@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn";
 import { Search, LayoutGrid, List, MoreHorizontal, FileText, Image as ImageIcon, Video, Music2, File, ChevronDown, Upload, FolderPlus, Trash2 } from 'lucide-react'
@@ -99,21 +100,6 @@ function inferAddedBy(item: DriveItem, index: number): string {
 
 function avatarInitial(email: string): string {
   return (email.trim()[0] || 'U').toUpperCase()
-}
-
-function FolderArtwork({ className = '' }: { className?: string }) {
-  return (
-    <svg viewBox="12 64 500 384" preserveAspectRatio="xMidYMid meet" className={className} aria-hidden="true">
-      <path
-        d="M12 128C12 93 41 64 76 64h101c14 0 27 6 36 17l19 23c8 9 19 14 31 14h186c35 0 63 28 63 63v200c0 36-28 64-63 64H76c-35 0-64-28-64-64V128z"
-        fill="#2F6DFF"
-      />
-      <path
-        d="M114 208c8-31 36-52 68-52h267c40 0 69 38 59 77l-44 170c-7 26-30 45-57 45H74c-38 0-66-36-55-73l95-167z"
-        fill="#4A98FF"
-      />
-    </svg>
-  )
 }
 
 export default function DrivePage() {
@@ -387,6 +373,14 @@ export default function DrivePage() {
                     />
                   </div>
                   <button
+                    onClick={() => setCreateFolderOpen(true)}
+                    disabled={!activeWorkspaceId || isCreatingFolder}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-md border border-gray-200 bg-gray-100 px-3 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <FolderPlus className="size-4" />
+                    Nova pasta
+                  </button>
+                  <button
                     onClick={onUploadClick}
                     disabled={!activeWorkspaceId || isUploading}
                     className="inline-flex h-9 items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 text-xs text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
@@ -425,19 +419,9 @@ export default function DrivePage() {
               <section>
                 <div className="mb-3 flex items-center justify-between">
                   <h2 className="text-base font-semibold text-gray-800">Folders</h2>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => setCreateFolderOpen(true)}
-                      disabled={!activeWorkspaceId || isCreatingFolder}
-                      className="inline-flex h-9 items-center gap-1.5 rounded-md border border-gray-200 bg-gray-100 px-3 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      <FolderPlus className="size-4" />
-                      Nova pasta
-                    </button>
-                    <button className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs text-gray-500 hover:bg-gray-50">
-                      <MoreHorizontal className="size-4" />
-                    </button>
-                  </div>
+                  <button className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs text-gray-500 hover:bg-gray-50">
+                    <MoreHorizontal className="size-4" />
+                  </button>
                 </div>
                 {isLoading ? (
                   <div className="py-10 text-sm text-gray-500">Carregando pastas...</div>
@@ -451,7 +435,14 @@ export default function DrivePage() {
                           onClick={() => router.push(`/drive/f/${f.id}`)}
                           className="w-full"
                         >
-                          <FolderArtwork className="mx-auto h-32 w-auto max-w-full transition group-hover:scale-[1.02]" />
+                          <Image
+                            src="/folder-blue.svg"
+                            alt=""
+                            aria-hidden="true"
+                            width={512}
+                            height={512}
+                            className="mx-auto h-32 w-auto max-w-full transition group-hover:scale-[1.02]"
+                          />
                           <div className="mt-2 min-w-0">
                             <div className="truncate text-center text-[14px] font-semibold text-gray-900">{f.name}</div>
                             <div className="mt-0.5 text-center text-sm text-gray-500">
