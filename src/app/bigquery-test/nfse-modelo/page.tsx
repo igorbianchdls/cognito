@@ -92,8 +92,8 @@ export default function NfseModeloPage() {
       <div className="mx-auto max-w-5xl space-y-4">
         <h1 className="text-lg font-semibold text-zinc-900">Modelo NFS-e (fiel ao layout da imagem)</h1>
 
-        <div className="overflow-auto rounded-md border border-zinc-400 bg-white p-3">
-          <div className="mx-auto w-[820px] border border-black bg-white text-black">
+        <div className="overflow-auto rounded-md border border-zinc-400 bg-zinc-300 p-4">
+          <div className="mx-auto w-[794px] min-h-[1123px] border-[1.5px] border-black bg-white text-black">
             <div className="border-b border-black px-2 py-1 text-[10px] leading-tight">
               Os dados da NFS-e abaixo sao ficticios. Documento visual de simulacao para interface.
             </div>
@@ -166,9 +166,6 @@ export default function NfseModeloPage() {
                   <div key={line}>{line}</div>
                 ))}
               </div>
-              <div className="pointer-events-none absolute right-10 top-12 -rotate-[54deg] text-[120px] font-semibold tracking-[0.14em] text-zinc-200/70">
-                CANCELADO
-              </div>
             </div>
 
             <div className="border-b border-black px-2 py-1 text-center text-[30px] font-bold">
@@ -213,4 +210,3 @@ export default function NfseModeloPage() {
     </div>
   )
 }
-
