@@ -398,12 +398,12 @@ export default function DrivePage() {
                 ) : (
                   <div className="grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
                     {folders.map((f) => (
-                      <div key={f.id} className="group relative w-full py-1 text-center">
+                      <div key={f.id} className="group relative w-full p-2 text-center">
                         <button
                           onClick={() => router.push(`/drive/f/${f.id}`)}
                           className="w-full"
                         >
-                          <FolderArtwork className="h-24 w-full transition group-hover:scale-[1.02]" />
+                          <FolderArtwork className="h-32 w-full px-1 transition group-hover:scale-[1.02]" />
                           <div className="mt-2 min-w-0">
                             <div className="truncate text-center text-[14px] font-semibold text-gray-900">{f.name}</div>
                             <div className="mt-0.5 text-center text-sm text-gray-500">
