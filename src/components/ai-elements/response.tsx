@@ -174,6 +174,7 @@ export type ResponseProps = HTMLAttributes<HTMLDivElement> & {
 };
 
 const components: Options['components'] = {
+  hr: () => null,
   ol: ({ node, children, className, ...props }) => (
     <ol className={cn('ml-4 list-outside list-decimal', className)} {...props}>
       {children}
