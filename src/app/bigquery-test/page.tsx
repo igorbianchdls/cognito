@@ -28,21 +28,12 @@ export default function BigQueryTestPage() {
             </Link>
           </div>
           <div className="rounded-xl border bg-white p-4">
-            <div className="text-sm font-medium text-gray-900 mb-2">NFS-e</div>
+            <div className="text-sm font-medium text-gray-900 mb-2">Modelos</div>
             <Link
-              href="/bigquery-test/nfse-modelo"
+              href="/bigquery-test/modelos"
               className="inline-flex rounded-md border border-gray-200 px-3 py-1.5 text-sm text-gray-800 hover:bg-gray-50"
             >
-              Abrir modelo NFS-e
-            </Link>
-          </div>
-          <div className="rounded-xl border bg-white p-4">
-            <div className="text-sm font-medium text-gray-900 mb-2">Contratos</div>
-            <Link
-              href="/bigquery-test/contratos-modelo"
-              className="inline-flex rounded-md border border-gray-200 px-3 py-1.5 text-sm text-gray-800 hover:bg-gray-50"
-            >
-              Abrir modelo de contrato
+              Abrir modelos de documentos
             </Link>
           </div>
         </div>
