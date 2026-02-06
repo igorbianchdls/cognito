@@ -43,6 +43,39 @@ function normalizeFieldKey(key: string): string {
   return key.toLowerCase().replace(/[^a-z0-9]+/g, '')
 }
 
+function pickField(row: AnyRow, candidates: string[]): unknown {
+  if (!row || typeof row !== 'object') return undefined
+  const wanted = new Set(candidates.map((c) => normalizeFieldKey(c)))
+  for (const [key, value] of Object.entries(row)) {
+    if (wanted.has(normalizeFieldKey(key))) return value
+  }
+  return undefined
+}
+
+function toFlatText(value: unknown): string {
+  if (value == null) return ''
+  if (typeof value === 'string') return value
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+  if (Array.isArray(value)) {
+    return value.map((item) => toFlatText(item)).filter(Boolean).join(', ')
+  }
+  if (typeof value === 'object') {
+    const obj = value as Record<string, unknown>
+    const name = typeof obj.name === 'string' ? obj.name : ''
+    const email = typeof obj.email === 'string' ? obj.email : (typeof obj.address === 'string' ? obj.address : '')
+    if (name && email) return `${name} <${email}>`
+    if (email) return email
+    if (name) return name
+    try { return JSON.stringify(obj) } catch { return String(obj) }
+  }
+  return String(value)
+}
+
+function toLabelsText(value: unknown): string {
+  if (Array.isArray(value)) return value.map((v) => toFlatText(v)).filter(Boolean).join(', ')
+  return toFlatText(value)
+}
+
 function normalizeRows(data: unknown): AnyRow[] {
   const rows: AnyRow[] = Array.isArray(data) ? (data as AnyRow[]) : []
   return rows.map((row) => {
@@ -201,8 +234,36 @@ export default function ToolListResult({ output, input }: { output: any; input?:
   const result = useMemo(() => parseResult(output, input), [output, input])
   const resourcePath = useMemo(() => normalizeResourcePath(input), [input])
   const isEmailResource = resourcePath.startsWith('email/')
+  const isEmailMessagesList = resourcePath === 'email/messages'
+  const inboxIdFromInput = useMemo(() => {
+    if (!input || typeof input !== 'object') return ''
+    const inp = input as any
+    const direct = typeof inp.inboxId === 'string' ? inp.inboxId : ''
+    const fromParams = inp.params && typeof inp.params === 'object' && typeof inp.params.inboxId === 'string'
+      ? inp.params.inboxId
+      : ''
+    return String(direct || fromParams || '').trim()
+  }, [input])
   const visibleRows = useMemo(() => {
     const src = Array.isArray(result.rows) ? result.rows : []
+    if (isEmailMessagesList) {
+      return src.map((row) => {
+        const messageIdValue = pickField(row, ['messageId', 'message_id', 'id'])
+        const fromValue = pickField(row, ['from', 'sender', 'fromEmail', 'from_address', 'fromAddress'])
+        const toValue = pickField(row, ['to', 'recipients', 'toEmail', 'to_address', 'toAddress'])
+        const subjectValue = pickField(row, ['subject', 'title'])
+        const labelsValue = pickField(row, ['labels', 'tags', 'categories'])
+        const inboxIdValue = pickField(row, ['inboxId', 'inbox_id'])
+        return {
+          messageId: toFlatText(messageIdValue),
+          from: toFlatText(fromValue),
+          to: toFlatText(toValue),
+          subject: toFlatText(subjectValue),
+          labels: toLabelsText(labelsValue),
+          inboxId: toFlatText(inboxIdValue) || inboxIdFromInput,
+        } as AnyRow
+      })
+    }
     if (!isEmailResource) return src
     return src.map((row) => {
       const out: AnyRow = {}
@@ -212,9 +273,19 @@ export default function ToolListResult({ output, input }: { output: any; input?:
       }
       return out
     })
-  }, [isEmailResource, result.rows])
+  }, [inboxIdFromInput, isEmailMessagesList, isEmailResource, result.rows])
 
   const columns: ColumnDef<AnyRow>[] = useMemo(() => {
+    if (isEmailMessagesList) {
+      return [
+        { accessorKey: 'messageId', header: 'messageId' },
+        { accessorKey: 'from', header: 'from' },
+        { accessorKey: 'to', header: 'to' },
+        { accessorKey: 'subject', header: 'subject' },
+        { accessorKey: 'labels', header: 'labels' },
+        { accessorKey: 'inboxId', header: 'inboxId' },
+      ] as ColumnDef<AnyRow>[]
+    }
     const cols: ColumnDef<AnyRow>[] = []
     const sample = (Array.isArray(visibleRows) && visibleRows[0]) || null
     if (sample) {
@@ -234,7 +305,7 @@ export default function ToolListResult({ output, input }: { output: any; input?:
       }
     }
     return cols
-  }, [visibleRows])
+  }, [isEmailMessagesList, visibleRows])
 
   return (
     <ArtifactDataTable
