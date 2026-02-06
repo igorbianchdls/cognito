@@ -6,6 +6,8 @@ import DriveViewerContent, { ViewerHandlers } from './DriveViewerContent'
 import { useViewerShortcuts } from './hooks/useViewerShortcuts'
 import type { DriveItem } from './types'
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
 export default function DriveViewer({
   items,
   index,
@@ -19,6 +21,15 @@ export default function DriveViewer({
 }) {
   const current = items[index]
   const countText = useMemo(() => `${index + 1} de ${items.length}`, [index, items.length])
+  const isCurrentUuid = useMemo(() => UUID_RE.test(current?.id || ''), [current?.id])
+  const previewUrl = useMemo(() => {
+    if (!current) return undefined
+    const isPdf = /application\/pdf/i.test(current.mime || '')
+    if (isPdf && isCurrentUuid) {
+      return `/api/drive/files/${current.id}/download`
+    }
+    return current.url
+  }, [current, isCurrentUuid])
 
   const goPrev = () => onNavigate(Math.max(0, index - 1))
   const goNext = () => onNavigate(Math.min(items.length - 1, index + 1))
@@ -30,8 +41,7 @@ export default function DriveViewer({
   const onDownload = async () => {
     if (!current) return
 
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(current.id)
-    if (isUuid) {
+    if (isCurrentUuid) {
       try {
         const a = document.createElement('a')
         a.href = `/api/drive/files/${current.id}/download`
@@ -84,7 +94,7 @@ export default function DriveViewer({
           <button onClick={goPrev} className="absolute left-0 top-1/2 z-[60] -translate-y-1/2 rounded-r-md bg-black/30 p-2 text-white hover:bg-black/40">‹</button>
           <button onClick={goNext} className="absolute right-0 top-1/2 z-[60] -translate-y-1/2 rounded-l-md bg-black/30 p-2 text-white hover:bg-black/40">›</button>
           <div className="relative h-[88vh] w-full overflow-hidden bg-neutral-950">
-            <DriveViewerContent mime={current?.mime} url={current?.url} name={current?.name} register={(h) => { handlersRef.current = h; const z = h.getZoomText?.(); if (z) setZoomText(z); }} />
+            <DriveViewerContent mime={current?.mime} url={previewUrl} name={current?.name} register={(h) => { handlersRef.current = h; const z = h.getZoomText?.(); if (z) setZoomText(z); }} />
           </div>
         </div>
       </div>
