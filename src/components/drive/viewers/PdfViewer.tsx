@@ -18,8 +18,8 @@ export default function PdfViewer({ url, register }: { url?: string; register?: 
         const mod: any = await import('react-pdf')
         const pdfjs = mod.pdfjs
         if (pdfjs?.GlobalWorkerOptions) {
-          // Prefer local bundled worker to avoid CDN/version mismatch and blocked network issues.
-          pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString()
+          // Keep worker version aligned with API version shipped by react-pdf.
+          pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
         }
         if (!cancelled) setWorkerReady(true)
       } catch (e) {
