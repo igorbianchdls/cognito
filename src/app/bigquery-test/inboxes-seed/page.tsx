@@ -28,6 +28,15 @@ type InboxPreview = {
   messages: MessagePreview[]
 }
 
+type ScenarioTemplate = {
+  from: Role
+  to: Role[]
+  cc?: Role[]
+  subject: string
+  text: string
+  labels?: string[]
+}
+
 function extractList(data: any): any[] {
   if (Array.isArray(data)) return data
   if (!data || typeof data !== "object") return []
@@ -123,6 +132,63 @@ async function fetchJson(path: string, init?: RequestInit) {
   return json
 }
 
+function buildSmbTemplates(): ScenarioTemplate[] {
+  const fiscal: Omit<ScenarioTemplate, "from">[] = [
+    { to: ["compras"], subject: "Aprovacao de pagamento - NF 4587", text: "Pagamento aprovado. Programar liquidacao para 12/02.", labels: ["fiscal", "financeiro"] },
+    { to: ["vendas"], subject: "Emissao de NF-e - Pedido PV-932", text: "NF-e emitida. Chave final 3124. Pode seguir com expedicao.", labels: ["fiscal", "vendas"] },
+    { to: ["compras", "vendas"], subject: "Fechamento mensal - documentos pendentes", text: "Enviar notas e comprovantes pendentes ate 17h para fechamento.", labels: ["fiscal", "fechamento"] },
+    { to: ["compras"], subject: "Conferencia de boletos do fornecedor Alfa", text: "Identifiquei divergencia de R$ 42,90. Revisar boleto de fevereiro.", labels: ["fiscal", "compras"] },
+    { to: ["vendas"], subject: "Tributacao de novo produto", text: "Validado NCM e aliquota para o item lancado nesta semana.", labels: ["fiscal", "vendas"] },
+    { to: ["compras"], subject: "Reembolso aprovado - viagem comercial", text: "Reembolso aprovado no valor de R$ 860,00. Seguir com pagamento.", labels: ["fiscal", "financeiro"] },
+    { to: ["vendas"], cc: ["compras"], subject: "Conciliacao de recebiveis - carteira fevereiro", text: "Conciliacao parcial concluida. Confirmar 3 recebimentos em aberto.", labels: ["fiscal", "financeiro"] },
+    { to: ["compras"], subject: "Retencoes de servico - validacao", text: "Aplicar retencoes no proximo pagamento de prestador PJ.", labels: ["fiscal", "compras"] },
+    { to: ["vendas"], subject: "Prazo de envio de XML para cliente", text: "Cliente solicitou XML ate 14h. Priorizar envio ainda hoje.", labels: ["fiscal", "vendas"] },
+    { to: ["compras", "vendas"], subject: "Checklist de auditoria interna", text: "Compartilhar contratos, pedidos e notas para auditoria trimestral.", labels: ["fiscal"] },
+  ]
+
+  const compras: Omit<ScenarioTemplate, "from">[] = [
+    { to: ["fiscal"], subject: "Solicitacao de aprovacao - NF 7721", text: "Preciso da aprovacao da NF 7721 para pagamento na sexta.", labels: ["compras", "financeiro"] },
+    { to: ["vendas"], subject: "Status de reposicao de estoque", text: "Toner, etiquetas e caixas com entrega prevista para amanha.", labels: ["compras", "operacao"] },
+    { to: ["fiscal"], subject: "Comprovante de pagamento - frete fevereiro", text: "Pagamento do frete realizado. Segue para conciliacao.", labels: ["compras", "financeiro"] },
+    { to: ["vendas"], subject: "Fornecedor homologado - embalagens", text: "Novo fornecedor homologado com custo 8% menor.", labels: ["compras"] },
+    { to: ["fiscal"], subject: "Pedido de adiantamento - material de escritorio", text: "Solicito adiantamento de R$ 1.200,00 para compra emergencial.", labels: ["compras", "financeiro"] },
+    { to: ["vendas"], cc: ["fiscal"], subject: "Atualizacao de prazo - pedido interno", text: "Entrega parcial hoje e saldo restante em 48h.", labels: ["compras", "vendas"] },
+    { to: ["fiscal"], subject: "Divergencia em nota de servico", text: "Valor de ISS veio acima do esperado. Preciso de orientacao.", labels: ["compras", "fiscal"] },
+    { to: ["vendas"], subject: "Cotacao aprovada - material promocional", text: "Aprovamos cotacao para panfletos e brindes do mes.", labels: ["compras", "marketing"] },
+    { to: ["fiscal"], subject: "Envio de XML - fornecedor Beta", text: "XML e DANFE enviados para arquivo fiscal.", labels: ["compras", "fiscal"] },
+    { to: ["vendas"], subject: "Reposicao urgente - etiquetas logisticas", text: "Solicitacao emergencial registrada com prioridade maxima.", labels: ["compras", "operacao"] },
+  ]
+
+  const vendas: Omit<ScenarioTemplate, "from">[] = [
+    { to: ["fiscal"], subject: "Pedido PV-1054 confirmado", text: "Cliente confirmou pedido de R$ 12.450,00. Emitir nota fiscal.", labels: ["vendas", "fiscal"] },
+    { to: ["compras"], subject: "Reposicao de itens para kit promocional", text: "Precisamos de 200 unidades extras para campanha de fevereiro.", labels: ["vendas", "compras"] },
+    { to: ["fiscal"], subject: "Boleto recebido - cliente Horizonte", text: "Boleto recebido hoje. Favor registrar no financeiro.", labels: ["vendas", "financeiro"] },
+    { to: ["compras"], subject: "Solicitacao de amostras - novo fornecedor", text: "Equipe comercial precisa de amostras ate quarta-feira.", labels: ["vendas", "compras"] },
+    { to: ["fiscal"], subject: "Ajuste de cadastro fiscal - cliente Nova Era", text: "Cliente alterou IE estadual. Atualizar cadastro antes da emissao.", labels: ["vendas", "fiscal"] },
+    { to: ["compras"], subject: "Material de apoio para time externo", text: "Solicito reposicao de folders e banners para visitas comerciais.", labels: ["vendas", "operacao"] },
+    { to: ["fiscal"], cc: ["compras"], subject: "Recebimento parcial - pedido corporativo", text: "Recebemos sinal de 30%. Saldo previsto para 15 dias.", labels: ["vendas", "financeiro"] },
+    { to: ["compras"], subject: "Follow-up de prazo - embalagem personalizada", text: "Confirmar prazo final para envio ao cliente premium.", labels: ["vendas", "compras"] },
+    { to: ["fiscal"], subject: "Cancelamento de pedido PV-1041", text: "Cliente cancelou por duplicidade. Necessario estorno fiscal.", labels: ["vendas", "fiscal"] },
+    { to: ["compras"], subject: "Urgente: reposicao de caixa de envio", text: "Estoque de caixas acabou no CD. Repor hoje se possivel.", labels: ["vendas", "operacao"] },
+  ]
+
+  const templates: ScenarioTemplate[] = []
+  for (const t of fiscal) templates.push({ from: "fiscal", ...t })
+  for (const t of compras) templates.push({ from: "compras", ...t })
+  for (const t of vendas) templates.push({ from: "vendas", ...t })
+  return templates
+}
+
+function buildSmbTemplatesFollowup(): ScenarioTemplate[] {
+  const runTag = new Date().toLocaleString("pt-BR")
+  return buildSmbTemplates().map((t, idx) => ({
+    ...t,
+    subject: `Follow-up ${idx + 1} - ${t.subject}`,
+    text: `Atualizacao automatica (${runTag}).\n\n${t.text}`,
+    labels: [...(t.labels || []), "followup"],
+  }))
+}
+
 export default function InboxesSeedPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -148,7 +214,7 @@ export default function InboxesSeedPage() {
     const nextPreviews: InboxPreview[] = []
     for (const role of ["fiscal", "compras", "vendas"] as Role[]) {
       const info = byRole[role] as InboxRef
-      const json = await fetchJson(`/api/email/messages?inboxId=${encodeURIComponent(info.inboxId)}&limit=8`, { cache: "no-store" })
+      const json = await fetchJson(`/api/email/messages?inboxId=${encodeURIComponent(info.inboxId)}&limit=12`, { cache: "no-store" })
       const rows = extractList(json?.data ?? json)
       const messages = rows.map((m: any) => ({
         id: String(m?.id || m?.messageId || "").trim(),
@@ -205,162 +271,110 @@ export default function InboxesSeedPage() {
     })
   }
 
+  const runSimulation = async (templates: ScenarioTemplate[], modeLabel: string) => {
+    setStatus(`Preparando ${modeLabel}...`)
+    const inboxes = await listAllInboxes()
+    const { byRole, missing } = pickScenarioInboxes(inboxes)
+    if (missing.length > 0) {
+      throw new Error("Faltam inboxes para a simulação (Fiscal/Compras/Vendas). Clique em 'Criar 3 inboxes' primeiro.")
+    }
+
+    const fiscal = byRole.fiscal as InboxRef
+    const compras = byRole.compras as InboxRef
+    const vendas = byRole.vendas as InboxRef
+
+    const roleMap: Record<Role, InboxRef> = { fiscal, compras, vendas }
+    const sent: Array<{
+      ok: boolean
+      index: number
+      fromRole: Role
+      from: string
+      to: string[]
+      subject: string
+      id?: string
+      error?: string
+    }> = []
+
+    for (let i = 0; i < templates.length; i += 1) {
+      const t = templates[i]
+      const from = roleMap[t.from]
+      const to = t.to.map((r) => roleMap[r].address)
+      const cc = t.cc?.map((r) => roleMap[r].address)
+      setStatus(`Enviando ${modeLabel}... ${i + 1}/${templates.length}`)
+      try {
+        const json = await fetchJson("/api/email/messages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            inboxId: from.inboxId,
+            to,
+            cc,
+            subject: t.subject,
+            text: t.text,
+            labels: t.labels,
+          }),
+        })
+        const messageId = String(json?.data?.id || json?.data?.messageId || "").trim() || undefined
+        sent.push({
+          ok: true,
+          index: i + 1,
+          fromRole: t.from,
+          from: from.address,
+          to,
+          subject: t.subject,
+          id: messageId,
+        })
+      } catch (e: any) {
+        sent.push({
+          ok: false,
+          index: i + 1,
+          fromRole: t.from,
+          from: from.address,
+          to,
+          subject: t.subject,
+          error: e?.message || String(e),
+        })
+      }
+    }
+
+    await loadPreviews(inboxes)
+    const success = sent.filter((s) => s.ok).length
+    const failed = sent.length - success
+    const plannedBySender: Record<Role, number> = { fiscal: 0, compras: 0, vendas: 0 }
+    const successBySender: Record<Role, number> = { fiscal: 0, compras: 0, vendas: 0 }
+    for (const t of templates) plannedBySender[t.from] += 1
+    for (const item of sent) {
+      if (item.ok) successBySender[item.fromRole] += 1
+    }
+    setResult({
+      ok: failed === 0,
+      mode: modeLabel,
+      summary: {
+        requested: sent.length,
+        success,
+        failed,
+        plannedBySender,
+        successBySender,
+      },
+      participants: {
+        fiscal: { inboxId: fiscal.inboxId, email: fiscal.address, label: fiscal.label },
+        compras: { inboxId: compras.inboxId, email: compras.address, label: compras.label },
+        vendas: { inboxId: vendas.inboxId, email: vendas.address, label: vendas.label },
+      },
+      messages: sent,
+    })
+    setStatus(`${modeLabel} finalizada: ${success}/${sent.length} emails enviados.`)
+  }
+
   const simulateSMBEmails = async () => {
     await call(async () => {
-      setStatus("Preparando simulação SMB...")
-      const inboxes = await listAllInboxes()
-      const { byRole, missing } = pickScenarioInboxes(inboxes)
-      if (missing.length > 0) {
-        throw new Error("Faltam inboxes para a simulação (Fiscal/Compras/Vendas). Clique em 'Criar 3 inboxes' primeiro.")
-      }
+      await runSimulation(buildSmbTemplates(), "simulação SMB")
+    })
+  }
 
-      const fiscal = byRole.fiscal as InboxRef
-      const compras = byRole.compras as InboxRef
-      const vendas = byRole.vendas as InboxRef
-
-      const templates: Array<{
-        from: Role
-        to: Role[]
-        cc?: Role[]
-        subject: string
-        text: string
-        labels?: string[]
-      }> = [
-        {
-          from: "compras",
-          to: ["fiscal"],
-          subject: "Aprovacao de pagamento - NF 4587 (Papelaria Alfa)",
-          text: "Bom dia, Fiscal. Preciso da aprovacao da NF 4587 no valor de R$ 1.280,00 para vencimento em 12/02.",
-          labels: ["financeiro", "compras"],
-        },
-        {
-          from: "fiscal",
-          to: ["compras"],
-          subject: "Re: Aprovacao de pagamento - NF 4587 (Papelaria Alfa)",
-          text: "Aprovado. Pode programar o pagamento para 12/02 e anexar o comprovante na pasta do mes.",
-          labels: ["financeiro", "fiscal"],
-        },
-        {
-          from: "vendas",
-          to: ["fiscal"],
-          subject: "Solicitacao de emissao de NF-e - Pedido PV-932",
-          text: "Cliente Nova Era confirmou o pedido PV-932. Favor emitir NF-e com vencimento para 15 dias.",
-          labels: ["vendas", "fiscal"],
-        },
-        {
-          from: "fiscal",
-          to: ["vendas"],
-          subject: "Re: Solicitacao de emissao de NF-e - Pedido PV-932",
-          text: "NF-e emitida com sucesso. Chave final 3124. Pode seguir com o envio.",
-          labels: ["fiscal", "vendas"],
-        },
-        {
-          from: "vendas",
-          to: ["compras"],
-          subject: "Pedido interno - reposicao de toner e etiquetas",
-          text: "Precisamos de reposicao de toner preto e etiquetas para expedicao ate sexta-feira.",
-          labels: ["vendas", "compras"],
-        },
-        {
-          from: "compras",
-          to: ["vendas"],
-          subject: "Re: Pedido interno - reposicao de toner e etiquetas",
-          text: "Cotacao recebida e aprovada. Entrega prevista para amanha no periodo da tarde.",
-          labels: ["compras"],
-        },
-        {
-          from: "fiscal",
-          to: ["compras", "vendas"],
-          subject: "Fechamento mensal - pendencias de documentos",
-          text: "Pessoal, enviar ate 17h os comprovantes e notas pendentes para fechamento contabil do mes.",
-          labels: ["fiscal", "fechamento"],
-        },
-        {
-          from: "compras",
-          to: ["fiscal"],
-          subject: "Comprovante de pagamento - Frete fevereiro",
-          text: "Pagamento do frete de fevereiro realizado. Segue confirmacao para conciliacao.",
-          labels: ["compras", "financeiro"],
-        },
-        {
-          from: "vendas",
-          to: ["fiscal"],
-          cc: ["compras"],
-          subject: "Boleto recebido - Cliente Horizonte",
-          text: "Recebemos hoje o boleto do cliente Horizonte. Favor registrar no financeiro e confirmar conciliacao.",
-          labels: ["vendas", "financeiro"],
-        },
-      ]
-
-      const roleMap: Record<Role, InboxRef> = { fiscal, compras, vendas }
-      const sent: Array<{
-        ok: boolean
-        index: number
-        from: string
-        to: string[]
-        subject: string
-        id?: string
-        error?: string
-      }> = []
-
-      for (let i = 0; i < templates.length; i += 1) {
-        const t = templates[i]
-        const from = roleMap[t.from]
-        const to = t.to.map((r) => roleMap[r].address)
-        const cc = t.cc?.map((r) => roleMap[r].address)
-        setStatus(`Enviando emails simulados... ${i + 1}/${templates.length}`)
-        try {
-          const json = await fetchJson("/api/email/messages", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              inboxId: from.inboxId,
-              to,
-              cc,
-              subject: t.subject,
-              text: t.text,
-              labels: t.labels,
-            }),
-          })
-          const messageId = String(json?.data?.id || json?.data?.messageId || "").trim() || undefined
-          sent.push({
-            ok: true,
-            index: i + 1,
-            from: from.address,
-            to,
-            subject: t.subject,
-            id: messageId,
-          })
-        } catch (e: any) {
-          sent.push({
-            ok: false,
-            index: i + 1,
-            from: from.address,
-            to,
-            subject: t.subject,
-            error: e?.message || String(e),
-          })
-        }
-      }
-
-      await loadPreviews(inboxes)
-      const success = sent.filter((s) => s.ok).length
-      const failed = sent.length - success
-      setResult({
-        ok: failed === 0,
-        summary: {
-          requested: sent.length,
-          success,
-          failed,
-        },
-        participants: {
-          fiscal: { inboxId: fiscal.inboxId, email: fiscal.address, label: fiscal.label },
-          compras: { inboxId: compras.inboxId, email: compras.address, label: compras.label },
-          vendas: { inboxId: vendas.inboxId, email: vendas.address, label: vendas.label },
-        },
-        messages: sent,
-      })
-      setStatus(`Simulacao finalizada: ${success}/${sent.length} emails enviados.`)
+  const simulateNewSMBEmails = async () => {
+    await call(async () => {
+      await runSimulation(buildSmbTemplatesFollowup(), "novos emails SMB")
     })
   }
 
@@ -409,6 +423,14 @@ export default function InboxesSeedPage() {
               className="rounded-md border border-gray-200 px-3 py-1.5 text-sm text-gray-800 disabled:opacity-60"
             >
               Simular emails SMB
+            </button>
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={simulateNewSMBEmails}
+              className="rounded-md border border-gray-200 px-3 py-1.5 text-sm text-gray-800 disabled:opacity-60"
+            >
+              Simular novos emails SMB
             </button>
             <button
               type="button"
