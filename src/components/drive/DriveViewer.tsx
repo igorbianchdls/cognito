@@ -27,6 +27,38 @@ export default function DriveViewer({
   const [zoomText, setZoomText] = useState<string | undefined>(undefined)
   useViewerShortcuts({ onClose, onPrev: goPrev, onNext: goNext, onTogglePlay: () => handlersRef.current.togglePlay?.() })
 
+  const onDownload = async () => {
+    if (!current) return
+
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(current.id)
+    if (isUuid) {
+      try {
+        const a = document.createElement('a')
+        a.href = `/api/drive/files/${current.id}/download`
+        a.download = current.name || 'download'
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        return
+      } catch {}
+    }
+
+    if (!current.url) return
+    try {
+      const res = await fetch(current.url)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const blob = await res.blob()
+      const objectUrl = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = objectUrl
+      a.download = current.name || 'download'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(objectUrl)
+    } catch {}
+  }
+
   return (
     <div className="fixed inset-0 z-50 grid grid-rows-[auto_1fr] bg-black/70 backdrop-blur-sm" onClick={onClose}>
       <div className="pointer-events-none mt-3 px-2" onClick={(e)=> e.stopPropagation()}>
@@ -41,7 +73,7 @@ export default function DriveViewer({
             onZoomOut={() => { handlersRef.current.zoomOut?.(); const z = handlersRef.current.getZoomText?.(); if (z) setZoomText(z) }}
             onZoomReset={() => { handlersRef.current.resetZoom?.(); const z = handlersRef.current.getZoomText?.(); if (z) setZoomText(z) }}
             onRotate={() => handlersRef.current.rotate?.()}
-            onDownload={() => { if (current?.url) { try { const a = document.createElement('a'); a.href = current.url; a.download = current.name || 'download'; a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); } catch { window.open(current.url!, '_blank', 'noopener'); } } }}
+            onDownload={onDownload}
             zoomText={zoomText}
           />
         </div>
