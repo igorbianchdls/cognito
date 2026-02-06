@@ -441,7 +441,7 @@ export default function DrivePage() {
                             aria-hidden="true"
                             width={512}
                             height={512}
-                            className="mx-auto h-32 w-auto max-w-full transition group-hover:scale-[1.02]"
+                            className="h-36 w-full object-contain transition group-hover:scale-[1.02]"
                           />
                           <div className="mt-2 min-w-0">
                             <div className="truncate text-center text-[14px] font-semibold text-gray-900">{f.name}</div>
