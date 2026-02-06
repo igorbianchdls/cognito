@@ -366,13 +366,13 @@ export default function EmailPage() {
         <SidebarInset className="h-screen overflow-hidden bg-white">
           <div className="grid h-full min-h-0 grid-cols-1 xl:grid-cols-[240px_380px_minmax(0,1fr)]">
             <aside className="hidden h-full min-h-0 flex-col border-r border-neutral-200 bg-white xl:flex">
-              <div className="flex h-14 items-center border-b border-neutral-200 px-3">
+              <div className="flex h-12 items-center border-b border-neutral-200 px-3">
                 <div className="relative">
                   <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-neutral-700">▲</span>
                   <select
                     value={activeInboxId}
                     onChange={(e) => setActiveInboxId(e.target.value)}
-                    className="h-9 w-full appearance-none rounded-lg border border-neutral-200 bg-white pl-7 pr-8 text-sm font-medium text-neutral-900 outline-none focus:border-neutral-300"
+                    className="h-8 w-full appearance-none rounded-lg border border-neutral-200 bg-white pl-7 pr-8 text-sm font-medium text-neutral-900 outline-none focus:border-neutral-300"
                   >
                     <option value="" disabled>{loadingInboxes ? 'Carregando inboxes…' : 'Selecione uma inbox'}</option>
                     {(Array.isArray(inboxes) ? inboxes : []).map((ib: any, index: number) => {
@@ -436,8 +436,8 @@ export default function EmailPage() {
 
             <section className="min-h-0 border-r border-neutral-200 bg-white">
               <div className="grid h-full min-h-0 grid-rows-[auto_auto_1fr]">
-                <div className="flex h-14 items-center justify-between border-b border-neutral-200 px-4">
-                  <div className="text-2xl leading-none font-semibold tracking-tight text-neutral-900">Inbox</div>
+                <div className="flex h-12 items-center justify-between border-b border-neutral-200 px-4">
+                  <div className="text-xl leading-none font-semibold tracking-tight text-neutral-900">Inbox</div>
                   <div className="inline-flex items-center rounded-lg border border-neutral-200 bg-neutral-50 p-0.5">
                     <button
                       onClick={() => setMailView('all')}
@@ -527,7 +527,7 @@ export default function EmailPage() {
             </section>
 
             <section className="hidden min-h-0 bg-white xl:flex xl:flex-col">
-              <div className="flex h-14 items-center justify-between border-b border-neutral-200 px-4">
+              <div className="flex h-12 items-center justify-between border-b border-neutral-200 px-4">
                 <div className="inline-flex items-center gap-2 text-neutral-700">
                   <button className="rounded-md p-1.5 hover:bg-neutral-100"><Archive className="size-4" /></button>
                   <button className="rounded-md p-1.5 hover:bg-neutral-100"><MailOpen className="size-4" /></button>
