@@ -1,12 +1,19 @@
 "use client"
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
-
 import React, { Suspense, useEffect, useMemo, useState } from 'react'
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import {
+  deleteEmailInbox,
+  fetchEmailInboxes,
+  fetchEmailMessageById,
+  fetchEmailMessages,
+  readStoredActiveInboxId,
+  removeStoredActiveInboxId,
+  updateInboxQueryString,
+  writeStoredActiveInboxId,
+} from '@/features/email/frontend/services/emailApi'
 import {
   Archive,
   ChevronDown,
@@ -276,13 +283,11 @@ export default function EmailPage() {
       setLoadingInboxes(true)
       setError('')
       try {
-        const res = await fetch('/api/email/inboxes', { cache: 'no-store' })
-        const json = await res.json().catch(() => ({}))
+        const json = await fetchEmailInboxes()
         if (!ignore) {
-          if (!res.ok || json?.ok === false) throw new Error(json?.error || `Falha inboxes: ${res.status}`)
           const list = extractList(json?.data)
           setInboxes(list)
-          const stored = typeof window !== 'undefined' ? localStorage.getItem('email.activeInboxId') || '' : ''
+          const stored = readStoredActiveInboxId()
           const chosen = qsInboxId || stored || (list[0]?.inboxId || list[0]?.id || '')
           if (chosen) setActiveInboxId(chosen)
         }
@@ -297,25 +302,16 @@ export default function EmailPage() {
 
   useEffect(() => {
     if (!activeInboxId) return
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('email.activeInboxId', activeInboxId)
-      const url = new URL(window.location.href)
-      url.searchParams.set('inboxId', activeInboxId)
-      history.replaceState(null, '', url.toString())
-    }
+    writeStoredActiveInboxId(activeInboxId)
+    updateInboxQueryString(activeInboxId)
 
     let ignore = false
     ;(async () => {
       setLoadingMessages(true)
       setError('')
       try {
-        const params = new URLSearchParams()
-        params.set('inboxId', activeInboxId)
-        params.set('limit', '100')
-        const res = await fetch(`/api/email/messages?${params.toString()}`, { cache: 'no-store' })
-        const json = await res.json().catch(() => ({}))
+        const json = await fetchEmailMessages(activeInboxId, 100)
         if (!ignore) {
-          if (!res.ok || json?.ok === false) throw new Error(json?.error || `Falha messages: ${res.status}`)
           const list = extractList(json?.data)
           setMessages(list)
         }
@@ -353,10 +349,8 @@ export default function EmailPage() {
       setLoadingSelectedMessage(true)
       setSelectedMessageError('')
       try {
-        const res = await fetch(`/api/email/messages/${encodeURIComponent(selectedMessageId)}?inboxId=${encodeURIComponent(activeInboxId)}`, { cache: 'no-store' })
-        const json = await res.json().catch(() => ({}))
+        const json = await fetchEmailMessageById(selectedMessageId, activeInboxId)
         if (!ignore) {
-          if (!res.ok || json?.ok === false) throw new Error(json?.error || `Falha ao carregar mensagem: ${res.status}`)
           setSelectedMessage(json?.data || null)
         }
       } catch (e: any) {
@@ -384,13 +378,7 @@ export default function EmailPage() {
     setDeletingInboxId(id)
     setError('')
     try {
-      const res = await fetch('/api/email/inboxes', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inboxId: id }),
-      })
-      const json = await res.json().catch(() => ({}))
-      if (!res.ok || json?.ok === false) throw new Error(json?.error || `Falha ao excluir inbox: ${res.status}`)
+      await deleteEmailInbox(id)
 
       const nextInboxes = inboxes.filter((ib: any) => getInboxId(ib) !== id)
       setInboxes(nextInboxes)
@@ -400,18 +388,12 @@ export default function EmailPage() {
         const nextActive = getInboxId(nextInboxes[0])
         setActiveInboxId(nextActive)
 
-        if (typeof window !== 'undefined') {
-          if (nextActive) {
-            localStorage.setItem('email.activeInboxId', nextActive)
-            const url = new URL(window.location.href)
-            url.searchParams.set('inboxId', nextActive)
-            history.replaceState(null, '', url.toString())
-          } else {
-            localStorage.removeItem('email.activeInboxId')
-            const url = new URL(window.location.href)
-            url.searchParams.delete('inboxId')
-            history.replaceState(null, '', url.toString())
-          }
+        if (nextActive) {
+          writeStoredActiveInboxId(nextActive)
+          updateInboxQueryString(nextActive)
+        } else {
+          removeStoredActiveInboxId()
+          updateInboxQueryString(null)
         }
 
         if (!nextActive) {

@@ -1,17 +1,18 @@
 "use client"
 
-import { useMemo, useRef, useState, useEffect } from 'react'
+import { useMemo, useRef, useEffect } from 'react'
+import { useStore } from '@nanostores/react'
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn";
 import { Search, MoreVertical, Paperclip, Smile, Send, Check, CheckCheck, Phone, Video } from 'lucide-react'
-import { SAMPLE_CHATS } from '@/features/whatsapp/shared/mockChats'
-import type { WhatsappChat, WhatsappMessage } from '@/features/whatsapp/shared/types'
+import type { WhatsappMessage } from '@/features/whatsapp/shared/types'
+import { $whatsappActiveChatId, $whatsappChats, $whatsappDraft, whatsappUiActions } from '@/features/whatsapp/state/whatsappUiStore'
 
 export default function WhatsappPage() {
-  const [chats, setChats] = useState<WhatsappChat[]>(SAMPLE_CHATS)
-  const [activeId, setActiveId] = useState<string>(SAMPLE_CHATS[0].id)
-  const [draft, setDraft] = useState('')
-  const active = useMemo(() => chats.find(c => c.id === activeId)!, [chats, activeId])
+  const chats = useStore($whatsappChats)
+  const activeId = useStore($whatsappActiveChatId)
+  const draft = useStore($whatsappDraft)
+  const active = useMemo(() => chats.find((c) => c.id === activeId) || chats[0] || null, [chats, activeId])
   const listRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -20,17 +21,20 @@ export default function WhatsappPage() {
   }, [activeId])
 
   const send = () => {
-    const text = draft.trim()
-    if (!text) return
-    const now = new Date()
-    const time = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-    setChats(prev => prev.map(c => (
-      c.id === activeId
-        ? { ...c, last: text, time, messages: [...c.messages, { id: 'm' + Math.random().toString(36).slice(2), from: 'me', text, time, status: 'sent' }] }
-        : c
-    )))
-    setDraft('')
+    const sent = whatsappUiActions.sendDraft()
+    if (!sent) return
     setTimeout(() => listRef.current?.scrollTo({ top: listRef.current!.scrollHeight, behavior: 'smooth' }), 10)
+  }
+
+  if (!active) {
+    return (
+      <SidebarProvider>
+        <SidebarShadcn showHeaderTrigger={false} />
+        <SidebarInset className="h-screen overflow-hidden">
+          <div className="grid h-full place-items-center text-sm text-gray-500">Sem conversas.</div>
+        </SidebarInset>
+      </SidebarProvider>
+    )
   }
 
   return (
@@ -51,7 +55,7 @@ export default function WhatsappPage() {
               <ul>
                 {chats.map(c => (
                   <li key={c.id}>
-                    <button onClick={() => setActiveId(c.id)} className={`grid w-full grid-cols-[44px_1fr_auto] items-center gap-3 px-3 py-3 text-left hover:bg-gray-50 ${activeId===c.id?'bg-gray-50':''}`}>
+                    <button onClick={() => whatsappUiActions.setActiveChat(c.id)} className={`grid w-full grid-cols-[44px_1fr_auto] items-center gap-3 px-3 py-3 text-left hover:bg-gray-50 ${activeId===c.id?'bg-gray-50':''}`}>
                       <div className="grid place-items-center">
                         <span className="inline-flex size-9 items-center justify-center rounded-full text-[11px] font-semibold text-white" style={{ backgroundColor: `hsl(${c.avatarHue ?? 200} 70% 45%)` }}>
                           {c.name.split(' ').map(p=>p[0]).join('').slice(0,2)}
@@ -105,7 +109,7 @@ export default function WhatsappPage() {
             <div className="flex items-center gap-2 border-t bg-white px-3 py-2">
               <button className="rounded p-2 text-gray-600 hover:bg-gray-100" title="Emoji"><Smile className="size-5" /></button>
               <button className="rounded p-2 text-gray-600 hover:bg-gray-100" title="Anexar"><Paperclip className="size-5" /></button>
-              <input value={draft} onChange={(e)=> setDraft(e.target.value)} onKeyDown={(e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send() } }} placeholder="Digite uma mensagem" className="h-10 w-full rounded-full border border-gray-200 bg-white px-4 text-sm outline-none focus:border-gray-300" />
+              <input value={draft} onChange={(e)=> whatsappUiActions.setDraft(e.target.value)} onKeyDown={(e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send() } }} placeholder="Digite uma mensagem" className="h-10 w-full rounded-full border border-gray-200 bg-white px-4 text-sm outline-none focus:border-gray-300" />
               <button onClick={send} className="rounded-full bg-emerald-600 p-2 text-white hover:bg-emerald-700" title="Enviar"><Send className="size-5" /></button>
             </div>
           </section>

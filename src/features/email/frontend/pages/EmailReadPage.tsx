@@ -1,13 +1,16 @@
 "use client"
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
-
 import React, { Suspense, useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import { ArrowLeft, Reply, Forward, Trash2, X, Plus, Mail, Clock3, Tag } from 'lucide-react'
+import {
+  buildAttachmentDownloadUrl,
+  fetchEmailMessageById,
+  readStoredActiveInboxId,
+  runEmailMessageAction,
+} from '@/features/email/frontend/services/emailApi'
 
 type OutgoingAttachment = {
   id: string
@@ -101,7 +104,7 @@ export default function EmailReadPage() {
       try {
         const url = new URL(window.location.href)
         const fromQuery = url.searchParams.get('inboxId') || ''
-        const fromStorage = localStorage.getItem('email.activeInboxId') || ''
+        const fromStorage = readStoredActiveInboxId()
         setQsInboxId(fromQuery || fromStorage)
       } catch {}
     }
@@ -113,12 +116,8 @@ export default function EmailReadPage() {
     ;(async () => {
       setLoading(true); setError(''); setData(null)
       try {
-        const inboxId = qsInboxId || ''
-        const url = `/api/email/messages/${encodeURIComponent(messageId)}${inboxId ? `?inboxId=${encodeURIComponent(inboxId)}` : ''}`
-        const res = await fetch(url, { cache: 'no-store' })
-        const json = await res.json().catch(() => ({}))
+        const json = await fetchEmailMessageById(messageId, qsInboxId || undefined)
         if (!ignore) {
-          if (!res.ok || json?.ok === false) throw new Error(json?.error || `Falha: ${res.status}`)
           setData(json?.data)
           setActionSubject(json?.data?.subject ? `Fwd: ${json.data.subject}` : 'Fwd:')
         }
@@ -221,13 +220,7 @@ export default function EmailReadPage() {
       }
       if (actionMode === 'forward') payload.subject = actionSubject || undefined
 
-      const res = await fetch(`/api/email/messages/${encodeURIComponent(messageId)}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-      const json = await res.json().catch(() => ({}))
-      if (!res.ok || json?.ok === false) throw new Error(json?.error || `Falha: ${res.status}`)
+      await runEmailMessageAction(messageId, payload)
       setActionMode(null)
       resetActionComposer()
     } catch (e: any) {
@@ -252,18 +245,12 @@ export default function EmailReadPage() {
     setLabelsBusy(true)
     setLabelsError('')
     try {
-      const res = await fetch(`/api/email/messages/${encodeURIComponent(messageId)}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'labels',
-          inboxId: resolvedInboxId,
-          addLabels,
-          removeLabels,
-        }),
+      const json = await runEmailMessageAction(messageId, {
+        action: 'labels',
+        inboxId: resolvedInboxId,
+        addLabels,
+        removeLabels,
       })
-      const json = await res.json().catch(() => ({}))
-      if (!res.ok || json?.ok === false) throw new Error(json?.error || `Falha: ${res.status}`)
       setData(json?.data || data)
       setLabelsToAdd('')
       setLabelsToRemove('')
@@ -358,7 +345,7 @@ export default function EmailReadPage() {
                             {data.attachments.map((att: any, index: number) => {
                               const attachmentId = att?.attachmentId || att?.id
                               if (!attachmentId) return null
-                              const href = `/api/email/messages/${encodeURIComponent(messageId || '')}/attachments/${encodeURIComponent(attachmentId)}?inboxId=${encodeURIComponent(resolvedInboxId)}`
+                              const href = buildAttachmentDownloadUrl(messageId || '', attachmentId, resolvedInboxId)
                               return (
                                 <a key={attachmentId || index} href={href} target="_blank" rel="noreferrer" className="truncate rounded-md border border-neutral-200 bg-white px-2.5 py-2 text-xs text-blue-700 hover:bg-blue-50">
                                   {att?.filename || `attachment-${index + 1}`} ({Math.ceil(Number(att?.size || 0) / 1024)} KB)
