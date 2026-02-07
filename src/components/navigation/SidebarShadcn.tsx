@@ -23,7 +23,7 @@ import ShopeeIcon from "@/components/icons/ShopeeIcon"
 import ContaAzulIcon from "@/components/icons/ContaAzulIcon"
 
 import { NavMainSimple } from "@/components/navigation/nav-main-simple"
-import { NavModulos } from "@/components/navigation/nav-modulos"
+import { NavErp } from "@/components/navigation/nav-erp"
 import { NavUser } from "@/components/nav-user"
 import { TeamSwitcher } from "@/components/team-switcher"
 import {
@@ -286,7 +286,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
           </button>
         </div>
         <NavMainSimple items={dataWithActiveState.navMain} groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} iconSizePx={finalIconSizePx} />
-        <NavModulos groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} />
+          <NavErp groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} />
 
         <SidebarGroup>
           <SidebarGroupLabel style={finalSectionTitleStyle}>Integrações</SidebarGroupLabel>

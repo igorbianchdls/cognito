@@ -1,8 +1,8 @@
 import { useMemo, useState, useEffect } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
-import EntityDisplay from '@/components/modulos/EntityDisplay';
-import StatusBadge from '@/components/modulos/StatusBadge';
+import EntityDisplay from '@/features/erp/frontend/components/EntityDisplay';
+import StatusBadge from '@/features/erp/frontend/components/StatusBadge';
 import { Receipt } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 

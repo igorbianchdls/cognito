@@ -4,18 +4,28 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: '/modulos',
+        destination: '/erp',
+        permanent: false,
+      },
+      {
+        source: '/modulos/:path*',
+        destination: '/erp/:path*',
+        permanent: false,
+      },
+      {
         source: '/Relatórios',
-        destination: '/modulos/relatorios',
+        destination: '/erp',
         permanent: false,
       },
       {
         source: '/relatórios',
-        destination: '/modulos/relatorios',
+        destination: '/erp',
         permanent: false,
       },
       {
         source: '/relatorios',
-        destination: '/modulos/relatorios',
+        destination: '/erp',
         permanent: false,
       },
     ]

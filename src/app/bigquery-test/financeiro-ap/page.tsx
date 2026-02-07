@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import CadastroContaAPagarSheet from '@/components/modulos/financeiro/CadastroContaAPagarSheet'
-import CadastroContaAReceberSheet from '@/components/modulos/financeiro/CadastroContaAReceberSheet'
-import CadastroPagamentoEfetuadoSheet from '@/components/modulos/financeiro/CadastroPagamentoEfetuadoSheet'
-import CadastroPagamentoRecebidoSheet from '@/components/modulos/financeiro/CadastroPagamentoRecebidoSheet'
+import CadastroContaAPagarSheet from '@/features/erp/frontend/components/financeiro/CadastroContaAPagarSheet'
+import CadastroContaAReceberSheet from '@/features/erp/frontend/components/financeiro/CadastroContaAReceberSheet'
+import CadastroPagamentoEfetuadoSheet from '@/features/erp/frontend/components/financeiro/CadastroPagamentoEfetuadoSheet'
+import CadastroPagamentoRecebidoSheet from '@/features/erp/frontend/components/financeiro/CadastroPagamentoRecebidoSheet'
 
 type Row = Record<string, unknown>
 

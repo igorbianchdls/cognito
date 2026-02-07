@@ -129,7 +129,7 @@ export const gerarDRE = tool({
         byGroup[r.grupo!][r.periodo_key!] = Number(r.valor || 0);
       }
 
-      // Monta árvore como em /modulos/contabilidade/route.ts
+      // Monta árvore como em /erp/contabilidade/route.ts
       const node = (id: string, name: string, key: string) => ({ id, name, valuesByPeriod: byGroup[key] || {} });
       const nodes = [
         {

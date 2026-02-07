@@ -374,7 +374,7 @@ export default function BigQueryTestNovaCompraPage() {
               {isSaving ? 'Salvando…' : 'Salvar Compra'}
             </Button>
             <Button variant="ghost" asChild>
-              <a href="/modulos/compras?tab=compras">Ver Compras</a>
+              <a href="/erp/compras?tab=compras">Ver Compras</a>
             </Button>
           </div>
         </Card>
@@ -440,7 +440,7 @@ export default function BigQueryTestNovaCompraPage() {
               {isSavingVenda ? 'Salvando…' : 'Salvar Venda'}
             </Button>
             <Button variant="ghost" asChild>
-              <a href="/modulos/vendas?tab=pedidos">Ver Vendas</a>
+              <a href="/erp/vendas?tab=pedidos">Ver Vendas</a>
             </Button>
           </div>
         </Card>

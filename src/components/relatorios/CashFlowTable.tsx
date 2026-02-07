@@ -5,7 +5,7 @@ import { ChevronRight, ChevronDown } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useStore } from '@nanostores/react'
 import { $reportsCommands } from '@/stores/reportsUiStore'
-import { $tabs } from '@/stores/modulos/financeiroUiStore'
+import { $tabs } from '@/features/erp/state/financeiroUiStore'
 
 type Node = { id: string; name: string; valuesByPeriod?: Record<string, number>; children?: Node[] }
 

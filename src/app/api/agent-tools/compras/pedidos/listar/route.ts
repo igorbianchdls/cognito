@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
       return Response.json({ ok: false, error: 'unauthorized' }, { status: 401 })
     }
 
-    // Inputs (alinhados à aba /modulos/compras, view=compras)
+    // Inputs (alinhados à aba /erp/compras, view=compras)
     const de = typeof payload.de === 'string' ? payload.de : undefined
     const ate = typeof payload.ate === 'string' ? payload.ate : undefined
     const status = typeof payload.status === 'string' ? payload.status : undefined

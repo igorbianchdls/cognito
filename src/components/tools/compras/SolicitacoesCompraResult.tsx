@@ -1,7 +1,7 @@
 'use client'
 
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable'
-import StatusBadge from '@/components/modulos/StatusBadge'
+import StatusBadge from '@/features/erp/frontend/components/StatusBadge'
 import { ColumnDef } from '@tanstack/react-table'
 import { FilePlus2 } from 'lucide-react'
 import { useMemo } from 'react'
