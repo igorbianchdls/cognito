@@ -1,7 +1,7 @@
 "use client"
 
 import { createClient } from '@/lib/supabase/client'
-import type { DriveItem } from '@/components/drive/types'
+import type { DriveItem } from '@/features/drive/shared/types'
 
 type PrepareUploadResponse = {
   success?: boolean

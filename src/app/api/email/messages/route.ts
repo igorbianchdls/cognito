@@ -1,48 +1,9 @@
 import type { NextRequest } from 'next/server'
+import { getAgentMailClient } from '@/features/email/backend/integrations/agentmailClient'
+import { parseAddressList, parseBoolean, splitCsv } from '@/features/email/backend/shared/parsers'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
-
-async function getClient() {
-  const apiKey = process.env.AGENTMAIL_API_KEY
-  if (!apiKey) throw new Error('AGENTMAIL_API_KEY not configured')
-  let AgentMailClient: any
-  try {
-    const mod: any = await import('agentmail')
-    AgentMailClient = mod.AgentMailClient || mod.default || mod
-  } catch {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    AgentMailClient = require('agentmail').AgentMailClient
-  }
-  return new AgentMailClient({ apiKey })
-}
-
-function splitCsv(value: string | null | undefined): string[] | undefined {
-  if (!value) return undefined
-  const list = value
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean)
-  return list.length > 0 ? list : undefined
-}
-
-function parseAddressList(value: unknown): string[] | undefined {
-  if (Array.isArray(value)) {
-    const list = value.map((v) => String(v || '').trim()).filter(Boolean)
-    return list.length > 0 ? list : undefined
-  }
-  if (typeof value === 'string') {
-    return splitCsv(value)
-  }
-  return undefined
-}
-
-function parseBoolean(value: string | null): boolean | undefined {
-  if (value == null) return undefined
-  if (value === 'true') return true
-  if (value === 'false') return false
-  return undefined
-}
 
 export async function GET(req: NextRequest) {
   try {
@@ -57,7 +18,7 @@ export async function GET(req: NextRequest) {
     const ascending = parseBoolean(searchParams.get('ascending'))
     const includeSpam = parseBoolean(searchParams.get('includeSpam'))
 
-    const client = await getClient()
+    const client = await getAgentMailClient()
     const opts: any = { limit, pageToken, labels, before, after, ascending, includeSpam }
     const data = await client.inboxes.messages.list(inboxId, opts)
     return Response.json({ ok: true, data })
@@ -98,7 +59,7 @@ export async function POST(req: NextRequest) {
       return Response.json({ ok: false, error: 'Missing to' }, { status: 400 })
     }
 
-    const client = await getClient()
+    const client = await getAgentMailClient()
     const sent = await client.inboxes.messages.send(inboxId, {
       to,
       cc,

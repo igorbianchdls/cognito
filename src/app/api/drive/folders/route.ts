@@ -1,5 +1,5 @@
 import { runQuery } from '@/lib/postgres'
-import { getWorkspaceOwnerId, parseUuid } from '../_lib'
+import { getWorkspaceOwnerId, parseUuid } from '@/features/drive/backend/lib'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'

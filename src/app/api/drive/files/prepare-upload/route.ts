@@ -5,7 +5,7 @@ import {
   getWorkspaceOwnerId,
   parseUuid,
   sanitizeDriveFileName,
-} from '../../_lib'
+} from '@/features/drive/backend/lib'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'

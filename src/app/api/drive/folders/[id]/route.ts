@@ -5,7 +5,7 @@ import {
   getSupabaseAdmin,
   listFilesByFolder,
   parseUuid,
-} from '../../_lib'
+} from '@/features/drive/backend/lib'
 import { runQuery } from '@/lib/postgres'
 
 export const maxDuration = 300

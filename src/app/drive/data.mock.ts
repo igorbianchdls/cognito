@@ -1,4 +1,4 @@
-import type { DriveItem } from '@/components/drive/types'
+import type { DriveItem } from '@/features/drive/shared/types'
 
 export type DriveFolder = {
   id: string

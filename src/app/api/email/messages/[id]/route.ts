@@ -1,41 +1,9 @@
 import type { NextRequest } from 'next/server'
+import { getAgentMailClient } from '@/features/email/backend/integrations/agentmailClient'
+import { parseAddressList } from '@/features/email/backend/shared/parsers'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
-
-async function getClient() {
-  const apiKey = process.env.AGENTMAIL_API_KEY
-  if (!apiKey) throw new Error('AGENTMAIL_API_KEY not configured')
-  let AgentMailClient: any
-  try {
-    const mod: any = await import('agentmail')
-    AgentMailClient = mod.AgentMailClient || mod.default || mod
-  } catch {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    AgentMailClient = require('agentmail').AgentMailClient
-  }
-  return new AgentMailClient({ apiKey })
-}
-
-function splitCsv(value: string | null | undefined): string[] | undefined {
-  if (!value) return undefined
-  const list = value
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean)
-  return list.length > 0 ? list : undefined
-}
-
-function parseAddressList(value: unknown): string[] | undefined {
-  if (Array.isArray(value)) {
-    const list = value.map((v) => String(v || '').trim()).filter(Boolean)
-    return list.length > 0 ? list : undefined
-  }
-  if (typeof value === 'string') {
-    return splitCsv(value)
-  }
-  return undefined
-}
 
 export async function GET(req: NextRequest, context: any) {
   try {
@@ -46,7 +14,7 @@ export async function GET(req: NextRequest, context: any) {
     const { searchParams } = new URL(req.url)
     const inboxId = searchParams.get('inboxId') || undefined
 
-    const client = await getClient()
+    const client = await getAgentMailClient()
     let data: any
     // Try common SDK signatures
     try {
@@ -84,7 +52,7 @@ export async function POST(req: NextRequest, context: any) {
     if (!inboxId) return Response.json({ ok: false, error: 'Missing inboxId' }, { status: 400 })
     if (!action) return Response.json({ ok: false, error: 'Missing action' }, { status: 400 })
 
-    const client = await getClient()
+    const client = await getAgentMailClient()
 
     if (action === 'reply' || action === 'replyAll') {
       const to = parseAddressList(body?.to)
@@ -168,7 +136,7 @@ export async function DELETE(req: NextRequest, context: any) {
     if (!inboxId) return Response.json({ ok: false, error: 'Missing inboxId' }, { status: 400 })
     const mode = (searchParams.get('mode') || 'trash').trim().toLowerCase()
 
-    const client = await getClient()
+    const client = await getAgentMailClient()
     let data: any = null
     let strategy = ''
     let lastError: any = null
