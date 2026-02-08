@@ -4,7 +4,7 @@ import * as React from "react"
 import { useEffect, useState } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn";
-import PageContainer from "@/components/chat/PageContainer";
+import PageContainer from "@/components/layout/PageContainer";
 import { IntegrationCard } from "@/components/navigation/integrations/IntegrationCard"
 import type { Integration } from "@/components/navigation/integrations/IntegrationCard"
 import { Icon, addCollection } from '@iconify/react'

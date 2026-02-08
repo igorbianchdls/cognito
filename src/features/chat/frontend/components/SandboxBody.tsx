@@ -1,9 +1,9 @@
 "use client";
 
 import React from 'react';
-import FileExplorer from '../file-explorer/FileExplorer';
+import FileExplorer from '@/components/file-explorer/FileExplorer';
 import { useStore } from '@nanostores/react';
-import { $sandboxActiveTab } from '@/stores/chat/sandboxStore';
+import { $sandboxActiveTab } from '@/features/chat/state/sandboxStore';
 import JsonRenderPreview from './json-render/JsonRenderPreview';
 import DashboardPicker from './json-render/DashboardPicker';
 

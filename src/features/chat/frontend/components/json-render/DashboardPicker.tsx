@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useStore } from '@nanostores/react';
-import { $previewJsonrPath, sandboxActions } from '@/stores/chat/sandboxStore';
+import { $previewJsonrPath, sandboxActions } from '@/features/chat/state/sandboxStore';
 
 type Props = { chatId?: string };
 
@@ -79,4 +79,3 @@ export default function DashboardPicker({ chatId }: Props) {
     </div>
   );
 }
-

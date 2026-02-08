@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn";
-import PageContainer from "@/components/chat/PageContainer";
+import PageContainer from "@/components/layout/PageContainer";
 
 type FsEntry = { name: string; type: 'dir'|'file' };
 
