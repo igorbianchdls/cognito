@@ -15,6 +15,56 @@ const SESSIONS = new Map<string, ChatSession>()
 const OPENAI_SANDBOXES = new Map<string, { sandbox: Sandbox; createdAt: number; lastUsedAt: number }>()
 const genId = () => Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
 
+function inferProviderFromModel(model?: string): ChatProvider {
+  const raw = (model || '').toString().trim().toLowerCase()
+  if (!raw) return 'claude-agent'
+  if (raw.startsWith('gpt-') || raw.startsWith('o1') || raw.startsWith('o3') || raw.startsWith('o4')) return 'openai-responses'
+  if (raw.includes('gpt') || raw.includes('openai')) return 'openai-responses'
+  return 'claude-agent'
+}
+
+function normalizeProvider(rawProvider?: string, rawModel?: string): ChatProvider {
+  const p = (rawProvider || '').toString().trim().toLowerCase()
+  if (p === 'openai' || p === 'openai-responses' || p === 'responses') return 'openai-responses'
+  if (p === 'claude' || p === 'claude-agent' || p === 'anthropic') return 'claude-agent'
+  return inferProviderFromModel(rawModel)
+}
+
+function normalizeModel(provider: ChatProvider, rawModel?: string): string {
+  const raw = (rawModel || '').toString().trim().toLowerCase()
+  if (provider === 'openai-responses') {
+    const openaiMap: Record<string, string> = {
+      'gpt-5-mini': 'gpt-5-mini',
+      'gpt5-mini': 'gpt-5-mini',
+      'gpt5mini': 'gpt-5-mini',
+    }
+    return openaiMap[raw] || 'gpt-5-mini'
+  }
+  const claudeMap: Record<string, string> = {
+    'sonnet': 'claude-sonnet-4-5-20251001',
+    'sonnet-4.5': 'claude-sonnet-4-5-20251001',
+    'claude-sonnet-4-5-20251001': 'claude-sonnet-4-5-20251001',
+    'haiku': 'claude-haiku-4-5-20251001',
+    'haiku-4.5': 'claude-haiku-4-5-20251001',
+    'claude-haiku-4-5-20251001': 'claude-haiku-4-5-20251001',
+  }
+  return claudeMap[raw] || 'claude-haiku-4-5-20251001'
+}
+
+async function getOrCreateOpenAiSandbox(chatId: string): Promise<Sandbox> {
+  const existing = OPENAI_SANDBOXES.get(chatId)
+  if (existing) {
+    existing.lastUsedAt = Date.now()
+    return existing.sandbox
+  }
+  const sandbox = await Sandbox.create({ runtime: 'node22', resources: { vcpus: 2 }, timeout: 600_000 })
+  try {
+    await sandbox.runCommand({ cmd: 'node', args: ['-e', "require('fs').mkdirSync('/vercel/sandbox/openai-chat',{recursive:true});console.log('ok')"] })
+  } catch {}
+  OPENAI_SANDBOXES.set(chatId, { sandbox, createdAt: Date.now(), lastUsedAt: Date.now() })
+  return sandbox
+}
+
 export async function POST(req: Request) {
   const enc = new TextEncoder()
   const { action, ...payload } = await req.json().catch(() => ({})) as any
@@ -35,56 +85,6 @@ export async function POST(req: Request) {
   if (action === 'chat-snapshot') return chatSnapshot(payload as { chatId?: string })
 
   return Response.json({ ok: false, error: `ação desconhecida: ${action}` }, { status: 400 })
-
-  function inferProviderFromModel(model?: string): ChatProvider {
-    const raw = (model || '').toString().trim().toLowerCase()
-    if (!raw) return 'claude-agent'
-    if (raw.startsWith('gpt-') || raw.startsWith('o1') || raw.startsWith('o3') || raw.startsWith('o4')) return 'openai-responses'
-    if (raw.includes('gpt') || raw.includes('openai')) return 'openai-responses'
-    return 'claude-agent'
-  }
-
-  function normalizeProvider(rawProvider?: string, rawModel?: string): ChatProvider {
-    const p = (rawProvider || '').toString().trim().toLowerCase()
-    if (p === 'openai' || p === 'openai-responses' || p === 'responses') return 'openai-responses'
-    if (p === 'claude' || p === 'claude-agent' || p === 'anthropic') return 'claude-agent'
-    return inferProviderFromModel(rawModel)
-  }
-
-  function normalizeModel(provider: ChatProvider, rawModel?: string): string {
-    const raw = (rawModel || '').toString().trim().toLowerCase()
-    if (provider === 'openai-responses') {
-      const openaiMap: Record<string, string> = {
-        'gpt-5-mini': 'gpt-5-mini',
-        'gpt5-mini': 'gpt-5-mini',
-        'gpt5mini': 'gpt-5-mini',
-      }
-      return openaiMap[raw] || 'gpt-5-mini'
-    }
-    const claudeMap: Record<string, string> = {
-      'sonnet': 'claude-sonnet-4-5-20251001',
-      'sonnet-4.5': 'claude-sonnet-4-5-20251001',
-      'claude-sonnet-4-5-20251001': 'claude-sonnet-4-5-20251001',
-      'haiku': 'claude-haiku-4-5-20251001',
-      'haiku-4.5': 'claude-haiku-4-5-20251001',
-      'claude-haiku-4-5-20251001': 'claude-haiku-4-5-20251001',
-    }
-    return claudeMap[raw] || 'claude-haiku-4-5-20251001'
-  }
-
-  async function getOrCreateOpenAiSandbox(chatId: string): Promise<Sandbox> {
-    const existing = OPENAI_SANDBOXES.get(chatId)
-    if (existing) {
-      existing.lastUsedAt = Date.now()
-      return existing.sandbox
-    }
-    const sandbox = await Sandbox.create({ runtime: 'node22', resources: { vcpus: 2 }, timeout: 600_000 })
-    try {
-      await sandbox.runCommand({ cmd: 'node', args: ['-e', "require('fs').mkdirSync('/vercel/sandbox/openai-chat',{recursive:true});console.log('ok')"] })
-    } catch {}
-    OPENAI_SANDBOXES.set(chatId, { sandbox, createdAt: Date.now(), lastUsedAt: Date.now() })
-    return sandbox
-  }
 
   async function chatStart(params?: { chatId?: string }) {
     let sandbox: Sandbox | undefined
