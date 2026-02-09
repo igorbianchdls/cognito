@@ -4,7 +4,7 @@ export const runtime = 'nodejs'
 export const maxDuration = 300
 
 type CodexSomeRequestBody = {
-  action?: 'start' | 'send' | 'stop'
+  action?: 'start' | 'send' | 'send-stream' | 'stop'
   sessionId?: string | null
   message?: string
   threadId?: string | null
@@ -129,6 +129,329 @@ async function getOrCreateSession(sessionId: string | null) {
   return { session: created.session, created: true, timeline: created.timeline }
 }
 
+function buildStreamRunnerScript() {
+  return `
+import { promises as fs } from 'node:fs';
+import { Codex } from '@openai/codex-sdk';
+
+const ROOT = '/vercel/sandbox/codex-some';
+const WORKDIR = '/vercel/sandbox/codex-some/workspace';
+const CODEX_HOME = '/tmp/.codex';
+const REQUEST_PATH = ROOT + '/request.json';
+
+await fs.mkdir(ROOT, { recursive: true });
+await fs.mkdir(WORKDIR, { recursive: true });
+await fs.mkdir(CODEX_HOME, { recursive: true });
+
+const payload = JSON.parse(await fs.readFile(REQUEST_PATH, 'utf8'));
+const apiKey = process.env.CODEX_API_KEY || '';
+if (!apiKey) {
+  console.log(JSON.stringify({ type: 'error', error: 'CODEX_API_KEY ausente na sandbox.' }));
+  process.exit(2);
+}
+
+const env = { ...process.env, HOME: '/tmp', CODEX_HOME };
+const codex = new Codex({ apiKey, env });
+const threadOptions = {
+  workingDirectory: WORKDIR,
+  skipGitRepoCheck: true,
+  sandboxMode: 'read-only',
+};
+if (payload.model) threadOptions.model = payload.model;
+
+const thread = payload.threadId
+  ? codex.resumeThread(payload.threadId, threadOptions)
+  : codex.startThread(threadOptions);
+
+const { events } = await thread.runStreamed(payload.message || '');
+
+const agentBuffers = {};
+const reasoningBuffers = {};
+let finalText = '';
+let finalUsage = null;
+
+for await (const ev of events) {
+  if (ev.type === 'thread.started') {
+    console.log(JSON.stringify({ type: 'thread_started', threadId: ev.thread_id || null }));
+    continue;
+  }
+
+  if (ev.type === 'item.started' || ev.type === 'item.updated' || ev.type === 'item.completed') {
+    const item = ev.item;
+    if (!item) continue;
+
+    if (item.type === 'agent_message') {
+      const id = item.id || 'agent';
+      const current = String(item.text || '');
+      const prev = String(agentBuffers[id] || '');
+      let chunk = '';
+      if (current.startsWith(prev)) chunk = current.slice(prev.length);
+      else if (current !== prev) chunk = current;
+      agentBuffers[id] = current;
+      if (chunk) console.log(JSON.stringify({ type: 'delta', text: chunk, full: current }));
+      finalText = current;
+      continue;
+    }
+
+    if (item.type === 'reasoning') {
+      const id = item.id || 'reasoning';
+      const current = String(item.text || '');
+      const prev = String(reasoningBuffers[id] || '');
+      let chunk = '';
+      if (current.startsWith(prev)) chunk = current.slice(prev.length);
+      else if (current !== prev) chunk = current;
+      reasoningBuffers[id] = current;
+      if (chunk) console.log(JSON.stringify({ type: 'reasoning_delta', text: chunk, full: current }));
+      continue;
+    }
+  }
+
+  if (ev.type === 'turn.completed') {
+    finalUsage = ev.usage ?? null;
+    console.log(JSON.stringify({ type: 'usage', usage: finalUsage }));
+    continue;
+  }
+
+  if (ev.type === 'turn.failed') {
+    console.log(JSON.stringify({ type: 'error', error: ev?.error?.message || 'turn failed' }));
+    process.exit(3);
+  }
+
+  if (ev.type === 'error') {
+    console.log(JSON.stringify({ type: 'error', error: ev.message || 'stream error' }));
+    process.exit(4);
+  }
+}
+
+console.log(JSON.stringify({
+  type: 'final',
+  threadId: thread.id || null,
+  text: finalText || '',
+  usage: finalUsage,
+}));
+`.trim()
+}
+
+function buildJsonRunnerScript() {
+  return `
+import { promises as fs } from 'node:fs';
+import { Codex } from '@openai/codex-sdk';
+
+const ROOT = '/vercel/sandbox/codex-some';
+const WORKDIR = '/vercel/sandbox/codex-some/workspace';
+const CODEX_HOME = '/tmp/.codex';
+const REQUEST_PATH = ROOT + '/request.json';
+
+await fs.mkdir(ROOT, { recursive: true });
+await fs.mkdir(WORKDIR, { recursive: true });
+await fs.mkdir(CODEX_HOME, { recursive: true });
+
+const payload = JSON.parse(await fs.readFile(REQUEST_PATH, 'utf8'));
+const apiKey = process.env.CODEX_API_KEY || '';
+if (!apiKey) {
+  console.log(JSON.stringify({ ok: false, error: 'CODEX_API_KEY ausente na sandbox.' }));
+  process.exit(2);
+}
+
+const env = { ...process.env, HOME: '/tmp', CODEX_HOME };
+const codex = new Codex({ apiKey, env });
+const threadOptions = {
+  workingDirectory: WORKDIR,
+  skipGitRepoCheck: true,
+  sandboxMode: 'read-only',
+};
+if (payload.model) threadOptions.model = payload.model;
+
+const thread = payload.threadId
+  ? codex.resumeThread(payload.threadId, threadOptions)
+  : codex.startThread(threadOptions);
+
+const turn = await thread.run(payload.message || '');
+console.log(JSON.stringify({
+  ok: true,
+  threadId: thread.id || null,
+  reply: turn.finalResponse || '',
+  itemCount: Array.isArray(turn.items) ? turn.items.length : 0,
+  usage: turn.usage ?? null,
+}));
+`.trim()
+}
+
+async function executeJsonTurn(params: {
+  sessionId: string
+  sandbox: Sandbox
+  message: string
+  threadId: string
+  model: string
+  timelineSeed: Array<{ name: string; ms: number; ok: boolean; exitCode?: number }>
+  apiKey: string
+}) {
+  const effectiveThreadId = params.threadId
+  const payload = JSON.stringify({
+    message: params.message,
+    threadId: effectiveThreadId || null,
+    model: params.model || null,
+  })
+
+  const runner = buildJsonRunnerScript()
+  await params.sandbox.writeFiles([
+    { path: '/vercel/sandbox/codex-some/request.json', content: Buffer.from(payload) },
+    { path: '/vercel/sandbox/codex-some/run.mjs', content: Buffer.from(runner) },
+  ])
+
+  const tRun = Date.now()
+  const sandboxEnv: Record<string, string> = { CODEX_API_KEY: params.apiKey }
+  const baseUrl = normalizeString(process.env.OPENAI_BASE_URL)
+  if (baseUrl) sandboxEnv.OPENAI_BASE_URL = baseUrl
+  const run = await params.sandbox.runCommand({
+    cmd: 'node',
+    args: ['codex-some/run.mjs'],
+    env: sandboxEnv,
+  })
+
+  const stdout = await run.stdout().catch(() => '')
+  const stderr = await run.stderr().catch(() => '')
+  const parsed = parseLastJsonLine(stdout)
+
+  if (run.exitCode !== 0) {
+    return json(
+      {
+        ok: false,
+        sessionId: params.sessionId,
+        error: parsed?.error || 'Falha ao executar Codex na sandbox.',
+        stdout,
+        stderr,
+        exitCode: run.exitCode,
+        timeline: [...params.timelineSeed, { name: 'run-codex', ms: Date.now() - tRun, ok: false, exitCode: run.exitCode }],
+      },
+      500
+    )
+  }
+
+  if (!parsed || parsed.ok !== true) {
+    return json(
+      {
+        ok: false,
+        sessionId: params.sessionId,
+        error: parsed?.error || 'Resposta inválida da sandbox.',
+        stdout,
+        stderr,
+        timeline: [...params.timelineSeed, { name: 'run-codex', ms: Date.now() - tRun, ok: false, exitCode: run.exitCode ?? 1 }],
+      },
+      500
+    )
+  }
+
+  return json({
+    ok: true,
+    sessionId: params.sessionId,
+    threadId: parsed.threadId || null,
+    reply: parsed.reply || '',
+    itemCount: parsed.itemCount ?? 0,
+    usage: parsed.usage ?? null,
+    timeline: [...params.timelineSeed, { name: 'run-codex', ms: Date.now() - tRun, ok: true, exitCode: run.exitCode }],
+  })
+}
+
+async function executeStreamTurn(params: {
+  sessionId: string
+  sandbox: Sandbox
+  message: string
+  threadId: string
+  model: string
+  createdSession: boolean
+  apiKey: string
+}) {
+  const enc = new TextEncoder()
+  const payload = JSON.stringify({
+    message: params.message,
+    threadId: params.threadId || null,
+    model: params.model || null,
+  })
+  const runner = buildStreamRunnerScript()
+
+  await params.sandbox.writeFiles([
+    { path: '/vercel/sandbox/codex-some/request.json', content: Buffer.from(payload) },
+    { path: '/vercel/sandbox/codex-some/run-stream.mjs', content: Buffer.from(runner) },
+  ])
+
+  const sandboxEnv: Record<string, string> = { CODEX_API_KEY: params.apiKey }
+  const baseUrl = normalizeString(process.env.OPENAI_BASE_URL)
+  if (baseUrl) sandboxEnv.OPENAI_BASE_URL = baseUrl
+
+  const stream = new ReadableStream<Uint8Array>({
+    start: async (controller) => {
+      try {
+        controller.enqueue(
+          enc.encode(
+            `event: meta\ndata: ${JSON.stringify({
+              ok: true,
+              sessionId: params.sessionId,
+              createdSession: params.createdSession,
+            })}\n\n`
+          )
+        )
+
+        const cmd: any = await (params.sandbox as any).runCommand({
+          cmd: 'node',
+          args: ['codex-some/run-stream.mjs'],
+          env: sandboxEnv,
+          detached: true,
+        })
+
+        controller.enqueue(enc.encode('event: start\ndata: ok\n\n'))
+
+        let stdoutBuf = ''
+        let stderrBuf = ''
+
+        for await (const log of cmd.logs()) {
+          const chunk = String(log.data || '')
+          if (log.stream === 'stdout') {
+            stdoutBuf += chunk
+            let idx = -1
+            while ((idx = stdoutBuf.indexOf('\n')) >= 0) {
+              const line = stdoutBuf.slice(0, idx).trim()
+              stdoutBuf = stdoutBuf.slice(idx + 1)
+              if (!line) continue
+              controller.enqueue(enc.encode(`data: ${line}\n\n`))
+            }
+          } else {
+            stderrBuf += chunk
+          }
+        }
+
+        if (stdoutBuf.trim()) {
+          controller.enqueue(enc.encode(`data: ${stdoutBuf.trim()}\n\n`))
+          stdoutBuf = ''
+        }
+
+        if (stderrBuf) {
+          controller.enqueue(enc.encode(`event: stderr\ndata: ${JSON.stringify(stderrBuf)}\n\n`))
+        }
+        controller.enqueue(enc.encode('event: end\ndata: done\n\n'))
+        controller.close()
+      } catch (error) {
+        controller.enqueue(
+          enc.encode(`event: error\ndata: ${JSON.stringify(error instanceof Error ? error.message : String(error))}\n\n`)
+        )
+        controller.close()
+      }
+    },
+    cancel: async () => {
+      // no-op
+    },
+  })
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache, no-transform',
+      Connection: 'keep-alive',
+      'X-Accel-Buffering': 'no',
+    },
+  })
+}
+
 export async function POST(req: Request) {
   await cleanupExpiredSessions()
 
@@ -144,7 +467,7 @@ export async function POST(req: Request) {
     body = {}
   }
 
-  const action = normalizeString(body.action || 'send') as 'start' | 'send' | 'stop'
+  const action = normalizeString(body.action || 'send') as 'start' | 'send' | 'send-stream' | 'stop'
   const incomingSessionId = normalizeString(body.sessionId)
 
   if (action === 'start') {
@@ -194,111 +517,26 @@ export async function POST(req: Request) {
     session.lastUsedAt = Date.now()
     const effectiveThreadId = sessionResult.created ? '' : threadId
 
-    const payload = JSON.stringify({
-      message,
-      threadId: effectiveThreadId || null,
-      model: model || null,
-    })
-
-    const runner = `
-import { promises as fs } from 'node:fs';
-import { Codex } from '@openai/codex-sdk';
-
-const ROOT = '/vercel/sandbox/codex-some';
-const WORKDIR = '/vercel/sandbox/codex-some/workspace';
-const CODEX_HOME = '/tmp/.codex';
-const REQUEST_PATH = ROOT + '/request.json';
-
-await fs.mkdir(ROOT, { recursive: true });
-await fs.mkdir(WORKDIR, { recursive: true });
-await fs.mkdir(CODEX_HOME, { recursive: true });
-
-const payload = JSON.parse(await fs.readFile(REQUEST_PATH, 'utf8'));
-const apiKey = process.env.CODEX_API_KEY || '';
-if (!apiKey) {
-  console.log(JSON.stringify({ ok: false, error: 'CODEX_API_KEY ausente na sandbox.' }));
-  process.exit(2);
-}
-
-const env = { ...process.env, HOME: '/tmp', CODEX_HOME };
-const codex = new Codex({ apiKey, env });
-const threadOptions = {
-  workingDirectory: WORKDIR,
-  skipGitRepoCheck: true,
-  sandboxMode: 'read-only',
-};
-if (payload.model) threadOptions.model = payload.model;
-
-const thread = payload.threadId
-  ? codex.resumeThread(payload.threadId, threadOptions)
-  : codex.startThread(threadOptions);
-
-const turn = await thread.run(payload.message || '');
-console.log(JSON.stringify({
-  ok: true,
-  threadId: thread.id || null,
-  reply: turn.finalResponse || '',
-  itemCount: Array.isArray(turn.items) ? turn.items.length : 0,
-  usage: turn.usage ?? null,
-}));
-`.trim()
-
-    await session.sandbox.writeFiles([
-      { path: '/vercel/sandbox/codex-some/request.json', content: Buffer.from(payload) },
-      { path: '/vercel/sandbox/codex-some/run.mjs', content: Buffer.from(runner) },
-    ])
-
-    const tRun = Date.now()
-    const sandboxEnv: Record<string, string> = { CODEX_API_KEY: apiKey }
-    const baseUrl = normalizeString(process.env.OPENAI_BASE_URL)
-    if (baseUrl) sandboxEnv.OPENAI_BASE_URL = baseUrl
-    const run = await session.sandbox.runCommand({
-      cmd: 'node',
-      args: ['codex-some/run.mjs'],
-      env: sandboxEnv,
-    })
-    const stdout = await run.stdout().catch(() => '')
-    const stderr = await run.stderr().catch(() => '')
-    const parsed = parseLastJsonLine(stdout)
-
-    if (run.exitCode !== 0) {
-      return json(
-        {
-          ok: false,
-          sessionId: session.id,
-          error: parsed?.error || 'Falha ao executar Codex na sandbox.',
-          stdout,
-          stderr,
-          exitCode: run.exitCode,
-          timeline: [...sessionResult.timeline, { name: 'run-codex', ms: Date.now() - tRun, ok: false, exitCode: run.exitCode }],
-        },
-        500
-      )
+    if (action === 'send-stream') {
+      return await executeStreamTurn({
+        sessionId: session.id,
+        sandbox: session.sandbox,
+        message,
+        threadId: effectiveThreadId,
+        model,
+        createdSession: sessionResult.created,
+        apiKey,
+      })
     }
 
-    if (!parsed || parsed.ok !== true) {
-      return json(
-        {
-          ok: false,
-          sessionId: session.id,
-          error: parsed?.error || 'Resposta inválida da sandbox.',
-          stdout,
-          stderr,
-          timeline: [...sessionResult.timeline, { name: 'run-codex', ms: Date.now() - tRun, ok: false, exitCode: run.exitCode ?? 1 }],
-        },
-        500
-      )
-    }
-
-    return json({
-      ok: true,
+    return await executeJsonTurn({
       sessionId: session.id,
-      threadId: parsed.threadId || null,
-      reply: parsed.reply || '',
-      itemCount: parsed.itemCount ?? 0,
-      usage: parsed.usage ?? null,
-      createdSession: sessionResult.created,
-      timeline: [...sessionResult.timeline, { name: 'run-codex', ms: Date.now() - tRun, ok: true, exitCode: run.exitCode }],
+      sandbox: session.sandbox,
+      message,
+      threadId: effectiveThreadId,
+      model,
+      timelineSeed: sessionResult.timeline,
+      apiKey,
     })
   } catch (error) {
     const messageText = error instanceof Error ? error.message : String(error)

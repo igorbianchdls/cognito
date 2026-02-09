@@ -44,6 +44,39 @@ function formatTime(value: number) {
   }
 }
 
+function parseSseChunk(chunk: string): { event: string; data: string } | null {
+  const lines = chunk.split('\n')
+  let event = 'message'
+  const dataLines: string[] = []
+  for (const line of lines) {
+    if (line.startsWith('event:')) {
+      event = line.slice('event:'.length).trim()
+      continue
+    }
+    if (line.startsWith('data:')) {
+      dataLines.push(line.slice('data:'.length).trim())
+    }
+  }
+  if (!dataLines.length) return null
+  return { event, data: dataLines.join('\n') }
+}
+
+function parseStreamError(raw: string) {
+  const text = raw.trim()
+  if (!text) return 'Erro no stream da IA'
+  try {
+    const parsed = JSON.parse(text) as unknown
+    if (typeof parsed === 'string' && parsed.trim()) return parsed.trim()
+    if (parsed && typeof parsed === 'object' && 'error' in parsed) {
+      const maybeError = (parsed as { error?: unknown }).error
+      if (typeof maybeError === 'string' && maybeError.trim()) return maybeError.trim()
+    }
+    return text
+  } catch {
+    return text
+  }
+}
+
 export default function CodexSomePage() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
@@ -51,6 +84,8 @@ export default function CodexSomePage() {
   const [threadId, setThreadId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [reasoningText, setReasoningText] = useState('')
+  const [reasoningOpen, setReasoningOpen] = useState(false)
   const feedRef = useRef<HTMLDivElement | null>(null)
 
   const canSend = input.trim().length > 0 && !loading
@@ -75,9 +110,18 @@ export default function CodexSomePage() {
       text,
       createdAt: Date.now(),
     }
-    setMessages((prev) => [...prev, userMessage])
+    const assistantId = `assistant-${Date.now() + 1}`
+    const assistantMessage: ChatMessage = {
+      id: assistantId,
+      role: 'assistant',
+      text: '',
+      createdAt: Date.now(),
+    }
+    setMessages((prev) => [...prev, userMessage, assistantMessage])
     setInput('')
     setError(null)
+    setReasoningText('')
+    setReasoningOpen(false)
     setLoading(true)
 
     try {
@@ -85,36 +129,131 @@ export default function CodexSomePage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: 'send',
+          action: 'send-stream',
           sessionId,
           message: text,
           threadId,
         }),
       })
-
-      const data = (await response.json().catch(() => ({}))) as CodexSomeResponse
-      if (!response.ok || !data.ok) {
+      if (!response.ok || !response.body) {
+        const data = (await response.json().catch(() => ({}))) as CodexSomeResponse
         throw new Error(data.error || `Erro ${response.status}`)
       }
 
-      if (data.sessionId && data.sessionId.trim()) {
-        setSessionId(data.sessionId.trim())
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+      let sawDelta = false
+      let sawFinal = false
+
+      const applyAssistantChunk = (chunk: string) => {
+        if (!chunk) return
+        sawDelta = true
+        setMessages((prev) =>
+          prev.map((msg) => (msg.id === assistantId ? { ...msg, text: msg.text + chunk } : msg))
+        )
       }
 
-      if (data.threadId && data.threadId.trim()) {
-        setThreadId(data.threadId.trim())
+      const applyAssistantFull = (full: string) => {
+        setMessages((prev) =>
+          prev.map((msg) => (msg.id === assistantId ? { ...msg, text: full } : msg))
+        )
       }
 
-      const assistantMessage: ChatMessage = {
-        id: `assistant-${Date.now() + 1}`,
-        role: 'assistant',
-        text: data.reply || '(sem resposta textual)',
-        createdAt: Date.now(),
+      const consumePayload = (raw: string, eventName: string) => {
+        if (!raw) return
+        if (eventName === 'meta') {
+          try {
+            const meta = JSON.parse(raw) as { sessionId?: string }
+            if (meta.sessionId && meta.sessionId.trim()) {
+              setSessionId(meta.sessionId.trim())
+            }
+          } catch {
+            // ignore meta parse error
+          }
+          return
+        }
+        if (eventName === 'stderr') {
+          return
+        }
+        if (eventName === 'error') {
+          throw new Error(parseStreamError(raw))
+        }
+        if (eventName === 'start' || eventName === 'end') {
+          return
+        }
+
+        let evt: any = null
+        try {
+          evt = JSON.parse(raw)
+        } catch {
+          return
+        }
+        if (!evt || typeof evt !== 'object') return
+
+        if (evt.type === 'thread_started' && typeof evt.threadId === 'string' && evt.threadId.trim()) {
+          setThreadId(evt.threadId.trim())
+          return
+        }
+        if (evt.type === 'delta' && typeof evt.text === 'string') {
+          applyAssistantChunk(evt.text)
+          return
+        }
+        if (evt.type === 'reasoning_delta' && typeof evt.text === 'string') {
+          if (!evt.text) return
+          setReasoningOpen(true)
+          setReasoningText((prev) => prev + evt.text)
+          return
+        }
+        if (evt.type === 'final') {
+          sawFinal = true
+          if (typeof evt.threadId === 'string' && evt.threadId.trim()) {
+            setThreadId(evt.threadId.trim())
+          }
+          if (typeof evt.text === 'string') {
+            if (!sawDelta) applyAssistantFull(evt.text)
+            if (!evt.text.trim() && !sawDelta) applyAssistantFull('(sem resposta textual)')
+          }
+          return
+        }
+        if (evt.type === 'error') {
+          throw new Error(typeof evt.error === 'string' ? evt.error : 'Erro no stream da IA')
+        }
       }
-      setMessages((prev) => [...prev, assistantMessage])
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true }).replace(/\r/g, '')
+
+        let idx = -1
+        while ((idx = buffer.indexOf('\n\n')) >= 0) {
+          const rawChunk = buffer.slice(0, idx)
+          buffer = buffer.slice(idx + 2)
+          const parsed = parseSseChunk(rawChunk)
+          if (!parsed) continue
+          consumePayload(parsed.data, parsed.event)
+        }
+      }
+
+      if (buffer.trim()) {
+        const parsed = parseSseChunk(buffer)
+        if (parsed) consumePayload(parsed.data, parsed.event)
+      }
+
+      if (!sawDelta && !sawFinal) {
+        applyAssistantFull('(sem resposta textual)')
+      }
     } catch (err) {
       const messageText = err instanceof Error ? err.message : String(err)
       setError(messageText)
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantId && !msg.text.trim()
+            ? { ...msg, text: 'Erro ao receber resposta da IA.' }
+            : msg
+        )
+      )
     } finally {
       setLoading(false)
     }
@@ -177,6 +316,14 @@ export default function CodexSomePage() {
               >
                 Novo chat
               </button>
+              <button
+                type="button"
+                onClick={() => setReasoningOpen((prev) => !prev)}
+                disabled={!reasoningText}
+                className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              >
+                {reasoningOpen ? 'Ocultar thinking' : 'Mostrar thinking'}
+              </button>
             </div>
           </div>
           <div className="mt-2 grid gap-1 text-[11px] text-slate-500 md:grid-cols-2">
@@ -192,6 +339,12 @@ export default function CodexSomePage() {
           {error && (
             <div className="mt-2 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
               {error}
+            </div>
+          )}
+          {reasoningOpen && (
+            <div className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              <div className="mb-1 font-semibold">Thinking</div>
+              <div className="whitespace-pre-wrap break-words">{reasoningText || 'Sem reasoning desta resposta.'}</div>
             </div>
           )}
         </header>
