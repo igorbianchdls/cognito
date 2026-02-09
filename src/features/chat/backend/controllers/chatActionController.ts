@@ -1,16 +1,18 @@
 import { Sandbox } from '@vercel/sandbox'
 import { runQuery } from '@/lib/postgres'
 import { createClient as createSupabaseServerClient } from '@/lib/supabase/server'
-import { getChatStreamRunnerScript, getSlashStreamRunnerScript } from '@/features/chat/backend/runtime/runners/agentRunnerScripts'
+import { getChatStreamRunnerScript, getOpenAIResponsesStreamRunnerScript, getSlashStreamRunnerScript } from '@/features/chat/backend/runtime/runners/agentRunnerScripts'
 import { generateAgentToken, setAgentToken } from '@/features/chat/backend/auth/agentTokenStore'
 
 export const runtime = 'nodejs'
 
 type Msg = { role: 'user'|'assistant'; content: string }
+type ChatProvider = 'claude-agent' | 'openai-responses'
 
 // Simple in-memory session store
-type ChatSession = { id: string; sandbox: Sandbox; createdAt: number; lastUsedAt: number; agentToken?: string; agentTokenExp?: number; composioEnabled?: boolean; model?: string; composioUserId?: string }
+type ChatSession = { id: string; sandbox: Sandbox; createdAt: number; lastUsedAt: number; agentToken?: string; agentTokenExp?: number; composioEnabled?: boolean; model?: string; composioUserId?: string; provider?: ChatProvider }
 const SESSIONS = new Map<string, ChatSession>()
+const OPENAI_SANDBOXES = new Map<string, { sandbox: Sandbox; createdAt: number; lastUsedAt: number }>()
 const genId = () => Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
 
 export async function POST(req: Request) {
@@ -29,10 +31,60 @@ export async function POST(req: Request) {
   if (action === 'fs-read') return fsRead(payload as { chatId?: string; path?: string })
   if (action === 'fs-write') return fsWrite(payload as { chatId?: string; path?: string; content?: string })
   if (action === 'mcp-toggle') return mcpToggle(payload as { chatId?: string; enabled?: boolean })
-  if (action === 'model-set') return modelSet(payload as { chatId?: string; model?: string })
+  if (action === 'model-set') return modelSet(payload as { chatId?: string; model?: string; provider?: string })
   if (action === 'chat-snapshot') return chatSnapshot(payload as { chatId?: string })
 
   return Response.json({ ok: false, error: `ação desconhecida: ${action}` }, { status: 400 })
+
+  function inferProviderFromModel(model?: string): ChatProvider {
+    const raw = (model || '').toString().trim().toLowerCase()
+    if (!raw) return 'claude-agent'
+    if (raw.startsWith('gpt-') || raw.startsWith('o1') || raw.startsWith('o3') || raw.startsWith('o4')) return 'openai-responses'
+    if (raw.includes('gpt') || raw.includes('openai')) return 'openai-responses'
+    return 'claude-agent'
+  }
+
+  function normalizeProvider(rawProvider?: string, rawModel?: string): ChatProvider {
+    const p = (rawProvider || '').toString().trim().toLowerCase()
+    if (p === 'openai' || p === 'openai-responses' || p === 'responses') return 'openai-responses'
+    if (p === 'claude' || p === 'claude-agent' || p === 'anthropic') return 'claude-agent'
+    return inferProviderFromModel(rawModel)
+  }
+
+  function normalizeModel(provider: ChatProvider, rawModel?: string): string {
+    const raw = (rawModel || '').toString().trim().toLowerCase()
+    if (provider === 'openai-responses') {
+      const openaiMap: Record<string, string> = {
+        'gpt-5-mini': 'gpt-5-mini',
+        'gpt5-mini': 'gpt-5-mini',
+        'gpt5mini': 'gpt-5-mini',
+      }
+      return openaiMap[raw] || 'gpt-5-mini'
+    }
+    const claudeMap: Record<string, string> = {
+      'sonnet': 'claude-sonnet-4-5-20251001',
+      'sonnet-4.5': 'claude-sonnet-4-5-20251001',
+      'claude-sonnet-4-5-20251001': 'claude-sonnet-4-5-20251001',
+      'haiku': 'claude-haiku-4-5-20251001',
+      'haiku-4.5': 'claude-haiku-4-5-20251001',
+      'claude-haiku-4-5-20251001': 'claude-haiku-4-5-20251001',
+    }
+    return claudeMap[raw] || 'claude-haiku-4-5-20251001'
+  }
+
+  async function getOrCreateOpenAiSandbox(chatId: string): Promise<Sandbox> {
+    const existing = OPENAI_SANDBOXES.get(chatId)
+    if (existing) {
+      existing.lastUsedAt = Date.now()
+      return existing.sandbox
+    }
+    const sandbox = await Sandbox.create({ runtime: 'node22', resources: { vcpus: 2 }, timeout: 600_000 })
+    try {
+      await sandbox.runCommand({ cmd: 'node', args: ['-e', "require('fs').mkdirSync('/vercel/sandbox/openai-chat',{recursive:true});console.log('ok')"] })
+    } catch {}
+    OPENAI_SANDBOXES.set(chatId, { sandbox, createdAt: Date.now(), lastUsedAt: Date.now() })
+    return sandbox
+  }
 
   async function chatStart(params?: { chatId?: string }) {
     let sandbox: Sandbox | undefined
@@ -42,11 +94,13 @@ export async function POST(req: Request) {
       // Decide chat id upfront and prefer per-chat snapshot
       const proposed = (params && typeof params.chatId === 'string' && params.chatId.trim()) ? params.chatId.trim() : null
       const id = proposed || genId()
+      let existingModel = ''
 
       let usedChatSnapshot = false
       try {
-        const rows = await runQuery<{ snapshot_id: string | null }>(`SELECT snapshot_id FROM chat.chats WHERE id = $1`, [id])
+        const rows = await runQuery<{ snapshot_id: string | null; model: string | null }>(`SELECT snapshot_id, model FROM chat.chats WHERE id = $1`, [id])
         const snap = (rows && rows[0] && rows[0].snapshot_id) || null
+        existingModel = (rows && rows[0] && rows[0].model) ? String(rows[0].model).trim() : ''
         if (snap && typeof snap === 'string' && snap.trim()) {
           const tSnap = Date.now()
           try {
@@ -207,14 +261,16 @@ export async function POST(req: Request) {
       }
       // Issue short-lived agent token (opaque) and store
       const { token, exp } = generateAgentToken(1800)
-      SESSIONS.set(id, { id, sandbox, createdAt: Date.now(), lastUsedAt: Date.now(), agentToken: token, agentTokenExp: exp, composioEnabled: false, model: 'claude-haiku-4-5-20251001', composioUserId })
+      const initialProvider = normalizeProvider(undefined, existingModel)
+      const initialModel = normalizeModel(initialProvider, existingModel || (initialProvider === 'openai-responses' ? 'gpt-5-mini' : 'claude-haiku-4-5-20251001'))
+      SESSIONS.set(id, { id, sandbox, createdAt: Date.now(), lastUsedAt: Date.now(), agentToken: token, agentTokenExp: exp, composioEnabled: false, model: initialModel, composioUserId, provider: initialProvider })
       setAgentToken(id, token, exp)
       // Persist chat header (best-effort)
       const tDb = Date.now()
       try {
         await runQuery(
           'INSERT INTO chat.chats (id, model, composio_enabled) VALUES ($1, $2, $3) ON CONFLICT (id) DO NOTHING',
-          [id, 'claude-haiku-4-5-20251001', false]
+          [id, initialModel, false]
         )
         timeline.push({ name: 'db_upsert_chat', ms: Date.now() - tDb, ok: true })
       } catch (e) {
@@ -259,7 +315,9 @@ export async function POST(req: Request) {
       } catch {}
     } catch {}
     try { await sess.sandbox.stop() } catch {}
+    try { await OPENAI_SANDBOXES.get(chatId)?.sandbox.stop() } catch {}
     SESSIONS.delete(chatId)
+    OPENAI_SANDBOXES.delete(chatId)
     return Response.json({ ok: true, snapshotId })
   }
 
@@ -282,6 +340,11 @@ export async function POST(req: Request) {
         try { await runQuery('UPDATE chat.chats SET last_message_at = now(), updated_at = now() WHERE id = $1', [chatId]) } catch {}
       }
     } catch {}
+    const provider = normalizeProvider(sess.provider, sess.model)
+    sess.provider = provider
+    if (provider === 'openai-responses') {
+      return chatSendStreamOpenAi({ chatId, history, sess })
+    }
     const lines: string[] = []
     lines.push('You are Otto, an AI operations partner for the company, not only an ERP assistant.')
     lines.push('Act like a high-trust teammate: understand goals, execute with tools, surface risks, and keep answers practical and objective.')
@@ -487,6 +550,127 @@ export async function POST(req: Request) {
     return new Response(stream, { headers: { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' } })
   }
 
+  async function chatSendStreamOpenAi({ chatId, history, sess }: { chatId: string; history: Msg[]; sess: ChatSession }) {
+    const enc = new TextEncoder()
+    const apiKey = (process.env.OPENAI_API_KEY || process.env.CODEX_API_KEY || '').trim()
+    if (!apiKey) {
+      return new Response(JSON.stringify({ ok: false, error: 'OPENAI_API_KEY/CODEX_API_KEY não configurada' }), { status: 500 })
+    }
+    const lines: string[] = []
+    lines.push('You are Otto, an AI operations partner for the company.')
+    lines.push('Give concise, practical, and objective answers in Brazilian Portuguese unless the user requests another language.')
+    lines.push('Use clear next steps and avoid inventing facts or capabilities.')
+    lines.push('')
+    lines.push('Conversation:')
+    for (const m of history) {
+      const txt = (typeof m?.content === 'string' ? m.content : '').trim()
+      if (!txt) continue
+      lines.push(`${m.role === 'user' ? 'User' : 'Assistant'}: ${txt}`)
+    }
+    lines.push('Assistant:')
+    const prompt = lines.join('\n').slice(0, 9000)
+
+    const modelId = normalizeModel('openai-responses', sess.model)
+    sess.model = modelId
+    sess.provider = 'openai-responses'
+    sess.lastUsedAt = Date.now()
+
+    const runner = getOpenAIResponsesStreamRunnerScript()
+    const openAiSandbox = await getOrCreateOpenAiSandbox(chatId)
+    await openAiSandbox.writeFiles([{ path: '/vercel/sandbox/openai-chat/agent-openai-stream.mjs', content: Buffer.from(runner) }])
+
+    let assistantTextBuf = ''
+    const assistantParts: any[] = []
+    let textSegBuf = ''
+    let reasoningActive = false
+    let reasoningBuf = ''
+
+    const stream = new ReadableStream<Uint8Array>({
+      start: async (controller) => {
+        try {
+          const env: Record<string, string> = {
+            OPENAI_API_KEY: apiKey,
+            CODEX_API_KEY: apiKey,
+            AGENT_MODEL: modelId,
+          }
+          if ((process.env.OPENAI_BASE_URL || '').trim()) env.OPENAI_BASE_URL = (process.env.OPENAI_BASE_URL || '').trim()
+          const cmd: any = await (openAiSandbox as any).runCommand({
+            cmd: 'node',
+            args: ['openai-chat/agent-openai-stream.mjs', prompt],
+            env,
+            detached: true,
+          })
+          controller.enqueue(enc.encode('event: start\ndata: ok\n\n'))
+          let outBuf = ''; let errBuf = ''
+          for await (const log of cmd.logs()) {
+            const ch = String(log.data)
+            if (log.stream === 'stdout') {
+              outBuf += ch
+              let idx
+              while ((idx = outBuf.indexOf('\n')) >= 0) {
+                const line = outBuf.slice(0, idx).trim(); outBuf = outBuf.slice(idx + 1)
+                if (!line) continue
+                try {
+                  const evt = JSON.parse(line)
+                  if (evt && evt.type === 'delta' && typeof evt.text === 'string') {
+                    assistantTextBuf += evt.text
+                    textSegBuf += evt.text
+                  } else if (evt && evt.type === 'reasoning_start') {
+                    const seg = (textSegBuf || '').trim()
+                    if (seg) {
+                      assistantParts.push({ type: 'text', text: seg })
+                      textSegBuf = ''
+                    }
+                    reasoningActive = true
+                    reasoningBuf = ''
+                  } else if (evt && evt.type === 'reasoning_delta' && typeof evt.text === 'string') {
+                    if (reasoningActive) reasoningBuf += evt.text
+                  } else if (evt && evt.type === 'reasoning_end') {
+                    if (reasoningActive) {
+                      assistantParts.push({ type: 'reasoning', content: reasoningBuf, state: 'done' })
+                      reasoningActive = false
+                      reasoningBuf = ''
+                    }
+                  }
+                } catch {}
+                controller.enqueue(enc.encode(`data: ${line}\n\n`))
+              }
+            } else {
+              errBuf += ch
+            }
+          }
+          if (errBuf) controller.enqueue(enc.encode(`event: stderr\ndata: ${JSON.stringify(errBuf)}\n\n`))
+          try {
+            if (reasoningActive) {
+              assistantParts.push({ type: 'reasoning', content: reasoningBuf, state: 'done' })
+              reasoningActive = false
+              reasoningBuf = ''
+            }
+            const seg = (textSegBuf || '').trim()
+            if (seg) assistantParts.push({ type: 'text', text: seg })
+            if (assistantParts.length === 0) {
+              const onlyText = (assistantTextBuf || '').trim()
+              if (onlyText) assistantParts.push({ type: 'text', text: onlyText })
+            }
+            if (assistantParts.length > 0) {
+              await runQuery(
+                `INSERT INTO chat.chat_messages (chat_id, role, content, parts) VALUES ($1,'assistant','',$2)`,
+                [chatId, JSON.stringify(assistantParts)]
+              )
+            }
+            try { await runQuery('UPDATE chat.chats SET last_message_at = now(), updated_at = now() WHERE id = $1', [chatId]) } catch {}
+          } catch {}
+          controller.enqueue(enc.encode('event: end\ndata: done\n\n'))
+          controller.close()
+        } catch (e: any) {
+          controller.enqueue(enc.encode(`event: error\ndata: ${JSON.stringify(e?.message || String(e))}\n\n`))
+          controller.close()
+        }
+      }
+    })
+    return new Response(stream, { headers: { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' } })
+  }
+
   async function chatSlash({ chatId, prompt }: { chatId?: string; prompt?: string }) {
     const enc = new TextEncoder()
     if (!chatId) return new Response(JSON.stringify({ ok: false, error: 'chatId obrigatório' }), { status: 400 })
@@ -652,21 +836,18 @@ catch(e){ console.error(String(e.message||e)); process.exit(1); }
     }
   }
 
-  async function modelSet({ chatId, model }: { chatId?: string; model?: string }) {
+  async function modelSet({ chatId, model, provider }: { chatId?: string; model?: string; provider?: string }) {
     if (!chatId) return Response.json({ ok: false, error: 'chatId obrigatório' }, { status: 400 })
     const sess = SESSIONS.get(chatId)
     if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
-    const raw = (model || '').toString().trim().toLowerCase()
-    const map: Record<string, string> = {
-      'sonnet': 'claude-sonnet-4-5-20251001',
-      'sonnet-4.5': 'claude-sonnet-4-5-20251001',
-      'claude-sonnet-4-5-20251001': 'claude-sonnet-4-5-20251001',
-      'haiku': 'claude-haiku-4-5-20251001',
-      'haiku-4.5': 'claude-haiku-4-5-20251001',
-      'claude-haiku-4-5-20251001': 'claude-haiku-4-5-20251001',
-    }
-    const chosen = map[raw] || sess.model || 'claude-haiku-4-5-20251001'
+    const chosenProvider = normalizeProvider(provider, model || sess.model)
+    const fallbackModel = chosenProvider === 'openai-responses' ? 'gpt-5-mini' : 'claude-haiku-4-5-20251001'
+    const chosen = normalizeModel(chosenProvider, model || sess.model || fallbackModel)
+    sess.provider = chosenProvider
     sess.model = chosen
     sess.lastUsedAt = Date.now()
-    return Response.json({ ok: true, model: chosen })
+    try {
+      await runQuery('UPDATE chat.chats SET model = $1, updated_at = now() WHERE id = $2', [chosen, chatId])
+    } catch {}
+    return Response.json({ ok: true, model: chosen, provider: chosenProvider })
   }

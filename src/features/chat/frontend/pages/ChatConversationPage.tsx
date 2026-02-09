@@ -18,6 +18,7 @@ export default function ChatRoutePageWithId() {
   const [sandboxExpanded, setSandboxExpanded] = useState(false);
   const [chatId, setChatId] = useState<string | null>(null);
   const [prefill, setPrefill] = useState<string | undefined>(undefined);
+  const [prefillEngine, setPrefillEngine] = useState<'claude-sonnet' | 'claude-haiku' | 'openai-gpt5mini' | undefined>(undefined);
 
   useEffect(() => {
     if (!urlId) return;
@@ -27,6 +28,11 @@ export default function ChatRoutePageWithId() {
       if (raw) {
         setPrefill(raw);
         sessionStorage.removeItem(key);
+      }
+      const rawEngine = sessionStorage.getItem(`firstEngine:${urlId}`) || '';
+      if (rawEngine === 'claude-sonnet' || rawEngine === 'claude-haiku' || rawEngine === 'openai-gpt5mini') {
+        setPrefillEngine(rawEngine);
+        sessionStorage.removeItem(`firstEngine:${urlId}`);
       }
     } catch {
       // ignore storage errors
@@ -51,6 +57,7 @@ export default function ChatRoutePageWithId() {
                     autoSendPrefill={Boolean(prefill)}
                     initialChatId={urlId}
                     autoStartSandbox={auto}
+                    initialEngine={prefillEngine}
                   />
                 </div>
                 <div className={!showSandbox ? 'hidden' : 'h-full min-h-0 p-2'}>

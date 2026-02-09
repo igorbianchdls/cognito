@@ -14,9 +14,10 @@ type ChatPanelProps = {
   autoSendPrefill?: boolean;
   initialChatId?: string;
   autoStartSandbox?: boolean;
+  initialEngine?: 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5mini';
 };
 
-export default function ChatPanel({ className, style, onOpenSandbox, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, autoStartSandbox }: ChatPanelProps) {
+export default function ChatPanel({ className, style, onOpenSandbox, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, autoStartSandbox, initialEngine }: ChatPanelProps) {
   return (
     <div className={`ui-text h-full min-h-0 w-full overflow-hidden ${className ?? ''}`} style={style}>
       <ChatContainer
@@ -27,6 +28,7 @@ export default function ChatPanel({ className, style, onOpenSandbox, withSideMar
         autoSendPrefill={autoSendPrefill}
         initialChatId={initialChatId}
         autoStartSandbox={autoStartSandbox}
+        initialEngine={initialEngine}
       />
     </div>
   );

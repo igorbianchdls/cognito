@@ -456,3 +456,191 @@ for await (const msg of q) {
 }
 `.trim();
 }
+
+export function getOpenAIResponsesStreamRunnerScript(): string {
+  return `
+const prompt = process.argv[2] || '';
+const modelId = process.env.AGENT_MODEL || 'gpt-5-mini';
+const apiKey = process.env.OPENAI_API_KEY || process.env.CODEX_API_KEY || '';
+
+if (!apiKey) {
+  console.log(JSON.stringify({ type: 'error', error: 'OPENAI_API_KEY/CODEX_API_KEY ausente na sandbox.' }));
+  process.exit(2);
+}
+
+const rawBase = String(process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1').trim();
+const base = rawBase.replace(/\\/+$/, '');
+const url = base.endsWith('/responses') ? base : (base + '/responses');
+
+const body = {
+  model: modelId,
+  input: prompt,
+  stream: true,
+  reasoning: { effort: 'medium', summary: 'auto' },
+};
+
+const res = await fetch(url, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: 'Bearer ' + apiKey,
+  },
+  body: JSON.stringify(body),
+});
+
+if (!res.ok || !res.body) {
+  const text = await res.text().catch(() => '');
+  console.log(JSON.stringify({ type: 'error', error: 'Responses API ' + res.status + ': ' + text.slice(0, 1200) }));
+  process.exit(3);
+}
+
+let responseId = null;
+let assistantText = '';
+let reasoningText = '';
+let reasoningStarted = false;
+
+function emit(type, extra) {
+  console.log(JSON.stringify({ type, ...(extra || {}) }));
+}
+
+function extractText(value, depth = 0) {
+  if (typeof value === 'string') return value;
+  if (!value || typeof value !== 'object' || depth > 5) return '';
+  const obj = value;
+  const candidates = [
+    obj.delta,
+    obj.text,
+    obj.summary_text,
+    obj.output_text,
+    obj.reasoning_text,
+    obj.summary,
+    obj.content,
+    obj.message,
+    obj.value,
+    obj.part,
+  ];
+  for (const c of candidates) {
+    if (typeof c === 'string' && c) return c;
+  }
+  for (const c of candidates) {
+    if (c && typeof c === 'object') {
+      const nested = extractText(c, depth + 1);
+      if (nested) return nested;
+    }
+  }
+  if (Array.isArray(obj.content)) {
+    for (const part of obj.content) {
+      const nested = extractText(part, depth + 1);
+      if (nested) return nested;
+    }
+  }
+  if (obj.response && typeof obj.response === 'object') {
+    const nested = extractText(obj.response, depth + 1);
+    if (nested) return nested;
+  }
+  return '';
+}
+
+function appendAssistant(delta) {
+  const text = String(delta || '');
+  if (!text) return;
+  assistantText += text;
+  emit('delta', { text });
+}
+
+function appendReasoning(delta) {
+  const text = String(delta || '');
+  if (!text) return;
+  if (!reasoningStarted) {
+    reasoningStarted = true;
+    emit('reasoning_start', {});
+  }
+  reasoningText += text;
+  emit('reasoning_delta', { text });
+}
+
+function onResponseDone() {
+  if (reasoningStarted) emit('reasoning_end', {});
+  emit('final', { text: assistantText, responseId });
+}
+
+function onEvent(eventName, dataRaw) {
+  const data = String(dataRaw || '').trim();
+  if (!data || data === '[DONE]') return;
+  let ev = null;
+  try { ev = JSON.parse(data); } catch { return; }
+  if (!ev || typeof ev !== 'object') return;
+
+  const type = String(ev.type || eventName || '');
+  if (type === 'response.created') {
+    responseId = ev?.response?.id || ev?.id || responseId;
+    return;
+  }
+  if (type === 'response.output_text.delta') {
+    appendAssistant(extractText(ev.delta) || extractText(ev?.output_text?.delta) || extractText(ev));
+    return;
+  }
+  if (type === 'response.output_text.done') {
+    const doneText = extractText(ev.text) || extractText(ev.output_text) || extractText(ev);
+    if (doneText && doneText.startsWith(assistantText)) {
+      const missing = doneText.slice(assistantText.length);
+      if (missing) appendAssistant(missing);
+    }
+    return;
+  }
+  if (type === 'response.reasoning_summary_text.delta' || type === 'response.reasoning_text.delta') {
+    appendReasoning(extractText(ev.delta) || extractText(ev.reasoning) || extractText(ev));
+    return;
+  }
+  if (type === 'response.reasoning_summary_text.done' || type === 'response.reasoning_text.done') {
+    const doneText = extractText(ev.text) || extractText(ev.reasoning_text) || extractText(ev);
+    if (doneText && doneText.startsWith(reasoningText)) {
+      const missing = doneText.slice(reasoningText.length);
+      if (missing) appendReasoning(missing);
+    }
+    return;
+  }
+  if (type === 'response.completed') {
+    responseId = ev?.response?.id || ev?.id || responseId;
+    onResponseDone();
+    return;
+  }
+  if (type === 'error') {
+    emit('error', { error: ev?.error?.message || ev?.message || 'stream error' });
+    process.exit(4);
+  }
+}
+
+function parseFrame(frame) {
+  const lines = frame.split('\\n');
+  let eventName = 'message';
+  const dataLines = [];
+  for (const line of lines) {
+    if (line.startsWith('event:')) {
+      eventName = line.slice('event:'.length).trim();
+      continue;
+    }
+    if (line.startsWith('data:')) {
+      dataLines.push(line.slice('data:'.length).trim());
+    }
+  }
+  if (!dataLines.length) return;
+  onEvent(eventName, dataLines.join('\\n'));
+}
+
+const decoder = new TextDecoder();
+let buffer = '';
+for await (const chunk of res.body) {
+  buffer += decoder.decode(chunk, { stream: true }).replace(/\\r/g, '');
+  let idx = -1;
+  while ((idx = buffer.indexOf('\\n\\n')) >= 0) {
+    const frame = buffer.slice(0, idx);
+    buffer = buffer.slice(idx + 2);
+    if (!frame.trim()) continue;
+    parseFrame(frame);
+  }
+}
+buffer += decoder.decode().replace(/\\r/g, '');
+if (buffer.trim()) parseFrame(buffer);
+`.trim();
+}

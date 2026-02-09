@@ -29,11 +29,11 @@ type Props = {
   onOpenSandbox?: () => void;
   composioEnabled?: boolean;
   onToggleComposio?: () => void;
-  model?: 'sonnet' | 'haiku';
-  onModelChange?: (m: 'sonnet' | 'haiku') => void;
+  model?: 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5mini';
+  onModelChange?: (m: 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5mini') => void;
 };
 
-export default function InputArea({ value, onChange, onSubmit, status = 'idle', onOpenSandbox, composioEnabled, onToggleComposio, model = 'haiku', onModelChange }: Props) {
+export default function InputArea({ value, onChange, onSubmit, status = 'idle', onOpenSandbox, composioEnabled, onToggleComposio, model = 'claude-haiku', onModelChange }: Props) {
   // Local-only UI state for Toolkits panel (no persistence, no backend)
   const [toolkitsOpen, setToolkitsOpen] = useState(false)
   const [tkSearch, setTkSearch] = useState('')
@@ -203,13 +203,17 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
             )}
 
             {/* Model selector */}
-            <PromptInputModelSelect value={model} onValueChange={(v: any) => onModelChange?.(v === 'haiku' ? 'haiku' : 'sonnet')}>
+            <PromptInputModelSelect value={model} onValueChange={(v: any) => {
+              const next = (v === 'claude-sonnet' || v === 'claude-haiku' || v === 'openai-gpt5mini') ? v : 'claude-haiku'
+              onModelChange?.(next)
+            }}>
               <PromptInputModelSelectTrigger className="text-gray-500 hover:text-gray-800">
                 <PromptInputModelSelectValue placeholder="Modelo" />
               </PromptInputModelSelectTrigger>
               <PromptInputModelSelectContent>
-                <PromptInputModelSelectItem value="sonnet">Sonnet 4.5</PromptInputModelSelectItem>
-                <PromptInputModelSelectItem value="haiku">Haiku 4.5</PromptInputModelSelectItem>
+                <PromptInputModelSelectItem value="claude-sonnet">Claude Sonnet 4.5 (Agent SDK)</PromptInputModelSelectItem>
+                <PromptInputModelSelectItem value="claude-haiku">Claude Haiku 4.5 (Agent SDK)</PromptInputModelSelectItem>
+                <PromptInputModelSelectItem value="openai-gpt5mini">OpenAI GPT-5 mini (Responses)</PromptInputModelSelectItem>
               </PromptInputModelSelectContent>
             </PromptInputModelSelect>
           </PromptInputTools>

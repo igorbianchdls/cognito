@@ -9,14 +9,29 @@ import InputArea from './InputArea';
 import { useRouter } from 'next/navigation';
 
 type ChatStatus = 'idle' | 'submitted' | 'streaming' | 'error'
+type EngineId = 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5mini'
 
-export default function ChatContainer({ onOpenSandbox, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, autoStartSandbox }: { onOpenSandbox?: (chatId?: string) => void; withSideMargins?: boolean; redirectOnFirstMessage?: boolean; initialMessage?: string; autoSendPrefill?: boolean; initialChatId?: string; autoStartSandbox?: boolean }) {
+function engineToBackend(engine: EngineId): { provider: string; model: string } {
+  if (engine === 'claude-sonnet') return { provider: 'claude-agent', model: 'claude-sonnet-4-5-20251001' }
+  if (engine === 'openai-gpt5mini') return { provider: 'openai-responses', model: 'gpt-5-mini' }
+  return { provider: 'claude-agent', model: 'claude-haiku-4-5-20251001' }
+}
+
+function modelToEngine(modelRaw?: string): EngineId {
+  const model = (modelRaw || '').toString().trim().toLowerCase()
+  if (!model) return 'claude-haiku'
+  if (model.includes('gpt') || model.includes('openai')) return 'openai-gpt5mini'
+  if (model.includes('sonnet')) return 'claude-sonnet'
+  return 'claude-haiku'
+}
+
+export default function ChatContainer({ onOpenSandbox, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, autoStartSandbox, initialEngine }: { onOpenSandbox?: (chatId?: string) => void; withSideMargins?: boolean; redirectOnFirstMessage?: boolean; initialMessage?: string; autoSendPrefill?: boolean; initialChatId?: string; autoStartSandbox?: boolean; initialEngine?: EngineId }) {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<UIMessage[]>([])
   const [chatId, setChatId] = useState<string | null>(null)
   const [status, setStatus] = useState<ChatStatus>('idle')
   const [composioEnabled, setComposioEnabled] = useState<boolean>(false)
-  const [model, setModel] = useState<'sonnet'|'haiku'>('haiku')
+  const [model, setModel] = useState<EngineId>(initialEngine || 'claude-haiku')
   const abortRef = useRef<AbortController | null>(null)
   // Track the assistant message for the current turn, so each user message
   // gets its own assistant response instead of appending to the first one.
@@ -24,6 +39,10 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   const router = useRouter()
   const [menuBusy, setMenuBusy] = useState(false)
   const [headerTitle, setHeaderTitle] = useState<string | undefined>(undefined)
+
+  useEffect(() => {
+    if (initialEngine) setModel(initialEngine)
+  }, [initialEngine])
 
   const startSandboxFromMenu = async () => {
     setMenuBusy(true)
@@ -68,6 +87,14 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
     const data = await res.json().catch(() => ({})) as { ok?: boolean; chatId?: string; error?: string }
     if (!res.ok || data.ok === false || !data.chatId) throw new Error(data.error || 'chat-start failed')
     setChatId(data.chatId)
+    try {
+      const cfg = engineToBackend(model)
+      await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'model-set', chatId: data.chatId, provider: cfg.provider, model: cfg.model }),
+      })
+    } catch { /* ignore */ }
     return data.chatId
   }
 
@@ -81,7 +108,10 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
         const urlId = (typeof window !== 'undefined' && (window as any).crypto?.randomUUID)
           ? (window as any).crypto.randomUUID()
           : (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2))
-        try { sessionStorage.setItem(`first:${urlId}`, text) } catch {}
+        try {
+          sessionStorage.setItem(`first:${urlId}`, text)
+          sessionStorage.setItem(`firstEngine:${urlId}`, model)
+        } catch {}
         setStatus('submitted')
         setInput('')
         router.replace(`/chat/${urlId}`)
@@ -408,6 +438,8 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
         if (!cancelled && res.ok && data && data.ok && data.chat) {
           const t = (data.chat.title || '').toString()
           if (t) setHeaderTitle(t)
+          const dbModel = (data.chat.model || '').toString()
+          if (dbModel) setModel(modelToEngine(dbModel))
         }
       } catch { /* ignore */ }
     })()
@@ -467,8 +499,8 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
                     }
                     try {
                       const id = await ensureStart();
-                      const modelId = m === 'haiku' ? 'claude-haiku-4-5-20251001' : 'claude-sonnet-4-5-20251001'
-                      await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'model-set', chatId: id, model: modelId }) })
+                      const cfg = engineToBackend(m)
+                      await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'model-set', chatId: id, provider: cfg.provider, model: cfg.model }) })
                     } catch { /* ignore */ }
                   }}
                   onOpenSandbox={async () => {
@@ -518,8 +550,8 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
             }
             try {
               const id = await ensureStart();
-              const modelId = m === 'haiku' ? 'claude-haiku-4-5-20251001' : 'claude-sonnet-4-5-20251001'
-              await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'model-set', chatId: id, model: modelId }) })
+              const cfg = engineToBackend(m)
+              await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'model-set', chatId: id, provider: cfg.provider, model: cfg.model }) })
             } catch { /* ignore */ }
           }} onOpenSandbox={async () => {
             if (redirectOnFirstMessage && !chatId) { return }
