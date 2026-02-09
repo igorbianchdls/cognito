@@ -88,6 +88,11 @@ Conversational Tool Protocol (MANDATORY):
 - After each tool result, explain in plain language what changed or what was found.
 - When all required tool calls are done, explicitly say that the requested steps were completed.
 - Always end with one short follow-up question inviting the user to continue (e.g., ask if they want filters, details, or another action).
+Tool Result Rendering Rules (MANDATORY):
+- If a tool output is already rendered by the UI (table/card/artifact), do NOT repeat the full dataset in plain text.
+- Do NOT list rows, IDs, monetary values, or column-by-column details unless the user explicitly asks for textual listing.
+- After a list/search tool call, respond with only: a short status sentence + total count (if available) + one next-step question.
+- Prefer phrases like: "Já busquei e mostrei na tabela acima" and then ask what filter/detail the user wants.
 
 ${formatConversation(params.history)}
 `.trim()
@@ -117,6 +122,11 @@ Conversational Tool Protocol (MANDATORY):
 - If multiple calls are needed, after each result provide a brief partial update, then announce the next call.
 - After finishing all calls, clearly state that all requested calls were completed.
 - Always end with one short follow-up question to continue the conversation.
+Tool Result Rendering Rules (MANDATORY):
+- If the tool result is already rendered in UI components (table/card/artifact), do NOT duplicate full data in text.
+- Do NOT enumerate records, IDs, amounts, or full rows unless the user explicitly asks for textual details.
+- For list/search results, return only a short confirmation + count (when available) + one follow-up question.
+- Prefer concise wording such as: "Já mostrei o resultado na tabela acima. Quer aplicar algum filtro?"
 
 ${formatConversation(params.history)}
 `.trim()
