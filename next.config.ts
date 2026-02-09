@@ -3,10 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     '/api/bigquery-test/codex-some': [
-      './node_modules/@openai/codex-sdk/vendor/**/*',
-      './node_modules/@openai/codex-sdk/dist/**/*',
-      './node_modules/.pnpm/@openai+codex-sdk@*/node_modules/@openai/codex-sdk/vendor/**/*',
-      './node_modules/.pnpm/@openai+codex-sdk@*/node_modules/@openai/codex-sdk/dist/**/*',
+      // Keep only Linux binaries used by Vercel Node runtime.
+      './node_modules/.pnpm/@openai+codex-sdk@*/node_modules/@openai/codex-sdk/vendor/x86_64-unknown-linux-musl/codex/codex',
     ],
   },
   async redirects() {
