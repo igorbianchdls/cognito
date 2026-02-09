@@ -36,6 +36,15 @@ export default function BigQueryTestPage() {
               Abrir modelos de documentos
             </Link>
           </div>
+          <div className="rounded-xl border bg-white p-4">
+            <div className="text-sm font-medium text-gray-900 mb-2">Codex Some</div>
+            <Link
+              href="/bigquery-test/codex-some"
+              className="inline-flex rounded-md border border-gray-200 px-3 py-1.5 text-sm text-gray-800 hover:bg-gray-50"
+            >
+              Abrir chat de teste (Codex SDK)
+            </Link>
+          </div>
         </div>
       </div>
     </div>
