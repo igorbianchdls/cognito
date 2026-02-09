@@ -151,7 +151,13 @@ if (!apiKey) {
 }
 
 const env = { ...process.env, HOME: '/tmp', CODEX_HOME };
-const codex = new Codex({ apiKey, env });
+const codex = new Codex({
+  apiKey,
+  env,
+  config: {
+    show_raw_agent_reasoning: true,
+  },
+});
 const threadOptions = {
   workingDirectory: WORKDIR,
   skipGitRepoCheck: true,
@@ -170,57 +176,141 @@ const reasoningBuffers = {};
 let finalText = '';
 let finalUsage = null;
 
+function upsertFromSnapshot(store, id, current) {
+  const key = String(id || 'default');
+  const next = String(current || '');
+  const prev = String(store[key] || '');
+  let chunk = '';
+  if (next.startsWith(prev)) chunk = next.slice(prev.length);
+  else if (next !== prev) chunk = next;
+  store[key] = next;
+  return { chunk, full: next };
+}
+
+function pickString(value) {
+  if (typeof value === 'string' && value) return value;
+  if (!value || typeof value !== 'object') return '';
+  const obj = value;
+  const candidates = [
+    obj.delta,
+    obj.text,
+    obj.content_delta,
+    obj.output_text_delta,
+    obj.textDelta,
+    obj.summaryTextDelta,
+    obj.reasoning,
+    obj.value,
+    obj.chunk,
+    obj.partial,
+    obj.message,
+    obj.content,
+  ];
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string' && candidate) return candidate;
+  }
+  if (obj.delta && typeof obj.delta === 'object') {
+    const nested = pickString(obj.delta);
+    if (nested) return nested;
+  }
+  if (obj.params && typeof obj.params === 'object') {
+    const nested = pickString(obj.params);
+    if (nested) return nested;
+  }
+  return '';
+}
+
+const AGENT_DELTA_TYPES = new Set([
+  'agent_message_delta',
+  'agent_message_content_delta',
+]);
+const AGENT_DELTA_METHODS = new Set([
+  'item/agentMessage/delta',
+]);
+const AGENT_PRIMARY_ID = '__agent__';
+const REASONING_DELTA_TYPES = new Set([
+  'agent_reasoning_delta',
+  'reasoning_content_delta',
+  'reasoning_raw_content_delta',
+  'agent_reasoning_raw_content_delta',
+]);
+const REASONING_DELTA_METHODS = new Set([
+  'item/reasoning/textDelta',
+  'item/reasoning/summaryTextDelta',
+  'item/reasoning/summaryPartAdded',
+]);
+const REASONING_PRIMARY_ID = '__reasoning__';
+
 for await (const ev of events) {
-  if (ev.type === 'thread.started') {
+  const evType = String(ev?.type || '');
+  const evMethod = String(ev?.method || '');
+
+  if (evType === 'thread.started') {
     console.log(JSON.stringify({ type: 'thread_started', threadId: ev.thread_id || null }));
     continue;
   }
 
-  if (ev.type === 'item.started' || ev.type === 'item.updated' || ev.type === 'item.completed') {
+  if (AGENT_DELTA_TYPES.has(evType) || AGENT_DELTA_METHODS.has(evMethod)) {
+    const delta = pickString(ev);
+    if (!delta) continue;
+    const id = ev?.id || ev?.item_id || ev?.params?.item_id || ev?.params?.id || AGENT_PRIMARY_ID;
+    const prev = String(agentBuffers[id] || '');
+    const next = prev + delta;
+    agentBuffers[id] = next;
+    finalText = next;
+    console.log(JSON.stringify({ type: 'delta', text: delta, full: next }));
+    continue;
+  }
+
+  if (REASONING_DELTA_TYPES.has(evType) || REASONING_DELTA_METHODS.has(evMethod)) {
+    const delta = pickString(ev);
+    if (!delta) continue;
+    const id = ev?.id || ev?.item_id || ev?.params?.item_id || ev?.params?.id || REASONING_PRIMARY_ID;
+    const prev = String(reasoningBuffers[id] || '');
+    const next = prev + delta;
+    reasoningBuffers[id] = next;
+    console.log(JSON.stringify({ type: 'reasoning_delta', text: delta, full: next }));
+    continue;
+  }
+
+  if (evType === 'item.started' || evType === 'item.updated' || evType === 'item.completed') {
     const item = ev.item;
     if (!item) continue;
 
     if (item.type === 'agent_message') {
-      const id = item.id || 'agent';
-      const current = String(item.text || '');
-      const prev = String(agentBuffers[id] || '');
-      let chunk = '';
-      if (current.startsWith(prev)) chunk = current.slice(prev.length);
-      else if (current !== prev) chunk = current;
-      agentBuffers[id] = current;
-      if (chunk) console.log(JSON.stringify({ type: 'delta', text: chunk, full: current }));
-      finalText = current;
+      const result = upsertFromSnapshot(agentBuffers, AGENT_PRIMARY_ID, item.text || '');
+      if (result.chunk) console.log(JSON.stringify({ type: 'delta', text: result.chunk, full: result.full }));
+      finalText = result.full;
       continue;
     }
 
     if (item.type === 'reasoning') {
-      const id = item.id || 'reasoning';
-      const current = String(item.text || '');
-      const prev = String(reasoningBuffers[id] || '');
-      let chunk = '';
-      if (current.startsWith(prev)) chunk = current.slice(prev.length);
-      else if (current !== prev) chunk = current;
-      reasoningBuffers[id] = current;
-      if (chunk) console.log(JSON.stringify({ type: 'reasoning_delta', text: chunk, full: current }));
+      const result = upsertFromSnapshot(reasoningBuffers, REASONING_PRIMARY_ID, item.text || '');
+      if (result.chunk) console.log(JSON.stringify({ type: 'reasoning_delta', text: result.chunk, full: result.full }));
       continue;
     }
   }
 
-  if (ev.type === 'turn.completed') {
-    finalUsage = ev.usage ?? null;
+  if (evType === 'turn.completed') {
+    finalUsage = ev.usage ?? ev?.params?.usage ?? null;
     console.log(JSON.stringify({ type: 'usage', usage: finalUsage }));
     continue;
   }
 
-  if (ev.type === 'turn.failed') {
-    console.log(JSON.stringify({ type: 'error', error: ev?.error?.message || 'turn failed' }));
+  if (evType === 'turn.failed') {
+    console.log(JSON.stringify({ type: 'error', error: ev?.error?.message || ev?.params?.error?.message || 'turn failed' }));
     process.exit(3);
   }
 
-  if (ev.type === 'error') {
-    console.log(JSON.stringify({ type: 'error', error: ev.message || 'stream error' }));
+  if (evType === 'error' || evType === 'stream_error') {
+    console.log(JSON.stringify({ type: 'error', error: ev.message || ev?.params?.message || 'stream error' }));
     process.exit(4);
   }
+}
+
+if (!finalText) {
+  const candidates = Object.values(agentBuffers).map((value) => String(value || ''));
+  candidates.sort((a, b) => b.length - a.length);
+  finalText = candidates[0] || '';
 }
 
 console.log(JSON.stringify({
@@ -254,7 +344,13 @@ if (!apiKey) {
 }
 
 const env = { ...process.env, HOME: '/tmp', CODEX_HOME };
-const codex = new Codex({ apiKey, env });
+const codex = new Codex({
+  apiKey,
+  env,
+  config: {
+    show_raw_agent_reasoning: true,
+  },
+});
 const threadOptions = {
   workingDirectory: WORKDIR,
   skipGitRepoCheck: true,
