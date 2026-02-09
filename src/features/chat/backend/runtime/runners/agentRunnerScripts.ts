@@ -564,9 +564,9 @@ function buildAgentToolsUrl(resource, suffix) {
   return (baseAppUrl || '') + '/api/agent-tools/' + cleanRes + '/' + cleanSuf;
 }
 
-async function callErp(args) {
+async function callCrud(args) {
   if (!baseAppUrl || !toolToken || !chatId) {
-    return { success: false, error: 'configuração ausente para tool erp (AGENT_BASE_URL/AGENT_TOOL_TOKEN/AGENT_CHAT_ID)' };
+    return { success: false, error: 'configuração ausente para tool crud (AGENT_BASE_URL/AGENT_TOOL_TOKEN/AGENT_CHAT_ID)' };
   }
   const action = String(args?.action || 'listar').toLowerCase();
   const resource = String(args?.resource || args?.path || '');
@@ -598,7 +598,7 @@ async function callErp(args) {
   try { data = JSON.parse(raw); } catch {}
   const out = (data && (data.result !== undefined ? data.result : data)) || {};
   if (!resTool.ok) {
-    return { success: false, status: resTool.status, error: out?.error || out?.message || raw || resTool.statusText || 'erro na tool erp' };
+    return { success: false, status: resTool.status, error: out?.error || out?.message || raw || resTool.statusText || 'erro na tool crud' };
   }
   return out;
 }
@@ -689,7 +689,7 @@ const decoder = new TextDecoder();
 const tools = [
   {
     type: 'function',
-    name: 'erp',
+    name: 'crud',
     description: 'Executa ações CRUD no ERP',
     parameters: {
       type: 'object',
@@ -835,8 +835,8 @@ while (!done && turn < 10) {
     emit('tool_input_done', { index, name: toolName, call_id: callId, input: parsedArgs, raw: rawArgs });
     try {
       let result = null;
-      if (toolName === 'erp') {
-        result = await callErp(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
+      if (toolName === 'crud') {
+        result = await callCrud(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
       } else if (toolName === 'workspace') {
         result = await callWorkspace(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
       } else {
