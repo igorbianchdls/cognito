@@ -144,6 +144,10 @@ const requestBody = {
     },
   ],
   stream: true,
+  reasoning: {
+    effort: payload.reasoningEffort || 'medium',
+    summary: 'auto',
+  },
 };
 if (payload.previousResponseId) {
   requestBody.previous_response_id = payload.previousResponseId;
@@ -166,22 +170,33 @@ if (!res.ok || !res.body) {
 
 let responseId = payload.previousResponseId || null;
 let assistantText = '';
+let reasoningText = '';
+const eventCounts = {};
+const unknownEventCounts = {};
+
+function bump(counter, key) {
+  const k = String(key || 'unknown');
+  counter[k] = (counter[k] || 0) + 1;
+}
 
 function extractText(value, depth = 0) {
   if (typeof value === 'string') return value;
   if (!value || typeof value !== 'object') return '';
-  if (depth > 3) return '';
+  if (depth > 5) return '';
   const obj = value;
   const candidates = [
     obj.delta,
     obj.text,
+    obj.summary_text,
+    obj.output_text,
+    obj.reasoning_text,
     obj.summary,
     obj.content,
     obj.reasoning,
     obj.message,
-    obj.output_text,
     obj.outputText,
     obj.value,
+    obj.part,
   ];
   for (const c of candidates) {
     if (typeof c === 'string' && c) return c;
@@ -209,6 +224,54 @@ function emit(type, data) {
   console.log(JSON.stringify({ type, ...data }));
 }
 
+function appendDelta(kind, delta, source) {
+  const text = String(delta || '');
+  if (!text) return;
+  if (kind === 'assistant') {
+    assistantText += text;
+    emit('delta', { text, full: assistantText, source });
+    return;
+  }
+  reasoningText += text;
+  emit('reasoning_delta', { text, full: reasoningText, source });
+}
+
+function applyDone(kind, doneText, source) {
+  const full = String(doneText || '');
+  if (!full) return;
+  if (kind === 'assistant') {
+    if (!assistantText) {
+      assistantText = full;
+      emit('delta', { text: full, full: assistantText, source });
+      return;
+    }
+    if (full.startsWith(assistantText)) {
+      const missing = full.slice(assistantText.length);
+      if (missing) emit('delta', { text: missing, full, source });
+      assistantText = full;
+      return;
+    }
+    if (assistantText !== full) {
+      assistantText = full;
+    }
+    return;
+  }
+  if (!reasoningText) {
+    reasoningText = full;
+    emit('reasoning_delta', { text: full, full: reasoningText, source });
+    return;
+  }
+  if (full.startsWith(reasoningText)) {
+    const missing = full.slice(reasoningText.length);
+    if (missing) emit('reasoning_delta', { text: missing, full, source });
+    reasoningText = full;
+    return;
+  }
+  if (reasoningText !== full) {
+    reasoningText = full;
+  }
+}
+
 function onEvent(eventName, dataRaw) {
   const data = String(dataRaw || '').trim();
   if (!data || data === '[DONE]') return;
@@ -222,6 +285,7 @@ function onEvent(eventName, dataRaw) {
   if (!ev || typeof ev !== 'object') return;
 
   const type = String(ev.type || eventName || '');
+  bump(eventCounts, type);
 
   if (type === 'response.created') {
     const id = ev?.response?.id || ev?.id || null;
@@ -231,37 +295,30 @@ function onEvent(eventName, dataRaw) {
   }
 
   if (type === 'response.output_text.delta') {
-    const delta = extractText(ev.delta) || extractText(ev);
+    const delta = extractText(ev.delta) || extractText(ev?.output_text?.delta) || extractText(ev);
     if (!delta) return;
-    assistantText += delta;
-    emit('delta', { text: delta, full: assistantText });
+    appendDelta('assistant', delta, type);
     return;
   }
 
   if (type === 'response.output_text.done') {
-    const doneText = extractText(ev.text) || extractText(ev);
+    const doneText = extractText(ev.text) || extractText(ev.output_text) || extractText(ev);
     if (!doneText) return;
-    if (!assistantText) {
-      assistantText = doneText;
-      emit('delta', { text: doneText, full: assistantText });
-      return;
-    }
-    if (doneText.startsWith(assistantText)) {
-      const missing = doneText.slice(assistantText.length);
-      if (missing) emit('delta', { text: missing, full: doneText });
-      assistantText = doneText;
-      return;
-    }
-    if (doneText !== assistantText) {
-      assistantText = doneText;
-    }
+    applyDone('assistant', doneText, type);
     return;
   }
 
-  if (type.includes('reasoning')) {
-    const reasoning = extractText(ev);
-    if (!reasoning) return;
-    emit('reasoning_delta', { text: reasoning });
+  if (type === 'response.reasoning_summary_text.delta' || type === 'response.reasoning_text.delta') {
+    const delta = extractText(ev.delta) || extractText(ev?.reasoning?.delta) || extractText(ev);
+    if (!delta) return;
+    appendDelta('reasoning', delta, type);
+    return;
+  }
+
+  if (type === 'response.reasoning_summary_text.done' || type === 'response.reasoning_text.done') {
+    const doneText = extractText(ev.text) || extractText(ev.reasoning_text) || extractText(ev);
+    if (!doneText) return;
+    applyDone('reasoning', doneText, type);
     return;
   }
 
@@ -279,6 +336,24 @@ function onEvent(eventName, dataRaw) {
     emit('error', { error: ev?.error?.message || ev?.message || 'stream error' });
     process.exit(4);
   }
+
+  if (type.includes('reasoning')) {
+    const maybe = extractText(ev);
+    if (maybe) {
+      appendDelta('reasoning', maybe, type);
+      return;
+    }
+  }
+
+  if (type.includes('output_text') && type.includes('delta')) {
+    const maybe = extractText(ev);
+    if (maybe) {
+      appendDelta('assistant', maybe, type);
+      return;
+    }
+  }
+
+  bump(unknownEventCounts, type);
 }
 
 function parseFrame(frame) {
@@ -313,9 +388,17 @@ for await (const chunk of res.body) {
 buffer += decoder.decode().replace(/\\r/g, '');
 if (buffer.trim()) parseFrame(buffer);
 
+emit('stream_stats', {
+  eventCounts,
+  unknownEventCounts,
+  assistantChars: assistantText.length,
+  reasoningChars: reasoningText.length,
+});
+
 emit('final', {
   responseId: responseId || null,
   text: assistantText || '',
+  reasoningText: reasoningText || '',
 });
 `.trim()
 }

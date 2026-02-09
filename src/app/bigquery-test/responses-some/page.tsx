@@ -22,6 +22,13 @@ type ResponsesSomeResponse = {
   error?: string
 }
 
+type StreamStats = {
+  eventCounts?: Record<string, number>
+  unknownEventCounts?: Record<string, number>
+  assistantChars?: number
+  reasoningChars?: number
+}
+
 const ENDPOINT = '/api/bigquery-test/responses-some'
 
 const IDEA_STARTERS = [
@@ -84,6 +91,7 @@ export default function ResponsesSomePage() {
   const [error, setError] = useState<string | null>(null)
   const [reasoningText, setReasoningText] = useState('')
   const [reasoningOpen, setReasoningOpen] = useState(false)
+  const [streamStats, setStreamStats] = useState<StreamStats | null>(null)
   const feedRef = useRef<HTMLDivElement | null>(null)
 
   const canSend = input.trim().length > 0 && !loading
@@ -120,6 +128,7 @@ export default function ResponsesSomePage() {
     setError(null)
     setReasoningText('')
     setReasoningOpen(false)
+    setStreamStats(null)
     setLoading(true)
 
     try {
@@ -216,6 +225,23 @@ export default function ResponsesSomePage() {
             if (!sawDelta) applyAssistantFull(evt.text)
             if (!evt.text.trim() && !sawDelta) applyAssistantFull('(sem resposta textual)')
           }
+          return
+        }
+        if (evt.type === 'stream_stats' && evt && typeof evt === 'object') {
+          setStreamStats({
+            eventCounts:
+              evt.eventCounts && typeof evt.eventCounts === 'object'
+                ? (evt.eventCounts as Record<string, number>)
+                : undefined,
+            unknownEventCounts:
+              evt.unknownEventCounts && typeof evt.unknownEventCounts === 'object'
+                ? (evt.unknownEventCounts as Record<string, number>)
+                : undefined,
+            assistantChars:
+              typeof evt.assistantChars === 'number' ? evt.assistantChars : undefined,
+            reasoningChars:
+              typeof evt.reasoningChars === 'number' ? evt.reasoningChars : undefined,
+          })
           return
         }
         if (evt.type === 'error') {
@@ -355,6 +381,14 @@ export default function ResponsesSomePage() {
               <div className="whitespace-pre-wrap break-words">
                 {reasoningText || 'Sem reasoning desta resposta.'}
               </div>
+            </div>
+          )}
+          {streamStats && (
+            <div className="mt-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+              <div className="mb-1 font-semibold">Stream Stats</div>
+              <pre className="whitespace-pre-wrap break-words">
+                {JSON.stringify(streamStats, null, 2)}
+              </pre>
             </div>
           )}
         </header>
