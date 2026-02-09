@@ -462,6 +462,10 @@ export function getOpenAIResponsesStreamRunnerScript(): string {
 const prompt = process.argv[2] || '';
 const modelId = process.env.AGENT_MODEL || 'gpt-5-mini';
 const apiKey = process.env.OPENAI_API_KEY || process.env.CODEX_API_KEY || '';
+const baseAppUrl = process.env.AGENT_BASE_URL || '';
+const toolToken = process.env.AGENT_TOOL_TOKEN || '';
+const chatId = process.env.AGENT_CHAT_ID || '';
+const tenantId = process.env.AGENT_TENANT_ID || '1';
 
 if (!apiKey) {
   console.log(JSON.stringify({ type: 'error', error: 'OPENAI_API_KEY/CODEX_API_KEY ausente na sandbox.' }));
@@ -472,32 +476,11 @@ const rawBase = String(process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1
 const base = rawBase.replace(/\\/+$/, '');
 const url = base.endsWith('/responses') ? base : (base + '/responses');
 
-const body = {
-  model: modelId,
-  input: prompt,
-  stream: true,
-  reasoning: { effort: 'medium', summary: 'auto' },
-};
-
-const res = await fetch(url, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    Authorization: 'Bearer ' + apiKey,
-  },
-  body: JSON.stringify(body),
-});
-
-if (!res.ok || !res.body) {
-  const text = await res.text().catch(() => '');
-  console.log(JSON.stringify({ type: 'error', error: 'Responses API ' + res.status + ': ' + text.slice(0, 1200) }));
-  process.exit(3);
-}
-
 let responseId = null;
 let assistantText = '';
 let reasoningText = '';
 let reasoningStarted = false;
+const SAFE_PREFIXES = ['financeiro', 'vendas', 'compras', 'contas-a-pagar', 'contas-a-receber', 'estoque', 'cadastros'];
 
 function emit(type, extra) {
   console.log(JSON.stringify({ type, ...(extra || {}) }));
@@ -559,9 +542,104 @@ function appendReasoning(delta) {
   emit('reasoning_delta', { text });
 }
 
-function onResponseDone() {
-  if (reasoningStarted) emit('reasoning_end', {});
-  emit('final', { text: assistantText, responseId });
+function isSafeResource(resource) {
+  try {
+    if (!resource || typeof resource !== 'string') return false;
+    if (resource.includes('..')) return false;
+    const clean = resource.replace(/^\\/+|\\/+$/g, '');
+    return SAFE_PREFIXES.some((p) => clean === p || clean.startsWith(p + '/'));
+  } catch {
+    return false;
+  }
+}
+
+function parseJsonMaybe(raw) {
+  if (typeof raw !== 'string') return raw;
+  try { return JSON.parse(raw); } catch { return raw; }
+}
+
+function buildAgentToolsUrl(resource, suffix) {
+  const cleanRes = String(resource || '').replace(/^\\/+|\\/+$/g, '');
+  const cleanSuf = String(suffix || '').replace(/^\\/+|\\/+$/g, '');
+  return (baseAppUrl || '') + '/api/agent-tools/' + cleanRes + '/' + cleanSuf;
+}
+
+async function callErp(args) {
+  if (!baseAppUrl || !toolToken || !chatId) {
+    return { success: false, error: 'configuração ausente para tool erp (AGENT_BASE_URL/AGENT_TOOL_TOKEN/AGENT_CHAT_ID)' };
+  }
+  const action = String(args?.action || 'listar').toLowerCase();
+  const resource = String(args?.resource || args?.path || '');
+  if (!isSafeResource(resource)) {
+    return { success: false, error: 'recurso não permitido', resource };
+  }
+  const method = String(args?.method || 'POST').toUpperCase();
+  let suffix = String(args?.actionSuffix || '').trim();
+  if (!suffix) {
+    if (action === 'criar') suffix = 'criar';
+    else if (action === 'atualizar') suffix = 'atualizar';
+    else if (action === 'deletar') suffix = 'deletar';
+    else suffix = 'listar';
+  }
+  const urlTool = buildAgentToolsUrl(resource, suffix);
+  const payload = action === 'listar' ? (args?.params || {}) : (args?.data || {});
+  const headers = {
+    'content-type': 'application/json',
+    authorization: 'Bearer ' + toolToken,
+    'x-chat-id': chatId,
+    'x-tenant-id': tenantId,
+  };
+  const init = method === 'GET'
+    ? { method, headers }
+    : { method, headers, body: JSON.stringify(payload || {}) };
+  const resTool = await fetch(urlTool, init);
+  const raw = await resTool.text().catch(() => '');
+  let data = {};
+  try { data = JSON.parse(raw); } catch {}
+  const out = (data && (data.result !== undefined ? data.result : data)) || {};
+  if (!resTool.ok) {
+    return { success: false, status: resTool.status, error: out?.error || out?.message || raw || resTool.statusText || 'erro na tool erp' };
+  }
+  return out;
+}
+
+async function callWorkspace(args) {
+  if (!baseAppUrl || !toolToken || !chatId) {
+    return { success: false, error: 'configuração ausente para tool workspace (AGENT_BASE_URL/AGENT_TOOL_TOKEN/AGENT_CHAT_ID)' };
+  }
+  const urlTool = (baseAppUrl || '').replace(/\\/+$/, '') + '/api/agent-tools/workspace/crud';
+  const headers = {
+    'content-type': 'application/json',
+    authorization: 'Bearer ' + toolToken,
+    'x-chat-id': chatId,
+    'x-tenant-id': tenantId,
+  };
+  const resTool = await fetch(urlTool, { method: 'POST', headers, body: JSON.stringify(args || {}) });
+  const raw = await resTool.text().catch(() => '');
+  let data = {};
+  try { data = JSON.parse(raw); } catch {}
+  const out = (data && (data.result !== undefined ? data.result : data)) || {};
+  if (!resTool.ok) {
+    return { success: false, status: resTool.status, error: out?.error || out?.message || raw || resTool.statusText || 'erro na tool workspace' };
+  }
+  return out;
+}
+
+function extractFunctionCallsFromResponse(responsePayload, fallbackCalls) {
+  const calls = [];
+  const output = Array.isArray(responsePayload?.output) ? responsePayload.output : [];
+  for (const item of output) {
+    if (!item || typeof item !== 'object') continue;
+    const itemType = String(item.type || '');
+    if (itemType !== 'function_call' && itemType !== 'tool_call') continue;
+    const name = String(item.name || item.tool_name || '');
+    if (!name) continue;
+    const callId = String(item.call_id || item.id || '');
+    const argsRaw = item.arguments ?? item.input ?? item.arguments_json ?? '{}';
+    calls.push({ name, call_id: callId, arguments: typeof argsRaw === 'string' ? argsRaw : JSON.stringify(argsRaw || {}) });
+  }
+  if (calls.length > 0) return calls;
+  return Array.isArray(fallbackCalls) ? fallbackCalls : [];
 }
 
 function onEvent(eventName, dataRaw) {
@@ -600,47 +678,183 @@ function onEvent(eventName, dataRaw) {
     }
     return;
   }
-  if (type === 'response.completed') {
-    responseId = ev?.response?.id || ev?.id || responseId;
-    onResponseDone();
-    return;
-  }
   if (type === 'error') {
     emit('error', { error: ev?.error?.message || ev?.message || 'stream error' });
     process.exit(4);
   }
-}
-
-function parseFrame(frame) {
-  const lines = frame.split('\\n');
-  let eventName = 'message';
-  const dataLines = [];
-  for (const line of lines) {
-    if (line.startsWith('event:')) {
-      eventName = line.slice('event:'.length).trim();
-      continue;
-    }
-    if (line.startsWith('data:')) {
-      dataLines.push(line.slice('data:'.length).trim());
-    }
-  }
-  if (!dataLines.length) return;
-  onEvent(eventName, dataLines.join('\\n'));
+  return ev;
 }
 
 const decoder = new TextDecoder();
-let buffer = '';
-for await (const chunk of res.body) {
-  buffer += decoder.decode(chunk, { stream: true }).replace(/\\r/g, '');
-  let idx = -1;
-  while ((idx = buffer.indexOf('\\n\\n')) >= 0) {
-    const frame = buffer.slice(0, idx);
-    buffer = buffer.slice(idx + 2);
-    if (!frame.trim()) continue;
-    parseFrame(frame);
+const tools = [
+  {
+    type: 'function',
+    name: 'erp',
+    description: 'Executa ações CRUD no ERP',
+    parameters: {
+      type: 'object',
+      properties: {
+        action: { type: 'string', enum: ['listar', 'criar', 'atualizar', 'deletar'] },
+        resource: { type: 'string' },
+        params: { type: 'object', additionalProperties: true },
+        data: { type: 'object', additionalProperties: true },
+        actionSuffix: { type: 'string' },
+        method: { type: 'string', enum: ['GET', 'POST'] },
+      },
+      required: ['action', 'resource'],
+      additionalProperties: true,
+    },
+  },
+  {
+    type: 'function',
+    name: 'workspace',
+    description: 'Executa ações de email/drive e leitura de arquivo',
+    parameters: {
+      type: 'object',
+      properties: {
+        action: { type: 'string', enum: ['request', 'read_file'] },
+        method: { type: 'string', enum: ['GET', 'POST', 'DELETE'] },
+        resource: { type: 'string' },
+        params: { type: 'object', additionalProperties: true },
+        data: { type: 'object', additionalProperties: true },
+        file_id: { type: 'string' },
+        mode: { type: 'string', enum: ['auto', 'text', 'binary'] },
+      },
+      additionalProperties: true,
+    },
+  },
+];
+
+let previousResponseId = null;
+let nextInput = prompt;
+let turn = 0;
+let done = false;
+
+while (!done && turn < 10) {
+  turn += 1;
+  const requestBody = {
+    model: modelId,
+    input: nextInput,
+    stream: true,
+    reasoning: { effort: 'medium', summary: 'auto' },
+    tools,
+    previous_response_id: previousResponseId || undefined,
+  };
+
+  const turnRes = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + apiKey,
+    },
+    body: JSON.stringify(requestBody),
+  });
+
+  if (!turnRes.ok || !turnRes.body) {
+    const text = await turnRes.text().catch(() => '');
+    emit('error', { error: 'Responses API ' + turnRes.status + ': ' + text.slice(0, 1200) });
+    process.exit(3);
   }
+
+  let buffer = '';
+  let completedResponse = null;
+  const fallbackFunctionCalls = [];
+
+  function parseFrameTurn(frame) {
+    const lines = frame.split('\\n');
+    let eventName = 'message';
+    const dataLines = [];
+    for (const line of lines) {
+      if (line.startsWith('event:')) {
+        eventName = line.slice('event:'.length).trim();
+        continue;
+      }
+      if (line.startsWith('data:')) {
+        dataLines.push(line.slice('data:'.length).trim());
+      }
+    }
+    if (!dataLines.length) return;
+    const raw = dataLines.join('\\n');
+    const ev = onEvent(eventName, raw);
+    if (!ev || typeof ev !== 'object') return;
+    const type = String(ev.type || eventName || '');
+    if (type === 'response.created') {
+      responseId = ev?.response?.id || ev?.id || responseId;
+      return;
+    }
+    if (type === 'response.completed') {
+      completedResponse = ev?.response || ev || null;
+      responseId = ev?.response?.id || ev?.id || responseId;
+      return;
+    }
+    if (type === 'response.output_item.done') {
+      const item = ev?.item;
+      const itemType = String(item?.type || '');
+      if (item && (itemType === 'function_call' || itemType === 'tool_call')) {
+        const name = String(item?.name || item?.tool_name || '');
+        const callId = String(item?.call_id || item?.id || '');
+        const argsRaw = item?.arguments ?? item?.input ?? item?.arguments_json ?? '{}';
+        if (name) {
+          fallbackFunctionCalls.push({ name, call_id: callId, arguments: typeof argsRaw === 'string' ? argsRaw : JSON.stringify(argsRaw || {}) });
+        }
+      }
+      return;
+    }
+  }
+
+  for await (const chunk of turnRes.body) {
+    buffer += decoder.decode(chunk, { stream: true }).replace(/\\r/g, '');
+    let idx = -1;
+    while ((idx = buffer.indexOf('\\n\\n')) >= 0) {
+      const frame = buffer.slice(0, idx);
+      buffer = buffer.slice(idx + 2);
+      if (!frame.trim()) continue;
+      parseFrameTurn(frame);
+    }
+  }
+  buffer += decoder.decode().replace(/\\r/g, '');
+  if (buffer.trim()) parseFrameTurn(buffer);
+
+  previousResponseId = responseId || completedResponse?.id || previousResponseId;
+  const functionCalls = extractFunctionCallsFromResponse(completedResponse, fallbackFunctionCalls);
+  if (!functionCalls.length) {
+    done = true;
+    break;
+  }
+
+  const outputs = [];
+  let callIdx = 0;
+  for (const fnCall of functionCalls) {
+    const index = callIdx++;
+    const toolName = String(fnCall?.name || '');
+    const rawArgs = typeof fnCall?.arguments === 'string' ? fnCall.arguments : JSON.stringify(fnCall?.arguments || {});
+    const parsedArgs = parseJsonMaybe(rawArgs);
+    const callId = String(fnCall?.call_id || ('call-' + index + '-' + Date.now()));
+    emit('tool_input_start', { index, name: toolName, call_id: callId });
+    if (rawArgs) emit('tool_input_delta', { index, partial: rawArgs });
+    emit('tool_input_done', { index, name: toolName, call_id: callId, input: parsedArgs, raw: rawArgs });
+    try {
+      let result = null;
+      if (toolName === 'erp') {
+        result = await callErp(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
+      } else if (toolName === 'workspace') {
+        result = await callWorkspace(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
+      } else {
+        result = { success: false, error: 'tool desconhecida: ' + toolName };
+      }
+      emit('tool_done', { tool_name: toolName, output: result });
+      outputs.push({ type: 'function_call_output', call_id: callId, output: JSON.stringify(result ?? {}) });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      emit('tool_error', { tool_name: toolName, error: msg });
+      outputs.push({ type: 'function_call_output', call_id: callId, output: JSON.stringify({ success: false, error: msg }) });
+    }
+  }
+
+  nextInput = outputs;
 }
-buffer += decoder.decode().replace(/\\r/g, '');
-if (buffer.trim()) parseFrame(buffer);
+
+if (reasoningStarted) emit('reasoning_end', {});
+emit('final', { text: assistantText, responseId });
 `.trim();
 }

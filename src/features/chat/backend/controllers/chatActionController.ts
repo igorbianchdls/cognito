@@ -560,6 +560,9 @@ export async function POST(req: Request) {
     lines.push('You are Otto, an AI operations partner for the company.')
     lines.push('Give concise, practical, and objective answers in Brazilian Portuguese unless the user requests another language.')
     lines.push('Use clear next steps and avoid inventing facts or capabilities.')
+    lines.push('Available tools: erp(action/resource/params/data) and workspace(action/method/resource/params/data/file_id/mode).')
+    lines.push('Use tools whenever a user request depends on live data or actions.')
+    lines.push('For destructive actions (delete/send), confirm intent when context is ambiguous.')
     lines.push('')
     lines.push('Conversation:')
     for (const m of history) {
@@ -582,6 +585,9 @@ export async function POST(req: Request) {
     let assistantTextBuf = ''
     const assistantParts: any[] = []
     let textSegBuf = ''
+    let pendingToolName: string | null = null
+    let pendingToolInputStream = ''
+    let pendingToolInput: any = undefined
     let reasoningActive = false
     let reasoningBuf = ''
 
@@ -592,6 +598,10 @@ export async function POST(req: Request) {
             OPENAI_API_KEY: apiKey,
             CODEX_API_KEY: apiKey,
             AGENT_MODEL: modelId,
+            AGENT_BASE_URL: origin,
+            AGENT_TOOL_TOKEN: sess.agentToken || '',
+            AGENT_CHAT_ID: chatId,
+            AGENT_TENANT_ID: process.env.AGENT_TENANT_ID || '1',
           }
           if ((process.env.OPENAI_BASE_URL || '').trim()) env.OPENAI_BASE_URL = (process.env.OPENAI_BASE_URL || '').trim()
           const cmd: any = await (openAiSandbox as any).runCommand({
@@ -615,6 +625,26 @@ export async function POST(req: Request) {
                   if (evt && evt.type === 'delta' && typeof evt.text === 'string') {
                     assistantTextBuf += evt.text
                     textSegBuf += evt.text
+                  } else if (evt && evt.type === 'tool_input_start') {
+                    const seg = (textSegBuf || '').trim()
+                    if (seg) {
+                      assistantParts.push({ type: 'text', text: seg })
+                      textSegBuf = ''
+                    }
+                    pendingToolName = (evt.name || evt.tool_name || null) as any
+                    pendingToolInputStream = ''
+                    pendingToolInput = undefined
+                  } else if (evt && evt.type === 'tool_input_delta' && typeof evt.partial === 'string') {
+                    pendingToolInputStream += evt.partial
+                  } else if (evt && evt.type === 'tool_input_done') {
+                    try {
+                      if (typeof evt.input !== 'undefined') {
+                        pendingToolInput = evt.input
+                      } else if (pendingToolInputStream) {
+                        const s = pendingToolInputStream.trim()
+                        if (s) { try { pendingToolInput = JSON.parse(s) } catch { pendingToolInput = s } }
+                      }
+                    } catch {}
                   } else if (evt && evt.type === 'reasoning_start') {
                     const seg = (textSegBuf || '').trim()
                     if (seg) {
@@ -631,6 +661,24 @@ export async function POST(req: Request) {
                       reasoningActive = false
                       reasoningBuf = ''
                     }
+                  } else if (evt && evt.type === 'tool_done') {
+                    const seg = (textSegBuf || '').trim()
+                    if (seg) {
+                      assistantParts.push({ type: 'text', text: seg })
+                      textSegBuf = ''
+                    }
+                    const toolName = ((evt.tool_name || pendingToolName || 'generic') as string)
+                    assistantParts.push({ type: `tool-${toolName}`, state: 'output-available', output: evt.output, input: pendingToolInput, tool_name: toolName })
+                    pendingToolName = null; pendingToolInputStream = ''; pendingToolInput = undefined
+                  } else if (evt && evt.type === 'tool_error') {
+                    const seg = (textSegBuf || '').trim()
+                    if (seg) {
+                      assistantParts.push({ type: 'text', text: seg })
+                      textSegBuf = ''
+                    }
+                    const toolName = ((evt.tool_name || pendingToolName || 'generic') as string)
+                    assistantParts.push({ type: `tool-${toolName}`, state: 'output-error', errorText: evt.error, input: pendingToolInput, tool_name: toolName })
+                    pendingToolName = null; pendingToolInputStream = ''; pendingToolInput = undefined
                   }
                 } catch {}
                 controller.enqueue(enc.encode(`data: ${line}\n\n`))
