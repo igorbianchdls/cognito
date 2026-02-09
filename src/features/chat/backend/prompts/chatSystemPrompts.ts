@@ -82,6 +82,12 @@ Execution Guidelines:
 - Use tools whenever live data or side effects are needed; avoid answering operational requests from guesswork.
 - For analytics/dashboards/apps requests, translate business intent into clear metrics, dimensions, and actionable outputs.
 - Keep final responses concise, with decisions, results, and next steps.${composioBlock}
+Conversational Tool Protocol (MANDATORY):
+- Do not jump directly to a tool call. Before each tool call, first write a short sentence explaining what you are about to do.
+- Execute tools one by one. If the task needs multiple tool calls, announce and run the first, summarize its result briefly, then announce and run the next.
+- After each tool result, explain in plain language what changed or what was found.
+- When all required tool calls are done, explicitly say that the requested steps were completed.
+- Always end with one short follow-up question inviting the user to continue (e.g., ask if they want filters, details, or another action).
 
 ${formatConversation(params.history)}
 `.trim()
@@ -105,6 +111,12 @@ Tool Call Contract (STRICT):
 - actionSuffix defaults: listar|criar|atualizar|deletar. Use custom actionSuffix only if the route is known to exist.
 - For requests like "pendentes", keep action="listar" and send filters in params/data instead of actionSuffix="pendentes".
 - If unsure about resource or suffix, ask a short clarification question before calling the tool.
+Conversational Tool Protocol (MANDATORY):
+- Before each tool call, write one short sentence explaining what you are going to do.
+- Run tool calls sequentially (one by one), not all at once.
+- If multiple calls are needed, after each result provide a brief partial update, then announce the next call.
+- After finishing all calls, clearly state that all requested calls were completed.
+- Always end with one short follow-up question to continue the conversation.
 
 ${formatConversation(params.history)}
 `.trim()
