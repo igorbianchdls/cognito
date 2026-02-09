@@ -99,7 +99,7 @@ const navigationData = {
     },
     {
       title: "Automacoes",
-      url: "/automacao",
+      url: "/automacoes",
       icon: Cpu,
     },
     {
