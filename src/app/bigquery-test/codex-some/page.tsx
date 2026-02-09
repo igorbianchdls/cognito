@@ -10,6 +10,7 @@ type ChatMessage = {
 
 type CodexSomeResponse = {
   ok?: boolean
+  sessionId?: string
   reply?: string
   threadId?: string
   error?: string
@@ -20,6 +21,7 @@ const ENDPOINT = '/api/bigquery-test/codex-some'
 export default function CodexSomePage() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('Responda em 1 frase: este teste de Codex SDK está funcionando?')
+  const [sessionId, setSessionId] = useState<string | null>(null)
   const [threadId, setThreadId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -44,6 +46,8 @@ export default function CodexSomePage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          action: 'send',
+          sessionId,
           message: text,
           threadId,
         }),
@@ -52,6 +56,10 @@ export default function CodexSomePage() {
       const data = (await response.json().catch(() => ({}))) as CodexSomeResponse
       if (!response.ok || !data.ok) {
         throw new Error(data.error || `Erro ${response.status}`)
+      }
+
+      if (data.sessionId && data.sessionId.trim()) {
+        setSessionId(data.sessionId.trim())
       }
 
       if (data.threadId && data.threadId.trim()) {
@@ -72,7 +80,19 @@ export default function CodexSomePage() {
     }
   }
 
-  const startNewConversation = () => {
+  const startNewConversation = async () => {
+    if (sessionId) {
+      try {
+        await fetch(ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'stop', sessionId }),
+        })
+      } catch {
+        // ignore stop errors
+      }
+    }
+    setSessionId(null)
     setThreadId(null)
     setMessages([])
     setError(null)
@@ -83,12 +103,16 @@ export default function CodexSomePage() {
       <div className="mx-auto max-w-3xl">
         <h1 className="mb-2 text-2xl font-bold text-gray-900">Codex Some — Chat de teste</h1>
         <p className="mb-4 text-sm text-gray-600">
-          Subrota de tese para validar Codex SDK sem sandbox.
+          Subrota de tese para validar Codex SDK com sandbox.
         </p>
 
         <div className="mb-4 rounded-md border border-gray-200 bg-white p-3 text-sm text-gray-700">
           <div>
             <span className="font-medium">Endpoint:</span> <code>{ENDPOINT}</code>
+          </div>
+          <div className="mt-1">
+            <span className="font-medium">Session ID:</span>{' '}
+            <code>{sessionId || 'nenhuma (sandbox será criada no 1º envio)'}</code>
           </div>
           <div className="mt-1">
             <span className="font-medium">Thread ID:</span>{' '}
