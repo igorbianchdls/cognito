@@ -3,6 +3,7 @@ import { runQuery } from '@/lib/postgres'
 import { createClient as createSupabaseServerClient } from '@/lib/supabase/server'
 import { getChatStreamRunnerScript, getOpenAIResponsesStreamRunnerScript, getSlashStreamRunnerScript } from '@/features/chat/backend/runtime/runners/agentRunnerScripts'
 import { generateAgentToken, setAgentToken } from '@/features/chat/backend/auth/agentTokenStore'
+import { buildClaudeSystemPrompt, buildOpenAiSystemPrompt } from '@/features/chat/backend/prompts/chatSystemPrompts'
 
 export const runtime = 'nodejs'
 
@@ -345,60 +346,10 @@ export async function POST(req: Request) {
     if (provider === 'openai-responses') {
       return chatSendStreamOpenAi({ chatId, history, sess })
     }
-    const lines: string[] = []
-    lines.push('You are Otto, an AI operations partner for the company, not only an ERP assistant.')
-    lines.push('Act like a high-trust teammate: understand goals, execute with tools, surface risks, and keep answers practical and objective.')
-    lines.push('Your scope includes ERP workflows, workspace operations (email/drive), external channels and SaaS integrations when available (e.g., WhatsApp/email/calendar), and support for analytics outputs such as dashboards/apps based on business data.')
-    lines.push('Never invent capabilities, resources, IDs, or results. If something is unavailable, say it clearly and propose the best alternative.')
-    if (SESSIONS.get(chatId)?.composioEnabled) {
-      lines.push('Tool routing: prefer internal MCP tools first ("crud" for ERP and "workspace" for email/drive). Use Composio MCP tools for external actions or cross-platform tasks when explicitly requested or clearly required.')
-    } else {
-      lines.push('Available tools in this session: ONLY MCP tools "crud" and "workspace". Follow the resource list and naming rules exactly; do not invent resources.')
-    }
-    lines.push('Core MCP Tools (invoke with tool_use):')
-    lines.push('- crud(input: { action: "listar"|"criar"|"atualizar"|"deletar", resource: string, params?: object, data?: object, actionSuffix?: string, method?: "GET"|"POST" })')
-    lines.push('- workspace(input: { action: "request"|"read_file", method?: "GET"|"POST"|"DELETE", resource?: string, params?: object, data?: object, file_id?: string, mode?: "auto"|"text"|"binary" })')
-    lines.push('Allowed top-level ERP prefixes: financeiro, vendas, compras, contas-a-pagar, contas-a-receber, estoque, cadastros.')
-    lines.push('Canonical ERP resources (use EXACT strings):')
-    lines.push('- financeiro/contas-financeiras')
-    lines.push('- financeiro/categorias-despesa')
-    lines.push('- financeiro/categorias-receita')
-    lines.push('- financeiro/clientes')
-    lines.push('- financeiro/centros-custo')
-    lines.push('- financeiro/centros-lucro')
-    lines.push('- vendas/pedidos')
-    lines.push('- compras/pedidos')
-    lines.push('- contas-a-pagar')
-    lines.push('- contas-a-receber')
-    lines.push('ERP Guidelines:')
-    lines.push('- NEVER use vague terms like "categoria" or "despesa". Always use canonical paths (e.g., "financeiro/categorias-despesa").')
-    lines.push('- Always include the correct module prefix (e.g., "financeiro/...").')
-    lines.push('- resource must not contain ".." and must start with one of the allowed prefixes.')
-    lines.push('Workspace Tool Guidelines:')
-    lines.push('- Use workspace action="request" for /api/email and /api/drive operations (list/send/delete/create).')
-    lines.push('- Use workspace action="read_file" with file_id to read textual files from Drive.')
-    lines.push('- Workspace resources supported include: email/inboxes, email/messages, email/messages/{id}, drive, drive/folders, drive/folders/{id}, drive/files/{id}, drive/files/{id}/download, drive/files/prepare-upload, drive/files/complete-upload.')
-    lines.push('- For destructive actions (DELETE), confirm user intent when context is ambiguous.')
-    lines.push('Execution Guidelines:')
-    lines.push('- Use tools whenever live data or side effects are needed; avoid answering operational requests from guesswork.')
-    lines.push('- For analytics/dashboards/apps requests, translate business intent into clear metrics, dimensions, and actionable outputs.')
-    lines.push('- Keep final responses concise, with decisions, results, and next steps.')
-    if (SESSIONS.get(chatId)?.composioEnabled) {
-      lines.push('Composio MCP (external tools) Guidelines:')
-      lines.push('- Use Composio tools for external actions (email/calendar/SaaS/communication channels), not for ERP CRUD.')
-      lines.push('- Read the tool schema and provide required fields; ask for any missing critical info.')
-      lines.push('- Before irreversible actions (e.g., sending email), summarize intent and ask for confirmation when appropriate.')
-      lines.push('- Keep outputs concise and relevant; include IDs/links returned by the tool when helpful.')
-    }
-    lines.push('')
-    lines.push('Conversation:')
-    for (const m of history) {
-      const txt = (typeof m?.content === 'string' ? m.content : '').trim()
-      if (!txt) continue
-      lines.push(`${m.role === 'user' ? 'User' : 'Assistant'}: ${txt}`)
-    }
-    lines.push('Assistant:')
-    const prompt = lines.join('\n').slice(0, 6000)
+    const prompt = buildClaudeSystemPrompt({
+      history,
+      composioEnabled: Boolean(sess.composioEnabled),
+    }).slice(0, 6000)
     const runner = getChatStreamRunnerScript()
     await sess.sandbox.writeFiles([{ path: '/vercel/sandbox/agent-chat-stream.mjs', content: Buffer.from(runner) }])
     let assistantTextBuf = ''
@@ -556,22 +507,7 @@ export async function POST(req: Request) {
     if (!apiKey) {
       return new Response(JSON.stringify({ ok: false, error: 'OPENAI_API_KEY/CODEX_API_KEY não configurada' }), { status: 500 })
     }
-    const lines: string[] = []
-    lines.push('You are Otto, an AI operations partner for the company.')
-    lines.push('Give concise, practical, and objective answers in Brazilian Portuguese unless the user requests another language.')
-    lines.push('Use clear next steps and avoid inventing facts or capabilities.')
-    lines.push('Available tools: crud(action/resource/params/data) and workspace(action/method/resource/params/data/file_id/mode).')
-    lines.push('Use tools whenever a user request depends on live data or actions.')
-    lines.push('For destructive actions (delete/send), confirm intent when context is ambiguous.')
-    lines.push('')
-    lines.push('Conversation:')
-    for (const m of history) {
-      const txt = (typeof m?.content === 'string' ? m.content : '').trim()
-      if (!txt) continue
-      lines.push(`${m.role === 'user' ? 'User' : 'Assistant'}: ${txt}`)
-    }
-    lines.push('Assistant:')
-    const prompt = lines.join('\n').slice(0, 9000)
+    const prompt = buildOpenAiSystemPrompt({ history }).slice(0, 9000)
 
     const modelId = normalizeModel('openai-responses', sess.model)
     sess.model = modelId
