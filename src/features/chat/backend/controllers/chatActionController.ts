@@ -35,13 +35,18 @@ function normalizeModel(provider: ChatProvider, rawModel?: string): string {
   const raw = (rawModel || '').toString().trim().toLowerCase()
   if (provider === 'openai-responses') {
     const openaiMap: Record<string, string> = {
+      'gpt-5': 'gpt-5',
+      'gpt5': 'gpt-5',
+      'gpt-5.1': 'gpt-5.1',
+      'gpt5.1': 'gpt-5.1',
+      'gpt-5.2': 'gpt-5.2',
+      'gpt5.2': 'gpt-5.2',
+      'gpt-5-mini': 'gpt-5-mini',
+      'gpt5-mini': 'gpt-5-mini',
+      'gpt5mini': 'gpt-5-mini',
       'gpt-5-nano': 'gpt-5-nano',
       'gpt5-nano': 'gpt-5-nano',
       'gpt5nano': 'gpt-5-nano',
-      // Backward compatibility: map previous mini aliases to nano
-      'gpt-5-mini': 'gpt-5-nano',
-      'gpt5-mini': 'gpt-5-nano',
-      'gpt5mini': 'gpt-5-nano',
     }
     return openaiMap[raw] || 'gpt-5-nano'
   }

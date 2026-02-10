@@ -10,18 +10,22 @@ import { useRouter } from 'next/navigation';
 import type { SandboxStatus } from '@/features/chat/frontend/lib/sandboxStatus';
 
 type ChatStatus = 'idle' | 'submitted' | 'streaming' | 'error'
-type EngineId = 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5nano' | 'openai-gpt5mini'
+type EngineId = 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5' | 'openai-gpt5mini' | 'openai-gpt5nano'
 
 function engineToBackend(engine: EngineId): { provider: string; model: string } {
   if (engine === 'claude-sonnet') return { provider: 'claude-agent', model: 'claude-sonnet-4-5-20251001' }
-  if (engine === 'openai-gpt5nano' || engine === 'openai-gpt5mini') return { provider: 'openai-responses', model: 'gpt-5-nano' }
+  if (engine === 'openai-gpt5') return { provider: 'openai-responses', model: 'gpt-5' }
+  if (engine === 'openai-gpt5mini') return { provider: 'openai-responses', model: 'gpt-5-mini' }
+  if (engine === 'openai-gpt5nano') return { provider: 'openai-responses', model: 'gpt-5-nano' }
   return { provider: 'claude-agent', model: 'claude-haiku-4-5-20251001' }
 }
 
 function modelToEngine(modelRaw?: string): EngineId {
   const model = (modelRaw || '').toString().trim().toLowerCase()
   if (!model) return 'openai-gpt5nano'
-  if (model.includes('gpt') || model.includes('openai')) return 'openai-gpt5nano'
+  if (model.includes('gpt-5-nano') || model.includes('gpt5nano') || model.includes('gpt5-nano')) return 'openai-gpt5nano'
+  if (model.includes('gpt-5-mini') || model.includes('gpt5mini') || model.includes('gpt5-mini')) return 'openai-gpt5mini'
+  if (model.includes('gpt-5') || model.includes('gpt5') || model.includes('openai')) return 'openai-gpt5'
   if (model.includes('sonnet')) return 'claude-sonnet'
   return 'openai-gpt5nano'
 }
@@ -444,6 +448,10 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
             }
           } else if (evt && evt.type === 'final') {
             setStatus('idle')
+          } else if (evt && evt.type === 'error') {
+            setStatus('error')
+            const msg = typeof evt.error === 'string' ? evt.error : 'Erro no stream'
+            appendToActiveText(`\n${msg}`)
           }
         } catch {}
       }

@@ -652,7 +652,8 @@ function supportsNativeShellTool(model) {
 
 function supportsNativeApplyPatchTool(model) {
   const m = String(model || '').toLowerCase().trim();
-  return m.startsWith('gpt-5');
+  if (m.includes('nano') || m.includes('mini')) return false;
+  return m === 'gpt-5' || m.startsWith('gpt-5.1') || m.startsWith('gpt-5.2');
 }
 
 async function callShell(args) {
@@ -795,7 +796,8 @@ function onEvent(eventName, dataRaw) {
 const decoder = new TextDecoder();
 const nativeShellEnabled = supportsNativeShellTool(modelId);
 const nativeApplyPatchEnabled = supportsNativeApplyPatchTool(modelId);
-const tools = [
+let enableApplyPatch = nativeApplyPatchEnabled;
+const baseTools = [
   {
     type: 'function',
     name: 'crud',
@@ -903,7 +905,6 @@ const tools = [
           additionalProperties: false,
         },
       }]),
-  ...(nativeApplyPatchEnabled ? [{ type: 'apply_patch' }] : []),
 ];
 
 let previousResponseId = null;
@@ -913,6 +914,7 @@ let done = false;
 
 while (!done && turn < 10) {
   turn += 1;
+  const tools = enableApplyPatch ? [...baseTools, { type: 'apply_patch' }] : baseTools;
   const requestBody = {
     model: modelId,
     input: nextInput,
@@ -933,6 +935,10 @@ while (!done && turn < 10) {
 
   if (!turnRes.ok || !turnRes.body) {
     const text = await turnRes.text().catch(() => '');
+    if (enableApplyPatch && /apply_patch/i.test(text) && /invalid|unsupported|unknown|not supported|tool/i.test(text)) {
+      enableApplyPatch = false;
+      continue;
+    }
     emit('error', { error: 'Responses API ' + turnRes.status + ': ' + text.slice(0, 1200) });
     process.exit(3);
   }
