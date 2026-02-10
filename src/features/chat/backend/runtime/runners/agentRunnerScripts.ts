@@ -1305,15 +1305,23 @@ const baseTools = [
           description: 'Inbox para action=send_email.'
         },
         to: {
-          description: 'Destinatários para action=send_email (array ou string).'
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Destinatários para action=send_email.'
         },
         cc: {
+          type: 'array',
+          items: { type: 'string' },
           description: 'CC opcional para action=send_email.'
         },
         bcc: {
+          type: 'array',
+          items: { type: 'string' },
           description: 'BCC opcional para action=send_email.'
         },
         labels: {
+          type: 'array',
+          items: { type: 'string' },
           description: 'Labels opcionais para action=send_email.'
         },
         subject: {
@@ -1330,6 +1338,18 @@ const baseTools = [
         },
         attachments: {
           type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: true,
+            properties: {
+              filename: { type: 'string' },
+              contentType: { type: 'string' },
+              contentDisposition: { type: 'string' },
+              contentId: { type: 'string' },
+              content: { type: 'string' },
+              url: { type: 'string' },
+            },
+          },
           description: 'Lista de anexos para action=send_email. Cada item pode ter url ou content(base64), além de filename/contentType.'
         },
         attachment_url: {
