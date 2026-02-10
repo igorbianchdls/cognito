@@ -1097,6 +1097,24 @@ process.exit(0);
     sess.provider = chosenProvider
     sess.model = chosen
     sess.lastUsedAt = Date.now()
+    if (chosenProvider === 'openai-responses') {
+      // Keep visible workspace aligned with the selected provider in /chat file explorer.
+      try {
+        await sess.sandbox.runCommand({
+          cmd: 'node',
+          args: ['-e', "const fs=require('fs');fs.mkdirSync('/vercel/sandbox/.agent/skills',{recursive:true});console.log('ok')"],
+        })
+      } catch {}
+      // Also pre-warm OpenAI dedicated sandbox (used by streaming runner).
+      try { await getOrCreateOpenAiSandbox(chatId) } catch {}
+    } else {
+      try {
+        await sess.sandbox.runCommand({
+          cmd: 'node',
+          args: ['-e', "const fs=require('fs');fs.mkdirSync('/vercel/sandbox/.claude/skills',{recursive:true});console.log('ok')"],
+        })
+      } catch {}
+    }
     try {
       await runQuery('UPDATE chat.chats SET model = $1, updated_at = now() WHERE id = $2', [chosen, chatId])
     } catch {}
