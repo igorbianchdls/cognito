@@ -688,10 +688,19 @@ function buildUnifiedUpdateDiff(beforeText, afterText) {
   return header;
 }
 
+function normalizeSandboxFilePath(rawPath) {
+  const value = String(rawPath || '').trim();
+  if (!value) return '';
+  if (value.startsWith('/vercel/sandbox')) return value;
+  if (value.startsWith('/')) return value;
+  return '/vercel/sandbox/' + value.replace(/^\/+/, '');
+}
+
 async function callRead(args) {
-  const filePath = typeof args?.file_path === 'string'
+  const filePathRaw = typeof args?.file_path === 'string'
     ? args.file_path.trim()
     : (typeof args?.path === 'string' ? args.path.trim() : '');
+  const filePath = normalizeSandboxFilePath(filePathRaw);
   if (!filePath) return { success: false, error: 'file_path é obrigatório para Read' };
 
   const offset = parsePositiveInt(args?.offset, 1);
@@ -738,9 +747,10 @@ async function callRead(args) {
 }
 
 async function callEdit(args) {
-  const filePath = typeof args?.file_path === 'string'
+  const filePathRaw = typeof args?.file_path === 'string'
     ? args.file_path.trim()
     : (typeof args?.path === 'string' ? args.path.trim() : '');
+  const filePath = normalizeSandboxFilePath(filePathRaw);
   const oldString = typeof args?.old_string === 'string' ? args.old_string : '';
   const hasNewString = typeof args?.new_string === 'string';
   const newString = hasNewString ? args.new_string : '';

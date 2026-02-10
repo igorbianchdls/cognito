@@ -753,10 +753,20 @@ export async function POST(req: Request) {
     return new Response(stream, { headers: { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' } })
   }
 
-  function validatePath(p?: string) {
+  function validatePath(
+    p?: string,
+    opts?: { allowRelative?: boolean; defaultPath?: string }
+  ) {
     const base = '/vercel/sandbox'
-    const path = (p || base).toString()
-    if (!path.startsWith(base)) return { ok: false as const, error: 'path fora de /vercel/sandbox' }
+    const allowRelative = Boolean(opts?.allowRelative)
+    const fallback = (opts?.defaultPath || base).toString()
+    const raw = (p || '').toString().trim()
+    const candidate = raw
+      ? (allowRelative && !raw.startsWith('/') ? `${base}/${raw.replace(/^\/+/, '')}` : raw)
+      : fallback
+    const path = candidate.replace(/\/{2,}/g, '/')
+    const inside = path === base || path.startsWith(base + '/')
+    if (!inside) return { ok: false as const, error: 'path fora de /vercel/sandbox' }
     if (path.includes('..')) return { ok: false as const, error: 'path inválido' }
     return { ok: true as const, path }
   }
@@ -765,7 +775,7 @@ export async function POST(req: Request) {
     if (!chatId) return Response.json({ ok: false, error: 'chatId obrigatório' }, { status: 400 })
     const sess = SESSIONS.get(chatId)
     if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
-    const v = validatePath(path); if (!v.ok) return Response.json({ ok: false, error: v.error }, { status: 400 })
+    const v = validatePath(path, { allowRelative: true, defaultPath: '/vercel/sandbox' }); if (!v.ok) return Response.json({ ok: false, error: v.error }, { status: 400 })
     const target = v.path
     const script = `
 const fs = require('fs');
@@ -789,7 +799,7 @@ try {
     if (!chatId) return Response.json({ ok: false, error: 'chatId obrigatório' }, { status: 400 })
     const sess = SESSIONS.get(chatId)
     if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
-    const v = validatePath(path); if (!v.ok) return Response.json({ ok: false, error: v.error }, { status: 400 })
+    const v = validatePath(path, { allowRelative: true, defaultPath: '/vercel/sandbox' }); if (!v.ok) return Response.json({ ok: false, error: v.error }, { status: 400 })
     const target = v.path
     const script = `
 const fs = require('fs');
@@ -814,7 +824,7 @@ try {
     if (!chatId) return Response.json({ ok: false, error: 'chatId obrigatório' }, { status: 400 })
     const sess = SESSIONS.get(chatId)
     if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
-    const v = validatePath(path); if (!v.ok) return Response.json({ ok: false, error: v.error }, { status: 400 })
+    const v = validatePath(path, { allowRelative: true, defaultPath: '/vercel/sandbox' }); if (!v.ok) return Response.json({ ok: false, error: v.error }, { status: 400 })
     const target = v.path
     const script = `
 const fs = require('fs');
@@ -831,9 +841,9 @@ catch(e){ console.error(String(e.message||e)); process.exit(1); }
   function resolvePatchPath(rawPath?: string) {
     const path = String(rawPath || '').trim()
     if (!path) return { ok: false as const, error: 'operation.path obrigatório' }
-    if (path.startsWith('/vercel/sandbox')) return validatePath(path)
+    if (path.startsWith('/vercel/sandbox')) return validatePath(path, { allowRelative: false })
     if (path.startsWith('/')) return { ok: false as const, error: 'operation.path absoluto fora do workspace' }
-    return validatePath('/vercel/sandbox/' + path.replace(/^\/+/, ''))
+    return validatePath(path, { allowRelative: true })
   }
 
   async function fsApplyPatch({ chatId, operation }: { chatId?: string; operation?: any }) {
@@ -1004,7 +1014,7 @@ process.exit(0);
     if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
     const cmd = String(command || '').trim()
     if (!cmd) return Response.json({ ok: false, error: 'command obrigatório' }, { status: 400 })
-    const v = validatePath(cwd || '/vercel/sandbox')
+    const v = validatePath(cwd || '/vercel/sandbox', { allowRelative: true, defaultPath: '/vercel/sandbox' })
     if (!v.ok) return Response.json({ ok: false, error: v.error }, { status: 400 })
     const run = await sess.sandbox.runCommand({
       cmd: 'bash',
