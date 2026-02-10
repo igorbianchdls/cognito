@@ -645,31 +645,173 @@ async function callWorkspace(args) {
   return out;
 }
 
+function parsePositiveInt(value, fallback) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  const k = Math.floor(n);
+  return k > 0 ? k : fallback;
+}
+
+function countOccurrences(haystack, needle) {
+  if (!needle) return 0;
+  let count = 0;
+  let idx = 0;
+  while (idx <= haystack.length) {
+    const found = haystack.indexOf(needle, idx);
+    if (found < 0) break;
+    count += 1;
+    idx = found + needle.length;
+  }
+  return count;
+}
+
+function replaceFirst(haystack, needle, replacement) {
+  const idx = haystack.indexOf(needle);
+  if (idx < 0) return { replaced: false, value: haystack };
+  return {
+    replaced: true,
+    value: haystack.slice(0, idx) + replacement + haystack.slice(idx + needle.length),
+  };
+}
+
+function buildUnifiedUpdateDiff(beforeText, afterText) {
+  const before = String(beforeText || '').replace(/\\r\\n/g, '\\n');
+  const after = String(afterText || '').replace(/\\r\\n/g, '\\n');
+  const beforeLines = before.length ? before.split('\\n') : [];
+  const afterLines = after.length ? after.split('\\n') : [];
+  const header = '@@ -1,' + beforeLines.length + ' +1,' + afterLines.length + ' @@';
+  const minus = beforeLines.map((ln) => '-' + ln).join('\\n');
+  const plus = afterLines.map((ln) => '+' + ln).join('\\n');
+  if (minus && plus) return header + '\\n' + minus + '\\n' + plus;
+  if (minus) return header + '\\n' + minus;
+  if (plus) return header + '\\n' + plus;
+  return header;
+}
+
 async function callRead(args) {
-  const path = typeof args?.path === 'string' ? args.path.trim() : '';
-  if (!path) return { success: false, error: 'path é obrigatório para Read' };
-  const maxCharsRaw = Number(args?.max_chars);
-  const maxChars = Number.isFinite(maxCharsRaw) && maxCharsRaw > 0
-    ? Math.min(200000, Math.floor(maxCharsRaw))
-    : 20000;
-  const run = await callChatAction('fs-read', { path });
+  const filePath = typeof args?.file_path === 'string'
+    ? args.file_path.trim()
+    : (typeof args?.path === 'string' ? args.path.trim() : '');
+  if (!filePath) return { success: false, error: 'file_path é obrigatório para Read' };
+
+  const offset = parsePositiveInt(args?.offset, 1);
+  const limitRaw = parsePositiveInt(args?.limit, 0);
+  const limit = limitRaw > 0 ? Math.min(limitRaw, 10000) : 0;
+
+  const run = await callChatAction('fs-read', { path: filePath });
   if (!run || run.ok === false) {
     return {
       success: false,
-      path,
+      file_path: filePath,
       error: run?.error || 'falha ao ler arquivo',
     };
   }
+
   const rawContent = typeof run?.content === 'string' ? run.content : '';
-  const truncated = rawContent.length > maxChars;
-  const content = truncated ? rawContent.slice(0, maxChars) : rawContent;
+  const isBinary = Boolean(run?.isBinary);
+  if (isBinary) {
+    return {
+      success: true,
+      file_path: String(run?.path || filePath),
+      is_binary: true,
+      content: rawContent,
+      content_encoding: 'base64',
+    };
+  }
+
+  const lines = rawContent.replace(/\\r\\n/g, '\\n').split('\\n');
+  const totalLines = lines.length;
+  const start = Math.max(1, offset);
+  const end = limit > 0 ? Math.min(totalLines + 1, start + limit) : (totalLines + 1);
+  const sliced = (start <= totalLines) ? lines.slice(start - 1, end - 1) : [];
+
   return {
     success: true,
-    path: String(run?.path || path),
-    isBinary: Boolean(run?.isBinary),
-    content,
-    truncated,
-    content_length: rawContent.length,
+    file_path: String(run?.path || filePath),
+    is_binary: false,
+    content: sliced.join('\\n'),
+    offset: start,
+    limit: limit || null,
+    total_lines: totalLines,
+    returned_lines: sliced.length,
+  };
+}
+
+async function callEdit(args) {
+  const filePath = typeof args?.file_path === 'string'
+    ? args.file_path.trim()
+    : (typeof args?.path === 'string' ? args.path.trim() : '');
+  const oldString = typeof args?.old_string === 'string' ? args.old_string : '';
+  const hasNewString = typeof args?.new_string === 'string';
+  const newString = hasNewString ? args.new_string : '';
+  const replaceAll = Boolean(args?.replace_all);
+
+  if (!filePath) return { success: false, error: 'file_path é obrigatório para Edit' };
+  if (!oldString) return { success: false, file_path: filePath, error: 'old_string é obrigatório para Edit' };
+  if (!hasNewString) return { success: false, file_path: filePath, error: 'new_string deve ser string (pode ser vazio)' };
+  if (oldString === newString) {
+    return { success: false, file_path: filePath, error: 'new_string deve ser diferente de old_string' };
+  }
+
+  const read = await callChatAction('fs-read', { path: filePath });
+  if (!read || read.ok === false) {
+    return { success: false, file_path: filePath, error: read?.error || 'falha ao ler arquivo para Edit' };
+  }
+  if (read?.isBinary) {
+    return { success: false, file_path: String(read?.path || filePath), error: 'Edit suporta apenas arquivos de texto' };
+  }
+
+  const current = typeof read?.content === 'string' ? read.content : '';
+  const matches = countOccurrences(current, oldString);
+  if (!matches) {
+    return { success: false, file_path: String(read?.path || filePath), error: 'old_string não encontrado no arquivo' };
+  }
+  if (!replaceAll && matches > 1) {
+    return {
+      success: false,
+      file_path: String(read?.path || filePath),
+      error: 'old_string encontrado múltiplas vezes; use replace_all=true ou torne old_string mais específico',
+      matches,
+    };
+  }
+
+  let next = current;
+  let replacements = 0;
+  if (replaceAll) {
+    next = current.split(oldString).join(newString);
+    replacements = matches;
+  } else {
+    const changed = replaceFirst(current, oldString, newString);
+    next = changed.value;
+    replacements = changed.replaced ? 1 : 0;
+  }
+  if (next === current || replacements === 0) {
+    return { success: false, file_path: String(read?.path || filePath), error: 'nenhuma alteração foi aplicada' };
+  }
+
+  const targetPath = String(read?.path || filePath);
+  const diff = buildUnifiedUpdateDiff(current, next);
+  const patch = await callChatAction('fs-apply-patch', {
+    operation: {
+      type: 'update_file',
+      path: targetPath,
+      diff,
+    },
+  });
+  if (!patch || patch.ok === false) {
+    return {
+      success: false,
+      file_path: targetPath,
+      error: patch?.error || patch?.output || 'falha ao aplicar edição via fs-apply-patch',
+    };
+  }
+
+  return {
+    success: true,
+    file_path: targetPath,
+    replacements,
+    status: String(patch?.status || 'completed'),
+    output: String(patch?.output || 'Edição aplicada com sucesso.'),
   };
 }
 
@@ -914,20 +1056,52 @@ const baseTools = [
   {
     type: 'function',
     name: 'Read',
-    description: 'Lê arquivo na sandbox do chat. Use para abrir código/texto em /vercel/sandbox sem executar comandos shell.',
+    description: 'Lê arquivo na sandbox do chat (padrão Claude SDK).',
     parameters: {
       type: 'object',
       properties: {
-        path: {
+        file_path: {
           type: 'string',
-          description: 'Caminho do arquivo. Aceita absoluto em /vercel/sandbox ou relativo ao workspace.',
+          description: 'Caminho absoluto em /vercel/sandbox ou relativo ao workspace.',
         },
-        max_chars: {
+        offset: {
           type: 'integer',
-          description: 'Limite opcional de caracteres retornados (padrão: 20000, máximo: 200000).',
+          description: 'Linha inicial (1-based). Opcional.',
+        },
+        limit: {
+          type: 'integer',
+          description: 'Quantidade de linhas a retornar. Opcional.',
         },
       },
-      required: ['path'],
+      required: ['file_path'],
+      additionalProperties: false,
+    },
+  },
+  {
+    type: 'function',
+    name: 'Edit',
+    description: 'Substitui texto exato em arquivo (padrão Claude SDK), aplicando gravação via fs-apply-patch.',
+    parameters: {
+      type: 'object',
+      properties: {
+        file_path: {
+          type: 'string',
+          description: 'Caminho absoluto em /vercel/sandbox ou relativo ao workspace.',
+        },
+        old_string: {
+          type: 'string',
+          description: 'Trecho exato a ser substituído.',
+        },
+        new_string: {
+          type: 'string',
+          description: 'Novo trecho (deve ser diferente de old_string).',
+        },
+        replace_all: {
+          type: 'boolean',
+          description: 'Quando true, substitui todas as ocorrências. Padrão: false.',
+        },
+      },
+      required: ['file_path', 'old_string', 'new_string'],
       additionalProperties: false,
     },
   },
@@ -1070,6 +1244,8 @@ while (!done && turn < 10) {
         result = await callWorkspace(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
       } else if (toolName === 'Read' || toolName === 'read') {
         result = await callRead(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
+      } else if (toolName === 'Edit' || toolName === 'edit') {
+        result = await callEdit(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
       } else if (toolName === 'shell') {
         result = await callShell(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
       } else if (toolName === 'apply_patch') {
@@ -1082,13 +1258,12 @@ while (!done && turn < 10) {
         const success = Boolean(result?.success);
         const stdout = typeof result?.stdout === 'string' ? result.stdout : '';
         const stderr = typeof result?.stderr === 'string' ? result.stderr : '';
+        const outputText = stdout || (success ? '' : stderr || String(result?.error || 'falha no shell'));
         outputs.push({
           type: 'shell_call_output',
           call_id: callId,
           status: success ? 'completed' : 'failed',
-          output: stdout || (success ? '' : stderr || String(result?.error || 'falha no shell')),
-          error: success ? undefined : (stderr || String(result?.error || 'falha no shell')),
-          exit_code: Number(result?.exit_code ?? (success ? 0 : 1)),
+          output: outputText,
         });
       } else if (callType === 'apply_patch_call') {
         const ok = Boolean(result?.success);
@@ -1109,9 +1284,7 @@ while (!done && turn < 10) {
           type: 'shell_call_output',
           call_id: callId,
           status: 'failed',
-          output: '',
-          error: msg,
-          exit_code: 1,
+          output: msg,
         });
       } else if (callType === 'apply_patch_call') {
         outputs.push({
