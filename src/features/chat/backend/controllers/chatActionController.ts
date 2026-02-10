@@ -100,6 +100,22 @@ export async function POST(req: Request) {
       // Decide chat id upfront and prefer per-chat snapshot
       const proposed = (params && typeof params.chatId === 'string' && params.chatId.trim()) ? params.chatId.trim() : null
       const id = proposed || genId()
+      const existing = SESSIONS.get(id)
+      if (existing) {
+        existing.lastUsedAt = Date.now()
+        // Ensure agent token remains valid for tool bridge calls.
+        if (!existing.agentToken || !existing.agentTokenExp || existing.agentTokenExp <= (Date.now() + 60_000)) {
+          const { token, exp } = generateAgentToken(1800)
+          existing.agentToken = token
+          existing.agentTokenExp = exp
+          setAgentToken(id, token, exp)
+        }
+        const provider = normalizeProvider(existing.provider, existing.model)
+        existing.provider = provider
+        existing.model = normalizeModel(provider, existing.model || (provider === 'openai-responses' ? 'gpt-5-nano' : 'claude-haiku-4-5-20251001'))
+        timeline.push({ name: 'reuse-existing-session', ms: Date.now() - t0, ok: true })
+        return Response.json({ ok: true, chatId: id, reused: true, timeline })
+      }
       let existingModel = ''
 
       let usedChatSnapshot = false
