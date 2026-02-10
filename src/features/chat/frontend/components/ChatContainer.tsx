@@ -31,7 +31,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   const [messages, setMessages] = useState<UIMessage[]>([])
   const [chatId, setChatId] = useState<string | null>(null)
   const [status, setStatus] = useState<ChatStatus>('idle')
-  const [sandboxStatus, setSandboxStatus] = useState<SandboxStatus>(autoStartSandbox && initialChatId ? 'starting' : 'off')
+  const [sandboxStatus, setSandboxStatus] = useState<SandboxStatus>('off')
   const [composioEnabled, setComposioEnabled] = useState<boolean>(false)
   const [model, setModel] = useState<EngineId>(initialEngine || 'openai-gpt5nano')
   const abortRef = useRef<AbortController | null>(null)
@@ -41,6 +41,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   const router = useRouter()
   const [menuBusy, setMenuBusy] = useState(false)
   const [headerTitle, setHeaderTitle] = useState<string | undefined>(undefined)
+  const [hasPersistedChat, setHasPersistedChat] = useState<boolean>(false)
 
   useEffect(() => {
     if (initialEngine) setModel(initialEngine)
@@ -91,12 +92,18 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
       setSandboxStatus('running')
       return chatId
     }
-    setSandboxStatus('starting')
+    const resumeHint = Boolean(initialChatId && (hasPersistedChat || messages.length > 0))
+    setSandboxStatus(resumeHint ? 'resuming' : 'starting')
     const body: any = { action: 'chat-start' }
     if (initialChatId && typeof initialChatId === 'string') body.chatId = initialChatId
     try {
       const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-      const data = await res.json().catch(() => ({})) as { ok?: boolean; chatId?: string; error?: string }
+      const data = await res.json().catch(() => ({})) as {
+        ok?: boolean
+        chatId?: string
+        error?: string
+        startupMode?: 'reused' | 'snapshot' | 'cold'
+      }
       if (!res.ok || data.ok === false || !data.chatId) throw new Error(data.error || 'chat-start failed')
       setChatId(data.chatId)
       setSandboxStatus('running')
@@ -455,6 +462,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
         const res = await fetch(`/api/chat/messages?chatId=${encodeURIComponent(initialChatId!)}&limit=50`, { cache: 'no-store' })
         const data = await res.json().catch(() => ({})) as { ok?: boolean; items?: Array<{ id: string; role: 'user'|'assistant'|'tool'; content?: string; parts?: any; created_at: string }> }
         if (!cancelled && res.ok && data && data.ok && Array.isArray(data.items)) {
+          setHasPersistedChat(true)
           const mapped = data.items.map((r) => ({
             id: r.id || `db-${r.created_at}`,
             role: (r.role === 'assistant' ? 'assistant' : 'user') as any,
@@ -481,6 +489,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
         if (!cancelled && res.ok && data && data.ok && data.chat) {
           const t = (data.chat.title || '').toString()
           if (t) setHeaderTitle(t)
+          setHasPersistedChat(true)
           const dbModel = (data.chat.model || '').toString()
           if (dbModel) setModel(modelToEngine(dbModel))
         }
@@ -503,6 +512,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
         const data = await res.json().catch(() => ({})) as { ok?: boolean; status?: string }
         if (cancelled) return
         if (res.ok && data && data.ok && data.status === 'running') {
+          setHasPersistedChat(true)
           setChatId(initialChatId)
           setSandboxStatus('running')
         } else {
@@ -518,7 +528,6 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   // Auto-start sandbox (no message) when requested via URL flag
   useEffect(() => {
     if (autoStartSandbox && initialChatId && !chatId) {
-      setSandboxStatus('starting')
       ensureStart().catch(() => { setSandboxStatus('error') })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

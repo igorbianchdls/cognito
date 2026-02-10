@@ -114,7 +114,7 @@ export async function POST(req: Request) {
         existing.provider = provider
         existing.model = normalizeModel(provider, existing.model || (provider === 'openai-responses' ? 'gpt-5-nano' : 'claude-haiku-4-5-20251001'))
         timeline.push({ name: 'reuse-existing-session', ms: Date.now() - t0, ok: true })
-        return Response.json({ ok: true, chatId: id, reused: true, timeline })
+        return Response.json({ ok: true, chatId: id, reused: true, startupMode: 'reused' as const, timeline })
       }
       let existingModel = ''
 
@@ -312,7 +312,13 @@ export async function POST(req: Request) {
       } catch {
         timeline.push({ name: 'db_set_title', ms: Date.now() - tTitle, ok: false })
       }
-      const res = Response.json({ ok: true, chatId: id, timeline })
+      const res = Response.json({
+        ok: true,
+        chatId: id,
+        reused: false,
+        startupMode: (usedChatSnapshot ? 'snapshot' : 'cold') as const,
+        timeline,
+      })
       try {
         if (composioUserId) res.headers.set('Set-Cookie', `composio_uid=${encodeURIComponent(composioUserId)}; Path=/; Max-Age=31536000; SameSite=Lax`)
       } catch {}
