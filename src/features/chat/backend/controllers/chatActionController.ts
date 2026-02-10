@@ -85,6 +85,7 @@ export async function POST(req: Request) {
   if (action === 'fs-list') return fsList(payload as { chatId?: string; path?: string })
   if (action === 'fs-read') return fsRead(payload as { chatId?: string; path?: string })
   if (action === 'fs-write') return fsWrite(payload as { chatId?: string; path?: string; content?: string })
+  if (action === 'sandbox-shell') return sandboxShell(payload as { chatId?: string; command?: string; cwd?: string })
   if (action === 'mcp-toggle') return mcpToggle(payload as { chatId?: string; enabled?: boolean })
   if (action === 'model-set') return modelSet(payload as { chatId?: string; model?: string; provider?: string })
   if (action === 'chat-status') return chatStatus(payload as { chatId?: string })
@@ -819,6 +820,31 @@ catch(e){ console.error(String(e.message||e)); process.exit(1); }
     const [out, err] = await Promise.all([run.stdout().catch(()=>''), run.stderr().catch(()=> '')])
     if (run.exitCode !== 0) return Response.json({ ok: false, error: err || out || 'falha ao escrever' }, { status: 500 })
     return Response.json({ ok: true })
+  }
+
+  async function sandboxShell({ chatId, command, cwd }: { chatId?: string; command?: string; cwd?: string }) {
+    if (!chatId) return Response.json({ ok: false, error: 'chatId obrigatório' }, { status: 400 })
+    const sess = SESSIONS.get(chatId)
+    if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
+    const cmd = String(command || '').trim()
+    if (!cmd) return Response.json({ ok: false, error: 'command obrigatório' }, { status: 400 })
+    const v = validatePath(cwd || '/vercel/sandbox')
+    if (!v.ok) return Response.json({ ok: false, error: v.error }, { status: 400 })
+    const run = await sess.sandbox.runCommand({
+      cmd: 'bash',
+      args: ['-lc', cmd],
+      cwd: v.path,
+    } as any)
+    const [stdout, stderr] = await Promise.all([run.stdout().catch(() => ''), run.stderr().catch(() => '')])
+    const exitCode = Number(run.exitCode ?? 1)
+    return Response.json({
+      ok: true,
+      success: exitCode === 0,
+      exit_code: exitCode,
+      cwd: v.path,
+      stdout,
+      stderr,
+    })
   }
 }
   async function mcpToggle({ chatId, enabled }: { chatId?: string; enabled?: boolean }) {

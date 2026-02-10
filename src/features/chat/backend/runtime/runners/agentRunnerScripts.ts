@@ -564,6 +564,26 @@ function buildAgentToolsUrl(resource, suffix) {
   return (baseAppUrl || '') + '/api/agent-tools/' + cleanRes + '/' + cleanSuf;
 }
 
+async function callChatAction(action, payload) {
+  if (!baseAppUrl || !chatId) {
+    return { success: false, error: 'configuração ausente para sandbox tools (AGENT_BASE_URL/AGENT_CHAT_ID)' };
+  }
+  const url = (baseAppUrl || '').replace(/\\/+$/, '') + '/api/chat';
+  const headers = { 'content-type': 'application/json' };
+  const res = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ action, chatId, ...(payload || {}) }),
+  });
+  const raw = await res.text().catch(() => '');
+  let data = {};
+  try { data = JSON.parse(raw); } catch {}
+  if (!res.ok) {
+    return { success: false, status: res.status, error: data?.error || raw || res.statusText || ('erro em ' + action) };
+  }
+  return data;
+}
+
 async function callCrud(args) {
   if (!baseAppUrl || !toolToken || !chatId) {
     return { success: false, error: 'configuração ausente para tool crud (AGENT_BASE_URL/AGENT_TOOL_TOKEN/AGENT_CHAT_ID)' };
@@ -625,18 +645,68 @@ async function callWorkspace(args) {
   return out;
 }
 
-function extractFunctionCallsFromResponse(responsePayload, fallbackCalls) {
+function supportsNativeShellTool(model) {
+  const m = String(model || '').toLowerCase().trim();
+  return m.startsWith('gpt-5.1') || m.startsWith('gpt-5.2');
+}
+
+async function callShell(args) {
+  const command = typeof args?.command === 'string' ? args.command : '';
+  if (!command.trim()) return { success: false, error: 'command é obrigatório para shell tool' };
+  const cwdRaw = typeof args?.cwd === 'string' ? args.cwd.trim() : '';
+  const cwd = cwdRaw || '/vercel/sandbox';
+  const run = await callChatAction('sandbox-shell', { command, cwd });
+  if (!run || run.ok === false) {
+    return { success: false, error: run?.error || 'falha ao executar shell' };
+  }
+  return {
+    success: Boolean(run.success),
+    exit_code: Number(run.exit_code ?? 1),
+    stdout: String(run.stdout || ''),
+    stderr: String(run.stderr || ''),
+    cwd: String(run.cwd || cwd),
+  };
+}
+
+function normalizeToolCallItem(item) {
+  if (!item || typeof item !== 'object') return null;
+  const itemType = String(item.type || '');
+  const callId = String(item.call_id || item.id || '');
+
+  if (itemType === 'function_call' || itemType === 'tool_call') {
+    const name = String(item.name || item.tool_name || '');
+    if (!name) return null;
+    const argsRaw = item.arguments ?? item.input ?? item.arguments_json ?? '{}';
+    return {
+      name,
+      call_id: callId,
+      call_type: 'function_call',
+      arguments: typeof argsRaw === 'string' ? argsRaw : JSON.stringify(argsRaw || {}),
+    };
+  }
+
+  if (itemType === 'shell_call') {
+    const argsRaw = item.arguments ?? item.input ?? {
+      command: item.command || '',
+      cwd: item.cwd || '/vercel/sandbox',
+    };
+    return {
+      name: 'shell',
+      call_id: callId,
+      call_type: 'shell_call',
+      arguments: typeof argsRaw === 'string' ? argsRaw : JSON.stringify(argsRaw || {}),
+    };
+  }
+
+  return null;
+}
+
+function extractToolCallsFromResponse(responsePayload, fallbackCalls) {
   const calls = [];
   const output = Array.isArray(responsePayload?.output) ? responsePayload.output : [];
   for (const item of output) {
-    if (!item || typeof item !== 'object') continue;
-    const itemType = String(item.type || '');
-    if (itemType !== 'function_call' && itemType !== 'tool_call') continue;
-    const name = String(item.name || item.tool_name || '');
-    if (!name) continue;
-    const callId = String(item.call_id || item.id || '');
-    const argsRaw = item.arguments ?? item.input ?? item.arguments_json ?? '{}';
-    calls.push({ name, call_id: callId, arguments: typeof argsRaw === 'string' ? argsRaw : JSON.stringify(argsRaw || {}) });
+    const normalized = normalizeToolCallItem(item);
+    if (normalized) calls.push(normalized);
   }
   if (calls.length > 0) return calls;
   return Array.isArray(fallbackCalls) ? fallbackCalls : [];
@@ -686,6 +756,7 @@ function onEvent(eventName, dataRaw) {
 }
 
 const decoder = new TextDecoder();
+const nativeShellEnabled = supportsNativeShellTool(modelId);
 const tools = [
   {
     type: 'function',
@@ -772,6 +843,7 @@ const tools = [
       additionalProperties: true,
     },
   },
+  ...(nativeShellEnabled ? [{ type: 'shell' }] : []),
 ];
 
 let previousResponseId = null;
@@ -807,7 +879,7 @@ while (!done && turn < 10) {
 
   let buffer = '';
   let completedResponse = null;
-  const fallbackFunctionCalls = [];
+  const fallbackToolCalls = [];
 
   function parseFrameTurn(frame) {
     const lines = frame.split('\\n');
@@ -838,15 +910,8 @@ while (!done && turn < 10) {
     }
     if (type === 'response.output_item.done') {
       const item = ev?.item;
-      const itemType = String(item?.type || '');
-      if (item && (itemType === 'function_call' || itemType === 'tool_call')) {
-        const name = String(item?.name || item?.tool_name || '');
-        const callId = String(item?.call_id || item?.id || '');
-        const argsRaw = item?.arguments ?? item?.input ?? item?.arguments_json ?? '{}';
-        if (name) {
-          fallbackFunctionCalls.push({ name, call_id: callId, arguments: typeof argsRaw === 'string' ? argsRaw : JSON.stringify(argsRaw || {}) });
-        }
-      }
+      const normalized = normalizeToolCallItem(item);
+      if (normalized) fallbackToolCalls.push(normalized);
       return;
     }
   }
@@ -865,20 +930,21 @@ while (!done && turn < 10) {
   if (buffer.trim()) parseFrameTurn(buffer);
 
   previousResponseId = responseId || completedResponse?.id || previousResponseId;
-  const functionCalls = extractFunctionCallsFromResponse(completedResponse, fallbackFunctionCalls);
-  if (!functionCalls.length) {
+  const toolCalls = extractToolCallsFromResponse(completedResponse, fallbackToolCalls);
+  if (!toolCalls.length) {
     done = true;
     break;
   }
 
   const outputs = [];
   let callIdx = 0;
-  for (const fnCall of functionCalls) {
+  for (const toolCall of toolCalls) {
     const index = callIdx++;
-    const toolName = String(fnCall?.name || '');
-    const rawArgs = typeof fnCall?.arguments === 'string' ? fnCall.arguments : JSON.stringify(fnCall?.arguments || {});
+    const toolName = String(toolCall?.name || '');
+    const callType = String(toolCall?.call_type || 'function_call');
+    const rawArgs = typeof toolCall?.arguments === 'string' ? toolCall.arguments : JSON.stringify(toolCall?.arguments || {});
     const parsedArgs = parseJsonMaybe(rawArgs);
-    const callId = String(fnCall?.call_id || ('call-' + index + '-' + Date.now()));
+    const callId = String(toolCall?.call_id || ('call-' + index + '-' + Date.now()));
     emit('tool_input_start', { index, name: toolName, call_id: callId });
     if (rawArgs) emit('tool_input_delta', { index, partial: rawArgs });
     emit('tool_input_done', { index, name: toolName, call_id: callId, input: parsedArgs, raw: rawArgs });
@@ -888,15 +954,42 @@ while (!done && turn < 10) {
         result = await callCrud(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
       } else if (toolName === 'workspace') {
         result = await callWorkspace(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
+      } else if (toolName === 'shell') {
+        result = await callShell(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
       } else {
         result = { success: false, error: 'tool desconhecida: ' + toolName };
       }
       emit('tool_done', { index, call_id: callId, tool_name: toolName, output: result });
-      outputs.push({ type: 'function_call_output', call_id: callId, output: JSON.stringify(result ?? {}) });
+      if (callType === 'shell_call') {
+        const success = Boolean(result?.success);
+        const stdout = typeof result?.stdout === 'string' ? result.stdout : '';
+        const stderr = typeof result?.stderr === 'string' ? result.stderr : '';
+        outputs.push({
+          type: 'shell_call_output',
+          call_id: callId,
+          status: success ? 'completed' : 'failed',
+          output: stdout || (success ? '' : stderr || String(result?.error || 'falha no shell')),
+          error: success ? undefined : (stderr || String(result?.error || 'falha no shell')),
+          exit_code: Number(result?.exit_code ?? (success ? 0 : 1)),
+        });
+      } else {
+        outputs.push({ type: 'function_call_output', call_id: callId, output: JSON.stringify(result ?? {}) });
+      }
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       emit('tool_error', { index, call_id: callId, tool_name: toolName, error: msg });
-      outputs.push({ type: 'function_call_output', call_id: callId, output: JSON.stringify({ success: false, error: msg }) });
+      if (callType === 'shell_call') {
+        outputs.push({
+          type: 'shell_call_output',
+          call_id: callId,
+          status: 'failed',
+          output: '',
+          error: msg,
+          exit_code: 1,
+        });
+      } else {
+        outputs.push({ type: 'function_call_output', call_id: callId, output: JSON.stringify({ success: false, error: msg }) });
+      }
     }
   }
 
