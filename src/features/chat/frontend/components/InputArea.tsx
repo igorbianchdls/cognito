@@ -33,7 +33,7 @@ type Props = {
   onModelChange?: (m: 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5' | 'openai-gpt5mini' | 'openai-gpt5nano') => void;
 };
 
-export default function InputArea({ value, onChange, onSubmit, status = 'idle', onOpenSandbox, composioEnabled, onToggleComposio, model = 'openai-gpt5nano', onModelChange }: Props) {
+export default function InputArea({ value, onChange, onSubmit, status = 'idle', onOpenSandbox, composioEnabled, onToggleComposio, model = 'openai-gpt5', onModelChange }: Props) {
   // Local-only UI state for Toolkits panel (no persistence, no backend)
   const [toolkitsOpen, setToolkitsOpen] = useState(false)
   const [tkSearch, setTkSearch] = useState('')
@@ -204,7 +204,7 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
 
             {/* Model selector */}
             <PromptInputModelSelect value={model} onValueChange={(v: any) => {
-              const next = (v === 'claude-sonnet' || v === 'claude-haiku' || v === 'openai-gpt5' || v === 'openai-gpt5nano' || v === 'openai-gpt5mini') ? v : 'openai-gpt5nano'
+              const next = (v === 'claude-sonnet' || v === 'claude-haiku' || v === 'openai-gpt5' || v === 'openai-gpt5nano' || v === 'openai-gpt5mini') ? v : 'openai-gpt5'
               onModelChange?.(next)
             }}>
               <PromptInputModelSelectTrigger className="text-gray-500 hover:text-gray-800">

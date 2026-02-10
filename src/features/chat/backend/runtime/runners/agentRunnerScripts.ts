@@ -460,7 +460,7 @@ for await (const msg of q) {
 export function getOpenAIResponsesStreamRunnerScript(): string {
   return `
 const prompt = process.argv[2] || '';
-const modelId = process.env.AGENT_MODEL || 'gpt-5-nano';
+const modelId = process.env.AGENT_MODEL || 'gpt-5';
 const apiKey = process.env.OPENAI_API_KEY || process.env.CODEX_API_KEY || '';
 const baseAppUrl = process.env.AGENT_BASE_URL || '';
 const toolToken = process.env.AGENT_TOOL_TOKEN || '';
@@ -652,8 +652,8 @@ function supportsNativeShellTool(model) {
 
 function supportsNativeApplyPatchTool(model) {
   const m = String(model || '').toLowerCase().trim();
-  if (m.includes('nano') || m.includes('mini')) return false;
-  return m === 'gpt-5' || m.startsWith('gpt-5.1') || m.startsWith('gpt-5.2');
+  if (!m) return false;
+  return m.startsWith('gpt-') || m.startsWith('o1') || m.startsWith('o3') || m.startsWith('o4');
 }
 
 async function callShell(args) {

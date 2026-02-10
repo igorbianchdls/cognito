@@ -22,12 +22,12 @@ function engineToBackend(engine: EngineId): { provider: string; model: string } 
 
 function modelToEngine(modelRaw?: string): EngineId {
   const model = (modelRaw || '').toString().trim().toLowerCase()
-  if (!model) return 'openai-gpt5nano'
+  if (!model) return 'openai-gpt5'
   if (model.includes('gpt-5-nano') || model.includes('gpt5nano') || model.includes('gpt5-nano')) return 'openai-gpt5nano'
   if (model.includes('gpt-5-mini') || model.includes('gpt5mini') || model.includes('gpt5-mini')) return 'openai-gpt5mini'
   if (model.includes('gpt-5') || model.includes('gpt5') || model.includes('openai')) return 'openai-gpt5'
   if (model.includes('sonnet')) return 'claude-sonnet'
-  return 'openai-gpt5nano'
+  return 'openai-gpt5'
 }
 
 export default function ChatContainer({ onOpenSandbox, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, autoStartSandbox, initialEngine }: { onOpenSandbox?: (chatId?: string) => void; withSideMargins?: boolean; redirectOnFirstMessage?: boolean; initialMessage?: string; autoSendPrefill?: boolean; initialChatId?: string; autoStartSandbox?: boolean; initialEngine?: EngineId }) {
@@ -37,7 +37,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   const [status, setStatus] = useState<ChatStatus>('idle')
   const [sandboxStatus, setSandboxStatus] = useState<SandboxStatus>('off')
   const [composioEnabled, setComposioEnabled] = useState<boolean>(false)
-  const [model, setModel] = useState<EngineId>(initialEngine || 'openai-gpt5nano')
+  const [model, setModel] = useState<EngineId>(initialEngine || 'openai-gpt5')
   const abortRef = useRef<AbortController | null>(null)
   // Track the assistant message for the current turn, so each user message
   // gets its own assistant response instead of appending to the first one.
