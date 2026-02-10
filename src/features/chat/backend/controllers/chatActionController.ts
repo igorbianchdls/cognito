@@ -62,15 +62,35 @@ function normalizeModel(provider: ChatProvider, rawModel?: string): string {
 }
 
 async function getOrCreateOpenAiSandbox(chatId: string): Promise<Sandbox> {
+  async function ensureOpenAiSkillsScaffold(sandbox: Sandbox) {
+    try {
+      await sandbox.runCommand({
+        cmd: 'node',
+        args: ['-e', "const fs=require('fs');fs.mkdirSync('/vercel/sandbox/openai-chat',{recursive:true});fs.mkdirSync('/vercel/sandbox/agents/skills',{recursive:true});console.log('ok')"],
+      })
+    } catch {}
+    try {
+      await sandbox.writeFiles([
+        {
+          path: '/vercel/sandbox/agents/skills/TESTE-1.md',
+          content: Buffer.from('# TESTE-1\\nSkill de teste 1 para bootstrap da sandbox OpenAI.\\n'),
+        },
+        {
+          path: '/vercel/sandbox/agents/skills/TESTE-2.md',
+          content: Buffer.from('# TESTE-2\\nSkill de teste 2 para bootstrap da sandbox OpenAI.\\n'),
+        },
+      ])
+    } catch {}
+  }
+
   const existing = OPENAI_SANDBOXES.get(chatId)
   if (existing) {
     existing.lastUsedAt = Date.now()
+    await ensureOpenAiSkillsScaffold(existing.sandbox)
     return existing.sandbox
   }
   const sandbox = await Sandbox.create({ runtime: 'node22', resources: { vcpus: 2 }, timeout: 600_000 })
-  try {
-    await sandbox.runCommand({ cmd: 'node', args: ['-e', "require('fs').mkdirSync('/vercel/sandbox/openai-chat',{recursive:true});console.log('ok')"] })
-  } catch {}
+  await ensureOpenAiSkillsScaffold(sandbox)
   OPENAI_SANDBOXES.set(chatId, { sandbox, createdAt: Date.now(), lastUsedAt: Date.now() })
   return sandbox
 }
