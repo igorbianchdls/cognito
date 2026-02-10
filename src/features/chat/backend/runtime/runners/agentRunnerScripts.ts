@@ -696,6 +696,179 @@ function isSandboxAbsolutePath(filePath) {
   return true;
 }
 
+const SKILL_ROOTS = ['/vercel/sandbox/agent/skills', '/vercel/sandbox/agents/skills'];
+
+function isSkillAbsolutePath(filePath) {
+  const p = String(filePath || '').trim();
+  if (!isSandboxAbsolutePath(p)) return false;
+  for (const root of SKILL_ROOTS) {
+    if (p === root || p.startsWith(root + '/')) return true;
+  }
+  return false;
+}
+
+function normalizeSkillRelativePath(value) {
+  let v = String(value || '').trim();
+  if (!v) return '';
+  if (v.includes('..')) return '';
+  while (v.startsWith('/')) v = v.slice(1);
+  return v;
+}
+
+function isMissingPathError(err) {
+  const e = String(err || '').toLowerCase();
+  return e.includes('enoent')
+    || e.includes('no such file')
+    || e.includes('not found')
+    || e.includes('arquivo não encontrado')
+    || e.includes('nao encontrado')
+    || e.includes('não existe')
+    || e.includes('nao existe');
+}
+
+async function callSkill(args) {
+  const action = String(
+    args?.action
+      || ((args?.path || args?.file_path || args?.skill_name) ? 'read' : 'list')
+  ).toLowerCase().trim();
+
+  if (action === 'list') {
+    const roots = [];
+    const collected = [];
+    for (const root of SKILL_ROOTS) {
+      const run = await callChatAction('fs-list', { path: root });
+      if (run && run.ok === true && Array.isArray(run.entries)) {
+        roots.push({ path: root, ok: true, entries: run.entries.length });
+        for (const entry of run.entries) {
+          if (!entry || typeof entry !== 'object') continue;
+          if (String(entry.type || '') !== 'file') continue;
+          const name = String(entry.name || '');
+          const path = String(entry.path || '');
+          if (!name || !path) continue;
+          collected.push({ name, path });
+        }
+      } else {
+        roots.push({ path: root, ok: false, error: String(run?.error || 'pasta de skills indisponível') });
+      }
+    }
+    const unique = new Map();
+    for (const file of collected) {
+      if (!unique.has(file.path)) unique.set(file.path, file);
+    }
+    const files = Array.from(unique.values()).sort((a, b) => a.path.localeCompare(b.path));
+    return { success: true, action: 'list', roots, files, count: files.length };
+  }
+
+  if (action !== 'read') {
+    return { success: false, error: 'action inválida para Skill. Use list ou read.' };
+  }
+
+  const offset = parsePositiveInt(args?.offset, 1);
+  const limitRaw = parsePositiveInt(args?.limit, 0);
+  const limit = limitRaw > 0 ? Math.min(limitRaw, 10000) : 0;
+
+  const candidates = [];
+  const rawPath = typeof args?.file_path === 'string'
+    ? args.file_path
+    : (typeof args?.path === 'string' ? args.path : '');
+
+  if (rawPath && rawPath.trim()) {
+    const given = rawPath.trim();
+    if (given.startsWith('/')) {
+      if (!isSkillAbsolutePath(given)) {
+        return {
+          success: false,
+          error: 'file_path fora da pasta de skills. Use /vercel/sandbox/agent/skills/... ou /vercel/sandbox/agents/skills/...',
+          file_path: given,
+        };
+      }
+      candidates.push(given);
+    } else {
+      const rel = normalizeSkillRelativePath(given);
+      if (!rel) return { success: false, error: 'path relativo inválido para Skill.' };
+      for (const root of SKILL_ROOTS) candidates.push(root + '/' + rel);
+    }
+  }
+
+  const rawSkillName = typeof args?.skill_name === 'string' ? args.skill_name.trim() : '';
+  if (rawSkillName) {
+    const name = normalizeSkillRelativePath(rawSkillName);
+    if (!name) return { success: false, error: 'skill_name inválido.' };
+    const hasMd = name.toLowerCase().endsWith('.md');
+    for (const root of SKILL_ROOTS) {
+      if (hasMd) {
+        candidates.push(root + '/' + name);
+      } else {
+        candidates.push(root + '/' + name + '.md');
+        candidates.push(root + '/' + name + '/SKILL.md');
+      }
+    }
+  }
+
+  if (!candidates.length) {
+    return { success: false, error: 'para Skill.read, informe path/file_path ou skill_name' };
+  }
+
+  const uniqueCandidates = [];
+  const seen = new Set();
+  for (const c of candidates) {
+    if (!seen.has(c)) {
+      seen.add(c);
+      uniqueCandidates.push(c);
+    }
+  }
+
+  const attempts = [];
+  for (const filePath of uniqueCandidates) {
+    const run = await callChatAction('fs-read', { path: filePath });
+    if (!run || run.ok !== true) {
+      attempts.push({ path: filePath, error: String(run?.error || 'falha ao ler skill') });
+      continue;
+    }
+
+    const rawContent = typeof run?.content === 'string' ? run.content : '';
+    const isBinary = Boolean(run?.isBinary);
+    if (isBinary) {
+      return {
+        success: true,
+        action: 'read',
+        file_path: String(run?.path || filePath),
+        is_binary: true,
+        content: rawContent,
+        content_encoding: 'base64',
+      };
+    }
+
+    const lines = rawContent.replace(/\\r\\n/g, '\\n').split('\\n');
+    const totalLines = lines.length;
+    const start = Math.max(1, offset);
+    const end = limit > 0 ? Math.min(totalLines + 1, start + limit) : (totalLines + 1);
+    const sliced = (start <= totalLines) ? lines.slice(start - 1, end - 1) : [];
+
+    return {
+      success: true,
+      action: 'read',
+      file_path: String(run?.path || filePath),
+      is_binary: false,
+      content: sliced.join('\\n'),
+      offset: start,
+      limit: limit || null,
+      total_lines: totalLines,
+      returned_lines: sliced.length,
+    };
+  }
+
+  const nonMissing = attempts.filter((a) => !isMissingPathError(a.error));
+  return {
+    success: false,
+    action: 'read',
+    error: nonMissing.length
+      ? 'falha ao ler skill'
+      : 'skill não encontrada',
+    attempts,
+  };
+}
+
 async function callRead(args) {
   const filePath = typeof args?.file_path === 'string'
     ? args.file_path.trim()
@@ -1158,6 +1331,43 @@ const baseTools = [
   },
   {
     type: 'function',
+    name: 'Skill',
+    description: 'Lista e lê skills dentro das pastas /vercel/sandbox/agent/skills (preferencial) e /vercel/sandbox/agents/skills (compatibilidade).',
+    parameters: {
+      type: 'object',
+      properties: {
+        action: {
+          type: 'string',
+          enum: ['list', 'read'],
+          description: 'list: lista arquivos de skill. read: lê um arquivo de skill.',
+        },
+        path: {
+          type: 'string',
+          description: 'Caminho do arquivo de skill (absoluto dentro de /vercel/sandbox/.../skills ou relativo à pasta de skills).',
+        },
+        file_path: {
+          type: 'string',
+          description: 'Alias de path.',
+        },
+        skill_name: {
+          type: 'string',
+          description: 'Nome da skill para leitura (ex.: TESTE-1). Resolve para <name>.md e <name>/SKILL.md.',
+        },
+        offset: {
+          type: 'integer',
+          description: 'Linha inicial (1-based) para action=read.',
+        },
+        limit: {
+          type: 'integer',
+          description: 'Quantidade de linhas para action=read.',
+        },
+      },
+      required: ['action'],
+      additionalProperties: false,
+    },
+  },
+  {
+    type: 'function',
     name: 'Edit',
     description: 'Substitui texto exato em arquivo (padrão Claude SDK), aplicando gravação via fs-apply-patch. file_path deve sempre começar com /vercel/sandbox.',
     parameters: {
@@ -1355,6 +1565,8 @@ while (!done && turn < 10) {
         result = await callWorkspace(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
       } else if (toolName === 'Read' || toolName === 'read') {
         result = await callRead(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
+      } else if (toolName === 'Skill' || toolName === 'skill') {
+        result = await callSkill(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
       } else if (toolName === 'Edit' || toolName === 'edit') {
         result = await callEdit(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
       } else if (toolName === 'Write' || toolName === 'write') {

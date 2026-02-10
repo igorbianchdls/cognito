@@ -66,17 +66,17 @@ async function getOrCreateOpenAiSandbox(chatId: string): Promise<Sandbox> {
     try {
       await sandbox.runCommand({
         cmd: 'node',
-        args: ['-e', "const fs=require('fs');fs.mkdirSync('/vercel/sandbox/openai-chat',{recursive:true});fs.mkdirSync('/vercel/sandbox/.agent/skills',{recursive:true});console.log('ok')"],
+        args: ['-e', "const fs=require('fs');fs.mkdirSync('/vercel/sandbox/openai-chat',{recursive:true});fs.mkdirSync('/vercel/sandbox/agent/skills',{recursive:true});console.log('ok')"],
       })
     } catch {}
     try {
       await sandbox.writeFiles([
         {
-          path: '/vercel/sandbox/.agent/skills/TESTE-1.md',
+          path: '/vercel/sandbox/agent/skills/TESTE-1.md',
           content: Buffer.from('# TESTE-1\\nSkill de teste 1 para bootstrap da sandbox OpenAI.\\n'),
         },
         {
-          path: '/vercel/sandbox/.agent/skills/TESTE-2.md',
+          path: '/vercel/sandbox/agent/skills/TESTE-2.md',
           content: Buffer.from('# TESTE-2\\nSkill de teste 2 para bootstrap da sandbox OpenAI.\\n'),
         },
       ])
@@ -792,7 +792,7 @@ const fs = require('fs');
 const p = process.env.TARGET_PATH;
 try {
   const names = fs.readdirSync(p, { withFileTypes: true }).map(d=>({ name: d.name, type: d.isDirectory()?'dir':'file', path: require('path').join(p, d.name) }));
-  const filtered = names.filter(e => ((e.name === '.claude' || e.name === '.agent') || !e.name.startsWith('.')) && e.name !== 'node_modules' && e.name !== '.cache');
+  const filtered = names.filter(e => (e.name === '.claude' || !e.name.startsWith('.')) && e.name !== 'node_modules' && e.name !== '.cache');
   filtered.sort((a,b)=> a.type===b.type ? a.name.localeCompare(b.name) : (a.type==='dir'?-1:1));
   console.log(JSON.stringify(filtered));
 } catch(e){ console.error(String(e.message||e)); process.exit(1); }
@@ -1102,8 +1102,20 @@ process.exit(0);
       try {
         await sess.sandbox.runCommand({
           cmd: 'node',
-          args: ['-e', "const fs=require('fs');fs.mkdirSync('/vercel/sandbox/.agent/skills',{recursive:true});console.log('ok')"],
+          args: ['-e', "const fs=require('fs');fs.mkdirSync('/vercel/sandbox/agent/skills',{recursive:true});console.log('ok')"],
         })
+      } catch {}
+      try {
+        await sess.sandbox.writeFiles([
+          {
+            path: '/vercel/sandbox/agent/skills/TESTE-1.md',
+            content: Buffer.from('# TESTE-1\\nArquivo de teste 1 para provider OpenAI.\\n'),
+          },
+          {
+            path: '/vercel/sandbox/agent/skills/TESTE-2.md',
+            content: Buffer.from('# TESTE-2\\nArquivo de teste 2 para provider OpenAI.\\n'),
+          },
+        ])
       } catch {}
       // Also pre-warm OpenAI dedicated sandbox (used by streaming runner).
       try { await getOrCreateOpenAiSandbox(chatId) } catch {}
