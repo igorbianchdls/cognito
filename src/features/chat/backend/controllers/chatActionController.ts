@@ -312,11 +312,12 @@ export async function POST(req: Request) {
       } catch {
         timeline.push({ name: 'db_set_title', ms: Date.now() - tTitle, ok: false })
       }
+      const startupMode: 'snapshot' | 'cold' = usedChatSnapshot ? 'snapshot' : 'cold'
       const res = Response.json({
         ok: true,
         chatId: id,
         reused: false,
-        startupMode: (usedChatSnapshot ? 'snapshot' : 'cold') as const,
+        startupMode,
         timeline,
       })
       try {
