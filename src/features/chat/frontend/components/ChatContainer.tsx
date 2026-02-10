@@ -14,7 +14,7 @@ type EngineId = 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5' | 'openai-gpt5m
 
 function engineToBackend(engine: EngineId): { provider: string; model: string } {
   if (engine === 'claude-sonnet') return { provider: 'claude-agent', model: 'claude-sonnet-4-5-20251001' }
-  if (engine === 'openai-gpt5') return { provider: 'openai-responses', model: 'gpt-5' }
+  if (engine === 'openai-gpt5') return { provider: 'openai-responses', model: 'gpt-5.1' }
   if (engine === 'openai-gpt5mini') return { provider: 'openai-responses', model: 'gpt-5-mini' }
   if (engine === 'openai-gpt5nano') return { provider: 'openai-responses', model: 'gpt-5-nano' }
   return { provider: 'claude-agent', model: 'claude-haiku-4-5-20251001' }

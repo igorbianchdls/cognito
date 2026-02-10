@@ -213,7 +213,7 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
               <PromptInputModelSelectContent>
                 <PromptInputModelSelectItem value="claude-sonnet">Claude Sonnet 4.5 (Agent SDK)</PromptInputModelSelectItem>
                 <PromptInputModelSelectItem value="claude-haiku">Claude Haiku 4.5 (Agent SDK)</PromptInputModelSelectItem>
-                <PromptInputModelSelectItem value="openai-gpt5">OpenAI GPT-5 (Responses)</PromptInputModelSelectItem>
+                <PromptInputModelSelectItem value="openai-gpt5">OpenAI GPT-5.1 (Responses)</PromptInputModelSelectItem>
                 <PromptInputModelSelectItem value="openai-gpt5mini">OpenAI GPT-5 mini (Responses)</PromptInputModelSelectItem>
                 <PromptInputModelSelectItem value="openai-gpt5nano">OpenAI GPT-5 nano (Responses)</PromptInputModelSelectItem>
               </PromptInputModelSelectContent>
