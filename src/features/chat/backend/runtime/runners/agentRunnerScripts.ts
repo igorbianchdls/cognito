@@ -690,16 +690,38 @@ const tools = [
   {
     type: 'function',
     name: 'crud',
-    description: 'Executa ações CRUD no ERP',
+    description: 'Tool ERP para listar/criar/atualizar/deletar recursos canônicos. Use action="listar" com filtros em params/data para pedidos como pendentes/vencidas. Use somente resources ERP válidos e com hífen (nunca underscore).',
     parameters: {
       type: 'object',
       properties: {
-        action: { type: 'string', enum: ['listar', 'criar', 'atualizar', 'deletar'] },
-        resource: { type: 'string' },
-        params: { type: 'object', additionalProperties: true },
-        data: { type: 'object', additionalProperties: true },
-        actionSuffix: { type: 'string' },
-        method: { type: 'string', enum: ['GET', 'POST'] },
+        action: {
+          type: 'string',
+          enum: ['listar', 'criar', 'atualizar', 'deletar'],
+          description: 'Operação principal do ERP.'
+        },
+        resource: {
+          type: 'string',
+          description: 'Resource ERP canônico (exatos): financeiro/contas-financeiras, financeiro/categorias-despesa, financeiro/categorias-receita, financeiro/clientes, financeiro/centros-custo, financeiro/centros-lucro, vendas/pedidos, compras/pedidos, contas-a-pagar, contas-a-receber.'
+        },
+        params: {
+          type: 'object',
+          additionalProperties: true,
+          description: 'Filtros/parâmetros de consulta (normalmente com action="listar").'
+        },
+        data: {
+          type: 'object',
+          additionalProperties: true,
+          description: 'Payload para criar/atualizar/deletar quando necessário.'
+        },
+        actionSuffix: {
+          type: 'string',
+          description: 'Sufixo de rota opcional. Padrões: listar|criar|atualizar|deletar. Só use customizado se tiver certeza do endpoint.'
+        },
+        method: {
+          type: 'string',
+          enum: ['GET', 'POST'],
+          description: 'Método HTTP opcional para bridge de rota.'
+        },
       },
       required: ['action', 'resource'],
       additionalProperties: true,
@@ -708,18 +730,45 @@ const tools = [
   {
     type: 'function',
     name: 'workspace',
-    description: 'Executa ações de email/drive e leitura de arquivo',
+    description: 'Tool de workspace (email/drive). action="request" chama rotas permitidas de email/drive; action="read_file" lê arquivo do Drive por file_id. Casos comuns: listar inboxes, listar emails, ler email por id, baixar anexo, listar drive e pastas.',
     parameters: {
       type: 'object',
       properties: {
-        action: { type: 'string', enum: ['request', 'read_file'] },
-        method: { type: 'string', enum: ['GET', 'POST', 'DELETE'] },
-        resource: { type: 'string' },
-        params: { type: 'object', additionalProperties: true },
-        data: { type: 'object', additionalProperties: true },
-        file_id: { type: 'string' },
-        mode: { type: 'string', enum: ['auto', 'text', 'binary'] },
+        action: {
+          type: 'string',
+          enum: ['request', 'read_file'],
+          description: 'request: operações email/drive por resource. read_file: leitura de conteúdo de arquivo do Drive usando file_id.'
+        },
+        method: {
+          type: 'string',
+          enum: ['GET', 'POST', 'DELETE'],
+          description: 'Método HTTP para action=request.'
+        },
+        resource: {
+          type: 'string',
+          description: 'Resource permitido para action=request: email/inboxes, email/messages, email/messages/{id}, email/messages/{id}/attachments/{attachmentId}, drive, drive/folders, drive/folders/{id}, drive/files/{id}, drive/files/{id}/download, drive/files/prepare-upload, drive/files/complete-upload.'
+        },
+        params: {
+          type: 'object',
+          additionalProperties: true,
+          description: 'Query params para action=request. Em email/messages (lista) e email/messages/{id}, normalmente incluir inboxId.'
+        },
+        data: {
+          type: 'object',
+          additionalProperties: true,
+          description: 'Body para action=request quando method for POST/DELETE.'
+        },
+        file_id: {
+          type: 'string',
+          description: 'UUID do arquivo no Drive para action=read_file.'
+        },
+        mode: {
+          type: 'string',
+          enum: ['auto', 'text', 'binary'],
+          description: 'Modo de leitura em action=read_file.'
+        },
       },
+      required: ['action'],
       additionalProperties: true,
     },
   },
