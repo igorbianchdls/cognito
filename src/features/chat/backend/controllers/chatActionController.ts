@@ -85,6 +85,7 @@ export async function POST(req: Request) {
   if (action === 'fs-list') return fsList(payload as { chatId?: string; path?: string })
   if (action === 'fs-read') return fsRead(payload as { chatId?: string; path?: string })
   if (action === 'fs-write') return fsWrite(payload as { chatId?: string; path?: string; content?: string })
+  if (action === 'fs-apply-patch') return fsApplyPatch(payload as { chatId?: string; operation?: any })
   if (action === 'sandbox-shell') return sandboxShell(payload as { chatId?: string; command?: string; cwd?: string })
   if (action === 'mcp-toggle') return mcpToggle(payload as { chatId?: string; enabled?: boolean })
   if (action === 'model-set') return modelSet(payload as { chatId?: string; model?: string; provider?: string })
@@ -820,6 +821,176 @@ catch(e){ console.error(String(e.message||e)); process.exit(1); }
     const [out, err] = await Promise.all([run.stdout().catch(()=>''), run.stderr().catch(()=> '')])
     if (run.exitCode !== 0) return Response.json({ ok: false, error: err || out || 'falha ao escrever' }, { status: 500 })
     return Response.json({ ok: true })
+  }
+
+  function resolvePatchPath(rawPath?: string) {
+    const path = String(rawPath || '').trim()
+    if (!path) return { ok: false as const, error: 'operation.path obrigatório' }
+    if (path.startsWith('/vercel/sandbox')) return validatePath(path)
+    if (path.startsWith('/')) return { ok: false as const, error: 'operation.path absoluto fora do workspace' }
+    return validatePath('/vercel/sandbox/' + path.replace(/^\/+/, ''))
+  }
+
+  async function fsApplyPatch({ chatId, operation }: { chatId?: string; operation?: any }) {
+    if (!chatId) return Response.json({ ok: false, error: 'chatId obrigatório' }, { status: 400 })
+    const sess = SESSIONS.get(chatId)
+    if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
+
+    const op = (operation && typeof operation === 'object' && operation.operation)
+      ? operation.operation
+      : operation
+    const opType = String(op?.type || '').trim()
+    if (!op || !opType) {
+      return Response.json({ ok: false, success: false, error: 'operation inválida' }, { status: 400 })
+    }
+    if (opType !== 'create_file' && opType !== 'update_file' && opType !== 'delete_file') {
+      return Response.json({ ok: false, success: false, error: `operation.type não suportado: ${opType}` }, { status: 400 })
+    }
+
+    const resolved = resolvePatchPath(String(op?.path || ''))
+    if (!resolved.ok) return Response.json({ ok: false, success: false, error: resolved.error }, { status: 400 })
+    const targetPath = resolved.path
+
+    const script = `
+const fs = require('fs');
+const path = require('path');
+
+function fail(msg, code = 1) {
+  console.error(String(msg || 'erro'));
+  process.exit(code);
+}
+
+function parseOperation() {
+  try { return JSON.parse(process.env.OPERATION_JSON || '{}'); }
+  catch (e) { fail('operation JSON inválido: ' + String(e?.message || e)); }
+}
+
+function parseHunks(diffText) {
+  const lines = String(diffText || '').replace(/\\r\\n/g, '\\n').split('\\n');
+  const hunks = [];
+  let i = 0;
+  while (i < lines.length && !lines[i].startsWith('@@')) i++;
+  while (i < lines.length) {
+    const header = lines[i];
+    if (!header.startsWith('@@')) { i++; continue; }
+    const m = header.match(/^@@\\s*-(\\d+)(?:,(\\d+))?\\s+\\+(\\d+)(?:,(\\d+))?\\s*@@/);
+    if (!m) fail('hunk header inválido: ' + header);
+    const oldStart = Math.max(1, parseInt(m[1], 10));
+    i++;
+    const hLines = [];
+    while (i < lines.length && !lines[i].startsWith('@@')) {
+      const ln = lines[i];
+      if (ln.startsWith('\\\\ No newline at end of file')) { i++; continue; }
+      if (ln.startsWith('diff --git ') || ln.startsWith('index ') || ln.startsWith('--- ') || ln.startsWith('+++ ')) { i++; continue; }
+      const prefix = ln[0];
+      if (prefix === ' ' || prefix === '+' || prefix === '-') {
+        hLines.push({ prefix, text: ln.slice(1) });
+      } else {
+        hLines.push({ prefix: ' ', text: ln });
+      }
+      i++;
+    }
+    hunks.push({ oldStart, lines: hLines });
+  }
+  return hunks;
+}
+
+function applyHunks(originalContent, hunks) {
+  const src = String(originalContent || '').replace(/\\r\\n/g, '\\n').split('\\n');
+  const out = [];
+  let cursor = 1;
+  for (const h of hunks) {
+    const start = Math.max(1, Number(h.oldStart || 1));
+    if (start > cursor) out.push(...src.slice(cursor - 1, start - 1));
+    let pos = start - 1;
+    for (const line of (h.lines || [])) {
+      if (line.prefix === ' ') {
+        out.push(src[pos] !== undefined ? src[pos] : line.text);
+        pos += 1;
+      } else if (line.prefix === '-') {
+        pos += 1;
+      } else if (line.prefix === '+') {
+        out.push(line.text);
+      }
+    }
+    cursor = pos + 1;
+  }
+  if (cursor <= src.length) out.push(...src.slice(cursor - 1));
+  return out.join('\\n');
+}
+
+const op = parseOperation();
+const target = process.env.TARGET_PATH || '';
+if (!target) fail('TARGET_PATH ausente');
+
+const type = String(op?.type || '');
+if (type !== 'create_file' && type !== 'update_file' && type !== 'delete_file') {
+  fail('operation.type não suportado: ' + type);
+}
+
+if (type === 'delete_file') {
+  try {
+    if (fs.existsSync(target)) fs.unlinkSync(target);
+    console.log(JSON.stringify({ success: true, status: 'completed', output: 'Arquivo removido: ' + target }));
+    process.exit(0);
+  } catch (e) {
+    fail('falha ao remover arquivo: ' + String(e?.message || e));
+  }
+}
+
+const diff = String(op?.diff || '');
+if (!diff.trim()) fail('diff obrigatório para create_file/update_file');
+
+if (type === 'create_file') {
+  const hunks = parseHunks(diff);
+  let content = '';
+  if (hunks.length) {
+    content = applyHunks('', hunks);
+  } else {
+    const lines = diff.replace(/\\r\\n/g, '\\n').split('\\n');
+    content = lines.filter((ln) => ln.startsWith('+') && !ln.startsWith('+++')).map((ln) => ln.slice(1)).join('\\n');
+  }
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  fs.writeFileSync(target, content, 'utf8');
+  console.log(JSON.stringify({ success: true, status: 'completed', output: 'Arquivo criado: ' + target }));
+  process.exit(0);
+}
+
+if (!fs.existsSync(target)) fail('arquivo não encontrado para update: ' + target);
+const current = fs.readFileSync(target, 'utf8');
+const hunks = parseHunks(diff);
+if (!hunks.length) fail('diff sem hunk @@ para update_file');
+const next = applyHunks(current, hunks);
+fs.writeFileSync(target, next, 'utf8');
+console.log(JSON.stringify({ success: true, status: 'completed', output: 'Arquivo atualizado: ' + target }));
+process.exit(0);
+`
+
+    const run = await sess.sandbox.runCommand({
+      cmd: 'node',
+      args: ['-e', script],
+      env: {
+        TARGET_PATH: targetPath,
+        OPERATION_JSON: JSON.stringify(op),
+      },
+    } as any)
+    const [out, err] = await Promise.all([run.stdout().catch(() => ''), run.stderr().catch(() => '')])
+    if (run.exitCode !== 0) {
+      return Response.json({
+        ok: false,
+        success: false,
+        status: 'failed',
+        output: (err || out || 'falha ao aplicar patch').toString().slice(0, 4000),
+      })
+    }
+    let parsed: any = {}
+    try { parsed = JSON.parse(String(out || '{}')) } catch {}
+    return Response.json({
+      ok: true,
+      success: true,
+      status: parsed?.status || 'completed',
+      output: parsed?.output || 'Patch aplicado com sucesso.',
+    })
   }
 
   async function sandboxShell({ chatId, command, cwd }: { chatId?: string; command?: string; cwd?: string }) {

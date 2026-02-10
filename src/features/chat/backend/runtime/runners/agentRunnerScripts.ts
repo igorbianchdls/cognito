@@ -650,6 +650,11 @@ function supportsNativeShellTool(model) {
   return m.startsWith('gpt-5.1') || m.startsWith('gpt-5.2');
 }
 
+function supportsNativeApplyPatchTool(model) {
+  const m = String(model || '').toLowerCase().trim();
+  return m.startsWith('gpt-5');
+}
+
 async function callShell(args) {
   const command = typeof args?.command === 'string' ? args.command : '';
   if (!command.trim()) return { success: false, error: 'command é obrigatório para shell tool' };
@@ -665,6 +670,28 @@ async function callShell(args) {
     stdout: String(run.stdout || ''),
     stderr: String(run.stderr || ''),
     cwd: String(run.cwd || cwd),
+  };
+}
+
+async function callApplyPatch(args) {
+  const operation = (args && typeof args === 'object' && args.operation)
+    ? args.operation
+    : args;
+  if (!operation || typeof operation !== 'object') {
+    return { success: false, status: 'failed', output: 'operation inválida para apply_patch' };
+  }
+  const run = await callChatAction('fs-apply-patch', { operation });
+  if (!run || run.ok === false) {
+    return {
+      success: false,
+      status: 'failed',
+      output: String(run?.output || run?.error || 'falha ao aplicar patch'),
+    };
+  }
+  return {
+    success: Boolean(run.success),
+    status: run.status || (run.success ? 'completed' : 'failed'),
+    output: String(run.output || (run.success ? 'Patch aplicado com sucesso.' : 'Falha ao aplicar patch')),
   };
 }
 
@@ -694,6 +721,16 @@ function normalizeToolCallItem(item) {
       name: 'shell',
       call_id: callId,
       call_type: 'shell_call',
+      arguments: typeof argsRaw === 'string' ? argsRaw : JSON.stringify(argsRaw || {}),
+    };
+  }
+
+  if (itemType === 'apply_patch_call') {
+    const argsRaw = item.operation ?? item.input ?? {};
+    return {
+      name: 'apply_patch',
+      call_id: callId,
+      call_type: 'apply_patch_call',
       arguments: typeof argsRaw === 'string' ? argsRaw : JSON.stringify(argsRaw || {}),
     };
   }
@@ -757,6 +794,7 @@ function onEvent(eventName, dataRaw) {
 
 const decoder = new TextDecoder();
 const nativeShellEnabled = supportsNativeShellTool(modelId);
+const nativeApplyPatchEnabled = supportsNativeApplyPatchTool(modelId);
 const tools = [
   {
     type: 'function',
@@ -843,7 +881,29 @@ const tools = [
       additionalProperties: true,
     },
   },
-  ...(nativeShellEnabled ? [{ type: 'shell' }] : []),
+  ...(nativeShellEnabled
+    ? [{ type: 'shell' }]
+    : [{
+        type: 'function',
+        name: 'shell',
+        description: 'Executa comandos no sandbox do chat. Use somente caminhos dentro de /vercel/sandbox.',
+        parameters: {
+          type: 'object',
+          properties: {
+            command: {
+              type: 'string',
+              description: 'Comando bash a executar.'
+            },
+            cwd: {
+              type: 'string',
+              description: 'Diretório de trabalho (padrão: /vercel/sandbox).'
+            },
+          },
+          required: ['command'],
+          additionalProperties: false,
+        },
+      }]),
+  ...(nativeApplyPatchEnabled ? [{ type: 'apply_patch' }] : []),
 ];
 
 let previousResponseId = null;
@@ -956,6 +1016,8 @@ while (!done && turn < 10) {
         result = await callWorkspace(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
       } else if (toolName === 'shell') {
         result = await callShell(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
+      } else if (toolName === 'apply_patch') {
+        result = await callApplyPatch(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
       } else {
         result = { success: false, error: 'tool desconhecida: ' + toolName };
       }
@@ -972,6 +1034,14 @@ while (!done && turn < 10) {
           error: success ? undefined : (stderr || String(result?.error || 'falha no shell')),
           exit_code: Number(result?.exit_code ?? (success ? 0 : 1)),
         });
+      } else if (callType === 'apply_patch_call') {
+        const ok = Boolean(result?.success);
+        outputs.push({
+          type: 'apply_patch_call_output',
+          call_id: callId,
+          status: ok ? 'completed' : 'failed',
+          output: String(result?.output || (ok ? 'Patch aplicado.' : 'Falha ao aplicar patch.')),
+        });
       } else {
         outputs.push({ type: 'function_call_output', call_id: callId, output: JSON.stringify(result ?? {}) });
       }
@@ -986,6 +1056,13 @@ while (!done && turn < 10) {
           output: '',
           error: msg,
           exit_code: 1,
+        });
+      } else if (callType === 'apply_patch_call') {
+        outputs.push({
+          type: 'apply_patch_call_output',
+          call_id: callId,
+          status: 'failed',
+          output: msg,
         });
       } else {
         outputs.push({ type: 'function_call_output', call_id: callId, output: JSON.stringify({ success: false, error: msg }) });
