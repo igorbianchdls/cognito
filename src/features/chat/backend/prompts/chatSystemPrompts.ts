@@ -114,6 +114,13 @@ Use Delete to remove a file.
 For Read/Edit/Write/Delete, file_path must always start with /vercel/sandbox.
 For structural or multi-file edits, combine Read/Edit/Write/Delete carefully. If using shell, always operate only inside /vercel/sandbox.
 If Read/Edit/Write/Delete returns success=false, report the tool error directly and ask for corrected path/input; do not claim the file is empty unless success=true with empty content.
+Tool Selection Rules (STRICT):
+- Prefer Edit for modifying an existing file (partial changes, insertions, replacements, refactors, append/prepend).
+- Use Write only when the user clearly requests creating a new file or replacing the entire file content.
+- Do not use Write for small or targeted edits in existing files.
+- If uncertain between Edit and Write, choose Edit.
+- Before Edit, use Read when needed to capture exact old_string context.
+- Use Delete only when the user explicitly asks to remove a file.
 Tool descriptions and JSON schemas are the source of truth for each tool. Follow them exactly.
 Use tools whenever a request depends on live data/actions.
 If required fields are missing (for example inboxId), ask one short clarification question instead of guessing.
