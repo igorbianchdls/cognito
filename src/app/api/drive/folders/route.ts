@@ -1,5 +1,5 @@
 import { runQuery } from '@/lib/postgres'
-import { getWorkspaceOwnerId, parseUuid } from '@/features/drive/backend/lib'
+import { ensureSeedWorkspace, getWorkspaceOwnerId, listWorkspaces, parseUuid } from '@/features/drive/backend/lib'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
@@ -9,6 +9,97 @@ type CreateFolderBody = {
   workspace_id?: string
   name?: string
   parent_id?: string | null
+}
+
+type FolderListRow = {
+  id: string
+  workspace_id: string
+  parent_id: string | null
+  name: string
+  files_count: number
+  total_bytes: string | number
+  created_at: string
+}
+
+export async function GET(req: Request) {
+  try {
+    await ensureSeedWorkspace()
+    const workspaces = await listWorkspaces()
+    if (!workspaces.length) {
+      return Response.json({ success: true, activeWorkspaceId: null, parentId: null, folders: [] })
+    }
+
+    const url = new URL(req.url)
+    const requestedWorkspaceId = parseUuid(url.searchParams.get('workspace_id'))
+    const activeWorkspaceId = requestedWorkspaceId && workspaces.some((w) => w.id === requestedWorkspaceId)
+      ? requestedWorkspaceId
+      : workspaces[0].id
+    const parentIdRaw = url.searchParams.get('parent_id')
+    const parentId = parentIdRaw ? parseUuid(parentIdRaw) : null
+
+    if (parentIdRaw && !parentId) {
+      return Response.json({ success: false, message: 'parent_id inválido' }, { status: 400 })
+    }
+
+    if (parentId) {
+      const parentRows = await runQuery<{ id: string }>(
+        `SELECT id::text AS id
+           FROM drive.folders
+          WHERE id = $1::uuid
+            AND workspace_id = $2::uuid
+            AND deleted_at IS NULL
+          LIMIT 1`,
+        [parentId, activeWorkspaceId]
+      )
+      if (!parentRows[0]) {
+        return Response.json({ success: false, message: 'parent_id não encontrado neste workspace' }, { status: 404 })
+      }
+    }
+
+    const rows = await runQuery<FolderListRow>(
+      `SELECT
+         f.id::text AS id,
+         f.workspace_id::text AS workspace_id,
+         f.parent_id::text AS parent_id,
+         f.name,
+         COUNT(df.id)::int AS files_count,
+         COALESCE(SUM(df.size_bytes), 0)::bigint AS total_bytes,
+         f.created_at
+       FROM drive.folders f
+       LEFT JOIN drive.files df
+         ON df.folder_id = f.id
+        AND df.deleted_at IS NULL
+       WHERE f.workspace_id = $1::uuid
+         AND f.deleted_at IS NULL
+         AND (
+           ($2::uuid IS NULL AND f.parent_id IS NULL)
+           OR f.parent_id = $2::uuid
+         )
+       GROUP BY f.id, f.workspace_id, f.parent_id, f.name, f.created_at
+       ORDER BY f.created_at ASC`,
+      [activeWorkspaceId, parentId]
+    )
+
+    const folders = rows.map((row) => ({
+      id: row.id,
+      workspaceId: row.workspace_id,
+      parentId: row.parent_id,
+      name: row.name,
+      filesCount: Number(row.files_count || 0),
+      totalBytes: Number(row.total_bytes || 0),
+      createdAt: row.created_at,
+    }))
+
+    return Response.json({
+      success: true,
+      activeWorkspaceId,
+      parentId: parentId || null,
+      folders,
+    }, { headers: { 'Cache-Control': 'no-store' } })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    return Response.json({ success: false, message }, { status: 500 })
+  }
 }
 
 export async function POST(req: Request) {
@@ -79,4 +170,3 @@ export async function POST(req: Request) {
     return Response.json({ success: false, message }, { status: 500 })
   }
 }
-

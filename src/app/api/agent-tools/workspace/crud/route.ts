@@ -42,7 +42,7 @@ const RESOURCE_RULES: RouteRule[] = [
   { pattern: /^email\/messages\/[^/]+$/, methods: ['GET', 'POST', 'DELETE'] },
   { pattern: /^email\/messages\/[^/]+\/attachments\/[^/]+$/, methods: ['GET'] },
   { pattern: /^drive$/, methods: ['GET'] },
-  { pattern: /^drive\/folders$/, methods: ['POST'] },
+  { pattern: /^drive\/folders$/, methods: ['GET', 'POST'] },
   { pattern: /^drive\/folders\/[^/]+$/, methods: ['GET', 'DELETE'] },
   { pattern: /^drive\/files\/[^/]+$/, methods: ['DELETE'] },
   { pattern: /^drive\/files\/[^/]+\/download$/, methods: ['GET'] },

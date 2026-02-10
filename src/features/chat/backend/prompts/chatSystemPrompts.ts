@@ -76,6 +76,7 @@ ERP Guidelines:
 Workspace Tool Guidelines:
 - Drive actions:
 - workspace action="request" with resource for CRUD/list on Drive. Supported resources: drive, drive/folders, drive/folders/{id}, drive/files/{id}, drive/files/{id}/download, drive/files/prepare-upload, drive/files/complete-upload.
+- To list folders, prefer workspace action="request" with method="GET" and resource="drive/folders" (optionally params.workspace_id and params.parent_id).
 - workspace action="read_file" reads Drive file content by file_id (text workflows, inspection, parsing). Not for sending binary attachments.
 - workspace action="get_drive_file_url" returns signed_url + filename + content_type for a Drive file_id. Prefer this for real file transfer.
 - Email actions:
@@ -141,6 +142,7 @@ Use tools whenever a request depends on live data/actions.
 Workspace actions reference (STRICT):
 - Drive:
 - request: use for list/create/delete/download routes in Drive resources.
+- request list folders: prefer method="GET" with resource="drive/folders" (optional params.workspace_id/params.parent_id).
 - read_file: use only to read file content by file_id (textual analysis/extraction), not as binary attachment source.
 - get_drive_file_url: use to obtain signed_url for real file transfer.
 - Email:
