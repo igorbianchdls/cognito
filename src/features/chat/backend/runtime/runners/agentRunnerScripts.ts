@@ -688,19 +688,10 @@ function buildUnifiedUpdateDiff(beforeText, afterText) {
   return header;
 }
 
-function normalizeSandboxFilePath(rawPath) {
-  const value = String(rawPath || '').trim();
-  if (!value) return '';
-  if (value.startsWith('/vercel/sandbox')) return value;
-  if (value.startsWith('/')) return value;
-  return '/vercel/sandbox/' + value.replace(/^\/+/, '');
-}
-
 async function callRead(args) {
-  const filePathRaw = typeof args?.file_path === 'string'
+  const filePath = typeof args?.file_path === 'string'
     ? args.file_path.trim()
     : (typeof args?.path === 'string' ? args.path.trim() : '');
-  const filePath = normalizeSandboxFilePath(filePathRaw);
   if (!filePath) return { success: false, error: 'file_path é obrigatório para Read' };
 
   const offset = parsePositiveInt(args?.offset, 1);
@@ -747,10 +738,9 @@ async function callRead(args) {
 }
 
 async function callEdit(args) {
-  const filePathRaw = typeof args?.file_path === 'string'
+  const filePath = typeof args?.file_path === 'string'
     ? args.file_path.trim()
     : (typeof args?.path === 'string' ? args.path.trim() : '');
-  const filePath = normalizeSandboxFilePath(filePathRaw);
   const oldString = typeof args?.old_string === 'string' ? args.old_string : '';
   const hasNewString = typeof args?.new_string === 'string';
   const newString = hasNewString ? args.new_string : '';
@@ -1066,13 +1056,13 @@ const baseTools = [
   {
     type: 'function',
     name: 'Read',
-    description: 'Lê arquivo na sandbox do chat (padrão Claude SDK).',
+    description: 'Lê arquivo na sandbox do chat (padrão Claude SDK). file_path deve sempre começar com /vercel/sandbox.',
     parameters: {
       type: 'object',
       properties: {
         file_path: {
           type: 'string',
-          description: 'Caminho absoluto em /vercel/sandbox ou relativo ao workspace.',
+          description: 'Caminho absoluto obrigatório, iniciando com /vercel/sandbox.',
         },
         offset: {
           type: 'integer',
@@ -1090,13 +1080,13 @@ const baseTools = [
   {
     type: 'function',
     name: 'Edit',
-    description: 'Substitui texto exato em arquivo (padrão Claude SDK), aplicando gravação via fs-apply-patch.',
+    description: 'Substitui texto exato em arquivo (padrão Claude SDK), aplicando gravação via fs-apply-patch. file_path deve sempre começar com /vercel/sandbox.',
     parameters: {
       type: 'object',
       properties: {
         file_path: {
           type: 'string',
-          description: 'Caminho absoluto em /vercel/sandbox ou relativo ao workspace.',
+          description: 'Caminho absoluto obrigatório, iniciando com /vercel/sandbox.',
         },
         old_string: {
           type: 'string',

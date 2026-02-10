@@ -109,6 +109,7 @@ Available tools: crud(action/resource/params/data), workspace(action/method/reso
 Native tools may be available for sandbox file operations (apply_patch and/or shell).
 Use Read to inspect files in sandbox, with optional line pagination via offset/limit.
 Use Edit for precise text replacement in a single file (old_string -> new_string, with optional replace_all=true).
+For Read/Edit, file_path must always start with /vercel/sandbox.
 For structural or multi-file edits, prefer apply_patch when available. If using shell, always operate only inside /vercel/sandbox.
 If Read/Edit returns success=false, report the tool error directly and ask for corrected path/input; do not claim the file is empty unless success=true with empty content.
 Tool descriptions and JSON schemas are the source of truth for each tool. Follow them exactly.
