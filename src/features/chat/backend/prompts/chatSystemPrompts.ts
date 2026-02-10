@@ -74,14 +74,18 @@ ERP Guidelines:
 - Always include the correct module prefix (e.g., "financeiro/...").
 - resource must not contain ".." and must start with one of the allowed prefixes.
 Workspace Tool Guidelines:
-- Use workspace action="request" for /api/email and /api/drive operations (list/send/delete/create).
-- Use workspace action="read_file" with file_id to read textual files from Drive.
+- Drive actions:
+- workspace action="request" with resource for CRUD/list on Drive. Supported resources: drive, drive/folders, drive/folders/{id}, drive/files/{id}, drive/files/{id}/download, drive/files/prepare-upload, drive/files/complete-upload.
+- workspace action="read_file" reads Drive file content by file_id (text workflows, inspection, parsing). Not for sending binary attachments.
+- workspace action="get_drive_file_url" returns signed_url + filename + content_type for a Drive file_id. Prefer this for real file transfer.
+- Email actions:
+- workspace action="request" with email resources for generic inbox/message operations. Supported resources: email/inboxes, email/messages, email/messages/{id}, email/messages/{id}/attachments/{attachmentId}.
+- workspace action="send_email" sends a full email (not only attachment). Required: inbox_id, to. Common fields: subject, text/html, cc, bcc, labels.
+- send_email attachments can be passed as attachments[] items ({ url or content, filename, contentType, ... }) or shortcut fields attachment_url/signed_url + filename/content_type.
 - Two-step flow for email with real Drive attachment (MANDATORY):
-- Step 1: call workspace action="get_drive_file_url" with file_id. This returns signed_url, filename, and content_type.
-- Step 2: call workspace action="send_email" with inbox_id, to, subject, text/html, and attachment URL.
-- In step 2, you may pass the file URL as attachments[].url, or via shortcut fields attachment_url/signed_url plus filename/content_type.
-- Never use workspace action="read_file" to create a binary attachment payload for invoices/PDFs when URL-based attachment is available.
-- Workspace resources supported include: email/inboxes, email/messages, email/messages/{id}, drive, drive/folders, drive/folders/{id}, drive/files/{id}, drive/files/{id}/download, drive/files/prepare-upload, drive/files/complete-upload.
+- Step 1: call workspace action="get_drive_file_url" with file_id.
+- Step 2: call workspace action="send_email" with inbox_id, to, subject, text/html, and the URL from step 1 in attachments[].url (or signed_url/attachment_url shortcut).
+- Never use workspace action="read_file" to create binary attachment payload for invoices/PDFs when URL flow is available.
 - For destructive actions (DELETE), confirm user intent when context is ambiguous.
 Execution Guidelines:
 - Use tools whenever live data or side effects are needed; avoid answering operational requests from guesswork.
@@ -134,9 +138,18 @@ Tool Selection Rules (STRICT):
 - Use Delete only when the user explicitly asks to remove a file.
 Tool descriptions and JSON schemas are the source of truth for each tool. Follow them exactly.
 Use tools whenever a request depends on live data/actions.
+Workspace actions reference (STRICT):
+- Drive:
+- request: use for list/create/delete/download routes in Drive resources.
+- read_file: use only to read file content by file_id (textual analysis/extraction), not as binary attachment source.
+- get_drive_file_url: use to obtain signed_url for real file transfer.
+- Email:
+- request: use for inbox/message listing and generic message operations via resource.
+- send_email: use to send complete email payload (inbox_id + to + subject + text/html) with optional attachments.
+- send_email attachment inputs: attachments[] or signed_url/attachment_url shortcut with filename/content_type.
 Two-step flow for real Drive attachment by email (MANDATORY):
 - Step 1: workspace action="get_drive_file_url" with file_id.
-- Step 2: workspace action="send_email" with inbox_id, to, subject, text/html, and attachments[].url (or signed_url/attachment_url shortcut).
+- Step 2: workspace action="send_email" with inbox_id, to, subject, text/html, and URL attachment.
 For binary files (invoice/PDF/image), do not use read_file as attachment source when URL flow is available.
 If required fields are missing (for example inboxId), ask one short clarification question instead of guessing.
 For destructive actions (delete/send), confirm intent when context is ambiguous.
