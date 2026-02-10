@@ -736,7 +736,7 @@ while (!done && turn < 10) {
     model: modelId,
     input: nextInput,
     stream: true,
-    reasoning: { effort: 'medium', summary: 'detailed' },
+    reasoning: { effort: 'medium', summary: 'concise' },
     tools,
     previous_response_id: previousResponseId || undefined,
   };
