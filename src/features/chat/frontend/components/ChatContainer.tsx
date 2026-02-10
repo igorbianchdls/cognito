@@ -179,24 +179,9 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
         return copy
       })
     }
-    const ensureTextPartAtEnd = () => {
-      ensureAssistantMessage()
-      setMessages(prev => {
-        const copy = prev.slice()
-        const targetId = currentAssistantIdRef.current
-        let idx = targetId ? copy.findIndex(m => m.id === targetId) : -1
-        if (idx === -1) idx = copy.findIndex(m => m.role === 'assistant')
-        if (idx !== -1) {
-          const parts = copy[idx].parts || []
-          const last = parts[parts.length - 1]
-          if (!(last && (last as any).type === 'text')) {
-            copy[idx] = { ...copy[idx], parts: [...parts, { type: 'text', text: '' } as any] }
-          }
-        }
-        return copy
-      })
-    }
-    const appendToTextEnd = (delta: string) => {
+    let activeTextPartId: string | null = null
+    let textPartSeq = 0
+    const appendToActiveText = (delta: string) => {
       ensureAssistantMessage()
       setMessages(prev => {
         const copy = prev.slice()
@@ -205,12 +190,19 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
         if (idx === -1) idx = copy.findIndex(m => m.role === 'assistant')
         if (idx !== -1) {
           const parts = (copy[idx].parts || []).slice()
-          if (parts.length === 0 || (parts[parts.length - 1] as any).type !== 'text') {
-            parts.push({ type: 'text', text: '' } as any)
+          let partId = activeTextPartId
+          if (!partId) {
+            partId = `txt-${Date.now()}-${++textPartSeq}`
+            activeTextPartId = partId
+            parts.push({ type: 'text', text: '', streamPartId: partId } as any)
           }
-          const last = parts[parts.length - 1] as any
-          const cur = (last && last.text) || ''
-          parts[parts.length - 1] = { type: 'text', text: cur + delta } as any
+          let textIdx = parts.findIndex((p) => (p as any).type === 'text' && (p as any).streamPartId === partId)
+          if (textIdx === -1) {
+            parts.push({ type: 'text', text: '', streamPartId: partId } as any)
+            textIdx = parts.length - 1
+          }
+          const cur = ((parts[textIdx] as any)?.text || '') as string
+          parts[textIdx] = { ...(parts[textIdx] as any), type: 'text', text: cur + delta, streamPartId: partId } as any
           copy[idx] = { ...copy[idx], parts }
         }
         return copy
@@ -290,12 +282,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
               toolCallId: callKey,
               inputStream: '',
             }
-            const last = parts[parts.length - 1]
-            if (last && (last as any).type === 'text') {
-              parts.splice(parts.length - 1, 0, newPart)
-            } else {
-              parts.push(newPart)
-            }
+            parts.push(newPart)
             copy[i] = { ...copy[i], parts }
           }
         }
@@ -332,8 +319,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
         try {
           const evt = JSON.parse(payload) as any
           if (evt && evt.type === 'delta' && typeof evt.text === 'string') {
-            ensureTextPartAtEnd()
-            appendToTextEnd(evt.text)
+            appendToActiveText(evt.text)
           } else if (evt && evt.type === 'reasoning_start') {
             ensureReasoningPart()
           } else if (evt && evt.type === 'reasoning_delta' && typeof evt.text === 'string') {
@@ -341,6 +327,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
           } else if (evt && evt.type === 'reasoning_end') {
             endReasoning()
           } else if (evt && evt.type === 'tool_input_start') {
+            activeTextPartId = null
             const idx: number = typeof evt.index === 'number' ? evt.index : 0
             const callKey = `ti-${idx}`
             ensureToolPart(callKey, evt.name, 'input-streaming')
@@ -375,6 +362,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
             try { if (typeof evt.input !== 'undefined') parsed = evt.input } catch {}
             updateToolPart(callKey, { state: 'input-available', input: parsed })
           } else if (evt && evt.type === 'tool_start') {
+            activeTextPartId = null
             if (!lastActiveToolKey) {
               const callKey = `ti-hook-${Date.now()}`
               ensureToolPart(callKey, (evt as any).tool_name, 'input-available')
@@ -383,6 +371,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
               updateToolPart(lastActiveToolKey, { state: 'input-available' })
             }
           } else if (evt && evt.type === 'tool_done') {
+            activeTextPartId = null
             // Ensure a tool part exists even if no prior tool_input/tool_start was observed
             if (!lastActiveToolKey) {
               const callKey = `td-hook-${Date.now()}`
@@ -391,6 +380,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
             }
             if (lastActiveToolKey) updateToolPart(lastActiveToolKey, { state: 'output-available', output: evt.output, type: `tool-${evt.tool_name || 'generic'}` })
           } else if (evt && evt.type === 'tool_error') {
+            activeTextPartId = null
             if (lastActiveToolKey) updateToolPart(lastActiveToolKey, { state: 'output-error', errorText: evt.error || 'Tool error', type: `tool-${evt.tool_name || 'generic'}` })
           } else if (evt && evt.type === 'final') {
             setStatus('idle')
