@@ -4,6 +4,8 @@ import React from 'react';
 import { MoreHorizontal, Lock, Play, Square, FilePlus2, BarChart3 } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import SandboxStatusBadge from '@/features/chat/frontend/components/SandboxStatusBadge';
+import type { SandboxStatus } from '@/features/chat/frontend/lib/sandboxStatus';
 
 type HeaderProps = {
   title?: string;
@@ -14,9 +16,10 @@ type HeaderProps = {
   onOpenArtifact?: () => Promise<void> | void;
   busy?: boolean;
   hasSandbox?: boolean;
+  sandboxStatus?: SandboxStatus;
 };
 
-export default function Header({ title = 'App from Mockup', privacy = 'Private', onStartSandbox, onStopSandbox, onWriteFiles, onOpenArtifact, busy = false, hasSandbox = false }: HeaderProps) {
+export default function Header({ title = 'App from Mockup', privacy = 'Private', onStartSandbox, onStopSandbox, onWriteFiles, onOpenArtifact, busy = false, hasSandbox = false, sandboxStatus = 'off' }: HeaderProps) {
   const handle = (fn?: () => Promise<void> | void, enabled = true) => async () => {
     if (!enabled || typeof fn !== 'function') return;
     try { await fn() } catch { /* noop */ }
@@ -31,6 +34,7 @@ export default function Header({ title = 'App from Mockup', privacy = 'Private',
           <Lock className="w-3.5 h-3.5" />
           {privacy}
         </span>
+        <SandboxStatusBadge status={sandboxStatus} />
       </div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

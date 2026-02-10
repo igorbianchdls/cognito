@@ -7,6 +7,7 @@ import PerguntaDoUsuario from './PerguntaDoUsuario';
 import RespostaDaIa from './RespostaDaIa';
 import InputArea from './InputArea';
 import { useRouter } from 'next/navigation';
+import type { SandboxStatus } from '@/features/chat/frontend/lib/sandboxStatus';
 
 type ChatStatus = 'idle' | 'submitted' | 'streaming' | 'error'
 type EngineId = 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5nano' | 'openai-gpt5mini'
@@ -30,6 +31,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   const [messages, setMessages] = useState<UIMessage[]>([])
   const [chatId, setChatId] = useState<string | null>(null)
   const [status, setStatus] = useState<ChatStatus>('idle')
+  const [sandboxStatus, setSandboxStatus] = useState<SandboxStatus>(autoStartSandbox && initialChatId ? 'starting' : 'off')
   const [composioEnabled, setComposioEnabled] = useState<boolean>(false)
   const [model, setModel] = useState<EngineId>(initialEngine || 'openai-gpt5nano')
   const abortRef = useRef<AbortController | null>(null)
@@ -46,7 +48,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
 
   const startSandboxFromMenu = async () => {
     setMenuBusy(true)
-    try { await ensureStart(); } catch {} finally { setMenuBusy(false) }
+    try { await ensureStart(); } catch { setSandboxStatus('error') } finally { setMenuBusy(false) }
   }
   const stopSandboxFromMenu = async () => {
     if (!chatId) return
@@ -56,8 +58,13 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
       const data = await res.json().catch(() => ({})) as any
       if (res.ok && data && data.ok) {
         setChatId(null)
+        setSandboxStatus('off')
+      } else {
+        setSandboxStatus('error')
       }
-    } catch {} finally { setMenuBusy(false) }
+    } catch {
+      setSandboxStatus('error')
+    } finally { setMenuBusy(false) }
   }
   const writeFilesFromMenu = async () => {
     setMenuBusy(true)
@@ -80,22 +87,32 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   }
 
   const ensureStart = async () => {
-    if (chatId) return chatId
+    if (chatId) {
+      setSandboxStatus('running')
+      return chatId
+    }
+    setSandboxStatus('starting')
     const body: any = { action: 'chat-start' }
     if (initialChatId && typeof initialChatId === 'string') body.chatId = initialChatId
-    const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-    const data = await res.json().catch(() => ({})) as { ok?: boolean; chatId?: string; error?: string }
-    if (!res.ok || data.ok === false || !data.chatId) throw new Error(data.error || 'chat-start failed')
-    setChatId(data.chatId)
     try {
-      const cfg = engineToBackend(model)
-      await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'model-set', chatId: data.chatId, provider: cfg.provider, model: cfg.model }),
-      })
-    } catch { /* ignore */ }
-    return data.chatId
+      const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      const data = await res.json().catch(() => ({})) as { ok?: boolean; chatId?: string; error?: string }
+      if (!res.ok || data.ok === false || !data.chatId) throw new Error(data.error || 'chat-start failed')
+      setChatId(data.chatId)
+      setSandboxStatus('running')
+      try {
+        const cfg = engineToBackend(model)
+        await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'model-set', chatId: data.chatId, provider: cfg.provider, model: cfg.model }),
+        })
+      } catch { /* ignore */ }
+      return data.chatId
+    } catch (error) {
+      setSandboxStatus('error')
+      throw error
+    }
   }
 
   const handleSubmit = (e: FormEvent) => {
@@ -472,10 +489,37 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
     return () => { cancelled = true }
   }, [initialChatId])
 
+  // Sync sandbox status for existing chat routes that were already started.
+  useEffect(() => {
+    if (!initialChatId || chatId || autoStartSandbox) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'chat-status', chatId: initialChatId }),
+        })
+        const data = await res.json().catch(() => ({})) as { ok?: boolean; status?: string }
+        if (cancelled) return
+        if (res.ok && data && data.ok && data.status === 'running') {
+          setChatId(initialChatId)
+          setSandboxStatus('running')
+        } else {
+          setSandboxStatus('off')
+        }
+      } catch {
+        if (!cancelled) setSandboxStatus('off')
+      }
+    })()
+    return () => { cancelled = true }
+  }, [initialChatId, chatId, autoStartSandbox])
+
   // Auto-start sandbox (no message) when requested via URL flag
   useEffect(() => {
     if (autoStartSandbox && initialChatId && !chatId) {
-      ensureStart().catch(() => {})
+      setSandboxStatus('starting')
+      ensureStart().catch(() => { setSandboxStatus('error') })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoStartSandbox, initialChatId])
@@ -492,7 +536,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   if (isEmpty) {
     return (
       <div className="h-full grid grid-rows-[auto_1fr]">
-        <Header title={headerTitle || 'Chat'} busy={menuBusy} hasSandbox={!!chatId} onStartSandbox={startSandboxFromMenu} onStopSandbox={stopSandboxFromMenu} onWriteFiles={writeFilesFromMenu} onOpenArtifact={openArtifactFromMenu} />
+        <Header title={headerTitle || 'Chat'} busy={menuBusy} hasSandbox={sandboxStatus === 'running'} sandboxStatus={sandboxStatus} onStartSandbox={startSandboxFromMenu} onStopSandbox={stopSandboxFromMenu} onWriteFiles={writeFilesFromMenu} onOpenArtifact={openArtifactFromMenu} />
         <div className="h-full min-h-0" style={withSideMargins ? { marginLeft: '20%', marginRight: '20%' } : undefined}>
           <div className="h-full px-4">
             <div className="h-full flex items-center justify-center">
@@ -546,7 +590,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
 
   return (
     <div className="h-full grid grid-rows-[auto_1fr]">
-      <Header title={headerTitle || 'Chat'} busy={menuBusy} hasSandbox={!!chatId} onStartSandbox={startSandboxFromMenu} onStopSandbox={stopSandboxFromMenu} onWriteFiles={writeFilesFromMenu} onOpenArtifact={openArtifactFromMenu} />
+      <Header title={headerTitle || 'Chat'} busy={menuBusy} hasSandbox={sandboxStatus === 'running'} sandboxStatus={sandboxStatus} onStartSandbox={startSandboxFromMenu} onStopSandbox={stopSandboxFromMenu} onWriteFiles={writeFilesFromMenu} onOpenArtifact={openArtifactFromMenu} />
       <div className="h-full grid grid-rows-[1fr_auto] min-h-0" style={withSideMargins ? { marginLeft: '20%', marginRight: '20%' } : undefined}>
         <div className="overflow-y-auto min-h-0 px-4 py-4">
           {messages.map((m) =>

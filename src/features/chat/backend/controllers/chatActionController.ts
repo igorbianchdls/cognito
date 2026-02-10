@@ -87,6 +87,7 @@ export async function POST(req: Request) {
   if (action === 'fs-write') return fsWrite(payload as { chatId?: string; path?: string; content?: string })
   if (action === 'mcp-toggle') return mcpToggle(payload as { chatId?: string; enabled?: boolean })
   if (action === 'model-set') return modelSet(payload as { chatId?: string; model?: string; provider?: string })
+  if (action === 'chat-status') return chatStatus(payload as { chatId?: string })
   if (action === 'chat-snapshot') return chatSnapshot(payload as { chatId?: string })
 
   return Response.json({ ok: false, error: `ação desconhecida: ${action}` }, { status: 400 })
@@ -804,6 +805,23 @@ catch(e){ console.error(String(e.message||e)); process.exit(1); }
     sess.composioEnabled = Boolean(enabled)
     sess.lastUsedAt = Date.now()
     return Response.json({ ok: true, enabled: sess.composioEnabled })
+  }
+
+  async function chatStatus({ chatId }: { chatId?: string }) {
+    if (!chatId) return Response.json({ ok: true, status: 'off' as const })
+    const sess = SESSIONS.get(chatId)
+    if (!sess) return Response.json({ ok: true, status: 'off' as const })
+    const provider = normalizeProvider(sess.provider, sess.model)
+    return Response.json({
+      ok: true,
+      status: 'running' as const,
+      chatId,
+      provider,
+      model: sess.model || null,
+      hasOpenAiSandbox: OPENAI_SANDBOXES.has(chatId),
+      composioEnabled: Boolean(sess.composioEnabled),
+      lastUsedAt: sess.lastUsedAt,
+    })
   }
 
   async function chatSnapshot({ chatId }: { chatId?: string }) {
