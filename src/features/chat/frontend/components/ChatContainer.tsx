@@ -308,7 +308,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
     const toolIndexToKey = new Map<number, string>()
     const toolCallIdToKey = new Map<string, string>()
     let toolKeySeq = 0
-    const getToolCallKey = (evt: any, idx: number, bindIdx = false) => {
+    const getToolCallKey = (evt: any, idx: number, bindIdx = false): string | null => {
       const rawCallId = (typeof evt?.call_id === 'string' && evt.call_id.trim())
         ? String(evt.call_id).trim()
         : ((typeof evt?.id === 'string' && evt.id.trim()) ? String(evt.id).trim() : '')
@@ -318,7 +318,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
           if (bindIdx) toolIndexToKey.set(idx, existing)
           return existing
         }
-        if (!bindIdx) return ''
+        if (!bindIdx) return null
         const key = `tc-${rawCallId}`
         toolCallIdToKey.set(rawCallId, key)
         if (bindIdx) toolIndexToKey.set(idx, key)
@@ -326,7 +326,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
       }
       const existingIdx = toolIndexToKey.get(idx)
       if (existingIdx) return existingIdx
-      if (!bindIdx) return ''
+      if (!bindIdx) return null
       const key = `ti-${idx}-${++toolKeySeq}`
       if (bindIdx) toolIndexToKey.set(idx, key)
       return key
@@ -354,12 +354,12 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
           } else if (evt && evt.type === 'tool_input_start') {
             activeTextPartId = null
             const idx: number = typeof evt.index === 'number' ? evt.index : 0
-            const callKey = getToolCallKey(evt, idx, true)
+            const callKey = getToolCallKey(evt, idx, true) || `ti-${idx}-${++toolKeySeq}`
             ensureToolPart(callKey, evt.name, 'input-streaming')
             lastActiveToolKey = callKey
           } else if (evt && evt.type === 'tool_input_delta' && typeof evt.partial === 'string') {
             const idx: number = typeof evt.index === 'number' ? evt.index : 0
-            const callKey = getToolCallKey(evt, idx, true)
+            const callKey = getToolCallKey(evt, idx, true) || `ti-${idx}-${++toolKeySeq}`
             ensureToolPart(callKey, evt.name, 'input-streaming')
             // Manually update by reading and writing to avoid stale closures
             setMessages(prev => {
@@ -381,7 +381,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
             })
           } else if (evt && evt.type === 'tool_input_done') {
             const idx: number = typeof evt.index === 'number' ? evt.index : 0
-            const callKey = getToolCallKey(evt, idx, true)
+            const callKey = getToolCallKey(evt, idx, true) || `ti-${idx}-${++toolKeySeq}`
             let parsed: any = undefined
             try { if (typeof evt.input !== 'undefined') parsed = evt.input } catch {}
             updateToolPart(callKey, { state: 'input-available', input: parsed })
@@ -398,8 +398,8 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
           } else if (evt && evt.type === 'tool_done') {
             activeTextPartId = null
             const idx: number = typeof evt.index === 'number' ? evt.index : 0
-            const keyFromEvent = getToolCallKey(evt, idx, false)
-            const targetKey = keyFromEvent || lastActiveToolKey
+            const keyFromEvent: string | null = getToolCallKey(evt, idx, false)
+            const targetKey: string | null = keyFromEvent || lastActiveToolKey
             // Ensure a tool part exists even if no prior tool_input/tool_start was observed
             if (!targetKey) {
               const callKey = `td-hook-${Date.now()}`
@@ -412,8 +412,8 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
           } else if (evt && evt.type === 'tool_error') {
             activeTextPartId = null
             const idx: number = typeof evt.index === 'number' ? evt.index : 0
-            const keyFromEvent = getToolCallKey(evt, idx, false)
-            const targetKey = keyFromEvent || lastActiveToolKey
+            const keyFromEvent: string | null = getToolCallKey(evt, idx, false)
+            const targetKey: string | null = keyFromEvent || lastActiveToolKey
             if (targetKey) {
               lastActiveToolKey = targetKey
               updateToolPart(lastActiveToolKey, { state: 'output-error', errorText: evt.error || 'Tool error', type: `tool-${evt.tool_name || 'generic'}` })
