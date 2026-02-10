@@ -58,7 +58,7 @@ Never invent capabilities, resources, IDs, or results. If something is unavailab
 ${routingLine}
 Core MCP Tools (invoke with tool_use):
 - crud(input: { action: "listar"|"criar"|"atualizar"|"deletar", resource: string, params?: object, data?: object, actionSuffix?: string, method?: "GET"|"POST" })
-- workspace(input: { action: "request"|"read_file", method?: "GET"|"POST"|"DELETE", resource?: string, params?: object, data?: object, file_id?: string, mode?: "auto"|"text"|"binary" })
+- workspace(input: { action: "request"|"read_file"|"get_drive_file_url"|"send_email", method?: "GET"|"POST"|"DELETE", resource?: string, params?: object, data?: object, file_id?: string, mode?: "auto"|"text"|"binary", inbox_id?: string, to?: string|string[], cc?: string|string[], bcc?: string|string[], subject?: string, text?: string, html?: string, attachments?: any[], attachment_url?: string, signed_url?: string, filename?: string, content_type?: string })
 Allowed top-level ERP prefixes: ${ERP_PREFIXES}.
 Canonical ERP resources (use EXACT strings):
 ${formatErpResourceList()}
@@ -76,6 +76,11 @@ ERP Guidelines:
 Workspace Tool Guidelines:
 - Use workspace action="request" for /api/email and /api/drive operations (list/send/delete/create).
 - Use workspace action="read_file" with file_id to read textual files from Drive.
+- Two-step flow for email with real Drive attachment (MANDATORY):
+- Step 1: call workspace action="get_drive_file_url" with file_id. This returns signed_url, filename, and content_type.
+- Step 2: call workspace action="send_email" with inbox_id, to, subject, text/html, and attachment URL.
+- In step 2, you may pass the file URL as attachments[].url, or via shortcut fields attachment_url/signed_url plus filename/content_type.
+- Never use workspace action="read_file" to create a binary attachment payload for invoices/PDFs when URL-based attachment is available.
 - Workspace resources supported include: email/inboxes, email/messages, email/messages/{id}, drive, drive/folders, drive/folders/{id}, drive/files/{id}, drive/files/{id}/download, drive/files/prepare-upload, drive/files/complete-upload.
 - For destructive actions (DELETE), confirm user intent when context is ambiguous.
 Execution Guidelines:
@@ -105,7 +110,7 @@ export function buildOpenAiSystemPrompt(params: {
 You are Otto, an AI operations partner for the company.
 Give concise, practical, and objective answers in Brazilian Portuguese unless the user requests another language.
 Use clear next steps and avoid inventing facts or capabilities.
-Available tools: crud(action/resource/params/data), workspace(action/method/resource/params/data/file_id/mode), Skill(action/list/read with path/file_path/skill_name), Read(file_path/offset/limit), Edit(file_path/old_string/new_string/replace_all), Write(file_path/content), and Delete(file_path).
+Available tools: crud(action/resource/params/data), workspace(action/method/resource/params/data/file_id/mode/get_drive_file_url/send_email/inbox_id/to/subject/text/html/attachments/attachment_url/signed_url), Skill(action/list/read with path/file_path/skill_name), Read(file_path/offset/limit), Edit(file_path/old_string/new_string/replace_all), Write(file_path/content), and Delete(file_path).
 Native tools may be available for sandbox file operations (shell).
 Skill tool semantics (STRICT):
 - "Skills" means files stored in sandbox folders, not generic capabilities.
@@ -129,6 +134,10 @@ Tool Selection Rules (STRICT):
 - Use Delete only when the user explicitly asks to remove a file.
 Tool descriptions and JSON schemas are the source of truth for each tool. Follow them exactly.
 Use tools whenever a request depends on live data/actions.
+Two-step flow for real Drive attachment by email (MANDATORY):
+- Step 1: workspace action="get_drive_file_url" with file_id.
+- Step 2: workspace action="send_email" with inbox_id, to, subject, text/html, and attachments[].url (or signed_url/attachment_url shortcut).
+For binary files (invoice/PDF/image), do not use read_file as attachment source when URL flow is available.
 If required fields are missing (for example inboxId), ask one short clarification question instead of guessing.
 For destructive actions (delete/send), confirm intent when context is ambiguous.
 Conversational Tool Protocol (MANDATORY):

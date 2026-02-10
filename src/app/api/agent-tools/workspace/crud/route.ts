@@ -1,17 +1,34 @@
 import { NextRequest } from 'next/server'
 import { verifyAgentToken } from '@/app/api/chat/tokenStore'
 import { runQuery } from '@/lib/postgres'
+import { getSupabaseAdmin } from '@/features/drive/backend/lib'
 
 export const runtime = 'nodejs'
 
 type RequestAction = {
-  action?: 'request' | 'read_file'
+  action?: 'request' | 'read_file' | 'get_drive_file_url' | 'send_email'
   method?: 'GET' | 'POST' | 'DELETE'
   resource?: string
   params?: Record<string, unknown>
   data?: unknown
   file_id?: string
   mode?: 'auto' | 'text' | 'binary'
+  inbox_id?: string
+  inboxId?: string
+  to?: unknown
+  cc?: unknown
+  bcc?: unknown
+  labels?: unknown
+  subject?: string
+  text?: string
+  html?: string
+  attachments?: unknown
+  attachment_url?: string
+  signed_url?: string
+  filename?: string
+  content_type?: string
+  content_disposition?: string
+  content_id?: string
 }
 
 type RouteRule = {
@@ -276,6 +293,145 @@ async function readDriveFile(req: NextRequest, payload: RequestAction) {
   }
 }
 
+async function getDriveFileUrl(payload: RequestAction) {
+  const fileId = String(payload.file_id || '').trim()
+  if (!isUuid(fileId)) {
+    return { ok: false, status: 400, result: { success: false, error: 'file_id inválido' } }
+  }
+
+  const rows = await runQuery<{
+    id: string
+    name: string
+    mime: string | null
+    size_bytes: string | number
+    storage_path: string
+    bucket_id: string | null
+  }>(
+    `SELECT
+       id::text AS id,
+       name,
+       mime,
+       size_bytes,
+       storage_path,
+       bucket_id
+     FROM drive.files
+     WHERE id = $1::uuid
+       AND deleted_at IS NULL
+     LIMIT 1`,
+    [fileId]
+  )
+  const file = rows[0]
+  if (!file) {
+    return { ok: false, status: 404, result: { success: false, error: 'Arquivo não encontrado' } }
+  }
+
+  const supabase = getSupabaseAdmin()
+  if (!supabase) {
+    return { ok: false, status: 500, result: { success: false, error: 'Supabase Storage não configurado no servidor' } }
+  }
+
+  const expiresInSeconds = 60 * 60
+  const bucket = file.bucket_id || 'drive'
+  const { data, error } = await supabase.storage.from(bucket).createSignedUrl(file.storage_path, expiresInSeconds)
+  if (error || !data?.signedUrl) {
+    return {
+      ok: false,
+      status: 500,
+      result: { success: false, error: `Falha ao gerar URL assinada: ${error?.message || 'erro desconhecido'}` },
+    }
+  }
+
+  const expiresAt = new Date(Date.now() + expiresInSeconds * 1000).toISOString()
+  return {
+    ok: true,
+    status: 200,
+    result: {
+      success: true,
+      file: {
+        id: file.id,
+        name: file.name,
+        mime: file.mime || 'application/octet-stream',
+        sizeBytes: Number(file.size_bytes || 0),
+        bucketId: bucket,
+      },
+      signed_url: data.signedUrl,
+      filename: file.name,
+      content_type: file.mime || 'application/octet-stream',
+      expires_in_seconds: expiresInSeconds,
+      expires_at: expiresAt,
+    },
+  }
+}
+
+function pickAttachmentList(payload: RequestAction) {
+  const out: Array<Record<string, unknown>> = []
+
+  if (Array.isArray(payload.attachments)) {
+    for (const entry of payload.attachments) {
+      if (!entry || typeof entry !== 'object') continue
+      const att = entry as Record<string, unknown>
+      const url = typeof att.url === 'string' ? att.url.trim() : ''
+      const content = typeof att.content === 'string' ? att.content : ''
+      if (!url && !content) continue
+      out.push({
+        filename: typeof att.filename === 'string' ? att.filename : undefined,
+        contentType: typeof att.contentType === 'string' ? att.contentType : undefined,
+        contentDisposition: typeof att.contentDisposition === 'string' ? att.contentDisposition : undefined,
+        contentId: typeof att.contentId === 'string' ? att.contentId : undefined,
+        content: content || undefined,
+        url: url || undefined,
+      })
+    }
+  }
+
+  const attachmentUrlRaw = typeof payload.attachment_url === 'string'
+    ? payload.attachment_url
+    : (typeof payload.signed_url === 'string' ? payload.signed_url : '')
+  const attachmentUrl = attachmentUrlRaw.trim()
+  if (attachmentUrl) {
+    out.push({
+      filename: typeof payload.filename === 'string' ? payload.filename : undefined,
+      contentType: typeof payload.content_type === 'string' ? payload.content_type : undefined,
+      contentDisposition: typeof payload.content_disposition === 'string' ? payload.content_disposition : undefined,
+      contentId: typeof payload.content_id === 'string' ? payload.content_id : undefined,
+      url: attachmentUrl,
+    })
+  }
+
+  return out.length > 0 ? out : undefined
+}
+
+async function sendEmail(req: NextRequest, payload: RequestAction) {
+  const inboxIdRaw = payload.inbox_id ?? payload.inboxId
+  const inboxId = typeof inboxIdRaw === 'string' ? inboxIdRaw.trim() : ''
+  if (!inboxId) {
+    return { ok: false, status: 400, result: { success: false, error: 'inbox_id é obrigatório' } }
+  }
+  if (payload.to == null) {
+    return { ok: false, status: 400, result: { success: false, error: 'to é obrigatório' } }
+  }
+
+  const emailBody = {
+    inboxId,
+    to: payload.to,
+    cc: payload.cc,
+    bcc: payload.bcc,
+    labels: payload.labels,
+    subject: typeof payload.subject === 'string' ? payload.subject : undefined,
+    text: typeof payload.text === 'string' ? payload.text : undefined,
+    html: typeof payload.html === 'string' ? payload.html : undefined,
+    attachments: pickAttachmentList(payload),
+  }
+
+  const out = await forwardWorkspaceRequest(req, {
+    action: 'request',
+    method: 'POST',
+    resource: 'email/messages',
+    data: emailBody,
+  })
+  return { ok: out.ok, status: out.ok ? 200 : out.status, result: out.result }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const auth = req.headers.get('authorization') || ''
@@ -287,6 +443,16 @@ export async function POST(req: NextRequest) {
 
     const payload = await req.json().catch(() => ({})) as RequestAction
     const action = String(payload.action || 'request').trim().toLowerCase()
+
+    if (action === 'get_drive_file_url') {
+      const out = await getDriveFileUrl(payload)
+      return Response.json({ ok: out.ok, result: out.result }, { status: out.status })
+    }
+
+    if (action === 'send_email') {
+      const out = await sendEmail(req, payload)
+      return Response.json({ ok: out.ok, result: out.result }, { status: out.status })
+    }
 
     if (action === 'read_file') {
       const out = await readDriveFile(req, payload)

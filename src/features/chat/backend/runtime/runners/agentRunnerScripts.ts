@@ -1263,14 +1263,14 @@ const baseTools = [
   {
     type: 'function',
     name: 'workspace',
-    description: 'Tool de workspace (email/drive). action="request" chama rotas permitidas de email/drive; action="read_file" lê arquivo do Drive por file_id. Casos comuns: listar inboxes, listar emails, ler email por id, baixar anexo, listar drive e pastas.',
+    description: 'Tool de workspace (email/drive). action="request" chama rotas permitidas; action="read_file" lê arquivo; action="get_drive_file_url" gera URL assinada do Drive por file_id; action="send_email" envia email completo (to/subject/text|html) com anexos por URL/base64.',
     parameters: {
       type: 'object',
       properties: {
         action: {
           type: 'string',
-          enum: ['request', 'read_file'],
-          description: 'request: operações email/drive por resource. read_file: leitura de conteúdo de arquivo do Drive usando file_id.'
+          enum: ['request', 'read_file', 'get_drive_file_url', 'send_email'],
+          description: 'request: operações por resource. read_file: leitura de conteúdo do Drive. get_drive_file_url: retorna signed_url por file_id. send_email: envia email completo com anexos.'
         },
         method: {
           type: 'string',
@@ -1293,12 +1293,60 @@ const baseTools = [
         },
         file_id: {
           type: 'string',
-          description: 'UUID do arquivo no Drive para action=read_file.'
+          description: 'UUID do arquivo no Drive para action=read_file e action=get_drive_file_url.'
         },
         mode: {
           type: 'string',
           enum: ['auto', 'text', 'binary'],
           description: 'Modo de leitura em action=read_file.'
+        },
+        inbox_id: {
+          type: 'string',
+          description: 'Inbox para action=send_email.'
+        },
+        to: {
+          description: 'Destinatários para action=send_email (array ou string).'
+        },
+        cc: {
+          description: 'CC opcional para action=send_email.'
+        },
+        bcc: {
+          description: 'BCC opcional para action=send_email.'
+        },
+        labels: {
+          description: 'Labels opcionais para action=send_email.'
+        },
+        subject: {
+          type: 'string',
+          description: 'Assunto para action=send_email.'
+        },
+        text: {
+          type: 'string',
+          description: 'Corpo texto para action=send_email.'
+        },
+        html: {
+          type: 'string',
+          description: 'Corpo HTML para action=send_email.'
+        },
+        attachments: {
+          type: 'array',
+          description: 'Lista de anexos para action=send_email. Cada item pode ter url ou content(base64), além de filename/contentType.'
+        },
+        attachment_url: {
+          type: 'string',
+          description: 'Atalho para 1 anexo por URL em action=send_email.'
+        },
+        signed_url: {
+          type: 'string',
+          description: 'Alias de attachment_url para action=send_email.'
+        },
+        filename: {
+          type: 'string',
+          description: 'Nome do arquivo para attachment_url em action=send_email.'
+        },
+        content_type: {
+          type: 'string',
+          description: 'MIME type para attachment_url em action=send_email.'
         },
       },
       required: ['action'],
