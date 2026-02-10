@@ -18,7 +18,7 @@ export default function ChatRoutePageWithId() {
   const [sandboxExpanded, setSandboxExpanded] = useState(false);
   const [chatId, setChatId] = useState<string | null>(null);
   const [prefill, setPrefill] = useState<string | undefined>(undefined);
-  const [prefillEngine, setPrefillEngine] = useState<'claude-sonnet' | 'claude-haiku' | 'openai-gpt5mini' | undefined>(undefined);
+  const [prefillEngine, setPrefillEngine] = useState<'claude-sonnet' | 'claude-haiku' | 'openai-gpt5nano' | 'openai-gpt5mini' | undefined>(undefined);
 
   useEffect(() => {
     if (!urlId) return;
@@ -30,8 +30,8 @@ export default function ChatRoutePageWithId() {
         sessionStorage.removeItem(key);
       }
       const rawEngine = sessionStorage.getItem(`firstEngine:${urlId}`) || '';
-      if (rawEngine === 'claude-sonnet' || rawEngine === 'claude-haiku' || rawEngine === 'openai-gpt5mini') {
-        setPrefillEngine(rawEngine);
+      if (rawEngine === 'claude-sonnet' || rawEngine === 'claude-haiku' || rawEngine === 'openai-gpt5nano' || rawEngine === 'openai-gpt5mini') {
+        setPrefillEngine(rawEngine === 'openai-gpt5mini' ? 'openai-gpt5nano' : rawEngine);
         sessionStorage.removeItem(`firstEngine:${urlId}`);
       }
     } catch {

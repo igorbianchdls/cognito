@@ -460,7 +460,7 @@ for await (const msg of q) {
 export function getOpenAIResponsesStreamRunnerScript(): string {
   return `
 const prompt = process.argv[2] || '';
-const modelId = process.env.AGENT_MODEL || 'gpt-5-mini';
+const modelId = process.env.AGENT_MODEL || 'gpt-5-nano';
 const apiKey = process.env.OPENAI_API_KEY || process.env.CODEX_API_KEY || '';
 const baseAppUrl = process.env.AGENT_BASE_URL || '';
 const toolToken = process.env.AGENT_TOOL_TOKEN || '';
@@ -736,7 +736,7 @@ while (!done && turn < 10) {
     model: modelId,
     input: nextInput,
     stream: true,
-    reasoning: { effort: 'medium', summary: 'auto' },
+    reasoning: { effort: 'medium', summary: 'detailed' },
     tools,
     previous_response_id: previousResponseId || undefined,
   };

@@ -14,7 +14,7 @@ type ChatPanelProps = {
   autoSendPrefill?: boolean;
   initialChatId?: string;
   autoStartSandbox?: boolean;
-  initialEngine?: 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5mini';
+  initialEngine?: 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5nano' | 'openai-gpt5mini';
 };
 
 export default function ChatPanel({ className, style, onOpenSandbox, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, autoStartSandbox, initialEngine }: ChatPanelProps) {

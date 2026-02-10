@@ -9,20 +9,20 @@ import InputArea from './InputArea';
 import { useRouter } from 'next/navigation';
 
 type ChatStatus = 'idle' | 'submitted' | 'streaming' | 'error'
-type EngineId = 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5mini'
+type EngineId = 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5nano' | 'openai-gpt5mini'
 
 function engineToBackend(engine: EngineId): { provider: string; model: string } {
   if (engine === 'claude-sonnet') return { provider: 'claude-agent', model: 'claude-sonnet-4-5-20251001' }
-  if (engine === 'openai-gpt5mini') return { provider: 'openai-responses', model: 'gpt-5-mini' }
+  if (engine === 'openai-gpt5nano' || engine === 'openai-gpt5mini') return { provider: 'openai-responses', model: 'gpt-5-nano' }
   return { provider: 'claude-agent', model: 'claude-haiku-4-5-20251001' }
 }
 
 function modelToEngine(modelRaw?: string): EngineId {
   const model = (modelRaw || '').toString().trim().toLowerCase()
-  if (!model) return 'openai-gpt5mini'
-  if (model.includes('gpt') || model.includes('openai')) return 'openai-gpt5mini'
+  if (!model) return 'openai-gpt5nano'
+  if (model.includes('gpt') || model.includes('openai')) return 'openai-gpt5nano'
   if (model.includes('sonnet')) return 'claude-sonnet'
-  return 'openai-gpt5mini'
+  return 'openai-gpt5nano'
 }
 
 export default function ChatContainer({ onOpenSandbox, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, autoStartSandbox, initialEngine }: { onOpenSandbox?: (chatId?: string) => void; withSideMargins?: boolean; redirectOnFirstMessage?: boolean; initialMessage?: string; autoSendPrefill?: boolean; initialChatId?: string; autoStartSandbox?: boolean; initialEngine?: EngineId }) {
@@ -31,7 +31,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   const [chatId, setChatId] = useState<string | null>(null)
   const [status, setStatus] = useState<ChatStatus>('idle')
   const [composioEnabled, setComposioEnabled] = useState<boolean>(false)
-  const [model, setModel] = useState<EngineId>(initialEngine || 'openai-gpt5mini')
+  const [model, setModel] = useState<EngineId>(initialEngine || 'openai-gpt5nano')
   const abortRef = useRef<AbortController | null>(null)
   // Track the assistant message for the current turn, so each user message
   // gets its own assistant response instead of appending to the first one.

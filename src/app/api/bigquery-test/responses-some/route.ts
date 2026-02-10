@@ -131,7 +131,7 @@ const base = rawBase.replace(/\\/+$/, '');
 const url = base.endsWith('/responses') ? base : base + '/responses';
 
 const requestBody = {
-  model: payload.model || 'gpt-5-mini',
+  model: payload.model || 'gpt-5-nano',
   input: [
     {
       role: 'user',

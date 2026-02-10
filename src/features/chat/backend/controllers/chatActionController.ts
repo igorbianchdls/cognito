@@ -35,11 +35,15 @@ function normalizeModel(provider: ChatProvider, rawModel?: string): string {
   const raw = (rawModel || '').toString().trim().toLowerCase()
   if (provider === 'openai-responses') {
     const openaiMap: Record<string, string> = {
-      'gpt-5-mini': 'gpt-5-mini',
-      'gpt5-mini': 'gpt-5-mini',
-      'gpt5mini': 'gpt-5-mini',
+      'gpt-5-nano': 'gpt-5-nano',
+      'gpt5-nano': 'gpt-5-nano',
+      'gpt5nano': 'gpt-5-nano',
+      // Backward compatibility: map previous mini aliases to nano
+      'gpt-5-mini': 'gpt-5-nano',
+      'gpt5-mini': 'gpt-5-nano',
+      'gpt5mini': 'gpt-5-nano',
     }
-    return openaiMap[raw] || 'gpt-5-mini'
+    return openaiMap[raw] || 'gpt-5-nano'
   }
   const claudeMap: Record<string, string> = {
     'sonnet': 'claude-sonnet-4-5-20251001',
@@ -263,7 +267,7 @@ export async function POST(req: Request) {
       // Issue short-lived agent token (opaque) and store
       const { token, exp } = generateAgentToken(1800)
       const initialProvider = normalizeProvider(undefined, existingModel)
-      const initialModel = normalizeModel(initialProvider, existingModel || (initialProvider === 'openai-responses' ? 'gpt-5-mini' : 'claude-haiku-4-5-20251001'))
+      const initialModel = normalizeModel(initialProvider, existingModel || (initialProvider === 'openai-responses' ? 'gpt-5-nano' : 'claude-haiku-4-5-20251001'))
       SESSIONS.set(id, { id, sandbox, createdAt: Date.now(), lastUsedAt: Date.now(), agentToken: token, agentTokenExp: exp, composioEnabled: false, model: initialModel, composioUserId, provider: initialProvider })
       setAgentToken(id, token, exp)
       // Persist chat header (best-effort)
@@ -825,7 +829,7 @@ catch(e){ console.error(String(e.message||e)); process.exit(1); }
     const sess = SESSIONS.get(chatId)
     if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
     const chosenProvider = normalizeProvider(provider, model || sess.model)
-    const fallbackModel = chosenProvider === 'openai-responses' ? 'gpt-5-mini' : 'claude-haiku-4-5-20251001'
+    const fallbackModel = chosenProvider === 'openai-responses' ? 'gpt-5-nano' : 'claude-haiku-4-5-20251001'
     const chosen = normalizeModel(chosenProvider, model || sess.model || fallbackModel)
     sess.provider = chosenProvider
     sess.model = chosen

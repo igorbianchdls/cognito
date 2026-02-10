@@ -29,11 +29,11 @@ type Props = {
   onOpenSandbox?: () => void;
   composioEnabled?: boolean;
   onToggleComposio?: () => void;
-  model?: 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5mini';
-  onModelChange?: (m: 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5mini') => void;
+  model?: 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5nano' | 'openai-gpt5mini';
+  onModelChange?: (m: 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5nano' | 'openai-gpt5mini') => void;
 };
 
-export default function InputArea({ value, onChange, onSubmit, status = 'idle', onOpenSandbox, composioEnabled, onToggleComposio, model = 'claude-haiku', onModelChange }: Props) {
+export default function InputArea({ value, onChange, onSubmit, status = 'idle', onOpenSandbox, composioEnabled, onToggleComposio, model = 'openai-gpt5nano', onModelChange }: Props) {
   // Local-only UI state for Toolkits panel (no persistence, no backend)
   const [toolkitsOpen, setToolkitsOpen] = useState(false)
   const [tkSearch, setTkSearch] = useState('')
@@ -204,7 +204,7 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
 
             {/* Model selector */}
             <PromptInputModelSelect value={model} onValueChange={(v: any) => {
-              const next = (v === 'claude-sonnet' || v === 'claude-haiku' || v === 'openai-gpt5mini') ? v : 'claude-haiku'
+              const next = (v === 'claude-sonnet' || v === 'claude-haiku' || v === 'openai-gpt5nano' || v === 'openai-gpt5mini') ? v : 'openai-gpt5nano'
               onModelChange?.(next)
             }}>
               <PromptInputModelSelectTrigger className="text-gray-500 hover:text-gray-800">
@@ -213,7 +213,7 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
               <PromptInputModelSelectContent>
                 <PromptInputModelSelectItem value="claude-sonnet">Claude Sonnet 4.5 (Agent SDK)</PromptInputModelSelectItem>
                 <PromptInputModelSelectItem value="claude-haiku">Claude Haiku 4.5 (Agent SDK)</PromptInputModelSelectItem>
-                <PromptInputModelSelectItem value="openai-gpt5mini">OpenAI GPT-5 mini (Responses)</PromptInputModelSelectItem>
+                <PromptInputModelSelectItem value="openai-gpt5nano">OpenAI GPT-5 nano (Responses)</PromptInputModelSelectItem>
               </PromptInputModelSelectContent>
             </PromptInputModelSelect>
           </PromptInputTools>
