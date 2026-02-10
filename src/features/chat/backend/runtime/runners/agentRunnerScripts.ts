@@ -688,6 +688,14 @@ function buildUnifiedUpdateDiff(beforeText, afterText) {
   return header;
 }
 
+function isSandboxAbsolutePath(filePath) {
+  const p = String(filePath || '').trim();
+  if (!p) return false;
+  if (!p.startsWith('/vercel/sandbox')) return false;
+  if (p.includes('..')) return false;
+  return true;
+}
+
 async function callRead(args) {
   const filePath = typeof args?.file_path === 'string'
     ? args.file_path.trim()
@@ -699,7 +707,7 @@ async function callRead(args) {
   const limit = limitRaw > 0 ? Math.min(limitRaw, 10000) : 0;
 
   const run = await callChatAction('fs-read', { path: filePath });
-  if (!run || run.ok === false) {
+  if (!run || run.ok !== true) {
     return {
       success: false,
       file_path: filePath,
@@ -754,7 +762,7 @@ async function callEdit(args) {
   }
 
   const read = await callChatAction('fs-read', { path: filePath });
-  if (!read || read.ok === false) {
+  if (!read || read.ok !== true) {
     return { success: false, file_path: filePath, error: read?.error || 'falha ao ler arquivo para Edit' };
   }
   if (read?.isBinary) {
@@ -798,7 +806,7 @@ async function callEdit(args) {
       diff,
     },
   });
-  if (!patch || patch.ok === false) {
+  if (!patch || patch.ok !== true) {
     return {
       success: false,
       file_path: targetPath,
@@ -815,15 +823,102 @@ async function callEdit(args) {
   };
 }
 
+async function callWrite(args) {
+  const filePath = typeof args?.file_path === 'string'
+    ? args.file_path.trim()
+    : (typeof args?.path === 'string' ? args.path.trim() : '');
+  const hasContent = typeof args?.content === 'string';
+  const content = hasContent ? args.content : '';
+
+  if (!filePath) return { success: false, error: 'file_path é obrigatório para Write' };
+  if (!isSandboxAbsolutePath(filePath)) {
+    return { success: false, file_path: filePath, error: 'file_path deve começar com /vercel/sandbox' };
+  }
+  if (!hasContent) return { success: false, file_path: filePath, error: 'content deve ser string (pode ser vazio)' };
+
+  const read = await callChatAction('fs-read', { path: filePath });
+  let operation = null;
+
+  if (read && read.ok === true) {
+    if (read?.isBinary) {
+      return { success: false, file_path: String(read?.path || filePath), error: 'Write suporta apenas arquivos de texto' };
+    }
+    const current = typeof read?.content === 'string' ? read.content : '';
+    if (current === content) {
+      return {
+        success: true,
+        file_path: String(read?.path || filePath),
+        status: 'completed',
+        output: 'Nenhuma alteração necessária; conteúdo já está atualizado.',
+      };
+    }
+    operation = {
+      type: 'update_file',
+      path: String(read?.path || filePath),
+      diff: buildUnifiedUpdateDiff(current, content),
+    };
+  } else {
+    const err = String(read?.error || '');
+    const missing = /enoent|no such file|not found|arquivo não encontrado|não existe/i.test(err);
+    if (!missing) {
+      return { success: false, file_path: filePath, error: err || 'falha ao verificar arquivo antes do Write' };
+    }
+    operation = {
+      type: 'create_file',
+      path: filePath,
+      diff: buildUnifiedUpdateDiff('', content),
+    };
+  }
+
+  const patch = await callChatAction('fs-apply-patch', { operation });
+  if (!patch || patch.ok !== true) {
+    return {
+      success: false,
+      file_path: String(operation?.path || filePath),
+      error: patch?.error || patch?.output || 'falha ao aplicar escrita via fs-apply-patch',
+    };
+  }
+  return {
+    success: true,
+    file_path: String(operation?.path || filePath),
+    status: String(patch?.status || 'completed'),
+    output: String(patch?.output || 'Write aplicado com sucesso.'),
+  };
+}
+
+async function callDelete(args) {
+  const filePath = typeof args?.file_path === 'string'
+    ? args.file_path.trim()
+    : (typeof args?.path === 'string' ? args.path.trim() : '');
+  if (!filePath) return { success: false, error: 'file_path é obrigatório para Delete' };
+  if (!isSandboxAbsolutePath(filePath)) {
+    return { success: false, file_path: filePath, error: 'file_path deve começar com /vercel/sandbox' };
+  }
+
+  const patch = await callChatAction('fs-apply-patch', {
+    operation: {
+      type: 'delete_file',
+      path: filePath,
+    },
+  });
+  if (!patch || patch.ok !== true) {
+    return {
+      success: false,
+      file_path: filePath,
+      error: patch?.error || patch?.output || 'falha ao remover arquivo via fs-apply-patch',
+    };
+  }
+  return {
+    success: true,
+    file_path: filePath,
+    status: String(patch?.status || 'completed'),
+    output: String(patch?.output || 'Delete aplicado com sucesso.'),
+  };
+}
+
 function supportsNativeShellTool(model) {
   const m = String(model || '').toLowerCase().trim();
   return m.startsWith('gpt-5.1') || m.startsWith('gpt-5.2');
-}
-
-function supportsNativeApplyPatchTool(model) {
-  const m = String(model || '').toLowerCase().trim();
-  if (!m) return false;
-  return m.startsWith('gpt-') || m.startsWith('o1') || m.startsWith('o3') || m.startsWith('o4');
 }
 
 async function callShell(args) {
@@ -832,7 +927,7 @@ async function callShell(args) {
   const cwdRaw = typeof args?.cwd === 'string' ? args.cwd.trim() : '';
   const cwd = cwdRaw || '/vercel/sandbox';
   const run = await callChatAction('sandbox-shell', { command, cwd });
-  if (!run || run.ok === false) {
+  if (!run || run.ok !== true) {
     return { success: false, error: run?.error || 'falha ao executar shell' };
   }
   return {
@@ -845,24 +940,10 @@ async function callShell(args) {
 }
 
 async function callApplyPatch(args) {
-  const operation = (args && typeof args === 'object' && args.operation)
-    ? args.operation
-    : args;
-  if (!operation || typeof operation !== 'object') {
-    return { success: false, status: 'failed', output: 'operation inválida para apply_patch' };
-  }
-  const run = await callChatAction('fs-apply-patch', { operation });
-  if (!run || run.ok === false) {
-    return {
-      success: false,
-      status: 'failed',
-      output: String(run?.output || run?.error || 'falha ao aplicar patch'),
-    };
-  }
   return {
-    success: Boolean(run.success),
-    status: run.status || (run.success ? 'completed' : 'failed'),
-    output: String(run.output || (run.success ? 'Patch aplicado com sucesso.' : 'Falha ao aplicar patch')),
+    success: false,
+    status: 'failed',
+    output: 'tool apply_patch desativada',
   };
 }
 
@@ -965,8 +1046,6 @@ function onEvent(eventName, dataRaw) {
 
 const decoder = new TextDecoder();
 const nativeShellEnabled = supportsNativeShellTool(modelId);
-const nativeApplyPatchEnabled = supportsNativeApplyPatchTool(modelId);
-let enableApplyPatch = nativeApplyPatchEnabled;
 const baseTools = [
   {
     type: 'function',
@@ -1105,6 +1184,42 @@ const baseTools = [
       additionalProperties: false,
     },
   },
+  {
+    type: 'function',
+    name: 'Write',
+    description: 'Cria ou sobrescreve arquivo texto via fs-apply-patch. file_path deve sempre começar com /vercel/sandbox.',
+    parameters: {
+      type: 'object',
+      properties: {
+        file_path: {
+          type: 'string',
+          description: 'Caminho absoluto obrigatório, iniciando com /vercel/sandbox.',
+        },
+        content: {
+          type: 'string',
+          description: 'Conteúdo completo do arquivo (pode ser vazio).',
+        },
+      },
+      required: ['file_path', 'content'],
+      additionalProperties: false,
+    },
+  },
+  {
+    type: 'function',
+    name: 'Delete',
+    description: 'Remove arquivo via fs-apply-patch. file_path deve sempre começar com /vercel/sandbox.',
+    parameters: {
+      type: 'object',
+      properties: {
+        file_path: {
+          type: 'string',
+          description: 'Caminho absoluto obrigatório, iniciando com /vercel/sandbox.',
+        },
+      },
+      required: ['file_path'],
+      additionalProperties: false,
+    },
+  },
   ...(nativeShellEnabled
     ? [{ type: 'shell' }]
     : [{
@@ -1136,7 +1251,7 @@ let done = false;
 
 while (!done && turn < 10) {
   turn += 1;
-  const tools = enableApplyPatch ? [...baseTools, { type: 'apply_patch' }] : baseTools;
+  const tools = baseTools;
   const requestBody = {
     model: modelId,
     input: nextInput,
@@ -1157,10 +1272,6 @@ while (!done && turn < 10) {
 
   if (!turnRes.ok || !turnRes.body) {
     const text = await turnRes.text().catch(() => '');
-    if (enableApplyPatch && /apply_patch/i.test(text) && /invalid|unsupported|unknown|not supported|tool/i.test(text)) {
-      enableApplyPatch = false;
-      continue;
-    }
     emit('error', { error: 'Responses API ' + turnRes.status + ': ' + text.slice(0, 1200) });
     process.exit(3);
   }
@@ -1246,6 +1357,10 @@ while (!done && turn < 10) {
         result = await callRead(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
       } else if (toolName === 'Edit' || toolName === 'edit') {
         result = await callEdit(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
+      } else if (toolName === 'Write' || toolName === 'write') {
+        result = await callWrite(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
+      } else if (toolName === 'Delete' || toolName === 'delete') {
+        result = await callDelete(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
       } else if (toolName === 'shell') {
         result = await callShell(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
       } else if (toolName === 'apply_patch') {
