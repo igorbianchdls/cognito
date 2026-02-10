@@ -842,11 +842,11 @@ while (!done && turn < 10) {
       } else {
         result = { success: false, error: 'tool desconhecida: ' + toolName };
       }
-      emit('tool_done', { tool_name: toolName, output: result });
+      emit('tool_done', { index, call_id: callId, tool_name: toolName, output: result });
       outputs.push({ type: 'function_call_output', call_id: callId, output: JSON.stringify(result ?? {}) });
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
-      emit('tool_error', { tool_name: toolName, error: msg });
+      emit('tool_error', { index, call_id: callId, tool_name: toolName, error: msg });
       outputs.push({ type: 'function_call_output', call_id: callId, output: JSON.stringify({ success: false, error: msg }) });
     }
   }
