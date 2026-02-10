@@ -19,10 +19,10 @@ function engineToBackend(engine: EngineId): { provider: string; model: string } 
 
 function modelToEngine(modelRaw?: string): EngineId {
   const model = (modelRaw || '').toString().trim().toLowerCase()
-  if (!model) return 'claude-haiku'
+  if (!model) return 'openai-gpt5mini'
   if (model.includes('gpt') || model.includes('openai')) return 'openai-gpt5mini'
   if (model.includes('sonnet')) return 'claude-sonnet'
-  return 'claude-haiku'
+  return 'openai-gpt5mini'
 }
 
 export default function ChatContainer({ onOpenSandbox, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, autoStartSandbox, initialEngine }: { onOpenSandbox?: (chatId?: string) => void; withSideMargins?: boolean; redirectOnFirstMessage?: boolean; initialMessage?: string; autoSendPrefill?: boolean; initialChatId?: string; autoStartSandbox?: boolean; initialEngine?: EngineId }) {
@@ -31,7 +31,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   const [chatId, setChatId] = useState<string | null>(null)
   const [status, setStatus] = useState<ChatStatus>('idle')
   const [composioEnabled, setComposioEnabled] = useState<boolean>(false)
-  const [model, setModel] = useState<EngineId>(initialEngine || 'claude-haiku')
+  const [model, setModel] = useState<EngineId>(initialEngine || 'openai-gpt5mini')
   const abortRef = useRef<AbortController | null>(null)
   // Track the assistant message for the current turn, so each user message
   // gets its own assistant response instead of appending to the first one.
