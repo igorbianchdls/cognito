@@ -29,12 +29,12 @@ import ToolDeleteInputCard from '@/components/tools/workflow/ToolDeleteInputCard
 // Removed dedicated supplier card for create flow
 // import CriarFornecedorResult from '@/components/tools/workflow/CriarFornecedorResult';
 
-type Props = { message: UIMessage };
+type Props = { message: UIMessage; isPending?: boolean };
 
-export default function RespostaDaIa({ message }: Props) {
+export default function RespostaDaIa({ message, isPending = false }: Props) {
   const parts = message.parts || [];
   const hasAnything = parts.length > 0;
-  if (!hasAnything) return null;
+  if (!hasAnything && !isPending) return null;
 
   return (
     <div className="w-full flex justify-start py-3">
@@ -43,7 +43,14 @@ export default function RespostaDaIa({ message }: Props) {
           <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-tr from-fuchsia-500 via-purple-500 to-blue-500 text-white text-[10px] leading-none shadow-sm ml-0.5">OT</span>
           <span className="font-semibold text-gray-900 text-[16px]">Otto</span>
         </div>
-        {parts.map((part, index) => {
+        {!hasAnything && isPending && (
+          <div className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-3 py-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-gray-400 animate-pulse [animation-delay:0ms]" />
+            <span className="h-1.5 w-1.5 rounded-full bg-gray-400 animate-pulse [animation-delay:150ms]" />
+            <span className="h-1.5 w-1.5 rounded-full bg-gray-400 animate-pulse [animation-delay:300ms]" />
+          </div>
+        )}
+        {hasAnything && parts.map((part, index) => {
           if (part.type === 'reasoning') {
             const txt = (part as any).content || (part as any).text || '';
             const isStreaming = (part as any).state === 'streaming';

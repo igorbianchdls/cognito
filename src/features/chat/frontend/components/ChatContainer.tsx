@@ -553,7 +553,15 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
             m.role === 'user' ? (
               <PerguntaDoUsuario key={m.id} message={m} />
             ) : (
-              <RespostaDaIa key={m.id} message={m} />
+              <RespostaDaIa
+                key={m.id}
+                message={m}
+                isPending={
+                  ((status === 'submitted' || status === 'streaming') &&
+                    currentAssistantIdRef.current === m.id &&
+                    (!Array.isArray((m as any).parts) || (m as any).parts.length === 0))
+                }
+              />
             )
           )}
         </div>
