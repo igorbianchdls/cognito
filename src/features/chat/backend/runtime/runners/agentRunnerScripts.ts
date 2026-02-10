@@ -645,6 +645,34 @@ async function callWorkspace(args) {
   return out;
 }
 
+async function callRead(args) {
+  const path = typeof args?.path === 'string' ? args.path.trim() : '';
+  if (!path) return { success: false, error: 'path é obrigatório para Read' };
+  const maxCharsRaw = Number(args?.max_chars);
+  const maxChars = Number.isFinite(maxCharsRaw) && maxCharsRaw > 0
+    ? Math.min(200000, Math.floor(maxCharsRaw))
+    : 20000;
+  const run = await callChatAction('fs-read', { path });
+  if (!run || run.ok === false) {
+    return {
+      success: false,
+      path,
+      error: run?.error || 'falha ao ler arquivo',
+    };
+  }
+  const rawContent = typeof run?.content === 'string' ? run.content : '';
+  const truncated = rawContent.length > maxChars;
+  const content = truncated ? rawContent.slice(0, maxChars) : rawContent;
+  return {
+    success: true,
+    path: String(run?.path || path),
+    isBinary: Boolean(run?.isBinary),
+    content,
+    truncated,
+    content_length: rawContent.length,
+  };
+}
+
 function supportsNativeShellTool(model) {
   const m = String(model || '').toLowerCase().trim();
   return m.startsWith('gpt-5.1') || m.startsWith('gpt-5.2');
@@ -883,6 +911,26 @@ const baseTools = [
       additionalProperties: true,
     },
   },
+  {
+    type: 'function',
+    name: 'Read',
+    description: 'Lê arquivo na sandbox do chat. Use para abrir código/texto em /vercel/sandbox sem executar comandos shell.',
+    parameters: {
+      type: 'object',
+      properties: {
+        path: {
+          type: 'string',
+          description: 'Caminho do arquivo. Aceita absoluto em /vercel/sandbox ou relativo ao workspace.',
+        },
+        max_chars: {
+          type: 'integer',
+          description: 'Limite opcional de caracteres retornados (padrão: 20000, máximo: 200000).',
+        },
+      },
+      required: ['path'],
+      additionalProperties: false,
+    },
+  },
   ...(nativeShellEnabled
     ? [{ type: 'shell' }]
     : [{
@@ -1020,6 +1068,8 @@ while (!done && turn < 10) {
         result = await callCrud(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
       } else if (toolName === 'workspace') {
         result = await callWorkspace(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
+      } else if (toolName === 'Read' || toolName === 'read') {
+        result = await callRead(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
       } else if (toolName === 'shell') {
         result = await callShell(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
       } else if (toolName === 'apply_patch') {
