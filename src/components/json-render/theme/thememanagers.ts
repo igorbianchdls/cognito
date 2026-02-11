@@ -36,10 +36,8 @@ export type BorderManager = {
     variant?: 'hud'
     baseColor?: string
     cornerColor?: string
-    foldColor?: string
     cornerSize?: string | number
     cornerWidth?: string | number
-    innerInset?: string | number
   }
 }
 
@@ -126,10 +124,8 @@ export function mapManagersToCssVars(managers: Managers | undefined): Record<str
       if (f.variant) cssVars.containerFrameVariant = String(f.variant)
       if (f.baseColor) cssVars.containerFrameBaseColor = String(f.baseColor)
       if (f.cornerColor) cssVars.containerFrameCornerColor = String(f.cornerColor)
-      if (f.foldColor) cssVars.containerFrameFoldColor = String(f.foldColor)
       if (f.cornerSize !== undefined) cssVars.containerFrameCornerSize = String(f.cornerSize)
       if (f.cornerWidth !== undefined) cssVars.containerFrameCornerWidth = String(f.cornerWidth)
-      if (f.innerInset !== undefined) cssVars.containerFrameInnerInset = String(f.innerInset)
     }
   }
 

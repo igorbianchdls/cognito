@@ -8,10 +8,8 @@ export type HudFrameConfig = {
   variant?: "hud";
   baseColor?: string;
   cornerColor?: string;
-  foldColor?: string;
   cornerSize?: number | string;
   cornerWidth?: number | string;
-  innerInset?: number | string;
 };
 
 type Props = {
@@ -49,7 +47,6 @@ function resolveFrame(frame: HudFrameConfig | null | undefined, cssVars?: Record
 
   const baseColor = frame?.baseColor || fromCss("containerFrameBaseColor") || getStyleBorderColor(style) || "#4b5563";
   const cornerColor = frame?.cornerColor || fromCss("containerFrameCornerColor") || baseColor;
-  const foldColor = frame?.foldColor || fromCss("containerFrameFoldColor") || cornerColor;
   const cornerSize = clamp(
     toNumber(frame?.cornerSize ?? fromCss("containerFrameCornerSize"), 14),
     4,
@@ -60,13 +57,8 @@ function resolveFrame(frame: HudFrameConfig | null | undefined, cssVars?: Record
     1,
     4
   );
-  const innerInset = clamp(
-    toNumber(frame?.innerInset ?? fromCss("containerFrameInnerInset"), 6),
-    2,
-    32
-  );
 
-  return { variant, baseColor, cornerColor, foldColor, cornerSize, cornerWidth, innerInset };
+  return { variant, baseColor, cornerColor, cornerSize, cornerWidth };
 }
 
 function lineStyle(color: string, width: number): React.CSSProperties {
@@ -99,8 +91,6 @@ export default function FrameSurface({ style, frame, cssVars, className, childre
   const radius = (style as AnyRecord)?.borderRadius;
   const corner = s.cornerSize;
   const stroke = s.cornerWidth;
-  const inset = s.innerInset;
-  const fold = Math.max(6, Math.round(corner * 0.58));
 
   return (
     <div className={className} style={merged}>
@@ -114,16 +104,6 @@ export default function FrameSurface({ style, frame, cssVars, className, childre
           borderRadius: radius as any,
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            inset,
-            border: `${stroke}px dashed ${s.foldColor}`,
-            borderRadius: radius as any,
-            opacity: 0.45,
-          }}
-        />
-
         <div style={{ ...lineStyle(s.cornerColor, stroke), left: 0, top: 0, width: corner, height: stroke }} />
         <div style={{ ...lineStyle(s.cornerColor, stroke), left: 0, top: 0, width: stroke, height: corner }} />
         <div style={{ ...lineStyle(s.cornerColor, stroke), right: 0, top: 0, width: corner, height: stroke }} />
@@ -132,55 +112,6 @@ export default function FrameSurface({ style, frame, cssVars, className, childre
         <div style={{ ...lineStyle(s.cornerColor, stroke), left: 0, bottom: 0, width: stroke, height: corner }} />
         <div style={{ ...lineStyle(s.cornerColor, stroke), right: 0, bottom: 0, width: corner, height: stroke }} />
         <div style={{ ...lineStyle(s.cornerColor, stroke), right: 0, bottom: 0, width: stroke, height: corner }} />
-
-        <div
-          style={{
-            ...lineStyle(s.foldColor, stroke),
-            left: inset,
-            top: inset,
-            width: fold,
-            height: stroke,
-            transform: "rotate(-45deg)",
-            transformOrigin: "left center",
-            opacity: 0.85,
-          }}
-        />
-        <div
-          style={{
-            ...lineStyle(s.foldColor, stroke),
-            right: inset,
-            top: inset,
-            width: fold,
-            height: stroke,
-            transform: "rotate(45deg)",
-            transformOrigin: "right center",
-            opacity: 0.85,
-          }}
-        />
-        <div
-          style={{
-            ...lineStyle(s.foldColor, stroke),
-            left: inset,
-            bottom: inset,
-            width: fold,
-            height: stroke,
-            transform: "rotate(45deg)",
-            transformOrigin: "left center",
-            opacity: 0.85,
-          }}
-        />
-        <div
-          style={{
-            ...lineStyle(s.foldColor, stroke),
-            right: inset,
-            bottom: inset,
-            width: fold,
-            height: stroke,
-            transform: "rotate(-45deg)",
-            transformOrigin: "right center",
-            opacity: 0.85,
-          }}
-        />
       </div>
     </div>
   );

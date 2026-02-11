@@ -44,10 +44,8 @@ const FrameStyleSchema = z.object({
   variant: z.enum(["hud"]).optional(),
   baseColor: z.string().optional(),
   cornerColor: z.string().optional(),
-  foldColor: z.string().optional(),
   cornerSize: z.union([z.number(), z.string()]).optional(),
   cornerWidth: z.union([z.number(), z.string()]).optional(),
-  innerInset: z.union([z.number(), z.string()]).optional(),
 }).partial();
 
 const ContainerStyleSchema = z.object({

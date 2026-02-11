@@ -13,10 +13,8 @@ export const APPS_COMPRAS_TEMPLATE_TEXT = JSON.stringify([
             variant: "hud",
             baseColor: "#bfc9d9",
             cornerColor: "#6f89aa",
-            foldColor: "#d8dfeb",
             cornerSize: 14,
-            cornerWidth: 1,
-            innerInset: 6
+            cornerWidth: 1
           }
         }
       }
