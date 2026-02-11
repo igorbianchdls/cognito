@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import type { ColumnDef } from '@tanstack/react-table'
 
-import NexusShell from '@/components/navigation/nexus/NexusShell'
+import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer'
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 
@@ -404,12 +404,11 @@ export default function ModulosVendasPage() {
       <SidebarInset className="h-screen overflow-hidden">
         <div className="flex h-full overflow-hidden bg-gray-50">
           <div className="flex flex-col h-full w-full">
-            <div className="flex-1 min-h-0 p-0 bg-white" data-page="nexus">
-              <div className="h-10 flex items-center border-b border-gray-200 px-2">
-                <SidebarTrigger className="h-8 w-8" />
-              </div>
-              <div className="p-2">
-                <NexusShell>
+            <div className="flex-1 min-h-0 p-0 bg-white">
+              <NexusPageContainer className="h-full">
+                <div className="h-10 flex items-center border-b border-gray-200 px-2">
+                  <SidebarTrigger className="h-8 w-8" />
+                </div>
                 <div style={{ marginBottom: layout.mbTitle }}>
                   <PageHeader
                     title={titulo.title}
@@ -446,112 +445,111 @@ export default function ModulosVendasPage() {
                   />
                 </div>
                 <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
-          <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
-            <DataToolbar
-              from={total === 0 ? 0 : (page - 1) * pageSize + 1}
-              to={total === 0 ? 0 : Math.min(page * pageSize, total)}
-              total={total}
-              dateRange={dateRange}
-              onDateRangeChange={setDateRange}
-              fontFamily={fontVar(tabs.fontFamily)}
-              fontSize={toolbarUI.fontSize}
-              fontWeight={toolbarUI.fontWeight}
-              fontColor={toolbarUI.fontColor}
-              letterSpacing={toolbarUI.letterSpacing}
-              borderBottomWidth={toolbarUI.borderBottomWidth}
-              borderBottomColor={toolbarUI.borderBottomColor}
-              borderDistanceTop={toolbarUI.borderDistanceTop}
-              underlineColor={toolbarUI.underlineColor}
-              underlineWidth={toolbarUI.underlineWidth}
-              underlineOffsetTop={toolbarUI.underlineOffsetTop}
-              iconGap={toolbarUI.iconGap}
-              iconColor={toolbarUI.iconColor}
-              iconSize={toolbarUI.iconSize}
-              searchWidth={toolbarUI.searchWidth}
-              dateRangeWidth={toolbarUI.dateRangeWidth}
-              actionComponent={
-                tabs.selected === 'pedidos'
-                  ? (<Button asChild><a href="/erp/vendas/pedidos/novo">Nova Venda</a></Button>)
-                  : undefined
-              }
-            />
-          </div>
-          <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
-            <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
-              {isLoading ? (
-                <div className="p-6 text-sm text-gray-500">Carregando dados…</div>
-              ) : error ? (
-                <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
-              ) : (
-                <DataTable
-                  key={tabs.selected}
-                  columns={columns}
-                  data={data}
-                  headerPadding={8}
-                  columnOptions={{
-                    // Pedidos: evitar quebra de linha
-                    cliente: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
-                    vendedor: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
-                    canal_venda: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
-                    canal_distribuicao: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
-                    campanha_venda: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 160 },
-                    filial: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
-                    sales_office: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
-                    data_pedido: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
-                    data_documento: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
-                    data_lancamento: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
-                    data_vencimento: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
-                  }}
-                  enableExpand={tabs.selected === 'pedidos' || tabs.selected === 'devolucoes' || tabs.selected === 'tabelas_preco' || tabs.selected === 'promocoes'}
-                  renderDetail={
-                    tabs.selected === 'pedidos'
-                      ? renderPedidoItems
-                      : tabs.selected === 'devolucoes'
-                      ? renderDevolucaoItems
-                      : tabs.selected === 'tabelas_preco'
-                      ? renderTabelaPrecoItems
-                      : tabs.selected === 'promocoes'
-                      ? renderPromocaoItems
-                      : undefined
-                  }
-                  enableSearch={tabelaUI.enableSearch}
-                  showColumnToggle={tabelaUI.enableColumnToggle}
-                  showPagination={tabelaUI.showPagination}
-                  pageSize={pageSize}
-                  pageIndex={page - 1}
-                  serverSidePagination
-                  serverTotalRows={total}
-                  headerBackground={tabelaUI.headerBg}
-                  headerTextColor={tabelaUI.headerText}
-                  cellTextColor={tabelaUI.cellText}
-                  headerFontSize={tabelaUI.headerFontSize}
-                  headerFontFamily={tabelaUI.headerFontFamily}
-                  headerFontWeight={tabelaUI.headerFontWeight}
-                  headerLetterSpacing={tabelaUI.headerLetterSpacing}
-                  cellFontSize={tabelaUI.cellFontSize}
-                  cellFontFamily={tabelaUI.cellFontFamily}
-                  cellFontWeight={tabelaUI.cellFontWeight}
-                  cellLetterSpacing={tabelaUI.cellLetterSpacing}
-                  enableZebraStripes={tabelaUI.enableZebraStripes}
-                  rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
-                  borderColor={tabelaUI.borderColor}
-                  borderWidth={tabelaUI.borderWidth}
-                  selectionColumnWidth={tabelaUI.selectionColumnWidth}
-                  enableRowSelection={tabelaUI.enableRowSelection}
-                  selectionMode={tabelaUI.selectionMode}
-                  defaultSortColumn={tabelaUI.defaultSortColumn}
-                  defaultSortDirection={tabelaUI.defaultSortDirection}
-                  onPaginationChange={({ pageIndex, pageSize: newSize }) => {
-                    setPage(pageIndex + 1)
-                    setPageSize(newSize)
-                  }}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-                </NexusShell>
-              </div>
+                  <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
+                    <DataToolbar
+                      from={total === 0 ? 0 : (page - 1) * pageSize + 1}
+                      to={total === 0 ? 0 : Math.min(page * pageSize, total)}
+                      total={total}
+                      dateRange={dateRange}
+                      onDateRangeChange={setDateRange}
+                      fontFamily={fontVar(tabs.fontFamily)}
+                      fontSize={toolbarUI.fontSize}
+                      fontWeight={toolbarUI.fontWeight}
+                      fontColor={toolbarUI.fontColor}
+                      letterSpacing={toolbarUI.letterSpacing}
+                      borderBottomWidth={toolbarUI.borderBottomWidth}
+                      borderBottomColor={toolbarUI.borderBottomColor}
+                      borderDistanceTop={toolbarUI.borderDistanceTop}
+                      underlineColor={toolbarUI.underlineColor}
+                      underlineWidth={toolbarUI.underlineWidth}
+                      underlineOffsetTop={toolbarUI.underlineOffsetTop}
+                      iconGap={toolbarUI.iconGap}
+                      iconColor={toolbarUI.iconColor}
+                      iconSize={toolbarUI.iconSize}
+                      searchWidth={toolbarUI.searchWidth}
+                      dateRangeWidth={toolbarUI.dateRangeWidth}
+                      actionComponent={
+                        tabs.selected === 'pedidos'
+                          ? (<Button asChild><a href="/erp/vendas/pedidos/novo">Nova Venda</a></Button>)
+                          : undefined
+                      }
+                    />
+                  </div>
+                  <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
+                    <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
+                      {isLoading ? (
+                        <div className="p-6 text-sm text-gray-500">Carregando dados…</div>
+                      ) : error ? (
+                        <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
+                      ) : (
+                        <DataTable
+                          key={tabs.selected}
+                          columns={columns}
+                          data={data}
+                          headerPadding={8}
+                          columnOptions={{
+                            // Pedidos: evitar quebra de linha
+                            cliente: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                            vendedor: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                            canal_venda: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                            canal_distribuicao: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                            campanha_venda: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 160 },
+                            filial: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                            sales_office: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                            data_pedido: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                            data_documento: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                            data_lancamento: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                            data_vencimento: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                          }}
+                          enableExpand={tabs.selected === 'pedidos' || tabs.selected === 'devolucoes' || tabs.selected === 'tabelas_preco' || tabs.selected === 'promocoes'}
+                          renderDetail={
+                            tabs.selected === 'pedidos'
+                              ? renderPedidoItems
+                              : tabs.selected === 'devolucoes'
+                              ? renderDevolucaoItems
+                              : tabs.selected === 'tabelas_preco'
+                              ? renderTabelaPrecoItems
+                              : tabs.selected === 'promocoes'
+                              ? renderPromocaoItems
+                              : undefined
+                          }
+                          enableSearch={tabelaUI.enableSearch}
+                          showColumnToggle={tabelaUI.enableColumnToggle}
+                          showPagination={tabelaUI.showPagination}
+                          pageSize={pageSize}
+                          pageIndex={page - 1}
+                          serverSidePagination
+                          serverTotalRows={total}
+                          headerBackground={tabelaUI.headerBg}
+                          headerTextColor={tabelaUI.headerText}
+                          cellTextColor={tabelaUI.cellText}
+                          headerFontSize={tabelaUI.headerFontSize}
+                          headerFontFamily={tabelaUI.headerFontFamily}
+                          headerFontWeight={tabelaUI.headerFontWeight}
+                          headerLetterSpacing={tabelaUI.headerLetterSpacing}
+                          cellFontSize={tabelaUI.cellFontSize}
+                          cellFontFamily={tabelaUI.cellFontFamily}
+                          cellFontWeight={tabelaUI.cellFontWeight}
+                          cellLetterSpacing={tabelaUI.cellLetterSpacing}
+                          enableZebraStripes={tabelaUI.enableZebraStripes}
+                          rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
+                          borderColor={tabelaUI.borderColor}
+                          borderWidth={tabelaUI.borderWidth}
+                          selectionColumnWidth={tabelaUI.selectionColumnWidth}
+                          enableRowSelection={tabelaUI.enableRowSelection}
+                          selectionMode={tabelaUI.selectionMode}
+                          defaultSortColumn={tabelaUI.defaultSortColumn}
+                          defaultSortDirection={tabelaUI.defaultSortDirection}
+                          onPaginationChange={({ pageIndex, pageSize: newSize }) => {
+                            setPage(pageIndex + 1)
+                            setPageSize(newSize)
+                          }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </NexusPageContainer>
             </div>
           </div>
         </div>

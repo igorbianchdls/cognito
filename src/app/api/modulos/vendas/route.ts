@@ -8,8 +8,9 @@ export const revalidate = 0
 const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
   pedidos: {
     pedido: 'p.id',
-    numero_pedido: 'p.numero_pedido',
-    cliente: 'cli.nome_fantasia',
+    // Nem todo schema possui a coluna numero_pedido; usar fallback seguro para ordenação
+    numero_pedido: 'p.id',
+    cliente: 'c.nome_fantasia',
     vendedor: 'f.nome',
     filial: 'fil.nome',
     canal_venda: 'cv.nome',
@@ -109,12 +110,26 @@ export async function GET(req: NextRequest) {
     let selectSql = ''
     let baseSql = ''
     let orderClause = ''
+    let hasNumeroPedidoCol = false
 
     if (view === 'pedidos') {
+      const cols = await runQuery<{ column_name: string }>(
+        `SELECT column_name
+           FROM information_schema.columns
+          WHERE table_schema = 'vendas'
+            AND table_name = 'pedidos'`
+      )
+      hasNumeroPedidoCol = cols.some((c) => c.column_name === 'numero_pedido')
+    }
+
+    if (view === 'pedidos') {
+      const numeroPedidoExpr = hasNumeroPedidoCol
+        ? 'p.numero_pedido'
+        : "('PV-' || p.id::text)"
       // Implementa a query fornecida (com IDs auxiliares para agregação)
       selectSql = `SELECT
         p.id               AS pedido_id,
-        p.numero_pedido,
+        ${numeroPedidoExpr} AS numero_pedido,
         p.data_pedido,
         p.data_documento,
         p.data_lancamento,
