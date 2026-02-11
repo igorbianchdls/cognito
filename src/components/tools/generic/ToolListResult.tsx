@@ -20,6 +20,7 @@ type ParsedResult = {
 const HIDDEN_EMAIL_FIELDS = new Set(['organizationid', 'podid'])
 const HIDDEN_DRIVE_FOLDER_FIELDS = new Set(['id', 'folderid'])
 const HIDDEN_DRIVE_FILE_FIELDS = new Set(['storagepath', 'bucketid'])
+const HIDDEN_DRIVE_FOLDERS_LIST_FIELDS = new Set(['id', 'workspaceid', 'parentid'])
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 function toTitleCasePath(path?: string): string {
@@ -238,6 +239,7 @@ export default function ToolListResult({ output, input }: { output: any; input?:
   const resourcePath = useMemo(() => normalizeResourcePath(input), [input])
   const isEmailResource = resourcePath.startsWith('email/')
   const isEmailMessagesList = resourcePath === 'email/messages'
+  const isDriveFoldersList = resourcePath === 'drive/folders'
   const isDriveFolderDetail = /^drive\/folders\/[^/]+$/.test(resourcePath)
   const driveFolderId = useMemo(() => {
     const m = resourcePath.match(/^drive\/folders\/([^/]+)$/)
@@ -295,6 +297,17 @@ export default function ToolListResult({ output, input }: { output: any; input?:
         return out
       })
     }
+    if (isDriveFoldersList) {
+      return src.map((row) => {
+        const out: AnyRow = {}
+        for (const [key, value] of Object.entries(row)) {
+          const normalized = normalizeFieldKey(key)
+          if (HIDDEN_DRIVE_FOLDERS_LIST_FIELDS.has(normalized)) continue
+          out[key] = value
+        }
+        return out
+      })
+    }
     if (!isEmailResource) return src
     return src.map((row) => {
       const out: AnyRow = {}
@@ -304,7 +317,7 @@ export default function ToolListResult({ output, input }: { output: any; input?:
       }
       return out
     })
-  }, [driveFolderId, inboxIdFromInput, isDriveFolderDetail, isEmailMessagesList, isEmailResource, result.rows])
+  }, [driveFolderId, inboxIdFromInput, isDriveFolderDetail, isDriveFoldersList, isEmailMessagesList, isEmailResource, result.rows])
 
   const columns: ColumnDef<AnyRow>[] = useMemo(() => {
     if (isEmailMessagesList) {
