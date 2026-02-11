@@ -19,6 +19,7 @@ type ParsedResult = {
 
 const HIDDEN_EMAIL_FIELDS = new Set(['organizationid', 'podid'])
 const HIDDEN_DRIVE_FOLDER_FIELDS = new Set(['id', 'folderid'])
+const HIDDEN_DRIVE_FILE_FIELDS = new Set(['storagepath', 'bucketid'])
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 function toTitleCasePath(path?: string): string {
@@ -281,8 +282,10 @@ export default function ToolListResult({ output, input }: { output: any; input?:
             : ''
         const out: AnyRow = {}
         for (const [key, value] of Object.entries(row)) {
-          if (HIDDEN_DRIVE_FOLDER_FIELDS.has(normalizeFieldKey(key))) continue
-          if (normalizeFieldKey(key) === 'url') continue
+          const normalized = normalizeFieldKey(key)
+          if (HIDDEN_DRIVE_FOLDER_FIELDS.has(normalized)) continue
+          if (HIDDEN_DRIVE_FILE_FIELDS.has(normalized)) continue
+          if (normalized === 'url') continue
           out[key] = value
         }
         out.documento = {

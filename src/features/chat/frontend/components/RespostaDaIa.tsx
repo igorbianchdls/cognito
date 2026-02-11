@@ -142,6 +142,7 @@ export default function RespostaDaIa({ message, isPending = false }: Props) {
                 /^email\/inboxes$/.test(cleanResourceForCheck) ||
                 /^email\/messages$/.test(cleanResourceForCheck) ||
                 /^drive$/.test(cleanResourceForCheck) ||
+                /^drive\/folders$/.test(cleanResourceForCheck) ||
                 /^drive\/folders\/[^/]+$/.test(cleanResourceForCheck);
               const isWorkspaceGet = isWorkspaceTool && isWorkspaceRequest && isWorkspaceReadMethod && !hasDataPayloadForCheck && isWorkspaceListResource;
               const isGenericList = normalized === 'listar' || /__listar$/i.test(normalized) || isCrudList || isWorkspaceGet;
