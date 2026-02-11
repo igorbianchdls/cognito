@@ -53,7 +53,7 @@ export default function CadastroPedidoCompraSheet({ triggerLabel = "Cadastrar", 
       if (status) fd.set('status', status.trim())
       if (valorTotal) fd.set('valor_total', valorTotal)
       if (observacoes) fd.set('observacoes', observacoes.trim())
-      const res = await fetch('/api/modulos/compras/pedidos', { method: 'POST', body: fd })
+      const res = await fetch('/api/modulos/compras', { method: 'POST', body: fd })
       const json = await res.json()
       if (!res.ok || !json?.success) return { success: false, error: json?.message || json?.error || 'Falha ao cadastrar' }
       const id = Number(json?.id)

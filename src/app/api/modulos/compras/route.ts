@@ -559,7 +559,42 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json().catch(() => ({})) as Record<string, unknown>
+    const contentType = (req.headers.get('content-type') || '').toLowerCase()
+    let body: Record<string, unknown> = {}
+
+    if (contentType.includes('application/json')) {
+      body = await req.json().catch(() => ({})) as Record<string, unknown>
+    } else {
+      const form = await req.formData()
+      let linhasFromForm: unknown[] = []
+      const linhasRaw = String(form.get('linhas') || '').trim()
+      if (linhasRaw) {
+        try {
+          const parsed = JSON.parse(linhasRaw)
+          if (Array.isArray(parsed)) linhasFromForm = parsed
+        } catch {}
+      }
+      body = {
+        tenant_id: form.get('tenant_id'),
+        fornecedor_id: form.get('fornecedor_id'),
+        filial_id: form.get('filial_id'),
+        centro_custo_id: form.get('centro_custo_id'),
+        projeto_id: form.get('projeto_id'),
+        categoria_financeira_id: form.get('categoria_financeira_id'),
+        categoria_despesa_id: form.get('categoria_despesa_id'),
+        numero_oc: form.get('numero_oc') ?? form.get('numero_pedido'),
+        data_pedido: form.get('data_pedido') ?? form.get('data_emissao'),
+        data_documento: form.get('data_documento'),
+        data_lancamento: form.get('data_lancamento'),
+        data_vencimento: form.get('data_vencimento'),
+        data_entrega_prevista: form.get('data_entrega_prevista'),
+        status: form.get('status'),
+        observacoes: form.get('observacoes'),
+        criado_por: form.get('criado_por'),
+        valor_total: form.get('valor_total'),
+        linhas: linhasFromForm,
+      }
+    }
 
     // Parse header fields
     const tenant = typeof body.tenant_id === 'number' && !Number.isNaN(body.tenant_id) ? body.tenant_id : 1
@@ -585,9 +620,6 @@ export async function POST(req: NextRequest) {
     const criado_por = body.criado_por == null ? null : Number(body.criado_por)
 
     const linhas = Array.isArray(body.linhas) ? (body.linhas as Array<Record<string, unknown>>) : []
-    if (!linhas.length) {
-      return Response.json({ success: false, message: 'Informe ao menos uma linha' }, { status: 400 })
-    }
 
     // Normalize lines and compute totals
     const normLinhas = linhas.map((l, idx) => {
@@ -607,7 +639,10 @@ export async function POST(req: NextRequest) {
       return { produto_id, quantidade, unidade_medida, preco_unitario, total, centro_custo_id: l_cc_id, projeto_id: l_proj_id, categoria_financeira_id: l_cat_id }
     })
 
-    const valor_total = normLinhas.reduce((acc, it) => acc + Number(it.total || 0), 0)
+    const valorTotalInput = Number(body.valor_total)
+    const valor_total = normLinhas.length
+      ? normLinhas.reduce((acc, it) => acc + Number(it.total || 0), 0)
+      : (Number.isFinite(valorTotalInput) ? valorTotalInput : 0)
 
     const result = await withTransaction(async (client) => {
       // Insert header
@@ -623,14 +658,16 @@ export async function POST(req: NextRequest) {
       const compra_id = Number(insCab.rows[0]?.id)
       if (!compra_id) throw new Error('Falha ao criar compra')
 
-      // Insert lines
-      for (const l of normLinhas) {
-        await client.query(
-          `INSERT INTO compras.compras_linhas (
-             tenant_id, compra_id, produto_id, quantidade, unidade_medida, preco_unitario, total, centro_custo_id, projeto_id, categoria_financeira_id
-           ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
-          [tenant, compra_id, l.produto_id, l.quantidade, l.unidade_medida, l.preco_unitario, l.total, l.centro_custo_id, l.projeto_id, l.categoria_financeira_id]
-        )
+      // Insert lines (optional in legacy/header-only mode)
+      if (normLinhas.length) {
+        for (const l of normLinhas) {
+          await client.query(
+            `INSERT INTO compras.compras_linhas (
+               tenant_id, compra_id, produto_id, quantidade, unidade_medida, preco_unitario, total, centro_custo_id, projeto_id, categoria_financeira_id
+             ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+            [tenant, compra_id, l.produto_id, l.quantidade, l.unidade_medida, l.preco_unitario, l.total, l.centro_custo_id, l.projeto_id, l.categoria_financeira_id]
+          )
+        }
       }
 
       return { id: compra_id }
@@ -652,7 +689,7 @@ export async function POST(req: NextRequest) {
       console.warn('Criação inline da Conta a Pagar falhou', err)
     }
 
-    return Response.json({ success: true, id: result.id, ap_id: apId })
+    return Response.json({ success: true, id: result.id, ap_id: apId, linhas_criadas: normLinhas.length })
   } catch (error) {
     console.error('📦 API /api/modulos/compras POST error:', error)
     const msg = error instanceof Error ? error.message : String(error)
