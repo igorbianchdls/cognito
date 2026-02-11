@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     const timeline: Array<{ name: string; ms: number; ok: boolean; exitCode?: number }> = []
     const t0 = Date.now()
     try {
-      sandbox = await Sandbox.create({ runtime: 'node22', resources: { vcpus: 2 }, timeout: 600_000 })
+      sandbox = await Sandbox.create({ runtime: 'node22', resources: { vcpus: 2 }, timeout: 1_800_000 })
       timeline.push({ name: 'create-sandbox', ms: Date.now() - t0, ok: true })
       const t1 = Date.now()
       const install = await sandbox.runCommand({ cmd: 'npm', args: ['install', '@anthropic-ai/claude-agent-sdk', '@anthropic-ai/claude-code'] })

@@ -11,7 +11,7 @@ export async function GET() {
     sandbox = await Sandbox.create({
       runtime: 'node22',
       resources: { vcpus: 4 },
-      timeout: 600_000,
+      timeout: 1_800_000,
     })
     timeline.push({ name: 'create-sandbox', ms: Date.now() - t0, ok: true })
 

@@ -89,7 +89,7 @@ async function getOrCreateOpenAiSandbox(chatId: string): Promise<Sandbox> {
     await ensureOpenAiSkillsScaffold(existing.sandbox)
     return existing.sandbox
   }
-  const sandbox = await Sandbox.create({ runtime: 'node22', resources: { vcpus: 2 }, timeout: 600_000 })
+  const sandbox = await Sandbox.create({ runtime: 'node22', resources: { vcpus: 2 }, timeout: 1_800_000 })
   await ensureOpenAiSkillsScaffold(sandbox)
   OPENAI_SANDBOXES.set(chatId, { sandbox, createdAt: Date.now(), lastUsedAt: Date.now() })
   return sandbox
@@ -153,7 +153,7 @@ export async function POST(req: Request) {
         if (snap && typeof snap === 'string' && snap.trim()) {
           const tSnap = Date.now()
           try {
-            sandbox = await Sandbox.create({ source: { type: 'snapshot', snapshotId: snap.trim() }, resources: { vcpus: 2 }, timeout: 600_000 })
+            sandbox = await Sandbox.create({ source: { type: 'snapshot', snapshotId: snap.trim() }, resources: { vcpus: 2 }, timeout: 1_800_000 })
             timeline.push({ name: 'create-from-chat-snapshot', ms: Date.now() - tSnap, ok: true })
             usedChatSnapshot = true
           } catch (e) {
@@ -164,7 +164,7 @@ export async function POST(req: Request) {
 
       if (!sandbox) {
         const tCreate = Date.now()
-        sandbox = await Sandbox.create({ runtime: 'node22', resources: { vcpus: 2 }, timeout: 600_000 })
+        sandbox = await Sandbox.create({ runtime: 'node22', resources: { vcpus: 2 }, timeout: 1_800_000 })
         timeline.push({ name: 'create-sandbox', ms: Date.now() - tCreate, ok: true })
         const t1 = Date.now()
         // Install Agent SDK + CLI + zod (for MCP schemas)

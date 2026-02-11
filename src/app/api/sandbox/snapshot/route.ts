@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     const doInstall = body.installDeps !== false
     const doSeed = body.seed !== false
 
-    const sandbox = await Sandbox.create({ runtime: 'node22', resources: { vcpus: 2 }, timeout: 600_000 })
+    const sandbox = await Sandbox.create({ runtime: 'node22', resources: { vcpus: 2 }, timeout: 1_800_000 })
     steps.push({ name: 'create-sandbox', ms: Date.now() - t0, ok: true })
 
     if (doInstall) {

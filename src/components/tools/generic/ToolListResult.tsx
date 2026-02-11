@@ -18,6 +18,7 @@ type ParsedResult = {
 }
 
 const HIDDEN_EMAIL_FIELDS = new Set(['organizationid', 'podid'])
+const HIDDEN_DRIVE_FOLDER_FIELDS = new Set(['id', 'folderid'])
 
 function toTitleCasePath(path?: string): string {
   if (!path) return 'Lista'
@@ -235,6 +236,7 @@ export default function ToolListResult({ output, input }: { output: any; input?:
   const resourcePath = useMemo(() => normalizeResourcePath(input), [input])
   const isEmailResource = resourcePath.startsWith('email/')
   const isEmailMessagesList = resourcePath === 'email/messages'
+  const isDriveFolderDetail = /^drive\/folders\/[^/]+$/.test(resourcePath)
   const inboxIdFromInput = useMemo(() => {
     if (!input || typeof input !== 'object') return ''
     const inp = input as any
@@ -264,6 +266,16 @@ export default function ToolListResult({ output, input }: { output: any; input?:
         } as AnyRow
       })
     }
+    if (isDriveFolderDetail) {
+      return src.map((row) => {
+        const out: AnyRow = {}
+        for (const [key, value] of Object.entries(row)) {
+          if (HIDDEN_DRIVE_FOLDER_FIELDS.has(normalizeFieldKey(key))) continue
+          out[key] = value
+        }
+        return out
+      })
+    }
     if (!isEmailResource) return src
     return src.map((row) => {
       const out: AnyRow = {}
@@ -273,7 +285,7 @@ export default function ToolListResult({ output, input }: { output: any; input?:
       }
       return out
     })
-  }, [inboxIdFromInput, isEmailMessagesList, isEmailResource, result.rows])
+  }, [inboxIdFromInput, isDriveFolderDetail, isEmailMessagesList, isEmailResource, result.rows])
 
   const columns: ColumnDef<AnyRow>[] = useMemo(() => {
     if (isEmailMessagesList) {

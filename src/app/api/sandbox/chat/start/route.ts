@@ -8,7 +8,7 @@ export async function POST() {
   const timeline: Array<{ name: string; ms: number; ok: boolean; exitCode?: number; note?: string }> = []
   const t0 = Date.now()
   try {
-    sandbox = await Sandbox.create({ runtime: 'node22', resources: { vcpus: 2 }, timeout: 600_000 })
+    sandbox = await Sandbox.create({ runtime: 'node22', resources: { vcpus: 2 }, timeout: 1_800_000 })
     timeline.push({ name: 'create-sandbox', ms: Date.now() - t0, ok: true })
 
     const t1 = Date.now()
@@ -31,4 +31,3 @@ export async function POST() {
     return Response.json({ ok: false, error: message, timeline }, { status: 500 })
   }
 }
-
