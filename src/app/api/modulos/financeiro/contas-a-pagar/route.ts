@@ -17,12 +17,14 @@ export async function POST(req: Request) {
         return Number.isFinite(n) ? n : NaN
       }
       const fornecedor_id = toNum(body['fornecedor_id'])
-      const categoria_id = body['categoria_id'] !== undefined && body['categoria_id'] !== null ? toNum(body['categoria_id']) : null
+      const categoria_id = body['categoria_despesa_id'] !== undefined && body['categoria_despesa_id'] !== null
+        ? toNum(body['categoria_despesa_id'])
+        : (body['categoria_id'] !== undefined && body['categoria_id'] !== null ? toNum(body['categoria_id']) : null)
       const descricao = toStr(body['descricao'] || 'Conta a pagar').trim()
       // Aceita qualquer status informado; fallback para 'pendente' apenas se vazio
       const status = toStr(body['status'] || 'pendente').trim()
       const data_lancamento = toStr(body['data_lancamento'] || new Date().toISOString().slice(0,10))
-      const data_documento = toStr((body as any)['data_emissao'] || (body as any)['data_documento'] || '')
+      const data_documento = toStr((body as any)['data_documento'] || (body as any)['data_pedido'] || (body as any)['data_emissao'] || '')
       const numero_documento = toStr((body as any)['numero_nota_fiscal'] || (body as any)['numero_documento'] || '')
       const tipo_documento = toStr((body as any)['tipo_documento'] || 'outro')
       const data_vencimento = toStr(body['data_vencimento'] || '')
@@ -126,7 +128,9 @@ export async function POST(req: Request) {
                 desconto: Number.isFinite(desc) ? desc : 0,
                 acrescimo: Number.isFinite(acres) ? acres : 0,
                 valor_total: Number.isFinite(vt) ? vt : 0,
-                categoria_id: it['categoria_id'] !== undefined && it['categoria_id'] !== null ? Number(it['categoria_id']) : null,
+                categoria_id: it['categoria_despesa_id'] !== undefined && it['categoria_despesa_id'] !== null
+                  ? Number(it['categoria_despesa_id'])
+                  : (it['categoria_id'] !== undefined && it['categoria_id'] !== null ? Number(it['categoria_id']) : null),
                 centro_custo_id: it['centro_custo_id'] !== undefined && it['centro_custo_id'] !== null ? Number(it['centro_custo_id']) : null,
                 natureza_financeira_id: it['natureza_financeira_id'] !== undefined && it['natureza_financeira_id'] !== null ? Number(it['natureza_financeira_id']) : null,
                 observacao: it['observacao'] ?? null,
@@ -238,7 +242,21 @@ export async function POST(req: Request) {
           )
         }
 
-        return { id, tenant_id, fornecedor_id, categoria_id, conta_financeira_id, numero_documento, data_lancamento, valor_liquido: Math.abs(valor), descricao, linhas_count: itensCount, itens_count: itensCount }
+        return {
+          id,
+          tenant_id,
+          fornecedor_id,
+          categoria_id,
+          conta_financeira_id,
+          numero_documento,
+          data_documento: (data_documento || data_lancamento),
+          data_lancamento,
+          data_vencimento,
+          valor_liquido: Math.abs(valor),
+          descricao,
+          linhas_count: itensCount,
+          itens_count: itensCount
+        }
       })
 
       // Dispara evento para criação automática de lançamento contábil (Inngest)
@@ -252,7 +270,9 @@ export async function POST(req: Request) {
             categoria_despesa_id: result.categoria_id,
             conta_financeira_id: result.conta_financeira_id,
             numero_documento: result.numero_documento,
+            data_documento: result.data_documento,
             data_lancamento: result.data_lancamento,
+            data_vencimento: result.data_vencimento,
             valor_liquido: result.valor_liquido,
             descricao: result.descricao,
             subtipo: 'principal',
@@ -272,6 +292,7 @@ export async function POST(req: Request) {
     const numero_documento = String(form.get('numero_documento') || '').trim()
     const tipo_documento = String(form.get('tipo_documento') || 'outro').trim() || 'outro'
     const valorRaw = String(form.get('valor') || '').trim()
+    const data_documento_raw = String(form.get('data_documento') || '').trim()
     const data_lancamento = String(form.get('data_lancamento') || '').trim()
     const data_vencimento = String(form.get('data_vencimento') || '').trim()
     if (!descricao) return Response.json({ success: false, message: 'descricao é obrigatório' }, { status: 400 })
@@ -279,6 +300,7 @@ export async function POST(req: Request) {
     if (!valorRaw) return Response.json({ success: false, message: 'valor é obrigatório' }, { status: 400 })
     if (!data_lancamento) return Response.json({ success: false, message: 'data_lancamento é obrigatório' }, { status: 400 })
     if (!data_vencimento) return Response.json({ success: false, message: 'data_vencimento é obrigatório' }, { status: 400 })
+    const data_documento = data_documento_raw || data_lancamento
 
     const valor = Number(valorRaw)
     if (Number.isNaN(valor)) return Response.json({ success: false, message: 'valor inválido' }, { status: 400 })
@@ -286,6 +308,7 @@ export async function POST(req: Request) {
     const tenant_id_raw = String(form.get('tenant_id') || '').trim()
     const entidade_id_raw = String(form.get('entidade_id') || '').trim() // fornecedor (compat)
     const fornecedor_id_raw = String(form.get('fornecedor_id') || '').trim() // novo schema
+    const categoria_despesa_id_raw = String(form.get('categoria_despesa_id') || '').trim()
     const categoria_id_raw = String(form.get('categoria_id') || '').trim()
     const conta_financeira_id_raw = String(form.get('conta_financeira_id') || '').trim()
     const centro_custo_id_raw = String(form.get('centro_custo_id') || '').trim()
@@ -297,7 +320,7 @@ export async function POST(req: Request) {
     const tenant_id = tenant_id_raw ? Number(tenant_id_raw) : 1
     const entidade_id = entidade_id_raw ? Number(entidade_id_raw) : null
     const fornecedor_id = fornecedor_id_raw ? Number(fornecedor_id_raw) : (entidade_id ?? null)
-    const categoria_id = categoria_id_raw ? Number(categoria_id_raw) : null
+    const categoria_id = categoria_despesa_id_raw ? Number(categoria_despesa_id_raw) : (categoria_id_raw ? Number(categoria_id_raw) : null)
     const conta_financeira_id = conta_financeira_id_raw ? Number(conta_financeira_id_raw) : null
     const centro_custo_id = centro_custo_id_raw ? Number(centro_custo_id_raw) : null
     const departamento_id = departamento_id_raw ? Number(departamento_id_raw) : null
@@ -340,7 +363,7 @@ export async function POST(req: Request) {
           numero_documento,        // NOT NULL
           tipo_documento,          // NOT NULL (default 'outro')
           status,
-          data_lancamento,
+          data_documento,
           data_lancamento,
           data_vencimento,
           Math.abs(valor),
@@ -356,7 +379,7 @@ export async function POST(req: Request) {
       if (conta_financeira_id !== null) {
         try { await client.query(`UPDATE financeiro.contas_pagar SET conta_financeira_id = $1 WHERE id = $2`, [conta_financeira_id, id]) } catch {}
       }
-      return { id, tenant_id, fornecedor_id, categoria_id, conta_financeira_id, numero_documento, data_lancamento, valor_liquido: Math.abs(valor), descricao }
+      return { id, tenant_id, fornecedor_id, categoria_id, conta_financeira_id, numero_documento, data_documento, data_lancamento, data_vencimento, valor_liquido: Math.abs(valor), descricao }
     })
 
     // Dispara evento Inngest também para modo FormData
@@ -370,7 +393,9 @@ export async function POST(req: Request) {
           categoria_despesa_id: result.categoria_id,
           conta_financeira_id: result.conta_financeira_id,
           numero_documento: result.numero_documento,
+          data_documento: result.data_documento,
           data_lancamento: result.data_lancamento,
+          data_vencimento: result.data_vencimento,
           valor_liquido: result.valor_liquido,
           descricao: result.descricao,
           subtipo: 'principal',

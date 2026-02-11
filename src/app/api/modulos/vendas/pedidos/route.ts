@@ -13,12 +13,20 @@ export async function POST(req: Request) {
     const cliente_id_raw = String(form.get('cliente_id') || '').trim()
     const canal_venda_id_raw = String(form.get('canal_venda_id') || '').trim()
     const data_pedido = String(form.get('data_pedido') || '').trim()
+    const data_documento_raw = String(form.get('data_documento') || '').trim()
+    const data_lancamento_raw = String(form.get('data_lancamento') || '').trim()
+    const data_vencimento_raw = String(form.get('data_vencimento') || '').trim()
     const valor_total_raw = String(form.get('valor_total') || '').trim()
 
     if (!cliente_id_raw) return Response.json({ success: false, message: 'cliente_id é obrigatório' }, { status: 400 })
     if (!canal_venda_id_raw) return Response.json({ success: false, message: 'canal_venda_id é obrigatório' }, { status: 400 })
     if (!data_pedido) return Response.json({ success: false, message: 'data_pedido é obrigatório' }, { status: 400 })
     if (!valor_total_raw) return Response.json({ success: false, message: 'valor_total é obrigatório' }, { status: 400 })
+
+    const data_documento = data_documento_raw || data_pedido
+    const data_lancamento = data_lancamento_raw || data_documento || data_pedido
+    const data_vencimento = data_vencimento_raw || data_pedido
+    const numeroPedidoFinal = numero_pedido || `PV-${Date.now()}`
 
     const cliente_id = Number(cliente_id_raw)
     const canal_venda_id = Number(canal_venda_id_raw)
@@ -58,7 +66,12 @@ export async function POST(req: Request) {
     let i = 1
 
     if (has('tenant_id')) { insertCols.push('tenant_id'); placeholders.push(`$${i++}`); values.push(tenant_id) }
-    // Para maior compatibilidade, não insere numero_pedido; usar descrição/campo próprio no futuro
+    if (has('numero_pedido')) {
+      if (notNull('numero_pedido') && !numeroPedidoFinal) {
+        return Response.json({ success: false, message: 'numero_pedido é obrigatório' }, { status: 400 })
+      }
+      insertCols.push('numero_pedido'); placeholders.push(`$${i++}`); values.push(numeroPedidoFinal)
+    }
     insertCols.push('cliente_id'); placeholders.push(`$${i++}`); values.push(cliente_id)
     insertCols.push('canal_venda_id'); placeholders.push(`$${i++}`); values.push(canal_venda_id)
     if (has('vendedor_id')) {
@@ -73,6 +86,9 @@ export async function POST(req: Request) {
       insertCols.push('usuario_id'); placeholders.push(`$${i++}`); values.push(vendedor_id)
     }
     insertCols.push('data_pedido'); placeholders.push(`$${i++}`); values.push(data_pedido)
+    if (has('data_documento')) { insertCols.push('data_documento'); placeholders.push(`$${i++}`); values.push(data_documento) }
+    if (has('data_lancamento')) { insertCols.push('data_lancamento'); placeholders.push(`$${i++}`); values.push(data_lancamento) }
+    if (has('data_vencimento')) { insertCols.push('data_vencimento'); placeholders.push(`$${i++}`); values.push(data_vencimento) }
     if (has('valor_produtos')) { insertCols.push('valor_produtos'); placeholders.push(`$${i++}`); values.push(valor_produtos) }
     if (has('valor_frete')) { insertCols.push('valor_frete'); placeholders.push(`$${i++}`); values.push(valor_frete) }
     if (has('valor_desconto')) { insertCols.push('valor_desconto'); placeholders.push(`$${i++}`); values.push(valor_desconto) }

@@ -26,10 +26,12 @@ export async function POST(req: Request) {
     const status = toStr(payload['status'] || 'pendente')
     const descricao = toStr(payload['descricao'] || 'Conta a receber')
     const data_lancamento = toStr(payload['data_lancamento'] || new Date().toISOString().slice(0,10))
-    const data_documento = toStr(payload['data_documento'] || payload['data_emissao'] || data_lancamento)
+    const data_documento = toStr(payload['data_documento'] || payload['data_pedido'] || payload['data_emissao'] || data_lancamento)
     const data_vencimento = toStr(payload['data_vencimento'] || '')
     const valor = toNum(payload['valor'] ?? NaN)
-    const categoria_receita_id = payload['categoria_id'] !== undefined && payload['categoria_id'] !== null ? toNum(payload['categoria_id']) : null
+    const categoria_receita_id = payload['categoria_receita_id'] !== undefined && payload['categoria_receita_id'] !== null
+      ? toNum(payload['categoria_receita_id'])
+      : (payload['categoria_id'] !== undefined && payload['categoria_id'] !== null ? toNum(payload['categoria_id']) : null)
     const centro_lucro_id = payload['centro_lucro_id'] !== undefined && payload['centro_lucro_id'] !== null ? toNum(payload['centro_lucro_id']) : null
     const departamento_id = payload['departamento_id'] !== undefined && payload['departamento_id'] !== null ? toNum(payload['departamento_id']) : null
     const filial_id = payload['filial_id'] !== undefined && payload['filial_id'] !== null ? toNum(payload['filial_id']) : null

@@ -11,7 +11,11 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
   compras: {
     compra_id: 'c.id',
     numero_oc: 'c.numero_oc',
-    data_emissao: 'c.data_emissao',
+    data_emissao: 'c.data_pedido',
+    data_pedido: 'c.data_pedido',
+    data_documento: 'c.data_documento',
+    data_lancamento: 'c.data_lancamento',
+    data_vencimento: 'c.data_vencimento',
     data_entrega_prevista: 'c.data_entrega_prevista',
     fornecedor: 'f.nome_fantasia',
     filial: 'fil.nome',
@@ -27,7 +31,7 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     data_recebimento: 'r.data_recebimento',
     status: 'r.status',
     numero_oc: 'c.numero_oc',
-    compra_data: 'c.data_emissao',
+    compra_data: 'c.data_pedido',
     fornecedor: 'f.nome',
     compra_valor_total: 'c.valor_total',
     criado_em: 'r.criado_em',
@@ -103,7 +107,10 @@ export async function GET(req: NextRequest) {
         p.nome AS projeto,
         cd.nome AS categoria_despesa,
         c.numero_oc,
-        c.data_emissao,
+        c.data_pedido,
+        c.data_documento,
+        c.data_lancamento,
+        c.data_vencimento,
         c.data_entrega_prevista,
         c.status,
         c.valor_total,
@@ -116,7 +123,7 @@ export async function GET(req: NextRequest) {
         LEFT JOIN empresa.centros_custo cc ON cc.id = c.centro_custo_id
         LEFT JOIN financeiro.projetos p ON p.id = c.projeto_id
         LEFT JOIN financeiro.categorias_despesa cd ON cd.id = c.categoria_despesa_id`;
-      whereDateCol = '';
+      whereDateCol = 'c.data_pedido';
       // Força ordenação exatamente como especificada
       conditions.length = 0;
     } else if (view === 'recebimentos') {
@@ -127,7 +134,7 @@ export async function GET(req: NextRequest) {
         r.observacoes,
         r.criado_em,
         c.numero_oc,
-        c.data_emissao AS compra_data,
+        c.data_pedido AS compra_data,
         c.valor_total AS compra_valor_total,
         f.nome AS fornecedor,
         rl.id AS recebimento_linha_id,
@@ -228,13 +235,13 @@ export async function GET(req: NextRequest) {
     let orderClause = '';
     if (ORDER_BY_WHITELIST[view] && Object.keys(ORDER_BY_WHITELIST[view]).length) {
       if (orderBy) {
-        if (view === 'compras') orderClause = 'ORDER BY c.data_emissao ASC, c.numero_oc ASC, c.id ASC';
+        if (view === 'compras') orderClause = 'ORDER BY c.data_pedido ASC, c.numero_oc ASC, c.id ASC';
         else if (view === 'recebimentos') orderClause = `ORDER BY ${orderBy} ${orderDir}, rl.id ASC`;
         else if (view === 'solicitacoes_compra') orderClause = `ORDER BY ${orderBy} ${orderDir}, sci.id ASC`;
         else if (view === 'cotacoes') orderClause = `ORDER BY ${orderBy} ${orderDir}, cf.id ASC, cl.id ASC`;
         else orderClause = `ORDER BY ${orderBy} ${orderDir}`;
       } else {
-        if (view === 'compras') orderClause = 'ORDER BY c.data_emissao ASC, c.numero_oc ASC, c.id ASC';
+        if (view === 'compras') orderClause = 'ORDER BY c.data_pedido ASC, c.numero_oc ASC, c.id ASC';
         else if (view === 'recebimentos') orderClause = 'ORDER BY r.id DESC, rl.id ASC';
         else if (view === 'solicitacoes_compra') orderClause = 'ORDER BY sc.id DESC, sci.id ASC';
         else if (view === 'cotacoes') orderClause = 'ORDER BY c.id DESC, cf.id ASC, cl.id ASC';
@@ -257,7 +264,10 @@ export async function GET(req: NextRequest) {
       type CompraAgregada = {
         compra_id: unknown
         numero_oc: unknown
-        data_emissao: unknown
+        data_pedido: unknown
+        data_documento: unknown
+        data_lancamento: unknown
+        data_vencimento: unknown
         data_entrega_prevista: unknown
         status: unknown
         valor_total: unknown
@@ -286,7 +296,10 @@ export async function GET(req: NextRequest) {
           comprasMap.set(compraKey, {
             compra_id: row.compra_id,
             numero_oc: row.numero_oc,
-            data_emissao: row.data_emissao,
+            data_pedido: row.data_pedido,
+            data_documento: row.data_documento,
+            data_lancamento: row.data_lancamento,
+            data_vencimento: row.data_vencimento,
             data_entrega_prevista: row.data_entrega_prevista,
             status: row.status,
             valor_total: row.valor_total,
@@ -562,7 +575,10 @@ export async function POST(req: NextRequest) {
     const categoria_despesa_id = body.categoria_despesa_id == null ? null : Number(body.categoria_despesa_id)
 
     const numero_oc = (body.numero_oc ?? null) as string | null
-    const data_emissao = (body.data_emissao ?? null) as string | null
+    const data_pedido = ((body.data_pedido ?? body.data_emissao) ?? null) as string | null
+    const data_documento = ((body.data_documento ?? data_pedido) ?? null) as string | null
+    const data_lancamento = ((body.data_lancamento ?? data_documento ?? data_pedido) ?? null) as string | null
+    const data_vencimento = ((body.data_vencimento ?? data_pedido) ?? null) as string | null
     const data_entrega_prevista = (body.data_entrega_prevista ?? null) as string | null
     const status = ((body.status as string) || 'rascunho') as string
     const observacoes = (body.observacoes ?? null) as string | null
@@ -598,11 +614,11 @@ export async function POST(req: NextRequest) {
       const insCab = await client.query(
         `INSERT INTO compras.compras (
            tenant_id, fornecedor_id, filial_id, centro_custo_id, projeto_id, categoria_financeira_id, categoria_despesa_id,
-           numero_oc, data_emissao, data_entrega_prevista, status, valor_total, observacoes, criado_por
-         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,COALESCE($9, CURRENT_DATE),$10,$11,$12,$13,$14)
+           numero_oc, data_pedido, data_documento, data_lancamento, data_vencimento, data_entrega_prevista, status, valor_total, observacoes, criado_por
+         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,COALESCE($9, CURRENT_DATE),COALESCE($10, COALESCE($9, CURRENT_DATE)),COALESCE($11, COALESCE($10, COALESCE($9, CURRENT_DATE))),COALESCE($12, COALESCE($9, CURRENT_DATE)),$13,$14,$15,$16,$17)
          RETURNING id`,
         [tenant, fornecedor_id, filial_id, centro_custo_id, projeto_id, categoria_financeira_id, categoria_despesa_id,
-         numero_oc, data_emissao, data_entrega_prevista, status, valor_total, observacoes, criado_por]
+         numero_oc, data_pedido, data_documento, data_lancamento, data_vencimento, data_entrega_prevista, status, valor_total, observacoes, criado_por]
       )
       const compra_id = Number(insCab.rows[0]?.id)
       if (!compra_id) throw new Error('Falha ao criar compra')

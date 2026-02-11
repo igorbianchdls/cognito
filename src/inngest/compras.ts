@@ -10,7 +10,10 @@ type CompraHeader = {
   projeto_id: number | null
   categoria_despesa_id: number | null
   numero_oc: string | null
-  data_emissao: string | null
+  data_pedido: string | null
+  data_documento: string | null
+  data_lancamento: string | null
+  data_vencimento: string | null
   data_entrega_prevista: string | null
   valor_total: number | null
   observacoes: string | null
@@ -35,7 +38,7 @@ export async function createApFromCompra(compraId: number): Promise<{ apId: numb
   // Carrega a compra
   const compraRows = await runQuery<CompraHeader>(
     `SELECT c.id, c.tenant_id, c.fornecedor_id, c.filial_id, c.centro_custo_id, c.projeto_id, c.categoria_despesa_id,
-            c.numero_oc, c.data_emissao, c.data_entrega_prevista, c.valor_total, c.observacoes
+            c.numero_oc, c.data_pedido, c.data_documento, c.data_lancamento, c.data_vencimento, c.data_entrega_prevista, c.valor_total, c.observacoes
        FROM compras.compras c
       WHERE c.id = $1
       LIMIT 1`,
@@ -50,9 +53,10 @@ export async function createApFromCompra(compraId: number): Promise<{ apId: numb
   const filialId = compra.filial_id !== null && compra.filial_id !== undefined ? Number(compra.filial_id) : null
   const categoriaId = compra.categoria_despesa_id !== null && compra.categoria_despesa_id !== undefined ? Number(compra.categoria_despesa_id) : null
   const numeroDoc = (compra.numero_oc && compra.numero_oc.trim()) ? compra.numero_oc.trim() : `OC-${compra.id}`
-  const dataDoc = toISODate(compra.data_emissao)
-  const dataLanc = dataDoc
-  const dataVenc = toISODate(compra.data_entrega_prevista, new Date(dataDoc))
+  const dataPedido = toISODate(compra.data_pedido)
+  const dataDoc = toISODate(compra.data_documento, new Date(dataPedido))
+  const dataLanc = toISODate(compra.data_lancamento, new Date(dataDoc))
+  const dataVenc = toISODate(compra.data_vencimento, new Date(toISODate(compra.data_entrega_prevista, new Date(dataDoc))))
   const valorTotal = Math.abs(Number(compra.valor_total || 0))
   const observacao = (compra.observacoes && compra.observacoes.trim()) || `Compra ${numeroDoc} (ID ${compra.id})`
 

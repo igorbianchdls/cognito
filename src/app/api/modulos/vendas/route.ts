@@ -8,11 +8,15 @@ export const revalidate = 0
 const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
   pedidos: {
     pedido: 'p.id',
+    numero_pedido: 'p.numero_pedido',
     cliente: 'cli.nome_fantasia',
     vendedor: 'f.nome',
     filial: 'fil.nome',
     canal_venda: 'cv.nome',
     data_pedido: 'p.data_pedido',
+    data_documento: 'p.data_documento',
+    data_lancamento: 'p.data_lancamento',
+    data_vencimento: 'p.data_vencimento',
     status: 'p.status',
     valor_total: 'p.valor_total',
   },
@@ -110,7 +114,11 @@ export async function GET(req: NextRequest) {
       // Implementa a query fornecida (com IDs auxiliares para agregação)
       selectSql = `SELECT
         p.id               AS pedido_id,
+        p.numero_pedido,
         p.data_pedido,
+        p.data_documento,
+        p.data_lancamento,
+        p.data_vencimento,
         p.status,
         p.subtotal,
         p.desconto_total,
@@ -281,12 +289,16 @@ export async function GET(req: NextRequest) {
       }
       type PedidoAgregado = {
         pedido: unknown
+        numero_pedido: unknown
         cliente: unknown
         vendedor: unknown
         filial: unknown
         canal_venda: unknown
         canal_venda_id?: unknown
         data_pedido: unknown
+        data_documento: unknown
+        data_lancamento: unknown
+        data_vencimento: unknown
         status: unknown
         valor_total: number
         itens: PedidoItem[]
@@ -299,12 +311,16 @@ export async function GET(req: NextRequest) {
         if (!pedidosMap.has(pedidoId)) {
           pedidosMap.set(pedidoId, {
             pedido: row.pedido_id,
+            numero_pedido: row.numero_pedido,
             cliente: row.cliente,
             vendedor: row.vendedor,
             filial: row.filial,
             canal_venda: row.canal_venda,
             canal_venda_id: row.canal_venda_id,
             data_pedido: row.data_pedido,
+            data_documento: row.data_documento,
+            data_lancamento: row.data_lancamento,
+            data_vencimento: row.data_vencimento,
             status: row.status,
             valor_total: Number(row.valor_total || 0),
             itens: []

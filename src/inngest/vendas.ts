@@ -27,6 +27,9 @@ export async function createCrFromPedido(pedidoId: number): Promise<{ crId: numb
     'p.cliente_id',
     has('numero_pedido') ? 'p.numero_pedido' : "NULL AS numero_pedido",
     'p.data_pedido',
+    has('data_documento') ? 'p.data_documento' : 'NULL AS data_documento',
+    has('data_lancamento') ? 'p.data_lancamento' : 'NULL AS data_lancamento',
+    has('data_vencimento') ? 'p.data_vencimento' : 'NULL AS data_vencimento',
     'p.valor_total',
     has('descricao') ? 'p.descricao' : 'NULL AS descricao',
     has('categoria_receita_id') ? 'p.categoria_receita_id' : 'NULL AS categoria_receita_id',
@@ -44,9 +47,10 @@ export async function createCrFromPedido(pedidoId: number): Promise<{ crId: numb
   if (!clienteId) throw new Error('cliente_id inválido no pedido')
 
   const numeroDoc = (pedido.numero_pedido && pedido.numero_pedido.trim()) ? pedido.numero_pedido.trim() : `PV-${pedido.id}`
-  const dataDoc = toISODate(pedido.data_pedido)
-  const dataLanc = dataDoc
-  const dataVenc = dataDoc
+  const dataPedido = toISODate(pedido.data_pedido)
+  const dataDoc = toISODate((pedido as any).data_documento, new Date(dataPedido))
+  const dataLanc = toISODate((pedido as any).data_lancamento, new Date(dataDoc))
+  const dataVenc = toISODate((pedido as any).data_vencimento, new Date(dataDoc))
   const valorTotal = Math.abs(Number(pedido.valor_total || 0))
   const observacao = (pedido.descricao && pedido.descricao.trim()) || `Venda ${numeroDoc} (ID ${pedido.id})`
 
