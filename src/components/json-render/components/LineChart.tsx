@@ -3,7 +3,7 @@
 import React from "react";
 import { useData } from "@/components/json-render/context";
 import { ResponsiveLine } from "@nivo/line";
-import { normalizeTitleStyle, normalizeContainerStyle, buildNivoTheme, applyBorderFromCssVars, ensureSurfaceBackground, applyShadowFromCssVars, applyH1FromCssVars } from "@/components/json-render/helpers";
+import { normalizeTitleStyle, normalizeContainerStyle, buildNivoTheme, applyBorderFromCssVars, ensureSurfaceBackground, applyH1FromCssVars } from "@/components/json-render/helpers";
 import { useThemeOverrides } from "@/components/json-render/theme/ThemeContext";
 import FrameSurface from "@/components/json-render/components/FrameSurface";
 
@@ -62,7 +62,8 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
   const titleStyle = applyH1FromCssVars(normalizeTitleStyle((element?.props as AnyRecord)?.titleStyle), theme.cssVars);
   const borderless = Boolean((element?.props as AnyRecord)?.borderless);
   const frame = (element?.props as AnyRecord)?.containerStyle?.frame as AnyRecord | undefined;
-  const containerStyle = ensureSurfaceBackground(applyShadowFromCssVars(applyBorderFromCssVars(normalizeContainerStyle((element?.props as AnyRecord)?.containerStyle, borderless), theme.cssVars), theme.cssVars), theme.cssVars);
+  const containerStyle = ensureSurfaceBackground(applyBorderFromCssVars(normalizeContainerStyle((element?.props as AnyRecord)?.containerStyle, borderless), theme.cssVars), theme.cssVars);
+  if (containerStyle) (containerStyle as AnyRecord).boxShadow = undefined;
 
   const seriesData = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
@@ -171,7 +172,7 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
           enableArea={enableArea}
           useMesh={true}
           tooltip={({ point }) => (
-            <div className="rounded bg-white px-2 py-1 text-xs text-gray-700 border border-gray-200 shadow">
+            <div className="rounded bg-white px-2 py-1 text-xs text-gray-700 border border-gray-200">
               <div className="font-medium">{point.data.xFormatted}</div>
               <div>{formatValue(point.data.y as any, fmt)}</div>
             </div>

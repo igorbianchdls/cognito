@@ -3,7 +3,7 @@
 import React from "react";
 import { useData } from "@/components/json-render/context";
 import { ResponsiveBar } from "@nivo/bar";
-import { normalizeTitleStyle, normalizeContainerStyle, buildNivoTheme, applyBorderFromCssVars, ensureSurfaceBackground, applyShadowFromCssVars, applyH1FromCssVars } from "@/components/json-render/helpers";
+import { normalizeTitleStyle, normalizeContainerStyle, buildNivoTheme, applyBorderFromCssVars, ensureSurfaceBackground, applyH1FromCssVars } from "@/components/json-render/helpers";
 import { useThemeOverrides } from "@/components/json-render/theme/ThemeContext";
 import FrameSurface from "@/components/json-render/components/FrameSurface";
 
@@ -33,7 +33,8 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   const titleStyle = applyH1FromCssVars(normalizeTitleStyle((element?.props as AnyRecord)?.titleStyle), theme.cssVars);
   const borderless = Boolean((element?.props as AnyRecord)?.borderless);
   const frame = (element?.props as AnyRecord)?.containerStyle?.frame as AnyRecord | undefined;
-  const containerStyle = ensureSurfaceBackground(applyShadowFromCssVars(applyBorderFromCssVars(normalizeContainerStyle((element?.props as AnyRecord)?.containerStyle, borderless), theme.cssVars), theme.cssVars), theme.cssVars);
+  const containerStyle = ensureSurfaceBackground(applyBorderFromCssVars(normalizeContainerStyle((element?.props as AnyRecord)?.containerStyle, borderless), theme.cssVars), theme.cssVars);
+  if (containerStyle) (containerStyle as AnyRecord).boxShadow = undefined;
 
   const dq = (element?.props?.dataQuery as AnyRecord | undefined);
   const [serverRows, setServerRows] = React.useState<Array<Record<string, unknown>> | null>(null);
@@ -191,7 +192,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
           enableLabel={enableLabel}
           labelTextColor={{ from: 'color', modifiers: [['darker', 1.4]] }}
           tooltip={({ data }) => (
-            <div className="rounded bg-white px-2 py-1 text-xs text-gray-700 border border-gray-200 shadow">
+            <div className="rounded bg-white px-2 py-1 text-xs text-gray-700 border border-gray-200">
               <div className="font-medium">{(data as any).label}</div>
               <div>{formatValue((data as any).value, fmt)}</div>
             </div>

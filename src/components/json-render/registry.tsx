@@ -11,7 +11,7 @@ import { mapManagersToCssVars } from "@/components/json-render/theme/thememanage
 import { buildThemeVars } from "@/components/json-render/theme/themeAdapter";
 import { useDataValue, useData } from "@/components/json-render/context";
 import { deepMerge } from "@/stores/ui/json-render/utils";
-import { normalizeTitleStyle, normalizeContainerStyle, applyBorderFromCssVars, ensureSurfaceBackground, applyShadowFromCssVars, applyH1FromCssVars, applyKpiTitleFromCssVars, applyKpiValueFromCssVars, applySlicerLabelFromCssVars, applySlicerOptionFromCssVars, applyDatePickerIconFromCssVars, applyDatePickerFieldFromCssVars, applyDatePickerLabelFromCssVars } from "@/components/json-render/helpers";
+import { normalizeTitleStyle, normalizeContainerStyle, applyBorderFromCssVars, ensureSurfaceBackground, applyH1FromCssVars, applyKpiTitleFromCssVars, applyKpiValueFromCssVars, applySlicerLabelFromCssVars, applySlicerOptionFromCssVars, applyDatePickerIconFromCssVars, applyDatePickerFieldFromCssVars, applyDatePickerLabelFromCssVars } from "@/components/json-render/helpers";
 import { Calendar } from 'lucide-react';
 
 type AnyRecord = Record<string, any>;
@@ -194,12 +194,10 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       padding: styleVal(p.padding) || undefined,
     };
     const style = ensureSurfaceBackground(
-      applyShadowFromCssVars(
-        applyBorderFromCssVars(styleBase as any, theme.cssVars),
-        theme.cssVars
-      ),
+      applyBorderFromCssVars(styleBase as any, theme.cssVars),
       theme.cssVars
     ) as React.CSSProperties;
+    style.boxShadow = undefined;
     return (
       <div style={style}>
         {title && <h3 className="text-base font-semibold text-gray-900 mb-0" style={titleStyle}>{title}</h3>}
@@ -232,12 +230,10 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       textAlign: align,
     };
     const wrappedStyle = ensureSurfaceBackground(
-      applyShadowFromCssVars(
-        applyBorderFromCssVars(containerStyle as any, theme.cssVars),
-        theme.cssVars
-      ),
+      applyBorderFromCssVars(containerStyle as any, theme.cssVars),
       theme.cssVars
     ) as React.CSSProperties;
+    wrappedStyle.boxShadow = undefined;
     const dp = p.datePicker || {};
     const showPicker = Boolean(dp.visible);
     const controlsPosition = (p.controlsPosition ?? dp.position ?? 'right') as 'left'|'right'|'below';
@@ -672,12 +668,10 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const theme = useThemeOverrides();
     const p = deepMerge(deepMerge(defaultGauge as any, ((theme.components as any)?.Gauge || {}) as AnyRecord), (element?.props || {}) as any) as AnyRecord;
     const containerStyle = ensureSurfaceBackground(
-      applyShadowFromCssVars(
-        applyBorderFromCssVars(normalizeContainerStyle(p.containerStyle, Boolean(p.borderless)), theme.cssVars),
-        theme.cssVars
-      ),
+      applyBorderFromCssVars(normalizeContainerStyle(p.containerStyle, Boolean(p.borderless)), theme.cssVars),
       theme.cssVars
     ) as React.CSSProperties;
+    containerStyle.boxShadow = undefined;
     return (
       <FrameSurface style={containerStyle} frame={p?.containerStyle?.frame as AnyRecord} cssVars={theme.cssVars}>
         <JsonRenderGauge element={{ props: p }} />
@@ -690,7 +684,8 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const p = deepMerge((theme.components?.SlicerCard || {}) as AnyRecord, (element?.props || {}) as AnyRecord) as AnyRecord;
     const title = p.title as string | undefined;
     const borderless = Boolean(p.borderless);
-    const containerStyle = ensureSurfaceBackground(applyShadowFromCssVars(applyBorderFromCssVars(normalizeContainerStyle(p.containerStyle, borderless), theme.cssVars), theme.cssVars), theme.cssVars);
+    const containerStyle = ensureSurfaceBackground(applyBorderFromCssVars(normalizeContainerStyle(p.containerStyle, borderless), theme.cssVars), theme.cssVars);
+    if (containerStyle) (containerStyle as AnyRecord).boxShadow = undefined;
     const layout = (p.layout || 'vertical') as 'vertical'|'horizontal';
     const applyMode = (p.applyMode || 'auto') as 'auto'|'manual';
     const fields = Array.isArray(p.fields) ? (p.fields as AnyRecord[]) : [];
@@ -913,7 +908,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       <button
         type="button"
         onClick={() => onAction && action ? onAction(action) : undefined}
-        className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 shadow-sm hover:bg-gray-50"
+        className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
       >
         {label}
       </button>
@@ -978,7 +973,8 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const unit = p.unit as string | undefined;
     const titleStyle = applyKpiTitleFromCssVars(normalizeTitleStyle(p.titleStyle), theme.cssVars);
     const valueStyle = applyKpiValueFromCssVars(normalizeTitleStyle(p.valueStyle), theme.cssVars);
-    const containerStyle = ensureSurfaceBackground(applyShadowFromCssVars(applyBorderFromCssVars(normalizeContainerStyle(p.containerStyle, Boolean(p.borderless)), theme.cssVars), theme.cssVars), theme.cssVars);
+    const containerStyle = ensureSurfaceBackground(applyBorderFromCssVars(normalizeContainerStyle(p.containerStyle, Boolean(p.borderless)), theme.cssVars), theme.cssVars);
+    if (containerStyle) (containerStyle as AnyRecord).boxShadow = undefined;
     const valuePath = (p.valuePath as string | undefined) || undefined;
     const valueFromPath = valuePath ? useDataValue(valuePath, undefined) : undefined;
     function formatValue(val: any, fmt: 'currency'|'percent'|'number'): string {

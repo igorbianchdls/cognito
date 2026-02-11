@@ -3,7 +3,7 @@
 import React from "react";
 import { useData } from "@/components/json-render/context";
 import { ResponsivePie } from "@nivo/pie";
-import { normalizeTitleStyle, normalizeContainerStyle, buildNivoTheme, applyBorderFromCssVars, ensureSurfaceBackground, applyShadowFromCssVars, applyH1FromCssVars } from "@/components/json-render/helpers";
+import { normalizeTitleStyle, normalizeContainerStyle, buildNivoTheme, applyBorderFromCssVars, ensureSurfaceBackground, applyH1FromCssVars } from "@/components/json-render/helpers";
 import { useThemeOverrides } from "@/components/json-render/theme/ThemeContext";
 import FrameSurface from "@/components/json-render/components/FrameSurface";
 
@@ -62,7 +62,8 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
   const titleStyle = applyH1FromCssVars(normalizeTitleStyle((element?.props as AnyRecord)?.titleStyle), theme.cssVars);
   const borderless = Boolean((element?.props as AnyRecord)?.borderless);
   const frame = (element?.props as AnyRecord)?.containerStyle?.frame as AnyRecord | undefined;
-  const containerStyle = ensureSurfaceBackground(applyShadowFromCssVars(applyBorderFromCssVars(normalizeContainerStyle((element?.props as AnyRecord)?.containerStyle, borderless), theme.cssVars), theme.cssVars), theme.cssVars);
+  const containerStyle = ensureSurfaceBackground(applyBorderFromCssVars(normalizeContainerStyle((element?.props as AnyRecord)?.containerStyle, borderless), theme.cssVars), theme.cssVars);
+  if (containerStyle) (containerStyle as AnyRecord).boxShadow = undefined;
 
   const pieData = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
@@ -130,7 +131,7 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
           arcLabelsSkipAngle={arcLabelsSkipAngle}
           arcLabelsTextColor={arcLabelsTextColor}
           tooltip={({ datum }) => (
-            <div className="rounded bg-white px-2 py-1 text-xs text-gray-700 border border-gray-200 shadow">
+            <div className="rounded bg-white px-2 py-1 text-xs text-gray-700 border border-gray-200">
               <div className="font-medium">{datum.label}</div>
               <div>{formatValue(datum.value, fmt)}</div>
             </div>
