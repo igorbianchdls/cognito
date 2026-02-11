@@ -52,8 +52,8 @@ export default function ChatRoutePageWithId() {
         <div className="flex h-full overflow-hidden">
           <div className="flex-1">
             <PageContainer>
-              <div className={showSandbox && !sandboxExpanded ? 'grid h-full grid-cols-1 lg:grid-cols-[1fr_2fr]' : 'grid h-full grid-cols-1'}>
-                <div className={sandboxExpanded ? 'hidden' : 'h-full min-h-0'}>
+              <div className={showSandbox && !sandboxExpanded ? 'grid h-full grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]' : 'grid h-full grid-cols-1'}>
+                <div className={sandboxExpanded ? 'hidden' : 'h-full min-h-0 min-w-0'}>
                   <ChatPanel
                     onOpenSandbox={(id) => { setChatId(id ?? null); setShowSandbox(true); setSandboxExpanded(false); }}
                     withSideMargins={!showSandbox}
@@ -66,7 +66,7 @@ export default function ChatRoutePageWithId() {
                     initialEngine={prefillEngine}
                   />
                 </div>
-                <div className={!showSandbox ? 'hidden' : 'h-full min-h-0 p-2'}>
+                <div className={!showSandbox ? 'hidden' : 'h-full min-h-0 min-w-0 p-2'}>
                   <SandboxPanel
                     chatId={chatId ?? undefined}
                     onClose={() => { setShowSandbox(false); setSandboxExpanded(false); }}
