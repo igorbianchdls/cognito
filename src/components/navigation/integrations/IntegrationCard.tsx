@@ -68,7 +68,10 @@ export function IntegrationCard({ integration, onToggle }: IntegrationCardProps)
   const IconComponent = iconMap[integration.icon as keyof typeof iconMap] || Globe;
 
   return (
-    <Card className="bg-white border border-gray-200 hover:border-gray-300 transition-colors">
+    <Card
+      className="bg-white border border-gray-200 hover:border-gray-300 transition-colors"
+      style={{ boxShadow: 'var(--shadow-3)' }}
+    >
       <CardContent className="px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4 flex-1">

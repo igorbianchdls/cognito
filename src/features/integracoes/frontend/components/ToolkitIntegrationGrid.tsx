@@ -33,7 +33,11 @@ export default function ToolkitIntegrationGrid({
         const isOn = Boolean(tkStatus[toolkit.slug] ?? tkStatus[lowerSlug])
 
         return (
-          <div key={toolkit.slug} className="border rounded p-4 bg-white">
+          <div
+            key={toolkit.slug}
+            className="border rounded p-4 bg-white"
+            style={{ boxShadow: 'var(--shadow-3)' }}
+          >
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-3 min-w-0">
                 {renderIntegrationLogo(toolkit.slug, toolkit.name)}
