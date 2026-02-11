@@ -230,14 +230,14 @@ export default function FrameSurface({ style, frame, cssVars, className, childre
           borderRadius: (radius as any) ?? "inherit",
         }}
       >
-        <div style={{ ...lineStyle(s.cornerColor, stroke), left: tlInset, top: 0, width: corner, height: stroke }} />
-        <div style={{ ...lineStyle(s.cornerColor, stroke), left: 0, top: tlInset, width: stroke, height: corner }} />
-        <div style={{ ...lineStyle(s.cornerColor, stroke), right: trInset, top: 0, width: corner, height: stroke }} />
-        <div style={{ ...lineStyle(s.cornerColor, stroke), right: 0, top: trInset, width: stroke, height: corner }} />
-        <div style={{ ...lineStyle(s.cornerColor, stroke), left: blInset, bottom: 0, width: corner, height: stroke }} />
-        <div style={{ ...lineStyle(s.cornerColor, stroke), left: 0, bottom: blInset, width: stroke, height: corner }} />
-        <div style={{ ...lineStyle(s.cornerColor, stroke), right: brInset, bottom: 0, width: corner, height: stroke }} />
-        <div style={{ ...lineStyle(s.cornerColor, stroke), right: 0, bottom: brInset, width: stroke, height: corner }} />
+        <div style={{ ...lineStyle(s.cornerColor, stroke), left: tlInset, top: tlInset, width: corner, height: stroke }} />
+        <div style={{ ...lineStyle(s.cornerColor, stroke), left: tlInset, top: tlInset, width: stroke, height: corner }} />
+        <div style={{ ...lineStyle(s.cornerColor, stroke), right: trInset, top: trInset, width: corner, height: stroke }} />
+        <div style={{ ...lineStyle(s.cornerColor, stroke), right: trInset, top: trInset, width: stroke, height: corner }} />
+        <div style={{ ...lineStyle(s.cornerColor, stroke), left: blInset, bottom: blInset, width: corner, height: stroke }} />
+        <div style={{ ...lineStyle(s.cornerColor, stroke), left: blInset, bottom: blInset, width: stroke, height: corner }} />
+        <div style={{ ...lineStyle(s.cornerColor, stroke), right: brInset, bottom: brInset, width: corner, height: stroke }} />
+        <div style={{ ...lineStyle(s.cornerColor, stroke), right: brInset, bottom: brInset, width: stroke, height: corner }} />
       </div>
     </div>
   );
