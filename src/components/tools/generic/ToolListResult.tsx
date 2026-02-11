@@ -2,7 +2,7 @@
 
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable'
 import type { ColumnDef, CellContext } from '@tanstack/react-table'
-import { Table as TableIcon } from 'lucide-react'
+import { FileText, Table as TableIcon } from 'lucide-react'
 import { useMemo } from 'react'
 
 type AnyRow = Record<string, unknown>
@@ -19,6 +19,7 @@ type ParsedResult = {
 
 const HIDDEN_EMAIL_FIELDS = new Set(['organizationid', 'podid'])
 const HIDDEN_DRIVE_FOLDER_FIELDS = new Set(['id', 'folderid'])
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 function toTitleCasePath(path?: string): string {
   if (!path) return 'Lista'
@@ -237,6 +238,10 @@ export default function ToolListResult({ output, input }: { output: any; input?:
   const isEmailResource = resourcePath.startsWith('email/')
   const isEmailMessagesList = resourcePath === 'email/messages'
   const isDriveFolderDetail = /^drive\/folders\/[^/]+$/.test(resourcePath)
+  const driveFolderId = useMemo(() => {
+    const m = resourcePath.match(/^drive\/folders\/([^/]+)$/)
+    return m ? m[1] : ''
+  }, [resourcePath])
   const inboxIdFromInput = useMemo(() => {
     if (!input || typeof input !== 'object') return ''
     const inp = input as any
@@ -268,10 +273,21 @@ export default function ToolListResult({ output, input }: { output: any; input?:
     }
     if (isDriveFolderDetail) {
       return src.map((row) => {
+        const fileId = toFlatText(pickField(row, ['id']))
+        const fileUrl = toFlatText(pickField(row, ['url']))
+        const openInViewer =
+          driveFolderId && UUID_RE.test(fileId)
+            ? `/drive/f/${encodeURIComponent(driveFolderId)}?openFile=${encodeURIComponent(fileId)}`
+            : ''
         const out: AnyRow = {}
         for (const [key, value] of Object.entries(row)) {
           if (HIDDEN_DRIVE_FOLDER_FIELDS.has(normalizeFieldKey(key))) continue
+          if (normalizeFieldKey(key) === 'url') continue
           out[key] = value
+        }
+        out.documento = {
+          openInViewer,
+          fileUrl,
         }
         return out
       })
@@ -285,7 +301,7 @@ export default function ToolListResult({ output, input }: { output: any; input?:
       }
       return out
     })
-  }, [inboxIdFromInput, isDriveFolderDetail, isEmailMessagesList, isEmailResource, result.rows])
+  }, [driveFolderId, inboxIdFromInput, isDriveFolderDetail, isEmailMessagesList, isEmailResource, result.rows])
 
   const columns: ColumnDef<AnyRow>[] = useMemo(() => {
     if (isEmailMessagesList) {
@@ -302,6 +318,32 @@ export default function ToolListResult({ output, input }: { output: any; input?:
     const sample = (Array.isArray(visibleRows) && visibleRows[0]) || null
     if (sample) {
       for (const key of Object.keys(sample)) {
+        if (isDriveFolderDetail && key === 'documento') {
+          cols.push({
+            accessorKey: key,
+            header: 'documento',
+            cell: (ctx: CellContext<AnyRow, unknown>) => {
+              const raw = (ctx.row.original as AnyRow)[key]
+              const value = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {}
+              const openInViewer = typeof value.openInViewer === 'string' ? value.openInViewer : ''
+              const fileUrl = typeof value.fileUrl === 'string' ? value.fileUrl : ''
+              const href = openInViewer || fileUrl
+              if (!href) return ''
+              return (
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center rounded-md border border-slate-200 p-1.5 text-slate-600 hover:bg-slate-50 hover:text-slate-800"
+                  title="Abrir documento"
+                >
+                  <FileText className="h-4 w-4" />
+                </a>
+              )
+            }
+          } as ColumnDef<AnyRow>)
+          continue
+        }
         cols.push({
           accessorKey: key,
           header: key,
@@ -317,7 +359,7 @@ export default function ToolListResult({ output, input }: { output: any; input?:
       }
     }
     return cols
-  }, [isEmailMessagesList, visibleRows])
+  }, [isDriveFolderDetail, isEmailMessagesList, visibleRows])
 
   return (
     <ArtifactDataTable

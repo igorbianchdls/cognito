@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import DriveViewer from '@/features/drive/frontend/components/DriveViewer'
@@ -33,8 +33,11 @@ const FALLBACK_OWNERS = [
 export default function DriveFolderPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const folderId = (params?.id as string) || ''
+  const openFileId = String(searchParams.get('openFile') || '').trim()
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const autoOpenedFileRef = useRef<string>('')
 
   const [folderName, setFolderName] = useState('Folder')
   const [folderWorkspaceId, setFolderWorkspaceId] = useState<string | null>(null)
@@ -95,6 +98,16 @@ export default function DriveFolderPage() {
     load()
     return () => { cancelled = true }
   }, [folderId])
+
+  useEffect(() => {
+    if (!openFileId || files.length === 0) return
+    if (autoOpenedFileRef.current === openFileId) return
+    const index = files.findIndex((file) => file.id === openFileId)
+    if (index >= 0) {
+      autoOpenedFileRef.current = openFileId
+      openViewer(index)
+    }
+  }, [files, openFileId])
 
   const filesCount = useMemo(() => files.length, [files])
 
