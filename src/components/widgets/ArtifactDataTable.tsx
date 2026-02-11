@@ -22,12 +22,15 @@ import {
   Table as TableIcon,
   Code,
   BarChart3,
+  Palette,
   Calendar as CalendarIcon,
   type LucideIcon
 } from 'lucide-react';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ChartSwitcher, type ChartSwitcherOptions } from '@/components/charts/ChartSwitcher';
+import { buildThemeVars } from '@/components/json-render/theme/themeAdapter';
+import { APPS_HEADER_THEME_OPTIONS, APPS_THEME_OPTIONS } from '@/features/apps/shared/themeOptions';
 import {
   ColumnDef,
   flexRender,
@@ -105,6 +108,8 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
   const [hdrPreset, setHdrPreset] = useState<string>('');
   const [hdrFrom, setHdrFrom] = useState<string>('');
   const [hdrTo, setHdrTo] = useState<string>('');
+  const [themeName, setThemeName] = useState<string>('light');
+  const [headerThemeName, setHeaderThemeName] = useState<string>('');
 
   useEffect(() => {
     if (!sqlQuery && viewMode === 'sql') {
@@ -136,6 +141,24 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
     return null;
   }, [chartRenderer, data, canAutoChart, chartOptions]);
   const hasAlternativeView = Boolean(sqlQuery || chartRenderer || canAutoChart);
+  const themeCssVars = useMemo(
+    () => buildThemeVars(themeName, undefined, { headerTheme: headerThemeName || undefined }).cssVars || {},
+    [themeName, headerThemeName]
+  );
+  const surfaceBorderColor = String(themeCssVars.surfaceBorder || '#e5e7eb');
+  const artifactBg = String(themeCssVars.bg || '#ffffff');
+  const artifactSurface = String(themeCssVars.surfaceBg || '#ffffff');
+  const textColor = String(themeCssVars.fg || '#414141');
+  const headerBg = String(themeCssVars.headerBg || artifactSurface);
+  const headerBorderColor = String(themeCssVars.headerBorder || surfaceBorderColor);
+  const headerTextColor = String(themeCssVars.headerText || textColor);
+  const headerActionBg = String(themeCssVars.headerDpBg || artifactSurface);
+  const headerActionBorder = String(themeCssVars.headerDpBorder || surfaceBorderColor);
+  const headerActionColor = String(themeCssVars.headerDpColor || headerTextColor);
+  const headerActionStyle = useMemo<CSSProperties>(
+    () => ({ color: headerActionColor, borderColor: headerActionBorder, backgroundColor: headerActionBg }),
+    [headerActionBg, headerActionBorder, headerActionColor]
+  );
 
   const reactTable = useReactTable({
     data,
@@ -211,17 +234,69 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
   return (
     <Artifact
       className="w-full shadow-none"
-      style={{ boxShadow: "none" }}
+      style={{ boxShadow: "none", backgroundColor: artifactBg, borderColor: surfaceBorderColor, color: textColor }}
     >
-      <ArtifactHeader>
+      <ArtifactHeader style={{ backgroundColor: headerBg, borderColor: headerBorderColor }}>
         <div>
           <div className="flex items-center gap-2">
-            <Icon className="h-5 w-5 text-gray-500" />
-            <ArtifactTitle>{title}</ArtifactTitle>
+            <Icon className="h-5 w-5" style={{ color: headerTextColor }} />
+            <ArtifactTitle style={{ color: headerTextColor }}>{title}</ArtifactTitle>
           </div>
         </div>
 
       <ArtifactActions>
+        <Popover>
+          <PopoverTrigger asChild>
+            <ArtifactAction
+              icon={Palette}
+              tooltip="Tema"
+              variant="outline"
+              size="icon"
+              style={headerActionStyle}
+            />
+          </PopoverTrigger>
+          <PopoverContent align="end" sideOffset={8} className="w-72 p-3">
+            <div className="space-y-3">
+              <div className="text-xs font-medium text-slate-500">Tema do Dashboard</div>
+              <div className="space-y-2">
+                <label className="text-xs text-slate-600">Tema</label>
+                <select
+                  className="h-8 w-full rounded border border-slate-300 bg-white px-2 text-sm"
+                  value={themeName}
+                  onChange={(e) => setThemeName(e.target.value)}
+                >
+                  {APPS_THEME_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-slate-600">Tema do Header</label>
+                <select
+                  className="h-8 w-full rounded border border-slate-300 bg-white px-2 text-sm"
+                  value={headerThemeName}
+                  onChange={(e) => setHeaderThemeName(e.target.value)}
+                >
+                  {APPS_HEADER_THEME_OPTIONS.map((opt) => (
+                    <option key={opt.value || 'auto'} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setThemeName('light');
+                    setHeaderThemeName('');
+                  }}
+                >
+                  Resetar
+                </Button>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
         {headerDateFilter && onHeaderDateRangeChange && (
           <Popover>
             <PopoverTrigger asChild>
@@ -230,7 +305,7 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
                 tooltip="Período"
                 variant="outline"
                 size="icon"
-                className="text-slate-600 hover:text-slate-900 hover:bg-gray-100"
+                style={headerActionStyle}
               />
             </PopoverTrigger>
             <PopoverContent align="end" sideOffset={8} className="w-72 p-3">
@@ -289,9 +364,9 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
             variant="outline"
             size="icon"
             className={cn(
-              'text-slate-600 hover:text-slate-900 hover:bg-gray-100',
               viewMode === 'table' ? 'bg-gray-100' : ''
             )}
+            style={headerActionStyle}
             onClick={() => setViewMode('table')}
           />
         )}
@@ -302,9 +377,9 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
               variant="outline"
               size="icon"
               className={cn(
-                'text-slate-600 hover:text-slate-900 hover:bg-gray-100',
                 viewMode === 'sql' ? 'bg-gray-100' : ''
               )}
+              style={headerActionStyle}
               onClick={() => setViewMode('sql')}
             />
           )}
@@ -315,9 +390,9 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
               variant="outline"
               size="icon"
               className={cn(
-                'text-slate-600 hover:text-slate-900 hover:bg-gray-100',
                 viewMode === 'chart' ? 'bg-gray-100' : ''
               )}
+              style={headerActionStyle}
               onClick={() => setViewMode('chart')}
             />
           )}
@@ -326,11 +401,13 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
             tooltip={copied ? "Copiado!" : "Copiar JSON"}
             onClick={handleCopyJSON}
             className={copied ? "text-green-600" : ""}
+            style={headerActionStyle}
           />
           <ArtifactAction
             icon={Download}
             tooltip="Exportar CSV"
             onClick={handleDownloadCSV}
+            style={headerActionStyle}
           />
         </ArtifactActions>
       </ArtifactHeader>
@@ -360,16 +437,16 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
           </div>
         ) : (
           <>
-            <div className="border-b">
+            <div className="border-b" style={{ borderColor: surfaceBorderColor }}>
               <Table>
-                <TableHeader className="bg-[#fcfcfc]">
+                <TableHeader style={{ backgroundColor: artifactSurface }}>
                   {reactTable.getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id}>
                       {headerGroup.headers.map((header) => (
                         <TableHead
                           key={header.id}
                           className="whitespace-nowrap"
-                          style={{ color: "rgb(65,65,65)", fontSize: "14px", fontWeight: 500, letterSpacing: "0em", padding: "12px", whiteSpace: "nowrap" }}
+                          style={{ color: textColor, fontSize: "14px", fontWeight: 500, letterSpacing: "0em", padding: "12px", whiteSpace: "nowrap", borderColor: surfaceBorderColor }}
                         >
                           {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                         </TableHead>
@@ -380,12 +457,12 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
                 <TableBody>
                   {reactTable.getRowModel().rows?.length ? (
                     reactTable.getRowModel().rows.map((row) => (
-                      <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'} className="bg-white">
+                      <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'} style={{ backgroundColor: artifactSurface, borderColor: surfaceBorderColor }}>
                         {row.getVisibleCells().map((cell) => (
                           <TableCell
                             key={cell.id}
                             className="whitespace-nowrap"
-                            style={{ color: "rgb(65,65,65)", fontSize: "13px", fontWeight: 400, letterSpacing: "0em", padding: "12px", whiteSpace: "nowrap" }}
+                            style={{ color: textColor, fontSize: "13px", fontWeight: 400, letterSpacing: "0em", padding: "12px", whiteSpace: "nowrap", borderColor: surfaceBorderColor }}
                           >
                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                           </TableCell>
@@ -393,8 +470,8 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
                       </TableRow>
                     ))
                   ) : (
-                    <TableRow className="bg-white">
-                      <TableCell colSpan={columns.length} className="h-24 text-center whitespace-nowrap" style={{ color: "rgb(65,65,65)", fontSize: "13px", fontWeight: 400, letterSpacing: "0em", padding: "12px", whiteSpace: "nowrap" }}>
+                    <TableRow style={{ backgroundColor: artifactSurface, borderColor: surfaceBorderColor }}>
+                      <TableCell colSpan={columns.length} className="h-24 text-center whitespace-nowrap" style={{ color: textColor, fontSize: "13px", fontWeight: 400, letterSpacing: "0em", padding: "12px", whiteSpace: "nowrap", borderColor: surfaceBorderColor }}>
                         Nenhum resultado encontrado.
                       </TableCell>
                     </TableRow>

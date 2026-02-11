@@ -1,36 +1,13 @@
 "use client";
 
 import React from "react";
+import { APPS_HEADER_THEME_OPTIONS, APPS_THEME_OPTIONS } from '@/features/apps/shared/themeOptions';
 
 type PanelProps = { jsonText: string; setJsonText: (s: string) => void; setTree: (t: any) => void; disabled?: boolean };
 
 export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled }: PanelProps) {
-  const themeOptions = [
-    { value: 'light', label: 'Light' },
-    { value: 'blue', label: 'Blue' },
-    { value: 'dark', label: 'Dark' },
-    { value: 'black', label: 'Black' },
-    { value: 'slate', label: 'Slate' },
-    { value: 'navy', label: 'Navy' },
-    { value: 'sand', label: 'Sand' },
-    { value: 'charcoal', label: 'Charcoal' },
-    { value: 'midnight', label: 'Midnight' },
-    { value: 'metro', label: 'Metro' },
-    { value: 'aero', label: 'Aero' },
-  ];
-  const headerThemeOptions = [
-    { value: '', label: 'Auto' },
-    { value: 'white', label: 'Branco' },
-    { value: 'gray', label: 'Cinza Claro' },
-    { value: 'purple', label: 'Roxo' },
-    { value: 'dark', label: 'Dark' },
-    { value: 'blue', label: 'Azul' },
-    { value: 'teal', label: 'Teal' },
-    { value: 'emerald', label: 'Esmeralda' },
-    { value: 'amber', label: 'Âmbar' },
-    { value: 'rose', label: 'Rosa' },
-    { value: 'slate', label: 'Slate' },
-  ];
+  const themeOptions = APPS_THEME_OPTIONS;
+  const headerThemeOptions = APPS_HEADER_THEME_OPTIONS;
   const fontOptions = [
     'Inter, ui-sans-serif, system-ui',
     'Barlow, ui-sans-serif, system-ui',

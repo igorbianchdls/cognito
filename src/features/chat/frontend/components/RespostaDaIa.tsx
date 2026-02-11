@@ -37,8 +37,8 @@ export default function RespostaDaIa({ message, isPending = false }: Props) {
   if (!hasAnything && !isPending) return null;
 
   return (
-    <div className="w-full flex justify-start py-3">
-      <div className="w-full">
+    <div className="w-full min-w-0 flex justify-start py-3">
+      <div className="w-full min-w-0">
         <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
           <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-tr from-fuchsia-500 via-purple-500 to-blue-500 text-white text-[10px] leading-none shadow-sm ml-0.5">OT</span>
           <span className="font-semibold text-gray-900 text-[16px]">Otto</span>
@@ -826,8 +826,8 @@ export default function RespostaDaIa({ message, isPending = false }: Props) {
             const txt = (part as any).text || '';
             if (!txt) return null;
             return (
-              <div key={`resp-${index}`} className="text-[15px] leading-6">
-                <Response options={{}}>{txt}</Response>
+              <div key={`resp-${index}`} className="min-w-0 text-[15px] leading-6 break-words [overflow-wrap:anywhere]">
+                <Response options={{}} className="break-words [overflow-wrap:anywhere]">{txt}</Response>
               </div>
             );
           }

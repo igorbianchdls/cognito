@@ -606,10 +606,10 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   }
 
   return (
-    <div className="h-full grid grid-rows-[auto_1fr]">
+    <div className="h-full min-w-0 grid grid-rows-[auto_1fr]">
       <Header title={headerTitle || 'Chat'} busy={menuBusy} hasSandbox={sandboxStatus === 'running'} sandboxStatus={sandboxStatus} onStartSandbox={startSandboxFromMenu} onStopSandbox={stopSandboxFromMenu} onWriteFiles={writeFilesFromMenu} onOpenArtifact={openArtifactFromMenu} />
-      <div className="h-full grid grid-rows-[1fr_auto] min-h-0" style={withSideMargins ? { marginLeft: '20%', marginRight: '20%' } : undefined}>
-        <div className="overflow-y-auto min-h-0 px-4 py-4">
+      <div className="h-full min-w-0 grid grid-rows-[1fr_auto] min-h-0" style={withSideMargins ? { marginLeft: '20%', marginRight: '20%' } : undefined}>
+        <div className="overflow-y-auto overflow-x-hidden min-h-0 min-w-0 px-4 py-4">
           {messages.map((m) =>
             m.role === 'user' ? (
               <PerguntaDoUsuario key={m.id} message={m} />

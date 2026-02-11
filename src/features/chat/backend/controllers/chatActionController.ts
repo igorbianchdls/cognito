@@ -4,6 +4,8 @@ import { createClient as createSupabaseServerClient } from '@/lib/supabase/serve
 import { getChatStreamRunnerScript, getOpenAIResponsesStreamRunnerScript, getSlashStreamRunnerScript } from '@/features/chat/backend/runtime/runners/agentRunnerScripts'
 import { generateAgentToken, setAgentToken } from '@/features/chat/backend/auth/agentTokenStore'
 import { buildClaudeSystemPrompt, buildOpenAiSystemPrompt } from '@/features/chat/backend/prompts/chatSystemPrompts'
+import { APPS_VENDAS_TEMPLATE_TEXT } from '@/features/apps/shared/templates/appsVendasTemplate'
+import { APPS_COMPRAS_TEMPLATE_TEXT } from '@/features/apps/shared/templates/appsComprasTemplate'
 
 export const runtime = 'nodejs'
 
@@ -185,49 +187,25 @@ export async function POST(req: Request) {
       } catch {}
       // Seed default JSON Render dashboards (.jsonr)
       try {
-        const vendasObj = [
-          { type: 'Theme', props: { name: 'light' }, children: [
-            { type: 'Header', props: { title: 'Dashboard de Vendas', subtitle: 'Principais indicadores e cortes', align: 'center', datePicker: { visible: true, mode: 'range', position: 'right', storePath: 'filters.dateRange', actionOnChange: { type: 'refresh_data' }, style: { padding: 6, fontFamily: 'Barlow', fontSize: 12 } } } },
-            { type: 'Div', props: { direction: 'row', gap: 12, padding: 16, justify: 'start', align: 'start', childGrow: true }, children: [
-              { type: 'KPI', props: { title: 'Vendas', format: 'currency', dataQuery: { model: 'vendas.pedidos', measure: 'SUM(p.valor_total)', filters: { tenant_id: 1 } }, containerStyle: { borderWidth: 2, borderColor: '#0ea5e9', borderRadius: 12 }, titleStyle: { fontWeight: 600, fontSize: 12, color: '#64748b' }, valueStyle: { fontWeight: 700, fontSize: 24, color: '#0f172a' } } },
-              { type: 'KPI', props: { title: 'Pedidos', format: 'number', dataQuery: { model: 'vendas.pedidos', measure: 'COUNT()', filters: { tenant_id: 1 } }, containerStyle: { borderWidth: 2, borderColor: '#22c55e', borderStyle: 'dashed', borderRadius: 10 } } },
-              { type: 'KPI', props: { title: 'Ticket Médio', format: 'currency', dataQuery: { model: 'vendas.pedidos', measure: 'AVG(p.valor_total)', filters: { tenant_id: 1 } }, titleStyle: { fontWeight: 600 }, valueStyle: { fontSize: 22 }, containerStyle: { borderWidth: 2, borderColor: '#f59e0b', borderStyle: 'dotted', borderRadius: 8 } } }
-            ] },
-            { type: 'Div', props: { direction: 'row', gap: 12, padding: 16, justify: 'start', align: 'start', childGrow: true }, children: [
-              { type: 'PieChart', props: { fr: 1, title: 'Canais', containerStyle: { borderWidth: 2, borderColor: '#0ea5e9', borderRadius: 12 }, dataQuery: { model: 'vendas.pedidos', dimension: 'canal_venda', measure: 'SUM(itens.subtotal)', filters: { tenant_id: 1 }, orderBy: { field: 'measure', dir: 'desc' }, limit: 6 }, format: 'currency', height: 240 } },
-              { type: 'BarChart', props: { fr: 2, title: 'Categorias', containerStyle: { borderWidth: 2, borderColor: '#10b981', borderStyle: 'dashed', borderRadius: 10 }, dataQuery: { model: 'vendas.pedidos', dimension: 'categoria_receita', measure: 'SUM(itens.subtotal)', filters: { tenant_id: 1 }, orderBy: { field: 'measure', dir: 'desc' }, limit: 6 }, format: 'currency', height: 240, nivo: { layout: 'horizontal' } } },
-              { type: 'SlicerCard', props: { fr: 1, title: 'Filtro de Canais', fields: [ { label: 'Canal', type: 'list', storePath: 'filters.canal_venda_id', source: { type: 'api', url: '/api/modulos/vendas/options?field=canal_venda_id&limit=50' }, selectAll: true, clearable: true } ], containerStyle: { borderWidth: 2, borderColor: '#e5e7eb', borderRadius: 12 } } },
-              { type: 'BarChart', props: { fr: 2, title: 'Clientes', containerStyle: { borderWidth: 3, borderColor: '#f59e0b', borderStyle: 'solid', borderRadius: 6 }, dataQuery: { model: 'vendas.pedidos', dimension: 'cliente', measure: 'SUM(itens.subtotal)', filters: { tenant_id: 1 }, orderBy: { field: 'measure', dir: 'desc' }, limit: 5 }, format: 'currency', height: 240, nivo: { layout: 'horizontal' } } }
-            ] },
-            { type: 'Div', props: { direction: 'row', gap: 12, padding: 16, justify: 'start', align: 'start', childGrow: true }, children: [
-              { type: 'BarChart', props: { fr: 1, title: 'Vendedores', containerStyle: { borderWidth: 2, borderColor: '#8b5cf6', borderRadius: 10 }, dataQuery: { model: 'vendas.pedidos', dimension: 'vendedor', measure: 'SUM(itens.subtotal)', filters: { tenant_id: 1 }, orderBy: { field: 'measure', dir: 'desc' }, limit: 6 }, format: 'currency', height: 220, nivo: { layout: 'horizontal' } } },
-              { type: 'BarChart', props: { fr: 1, title: 'Filiais', containerStyle: { borderWidth: 2, borderColor: '#ef4444', borderStyle: 'dotted', borderRadius: 12 }, dataQuery: { model: 'vendas.pedidos', dimension: 'filial', measure: 'SUM(itens.subtotal)', filters: { tenant_id: 1 }, orderBy: { field: 'measure', dir: 'desc' }, limit: 6 }, format: 'currency', height: 220, nivo: { layout: 'horizontal' } } },
-              { type: 'BarChart', props: { fr: 1, title: 'Unidades de Negócio', containerStyle: { borderWidth: 1, borderColor: '#334155', borderStyle: 'solid', borderRadius: 8 }, dataQuery: { model: 'vendas.pedidos', dimension: 'unidade_negocio', measure: 'SUM(itens.subtotal)', filters: { tenant_id: 1 }, orderBy: { field: 'measure', dir: 'desc' }, limit: 6 }, format: 'currency', height: 220, nivo: { layout: 'horizontal' } } }
-            ] }
-          ] }
-        ];
-        const comprasObj = [
-          { type: 'Theme', props: { name: 'light' }, children: [
-            { type: 'Header', props: { title: 'Dashboard de Compras', subtitle: 'Principais indicadores e cortes', align: 'center', datePicker: { visible: true, mode: 'range', position: 'right', storePath: 'filters.dateRange', actionOnChange: { type: 'refresh_data' }, style: { padding: 6, fontFamily: 'Barlow', fontSize: 12 } } } },
-            { type: 'Div', props: { direction: 'row', gap: 12, padding: 16, justify: 'start', align: 'start', childGrow: true }, children: [
-              { type: 'KPI', props: { title: 'Gasto', format: 'currency', dataQuery: { model: 'compras.compras', measure: 'SUM(valor_total)', filters: { tenant_id: 1 } }, titleStyle: { fontWeight: 600, fontSize: 12, color: '#64748b' }, valueStyle: { fontWeight: 700, fontSize: 24, color: '#0f172a' } } },
-              { type: 'KPI', props: { title: 'Fornecedores', format: 'number', dataQuery: { model: 'compras.compras', measure: 'COUNT_DISTINCT(fornecedor_id)', filters: { tenant_id: 1 } } } },
-              { type: 'KPI', props: { title: 'Pedidos', format: 'number', dataQuery: { model: 'compras.compras', measure: 'COUNT_DISTINCT(id)', filters: { tenant_id: 1 } }, valueStyle: { fontSize: 22 } } },
-              { type: 'KPI', props: { title: 'Transações', format: 'number', dataQuery: { model: 'compras.recebimentos', measure: 'COUNT()', filters: { tenant_id: 1 } } } }
-            ] },
-            { type: 'Div', props: { direction: 'row', gap: 12, padding: 16, justify: 'start', align: 'start', childGrow: true }, children: [
-              { type: 'BarChart', props: { fr: 1, title: 'Fornecedores', dataQuery: { model: 'compras.compras', dimension: 'fornecedor', measure: 'SUM(valor_total)', filters: { tenant_id: 1 }, orderBy: { field: 'measure', dir: 'desc' }, limit: 8 }, format: 'currency', height: 240, nivo: { layout: 'horizontal' } } },
-              { type: 'BarChart', props: { fr: 1, title: 'Centros de Custo', dataQuery: { model: 'compras.compras', dimension: 'centro_custo', measure: 'SUM(valor_total)', filters: { tenant_id: 1 }, orderBy: { field: 'measure', dir: 'desc' }, limit: 8 }, format: 'currency', height: 240, nivo: { layout: 'horizontal' } } },
-              { type: 'SlicerCard', props: { fr: 1, title: 'Filtro Centro de Custo', fields: [ { label: 'Centro de Custo', type: 'list', storePath: 'filters.centro_custo_id', source: { type: 'api', url: '/api/modulos/compras/options?field=centro_custo_id&limit=100' }, selectAll: true } ], containerStyle: { borderWidth: 2, borderColor: '#e5e7eb', borderRadius: 12 } } },
-              { type: 'BarChart', props: { fr: 1, title: 'Filiais', dataQuery: { model: 'compras.compras', dimension: 'filial', measure: 'SUM(valor_total)', filters: { tenant_id: 1 }, orderBy: { field: 'measure', dir: 'desc' }, limit: 8 }, format: 'currency', height: 240, nivo: { layout: 'horizontal' } } }
-            ] },
-            { type: 'Div', props: { direction: 'row', gap: 12, padding: 16, justify: 'start', align: 'start', childGrow: true }, children: [
-              { type: 'BarChart', props: { fr: 1, title: 'Categorias', dataQuery: { model: 'compras.compras', dimension: 'categoria_despesa', measure: 'SUM(valor_total)', filters: { tenant_id: 1 }, orderBy: { field: 'measure', dir: 'desc' }, limit: 8 }, format: 'currency', height: 220, nivo: { layout: 'horizontal' } } },
-              { type: 'BarChart', props: { fr: 1, title: 'Projetos', dataQuery: { model: 'compras.compras', dimension: 'projeto', measure: 'SUM(valor_total)', filters: { tenant_id: 1 }, orderBy: { field: 'measure', dir: 'desc' }, limit: 8 }, format: 'currency', height: 220, nivo: { layout: 'horizontal' } } },
-              { type: 'BarChart', props: { fr: 1, title: 'Status (Qtd)', dataQuery: { model: 'compras.compras', dimension: 'status', measure: 'COUNT()', filters: { tenant_id: 1 }, orderBy: { field: 'measure', dir: 'desc' }, limit: 8 }, format: 'number', height: 220, nivo: { layout: 'horizontal' } } }
-            ] }
-          ] }
-        ];
+        const parseSeedJson = (raw: string): any[] => {
+          try {
+            const parsed = JSON.parse(raw)
+            const nodes = Array.isArray(parsed) ? parsed : [parsed]
+            if (!nodes[0] || nodes[0].type !== 'Theme') {
+              return [{ type: 'Theme', props: { name: 'light', headerTheme: 'auto', managers: {} }, children: nodes }]
+            }
+            const theme = nodes[0]
+            theme.props = theme.props && typeof theme.props === 'object' ? theme.props : {}
+            if (!theme.props.name) theme.props.name = 'light'
+            if (typeof theme.props.headerTheme !== 'string') theme.props.headerTheme = 'auto'
+            if (!theme.props.managers || typeof theme.props.managers !== 'object') theme.props.managers = {}
+            return nodes
+          } catch {
+            return []
+          }
+        }
+        const vendasObj = parseSeedJson(APPS_VENDAS_TEMPLATE_TEXT)
+        const comprasObj = parseSeedJson(APPS_COMPRAS_TEMPLATE_TEXT)
         const seedDash = `const fs=require('fs');const p=process.env.TARGET;fs.mkdirSync(p,{recursive:true});const w=(f,c)=>{if(!fs.existsSync(f))fs.writeFileSync(f,c,'utf8');};w(p+'/vendas.jsonr',process.env.VENDAS_JSONR||'[]');w(p+'/compras.jsonr',process.env.COMPRAS_JSONR||'[]');console.log('ok');`;
         const runSeed = await sandbox.runCommand({ cmd: 'node', args: ['-e', seedDash], env: { TARGET: '/vercel/sandbox/dashboard', VENDAS_JSONR: JSON.stringify(vendasObj), COMPRAS_JSONR: JSON.stringify(comprasObj) } })
         timeline.push({ name: 'seed-jsonr', ms: 0, ok: runSeed.exitCode === 0, exitCode: runSeed.exitCode })
