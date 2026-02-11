@@ -1263,14 +1263,14 @@ const baseTools = [
   {
     type: 'function',
     name: 'workspace',
-    description: 'Tool de workspace (email/drive). action="request" chama rotas permitidas; action="read_file" lê arquivo; action="get_drive_file_url" gera URL assinada do Drive por file_id; action="send_email" envia email completo (to/subject/text|html) com anexos por URL/base64.',
+    description: 'Tool de workspace (email/drive). action="request" chama rotas permitidas; action="read_file" lê arquivo (texto e extração de texto para PDF quando possível); action="get_drive_file_url" gera URL assinada do Drive por file_id; action="send_email" envia email completo (to/subject/text|html) com anexos por URL/base64.',
     parameters: {
       type: 'object',
       properties: {
         action: {
           type: 'string',
           enum: ['request', 'read_file', 'get_drive_file_url', 'send_email'],
-          description: 'request: operações por resource. read_file: leitura de conteúdo do Drive. get_drive_file_url: retorna signed_url por file_id. send_email: envia email completo com anexos.'
+          description: 'request: operações por resource. read_file: leitura de conteúdo do Drive (inclui extração de texto de PDF quando disponível). get_drive_file_url: retorna signed_url por file_id. send_email: envia email completo com anexos.'
         },
         method: {
           type: 'string',

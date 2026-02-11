@@ -56,6 +56,73 @@ const TEXT_EXTENSIONS = new Set([
   'go', 'rs', 'c', 'h', 'cpp', 'hpp', 'html', 'css',
 ])
 
+let pdfjsImportPromise: Promise<any> | null = null
+
+function ensurePdfJsPolyfills() {
+  const g = globalThis as any
+  if (typeof g.DOMMatrix === 'undefined') {
+    g.DOMMatrix = class DOMMatrix {
+      multiplySelf() { return this }
+      preMultiplySelf() { return this }
+      translateSelf() { return this }
+      scaleSelf() { return this }
+      rotateSelf() { return this }
+      invertSelf() { return this }
+    }
+  }
+  if (typeof g.ImageData === 'undefined') {
+    g.ImageData = class ImageData {}
+  }
+  if (typeof g.Path2D === 'undefined') {
+    g.Path2D = class Path2D {}
+  }
+}
+
+function isPdfFile(name: string, mime: string): boolean {
+  if (String(mime || '').toLowerCase().includes('pdf')) return true
+  return /\.pdf$/i.test(String(name || '').trim())
+}
+
+async function getPdfJs() {
+  ensurePdfJsPolyfills()
+  if (!pdfjsImportPromise) {
+    pdfjsImportPromise = import('pdfjs-dist/legacy/build/pdf.mjs')
+  }
+  return pdfjsImportPromise
+}
+
+async function extractPdfText(buffer: Buffer): Promise<{ text: string; pages: number }> {
+  const pdfjs = await getPdfJs()
+  const loadingTask = pdfjs.getDocument({
+    data: new Uint8Array(buffer),
+    useWorkerFetch: false,
+    isEvalSupported: false,
+    disableFontFace: true,
+    verbosity: 0,
+  })
+  const doc = await loadingTask.promise
+  try {
+    const chunks: string[] = []
+    for (let pageNo = 1; pageNo <= doc.numPages; pageNo += 1) {
+      const page = await doc.getPage(pageNo)
+      const textContent = await page.getTextContent()
+      const text = (Array.isArray(textContent?.items) ? textContent.items : [])
+        .map((item: any) => (item && typeof item.str === 'string' ? item.str : ''))
+        .filter(Boolean)
+        .join(' ')
+        .trim()
+      chunks.push(text)
+      try { page.cleanup() } catch {}
+    }
+    return {
+      text: chunks.filter(Boolean).join('\n\n').trim(),
+      pages: Number(doc.numPages || 0),
+    }
+  } finally {
+    try { await doc.destroy() } catch {}
+  }
+}
+
 function toCleanResource(value: unknown): string {
   return String(value || '').trim().replace(/^\/+|\/+$/g, '')
 }
@@ -236,16 +303,19 @@ async function readDriveFile(req: NextRequest, payload: RequestAction) {
   const buffer = Buffer.from(await res.arrayBuffer())
   const mime = String(file.mime || '').trim().toLowerCase() || 'application/octet-stream'
   const textLike = isTextLikeFile(file.name, mime)
+  const pdfLike = isPdfFile(file.name, mime)
 
   if (mode === 'text' && !textLike) {
-    return {
-      ok: false,
-      status: 400,
-      result: {
-        success: false,
-        error: 'Arquivo não parece textual. Use mode=binary ou mode=auto.',
-        file: { id: file.id, name: file.name, mime, sizeBytes: Number(file.size_bytes || 0) },
-      },
+    if (!pdfLike) {
+      return {
+        ok: false,
+        status: 400,
+        result: {
+          success: false,
+          error: 'Arquivo não parece textual. Use mode=binary ou mode=auto.',
+          file: { id: file.id, name: file.name, mime, sizeBytes: Number(file.size_bytes || 0) },
+        },
+      }
     }
   }
 
@@ -262,6 +332,51 @@ async function readDriveFile(req: NextRequest, payload: RequestAction) {
         content: chunk.toString('base64'),
         truncated: buffer.length > maxBytes,
       },
+    }
+  }
+
+  if (pdfLike) {
+    try {
+      const extracted = await extractPdfText(buffer)
+      const maxBytes = 180_000
+      const textBuffer = Buffer.from(extracted.text || '', 'utf8')
+      const chunk = textBuffer.subarray(0, maxBytes)
+      const content = new TextDecoder('utf-8', { fatal: false }).decode(chunk)
+      return {
+        ok: true,
+        status: 200,
+        result: {
+          success: true,
+          file: { id: file.id, name: file.name, mime, sizeBytes: Number(file.size_bytes || 0) },
+          encoding: 'utf-8',
+          content,
+          truncated: textBuffer.length > maxBytes,
+          extractedFrom: 'pdf',
+          pages: extracted.pages,
+        },
+      }
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error)
+      if (mode === 'text') {
+        return {
+          ok: false,
+          status: 500,
+          result: {
+            success: false,
+            error: `Falha ao extrair texto do PDF: ${detail}`,
+            file: { id: file.id, name: file.name, mime, sizeBytes: Number(file.size_bytes || 0) },
+          },
+        }
+      }
+      return {
+        ok: true,
+        status: 200,
+        result: {
+          success: true,
+          file: { id: file.id, name: file.name, mime, sizeBytes: Number(file.size_bytes || 0) },
+          message: `PDF detectado, mas não foi possível extrair texto automaticamente. Detalhe: ${detail}. Para conteúdo bruto, use mode=binary.`,
+        },
+      }
     }
   }
 
