@@ -4,6 +4,7 @@ import React from "react";
 
 type AnyRecord = Record<string, any>;
 type Rgb = { r: number; g: number; b: number };
+type BorderWidths = { top: number; right: number; bottom: number; left: number };
 
 export type HudFrameConfig = {
   variant?: "hud";
@@ -126,6 +127,17 @@ function resolveFrame(frame: HudFrameConfig | null | undefined, cssVars?: Record
   return { variant, baseColor, cornerColor, cornerSize, cornerWidth };
 }
 
+function resolveBorderWidths(style: React.CSSProperties | undefined, fallback: number): BorderWidths {
+  const s = (style || {}) as AnyRecord;
+  const all = Math.max(0, toNumber(s.borderWidth, fallback));
+  return {
+    top: Math.max(0, toNumber(s.borderTopWidth, all)),
+    right: Math.max(0, toNumber(s.borderRightWidth, all)),
+    bottom: Math.max(0, toNumber(s.borderBottomWidth, all)),
+    left: Math.max(0, toNumber(s.borderLeftWidth, all)),
+  };
+}
+
 function lineStyle(color: string, width: number): React.CSSProperties {
   return {
     position: "absolute",
@@ -159,6 +171,11 @@ export default function FrameSurface({ style, frame, cssVars, className, childre
   };
   const corner = s.cornerSize;
   const stroke = s.cornerWidth;
+  const bw = resolveBorderWidths(merged, stroke);
+  const topEdge = -bw.top;
+  const rightEdge = -bw.right;
+  const bottomEdge = -bw.bottom;
+  const leftEdge = -bw.left;
 
   return (
     <div className={className} style={merged}>
@@ -172,14 +189,14 @@ export default function FrameSurface({ style, frame, cssVars, className, childre
           borderRadius: 0,
         }}
       >
-        <div style={{ ...lineStyle(s.cornerColor, stroke), left: 0, top: 0, width: corner, height: stroke }} />
-        <div style={{ ...lineStyle(s.cornerColor, stroke), left: 0, top: 0, width: stroke, height: corner }} />
-        <div style={{ ...lineStyle(s.cornerColor, stroke), right: 0, top: 0, width: corner, height: stroke }} />
-        <div style={{ ...lineStyle(s.cornerColor, stroke), right: 0, top: 0, width: stroke, height: corner }} />
-        <div style={{ ...lineStyle(s.cornerColor, stroke), left: 0, bottom: 0, width: corner, height: stroke }} />
-        <div style={{ ...lineStyle(s.cornerColor, stroke), left: 0, bottom: 0, width: stroke, height: corner }} />
-        <div style={{ ...lineStyle(s.cornerColor, stroke), right: 0, bottom: 0, width: corner, height: stroke }} />
-        <div style={{ ...lineStyle(s.cornerColor, stroke), right: 0, bottom: 0, width: stroke, height: corner }} />
+        <div style={{ ...lineStyle(s.cornerColor, stroke), left: leftEdge, top: topEdge, width: corner, height: stroke }} />
+        <div style={{ ...lineStyle(s.cornerColor, stroke), left: leftEdge, top: topEdge, width: stroke, height: corner }} />
+        <div style={{ ...lineStyle(s.cornerColor, stroke), right: rightEdge, top: topEdge, width: corner, height: stroke }} />
+        <div style={{ ...lineStyle(s.cornerColor, stroke), right: rightEdge, top: topEdge, width: stroke, height: corner }} />
+        <div style={{ ...lineStyle(s.cornerColor, stroke), left: leftEdge, bottom: bottomEdge, width: corner, height: stroke }} />
+        <div style={{ ...lineStyle(s.cornerColor, stroke), left: leftEdge, bottom: bottomEdge, width: stroke, height: corner }} />
+        <div style={{ ...lineStyle(s.cornerColor, stroke), right: rightEdge, bottom: bottomEdge, width: corner, height: stroke }} />
+        <div style={{ ...lineStyle(s.cornerColor, stroke), right: rightEdge, bottom: bottomEdge, width: stroke, height: corner }} />
       </div>
     </div>
   );
