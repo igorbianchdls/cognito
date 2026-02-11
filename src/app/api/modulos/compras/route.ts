@@ -19,7 +19,9 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     data_entrega_prevista: 'c.data_entrega_prevista',
     fornecedor: 'f.nome_fantasia',
     filial: 'fil.nome',
+    departamento: 'dep.nome',
     centro_custo: 'cc.nome',
+    unidade_negocio: 'un.nome',
     projeto: 'p.nome',
     categoria_despesa: 'cd.nome',
     status: 'c.status',
@@ -103,7 +105,9 @@ export async function GET(req: NextRequest) {
         c.id AS compra_id,
         f.nome_fantasia AS fornecedor,
         fil.nome AS filial,
+        dep.nome AS departamento,
         cc.nome AS centro_custo,
+        un.nome AS unidade_negocio,
         p.nome AS projeto,
         cd.nome AS categoria_despesa,
         c.numero_oc,
@@ -120,7 +124,9 @@ export async function GET(req: NextRequest) {
       baseSql = `FROM compras.compras c
         LEFT JOIN entidades.fornecedores f ON f.id = c.fornecedor_id
         LEFT JOIN empresa.filiais fil ON fil.id = c.filial_id
+        LEFT JOIN empresa.departamentos dep ON dep.id = c.departamento_id
         LEFT JOIN empresa.centros_custo cc ON cc.id = c.centro_custo_id
+        LEFT JOIN empresa.unidades_negocio un ON un.id = c.unidade_negocio_id
         LEFT JOIN financeiro.projetos p ON p.id = c.projeto_id
         LEFT JOIN financeiro.categorias_despesa cd ON cd.id = c.categoria_despesa_id`;
       whereDateCol = 'c.data_pedido';
@@ -275,7 +281,9 @@ export async function GET(req: NextRequest) {
         criado_em: unknown
         fornecedor: unknown
         filial: unknown
+        departamento: unknown
         centro_custo: unknown
+        unidade_negocio: unknown
         projeto: unknown
         categoria_despesa: unknown
         linhas: Array<{
@@ -307,7 +315,9 @@ export async function GET(req: NextRequest) {
             criado_em: row.criado_em,
           fornecedor: row.fornecedor,
           filial: row.filial,
+          departamento: row.departamento,
           centro_custo: row.centro_custo,
+          unidade_negocio: row.unidade_negocio,
           projeto: row.projeto,
             categoria_despesa: row.categoria_despesa,
           linhas: []
@@ -578,7 +588,9 @@ export async function POST(req: NextRequest) {
         tenant_id: form.get('tenant_id'),
         fornecedor_id: form.get('fornecedor_id'),
         filial_id: form.get('filial_id'),
+        departamento_id: form.get('departamento_id'),
         centro_custo_id: form.get('centro_custo_id'),
+        unidade_negocio_id: form.get('unidade_negocio_id'),
         projeto_id: form.get('projeto_id'),
         categoria_financeira_id: form.get('categoria_financeira_id'),
         categoria_despesa_id: form.get('categoria_despesa_id'),
@@ -597,17 +609,28 @@ export async function POST(req: NextRequest) {
     }
 
     // Parse header fields
-    const tenant = typeof body.tenant_id === 'number' && !Number.isNaN(body.tenant_id) ? body.tenant_id : 1
+    const parseOptionalId = (value: unknown): number | null => {
+      if (value === null || value === undefined) return null
+      const raw = String(value).trim()
+      if (!raw) return null
+      const n = Number(raw)
+      return Number.isFinite(n) ? n : null
+    }
+
+    const tenantRaw = Number(body.tenant_id)
+    const tenant = Number.isFinite(tenantRaw) && tenantRaw > 0 ? tenantRaw : 1
     const fornecedor_id = Number(body.fornecedor_id)
     if (!fornecedor_id || Number.isNaN(fornecedor_id)) {
       return Response.json({ success: false, message: 'fornecedor_id é obrigatório e deve ser numérico' }, { status: 400 })
     }
 
-    const filial_id = body.filial_id == null ? null : Number(body.filial_id)
-    const centro_custo_id = body.centro_custo_id == null ? null : Number(body.centro_custo_id)
-    const projeto_id = body.projeto_id == null ? null : Number(body.projeto_id)
-    const categoria_financeira_id = body.categoria_financeira_id == null ? null : Number(body.categoria_financeira_id)
-    const categoria_despesa_id = body.categoria_despesa_id == null ? null : Number(body.categoria_despesa_id)
+    const filial_id = parseOptionalId(body.filial_id)
+    const departamento_id = parseOptionalId(body.departamento_id)
+    const centro_custo_id = parseOptionalId(body.centro_custo_id)
+    const unidade_negocio_id = parseOptionalId(body.unidade_negocio_id)
+    const projeto_id = parseOptionalId(body.projeto_id)
+    const categoria_financeira_id = parseOptionalId(body.categoria_financeira_id)
+    const categoria_despesa_id = parseOptionalId(body.categoria_despesa_id)
 
     const numero_oc = (body.numero_oc ?? null) as string | null
     const data_pedido = ((body.data_pedido ?? body.data_emissao) ?? null) as string | null
@@ -618,6 +641,10 @@ export async function POST(req: NextRequest) {
     const status = ((body.status as string) || 'rascunho') as string
     const observacoes = (body.observacoes ?? null) as string | null
     const criado_por = body.criado_por == null ? null : Number(body.criado_por)
+    const data_pedido_final = data_pedido || new Date().toISOString().slice(0, 10)
+    const data_documento_final = data_documento || data_pedido_final
+    const data_lancamento_final = data_lancamento || data_documento_final
+    const data_vencimento_final = data_vencimento || data_pedido_final
 
     const linhas = Array.isArray(body.linhas) ? (body.linhas as Array<Record<string, unknown>>) : []
 
@@ -627,16 +654,29 @@ export async function POST(req: NextRequest) {
       const quantidade = Number(l.quantidade)
       const preco_unitario = Number(l.preco_unitario)
       const unidade_medida = (l.unidade_medida ?? null) as string | null
-      const l_cc_id = l.centro_custo_id == null ? null : Number(l.centro_custo_id)
-      const l_proj_id = l.projeto_id == null ? null : Number(l.projeto_id)
-      const l_cat_id = l.categoria_financeira_id == null ? null : Number(l.categoria_financeira_id)
+      const l_dep_id = parseOptionalId(l.departamento_id)
+      const l_cc_id = parseOptionalId(l.centro_custo_id)
+      const l_un_id = parseOptionalId(l.unidade_negocio_id)
+      const l_proj_id = parseOptionalId(l.projeto_id)
+      const l_cat_id = parseOptionalId(l.categoria_financeira_id)
 
       if (!produto_id || Number.isNaN(produto_id)) throw new Error(`Linha ${idx + 1}: produto_id inválido`)
       if (!quantidade || Number.isNaN(quantidade)) throw new Error(`Linha ${idx + 1}: quantidade inválida`)
       if (Number.isNaN(preco_unitario)) throw new Error(`Linha ${idx + 1}: preco_unitario inválido`)
       const total = !Number.isNaN(Number(l.total)) ? Number(l.total) : Number((quantidade * preco_unitario).toFixed(2))
 
-      return { produto_id, quantidade, unidade_medida, preco_unitario, total, centro_custo_id: l_cc_id, projeto_id: l_proj_id, categoria_financeira_id: l_cat_id }
+      return {
+        produto_id,
+        quantidade,
+        unidade_medida,
+        preco_unitario,
+        total,
+        departamento_id: l_dep_id,
+        centro_custo_id: l_cc_id,
+        unidade_negocio_id: l_un_id,
+        projeto_id: l_proj_id,
+        categoria_financeira_id: l_cat_id,
+      }
     })
 
     const valorTotalInput = Number(body.valor_total)
@@ -645,27 +685,123 @@ export async function POST(req: NextRequest) {
       : (Number.isFinite(valorTotalInput) ? valorTotalInput : 0)
 
     const result = await withTransaction(async (client) => {
+      const colsRes = await client.query(
+        `SELECT column_name
+           FROM information_schema.columns
+          WHERE table_schema = 'compras' AND table_name = 'compras'`
+      )
+      const colsSet = new Set((colsRes.rows as Array<{ column_name: string }>).map((r) => String(r.column_name)))
+      const hasCompraCol = (c: string) => colsSet.has(c)
+
       // Insert header
+      const headerCols = [
+        'tenant_id',
+        'fornecedor_id',
+        'filial_id',
+        'centro_custo_id',
+        'projeto_id',
+        'categoria_financeira_id',
+        'categoria_despesa_id',
+      ]
+      const headerVals: unknown[] = [
+        tenant,
+        fornecedor_id,
+        filial_id,
+        centro_custo_id,
+        projeto_id,
+        categoria_financeira_id,
+        categoria_despesa_id,
+      ]
+      if (hasCompraCol('departamento_id')) {
+        headerCols.push('departamento_id')
+        headerVals.push(departamento_id)
+      }
+      if (hasCompraCol('unidade_negocio_id')) {
+        headerCols.push('unidade_negocio_id')
+        headerVals.push(unidade_negocio_id)
+      }
+      headerCols.push(
+        'numero_oc',
+        'data_pedido',
+        'data_documento',
+        'data_lancamento',
+        'data_vencimento',
+        'data_entrega_prevista',
+        'status',
+        'valor_total',
+        'observacoes',
+        'criado_por'
+      )
+      headerVals.push(
+        numero_oc,
+        data_pedido_final,
+        data_documento_final,
+        data_lancamento_final,
+        data_vencimento_final,
+        data_entrega_prevista,
+        status,
+        valor_total,
+        observacoes,
+        criado_por
+      )
+      const headerPlaceholders = headerCols.map((_, idx) => `$${idx + 1}`)
       const insCab = await client.query(
-        `INSERT INTO compras.compras (
-           tenant_id, fornecedor_id, filial_id, centro_custo_id, projeto_id, categoria_financeira_id, categoria_despesa_id,
-           numero_oc, data_pedido, data_documento, data_lancamento, data_vencimento, data_entrega_prevista, status, valor_total, observacoes, criado_por
-         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,COALESCE($9, CURRENT_DATE),COALESCE($10, COALESCE($9, CURRENT_DATE)),COALESCE($11, COALESCE($10, COALESCE($9, CURRENT_DATE))),COALESCE($12, COALESCE($9, CURRENT_DATE)),$13,$14,$15,$16,$17)
+        `INSERT INTO compras.compras (${headerCols.join(',')})
+         VALUES (${headerPlaceholders.join(',')})
          RETURNING id`,
-        [tenant, fornecedor_id, filial_id, centro_custo_id, projeto_id, categoria_financeira_id, categoria_despesa_id,
-         numero_oc, data_pedido, data_documento, data_lancamento, data_vencimento, data_entrega_prevista, status, valor_total, observacoes, criado_por]
+        headerVals
       )
       const compra_id = Number(insCab.rows[0]?.id)
       if (!compra_id) throw new Error('Falha ao criar compra')
 
       // Insert lines (optional in legacy/header-only mode)
       if (normLinhas.length) {
+        const lineColsRes = await client.query(
+          `SELECT column_name
+             FROM information_schema.columns
+            WHERE table_schema = 'compras' AND table_name = 'compras_linhas'`
+        )
+        const lineColsSet = new Set((lineColsRes.rows as Array<{ column_name: string }>).map((r) => String(r.column_name)))
+        const hasLineCol = (c: string) => lineColsSet.has(c)
+
         for (const l of normLinhas) {
+          const lineCols = [
+            'tenant_id',
+            'compra_id',
+            'produto_id',
+            'quantidade',
+            'unidade_medida',
+            'preco_unitario',
+            'total',
+            'centro_custo_id',
+            'projeto_id',
+            'categoria_financeira_id',
+          ]
+          const lineVals: unknown[] = [
+            tenant,
+            compra_id,
+            l.produto_id,
+            l.quantidade,
+            l.unidade_medida,
+            l.preco_unitario,
+            l.total,
+            l.centro_custo_id,
+            l.projeto_id,
+            l.categoria_financeira_id,
+          ]
+          if (hasLineCol('departamento_id')) {
+            lineCols.push('departamento_id')
+            lineVals.push(l.departamento_id ?? departamento_id ?? null)
+          }
+          if (hasLineCol('unidade_negocio_id')) {
+            lineCols.push('unidade_negocio_id')
+            lineVals.push(l.unidade_negocio_id ?? unidade_negocio_id ?? null)
+          }
+          const linePlaceholders = lineCols.map((_, idx) => `$${idx + 1}`)
           await client.query(
-            `INSERT INTO compras.compras_linhas (
-               tenant_id, compra_id, produto_id, quantidade, unidade_medida, preco_unitario, total, centro_custo_id, projeto_id, categoria_financeira_id
-             ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
-            [tenant, compra_id, l.produto_id, l.quantidade, l.unidade_medida, l.preco_unitario, l.total, l.centro_custo_id, l.projeto_id, l.categoria_financeira_id]
+            `INSERT INTO compras.compras_linhas (${lineCols.join(',')})
+             VALUES (${linePlaceholders.join(',')})`,
+            lineVals
           )
         }
       }

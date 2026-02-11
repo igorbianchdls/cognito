@@ -45,6 +45,22 @@ export async function GET(req: NextRequest) {
                  ORDER BY label ASC
                  LIMIT $${ctx.params.length + 1}::int`.replace(/\s+/g, ' ').trim()
       ctx.params.push(limit)
+    } else if (field === 'departamento_id') {
+      const where = like(`COALESCE(dep.nome,'—')`)
+      ctx.sql = `SELECT dep.id AS value, COALESCE(dep.nome,'—') AS label
+                 FROM empresa.departamentos dep
+                 ${where}
+                 ORDER BY label ASC
+                 LIMIT $${ctx.params.length + 1}::int`.replace(/\s+/g, ' ').trim()
+      ctx.params.push(limit)
+    } else if (field === 'unidade_negocio_id') {
+      const where = like(`COALESCE(un.nome,'—')`)
+      ctx.sql = `SELECT un.id AS value, COALESCE(un.nome,'—') AS label
+                 FROM empresa.unidades_negocio un
+                 ${where}
+                 ORDER BY label ASC
+                 LIMIT $${ctx.params.length + 1}::int`.replace(/\s+/g, ' ').trim()
+      ctx.params.push(limit)
     } else if (field === 'categoria_despesa_id') {
       const where = like(`COALESCE(cd.nome,'—')`)
       ctx.sql = `SELECT cd.id AS value, COALESCE(cd.nome,'—') AS label
@@ -73,4 +89,3 @@ export async function GET(req: NextRequest) {
     return Response.json({ success: false, message: 'Erro interno', error: error instanceof Error ? error.message : 'Erro desconhecido' }, { status: 500 })
   }
 }
-

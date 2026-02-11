@@ -6,7 +6,9 @@ type CompraHeader = {
   tenant_id: number | null
   fornecedor_id: number | null
   filial_id: number | null
+  departamento_id: number | null
   centro_custo_id: number | null
+  unidade_negocio_id: number | null
   projeto_id: number | null
   categoria_despesa_id: number | null
   numero_oc: string | null
@@ -35,9 +37,18 @@ function toISODate(value: unknown, fallback?: Date): string {
 }
 
 export async function createApFromCompra(compraId: number): Promise<{ apId: number }> {
+  const compraCols = await runQuery<{ column_name: string }>(
+    `SELECT column_name
+       FROM information_schema.columns
+      WHERE table_schema = 'compras' AND table_name = 'compras'`
+  )
+  const hasCompraCol = (c: string) => compraCols.some((r) => r.column_name === c)
+  const departamentoExpr = hasCompraCol('departamento_id') ? 'c.departamento_id' : 'NULL::int AS departamento_id'
+  const unidadeNegocioExpr = hasCompraCol('unidade_negocio_id') ? 'c.unidade_negocio_id' : 'NULL::int AS unidade_negocio_id'
+
   // Carrega a compra
   const compraRows = await runQuery<CompraHeader>(
-    `SELECT c.id, c.tenant_id, c.fornecedor_id, c.filial_id, c.centro_custo_id, c.projeto_id, c.categoria_despesa_id,
+    `SELECT c.id, c.tenant_id, c.fornecedor_id, c.filial_id, ${departamentoExpr}, c.centro_custo_id, ${unidadeNegocioExpr}, c.projeto_id, c.categoria_despesa_id,
             c.numero_oc, c.data_pedido, c.data_documento, c.data_lancamento, c.data_vencimento, c.data_entrega_prevista, c.valor_total, c.observacoes
        FROM compras.compras c
       WHERE c.id = $1
@@ -49,8 +60,10 @@ export async function createApFromCompra(compraId: number): Promise<{ apId: numb
 
   const tenantId = Number(compra.tenant_id ?? 1)
   const fornecedorId = compra.fornecedor_id !== null && compra.fornecedor_id !== undefined ? Number(compra.fornecedor_id) : null
+  const departamentoId = compra.departamento_id !== null && compra.departamento_id !== undefined ? Number(compra.departamento_id) : null
   const ccId = compra.centro_custo_id !== null && compra.centro_custo_id !== undefined ? Number(compra.centro_custo_id) : null
   const filialId = compra.filial_id !== null && compra.filial_id !== undefined ? Number(compra.filial_id) : null
+  const unidadeNegocioId = compra.unidade_negocio_id !== null && compra.unidade_negocio_id !== undefined ? Number(compra.unidade_negocio_id) : null
   const categoriaId = compra.categoria_despesa_id !== null && compra.categoria_despesa_id !== undefined ? Number(compra.categoria_despesa_id) : null
   const numeroDoc = (compra.numero_oc && compra.numero_oc.trim()) ? compra.numero_oc.trim() : `OC-${compra.id}`
   const dataPedido = toISODate(compra.data_pedido)
@@ -100,9 +113,9 @@ export async function createApFromCompra(compraId: number): Promise<{ apId: numb
         fornecedorId,
         categoriaId,
         ccId,
-        null,
+        departamentoId,
         filialId,
-        null,
+        unidadeNegocioId,
         numeroDoc,
         'fatura',
         'pendente',
@@ -133,7 +146,21 @@ export async function createApFromCompra(compraId: number): Promise<{ apId: numb
       const descr = it.produto ? String(it.produto) : `Item de compra ${it.id || ''}`.trim()
       const linhaCcId = it.centro_custo_id !== null && it.centro_custo_id !== undefined ? Number(it.centro_custo_id) : ccId
       valuesSql.push(`($${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++},$${i++})`)
-      params.push(apId,'servico',descr,q,vu,bruto,0,0,liquido,categoriaId || null,null,linhaCcId || null,null)
+      params.push(
+        apId,
+        'servico',
+        descr,
+        q,
+        vu,
+        bruto,
+        0,
+        0,
+        liquido,
+        categoriaId ?? null,
+        departamentoId ?? null,
+        linhaCcId ?? null,
+        unidadeNegocioId ?? null
+      )
     }
     if (valuesSql.length) {
       await client.query(
