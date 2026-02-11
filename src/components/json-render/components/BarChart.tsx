@@ -147,7 +147,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   const padding = typeof nivo?.padding === 'number' ? nivo.padding : 0.3;
   const groupMode = (nivo?.groupMode === 'stacked' ? 'stacked' : 'grouped') as 'grouped'|'stacked';
   const gridX = Boolean(nivo?.gridX ?? false);
-  const gridY = Boolean(nivo?.gridY ?? true);
+  const gridY = Boolean(nivo?.gridY ?? false);
   const enableLabel = Boolean(nivo?.enableLabel ?? false);
   const labelSkipWidth = typeof nivo?.labelSkipWidth === 'number' ? nivo.labelSkipWidth : 12;
   const labelSkipHeight = typeof nivo?.labelSkipHeight === 'number' ? nivo.labelSkipHeight : 12;

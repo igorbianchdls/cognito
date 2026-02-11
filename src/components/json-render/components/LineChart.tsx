@@ -130,7 +130,7 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
   } as const;
 
   const gridX = Boolean(nivo?.gridX ?? false);
-  const gridY = Boolean(nivo?.gridY ?? true);
+  const gridY = Boolean(nivo?.gridY ?? false);
   const curve = (typeof nivo?.curve === 'string' ? nivo.curve : 'linear') as any;
   const enableArea = Boolean(nivo?.area ?? false);
   const pointSize = typeof nivo?.pointSize === 'number' ? nivo.pointSize : 6;

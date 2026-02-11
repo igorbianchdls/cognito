@@ -47,7 +47,7 @@ export const $lineChartDefaults = atom<LineChartDefaults>({
   },
   colorScheme: ['#3b82f6'],
   nivo: {
-    gridY: true,
+    gridY: false,
     curve: 'linear',
     pointSize: 6,
     margin: { top: 10, right: 10, bottom: 40, left: 48 },

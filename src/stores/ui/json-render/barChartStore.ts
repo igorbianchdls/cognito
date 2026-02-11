@@ -54,7 +54,7 @@ export const $barChartDefaults = atom<BarChartDefaults>({
     layout: 'vertical',
     padding: 0.3,
     groupMode: 'grouped',
-    gridY: true,
+    gridY: false,
     axisBottom: { tickRotation: 0, legendOffset: 32 },
     axisLeft: { legendOffset: 40 },
     margin: { top: 10, right: 10, bottom: 40, left: 48 },

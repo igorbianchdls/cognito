@@ -67,7 +67,7 @@ const defaultBarChart = {
   format: 'number' as 'currency'|'percent'|'number',
   titleStyle: { padding: 8, textAlign: 'left' },
   colorScheme: ['#3b82f6'],
-  nivo: { layout: 'vertical', padding: 0.3, groupMode: 'grouped', gridY: true, axisBottom: { tickRotation: 0, legendOffset: 32 }, axisLeft: { legendOffset: 40 }, margin: { top: 10, right: 10, bottom: 40, left: 48 }, animate: true, motionConfig: 'gentle' },
+  nivo: { layout: 'vertical', padding: 0.3, groupMode: 'grouped', gridX: false, gridY: false, axisBottom: { tickRotation: 0, legendOffset: 32 }, axisLeft: { legendOffset: 40 }, margin: { top: 10, right: 10, bottom: 40, left: 48 }, animate: true, motionConfig: 'gentle' },
 } as const;
 
 const defaultLineChart = {
@@ -75,7 +75,7 @@ const defaultLineChart = {
   format: 'number' as 'currency'|'percent'|'number',
   titleStyle: { padding: 6, textAlign: 'left' },
   colorScheme: ['#3b82f6'],
-  nivo: { gridY: true, curve: 'linear', pointSize: 6, margin: { top: 10, right: 10, bottom: 40, left: 48 }, animate: true, motionConfig: 'gentle' },
+  nivo: { gridX: false, gridY: false, curve: 'linear', pointSize: 6, margin: { top: 10, right: 10, bottom: 40, left: 48 }, animate: true, motionConfig: 'gentle' },
 } as const;
 
 const defaultPieChart = {
@@ -551,7 +551,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     }, [picker, JSON.stringify(slicers), JSON.stringify(optionsMap), data]);
 
     return (
-      <FrameSurface className="rounded-md" style={wrappedStyle} frame={p.frame as AnyRecord} cssVars={theme.cssVars}>
+      <div className="rounded-md" style={wrappedStyle}>
         {controlsPosition === 'below' ? (
           <>
             <div className="flex items-center justify-between">
@@ -575,7 +575,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
           </div>
         )}
         {children && <div className="mt-2">{children}</div>}
-      </FrameSurface>
+      </div>
     );
   },
 
