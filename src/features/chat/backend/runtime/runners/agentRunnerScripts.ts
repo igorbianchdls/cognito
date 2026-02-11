@@ -373,8 +373,14 @@ for await (const msg of q) {
               const out = (data && (data.result !== undefined ? data.result : data)) || {};
               console.log(JSON.stringify({ type: 'tool_done', tool_name: 'criar_conta_financeira', output: out }));
             } else if (toolName === 'criarVenda' || toolName === 'criar_venda') {
-              const url = (base || '') + '/api/agent-tools/vendas/pedidos/criar';
-              const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + token, 'x-chat-id': chatId }, body: JSON.stringify(args || {}) });
+              const url = (base || '') + '/api/modulos/vendas/pedidos';
+              const params = new URLSearchParams();
+              const payload = (args && typeof args === 'object') ? args : {};
+              for (const [k, v] of Object.entries(payload || {})) {
+                if (v === undefined || v === null) continue;
+                params.set(k, typeof v === 'string' ? v : String(v));
+              }
+              const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: params.toString() });
               const data = await res.json().catch(() => ({}));
               const out = (data && (data.result !== undefined ? data.result : data)) || {};
               console.log(JSON.stringify({ type: 'tool_done', tool_name: 'criar_venda', output: out }));
