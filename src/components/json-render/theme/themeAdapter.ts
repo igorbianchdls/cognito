@@ -6,6 +6,7 @@ import type { Managers } from "@/components/json-render/theme/thememanagers";
 import { mapManagersToCssVars } from "@/components/json-render/theme/thememanagers";
 
 type AnyRecord = Record<string, any>;
+type Rgb = { r: number; g: number; b: number };
 
 // Map JSON Render theme names/aliases to DesignTokens theme keys
 const THEME_ALIASES: Record<string, ThemeName> = {
@@ -57,6 +58,75 @@ function buildChartScheme(tokens: DesignTokens): string[] {
   // Fallback palette if still short
   if (out.length < 5) out.push("#22d3ee", "#a78bfa", "#34d399", "#f59e0b", "#ef4444");
   return out;
+}
+
+function clamp(n: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, n));
+}
+
+function parseColor(input: string | undefined): Rgb | null {
+  if (!input) return null;
+  const s = String(input).trim().toLowerCase();
+  const hex = s.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  if (hex) {
+    const raw = hex[1];
+    if (raw.length === 3) {
+      return {
+        r: parseInt(raw[0] + raw[0], 16),
+        g: parseInt(raw[1] + raw[1], 16),
+        b: parseInt(raw[2] + raw[2], 16),
+      };
+    }
+    return {
+      r: parseInt(raw.slice(0, 2), 16),
+      g: parseInt(raw.slice(2, 4), 16),
+      b: parseInt(raw.slice(4, 6), 16),
+    };
+  }
+  const rgb = s.match(
+    /^rgba?\(\s*([+-]?\d+(?:\.\d+)?)\s*,\s*([+-]?\d+(?:\.\d+)?)\s*,\s*([+-]?\d+(?:\.\d+)?)(?:\s*,\s*([+-]?\d+(?:\.\d+)?))?\s*\)$/i
+  );
+  if (!rgb) return null;
+  return {
+    r: clamp(Math.round(Number(rgb[1])), 0, 255),
+    g: clamp(Math.round(Number(rgb[2])), 0, 255),
+    b: clamp(Math.round(Number(rgb[3])), 0, 255),
+  };
+}
+
+function toLinear(c: number): number {
+  const v = c / 255;
+  return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+}
+
+function luminance(c: Rgb): number {
+  return 0.2126 * toLinear(c.r) + 0.7152 * toLinear(c.g) + 0.0722 * toLinear(c.b);
+}
+
+function mixRgb(a: Rgb, b: Rgb, amount: number): Rgb {
+  return {
+    r: Math.round(a.r + (b.r - a.r) * amount),
+    g: Math.round(a.g + (b.g - a.g) * amount),
+    b: Math.round(a.b + (b.b - a.b) * amount),
+  };
+}
+
+function rgbToCss(c: Rgb): string {
+  return `rgb(${c.r} ${c.g} ${c.b})`;
+}
+
+function deriveHeaderBg(bgColor: string | undefined, fgColor: string | undefined): string | undefined {
+  if (!bgColor) return undefined;
+  const bg = parseColor(bgColor);
+  const fg = parseColor(fgColor);
+  if (bg) {
+    const isDark = luminance(bg) < 0.45;
+    const target: Rgb = fg || (isDark ? { r: 255, g: 255, b: 255 } : { r: 0, g: 0, b: 0 });
+    // Subtle shift from dashboard bg; darker in light themes, lighter in dark themes.
+    return rgbToCss(mixRgb(bg, target, isDark ? 0.12 : 0.09));
+  }
+  const fgExpr = fgColor || "#111827";
+  return `color-mix(in srgb, ${bgColor} 90%, ${fgExpr} 10%)`;
 }
 
 function buildManagersFromTokens(tokens: DesignTokens, name: ThemeName): Managers {
@@ -263,6 +333,13 @@ export function buildThemeVars(name?: string, managersOverride?: Managers) {
   // Override fg/surfaceBorder if managers defined custom ones via overrides above
   if (managers?.kpi?.value?.color) extraCss.fg = String(managers.kpi.value.color);
   if ((managers as AnyRecord)?.border?.color) extraCss.surfaceBorder = String((managers as AnyRecord).border.color);
+  // Header background should be theme-aware and distinct from dashboard background.
+  const bgSeed = typeof (managers as AnyRecord)?.background === 'string'
+    ? String((managers as AnyRecord).background)
+    : (colors?.background ? String(colors.background) : undefined);
+  const fgSeed = (extraCss.fg || (colors?.text?.primary ? String(colors.text.primary) : undefined));
+  const headerBg = deriveHeaderBg(bgSeed, fgSeed);
+  if (headerBg) extraCss.headerBg = headerBg;
 
   // If theme is "blue", push a stronger blue palette unless overridden
   if (['blue','navy','midnight','aero'].includes(n) && !cssVars.chartColorScheme) {

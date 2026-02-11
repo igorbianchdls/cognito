@@ -210,21 +210,19 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const theme = useThemeOverrides();
     const p = deepMerge(deepMerge(defaultHeader as any, (theme.components?.Header || {}) as any), (element?.props || {}) as any) as AnyRecord;
     const align = (p.align ?? 'left') as 'left'|'center'|'right';
-    const hasBorder = [p.borderWidth, p.borderTopWidth, p.borderRightWidth, p.borderBottomWidth, p.borderLeftWidth]
-      .some((w: any) => typeof w === 'number' && w > 0);
     const containerStyle: React.CSSProperties = {
       backgroundColor: p.backgroundColor,
       color: p.textColor,
       padding: styleVal(p.padding),
       margin: styleVal(p.margin),
       borderColor: p.borderColor,
-      borderWidth: p.borderWidth,
-      borderTopWidth: p.borderTopWidth,
-      borderRightWidth: p.borderRightWidth,
-      borderBottomWidth: p.borderBottomWidth,
-      borderLeftWidth: p.borderLeftWidth,
-      borderStyle: hasBorder ? 'solid' : undefined,
-      borderRadius: p.borderRadius,
+      borderStyle: 'solid',
+      borderWidth: 0,
+      borderTopWidth: 0,
+      borderRightWidth: 0,
+      borderBottomWidth: p.borderBottomWidth ?? p.borderWidth ?? 1,
+      borderLeftWidth: 0,
+      borderRadius: 0,
       width: styleVal(p.width),
       height: styleVal(p.height),
       textAlign: align,
@@ -233,6 +231,19 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       applyBorderFromCssVars(containerStyle as any, theme.cssVars),
       theme.cssVars
     ) as React.CSSProperties;
+    const requestedBottom = Number(p.borderBottomWidth ?? p.borderWidth ?? wrappedStyle.borderBottomWidth ?? wrappedStyle.borderWidth ?? 1);
+    const bottomWidth = Number.isFinite(requestedBottom) && requestedBottom > 0 ? requestedBottom : 0;
+    wrappedStyle.borderStyle = bottomWidth > 0 ? 'solid' : 'none';
+    wrappedStyle.borderWidth = 0;
+    wrappedStyle.borderTopWidth = 0;
+    wrappedStyle.borderRightWidth = 0;
+    wrappedStyle.borderBottomWidth = bottomWidth;
+    wrappedStyle.borderLeftWidth = 0;
+    wrappedStyle.borderRadius = 0;
+    wrappedStyle.borderTopLeftRadius = 0;
+    wrappedStyle.borderTopRightRadius = 0;
+    wrappedStyle.borderBottomRightRadius = 0;
+    wrappedStyle.borderBottomLeftRadius = 0;
     wrappedStyle.boxShadow = undefined;
     const dp = p.datePicker || {};
     const showPicker = Boolean(dp.visible);
