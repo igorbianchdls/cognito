@@ -15,6 +15,7 @@ export default function JsonRenderPreview({ chatId }: Props) {
   const [error, setError] = React.useState<string | null>(null);
   const [tree, setTree] = React.useState<any | any[] | null>(null);
   const [loading, setLoading] = React.useState<boolean>(false);
+  const [refreshTick, setRefreshTick] = React.useState(0);
   const [paths, setPaths] = React.useState<string[]>([]);
   const [loadingPaths, setLoadingPaths] = React.useState<boolean>(false);
   const [pathsError, setPathsError] = React.useState<string | null>(null);
@@ -72,7 +73,7 @@ export default function JsonRenderPreview({ chatId }: Props) {
         setLoading(false);
       }
     })();
-  }, [chatId, jsonrPath]);
+  }, [chatId, jsonrPath, refreshTick]);
 
   // Discover .jsonr files under /vercel/sandbox
   const refreshPaths = React.useCallback(async (): Promise<string[]> => {
@@ -130,6 +131,12 @@ export default function JsonRenderPreview({ chatId }: Props) {
   }, [chatId]);
 
   React.useEffect(() => { refreshPaths(); }, [refreshPaths]);
+
+  React.useEffect(() => {
+    const onRefresh = () => setRefreshTick((v) => v + 1);
+    window.addEventListener('sandbox-preview-refresh', onRefresh);
+    return () => window.removeEventListener('sandbox-preview-refresh', onRefresh);
+  }, []);
 
   return (
     <div className="h-full w-full min-h-0 overflow-auto p-2 bg-gray-50">

@@ -20,7 +20,7 @@ export default function SandboxPanel({ className, style, onClose, onExpand, expa
       }`}
       style={style}
     >
-      <SandboxHeader onClose={onClose} onExpand={onExpand} expanded={expanded} />
+      <SandboxHeader onClose={onClose} onExpand={onExpand} expanded={expanded} chatId={chatId} />
       <SandboxBody chatId={chatId} />
     </div>
   );

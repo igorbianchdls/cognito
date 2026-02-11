@@ -11,9 +11,10 @@ type Props = {
   onClose?: () => void;
   onExpand?: () => void; // toggles expand/collapse
   expanded?: boolean;
+  chatId?: string;
 };
 
-export default function SandboxHeader({ onClose, onExpand, expanded }: Props) {
+export default function SandboxHeader({ onClose, onExpand, expanded, chatId }: Props) {
   return (
     <div className="flex items-center justify-between border-b px-3 py-1 bg-white">
       {/* Left group: chevrons + tabs */}
@@ -40,7 +41,7 @@ export default function SandboxHeader({ onClose, onExpand, expanded }: Props) {
       </div>
       {/* Right: actions + deploy + close */}
       <div className="flex items-center gap-1">
-        <HeaderActions />
+        <HeaderActions chatId={chatId} />
         {onClose && (
           <button
             type="button"
