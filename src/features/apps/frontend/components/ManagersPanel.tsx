@@ -24,6 +24,12 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
     { value: 'gray', label: 'Cinza Claro' },
     { value: 'purple', label: 'Roxo' },
     { value: 'dark', label: 'Dark' },
+    { value: 'blue', label: 'Azul' },
+    { value: 'teal', label: 'Teal' },
+    { value: 'emerald', label: 'Esmeralda' },
+    { value: 'amber', label: 'Âmbar' },
+    { value: 'rose', label: 'Rosa' },
+    { value: 'slate', label: 'Slate' },
   ];
   const fontOptions = [
     'Inter, ui-sans-serif, system-ui',

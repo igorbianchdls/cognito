@@ -39,13 +39,19 @@ import { $headerUi, headerUiActions } from '@/stores/ui/headerUiStore';
 import type { HeaderStyle } from '@/stores/ui/headerUiStore';
 import { dashboardsApi, type Dashboard } from '@/stores/dashboardsStore';
 
-type HeaderThemeOption = 'auto' | 'white' | 'gray' | 'purple' | 'dark';
+type HeaderThemeOption = 'auto' | 'white' | 'gray' | 'purple' | 'dark' | 'blue' | 'teal' | 'emerald' | 'amber' | 'rose' | 'slate';
 const HEADER_THEME_OPTIONS: Array<{ key: HeaderThemeOption; label: string }> = [
   { key: 'auto', label: 'Auto' },
   { key: 'white', label: 'Branco' },
   { key: 'gray', label: 'Cinza Claro' },
   { key: 'purple', label: 'Roxo' },
   { key: 'dark', label: 'Dark' },
+  { key: 'blue', label: 'Azul' },
+  { key: 'teal', label: 'Teal' },
+  { key: 'emerald', label: 'Esmeralda' },
+  { key: 'amber', label: 'Âmbar' },
+  { key: 'rose', label: 'Rosa' },
+  { key: 'slate', label: 'Slate' },
 ];
 const HEADER_THEME_STYLES: Record<Exclude<HeaderThemeOption, 'auto'>, Partial<HeaderStyle>> = {
   white: {
@@ -76,6 +82,48 @@ const HEADER_THEME_STYLES: Record<Exclude<HeaderThemeOption, 'auto'>, Partial<He
     borderBottomColor: '#374151',
     datePickerBorderColor: '#4b5563',
   },
+  blue: {
+    background: '#1d4ed8',
+    textPrimary: '#eff6ff',
+    textSecondary: '#bfdbfe',
+    borderBottomColor: '#3b82f6',
+    datePickerBorderColor: '#60a5fa',
+  },
+  teal: {
+    background: '#0f766e',
+    textPrimary: '#f0fdfa',
+    textSecondary: '#99f6e4',
+    borderBottomColor: '#14b8a6',
+    datePickerBorderColor: '#2dd4bf',
+  },
+  emerald: {
+    background: '#065f46',
+    textPrimary: '#ecfdf5',
+    textSecondary: '#a7f3d0',
+    borderBottomColor: '#10b981',
+    datePickerBorderColor: '#34d399',
+  },
+  amber: {
+    background: '#b45309',
+    textPrimary: '#fffbeb',
+    textSecondary: '#fde68a',
+    borderBottomColor: '#d97706',
+    datePickerBorderColor: '#f59e0b',
+  },
+  rose: {
+    background: '#9f1239',
+    textPrimary: '#fff1f2',
+    textSecondary: '#fecdd3',
+    borderBottomColor: '#e11d48',
+    datePickerBorderColor: '#fb7185',
+  },
+  slate: {
+    background: '#334155',
+    textPrimary: '#f8fafc',
+    textSecondary: '#cbd5e1',
+    borderBottomColor: '#475569',
+    datePickerBorderColor: '#64748b',
+  },
 };
 
 function normalizeHeaderThemeOption(value: unknown): HeaderThemeOption {
@@ -85,6 +133,12 @@ function normalizeHeaderThemeOption(value: unknown): HeaderThemeOption {
   if (['gray', 'grey', 'cinza', 'light-gray', 'light-grey'].includes(key)) return 'gray';
   if (['purple', 'roxo', 'violet', 'indigo'].includes(key)) return 'purple';
   if (['dark', 'preto', 'black', 'grafite', 'charcoal'].includes(key)) return 'dark';
+  if (['blue', 'azul', 'royal'].includes(key)) return 'blue';
+  if (['teal', 'turquesa', 'ciano'].includes(key)) return 'teal';
+  if (['emerald', 'esmeralda', 'green', 'verde'].includes(key)) return 'emerald';
+  if (['amber', 'amarelo', 'gold', 'laranja'].includes(key)) return 'amber';
+  if (['rose', 'pink', 'rosa', 'magenta'].includes(key)) return 'rose';
+  if (['slate', 'chumbo', 'ardosia', 'steel'].includes(key)) return 'slate';
   // compat with old options
   if (['subtle', 'soft', 'muted', 'minimal', 'surface', 'card', 'solid'].includes(key)) return 'gray';
   if (['contrast', 'strong', 'high-contrast'].includes(key)) return 'dark';

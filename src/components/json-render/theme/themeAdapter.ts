@@ -7,7 +7,18 @@ import { mapManagersToCssVars } from "@/components/json-render/theme/thememanage
 
 type AnyRecord = Record<string, any>;
 type Rgb = { r: number; g: number; b: number };
-export type HeaderThemePreset = "auto" | "white" | "gray" | "purple" | "dark";
+export type HeaderThemePreset =
+  | "auto"
+  | "white"
+  | "gray"
+  | "purple"
+  | "dark"
+  | "blue"
+  | "teal"
+  | "emerald"
+  | "amber"
+  | "rose"
+  | "slate";
 
 // Map JSON Render theme names/aliases to DesignTokens theme keys
 const THEME_ALIASES: Record<string, ThemeName> = {
@@ -123,6 +134,12 @@ function normalizeHeaderTheme(input?: string): HeaderThemePreset {
   if (["gray", "grey", "cinza", "light-gray", "light-grey"].includes(key)) return "gray";
   if (["purple", "roxo", "violet", "indigo"].includes(key)) return "purple";
   if (["dark", "preto", "black", "grafite", "charcoal"].includes(key)) return "dark";
+  if (["blue", "azul", "royal"].includes(key)) return "blue";
+  if (["teal", "turquesa", "ciano"].includes(key)) return "teal";
+  if (["emerald", "esmeralda", "green", "verde"].includes(key)) return "emerald";
+  if (["amber", "amarelo", "gold", "laranja"].includes(key)) return "amber";
+  if (["rose", "pink", "rosa", "magenta"].includes(key)) return "rose";
+  if (["slate", "chumbo", "ardosia", "steel"].includes(key)) return "slate";
   // Legacy aliases
   if (["subtle", "soft", "muted", "minimal", "surface", "card", "solid"].includes(key)) return "gray";
   if (["contrast", "strong", "high-contrast"].includes(key)) return "dark";
@@ -183,6 +200,72 @@ const FIXED_HEADER_THEMES: Record<Exclude<HeaderThemePreset, "auto">, {
     dpBorder: "#4b5563",
     dpIcon: "#cbd5e1",
     dpLabel: "#9ca3af",
+  },
+  blue: {
+    bg: "#1d4ed8",
+    text: "#eff6ff",
+    subtitle: "#bfdbfe",
+    border: "#3b82f6",
+    dpBg: "#1e40af",
+    dpColor: "#eff6ff",
+    dpBorder: "#60a5fa",
+    dpIcon: "#bfdbfe",
+    dpLabel: "#bfdbfe",
+  },
+  teal: {
+    bg: "#0f766e",
+    text: "#f0fdfa",
+    subtitle: "#99f6e4",
+    border: "#14b8a6",
+    dpBg: "#115e59",
+    dpColor: "#f0fdfa",
+    dpBorder: "#2dd4bf",
+    dpIcon: "#99f6e4",
+    dpLabel: "#99f6e4",
+  },
+  emerald: {
+    bg: "#065f46",
+    text: "#ecfdf5",
+    subtitle: "#a7f3d0",
+    border: "#10b981",
+    dpBg: "#047857",
+    dpColor: "#ecfdf5",
+    dpBorder: "#34d399",
+    dpIcon: "#a7f3d0",
+    dpLabel: "#a7f3d0",
+  },
+  amber: {
+    bg: "#b45309",
+    text: "#fffbeb",
+    subtitle: "#fde68a",
+    border: "#d97706",
+    dpBg: "#92400e",
+    dpColor: "#fffbeb",
+    dpBorder: "#f59e0b",
+    dpIcon: "#fde68a",
+    dpLabel: "#fde68a",
+  },
+  rose: {
+    bg: "#9f1239",
+    text: "#fff1f2",
+    subtitle: "#fecdd3",
+    border: "#e11d48",
+    dpBg: "#881337",
+    dpColor: "#fff1f2",
+    dpBorder: "#fb7185",
+    dpIcon: "#fecdd3",
+    dpLabel: "#fecdd3",
+  },
+  slate: {
+    bg: "#334155",
+    text: "#f8fafc",
+    subtitle: "#cbd5e1",
+    border: "#475569",
+    dpBg: "#1e293b",
+    dpColor: "#f8fafc",
+    dpBorder: "#64748b",
+    dpIcon: "#cbd5e1",
+    dpLabel: "#cbd5e1",
   },
 };
 
