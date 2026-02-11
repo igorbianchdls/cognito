@@ -186,14 +186,6 @@ function resolveBorderWidths(style: React.CSSProperties | undefined, fallback: n
   };
 }
 
-function lineStyle(color: string, width: number): React.CSSProperties {
-  return {
-    position: "absolute",
-    backgroundColor: color,
-    borderRadius: width,
-  };
-}
-
 export default function FrameSurface({ style, frame, cssVars, className, children }: Props) {
   const resolved = resolveFrame(frame, cssVars, style);
   if (!resolved) {
@@ -220,32 +212,61 @@ export default function FrameSurface({ style, frame, cssVars, className, childre
   const corner = s.cornerSize;
   const stroke = s.cornerWidth;
   const bw = resolveBorderWidths(merged, stroke);
-  const topEdge = -bw.top;
-  const rightEdge = -bw.right;
-  const bottomEdge = -bw.bottom;
-  const leftEdge = -bw.left;
+  const rootRef = React.useRef<HTMLDivElement | null>(null);
+  const [size, setSize] = React.useState({ width: 0, height: 0 });
+
+  React.useLayoutEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    const update = () => {
+      const rect = el.getBoundingClientRect();
+      setSize({ width: rect.width, height: rect.height });
+    };
+    update();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => update());
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const snapHalfPx = (n: number) => Math.round(n * 2) / 2;
+  const safeCorner = Math.max(0, Math.min(corner, Math.floor(size.width / 2), Math.floor(size.height / 2)));
+  const xLeft = snapHalfPx(bw.left / 2);
+  const yTop = snapHalfPx(bw.top / 2);
+  const xRight = snapHalfPx(Math.max(xLeft, size.width - bw.right / 2));
+  const yBottom = snapHalfPx(Math.max(yTop, size.height - bw.bottom / 2));
 
   return (
-    <div className={className} style={merged}>
+    <div ref={rootRef} className={className} style={merged}>
       {children}
-      <div
-        aria-hidden
-        style={{
-          position: "absolute",
-          inset: 0,
-          pointerEvents: "none",
-          borderRadius: 0,
-        }}
-      >
-        <div style={{ ...lineStyle(s.cornerColor, stroke), left: leftEdge, top: topEdge, width: corner, height: stroke }} />
-        <div style={{ ...lineStyle(s.cornerColor, stroke), left: leftEdge, top: topEdge, width: stroke, height: corner }} />
-        <div style={{ ...lineStyle(s.cornerColor, stroke), right: rightEdge, top: topEdge, width: corner, height: stroke }} />
-        <div style={{ ...lineStyle(s.cornerColor, stroke), right: rightEdge, top: topEdge, width: stroke, height: corner }} />
-        <div style={{ ...lineStyle(s.cornerColor, stroke), left: leftEdge, bottom: bottomEdge, width: corner, height: stroke }} />
-        <div style={{ ...lineStyle(s.cornerColor, stroke), left: leftEdge, bottom: bottomEdge, width: stroke, height: corner }} />
-        <div style={{ ...lineStyle(s.cornerColor, stroke), right: rightEdge, bottom: bottomEdge, width: corner, height: stroke }} />
-        <div style={{ ...lineStyle(s.cornerColor, stroke), right: rightEdge, bottom: bottomEdge, width: stroke, height: corner }} />
-      </div>
+      {size.width > 0 && size.height > 0 && (
+        <svg
+          aria-hidden
+          viewBox={`0 0 ${size.width} ${size.height}`}
+          preserveAspectRatio="none"
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            pointerEvents: "none",
+            overflow: "visible",
+            shapeRendering: "geometricPrecision",
+          }}
+        >
+          <line x1={xLeft} y1={yTop} x2={xLeft + safeCorner} y2={yTop} stroke={s.cornerColor} strokeWidth={stroke} strokeLinecap="butt" vectorEffect="non-scaling-stroke" />
+          <line x1={xLeft} y1={yTop} x2={xLeft} y2={yTop + safeCorner} stroke={s.cornerColor} strokeWidth={stroke} strokeLinecap="butt" vectorEffect="non-scaling-stroke" />
+
+          <line x1={xRight} y1={yTop} x2={xRight - safeCorner} y2={yTop} stroke={s.cornerColor} strokeWidth={stroke} strokeLinecap="butt" vectorEffect="non-scaling-stroke" />
+          <line x1={xRight} y1={yTop} x2={xRight} y2={yTop + safeCorner} stroke={s.cornerColor} strokeWidth={stroke} strokeLinecap="butt" vectorEffect="non-scaling-stroke" />
+
+          <line x1={xLeft} y1={yBottom} x2={xLeft + safeCorner} y2={yBottom} stroke={s.cornerColor} strokeWidth={stroke} strokeLinecap="butt" vectorEffect="non-scaling-stroke" />
+          <line x1={xLeft} y1={yBottom} x2={xLeft} y2={yBottom - safeCorner} stroke={s.cornerColor} strokeWidth={stroke} strokeLinecap="butt" vectorEffect="non-scaling-stroke" />
+
+          <line x1={xRight} y1={yBottom} x2={xRight - safeCorner} y2={yBottom} stroke={s.cornerColor} strokeWidth={stroke} strokeLinecap="butt" vectorEffect="non-scaling-stroke" />
+          <line x1={xRight} y1={yBottom} x2={xRight} y2={yBottom - safeCorner} stroke={s.cornerColor} strokeWidth={stroke} strokeLinecap="butt" vectorEffect="non-scaling-stroke" />
+        </svg>
+      )}
     </div>
   );
 }
