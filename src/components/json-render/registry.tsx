@@ -22,7 +22,7 @@ const defaultHeader = {
   backgroundColor: 'transparent',
   textColor: '#111827',
   subtitleColor: '#6b7280',
-  padding: 12,
+  padding: '4px 12px',
   borderColor: '#e5e7eb',
   borderWidth: 0,
   borderBottomWidth: 1,
@@ -201,10 +201,10 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       theme.cssVars
     ) as React.CSSProperties;
     return (
-      <FrameSurface style={style} frame={p.frame as AnyRecord} cssVars={theme.cssVars}>
+      <div style={style}>
         {title && <h3 className="text-base font-semibold text-gray-900 mb-0" style={titleStyle}>{title}</h3>}
         <div className="space-y-2">{children}</div>
-      </FrameSurface>
+      </div>
     );
   },
 
@@ -557,7 +557,6 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
             <div className="flex items-center justify-between">
               <div style={{ padding: '3px 6px' }}>
                 <div className="text-lg font-semibold" style={{ ...(applyH1FromCssVars({ color: p.textColor }, theme.cssVars) || {}), fontSize: '20px' }}>{p.title}</div>
-                {p.subtitle && <div className="text-sm" style={{ color: p.subtitleColor }}>{p.subtitle}</div>}
               </div>
             </div>
             {controls && <div className="mt-2">{controls}</div>}
@@ -568,7 +567,6 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
               {controlsPosition === 'left' && controls}
               <div style={{ padding: '3px 6px' }}>
                 <div className="text-lg font-semibold" style={{ ...(applyH1FromCssVars({ color: p.textColor }, theme.cssVars) || {}), fontSize: '20px' }}>{p.title}</div>
-                {p.subtitle && <div className="text-sm" style={{ color: p.subtitleColor }}>{p.subtitle}</div>}
               </div>
             </div>
             {controlsPosition === 'right' && controls}
@@ -611,9 +609,9 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const hasWeights = frArr.some((w) => w > 0);
     if (!hasWeights) {
       return (
-        <FrameSurface style={style} frame={p.frame as AnyRecord} cssVars={theme.cssVars}>
+        <div style={style}>
           {children}
-        </FrameSurface>
+        </div>
       );
     }
 
@@ -627,9 +625,9 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       );
     });
     return (
-      <FrameSurface style={style} frame={p.frame as AnyRecord} cssVars={theme.cssVars}>
+      <div style={style}>
         {wrapped}
-      </FrameSurface>
+      </div>
     );
   },
 
