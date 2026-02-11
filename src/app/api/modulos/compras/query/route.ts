@@ -50,7 +50,8 @@ export async function POST(req: NextRequest) {
       // Qualify known columns for compras when unqualified
       const qualifyDimExpr = (expr: string) => {
         let e = expr
-        e = e.replace(/\bdata_emissao\b/g, 'c.data_emissao')
+        e = e.replace(/\bdata_emissao\b/g, 'c.data_pedido')
+        e = e.replace(/\bdata_pedido\b/g, 'c.data_pedido')
         e = e.replace(/\bvalor_total\b/g, 'c.valor_total')
         return e
       }
@@ -64,7 +65,7 @@ export async function POST(req: NextRequest) {
       else if (dimension === 'projeto' && model === 'compras.compras') { dimExpr = "COALESCE(pr.nome,'—')"; dimAlias = 'projeto' }
       else if (dimension === 'categoria_despesa' && model === 'compras.compras') { dimExpr = "COALESCE(cd.nome,'—')"; dimAlias = 'categoria_despesa' }
       else if (dimension === 'status' && model === 'compras.compras') { dimExpr = "COALESCE(c.status,'—')"; dimAlias = 'status' }
-      else if (dimension === 'periodo' && model === 'compras.compras') { dimExpr = "TO_CHAR(DATE_TRUNC('month', c.data_emissao), 'YYYY-MM')"; dimAlias = 'periodo' }
+      else if (dimension === 'periodo' && model === 'compras.compras') { dimExpr = "TO_CHAR(DATE_TRUNC('month', c.data_pedido), 'YYYY-MM')"; dimAlias = 'periodo' }
       else if (dimension === 'status' && model === 'compras.recebimentos') { dimExpr = "COALESCE(r.status,'—')"; dimAlias = 'status' }
       else if (dimension === 'periodo' && model === 'compras.recebimentos') { dimExpr = "TO_CHAR(DATE_TRUNC('month', r.data_recebimento), 'YYYY-MM')"; dimAlias = 'periodo' }
       else if (dimension) {
@@ -114,8 +115,8 @@ export async function POST(req: NextRequest) {
     const params: unknown[] = []
     const whereParts: string[] = []
     if (typeof (filters as any).tenant_id === 'number') { whereParts.push(`${model==='compras.compras'?'c':'r'}.tenant_id = $${params.length + 1}`); params.push((filters as any).tenant_id) }
-    if (typeof (filters as any).de === 'string') { whereParts.push(`${model==='compras.compras'?'c.data_emissao':'r.data_recebimento'} >= $${params.length + 1}`); params.push((filters as any).de) }
-    if (typeof (filters as any).ate === 'string') { whereParts.push(`${model==='compras.compras'?'c.data_emissao':'r.data_recebimento'} <= $${params.length + 1}`); params.push((filters as any).ate) }
+    if (typeof (filters as any).de === 'string') { whereParts.push(`${model==='compras.compras'?'c.data_pedido':'r.data_recebimento'} >= $${params.length + 1}`); params.push((filters as any).de) }
+    if (typeof (filters as any).ate === 'string') { whereParts.push(`${model==='compras.compras'?'c.data_pedido':'r.data_recebimento'} <= $${params.length + 1}`); params.push((filters as any).ate) }
     if (typeof (filters as any).status === 'string') { const al = model==='compras.compras'?'c':'r'; whereParts.push(`LOWER(${al}.status) = LOWER($${params.length + 1})`); params.push((filters as any).status) }
     // id filters and numeric range (only for compras.compras)
     const addInFilter = (col: string, val: unknown) => {

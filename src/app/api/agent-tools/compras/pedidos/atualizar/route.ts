@@ -23,7 +23,10 @@ export async function POST(req: NextRequest) {
     pushIf('status', 'status', (v)=> String(v).toLowerCase())
     pushIf('observacoes', 'observacoes')
     pushIf('data_entrega_prevista', 'data_entrega_prevista')
-    pushIf('data_emissao', 'data_emissao')
+    pushIf('data_pedido', 'data_pedido')
+    pushIf('data_documento', 'data_documento')
+    pushIf('data_lancamento', 'data_lancamento')
+    pushIf('data_vencimento', 'data_vencimento')
 
     if (fields.length === 0) return Response.json({ ok: false, error: 'Nenhum campo válido para atualizar' }, { status: 400 })
 
@@ -40,4 +43,3 @@ export async function POST(req: NextRequest) {
     return Response.json({ ok: false, error: (e as Error).message }, { status: 500 })
   }
 }
-

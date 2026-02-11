@@ -39,7 +39,11 @@ export async function POST(req: NextRequest) {
       p.nome AS projeto,
       cd.nome AS categoria_despesa,
       c.numero_oc AS numero_pedido,
-      c.data_emissao AS data_pedido,
+      c.numero_oc,
+      c.data_pedido,
+      c.data_documento,
+      c.data_lancamento,
+      c.data_vencimento,
       c.data_entrega_prevista,
       c.status,
       c.valor_total,
@@ -56,12 +60,12 @@ export async function POST(req: NextRequest) {
 
     if (status) push('LOWER(c.status) =', status.toLowerCase())
     if (fornecedor_id) push('c.fornecedor_id =', fornecedor_id)
-    if (de) push('c.data_emissao >=', de)
-    if (ate) push('c.data_emissao <=', ate)
+    if (de) push('c.data_pedido >=', de)
+    if (ate) push('c.data_pedido <=', ate)
     if (q) { conditions.push(`(c.numero_oc ILIKE '%' || $${i} || '%' OR COALESCE(c.observacoes,'') ILIKE '%' || $${i} || '%' OR COALESCE(f.nome_fantasia,'') ILIKE '%' || $${i} || '%')`); params.push(q); i += 1 }
 
     const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
-    const orderClause = 'ORDER BY c.data_emissao ASC, c.numero_oc ASC, c.id ASC'
+    const orderClause = 'ORDER BY c.data_pedido ASC, c.numero_oc ASC, c.id ASC'
     const limitOffset = `LIMIT $${i}::int OFFSET $${i+1}::int`
     const paramsWithPage = [...params, pageSize, offset]
 

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { runQuery, withTransaction } from '@/lib/postgres'
+import { withTransaction } from '@/lib/postgres'
 import { verifyAgentToken } from '@/app/api/chat/tokenStore'
 
 export const runtime = 'nodejs'
@@ -19,6 +19,13 @@ export async function POST(req: NextRequest) {
     const fornecedor_id = Number(payload.fornecedor_id)
     if (!Number.isFinite(fornecedor_id)) return Response.json({ ok: false, error: 'fornecedor_id é obrigatório' }, { status: 400 })
     const data_pedido = typeof payload.data_pedido === 'string' ? payload.data_pedido : new Date().toISOString().slice(0, 10)
+    const data_documento = typeof payload.data_documento === 'string' ? payload.data_documento : data_pedido
+    const data_lancamento = typeof payload.data_lancamento === 'string' ? payload.data_lancamento : data_documento
+    const data_vencimento = typeof payload.data_vencimento === 'string' ? payload.data_vencimento : data_pedido
+    const numero_oc_in = typeof payload.numero_oc === 'string'
+      ? payload.numero_oc
+      : (typeof payload.numero_pedido === 'string' ? payload.numero_pedido : '')
+    const numero_oc = numero_oc_in.trim() || `OC-${Date.now()}`
     const itens = Array.isArray(payload.itens) ? payload.itens as Array<any> : []
     let valor_total = payload.valor_total !== undefined ? Number(payload.valor_total) : NaN
     if (!Number.isFinite(valor_total)) {
@@ -27,10 +34,10 @@ export async function POST(req: NextRequest) {
     const status = (payload.status && String(payload.status)) || 'aberto'
 
     const result = await withTransaction(async (client) => {
-      const cols: string[] = ['tenant_id','fornecedor_id','data_pedido','valor_total','status']
-      const vals: any[] = [tenantId, fornecedor_id, data_pedido, valor_total, status]
+      const cols: string[] = ['tenant_id','fornecedor_id','numero_oc','data_pedido','data_documento','data_lancamento','data_vencimento','valor_total','status']
+      const vals: any[] = [tenantId, fornecedor_id, numero_oc, data_pedido, data_documento, data_lancamento, data_vencimento, valor_total, status]
       const placeholders = cols.map((_, i) => `$${i+1}`)
-      const insertSql = `INSERT INTO compras.pedidos (${cols.join(',')}) VALUES (${placeholders.join(',')}) RETURNING id`;
+      const insertSql = `INSERT INTO compras.compras (${cols.join(',')}) VALUES (${placeholders.join(',')}) RETURNING id`;
       const ins = await client.query(insertSql, vals)
       const id = Number(ins.rows[0]?.id)
       if (!id) throw new Error('Falha ao criar pedido de compra')
@@ -42,4 +49,3 @@ export async function POST(req: NextRequest) {
     return Response.json({ ok: false, error: (e as Error).message }, { status: 500 })
   }
 }
-

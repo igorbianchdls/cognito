@@ -22,8 +22,8 @@ export async function GET(req: NextRequest) {
     const cWhereParts: string[] = []
     const cParams: unknown[] = []
     let ci = 1
-    if (de) { cWhereParts.push(`c.data_emissao >= $${ci++}`); cParams.push(de) }
-    if (ate) { cWhereParts.push(`c.data_emissao <= $${ci++}`); cParams.push(ate) }
+    if (de) { cWhereParts.push(`c.data_pedido >= $${ci++}`); cParams.push(de) }
+    if (ate) { cWhereParts.push(`c.data_pedido <= $${ci++}`); cParams.push(ate) }
     if (status) { cWhereParts.push(`LOWER(c.status) = LOWER($${ci++})`); cParams.push(status) }
     if (typeof fornecedorId === 'number' && !Number.isNaN(fornecedorId)) { cWhereParts.push(`c.fornecedor_id = $${ci++}`); cParams.push(fornecedorId) }
     const cWhere = cWhereParts.length ? `WHERE ${cWhereParts.join(' AND ')}` : ''
