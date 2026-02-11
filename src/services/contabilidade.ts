@@ -267,11 +267,12 @@ export async function createLancamentoFinanceiroEContabil(
     const categoriaTable = tipo === 'conta_a_pagar'
       ? 'financeiro.categorias_despesa'
       : 'financeiro.categorias_receita'
-    const planoRows = await client.query<{ plano_conta_id: number | null }>(
+    const planoRows = await client.query(
       `SELECT plano_conta_id FROM ${categoriaTable} WHERE id = $1 LIMIT 1`,
       [categoria_id]
     )
-    const planoContaRaw = planoRows.rows[0]?.plano_conta_id
+    const planoRowsTyped = planoRows.rows as Array<{ plano_conta_id: number | null }>
+    const planoContaRaw = planoRowsTyped[0]?.plano_conta_id
     const planoContaId = planoContaRaw !== null && planoContaRaw !== undefined ? Number(planoContaRaw) : NaN
     if (!Number.isFinite(planoContaId)) {
       throw new Error('Categoria sem plano_conta_id configurado')
@@ -280,13 +281,7 @@ export async function createLancamentoFinanceiroEContabil(
     // 3) Regra contábil por origem + plano
     const origemCandidates = origemCandidatesByTipo(tipo)
     const preferredOrigem = origemCandidates[0]
-    const regraRows = await client.query<{
-      id: number | null
-      conta_debito_id: number | null
-      conta_credito_id: number | null
-      descricao: string | null
-      origem: string | null
-    }>(
+    const regraRows = await client.query(
       `SELECT id, conta_debito_id, conta_credito_id, descricao, origem
          FROM contabilidade.regras_contabeis
         WHERE tenant_id = $1
@@ -296,7 +291,14 @@ export async function createLancamentoFinanceiroEContabil(
         LIMIT 1`,
       [tenant_id, origemCandidates, planoContaId, preferredOrigem]
     )
-    const regra = regraRows.rows[0] || null
+    const regraRowsTyped = regraRows.rows as Array<{
+      id: number | null
+      conta_debito_id: number | null
+      conta_credito_id: number | null
+      descricao: string | null
+      origem: string | null
+    }>
+    const regra = regraRowsTyped[0] || null
     if (!regra) {
       throw new Error(`Nenhuma regra contábil ativa para ${tipo} + plano_conta_id ${planoContaId}`)
     }
