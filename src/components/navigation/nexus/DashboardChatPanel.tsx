@@ -39,6 +39,18 @@ import { $headerUi, headerUiActions } from '@/stores/ui/headerUiStore';
 import type { HeaderStyle } from '@/stores/ui/headerUiStore';
 import { dashboardsApi, type Dashboard } from '@/stores/dashboardsStore';
 
+type HeaderThemeOption = 'auto' | 'subtle' | 'contrast' | 'surface';
+const HEADER_THEME_OPTIONS: Array<{ key: HeaderThemeOption; label: string }> = [
+  { key: 'auto', label: 'Auto' },
+  { key: 'subtle', label: 'Subtle' },
+  { key: 'contrast', label: 'Contrast' },
+  { key: 'surface', label: 'Surface' },
+];
+
+function isHeaderThemeOption(value: unknown): value is HeaderThemeOption {
+  return value === 'auto' || value === 'subtle' || value === 'contrast' || value === 'surface';
+}
+
 export default function DashboardChatPanel() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -48,6 +60,7 @@ export default function DashboardChatPanel() {
   const [selectedViewport, setSelectedViewport] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [selectedDashboard, setSelectedDashboard] = useState('Dashboard Builder');
   const [selectedTheme, setSelectedTheme] = useState<ThemeName>('branco');
+  const [selectedHeaderTheme, setSelectedHeaderTheme] = useState<HeaderThemeOption>('auto');
   const [selectedFont, setSelectedFont] = useState<FontPresetKey>('barlow');
   const [selectedFontSize, setSelectedFontSize] = useState<FontSizeKey>('lg');
   const [selectedLetterSpacing, setSelectedLetterSpacing] = useState<number>(-0.02);
@@ -319,6 +332,9 @@ export default function DashboardChatPanel() {
       const st = style as Record<string, unknown>;
       const theme = st['theme'];
       if (typeof theme === 'string' && ThemeManager.isValidTheme(theme)) setSelectedTheme(theme as ThemeName);
+      const headerTheme = st['headerTheme'];
+      if (isHeaderThemeOption(headerTheme)) setSelectedHeaderTheme(headerTheme);
+      else setSelectedHeaderTheme('auto');
       const cf = st['customFont'];
       if (typeof cf === 'string' && FontManager.isValidFont(cf)) setSelectedFont(cf as FontPresetKey);
       const cfs = st['customFontSize'];
@@ -379,9 +395,17 @@ export default function DashboardChatPanel() {
     const code = visualBuilderState.code;
     if (!code || isDsl(code)) return;
     try {
-      type HeaderConfig = { variant?: 'auto' | 'light' | 'dark'; light?: Partial<HeaderStyle>; dark?: Partial<HeaderStyle> };
-      const cfg = JSON.parse(code) as { config?: { header?: HeaderConfig }, theme?: string };
+      type HeaderConfig = {
+        variant?: 'auto' | 'light' | 'dark';
+        theme?: HeaderThemeOption;
+        light?: Partial<HeaderStyle>;
+        dark?: Partial<HeaderStyle>;
+      };
+      const cfg = JSON.parse(code) as { config?: { header?: HeaderConfig }, theme?: string, headerTheme?: HeaderThemeOption };
       const header = (cfg.config?.header || {}) as HeaderConfig;
+      const headerThemeFromCode = cfg.headerTheme ?? header.theme;
+      if (isHeaderThemeOption(headerThemeFromCode)) setSelectedHeaderTheme(headerThemeFromCode);
+      else setSelectedHeaderTheme('auto');
       const hasHeaderStyles = (header.light && typeof header.light === 'object') || (header.dark && typeof header.dark === 'object');
       if (!hasHeaderStyles) {
         headerUiActions.resetAll();
@@ -639,6 +663,33 @@ export default function DashboardChatPanel() {
       console.log(`🎨 Theme changed to: ${themeName}`);
     } catch (error) {
       console.error('Error applying theme:', error);
+    }
+  };
+
+  const handleHeaderThemeChange = (headerTheme: HeaderThemeOption) => {
+    try {
+      const code = visualBuilderState.code;
+      if (isDsl(code)) {
+        const next = writeStyleToDsl(code, { headerTheme });
+        visualBuilderActions.updateCode(next);
+      } else {
+        const currentConfig = JSON.parse(code || '{}');
+        const updatedConfig = {
+          ...currentConfig,
+          headerTheme,
+          config: {
+            ...(currentConfig.config || {}),
+            header: {
+              ...(currentConfig.config?.header || {}),
+              theme: headerTheme,
+            },
+          },
+        };
+        visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      }
+      setSelectedHeaderTheme(headerTheme);
+    } catch (error) {
+      console.error('Error applying header theme:', error);
     }
   };
 
@@ -1330,6 +1381,26 @@ export default function DashboardChatPanel() {
                       </DropdownMenuItem>
                     );
                   })}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Layout className="w-4 h-4 mr-2" />
+                  Tema do Header
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  {HEADER_THEME_OPTIONS.map((opt) => (
+                    <DropdownMenuItem
+                      key={opt.key}
+                      onClick={() => handleHeaderThemeChange(opt.key)}
+                      className="flex items-center justify-between py-2"
+                    >
+                      <span>{opt.label}</span>
+                      {selectedHeaderTheme === opt.key && (
+                        <Check className="w-4 h-4 text-blue-600" />
+                      )}
+                    </DropdownMenuItem>
+                  ))}
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
 

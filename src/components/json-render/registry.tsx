@@ -25,7 +25,7 @@ const defaultHeader = {
   padding: '4px 12px',
   borderColor: '#e5e7eb',
   borderWidth: 0,
-  borderBottomWidth: 1,
+  borderBottomWidth: 0,
   borderRadius: 0,
 } as const;
 
@@ -928,8 +928,9 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
 
   Theme: ({ element, children }) => {
     const name = element?.props?.name as string | undefined;
+    const headerTheme = element?.props?.headerTheme as string | undefined;
     const mgr = (element?.props?.managers || {}) as AnyRecord;
-    const preset = buildThemeVars(name, mgr as any);
+    const preset = buildThemeVars(name, mgr as any, { headerTheme });
     const cssVars = preset.cssVars || mapManagersToCssVars(mgr);
     return (
       <ThemeProvider name={name} cssVars={cssVars}>

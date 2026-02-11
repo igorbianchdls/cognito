@@ -18,6 +18,12 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
     { value: 'metro', label: 'Metro' },
     { value: 'aero', label: 'Aero' },
   ];
+  const headerThemeOptions = [
+    { value: '', label: 'Auto' },
+    { value: 'subtle', label: 'Subtle' },
+    { value: 'contrast', label: 'Contrast' },
+    { value: 'surface', label: 'Surface' },
+  ];
   const fontOptions = [
     'Inter, ui-sans-serif, system-ui',
     'Barlow, ui-sans-serif, system-ui',
@@ -52,15 +58,16 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
   const kpiSpacingOptions = ['-0.05em','-0.04em','-0.03em','-0.02em','-0.01em','0em','0.01em','0.02em','0.03em','0.04em','0.05em'];
   const kpiPaddingOptions = ['0','4','6','8','12'];
 
-  function readCurrent(): { name: string; managers: any } {
+  function readCurrent(): { name: string; headerTheme: string; managers: any } {
     try {
       const arr = JSON.parse(jsonText);
       const nodes = Array.isArray(arr) ? arr : [arr];
       const theme = nodes[0] && nodes[0].type === 'Theme' ? nodes[0] : null;
       const name = String(theme?.props?.name || 'light');
+      const headerTheme = typeof theme?.props?.headerTheme === 'string' ? theme.props.headerTheme : '';
       const managers = (theme?.props?.managers && typeof theme.props.managers === 'object') ? theme.props.managers : {};
-      return { name, managers };
-    } catch { return { name: 'light', managers: {} } }
+      return { name, headerTheme, managers };
+    } catch { return { name: 'light', headerTheme: '', managers: {} } }
   }
 
   function updateTheme(mut: (t: any) => void) {
@@ -101,6 +108,18 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
           <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={current.name}
             onChange={(e) => updateTheme((th: any) => { if (!th.props) th.props = {}; th.props.name = e.target.value; })}>
             {themeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-gray-700 w-20">Header</label>
+          <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={current.headerTheme}
+            onChange={(e) => updateTheme((th: any) => {
+              if (!th.props) th.props = {};
+              const v = e.target.value;
+              if (v) th.props.headerTheme = v;
+              else delete th.props.headerTheme;
+            })}>
+            {headerThemeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </div>
         {/* KPI Title / Value */}

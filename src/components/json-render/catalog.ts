@@ -65,6 +65,7 @@ export const catalog = {
     Theme: {
       props: z.object({
         name: z.string(),
+        headerTheme: z.string().optional(),
         managers: z.object({
           font: z.string().optional(),
           border: z.object({

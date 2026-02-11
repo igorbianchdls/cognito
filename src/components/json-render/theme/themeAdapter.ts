@@ -7,6 +7,7 @@ import { mapManagersToCssVars } from "@/components/json-render/theme/thememanage
 
 type AnyRecord = Record<string, any>;
 type Rgb = { r: number; g: number; b: number };
+export type HeaderThemePreset = "auto" | "subtle" | "contrast" | "surface";
 
 // Map JSON Render theme names/aliases to DesignTokens theme keys
 const THEME_ALIASES: Record<string, ThemeName> = {
@@ -115,18 +116,80 @@ function rgbToCss(c: Rgb): string {
   return `rgb(${c.r} ${c.g} ${c.b})`;
 }
 
-function deriveHeaderBg(bgColor: string | undefined, fgColor: string | undefined): string | undefined {
-  if (!bgColor) return undefined;
+function normalizeHeaderTheme(input?: string): HeaderThemePreset {
+  const key = String(input || "auto").trim().toLowerCase();
+  if (!key || key === "auto" || key === "default") return "auto";
+  if (["subtle", "soft", "muted", "minimal"].includes(key)) return "subtle";
+  if (["contrast", "strong", "high-contrast"].includes(key)) return "contrast";
+  if (["surface", "card", "solid"].includes(key)) return "surface";
+  return "auto";
+}
+
+function deriveHeaderVars(args: {
+  headerTheme?: string;
+  bgColor?: string;
+  fgColor?: string;
+  surfaceColor?: string;
+  borderColor?: string;
+}): Record<string, string> {
+  const { headerTheme, bgColor, fgColor, surfaceColor, borderColor } = args;
+  const out: Record<string, string> = {};
+  if (!bgColor) return out;
+
+  const preset = normalizeHeaderTheme(headerTheme);
   const bg = parseColor(bgColor);
   const fg = parseColor(fgColor);
+  const surface = parseColor(surfaceColor);
+  const border = parseColor(borderColor);
+
   if (bg) {
     const isDark = luminance(bg) < 0.45;
-    const target: Rgb = fg || (isDark ? { r: 255, g: 255, b: 255 } : { r: 0, g: 0, b: 0 });
-    // Subtle shift from dashboard bg; darker in light themes, lighter in dark themes.
-    return rgbToCss(mixRgb(bg, target, isDark ? 0.12 : 0.09));
+    const text = fg || (isDark ? { r: 229, g: 231, b: 235 } : { r: 15, g: 23, b: 42 });
+
+    let headerBgRgb: Rgb;
+    if (preset === "surface" && surface) {
+      headerBgRgb = surface;
+    } else {
+      const bgMix = preset === "subtle"
+        ? (isDark ? 0.06 : 0.05)
+        : preset === "contrast"
+          ? (isDark ? 0.2 : 0.15)
+          : (isDark ? 0.12 : 0.09);
+      headerBgRgb = mixRgb(bg, text, bgMix);
+    }
+
+    const borderMix = preset === "subtle"
+      ? (isDark ? 0.18 : 0.12)
+      : preset === "contrast"
+        ? (isDark ? 0.36 : 0.28)
+        : preset === "surface"
+          ? (isDark ? 0.26 : 0.2)
+          : (isDark ? 0.24 : 0.18);
+    const headerBorderRgb = (preset === "surface" && border)
+      ? border
+      : mixRgb(bg, text, borderMix);
+
+    const subtitleMix = preset === "contrast"
+      ? (isDark ? 0.28 : 0.34)
+      : preset === "subtle"
+        ? (isDark ? 0.44 : 0.5)
+        : (isDark ? 0.36 : 0.42);
+    const subtitleRgb = mixRgb(text, headerBgRgb, subtitleMix);
+
+    out.headerBg = rgbToCss(headerBgRgb);
+    out.headerBorder = rgbToCss(headerBorderRgb);
+    out.headerText = rgbToCss(text);
+    out.headerSubtitle = rgbToCss(subtitleRgb);
+    return out;
   }
+
   const fgExpr = fgColor || "#111827";
-  return `color-mix(in srgb, ${bgColor} 90%, ${fgExpr} 10%)`;
+  const bgPct = preset === "contrast" ? 82 : (preset === "subtle" ? 94 : 90);
+  out.headerBg = (preset === "surface" && surfaceColor)
+    ? String(surfaceColor)
+    : `color-mix(in srgb, ${bgColor} ${bgPct}%, ${fgExpr} ${100 - bgPct}%)`;
+  if (borderColor) out.headerBorder = String(borderColor);
+  return out;
 }
 
 function buildManagersFromTokens(tokens: DesignTokens, name: ThemeName): Managers {
@@ -245,7 +308,11 @@ function deepMerge<T extends AnyRecord>(a: T, b: Partial<T>): T {
   return out as T;
 }
 
-export function buildThemeVars(name?: string, managersOverride?: Managers) {
+export function buildThemeVars(
+  name?: string,
+  managersOverride?: Managers,
+  options?: { headerTheme?: string }
+) {
   const resolved = resolveThemeName(name);
   const tokens = ThemeManager.getThemeTokens(resolved);
   const autoManagers = buildManagersFromTokens(tokens, resolved);
@@ -333,13 +400,23 @@ export function buildThemeVars(name?: string, managersOverride?: Managers) {
   // Override fg/surfaceBorder if managers defined custom ones via overrides above
   if (managers?.kpi?.value?.color) extraCss.fg = String(managers.kpi.value.color);
   if ((managers as AnyRecord)?.border?.color) extraCss.surfaceBorder = String((managers as AnyRecord).border.color);
-  // Header background should be theme-aware and distinct from dashboard background.
+  // Header styling can be themed independently from dashboard theme.
   const bgSeed = typeof (managers as AnyRecord)?.background === 'string'
     ? String((managers as AnyRecord).background)
     : (colors?.background ? String(colors.background) : undefined);
+  const surfaceSeed = typeof (managers as AnyRecord)?.surface === 'string'
+    ? String((managers as AnyRecord).surface)
+    : (colors?.surface ? String(colors.surface) : undefined);
   const fgSeed = (extraCss.fg || (colors?.text?.primary ? String(colors.text.primary) : undefined));
-  const headerBg = deriveHeaderBg(bgSeed, fgSeed);
-  if (headerBg) extraCss.headerBg = headerBg;
+  const borderSeed = extraCss.surfaceBorder || (colors?.border ? String(colors.border) : undefined);
+  const headerVars = deriveHeaderVars({
+    headerTheme: options?.headerTheme,
+    bgColor: bgSeed,
+    fgColor: fgSeed,
+    surfaceColor: surfaceSeed,
+    borderColor: borderSeed,
+  });
+  Object.assign(extraCss, headerVars);
 
   // If theme is "blue", push a stronger blue palette unless overridden
   if (['blue','navy','midnight','aero'].includes(n) && !cssVars.chartColorScheme) {
