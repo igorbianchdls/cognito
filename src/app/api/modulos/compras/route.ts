@@ -100,16 +100,30 @@ export async function GET(req: NextRequest) {
     let whereDateCol = '';
 
   if (view === 'compras') {
-      // Query fixa (sem filtros dinâmicos), conforme especificação
+      // Montagem dinâmica para não quebrar em tenants/schemas sem todas as colunas de dimensão
+      const compraCols = await runQuery<{ column_name: string }>(
+        `SELECT column_name
+           FROM information_schema.columns
+          WHERE table_schema = 'compras' AND table_name = 'compras'`
+      )
+      const has = (c: string) => compraCols.some((r) => r.column_name === c)
+
+      const hasFilial = has('filial_id')
+      const hasDepartamento = has('departamento_id')
+      const hasCentroCusto = has('centro_custo_id')
+      const hasUnidadeNegocio = has('unidade_negocio_id')
+      const hasProjeto = has('projeto_id')
+      const hasCategoriaDespesa = has('categoria_despesa_id')
+
       selectSql = `SELECT
         c.id AS compra_id,
         f.nome_fantasia AS fornecedor,
-        fil.nome AS filial,
-        dep.nome AS departamento,
-        cc.nome AS centro_custo,
-        un.nome AS unidade_negocio,
-        p.nome AS projeto,
-        cd.nome AS categoria_despesa,
+        ${hasFilial ? 'fil.nome' : 'NULL::text'} AS filial,
+        ${hasDepartamento ? 'dep.nome' : 'NULL::text'} AS departamento,
+        ${hasCentroCusto ? 'cc.nome' : 'NULL::text'} AS centro_custo,
+        ${hasUnidadeNegocio ? 'un.nome' : 'NULL::text'} AS unidade_negocio,
+        ${hasProjeto ? 'p.nome' : 'NULL::text'} AS projeto,
+        ${hasCategoriaDespesa ? 'cd.nome' : 'NULL::text'} AS categoria_despesa,
         c.numero_oc,
         c.data_pedido,
         c.data_documento,
@@ -121,14 +135,19 @@ export async function GET(req: NextRequest) {
         c.observacoes,
         c.criado_em,
         c.atualizado_em`;
+
+      const joinParts = [
+        `LEFT JOIN entidades.fornecedores f ON f.id = c.fornecedor_id`,
+        hasFilial ? `LEFT JOIN empresa.filiais fil ON fil.id = c.filial_id` : '',
+        hasDepartamento ? `LEFT JOIN empresa.departamentos dep ON dep.id = c.departamento_id` : '',
+        hasCentroCusto ? `LEFT JOIN empresa.centros_custo cc ON cc.id = c.centro_custo_id` : '',
+        hasUnidadeNegocio ? `LEFT JOIN empresa.unidades_negocio un ON un.id = c.unidade_negocio_id` : '',
+        hasProjeto ? `LEFT JOIN financeiro.projetos p ON p.id = c.projeto_id` : '',
+        hasCategoriaDespesa ? `LEFT JOIN financeiro.categorias_despesa cd ON cd.id = c.categoria_despesa_id` : '',
+      ].filter(Boolean)
+
       baseSql = `FROM compras.compras c
-        LEFT JOIN entidades.fornecedores f ON f.id = c.fornecedor_id
-        LEFT JOIN empresa.filiais fil ON fil.id = c.filial_id
-        LEFT JOIN empresa.departamentos dep ON dep.id = c.departamento_id
-        LEFT JOIN empresa.centros_custo cc ON cc.id = c.centro_custo_id
-        LEFT JOIN empresa.unidades_negocio un ON un.id = c.unidade_negocio_id
-        LEFT JOIN financeiro.projetos p ON p.id = c.projeto_id
-        LEFT JOIN financeiro.categorias_despesa cd ON cd.id = c.categoria_despesa_id`;
+        ${joinParts.join('\n        ')}`;
       whereDateCol = 'c.data_pedido';
       // Força ordenação exatamente como especificada
       conditions.length = 0;
