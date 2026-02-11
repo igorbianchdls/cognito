@@ -18,19 +18,35 @@ export default function DashboardPicker({ chatId }: Props) {
     setLoading(true); setError(null);
     try {
       const collected: string[] = [];
-      const visited = new Set<string>();
-      const queue: string[] = ['/vercel/sandbox'];
-      const MAX_FILES = 500, MAX_DIRS = 1000; let dirs = 0;
-      while (queue.length && collected.length < MAX_FILES && dirs < MAX_DIRS) {
-        const dir = queue.shift()!; dirs++;
+
+      // Fast path for dashboard jsonr files.
+      const directDirs = ['/vercel/sandbox/dashboard'];
+      for (const dir of directDirs) {
         const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-list', chatId, path: dir }) });
         const data = await res.json().catch(()=>({})) as { ok?: boolean; entries?: Array<{ name:string; path:string; type:'file'|'dir' }>; error?: string };
-        if (!res.ok || data.ok === false) { setError(data.error || `Falha ao listar ${dir}`); break; }
+        if (!res.ok || data.ok === false) continue;
         for (const e of (data.entries||[])) {
-          if (e.type === 'dir') { if (!visited.has(e.path)) { visited.add(e.path); queue.push(e.path); } }
-          else if (e.type === 'file' && e.path.endsWith('.jsonr')) collected.push(e.path);
+          if (e.type === 'file' && e.path.endsWith('.jsonr')) collected.push(e.path);
         }
       }
+
+      // Fallback recursive scan if dashboard folder has no jsonr.
+      if (collected.length === 0) {
+        const visited = new Set<string>();
+        const queue: string[] = ['/vercel/sandbox'];
+        const MAX_FILES = 500, MAX_DIRS = 1000; let dirs = 0;
+        while (queue.length && collected.length < MAX_FILES && dirs < MAX_DIRS) {
+          const dir = queue.shift()!; dirs++;
+          const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-list', chatId, path: dir }) });
+          const data = await res.json().catch(()=>({})) as { ok?: boolean; entries?: Array<{ name:string; path:string; type:'file'|'dir' }>; error?: string };
+          if (!res.ok || data.ok === false) { setError(data.error || `Falha ao listar ${dir}`); break; }
+          for (const e of (data.entries||[])) {
+            if (e.type === 'dir') { if (!visited.has(e.path)) { visited.add(e.path); queue.push(e.path); } }
+            else if (e.type === 'file' && e.path.endsWith('.jsonr')) collected.push(e.path);
+          }
+        }
+      }
+
       collected.sort(); setPaths(collected);
     } catch (e: any) { setError(e?.message ? String(e.message) : 'Erro ao listar dashboards'); }
     finally { setLoading(false); }
