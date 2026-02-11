@@ -4,7 +4,6 @@ import React from "react";
 
 type AnyRecord = Record<string, any>;
 type Rgb = { r: number; g: number; b: number };
-type CornerRadii = { tl: number; tr: number; br: number; bl: number };
 
 export type HudFrameConfig = {
   variant?: "hud";
@@ -105,61 +104,6 @@ function deriveCornerColor(baseColor: string): string {
   return rgbToCss(mixRgb(parsed, target, amount));
 }
 
-function parsePxValue(value: unknown): number | null {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (typeof value !== "string") return null;
-  const raw = value.trim();
-  if (!raw) return null;
-  const token = raw.split("/")[0]?.trim().split(/\s+/)[0] || "";
-  if (!token || token.includes("%")) return null;
-  const m = token.match(/^([+-]?\d+(?:\.\d+)?)(px)?$/i);
-  if (!m) return null;
-  const n = Number(m[1]);
-  return Number.isFinite(n) ? n : null;
-}
-
-function expandRadiusTokens(tokens: string[]): [string, string, string, string] {
-  if (tokens.length <= 1) return [tokens[0] || "0", tokens[0] || "0", tokens[0] || "0", tokens[0] || "0"];
-  if (tokens.length === 2) return [tokens[0], tokens[1], tokens[0], tokens[1]];
-  if (tokens.length === 3) return [tokens[0], tokens[1], tokens[2], tokens[1]];
-  return [tokens[0], tokens[1], tokens[2], tokens[3]];
-}
-
-function resolveCornerRadii(style?: React.CSSProperties): CornerRadii {
-  const s = (style || {}) as AnyRecord;
-  const single = s.borderRadius;
-  let fromShorthand: CornerRadii | null = null;
-
-  if (typeof single === "string") {
-    const head = single.split("/")[0]?.trim() || "";
-    const tokens = head.split(/\s+/).filter(Boolean);
-    if (tokens.length > 1) {
-      const [tl, tr, br, bl] = expandRadiusTokens(tokens);
-      fromShorthand = {
-        tl: parsePxValue(tl) ?? 0,
-        tr: parsePxValue(tr) ?? 0,
-        br: parsePxValue(br) ?? 0,
-        bl: parsePxValue(bl) ?? 0,
-      };
-    }
-  }
-
-  const singlePx = parsePxValue(single) ?? 0;
-  const pick = (value: unknown, key: keyof CornerRadii): number => {
-    const explicit = parsePxValue(value);
-    if (explicit != null) return explicit;
-    if (fromShorthand) return fromShorthand[key];
-    return singlePx;
-  };
-
-  return {
-    tl: pick(s.borderTopLeftRadius, "tl"),
-    tr: pick(s.borderTopRightRadius, "tr"),
-    br: pick(s.borderBottomRightRadius, "br"),
-    bl: pick(s.borderBottomLeftRadius, "bl"),
-  };
-}
-
 function resolveFrame(frame: HudFrameConfig | null | undefined, cssVars?: Record<string, string>, style?: React.CSSProperties) {
   const fromCss = (key: string) => (cssVars && cssVars[key] ? String(cssVars[key]) : undefined);
   const variant = frame?.variant || (fromCss("containerFrameVariant") as "hud" | undefined);
@@ -210,13 +154,8 @@ export default function FrameSurface({ style, frame, cssVars, className, childre
   };
 
   const radius = (merged as AnyRecord)?.borderRadius;
-  const radii = resolveCornerRadii(merged);
   const corner = s.cornerSize;
   const stroke = s.cornerWidth;
-  const tlInset = Math.max(0, Math.round(radii.tl - stroke / 2));
-  const trInset = Math.max(0, Math.round(radii.tr - stroke / 2));
-  const brInset = Math.max(0, Math.round(radii.br - stroke / 2));
-  const blInset = Math.max(0, Math.round(radii.bl - stroke / 2));
 
   return (
     <div className={className} style={merged}>
@@ -230,14 +169,14 @@ export default function FrameSurface({ style, frame, cssVars, className, childre
           borderRadius: (radius as any) ?? "inherit",
         }}
       >
-        <div style={{ ...lineStyle(s.cornerColor, stroke), left: tlInset, top: tlInset, width: corner, height: stroke }} />
-        <div style={{ ...lineStyle(s.cornerColor, stroke), left: tlInset, top: tlInset, width: stroke, height: corner }} />
-        <div style={{ ...lineStyle(s.cornerColor, stroke), right: trInset, top: trInset, width: corner, height: stroke }} />
-        <div style={{ ...lineStyle(s.cornerColor, stroke), right: trInset, top: trInset, width: stroke, height: corner }} />
-        <div style={{ ...lineStyle(s.cornerColor, stroke), left: blInset, bottom: blInset, width: corner, height: stroke }} />
-        <div style={{ ...lineStyle(s.cornerColor, stroke), left: blInset, bottom: blInset, width: stroke, height: corner }} />
-        <div style={{ ...lineStyle(s.cornerColor, stroke), right: brInset, bottom: brInset, width: corner, height: stroke }} />
-        <div style={{ ...lineStyle(s.cornerColor, stroke), right: brInset, bottom: brInset, width: stroke, height: corner }} />
+        <div style={{ ...lineStyle(s.cornerColor, stroke), left: 0, top: 0, width: corner, height: stroke }} />
+        <div style={{ ...lineStyle(s.cornerColor, stroke), left: 0, top: 0, width: stroke, height: corner }} />
+        <div style={{ ...lineStyle(s.cornerColor, stroke), right: 0, top: 0, width: corner, height: stroke }} />
+        <div style={{ ...lineStyle(s.cornerColor, stroke), right: 0, top: 0, width: stroke, height: corner }} />
+        <div style={{ ...lineStyle(s.cornerColor, stroke), left: 0, bottom: 0, width: corner, height: stroke }} />
+        <div style={{ ...lineStyle(s.cornerColor, stroke), left: 0, bottom: 0, width: stroke, height: corner }} />
+        <div style={{ ...lineStyle(s.cornerColor, stroke), right: 0, bottom: 0, width: corner, height: stroke }} />
+        <div style={{ ...lineStyle(s.cornerColor, stroke), right: 0, bottom: 0, width: stroke, height: corner }} />
       </div>
     </div>
   );
