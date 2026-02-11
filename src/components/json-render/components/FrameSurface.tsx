@@ -42,6 +42,12 @@ function getStyleBorderColor(style?: React.CSSProperties): string | undefined {
   return String(c);
 }
 
+function getStyleBackgroundColor(style?: React.CSSProperties): string | undefined {
+  const c = style?.backgroundColor;
+  if (!c) return undefined;
+  return String(c);
+}
+
 function parseColor(input: string): Rgb | null {
   const s = input.trim().toLowerCase();
   const hex = s.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
@@ -93,16 +99,53 @@ function rgbToCss(c: Rgb): string {
   return `rgb(${c.r} ${c.g} ${c.b})`;
 }
 
-function deriveCornerColor(baseColor: string): string {
-  const parsed = parseColor(baseColor);
-  if (!parsed) {
-    // Keep corner color theme-aware when base color is a CSS variable.
-    return `color-mix(in srgb, ${baseColor} 70%, var(--fg, #111827) 30%)`;
+function isDarkThemeContext(bgColor: string | undefined, baseColor: string | undefined, fgColor?: string): boolean {
+  const bg = bgColor ? parseColor(bgColor) : null;
+  if (bg) return luminance(bg) < 0.45;
+  const fg = fgColor ? parseColor(fgColor) : null;
+  if (fg) return luminance(fg) > 0.62;
+  const base = baseColor ? parseColor(baseColor) : null;
+  if (base) return luminance(base) < 0.42;
+  return false;
+}
+
+function deriveBaseColor(baseSeed: string, bgSeed: string | undefined, isDark: boolean): string {
+  const bg = bgSeed ? parseColor(bgSeed) : null;
+  if (bg) {
+    const target: Rgb = isDark ? { r: 255, g: 255, b: 255 } : { r: 0, g: 0, b: 0 };
+    // Base border should stay close to background.
+    return rgbToCss(mixRgb(bg, target, isDark ? 0.16 : 0.1));
   }
-  const isDark = luminance(parsed) < 0.45;
-  const target: Rgb = isDark ? { r: 255, g: 255, b: 255 } : { r: 0, g: 0, b: 0 };
-  const amount = isDark ? 0.34 : 0.3;
-  return rgbToCss(mixRgb(parsed, target, amount));
+  if (isDark) {
+    const bgExpr = bgSeed || "#000000";
+    return `color-mix(in srgb, ${baseSeed} 52%, ${bgExpr} 48%)`;
+  }
+  return baseSeed;
+}
+
+function deriveCornerColor(baseColor: string, bgSeed: string | undefined, isDark: boolean, fgSeed?: string): string {
+  const parsedBg = bgSeed ? parseColor(bgSeed) : null;
+  if (parsedBg) {
+    const target: Rgb = isDark ? { r: 255, g: 255, b: 255 } : { r: 0, g: 0, b: 0 };
+    // Corner should have stronger contrast than the base border.
+    return rgbToCss(mixRgb(parsedBg, target, isDark ? 0.45 : 0.34));
+  }
+
+  const parsedBase = parseColor(baseColor);
+  if (!parsedBase) {
+    // Keep corner color theme-aware when base is variable/color-mix.
+    if (isDark) {
+      const fgExpr = fgSeed || "var(--fg, #e5e7eb)";
+      return `color-mix(in srgb, ${baseColor} 35%, ${fgExpr} 65%)`;
+    }
+    return `color-mix(in srgb, ${baseColor} 68%, var(--fg, #111827) 32%)`;
+  }
+  if (isDark) {
+    const parsedFg = fgSeed ? parseColor(fgSeed) : null;
+    const target: Rgb = parsedFg || { r: 255, g: 255, b: 255 };
+    return rgbToCss(mixRgb(parsedBase, target, 0.58));
+  }
+  return rgbToCss(mixRgb(parsedBase, { r: 0, g: 0, b: 0 }, 0.32));
 }
 
 function resolveFrame(frame: HudFrameConfig | null | undefined, cssVars?: Record<string, string>, style?: React.CSSProperties) {
@@ -111,8 +154,13 @@ function resolveFrame(frame: HudFrameConfig | null | undefined, cssVars?: Record
   if (variant !== "hud") return null;
 
   const styleBorderWidth = toNumber((style as AnyRecord)?.borderWidth, 1);
-  const baseColor = frame?.baseColor || fromCss("containerFrameBaseColor") || getStyleBorderColor(style) || "#4b5563";
-  const cornerColor = frame?.cornerColor || fromCss("containerFrameCornerColor") || deriveCornerColor(baseColor);
+  const bgColor = getStyleBackgroundColor(style) || fromCss("surfaceBg") || fromCss("bg");
+  const fgColor = fromCss("fg");
+  const explicitBase = frame?.baseColor || fromCss("containerFrameBaseColor");
+  const baseSeed = getStyleBorderColor(style) || fromCss("surfaceBorder") || fromCss("containerBorderColor") || "#4b5563";
+  const isDark = isDarkThemeContext(bgColor, baseSeed, fgColor);
+  const baseColor = explicitBase ? String(explicitBase) : deriveBaseColor(baseSeed, bgColor, isDark);
+  const cornerColor = frame?.cornerColor || fromCss("containerFrameCornerColor") || deriveCornerColor(baseColor, bgColor, isDark, fgColor);
   const cornerSize = clamp(
     toNumber(frame?.cornerSize ?? fromCss("containerFrameCornerSize"), 14),
     4,
@@ -162,7 +210,7 @@ export default function FrameSurface({ style, frame, cssVars, className, childre
     position: "relative",
     borderStyle: style?.borderStyle && style.borderStyle !== "none" ? style.borderStyle : "solid",
     borderWidth: style?.borderWidth ?? s.cornerWidth,
-    borderColor: style?.borderColor || s.baseColor,
+    borderColor: s.baseColor,
     borderRadius: 0,
     borderTopLeftRadius: 0,
     borderTopRightRadius: 0,
