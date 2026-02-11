@@ -7,7 +7,7 @@ import { mapManagersToCssVars } from "@/components/json-render/theme/thememanage
 
 type AnyRecord = Record<string, any>;
 type Rgb = { r: number; g: number; b: number };
-export type HeaderThemePreset = "auto" | "subtle" | "contrast" | "surface";
+export type HeaderThemePreset = "auto" | "white" | "gray" | "purple" | "dark";
 
 // Map JSON Render theme names/aliases to DesignTokens theme keys
 const THEME_ALIASES: Record<string, ThemeName> = {
@@ -119,11 +119,47 @@ function rgbToCss(c: Rgb): string {
 function normalizeHeaderTheme(input?: string): HeaderThemePreset {
   const key = String(input || "auto").trim().toLowerCase();
   if (!key || key === "auto" || key === "default") return "auto";
-  if (["subtle", "soft", "muted", "minimal"].includes(key)) return "subtle";
-  if (["contrast", "strong", "high-contrast"].includes(key)) return "contrast";
-  if (["surface", "card", "solid"].includes(key)) return "surface";
+  if (["white", "branco", "light"].includes(key)) return "white";
+  if (["gray", "grey", "cinza", "light-gray", "light-grey"].includes(key)) return "gray";
+  if (["purple", "roxo", "violet", "indigo"].includes(key)) return "purple";
+  if (["dark", "preto", "black", "grafite", "charcoal"].includes(key)) return "dark";
+  // Legacy aliases
+  if (["subtle", "soft", "muted", "minimal", "surface", "card", "solid"].includes(key)) return "gray";
+  if (["contrast", "strong", "high-contrast"].includes(key)) return "dark";
   return "auto";
 }
+
+const FIXED_HEADER_THEMES: Record<Exclude<HeaderThemePreset, "auto">, {
+  bg: string;
+  text: string;
+  subtitle: string;
+  border: string;
+}> = {
+  white: {
+    bg: "#ffffff",
+    text: "#0f172a",
+    subtitle: "#475569",
+    border: "#e2e8f0",
+  },
+  gray: {
+    bg: "#f3f4f6",
+    text: "#111827",
+    subtitle: "#4b5563",
+    border: "#d1d5db",
+  },
+  purple: {
+    bg: "#5b21b6",
+    text: "#f5f3ff",
+    subtitle: "#ddd6fe",
+    border: "#7c3aed",
+  },
+  dark: {
+    bg: "#111827",
+    text: "#f9fafb",
+    subtitle: "#9ca3af",
+    border: "#374151",
+  },
+};
 
 function deriveHeaderVars(args: {
   headerTheme?: string;
@@ -137,6 +173,15 @@ function deriveHeaderVars(args: {
   if (!bgColor) return out;
 
   const preset = normalizeHeaderTheme(headerTheme);
+  if (preset !== "auto") {
+    const fixed = FIXED_HEADER_THEMES[preset];
+    out.headerBg = fixed.bg;
+    out.headerText = fixed.text;
+    out.headerSubtitle = fixed.subtitle;
+    out.headerBorder = fixed.border;
+    return out;
+  }
+
   const bg = parseColor(bgColor);
   const fg = parseColor(fgColor);
   const surface = parseColor(surfaceColor);
@@ -147,33 +192,17 @@ function deriveHeaderVars(args: {
     const text = fg || (isDark ? { r: 229, g: 231, b: 235 } : { r: 15, g: 23, b: 42 });
 
     let headerBgRgb: Rgb;
-    if (preset === "surface" && surface) {
+    if (surface) {
       headerBgRgb = surface;
     } else {
-      const bgMix = preset === "subtle"
-        ? (isDark ? 0.06 : 0.05)
-        : preset === "contrast"
-          ? (isDark ? 0.2 : 0.15)
-          : (isDark ? 0.12 : 0.09);
-      headerBgRgb = mixRgb(bg, text, bgMix);
+      headerBgRgb = mixRgb(bg, text, isDark ? 0.12 : 0.09);
     }
 
-    const borderMix = preset === "subtle"
-      ? (isDark ? 0.18 : 0.12)
-      : preset === "contrast"
-        ? (isDark ? 0.36 : 0.28)
-        : preset === "surface"
-          ? (isDark ? 0.26 : 0.2)
-          : (isDark ? 0.24 : 0.18);
-    const headerBorderRgb = (preset === "surface" && border)
+    const headerBorderRgb = border
       ? border
-      : mixRgb(bg, text, borderMix);
+      : mixRgb(bg, text, isDark ? 0.24 : 0.18);
 
-    const subtitleMix = preset === "contrast"
-      ? (isDark ? 0.28 : 0.34)
-      : preset === "subtle"
-        ? (isDark ? 0.44 : 0.5)
-        : (isDark ? 0.36 : 0.42);
+    const subtitleMix = isDark ? 0.36 : 0.42;
     const subtitleRgb = mixRgb(text, headerBgRgb, subtitleMix);
 
     out.headerBg = rgbToCss(headerBgRgb);
@@ -184,10 +213,9 @@ function deriveHeaderVars(args: {
   }
 
   const fgExpr = fgColor || "#111827";
-  const bgPct = preset === "contrast" ? 82 : (preset === "subtle" ? 94 : 90);
-  out.headerBg = (preset === "surface" && surfaceColor)
+  out.headerBg = surfaceColor
     ? String(surfaceColor)
-    : `color-mix(in srgb, ${bgColor} ${bgPct}%, ${fgExpr} ${100 - bgPct}%)`;
+    : `color-mix(in srgb, ${bgColor} 90%, ${fgExpr} 10%)`;
   if (borderColor) out.headerBorder = String(borderColor);
   return out;
 }

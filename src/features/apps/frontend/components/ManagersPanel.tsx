@@ -20,9 +20,10 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
   ];
   const headerThemeOptions = [
     { value: '', label: 'Auto' },
-    { value: 'subtle', label: 'Subtle' },
-    { value: 'contrast', label: 'Contrast' },
-    { value: 'surface', label: 'Surface' },
+    { value: 'white', label: 'Branco' },
+    { value: 'gray', label: 'Cinza Claro' },
+    { value: 'purple', label: 'Roxo' },
+    { value: 'dark', label: 'Dark' },
   ];
   const fontOptions = [
     'Inter, ui-sans-serif, system-ui',

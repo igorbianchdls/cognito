@@ -39,16 +39,26 @@ import { $headerUi, headerUiActions } from '@/stores/ui/headerUiStore';
 import type { HeaderStyle } from '@/stores/ui/headerUiStore';
 import { dashboardsApi, type Dashboard } from '@/stores/dashboardsStore';
 
-type HeaderThemeOption = 'auto' | 'subtle' | 'contrast' | 'surface';
+type HeaderThemeOption = 'auto' | 'white' | 'gray' | 'purple' | 'dark';
 const HEADER_THEME_OPTIONS: Array<{ key: HeaderThemeOption; label: string }> = [
   { key: 'auto', label: 'Auto' },
-  { key: 'subtle', label: 'Subtle' },
-  { key: 'contrast', label: 'Contrast' },
-  { key: 'surface', label: 'Surface' },
+  { key: 'white', label: 'Branco' },
+  { key: 'gray', label: 'Cinza Claro' },
+  { key: 'purple', label: 'Roxo' },
+  { key: 'dark', label: 'Dark' },
 ];
 
-function isHeaderThemeOption(value: unknown): value is HeaderThemeOption {
-  return value === 'auto' || value === 'subtle' || value === 'contrast' || value === 'surface';
+function normalizeHeaderThemeOption(value: unknown): HeaderThemeOption {
+  const key = String(value ?? '').trim().toLowerCase();
+  if (!key || key === 'auto' || key === 'default') return 'auto';
+  if (['white', 'branco', 'light'].includes(key)) return 'white';
+  if (['gray', 'grey', 'cinza', 'light-gray', 'light-grey'].includes(key)) return 'gray';
+  if (['purple', 'roxo', 'violet', 'indigo'].includes(key)) return 'purple';
+  if (['dark', 'preto', 'black', 'grafite', 'charcoal'].includes(key)) return 'dark';
+  // compat with old options
+  if (['subtle', 'soft', 'muted', 'minimal', 'surface', 'card', 'solid'].includes(key)) return 'gray';
+  if (['contrast', 'strong', 'high-contrast'].includes(key)) return 'dark';
+  return 'auto';
 }
 
 export default function DashboardChatPanel() {
@@ -333,8 +343,7 @@ export default function DashboardChatPanel() {
       const theme = st['theme'];
       if (typeof theme === 'string' && ThemeManager.isValidTheme(theme)) setSelectedTheme(theme as ThemeName);
       const headerTheme = st['headerTheme'];
-      if (isHeaderThemeOption(headerTheme)) setSelectedHeaderTheme(headerTheme);
-      else setSelectedHeaderTheme('auto');
+      setSelectedHeaderTheme(normalizeHeaderThemeOption(headerTheme));
       const cf = st['customFont'];
       if (typeof cf === 'string' && FontManager.isValidFont(cf)) setSelectedFont(cf as FontPresetKey);
       const cfs = st['customFontSize'];
@@ -404,8 +413,7 @@ export default function DashboardChatPanel() {
       const cfg = JSON.parse(code) as { config?: { header?: HeaderConfig }, theme?: string, headerTheme?: HeaderThemeOption };
       const header = (cfg.config?.header || {}) as HeaderConfig;
       const headerThemeFromCode = cfg.headerTheme ?? header.theme;
-      if (isHeaderThemeOption(headerThemeFromCode)) setSelectedHeaderTheme(headerThemeFromCode);
-      else setSelectedHeaderTheme('auto');
+      setSelectedHeaderTheme(normalizeHeaderThemeOption(headerThemeFromCode));
       const hasHeaderStyles = (header.light && typeof header.light === 'object') || (header.dark && typeof header.dark === 'object');
       if (!hasHeaderStyles) {
         headerUiActions.resetAll();
