@@ -4,7 +4,6 @@ import React from "react";
 
 type AnyRecord = Record<string, any>;
 type Rgb = { r: number; g: number; b: number };
-type BorderWidths = { top: number; right: number; bottom: number; left: number };
 
 export type HudFrameConfig = {
   variant?: "hud";
@@ -175,17 +174,6 @@ function resolveFrame(frame: HudFrameConfig | null | undefined, cssVars?: Record
   return { variant, baseColor, cornerColor, cornerSize, cornerWidth };
 }
 
-function resolveBorderWidths(style: React.CSSProperties | undefined, fallback: number): BorderWidths {
-  const s = (style || {}) as AnyRecord;
-  const all = Math.max(0, toNumber(s.borderWidth, fallback));
-  return {
-    top: Math.max(0, toNumber(s.borderTopWidth, all)),
-    right: Math.max(0, toNumber(s.borderRightWidth, all)),
-    bottom: Math.max(0, toNumber(s.borderBottomWidth, all)),
-    left: Math.max(0, toNumber(s.borderLeftWidth, all)),
-  };
-}
-
 export default function FrameSurface({ style, frame, cssVars, className, children }: Props) {
   const resolved = resolveFrame(frame, cssVars, style);
   if (!resolved) {
@@ -211,7 +199,6 @@ export default function FrameSurface({ style, frame, cssVars, className, childre
   };
   const corner = s.cornerSize;
   const stroke = s.cornerWidth;
-  const bw = resolveBorderWidths(merged, stroke);
   const rootRef = React.useRef<HTMLDivElement | null>(null);
   const [size, setSize] = React.useState({ width: 0, height: 0 });
 
@@ -231,10 +218,11 @@ export default function FrameSurface({ style, frame, cssVars, className, childre
 
   const snapHalfPx = (n: number) => Math.round(n * 2) / 2;
   const safeCorner = Math.max(0, Math.min(corner, Math.floor(size.width / 2), Math.floor(size.height / 2)));
-  const xLeft = snapHalfPx(bw.left / 2);
-  const yTop = snapHalfPx(bw.top / 2);
-  const xRight = snapHalfPx(Math.max(xLeft, size.width - bw.right / 2));
-  const yBottom = snapHalfPx(Math.max(yTop, size.height - bw.bottom / 2));
+  // Draw corner accents on the outer border edge so they overlap the base border.
+  const xLeft = snapHalfPx(0);
+  const yTop = snapHalfPx(0);
+  const xRight = snapHalfPx(Math.max(0, size.width));
+  const yBottom = snapHalfPx(Math.max(0, size.height));
 
   return (
     <div ref={rootRef} className={className} style={merged}>
