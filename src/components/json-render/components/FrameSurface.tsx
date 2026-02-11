@@ -151,9 +151,12 @@ export default function FrameSurface({ style, frame, cssVars, className, childre
     borderStyle: style?.borderStyle && style.borderStyle !== "none" ? style.borderStyle : "solid",
     borderWidth: style?.borderWidth ?? s.cornerWidth,
     borderColor: style?.borderColor || s.baseColor,
+    borderRadius: 0,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
+    borderBottomLeftRadius: 0,
   };
-
-  const radius = (merged as AnyRecord)?.borderRadius;
   const corner = s.cornerSize;
   const stroke = s.cornerWidth;
 
@@ -166,7 +169,7 @@ export default function FrameSurface({ style, frame, cssVars, className, childre
           position: "absolute",
           inset: 0,
           pointerEvents: "none",
-          borderRadius: (radius as any) ?? "inherit",
+          borderRadius: 0,
         }}
       >
         <div style={{ ...lineStyle(s.cornerColor, stroke), left: 0, top: 0, width: corner, height: stroke }} />
