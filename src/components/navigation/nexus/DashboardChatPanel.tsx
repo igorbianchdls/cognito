@@ -47,6 +47,36 @@ const HEADER_THEME_OPTIONS: Array<{ key: HeaderThemeOption; label: string }> = [
   { key: 'purple', label: 'Roxo' },
   { key: 'dark', label: 'Dark' },
 ];
+const HEADER_THEME_STYLES: Record<Exclude<HeaderThemeOption, 'auto'>, Partial<HeaderStyle>> = {
+  white: {
+    background: '#ffffff',
+    textPrimary: '#0f172a',
+    textSecondary: '#475569',
+    borderBottomColor: '#e2e8f0',
+    datePickerBorderColor: '#cbd5e1',
+  },
+  gray: {
+    background: '#f3f4f6',
+    textPrimary: '#111827',
+    textSecondary: '#4b5563',
+    borderBottomColor: '#d1d5db',
+    datePickerBorderColor: '#cbd5e1',
+  },
+  purple: {
+    background: '#5b21b6',
+    textPrimary: '#f5f3ff',
+    textSecondary: '#ddd6fe',
+    borderBottomColor: '#7c3aed',
+    datePickerBorderColor: '#a78bfa',
+  },
+  dark: {
+    background: '#111827',
+    textPrimary: '#f9fafb',
+    textSecondary: '#9ca3af',
+    borderBottomColor: '#374151',
+    datePickerBorderColor: '#4b5563',
+  },
+};
 
 function normalizeHeaderThemeOption(value: unknown): HeaderThemeOption {
   const key = String(value ?? '').trim().toLowerCase();
@@ -59,6 +89,13 @@ function normalizeHeaderThemeOption(value: unknown): HeaderThemeOption {
   if (['subtle', 'soft', 'muted', 'minimal', 'surface', 'card', 'solid'].includes(key)) return 'gray';
   if (['contrast', 'strong', 'high-contrast'].includes(key)) return 'dark';
   return 'auto';
+}
+
+function applyHeaderThemePresetToStore(preset: HeaderThemeOption) {
+  if (preset === 'auto') return;
+  const style = HEADER_THEME_STYLES[preset];
+  headerUiActions.setStyle('light', style);
+  headerUiActions.setStyle('dark', style);
 }
 
 export default function DashboardChatPanel() {
@@ -446,6 +483,11 @@ export default function DashboardChatPanel() {
     } catch {}
   }, [visualBuilderState.code]);
 
+  // Keep header visuals in sync when a fixed header theme is selected.
+  useEffect(() => {
+    applyHeaderThemePresetToStore(selectedHeaderTheme);
+  }, [selectedHeaderTheme]);
+
   // Derive dashboardId from URL query (?dashboardId=... or ?dashboard=...)
   useEffect(() => {
     const fromQuery = searchParams?.get('dashboardId') || searchParams?.get('dashboard');
@@ -696,6 +738,7 @@ export default function DashboardChatPanel() {
         visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
       }
       setSelectedHeaderTheme(headerTheme);
+      applyHeaderThemePresetToStore(headerTheme);
     } catch (error) {
       console.error('Error applying header theme:', error);
     }

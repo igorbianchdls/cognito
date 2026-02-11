@@ -127,7 +127,7 @@ function mapAlign(v?: string): React.CSSProperties['alignItems'] | undefined {
 }
 
 // Themed Date input with custom icon
-function DateFieldWithIcon({ value, onChange, fieldStyle }: { value: string; onChange: (v: string) => void; fieldStyle?: React.CSSProperties }) {
+function DateFieldWithIcon({ value, onChange, fieldStyle, iconStyleOverride }: { value: string; onChange: (v: string) => void; fieldStyle?: React.CSSProperties; iconStyleOverride?: React.CSSProperties }) {
   const theme = useThemeOverrides();
   const ref = React.useRef<HTMLInputElement>(null);
   const iconVars = applyDatePickerIconFromCssVars(undefined, theme.cssVars) as React.CSSProperties | undefined;
@@ -150,6 +150,7 @@ function DateFieldWithIcon({ value, onChange, fieldStyle }: { value: string; onC
     justifyContent: 'center',
     cursor: 'pointer',
     ...iconVars,
+    ...iconStyleOverride,
   };
   const wrapperStyle: React.CSSProperties = {
     position: 'relative',
@@ -163,7 +164,7 @@ function DateFieldWithIcon({ value, onChange, fieldStyle }: { value: string; onC
         ref={ref}
         type="date"
         className="outline-none bg-transparent text-xs"
-        style={{ border: 'none', background: 'transparent' }}
+        style={{ border: 'none', background: 'transparent', color: 'inherit' }}
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />
@@ -208,6 +209,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
 
   Header: ({ element, children, onAction }) => {
     const theme = useThemeOverrides();
+    const css = (theme.cssVars || {}) as AnyRecord;
     const p = deepMerge(deepMerge(defaultHeader as any, (theme.components?.Header || {}) as any), (element?.props || {}) as any) as AnyRecord;
     const align = (p.align ?? 'left') as 'left'|'center'|'right';
     const containerStyle: React.CSSProperties = {
@@ -251,9 +253,27 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const mode = (dp.mode ?? 'range') as 'range'|'single';
     const storePath = typeof dp.storePath === 'string' ? dp.storePath : undefined;
     const format = (typeof dp.format === 'string' && dp.format) ? dp.format : 'YYYY-MM-DD';
-    const dateLabelStyle = applyDatePickerLabelFromCssVars(normalizeTitleStyle((dp.style as any)?.labelStyle), theme.cssVars) as React.CSSProperties | undefined;
-    const dateFieldStyle = applyDatePickerFieldFromCssVars(undefined, theme.cssVars) as React.CSSProperties | undefined;
+    const baseDateLabelStyle = applyDatePickerLabelFromCssVars(normalizeTitleStyle((dp.style as any)?.labelStyle), theme.cssVars) as React.CSSProperties | undefined;
+    const dateLabelStyle = ({
+      ...baseDateLabelStyle,
+      color: css.headerDpLabel || p.subtitleColor || baseDateLabelStyle?.color,
+    }) as React.CSSProperties;
+    const baseDateFieldStyle = applyDatePickerFieldFromCssVars(undefined, theme.cssVars) as React.CSSProperties | undefined;
+    const dateFieldStyle = ({
+      ...baseDateFieldStyle,
+      backgroundColor: css.headerDpBg || baseDateFieldStyle?.backgroundColor,
+      color: css.headerDpColor || p.textColor || baseDateFieldStyle?.color,
+      borderColor: css.headerDpBorder || p.borderColor || baseDateFieldStyle?.borderColor,
+    }) as React.CSSProperties;
+    const dateIconStyle = ({
+      color: css.headerDpIcon || css.headerDpColor || p.textColor,
+    }) as React.CSSProperties;
     const dateFieldOverride = applyDatePickerFieldFromCssVars((dp.style as any)?.fieldStyle, undefined) as React.CSSProperties | undefined;
+    const headerTitleStyle = (() => {
+      const s = applyH1FromCssVars({ color: p.textColor }, theme.cssVars) || {};
+      (s as AnyRecord).color = p.textColor;
+      return s as React.CSSProperties;
+    })();
     const { data, setData, getValueByPath } = useData();
     function toISO(d: Date) { return d.toISOString().slice(0,10); }
     function fmt(d?: string) { return d || ''; }
@@ -297,6 +317,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
                 if (dp.actionOnChange && typeof dp.actionOnChange === 'object') onAction?.(dp.actionOnChange);
               }}
               fieldStyle={{ ...dateFieldStyle, ...dateFieldOverride }}
+              iconStyleOverride={dateIconStyle}
             />
             <span className="text-xs" style={dateLabelStyle}>até</span>
             <DateFieldWithIcon
@@ -308,6 +329,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
                 if (dp.actionOnChange && typeof dp.actionOnChange === 'object') onAction?.(dp.actionOnChange);
               }}
               fieldStyle={{ ...dateFieldStyle, ...dateFieldOverride }}
+              iconStyleOverride={dateIconStyle}
             />
           </div>
         );
@@ -324,6 +346,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
                 if (dp.actionOnChange && typeof dp.actionOnChange === 'object') onAction?.(dp.actionOnChange);
               }}
               fieldStyle={{ ...dateFieldStyle, ...dateFieldOverride }}
+              iconStyleOverride={dateIconStyle}
             />
           </div>
         );
@@ -563,7 +586,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
           <>
             <div className="flex items-center justify-between">
               <div style={{ padding: '3px 6px' }}>
-                <div className="text-lg font-semibold" style={{ ...(applyH1FromCssVars({ color: p.textColor }, theme.cssVars) || {}), fontSize: '20px' }}>{p.title}</div>
+                <div className="text-lg font-semibold" style={{ ...headerTitleStyle, fontSize: '20px' }}>{p.title}</div>
               </div>
             </div>
             {controls && <div className="mt-2">{controls}</div>}
@@ -573,7 +596,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
             <div className="flex items-center gap-3">
               {controlsPosition === 'left' && controls}
               <div style={{ padding: '3px 6px' }}>
-                <div className="text-lg font-semibold" style={{ ...(applyH1FromCssVars({ color: p.textColor }, theme.cssVars) || {}), fontSize: '20px' }}>{p.title}</div>
+                <div className="text-lg font-semibold" style={{ ...headerTitleStyle, fontSize: '20px' }}>{p.title}</div>
               </div>
             </div>
             {controlsPosition === 'right' && controls}

@@ -134,30 +134,55 @@ const FIXED_HEADER_THEMES: Record<Exclude<HeaderThemePreset, "auto">, {
   text: string;
   subtitle: string;
   border: string;
+  dpBg: string;
+  dpColor: string;
+  dpBorder: string;
+  dpIcon: string;
+  dpLabel: string;
 }> = {
   white: {
     bg: "#ffffff",
     text: "#0f172a",
     subtitle: "#475569",
     border: "#e2e8f0",
+    dpBg: "#ffffff",
+    dpColor: "#0f172a",
+    dpBorder: "#cbd5e1",
+    dpIcon: "#334155",
+    dpLabel: "#475569",
   },
   gray: {
     bg: "#f3f4f6",
     text: "#111827",
     subtitle: "#4b5563",
     border: "#d1d5db",
+    dpBg: "#ffffff",
+    dpColor: "#111827",
+    dpBorder: "#cbd5e1",
+    dpIcon: "#374151",
+    dpLabel: "#4b5563",
   },
   purple: {
     bg: "#5b21b6",
     text: "#f5f3ff",
     subtitle: "#ddd6fe",
     border: "#7c3aed",
+    dpBg: "#6d28d9",
+    dpColor: "#f5f3ff",
+    dpBorder: "#a78bfa",
+    dpIcon: "#ddd6fe",
+    dpLabel: "#ddd6fe",
   },
   dark: {
     bg: "#111827",
     text: "#f9fafb",
     subtitle: "#9ca3af",
     border: "#374151",
+    dpBg: "#1f2937",
+    dpColor: "#f9fafb",
+    dpBorder: "#4b5563",
+    dpIcon: "#cbd5e1",
+    dpLabel: "#9ca3af",
   },
 };
 
@@ -179,6 +204,11 @@ function deriveHeaderVars(args: {
     out.headerText = fixed.text;
     out.headerSubtitle = fixed.subtitle;
     out.headerBorder = fixed.border;
+    out.headerDpBg = fixed.dpBg;
+    out.headerDpColor = fixed.dpColor;
+    out.headerDpBorder = fixed.dpBorder;
+    out.headerDpIcon = fixed.dpIcon;
+    out.headerDpLabel = fixed.dpLabel;
     return out;
   }
 
@@ -209,6 +239,13 @@ function deriveHeaderVars(args: {
     out.headerBorder = rgbToCss(headerBorderRgb);
     out.headerText = rgbToCss(text);
     out.headerSubtitle = rgbToCss(subtitleRgb);
+    const dpBgRgb = mixRgb(headerBgRgb, text, isDark ? 0.1 : 0.03);
+    const dpBorderRgb = mixRgb(headerBgRgb, text, isDark ? 0.3 : 0.22);
+    out.headerDpBg = rgbToCss(dpBgRgb);
+    out.headerDpColor = rgbToCss(text);
+    out.headerDpBorder = rgbToCss(dpBorderRgb);
+    out.headerDpIcon = rgbToCss(mixRgb(text, subtitleRgb, 0.4));
+    out.headerDpLabel = rgbToCss(subtitleRgb);
     return out;
   }
 
