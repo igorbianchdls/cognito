@@ -134,7 +134,7 @@ function extractPdfTextFallback(buffer: Buffer): { text: string; pages: number }
     if (text) chunks.push(text)
   }
 
-  const tjArrayRegex = /\[((?:\\.|[^\]])*)\]\s*TJ/gms
+  const tjArrayRegex = /\[((?:\\.|[\s\S])*?)\]\s*TJ/gm
   for (const match of src.matchAll(tjArrayRegex)) {
     const arr = match[1] || ''
     const parts: string[] = []
