@@ -192,3 +192,172 @@ export async function createContaAPagarEContabil(input: CreateContaAPagarInput):
   })
 }
 
+export type TipoLancamentoFinanceiro = 'conta_a_pagar' | 'conta_a_receber'
+
+export type CreateLancamentoFinanceiroEContabilInput = {
+  tenant_id: number
+  tipo: TipoLancamentoFinanceiro
+  descricao: string
+  valor: number
+  data_lancamento: string
+  data_vencimento: string
+  categoria_id: number
+  entidade_id?: number | null
+  conta_financeira_id?: number | null
+  status?: string | null
+  origem_tabela?: string | null
+  origem_numero?: string | null
+}
+
+function origemCandidatesByTipo(tipo: TipoLancamentoFinanceiro): string[] {
+  return tipo === 'conta_a_pagar'
+    ? ['contas_a_pagar', 'conta_a_pagar']
+    : ['contas_a_receber', 'conta_a_receber']
+}
+
+/**
+ * Cria lançamento financeiro (financeiro.lancamentos_financeiros) e o respectivo
+ * lançamento contábil (contabilidade.lancamentos_contabeis + linhas) na mesma transação.
+ */
+export async function createLancamentoFinanceiroEContabil(
+  input: CreateLancamentoFinanceiroEContabilInput
+): Promise<{ lfId: number; lcId: number; regraId: number | null; planoContaId: number }> {
+  const {
+    tenant_id,
+    tipo,
+    descricao,
+    valor,
+    data_lancamento,
+    data_vencimento,
+    categoria_id,
+    entidade_id = null,
+    conta_financeira_id = null,
+    status = 'pendente',
+    origem_tabela = 'financeiro.lancamentos_financeiros',
+    origem_numero = null,
+  } = input
+
+  const valorAbs = Math.abs(Number(valor))
+  if (!Number.isFinite(valorAbs) || valorAbs <= 0) throw new Error('valor inválido')
+
+  return withTransaction(async (client) => {
+    // 1) Lançamento financeiro base
+    const insertLfSql = `
+      INSERT INTO financeiro.lancamentos_financeiros
+        (tenant_id, tipo, descricao, valor, data_lancamento, data_vencimento, status, entidade_id, categoria_id, conta_financeira_id)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+      RETURNING id`
+    const lfVals = [
+      tenant_id,
+      tipo,
+      descricao,
+      valorAbs,
+      data_lancamento,
+      data_vencimento,
+      String(status || 'pendente').toLowerCase(),
+      entidade_id,
+      categoria_id,
+      conta_financeira_id,
+    ]
+    const lfRes = await client.query(insertLfSql, lfVals)
+    const lfId = Number(lfRes.rows[0]?.id)
+    if (!lfId) throw new Error('Falha ao criar lançamento financeiro')
+
+    // 2) Categoria -> plano contábil
+    const categoriaTable = tipo === 'conta_a_pagar'
+      ? 'financeiro.categorias_despesa'
+      : 'financeiro.categorias_receita'
+    const planoRows = await client.query<{ plano_conta_id: number | null }>(
+      `SELECT plano_conta_id FROM ${categoriaTable} WHERE id = $1 LIMIT 1`,
+      [categoria_id]
+    )
+    const planoContaRaw = planoRows.rows[0]?.plano_conta_id
+    const planoContaId = planoContaRaw !== null && planoContaRaw !== undefined ? Number(planoContaRaw) : NaN
+    if (!Number.isFinite(planoContaId)) {
+      throw new Error('Categoria sem plano_conta_id configurado')
+    }
+
+    // 3) Regra contábil por origem + plano
+    const origemCandidates = origemCandidatesByTipo(tipo)
+    const preferredOrigem = origemCandidates[0]
+    const regraRows = await client.query<{
+      id: number | null
+      conta_debito_id: number | null
+      conta_credito_id: number | null
+      descricao: string | null
+      origem: string | null
+    }>(
+      `SELECT id, conta_debito_id, conta_credito_id, descricao, origem
+         FROM contabilidade.regras_contabeis
+        WHERE tenant_id = $1
+          AND origem = ANY($2::text[])
+          AND plano_conta_id = $3
+        ORDER BY CASE WHEN origem = $4 THEN 0 ELSE 1 END, id ASC
+        LIMIT 1`,
+      [tenant_id, origemCandidates, planoContaId, preferredOrigem]
+    )
+    const regra = regraRows.rows[0] || null
+    if (!regra) {
+      throw new Error(`Nenhuma regra contábil ativa para ${tipo} + plano_conta_id ${planoContaId}`)
+    }
+
+    // 4) Contas de débito/crédito conforme tipo
+    let contaDebitoId: number
+    let contaCreditoId: number
+    if (tipo === 'conta_a_pagar') {
+      // Dr despesa/custo (plano da categoria), Cr obrigação/caixa conforme regra
+      contaDebitoId = Number(regra.conta_debito_id ?? planoContaId)
+      contaCreditoId = Number(regra.conta_credito_id)
+      if (!Number.isFinite(contaCreditoId)) throw new Error('Regra contábil inválida: conta_credito_id ausente')
+    } else {
+      // Dr clientes/caixa conforme regra, Cr receita (plano da categoria)
+      contaDebitoId = Number(regra.conta_debito_id)
+      contaCreditoId = Number(regra.conta_credito_id ?? planoContaId)
+      if (!Number.isFinite(contaDebitoId)) throw new Error('Regra contábil inválida: conta_debito_id ausente')
+    }
+    if (!Number.isFinite(contaDebitoId) || !Number.isFinite(contaCreditoId)) {
+      throw new Error('Regra contábil inválida: contas de débito/crédito não resolvidas')
+    }
+
+    // 5) Cabeçalho contábil vinculado ao financeiro
+    const fornecedorId = tipo === 'conta_a_pagar' ? entidade_id : null
+    const clienteId = tipo === 'conta_a_receber' ? entidade_id : null
+    const historico = String(regra.descricao || descricao || '').trim() || null
+    const insertLcSql = `
+      INSERT INTO contabilidade.lancamentos_contabeis
+        (tenant_id, data_lancamento, historico, fornecedor_id, cliente_id, conta_financeira_id,
+         total_debitos, total_creditos, lancamento_financeiro_id, origem_tabela, origem_id, origem_numero)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$7,$8,$9,$8,$10)
+      RETURNING id`
+    const lcVals = [
+      tenant_id,
+      data_lancamento,
+      historico,
+      fornecedorId,
+      clienteId,
+      conta_financeira_id,
+      valorAbs,
+      lfId,
+      origem_tabela,
+      origem_numero,
+    ]
+    const lcRes = await client.query(insertLcSql, lcVals)
+    const lcId = Number(lcRes.rows[0]?.id)
+    if (!lcId) throw new Error('Falha ao criar lançamento contábil')
+
+    // 6) Linhas contábeis
+    const insertLinhaSql = `
+      INSERT INTO contabilidade.lancamentos_contabeis_linhas
+        (lancamento_id, lancamento_contabil_id, conta_id, debito, credito, historico)
+      VALUES ($1,$2,$3,$4,$5,$6)`
+    await client.query(insertLinhaSql, [lcId, lcId, contaDebitoId, valorAbs, 0, historico])
+    await client.query(insertLinhaSql, [lcId, lcId, contaCreditoId, 0, valorAbs, historico])
+
+    return {
+      lfId,
+      lcId,
+      regraId: regra.id !== null && regra.id !== undefined ? Number(regra.id) : null,
+      planoContaId,
+    }
+  })
+}

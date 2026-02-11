@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { runQuery } from '@/lib/postgres'
+import { createLancamentoFinanceiroEContabil } from '@/services/contabilidade'
 import { verifyAgentToken } from '@/app/api/chat/tokenStore'
 
 export const runtime = 'nodejs'
@@ -25,16 +25,27 @@ export async function POST(req: NextRequest) {
     const conta_financeira_id = payload.conta_financeira_id !== undefined ? Number(payload.conta_financeira_id) : null
     if (!Number.isFinite(categoria_id) || !Number.isFinite(valor)) return Response.json({ ok: false, error: 'categoria_id e valor são obrigatórios' }, { status: 400 })
 
-    const sql = `INSERT INTO financeiro.lancamentos_financeiros
-      (tenant_id, tipo, descricao, valor, data_lancamento, data_vencimento, status, entidade_id, categoria_id, conta_financeira_id)
-      VALUES ($1,'conta_a_pagar',$2,$3,$4,$5,'pendente',$6,$7,$8)
-      RETURNING id`
-    const params = [tenantId, descricao, Math.abs(valor), data_lancamento, data_vencimento, fornecedor_id, categoria_id, conta_financeira_id]
-    const rows = await runQuery<{ id: number }>(sql, params)
-    const id = Number(rows[0]?.id)
-    return Response.json({ ok: true, result: { success: true, data: { id }, message: 'Conta a pagar criada' } })
+    const result = await createLancamentoFinanceiroEContabil({
+      tenant_id: tenantId,
+      tipo: 'conta_a_pagar',
+      descricao,
+      valor: Math.abs(valor),
+      data_lancamento,
+      data_vencimento,
+      categoria_id,
+      entidade_id: fornecedor_id,
+      conta_financeira_id,
+    })
+
+    return Response.json({
+      ok: true,
+      result: {
+        success: true,
+        data: { id: result.lfId, lancamento_contabil_id: result.lcId },
+        message: 'Conta a pagar criada com lançamento contábil'
+      }
+    })
   } catch (e) {
     return Response.json({ ok: false, error: (e as Error).message }, { status: 500 })
   }
 }
-

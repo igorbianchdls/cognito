@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { tool } from 'ai'
 import { runQuery } from '@/lib/postgres'
+import { createLancamentoFinanceiroEContabil } from '@/services/contabilidade'
 
 const fmt = (params: unknown[]) => (params.length ? JSON.stringify(params) : '[]')
 
@@ -108,65 +109,44 @@ export const createContaAPagar = tool({
         ? normalizedStatusRaw
         : 'pendente'
 
-      // Monta colunas/valores para lancamentos_financeiros
-      const columns: string[] = [
-        'tenant_id',
-        'tipo',
-        'descricao',
-        'valor',
-        'data_lancamento',
-        'data_vencimento',
-        'status',
-        'entidade_id',
-      ]
       const entidadeId = fornecedor_id ? Number(fornecedor_id) : null
       const categoriaIdNum = typeof categoria_id !== 'undefined' && categoria_id !== null ? Number(categoria_id) : undefined
       const contaFinanceiraIdNum = typeof conta_financeira_id !== 'undefined' && conta_financeira_id !== null ? Number(conta_financeira_id) : undefined
-      const centroCustoIdNum = typeof centro_custo_id !== 'undefined' && centro_custo_id !== null ? Number(centro_custo_id) : undefined
-
-      const values: unknown[] = [
-        tenant_id ?? null,
-        'conta_a_pagar',
-        descricao,
-        Math.abs(valor_total),
-        data_emissao,
-        data_vencimento,
-        normalizedStatus,
-        entidadeId,
-      ]
-
-      const addOpt = (col: string, v: unknown) => {
-        if (typeof v !== 'undefined') {
-          columns.push(col)
-          values.push(v)
-        }
+      const categoriaId = typeof categoriaIdNum === 'number' && !Number.isNaN(categoriaIdNum) ? categoriaIdNum : NaN
+      if (!Number.isFinite(categoriaId)) {
+        return { success: false, message: 'categoria_id é obrigatório para gerar lançamento contábil automaticamente' }
       }
 
-      addOpt('categoria_id', typeof categoriaIdNum === 'number' && !Number.isNaN(categoriaIdNum) ? categoriaIdNum : null)
-      addOpt('conta_financeira_id', typeof contaFinanceiraIdNum === 'number' && !Number.isNaN(contaFinanceiraIdNum) ? contaFinanceiraIdNum : null)
-      addOpt('centro_custo_id', typeof centroCustoIdNum === 'number' && !Number.isNaN(centroCustoIdNum) ? centroCustoIdNum : null)
-
-      const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ')
-      const insertSql = `
-        INSERT INTO financeiro.lancamentos_financeiros (${columns.join(', ')})
-        VALUES (${placeholders})
-        RETURNING id, tipo, descricao, valor, data_lancamento, data_vencimento, status,
-                  entidade_id, categoria_id, conta_financeira_id, centro_custo_id
-      `.trim()
-      const [row] = await runQuery<Record<string, unknown>>(insertSql, values)
+      const created = await createLancamentoFinanceiroEContabil({
+        tenant_id: tenant_id ?? 1,
+        tipo: 'conta_a_pagar',
+        descricao,
+        valor: Math.abs(valor_total),
+        data_lancamento: data_emissao,
+        data_vencimento,
+        categoria_id: categoriaId,
+        entidade_id: entidadeId,
+        conta_financeira_id: typeof contaFinanceiraIdNum === 'number' && !Number.isNaN(contaFinanceiraIdNum) ? contaFinanceiraIdNum : null,
+        status: normalizedStatus,
+      })
 
       // Mapeia campos esperados pelo card/resumo
-      const conta = row ? {
-        id: row['id'],
-        descricao: row['descricao'],
-        valor: row['valor'],
-        data_emissao: row['data_lancamento'],
-        data_vencimento: row['data_vencimento'],
-        status: row['status'],
-        fornecedor_id: row['entidade_id'],
-      } : null
+      const conta = {
+        id: created.lfId,
+        descricao,
+        valor: Math.abs(valor_total),
+        data_emissao,
+        data_vencimento,
+        status: normalizedStatus,
+        fornecedor_id: entidadeId,
+        lancamento_contabil_id: created.lcId,
+      }
 
-      return { success: true, message: 'Conta a pagar criada com sucesso', conta, sql_query: insertSql, sql_params: fmt(values) }
+      return {
+        success: true,
+        message: 'Conta a pagar criada com sucesso (financeiro + contábil)',
+        conta,
+      }
     } catch (error) {
       return { success: false, message: `Erro ao criar conta a pagar: ${error instanceof Error ? error.message : String(error)}` }
     }

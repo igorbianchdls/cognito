@@ -1,4 +1,5 @@
 import { withTransaction } from '@/lib/postgres'
+import { createLancamentoFinanceiroEContabil } from '@/services/contabilidade'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -11,11 +12,60 @@ type PostBody = {
   historico?: string | null
   conta_financeira_id?: number | string | null
   linhas: Linha[]
+  // Modo financeiro opcional: cria financeiro + contábil automaticamente
+  tipo?: 'conta_a_pagar' | 'conta_a_receber' | string
+  categoria_id?: number | string
+  entidade_id?: number | string | null
+  valor?: number | string
+  data_vencimento?: string
+  status?: string | null
+  descricao?: string | null
 }
 
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as Partial<PostBody>
+    const tipoRaw = String(body.tipo || '').trim().toLowerCase()
+    const isModoFinanceiro = tipoRaw === 'conta_a_pagar' || tipoRaw === 'conta_a_receber'
+
+    if (isModoFinanceiro) {
+      const tenantId = body.tenant_id !== undefined && body.tenant_id !== null ? Number(body.tenant_id) : 1
+      const categoriaId = body.categoria_id !== undefined && body.categoria_id !== null ? Number(body.categoria_id) : NaN
+      const valor = body.valor !== undefined && body.valor !== null ? Number(body.valor) : NaN
+      const dataLanc = String(body.data_lancamento || '').trim()
+      const dataVenc = String(body.data_vencimento || '').trim() || dataLanc
+      const descricao = body.descricao !== undefined && body.descricao !== null
+        ? String(body.descricao).trim()
+        : (body.historico !== undefined && body.historico !== null ? String(body.historico).trim() : `Lançamento ${tipoRaw}`)
+      const entidadeId = body.entidade_id !== undefined && body.entidade_id !== null ? Number(body.entidade_id) : null
+      const contaFinId = body.conta_financeira_id !== undefined && body.conta_financeira_id !== null ? Number(body.conta_financeira_id) : null
+      const status = body.status !== undefined && body.status !== null ? String(body.status).trim().toLowerCase() : 'pendente'
+
+      if (!dataLanc) return Response.json({ success: false, message: 'data_lancamento é obrigatório' }, { status: 400 })
+      if (!Number.isFinite(categoriaId) || categoriaId <= 0) return Response.json({ success: false, message: 'categoria_id é obrigatório' }, { status: 400 })
+      if (!Number.isFinite(valor) || valor <= 0) return Response.json({ success: false, message: 'valor inválido' }, { status: 400 })
+
+      const created = await createLancamentoFinanceiroEContabil({
+        tenant_id: tenantId,
+        tipo: tipoRaw as 'conta_a_pagar' | 'conta_a_receber',
+        descricao,
+        valor,
+        data_lancamento: dataLanc,
+        data_vencimento: dataVenc,
+        categoria_id: categoriaId,
+        entidade_id: Number.isFinite(Number(entidadeId)) ? Number(entidadeId) : null,
+        conta_financeira_id: Number.isFinite(Number(contaFinId)) ? Number(contaFinId) : null,
+        status,
+      })
+
+      return Response.json({
+        success: true,
+        id: created.lcId,
+        lancamento_financeiro_id: created.lfId,
+        mode: 'financeiro+contabil',
+      })
+    }
+
     const dataLanc = String(body.data_lancamento || '').trim()
     const historico = body.historico !== undefined && body.historico !== null ? String(body.historico).trim() : null
     const tenantId = body.tenant_id !== undefined && body.tenant_id !== null ? Number(body.tenant_id) : 1
@@ -67,4 +117,3 @@ export async function POST(req: Request) {
     return Response.json({ success: false, message: msg }, { status: 400 })
   }
 }
-

@@ -342,7 +342,10 @@ export default function ModulosComprasPage() {
     return [
       { accessorKey: 'compra_id', header: 'ID' },
       { accessorKey: 'numero_oc', header: 'Número OC' },
-      { accessorKey: 'data_emissao', header: 'Data Emissão', cell: ({ row }) => formatDate(row.original['data_emissao']) },
+      { accessorKey: 'data_pedido', header: 'Data Pedido', cell: ({ row }) => formatDate(row.original['data_pedido']) },
+      { accessorKey: 'data_documento', header: 'Documento', cell: ({ row }) => formatDate(row.original['data_documento']) },
+      { accessorKey: 'data_lancamento', header: 'Lançamento', cell: ({ row }) => formatDate(row.original['data_lancamento']) },
+      { accessorKey: 'data_vencimento', header: 'Vencimento', cell: ({ row }) => formatDate(row.original['data_vencimento']) },
       { accessorKey: 'data_entrega_prevista', header: 'Entrega Prevista', cell: ({ row }) => formatDate(row.original['data_entrega_prevista']) },
       { accessorKey: 'fornecedor', header: 'Fornecedor',
         cell: ({ row }) => (
@@ -535,7 +538,10 @@ export default function ModulosComprasPage() {
                             tabs.selected === 'compras' ? {
                               compra_id: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 80 },
                               numero_oc: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
-                              data_emissao: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                              data_pedido: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                              data_documento: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                              data_lancamento: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                              data_vencimento: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
                               data_entrega_prevista: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
                               fornecedor: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 160 },
                               filial: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },

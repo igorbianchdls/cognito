@@ -270,6 +270,9 @@ export default function ModulosVendasPage() {
           { accessorKey: 'canal_venda', header: () => <IconLabelHeader icon={<LayoutGrid className="h-3.5 w-3.5" />} label="Canal de Venda" />, 
             cell: ({ row }) => <StatusBadge value={row.original['canal_venda']} id={row.original['canal_venda_id'] as number} type="canal_venda" /> },
           { accessorKey: 'data_pedido', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Data Pedido" />, cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'data_documento', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Documento" />, cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'data_lancamento', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Lançamento" />, cell: ({ getValue }) => formatDate(getValue()) },
+          { accessorKey: 'data_vencimento', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Vencimento" />, cell: ({ getValue }) => formatDate(getValue()) },
           { accessorKey: 'status', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Status" />,
             cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
           { accessorKey: 'valor_total', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Total" />, cell: ({ getValue }) => formatBRL(getValue()) },
@@ -494,6 +497,10 @@ export default function ModulosVendasPage() {
                     campanha_venda: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 160 },
                     filial: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
                     sales_office: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                    data_pedido: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                    data_documento: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                    data_lancamento: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
+                    data_vencimento: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
                   }}
                   enableExpand={tabs.selected === 'pedidos' || tabs.selected === 'devolucoes' || tabs.selected === 'tabelas_preco' || tabs.selected === 'promocoes'}
                   renderDetail={
