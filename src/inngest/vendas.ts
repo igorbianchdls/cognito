@@ -97,12 +97,13 @@ export async function createCrFromPedido(pedidoId: number): Promise<{ crId: numb
   )
 
   const result = await withTransaction(async (client) => {
-    const crColsInfo = await client.query<{ column_name: string }>(
+    const crColsInfo = await client.query(
       `SELECT column_name
          FROM information_schema.columns
         WHERE table_schema = 'financeiro' AND table_name = 'contas_receber'`
     )
-    const hasCr = (c: string) => crColsInfo.rows.some((r) => r.column_name === c)
+    const crColRows = crColsInfo.rows as Array<{ column_name: string }>
+    const hasCr = (c: string) => crColRows.some((r) => r.column_name === c)
     const requiredCrCols = ['tenant_id', 'cliente_id', 'numero_documento', 'data_documento', 'data_vencimento']
     for (const c of requiredCrCols) {
       if (!hasCr(c)) throw new Error(`contas_receber sem coluna obrigatória: ${c}`)
@@ -148,12 +149,13 @@ export async function createCrFromPedido(pedidoId: number): Promise<{ crId: numb
 
     // Linhas
     const items = (itens.length ? itens : [{ id: 0, servico_id: null, servico: 'Serviço', quantidade: 1, preco_unitario: valorTotal, desconto: 0, subtotal: valorTotal }])
-    const linhaColsInfo = await client.query<{ column_name: string }>(
+    const linhaColsInfo = await client.query(
       `SELECT column_name
          FROM information_schema.columns
         WHERE table_schema = 'financeiro' AND table_name = 'contas_receber_linhas'`
     )
-    const hasLinha = (c: string) => linhaColsInfo.rows.some((r) => r.column_name === c)
+    const linhaColRows = linhaColsInfo.rows as Array<{ column_name: string }>
+    const hasLinha = (c: string) => linhaColRows.some((r) => r.column_name === c)
     const cols = [
       'conta_receber_id',
       'tipo_linha',
