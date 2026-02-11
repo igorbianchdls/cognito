@@ -40,6 +40,28 @@ const NivoThemeSchema = z.object({
   labels: z.object({ text: NivoTextSchema }).partial(),
 }).partial();
 
+const FrameStyleSchema = z.object({
+  variant: z.enum(["hud"]).optional(),
+  baseColor: z.string().optional(),
+  cornerColor: z.string().optional(),
+  foldColor: z.string().optional(),
+  cornerSize: z.union([z.number(), z.string()]).optional(),
+  cornerWidth: z.union([z.number(), z.string()]).optional(),
+  innerInset: z.union([z.number(), z.string()]).optional(),
+}).partial();
+
+const ContainerStyleSchema = z.object({
+  backgroundColor: z.string().optional(),
+  borderColor: z.string().optional(),
+  borderStyle: z.string().optional(),
+  borderWidth: z.union([z.number(), z.string()]).optional(),
+  borderRadius: z.union([z.number(), z.string()]).optional(),
+  boxShadow: z.string().optional(),
+  padding: z.union([z.number(), z.string()]).optional(),
+  margin: z.union([z.number(), z.string()]).optional(),
+  frame: FrameStyleSchema.optional(),
+}).partial();
+
 export const catalog = {
   components: {
     Theme: {
@@ -53,6 +75,7 @@ export const catalog = {
             color: z.string().optional(),
             radius: z.union([z.number(), z.string()]).optional(),
             shadow: z.enum(["none","sm","md","lg","xl","2xl"]).optional(),
+            frame: FrameStyleSchema.optional(),
           }).partial().optional(),
           color: z.object({
             scheme: z.array(z.string()).optional(),
@@ -106,6 +129,7 @@ export const catalog = {
         borderRadius: z.number().optional(),
         width: z.union([z.number(), z.string()]).optional(),
         height: z.union([z.number(), z.string()]).optional(),
+        frame: FrameStyleSchema.optional(),
         // Optional position for all header controls (datePicker + slicers)
         controlsPosition: z.enum(["left","right","below"]).optional(),
         datePicker: z.object({
@@ -207,6 +231,7 @@ export const catalog = {
         borderRadius: z.number().optional(),
         width: z.union([z.number(), z.string()]).optional(),
         height: z.union([z.number(), z.string()]).optional(),
+        frame: FrameStyleSchema.optional(),
       }).strict(),
       hasChildren: true,
     },
@@ -214,6 +239,7 @@ export const catalog = {
       props: z.object({
         title: z.string(),
         titleStyle: TitleStyleSchema.optional(),
+        frame: FrameStyleSchema.optional(),
       }).strict(),
       hasChildren: true,
     },
@@ -240,16 +266,7 @@ export const catalog = {
         format: z.enum(["currency", "percent", "number"]).default("number"),
         titleStyle: TitleStyleSchema.optional(),
         valueStyle: TitleStyleSchema.optional(),
-        containerStyle: z.object({
-          backgroundColor: z.string().optional(),
-          borderColor: z.string().optional(),
-          borderStyle: z.string().optional(),
-          borderWidth: z.union([z.number(), z.string()]).optional(),
-          borderRadius: z.union([z.number(), z.string()]).optional(),
-          boxShadow: z.string().optional(),
-          padding: z.union([z.number(), z.string()]).optional(),
-          margin: z.union([z.number(), z.string()]).optional(),
-        }).partial().optional(),
+        containerStyle: ContainerStyleSchema.optional(),
         borderless: z.boolean().optional(),
         fr: z.number().optional(),
         unit: z.string().optional(),
@@ -275,16 +292,7 @@ export const catalog = {
           orderBy: z.object({ field: z.string().optional(), dir: z.enum(["asc","desc"]).optional() }).partial().optional(),
           limit: z.number().optional(),
         }).strict(),
-        containerStyle: z.object({
-          backgroundColor: z.string().optional(),
-          borderColor: z.string().optional(),
-          borderStyle: z.string().optional(),
-          borderWidth: z.union([z.number(), z.string()]).optional(),
-          borderRadius: z.union([z.number(), z.string()]).optional(),
-          boxShadow: z.string().optional(),
-          padding: z.union([z.number(), z.string()]).optional(),
-          margin: z.union([z.number(), z.string()]).optional(),
-        }).partial().optional(),
+        containerStyle: ContainerStyleSchema.optional(),
         borderless: z.boolean().optional(),
         // xKey/yKey removed — server returns { label, value }
         fr: z.number().optional(),
@@ -337,16 +345,7 @@ export const catalog = {
           orderBy: z.object({ field: z.string().optional(), dir: z.enum(["asc","desc"]).optional() }).partial().optional(),
           limit: z.number().optional(),
         }).strict(),
-        containerStyle: z.object({
-          backgroundColor: z.string().optional(),
-          borderColor: z.string().optional(),
-          borderStyle: z.string().optional(),
-          borderWidth: z.union([z.number(), z.string()]).optional(),
-          borderRadius: z.union([z.number(), z.string()]).optional(),
-          boxShadow: z.string().optional(),
-          padding: z.union([z.number(), z.string()]).optional(),
-          margin: z.union([z.number(), z.string()]).optional(),
-        }).partial().optional(),
+        containerStyle: ContainerStyleSchema.optional(),
         borderless: z.boolean().optional(),
         // xKey/yKey removed — server returns { label, value }
         fr: z.number().optional(),
@@ -395,16 +394,7 @@ export const catalog = {
           orderBy: z.object({ field: z.string().optional(), dir: z.enum(["asc","desc"]).optional() }).partial().optional(),
           limit: z.number().optional(),
         }).strict(),
-        containerStyle: z.object({
-          backgroundColor: z.string().optional(),
-          borderColor: z.string().optional(),
-          borderStyle: z.string().optional(),
-          borderWidth: z.union([z.number(), z.string()]).optional(),
-          borderRadius: z.union([z.number(), z.string()]).optional(),
-          boxShadow: z.string().optional(),
-          padding: z.union([z.number(), z.string()]).optional(),
-          margin: z.union([z.number(), z.string()]).optional(),
-        }).partial().optional(),
+        containerStyle: ContainerStyleSchema.optional(),
         borderless: z.boolean().optional(),
         // xKey/yKey removed — server returns { label, value }
         fr: z.number().optional(),
@@ -443,16 +433,7 @@ export const catalog = {
         indicatorColor: z.string().optional(),
         showValue: z.boolean().optional(),
         roundedCaps: z.boolean().optional(),
-        containerStyle: z.object({
-          backgroundColor: z.string().optional(),
-          borderColor: z.string().optional(),
-          borderStyle: z.string().optional(),
-          borderWidth: z.union([z.number(), z.string()]).optional(),
-          borderRadius: z.union([z.number(), z.string()]).optional(),
-          boxShadow: z.string().optional(),
-          padding: z.union([z.number(), z.string()]).optional(),
-          margin: z.union([z.number(), z.string()]).optional(),
-        }).partial().optional(),
+        containerStyle: ContainerStyleSchema.optional(),
         borderless: z.boolean().optional(),
         fr: z.number().optional(),
       }).strict(),
@@ -465,16 +446,7 @@ export const catalog = {
         layout: z.enum(["vertical","horizontal"]).optional(),
         applyMode: z.enum(["auto","manual"]).optional(),
         actionOnApply: z.object({ type: z.string() }).partial().optional(),
-        containerStyle: z.object({
-          backgroundColor: z.string().optional(),
-          borderColor: z.string().optional(),
-          borderStyle: z.string().optional(),
-          borderWidth: z.union([z.number(), z.string()]).optional(),
-          borderRadius: z.union([z.number(), z.string()]).optional(),
-          boxShadow: z.string().optional(),
-          padding: z.union([z.number(), z.string()]).optional(),
-          margin: z.union([z.number(), z.string()]).optional(),
-        }).partial().optional(),
+        containerStyle: ContainerStyleSchema.optional(),
         borderless: z.boolean().optional(),
         fields: z.array(z.object({
           label: z.string().optional(),

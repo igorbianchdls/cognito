@@ -1,7 +1,26 @@
 export const APPS_HOME_TEMPLATE_TEXT = JSON.stringify([
   {
     type: "Theme",
-    props: { name: "light" },
+    props: {
+      name: "light",
+      managers: {
+        border: {
+          style: "solid",
+          width: 1,
+          color: "#bfc9d9",
+          radius: 8,
+          frame: {
+            variant: "hud",
+            baseColor: "#bfc9d9",
+            cornerColor: "#6f89aa",
+            foldColor: "#d8dfeb",
+            cornerSize: 14,
+            cornerWidth: 1,
+            innerInset: 6
+          }
+        }
+      }
+    },
     children: [
       { type: "Header", props: { title: "Dashboard (Dados Reais)", subtitle: "Vendas, Compras e Financeiro", align: "center", datePicker: { visible: true, mode: "range", position: "right", storePath: "filters.dateRange", actionOnChange: { type: "refresh_data" }, style: { padding: 6, fontFamily: "Barlow", fontSize: 12 } }, slicers: [
         { label: "Status", type: "tile", storePath: "filters.status", clearable: true, source: { type: 'static', options: [

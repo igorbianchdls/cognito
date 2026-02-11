@@ -32,6 +32,15 @@ export type BorderManager = {
   color?: string
   radius?: string | number
   shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl'
+  frame?: {
+    variant?: 'hud'
+    baseColor?: string
+    cornerColor?: string
+    foldColor?: string
+    cornerSize?: string | number
+    cornerWidth?: string | number
+    innerInset?: string | number
+  }
 }
 
 export type ColorManager = {
@@ -112,6 +121,16 @@ export function mapManagersToCssVars(managers: Managers | undefined): Record<str
     if (b.color) cssVars.containerBorderColor = String(b.color)
     if (b.radius !== undefined) cssVars.containerRadius = String(b.radius)
     if (b.shadow) cssVars.containerShadow = String(b.shadow)
+    if (b.frame && typeof b.frame === 'object') {
+      const f = b.frame as AnyRecord
+      if (f.variant) cssVars.containerFrameVariant = String(f.variant)
+      if (f.baseColor) cssVars.containerFrameBaseColor = String(f.baseColor)
+      if (f.cornerColor) cssVars.containerFrameCornerColor = String(f.cornerColor)
+      if (f.foldColor) cssVars.containerFrameFoldColor = String(f.foldColor)
+      if (f.cornerSize !== undefined) cssVars.containerFrameCornerSize = String(f.cornerSize)
+      if (f.cornerWidth !== undefined) cssVars.containerFrameCornerWidth = String(f.cornerWidth)
+      if (f.innerInset !== undefined) cssVars.containerFrameInnerInset = String(f.innerInset)
+    }
   }
 
   // Chart color scheme

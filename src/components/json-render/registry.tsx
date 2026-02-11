@@ -5,6 +5,7 @@ import JsonRenderBarChart from "@/components/json-render/components/BarChart";
 import JsonRenderLineChart from "@/components/json-render/components/LineChart";
 import JsonRenderPieChart from "@/components/json-render/components/PieChart";
 import JsonRenderGauge from "@/components/json-render/components/Gauge";
+import FrameSurface from "@/components/json-render/components/FrameSurface";
 import { ThemeProvider, useThemeOverrides } from "@/components/json-render/theme/ThemeContext";
 import { mapManagersToCssVars } from "@/components/json-render/theme/thememanagers";
 import { buildThemeVars } from "@/components/json-render/theme/themeAdapter";
@@ -200,10 +201,10 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       theme.cssVars
     ) as React.CSSProperties;
     return (
-      <div style={style}>
+      <FrameSurface style={style} frame={p.frame as AnyRecord} cssVars={theme.cssVars}>
         {title && <h3 className="text-base font-semibold text-gray-900 mb-0" style={titleStyle}>{title}</h3>}
         <div className="space-y-2">{children}</div>
-      </div>
+      </FrameSurface>
     );
   },
 
@@ -550,7 +551,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     }, [picker, JSON.stringify(slicers), JSON.stringify(optionsMap), data]);
 
     return (
-      <div className="rounded-md" style={wrappedStyle}>
+      <FrameSurface className="rounded-md" style={wrappedStyle} frame={p.frame as AnyRecord} cssVars={theme.cssVars}>
         {controlsPosition === 'below' ? (
           <>
             <div className="flex items-center justify-between">
@@ -574,7 +575,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
           </div>
         )}
         {children && <div className="mt-2">{children}</div>}
-      </div>
+      </FrameSurface>
     );
   },
 
@@ -608,7 +609,13 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
 
     // If neither childGrow nor valid fr weights, render as-is
     const hasWeights = frArr.some((w) => w > 0);
-    if (!hasWeights) return <div style={style}>{children}</div>;
+    if (!hasWeights) {
+      return (
+        <FrameSurface style={style} frame={p.frame as AnyRecord} cssVars={theme.cssVars}>
+          {children}
+        </FrameSurface>
+      );
+    }
 
     const kids = React.Children.toArray(children);
     const wrapped = kids.map((c, i) => {
@@ -619,7 +626,11 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
         </div>
       );
     });
-    return <div style={style}>{wrapped}</div>;
+    return (
+      <FrameSurface style={style} frame={p.frame as AnyRecord} cssVars={theme.cssVars}>
+        {wrapped}
+      </FrameSurface>
+    );
   },
 
   Metric: ({ element, data }) => {
@@ -670,9 +681,9 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       theme.cssVars
     ) as React.CSSProperties;
     return (
-      <div style={containerStyle}>
+      <FrameSurface style={containerStyle} frame={p?.containerStyle?.frame as AnyRecord} cssVars={theme.cssVars}>
         <JsonRenderGauge element={{ props: p }} />
-      </div>
+      </FrameSurface>
     );
   },
 
@@ -785,7 +796,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     };
 
     const card = (
-      <div style={containerStyle}>
+      <FrameSurface style={containerStyle} frame={p?.containerStyle?.frame as AnyRecord} cssVars={theme.cssVars}>
         {title && <div className="mb-0" style={applyH1FromCssVars(undefined, theme.cssVars)}>{title}</div>}
         <div className={(layout === 'horizontal' ? 'flex items-start gap-3 flex-wrap' : 'space-y-3') + ' p-2'}>
           {(() => {
@@ -892,7 +903,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
             </button>
           </div>
         )}
-      </div>
+      </FrameSurface>
     );
     return card;
   },
@@ -983,10 +994,10 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     }
     const displayValue = (dq && dq.model && dq.measure) ? serverValue : (valueFromPath ?? 0);
     return (
-      <div style={containerStyle}>
+      <FrameSurface style={containerStyle} frame={p?.containerStyle?.frame as AnyRecord} cssVars={theme.cssVars}>
         <div className="mb-1" style={titleStyle}>{title}</div>
         <div className="text-2xl font-semibold" style={valueStyle}>{formatValue(displayValue, fmt)}{unit ? ` ${unit}` : ''}</div>
-      </div>
+      </FrameSurface>
     );
   },
 };

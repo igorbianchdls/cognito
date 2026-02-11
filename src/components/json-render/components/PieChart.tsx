@@ -5,6 +5,7 @@ import { useData } from "@/components/json-render/context";
 import { ResponsivePie } from "@nivo/pie";
 import { normalizeTitleStyle, normalizeContainerStyle, buildNivoTheme, applyBorderFromCssVars, ensureSurfaceBackground, applyShadowFromCssVars, applyH1FromCssVars } from "@/components/json-render/helpers";
 import { useThemeOverrides } from "@/components/json-render/theme/ThemeContext";
+import FrameSurface from "@/components/json-render/components/FrameSurface";
 
 type AnyRecord = Record<string, any>;
 
@@ -60,6 +61,7 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
   const nivo = (element?.props?.nivo as AnyRecord | undefined) || {};
   const titleStyle = applyH1FromCssVars(normalizeTitleStyle((element?.props as AnyRecord)?.titleStyle), theme.cssVars);
   const borderless = Boolean((element?.props as AnyRecord)?.borderless);
+  const frame = (element?.props as AnyRecord)?.containerStyle?.frame as AnyRecord | undefined;
   const containerStyle = ensureSurfaceBackground(applyShadowFromCssVars(applyBorderFromCssVars(normalizeContainerStyle((element?.props as AnyRecord)?.containerStyle, borderless), theme.cssVars), theme.cssVars), theme.cssVars);
 
   const pieData = React.useMemo(() => {
@@ -112,7 +114,7 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
     nivoTheme = t;
   }
   return (
-    <div style={containerStyle}>
+    <FrameSurface style={containerStyle} frame={frame} cssVars={theme.cssVars}>
       {title && <div className="mb-0" style={titleStyle}>{title}</div>}
       <div style={{ height }}>
         <ResponsivePie
@@ -138,6 +140,6 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
           theme={nivoTheme as any}
         />
       </div>
-    </div>
+    </FrameSurface>
   );
 }
