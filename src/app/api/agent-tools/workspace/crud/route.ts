@@ -91,10 +91,71 @@ async function getPdfJs() {
   return pdfjsImportPromise
 }
 
-async function extractPdfText(buffer: Buffer): Promise<{ text: string; pages: number }> {
+function decodePdfTextLiteral(raw: string): string {
+  let out = ''
+  for (let i = 0; i < raw.length; i += 1) {
+    const ch = raw[i]
+    if (ch !== '\\') {
+      out += ch
+      continue
+    }
+    const next = raw[i + 1]
+    if (next == null) break
+    i += 1
+    if (next === 'n') { out += '\n'; continue }
+    if (next === 'r') { out += '\r'; continue }
+    if (next === 't') { out += '\t'; continue }
+    if (next === 'b') { out += '\b'; continue }
+    if (next === 'f') { out += '\f'; continue }
+    if (next === '(' || next === ')' || next === '\\') { out += next; continue }
+    if (/[0-7]/.test(next)) {
+      let oct = next
+      for (let j = 0; j < 2; j += 1) {
+        const c = raw[i + 1]
+        if (!c || !/[0-7]/.test(c)) break
+        oct += c
+        i += 1
+      }
+      out += String.fromCharCode(parseInt(oct, 8))
+      continue
+    }
+    out += next
+  }
+  return out
+}
+
+function extractPdfTextFallback(buffer: Buffer): { text: string; pages: number } {
+  const src = buffer.toString('latin1')
+  const chunks: string[] = []
+
+  const tjRegex = /\(((?:\\.|[^\\()])*)\)\s*Tj/g
+  for (const match of src.matchAll(tjRegex)) {
+    const text = decodePdfTextLiteral(match[1] || '').trim()
+    if (text) chunks.push(text)
+  }
+
+  const tjArrayRegex = /\[((?:\\.|[^\]])*)\]\s*TJ/gms
+  for (const match of src.matchAll(tjArrayRegex)) {
+    const arr = match[1] || ''
+    const parts: string[] = []
+    const litRegex = /\(((?:\\.|[^\\()])*)\)/g
+    for (const lit of arr.matchAll(litRegex)) {
+      const text = decodePdfTextLiteral(lit[1] || '').trim()
+      if (text) parts.push(text)
+    }
+    if (parts.length) chunks.push(parts.join(' '))
+  }
+
+  const pages = (src.match(/\/Type\s*\/Page\b/g) || []).length || 1
+  const text = chunks.join('\n').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim()
+  return { text, pages }
+}
+
+async function extractPdfTextPdfJs(buffer: Buffer): Promise<{ text: string; pages: number }> {
   const pdfjs = await getPdfJs()
   const loadingTask = pdfjs.getDocument({
     data: new Uint8Array(buffer),
+    disableWorker: true,
     useWorkerFetch: false,
     isEvalSupported: false,
     disableFontFace: true,
@@ -121,6 +182,15 @@ async function extractPdfText(buffer: Buffer): Promise<{ text: string; pages: nu
   } finally {
     try { await doc.destroy() } catch {}
   }
+}
+
+async function extractPdfText(buffer: Buffer): Promise<{ text: string; pages: number; method: 'fallback' | 'pdfjs' }> {
+  const fallback = extractPdfTextFallback(buffer)
+  if ((fallback.text || '').length >= 12) {
+    return { ...fallback, method: 'fallback' }
+  }
+  const parsed = await extractPdfTextPdfJs(buffer)
+  return { ...parsed, method: 'pdfjs' }
 }
 
 function toCleanResource(value: unknown): string {
@@ -352,6 +422,7 @@ async function readDriveFile(req: NextRequest, payload: RequestAction) {
           content,
           truncated: textBuffer.length > maxBytes,
           extractedFrom: 'pdf',
+          extractionMethod: extracted.method,
           pages: extracted.pages,
         },
       }
