@@ -18,112 +18,208 @@ const SESSIONS = new Map<string, ChatSession>()
 const OPENAI_SANDBOXES = new Map<string, { sandbox: Sandbox; createdAt: number; lastUsedAt: number }>()
 const genId = () => Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
 const DASHBOARD_SKILL_PATH = '/vercel/sandbox/agent/skills/dashboard.md'
-const DASHBOARD_SKILL_MD = [
-  '# Dashboard Skill',
-  '',
-  'Objetivo: criar e editar dashboards JSON Render para ERP (vendas, compras e financeiro) com alta taxa de acerto operacional.',
-  '',
-  'Este skill e obrigatorio quando o pedido envolver dashboard, KPI, grafico, filtro, layout ou dataQuery.',
-  '',
-  '## Contrato de Query (obrigatorio)',
-  '- O formato atual e SEMPRE `dataQuery` com `model`, `measure`, `dimension` e `filters`.',
-  '- Nao usar SQL puro no JSON.',
-  '- `model` no JSON representa a tabela canonica (ex.: `vendas.pedidos`).',
-  '- `dimension` e opcional para KPI agregado.',
-  '- `dimensionExpr` so deve ser usado quando necessario e com expressao simples.',
-  '- Para slicers, preferir `source.type = "options"` com `{ model, field, pageSize }` em vez de URL hardcoded.',
-  '',
-  '## Fonte de Verdade (obrigatorio)',
-  '- Antes de montar ou corrigir query, consultar: `GET /api/modulos/query/catalog`.',
-  '- Para um modulo: `GET /api/modulos/query/catalog?module=vendas|compras|financeiro`.',
-  '- Para tabela/modelo especifico: `GET /api/modulos/query/catalog?table=<nome>` ou `?model=<nome>`.',
-  '- Nunca inventar tabela, measure, dimension ou filtro fora do catalogo.',
-  '- Aceitar aliases de model quando vierem do usuario e normalizar para tabela canonica.',
-  '',
-  '## Regras de Ouro',
-  '- Sempre trabalhar com `.jsonr` em `/vercel/sandbox/dashboard`.',
-  '- Sempre iniciar com `Theme` como raiz.',
-  '- Sempre incluir `Theme.props.name` e `Theme.props.headerTheme`.',
-  '- Sempre incluir `Header` com date picker quando houver serie temporal.',
-  '- Sempre aplicar `tenant_id` em `filters`.',
-  '- Sempre incluir `de` e `ate` para analises de periodo quando apropriado.',
-  '- KPI: somente `measure` + `filters` (sem `dimension`).',
-  '- Grafico segmentado: `dimension` + `measure` + `filters`.',
-  '- Tendencia mensal: usar `dimension: "periodo"` quando suportado; usar `dimensionExpr` apenas se precisar.',
-  '',
-  '## Processo Obrigatorio (passo a passo)',
-  '1. Identificar modulo e objetivo do usuario (vendas/compras/financeiro).',
-  '2. Consultar catalogo e validar tabela, medidas, dimensoes e filtros permitidos.',
-  '3. Definir layout (KPIs > filtros > distribuicao > tendencia).',
-  '4. Montar dataQuery com filtros base (`tenant_id`, periodo quando aplicavel).',
-  '5. Validar consistencia: measure x dimension x model.',
-  '6. Entregar JSON final limpo, sem campos obsoletos.',
-  '7. Se houver erro de query, corrigir usando o catalogo, nao por tentativa cega.',
-  '',
-  '## Estrutura Recomendada',
-  '~~~json',
-  '[',
-  '  {',
-  '    "type": "Theme",',
-  '    "props": { "name": "light", "headerTheme": "light", "managers": {} },',
-  '    "children": [',
-  '      { "type": "Header", "props": { "title": "Dashboard", "datePicker": { "visible": true, "mode": "range", "storePath": "filters.dateRange" } } },',
-  '      { "type": "Div", "props": { "direction": "row", "gap": 12, "padding": 16, "childGrow": true }, "children": [',
-  '        { "type": "KPI", "props": { "title": "Faturamento", "format": "currency", "dataQuery": { "model": "vendas.pedidos", "measure": "SUM(p.valor_total)", "filters": { "tenant_id": 1, "de": "2026-01-01", "ate": "2026-01-31" } } } },',
-  '        { "type": "KPI", "props": { "title": "Pedidos", "format": "number", "dataQuery": { "model": "vendas.pedidos", "measure": "COUNT()", "filters": { "tenant_id": 1, "de": "2026-01-01", "ate": "2026-01-31" } } } },',
-  '        { "type": "KPI", "props": { "title": "Ticket Medio", "format": "currency", "dataQuery": { "model": "vendas.pedidos", "measure": "AVG(p.valor_total)", "filters": { "tenant_id": 1, "de": "2026-01-01", "ate": "2026-01-31" } } } }',
-  '      ]},',
-  '      { "type": "Div", "props": { "direction": "row", "gap": 12, "padding": 16, "childGrow": true }, "children": [',
-  '        { "type": "BarChart", "props": { "title": "Por Categoria", "format": "currency", "dataQuery": { "model": "vendas.pedidos", "dimension": "categoria_receita", "measure": "SUM(itens.subtotal)", "filters": { "tenant_id": 1, "de": "2026-01-01", "ate": "2026-01-31" }, "orderBy": { "field": "measure", "dir": "desc" }, "limit": 6 } } },',
-  '        { "type": "LineChart", "props": { "title": "Evolucao Mensal", "format": "currency", "dataQuery": { "model": "vendas.pedidos", "dimension": "periodo", "measure": "SUM(itens.subtotal)", "filters": { "tenant_id": 1, "de": "2026-01-01", "ate": "2026-03-31" }, "orderBy": { "field": "dimension", "dir": "asc" }, "limit": 12 } } }',
-  '      ]}',
-  '    ]',
-  '  }',
-  ']',
-  '~~~',
-  '',
-  '## Layout Padrao (recomendado)',
-  '- Linha 1: 3 a 5 KPIs principais.',
-  '- Linha 2: filtros de maior impacto (canal, categoria, centro, filial, etc.).',
-  '- Linha 3: distribuicao (bar/pie) por dimensoes de negocio.',
-  '- Linha 4+: tendencia temporal (line/bar por `periodo`).',
-  '- Evitar ruido visual: sem containers desnecessarios e sem query redundante.',
-  '',
-  '## Mapeamento ERP (resumo rapido)',
-  '- Vendas: `vendas.pedidos`.',
-  '- Compras: `compras.compras`, `compras.recebimentos`.',
-  '- Financeiro: `financeiro.contas_pagar`, `financeiro.contas_receber`.',
-  '- Lista completa de medidas/dimensoes/filtros: sempre no endpoint de catalogo.',
-  '',
-  '## Decisoes de Query',
-  '- Para valor financeiro detalhado por dimensao em vendas, preferir `SUM(itens.subtotal)`.',
-  '- Para KPI de total pedido, usar `SUM(p.valor_total)`.',
-  '- Para contagem de pedidos, usar `COUNT()`.',
-  '- Para ticket medio, usar `AVG(...)` conforme measure permitida no catalogo.',
-  '- Em compras/financeiro, sempre respeitar measures permitidas por tabela.',
-  '',
-  '## Erros que devem ser evitados',
-  '- Misturar measure de uma tabela com dimension de outra.',
-  '- Omitir `tenant_id`.',
-  '- Usar `dimension` em KPI agregado.',
-  '- Usar campo fora do catalogo por "achismo".',
-  '- Entregar JSON sem `Theme` no topo.',
-  '',
-  '## Quando o pedido for ambiguo',
-  '- Perguntar no maximo 1 pergunta de clarificacao (objetivo principal do dashboard).',
-  '- Se nao houver resposta, assumir layout padrao com KPIs + distribuicao + tendencia.',
-  '- Priorizar versao funcional e correta no schema antes de refinamento visual.',
-  '',
-  '## Checklist Final (obrigatorio)',
-  '- Arquivo valido em JSON.',
-  '- `Theme` presente e no topo.',
-  '- `Header` com periodo quando relevante.',
-  '- `dataQuery.model` valido no catalogo.',
-  '- `measure` valida para o model.',
-  '- `dimension` valida para o model (ou ausente para KPI).',
-  '- `filters.tenant_id` presente.',
-  '- Sem SQL puro dentro do JSON.',
-].join('\n')
+const DASHBOARD_SKILL_MD = `
+# Dashboard Skill (JSON Render + ERP BI)
+
+Objetivo: criar e editar dashboards .jsonr de Vendas, Compras e Financeiro com alta precisao funcional, boa UX e queries compativeis com o backend.
+
+Este skill e obrigatorio para pedidos envolvendo: dashboard, KPI, grafico, filtro, tema, layout, dataQuery, drill, interacao de chart, apps /apps e artefatos JSON Render.
+
+## Principios Nao Negociaveis
+- Catalog-first: nunca inventar tabela, medida, dimensao, filtro ou data field.
+- Contrato atual e dataQuery (nao SQL puro dentro do JSON).
+- Responder com estrutura JSON valida e operacional.
+- Priorizar corretude dos dados antes de refinamento visual.
+- Evitar mudancas fora do escopo pedido.
+
+## Fonte de Verdade (sempre consultar)
+- GET /api/modulos/query/catalog
+- GET /api/modulos/query/catalog?module=vendas|compras|financeiro
+- GET /api/modulos/query/catalog?table=<tabela> ou ?model=<model>
+
+Use o catalogo para:
+- confirmar model canonico
+- escolher metricas permitidas (legacyMeasures)
+- escolher dimensoes permitidas
+- escolher filtros permitidos
+- escolher defaultTimeField
+
+Se houver divergencia entre pedido e catalogo: seguir catalogo e explicar ajuste.
+
+## Escopo ERP Suportado (atual)
+- vendas.pedidos
+- compras.compras
+- compras.recebimentos
+- financeiro.contas_pagar
+- financeiro.contas_receber
+
+## Contrato de Query (obrigatorio)
+- Sempre usar dataQuery com:
+  - model (obrigatorio)
+  - measure (obrigatorio)
+  - dimension (opcional; nao usar em KPI agregado)
+  - filters (obrigatorio em cenarios reais)
+  - orderBy, limit (quando fizer sentido)
+  - dimensionExpr (somente quando necessario)
+- Nunca usar SQL puro no JSON.
+- Em KPI agregado: sem dimension.
+- Em chart segmentado: dimension + measure.
+- Para serie temporal: preferir dimension = "periodo" quando suportado.
+- dimensionExpr e ultima opcao.
+
+## Regras de Filtros
+- Sempre incluir filters.tenant_id.
+- Quando houver analise temporal:
+  - usar filters.de e filters.ate
+  - manter coerencia com datePicker (filters.dateRange no estado)
+- Para recortes de negocio, usar *_id conforme catalogo (ex.: filial_id, categoria_receita_id etc.).
+- Nao inventar filtro fora do catalogo.
+
+## Estrutura JSON Render (padrao recomendado)
+1. Theme na raiz (sempre)
+2. Header no topo
+3. Linha de KPIs principais
+4. Linha de filtros (SlicerCard)
+5. Linhas de distribuicao (Bar/Pie)
+6. Linhas de tendencia temporal (Line/Bar)
+
+Padroes:
+- Theme.props.name e Theme.props.headerTheme sempre definidos.
+- Header com datePicker quando houver serie temporal.
+- Div com childGrow=true para grids fluidos.
+- Evitar containers redundantes.
+
+## Componentes e Boas Praticas
+
+### KPI
+- Uso: total, contagem, ticket, saldo, valor medio.
+- dataQuery sem dimension.
+- format coerente (currency/number/percent).
+
+### BarChart / PieChart / LineChart
+- Bar/Pie: comparacao por dimensao de negocio.
+- Line: evolucao temporal.
+- limit padrao de 5-12 conforme caso.
+- orderBy normalmente por measure desc (ranking) ou dimension asc (serie temporal).
+
+### SlicerCard
+- Preferir source.type = "options" com model + field.
+- Evitar URLs hardcoded.
+- Para filtros de alto impacto: usar tile-multi ou list com selectAll e search.
+
+### Header
+- Usar datePicker visivel quando dashboard for temporal.
+- storePath padrao: filters.dateRange.
+
+## Interacoes de Charts (padrao atual)
+- Charts podem agir como filtro global via interaction.clickAsFilter.
+- Para dimensoes de negocio, definir explicitamente:
+  - interaction.filterField
+  - interaction.storePath (ex.: filters.cliente_id)
+- clearOnSecondClick geralmente true.
+- Em chart com drill, definir claramente se clique tambem filtra:
+  - interaction.alsoWithDrill (quando aplicavel).
+
+## Drill (quando usar)
+- Usar apenas quando ha narrativa hierarquica clara (ex.: filial -> cliente -> vendedor).
+- Cada nivel deve ter:
+  - label
+  - dimension (ou dimensionExpr)
+  - filterField (recomendado explicito)
+- Nao aplicar drill por padrao em todos os graficos.
+
+## Mapeamento de Negocio -> Query (heuristicas praticas)
+
+### Vendas
+- Faturamento por dimensao: preferir SUM(itens.subtotal) quando permitido.
+- Faturamento de pedido (KPI): SUM(p.valor_total) quando permitido.
+- Pedidos: COUNT()
+- Ticket medio: AVG(p.valor_total) quando permitido.
+
+### Compras
+- Gasto total: SUM(c.valor_total) quando permitido.
+- Ticket medio compras: AVG(c.valor_total) quando permitido.
+- Pedidos: COUNT() ou COUNT_DISTINCT(id) conforme catalogo.
+
+### Financeiro
+- AP/AR valor total: SUM(valor_liquido) (ou alias permitido no catalogo).
+- Titulos: COUNT()
+- Dimensoes comuns: categoria, centro, filial, unidade, projeto, status.
+
+Sempre validar no catalogo antes de fixar medida final.
+
+## Processo Obrigatorio (execucao)
+1. Entender objetivo do usuario (pergunta de negocio).
+2. Identificar modulo(s) e periodo.
+3. Consultar catalogo do modulo/tabela.
+4. Mapear KPIs e charts necessarios.
+5. Definir layout (KPI -> filtros -> distribuicao -> tendencia).
+6. Montar dataQuery de cada bloco com tenant_id e periodo.
+7. Configurar interacoes/filtros (Slicer + clickAsFilter/drill se aplicavel).
+8. Revisar consistencia de formatos, titulos e limites.
+9. Validar JSON final.
+10. Entregar resposta objetiva com o .jsonr final.
+
+## When User Asks "crie um dashboard completo"
+Sem clarificacao extensa, assumir baseline:
+- 3 a 5 KPIs
+- 1 linha de filtros principais
+- 2 a 4 charts de distribuicao
+- 1 ou 2 charts de tendencia temporal
+- tema padrao consistente
+
+Fazer no maximo 1 pergunta de clarificacao se faltar algo critico:
+- modulo principal
+- periodo alvo
+- objetivo principal (receita, margem, inadimplencia, compras etc.)
+
+## Anti-Erros (proibido)
+- Misturar measure de uma tabela com dimension de outra.
+- Omitir tenant_id.
+- Usar dimension em KPI agregado.
+- Usar campo/measure nao existente no catalogo.
+- Entregar JSON invalido.
+- Responder com pseudo-SQL em vez de dataQuery.
+- Ignorar filtros de periodo quando pedido e temporal.
+
+## Checklist Final (obrigatorio)
+- JSON valido.
+- Theme na raiz.
+- Header coerente com periodo.
+- Todos dataQuery com model valido.
+- Measure valida para cada model.
+- Dimension valida (ou ausente em KPI).
+- filters.tenant_id presente.
+- filtros de periodo coerentes (de/ate) quando aplicavel.
+- interaction/drill coerentes e sem conflito.
+- Sem SQL puro no JSON.
+
+## Snippet Base (referencia rapida)
+~~~json
+[
+  {
+    "type": "Theme",
+    "props": { "name": "light", "headerTheme": "light", "managers": {} },
+    "children": [
+      {
+        "type": "Header",
+        "props": {
+          "title": "Dashboard",
+          "datePicker": {
+            "visible": true,
+            "mode": "range",
+            "storePath": "filters.dateRange",
+            "actionOnChange": { "type": "refresh_data" }
+          }
+        }
+      }
+    ]
+  }
+]
+~~~
+
+Se houver erro de execucao de query, corrigir com base no catalogo (nunca tentativa cega com campos inventados).
+`.trim()
 
 function inferProviderFromModel(model?: string): ChatProvider {
   const raw = (model || '').toString().trim().toLowerCase()
