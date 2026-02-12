@@ -337,10 +337,12 @@ export const catalog = {
             tickRotation: z.number().optional(),
             legend: z.string().optional(),
             legendOffset: z.number().optional(),
+            maxTicks: z.number().optional(),
           }).partial().optional(),
           axisLeft: z.object({
             legend: z.string().optional(),
             legendOffset: z.number().optional(),
+            maxTicks: z.number().optional(),
           }).partial().optional(),
           margin: z.object({ top: z.number().optional(), right: z.number().optional(), bottom: z.number().optional(), left: z.number().optional() }).partial().optional(),
           animate: z.boolean().optional(),

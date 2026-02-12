@@ -237,6 +237,9 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     tickRotation: Number(nivo?.axisBottom?.tickRotation ?? 0),
     legend: typeof nivo?.axisBottom?.legend === 'string' ? nivo.axisBottom.legend : undefined,
     legendOffset: Number(nivo?.axisBottom?.legendOffset ?? 32),
+    tickValues: (layout === 'horizontal')
+      ? Number(nivo?.axisBottom?.maxTicks ?? 5)
+      : undefined,
   } as const;
 
   const axisLeft = {
@@ -245,6 +248,9 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     tickRotation: 0,
     legend: typeof nivo?.axisLeft?.legend === 'string' ? nivo.axisLeft.legend : undefined,
     legendOffset: Number(nivo?.axisLeft?.legendOffset ?? 40),
+    tickValues: (layout === 'vertical')
+      ? Number(nivo?.axisLeft?.maxTicks ?? 5)
+      : undefined,
   } as const;
 
   const padding = typeof nivo?.padding === 'number' ? nivo.padding : 0.3;
