@@ -910,7 +910,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
             const lblStyle = applySlicerLabelFromCssVars(normalizeTitleStyle((f as any)?.labelStyle), theme.cssVars);
             const opts = optionsMap[idx] || [];
             const width = (f?.width !== undefined) ? (typeof f.width === 'number' ? `${f.width}px` : f.width) : undefined;
-            const t = (f?.type || 'list') as 'list'|'dropdown'|'tile'|'tile-multi';
+            const t = (f?.type || 'list') as 'list'|'dropdown'|'multi'|'tile'|'tile-multi';
             const isMulti = (t === 'tile-multi' || t === 'list' || t === 'multi');
             const stored = effectiveGet(idx, sp, isMulti);
             const clearable = (f?.clearable !== false);

@@ -466,7 +466,7 @@ export const catalog = {
         borderless: z.boolean().optional(),
         fields: z.array(z.object({
           label: z.string().optional(),
-          type: z.enum(["list","dropdown","tile","tile-multi"]).default("list"),
+          type: z.enum(["list","dropdown","multi","tile","tile-multi"]).default("list"),
           storePath: z.string(),
           placeholder: z.string().optional(),
           clearable: z.boolean().optional(),
