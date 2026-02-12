@@ -22,10 +22,68 @@ function formatValue(val: any, fmt: "currency" | "percent" | "number"): string {
   }
 }
 
+function setByPath(prev: AnyRecord, path: string, value: any): AnyRecord {
+  const parts = path.split(".").map((s) => s.trim()).filter(Boolean);
+  if (!parts.length) return prev || {};
+  const root: AnyRecord = Array.isArray(prev) ? [...prev] as any : { ...(prev || {}) };
+  let curr: AnyRecord = root;
+  for (let i = 0; i < parts.length; i++) {
+    const key = parts[i];
+    if (i === parts.length - 1) {
+      curr[key] = value;
+    } else {
+      const next = curr[key];
+      curr[key] = (next && typeof next === "object") ? { ...next } : {};
+      curr = curr[key] as AnyRecord;
+    }
+  }
+  return root;
+}
+
+function getByPath(data: AnyRecord, path: string): any {
+  const parts = path.split(".").map((s) => s.trim()).filter(Boolean);
+  let curr: any = data;
+  for (const key of parts) {
+    if (curr == null) return undefined;
+    curr = curr[key];
+  }
+  return curr;
+}
+
+function inferFilterField(dimension?: string): string {
+  const d = (dimension || '').trim().toLowerCase();
+  if (!d) return '';
+  const map: Record<string, string> = {
+    cliente: 'cliente_id',
+    fornecedor: 'fornecedor_id',
+    vendedor: 'vendedor_id',
+    filial: 'filial_id',
+    unidade_negocio: 'unidade_negocio_id',
+    canal_venda: 'canal_venda_id',
+    categoria_receita: 'categoria_receita_id',
+    categoria_despesa: 'categoria_despesa_id',
+    centro_lucro: 'centro_lucro_id',
+    centro_custo: 'centro_custo_id',
+    departamento: 'departamento_id',
+    projeto: 'projeto_id',
+    territorio: 'territorio_id',
+    status: 'status',
+  };
+  return map[d] || '';
+}
+
 export default function JsonRenderLineChart({ element }: { element: any }) {
-  const { data } = useData();
+  const { data, setData } = useData();
   const theme = useThemeOverrides();
   const dq = (element?.props?.dataQuery as AnyRecord | undefined);
+  const interaction = (element?.props?.interaction as AnyRecord | undefined) || {};
+  const clickAsFilter = Boolean(interaction?.clickAsFilter ?? true);
+  const clearOnSecondClick = Boolean(interaction?.clearOnSecondClick ?? true);
+  const filterFieldFromConfig = typeof interaction?.filterField === "string" ? interaction.filterField.trim() : "";
+  const filterStorePathFromConfig = typeof interaction?.storePath === "string" ? interaction.storePath.trim() : "";
+  const resolvedFilterField = filterFieldFromConfig || inferFilterField(dq?.dimension);
+  const resolvedFilterStorePath = filterStorePathFromConfig || (resolvedFilterField ? `filters.${resolvedFilterField}` : "");
+  const shouldClickFilter = clickAsFilter && Boolean(resolvedFilterStorePath);
   const [serverRows, setServerRows] = React.useState<Array<Record<string, unknown>> | null>(null);
   React.useEffect(() => {
     let cancelled = false;
@@ -67,8 +125,26 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
 
   const seriesData = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
-    return [{ id: title || 'Series', data: src.map((r) => ({ x: String((r as AnyRecord).label ?? ''), y: Number((r as AnyRecord).value ?? 0) })) }];
+    return [{
+      id: title || 'Series',
+      data: src.map((r) => ({
+        x: String((r as AnyRecord).label ?? ''),
+        y: Number((r as AnyRecord).value ?? 0),
+        filterKey: (r as AnyRecord).key ?? String((r as AnyRecord).label ?? ''),
+      })),
+    }];
   }, [title, serverRows]);
+  const handleGlobalFilterClick = React.useCallback((point: any) => {
+    if (!shouldClickFilter || !resolvedFilterStorePath) return;
+    const rawValue = point?.data?.filterKey ?? point?.data?.x ?? point?.id;
+    if (rawValue === undefined || rawValue === null || rawValue === "") return;
+    const nextValue = (typeof rawValue === "number" || typeof rawValue === "string") ? rawValue : String(rawValue);
+    setData((prev) => {
+      const current = getByPath((prev || {}) as AnyRecord, resolvedFilterStorePath);
+      const shouldClear = clearOnSecondClick && String(current ?? "") === String(nextValue);
+      return setByPath((prev || {}) as AnyRecord, resolvedFilterStorePath, shouldClear ? undefined : nextValue);
+    });
+  }, [shouldClickFilter, resolvedFilterStorePath, setData, clearOnSecondClick]);
 
   let managedScheme: string[] | undefined = undefined;
   const rawVar = (theme.cssVars || {}).chartColorScheme as unknown as string | undefined;
@@ -177,6 +253,7 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
               <div>{formatValue(point.data.y as any, fmt)}</div>
             </div>
           )}
+          onClick={shouldClickFilter ? handleGlobalFilterClick : undefined}
           animate={animate}
           motionConfig={motionConfig}
           theme={nivoTheme as any}

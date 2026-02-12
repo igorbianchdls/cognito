@@ -22,8 +22,36 @@ function formatValue(val: any, fmt: "currency" | "percent" | "number"): string {
   }
 }
 
+function setByPath(prev: AnyRecord, path: string, value: any): AnyRecord {
+  const parts = path.split(".").map((s) => s.trim()).filter(Boolean);
+  if (!parts.length) return prev || {};
+  const root: AnyRecord = Array.isArray(prev) ? [...prev] as any : { ...(prev || {}) };
+  let curr: AnyRecord = root;
+  for (let i = 0; i < parts.length; i++) {
+    const key = parts[i];
+    if (i === parts.length - 1) {
+      curr[key] = value;
+    } else {
+      const next = curr[key];
+      curr[key] = (next && typeof next === "object") ? { ...next } : {};
+      curr = curr[key] as AnyRecord;
+    }
+  }
+  return root;
+}
+
+function getByPath(data: AnyRecord, path: string): any {
+  const parts = path.split(".").map((s) => s.trim()).filter(Boolean);
+  let curr: any = data;
+  for (const key of parts) {
+    if (curr == null) return undefined;
+    curr = curr[key];
+  }
+  return curr;
+}
+
 export default function JsonRenderBarChart({ element }: { element: any }) {
-  const { data } = useData();
+  const { data, setData } = useData();
   const theme = useThemeOverrides();
   const title = element?.props?.title as string | undefined;
   const fmt = (element?.props?.format ?? 'number') as 'currency'|'percent'|'number';
@@ -38,6 +66,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
 
   const dq = (element?.props?.dataQuery as AnyRecord | undefined);
   const drill = (element?.props?.drill as AnyRecord | undefined);
+  const interaction = (element?.props?.interaction as AnyRecord | undefined) || {};
   const inferFilterField = React.useCallback((dimension?: string) => {
     const d = (dimension || '').trim().toLowerCase();
     if (!d) return '';
@@ -79,6 +108,14 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
       .filter(Boolean) as Array<{ label: string; dimension?: string; dimensionExpr?: string; filterField?: string }>;
   }, [JSON.stringify(drill?.levels || []), inferFilterField]);
   const drillEnabled = Boolean(drill?.enabled ?? true) && drillLevels.length > 0;
+  const clickAsFilter = Boolean(interaction?.clickAsFilter ?? true);
+  const clearOnSecondClick = Boolean(interaction?.clearOnSecondClick ?? true);
+  const filterFieldFromConfig = typeof interaction?.filterField === "string" ? interaction.filterField.trim() : "";
+  const filterStorePathFromConfig = typeof interaction?.storePath === "string" ? interaction.storePath.trim() : "";
+  const resolvedFilterField = filterFieldFromConfig || inferFilterField(dq?.dimension);
+  const resolvedFilterStorePath = filterStorePathFromConfig || (resolvedFilterField ? `filters.${resolvedFilterField}` : "");
+  const alsoWithDrill = Boolean(interaction?.alsoWithDrill ?? false);
+  const shouldClickFilter = clickAsFilter && Boolean(resolvedFilterStorePath) && (!drillEnabled || alsoWithDrill);
   const [drillLevelIndex, setDrillLevelIndex] = React.useState(0);
   const [drillPath, setDrillPath] = React.useState<Array<{ level: number; label: string; value: string | number; filterField: string }>>([]);
   React.useEffect(() => {
@@ -251,6 +288,18 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     });
     setDrillLevelIndex((prev) => Math.min(prev + 1, drillLevels.length - 1));
   }, [canDrillDown, activeDrillLevel, drillLevelIndex, drillLevels.length]);
+  const handleGlobalFilterClick = React.useCallback((point: any) => {
+    if (!shouldClickFilter || !resolvedFilterStorePath) return;
+    const row = (point?.data || point || {}) as AnyRecord;
+    const rawValue = row.drillKey ?? row.key ?? row.id ?? row.label ?? row.indexValue;
+    if (rawValue === undefined || rawValue === null || rawValue === "") return;
+    const nextValue = (typeof rawValue === "number" || typeof rawValue === "string") ? rawValue : String(rawValue);
+    setData((prev) => {
+      const current = getByPath((prev || {}) as AnyRecord, resolvedFilterStorePath);
+      const shouldClear = clearOnSecondClick && String(current ?? "") === String(nextValue);
+      return setByPath((prev || {}) as AnyRecord, resolvedFilterStorePath, shouldClear ? undefined : nextValue);
+    });
+  }, [shouldClickFilter, resolvedFilterStorePath, setData, clearOnSecondClick]);
   const handleDrillUp = React.useCallback(() => {
     setDrillLevelIndex((prev) => {
       const next = Math.max(0, prev - 1);
@@ -272,6 +321,10 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     }
     return labels.join(' > ');
   }, [drillLevelIndex, drillLevels, drillPath]);
+  const handleChartClick = React.useCallback((point: any) => {
+    if (shouldClickFilter) handleGlobalFilterClick(point);
+    if (canDrillDown) handleDrillDown(point);
+  }, [shouldClickFilter, handleGlobalFilterClick, canDrillDown, handleDrillDown]);
   return (
     <FrameSurface style={{ ...containerStyle, overflow: 'visible' }} frame={frame} cssVars={theme.cssVars}>
       {title && <div className="mb-0" style={titleStyle}>{title}</div>}
@@ -321,7 +374,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
               <div>{formatValue((data as any).value, fmt)}</div>
             </div>
           )}
-          onClick={canDrillDown ? handleDrillDown : undefined}
+          onClick={(canDrillDown || shouldClickFilter) ? handleChartClick : undefined}
           animate={animate}
           motionConfig={motionConfig}
           theme={nivoTheme as any}

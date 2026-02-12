@@ -309,6 +309,13 @@ export const catalog = {
             filterField: z.string().optional(),
           }).strict().refine((l) => Boolean(l.dimension || l.dimensionExpr), { message: 'drill level requires dimension or dimensionExpr' })).optional(),
         }).partial().optional(),
+        interaction: z.object({
+          clickAsFilter: z.boolean().optional(),
+          filterField: z.string().optional(),
+          storePath: z.string().optional(),
+          clearOnSecondClick: z.boolean().optional(),
+          alsoWithDrill: z.boolean().optional(),
+        }).partial().optional(),
         containerStyle: ContainerStyleSchema.optional(),
         borderless: z.boolean().optional(),
         // xKey/yKey removed — server returns { label, value }
@@ -362,6 +369,12 @@ export const catalog = {
           orderBy: z.object({ field: z.string().optional(), dir: z.enum(["asc","desc"]).optional() }).partial().optional(),
           limit: z.number().optional(),
         }).strict(),
+        interaction: z.object({
+          clickAsFilter: z.boolean().optional(),
+          filterField: z.string().optional(),
+          storePath: z.string().optional(),
+          clearOnSecondClick: z.boolean().optional(),
+        }).partial().optional(),
         containerStyle: ContainerStyleSchema.optional(),
         borderless: z.boolean().optional(),
         // xKey/yKey removed — server returns { label, value }
@@ -411,6 +424,12 @@ export const catalog = {
           orderBy: z.object({ field: z.string().optional(), dir: z.enum(["asc","desc"]).optional() }).partial().optional(),
           limit: z.number().optional(),
         }).strict(),
+        interaction: z.object({
+          clickAsFilter: z.boolean().optional(),
+          filterField: z.string().optional(),
+          storePath: z.string().optional(),
+          clearOnSecondClick: z.boolean().optional(),
+        }).partial().optional(),
         containerStyle: ContainerStyleSchema.optional(),
         borderless: z.boolean().optional(),
         // xKey/yKey removed — server returns { label, value }
