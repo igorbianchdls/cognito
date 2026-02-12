@@ -37,11 +37,42 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   if (containerStyle) (containerStyle as AnyRecord).boxShadow = undefined;
 
   const dq = (element?.props?.dataQuery as AnyRecord | undefined);
+  const drill = (element?.props?.drill as AnyRecord | undefined);
+  const drillLevels = React.useMemo(() => {
+    const raw = Array.isArray(drill?.levels) ? drill.levels : [];
+    return raw
+      .map((level: any, idx: number) => {
+        if (!level || typeof level !== 'object') return null;
+        const dimension = typeof level.dimension === 'string' ? level.dimension.trim() : '';
+        const dimensionExpr = typeof level.dimensionExpr === 'string' ? level.dimensionExpr.trim() : '';
+        if (!dimension && !dimensionExpr) return null;
+        return {
+          label: typeof level.label === 'string' && level.label.trim() ? level.label.trim() : `Nivel ${idx + 1}`,
+          dimension,
+          dimensionExpr,
+        };
+      })
+      .filter(Boolean) as Array<{ label: string; dimension?: string; dimensionExpr?: string }>;
+  }, [JSON.stringify(drill?.levels || [])]);
+  const drillEnabled = Boolean(drill?.enabled ?? true) && drillLevels.length > 0;
+  const [drillLevelIndex, setDrillLevelIndex] = React.useState(0);
+  React.useEffect(() => {
+    setDrillLevelIndex(0);
+  }, [JSON.stringify(drill?.levels || []), JSON.stringify(dq)]);
+  const activeDrillLevel = drillEnabled ? drillLevels[Math.min(drillLevelIndex, drillLevels.length - 1)] : null;
+  const effectiveDimension = (activeDrillLevel?.dimension && activeDrillLevel.dimension.length > 0)
+    ? activeDrillLevel.dimension
+    : dq?.dimension;
+  const effectiveDimensionExpr = (activeDrillLevel?.dimensionExpr && activeDrillLevel.dimensionExpr.length > 0)
+    ? activeDrillLevel.dimensionExpr
+    : dq?.dimensionExpr;
+  const canDrillDown = drillEnabled && drillLevelIndex < (drillLevels.length - 1);
+  const canDrillUp = drillEnabled && drillLevelIndex > 0;
   const [serverRows, setServerRows] = React.useState<Array<Record<string, unknown>> | null>(null);
   React.useEffect(() => {
     let cancelled = false;
     async function run() {
-      if (!dq || !dq.model || !dq.dimension || !dq.measure) { setServerRows(null); return; }
+      if (!dq || !dq.model || (!effectiveDimension && !effectiveDimensionExpr) || !dq.measure) { setServerRows(null); return; }
       try {
         const mod = String(dq.model).split('.')[0];
         const url = `/api/modulos/${mod}/query`;
@@ -58,7 +89,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
             if (filters[k as any] === undefined) (filters as any)[k] = v as any;
           }
         }
-        const body = { dataQuery: { model: dq.model, dimension: dq.dimension, dimensionExpr: dq.dimensionExpr, measure: dq.measure, filters, orderBy: dq.orderBy, limit: dq.limit } };
+        const body = { dataQuery: { model: dq.model, dimension: effectiveDimension, dimensionExpr: effectiveDimensionExpr, measure: dq.measure, filters, orderBy: dq.orderBy, limit: dq.limit } };
         const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
         const j = await res.json();
         const rows = Array.isArray(j?.rows) ? j.rows : [];
@@ -67,7 +98,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     }
     run();
     return () => { cancelled = true };
-  }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters)]);
+  }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters), effectiveDimension, effectiveDimensionExpr]);
 
   const barData = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
@@ -173,6 +204,28 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   return (
     <FrameSurface style={{ ...containerStyle, overflow: 'visible' }} frame={frame} cssVars={theme.cssVars}>
       {title && <div className="mb-0" style={titleStyle}>{title}</div>}
+      {drillEnabled && drill?.showBreadcrumb !== false && (
+        <div className="mb-2 flex items-center gap-2 text-[11px] text-gray-500">
+          <button
+            type="button"
+            className="rounded border border-gray-300 px-2 py-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={!canDrillUp}
+            onClick={() => setDrillLevelIndex((prev) => Math.max(0, prev - 1))}
+          >
+            Voltar
+          </button>
+          <span>{drillLevels.slice(0, drillLevelIndex + 1).map((level) => level.label).join(' > ')}</span>
+          {canDrillUp && (
+            <button
+              type="button"
+              className="rounded border border-gray-300 px-2 py-0.5"
+              onClick={() => setDrillLevelIndex(0)}
+            >
+              Reset
+            </button>
+          )}
+        </div>
+      )}
       <div style={{ height }}>
         <ResponsiveBar
           data={barData}
@@ -197,6 +250,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
               <div>{formatValue((data as any).value, fmt)}</div>
             </div>
           )}
+          onClick={canDrillDown ? (() => setDrillLevelIndex((prev) => Math.min(prev + 1, drillLevels.length - 1))) : undefined}
           animate={animate}
           motionConfig={motionConfig}
           theme={nivoTheme as any}

@@ -903,10 +903,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       <FrameSurface style={containerStyle} frame={p?.containerStyle?.frame as AnyRecord} cssVars={theme.cssVars}>
         {title && <div className="mb-0" style={applyH1FromCssVars(undefined, theme.cssVars)}>{title}</div>}
         <div className={(layout === 'horizontal' ? 'flex items-start gap-3 flex-wrap' : 'space-y-3') + ' p-2'}>
-          {(() => {
-            const f = (fields && fields.length > 0) ? fields[0] : undefined;
-            if (!f) return null;
-            const idx = 0;
+          {fields.map((f, idx) => {
             const sp = String(f?.storePath || '').trim();
             if (!sp) return null;
             const lbl = typeof f?.label === 'string' ? f.label : undefined;
@@ -914,15 +911,16 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
             const opts = optionsMap[idx] || [];
             const width = (f?.width !== undefined) ? (typeof f.width === 'number' ? `${f.width}px` : f.width) : undefined;
             const t = (f?.type || 'list') as 'list'|'dropdown'|'tile'|'tile-multi';
-            const isMulti = (t === 'tile-multi' || t === 'list');
+            const isMulti = (t === 'tile-multi' || t === 'list' || t === 'multi');
             const stored = effectiveGet(idx, sp, isMulti);
             const clearable = (f?.clearable !== false);
             const selectAll = Boolean(f?.selectAll);
             const showSearch = Boolean(f?.search);
+
             if (t === 'tile' || t === 'tile-multi') {
               const onClear = () => onChangeField(idx, sp, isMulti ? [] : undefined, f.actionOnChange);
               return (
-                <div className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
+                <div key={`field-${idx}`} className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
                   {lbl && !title && <div className="text-xs" style={lblStyle}>{lbl}</div>}
                   <div className="flex flex-col gap-2">
                     {showSearch && (
@@ -975,11 +973,58 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
                 </div>
               );
             }
-            // Default list (checkboxes)
+
+            if (t === 'list') {
+              const onClear = () => onChangeField(idx, sp, [], f.actionOnChange);
+              return (
+                <div key={`field-${idx}`} className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
+                  {lbl && !title && <div className="text-xs" style={lblStyle}>{lbl}</div>}
+                  <div className="flex flex-col gap-2 p-2">
+                    {showSearch && (
+                      <input
+                        type="text"
+                        value={searchMap[idx] || ''}
+                        onChange={(e) => setSearchMap((prev) => ({ ...prev, [idx]: e.target.value }))}
+                        placeholder="Buscar..."
+                        className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs"
+                      />
+                    )}
+                    <div className="flex flex-col gap-1 max-h-48 overflow-y-auto pr-1">
+                      {opts.map((o) => (
+                        <label key={String(o.value)} className="inline-flex items-center gap-2 text-xs">
+                          <input
+                            type="checkbox"
+                            className="rounded border-gray-300"
+                            checked={Array.isArray(stored) && stored.includes(o.value)}
+                            onChange={(e) => {
+                              const arr = Array.isArray(stored) ? stored.slice() : [];
+                              const nextArr = e.target.checked ? [...arr, o.value] : arr.filter((v: any) => v !== o.value);
+                              onChangeField(idx, sp, nextArr, f.actionOnChange);
+                            }}
+                          />
+                          <span style={applySlicerOptionFromCssVars(normalizeTitleStyle((f as any)?.optionStyle), theme.cssVars)}>{o.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {selectAll && (
+                        <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={() => onChangeField(idx, sp, opts.map(o => o.value), f.actionOnChange)}>Selecionar todos</button>
+                      )}
+                      {clearable && (
+                        <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={onClear}>Limpar</button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            const val = t === 'multi' ? (Array.isArray(stored) ? stored : []) : (stored ?? '');
+            const onClear = () => onChangeField(idx, sp, t === 'multi' ? [] : undefined, f.actionOnChange);
             return (
-              <div className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
+              <div key={`field-${idx}`} className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
                 {lbl && !title && <div className="text-xs" style={lblStyle}>{lbl}</div>}
-                <div className="flex flex-col gap-2 p-2">
+                <div className="flex flex-col gap-2">
                   {showSearch && (
                     <input
                       type="text"
@@ -989,35 +1034,33 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
                       className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs"
                     />
                   )}
-                  <div className="flex flex-col gap-1 max-h-48 overflow-y-auto pr-1">
+                  <select
+                    multiple={t === 'multi'}
+                    className="border border-gray-300 rounded px-2 py-1 text-xs"
+                    style={applySlicerOptionFromCssVars(normalizeTitleStyle((f as any)?.optionStyle), theme.cssVars) as any}
+                    value={val as any}
+                    onChange={(e) => {
+                      if (t === 'multi') {
+                        const selected: any[] = Array.from(e.target.selectedOptions).map((o) => (o as any).value).map((x) => (String(Number(x)) === x ? Number(x) : x));
+                        onChangeField(idx, sp, selected, f.actionOnChange);
+                      } else {
+                        const v = e.target.value;
+                        onChangeField(idx, sp, String(Number(v)) === v ? Number(v) : v, f.actionOnChange);
+                      }
+                    }}
+                  >
+                    {(t !== 'multi' && typeof f?.placeholder === 'string' && f.placeholder) && <option value="">{f.placeholder}</option>}
                     {opts.map((o) => (
-                      <label key={String(o.value)} className="inline-flex items-center gap-2 text-xs">
-                        <input
-                          type="checkbox"
-                          className="rounded border-gray-300"
-                          checked={Array.isArray(stored) && stored.includes(o.value)}
-                          onChange={(e) => {
-                            const arr = Array.isArray(stored) ? stored.slice() : [];
-                            const nextArr = e.target.checked ? [...arr, o.value] : arr.filter((v: any) => v !== o.value);
-                            onChangeField(idx, sp, nextArr, f.actionOnChange);
-                          }}
-                        />
-                        <span style={applySlicerOptionFromCssVars(normalizeTitleStyle((f as any)?.optionStyle), theme.cssVars)}>{o.label}</span>
-                      </label>
+                      <option key={String(o.value)} value={String(o.value)}>{o.label}</option>
                     ))}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {selectAll && (
-                      <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={() => onChangeField(idx, sp, opts.map(o => o.value), f.actionOnChange)}>Selecionar todos</button>
-                    )}
-                    {clearable && (
-                      <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={() => onChangeField(idx, sp, [], f.actionOnChange)}>Limpar</button>
-                    )}
-                  </div>
+                  </select>
                 </div>
+                {clearable && (
+                  <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={onClear}>Limpar</button>
+                )}
               </div>
             );
-          })()}
+          })}
         </div>
         {applyMode === 'manual' && (
           <div className="mt-2 flex justify-end">

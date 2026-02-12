@@ -299,6 +299,15 @@ export const catalog = {
           orderBy: z.object({ field: z.string().optional(), dir: z.enum(["asc","desc"]).optional() }).partial().optional(),
           limit: z.number().optional(),
         }).strict(),
+        drill: z.object({
+          enabled: z.boolean().optional(),
+          showBreadcrumb: z.boolean().optional(),
+          levels: z.array(z.object({
+            label: z.string().optional(),
+            dimension: z.string().optional(),
+            dimensionExpr: z.string().optional(),
+          }).strict().refine((l) => Boolean(l.dimension || l.dimensionExpr), { message: 'drill level requires dimension or dimensionExpr' })).optional(),
+        }).partial().optional(),
         containerStyle: ContainerStyleSchema.optional(),
         borderless: z.boolean().optional(),
         // xKey/yKey removed — server returns { label, value }
