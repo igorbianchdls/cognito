@@ -17,6 +17,81 @@ type ChatSession = { id: string; sandbox: Sandbox; createdAt: number; lastUsedAt
 const SESSIONS = new Map<string, ChatSession>()
 const OPENAI_SANDBOXES = new Map<string, { sandbox: Sandbox; createdAt: number; lastUsedAt: number }>()
 const genId = () => Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
+const DASHBOARD_SKILL_PATH = '/vercel/sandbox/agent/skills/dashboard.md'
+const DASHBOARD_SKILL_MD = [
+  '# Dashboard Skill',
+  '',
+  'Objetivo: guiar a criacao de dashboards em JSON Render para o ERP (vendas, compras e financeiro) com layout consistente e queries validas.',
+  '',
+  '## Regras Gerais',
+  '- Sempre trabalhar com arquivos `.jsonr` na pasta `/vercel/sandbox/dashboard`.',
+  '- Sempre usar `Theme` no primeiro nodo.',
+  '- Sempre incluir `Theme.props.name` e `Theme.props.headerTheme`.',
+  '- Sempre usar filtros de periodo (`de`, `ate`) quando houver analise temporal.',
+  '- Para KPIs, nao enviar `dimension` (apenas `measure`).',
+  '- Para graficos segmentados, usar `dimension` + `measure`.',
+  '',
+  '## Estrutura Minima JSON',
+  '~~~json',
+  '[',
+  '  {',
+  '    "type": "Theme",',
+  '    "props": { "name": "light", "headerTheme": "auto", "managers": {} },',
+  '    "children": [',
+  '      { "type": "Header", "props": { "title": "Dashboard", "datePicker": { "visible": true, "mode": "range", "storePath": "filters.dateRange" } } },',
+  '      { "type": "Div", "props": { "direction": "row", "gap": 12, "padding": 16, "childGrow": true }, "children": [',
+  '        { "type": "KPI", "props": { "title": "Total", "format": "currency", "dataQuery": { "model": "vendas.pedidos", "measure": "SUM(p.valor_total)", "filters": { "tenant_id": 1 } } } },',
+  '        { "type": "KPI", "props": { "title": "Pedidos", "format": "number", "dataQuery": { "model": "vendas.pedidos", "measure": "COUNT()", "filters": { "tenant_id": 1 } } } }',
+  '      ]},',
+  '      { "type": "Div", "props": { "direction": "row", "gap": 12, "padding": 16, "childGrow": true }, "children": [',
+  '        { "type": "BarChart", "props": { "title": "Por Categoria", "format": "currency", "dataQuery": { "model": "vendas.pedidos", "dimension": "categoria_receita", "measure": "SUM(itens.subtotal)", "filters": { "tenant_id": 1 }, "orderBy": { "field": "measure", "dir": "desc" }, "limit": 6 } } }',
+  '      ]}',
+  '    ]',
+  '  }',
+  ']',
+  '~~~',
+  '',
+  '## Layout Recomendado',
+  '- Linha 1: KPIs principais (3-5 cards).',
+  '- Linha 2: filtros (SlicerCard/list/tile), mantendo filtros de maior impacto visiveis.',
+  '- Linhas seguintes: graficos de distribuicao (bar/pie) e tendencia (line/bar mensal).',
+  '- Evitar excesso de cards aninhados; preferir grid de `Div` com `childGrow`.',
+  '',
+  '## Modelos e Campos para Visualizacao',
+  '',
+  '### Vendas (`/api/modulos/vendas/query`)',
+  '- Model suportado: `vendas.pedidos`.',
+  '- Dimensions suportadas: `cliente`, `canal_venda`, `vendedor`, `filial`, `unidade_negocio`, `categoria_receita`, `territorio`, `periodo`.',
+  '- Measures suportadas: `SUM(pi.subtotal)`, `SUM(itens.subtotal)`, `SUM(p.valor_total)`, `AVG(p.valor_total)`, `COUNT()`.',
+  '- Filtros comuns: `tenant_id`, `de`, `ate`, `status`, `valor_min`, `valor_max`, `cliente_id`, `vendedor_id`, `canal_venda_id`, `filial_id`, `unidade_negocio_id`, `territorio_id`, `categoria_receita_id`, `centro_lucro_id`.',
+  '',
+  '### Compras (`/api/modulos/compras/query`)',
+  '- Models suportados: `compras.compras`, `compras.recebimentos`.',
+  '- Dimensions em `compras.compras`: `fornecedor`, `centro_custo`, `filial`, `projeto`, `categoria_despesa`, `status`, `periodo`.',
+  '- Dimensions em `compras.recebimentos`: `status`, `periodo`.',
+  '- Measures em `compras.compras`: `SUM(c.valor_total)`, `AVG(c.valor_total)`, `COUNT()`, `COUNT_DISTINCT(c.id)`, `COUNT_DISTINCT(c.fornecedor_id)`.',
+  '- Measures em `compras.recebimentos`: `COUNT()`.',
+  '- Filtros comuns: `tenant_id`, `de`, `ate`, `status`, `fornecedor_id`, `filial_id`, `centro_custo_id`, `categoria_despesa_id`, `valor_min`, `valor_max`.',
+  '',
+  '### Financeiro (`/api/modulos/financeiro/query`)',
+  '- Models suportados: `financeiro.contas_pagar`, `financeiro.contas_receber`.',
+  '- Dimensions contas a pagar: `fornecedor`, `centro_custo`, `departamento`, `unidade_negocio`, `filial`, `projeto`, `categoria_despesa`, `categoria`, `status`, `titulo`, `periodo`.',
+  '- Dimensions contas a receber: `cliente`, `centro_lucro`, `departamento`, `unidade_negocio`, `filial`, `projeto`, `categoria_receita`, `categoria`, `status`, `titulo`, `periodo`.',
+  '- Measures suportadas nos dois models: `SUM(valor_liquido)`, `SUM(valor)`, `COUNT()`.',
+  '- Filtros comuns: `tenant_id`, `de`, `ate`, `status`, `valor_min`, `valor_max` e IDs relacionais do model (cliente/fornecedor/categoria/centro/departamento/unidade/filial/projeto).',
+  '',
+  '## Boas Praticas de Tema',
+  '- Sempre manter `Theme` como raiz.',
+  '- Separar tema de dashboard (`name`) de tema de header (`headerTheme`).',
+  '- Usar `managers` somente para ajustes finos (fonte, borda, esquema de cores).',
+  '',
+  '## Checklist Antes de Salvar',
+  '- Arquivo valido em JSON.',
+  '- `Theme` presente e no topo.',
+  '- `dataQuery.model` suportado.',
+  '- `dimension` e `measure` suportados para o model.',
+  '- Filtros de periodo consistentes com os dados.',
+].join('\n')
 
 function inferProviderFromModel(model?: string): ChatProvider {
   const raw = (model || '').toString().trim().toLowerCase()
@@ -63,26 +138,26 @@ function normalizeModel(provider: ChatProvider, rawModel?: string): string {
   return claudeMap[raw] || 'claude-haiku-4-5-20251001'
 }
 
+async function ensureDashboardSkillInSandbox(sandbox: Sandbox, opts?: { ensureOpenAiDir?: boolean }) {
+  try {
+    const mkdirScript = opts?.ensureOpenAiDir
+      ? "const fs=require('fs');fs.mkdirSync('/vercel/sandbox/openai-chat',{recursive:true});fs.mkdirSync('/vercel/sandbox/agent/skills',{recursive:true});console.log('ok')"
+      : "const fs=require('fs');fs.mkdirSync('/vercel/sandbox/agent/skills',{recursive:true});console.log('ok')"
+    await sandbox.runCommand({ cmd: 'node', args: ['-e', mkdirScript] })
+  } catch {}
+  try {
+    await sandbox.writeFiles([
+      {
+        path: DASHBOARD_SKILL_PATH,
+        content: Buffer.from(DASHBOARD_SKILL_MD),
+      },
+    ])
+  } catch {}
+}
+
 async function getOrCreateOpenAiSandbox(chatId: string): Promise<Sandbox> {
   async function ensureOpenAiSkillsScaffold(sandbox: Sandbox) {
-    try {
-      await sandbox.runCommand({
-        cmd: 'node',
-        args: ['-e', "const fs=require('fs');fs.mkdirSync('/vercel/sandbox/openai-chat',{recursive:true});fs.mkdirSync('/vercel/sandbox/agent/skills',{recursive:true});console.log('ok')"],
-      })
-    } catch {}
-    try {
-      await sandbox.writeFiles([
-        {
-          path: '/vercel/sandbox/agent/skills/TESTE-1.md',
-          content: Buffer.from('# TESTE-1\\nSkill de teste 1 para bootstrap da sandbox OpenAI.\\n'),
-        },
-        {
-          path: '/vercel/sandbox/agent/skills/TESTE-2.md',
-          content: Buffer.from('# TESTE-2\\nSkill de teste 2 para bootstrap da sandbox OpenAI.\\n'),
-        },
-      ])
-    } catch {}
+    await ensureDashboardSkillInSandbox(sandbox, { ensureOpenAiDir: true })
   }
 
   const existing = OPENAI_SANDBOXES.get(chatId)
@@ -142,6 +217,7 @@ export async function POST(req: Request) {
         const provider = normalizeProvider(existing.provider, existing.model)
         existing.provider = provider
         existing.model = normalizeModel(provider, existing.model || (provider === 'openai-responses' ? 'gpt-5.1' : 'claude-haiku-4-5-20251001'))
+        await ensureDashboardSkillInSandbox(existing.sandbox)
         timeline.push({ name: 'reuse-existing-session', ms: Date.now() - t0, ok: true })
         return Response.json({ ok: true, chatId: id, reused: true, startupMode: 'reused' as const, timeline })
       }
@@ -178,6 +254,7 @@ export async function POST(req: Request) {
           return Response.json({ ok: false, error: 'install failed', stdout: o, stderr: e, timeline }, { status: 500 })
         }
       }
+      if (sandbox) await ensureDashboardSkillInSandbox(sandbox)
       // Seed a single Tools Skill to document generic MCP tools (only when cold start)
       if (!usedChatSnapshot) try {
         const mk = await sandbox.runCommand({ cmd: 'node', args: ['-e', `require('fs').mkdirSync('/vercel/sandbox/.claude/skills/Tools', { recursive: true });`] })
@@ -1075,26 +1152,8 @@ process.exit(0);
     sess.provider = chosenProvider
     sess.model = chosen
     sess.lastUsedAt = Date.now()
+    await ensureDashboardSkillInSandbox(sess.sandbox)
     if (chosenProvider === 'openai-responses') {
-      // Keep visible workspace aligned with the selected provider in /chat file explorer.
-      try {
-        await sess.sandbox.runCommand({
-          cmd: 'node',
-          args: ['-e', "const fs=require('fs');fs.mkdirSync('/vercel/sandbox/agent/skills',{recursive:true});console.log('ok')"],
-        })
-      } catch {}
-      try {
-        await sess.sandbox.writeFiles([
-          {
-            path: '/vercel/sandbox/agent/skills/TESTE-1.md',
-            content: Buffer.from('# TESTE-1\\nArquivo de teste 1 para provider OpenAI.\\n'),
-          },
-          {
-            path: '/vercel/sandbox/agent/skills/TESTE-2.md',
-            content: Buffer.from('# TESTE-2\\nArquivo de teste 2 para provider OpenAI.\\n'),
-          },
-        ])
-      } catch {}
       // Also pre-warm OpenAI dedicated sandbox (used by streaming runner).
       try { await getOrCreateOpenAiSandbox(chatId) } catch {}
     } else {
