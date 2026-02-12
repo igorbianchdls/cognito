@@ -45,7 +45,7 @@ export const APPS_VENDAS_TEMPLATE_TEXT = JSON.stringify([
         { type: "SlicerCard", props: { fr: 1, title: "Filtro de Canais", fields: [
           { label: "Canal", type: "list", storePath: "filters.canal_venda_id", source: canalVendaOptionsSource, selectAll: true, search: true, clearable: true }
         ] } },
-        { type: "BarChart", props: { fr: 2, title: "Clientes", dataQuery: { model: "vendas.pedidos", dimension: "cliente", measure: "SUM(itens.subtotal)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 5 }, drill: { enabled: true, showBreadcrumb: true, levels: [ { label: "Filial", dimension: "filial" }, { label: "Cliente", dimension: "cliente" }, { label: "Vendedor", dimension: "vendedor" } ] }, format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
+        { type: "BarChart", props: { fr: 2, title: "Clientes", dataQuery: { model: "vendas.pedidos", dimension: "cliente", measure: "SUM(itens.subtotal)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 5 }, drill: { enabled: true, showBreadcrumb: true, levels: [ { label: "Filial", dimension: "filial", filterField: "filial_id" }, { label: "Cliente", dimension: "cliente", filterField: "cliente_id" }, { label: "Vendedor", dimension: "vendedor", filterField: "vendedor_id" } ] }, format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [

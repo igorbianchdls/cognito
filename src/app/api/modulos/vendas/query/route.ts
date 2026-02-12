@@ -43,6 +43,7 @@ export async function POST(req: NextRequest) {
 
     // Dimension mapping (whitelist) or override via dimensionExpr
     let dimExpr = ''
+    let dimKeyExpr = ''
     let dimAlias = ''
     if (!dimension && !dimensionExprOverride) {
       // KPI mode: no dimension -> single aggregate
@@ -118,17 +119,18 @@ export async function POST(req: NextRequest) {
         return e
       }
       dimExpr = qualifyDimExpr(dimensionExprOverride)
+      dimKeyExpr = dimExpr
       dimAlias = dimension || 'dimension'
     } else {
       // Suportadas: cliente, canal_venda, vendedor, filial, unidade_negocio, categoria_receita, territorio, periodo
-      if (dimension === 'cliente') { dimExpr = 'c.nome_fantasia'; dimAlias = 'cliente' }
-      else if (dimension === 'canal_venda') { dimExpr = 'COALESCE(cv.nome,\'—\')'; dimAlias = 'canal_venda' }
-      else if (dimension === 'vendedor') { dimExpr = 'COALESCE(f.nome,\'—\')'; dimAlias = 'vendedor' }
-      else if (dimension === 'filial') { dimExpr = 'COALESCE(fil.nome,\'—\')'; dimAlias = 'filial' }
-      else if (dimension === 'unidade_negocio') { dimExpr = 'COALESCE(un.nome,\'—\')'; dimAlias = 'unidade_negocio' }
-      else if (dimension === 'categoria_receita') { dimExpr = 'COALESCE(cr.nome,\'—\')'; dimAlias = 'categoria_receita' }
-      else if (dimension === 'periodo') { dimExpr = "TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM')"; dimAlias = 'periodo' }
-      else if (dimension === 'territorio') { dimExpr = 'COALESCE(t.nome,\'—\')'; dimAlias = 'territorio' }
+      if (dimension === 'cliente') { dimExpr = 'c.nome_fantasia'; dimKeyExpr = 'c.id'; dimAlias = 'cliente' }
+      else if (dimension === 'canal_venda') { dimExpr = 'COALESCE(cv.nome,\'—\')'; dimKeyExpr = 'cv.id'; dimAlias = 'canal_venda' }
+      else if (dimension === 'vendedor') { dimExpr = 'COALESCE(f.nome,\'—\')'; dimKeyExpr = 'v.id'; dimAlias = 'vendedor' }
+      else if (dimension === 'filial') { dimExpr = 'COALESCE(fil.nome,\'—\')'; dimKeyExpr = 'fil.id'; dimAlias = 'filial' }
+      else if (dimension === 'unidade_negocio') { dimExpr = 'COALESCE(un.nome,\'—\')'; dimKeyExpr = 'un.id'; dimAlias = 'unidade_negocio' }
+      else if (dimension === 'categoria_receita') { dimExpr = 'COALESCE(cr.nome,\'—\')'; dimKeyExpr = 'cr.id'; dimAlias = 'categoria_receita' }
+      else if (dimension === 'periodo') { dimExpr = "TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM')"; dimKeyExpr = dimExpr; dimAlias = 'periodo' }
+      else if (dimension === 'territorio') { dimExpr = 'COALESCE(t.nome,\'—\')'; dimKeyExpr = 't.id'; dimAlias = 'territorio' }
       else {
         return Response.json({ success: false, message: `Dimensão não suportada: ${dimension}` }, { status: 400 })
       }
@@ -218,14 +220,14 @@ export async function POST(req: NextRequest) {
 
     // Order by
     const dir = (orderBy?.dir && orderBy.dir.toLowerCase() === 'asc') ? 'ASC' : 'DESC'
-    const obField = (orderBy?.field === 'dimension') ? '1' : '2' // 1: dimension expr, 2: measure expr
+    const obField = (orderBy?.field === 'dimension') ? '2' : '3' // 2: label, 3: measure
     const orderSql = `ORDER BY ${obField} ${dir}`
 
     // Build
-    const sql = `SELECT ${dimExpr} AS label, ${measExpr} AS value
+    const sql = `SELECT ${dimKeyExpr || dimExpr} AS key, ${dimExpr} AS label, ${measExpr} AS value
                  ${fromSql}
                  ${whereSql}
-                 GROUP BY 1
+                 GROUP BY 1, 2
                  ${orderSql}
                  LIMIT $${params.length + 1}::int`.replace(/\s+/g, ' ').trim()
     const rows = await runQuery<Record<string, unknown>>(sql, [...params, limit])

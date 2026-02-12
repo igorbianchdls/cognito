@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     let ctx: {
       from: string
       defaultDate: string
-      dimMap: Map<string, { expr: string; alias: string }>
+      dimMap: Map<string, { expr: string; keyExpr?: string; alias: string }>
       measureMap: Map<string, { expr: string; alias: string }>
     } | null = null
 
@@ -58,17 +58,17 @@ export async function POST(req: NextRequest) {
                LEFT JOIN financeiro.projetos pr ON pr.id = cp.projeto_id`,
         defaultDate: 'cp.data_vencimento',
         dimMap: new Map([
-          ['fornecedor', { expr: "COALESCE(f.nome_fantasia,'Sem fornecedor')", alias: 'fornecedor' }],
-          ['centro_custo', { expr: "COALESCE(cc.nome,'Sem centro de custo')", alias: 'centro_custo' }],
-          ['departamento', { expr: "COALESCE(dep.nome,'Sem departamento')", alias: 'departamento' }],
-          ['unidade_negocio', { expr: "COALESCE(un.nome,'Sem unidade')", alias: 'unidade_negocio' }],
-          ['filial', { expr: "COALESCE(fil.nome,'Sem filial')", alias: 'filial' }],
-          ['projeto', { expr: "COALESCE(pr.nome,'Sem projeto')", alias: 'projeto' }],
-          ['categoria_despesa', { expr: "COALESCE(cd.nome,'Sem categoria')", alias: 'categoria_despesa' }],
-          ['categoria', { expr: "COALESCE(cd.nome,'Sem categoria')", alias: 'categoria' }],
-          ['status', { expr: "COALESCE(cp.status,'—')", alias: 'status' }],
-          ['titulo', { expr: "COALESCE(NULLIF(TRIM(cp.numero_documento), ''), CONCAT('Conta #', cp.id::text))", alias: 'titulo' }],
-          ['periodo', { expr: "TO_CHAR(DATE_TRUNC('month', cp.data_vencimento), 'YYYY-MM')", alias: 'periodo' }],
+          ['fornecedor', { expr: "COALESCE(f.nome_fantasia,'Sem fornecedor')", keyExpr: 'f.id', alias: 'fornecedor' }],
+          ['centro_custo', { expr: "COALESCE(cc.nome,'Sem centro de custo')", keyExpr: 'cc.id', alias: 'centro_custo' }],
+          ['departamento', { expr: "COALESCE(dep.nome,'Sem departamento')", keyExpr: 'dep.id', alias: 'departamento' }],
+          ['unidade_negocio', { expr: "COALESCE(un.nome,'Sem unidade')", keyExpr: 'un.id', alias: 'unidade_negocio' }],
+          ['filial', { expr: "COALESCE(fil.nome,'Sem filial')", keyExpr: 'fil.id', alias: 'filial' }],
+          ['projeto', { expr: "COALESCE(pr.nome,'Sem projeto')", keyExpr: 'pr.id', alias: 'projeto' }],
+          ['categoria_despesa', { expr: "COALESCE(cd.nome,'Sem categoria')", keyExpr: 'cd.id', alias: 'categoria_despesa' }],
+          ['categoria', { expr: "COALESCE(cd.nome,'Sem categoria')", keyExpr: 'cd.id', alias: 'categoria' }],
+          ['status', { expr: "COALESCE(cp.status,'—')", keyExpr: "COALESCE(cp.status,'—')", alias: 'status' }],
+          ['titulo', { expr: "COALESCE(NULLIF(TRIM(cp.numero_documento), ''), CONCAT('Conta #', cp.id::text))", keyExpr: 'cp.id', alias: 'titulo' }],
+          ['periodo', { expr: "TO_CHAR(DATE_TRUNC('month', cp.data_vencimento), 'YYYY-MM')", keyExpr: "TO_CHAR(DATE_TRUNC('month', cp.data_vencimento), 'YYYY-MM')", alias: 'periodo' }],
         ]),
         measureMap: new Map([
           ['sum(valor_liquido)', { expr: 'COALESCE(SUM(cp.valor_liquido),0)::float', alias: 'valor_total' }],
@@ -88,17 +88,17 @@ export async function POST(req: NextRequest) {
                LEFT JOIN financeiro.projetos pr ON pr.id = cr.projeto_id`,
         defaultDate: 'cr.data_vencimento',
         dimMap: new Map([
-          ['cliente', { expr: "COALESCE(cli.nome_fantasia,'Sem cliente')", alias: 'cliente' }],
-          ['centro_lucro', { expr: "COALESCE(cl.nome,'Sem centro de lucro')", alias: 'centro_lucro' }],
-          ['departamento', { expr: "COALESCE(dep.nome,'Sem departamento')", alias: 'departamento' }],
-          ['unidade_negocio', { expr: "COALESCE(un.nome,'Sem unidade')", alias: 'unidade_negocio' }],
-          ['filial', { expr: "COALESCE(fil.nome,'Sem filial')", alias: 'filial' }],
-          ['projeto', { expr: "COALESCE(pr.nome,'Sem projeto')", alias: 'projeto' }],
-          ['categoria_receita', { expr: "COALESCE(crcat.nome,'Sem categoria')", alias: 'categoria_receita' }],
-          ['categoria', { expr: "COALESCE(crcat.nome,'Sem categoria')", alias: 'categoria' }],
-          ['status', { expr: "COALESCE(cr.status,'—')", alias: 'status' }],
-          ['titulo', { expr: "COALESCE(NULLIF(TRIM(cr.numero_documento), ''), CONCAT('Conta #', cr.id::text))", alias: 'titulo' }],
-          ['periodo', { expr: "TO_CHAR(DATE_TRUNC('month', cr.data_vencimento), 'YYYY-MM')", alias: 'periodo' }],
+          ['cliente', { expr: "COALESCE(cli.nome_fantasia,'Sem cliente')", keyExpr: 'cli.id', alias: 'cliente' }],
+          ['centro_lucro', { expr: "COALESCE(cl.nome,'Sem centro de lucro')", keyExpr: 'cl.id', alias: 'centro_lucro' }],
+          ['departamento', { expr: "COALESCE(dep.nome,'Sem departamento')", keyExpr: 'dep.id', alias: 'departamento' }],
+          ['unidade_negocio', { expr: "COALESCE(un.nome,'Sem unidade')", keyExpr: 'un.id', alias: 'unidade_negocio' }],
+          ['filial', { expr: "COALESCE(fil.nome,'Sem filial')", keyExpr: 'fil.id', alias: 'filial' }],
+          ['projeto', { expr: "COALESCE(pr.nome,'Sem projeto')", keyExpr: 'pr.id', alias: 'projeto' }],
+          ['categoria_receita', { expr: "COALESCE(crcat.nome,'Sem categoria')", keyExpr: 'crcat.id', alias: 'categoria_receita' }],
+          ['categoria', { expr: "COALESCE(crcat.nome,'Sem categoria')", keyExpr: 'crcat.id', alias: 'categoria' }],
+          ['status', { expr: "COALESCE(cr.status,'—')", keyExpr: "COALESCE(cr.status,'—')", alias: 'status' }],
+          ['titulo', { expr: "COALESCE(NULLIF(TRIM(cr.numero_documento), ''), CONCAT('Conta #', cr.id::text))", keyExpr: 'cr.id', alias: 'titulo' }],
+          ['periodo', { expr: "TO_CHAR(DATE_TRUNC('month', cr.data_vencimento), 'YYYY-MM')", keyExpr: "TO_CHAR(DATE_TRUNC('month', cr.data_vencimento), 'YYYY-MM')", alias: 'periodo' }],
         ]),
         measureMap: new Map([
           ['sum(valor_liquido)', { expr: 'COALESCE(SUM(cr.valor_liquido),0)::float', alias: 'valor_total' }],
@@ -123,7 +123,8 @@ export async function POST(req: NextRequest) {
         e = e.replace(/\bvalor\b/g, `${alias}.valor_liquido`)
         return e
       }
-      dim = { expr: qualifyDimExpr(dimensionExprOverride), alias: dimension || 'dimension' }
+      const qualified = qualifyDimExpr(dimensionExprOverride)
+      dim = { expr: qualified, keyExpr: qualified, alias: dimension || 'dimension' }
     } else {
       if (dimKey && !dim) {
         return Response.json({ success: false, message: `Dimensão não suportada: ${dimension}` }, { status: 400 })
@@ -193,12 +194,12 @@ export async function POST(req: NextRequest) {
       execParams = params
     } else {
       const dir = (orderBy?.dir && orderBy.dir.toLowerCase() === 'asc') ? 'ASC' : 'DESC'
-      const obField = (orderBy?.field === 'dimension') ? '1' : '2'
+      const obField = (orderBy?.field === 'dimension') ? '2' : '3'
       const orderSql = `ORDER BY ${obField} ${dir}`
-      sql = `SELECT ${dim.expr} AS label, ${meas.expr} AS value
+      sql = `SELECT ${dim.keyExpr || dim.expr} AS key, ${dim.expr} AS label, ${meas.expr} AS value
              ${ctx.from}
              ${whereSql}
-             GROUP BY 1
+             GROUP BY 1, 2
              ${orderSql}
              LIMIT $${params.length + 1}::int`.replace(/\s+/g, ' ').trim()
       execParams = [...params, limit]

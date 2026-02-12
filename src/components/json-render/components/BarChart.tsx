@@ -38,6 +38,27 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
 
   const dq = (element?.props?.dataQuery as AnyRecord | undefined);
   const drill = (element?.props?.drill as AnyRecord | undefined);
+  const inferFilterField = React.useCallback((dimension?: string) => {
+    const d = (dimension || '').trim().toLowerCase();
+    if (!d) return '';
+    const map: Record<string, string> = {
+      cliente: 'cliente_id',
+      fornecedor: 'fornecedor_id',
+      vendedor: 'vendedor_id',
+      filial: 'filial_id',
+      unidade_negocio: 'unidade_negocio_id',
+      canal_venda: 'canal_venda_id',
+      categoria_receita: 'categoria_receita_id',
+      categoria_despesa: 'categoria_despesa_id',
+      centro_lucro: 'centro_lucro_id',
+      centro_custo: 'centro_custo_id',
+      departamento: 'departamento_id',
+      projeto: 'projeto_id',
+      territorio: 'territorio_id',
+      status: 'status',
+    };
+    return map[d] || '';
+  }, []);
   const drillLevels = React.useMemo(() => {
     const raw = Array.isArray(drill?.levels) ? drill.levels : [];
     return raw
@@ -46,18 +67,23 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
         const dimension = typeof level.dimension === 'string' ? level.dimension.trim() : '';
         const dimensionExpr = typeof level.dimensionExpr === 'string' ? level.dimensionExpr.trim() : '';
         if (!dimension && !dimensionExpr) return null;
+        const filterFieldFromConfig = typeof level.filterField === 'string' ? level.filterField.trim() : '';
+        const filterField = filterFieldFromConfig || inferFilterField(dimension);
         return {
           label: typeof level.label === 'string' && level.label.trim() ? level.label.trim() : `Nivel ${idx + 1}`,
           dimension,
           dimensionExpr,
+          filterField,
         };
       })
-      .filter(Boolean) as Array<{ label: string; dimension?: string; dimensionExpr?: string }>;
-  }, [JSON.stringify(drill?.levels || [])]);
+      .filter(Boolean) as Array<{ label: string; dimension?: string; dimensionExpr?: string; filterField?: string }>;
+  }, [JSON.stringify(drill?.levels || []), inferFilterField]);
   const drillEnabled = Boolean(drill?.enabled ?? true) && drillLevels.length > 0;
   const [drillLevelIndex, setDrillLevelIndex] = React.useState(0);
+  const [drillPath, setDrillPath] = React.useState<Array<{ level: number; label: string; value: string | number; filterField: string }>>([]);
   React.useEffect(() => {
     setDrillLevelIndex(0);
+    setDrillPath([]);
   }, [JSON.stringify(drill?.levels || []), JSON.stringify(dq)]);
   const activeDrillLevel = drillEnabled ? drillLevels[Math.min(drillLevelIndex, drillLevels.length - 1)] : null;
   const effectiveDimension = (activeDrillLevel?.dimension && activeDrillLevel.dimension.length > 0)
@@ -89,6 +115,13 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
             if (filters[k as any] === undefined) (filters as any)[k] = v as any;
           }
         }
+        if (drillEnabled && drillPath.length > 0) {
+          for (let i = 0; i < Math.min(drillLevelIndex, drillPath.length); i++) {
+            const step = drillPath[i];
+            if (!step?.filterField) continue;
+            (filters as AnyRecord)[step.filterField] = step.value;
+          }
+        }
         const body = { dataQuery: { model: dq.model, dimension: effectiveDimension, dimensionExpr: effectiveDimensionExpr, measure: dq.measure, filters, orderBy: dq.orderBy, limit: dq.limit } };
         const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
         const j = await res.json();
@@ -98,13 +131,14 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     }
     run();
     return () => { cancelled = true };
-  }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters), effectiveDimension, effectiveDimensionExpr]);
+  }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters), effectiveDimension, effectiveDimensionExpr, drillEnabled, drillLevelIndex, JSON.stringify(drillPath)]);
 
   const barData = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
     return src.map((r) => ({
       label: String((r as AnyRecord).label ?? ''),
       value: Number((r as AnyRecord).value ?? 0),
+      drillKey: (r as AnyRecord).key ?? String((r as AnyRecord).label ?? ''),
     }));
   }, [serverRows]);
 
@@ -201,6 +235,43 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     t.labels.text = { ...(t.labels.text || {}), ...(managerFont ? { fontFamily: managerFont } : {}), ...(fg ? { fill: fg } : {}) };
     nivoTheme = t;
   }
+  const handleDrillDown = React.useCallback((point: any) => {
+    if (!canDrillDown || !activeDrillLevel) return;
+    const row = (point?.data || point || {}) as AnyRecord;
+    const clickedLabel = String(row.label ?? row.indexValue ?? '');
+    const rawKey = row.drillKey ?? row.key ?? row.id ?? clickedLabel;
+    const normalizedKey = (typeof rawKey === 'number' || typeof rawKey === 'string') ? rawKey : clickedLabel;
+    const filterField = typeof activeDrillLevel.filterField === 'string' ? activeDrillLevel.filterField.trim() : '';
+    setDrillPath((prev) => {
+      const prefix = prev.slice(0, drillLevelIndex);
+      if (!filterField || normalizedKey === undefined || normalizedKey === null || normalizedKey === '') {
+        return prefix;
+      }
+      return [...prefix, { level: drillLevelIndex, label: clickedLabel, value: normalizedKey, filterField }];
+    });
+    setDrillLevelIndex((prev) => Math.min(prev + 1, drillLevels.length - 1));
+  }, [canDrillDown, activeDrillLevel, drillLevelIndex, drillLevels.length]);
+  const handleDrillUp = React.useCallback(() => {
+    setDrillLevelIndex((prev) => {
+      const next = Math.max(0, prev - 1);
+      setDrillPath((path) => path.slice(0, next));
+      return next;
+    });
+  }, []);
+  const handleDrillReset = React.useCallback(() => {
+    setDrillLevelIndex(0);
+    setDrillPath([]);
+  }, []);
+  const breadcrumb = React.useMemo(() => {
+    const labels: string[] = [];
+    for (let i = 0; i <= drillLevelIndex; i++) {
+      const level = drillLevels[i];
+      if (!level) break;
+      const step = drillPath[i];
+      labels.push(step?.label ? `${level.label}: ${step.label}` : level.label);
+    }
+    return labels.join(' > ');
+  }, [drillLevelIndex, drillLevels, drillPath]);
   return (
     <FrameSurface style={{ ...containerStyle, overflow: 'visible' }} frame={frame} cssVars={theme.cssVars}>
       {title && <div className="mb-0" style={titleStyle}>{title}</div>}
@@ -210,16 +281,16 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
             type="button"
             className="rounded border border-gray-300 px-2 py-0.5 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={!canDrillUp}
-            onClick={() => setDrillLevelIndex((prev) => Math.max(0, prev - 1))}
+            onClick={handleDrillUp}
           >
             Voltar
           </button>
-          <span>{drillLevels.slice(0, drillLevelIndex + 1).map((level) => level.label).join(' > ')}</span>
+          <span>{breadcrumb}</span>
           {canDrillUp && (
             <button
               type="button"
               className="rounded border border-gray-300 px-2 py-0.5"
-              onClick={() => setDrillLevelIndex(0)}
+              onClick={handleDrillReset}
             >
               Reset
             </button>
@@ -250,7 +321,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
               <div>{formatValue((data as any).value, fmt)}</div>
             </div>
           )}
-          onClick={canDrillDown ? (() => setDrillLevelIndex((prev) => Math.min(prev + 1, drillLevels.length - 1))) : undefined}
+          onClick={canDrillDown ? handleDrillDown : undefined}
           animate={animate}
           motionConfig={motionConfig}
           theme={nivoTheme as any}

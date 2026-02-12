@@ -306,6 +306,7 @@ export const catalog = {
             label: z.string().optional(),
             dimension: z.string().optional(),
             dimensionExpr: z.string().optional(),
+            filterField: z.string().optional(),
           }).strict().refine((l) => Boolean(l.dimension || l.dimensionExpr), { message: 'drill level requires dimension or dimensionExpr' })).optional(),
         }).partial().optional(),
         containerStyle: ContainerStyleSchema.optional(),
