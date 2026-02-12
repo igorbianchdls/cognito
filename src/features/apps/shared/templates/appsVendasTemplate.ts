@@ -1,3 +1,7 @@
+import { BiSlicers } from '@/features/apps/bi'
+
+const canalVendaOptionsSource = BiSlicers.createOptionsSource('vendas.pedidos', 'canal_venda_id', 50)
+
 export const APPS_VENDAS_TEMPLATE_TEXT = JSON.stringify([
   {
     type: "Theme",
@@ -29,7 +33,7 @@ export const APPS_VENDAS_TEMPLATE_TEXT = JSON.stringify([
 
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "SlicerCard", props: { fr: 1, title: "Filtro de Canais (Tile)", layout: "horizontal", fields: [
-          { label: "Canal", type: "tile-multi", storePath: "filters.canal_venda_id", selectAll: true, search: true, clearable: true, source: { type: "options", model: "vendas.pedidos", field: "canal_venda_id", pageSize: 50 } }
+          { label: "Canal", type: "tile-multi", storePath: "filters.canal_venda_id", selectAll: true, search: true, clearable: true, source: canalVendaOptionsSource }
         ] } }
       ]},
 
@@ -37,7 +41,7 @@ export const APPS_VENDAS_TEMPLATE_TEXT = JSON.stringify([
         { type: "PieChart", props: { fr: 1, title: "Canais", dataQuery: { model: "vendas.pedidos", dimension: "canal_venda", measure: "SUM(itens.subtotal)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 6 }, format: "currency", height: 240, nivo: { innerRadius: 0.35 } } },
         { type: "BarChart", props: { fr: 2, title: "Categorias", dataQuery: { model: "vendas.pedidos", dimension: "categoria_receita", measure: "SUM(itens.subtotal)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 6 }, format: "currency", height: 240, nivo: { layout: 'horizontal' } } },
         { type: "SlicerCard", props: { fr: 1, title: "Filtro de Canais", fields: [
-          { label: "Canal", type: "list", storePath: "filters.canal_venda_id", source: { type: "options", model: "vendas.pedidos", field: "canal_venda_id", pageSize: 50 }, selectAll: true, search: true, clearable: true }
+          { label: "Canal", type: "list", storePath: "filters.canal_venda_id", source: canalVendaOptionsSource, selectAll: true, search: true, clearable: true }
         ] } },
         { type: "BarChart", props: { fr: 2, title: "Clientes", dataQuery: { model: "vendas.pedidos", dimension: "cliente", measure: "SUM(itens.subtotal)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 5 }, format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
       ]},

@@ -1,3 +1,8 @@
+import { BiSlicers } from '@/features/apps/bi'
+
+const fornecedorOptionsSource = BiSlicers.createOptionsSource('compras.compras', 'fornecedor_id', 100)
+const centroCustoOptionsSource = BiSlicers.createOptionsSource('compras.compras', 'centro_custo_id', 100)
+
 export const APPS_COMPRAS_TEMPLATE_TEXT = JSON.stringify([
   {
     type: "Theme",
@@ -28,7 +33,7 @@ export const APPS_COMPRAS_TEMPLATE_TEXT = JSON.stringify([
 
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "SlicerCard", props: { fr: 1, title: "Filtro de Fornecedor (Tile)", layout: "horizontal", fields: [
-          { label: "Fornecedor", type: "tile-multi", storePath: "filters.fornecedor_id", clearable: true, selectAll: true, source: { type: "options", model: "compras.compras", field: "fornecedor_id", pageSize: 100 } }
+          { label: "Fornecedor", type: "tile-multi", storePath: "filters.fornecedor_id", clearable: true, selectAll: true, source: fornecedorOptionsSource }
         ] } }
       ]},
 
@@ -36,7 +41,7 @@ export const APPS_COMPRAS_TEMPLATE_TEXT = JSON.stringify([
         { type: "BarChart", props: { fr: 1, title: "Fornecedores", dataQuery: { model: "compras.compras", dimension: "fornecedor", measure: "SUM(valor_total)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 8 }, format: "currency", height: 240, nivo: { layout: 'horizontal' } } },
         { type: "BarChart", props: { fr: 1, title: "Centros de Custo", dataQuery: { model: "compras.compras", dimension: "centro_custo", measure: "SUM(valor_total)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 8 }, format: "currency", height: 240, nivo: { layout: 'horizontal' } } },
         { type: "SlicerCard", props: { fr: 1, title: "Filtro Centro de Custo", fields: [
-          { label: "Centro de Custo", type: "list", storePath: "filters.centro_custo_id", source: { type: "options", model: "compras.compras", field: "centro_custo_id", pageSize: 100 }, selectAll: true, search: true }
+          { label: "Centro de Custo", type: "list", storePath: "filters.centro_custo_id", source: centroCustoOptionsSource, selectAll: true, search: true }
         ] } },
         { type: "BarChart", props: { fr: 1, title: "Filiais", dataQuery: { model: "compras.compras", dimension: "filial", measure: "SUM(valor_total)", filters: { tenant_id: 1 }, orderBy: { field: "measure", dir: "desc" }, limit: 8 }, format: "currency", height: 240, nivo: { layout: 'horizontal' } } }
       ]},
