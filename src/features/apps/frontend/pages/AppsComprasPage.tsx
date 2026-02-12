@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react'
 
-import { DataProvider, useData } from '@/components/json-render/context'
+import { DataProvider, useData } from '@/features/apps/bi/json-render/context'
 import JsonEditorPanel from '@/features/apps/frontend/components/JsonEditorPanel'
 import JsonPreviewPanel from '@/features/apps/frontend/components/JsonPreviewPanel'
 import ManagersPanel from '@/features/apps/frontend/components/ManagersPanel'

@@ -1,17 +1,17 @@
 "use client";
 
 import React from "react";
-import JsonRenderBarChart from "@/components/json-render/components/BarChart";
-import JsonRenderLineChart from "@/components/json-render/components/LineChart";
-import JsonRenderPieChart from "@/components/json-render/components/PieChart";
-import JsonRenderGauge from "@/components/json-render/components/Gauge";
-import FrameSurface from "@/components/json-render/components/FrameSurface";
-import { ThemeProvider, useThemeOverrides } from "@/components/json-render/theme/ThemeContext";
-import { mapManagersToCssVars } from "@/components/json-render/theme/thememanagers";
-import { buildThemeVars } from "@/components/json-render/theme/themeAdapter";
-import { useDataValue, useData } from "@/components/json-render/context";
+import JsonRenderBarChart from "@/features/apps/bi/json-render/components/BarChart";
+import JsonRenderLineChart from "@/features/apps/bi/json-render/components/LineChart";
+import JsonRenderPieChart from "@/features/apps/bi/json-render/components/PieChart";
+import JsonRenderGauge from "@/features/apps/bi/json-render/components/Gauge";
+import FrameSurface from "@/features/apps/bi/json-render/components/FrameSurface";
+import { ThemeProvider, useThemeOverrides } from "@/features/apps/bi/json-render/theme/ThemeContext";
+import { mapManagersToCssVars } from "@/features/apps/bi/json-render/theme/thememanagers";
+import { buildThemeVars } from "@/features/apps/bi/json-render/theme/themeAdapter";
+import { useDataValue, useData } from "@/features/apps/bi/json-render/context";
 import { deepMerge } from "@/stores/ui/json-render/utils";
-import { normalizeTitleStyle, normalizeContainerStyle, applyBorderFromCssVars, ensureSurfaceBackground, applyH1FromCssVars, applyKpiTitleFromCssVars, applyKpiValueFromCssVars, applySlicerLabelFromCssVars, applySlicerOptionFromCssVars, applyDatePickerIconFromCssVars, applyDatePickerFieldFromCssVars, applyDatePickerLabelFromCssVars } from "@/components/json-render/helpers";
+import { normalizeTitleStyle, normalizeContainerStyle, applyBorderFromCssVars, ensureSurfaceBackground, applyH1FromCssVars, applyKpiTitleFromCssVars, applyKpiValueFromCssVars, applySlicerLabelFromCssVars, applySlicerOptionFromCssVars, applyDatePickerIconFromCssVars, applyDatePickerFieldFromCssVars, applyDatePickerLabelFromCssVars } from "@/features/apps/bi/json-render/helpers";
 import { Calendar } from 'lucide-react';
 
 type AnyRecord = Record<string, any>;

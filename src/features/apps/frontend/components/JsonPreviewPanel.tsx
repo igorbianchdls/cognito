@@ -1,7 +1,7 @@
 'use client'
 
-import { Renderer } from '@/components/json-render/renderer'
-import { registry } from '@/components/json-render/registry'
+import { Renderer } from '@/features/apps/bi/json-render/renderer'
+import { registry } from '@/features/apps/bi/json-render/registry'
 import type { JsonTree } from '@/features/apps/shared/types'
 
 type JsonPreviewPanelProps = {

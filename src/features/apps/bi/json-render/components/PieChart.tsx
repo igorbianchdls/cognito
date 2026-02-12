@@ -1,11 +1,11 @@
 "use client";
 
 import React from "react";
-import { useData } from "@/components/json-render/context";
+import { useData } from "@/features/apps/bi/json-render/context";
 import { ResponsivePie } from "@nivo/pie";
-import { normalizeTitleStyle, normalizeContainerStyle, buildNivoTheme, applyBorderFromCssVars, ensureSurfaceBackground, applyH1FromCssVars } from "@/components/json-render/helpers";
-import { useThemeOverrides } from "@/components/json-render/theme/ThemeContext";
-import FrameSurface from "@/components/json-render/components/FrameSurface";
+import { normalizeTitleStyle, normalizeContainerStyle, buildNivoTheme, applyBorderFromCssVars, ensureSurfaceBackground, applyH1FromCssVars } from "@/features/apps/bi/json-render/helpers";
+import { useThemeOverrides } from "@/features/apps/bi/json-render/theme/ThemeContext";
+import FrameSurface from "@/features/apps/bi/json-render/components/FrameSurface";
 
 type AnyRecord = Record<string, any>;
 

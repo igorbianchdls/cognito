@@ -3,9 +3,9 @@
 import React from 'react';
 import { useStore } from '@nanostores/react';
 import { $previewJsonrPath, sandboxActions } from '@/features/chat/state/sandboxStore';
-import { DataProvider } from '@/components/json-render/context';
-import { Renderer } from '@/components/json-render/renderer';
-import { registry } from '@/components/json-render/registry';
+import { DataProvider } from '@/features/apps/bi/json-render/context';
+import { Renderer } from '@/features/apps/bi/json-render/renderer';
+import { registry } from '@/features/apps/bi/json-render/registry';
 
 type Props = { chatId?: string };
 
