@@ -31,6 +31,7 @@ const DASHBOARD_SKILL_MD = [
   '- `model` no JSON representa a tabela canonica (ex.: `vendas.pedidos`).',
   '- `dimension` e opcional para KPI agregado.',
   '- `dimensionExpr` so deve ser usado quando necessario e com expressao simples.',
+  '- Para slicers, preferir `source.type = "options"` com `{ model, field, pageSize }` em vez de URL hardcoded.',
   '',
   '## Fonte de Verdade (obrigatorio)',
   '- Antes de montar ou corrigir query, consultar: `GET /api/modulos/query/catalog`.',

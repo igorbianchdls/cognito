@@ -188,6 +188,14 @@ export const catalog = {
                 valueField: z.string().optional(),
                 labelField: z.string().optional(),
                 params: z.record(z.any()).optional(),
+              }).strict(),
+              z.object({
+                type: z.literal('options'),
+                model: z.string(),
+                field: z.string(),
+                pageSize: z.number().optional(),
+                limit: z.number().optional(),
+                dependsOn: z.array(z.string()).optional(),
               }).strict()
             ]).optional(),
             actionOnChange: z.object({ type: z.string() }).partial().optional(),
@@ -468,6 +476,14 @@ export const catalog = {
               valueField: z.string().optional(),
               labelField: z.string().optional(),
               params: z.record(z.any()).optional(),
+            }).strict(),
+            z.object({
+              type: z.literal('options'),
+              model: z.string(),
+              field: z.string(),
+              pageSize: z.number().optional(),
+              limit: z.number().optional(),
+              dependsOn: z.array(z.string()).optional(),
             }).strict(),
             z.object({
               type: z.literal('query'),

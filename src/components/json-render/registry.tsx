@@ -104,6 +104,128 @@ function styleVal(v: unknown): string | undefined {
   return typeof v === 'number' ? `${v}px` : String(v);
 }
 
+function getPathValue(obj: any, path: string): any {
+  if (!path || !obj || typeof obj !== 'object') return undefined;
+  const parts = path.split('.').map((s) => s.trim()).filter(Boolean);
+  let curr = obj as any;
+  for (const part of parts) {
+    if (curr == null || typeof curr !== 'object') return undefined;
+    curr = curr[part];
+  }
+  return curr;
+}
+
+type SlicerOpt = { value: string | number; label: string };
+
+function mapRawToOptions(raw: any[], valueField?: string, labelField?: string): SlicerOpt[] {
+  const vf = valueField || 'value';
+  const lf = labelField || 'label';
+  return raw.map((r: any) => ({
+    value: r?.[vf] ?? r?.value,
+    label: String(r?.[lf] ?? r?.label ?? r?.name ?? r?.nome ?? ''),
+  }));
+}
+
+async function fetchOptionsFromSource(
+  src: AnyRecord,
+  args: { term?: string; data?: AnyRecord; readByPath?: (path: string, fallback?: any) => any },
+): Promise<SlicerOpt[]> {
+  if (!src || typeof src !== 'object') return [];
+  const term = String(args.term || '').trim();
+
+  if (src.type === 'static') {
+    const opts = Array.isArray(src.options) ? src.options : [];
+    return mapRawToOptions(opts);
+  }
+
+  if (src.type === 'options' && typeof src.model === 'string' && typeof src.field === 'string') {
+    try {
+      const pageSizeRaw = Number(src.pageSize ?? src.limit ?? 50);
+      const limit = Number.isFinite(pageSizeRaw) ? Math.max(1, Math.min(200, pageSizeRaw)) : 50;
+      const payload: AnyRecord = {
+        model: src.model,
+        field: src.field,
+        limit,
+      };
+      if (term) payload.q = term;
+
+      const dependsOn = Array.isArray(src.dependsOn) ? src.dependsOn.filter((p: any) => typeof p === 'string' && p.trim()) : [];
+      if (dependsOn.length) {
+        const contextFilters: AnyRecord = {};
+        for (const depPath of dependsOn) {
+          const depKey = String(depPath).split('.').pop() || String(depPath);
+          const depVal = args.readByPath
+            ? args.readByPath(String(depPath), undefined)
+            : getPathValue(args.data, String(depPath));
+          if (depVal !== undefined && depVal !== null && depVal !== '' && (!Array.isArray(depVal) || depVal.length > 0)) {
+            contextFilters[depKey] = depVal;
+          }
+        }
+        if (Object.keys(contextFilters).length > 0) {
+          payload.contextFilters = contextFilters;
+        }
+      }
+
+      const res = await fetch('/api/modulos/options/resolve', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const j = await res.json();
+      const raw = Array.isArray(j?.options) ? j.options : [];
+      return mapRawToOptions(raw, src.valueField, src.labelField);
+    } catch {
+      return [];
+    }
+  }
+
+  if (src.type === 'api' && typeof src.url === 'string' && src.url) {
+    try {
+      const method = (src.method || 'GET').toUpperCase();
+      let url = src.url as string;
+      if (method === 'GET' && term) url += (url.includes('?') ? '&' : '?') + 'q=' + encodeURIComponent(term);
+      const res = await fetch(url, {
+        method,
+        headers: { 'content-type': 'application/json' },
+        ...(method === 'POST' ? { body: JSON.stringify({ ...(src.params || {}), ...(term ? { q: term } : {}) }) } : {}),
+      });
+      const j = await res.json();
+      const raw = Array.isArray(j?.options) ? j.options : (Array.isArray(j?.rows) ? j.rows : []);
+      return mapRawToOptions(raw, src.valueField, src.labelField);
+    } catch {
+      return [];
+    }
+  }
+
+  if (src.type === 'query' && typeof src.model === 'string' && typeof src.dimension === 'string') {
+    try {
+      const mod = String(src.model).split('.')[0];
+      const body = {
+        dataQuery: {
+          model: src.model,
+          dimension: src.dimension,
+          measure: 'COUNT()',
+          filters: src.filters || {},
+          orderBy: { field: 'dimension', dir: 'asc' },
+          limit: src.limit || 100,
+        },
+      };
+      const res = await fetch(`/api/modulos/${mod}/query`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const j = await res.json();
+      const rows = Array.isArray(j?.rows) ? j.rows : [];
+      return rows.map((r: any) => ({ value: r?.label ?? '', label: String(r?.label ?? '') }));
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
+}
+
 function mapJustify(v?: string): React.CSSProperties['justifyContent'] | undefined {
   switch (v) {
     case 'start': return 'flex-start';
@@ -363,25 +485,8 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
         const tasks = await Promise.allSettled((slicers || []).map(async (s, idx) => {
           const src = s?.source;
           if (!src || typeof src !== 'object') return { idx, opts: [] as Opt[] };
-          if (src.type === 'static') {
-            const opts = Array.isArray(src.options) ? src.options.map((o: any) => ({ value: o.value, label: String(o.label ?? o.value) })) : [];
-            return { idx, opts };
-          }
-          if (src.type === 'api' && typeof src.url === 'string' && src.url) {
-            try {
-              const method = (src.method || 'GET').toUpperCase();
-              const res = await fetch(src.url, { method, headers: { 'content-type': 'application/json' }, ...(method === 'POST' && src.params ? { body: JSON.stringify(src.params) } : {}) });
-              const j = await res.json();
-              const raw = Array.isArray(j?.options) ? j.options : (Array.isArray(j?.rows) ? j.rows : []);
-              const vf = src.valueField || 'value';
-              const lf = src.labelField || 'label';
-              const opts = raw.map((r: any) => ({ value: (r?.[vf] ?? r?.value), label: String(r?.[lf] ?? r?.label ?? r?.name ?? r?.nome ?? '') }));
-              return { idx, opts };
-            } catch {
-              return { idx, opts: [] as Opt[] };
-            }
-          }
-          return { idx, opts: [] as Opt[] };
+          const opts = await fetchOptionsFromSource(src, { data, readByPath: getValueByPath });
+          return { idx, opts };
         }));
         if (cancelled) return;
         const map: Record<number, Opt[]> = {};
@@ -390,7 +495,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       }
       run();
       return () => { cancelled = true };
-    }, [JSON.stringify(slicers)]);
+    }, [JSON.stringify(slicers), JSON.stringify(data)]);
 
     const controls = React.useMemo(() => {
       const elems: React.ReactNode[] = [];
@@ -759,37 +864,9 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
         const tasks = await Promise.allSettled(fields.map(async (f, idx) => {
           const src = f?.source;
           if (!src || typeof src !== 'object') return { idx, opts: [] as Opt[] };
-          if (src.type === 'static') {
-            const opts = Array.isArray(src.options) ? src.options.map((o: any) => ({ value: o.value, label: String(o.label ?? o.value) })) : [];
-            return { idx, opts };
-          }
           const term = searchMap[idx] || '';
-          if (src.type === 'api' && typeof src.url === 'string' && src.url) {
-            try {
-              const method = (src.method || 'GET').toUpperCase();
-              let url = src.url as string;
-              if (method === 'GET' && term) url += (url.includes('?') ? '&' : '?') + 'q=' + encodeURIComponent(term);
-              const res = await fetch(url, { method, headers: { 'content-type': 'application/json' }, ...(method === 'POST' ? { body: JSON.stringify({ ...(src.params||{}), ...(term ? { q: term } : {}) }) } : {}) });
-              const j = await res.json();
-              const raw = Array.isArray(j?.options) ? j.options : (Array.isArray(j?.rows) ? j.rows : []);
-              const vf = src.valueField || 'value';
-              const lf = src.labelField || 'label';
-              const opts = raw.map((r: any) => ({ value: (r?.[vf] ?? r?.value), label: String(r?.[lf] ?? r?.label ?? r?.name ?? r?.nome ?? '') }));
-              return { idx, opts };
-            } catch { return { idx, opts: [] as Opt[] } }
-          }
-          if (src.type === 'query' && typeof src.model === 'string' && typeof src.dimension === 'string') {
-            try {
-              const mod = String(src.model).split('.')[0];
-              const body = { dataQuery: { model: src.model, dimension: src.dimension, measure: 'COUNT()', filters: src.filters || {}, orderBy: { field: 'dimension', dir: 'asc' }, limit: src.limit || 100 } };
-              const res = await fetch(`/api/modulos/${mod}/query`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
-              const j = await res.json();
-              const rows = Array.isArray(j?.rows) ? j.rows : [];
-              const opts = rows.map((r: any) => ({ value: (r?.label ?? ''), label: String(r?.label ?? '') }));
-              return { idx, opts };
-            } catch { return { idx, opts: [] as Opt[] } }
-          }
-          return { idx, opts: [] as Opt[] };
+          const opts = await fetchOptionsFromSource(src, { term, data, readByPath: getValueByPath });
+          return { idx, opts };
         }))
         if (cancelled) return;
         const map: Record<number, Opt[]> = {};
@@ -798,7 +875,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       }
       load();
       return () => { cancelled = true };
-    }, [JSON.stringify(fields), JSON.stringify(searchMap)]);
+    }, [JSON.stringify(fields), JSON.stringify(searchMap), JSON.stringify(data)]);
 
     const onChangeField = (idx: number, sp: string, value: any, autoAction?: AnyRecord) => {
       if (applyMode === 'manual') {
@@ -841,40 +918,51 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
             const stored = effectiveGet(idx, sp, isMulti);
             const clearable = (f?.clearable !== false);
             const selectAll = Boolean(f?.selectAll);
-            const showSearch = false;
+            const showSearch = Boolean(f?.search);
             if (t === 'tile' || t === 'tile-multi') {
               const onClear = () => onChangeField(idx, sp, isMulti ? [] : undefined, f.actionOnChange);
               return (
                 <div className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
                   {lbl && !title && <div className="text-xs" style={lblStyle}>{lbl}</div>}
-                  <div className="flex flex-wrap gap-2">
-                    {opts.map((o) => {
-                      const selected = isMulti ? (Array.isArray(stored) && stored.includes(o.value)) : (stored === o.value);
-                      const tileCfgCard = ((((theme as any).components?.SlicerCard as any)?.tile) || (((theme as any).components?.Slicer as any)?.tile) || {});
-                      const base = String(tileCfgCard.baseClass || 'text-xs font-medium rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 active:scale-[0.98]');
-                      const selectedClass = String(tileCfgCard.selectedClass || 'bg-sky-600 text-white border-sky-600 hover:bg-sky-700');
-                      const unselectedClass = String(tileCfgCard.unselectedClass || 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200');
-                      const cls = selected ? selectedClass : unselectedClass;
-                      return (
-                        <button
-                          key={String(o.value)}
-                          type="button"
-                          className={`${base} ${cls}`}
-                          onClick={() => {
-                            if (isMulti) {
-                              const arr = Array.isArray(stored) ? stored.slice() : [];
-                              const exists = arr.includes(o.value);
-                              const nextArr = exists ? arr.filter((v: any) => v !== o.value) : [...arr, o.value];
-                              onChangeField(idx, sp, nextArr, f.actionOnChange);
-                            } else {
-                              const nextVal = (stored === o.value) ? (clearable ? undefined : o.value) : o.value;
-                              onChangeField(idx, sp, nextVal, f.actionOnChange);
-                            }
-                          }}
-                          style={(() => { const s = applySlicerOptionFromCssVars(undefined, theme.cssVars) || {}; delete (s as any).color; return s as any; })()}
-                        >{o.label}</button>
-                      );
-                    })}
+                  <div className="flex flex-col gap-2">
+                    {showSearch && (
+                      <input
+                        type="text"
+                        value={searchMap[idx] || ''}
+                        onChange={(e) => setSearchMap((prev) => ({ ...prev, [idx]: e.target.value }))}
+                        placeholder="Buscar..."
+                        className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs"
+                      />
+                    )}
+                    <div className="flex flex-wrap gap-2">
+                      {opts.map((o) => {
+                        const selected = isMulti ? (Array.isArray(stored) && stored.includes(o.value)) : (stored === o.value);
+                        const tileCfgCard = ((((theme as any).components?.SlicerCard as any)?.tile) || (((theme as any).components?.Slicer as any)?.tile) || {});
+                        const base = String(tileCfgCard.baseClass || 'text-xs font-medium rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 active:scale-[0.98]');
+                        const selectedClass = String(tileCfgCard.selectedClass || 'bg-sky-600 text-white border-sky-600 hover:bg-sky-700');
+                        const unselectedClass = String(tileCfgCard.unselectedClass || 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200');
+                        const cls = selected ? selectedClass : unselectedClass;
+                        return (
+                          <button
+                            key={String(o.value)}
+                            type="button"
+                            className={`${base} ${cls}`}
+                            onClick={() => {
+                              if (isMulti) {
+                                const arr = Array.isArray(stored) ? stored.slice() : [];
+                                const exists = arr.includes(o.value);
+                                const nextArr = exists ? arr.filter((v: any) => v !== o.value) : [...arr, o.value];
+                                onChangeField(idx, sp, nextArr, f.actionOnChange);
+                              } else {
+                                const nextVal = (stored === o.value) ? (clearable ? undefined : o.value) : o.value;
+                                onChangeField(idx, sp, nextVal, f.actionOnChange);
+                              }
+                            }}
+                            style={(() => { const s = applySlicerOptionFromCssVars(undefined, theme.cssVars) || {}; delete (s as any).color; return s as any; })()}
+                          >{o.label}</button>
+                        );
+                      })}
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     {selectAll && isMulti && (
@@ -891,8 +979,16 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
             return (
               <div className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
                 {lbl && !title && <div className="text-xs" style={lblStyle}>{lbl}</div>}
-                {/* search input removido */}
                 <div className="flex flex-col gap-2 p-2">
+                  {showSearch && (
+                    <input
+                      type="text"
+                      value={searchMap[idx] || ''}
+                      onChange={(e) => setSearchMap((prev) => ({ ...prev, [idx]: e.target.value }))}
+                      placeholder="Buscar..."
+                      className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs"
+                    />
+                  )}
                   <div className="flex flex-col gap-1 max-h-48 overflow-y-auto pr-1">
                     {opts.map((o) => (
                       <label key={String(o.value)} className="inline-flex items-center gap-2 text-xs">
