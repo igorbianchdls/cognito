@@ -12,10 +12,13 @@ import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/features/erp/frontend/components/DataToolbar'
 import CadastroOportunidadeSheet from '@/features/erp/frontend/components/crm/CadastroOportunidadeSheet'
 import CadastroLeadSheet from '@/features/erp/frontend/components/crm/CadastroLeadSheet'
+import CadastroContaSheet from '@/features/erp/frontend/components/crm/CadastroContaSheet'
+import CadastroContatoSheet from '@/features/erp/frontend/components/crm/CadastroContatoSheet'
+import CadastroAtividadeSheet from '@/features/erp/frontend/components/crm/CadastroAtividadeSheet'
 import StatusBadge from '@/features/erp/frontend/components/StatusBadge'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/features/erp/state/moduleUiStore'
 import type { Opcao } from '@/features/erp/frontend/components/TabsNav'
-import { Briefcase, UserPlus, CalendarClock, MessageSquare, Package, GitBranch } from 'lucide-react'
+import { Briefcase, UserPlus, CalendarClock, MessageSquare, Package, GitBranch, Building2, Users } from 'lucide-react'
 
 type Row = TableData
 
@@ -32,6 +35,8 @@ type OportunidadeProdutosRow = Row & {
 
 type PipelineOportunidadeItem = {
   oportunidade: number
+  nome: string | null
+  conta: string | null
   lead: string | null
   empresa_lead: string | null
   vendedor: string | null
@@ -61,6 +66,8 @@ export default function ModulosCrmPage() {
     moduleUiActions.setTitulo({ title: 'CRM', subtitle: 'Relacione-se com clientes, leads e oportunidades' })
     moduleUiActions.setTabs({
       options: [
+        { value: 'contas', label: 'Contas' },
+        { value: 'contatos', label: 'Contatos' },
         { value: 'oportunidades', label: 'Oportunidades' },
         { value: 'leads', label: 'Leads' },
         { value: 'atividades', label: 'Atividades' },
@@ -151,6 +158,8 @@ export default function ModulosCrmPage() {
           <thead>
             <tr className="border-b">
               <th className="text-left py-2 px-3">ID</th>
+              <th className="text-left py-2 px-3">Oportunidade</th>
+              <th className="text-left py-2 px-3">Conta</th>
               <th className="text-left py-2 px-3">Lead</th>
               <th className="text-left py-2 px-3">Empresa</th>
               <th className="text-left py-2 px-3">Vendedor</th>
@@ -163,6 +172,8 @@ export default function ModulosCrmPage() {
             {oportunidades.map((item, idx) => (
               <tr key={idx} className="border-b last:border-0">
                 <td className="py-2 px-3">{item.oportunidade}</td>
+                <td className="py-2 px-3">{item.nome ?? '-'}</td>
+                <td className="py-2 px-3">{item.conta ?? '-'}</td>
                 <td className="py-2 px-3">{item.lead ?? '-'}</td>
                 <td className="py-2 px-3">{item.empresa_lead ?? '-'}</td>
                 <td className="py-2 px-3">{item.vendedor ?? '-'}</td>
@@ -179,6 +190,30 @@ export default function ModulosCrmPage() {
 
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
+      case 'contas':
+        return [
+          { accessorKey: 'conta', header: 'ID' },
+          { accessorKey: 'nome', header: 'Nome' },
+          { accessorKey: 'setor', header: 'Setor' },
+          { accessorKey: 'site', header: 'Site' },
+          { accessorKey: 'telefone', header: 'Telefone' },
+          { accessorKey: 'endereco_cobranca', header: 'Endereço Cobrança' },
+          { accessorKey: 'responsavel', header: 'Responsável' },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em'], true) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em'], true) },
+        ]
+      case 'contatos':
+        return [
+          { accessorKey: 'contato', header: 'ID' },
+          { accessorKey: 'nome', header: 'Nome' },
+          { accessorKey: 'cargo', header: 'Cargo' },
+          { accessorKey: 'email', header: 'Email' },
+          { accessorKey: 'telefone', header: 'Telefone' },
+          { accessorKey: 'conta', header: 'Conta' },
+          { accessorKey: 'responsavel', header: 'Responsável' },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em'], true) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em'], true) },
+        ]
       case 'leads':
         return [
           { accessorKey: 'lead', header: 'ID' },
@@ -197,6 +232,8 @@ export default function ModulosCrmPage() {
       case 'atividades':
         return [
           { accessorKey: 'atividade', header: 'ID' },
+          { accessorKey: 'conta', header: 'Conta' },
+          { accessorKey: 'contato', header: 'Contato' },
           { accessorKey: 'lead', header: 'Lead' },
           { accessorKey: 'oportunidade', header: 'Oportunidade' },
           { accessorKey: 'responsavel', header: 'Responsável' },
@@ -211,6 +248,8 @@ export default function ModulosCrmPage() {
       case 'interacoes':
         return [
           { accessorKey: 'interacao', header: 'ID' },
+          { accessorKey: 'conta', header: 'Conta' },
+          { accessorKey: 'contato', header: 'Contato' },
           { accessorKey: 'lead', header: 'Lead' },
           { accessorKey: 'oportunidade', header: 'Oportunidade' },
           { accessorKey: 'responsavel', header: 'Responsável' },
@@ -223,6 +262,8 @@ export default function ModulosCrmPage() {
       case 'oportunidades_produtos':
         return [
           { accessorKey: 'oportunidade', header: 'ID' },
+          { accessorKey: 'nome', header: 'Oportunidade' },
+          { accessorKey: 'conta', header: 'Conta' },
           { accessorKey: 'lead', header: 'Lead' },
           { accessorKey: 'empresa_lead', header: 'Empresa Lead' },
           { accessorKey: 'vendedor', header: 'Vendedor' },
@@ -249,6 +290,8 @@ export default function ModulosCrmPage() {
       default:
         return [
           { accessorKey: 'oportunidade', header: 'ID' },
+          { accessorKey: 'nome', header: 'Oportunidade' },
+          { accessorKey: 'conta', header: 'Conta' },
           { accessorKey: 'lead', header: 'Lead' },
           { accessorKey: 'lead_empresa', header: 'Lead Empresa' },
           { accessorKey: 'cliente', header: 'Cliente' },
@@ -318,6 +361,10 @@ export default function ModulosCrmPage() {
   const tabOptions: Opcao[] = useMemo(() => {
     const iconFor = (v: string) => {
       switch (v) {
+        case 'contas':
+          return <Building2 className="h-4 w-4" />
+        case 'contatos':
+          return <Users className="h-4 w-4" />
         case 'oportunidades':
           return <Briefcase className="h-4 w-4" />
         case 'leads':
@@ -401,6 +448,12 @@ export default function ModulosCrmPage() {
                   <CadastroOportunidadeSheet triggerLabel="Cadastrar" onCreated={() => setRefreshKey((k) => k + 1)} />
                 ) : tabs.selected === 'leads' ? (
                   <CadastroLeadSheet triggerLabel="Cadastrar" onCreated={() => setRefreshKey((k) => k + 1)} />
+                ) : tabs.selected === 'contas' ? (
+                  <CadastroContaSheet triggerLabel="Cadastrar" onCreated={() => setRefreshKey((k) => k + 1)} />
+                ) : tabs.selected === 'contatos' ? (
+                  <CadastroContatoSheet triggerLabel="Cadastrar" onCreated={() => setRefreshKey((k) => k + 1)} />
+                ) : tabs.selected === 'atividades' ? (
+                  <CadastroAtividadeSheet triggerLabel="Cadastrar" onCreated={() => setRefreshKey((k) => k + 1)} />
                 ) : undefined
               }
             />

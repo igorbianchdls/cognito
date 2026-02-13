@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { runQuery } from '@/lib/postgres';
+import { resolveTenantId } from '@/lib/tenant';
 
 export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
@@ -8,6 +9,8 @@ export const revalidate = 0;
 const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
   oportunidades: {
     oportunidade: 'o.id',
+    nome: 'o.nome',
+    conta: 'ct.nome',
     lead: 'l.nome',
     lead_empresa: 'l.empresa',
     cliente: 'cli.nome_fantasia',
@@ -28,17 +31,40 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     empresa: 'l.empresa',
     email: 'l.email',
     telefone: 'l.telefone',
-    origem: 'l.origem',
-    responsavel: 'l.responsavel',
+    origem: 'ol.nome',
+    responsavel: 'f.nome',
     status: 'l.status',
     tag: 'l.tag',
     criado_em: 'l.criado_em',
     atualizado_em: 'l.atualizado_em',
   },
+  contas: {
+    conta: 'ct.id',
+    nome: 'ct.nome',
+    setor: 'ct.setor',
+    site: 'ct.site',
+    telefone: 'ct.telefone',
+    responsavel: 'f.nome',
+    criado_em: 'ct.criado_em',
+    atualizado_em: 'ct.atualizado_em',
+  },
+  contatos: {
+    contato: 'ctt.id',
+    nome: 'ctt.nome',
+    cargo: 'ctt.cargo',
+    email: 'ctt.email',
+    telefone: 'ctt.telefone',
+    conta: 'cta.nome',
+    responsavel: 'f.nome',
+    criado_em: 'ctt.criado_em',
+    atualizado_em: 'ctt.atualizado_em',
+  },
   atividades: {
     atividade: 'a.id',
     lead: 'l.nome',
     oportunidade: 'o.id',
+    conta: 'cta.nome',
+    contato: 'ctt.nome',
     responsavel: 'f.nome',
     tipo: 'a.tipo',
     data_prevista: 'a.data_prevista',
@@ -51,6 +77,8 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     interacao: 'i.id',
     lead: 'l.nome',
     oportunidade: 'o.id',
+    conta: 'cta.nome',
+    contato: 'ctt.nome',
     responsavel: 'f.nome',
     canal: 'i.canal',
     data_interacao: 'i.data_interacao',
@@ -59,6 +87,8 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
   },
   oportunidades_produtos: {
     oportunidade: 'o.id',
+    nome: 'o.nome',
+    conta: 'ct.nome',
     lead: 'l.nome',
     empresa_lead: 'l.empresa',
     vendedor: 'f.nome',
@@ -77,6 +107,8 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     fase: 'fp.nome',
     ordem_fase: 'fp.ordem',
     oportunidade: 'o.id',
+    nome: 'o.nome',
+    conta: 'ct.nome',
     lead: 'l.nome',
     empresa_lead: 'l.empresa',
     vendedor: 'f.nome',
@@ -97,6 +129,8 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const view = (searchParams.get('view') || '').toLowerCase();
     if (!view) return Response.json({ success: false, message: 'Parâmetro view é obrigatório' }, { status: 400 });
+
+    const tenantId = resolveTenantId(req.headers);
 
     // Common filters
     const de = searchParams.get('de') || undefined;
@@ -139,6 +173,8 @@ export async function GET(req: NextRequest) {
     if (view === 'oportunidades') {
       selectSql = `SELECT
         o.id AS oportunidade,
+        o.nome AS nome,
+        ct.nome AS conta,
         l.nome AS lead,
         l.empresa AS lead_empresa,
         cli.nome_fantasia AS cliente,
@@ -157,17 +193,19 @@ export async function GET(req: NextRequest) {
         o.atualizado_em`;
       baseSql = `FROM crm.oportunidades o
         LEFT JOIN crm.leads l ON l.id = o.lead_id
+        LEFT JOIN crm.contas ct ON ct.id = o.conta_id AND ct.tenant_id = o.tenant_id
         LEFT JOIN entidades.clientes cli ON cli.id = o.cliente_id
-        LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
-        LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+        LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id AND v.tenant_id = o.tenant_id
+        LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id AND f.tenant_id = v.tenant_id
         LEFT JOIN comercial.territorios t ON t.id = o.territorio_id
         LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id
         LEFT JOIN crm.motivos_perda mp ON mp.id = o.motivo_perda_id`;
       whereDateCol = 'o.data_prevista';
+      push('o.tenant_id =', tenantId);
       if (status) push('LOWER(o.status) =', status.toLowerCase());
-      if (responsavel_id) push('v.funcionario_id =', responsavel_id);
+      if (responsavel_id) push('v.id =', responsavel_id);
       if (q) {
-        conditions.push(`(l.nome ILIKE '%' || $${i} || '%' OR l.empresa ILIKE '%' || $${i} || '%' OR cli.nome_fantasia ILIKE '%' || $${i} || '%' OR f.nome ILIKE '%' || $${i} || '%')`);
+        conditions.push(`(o.nome ILIKE '%' || $${i} || '%' OR ct.nome ILIKE '%' || $${i} || '%' OR l.nome ILIKE '%' || $${i} || '%' OR l.empresa ILIKE '%' || $${i} || '%' OR cli.nome_fantasia ILIKE '%' || $${i} || '%' OR f.nome ILIKE '%' || $${i} || '%')`);
         params.push(q);
         i += 1;
       }
@@ -187,13 +225,57 @@ export async function GET(req: NextRequest) {
         l.atualizado_em`;
       baseSql = `FROM crm.leads l
         LEFT JOIN crm.origens_lead ol ON ol.id = l.origem_id
-        LEFT JOIN comercial.vendedores v ON v.id = l.responsavel_id
-        LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id`;
+        LEFT JOIN comercial.vendedores v ON v.id = l.responsavel_id AND v.tenant_id = l.tenant_id
+        LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id AND f.tenant_id = v.tenant_id`;
+      push('l.tenant_id =', tenantId);
       if (status) push('LOWER(l.status) =', status.toLowerCase());
       if (origem) push('LOWER(ol.nome) =', origem.toLowerCase());
-      if (responsavel_id) push('v.funcionario_id =', responsavel_id);
+      if (responsavel_id) push('v.id =', responsavel_id);
       if (q) {
         conditions.push(`(l.nome ILIKE '%' || $${i} || '%' OR l.empresa ILIKE '%' || $${i} || '%' OR l.email ILIKE '%' || $${i} || '%' OR f.nome ILIKE '%' || $${i} || '%')`);
+        params.push(q);
+        i += 1;
+      }
+    } else if (view === 'contas') {
+      selectSql = `SELECT
+        ct.id AS conta,
+        ct.nome,
+        ct.setor,
+        ct.site,
+        ct.telefone,
+        ct.endereco_cobranca,
+        f.nome AS responsavel,
+        ct.criado_em,
+        ct.atualizado_em`;
+      baseSql = `FROM crm.contas ct
+        LEFT JOIN comercial.vendedores v ON v.id = ct.responsavel_id AND v.tenant_id = ct.tenant_id
+        LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id AND f.tenant_id = v.tenant_id`;
+      push('ct.tenant_id =', tenantId);
+      if (responsavel_id) push('v.id =', responsavel_id);
+      if (q) {
+        conditions.push(`(ct.nome ILIKE '%' || $${i} || '%' OR ct.setor ILIKE '%' || $${i} || '%' OR ct.site ILIKE '%' || $${i} || '%' OR f.nome ILIKE '%' || $${i} || '%')`);
+        params.push(q);
+        i += 1;
+      }
+    } else if (view === 'contatos') {
+      selectSql = `SELECT
+        ctt.id AS contato,
+        ctt.nome,
+        ctt.cargo,
+        ctt.email,
+        ctt.telefone,
+        cta.nome AS conta,
+        f.nome AS responsavel,
+        ctt.criado_em,
+        ctt.atualizado_em`;
+      baseSql = `FROM crm.contatos ctt
+        LEFT JOIN crm.contas cta ON cta.id = ctt.conta_id AND cta.tenant_id = ctt.tenant_id
+        LEFT JOIN comercial.vendedores v ON v.id = ctt.responsavel_id AND v.tenant_id = ctt.tenant_id
+        LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id AND f.tenant_id = v.tenant_id`;
+      push('ctt.tenant_id =', tenantId);
+      if (responsavel_id) push('v.id =', responsavel_id);
+      if (q) {
+        conditions.push(`(ctt.nome ILIKE '%' || $${i} || '%' OR ctt.email ILIKE '%' || $${i} || '%' OR ctt.cargo ILIKE '%' || $${i} || '%' OR cta.nome ILIKE '%' || $${i} || '%' OR f.nome ILIKE '%' || $${i} || '%')`);
         params.push(q);
         i += 1;
       }
@@ -202,6 +284,8 @@ export async function GET(req: NextRequest) {
         a.id AS atividade,
         l.nome AS lead,
         o.id AS oportunidade,
+        cta.nome AS conta,
+        ctt.nome AS contato,
         f.nome AS responsavel,
         a.tipo,
         a.descricao,
@@ -211,14 +295,17 @@ export async function GET(req: NextRequest) {
         a.criado_em,
         a.atualizado_em`;
       baseSql = `FROM crm.atividades a
+        LEFT JOIN crm.contas cta ON cta.id = a.conta_id AND cta.tenant_id = a.tenant_id
+        LEFT JOIN crm.contatos ctt ON ctt.id = a.contato_id AND ctt.tenant_id = a.tenant_id
         LEFT JOIN crm.leads l ON l.id = a.lead_id
         LEFT JOIN crm.oportunidades o ON o.id = a.oportunidade_id
-        LEFT JOIN comercial.vendedores v ON v.id = a.responsavel_id
-        LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id`;
+        LEFT JOIN comercial.vendedores v ON v.id = a.responsavel_id AND v.tenant_id = a.tenant_id
+        LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id AND f.tenant_id = v.tenant_id`;
       whereDateCol = 'a.data_prevista';
+      push('a.tenant_id =', tenantId);
       if (status) push('LOWER(a.status) =', status.toLowerCase());
       if (tipo) push('LOWER(a.tipo) =', tipo.toLowerCase());
-      if (responsavel_id) push('v.funcionario_id =', responsavel_id);
+      if (responsavel_id) push('v.id =', responsavel_id);
       if (q) {
         conditions.push(`(a.descricao ILIKE '%' || $${i} || '%' OR l.nome ILIKE '%' || $${i} || '%' OR f.nome ILIKE '%' || $${i} || '%')`);
         params.push(q);
@@ -229,6 +316,8 @@ export async function GET(req: NextRequest) {
         i.id AS interacao,
         l.nome AS lead,
         o.id AS oportunidade,
+        cta.nome AS conta,
+        ctt.nome AS contato,
         f.nome AS responsavel,
         i.canal,
         i.conteudo,
@@ -236,13 +325,16 @@ export async function GET(req: NextRequest) {
         i.criado_em,
         i.atualizado_em`;
       baseSql = `FROM crm.interacoes i
+        LEFT JOIN crm.contas cta ON cta.id = i.conta_id AND cta.tenant_id = i.tenant_id
+        LEFT JOIN crm.contatos ctt ON ctt.id = i.contato_id AND ctt.tenant_id = i.tenant_id
         LEFT JOIN crm.leads l ON l.id = i.lead_id
         LEFT JOIN crm.oportunidades o ON o.id = i.oportunidade_id
-        LEFT JOIN comercial.vendedores v ON v.id = i.responsavel_id
-        LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id`;
+        LEFT JOIN comercial.vendedores v ON v.id = i.responsavel_id AND v.tenant_id = i.tenant_id
+        LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id AND f.tenant_id = v.tenant_id`;
       whereDateCol = 'i.data_interacao';
+      push('i.tenant_id =', tenantId);
       if (canal) push('LOWER(i.canal) =', canal.toLowerCase());
-      if (responsavel_id) push('v.funcionario_id =', responsavel_id);
+      if (responsavel_id) push('v.id =', responsavel_id);
       if (q) {
         conditions.push(`(i.conteudo ILIKE '%' || $${i} || '%' OR l.nome ILIKE '%' || $${i} || '%' OR f.nome ILIKE '%' || $${i} || '%')`);
         params.push(q);
@@ -251,6 +343,8 @@ export async function GET(req: NextRequest) {
     } else if (view === 'oportunidades_produtos') {
       selectSql = `SELECT
         o.id AS oportunidade,
+        o.nome AS nome,
+        ct.nome AS conta,
         l.nome AS lead,
         l.empresa AS empresa_lead,
         f.nome AS vendedor,
@@ -271,17 +365,19 @@ export async function GET(req: NextRequest) {
         o.atualizado_em,
         op.id AS item_id`;
       baseSql = `FROM crm.oportunidades_produtos op
-        LEFT JOIN crm.oportunidades o ON o.id = op.oportunidade_id
-        LEFT JOIN crm.leads l ON l.id = o.lead_id
-        LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
-        LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+        LEFT JOIN crm.oportunidades o ON o.id = op.oportunidade_id AND o.tenant_id = op.tenant_id
+        LEFT JOIN crm.leads l ON l.id = o.lead_id AND l.tenant_id = o.tenant_id
+        LEFT JOIN crm.contas ct ON ct.id = o.conta_id AND ct.tenant_id = o.tenant_id
+        LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id AND v.tenant_id = o.tenant_id
+        LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id AND f.tenant_id = v.tenant_id
         LEFT JOIN comercial.territorios t ON t.id = o.territorio_id
         LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id
         LEFT JOIN produtos.produto pr ON pr.id = op.produto_id
         LEFT JOIN crm.motivos_perda mp ON mp.id = o.motivo_perda_id`;
       whereDateCol = 'o.data_prevista';
+      push('op.tenant_id =', tenantId);
       if (status) push('LOWER(o.status) =', status.toLowerCase());
-      if (responsavel_id) push('v.funcionario_id =', responsavel_id);
+      if (responsavel_id) push('v.id =', responsavel_id);
       if (q) {
         conditions.push(`(l.nome ILIKE '%' || $${i} || '%' OR l.empresa ILIKE '%' || $${i} || '%' OR f.nome ILIKE '%' || $${i} || '%' OR pr.nome ILIKE '%' || $${i} || '%')`);
         params.push(q);
@@ -294,6 +390,8 @@ export async function GET(req: NextRequest) {
         fp.ordem AS ordem_fase,
         fp.probabilidade_padrao AS probabilidade_fase,
         o.id AS oportunidade,
+        o.nome AS nome,
+        ct.nome AS conta,
         l.nome AS lead,
         l.empresa AS empresa_lead,
         f.nome AS vendedor,
@@ -309,15 +407,17 @@ export async function GET(req: NextRequest) {
         fp.id AS fase_id`;
       baseSql = `FROM crm.fases_pipeline fp
         LEFT JOIN crm.pipelines p ON p.id = fp.pipeline_id
-        LEFT JOIN crm.oportunidades o ON o.fase_pipeline_id = fp.id
-        LEFT JOIN crm.leads l ON l.id = o.lead_id
-        LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
-        LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+        LEFT JOIN crm.oportunidades o ON o.fase_pipeline_id = fp.id AND o.tenant_id = fp.tenant_id
+        LEFT JOIN crm.leads l ON l.id = o.lead_id AND l.tenant_id = o.tenant_id
+        LEFT JOIN crm.contas ct ON ct.id = o.conta_id AND ct.tenant_id = o.tenant_id
+        LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id AND v.tenant_id = o.tenant_id
+        LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id AND f.tenant_id = v.tenant_id
         LEFT JOIN comercial.territorios t ON t.id = o.territorio_id
         LEFT JOIN crm.motivos_perda mp ON mp.id = o.motivo_perda_id`;
       whereDateCol = 'o.data_prevista';
+      push('fp.tenant_id =', tenantId);
       if (status) push('LOWER(o.status) =', status.toLowerCase());
-      if (responsavel_id) push('v.funcionario_id =', responsavel_id);
+      if (responsavel_id) push('v.id =', responsavel_id);
       if (q) {
         conditions.push(`(p.nome ILIKE '%' || $${i} || '%' OR fp.nome ILIKE '%' || $${i} || '%' OR l.nome ILIKE '%' || $${i} || '%' OR f.nome ILIKE '%' || $${i} || '%')`);
         params.push(q);
@@ -339,6 +439,8 @@ export async function GET(req: NextRequest) {
       else {
         if (view === 'oportunidades') orderClause = 'ORDER BY o.id DESC';
         else if (view === 'leads') orderClause = 'ORDER BY l.id ASC';
+        else if (view === 'contas') orderClause = 'ORDER BY ct.nome ASC';
+        else if (view === 'contatos') orderClause = 'ORDER BY ctt.nome ASC';
         else if (view === 'atividades') orderClause = 'ORDER BY a.id ASC';
         else if (view === 'interacoes') orderClause = 'ORDER BY i.id ASC';
         else if (view === 'oportunidades_produtos') orderClause = 'ORDER BY o.id ASC, op.id ASC';
@@ -362,6 +464,8 @@ export async function GET(req: NextRequest) {
     if (view === 'oportunidades_produtos') {
       type OportunidadeAgregada = {
         oportunidade: unknown
+        nome: unknown
+        conta: unknown
         lead: unknown
         empresa_lead: unknown
         vendedor: unknown
@@ -391,6 +495,8 @@ export async function GET(req: NextRequest) {
         if (!oportunidadesMap.has(oportunidadeKey)) {
           oportunidadesMap.set(oportunidadeKey, {
             oportunidade: row.oportunidade,
+            nome: row.nome,
+            conta: row.conta,
             lead: row.lead,
             empresa_lead: row.empresa_lead,
             vendedor: row.vendedor,
@@ -431,6 +537,8 @@ export async function GET(req: NextRequest) {
         probabilidade_fase: unknown
         oportunidades: Array<{
           oportunidade: unknown
+          nome: unknown
+          conta: unknown
           lead: unknown
           empresa_lead: unknown
           vendedor: unknown
@@ -463,6 +571,8 @@ export async function GET(req: NextRequest) {
         if (row.oportunidade) {
           fasesMap.get(faseKey)!.oportunidades.push({
             oportunidade: row.oportunidade,
+            nome: row.nome,
+            conta: row.conta,
             lead: row.lead,
             empresa_lead: row.empresa_lead,
             vendedor: row.vendedor,

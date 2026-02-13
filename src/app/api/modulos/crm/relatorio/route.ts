@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { runQuery } from '@/lib/postgres'
+import { resolveTenantId } from '@/lib/tenant'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
@@ -8,6 +9,7 @@ export const revalidate = 0
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
+    const tenantId = resolveTenantId(req.headers)
 
     const de = searchParams.get('de') || undefined
     const ate = searchParams.get('ate') || undefined
@@ -24,10 +26,11 @@ export async function GET(req: NextRequest) {
     const oConds: string[] = []
     const oParams: unknown[] = []
     let oi = 1
+    oConds.push(`o.tenant_id = $${oi++}`); oParams.push(tenantId)
     if (de) { oConds.push(`o.data_prevista >= $${oi++}`); oParams.push(de) }
     if (ate) { oConds.push(`o.data_prevista <= $${oi++}`); oParams.push(ate) }
     if (status) { oConds.push(`LOWER(o.status) = LOWER($${oi++})`); oParams.push(status) }
-    if (responsavelId) { oConds.push(`v.funcionario_id = $${oi++}`); oParams.push(responsavelId) }
+    if (responsavelId) { oConds.push(`v.id = $${oi++}`); oParams.push(responsavelId) }
     if (q) {
       oConds.push(`(l.nome ILIKE '%' || $${oi} || '%' OR l.empresa ILIKE '%' || $${oi} || '%' OR cli.nome_fantasia ILIKE '%' || $${oi} || '%' OR f.nome ILIKE '%' || $${oi} || '%')`)
       oParams.push(q)
@@ -39,10 +42,11 @@ export async function GET(req: NextRequest) {
     const lConds: string[] = []
     const lParams: unknown[] = []
     let li = 1
+    lConds.push(`l.tenant_id = $${li++}`); lParams.push(tenantId)
     if (de) { lConds.push(`l.criado_em >= $${li++}`); lParams.push(de) }
     if (ate) { lConds.push(`l.criado_em <= $${li++}`); lParams.push(ate) }
     if (origem) { lConds.push(`LOWER(ol.nome) = LOWER($${li++})`); lParams.push(origem) }
-    if (responsavelId) { lConds.push(`v.funcionario_id = $${li++}`); lParams.push(responsavelId) }
+    if (responsavelId) { lConds.push(`v.id = $${li++}`); lParams.push(responsavelId) }
     if (q) {
       lConds.push(`(l.nome ILIKE '%' || $${li} || '%' OR l.empresa ILIKE '%' || $${li} || '%' OR l.email ILIKE '%' || $${li} || '%' OR f.nome ILIKE '%' || $${li} || '%')`)
       lParams.push(q)
@@ -54,9 +58,10 @@ export async function GET(req: NextRequest) {
     const aConds: string[] = []
     const aParams: unknown[] = []
     let ai = 1
+    aConds.push(`a.tenant_id = $${ai++}`); aParams.push(tenantId)
     if (de) { aConds.push(`a.data_prevista >= $${ai++}`); aParams.push(de) }
     if (ate) { aConds.push(`a.data_prevista <= $${ai++}`); aParams.push(ate) }
-    if (responsavelId) { aConds.push(`v.funcionario_id = $${ai++}`); aParams.push(responsavelId) }
+    if (responsavelId) { aConds.push(`v.id = $${ai++}`); aParams.push(responsavelId) }
     if (q) {
       aConds.push(`(a.descricao ILIKE '%' || $${ai} || '%' OR a.tipo ILIKE '%' || $${ai} || '%')`)
       aParams.push(q)
@@ -64,16 +69,16 @@ export async function GET(req: NextRequest) {
     }
     const aWhere = aConds.length ? `WHERE ${aConds.join(' AND ')}` : ''
 
-    // Fase fechada: coluna fase (fp.nome) com texto 'Fechado'
-    const faseFechadaPredicate = `LOWER(fp.nome) = 'fechado'`
-
     // KPIs queries
+    // Consider both "Fechado" (B2B) and "Fechamento" (Inside Sales) as won.
+    const faseFechadaPredicate = `(LOWER(fp.nome) = 'fechado' OR LOWER(fp.nome) = 'fechamento' OR COALESCE(fp.probabilidade_padrao, 0) >= 100)`
+
     const faturamentoSql = `SELECT COALESCE(SUM(o.valor_estimado),0)::float AS faturamento
       FROM crm.oportunidades o
       LEFT JOIN crm.leads l ON l.id = o.lead_id
       LEFT JOIN entidades.clientes cli ON cli.id = o.cliente_id
-      LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
-      LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+      LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id AND v.tenant_id = o.tenant_id
+      LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id AND f.tenant_id = v.tenant_id
       LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id
       ${oWhere ? oWhere + ' AND ' : 'WHERE '}${faseFechadaPredicate}`
 
@@ -81,8 +86,8 @@ export async function GET(req: NextRequest) {
       FROM crm.oportunidades o
       LEFT JOIN crm.leads l ON l.id = o.lead_id
       LEFT JOIN entidades.clientes cli ON cli.id = o.cliente_id
-      LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
-      LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+      LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id AND v.tenant_id = o.tenant_id
+      LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id AND f.tenant_id = v.tenant_id
       LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id
       ${oWhere ? oWhere + ' AND ' : 'WHERE '}${faseFechadaPredicate}`
 
@@ -90,16 +95,16 @@ export async function GET(req: NextRequest) {
       FROM crm.oportunidades o
       LEFT JOIN crm.leads l ON l.id = o.lead_id
       LEFT JOIN entidades.clientes cli ON cli.id = o.cliente_id
-      LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
-      LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+      LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id AND v.tenant_id = o.tenant_id
+      LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id AND f.tenant_id = v.tenant_id
       LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id
       ${oWhere}`
 
     const leadsSql = `SELECT COUNT(DISTINCT l.id)::int AS leads
       FROM crm.leads l
       LEFT JOIN crm.origens_lead ol ON ol.id = l.origem_id
-      LEFT JOIN comercial.vendedores v ON v.id = l.responsavel_id
-      LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+      LEFT JOIN comercial.vendedores v ON v.id = l.responsavel_id AND v.tenant_id = l.tenant_id
+      LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id AND f.tenant_id = v.tenant_id
       ${lWhere}`
 
     const [{ faturamento }] = await runQuery<{ faturamento: number }>(faturamentoSql, oParams)
@@ -120,8 +125,8 @@ export async function GET(req: NextRequest) {
                       FROM crm.oportunidades o
                       LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id
                       LEFT JOIN crm.leads l ON l.id = o.lead_id
-                      LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
-                      LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                      LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id AND v.tenant_id = o.tenant_id
+                      LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id AND f.tenant_id = v.tenant_id
                       LEFT JOIN entidades.clientes cli ON cli.id = o.cliente_id
                       ${oWhere}
                       GROUP BY fp.nome
@@ -131,8 +136,8 @@ export async function GET(req: NextRequest) {
     // 2) Pipeline por vendedor (top N)
     const vendSql = `SELECT COALESCE(f.nome, '—') AS label, COALESCE(SUM(o.valor_estimado),0)::float AS value
                      FROM crm.oportunidades o
-                     LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
-                     LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                     LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id AND v.tenant_id = o.tenant_id
+                     LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id AND f.tenant_id = v.tenant_id
                      LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id
                      LEFT JOIN crm.leads l ON l.id = o.lead_id
                      LEFT JOIN entidades.clientes cli ON cli.id = o.cliente_id
@@ -156,8 +161,8 @@ export async function GET(req: NextRequest) {
                          FROM crm.oportunidades o
                          LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id
                          LEFT JOIN crm.leads l ON l.id = o.lead_id
-                         LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
-                         LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                         LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id AND v.tenant_id = o.tenant_id
+                         LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id AND f.tenant_id = v.tenant_id
                          LEFT JOIN entidades.clientes cli ON cli.id = o.cliente_id
                          ${forecastWhere}
                          GROUP BY 1
@@ -168,16 +173,16 @@ export async function GET(req: NextRequest) {
     const leadsPorCanalSql = `SELECT COALESCE(ol.nome, '—') AS canal, COUNT(*)::int AS leads
                               FROM crm.leads l
                               LEFT JOIN crm.origens_lead ol ON ol.id = l.origem_id
-                              LEFT JOIN comercial.vendedores v ON v.id = l.responsavel_id
-                              LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                              LEFT JOIN comercial.vendedores v ON v.id = l.responsavel_id AND v.tenant_id = l.tenant_id
+                              LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id AND f.tenant_id = v.tenant_id
                               ${lWhere}
                               GROUP BY 1`;
     const vendasPorCanalSql = `SELECT COALESCE(ol.nome, '—') AS canal, COUNT(DISTINCT o.id)::int AS vendas
                                FROM crm.oportunidades o
                                LEFT JOIN crm.leads l ON l.id = o.lead_id
                                LEFT JOIN crm.origens_lead ol ON ol.id = l.origem_id
-                               LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
-                               LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                               LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id AND v.tenant_id = o.tenant_id
+                               LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id AND f.tenant_id = v.tenant_id
                                LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id
                                ${oWhere ? oWhere + ' AND ' : 'WHERE '}${faseFechadaPredicate}
                                GROUP BY 1`;
@@ -197,16 +202,16 @@ export async function GET(req: NextRequest) {
     // 5) Conversão por vendedor
     const oppsPorVendedorSql = `SELECT COALESCE(f.nome, '—') AS vendedor, COUNT(DISTINCT o.id)::int AS total
                                 FROM crm.oportunidades o
-                                LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
-                                LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                                LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id AND v.tenant_id = o.tenant_id
+                                LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id AND f.tenant_id = v.tenant_id
                                 LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id
                                 LEFT JOIN crm.leads l ON l.id = o.lead_id
                                 ${oWhere}
                                 GROUP BY 1`;
     const vendasPorVendedorSql = `SELECT COALESCE(f.nome, '—') AS vendedor, COUNT(DISTINCT o.id)::int AS vendas
                                   FROM crm.oportunidades o
-                                  LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
-                                  LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                                  LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id AND v.tenant_id = o.tenant_id
+                                  LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id AND f.tenant_id = v.tenant_id
                                   LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id
                                   LEFT JOIN crm.leads l ON l.id = o.lead_id
                                   ${oWhere ? oWhere + ' AND ' : 'WHERE '}${faseFechadaPredicate}
@@ -230,8 +235,8 @@ export async function GET(req: NextRequest) {
                              LEFT JOIN crm.motivos_perda mp ON mp.id = o.motivo_perda_id
                              LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id
                              LEFT JOIN crm.leads l ON l.id = o.lead_id
-                             LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
-                             LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                             LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id AND v.tenant_id = o.tenant_id
+                             LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id AND f.tenant_id = v.tenant_id
                              LEFT JOIN entidades.clientes cli ON cli.id = o.cliente_id
                              ${oWhere}
                              GROUP BY 1
@@ -242,8 +247,8 @@ export async function GET(req: NextRequest) {
     // 7) Atividades por vendedor
     const atividadesVendSql = `SELECT COALESCE(f.nome, '—') AS label, COUNT(*)::int AS value
                                FROM crm.atividades a
-                               LEFT JOIN comercial.vendedores v ON v.id = a.responsavel_id
-                               LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                               LEFT JOIN comercial.vendedores v ON v.id = a.responsavel_id AND v.tenant_id = a.tenant_id
+                               LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id AND f.tenant_id = v.tenant_id
                                ${aWhere}
                                GROUP BY 1
                                ORDER BY value DESC
@@ -254,8 +259,8 @@ export async function GET(req: NextRequest) {
     const fontesLeadsSql = `SELECT COALESCE(ol.nome, '—') AS label, COUNT(*)::int AS value
                             FROM crm.leads l
                             LEFT JOIN crm.origens_lead ol ON ol.id = l.origem_id
-                            LEFT JOIN comercial.vendedores v ON v.id = l.responsavel_id
-                            LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                            LEFT JOIN comercial.vendedores v ON v.id = l.responsavel_id AND v.tenant_id = l.tenant_id
+                            LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id AND f.tenant_id = v.tenant_id
                             ${lWhere}
                             GROUP BY 1
                             ORDER BY value DESC
@@ -293,8 +298,8 @@ export async function GET(req: NextRequest) {
                             LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id
                             LEFT JOIN crm.pipelines p ON p.id = fp.pipeline_id
                             LEFT JOIN crm.leads l ON l.id = o.lead_id
-                            LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
-                            LEFT JOIN empresa.funcionarios f ON f.id = v.funcionario_id
+                            LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id AND v.tenant_id = o.tenant_id
+                            LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id AND f.tenant_id = v.tenant_id
                             LEFT JOIN entidades.clientes cli ON cli.id = o.cliente_id
                             ${oWhere}
                             GROUP BY 1,2`;

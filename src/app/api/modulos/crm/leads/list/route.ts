@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { runQuery } from '@/lib/postgres'
+import { resolveTenantId } from '@/lib/tenant'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
@@ -7,8 +8,10 @@ export const revalidate = 0
 
 export async function GET(req: NextRequest) {
   try {
+    const tenantId = resolveTenantId(req.headers)
     const rows = await runQuery<{ id: number; nome: string }>(
-      `SELECT leadid AS id, (primeironome || ' ' || sobrenome) AS nome FROM crm.leads ORDER BY 2 ASC`
+      `SELECT id, COALESCE(nome, 'Lead #' || id::text) AS nome FROM crm.leads WHERE tenant_id = $1 ORDER BY 2 ASC`,
+      [tenantId]
     )
     return Response.json({ success: true, rows }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
@@ -16,4 +19,3 @@ export async function GET(req: NextRequest) {
     return Response.json({ success: false, message: 'Erro interno' }, { status: 500 })
   }
 }
-

@@ -1,4 +1,5 @@
 import { withTransaction } from '@/lib/postgres'
+import { resolveTenantId } from '@/lib/tenant'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
@@ -7,6 +8,7 @@ export const revalidate = 0
 export async function POST(req: Request) {
   try {
     const form = await req.formData()
+    const tenantId = resolveTenantId(req.headers)
 
     const nome = String(form.get('nome') || '').trim()
     if (!nome) return Response.json({ success: false, message: 'nome é obrigatório' }, { status: 400 })
@@ -16,14 +18,14 @@ export async function POST(req: Request) {
     const telefone = String(form.get('telefone') || '').trim() || null
     const endereco_cobranca = String(form.get('endereco_cobranca') || '').trim() || null
     const usuario_id_raw = String(form.get('usuario_id') || '').trim()
-    const usuarioid = usuario_id_raw ? Number(usuario_id_raw) : null
+    const responsavel_id = usuario_id_raw ? Number(usuario_id_raw) : null
 
     const result = await withTransaction(async (client) => {
       const insert = await client.query(
-        `INSERT INTO crm.contas (nome, setor, site, telefone, enderecocobranca, usuarioid)
-         VALUES ($1,$2,$3,$4,$5,$6)
-         RETURNING contaid AS id`,
-        [nome, setor, site, telefone, endereco_cobranca, usuarioid]
+        `INSERT INTO crm.contas (tenant_id, nome, setor, site, telefone, endereco_cobranca, responsavel_id)
+         VALUES ($1,$2,$3,$4,$5,$6,$7)
+         RETURNING id`,
+        [tenantId, nome, setor, site, telefone, endereco_cobranca, responsavel_id]
       )
       const inserted = insert.rows[0] as { id: number | string }
       const id = Number(inserted?.id)
@@ -38,4 +40,3 @@ export async function POST(req: Request) {
     return Response.json({ success: false, message: msg }, { status: 400 })
   }
 }
-
