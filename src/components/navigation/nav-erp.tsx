@@ -181,6 +181,42 @@ export function NavErp({ groupLabelStyle, itemTextStyle }: { groupLabelStyle?: R
             </SidebarMenuItem>
           </Collapsible>
 
+          {/* CRM (moved from Outros -> Gestão ERP) */}
+          <Collapsible
+            key="crm"
+            asChild
+            defaultOpen={pathname.startsWith("/erp/crm")}
+            className="group/collapsible"
+          >
+            <SidebarMenuItem>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton tooltip="CRM">
+                  <Users className="w-3 h-3" />
+                  <span style={itemTextStyle}>CRM</span>
+                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/erp/crm"}>
+                      <a href="/erp/crm">
+                        <span style={itemTextStyle}>Gestão</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild isActive={pathname === "/erp/crm/relatorio"}>
+                      <a href="/erp/crm/relatorio">
+                        <span style={itemTextStyle}>Relatório</span>
+                      </a>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
+              </CollapsibleContent>
+            </SidebarMenuItem>
+          </Collapsible>
+
           {/* Produtos */}
           <SidebarMenuItem>
             <SidebarMenuButton
@@ -260,41 +296,6 @@ export function NavErp({ groupLabelStyle, itemTextStyle }: { groupLabelStyle?: R
       <SidebarGroup>
         <SidebarGroupLabel style={groupLabelStyle}>Outros</SidebarGroupLabel>
         <SidebarMenu className="gap-0.5">
-          {/* Vendas */}
-          <Collapsible
-            key="crm"
-            asChild
-            defaultOpen={pathname.startsWith("/erp/crm")}
-            className="group/collapsible"
-          >
-            <SidebarMenuItem>
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip="CRM">
-                  <Users className="w-3 h-3" />
-                  <span style={itemTextStyle}>CRM</span>
-                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <SidebarMenuSub>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild isActive={pathname === "/erp/crm"}>
-                      <a href="/erp/crm">
-                        <span style={itemTextStyle}>Gestão</span>
-                      </a>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild isActive={pathname === "/erp/crm/relatorio"}>
-                      <a href="/erp/crm/relatorio">
-                        <span style={itemTextStyle}>Relatório</span>
-                      </a>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                </SidebarMenuSub>
-              </CollapsibleContent>
-            </SidebarMenuItem>
-          </Collapsible>
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip="Comercial"
