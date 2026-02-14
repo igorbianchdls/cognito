@@ -66,8 +66,8 @@ export default function PedidosLinkedEditorSheet({ open, onOpenChange, tipo, id,
     setError(null)
     try {
       const patch: Record<string, unknown> = {}
-      if (imagemUrl !== (initialRef.current.imagem_url ?? '')) patch['imagem_url'] = imagemUrl
       if (tipo === 'cliente') {
+        if (imagemUrl !== (initialRef.current.imagem_url ?? '')) patch['imagem_url'] = imagemUrl
         if (segmento !== (initialRef.current.segmento ?? '')) patch['segmento'] = segmento
       } else {
         if (nome !== (initialRef.current.nome ?? '')) patch['nome'] = nome
@@ -94,21 +94,27 @@ export default function PedidosLinkedEditorSheet({ open, onOpenChange, tipo, id,
       <SheetContent side="right" className="w-[480px] sm:w-[560px]">
         <SheetHeader>
           <SheetTitle>Editar {tipo === 'cliente' ? 'Cliente' : 'Canal de Venda'}</SheetTitle>
-          <SheetDescription>Atualize a imagem e {tipo === 'cliente' ? 'o segmento do cliente' : 'o nome do canal'}.</SheetDescription>
+          <SheetDescription>
+            {tipo === 'cliente'
+              ? 'Atualize a imagem e o segmento do cliente.'
+              : 'Atualize o nome do canal.'}
+          </SheetDescription>
         </SheetHeader>
         {error && (
           <div className="mt-4 mb-2 text-sm text-red-600 border border-red-200 bg-red-50 px-3 py-2 rounded">{error}</div>
         )}
         <div className="mt-4 space-y-4">
-          <div className="grid gap-2">
-            <Label htmlFor="imagem_url">Link da Imagem (https)</Label>
-            <Input id="imagem_url" value={imagemUrl} onChange={(e) => setImagemUrl(e.target.value)} placeholder="https://exemplo.com/foto.jpg" />
-          </div>
           {tipo === 'cliente' ? (
-            <div className="grid gap-2">
-              <Label htmlFor="segmento">Segmento</Label>
-              <Input id="segmento" value={segmento} onChange={(e) => setSegmento(e.target.value)} placeholder="ex.: Varejo, Indústria" />
-            </div>
+            <>
+              <div className="grid gap-2">
+                <Label htmlFor="imagem_url">Link da Imagem (https)</Label>
+                <Input id="imagem_url" value={imagemUrl} onChange={(e) => setImagemUrl(e.target.value)} placeholder="https://exemplo.com/foto.jpg" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="segmento">Segmento</Label>
+                <Input id="segmento" value={segmento} onChange={(e) => setSegmento(e.target.value)} placeholder="ex.: Varejo, Indústria" />
+              </div>
+            </>
           ) : (
             <div className="grid gap-2">
               <Label htmlFor="nome">Nome do Canal</Label>
@@ -126,4 +132,3 @@ export default function PedidosLinkedEditorSheet({ open, onOpenChange, tipo, id,
     </Sheet>
   )
 }
-

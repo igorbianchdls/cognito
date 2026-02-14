@@ -1,4 +1,5 @@
 import { runQuery } from '@/lib/postgres'
+import { resolveTenantId } from '@/lib/tenant'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -10,8 +11,15 @@ export async function GET(req: Request) {
     const id = parts[parts.length - 1]
     if (!id) return Response.json({ success: false, message: 'ID é obrigatório' }, { status: 400 })
 
-    const sql = `SELECT id, nome, imagem_url, segmento FROM gestaovendas.clientes WHERE id = $1 LIMIT 1`
-    const rows = await runQuery<Record<string, unknown>>(sql, [id])
+    const tenantId = resolveTenantId(req.headers)
+    const sql = `SELECT id,
+                        nome_fantasia AS nome,
+                        imagem_url,
+                        canal AS segmento
+                   FROM entidades.clientes
+                  WHERE tenant_id = $1 AND id = $2
+                  LIMIT 1`
+    const rows = await runQuery<Record<string, unknown>>(sql, [tenantId, id])
     const cliente = rows[0] || null
     if (!cliente) return Response.json({ success: false, message: 'Cliente não encontrado' }, { status: 404 })
     return Response.json({ success: true, data: cliente })
@@ -21,7 +29,7 @@ export async function GET(req: Request) {
   }
 }
 
-const WHITELIST = new Set(['imagem_url', 'segmento'])
+const WHITELIST = new Set(['imagem_url', 'segmento', 'nome'])
 
 export async function PATCH(req: Request) {
   try {
@@ -43,12 +51,22 @@ export async function PATCH(req: Request) {
     const sets: string[] = []
     const paramsArr: unknown[] = []
     for (const [key, value] of entries) {
-      sets.push(`${key} = $${i}`)
-      paramsArr.push(value)
+      if (key === 'segmento') {
+        sets.push(`canal = $${i}`)
+        paramsArr.push(value)
+      } else if (key === 'nome') {
+        sets.push(`nome_fantasia = $${i}`)
+        paramsArr.push(value)
+      } else {
+        sets.push(`${key} = $${i}`)
+        paramsArr.push(value)
+      }
       i += 1
     }
+    const tenantId = resolveTenantId(req.headers)
+    paramsArr.push(tenantId)
     paramsArr.push(id)
-    const sql = `UPDATE gestaovendas.clientes SET ${sets.join(', ')} WHERE id = $${i} RETURNING id`
+    const sql = `UPDATE entidades.clientes SET ${sets.join(', ')}, atualizado_em = NOW() WHERE tenant_id = $${i} AND id = $${i + 1} RETURNING id`
     await runQuery(sql, paramsArr)
     return Response.json({ success: true })
   } catch (error) {
@@ -56,4 +74,3 @@ export async function PATCH(req: Request) {
     return Response.json({ success: false, message: 'Erro interno' }, { status: 500 })
   }
 }
-

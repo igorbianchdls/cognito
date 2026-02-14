@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { runQuery } from '@/lib/postgres'
+import { resolveTenantId } from '@/lib/tenant'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
@@ -7,8 +8,10 @@ export const revalidate = 0
 
 export async function GET(req: NextRequest) {
   try {
+    const tenantId = resolveTenantId(req.headers)
     const rows = await runQuery<{ id: number; nome: string }>(
-      `SELECT id, nome_fantasia AS nome FROM entidades.clientes ORDER BY nome_fantasia ASC`
+      `SELECT id, nome_fantasia AS nome FROM entidades.clientes WHERE tenant_id = $1 ORDER BY nome_fantasia ASC`,
+      [tenantId]
     )
     return Response.json({ success: true, rows }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {

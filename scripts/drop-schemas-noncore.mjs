@@ -25,6 +25,8 @@ function loadEnvFiles() {
 }
 
 const TARGET_SCHEMAS = [
+  "producao",
+  "manutencao",
   "transporte",
   "logistica",
   "armazem",
@@ -102,4 +104,3 @@ async function main() {
 }
 
 main();
-
