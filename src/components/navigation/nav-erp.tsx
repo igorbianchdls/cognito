@@ -1,8 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
-import { DollarSign, ShoppingCart, Users, Package, ShoppingBag, Wrench, Megaphone, Briefcase, BookOpen, Building2, ChevronRight, ChevronDown, Home, Truck, BarChart3, Settings } from "lucide-react"
+import { DollarSign, ShoppingCart, Users, Package, ShoppingBag, Wrench, BookOpen, Building2, ChevronRight, Settings } from "lucide-react"
 
 import {
   SidebarGroup,
@@ -10,7 +9,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuAction,
   SidebarMenuSub,
   SidebarMenuSubItem,
   SidebarMenuSubButton,
@@ -307,17 +305,7 @@ export function NavErp({ groupLabelStyle, itemTextStyle }: { groupLabelStyle?: R
             </SidebarMenuButton>
           </SidebarMenuItem>
 
-          {/* Supply Chain */}
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Transportes"
-              onClick={() => router.push("/erp/transportes")}
-              isActive={pathname.startsWith("/erp/transportes")}
-            >
-              <Truck className="w-3 h-3" />
-              <span style={itemTextStyle}>Transportes</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          {/* Supply Chain (removido) */}
 
           {/* Pós-Vendas */}
           <Collapsible
@@ -416,109 +404,7 @@ export function NavErp({ groupLabelStyle, itemTextStyle }: { groupLabelStyle?: R
             </SidebarMenuItem>
           </Collapsible>
 
-          {/* Marketing */}
-          <Collapsible
-            key="marketing"
-            asChild
-            defaultOpen={pathname.startsWith("/erp/marketing")}
-            className="group/collapsible"
-          >
-            <SidebarMenuItem>
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip="Marketing Orgânico">
-                  <Megaphone className="w-3 h-3" />
-                  <span style={itemTextStyle}>Marketing Orgânico</span>
-                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <SidebarMenuSub>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild isActive={pathname === "/erp/marketing"}>
-                      <a href="/erp/marketing">
-                        <span style={itemTextStyle}>Gestão</span>
-                      </a>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild isActive={pathname === "/erp/marketing/relatorio"}>
-                      <a href="/erp/marketing/relatorio">
-                        <span style={itemTextStyle}>Relatório</span>
-                      </a>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                </SidebarMenuSub>
-              </CollapsibleContent>
-            </SidebarMenuItem>
-          </Collapsible>
-          <Collapsible
-            key="trafego-pago"
-            asChild
-            defaultOpen={pathname.startsWith("/erp/trafego-pago")}
-            className="group/collapsible"
-          >
-            <SidebarMenuItem>
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip="Tráfego Pago">
-                  <Megaphone className="w-3 h-3" />
-                  <span style={itemTextStyle}>Tráfego Pago</span>
-                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <SidebarMenuSub>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild isActive={pathname === "/erp/trafego-pago"}>
-                      <a href="/erp/trafego-pago">
-                        <span style={itemTextStyle}>Gestão</span>
-                      </a>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild isActive={pathname === "/erp/trafego-pago/relatorio"}>
-                      <a href="/erp/trafego-pago/relatorio">
-                        <span style={itemTextStyle}>Relatório</span>
-                      </a>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                </SidebarMenuSub>
-              </CollapsibleContent>
-            </SidebarMenuItem>
-          </Collapsible>
-          <Collapsible
-            key="web-analytics"
-            asChild
-            defaultOpen={pathname.startsWith("/erp/web-analytics")}
-            className="group/collapsible"
-          >
-            <SidebarMenuItem>
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip="Web Analytics">
-                  <BarChart3 className="w-3 h-3" />
-                  <span style={itemTextStyle}>Web Analytics</span>
-                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <SidebarMenuSub>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild isActive={pathname === "/erp/web-analytics"}>
-                      <a href="/erp/web-analytics">
-                        <span style={itemTextStyle}>Gestão</span>
-                      </a>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild isActive={pathname === "/erp/web-analytics/relatorio"}>
-                      <a href="/erp/web-analytics/relatorio">
-                        <span style={itemTextStyle}>Relatório</span>
-                      </a>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                </SidebarMenuSub>
-              </CollapsibleContent>
-            </SidebarMenuItem>
-          </Collapsible>
+          {/* Marketing / Tráfego Pago / Web Analytics (removidos) */}
         </SidebarMenu>
       </SidebarGroup>
 
