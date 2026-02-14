@@ -1,8 +1,10 @@
 import { NextRequest } from "next/server"
 import { runQuery, withTransaction } from "@/lib/postgres"
-import { getTenantId, maxDuration, dynamic, revalidate, toSlug } from "../../../_shared"
+import { getTenantId, toSlug } from "../../../_shared"
 
-export { maxDuration, dynamic, revalidate }
+export const maxDuration = 300
+export const dynamic = "force-dynamic"
+export const revalidate = 0
 
 const ALLOWED_TYPES = new Set(["text", "number", "bool", "date", "json", "select", "multi_select", "link"])
 

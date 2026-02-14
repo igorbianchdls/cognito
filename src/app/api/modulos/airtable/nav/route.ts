@@ -1,8 +1,10 @@
 import { NextRequest } from "next/server"
 import { runQuery } from "@/lib/postgres"
-import { getTenantId, maxDuration, dynamic, revalidate } from "../_shared"
+import { getTenantId } from "../_shared"
 
-export { maxDuration, dynamic, revalidate }
+export const maxDuration = 300
+export const dynamic = "force-dynamic"
+export const revalidate = 0
 
 export async function GET(req: NextRequest) {
   try {
@@ -20,4 +22,3 @@ export async function GET(req: NextRequest) {
     return Response.json({ success: false, message: "Erro interno" }, { status: 500 })
   }
 }
-

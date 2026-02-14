@@ -1,8 +1,10 @@
 import { NextRequest } from "next/server"
 import { withTransaction } from "@/lib/postgres"
-import { getTenantId, maxDuration, dynamic, revalidate } from "../../_shared"
+import { getTenantId } from "../../_shared"
 
-export { maxDuration, dynamic, revalidate }
+export const maxDuration = 300
+export const dynamic = "force-dynamic"
+export const revalidate = 0
 
 type CellUpdate = {
   record_id: string
@@ -139,4 +141,3 @@ export async function POST(req: NextRequest) {
     return Response.json({ success: false, message: "Erro interno" }, { status: 500 })
   }
 }
-
