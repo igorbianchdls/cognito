@@ -456,9 +456,9 @@ export default function AirtableSchemaPage() {
           )}
         </div>
 
-        <div className="flex-1 min-h-0 p-4 md:p-6">
-          <div className="bg-white rounded-lg border h-full flex flex-col overflow-hidden">
-            <div className="px-4 py-3 border-b flex items-center justify-between gap-3">
+        <div className="flex-1 min-h-0 py-4 md:py-6">
+          <div className="bg-white border-y border-x-0 rounded-none h-full flex flex-col overflow-hidden">
+            <div className="px-0 py-3 border-b flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Rows3 className="h-4 w-4" />
                 Registros
