@@ -1,1 +1,1 @@
-export { runtime, POST } from '@/products/chat/backend/agents/controllers/chatActionController'
+export * from '@/products/chat/backend/features/chat/controllers/chatActionController'
