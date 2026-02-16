@@ -1,4 +1,4 @@
-import { POST as chatPost } from '@/features/chat/backend/controllers/chatActionController'
+import { POST as chatPost } from '@/features/chat/backend/agents/controllers/chatActionController'
 
 export const runtime = 'nodejs'
 

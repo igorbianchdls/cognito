@@ -3,4 +3,4 @@ export {
   generateAgentToken,
   setAgentToken,
   verifyAgentToken,
-} from '@/features/chat/backend/auth/agentTokenStore'
+} from '@/features/chat/backend/agents/auth/agentTokenStore'
