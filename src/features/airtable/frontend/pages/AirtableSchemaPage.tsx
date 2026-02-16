@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import type { ColumnDef } from "@tanstack/react-table"
-import { Plus, Table as TableIcon, Columns3, Rows3 } from "lucide-react"
+import { Plus, Table as TableIcon, Columns3, Rows3, Type, Hash, Calendar, ToggleLeft, Code2 } from "lucide-react"
 
 import NexusShell from "@/components/navigation/nexus/NexusShell"
 import PageHeader from "@/features/erp/frontend/components/PageHeader"
@@ -42,6 +42,25 @@ const FIELD_TYPES = [
   { value: "date", label: "Data" },
   { value: "json", label: "JSON" },
 ] as const
+
+function fieldTypeIcon(type: string) {
+  const iconClass = "h-3.5 w-3.5 text-muted-foreground"
+  const t = String(type || "").toLowerCase()
+  if (t === "number") return <Hash className={iconClass} />
+  if (t === "bool") return <ToggleLeft className={iconClass} />
+  if (t === "date") return <Calendar className={iconClass} />
+  if (t === "json") return <Code2 className={iconClass} />
+  return <Type className={iconClass} />
+}
+
+function renderColumnHeader(label: string, type: string) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      {fieldTypeIcon(type)}
+      <span>{label}</span>
+    </span>
+  )
+}
 
 export default function AirtableSchemaPage() {
   const router = useRouter()
@@ -182,11 +201,11 @@ export default function AirtableSchemaPage() {
 
   const columns: ColumnDef<Row>[] = useMemo(() => {
     const cols: ColumnDef<Row>[] = [
-      { accessorKey: "title", id: "title", header: "Título" },
+      { accessorKey: "title", id: "title", header: () => renderColumnHeader("Título", "text") },
       ...fields.map((f) => ({
         accessorKey: f.slug,
         id: f.slug,
-        header: f.name,
+        header: () => renderColumnHeader(f.name, f.type),
       })),
     ]
     return cols
@@ -471,7 +490,7 @@ export default function AirtableSchemaPage() {
                 showPagination
                 pageSize={pageSize}
                 padding={8}
-                headerPadding={8}
+                headerPadding={6}
                 serverSidePagination
                 serverTotalRows={total}
                 pageIndex={pageIndex}
