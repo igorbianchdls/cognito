@@ -74,14 +74,14 @@ export async function POST(req: NextRequest, context: { params: Promise<{ tableI
          limit 1`,
         [tenantId, tableId]
       )
-      if (tbl.rows.length === 0) return { ok: false as const, notFound: true as const, conflict: false as const, row: null as const }
+      if (tbl.rows.length === 0) return { ok: false as const, notFound: true as const, conflict: false as const, row: null }
       const schemaId = String((tbl.rows[0] as { schema_id: string }).schema_id)
 
       const exists = await client.query(
         `select 1 from airtable."field" where tenant_id = $1 and table_id = $2::uuid and lower(slug) = lower($3) limit 1`,
         [tenantId, tableId, slug]
       )
-      if (exists.rows.length > 0) return { ok: false as const, notFound: false as const, conflict: true as const, row: null as const }
+      if (exists.rows.length > 0) return { ok: false as const, notFound: false as const, conflict: true as const, row: null }
 
       const ins = await client.query(
         `insert into airtable."field" (tenant_id, schema_id, table_id, name, slug, type, required, config, "order")

@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
         [tenantId, name]
       )
       if (exists.rows.length > 0) {
-        return { ok: false as const, conflict: true as const, row: null as const }
+        return { ok: false as const, conflict: true as const, row: null }
       }
 
       const ins = await client.query(
