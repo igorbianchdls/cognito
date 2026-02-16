@@ -1,1 +1,5 @@
-export { maxDuration, dynamic, revalidate, GET } from "@/features/airtable/backend/controllers/navController"
+export const maxDuration = 300
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
+export { GET } from "@/features/airtable/backend/controllers/navController"
