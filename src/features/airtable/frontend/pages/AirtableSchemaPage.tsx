@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import type { ColumnDef } from "@tanstack/react-table"
-import { Plus, Table as TableIcon, Columns3, Rows3, Type, Hash, Calendar, ToggleLeft, Code2, Phone, Mail, Building2, User, FileText, ChevronDown } from "lucide-react"
+import { Plus, Table as TableIcon, Columns3, Type, Hash, Calendar, ToggleLeft, Code2, Phone, Mail, Building2, User, FileText, ChevronDown } from "lucide-react"
 
 import NexusShell from "@/components/navigation/nexus/NexusShell"
 import PageHeader from "@/features/erp/frontend/components/PageHeader"
@@ -412,6 +412,7 @@ export default function AirtableSchemaPage() {
         <PageHeader
           title={schema?.name ? `Airtable: ${schema.name}` : "Airtable"}
           subtitle={schema?.description || "Crie tabelas, campos e registros"}
+          className="[&_p]:mb-3"
           actions={
             <div className="flex items-center gap-2">
               <Button variant="secondary" size="sm" onClick={() => router.push("/airtable")}>
@@ -479,11 +480,7 @@ export default function AirtableSchemaPage() {
 
         <div className="flex-1 min-h-0 pb-4 md:pb-6">
           <div className="bg-white border-b border-x-0 rounded-none h-full flex flex-col overflow-hidden">
-            <div className="px-0 py-3 border-b flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Rows3 className="h-4 w-4" />
-                Registros
-              </div>
+            <div className="px-0 py-2 border-b flex items-center justify-end gap-3">
               <div className="flex items-center gap-2">
                 <Dialog open={openNewField} onOpenChange={setOpenNewField}>
                   <DialogTrigger asChild>
@@ -546,7 +543,7 @@ export default function AirtableSchemaPage() {
                 showPagination
                 pageSize={pageSize}
                 padding={8}
-                headerPadding={4}
+                headerPadding={3}
                 columnOptions={columnOptions}
                 serverSidePagination
                 serverTotalRows={total}
