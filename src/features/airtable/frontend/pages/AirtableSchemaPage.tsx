@@ -255,19 +255,79 @@ export default function AirtableSchemaPage() {
     }
   }
 
-  const onCellEdit = async (rowIndex: number, columnKey: string, newValue: unknown) => {
-    if (columnKey === "title") return
+  const normalizeFieldValue = (field: FieldRow, rawValue: unknown): unknown => {
+    if (rawValue == null || rawValue === "") return null
+    const t = String(field.type || "").toLowerCase()
+    if (t === "number") {
+      const n = Number(rawValue)
+      return Number.isFinite(n) ? n : rawValue
+    }
+    if (t === "bool") {
+      if (typeof rawValue === "boolean") return rawValue
+      const txt = String(rawValue).trim().toLowerCase()
+      if (["1", "true", "sim", "yes"].includes(txt)) return true
+      if (["0", "false", "nao", "não", "no"].includes(txt)) return false
+      return rawValue
+    }
+    if (t === "json") {
+      if (typeof rawValue === "string") {
+        try {
+          return JSON.parse(rawValue)
+        } catch {
+          return rawValue
+        }
+      }
+      return rawValue
+    }
+    return rawValue
+  }
+
+  const onCellEdit = async (
+    rowIndex: number,
+    columnKey: string,
+    newValue: string | number | boolean | null | undefined
+  ) => {
     const rec = records[rowIndex]
-    const field = fieldBySlug.get(columnKey)
-    if (!rec?.id || !field?.id) return
+    if (!rec?.id) return
+    setError(null)
     try {
-      await fetch(`/api/airtable/records/cells`, {
+      if (columnKey === "title") {
+        const res = await fetch(`/api/airtable/tables/${selectedTableId}/records`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            recordId: rec.id,
+            title: newValue == null || newValue === "" ? null : String(newValue),
+          }),
+        })
+        const json = await res.json().catch(() => ({}))
+        if (!res.ok || json?.success === false) {
+          throw new Error(json?.message || `HTTP ${res.status}`)
+        }
+        return
+      }
+
+      const field = fieldBySlug.get(columnKey)
+      if (!field?.id) return
+
+      const normalized = normalizeFieldValue(field, newValue)
+      const res = await fetch(`/api/airtable/records/cells`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ updates: [{ record_id: rec.id, field_id: field.id, value: newValue }] }),
+        body: JSON.stringify({
+          updates: [{ record_id: rec.id, field_id: field.id, value: normalized }],
+        }),
       })
-    } catch {
-      // keep UI optimistic for now
+      const json = await res.json().catch(() => ({}))
+      const failed = Array.isArray(json?.results)
+        ? json.results.find((r: { ok?: boolean; message?: string }) => r?.ok === false)
+        : null
+      if (!res.ok || json?.success === false || failed) {
+        throw new Error((failed && failed.message) || json?.message || `HTTP ${res.status}`)
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Falha ao atualizar célula")
+      if (selectedTableId) await loadTableData(selectedTableId, pageIndex, pageSize)
     }
   }
 
@@ -410,6 +470,8 @@ export default function AirtableSchemaPage() {
                 enableSearch
                 showPagination
                 pageSize={pageSize}
+                padding={8}
+                headerPadding={8}
                 serverSidePagination
                 serverTotalRows={total}
                 pageIndex={pageIndex}
@@ -418,7 +480,9 @@ export default function AirtableSchemaPage() {
                   setPageSize(ps)
                 }}
                 editableMode
-                editableCells={fields.map((f) => f.slug)}
+                editTrigger="click"
+                saveBehavior="onBlur"
+                editableCells={["title", ...fields.map((f) => f.slug)]}
                 onCellEdit={onCellEdit}
               />
             </div>

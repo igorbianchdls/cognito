@@ -108,3 +108,37 @@ export async function POST(req: NextRequest, context: { params: Promise<{ tableI
     return Response.json({ success: false, message: "Erro interno" }, { status: 500 })
   }
 }
+
+export async function PATCH(req: NextRequest, context: { params: Promise<{ tableId: string }> }) {
+  try {
+    const tenantId = getTenantId(req)
+    const { tableId } = await context.params
+    const body = (await req.json().catch(() => ({}))) as { recordId?: string; title?: string | null }
+    const recordId = String(body?.recordId || "").trim()
+    if (!recordId) {
+      return Response.json({ success: false, message: "recordId é obrigatório" }, { status: 400 })
+    }
+    const title = body?.title == null ? null : String(body.title)
+
+    const updated = await runQuery<{ id: string; title: string | null; created_at: string; updated_at: string }>(
+      `
+      update airtable."record"
+      set title = $4, updated_at = now()
+      where tenant_id = $1
+        and table_id = $2::uuid
+        and id = $3::uuid
+      returning id::text as id, title, created_at::text, updated_at::text
+      `,
+      [tenantId, tableId, recordId, title]
+    )
+
+    if (!updated?.[0]) {
+      return Response.json({ success: false, message: "Registro não encontrado" }, { status: 404 })
+    }
+
+    return Response.json({ success: true, row: updated[0] }, { headers: { "Cache-Control": "no-store" } })
+  } catch (error) {
+    console.error("🧩 API /api/airtable/tables/[tableId]/records PATCH error:", error)
+    return Response.json({ success: false, message: "Erro interno" }, { status: 500 })
+  }
+}
