@@ -135,15 +135,7 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ table
     }
 
     const updated = await withTransaction(async (client) => {
-      const currentQ = await client.query<{
-        id: string
-        name: string
-        slug: string
-        type: string
-        required: boolean
-        config: unknown
-        order: number
-      }>(
+      const currentQ = await client.query(
         `select id::text as id, name, slug, type, required, config, "order" as "order"
          from airtable."field"
          where tenant_id = $1 and table_id = $2::uuid and id = $3::uuid
@@ -155,7 +147,15 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ table
         return { ok: false as const, notFound: true as const, conflict: false as const, row: null }
       }
 
-      const current = currentQ.rows[0]
+      const current = currentQ.rows[0] as {
+        id: string
+        name: string
+        slug: string
+        type: string
+        required: boolean
+        config: unknown
+        order: number
+      }
       const nextName = typeof body?.name !== "undefined" ? String(body.name).trim() : current.name
       const nextSlug = typeof body?.slug !== "undefined" ? toSlug(String(body.slug || "")) : current.slug
       const nextType = typeof body?.type !== "undefined" ? String(body.type || "").trim().toLowerCase() : current.type
