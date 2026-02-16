@@ -79,7 +79,7 @@ export default function AirtableHomePage() {
   }
 
   return (
-    <NexusShell contentClassName="p-0" outerBg="#f9fafb">
+    <NexusShell contentClassName="p-0" outerBg="#f9fafb" sidebarBorderless={false}>
       <div className="h-full flex flex-col">
         <PageHeader
           title="Airtable"

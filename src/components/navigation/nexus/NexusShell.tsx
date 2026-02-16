@@ -12,6 +12,8 @@ type NexusShellProps = React.PropsWithChildren<{
   contentClassName?: string
   showSidebarTrigger?: boolean
   outerBg?: string
+  sidebarBorderless?: boolean
+  sidebarHeaderBorderless?: boolean
 }>
 
 export default function NexusShell({
@@ -20,12 +22,14 @@ export default function NexusShell({
   contentClassName,
   showSidebarTrigger,
   outerBg,
+  sidebarBorderless = true,
+  sidebarHeaderBorderless = true,
   children,
 }: NexusShellProps) {
   const bg = outerBg ?? "#f9fafb" // gray-50
   return (
     <SidebarProvider>
-      <SidebarShadcn borderless headerBorderless />
+      <SidebarShadcn borderless={sidebarBorderless} headerBorderless={sidebarHeaderBorderless} />
       <SidebarInset className="h-screen overflow-hidden">
         <div className="flex h-full overflow-hidden" style={{ backgroundColor: bg }}>
           <div className="flex flex-col h-full w-full">

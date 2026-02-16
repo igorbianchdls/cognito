@@ -272,7 +272,7 @@ export default function AirtableSchemaPage() {
   }
 
   return (
-    <NexusShell contentClassName="p-0" outerBg="#f9fafb">
+    <NexusShell contentClassName="p-0" outerBg="#f9fafb" sidebarBorderless={false}>
       <div className="h-full flex flex-col">
         <PageHeader
           title={schema?.name ? `Airtable: ${schema.name}` : "Airtable"}
@@ -318,9 +318,25 @@ export default function AirtableSchemaPage() {
           }
         />
 
-        <div className="px-4 md:px-6 pt-3">
+        <div className="pt-1">
           {tabsOptions.length > 0 ? (
-            <TabsNav options={tabsOptions} value={selectedTableId} onValueChange={setSelectedTableId} />
+            <TabsNav
+              options={tabsOptions}
+              value={selectedTableId}
+              onValueChange={setSelectedTableId}
+              fontFamily="var(--font-geist-sans)"
+              fontSize={15}
+              fontWeight="400"
+              color="rgb(99, 99, 99)"
+              letterSpacing={-0.3}
+              iconSize={16}
+              labelOffsetY={8}
+              startOffset={22}
+              activeColor="rgb(41, 41, 41)"
+              activeFontWeight="500"
+              activeBorderColor="rgb(41, 41, 41)"
+              className="px-0 md:px-0"
+            />
           ) : (
             <div className="text-sm text-muted-foreground">Nenhuma tabela ainda. Clique em "Nova tabela".</div>
           )}
