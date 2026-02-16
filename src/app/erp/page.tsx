@@ -1,18 +1,3 @@
-'use client'
+import Page from '@/products/erp/frontend/features/home/pages/index'
 
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
-import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
-
-export default function ErpHomePage() {
-  return (
-    <SidebarProvider>
-      <SidebarShadcn />
-      <SidebarInset className="h-screen flex items-center justify-center">
-        <div className="text-center px-6">
-          <h1 className="text-2xl font-semibold mb-2">ERP</h1>
-          <p className="text-muted-foreground">Selecione um módulo no menu lateral</p>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
-  )
-}
+export default Page

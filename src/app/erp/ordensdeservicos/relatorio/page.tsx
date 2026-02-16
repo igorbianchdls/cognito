@@ -1,6 +1,3 @@
-import { redirect } from 'next/navigation'
+import Page from '@/products/erp/frontend/features/ordensdeservicos/pages/relatorio'
 
-export default function Page() {
-  redirect('/erp/servicos/relatorio')
-}
-
+export default Page

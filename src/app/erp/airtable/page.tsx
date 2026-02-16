@@ -1,5 +1,3 @@
-import { redirect } from "next/navigation"
+import Page from '@/products/erp/frontend/features/airtable/pages/index'
 
-export default function ErpAirtableRedirectPage() {
-  redirect("/airtable")
-}
+export default Page

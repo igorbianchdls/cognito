@@ -1,31 +1,3 @@
-"use client"
+import Page from '@/products/erp/frontend/features/servicos/pages/nota-fiscal/emitir'
 
-import * as React from 'react'
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
-import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
-import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer'
-import PageHeader from '@/products/erp/frontend/components/PageHeader'
-import EmitirNfseForm from '@/products/erp/frontend/components/servicos/nfe/EmitirNfseForm'
-
-export default function EmitirNfsePage() {
-  return (
-    <SidebarProvider>
-      <SidebarShadcn borderless headerBorderless />
-      <SidebarInset className="h-screen overflow-hidden">
-        <div className="flex h-full overflow-hidden bg-gray-100">
-          <div className="flex flex-col h-full w-full">
-            
-            <div className="flex-1 min-h-0 pl-2 pr-2 pt-2 pb-2 overflow-auto" data-page="nexus">
-              <NexusPageContainer className="h-full" style={{ overflow: 'auto' }}>
-                <div className="mb-3">
-                  <PageHeader title="Emitir NFS-e" subtitle="Preencha os dados para emissão" />
-                </div>
-                <EmitirNfseForm />
-              </NexusPageContainer>
-            </div>
-          </div>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
-  )
-}
+export default Page

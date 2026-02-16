@@ -1,10 +1,3 @@
-import { redirect } from "next/navigation"
+import Page from '@/products/erp/frontend/features/airtable/pages/[schemaId]'
 
-export default async function ErpAirtableSchemaRedirectPage({
-  params,
-}: {
-  params: Promise<{ schemaId: string }>
-}) {
-  const { schemaId } = await params
-  redirect(`/airtable/${schemaId}`)
-}
+export default Page

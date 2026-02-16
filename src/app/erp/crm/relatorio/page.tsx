@@ -1,5 +1,3 @@
-export default function CRMRoadmapRelatorio() {
-  return (
-    <div className="p-6 text-sm text-gray-600">Relatório do CRM em preparação.</div>
-  )
-}
+import Page from '@/products/erp/frontend/features/crm/pages/relatorio'
+
+export default Page
