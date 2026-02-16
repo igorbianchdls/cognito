@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
-import DashboardLayout from '@/features/erp/frontend/components/DashboardLayout'
+import DashboardLayout from '@/products/erp/frontend/components/DashboardLayout'
 import { ArrowDownCircle, ArrowUpCircle, BarChart3, Wallet, Star, CalendarCheck, Calendar as CalendarIcon } from 'lucide-react'
 import { BarChartHorizontalRecharts } from '@/components/charts/BarChartHorizontalRecharts'
 // import { BarChartMultipleRecharts } from '@/components/charts/BarChartMultipleRecharts'
@@ -13,9 +13,9 @@ import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 // import { Switch } from '@/components/ui/switch'
 import type { DateRange } from 'react-day-picker'
-import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions, type FontSection } from '@/features/erp/state/financeiroDashboardStore'
+import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions, type FontSection } from '@/products/erp/state/financeiroDashboardStore'
 // (sem store global para sparkline)
-import type { FinanceiroDashboardUIState } from '@/features/erp/state/financeiroDashboardStore'
+import type { FinanceiroDashboardUIState } from '@/products/erp/state/financeiroDashboardStore'
 
 type BaseRow = {
   valor_total?: number | string

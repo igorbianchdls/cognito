@@ -1,3 +1,3 @@
-import ChatListPage from '@/features/chat/frontend/pages/ChatListPage'
+import ChatListPage from '@/products/chat/frontend/pages/ChatListPage'
 
 export default ChatListPage

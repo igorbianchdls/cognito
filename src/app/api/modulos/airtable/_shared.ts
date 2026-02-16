@@ -1,1 +1,1 @@
-export { getTenantId, toSlug } from "@/features/airtable/backend/shared"
+export { getTenantId, toSlug } from "@/products/airtable/backend/shared"

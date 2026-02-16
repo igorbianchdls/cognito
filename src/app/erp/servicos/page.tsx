@@ -8,33 +8,33 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/s
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer'
 
-import PageHeader from '@/features/erp/frontend/components/PageHeader'
-import TabsNav from '@/features/erp/frontend/components/TabsNav'
+import PageHeader from '@/products/erp/frontend/components/PageHeader'
+import TabsNav from '@/products/erp/frontend/components/TabsNav'
 import DataTable, { type TableData } from '@/components/widgets/Table'
-import DataToolbar from '@/features/erp/frontend/components/DataToolbar'
-import CadastroOrdemServicoSheet from '@/features/erp/frontend/components/servicos/CadastroOrdemServicoSheet'
-import CadastroAgendamentoSheet from '@/features/erp/frontend/components/servicos/CadastroAgendamentoSheet'
-import CadastroTecnicoSheet from '@/features/erp/frontend/components/servicos/CadastroTecnicoSheet'
-import CadastroClienteSheet from '@/features/erp/frontend/components/servicos/CadastroClienteSheet'
+import DataToolbar from '@/products/erp/frontend/components/DataToolbar'
+import CadastroOrdemServicoSheet from '@/products/erp/frontend/components/servicos/CadastroOrdemServicoSheet'
+import CadastroAgendamentoSheet from '@/products/erp/frontend/components/servicos/CadastroAgendamentoSheet'
+import CadastroTecnicoSheet from '@/products/erp/frontend/components/servicos/CadastroTecnicoSheet'
+import CadastroClienteSheet from '@/products/erp/frontend/components/servicos/CadastroClienteSheet'
 import dynamic from 'next/dynamic'
-import CadastroServicoSheet from '@/features/erp/frontend/components/servicos/CadastroServicoSheet'
-const CadastroCatalogoServicoSheet = dynamic(() => import('@/features/erp/frontend/components/servicos/CadastroCatalogoServicoSheet').then(m => m.default), { ssr: false })
-const CadastroCategoriaServicoSheet = dynamic(() => import('@/features/erp/frontend/components/servicos/CadastroCategoriaServicoSheet').then(m => m.default), { ssr: false })
-const CadastroTabelaPrecoServicoSheet = dynamic(() => import('@/features/erp/frontend/components/servicos/CadastroTabelaPrecoServicoSheet').then(m => m.default), { ssr: false })
-const CadastroSlaServicoSheet = dynamic(() => import('@/features/erp/frontend/components/servicos/CadastroSlaServicoSheet').then(m => m.default), { ssr: false })
-import StatusBadge from '@/features/erp/frontend/components/StatusBadge'
-import EntityDisplay from '@/features/erp/frontend/components/EntityDisplay'
-import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/features/erp/state/moduleUiStore'
-import type { Opcao } from '@/features/erp/frontend/components/TabsNav'
+import CadastroServicoSheet from '@/products/erp/frontend/components/servicos/CadastroServicoSheet'
+const CadastroCatalogoServicoSheet = dynamic(() => import('@/products/erp/frontend/components/servicos/CadastroCatalogoServicoSheet').then(m => m.default), { ssr: false })
+const CadastroCategoriaServicoSheet = dynamic(() => import('@/products/erp/frontend/components/servicos/CadastroCategoriaServicoSheet').then(m => m.default), { ssr: false })
+const CadastroTabelaPrecoServicoSheet = dynamic(() => import('@/products/erp/frontend/components/servicos/CadastroTabelaPrecoServicoSheet').then(m => m.default), { ssr: false })
+const CadastroSlaServicoSheet = dynamic(() => import('@/products/erp/frontend/components/servicos/CadastroSlaServicoSheet').then(m => m.default), { ssr: false })
+import StatusBadge from '@/products/erp/frontend/components/StatusBadge'
+import EntityDisplay from '@/products/erp/frontend/components/EntityDisplay'
+import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/products/erp/state/moduleUiStore'
+import type { Opcao } from '@/products/erp/frontend/components/TabsNav'
 import { Wrench, Calendar, User, Users, List, Building2, Briefcase, Phone, Mail, ShoppingCart, DollarSign, Receipt, Eye } from 'lucide-react'
 import IconLabelHeader from '@/components/widgets/IconLabelHeader'
-import ImagemEditorSheet from '@/features/erp/frontend/components/servicos/ImagemEditorSheet'
+import ImagemEditorSheet from '@/products/erp/frontend/components/servicos/ImagemEditorSheet'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import NfeKpiRow from '@/features/erp/frontend/components/servicos/nfe/NfeKpiRow'
-import NfeStatusBadge from '@/features/erp/frontend/components/servicos/nfe/NfeStatusBadge'
-import RowActionsMenu from '@/features/erp/frontend/components/financeiro/RowActionsMenu'
-import VendasKpiRow from '@/features/erp/frontend/components/servicos/vendas/VendasKpiRow'
+import NfeKpiRow from '@/products/erp/frontend/components/servicos/nfe/NfeKpiRow'
+import NfeStatusBadge from '@/products/erp/frontend/components/servicos/nfe/NfeStatusBadge'
+import RowActionsMenu from '@/products/erp/frontend/components/financeiro/RowActionsMenu'
+import VendasKpiRow from '@/products/erp/frontend/components/servicos/vendas/VendasKpiRow'
 
 type Row = TableData
 

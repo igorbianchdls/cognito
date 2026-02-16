@@ -1,4 +1,4 @@
-import { GET as listGet } from '@/features/chat/backend/controllers/chatListController'
+import { GET as listGet } from '@/products/chat/backend/controllers/chatListController'
 
 export const runtime = 'nodejs'
 

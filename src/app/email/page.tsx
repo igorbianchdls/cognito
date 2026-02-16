@@ -1,4 +1,4 @@
-import EmailPage from '@/features/email/frontend/pages/EmailPage'
+import EmailPage from '@/products/email/frontend/pages/EmailPage'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'

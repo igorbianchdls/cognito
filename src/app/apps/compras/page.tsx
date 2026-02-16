@@ -1,3 +1,3 @@
-import AppsComprasPage from '@/features/apps/frontend/pages/AppsComprasPage'
+import AppsComprasPage from '@/products/apps/frontend/pages/AppsComprasPage'
 
 export default AppsComprasPage

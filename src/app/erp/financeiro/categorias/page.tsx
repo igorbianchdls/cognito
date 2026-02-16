@@ -7,11 +7,11 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 
-import PageHeader from '@/features/erp/frontend/components/PageHeader'
-import TabsNav, { type Opcao } from '@/features/erp/frontend/components/TabsNav'
-import DataToolbar from '@/features/erp/frontend/components/DataToolbar'
+import PageHeader from '@/products/erp/frontend/components/PageHeader'
+import TabsNav, { type Opcao } from '@/products/erp/frontend/components/TabsNav'
+import DataToolbar from '@/products/erp/frontend/components/DataToolbar'
 import DataTable, { type TableData } from '@/components/widgets/Table'
-import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/features/erp/state/financeiroUiStore'
+import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/products/erp/state/financeiroUiStore'
 import { List } from 'lucide-react'
 
 type Row = TableData

@@ -1,5 +1,5 @@
 import type { NextRequest } from 'next/server'
-import { listMessages, sendMessage } from '@/features/email/backend/controllers/messagesController'
+import { listMessages, sendMessage } from '@/products/email/backend/controllers/messagesController'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'

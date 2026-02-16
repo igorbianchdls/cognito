@@ -4,8 +4,8 @@ import * as React from 'react'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer'
-import PageHeader from '@/features/erp/frontend/components/PageHeader'
-import NovaCotacaoForm from '@/features/erp/frontend/components/compras/NovaCotacaoForm'
+import PageHeader from '@/products/erp/frontend/components/PageHeader'
+import NovaCotacaoForm from '@/products/erp/frontend/components/compras/NovaCotacaoForm'
 
 export default function NovaCotacaoPage() {
   return (

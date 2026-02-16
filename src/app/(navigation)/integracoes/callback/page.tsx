@@ -1,3 +1,3 @@
-import IntegracoesCallbackPage from '@/features/integracoes/frontend/pages/IntegracoesCallbackPage'
+import IntegracoesCallbackPage from '@/products/integracoes/frontend/pages/IntegracoesCallbackPage'
 
 export default IntegracoesCallbackPage

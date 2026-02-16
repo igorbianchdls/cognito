@@ -4,15 +4,15 @@ import { useMemo, useState, useEffect } from 'react'
 import { useStore } from '@nanostores/react'
 import type { ColumnDef } from '@tanstack/react-table'
 
-import PageHeader from '@/features/erp/frontend/components/PageHeader'
-import TabsNav, { type Opcao } from '@/features/erp/frontend/components/TabsNav'
-import DataToolbar from '@/features/erp/frontend/components/DataToolbar'
+import PageHeader from '@/products/erp/frontend/components/PageHeader'
+import TabsNav, { type Opcao } from '@/products/erp/frontend/components/TabsNav'
+import DataToolbar from '@/products/erp/frontend/components/DataToolbar'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer'
 import { List } from 'lucide-react'
-import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/features/erp/state/moduleUiStore'
+import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/products/erp/state/moduleUiStore'
 
 type Row = TableData
 

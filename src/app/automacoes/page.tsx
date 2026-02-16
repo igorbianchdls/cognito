@@ -1,3 +1,3 @@
-import AutomacaoPage from '@/features/automacao/frontend/pages/AutomacaoPage'
+import AutomacaoPage from '@/products/automacao/frontend/pages/AutomacaoPage'
 
 export default AutomacaoPage

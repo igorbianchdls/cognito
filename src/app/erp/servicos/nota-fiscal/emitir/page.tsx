@@ -4,8 +4,8 @@ import * as React from 'react'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer'
-import PageHeader from '@/features/erp/frontend/components/PageHeader'
-import EmitirNfseForm from '@/features/erp/frontend/components/servicos/nfe/EmitirNfseForm'
+import PageHeader from '@/products/erp/frontend/components/PageHeader'
+import EmitirNfseForm from '@/products/erp/frontend/components/servicos/nfe/EmitirNfseForm'
 
 export default function EmitirNfsePage() {
   return (

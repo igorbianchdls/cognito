@@ -1,5 +1,5 @@
 import type { NextRequest } from 'next/server'
-import { getMessageAttachment } from '@/features/email/backend/controllers/attachmentsController'
+import { getMessageAttachment } from '@/products/email/backend/controllers/attachmentsController'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'

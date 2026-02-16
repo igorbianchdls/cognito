@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
-import DashboardLayout from '@/features/erp/frontend/components/DashboardLayout'
+import DashboardLayout from '@/products/erp/frontend/components/DashboardLayout'
 import { BarChartHorizontalRecharts } from '@/components/charts/BarChartHorizontalRecharts'
 import { BarChartMultipleRecharts } from '@/components/charts/BarChartMultipleRecharts'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -12,7 +12,7 @@ import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Calendar as CalendarIcon, Users, MapPin, Globe, Tag, Building2, Briefcase, Store } from 'lucide-react'
 import type { DateRange } from 'react-day-picker'
-import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions, type FontSection } from '@/features/erp/state/financeiroDashboardStore'
+import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions, type FontSection } from '@/products/erp/state/financeiroDashboardStore'
 
 type PedidoRow = {
   valor_total_pedido?: number | string

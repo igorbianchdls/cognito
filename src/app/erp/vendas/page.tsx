@@ -8,15 +8,15 @@ import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 
-import PageHeader from '@/features/erp/frontend/components/PageHeader'
-import TabsNav, { type Opcao } from '@/features/erp/frontend/components/TabsNav'
-import DataToolbar from '@/features/erp/frontend/components/DataToolbar'
+import PageHeader from '@/products/erp/frontend/components/PageHeader'
+import TabsNav, { type Opcao } from '@/products/erp/frontend/components/TabsNav'
+import DataToolbar from '@/products/erp/frontend/components/DataToolbar'
 import DataTable, { type TableData } from '@/components/widgets/Table'
-import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/features/erp/state/moduleUiStore'
+import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/products/erp/state/moduleUiStore'
 import { ShoppingCart, RotateCcw, Ticket, LayoutGrid, User, Users, Building2, Building, Calendar, CalendarClock, CheckCircle2, DollarSign, Percent, Coins, TrendingUp, Truck, FileText, Tag, Table, Bookmark, Settings, Megaphone, Star, Hash } from 'lucide-react'
 import IconLabelHeader from '@/components/widgets/IconLabelHeader'
-import EntityDisplay from '@/features/erp/frontend/components/EntityDisplay'
-import StatusBadge from '@/features/erp/frontend/components/StatusBadge'
+import EntityDisplay from '@/products/erp/frontend/components/EntityDisplay'
+import StatusBadge from '@/products/erp/frontend/components/StatusBadge'
 import { Button } from '@/components/ui/button'
 
 type Row = TableData

@@ -3,18 +3,18 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
-import DashboardLayout from '@/features/erp/frontend/components/DashboardLayout'
+import DashboardLayout from '@/products/erp/frontend/components/DashboardLayout'
 import DRETable from '@/components/relatorios/DRETable'
-import BPTabela from '@/features/erp/frontend/components/contabilidade/BPTabela'
-import WaterfallDRE from '@/features/erp/frontend/components/contabilidade/WaterfallDRE'
-import { MultiLine } from '@/features/erp/frontend/components/financeiro/NivoCharts'
+import BPTabela from '@/products/erp/frontend/components/contabilidade/BPTabela'
+import WaterfallDRE from '@/products/erp/frontend/components/contabilidade/WaterfallDRE'
+import { MultiLine } from '@/products/erp/frontend/components/financeiro/NivoCharts'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Calendar as CalendarIcon } from 'lucide-react'
 import type { DateRange } from 'react-day-picker'
-import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions, type FontSection } from '@/features/erp/state/financeiroDashboardStore'
+import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions, type FontSection } from '@/products/erp/state/financeiroDashboardStore'
 
 type BPLinha = { conta: string; valor: number }
 type BPSecao = { nome: string; linhas: BPLinha[] }

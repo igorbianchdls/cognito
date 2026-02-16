@@ -1,3 +1,3 @@
-import AppsVendasPage from '@/features/apps/frontend/pages/AppsVendasPage'
+import AppsVendasPage from '@/products/apps/frontend/pages/AppsVendasPage'
 
 export default AppsVendasPage

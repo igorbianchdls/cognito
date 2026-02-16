@@ -1,5 +1,5 @@
 import { runQuery } from '@/lib/postgres'
-import { getSupabaseAdmin, parseUuid } from '@/features/drive/backend/lib'
+import { getSupabaseAdmin, parseUuid } from '@/products/drive/backend/lib'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'

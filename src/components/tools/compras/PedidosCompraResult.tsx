@@ -1,8 +1,8 @@
 'use client'
 
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable'
-import EntityDisplay from '@/features/erp/frontend/components/EntityDisplay'
-import StatusBadge from '@/features/erp/frontend/components/StatusBadge'
+import EntityDisplay from '@/products/erp/frontend/components/EntityDisplay'
+import StatusBadge from '@/products/erp/frontend/components/StatusBadge'
 import { ColumnDef } from '@tanstack/react-table'
 import { ShoppingBag } from 'lucide-react'
 import { useMemo } from 'react'

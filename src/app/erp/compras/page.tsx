@@ -8,17 +8,17 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/s
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer'
 
-import PageHeader from '@/features/erp/frontend/components/PageHeader'
-import TabsNav from '@/features/erp/frontend/components/TabsNav'
+import PageHeader from '@/products/erp/frontend/components/PageHeader'
+import TabsNav from '@/products/erp/frontend/components/TabsNav'
 import DataTable, { type TableData } from '@/components/widgets/Table'
-import EntityDisplay from '@/features/erp/frontend/components/EntityDisplay'
-import DataToolbar from '@/features/erp/frontend/components/DataToolbar'
-import StatusBadge from '@/features/erp/frontend/components/StatusBadge'
-import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/features/erp/state/moduleUiStore'
-import type { Opcao } from '@/features/erp/frontend/components/TabsNav'
+import EntityDisplay from '@/products/erp/frontend/components/EntityDisplay'
+import DataToolbar from '@/products/erp/frontend/components/DataToolbar'
+import StatusBadge from '@/products/erp/frontend/components/StatusBadge'
+import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/products/erp/state/moduleUiStore'
+import type { Opcao } from '@/products/erp/frontend/components/TabsNav'
 import { ShoppingCart, PackageCheck, ClipboardList, FileText } from 'lucide-react'
-import ComprasKpiRow from '@/features/erp/frontend/components/compras/ComprasKpiRow'
-import CotacoesKpiRow from '@/features/erp/frontend/components/compras/CotacoesKpiRow'
+import ComprasKpiRow from '@/products/erp/frontend/components/compras/ComprasKpiRow'
+import CotacoesKpiRow from '@/products/erp/frontend/components/compras/CotacoesKpiRow'
 
 type Row = TableData
 

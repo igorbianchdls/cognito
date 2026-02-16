@@ -1,3 +1,3 @@
-import DrivePage from '@/features/drive/frontend/pages/DrivePage'
+import DrivePage from '@/products/drive/frontend/pages/DrivePage'
 
 export default DrivePage

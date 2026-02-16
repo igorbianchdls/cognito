@@ -4,7 +4,7 @@ import {
   getSupabaseAdmin,
   getWorkspaceOwnerId,
   parseUuid,
-} from '@/features/drive/backend/lib'
+} from '@/products/drive/backend/lib'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'

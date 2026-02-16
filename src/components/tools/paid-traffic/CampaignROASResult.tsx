@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
-import EntityDisplay from '@/features/erp/frontend/components/EntityDisplay';
-import StatusBadge from '@/features/erp/frontend/components/StatusBadge';
+import EntityDisplay from '@/products/erp/frontend/components/EntityDisplay';
+import StatusBadge from '@/products/erp/frontend/components/StatusBadge';
 import { BarChart } from '@/components/charts/BarChart';
 import { LineChart } from '@/components/charts/LineChart';
 import { AreaChart } from '@/components/charts/AreaChart';

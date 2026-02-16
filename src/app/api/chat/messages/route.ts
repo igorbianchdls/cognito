@@ -1,4 +1,4 @@
-import { GET as messagesGet } from '@/features/chat/backend/controllers/chatMessagesController'
+import { GET as messagesGet } from '@/products/chat/backend/controllers/chatMessagesController'
 
 export const runtime = 'nodejs'
 

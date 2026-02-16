@@ -1,4 +1,4 @@
-import { GET as metaGet } from '@/features/chat/backend/controllers/chatMetaController'
+import { GET as metaGet } from '@/products/chat/backend/controllers/chatMetaController'
 
 export const runtime = 'nodejs'
 

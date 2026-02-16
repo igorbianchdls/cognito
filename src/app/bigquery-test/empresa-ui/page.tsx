@@ -1,8 +1,8 @@
 "use client"
 
 import { useMemo, useState } from 'react'
-import PageHeader from '@/features/erp/frontend/components/PageHeader'
-import TabsNav, { type Opcao } from '@/features/erp/frontend/components/TabsNav'
+import PageHeader from '@/products/erp/frontend/components/PageHeader'
+import TabsNav, { type Opcao } from '@/products/erp/frontend/components/TabsNav'
 import { List } from 'lucide-react'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'

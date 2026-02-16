@@ -1,3 +1,3 @@
-import AppsHomePage from '@/features/apps/frontend/pages/AppsHomePage'
+import AppsHomePage from '@/products/apps/frontend/pages/AppsHomePage'
 
 export default AppsHomePage

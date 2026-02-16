@@ -8,19 +8,19 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/s
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer'
 
-import PageHeader from '@/features/erp/frontend/components/PageHeader'
-import TabsNav, { type Opcao } from '@/features/erp/frontend/components/TabsNav'
-import DataToolbar from '@/features/erp/frontend/components/DataToolbar'
+import PageHeader from '@/products/erp/frontend/components/PageHeader'
+import TabsNav, { type Opcao } from '@/products/erp/frontend/components/TabsNav'
+import DataToolbar from '@/products/erp/frontend/components/DataToolbar'
 import DataTable, { type TableData } from '@/components/widgets/Table'
-import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/features/erp/state/moduleUiStore'
+import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/products/erp/state/moduleUiStore'
 import { List, Building2, Tag, FileText, Globe, MapPin, Flag, CheckCircle2, BookOpen, Briefcase } from 'lucide-react'
 import IconLabelHeader from '@/components/widgets/IconLabelHeader'
 import { Button } from '@/components/ui/button'
 
-import CadastroEmpresaSheet from '@/features/erp/frontend/components/empresa/CadastroEmpresaSheet'
-import CadastroFilialSheet from '@/features/erp/frontend/components/empresa/CadastroFilialSheet'
-import CadastroDepartamentoSheet from '@/features/erp/frontend/components/empresa/CadastroDepartamentoSheet'
-import CadastroCargoSheet from '@/features/erp/frontend/components/empresa/CadastroCargoSheet'
+import CadastroEmpresaSheet from '@/products/erp/frontend/components/empresa/CadastroEmpresaSheet'
+import CadastroFilialSheet from '@/products/erp/frontend/components/empresa/CadastroFilialSheet'
+import CadastroDepartamentoSheet from '@/products/erp/frontend/components/empresa/CadastroDepartamentoSheet'
+import CadastroCargoSheet from '@/products/erp/frontend/components/empresa/CadastroCargoSheet'
 
 type Row = TableData
 

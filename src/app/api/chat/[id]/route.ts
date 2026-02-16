@@ -1,4 +1,4 @@
-import { PATCH as patchById, DELETE as deleteById } from '@/features/chat/backend/controllers/chatByIdController'
+import { PATCH as patchById, DELETE as deleteById } from '@/products/chat/backend/controllers/chatByIdController'
 
 export const runtime = 'nodejs'
 

@@ -1,3 +1,3 @@
-import IntegracoesPage from '@/features/integracoes/frontend/pages/IntegracoesPage'
+import IntegracoesPage from '@/products/integracoes/frontend/pages/IntegracoesPage'
 
 export default IntegracoesPage

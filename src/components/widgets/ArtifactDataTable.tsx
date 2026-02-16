@@ -29,8 +29,8 @@ import {
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ChartSwitcher, type ChartSwitcherOptions } from '@/components/charts/ChartSwitcher';
-import { buildThemeVars } from '@/features/apps/bi/json-render/theme/themeAdapter';
-import { APPS_HEADER_THEME_OPTIONS, APPS_THEME_OPTIONS } from '@/features/apps/shared/themeOptions';
+import { buildThemeVars } from '@/products/apps/bi/json-render/theme/themeAdapter';
+import { APPS_HEADER_THEME_OPTIONS, APPS_THEME_OPTIONS } from '@/products/apps/shared/themeOptions';
 import {
   ColumnDef,
   flexRender,

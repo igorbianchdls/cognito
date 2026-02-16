@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
-import EntityDisplay from '@/features/erp/frontend/components/EntityDisplay';
+import EntityDisplay from '@/products/erp/frontend/components/EntityDisplay';
 import { ChartSwitcher } from '@/components/charts/ChartSwitcher';
 import { Layers } from 'lucide-react';
 

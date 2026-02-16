@@ -8,12 +8,12 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/s
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer'
 
-import PageHeader from '@/features/erp/frontend/components/PageHeader'
-import TabsNav from '@/features/erp/frontend/components/TabsNav'
+import PageHeader from '@/products/erp/frontend/components/PageHeader'
+import TabsNav from '@/products/erp/frontend/components/TabsNav'
 import DataTable, { type TableData } from '@/components/widgets/Table'
-import DataToolbar from '@/features/erp/frontend/components/DataToolbar'
-import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/features/erp/state/moduleUiStore'
-import type { Opcao } from '@/features/erp/frontend/components/TabsNav'
+import DataToolbar from '@/products/erp/frontend/components/DataToolbar'
+import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/products/erp/state/moduleUiStore'
+import type { Opcao } from '@/products/erp/frontend/components/TabsNav'
 import { Building2, Package, List, Shuffle, ClipboardList, DollarSign, Settings } from 'lucide-react'
 
 type Row = TableData

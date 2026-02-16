@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
-import DashboardLayout from '@/features/erp/frontend/components/DashboardLayout'
+import DashboardLayout from '@/products/erp/frontend/components/DashboardLayout'
 import { BarChartHorizontalRecharts } from '@/components/charts/BarChartHorizontalRecharts'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
@@ -10,7 +10,7 @@ import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Calendar as CalendarIcon, Handshake, ShoppingCart, PackagePlus, FileCheck2, Building2, DollarSign, Users, MapPin, Tag, FolderKanban } from 'lucide-react'
 import type { DateRange } from 'react-day-picker'
-import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions } from '@/features/erp/state/financeiroDashboardStore'
+import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions } from '@/products/erp/state/financeiroDashboardStore'
 
 type ChartItem = { label: string; value: number }
 

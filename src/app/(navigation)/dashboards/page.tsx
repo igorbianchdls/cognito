@@ -3,9 +3,9 @@
 import { useEffect } from "react";
 import { useStore } from "@nanostores/react";
 import NexusShell from "@/components/navigation/nexus/NexusShell";
-import PageHeader from "@/features/erp/frontend/components/PageHeader";
-import TabsNav from "@/features/erp/frontend/components/TabsNav";
-import { $titulo, $tabs, $layout, moduleUiActions } from "@/features/erp/state/moduleUiStore";
+import PageHeader from "@/products/erp/frontend/components/PageHeader";
+import TabsNav from "@/products/erp/frontend/components/TabsNav";
+import { $titulo, $tabs, $layout, moduleUiActions } from "@/products/erp/state/moduleUiStore";
 import { Layout, Users, Globe2, LayoutGrid } from "lucide-react";
 import DashboardGridView from "@/components/navigation/dashboards/DashboardGridView";
 

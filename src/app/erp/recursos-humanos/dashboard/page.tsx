@@ -3,14 +3,14 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
-import DashboardLayout from '@/features/erp/frontend/components/DashboardLayout'
+import DashboardLayout from '@/products/erp/frontend/components/DashboardLayout'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Calendar as CalendarIcon } from 'lucide-react'
 import type { DateRange } from 'react-day-picker'
-import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions } from '@/features/erp/state/financeiroDashboardStore'
+import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions } from '@/products/erp/state/financeiroDashboardStore'
 
 type ContratoRow = {
   id?: number | string

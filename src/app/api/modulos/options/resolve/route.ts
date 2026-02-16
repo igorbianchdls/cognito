@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { normalizeAppsTableName } from '@/features/apps/shared/queryCatalog'
+import { normalizeAppsTableName } from '@/products/apps/shared/queryCatalog'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0

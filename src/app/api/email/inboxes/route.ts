@@ -1,5 +1,5 @@
 import type { NextRequest } from 'next/server'
-import { createInboxes, deleteInbox, listInboxes } from '@/features/email/backend/controllers/inboxesController'
+import { createInboxes, deleteInbox, listInboxes } from '@/products/email/backend/controllers/inboxesController'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'

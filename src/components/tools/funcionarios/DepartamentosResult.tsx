@@ -1,7 +1,7 @@
 'use client'
 
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable'
-import EntityDisplay from '@/features/erp/frontend/components/EntityDisplay'
+import EntityDisplay from '@/products/erp/frontend/components/EntityDisplay'
 import { ColumnDef } from '@tanstack/react-table'
 import { Building2 } from 'lucide-react'
 import { useMemo } from 'react'

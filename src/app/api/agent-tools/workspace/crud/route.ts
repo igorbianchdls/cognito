@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { verifyAgentToken } from '@/app/api/chat/tokenStore'
 import { runQuery } from '@/lib/postgres'
-import { getSupabaseAdmin } from '@/features/drive/backend/lib'
+import { getSupabaseAdmin } from '@/products/drive/backend/lib'
 
 export const runtime = 'nodejs'
 
