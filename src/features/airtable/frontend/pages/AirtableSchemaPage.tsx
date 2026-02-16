@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import type { ColumnDef } from "@tanstack/react-table"
-import { Plus, Table as TableIcon, Columns3, Rows3, Type, Hash, Calendar, ToggleLeft, Code2, Phone, Mail, Building2, User, FileText } from "lucide-react"
+import { Plus, Table as TableIcon, Columns3, Rows3, Type, Hash, Calendar, ToggleLeft, Code2, Phone, Mail, Building2, User, FileText, ChevronDown } from "lucide-react"
 
 import NexusShell from "@/components/navigation/nexus/NexusShell"
 import PageHeader from "@/features/erp/frontend/components/PageHeader"
@@ -88,14 +88,7 @@ function fieldTypeIcon(field: { type: string; name?: string; slug?: string }) {
   return <Type className={iconClass} />
 }
 
-function renderColumnHeader(label: string, type: string, slug?: string) {
-  return (
-    <span className="inline-flex items-center gap-1.5">
-      {fieldTypeIcon({ type, name: label, slug })}
-      <span>{label}</span>
-    </span>
-  )
-}
+type HeaderMenuTarget = { key: string; label: string; type: string } | null
 
 export default function AirtableSchemaPage() {
   const router = useRouter()
@@ -126,6 +119,7 @@ export default function AirtableSchemaPage() {
   const [newFieldSlug, setNewFieldSlug] = useState("")
   const [newFieldType, setNewFieldType] = useState<(typeof FIELD_TYPES)[number]["value"]>("text")
   const [isCreatingField, setIsCreatingField] = useState(false)
+  const [headerMenuTarget, setHeaderMenuTarget] = useState<HeaderMenuTarget>(null)
 
   const loadSchemaAndTables = async () => {
     if (!schemaId) return
@@ -235,15 +229,42 @@ export default function AirtableSchemaPage() {
   }, [records, fields])
 
   const columns: ColumnDef<Row>[] = useMemo(() => {
+    const renderColumnHeader = (label: string, type: string, key: string, slug?: string) => (
+      <div className="inline-flex items-center gap-1.5">
+        {fieldTypeIcon({ type, name: label, slug })}
+        <span>{label}</span>
+        <button
+          type="button"
+          className="inline-flex h-4 w-4 items-center justify-center rounded-sm text-muted-foreground hover:bg-muted"
+          onClick={(e) => {
+            e.stopPropagation()
+            setHeaderMenuTarget({ key, label, type })
+          }}
+          aria-label={`Opções da coluna ${label}`}
+          title={`Opções da coluna ${label}`}
+        >
+          <ChevronDown className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    )
+
     const cols: ColumnDef<Row>[] = [
-      { accessorKey: "title", id: "title", header: () => renderColumnHeader("Título", "text", "title") },
+      { accessorKey: "title", id: "title", header: () => renderColumnHeader("Título", "text", "title", "title") },
       ...fields.map((f) => ({
         accessorKey: f.slug,
         id: f.slug,
-        header: () => renderColumnHeader(f.name, f.type, f.slug),
+        header: () => renderColumnHeader(f.name, f.type, f.slug, f.slug),
       })),
     ]
     return cols
+  }, [fields])
+
+  const columnOptions = useMemo(() => {
+    const opts: Record<string, { cellNoWrap?: boolean }> = { title: { cellNoWrap: true } }
+    for (const f of fields) {
+      opts[f.slug] = { cellNoWrap: true }
+    }
+    return opts
   }, [fields])
 
   const createTable = async () => {
@@ -432,7 +453,7 @@ export default function AirtableSchemaPage() {
           }
         />
 
-        <div className="pt-1">
+        <div className="pt-0">
           {tabsOptions.length > 0 ? (
             <TabsNav
               options={tabsOptions}
@@ -456,8 +477,8 @@ export default function AirtableSchemaPage() {
           )}
         </div>
 
-        <div className="flex-1 min-h-0 py-4 md:py-6">
-          <div className="bg-white border-y border-x-0 rounded-none h-full flex flex-col overflow-hidden">
+        <div className="flex-1 min-h-0 pb-4 md:pb-6">
+          <div className="bg-white border-b border-x-0 rounded-none h-full flex flex-col overflow-hidden">
             <div className="px-0 py-3 border-b flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Rows3 className="h-4 w-4" />
@@ -525,7 +546,8 @@ export default function AirtableSchemaPage() {
                 showPagination
                 pageSize={pageSize}
                 padding={8}
-                headerPadding={6}
+                headerPadding={4}
+                columnOptions={columnOptions}
                 serverSidePagination
                 serverTotalRows={total}
                 pageIndex={pageIndex}
@@ -546,6 +568,26 @@ export default function AirtableSchemaPage() {
           {error ? <div className="mt-3 text-sm text-red-600">{error}</div> : null}
         </div>
       </div>
+
+      <Dialog open={Boolean(headerMenuTarget)} onOpenChange={(open) => !open && setHeaderMenuTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Opções da coluna</DialogTitle>
+            <DialogDescription>
+              UI placeholder. Depois podemos adicionar ações reais para este campo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 text-sm">
+            <div><span className="font-medium">Campo:</span> {headerMenuTarget?.label || "-"}</div>
+            <div><span className="font-medium">Tipo:</span> {headerMenuTarget?.type || "-"}</div>
+          </div>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setHeaderMenuTarget(null)}>
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </NexusShell>
   )
 }
