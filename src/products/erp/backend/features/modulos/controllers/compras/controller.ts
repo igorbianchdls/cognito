@@ -1,0 +1,853 @@
+import { NextRequest } from 'next/server';
+import { runQuery, withTransaction } from '@/lib/postgres';
+import { inngest } from '@/lib/inngest';
+import { createApFromCompra } from '@/inngest/compras';
+
+export const maxDuration = 300;
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
+  compras: {
+    compra_id: 'c.id',
+    numero_oc: 'c.numero_oc',
+    data_emissao: 'c.data_pedido',
+    data_pedido: 'c.data_pedido',
+    data_documento: 'c.data_documento',
+    data_lancamento: 'c.data_lancamento',
+    data_vencimento: 'c.data_vencimento',
+    data_entrega_prevista: 'c.data_entrega_prevista',
+    fornecedor: 'f.nome_fantasia',
+    filial: 'fil.nome',
+    departamento: 'dep.nome',
+    centro_custo: 'cc.nome',
+    unidade_negocio: 'un.nome',
+    projeto: 'p.nome',
+    categoria_despesa: 'cd.nome',
+    status: 'c.status',
+    valor_total: 'c.valor_total',
+    criado_em: 'c.criado_em',
+  },
+  recebimentos: {
+    recebimento_id: 'r.id',
+    data_recebimento: 'r.data_recebimento',
+    status: 'r.status',
+    numero_oc: 'c.numero_oc',
+    compra_data: 'c.data_pedido',
+    fornecedor: 'f.nome',
+    compra_valor_total: 'c.valor_total',
+    criado_em: 'r.criado_em',
+  },
+  solicitacoes_compra: {
+    solicitacao_id: 'sc.id',
+    solicitado_por: 'sc.solicitado_por',
+    status: 'sc.status',
+    urgencia: 'sc.urgencia',
+    departamento: 'd.nome',
+    criado_em: 'sc.criado_em',
+  },
+  cotacoes: {
+    cotacao_id: 'c.id',
+    numero_cotacao: 'c.numero_cotacao',
+    data_solicitacao: 'c.data_solicitacao',
+    prazo_resposta: 'c.prazo_resposta',
+    status: 'c.status',
+    fornecedor: 'f.nome',
+    criado_em: 'c.criado_em',
+  },
+};
+
+const parseNumber = (v: string | null, fb?: number) => (v ? Number(v) : fb);
+
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const view = (searchParams.get('view') || '').toLowerCase();
+    if (!view) return Response.json({ success: false, message: 'Parâmetro view é obrigatório' }, { status: 400 });
+
+    // Common filters
+    const de = searchParams.get('de') || undefined;
+    const ate = searchParams.get('ate') || undefined;
+    const q = searchParams.get('q') || undefined;
+
+    // Specific filters
+    const status = searchParams.get('status') || undefined;
+    const fornecedor_id = searchParams.get('fornecedor_id') || undefined;
+
+    // Pagination
+    const page = Math.max(1, parseNumber(searchParams.get('page'), 1) || 1);
+    const pageSize = Math.max(1, Math.min(1000, parseNumber(searchParams.get('pageSize'), 20) || 20));
+    const offset = (page - 1) * pageSize;
+
+    // Sorting
+    const orderByParam = (searchParams.get('order_by') || '').toLowerCase();
+    const orderDirParam = (searchParams.get('order_dir') || 'desc').toLowerCase();
+    const whitelist = ORDER_BY_WHITELIST[view] || {};
+    const orderBy = whitelist[orderByParam] || undefined;
+    const orderDir = orderDirParam === 'asc' ? 'ASC' : 'DESC';
+
+    const conditions: string[] = [];
+    const params: unknown[] = [];
+    let i = 1;
+    const push = (expr: string, val: unknown) => {
+      conditions.push(`${expr} $${i}`);
+      params.push(val);
+      i += 1;
+    };
+
+    let selectSql = '';
+    let baseSql = '';
+    let whereDateCol = '';
+
+  if (view === 'compras') {
+      // Montagem dinâmica para não quebrar em tenants/schemas sem todas as colunas de dimensão
+      const compraCols = await runQuery<{ column_name: string }>(
+        `SELECT column_name
+           FROM information_schema.columns
+          WHERE table_schema = 'compras' AND table_name = 'compras'`
+      )
+      const has = (c: string) => compraCols.some((r) => r.column_name === c)
+
+      const hasFilial = has('filial_id')
+      const hasDepartamento = has('departamento_id')
+      const hasCentroCusto = has('centro_custo_id')
+      const hasUnidadeNegocio = has('unidade_negocio_id')
+      const hasProjeto = has('projeto_id')
+      const hasCategoriaDespesa = has('categoria_despesa_id')
+
+      selectSql = `SELECT
+        c.id AS compra_id,
+        f.nome_fantasia AS fornecedor,
+        ${hasFilial ? 'fil.nome' : 'NULL::text'} AS filial,
+        ${hasDepartamento ? 'dep.nome' : 'NULL::text'} AS departamento,
+        ${hasCentroCusto ? 'cc.nome' : 'NULL::text'} AS centro_custo,
+        ${hasUnidadeNegocio ? 'un.nome' : 'NULL::text'} AS unidade_negocio,
+        ${hasProjeto ? 'p.nome' : 'NULL::text'} AS projeto,
+        ${hasCategoriaDespesa ? 'cd.nome' : 'NULL::text'} AS categoria_despesa,
+        c.numero_oc,
+        c.data_pedido,
+        c.data_documento,
+        c.data_lancamento,
+        c.data_vencimento,
+        c.data_entrega_prevista,
+        c.status,
+        c.valor_total,
+        c.observacoes,
+        c.criado_em,
+        c.atualizado_em`;
+
+      const joinParts = [
+        `LEFT JOIN entidades.fornecedores f ON f.id = c.fornecedor_id`,
+        hasFilial ? `LEFT JOIN empresa.filiais fil ON fil.id = c.filial_id` : '',
+        hasDepartamento ? `LEFT JOIN empresa.departamentos dep ON dep.id = c.departamento_id` : '',
+        hasCentroCusto ? `LEFT JOIN empresa.centros_custo cc ON cc.id = c.centro_custo_id` : '',
+        hasUnidadeNegocio ? `LEFT JOIN empresa.unidades_negocio un ON un.id = c.unidade_negocio_id` : '',
+        hasProjeto ? `LEFT JOIN financeiro.projetos p ON p.id = c.projeto_id` : '',
+        hasCategoriaDespesa ? `LEFT JOIN financeiro.categorias_despesa cd ON cd.id = c.categoria_despesa_id` : '',
+      ].filter(Boolean)
+
+      baseSql = `FROM compras.compras c
+        ${joinParts.join('\n        ')}`;
+      whereDateCol = 'c.data_pedido';
+      // Força ordenação exatamente como especificada
+      conditions.length = 0;
+    } else if (view === 'recebimentos') {
+      selectSql = `SELECT
+        r.id AS recebimento_id,
+        r.data_recebimento,
+        r.status,
+        r.observacoes,
+        r.criado_em,
+        c.numero_oc,
+        c.data_pedido AS compra_data,
+        c.valor_total AS compra_valor_total,
+        f.nome AS fornecedor,
+        rl.id AS recebimento_linha_id,
+        p.nome AS produto,
+        rl.quantidade_recebida,
+        rl.lote,
+        rl.validade`;
+      baseSql = `FROM compras.recebimentos r
+        LEFT JOIN compras.compras c ON c.id = r.compra_id
+        LEFT JOIN entidades.fornecedores f ON f.id = c.fornecedor_id
+        LEFT JOIN compras.recebimentos_linhas rl ON rl.recebimento_id = r.id
+        LEFT JOIN compras.compras_linhas cl ON cl.id = rl.compra_linha_id
+        LEFT JOIN produtos.produto p ON p.id = cl.produto_id`;
+      whereDateCol = 'r.data_recebimento';
+      if (status) push('LOWER(r.status) =', status.toLowerCase());
+      if (q) {
+        conditions.push(`(c.numero_oc ILIKE '%' || $${i} || '%' OR f.nome ILIKE '%' || $${i} || '%' OR p.nome ILIKE '%' || $${i} || '%' OR r.observacoes ILIKE '%' || $${i} || '%')`);
+        params.push(q);
+        i += 1;
+      }
+    } else if (view === 'solicitacoes_compra') {
+      selectSql = `SELECT
+        sc.id AS solicitacao_id,
+        sc.solicitado_por,
+        sc.status,
+        sc.urgencia,
+        sc.observacoes,
+        sc.criado_em,
+        d.nome AS departamento,
+        sci.id AS solicitacao_linha_id,
+        COALESCE(p.nome, sci.descricao) AS produto,
+        sci.quantidade,
+        sci.unidade_medida,
+        cc.nome AS centro_custo,
+        pr.nome AS projeto`;
+      baseSql = `FROM compras.solicitacoes_compra sc
+        LEFT JOIN empresa.departamentos d ON d.id = sc.departamento_id
+        LEFT JOIN compras.solicitacoes_compra_itens sci ON sci.solicitacao_id = sc.id
+        LEFT JOIN produtos.produto p ON p.id = sci.produto_id
+        LEFT JOIN empresa.centros_custo cc ON cc.id = sci.centro_custo_id
+        LEFT JOIN financeiro.projetos pr ON pr.id = sci.projeto_id`;
+      whereDateCol = 'sc.criado_em';
+      if (status) push('LOWER(sc.status) =', status.toLowerCase());
+      if (q) {
+        conditions.push(`(sc.observacoes ILIKE '%' || $${i} || '%' OR p.nome ILIKE '%' || $${i} || '%' OR sci.descricao ILIKE '%' || $${i} || '%')`);
+        params.push(q);
+        i += 1;
+      }
+    } else if (view === 'cotacoes') {
+      selectSql = `SELECT
+        c.id AS cotacao_id,
+        c.numero_cotacao,
+        c.data_solicitacao,
+        c.prazo_resposta,
+        c.status,
+        c.observacoes,
+        c.criado_em,
+        f.nome AS fornecedor,
+        cf.id AS cotacao_fornecedor_id,
+        cf.status AS status_fornecedor,
+        cf.data_envio,
+        cf.data_resposta,
+        cl.id AS cotacao_linha_id,
+        COALESCE(p.nome, cl.descricao) AS produto,
+        cl.quantidade,
+        cl.unidade_medida,
+        cr.data_resposta AS resposta_data,
+        cr.validade_data AS resposta_validade,
+        cr.prazo_entrega AS resposta_prazo,
+        cr.condicao_pagamento AS resposta_pagamento,
+        crl.preco_unitario AS preco_ofertado,
+        crl.desconto,
+        crl.prazo_entrega_item AS prazo_item`;
+      baseSql = `FROM compras.cotacoes c
+        LEFT JOIN compras.cotacoes_fornecedores cf ON cf.cotacao_id = c.id
+        LEFT JOIN entidades.fornecedores f ON f.id = cf.fornecedor_id
+        LEFT JOIN compras.cotacoes_linhas cl ON cl.cotacao_id = c.id
+        LEFT JOIN produtos.produto p ON p.id = cl.produto_id
+        LEFT JOIN compras.cotacoes_respostas cr ON cr.cotacao_fornecedor_id = cf.id
+        LEFT JOIN compras.cotacoes_respostas_linhas crl ON crl.cotacao_resposta_id = cr.id AND crl.cotacao_linha_id = cl.id`;
+      whereDateCol = 'c.data_solicitacao';
+      if (status) push('LOWER(c.status) =', status.toLowerCase());
+      if (q) {
+        conditions.push(`(c.numero_cotacao ILIKE '%' || $${i} || '%' OR f.nome ILIKE '%' || $${i} || '%' OR p.nome ILIKE '%' || $${i} || '%' OR c.observacoes ILIKE '%' || $${i} || '%')`);
+        params.push(q);
+        i += 1;
+      }
+    } else {
+      return Response.json({ success: false, message: `View inválida: ${view}` }, { status: 400 });
+    }
+
+    if (de && whereDateCol) push(`${whereDateCol} >=`, de);
+    if (ate && whereDateCol) push(`${whereDateCol} <=`, ate);
+
+    const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    // Default ordering
+    let orderClause = '';
+    if (ORDER_BY_WHITELIST[view] && Object.keys(ORDER_BY_WHITELIST[view]).length) {
+      if (orderBy) {
+        if (view === 'compras') orderClause = 'ORDER BY c.data_pedido ASC, c.numero_oc ASC, c.id ASC';
+        else if (view === 'recebimentos') orderClause = `ORDER BY ${orderBy} ${orderDir}, rl.id ASC`;
+        else if (view === 'solicitacoes_compra') orderClause = `ORDER BY ${orderBy} ${orderDir}, sci.id ASC`;
+        else if (view === 'cotacoes') orderClause = `ORDER BY ${orderBy} ${orderDir}, cf.id ASC, cl.id ASC`;
+        else orderClause = `ORDER BY ${orderBy} ${orderDir}`;
+      } else {
+        if (view === 'compras') orderClause = 'ORDER BY c.data_pedido ASC, c.numero_oc ASC, c.id ASC';
+        else if (view === 'recebimentos') orderClause = 'ORDER BY r.id DESC, rl.id ASC';
+        else if (view === 'solicitacoes_compra') orderClause = 'ORDER BY sc.id DESC, sci.id ASC';
+        else if (view === 'cotacoes') orderClause = 'ORDER BY c.id DESC, cf.id ASC, cl.id ASC';
+      }
+    }
+
+    const limitOffset = `LIMIT $${i}::int OFFSET $${i + 1}::int`;
+    const paramsWithPage = [...params, pageSize, offset];
+
+    const listSql = `${selectSql}
+                     ${baseSql}
+                     ${whereClause}
+                     ${orderClause}
+                     ${limitOffset}`.replace(/\s+$/m, '').trim();
+
+    let rows = await runQuery<Record<string, unknown>>(listSql, paramsWithPage);
+
+    // Aggregate: group linhas by compra
+    if (view === 'compras') {
+      type CompraAgregada = {
+        compra_id: unknown
+        numero_oc: unknown
+        data_pedido: unknown
+        data_documento: unknown
+        data_lancamento: unknown
+        data_vencimento: unknown
+        data_entrega_prevista: unknown
+        status: unknown
+        valor_total: unknown
+        observacoes: unknown
+        criado_em: unknown
+        fornecedor: unknown
+        filial: unknown
+        departamento: unknown
+        centro_custo: unknown
+        unidade_negocio: unknown
+        projeto: unknown
+        categoria_despesa: unknown
+        linhas: Array<{
+          linha_id: unknown
+          produto: unknown
+          quantidade: unknown
+          unidade_medida: unknown
+          preco_unitario: unknown
+          total_linha: unknown
+        }>
+      }
+      const comprasMap = new Map<number, CompraAgregada>()
+
+      for (const row of rows) {
+        const compraKey = Number(row.compra_id)
+
+        if (!comprasMap.has(compraKey)) {
+          comprasMap.set(compraKey, {
+            compra_id: row.compra_id,
+            numero_oc: row.numero_oc,
+            data_pedido: row.data_pedido,
+            data_documento: row.data_documento,
+            data_lancamento: row.data_lancamento,
+            data_vencimento: row.data_vencimento,
+            data_entrega_prevista: row.data_entrega_prevista,
+            status: row.status,
+            valor_total: row.valor_total,
+            observacoes: row.observacoes,
+            criado_em: row.criado_em,
+          fornecedor: row.fornecedor,
+          filial: row.filial,
+          departamento: row.departamento,
+          centro_custo: row.centro_custo,
+          unidade_negocio: row.unidade_negocio,
+          projeto: row.projeto,
+            categoria_despesa: row.categoria_despesa,
+          linhas: []
+        })
+      }
+
+        if (row.linha_id) {
+          comprasMap.get(compraKey)!.linhas.push({
+            linha_id: row.linha_id,
+            produto: row.produto,
+            quantidade: row.quantidade,
+            unidade_medida: row.unidade_medida,
+            preco_unitario: row.preco_unitario,
+            total_linha: row.total_linha,
+          })
+        }
+      }
+
+      rows = Array.from(comprasMap.values())
+    }
+
+    // Aggregate: group linhas by recebimento
+    if (view === 'recebimentos') {
+      type RecebimentoAgregado = {
+        recebimento_id: unknown
+        data_recebimento: unknown
+        status: unknown
+        observacoes: unknown
+        criado_em: unknown
+        numero_oc: unknown
+        compra_data: unknown
+        compra_valor_total: unknown
+        fornecedor: unknown
+        linhas: Array<{
+          recebimento_linha_id: unknown
+          produto: unknown
+          quantidade_recebida: unknown
+          lote: unknown
+          validade: unknown
+        }>
+      }
+      const recebimentosMap = new Map<number, RecebimentoAgregado>()
+
+      for (const row of rows) {
+        const recebimentoKey = Number(row.recebimento_id)
+
+        if (!recebimentosMap.has(recebimentoKey)) {
+          recebimentosMap.set(recebimentoKey, {
+            recebimento_id: row.recebimento_id,
+            data_recebimento: row.data_recebimento,
+            status: row.status,
+            observacoes: row.observacoes,
+            criado_em: row.criado_em,
+            numero_oc: row.numero_oc,
+            compra_data: row.compra_data,
+            compra_valor_total: row.compra_valor_total,
+            fornecedor: row.fornecedor,
+            linhas: []
+          })
+        }
+
+        if (row.recebimento_linha_id) {
+          recebimentosMap.get(recebimentoKey)!.linhas.push({
+            recebimento_linha_id: row.recebimento_linha_id,
+            produto: row.produto,
+            quantidade_recebida: row.quantidade_recebida,
+            lote: row.lote,
+            validade: row.validade,
+          })
+        }
+      }
+
+      rows = Array.from(recebimentosMap.values())
+    }
+
+    // Aggregate: group itens by solicitacao
+    if (view === 'solicitacoes_compra') {
+      type SolicitacaoAgregada = {
+        solicitacao_id: unknown
+        solicitado_por: unknown
+        status: unknown
+        urgencia: unknown
+        observacoes: unknown
+        criado_em: unknown
+        departamento: unknown
+        itens: Array<{
+          solicitacao_linha_id: unknown
+          produto: unknown
+          quantidade: unknown
+          unidade_medida: unknown
+          centro_custo: unknown
+          projeto: unknown
+        }>
+      }
+      const solicitacoesMap = new Map<number, SolicitacaoAgregada>()
+
+      for (const row of rows) {
+        const solicitacaoKey = Number(row.solicitacao_id)
+
+        if (!solicitacoesMap.has(solicitacaoKey)) {
+          solicitacoesMap.set(solicitacaoKey, {
+            solicitacao_id: row.solicitacao_id,
+            solicitado_por: row.solicitado_por,
+            status: row.status,
+            urgencia: row.urgencia,
+            observacoes: row.observacoes,
+            criado_em: row.criado_em,
+            departamento: row.departamento,
+            itens: []
+          })
+        }
+
+        if (row.solicitacao_linha_id) {
+          solicitacoesMap.get(solicitacaoKey)!.itens.push({
+            solicitacao_linha_id: row.solicitacao_linha_id,
+            produto: row.produto,
+            quantidade: row.quantidade,
+            unidade_medida: row.unidade_medida,
+            centro_custo: row.centro_custo,
+            projeto: row.projeto,
+          })
+        }
+      }
+
+      rows = Array.from(solicitacoesMap.values())
+    }
+
+    // Aggregate: group linhas by cotacao
+    if (view === 'cotacoes') {
+      type CotacaoAgregada = {
+        cotacao_id: unknown
+        numero_cotacao: unknown
+        data_solicitacao: unknown
+        prazo_resposta: unknown
+        status: unknown
+        observacoes: unknown
+        criado_em: unknown
+        linhas: Array<{
+          cotacao_linha_id: unknown
+          produto: unknown
+          quantidade: unknown
+          unidade_medida: unknown
+          fornecedores: Array<{
+            cotacao_fornecedor_id: unknown
+            fornecedor: unknown
+            status_fornecedor: unknown
+            data_envio: unknown
+            data_resposta: unknown
+            resposta_data: unknown
+            resposta_validade: unknown
+            resposta_prazo: unknown
+            resposta_pagamento: unknown
+            preco_ofertado: unknown
+            desconto: unknown
+            prazo_item: unknown
+          }>
+        }>
+      }
+      const cotacoesMap = new Map<number, CotacaoAgregada>()
+
+      for (const row of rows) {
+        const cotacaoKey = Number(row.cotacao_id)
+
+        if (!cotacoesMap.has(cotacaoKey)) {
+          cotacoesMap.set(cotacaoKey, {
+            cotacao_id: row.cotacao_id,
+            numero_cotacao: row.numero_cotacao,
+            data_solicitacao: row.data_solicitacao,
+            prazo_resposta: row.prazo_resposta,
+            status: row.status,
+            observacoes: row.observacoes,
+            criado_em: row.criado_em,
+            linhas: []
+          })
+        }
+
+        const cotacao = cotacoesMap.get(cotacaoKey)!
+
+        if (row.cotacao_linha_id) {
+          let linha = cotacao.linhas.find(l => l.cotacao_linha_id === row.cotacao_linha_id)
+
+          if (!linha) {
+            linha = {
+              cotacao_linha_id: row.cotacao_linha_id,
+              produto: row.produto,
+              quantidade: row.quantidade,
+              unidade_medida: row.unidade_medida,
+              fornecedores: []
+            }
+            cotacao.linhas.push(linha)
+          }
+
+          if (row.cotacao_fornecedor_id) {
+            const fornecedorExists = linha.fornecedores.some(f => f.cotacao_fornecedor_id === row.cotacao_fornecedor_id)
+
+            if (!fornecedorExists) {
+              linha.fornecedores.push({
+                cotacao_fornecedor_id: row.cotacao_fornecedor_id,
+                fornecedor: row.fornecedor,
+                status_fornecedor: row.status_fornecedor,
+                data_envio: row.data_envio,
+                data_resposta: row.data_resposta,
+                resposta_data: row.resposta_data,
+                resposta_validade: row.resposta_validade,
+                resposta_prazo: row.resposta_prazo,
+                resposta_pagamento: row.resposta_pagamento,
+                preco_ofertado: row.preco_ofertado,
+                desconto: row.desconto,
+                prazo_item: row.prazo_item,
+              })
+            }
+          }
+        }
+      }
+
+      rows = Array.from(cotacoesMap.values())
+    }
+
+    const totalSql = view === 'compras'
+      ? `SELECT COUNT(*)::int AS total FROM compras.compras c`
+      : view === 'recebimentos'
+      ? `SELECT COUNT(DISTINCT r.id)::int AS total FROM compras.recebimentos r ${whereClause.replace(/r\./g, 'r.')}`
+      : view === 'solicitacoes_compra'
+      ? `SELECT COUNT(DISTINCT sc.id)::int AS total FROM compras.solicitacoes_compra sc ${whereClause.replace(/sc\./g, 'sc.')}`
+      : view === 'cotacoes'
+      ? `SELECT COUNT(DISTINCT c.id)::int AS total FROM compras.cotacoes c ${whereClause.replace(/c\./g, 'c.')}`
+      : `SELECT COUNT(*)::int AS total ${baseSql} ${whereClause}`;
+    const totalRows = await runQuery<{ total: number }>(totalSql, params);
+    const total = totalRows[0]?.total ?? 0;
+
+    return Response.json({
+      success: true,
+      view,
+      page,
+      pageSize,
+      total,
+      rows,
+      sql: listSql,
+      params: JSON.stringify(paramsWithPage),
+    }, { headers: { 'Cache-Control': 'no-store' } });
+  } catch (error) {
+    console.error('📦 API /api/modulos/compras error:', error);
+    return Response.json(
+      { success: false, message: 'Erro interno', error: error instanceof Error ? error.message : 'Erro desconhecido' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const contentType = (req.headers.get('content-type') || '').toLowerCase()
+    let body: Record<string, unknown> = {}
+
+    if (contentType.includes('application/json')) {
+      body = await req.json().catch(() => ({})) as Record<string, unknown>
+    } else {
+      const form = await req.formData()
+      let linhasFromForm: unknown[] = []
+      const linhasRaw = String(form.get('linhas') || '').trim()
+      if (linhasRaw) {
+        try {
+          const parsed = JSON.parse(linhasRaw)
+          if (Array.isArray(parsed)) linhasFromForm = parsed
+        } catch {}
+      }
+      body = {
+        tenant_id: form.get('tenant_id'),
+        fornecedor_id: form.get('fornecedor_id'),
+        filial_id: form.get('filial_id'),
+        departamento_id: form.get('departamento_id'),
+        centro_custo_id: form.get('centro_custo_id'),
+        unidade_negocio_id: form.get('unidade_negocio_id'),
+        projeto_id: form.get('projeto_id'),
+        categoria_financeira_id: form.get('categoria_financeira_id'),
+        categoria_despesa_id: form.get('categoria_despesa_id'),
+        numero_oc: form.get('numero_oc') ?? form.get('numero_pedido'),
+        data_pedido: form.get('data_pedido') ?? form.get('data_emissao'),
+        data_documento: form.get('data_documento'),
+        data_lancamento: form.get('data_lancamento'),
+        data_vencimento: form.get('data_vencimento'),
+        data_entrega_prevista: form.get('data_entrega_prevista'),
+        status: form.get('status'),
+        observacoes: form.get('observacoes'),
+        criado_por: form.get('criado_por'),
+        valor_total: form.get('valor_total'),
+        linhas: linhasFromForm,
+      }
+    }
+
+    // Parse header fields
+    const parseOptionalId = (value: unknown): number | null => {
+      if (value === null || value === undefined) return null
+      const raw = String(value).trim()
+      if (!raw) return null
+      const n = Number(raw)
+      return Number.isFinite(n) ? n : null
+    }
+
+    const tenantRaw = Number(body.tenant_id)
+    const tenant = Number.isFinite(tenantRaw) && tenantRaw > 0 ? tenantRaw : 1
+    const fornecedor_id = Number(body.fornecedor_id)
+    if (!fornecedor_id || Number.isNaN(fornecedor_id)) {
+      return Response.json({ success: false, message: 'fornecedor_id é obrigatório e deve ser numérico' }, { status: 400 })
+    }
+
+    const filial_id = parseOptionalId(body.filial_id)
+    const departamento_id = parseOptionalId(body.departamento_id)
+    const centro_custo_id = parseOptionalId(body.centro_custo_id)
+    const unidade_negocio_id = parseOptionalId(body.unidade_negocio_id)
+    const projeto_id = parseOptionalId(body.projeto_id)
+    const categoria_financeira_id = parseOptionalId(body.categoria_financeira_id)
+    const categoria_despesa_id = parseOptionalId(body.categoria_despesa_id)
+
+    const numero_oc = (body.numero_oc ?? null) as string | null
+    const data_pedido = ((body.data_pedido ?? body.data_emissao) ?? null) as string | null
+    const data_documento = ((body.data_documento ?? data_pedido) ?? null) as string | null
+    const data_lancamento = ((body.data_lancamento ?? data_documento ?? data_pedido) ?? null) as string | null
+    const data_vencimento = ((body.data_vencimento ?? data_pedido) ?? null) as string | null
+    const data_entrega_prevista = (body.data_entrega_prevista ?? null) as string | null
+    const status = ((body.status as string) || 'rascunho') as string
+    const observacoes = (body.observacoes ?? null) as string | null
+    const criado_por = body.criado_por == null ? null : Number(body.criado_por)
+    const data_pedido_final = data_pedido || new Date().toISOString().slice(0, 10)
+    const data_documento_final = data_documento || data_pedido_final
+    const data_lancamento_final = data_lancamento || data_documento_final
+    const data_vencimento_final = data_vencimento || data_pedido_final
+
+    const linhas = Array.isArray(body.linhas) ? (body.linhas as Array<Record<string, unknown>>) : []
+
+    // Normalize lines and compute totals
+    const normLinhas = linhas.map((l, idx) => {
+      const produto_id = Number(l.produto_id)
+      const quantidade = Number(l.quantidade)
+      const preco_unitario = Number(l.preco_unitario)
+      const unidade_medida = (l.unidade_medida ?? null) as string | null
+      const l_dep_id = parseOptionalId(l.departamento_id)
+      const l_cc_id = parseOptionalId(l.centro_custo_id)
+      const l_un_id = parseOptionalId(l.unidade_negocio_id)
+      const l_proj_id = parseOptionalId(l.projeto_id)
+      const l_cat_id = parseOptionalId(l.categoria_financeira_id)
+
+      if (!produto_id || Number.isNaN(produto_id)) throw new Error(`Linha ${idx + 1}: produto_id inválido`)
+      if (!quantidade || Number.isNaN(quantidade)) throw new Error(`Linha ${idx + 1}: quantidade inválida`)
+      if (Number.isNaN(preco_unitario)) throw new Error(`Linha ${idx + 1}: preco_unitario inválido`)
+      const total = !Number.isNaN(Number(l.total)) ? Number(l.total) : Number((quantidade * preco_unitario).toFixed(2))
+
+      return {
+        produto_id,
+        quantidade,
+        unidade_medida,
+        preco_unitario,
+        total,
+        departamento_id: l_dep_id,
+        centro_custo_id: l_cc_id,
+        unidade_negocio_id: l_un_id,
+        projeto_id: l_proj_id,
+        categoria_financeira_id: l_cat_id,
+      }
+    })
+
+    const valorTotalInput = Number(body.valor_total)
+    const valor_total = normLinhas.length
+      ? normLinhas.reduce((acc, it) => acc + Number(it.total || 0), 0)
+      : (Number.isFinite(valorTotalInput) ? valorTotalInput : 0)
+
+    const result = await withTransaction(async (client) => {
+      const colsRes = await client.query(
+        `SELECT column_name
+           FROM information_schema.columns
+          WHERE table_schema = 'compras' AND table_name = 'compras'`
+      )
+      const colsSet = new Set((colsRes.rows as Array<{ column_name: string }>).map((r) => String(r.column_name)))
+      const hasCompraCol = (c: string) => colsSet.has(c)
+
+      // Insert header
+      const headerCols = [
+        'tenant_id',
+        'fornecedor_id',
+        'filial_id',
+        'centro_custo_id',
+        'projeto_id',
+        'categoria_financeira_id',
+        'categoria_despesa_id',
+      ]
+      const headerVals: unknown[] = [
+        tenant,
+        fornecedor_id,
+        filial_id,
+        centro_custo_id,
+        projeto_id,
+        categoria_financeira_id,
+        categoria_despesa_id,
+      ]
+      if (hasCompraCol('departamento_id')) {
+        headerCols.push('departamento_id')
+        headerVals.push(departamento_id)
+      }
+      if (hasCompraCol('unidade_negocio_id')) {
+        headerCols.push('unidade_negocio_id')
+        headerVals.push(unidade_negocio_id)
+      }
+      headerCols.push(
+        'numero_oc',
+        'data_pedido',
+        'data_documento',
+        'data_lancamento',
+        'data_vencimento',
+        'data_entrega_prevista',
+        'status',
+        'valor_total',
+        'observacoes',
+        'criado_por'
+      )
+      headerVals.push(
+        numero_oc,
+        data_pedido_final,
+        data_documento_final,
+        data_lancamento_final,
+        data_vencimento_final,
+        data_entrega_prevista,
+        status,
+        valor_total,
+        observacoes,
+        criado_por
+      )
+      const headerPlaceholders = headerCols.map((_, idx) => `$${idx + 1}`)
+      const insCab = await client.query(
+        `INSERT INTO compras.compras (${headerCols.join(',')})
+         VALUES (${headerPlaceholders.join(',')})
+         RETURNING id`,
+        headerVals
+      )
+      const compra_id = Number(insCab.rows[0]?.id)
+      if (!compra_id) throw new Error('Falha ao criar compra')
+
+      // Insert lines (optional in legacy/header-only mode)
+      if (normLinhas.length) {
+        const lineColsRes = await client.query(
+          `SELECT column_name
+             FROM information_schema.columns
+            WHERE table_schema = 'compras' AND table_name = 'compras_linhas'`
+        )
+        const lineColsSet = new Set((lineColsRes.rows as Array<{ column_name: string }>).map((r) => String(r.column_name)))
+        const hasLineCol = (c: string) => lineColsSet.has(c)
+
+        for (const l of normLinhas) {
+          const lineCols = [
+            'tenant_id',
+            'compra_id',
+            'produto_id',
+            'quantidade',
+            'unidade_medida',
+            'preco_unitario',
+            'total',
+            'centro_custo_id',
+            'projeto_id',
+            'categoria_financeira_id',
+          ]
+          const lineVals: unknown[] = [
+            tenant,
+            compra_id,
+            l.produto_id,
+            l.quantidade,
+            l.unidade_medida,
+            l.preco_unitario,
+            l.total,
+            l.centro_custo_id,
+            l.projeto_id,
+            l.categoria_financeira_id,
+          ]
+          if (hasLineCol('departamento_id')) {
+            lineCols.push('departamento_id')
+            lineVals.push(l.departamento_id ?? departamento_id ?? null)
+          }
+          if (hasLineCol('unidade_negocio_id')) {
+            lineCols.push('unidade_negocio_id')
+            lineVals.push(l.unidade_negocio_id ?? unidade_negocio_id ?? null)
+          }
+          const linePlaceholders = lineCols.map((_, idx) => `$${idx + 1}`)
+          await client.query(
+            `INSERT INTO compras.compras_linhas (${lineCols.join(',')})
+             VALUES (${linePlaceholders.join(',')})`,
+            lineVals
+          )
+        }
+      }
+
+      return { id: compra_id }
+    })
+
+    // Dispara evento Inngest para criação de Conta a Pagar a partir da compra
+    try {
+      await inngest.send({ name: 'compras/compra/criada', data: { compra_id: result.id } })
+    } catch (e) {
+      console.warn('Falha ao enviar evento Inngest compras/compra/criada', e)
+    }
+
+    // Cria AP imediatamente (idempotente). Retorna ap_id para feedback no UI.
+    let apId: number | null = null
+    try {
+      const ap = await createApFromCompra(result.id)
+      apId = ap.apId
+    } catch (err) {
+      console.warn('Criação inline da Conta a Pagar falhou', err)
+    }
+
+    return Response.json({ success: true, id: result.id, ap_id: apId, linhas_criadas: normLinhas.length })
+  } catch (error) {
+    console.error('📦 API /api/modulos/compras POST error:', error)
+    const msg = error instanceof Error ? error.message : String(error)
+    return Response.json({ success: false, message: msg }, { status: 400 })
+  }
+}

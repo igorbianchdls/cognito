@@ -1,7 +1,6 @@
 # ERP Backend Features
 
-Estrutura inicial criada para migração incremental dos handlers de `src/app/api/modulos/*`.
+Back-end organizado por features.
 
-Próximo passo sugerido:
-- mover controladores por módulo para `features/<modulo>/controllers/*`
-- manter `src/app/api/modulos/*` como wrappers finos.
+- `features/modulos/controllers/*`: controladores extraidos de `src/app/api/modulos/*`.
+- `src/app/api/modulos/*`: wrappers finos para manter rotas estaveis.
