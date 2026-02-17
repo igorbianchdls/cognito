@@ -1,9 +1,11 @@
 import { Sandbox } from '@vercel/sandbox'
 import { runQuery } from '@/lib/postgres'
 import { createClient as createSupabaseServerClient } from '@/lib/supabase/server'
-import { getChatStreamRunnerScript, getOpenAIResponsesStreamRunnerScript, getSlashStreamRunnerScript } from '@/products/chat/backend/features/agents/runtime/runners/agentRunnerScripts'
+import { getChatStreamRunnerScript, getSlashStreamRunnerScript } from '@/products/chat/backend/features/agents/claudecode/runtime/runners/claudeCodeRunnerScripts'
+import { getOpenAIResponsesStreamRunnerScript } from '@/products/chat/backend/features/agents/codex/runtime/runners/codexRunnerScripts'
 import { generateAgentToken, setAgentToken } from '@/products/chat/backend/features/agents/auth/agentTokenStore'
-import { buildClaudeSystemPrompt, buildOpenAiSystemPrompt } from '@/products/chat/backend/features/agents/prompts/chatSystemPrompts'
+import { buildClaudeSystemPrompt } from '@/products/chat/backend/features/agents/claudecode/prompts/claudeCodeSystemPrompt'
+import { buildOpenAiSystemPrompt } from '@/products/chat/backend/features/agents/codex/prompts/codexSystemPrompt'
 import { APPS_VENDAS_TEMPLATE_TEXT } from '@/products/apps/shared/templates/appsVendasTemplate'
 import { APPS_COMPRAS_TEMPLATE_TEXT } from '@/products/apps/shared/templates/appsComprasTemplate'
 

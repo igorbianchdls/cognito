@@ -1,5 +1,10 @@
 # Agents Sandbox
 
-Contém scripts e recursos executados na sandbox do chat.
+Namespace legado para runners de sandbox do chat.
 
-- `runners/`: scripts de stream para Claude/OpenAI e comandos slash.
+Estrutura atual recomendada:
+
+- `src/products/chat/backend/features/agents/claudecode/runtime/runners/*`
+- `src/products/chat/backend/features/agents/codex/runtime/runners/*`
+
+Esta pasta permanece por compatibilidade.

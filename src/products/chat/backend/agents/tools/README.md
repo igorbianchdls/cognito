@@ -1,8 +1,10 @@
 # Agents Tools
 
-Pasta reservada para centralizar o registro e handlers de tools do agente.
+Namespace legado para tools dos agentes.
 
-Estado atual:
+Estrutura atual recomendada:
 
-- O roteamento de tools ainda está concentrado no runner e no controller principal.
-- Próxima etapa recomendada: extrair para um `registry` único nesta pasta.
+- `src/products/chat/backend/features/agents/claudecode/tools/*`
+- `src/products/chat/backend/features/agents/codex/tools/*`
+
+Esta pasta permanece por compatibilidade.

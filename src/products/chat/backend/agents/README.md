@@ -1,14 +1,13 @@
 # Chat Agents Backend
 
-Estrutura interna dos agentes da feature `chat`.
+Pasta de compatibilidade para caminhos legados dos agentes da feature `chat`.
 
-- `controllers/`: entrada de ações do agente (orquestração principal).
-- `tools/`: namespace para handlers e registro de tools da feature.
-- `prompts/`: prompts de sistema e convenções de comportamento.
-- `sandbox/`: runners e recursos executados dentro da sandbox.
-- `auth/`: token efêmero usado no bridge `/api/agent-tools`.
-- `transport/`: adapters HTTP/SSE (expansão incremental).
+Código-fonte principal atual:
 
-Compatibilidade:
+- `src/products/chat/backend/features/agents/controllers/*`
+- `src/products/chat/backend/features/agents/claudecode/*`
+- `src/products/chat/backend/features/agents/codex/*`
+- `src/products/chat/backend/features/agents/shared/*`
+- `src/products/chat/backend/features/agents/auth/*`
 
-- Os caminhos legados em `backend/controllers`, `backend/runtime`, `backend/prompts` e `backend/auth` continuam como wrappers finos para evitar quebra durante a migração.
+Nesta pasta (`backend/agents/*`), os arquivos continuam como wrappers finos para evitar quebra durante a migração.

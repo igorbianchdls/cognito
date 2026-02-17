@@ -4,13 +4,21 @@ Estrutura principal da feature de chat:
 
 - `frontend/`: páginas e componentes de UI do chat.
 - `backend/`: backend interno da feature.
-  - `backend/agents/`: domínio de agentes (organização principal).
-    - `controllers/`: orquestração das ações do agente.
-    - `tools/`: espaço para registry/handlers de tools.
-    - `prompts/`: prompts de sistema e regras de comportamento.
-    - `sandbox/`: runners e recursos de execução na sandbox.
+  - `backend/features/agents/`: domínio principal dos agentes.
+    - `controllers/`: orquestração principal do chat.
+    - `shared/`: utilitários compartilhados entre provedores.
     - `auth/`: token store do bridge de agent tools.
-    - `transport/`: adapters HTTP/SSE (evolução incremental).
+    - `claudecode/`: implementação isolada do agente ClaudeCode.
+      - `prompts/`: prompts de sistema do ClaudeCode.
+      - `runtime/`: runners do ClaudeCode (chat e slash).
+      - `tools/`: namespace de tools específicas do ClaudeCode.
+      - `skills/`: namespace de skills específicas do ClaudeCode.
+    - `codex/`: implementação isolada do agente Codex (OpenAI).
+      - `prompts/`: prompts de sistema do Codex.
+      - `runtime/`: runners do Codex/OpenAI Responses.
+      - `tools/`: namespace de tools específicas do Codex.
+      - `skills/`: namespace de skills específicas do Codex.
+  - `backend/agents/`: wrappers de compatibilidade para caminhos antigos.
   - `backend/controllers`, `backend/runtime`, `backend/prompts`, `backend/auth`:
     wrappers de compatibilidade durante migração.
 - `state/`: estado local da feature (nanostores).
