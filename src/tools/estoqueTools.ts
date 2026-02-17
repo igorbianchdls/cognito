@@ -75,14 +75,14 @@ export const listarEstoqueAtual = tool({
   execute: async ({ limit, almoxarifado_id, produto_id, de, ate, q }) => {
     const ea = `${ESTOQUE_SCHEMA}.estoques_atual`
     const a = `${ESTOQUE_SCHEMA}.almoxarifados`
-    const p = `${PROD_SCHEMA}.produtos`
+    const p = `${PROD_SCHEMA}.produto`
     const conditions: string[] = []
     const params: unknown[] = []
     let i = 1
     const push = (expr: string, val: unknown) => { conditions.push(`${expr} $${i}`); params.push(val); i += 1 }
 
     const selectSql = `SELECT ea.id AS id,
-                              p.nome AS produto,
+                              COALESCE(p.nome, ea.produto_id::text) AS produto,
                               a.nome AS almoxarifado,
                               ea.quantidade AS quantidade_atual,
                               ea.custo_medio AS custo_medio,
@@ -94,7 +94,7 @@ export const listarEstoqueAtual = tool({
 
     if (almoxarifado_id) push('ea.almoxarifado_id =', almoxarifado_id)
     if (produto_id) push('ea.produto_id =', produto_id)
-    if (q) { conditions.push(`(p.nome ILIKE '%' || $${i} || '%' OR a.nome ILIKE '%' || $${i} || '%')`); params.push(q); i += 1 }
+    if (q) { conditions.push(`(COALESCE(p.nome,'') ILIKE '%' || $${i} || '%' OR a.nome ILIKE '%' || $${i} || '%')`); params.push(q); i += 1 }
     buildWhere(push, 'ea.atualizado_em', de, ate)
 
     const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
@@ -129,14 +129,14 @@ export const listarMovimentacoesEstoque = tool({
     const m = `${ESTOQUE_SCHEMA}.movimentacoes_estoque`
     const tm = `${ESTOQUE_SCHEMA}.tipos_movimentacao`
     const a = `${ESTOQUE_SCHEMA}.almoxarifados`
-    const p = `${PROD_SCHEMA}.produtos`
+    const p = `${PROD_SCHEMA}.produto`
     const conditions: string[] = []
     const params: unknown[] = []
     let i = 1
     const push = (expr: string, val: unknown) => { conditions.push(`${expr} $${i}`); params.push(val); i += 1 }
 
     const selectSql = `SELECT m.id AS id,
-                              p.nome AS produto,
+                              COALESCE(p.nome, m.produto_id::text) AS produto,
                               a.nome AS almoxarifado,
                               m.tipo_movimento AS tipo_movimento,
                               tm.descricao AS descricao_movimento,
@@ -156,7 +156,7 @@ export const listarMovimentacoesEstoque = tool({
     if (produto_id) push('m.produto_id =', produto_id)
     if (tipo_movimento) push('LOWER(m.tipo_movimento) =', tipo_movimento.toLowerCase())
     if (natureza) push('LOWER(tm.natureza) =', natureza.toLowerCase())
-    if (q) { conditions.push(`(p.nome ILIKE '%' || $${i} || '%' OR tm.descricao ILIKE '%' || $${i} || '%' OR COALESCE(m.observacoes,'') ILIKE '%' || $${i} || '%')`); params.push(q); i += 1 }
+    if (q) { conditions.push(`(COALESCE(p.nome,'') ILIKE '%' || $${i} || '%' OR tm.descricao ILIKE '%' || $${i} || '%' OR COALESCE(m.observacoes,'') ILIKE '%' || $${i} || '%')`); params.push(q); i += 1 }
     buildWhere(push, 'm.data_movimento', de, ate)
 
     const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
@@ -171,174 +171,6 @@ export const listarMovimentacoesEstoque = tool({
       return { success: true, message: `✅ ${rows.length} movimentação(ões)`, rows, count: rows.length, sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
     } catch (error) {
       return { success: false, message: '❌ Erro ao listar movimentações', rows: [], count: 0, error: error instanceof Error ? error.message : String(error), sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
-    }
-  }
-})
-
-export const listarTransferenciasEstoque = tool({
-  description: 'Lista transferências de estoque'.trim(),
-  inputSchema: z.object({
-    limit: z.number().default(20),
-    almoxarifado_id: z.string().optional(),
-    produto_id: z.string().optional(),
-    status: z.string().optional(),
-    de: z.string().optional(),
-    ate: z.string().optional(),
-    q: z.string().optional(),
-  }),
-  execute: async ({ limit, almoxarifado_id, produto_id, status, de, ate, q }) => {
-    const t = `${ESTOQUE_SCHEMA}.transferencias_estoque`
-    const ti = `${ESTOQUE_SCHEMA}.transferencias_itens`
-    const a = `${ESTOQUE_SCHEMA}.almoxarifados`
-    const p = `${PROD_SCHEMA}.produtos`
-    const conditions: string[] = []
-    const params: unknown[] = []
-    let i = 1
-    const push = (expr: string, val: unknown) => { conditions.push(`${expr} $${i}`); params.push(val); i += 1 }
-
-    const selectSql = `SELECT t.id AS id,
-                              ao.nome AS origem,
-                              ad.nome AS destino,
-                              t.responsavel AS responsavel,
-                              t.status AS status,
-                              t.data_transferencia AS data,
-                              p.nome AS produto,
-                              ti.quantidade AS quantidade,
-                              ti.observacoes AS observacoes`
-    const baseSql = `FROM ${t} t
-                     LEFT JOIN ${ti} ti ON ti.transferencia_id = t.id
-                     LEFT JOIN ${a} ao ON t.origem_id = ao.id
-                     LEFT JOIN ${a} ad ON t.destino_id = ad.id
-                     LEFT JOIN ${p} p ON ti.produto_id = p.id`
-
-    if (status) push('LOWER(t.status) =', status.toLowerCase())
-    if (almoxarifado_id) { conditions.push(`(t.origem_id = $${i} OR t.destino_id = $${i})`); params.push(almoxarifado_id); i += 1 }
-    if (produto_id) push('ti.produto_id =', produto_id)
-    if (q) { conditions.push(`(p.nome ILIKE '%' || $${i} || '%' OR COALESCE(ti.observacoes,'') ILIKE '%' || $${i} || '%')`); params.push(q); i += 1 }
-    buildWhere(push, 't.data_transferencia', de, ate)
-
-    const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
-    const orderClause = 'ORDER BY t.data_transferencia DESC'
-    const lim = normalizeLimit(limit)
-    const limitClause = `LIMIT $${i}::int`
-    const paramsWithLimit = [...params, lim]
-
-    const sql = `${selectSql}\n${baseSql}\n${whereClause}\n${orderClause}\n${limitClause}`.trim()
-    try {
-      const rows = await runQuery<Record<string, unknown>>(sql, paramsWithLimit)
-      return { success: true, message: `✅ ${rows.length} transferência(s)`, rows, count: rows.length, sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
-    } catch (error) {
-      return { success: false, message: '❌ Erro ao listar transferências', rows: [], count: 0, error: error instanceof Error ? error.message : String(error), sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
-    }
-  }
-})
-
-export const listarInventariosEstoque = tool({
-  description: 'Lista inventários e seus itens (diferenças)'.trim(),
-  inputSchema: z.object({
-    limit: z.number().default(20),
-    almoxarifado_id: z.string().optional(),
-    produto_id: z.string().optional(),
-    status: z.string().optional(),
-    de: z.string().optional(),
-    ate: z.string().optional(),
-    q: z.string().optional(),
-  }),
-  execute: async ({ limit, almoxarifado_id, produto_id, status, de, ate, q }) => {
-    const iTable = `${ESTOQUE_SCHEMA}.inventarios`
-    const ii = `${ESTOQUE_SCHEMA}.inventarios_itens`
-    const a = `${ESTOQUE_SCHEMA}.almoxarifados`
-    const p = `${PROD_SCHEMA}.produtos`
-    const conditions: string[] = []
-    const params: unknown[] = []
-    let i = 1
-    const push = (expr: string, val: unknown) => { conditions.push(`${expr} $${i}`); params.push(val); i += 1 }
-
-    const selectSql = `SELECT i.id AS id,
-                              a.nome AS almoxarifado,
-                              i.responsavel AS responsavel,
-                              i.status AS status,
-                              i.data_inicio AS inicio,
-                              i.data_fim AS fim,
-                              p.nome AS produto,
-                              ii.quantidade_sistema AS qtde_sistema,
-                              ii.quantidade_contada AS qtde_contada,
-                              ii.diferenca AS diferenca,
-                              CASE WHEN ii.ajuste_gerado THEN 'Sim' ELSE 'Não' END AS ajuste_gerado`
-    const baseSql = `FROM ${iTable} i
-                     LEFT JOIN ${ii} ii ON ii.inventario_id = i.id
-                     LEFT JOIN ${a} a ON i.almoxarifado_id = a.id
-                     LEFT JOIN ${p} p ON ii.produto_id = p.id`
-
-    if (status) push('LOWER(i.status) =', status.toLowerCase())
-    if (almoxarifado_id) push('i.almoxarifado_id =', almoxarifado_id)
-    if (produto_id) push('ii.produto_id =', produto_id)
-    if (q) { conditions.push(`(p.nome ILIKE '%' || $${i} || '%' OR i.responsavel ILIKE '%' || $${i} || '%')`); params.push(q); i += 1 }
-    buildWhere(push, 'i.data_inicio', de, ate)
-
-    const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
-    const orderClause = 'ORDER BY i.data_inicio DESC, p.nome ASC'
-    const lim = normalizeLimit(limit)
-    const limitClause = `LIMIT $${i}::int`
-    const paramsWithLimit = [...params, lim]
-
-    const sql = `${selectSql}\n${baseSql}\n${whereClause}\n${orderClause}\n${limitClause}`.trim()
-    try {
-      const rows = await runQuery<Record<string, unknown>>(sql, paramsWithLimit)
-      return { success: true, message: `✅ ${rows.length} item(ns) de inventário`, rows, count: rows.length, sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
-    } catch (error) {
-      return { success: false, message: '❌ Erro ao listar inventários', rows: [], count: 0, error: error instanceof Error ? error.message : String(error), sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
-    }
-  }
-})
-
-export const listarCustosEstoque = tool({
-  description: 'Lista custos de estoque por produto (método e fonte)'.trim(),
-  inputSchema: z.object({
-    limit: z.number().default(20),
-    produto_id: z.string().optional(),
-    metodo: z.string().optional(),
-    fonte: z.string().optional(),
-    de: z.string().optional(),
-    ate: z.string().optional(),
-    q: z.string().optional(),
-  }),
-  execute: async ({ limit, produto_id, metodo, fonte, de, ate, q }) => {
-    const c = `${ESTOQUE_SCHEMA}.custos_estoque`
-    const p = `${PROD_SCHEMA}.produtos`
-    const conditions: string[] = []
-    const params: unknown[] = []
-    let i = 1
-    const push = (expr: string, val: unknown) => { conditions.push(`${expr} $${i}`); params.push(val); i += 1 }
-
-    const selectSql = `SELECT c.id AS id,
-                              p.nome AS produto,
-                              c.metodo AS metodo,
-                              c.fonte AS fonte,
-                              c.custo AS custo,
-                              c.data_referencia AS data_referencia,
-                              c.criado_em AS registrado_em`
-    const baseSql = `FROM ${c} c
-                     LEFT JOIN ${p} p ON c.produto_id = p.id`
-
-    if (produto_id) push('c.produto_id =', produto_id)
-    if (metodo) push('LOWER(c.metodo) =', metodo.toLowerCase())
-    if (fonte) push('LOWER(c.fonte) =', fonte.toLowerCase())
-    if (q) { conditions.push(`(p.nome ILIKE '%' || $${i} || '%' OR c.metodo ILIKE '%' || $${i} || '%' OR c.fonte ILIKE '%' || $${i} || '%')`); params.push(q); i += 1 }
-    buildWhere(push, 'c.data_referencia', de, ate)
-
-    const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
-    const orderClause = 'ORDER BY c.data_referencia DESC'
-    const lim = normalizeLimit(limit)
-    const limitClause = `LIMIT $${i}::int`
-    const paramsWithLimit = [...params, lim]
-
-    const sql = `${selectSql}\n${baseSql}\n${whereClause}\n${orderClause}\n${limitClause}`.trim()
-    try {
-      const rows = await runQuery<Record<string, unknown>>(sql, paramsWithLimit)
-      return { success: true, message: `✅ ${rows.length} custo(s)`, rows, count: rows.length, sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
-    } catch (error) {
-      return { success: false, message: '❌ Erro ao listar custos de estoque', rows: [], count: 0, error: error instanceof Error ? error.message : String(error), sql_query: sql, sql_params: fmtParams(paramsWithLimit) }
     }
   }
 })
@@ -384,4 +216,3 @@ export const listarTiposMovimentacao = tool({
     }
   }
 })
-

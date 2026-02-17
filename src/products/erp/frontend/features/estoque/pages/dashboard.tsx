@@ -7,23 +7,22 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Calendar as CalendarIcon, Boxes, PackageSearch, TriangleAlert, ArrowDownRight, ArrowUpRight } from 'lucide-react'
+import { Calendar as CalendarIcon, Boxes, PackageSearch, TriangleAlert, ArrowDownRight } from 'lucide-react'
 import type { DateRange } from 'react-day-picker'
 import { $financeiroDashboardUI, $financeiroDashboardFilters, financeiroDashboardActions } from '@/products/erp/state/financeiroDashboardStore'
 
 type ProdutoRow = {
-  codigo?: string
-  nome?: string
-  categoria?: string
-  estoque_atual?: number | string
-  estoque_minimo?: number | string
-  valor_unitario?: number | string
-  updated_at?: string
+  produto?: string
+  almoxarifado?: string
+  quantidade_atual?: number | string
+  custo_medio?: number | string
+  valor_total?: number | string
+  atualizado_em?: string
 }
 
 type MovRow = {
   data?: string
-  tipo?: 'entrada' | 'saida'
+  tipo?: 'entrada' | 'saida' | 'ajuste'
   produto?: string
   quantidade?: number | string
   valor_total?: number | string
@@ -61,22 +60,43 @@ export default function EstoqueDashboardPage() {
       try {
         const base = '/api/modulos/estoque'
         const [pRes, mRes] = await Promise.allSettled([
-          fetch(`${base}?view=produtos&page=1&pageSize=1000`, { cache: 'no-store' }),
+          fetch(`${base}?view=estoque-atual&page=1&pageSize=1000`, { cache: 'no-store' }),
           fetch(`${base}?view=movimentacoes&page=1&pageSize=1000`, { cache: 'no-store' }),
         ])
         let ps: ProdutoRow[] = []
         let ms: MovRow[] = []
-        if (pRes.status === 'fulfilled' && pRes.value.ok) { const j = await pRes.value.json(); ps = Array.isArray(j?.rows) ? j.rows as ProdutoRow[] : [] }
-        if (mRes.status === 'fulfilled' && mRes.value.ok) { const j = await mRes.value.json(); ms = Array.isArray(j?.rows) ? j.rows as MovRow[] : [] }
+        if (pRes.status === 'fulfilled' && pRes.value.ok) {
+          const j = await pRes.value.json()
+          const rows = Array.isArray(j?.rows) ? j.rows as Array<Record<string, unknown>> : []
+          ps = rows.map((r) => ({
+            produto: String(r.produto ?? ''),
+            almoxarifado: r.almoxarifado ? String(r.almoxarifado) : undefined,
+            quantidade_atual: r.quantidade_atual as number | string | undefined,
+            custo_medio: r.custo_medio as number | string | undefined,
+            valor_total: r.valor_total as number | string | undefined,
+            atualizado_em: r.atualizado_em ? String(r.atualizado_em) : undefined,
+          }))
+        }
+        if (mRes.status === 'fulfilled' && mRes.value.ok) {
+          const j = await mRes.value.json()
+          const rows = Array.isArray(j?.rows) ? j.rows as Array<Record<string, unknown>> : []
+          ms = rows.map((r) => ({
+            data: r.data_movimento ? String(r.data_movimento) : undefined,
+            tipo: String(r.tipo_movimento ?? '').toLowerCase() as MovRow['tipo'],
+            produto: r.produto ? String(r.produto) : undefined,
+            quantidade: r.quantidade as number | string | undefined,
+            valor_total: r.valor_total as number | string | undefined,
+          }))
+        }
 
         if (ps.length === 0 && ms.length === 0) {
           // Mocks coerentes
           ps = [
-            { codigo: 'SKU-1001', nome: 'Produto A', categoria: 'Eletrônicos', estoque_atual: 120, estoque_minimo: 40, valor_unitario: 120.5 },
-            { codigo: 'SKU-1002', nome: 'Produto B', categoria: 'Acessórios', estoque_atual: 18, estoque_minimo: 25, valor_unitario: 35.9 },
-            { codigo: 'SKU-1003', nome: 'Produto C', categoria: 'Eletrônicos', estoque_atual: 0, estoque_minimo: 10, valor_unitario: 980.0 },
-            { codigo: 'SKU-1004', nome: 'Produto D', categoria: 'Casa', estoque_atual: 65, estoque_minimo: 20, valor_unitario: 49.0 },
-            { codigo: 'SKU-1005', nome: 'Produto E', categoria: 'Casa', estoque_atual: 8, estoque_minimo: 12, valor_unitario: 25.0 },
+            { produto: 'Produto A', almoxarifado: 'Depósito Central', quantidade_atual: 120, custo_medio: 120.5, valor_total: 14460 },
+            { produto: 'Produto B', almoxarifado: 'Showroom Recife', quantidade_atual: 18, custo_medio: 35.9, valor_total: 646.2 },
+            { produto: 'Produto C', almoxarifado: 'E-commerce', quantidade_atual: 0, custo_medio: 980.0, valor_total: 0 },
+            { produto: 'Produto D', almoxarifado: 'Depósito Central', quantidade_atual: 65, custo_medio: 49.0, valor_total: 3185 },
+            { produto: 'Produto E', almoxarifado: 'E-commerce', quantidade_atual: 8, custo_medio: 25.0, valor_total: 200 },
           ]
           const d0 = toDateOnly(new Date())
           const d1 = toDateOnly(new Date(Date.now() - 86400000))
@@ -224,22 +244,22 @@ export default function EstoqueDashboardPage() {
   )
 
   // KPIs
-  const valorEstoque = useMemo(() => produtos.reduce((acc, p) => acc + (Number(p.estoque_atual)||0) * (Number(p.valor_unitario)||0), 0), [produtos])
-  const abaixoMinimo = useMemo(() => produtos.filter(p => (Number(p.estoque_atual)||0) < (Number(p.estoque_minimo)||0)).length, [produtos])
-  const rupturas = useMemo(() => produtos.filter(p => (Number(p.estoque_atual)||0) <= 0).length, [produtos])
+  const valorEstoque = useMemo(() => produtos.reduce((acc, p) => acc + (Number(p.valor_total) || ((Number(p.quantidade_atual) || 0) * (Number(p.custo_medio) || 0))), 0), [produtos])
+  const abaixoMinimo = useMemo(() => produtos.filter(p => (Number(p.quantidade_atual) || 0) > 0 && (Number(p.quantidade_atual) || 0) <= 5).length, [produtos])
+  const rupturas = useMemo(() => produtos.filter(p => (Number(p.quantidade_atual) || 0) <= 0).length, [produtos])
   const entradasMes = useMemo(() => {
     const key = monthKey(new Date())
     return movs.filter(m => m.tipo === 'entrada' && (m.data||'').startsWith(key)).reduce((acc,m)=> acc + (Number(m.valor_total)||0), 0)
   }, [movs])
 
   // Charts
-  const estoquePorCategoria = useMemo(() => {
+  const estoquePorAlmoxarifado = useMemo(() => {
     const m = new Map<string, number>()
-    for (const p of produtos) { const k = p.categoria || '—'; m.set(k, (m.get(k)||0) + (Number(p.estoque_atual)||0)) }
+    for (const p of produtos) { const k = p.almoxarifado || '—'; m.set(k, (m.get(k)||0) + (Number(p.quantidade_atual)||0)) }
     return Array.from(m, ([label, value]) => ({ label, value })).sort((a,b)=> b.value-a.value).slice(0,6)
   }, [produtos])
   const topValorEstoque = useMemo(() => {
-    return produtos.map(p => ({ label: p.nome || p.codigo || 'Produto', value: (Number(p.estoque_atual)||0) * (Number(p.valor_unitario)||0) }))
+    return produtos.map(p => ({ label: p.produto || 'Produto', value: Number(p.valor_total) || ((Number(p.quantidade_atual)||0) * (Number(p.custo_medio)||0)) }))
       .sort((a,b)=> b.value-a.value).slice(0,6)
   }, [produtos])
   const meses = useMemo(() => lastMonths(6), [])
@@ -289,9 +309,9 @@ export default function EstoqueDashboardPage() {
           <div className="text-xs text-gray-400 mt-1" style={styleText}>Soma (qtd × valor unit.)</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}><PackageSearch className="w-4 h-4 text-amber-600" />Abaixo do Mínimo</div>
+          <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}><PackageSearch className="w-4 h-4 text-amber-600" />Saldo Baixo</div>
           <div className="text-2xl font-bold text-amber-600" style={styleValues}>{abaixoMinimo}</div>
-          <div className="text-xs text-gray-400 mt-1" style={styleText}>Itens com alerta</div>
+          <div className="text-xs text-gray-400 mt-1" style={styleText}>Itens com 1 a 5 unidades</div>
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
           <div className="text-sm font-medium text-gray-500 mb-2 flex items-center gap-2" style={styleKpiTitle}><TriangleAlert className="w-4 h-4 text-red-600" />Rupturas</div>
@@ -307,8 +327,8 @@ export default function EstoqueDashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
-          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Estoque por Categoria</h3>
-          <HBars items={estoquePorCategoria} color="bg-indigo-500" />
+          <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Estoque por Almoxarifado</h3>
+          <HBars items={estoquePorAlmoxarifado} color="bg-indigo-500" />
         </div>
         <div className={cardContainerClass} style={{ borderColor: cardBorderColor }}>
           <h3 className="text-lg font-semibold mb-4" style={styleChartTitle}>Top Itens por Valor</h3>
@@ -341,10 +361,10 @@ export default function EstoqueDashboardPage() {
             ) : movs.slice(0,5).map((mv, idx) => (
               <div key={idx} className="flex justify-between items-center pb-2 border-b last:border-b-0" style={{ borderColor: cardBorderColor }}>
                 <div>
-                  <div className="font-medium text-sm" style={styleText}>{mv.tipo === 'entrada' ? 'Entrada' : 'Saída'} • {mv.produto}</div>
+                  <div className="font-medium text-sm" style={styleText}>{mv.tipo === 'entrada' ? 'Entrada' : mv.tipo === 'saida' ? 'Saída' : 'Ajuste'} • {mv.produto}</div>
                   <div className="text-xs text-gray-500" style={styleText}>{mv.data || '—'} • {Number(mv.quantidade)||0} un</div>
                 </div>
-                <div className={`text-xs ${mv.tipo === 'entrada' ? 'text-emerald-600' : 'text-rose-600'}`}>{formatBRL(Number(mv.valor_total)||0)}</div>
+                <div className={`text-xs ${mv.tipo === 'entrada' ? 'text-emerald-600' : mv.tipo === 'saida' ? 'text-rose-600' : 'text-amber-600'}`}>{formatBRL(Number(mv.valor_total)||0)}</div>
               </div>
             ))}
           </div>

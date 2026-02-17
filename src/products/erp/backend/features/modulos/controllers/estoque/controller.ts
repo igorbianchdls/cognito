@@ -31,28 +31,6 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     data_movimento: 'm.data_movimento',
     valor_total: 'm.valor_total',
   },
-  'transferencias': {
-    id: 't.id',
-    origem: 'ao.nome',
-    destino: 'ad.nome',
-    status: 't.status',
-    data: 't.data_transferencia',
-  },
-  'inventarios': {
-    id: 'i.id',
-    almoxarifado: 'a.nome',
-    status: 'i.status',
-    inicio: 'i.data_inicio',
-    fim: 'i.data_fim',
-  },
-  'custos-estoque': {
-    id: 'c.id',
-    produto: 'p.nome',
-    metodo: 'c.metodo',
-    fonte: 'c.fonte',
-    custo: 'c.custo',
-    data_referencia: 'c.data_referencia',
-  },
   'tipos-movimentacao': {
     codigo: 'tm.codigo',
     descricao: 'tm.descricao',
@@ -114,7 +92,7 @@ export async function GET(req: NextRequest) {
       if (q) { conditions.push(`(a.nome ILIKE '%' || $${i} || '%' OR a.responsavel ILIKE '%' || $${i} || '%')`); params.push(q); i += 1 }
     } else if (view === 'estoque-atual') {
       selectSql = `SELECT ea.id AS id,
-                          p.nome AS produto,
+                          COALESCE(p.nome, ea.produto_id::text) AS produto,
                           a.nome AS almoxarifado,
                           ea.quantidade AS quantidade_atual,
                           ea.custo_medio AS custo_medio,
@@ -122,14 +100,14 @@ export async function GET(req: NextRequest) {
                           ea.atualizado_em AS atualizado_em`
       baseSql = `FROM estoque.estoques_atual ea
                  LEFT JOIN estoque.almoxarifados a ON ea.almoxarifado_id = a.id
-                 LEFT JOIN produtos.produtos p ON ea.produto_id = p.id`
+                 LEFT JOIN produtos.produto p ON ea.produto_id = p.id`
       whereDateCol = 'ea.atualizado_em'
       if (almoxarifado_id) push('ea.almoxarifado_id =', almoxarifado_id)
       if (produto_id) push('ea.produto_id =', produto_id)
-      if (q) { conditions.push(`(p.nome ILIKE '%' || $${i} || '%' OR a.nome ILIKE '%' || $${i} || '%')`); params.push(q); i += 1 }
+      if (q) { conditions.push(`(COALESCE(p.nome,'') ILIKE '%' || $${i} || '%' OR a.nome ILIKE '%' || $${i} || '%')`); params.push(q); i += 1 }
     } else if (view === 'movimentacoes') {
       selectSql = `SELECT m.id AS id,
-                          p.nome AS produto,
+                          COALESCE(p.nome, m.produto_id::text) AS produto,
                           a.nome AS almoxarifado,
                           m.tipo_movimento AS tipo_movimento,
                           tm.descricao AS descricao_movimento,
@@ -143,66 +121,12 @@ export async function GET(req: NextRequest) {
       baseSql = `FROM estoque.movimentacoes_estoque m
                  LEFT JOIN estoque.tipos_movimentacao tm ON m.tipo_codigo = tm.codigo
                  LEFT JOIN estoque.almoxarifados a ON m.almoxarifado_id = a.id
-                 LEFT JOIN produtos.produtos p ON m.produto_id = p.id`
+                 LEFT JOIN produtos.produto p ON m.produto_id = p.id`
       whereDateCol = 'm.data_movimento'
       if (almoxarifado_id) push('m.almoxarifado_id =', almoxarifado_id)
       if (produto_id) push('m.produto_id =', produto_id)
       if (status) push('LOWER(m.tipo_movimento) =', status.toLowerCase()) // permite filtrar por tipo_movimento
-      if (q) { conditions.push(`(p.nome ILIKE '%' || $${i} || '%' OR tm.descricao ILIKE '%' || $${i} || '%' OR COALESCE(m.observacoes,'') ILIKE '%' || $${i} || '%')`); params.push(q); i += 1 }
-    } else if (view === 'transferencias') {
-      selectSql = `SELECT t.id AS id,
-                          ao.nome AS origem,
-                          ad.nome AS destino,
-                          t.responsavel AS responsavel,
-                          t.status AS status,
-                          t.data_transferencia AS data,
-                          p.nome AS produto,
-                          ti.quantidade AS quantidade,
-                          ti.observacoes AS observacoes`
-      baseSql = `FROM estoque.transferencias_estoque t
-                 LEFT JOIN estoque.transferencias_itens ti ON ti.transferencia_id = t.id
-                 LEFT JOIN estoque.almoxarifados ao ON t.origem_id = ao.id
-                 LEFT JOIN estoque.almoxarifados ad ON t.destino_id = ad.id
-                 LEFT JOIN produtos.produtos p ON ti.produto_id = p.id`
-      whereDateCol = 't.data_transferencia'
-      if (status) push('LOWER(t.status) =', status.toLowerCase())
-      if (almoxarifado_id) { conditions.push(`(t.origem_id = $${i} OR t.destino_id = $${i})`); params.push(almoxarifado_id); i += 1 }
-      if (produto_id) push('ti.produto_id =', produto_id)
-      if (q) { conditions.push(`(p.nome ILIKE '%' || $${i} || '%' OR COALESCE(ti.observacoes,'') ILIKE '%' || $${i} || '%')`); params.push(q); i += 1 }
-    } else if (view === 'inventarios') {
-      selectSql = `SELECT i.id AS id,
-                          a.nome AS almoxarifado,
-                          i.responsavel AS responsavel,
-                          i.status AS status,
-                          i.data_inicio AS inicio,
-                          i.data_fim AS fim,
-                          p.nome AS produto,
-                          ii.quantidade_sistema AS qtde_sistema,
-                          ii.quantidade_contada AS qtde_contada,
-                          ii.diferenca AS diferenca,
-                          CASE WHEN ii.ajuste_gerado THEN 'Sim' ELSE 'Não' END AS ajuste_gerado`
-      baseSql = `FROM estoque.inventarios i
-                 LEFT JOIN estoque.inventarios_itens ii ON ii.inventario_id = i.id
-                 LEFT JOIN estoque.almoxarifados a ON i.almoxarifado_id = a.id
-                 LEFT JOIN produtos.produtos p ON ii.produto_id = p.id`
-      whereDateCol = 'i.data_inicio'
-      if (status) push('LOWER(i.status) =', status.toLowerCase())
-      if (almoxarifado_id) push('i.almoxarifado_id =', almoxarifado_id)
-      if (produto_id) push('ii.produto_id =', produto_id)
-      if (q) { conditions.push(`(p.nome ILIKE '%' || $${i} || '%' OR i.responsavel ILIKE '%' || $${i} || '%')`); params.push(q); i += 1 }
-    } else if (view === 'custos-estoque') {
-      selectSql = `SELECT c.id AS id,
-                          p.nome AS produto,
-                          c.metodo AS metodo,
-                          c.fonte AS fonte,
-                          c.custo AS custo,
-                          c.data_referencia AS data_referencia,
-                          c.criado_em AS registrado_em`
-      baseSql = `FROM estoque.custos_estoque c
-                 LEFT JOIN produtos.produtos p ON c.produto_id = p.id`
-      whereDateCol = 'c.data_referencia'
-      if (produto_id) push('c.produto_id =', produto_id)
-      if (q) { conditions.push(`(p.nome ILIKE '%' || $${i} || '%' OR c.metodo ILIKE '%' || $${i} || '%' OR c.fonte ILIKE '%' || $${i} || '%')`); params.push(q); i += 1 }
+      if (q) { conditions.push(`(COALESCE(p.nome,'') ILIKE '%' || $${i} || '%' OR tm.descricao ILIKE '%' || $${i} || '%' OR COALESCE(m.observacoes,'') ILIKE '%' || $${i} || '%')`); params.push(q); i += 1 }
     } else if (view === 'tipos-movimentacao') {
       selectSql = `SELECT tm.codigo AS codigo,
                           tm.descricao AS descricao,
@@ -229,9 +153,6 @@ export async function GET(req: NextRequest) {
         if (view === 'almoxarifados') orderClause = 'ORDER BY a.nome ASC'
         else if (view === 'estoque-atual') orderClause = 'ORDER BY a.nome ASC, p.nome ASC'
         else if (view === 'movimentacoes') orderClause = 'ORDER BY m.data_movimento DESC'
-        else if (view === 'transferencias') orderClause = 'ORDER BY t.data_transferencia DESC'
-        else if (view === 'inventarios') orderClause = 'ORDER BY i.data_inicio DESC, p.nome ASC'
-        else if (view === 'custos-estoque') orderClause = 'ORDER BY c.data_referencia DESC'
         else if (view === 'tipos-movimentacao') orderClause = 'ORDER BY tm.natureza ASC, tm.descricao ASC'
       }
     }
@@ -271,4 +192,3 @@ export async function GET(req: NextRequest) {
     )
   }
 }
-

@@ -164,9 +164,6 @@ export const ToolHeader = ({
           'tool-listarAlmoxarifadosEstoque': 'Almoxarifados',
           'tool-listarEstoqueAtual': 'Estoque Atual',
           'tool-listarMovimentacoesEstoque': 'Movimentações de Estoque',
-          'tool-listarTransferenciasEstoque': 'Transferências de Estoque',
-          'tool-listarInventariosEstoque': 'Inventários de Estoque',
-          'tool-listarCustosEstoque': 'Custos de Estoque',
           'tool-listarTiposMovimentacao': 'Tipos de Movimentação',
         };
         return labels[type] ?? type.replace('tool-', '');

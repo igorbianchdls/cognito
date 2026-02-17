@@ -14,7 +14,7 @@ import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/products/erp/frontend/components/DataToolbar'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/products/erp/state/moduleUiStore'
 import type { Opcao } from '@/products/erp/frontend/components/TabsNav'
-import { Building2, Package, List, Shuffle, ClipboardList, DollarSign, Settings } from 'lucide-react'
+import { Building2, Package, List, Settings } from 'lucide-react'
 
 type Row = TableData
 
@@ -35,9 +35,6 @@ export default function ModulosEstoquePage() {
         { value: 'almoxarifados', label: 'Almoxarifados' },
         { value: 'estoque-atual', label: 'Estoque Atual' },
         { value: 'movimentacoes', label: 'Movimentações' },
-        { value: 'transferencias', label: 'Transferências' },
-        { value: 'inventarios', label: 'Inventários' },
-        { value: 'custos-estoque', label: 'Custos de Estoque' },
         { value: 'tipos-movimentacao', label: 'Tipos Movimentação' },
       ],
       selected: 'almoxarifados',
@@ -110,39 +107,6 @@ export default function ModulosEstoquePage() {
           { accessorKey: 'origem', header: 'Origem' },
           { accessorKey: 'observacoes', header: 'Observações' },
         ]
-      case 'transferencias':
-        return [
-          { accessorKey: 'origem', header: 'Origem' },
-          { accessorKey: 'destino', header: 'Destino' },
-          { accessorKey: 'responsavel', header: 'Responsável' },
-          { accessorKey: 'status', header: 'Status' },
-          { accessorKey: 'data', header: 'Data', cell: ({ row }) => formatDate(row.original['data']) },
-          { accessorKey: 'produto', header: 'Produto' },
-          { accessorKey: 'quantidade', header: 'Quantidade' },
-          { accessorKey: 'observacoes', header: 'Observações' },
-        ]
-      case 'inventarios':
-        return [
-          { accessorKey: 'almoxarifado', header: 'Almoxarifado' },
-          { accessorKey: 'responsavel', header: 'Responsável' },
-          { accessorKey: 'status', header: 'Status' },
-          { accessorKey: 'inicio', header: 'Início', cell: ({ row }) => formatDate(row.original['inicio']) },
-          { accessorKey: 'fim', header: 'Fim', cell: ({ row }) => formatDate(row.original['fim']) },
-          { accessorKey: 'produto', header: 'Produto' },
-          { accessorKey: 'qtde_sistema', header: 'Qtde Sistema' },
-          { accessorKey: 'qtde_contada', header: 'Qtde Contada' },
-          { accessorKey: 'diferenca', header: 'Diferença' },
-          { accessorKey: 'ajuste_gerado', header: 'Ajuste Gerado' },
-        ]
-      case 'custos-estoque':
-        return [
-          { accessorKey: 'produto', header: 'Produto' },
-          { accessorKey: 'metodo', header: 'Método de Custo' },
-          { accessorKey: 'fonte', header: 'Fonte' },
-          { accessorKey: 'custo', header: 'Custo (R$)', cell: ({ row }) => formatBRL(row.original['custo']) },
-          { accessorKey: 'data_referencia', header: 'Data Referência', cell: ({ row }) => formatDate(row.original['data_referencia']) },
-          { accessorKey: 'registrado_em', header: 'Registrado em', cell: ({ row }) => formatDate(row.original['registrado_em']) },
-        ]
       case 'tipos-movimentacao':
         return [
           { accessorKey: 'codigo', header: 'Código' },
@@ -203,9 +167,6 @@ export default function ModulosEstoquePage() {
         case 'almoxarifados': return <Building2 className="h-4 w-4" />
         case 'estoque-atual': return <Package className="h-4 w-4" />
         case 'movimentacoes': return <List className="h-4 w-4" />
-        case 'transferencias': return <Shuffle className="h-4 w-4" />
-        case 'inventarios': return <ClipboardList className="h-4 w-4" />
-        case 'custos-estoque': return <DollarSign className="h-4 w-4" />
         case 'tipos-movimentacao': return <Settings className="h-4 w-4" />
         default: return null
       }
