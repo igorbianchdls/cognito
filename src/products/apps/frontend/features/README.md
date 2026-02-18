@@ -6,5 +6,6 @@
 - `financeiro/pages/AppsFinanceiroPage.tsx`
 - `estoque/pages/AppsEstoquePage.tsx`
 - `crm/pages/AppsCrmPage.tsx`
+- `documentos/pages/AppsDocumentosPage.tsx`
 
 `frontend/pages/*` permanece como wrapper de compatibilidade.

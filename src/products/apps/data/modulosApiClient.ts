@@ -1,6 +1,6 @@
 import type { DateRange } from '@/products/apps/shared/types'
 
-type ModuleSlug = 'financeiro' | 'vendas' | 'compras' | 'estoque' | 'crm'
+type ModuleSlug = 'financeiro' | 'vendas' | 'compras' | 'estoque' | 'crm' | 'documentos'
 
 type DashboardPayload = {
   charts?: Record<string, unknown>

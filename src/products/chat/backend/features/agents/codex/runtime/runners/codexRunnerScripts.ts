@@ -21,7 +21,7 @@ let responseId = null;
 let assistantText = '';
 let reasoningText = '';
 let reasoningStarted = false;
-const SAFE_PREFIXES = ['financeiro', 'vendas', 'compras', 'contas-a-pagar', 'contas-a-receber', 'crm', 'estoque', 'cadastros'];
+const SAFE_PREFIXES = ['financeiro', 'vendas', 'compras', 'contas-a-pagar', 'contas-a-receber', 'crm', 'estoque', 'cadastros', 'documentos'];
 
 function emit(type, extra) {
   console.log(JSON.stringify({ type, ...(extra || {}) }));
@@ -783,7 +783,7 @@ const baseTools = [
         },
         resource: {
           type: 'string',
-          description: 'Resource ERP canônico (exatos): financeiro/contas-financeiras, financeiro/categorias-despesa, financeiro/categorias-receita, financeiro/clientes, financeiro/centros-custo, financeiro/centros-lucro, vendas/pedidos, compras/pedidos, contas-a-pagar, contas-a-receber, crm/contas, crm/contatos, crm/leads, crm/oportunidades, crm/atividades, estoque/almoxarifados, estoque/movimentacoes, estoque/estoque-atual, estoque/tipos-movimentacao.'
+          description: 'Resource ERP canônico (exatos): financeiro/contas-financeiras, financeiro/categorias-despesa, financeiro/categorias-receita, financeiro/clientes, financeiro/centros-custo, financeiro/centros-lucro, vendas/pedidos, compras/pedidos, contas-a-pagar, contas-a-receber, crm/contas, crm/contatos, crm/leads, crm/oportunidades, crm/atividades, estoque/almoxarifados, estoque/movimentacoes, estoque/estoque-atual, estoque/tipos-movimentacao, documentos/templates, documentos/template-versions, documentos/documentos.'
         },
         params: {
           type: 'object',

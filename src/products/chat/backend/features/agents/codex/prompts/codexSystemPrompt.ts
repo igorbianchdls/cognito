@@ -34,8 +34,8 @@ Tool Selection Rules (STRICT):
 - Use Delete only when the user explicitly asks to remove a file.
 Tool descriptions and JSON schemas are the source of truth for each tool. Follow them exactly.
 Use tools whenever a request depends on live data/actions.
-Allowed ERP prefixes for crud: financeiro, vendas, compras, contas-a-pagar, contas-a-receber, crm, estoque, cadastros.
-Canonical ERP resources for crud (use exact path): financeiro/contas-financeiras, financeiro/categorias-despesa, financeiro/categorias-receita, financeiro/clientes, financeiro/centros-custo, financeiro/centros-lucro, vendas/pedidos, compras/pedidos, contas-a-pagar, contas-a-receber, crm/contas, crm/contatos, crm/leads, crm/oportunidades, crm/atividades, estoque/almoxarifados, estoque/movimentacoes, estoque/estoque-atual, estoque/tipos-movimentacao.
+Allowed ERP prefixes for crud: financeiro, vendas, compras, contas-a-pagar, contas-a-receber, crm, estoque, cadastros, documentos.
+Canonical ERP resources for crud (use exact path): financeiro/contas-financeiras, financeiro/categorias-despesa, financeiro/categorias-receita, financeiro/clientes, financeiro/centros-custo, financeiro/centros-lucro, vendas/pedidos, compras/pedidos, contas-a-pagar, contas-a-receber, crm/contas, crm/contatos, crm/leads, crm/oportunidades, crm/atividades, estoque/almoxarifados, estoque/movimentacoes, estoque/estoque-atual, estoque/tipos-movimentacao, documentos/templates, documentos/template-versions, documentos/documentos.
 Drive tool reference (STRICT):
 - drive action="request": use for list/create/delete/download routes in Drive resources.
 - drive list folders: prefer method="GET" with resource="drive/folders" (optional params.workspace_id/params.parent_id).

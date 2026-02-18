@@ -3,7 +3,7 @@ import {
   type PromptHistoryMessage,
 } from '@/products/chat/backend/features/agents/shared/prompts/promptConversation'
 
-const ERP_PREFIXES = 'financeiro, vendas, compras, contas-a-pagar, contas-a-receber, crm, estoque, cadastros'
+const ERP_PREFIXES = 'financeiro, vendas, compras, contas-a-pagar, contas-a-receber, crm, estoque, cadastros, documentos'
 
 const ERP_RESOURCES = [
   'financeiro/contas-financeiras',
@@ -25,6 +25,9 @@ const ERP_RESOURCES = [
   'estoque/movimentacoes',
   'estoque/estoque-atual',
   'estoque/tipos-movimentacao',
+  'documentos/templates',
+  'documentos/template-versions',
+  'documentos/documentos',
 ]
 
 function formatErpResourceList(): string {
