@@ -15,17 +15,18 @@ const parseNumericId = (value?: string | null): number | null => {
 
 function buildWhere(
   alias: 'ea' | 'm',
-  filters: { de?: string; ate?: string; almoxarifadoId?: number | null; produtoId?: number | null },
+  filters: { de?: string; ate?: string; almoxarifadoId?: number | null; produtoId?: number | null; includeDate?: boolean },
 ) {
   const params: unknown[] = []
   const whereParts: string[] = []
   const dateField = alias === 'ea' ? 'ea.atualizado_em' : 'm.data_movimento'
+  const includeDate = filters.includeDate !== false
 
-  if (filters.de) {
+  if (includeDate && filters.de) {
     whereParts.push(`${dateField} >= $${params.length + 1}`)
     params.push(filters.de)
   }
-  if (filters.ate) {
+  if (includeDate && filters.ate) {
     whereParts.push(`${dateField} <= $${params.length + 1}`)
     params.push(filters.ate)
   }
@@ -54,7 +55,8 @@ export async function GET(req: NextRequest) {
     const limitParam = searchParams.get('limit') || undefined
     const limit = Math.max(1, Math.min(50, limitParam ? Number(limitParam) : 8))
 
-    const stockWhereCtx = buildWhere('ea', { de, ate, almoxarifadoId, produtoId })
+    // estoque_atual é snapshot de saldo; não deve zerar por filtro de período do dateRange.
+    const stockWhereCtx = buildWhere('ea', { de, ate, almoxarifadoId, produtoId, includeDate: false })
     const movWhereCtx = buildWhere('m', { de, ate, almoxarifadoId, produtoId })
 
     const [{ produtos_ativos }] = await runQuery<{ produtos_ativos: number }>(
@@ -178,4 +180,3 @@ export async function GET(req: NextRequest) {
     )
   }
 }
-

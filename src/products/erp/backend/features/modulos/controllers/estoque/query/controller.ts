@@ -150,13 +150,16 @@ export async function POST(req: NextRequest) {
     const f = filters as Record<string, unknown>
     const alias = model === 'estoque.estoques_atual' ? 'ea' : 'm'
 
-    if (typeof f.de === 'string') {
-      whereParts.push(`${context.dateField} >= $${params.length + 1}`)
-      params.push(f.de)
-    }
-    if (typeof f.ate === 'string') {
-      whereParts.push(`${context.dateField} <= $${params.length + 1}`)
-      params.push(f.ate)
+    // estoque_atual é snapshot; de/ate deve afetar apenas movimentações.
+    if (model === 'estoque.movimentacoes') {
+      if (typeof f.de === 'string') {
+        whereParts.push(`${context.dateField} >= $${params.length + 1}`)
+        params.push(f.de)
+      }
+      if (typeof f.ate === 'string') {
+        whereParts.push(`${context.dateField} <= $${params.length + 1}`)
+        params.push(f.ate)
+      }
     }
 
     addInFilter(params, whereParts, `${alias}.produto_id`, f.produto_id)
@@ -215,4 +218,3 @@ export async function POST(req: NextRequest) {
     )
   }
 }
-
