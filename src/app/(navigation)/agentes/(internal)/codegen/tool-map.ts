@@ -1,5 +1,5 @@
-// Static mapping between visual tool IDs and actual module exports.
-// Used only for code generation (strings), not to import runtime values here.
+// Visual agents legacy mapping disabled.
+// O produto agora usa /chat com tools CRUD/drive/email.
 
 export type ToolImportSpec = {
   // Visual ID used in the builder (what the user types/selects)
@@ -10,37 +10,7 @@ export type ToolImportSpec = {
   exportName: string
 }
 
-// Minimal initial catalog. Extend as new tools are added.
-export const TOOL_IMPORTS: Record<string, ToolImportSpec> = {
-  // Web Analytics
-  getAnalyticsData: { id: 'getAnalyticsData', importPath: "@/tools/analyticsTools", exportName: 'getAnalyticsData' },
-  createDashboardTool: { id: 'createDashboardTool', importPath: "@/tools/apps/createDashboardTool", exportName: 'createDashboardTool' },
-
-  // Contabilidade
-  listarLancamentosContabeis: { id: 'listarLancamentosContabeis', importPath: "@/tools/contabilidadeTools", exportName: 'listarLancamentosContabeis' },
-  gerarDRE: { id: 'gerarDRE', importPath: "@/tools/contabilidadeTools", exportName: 'gerarDRE' },
-  gerarBalancoPatrimonial: { id: 'gerarBalancoPatrimonial', importPath: "@/tools/contabilidadeTools", exportName: 'gerarBalancoPatrimonial' },
-
-  // NF-e (UI id → export name mapping)
-  listarNFe: { id: 'listarNFe', importPath: "@/tools/nfeTools", exportName: 'getNotasFiscais' },
-
-  // Inventory (selected analytical tools already present in agents)
-  avaliacaoCustoInventario: { id: 'avaliacaoCustoInventario', importPath: "@/tools/inventoryTools", exportName: 'avaliacaoCustoInventario' },
-  calculateInventoryMetrics: { id: 'calculateInventoryMetrics', importPath: "@/tools/inventoryTools", exportName: 'calculateInventoryMetrics' },
-  abcDetalhadaProduto: { id: 'abcDetalhadaProduto', importPath: "@/tools/inventoryTools", exportName: 'abcDetalhadaProduto' },
-  analiseDOS: { id: 'analiseDOS', importPath: "@/tools/inventoryTools", exportName: 'analiseDOS' },
-  abcResumoGerencial: { id: 'abcResumoGerencial', importPath: "@/tools/inventoryTools", exportName: 'abcResumoGerencial' },
-
-  // Serviços
-  listarOrdensDeServico: { id: 'listarOrdensDeServico', importPath: "@/tools/servicosTools", exportName: 'listarOrdensDeServico' },
-  listarTecnicos: { id: 'listarTecnicos', importPath: "@/tools/servicosTools", exportName: 'listarTecnicos' },
-  listarAgendamentos: { id: 'listarAgendamentos', importPath: "@/tools/servicosTools", exportName: 'listarAgendamentos' },
-  listarCatalogoDeServicos: { id: 'listarCatalogoDeServicos', importPath: "@/tools/servicosTools", exportName: 'listarCatalogoDeServicos' },
-
-  // Funcionários (UI id → export name mapping)
-  listarFuncionarios: { id: 'listarFuncionarios', importPath: "@/tools/funcionariosV2Tools", exportName: 'listarFuncionariosRH' },
-  listarDepartamentos: { id: 'listarDepartamentos', importPath: "@/tools/funcionariosV2Tools", exportName: 'listarDepartamentosRH' },
-}
+export const TOOL_IMPORTS: Record<string, ToolImportSpec> = {}
 
 export function resolveToolIds(ids: string[]) {
   const resolved: { [importPath: string]: string[] } = {}

@@ -51,7 +51,8 @@ try {
 const allowedToolsList = [];
 if (appToolsServerERP) {
   allowedToolsList.push('mcp__ERP__crud');
-  allowedToolsList.push('mcp__ERP__workspace');
+  allowedToolsList.push('mcp__ERP__drive');
+  allowedToolsList.push('mcp__ERP__email');
 }
 try {
   if (appToolsServerComposio && Array.isArray(appToolsServerComposio.tools)) {
@@ -466,4 +467,3 @@ for await (const msg of q) {
 }
 `.trim();
 }
-

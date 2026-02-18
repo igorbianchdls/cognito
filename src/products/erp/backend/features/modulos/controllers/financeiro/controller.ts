@@ -1044,23 +1044,27 @@ ORDER BY
                           p.atualizado_em`;
       whereDateCol = 'p.data_inicio';
     } else if (view === 'movimentos') {
-      baseSql = `FROM gestaofinanceira.movimentos m
-                 LEFT JOIN gestaofinanceira.categorias cat ON cat.id = m.categoria_id
-                 LEFT JOIN gestaofinanceira.contas c ON c.id = m.conta_id`;
+      baseSql = `FROM financeiro.movimentos m
+                 LEFT JOIN financeiro.contas_financeiras cf
+                   ON cf.id = COALESCE(m.conta_financeira_id, m.conta_id)`;
       selectSql = `SELECT m.id,
-                          m.data,
-                          CASE WHEN m.valor > 0 THEN 'entrada' ELSE 'saída' END AS tipo,
+                          m.data_movimento AS data,
+                          CASE
+                            WHEN LOWER(COALESCE(m.tipo, '')) IN ('entrada','in') THEN 'entrada'
+                            WHEN LOWER(COALESCE(m.tipo, '')) IN ('saida','saída','out') THEN 'saída'
+                            WHEN m.valor > 0 THEN 'entrada'
+                            ELSE 'saída'
+                          END AS tipo,
                           m.valor,
-                          m.categoria_id,
-                          COALESCE(cat.nome, 'Sem categoria') AS categoria_nome,
-                          m.conta_id,
-                          COALESCE(c.nome, 'Sem conta') AS conta_nome,
-                          m.centro_custo_id`;
-      whereDateCol = 'm.data';
-      if (conta_id) push('m.conta_id =', conta_id);
-      if (categoria_id) push('m.categoria_id =', categoria_id);
-      if (tipo === 'entrada') conditions.push('m.valor > 0');
-      if (tipo === 'saída' || tipo === 'saida') conditions.push('m.valor < 0');
+                          NULL::bigint AS categoria_id,
+                          NULL::text AS categoria_nome,
+                          COALESCE(m.conta_financeira_id, m.conta_id) AS conta_id,
+                          COALESCE(cf.nome_conta, 'Sem conta') AS conta_nome,
+                          NULL::bigint AS centro_custo_id`;
+      whereDateCol = 'm.data_movimento';
+      if (conta_id) push('COALESCE(m.conta_financeira_id, m.conta_id) =', conta_id);
+      if (tipo === 'entrada') conditions.push(`LOWER(COALESCE(m.tipo, CASE WHEN m.valor > 0 THEN 'entrada' ELSE 'saida' END)) IN ('entrada','in')`);
+      if (tipo === 'saída' || tipo === 'saida') conditions.push(`LOWER(COALESCE(m.tipo, CASE WHEN m.valor > 0 THEN 'entrada' ELSE 'saida' END)) IN ('saida','saída','out')`);
       if (valor_min !== undefined) push('m.valor >=', valor_min);
       if (valor_max !== undefined) push('m.valor <=', valor_max);
     } else {

@@ -1,6 +1,9 @@
 export async function getAgentMailClient() {
   const apiKey = process.env.AGENTMAIL_API_KEY
-  if (!apiKey) throw new Error('AGENTMAIL_API_KEY not configured')
+  if (!apiKey) {
+    const { getLocalEmailClient } = await import('@/products/email/backend/integrations/localEmailClient')
+    return getLocalEmailClient()
+  }
 
   let AgentMailClient: any
   try {

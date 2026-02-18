@@ -13,7 +13,7 @@ export function genRouteTs(graph: Graph, slug: string): string {
   const step = getStepSettings(graph)
 
   const selectedToolIds = collectTools(graph)
-  const BUILDER_SET = new Set(['echoTool','sumTool','pickFieldsTool','getWeather','getTime'])
+  const BUILDER_SET = new Set<string>()
   const builderIds = selectedToolIds.filter(id => BUILDER_SET.has(id))
   const stubIds = selectedToolIds.filter(id => !BUILDER_SET.has(id))
 
@@ -42,7 +42,6 @@ export function genRouteTs(graph: Graph, slug: string): string {
   const imports = `import { NextResponse } from 'next/server'
 import { generateText${needsStub ? ', tool' : ''}${needsStopWhen ? ', stepCountIs, hasToolCall' : ''} } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'${importOpenAI ? "\nimport { openai } from '@ai-sdk/openai'" : ''}`
-    + (builderIds.length ? `\nimport { ${builderIds.join(', ')} } from '@/tools/agentbuilder'` : '')
     + (needsStub ? `\nimport { z } from 'zod'` : '')
 
   // No additional imports required for prepareStep generation

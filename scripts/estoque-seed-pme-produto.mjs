@@ -6,8 +6,9 @@ import fs from "node:fs";
 import path from "node:path";
 
 const TENANT_ID = 1;
-const PERIOD_START = "2025-09-01";
-const PERIOD_END = "2026-02-16";
+const OPENING_DATE = "2026-01-31";
+const PERIOD_START = "2026-02-01";
+const PERIOD_END = "2026-03-31";
 const DOC_START = 200000;
 
 const NEW_PRODUCTS = [
@@ -405,7 +406,7 @@ async function main() {
           valor_unitario: baseCost,
           avgUnitCost: baseCost,
           origem: wh.replenishOrigin,
-          data_movimento: PERIOD_START,
+          data_movimento: OPENING_DATE,
           observacoes: "Carga inicial PME",
         });
 

@@ -42,7 +42,9 @@ export async function POST(req: NextRequest) {
       fil.nome           AS filial,
       un.nome            AS unidade_negocio,
 
-      s.nome             AS servico,
+      COALESCE(pr.nome, s.nome, 'Item sem descrição') AS item_nome,
+      pr.id              AS produto_id,
+      s.id               AS servico_id,
       pi.quantidade,
       pi.preco_unitario,
       pi.desconto        AS desconto_item,
@@ -52,7 +54,8 @@ export async function POST(req: NextRequest) {
     const baseSql = `FROM vendas.pedidos p
       JOIN vendas.pedidos_itens pi      ON pi.pedido_id = p.id
       JOIN entidades.clientes c         ON c.id = p.cliente_id
-      JOIN servicos.catalogo_servicos s ON s.id = pi.servico_id
+      LEFT JOIN produtos.produto pr     ON pr.id = pi.produto_id
+      LEFT JOIN servicos.catalogo_servicos s ON s.id = pi.servico_id
       LEFT JOIN comercial.vendedores v  ON v.id = p.vendedor_id
       LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
       LEFT JOIN comercial.territorios t ON t.id = p.territorio_id
@@ -63,13 +66,13 @@ export async function POST(req: NextRequest) {
       LEFT JOIN empresa.filiais fil      ON fil.id = p.filial_id
       LEFT JOIN empresa.unidades_negocio un ON un.id = p.unidade_negocio_id
       WHERE p.tenant_id = 1`
-    const orderClause = 'ORDER BY p.data_pedido ASC, c.nome_fantasia ASC, s.nome ASC'
+    const orderClause = 'ORDER BY p.data_pedido ASC, c.nome_fantasia ASC, COALESCE(pr.nome, s.nome, pi.id::text) ASC'
     const listSql = `${selectSql} ${baseSql} ${orderClause} LIMIT $1::int OFFSET $2::int`.trim()
 
     let rows = await runQuery<Record<string, unknown>>(listSql, [pageSize, offset])
 
     // Aggregate items per pedido
-    type PedidoItem = { item_id: unknown; servico_id?: unknown; servico: unknown; quantidade: unknown; preco_unitario: unknown; subtotal: unknown }
+    type PedidoItem = { item_id: unknown; produto_id?: unknown; servico_id?: unknown; item: unknown; quantidade: unknown; preco_unitario: unknown; subtotal: unknown }
     type PedidoAgregado = {
       pedido: unknown
       cliente: unknown
@@ -107,8 +110,9 @@ export async function POST(req: NextRequest) {
       if (row.item_id) {
         pedidosMap.get(pedidoId)!.itens.push({
           item_id: row.item_id,
-          servico_id: undefined,
-          servico: row.servico,
+          produto_id: row.produto_id,
+          servico_id: row.servico_id,
+          item: row.item_nome,
           quantidade: row.quantidade,
           preco_unitario: row.preco_unitario,
           subtotal: (row as any).subtotal_item ?? row.subtotal,

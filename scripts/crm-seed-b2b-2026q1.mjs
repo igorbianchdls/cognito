@@ -114,8 +114,8 @@ async function main() {
   const tenantId = 1;
   const rng = makeRng(20260331);
 
-  // Requested window: Jan 1 to Mar 31, 2026
-  const START = new Date(Date.UTC(2026, 0, 1, 12, 0, 0)); // 2026-01-01 12:00 UTC
+  // Requested window: Feb 1 to Mar 31, 2026
+  const START = new Date(Date.UTC(2026, 1, 1, 12, 0, 0)); // 2026-02-01 12:00 UTC
   const END = new Date(Date.UTC(2026, 2, 31, 20, 0, 0)); // 2026-03-31 20:00 UTC
 
   const client = new Client({
@@ -781,11 +781,11 @@ async function main() {
     );
     const row = chk.rows[0] || {};
     if (row.leads_before || row.leads_after || row.opps_before || row.opps_after) {
-      throw new Error("Seed gerou datas fora da janela 2026-01..2026-03.");
+      throw new Error("Seed gerou datas fora da janela 2026-02..2026-03.");
     }
 
     await client.query("COMMIT");
-    console.log("CRM seed B2B (2026-01..2026-03) aplicado com sucesso.");
+    console.log("CRM seed B2B (2026-02..2026-03) aplicado com sucesso.");
     console.log(`Vendedores usados: ${vendedores.map((v) => `${v.id}:${v.nome}`).join(", ")}`);
   } catch (error) {
     try {

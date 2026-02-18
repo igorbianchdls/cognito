@@ -4,5 +4,5 @@ import { handleWorkspaceToolPost } from '@/app/api/agent-tools/_workspace/handle
 export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
-  return handleWorkspaceToolPost(req, 'workspace')
+  return handleWorkspaceToolPost(req, 'drive')
 }

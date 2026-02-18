@@ -1,9 +1,16 @@
 "use client"
 
 import React, { useEffect, useMemo, useState } from 'react'
-import ComposioGmailEmailsResult from '@/components/tools/mcp/ComposioGmailEmailsResult'
 
 type FetchState = 'idle' | 'loading' | 'error' | 'done'
+
+function pretty(value: unknown): string {
+  try {
+    return JSON.stringify(value, null, 2)
+  } catch {
+    return String(value)
+  }
+}
 
 export default function ComposioGmailTestPage() {
   const [q, setQ] = useState<string>('')
@@ -34,19 +41,22 @@ export default function ComposioGmailTestPage() {
       const res = await fetch('/api/composio/gmail/fetch-emails', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
       const json = await res.json().catch(()=>({}))
       if (!res.ok || json?.success === false) throw new Error(json?.error || 'Falha na busca')
+
       setData((prev: any) => {
         if (!merge) return json
         try {
           const prevMsgs = prev?.data?.results?.[0]?.response?.data?.messages || []
           const newMsgs = json?.data?.results?.[0]?.response?.data?.messages || []
-          const merged = [...prevMsgs, ...newMsgs]
           const wrapped = { ...json }
           if (wrapped.data?.results?.[0]?.response?.data) {
-            wrapped.data.results[0].response.data.messages = merged
+            wrapped.data.results[0].response.data.messages = [...prevMsgs, ...newMsgs]
           }
           return wrapped
-        } catch { return json }
+        } catch {
+          return json
+        }
       })
+
       const token = json?.data?.results?.[0]?.response?.data?.nextPageToken || ''
       setNextToken(typeof token === 'string' ? token : '')
       setState('done')
@@ -58,11 +68,13 @@ export default function ComposioGmailTestPage() {
 
   useEffect(() => { doFetch(false).catch(()=>{}) }, [])
 
+  const messages = data?.data?.results?.[0]?.response?.data?.messages || []
+
   return (
     <div className="px-8 py-6 space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">Teste — Gmail (Composio)</h1>
-        <p className="text-sm text-slate-600">Busca os últimos 5 emails por padrão. Ajuste filtros conforme necessário e execute.</p>
+        <p className="text-sm text-slate-600">Busca emails via Composio sem UI legada do Nexus.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -80,7 +92,7 @@ export default function ComposioGmailTestPage() {
         </div>
         <div className="flex items-center gap-2">
           <input id="spam" type="checkbox" checked={includeSpamTrash} onChange={(e)=> setIncludeSpamTrash(e.target.checked)} />
-          <label htmlFor="spam" className="text-xs text-slate-600">Incluir Spam/Texto</label>
+          <label htmlFor="spam" className="text-xs text-slate-600">Incluir Spam/Lixeira</label>
         </div>
         <div className="flex items-center gap-2">
           <input id="payload" type="checkbox" checked={includePayload} onChange={(e)=> setIncludePayload(e.target.checked)} />
@@ -90,26 +102,18 @@ export default function ComposioGmailTestPage() {
           <input id="verbose" type="checkbox" checked={verbose} onChange={(e)=> setVerbose(e.target.checked)} />
           <label htmlFor="verbose" className="text-xs text-slate-600">Verbose</label>
         </div>
-        <div className="md:col-span-2">
-          <label className="block text-xs text-slate-600">page_token</label>
-          <input value={pageToken} onChange={(e)=> setPageToken(e.target.value)} className="w-full rounded border px-2 py-1 text-sm" placeholder="Para paginação" />
-        </div>
       </div>
 
       <div className="flex items-center gap-3">
         <button onClick={()=> doFetch(false)} disabled={state==='loading'} className="px-3 py-1.5 rounded bg-black text-white text-sm disabled:opacity-60">{state==='loading' ? 'Buscando…' : 'Buscar'}</button>
         <button onClick={()=> { if (nextToken) { setPageToken(nextToken); doFetch(true) } }} disabled={!nextToken || state==='loading'} className="px-3 py-1.5 rounded border text-sm disabled:opacity-60">Carregar mais</button>
-        {nextToken && <span className="text-xs text-slate-500">nextPageToken: {nextToken.slice(0,14)}…</span>}
       </div>
 
       {error && (<div className="text-sm text-red-600">{error}</div>)}
 
-      <div>
-        {data ? (
-          <ComposioGmailEmailsResult output={data} />
-        ) : (
-          <div className="text-sm text-slate-500">Sem dados ainda.</div>
-        )}
+      <div className="rounded border border-gray-200 p-4">
+        <div className="text-sm font-medium mb-2">Mensagens: {Array.isArray(messages) ? messages.length : 0}</div>
+        <pre className="text-xs whitespace-pre-wrap overflow-auto max-h-[60vh]">{pretty(data)}</pre>
       </div>
     </div>
   )

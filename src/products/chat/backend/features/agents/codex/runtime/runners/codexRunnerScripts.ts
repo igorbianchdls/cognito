@@ -164,11 +164,11 @@ async function callCrud(args) {
   return out;
 }
 
-async function callWorkspace(args) {
+async function callScopedTool(path, args, label) {
   if (!baseAppUrl || !toolToken || !chatId) {
-    return { success: false, error: 'configuração ausente para tool workspace (AGENT_BASE_URL/AGENT_TOOL_TOKEN/AGENT_CHAT_ID)' };
+    return { success: false, error: 'configuração ausente para tool ' + label + ' (AGENT_BASE_URL/AGENT_TOOL_TOKEN/AGENT_CHAT_ID)' };
   }
-  const urlTool = (baseAppUrl || '').replace(/\\/+$/, '') + '/api/agent-tools/workspace/crud';
+  const urlTool = (baseAppUrl || '').replace(/\\/+$/, '') + path;
   const headers = {
     'content-type': 'application/json',
     authorization: 'Bearer ' + toolToken,
@@ -181,9 +181,17 @@ async function callWorkspace(args) {
   try { data = JSON.parse(raw); } catch {}
   const out = (data && (data.result !== undefined ? data.result : data)) || {};
   if (!resTool.ok) {
-    return { success: false, status: resTool.status, error: out?.error || out?.message || raw || resTool.statusText || 'erro na tool workspace' };
+    return { success: false, status: resTool.status, error: out?.error || out?.message || raw || resTool.statusText || ('erro na tool ' + label) };
   }
   return out;
+}
+
+async function callDrive(args) {
+  return callScopedTool('/api/agent-tools/drive', args, 'drive');
+}
+
+async function callEmail(args) {
+  return callScopedTool('/api/agent-tools/email', args, 'email');
 }
 
 function parsePositiveInt(value, fallback) {
@@ -803,15 +811,15 @@ const baseTools = [
   },
   {
     type: 'function',
-    name: 'workspace',
-    description: 'Tool de workspace (email/drive). action="request" chama rotas permitidas; action="read_file" lê arquivo (texto e extração de texto para PDF quando possível); action="get_drive_file_url" gera URL assinada do Drive por file_id; action="send_email" envia email completo (to/subject/text|html) com anexos por URL/base64.',
+    name: 'drive',
+    description: 'Tool de Drive. action="request" chama rotas permitidas de Drive; action="read_file" lê conteúdo (inclui extração de texto para PDF quando possível); action="get_file_url" retorna signed_url por file_id.',
     parameters: {
       type: 'object',
       properties: {
         action: {
           type: 'string',
-          enum: ['request', 'read_file', 'get_drive_file_url', 'send_email'],
-          description: 'request: operações por resource. read_file: leitura de conteúdo do Drive (inclui extração de texto de PDF quando disponível). get_drive_file_url: retorna signed_url por file_id. send_email: envia email completo com anexos.'
+          enum: ['request', 'read_file', 'get_file_url', 'get_drive_file_url'],
+          description: 'request: operações por resource Drive. read_file: leitura textual/binária por file_id. get_file_url/get_drive_file_url: URL assinada por file_id.'
         },
         method: {
           type: 'string',
@@ -820,12 +828,12 @@ const baseTools = [
         },
         resource: {
           type: 'string',
-          description: 'Resource permitido para action=request: email/inboxes, email/messages, email/messages/{id}, email/messages/{id}/attachments/{attachmentId}, drive, drive/folders, drive/folders/{id}, drive/files/{id}, drive/files/{id}/download, drive/files/prepare-upload, drive/files/complete-upload.'
+          description: 'Resource permitido para action=request: drive, drive/folders, drive/folders/{id}, drive/files/{id}, drive/files/{id}/download, drive/files/prepare-upload, drive/files/complete-upload.'
         },
         params: {
           type: 'object',
           additionalProperties: true,
-          description: 'Query params para action=request. Em email/messages (lista) e email/messages/{id}, normalmente incluir inboxId.'
+          description: 'Query params para action=request.'
         },
         data: {
           type: 'object',
@@ -834,48 +842,84 @@ const baseTools = [
         },
         file_id: {
           type: 'string',
-          description: 'UUID do arquivo no Drive para action=read_file e action=get_drive_file_url.'
+          description: 'UUID do arquivo no Drive para action=read_file e action=get_file_url.'
         },
         mode: {
           type: 'string',
           enum: ['auto', 'text', 'binary'],
           description: 'Modo de leitura em action=read_file.'
         },
+      },
+      required: ['action'],
+      additionalProperties: true,
+    },
+  },
+  {
+    type: 'function',
+    name: 'email',
+    description: 'Tool de Email. action="request" opera inbox/messages; action="send" envia email completo com anexos por URL/base64.',
+    parameters: {
+      type: 'object',
+      properties: {
+        action: {
+          type: 'string',
+          enum: ['request', 'send', 'send_email'],
+          description: 'request: operações por resource de email. send/send_email: envia email.'
+        },
+        method: {
+          type: 'string',
+          enum: ['GET', 'POST', 'DELETE'],
+          description: 'Método HTTP para action=request.'
+        },
+        resource: {
+          type: 'string',
+          description: 'Resource permitido para action=request: email/inboxes, email/messages, email/messages/{id}, email/messages/{id}/attachments/{attachmentId}.'
+        },
+        params: {
+          type: 'object',
+          additionalProperties: true,
+          description: 'Query params para action=request. Em email/messages, normalmente incluir inboxId.'
+        },
+        data: {
+          type: 'object',
+          additionalProperties: true,
+          description: 'Body para action=request quando method for POST/DELETE.'
+        },
         inbox_id: {
           type: 'string',
-          description: 'Inbox para action=send_email.'
+          description: 'Inbox para action=send.'
         },
         to: {
           type: 'array',
           items: { type: 'string' },
-          description: 'Destinatários para action=send_email.'
+          description: 'Destinatários para action=send.'
         },
         cc: {
           type: 'array',
           items: { type: 'string' },
-          description: 'CC opcional para action=send_email.'
+          description: 'CC opcional para action=send.'
         },
         bcc: {
           type: 'array',
           items: { type: 'string' },
-          description: 'BCC opcional para action=send_email.'
+          description: 'BCC opcional para action=send.'
         },
         labels: {
           type: 'array',
           items: { type: 'string' },
-          description: 'Labels opcionais para action=send_email.'
+          description: 'Labels opcionais para action=send.'
         },
         subject: {
           type: 'string',
-          description: 'Assunto para action=send_email.'
+          description: 'Assunto para action=send.'
         },
         text: {
           type: 'string',
-          description: 'Corpo texto para action=send_email.'
+          description: 'Corpo texto para action=send.'
         },
         html: {
           type: 'string',
-          description: 'Corpo HTML para action=send_email.'
+          description: 'Corpo HTML para action=send.'
         },
         attachments: {
           type: 'array',
@@ -891,23 +935,23 @@ const baseTools = [
               url: { type: 'string' },
             },
           },
-          description: 'Lista de anexos para action=send_email. Cada item pode ter url ou content(base64), além de filename/contentType.'
+          description: 'Lista de anexos para action=send. Cada item pode ter url ou content(base64), além de filename/contentType.'
         },
         attachment_url: {
           type: 'string',
-          description: 'Atalho para 1 anexo por URL em action=send_email.'
+          description: 'Atalho para 1 anexo por URL em action=send.'
         },
         signed_url: {
           type: 'string',
-          description: 'Alias de attachment_url para action=send_email.'
+          description: 'Alias de attachment_url para action=send.'
         },
         filename: {
           type: 'string',
-          description: 'Nome do arquivo para attachment_url em action=send_email.'
+          description: 'Nome do arquivo para attachment_url em action=send.'
         },
         content_type: {
           type: 'string',
-          description: 'MIME type para attachment_url em action=send_email.'
+          description: 'MIME type para attachment_url em action=send.'
         },
       },
       required: ['action'],
@@ -1170,8 +1214,10 @@ while (!done && turn < 10) {
       let result = null;
       if (toolName === 'crud') {
         result = await callCrud(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
-      } else if (toolName === 'workspace') {
-        result = await callWorkspace(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
+      } else if (toolName === 'drive') {
+        result = await callDrive(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
+      } else if (toolName === 'email') {
+        result = await callEmail(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
       } else if (toolName === 'Read' || toolName === 'read') {
         result = await callRead(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
       } else if (toolName === 'Skill' || toolName === 'skill') {
