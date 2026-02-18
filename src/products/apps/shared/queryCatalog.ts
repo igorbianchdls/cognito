@@ -4,7 +4,11 @@ export type AppsTableName =
   | 'compras.recebimentos'
   | 'financeiro.contas_pagar'
   | 'financeiro.contas_receber'
-export type AppsModule = 'vendas' | 'compras' | 'financeiro'
+  | 'crm.oportunidades'
+  | 'crm.leads'
+  | 'estoque.estoques_atual'
+  | 'estoque.movimentacoes'
+export type AppsModule = 'vendas' | 'compras' | 'financeiro' | 'crm' | 'estoque'
 
 export type AppsMetricFormat = 'currency' | 'number' | 'percent'
 export type AppsDimensionKind = 'attribute' | 'time'
@@ -51,6 +55,10 @@ const MONTH_EXPR_PEDIDO = "TO_CHAR(DATE_TRUNC('month', data_pedido), 'YYYY-MM')"
 const MONTH_EXPR_EMISSAO_ALIAS = "TO_CHAR(DATE_TRUNC('month', data_emissao), 'YYYY-MM')"
 const MONTH_EXPR_VENCIMENTO = "TO_CHAR(DATE_TRUNC('month', data_vencimento), 'YYYY-MM')"
 const MONTH_EXPR_RECEBIMENTO = "TO_CHAR(DATE_TRUNC('month', data_recebimento), 'YYYY-MM')"
+const MONTH_EXPR_PREVISAO = "TO_CHAR(DATE_TRUNC('month', data_prevista), 'YYYY-MM')"
+const MONTH_EXPR_CRIADO = "TO_CHAR(DATE_TRUNC('month', criado_em), 'YYYY-MM')"
+const MONTH_EXPR_ESTOQUE_ATUALIZADO = "TO_CHAR(DATE_TRUNC('month', atualizado_em), 'YYYY-MM')"
+const MONTH_EXPR_MOVIMENTO = "TO_CHAR(DATE_TRUNC('month', data_movimento), 'YYYY-MM')"
 
 export const APPS_QUERY_CATALOG: Record<AppsTableName, AppsTableCatalog> = {
   'vendas.pedidos': {
@@ -331,6 +339,194 @@ export const APPS_QUERY_CATALOG: Record<AppsTableName, AppsTableCatalog> = {
       { field: 'numero_documento', label: 'Numero Documento', type: 'string', operators: ['contains'] },
       { field: 'valor_min', label: 'Valor Minimo', type: 'number', operators: ['gte'] },
       { field: 'valor_max', label: 'Valor Maximo', type: 'number', operators: ['lte'] },
+    ],
+  },
+  'crm.oportunidades': {
+    table: 'crm.oportunidades',
+    module: 'crm',
+    description: 'Pipeline de oportunidades comerciais.',
+    aliases: ['crm-oportunidades', 'crm_oportunidades'],
+    metrics: [
+      {
+        id: 'pipeline_valor',
+        label: 'Pipeline (Valor)',
+        format: 'currency',
+        legacyMeasures: ['SUM(valor_estimado)', 'SUM(o.valor_estimado)'],
+      },
+      {
+        id: 'oportunidades',
+        label: 'Oportunidades',
+        format: 'number',
+        legacyMeasures: ['COUNT()', 'COUNT_DISTINCT(o.id)'],
+      },
+      {
+        id: 'ticket_estimado',
+        label: 'Ticket Estimado',
+        format: 'currency',
+        legacyMeasures: ['AVG(valor_estimado)', 'AVG(o.valor_estimado)'],
+      },
+    ],
+    dimensions: [
+      { id: 'vendedor', label: 'Vendedor', kind: 'attribute', legacyDimension: 'vendedor' },
+      { id: 'fase', label: 'Fase', kind: 'attribute', legacyDimension: 'fase' },
+      { id: 'origem', label: 'Origem', kind: 'attribute', legacyDimension: 'origem' },
+      { id: 'conta', label: 'Conta', kind: 'attribute', legacyDimension: 'conta' },
+      { id: 'status', label: 'Status', kind: 'attribute', legacyDimension: 'status' },
+      {
+        id: 'periodo',
+        label: 'Periodo',
+        kind: 'time',
+        legacyDimension: 'periodo',
+        legacyDimensionExprByGrain: {
+          month: MONTH_EXPR_PREVISAO,
+        },
+      },
+    ],
+    defaultTimeField: 'data_prevista',
+    filters: [
+      { field: 'tenant_id', label: 'Tenant', type: 'id', operators: ['eq'] },
+      { field: 'de', label: 'Data Inicial', type: 'date', operators: ['gte'] },
+      { field: 'ate', label: 'Data Final', type: 'date', operators: ['lte'] },
+      { field: 'status', label: 'Status', type: 'enum', operators: ['eq', 'in'] },
+      { field: 'vendedor_id', label: 'Vendedor', type: 'id', operators: ['eq', 'in'] },
+      { field: 'fase_pipeline_id', label: 'Fase Pipeline', type: 'id', operators: ['eq', 'in'] },
+      { field: 'origem_id', label: 'Origem', type: 'id', operators: ['eq', 'in'] },
+      { field: 'conta_id', label: 'Conta', type: 'id', operators: ['eq', 'in'] },
+      { field: 'valor_min', label: 'Valor Minimo', type: 'number', operators: ['gte'] },
+      { field: 'valor_max', label: 'Valor Maximo', type: 'number', operators: ['lte'] },
+    ],
+  },
+  'crm.leads': {
+    table: 'crm.leads',
+    module: 'crm',
+    description: 'Leads comerciais por origem, responsável e status.',
+    aliases: ['crm-leads', 'crm_leads'],
+    metrics: [
+      {
+        id: 'leads',
+        label: 'Leads',
+        format: 'number',
+        legacyMeasures: ['COUNT()', 'COUNT_DISTINCT(l.id)'],
+      },
+    ],
+    dimensions: [
+      { id: 'origem', label: 'Origem', kind: 'attribute', legacyDimension: 'origem' },
+      { id: 'responsavel', label: 'Responsavel', kind: 'attribute', legacyDimension: 'responsavel' },
+      { id: 'empresa', label: 'Empresa', kind: 'attribute', legacyDimension: 'empresa' },
+      { id: 'status', label: 'Status', kind: 'attribute', legacyDimension: 'status' },
+      {
+        id: 'periodo',
+        label: 'Periodo',
+        kind: 'time',
+        legacyDimension: 'periodo',
+        legacyDimensionExprByGrain: {
+          month: MONTH_EXPR_CRIADO,
+        },
+      },
+    ],
+    defaultTimeField: 'criado_em',
+    filters: [
+      { field: 'tenant_id', label: 'Tenant', type: 'id', operators: ['eq'] },
+      { field: 'de', label: 'Data Inicial', type: 'date', operators: ['gte'] },
+      { field: 'ate', label: 'Data Final', type: 'date', operators: ['lte'] },
+      { field: 'status', label: 'Status', type: 'enum', operators: ['eq', 'in'] },
+      { field: 'origem_id', label: 'Origem', type: 'id', operators: ['eq', 'in'] },
+      { field: 'responsavel_id', label: 'Responsavel', type: 'id', operators: ['eq', 'in'] },
+    ],
+  },
+  'estoque.estoques_atual': {
+    table: 'estoque.estoques_atual',
+    module: 'estoque',
+    description: 'Snapshot atual de estoque por produto e almoxarifado.',
+    aliases: ['estoque-estoques-atual', 'estoque_estoques_atual', 'estoque.estoque-atual'],
+    metrics: [
+      {
+        id: 'quantidade_total',
+        label: 'Quantidade',
+        format: 'number',
+        legacyMeasures: ['SUM(quantidade)', 'SUM(ea.quantidade)'],
+      },
+      {
+        id: 'valor_total',
+        label: 'Valor em Estoque',
+        format: 'currency',
+        legacyMeasures: ['SUM(valor_total)', 'SUM(ea.quantidade * ea.custo_medio)'],
+      },
+      {
+        id: 'skus',
+        label: 'SKUs',
+        format: 'number',
+        legacyMeasures: ['COUNT_DISTINCT(produto_id)', 'COUNT_DISTINCT(ea.produto_id)'],
+      },
+    ],
+    dimensions: [
+      { id: 'produto', label: 'Produto', kind: 'attribute', legacyDimension: 'produto' },
+      { id: 'almoxarifado', label: 'Almoxarifado', kind: 'attribute', legacyDimension: 'almoxarifado' },
+      {
+        id: 'periodo',
+        label: 'Periodo',
+        kind: 'time',
+        legacyDimension: 'periodo',
+        legacyDimensionExprByGrain: {
+          month: MONTH_EXPR_ESTOQUE_ATUALIZADO,
+        },
+      },
+    ],
+    defaultTimeField: 'atualizado_em',
+    filters: [
+      { field: 'de', label: 'Data Inicial', type: 'date', operators: ['gte'] },
+      { field: 'ate', label: 'Data Final', type: 'date', operators: ['lte'] },
+      { field: 'produto_id', label: 'Produto', type: 'id', operators: ['eq', 'in'] },
+      { field: 'almoxarifado_id', label: 'Almoxarifado', type: 'id', operators: ['eq', 'in'] },
+    ],
+  },
+  'estoque.movimentacoes': {
+    table: 'estoque.movimentacoes',
+    module: 'estoque',
+    description: 'Movimentações de estoque (entradas, saídas e ajustes).',
+    aliases: ['estoque-movimentacoes', 'estoque_movimentacoes', 'estoque.movimentacoes_estoque'],
+    metrics: [
+      {
+        id: 'quantidade_total',
+        label: 'Quantidade Movimentada',
+        format: 'number',
+        legacyMeasures: ['SUM(quantidade)', 'SUM(m.quantidade)'],
+      },
+      {
+        id: 'valor_movimentado',
+        label: 'Valor Movimentado',
+        format: 'currency',
+        legacyMeasures: ['SUM(valor_total)', 'SUM(m.valor_total)'],
+      },
+      {
+        id: 'movimentos',
+        label: 'Movimentos',
+        format: 'number',
+        legacyMeasures: ['COUNT()', 'COUNT_DISTINCT(m.id)'],
+      },
+    ],
+    dimensions: [
+      { id: 'produto', label: 'Produto', kind: 'attribute', legacyDimension: 'produto' },
+      { id: 'almoxarifado', label: 'Almoxarifado', kind: 'attribute', legacyDimension: 'almoxarifado' },
+      { id: 'tipo_movimento', label: 'Tipo Movimento', kind: 'attribute', legacyDimension: 'tipo_movimento' },
+      { id: 'natureza', label: 'Natureza', kind: 'attribute', legacyDimension: 'natureza' },
+      {
+        id: 'periodo',
+        label: 'Periodo',
+        kind: 'time',
+        legacyDimension: 'periodo',
+        legacyDimensionExprByGrain: {
+          month: MONTH_EXPR_MOVIMENTO,
+        },
+      },
+    ],
+    defaultTimeField: 'data_movimento',
+    filters: [
+      { field: 'de', label: 'Data Inicial', type: 'date', operators: ['gte'] },
+      { field: 'ate', label: 'Data Final', type: 'date', operators: ['lte'] },
+      { field: 'produto_id', label: 'Produto', type: 'id', operators: ['eq', 'in'] },
+      { field: 'almoxarifado_id', label: 'Almoxarifado', type: 'id', operators: ['eq', 'in'] },
+      { field: 'tipo_movimento', label: 'Tipo Movimento', type: 'enum', operators: ['eq', 'in'] },
     ],
   },
 }

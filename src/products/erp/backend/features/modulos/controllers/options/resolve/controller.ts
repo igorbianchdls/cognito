@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       return Response.json({ success: false, message: `model não suportado: ${rawModel}` }, { status: 400 })
     }
     const moduleSlug = canonicalModel.split('.')[0]
-    if (!moduleSlug || !['vendas', 'compras', 'financeiro'].includes(moduleSlug)) {
+    if (!moduleSlug || !['vendas', 'compras', 'financeiro', 'crm', 'estoque'].includes(moduleSlug)) {
       return Response.json({ success: false, message: `módulo inválido para model: ${canonicalModel}` }, { status: 400 })
     }
 
@@ -86,4 +86,3 @@ export async function POST(req: NextRequest) {
     )
   }
 }
-

@@ -31,8 +31,10 @@ export async function GET(req: NextRequest) {
       })
     }
 
-    const allowedModules = new Set(['vendas', 'compras', 'financeiro'])
-    const module = allowedModules.has(moduleFilter) ? (moduleFilter as 'vendas' | 'compras' | 'financeiro') : undefined
+    const allowedModules = new Set(['vendas', 'compras', 'financeiro', 'crm', 'estoque'])
+    const module = allowedModules.has(moduleFilter)
+      ? (moduleFilter as 'vendas' | 'compras' | 'financeiro' | 'crm' | 'estoque')
+      : undefined
     const items = listAppsTableCatalogs(module).map((entry) => ({
       ...entry,
       legacyModel: toLegacyModel(entry.table),
@@ -55,4 +57,3 @@ export async function GET(req: NextRequest) {
     )
   }
 }
-

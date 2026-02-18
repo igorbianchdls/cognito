@@ -127,6 +127,59 @@ async function buildComprasPatch(range?: DateRange): Promise<DataRecord> {
   }
 }
 
+async function buildFinanceiroPatch(range?: DateRange): Promise<DataRecord> {
+  const effectiveRange = normalizeRange(range)
+
+  const [dashboard, contasPagarRows, contasReceberRows] = await Promise.all([
+    fetchModuleDashboard('financeiro', { de: effectiveRange.from, ate: effectiveRange.to, limit: 8 }),
+    fetchModuleRows('financeiro', 'contas-a-pagar'),
+    fetchModuleRows('financeiro', 'contas-a-receber'),
+  ])
+
+  return {
+    financeiro: {
+      'contas-a-pagar': contasPagarRows,
+      'contas-a-receber': contasReceberRows,
+      dashboard: dashboard?.charts || {},
+      kpis: dashboard?.kpis || {},
+    },
+  }
+}
+
+async function buildEstoquePatch(range?: DateRange): Promise<DataRecord> {
+  const effectiveRange = normalizeRange(range)
+
+  const [dashboard, estoqueAtualRows] = await Promise.all([
+    fetchModuleDashboard('estoque', { de: effectiveRange.from, ate: effectiveRange.to, limit: 8 }),
+    fetchModuleRows('estoque', 'estoque-atual'),
+  ])
+
+  return {
+    estoque: {
+      'estoque-atual': estoqueAtualRows,
+      dashboard: dashboard?.charts || {},
+      kpis: dashboard?.kpis || {},
+    },
+  }
+}
+
+async function buildCrmPatch(range?: DateRange): Promise<DataRecord> {
+  const effectiveRange = normalizeRange(range)
+
+  const [dashboard, oportunidadesRows] = await Promise.all([
+    fetchModuleDashboard('crm', { de: effectiveRange.from, ate: effectiveRange.to, limit: 8 }),
+    fetchModuleRows('crm', 'oportunidades'),
+  ])
+
+  return {
+    crm: {
+      oportunidades: oportunidadesRows,
+      dashboard: dashboard?.charts || {},
+      kpis: dashboard?.kpis || {},
+    },
+  }
+}
+
 export async function refreshAppsHomeData(setData: Dispatch<SetStateAction<DataRecord>>, range?: DateRange) {
   const patch = await buildAppsHomePatch(range)
   setData((prev) => mergeByNamespace(prev || {}, patch))
@@ -151,6 +204,21 @@ export async function refreshAppsComprasData(
     }
   }
 
+  setData((prev) => mergeByNamespace(prev || {}, patch))
+}
+
+export async function refreshAppsFinanceiroData(setData: Dispatch<SetStateAction<DataRecord>>, range?: DateRange) {
+  const patch = await buildFinanceiroPatch(range)
+  setData((prev) => mergeByNamespace(prev || {}, patch))
+}
+
+export async function refreshAppsEstoqueData(setData: Dispatch<SetStateAction<DataRecord>>, range?: DateRange) {
+  const patch = await buildEstoquePatch(range)
+  setData((prev) => mergeByNamespace(prev || {}, patch))
+}
+
+export async function refreshAppsCrmData(setData: Dispatch<SetStateAction<DataRecord>>, range?: DateRange) {
+  const patch = await buildCrmPatch(range)
   setData((prev) => mergeByNamespace(prev || {}, patch))
 }
 
@@ -199,6 +267,54 @@ export function useAppsComprasBootstrap(setData: Dispatch<SetStateAction<DataRec
         patch = await buildComprasPatch(undefined)
       }
 
+      if (!active) return
+      setData((prev) => mergeByNamespace(prev || {}, patch))
+    })()
+
+    return () => {
+      active = false
+    }
+  }, [setData])
+}
+
+export function useAppsFinanceiroBootstrap(setData: Dispatch<SetStateAction<DataRecord>>) {
+  useEffect(() => {
+    let active = true
+
+    void (async () => {
+      const patch = await buildFinanceiroPatch(undefined)
+      if (!active) return
+      setData((prev) => mergeByNamespace(prev || {}, patch))
+    })()
+
+    return () => {
+      active = false
+    }
+  }, [setData])
+}
+
+export function useAppsEstoqueBootstrap(setData: Dispatch<SetStateAction<DataRecord>>) {
+  useEffect(() => {
+    let active = true
+
+    void (async () => {
+      const patch = await buildEstoquePatch(undefined)
+      if (!active) return
+      setData((prev) => mergeByNamespace(prev || {}, patch))
+    })()
+
+    return () => {
+      active = false
+    }
+  }, [setData])
+}
+
+export function useAppsCrmBootstrap(setData: Dispatch<SetStateAction<DataRecord>>) {
+  useEffect(() => {
+    let active = true
+
+    void (async () => {
+      const patch = await buildCrmPatch(undefined)
       if (!active) return
       setData((prev) => mergeByNamespace(prev || {}, patch))
     })()
