@@ -33,6 +33,7 @@ try {
 
 const sql = (getArg("--sql") || "").trim();
 const dbUrlArg = (getArg("--db-url") || "").trim();
+const retries = Math.max(1, Number(getArg("--retries") || 8));
 const dbUrl = process.env.SUPABASE_DB_URL;
 
 const effectiveDbUrl = dbUrlArg || dbUrl;
@@ -58,18 +59,32 @@ if (normalized.includes(";")) {
   process.exit(1);
 }
 
-const client = new Client({
-  connectionString: effectiveDbUrl,
-  ssl: { rejectUnauthorized: false },
-});
-
-try {
-  await client.connect();
-  const result = await client.query(sql);
-  process.stdout.write(`${JSON.stringify(result.rows, null, 2)}\n`);
-} catch (error) {
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exit(1);
-} finally {
-  await client.end().catch(() => {});
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+let lastError = null;
+for (let attempt = 1; attempt <= retries; attempt += 1) {
+  const client = new Client({
+    connectionString: effectiveDbUrl,
+    ssl: { rejectUnauthorized: false },
+  });
+
+  try {
+    await client.connect();
+    const result = await client.query(sql);
+    process.stdout.write(`${JSON.stringify(result.rows, null, 2)}\n`);
+    process.exit(0);
+  } catch (error) {
+    lastError = error;
+    const msg = error instanceof Error ? error.message : String(error);
+    const isDns = /EAI_AGAIN|getaddrinfo/i.test(msg);
+    if (!isDns || attempt >= retries) break;
+    await sleep(300 * attempt);
+  } finally {
+    await client.end().catch(() => {});
+  }
+}
+
+console.error(lastError instanceof Error ? lastError.message : String(lastError));
+process.exit(1);
