@@ -1,8 +1,8 @@
 "use client"
 
 import type { UIMessage } from 'ai'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import EntityDisplay from '@/products/erp/frontend/components/EntityDisplay'
 
 type Props = { message: UIMessage; isPending?: boolean }
 type CrudRow = Record<string, unknown>
@@ -236,16 +236,9 @@ function pickEntityCellData(row: CrudRow, entityColumn: string): { name: string;
 }
 
 function CrudEntityCell({ name, imageUrl }: { name: string; imageUrl?: string }) {
-  const initial = name.trim().charAt(0).toUpperCase() || '?'
   return (
-    <div className="flex items-center gap-2 min-w-0">
-      <Avatar className="h-7 w-7 rounded-md border border-gray-200">
-        {imageUrl ? <AvatarImage src={imageUrl} alt={name} /> : null}
-        <AvatarFallback className="rounded-md bg-gray-100 text-gray-700 text-[11px] font-semibold">
-          {initial}
-        </AvatarFallback>
-      </Avatar>
-      <span className="font-semibold text-gray-900 whitespace-nowrap overflow-hidden text-ellipsis">{name}</span>
+    <div className="max-w-[280px] overflow-hidden whitespace-nowrap">
+      <EntityDisplay name={name} imageUrl={imageUrl} size={24} />
     </div>
   )
 }
@@ -283,10 +276,14 @@ function CrudOutputTable({ rows, title, message, count }: { rows: CrudRow[]; tit
       <div className="rounded-md border border-gray-200 overflow-hidden bg-white">
         <Table>
           {columns.length > 0 ? (
-            <TableHeader className="bg-gray-50">
-              <TableRow className="hover:bg-gray-50">
+            <TableHeader>
+              <TableRow className="hover:bg-[rgb(252,252,252)]" style={{ backgroundColor: 'rgb(252, 252, 252)' }}>
                 {columns.map((column) => (
-                  <TableHead key={column} className="h-10 py-2 text-[12px] font-semibold text-gray-700">
+                  <TableHead
+                    key={column}
+                    className="h-9 text-[11px] font-semibold text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis"
+                    style={{ padding: '6px 10px' }}
+                  >
                     {humanizeKey(column)}
                   </TableHead>
                 ))}
@@ -307,14 +304,22 @@ function CrudOutputTable({ rows, title, message, count }: { rows: CrudRow[]; tit
                     if (entityColumn && column === entityColumn) {
                       const entity = pickEntityCellData(row, entityColumn)
                       return (
-                        <TableCell key={`${rowIndex}-${column}`} className="py-2 align-middle">
+                        <TableCell
+                          key={`${rowIndex}-${column}`}
+                          className="align-middle whitespace-nowrap overflow-hidden text-ellipsis"
+                          style={{ padding: '8px 10px' }}
+                        >
                           <CrudEntityCell name={entity.name} imageUrl={entity.imageUrl} />
                         </TableCell>
                       )
                     }
                     return (
-                      <TableCell key={`${rowIndex}-${column}`} className="py-2 text-gray-700">
-                        <span className="text-sm">{compactValue(row[column])}</span>
+                      <TableCell
+                        key={`${rowIndex}-${column}`}
+                        className="text-gray-700 whitespace-nowrap overflow-hidden text-ellipsis"
+                        style={{ padding: '8px 10px' }}
+                      >
+                        <span className="block max-w-[220px] truncate text-[13px]">{compactValue(row[column])}</span>
                       </TableCell>
                     )
                   })}
