@@ -856,7 +856,7 @@ export default function ModulosFinanceiroPage() {
               <NexusPageContainer className="h-full">
                 {/* Header interno com SidebarTrigger */}
                 <div className="h-10 flex items-center border-b border-gray-100 px-2">
-                  <SidebarTrigger className="h-8 w-8 text-gray-200" />
+                  <SidebarTrigger className="h-8 w-8 text-gray-400" />
                 </div>
                 <div style={{ marginBottom: layout.mbTitle }}>
                   <PageHeader
