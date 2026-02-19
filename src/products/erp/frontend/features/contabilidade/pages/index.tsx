@@ -302,8 +302,8 @@ export default function ModulosContabilidadePage() {
             
             <div className="flex-1 min-h-0 p-0 bg-white" data-page="nexus">
               <NexusPageContainer className="h-full">
-                <div className="h-10 flex items-center border-b border-gray-200 px-2">
-                  <SidebarTrigger className="h-8 w-8" />
+                <div className="h-10 flex items-center border-b border-gray-100 px-2">
+                  <SidebarTrigger className="h-8 w-8 text-gray-200" />
                 </div>
                 <div style={{ marginBottom: layout.mbTitle }}>
                   <PageHeader

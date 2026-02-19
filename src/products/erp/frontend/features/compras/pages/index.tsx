@@ -11,12 +11,13 @@ import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer
 import PageHeader from '@/products/erp/frontend/components/PageHeader'
 import TabsNav from '@/products/erp/frontend/components/TabsNav'
 import DataTable, { type TableData } from '@/components/widgets/Table'
+import IconLabelHeader from '@/components/widgets/IconLabelHeader'
 import EntityDisplay from '@/products/erp/frontend/components/EntityDisplay'
 import DataToolbar from '@/products/erp/frontend/components/DataToolbar'
 import StatusBadge from '@/products/erp/frontend/components/StatusBadge'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/products/erp/state/moduleUiStore'
 import type { Opcao } from '@/products/erp/frontend/components/TabsNav'
-import { ShoppingCart, PackageCheck, ClipboardList, FileText } from 'lucide-react'
+import { ShoppingCart, PackageCheck, ClipboardList, FileText, Hash, Calendar, CalendarClock, Building2, DollarSign, CheckCircle2, Building, PieChart, Folder, Tag, User, AlertTriangle } from 'lucide-react'
 import ComprasKpiRow from '@/products/erp/frontend/components/compras/ComprasKpiRow'
 import CotacoesKpiRow from '@/products/erp/frontend/components/compras/CotacoesKpiRow'
 
@@ -302,68 +303,67 @@ export default function ModulosComprasPage() {
   const columns: ColumnDef<Row>[] = useMemo(() => {
     if (tabs.selected === 'recebimentos') {
       return [
-        { accessorKey: 'recebimento_id', header: 'ID' },
-        { accessorKey: 'data_recebimento', header: 'Data Recebimento', cell: ({ row }) => formatDate(row.original['data_recebimento']) },
-        { accessorKey: 'numero_oc', header: 'Número OC' },
-        { accessorKey: 'compra_data', header: 'Data Compra', cell: ({ row }) => formatDate(row.original['compra_data']) },
-        { accessorKey: 'fornecedor', header: 'Fornecedor' },
-        { accessorKey: 'compra_valor_total', header: 'Valor Compra', cell: ({ row }) => formatBRL(row.original['compra_valor_total']) },
-        { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
-        { accessorKey: 'observacoes', header: 'Observações' },
-        { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+        { accessorKey: 'recebimento_id', header: () => <IconLabelHeader icon={<Hash className="h-3.5 w-3.5" />} label="ID" /> },
+        { accessorKey: 'data_recebimento', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Data Recebimento" />, cell: ({ row }) => formatDate(row.original['data_recebimento']) },
+        { accessorKey: 'numero_oc', header: () => <IconLabelHeader icon={<Hash className="h-3.5 w-3.5" />} label="Número OC" /> },
+        { accessorKey: 'compra_data', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Data Compra" />, cell: ({ row }) => formatDate(row.original['compra_data']) },
+        { accessorKey: 'fornecedor', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Fornecedor" /> },
+        { accessorKey: 'compra_valor_total', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Valor Compra" />, cell: ({ row }) => formatBRL(row.original['compra_valor_total']) },
+        { accessorKey: 'status', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Status" />, cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
+        { accessorKey: 'observacoes', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Observações" /> },
+        { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado em" />, cell: ({ row }) => formatDate(row.original['criado_em']) },
       ]
     }
 
     if (tabs.selected === 'solicitacoes_compra') {
       return [
-        { accessorKey: 'solicitacao_id', header: 'ID' },
-        { accessorKey: 'solicitado_por', header: 'Solicitado Por' },
-        { accessorKey: 'departamento', header: 'Departamento' },
-        { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
-        { accessorKey: 'urgencia', header: 'Urgência' },
-        { accessorKey: 'observacoes', header: 'Observações' },
-        { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+        { accessorKey: 'solicitacao_id', header: () => <IconLabelHeader icon={<Hash className="h-3.5 w-3.5" />} label="ID" /> },
+        { accessorKey: 'solicitado_por', header: () => <IconLabelHeader icon={<User className="h-3.5 w-3.5" />} label="Solicitado Por" /> },
+        { accessorKey: 'departamento', header: () => <IconLabelHeader icon={<Building className="h-3.5 w-3.5" />} label="Departamento" /> },
+        { accessorKey: 'status', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Status" />, cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
+        { accessorKey: 'urgencia', header: () => <IconLabelHeader icon={<AlertTriangle className="h-3.5 w-3.5" />} label="Urgência" /> },
+        { accessorKey: 'observacoes', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Observações" /> },
+        { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado em" />, cell: ({ row }) => formatDate(row.original['criado_em']) },
       ]
     }
 
     if (tabs.selected === 'cotacoes') {
       return [
-        { accessorKey: 'cotacao_id', header: 'ID' },
-        { accessorKey: 'numero_cotacao', header: 'Número Cotação' },
-        { accessorKey: 'data_solicitacao', header: 'Data Solicitação', cell: ({ row }) => formatDate(row.original['data_solicitacao']) },
-        { accessorKey: 'prazo_resposta', header: 'Prazo Resposta', cell: ({ row }) => formatDate(row.original['prazo_resposta']) },
-        { accessorKey: 'valor_estimado', header: 'Valor Estimado', cell: ({ row }) => formatBRL(row.original['valor_estimado']) },
-        { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
-        { accessorKey: 'observacoes', header: 'Observações' },
-        { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+        { accessorKey: 'cotacao_id', header: () => <IconLabelHeader icon={<Hash className="h-3.5 w-3.5" />} label="ID" /> },
+        { accessorKey: 'numero_cotacao', header: () => <IconLabelHeader icon={<Hash className="h-3.5 w-3.5" />} label="Número Cotação" /> },
+        { accessorKey: 'data_solicitacao', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Data Solicitação" />, cell: ({ row }) => formatDate(row.original['data_solicitacao']) },
+        { accessorKey: 'prazo_resposta', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Prazo Resposta" />, cell: ({ row }) => formatDate(row.original['prazo_resposta']) },
+        { accessorKey: 'valor_estimado', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Valor Estimado" />, cell: ({ row }) => formatBRL(row.original['valor_estimado']) },
+        { accessorKey: 'status', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Status" />, cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
+        { accessorKey: 'observacoes', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Observações" /> },
+        { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado em" />, cell: ({ row }) => formatDate(row.original['criado_em']) },
       ]
     }
 
     return [
-      { accessorKey: 'fornecedor', header: 'Fornecedor',
+      { accessorKey: 'fornecedor', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Fornecedor" />,
         cell: ({ row }) => (
           <EntityDisplay
             name={row.original['fornecedor'] ? String(row.original['fornecedor']) : '—'}
-            imageUrl={row.original['fornecedor_imagem_url'] ? String(row.original['fornecedor_imagem_url']) : undefined}
             size={32}
           />
         )
       },
-      { accessorKey: 'compra_id', header: 'ID' },
-      { accessorKey: 'numero_oc', header: 'Número OC' },
-      { accessorKey: 'data_pedido', header: 'Data Pedido', cell: ({ row }) => formatDate(row.original['data_pedido']) },
-      { accessorKey: 'data_documento', header: 'Documento', cell: ({ row }) => formatDate(row.original['data_documento']) },
-      { accessorKey: 'data_lancamento', header: 'Lançamento', cell: ({ row }) => formatDate(row.original['data_lancamento']) },
-      { accessorKey: 'data_vencimento', header: 'Vencimento', cell: ({ row }) => formatDate(row.original['data_vencimento']) },
-      { accessorKey: 'data_entrega_prevista', header: 'Entrega Prevista', cell: ({ row }) => formatDate(row.original['data_entrega_prevista']) },
-      { accessorKey: 'filial', header: 'Filial', cell: ({ row }) => <StatusBadge value={row.original['filial']} type="status" /> },
-      { accessorKey: 'centro_custo', header: 'Centro de Custo', cell: ({ row }) => <StatusBadge value={row.original['centro_custo']} type="status" /> },
-      { accessorKey: 'projeto', header: 'Projeto', cell: ({ row }) => <StatusBadge value={row.original['projeto']} type="status" /> },
-      { accessorKey: 'categoria_despesa', header: 'Categoria de Despesa', cell: ({ row }) => <StatusBadge value={row.original['categoria_despesa']} type="status" /> },
-      { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
-      { accessorKey: 'valor_total', header: 'Valor Total', cell: ({ row }) => formatBRL(row.original['valor_total']) },
-      { accessorKey: 'observacoes', header: 'Observações' },
-      { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+      { accessorKey: 'compra_id', header: () => <IconLabelHeader icon={<Hash className="h-3.5 w-3.5" />} label="ID" /> },
+      { accessorKey: 'numero_oc', header: () => <IconLabelHeader icon={<Hash className="h-3.5 w-3.5" />} label="Número OC" /> },
+      { accessorKey: 'data_pedido', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Data Pedido" />, cell: ({ row }) => formatDate(row.original['data_pedido']) },
+      { accessorKey: 'data_documento', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Documento" />, cell: ({ row }) => formatDate(row.original['data_documento']) },
+      { accessorKey: 'data_lancamento', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Lançamento" />, cell: ({ row }) => formatDate(row.original['data_lancamento']) },
+      { accessorKey: 'data_vencimento', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Vencimento" />, cell: ({ row }) => formatDate(row.original['data_vencimento']) },
+      { accessorKey: 'data_entrega_prevista', header: () => <IconLabelHeader icon={<CalendarClock className="h-3.5 w-3.5" />} label="Entrega Prevista" />, cell: ({ row }) => formatDate(row.original['data_entrega_prevista']) },
+      { accessorKey: 'filial', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Filial" />, cell: ({ row }) => <StatusBadge value={row.original['filial']} type="status" /> },
+      { accessorKey: 'centro_custo', header: () => <IconLabelHeader icon={<PieChart className="h-3.5 w-3.5" />} label="Centro de Custo" />, cell: ({ row }) => <StatusBadge value={row.original['centro_custo']} type="status" /> },
+      { accessorKey: 'projeto', header: () => <IconLabelHeader icon={<Folder className="h-3.5 w-3.5" />} label="Projeto" />, cell: ({ row }) => <StatusBadge value={row.original['projeto']} type="status" /> },
+      { accessorKey: 'categoria_despesa', header: () => <IconLabelHeader icon={<Tag className="h-3.5 w-3.5" />} label="Categoria de Despesa" />, cell: ({ row }) => <StatusBadge value={row.original['categoria_despesa']} type="status" /> },
+      { accessorKey: 'status', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Status" />, cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
+      { accessorKey: 'valor_total', header: () => <IconLabelHeader icon={<DollarSign className="h-3.5 w-3.5" />} label="Valor Total" />, cell: ({ row }) => formatBRL(row.original['valor_total']) },
+      { accessorKey: 'observacoes', header: () => <IconLabelHeader icon={<FileText className="h-3.5 w-3.5" />} label="Observações" /> },
+      { accessorKey: 'criado_em', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Criado em" />, cell: ({ row }) => formatDate(row.original['criado_em']) },
     ]
   }, [tabs.selected])
 
@@ -439,8 +439,8 @@ export default function ModulosComprasPage() {
             
             <div className="flex-1 min-h-0 p-0 bg-white">
               <NexusPageContainer className="h-full">
-                <div className="h-10 flex items-center border-b border-gray-200 px-2">
-                  <SidebarTrigger className="h-8 w-8" />
+                <div className="h-10 flex items-center border-b border-gray-100 px-2">
+                  <SidebarTrigger className="h-8 w-8 text-gray-200" />
                 </div>
                 <div style={{ marginBottom: layout.mbTitle }}>
                   <PageHeader

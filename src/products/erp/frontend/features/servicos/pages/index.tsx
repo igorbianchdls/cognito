@@ -141,7 +141,6 @@ export default function ModulosServicosPage() {
           { accessorKey: 'cliente', header: 'Cliente', size: 250, minSize: 200, cell: ({ row }) => (
             <EntityDisplay
               name={row.original['cliente'] ? String(row.original['cliente']) : 'Sem nome'}
-              imageUrl={row.original['cliente_imagem_url'] ? String(row.original['cliente_imagem_url']) : undefined}
             />
           ) },
           { accessorKey: 'valor', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor']) },
@@ -157,7 +156,6 @@ export default function ModulosServicosPage() {
           { accessorKey: 'cliente', header: 'Cliente', size: 260, minSize: 180, cell: ({ row }) => (
             <div>
               <EntityDisplay name={String(row.original['cliente'] ?? '-')}
-                imageUrl={row.original['cliente_imagem_url'] ? String(row.original['cliente_imagem_url']) : undefined}
               />
               <div className="text-[11px] inline-flex items-center gap-1 px-2 py-0.5 rounded bg-gray-100 text-gray-600 mt-1">Venda</div>
             </div>
@@ -277,7 +275,6 @@ export default function ModulosServicosPage() {
               <EntityDisplay
                 name={row.original['cliente'] ? String(row.original['cliente']) : 'Sem nome'}
                 subtitle={row.original['segmento'] ? String(row.original['segmento']) : 'Sem segmento'}
-                imageUrl={row.original['cliente_imagem_url'] ? String(row.original['cliente_imagem_url']) : undefined}
                 onClick={() => openImagemEditor('cliente', row.original['id'] as string | number, { nome: String(row.original['cliente'] || ''), imagem_url: row.original['cliente_imagem_url'] ? String(row.original['cliente_imagem_url']) : undefined })}
                 clickable
               />
@@ -305,7 +302,6 @@ export default function ModulosServicosPage() {
               <EntityDisplay
                 name={row.original['cliente'] ? String(row.original['cliente']) : 'Sem nome'}
                 subtitle={row.original['segmento'] ? String(row.original['segmento']) : 'Sem segmento'}
-                imageUrl={row.original['cliente_imagem_url'] ? String(row.original['cliente_imagem_url']) : undefined}
                 onClick={() => openImagemEditor('cliente', row.original['cliente_id'] as string | number | undefined, { nome: String(row.original['cliente'] || ''), imagem_url: row.original['cliente_imagem_url'] ? String(row.original['cliente_imagem_url']) : undefined })}
                 clickable
               />
@@ -459,8 +455,8 @@ export default function ModulosServicosPage() {
             
             <div className="flex-1 min-h-0 p-0 bg-white" data-page="nexus">
               <NexusPageContainer className="h-full">
-                <div className="h-10 flex items-center border-b border-gray-200 px-2">
-                  <SidebarTrigger className="h-8 w-8" />
+                <div className="h-10 flex items-center border-b border-gray-100 px-2">
+                  <SidebarTrigger className="h-8 w-8 text-gray-200" />
                 </div>
                 <div style={{ marginBottom: layout.mbTitle }}>
                   <PageHeader

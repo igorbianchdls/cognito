@@ -255,7 +255,6 @@ export default function ModulosVendasPage() {
             cell: ({ row }) => (
               <EntityDisplay
                 name={row.original['cliente'] ? String(row.original['cliente']) : 'Sem nome'}
-                imageUrl={row.original['cliente_imagem_url'] ? String(row.original['cliente_imagem_url']) : undefined}
               />
             )
           },
@@ -406,8 +405,8 @@ export default function ModulosVendasPage() {
           <div className="flex flex-col h-full w-full">
             <div className="flex-1 min-h-0 p-0 bg-white">
               <NexusPageContainer className="h-full">
-                <div className="h-10 flex items-center border-b border-gray-200 px-2">
-                  <SidebarTrigger className="h-8 w-8" />
+                <div className="h-10 flex items-center border-b border-gray-100 px-2">
+                  <SidebarTrigger className="h-8 w-8 text-gray-200" />
                 </div>
                 <div style={{ marginBottom: layout.mbTitle }}>
                   <PageHeader

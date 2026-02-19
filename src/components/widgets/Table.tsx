@@ -243,7 +243,7 @@ export function DataTable<TData extends TableData>({
   const [newRows, setNewRows] = React.useState<Set<number>>(new Set())
   const [expandedRows, setExpandedRows] = React.useState<Set<string>>(new Set())
   const baseHeaderPadding = headerPadding ?? padding
-  const effectiveHeaderBackground = isErpRoute ? 'rgb(254, 254, 254)' : headerBackground
+  const effectiveHeaderBackground = isErpRoute ? 'rgb(252, 252, 252)' : headerBackground
   const effectiveHeaderPaddingY = isErpRoute ? Math.min(baseHeaderPadding, 6) : baseHeaderPadding
   const effectiveHeaderPaddingX = baseHeaderPadding
   
