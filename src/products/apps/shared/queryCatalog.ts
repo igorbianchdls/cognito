@@ -6,9 +6,10 @@ export type AppsTableName =
   | 'financeiro.contas_receber'
   | 'crm.oportunidades'
   | 'crm.leads'
+  | 'documentos.documentos'
   | 'estoque.estoques_atual'
   | 'estoque.movimentacoes'
-export type AppsModule = 'vendas' | 'compras' | 'financeiro' | 'crm' | 'estoque'
+export type AppsModule = 'vendas' | 'compras' | 'financeiro' | 'crm' | 'documentos' | 'estoque'
 
 export type AppsMetricFormat = 'currency' | 'number' | 'percent'
 export type AppsDimensionKind = 'attribute' | 'time'
@@ -432,6 +433,57 @@ export const APPS_QUERY_CATALOG: Record<AppsTableName, AppsTableCatalog> = {
       { field: 'status', label: 'Status', type: 'enum', operators: ['eq', 'in'] },
       { field: 'origem_id', label: 'Origem', type: 'id', operators: ['eq', 'in'] },
       { field: 'responsavel_id', label: 'Responsavel', type: 'id', operators: ['eq', 'in'] },
+    ],
+  },
+  'documentos.documentos': {
+    table: 'documentos.documentos',
+    module: 'documentos',
+    description: 'Documentos gerados a partir de CRM, vendas e financeiro.',
+    aliases: ['documentos-documentos', 'documentos_documentos'],
+    metrics: [
+      {
+        id: 'documentos',
+        label: 'Documentos',
+        format: 'number',
+        legacyMeasures: ['COUNT()', 'COUNT_DISTINCT(d.id)'],
+      },
+      {
+        id: 'assinados',
+        label: 'Assinados',
+        format: 'number',
+        legacyMeasures: ["SUM(CASE WHEN d.status = 'assinado' THEN 1 ELSE 0 END)", "SUM(CASE WHEN status = 'assinado' THEN 1 ELSE 0 END)"],
+      },
+      {
+        id: 'enviados',
+        label: 'Enviados',
+        format: 'number',
+        legacyMeasures: ["SUM(CASE WHEN d.status = 'enviado' THEN 1 ELSE 0 END)", "SUM(CASE WHEN status = 'enviado' THEN 1 ELSE 0 END)"],
+      },
+    ],
+    dimensions: [
+      { id: 'template', label: 'Template', kind: 'attribute', legacyDimension: 'template' },
+      { id: 'status', label: 'Status', kind: 'attribute', legacyDimension: 'status' },
+      { id: 'origem_tipo', label: 'Origem Tipo', kind: 'attribute', legacyDimension: 'origem_tipo' },
+      {
+        id: 'periodo',
+        label: 'Periodo',
+        kind: 'time',
+        legacyDimension: 'periodo',
+        legacyDimensionExprByGrain: {
+          month: MONTH_EXPR_CRIADO,
+        },
+      },
+    ],
+    defaultTimeField: 'criado_em',
+    filters: [
+      { field: 'tenant_id', label: 'Tenant', type: 'id', operators: ['eq'] },
+      { field: 'de', label: 'Data Inicial', type: 'date', operators: ['gte'] },
+      { field: 'ate', label: 'Data Final', type: 'date', operators: ['lte'] },
+      { field: 'status', label: 'Status', type: 'enum', operators: ['eq', 'in'] },
+      { field: 'origem_tipo', label: 'Origem Tipo', type: 'string', operators: ['eq', 'in', 'contains'] },
+      { field: 'origem_id', label: 'Origem ID', type: 'id', operators: ['eq', 'in'] },
+      { field: 'template_id', label: 'Template', type: 'id', operators: ['eq', 'in'] },
+      { field: 'template_version_id', label: 'Versao do Template', type: 'id', operators: ['eq', 'in'] },
     ],
   },
   'estoque.estoques_atual': {
