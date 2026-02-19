@@ -490,7 +490,9 @@ SELECT
   cp.data_lancamento,
   cp.data_vencimento,
 
+  f.id                                 AS fornecedor_id,
   f.nome_fantasia                      AS fornecedor,
+  f.imagem_url                         AS fornecedor_imagem_url,
 
   cat_h.nome                           AS categoria_despesa,
 
@@ -548,7 +550,9 @@ SELECT
   cp.data_lancamento,
   cp.data_vencimento,
 
+  f.id                                 AS fornecedor_id,
   f.nome_fantasia                      AS fornecedor,
+  f.imagem_url                         AS fornecedor_imagem_url,
 
   cat_h.nome                           AS categoria_despesa,
 
@@ -666,7 +670,9 @@ SELECT
   cr.data_lancamento,
   cr.data_vencimento,
 
+  cli.id                               AS cliente_id,
   cli.nome_fantasia                    AS cliente,
+  cli.imagem_url                       AS cliente_imagem_url,
 
   cat_h.nome                           AS categoria_financeira,
   cat_r.nome                           AS categoria_receita,

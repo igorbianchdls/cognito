@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { usePathname } from "next/navigation"
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -223,6 +224,8 @@ export function DataTable<TData extends TableData>({
   onTableReady,
   onPaginationChange: onExternalPaginationChange,
 }: DataTableProps<TData>) {
+  const pathname = usePathname()
+  const isErpRoute = pathname?.startsWith('/erp')
   const [sorting, setSorting] = React.useState<SortingState>(
     defaultSortColumn ? [{ id: defaultSortColumn, desc: defaultSortDirection === 'desc' }] : []
   )
@@ -239,6 +242,10 @@ export function DataTable<TData extends TableData>({
   const [tableData, setTableData] = React.useState<TData[]>(data)
   const [newRows, setNewRows] = React.useState<Set<number>>(new Set())
   const [expandedRows, setExpandedRows] = React.useState<Set<string>>(new Set())
+  const baseHeaderPadding = headerPadding ?? padding
+  const effectiveHeaderBackground = isErpRoute ? 'rgb(254, 254, 254)' : headerBackground
+  const effectiveHeaderPaddingY = isErpRoute ? Math.min(baseHeaderPadding, 6) : baseHeaderPadding
+  const effectiveHeaderPaddingX = baseHeaderPadding
   
   // Update table data when external data changes
   React.useEffect(() => {
@@ -551,7 +558,7 @@ export function DataTable<TData extends TableData>({
                 <TableRow 
                   key={headerGroup.id}
                   style={{ 
-                    backgroundColor: headerBackground,
+                    backgroundColor: effectiveHeaderBackground,
                     borderColor,
                     borderBottomWidth: borderWidth,
                   }}
@@ -562,7 +569,7 @@ export function DataTable<TData extends TableData>({
                         key={header.id}
                         style={{ 
                           color: headerTextColor,
-                          padding: header.column.id === 'select' ? '4px' : `${(headerPadding ?? padding)}px`,
+                          padding: header.column.id === 'select' ? '4px' : `${effectiveHeaderPaddingY}px ${effectiveHeaderPaddingX}px`,
                           width: (columnOptions && columnOptions[header.column.id]?.widthMode === 'auto')
                             ? undefined
                             : (columnOptions && columnOptions[header.column.id]?.widthMode === 'fixed' && typeof columnOptions[header.column.id]?.fixedWidth === 'number')

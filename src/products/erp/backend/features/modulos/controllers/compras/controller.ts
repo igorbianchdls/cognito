@@ -118,6 +118,7 @@ export async function GET(req: NextRequest) {
       selectSql = `SELECT
         c.id AS compra_id,
         f.nome_fantasia AS fornecedor,
+        f.imagem_url AS fornecedor_imagem_url,
         ${hasFilial ? 'fil.nome' : 'NULL::text'} AS filial,
         ${hasDepartamento ? 'dep.nome' : 'NULL::text'} AS departamento,
         ${hasCentroCusto ? 'cc.nome' : 'NULL::text'} AS centro_custo,
@@ -299,6 +300,7 @@ export async function GET(req: NextRequest) {
         observacoes: unknown
         criado_em: unknown
         fornecedor: unknown
+        fornecedor_imagem_url: unknown
         filial: unknown
         departamento: unknown
         centro_custo: unknown
@@ -332,16 +334,17 @@ export async function GET(req: NextRequest) {
             valor_total: row.valor_total,
             observacoes: row.observacoes,
             criado_em: row.criado_em,
-          fornecedor: row.fornecedor,
-          filial: row.filial,
-          departamento: row.departamento,
-          centro_custo: row.centro_custo,
-          unidade_negocio: row.unidade_negocio,
-          projeto: row.projeto,
+            fornecedor: row.fornecedor,
+            fornecedor_imagem_url: row.fornecedor_imagem_url,
+            filial: row.filial,
+            departamento: row.departamento,
+            centro_custo: row.centro_custo,
+            unidade_negocio: row.unidade_negocio,
+            projeto: row.projeto,
             categoria_despesa: row.categoria_despesa,
-          linhas: []
-        })
-      }
+            linhas: []
+          })
+        }
 
         if (row.linha_id) {
           comprasMap.get(compraKey)!.linhas.push({

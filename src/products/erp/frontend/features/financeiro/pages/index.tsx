@@ -481,6 +481,17 @@ export default function ModulosFinanceiroPage() {
       case 'contas-a-receber':
         return [
           {
+            accessorKey: 'cliente',
+            header: () => <IconLabelHeader icon={<User className="h-3.5 w-3.5" />} label="Cliente" />,
+            cell: ({ row }) => (
+              <EntityDisplay
+                name={row.original['cliente'] ? String(row.original['cliente']) : 'Sem cliente'}
+                imageUrl={row.original['cliente_imagem_url'] ? String(row.original['cliente_imagem_url']) : undefined}
+                size={32}
+              />
+            )
+          },
+          {
             id: 'acoes',
             header: () => <span className="sr-only">Ações</span>,
             cell: ({ row }) => (
@@ -506,7 +517,6 @@ export default function ModulosFinanceiroPage() {
               />
             ),
           },
-          { accessorKey: 'cliente', header: () => <IconLabelHeader icon={<User className="h-3.5 w-3.5" />} label="Cliente" /> },
           { accessorKey: 'status', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Status" />, cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
           { accessorKey: 'data_documento', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Emissão" />, cell: ({ row }) => formatDate(row.original['data_documento']) },
           { accessorKey: 'data_lancamento', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Lançamento" />, cell: ({ row }) => formatDate(row.original['data_lancamento']) },
@@ -599,6 +609,17 @@ export default function ModulosFinanceiroPage() {
       default:
         return [
           {
+            accessorKey: 'fornecedor',
+            header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Fornecedor" />,
+            cell: ({ row }) => (
+              <EntityDisplay
+                name={row.original['fornecedor'] ? String(row.original['fornecedor']) : 'Sem fornecedor'}
+                imageUrl={row.original['fornecedor_imagem_url'] ? String(row.original['fornecedor_imagem_url']) : undefined}
+                size={32}
+              />
+            )
+          },
+          {
             id: 'acoes',
             header: () => <span className="sr-only">Ações</span>,
             cell: ({ row }) => (
@@ -624,7 +645,6 @@ export default function ModulosFinanceiroPage() {
               />
             ),
           },
-          { accessorKey: 'fornecedor', header: () => <IconLabelHeader icon={<Building2 className="h-3.5 w-3.5" />} label="Fornecedor" /> },
           { accessorKey: 'status', header: () => <IconLabelHeader icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Status" />, cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" /> },
           { accessorKey: 'data_documento', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Emissão" />, cell: ({ row }) => formatDate(row.original['data_documento']) },
           { accessorKey: 'data_lancamento', header: () => <IconLabelHeader icon={<Calendar className="h-3.5 w-3.5" />} label="Lançamento" />, cell: ({ row }) => formatDate(row.original['data_lancamento']) },
@@ -950,7 +970,7 @@ export default function ModulosFinanceiroPage() {
                     // Tipo de registro (CABECALHO/LINHA)
                     tipo_registro: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 90 },
                     // Fornecedor
-                    fornecedor: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                    fornecedor: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 160 },
                     // Descrição
                     descricao: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 180 },
                     // Doc/Tipo
@@ -978,7 +998,8 @@ export default function ModulosFinanceiroPage() {
                     metodo_pagamento: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
                     metodo_pagamento_nome: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 120 },
                     // Cliente (Contas a Receber e Pagamentos Recebidos)
-                    cliente_nome: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
+                    cliente: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 160 },
+                    cliente_nome: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 160 },
                     // Banco (Extrato)
                     banco: { headerNoWrap: true, cellNoWrap: true, widthMode: 'auto', minWidth: 140 },
                   }}

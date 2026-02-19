@@ -154,7 +154,7 @@ const DEFAULT_TABELA_UI: TabelaUIState = {
   enableRowSelection: true,
   selectionMode: 'multiple',
   stickyHeader: false,
-  headerBg: '#ffffff',
+  headerBg: 'rgb(254, 254, 254)',
   headerText: '#aaaaaa',
   cellText: '#1f2937',
   headerFontSize: 13,

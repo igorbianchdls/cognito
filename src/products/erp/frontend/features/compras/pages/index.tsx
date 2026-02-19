@@ -340,6 +340,15 @@ export default function ModulosComprasPage() {
     }
 
     return [
+      { accessorKey: 'fornecedor', header: 'Fornecedor',
+        cell: ({ row }) => (
+          <EntityDisplay
+            name={row.original['fornecedor'] ? String(row.original['fornecedor']) : '—'}
+            imageUrl={row.original['fornecedor_imagem_url'] ? String(row.original['fornecedor_imagem_url']) : undefined}
+            size={32}
+          />
+        )
+      },
       { accessorKey: 'compra_id', header: 'ID' },
       { accessorKey: 'numero_oc', header: 'Número OC' },
       { accessorKey: 'data_pedido', header: 'Data Pedido', cell: ({ row }) => formatDate(row.original['data_pedido']) },
@@ -347,13 +356,6 @@ export default function ModulosComprasPage() {
       { accessorKey: 'data_lancamento', header: 'Lançamento', cell: ({ row }) => formatDate(row.original['data_lancamento']) },
       { accessorKey: 'data_vencimento', header: 'Vencimento', cell: ({ row }) => formatDate(row.original['data_vencimento']) },
       { accessorKey: 'data_entrega_prevista', header: 'Entrega Prevista', cell: ({ row }) => formatDate(row.original['data_entrega_prevista']) },
-      { accessorKey: 'fornecedor', header: 'Fornecedor',
-        cell: ({ row }) => (
-          <EntityDisplay
-            name={row.original['fornecedor'] ? String(row.original['fornecedor']) : '—'}
-          />
-        )
-      },
       { accessorKey: 'filial', header: 'Filial', cell: ({ row }) => <StatusBadge value={row.original['filial']} type="status" /> },
       { accessorKey: 'centro_custo', header: 'Centro de Custo', cell: ({ row }) => <StatusBadge value={row.original['centro_custo']} type="status" /> },
       { accessorKey: 'projeto', header: 'Projeto', cell: ({ row }) => <StatusBadge value={row.original['projeto']} type="status" /> },
