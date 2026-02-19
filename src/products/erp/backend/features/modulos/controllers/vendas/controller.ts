@@ -142,6 +142,7 @@ export async function GET(req: NextRequest) {
         p.observacoes,
 
         c.nome_fantasia    AS cliente,
+        c.imagem_url       AS cliente_imagem_url,
 
         f.nome             AS vendedor,
 
@@ -306,6 +307,7 @@ export async function GET(req: NextRequest) {
         pedido: unknown
         numero_pedido: unknown
         cliente: unknown
+        cliente_imagem_url?: unknown
         vendedor: unknown
         filial: unknown
         canal_venda: unknown
@@ -328,6 +330,7 @@ export async function GET(req: NextRequest) {
             pedido: row.pedido_id,
             numero_pedido: row.numero_pedido,
             cliente: row.cliente,
+            cliente_imagem_url: row.cliente_imagem_url,
             vendedor: row.vendedor,
             filial: row.filial,
             canal_venda: row.canal_venda,
