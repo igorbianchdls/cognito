@@ -345,7 +345,7 @@ export default function ModulosComprasPage() {
         cell: ({ row }) => (
           <EntityDisplay
             name={row.original['fornecedor'] ? String(row.original['fornecedor']) : '—'}
-            size={32}
+            size={24}
           />
         )
       },

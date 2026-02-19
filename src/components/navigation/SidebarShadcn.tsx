@@ -209,7 +209,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
       <SidebarHeader className={cn("h-16 p-0")} style={{ backgroundColor: 'var(--sidebar)' }}>
         <div className="h-full w-full flex items-center justify-start gap-2 px-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
           <Cpu className="h-4 w-4 text-black shrink-0" />
-          <span className="text-black font-bold text-base leading-none group-data-[collapsible=icon]:hidden">Cretto</span>
+          <span className="text-black font-bold text-base leading-none group-data-[collapsible=icon]:hidden">Creatto</span>
         </div>
       </SidebarHeader>
       <SidebarContent className="ui-text">

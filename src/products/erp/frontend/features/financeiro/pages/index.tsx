@@ -486,7 +486,7 @@ export default function ModulosFinanceiroPage() {
             cell: ({ row }) => (
               <EntityDisplay
                 name={row.original['cliente'] ? String(row.original['cliente']) : 'Sem cliente'}
-                size={32}
+                size={24}
               />
             )
           },
@@ -613,7 +613,7 @@ export default function ModulosFinanceiroPage() {
             cell: ({ row }) => (
               <EntityDisplay
                 name={row.original['fornecedor'] ? String(row.original['fornecedor']) : 'Sem fornecedor'}
-                size={32}
+                size={24}
               />
             )
           },
