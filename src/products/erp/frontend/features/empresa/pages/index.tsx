@@ -9,6 +9,7 @@ import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer'
 
 import PageHeader from '@/products/erp/frontend/components/PageHeader'
+import ErpHeaderActions from '@/products/erp/frontend/components/ErpHeaderActions'
 import TabsNav, { type Opcao } from '@/products/erp/frontend/components/TabsNav'
 import DataToolbar from '@/products/erp/frontend/components/DataToolbar'
 import DataTable, { type TableData } from '@/components/widgets/Table'
@@ -196,6 +197,7 @@ export default function ModulosEmpresaPage() {
               <NexusPageContainer className="h-full">
         <div className="h-10 flex items-center border-b border-gray-100 px-2">
           <SidebarTrigger className="h-8 w-8 text-gray-400" />
+                  <ErpHeaderActions />
         </div>
         <div style={{ background: 'white' }}>
           <div style={{ marginBottom: layout.mbTitle }}>

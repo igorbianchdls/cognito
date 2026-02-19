@@ -9,6 +9,7 @@ import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import NexusPageContainer from '@/components/navigation/nexus/NexusPageContainer'
 
 import PageHeader from '@/products/erp/frontend/components/PageHeader'
+import ErpHeaderActions from '@/products/erp/frontend/components/ErpHeaderActions'
 import TabsNav from '@/products/erp/frontend/components/TabsNav'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/products/erp/frontend/components/DataToolbar'
@@ -857,6 +858,7 @@ export default function ModulosFinanceiroPage() {
                 {/* Header interno com SidebarTrigger */}
                 <div className="h-10 flex items-center border-b border-gray-100 px-2">
                   <SidebarTrigger className="h-8 w-8 text-gray-400" />
+                  <ErpHeaderActions />
                 </div>
                 <div style={{ marginBottom: layout.mbTitle }}>
                   <PageHeader
