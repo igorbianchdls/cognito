@@ -225,8 +225,8 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
           </button>
         </div>
         <NavMainSimple items={dataWithActiveState.navMain} groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} iconSizePx={finalIconSizePx} />
-        <NavAirtable groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} />
         <NavErp groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} />
+        <NavAirtable groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} />
 
         <SidebarGroup>
           <SidebarGroupLabel style={finalSectionTitleStyle}>Integrações</SidebarGroupLabel>
