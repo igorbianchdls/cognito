@@ -1,5 +1,6 @@
 import { inngest } from '@/lib/inngest'
 import { withTransaction, runQuery } from '@/lib/postgres'
+import { emitCriticalEvent } from '@/products/erp/backend/shared/events/outbox'
 
 type CompraHeader = {
   id: number
@@ -185,27 +186,24 @@ export const compraCriadaFn = inngest.createFunction(
     }
     const result = await step.run('create-ap-inline', async () => createApFromCompra(compraId))
 
-    // Dispara evento para contabilidade
-    try {
-      await inngest.send({
-        name: 'financeiro/contas_a_pagar/criada',
-        data: {
+    const eventDispatch = await step.run('emit-conta-pagar-criada', async () =>
+      emitCriticalEvent({
+        eventName: 'financeiro/contas_a_pagar/criada',
+        payload: {
           conta_pagar_id: result.apId,
-          tenant_id: null,
-          fornecedor_id: null,
-          categoria_despesa_id: null,
-          conta_financeira_id: null,
-          numero_documento: null,
-          data_lancamento: new Date().toISOString().slice(0,10),
-          valor_liquido: 0,
-          descricao: 'Compra -> AP',
           subtipo: 'principal',
         },
+        origin: 'financeiro.contas_pagar',
+        originId: result.apId,
       })
-    } catch (e) {
-      console.warn('Falha ao enviar evento Inngest contas_a_pagar.criada (via compras)', e)
-    }
+    )
 
-    return { success: true, apId: result.apId }
+    return {
+      success: true,
+      apId: result.apId,
+      event_sent: eventDispatch.sent,
+      event_outbox_id: eventDispatch.outboxId,
+      event_outbox_status: eventDispatch.status,
+    }
   }
 )

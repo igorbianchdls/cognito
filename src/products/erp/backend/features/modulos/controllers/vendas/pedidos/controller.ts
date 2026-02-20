@@ -1,5 +1,5 @@
 import { withTransaction, runQuery } from '@/lib/postgres'
-import { inngest } from '@/lib/inngest'
+import { dispatchOutboxEventById, enqueueOutboxEvent } from '@/products/erp/backend/shared/events/outbox'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
@@ -139,29 +139,43 @@ export async function POST(req: Request) {
       const inserted = insert.rows[0] as { id: number | string }
       const id = Number(inserted?.id)
       if (!id) throw new Error('Falha ao criar pedido')
-      return { id }
+      const outbox = await enqueueOutboxEvent(
+        {
+          eventName: 'vendas/pedido/criado',
+          payload: { pedido_id: id },
+          origin: 'vendas.pedidos',
+          originId: id,
+        },
+        client
+      )
+      return { id, outboxId: Number(outbox.id) }
     })
 
-    // Dispara evento Inngest para manter o fluxo assíncrono (espelha compras)
-    let eventSent = false
+    let dispatch: { sent: boolean; status: string } = { sent: false, status: 'pending' }
     try {
-      await inngest.send({ name: 'vendas/pedido/criado', data: { pedido_id: result.id } })
-      eventSent = true
+      const dispatched = await dispatchOutboxEventById(result.outboxId)
+      dispatch = { sent: dispatched.sent, status: dispatched.status }
     } catch (e) {
-      console.warn('Falha ao enviar evento Inngest vendas/pedido/criado', e)
+      console.warn('Falha ao despachar evento vendas/pedido/criado via outbox', e)
     }
 
-    // Inline CR creation
     let crId: number | null = null
     try {
       const mod = await import('@/inngest/vendas')
       const cr = await mod.createCrFromPedido(result.id)
       crId = cr.crId
     } catch (e) {
-      // best effort only
+      console.warn('Criação inline da Conta a Receber falhou', e)
     }
 
-    return Response.json({ success: true, id: result.id, cr_id: crId, event_sent: eventSent })
+    return Response.json({
+      success: true,
+      id: result.id,
+      cr_id: crId,
+      event_sent: dispatch.sent,
+      event_outbox_status: dispatch.status,
+      event_outbox_id: result.outboxId,
+    })
   } catch (error) {
     console.error('🛒 API /api/modulos/vendas/pedidos POST error:', error)
     const msg = error instanceof Error ? error.message : String(error)

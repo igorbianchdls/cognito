@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { runQuery, withTransaction } from '@/lib/postgres';
-import { inngest } from '@/lib/inngest';
 import { createApFromCompra } from '@/inngest/compras';
+import { dispatchOutboxEventById, enqueueOutboxEvent } from '@/products/erp/backend/shared/events/outbox';
 
 export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
@@ -828,14 +828,28 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      return { id: compra_id }
+      const outbox = await enqueueOutboxEvent(
+        {
+          eventName: 'compras/compra/criada',
+          payload: { compra_id },
+          origin: 'compras.compras',
+          originId: compra_id,
+        },
+        client
+      )
+
+      return { id: compra_id, outboxId: Number(outbox.id) }
     })
 
     // Dispara evento Inngest para criação de Conta a Pagar a partir da compra
+    let eventSent = false
+    let eventOutboxStatus = 'pending'
     try {
-      await inngest.send({ name: 'compras/compra/criada', data: { compra_id: result.id } })
+      const dispatched = await dispatchOutboxEventById(result.outboxId)
+      eventSent = dispatched.sent
+      eventOutboxStatus = dispatched.status
     } catch (e) {
-      console.warn('Falha ao enviar evento Inngest compras/compra/criada', e)
+      console.warn('Falha ao despachar evento compras/compra/criada via outbox', e)
     }
 
     // Cria AP imediatamente (idempotente). Retorna ap_id para feedback no UI.
@@ -847,7 +861,15 @@ export async function POST(req: NextRequest) {
       console.warn('Criação inline da Conta a Pagar falhou', err)
     }
 
-    return Response.json({ success: true, id: result.id, ap_id: apId, linhas_criadas: normLinhas.length })
+    return Response.json({
+      success: true,
+      id: result.id,
+      ap_id: apId,
+      linhas_criadas: normLinhas.length,
+      event_sent: eventSent,
+      event_outbox_status: eventOutboxStatus,
+      event_outbox_id: result.outboxId,
+    })
   } catch (error) {
     console.error('📦 API /api/modulos/compras POST error:', error)
     const msg = error instanceof Error ? error.message : String(error)

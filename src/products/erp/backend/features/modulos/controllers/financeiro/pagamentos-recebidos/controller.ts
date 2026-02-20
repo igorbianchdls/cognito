@@ -1,5 +1,5 @@
 import { withTransaction } from '@/lib/postgres'
-import { inngest } from '@/lib/inngest'
+import { emitCriticalEvent } from '@/products/erp/backend/shared/events/outbox'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
@@ -139,7 +139,16 @@ export async function POST(req: Request) {
         }
       })
 
-      try { await inngest.send({ name: 'financeiro/pagamentos_recebidos/criado', data: { pagamento_id: Number((result as any).response?.data?.id || 0) } }) } catch {}
+      const pagamentoId = Number((result as any).response?.data?.id || 0)
+      const eventDispatch = await emitCriticalEvent({
+        eventName: 'financeiro/pagamentos_recebidos/criado',
+        payload: { pagamento_id: pagamentoId },
+        origin: 'financeiro.pagamentos_recebidos',
+        originId: pagamentoId,
+      })
+      ;(result.response as Record<string, unknown>)['event_sent'] = eventDispatch.sent
+      ;(result.response as Record<string, unknown>)['event_outbox_id'] = eventDispatch.outboxId
+      ;(result.response as Record<string, unknown>)['event_outbox_status'] = eventDispatch.status
       return Response.json(result.response)
     }
 
@@ -188,8 +197,19 @@ export async function POST(req: Request) {
       return { id }
     })
 
-    try { await inngest.send({ name: 'financeiro/pagamentos_recebidos/criado', data: { pagamento_id: result.id } }) } catch {}
-    return Response.json({ success: true, id: result.id })
+    const eventDispatch = await emitCriticalEvent({
+      eventName: 'financeiro/pagamentos_recebidos/criado',
+      payload: { pagamento_id: result.id },
+      origin: 'financeiro.pagamentos_recebidos',
+      originId: result.id,
+    })
+    return Response.json({
+      success: true,
+      id: result.id,
+      event_sent: eventDispatch.sent,
+      event_outbox_id: eventDispatch.outboxId,
+      event_outbox_status: eventDispatch.status,
+    })
   } catch (error) {
     console.error('💸 API /api/modulos/financeiro/pagamentos-recebidos POST error:', error)
     const msg = error instanceof Error ? error.message : String(error)

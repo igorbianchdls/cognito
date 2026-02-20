@@ -1,5 +1,5 @@
 import { withTransaction } from '@/lib/postgres'
-import { inngest } from '@/lib/inngest'
+import { emitCriticalEvent } from '@/products/erp/backend/shared/events/outbox'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
@@ -143,12 +143,15 @@ export async function POST(req: Request) {
       })
 
       if (!result) throw new Error('Falha ao criar pagamento efetuado')
-      // Dispara evento Inngest para criação do LC
-      try {
-        await inngest.send({ name: 'financeiro/pagamentos_efetuados/criado', data: { pagamento_id: result.id } })
-      } catch (e) {
-        console.warn('Falha ao enviar evento Inngest pagamentos_efetuados.criado', e)
-      }
+      const eventDispatch = await emitCriticalEvent({
+        eventName: 'financeiro/pagamentos_efetuados/criado',
+        payload: { pagamento_id: result.id },
+        origin: 'financeiro.pagamentos_efetuados',
+        originId: result.id,
+      })
+      ;(result.response as Record<string, unknown>)['event_sent'] = eventDispatch.sent
+      ;(result.response as Record<string, unknown>)['event_outbox_id'] = eventDispatch.outboxId
+      ;(result.response as Record<string, unknown>)['event_outbox_status'] = eventDispatch.status
       return Response.json(result.response)
     }
 
@@ -193,13 +196,19 @@ export async function POST(req: Request) {
       return { id }
     })
 
-    // Dispara evento Inngest também para modo FormData
-    try {
-      await inngest.send({ name: 'financeiro/pagamentos_efetuados/criado', data: { pagamento_id: result.id } })
-    } catch (e) {
-      console.warn('Falha ao enviar evento Inngest (FormData) pagamentos_efetuados.criado', e)
-    }
-    return Response.json({ success: true, id: result.id })
+    const eventDispatch = await emitCriticalEvent({
+      eventName: 'financeiro/pagamentos_efetuados/criado',
+      payload: { pagamento_id: result.id },
+      origin: 'financeiro.pagamentos_efetuados',
+      originId: result.id,
+    })
+    return Response.json({
+      success: true,
+      id: result.id,
+      event_sent: eventDispatch.sent,
+      event_outbox_id: eventDispatch.outboxId,
+      event_outbox_status: eventDispatch.status,
+    })
   } catch (error) {
     console.error('💸 API /api/modulos/financeiro/pagamentos-efetuados POST error:', error)
     const msg = error instanceof Error ? error.message : String(error)

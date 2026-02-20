@@ -1,5 +1,5 @@
 import { createCrFromPedido } from '@/inngest/vendas'
-import { inngest } from '@/lib/inngest'
+import { emitCriticalEvent } from '@/products/erp/backend/shared/events/outbox'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
@@ -16,17 +16,19 @@ export async function POST(req: Request) {
       return Response.json({ success: false, message: 'pedido_id inválido' }, { status: 400 })
     }
     const result = await createCrFromPedido(pedidoId)
-    let eventSent = false
-    try {
-      await inngest.send({
-        name: 'financeiro/contas_a_receber/criada',
-        data: { conta_receber_id: result.crId },
-      })
-      eventSent = true
-    } catch (e) {
-      console.warn('Falha ao enviar evento Inngest financeiro/contas_a_receber/criada (create-cr)', e)
-    }
-    return Response.json({ success: true, cr_id: result.crId, event_sent: eventSent })
+    const eventDispatch = await emitCriticalEvent({
+      eventName: 'financeiro/contas_a_receber/criada',
+      payload: { conta_receber_id: result.crId },
+      origin: 'financeiro.contas_receber',
+      originId: result.crId,
+    })
+    return Response.json({
+      success: true,
+      cr_id: result.crId,
+      event_sent: eventDispatch.sent,
+      event_outbox_id: eventDispatch.outboxId,
+      event_outbox_status: eventDispatch.status,
+    })
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error)
     return Response.json({ success: false, message: msg }, { status: 400 })

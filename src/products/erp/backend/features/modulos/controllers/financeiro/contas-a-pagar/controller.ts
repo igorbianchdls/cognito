@@ -1,5 +1,5 @@
 import { withTransaction } from '@/lib/postgres'
-import { inngest } from '@/lib/inngest'
+import { emitCriticalEvent } from '@/products/erp/backend/shared/events/outbox'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
@@ -259,30 +259,35 @@ export async function POST(req: Request) {
         }
       })
 
-      // Dispara evento para criação automática de lançamento contábil (Inngest)
-      try {
-        await inngest.send({
-          name: 'financeiro/contas_a_pagar/criada',
-          data: {
-            conta_pagar_id: result.id,
-            tenant_id: result.tenant_id,
-            fornecedor_id: result.fornecedor_id,
-            categoria_despesa_id: result.categoria_id,
-            conta_financeira_id: result.conta_financeira_id,
-            numero_documento: result.numero_documento,
-            data_documento: result.data_documento,
-            data_lancamento: result.data_lancamento,
-            data_vencimento: result.data_vencimento,
-            valor_liquido: result.valor_liquido,
-            descricao: result.descricao,
-            subtipo: 'principal',
-          },
-        })
-      } catch (e) {
-        console.warn('Falha ao enviar evento Inngest contas_a_pagar.criada', e)
-      }
+      const eventDispatch = await emitCriticalEvent({
+        eventName: 'financeiro/contas_a_pagar/criada',
+        payload: {
+          conta_pagar_id: result.id,
+          tenant_id: result.tenant_id,
+          fornecedor_id: result.fornecedor_id,
+          categoria_despesa_id: result.categoria_id,
+          conta_financeira_id: result.conta_financeira_id,
+          numero_documento: result.numero_documento,
+          data_documento: result.data_documento,
+          data_lancamento: result.data_lancamento,
+          data_vencimento: result.data_vencimento,
+          valor_liquido: result.valor_liquido,
+          descricao: result.descricao,
+          subtipo: 'principal',
+        },
+        origin: 'financeiro.contas_pagar',
+        originId: result.id,
+      })
 
-      return Response.json({ success: true, id: result.id, linhas_count: result.linhas_count, itens_count: result.itens_count })
+      return Response.json({
+        success: true,
+        id: result.id,
+        linhas_count: result.linhas_count,
+        itens_count: result.itens_count,
+        event_sent: eventDispatch.sent,
+        event_outbox_id: eventDispatch.outboxId,
+        event_outbox_status: eventDispatch.status,
+      })
     }
 
     // Default legacy FormData mode (header only)
@@ -382,30 +387,33 @@ export async function POST(req: Request) {
       return { id, tenant_id, fornecedor_id, categoria_id, conta_financeira_id, numero_documento, data_documento, data_lancamento, data_vencimento, valor_liquido: Math.abs(valor), descricao }
     })
 
-    // Dispara evento Inngest também para modo FormData
-    try {
-      await inngest.send({
-        name: 'financeiro/contas_a_pagar/criada',
-        data: {
-          conta_pagar_id: result.id,
-          tenant_id: result.tenant_id,
-          fornecedor_id: result.fornecedor_id,
-          categoria_despesa_id: result.categoria_id,
-          conta_financeira_id: result.conta_financeira_id,
-          numero_documento: result.numero_documento,
-          data_documento: result.data_documento,
-          data_lancamento: result.data_lancamento,
-          data_vencimento: result.data_vencimento,
-          valor_liquido: result.valor_liquido,
-          descricao: result.descricao,
-          subtipo: 'principal',
-        },
-      })
-    } catch (e) {
-      console.warn('Falha ao enviar evento Inngest (FormData) contas_a_pagar.criada', e)
-    }
+    const eventDispatch = await emitCriticalEvent({
+      eventName: 'financeiro/contas_a_pagar/criada',
+      payload: {
+        conta_pagar_id: result.id,
+        tenant_id: result.tenant_id,
+        fornecedor_id: result.fornecedor_id,
+        categoria_despesa_id: result.categoria_id,
+        conta_financeira_id: result.conta_financeira_id,
+        numero_documento: result.numero_documento,
+        data_documento: result.data_documento,
+        data_lancamento: result.data_lancamento,
+        data_vencimento: result.data_vencimento,
+        valor_liquido: result.valor_liquido,
+        descricao: result.descricao,
+        subtipo: 'principal',
+      },
+      origin: 'financeiro.contas_pagar',
+      originId: result.id,
+    })
 
-    return Response.json({ success: true, id: result.id })
+    return Response.json({
+      success: true,
+      id: result.id,
+      event_sent: eventDispatch.sent,
+      event_outbox_id: eventDispatch.outboxId,
+      event_outbox_status: eventDispatch.status,
+    })
   } catch (error) {
     console.error('💸 API /api/modulos/financeiro/contas-a-pagar POST error:', error)
     const msg = error instanceof Error ? error.message : String(error)

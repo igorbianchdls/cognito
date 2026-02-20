@@ -1,5 +1,6 @@
 import { inngest } from '@/lib/inngest'
 import { withTransaction, runQuery } from '@/lib/postgres'
+import { emitCriticalEvent } from '@/products/erp/backend/shared/events/outbox'
 
 function toISODate(value: unknown, fallback?: Date): string {
   if (typeof value === 'string') {
@@ -218,13 +219,21 @@ export const pedidoCriadoFn = inngest.createFunction(
 
     const result = await step.run('create-cr', async () => createCrFromPedido(pedidoId))
 
-    try {
-      await inngest.send({
-        name: 'financeiro/contas_a_receber/criada',
-        data: { conta_receber_id: result.crId },
+    const eventDispatch = await step.run('emit-conta-receber-criada', async () =>
+      emitCriticalEvent({
+        eventName: 'financeiro/contas_a_receber/criada',
+        payload: { conta_receber_id: result.crId, subtipo: 'principal' },
+        origin: 'financeiro.contas_receber',
+        originId: result.crId,
       })
-    } catch {}
+    )
 
-    return { success: true, crId: result.crId }
+    return {
+      success: true,
+      crId: result.crId,
+      event_sent: eventDispatch.sent,
+      event_outbox_id: eventDispatch.outboxId,
+      event_outbox_status: eventDispatch.status,
+    }
   }
 )
