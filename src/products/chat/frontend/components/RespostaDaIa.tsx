@@ -1,6 +1,9 @@
 "use client"
 
-import type { UIMessage } from 'ai'
+import type { ToolUIPart, UIMessage } from 'ai'
+import { Message } from '@/components/ai-elements/message'
+import { Reasoning, ReasoningContent, ReasoningTrigger } from '@/components/ai-elements/reasoning'
+import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from '@/components/ai-elements/tool'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import EntityDisplay from '@/products/erp/frontend/components/EntityDisplay'
 
@@ -340,7 +343,7 @@ export default function RespostaDaIa({ message, isPending = false }: Props) {
   if (!hasParts && !isPending) return null
 
   return (
-    <div className="w-full min-w-0 flex justify-start py-3">
+    <Message from="assistant" className="py-3">
       <div className="w-full min-w-0 space-y-2">
         <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
           <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-tr from-fuchsia-500 via-purple-500 to-blue-500 text-white text-[10px] leading-none shadow-sm ml-0.5">OT</span>
@@ -368,10 +371,19 @@ export default function RespostaDaIa({ message, isPending = false }: Props) {
             const txt = String(part?.content ?? part?.text ?? '').trim()
             if (!txt) return null
             return (
-              <details key={`rs-${index}`} className="rounded-md border border-gray-200 bg-gray-50 p-2 text-xs">
-                <summary className="cursor-pointer font-medium text-gray-700">Raciocínio</summary>
-                <pre className="mt-2 whitespace-pre-wrap text-gray-600">{txt}</pre>
-              </details>
+              <Reasoning
+                key={`rs-${index}`}
+                isStreaming={String(part?.state || '') === 'streaming'}
+                defaultOpen={String(part?.state || '') === 'streaming'}
+                className="rounded-md border border-gray-200 bg-gray-50 p-2 text-xs"
+              >
+                <ReasoningTrigger className="cursor-pointer font-medium text-gray-700">
+                  Raciocínio
+                </ReasoningTrigger>
+                <ReasoningContent className="mt-2 whitespace-pre-wrap text-gray-600">
+                  {txt}
+                </ReasoningContent>
+              </Reasoning>
             )
           }
 
@@ -379,38 +391,46 @@ export default function RespostaDaIa({ message, isPending = false }: Props) {
             const crudPart = isCrudToolPart(part)
             const crudRows = crudPart ? extractCrudRows(part?.output) : null
             const crudMeta = crudPart ? extractCrudMeta(part?.output) : {}
+            const rawState = String(part?.state || 'output-available')
+            const toolState: ToolUIPart['state'] = (
+              rawState === 'input-streaming' ||
+              rawState === 'input-available' ||
+              rawState === 'output-available' ||
+              rawState === 'output-error'
+            ) ? rawState : 'output-available'
+            const showCrudTable = crudPart && crudRows !== null
+            const shouldOpen = toolState === 'output-available' || toolState === 'output-error'
+            const type = String(part.type) as ToolUIPart['type']
 
             return (
-              <div key={`tool-${index}`} className="rounded-md border border-gray-200 bg-white p-3 space-y-2">
-                <div className="text-xs font-semibold text-gray-700">{String(part.type).replace(/^tool-/, '')} · {String(part?.state || 'output-available')}</div>
-                {part?.input !== undefined && (
-                  <div>
-                    <div className="text-[11px] uppercase tracking-wide text-gray-500">input</div>
-                    <pre className="text-xs whitespace-pre-wrap text-gray-700">{pretty(part.input)}</pre>
-                  </div>
-                )}
-                {part?.errorText ? (
-                  <div>
-                    <div className="text-[11px] uppercase tracking-wide text-red-500">erro</div>
-                    <pre className="text-xs whitespace-pre-wrap text-red-600">{String(part.errorText)}</pre>
-                  </div>
-                ) : (
-                  part?.output !== undefined && (
-                    <div>
-                      <div className="text-[11px] uppercase tracking-wide text-gray-500">output</div>
-                      {crudPart && crudRows ? (
-                        <CrudOutputTable
-                          rows={crudRows}
-                          title={crudMeta.title}
-                          message={crudMeta.message}
-                          count={crudMeta.count}
+              <div key={`tool-${index}`} className="space-y-2">
+                <Tool defaultOpen={shouldOpen}>
+                  <ToolHeader type={type} state={toolState} />
+                  <ToolContent>
+                    {part?.input !== undefined ? (
+                      <ToolInput input={part.input as ToolUIPart['input']} />
+                    ) : null}
+                    {part?.errorText ? (
+                      <ToolOutput output={null} errorText={String(part.errorText)} />
+                    ) : (
+                      part?.output !== undefined && !showCrudTable ? (
+                        <ToolOutput
+                          output={<pre className="text-xs whitespace-pre-wrap">{pretty(part.output)}</pre>}
+                          errorText={undefined}
                         />
-                      ) : (
-                        <pre className="text-xs whitespace-pre-wrap text-gray-700">{pretty(part.output)}</pre>
-                      )}
-                    </div>
-                  )
-                )}
+                      ) : null
+                    )}
+                  </ToolContent>
+                </Tool>
+
+                {showCrudTable ? (
+                  <CrudOutputTable
+                    rows={crudRows}
+                    title={crudMeta.title}
+                    message={crudMeta.message}
+                    count={crudMeta.count}
+                  />
+                ) : null}
               </div>
             )
           }
@@ -418,6 +438,6 @@ export default function RespostaDaIa({ message, isPending = false }: Props) {
           return null
         })}
       </div>
-    </div>
+    </Message>
   )
 }
