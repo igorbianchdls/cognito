@@ -391,7 +391,11 @@ export default function RespostaDaIa({ message, isPending = false }: Props) {
     <Message from="assistant" className="py-3">
       <div className="w-full min-w-0 space-y-2">
         <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
-          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-tr from-fuchsia-500 via-purple-500 to-blue-500 text-white text-[10px] leading-none shadow-sm ml-0.5">OT</span>
+          <img
+            src="https://pyxis.nymag.com/v1/imgs/bf2/b1e/6f6018c7b262f744bf717f22e291fb5b50-alfred-lede.rsquare.w400.jpg"
+            alt="Alfred"
+            className="w-6 h-6 rounded-sm object-cover shadow-sm ml-0.5"
+          />
           <span className="font-semibold text-gray-900 text-[16px]">Alfred</span>
         </div>
 
@@ -406,7 +410,7 @@ export default function RespostaDaIa({ message, isPending = false }: Props) {
         {parts.map((part: any, index: number) => {
           if (part?.type === 'text') {
             return (
-              <div key={`txt-${index}`} className="whitespace-pre-wrap text-sm leading-6 text-gray-900">
+              <div key={`txt-${index}`} className="whitespace-pre-wrap text-[15px] leading-6 text-gray-900">
                 {String(part?.text || '')}
               </div>
             )
@@ -418,7 +422,7 @@ export default function RespostaDaIa({ message, isPending = false }: Props) {
             return (
               <Reasoning key={`rs-${index}`} isStreaming={String(part?.state || '') === 'streaming'}>
                 <ReasoningTrigger />
-                <ReasoningContent className="text-[14px] text-gray-500">{txt}</ReasoningContent>
+                <ReasoningContent className="text-[12px] text-gray-300">{txt}</ReasoningContent>
               </Reasoning>
             )
           }
