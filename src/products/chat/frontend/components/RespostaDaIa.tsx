@@ -42,6 +42,31 @@ function isCrudToolPart(part: any): boolean {
   return type.includes('crud') || toolName.includes('crud')
 }
 
+function toNonEmptyString(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  return trimmed ? trimmed : null
+}
+
+function stripFirstResourceBlock(resource: string): string {
+  const idx = resource.indexOf('-')
+  if (idx === -1) return resource
+  const rest = resource.slice(idx + 1).trim()
+  return rest || resource
+}
+
+function getCrudToolHeaderType(inputRaw: unknown): ToolUIPart['type'] | null {
+  const input = parseMaybeJson(inputRaw)
+  if (!isRecord(input)) return null
+
+  const action = toNonEmptyString(input.action)
+  const resource = toNonEmptyString(input.resource)
+  if (!action || !resource) return null
+
+  const label = `${action}_${stripFirstResourceBlock(resource)}`
+  return `tool-${label}` as ToolUIPart['type']
+}
+
 function asCrudRows(value: unknown): CrudRow[] | null {
   if (!Array.isArray(value)) return null
   if (value.length === 0) return []
@@ -392,11 +417,12 @@ export default function RespostaDaIa({ message, isPending = false }: Props) {
             const showCrudTable = crudPart && crudRows !== null
             const shouldOpen = toolState === 'output-available' || toolState === 'output-error'
             const type = String(part.type) as ToolUIPart['type']
+            const headerType = crudPart ? (getCrudToolHeaderType(part?.input) || type) : type
 
             return (
               <div key={`tool-${index}`} className="space-y-2">
                 <Tool defaultOpen={shouldOpen}>
-                  <ToolHeader type={type} state={toolState} />
+                  <ToolHeader type={headerType} state={toolState} />
                   <ToolContent>
                     {part?.input !== undefined ? (
                       <ToolInput input={part.input as ToolUIPart['input']} />
