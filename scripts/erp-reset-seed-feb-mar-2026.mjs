@@ -166,6 +166,43 @@ async function insertMany(client, table, columns, rows, chunkSize = 200) {
   }
 }
 
+async function alignIdSequence(client, table, column = "id") {
+  const seqRes = await client.query(
+    `SELECT pg_get_serial_sequence($1, $2) AS seq`,
+    [table, column]
+  );
+  const seq = seqRes.rows?.[0]?.seq || null;
+  if (!seq) {
+    return { table, column, sequence: null, max_id: null, last_value: null, ok: true, skipped: true };
+  }
+
+  const maxRes = await client.query(
+    `SELECT COALESCE(MAX(${column}), 0)::bigint AS max_id FROM ${table}`
+  );
+  const maxId = Number(maxRes.rows?.[0]?.max_id || 0);
+  const nextBase = Math.max(1, maxId);
+
+  await client.query(`SELECT setval($1, $2, true)`, [seq, nextBase]);
+
+  let lastValue = null;
+  try {
+    const lastRes = await client.query(`SELECT last_value::bigint AS last_value FROM ${seq}`);
+    lastValue = Number(lastRes.rows?.[0]?.last_value || 0);
+  } catch {
+    // fallback: if we cannot read sequence directly, consider sync successful after setval.
+  }
+
+  return {
+    table,
+    column,
+    sequence: seq,
+    max_id: maxId,
+    last_value: lastValue,
+    ok: lastValue === null ? true : lastValue >= maxId,
+    skipped: false,
+  };
+}
+
 async function main() {
   loadEnvFiles();
 
@@ -850,10 +887,27 @@ async function main() {
       contasPagarLinhas
     );
 
-    await client.query(`SELECT setval('compras.compras_id_seq', COALESCE((SELECT MAX(id) FROM compras.compras), 1), true)`);
-    await client.query(`SELECT setval('compras.compras_linhas_id_seq', COALESCE((SELECT MAX(id) FROM compras.compras_linhas), 1), true)`);
-    await client.query(`SELECT setval('vendas.pedidos_id_seq', COALESCE((SELECT MAX(id) FROM vendas.pedidos), 1), true)`);
-    await client.query(`SELECT setval('vendas.pedidos_itens_id_seq', COALESCE((SELECT MAX(id) FROM vendas.pedidos_itens), 1), true)`);
+    const sequenceSync = [];
+    const sequenceTables = [
+      "compras.compras",
+      "compras.compras_linhas",
+      "vendas.pedidos",
+      "vendas.pedidos_itens",
+      "financeiro.contas_pagar",
+      "financeiro.contas_pagar_linhas",
+      "financeiro.contas_receber",
+      "financeiro.contas_receber_linhas",
+    ];
+    for (const table of sequenceTables) {
+      sequenceSync.push(await alignIdSequence(client, table, "id"));
+    }
+
+    const sequenceErrors = sequenceSync.filter((s) => !s.ok);
+    if (sequenceErrors.length > 0) {
+      throw new Error(
+        `Falha ao sincronizar sequences: ${sequenceErrors.map((s) => s.table).join(", ")}`
+      );
+    }
 
     await client.query("COMMIT");
 
@@ -874,6 +928,7 @@ async function main() {
         contas_pagar: contasPagar.length,
         linhas_pagar: contasPagarLinhas.length,
       },
+      sequence_sync: sequenceSync,
     };
     process.stdout.write(`${JSON.stringify(summary, null, 2)}\n`);
   } catch (error) {
