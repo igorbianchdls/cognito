@@ -49,9 +49,29 @@ function toNonEmptyString(value: unknown): string | null {
 }
 
 function stripFirstResourceBlock(resource: string): string {
-  const idx = resource.indexOf('-')
-  if (idx === -1) return resource
-  const rest = resource.slice(idx + 1).trim()
+  const slashIdx = resource.indexOf('/')
+  if (slashIdx !== -1) {
+    const rest = resource.slice(slashIdx + 1).trim()
+    return rest || resource
+  }
+
+  const knownNamespaces = new Set([
+    'vendas',
+    'financeiro',
+    'compras',
+    'contabilidade',
+    'estoque',
+    'rh',
+    'servicos',
+  ])
+
+  const hyphenIdx = resource.indexOf('-')
+  if (hyphenIdx === -1) return resource
+
+  const first = resource.slice(0, hyphenIdx).trim().toLowerCase()
+  if (!knownNamespaces.has(first)) return resource
+
+  const rest = resource.slice(hyphenIdx + 1).trim()
   return rest || resource
 }
 
@@ -398,7 +418,7 @@ export default function RespostaDaIa({ message, isPending = false }: Props) {
             return (
               <Reasoning key={`rs-${index}`} isStreaming={String(part?.state || '') === 'streaming'}>
                 <ReasoningTrigger />
-                <ReasoningContent>{txt}</ReasoningContent>
+                <ReasoningContent className="text-[14px] text-gray-500">{txt}</ReasoningContent>
               </Reasoning>
             )
           }
