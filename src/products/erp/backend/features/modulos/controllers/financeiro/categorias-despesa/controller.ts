@@ -10,7 +10,7 @@ type CategoriaDespesaPayload = {
   nome: string
   descricao?: string | null
   tipo?: 'operacional' | 'financeira' | 'outras'
-  plano_conta_id?: number | string | null
+  plano_conta_id?: number | string
   ativo?: boolean
 }
 
@@ -25,7 +25,26 @@ export async function POST(req: Request) {
     const descricao = body.descricao ? String(body.descricao).trim() : null
     const tipoRaw = body.tipo ? String(body.tipo).trim().toLowerCase() : 'operacional'
     const tipo: 'operacional' | 'financeira' | 'outras' = (['operacional','financeira','outras'] as const).includes(tipoRaw as any) ? (tipoRaw as any) : 'operacional'
-    const planoId = body.plano_conta_id !== undefined && body.plano_conta_id !== null ? Number(body.plano_conta_id) : null
+    const planoIdRaw = body.plano_conta_id
+    const planoId = Number(planoIdRaw)
+    if (planoIdRaw === undefined || planoIdRaw === null || !Number.isFinite(planoId) || planoId <= 0) {
+      return Response.json({ success: false, message: 'plano_conta_id é obrigatório e deve ser válido' }, { status: 400 })
+    }
+    const planoRows = await runQuery<{ id: number }>(
+      `SELECT id
+         FROM contabilidade.plano_contas
+        WHERE id = $1
+          AND aceita_lancamento = TRUE
+          AND tipo_conta IN ('Custo','Despesa')
+        LIMIT 1`,
+      [planoId]
+    )
+    if (!planoRows.length) {
+      return Response.json(
+        { success: false, message: 'plano_conta_id inválido para categoria de despesa (use conta lançável de Custo/Despesa)' },
+        { status: 400 }
+      )
+    }
     const ativo = body.ativo === undefined ? true : Boolean(body.ativo)
 
     const sql = `
@@ -44,4 +63,3 @@ export async function POST(req: Request) {
     return Response.json({ success: false, message: msg }, { status: 400 })
   }
 }
-

@@ -1,4 +1,5 @@
 import { createCrFromPedido } from '@/inngest/vendas'
+import { inngest } from '@/lib/inngest'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
@@ -15,10 +16,19 @@ export async function POST(req: Request) {
       return Response.json({ success: false, message: 'pedido_id inválido' }, { status: 400 })
     }
     const result = await createCrFromPedido(pedidoId)
-    return Response.json({ success: true, cr_id: result.crId })
+    let eventSent = false
+    try {
+      await inngest.send({
+        name: 'financeiro/contas_a_receber/criada',
+        data: { conta_receber_id: result.crId },
+      })
+      eventSent = true
+    } catch (e) {
+      console.warn('Falha ao enviar evento Inngest financeiro/contas_a_receber/criada (create-cr)', e)
+    }
+    return Response.json({ success: true, cr_id: result.crId, event_sent: eventSent })
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error)
     return Response.json({ success: false, message: msg }, { status: 400 })
   }
 }
-

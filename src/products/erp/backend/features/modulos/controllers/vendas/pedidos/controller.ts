@@ -1,4 +1,5 @@
 import { withTransaction, runQuery } from '@/lib/postgres'
+import { inngest } from '@/lib/inngest'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
@@ -141,11 +142,14 @@ export async function POST(req: Request) {
       return { id }
     })
 
-    // Emit event and try inline CR creation (idempotente)
+    // Dispara evento Inngest para manter o fluxo assíncrono (espelha compras)
+    let eventSent = false
     try {
-      // Emit Inngest event (best effort)
-      try { await runQuery('SELECT 1') } catch {}
-    } catch {}
+      await inngest.send({ name: 'vendas/pedido/criado', data: { pedido_id: result.id } })
+      eventSent = true
+    } catch (e) {
+      console.warn('Falha ao enviar evento Inngest vendas/pedido/criado', e)
+    }
 
     // Inline CR creation
     let crId: number | null = null
@@ -157,7 +161,7 @@ export async function POST(req: Request) {
       // best effort only
     }
 
-    return Response.json({ success: true, id: result.id, cr_id: crId })
+    return Response.json({ success: true, id: result.id, cr_id: crId, event_sent: eventSent })
   } catch (error) {
     console.error('🛒 API /api/modulos/vendas/pedidos POST error:', error)
     const msg = error instanceof Error ? error.message : String(error)

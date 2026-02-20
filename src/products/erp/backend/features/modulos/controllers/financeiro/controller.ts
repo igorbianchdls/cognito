@@ -174,6 +174,8 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     natureza: 'cd.natureza',
     categoria_pai_id: 'cd.categoria_pai_id',
     plano_conta_id: 'cd.plano_conta_id',
+    plano_conta_codigo: 'pc.codigo',
+    plano_conta_nome: 'pc.nome',
     criado_em: 'cd.criado_em',
     atualizado_em: 'cd.atualizado_em',
   },
@@ -185,6 +187,8 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     tipo: 'cr.tipo',
     natureza: 'cr.natureza',
     plano_conta_id: 'cr.plano_conta_id',
+    plano_conta_codigo: 'pc.codigo',
+    plano_conta_nome: 'pc.nome',
     ativo: 'cr.ativo',
     criado_em: 'cr.criado_em',
     atualizado_em: 'cr.atualizado_em',
@@ -1010,7 +1014,8 @@ ORDER BY
                           cl.atualizado_em`;
       whereDateCol = 'cl.criado_em';
     } else if (view === 'categorias-despesa') {
-      baseSql = `FROM financeiro.categorias_despesa cd`;
+      baseSql = `FROM financeiro.categorias_despesa cd
+                 LEFT JOIN contabilidade.plano_contas pc ON pc.id = cd.plano_conta_id`;
       selectSql = `SELECT cd.id,
                           cd.codigo,
                           cd.nome,
@@ -1019,11 +1024,14 @@ ORDER BY
                           cd.natureza,
                           cd.categoria_pai_id,
                           cd.plano_conta_id,
+                          pc.codigo AS plano_conta_codigo,
+                          pc.nome AS plano_conta_nome,
                           cd.criado_em,
                           cd.atualizado_em`;
       whereDateCol = 'cd.criado_em';
     } else if (view === 'categorias-receita') {
-      baseSql = `FROM financeiro.categorias_receita cr`;
+      baseSql = `FROM financeiro.categorias_receita cr
+                 LEFT JOIN contabilidade.plano_contas pc ON pc.id = cr.plano_conta_id`;
       selectSql = `SELECT cr.id,
                           cr.codigo,
                           cr.nome,
@@ -1031,6 +1039,8 @@ ORDER BY
                           cr.tipo,
                           cr.natureza,
                           cr.plano_conta_id,
+                          pc.codigo AS plano_conta_codigo,
+                          pc.nome AS plano_conta_nome,
                           cr.ativo,
                           cr.criado_em,
                           cr.atualizado_em`;

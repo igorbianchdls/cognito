@@ -15,6 +15,52 @@ type ContaAPagarPayload = {
   plano_conta_id?: number | null
 }
 
+const lancamentoColumnCache = new Map<'contas_pagar' | 'contas_receber', boolean>()
+
+async function hasLancamentoContabilIdColumn(table: 'contas_pagar' | 'contas_receber'): Promise<boolean> {
+  const cached = lancamentoColumnCache.get(table)
+  if (cached !== undefined) return cached
+  const rows = await runQuery<{ exists: boolean }>(
+    `SELECT EXISTS (
+       SELECT 1
+         FROM information_schema.columns
+        WHERE table_schema = 'financeiro'
+          AND table_name = $1
+          AND column_name = 'lancamento_contabil_id'
+     ) AS exists`,
+    [table]
+  )
+  const exists = Boolean(rows[0]?.exists)
+  lancamentoColumnCache.set(table, exists)
+  return exists
+}
+
+async function bindOrigemLancamentoContabil(
+  table: 'contas_pagar' | 'contas_receber',
+  origemId: number,
+  lcId: number
+): Promise<void> {
+  if (!Number.isFinite(origemId) || !Number.isFinite(lcId)) return
+  const hasColumn = await hasLancamentoContabilIdColumn(table)
+  if (!hasColumn) return
+
+  const sqlByTable: Record<'contas_pagar' | 'contas_receber', string> = {
+    contas_pagar: `
+      UPDATE financeiro.contas_pagar
+         SET lancamento_contabil_id = $1
+       WHERE id = $2
+         AND (lancamento_contabil_id IS NULL OR lancamento_contabil_id <> $1)
+    `,
+    contas_receber: `
+      UPDATE financeiro.contas_receber
+         SET lancamento_contabil_id = $1
+       WHERE id = $2
+         AND (lancamento_contabil_id IS NULL OR lancamento_contabil_id <> $1)
+    `,
+  }
+  await runQuery(sqlByTable[table], [lcId, origemId])
+}
+
 export const contaAPagarCriadaFn = inngest.createFunction(
   { id: 'financeiro.contas-a-pagar.criada->contabil' },
   { event: 'financeiro/contas_a_pagar/criada' },
@@ -60,7 +106,12 @@ export const contaAPagarCriadaFn = inngest.createFunction(
       )
       return rows[0]?.id || null
     })
-    if (existing) return { alreadyExists: true, lcId: existing }
+    if (existing) {
+      await step.run('bind-existing-lc', async () => {
+        await bindOrigemLancamentoContabil('contas_pagar', id, Number(existing))
+      })
+      return { alreadyExists: true, lcId: existing }
+    }
 
     // Categoria -> plano (débito)
     const planoContaId = await step.run('fetch-categoria-e-plano', async () => {
@@ -134,6 +185,10 @@ export const contaAPagarCriadaFn = inngest.createFunction(
 
       return { lcId }
     }))
+
+    await step.run('bind-lc-id', async () => {
+      await bindOrigemLancamentoContabil('contas_pagar', id, Number(out.lcId))
+    })
 
     return { success: true, lcId: out.lcId, regra_id: Number(regra['id'] || 0) }
   }
@@ -402,7 +457,12 @@ export const contaAReceberCriadaFn = inngest.createFunction(
       )
       return rows[0]?.id || null
     })
-    if (existing) return { alreadyExists: true, lcId: existing }
+    if (existing) {
+      await step.run('bind-existing-lc', async () => {
+        await bindOrigemLancamentoContabil('contas_receber', id, Number(existing))
+      })
+      return { alreadyExists: true, lcId: existing }
+    }
 
     // Categoria Receita -> plano (Cr Receita)
     const planoReceitaId = await step.run('fetch-plano-receita', async () => {
@@ -451,6 +511,10 @@ export const contaAReceberCriadaFn = inngest.createFunction(
 
       return { lcId }
     }))
+
+    await step.run('bind-lc-id', async () => {
+      await bindOrigemLancamentoContabil('contas_receber', id, Number(out.lcId))
+    })
 
     return { success: true, lcId: out.lcId, regra_id: regra?.id ?? null }
   }
