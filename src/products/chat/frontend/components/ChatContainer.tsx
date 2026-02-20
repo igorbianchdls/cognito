@@ -8,6 +8,7 @@ import RespostaDaIa from './RespostaDaIa';
 import InputArea from './InputArea';
 import { useRouter } from 'next/navigation';
 import type { SandboxStatus } from '@/products/chat/frontend/lib/sandboxStatus';
+import { useChatErrorNotifications } from '@/products/chat/frontend/features/error-notifications/useChatErrorNotifications';
 
 type ChatStatus = 'idle' | 'submitted' | 'streaming' | 'error'
 type EngineId = 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5' | 'openai-gpt5mini' | 'openai-gpt5nano'
@@ -46,6 +47,17 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   const [menuBusy, setMenuBusy] = useState(false)
   const [headerTitle, setHeaderTitle] = useState<string | undefined>(undefined)
   const [hasPersistedChat, setHasPersistedChat] = useState<boolean>(false)
+  const {
+    notifications: errorNotifications,
+    unreadCount: errorNotificationsUnread,
+    pushErrorNotification,
+    markAllAsRead,
+    clearNotifications,
+  } = useChatErrorNotifications()
+
+  const notifyError = (source: 'sandbox' | 'api' | 'stream' | 'tool' | 'network' | 'unknown', error: unknown, message: string, details?: unknown) => {
+    pushErrorNotification({ source, error, message, details })
+  }
 
   useEffect(() => {
     if (initialEngine) setModel(initialEngine)
@@ -53,7 +65,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
 
   const startSandboxFromMenu = async () => {
     setMenuBusy(true)
-    try { await ensureStart(); } catch { setSandboxStatus('error') } finally { setMenuBusy(false) }
+    try { await ensureStart(); } catch (err) { setSandboxStatus('error'); notifyError('sandbox', err, 'Falha ao iniciar sandbox') } finally { setMenuBusy(false) }
   }
   const stopSandboxFromMenu = async () => {
     if (!chatId) return
@@ -66,9 +78,11 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
         setSandboxStatus('off')
       } else {
         setSandboxStatus('error')
+        notifyError('sandbox', data?.error, 'Falha ao fechar sandbox', data)
       }
-    } catch {
+    } catch (err) {
       setSandboxStatus('error')
+      notifyError('sandbox', err, 'Falha ao fechar sandbox')
     } finally { setMenuBusy(false) }
   }
   const writeFilesFromMenu = async () => {
@@ -76,17 +90,20 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
     try {
       const id = await ensureStart()
       const w1 = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-write', chatId: id, path: '/vercel/sandbox/menu/hello.txt', content: 'Hello from menu' }) })
-      if (!w1.ok) throw new Error('write hello failed')
+      if (!w1.ok) throw new Error('Falha ao escrever hello.txt')
       const w2 = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-write', chatId: id, path: '/vercel/sandbox/menu/info.json', content: JSON.stringify({ when: new Date().toISOString(), via: 'menu' }) }) })
-      if (!w2.ok) throw new Error('write info failed')
-    } catch {} finally { setMenuBusy(false) }
+      if (!w2.ok) throw new Error('Falha ao escrever info.json')
+    } catch (err) {
+      notifyError('sandbox', err, 'Falha ao criar arquivos na sandbox')
+    } finally { setMenuBusy(false) }
   }
 
   const openArtifactFromMenu = async () => {
     try {
       const id = await ensureStart();
       onOpenSandbox?.(id);
-    } catch {
+    } catch (err) {
+      notifyError('sandbox', err, 'Falha ao abrir Artifact da sandbox')
       onOpenSandbox?.(chatId ?? undefined)
     }
   }
@@ -113,12 +130,17 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
       setSandboxStatus('running')
       try {
         const cfg = engineToBackend(model)
-        await fetch('/api/chat', {
+        const modelRes = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'model-set', chatId: data.chatId, provider: cfg.provider, model: cfg.model }),
         })
-      } catch { /* ignore */ }
+        if (!modelRes.ok) {
+          notifyError('api', `HTTP ${modelRes.status}`, 'Falha ao configurar modelo inicial')
+        }
+      } catch (err) {
+        notifyError('api', err, 'Falha ao configurar modelo inicial')
+      }
       return data.chatId
     } catch (error) {
       setSandboxStatus('error')
@@ -152,6 +174,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
     send(text).catch(err => {
       console.error('chat send error', err)
       setStatus('error')
+      notifyError('api', err, 'Falha ao enviar mensagem')
     })
     setInput('')
   };
@@ -446,12 +469,14 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
               lastActiveToolKey = targetKey
               updateToolPart(lastActiveToolKey, { state: 'output-error', errorText: evt.error || 'Tool error', type: `tool-${evt.tool_name || 'generic'}` })
             }
+            notifyError('tool', evt?.error, `Erro na tool ${evt?.tool_name || 'desconhecida'}`, evt)
           } else if (evt && evt.type === 'final') {
             setStatus('idle')
           } else if (evt && evt.type === 'error') {
             setStatus('error')
             const msg = typeof evt.error === 'string' ? evt.error : 'Erro no stream'
             appendToActiveText(`\n${msg}`)
+            notifyError('stream', evt?.error, 'Erro no stream da resposta', evt)
           }
         } catch {}
       }
@@ -536,7 +561,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   // Auto-start sandbox (no message) when requested via URL flag
   useEffect(() => {
     if (autoStartSandbox && initialChatId && !chatId) {
-      ensureStart().catch(() => { setSandboxStatus('error') })
+      ensureStart().catch((err) => { setSandboxStatus('error'); notifyError('sandbox', err, 'Falha ao iniciar sandbox automaticamente') })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoStartSandbox, initialChatId])
@@ -546,6 +571,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
       send(initialMessage).catch(err => {
         console.error('auto-send error', err)
         setStatus('error')
+        notifyError('api', err, 'Falha ao enviar mensagem automática')
       })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -553,7 +579,20 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   if (isEmpty) {
     return (
       <div className="h-full grid grid-rows-[auto_1fr]">
-        <Header title={headerTitle || 'Chat'} busy={menuBusy} hasSandbox={sandboxStatus === 'running'} sandboxStatus={sandboxStatus} onStartSandbox={startSandboxFromMenu} onStopSandbox={stopSandboxFromMenu} onWriteFiles={writeFilesFromMenu} onOpenArtifact={openArtifactFromMenu} />
+        <Header
+          title={headerTitle || 'Chat'}
+          busy={menuBusy}
+          hasSandbox={sandboxStatus === 'running'}
+          sandboxStatus={sandboxStatus}
+          onStartSandbox={startSandboxFromMenu}
+          onStopSandbox={stopSandboxFromMenu}
+          onWriteFiles={writeFilesFromMenu}
+          onOpenArtifact={openArtifactFromMenu}
+          errorNotifications={errorNotifications}
+          errorNotificationsUnread={errorNotificationsUnread}
+          onMarkAllErrorNotificationsRead={markAllAsRead}
+          onClearErrorNotifications={clearNotifications}
+        />
         <div className="h-full min-h-0" style={withSideMargins ? { marginLeft: '20%', marginRight: '20%' } : undefined}>
           <div className="h-full px-4">
             <div className="h-full flex items-center justify-center">
@@ -576,8 +615,14 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
                       const id = await ensureStart();
                       const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'mcp-toggle', chatId: id, enabled: !composioEnabled }) });
                       const data = await res.json().catch(() => ({})) as any;
-                      if (res.ok && data && data.ok) setComposioEnabled(Boolean(data.enabled));
-                    } catch { /* ignore */ }
+                      if (res.ok && data && data.ok) {
+                        setComposioEnabled(Boolean(data.enabled));
+                      } else {
+                        notifyError('api', data?.error, 'Falha ao atualizar integrações (MCP)', data)
+                      }
+                    } catch (err) {
+                      notifyError('api', err, 'Falha ao atualizar integrações (MCP)')
+                    }
                   }}
                   onModelChange={async (m) => {
                     setModel(m)
@@ -587,13 +632,16 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
                     try {
                       const id = await ensureStart();
                       const cfg = engineToBackend(m)
-                      await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'model-set', chatId: id, provider: cfg.provider, model: cfg.model }) })
-                    } catch { /* ignore */ }
+                      const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'model-set', chatId: id, provider: cfg.provider, model: cfg.model }) })
+                      if (!res.ok) notifyError('api', `HTTP ${res.status}`, 'Falha ao alterar modelo')
+                    } catch (err) {
+                      notifyError('api', err, 'Falha ao alterar modelo')
+                    }
                   }}
                   onOpenSandbox={async () => {
                     // Avoid starting chat before first message when redirecting
                     if (redirectOnFirstMessage && !chatId) { return }
-                    try { const id = await ensureStart(); onOpenSandbox?.(id); } catch { /* ignore */ }
+                    try { const id = await ensureStart(); onOpenSandbox?.(id); } catch (err) { notifyError('sandbox', err, 'Falha ao abrir sandbox') }
                   }}
                 />
                 <p className="mt-2 text-xs text-gray-400 text-center">Otto é uma IA e pode cometer erros. Por favor, verifique as respostas.</p>
@@ -607,7 +655,20 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
 
   return (
     <div className="h-full min-w-0 grid grid-rows-[auto_1fr]">
-      <Header title={headerTitle || 'Chat'} busy={menuBusy} hasSandbox={sandboxStatus === 'running'} sandboxStatus={sandboxStatus} onStartSandbox={startSandboxFromMenu} onStopSandbox={stopSandboxFromMenu} onWriteFiles={writeFilesFromMenu} onOpenArtifact={openArtifactFromMenu} />
+      <Header
+        title={headerTitle || 'Chat'}
+        busy={menuBusy}
+        hasSandbox={sandboxStatus === 'running'}
+        sandboxStatus={sandboxStatus}
+        onStartSandbox={startSandboxFromMenu}
+        onStopSandbox={stopSandboxFromMenu}
+        onWriteFiles={writeFilesFromMenu}
+        onOpenArtifact={openArtifactFromMenu}
+        errorNotifications={errorNotifications}
+        errorNotificationsUnread={errorNotificationsUnread}
+        onMarkAllErrorNotificationsRead={markAllAsRead}
+        onClearErrorNotifications={clearNotifications}
+      />
       <div className="h-full min-w-0 grid grid-rows-[1fr_auto] min-h-0" style={withSideMargins ? { marginLeft: '20%', marginRight: '20%' } : undefined}>
         <div className="overflow-y-auto overflow-x-hidden min-h-0 min-w-0 px-4 py-4">
           {messages.map((m) =>
@@ -636,8 +697,14 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
               const id = await ensureStart();
               const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'mcp-toggle', chatId: id, enabled: !composioEnabled }) });
               const data = await res.json().catch(() => ({})) as any;
-              if (res.ok && data && data.ok) setComposioEnabled(Boolean(data.enabled));
-            } catch { /* ignore */ }
+              if (res.ok && data && data.ok) {
+                setComposioEnabled(Boolean(data.enabled));
+              } else {
+                notifyError('api', data?.error, 'Falha ao atualizar integrações (MCP)', data)
+              }
+            } catch (err) {
+              notifyError('api', err, 'Falha ao atualizar integrações (MCP)')
+            }
           }} model={model} onModelChange={async (m) => {
             setModel(m)
             if (redirectOnFirstMessage && !chatId) {
@@ -646,11 +713,14 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
             try {
               const id = await ensureStart();
               const cfg = engineToBackend(m)
-              await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'model-set', chatId: id, provider: cfg.provider, model: cfg.model }) })
-            } catch { /* ignore */ }
+              const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'model-set', chatId: id, provider: cfg.provider, model: cfg.model }) })
+              if (!res.ok) notifyError('api', `HTTP ${res.status}`, 'Falha ao alterar modelo')
+            } catch (err) {
+              notifyError('api', err, 'Falha ao alterar modelo')
+            }
           }} onOpenSandbox={async () => {
             if (redirectOnFirstMessage && !chatId) { return }
-            try { const id = await ensureStart(); onOpenSandbox?.(id); } catch { /* ignore */ }
+            try { const id = await ensureStart(); onOpenSandbox?.(id); } catch (err) { notifyError('sandbox', err, 'Falha ao abrir sandbox') }
           }} />
           <p className="mt-2 text-xs text-gray-400 text-center">Otto é uma IA e pode cometer erros. Por favor, verifique as respostas.</p>
         </div>
