@@ -371,18 +371,9 @@ export default function RespostaDaIa({ message, isPending = false }: Props) {
             const txt = String(part?.content ?? part?.text ?? '').trim()
             if (!txt) return null
             return (
-              <Reasoning
-                key={`rs-${index}`}
-                isStreaming={String(part?.state || '') === 'streaming'}
-                defaultOpen={String(part?.state || '') === 'streaming'}
-                className="rounded-md border border-gray-200 bg-gray-50 p-2 text-xs"
-              >
-                <ReasoningTrigger className="cursor-pointer font-medium text-gray-700">
-                  Raciocínio
-                </ReasoningTrigger>
-                <ReasoningContent className="mt-2 whitespace-pre-wrap text-gray-600">
-                  {txt}
-                </ReasoningContent>
+              <Reasoning key={`rs-${index}`} isStreaming={String(part?.state || '') === 'streaming'}>
+                <ReasoningTrigger />
+                <ReasoningContent>{txt}</ReasoningContent>
               </Reasoning>
             )
           }
