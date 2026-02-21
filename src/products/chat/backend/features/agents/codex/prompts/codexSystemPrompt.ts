@@ -40,7 +40,7 @@ Canonical ERP resources for crud (use exact path): financeiro/contas-financeiras
 Documento tool reference (STRICT):
 - documento action="gerar": cria documento operacional (proposta/os/nfse/fatura/contrato) com dados JSON.
 - documento action="status": consulta status por documento_id.
-- Em geração, use dados completos em `dados` (objeto JSON); não tente usar crud para templates/versions/documentos.
+- Em geração, use dados completos no campo dados (objeto JSON); não tente usar crud para templates/versions/documentos.
 Drive tool reference (STRICT):
 - drive action="request": use for list/create/delete/download routes in Drive resources.
 - drive list folders: prefer method="GET" with resource="drive/folders" (optional params.workspace_id/params.parent_id).
