@@ -91,12 +91,16 @@ export function setAgentToken(chatId: string, token: string, exp: number) {
 }
 
 export function verifyAgentToken(chatId: string | null | undefined, token: string | null | undefined) {
-  if (!chatId || !token) return false
+  const tk = String(token || '').trim()
+  const internalKey = String(process.env.AGENT_INTERNAL_API_KEY || '').trim()
+  if (internalKey && tk && tk === internalKey) return true
 
-  if (verifyStatelessToken(chatId, token)) return true
+  if (!chatId || !tk) return false
+
+  if (verifyStatelessToken(chatId, tk)) return true
 
   const rec = TOKENS.get(chatId)
   if (!rec) return false
   if (nowSec() >= rec.exp) return false
-  return rec.token === token
+  return rec.token === tk
 }

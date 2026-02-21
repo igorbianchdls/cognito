@@ -146,6 +146,7 @@ async function parseJsonResponse(res: Response) {
 async function callScopedTool(input: {
   origin: string
   token: string
+  internalKey?: string
   chatId: string
   tenantId: number
   path: string
@@ -160,6 +161,7 @@ async function callScopedTool(input: {
       authorization: `Bearer ${input.token}`,
       'x-chat-id': input.chatId,
       'x-tenant-id': String(input.tenantId),
+      ...(input.internalKey ? { 'x-internal-agent-key': input.internalKey } : {}),
     },
     body: JSON.stringify(input.args ?? {}),
     cache: 'no-store',
@@ -179,6 +181,7 @@ async function callScopedTool(input: {
 async function callCrudTool(input: {
   origin: string
   token: string
+  internalKey?: string
   chatId: string
   tenantId: number
   args: JsonObject
@@ -188,7 +191,7 @@ async function callCrudTool(input: {
   if (!isSafeResource(resource)) {
     return { success: false, error: 'recurso não permitido', resource }
   }
-  const method = toText(input.args.method || 'POST').toUpperCase() || 'POST'
+  const method = 'POST'
   const suffix = resolveCrudSuffix(action, input.args.actionSuffix)
   const url = buildAgentToolsUrl(input.origin, resource, suffix)
   const payload = action === 'listar'
@@ -202,6 +205,7 @@ async function callCrudTool(input: {
       authorization: `Bearer ${input.token}`,
       'x-chat-id': input.chatId,
       'x-tenant-id': String(input.tenantId),
+      ...(input.internalKey ? { 'x-internal-agent-key': input.internalKey } : {}),
     },
     body: method === 'GET' ? undefined : JSON.stringify(payload),
     cache: 'no-store',
@@ -415,7 +419,9 @@ export async function POST(req: Request) {
     if (reset) session.lastResponseId = null
 
     const chatId = `relay-lite:${conversationId}`
+    const internalKey = toText(process.env.AGENT_INTERNAL_API_KEY)
     const tokenData = generateAgentToken(1800, chatId)
+    const toolToken = internalKey || tokenData.token
     setAgentToken(chatId, tokenData.token, tokenData.exp)
 
     const origin = getOrigin(req)
@@ -459,7 +465,8 @@ export async function POST(req: Request) {
           if (call.name === 'crud') {
             result = await callCrudTool({
               origin,
-              token: tokenData.token,
+              token: toolToken,
+              internalKey: internalKey || undefined,
               chatId,
               tenantId,
               args: parsedArgs,
@@ -467,7 +474,8 @@ export async function POST(req: Request) {
           } else if (call.name === 'documento') {
             result = await callScopedTool({
               origin,
-              token: tokenData.token,
+              token: toolToken,
+              internalKey: internalKey || undefined,
               chatId,
               tenantId,
               path: '/api/agent-tools/documento',
@@ -477,7 +485,8 @@ export async function POST(req: Request) {
           } else if (call.name === 'drive') {
             result = await callScopedTool({
               origin,
-              token: tokenData.token,
+              token: toolToken,
+              internalKey: internalKey || undefined,
               chatId,
               tenantId,
               path: '/api/agent-tools/drive',
@@ -487,7 +496,8 @@ export async function POST(req: Request) {
           } else if (call.name === 'email') {
             result = await callScopedTool({
               origin,
-              token: tokenData.token,
+              token: toolToken,
+              internalKey: internalKey || undefined,
               chatId,
               tenantId,
               path: '/api/agent-tools/email',
