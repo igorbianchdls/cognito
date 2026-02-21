@@ -296,7 +296,13 @@ function buildToolsSchema() {
           subject: { type: 'string' },
           text: { type: 'string' },
           html: { type: 'string' },
-          attachments: { type: 'array' },
+          attachments: {
+            type: 'array',
+            items: {
+              type: 'object',
+              additionalProperties: true,
+            },
+          },
         },
         required: ['action'],
       },
