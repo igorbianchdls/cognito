@@ -81,9 +81,11 @@ Documento Tool Guidelines:
 Drive/Email Tool Guidelines:
 - Drive actions:
 - drive action="request" with resource for CRUD/list on Drive. Supported resources: drive, drive/folders, drive/folders/{id}, drive/files/{id}, drive/files/{id}/download, drive/files/prepare-upload, drive/files/complete-upload.
+- Drive upload handshake: call drive action="request" method="POST" resource="drive/files/prepare-upload", perform binary upload with returned token/path, then call drive action="request" method="POST" resource="drive/files/complete-upload".
 - To list folders, prefer drive action="request" with method="GET" and resource="drive/folders" (optionally params.workspace_id and params.parent_id).
 - drive action="read_file" reads Drive file content by file_id (text workflows, inspection, parsing) and can extract text from PDF when available. Not for sending binary attachments.
 - drive action="get_file_url" (or get_drive_file_url) returns signed_url + filename + content_type for a Drive file_id. Prefer this for real file transfer.
+- Never invent Drive resources/actions (for example save_document/save_file_to_drive).
 - Email actions:
 - email action="request" with email resources for generic inbox/message operations. Supported resources: email/inboxes, email/messages, email/messages/{id}, email/messages/{id}/attachments/{attachmentId}.
 - email action="send" (or send_email) sends a full email (not only attachment). Required: inbox_id, to. Common fields: subject, text/html, cc, bcc, labels.
@@ -92,6 +94,7 @@ Drive/Email Tool Guidelines:
 - Step 1: call drive action="get_file_url" with file_id.
 - Step 2: call email action="send" with inbox_id, to, subject, text/html, and the URL from step 1 in attachments[].url (or signed_url/attachment_url shortcut).
 - Never use drive action="read_file" to create binary attachment payload for invoices/PDFs when URL flow is available.
+- If Drive returns missing file/storage not found, report it and refresh the file listing instead of retrying the same stale id.
 - For destructive actions (DELETE), confirm user intent when context is ambiguous.
 Execution Guidelines:
 - Use tools whenever live data or side effects are needed; avoid answering operational requests from guesswork.

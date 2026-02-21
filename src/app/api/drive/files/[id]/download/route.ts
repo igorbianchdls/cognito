@@ -13,6 +13,33 @@ type FileRow = {
   bucket_id: string | null
 }
 
+function looksLikeStorageNotFound(errorTextRaw: unknown): boolean {
+  const errorText = String(errorTextRaw || '').toLowerCase()
+  if (!errorText) return false
+  return (
+    errorText.includes('object not found')
+    || errorText.includes('not found')
+    || errorText.includes('no such')
+    || errorText.includes('does not exist')
+    || errorText.includes('404')
+  )
+}
+
+async function softDeleteDriveFile(fileId: string) {
+  try {
+    await runQuery(
+      `UPDATE drive.files
+          SET deleted_at = now(),
+              updated_at = now()
+        WHERE id = $1::uuid
+          AND deleted_at IS NULL`,
+      [fileId],
+    )
+  } catch {
+    // Best-effort cleanup.
+  }
+}
+
 function buildContentDisposition(filename: string) {
   const safeName = String(filename || 'download').replace(/[\r\n"]/g, '').trim() || 'download'
   return `attachment; filename*=UTF-8''${encodeURIComponent(safeName)}`
@@ -55,7 +82,15 @@ export async function GET(req: Request) {
     const bucket = file.bucket_id || 'drive'
     const { data, error } = await supabase.storage.from(bucket).download(file.storage_path)
     if (error || !data) {
-      return Response.json({ success: false, message: `Falha no download: ${error?.message || 'erro desconhecido'}` }, { status: 500 })
+      const detail = error?.message || 'erro desconhecido'
+      if (looksLikeStorageNotFound(detail)) {
+        await softDeleteDriveFile(file.id)
+        return Response.json(
+          { success: false, message: 'Arquivo não encontrado no storage. Metadado removido da lista do Drive.' },
+          { status: 404 },
+        )
+      }
+      return Response.json({ success: false, message: `Falha no download: ${detail}` }, { status: 500 })
     }
 
     const buffer = await data.arrayBuffer()
@@ -73,4 +108,3 @@ export async function GET(req: Request) {
     return Response.json({ success: false, message }, { status: 500 })
   }
 }
-

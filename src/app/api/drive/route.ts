@@ -1,3 +1,4 @@
+import { runQuery } from '@/lib/postgres'
 import {
   buildUserLabel,
   ensureSeedWorkspace,
@@ -12,6 +13,33 @@ import {
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
+
+function looksLikeStorageNotFound(errorTextRaw: unknown): boolean {
+  const errorText = String(errorTextRaw || '').toLowerCase()
+  if (!errorText) return false
+  return (
+    errorText.includes('object not found')
+    || errorText.includes('not found')
+    || errorText.includes('no such')
+    || errorText.includes('does not exist')
+    || errorText.includes('404')
+  )
+}
+
+async function softDeleteDriveFile(fileId: string) {
+  try {
+    await runQuery(
+      `UPDATE drive.files
+          SET deleted_at = now(),
+              updated_at = now()
+        WHERE id = $1::uuid
+          AND deleted_at IS NULL`,
+      [fileId],
+    )
+  } catch {
+    // Best-effort cleanup.
+  }
+}
 
 export async function GET(req: Request) {
   try {
@@ -33,15 +61,23 @@ export async function GET(req: Request) {
     ])
 
     const supabase = getSupabaseAdmin()
-    const recentFiles = await Promise.all(
+    const recentFilesRaw = await Promise.all(
       files.map(async (f) => {
         let signedUrl: string | undefined
         const bucket = f.bucket_id || 'drive'
         if (supabase) {
           try {
-            const { data } = await supabase.storage.from(bucket).createSignedUrl(f.storage_path, 60 * 60)
+            const { data, error } = await supabase.storage.from(bucket).createSignedUrl(f.storage_path, 60 * 60)
+            if (error && looksLikeStorageNotFound(error.message)) {
+              await softDeleteDriveFile(f.id)
+              return null
+            }
             signedUrl = data?.signedUrl
-          } catch {
+          } catch (error) {
+            if (looksLikeStorageNotFound(error instanceof Error ? error.message : String(error))) {
+              await softDeleteDriveFile(f.id)
+              return null
+            }
             signedUrl = undefined
           }
         }
@@ -60,6 +96,7 @@ export async function GET(req: Request) {
         }
       })
     )
+    const recentFiles = recentFilesRaw.filter((item): item is NonNullable<typeof item> => Boolean(item))
 
     const outFolders = folders.map((f) => ({
       id: f.id,

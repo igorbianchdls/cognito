@@ -36,6 +36,27 @@ type ToolTraceEntry = {
 const SESSIONS = new Map<string, RelaySession>()
 const SESSION_TTL_MS = 6 * 60 * 60 * 1000
 const SAFE_PREFIXES = ['financeiro', 'vendas', 'compras', 'contas-a-pagar', 'contas-a-receber', 'crm', 'estoque', 'cadastros']
+const CRUD_CANONICAL_RESOURCES = [
+  'financeiro/contas-financeiras',
+  'financeiro/categorias-despesa',
+  'financeiro/categorias-receita',
+  'financeiro/clientes',
+  'financeiro/centros-custo',
+  'financeiro/centros-lucro',
+  'vendas/pedidos',
+  'compras/pedidos',
+  'contas-a-pagar',
+  'contas-a-receber',
+  'crm/contas',
+  'crm/contatos',
+  'crm/leads',
+  'crm/oportunidades',
+  'crm/atividades',
+  'estoque/almoxarifados',
+  'estoque/movimentacoes',
+  'estoque/estoque-atual',
+  'estoque/tipos-movimentacao',
+]
 
 function nowMs() {
   return Date.now()
@@ -314,6 +335,25 @@ function buildToolsSchema() {
   ]
 }
 
+function buildRelayInstructions() {
+  const resources = CRUD_CANONICAL_RESOURCES.join(', ')
+  return [
+    'Você é um agente operacional SMB.',
+    'Responda em português brasileiro, curto e objetivo.',
+    `Crud: use somente resources canônicos (${resources}). Não invente paths como "financeiro/caixa".`,
+    'Crud: para listar use action="listar"; para criar/atualizar/deletar use action correspondente.',
+    'Documento: use action="gerar" para proposta/os/nfse/fatura/contrato com payload em dados; use action="status" com documento_id.',
+    'Drive: actions válidas são request, read_file e get_file_url.',
+    'Drive request: resources válidos são drive, drive/folders, drive/folders/{id}, drive/files/{id}, drive/files/{id}/download, drive/files/prepare-upload, drive/files/complete-upload.',
+    'Drive upload: use exatamente method="POST" com resource="drive/files/prepare-upload" e depois method="POST" com resource="drive/files/complete-upload".',
+    'Email: use action="send" com inbox_id, to, subject e text/html; anexos por attachments[] ou signed_url/attachment_url.',
+    'Fluxo obrigatório para anexar arquivo do Drive em email: 1) drive get_file_url por file_id; 2) email send com essa URL no anexo.',
+    'Nunca use ações/resources inexistentes como save_document/save_file_to_drive.',
+    'Se faltar campo obrigatório para executar a ação, faça uma pergunta curta.',
+    'Se uma tool retornar erro de arquivo não encontrado, informe claramente e prossiga com alternativa segura (ex.: listar novamente).',
+  ].join('\n')
+}
+
 function extractFunctionCalls(output: unknown): FunctionCallItem[] {
   if (!Array.isArray(output)) return []
   const calls: FunctionCallItem[] = []
@@ -433,9 +473,7 @@ export async function POST(req: Request) {
       tools,
       tool_choice: 'auto',
       reasoning: { effort: 'medium', summary: 'auto' },
-      instructions:
-        'Você é um agente operacional SMB. Use as tools para ações reais de ERP/documentos/drive/email. ' +
-        'Responda em português brasileiro de forma objetiva. Se faltar dado obrigatório para ação destrutiva/envio, pergunte curto.',
+      instructions: buildRelayInstructions(),
     }
 
     let response = await callOpenAiResponses({

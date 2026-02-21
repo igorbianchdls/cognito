@@ -44,8 +44,10 @@ Documento tool reference (STRICT):
 Drive tool reference (STRICT):
 - drive action="request": use for list/create/delete/download routes in Drive resources.
 - drive list folders: prefer method="GET" with resource="drive/folders" (optional params.workspace_id/params.parent_id).
+- drive upload handshake: call method="POST" resource="drive/files/prepare-upload", then upload binary using returned token/path, then call method="POST" resource="drive/files/complete-upload".
 - drive action="read_file": use to read file content by file_id (textual analysis/extraction), including PDF text extraction when available, not as binary attachment source.
 - drive action="get_file_url" (or get_drive_file_url): use to obtain signed_url for real file transfer.
+- never invent Drive resources/actions (for example save_document/save_file_to_drive). Use only supported resources above.
 Email tool reference (STRICT):
 - email action="request": use for inbox/message listing and generic message operations via resource.
 - email action="send" (or send_email): use to send complete email payload (inbox_id + to + subject + text/html) with optional attachments.
@@ -54,6 +56,7 @@ Two-step flow for real Drive attachment by email (MANDATORY):
 - Step 1: drive action="get_file_url" with file_id.
 - Step 2: email action="send" with inbox_id, to, subject, text/html, and URL attachment.
 For binary files (invoice/PDF/image), do not use read_file as attachment source when URL flow is available.
+If Drive returns "arquivo não encontrado no storage", communicate clearly and refresh/list files again instead of retrying the same stale id.
 If required fields are missing (for example inboxId), ask one short clarification question instead of guessing.
 For destructive actions (delete/send), confirm intent when context is ambiguous.
 Conversational Tool Protocol (MANDATORY):

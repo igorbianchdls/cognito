@@ -47,10 +47,10 @@ const DRIVE_RESOURCE_RULES: RouteRule[] = [
   { pattern: /^drive$/, methods: ['GET'] },
   { pattern: /^drive\/folders$/, methods: ['GET', 'POST'] },
   { pattern: /^drive\/folders\/[^/]+$/, methods: ['GET', 'DELETE'] },
-  { pattern: /^drive\/files\/[^/]+$/, methods: ['DELETE'] },
-  { pattern: /^drive\/files\/[^/]+\/download$/, methods: ['GET'] },
   { pattern: /^drive\/files\/prepare-upload$/, methods: ['POST'] },
   { pattern: /^drive\/files\/complete-upload$/, methods: ['POST'] },
+  { pattern: /^drive\/files\/[^/]+$/, methods: ['DELETE'] },
+  { pattern: /^drive\/files\/[^/]+\/download$/, methods: ['GET'] },
 ]
 
 const TEXT_EXTENSIONS = new Set([
@@ -258,6 +258,33 @@ function isTextLikeFile(name: string, mime: string): boolean {
   return TEXT_EXTENSIONS.has(ext)
 }
 
+function looksLikeStorageNotFound(errorTextRaw: unknown): boolean {
+  const errorText = String(errorTextRaw || '').toLowerCase()
+  if (!errorText) return false
+  return (
+    errorText.includes('object not found')
+    || errorText.includes('not found')
+    || errorText.includes('no such')
+    || errorText.includes('does not exist')
+    || errorText.includes('404')
+  )
+}
+
+async function softDeleteDriveFile(fileId: string) {
+  try {
+    await runQuery(
+      `UPDATE drive.files
+          SET deleted_at = now(),
+              updated_at = now()
+        WHERE id = $1::uuid
+          AND deleted_at IS NULL`,
+      [fileId],
+    )
+  } catch {
+    // Best-effort cleanup; do not fail the request if DB update fails.
+  }
+}
+
 async function forwardWorkspaceRequest(req: NextRequest, payload: WorkspaceRequestAction, scope: WorkspaceToolScope) {
   const method = normalizeMethod(payload.method)
   const resource = toCleanResource(payload.resource)
@@ -372,10 +399,15 @@ async function readDriveFile(req: NextRequest, payload: WorkspaceRequestAction) 
   const res = await fetch(downloadUrl.toString(), { method: 'GET', cache: 'no-store' })
   if (!res.ok) {
     const text = await res.text().catch(() => '')
+    const maybeJson = parseJsonMaybe(text)
+    const errorMessage =
+      maybeJson && typeof maybeJson === 'object' && !Array.isArray(maybeJson)
+        ? String((maybeJson as Record<string, unknown>).message || text || `Falha ao baixar arquivo (${res.status})`)
+        : (text || `Falha ao baixar arquivo (${res.status})`)
     return {
       ok: false,
       status: res.status,
-      result: { success: false, error: text || `Falha ao baixar arquivo (${res.status})` },
+      result: { success: false, error: errorMessage },
     }
   }
 
@@ -529,10 +561,23 @@ async function getDriveFileUrl(payload: WorkspaceRequestAction) {
   const bucket = file.bucket_id || 'drive'
   const { data, error } = await supabase.storage.from(bucket).createSignedUrl(file.storage_path, expiresInSeconds)
   if (error || !data?.signedUrl) {
+    const detail = error?.message || 'erro desconhecido'
+    if (looksLikeStorageNotFound(detail)) {
+      await softDeleteDriveFile(file.id)
+      return {
+        ok: false,
+        status: 404,
+        result: {
+          success: false,
+          error: 'Arquivo não encontrado no storage. Metadado removido da lista do Drive.',
+          file_id: file.id,
+        },
+      }
+    }
     return {
       ok: false,
       status: 500,
-      result: { success: false, error: `Falha ao gerar URL assinada: ${error?.message || 'erro desconhecido'}` },
+      result: { success: false, error: `Falha ao gerar URL assinada: ${detail}` },
     }
   }
 
@@ -632,6 +677,14 @@ function normalizeAction(actionRaw: unknown): string {
   if (action === 'get_file_url') return 'get_drive_file_url'
   if (action === 'send') return 'send_email'
   return action
+}
+
+function parseJsonMaybe(raw: string): unknown {
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return raw
+  }
 }
 
 function isActionAllowed(scope: WorkspaceToolScope, action: string): boolean {
