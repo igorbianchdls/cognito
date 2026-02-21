@@ -4,12 +4,14 @@ export type AppsTableName =
   | 'compras.recebimentos'
   | 'financeiro.contas_pagar'
   | 'financeiro.contas_receber'
+  | 'contabilidade.lancamentos_contabeis'
+  | 'contabilidade.lancamentos_contabeis_linhas'
   | 'crm.oportunidades'
   | 'crm.leads'
   | 'documentos.documentos'
   | 'estoque.estoques_atual'
   | 'estoque.movimentacoes'
-export type AppsModule = 'vendas' | 'compras' | 'financeiro' | 'crm' | 'documentos' | 'estoque'
+export type AppsModule = 'vendas' | 'compras' | 'financeiro' | 'contabilidade' | 'crm' | 'documentos' | 'estoque'
 
 export type AppsMetricFormat = 'currency' | 'number' | 'percent'
 export type AppsDimensionKind = 'attribute' | 'time'
@@ -60,6 +62,7 @@ const MONTH_EXPR_PREVISAO = "TO_CHAR(DATE_TRUNC('month', data_prevista), 'YYYY-M
 const MONTH_EXPR_CRIADO = "TO_CHAR(DATE_TRUNC('month', criado_em), 'YYYY-MM')"
 const MONTH_EXPR_ESTOQUE_ATUALIZADO = "TO_CHAR(DATE_TRUNC('month', atualizado_em), 'YYYY-MM')"
 const MONTH_EXPR_MOVIMENTO = "TO_CHAR(DATE_TRUNC('month', data_movimento), 'YYYY-MM')"
+const MONTH_EXPR_CONTABIL_LANCAMENTO = "TO_CHAR(DATE_TRUNC('month', data_lancamento), 'YYYY-MM')"
 
 export const APPS_QUERY_CATALOG: Record<AppsTableName, AppsTableCatalog> = {
   'vendas.pedidos': {
@@ -340,6 +343,127 @@ export const APPS_QUERY_CATALOG: Record<AppsTableName, AppsTableCatalog> = {
       { field: 'numero_documento', label: 'Numero Documento', type: 'string', operators: ['contains'] },
       { field: 'valor_min', label: 'Valor Minimo', type: 'number', operators: ['gte'] },
       { field: 'valor_max', label: 'Valor Maximo', type: 'number', operators: ['lte'] },
+    ],
+  },
+  'contabilidade.lancamentos_contabeis': {
+    table: 'contabilidade.lancamentos_contabeis',
+    module: 'contabilidade',
+    description: 'Cabecalho dos lancamentos contabeis.',
+    aliases: ['contabilidade-lancamentos-contabeis', 'contabilidade_lancamentos_contabeis'],
+    metrics: [
+      {
+        id: 'total_debitos',
+        label: 'Total de Debitos',
+        format: 'currency',
+        legacyMeasures: ['SUM(total_debitos)'],
+      },
+      {
+        id: 'total_creditos',
+        label: 'Total de Creditos',
+        format: 'currency',
+        legacyMeasures: ['SUM(total_creditos)'],
+      },
+      {
+        id: 'saldo',
+        label: 'Saldo',
+        format: 'currency',
+        legacyMeasures: ['SUM(total_debitos - total_creditos)'],
+      },
+      {
+        id: 'lancamentos',
+        label: 'Lancamentos',
+        format: 'number',
+        legacyMeasures: ['COUNT()', 'COUNT_DISTINCT(id)'],
+      },
+    ],
+    dimensions: [
+      { id: 'origem', label: 'Origem', kind: 'attribute', legacyDimension: 'origem' },
+      { id: 'numero_documento', label: 'Numero Documento', kind: 'attribute', legacyDimension: 'numero_documento' },
+      { id: 'historico', label: 'Historico', kind: 'attribute', legacyDimension: 'historico' },
+      {
+        id: 'periodo',
+        label: 'Periodo',
+        kind: 'time',
+        legacyDimension: 'periodo',
+        legacyDimensionExprByGrain: {
+          month: MONTH_EXPR_CONTABIL_LANCAMENTO,
+        },
+      },
+    ],
+    defaultTimeField: 'data_lancamento',
+    filters: [
+      { field: 'tenant_id', label: 'Tenant', type: 'id', operators: ['eq'] },
+      { field: 'de', label: 'Data Inicial', type: 'date', operators: ['gte'] },
+      { field: 'ate', label: 'Data Final', type: 'date', operators: ['lte'] },
+      { field: 'origem', label: 'Origem', type: 'string', operators: ['eq', 'in'] },
+    ],
+  },
+  'contabilidade.lancamentos_contabeis_linhas': {
+    table: 'contabilidade.lancamentos_contabeis_linhas',
+    module: 'contabilidade',
+    description: 'Partidas dobradas (linhas) dos lancamentos contabeis.',
+    aliases: ['contabilidade-lancamentos-contabeis-linhas', 'contabilidade_lancamentos_contabeis_linhas'],
+    metrics: [
+      {
+        id: 'debitos',
+        label: 'Debitos',
+        format: 'currency',
+        legacyMeasures: ['SUM(debito)'],
+      },
+      {
+        id: 'creditos',
+        label: 'Creditos',
+        format: 'currency',
+        legacyMeasures: ['SUM(credito)'],
+      },
+      {
+        id: 'saldo',
+        label: 'Saldo',
+        format: 'currency',
+        legacyMeasures: ['SUM(debito - credito)'],
+      },
+      {
+        id: 'linhas',
+        label: 'Linhas',
+        format: 'number',
+        legacyMeasures: ['COUNT()'],
+      },
+      {
+        id: 'lancamentos',
+        label: 'Lancamentos Distintos',
+        format: 'number',
+        legacyMeasures: ['COUNT_DISTINCT(lancamento_id)'],
+      },
+      {
+        id: 'contas_movimentadas',
+        label: 'Contas Movimentadas',
+        format: 'number',
+        legacyMeasures: ['COUNT_DISTINCT(conta_id)'],
+      },
+    ],
+    dimensions: [
+      { id: 'conta', label: 'Conta', kind: 'attribute', legacyDimension: 'conta' },
+      { id: 'codigo_conta', label: 'Codigo da Conta', kind: 'attribute', legacyDimension: 'codigo_conta' },
+      { id: 'tipo_conta', label: 'Tipo de Conta', kind: 'attribute', legacyDimension: 'tipo_conta' },
+      { id: 'origem', label: 'Origem', kind: 'attribute', legacyDimension: 'origem' },
+      {
+        id: 'periodo',
+        label: 'Periodo',
+        kind: 'time',
+        legacyDimension: 'periodo',
+        legacyDimensionExprByGrain: {
+          month: MONTH_EXPR_CONTABIL_LANCAMENTO,
+        },
+      },
+    ],
+    defaultTimeField: 'data_lancamento',
+    filters: [
+      { field: 'tenant_id', label: 'Tenant', type: 'id', operators: ['eq'] },
+      { field: 'de', label: 'Data Inicial', type: 'date', operators: ['gte'] },
+      { field: 'ate', label: 'Data Final', type: 'date', operators: ['lte'] },
+      { field: 'origem', label: 'Origem', type: 'string', operators: ['eq', 'in'] },
+      { field: 'conta_id', label: 'Conta', type: 'id', operators: ['eq', 'in'] },
+      { field: 'tipo_conta', label: 'Tipo Conta', type: 'string', operators: ['eq', 'in'] },
     ],
   },
   'crm.oportunidades': {

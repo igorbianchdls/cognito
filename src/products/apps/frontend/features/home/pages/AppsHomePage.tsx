@@ -87,6 +87,7 @@ export default function AppsHomePage() {
         <p className="text-sm text-gray-600 mb-6">Edite o JSON à esquerda e veja o render à direita.</p>
         <div className="flex flex-wrap gap-2 mb-6">
           <a href="/apps/financeiro" className="rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100">Financeiro</a>
+          <a href="/apps/contabilidade" className="rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100">Contabilidade</a>
           <a href="/apps/vendas" className="rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100">Vendas</a>
           <a href="/apps/compras" className="rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100">Compras</a>
           <a href="/apps/estoque" className="rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100">Estoque</a>

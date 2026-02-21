@@ -31,9 +31,9 @@ export async function GET(req: NextRequest) {
       })
     }
 
-    const allowedModules = new Set(['vendas', 'compras', 'financeiro', 'crm', 'estoque', 'documentos'])
+    const allowedModules = new Set(['vendas', 'compras', 'financeiro', 'contabilidade', 'crm', 'estoque', 'documentos'])
     const module = allowedModules.has(moduleFilter)
-      ? (moduleFilter as 'vendas' | 'compras' | 'financeiro' | 'crm' | 'estoque' | 'documentos')
+      ? (moduleFilter as 'vendas' | 'compras' | 'financeiro' | 'contabilidade' | 'crm' | 'estoque' | 'documentos')
       : undefined
     const items = listAppsTableCatalogs(module).map((entry) => ({
       ...entry,

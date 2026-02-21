@@ -201,6 +201,25 @@ async function buildDocumentosPatch(range?: DateRange): Promise<DataRecord> {
   }
 }
 
+async function buildContabilidadePatch(range?: DateRange): Promise<DataRecord> {
+  const effectiveRange = normalizeRange(range)
+
+  const [dashboard, lancamentosRows, planoContasRows] = await Promise.all([
+    fetchModuleDashboard('contabilidade', { de: effectiveRange.from, ate: effectiveRange.to, limit: 8 }),
+    fetchModuleRows('contabilidade', 'lancamentos'),
+    fetchModuleRows('contabilidade', 'plano-contas'),
+  ])
+
+  return {
+    contabilidade: {
+      lancamentos: lancamentosRows,
+      'plano-contas': planoContasRows,
+      dashboard: dashboard?.charts || {},
+      kpis: dashboard?.kpis || {},
+    },
+  }
+}
+
 export async function refreshAppsHomeData(setData: Dispatch<SetStateAction<DataRecord>>, range?: DateRange) {
   const patch = await buildAppsHomePatch(range)
   setData((prev) => mergeByNamespace(prev || {}, patch))
@@ -245,6 +264,11 @@ export async function refreshAppsCrmData(setData: Dispatch<SetStateAction<DataRe
 
 export async function refreshAppsDocumentosData(setData: Dispatch<SetStateAction<DataRecord>>, range?: DateRange) {
   const patch = await buildDocumentosPatch(range)
+  setData((prev) => mergeByNamespace(prev || {}, patch))
+}
+
+export async function refreshAppsContabilidadeData(setData: Dispatch<SetStateAction<DataRecord>>, range?: DateRange) {
+  const patch = await buildContabilidadePatch(range)
   setData((prev) => mergeByNamespace(prev || {}, patch))
 }
 
@@ -357,6 +381,22 @@ export function useAppsDocumentosBootstrap(setData: Dispatch<SetStateAction<Data
 
     void (async () => {
       const patch = await buildDocumentosPatch(undefined)
+      if (!active) return
+      setData((prev) => mergeByNamespace(prev || {}, patch))
+    })()
+
+    return () => {
+      active = false
+    }
+  }, [setData])
+}
+
+export function useAppsContabilidadeBootstrap(setData: Dispatch<SetStateAction<DataRecord>>) {
+  useEffect(() => {
+    let active = true
+
+    void (async () => {
+      const patch = await buildContabilidadePatch(undefined)
       if (!active) return
       setData((prev) => mergeByNamespace(prev || {}, patch))
     })()
