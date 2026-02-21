@@ -21,7 +21,7 @@ let responseId = null;
 let assistantText = '';
 let reasoningText = '';
 let reasoningStarted = false;
-const SAFE_PREFIXES = ['financeiro', 'vendas', 'compras', 'contas-a-pagar', 'contas-a-receber', 'crm', 'estoque', 'cadastros', 'documentos'];
+const SAFE_PREFIXES = ['financeiro', 'vendas', 'compras', 'contas-a-pagar', 'contas-a-receber', 'crm', 'estoque', 'cadastros'];
 
 function emit(type, extra) {
   console.log(JSON.stringify({ type, ...(extra || {}) }));
@@ -192,6 +192,10 @@ async function callDrive(args) {
 
 async function callEmail(args) {
   return callScopedTool('/api/agent-tools/email', args, 'email');
+}
+
+async function callDocumento(args) {
+  return callScopedTool('/api/agent-tools/documento', args, 'documento');
 }
 
 function parsePositiveInt(value, fallback) {
@@ -783,7 +787,7 @@ const baseTools = [
         },
         resource: {
           type: 'string',
-          description: 'Resource ERP canônico (exatos): financeiro/contas-financeiras, financeiro/categorias-despesa, financeiro/categorias-receita, financeiro/clientes, financeiro/centros-custo, financeiro/centros-lucro, vendas/pedidos, compras/pedidos, contas-a-pagar, contas-a-receber, crm/contas, crm/contatos, crm/leads, crm/oportunidades, crm/atividades, estoque/almoxarifados, estoque/movimentacoes, estoque/estoque-atual, estoque/tipos-movimentacao, documentos/templates, documentos/template-versions, documentos/documentos.'
+          description: 'Resource ERP canônico (exatos): financeiro/contas-financeiras, financeiro/categorias-despesa, financeiro/categorias-receita, financeiro/clientes, financeiro/centros-custo, financeiro/centros-lucro, vendas/pedidos, compras/pedidos, contas-a-pagar, contas-a-receber, crm/contas, crm/contatos, crm/leads, crm/oportunidades, crm/atividades, estoque/almoxarifados, estoque/movimentacoes, estoque/estoque-atual, estoque/tipos-movimentacao.'
         },
         params: {
           type: 'object',
@@ -952,6 +956,61 @@ const baseTools = [
         content_type: {
           type: 'string',
           description: 'MIME type para attachment_url em action=send.'
+        },
+      },
+      required: ['action'],
+      additionalProperties: true,
+    },
+  },
+  {
+    type: 'function',
+    name: 'documento',
+    description: 'Gera e consulta documentos operacionais (OS/proposta/NFSe/fatura/contrato). Use action="gerar" para criar documento a partir de dados JSON e action="status" para consultar.',
+    parameters: {
+      type: 'object',
+      properties: {
+        action: {
+          type: 'string',
+          enum: ['gerar', 'status'],
+          description: 'gerar: cria documento. status: consulta documento existente.'
+        },
+        tipo: {
+          type: 'string',
+          enum: ['proposta', 'os', 'fatura', 'contrato', 'nfse'],
+          description: 'Obrigatório em action=gerar.'
+        },
+        origem_tipo: {
+          type: 'string',
+          description: 'Origem do documento (ex.: ordem_servico, oportunidade). Obrigatório em action=gerar.'
+        },
+        origem_id: {
+          type: 'integer',
+          description: 'ID numérico da origem. Obrigatório em action=gerar.'
+        },
+        titulo: {
+          type: 'string',
+          description: 'Título opcional do documento.'
+        },
+        dados: {
+          type: 'object',
+          additionalProperties: true,
+          description: 'Payload JSON com os dados variáveis do documento. Obrigatório em action=gerar.'
+        },
+        template_id: {
+          type: 'integer',
+          description: 'Template explícito opcional para geração.'
+        },
+        template_version_id: {
+          type: 'integer',
+          description: 'Versão explícita opcional para geração.'
+        },
+        idempotency_key: {
+          type: 'string',
+          description: 'Chave opcional para evitar geração duplicada.'
+        },
+        documento_id: {
+          type: 'integer',
+          description: 'Obrigatório em action=status.'
         },
       },
       required: ['action'],
@@ -1214,6 +1273,8 @@ while (!done && turn < 10) {
       let result = null;
       if (toolName === 'crud') {
         result = await callCrud(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
+      } else if (toolName === 'documento') {
+        result = await callDocumento(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
       } else if (toolName === 'drive') {
         result = await callDrive(parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {});
       } else if (toolName === 'email') {

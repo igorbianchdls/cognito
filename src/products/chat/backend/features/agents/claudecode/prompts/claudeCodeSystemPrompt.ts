@@ -3,7 +3,7 @@ import {
   type PromptHistoryMessage,
 } from '@/products/chat/backend/features/agents/shared/prompts/promptConversation'
 
-const ERP_PREFIXES = 'financeiro, vendas, compras, contas-a-pagar, contas-a-receber, crm, estoque, cadastros, documentos'
+const ERP_PREFIXES = 'financeiro, vendas, compras, contas-a-pagar, contas-a-receber, crm, estoque, cadastros'
 
 const ERP_RESOURCES = [
   'financeiro/contas-financeiras',
@@ -25,9 +25,6 @@ const ERP_RESOURCES = [
   'estoque/movimentacoes',
   'estoque/estoque-atual',
   'estoque/tipos-movimentacao',
-  'documentos/templates',
-  'documentos/template-versions',
-  'documentos/documentos',
 ]
 
 function formatErpResourceList(): string {
@@ -39,8 +36,8 @@ export function buildClaudeSystemPrompt(params: {
   composioEnabled: boolean
 }): string {
   const routingLine = params.composioEnabled
-    ? 'Tool routing: prefer internal MCP tools first ("crud" for ERP, "drive" for documentos, "email" para mensagens). Use Composio MCP tools for external actions or cross-platform tasks when explicitly requested or clearly required.'
-    : 'Available tools in this session: ONLY MCP tools "crud", "drive", and "email". Follow the resource list and naming rules exactly; do not invent resources.'
+    ? 'Tool routing: prefer internal MCP tools first ("crud" para ERP canônico, "documento" para OS/proposta/NFSe/fatura/contrato, "drive" para arquivos e "email" para mensagens). Use Composio MCP tools for external actions or cross-platform tasks when explicitly requested or clearly required.'
+    : 'Available tools in this session: ONLY MCP tools "crud", "documento", "drive", and "email". Follow the resource list and naming rules exactly; do not invent resources.'
 
   const composioBlock = params.composioEnabled
     ? `
@@ -60,6 +57,7 @@ Business context baseline: prioritize B2B service operations (CRM/commercial/fin
 ${routingLine}
 Core MCP Tools (invoke with tool_use):
 - crud(input: { action: "listar"|"criar"|"atualizar"|"deletar", resource: string, params?: object, data?: object, actionSuffix?: string, method?: "GET"|"POST" })
+- documento(input: { action: "gerar"|"status", tipo?: "proposta"|"os"|"fatura"|"contrato"|"nfse", origem_tipo?: string, origem_id?: number, titulo?: string, dados?: object, template_id?: number, template_version_id?: number, idempotency_key?: string, documento_id?: number })
 - drive(input: { action: "request"|"read_file"|"get_file_url"|"get_drive_file_url", method?: "GET"|"POST"|"DELETE", resource?: string, params?: object, data?: object, file_id?: string, mode?: "auto"|"text"|"binary" })
 - email(input: { action: "request"|"send"|"send_email", method?: "GET"|"POST"|"DELETE", resource?: string, params?: object, data?: object, inbox_id?: string, to?: string|string[], cc?: string|string[], bcc?: string|string[], subject?: string, text?: string, html?: string, attachments?: any[], attachment_url?: string, signed_url?: string, filename?: string, content_type?: string })
 Allowed top-level ERP prefixes: ${ERP_PREFIXES}.
@@ -76,6 +74,10 @@ ERP Guidelines:
 - NEVER use vague terms like "categoria" or "despesa". Always use canonical paths (e.g., "financeiro/categorias-despesa").
 - Always include the correct module prefix (e.g., "financeiro/...").
 - resource must not contain ".." and must start with one of the allowed prefixes.
+Documento Tool Guidelines:
+- Use documento action="gerar" for emissão de proposta/OS/NFSe/fatura/contrato com payload em `dados`.
+- Use documento action="status" to acompanhar processamento por documento_id.
+- Do not use crud for documentos/templates/template-versions/documentos; those are handled by documento tool in this mode.
 Drive/Email Tool Guidelines:
 - Drive actions:
 - drive action="request" with resource for CRUD/list on Drive. Supported resources: drive, drive/folders, drive/folders/{id}, drive/files/{id}, drive/files/{id}/download, drive/files/prepare-upload, drive/files/complete-upload.

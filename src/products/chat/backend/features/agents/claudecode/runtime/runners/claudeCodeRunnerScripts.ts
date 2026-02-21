@@ -51,6 +51,7 @@ try {
 const allowedToolsList = [];
 if (appToolsServerERP) {
   allowedToolsList.push('mcp__ERP__crud');
+  allowedToolsList.push('mcp__ERP__documento');
   allowedToolsList.push('mcp__ERP__drive');
   allowedToolsList.push('mcp__ERP__email');
 }

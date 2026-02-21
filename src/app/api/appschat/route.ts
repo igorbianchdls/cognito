@@ -4,7 +4,7 @@ export async function POST() {
   return Response.json(
     {
       success: false,
-      message: 'Endpoint desativado. Use /chat com as tools crud, drive e email.',
+      message: 'Endpoint desativado. Use /chat com as tools crud, documento, drive e email.',
     },
     { status: 410 }
   )

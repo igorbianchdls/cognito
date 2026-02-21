@@ -17,6 +17,7 @@ As tools disponíveis (apenas via MCP):
 - criar(input: { resource: string, data?: object, actionSuffix?: string, method?: "GET"|"POST" })
 - atualizar(input: { resource: string, data?: object, actionSuffix?: string, method?: "GET"|"POST" })
 - deletar(input: { resource: string, data?: object, actionSuffix?: string, method?: "GET"|"POST" })
+- documento(input: { action: "gerar"|"status", tipo?: "proposta"|"os"|"fatura"|"contrato"|"nfse", origem_tipo?: string, origem_id?: number, dados?: object, documento_id?: number, template_id?: number, template_version_id?: number, idempotency_key?: string })
 
 RECURSOS (resource) SUPORTADOS (use exatamente estes caminhos; não invente nomes):
 - financeiro/contas-financeiras
@@ -38,16 +39,14 @@ RECURSOS (resource) SUPORTADOS (use exatamente estes caminhos; não invente nome
 - estoque/movimentacoes
 - estoque/estoque-atual (somente listar)
 - estoque/tipos-movimentacao (somente listar)
-- documentos/templates
-- documentos/template-versions
-- documentos/documentos
 
 Regras:
 - NUNCA use termos genéricos como "categoria" ou "despesa". Use os caminhos exatos, por exemplo "financeiro/categorias-despesa".
 - Prefixe corretamente com o módulo (ex.: "financeiro/...").
-- O "resource" não pode conter ".." e deve iniciar com um dos prefixos: financeiro, vendas, compras, contas-a-pagar, contas-a-receber, crm, estoque, cadastros, documentos.
+- O "resource" não pode conter ".." e deve iniciar com um dos prefixos: financeiro, vendas, compras, contas-a-pagar, contas-a-receber, crm, estoque, cadastros.
 - Contexto operacional padrão: B2B serviços como núcleo. Estoque é domínio separado e não deve ser acoplado automaticamente em todo fluxo comercial.
 - Por padrão, listar usa actionSuffix="listar" e criar/atualizar/deletar usam seus sufixos homônimos.
+- Para proposta/OS/NFSe/fatura/contrato, use a tool documento (action gerar/status), não CRUD de documentos.
 
 Exemplos:
 - Listar contas financeiras:
@@ -93,7 +92,7 @@ export default composioServer;
 const ERP_MCP_SCRIPT = `import { createSdkMcpServer, tool } from '@anthropic-ai/claude-agent-sdk';
 import { z } from 'zod';
 
-const SAFE_PREFIXES = ['financeiro', 'vendas', 'compras', 'contas-a-pagar', 'contas-a-receber', 'crm', 'estoque', 'cadastros', 'documentos'];
+const SAFE_PREFIXES = ['financeiro', 'vendas', 'compras', 'contas-a-pagar', 'contas-a-receber', 'crm', 'estoque', 'cadastros'];
 function isSafeResource(res){ try { if (!res || typeof res !== 'string') return false; if (res.includes('..')) return false; const clean = res.replace(/^\\/+|\\/+$/g,''); return SAFE_PREFIXES.some(p=> clean === p || clean.startsWith(p + '/')); } catch { return false } }
 function buildUrl(base, res, suffix){ const cleanRes = String(res || '').replace(/^\\/+|\\/+$/g,''); const cleanSuf = String(suffix || '').replace(/^\\/+|\\/+$/g,''); return (base || '') + '/api/agent-tools/' + cleanRes + '/' + cleanSuf; }
 
@@ -184,6 +183,7 @@ async function callScopedTool(path,args,label){
 }
 async function callDrive(args){ return callScopedTool('/api/agent-tools/drive', args, 'drive'); }
 async function callEmail(args){ return callScopedTool('/api/agent-tools/email', args, 'email'); }
+async function callDocumento(args){ return callScopedTool('/api/agent-tools/documento', args, 'documento'); }
 
 export const mcpERPServer = createSdkMcpServer({
   name: 'ERP',
@@ -198,6 +198,19 @@ export const mcpERPServer = createSdkMcpServer({
       actionSuffix: z.string().optional(),
       method: z.enum(['GET','POST']).optional(),
     }, async (args) => callBridge({ action: args.action, args })),
+    tool('documento','Gera e consulta documentos operacionais (OS/proposta/NFSe/fatura/contrato)', {
+      action: z.enum(['gerar','status']),
+      tipo: z.enum(['proposta','os','fatura','contrato','nfse']).optional(),
+      origem_tipo: z.string().optional(),
+      origem_id: z.number().int().optional(),
+      titulo: z.string().optional(),
+      dados: z.any().optional(),
+      template_id: z.number().int().optional(),
+      template_version_id: z.number().int().optional(),
+      idempotency_key: z.string().optional(),
+      documento_id: z.number().int().optional(),
+      tenant_id: z.number().int().optional(),
+    }, async (args) => callDocumento(args)),
     tool('drive','Acessa operações de Drive', {
       action: z.enum(['request','read_file','get_file_url','get_drive_file_url']).default('request'),
       method: z.enum(['GET','POST','DELETE']).optional(),
@@ -261,4 +274,3 @@ export async function seedMcpServersInSandbox(sandbox: Sandbox) {
     { path: '/vercel/sandbox/.mcp/ERP.mjs', content: Buffer.from(ERP_MCP_SCRIPT) },
   ])
 }
-
