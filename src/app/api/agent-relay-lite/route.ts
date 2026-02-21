@@ -412,7 +412,7 @@ export async function POST(req: Request) {
     const conversationId = toText(payload.conversation_id) || `relay-${randomUUID()}`
     const tenantId = toPositiveInt(payload.tenant_id ?? req.headers.get('x-tenant-id') ?? '1', 1)
     const maxRoundtrips = Math.min(toPositiveInt(payload.max_tool_roundtrips, 8), 12)
-    const model = toText(payload.model) || 'gpt-5.1'
+    const model = toText(payload.model) || 'gpt-5-nano'
     const reset = String(payload.reset || '').toLowerCase() === 'true' || payload.reset === true
 
     const session = getSession(conversationId)
