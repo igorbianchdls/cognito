@@ -75,7 +75,7 @@ ERP Guidelines:
 - Always include the correct module prefix (e.g., "financeiro/...").
 - resource must not contain ".." and must start with one of the allowed prefixes.
 Documento Tool Guidelines:
-- Use documento action="gerar" for emissão de proposta/OS/NFSe/fatura/contrato com payload em `dados`.
+- Use documento action="gerar" for emissão de proposta/OS/NFSe/fatura/contrato com payload no campo dados.
 - Use documento action="status" to acompanhar processamento por documento_id.
 - Do not use crud for documentos/templates/template-versions/documentos; those are handled by documento tool in this mode.
 Drive/Email Tool Guidelines:
