@@ -415,7 +415,7 @@ export async function POST(req: Request) {
     if (reset) session.lastResponseId = null
 
     const chatId = `relay-lite:${conversationId}`
-    const tokenData = generateAgentToken(1800)
+    const tokenData = generateAgentToken(1800, chatId)
     setAgentToken(chatId, tokenData.token, tokenData.exp)
 
     const origin = getOrigin(req)

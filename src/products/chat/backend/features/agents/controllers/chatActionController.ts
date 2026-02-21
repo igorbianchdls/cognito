@@ -140,7 +140,7 @@ export async function POST(req: Request) {
         existing.lastUsedAt = Date.now()
         // Ensure agent token remains valid for tool bridge calls.
         if (!existing.agentToken || !existing.agentTokenExp || existing.agentTokenExp <= (Date.now() + 60_000)) {
-          const { token, exp } = generateAgentToken(1800)
+          const { token, exp } = generateAgentToken(1800, id)
           existing.agentToken = token
           existing.agentTokenExp = exp
           setAgentToken(id, token, exp)
@@ -224,7 +224,7 @@ export async function POST(req: Request) {
       // Resolve Composio user id: prefer cookie, else DB lookup via Supabase auth
       const composioUserId = await resolveComposioUserIdFromRequest(req)
       // Issue short-lived agent token (opaque) and store
-      const { token, exp } = generateAgentToken(1800)
+      const { token, exp } = generateAgentToken(1800, id)
       const initialProvider = normalizeProvider(undefined, existingModel)
       const initialModel = normalizeModel(initialProvider, existingModel || (initialProvider === 'openai-responses' ? 'gpt-5.1' : 'claude-haiku-4-5-20251001'))
       SESSIONS.set(id, { id, sandbox, createdAt: Date.now(), lastUsedAt: Date.now(), agentToken: token, agentTokenExp: exp, composioEnabled: false, model: initialModel, composioUserId, provider: initialProvider })
