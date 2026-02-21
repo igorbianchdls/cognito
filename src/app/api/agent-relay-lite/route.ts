@@ -207,7 +207,7 @@ async function callCrudTool(input: {
       'x-tenant-id': String(input.tenantId),
       ...(input.internalKey ? { 'x-internal-agent-key': input.internalKey } : {}),
     },
-    body: method === 'GET' ? undefined : JSON.stringify(payload),
+    body: JSON.stringify(payload),
     cache: 'no-store',
   })
   const { raw, data } = await parseJsonResponse(res)
