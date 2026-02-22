@@ -13,6 +13,7 @@ type SparticuzChromiumLike = {
   executablePath?: string | (() => Promise<string>)
   defaultViewport?: Record<string, unknown> | null
   headless?: boolean | string
+  setGraphicsMode?: boolean
 }
 
 let lastPlaywrightPdfError: string | null = null
@@ -33,7 +34,7 @@ async function importPlaywrightCore(): Promise<PlaywrightModule | null> {
 async function importSparticuzChromium(): Promise<SparticuzChromiumLike | null> {
   try {
     const mod = await import('@sparticuz/chromium') as Record<string, unknown>
-    const candidate = ((mod.default as unknown) || mod) as SparticuzChromiumLike
+    const candidate = ((mod.default as unknown) ?? mod) as SparticuzChromiumLike
     return candidate || null
   } catch {
     lastPlaywrightPdfError = '@sparticuz/chromium import failed'
@@ -64,6 +65,11 @@ async function resolvePlaywrightLaunch() {
   const pwCore = await importPlaywrightCore()
   const sparticuz = await importSparticuzChromium()
   if (pwCore?.chromium?.launch) {
+    try {
+      if (sparticuz && 'setGraphicsMode' in sparticuz) {
+        ;(sparticuz as any).setGraphicsMode = false
+      }
+    } catch {}
     const executablePath = await getExecutablePath(sparticuz)
     const args = Array.isArray(sparticuz?.args) && sparticuz?.args?.length
       ? sparticuz.args
