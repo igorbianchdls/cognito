@@ -29,6 +29,10 @@ export type WorkspaceRequestAction = {
   content_type?: string
   content_disposition?: string
   content_id?: string
+  drive_file_id?: string
+  driveFileId?: string
+  drive_file_ids?: unknown
+  driveFileIds?: unknown
 }
 
 type RouteRule = {
@@ -384,6 +388,59 @@ function addErrorCodeIfMissing(
 
   if (!code) return result
   return { ...obj, code }
+}
+
+function pickPrimaryData(result: unknown): unknown {
+  if (!result || typeof result !== 'object' || Array.isArray(result)) return result
+  const obj = result as Record<string, unknown>
+  if ('data' in obj) return obj.data
+  return result
+}
+
+function inferToolSuccess(result: unknown, fallbackOk: boolean): boolean {
+  if (!result || typeof result !== 'object' || Array.isArray(result)) return fallbackOk
+  const obj = result as Record<string, unknown>
+  if (typeof obj.success === 'boolean') return obj.success
+  if (typeof obj.ok === 'boolean') return obj.ok
+  return fallbackOk
+}
+
+function toolResponseBody(input: {
+  ok: boolean
+  status: number
+  scope: WorkspaceToolScope | 'documento' | 'crud'
+  action: string
+  result: unknown
+  resource?: string
+}) {
+  const normalizedResult = addErrorCodeIfMissing(input.result, {
+    scope: (input.scope === 'documento' || input.scope === 'crud') ? 'workspace' : input.scope,
+    action: input.action,
+    resource: input.resource,
+    status: input.status,
+  })
+  const success = inferToolSuccess(normalizedResult, input.ok)
+  const data = success ? pickPrimaryData(normalizedResult) : null
+  const obj = (normalizedResult && typeof normalizedResult === 'object' && !Array.isArray(normalizedResult))
+    ? normalizedResult as Record<string, unknown>
+    : null
+  const error = success ? undefined : String(obj?.error || obj?.message || 'erro')
+  const code = success ? undefined : (typeof obj?.code === 'string' ? obj.code : undefined)
+
+  return {
+    ok: input.ok,
+    result: normalizedResult,
+    success,
+    data,
+    ...(error ? { error } : {}),
+    ...(code ? { code } : {}),
+    meta: {
+      tool: input.scope,
+      action: input.action,
+      status: input.status,
+      ...(input.resource ? { resource: input.resource } : {}),
+    },
+  }
 }
 
 function getResourceRules(scope: WorkspaceToolScope): RouteRule[] {
@@ -800,6 +857,27 @@ function pickAttachmentList(payload: WorkspaceRequestAction) {
   return out.length > 0 ? out : undefined
 }
 
+function parseDriveFileIdsFromEmailPayload(payload: WorkspaceRequestAction): string[] {
+  const out: string[] = []
+  const pushId = (value: unknown) => {
+    const v = String(value || '').trim()
+    if (!v || !isUuid(v)) return
+    if (!out.includes(v)) out.push(v)
+  }
+
+  pushId(payload.drive_file_id)
+  pushId(payload.driveFileId)
+
+  const multi = payload.drive_file_ids ?? payload.driveFileIds
+  if (Array.isArray(multi)) {
+    for (const item of multi) pushId(item)
+  } else if (typeof multi === 'string') {
+    for (const part of multi.split(',')) pushId(part)
+  }
+
+  return out
+}
+
 async function sendEmail(req: NextRequest, payload: WorkspaceRequestAction) {
   const inboxIdRaw = payload.inbox_id ?? payload.inboxId
   const inboxId = typeof inboxIdRaw === 'string' ? inboxIdRaw.trim() : ''
@@ -810,6 +888,34 @@ async function sendEmail(req: NextRequest, payload: WorkspaceRequestAction) {
     return { ok: false, status: 400, result: toolError('EMAIL_TO_REQUIRED', 'to é obrigatório') }
   }
 
+  const driveFileIds = parseDriveFileIdsFromEmailPayload(payload)
+  const derivedDriveAttachments: Array<Record<string, unknown>> = []
+  for (const driveFileId of driveFileIds) {
+    const fileUrl = await getDriveFileUrl({ ...payload, file_id: driveFileId })
+    if (!fileUrl.ok) {
+      return {
+        ok: false,
+        status: fileUrl.status,
+        result: {
+          ...(fileUrl.result as Record<string, unknown>),
+          message: (fileUrl.result as any)?.error || (fileUrl.result as any)?.message || 'Falha ao anexar arquivo do Drive',
+          drive_file_id: driveFileId,
+        },
+      }
+    }
+    const r = fileUrl.result as Record<string, unknown>
+    derivedDriveAttachments.push({
+      filename: typeof r.filename === 'string' ? r.filename : undefined,
+      contentType: typeof r.content_type === 'string' ? r.content_type : undefined,
+      url: typeof r.signed_url === 'string' ? r.signed_url : undefined,
+    })
+  }
+
+  const attachments = [
+    ...(pickAttachmentList(payload) || []),
+    ...derivedDriveAttachments,
+  ]
+
   const emailBody = {
     inboxId,
     to: payload.to,
@@ -819,7 +925,7 @@ async function sendEmail(req: NextRequest, payload: WorkspaceRequestAction) {
     subject: typeof payload.subject === 'string' ? payload.subject : undefined,
     text: typeof payload.text === 'string' ? payload.text : undefined,
     html: typeof payload.html === 'string' ? payload.html : undefined,
-    attachments: pickAttachmentList(payload),
+    attachments: attachments.length > 0 ? attachments : undefined,
   }
 
   const out = await forwardWorkspaceRequest(req, {
@@ -858,38 +964,68 @@ export async function handleWorkspaceToolPost(req: NextRequest, scope: Workspace
     const chatId = req.headers.get('x-chat-id') || ''
     const token = auth.toLowerCase().startsWith('bearer ') ? auth.slice(7).trim() : ''
     if (!verifyAgentToken(chatId, token)) {
-      return Response.json({ ok: false, error: 'unauthorized', code: 'TOOL_UNAUTHORIZED' }, { status: 401 })
+      return Response.json(
+        toolResponseBody({ ok: false, status: 401, scope, action: 'auth', result: { success: false, error: 'unauthorized', code: 'TOOL_UNAUTHORIZED' } }),
+        { status: 401 },
+      )
     }
 
     const rawPayload = await req.json().catch(() => ({})) as WorkspaceRequestAction
     const payload = normalizeWorkspaceRequestPayload(scope, rawPayload)
     const action = normalizeAction(payload.action)
     if (!isActionAllowed(scope, action)) {
-      return Response.json({ ok: false, error: `Ação inválida para ${scope}: ${action}`, code: 'TOOL_ACTION_INVALID' }, { status: 400 })
+      return Response.json(
+        toolResponseBody({ ok: false, status: 400, scope, action, result: { success: false, error: `Ação inválida para ${scope}: ${action}`, code: 'TOOL_ACTION_INVALID' } }),
+        { status: 400 },
+      )
     }
 
     if (action === 'get_drive_file_url') {
       const out = await getDriveFileUrl(payload)
-      return Response.json({ ok: out.ok, result: addErrorCodeIfMissing(out.result, { scope: scope === 'workspace' ? 'drive' : scope, action: 'get_drive_file_url', status: out.status }) }, { status: out.status })
+      return Response.json(
+        toolResponseBody({
+          ok: out.ok,
+          status: out.status,
+          scope: scope === 'workspace' ? 'drive' : scope,
+          action: 'get_drive_file_url',
+          result: out.result,
+        }),
+        { status: out.status },
+      )
     }
 
     if (action === 'send_email') {
       const out = await sendEmail(req, payload)
-      return Response.json({ ok: out.ok, result: addErrorCodeIfMissing(out.result, { scope: 'email', action: 'send_email', status: out.status }) }, { status: out.status })
+      return Response.json(
+        toolResponseBody({ ok: out.ok, status: out.status, scope: 'email', action: 'send_email', result: out.result }),
+        { status: out.status },
+      )
     }
 
     if (action === 'read_file') {
       const out = await readDriveFile(req, payload)
-      return Response.json({ ok: out.ok, result: addErrorCodeIfMissing(out.result, { scope: 'drive', action: 'read_file', status: out.status }) }, { status: out.status })
+      return Response.json(
+        toolResponseBody({ ok: out.ok, status: out.status, scope: 'drive', action: 'read_file', result: out.result }),
+        { status: out.status },
+      )
     }
 
     if (action !== 'request') {
-      return Response.json({ ok: false, error: `Ação inválida para ${scope}: ${action}`, code: 'TOOL_ACTION_INVALID' }, { status: 400 })
+      return Response.json(
+        toolResponseBody({ ok: false, status: 400, scope, action, result: { success: false, error: `Ação inválida para ${scope}: ${action}`, code: 'TOOL_ACTION_INVALID' } }),
+        { status: 400 },
+      )
     }
 
     const out = await forwardWorkspaceRequest(req, payload, scope)
-    return Response.json({ ok: out.ok, result: addErrorCodeIfMissing(out.result, { scope, action: 'request', status: out.status }) }, { status: out.ok ? 200 : out.status })
+    return Response.json(
+      toolResponseBody({ ok: out.ok, status: out.ok ? 200 : out.status, scope, action: 'request', result: out.result, resource: toCleanResource(payload.resource) }),
+      { status: out.ok ? 200 : out.status },
+    )
   } catch (e) {
-    return Response.json({ ok: false, error: (e as Error).message, code: 'TOOL_HANDLER_ERROR' }, { status: 500 })
+    return Response.json(
+      toolResponseBody({ ok: false, status: 500, scope, action: 'handler', result: { success: false, error: (e as Error).message, code: 'TOOL_HANDLER_ERROR' } }),
+      { status: 500 },
+    )
   }
 }

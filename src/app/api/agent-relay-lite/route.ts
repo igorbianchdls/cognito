@@ -164,6 +164,29 @@ async function parseJsonResponse(res: Response) {
   return { raw, data }
 }
 
+function normalizeRelayToolSuccess(outRaw: unknown, meta: { tool: string; status: number }) {
+  const out = (outRaw && typeof outRaw === 'object' && !Array.isArray(outRaw))
+    ? { ...(outRaw as Record<string, unknown>) }
+    : { value: outRaw }
+  const success = typeof out.success === 'boolean'
+    ? out.success
+    : (typeof out.ok === 'boolean' ? out.ok : true)
+  if (!('success' in out)) out.success = success
+  if (!('data' in out)) {
+    if ('rows' in out || 'count' in out) out.data = outRaw
+    else if ('ok' in out && 'data' in out) {
+      // unreachable due to branch above; kept for clarity
+      out.data = (out as any).data
+    } else if ('data' in (outRaw as any || {})) {
+      out.data = (outRaw as any).data
+    } else {
+      out.data = outRaw
+    }
+  }
+  out.meta = { ...(typeof out.meta === 'object' && out.meta ? out.meta as Record<string, unknown> : {}), ...meta }
+  return out
+}
+
 async function callScopedTool(input: {
   origin: string
   token: string
@@ -197,7 +220,7 @@ async function callScopedTool(input: {
       error: (out as any)?.error || (out as any)?.message || raw || res.statusText || `erro na tool ${input.label}`,
     }
   }
-  return out
+  return normalizeRelayToolSuccess(out, { tool: input.label, status: res.status })
 }
 
 async function callCrudTool(input: {
@@ -242,7 +265,7 @@ async function callCrudTool(input: {
       error: (out as any)?.error || (out as any)?.message || raw || res.statusText || 'erro na tool crud',
     }
   }
-  return out
+  return normalizeRelayToolSuccess(out, { tool: 'crud', status: res.status })
 }
 
 function buildToolsSchema() {
@@ -330,6 +353,8 @@ function buildToolsSchema() {
               additionalProperties: true,
             },
           },
+          drive_file_id: { type: 'string', description: 'file_id do Drive para anexar automaticamente' },
+          drive_file_ids: { type: 'array', items: { type: 'string' }, description: 'lista de file_id do Drive para anexar automaticamente' },
         },
         required: ['action'],
       },
@@ -346,10 +371,11 @@ function buildRelayInstructions() {
     'Crud: para listar use action="listar"; para criar/atualizar/deletar use action correspondente.',
     'Documento: use action="gerar" para proposta/os/nfse/fatura/contrato com payload em dados; use action="status" com documento_id.',
     'Drive: actions válidas são request, read_file e get_file_url.',
-    'Drive request: resources válidos são drive, drive/folders, drive/folders/{id}, drive/files/{id}, drive/files/{id}/download, drive/files/prepare-upload, drive/files/complete-upload.',
+    'Drive request: resources válidos são drive, drive/folders, drive/folders/{id}, drive/files/{id}, drive/files/{id}/download, drive/files/prepare-upload, drive/files/complete-upload, drive/files/upload-base64.',
     'Drive upload: use exatamente method="POST" com resource="drive/files/prepare-upload" e depois method="POST" com resource="drive/files/complete-upload".',
     'Email: use action="send" com inbox_id, to, subject e text/html; anexos por attachments[] ou signed_url/attachment_url.',
-    'Fluxo obrigatório para anexar arquivo do Drive em email: 1) drive get_file_url por file_id; 2) email send com essa URL no anexo.',
+    'Email send também aceita drive_file_id ou drive_file_ids para anexar automaticamente arquivo(s) do Drive.',
+    'Fluxo alternativo para anexar Drive: use drive_file_id direto em email send; fluxo manual continua válido (get_file_url -> email send).',
     'Nunca use ações/resources inexistentes como save_document/save_file_to_drive.',
     'Se faltar campo obrigatório para executar a ação, faça uma pergunta curta.',
     'Se uma tool retornar erro de arquivo não encontrado, informe claramente e prossiga com alternativa segura (ex.: listar novamente).',

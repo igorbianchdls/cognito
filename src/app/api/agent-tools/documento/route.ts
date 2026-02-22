@@ -57,8 +57,29 @@ function normalizeAction(value: unknown): DocumentoAction | null {
   return null
 }
 
-function toolErrorJson(status: number, code: string, error: string) {
-  return Response.json({ ok: false, error, code }, { status })
+function toolErrorJson(status: number, code: string, error: string, action: string = 'unknown') {
+  return Response.json(
+    {
+      ok: false,
+      success: false,
+      data: null,
+      error,
+      code,
+      meta: { tool: 'documento', action, status },
+      result: { success: false, error, code },
+    },
+    { status },
+  )
+}
+
+function toolSuccessJson(action: DocumentoAction, result: Record<string, unknown>) {
+  return Response.json({
+    ok: true,
+    success: true,
+    data: result,
+    meta: { tool: 'documento', action, status: 200 },
+    result,
+  })
 }
 
 type DocumentoRow = {
@@ -298,26 +319,23 @@ export async function POST(req: NextRequest) {
     const action = normalizeAction(payload.action)
 
     if (!action) {
-      return toolErrorJson(400, 'DOCUMENTO_ACTION_INVALID', 'action inválida. Use gerar ou status.')
+      return toolErrorJson(400, 'DOCUMENTO_ACTION_INVALID', 'action inválida. Use gerar ou status.', 'invalid_action')
     }
 
     if (action === 'status') {
       const documentoId = intOrNull(payload.documento_id)
       if (documentoId == null || documentoId <= 0) {
-        return toolErrorJson(400, 'DOCUMENTO_ID_REQUIRED', 'documento_id é obrigatório em status')
+        return toolErrorJson(400, 'DOCUMENTO_ID_REQUIRED', 'documento_id é obrigatório em status', action)
       }
       const row = await getDocumentoById(tenantId, documentoId)
-      if (!row) return toolErrorJson(404, 'DOCUMENTO_NOT_FOUND', 'Documento não encontrado')
+      if (!row) return toolErrorJson(404, 'DOCUMENTO_NOT_FOUND', 'Documento não encontrado', action)
       const out = await normalizeDocumentoOutput(row)
-      return Response.json({
-        ok: true,
-        result: { success: true, ...out },
-      })
+      return toolSuccessJson(action, { success: true, ...out })
     }
 
     const tipo = toText(payload.tipo).toLowerCase()
     if (!DOC_TYPES.has(tipo)) {
-      return toolErrorJson(400, 'DOCUMENTO_TIPO_INVALIDO', `tipo inválido: ${tipo || '(vazio)'}`)
+      return toolErrorJson(400, 'DOCUMENTO_TIPO_INVALIDO', `tipo inválido: ${tipo || '(vazio)'}`, action)
     }
 
     const origemTipo = toText(payload.origem_tipo)
@@ -325,17 +343,17 @@ export async function POST(req: NextRequest) {
     const dados = toObj(payload.dados)
 
     if (!origemTipo || origemId == null || origemId <= 0) {
-      return toolErrorJson(400, 'DOCUMENTO_ORIGEM_REQUIRED', 'origem_tipo e origem_id são obrigatórios em gerar')
+      return toolErrorJson(400, 'DOCUMENTO_ORIGEM_REQUIRED', 'origem_tipo e origem_id são obrigatórios em gerar', action)
     }
     if (!Object.keys(dados).length) {
-      return toolErrorJson(400, 'DOCUMENTO_DADOS_REQUIRED', 'dados é obrigatório e deve ser objeto não vazio')
+      return toolErrorJson(400, 'DOCUMENTO_DADOS_REQUIRED', 'dados é obrigatório e deve ser objeto não vazio', action)
     }
 
     const templateResolved = await resolveTemplateId(tenantId, tipo, payload.template_id)
-    if (!templateResolved.ok) return toolErrorJson(400, 'DOCUMENTO_TEMPLATE_INVALID', templateResolved.error)
+    if (!templateResolved.ok) return toolErrorJson(400, 'DOCUMENTO_TEMPLATE_INVALID', templateResolved.error, action)
 
     const versionResolved = await resolveTemplateVersionId(tenantId, templateResolved.id, payload.template_version_id)
-    if (!versionResolved.ok) return toolErrorJson(400, 'DOCUMENTO_TEMPLATE_VERSION_INVALID', versionResolved.error)
+    if (!versionResolved.ok) return toolErrorJson(400, 'DOCUMENTO_TEMPLATE_VERSION_INVALID', versionResolved.error, action)
 
     const idempotencyKey = toText(payload.idempotency_key)
     if (idempotencyKey) {
@@ -351,11 +369,8 @@ export async function POST(req: NextRequest) {
         if (existing) {
           const out = await normalizeDocumentoOutput(existing)
           const saveDrive = await maybeSaveDocumentoToDrive(payload, out)
-          if (!saveDrive.ok) return toolErrorJson(saveDrive.status, saveDrive.code, saveDrive.error)
-          return Response.json({
-            ok: true,
-            result: { success: true, reused: true, ...out, ...(saveDrive.drive ? { drive: saveDrive.drive } : {}) },
-          })
+          if (!saveDrive.ok) return toolErrorJson(saveDrive.status, saveDrive.code, saveDrive.error, action)
+          return toolSuccessJson(action, { success: true, reused: true, ...out, ...(saveDrive.drive ? { drive: saveDrive.drive } : {}) })
         }
       }
     }
@@ -395,30 +410,35 @@ export async function POST(req: NextRequest) {
 
     const documentoId = inserted[0]?.id
     if (!documentoId) {
-      return toolErrorJson(500, 'DOCUMENTO_CREATE_FAILED', 'Falha ao gerar documento')
+      return toolErrorJson(500, 'DOCUMENTO_CREATE_FAILED', 'Falha ao gerar documento', action)
     }
 
     const row = await getDocumentoById(tenantId, documentoId)
     if (!row) {
-      return toolErrorJson(500, 'DOCUMENTO_LOAD_AFTER_CREATE_FAILED', 'Documento criado, mas não foi possível carregar o resultado')
+      return toolErrorJson(500, 'DOCUMENTO_LOAD_AFTER_CREATE_FAILED', 'Documento criado, mas não foi possível carregar o resultado', action)
     }
 
     const out = await normalizeDocumentoOutput(row)
     const saveDrive = await maybeSaveDocumentoToDrive(payload, out)
-    if (!saveDrive.ok) return toolErrorJson(saveDrive.status, saveDrive.code, saveDrive.error)
+    if (!saveDrive.ok) return toolErrorJson(saveDrive.status, saveDrive.code, saveDrive.error, action)
 
-    return Response.json({
-      ok: true,
-      result: {
-        success: true,
-        reused: false,
-        ...out,
-        ...(saveDrive.drive ? { drive: saveDrive.drive } : {}),
-      },
+    return toolSuccessJson(action, {
+      success: true,
+      reused: false,
+      ...out,
+      ...(saveDrive.drive ? { drive: saveDrive.drive } : {}),
     })
   } catch (error) {
     return Response.json(
-      { ok: false, error: error instanceof Error ? error.message : String(error), code: 'DOCUMENTO_TOOL_ERROR' },
+      {
+        ok: false,
+        success: false,
+        data: null,
+        error: error instanceof Error ? error.message : String(error),
+        code: 'DOCUMENTO_TOOL_ERROR',
+        meta: { tool: 'documento', action: 'handler', status: 500 },
+        result: { success: false, error: error instanceof Error ? error.message : String(error), code: 'DOCUMENTO_TOOL_ERROR' },
+      },
       { status: 500 },
     )
   }
