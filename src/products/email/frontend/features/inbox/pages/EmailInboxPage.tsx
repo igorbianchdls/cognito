@@ -190,7 +190,7 @@ export default function EmailPage() {
       try {
         const json = await fetchEmailInboxes()
         if (!ignore) {
-          const list = extractList(json?.data)
+          const list = extractList(json?.data) as any[]
           setInboxes(list)
           const stored = readStoredActiveInboxId()
           const chosen = qsInboxId || stored || (list[0]?.inboxId || list[0]?.id || '')
@@ -217,7 +217,7 @@ export default function EmailPage() {
       try {
         const json = await fetchEmailMessages(activeInboxId, 100)
         if (!ignore) {
-          const list = extractList(json?.data)
+          const list = extractList(json?.data) as any[]
           setMessages(list)
         }
       } catch (e: any) {
