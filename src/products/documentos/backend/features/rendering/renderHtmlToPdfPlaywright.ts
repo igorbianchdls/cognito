@@ -15,14 +15,12 @@ type SparticuzChromiumLike = {
   headless?: boolean | string
 }
 
-async function dynamicImport(specifier: string): Promise<unknown> {
-  const importer = new Function('specifier', 'return import(specifier)') as (s: string) => Promise<unknown>
-  return importer(specifier)
-}
-
 async function importPlaywright(specifier: 'playwright-core' | 'playwright'): Promise<PlaywrightModule | null> {
   try {
-    return await dynamicImport(specifier) as PlaywrightModule
+    if (specifier === 'playwright-core') {
+      return await import('playwright-core') as PlaywrightModule
+    }
+    return await import('playwright') as PlaywrightModule
   } catch {
     return null
   }
@@ -30,7 +28,7 @@ async function importPlaywright(specifier: 'playwright-core' | 'playwright'): Pr
 
 async function importSparticuzChromium(): Promise<SparticuzChromiumLike | null> {
   try {
-    const mod = await dynamicImport('@sparticuz/chromium') as Record<string, unknown>
+    const mod = await import('@sparticuz/chromium') as Record<string, unknown>
     const candidate = ((mod.default as unknown) || mod) as SparticuzChromiumLike
     return candidate || null
   } catch {
@@ -117,7 +115,11 @@ export async function tryRenderHtmlToPdfWithPlaywright(input: DocumentosHtmlRend
       contentType: 'application/pdf',
       engine: 'playwright',
     }
-  } catch {
+  } catch (error) {
+    // Keep fallback behavior, but emit a server log to diagnose deploy/runtime issues.
+    try {
+      console.error('[documentos/pdf] Playwright render failed:', error instanceof Error ? error.message : String(error))
+    } catch {}
     return null
   } finally {
     if (browser) {
