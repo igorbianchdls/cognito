@@ -5,6 +5,7 @@ import {
   buildDocumentoToolAttachmentFromRow,
   buildDocumentoToolHtmlSnapshot,
 } from '@/products/documentos/backend/features/tooling/documentoToolArtifact'
+import { uploadBase64ToDrive } from '@/products/drive/backend/features/uploads/uploadBase64ToDrive'
 
 export const runtime = 'nodejs'
 
@@ -27,6 +28,12 @@ function intOrNull(value: unknown): number | null {
   const n = Number(value)
   if (!Number.isFinite(n)) return null
   return Math.trunc(n)
+}
+
+function boolFlag(value: unknown): boolean {
+  if (typeof value === 'boolean') return value
+  const v = toText(value).toLowerCase()
+  return v === 'true' || v === '1' || v === 'yes' || v === 'sim'
 }
 
 function parseTenantId(req: NextRequest, payload: JsonMap): number {
@@ -129,6 +136,54 @@ async function normalizeDocumentoOutput(row: DocumentoRow) {
       enviado_em: row.enviado_em,
     },
     attachment: artifact.attachment,
+  }
+}
+
+function getDriveSaveConfig(payload: JsonMap) {
+  const nested = toObj(payload.drive)
+  const workspaceId = toText(nested.workspace_id || nested.workspaceId || payload.workspace_id || payload.drive_workspace_id)
+  const folderIdRaw = toText(nested.folder_id || nested.folderId || payload.folder_id || payload.drive_folder_id)
+  const fileName = toText(nested.file_name || nested.fileName || payload.file_name || payload.drive_file_name)
+  return {
+    workspace_id: workspaceId || null,
+    folder_id: folderIdRaw || null,
+    file_name: fileName || null,
+  }
+}
+
+async function maybeSaveDocumentoToDrive(payload: JsonMap, out: Awaited<ReturnType<typeof normalizeDocumentoOutput>>) {
+  if (!boolFlag(payload.save_to_drive)) return { ok: true as const, drive: undefined }
+  const driveCfg = getDriveSaveConfig(payload)
+  if (!driveCfg.workspace_id) {
+    return { ok: false as const, status: 400, code: 'DOCUMENTO_DRIVE_WORKSPACE_REQUIRED', error: 'save_to_drive=true requer drive.workspace_id (ou workspace_id)' }
+  }
+  if (!out.attachment?.content) {
+    return { ok: false as const, status: 500, code: 'DOCUMENTO_ATTACHMENT_MISSING', error: 'Documento gerado sem attachment para upload no Drive' }
+  }
+
+  const uploadResult = await uploadBase64ToDrive({
+    workspace_id: driveCfg.workspace_id,
+    folder_id: driveCfg.folder_id,
+    file_name: driveCfg.file_name || out.attachment.filename,
+    mime: out.attachment.content_type,
+    content_base64: out.attachment.content,
+  })
+  if (!uploadResult.success) {
+    return {
+      ok: false as const,
+      status: uploadResult.status || 500,
+      code: uploadResult.code || 'DOCUMENTO_DRIVE_SAVE_FAILED',
+      error: uploadResult.message || 'Falha ao salvar documento no Drive',
+    }
+  }
+
+  return {
+    ok: true as const,
+    drive: {
+      saved: true,
+      file: uploadResult.file,
+      signed_url: uploadResult.signed_url,
+    },
   }
 }
 
@@ -295,9 +350,11 @@ export async function POST(req: NextRequest) {
         const existing = await getDocumentoById(tenantId, existingId)
         if (existing) {
           const out = await normalizeDocumentoOutput(existing)
+          const saveDrive = await maybeSaveDocumentoToDrive(payload, out)
+          if (!saveDrive.ok) return toolErrorJson(saveDrive.status, saveDrive.code, saveDrive.error)
           return Response.json({
             ok: true,
-            result: { success: true, reused: true, ...out },
+            result: { success: true, reused: true, ...out, ...(saveDrive.drive ? { drive: saveDrive.drive } : {}) },
           })
         }
       }
@@ -347,12 +404,16 @@ export async function POST(req: NextRequest) {
     }
 
     const out = await normalizeDocumentoOutput(row)
+    const saveDrive = await maybeSaveDocumentoToDrive(payload, out)
+    if (!saveDrive.ok) return toolErrorJson(saveDrive.status, saveDrive.code, saveDrive.error)
+
     return Response.json({
       ok: true,
       result: {
         success: true,
         reused: false,
         ...out,
+        ...(saveDrive.drive ? { drive: saveDrive.drive } : {}),
       },
     })
   } catch (error) {

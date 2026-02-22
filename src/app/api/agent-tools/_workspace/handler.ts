@@ -55,6 +55,7 @@ const DRIVE_RESOURCE_RULES: RouteRule[] = [
   { pattern: /^drive\/folders\/[^/]+$/, methods: ['GET', 'DELETE'] },
   { pattern: /^drive\/files\/prepare-upload$/, methods: ['POST'] },
   { pattern: /^drive\/files\/complete-upload$/, methods: ['POST'] },
+  { pattern: /^drive\/files\/upload-base64$/, methods: ['POST'] },
   { pattern: /^drive\/files\/[^/]+$/, methods: ['DELETE'] },
   { pattern: /^drive\/files\/[^/]+\/download$/, methods: ['GET'] },
 ]
@@ -306,7 +307,15 @@ function normalizeWorkspaceRequestPayload(scope: WorkspaceToolScope, payload: Wo
   }
 
   // Drive request ergonomics: prepare/complete upload often comes malformed at top-level.
-  if (scope === 'drive' && method === 'POST' && (resource === 'drive/files/prepare-upload' || resource === 'drive/files/complete-upload')) {
+  if (
+    scope === 'drive'
+    && method === 'POST'
+    && (
+      resource === 'drive/files/prepare-upload'
+      || resource === 'drive/files/complete-upload'
+      || resource === 'drive/files/upload-base64'
+    )
+  ) {
     const workspaceId = firstNonEmptyString((payload as any).workspace_id, (payload as any).workspaceId, data.workspace_id, data.workspaceId)
     const folderId = firstNonEmptyString((payload as any).folder_id, (payload as any).folderId, data.folder_id, data.folderId)
     const fileName = firstNonEmptyString((payload as any).file_name, (payload as any).fileName, data.file_name, data.fileName)
@@ -314,6 +323,12 @@ function normalizeWorkspaceRequestPayload(scope: WorkspaceToolScope, payload: Wo
     const storagePath = firstNonEmptyString((payload as any).storage_path, (payload as any).storagePath, data.storage_path, data.storagePath)
     const mime = firstNonEmptyString((payload as any).mime, data.mime)
     const name = firstNonEmptyString((payload as any).name, data.name)
+    const contentBase64 = firstNonEmptyString(
+      (payload as any).content_base64,
+      (payload as any).contentBase64,
+      data.content_base64,
+      data.contentBase64,
+    )
 
     if (workspaceId) data.workspace_id = workspaceId
     if (folderId) data.folder_id = folderId
@@ -322,6 +337,7 @@ function normalizeWorkspaceRequestPayload(scope: WorkspaceToolScope, payload: Wo
     if (storagePath) data.storage_path = storagePath
     if (mime) data.mime = mime
     if (name) data.name = name
+    if (contentBase64) data.content_base64 = contentBase64
     if ((payload as any).size_bytes != null && data.size_bytes == null) data.size_bytes = (payload as any).size_bytes
     if ((payload as any).sizeBytes != null && data.size_bytes == null) data.size_bytes = (payload as any).sizeBytes
   }
@@ -360,6 +376,8 @@ function addErrorCodeIfMissing(
     code = context.scope === 'drive' ? 'DRIVE_FILE_NOT_FOUND' : 'RESOURCE_NOT_FOUND'
   } else if (msg.includes('supabase storage não configurado')) {
     code = 'DRIVE_STORAGE_NOT_CONFIGURED'
+  } else if (msg.includes('content_base64 é obrigatório')) {
+    code = 'DRIVE_CONTENT_BASE64_REQUIRED'
   } else if (msg.includes('to é obrigatório')) {
     code = 'EMAIL_TO_REQUIRED'
   }
