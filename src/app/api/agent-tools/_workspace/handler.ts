@@ -339,7 +339,8 @@ function addErrorCodeIfMissing(
   const obj = result as Record<string, unknown>
   if (obj.code) return result
   const success = obj.success
-  if (success !== false) return result
+  const okFlag = obj.ok
+  if (success !== false && okFlag !== false) return result
   const msg = String(obj.error || obj.message || '').toLowerCase()
 
   let code = ''
