@@ -6,6 +6,7 @@ import { DataProvider, useData } from '@/products/apps/bi/json-render/context'
 import JsonEditorPanel from '@/products/apps/frontend/components/JsonEditorPanel'
 import JsonPreviewPanel from '@/products/apps/frontend/components/JsonPreviewPanel'
 import ManagersPanel from '@/products/apps/frontend/components/ManagersPanel'
+import DocumentosPdfExportButton from '@/products/apps/frontend/features/documentos/components/DocumentosPdfExportButton'
 import {
   refreshAppsDocumentosData,
   useAppsDocumentosBootstrap,
@@ -64,7 +65,18 @@ function AppsDocumentosPlayground() {
         }
         dataPreview={data}
       />
-      <JsonPreviewPanel tree={tree} onAction={handleAction} actionHint="Ações: Atualizar" />
+      <JsonPreviewPanel
+        tree={tree}
+        onAction={handleAction}
+        actionHint="Ações: Atualizar / Baixar PDF"
+        toolbar={(
+          <DocumentosPdfExportButton
+            templateJson={jsonText}
+            sampleData={data}
+            disabled={Boolean(parseError) || !tree}
+          />
+        )}
+      />
     </div>
   )
 }
