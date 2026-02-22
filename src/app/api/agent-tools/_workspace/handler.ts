@@ -36,6 +36,12 @@ type RouteRule = {
   methods: Array<'GET' | 'POST' | 'DELETE'>
 }
 
+type ToolErrorResult = {
+  success: false
+  error: string
+  code: string
+} & Record<string, unknown>
+
 const EMAIL_RESOURCE_RULES: RouteRule[] = [
   { pattern: /^email\/inboxes$/, methods: ['GET', 'POST', 'DELETE'] },
   { pattern: /^email\/messages$/, methods: ['GET', 'POST'] },
@@ -230,6 +236,137 @@ function normalizeMethod(value: unknown): 'GET' | 'POST' | 'DELETE' {
   return 'GET'
 }
 
+function toolError(code: string, error: string, extra?: Record<string, unknown>): ToolErrorResult {
+  return {
+    success: false,
+    code,
+    error,
+    ...(extra || {}),
+  }
+}
+
+function objectOrEmpty(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
+  return { ...(value as Record<string, unknown>) }
+}
+
+function firstNonEmptyString(...values: unknown[]): string {
+  for (const raw of values) {
+    if (typeof raw !== 'string') continue
+    const v = raw.trim()
+    if (v) return v
+  }
+  return ''
+}
+
+function setIfMissing(target: Record<string, unknown>, key: string, value: unknown) {
+  if (value == null) return
+  if (key in target && target[key] != null && String(target[key]).trim() !== '') return
+  target[key] = value
+}
+
+function normalizeWorkspaceRequestPayload(scope: WorkspaceToolScope, payload: WorkspaceRequestAction): WorkspaceRequestAction {
+  if (normalizeAction(payload.action) !== 'request') return payload
+
+  const resource = toCleanResource(payload.resource)
+  const method = normalizeMethod(payload.method)
+
+  const out: WorkspaceRequestAction = { ...payload }
+  const params = objectOrEmpty(payload.params)
+  const data = objectOrEmpty(payload.data)
+
+  // Generic GET convenience: move common top-level query fields into params.
+  if (method === 'GET') {
+    const topLevelQueryPairs: Array<[string, unknown]> = [
+      ['workspace_id', (payload as any).workspace_id],
+      ['workspace_id', (payload as any).workspaceId],
+      ['parent_id', (payload as any).parent_id],
+      ['parent_id', (payload as any).parentId],
+      ['folder_id', (payload as any).folder_id],
+      ['folder_id', (payload as any).folderId],
+      ['inboxId', payload.inboxId],
+      ['inboxId', payload.inbox_id],
+      ['limit', (payload as any).limit],
+      ['pageToken', (payload as any).pageToken],
+      ['q', (payload as any).q],
+      ['search', (payload as any).search],
+    ]
+    for (const [key, value] of topLevelQueryPairs) setIfMissing(params, key, value)
+  }
+
+  // Email request ergonomics: GET /email/messages requires inboxId in query params.
+  if (scope === 'email' && method === 'GET' && resource.startsWith('email/messages')) {
+    const inboxId = firstNonEmptyString(params.inboxId, params.inbox_id, payload.inboxId, payload.inbox_id, (payload as any).inbox)
+    if (inboxId) {
+      params.inboxId = inboxId
+      delete (params as any).inbox_id
+    }
+    if ((payload as any).limit != null) setIfMissing(params, 'limit', (payload as any).limit)
+    if ((payload as any).pageToken != null) setIfMissing(params, 'pageToken', (payload as any).pageToken)
+  }
+
+  // Drive request ergonomics: prepare/complete upload often comes malformed at top-level.
+  if (scope === 'drive' && method === 'POST' && (resource === 'drive/files/prepare-upload' || resource === 'drive/files/complete-upload')) {
+    const workspaceId = firstNonEmptyString((payload as any).workspace_id, (payload as any).workspaceId, data.workspace_id, data.workspaceId)
+    const folderId = firstNonEmptyString((payload as any).folder_id, (payload as any).folderId, data.folder_id, data.folderId)
+    const fileName = firstNonEmptyString((payload as any).file_name, (payload as any).fileName, data.file_name, data.fileName)
+    const fileId = firstNonEmptyString((payload as any).file_id, (payload as any).fileId, data.file_id, data.fileId)
+    const storagePath = firstNonEmptyString((payload as any).storage_path, (payload as any).storagePath, data.storage_path, data.storagePath)
+    const mime = firstNonEmptyString((payload as any).mime, data.mime)
+    const name = firstNonEmptyString((payload as any).name, data.name)
+
+    if (workspaceId) data.workspace_id = workspaceId
+    if (folderId) data.folder_id = folderId
+    if (fileName) data.file_name = fileName
+    if (fileId) data.file_id = fileId
+    if (storagePath) data.storage_path = storagePath
+    if (mime) data.mime = mime
+    if (name) data.name = name
+    if ((payload as any).size_bytes != null && data.size_bytes == null) data.size_bytes = (payload as any).size_bytes
+    if ((payload as any).sizeBytes != null && data.size_bytes == null) data.size_bytes = (payload as any).sizeBytes
+  }
+
+  out.params = params
+  out.data = data
+  return out
+}
+
+function addErrorCodeIfMissing(
+  result: unknown,
+  context: { scope: WorkspaceToolScope; resource?: string; action?: string; status?: number },
+): unknown {
+  if (!result || typeof result !== 'object' || Array.isArray(result)) return result
+  const obj = result as Record<string, unknown>
+  if (obj.code) return result
+  const success = obj.success
+  if (success !== false) return result
+  const msg = String(obj.error || obj.message || '').toLowerCase()
+
+  let code = ''
+  if (msg.includes('missing inboxid') || msg.includes('inbox_id é obrigatório') || msg.includes('inboxid é obrigatório')) {
+    code = 'EMAIL_INBOX_REQUIRED'
+  } else if (msg.includes('resource é obrigatório')) {
+    code = 'TOOL_RESOURCE_REQUIRED'
+  } else if (msg.includes('resource inválido')) {
+    code = 'TOOL_RESOURCE_INVALID'
+  } else if (msg.includes('resource/method não permitido')) {
+    code = 'TOOL_RESOURCE_METHOD_NOT_ALLOWED'
+  } else if (msg.includes('file_id inválido')) {
+    code = 'DRIVE_FILE_ID_INVALID'
+  } else if (msg.includes('arquivo não encontrado no storage')) {
+    code = 'DRIVE_FILE_STORAGE_MISSING'
+  } else if (msg.includes('arquivo não encontrado')) {
+    code = context.scope === 'drive' ? 'DRIVE_FILE_NOT_FOUND' : 'RESOURCE_NOT_FOUND'
+  } else if (msg.includes('supabase storage não configurado')) {
+    code = 'DRIVE_STORAGE_NOT_CONFIGURED'
+  } else if (msg.includes('to é obrigatório')) {
+    code = 'EMAIL_TO_REQUIRED'
+  }
+
+  if (!code) return result
+  return { ...obj, code }
+}
+
 function getResourceRules(scope: WorkspaceToolScope): RouteRule[] {
   if (scope === 'drive') return DRIVE_RESOURCE_RULES
   if (scope === 'email') return EMAIL_RESOURCE_RULES
@@ -290,13 +427,17 @@ async function forwardWorkspaceRequest(req: NextRequest, payload: WorkspaceReque
   const resource = toCleanResource(payload.resource)
 
   if (!resource) {
-    return { ok: false, status: 400, result: { success: false, error: 'resource é obrigatório' } }
+    return { ok: false, status: 400, result: toolError('TOOL_RESOURCE_REQUIRED', 'resource é obrigatório') }
   }
   if (resource.includes('..')) {
-    return { ok: false, status: 400, result: { success: false, error: 'resource inválido' } }
+    return { ok: false, status: 400, result: toolError('TOOL_RESOURCE_INVALID', 'resource inválido') }
   }
   if (!matchesRule(scope, resource, method)) {
-    return { ok: false, status: 400, result: { success: false, error: `resource/method não permitido para ${scope}: ${resource} (${method})` } }
+    return {
+      ok: false,
+      status: 400,
+      result: toolError('TOOL_RESOURCE_METHOD_NOT_ALLOWED', `resource/method não permitido para ${scope}: ${resource} (${method})`),
+    }
   }
 
   const url = new URL(`/api/${resource}`, req.url)
@@ -334,7 +475,7 @@ async function forwardWorkspaceRequest(req: NextRequest, payload: WorkspaceReque
 
   if (contentType.includes('application/json')) {
     const json = await upstream.json().catch(() => ({}))
-    return { ok: upstream.ok, status, result: json }
+    return { ok: upstream.ok, status, result: addErrorCodeIfMissing(json, { scope, resource, action: 'request', status }) }
   }
 
   if (contentType.startsWith('text/')) {
@@ -369,7 +510,7 @@ async function forwardWorkspaceRequest(req: NextRequest, payload: WorkspaceReque
 async function readDriveFile(req: NextRequest, payload: WorkspaceRequestAction) {
   const fileId = String(payload.file_id || '').trim()
   if (!isUuid(fileId)) {
-    return { ok: false, status: 400, result: { success: false, error: 'file_id inválido' } }
+    return { ok: false, status: 400, result: toolError('DRIVE_FILE_ID_INVALID', 'file_id inválido') }
   }
 
   const rows = await runQuery<{
@@ -391,7 +532,7 @@ async function readDriveFile(req: NextRequest, payload: WorkspaceRequestAction) 
   )
   const file = rows[0]
   if (!file) {
-    return { ok: false, status: 404, result: { success: false, error: 'Arquivo não encontrado' } }
+    return { ok: false, status: 404, result: toolError('DRIVE_FILE_NOT_FOUND', 'Arquivo não encontrado') }
   }
 
   const mode = String(payload.mode || 'auto').trim().toLowerCase()
@@ -407,7 +548,7 @@ async function readDriveFile(req: NextRequest, payload: WorkspaceRequestAction) 
     return {
       ok: false,
       status: res.status,
-      result: { success: false, error: errorMessage },
+      result: addErrorCodeIfMissing({ success: false, error: errorMessage }, { scope: 'drive', action: 'read_file', status: res.status }),
     }
   }
 
@@ -523,7 +664,7 @@ async function readDriveFile(req: NextRequest, payload: WorkspaceRequestAction) 
 async function getDriveFileUrl(payload: WorkspaceRequestAction) {
   const fileId = String(payload.file_id || '').trim()
   if (!isUuid(fileId)) {
-    return { ok: false, status: 400, result: { success: false, error: 'file_id inválido' } }
+    return { ok: false, status: 400, result: toolError('DRIVE_FILE_ID_INVALID', 'file_id inválido') }
   }
 
   const rows = await runQuery<{
@@ -549,12 +690,12 @@ async function getDriveFileUrl(payload: WorkspaceRequestAction) {
   )
   const file = rows[0]
   if (!file) {
-    return { ok: false, status: 404, result: { success: false, error: 'Arquivo não encontrado' } }
+    return { ok: false, status: 404, result: toolError('DRIVE_FILE_NOT_FOUND', 'Arquivo não encontrado') }
   }
 
   const supabase = getSupabaseAdmin()
   if (!supabase) {
-    return { ok: false, status: 500, result: { success: false, error: 'Supabase Storage não configurado no servidor' } }
+    return { ok: false, status: 500, result: toolError('DRIVE_STORAGE_NOT_CONFIGURED', 'Supabase Storage não configurado no servidor') }
   }
 
   const expiresInSeconds = 60 * 60
@@ -568,8 +709,7 @@ async function getDriveFileUrl(payload: WorkspaceRequestAction) {
         ok: false,
         status: 404,
         result: {
-          success: false,
-          error: 'Arquivo não encontrado no storage. Metadado removido da lista do Drive.',
+          ...toolError('DRIVE_FILE_STORAGE_MISSING', 'Arquivo não encontrado no storage. Metadado removido da lista do Drive.'),
           file_id: file.id,
         },
       }
@@ -577,7 +717,7 @@ async function getDriveFileUrl(payload: WorkspaceRequestAction) {
     return {
       ok: false,
       status: 500,
-      result: { success: false, error: `Falha ao gerar URL assinada: ${detail}` },
+      result: toolError('DRIVE_SIGNED_URL_FAILED', `Falha ao gerar URL assinada: ${detail}`),
     }
   }
 
@@ -645,10 +785,10 @@ async function sendEmail(req: NextRequest, payload: WorkspaceRequestAction) {
   const inboxIdRaw = payload.inbox_id ?? payload.inboxId
   const inboxId = typeof inboxIdRaw === 'string' ? inboxIdRaw.trim() : ''
   if (!inboxId) {
-    return { ok: false, status: 400, result: { success: false, error: 'inbox_id é obrigatório' } }
+    return { ok: false, status: 400, result: toolError('EMAIL_INBOX_REQUIRED', 'inbox_id é obrigatório') }
   }
   if (payload.to == null) {
-    return { ok: false, status: 400, result: { success: false, error: 'to é obrigatório' } }
+    return { ok: false, status: 400, result: toolError('EMAIL_TO_REQUIRED', 'to é obrigatório') }
   }
 
   const emailBody = {
@@ -669,7 +809,7 @@ async function sendEmail(req: NextRequest, payload: WorkspaceRequestAction) {
     resource: 'email/messages',
     data: emailBody,
   }, 'email')
-  return { ok: out.ok, status: out.ok ? 200 : out.status, result: out.result }
+  return { ok: out.ok, status: out.ok ? 200 : out.status, result: addErrorCodeIfMissing(out.result, { scope: 'email', action: 'send_email', status: out.status }) }
 }
 
 function normalizeAction(actionRaw: unknown): string {
@@ -699,37 +839,38 @@ export async function handleWorkspaceToolPost(req: NextRequest, scope: Workspace
     const chatId = req.headers.get('x-chat-id') || ''
     const token = auth.toLowerCase().startsWith('bearer ') ? auth.slice(7).trim() : ''
     if (!verifyAgentToken(chatId, token)) {
-      return Response.json({ ok: false, error: 'unauthorized' }, { status: 401 })
+      return Response.json({ ok: false, error: 'unauthorized', code: 'TOOL_UNAUTHORIZED' }, { status: 401 })
     }
 
-    const payload = await req.json().catch(() => ({})) as WorkspaceRequestAction
+    const rawPayload = await req.json().catch(() => ({})) as WorkspaceRequestAction
+    const payload = normalizeWorkspaceRequestPayload(scope, rawPayload)
     const action = normalizeAction(payload.action)
     if (!isActionAllowed(scope, action)) {
-      return Response.json({ ok: false, error: `Ação inválida para ${scope}: ${action}` }, { status: 400 })
+      return Response.json({ ok: false, error: `Ação inválida para ${scope}: ${action}`, code: 'TOOL_ACTION_INVALID' }, { status: 400 })
     }
 
     if (action === 'get_drive_file_url') {
       const out = await getDriveFileUrl(payload)
-      return Response.json({ ok: out.ok, result: out.result }, { status: out.status })
+      return Response.json({ ok: out.ok, result: addErrorCodeIfMissing(out.result, { scope: scope === 'workspace' ? 'drive' : scope, action: 'get_drive_file_url', status: out.status }) }, { status: out.status })
     }
 
     if (action === 'send_email') {
       const out = await sendEmail(req, payload)
-      return Response.json({ ok: out.ok, result: out.result }, { status: out.status })
+      return Response.json({ ok: out.ok, result: addErrorCodeIfMissing(out.result, { scope: 'email', action: 'send_email', status: out.status }) }, { status: out.status })
     }
 
     if (action === 'read_file') {
       const out = await readDriveFile(req, payload)
-      return Response.json({ ok: out.ok, result: out.result }, { status: out.status })
+      return Response.json({ ok: out.ok, result: addErrorCodeIfMissing(out.result, { scope: 'drive', action: 'read_file', status: out.status }) }, { status: out.status })
     }
 
     if (action !== 'request') {
-      return Response.json({ ok: false, error: `Ação inválida para ${scope}: ${action}` }, { status: 400 })
+      return Response.json({ ok: false, error: `Ação inválida para ${scope}: ${action}`, code: 'TOOL_ACTION_INVALID' }, { status: 400 })
     }
 
     const out = await forwardWorkspaceRequest(req, payload, scope)
-    return Response.json({ ok: out.ok, result: out.result }, { status: out.ok ? 200 : out.status })
+    return Response.json({ ok: out.ok, result: addErrorCodeIfMissing(out.result, { scope, action: 'request', status: out.status }) }, { status: out.ok ? 200 : out.status })
   } catch (e) {
-    return Response.json({ ok: false, error: (e as Error).message }, { status: 500 })
+    return Response.json({ ok: false, error: (e as Error).message, code: 'TOOL_HANDLER_ERROR' }, { status: 500 })
   }
 }
