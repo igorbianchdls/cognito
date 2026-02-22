@@ -30,6 +30,7 @@ import {
   MoreVertical,
 } from 'lucide-react'
 import {
+  asLowerLabels,
   extractList,
   messageInFolder,
   getMessageId,

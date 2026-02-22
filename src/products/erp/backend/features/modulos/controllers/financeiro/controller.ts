@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server';
 import { runQuery } from '@/lib/postgres';
 import { ORDER_BY_WHITELIST } from './query/orderByWhitelist';
 import { parseFinanceiroRequest } from './query/parseFinanceiroRequest';
+import { maybeHandleExtratoGroupedView } from './views/extratoGrouped';
+import { maybeHandleKpisView } from './views/kpis';
 
 export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
@@ -34,107 +36,11 @@ export async function GET(req: NextRequest) {
       return Response.json({ success: false, message: 'Parâmetro view é obrigatório' }, { status: 400 });
     }
 
-    // Special case: view=extrato grouped (extratos as pais + transacoes como filhos)
-    if (view === 'extrato') {
-      const groupedParam = (searchParams.get('grouped') || '').toLowerCase()
-      const grouped = groupedParam === '1' || groupedParam === 'true'
-      if (grouped) {
-        try {
-          // Filters on extrato header
-          const paramsFilt: unknown[] = []
-          let idxG = 1
-          let whereG = 'WHERE 1=1'
-          if (de) { whereG += ` AND e.data_extrato >= $${idxG++}`; paramsFilt.push(de) }
-          if (ate) { whereG += ` AND e.data_extrato <= $${idxG++}`; paramsFilt.push(ate) }
-          if (status) { whereG += ` AND LOWER(e.status) = $${idxG++}`; paramsFilt.push(status.toLowerCase()) }
-
-          // Whitelist for ordering by extrato-level columns
-          const extratoOrderWhitelist: Record<string, string> = {
-            extrato_id: 'e.id',
-            data_extrato: 'e.data_extrato',
-            saldo_inicial: 'e.saldo_inicial',
-            total_creditos: 'e.total_creditos',
-            total_debitos: 'e.total_debitos',
-            saldo_final: 'e.saldo_final',
-            status: 'e.status',
-            banco: 'b.nome_banco',
-            conta_financeira: 'cf.nome_conta',
-            tipo_conta: 'cf.tipo_conta',
-          }
-          const obParam = (searchParams.get('order_by') || 'data_extrato').toLowerCase()
-          const orderByExtrato = extratoOrderWhitelist[obParam] || 'e.id'
-
-          // CTE with paginated extratos + joins for bank/account labels; then aggregate transacoes per extrato
-          const listSql = `
-            WITH e AS (
-              SELECT 
-                e.id AS extrato_id,
-                e.data_extrato,
-                e.descricao_extrato,
-                e.conta_financeira_id,
-                e.saldo_inicial,
-                e.total_creditos,
-                e.total_debitos,
-                e.saldo_final,
-                e.status,
-                e.arquivo_ofx_url,
-                b.nome_banco AS banco,
-                b.imagem_url AS banco_imagem_url,
-                cf.nome_conta AS conta_financeira,
-                cf.tipo_conta AS tipo_conta
-              FROM financeiro.extratos_bancarios e
-              LEFT JOIN financeiro.contas_financeiras cf ON cf.id = e.conta_financeira_id
-              LEFT JOIN financeiro.bancos b ON b.id = e.conta_id
-              ${whereG}
-              ORDER BY ${orderByExtrato} ${orderDir}
-              LIMIT $${idxG}::int OFFSET $${idxG + 1}::int
-            )
-            SELECT e.*,
-                   COALESCE(
-                     (
-                       SELECT json_agg(
-                         json_build_object(
-                           'transacao_id', t.id,
-                           'tipo_transacao', t.tipo,
-                           'data_transacao', t.data_transacao,
-                           'descricao_transacao', t.descricao,
-                           'valor_transacao', t.valor,
-                           'origem_transacao', t.origem,
-                           'transacao_conciliada', t.conciliado
-                         )
-                         ORDER BY t.data_transacao ASC
-                       )
-                       FROM financeiro.extrato_transacoes t
-                       WHERE t.extrato_id = e.extrato_id
-                     ),
-                     '[]'::json
-                   ) AS transacoes
-            FROM e
-          `.replace(/\n\s+/g, ' ').trim()
-
-          const paramsWithPage: unknown[] = [...paramsFilt, pageSize, offset]
-          const rows = await runQuery<Record<string, unknown>>(listSql, paramsWithPage)
-
-          const totalSql = `SELECT COUNT(*)::int AS total FROM financeiro.extratos_bancarios e ${whereG}`
-          const totalRows = await runQuery<{ total: number }>(totalSql, paramsFilt)
-          const total = totalRows[0]?.total ?? 0
-
-          return Response.json({
-            success: true,
-            view,
-            page,
-            pageSize,
-            total,
-            rows,
-            sql: listSql,
-            params: JSON.stringify(paramsWithPage),
-          }, { headers: { 'Cache-Control': 'no-store' } })
-        } catch (error) {
-          const msg = error instanceof Error ? error.message : String(error)
-          return Response.json({ success: false, message: msg }, { status: 400 })
-        }
-      }
-    }
+    const extratoGroupedResponse = await maybeHandleExtratoGroupedView({
+      searchParams,
+      parsed: { view, de, ate, status, cliente_id, fornecedor_id, valor_min, valor_max, conta_id, categoria_id, tipo, page, pageSize, offset, orderBy, orderDir },
+    });
+    if (extratoGroupedResponse) return extratoGroupedResponse;
 
     // Build SQL per view
     const conditions: string[] = [];
@@ -152,110 +58,11 @@ export async function GET(req: NextRequest) {
   let totalSql = '';
   let selectSql = '';
 
-  if (view === 'kpis') {
-    try {
-      // Intervalo: usa 'de' e 'ate' se vierem; senão mês corrente
-      const now = new Date();
-      const firstDayDefault = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
-      const lastDayDefault = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
-
-      const deDate = de || firstDayDefault;
-      const ateDate = ate || lastDayDefault;
-
-      const kpiParamsBase: unknown[] = [deDate, ateDate];
-      let idxKpi = 3;
-      // tenant opcional
-      const tenantId = parseNumber(searchParams.get('tenant_id'));
-      const kpiParams: unknown[] = tenantId ? [...kpiParamsBase, tenantId] : [...kpiParamsBase];
-      const tenantFilterCr = tenantId ? ` AND cr.tenant_id = $${idxKpi}` : '';
-      const tenantFilterCp = tenantId ? ` AND cp.tenant_id = $${idxKpi}` : '';
-      const tenantFilterPr = tenantId ? ` AND pr.tenant_id = $${idxKpi}` : '';
-      const tenantFilterPe = tenantId ? ` AND pe.tenant_id = $${idxKpi}` : '';
-
-      // A RECEBER NO PERÍODO (pendentes): contas_receber por vencimento
-      const arSql = `SELECT COALESCE(SUM(cr.valor_liquido), 0) AS total
-                       FROM financeiro.contas_receber cr
-                      WHERE LOWER(cr.status) NOT IN ('recebido','baixado','liquidado')
-                        AND DATE(cr.data_vencimento) BETWEEN $1 AND $2${tenantFilterCr}`.replace(/\s+/g, ' ');
-      const [arRow] = await runQuery<{ total: number | null }>(arSql, kpiParams);
-
-      // A PAGAR NO PERÍODO (pendentes): contas_pagar por vencimento
-      const apSql = `SELECT COALESCE(SUM(cp.valor_liquido), 0) AS total
-                       FROM financeiro.contas_pagar cp
-                      WHERE LOWER(cp.status) NOT IN ('pago','baixado','liquidado')
-                        AND DATE(cp.data_vencimento) BETWEEN $1 AND $2${tenantFilterCp}`.replace(/\s+/g, ' ');
-      const [apRow] = await runQuery<{ total: number | null }>(apSql, kpiParams);
-
-      // RECEBIDOS NO PERÍODO (caixa realizado): pagamentos_recebidos por data_recebimento
-      const recSql = `SELECT COALESCE(SUM(pr.valor_total_recebido), 0) AS total
-                        FROM financeiro.pagamentos_recebidos pr
-                       WHERE DATE(pr.data_recebimento) BETWEEN $1 AND $2${tenantFilterPr}`.replace(/\s+/g, ' ');
-      const [recRow] = await runQuery<{ total: number | null }>(recSql, kpiParams);
-
-      // PAGOS NO PERÍODO (caixa realizado): pagamentos_efetuados por data_pagamento
-      const pagoSql = `SELECT COALESCE(SUM(pe.valor_total_pagamento), 0) AS total
-                        FROM financeiro.pagamentos_efetuados pe
-                       WHERE DATE(pe.data_pagamento) BETWEEN $1 AND $2${tenantFilterPe}`.replace(/\s+/g, ' ');
-      const [pagoRow] = await runQuery<{ total: number | null }>(pagoSql, kpiParams);
-
-      // RECEITA NO PERÍODO (competência): contas_receber por vencimento (sem filtro de status)
-      const receitaSql = `SELECT COALESCE(SUM(cr.valor_liquido), 0) AS total
-                            FROM financeiro.contas_receber cr
-                           WHERE DATE(cr.data_vencimento) BETWEEN $1 AND $2${tenantFilterCr}`.replace(/\s+/g, ' ');
-      const [receitaRow] = await runQuery<{ total: number | null }>(receitaSql, kpiParams);
-
-      // DESPESAS NO PERÍODO (competência): contas_pagar por vencimento (sem filtro de status)
-      const despesasSql = `SELECT COALESCE(SUM(cp.valor_liquido), 0) AS total
-                             FROM financeiro.contas_pagar cp
-                            WHERE DATE(cp.data_vencimento) BETWEEN $1 AND $2${tenantFilterCp}`.replace(/\s+/g, ' ');
-      const [despesasRow] = await runQuery<{ total: number | null }>(despesasSql, kpiParams);
-
-      // Contagens de títulos pendentes por vencimento
-      const arCountSql = `SELECT COUNT(*)::int AS count
-                            FROM financeiro.contas_receber cr
-                           WHERE LOWER(cr.status) = 'pendente'
-                             AND DATE(cr.data_vencimento) BETWEEN $1 AND $2${tenantFilterCr}`.replace(/\s+/g, ' ');
-      const [arCountRow] = await runQuery<{ count: number | null }>(arCountSql, kpiParams);
-
-      const apCountSql = `SELECT COUNT(*)::int AS count
-                            FROM financeiro.contas_pagar cp
-                           WHERE LOWER(cp.status) = 'pendente'
-                             AND DATE(cp.data_vencimento) BETWEEN $1 AND $2${tenantFilterCp}`.replace(/\s+/g, ' ');
-      const [apCountRow] = await runQuery<{ count: number | null }>(apCountSql, kpiParams);
-
-      return Response.json({
-        success: true,
-        de: deDate,
-        ate: ateDate,
-        kpis: {
-          ar_mes: Number(arRow?.total ?? 0),
-          ap_mes: Number(apRow?.total ?? 0),
-          recebidos_mes: Number(recRow?.total ?? 0),
-          pagos_mes: Number(pagoRow?.total ?? 0),
-          geracao_caixa: Number(recRow?.total ?? 0) - Number(pagoRow?.total ?? 0),
-          receita_mes: Number(receitaRow?.total ?? 0),
-          despesas_mes: Number(despesasRow?.total ?? 0),
-          lucro_mes: Number(receitaRow?.total ?? 0) - Number(despesasRow?.total ?? 0),
-          ar_count: Number(arCountRow?.count ?? 0),
-          ap_count: Number(apCountRow?.count ?? 0),
-        },
-        sql_query: {
-          a_receber_mes: arSql,
-          a_pagar_mes: apSql,
-          recebidos_mes: recSql,
-          pagos_mes: pagoSql,
-          receita_mes: receitaSql,
-          despesas_mes: despesasSql,
-          ar_count: arCountSql,
-          ap_count: apCountSql,
-        },
-        sql_params: kpiParams,
-      });
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      return Response.json({ success: false, message: msg }, { status: 400 });
-    }
-  }
+  const kpisResponse = await maybeHandleKpisView({
+    searchParams,
+    parsed: { view, de, ate, status, cliente_id, fornecedor_id, valor_min, valor_max, conta_id, categoria_id, tipo, page, pageSize, offset, orderBy, orderDir },
+  });
+  if (kpisResponse) return kpisResponse;
 
     if (view === 'aging') {
       return Response.json({ success: false, message: 'View removida (lancamentos_financeiros descontinuado)' }, { status: 410 });
