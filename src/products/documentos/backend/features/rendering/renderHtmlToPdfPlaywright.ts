@@ -1,4 +1,6 @@
 import type { DocumentosHtmlRenderOutput, DocumentosPdfRenderOutput } from '@/products/documentos/backend/features/rendering/types'
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 
 type ChromiumLike = {
   launch: (opts?: Record<string, unknown>) => Promise<any>
@@ -10,7 +12,7 @@ type PlaywrightModule = {
 
 type SparticuzChromiumLike = {
   args?: string[]
-  executablePath?: string | (() => Promise<string>)
+  executablePath?: string | ((input?: string) => Promise<string>)
   defaultViewport?: Record<string, unknown> | null
   headless?: boolean | string
   setGraphicsMode?: boolean
@@ -54,11 +56,33 @@ function fallbackLaunchArgs(): string[] {
 async function getExecutablePath(chromium: SparticuzChromiumLike | null): Promise<string | undefined> {
   if (!chromium?.executablePath) return undefined
   if (typeof chromium.executablePath === 'function') {
-    const path = await chromium.executablePath().catch(() => '')
-    return String(path || '').trim() || undefined
+    try {
+      const directPath = await chromium.executablePath()
+      const direct = String(directPath || '').trim()
+      if (direct) return direct
+    } catch (error) {
+      lastPlaywrightPdfError = `chromium.executablePath() failed: ${error instanceof Error ? error.message : String(error)}`
+    }
+
+    const candidateDirs = [
+      join(process.cwd(), 'node_modules', '@sparticuz', 'chromium', 'bin'),
+      join('/var/task', 'node_modules', '@sparticuz', 'chromium', 'bin'),
+      join('/opt', 'nodejs', 'node_modules', '@sparticuz', 'chromium', 'bin'),
+    ]
+    for (const dir of candidateDirs) {
+      try {
+        if (!existsSync(dir)) continue
+        const p = await chromium.executablePath(dir)
+        const resolved = String(p || '').trim()
+        if (resolved) return resolved
+      } catch (error) {
+        lastPlaywrightPdfError = `chromium.executablePath(${dir}) failed: ${error instanceof Error ? error.message : String(error)}`
+      }
+    }
+    return undefined
   }
-  const path = String(chromium.executablePath || '').trim()
-  return path || undefined
+  const execPath = String(chromium.executablePath || '').trim()
+  return execPath || undefined
 }
 
 async function resolvePlaywrightLaunch() {
@@ -71,6 +95,9 @@ async function resolvePlaywrightLaunch() {
       }
     } catch {}
     const executablePath = await getExecutablePath(sparticuz)
+    if (!executablePath && !lastPlaywrightPdfError) {
+      lastPlaywrightPdfError = 'chromium executablePath unavailable'
+    }
     const args = Array.isArray(sparticuz?.args) && sparticuz?.args?.length
       ? sparticuz.args
       : fallbackLaunchArgs()
@@ -121,7 +148,10 @@ export async function tryRenderHtmlToPdfWithPlaywright(input: DocumentosHtmlRend
     }
   } catch (error) {
     // Keep fallback behavior, but emit a server log to diagnose deploy/runtime issues.
-    lastPlaywrightPdfError = error instanceof Error ? error.message : String(error)
+    const launchError = error instanceof Error ? error.message : String(error)
+    lastPlaywrightPdfError = lastPlaywrightPdfError
+      ? `${lastPlaywrightPdfError} | launch: ${launchError}`
+      : launchError
     try {
       console.error('[documentos/pdf] Playwright render failed:', lastPlaywrightPdfError)
     } catch {}
