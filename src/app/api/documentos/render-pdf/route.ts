@@ -27,7 +27,11 @@ function contentDispositionAttachment(fileName: string): string {
 }
 
 function safeHeaderValue(value: string | null | undefined, maxLen = 180): string | undefined {
-  const text = String(value || '').replace(/[\r\n]+/g, ' ').trim()
+  const text = String(value || '')
+    .replace(/[\r\n]+/g, ' ')
+    .normalize('NFKD')
+    .replace(/[^\x20-\x7E]/g, '')
+    .trim()
   if (!text) return undefined
   return text.slice(0, maxLen)
 }
