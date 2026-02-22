@@ -14,6 +14,12 @@ type RenderPdfRequestBody = {
   title?: unknown
 }
 
+function toArrayBuffer(bytes: Uint8Array<ArrayBufferLike>): ArrayBuffer {
+  const copy = new Uint8Array(bytes.byteLength)
+  copy.set(bytes)
+  return copy.buffer
+}
+
 function contentDispositionAttachment(fileName: string): string {
   const safe = String(fileName || 'documentos-preview.pdf').replace(/[\r\n"]/g, '').trim() || 'documentos-preview.pdf'
   return `attachment; filename*=UTF-8''${encodeURIComponent(safe)}`
@@ -34,8 +40,9 @@ export async function POST(req: Request) {
     })
 
     const pdf = await renderHtmlToPdf(html)
+    const body = toArrayBuffer(pdf.bytes)
 
-    return new Response(pdf.bytes, {
+    return new Response(body, {
       status: 200,
       headers: {
         'Content-Type': pdf.contentType,
