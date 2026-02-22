@@ -1,250 +1,38 @@
 import { NextRequest } from 'next/server';
 import { runQuery } from '@/lib/postgres';
+import { ORDER_BY_WHITELIST } from './query/orderByWhitelist';
+import { parseFinanceiroRequest } from './query/parseFinanceiroRequest';
 
 export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
-
-// Safeguard: whitelist order by columns per view
-const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
-  'contas-a-pagar': {
-    id: 'cp.id',
-    conta_id: 'cp.id',
-    descricao_conta: 'cp.observacao',
-    valor_a_pagar: 'cp.valor_liquido',
-    status_conta: 'cp.status',
-    data_documento: 'cp.data_documento',
-    data_lancamento: 'cp.data_lancamento',
-    data_vencimento: 'cp.data_vencimento',
-    observacao: 'cp.observacao',
-    categoria_nome: 'cat_h.nome',
-    departamento_nome: 'dep_h.nome',
-    centro_custo_nome: 'cc_h.nome',
-    filial_nome: 'fil.nome',
-    unidade_negocio_nome: 'un.nome',
-    fornecedor_nome: 'f.nome_fantasia',
-  },
-  'contas-a-receber': {
-    id: 'cr.id',
-    conta_id: 'cr.id',
-    descricao_conta: 'cr.observacao',
-    valor_a_receber: 'cr.valor_liquido',
-    status_conta: 'cr.status',
-    data_documento: 'cr.data_documento',
-    data_lancamento: 'cr.data_lancamento',
-    data_vencimento: 'cr.data_vencimento',
-    observacao: 'cr.observacao',
-    categoria_nome: 'cat_r.nome',
-    centro_lucro_nome: 'cl.nome',
-    departamento_nome: 'dep_h.nome',
-    filial_nome: 'fil.nome',
-    unidade_negocio_nome: 'un.nome',
-    cliente_nome: 'cli.nome_fantasia',
-  },
-  'pagamentos-efetuados': {
-    id: 'pe.id',
-    pagamento_id: 'pe.id',
-    titulo_id: 'ap.id',
-    descricao_pagamento: 'pe.observacao',
-    pagamento_descricao: 'pe.observacao',
-    valor_pago: 'pe.valor_total_pagamento',
-    data_pagamento: 'pe.data_pagamento',
-    data_lancamento: 'pe.data_lancamento',
-    status: 'pe.status',
-    fornecedor: 'f.nome_fantasia',
-    conta_financeira: 'cf.nome_conta',
-    metodo_pagamento: 'mp.nome',
-  },
-  'pagamentos-recebidos': {
-    id: 'pr.id',
-    pagamento_id: 'pr.id',
-    cliente_nome: 'cli.nome_fantasia',
-    data_recebimento: 'pr.data_recebimento',
-    data_lancamento: 'pr.data_lancamento',
-    descricao_pagamento: 'pr.observacao',
-    valor: 'pr.valor_total_recebido',
-    valor_recebido: 'pr.valor_total_recebido',
-    status_pagamento: 'pr.status',
-    observacao: 'pr.observacao',
-    conta_financeira_nome: 'cf.nome_conta',
-    metodo_pagamento_nome: 'mp.nome',
-  },
-  conciliacao: {
-    conciliacao_id: 'cb.id',
-    periodo_inicio: 'cb.periodo_inicio',
-    periodo_fim: 'cb.periodo_fim',
-    banco: 'b.nome_banco',
-    conta_financeira: 'cf.nome_conta',
-    tipo_conta: 'cf.tipo_conta',
-    saldo_inicial: 'cb.saldo_inicial',
-    saldo_extrato: 'cb.saldo_extrato',
-    saldo_sistema: 'cb.saldo_sistema',
-    diferenca: 'cb.diferenca',
-    status: 'cb.status',
-    criado_em: 'cb.criado_em',
-  },
-  'extrato': {
-    extrato_id: 'eb.id',
-    data_extrato: 'eb.data_extrato',
-    banco: 'b.nome_banco',
-    conta_financeira: 'cf.nome_conta',
-    tipo_conta: 'cf.tipo_conta',
-    saldo_inicial: 'eb.saldo_inicial',
-    total_creditos: 'eb.total_creditos',
-    total_debitos: 'eb.total_debitos',
-    saldo_final: 'eb.saldo_final',
-    status: 'eb.status',
-    transacao_id: 't.id',
-    data_transacao: 't.data_transacao',
-    tipo_transacao: 't.tipo',
-    valor_transacao: 't.valor',
-    origem_transacao: 't.origem',
-    transacao_conciliada: 't.conciliado',
-  },
-  bancos: {
-    banco_id: 'b.id',
-    nome_banco: 'b.nome_banco',
-    numero_banco: 'b.numero_banco',
-    agencia: 'b.agencia',
-    endereco: 'b.endereco',
-    criado_em: 'b.criado_em',
-    atualizado_em: 'b.atualizado_em',
-  },
-  contas: {
-    conta_id: 'cf.id',
-    nome_conta: 'cf.nome_conta',
-    tipo_conta: 'cf.tipo_conta',
-    agencia: 'cf.agencia',
-    numero_conta: 'cf.numero_conta',
-    pix_chave: 'cf.pix_chave',
-    saldo_inicial: 'cf.saldo_inicial',
-    saldo_atual: 'cf.saldo_atual',
-    data_abertura: 'cf.data_abertura',
-    ativo: 'cf.ativo',
-    criado_em: 'cf.criado_em',
-    atualizado_em: 'cf.atualizado_em',
-  },
-  'contas-financeiras': {
-    conta_id: 'cf.id',
-    nome_conta: 'cf.nome_conta',
-    tipo_conta: 'cf.tipo_conta',
-    agencia: 'cf.agencia',
-    numero_conta: 'cf.numero_conta',
-    pix_chave: 'cf.pix_chave',
-    saldo_inicial: 'cf.saldo_inicial',
-    saldo_atual: 'cf.saldo_atual',
-    data_abertura: 'cf.data_abertura',
-    ativo: 'cf.ativo',
-    criado_em: 'cf.criado_em',
-    atualizado_em: 'cf.atualizado_em',
-  },
-  categorias: {
-    id: 'cat.id',
-    nome: 'cat.nome',
-    tipo: 'cat.tipo',
-    descricao: 'cat.descricao',
-    ativo: 'cat.ativo',
-    criado_em: 'cat.criado_em',
-    atualizado_em: 'cat.atualizado_em',
-  },
-  'centros-de-custo': {
-    id: 'cc.id',
-    codigo: 'cc.codigo',
-    nome: 'cc.nome',
-    descricao: 'cc.descricao',
-    ativo: 'cc.ativo',
-    criado_em: 'cc.criado_em',
-    atualizado_em: 'cc.atualizado_em',
-  },
-  'centros-de-lucro': {
-    id: 'cl.id',
-    codigo: 'cl.codigo',
-    nome: 'cl.nome',
-    descricao: 'cl.descricao',
-    ativo: 'cl.ativo',
-    criado_em: 'cl.criado_em',
-    atualizado_em: 'cl.atualizado_em',
-  },
-  'categorias-despesa': {
-    id: 'cd.id',
-    codigo: 'cd.codigo',
-    nome: 'cd.nome',
-    descricao: 'cd.descricao',
-    tipo: 'cd.tipo',
-    natureza: 'cd.natureza',
-    categoria_pai_id: 'cd.categoria_pai_id',
-    plano_conta_id: 'cd.plano_conta_id',
-    plano_conta_codigo: 'pc.codigo',
-    plano_conta_nome: 'pc.nome',
-    criado_em: 'cd.criado_em',
-    atualizado_em: 'cd.atualizado_em',
-  },
-  'categorias-receita': {
-    id: 'cr.id',
-    codigo: 'cr.codigo',
-    nome: 'cr.nome',
-    descricao: 'cr.descricao',
-    tipo: 'cr.tipo',
-    natureza: 'cr.natureza',
-    plano_conta_id: 'cr.plano_conta_id',
-    plano_conta_codigo: 'pc.codigo',
-    plano_conta_nome: 'pc.nome',
-    ativo: 'cr.ativo',
-    criado_em: 'cr.criado_em',
-    atualizado_em: 'cr.atualizado_em',
-  },
-  projetos: {
-    id: 'p.id',
-    codigo: 'p.codigo',
-    nome: 'p.nome',
-    data_inicio: 'p.data_inicio',
-    data_fim: 'p.data_fim',
-    status: 'p.status',
-    descricao: 'p.descricao',
-    ativo: 'p.ativo',
-    criado_em: 'p.criado_em',
-    atualizado_em: 'p.atualizado_em',
-  },
-  movimentos: {
-    id: 'm.id',
-    data: 'm.data',
-    valor: 'm.valor',
-  },
-};
 
 const parseNumber = (v: string | null, fallback?: number) => (v ? Number(v) : fallback);
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const view = (searchParams.get('view') || '').toLowerCase();
+    const {
+      view,
+      de,
+      ate,
+      status,
+      cliente_id,
+      fornecedor_id,
+      valor_min,
+      valor_max,
+      conta_id,
+      categoria_id,
+      tipo,
+      page,
+      pageSize,
+      offset,
+      orderBy,
+      orderDir,
+    } = parseFinanceiroRequest(searchParams, ORDER_BY_WHITELIST);
     if (!view) {
       return Response.json({ success: false, message: 'Parâmetro view é obrigatório' }, { status: 400 });
     }
-
-    // Common filters
-    const de = searchParams.get('de') || undefined; // YYYY-MM-DD
-    const ate = searchParams.get('ate') || undefined; // YYYY-MM-DD
-    const status = searchParams.get('status') || undefined;
-    const cliente_id = searchParams.get('cliente_id') || undefined;
-    const fornecedor_id = searchParams.get('fornecedor_id') || undefined;
-    const valor_min = parseNumber(searchParams.get('valor_min'));
-    const valor_max = parseNumber(searchParams.get('valor_max'));
-    const conta_id = searchParams.get('conta_id') || undefined;
-    const categoria_id = searchParams.get('categoria_id') || undefined;
-    const tipo = searchParams.get('tipo') || undefined; // entrada | saída (movimentos)
-
-    // Pagination
-    const page = Math.max(1, parseNumber(searchParams.get('page'), 1) || 1);
-    const pageSize = Math.max(1, Math.min(1000, parseNumber(searchParams.get('pageSize'), 1000) || 1000));
-    const offset = (page - 1) * pageSize;
-
-    // Sorting
-    const orderByParam = (searchParams.get('order_by') || '').toLowerCase();
-    const orderDirParam = (searchParams.get('order_dir') || 'desc').toLowerCase();
-  const orderWhitelist = ORDER_BY_WHITELIST[view] || {};
-  const orderBy = orderWhitelist[orderByParam] || undefined;
-  const orderDir = orderDirParam === 'asc' ? 'ASC' : 'DESC';
 
     // Special case: view=extrato grouped (extratos as pais + transacoes como filhos)
     if (view === 'extrato') {

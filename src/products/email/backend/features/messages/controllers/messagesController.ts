@@ -1,7 +1,17 @@
 import type { NextRequest } from 'next/server'
 import { getAgentMailClient } from '@/products/email/backend/integrations/agentmailClient'
-import { parseAddressList, parseBoolean, splitCsv } from '@/products/email/backend/shared/parsers'
+import { parseBoolean, splitCsv } from '@/products/email/backend/shared/parsers'
 import { toEmailErrorResponse } from '@/products/email/backend/shared/http'
+import {
+  parseComposePayload,
+  parseLabelsPatchPayload,
+  readRequiredTrimmedString,
+} from '@/products/email/backend/features/messages/parsers/messagePayload'
+import {
+  getRequiredRouteId,
+  readJsonObject,
+} from '@/products/email/backend/features/messages/parsers/requestHelpers'
+import type { RouteContextLike } from '@/products/email/backend/features/messages/types'
 
 export async function listMessages(req: NextRequest) {
   try {
@@ -18,7 +28,7 @@ export async function listMessages(req: NextRequest) {
     const includeSpam = parseBoolean(searchParams.get('includeSpam'))
 
     const client = await getAgentMailClient()
-    const opts: any = { limit, pageToken, labels, before, after, ascending, includeSpam }
+    const opts: Record<string, unknown> = { limit, pageToken, labels, before, after, ascending, includeSpam }
     const data = await client.inboxes.messages.list(inboxId, opts)
     return Response.json({ ok: true, data })
   } catch (error) {
@@ -28,31 +38,12 @@ export async function listMessages(req: NextRequest) {
 
 export async function sendMessage(req: NextRequest) {
   try {
-    const body = await req.json().catch(() => ({}))
-    const inboxId = String((body as any)?.inboxId || '').trim()
+    const body = await readJsonObject(req)
+    const inboxId = readRequiredTrimmedString(body, 'inboxId')
     if (!inboxId) return Response.json({ ok: false, error: 'Missing inboxId' }, { status: 400 })
 
-    const to = parseAddressList((body as any)?.to)
-    const cc = parseAddressList((body as any)?.cc)
-    const bcc = parseAddressList((body as any)?.bcc)
-    const labels = Array.isArray((body as any)?.labels)
-      ? (body as any).labels.map((s: any) => String(s).trim()).filter(Boolean)
-      : parseAddressList((body as any)?.labels)
-    const subject = typeof (body as any)?.subject === 'string' ? (body as any).subject.trim() : undefined
-    const text = typeof (body as any)?.text === 'string' ? (body as any).text : undefined
-    const html = typeof (body as any)?.html === 'string' ? (body as any).html : undefined
-    const attachments = Array.isArray((body as any)?.attachments)
-      ? (body as any).attachments
-          .map((att: any) => ({
-            filename: typeof att?.filename === 'string' ? att.filename : undefined,
-            contentType: typeof att?.contentType === 'string' ? att.contentType : undefined,
-            contentDisposition: typeof att?.contentDisposition === 'string' ? att.contentDisposition : undefined,
-            contentId: typeof att?.contentId === 'string' ? att.contentId : undefined,
-            content: typeof att?.content === 'string' ? att.content : undefined,
-            url: typeof att?.url === 'string' ? att.url : undefined,
-          }))
-          .filter((att: any) => !!att.content || !!att.url)
-      : undefined
+    const payload = parseComposePayload(body)
+    const { to, cc, bcc, labels, subject, text, html, attachments } = payload
 
     if (!to || to.length === 0) {
       return Response.json({ ok: false, error: 'Missing to' }, { status: 400 })
@@ -76,18 +67,16 @@ export async function sendMessage(req: NextRequest) {
   }
 }
 
-export async function getMessage(req: NextRequest, context: any) {
+export async function getMessage(req: NextRequest, context: RouteContextLike) {
   try {
-    const maybeParams = context?.params
-    const params = maybeParams && typeof maybeParams.then === 'function' ? await maybeParams : maybeParams
-    const id = params?.id as string | undefined
+    const id = await getRequiredRouteId(context)
     if (!id) return Response.json({ ok: false, error: 'Missing id' }, { status: 400 })
 
     const { searchParams } = new URL(req.url)
     const inboxId = searchParams.get('inboxId') || undefined
 
     const client = await getAgentMailClient()
-    let data: any
+    let data: unknown
     try {
       data = await (client.messages?.get ? client.messages.get(id) : undefined)
     } catch {}
@@ -101,8 +90,14 @@ export async function getMessage(req: NextRequest, context: any) {
     if (!data) {
       if (!inboxId) throw new Error('Message not found; provide inboxId for fallback lookup')
       const list = await client.inboxes?.messages?.list(inboxId)
-      const items = (list?.items || list || []) as any[]
-      data = items.find((m: any) => (m.id || m.messageId || m.message_id) === id)
+      const listObj = list && typeof list === 'object' ? (list as Record<string, unknown>) : null
+      const itemsCandidate = (listObj?.items ?? list) as unknown
+      const items = Array.isArray(itemsCandidate) ? itemsCandidate : []
+      data = items.find((m) => {
+        if (!m || typeof m !== 'object') return false
+        const msg = m as Record<string, unknown>
+        return (msg.id || msg.messageId || msg.message_id) === id
+      })
       if (!data) throw new Error('Message not found')
     }
 
@@ -112,42 +107,21 @@ export async function getMessage(req: NextRequest, context: any) {
   }
 }
 
-export async function runMessageAction(req: NextRequest, context: any) {
+export async function runMessageAction(req: NextRequest, context: RouteContextLike) {
   try {
-    const maybeParams = context?.params
-    const params = maybeParams && typeof maybeParams.then === 'function' ? await maybeParams : maybeParams
-    const id = params?.id as string | undefined
+    const id = await getRequiredRouteId(context)
     if (!id) return Response.json({ ok: false, error: 'Missing id' }, { status: 400 })
 
-    const body = await req.json().catch(() => ({}))
-    const action = String((body as any)?.action || '').trim()
-    const inboxId = String((body as any)?.inboxId || '').trim()
+    const body = await readJsonObject(req)
+    const action = readRequiredTrimmedString(body, 'action')
+    const inboxId = readRequiredTrimmedString(body, 'inboxId')
     if (!inboxId) return Response.json({ ok: false, error: 'Missing inboxId' }, { status: 400 })
     if (!action) return Response.json({ ok: false, error: 'Missing action' }, { status: 400 })
 
     const client = await getAgentMailClient()
 
     if (action === 'reply' || action === 'replyAll') {
-      const to = parseAddressList((body as any)?.to)
-      const cc = parseAddressList((body as any)?.cc)
-      const bcc = parseAddressList((body as any)?.bcc)
-      const labels = Array.isArray((body as any)?.labels)
-        ? (body as any).labels.map((s: any) => String(s).trim()).filter(Boolean)
-        : parseAddressList((body as any)?.labels)
-      const text = typeof (body as any)?.text === 'string' ? (body as any).text : undefined
-      const html = typeof (body as any)?.html === 'string' ? (body as any).html : undefined
-      const attachments = Array.isArray((body as any)?.attachments)
-        ? (body as any).attachments
-            .map((att: any) => ({
-              filename: typeof att?.filename === 'string' ? att.filename : undefined,
-              contentType: typeof att?.contentType === 'string' ? att.contentType : undefined,
-              contentDisposition: typeof att?.contentDisposition === 'string' ? att.contentDisposition : undefined,
-              contentId: typeof att?.contentId === 'string' ? att.contentId : undefined,
-              content: typeof att?.content === 'string' ? att.content : undefined,
-              url: typeof att?.url === 'string' ? att.url : undefined,
-            }))
-            .filter((att: any) => !!att.content || !!att.url)
-        : undefined
+      const { to, cc, bcc, labels, text, html, attachments } = parseComposePayload(body)
 
       const sent =
         action === 'replyAll'
@@ -157,29 +131,8 @@ export async function runMessageAction(req: NextRequest, context: any) {
     }
 
     if (action === 'forward') {
-      const to = parseAddressList((body as any)?.to)
+      const { to, cc, bcc, labels, subject, text, html, attachments } = parseComposePayload(body)
       if (!to || to.length === 0) return Response.json({ ok: false, error: 'Missing to for forward' }, { status: 400 })
-
-      const cc = parseAddressList((body as any)?.cc)
-      const bcc = parseAddressList((body as any)?.bcc)
-      const labels = Array.isArray((body as any)?.labels)
-        ? (body as any).labels.map((s: any) => String(s).trim()).filter(Boolean)
-        : parseAddressList((body as any)?.labels)
-      const subject = typeof (body as any)?.subject === 'string' ? (body as any).subject.trim() : undefined
-      const text = typeof (body as any)?.text === 'string' ? (body as any).text : undefined
-      const html = typeof (body as any)?.html === 'string' ? (body as any).html : undefined
-      const attachments = Array.isArray((body as any)?.attachments)
-        ? (body as any).attachments
-            .map((att: any) => ({
-              filename: typeof att?.filename === 'string' ? att.filename : undefined,
-              contentType: typeof att?.contentType === 'string' ? att.contentType : undefined,
-              contentDisposition: typeof att?.contentDisposition === 'string' ? att.contentDisposition : undefined,
-              contentId: typeof att?.contentId === 'string' ? att.contentId : undefined,
-              content: typeof att?.content === 'string' ? att.content : undefined,
-              url: typeof att?.url === 'string' ? att.url : undefined,
-            }))
-            .filter((att: any) => !!att.content || !!att.url)
-        : undefined
 
       const sent = await client.inboxes.messages.forward(inboxId, id, {
         to,
@@ -195,12 +148,7 @@ export async function runMessageAction(req: NextRequest, context: any) {
     }
 
     if (action === 'labels') {
-      const addLabels = Array.isArray((body as any)?.addLabels)
-        ? (body as any).addLabels.map((s: any) => String(s).trim()).filter(Boolean)
-        : undefined
-      const removeLabels = Array.isArray((body as any)?.removeLabels)
-        ? (body as any).removeLabels.map((s: any) => String(s).trim()).filter(Boolean)
-        : undefined
+      const { addLabels, removeLabels } = parseLabelsPatchPayload(body)
       if ((!addLabels || addLabels.length === 0) && (!removeLabels || removeLabels.length === 0)) {
         return Response.json({ ok: false, error: 'Provide addLabels and/or removeLabels' }, { status: 400 })
       }
@@ -214,11 +162,9 @@ export async function runMessageAction(req: NextRequest, context: any) {
   }
 }
 
-export async function deleteMessage(req: NextRequest, context: any) {
+export async function deleteMessage(req: NextRequest, context: RouteContextLike) {
   try {
-    const maybeParams = context?.params
-    const params = maybeParams && typeof maybeParams.then === 'function' ? await maybeParams : maybeParams
-    const id = params?.id as string | undefined
+    const id = await getRequiredRouteId(context)
     if (!id) return Response.json({ ok: false, error: 'Missing id' }, { status: 400 })
 
     const { searchParams } = new URL(req.url)
@@ -228,7 +174,7 @@ export async function deleteMessage(req: NextRequest, context: any) {
     const mode = (searchParams.get('mode') || 'trash').trim().toLowerCase()
     const client = await getAgentMailClient()
 
-    let data: any = null
+    let data: unknown = null
     let strategy = ''
     let lastError: unknown = null
 

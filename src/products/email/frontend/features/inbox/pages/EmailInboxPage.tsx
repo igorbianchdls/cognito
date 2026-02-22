@@ -29,8 +29,22 @@ import {
   Redo2,
   MoreVertical,
 } from 'lucide-react'
-
-type FolderKey = 'inbox' | 'drafts' | 'sent' | 'junk' | 'trash' | 'archive'
+import {
+  extractList,
+  messageInFolder,
+  getMessageId,
+  getInboxId,
+  getInboxLabel,
+  getSenderName,
+  getSenderEmail,
+  getSubject,
+  getSnippet,
+  getLabels,
+  isUnread,
+  formatRelativeDate,
+  formatAbsoluteDate,
+  type FolderKey,
+} from '@/products/email/frontend/features/inbox/utils/inboxView'
 
 type CategoryKey = 'social' | 'updates' | 'forums' | 'shopping' | 'promotions'
 
@@ -50,116 +64,6 @@ const CATEGORY_FILTERS: Array<{ key: CategoryKey; name: string; labels: string[]
   { key: 'shopping', name: 'Shopping', labels: ['shopping', 'shop'] },
   { key: 'promotions', name: 'Promotions', labels: ['promotion', 'promotions', 'promo'] },
 ]
-
-function extractList(data: any): any[] {
-  if (Array.isArray(data)) return data
-  if (!data || typeof data !== 'object') return []
-
-  const directCandidates = [data.items, data.inboxes, data.messages, data.results, data.rows]
-  for (const candidate of directCandidates) {
-    if (Array.isArray(candidate)) return candidate
-  }
-
-  if (data.data && typeof data.data === 'object') {
-    const nested = [data.data.items, data.data.inboxes, data.data.messages, data.data.results, data.data.rows]
-    for (const candidate of nested) {
-      if (Array.isArray(candidate)) return candidate
-    }
-  }
-
-  return []
-}
-
-function asLowerLabels(message: any): Set<string> {
-  const labels = Array.isArray(message?.labels) ? message.labels : []
-  return new Set(labels.map((l: any) => String(l || '').trim().toLowerCase()).filter(Boolean))
-}
-
-function messageInFolder(message: any, folder: FolderKey): boolean {
-  if (!message || typeof message !== 'object') return false
-  const labels = asLowerLabels(message)
-  const hasLabel = (...candidates: string[]) => candidates.some((v) => labels.has(v))
-
-  const sent = Boolean(message?.sent || message?.isSent || hasLabel('sent', 'outbound'))
-  const drafts = Boolean(message?.draft || message?.isDraft || hasLabel('draft', 'drafts'))
-  const archive = Boolean(message?.archived || message?.isArchived || hasLabel('archive', 'archived'))
-  const trash = Boolean(message?.trashed || message?.isTrashed || message?.deleted || hasLabel('trash', 'deleted'))
-  const junk = Boolean(message?.junk || message?.isJunk || hasLabel('junk', 'spam'))
-
-  if (folder === 'sent') return sent
-  if (folder === 'drafts') return drafts
-  if (folder === 'archive') return archive
-  if (folder === 'trash') return trash
-  if (folder === 'junk') return junk
-  return !sent && !drafts && !archive && !trash && !junk
-}
-
-function getMessageId(message: any): string {
-  return String(message?.id || message?.messageId || message?.message_id || '').trim()
-}
-
-function getInboxId(inbox: any): string {
-  return String(inbox?.inboxId || inbox?.id || '').trim()
-}
-
-function getInboxLabel(inbox: any, index: number): string {
-  const label = String(inbox?.displayName || inbox?.username || inbox?.email || inbox?.inboxId || '').trim()
-  return label || `Inbox ${index + 1}`
-}
-
-function getSenderName(message: any): string {
-  return String(message?.from?.name || message?.from_name || message?.from || 'Sem remetente')
-}
-
-function getSenderEmail(message: any): string {
-  return String(message?.from?.email || message?.from_email || '').trim()
-}
-
-function getSubject(message: any): string {
-  return String(message?.subject || 'Sem assunto')
-}
-
-function getSnippet(message: any): string {
-  return String(message?.snippet || message?.preview || message?.text || '').trim()
-}
-
-function getLabels(message: any): string[] {
-  if (!Array.isArray(message?.labels)) return []
-  return message.labels.map((l: any) => String(l || '').trim()).filter(Boolean)
-}
-
-function isUnread(message: any): boolean {
-  return Boolean(message?.unread || message?.isUnread)
-}
-
-function formatRelativeDate(value: any): string {
-  if (!value) return ''
-  const raw = String(value)
-  const parsed = new Date(raw)
-  if (Number.isNaN(parsed.getTime())) return raw
-
-  const now = new Date()
-  const diffMs = now.getTime() - parsed.getTime()
-  const diffDays = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)))
-  if (diffDays < 1) return parsed.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-  if (diffDays < 30) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
-  const months = Math.floor(diffDays / 30)
-  return `${months} month${months > 1 ? 's' : ''} ago`
-}
-
-function formatAbsoluteDate(value: any): string {
-  if (!value) return ''
-  const raw = String(value)
-  const parsed = new Date(raw)
-  if (Number.isNaN(parsed.getTime())) return raw
-  return parsed.toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  })
-}
 
 export default function EmailPage() {
   const [folder, setFolder] = useState<FolderKey>('inbox')
