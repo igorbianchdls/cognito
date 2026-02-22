@@ -40,9 +40,9 @@ export async function POST(req: Request) {
     })
 
     const pdf = await renderHtmlToPdf(html)
-    const body = toArrayBuffer(pdf.bytes)
+    const responseBody = toArrayBuffer(pdf.bytes)
 
-    return new Response(body, {
+    return new Response(responseBody, {
       status: 200,
       headers: {
         'Content-Type': pdf.contentType,
