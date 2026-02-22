@@ -1,4 +1,5 @@
 import type { DocumentosHtmlRenderOutput, DocumentosPdfRenderOutput } from '@/products/documentos/backend/features/rendering/types'
+import { tryRenderHtmlToPdfWithPlaywright } from '@/products/documentos/backend/features/rendering/renderHtmlToPdfPlaywright'
 
 function decodeHtmlEntities(text: string): string {
   return text
@@ -105,6 +106,9 @@ function buildSinglePagePdfFromText(text: string): Uint8Array {
 }
 
 export async function renderHtmlToPdf(input: DocumentosHtmlRenderOutput): Promise<DocumentosPdfRenderOutput> {
+  const realPdf = await tryRenderHtmlToPdfWithPlaywright(input)
+  if (realPdf) return realPdf
+
   const plainText = toAsciiSafe(htmlToPlainText(input.html))
   const header = `${input.title}\nGerado pelo render-pdf (MVP)\n\n`
   const bytes = buildSinglePagePdfFromText(`${header}${plainText}`.trim())
@@ -115,4 +119,3 @@ export async function renderHtmlToPdf(input: DocumentosHtmlRenderOutput): Promis
     engine: 'minimal-pdf-fallback',
   }
 }
-

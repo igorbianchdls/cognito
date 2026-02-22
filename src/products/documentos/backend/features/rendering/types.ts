@@ -15,6 +15,5 @@ export type DocumentosPdfRenderOutput = {
   bytes: Uint8Array
   fileName: string
   contentType: 'application/pdf'
-  engine: 'minimal-pdf-fallback'
+  engine: 'playwright' | 'minimal-pdf-fallback'
 }
-

@@ -193,6 +193,7 @@ async function callScopedTool(input: {
     return {
       success: false,
       status: res.status,
+      code: (out as any)?.code || undefined,
       error: (out as any)?.error || (out as any)?.message || raw || res.statusText || `erro na tool ${input.label}`,
     }
   }
@@ -210,7 +211,7 @@ async function callCrudTool(input: {
   const action = toText(input.args.action || 'listar').toLowerCase()
   const resource = toText(input.args.resource || input.args.path)
   if (!isSafeResource(resource)) {
-    return { success: false, error: 'recurso não permitido', resource }
+    return { success: false, code: 'CRUD_RESOURCE_FORBIDDEN', error: 'recurso não permitido', resource }
   }
   const method = 'POST'
   const suffix = resolveCrudSuffix(action, input.args.actionSuffix)
@@ -237,6 +238,7 @@ async function callCrudTool(input: {
     return {
       success: false,
       status: res.status,
+      code: (out as any)?.code || undefined,
       error: (out as any)?.error || (out as any)?.message || raw || res.statusText || 'erro na tool crud',
     }
   }
