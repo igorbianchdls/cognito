@@ -15,12 +15,9 @@ type SparticuzChromiumLike = {
   headless?: boolean | string
 }
 
-async function importPlaywright(specifier: 'playwright-core' | 'playwright'): Promise<PlaywrightModule | null> {
+async function importPlaywrightCore(): Promise<PlaywrightModule | null> {
   try {
-    if (specifier === 'playwright-core') {
-      return await import('playwright-core') as PlaywrightModule
-    }
-    return await import('playwright') as PlaywrightModule
+    return await import('playwright-core') as PlaywrightModule
   } catch {
     return null
   }
@@ -56,7 +53,7 @@ async function getExecutablePath(chromium: SparticuzChromiumLike | null): Promis
 }
 
 async function resolvePlaywrightLaunch() {
-  const pwCore = await importPlaywright('playwright-core')
+  const pwCore = await importPlaywrightCore()
   const sparticuz = await importSparticuzChromium()
   if (pwCore?.chromium?.launch) {
     const executablePath = await getExecutablePath(sparticuz)
@@ -69,17 +66,6 @@ async function resolvePlaywrightLaunch() {
         headless: typeof sparticuz?.headless === 'boolean' ? sparticuz.headless : true,
         args,
         ...(executablePath ? { executablePath } : {}),
-      } satisfies Record<string, unknown>,
-    }
-  }
-
-  const pw = await importPlaywright('playwright')
-  if (pw?.chromium?.launch) {
-    return {
-      chromium: pw.chromium,
-      options: {
-        headless: true,
-        args: fallbackLaunchArgs(),
       } satisfies Record<string, unknown>,
     }
   }
