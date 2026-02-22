@@ -1,5 +1,6 @@
 import { renderTemplateToHtml } from '@/products/documentos/backend/features/rendering/renderTemplateToHtml'
 import { renderHtmlToPdf } from '@/products/documentos/backend/features/rendering/renderHtmlToPdf'
+import { getLastPlaywrightPdfError } from '@/products/documentos/backend/features/rendering/renderHtmlToPdfPlaywright'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -25,6 +26,12 @@ function contentDispositionAttachment(fileName: string): string {
   return `attachment; filename*=UTF-8''${encodeURIComponent(safe)}`
 }
 
+function safeHeaderValue(value: string | null | undefined, maxLen = 180): string | undefined {
+  const text = String(value || '').replace(/[\r\n]+/g, ' ').trim()
+  if (!text) return undefined
+  return text.slice(0, maxLen)
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({})) as RenderPdfRequestBody
@@ -41,6 +48,9 @@ export async function POST(req: Request) {
 
     const pdf = await renderHtmlToPdf(html)
     const responseBody = toArrayBuffer(pdf.bytes)
+    const playwrightErrorHeader = pdf.engine !== 'playwright'
+      ? safeHeaderValue(getLastPlaywrightPdfError())
+      : undefined
 
     return new Response(responseBody, {
       status: 200,
@@ -49,6 +59,7 @@ export async function POST(req: Request) {
         'Content-Disposition': contentDispositionAttachment(pdf.fileName),
         'Cache-Control': 'no-store',
         'X-Documentos-Pdf-Engine': pdf.engine,
+        ...(playwrightErrorHeader ? { 'X-Documentos-Pdf-Playwright-Error': playwrightErrorHeader } : {}),
       },
     })
   } catch (error) {

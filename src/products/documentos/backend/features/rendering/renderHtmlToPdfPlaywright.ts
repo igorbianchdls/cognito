@@ -15,10 +15,17 @@ type SparticuzChromiumLike = {
   headless?: boolean | string
 }
 
+let lastPlaywrightPdfError: string | null = null
+
+export function getLastPlaywrightPdfError(): string | null {
+  return lastPlaywrightPdfError
+}
+
 async function importPlaywrightCore(): Promise<PlaywrightModule | null> {
   try {
     return await import('playwright-core') as PlaywrightModule
   } catch {
+    lastPlaywrightPdfError = 'import playwright-core failed'
     return null
   }
 }
@@ -29,6 +36,7 @@ async function importSparticuzChromium(): Promise<SparticuzChromiumLike | null> 
     const candidate = ((mod.default as unknown) || mod) as SparticuzChromiumLike
     return candidate || null
   } catch {
+    lastPlaywrightPdfError = '@sparticuz/chromium import failed'
     return null
   }
 }
@@ -74,8 +82,12 @@ async function resolvePlaywrightLaunch() {
 }
 
 export async function tryRenderHtmlToPdfWithPlaywright(input: DocumentosHtmlRenderOutput): Promise<DocumentosPdfRenderOutput | null> {
+  lastPlaywrightPdfError = null
   const launch = await resolvePlaywrightLaunch()
-  if (!launch?.chromium?.launch) return null
+  if (!launch?.chromium?.launch) {
+    lastPlaywrightPdfError = lastPlaywrightPdfError || 'playwright launch unavailable'
+    return null
+  }
 
   let browser: any = null
   try {
@@ -103,8 +115,9 @@ export async function tryRenderHtmlToPdfWithPlaywright(input: DocumentosHtmlRend
     }
   } catch (error) {
     // Keep fallback behavior, but emit a server log to diagnose deploy/runtime issues.
+    lastPlaywrightPdfError = error instanceof Error ? error.message : String(error)
     try {
-      console.error('[documentos/pdf] Playwright render failed:', error instanceof Error ? error.message : String(error))
+      console.error('[documentos/pdf] Playwright render failed:', lastPlaywrightPdfError)
     } catch {}
     return null
   } finally {
