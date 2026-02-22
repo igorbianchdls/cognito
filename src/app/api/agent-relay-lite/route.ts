@@ -165,7 +165,7 @@ async function parseJsonResponse(res: Response) {
 }
 
 function normalizeRelayToolSuccess(outRaw: unknown, meta: { tool: string; status: number }) {
-  const out = (outRaw && typeof outRaw === 'object' && !Array.isArray(outRaw))
+  const out: Record<string, unknown> = (outRaw && typeof outRaw === 'object' && !Array.isArray(outRaw))
     ? { ...(outRaw as Record<string, unknown>) }
     : { value: outRaw }
   const success = typeof out.success === 'boolean'
