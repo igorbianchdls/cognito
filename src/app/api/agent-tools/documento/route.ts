@@ -1,6 +1,10 @@
 import { NextRequest } from 'next/server'
 import { verifyAgentToken } from '@/app/api/chat/tokenStore'
 import { runQuery } from '@/lib/postgres'
+import {
+  buildDocumentoToolAttachmentFromRow,
+  buildDocumentoToolHtmlSnapshot,
+} from '@/products/documentos/backend/features/tooling/documentoToolArtifact'
 
 export const runtime = 'nodejs'
 
@@ -44,38 +48,6 @@ function normalizeAction(value: unknown): DocumentoAction | null {
   const v = toText(value).toLowerCase()
   if (v === 'gerar' || v === 'status') return v
   return null
-}
-
-function fileSlug(value: string): string {
-  const raw = value
-    .normalize('NFKD')
-    .replace(/[^\w.\- ]+/g, ' ')
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .toLowerCase()
-  return raw || 'documento'
-}
-
-function buildDocumentText(input: {
-  tipo: string
-  titulo: string
-  origemTipo: string
-  origemId: number
-  dados: JsonMap
-}) {
-  const now = new Date().toISOString()
-  const dadosPretty = JSON.stringify(input.dados, null, 2)
-  return [
-    `Documento: ${input.titulo}`,
-    `Tipo: ${input.tipo}`,
-    `Origem: ${input.origemTipo}#${input.origemId}`,
-    `Gerado em: ${now}`,
-    '',
-    'Dados:',
-    dadosPretty,
-    '',
-  ].join('\n')
 }
 
 type DocumentoRow = {
@@ -126,18 +98,14 @@ async function getDocumentoById(tenantId: number, documentoId: number) {
   return rows[0] || null
 }
 
-function normalizeDocumentoOutput(row: DocumentoRow) {
-  const mime = toText(row.mime) || 'text/plain'
-  const snapshot = toText(row.html_snapshot)
-  const filename = `${fileSlug(row.titulo || `documento-${row.id}`)}.txt`
-  const attachment =
-    snapshot
-      ? {
-          filename,
-          content_type: mime,
-          content: Buffer.from(snapshot, 'utf8').toString('base64'),
-        }
-      : undefined
+async function normalizeDocumentoOutput(row: DocumentoRow) {
+  const artifact = await buildDocumentoToolAttachmentFromRow({
+    id: row.id,
+    titulo: row.titulo,
+    mime: row.mime,
+    html_snapshot: row.html_snapshot,
+  })
+  const mime = artifact.mime
 
   return {
     documento: {
@@ -156,7 +124,7 @@ function normalizeDocumentoOutput(row: DocumentoRow) {
       gerado_em: row.gerado_em,
       enviado_em: row.enviado_em,
     },
-    attachment,
+    attachment: artifact.attachment,
   }
 }
 
@@ -281,7 +249,7 @@ export async function POST(req: NextRequest) {
       }
       const row = await getDocumentoById(tenantId, documentoId)
       if (!row) return Response.json({ ok: false, error: 'Documento não encontrado' }, { status: 404 })
-      const out = normalizeDocumentoOutput(row)
+      const out = await normalizeDocumentoOutput(row)
       return Response.json({
         ok: true,
         result: { success: true, ...out },
@@ -322,7 +290,7 @@ export async function POST(req: NextRequest) {
       if (existingId) {
         const existing = await getDocumentoById(tenantId, existingId)
         if (existing) {
-          const out = normalizeDocumentoOutput(existing)
+          const out = await normalizeDocumentoOutput(existing)
           return Response.json({
             ok: true,
             result: { success: true, reused: true, ...out },
@@ -332,7 +300,7 @@ export async function POST(req: NextRequest) {
     }
 
     const titulo = toText(payload.titulo) || `${tipo.toUpperCase()} ${origemTipo} #${origemId}`
-    const textoDocumento = buildDocumentText({ tipo, titulo, origemTipo, origemId, dados })
+    const htmlDocumento = buildDocumentoToolHtmlSnapshot({ tipo, titulo, origemTipo, origemId, dados })
     const criadoPor = intOrNull(payload.criado_por)
     const payloadJson = JSON.stringify({
       tipo,
@@ -358,8 +326,8 @@ export async function POST(req: NextRequest) {
         origemId,
         titulo,
         payloadJson,
-        textoDocumento,
-        'text/plain',
+        htmlDocumento,
+        'application/pdf',
         criadoPor,
       ],
     )
@@ -374,7 +342,7 @@ export async function POST(req: NextRequest) {
       return Response.json({ ok: false, error: 'Documento criado, mas não foi possível carregar o resultado' }, { status: 500 })
     }
 
-    const out = normalizeDocumentoOutput(row)
+    const out = await normalizeDocumentoOutput(row)
     return Response.json({
       ok: true,
       result: {
