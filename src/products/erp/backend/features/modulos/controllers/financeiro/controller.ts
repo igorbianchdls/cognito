@@ -4,6 +4,8 @@ import { ORDER_BY_WHITELIST } from './query/orderByWhitelist';
 import { parseFinanceiroRequest } from './query/parseFinanceiroRequest';
 import { maybeHandleExtratoGroupedView } from './views/extratoGrouped';
 import { maybeHandleKpisView } from './views/kpis';
+import { maybeHandleFinanceiroContasAPagarView } from './views/contasAPagar';
+import { maybeHandleFinanceiroContasAReceberView } from './views/contasAReceber';
 
 export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
@@ -63,6 +65,14 @@ export async function GET(req: NextRequest) {
     parsed: { view, de, ate, status, cliente_id, fornecedor_id, valor_min, valor_max, conta_id, categoria_id, tipo, page, pageSize, offset, orderBy, orderDir },
   });
   if (kpisResponse) return kpisResponse;
+  const contasAPagarResponse = await maybeHandleFinanceiroContasAPagarView({
+    parsed: { view, de, ate, status, cliente_id, fornecedor_id, valor_min, valor_max, conta_id, categoria_id, tipo, page, pageSize, offset, orderBy, orderDir },
+  });
+  if (contasAPagarResponse) return contasAPagarResponse;
+  const contasAReceberResponse = await maybeHandleFinanceiroContasAReceberView({
+    parsed: { view, de, ate, status, cliente_id, fornecedor_id, valor_min, valor_max, conta_id, categoria_id, tipo, page, pageSize, offset, orderBy, orderDir },
+  });
+  if (contasAReceberResponse) return contasAReceberResponse;
 
     if (view === 'aging') {
       return Response.json({ success: false, message: 'View removida (lancamentos_financeiros descontinuado)' }, { status: 410 });
@@ -76,65 +86,6 @@ export async function GET(req: NextRequest) {
       return Response.json({ success: false, message: 'View removida (lancamentos_financeiros descontinuado)' }, { status: 410 });
     } else if (view === 'top-receitas-centro-lucro') {
       return Response.json({ success: false, message: 'View removida (lancamentos_financeiros descontinuado)' }, { status: 410 });
-    } else if (view === 'contas-a-pagar') {
-      // Contas a Pagar — somente CABEÇALHOS (query fornecida)
-      const headerSql = `
-SELECT
-  cp.id                                AS conta_pagar_id,
-
-  cp.numero_documento,
-  cp.tipo_documento,
-  cp.status,
-  cp.data_documento,
-  cp.data_lancamento,
-  cp.data_vencimento,
-
-  f.id                                 AS fornecedor_id,
-  f.nome_fantasia                      AS fornecedor,
-  f.imagem_url                         AS fornecedor_imagem_url,
-
-  cat_h.nome                           AS categoria_despesa,
-
-  dep_h.nome                           AS departamento,
-  cc_h.nome                            AS centro_custo,
-  fil.nome                             AS filial,
-  un.nome                              AS unidade_negocio,
-
-  cp.valor_bruto,
-  cp.valor_desconto,
-  cp.valor_impostos,
-  cp.valor_liquido,
-
-  cp.observacao                        AS descricao
-
-FROM financeiro.contas_pagar cp
-
-LEFT JOIN entidades.fornecedores f
-       ON f.id = cp.fornecedor_id
-
-LEFT JOIN financeiro.categorias_despesa cat_h
-       ON cat_h.id = cp.categoria_despesa_id
-
-LEFT JOIN empresa.departamentos dep_h
-       ON dep_h.id = cp.departamento_id
-
-LEFT JOIN empresa.centros_custo cc_h
-       ON cc_h.id = cp.centro_custo_id
-
-LEFT JOIN empresa.filiais fil
-       ON fil.id = cp.filial_id
-
-LEFT JOIN empresa.unidades_negocio un
-       ON un.id = cp.unidade_negocio_id
-
-ORDER BY
-  cp.data_vencimento DESC,
-  cp.id DESC
-      `.replace(/\n\s+/g, ' ').trim()
-
-      const rows = await runQuery<Record<string, unknown>>(headerSql, [])
-      const total = rows.length
-      return Response.json({ success: true, view, page, pageSize, total, rows, sql: headerSql, params: '[]' }, { headers: { 'Cache-Control': 'no-store' } })
     } else if (view === 'contas-a-pagar-cabecalhos' || view === 'contas-a-pagar-cabecalhos') {
       // Contas a Pagar — Cabeçalhos (query solicitada)
       try {
@@ -252,68 +203,6 @@ GROUP BY
 ORDER BY
   pe.data_pagamento DESC,
   pe.id DESC`.replace(/\n\s+/g, ' ').trim()
-
-      const rows = await runQuery<Record<string, unknown>>(sql, [])
-      const total = rows.length
-      return Response.json({ success: true, view, page, pageSize, total, rows, sql, params: '[]' }, { headers: { 'Cache-Control': 'no-store' } })
-    } else if (view === 'contas-a-receber') {
-      // Contas a Receber — query atualizada (inclui centro_lucro e remove centro_custo)
-      const sql = `
-SELECT
-  cr.id                                AS conta_receber_id,
-
-  cr.numero_documento,
-  cr.tipo_documento,
-  cr.status,
-  cr.data_documento,
-  cr.data_lancamento,
-  cr.data_vencimento,
-
-  cli.id                               AS cliente_id,
-  cli.nome_fantasia                    AS cliente,
-  cli.imagem_url                       AS cliente_imagem_url,
-
-  cat_h.nome                           AS categoria_financeira,
-  cat_r.nome                           AS categoria_receita,
-
-  dep_h.nome                           AS departamento,
-  cl.nome                              AS centro_lucro,
-  fil.nome                             AS filial,
-  un.nome                              AS unidade_negocio,
-
-  cr.valor_bruto,
-  cr.valor_desconto,
-  cr.valor_impostos,
-  cr.valor_liquido,
-
-  cr.observacao                        AS descricao
-
-FROM financeiro.contas_receber cr
-
-LEFT JOIN entidades.clientes cli
-       ON cli.id = cr.cliente_id
-
-LEFT JOIN financeiro.categorias_financeiras cat_h
-       ON cat_h.id = cr.categoria_financeira_id
-
-LEFT JOIN financeiro.categorias_receita cat_r
-       ON cat_r.id = cr.categoria_receita_id
-
-LEFT JOIN empresa.departamentos dep_h
-       ON dep_h.id = cr.departamento_id
-
-LEFT JOIN empresa.centros_lucro cl
-       ON cl.id = cr.centro_lucro_id
-
-LEFT JOIN empresa.filiais fil
-       ON fil.id = cr.filial_id
-
-LEFT JOIN empresa.unidades_negocio un
-       ON un.id = cr.unidade_negocio_id
-
-ORDER BY
-  cr.data_vencimento DESC,
-  cr.id DESC`.replace(/\n\s+/g, ' ').trim()
 
       const rows = await runQuery<Record<string, unknown>>(sql, [])
       const total = rows.length
