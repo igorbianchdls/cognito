@@ -3,7 +3,7 @@
 import type { UIMessage, ToolUIPart } from 'ai'
 import { Reasoning, ReasoningTrigger, ReasoningContent } from '@/components/ai-elements/reasoning'
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/components/ai-elements/tool'
-import { DocumentoToolPart } from '@/components/navigation/agentes/workflows/exec/tools/DocumentoToolPart'
+import { renderCodexToolPart } from '@/products/chat/codex/ui/toolRegistry'
 
 type TextPart = { type: 'text'; text: string }
 type ReasoningPart = { type: 'reasoning'; content?: string; text?: string; state?: string }
@@ -57,9 +57,8 @@ export default function AssistantMessage({ message }: { message: UIMessage }) {
 
       {tools.map((p, idx) => {
         const part = p as ToolUIPart & AnyPart
-        if (part.type === 'tool-documento') {
-          return <DocumentoToolPart key={`doc-${part.toolCallId || idx}`} part={part} idx={idx} />
-        }
+        const customToolUi = renderCodexToolPart(part, idx)
+        if (customToolUi) return customToolUi
         const callId = part.toolCallId || String(idx)
         const shouldBeOpen = part.state === 'output-available' || part.state === 'output-error'
         const t = part.type as string
