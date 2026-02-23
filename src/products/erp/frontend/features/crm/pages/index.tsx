@@ -19,6 +19,7 @@ import StatusBadge from '@/products/erp/frontend/components/StatusBadge'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, moduleUiActions } from '@/products/erp/state/moduleUiStore'
 import type { Opcao } from '@/products/erp/frontend/components/TabsNav'
 import { Briefcase, UserPlus, CalendarClock, MessageSquare, Package, GitBranch, Building2, Users } from 'lucide-react'
+import { fontVar, formatDate, formatBRL } from '@/products/erp/frontend/features/crm/utils/formatting'
 
 type Row = TableData
 
@@ -79,13 +80,6 @@ export default function ModulosCrmPage() {
     })
   }, [])
 
-  const fontVar = (name?: string) => {
-    if (!name) return undefined
-    if (name === 'Inter') return 'var(--font-inter)'
-    if (name === 'Geist') return 'var(--font-geist-sans)'
-    return name
-  }
-
   const [data, setData] = useState<Row[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -94,23 +88,6 @@ export default function ModulosCrmPage() {
   const [pageSize, setPageSize] = useState<number>(20)
   const [total, setTotal] = useState<number>(0)
   const [refreshKey, setRefreshKey] = useState<number>(0)
-
-  const formatDate = (value?: unknown, withTime?: boolean) => {
-    if (!value) return ''
-    try {
-      const d = new Date(String(value))
-      if (isNaN(d.getTime())) return String(value)
-      return d.toLocaleString('pt-BR', withTime ? { dateStyle: 'short', timeStyle: 'short' } : { dateStyle: 'short' })
-    } catch {
-      return String(value)
-    }
-  }
-
-  const formatBRL = (value?: unknown) => {
-    const n = Number(value ?? 0)
-    if (isNaN(n)) return String(value ?? '')
-    return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-  }
 
   const renderOportunidadeProdutos = (row: Row) => {
     const oportunidadeRow = row as OportunidadeProdutosRow

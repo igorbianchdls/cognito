@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { runQuery } from '@/lib/postgres'
+import { buildVendasDashboardRequest } from './request'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
@@ -8,36 +9,8 @@ export const revalidate = 0
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
-    const de = searchParams.get('de') || undefined
-    const ate = searchParams.get('ate') || undefined
-    const limitParam = searchParams.get('limit') || undefined
-  const limit = Math.max(1, Math.min(50, limitParam ? Number(limitParam) : 5))
-
-    // WHERE for pedidos (p)
-    const pConds: string[] = []
-    const pParams: unknown[] = []
-    let pi = 1
-    if (de) { pConds.push(`p.data_pedido >= $${pi++}`); pParams.push(de) }
-    if (ate) { pConds.push(`p.data_pedido <= $${pi++}`); pParams.push(ate) }
-    const pWhere = pConds.length ? `WHERE ${pConds.join(' AND ')}` : ''
-    // Reusable WHERE for canais de distribuição: período + status concluído
-    const cdWhere = pWhere ? `${pWhere} AND p.status = 'concluido'` : `WHERE p.status = 'concluido'`
-
-    // WHERE for comercial.vw_vendas_metas (vm)
-    const vmConds: string[] = []
-    const vmParams: unknown[] = []
-    // Keep param order consistent with pWhere (de then ate)
-    if (de) { vmConds.push(`data_pedido >= $${vmParams.length + 1}`); vmParams.push(de) }
-    if (ate) { vmConds.push(`data_pedido <= $${vmParams.length + 1}`); vmParams.push(ate) }
-    const vmWhere = vmConds.length ? `WHERE ${vmConds.join(' AND ')}` : ''
-
-    // WHERE for devolucoes (d)
-    const dConds: string[] = []
-    const dParams: unknown[] = []
-    let di = 1
-    if (de) { dConds.push(`d.data_devolucao >= $${di++}`); dParams.push(de) }
-    if (ate) { dConds.push(`d.data_devolucao <= $${di++}`); dParams.push(ate) }
-    const dWhere = dConds.length ? `WHERE ${dConds.join(' AND ')}` : ''
+    const { de, ate, limit, pWhere, pParams, cdWhere, vmWhere, vmParams, dWhere, dParams } =
+      buildVendasDashboardRequest(searchParams)
 
     // KPI: vendas, pedidos, descontos
     const vendasSql = `SELECT COALESCE(SUM(pi.subtotal),0)::float AS vendas,

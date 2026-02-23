@@ -1,160 +1,35 @@
 import { NextRequest } from 'next/server';
 import { runQuery } from '@/lib/postgres';
 import { resolveTenantId } from '@/lib/tenant';
+import { ORDER_BY_WHITELIST } from './query/orderByWhitelist';
+import { parseCrmRequest } from './query/parseCrmRequest';
 
 export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
-  oportunidades: {
-    oportunidade: 'o.id',
-    nome: 'o.nome',
-    conta: 'ct.nome',
-    lead: 'l.nome',
-    lead_empresa: 'l.empresa',
-    cliente: 'cli.nome_fantasia',
-    vendedor: 'f.nome',
-    territorio: 't.nome',
-    fase: 'fp.nome',
-    ordem_fase: 'fp.ordem',
-    valor_estimado: 'o.valor_estimado',
-    probabilidade: 'o.probabilidade',
-    data_prevista: 'o.data_prevista',
-    status: 'o.status',
-    criado_em: 'o.criado_em',
-    atualizado_em: 'o.atualizado_em',
-  },
-  leads: {
-    lead: 'l.id',
-    nome: 'l.nome',
-    empresa: 'l.empresa',
-    email: 'l.email',
-    telefone: 'l.telefone',
-    origem: 'ol.nome',
-    responsavel: 'f.nome',
-    status: 'l.status',
-    tag: 'l.tag',
-    criado_em: 'l.criado_em',
-    atualizado_em: 'l.atualizado_em',
-  },
-  contas: {
-    conta: 'ct.id',
-    nome: 'ct.nome',
-    setor: 'ct.setor',
-    site: 'ct.site',
-    telefone: 'ct.telefone',
-    responsavel: 'f.nome',
-    criado_em: 'ct.criado_em',
-    atualizado_em: 'ct.atualizado_em',
-  },
-  contatos: {
-    contato: 'ctt.id',
-    nome: 'ctt.nome',
-    cargo: 'ctt.cargo',
-    email: 'ctt.email',
-    telefone: 'ctt.telefone',
-    conta: 'cta.nome',
-    responsavel: 'f.nome',
-    criado_em: 'ctt.criado_em',
-    atualizado_em: 'ctt.atualizado_em',
-  },
-  atividades: {
-    atividade: 'a.id',
-    lead: 'l.nome',
-    oportunidade: 'o.id',
-    conta: 'cta.nome',
-    contato: 'ctt.nome',
-    responsavel: 'f.nome',
-    tipo: 'a.tipo',
-    data_prevista: 'a.data_prevista',
-    data_conclusao: 'a.data_conclusao',
-    status: 'a.status',
-    criado_em: 'a.criado_em',
-    atualizado_em: 'a.atualizado_em',
-  },
-  interacoes: {
-    interacao: 'i.id',
-    lead: 'l.nome',
-    oportunidade: 'o.id',
-    conta: 'cta.nome',
-    contato: 'ctt.nome',
-    responsavel: 'f.nome',
-    canal: 'i.canal',
-    data_interacao: 'i.data_interacao',
-    criado_em: 'i.criado_em',
-    atualizado_em: 'i.atualizado_em',
-  },
-  oportunidades_produtos: {
-    oportunidade: 'o.id',
-    nome: 'o.nome',
-    conta: 'ct.nome',
-    lead: 'l.nome',
-    empresa_lead: 'l.empresa',
-    vendedor: 'f.nome',
-    territorio: 't.nome',
-    fase: 'fp.nome',
-    ordem_fase: 'fp.ordem',
-    produto: 'pr.nome',
-    valor_estimado: 'o.valor_estimado',
-    status: 'o.status',
-    data_prevista: 'o.data_prevista',
-    criado_em: 'o.criado_em',
-    atualizado_em: 'o.atualizado_em',
-  },
-  pipeline: {
-    pipeline: 'p.nome',
-    fase: 'fp.nome',
-    ordem_fase: 'fp.ordem',
-    oportunidade: 'o.id',
-    nome: 'o.nome',
-    conta: 'ct.nome',
-    lead: 'l.nome',
-    empresa_lead: 'l.empresa',
-    vendedor: 'f.nome',
-    territorio: 't.nome',
-    valor_estimado: 'o.valor_estimado',
-    probabilidade: 'o.probabilidade',
-    status: 'o.status',
-    data_prevista: 'o.data_prevista',
-    criado_em: 'o.criado_em',
-    atualizado_em: 'o.atualizado_em',
-  },
-};
-
-const parseNumber = (v: string | null, fb?: number) => (v ? Number(v) : fb);
-
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const view = (searchParams.get('view') || '').toLowerCase();
+    const {
+      view,
+      de,
+      ate,
+      q,
+      responsavel_id,
+      status,
+      origem,
+      tipo,
+      canal,
+      page,
+      pageSize,
+      offset,
+      orderBy,
+      orderDir,
+    } = parseCrmRequest(searchParams, ORDER_BY_WHITELIST);
     if (!view) return Response.json({ success: false, message: 'Parâmetro view é obrigatório' }, { status: 400 });
 
     const tenantId = resolveTenantId(req.headers);
-
-    // Common filters
-    const de = searchParams.get('de') || undefined;
-    const ate = searchParams.get('ate') || undefined;
-    const q = searchParams.get('q') || undefined;
-    const responsavel_id = searchParams.get('responsavel_id') || undefined; // usuarioid
-
-    // Specific filters
-    const status = searchParams.get('status') || undefined;
-    const origem = searchParams.get('origem') || undefined;
-    const tipo = searchParams.get('tipo') || undefined;
-    const canal = searchParams.get('canal') || undefined;
-
-    // Pagination
-    const page = Math.max(1, parseNumber(searchParams.get('page'), 1) || 1);
-    const pageSize = Math.max(1, Math.min(1000, parseNumber(searchParams.get('pageSize'), 20) || 20));
-    const offset = (page - 1) * pageSize;
-
-    // Sorting
-    const orderByParam = (searchParams.get('order_by') || '').toLowerCase();
-    const orderDirParam = (searchParams.get('order_dir') || 'desc').toLowerCase();
-    const whitelist = ORDER_BY_WHITELIST[view] || {};
-    const orderBy = whitelist[orderByParam] || undefined;
-    const orderDir = orderDirParam === 'asc' ? 'ASC' : 'DESC';
 
     const conditions: string[] = [];
     const params: unknown[] = [];

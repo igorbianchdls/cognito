@@ -6,12 +6,15 @@ import { maybeHandleExtratoGroupedView } from './views/extratoGrouped';
 import { maybeHandleKpisView } from './views/kpis';
 import { maybeHandleFinanceiroContasAPagarView } from './views/contasAPagar';
 import { maybeHandleFinanceiroContasAReceberView } from './views/contasAReceber';
+import { maybeHandleFinanceiroPagamentosEfetuadosView } from './views/pagamentosEfetuados';
+import { maybeHandleFinanceiroPagamentosRecebidosView } from './views/pagamentosRecebidos';
+import { maybeHandleFinanceiroTop5ApView } from './views/top5Ap';
+import { maybeHandleFinanceiroTop5ArView } from './views/top5Ar';
+import { maybeHandleFinanceiroContasAPagarCabecalhosView } from './views/contasAPagarCabecalhos';
 
 export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
-
-const parseNumber = (v: string | null, fallback?: number) => (v ? Number(v) : fallback);
 
 export async function GET(req: NextRequest) {
   try {
@@ -73,6 +76,28 @@ export async function GET(req: NextRequest) {
     parsed: { view, de, ate, status, cliente_id, fornecedor_id, valor_min, valor_max, conta_id, categoria_id, tipo, page, pageSize, offset, orderBy, orderDir },
   });
   if (contasAReceberResponse) return contasAReceberResponse;
+  const pagamentosEfetuadosResponse = await maybeHandleFinanceiroPagamentosEfetuadosView({
+    parsed: { view, de, ate, status, cliente_id, fornecedor_id, valor_min, valor_max, conta_id, categoria_id, tipo, page, pageSize, offset, orderBy, orderDir },
+  });
+  if (pagamentosEfetuadosResponse) return pagamentosEfetuadosResponse;
+  const pagamentosRecebidosResponse = await maybeHandleFinanceiroPagamentosRecebidosView({
+    parsed: { view, de, ate, status, cliente_id, fornecedor_id, valor_min, valor_max, conta_id, categoria_id, tipo, page, pageSize, offset, orderBy, orderDir },
+  });
+  if (pagamentosRecebidosResponse) return pagamentosRecebidosResponse;
+  const top5ApResponse = await maybeHandleFinanceiroTop5ApView({
+    searchParams,
+    parsed: { view, de, ate, status, cliente_id, fornecedor_id, valor_min, valor_max, conta_id, categoria_id, tipo, page, pageSize, offset, orderBy, orderDir },
+  });
+  if (top5ApResponse) return top5ApResponse;
+  const top5ArResponse = await maybeHandleFinanceiroTop5ArView({
+    searchParams,
+    parsed: { view, de, ate, status, cliente_id, fornecedor_id, valor_min, valor_max, conta_id, categoria_id, tipo, page, pageSize, offset, orderBy, orderDir },
+  });
+  if (top5ArResponse) return top5ArResponse;
+  const contasAPagarCabecalhosResponse = await maybeHandleFinanceiroContasAPagarCabecalhosView({
+    parsed: { view, de, ate, status, cliente_id, fornecedor_id, valor_min, valor_max, conta_id, categoria_id, tipo, page, pageSize, offset, orderBy, orderDir },
+  });
+  if (contasAPagarCabecalhosResponse) return contasAPagarCabecalhosResponse;
 
     if (view === 'aging') {
       return Response.json({ success: false, message: 'View removida (lancamentos_financeiros descontinuado)' }, { status: 410 });
@@ -86,293 +111,6 @@ export async function GET(req: NextRequest) {
       return Response.json({ success: false, message: 'View removida (lancamentos_financeiros descontinuado)' }, { status: 410 });
     } else if (view === 'top-receitas-centro-lucro') {
       return Response.json({ success: false, message: 'View removida (lancamentos_financeiros descontinuado)' }, { status: 410 });
-    } else if (view === 'contas-a-pagar-cabecalhos' || view === 'contas-a-pagar-cabecalhos') {
-      // Contas a Pagar — Cabeçalhos (query solicitada)
-      try {
-        const sql = `
-SELECT
-  cp.id                                AS conta_pagar_id,
-
-  cp.numero_documento,
-  cp.tipo_documento,
-  cp.status,
-  cp.data_documento,
-  cp.data_lancamento,
-  cp.data_vencimento,
-
-  f.id                                 AS fornecedor_id,
-  f.nome_fantasia                      AS fornecedor,
-  f.imagem_url                         AS fornecedor_imagem_url,
-
-  cat_h.nome                           AS categoria_despesa,
-
-  dep_h.nome                           AS departamento,
-  cc_h.nome                            AS centro_custo,
-  fil.nome                             AS filial,
-  un.nome                              AS unidade_negocio,
-
-  cp.valor_bruto,
-  cp.valor_desconto,
-  cp.valor_impostos,
-  cp.valor_liquido,
-
-  cp.observacao                        AS descricao
-
-FROM financeiro.contas_pagar cp
-
-LEFT JOIN entidades.fornecedores f
-       ON f.id = cp.fornecedor_id
-
-LEFT JOIN financeiro.categorias_despesa cat_h
-       ON cat_h.id = cp.categoria_despesa_id
-
-LEFT JOIN empresa.departamentos dep_h
-       ON dep_h.id = cp.departamento_id
-
-LEFT JOIN empresa.centros_custo cc_h
-       ON cc_h.id = cp.centro_custo_id
-
-LEFT JOIN empresa.filiais fil
-       ON fil.id = cp.filial_id
-
-LEFT JOIN empresa.unidades_negocio un
-       ON un.id = cp.unidade_negocio_id
-
-ORDER BY
-  cp.data_vencimento DESC,
-  cp.id DESC;`.replace(/\n\s+/g, ' ').trim()
-
-        const rows = await runQuery<Record<string, unknown>>(sql, [])
-        const total = rows.length
-        return Response.json({ success: true, view, page, pageSize, total, rows, sql, params: '[]' }, { headers: { 'Cache-Control': 'no-store' } })
-      } catch (error) {
-        const msg = error instanceof Error ? error.message : String(error)
-        return Response.json({ success: false, message: msg }, { status: 400 })
-      }
-    } else if (view === 'pagamentos-efetuados') {
-      // Pagamentos Efetuados — query solicitada (pe/pel/cp/f/cf/mp)
-      const sql = `
-SELECT
-  pe.id                               AS pagamento_id,
-
-  pe.numero_pagamento,
-  pe.status,
-  pe.data_pagamento,
-  pe.data_lancamento,
-
-  f.nome_fantasia                     AS fornecedor,
-
-  cf.nome_conta                       AS conta_financeira,
-  mp.nome                             AS metodo_pagamento,
-
-  pe.valor_total_pagamento,
-
-  pe.observacao
-
-FROM financeiro.pagamentos_efetuados pe
-
--- ligações para descobrir o fornecedor
-LEFT JOIN financeiro.pagamentos_efetuados_linhas pel
-       ON pel.pagamento_id = pe.id
-
-LEFT JOIN financeiro.contas_pagar cp
-       ON cp.id = pel.conta_pagar_id
-
-LEFT JOIN entidades.fornecedores f
-       ON f.id = cp.fornecedor_id
-
--- banco / método
-LEFT JOIN financeiro.contas_financeiras cf
-       ON cf.id = pe.conta_financeira_id
-
-LEFT JOIN financeiro.metodos_pagamento mp
-       ON mp.id = pe.metodo_pagamento_id
-
-GROUP BY
-  pe.id,
-  pe.numero_pagamento,
-  pe.status,
-  pe.data_pagamento,
-  pe.data_lancamento,
-  f.nome_fantasia,
-  cf.nome_conta,
-  mp.nome,
-  pe.valor_total_pagamento,
-  pe.observacao
-
-ORDER BY
-  pe.data_pagamento DESC,
-  pe.id DESC`.replace(/\n\s+/g, ' ').trim()
-
-      const rows = await runQuery<Record<string, unknown>>(sql, [])
-      const total = rows.length
-      return Response.json({ success: true, view, page, pageSize, total, rows, sql, params: '[]' }, { headers: { 'Cache-Control': 'no-store' } })
-    } else if (view === 'top5-ap') {
-      // Top 5 por Contas a Pagar em aberto (status='aberto')
-      const dim = (searchParams.get('dim') || '').toLowerCase(); // fornecedor | centro_custo | filial | categoria | titulo
-      const limit = Math.max(1, Math.min(50, parseNumber(searchParams.get('limit'), 5) || 5));
-      const tenantId = parseNumber(searchParams.get('tenant_id'));
-
-      const params: unknown[] = []
-      let idx = 1
-      const filtros: string[] = []
-      const statusParam = (searchParams.get('status') || 'aberto').toLowerCase()
-      if (statusParam === 'aberto') {
-        filtros.push(`LOWER(cp.status) IN ('aberto','pendente','em_aberto','em aberto')`)
-      } else {
-        filtros.push(`LOWER(cp.status) = $${idx++}`)
-        params.push(statusParam)
-      }
-      if (de) { filtros.push(`cp.data_vencimento >= $${idx++}`); params.push(de) }
-      if (ate) { filtros.push(`cp.data_vencimento <= $${idx++}`); params.push(ate) }
-      if (tenantId) { filtros.push(`cp.tenant_id = $${idx++}`); params.push(tenantId) }
-      const where = filtros.length ? `WHERE ${filtros.join(' AND ')}` : ''
-
-      if (dim === 'titulo') {
-        // Top 5 títulos (individuais)
-        const sql = `
-          SELECT cp.id AS conta_pagar_id,
-                 COALESCE(NULLIF(TRIM(cp.numero_documento), ''), CONCAT('Conta #', cp.id::text)) AS label,
-                 cp.valor_liquido AS total
-            FROM financeiro.contas_pagar cp
-            ${where}
-           ORDER BY cp.valor_liquido DESC NULLS LAST
-           LIMIT ${limit}
-        `.replace(/\n\s+/g, ' ').trim()
-        const rows = await runQuery<{ conta_pagar_id: number; label: string; total: number | null }>(sql, params)
-        return Response.json({ success: true, dim: 'titulo', rows, sql_query: sql, sql_params: params })
-      }
-
-      // Agrupados por dimensão
-      let labelExpr = ''
-      if (dim === 'fornecedor') labelExpr = "COALESCE(f.nome_fantasia, 'Sem fornecedor')"
-      else if (dim === 'centro_custo' || dim === 'centro-custo') labelExpr = "COALESCE(cc.nome, 'Sem centro de custo')"
-      else if (dim === 'filial') labelExpr = "COALESCE(fil.nome, 'Sem filial')"
-      else if (dim === 'categoria') labelExpr = "COALESCE(cat.nome, 'Sem categoria')"
-      else if (dim === 'departamento') labelExpr = "COALESCE(dep.nome, 'Sem departamento')"
-      else if (dim === 'unidade_negocio' || dim === 'unidade-negocio') labelExpr = "COALESCE(un.nome, 'Sem unidade')"
-      else {
-        return Response.json({ success: false, message: "Parâmetro 'dim' inválido. Use 'fornecedor' | 'centro_custo' | 'filial' | 'categoria' | 'departamento' | 'unidade_negocio' | 'titulo'" }, { status: 400 })
-      }
-
-      const sql = `
-        SELECT ${labelExpr} AS label,
-               COALESCE(SUM(cp.valor_liquido), 0) AS total
-          FROM financeiro.contas_pagar cp
-          LEFT JOIN entidades.fornecedores f ON f.id = cp.fornecedor_id
-          LEFT JOIN empresa.centros_custo cc ON cc.id = cp.centro_custo_id
-          LEFT JOIN empresa.departamentos dep ON dep.id = cp.departamento_id
-          LEFT JOIN empresa.unidades_negocio un ON un.id = cp.unidade_negocio_id
-          LEFT JOIN empresa.filiais fil ON fil.id = cp.filial_id
-          LEFT JOIN financeiro.categorias_despesa cat ON cat.id = cp.categoria_despesa_id
-          ${where}
-         GROUP BY 1
-         ORDER BY total DESC NULLS LAST
-         LIMIT ${limit}
-      `.replace(/\n\s+/g, ' ').trim()
-      const rows = await runQuery<{ label: string; total: number | null }>(sql, params)
-      return Response.json({ success: true, dim, rows, sql_query: sql, sql_params: params })
-
-    } else if (view === 'top5-ar') {
-      // Top 5 por Contas a Receber (status='aberto') – categorias de receita e centros de lucro
-      const dim = (searchParams.get('dim') || '').toLowerCase(); // categoria | categoria_receita | centro_lucro
-      const limit = Math.max(1, Math.min(50, parseNumber(searchParams.get('limit'), 5) || 5));
-      const tenantId = parseNumber(searchParams.get('tenant_id'));
-
-      const params: unknown[] = []
-      let idx = 1
-      const filtros: string[] = []
-      const statusParam = (searchParams.get('status') || 'aberto').toLowerCase()
-      if (statusParam === 'aberto') {
-        filtros.push(`LOWER(cr.status) IN ('aberto','pendente','em_aberto','em aberto')`)
-      } else {
-        filtros.push(`LOWER(cr.status) = $${idx++}`)
-        params.push(statusParam)
-      }
-      if (de) { filtros.push(`cr.data_vencimento >= $${idx++}`); params.push(de) }
-      if (ate) { filtros.push(`cr.data_vencimento <= $${idx++}`); params.push(ate) }
-      if (tenantId) { filtros.push(`cr.tenant_id = $${idx++}`); params.push(tenantId) }
-      const where = filtros.length ? `WHERE ${filtros.join(' AND ')}` : ''
-
-      let labelExpr = ''
-      if (dim === 'categoria' || dim === 'categoria_receita') labelExpr = "COALESCE(cat.nome, 'Sem categoria')"
-      else if (dim === 'centro_lucro' || dim === 'centro-lucro') labelExpr = "COALESCE(cl.nome, 'Sem centro de lucro')"
-      else {
-        return Response.json({ success: false, message: "Parâmetro 'dim' inválido. Use 'categoria' | 'centro_lucro'" }, { status: 400 })
-      }
-
-      const sql = `
-        SELECT ${labelExpr} AS label,
-               COALESCE(SUM(cr.valor_liquido), 0) AS total
-          FROM financeiro.contas_receber cr
-          LEFT JOIN financeiro.categorias_receita cat ON cat.id = cr.categoria_receita_id
-          LEFT JOIN empresa.centros_lucro cl ON cl.id = cr.centro_lucro_id
-          ${where}
-         GROUP BY 1
-         ORDER BY total DESC NULLS LAST
-         LIMIT ${limit}
-      `.replace(/\n\s+/g, ' ').trim()
-      const rows = await runQuery<{ label: string; total: number | null }>(sql, params)
-      return Response.json({ success: true, dim, rows, sql_query: sql, sql_params: params })
-
-    } else if (view === 'pagamentos-recebidos') {
-      // Pagamentos Recebidos — query fornecida (pr/prl/cr/cli/cf/mp)
-      const sql = `
-SELECT
-  pr.id                               AS pagamento_recebido_id,
-
-  pr.numero_pagamento,
-  pr.status,
-  pr.data_recebimento,
-  pr.data_lancamento,
-
-  cli.nome_fantasia                   AS cliente,
-
-  cf.nome_conta                       AS conta_financeira,
-  mp.nome                             AS metodo_pagamento,
-
-  pr.valor_total_recebido,
-
-  pr.observacao
-
-FROM financeiro.pagamentos_recebidos pr
-
--- ligações para descobrir o cliente (vem das linhas)
-LEFT JOIN financeiro.pagamentos_recebidos_linhas prl
-       ON prl.pagamento_id = pr.id
-
-LEFT JOIN financeiro.contas_receber cr
-       ON cr.id = prl.conta_receber_id
-
-LEFT JOIN entidades.clientes cli
-       ON cli.id = cr.cliente_id
-
--- banco / método
-LEFT JOIN financeiro.contas_financeiras cf
-       ON cf.id = pr.conta_financeira_id
-
-LEFT JOIN financeiro.metodos_pagamento mp
-       ON mp.id = pr.metodo_pagamento_id
-
-GROUP BY
-  pr.id,
-  pr.numero_pagamento,
-  pr.status,
-  pr.data_recebimento,
-  pr.data_lancamento,
-  cli.nome_fantasia,
-  cf.nome_conta,
-  mp.nome,
-  pr.valor_total_recebido,
-  pr.observacao
-
-ORDER BY
-  pr.data_recebimento DESC,
-  pr.id DESC`.replace(/\n\s+/g, ' ').trim()
-
-      const rows = await runQuery<Record<string, unknown>>(sql, [])
-      const total = rows.length
-      return Response.json({ success: true, view, page, pageSize, total, rows, sql, params: '[]' }, { headers: { 'Cache-Control': 'no-store' } })
     } else if (view === 'extrato') {
       baseSql = `FROM financeiro.extratos_bancarios eb
                  LEFT JOIN financeiro.extrato_transacoes t ON t.extrato_id = eb.id

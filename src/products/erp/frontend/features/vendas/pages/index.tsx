@@ -19,6 +19,7 @@ import IconLabelHeader from '@/components/widgets/IconLabelHeader'
 import EntityDisplay from '@/products/erp/frontend/components/EntityDisplay'
 import StatusBadge from '@/products/erp/frontend/components/StatusBadge'
 import { Button } from '@/components/ui/button'
+import { fontVar, formatDate, formatBRL } from '@/products/erp/frontend/features/vendas/utils/formatting'
 
 type Row = TableData
 
@@ -77,14 +78,6 @@ export default function ModulosVendasPage() {
   const [total, setTotal] = useState<number>(0)
   const [refreshKey, setRefreshKey] = useState(0)
 
-  const fontVar = (name?: string) => {
-    if (!name) return undefined
-    if (name === 'Inter') return 'var(--font-inter)'
-    if (name === 'Geist') return 'var(--font-geist-sans)'
-    if (name === 'Barlow') return 'var(--font-barlow), "Barlow", sans-serif'
-    return name
-  }
-
   useEffect(() => {
     moduleUiActions.setTitulo({
       title: 'Vendas',
@@ -113,21 +106,6 @@ export default function ModulosVendasPage() {
     return <ShoppingCart className="h-4 w-4" />
   }
   const tabOptions: Opcao[] = useMemo(() => (tabs.options.map((opt) => ({ ...opt, icon: iconFor(opt.value) })) as Opcao[]), [tabs.options])
-
-  const formatDate = (value?: unknown) => {
-    if (!value) return ''
-    try {
-      const d = new Date(String(value))
-      if (isNaN(d.getTime())) return String(value)
-      return d.toLocaleDateString('pt-BR')
-    } catch { return String(value) }
-  }
-
-  const formatBRL = (value?: unknown) => {
-    const n = Number(value ?? 0)
-    if (isNaN(n)) return String(value ?? '')
-    return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-  }
 
   const renderPedidoItems = (row: Row) => {
     const pedidoRow = row as PedidoRow

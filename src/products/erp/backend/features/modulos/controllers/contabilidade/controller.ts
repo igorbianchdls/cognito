@@ -5,12 +5,14 @@ import { parseContabilidadeRequest } from './query/parseContabilidadeRequest'
 import { maybeHandleContabilidadeKpisView } from './views/kpis'
 import { maybeHandleContabilidadeDreTabelaView } from './views/dreTabela'
 import { maybeHandleContabilidadeDreSummaryView } from './views/dreSummary'
+import { maybeHandleContabilidadeBpSummaryView } from './views/bpSummary'
+import { maybeHandleContabilidadeDreComparisonView } from './views/dreComparison'
+import { maybeHandleContabilidadeBpComparisonView } from './views/bpComparison'
+import { maybeHandleContabilidadeOrcamentosView } from './views/orcamentos'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
-
-const parseNumber = (v: string | null, fallback?: number) => (v ? Number(v) : fallback)
 
 export async function GET(req: NextRequest) {
   try {
@@ -58,256 +60,22 @@ export async function GET(req: NextRequest) {
       parsed: { view, de, ate, cliente_id, fornecedor_id, page, pageSize, offset, orderBy, orderDir },
     })
     if (dreSummaryResponse) return dreSummaryResponse
-
-    if (view === 'bp-summary') {
-      const sql = `
-        SELECT
-          pc.codigo AS codigo_conta,
-          pc.nome   AS conta_contabil,
-
-          -- Saldo acumulado até 31/12/2025
-          COALESCE(SUM(
-            CASE
-              WHEN lc.data_lancamento <= DATE '2025-12-31' THEN
-                CASE
-                  WHEN pc.codigo LIKE '1%' THEN (COALESCE(lcl.debito,0) - COALESCE(lcl.credito,0))
-                  WHEN pc.codigo LIKE '2%' THEN (COALESCE(lcl.credito,0) - COALESCE(lcl.debito,0))
-                  WHEN pc.codigo LIKE '3%' THEN (COALESCE(lcl.credito,0) - COALESCE(lcl.debito,0))
-                  ELSE 0
-                END
-              ELSE 0
-            END
-          ), 0) AS realizado_dez_2025,
-
-          -- Saldo acumulado até 30/11/2025
-          COALESCE(SUM(
-            CASE
-              WHEN lc.data_lancamento <= DATE '2025-11-30' THEN
-                CASE
-                  WHEN pc.codigo LIKE '1%' THEN (COALESCE(lcl.debito,0) - COALESCE(lcl.credito,0))
-                  WHEN pc.codigo LIKE '2%' THEN (COALESCE(lcl.credito,0) - COALESCE(lcl.debito,0))
-                  WHEN pc.codigo LIKE '3%' THEN (COALESCE(lcl.credito,0) - COALESCE(lcl.debito,0))
-                  ELSE 0
-                END
-              ELSE 0
-            END
-          ), 0) AS realizado_nov_2025,
-
-          -- Saldo acumulado até 31/10/2025
-          COALESCE(SUM(
-            CASE
-              WHEN lc.data_lancamento <= DATE '2025-10-31' THEN
-                CASE
-                  WHEN pc.codigo LIKE '1%' THEN (COALESCE(lcl.debito,0) - COALESCE(lcl.credito,0))
-                  WHEN pc.codigo LIKE '2%' THEN (COALESCE(lcl.credito,0) - COALESCE(lcl.debito,0))
-                  WHEN pc.codigo LIKE '3%' THEN (COALESCE(lcl.credito,0) - COALESCE(lcl.debito,0))
-                  ELSE 0
-                END
-              ELSE 0
-            END
-          ), 0) AS realizado_out_2025,
-
-          -- Saldo acumulado até 30/09/2025
-          COALESCE(SUM(
-            CASE
-              WHEN lc.data_lancamento <= DATE '2025-09-30' THEN
-                CASE
-                  WHEN pc.codigo LIKE '1%' THEN (COALESCE(lcl.debito,0) - COALESCE(lcl.credito,0))
-                  WHEN pc.codigo LIKE '2%' THEN (COALESCE(lcl.credito,0) - COALESCE(lcl.debito,0))
-                  WHEN pc.codigo LIKE '3%' THEN (COALESCE(lcl.credito,0) - COALESCE(lcl.debito,0))
-                  ELSE 0
-                END
-              ELSE 0
-            END
-          ), 0) AS realizado_set_2025
-
-        FROM contabilidade.plano_contas pc
-        LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl
-          ON lcl.conta_id = pc.id
-        LEFT JOIN contabilidade.lancamentos_contabeis lc
-          ON lc.id = lcl.lancamento_id
-        WHERE pc.codigo LIKE '1%'
-           OR pc.codigo LIKE '2%'
-           OR pc.codigo LIKE '3%'
-        GROUP BY pc.codigo, pc.nome
-        ORDER BY pc.codigo`;
-
-      const rows = await runQuery<{
-        codigo_conta: string;
-        conta_contabil: string;
-        realizado_dez_2025: number | null;
-        realizado_nov_2025: number | null;
-        realizado_out_2025: number | null;
-        realizado_set_2025: number | null;
-      }>(sql, [])
-      return Response.json({ success: true, view, rows, sql }, { headers: { 'Cache-Control': 'no-store' } })
-    }
-
-    if (view === 'dre-comparison') {
-      const sql = `
-        SELECT
-          pc.codigo AS codigo_conta,
-          pc.nome   AS conta_contabil,
-
-          -- Dezembro 2025
-          SUM(
-            CASE
-              WHEN pc.codigo LIKE '4%' AND date_trunc('month', lc.data_lancamento) = DATE '2025-12-01' THEN lcl.credito
-              WHEN pc.codigo LIKE '5%' AND date_trunc('month', lc.data_lancamento) = DATE '2025-12-01' THEN lcl.debito
-              WHEN pc.codigo LIKE '6%' AND date_trunc('month', lc.data_lancamento) = DATE '2025-12-01' THEN lcl.debito
-              ELSE 0
-            END
-          ) AS realizado_dez_2025,
-
-          -- Novembro 2025
-          SUM(
-            CASE
-              WHEN pc.codigo LIKE '4%' AND date_trunc('month', lc.data_lancamento) = DATE '2025-11-01' THEN lcl.credito
-              WHEN pc.codigo LIKE '5%' AND date_trunc('month', lc.data_lancamento) = DATE '2025-11-01' THEN lcl.debito
-              WHEN pc.codigo LIKE '6%' AND date_trunc('month', lc.data_lancamento) = DATE '2025-11-01' THEN lcl.debito
-              ELSE 0
-            END
-          ) AS realizado_nov_2025,
-
-          -- Dezembro 2024
-          SUM(
-            CASE
-              WHEN pc.codigo LIKE '4%' AND date_trunc('month', lc.data_lancamento) = DATE '2024-12-01' THEN lcl.credito
-              WHEN pc.codigo LIKE '5%' AND date_trunc('month', lc.data_lancamento) = DATE '2024-12-01' THEN lcl.debito
-              WHEN pc.codigo LIKE '6%' AND date_trunc('month', lc.data_lancamento) = DATE '2024-12-01' THEN lcl.debito
-              ELSE 0
-            END
-          ) AS realizado_dez_2024
-
-        FROM contabilidade.plano_contas pc
-        LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl
-          ON lcl.conta_id = pc.id
-        LEFT JOIN contabilidade.lancamentos_contabeis lc
-          ON lc.id = lcl.lancamento_id
-        WHERE pc.codigo LIKE '4%'
-           OR pc.codigo LIKE '5%'
-           OR pc.codigo LIKE '6%'
-        GROUP BY pc.codigo, pc.nome
-        ORDER BY pc.codigo`;
-
-      const rows = await runQuery<{
-        codigo_conta: string;
-        conta_contabil: string;
-        realizado_dez_2025: number | null;
-        realizado_nov_2025: number | null;
-        realizado_dez_2024: number | null;
-      }>(sql, [])
-      return Response.json({ success: true, view, rows, sql }, { headers: { 'Cache-Control': 'no-store' } })
-    }
-
-    if (view === 'bp-comparison') {
-      const sql = `
-        SELECT
-          pc.codigo AS codigo_conta,
-          pc.nome   AS conta_contabil,
-
-          -- Saldo acumulado até 31/12/2025
-          COALESCE(SUM(
-            CASE
-              WHEN lc.data_lancamento <= DATE '2025-12-31' THEN
-                CASE
-                  WHEN pc.codigo LIKE '1%' THEN (COALESCE(lcl.debito,0) - COALESCE(lcl.credito,0))
-                  WHEN pc.codigo LIKE '2%' THEN (COALESCE(lcl.credito,0) - COALESCE(lcl.debito,0))
-                  WHEN pc.codigo LIKE '3%' THEN (COALESCE(lcl.credito,0) - COALESCE(lcl.debito,0))
-                  ELSE 0
-                END
-              ELSE 0
-            END
-          ), 0) AS saldo_dez_2025,
-
-          -- Saldo acumulado até 30/11/2025
-          COALESCE(SUM(
-            CASE
-              WHEN lc.data_lancamento <= DATE '2025-11-30' THEN
-                CASE
-                  WHEN pc.codigo LIKE '1%' THEN (COALESCE(lcl.debito,0) - COALESCE(lcl.credito,0))
-                  WHEN pc.codigo LIKE '2%' THEN (COALESCE(lcl.credito,0) - COALESCE(lcl.debito,0))
-                  WHEN pc.codigo LIKE '3%' THEN (COALESCE(lcl.credito,0) - COALESCE(lcl.debito,0))
-                  ELSE 0
-                END
-              ELSE 0
-            END
-          ), 0) AS saldo_nov_2025,
-
-          -- Saldo acumulado até 31/12/2024
-          COALESCE(SUM(
-            CASE
-              WHEN lc.data_lancamento <= DATE '2024-12-31' THEN
-                CASE
-                  WHEN pc.codigo LIKE '1%' THEN (COALESCE(lcl.debito,0) - COALESCE(lcl.credito,0))
-                  WHEN pc.codigo LIKE '2%' THEN (COALESCE(lcl.credito,0) - COALESCE(lcl.debito,0))
-                  WHEN pc.codigo LIKE '3%' THEN (COALESCE(lcl.credito,0) - COALESCE(lcl.debito,0))
-                  ELSE 0
-                END
-              ELSE 0
-            END
-          ), 0) AS saldo_dez_2024
-
-        FROM contabilidade.plano_contas pc
-        LEFT JOIN contabilidade.lancamentos_contabeis_linhas lcl
-          ON lcl.conta_id = pc.id
-        LEFT JOIN contabilidade.lancamentos_contabeis lc
-          ON lc.id = lcl.lancamento_id
-        WHERE pc.codigo LIKE '1%'
-           OR pc.codigo LIKE '2%'
-           OR pc.codigo LIKE '3%'
-        GROUP BY pc.codigo, pc.nome
-        ORDER BY pc.codigo`;
-
-      const rows = await runQuery<{
-        codigo_conta: string;
-        conta_contabil: string;
-        saldo_dez_2025: number | null;
-        saldo_nov_2025: number | null;
-        saldo_dez_2024: number | null;
-      }>(sql, [])
-      return Response.json({ success: true, view, rows, sql }, { headers: { 'Cache-Control': 'no-store' } })
-    }
-
-    if (view === 'orcamentos') {
-      const sql = `
-        SELECT
-          o.id            AS orcamento_id,
-          o.nome          AS orcamento_nome,
-          o.ano           AS orcamento_ano,
-          o.versao        AS orcamento_versao,
-          o.status        AS orcamento_status,
-          o.descricao     AS orcamento_descricao,
-          o.criado_em     AS orcamento_criado_em,
-          o.atualizado_em AS orcamento_atualizado_em,
-
-          l.id            AS linha_id,
-          l.mes           AS linha_mes,
-          l.valor_debito  AS valor_debito,
-          l.valor_credito AS valor_credito,
-          l.observacao    AS linha_observacao,
-          l.criado_em     AS linha_criado_em,
-          l.atualizado_em AS linha_atualizado_em,
-
-          pc.id           AS plano_conta_id,
-          pc.codigo       AS plano_conta_codigo,
-          pc.nome         AS plano_conta_nome
-
-        FROM contabilidade.orcamentos_contabeis o
-        LEFT JOIN contabilidade.orcamentos_contabeis_linhas l
-          ON l.orcamento_id = o.id
-        LEFT JOIN contabilidade.plano_contas pc
-          ON pc.id = l.conta_id
-        ORDER BY
-          o.ano DESC,
-          o.nome,
-          o.versao,
-          l.mes,
-          pc.codigo`;
-
-      const rows = await runQuery<Record<string, unknown>>(sql, [])
-      return Response.json({ success: true, view, rows, sql }, { headers: { 'Cache-Control': 'no-store' } })
-    }
+    const bpSummaryResponse = await maybeHandleContabilidadeBpSummaryView({
+      parsed: { view, de, ate, cliente_id, fornecedor_id, page, pageSize, offset, orderBy, orderDir },
+    })
+    if (bpSummaryResponse) return bpSummaryResponse
+    const dreComparisonResponse = await maybeHandleContabilidadeDreComparisonView({
+      parsed: { view, de, ate, cliente_id, fornecedor_id, page, pageSize, offset, orderBy, orderDir },
+    })
+    if (dreComparisonResponse) return dreComparisonResponse
+    const bpComparisonResponse = await maybeHandleContabilidadeBpComparisonView({
+      parsed: { view, de, ate, cliente_id, fornecedor_id, page, pageSize, offset, orderBy, orderDir },
+    })
+    if (bpComparisonResponse) return bpComparisonResponse
+    const orcamentosResponse = await maybeHandleContabilidadeOrcamentosView({
+      parsed: { view, de, ate, cliente_id, fornecedor_id, page, pageSize, offset, orderBy, orderDir },
+    })
+    if (orcamentosResponse) return orcamentosResponse
 
     // Balanço Patrimonial em tabela simples (Ativo, Passivo, PL)
     if (view === 'balanco-tabela') {
