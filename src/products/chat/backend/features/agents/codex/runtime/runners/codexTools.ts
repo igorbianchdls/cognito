@@ -776,7 +776,7 @@ const baseTools = [
   {
     type: 'function',
     name: 'crud',
-    description: 'Tool ERP canônica para listar/criar/atualizar/deletar recursos de negócio. Use somente `resource` da lista canônica (com hífen, nunca underscore). Para consultas, prefira `action="listar"` com filtros em `params` (e `data` quando necessário).',
+    description: 'Tool ERP canônica para listar/criar/atualizar/deletar recursos de negócio. Use somente resource da lista canônica (com hífen, nunca underscore). Para consultas, prefira action="listar" com filtros em params (e data quando necessário).',
     parameters: {
       type: 'object',
       properties: {
@@ -816,7 +816,7 @@ const baseTools = [
   {
     type: 'function',
     name: 'drive',
-    description: 'Tool de Drive para listar/gerenciar arquivos e pastas, obter URL assinada, ler conteúdo e fazer upload. Prefira `resource="drive/files/upload-base64"` quando já tiver conteúdo em base64 (ex.: saída de `documento`); use `prepare-upload`/`complete-upload` para fluxos binários/externos.',
+    description: 'Tool de Drive para listar/gerenciar arquivos e pastas, obter URL assinada, ler conteúdo e fazer upload. Prefira resource="drive/files/upload-base64" quando já tiver conteúdo em base64 (ex.: saída de documento); use prepare-upload/complete-upload para fluxos binários/externos.',
     parameters: {
       type: 'object',
       properties: {
@@ -842,7 +842,7 @@ const baseTools = [
         data: {
           type: 'object',
           additionalProperties: true,
-          description: 'Body para action=request quando method for POST/DELETE. Em uploads, o backend também aceita campos top-level e normaliza para `data`.'
+          description: 'Body para action=request quando method for POST/DELETE. Em uploads, o backend também aceita campos top-level e normaliza para data.'
         },
         file_id: {
           type: 'string',
@@ -885,7 +885,7 @@ const baseTools = [
   {
     type: 'function',
     name: 'email',
-    description: 'Tool de Email para consultar inbox/messages e enviar emails. Prefira anexar por `drive_file_id`/`drive_file_ids` (backend resolve URL assinada); use URL/base64 (`attachments`/`attachment_url`) como fallback.',
+    description: 'Tool de Email para consultar inbox/messages e enviar emails. Prefira anexar por drive_file_id/drive_file_ids (backend resolve URL assinada); use URL/base64 (attachments/attachment_url) como fallback.',
     parameters: {
       type: 'object',
       properties: {
@@ -911,7 +911,7 @@ const baseTools = [
         data: {
           type: 'object',
           additionalProperties: true,
-          description: 'Body para action=request quando method for POST/DELETE. Em `email/messages`, `inbox_id`/`inboxId` também pode ser enviado top-level (backend normaliza).'
+          description: 'Body para action=request quando method for POST/DELETE. Em email/messages, inbox_id/inboxId também pode ser enviado top-level (backend normaliza).'
         },
         inbox_id: {
           type: 'string',
@@ -964,7 +964,7 @@ const baseTools = [
               url: { type: 'string' },
             },
           },
-          description: 'Lista de anexos para action=send. Cada item pode ter `url` ou `content` (base64), além de `filename`/`contentType`. Use quando não for usar `drive_file_id(s)`.'
+          description: 'Lista de anexos para action=send. Cada item pode ter url ou content (base64), além de filename/contentType. Use quando não for usar drive_file_id(s).'
         },
         drive_file_id: {
           type: 'string',
@@ -999,7 +999,7 @@ const baseTools = [
   {
     type: 'function',
     name: 'documento',
-    description: 'Gera e consulta documentos operacionais (OS/proposta/NFSe/fatura/contrato), retornando PDF. Com `save_to_drive=true`, tenta salvar no Drive e retornar metadados do arquivo; sem isso, retorna o PDF inline.',
+    description: 'Gera e consulta documentos operacionais (OS/proposta/NFSe/fatura/contrato), retornando PDF. Com save_to_drive=true, tenta salvar no Drive e retornar metadados do arquivo; sem isso, retorna o PDF inline.',
     parameters: {
       type: 'object',
       properties: {
@@ -1068,7 +1068,7 @@ const baseTools = [
   {
     type: 'function',
     name: 'Read',
-    description: 'Lê arquivo na sandbox do chat (padrão Claude SDK). `file_path` deve começar com `/vercel/sandbox`; `offset`/`limit` operam por linhas (não bytes).',
+    description: 'Lê arquivo na sandbox do chat (padrão Claude SDK). file_path deve começar com /vercel/sandbox; offset/limit operam por linhas (não bytes).',
     parameters: {
       type: 'object',
       properties: {
@@ -1092,7 +1092,7 @@ const baseTools = [
   {
     type: 'function',
     name: 'Skill',
-    description: 'Lista e lê skills na sandbox do chat. Procura em `/vercel/sandbox/agent/skills` (preferencial) e `/vercel/sandbox/agents/skills` (compatibilidade).',
+    description: 'Lista e lê skills na sandbox do chat. Procura em /vercel/sandbox/agent/skills (preferencial) e /vercel/sandbox/agents/skills (compatibilidade).',
     parameters: {
       type: 'object',
       properties: {
@@ -1129,7 +1129,7 @@ const baseTools = [
   {
     type: 'function',
     name: 'Edit',
-    description: 'Substitui texto exato em arquivo (padrão Claude SDK) via `fs-apply-patch`. `file_path` deve começar com `/vercel/sandbox` e a operação falha se `old_string` não corresponder exatamente.',
+    description: 'Substitui texto exato em arquivo (padrão Claude SDK) via fs-apply-patch. file_path deve começar com /vercel/sandbox e a operação falha se old_string não corresponder exatamente.',
     parameters: {
       type: 'object',
       properties: {
@@ -1157,7 +1157,7 @@ const baseTools = [
   {
     type: 'function',
     name: 'Write',
-    description: 'Cria ou sobrescreve completamente um arquivo texto via `fs-apply-patch`. `file_path` deve começar com `/vercel/sandbox`.',
+    description: 'Cria ou sobrescreve completamente um arquivo texto via fs-apply-patch. file_path deve começar com /vercel/sandbox.',
     parameters: {
       type: 'object',
       properties: {
@@ -1177,7 +1177,7 @@ const baseTools = [
   {
     type: 'function',
     name: 'Delete',
-    description: 'Remove arquivo na sandbox via `fs-apply-patch`. `file_path` deve começar com `/vercel/sandbox`.',
+    description: 'Remove arquivo na sandbox via fs-apply-patch. file_path deve começar com /vercel/sandbox.',
     parameters: {
       type: 'object',
       properties: {
@@ -1195,7 +1195,7 @@ const baseTools = [
     : [{
         type: 'function',
         name: 'shell',
-        description: 'Executa comandos shell no sandbox do chat. Prefira comandos curtos e use caminhos dentro de `/vercel/sandbox`.',
+        description: 'Executa comandos shell no sandbox do chat. Prefira comandos curtos e use caminhos dentro de /vercel/sandbox.',
         parameters: {
           type: 'object',
           properties: {
