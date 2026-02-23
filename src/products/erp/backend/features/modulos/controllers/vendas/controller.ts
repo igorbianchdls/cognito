@@ -1,111 +1,17 @@
 import { NextRequest } from 'next/server'
 import { runQuery } from '@/lib/postgres'
+import { ORDER_BY_WHITELIST } from './query/orderByWhitelist'
+import { parseVendasRequest } from './query/parseVendasRequest'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
-  pedidos: {
-    pedido: 'p.id',
-    // Nem todo schema possui a coluna numero_pedido; usar fallback seguro para ordenação
-    numero_pedido: 'p.id',
-    cliente: 'c.nome_fantasia',
-    vendedor: 'f.nome',
-    filial: 'fil.nome',
-    canal_venda: 'cv.nome',
-    data_pedido: 'p.data_pedido',
-    data_documento: 'p.data_documento',
-    data_lancamento: 'p.data_lancamento',
-    data_vencimento: 'p.data_vencimento',
-    status: 'p.status',
-    valor_total: 'p.valor_total',
-  },
-  devolucoes: {
-    devolucao: 'd.id',
-    pedido: 'p.id',
-    cliente: 'c.nome_fantasia',
-    motivo: 'd.motivo',
-    data_devolucao: 'd.data_devolucao',
-    valor_total: 'd.valor_total',
-    criado_em: 'd.criado_em',
-    atualizado_em: 'd.atualizado_em',
-  },
-  cupons: {
-    cupom: 'c.codigo',
-    tipo_desconto: 'c.tipo',
-    valor_desconto: 'c.valor',
-    valor_minimo: 'c.valor_minimo',
-    limite_uso_total: 'c.limite_uso_total',
-    limite_uso_por_cliente: 'c.limite_uso_por_cliente',
-    data_inicio: 'c.data_inicio',
-    data_fim: 'c.data_fim',
-    ativo: 'c.ativo',
-    criado_em: 'c.criado_em',
-    atualizado_em: 'c.atualizado_em',
-  },
-  canais: {
-    canal_venda: 'cv.id',
-    nome_canal_venda: 'cv.nome',
-    descricao_canal_venda: 'cv.descricao',
-    ativo: 'cv.ativo',
-    canal_distribuicao: 'cd.nome',
-    descricao_canal_distribuicao: 'cd.descricao',
-    criado_em: 'cv.criado_em',
-    atualizado_em: 'cv.atualizado_em',
-  },
-  tabelas_preco: {
-    tabela_preco: 'tp.id',
-    nome_tabela: 'tp.nome',
-    descricao: 'tp.descricao',
-    ativo: 'tp.ativo',
-    criado_em: 'tp.criado_em',
-    atualizado_em: 'tp.atualizado_em',
-  },
-  promocoes: {
-    promocao: 'pr.id',
-    nome_promocao: 'pr.nome',
-    tipo_desconto: 'pr.tipo',
-    valor_desconto: 'pr.valor',
-    valor_minimo: 'pr.valor_minimo',
-    data_inicio: 'pr.data_inicio',
-    data_fim: 'pr.data_fim',
-    ativo: 'pr.ativo',
-    criado_em: 'pr.criado_em',
-    atualizado_em: 'pr.atualizado_em',
-  },
-  regras_desconto: {
-    regra: 'rd.id',
-    nome_regra: 'rd.nome',
-    tipo_regra: 'rd.tipo',
-    quantidade_minima: 'rd.quantidade_minima',
-    valor_minimo: 'rd.valor_minimo',
-    tipo_desconto: 'rd.tipo_desconto',
-    valor_desconto: 'rd.valor_desconto',
-    ativo: 'rd.ativo',
-    referencia: 'cv.nome', // ordering by joined coalesce is complex; fallback to cv.nome
-    criado_em: 'rd.criado_em',
-    atualizado_em: 'rd.atualizado_em',
-  },
-}
-
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
-    const view = (searchParams.get('view') || '').toLowerCase()
+    const { view, page, pageSize, offset, orderBy, orderDir } = parseVendasRequest(searchParams, ORDER_BY_WHITELIST)
     if (!view) return Response.json({ success: false, message: 'Parâmetro view é obrigatório' }, { status: 400 })
-
-    // Paginação
-    const page = Math.max(1, Number(searchParams.get('page') || 1))
-    const pageSize = Math.max(1, Math.min(1000, Number(searchParams.get('pageSize') || 20)))
-    const offset = (page - 1) * pageSize
-
-    // Ordenação segura
-    const orderByParam = (searchParams.get('order_by') || '').toLowerCase()
-    const orderDirParam = (searchParams.get('order_dir') || 'asc').toLowerCase()
-    const whitelist = ORDER_BY_WHITELIST[view] || {}
-    const orderBy = whitelist[orderByParam]
-    const orderDir = orderDirParam === 'desc' ? 'DESC' : 'ASC'
 
     let selectSql = ''
     let baseSql = ''
