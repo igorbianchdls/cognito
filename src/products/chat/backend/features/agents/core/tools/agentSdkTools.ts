@@ -200,7 +200,7 @@ export const mcpERPServer = createSdkMcpServer({
   name: 'ERP',
   version: '1.0.0',
   tools: [
-    tool('crud','Executa ações CRUD genéricas', {
+    tool('crud','Tool ERP canônica para listar/criar/atualizar/deletar recursos de negócio. Use somente resource canônico (com hífen, nunca underscore). Resources suportados: financeiro/contas-financeiras, financeiro/categorias-despesa, financeiro/categorias-receita, financeiro/clientes, financeiro/centros-custo, financeiro/centros-lucro, vendas/pedidos, compras/pedidos, contas-a-pagar, contas-a-receber, crm/contas, crm/contatos, crm/leads, crm/oportunidades, crm/atividades, estoque/almoxarifados, estoque/movimentacoes, estoque/estoque-atual, estoque/tipos-movimentacao. Para consultas, prefira action=\"listar\" com filtros em params (e data quando necessário).', {
       action: z.enum(['listar','criar','atualizar','deletar']),
       resource: z.string().optional(),
       path: z.string().optional(),
@@ -209,7 +209,7 @@ export const mcpERPServer = createSdkMcpServer({
       actionSuffix: z.string().optional(),
       method: z.enum(['GET','POST']).optional(),
     }, async (args) => callBridge({ action: args.action, args })),
-    tool('documento','Gera/consulta documentos operacionais (PDF) e pode salvar no Drive com save_to_drive', {
+    tool('documento','Gera e consulta documentos operacionais (OS/proposta/NFSe/fatura/contrato), retornando PDF. Com save_to_drive=true, tenta salvar no Drive e retornar metadados do arquivo; sem isso, retorna o PDF inline.', {
       action: z.enum(['gerar','status']),
       tipo: z.enum(['proposta','os','fatura','contrato','nfse']).optional(),
       origem_tipo: z.string().optional(),
@@ -228,7 +228,7 @@ export const mcpERPServer = createSdkMcpServer({
       documento_id: z.number().int().optional(),
       tenant_id: z.number().int().optional(),
     }, async (args) => callDocumento(args)),
-    tool('drive','Acessa operações de Drive (listagem/URL/leitura/upload). Suporta upload direto via drive/files/upload-base64', {
+    tool('drive','Tool de Drive para listar/gerenciar arquivos e pastas, obter URL assinada, ler conteúdo e fazer upload. Prefira resource=\"drive/files/upload-base64\" quando já tiver conteúdo em base64 (ex.: saída de documento); use prepare-upload/complete-upload para fluxos binários/externos.', {
       action: z.enum(['request','read_file','get_file_url','get_drive_file_url']).default('request'),
       method: z.enum(['GET','POST','DELETE']).optional(),
       resource: z.string().optional(),
@@ -243,7 +243,7 @@ export const mcpERPServer = createSdkMcpServer({
       storage_path: z.string().optional(),
       mode: z.enum(['auto','text','binary']).optional(),
     }, async (args) => callDrive(args)),
-    tool('email','Acessa Email (inboxes/messages) e envia emails com anexos inline/URL/drive_file_id', {
+    tool('email','Tool de Email para consultar inbox/messages e enviar emails. Prefira anexar por drive_file_id/drive_file_ids (backend resolve URL assinada); use URL/base64 (attachments/attachment_url) como fallback.', {
       action: z.enum(['request','send','send_email']).default('request'),
       method: z.enum(['GET','POST','DELETE']).optional(),
       resource: z.string().optional(),

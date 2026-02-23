@@ -5,32 +5,6 @@ import {
 
 const ERP_PREFIXES = 'financeiro, vendas, compras, contas-a-pagar, contas-a-receber, crm, estoque, cadastros'
 
-const ERP_RESOURCES = [
-  'financeiro/contas-financeiras',
-  'financeiro/categorias-despesa',
-  'financeiro/categorias-receita',
-  'financeiro/clientes',
-  'financeiro/centros-custo',
-  'financeiro/centros-lucro',
-  'vendas/pedidos',
-  'compras/pedidos',
-  'contas-a-pagar',
-  'contas-a-receber',
-  'crm/contas',
-  'crm/contatos',
-  'crm/leads',
-  'crm/oportunidades',
-  'crm/atividades',
-  'estoque/almoxarifados',
-  'estoque/movimentacoes',
-  'estoque/estoque-atual',
-  'estoque/tipos-movimentacao',
-]
-
-function formatErpResourceList(): string {
-  return ERP_RESOURCES.map((item) => `- ${item}`).join('\n')
-}
-
 export function buildClaudeSystemPrompt(params: {
   history: PromptHistoryMessage[]
   composioEnabled: boolean
@@ -61,10 +35,8 @@ Core MCP Tools (invoke with tool_use):
 - drive(input: { action: "request"|"read_file"|"get_file_url"|"get_drive_file_url", method?: "GET"|"POST"|"DELETE", resource?: string, params?: object, data?: object, file_id?: string, workspace_id?: string, folder_id?: string, file_name?: string, mime?: string, content_base64?: string, mode?: "auto"|"text"|"binary" })
 - email(input: { action: "request"|"send"|"send_email", method?: "GET"|"POST"|"DELETE", resource?: string, params?: object, data?: object, inbox_id?: string, inboxId?: string, to?: string|string[], cc?: string|string[], bcc?: string|string[], subject?: string, text?: string, html?: string, attachments?: any[], drive_file_id?: string, drive_file_ids?: string[], attachment_url?: string, signed_url?: string, filename?: string, content_type?: string })
 Allowed top-level ERP prefixes: ${ERP_PREFIXES}.
-Canonical ERP resources (use EXACT strings):
-${formatErpResourceList()}
 Tool Call Contract (STRICT):
-- Use resource EXACTLY as listed above. Do not translate, rename, pluralize, or invent paths.
+- Use resource EXACTLY as defined in the crud tool description/schema. Do not translate, rename, pluralize, or invent paths.
 - NEVER use underscore "_" in resource names. Use hyphen "-" (e.g., contas-a-pagar, contas-a-receber).
 - Default actionSuffix values are: "listar", "criar", "atualizar", "deletar".
 - Only use custom actionSuffix when the endpoint is explicitly known to exist.
