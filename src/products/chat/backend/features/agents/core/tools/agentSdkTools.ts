@@ -9,7 +9,7 @@ type TimelineEntry = {
 
 const APP_TOOLS_SKILL_MD = `---
 name: App MCP Tools
-description: Uso das tools genéricas via MCP (listar, criar, atualizar, deletar).
+description: Uso das tools internas ERP (crud, documento, drive, email) via MCP.
 ---
 
 As tools disponíveis (apenas via MCP):
@@ -17,7 +17,9 @@ As tools disponíveis (apenas via MCP):
 - criar(input: { resource: string, data?: object, actionSuffix?: string, method?: "GET"|"POST" })
 - atualizar(input: { resource: string, data?: object, actionSuffix?: string, method?: "GET"|"POST" })
 - deletar(input: { resource: string, data?: object, actionSuffix?: string, method?: "GET"|"POST" })
-- documento(input: { action: "gerar"|"status", tipo?: "proposta"|"os"|"fatura"|"contrato"|"nfse", origem_tipo?: string, origem_id?: number, dados?: object, documento_id?: number, template_id?: number, template_version_id?: number, idempotency_key?: string })
+- documento(input: { action: "gerar"|"status", tipo?: "proposta"|"os"|"fatura"|"contrato"|"nfse", origem_tipo?: string, origem_id?: number, dados?: object, documento_id?: number, template_id?: number, template_version_id?: number, idempotency_key?: string, save_to_drive?: boolean, drive?: { workspace_id?: string, folder_id?: string, file_name?: string } })
+- drive(input: { action: "request"|"read_file"|"get_file_url", resource?: string, method?: "GET"|"POST"|"DELETE", params?: object, data?: object, file_id?: string, workspace_id?: string, folder_id?: string, file_name?: string, mime?: string, content_base64?: string })
+- email(input: { action: "request"|"send", resource?: string, method?: "GET"|"POST"|"DELETE", params?: object, data?: object, inbox_id?: string, inboxId?: string, to?: string|string[], subject?: string, text?: string, html?: string, attachments?: object[], drive_file_id?: string, drive_file_ids?: string[] })
 
 RECURSOS (resource) SUPORTADOS (use exatamente estes caminhos; não invente nomes):
 - financeiro/contas-financeiras
@@ -47,6 +49,9 @@ Regras:
 - Contexto operacional padrão: B2B serviços como núcleo. Estoque é domínio separado e não deve ser acoplado automaticamente em todo fluxo comercial.
 - Por padrão, listar usa actionSuffix="listar" e criar/atualizar/deletar usam seus sufixos homônimos.
 - Para proposta/OS/NFSe/fatura/contrato, use a tool documento (action gerar/status), não CRUD de documentos.
+- Documento pode gerar PDF e salvar no Drive na mesma chamada com save_to_drive=true e drive.workspace_id.
+- Para upload de arquivo gerado em base64, prefira drive resource="drive/files/upload-base64" (action=request).
+- Para enviar anexo já salvo no Drive, prefira email action="send" com drive_file_id (sem precisar obter signed_url manualmente).
 
 Exemplos:
 - Listar contas financeiras:
@@ -198,29 +203,41 @@ export const mcpERPServer = createSdkMcpServer({
       actionSuffix: z.string().optional(),
       method: z.enum(['GET','POST']).optional(),
     }, async (args) => callBridge({ action: args.action, args })),
-    tool('documento','Gera e consulta documentos operacionais (OS/proposta/NFSe/fatura/contrato)', {
+    tool('documento','Gera/consulta documentos operacionais (PDF) e pode salvar no Drive com save_to_drive', {
       action: z.enum(['gerar','status']),
       tipo: z.enum(['proposta','os','fatura','contrato','nfse']).optional(),
       origem_tipo: z.string().optional(),
       origem_id: z.number().int().optional(),
       titulo: z.string().optional(),
       dados: z.any().optional(),
+      save_to_drive: z.boolean().optional(),
+      drive: z.object({
+        workspace_id: z.string().optional(),
+        folder_id: z.string().optional(),
+        file_name: z.string().optional(),
+      }).optional(),
       template_id: z.number().int().optional(),
       template_version_id: z.number().int().optional(),
       idempotency_key: z.string().optional(),
       documento_id: z.number().int().optional(),
       tenant_id: z.number().int().optional(),
     }, async (args) => callDocumento(args)),
-    tool('drive','Acessa operações de Drive', {
+    tool('drive','Acessa operações de Drive (listagem/URL/leitura/upload). Suporta upload direto via drive/files/upload-base64', {
       action: z.enum(['request','read_file','get_file_url','get_drive_file_url']).default('request'),
       method: z.enum(['GET','POST','DELETE']).optional(),
       resource: z.string().optional(),
       params: z.any().optional(),
       data: z.any().optional(),
       file_id: z.string().optional(),
+      workspace_id: z.string().optional(),
+      folder_id: z.string().optional(),
+      file_name: z.string().optional(),
+      mime: z.string().optional(),
+      content_base64: z.string().optional(),
+      storage_path: z.string().optional(),
       mode: z.enum(['auto','text','binary']).optional(),
     }, async (args) => callDrive(args)),
-    tool('email','Acessa operações de Email', {
+    tool('email','Acessa Email (inboxes/messages) e envia emails com anexos inline/URL/drive_file_id', {
       action: z.enum(['request','send','send_email']).default('request'),
       method: z.enum(['GET','POST','DELETE']).optional(),
       resource: z.string().optional(),
@@ -228,14 +245,16 @@ export const mcpERPServer = createSdkMcpServer({
       data: z.any().optional(),
       inbox_id: z.string().optional(),
       inboxId: z.string().optional(),
-      to: z.any().optional(),
-      cc: z.any().optional(),
-      bcc: z.any().optional(),
+      to: z.union([z.string(), z.array(z.string())]).optional(),
+      cc: z.union([z.string(), z.array(z.string())]).optional(),
+      bcc: z.union([z.string(), z.array(z.string())]).optional(),
       labels: z.any().optional(),
       subject: z.string().optional(),
       text: z.string().optional(),
       html: z.string().optional(),
       attachments: z.any().optional(),
+      drive_file_id: z.string().optional(),
+      drive_file_ids: z.array(z.string()).optional(),
       attachment_url: z.string().optional(),
       signed_url: z.string().optional(),
       filename: z.string().optional(),

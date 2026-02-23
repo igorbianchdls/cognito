@@ -816,7 +816,7 @@ const baseTools = [
   {
     type: 'function',
     name: 'drive',
-    description: 'Tool de Drive. action="request" chama rotas permitidas de Drive; action="read_file" lê conteúdo (inclui extração de texto para PDF quando possível); action="get_file_url" retorna signed_url por file_id.',
+    description: 'Tool de Drive para listar/gerenciar arquivos e pastas, obter URL assinada, ler conteúdo e fazer upload (incluindo drive/files/upload-base64).',
     parameters: {
       type: 'object',
       properties: {
@@ -832,7 +832,7 @@ const baseTools = [
         },
         resource: {
           type: 'string',
-          description: 'Resource permitido para action=request: drive, drive/folders, drive/folders/{id}, drive/files/{id}, drive/files/{id}/download, drive/files/prepare-upload, drive/files/complete-upload.'
+          description: 'Resource permitido para action=request: drive, drive/folders, drive/folders/{id}, drive/files/{id}, drive/files/{id}/download, drive/files/prepare-upload, drive/files/complete-upload, drive/files/upload-base64.'
         },
         params: {
           type: 'object',
@@ -848,6 +848,30 @@ const baseTools = [
           type: 'string',
           description: 'UUID do arquivo no Drive para action=read_file e action=get_file_url.'
         },
+        workspace_id: {
+          type: 'string',
+          description: 'Workspace do Drive. Pode ser enviado top-level (backend normaliza para data/params).'
+        },
+        folder_id: {
+          type: 'string',
+          description: 'Pasta destino no Drive (opcional). Pode ser enviado top-level.'
+        },
+        file_name: {
+          type: 'string',
+          description: 'Nome do arquivo (ex.: em drive/files/upload-base64). Pode ser enviado top-level.'
+        },
+        mime: {
+          type: 'string',
+          description: 'MIME type do arquivo (ex.: application/pdf) para uploads.'
+        },
+        content_base64: {
+          type: 'string',
+          description: 'Conteúdo base64 para upload direto via resource=drive/files/upload-base64.'
+        },
+        storage_path: {
+          type: 'string',
+          description: 'Caminho no storage em fluxos avançados de upload/complete-upload.'
+        },
         mode: {
           type: 'string',
           enum: ['auto', 'text', 'binary'],
@@ -861,7 +885,7 @@ const baseTools = [
   {
     type: 'function',
     name: 'email',
-    description: 'Tool de Email. action="request" opera inbox/messages; action="send" envia email completo com anexos por URL/base64.',
+    description: 'Tool de Email. action="request" opera inbox/messages; action="send" envia email com anexos por URL/base64 ou por drive_file_id.',
     parameters: {
       type: 'object',
       properties: {
@@ -893,20 +917,21 @@ const baseTools = [
           type: 'string',
           description: 'Inbox para action=send.'
         },
+        inboxId: {
+          type: 'string',
+          description: 'Alias de inbox_id (compatibilidade).'
+        },
         to: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'Destinatários para action=send.'
+          oneOf: [{ type: 'string' }, { type: 'array', items: { type: 'string' } }],
+          description: 'Destinatários para action=send (string ou array).'
         },
         cc: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'CC opcional para action=send.'
+          oneOf: [{ type: 'string' }, { type: 'array', items: { type: 'string' } }],
+          description: 'CC opcional para action=send (string ou array).'
         },
         bcc: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'BCC opcional para action=send.'
+          oneOf: [{ type: 'string' }, { type: 'array', items: { type: 'string' } }],
+          description: 'BCC opcional para action=send (string ou array).'
         },
         labels: {
           type: 'array',
@@ -941,6 +966,15 @@ const baseTools = [
           },
           description: 'Lista de anexos para action=send. Cada item pode ter url ou content(base64), além de filename/contentType.'
         },
+        drive_file_id: {
+          type: 'string',
+          description: 'ID de arquivo no Drive para anexo automático (backend resolve signed_url).'
+        },
+        drive_file_ids: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Lista de IDs de arquivos no Drive para anexos automáticos.'
+        },
         attachment_url: {
           type: 'string',
           description: 'Atalho para 1 anexo por URL em action=send.'
@@ -965,7 +999,7 @@ const baseTools = [
   {
     type: 'function',
     name: 'documento',
-    description: 'Gera e consulta documentos operacionais (OS/proposta/NFSe/fatura/contrato). Use action="gerar" para criar documento a partir de dados JSON e action="status" para consultar.',
+    description: 'Gera e consulta documentos operacionais (OS/proposta/NFSe/fatura/contrato). Pode gerar PDF e salvar no Drive (save_to_drive).',
     parameters: {
       type: 'object',
       properties: {
@@ -995,6 +1029,20 @@ const baseTools = [
           type: 'object',
           additionalProperties: true,
           description: 'Payload JSON com os dados variáveis do documento. Obrigatório em action=gerar.'
+        },
+        save_to_drive: {
+          type: 'boolean',
+          description: 'Se true, tenta salvar o PDF gerado no Drive e retornar metadados/arquivo.'
+        },
+        drive: {
+          type: 'object',
+          additionalProperties: true,
+          properties: {
+            workspace_id: { type: 'string' },
+            folder_id: { type: 'string' },
+            file_name: { type: 'string' },
+          },
+          description: 'Configuração opcional de destino no Drive quando save_to_drive=true.'
         },
         template_id: {
           type: 'integer',
