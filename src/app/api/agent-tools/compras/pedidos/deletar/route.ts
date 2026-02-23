@@ -1,5 +1,4 @@
 import { NextRequest } from 'next/server'
-import { runQuery } from '@/lib/postgres'
 import { verifyAgentToken } from '@/app/api/chat/tokenStore'
 
 export const runtime = 'nodejs'
@@ -13,11 +12,24 @@ export async function POST(req: NextRequest) {
     if (!verifyAgentToken(chatId, token)) return Response.json({ ok: false, error: 'unauthorized' }, { status: 401 })
     const id = Number((payload as any)?.id)
     if (!Number.isFinite(id)) return Response.json({ ok: false, error: 'id inválido' }, { status: 400 })
-    const hdrTenant = Number.parseInt((req.headers.get('x-tenant-id') || '').trim(), 10)
-    const envTenant = Number.parseInt((process.env.DEFAULT_TENANT_ID || '').trim(), 10)
-    const tenantId = Number.isFinite(hdrTenant) && hdrTenant > 0 ? hdrTenant : (Number.isFinite(envTenant) && envTenant > 0 ? envTenant : 1)
-    await runQuery(`DELETE FROM compras.compras WHERE tenant_id = $1 AND id = $2`, [tenantId, id])
-    return Response.json({ ok: true, result: { success: true, message: 'Pedido de compra deletado', data: { id } } })
+
+    return Response.json(
+      {
+        ok: false,
+        code: 'PEDIDO_COMPRA_DELETE_NOT_ALLOWED',
+        error: 'Pedido de compra é uma transação e não pode ser excluído pela tool CRUD. Use atualizar com status=\"cancelado\".',
+        result: {
+          success: false,
+          message: 'Exclusão de pedido de compra não permitida',
+          data: {
+            id,
+            allowed_action: 'atualizar',
+            suggested_status: 'cancelado',
+          },
+        },
+      },
+      { status: 409 },
+    )
   } catch (e) {
     return Response.json({ ok: false, error: (e as Error).message }, { status: 500 })
   }

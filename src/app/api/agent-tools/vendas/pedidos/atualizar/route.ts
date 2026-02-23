@@ -4,6 +4,26 @@ import { verifyAgentToken } from '@/app/api/chat/tokenStore'
 
 export const runtime = 'nodejs'
 
+const ORDER_STATUS_VALUES = ['pendente', 'aprovado', 'concluido', 'cancelado'] as const
+type OrderStatus = (typeof ORDER_STATUS_VALUES)[number]
+const ORDER_STATUS_SET = new Set<string>(ORDER_STATUS_VALUES)
+const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  pendente: ['aprovado', 'concluido', 'cancelado'],
+  aprovado: ['concluido', 'cancelado'],
+  concluido: [],
+  cancelado: [],
+}
+
+function normalizeStatus(value: unknown): string {
+  return String(value ?? '').trim().toLowerCase()
+}
+
+function isPgForeignKeyError(err: unknown): boolean {
+  const code = String((err as any)?.code || '')
+  const msg = String((err as any)?.message || '')
+  return code === '23503' || /foreign key constraint/i.test(msg)
+}
+
 export async function POST(req: NextRequest) {
   try {
     const payload = await req.json().catch(() => ({})) as Record<string, any>
@@ -18,9 +38,65 @@ export async function POST(req: NextRequest) {
     const envTenant = Number.parseInt((process.env.DEFAULT_TENANT_ID || '').trim(), 10)
     const tenantId = Number.isFinite(hdrTenant) && hdrTenant > 0 ? hdrTenant : (Number.isFinite(envTenant) && envTenant > 0 ? envTenant : 1)
 
+    let nextStatus: string | null = null
+    if (payload.status !== undefined) {
+      nextStatus = normalizeStatus(payload.status)
+      if (!ORDER_STATUS_SET.has(nextStatus)) {
+        return Response.json(
+          {
+            ok: false,
+            code: 'PEDIDO_VENDA_STATUS_INVALID',
+            error: `status inválido para pedido de venda: ${nextStatus || '(vazio)'}`,
+            result: {
+              success: false,
+              message: 'Status inválido para pedido de venda',
+              data: { id, allowed_statuses: ORDER_STATUS_VALUES },
+            },
+          },
+          { status: 400 },
+        )
+      }
+    }
+
+    if (nextStatus) {
+      const currentRows = await runQuery<{ id: number; status: string | null }>(
+        `SELECT id, status FROM vendas.pedidos WHERE tenant_id = $1 AND id = $2 LIMIT 1`,
+        [tenantId, id],
+      )
+      const current = currentRows[0]
+      if (!current) {
+        return Response.json({ ok: false, error: 'Não encontrado ou sem permissão' }, { status: 404 })
+      }
+      const currentStatus = normalizeStatus(current.status || 'pendente') as OrderStatus
+      if (
+        currentStatus !== nextStatus &&
+        ORDER_STATUS_SET.has(currentStatus) &&
+        !ORDER_STATUS_TRANSITIONS[currentStatus].includes(nextStatus as OrderStatus)
+      ) {
+        return Response.json(
+          {
+            ok: false,
+            code: 'PEDIDO_VENDA_STATUS_TRANSITION_INVALID',
+            error: `Transição de status inválida: ${currentStatus} -> ${nextStatus}`,
+            result: {
+              success: false,
+              message: 'Transição de status não permitida para pedido de venda',
+              data: {
+                id,
+                current_status: currentStatus,
+                attempted_status: nextStatus,
+                allowed_transitions: ORDER_STATUS_TRANSITIONS[currentStatus],
+              },
+            },
+          },
+          { status: 409 },
+        )
+      }
+    }
+
     const fields: Array<{ col: string; val: any }> = []
     const pushIf = (key: string, col: string, mapFn?: (v:any)=>any) => { if (payload[key] !== undefined) fields.push({ col, val: mapFn ? mapFn(payload[key]) : payload[key] }) }
-    pushIf('status', 'status', (v)=> String(v).toLowerCase())
+    pushIf('status', 'status', () => nextStatus ?? undefined)
     pushIf('descricao', 'descricao')
     pushIf('observacoes', 'observacoes')
     pushIf('data_pedido', 'data_pedido')
@@ -38,7 +114,17 @@ export async function POST(req: NextRequest) {
     if (!rows.length) return Response.json({ ok: false, error: 'Não encontrado ou sem permissão' }, { status: 404 })
     return Response.json({ ok: true, result: { success: true, message: 'Pedido de venda atualizado', data: { id } } })
   } catch (e) {
+    if (isPgForeignKeyError(e)) {
+      return Response.json(
+        {
+          ok: false,
+          code: 'PEDIDO_VENDA_UPDATE_BLOCKED_BY_DEPENDENCY',
+          error: 'Não foi possível atualizar o pedido de venda por dependências relacionadas.',
+          result: { success: false, message: 'Atualização bloqueada por vínculo de negócio' },
+        },
+        { status: 409 },
+      )
+    }
     return Response.json({ ok: false, error: (e as Error).message }, { status: 500 })
   }
 }
-

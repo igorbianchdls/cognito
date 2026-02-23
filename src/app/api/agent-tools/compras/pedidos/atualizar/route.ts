@@ -4,6 +4,26 @@ import { verifyAgentToken } from '@/app/api/chat/tokenStore'
 
 export const runtime = 'nodejs'
 
+const PURCHASE_STATUS_VALUES = ['pendente', 'aprovado', 'concluido', 'cancelado'] as const
+type PurchaseStatus = (typeof PURCHASE_STATUS_VALUES)[number]
+const PURCHASE_STATUS_SET = new Set<string>(PURCHASE_STATUS_VALUES)
+const PURCHASE_STATUS_TRANSITIONS: Record<PurchaseStatus, PurchaseStatus[]> = {
+  pendente: ['aprovado', 'concluido', 'cancelado'],
+  aprovado: ['concluido', 'cancelado'],
+  concluido: [],
+  cancelado: [],
+}
+
+function normalizeStatus(value: unknown): string {
+  return String(value ?? '').trim().toLowerCase()
+}
+
+function isPgForeignKeyError(err: unknown): boolean {
+  const code = String((err as any)?.code || '')
+  const msg = String((err as any)?.message || '')
+  return code === '23503' || /foreign key constraint/i.test(msg)
+}
+
 export async function POST(req: NextRequest) {
   try {
     const payload = await req.json().catch(() => ({})) as Record<string, any>
@@ -18,9 +38,63 @@ export async function POST(req: NextRequest) {
     const envTenant = Number.parseInt((process.env.DEFAULT_TENANT_ID || '').trim(), 10)
     const tenantId = Number.isFinite(hdrTenant) && hdrTenant > 0 ? hdrTenant : (Number.isFinite(envTenant) && envTenant > 0 ? envTenant : 1)
 
+    let nextStatus: string | null = null
+    if (payload.status !== undefined) {
+      nextStatus = normalizeStatus(payload.status)
+      if (!PURCHASE_STATUS_SET.has(nextStatus)) {
+        return Response.json(
+          {
+            ok: false,
+            code: 'PEDIDO_COMPRA_STATUS_INVALID',
+            error: `status inválido para pedido de compra: ${nextStatus || '(vazio)'}`,
+            result: {
+              success: false,
+              message: 'Status inválido para pedido de compra',
+              data: { id, allowed_statuses: PURCHASE_STATUS_VALUES },
+            },
+          },
+          { status: 400 },
+        )
+      }
+    }
+
+    if (nextStatus) {
+      const currentRows = await runQuery<{ id: number; status: string | null }>(
+        `SELECT id, status FROM compras.compras WHERE tenant_id = $1 AND id = $2 LIMIT 1`,
+        [tenantId, id],
+      )
+      const current = currentRows[0]
+      if (!current) return Response.json({ ok: false, error: 'Não encontrado ou sem permissão' }, { status: 404 })
+      const currentStatus = normalizeStatus(current.status || 'pendente') as PurchaseStatus
+      if (
+        currentStatus !== nextStatus &&
+        PURCHASE_STATUS_SET.has(currentStatus) &&
+        !PURCHASE_STATUS_TRANSITIONS[currentStatus].includes(nextStatus as PurchaseStatus)
+      ) {
+        return Response.json(
+          {
+            ok: false,
+            code: 'PEDIDO_COMPRA_STATUS_TRANSITION_INVALID',
+            error: `Transição de status inválida: ${currentStatus} -> ${nextStatus}`,
+            result: {
+              success: false,
+              message: 'Transição de status não permitida para pedido de compra',
+              data: {
+                id,
+                current_status: currentStatus,
+                attempted_status: nextStatus,
+                allowed_transitions: PURCHASE_STATUS_TRANSITIONS[currentStatus],
+              },
+            },
+          },
+          { status: 409 },
+        )
+      }
+    }
+
     const fields: Array<{ col: string; val: any }> = []
     const pushIf = (key: string, col: string, mapFn?: (v:any)=>any) => { if (payload[key] !== undefined) fields.push({ col, val: mapFn ? mapFn(payload[key]) : payload[key] }) }
-    pushIf('status', 'status', (v)=> String(v).toLowerCase())
+    pushIf('status', 'status', () => nextStatus ?? undefined)
     pushIf('observacoes', 'observacoes')
     pushIf('data_entrega_prevista', 'data_entrega_prevista')
     pushIf('data_pedido', 'data_pedido')
@@ -40,6 +114,17 @@ export async function POST(req: NextRequest) {
     if (!rows.length) return Response.json({ ok: false, error: 'Não encontrado ou sem permissão' }, { status: 404 })
     return Response.json({ ok: true, result: { success: true, message: 'Pedido de compra atualizado', data: { id } } })
   } catch (e) {
+    if (isPgForeignKeyError(e)) {
+      return Response.json(
+        {
+          ok: false,
+          code: 'PEDIDO_COMPRA_UPDATE_BLOCKED_BY_DEPENDENCY',
+          error: 'Não foi possível atualizar o pedido de compra por dependências relacionadas.',
+          result: { success: false, message: 'Atualização bloqueada por vínculo de negócio' },
+        },
+        { status: 409 },
+      )
+    }
     return Response.json({ ok: false, error: (e as Error).message }, { status: 500 })
   }
 }
