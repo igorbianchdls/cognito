@@ -1,109 +1,33 @@
 import { NextRequest } from 'next/server'
 import { runQuery } from '@/lib/postgres'
+import { ORDER_BY_WHITELIST } from './query/orderByWhitelist'
+import { parseContabilidadeRequest } from './query/parseContabilidadeRequest'
+import { maybeHandleContabilidadeKpisView } from './views/kpis'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
-
-// Whitelist para ordenação segura por view
-const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
-  'lancamentos': {
-    lancamento_id: 'lc.id',
-    data_lancamento: 'lc.data_lancamento',
-    conta_id: 'lcl.conta_id',
-    debito: 'lcl.debito',
-    credito: 'lcl.credito',
-    criado_em: 'lcl.criado_em',
-  },
-  'plano-contas': {
-    id: 'pc.id',
-    codigo: 'pc.codigo',
-    nome: 'pc.nome',
-    grupo_principal: "LEFT(pc.codigo, 1)",
-    nivel: 'pc.nivel',
-    aceita_lancamento: 'pc.aceita_lancamento',
-    codigo_pai: 'pai.codigo',
-    conta_pai: 'pai.nome',
-    criado_em: 'pc.criado_em',
-    atualizado_em: 'pc.atualizado_em',
-  },
-  'categorias': {
-    id: 'pcc.id',
-    codigo: 'pcc.codigo',
-    nome: 'pcc.nome',
-    tipo: 'pcc.tipo',
-    nivel: 'pcc.nivel',
-    ordem: 'pcc.ordem',
-    ativo: 'pcc.ativo',
-    criado_em: 'pcc.criado_em',
-  },
-  'segmentos': {
-    id: 'pcs.id',
-    codigo: 'pcs.codigo',
-    nome: 'pcs.nome',
-    ordem: 'pcs.ordem',
-    separador: 'pcs.separador',
-    ativo: 'pcs.ativo',
-    criado_em: 'pcs.criado_em',
-  },
-  'centros-de-custo': {
-    id: 'cc.id',
-    codigo: 'cc.codigo',
-    nome: 'cc.nome',
-    criado_em: 'cc.criado_em',
-    atualizado_em: 'cc.atualizado_em',
-  },
-  'centros-de-lucro': {
-    id: 'cl.id',
-    codigo: 'cl.codigo',
-    nome: 'cl.nome',
-    criado_em: 'cl.criado_em',
-    atualizado_em: 'cl.atualizado_em',
-  },
-  'regras-contabeis': {
-    id: 'r.id',
-    origem: 'r.origem',
-    subtipo: 'r.subtipo',
-    plano_conta_id: 'r.plano_conta_id',
-    conta_debito_id: 'r.conta_debito_id',
-    codigo_conta_debito: 'd.codigo',
-    conta_debito: 'd.nome',
-    conta_credito_id: 'r.conta_credito_id',
-    codigo_conta_credito: 'c.codigo',
-    conta_credito: 'c.nome',
-    descricao: 'r.descricao',
-    criado_em: 'r.criado_em',
-    atualizado_em: 'r.atualizado_em',
-  },
-}
 
 const parseNumber = (v: string | null, fallback?: number) => (v ? Number(v) : fallback)
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
-    const view = (searchParams.get('view') || '').toLowerCase()
+    const {
+      view,
+      de,
+      ate,
+      cliente_id,
+      fornecedor_id,
+      page,
+      pageSize,
+      offset,
+      orderBy,
+      orderDir,
+    } = parseContabilidadeRequest(searchParams, ORDER_BY_WHITELIST)
     if (!view) {
       return Response.json({ success: false, message: 'Parâmetro view é obrigatório' }, { status: 400 })
     }
-
-    // Filtros comuns
-    const de = searchParams.get('de') || undefined // YYYY-MM-DD
-    const ate = searchParams.get('ate') || undefined // YYYY-MM-DD
-    const cliente_id = searchParams.get('cliente_id') || undefined
-    const fornecedor_id = searchParams.get('fornecedor_id') || undefined
-
-    // Paginação
-    const page = Math.max(1, parseNumber(searchParams.get('page'), 1) || 1)
-    const pageSize = Math.max(1, Math.min(1000, parseNumber(searchParams.get('pageSize'), 1000) || 1000))
-    const offset = (page - 1) * pageSize
-
-    // Ordenação
-    const orderByParam = (searchParams.get('order_by') || '').toLowerCase()
-    const orderDirParam = (searchParams.get('order_dir') || 'desc').toLowerCase()
-    const orderWhitelist = ORDER_BY_WHITELIST[view] || {}
-    const orderBy = orderWhitelist[orderByParam] || undefined
-    const orderDir = orderDirParam === 'asc' ? 'ASC' : 'DESC'
 
     // Montagem de SQL por view
     const conditions: string[] = []
@@ -120,145 +44,10 @@ export async function GET(req: NextRequest) {
     let whereDateCol = ''
     let selectSql = ''
 
-    // KPIs Contabilidade (lucro, margem, capital de giro, liquidez, endividamento)
-    if (view === 'kpis') {
-      const today = new Date()
-      const y = today.getFullYear()
-      const m = String(today.getMonth() + 1).padStart(2, '0')
-      const firstDay = `${y}-${m}-01`
-      const from = de || firstDay
-      const to = ate || new Date().toISOString().slice(0, 10)
-
-      // Base de Balanço Patrimonial (mesmo CTE de 'balanco-patrimonial')
-      const bpSql = `
-        WITH base AS (
-          SELECT 
-            lc.data_lancamento::date AS data_lancamento,
-            pc.codigo,
-            pc.nome,
-            pc.tipo_conta,
-            pc.aceita_lancamento,
-            COALESCE(lcl.debito,0) AS debito,
-            COALESCE(lcl.credito,0) AS credito
-          FROM contabilidade.lancamentos_contabeis lc
-          JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.lancamento_id = lc.id
-          JOIN contabilidade.plano_contas pc ON pc.id = lcl.conta_id
-        ),
-        inicial AS (
-          SELECT codigo, nome, tipo_conta,
-            SUM(CASE WHEN tipo_conta IN ('Receita','Passivo','Patrimônio Líquido') THEN (credito - debito) ELSE (debito - credito) END) AS saldo_inicial
-          FROM base
-          WHERE data_lancamento < $1::date AND aceita_lancamento = TRUE
-          GROUP BY codigo, nome, tipo_conta
-        ),
-        movimentos AS (
-          SELECT codigo, nome, tipo_conta,
-            SUM(CASE WHEN tipo_conta IN ('Receita','Passivo','Patrimônio Líquido') THEN (credito - debito) ELSE (debito - credito) END) AS movimentos
-          FROM base
-          WHERE data_lancamento BETWEEN $1::date AND $2::date AND aceita_lancamento = TRUE
-          GROUP BY codigo, nome, tipo_conta
-        ),
-        final AS (
-          SELECT 
-            COALESCE(i.codigo, m.codigo) AS codigo,
-            COALESCE(i.nome, m.nome) AS nome,
-            COALESCE(i.tipo_conta, m.tipo_conta) AS tipo_conta,
-            COALESCE(i.saldo_inicial,0) AS saldo_inicial,
-            COALESCE(m.movimentos,0) AS movimentos,
-            COALESCE(i.saldo_inicial,0) + COALESCE(m.movimentos,0) AS saldo_final
-          FROM inicial i
-          FULL JOIN movimentos m USING (codigo, nome, tipo_conta)
-        ),
-        classificados AS (
-          SELECT
-            f.codigo, f.nome, f.tipo_conta, f.saldo_inicial, f.movimentos, f.saldo_final,
-            CASE
-              WHEN f.codigo ~ '^1\\.1\\.' THEN 'Ativo Circulante'
-              WHEN f.codigo ~ '^1\\.2\\.' THEN 'Ativo Não Circulante'
-              WHEN f.codigo ~ '^2\\.1\\.' THEN 'Passivo Circulante'
-              WHEN f.codigo ~ '^2\\.2\\.' THEN 'Passivo Não Circulante'
-              WHEN f.codigo ~ '^3\\.' THEN 'Patrimônio Líquido'
-              ELSE NULL
-            END AS grupo
-          FROM final f
-        )
-        SELECT grupo, SUM(saldo_final) AS total
-        FROM classificados
-        WHERE grupo IS NOT NULL
-        GROUP BY grupo`;
-
-      const grupos = await runQuery<{ grupo: string; total: number | null }>(bpSql, [from, to])
-      const sum = (pred: (g: string) => boolean) => grupos.filter(r => pred(r.grupo)).reduce((a, r) => a + Number(r.total || 0), 0)
-      const ativoTotal = sum(g => g.startsWith('Ativo'))
-      const passivoTotal = sum(g => g.startsWith('Passivo'))
-      const plTotal = sum(g => g === 'Patrimônio Líquido')
-      const acTotal = sum(g => g === 'Ativo Circulante')
-      const pcTotal = sum(g => g === 'Passivo Circulante')
-
-      // Resultado (lucro/prejuízo) do período
-      const resultadoSql = `
-        SELECT COALESCE(SUM(
-          CASE WHEN pc.tipo_conta = 'Receita'
-                 THEN (lcl.credito - lcl.debito)
-               WHEN pc.tipo_conta IN ('Despesa', 'Custo')
-                 THEN (lcl.debito - lcl.credito) * -1
-               ELSE (lcl.debito - lcl.credito) * -1
-          END
-        ),0) AS resultado
-        FROM contabilidade.lancamentos_contabeis lc
-        JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.lancamento_id = lc.id
-        JOIN contabilidade.plano_contas pc ON pc.id = lcl.conta_id
-        WHERE lc.data_lancamento BETWEEN $1::date AND $2::date
-          AND pc.aceita_lancamento = TRUE
-          AND (pc.codigo LIKE '4.%' OR pc.codigo LIKE '5.%' OR pc.codigo LIKE '6.%')`;
-      const resRows = await runQuery<{ resultado: number }>(resultadoSql, [from, to])
-      const lucro = Number(resRows[0]?.resultado || 0)
-
-      // Receita do período (contas 4.x)
-      const receitaSql = `
-        SELECT COALESCE(SUM(lcl.credito - lcl.debito),0) AS receita
-        FROM contabilidade.lancamentos_contabeis lc
-        JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.lancamento_id = lc.id
-        JOIN contabilidade.plano_contas pc ON pc.id = lcl.conta_id
-        WHERE lc.data_lancamento BETWEEN $1::date AND $2::date
-          AND pc.aceita_lancamento = TRUE
-          AND pc.codigo LIKE '4.%'`;
-      const recRows = await runQuery<{ receita: number }>(receitaSql, [from, to])
-      const receita = Number(recRows[0]?.receita || 0)
-
-      // Despesa do período (contas 5.x e 6.x)
-      const despesaSql = `
-        SELECT COALESCE(SUM(lcl.debito - lcl.credito),0) AS despesa
-        FROM contabilidade.lancamentos_contabeis lc
-        JOIN contabilidade.lancamentos_contabeis_linhas lcl ON lcl.lancamento_id = lc.id
-        JOIN contabilidade.plano_contas pc ON pc.id = lcl.conta_id
-        WHERE lc.data_lancamento BETWEEN $1::date AND $2::date
-          AND pc.aceita_lancamento = TRUE
-          AND (pc.codigo LIKE '5.%' OR pc.codigo LIKE '6.%')`;
-      const despRows = await runQuery<{ despesa: number }>(despesaSql, [from, to])
-      const despesa = Number(despRows[0]?.despesa || 0)
-
-      const capitalDeGiro = acTotal - pcTotal
-      const liquidezCorrente = pcTotal !== 0 ? (acTotal / pcTotal) : null
-      const endividamento = ativoTotal !== 0 ? (passivoTotal / ativoTotal) : null
-      const margemLiquida = receita !== 0 ? (lucro / receita) : null
-
-      return Response.json({
-        success: true,
-        de: from,
-        ate: to,
-        kpis: {
-          receita,
-          despesa,
-          lucro,
-          margem_liquida: margemLiquida,
-          capital_de_giro: capitalDeGiro,
-          liquidez_corrente: liquidezCorrente,
-          endividamento,
-        },
-        sql_query: { bpSql, resultadoSql, receitaSql, despesaSql },
-      }, { headers: { 'Cache-Control': 'no-store' } })
-    }
+    const kpisResponse = await maybeHandleContabilidadeKpisView({
+      parsed: { view, de, ate, cliente_id, fornecedor_id, page, pageSize, offset, orderBy, orderDir },
+    })
+    if (kpisResponse) return kpisResponse
 
     // DRE simples (tabela) usando a query fornecida pelo usuário
     if (view === 'dre-tabela') {

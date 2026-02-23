@@ -39,6 +39,7 @@ import ApKpiRow from '@/products/erp/frontend/components/financeiro/ApKpiRow'
 import ExtratoKpiRow from '@/products/erp/frontend/components/financeiro/ExtratoKpiRow'
 import RowActionsMenu from '@/products/erp/frontend/components/financeiro/RowActionsMenu'
 import { useRouter } from 'next/navigation'
+import { fontVar, formatDate, formatBRL } from '@/products/erp/frontend/features/financeiro/utils/formatting'
 
 type Row = TableData
 
@@ -71,30 +72,6 @@ export default function ModulosFinanceiroPage() {
       selected: 'contas-a-pagar',
     })
   }, [])
-
-  const fontVar = (name?: string) => {
-    if (!name) return undefined
-    if (name === 'Inter') return 'var(--font-inter)'
-    if (name === 'Geist') return 'var(--font-geist-sans)'
-    return name
-  }
-
-  const formatDate = (value?: unknown) => {
-    if (!value) return ''
-    try {
-      const d = new Date(String(value))
-      if (isNaN(d.getTime())) return String(value)
-      return d.toLocaleDateString('pt-BR')
-    } catch {
-      return String(value)
-    }
-  }
-
-  const formatBRL = (value?: unknown) => {
-    const n = Number(value ?? 0)
-    if (isNaN(n)) return String(value ?? '')
-    return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-  }
 
   // Nested detail component for Contas a Pagar: linhas do título
   function LinhasContaPagar({ contaPagarId }: { contaPagarId: number }) {
