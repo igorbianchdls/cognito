@@ -5,8 +5,7 @@ import { useState } from "react";
 import PageContainer from "@/components/layout/PageContainer";
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import ChatPanel from "@/products/chat/frontend/components/ChatPanel";
-import SandboxPanel from "@/products/chat/frontend/components/SandboxPanel";
+import { ChatPanel, SandboxPanel } from "@/chat/ui";
 
 export type ChatEngineId =
   | "claude-sonnet"

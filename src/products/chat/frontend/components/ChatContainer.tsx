@@ -7,7 +7,7 @@ import PerguntaDoUsuario from './PerguntaDoUsuario';
 import RespostaDaIa from './RespostaDaIa';
 import InputArea from './InputArea';
 import { useRouter } from 'next/navigation';
-import type { SandboxStatus } from '@/products/chat/frontend/lib/sandboxStatus';
+import type { SandboxStatus } from '@/chat/sandbox';
 import { useChatErrorNotifications } from '@/products/chat/frontend/features/error-notifications/useChatErrorNotifications';
 
 type ChatStatus = 'idle' | 'submitted' | 'streaming' | 'error'

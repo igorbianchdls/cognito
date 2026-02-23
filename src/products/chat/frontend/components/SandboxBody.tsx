@@ -3,7 +3,7 @@
 import React from 'react';
 import FileExplorer from '@/components/file-explorer/FileExplorer';
 import { useStore } from '@nanostores/react';
-import { $sandboxActiveTab } from '@/products/chat/state/sandboxStore';
+import { $sandboxActiveTab } from '@/chat/sandbox';
 import JsonRenderPreview from './json-render/JsonRenderPreview';
 import DashboardPicker from './json-render/DashboardPicker';
 

@@ -6,7 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Undo2, Redo2, ClipboardList, GitBranch, Upload, Palette } from 'lucide-react';
-import { $previewJsonrPath } from '@/products/chat/state/sandboxStore';
+import { $previewJsonrPath } from '@/chat/sandbox';
 import { APPS_HEADER_THEME_OPTIONS, APPS_THEME_OPTIONS } from '@/products/apps/shared/themeOptions';
 
 function IconButton({ title, children }: { title: string; children: React.ReactNode }) {

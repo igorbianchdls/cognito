@@ -1,1 +1,1 @@
-export * from '@/products/chat/backend/features/agents/runtime/runners/agentRunnerScripts'
+export * from '@/products/chat/shared/sandbox/runners/agentRunnerScripts'

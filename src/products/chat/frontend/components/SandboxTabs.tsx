@@ -6,7 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { MoreHorizontal, Code2, Monitor, LayoutDashboard, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStore } from '@nanostores/react';
-import { $sandboxActiveTab, sandboxActions, type SandboxTab } from '@/products/chat/state/sandboxStore';
+import { $sandboxActiveTab, sandboxActions, type SandboxTab } from '@/chat/sandbox';
 
 export default function SandboxTabs() {
   const active = useStore($sandboxActiveTab);

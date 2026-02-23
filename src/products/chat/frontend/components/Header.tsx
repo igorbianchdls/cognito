@@ -5,7 +5,7 @@ import { MoreHorizontal, Lock, Play, Square, FilePlus2, BarChart3 } from 'lucide
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import SandboxStatusBadge from '@/products/chat/frontend/components/SandboxStatusBadge';
-import type { SandboxStatus } from '@/products/chat/frontend/lib/sandboxStatus';
+import type { SandboxStatus } from '@/chat/sandbox';
 import ChatErrorNotificationsButton from '@/products/chat/frontend/features/error-notifications/ChatErrorNotificationsButton';
 import type { ChatErrorNotification } from '@/products/chat/frontend/features/error-notifications/types';
 

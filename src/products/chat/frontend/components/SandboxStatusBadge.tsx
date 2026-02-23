@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { getSandboxStatusClasses, getSandboxStatusLabel, type SandboxStatus } from '@/products/chat/frontend/lib/sandboxStatus';
+import { getSandboxStatusClasses, getSandboxStatusLabel, type SandboxStatus } from '@/chat/sandbox';
 
 type SandboxStatusBadgeProps = {
   status: SandboxStatus;

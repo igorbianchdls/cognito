@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useStore } from '@nanostores/react';
-import { $previewJsonrPath, sandboxActions } from '@/products/chat/state/sandboxStore';
+import { $previewJsonrPath, sandboxActions } from '@/chat/sandbox';
 
 type Props = { chatId?: string };
 
