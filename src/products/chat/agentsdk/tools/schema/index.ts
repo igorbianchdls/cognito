@@ -1,5 +1,5 @@
-// Migração incremental: schemas Zod/MCP de tools do AgentSDK ainda vivem em
-// `backend/features/agents/core/tools/agentSdkTools.ts` (ERP_MCP_SCRIPT).
-// Este diretório é o destino da extração.
-export {}
-
+export { AGENTSDK_ERP_MCP_CRUD_TOOL_SCRIPT } from '@/products/chat/agentsdk/tools/schema/erpCrudToolScript'
+export { AGENTSDK_ERP_MCP_DOCUMENTO_TOOL_SCRIPT } from '@/products/chat/agentsdk/tools/schema/erpDocumentoToolScript'
+export { AGENTSDK_ERP_MCP_DRIVE_TOOL_SCRIPT } from '@/products/chat/agentsdk/tools/schema/erpDriveToolScript'
+export { AGENTSDK_ERP_MCP_EMAIL_TOOL_SCRIPT } from '@/products/chat/agentsdk/tools/schema/erpEmailToolScript'
+export { AGENTSDK_ERP_MCP_TOOLS_SCRIPT } from '@/products/chat/agentsdk/tools/schema/erpToolsScript'
