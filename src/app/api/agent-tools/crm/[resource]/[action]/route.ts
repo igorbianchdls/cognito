@@ -266,7 +266,7 @@ async function createRow(resource: CrmResource, tenantId: number, payload: JsonM
         intOrNull(payload.responsavel_id ?? payload.usuario_id),
       ]
     )
-    return { status: 200, body: { ok: true, result: { success: true, id: rows[0]?.id, message: 'Conta criada' } } }
+    return { status: 200, body: { ok: true, result: { success: true, id: rows[0]?.id, data: { id: rows[0]?.id }, message: 'Conta criada' } } }
   }
 
   if (resource === 'contatos') {
@@ -290,7 +290,7 @@ async function createRow(resource: CrmResource, tenantId: number, payload: JsonM
         intOrNull(payload.responsavel_id ?? payload.usuario_id),
       ]
     )
-    return { status: 200, body: { ok: true, result: { success: true, id: rows[0]?.id, message: 'Contato criado' } } }
+    return { status: 200, body: { ok: true, result: { success: true, id: rows[0]?.id, data: { id: rows[0]?.id }, message: 'Contato criado' } } }
   }
 
   if (resource === 'leads') {
@@ -337,7 +337,7 @@ async function createRow(resource: CrmResource, tenantId: number, payload: JsonM
         textOrNull(payload.descricao),
       ]
     )
-    return { status: 200, body: { ok: true, result: { success: true, id: rows[0]?.id, message: 'Lead criado' } } }
+    return { status: 200, body: { ok: true, result: { success: true, id: rows[0]?.id, data: { id: rows[0]?.id }, message: 'Lead criado' } } }
   }
 
   if (resource === 'oportunidades') {
@@ -372,7 +372,7 @@ async function createRow(resource: CrmResource, tenantId: number, payload: JsonM
         textOrNull(payload.descricao),
       ]
     )
-    return { status: 200, body: { ok: true, result: { success: true, id: rows[0]?.id, message: 'Oportunidade criada' } } }
+    return { status: 200, body: { ok: true, result: { success: true, id: rows[0]?.id, data: { id: rows[0]?.id }, message: 'Oportunidade criada' } } }
   }
 
   const assunto = toText(payload.assunto || payload.descricao)
@@ -400,7 +400,7 @@ async function createRow(resource: CrmResource, tenantId: number, payload: JsonM
     ]
   )
 
-  return { status: 200, body: { ok: true, result: { success: true, id: rows[0]?.id, message: 'Atividade criada' } } }
+  return { status: 200, body: { ok: true, result: { success: true, id: rows[0]?.id, data: { id: rows[0]?.id }, message: 'Atividade criada' } } }
 }
 
 async function updateRow(resource: CrmResource, tenantId: number, payload: JsonMap) {
@@ -497,7 +497,7 @@ async function updateRow(resource: CrmResource, tenantId: number, payload: JsonM
     return { status: 404, body: { ok: false, error: 'Registro não encontrado para atualizar' } }
   }
 
-  return { status: 200, body: { ok: true, result: { success: true, id: rows[0].id, message: 'Registro atualizado' } } }
+  return { status: 200, body: { ok: true, result: { success: true, id: rows[0].id, data: { id: rows[0].id }, message: 'Registro atualizado' } } }
 }
 
 async function deleteRow(resource: CrmResource, tenantId: number, payload: JsonMap) {
@@ -525,7 +525,7 @@ async function deleteRow(resource: CrmResource, tenantId: number, payload: JsonM
     return { status: 404, body: { ok: false, error: 'Registro não encontrado para deletar' } }
   }
 
-  return { status: 200, body: { ok: true, result: { success: true, id: rows[0].id, message: 'Registro deletado' } } }
+  return { status: 200, body: { ok: true, result: { success: true, id: rows[0].id, data: { id: rows[0].id }, message: 'Registro deletado' } } }
 }
 
 async function handle(req: NextRequest, params: Params, payload: JsonMap) {

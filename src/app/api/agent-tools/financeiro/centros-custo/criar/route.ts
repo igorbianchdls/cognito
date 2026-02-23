@@ -41,7 +41,15 @@ export async function POST(req: NextRequest) {
       [tenantId, codigo, nome, descricao, ativo]
     )
     const row = ins[0]
-    return Response.json({ ok: true, result: { success: true, data: row, message: 'Centro de custo criado com sucesso' } })
+    return Response.json({
+      ok: true,
+      result: {
+        success: true,
+        id: row?.id ?? null,
+        data: row,
+        message: 'Centro de custo criado com sucesso',
+      },
+    })
   } catch (e) {
     return Response.json({ ok: false, error: (e as Error).message }, { status: 500 })
   }

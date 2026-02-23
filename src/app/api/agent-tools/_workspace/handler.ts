@@ -6,7 +6,7 @@ import { getSupabaseAdmin } from '@/products/drive/backend/lib'
 export type WorkspaceToolScope = 'workspace' | 'drive' | 'email'
 
 export type WorkspaceRequestAction = {
-  action?: 'request' | 'read_file' | 'get_drive_file_url' | 'get_file_url' | 'send_email' | 'send'
+  action?: 'request' | 'read_file' | 'get_drive_file_url' | 'get_file_url' | 'send_email' | 'send' | 'batch'
   method?: 'GET' | 'POST' | 'DELETE'
   resource?: string
   params?: Record<string, unknown>
@@ -33,6 +33,22 @@ export type WorkspaceRequestAction = {
   driveFileId?: string
   drive_file_ids?: unknown
   driveFileIds?: unknown
+  operations?: unknown
+  continue_on_error?: boolean
+  continueOnError?: boolean
+  from?: string
+  q?: string
+  search?: string
+  date_from?: string
+  dateFrom?: string
+  date_to?: string
+  dateTo?: string
+  has_attachments?: boolean | string
+  hasAttachments?: boolean | string
+  unread?: boolean | string
+  label?: string
+  labels_any?: unknown
+  labelsAny?: unknown
 }
 
 type RouteRule = {
@@ -255,6 +271,15 @@ function objectOrEmpty(value: unknown): Record<string, unknown> {
   return { ...(value as Record<string, unknown>) }
 }
 
+function boolOrNull(value: unknown): boolean | null {
+  if (typeof value === 'boolean') return value
+  const v = String(value ?? '').trim().toLowerCase()
+  if (!v) return null
+  if (['1', 'true', 'sim', 'yes'].includes(v)) return true
+  if (['0', 'false', 'nao', 'não', 'no'].includes(v)) return false
+  return null
+}
+
 function firstNonEmptyString(...values: unknown[]): string {
   for (const raw of values) {
     if (typeof raw !== 'string') continue
@@ -295,6 +320,18 @@ function normalizeWorkspaceRequestPayload(scope: WorkspaceToolScope, payload: Wo
       ['pageToken', (payload as any).pageToken],
       ['q', (payload as any).q],
       ['search', (payload as any).search],
+      ['subject', (payload as any).subject],
+      ['from', (payload as any).from],
+      ['date_from', (payload as any).date_from],
+      ['date_from', (payload as any).dateFrom],
+      ['date_to', (payload as any).date_to],
+      ['date_to', (payload as any).dateTo],
+      ['has_attachments', (payload as any).has_attachments],
+      ['has_attachments', (payload as any).hasAttachments],
+      ['unread', (payload as any).unread],
+      ['label', (payload as any).label],
+      ['labels_any', (payload as any).labels_any],
+      ['labels_any', (payload as any).labelsAny],
     ]
     for (const [key, value] of topLevelQueryPairs) setIfMissing(params, key, value)
   }
@@ -349,6 +386,112 @@ function normalizeWorkspaceRequestPayload(scope: WorkspaceToolScope, payload: Wo
   out.params = params
   out.data = data
   return out
+}
+
+function normalizeEmailMessagesListResult(raw: unknown): { messages: Record<string, unknown>[]; assign: (messages: Record<string, unknown>[]) => unknown } | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
+  const obj = raw as Record<string, unknown>
+
+  if (Array.isArray(obj.messages)) {
+    return {
+      messages: obj.messages.filter((m): m is Record<string, unknown> => !!m && typeof m === 'object' && !Array.isArray(m)),
+      assign: (messages) => ({ ...obj, messages, count: messages.length }),
+    }
+  }
+
+  const data = obj.data
+  if (data && typeof data === 'object' && !Array.isArray(data) && Array.isArray((data as Record<string, unknown>).messages)) {
+    const dataObj = data as Record<string, unknown>
+    return {
+      messages: dataObj.messages!.filter((m): m is Record<string, unknown> => !!m && typeof m === 'object' && !Array.isArray(m)),
+      assign: (messages) => ({
+        ...obj,
+        data: {
+          ...dataObj,
+          messages,
+          count: messages.length,
+          filtered: true,
+        },
+      }),
+    }
+  }
+
+  return null
+}
+
+function toTimestampMs(value: unknown): number | null {
+  const s = String(value ?? '').trim()
+  if (!s) return null
+  const ms = Date.parse(s)
+  return Number.isFinite(ms) ? ms : null
+}
+
+function matchesEmailMessageFilters(message: Record<string, unknown>, params: Record<string, unknown>): boolean {
+  const subjectNeedle = String(params.subject || '').trim().toLowerCase()
+  const fromNeedle = String(params.from || '').trim().toLowerCase()
+  const searchNeedle = String(params.search || params.q || '').trim().toLowerCase()
+  const labelOne = String(params.label || '').trim().toLowerCase()
+  const labelsAnyRaw = params.labels_any
+  const unreadOnly = boolOrNull(params.unread)
+  const hasAttachments = boolOrNull(params.has_attachments)
+  const dateFromMs = toTimestampMs(params.date_from)
+  const dateToMs = toTimestampMs(params.date_to)
+
+  const subject = String(message.subject || '').toLowerCase()
+  const from = String(message.from || '').toLowerCase()
+  const preview = String(message.preview || '').toLowerCase()
+  const to = Array.isArray(message.to) ? message.to.map((v) => String(v || '').toLowerCase()) : []
+  const labels = Array.isArray(message.labels) ? message.labels.map((v) => String(v || '').toLowerCase()) : []
+  const attachments = Array.isArray(message.attachments) ? message.attachments : []
+  const timestampMs = toTimestampMs(message.timestamp || message.createdAt || message.updatedAt)
+
+  if (subjectNeedle && !subject.includes(subjectNeedle)) return false
+  if (fromNeedle && !from.includes(fromNeedle)) return false
+  if (searchNeedle) {
+    const hay = [subject, from, preview, ...to].join(' ')
+    if (!hay.includes(searchNeedle)) return false
+  }
+  if (labelOne && !labels.includes(labelOne)) return false
+
+  const labelsAny = Array.isArray(labelsAnyRaw)
+    ? labelsAnyRaw.map((v) => String(v || '').trim().toLowerCase()).filter(Boolean)
+    : String(labelsAnyRaw || '').split(',').map((v) => v.trim().toLowerCase()).filter(Boolean)
+  if (labelsAny.length && !labelsAny.some((lbl) => labels.includes(lbl))) return false
+
+  if (unreadOnly != null) {
+    const isUnread = labels.includes('unread')
+    if (isUnread !== unreadOnly) return false
+  }
+
+  if (hasAttachments != null) {
+    const has = attachments.length > 0
+    if (has !== hasAttachments) return false
+  }
+
+  if (dateFromMs != null && timestampMs != null && timestampMs < dateFromMs) return false
+  if (dateToMs != null && timestampMs != null && timestampMs > dateToMs) return false
+
+  return true
+}
+
+function maybeFilterEmailMessagesResult(payload: WorkspaceRequestAction, scope: WorkspaceToolScope, method: 'GET' | 'POST' | 'DELETE', resource: string, result: unknown): unknown {
+  if (scope !== 'email' || method !== 'GET' || resource !== 'email/messages') return result
+  const params = objectOrEmpty(payload.params)
+  const hasFilter =
+    String(params.subject || '').trim() ||
+    String(params.from || '').trim() ||
+    String(params.q || params.search || '').trim() ||
+    String(params.date_from || '').trim() ||
+    String(params.date_to || '').trim() ||
+    String(params.label || '').trim() ||
+    params.labels_any != null ||
+    params.unread != null ||
+    params.has_attachments != null
+  if (!hasFilter) return result
+  const normalized = normalizeEmailMessagesListResult(result)
+  if (!normalized) return result
+  const filtered = normalized.messages.filter((m) => matchesEmailMessageFilters(m, params))
+  return normalized.assign(filtered)
 }
 
 function addErrorCodeIfMissing(
@@ -551,7 +694,8 @@ async function forwardWorkspaceRequest(req: NextRequest, payload: WorkspaceReque
 
   if (contentType.includes('application/json')) {
     const json = await upstream.json().catch(() => ({}))
-    return { ok: upstream.ok, status, result: addErrorCodeIfMissing(json, { scope, resource, action: 'request', status }) }
+    const filtered = maybeFilterEmailMessagesResult(payload, scope, method, resource, json)
+    return { ok: upstream.ok, status, result: addErrorCodeIfMissing(filtered, { scope, resource, action: 'request', status }) }
   }
 
   if (contentType.startsWith('text/')) {
@@ -953,9 +1097,9 @@ function parseJsonMaybe(raw: string): unknown {
 }
 
 function isActionAllowed(scope: WorkspaceToolScope, action: string): boolean {
-  if (scope === 'drive') return action === 'request' || action === 'read_file' || action === 'get_drive_file_url'
-  if (scope === 'email') return action === 'request' || action === 'send_email'
-  return action === 'request' || action === 'read_file' || action === 'get_drive_file_url' || action === 'send_email'
+  if (scope === 'drive') return action === 'request' || action === 'read_file' || action === 'get_drive_file_url' || action === 'batch'
+  if (scope === 'email') return action === 'request' || action === 'send_email' || action === 'batch'
+  return action === 'request' || action === 'read_file' || action === 'get_drive_file_url' || action === 'send_email' || action === 'batch'
 }
 
 export async function handleWorkspaceToolPost(req: NextRequest, scope: WorkspaceToolScope = 'workspace') {
@@ -991,6 +1135,72 @@ export async function handleWorkspaceToolPost(req: NextRequest, scope: Workspace
           result: out.result,
         }),
         { status: out.status },
+      )
+    }
+
+    if (action === 'batch') {
+      const opsRaw = Array.isArray(rawPayload.operations) ? rawPayload.operations : []
+      if (!opsRaw.length) {
+        return Response.json(
+          toolResponseBody({ ok: false, status: 400, scope, action: 'batch', result: { success: false, error: 'operations é obrigatório e deve ser array não vazio', code: 'TOOL_BATCH_OPERATIONS_REQUIRED' } }),
+          { status: 400 },
+        )
+      }
+      const continueOnError = boolOrNull(rawPayload.continue_on_error ?? rawPayload.continueOnError) ?? true
+      const items: Array<Record<string, unknown>> = []
+      let failed = 0
+
+      for (let i = 0; i < opsRaw.length; i += 1) {
+        const itemPayload = normalizeWorkspaceRequestPayload(scope, objectOrEmpty(opsRaw[i]) as WorkspaceRequestAction)
+        const itemAction = normalizeAction(itemPayload.action)
+        if (!isActionAllowed(scope, itemAction) || itemAction === 'batch') {
+          failed += 1
+          items.push({
+            index: i,
+            ok: false,
+            status: 400,
+            action: itemAction || null,
+            resource: toCleanResource(itemPayload.resource),
+            result: { success: false, error: `Ação inválida para batch/${scope}: ${itemAction}`, code: 'TOOL_ACTION_INVALID' },
+          })
+          if (!continueOnError) break
+          continue
+        }
+
+        let itemOut: { ok: boolean; status: number; result: unknown }
+        if (itemAction === 'get_drive_file_url') itemOut = await getDriveFileUrl(itemPayload)
+        else if (itemAction === 'send_email') itemOut = await sendEmail(req, itemPayload)
+        else if (itemAction === 'read_file') itemOut = await readDriveFile(req, itemPayload)
+        else itemOut = await forwardWorkspaceRequest(req, itemPayload, scope)
+
+        if (!itemOut.ok) failed += 1
+        items.push({
+          index: i,
+          ok: itemOut.ok,
+          status: itemOut.status,
+          action: itemAction,
+          resource: toCleanResource(itemPayload.resource),
+          result: itemOut.result,
+        })
+        if (!itemOut.ok && !continueOnError) break
+      }
+
+      const total = items.length
+      const passed = total - failed
+      const batchOk = failed === 0
+      return Response.json(
+        toolResponseBody({
+          ok: batchOk,
+          status: batchOk ? 200 : 207,
+          scope,
+          action: 'batch',
+          result: {
+            success: batchOk,
+            items,
+            summary: { total, passed, failed, continue_on_error: continueOnError },
+          },
+        }),
+        { status: batchOk ? 200 : 207 },
       )
     }
 

@@ -36,9 +36,8 @@ export async function POST(req: NextRequest) {
     const sql = `UPDATE empresa.centros_custo SET ${sets.join(', ')} WHERE tenant_id = $${i++} AND id = $${i} RETURNING id`
     const rows = await runQuery<{ id: number }>(sql, params)
     if (!rows.length) return Response.json({ ok: false, error: 'Não encontrado ou sem permissão' }, { status: 404 })
-    return Response.json({ ok: true, result: { success: true, message: 'Centro de custo atualizado', data: { id } } })
+    return Response.json({ ok: true, result: { success: true, id, message: 'Centro de custo atualizado', data: { id } } })
   } catch (e) {
     return Response.json({ ok: false, error: (e as Error).message }, { status: 500 })
   }
 }
-

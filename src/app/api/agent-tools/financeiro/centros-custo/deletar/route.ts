@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     const envTenant = Number.parseInt((process.env.DEFAULT_TENANT_ID || '').trim(), 10)
     const tenantId = Number.isFinite(hdrTenant) && hdrTenant > 0 ? hdrTenant : (Number.isFinite(envTenant) && envTenant > 0 ? envTenant : 1)
     await runQuery(`DELETE FROM empresa.centros_custo WHERE tenant_id = $1 AND id = $2`, [tenantId, id])
-    return Response.json({ ok: true, result: { success: true, message: 'Centro de custo deletado', data: { id } } })
+    return Response.json({ ok: true, result: { success: true, id, message: 'Centro de custo deletado', data: { id } } })
   } catch (e) {
     return Response.json({ ok: false, error: (e as Error).message }, { status: 500 })
   }

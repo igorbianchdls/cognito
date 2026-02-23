@@ -5,6 +5,7 @@ import {
   buildDocumentoToolAttachmentFromRow,
   buildDocumentoToolHtmlSnapshot,
 } from '@/products/documentos/backend/features/tooling/documentoToolArtifact'
+import { getSupabaseAdmin } from '@/products/drive/backend/lib'
 import { uploadBase64ToDrive } from '@/products/drive/backend/features/uploads/uploadBase64ToDrive'
 
 export const runtime = 'nodejs'
@@ -102,6 +103,7 @@ type DocumentoRow = {
   gerado_em: string | null
   enviado_em: string | null
   html_snapshot: string | null
+  payload_json: unknown
 }
 
 async function getDocumentoById(tenantId: number, documentoId: number) {
@@ -121,7 +123,8 @@ async function getDocumentoById(tenantId: number, documentoId: number) {
        d.atualizado_em,
        d.gerado_em,
        d.enviado_em,
-       d.html_snapshot
+       d.html_snapshot,
+       d.payload_json
      FROM documentos.documentos d
      LEFT JOIN documentos.templates t
        ON t.id = d.template_id
@@ -164,11 +167,12 @@ async function normalizeDocumentoOutput(row: DocumentoRow) {
   }
 }
 
-function shouldIncludeAttachmentContent(payload: JsonMap): boolean {
+function shouldIncludeAttachmentContent(payload: JsonMap, action: DocumentoAction | null): boolean {
   const explicit = hasOwnKey(payload, 'include_attachment_content')
     ? payload.include_attachment_content
     : (hasOwnKey(payload, 'includeAttachmentContent') ? payload.includeAttachmentContent : undefined)
   if (explicit !== undefined) return boolFlag(explicit)
+  if (action === 'status') return false
   return !boolFlag(payload.save_to_drive)
 }
 
@@ -195,8 +199,97 @@ function getDriveSaveConfig(payload: JsonMap) {
   }
 }
 
-async function maybeSaveDocumentoToDrive(payload: JsonMap, out: Awaited<ReturnType<typeof normalizeDocumentoOutput>>) {
+function getStoredDriveRef(row: DocumentoRow | null | undefined): Record<string, unknown> | null {
+  if (!row || !row.payload_json) return null
+  const payloadObj = toObj(row.payload_json)
+  const toolDrive = toObj(payloadObj.tool_drive)
+  if (!Object.keys(toolDrive).length) return null
+  return toolDrive
+}
+
+async function refreshStoredDriveSignedUrl(fileIdRaw: unknown) {
+  const fileId = toText(fileIdRaw)
+  if (!fileId) return null
+  const rows = await runQuery<{
+    id: string
+    name: string
+    mime: string | null
+    size_bytes: string | number
+    storage_path: string
+    bucket_id: string | null
+    folder_id: string | null
+    created_at: string
+    created_by: string | number | null
+  }>(
+    `SELECT
+       id::text AS id,
+       folder_id::text AS folder_id,
+       name,
+       mime,
+       size_bytes,
+       storage_path,
+       bucket_id,
+       created_at,
+       created_by::text AS created_by
+     FROM drive.files
+     WHERE id = $1::uuid
+       AND deleted_at IS NULL
+     LIMIT 1`,
+    [fileId],
+  )
+  const file = rows[0]
+  if (!file) return null
+  const supabase = getSupabaseAdmin()
+  if (!supabase) return null
+  const bucket = file.bucket_id || 'drive'
+  const expiresInSeconds = 60 * 60
+  const signed = await supabase.storage.from(bucket).createSignedUrl(file.storage_path, expiresInSeconds)
+  if (!signed.data?.signedUrl) return null
+  return {
+    saved: true,
+    file: {
+      id: file.id,
+      folderId: file.folder_id || undefined,
+      name: file.name,
+      mime: file.mime || 'application/octet-stream',
+      sizeBytes: Number(file.size_bytes || 0),
+      size: undefined,
+      addedAt: file.created_at,
+      addedBy: file.created_by ? `user-${String(file.created_by)}` : undefined,
+      url: signed.data.signedUrl,
+      storagePath: file.storage_path,
+      bucketId: bucket,
+    },
+    signed_url: signed.data.signedUrl,
+  }
+}
+
+async function persistDocumentoDriveRef(tenantId: number, documentoId: number, drive: Record<string, unknown>) {
+  await runQuery(
+    `UPDATE documentos.documentos
+        SET payload_json = COALESCE(payload_json, '{}'::jsonb) || jsonb_build_object('tool_drive', $3::jsonb),
+            atualizado_em = now()
+      WHERE tenant_id = $1
+        AND id = $2`,
+    [tenantId, documentoId, JSON.stringify(drive)],
+  )
+}
+
+async function maybeSaveDocumentoToDrive(
+  tenantId: number,
+  payload: JsonMap,
+  out: Awaited<ReturnType<typeof normalizeDocumentoOutput>>,
+  row?: DocumentoRow | null,
+) {
   if (!boolFlag(payload.save_to_drive)) return { ok: true as const, drive: undefined }
+  const storedDrive = getStoredDriveRef(row)
+  const storedFileId = toObj(storedDrive?.file).id
+  if (storedFileId) {
+    const refreshed = await refreshStoredDriveSignedUrl(storedFileId)
+    if (refreshed) {
+      return { ok: true as const, drive: refreshed }
+    }
+  }
   const driveCfg = getDriveSaveConfig(payload)
   if (!driveCfg.workspace_id) {
     return { ok: false as const, status: 400, code: 'DOCUMENTO_DRIVE_WORKSPACE_REQUIRED', error: 'save_to_drive=true requer drive.workspace_id (ou workspace_id)' }
@@ -219,6 +312,15 @@ async function maybeSaveDocumentoToDrive(payload: JsonMap, out: Awaited<ReturnTy
       code: uploadResult.code || 'DOCUMENTO_DRIVE_SAVE_FAILED',
       error: uploadResult.message || 'Falha ao salvar documento no Drive',
     }
+  }
+
+  try {
+    await persistDocumentoDriveRef(tenantId, Number(out.documento.id), {
+      saved: true,
+      file: uploadResult.file,
+    })
+  } catch {
+    // Do not fail the request after successful upload because persistence is best-effort.
   }
 
   return {
@@ -340,7 +442,7 @@ export async function POST(req: NextRequest) {
     const payload = toObj(await req.json().catch(() => ({})))
     const tenantId = parseTenantId(req, payload)
     const action = normalizeAction(payload.action)
-    const includeAttachmentContent = shouldIncludeAttachmentContent(payload)
+    const includeAttachmentContent = shouldIncludeAttachmentContent(payload, action)
 
     if (!action) {
       return toolErrorJson(400, 'DOCUMENTO_ACTION_INVALID', 'action inválida. Use gerar ou status.', 'invalid_action')
@@ -393,7 +495,7 @@ export async function POST(req: NextRequest) {
         const existing = await getDocumentoById(tenantId, existingId)
         if (existing) {
           const out = await normalizeDocumentoOutput(existing)
-          const saveDrive = await maybeSaveDocumentoToDrive(payload, out)
+          const saveDrive = await maybeSaveDocumentoToDrive(tenantId, payload, out, existing)
           if (!saveDrive.ok) return toolErrorJson(saveDrive.status, saveDrive.code, saveDrive.error, action)
           const safeOut = trimDocumentoAttachmentContent(out, includeAttachmentContent)
           return toolSuccessJson(action, { success: true, reused: true, ...safeOut, ...(saveDrive.drive ? { drive: saveDrive.drive } : {}) })
@@ -445,7 +547,7 @@ export async function POST(req: NextRequest) {
     }
 
     const out = await normalizeDocumentoOutput(row)
-    const saveDrive = await maybeSaveDocumentoToDrive(payload, out)
+    const saveDrive = await maybeSaveDocumentoToDrive(tenantId, payload, out, row)
     if (!saveDrive.ok) return toolErrorJson(saveDrive.status, saveDrive.code, saveDrive.error, action)
     const safeOut = trimDocumentoAttachmentContent(out, includeAttachmentContent)
 
