@@ -36,6 +36,10 @@ function boolFlag(value: unknown): boolean {
   return v === 'true' || v === '1' || v === 'yes' || v === 'sim'
 }
 
+function hasOwnKey(obj: JsonMap, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(obj, key)
+}
+
 function parseTenantId(req: NextRequest, payload: JsonMap): number {
   const fromHeader = Number(req.headers.get('x-tenant-id') || '')
   if (Number.isFinite(fromHeader) && fromHeader > 0) return Math.trunc(fromHeader)
@@ -158,6 +162,25 @@ async function normalizeDocumentoOutput(row: DocumentoRow) {
     },
     attachment: artifact.attachment,
   }
+}
+
+function shouldIncludeAttachmentContent(payload: JsonMap): boolean {
+  const explicit = hasOwnKey(payload, 'include_attachment_content')
+    ? payload.include_attachment_content
+    : (hasOwnKey(payload, 'includeAttachmentContent') ? payload.includeAttachmentContent : undefined)
+  if (explicit !== undefined) return boolFlag(explicit)
+  return !boolFlag(payload.save_to_drive)
+}
+
+function trimDocumentoAttachmentContent(
+  out: Awaited<ReturnType<typeof normalizeDocumentoOutput>>,
+  includeAttachmentContent: boolean,
+) {
+  if (includeAttachmentContent) return out
+  if (!out.attachment || typeof out.attachment !== 'object') return out
+  const attachment = { ...(out.attachment as Record<string, unknown>) }
+  delete attachment.content
+  return { ...out, attachment }
 }
 
 function getDriveSaveConfig(payload: JsonMap) {
@@ -317,6 +340,7 @@ export async function POST(req: NextRequest) {
     const payload = toObj(await req.json().catch(() => ({})))
     const tenantId = parseTenantId(req, payload)
     const action = normalizeAction(payload.action)
+    const includeAttachmentContent = shouldIncludeAttachmentContent(payload)
 
     if (!action) {
       return toolErrorJson(400, 'DOCUMENTO_ACTION_INVALID', 'action inválida. Use gerar ou status.', 'invalid_action')
@@ -330,7 +354,8 @@ export async function POST(req: NextRequest) {
       const row = await getDocumentoById(tenantId, documentoId)
       if (!row) return toolErrorJson(404, 'DOCUMENTO_NOT_FOUND', 'Documento não encontrado', action)
       const out = await normalizeDocumentoOutput(row)
-      return toolSuccessJson(action, { success: true, ...out })
+      const safeOut = trimDocumentoAttachmentContent(out, includeAttachmentContent)
+      return toolSuccessJson(action, { success: true, ...safeOut })
     }
 
     const tipo = toText(payload.tipo).toLowerCase()
@@ -370,7 +395,8 @@ export async function POST(req: NextRequest) {
           const out = await normalizeDocumentoOutput(existing)
           const saveDrive = await maybeSaveDocumentoToDrive(payload, out)
           if (!saveDrive.ok) return toolErrorJson(saveDrive.status, saveDrive.code, saveDrive.error, action)
-          return toolSuccessJson(action, { success: true, reused: true, ...out, ...(saveDrive.drive ? { drive: saveDrive.drive } : {}) })
+          const safeOut = trimDocumentoAttachmentContent(out, includeAttachmentContent)
+          return toolSuccessJson(action, { success: true, reused: true, ...safeOut, ...(saveDrive.drive ? { drive: saveDrive.drive } : {}) })
         }
       }
     }
@@ -421,11 +447,12 @@ export async function POST(req: NextRequest) {
     const out = await normalizeDocumentoOutput(row)
     const saveDrive = await maybeSaveDocumentoToDrive(payload, out)
     if (!saveDrive.ok) return toolErrorJson(saveDrive.status, saveDrive.code, saveDrive.error, action)
+    const safeOut = trimDocumentoAttachmentContent(out, includeAttachmentContent)
 
     return toolSuccessJson(action, {
       success: true,
       reused: false,
-      ...out,
+      ...safeOut,
       ...(saveDrive.drive ? { drive: saveDrive.drive } : {}),
     })
   } catch (error) {
