@@ -123,19 +123,22 @@ async function callBridge({ action, args }){
     let data = {};
     try { data = JSON.parse(raw); } catch {}
     const out = (data && (data.result !== undefined ? data.result : data)) || {};
-    return { ok: res.ok, out, status: res.status, rawText: raw, statusText: (res.statusText || '') };
+    const outWithMeta = (data && data.result !== undefined && out && typeof out === 'object' && !Array.isArray(out))
+      ? { ...out, ...(data?.meta !== undefined && out?.meta === undefined ? { meta: data.meta } : {}) }
+      : out;
+    return { ok: res.ok, out: outWithMeta, status: res.status, rawText: raw, statusText: (res.statusText || '') };
   };
 
   try {
     if (action === 'listar') {
       const suffix = (args && args.actionSuffix) || 'listar';
       const { ok, out, status, rawText, statusText } = await doFetch(suffix, (args && args.params) || {});
-      const payload = ok ? out : { success:false, error: (out?.error || out?.message || rawText || statusText || 'erro ao listar'), status };
+      const payload = ok ? out : { success:false, error: (out?.error || out?.message || rawText || statusText || 'erro ao listar'), status, ...(out?.code ? { code: out.code } : {}), ...(out?.meta ? { meta: out.meta } : { meta: { tool:'crud', status } }) };
       return { content: [ { type: 'text', text: JSON.stringify(payload) } ] };
     } else if (action === 'criar') {
       const suffix = (args && args.actionSuffix) || 'criar';
       const { ok, out, status, rawText, statusText } = await doFetch(suffix, (args && args.data) || {});
-      const payload = ok ? out : { success:false, error: (out?.error || out?.message || rawText || statusText || 'erro ao criar'), status };
+      const payload = ok ? out : { success:false, error: (out?.error || out?.message || rawText || statusText || 'erro ao criar'), status, ...(out?.code ? { code: out.code } : {}), ...(out?.meta ? { meta: out.meta } : { meta: { tool:'crud', status } }) };
       return { content: [ { type: 'text', text: JSON.stringify(payload) } ] };
     } else if (action === 'atualizar') {
       const suffixes = (args && args.actionSuffix) ? [String(args.actionSuffix)] : ['atualizar','editar','update','edit'];
@@ -151,7 +154,7 @@ async function callBridge({ action, args }){
       for (const suf of suffixes) {
         const { ok, out, status, rawText, statusText } = await doFetch(suf, payloadIn);
         if (ok) return { content: [ { type: 'text', text: JSON.stringify(out) } ] };
-        const payloadErr = { success:false, error: (out?.error || out?.message || rawText || statusText || 'falha ao deletar'), status };
+        const payloadErr = { success:false, error: (out?.error || out?.message || rawText || statusText || 'falha ao deletar'), status, ...(out?.code ? { code: out.code } : {}), ...(out?.meta ? { meta: out.meta } : { meta: { tool:'crud', status } }) };
         return { content: [ { type: 'text', text: JSON.stringify(payloadErr) } ] };
       }
       return { content: [{ type: 'text', text: JSON.stringify({ success:false, error:'falha ao deletar' }) }] };
@@ -177,11 +180,14 @@ async function callScopedTool(path,args,label){
     let data = {};
     try { data = JSON.parse(raw); } catch {}
     const out = (data && (data.result !== undefined ? data.result : data)) || {};
+    const outWithMeta = (data && data.result !== undefined && out && typeof out === 'object' && !Array.isArray(out))
+      ? { ...out, ...(data?.meta !== undefined && out?.meta === undefined ? { meta: data.meta } : {}) }
+      : out;
     if (!res.ok) {
-      const err = { success:false, status:res.status, error:(out?.error || out?.message || raw || res.statusText || (label + ' error')) };
+      const err = { success:false, status:res.status, error:(out?.error || out?.message || raw || res.statusText || (label + ' error')), ...(out?.code ? { code: out.code } : {}), ...(out?.meta ? { meta: out.meta } : { meta: { tool: label, status: res.status } }) };
       return { content: [{ type:'text', text: JSON.stringify(err) }] };
     }
-    return { content: [{ type:'text', text: JSON.stringify(out) }] };
+    return { content: [{ type:'text', text: JSON.stringify(outWithMeta) }] };
   } catch(e) {
     return { content: [{ type: 'text', text: JSON.stringify({ success:false, error:String(e?.message || e) }) }] };
   }

@@ -158,10 +158,25 @@ async function callCrud(args) {
   let data = {};
   try { data = JSON.parse(raw); } catch {}
   const out = (data && (data.result !== undefined ? data.result : data)) || {};
+  const outWithMeta = (
+    data &&
+    data.result !== undefined &&
+    out &&
+    typeof out === 'object' &&
+    !Array.isArray(out)
+  )
+    ? { ...out, ...(data?.meta !== undefined && out?.meta === undefined ? { meta: data.meta } : {}) }
+    : out;
   if (!resTool.ok) {
-    return { success: false, status: resTool.status, error: out?.error || out?.message || raw || resTool.statusText || 'erro na tool crud' };
+    return {
+      success: false,
+      status: resTool.status,
+      error: out?.error || out?.message || raw || resTool.statusText || 'erro na tool crud',
+      ...(out?.code ? { code: out.code } : {}),
+      ...(out?.meta ? { meta: out.meta } : { meta: { tool: 'crud', status: resTool.status } }),
+    };
   }
-  return out;
+  return outWithMeta;
 }
 
 async function callScopedTool(path, args, label) {
@@ -180,10 +195,25 @@ async function callScopedTool(path, args, label) {
   let data = {};
   try { data = JSON.parse(raw); } catch {}
   const out = (data && (data.result !== undefined ? data.result : data)) || {};
+  const outWithMeta = (
+    data &&
+    data.result !== undefined &&
+    out &&
+    typeof out === 'object' &&
+    !Array.isArray(out)
+  )
+    ? { ...out, ...(data?.meta !== undefined && out?.meta === undefined ? { meta: data.meta } : {}) }
+    : out;
   if (!resTool.ok) {
-    return { success: false, status: resTool.status, error: out?.error || out?.message || raw || resTool.statusText || ('erro na tool ' + label) };
+    return {
+      success: false,
+      status: resTool.status,
+      error: out?.error || out?.message || raw || resTool.statusText || ('erro na tool ' + label),
+      ...(out?.code ? { code: out.code } : {}),
+      ...(out?.meta ? { meta: out.meta } : { meta: { tool: label, status: resTool.status } }),
+    };
   }
-  return out;
+  return outWithMeta;
 }
 
 async function callDrive(args) {
@@ -776,7 +806,7 @@ const baseTools = [
   {
     type: 'function',
     name: 'crud',
-    description: 'Tool ERP canônica para listar/criar/atualizar/deletar recursos de negócio. Use somente resource da lista canônica (com hífen, nunca underscore). Para consultas, prefira action="listar" com filtros em params (e data quando necessário).',
+    description: 'Tool ERP canônica para listar/criar/atualizar/deletar recursos de negócio. Use somente resource canônico (com hífen, nunca underscore). Resources suportados: financeiro/contas-financeiras, financeiro/categorias-despesa, financeiro/categorias-receita, financeiro/clientes, financeiro/centros-custo, financeiro/centros-lucro, vendas/pedidos, compras/pedidos, contas-a-pagar, contas-a-receber, crm/contas, crm/contatos, crm/leads, crm/oportunidades, crm/atividades, estoque/almoxarifados, estoque/movimentacoes, estoque/estoque-atual, estoque/tipos-movimentacao. Para consultas, prefira action=\"listar\" com filtros em params (e data quando necessário).',
     parameters: {
       type: 'object',
       properties: {
@@ -787,7 +817,7 @@ const baseTools = [
         },
         resource: {
           type: 'string',
-          description: 'Resource ERP canônico (exatos): financeiro/contas-financeiras, financeiro/categorias-despesa, financeiro/categorias-receita, financeiro/clientes, financeiro/centros-custo, financeiro/centros-lucro, vendas/pedidos, compras/pedidos, contas-a-pagar, contas-a-receber, crm/contas, crm/contatos, crm/leads, crm/oportunidades, crm/atividades, estoque/almoxarifados, estoque/movimentacoes, estoque/estoque-atual, estoque/tipos-movimentacao.'
+          description: 'Resource ERP canônico exato (use um dos resources listados na descrição da tool).'
         },
         params: {
           type: 'object',

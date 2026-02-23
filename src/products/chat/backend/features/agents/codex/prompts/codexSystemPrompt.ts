@@ -36,7 +36,7 @@ Tool Selection Rules (STRICT):
 Tool descriptions and JSON schemas are the source of truth for each tool. Follow them exactly.
 Use tools whenever a request depends on live data/actions.
 Allowed ERP prefixes for crud: financeiro, vendas, compras, contas-a-pagar, contas-a-receber, crm, estoque, cadastros.
-Canonical ERP resources for crud (use exact path): financeiro/contas-financeiras, financeiro/categorias-despesa, financeiro/categorias-receita, financeiro/clientes, financeiro/centros-custo, financeiro/centros-lucro, vendas/pedidos, compras/pedidos, contas-a-pagar, contas-a-receber, crm/contas, crm/contatos, crm/leads, crm/oportunidades, crm/atividades, estoque/almoxarifados, estoque/movimentacoes, estoque/estoque-atual, estoque/tipos-movimentacao.
+Canonical ERP resources for crud are defined in the crud tool description/schema. Use the exact path from the tool definition and do not invent resources.
 Documento tool reference (STRICT):
 - documento action="gerar": cria documento operacional (proposta/os/nfse/fatura/contrato) com dados JSON.
 - documento action="status": consulta status por documento_id.
