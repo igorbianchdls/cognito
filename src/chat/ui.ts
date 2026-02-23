@@ -1,1 +1,1 @@
-export * from @/products/chat/shared/chat-ui
+export * from '@/products/chat/shared/chat-ui'

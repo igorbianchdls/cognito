@@ -1,3 +1,3 @@
 "use client"
 
-export { default } from @/products/chat/frontend/components/
+export { default } from '@/products/chat/frontend/components/StatusBadge'
