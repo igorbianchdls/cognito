@@ -13,3 +13,5 @@ export { default as SandboxPanel } from '@/products/chat/shared/chat-ui/componen
 export { default as SandboxHeader } from '@/products/chat/shared/chat-ui/components/SandboxHeader'
 export { default as SandboxBody } from '@/products/chat/shared/chat-ui/components/SandboxBody'
 export { default as StatusBadge } from '@/products/chat/shared/chat-ui/components/StatusBadge'
+export { default as JsonRenderPreview } from '@/products/chat/shared/chat-ui/components/json-render/JsonRenderPreview'
+export { default as DashboardPicker } from '@/products/chat/shared/chat-ui/components/json-render/DashboardPicker'
