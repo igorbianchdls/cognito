@@ -402,8 +402,9 @@ function normalizeEmailMessagesListResult(raw: unknown): { messages: Record<stri
   const data = obj.data
   if (data && typeof data === 'object' && !Array.isArray(data) && Array.isArray((data as Record<string, unknown>).messages)) {
     const dataObj = data as Record<string, unknown>
+    const dataMessages = dataObj.messages as unknown[]
     return {
-      messages: dataObj.messages!.filter((m): m is Record<string, unknown> => !!m && typeof m === 'object' && !Array.isArray(m)),
+      messages: dataMessages.filter((m): m is Record<string, unknown> => !!m && typeof m === 'object' && !Array.isArray(m)),
       assign: (messages) => ({
         ...obj,
         data: {
