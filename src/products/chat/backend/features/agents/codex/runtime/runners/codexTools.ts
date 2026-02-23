@@ -1068,7 +1068,7 @@ const baseTools = [
   {
     type: 'function',
     name: 'Read',
-    description: 'Lê arquivo na sandbox do chat (padrão Claude SDK). file_path deve sempre começar com /vercel/sandbox.',
+    description: 'Lê arquivo na sandbox do chat (padrão Claude SDK). `file_path` deve começar com `/vercel/sandbox`; `offset`/`limit` operam por linhas (não bytes).',
     parameters: {
       type: 'object',
       properties: {
@@ -1092,7 +1092,7 @@ const baseTools = [
   {
     type: 'function',
     name: 'Skill',
-    description: 'Lista e lê skills dentro das pastas /vercel/sandbox/agent/skills (preferencial) e /vercel/sandbox/agents/skills (compatibilidade).',
+    description: 'Lista e lê skills na sandbox do chat. Procura em `/vercel/sandbox/agent/skills` (preferencial) e `/vercel/sandbox/agents/skills` (compatibilidade).',
     parameters: {
       type: 'object',
       properties: {
@@ -1129,7 +1129,7 @@ const baseTools = [
   {
     type: 'function',
     name: 'Edit',
-    description: 'Substitui texto exato em arquivo (padrão Claude SDK), aplicando gravação via fs-apply-patch. file_path deve sempre começar com /vercel/sandbox.',
+    description: 'Substitui texto exato em arquivo (padrão Claude SDK) via `fs-apply-patch`. `file_path` deve começar com `/vercel/sandbox` e a operação falha se `old_string` não corresponder exatamente.',
     parameters: {
       type: 'object',
       properties: {
@@ -1157,7 +1157,7 @@ const baseTools = [
   {
     type: 'function',
     name: 'Write',
-    description: 'Cria ou sobrescreve arquivo texto via fs-apply-patch. file_path deve sempre começar com /vercel/sandbox.',
+    description: 'Cria ou sobrescreve completamente um arquivo texto via `fs-apply-patch`. `file_path` deve começar com `/vercel/sandbox`.',
     parameters: {
       type: 'object',
       properties: {
@@ -1177,7 +1177,7 @@ const baseTools = [
   {
     type: 'function',
     name: 'Delete',
-    description: 'Remove arquivo via fs-apply-patch. file_path deve sempre começar com /vercel/sandbox.',
+    description: 'Remove arquivo na sandbox via `fs-apply-patch`. `file_path` deve começar com `/vercel/sandbox`.',
     parameters: {
       type: 'object',
       properties: {
@@ -1195,7 +1195,7 @@ const baseTools = [
     : [{
         type: 'function',
         name: 'shell',
-        description: 'Executa comandos no sandbox do chat. Use somente caminhos dentro de /vercel/sandbox.',
+        description: 'Executa comandos shell no sandbox do chat. Prefira comandos curtos e use caminhos dentro de `/vercel/sandbox`.',
         parameters: {
           type: 'object',
           properties: {
