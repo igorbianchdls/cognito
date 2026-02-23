@@ -776,7 +776,7 @@ const baseTools = [
   {
     type: 'function',
     name: 'crud',
-    description: 'Tool ERP para listar/criar/atualizar/deletar recursos canônicos. Use action="listar" com filtros em params/data para pedidos como pendentes/vencidas. Use somente resources ERP válidos e com hífen (nunca underscore).',
+    description: 'Tool ERP canônica para listar/criar/atualizar/deletar recursos de negócio. Use somente `resource` da lista canônica (com hífen, nunca underscore). Para consultas, prefira `action="listar"` com filtros em `params` (e `data` quando necessário).',
     parameters: {
       type: 'object',
       properties: {
@@ -816,7 +816,7 @@ const baseTools = [
   {
     type: 'function',
     name: 'drive',
-    description: 'Tool de Drive para listar/gerenciar arquivos e pastas, obter URL assinada, ler conteúdo e fazer upload (incluindo drive/files/upload-base64).',
+    description: 'Tool de Drive para listar/gerenciar arquivos e pastas, obter URL assinada, ler conteúdo e fazer upload. Prefira `resource="drive/files/upload-base64"` quando já tiver conteúdo em base64 (ex.: saída de `documento`); use `prepare-upload`/`complete-upload` para fluxos binários/externos.',
     parameters: {
       type: 'object',
       properties: {
@@ -842,7 +842,7 @@ const baseTools = [
         data: {
           type: 'object',
           additionalProperties: true,
-          description: 'Body para action=request quando method for POST/DELETE.'
+          description: 'Body para action=request quando method for POST/DELETE. Em uploads, o backend também aceita campos top-level e normaliza para `data`.'
         },
         file_id: {
           type: 'string',
@@ -885,7 +885,7 @@ const baseTools = [
   {
     type: 'function',
     name: 'email',
-    description: 'Tool de Email. action="request" opera inbox/messages; action="send" envia email com anexos por URL/base64 ou por drive_file_id.',
+    description: 'Tool de Email para consultar inbox/messages e enviar emails. Prefira anexar por `drive_file_id`/`drive_file_ids` (backend resolve URL assinada); use URL/base64 (`attachments`/`attachment_url`) como fallback.',
     parameters: {
       type: 'object',
       properties: {
@@ -911,7 +911,7 @@ const baseTools = [
         data: {
           type: 'object',
           additionalProperties: true,
-          description: 'Body para action=request quando method for POST/DELETE.'
+          description: 'Body para action=request quando method for POST/DELETE. Em `email/messages`, `inbox_id`/`inboxId` também pode ser enviado top-level (backend normaliza).'
         },
         inbox_id: {
           type: 'string',
@@ -964,7 +964,7 @@ const baseTools = [
               url: { type: 'string' },
             },
           },
-          description: 'Lista de anexos para action=send. Cada item pode ter url ou content(base64), além de filename/contentType.'
+          description: 'Lista de anexos para action=send. Cada item pode ter `url` ou `content` (base64), além de `filename`/`contentType`. Use quando não for usar `drive_file_id(s)`.'
         },
         drive_file_id: {
           type: 'string',
@@ -999,7 +999,7 @@ const baseTools = [
   {
     type: 'function',
     name: 'documento',
-    description: 'Gera e consulta documentos operacionais (OS/proposta/NFSe/fatura/contrato). Pode gerar PDF e salvar no Drive (save_to_drive).',
+    description: 'Gera e consulta documentos operacionais (OS/proposta/NFSe/fatura/contrato), retornando PDF. Com `save_to_drive=true`, tenta salvar no Drive e retornar metadados do arquivo; sem isso, retorna o PDF inline.',
     parameters: {
       type: 'object',
       properties: {
@@ -1028,7 +1028,7 @@ const baseTools = [
         dados: {
           type: 'object',
           additionalProperties: true,
-          description: 'Payload JSON com os dados variáveis do documento. Obrigatório em action=gerar.'
+          description: 'Payload JSON com os dados variáveis/operacionais do documento. Obrigatório em action=gerar.'
         },
         save_to_drive: {
           type: 'boolean',
@@ -1042,7 +1042,7 @@ const baseTools = [
             folder_id: { type: 'string' },
             file_name: { type: 'string' },
           },
-          description: 'Configuração opcional de destino no Drive quando save_to_drive=true.'
+          description: 'Configuração opcional de destino no Drive quando save_to_drive=true (workspace obrigatório na prática para salvar).'
         },
         template_id: {
           type: 'integer',
