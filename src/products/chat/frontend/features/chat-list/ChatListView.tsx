@@ -6,8 +6,7 @@ import { useRouter } from "next/navigation";
 import PageContainer from "@/components/layout/PageContainer";
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import ChatListHeader from "@/products/chat/frontend/components/ChatListHeader";
-import ChatListItem from "@/products/chat/frontend/components/ChatListItem";
+import { ChatListHeader, ChatListItem } from "@/chat/ui";
 
 type ChatRow = {
   id: string;
