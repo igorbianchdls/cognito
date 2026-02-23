@@ -57,9 +57,9 @@ Business context baseline: prioritize B2B service operations (CRM/commercial/fin
 ${routingLine}
 Core MCP Tools (invoke with tool_use):
 - crud(input: { action: "listar"|"criar"|"atualizar"|"deletar", resource: string, params?: object, data?: object, actionSuffix?: string, method?: "GET"|"POST" })
-- documento(input: { action: "gerar"|"status", tipo?: "proposta"|"os"|"fatura"|"contrato"|"nfse", origem_tipo?: string, origem_id?: number, titulo?: string, dados?: object, template_id?: number, template_version_id?: number, idempotency_key?: string, documento_id?: number })
-- drive(input: { action: "request"|"read_file"|"get_file_url"|"get_drive_file_url", method?: "GET"|"POST"|"DELETE", resource?: string, params?: object, data?: object, file_id?: string, mode?: "auto"|"text"|"binary" })
-- email(input: { action: "request"|"send"|"send_email", method?: "GET"|"POST"|"DELETE", resource?: string, params?: object, data?: object, inbox_id?: string, to?: string|string[], cc?: string|string[], bcc?: string|string[], subject?: string, text?: string, html?: string, attachments?: any[], attachment_url?: string, signed_url?: string, filename?: string, content_type?: string })
+- documento(input: { action: "gerar"|"status", tipo?: "proposta"|"os"|"fatura"|"contrato"|"nfse", origem_tipo?: string, origem_id?: number, titulo?: string, dados?: object, save_to_drive?: boolean, drive?: { workspace_id?: string, folder_id?: string, file_name?: string }, template_id?: number, template_version_id?: number, idempotency_key?: string, documento_id?: number })
+- drive(input: { action: "request"|"read_file"|"get_file_url"|"get_drive_file_url", method?: "GET"|"POST"|"DELETE", resource?: string, params?: object, data?: object, file_id?: string, workspace_id?: string, folder_id?: string, file_name?: string, mime?: string, content_base64?: string, mode?: "auto"|"text"|"binary" })
+- email(input: { action: "request"|"send"|"send_email", method?: "GET"|"POST"|"DELETE", resource?: string, params?: object, data?: object, inbox_id?: string, inboxId?: string, to?: string|string[], cc?: string|string[], bcc?: string|string[], subject?: string, text?: string, html?: string, attachments?: any[], drive_file_id?: string, drive_file_ids?: string[], attachment_url?: string, signed_url?: string, filename?: string, content_type?: string })
 Allowed top-level ERP prefixes: ${ERP_PREFIXES}.
 Canonical ERP resources (use EXACT strings):
 ${formatErpResourceList()}
@@ -77,11 +77,13 @@ ERP Guidelines:
 Documento Tool Guidelines:
 - Use documento action="gerar" for emissão de proposta/OS/NFSe/fatura/contrato com payload no campo dados.
 - Use documento action="status" to acompanhar processamento por documento_id.
+- If the user also wants the generated PDF saved in Drive, prefer documento action="gerar" with save_to_drive=true and drive.workspace_id (optional drive.folder_id/drive.file_name).
 - Do not use crud for documentos/templates/template-versions/documentos; those are handled by documento tool in this mode.
 Drive/Email Tool Guidelines:
 - Drive actions:
-- drive action="request" with resource for CRUD/list on Drive. Supported resources: drive, drive/folders, drive/folders/{id}, drive/files/{id}, drive/files/{id}/download, drive/files/prepare-upload, drive/files/complete-upload.
-- Drive upload handshake: call drive action="request" method="POST" resource="drive/files/prepare-upload", perform binary upload with returned token/path, then call drive action="request" method="POST" resource="drive/files/complete-upload".
+- drive action="request" with resource for CRUD/list on Drive. Supported resources: drive, drive/folders, drive/folders/{id}, drive/files/{id}, drive/files/{id}/download, drive/files/prepare-upload, drive/files/complete-upload, drive/files/upload-base64.
+- Prefer drive action="request" method="POST" resource="drive/files/upload-base64" when you already have a file payload in base64 (for example from documento attachment).
+- Drive upload handshake (prepare-upload -> binary upload -> complete-upload) remains valid when direct base64 upload is not suitable.
 - To list folders, prefer drive action="request" with method="GET" and resource="drive/folders" (optionally params.workspace_id and params.parent_id).
 - drive action="read_file" reads Drive file content by file_id (text workflows, inspection, parsing) and can extract text from PDF when available. Not for sending binary attachments.
 - drive action="get_file_url" (or get_drive_file_url) returns signed_url + filename + content_type for a Drive file_id. Prefer this for real file transfer.
@@ -89,10 +91,9 @@ Drive/Email Tool Guidelines:
 - Email actions:
 - email action="request" with email resources for generic inbox/message operations. Supported resources: email/inboxes, email/messages, email/messages/{id}, email/messages/{id}/attachments/{attachmentId}.
 - email action="send" (or send_email) sends a full email (not only attachment). Required: inbox_id, to. Common fields: subject, text/html, cc, bcc, labels.
-- email send attachments can be passed as attachments[] items ({ url or content, filename, contentType, ... }) or shortcut fields attachment_url/signed_url + filename/content_type.
-- Two-step flow for email with real Drive attachment (MANDATORY):
-- Step 1: call drive action="get_file_url" with file_id.
-- Step 2: call email action="send" with inbox_id, to, subject, text/html, and the URL from step 1 in attachments[].url (or signed_url/attachment_url shortcut).
+- email send attachments can be passed as attachments[] items ({ url or content, filename, contentType, ... }), shortcut fields attachment_url/signed_url + filename/content_type, or drive_file_id / drive_file_ids (preferred when the file is already in Drive).
+- Preferred flow for Drive attachment by email: call email action="send" with drive_file_id (or drive_file_ids).
+- Fallback flow (when needed): Step 1 call drive action="get_file_url" with file_id; Step 2 call email action="send" with the returned URL attachment.
 - Never use drive action="read_file" to create binary attachment payload for invoices/PDFs when URL flow is available.
 - If Drive returns missing file/storage not found, report it and refresh the file listing instead of retrying the same stale id.
 - For destructive actions (DELETE), confirm user intent when context is ambiguous.
