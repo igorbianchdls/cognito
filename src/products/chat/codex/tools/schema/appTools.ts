@@ -3,14 +3,14 @@ export const codexAppFunctionTools = [
     type: 'function',
     name: 'crud',
     description:
-      'Tool ERP canônica para listar/criar/atualizar/deletar/aprovar/concluir/cancelar/reabrir/baixar/estornar recursos de negócio. Use somente resource canônico (com hífen, nunca underscore). Resources suportados: financeiro/contas-financeiras, financeiro/categorias-despesa, financeiro/categorias-receita, financeiro/clientes, financeiro/centros-custo, financeiro/centros-lucro, vendas/pedidos, compras/pedidos, contas-a-pagar, contas-a-receber, crm/contas, crm/contatos, crm/leads, crm/oportunidades, crm/atividades, estoque/almoxarifados, estoque/movimentacoes, estoque/estoque-atual, estoque/tipos-movimentacao. Em recursos transacionais, prefira ações de negócio (aprovar/concluir/cancelar/reabrir/baixar/estornar/marcar_como_recebido/marcar_recebimento_parcial) em vez de deletar. Para consultas, prefira action="listar" com filtros em params (e data quando necessário).',
+      'Tool ERP canônica para listar/criar/atualizar/deletar/aprovar/concluir/cancelar/reabrir/baixar/estornar recursos de negócio. Use somente resource canônico (com hífen, nunca underscore). Resources suportados: financeiro/contas-financeiras, financeiro/categorias-despesa, financeiro/categorias-receita, financeiro/clientes, financeiro/centros-custo, financeiro/centros-lucro, vendas/pedidos, compras/pedidos, contas-a-pagar, contas-a-receber, crm/contas, crm/contatos, crm/leads, crm/oportunidades, crm/atividades, estoque/almoxarifados, estoque/movimentacoes, estoque/estoque-atual, estoque/tipos-movimentacao. Matriz prática: vendas/pedidos -> aprovar|concluir|cancelar|reabrir; compras/pedidos -> aprovar|cancelar|reabrir|marcar_como_recebido|marcar_recebimento_parcial; contas-a-pagar/contas-a-receber -> baixar|estornar|cancelar|reabrir. Em recursos transacionais, prefira ações de negócio em vez de deletar. Para consultas, prefira action="listar" com filtros em params.',
     parameters: {
       type: 'object',
       properties: {
         action: {
           type: 'string',
           enum: ['listar', 'criar', 'atualizar', 'deletar', 'aprovar', 'concluir', 'cancelar', 'reabrir', 'baixar', 'estornar', 'marcar_como_recebido', 'marcar_recebimento_parcial'],
-          description: 'Operação principal do ERP.',
+          description: 'Operação principal. Use ações de negócio por recurso (ex.: vendas/pedidos: aprovar/concluir/cancelar/reabrir; compras/pedidos: aprovar/cancelar/reabrir/marcar_como_recebido/marcar_recebimento_parcial; contas-*: baixar/estornar/cancelar/reabrir).',
         },
         resource: {
           type: 'string',
@@ -45,15 +45,15 @@ export const codexAppFunctionTools = [
     type: 'function',
     name: 'drive',
     description:
-      'Tool de Drive para listar/gerenciar arquivos e pastas, obter URL assinada, ler conteúdo e fazer upload. Prefira resource="drive/files/upload-base64" quando já tiver conteúdo em base64 (ex.: saída de documento); use prepare-upload/complete-upload para fluxos binários/externos.',
+      'Tool de Drive para listar/gerenciar arquivos e pastas, obter URL assinada, ler conteúdo e fazer upload. Também suporta batch (múltiplas operações em sequência). Prefira resource="drive/files/upload-base64" quando já tiver conteúdo em base64 (ex.: saída de documento); use prepare-upload/complete-upload para fluxos binários/externos.',
     parameters: {
       type: 'object',
       properties: {
         action: {
           type: 'string',
-          enum: ['request', 'read_file', 'get_file_url', 'get_drive_file_url'],
+          enum: ['request', 'read_file', 'get_file_url', 'get_drive_file_url', 'batch'],
           description:
-            'request: operações por resource Drive. read_file: leitura textual/binária por file_id. get_file_url/get_drive_file_url: URL assinada por file_id.',
+            'request: operações por resource Drive. read_file: leitura textual/binária por file_id. get_file_url/get_drive_file_url: URL assinada por file_id. batch: executa operations[] em sequência.',
         },
         method: {
           type: 'string',
@@ -109,6 +109,15 @@ export const codexAppFunctionTools = [
           enum: ['auto', 'text', 'binary'],
           description: 'Modo de leitura em action=read_file.',
         },
+        operations: {
+          type: 'array',
+          items: { type: 'object', additionalProperties: true },
+          description: 'Lista de operações para action=batch. Cada item usa o mesmo contrato de drive (ex.: { action:\"request\", method:\"GET\", resource:\"drive\" }).',
+        },
+        continue_on_error: {
+          type: 'boolean',
+          description: 'Para action=batch: se true (default), continua executando próximas operações mesmo após erro.',
+        },
       },
       required: ['action'],
       additionalProperties: true,
@@ -118,14 +127,14 @@ export const codexAppFunctionTools = [
     type: 'function',
     name: 'email',
     description:
-      'Tool de Email para consultar inbox/messages e enviar emails. Prefira anexar por drive_file_id/drive_file_ids (backend resolve URL assinada); use URL/base64 (attachments/attachment_url) como fallback.',
+      'Tool de Email para consultar inbox/messages e enviar emails. Também suporta batch (múltiplos envios/requests em sequência). Prefira anexar por drive_file_id/drive_file_ids (backend resolve URL assinada); use URL/base64 (attachments/attachment_url) como fallback. Em email/messages, filtros como subject/q/has_attachments ajudam a localizar mensagens.',
     parameters: {
       type: 'object',
       properties: {
         action: {
           type: 'string',
-          enum: ['request', 'send', 'send_email'],
-          description: 'request: operações por resource de email. send/send_email: envia email.',
+          enum: ['request', 'send', 'send_email', 'batch'],
+          description: 'request: operações por resource de email. send/send_email: envia email. batch: executa operations[] em sequência.',
         },
         method: {
           type: 'string',
@@ -140,7 +149,7 @@ export const codexAppFunctionTools = [
         params: {
           type: 'object',
           additionalProperties: true,
-          description: 'Query params para action=request. Em email/messages, normalmente incluir inboxId.',
+          description: 'Query params para action=request. Em email/messages, use inbox_id/inboxId e filtros como subject, q/search, has_attachments, unread, date_from/date_to, label/labels_any.',
         },
         data: {
           type: 'object',
@@ -227,6 +236,15 @@ export const codexAppFunctionTools = [
           type: 'string',
           description: 'MIME type para attachment_url em action=send.',
         },
+        operations: {
+          type: 'array',
+          items: { type: 'object', additionalProperties: true },
+          description: 'Lista de operações para action=batch (request/send/send_email).',
+        },
+        continue_on_error: {
+          type: 'boolean',
+          description: 'Para action=batch: se true (default), continua executando próximas operações mesmo após erro.',
+        },
       },
       required: ['action'],
       additionalProperties: true,
@@ -236,7 +254,7 @@ export const codexAppFunctionTools = [
     type: 'function',
     name: 'documento',
     description:
-      'Gera e consulta documentos operacionais (OS/proposta/NFSe/fatura/contrato), retornando PDF. Com save_to_drive=true, tenta salvar no Drive e retornar metadados do arquivo; sem isso, retorna o PDF inline.',
+      'Gera e consulta documentos operacionais (OS/proposta/NFSe/fatura/contrato), retornando PDF. Com save_to_drive=true, salva no Drive (workspace_id obrigatório na prática) e retorna metadados/drive_file_id; por padrão o payload fica enxuto (sem attachment.content/base64) quando salvo no Drive. Use include_attachment_content=true somente se precisar do PDF inline/base64.',
     parameters: {
       type: 'object',
       properties: {
@@ -269,7 +287,19 @@ export const codexAppFunctionTools = [
         },
         save_to_drive: {
           type: 'boolean',
-          description: 'Se true, tenta salvar o PDF gerado no Drive e retornar metadados/arquivo.',
+          description: 'Se true, salva no Drive e retorna metadados do arquivo. Recomendado para fluxo documento -> drive -> email.',
+        },
+        workspace_id: {
+          type: 'string',
+          description: 'Atalho para drive.workspace_id. Obrigatório na prática quando save_to_drive=true.',
+        },
+        folder_id: {
+          type: 'string',
+          description: 'Atalho para drive.folder_id (opcional).',
+        },
+        file_name: {
+          type: 'string',
+          description: 'Atalho para drive.file_name (opcional).',
         },
         drive: {
           type: 'object',
@@ -281,6 +311,10 @@ export const codexAppFunctionTools = [
           },
           description:
             'Configuração opcional de destino no Drive quando save_to_drive=true (workspace obrigatório na prática para salvar).',
+        },
+        include_attachment_content: {
+          type: 'boolean',
+          description: 'Se true, inclui attachment.content (base64) no retorno. Com save_to_drive=true, o padrão recomendado é false/payload enxuto.',
         },
         template_id: {
           type: 'integer',

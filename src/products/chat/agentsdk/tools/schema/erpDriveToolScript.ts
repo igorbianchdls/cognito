@@ -1,5 +1,5 @@
-export const AGENTSDK_ERP_MCP_DRIVE_TOOL_SCRIPT = `tool('drive','Tool de Drive para listar/gerenciar arquivos e pastas, obter URL assinada, ler conteúdo e fazer upload. Prefira resource="drive/files/upload-base64" quando já tiver conteúdo em base64 (ex.: saída de documento); use prepare-upload/complete-upload para fluxos binários/externos.', {
-  action: z.enum(['request','read_file','get_file_url','get_drive_file_url']).default('request'),
+export const AGENTSDK_ERP_MCP_DRIVE_TOOL_SCRIPT = `tool('drive','Tool de Drive para listar/gerenciar arquivos e pastas, obter URL assinada, ler conteúdo e fazer upload. Também suporta batch (múltiplas operações em sequência). Prefira resource="drive/files/upload-base64" quando já tiver conteúdo em base64 (ex.: saída de documento); use prepare-upload/complete-upload para fluxos binários/externos.', {
+  action: z.enum(['request','read_file','get_file_url','get_drive_file_url','batch']).default('request'),
   method: z.enum(['GET','POST','DELETE']).optional(),
   resource: z.string().optional(),
   params: z.any().optional(),
@@ -12,4 +12,6 @@ export const AGENTSDK_ERP_MCP_DRIVE_TOOL_SCRIPT = `tool('drive','Tool de Drive p
   content_base64: z.string().optional(),
   storage_path: z.string().optional(),
   mode: z.enum(['auto','text','binary']).optional(),
+  operations: z.array(z.any()).optional(),
+  continue_on_error: z.boolean().optional(),
 }, async (args) => callDrive(args))`;

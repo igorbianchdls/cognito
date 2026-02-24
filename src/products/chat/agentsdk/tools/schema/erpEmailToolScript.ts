@@ -1,5 +1,5 @@
-export const AGENTSDK_ERP_MCP_EMAIL_TOOL_SCRIPT = `tool('email','Tool de Email para consultar inbox/messages e enviar emails. Prefira anexar por drive_file_id/drive_file_ids (backend resolve URL assinada); use URL/base64 (attachments/attachment_url) como fallback.', {
-  action: z.enum(['request','send','send_email']).default('request'),
+export const AGENTSDK_ERP_MCP_EMAIL_TOOL_SCRIPT = `tool('email','Tool de Email para consultar inbox/messages e enviar emails. Também suporta batch (múltiplos envios/requests em sequência). Prefira anexar por drive_file_id/drive_file_ids (backend resolve URL assinada); use URL/base64 (attachments/attachment_url) como fallback. Em email/messages, use filtros como subject, q/search, has_attachments, unread e date_from/date_to quando precisar localizar mensagens.', {
+  action: z.enum(['request','send','send_email','batch']).default('request'),
   method: z.enum(['GET','POST','DELETE']).optional(),
   resource: z.string().optional(),
   params: z.any().optional(),
@@ -22,4 +22,6 @@ export const AGENTSDK_ERP_MCP_EMAIL_TOOL_SCRIPT = `tool('email','Tool de Email p
   content_type: z.string().optional(),
   content_disposition: z.string().optional(),
   content_id: z.string().optional(),
+  operations: z.array(z.any()).optional(),
+  continue_on_error: z.boolean().optional(),
 }, async (args) => callEmail(args))`;
