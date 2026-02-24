@@ -3,13 +3,13 @@ export const codexAppFunctionTools = [
     type: 'function',
     name: 'crud',
     description:
-      'Tool ERP canônica para listar/criar/atualizar/deletar/cancelar/baixar/estornar/reabrir recursos de negócio. Use somente resource canônico (com hífen, nunca underscore). Resources suportados: financeiro/contas-financeiras, financeiro/categorias-despesa, financeiro/categorias-receita, financeiro/clientes, financeiro/centros-custo, financeiro/centros-lucro, vendas/pedidos, compras/pedidos, contas-a-pagar, contas-a-receber, crm/contas, crm/contatos, crm/leads, crm/oportunidades, crm/atividades, estoque/almoxarifados, estoque/movimentacoes, estoque/estoque-atual, estoque/tipos-movimentacao. Em recursos transacionais, prefira ações de negócio (cancelar/baixar/estornar/reabrir) em vez de deletar. Para consultas, prefira action="listar" com filtros em params (e data quando necessário).',
+      'Tool ERP canônica para listar/criar/atualizar/deletar/aprovar/concluir/cancelar/reabrir/baixar/estornar recursos de negócio. Use somente resource canônico (com hífen, nunca underscore). Resources suportados: financeiro/contas-financeiras, financeiro/categorias-despesa, financeiro/categorias-receita, financeiro/clientes, financeiro/centros-custo, financeiro/centros-lucro, vendas/pedidos, compras/pedidos, contas-a-pagar, contas-a-receber, crm/contas, crm/contatos, crm/leads, crm/oportunidades, crm/atividades, estoque/almoxarifados, estoque/movimentacoes, estoque/estoque-atual, estoque/tipos-movimentacao. Em recursos transacionais, prefira ações de negócio (aprovar/concluir/cancelar/reabrir/baixar/estornar/marcar_como_recebido/marcar_recebimento_parcial) em vez de deletar. Para consultas, prefira action="listar" com filtros em params (e data quando necessário).',
     parameters: {
       type: 'object',
       properties: {
         action: {
           type: 'string',
-          enum: ['listar', 'criar', 'atualizar', 'deletar', 'cancelar', 'baixar', 'estornar', 'reabrir'],
+          enum: ['listar', 'criar', 'atualizar', 'deletar', 'aprovar', 'concluir', 'cancelar', 'reabrir', 'baixar', 'estornar', 'marcar_como_recebido', 'marcar_recebimento_parcial'],
           description: 'Operação principal do ERP.',
         },
         resource: {
@@ -24,12 +24,12 @@ export const codexAppFunctionTools = [
         data: {
           type: 'object',
           additionalProperties: true,
-          description: 'Payload para criar/atualizar/deletar quando necessário.',
+          description: 'Payload para criar/atualizar/deletar e ações de negócio (aprovar/concluir/cancelar/reabrir/baixar/estornar etc.) quando necessário.',
         },
         actionSuffix: {
           type: 'string',
           description:
-            'Sufixo de rota opcional. Padrões: listar|criar|atualizar|deletar|cancelar|baixar|estornar|reabrir. Só use customizado se tiver certeza do endpoint.',
+            'Sufixo de rota opcional. Padrões: listar|criar|atualizar|deletar|aprovar|concluir|cancelar|reabrir|baixar|estornar|marcar_como_recebido|marcar_recebimento_parcial. Só use customizado se tiver certeza do endpoint.',
         },
         method: {
           type: 'string',

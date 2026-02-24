@@ -61,6 +61,40 @@ Exemplos:
 
 Para esses recursos, use acoes de negocio como `cancelar`, `baixar`, `estornar`, `reabrir`.
 
+### Acoes de negocio em `vendas/pedidos`
+
+Acoes suportadas:
+
+- `aprovar` -> status `aprovado`
+- `concluir` -> status `concluido`
+- `cancelar` -> status `cancelado`
+- `reabrir` -> status `pendente` (quando cancelado)
+
+Status de origem (resumo):
+
+- `aprovar`: `pendente`
+- `concluir`: `pendente`, `aprovado`
+- `cancelar`: `pendente`, `aprovado`
+- `reabrir`: `cancelado`
+
+### Acoes de negocio em `compras/pedidos`
+
+Acoes suportadas:
+
+- `aprovar` -> status `aprovado`
+- `cancelar` -> status `cancelado`
+- `reabrir` -> status `em_analise` (quando cancelado)
+- `marcar_recebimento_parcial` -> status `recebimento_parcial`
+- `marcar_como_recebido` -> status `recebido`
+
+Status de origem (resumo):
+
+- `aprovar`: `rascunho`, `em_analise`
+- `cancelar`: `rascunho`, `em_analise`, `aprovado`, `recebimento_parcial`
+- `reabrir`: `cancelado`
+- `marcar_recebimento_parcial`: `aprovado`
+- `marcar_como_recebido`: `aprovado`, `recebimento_parcial`
+
 ### Recursos transacionais e tabelas reais (DB)
 
 #### `vendas/pedidos`

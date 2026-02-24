@@ -20,10 +20,14 @@ async function callCrud(args) {
     if (action === 'criar') suffix = 'criar';
     else if (action === 'atualizar') suffix = 'atualizar';
     else if (action === 'deletar') suffix = 'deletar';
+    else if (action === 'aprovar') suffix = 'aprovar';
+    else if (action === 'concluir') suffix = 'concluir';
     else if (action === 'baixar') suffix = 'baixar';
     else if (action === 'estornar') suffix = 'estornar';
     else if (action === 'cancelar') suffix = 'cancelar';
     else if (action === 'reabrir') suffix = 'reabrir';
+    else if (action === 'marcar_como_recebido') suffix = 'marcar_como_recebido';
+    else if (action === 'marcar_recebimento_parcial') suffix = 'marcar_recebimento_parcial';
     else suffix = 'listar';
   }
   const urlTool = buildAgentToolsUrl(resource, suffix);

@@ -150,14 +150,30 @@ function resolveCrudSuffix(actionRaw: unknown, explicitSuffixRaw: unknown): stri
   if (action === 'criar') return 'criar'
   if (action === 'atualizar') return 'atualizar'
   if (action === 'deletar') return 'deletar'
+  if (action === 'aprovar') return 'aprovar'
+  if (action === 'concluir') return 'concluir'
   if (action === 'baixar') return 'baixar'
   if (action === 'estornar') return 'estornar'
   if (action === 'cancelar') return 'cancelar'
   if (action === 'reabrir') return 'reabrir'
+  if (action === 'marcar_como_recebido') return 'marcar_como_recebido'
+  if (action === 'marcar_recebimento_parcial') return 'marcar_recebimento_parcial'
   return 'listar'
 }
 
-type CrudToolAction = 'listar' | 'criar' | 'atualizar' | 'deletar' | 'cancelar' | 'baixar' | 'estornar' | 'reabrir'
+type CrudToolAction =
+  | 'listar'
+  | 'criar'
+  | 'atualizar'
+  | 'deletar'
+  | 'cancelar'
+  | 'baixar'
+  | 'estornar'
+  | 'reabrir'
+  | 'aprovar'
+  | 'concluir'
+  | 'marcar_como_recebido'
+  | 'marcar_recebimento_parcial'
 
 type CrudActionRule = {
   actions: CrudToolAction[]
@@ -170,7 +186,7 @@ const CRUD_RESOURCE_ACTION_RULES: Array<{ match: RegExp; rule: CrudActionRule }>
   {
     match: /^vendas\/pedidos$/,
     rule: {
-      actions: ['listar', 'criar', 'atualizar', 'cancelar'],
+      actions: ['listar', 'criar', 'atualizar', 'aprovar', 'concluir', 'cancelar', 'reabrir'],
       blockedMessages: {
         deletar: {
           code: 'CRUD_ACTION_NOT_ALLOWED_FOR_RESOURCE',
@@ -183,7 +199,7 @@ const CRUD_RESOURCE_ACTION_RULES: Array<{ match: RegExp; rule: CrudActionRule }>
   {
     match: /^compras\/pedidos$/,
     rule: {
-      actions: ['listar', 'criar', 'atualizar', 'cancelar'],
+      actions: ['listar', 'criar', 'atualizar', 'aprovar', 'cancelar', 'reabrir', 'marcar_como_recebido', 'marcar_recebimento_parcial'],
       blockedMessages: {
         deletar: {
           code: 'CRUD_ACTION_NOT_ALLOWED_FOR_RESOURCE',
@@ -419,17 +435,17 @@ function buildToolsSchema() {
     {
       type: 'function',
       name: 'crud',
-      description: 'Executa operações no ERP para recursos permitidos (CRUD + ações de negócio como cancelar, baixar, estornar e reabrir em recursos transacionais).',
+      description: 'Executa operações no ERP para recursos permitidos (CRUD + ações de negócio como aprovar, concluir, cancelar, baixar, estornar e reabrir em recursos transacionais).',
       parameters: {
         type: 'object',
         additionalProperties: true,
         properties: {
-          action: { type: 'string', description: 'listar|criar|atualizar|deletar|cancelar|baixar|estornar|reabrir (ex.: vendas/pedidos, compras/pedidos, contas-a-pagar, contas-a-receber)' },
+          action: { type: 'string', description: 'listar|criar|atualizar|deletar|aprovar|concluir|cancelar|reabrir|baixar|estornar|marcar_como_recebido|marcar_recebimento_parcial' },
           resource: { type: 'string', description: 'Ex: financeiro/clientes ou vendas/pedidos' },
           method: { type: 'string', description: 'GET|POST|DELETE' },
           params: { type: 'object' },
           data: { type: 'object' },
-          actionSuffix: { type: 'string', description: 'listar|criar|atualizar|deletar|cancelar|baixar|estornar|reabrir (override opcional)' },
+          actionSuffix: { type: 'string', description: 'listar|criar|atualizar|deletar|aprovar|concluir|cancelar|reabrir|baixar|estornar|marcar_como_recebido|marcar_recebimento_parcial (override opcional)' },
         },
         required: ['action', 'resource'],
       },

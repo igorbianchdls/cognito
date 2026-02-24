@@ -59,7 +59,16 @@ async function callBridge({ action, args }){
         return { content: [ { type: 'text', text: JSON.stringify(payloadErr) } ] };
       }
       return { content: [{ type: 'text', text: JSON.stringify({ success:false, error:'falha ao deletar' }) }] };
-    } else if (action === 'cancelar' || action === 'baixar' || action === 'estornar' || action === 'reabrir') {
+    } else if (
+      action === 'cancelar' ||
+      action === 'baixar' ||
+      action === 'estornar' ||
+      action === 'reabrir' ||
+      action === 'aprovar' ||
+      action === 'concluir' ||
+      action === 'marcar_como_recebido' ||
+      action === 'marcar_recebimento_parcial'
+    ) {
       const suffixes = (args && args.actionSuffix)
         ? [String(args.actionSuffix)]
         : (
@@ -74,7 +83,15 @@ async function callBridge({ action, args }){
               ...payloadIn,
               ...(payloadIn && payloadIn.status !== undefined
                 ? {}
-                : { status: action === 'cancelar' ? 'cancelado' : undefined }),
+                : {
+                    status:
+                      action === 'cancelar' ? 'cancelado'
+                      : action === 'aprovar' ? 'aprovado'
+                      : action === 'concluir' ? 'concluido'
+                      : action === 'marcar_como_recebido' ? 'recebido'
+                      : action === 'marcar_recebimento_parcial' ? 'recebimento_parcial'
+                      : undefined,
+                  }),
             }
           : payloadIn;
         const { ok, out, status, rawText, statusText } = await doFetch(suf, body);
