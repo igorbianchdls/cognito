@@ -1,10 +1,132 @@
 'use client'
 
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { useEffect, useRef } from 'react'
+import { Icon } from '@iconify/react'
+import { MessageSquare } from 'lucide-react'
+
+import { ensureSimpleIconsRegistered, renderIntegrationLogo } from '@/products/integracoes/shared/iconMaps'
 
 const NODE_IDS = ['n-erp', 'n-google', 'n-meta', 'n-gads', 'n-tele', 'n-crm', 'n-comm', 'n-analytics']
 const NODE_COLORS = ['#00d4ff', '#ea4335', '#1877f2', '#fbbc04', '#10b981', '#a855f7', '#6366f1', '#f59e0b']
+
+type NodeDef = {
+  id: string
+  left: string
+  top: string
+  color: string
+  title: string
+  subtitle: string
+  iconItems: ReactNode[]
+}
+
+function brandLogo(slug: string, name: string, key?: string) {
+  return (
+    <span key={key ?? slug} className="brand-icon" aria-label={name} title={name}>
+      {renderIntegrationLogo(slug, name)}
+    </span>
+  )
+}
+
+function customSimpleIcon(iconKey: string, name: string) {
+  ensureSimpleIconsRegistered()
+  return (
+    <span key={iconKey} className="brand-icon" aria-label={name} title={name}>
+      <Icon icon={`simple-icons:${iconKey}`} width={20} height={20} />
+    </span>
+  )
+}
+
+function smsIcon() {
+  return (
+    <span key="sms" className="brand-icon brand-icon-sms" aria-label="SMS" title="SMS">
+      <MessageSquare size={20} strokeWidth={2} />
+    </span>
+  )
+}
+
+const LANDING_NODES: NodeDef[] = [
+  {
+    id: 'n-erp',
+    left: '50%',
+    top: '10%',
+    color: 'rgba(0,212,255,0.4)',
+    title: 'Google Workspace',
+    subtitle: 'Gmail · Drive · Sheets',
+    iconItems: [
+      brandLogo('GMAIL', 'Gmail'),
+      brandLogo('GOOGLEDRIVE', 'Google Drive'),
+      brandLogo('GOOGLESHEETS', 'Google Sheets'),
+    ],
+  },
+  {
+    id: 'n-google',
+    left: '83%',
+    top: '20%',
+    color: 'rgba(234,67,53,0.4)',
+    title: 'Comunicação',
+    subtitle: 'WhatsApp · Slack · SMS',
+    iconItems: [brandLogo('WHATSAPP', 'WhatsApp'), brandLogo('SLACK', 'Slack'), smsIcon()],
+  },
+  {
+    id: 'n-meta',
+    left: '93%',
+    top: '52%',
+    color: 'rgba(24,119,242,0.4)',
+    title: 'Mídia Paga',
+    subtitle: 'Google Ads · Meta Ads',
+    iconItems: [brandLogo('GOOGLEADS', 'Google Ads'), brandLogo('METAADS', 'Meta Ads')],
+  },
+  {
+    id: 'n-gads',
+    left: '78%',
+    top: '82%',
+    color: 'rgba(251,188,4,0.4)',
+    title: 'Growth Stack',
+    subtitle: 'Analytics · HubSpot · Mailchimp',
+    iconItems: [
+      brandLogo('GOOGLE_ANALYTICS', 'Google Analytics'),
+      brandLogo('HUBSPOT', 'HubSpot'),
+      brandLogo('MAILCHIMP', 'Mailchimp'),
+    ],
+  },
+  {
+    id: 'n-tele',
+    left: '37%',
+    top: '90%',
+    color: 'rgba(16,185,129,0.4)',
+    title: 'Pagamentos',
+    subtitle: 'Stripe · Mercado Pago',
+    iconItems: [brandLogo('STRIPE', 'Stripe'), customSimpleIcon('mercadopago', 'Mercado Pago')],
+  },
+  {
+    id: 'n-crm',
+    left: '10%',
+    top: '78%',
+    color: 'rgba(168,85,247,0.4)',
+    title: 'Marketplace',
+    subtitle: 'Amazon',
+    iconItems: [customSimpleIcon('amazon', 'Amazon')],
+  },
+  {
+    id: 'n-comm',
+    left: '6%',
+    top: '46%',
+    color: 'rgba(99,102,241,0.4)',
+    title: 'Execução',
+    subtitle: 'Rotinas · Alertas · Ações',
+    iconItems: [brandLogo('WHATSAPP', 'WhatsApp', 'wpp-exec'), brandLogo('GMAIL', 'Gmail', 'gmail-exec')],
+  },
+  {
+    id: 'n-analytics',
+    left: '18%',
+    top: '18%',
+    color: 'rgba(245,158,11,0.4)',
+    title: 'Ops Sheets',
+    subtitle: 'Planilhas · Automações',
+    iconItems: [brandLogo('GOOGLESHEETS', 'Google Sheets', 'sheets-ops')],
+  },
+]
 
 function nodeCardStyle(color: string): CSSProperties {
   return { ['--node-color' as string]: color } as CSSProperties
@@ -137,82 +259,21 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="node" id="n-erp" style={{ left: '50%', top: '10%' }}>
-            <div className="node-card" style={nodeCardStyle('rgba(0,212,255,0.4)')}>
-              <span className="node-icon">🏢</span>
-              <div className="node-name">ERP Core</div>
-              <div className="node-sub">Financeiro · RH · Estoque</div>
-              <div className="node-status">LIVE</div>
+          {LANDING_NODES.map((node) => (
+            <div className="node" id={node.id} key={node.id} style={{ left: node.left, top: node.top }}>
+              <div className="node-card" style={nodeCardStyle(node.color)}>
+                <span className="node-icon">{node.iconItems}</span>
+                <div className="node-name">{node.title}</div>
+                <div className="node-sub">{node.subtitle}</div>
+                <div className="node-status">LIVE</div>
+              </div>
             </div>
-          </div>
-
-          <div className="node" id="n-google" style={{ left: '83%', top: '20%' }}>
-            <div className="node-card" style={nodeCardStyle('rgba(234,67,53,0.4)')}>
-              <span className="node-icon">📧</span>
-              <div className="node-name">Google</div>
-              <div className="node-sub">Gmail · Drive · Calendar</div>
-              <div className="node-status">LIVE</div>
-            </div>
-          </div>
-
-          <div className="node" id="n-meta" style={{ left: '93%', top: '52%' }}>
-            <div className="node-card" style={nodeCardStyle('rgba(24,119,242,0.4)')}>
-              <span className="node-icon">📣</span>
-              <div className="node-name">Meta Ads</div>
-              <div className="node-sub">Facebook · Instagram</div>
-              <div className="node-status">LIVE</div>
-            </div>
-          </div>
-
-          <div className="node" id="n-gads" style={{ left: '78%', top: '82%' }}>
-            <div className="node-card" style={nodeCardStyle('rgba(251,188,4,0.4)')}>
-              <span className="node-icon">🎯</span>
-              <div className="node-name">Google Ads</div>
-              <div className="node-sub">Search · Display · YT</div>
-              <div className="node-status">LIVE</div>
-            </div>
-          </div>
-
-          <div className="node" id="n-tele" style={{ left: '37%', top: '90%' }}>
-            <div className="node-card" style={nodeCardStyle('rgba(16,185,129,0.4)')}>
-              <span className="node-icon">📡</span>
-              <div className="node-name">Telemetria</div>
-              <div className="node-sub">IoT · Sensores · GPS</div>
-              <div className="node-status">LIVE</div>
-            </div>
-          </div>
-
-          <div className="node" id="n-crm" style={{ left: '10%', top: '78%' }}>
-            <div className="node-card" style={nodeCardStyle('rgba(168,85,247,0.4)')}>
-              <span className="node-icon">🤝</span>
-              <div className="node-name">CRM</div>
-              <div className="node-sub">Pipeline · Leads · NPS</div>
-              <div className="node-status">LIVE</div>
-            </div>
-          </div>
-
-          <div className="node" id="n-comm" style={{ left: '6%', top: '46%' }}>
-            <div className="node-card" style={nodeCardStyle('rgba(99,102,241,0.4)')}>
-              <span className="node-icon">💬</span>
-              <div className="node-name">Comunicação</div>
-              <div className="node-sub">Slack · WhatsApp · SMS</div>
-              <div className="node-status">LIVE</div>
-            </div>
-          </div>
-
-          <div className="node" id="n-analytics" style={{ left: '18%', top: '18%' }}>
-            <div className="node-card" style={nodeCardStyle('rgba(245,158,11,0.4)')}>
-              <span className="node-icon">📊</span>
-              <div className="node-name">Analytics</div>
-              <div className="node-sub">BI · Dashboards · KPIs</div>
-              <div className="node-status">LIVE</div>
-            </div>
-          </div>
+          ))}
         </div>
 
         <div className="stats-bar">
           <div className="stat">
-            <div className="stat-value">8+</div>
+            <div className="stat-value">14+</div>
             <div className="stat-label">Plataformas Conectadas</div>
           </div>
           <div className="stat-divider" />
@@ -496,7 +557,32 @@ export default function LandingPage() {
         .landingpage-root .node-icon {
           font-size: 22px;
           margin-bottom: 6px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          min-height: 24px;
+          line-height: 1;
+        }
+
+        .landingpage-root .brand-icon {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 20px;
+          height: 20px;
+          flex: 0 0 auto;
+        }
+
+        .landingpage-root .brand-icon svg {
+          width: 20px;
+          height: 20px;
           display: block;
+        }
+
+        .landingpage-root .brand-icon-sms {
+          color: var(--text);
+          opacity: 0.95;
         }
 
         .landingpage-root .node-name {
@@ -654,6 +740,18 @@ export default function LandingPage() {
           .landingpage-root .node-icon {
             font-size: 18px;
             margin-bottom: 4px;
+            gap: 6px;
+            min-height: 20px;
+          }
+
+          .landingpage-root .brand-icon {
+            width: 16px;
+            height: 16px;
+          }
+
+          .landingpage-root .brand-icon svg {
+            width: 16px;
+            height: 16px;
           }
 
           .landingpage-root .node-name {
