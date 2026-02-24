@@ -4,13 +4,16 @@ import { verifyAgentToken } from '@/app/api/chat/tokenStore'
 
 export const runtime = 'nodejs'
 
-const STATUS_VALUES = ['pendente', 'aprovado', 'concluido', 'cancelado'] as const
+const STATUS_VALUES = ['rascunho', 'em_analise', 'aprovado', 'recebimento_parcial', 'recebido', 'cancelado'] as const
 type PedidoCompraStatus = (typeof STATUS_VALUES)[number]
 const STATUS_SET = new Set<string>(STATUS_VALUES)
-const ALLOWED_TO_CANCEL = new Set<PedidoCompraStatus>(['pendente', 'aprovado'])
+const ALLOWED_TO_CANCEL = new Set<PedidoCompraStatus>(['rascunho', 'em_analise', 'aprovado', 'recebimento_parcial'])
 
 function normalizeStatus(value: unknown): string {
-  return String(value ?? '').trim().toLowerCase()
+  const s = String(value ?? '').trim().toLowerCase()
+  if (s === 'pendente') return 'em_analise'
+  if (s === 'concluido') return 'recebido'
+  return s
 }
 
 function resolveTenantId(req: NextRequest): number {

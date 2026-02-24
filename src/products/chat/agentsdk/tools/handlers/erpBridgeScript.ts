@@ -59,19 +59,30 @@ async function callBridge({ action, args }){
         return { content: [ { type: 'text', text: JSON.stringify(payloadErr) } ] };
       }
       return { content: [{ type: 'text', text: JSON.stringify({ success:false, error:'falha ao deletar' }) }] };
-    } else if (action === 'cancelar') {
-      const suffixes = (args && args.actionSuffix) ? [String(args.actionSuffix)] : ['cancelar', 'atualizar'];
+    } else if (action === 'cancelar' || action === 'baixar' || action === 'estornar' || action === 'reabrir') {
+      const suffixes = (args && args.actionSuffix)
+        ? [String(args.actionSuffix)]
+        : (
+          action === 'cancelar'
+            ? ['cancelar', 'atualizar']
+            : [String(action), 'atualizar']
+        );
       const payloadIn = (args && args.data) || {};
       for (const suf of suffixes) {
         const body = suf === 'atualizar'
-          ? { ...payloadIn, ...(payloadIn && payloadIn.status !== undefined ? {} : { status: 'cancelado' }) }
+          ? {
+              ...payloadIn,
+              ...(payloadIn && payloadIn.status !== undefined
+                ? {}
+                : { status: action === 'cancelar' ? 'cancelado' : undefined }),
+            }
           : payloadIn;
         const { ok, out, status, rawText, statusText } = await doFetch(suf, body);
         if (ok) return { content: [ { type: 'text', text: JSON.stringify(out) } ] };
-        const payloadErr = { success:false, error: (out?.error || out?.message || rawText || statusText || 'falha ao cancelar'), status, ...(out?.code ? { code: out.code } : {}), ...(out?.meta ? { meta: out.meta } : { meta: { tool:'crud', status } }) };
+        const payloadErr = { success:false, error: (out?.error || out?.message || rawText || statusText || ('falha ao ' + action)), status, ...(out?.code ? { code: out.code } : {}), ...(out?.meta ? { meta: out.meta } : { meta: { tool:'crud', status } }) };
         return { content: [ { type: 'text', text: JSON.stringify(payloadErr) } ] };
       }
-      return { content: [{ type: 'text', text: JSON.stringify({ success:false, error:'falha ao cancelar' }) }] };
+      return { content: [{ type: 'text', text: JSON.stringify({ success:false, error: ('falha ao ' + action) }) }] };
     }
     return { content: [{ type: 'text', text: JSON.stringify({ success:false, error:'ação desconhecida', action }) }] };
   } catch(e) {

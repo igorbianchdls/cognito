@@ -4,18 +4,23 @@ import { verifyAgentToken } from '@/app/api/chat/tokenStore'
 
 export const runtime = 'nodejs'
 
-const PURCHASE_STATUS_VALUES = ['pendente', 'aprovado', 'concluido', 'cancelado'] as const
+const PURCHASE_STATUS_VALUES = ['rascunho', 'em_analise', 'aprovado', 'recebimento_parcial', 'recebido', 'cancelado'] as const
 type PurchaseStatus = (typeof PURCHASE_STATUS_VALUES)[number]
 const PURCHASE_STATUS_SET = new Set<string>(PURCHASE_STATUS_VALUES)
 const PURCHASE_STATUS_TRANSITIONS: Record<PurchaseStatus, PurchaseStatus[]> = {
-  pendente: ['aprovado', 'concluido', 'cancelado'],
-  aprovado: ['concluido', 'cancelado'],
-  concluido: [],
+  rascunho: ['em_analise', 'cancelado'],
+  em_analise: ['aprovado', 'cancelado'],
+  aprovado: ['recebimento_parcial', 'recebido', 'cancelado'],
+  recebimento_parcial: ['recebido', 'cancelado'],
+  recebido: [],
   cancelado: [],
 }
 
 function normalizeStatus(value: unknown): string {
-  return String(value ?? '').trim().toLowerCase()
+  const s = String(value ?? '').trim().toLowerCase()
+  if (s === 'pendente') return 'em_analise'
+  if (s === 'concluido') return 'recebido'
+  return s
 }
 
 function isPgForeignKeyError(err: unknown): boolean {

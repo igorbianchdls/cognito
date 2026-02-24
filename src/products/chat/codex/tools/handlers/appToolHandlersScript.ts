@@ -20,7 +20,10 @@ async function callCrud(args) {
     if (action === 'criar') suffix = 'criar';
     else if (action === 'atualizar') suffix = 'atualizar';
     else if (action === 'deletar') suffix = 'deletar';
+    else if (action === 'baixar') suffix = 'baixar';
+    else if (action === 'estornar') suffix = 'estornar';
     else if (action === 'cancelar') suffix = 'cancelar';
+    else if (action === 'reabrir') suffix = 'reabrir';
     else suffix = 'listar';
   }
   const urlTool = buildAgentToolsUrl(resource, suffix);
