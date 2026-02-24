@@ -222,7 +222,7 @@ export async function handlePedidoAction(req: NextRequest, kind: PedidoKind, act
     await runQuery(
       `UPDATE ${cfg.table}
           SET status = $3,
-              observacoes = CASE WHEN $4 IS NOT NULL THEN $4 ELSE observacoes END,
+              observacoes = CASE WHEN $4::text IS NOT NULL THEN $4::text ELSE observacoes END,
               atualizado_em = now()
         WHERE tenant_id = $1 AND id = $2`,
       [tenantId, id, target, observacoesAtualizadas],
@@ -240,4 +240,3 @@ export async function handlePedidoAction(req: NextRequest, kind: PedidoKind, act
     return Response.json({ ok: false, error: (e as Error).message }, { status: 500 })
   }
 }
-
