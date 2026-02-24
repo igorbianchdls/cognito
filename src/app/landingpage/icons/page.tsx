@@ -34,9 +34,15 @@ function customSimpleIcon(iconKey: string, name: string) {
   )
 }
 
-function telemetryIcon(icon: ReactNode, name: string, key: string) {
+function telemetryIcon(icon: ReactNode, name: string, key: string, color: string) {
   return (
-    <span key={key} className="brand-icon brand-icon-telemetry" aria-label={name} title={name}>
+    <span
+      key={key}
+      className="brand-icon brand-icon-telemetry"
+      aria-label={name}
+      title={name}
+      style={{ color }}
+    >
       {icon}
     </span>
   )
@@ -117,48 +123,48 @@ const LANDING_NODES: NodeDef[] = [
   },
   {
     id: 'n-frota',
-    left: '44%',
-    top: '94%',
+    left: '52%',
+    top: '95%',
     color: 'rgba(99,102,241,0.4)',
     lineColor: '#6366f1',
     label: 'Frota',
-    iconItem: telemetryIcon(<Truck size={20} strokeWidth={2} />, 'Frota', 'tele-frota'),
+    iconItem: telemetryIcon(<Truck size={20} strokeWidth={2} />, 'Frota', 'tele-frota', '#60a5fa'),
   },
   {
     id: 'n-gerador',
-    left: '27%',
-    top: '88%',
+    left: '31%',
+    top: '90%',
     color: 'rgba(245,158,11,0.4)',
     lineColor: '#f59e0b',
     label: 'Gerador',
-    iconItem: telemetryIcon(<Bolt size={20} strokeWidth={2} />, 'Gerador', 'tele-gerador'),
+    iconItem: telemetryIcon(<Bolt size={20} strokeWidth={2} />, 'Gerador', 'tele-gerador', '#fbbf24'),
   },
   {
     id: 'n-sensores',
-    left: '12%',
-    top: '76%',
+    left: '14%',
+    top: '73%',
     color: 'rgba(0,212,255,0.35)',
     lineColor: '#38bdf8',
     label: 'Sensores',
-    iconItem: telemetryIcon(<Radar size={20} strokeWidth={2} />, 'Sensores', 'tele-sensores'),
+    iconItem: telemetryIcon(<Radar size={20} strokeWidth={2} />, 'Sensores', 'tele-sensores', '#22d3ee'),
   },
   {
     id: 'n-gps',
     left: '5%',
-    top: '59%',
+    top: '53%',
     color: 'rgba(16,185,129,0.35)',
     lineColor: '#34d399',
     label: 'GPS',
-    iconItem: telemetryIcon(<MapPinned size={20} strokeWidth={2} />, 'GPS', 'tele-gps'),
+    iconItem: telemetryIcon(<MapPinned size={20} strokeWidth={2} />, 'GPS', 'tele-gps', '#34d399'),
   },
   {
     id: 'n-maquinas',
-    left: '4%',
-    top: '42%',
+    left: '9%',
+    top: '37%',
     color: 'rgba(124,58,237,0.35)',
     lineColor: '#7c3aed',
     label: 'Máquinas',
-    iconItem: telemetryIcon(<Cog size={20} strokeWidth={2} />, 'Máquinas', 'tele-maquinas'),
+    iconItem: telemetryIcon(<Cog size={20} strokeWidth={2} />, 'Máquinas', 'tele-maquinas', '#a78bfa'),
   },
   {
     id: 'n-comm',
@@ -463,6 +469,7 @@ export default function LandingPage() {
         .landingpage-root h1 {
           font-size: clamp(42px, 7vw, 80px);
           font-weight: 800;
+          font-family: var(--font-geist-sans), Geist, sans-serif;
           letter-spacing: -0.03em;
           line-height: 1;
           background: linear-gradient(135deg, #e2eeff 0%, #00d4ff 50%, #7c3aed 100%);
