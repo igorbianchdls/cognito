@@ -108,8 +108,8 @@ const LANDING_NODES: NodeDef[] = [
     top: '89%',
     color: 'rgba(99,102,241,0.4)',
     lineColor: '#6366f1',
-    label: 'Frota',
-    iconItem: telemetryIcon(<Icon icon="mdi:truck" width={20} height={20} />, 'Frota', 'tele-frota', '#60a5fa'),
+    label: 'Frotas',
+    iconItem: telemetryIcon(<Icon icon="mdi:truck" width={20} height={20} />, 'Frotas', 'tele-frota', '#60a5fa'),
   },
   {
     id: 'n-gerador',
@@ -117,10 +117,10 @@ const LANDING_NODES: NodeDef[] = [
     top: '93%',
     color: 'rgba(245,158,11,0.4)',
     lineColor: '#f59e0b',
-    label: 'Gerador',
+    label: 'Geradores',
     iconItem: telemetryIcon(
       <Icon icon="mdi:engine" width={20} height={20} />,
-      'Gerador',
+      'Geradores',
       'tele-gerador',
       '#fbbf24',
     ),
@@ -145,10 +145,10 @@ const LANDING_NODES: NodeDef[] = [
     top: '83%',
     color: 'rgba(16,185,129,0.35)',
     lineColor: '#34d399',
-    label: 'GPS',
+    label: 'Rastreadores',
     iconItem: telemetryIcon(
       <Icon icon="mdi:map-marker-radius" width={20} height={20} />,
-      'GPS',
+      'Rastreadores',
       'tele-gps',
       '#34d399',
     ),
@@ -654,7 +654,7 @@ export default function LandingPage() {
         }
 
         .landingpage-root .node-name {
-          font-size: 9px;
+          font-size: 10px;
           font-weight: 700;
           letter-spacing: 0.02em;
           text-transform: none;
@@ -830,7 +830,7 @@ export default function LandingPage() {
           }
 
           .landingpage-root .node-name {
-            font-size: 7px;
+            font-size: 8px;
             letter-spacing: 0.01em;
           }
 
