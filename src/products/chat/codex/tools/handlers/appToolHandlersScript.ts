@@ -20,6 +20,7 @@ async function callCrud(args) {
     if (action === 'criar') suffix = 'criar';
     else if (action === 'atualizar') suffix = 'atualizar';
     else if (action === 'deletar') suffix = 'deletar';
+    else if (action === 'cancelar') suffix = 'cancelar';
     else suffix = 'listar';
   }
   const urlTool = buildAgentToolsUrl(resource, suffix);
@@ -108,4 +109,3 @@ async function callDocumento(args) {
   return callScopedTool('/api/agent-tools/documento', args, 'documento');
 }
 `.trim()
-

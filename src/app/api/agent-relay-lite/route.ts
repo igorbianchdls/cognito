@@ -150,7 +150,101 @@ function resolveCrudSuffix(actionRaw: unknown, explicitSuffixRaw: unknown): stri
   if (action === 'criar') return 'criar'
   if (action === 'atualizar') return 'atualizar'
   if (action === 'deletar') return 'deletar'
+  if (action === 'cancelar') return 'cancelar'
   return 'listar'
+}
+
+type CrudToolAction = 'listar' | 'criar' | 'atualizar' | 'deletar' | 'cancelar'
+
+type CrudActionRule = {
+  actions: CrudToolAction[]
+  blockedMessages?: Partial<Record<CrudToolAction, { code: string; error: string; suggested_action?: CrudToolAction }>>
+}
+
+const DEFAULT_CRUD_ACTIONS: CrudToolAction[] = ['listar', 'criar', 'atualizar', 'deletar']
+
+const CRUD_RESOURCE_ACTION_RULES: Array<{ match: RegExp; rule: CrudActionRule }> = [
+  {
+    match: /^vendas\/pedidos$/,
+    rule: {
+      actions: ['listar', 'criar', 'atualizar', 'cancelar'],
+      blockedMessages: {
+        deletar: {
+          code: 'CRUD_ACTION_NOT_ALLOWED_FOR_RESOURCE',
+          error: 'vendas/pedidos é transacional; use action="cancelar" (ou atualizar status="cancelado") em vez de deletar.',
+          suggested_action: 'cancelar',
+        },
+      },
+    },
+  },
+  {
+    match: /^compras\/pedidos$/,
+    rule: {
+      actions: ['listar', 'criar', 'atualizar', 'cancelar'],
+      blockedMessages: {
+        deletar: {
+          code: 'CRUD_ACTION_NOT_ALLOWED_FOR_RESOURCE',
+          error: 'compras/pedidos é transacional; use action="cancelar" (ou atualizar status="cancelado") em vez de deletar.',
+          suggested_action: 'cancelar',
+        },
+      },
+    },
+  },
+]
+
+function getCrudActionRule(resourceRaw: unknown): CrudActionRule {
+  const resource = toText(resourceRaw).replace(/^\/+|\/+$/g, '')
+  const found = CRUD_RESOURCE_ACTION_RULES.find((entry) => entry.match.test(resource))
+  return found?.rule || { actions: DEFAULT_CRUD_ACTIONS }
+}
+
+function normalizeCrudRelaySuccess(
+  outRaw: unknown,
+  meta: { status: number; action: string; resource: string },
+) {
+  const out = normalizeRelayToolSuccess(outRaw, { tool: 'crud', status: meta.status }) as Record<string, unknown>
+  const message = toText(out.message) || undefined
+  const payloadData = Object.prototype.hasOwnProperty.call(out, 'data') ? out.data : outRaw
+  return {
+    ...out,
+    action: meta.action,
+    resource: meta.resource,
+    result: {
+      success: typeof out.success === 'boolean' ? out.success : true,
+      message,
+      data: payloadData,
+    },
+  }
+}
+
+function normalizeCrudRelayError(input: {
+  status: number
+  code?: string
+  error: string
+  action: string
+  resource: string
+  allowedActions?: string[]
+  suggestedAction?: string
+}) {
+  return {
+    success: false,
+    status: input.status,
+    code: input.code,
+    error: input.error,
+    action: input.action,
+    resource: input.resource,
+    result: {
+      success: false,
+      message: input.error,
+      data: {
+        action: input.action,
+        resource: input.resource,
+        allowed_actions: input.allowedActions,
+        suggested_action: input.suggestedAction,
+      },
+    },
+    meta: { tool: 'crud', status: input.status },
+  }
 }
 
 async function parseJsonResponse(res: Response) {
@@ -234,7 +328,27 @@ async function callCrudTool(input: {
   const action = toText(input.args.action || 'listar').toLowerCase()
   const resource = toText(input.args.resource || input.args.path)
   if (!isSafeResource(resource)) {
-    return { success: false, code: 'CRUD_RESOURCE_FORBIDDEN', error: 'recurso não permitido', resource }
+    return normalizeCrudRelayError({
+      status: 400,
+      code: 'CRUD_RESOURCE_FORBIDDEN',
+      error: 'recurso não permitido',
+      action,
+      resource,
+      allowedActions: getCrudActionRule(resource).actions,
+    })
+  }
+  const actionRule = getCrudActionRule(resource)
+  if (!actionRule.actions.includes(action as CrudToolAction)) {
+    const blocked = actionRule.blockedMessages?.[action as CrudToolAction]
+    return normalizeCrudRelayError({
+      status: 409,
+      code: blocked?.code || 'CRUD_ACTION_NOT_ALLOWED_FOR_RESOURCE',
+      error: blocked?.error || `Ação ${action || '(vazia)'} não permitida para resource ${resource}`,
+      action,
+      resource,
+      allowedActions: actionRule.actions,
+      suggestedAction: blocked?.suggested_action,
+    })
   }
   const method = 'POST'
   const suffix = resolveCrudSuffix(action, input.args.actionSuffix)
@@ -258,14 +372,17 @@ async function callCrudTool(input: {
   const { raw, data } = await parseJsonResponse(res)
   const out = (data && (data.result !== undefined ? data.result : data)) || {}
   if (!res.ok) {
-    return {
-      success: false,
+    return normalizeCrudRelayError({
       status: res.status,
       code: (out as any)?.code || undefined,
       error: (out as any)?.error || (out as any)?.message || raw || res.statusText || 'erro na tool crud',
-    }
+      action,
+      resource,
+      allowedActions: actionRule.actions,
+      suggestedAction: (out as any)?.suggested_action || (out as any)?.result?.data?.suggested_action,
+    })
   }
-  return normalizeRelayToolSuccess(out, { tool: 'crud', status: res.status })
+  return normalizeCrudRelaySuccess(out, { status: res.status, action, resource })
 }
 
 function buildToolsSchema() {
@@ -273,17 +390,17 @@ function buildToolsSchema() {
     {
       type: 'function',
       name: 'crud',
-      description: 'Executa CRUD no ERP para recursos permitidos (financeiro/vendas/compras/contas/crm/estoque/cadastros).',
+      description: 'Executa operações no ERP para recursos permitidos (CRUD + ações de negócio como cancelar em recursos transacionais).',
       parameters: {
         type: 'object',
         additionalProperties: true,
         properties: {
-          action: { type: 'string', description: 'listar|criar|atualizar|deletar' },
+          action: { type: 'string', description: 'listar|criar|atualizar|deletar|cancelar (ex.: vendas/pedidos, compras/pedidos)' },
           resource: { type: 'string', description: 'Ex: financeiro/clientes ou vendas/pedidos' },
           method: { type: 'string', description: 'GET|POST|DELETE' },
           params: { type: 'object' },
           data: { type: 'object' },
-          actionSuffix: { type: 'string', description: 'listar|criar|atualizar|deletar (override opcional)' },
+          actionSuffix: { type: 'string', description: 'listar|criar|atualizar|deletar|cancelar (override opcional)' },
         },
         required: ['action', 'resource'],
       },
@@ -387,7 +504,7 @@ function buildRelayInstructions() {
     'Você é um agente operacional SMB.',
     'Responda em português brasileiro, curto e objetivo.',
     `Crud: use somente resources canônicos (${resources}). Não invente paths como "financeiro/caixa".`,
-    'Crud: para listar use action="listar"; para criar/atualizar/deletar use action correspondente.',
+    'Crud: para listar use action="listar"; para criar/atualizar use action correspondente. Em recursos transacionais (ex.: vendas/pedidos, compras/pedidos), prefira action="cancelar" em vez de deletar.',
     'Documento: use action="gerar" para proposta/os/nfse/fatura/contrato com payload em dados; use action="status" com documento_id. status retorna payload enxuto por padrão (sem base64).',
     'Documento + Email: prefira save_to_drive=true e depois email send com drive_file_id; use include_attachment_content=false para evitar payload grande.',
     'Drive: actions válidas são request, read_file e get_file_url.',
