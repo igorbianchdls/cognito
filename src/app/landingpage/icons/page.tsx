@@ -95,24 +95,6 @@ const LANDING_NODES: NodeDef[] = [
     iconItem: brandLogo('HUBSPOT', 'HubSpot'),
   },
   {
-    id: 'n-tele',
-    left: '92%',
-    top: '62%',
-    color: 'rgba(16,185,129,0.4)',
-    lineColor: '#10b981',
-    label: 'Mailchimp',
-    iconItem: brandLogo('MAILCHIMP', 'Mailchimp'),
-  },
-  {
-    id: 'n-pay',
-    left: '79%',
-    top: '78%',
-    color: 'rgba(16,185,129,0.4)',
-    lineColor: '#22c55e',
-    label: 'Stripe',
-    iconItem: brandLogo('STRIPE', 'Stripe'),
-  },
-  {
     id: 'n-market',
     left: '63%',
     top: '90%',
@@ -338,7 +320,7 @@ export default function LandingPage() {
 
         <div className="stats-bar">
           <div className="stat">
-            <div className="stat-value">16</div>
+            <div className="stat-value">14</div>
             <div className="stat-label">Nodos Conectados</div>
           </div>
           <div className="stat-divider" />
@@ -658,7 +640,7 @@ export default function LandingPage() {
           letter-spacing: 0.02em;
           text-transform: none;
           color: var(--text);
-          font-family: 'JetBrains Mono', monospace;
+          font-family: var(--font-geist-sans), Geist, sans-serif;
           opacity: 0.92;
         }
 
