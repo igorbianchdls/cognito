@@ -3,7 +3,6 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { useEffect, useRef } from 'react'
 import { Icon } from '@iconify/react'
-import { MessageSquare } from 'lucide-react'
 
 import { ensureSimpleIconsRegistered, renderIntegrationLogo } from '@/products/integracoes/shared/iconMaps'
 
@@ -15,9 +14,8 @@ type NodeDef = {
   left: string
   top: string
   color: string
-  title: string
-  subtitle: string
-  iconItems: ReactNode[]
+  label: string
+  iconItem: ReactNode
 }
 
 function brandLogo(slug: string, name: string, key?: string) {
@@ -37,94 +35,70 @@ function customSimpleIcon(iconKey: string, name: string) {
   )
 }
 
-function smsIcon() {
-  return (
-    <span key="sms" className="brand-icon brand-icon-sms" aria-label="SMS" title="SMS">
-      <MessageSquare size={20} strokeWidth={2} />
-    </span>
-  )
-}
-
 const LANDING_NODES: NodeDef[] = [
   {
     id: 'n-erp',
     left: '50%',
     top: '10%',
     color: 'rgba(0,212,255,0.4)',
-    title: 'Google Workspace',
-    subtitle: 'Gmail · Drive · Sheets',
-    iconItems: [
-      brandLogo('GMAIL', 'Gmail'),
-      brandLogo('GOOGLEDRIVE', 'Google Drive'),
-      brandLogo('GOOGLESHEETS', 'Google Sheets'),
-    ],
+    label: 'Gmail',
+    iconItem: brandLogo('GMAIL', 'Gmail'),
   },
   {
     id: 'n-google',
     left: '83%',
     top: '20%',
     color: 'rgba(234,67,53,0.4)',
-    title: 'Comunicação',
-    subtitle: 'WhatsApp · Slack · SMS',
-    iconItems: [brandLogo('WHATSAPP', 'WhatsApp'), brandLogo('SLACK', 'Slack'), smsIcon()],
+    label: 'WhatsApp',
+    iconItem: brandLogo('WHATSAPP', 'WhatsApp'),
   },
   {
     id: 'n-meta',
     left: '93%',
     top: '52%',
     color: 'rgba(24,119,242,0.4)',
-    title: 'Mídia Paga',
-    subtitle: 'Google Ads · Meta Ads',
-    iconItems: [brandLogo('GOOGLEADS', 'Google Ads'), brandLogo('METAADS', 'Meta Ads')],
+    label: 'Meta Ads',
+    iconItem: brandLogo('METAADS', 'Meta Ads'),
   },
   {
     id: 'n-gads',
     left: '78%',
     top: '82%',
     color: 'rgba(251,188,4,0.4)',
-    title: 'Growth Stack',
-    subtitle: 'Analytics · HubSpot · Mailchimp',
-    iconItems: [
-      brandLogo('GOOGLE_ANALYTICS', 'Google Analytics'),
-      brandLogo('HUBSPOT', 'HubSpot'),
-      brandLogo('MAILCHIMP', 'Mailchimp'),
-    ],
+    label: 'Google Ads',
+    iconItem: brandLogo('GOOGLEADS', 'Google Ads'),
   },
   {
     id: 'n-tele',
     left: '37%',
     top: '90%',
     color: 'rgba(16,185,129,0.4)',
-    title: 'Pagamentos',
-    subtitle: 'Stripe · Mercado Pago',
-    iconItems: [brandLogo('STRIPE', 'Stripe'), customSimpleIcon('mercadopago', 'Mercado Pago')],
+    label: 'Stripe',
+    iconItem: brandLogo('STRIPE', 'Stripe'),
   },
   {
     id: 'n-crm',
     left: '10%',
     top: '78%',
     color: 'rgba(168,85,247,0.4)',
-    title: 'Marketplace',
-    subtitle: 'Amazon',
-    iconItems: [customSimpleIcon('amazon', 'Amazon')],
+    label: 'Amazon',
+    iconItem: customSimpleIcon('amazon', 'Amazon'),
   },
   {
     id: 'n-comm',
     left: '6%',
     top: '46%',
     color: 'rgba(99,102,241,0.4)',
-    title: 'Execução',
-    subtitle: 'Rotinas · Alertas · Ações',
-    iconItems: [brandLogo('WHATSAPP', 'WhatsApp', 'wpp-exec'), brandLogo('GMAIL', 'Gmail', 'gmail-exec')],
+    label: 'Slack',
+    iconItem: brandLogo('SLACK', 'Slack'),
   },
   {
     id: 'n-analytics',
     left: '18%',
     top: '18%',
     color: 'rgba(245,158,11,0.4)',
-    title: 'Ops Sheets',
-    subtitle: 'Planilhas · Automações',
-    iconItems: [brandLogo('GOOGLESHEETS', 'Google Sheets', 'sheets-ops')],
+    label: 'Sheets',
+    iconItem: brandLogo('GOOGLESHEETS', 'Google Sheets'),
   },
 ]
 
@@ -262,7 +236,8 @@ export default function LandingPage() {
           {LANDING_NODES.map((node) => (
             <div className="node" id={node.id} key={node.id} style={{ left: node.left, top: node.top }}>
               <div className="node-card" style={nodeCardStyle(node.color)}>
-                <span className="node-icon">{node.iconItems}</span>
+                <span className="node-icon">{node.iconItem}</span>
+                <div className="node-name">{node.label}</div>
               </div>
             </div>
           ))}
@@ -524,8 +499,8 @@ export default function LandingPage() {
           border: 1px solid var(--border);
           border-radius: 14px;
           padding: 14px 16px;
-          min-width: 72px;
-          min-height: 56px;
+          min-width: 90px;
+          min-height: 74px;
           text-align: center;
           cursor: default;
           transition: all 0.3s ease;
@@ -554,11 +529,11 @@ export default function LandingPage() {
 
         .landingpage-root .node-icon {
           font-size: 22px;
-          margin-bottom: 0;
+          margin-bottom: 6px;
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 8px;
+          gap: 0;
           min-height: 24px;
           line-height: 1;
         }
@@ -584,11 +559,13 @@ export default function LandingPage() {
         }
 
         .landingpage-root .node-name {
-          font-size: 11px;
+          font-size: 9px;
           font-weight: 700;
-          letter-spacing: 0.05em;
+          letter-spacing: 0.06em;
           text-transform: uppercase;
           color: var(--text);
+          font-family: 'JetBrains Mono', monospace;
+          opacity: 0.92;
         }
 
         .landingpage-root .node-sub {
@@ -730,17 +707,22 @@ export default function LandingPage() {
           }
 
           .landingpage-root .node-card {
-            min-width: 58px;
-            min-height: 44px;
-            padding: 10px 10px;
+            min-width: 72px;
+            min-height: 58px;
+            padding: 8px 8px;
             border-radius: 12px;
           }
 
           .landingpage-root .node-icon {
             font-size: 18px;
             margin-bottom: 4px;
-            gap: 6px;
+            gap: 0;
             min-height: 20px;
+          }
+
+          .landingpage-root .node-name {
+            font-size: 7px;
+            letter-spacing: 0.05em;
           }
 
           .landingpage-root .brand-icon {
