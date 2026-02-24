@@ -3,7 +3,6 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { useEffect, useRef } from 'react'
 import { Icon } from '@iconify/react'
-import { Bolt, Cog, MapPinned, Radar, Truck } from 'lucide-react'
 
 import { ensureSimpleIconsRegistered, renderIntegrationLogo } from '@/products/integracoes/shared/iconMaps'
 
@@ -110,7 +109,7 @@ const LANDING_NODES: NodeDef[] = [
     color: 'rgba(99,102,241,0.4)',
     lineColor: '#6366f1',
     label: 'Frota',
-    iconItem: telemetryIcon(<Truck size={20} strokeWidth={2} />, 'Frota', 'tele-frota', '#60a5fa'),
+    iconItem: telemetryIcon(<Icon icon="mdi:truck" width={20} height={20} />, 'Frota', 'tele-frota', '#60a5fa'),
   },
   {
     id: 'n-gerador',
@@ -119,7 +118,12 @@ const LANDING_NODES: NodeDef[] = [
     color: 'rgba(245,158,11,0.4)',
     lineColor: '#f59e0b',
     label: 'Gerador',
-    iconItem: telemetryIcon(<Bolt size={20} strokeWidth={2} />, 'Gerador', 'tele-gerador', '#fbbf24'),
+    iconItem: telemetryIcon(
+      <Icon icon="mdi:engine" width={20} height={20} />,
+      'Gerador',
+      'tele-gerador',
+      '#fbbf24',
+    ),
   },
   {
     id: 'n-sensores',
@@ -128,7 +132,12 @@ const LANDING_NODES: NodeDef[] = [
     color: 'rgba(0,212,255,0.35)',
     lineColor: '#38bdf8',
     label: 'Sensores',
-    iconItem: telemetryIcon(<Radar size={20} strokeWidth={2} />, 'Sensores', 'tele-sensores', '#22d3ee'),
+    iconItem: telemetryIcon(
+      <Icon icon="mdi:radar" width={20} height={20} />,
+      'Sensores',
+      'tele-sensores',
+      '#22d3ee',
+    ),
   },
   {
     id: 'n-gps',
@@ -137,7 +146,12 @@ const LANDING_NODES: NodeDef[] = [
     color: 'rgba(16,185,129,0.35)',
     lineColor: '#34d399',
     label: 'GPS',
-    iconItem: telemetryIcon(<MapPinned size={20} strokeWidth={2} />, 'GPS', 'tele-gps', '#34d399'),
+    iconItem: telemetryIcon(
+      <Icon icon="mdi:map-marker-radius" width={20} height={20} />,
+      'GPS',
+      'tele-gps',
+      '#34d399',
+    ),
   },
   {
     id: 'n-maquinas',
@@ -146,7 +160,12 @@ const LANDING_NODES: NodeDef[] = [
     color: 'rgba(124,58,237,0.35)',
     lineColor: '#7c3aed',
     label: 'Máquinas',
-    iconItem: telemetryIcon(<Cog size={20} strokeWidth={2} />, 'Máquinas', 'tele-maquinas', '#a78bfa'),
+    iconItem: telemetryIcon(
+      <Icon icon="mdi:factory" width={20} height={20} />,
+      'Máquinas',
+      'tele-maquinas',
+      '#a78bfa',
+    ),
   },
   {
     id: 'n-comm',
@@ -645,8 +664,17 @@ export default function LandingPage() {
         }
 
         .landingpage-root .brand-icon-telemetry {
-          color: var(--text);
-          opacity: 0.95;
+          opacity: 0.98;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 7px;
+          width: 24px;
+          height: 24px;
+          box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.02);
+        }
+
+        .landingpage-root .brand-icon-telemetry svg {
+          filter: drop-shadow(0 0 6px currentColor);
         }
 
         .landingpage-root .node-sub {
@@ -814,6 +842,12 @@ export default function LandingPage() {
           .landingpage-root .brand-icon svg {
             width: 16px;
             height: 16px;
+          }
+
+          .landingpage-root .brand-icon-telemetry {
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
           }
 
           .landingpage-root .core {
