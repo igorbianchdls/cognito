@@ -3,17 +3,16 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { useEffect, useRef } from 'react'
 import { Icon } from '@iconify/react'
+import { Bolt, Cog, MapPinned, Radar, Truck } from 'lucide-react'
 
 import { ensureSimpleIconsRegistered, renderIntegrationLogo } from '@/products/integracoes/shared/iconMaps'
-
-const NODE_IDS = ['n-erp', 'n-google', 'n-meta', 'n-gads', 'n-tele', 'n-crm', 'n-comm', 'n-analytics']
-const NODE_COLORS = ['#00d4ff', '#ea4335', '#1877f2', '#fbbc04', '#10b981', '#a855f7', '#6366f1', '#f59e0b']
 
 type NodeDef = {
   id: string
   left: string
   top: string
   color: string
+  lineColor: string
   label: string
   iconItem: ReactNode
 }
@@ -35,70 +34,158 @@ function customSimpleIcon(iconKey: string, name: string) {
   )
 }
 
+function telemetryIcon(icon: ReactNode, name: string, key: string) {
+  return (
+    <span key={key} className="brand-icon brand-icon-telemetry" aria-label={name} title={name}>
+      {icon}
+    </span>
+  )
+}
+
 const LANDING_NODES: NodeDef[] = [
   {
     id: 'n-erp',
     left: '50%',
-    top: '10%',
+    top: '7%',
     color: 'rgba(0,212,255,0.4)',
+    lineColor: '#00d4ff',
     label: 'Gmail',
     iconItem: brandLogo('GMAIL', 'Gmail'),
   },
   {
     id: 'n-google',
-    left: '83%',
-    top: '20%',
+    left: '67%',
+    top: '9%',
     color: 'rgba(234,67,53,0.4)',
+    lineColor: '#ea4335',
     label: 'WhatsApp',
     iconItem: brandLogo('WHATSAPP', 'WhatsApp'),
   },
   {
     id: 'n-meta',
-    left: '93%',
-    top: '52%',
+    left: '82%',
+    top: '15%',
     color: 'rgba(24,119,242,0.4)',
+    lineColor: '#1877f2',
+    label: 'Drive',
+    iconItem: brandLogo('GOOGLEDRIVE', 'Google Drive'),
+  },
+  {
+    id: 'n-gads',
+    left: '93%',
+    top: '28%',
+    color: 'rgba(251,188,4,0.4)',
+    lineColor: '#fbbc04',
     label: 'Meta Ads',
     iconItem: brandLogo('METAADS', 'Meta Ads'),
   },
   {
-    id: 'n-gads',
-    left: '78%',
-    top: '82%',
+    id: 'n-growth',
+    left: '96%',
+    top: '45%',
     color: 'rgba(251,188,4,0.4)',
-    label: 'Google Ads',
-    iconItem: brandLogo('GOOGLEADS', 'Google Ads'),
+    lineColor: '#f59e0b',
+    label: 'HubSpot',
+    iconItem: brandLogo('HUBSPOT', 'HubSpot'),
   },
   {
     id: 'n-tele',
-    left: '37%',
-    top: '90%',
+    left: '92%',
+    top: '62%',
     color: 'rgba(16,185,129,0.4)',
+    lineColor: '#10b981',
+    label: 'Mailchimp',
+    iconItem: brandLogo('MAILCHIMP', 'Mailchimp'),
+  },
+  {
+    id: 'n-pay',
+    left: '79%',
+    top: '78%',
+    color: 'rgba(16,185,129,0.4)',
+    lineColor: '#22c55e',
     label: 'Stripe',
     iconItem: brandLogo('STRIPE', 'Stripe'),
   },
   {
-    id: 'n-crm',
-    left: '10%',
-    top: '78%',
+    id: 'n-market',
+    left: '63%',
+    top: '90%',
     color: 'rgba(168,85,247,0.4)',
-    label: 'Amazon',
-    iconItem: customSimpleIcon('amazon', 'Amazon'),
+    lineColor: '#a855f7',
+    label: 'Mercado Pago',
+    iconItem: customSimpleIcon('mercadopago', 'Mercado Pago'),
+  },
+  {
+    id: 'n-frota',
+    left: '44%',
+    top: '94%',
+    color: 'rgba(99,102,241,0.4)',
+    lineColor: '#6366f1',
+    label: 'Frota',
+    iconItem: telemetryIcon(<Truck size={20} strokeWidth={2} />, 'Frota', 'tele-frota'),
+  },
+  {
+    id: 'n-gerador',
+    left: '27%',
+    top: '88%',
+    color: 'rgba(245,158,11,0.4)',
+    lineColor: '#f59e0b',
+    label: 'Gerador',
+    iconItem: telemetryIcon(<Bolt size={20} strokeWidth={2} />, 'Gerador', 'tele-gerador'),
+  },
+  {
+    id: 'n-sensores',
+    left: '12%',
+    top: '76%',
+    color: 'rgba(0,212,255,0.35)',
+    lineColor: '#38bdf8',
+    label: 'Sensores',
+    iconItem: telemetryIcon(<Radar size={20} strokeWidth={2} />, 'Sensores', 'tele-sensores'),
+  },
+  {
+    id: 'n-gps',
+    left: '5%',
+    top: '59%',
+    color: 'rgba(16,185,129,0.35)',
+    lineColor: '#34d399',
+    label: 'GPS',
+    iconItem: telemetryIcon(<MapPinned size={20} strokeWidth={2} />, 'GPS', 'tele-gps'),
+  },
+  {
+    id: 'n-maquinas',
+    left: '4%',
+    top: '42%',
+    color: 'rgba(124,58,237,0.35)',
+    lineColor: '#7c3aed',
+    label: 'Máquinas',
+    iconItem: telemetryIcon(<Cog size={20} strokeWidth={2} />, 'Máquinas', 'tele-maquinas'),
   },
   {
     id: 'n-comm',
-    left: '6%',
-    top: '46%',
+    left: '8%',
+    top: '26%',
     color: 'rgba(99,102,241,0.4)',
+    lineColor: '#6366f1',
     label: 'Slack',
     iconItem: brandLogo('SLACK', 'Slack'),
   },
   {
     id: 'n-analytics',
-    left: '18%',
-    top: '18%',
+    left: '20%',
+    top: '14%',
     color: 'rgba(245,158,11,0.4)',
+    lineColor: '#f59e0b',
     label: 'Sheets',
     iconItem: brandLogo('GOOGLESHEETS', 'Google Sheets'),
+  },
+  {
+    id: 'n-amazon',
+    left: '33%',
+    top: '8%',
+    color: 'rgba(255,153,0,0.35)',
+    lineColor: '#ff9900',
+    label: 'Amazon',
+    iconItem: customSimpleIcon('amazon', 'Amazon'),
   },
 ]
 
@@ -134,11 +221,11 @@ export default function LandingPage() {
       if (!coreEl) return
       const core = getCenter(coreEl)
 
-      NODE_IDS.forEach((id, i) => {
-        const el = document.getElementById(id)
+      LANDING_NODES.forEach((node, i) => {
+        const el = document.getElementById(node.id)
         if (!el) return
         const p = getCenter(el)
-        const color = NODE_COLORS[i]
+        const color = node.lineColor
 
         const dx = p.x - core.x
         const dy = p.y - core.y
@@ -245,8 +332,8 @@ export default function LandingPage() {
 
         <div className="stats-bar">
           <div className="stat">
-            <div className="stat-value">14+</div>
-            <div className="stat-label">Plataformas Conectadas</div>
+            <div className="stat-value">16</div>
+            <div className="stat-label">Nodos Conectados</div>
           </div>
           <div className="stat-divider" />
           <div className="stat">
@@ -500,7 +587,7 @@ export default function LandingPage() {
           border-radius: 14px;
           padding: 14px 16px;
           min-width: 90px;
-          min-height: 74px;
+          min-height: 78px;
           text-align: center;
           cursor: default;
           transition: all 0.3s ease;
@@ -561,11 +648,16 @@ export default function LandingPage() {
         .landingpage-root .node-name {
           font-size: 9px;
           font-weight: 700;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
+          letter-spacing: 0.02em;
+          text-transform: none;
           color: var(--text);
           font-family: 'JetBrains Mono', monospace;
           opacity: 0.92;
+        }
+
+        .landingpage-root .brand-icon-telemetry {
+          color: var(--text);
+          opacity: 0.95;
         }
 
         .landingpage-root .node-sub {
@@ -708,7 +800,7 @@ export default function LandingPage() {
 
           .landingpage-root .node-card {
             min-width: 72px;
-            min-height: 58px;
+            min-height: 62px;
             padding: 8px 8px;
             border-radius: 12px;
           }
@@ -722,7 +814,7 @@ export default function LandingPage() {
 
           .landingpage-root .node-name {
             font-size: 7px;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.01em;
           }
 
           .landingpage-root .brand-icon {
