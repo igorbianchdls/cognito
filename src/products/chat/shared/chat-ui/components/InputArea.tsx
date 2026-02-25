@@ -11,7 +11,6 @@ import {
   PromptInputSubmit,
   PromptInputModelSelect,
   PromptInputModelSelectTrigger,
-  PromptInputModelSelectValue,
   PromptInputModelSelectContent,
   PromptInputModelSelectItem,
 } from '@/components/ai-elements/prompt-input';
@@ -207,8 +206,8 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
               const next = (v === 'claude-sonnet' || v === 'claude-haiku' || v === 'openai-gpt5' || v === 'openai-gpt5nano' || v === 'openai-gpt5mini') ? v : 'openai-gpt5mini'
               onModelChange?.(next)
             }}>
-              <PromptInputModelSelectTrigger className="min-w-0 max-w-[220px] text-gray-500 hover:text-gray-800 [&>span]:truncate">
-                <PromptInputModelSelectValue className="truncate" placeholder="Modelo" />
+              <PromptInputModelSelectTrigger className="min-w-0 max-w-[120px] text-gray-500 hover:text-gray-800">
+                <span className="truncate">Modelo</span>
               </PromptInputModelSelectTrigger>
               <PromptInputModelSelectContent>
                 <PromptInputModelSelectItem value="claude-sonnet">Claude Sonnet 4.5 (Agent SDK)</PromptInputModelSelectItem>
