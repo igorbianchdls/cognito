@@ -14,6 +14,8 @@ type Props = {
   onReplaceNodeProps: (nodePath: JsonNodePath, props: Record<string, any>) => void
 }
 
+type TabKey = 'data' | 'style' | 'json'
+
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return <label className="text-[11px] font-medium text-gray-700">{children}</label>
 }
@@ -94,6 +96,38 @@ function SelectField({
   )
 }
 
+function ColorField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+}) {
+  const normalized = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(value || '') ? value : '#000000'
+  return (
+    <div className="space-y-1">
+      <FieldLabel>{label}</FieldLabel>
+      <div className="flex items-center gap-2">
+        <input
+          type="color"
+          value={normalized}
+          onChange={(e) => onChange(e.target.value)}
+          className="h-8 w-10 rounded border border-gray-300 bg-transparent p-0.5"
+        />
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="#ffffff"
+          className="w-full rounded border border-gray-300 px-2 py-1 text-xs"
+        />
+      </div>
+    </div>
+  )
+}
+
 function CheckboxField({
   label,
   checked,
@@ -132,12 +166,36 @@ export default function PropertiesPanel({
   const node = React.useMemo(() => getNodeAtPath(tree, selectedPath), [tree, selectedPath])
   const [rawPropsText, setRawPropsText] = React.useState('{}')
   const [rawPropsError, setRawPropsError] = React.useState<string | null>(null)
+  const [activeTab, setActiveTab] = React.useState<TabKey>('data')
+
+  const supportsDataTab = Boolean(
+    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard'].includes(String(node.type)),
+  )
+  const supportsStyleTab = Boolean(
+    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'Card', 'Div', 'Gauge'].includes(String(node.type)),
+  )
 
   React.useEffect(() => {
     const next = node?.props && typeof node.props === 'object' ? node.props : {}
     setRawPropsText(JSON.stringify(next, null, 2))
     setRawPropsError(null)
   }, [node && JSON.stringify(node.props || {})])
+
+  React.useEffect(() => {
+    if (!node) {
+      setActiveTab('json')
+      return
+    }
+    if (supportsDataTab) {
+      setActiveTab('data')
+      return
+    }
+    if (supportsStyleTab) {
+      setActiveTab('style')
+      return
+    }
+    setActiveTab('json')
+  }, [selectedPath?.join('.'), node?.type, supportsDataTab, supportsStyleTab])
 
   if (!isOpen) return null
 
@@ -159,9 +217,37 @@ export default function PropertiesPanel({
         <div className="p-3 text-xs text-gray-500">Selecione um componente e clique em Editar no menu `...`.</div>
       ) : (
         <div className="space-y-3 p-3">
+          <div className="flex items-center gap-1 rounded border border-gray-200 bg-gray-50 p-1">
+            {supportsDataTab && (
+              <button
+                type="button"
+                onClick={() => setActiveTab('data')}
+                className={`rounded px-2 py-1 text-xs ${activeTab === 'data' ? 'bg-white border border-gray-300 text-gray-900' : 'text-gray-600 hover:bg-white'}`}
+              >
+                Data
+              </button>
+            )}
+            {supportsStyleTab && (
+              <button
+                type="button"
+                onClick={() => setActiveTab('style')}
+                className={`rounded px-2 py-1 text-xs ${activeTab === 'style' ? 'bg-white border border-gray-300 text-gray-900' : 'text-gray-600 hover:bg-white'}`}
+              >
+                Style
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setActiveTab('json')}
+              className={`rounded px-2 py-1 text-xs ${activeTab === 'json' ? 'bg-white border border-gray-300 text-gray-900' : 'text-gray-600 hover:bg-white'}`}
+            >
+              JSON
+            </button>
+          </div>
+
           {selectedPath && (
             <>
-              {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'Header' || node.type === 'SlicerCard') && (
+              {activeTab === 'data' && (node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'Header' || node.type === 'SlicerCard') && (
                 <TextField
                   label="Título"
                   value={String(getProp(node, 'title', ''))}
@@ -169,7 +255,7 @@ export default function PropertiesPanel({
                 />
               )}
 
-              {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart') && (
+              {activeTab === 'data' && (node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart') && (
                 <div className="grid grid-cols-2 gap-2">
                   <SelectField
                     label="Formato"
@@ -189,7 +275,7 @@ export default function PropertiesPanel({
                 </div>
               )}
 
-              {(node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart') && (
+              {activeTab === 'data' && (node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart') && (
                 <div className="grid grid-cols-2 gap-2">
                   <NumberField
                     label="Altura"
@@ -204,7 +290,7 @@ export default function PropertiesPanel({
                 </div>
               )}
 
-              {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart') && (
+              {activeTab === 'data' && (node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart') && (
                 <>
                   {node.type === 'KPI' && (
                     <TextField
@@ -236,7 +322,7 @@ export default function PropertiesPanel({
                 </>
               )}
 
-              {node.type === 'BarChart' && (
+              {activeTab === 'data' && node.type === 'BarChart' && (
                 <SelectField
                   label="Layout"
                   value={String(getProp(node, 'nivo.layout', 'vertical'))}
@@ -248,7 +334,7 @@ export default function PropertiesPanel({
                 />
               )}
 
-              {node.type === 'LineChart' && (
+              {activeTab === 'data' && node.type === 'LineChart' && (
                 <div className="space-y-2">
                   <TextField
                     label="Curva"
@@ -263,7 +349,7 @@ export default function PropertiesPanel({
                 </div>
               )}
 
-              {node.type === 'PieChart' && (
+              {activeTab === 'data' && node.type === 'PieChart' && (
                 <NumberField
                   label="nivo.innerRadius"
                   value={Number(getProp(node, 'nivo.innerRadius', '')) || ''}
@@ -271,7 +357,7 @@ export default function PropertiesPanel({
                 />
               )}
 
-              {node.type === 'Header' && (
+              {activeTab === 'data' && node.type === 'Header' && (
                 <div className="space-y-2">
                   <SelectField
                     label="controlsPosition"
@@ -305,7 +391,7 @@ export default function PropertiesPanel({
                 </div>
               )}
 
-              {node.type === 'SlicerCard' && (
+              {activeTab === 'data' && node.type === 'SlicerCard' && (
                 <div className="grid grid-cols-2 gap-2">
                   <SelectField
                     label="Layout"
@@ -328,7 +414,7 @@ export default function PropertiesPanel({
                 </div>
               )}
 
-              {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'SlicerCard') && (
+              {activeTab === 'data' && (node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'SlicerCard') && (
                 <CheckboxField
                   label="Borderless"
                   checked={Boolean(getProp(node, 'borderless', false))}
@@ -336,38 +422,164 @@ export default function PropertiesPanel({
                 />
               )}
 
-              <div className="rounded border border-gray-200 p-2">
-                <div className="mb-1 text-[11px] font-medium text-gray-700">Props JSON (avançado)</div>
-                <textarea
-                  value={rawPropsText}
-                  onChange={(e) => setRawPropsText(e.target.value)}
-                  className="min-h-[180px] w-full rounded border border-gray-300 p-2 font-mono text-[11px]"
-                  spellCheck={false}
-                />
-                {rawPropsError && <div className="mt-1 text-[11px] text-red-600">{rawPropsError}</div>}
-                <div className="mt-2 flex justify-end">
-                  <button
-                    type="button"
-                    className="rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50"
-                    onClick={() => {
-                      if (!selectedPath) return
-                      try {
-                        const parsed = JSON.parse(rawPropsText)
-                        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-                          setRawPropsError('Props JSON deve ser um objeto')
-                          return
+              {activeTab === 'style' && (
+                <>
+                  {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'Header' || node.type === 'SlicerCard' || node.type === 'Card') && (
+                    <TextField
+                      label="Título"
+                      value={String(getProp(node, 'title', ''))}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'title', v || undefined)}
+                    />
+                  )}
+
+                  {(node.type === 'Header' || node.type === 'Div' || node.type === 'Card') && (
+                    <ColorField
+                      label="backgroundColor"
+                      value={String(getProp(node, 'backgroundColor', ''))}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'backgroundColor', v || undefined)}
+                    />
+                  )}
+
+                  {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'SlicerCard' || node.type === 'Gauge') && (
+                    <div className="space-y-2 rounded border border-gray-200 p-2">
+                      <div className="text-[11px] font-medium text-gray-700">Container Style</div>
+                      <ColorField
+                        label="containerStyle.backgroundColor"
+                        value={String(getProp(node, 'containerStyle.backgroundColor', ''))}
+                        onChange={(v) => onSetNodeProp(selectedPath, 'containerStyle.backgroundColor', v || undefined)}
+                      />
+                      <ColorField
+                        label="containerStyle.borderColor"
+                        value={String(getProp(node, 'containerStyle.borderColor', ''))}
+                        onChange={(v) => onSetNodeProp(selectedPath, 'containerStyle.borderColor', v || undefined)}
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <NumberField
+                          label="containerStyle.borderWidth"
+                          value={Number(getProp(node, 'containerStyle.borderWidth', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'containerStyle.borderWidth', v)}
+                        />
+                        <NumberField
+                          label="containerStyle.borderRadius"
+                          value={Number(getProp(node, 'containerStyle.borderRadius', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'containerStyle.borderRadius', v)}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'Header' || node.type === 'SlicerCard' || node.type === 'Card') && (
+                    <div className="space-y-2 rounded border border-gray-200 p-2">
+                      <div className="text-[11px] font-medium text-gray-700">Title Style</div>
+                      <ColorField
+                        label="titleStyle.color"
+                        value={String(getProp(node, 'titleStyle.color', ''))}
+                        onChange={(v) => onSetNodeProp(selectedPath, 'titleStyle.color', v || undefined)}
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <NumberField
+                          label="titleStyle.fontSize"
+                          value={Number(getProp(node, 'titleStyle.fontSize', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'titleStyle.fontSize', v)}
+                        />
+                        <NumberField
+                          label="titleStyle.fontWeight"
+                          value={Number(getProp(node, 'titleStyle.fontWeight', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'titleStyle.fontWeight', v)}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {node.type === 'Header' && (
+                    <div className="space-y-2 rounded border border-gray-200 p-2">
+                      <div className="text-[11px] font-medium text-gray-700">Header Colors</div>
+                      <ColorField
+                        label="textColor"
+                        value={String(getProp(node, 'textColor', ''))}
+                        onChange={(v) => onSetNodeProp(selectedPath, 'textColor', v || undefined)}
+                      />
+                      <ColorField
+                        label="subtitleColor"
+                        value={String(getProp(node, 'subtitleColor', ''))}
+                        onChange={(v) => onSetNodeProp(selectedPath, 'subtitleColor', v || undefined)}
+                      />
+                      <ColorField
+                        label="borderColor"
+                        value={String(getProp(node, 'borderColor', ''))}
+                        onChange={(v) => onSetNodeProp(selectedPath, 'borderColor', v || undefined)}
+                      />
+                    </div>
+                  )}
+
+                  {(node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart') && (
+                    <div className="space-y-2 rounded border border-gray-200 p-2">
+                      <div className="text-[11px] font-medium text-gray-700">Chart Style</div>
+                      <NumberField
+                        label="height"
+                        value={Number(getProp(node, 'height', '')) || ''}
+                        onChange={(v) => onSetNodeProp(selectedPath, 'height', v)}
+                      />
+                      <TextField
+                        label="colorScheme (separe por vírgula)"
+                        value={(() => {
+                          const raw = getProp<any>(node, 'colorScheme', '')
+                          if (Array.isArray(raw)) return raw.join(', ')
+                          return typeof raw === 'string' ? raw : ''
+                        })()}
+                        onChange={(v) => {
+                          const values = v.split(',').map((x) => x.trim()).filter(Boolean)
+                          onSetNodeProp(selectedPath, 'colorScheme', values.length ? values : undefined)
+                        }}
+                        placeholder="#3b82f6, #10b981, #f59e0b"
+                      />
+                    </div>
+                  )}
+
+                  {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'SlicerCard' || node.type === 'Gauge') && (
+                    <CheckboxField
+                      label="Borderless"
+                      checked={Boolean(getProp(node, 'borderless', false))}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'borderless', v)}
+                    />
+                  )}
+                </>
+              )}
+
+              {activeTab === 'json' && (
+                <div className="rounded border border-gray-200 p-2">
+                  <div className="mb-1 text-[11px] font-medium text-gray-700">Props JSON (avançado)</div>
+                  <textarea
+                    value={rawPropsText}
+                    onChange={(e) => setRawPropsText(e.target.value)}
+                    className="min-h-[220px] w-full rounded border border-gray-300 p-2 font-mono text-[11px]"
+                    spellCheck={false}
+                  />
+                  {rawPropsError && <div className="mt-1 text-[11px] text-red-600">{rawPropsError}</div>}
+                  <div className="mt-2 flex justify-end">
+                    <button
+                      type="button"
+                      className="rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50"
+                      onClick={() => {
+                        if (!selectedPath) return
+                        try {
+                          const parsed = JSON.parse(rawPropsText)
+                          if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+                            setRawPropsError('Props JSON deve ser um objeto')
+                            return
+                          }
+                          onReplaceNodeProps(selectedPath, parsed)
+                          setRawPropsError(null)
+                        } catch (error) {
+                          setRawPropsError(error instanceof Error ? error.message : 'JSON inválido')
                         }
-                        onReplaceNodeProps(selectedPath, parsed)
-                        setRawPropsError(null)
-                      } catch (error) {
-                        setRawPropsError(error instanceof Error ? error.message : 'JSON inválido')
-                      }
-                    }}
-                  >
-                    Aplicar Props JSON
-                  </button>
+                      }}
+                    >
+                      Aplicar Props JSON
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </>
           )}
         </div>
@@ -375,4 +587,3 @@ export default function PropertiesPanel({
     </div>
   )
 }
-
