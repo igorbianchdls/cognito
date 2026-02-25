@@ -15,7 +15,7 @@ import {
   $stagedFilters,
   type BigQueryField
 } from '@/stores/apps/chartStore'
-import { DndContext, DragEndEvent } from '@dnd-kit/core'
+import { DndContext, DragEndEvent} from '@dnd-kit/core'
 import { Database, RefreshCw, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import DropZone from '../builder/DropZone'
