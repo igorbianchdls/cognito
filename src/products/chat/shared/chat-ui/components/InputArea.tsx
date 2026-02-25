@@ -154,8 +154,8 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
           value={value}
           onChange={(e) => onChange(e.target.value)}
         />
-        <PromptInputToolbar>
-          <PromptInputTools>
+        <PromptInputToolbar className="flex-wrap items-start justify-start gap-1">
+          <PromptInputTools className="min-w-0 flex-1 flex-wrap">
             {/* Plus at extreme left */}
             <PromptInputButton>
               <Plus size={16} />
@@ -207,8 +207,8 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
               const next = (v === 'claude-sonnet' || v === 'claude-haiku' || v === 'openai-gpt5' || v === 'openai-gpt5nano' || v === 'openai-gpt5mini') ? v : 'openai-gpt5mini'
               onModelChange?.(next)
             }}>
-              <PromptInputModelSelectTrigger className="text-gray-500 hover:text-gray-800">
-                <PromptInputModelSelectValue placeholder="Modelo" />
+              <PromptInputModelSelectTrigger className="min-w-0 max-w-[220px] text-gray-500 hover:text-gray-800 [&>span]:truncate">
+                <PromptInputModelSelectValue className="truncate" placeholder="Modelo" />
               </PromptInputModelSelectTrigger>
               <PromptInputModelSelectContent>
                 <PromptInputModelSelectItem value="claude-sonnet">Claude Sonnet 4.5 (Agent SDK)</PromptInputModelSelectItem>
@@ -219,7 +219,7 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
               </PromptInputModelSelectContent>
             </PromptInputModelSelect>
           </PromptInputTools>
-          <div className="flex items-center gap-1">
+          <div className="ml-auto flex shrink-0 items-center gap-1">
             {/* Mic control button */}
             {recState === 'recording' ? (
               <PromptInputButton onClick={stopRecording} className="text-red-600 hover:text-red-700" title="Parar gravação">
