@@ -59,40 +59,6 @@ export const APPS_FINANCEIRO_TEMPLATE_TEXT = JSON.stringify(
           props: { direction: 'row', gap: 12, padding: 16, justify: 'start', align: 'start', childGrow: true },
           children: [
             {
-              type: 'SlicerCard',
-              props: {
-                fr: 1,
-                title: 'Filtros',
-                layout: 'horizontal',
-                fields: [
-                  {
-                    label: 'Fornecedor',
-                    type: 'tile-multi',
-                    storePath: 'filters.fornecedor_id',
-                    selectAll: true,
-                    search: true,
-                    clearable: true,
-                    source: fornecedorOptionsSource,
-                  },
-                  {
-                    label: 'Status',
-                    type: 'tile-multi',
-                    storePath: 'filters.status',
-                    selectAll: true,
-                    search: true,
-                    clearable: true,
-                    source: statusOptionsSource,
-                  },
-                ],
-              },
-            },
-          ],
-        },
-        {
-          type: 'Div',
-          props: { direction: 'row', gap: 12, padding: 16, justify: 'start', align: 'start', childGrow: true },
-          children: [
-            {
               type: 'BarChart',
               props: {
                 fr: 1,
@@ -197,4 +163,3 @@ export const APPS_FINANCEIRO_TEMPLATE_TEXT = JSON.stringify(
   null,
   2,
 )
-

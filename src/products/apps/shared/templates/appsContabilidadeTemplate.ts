@@ -91,55 +91,6 @@ export const APPS_CONTABILIDADE_TEMPLATE_TEXT = JSON.stringify(
           props: { direction: 'row', gap: 12, padding: 16, justify: 'start', align: 'start', childGrow: true },
           children: [
             {
-              type: 'SlicerCard',
-              props: {
-                fr: 1,
-                title: 'Filtros Rapidos',
-                layout: 'horizontal',
-                fields: [
-                  {
-                    label: 'Tipo de Conta',
-                    type: 'tile-multi',
-                    storePath: 'filters.tipo_conta',
-                    selectAll: true,
-                    clearable: true,
-                    source: {
-                      type: 'static',
-                      options: [
-                        { value: 'Ativo', label: 'Ativo' },
-                        { value: 'Passivo', label: 'Passivo' },
-                        { value: 'Patrimônio Líquido', label: 'Patrimonio Liquido' },
-                        { value: 'Receita', label: 'Receita' },
-                        { value: 'Despesa', label: 'Despesa' },
-                        { value: 'Custo', label: 'Custo' },
-                      ],
-                    },
-                  },
-                  {
-                    label: 'Origem',
-                    type: 'tile-multi',
-                    storePath: 'filters.origem',
-                    selectAll: true,
-                    clearable: true,
-                    source: {
-                      type: 'static',
-                      options: [
-                        { value: 'financeiro.contas_receber', label: 'CR' },
-                        { value: 'financeiro.contas_pagar', label: 'CP' },
-                        { value: 'manual', label: 'Manual' },
-                      ],
-                    },
-                  },
-                ],
-              },
-            },
-          ],
-        },
-        {
-          type: 'Div',
-          props: { direction: 'row', gap: 12, padding: 16, justify: 'start', align: 'start', childGrow: true },
-          children: [
-            {
               type: 'BarChart',
               props: {
                 fr: 1,

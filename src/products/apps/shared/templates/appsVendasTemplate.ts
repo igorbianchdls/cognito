@@ -28,15 +28,7 @@ export const APPS_VENDAS_TEMPLATE_TEXT = JSON.stringify([
         { type: "KPI", props: { fr: 1, title: "Vendas", format: "currency", borderless: true, dataQuery: { model: "vendas.pedidos", measure: "SUM(p.valor_total)", filters: { tenant_id: 1 } } } },
         { type: "KPI", props: { fr: 1, title: "Pedidos", format: "number", borderless: true, dataQuery: { model: "vendas.pedidos", measure: "COUNT()", filters: { tenant_id: 1 } } } },
         { type: "KPI", props: { fr: 1, title: "Ticket Médio", format: "currency", borderless: true, dataQuery: { model: "vendas.pedidos", measure: "AVG(p.valor_total)", filters: { tenant_id: 1 } } } },
-        { type: "KPI", props: { fr: 1, title: "Margem Bruta", valuePath: "vendas.kpis.margemBruta", format: "currency", borderless: true } },
-        { type: "Gauge", props: { fr: 1, title: "Conversão", value: 0.37, format: "percent", size: 140, thickness: 12, indicatorColor: "#10b981" } }
-      ]},
-
-      { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
-        { type: "SlicerCard", props: { fr: 1, title: "Filtro de Canais (Tile)", layout: "horizontal", fields: [
-          { label: "Canal", type: "tile-multi", storePath: "filters.canal_venda_id", selectAll: true, search: true, clearable: true, source: canalVendaOptionsSource },
-          { label: "Filial", type: "tile-multi", storePath: "filters.filial_id", selectAll: true, search: true, clearable: true, source: filialOptionsSource }
-        ] } }
+        { type: "KPI", props: { fr: 1, title: "Margem Bruta", valuePath: "vendas.kpis.margemBruta", format: "currency", borderless: true } }
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [

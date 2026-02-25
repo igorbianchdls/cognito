@@ -54,49 +54,6 @@ export const APPS_CRM_TEMPLATE_TEXT = JSON.stringify(
           props: { direction: 'row', gap: 12, padding: 16, justify: 'start', align: 'start', childGrow: true },
           children: [
             {
-              type: 'SlicerCard',
-              props: {
-                fr: 1,
-                title: 'Filtros',
-                layout: 'horizontal',
-                fields: [
-                  {
-                    label: 'Vendedor',
-                    type: 'tile-multi',
-                    storePath: 'filters.vendedor_id',
-                    clearable: true,
-                    search: true,
-                    selectAll: true,
-                    source: vendedorOptionsSource,
-                  },
-                  {
-                    label: 'Fase',
-                    type: 'tile-multi',
-                    storePath: 'filters.fase_pipeline_id',
-                    clearable: true,
-                    search: true,
-                    selectAll: true,
-                    source: faseOptionsSource,
-                  },
-                  {
-                    label: 'Origem',
-                    type: 'tile-multi',
-                    storePath: 'filters.origem_id',
-                    clearable: true,
-                    search: true,
-                    selectAll: true,
-                    source: origemOptionsSource,
-                  },
-                ],
-              },
-            },
-          ],
-        },
-        {
-          type: 'Div',
-          props: { direction: 'row', gap: 12, padding: 16, justify: 'start', align: 'start', childGrow: true },
-          children: [
-            {
               type: 'BarChart',
               props: {
                 fr: 2,

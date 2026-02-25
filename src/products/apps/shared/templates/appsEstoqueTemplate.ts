@@ -53,49 +53,6 @@ export const APPS_ESTOQUE_TEMPLATE_TEXT = JSON.stringify(
           props: { direction: 'row', gap: 12, padding: 16, justify: 'start', align: 'start', childGrow: true },
           children: [
             {
-              type: 'SlicerCard',
-              props: {
-                fr: 1,
-                title: 'Filtros',
-                layout: 'horizontal',
-                fields: [
-                  {
-                    label: 'Almoxarifado',
-                    type: 'tile-multi',
-                    storePath: 'filters.almoxarifado_id',
-                    clearable: true,
-                    search: true,
-                    selectAll: true,
-                    source: almoxarifadoOptionsSource,
-                  },
-                  {
-                    label: 'Produto',
-                    type: 'tile-multi',
-                    storePath: 'filters.produto_id',
-                    clearable: true,
-                    search: true,
-                    selectAll: true,
-                    source: produtoOptionsSource,
-                  },
-                  {
-                    label: 'Tipo Movimento',
-                    type: 'tile-multi',
-                    storePath: 'filters.tipo_movimento',
-                    clearable: true,
-                    search: true,
-                    selectAll: true,
-                    source: tipoMovimentoOptionsSource,
-                  },
-                ],
-              },
-            },
-          ],
-        },
-        {
-          type: 'Div',
-          props: { direction: 'row', gap: 12, padding: 16, justify: 'start', align: 'start', childGrow: true },
-          children: [
-            {
               type: 'BarChart',
               props: {
                 fr: 1,
