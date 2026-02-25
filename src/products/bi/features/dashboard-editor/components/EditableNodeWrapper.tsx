@@ -64,6 +64,7 @@ export default function EditableNodeWrapper({
     attributes: dragAttributes,
     listeners: dragListeners,
     setNodeRef: setDraggableNodeRef,
+    setActivatorNodeRef,
     isDragging,
   } = useDraggable({
     id: `bi-node-drag:${dndIdBase}`,
@@ -99,6 +100,7 @@ export default function EditableNodeWrapper({
       ref={(node) => {
         rootRef.current = node
         setDroppableNodeRef(node)
+        setDraggableNodeRef(node)
       }}
       className="relative"
       onMouseEnter={() => setHovered(true)}
@@ -128,7 +130,7 @@ export default function EditableNodeWrapper({
           <button
             type="button"
             aria-label={`Mover componente ${type}`}
-            ref={setDraggableNodeRef}
+            ref={setActivatorNodeRef}
             {...dragListeners}
             {...dragAttributes}
             className="pointer-events-auto cursor-grab active:cursor-grabbing rounded border border-gray-200 bg-white px-1.5 py-0.5 text-xs text-gray-700 shadow-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
