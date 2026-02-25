@@ -60,12 +60,20 @@ export default function JsonPreviewPanel({ tree, onAction, actionHint, toolbar, 
           {toolbar}
         </div>
       </div>
-      {propertiesPanel ? (
-        <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_320px]">
-          {previewContent}
-          <div>{propertiesPanel}</div>
+      {previewContent}
+      {propertiesPanel && (
+        <div className="fixed inset-0 z-[120]">
+          <div className="absolute inset-0 bg-black/30" />
+          <div className="absolute inset-0 flex items-center justify-center p-4">
+            <div
+              className="w-full max-w-[680px] max-h-[85vh] overflow-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {propertiesPanel}
+            </div>
+          </div>
         </div>
-      ) : previewContent}
+      )}
     </div>
   )
 }
