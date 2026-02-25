@@ -50,8 +50,12 @@ export function ThemeProvider({ name, components, cssVars, children }: { name?: 
     (styleVars as any)[`--${k}`] = (combined.cssVars as any)[k];
   }
   const css = combined.cssVars || {};
+  const fxPreset = typeof (css as any).dashboardBackgroundPreset === 'string'
+    ? String((css as any).dashboardBackgroundPreset).trim().toLowerCase()
+    : '';
+  const hasFxBackground = Boolean(fxPreset && fxPreset !== 'none');
   if (css.hasOwnProperty('fontFamily')) (styleVars as any).fontFamily = 'var(--fontFamily)';
-  if (css.hasOwnProperty('bg')) (styleVars as any).backgroundColor = 'var(--bg)';
+  if (css.hasOwnProperty('bg') && !hasFxBackground) (styleVars as any).backgroundColor = 'var(--bg)';
   if (css.hasOwnProperty('fg')) (styleVars as any).color = 'var(--fg)';
 
   return (
