@@ -11,7 +11,7 @@ export const APPS_HOME_TEMPLATE_TEXT = JSON.stringify([
           radius: 8,
           frame: {
             variant: "hud",
-            cornerSize: 14,
+            cornerSize: 8,
             cornerWidth: 1
           }
         }

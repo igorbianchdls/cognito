@@ -6,6 +6,8 @@ import { DataProvider, useData } from '@/products/bi/json-render/context'
 import JsonEditorPanel from '@/products/bi/features/dashboard-editor/components/JsonEditorPanel'
 import JsonPreviewPanel from '@/products/bi/features/dashboard-editor/components/JsonPreviewPanel'
 import ManagersPanel from '@/products/bi/features/dashboard-editor/components/ManagersPanel'
+import PropertiesPanel from '@/products/bi/features/dashboard-editor/components/PropertiesPanel'
+import useDashboardVisualEditor from '@/products/bi/features/dashboard-editor/hooks/useDashboardVisualEditor'
 import {
   refreshAppsComprasData,
   useAppsComprasBootstrap,
@@ -25,7 +27,19 @@ function AppsComprasPlayground() {
     onChangeText,
     onFormat,
     onReset,
+    duplicateNode,
+    deleteNode,
+    moveNode,
+    moveNodeRelative,
+    setNodeProp,
+    replaceNodeProps,
   } = useJsonTemplateEditor(APPS_COMPRAS_TEMPLATE_TEXT)
+  const visualEditor = useDashboardVisualEditor({
+    onDuplicateNode: duplicateNode,
+    onDeleteNode: deleteNode,
+    onMoveNode: moveNode,
+    onMoveNodeRelative: moveNodeRelative,
+  })
 
   useAppsComprasBootstrap(setData)
 
@@ -56,7 +70,29 @@ function AppsComprasPlayground() {
           />
         }
       />
-      <JsonPreviewPanel tree={tree} onAction={handleAction} />
+      <JsonPreviewPanel
+        tree={tree}
+        onAction={handleAction}
+        visualEditor={{
+          enabled: true,
+          selectedPath: visualEditor.selectedPath,
+          onNodeAction: visualEditor.handleNodeAction,
+          onNodeMove: visualEditor.handleNodeMove,
+          onNodeDropReorder: visualEditor.handleNodeDropReorder,
+        }}
+        propertiesPanel={
+          visualEditor.isPropertiesOpen ? (
+            <PropertiesPanel
+              tree={tree}
+              selectedPath={visualEditor.selectedPath}
+              isOpen={visualEditor.isPropertiesOpen}
+              onClose={visualEditor.closeProperties}
+              onSetNodeProp={setNodeProp}
+              onReplaceNodeProps={replaceNodeProps}
+            />
+          ) : null
+        }
+      />
     </div>
   )
 }

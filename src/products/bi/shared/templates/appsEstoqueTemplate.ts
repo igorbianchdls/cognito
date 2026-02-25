@@ -16,7 +16,7 @@ export const APPS_ESTOQUE_TEMPLATE_TEXT = JSON.stringify(
             width: 1,
             color: '#bfc9d9',
             radius: 8,
-            frame: { variant: 'hud', cornerSize: 14, cornerWidth: 1 },
+            frame: { variant: 'hud', cornerSize: 8, cornerWidth: 1 },
           },
         },
       },

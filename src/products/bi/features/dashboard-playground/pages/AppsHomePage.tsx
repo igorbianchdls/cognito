@@ -5,6 +5,8 @@ import { useCallback } from 'react'
 import { DataProvider, useData } from '@/products/bi/json-render/context'
 import JsonEditorPanel from '@/products/bi/features/dashboard-editor/components/JsonEditorPanel'
 import JsonPreviewPanel from '@/products/bi/features/dashboard-editor/components/JsonPreviewPanel'
+import PropertiesPanel from '@/products/bi/features/dashboard-editor/components/PropertiesPanel'
+import useDashboardVisualEditor from '@/products/bi/features/dashboard-editor/hooks/useDashboardVisualEditor'
 import {
   refreshAppsHomeData,
   useAppsHomeBootstrap,
@@ -37,8 +39,27 @@ const INITIAL_APPS_HOME_DATA = {
 
 function AppsHomePlayground() {
   const { data, setData, getValueByPath } = useData()
-  const { jsonText, parseError, tree, onChangeText, onFormat, onReset } =
+  const {
+    jsonText,
+    parseError,
+    tree,
+    onChangeText,
+    onFormat,
+    onReset,
+    duplicateNode,
+    deleteNode,
+    moveNode,
+    moveNodeRelative,
+    setNodeProp,
+    replaceNodeProps,
+  } =
     useJsonTemplateEditor(APPS_HOME_TEMPLATE_TEXT)
+  const visualEditor = useDashboardVisualEditor({
+    onDuplicateNode: duplicateNode,
+    onDeleteNode: deleteNode,
+    onMoveNode: moveNode,
+    onMoveNodeRelative: moveNodeRelative,
+  })
 
   useAppsHomeBootstrap(setData)
 
@@ -74,6 +95,25 @@ function AppsHomePlayground() {
         tree={tree}
         onAction={handleAction}
         actionHint="Ações: Atualizar / Exportar PDF"
+        visualEditor={{
+          enabled: true,
+          selectedPath: visualEditor.selectedPath,
+          onNodeAction: visualEditor.handleNodeAction,
+          onNodeMove: visualEditor.handleNodeMove,
+          onNodeDropReorder: visualEditor.handleNodeDropReorder,
+        }}
+        propertiesPanel={
+          visualEditor.isPropertiesOpen ? (
+            <PropertiesPanel
+              tree={tree}
+              selectedPath={visualEditor.selectedPath}
+              isOpen={visualEditor.isPropertiesOpen}
+              onClose={visualEditor.closeProperties}
+              onSetNodeProp={setNodeProp}
+              onReplaceNodeProps={replaceNodeProps}
+            />
+          ) : null
+        }
       />
     </div>
   )
