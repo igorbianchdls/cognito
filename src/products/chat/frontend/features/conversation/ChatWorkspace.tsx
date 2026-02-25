@@ -53,7 +53,7 @@ export default function ChatWorkspace({
                 <div
                   className={[
                     sandboxExpanded ? "hidden" : "h-full min-h-0 min-w-0",
-                    splitOpen ? "w-full lg:basis-[42%] lg:max-w-[42%] lg:min-w-[360px]" : "w-full",
+                    splitOpen ? "w-full lg:basis-[33.333%] lg:max-w-[33.333%] lg:min-w-[360px]" : "w-full",
                   ].join(' ')}
                 >
                   <div
@@ -82,7 +82,7 @@ export default function ChatWorkspace({
                 <div
                   className={[
                     !showSandbox ? "hidden" : "h-full min-h-0 min-w-0",
-                    splitOpen ? "w-full lg:basis-[58%] lg:min-w-0" : "w-full",
+                    splitOpen ? "w-full lg:basis-[66.667%] lg:min-w-0" : "w-full",
                   ].join(' ')}
                 >
                   <div

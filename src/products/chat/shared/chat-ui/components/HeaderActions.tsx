@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Undo2, Redo2, ClipboardList, GitBranch, Upload, Palette } from 'lucide-react';
 import { $previewJsonrPath } from '@/chat/sandbox';
-import { APPS_HEADER_THEME_OPTIONS, APPS_THEME_OPTIONS } from '@/products/bi/shared/themeOptions';
+import { APPS_COLOR_PRESETS, APPS_HEADER_THEME_OPTIONS, APPS_THEME_OPTIONS } from '@/products/bi/shared/themeOptions';
 
 function IconButton({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -58,7 +58,21 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
   const [loading, setLoading] = React.useState(false);
   const [themeName, setThemeName] = React.useState<string>('light');
   const [headerTheme, setHeaderTheme] = React.useState<string>('');
+  const [colorPreset, setColorPreset] = React.useState<string>('custom');
   const [error, setError] = React.useState<string | null>(null);
+
+  const schemeToPreset = React.useCallback((arr?: string[]): string => {
+    if (!arr) return 'custom';
+    for (const [k, v] of Object.entries(APPS_COLOR_PRESETS)) {
+      if (
+        v.length === arr.length &&
+        v.every((c, i) => c.toLowerCase() === String(arr[i] || '').toLowerCase())
+      ) {
+        return k;
+      }
+    }
+    return 'custom';
+  }, []);
 
   const readCurrent = React.useCallback(async () => {
     if (!chatId || !previewPath) {
@@ -80,8 +94,11 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
       const props = (nodes[0] as any)?.props || {};
       const nextTheme = String(props.name || 'light');
       const rawHeader = typeof props.headerTheme === 'string' ? props.headerTheme : 'auto';
+      const managers = props.managers && typeof props.managers === 'object' ? props.managers : {};
+      const scheme = Array.isArray(managers?.color?.scheme) ? managers.color.scheme : undefined;
       setThemeName(nextTheme);
       setHeaderTheme(rawHeader === 'auto' ? '' : rawHeader);
+      setColorPreset(schemeToPreset(scheme));
     } catch (e: any) {
       setError(e?.message ? String(e.message) : 'Erro ao carregar tema');
     } finally {
@@ -95,7 +112,7 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
   }, [open, readCurrent]);
 
   const persist = React.useCallback(
-    async (next: { name?: string; headerTheme?: string }) => {
+    async (next: { name?: string; headerTheme?: string; colorPreset?: string }) => {
       if (!chatId || !previewPath) {
         setError('chatId/path ausente');
         return;
@@ -118,6 +135,15 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
         if (typeof next.headerTheme === 'string') {
           theme.props.headerTheme = next.headerTheme ? next.headerTheme : 'auto';
         }
+        if (typeof next.colorPreset === 'string') {
+          theme.props.managers = theme.props.managers && typeof theme.props.managers === 'object' ? theme.props.managers : {};
+          theme.props.managers.color = theme.props.managers.color && typeof theme.props.managers.color === 'object' ? theme.props.managers.color : {};
+          if (next.colorPreset && next.colorPreset !== 'custom') {
+            theme.props.managers.color.scheme = APPS_COLOR_PRESETS[next.colorPreset];
+          } else if (theme.props.managers.color) {
+            delete theme.props.managers.color.scheme;
+          }
+        }
 
         const writeRes = await fetch('/api/chat', {
           method: 'POST',
@@ -134,8 +160,10 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
 
         const savedTheme = String(theme.props?.name || 'light');
         const savedHeaderRaw = typeof theme.props?.headerTheme === 'string' ? theme.props.headerTheme : 'auto';
+        const savedScheme = Array.isArray(theme.props?.managers?.color?.scheme) ? theme.props.managers.color.scheme : undefined;
         setThemeName(savedTheme);
         setHeaderTheme(savedHeaderRaw === 'auto' ? '' : savedHeaderRaw);
+        setColorPreset(schemeToPreset(savedScheme));
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('sandbox-preview-refresh', { detail: { path: previewPath } }));
         }
@@ -145,7 +173,7 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
         setLoading(false);
       }
     },
-    [chatId, previewPath]
+    [chatId, previewPath, schemeToPreset]
   );
 
   return (
@@ -199,6 +227,26 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
                 {APPS_HEADER_THEME_OPTIONS.map((opt) => (
                   <option key={opt.value || 'auto'} value={opt.value}>
                     {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-slate-600">Cores</label>
+              <select
+                className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs outline-none focus:border-slate-400"
+                value={colorPreset}
+                disabled={loading || !chatId || !previewPath}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setColorPreset(next);
+                  void persist({ colorPreset: next });
+                }}
+              >
+                <option value="custom">Custom</option>
+                {Object.keys(APPS_COLOR_PRESETS).map((key) => (
+                  <option key={key} value={key}>
+                    {key}
                   </option>
                 ))}
               </select>
