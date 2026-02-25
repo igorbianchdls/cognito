@@ -565,6 +565,10 @@ export function buildThemeVars(
     borderColor: borderSeed,
   });
   Object.assign(extraCss, headerVars);
+  if (['midnight', 'aero', 'metro'].includes(n) && extraCss.headerDpBg) {
+    // Improves title contrast on these themes by reusing the header datepicker surface color.
+    extraCss.headerText = String(extraCss.headerDpBg);
+  }
 
   // If theme is "blue", push a stronger blue palette unless overridden
   if (['blue','navy','midnight','aero'].includes(n) && !cssVars.chartColorScheme) {
