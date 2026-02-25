@@ -1,4 +1,4 @@
-import { BiSlicers } from '@/products/apps/bi'
+import { BiSlicers } from '@/products/bi'
 
 const canalVendaOptionsSource = BiSlicers.createOptionsSource('vendas.pedidos', 'canal_venda_id', 50)
 const filialOptionsSource = BiSlicers.createOptionsSource('vendas.pedidos', 'filial_id', 50)

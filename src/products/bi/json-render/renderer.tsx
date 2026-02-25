@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { catalog, validateElement } from "@/products/apps/bi/json-render/catalog";
+import { catalog, validateElement } from "@/products/bi/json-render/catalog";
 
 type AnyRecord = Record<string, any>;
 

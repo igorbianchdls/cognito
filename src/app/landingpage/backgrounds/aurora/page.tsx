@@ -1,3 +1,5 @@
+'use client'
+
 export default function LandingBackgroundAuroraPage() {
   return (
     <>
@@ -95,4 +97,3 @@ export default function LandingBackgroundAuroraPage() {
     </>
   )
 }
-

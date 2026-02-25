@@ -1,3 +1,5 @@
+'use client'
+
 export default function LandingBackgroundOrbitalPage() {
   return (
     <>
@@ -73,4 +75,3 @@ export default function LandingBackgroundOrbitalPage() {
     </>
   )
 }
-

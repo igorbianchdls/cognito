@@ -1,4 +1,4 @@
-import { BiSlicers } from '@/products/apps/bi'
+import { BiSlicers } from '@/products/bi'
 
 const almoxarifadoOptionsSource = BiSlicers.createOptionsSource('estoque.estoques_atual', 'almoxarifado_id', 80)
 const produtoOptionsSource = BiSlicers.createOptionsSource('estoque.estoques_atual', 'produto_id', 120)

@@ -1,3 +1,5 @@
+'use client'
+
 export default function LandingBackgroundMatrixGlassPage() {
   return (
     <>
@@ -128,4 +130,3 @@ export default function LandingBackgroundMatrixGlassPage() {
     </>
   )
 }
-

@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useMemo, useState } from 'react'
-import { exportDocumentosPdf } from '@/products/apps/frontend/features/documentos/services/documentosPdfClient'
+import { exportDocumentosPdf } from '@/products/documentos/frontend/features/documentos/services/documentosPdfClient'
 
 type DownloadDocumentosPdfInput = {
   templateJson: string

@@ -1,3 +1,5 @@
+'use client'
+
 export default function LandingBackgroundBlueprintPage() {
   return (
     <>
@@ -84,4 +86,3 @@ export default function LandingBackgroundBlueprintPage() {
     </>
   )
 }
-

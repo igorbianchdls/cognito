@@ -2,8 +2,8 @@
 
 import { ThemeManager, type ThemeName } from "@/components/visual-builder/ThemeManager";
 import type { DesignTokens } from "@/components/visual-builder/DesignTokens";
-import type { Managers } from "@/products/apps/bi/json-render/theme/thememanagers";
-import { mapManagersToCssVars } from "@/products/apps/bi/json-render/theme/thememanagers";
+import type { Managers } from "@/products/bi/json-render/theme/thememanagers";
+import { mapManagersToCssVars } from "@/products/bi/json-render/theme/thememanagers";
 
 type AnyRecord = Record<string, any>;
 type Rgb = { r: number; g: number; b: number };

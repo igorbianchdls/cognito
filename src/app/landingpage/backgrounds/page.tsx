@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 
 const ITEMS = [
@@ -72,4 +74,3 @@ export default function LandingBackgroundIndexPage() {
     </>
   )
 }
-

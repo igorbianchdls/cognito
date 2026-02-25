@@ -1,6 +1,6 @@
 'use client'
 
-import useDocumentosPdfExport from '@/products/apps/frontend/features/documentos/hooks/useDocumentosPdfExport'
+import useDocumentosPdfExport from '@/products/documentos/frontend/features/documentos/hooks/useDocumentosPdfExport'
 
 type Props = {
   templateJson: string

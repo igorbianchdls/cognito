@@ -1,4 +1,4 @@
-import { BiSlicers } from '@/products/apps/bi'
+import { BiSlicers } from '@/products/bi'
 
 const fornecedorOptionsSource = BiSlicers.createOptionsSource('financeiro.contas_pagar', 'fornecedor_id', 80)
 const statusOptionsSource = BiSlicers.createOptionsSource('financeiro.contas_pagar', 'status', 40)

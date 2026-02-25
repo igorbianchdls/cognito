@@ -1,8 +1,8 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { Renderer } from '@/products/apps/bi/json-render/renderer'
-import { registry } from '@/products/apps/bi/json-render/registry'
+import { Renderer } from '@/products/bi/json-render/renderer'
+import { registry } from '@/products/bi/json-render/registry'
 import type { JsonTree } from '@/products/apps/shared/types'
 
 type JsonPreviewPanelProps = {

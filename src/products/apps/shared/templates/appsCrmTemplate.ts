@@ -1,4 +1,4 @@
-import { BiSlicers } from '@/products/apps/bi'
+import { BiSlicers } from '@/products/bi'
 
 const vendedorOptionsSource = BiSlicers.createOptionsSource('crm.oportunidades', 'vendedor_id', 80)
 const faseOptionsSource = BiSlicers.createOptionsSource('crm.oportunidades', 'fase_pipeline_id', 80)

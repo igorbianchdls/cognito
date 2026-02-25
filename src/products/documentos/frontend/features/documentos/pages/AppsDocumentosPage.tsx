@@ -2,11 +2,11 @@
 
 import { useCallback } from 'react'
 
-import { DataProvider, useData } from '@/products/apps/bi/json-render/context'
+import { DataProvider, useData } from '@/products/bi/json-render/context'
 import JsonEditorPanel from '@/products/apps/frontend/components/JsonEditorPanel'
 import JsonPreviewPanel from '@/products/apps/frontend/components/JsonPreviewPanel'
 import ManagersPanel from '@/products/apps/frontend/components/ManagersPanel'
-import DocumentosPdfExportButton from '@/products/apps/frontend/features/documentos/components/DocumentosPdfExportButton'
+import DocumentosPdfExportButton from '@/products/documentos/frontend/features/documentos/components/DocumentosPdfExportButton'
 import {
   refreshAppsDocumentosData,
   useAppsDocumentosBootstrap,

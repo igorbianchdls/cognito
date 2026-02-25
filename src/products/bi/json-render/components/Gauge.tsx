@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import { useDataValue } from "@/products/apps/bi/json-render/context";
-import { useThemeOverrides } from "@/products/apps/bi/json-render/theme/ThemeContext";
+import { useDataValue } from "@/products/bi/json-render/context";
+import { useThemeOverrides } from "@/products/bi/json-render/theme/ThemeContext";
 
 type AnyRecord = Record<string, any>;
 

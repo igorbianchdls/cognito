@@ -1,1 +1,1 @@
-export { default } from '@/products/apps/frontend/features/documentos/pages/AppsDocumentosPage'
+export { default } from '@/products/documentos/frontend/features/documentos/pages/AppsDocumentosPage'
