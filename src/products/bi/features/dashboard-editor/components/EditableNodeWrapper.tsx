@@ -1,7 +1,7 @@
 'use client'
 
-import type { DragEvent as ReactDragEvent } from 'react'
 import { useEffect, useRef, useState } from 'react'
+import { useDraggable, useDroppable } from '@dnd-kit/core'
 import NodeActionMenu from '@/products/bi/features/dashboard-editor/components/NodeActionMenu'
 import NodeMoveMenu from '@/products/bi/features/dashboard-editor/components/NodeMoveMenu'
 import type {
@@ -11,8 +11,6 @@ import type {
   NodeMoveDirection,
 } from '@/products/bi/features/dashboard-editor/types/editor-types'
 
-const DRAG_PATH_MIME = 'application/x-bi-node-path'
-
 type EditableNodeWrapperProps = {
   path: JsonNodePath
   type: string
@@ -20,7 +18,11 @@ type EditableNodeWrapperProps = {
   siblingAxis?: 'horizontal' | 'vertical'
   onAction: (path: JsonNodePath, action: NodeMenuAction) => void
   onMove: (path: JsonNodePath, direction: NodeMoveDirection) => void
-  onDropReorder: (sourcePath: JsonNodePath, targetPath: JsonNodePath, placement: NodeDropPlacement) => void
+  dnd?: {
+    enabled?: boolean
+    showDropIndicator?: boolean
+    dropPlacement?: NodeDropPlacement | null
+  }
   children: React.ReactNode
 }
 
@@ -31,13 +33,12 @@ export default function EditableNodeWrapper({
   siblingAxis = 'vertical',
   onAction,
   onMove,
-  onDropReorder,
+  dnd,
   children,
 }: EditableNodeWrapperProps) {
   const [hovered, setHovered] = useState(false)
   const [actionMenuOpen, setActionMenuOpen] = useState(false)
   const [moveMenuOpen, setMoveMenuOpen] = useState(false)
-  const [dropPlacement, setDropPlacement] = useState<NodeDropPlacement | null>(null)
   const rootRef = useRef<HTMLDivElement | null>(null)
   const isTheme = type === 'Theme'
   const isRootNode = path.length === 0
@@ -46,6 +47,32 @@ export default function EditableNodeWrapper({
   const canMove = !isTheme && !isRootNode
   const canMoveUp = canMove && path[path.length - 1] > 0
   const canMoveDown = canMove
+  const dndEnabled = Boolean(dnd?.enabled)
+  const dndIdBase = path.length ? path.join('.') : 'root'
+  const {
+    setNodeRef: setDroppableNodeRef,
+  } = useDroppable({
+    id: `bi-node-drop:${dndIdBase}`,
+    data: {
+      kind: 'dashboard-node-target',
+      path,
+      siblingAxis,
+    },
+    disabled: !dndEnabled || isRootNode,
+  })
+  const {
+    attributes: dragAttributes,
+    listeners: dragListeners,
+    setNodeRef: setDraggableNodeRef,
+    isDragging,
+  } = useDraggable({
+    id: `bi-node-drag:${dndIdBase}`,
+    data: {
+      kind: 'dashboard-node',
+      path,
+    },
+    disabled: !dndEnabled || !canMove,
+  })
 
   useEffect(() => {
     function onDocClick(event: MouseEvent) {
@@ -53,13 +80,11 @@ export default function EditableNodeWrapper({
       if (rootRef.current.contains(event.target as Node)) return
       setActionMenuOpen(false)
       setMoveMenuOpen(false)
-      setDropPlacement(null)
     }
     function onKeyDown(event: KeyboardEvent) {
       if (event.key !== 'Escape') return
       setActionMenuOpen(false)
       setMoveMenuOpen(false)
-      setDropPlacement(null)
     }
     document.addEventListener('mousedown', onDocClick)
     document.addEventListener('keydown', onKeyDown)
@@ -69,81 +94,30 @@ export default function EditableNodeWrapper({
     }
   }, [])
 
-  function parseDraggedPath(event: ReactDragEvent): JsonNodePath | null {
-    const raw = event.dataTransfer.getData(DRAG_PATH_MIME) || event.dataTransfer.getData('text/plain')
-    if (!raw) return null
-    try {
-      const parsed = JSON.parse(raw)
-      if (!Array.isArray(parsed) || parsed.some((v) => !Number.isInteger(v))) return null
-      return parsed as JsonNodePath
-    } catch {
-      return null
-    }
-  }
-
-  function isSameParentPath(a: JsonNodePath, b: JsonNodePath) {
-    if (a.length !== b.length) return false
-    return a.slice(0, -1).every((v, i) => v === b[i])
-  }
-
-  function getPlacementFromPointer(event: ReactDragEvent<HTMLDivElement>): NodeDropPlacement {
-    const rect = event.currentTarget.getBoundingClientRect()
-    if (siblingAxis === 'horizontal') {
-      const midX = rect.left + rect.width / 2
-      return event.clientX < midX ? 'before' : 'after'
-    }
-    const midY = rect.top + rect.height / 2
-    return event.clientY < midY ? 'before' : 'after'
-  }
-
   return (
     <div
-      ref={rootRef}
+      ref={(node) => {
+        rootRef.current = node
+        setDroppableNodeRef(node)
+      }}
       className="relative"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onDragOver={(e) => {
-        const sourcePath = parseDraggedPath(e)
-        if (!sourcePath) return
-        if (!isSameParentPath(sourcePath, path)) return
-        if (sourcePath.every((v, i) => path[i] === v)) return
-        e.preventDefault()
-        e.stopPropagation()
-        e.dataTransfer.dropEffect = 'move'
-        const nextPlacement = getPlacementFromPointer(e)
-        if (nextPlacement !== dropPlacement) setDropPlacement(nextPlacement)
-      }}
-      onDragLeave={(e) => {
-        const nextTarget = e.relatedTarget as Node | null
-        if (nextTarget && rootRef.current?.contains(nextTarget)) return
-        setDropPlacement(null)
-      }}
-      onDrop={(e) => {
-        const sourcePath = parseDraggedPath(e)
-        const placement = dropPlacement ?? getPlacementFromPointer(e)
-        setDropPlacement(null)
-        if (!sourcePath) return
-        if (!isSameParentPath(sourcePath, path)) return
-        if (sourcePath.every((v, i) => path[i] === v)) return
-        e.preventDefault()
-        e.stopPropagation()
-        onDropReorder(sourcePath, path, placement)
-      }}
       style={{
         outline: selected ? '2px solid rgba(59,130,246,0.7)' : undefined,
         outlineOffset: 2,
         borderRadius: selected ? 6 : undefined,
       }}
     >
-      {dropPlacement && (
+      {dnd?.showDropIndicator && dnd.dropPlacement && (
         <div
           className="pointer-events-none absolute z-30 rounded bg-blue-500/80"
           style={
             siblingAxis === 'horizontal'
-              ? dropPlacement === 'before'
+              ? dnd.dropPlacement === 'before'
                 ? { left: -2, top: 6, bottom: 6, width: 3 }
                 : { right: -2, top: 6, bottom: 6, width: 3 }
-              : dropPlacement === 'before'
+              : dnd.dropPlacement === 'before'
                 ? { left: 6, right: 6, top: -2, height: 3 }
                 : { left: 6, right: 6, bottom: -2, height: 3 }
           }
@@ -154,25 +128,15 @@ export default function EditableNodeWrapper({
           <button
             type="button"
             aria-label={`Mover componente ${type}`}
+            ref={setDraggableNodeRef}
+            {...dragListeners}
+            {...dragAttributes}
             className="pointer-events-auto cursor-grab active:cursor-grabbing rounded border border-gray-200 bg-white px-1.5 py-0.5 text-xs text-gray-700 shadow-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
             disabled={!canMove}
-            draggable={canMove}
-            onDragStart={(e) => {
-              if (!canMove) return
-              e.stopPropagation()
-              setActionMenuOpen(false)
-              setMoveMenuOpen(false)
-              setDropPlacement(null)
-              const payload = JSON.stringify(path)
-              e.dataTransfer.effectAllowed = 'move'
-              e.dataTransfer.setData(DRAG_PATH_MIME, payload)
-              e.dataTransfer.setData('text/plain', payload)
-            }}
-            onDragEnd={() => {
-              setDropPlacement(null)
-            }}
+            style={isDragging ? { opacity: 0.5 } : undefined}
             onClick={(e) => {
               e.stopPropagation()
+              if (isDragging) return
               if (!canMove) return
               setMoveMenuOpen((prev) => {
                 const next = !prev
