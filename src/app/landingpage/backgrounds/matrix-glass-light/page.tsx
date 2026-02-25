@@ -1,11 +1,14 @@
 'use client'
 
+import MatrixCardShowcase from '../_components/MatrixCardShowcase'
+
 export default function LandingBackgroundMatrixGlassLightPage() {
   return (
     <>
       <div className="lp-bg-matrix-glass-light" aria-hidden="true">
         <div className="vignette" />
       </div>
+      <MatrixCardShowcase tone="light" />
       <style jsx global>{`
         .lp-bg-matrix-glass-light {
           position: relative;
