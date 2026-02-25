@@ -51,6 +51,7 @@ export type Managers = {
   color?: ColorManager
   background?: string
   backgroundPreset?: string
+  cardStylePreset?: string
   surface?: string
   h1?: H1Manager
   kpi?: {
@@ -136,6 +137,7 @@ export function mapManagersToCssVars(managers: Managers | undefined): Record<str
   // Backgrounds
   if (typeof m.background === 'string' && m.background) cssVars.bg = m.background
   if (typeof m.backgroundPreset === 'string' && m.backgroundPreset) cssVars.dashboardBackgroundPreset = m.backgroundPreset
+  if (typeof m.cardStylePreset === 'string' && m.cardStylePreset) cssVars.cardStylePreset = m.cardStylePreset
   if (typeof m.surface === 'string' && m.surface) cssVars.surfaceBg = m.surface
 
   // H1 (titles)

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { normalizeCardStylePreset } from "@/products/bi/json-render/surfaces/cardStylePreset";
 
 type AnyRecord = Record<string, any>;
 type Rgb = { r: number; g: number; b: number };
@@ -20,6 +21,38 @@ type Props = {
   className?: string;
   children: React.ReactNode;
 };
+
+function applyCardStylePreset(style: React.CSSProperties | undefined, cssVars?: Record<string, string>): React.CSSProperties | undefined {
+  const preset = normalizeCardStylePreset((cssVars as Record<string, any> | undefined)?.cardStylePreset);
+  if (preset === "default" || preset === "solid") return style;
+
+  const out: React.CSSProperties = { ...(style || {}) };
+  const preserveRadius = out.borderRadius ?? 8;
+
+  if (preset === "glass-dark") {
+    out.backgroundColor = "rgba(15, 18, 24, 0.78)";
+    out.backgroundImage = "linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01))";
+    out.borderColor = out.borderColor || "rgba(255, 255, 255, 0.12)";
+    out.boxShadow = "0 10px 24px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.05)";
+    (out as any).backdropFilter = "blur(10px)";
+    (out as any).WebkitBackdropFilter = "blur(10px)";
+    if (out.borderWidth === undefined) out.borderWidth = 1;
+    if (!out.borderStyle || out.borderStyle === "none") out.borderStyle = "solid";
+    out.borderRadius = preserveRadius;
+    return out;
+  }
+
+  out.backgroundColor = "rgba(255, 255, 255, 0.72)";
+  out.backgroundImage = "linear-gradient(180deg, rgba(255,255,255,0.75), rgba(255,255,255,0.50))";
+  out.borderColor = out.borderColor || "rgba(255,255,255,0.58)";
+  out.boxShadow = "0 12px 28px rgba(15,23,42,0.10), inset 0 1px 0 rgba(255,255,255,0.8)";
+  (out as any).backdropFilter = "blur(10px)";
+  (out as any).WebkitBackdropFilter = "blur(10px)";
+  if (out.borderWidth === undefined) out.borderWidth = 1;
+  if (!out.borderStyle || out.borderStyle === "none") out.borderStyle = "solid";
+  out.borderRadius = preserveRadius;
+  return out;
+}
 
 function toNumber(value: unknown, fallback: number): number {
   if (typeof value === "number" && Number.isFinite(value)) return value;
@@ -176,9 +209,10 @@ function resolveFrame(frame: HudFrameConfig | null | undefined, cssVars?: Record
 
 export default function FrameSurface({ style, frame, cssVars, className, children }: Props) {
   const resolved = resolveFrame(frame, cssVars, style);
+  const baseStyle = applyCardStylePreset(style, cssVars);
   if (!resolved) {
     return (
-      <div className={className} style={style}>
+      <div className={className} style={baseStyle}>
         {children}
       </div>
     );
@@ -186,10 +220,10 @@ export default function FrameSurface({ style, frame, cssVars, className, childre
 
   const s = resolved;
   const merged: React.CSSProperties = {
-    ...(style || {}),
+    ...(baseStyle || {}),
     position: "relative",
-    borderStyle: style?.borderStyle && style.borderStyle !== "none" ? style.borderStyle : "solid",
-    borderWidth: style?.borderWidth ?? s.cornerWidth,
+    borderStyle: baseStyle?.borderStyle && baseStyle.borderStyle !== "none" ? baseStyle.borderStyle : "solid",
+    borderWidth: baseStyle?.borderWidth ?? s.cornerWidth,
     borderColor: s.baseColor,
     borderRadius: 0,
     borderTopLeftRadius: 0,

@@ -81,6 +81,7 @@ export const catalog = {
           }).partial().optional(),
           background: z.string().optional(),
           backgroundPreset: z.string().optional(),
+          cardStylePreset: z.string().optional(),
           surface: z.string().optional(),
           h1: z.object({
             color: z.string().optional(),
