@@ -10,46 +10,71 @@ type RendererProps = {
   registry: Record<string, React.FC<{ element: any; children?: React.ReactNode; data?: AnyRecord; onAction?: (action: any) => void }>>;
   data?: AnyRecord;
   onAction?: (action: any) => void;
+  nodeDecorator?: (args: { rendered: React.ReactNode; node: any; path: number[]; type: string }) => React.ReactNode;
 };
 
-function RenderNode({ node, registry, data, onAction }: { node: any; registry: RendererProps["registry"]; data?: AnyRecord; onAction?: (action: any) => void }) {
+function RenderNode({
+  node,
+  registry,
+  data,
+  onAction,
+  nodeDecorator,
+  path,
+}: {
+  node: any
+  registry: RendererProps["registry"]
+  data?: AnyRecord
+  onAction?: (action: any) => void
+  nodeDecorator?: RendererProps["nodeDecorator"]
+  path: number[]
+}) {
   const v = validateElement(node);
   if (!v.success) {
-    return (
+    const rendered = (
       <div className="rounded border border-red-300 bg-red-50 p-2 text-xs text-red-700">
         Invalid element: {v.error}
       </div>
     );
+    return nodeDecorator ? nodeDecorator({ rendered, node, path, type: String(node?.type || '') }) : rendered;
   }
   const el = v.value;
   const Cmp = registry[el.type];
   if (!Cmp) {
-    return (
+    const rendered = (
       <div className="rounded border border-yellow-300 bg-yellow-50 p-2 text-xs text-yellow-800">
         Unknown component: {el.type}
       </div>
     );
+    return nodeDecorator ? nodeDecorator({ rendered, node: el, path, type: el.type }) : rendered;
   }
   const children = Array.isArray(el.children)
     ? el.children.map((child: any, idx: number) => (
-        <RenderNode key={idx} node={child} registry={registry} data={data} onAction={onAction} />
+        <RenderNode
+          key={idx}
+          node={child}
+          registry={registry}
+          data={data}
+          onAction={onAction}
+          nodeDecorator={nodeDecorator}
+          path={[...path, idx]}
+        />
       ))
     : null;
-  return <Cmp element={el} data={data} onAction={onAction}>{children}</Cmp>;
+  const rendered = <Cmp element={el} data={data} onAction={onAction}>{children}</Cmp>;
+  return nodeDecorator ? nodeDecorator({ rendered, node: el, path, type: el.type }) : rendered;
 }
 
-export function Renderer({ tree, registry, data, onAction }: RendererProps) {
+export function Renderer({ tree, registry, data, onAction, nodeDecorator }: RendererProps) {
   if (Array.isArray(tree)) {
     return (
       <div className="space-y-3">
         {tree.map((n, i) => (
-          <RenderNode key={i} node={n} registry={registry} data={data} onAction={onAction} />
+          <RenderNode key={i} node={n} registry={registry} data={data} onAction={onAction} nodeDecorator={nodeDecorator} path={[i]} />
         ))}
       </div>
     );
   }
-  return <RenderNode node={tree} registry={registry} data={data} onAction={onAction} />;
+  return <RenderNode node={tree} registry={registry} data={data} onAction={onAction} nodeDecorator={nodeDecorator} path={[]} />;
 }
 
 export { catalog };
-

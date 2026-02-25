@@ -41,7 +41,7 @@ export const APPS_CONTABILIDADE_TEMPLATE_TEXT = JSON.stringify(
               props: {
                 title: 'Debitos no Periodo',
                 format: 'currency',
-                dataQuery: { model: 'contabilidade.lancamentos_contabeis_linhas', measure: 'SUM(debito)', filters: { tenant_id: 1 } },
+                dataQuery: { model: 'contabilidade.lancamentos_contabeis_linhas', measure: 'SUM(debito)', filters: {} },
               },
             },
             {
@@ -49,7 +49,7 @@ export const APPS_CONTABILIDADE_TEMPLATE_TEXT = JSON.stringify(
               props: {
                 title: 'Creditos no Periodo',
                 format: 'currency',
-                dataQuery: { model: 'contabilidade.lancamentos_contabeis_linhas', measure: 'SUM(credito)', filters: { tenant_id: 1 } },
+                dataQuery: { model: 'contabilidade.lancamentos_contabeis_linhas', measure: 'SUM(credito)', filters: {} },
               },
             },
             {
@@ -57,7 +57,7 @@ export const APPS_CONTABILIDADE_TEMPLATE_TEXT = JSON.stringify(
               props: {
                 title: 'Saldo (D-C)',
                 format: 'currency',
-                dataQuery: { model: 'contabilidade.lancamentos_contabeis_linhas', measure: 'SUM(debito - credito)', filters: { tenant_id: 1 } },
+                dataQuery: { model: 'contabilidade.lancamentos_contabeis_linhas', measure: 'SUM(debito - credito)', filters: {} },
               },
             },
             {
@@ -65,7 +65,7 @@ export const APPS_CONTABILIDADE_TEMPLATE_TEXT = JSON.stringify(
               props: {
                 title: 'Lancamentos',
                 format: 'number',
-                dataQuery: { model: 'contabilidade.lancamentos_contabeis_linhas', measure: 'COUNT_DISTINCT(lancamento_id)', filters: { tenant_id: 1 } },
+                dataQuery: { model: 'contabilidade.lancamentos_contabeis_linhas', measure: 'COUNT_DISTINCT(lancamento_id)', filters: {} },
               },
             },
             {
@@ -73,7 +73,7 @@ export const APPS_CONTABILIDADE_TEMPLATE_TEXT = JSON.stringify(
               props: {
                 title: 'Linhas Contabeis',
                 format: 'number',
-                dataQuery: { model: 'contabilidade.lancamentos_contabeis_linhas', measure: 'COUNT()', filters: { tenant_id: 1 } },
+                dataQuery: { model: 'contabilidade.lancamentos_contabeis_linhas', measure: 'COUNT()', filters: {} },
               },
             },
             {
@@ -81,7 +81,7 @@ export const APPS_CONTABILIDADE_TEMPLATE_TEXT = JSON.stringify(
               props: {
                 title: 'Contas Movimentadas',
                 format: 'number',
-                dataQuery: { model: 'contabilidade.lancamentos_contabeis_linhas', measure: 'COUNT_DISTINCT(conta_id)', filters: { tenant_id: 1 } },
+                dataQuery: { model: 'contabilidade.lancamentos_contabeis_linhas', measure: 'COUNT_DISTINCT(conta_id)', filters: {} },
               },
             },
           ],
@@ -99,7 +99,7 @@ export const APPS_CONTABILIDADE_TEMPLATE_TEXT = JSON.stringify(
                   model: 'contabilidade.lancamentos_contabeis_linhas',
                   dimension: 'tipo_conta',
                   measure: 'SUM(debito)',
-                  filters: { tenant_id: 1 },
+                  filters: {},
                   orderBy: { field: 'measure', dir: 'desc' },
                   limit: 8,
                 },
@@ -117,7 +117,7 @@ export const APPS_CONTABILIDADE_TEMPLATE_TEXT = JSON.stringify(
                   model: 'contabilidade.lancamentos_contabeis_linhas',
                   dimension: 'tipo_conta',
                   measure: 'SUM(credito)',
-                  filters: { tenant_id: 1 },
+                  filters: {},
                   orderBy: { field: 'measure', dir: 'desc' },
                   limit: 8,
                 },
@@ -141,7 +141,7 @@ export const APPS_CONTABILIDADE_TEMPLATE_TEXT = JSON.stringify(
                   model: 'contabilidade.lancamentos_contabeis_linhas',
                   dimension: 'conta',
                   measure: 'SUM(debito)',
-                  filters: { tenant_id: 1 },
+                  filters: {},
                   orderBy: { field: 'measure', dir: 'desc' },
                   limit: 10,
                 },
@@ -159,7 +159,7 @@ export const APPS_CONTABILIDADE_TEMPLATE_TEXT = JSON.stringify(
                   model: 'contabilidade.lancamentos_contabeis_linhas',
                   dimension: 'conta',
                   measure: 'SUM(credito)',
-                  filters: { tenant_id: 1 },
+                  filters: {},
                   orderBy: { field: 'measure', dir: 'desc' },
                   limit: 10,
                 },
@@ -183,7 +183,7 @@ export const APPS_CONTABILIDADE_TEMPLATE_TEXT = JSON.stringify(
                   model: 'contabilidade.lancamentos_contabeis_linhas',
                   dimension: 'periodo',
                   measure: 'SUM(debito)',
-                  filters: { tenant_id: 1 },
+                  filters: {},
                   orderBy: { field: 'dimension', dir: 'asc' },
                   limit: 24,
                 },
@@ -201,7 +201,7 @@ export const APPS_CONTABILIDADE_TEMPLATE_TEXT = JSON.stringify(
                   model: 'contabilidade.lancamentos_contabeis_linhas',
                   dimension: 'periodo',
                   measure: 'SUM(credito)',
-                  filters: { tenant_id: 1 },
+                  filters: {},
                   orderBy: { field: 'dimension', dir: 'asc' },
                   limit: 24,
                 },
@@ -225,7 +225,7 @@ export const APPS_CONTABILIDADE_TEMPLATE_TEXT = JSON.stringify(
                   model: 'contabilidade.lancamentos_contabeis_linhas',
                   dimension: 'origem',
                   measure: 'COUNT_DISTINCT(lancamento_id)',
-                  filters: { tenant_id: 1 },
+                  filters: {},
                   orderBy: { field: 'measure', dir: 'desc' },
                   limit: 8,
                 },
@@ -243,7 +243,7 @@ export const APPS_CONTABILIDADE_TEMPLATE_TEXT = JSON.stringify(
                   model: 'contabilidade.lancamentos_contabeis_linhas',
                   dimension: 'conta',
                   measure: 'SUM(debito - credito)',
-                  filters: { tenant_id: 1 },
+                  filters: {},
                   orderBy: { field: 'measure', dir: 'desc' },
                   limit: 10,
                 },

@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { runQuery } from '@/lib/postgres'
+import { resolveTenantId } from '@/lib/tenant'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
@@ -33,7 +34,10 @@ export async function POST(req: NextRequest) {
     const dimension = typeof dq.dimension === 'string' ? dq.dimension.trim() : ''
     const dimensionExprOverride = typeof (dq as any).dimensionExpr === 'string' ? (dq as any).dimensionExpr.trim() : ''
     const measure = typeof dq.measure === 'string' ? dq.measure.trim() : ''
-    const filters = isObject(dq.filters) ? dq.filters : {}
+    const tenantId = resolveTenantId(req.headers)
+    const rawFilters = isObject(dq.filters) ? dq.filters : {}
+    const filters: Record<string, unknown> =
+      typeof rawFilters.tenant_id === 'number' ? rawFilters : { ...rawFilters, tenant_id: tenantId }
     const orderBy = (isObject(dq.orderBy) ? dq.orderBy : {}) as OrderBy
     const limitRaw = typeof dq.limit === 'number' ? dq.limit : undefined
     const limit = Math.max(1, Math.min(1000, limitRaw ?? 5))

@@ -3,14 +3,18 @@
 import { useCallback } from 'react'
 
 import { DataProvider, useData } from '@/products/bi/json-render/context'
-import JsonEditorPanel from '@/products/apps/frontend/components/JsonEditorPanel'
-import JsonPreviewPanel from '@/products/apps/frontend/components/JsonPreviewPanel'
-import ManagersPanel from '@/products/apps/frontend/components/ManagersPanel'
+import {
+  JsonEditorPanel,
+  JsonPreviewPanel,
+  ManagersPanel,
+  PropertiesPanel,
+  useDashboardVisualEditor,
+  useJsonTemplateEditor,
+} from '@/products/bi/features/dashboard-editor'
 import {
   refreshAppsVendasData,
   useAppsVendasBootstrap,
 } from '@/products/apps/frontend/hooks/useAppsData'
-import useJsonTemplateEditor from '@/products/apps/frontend/hooks/useJsonTemplateEditor'
 import type { DateRange } from '@/products/apps/shared/types'
 import { APPS_VENDAS_TEMPLATE_TEXT } from '@/products/apps/shared/templates/appsVendasTemplate'
 
@@ -25,7 +29,15 @@ function AppsVendasPlayground() {
     onChangeText,
     onFormat,
     onReset,
+    duplicateNode,
+    deleteNode,
+    setNodeProp,
+    replaceNodeProps,
   } = useJsonTemplateEditor(APPS_VENDAS_TEMPLATE_TEXT)
+  const visualEditor = useDashboardVisualEditor({
+    onDuplicateNode: duplicateNode,
+    onDeleteNode: deleteNode,
+  })
 
   useAppsVendasBootstrap(setData)
 
@@ -57,7 +69,28 @@ function AppsVendasPlayground() {
         }
         dataPreview={data}
       />
-      <JsonPreviewPanel tree={tree} onAction={handleAction} actionHint="Ações: Atualizar" />
+      <JsonPreviewPanel
+        tree={tree}
+        onAction={handleAction}
+        actionHint="Ações: Atualizar"
+        visualEditor={{
+          enabled: true,
+          selectedPath: visualEditor.selectedPath,
+          onNodeAction: visualEditor.handleNodeAction,
+        }}
+        propertiesPanel={
+          visualEditor.isPropertiesOpen ? (
+            <PropertiesPanel
+              tree={tree}
+              selectedPath={visualEditor.selectedPath}
+              isOpen={visualEditor.isPropertiesOpen}
+              onClose={visualEditor.closeProperties}
+              onSetNodeProp={setNodeProp}
+              onReplaceNodeProps={replaceNodeProps}
+            />
+          ) : null
+        }
+      />
     </div>
   )
 }
