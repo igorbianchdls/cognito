@@ -24,7 +24,7 @@ export default function NodeMoveMenu({
         disabled={!canMoveUp}
         className="block w-full rounded px-2 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
       >
-        Mover acima
+        Mover antes
       </button>
       <button
         type="button"
@@ -32,7 +32,7 @@ export default function NodeMoveMenu({
         disabled={!canMoveDown}
         className="block w-full rounded px-2 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
       >
-        Mover abaixo
+        Mover depois
       </button>
     </div>
   )

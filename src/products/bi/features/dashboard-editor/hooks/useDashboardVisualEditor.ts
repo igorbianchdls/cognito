@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react'
 import type {
   JsonNodePath,
+  NodeDropPlacement,
   NodeMenuAction,
   NodeMoveDirection,
 } from '@/products/bi/features/dashboard-editor/types/editor-types'
@@ -11,12 +12,18 @@ type UseDashboardVisualEditorArgs = {
   onDuplicateNode: (path: JsonNodePath) => void
   onDeleteNode: (path: JsonNodePath) => void
   onMoveNode: (path: JsonNodePath, direction: NodeMoveDirection) => boolean
+  onMoveNodeRelative: (
+    sourcePath: JsonNodePath,
+    targetPath: JsonNodePath,
+    placement: NodeDropPlacement,
+  ) => boolean
 }
 
 export default function useDashboardVisualEditor({
   onDuplicateNode,
   onDeleteNode,
   onMoveNode,
+  onMoveNodeRelative,
 }: UseDashboardVisualEditorArgs) {
   const [selectedPath, setSelectedPath] = useState<JsonNodePath | null>(null)
   const [isPropertiesOpen, setIsPropertiesOpen] = useState(false)
@@ -71,6 +78,31 @@ export default function useDashboardVisualEditor({
     })
   }, [onMoveNode])
 
+  const handleNodeDropReorder = useCallback((
+    sourcePath: JsonNodePath,
+    targetPath: JsonNodePath,
+    placement: NodeDropPlacement,
+  ) => {
+    if (!sourcePath.length || !targetPath.length) return
+    const didMove = onMoveNodeRelative(sourcePath, targetPath, placement)
+    if (!didMove) return
+
+    const movedIndex =
+      placement === 'before'
+        ? targetPath[targetPath.length - 1] - (sourcePath[sourcePath.length - 1] < targetPath[targetPath.length - 1] ? 1 : 0)
+        : targetPath[targetPath.length - 1] + (sourcePath[sourcePath.length - 1] < targetPath[targetPath.length - 1] ? 0 : 1)
+
+    setSelectedPath((prev) => {
+      if (!prev) return prev
+      const isMovedSubtreeSelected =
+        prev.length >= sourcePath.length && sourcePath.every((segment, index) => prev[index] === segment)
+      if (!isMovedSubtreeSelected) return prev
+      const next = [...prev]
+      next[sourcePath.length - 1] = movedIndex
+      return next
+    })
+  }, [onMoveNodeRelative])
+
   return {
     selectedPath,
     setSelectedPath,
@@ -80,5 +112,6 @@ export default function useDashboardVisualEditor({
     closeProperties,
     handleNodeAction,
     handleNodeMove,
+    handleNodeDropReorder,
   }
 }

@@ -2,11 +2,16 @@
 
 import { useCallback, useState } from 'react'
 import type { JsonTree } from '@/products/bi/shared/types'
-import type { JsonNodePath, NodeMoveDirection } from '@/products/bi/features/dashboard-editor/types/editor-types'
+import type {
+  JsonNodePath,
+  NodeDropPlacement,
+  NodeMoveDirection,
+} from '@/products/bi/features/dashboard-editor/types/editor-types'
 import {
   deleteNodeAtPath,
   duplicateNodeAtPath,
   moveNodeAtPath,
+  moveNodeRelativeToPath,
   replaceNodeProps as replaceNodePropsInTree,
   setNodePropByPath,
 } from '@/products/bi/features/dashboard-editor/lib/jsonTreeOps'
@@ -88,6 +93,17 @@ export default function useJsonTemplateEditor(initialTemplateText: string) {
     return true
   }, [replaceTree, tree])
 
+  const moveNodeRelative = useCallback((
+    sourcePath: JsonNodePath,
+    targetPath: JsonNodePath,
+    placement: NodeDropPlacement,
+  ) => {
+    const next = moveNodeRelativeToPath(tree, sourcePath, targetPath, placement)
+    if (next === tree) return false
+    replaceTree(next)
+    return true
+  }, [replaceTree, tree])
+
   const setNodeProp = useCallback((path: JsonNodePath, propPath: string, value: unknown) => {
     setTree((prev) => {
       const next = setNodePropByPath(prev, path, propPath, value)
@@ -120,6 +136,7 @@ export default function useJsonTemplateEditor(initialTemplateText: string) {
     duplicateNode,
     deleteNode,
     moveNode,
+    moveNodeRelative,
     setNodeProp,
     replaceNodeProps,
     onChangeText,

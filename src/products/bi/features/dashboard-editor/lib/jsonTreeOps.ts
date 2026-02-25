@@ -1,5 +1,9 @@
 import type { JsonTree } from '@/products/bi/shared/types'
-import type { JsonNodePath, NodeMoveDirection } from '@/products/bi/features/dashboard-editor/types/editor-types'
+import type {
+  JsonNodePath,
+  NodeDropPlacement,
+  NodeMoveDirection,
+} from '@/products/bi/features/dashboard-editor/types/editor-types'
 
 type JsonNode = Record<string, any>
 
@@ -172,5 +176,39 @@ export function moveNodeAtPath(tree: JsonTree, path: JsonNodePath, direction: No
   const [moved] = container.container.splice(fromIndex, 1)
   if (!moved) return tree
   container.container.splice(toIndex, 0, moved)
+  return next
+}
+
+export function moveNodeRelativeToPath(
+  tree: JsonTree,
+  sourcePath: JsonNodePath,
+  targetPath: JsonNodePath,
+  placement: NodeDropPlacement,
+): JsonTree {
+  if (!tree || !sourcePath.length || !targetPath.length) return tree
+  if (sourcePath.length !== targetPath.length) return tree
+  if (sourcePath.every((v, i) => v === targetPath[i])) return tree
+
+  const sameParent = sourcePath.slice(0, -1).every((v, i) => v === targetPath[i])
+  if (!sameParent) return tree
+
+  const next = cloneTree(tree)
+  const container = resolveContainerForPath(next, sourcePath)
+  if (!container) return tree
+
+  const sourceIndex = sourcePath[sourcePath.length - 1]
+  const targetIndex = targetPath[targetPath.length - 1]
+  if (sourceIndex < 0 || sourceIndex >= container.container.length) return tree
+  if (targetIndex < 0 || targetIndex >= container.container.length) return tree
+
+  const [moved] = container.container.splice(sourceIndex, 1)
+  if (!moved) return tree
+
+  let insertIndex = placement === 'before' ? targetIndex : targetIndex + 1
+  if (sourceIndex < insertIndex) insertIndex -= 1
+  if (insertIndex < 0) insertIndex = 0
+  if (insertIndex > container.container.length) insertIndex = container.container.length
+
+  container.container.splice(insertIndex, 0, moved)
   return next
 }

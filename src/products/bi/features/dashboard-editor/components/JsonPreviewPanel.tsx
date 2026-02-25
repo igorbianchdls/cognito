@@ -5,7 +5,9 @@ import { Renderer } from '@/products/bi/json-render/renderer'
 import { registry } from '@/products/bi/json-render/registry'
 import type { JsonTree } from '@/products/bi/shared/types'
 import EditableNodeWrapper from '@/products/bi/features/dashboard-editor/components/EditableNodeWrapper'
+import { getNodeAtPath } from '@/products/bi/features/dashboard-editor/lib/jsonTreeOps'
 import type {
+  NodeDropPlacement,
   JsonNodePath,
   NodeMenuAction,
   NodeMoveDirection,
@@ -22,6 +24,11 @@ type JsonPreviewPanelProps = {
     selectedPath?: JsonNodePath | null
     onNodeAction: (path: JsonNodePath, action: NodeMenuAction) => void
     onNodeMove: (path: JsonNodePath, direction: NodeMoveDirection) => void
+    onNodeDropReorder: (
+      sourcePath: JsonNodePath,
+      targetPath: JsonNodePath,
+      placement: NodeDropPlacement,
+    ) => void
   }
 }
 
@@ -29,6 +36,16 @@ function samePath(a?: JsonNodePath | null, b?: JsonNodePath | null) {
   if (!a || !b) return false
   if (a.length !== b.length) return false
   return a.every((v, i) => v === b[i])
+}
+
+function getSiblingAxis(tree: JsonTree, path: JsonNodePath): 'horizontal' | 'vertical' {
+  if (!path.length) return 'vertical'
+  if (Array.isArray(tree)) return 'vertical'
+
+  const parentPath = path.slice(0, -1)
+  const parentNode = parentPath.length ? getNodeAtPath(tree, parentPath) : (tree as Record<string, any>)
+  const direction = parentNode?.type === 'Div' ? String(parentNode?.props?.direction ?? 'column') : 'column'
+  return direction === 'row' ? 'horizontal' : 'vertical'
 }
 
 export default function JsonPreviewPanel({ tree, onAction, actionHint, toolbar, propertiesPanel, visualEditor }: JsonPreviewPanelProps) {
@@ -44,8 +61,10 @@ export default function JsonPreviewPanel({ tree, onAction, actionHint, toolbar, 
               path={path}
               type={type}
               selected={samePath(visualEditor.selectedPath, path)}
+              siblingAxis={getSiblingAxis(tree, path)}
               onAction={visualEditor.onNodeAction}
               onMove={visualEditor.onNodeMove}
+              onDropReorder={visualEditor.onNodeDropReorder}
             >
               {rendered}
             </EditableNodeWrapper>

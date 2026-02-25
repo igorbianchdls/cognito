@@ -32,6 +32,7 @@ function AppsVendasPlayground() {
     duplicateNode,
     deleteNode,
     moveNode,
+    moveNodeRelative,
     setNodeProp,
     replaceNodeProps,
   } = useJsonTemplateEditor(APPS_VENDAS_TEMPLATE_TEXT)
@@ -39,6 +40,7 @@ function AppsVendasPlayground() {
     onDuplicateNode: duplicateNode,
     onDeleteNode: deleteNode,
     onMoveNode: moveNode,
+    onMoveNodeRelative: moveNodeRelative,
   })
 
   useAppsVendasBootstrap(setData)
@@ -80,6 +82,7 @@ function AppsVendasPlayground() {
           selectedPath: visualEditor.selectedPath,
           onNodeAction: visualEditor.handleNodeAction,
           onNodeMove: visualEditor.handleNodeMove,
+          onNodeDropReorder: visualEditor.handleNodeDropReorder,
         }}
         propertiesPanel={
           visualEditor.isPropertiesOpen ? (
