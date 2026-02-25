@@ -6,7 +6,9 @@ const ITEMS = [
   { href: '/landingpage/backgrounds/orbital', title: 'Orbital Grid' },
   { href: '/landingpage/backgrounds/blueprint', title: 'Blueprint Scan' },
   { href: '/landingpage/backgrounds/aurora', title: 'Aurora Executive' },
-  { href: '/landingpage/backgrounds/matrix-glass', title: 'Matrix Glass' },
+  { href: '/landingpage/backgrounds/matrix-glass', title: 'Matrix Glass (Color)' },
+  { href: '/landingpage/backgrounds/matrix-glass-mono', title: 'Matrix Glass Mono' },
+  { href: '/landingpage/backgrounds/matrix-glass-light', title: 'Matrix Glass Light' },
 ]
 
 export default function LandingBackgroundIndexPage() {
