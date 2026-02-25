@@ -15,7 +15,7 @@ export default function NodeActionMenu({
 }: NodeActionMenuProps) {
   return (
     <div
-      className="absolute right-0 top-7 z-50 min-w-[140px] rounded-md border border-gray-200 bg-white p-1 shadow-lg"
+      className="pointer-events-auto absolute right-0 top-7 z-50 min-w-[140px] rounded-md border border-gray-200 bg-white p-1 shadow-lg"
       onClick={(e) => e.stopPropagation()}
     >
       <button
@@ -44,4 +44,3 @@ export default function NodeActionMenu({
     </div>
   )
 }
-
