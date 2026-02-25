@@ -174,6 +174,9 @@ export default function PropertiesPanel({
   const supportsStyleTab = Boolean(
     node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'Card', 'Div', 'Gauge'].includes(String(node.type)),
   )
+  const supportsFr = Boolean(
+    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Gauge', 'SlicerCard'].includes(String(node.type)),
+  )
 
   React.useEffect(() => {
     const next = node?.props && typeof node.props === 'object' ? node.props : {}
@@ -424,6 +427,17 @@ export default function PropertiesPanel({
 
               {activeTab === 'style' && (
                 <>
+                  {supportsFr && (
+                    <div className="space-y-2 rounded border border-gray-200 p-2">
+                      <div className="text-[11px] font-medium text-gray-700">Layout</div>
+                      <NumberField
+                        label="fr (largura relativa)"
+                        value={Number(getProp(node, 'fr', '')) || ''}
+                        onChange={(v) => onSetNodeProp(selectedPath, 'fr', v)}
+                      />
+                    </div>
+                  )}
+
                   {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'Header' || node.type === 'SlicerCard' || node.type === 'Card') && (
                     <TextField
                       label="Título"

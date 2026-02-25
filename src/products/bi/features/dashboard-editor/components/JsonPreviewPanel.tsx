@@ -5,7 +5,11 @@ import { Renderer } from '@/products/bi/json-render/renderer'
 import { registry } from '@/products/bi/json-render/registry'
 import type { JsonTree } from '@/products/bi/shared/types'
 import EditableNodeWrapper from '@/products/bi/features/dashboard-editor/components/EditableNodeWrapper'
-import type { JsonNodePath, NodeMenuAction } from '@/products/bi/features/dashboard-editor/types/editor-types'
+import type {
+  JsonNodePath,
+  NodeMenuAction,
+  NodeMoveDirection,
+} from '@/products/bi/features/dashboard-editor/types/editor-types'
 
 type JsonPreviewPanelProps = {
   tree: JsonTree
@@ -17,6 +21,7 @@ type JsonPreviewPanelProps = {
     enabled?: boolean
     selectedPath?: JsonNodePath | null
     onNodeAction: (path: JsonNodePath, action: NodeMenuAction) => void
+    onNodeMove: (path: JsonNodePath, direction: NodeMoveDirection) => void
   }
 }
 
@@ -40,6 +45,7 @@ export default function JsonPreviewPanel({ tree, onAction, actionHint, toolbar, 
               type={type}
               selected={samePath(visualEditor.selectedPath, path)}
               onAction={visualEditor.onNodeAction}
+              onMove={visualEditor.onNodeMove}
             >
               {rendered}
             </EditableNodeWrapper>

@@ -2,10 +2,11 @@
 
 import { useCallback, useState } from 'react'
 import type { JsonTree } from '@/products/bi/shared/types'
-import type { JsonNodePath } from '@/products/bi/features/dashboard-editor/types/editor-types'
+import type { JsonNodePath, NodeMoveDirection } from '@/products/bi/features/dashboard-editor/types/editor-types'
 import {
   deleteNodeAtPath,
   duplicateNodeAtPath,
+  moveNodeAtPath,
   replaceNodeProps as replaceNodePropsInTree,
   setNodePropByPath,
 } from '@/products/bi/features/dashboard-editor/lib/jsonTreeOps'
@@ -80,6 +81,13 @@ export default function useJsonTemplateEditor(initialTemplateText: string) {
     })
   }, [])
 
+  const moveNode = useCallback((path: JsonNodePath, direction: NodeMoveDirection) => {
+    const next = moveNodeAtPath(tree, path, direction)
+    if (next === tree) return false
+    replaceTree(next)
+    return true
+  }, [replaceTree, tree])
+
   const setNodeProp = useCallback((path: JsonNodePath, propPath: string, value: unknown) => {
     setTree((prev) => {
       const next = setNodePropByPath(prev, path, propPath, value)
@@ -111,6 +119,7 @@ export default function useJsonTemplateEditor(initialTemplateText: string) {
     replaceTree,
     duplicateNode,
     deleteNode,
+    moveNode,
     setNodeProp,
     replaceNodeProps,
     onChangeText,

@@ -31,12 +31,14 @@ function AppsVendasPlayground() {
     onReset,
     duplicateNode,
     deleteNode,
+    moveNode,
     setNodeProp,
     replaceNodeProps,
   } = useJsonTemplateEditor(APPS_VENDAS_TEMPLATE_TEXT)
   const visualEditor = useDashboardVisualEditor({
     onDuplicateNode: duplicateNode,
     onDeleteNode: deleteNode,
+    onMoveNode: moveNode,
   })
 
   useAppsVendasBootstrap(setData)
@@ -77,6 +79,7 @@ function AppsVendasPlayground() {
           enabled: true,
           selectedPath: visualEditor.selectedPath,
           onNodeAction: visualEditor.handleNodeAction,
+          onNodeMove: visualEditor.handleNodeMove,
         }}
         propertiesPanel={
           visualEditor.isPropertiesOpen ? (

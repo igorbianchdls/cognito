@@ -1,16 +1,22 @@
 'use client'
 
 import { useCallback, useState } from 'react'
-import type { JsonNodePath, NodeMenuAction } from '@/products/bi/features/dashboard-editor/types/editor-types'
+import type {
+  JsonNodePath,
+  NodeMenuAction,
+  NodeMoveDirection,
+} from '@/products/bi/features/dashboard-editor/types/editor-types'
 
 type UseDashboardVisualEditorArgs = {
   onDuplicateNode: (path: JsonNodePath) => void
   onDeleteNode: (path: JsonNodePath) => void
+  onMoveNode: (path: JsonNodePath, direction: NodeMoveDirection) => boolean
 }
 
 export default function useDashboardVisualEditor({
   onDuplicateNode,
   onDeleteNode,
+  onMoveNode,
 }: UseDashboardVisualEditorArgs) {
   const [selectedPath, setSelectedPath] = useState<JsonNodePath | null>(null)
   const [isPropertiesOpen, setIsPropertiesOpen] = useState(false)
@@ -46,6 +52,25 @@ export default function useDashboardVisualEditor({
     }
   }, [onDeleteNode, onDuplicateNode, openPropertiesFor])
 
+  const handleNodeMove = useCallback((path: JsonNodePath, direction: NodeMoveDirection) => {
+    if (!path.length) return
+
+    const didMove = onMoveNode(path, direction)
+    if (!didMove) return
+
+    const delta = direction === 'up' ? -1 : 1
+    setSelectedPath((prev) => {
+      if (!prev) return prev
+      const isMovedSubtreeSelected =
+        prev.length >= path.length && path.every((segment, index) => prev[index] === segment)
+
+      if (!isMovedSubtreeSelected) return prev
+      const next = [...prev]
+      next[path.length - 1] = next[path.length - 1] + delta
+      return next
+    })
+  }, [onMoveNode])
+
   return {
     selectedPath,
     setSelectedPath,
@@ -54,5 +79,6 @@ export default function useDashboardVisualEditor({
     openPropertiesFor,
     closeProperties,
     handleNodeAction,
+    handleNodeMove,
   }
 }

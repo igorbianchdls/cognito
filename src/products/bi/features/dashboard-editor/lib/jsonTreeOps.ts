@@ -1,5 +1,5 @@
 import type { JsonTree } from '@/products/bi/shared/types'
-import type { JsonNodePath } from '@/products/bi/features/dashboard-editor/types/editor-types'
+import type { JsonNodePath, NodeMoveDirection } from '@/products/bi/features/dashboard-editor/types/editor-types'
 
 type JsonNode = Record<string, any>
 
@@ -28,11 +28,14 @@ function resolveContainerForPath(tree: JsonTree, path: JsonNodePath): { containe
     return { container: children, index: path[path.length - 1] }
   }
 
-  if (path[0] !== 0) return null
-  if (path.length === 1) return null
+  if (path.length === 1) {
+    const children = getNodeChildren(tree as JsonNode)
+    if (!children) return null
+    return { container: children, index: path[0] }
+  }
 
   let node = tree as JsonNode
-  for (let i = 1; i < path.length - 1; i++) {
+  for (let i = 0; i < path.length - 1; i++) {
     const children = getNodeChildren(node)
     if (!children) return null
     node = children[path[i]]
@@ -56,9 +59,8 @@ export function getNodeAtPath(tree: JsonTree, path: JsonNodePath | null | undefi
   }
 
   if (!path.length) return tree as JsonNode
-  if (path[0] !== 0) return null
   let node = tree as JsonNode
-  for (let i = 1; i < path.length; i++) {
+  for (let i = 0; i < path.length; i++) {
     const children = getNodeChildren(node)
     if (!children) return null
     node = children[path[i]]
@@ -156,3 +158,19 @@ export function deleteNodeAtPath(tree: JsonTree, path: JsonNodePath): JsonTree {
   return next
 }
 
+export function moveNodeAtPath(tree: JsonTree, path: JsonNodePath, direction: NodeMoveDirection): JsonTree {
+  if (!tree || !path.length) return tree
+
+  const next = cloneTree(tree)
+  const container = resolveContainerForPath(next, path)
+  if (!container) return tree
+
+  const fromIndex = container.index
+  const toIndex = direction === 'up' ? fromIndex - 1 : fromIndex + 1
+  if (fromIndex < 0 || toIndex < 0 || toIndex >= container.container.length) return tree
+
+  const [moved] = container.container.splice(fromIndex, 1)
+  if (!moved) return tree
+  container.container.splice(toIndex, 0, moved)
+  return next
+}
