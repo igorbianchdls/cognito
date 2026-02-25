@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import type { JsonTree } from '@/products/apps/shared/types'
+import type { JsonTree } from '@/products/bi/shared/types'
 import { getNodeAtPath } from '@/products/bi/features/dashboard-editor/lib/jsonTreeOps'
 import type { JsonNodePath } from '@/products/bi/features/dashboard-editor/types/editor-types'
 

@@ -1,4 +1,4 @@
-import AppsFinanceiroPage from '@/products/apps/frontend/pages/AppsFinanceiroPage'
+import AppsFinanceiroPage from '@/products/bi/features/dashboard-playground/pages/AppsFinanceiroPage'
 
 export default AppsFinanceiroPage
 

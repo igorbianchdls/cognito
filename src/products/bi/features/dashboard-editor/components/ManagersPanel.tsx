@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { APPS_HEADER_THEME_OPTIONS, APPS_THEME_OPTIONS } from '@/products/apps/shared/themeOptions';
+import { APPS_HEADER_THEME_OPTIONS, APPS_THEME_OPTIONS } from '@/products/bi/shared/themeOptions';
 import { DASHBOARD_BACKGROUND_PRESET_OPTIONS } from '@/products/bi/json-render/backgrounds/registry';
 import { CARD_STYLE_PRESET_OPTIONS } from '@/products/bi/json-render/surfaces/cardStylePreset';
 

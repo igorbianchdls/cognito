@@ -1,3 +1,3 @@
-import AppsComprasPage from '@/products/apps/frontend/pages/AppsComprasPage'
+import AppsComprasPage from '@/products/bi/features/dashboard-playground/pages/AppsComprasPage'
 
 export default AppsComprasPage

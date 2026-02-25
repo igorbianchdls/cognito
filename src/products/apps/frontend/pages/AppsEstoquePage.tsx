@@ -1,2 +1,3 @@
-export { default } from '@/products/apps/frontend/features/estoque/pages/AppsEstoquePage'
+'use client'
 
+export { default } from '@/products/bi/features/dashboard-playground/pages/AppsEstoquePage'

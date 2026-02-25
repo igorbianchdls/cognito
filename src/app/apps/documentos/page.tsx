@@ -1,3 +1,3 @@
-import AppsDocumentosPage from '@/products/documentos/frontend/features/documentos/pages/AppsDocumentosPage'
+import AppsDocumentosPage from '@/products/bi/features/dashboard-playground/pages/AppsDocumentosPage'
 
 export default AppsDocumentosPage

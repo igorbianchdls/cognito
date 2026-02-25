@@ -1,1 +1,3 @@
-export { default } from '@/products/documentos/frontend/features/documentos/pages/AppsDocumentosPage'
+'use client'
+
+export { default } from '@/products/bi/features/dashboard-playground/pages/AppsDocumentosPage'

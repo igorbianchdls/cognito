@@ -1,2 +1,3 @@
-export { default } from '@/products/apps/frontend/features/financeiro/pages/AppsFinanceiroPage'
+'use client'
 
+export { default } from '@/products/bi/features/dashboard-playground/pages/AppsFinanceiroPage'

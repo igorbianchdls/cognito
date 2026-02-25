@@ -30,7 +30,7 @@ import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ChartSwitcher, type ChartSwitcherOptions } from '@/components/charts/ChartSwitcher';
 import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter';
-import { APPS_HEADER_THEME_OPTIONS, APPS_THEME_OPTIONS } from '@/products/apps/shared/themeOptions';
+import { APPS_HEADER_THEME_OPTIONS, APPS_THEME_OPTIONS } from '@/products/bi/shared/themeOptions';
 import {
   ColumnDef,
   flexRender,

@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react'
 import { Renderer } from '@/products/bi/json-render/renderer'
 import { registry } from '@/products/bi/json-render/registry'
-import type { JsonTree } from '@/products/apps/shared/types'
+import type { JsonTree } from '@/products/bi/shared/types'
 import EditableNodeWrapper from '@/products/bi/features/dashboard-editor/components/EditableNodeWrapper'
 import type { JsonNodePath, NodeMenuAction } from '@/products/bi/features/dashboard-editor/types/editor-types'
 

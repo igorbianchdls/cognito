@@ -1,4 +1,4 @@
-import AppsCrmPage from '@/products/apps/frontend/pages/AppsCrmPage'
+import AppsCrmPage from '@/products/bi/features/dashboard-playground/pages/AppsCrmPage'
 
 export default AppsCrmPage
 

@@ -1,2 +1,3 @@
-export { default } from '@/products/apps/frontend/features/crm/pages/AppsCrmPage'
+'use client'
 
+export { default } from '@/products/bi/features/dashboard-playground/pages/AppsCrmPage'

@@ -1,1 +1,3 @@
-export { default } from '@/products/apps/frontend/features/vendas/pages/AppsVendasPage'
+'use client'
+
+export { default } from '@/products/bi/features/dashboard-playground/pages/AppsVendasPage'

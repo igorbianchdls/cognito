@@ -1,3 +1,3 @@
-import AppsHomePage from '@/products/apps/frontend/pages/AppsHomePage'
+import AppsHomePage from '@/products/bi/features/dashboard-playground/pages/AppsHomePage'
 
 export default AppsHomePage
