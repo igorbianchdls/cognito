@@ -134,6 +134,13 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
       })),
     }];
   }, [title, serverRows]);
+  const seriesMinY = React.useMemo(() => {
+    const values = (seriesData[0]?.data || [])
+      .map((p: any) => Number(p?.y))
+      .filter((n: number) => Number.isFinite(n));
+    if (!values.length) return undefined;
+    return Math.min(...values);
+  }, [JSON.stringify(seriesData[0]?.data || [])]);
   const handleGlobalFilterClick = React.useCallback((point: any) => {
     if (!shouldClickFilter || !resolvedFilterStorePath) return;
     const rawValue = point?.data?.filterKey ?? point?.data?.x ?? point?.id;
@@ -218,6 +225,10 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
   const gridY = Boolean(nivo?.gridY ?? false);
   const curve = (typeof nivo?.curve === 'string' ? nivo.curve : 'linear') as any;
   const enableArea = Boolean(nivo?.area ?? false);
+  const areaBaselineValue =
+    typeof nivo?.areaBaselineValue === 'number'
+      ? nivo.areaBaselineValue
+      : (enableArea && typeof seriesMinY === 'number' && seriesMinY > 0 ? seriesMinY : undefined);
   const pointSize = typeof nivo?.pointSize === 'number' ? nivo.pointSize : 6;
   const animate = Boolean(nivo?.animate ?? true);
   const motionConfig = (typeof nivo?.motionConfig === 'string' ? nivo.motionConfig : 'gentle') as any;
@@ -254,6 +265,7 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
           axisLeft={axisLeft as any}
           pointSize={pointSize}
           enableArea={enableArea}
+          areaBaselineValue={areaBaselineValue as any}
           useMesh={true}
           tooltip={({ point }) => (
             <div className="rounded bg-white px-2 py-1 text-xs text-gray-700 border border-gray-200">
