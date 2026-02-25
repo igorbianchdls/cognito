@@ -158,7 +158,7 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
 
   const baseMargin = {
     top: Number(nivo?.margin?.top ?? 10),
-    right: Number(nivo?.margin?.right ?? 10),
+    right: Number(nivo?.margin?.right ?? 16),
     bottom: Number(nivo?.margin?.bottom ?? 40),
     left: Number(nivo?.margin?.left ?? 48),
   } as const;
@@ -187,6 +187,14 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
     const maxW = labels.length ? Math.max(...labels.map(measureText)) : 0;
     const pad = 12;
     m.bottom = Math.max(m.bottom, Math.min(maxLabelClamp, Math.ceil(maxW) + pad));
+    // Point scale places first/last ticks on the plot edges, so edge labels need horizontal margin.
+    const firstLabel = labels[0] || "";
+    const lastLabel = labels[labels.length - 1] || "";
+    const edgePad = 10;
+    const firstHalf = Math.ceil(measureText(firstLabel) / 2) + edgePad;
+    const lastHalf = Math.ceil(measureText(lastLabel) / 2) + edgePad;
+    m.left = Math.max(m.left, Math.min(maxLabelClamp, firstHalf));
+    m.right = Math.max(m.right, Math.min(maxLabelClamp, lastHalf));
     return m;
   }, [baseMargin.top, baseMargin.right, baseMargin.bottom, baseMargin.left, autoMargin, JSON.stringify(seriesData[0]?.data || []), axisFontSize, managerFont]);
 

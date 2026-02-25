@@ -155,10 +155,10 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
     : (Array.isArray(colorScheme) ? colorScheme : (typeof colorScheme === 'string' ? [colorScheme] : ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']));
 
   const margin = {
-    top: Number(nivo?.margin?.top ?? 10),
-    right: Number(nivo?.margin?.right ?? 10),
-    bottom: Number(nivo?.margin?.bottom ?? 10),
-    left: Number(nivo?.margin?.left ?? 10),
+    top: Number(nivo?.margin?.top ?? 20),
+    right: Number(nivo?.margin?.right ?? 20),
+    bottom: Number(nivo?.margin?.bottom ?? 20),
+    left: Number(nivo?.margin?.left ?? 20),
   };
 
   const innerRadius = typeof nivo?.innerRadius === 'number' ? nivo.innerRadius : 0;
@@ -167,6 +167,7 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
   const activeInnerRadiusOffset = typeof nivo?.activeInnerRadiusOffset === 'number' ? nivo.activeInnerRadiusOffset : 0;
   const activeOuterRadiusOffset = typeof nivo?.activeOuterRadiusOffset === 'number' ? nivo.activeOuterRadiusOffset : 8;
   const enableArcLabels = Boolean(nivo?.enableArcLabels ?? true);
+  const enableArcLinkLabels = Boolean(nivo?.enableArcLinkLabels ?? false);
   const arcLabelsSkipAngle = typeof nivo?.arcLabelsSkipAngle === 'number' ? nivo.arcLabelsSkipAngle : 10;
   const arcLabelsTextColor = typeof nivo?.arcLabelsTextColor === 'string' ? nivo.arcLabelsTextColor : '#333333';
   const animate = Boolean(nivo?.animate ?? true);
@@ -202,6 +203,7 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
           activeOuterRadiusOffset={activeOuterRadiusOffset}
           colors={colors as any}
           enableArcLabels={enableArcLabels}
+          enableArcLinkLabels={enableArcLinkLabels}
           arcLabelsSkipAngle={arcLabelsSkipAngle}
           arcLabelsTextColor={arcLabelsTextColor}
           tooltip={({ datum }) => (
