@@ -42,44 +42,67 @@ export default function ChatWorkspace({
       <SidebarInset className="h-screen overflow-hidden">
         <div className="flex h-full overflow-hidden">
           <div className="flex-1">
-            <PageContainer>
-              <div className={splitOpen ? "flex h-full min-h-0 flex-col lg:flex-row" : "h-full min-h-0"}>
+            <PageContainer className={splitOpen ? "bg-slate-50" : undefined}>
+              <div
+                className={
+                  splitOpen
+                    ? "flex h-full min-h-0 flex-col gap-2 p-2 lg:flex-row"
+                    : "h-full min-h-0"
+                }
+              >
                 <div
                   className={[
                     sandboxExpanded ? "hidden" : "h-full min-h-0 min-w-0",
                     splitOpen ? "w-full lg:basis-[42%] lg:max-w-[42%] lg:min-w-[360px]" : "w-full",
                   ].join(' ')}
                 >
-                  <ChatPanel
-                    onOpenSandbox={(id) => {
-                      setChatId(id ?? null);
-                      setShowSandbox(true);
-                      setSandboxExpanded(false);
-                    }}
-                    withSideMargins={!showSandbox}
-                    redirectOnFirstMessage={redirectOnFirstMessage}
-                    initialChatId={initialChatId}
-                    initialMessage={initialMessage}
-                    autoSendPrefill={autoSendPrefill}
-                    autoStartSandbox={autoStartSandbox}
-                    initialEngine={initialEngine}
-                  />
+                  <div
+                    className={
+                      splitOpen
+                        ? "h-full min-h-0 min-w-0 overflow-hidden rounded-md border border-gray-200 bg-white"
+                        : "h-full min-h-0 min-w-0"
+                    }
+                  >
+                    <ChatPanel
+                      onOpenSandbox={(id) => {
+                        setChatId(id ?? null);
+                        setShowSandbox(true);
+                        setSandboxExpanded(false);
+                      }}
+                      withSideMargins={!showSandbox}
+                      redirectOnFirstMessage={redirectOnFirstMessage}
+                      initialChatId={initialChatId}
+                      initialMessage={initialMessage}
+                      autoSendPrefill={autoSendPrefill}
+                      autoStartSandbox={autoStartSandbox}
+                      initialEngine={initialEngine}
+                    />
+                  </div>
                 </div>
                 <div
                   className={[
-                    !showSandbox ? "hidden" : "h-full min-h-0 min-w-0 p-2",
+                    !showSandbox ? "hidden" : "h-full min-h-0 min-w-0",
                     splitOpen ? "w-full lg:basis-[58%] lg:min-w-0" : "w-full",
                   ].join(' ')}
                 >
-                  <SandboxPanel
-                    chatId={chatId ?? undefined}
-                    onClose={() => {
-                      setShowSandbox(false);
-                      setSandboxExpanded(false);
-                    }}
-                    onExpand={() => setSandboxExpanded(!sandboxExpanded)}
-                    expanded={sandboxExpanded}
-                  />
+                  <div
+                    className={
+                      splitOpen
+                        ? "h-full min-h-0 min-w-0 overflow-hidden rounded-md border border-gray-200 bg-white"
+                        : "h-full min-h-0 min-w-0"
+                    }
+                  >
+                    <SandboxPanel
+                      className={splitOpen ? "border-0 rounded-none" : undefined}
+                      chatId={chatId ?? undefined}
+                      onClose={() => {
+                        setShowSandbox(false);
+                        setSandboxExpanded(false);
+                      }}
+                      onExpand={() => setSandboxExpanded(!sandboxExpanded)}
+                      expanded={sandboxExpanded}
+                    />
+                  </div>
                 </div>
               </div>
             </PageContainer>
