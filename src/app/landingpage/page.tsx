@@ -214,6 +214,39 @@ const LANDING_USE_CASES = [
   },
 ] as const
 
+const LANDING_DATA_INSIGHTS_CARDS = [
+  {
+    tag: 'Dados',
+    title: 'Todos os dados do seu negócio em um só lugar',
+    description: 'Conecte todas as suas fontes de dados em poucos cliques. Sem precisar de engenharia.',
+  },
+  {
+    tag: 'Dashboards',
+    title: 'Crie dashboards ao vivo em minutos',
+    description: 'Curva de aprendizado zero. Descreva quais gráficos você precisa e veja tudo aparecer.',
+  },
+  {
+    tag: 'Insights',
+    title: 'Converse com seus dados para gerar insights',
+    description: 'Faça perguntas em linguagem natural e receba análises detalhadas com gráficos relacionados.',
+  },
+] as const
+
+const LANDING_DATA_STACK_ITEMS = [
+  { name: 'Meta Ads', icon: brandLogo('METAADS', 'Meta Ads', 'stack-metaads') },
+  { name: 'Google Ads', icon: brandLogo('GOOGLEADS', 'Google Ads', 'stack-googleads') },
+  { name: 'Google Analytics', icon: brandLogo('GOOGLE_ANALYTICS', 'Google Analytics', 'stack-ga') },
+  { name: 'HubSpot', icon: brandLogo('HUBSPOT', 'HubSpot', 'stack-hubspot') },
+  { name: 'Mailchimp', icon: brandLogo('MAILCHIMP', 'Mailchimp', 'stack-mailchimp') },
+  { name: 'Gmail', icon: brandLogo('GMAIL', 'Gmail', 'stack-gmail') },
+  { name: 'Google Drive', icon: brandLogo('GOOGLEDRIVE', 'Google Drive', 'stack-drive') },
+  { name: 'Google Sheets', icon: brandLogo('GOOGLESHEETS', 'Google Sheets', 'stack-sheets') },
+  { name: 'WhatsApp', icon: brandLogo('WHATSAPP', 'WhatsApp', 'stack-whatsapp') },
+  { name: 'Slack', icon: brandLogo('SLACK', 'Slack', 'stack-slack') },
+  { name: 'Stripe', icon: brandLogo('STRIPE', 'Stripe', 'stack-stripe') },
+  { name: 'Mercado Pago', icon: customSimpleIcon('mercadopago', 'Mercado Pago') },
+] as const
+
 function nodeCardStyle(color: string): CSSProperties {
   return { ['--node-color' as string]: color } as CSSProperties
 }
@@ -447,6 +480,46 @@ export default function LandingPage() {
                   ))}
                 </ul>
               </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="lp-copy-section lp-copy-section--data-insights">
+          <div className="lp-copy-head">
+            <div className="lp-copy-kicker">Dados e insights</div>
+            <h2>Conecte todos os seus dados e gere insights</h2>
+            <p>
+              Entenda seu negócio com mais profundidade fazendo perguntas e recebendo respostas com gráficos e contexto.
+            </p>
+          </div>
+
+          <div className="lp-data-insights-grid">
+            {LANDING_DATA_INSIGHTS_CARDS.map((card) => (
+              <article key={card.title} className="lp-saas-card lp-saas-card--feature lp-saas-card--data">
+                <div className="lp-saas-card__tag">{card.tag}</div>
+                <h3>{card.title}</h3>
+                <p>{card.description}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="lp-copy-section lp-copy-section--stack">
+          <div className="lp-copy-head">
+            <div className="lp-copy-kicker">Integrações</div>
+            <h2>Conecte toda a sua stack de dados</h2>
+            <p>
+              Reúna suas fontes de dados em um único lugar. Sem ficar pulando entre plataformas para entender sua
+              performance.
+            </p>
+          </div>
+
+          <div className="lp-stack-grid">
+            {LANDING_DATA_STACK_ITEMS.map((item) => (
+              <div key={item.name} className="lp-stack-item">
+                <div className="lp-stack-item__icon">{item.icon}</div>
+                <div className="lp-stack-item__name">{item.name}</div>
+              </div>
             ))}
           </div>
         </section>
@@ -916,6 +989,18 @@ export default function LandingPage() {
           gap: 14px;
         }
 
+        .landingpage-root .lp-data-insights-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 14px;
+        }
+
+        .landingpage-root .lp-stack-grid {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 12px;
+        }
+
         .landingpage-root .lp-saas-card {
           position: relative;
           border-radius: 16px;
@@ -1045,6 +1130,56 @@ export default function LandingPage() {
           min-height: 184px;
           display: flex;
           flex-direction: column;
+        }
+
+        .landingpage-root .lp-saas-card--data {
+          min-height: 188px;
+        }
+
+        .landingpage-root .lp-stack-item {
+          border-radius: 14px;
+          border: 1px solid rgba(116, 163, 255, 0.14);
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01)),
+            rgba(10, 14, 24, 0.76);
+          box-shadow:
+            0 12px 28px rgba(2, 6, 23, 0.18),
+            inset 0 1px 0 rgba(255, 255, 255, 0.04);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          min-height: 74px;
+          padding: 12px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .landingpage-root .lp-stack-item:hover {
+          transform: translateY(-1px);
+          border-color: rgba(0, 212, 255, 0.22);
+          box-shadow:
+            0 14px 30px rgba(2, 6, 23, 0.22),
+            inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .landingpage-root .lp-stack-item__icon {
+          width: 34px;
+          height: 34px;
+          border-radius: 10px;
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          background: rgba(255, 255, 255, 0.02);
+          display: grid;
+          place-items: center;
+          flex: 0 0 auto;
+        }
+
+        .landingpage-root .lp-stack-item__name {
+          color: #e7f0ff;
+          font-size: 12px;
+          line-height: 1.2;
+          letter-spacing: -0.01em;
+          font-weight: 700;
         }
 
         .landingpage-root .lp-usecase-pill {
@@ -1290,6 +1425,16 @@ export default function LandingPage() {
           .landingpage-root .lp-feature-grid,
           .landingpage-root .lp-steps-grid,
           .landingpage-root .lp-usecase-grid {
+            grid-template-columns: 1fr;
+            gap: 10px;
+          }
+
+          .landingpage-root .lp-data-insights-grid {
+            grid-template-columns: 1fr;
+            gap: 10px;
+          }
+
+          .landingpage-root .lp-stack-grid {
             grid-template-columns: 1fr;
             gap: 10px;
           }
