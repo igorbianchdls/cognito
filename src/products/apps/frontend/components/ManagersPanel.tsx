@@ -2,6 +2,7 @@
 
 import React from "react";
 import { APPS_HEADER_THEME_OPTIONS, APPS_THEME_OPTIONS } from '@/products/apps/shared/themeOptions';
+import { DASHBOARD_BACKGROUND_PRESET_OPTIONS } from '@/products/bi/json-render/backgrounds/registry';
 
 type PanelProps = { jsonText: string; setJsonText: (s: string) => void; setTree: (t: any) => void; disabled?: boolean };
 
@@ -24,6 +25,7 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
   const borderColorOptions = ['#e5e7eb','#333333','#2563eb','#10b981','#ef4444'];
   const shadowOptions = ['none','sm','md','lg','xl','2xl'];
   const surfaceOptions = ['#ffffff','#f1f5f9','#eef2ff','#0b0b0b','#111214'];
+  const dashboardBackgroundPresetOptions = DASHBOARD_BACKGROUND_PRESET_OPTIONS;
   const colorPresets: Record<string, string[]> = {
     sky: ['#38bdf8','#0ea5e9','#0284c7','#0369a1'],
     emerald: ['#34d399','#10b981','#059669','#047857'],
@@ -96,6 +98,10 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
     const v = String(current.managers?.background || '').trim();
     return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v) ? v : '#ffffff';
   })();
+  const dashboardBgPreset = (() => {
+    const v = String(current.managers?.backgroundPreset || '').trim();
+    return dashboardBackgroundPresetOptions.some((o) => o.value === v) ? v : 'none';
+  })();
 
   return (
     <div className="mt-4 rounded-md bg-white p-3 border border-gray-200">
@@ -119,6 +125,22 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
               else delete th.props.headerTheme;
             })}>
             {headerThemeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-gray-700 w-20">Fundo FX</label>
+          <select
+            disabled={disabled}
+            className="text-xs border border-gray-300 rounded px-2 py-1"
+            value={dashboardBgPreset}
+            onChange={(e) => updateTheme((th: any) => {
+              th.props.managers = th.props.managers || {};
+              const v = e.target.value;
+              if (v && v !== 'none') th.props.managers.backgroundPreset = v;
+              else delete th.props.managers.backgroundPreset;
+            })}
+          >
+            {dashboardBackgroundPresetOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </div>
         <div className="flex items-center gap-2">

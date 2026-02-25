@@ -6,6 +6,8 @@ import JsonRenderLineChart from "@/products/bi/json-render/components/LineChart"
 import JsonRenderPieChart from "@/products/bi/json-render/components/PieChart";
 import JsonRenderGauge from "@/products/bi/json-render/components/Gauge";
 import FrameSurface from "@/products/bi/json-render/components/FrameSurface";
+import DashboardBackgroundLayer from "@/products/bi/json-render/backgrounds/DashboardBackgroundLayer";
+import { normalizeDashboardBackgroundPreset } from "@/products/bi/json-render/backgrounds/types";
 import { ThemeProvider, useThemeOverrides } from "@/products/bi/json-render/theme/ThemeContext";
 import { mapManagersToCssVars } from "@/products/bi/json-render/theme/thememanagers";
 import { buildThemeVars } from "@/products/bi/json-render/theme/themeAdapter";
@@ -1094,9 +1096,17 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const mgr = (element?.props?.managers || {}) as AnyRecord;
     const preset = buildThemeVars(name, mgr as any, { headerTheme });
     const cssVars = preset.cssVars || mapManagersToCssVars(mgr);
+    const backgroundPreset = normalizeDashboardBackgroundPreset(
+      (mgr as AnyRecord)?.backgroundPreset ?? (cssVars as AnyRecord)?.dashboardBackgroundPreset
+    );
     return (
       <ThemeProvider name={name} cssVars={cssVars}>
-        {children}
+        <div style={{ position: 'relative', isolation: 'isolate' }}>
+          <DashboardBackgroundLayer preset={backgroundPreset} />
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            {children}
+          </div>
+        </div>
       </ThemeProvider>
     );
   },
