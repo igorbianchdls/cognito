@@ -80,6 +80,7 @@ export const catalog = {
             scheme: z.array(z.string()).optional(),
           }).partial().optional(),
           background: z.string().optional(),
+          backgroundPreset: z.string().optional(),
           surface: z.string().optional(),
           h1: z.object({
             color: z.string().optional(),
