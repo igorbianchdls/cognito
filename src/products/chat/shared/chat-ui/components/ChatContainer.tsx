@@ -7,7 +7,7 @@ import PerguntaDoUsuario from './PerguntaDoUsuario';
 import RespostaDaIa from './RespostaDaIa';
 import InputArea from './InputArea';
 import { useRouter } from 'next/navigation';
-import type { SandboxStatus } from '@/chat/sandbox';
+import { sandboxActions, type SandboxStatus } from '@/chat/sandbox';
 import { useChatErrorNotifications } from '@/products/chat/frontend/features/error-notifications/useChatErrorNotifications';
 
 type ChatStatus = 'idle' | 'submitted' | 'streaming' | 'error'
@@ -99,13 +99,8 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   }
 
   const openArtifactFromMenu = async () => {
-    try {
-      const id = await ensureStart();
-      onOpenSandbox?.(id);
-    } catch (err) {
-      notifyError('sandbox', err, 'Falha ao abrir Artifact da sandbox')
-      onOpenSandbox?.(chatId ?? undefined)
-    }
+    sandboxActions.setActiveTab('dashboard')
+    onOpenSandbox?.(chatId ?? undefined)
   }
 
   const ensureStart = async () => {
@@ -639,9 +634,8 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
                     }
                   }}
                   onOpenSandbox={async () => {
-                    // Avoid starting chat before first message when redirecting
-                    if (redirectOnFirstMessage && !chatId) { return }
-                    try { const id = await ensureStart(); onOpenSandbox?.(id); } catch (err) { notifyError('sandbox', err, 'Falha ao abrir sandbox') }
+                    sandboxActions.setActiveTab('dashboard')
+                    onOpenSandbox?.(chatId ?? undefined)
                   }}
                 />
                 <p className="mt-2 text-xs text-gray-400 text-center">Otto é uma IA e pode cometer erros. Por favor, verifique as respostas.</p>
@@ -719,8 +713,8 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
               notifyError('api', err, 'Falha ao alterar modelo')
             }
           }} onOpenSandbox={async () => {
-            if (redirectOnFirstMessage && !chatId) { return }
-            try { const id = await ensureStart(); onOpenSandbox?.(id); } catch (err) { notifyError('sandbox', err, 'Falha ao abrir sandbox') }
+            sandboxActions.setActiveTab('dashboard')
+            onOpenSandbox?.(chatId ?? undefined)
           }} />
           <p className="mt-2 text-xs text-gray-400 text-center">Otto é uma IA e pode cometer erros. Por favor, verifique as respostas.</p>
         </div>

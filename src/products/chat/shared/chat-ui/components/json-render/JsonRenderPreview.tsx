@@ -37,7 +37,7 @@ export default function JsonRenderPreview({ chatId }: Props) {
       setError(null);
       setContent(null);
       setTree(null);
-      if (!chatId) { setError('chatId ausente (abra uma sessão de chat).'); setLoading(false); return; }
+      if (!chatId) { setLoading(false); return; }
       if (!jsonrPath) { setError('Caminho do .jsonr não configurado.'); setLoading(false); return; }
       try {
         const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-read', chatId, path: jsonrPath }) });
@@ -77,7 +77,11 @@ export default function JsonRenderPreview({ chatId }: Props) {
 
   // Discover .jsonr files under /vercel/sandbox
   const refreshPaths = React.useCallback(async (): Promise<string[]> => {
-    if (!chatId) { setPathsError('chatId ausente'); return []; }
+    if (!chatId) {
+      setPaths([]);
+      setPathsError(null);
+      return [];
+    }
     setLoadingPaths(true); setPathsError(null);
     try {
       const collected: string[] = [];
@@ -142,6 +146,11 @@ export default function JsonRenderPreview({ chatId }: Props) {
     <div className="h-full w-full min-h-0 overflow-auto p-2 bg-gray-50">
       {(pathsError && !error) && (
         <div className="rounded border border-yellow-300 bg-yellow-50 text-yellow-800 text-xs p-2 mb-2">{pathsError}</div>
+      )}
+      {!chatId && !error && !loading && (
+        <div className="rounded border border-gray-200 bg-white text-gray-600 text-xs p-3">
+          UI de preview aberta. Inicie uma sandbox para carregar e renderizar arquivos `.jsonr`.
+        </div>
       )}
       {error && (
         <div className="rounded border border-red-300 bg-red-50 text-red-700 text-xs p-2">{error}</div>

@@ -14,7 +14,12 @@ export default function DashboardPicker({ chatId }: Props) {
   const [query, setQuery] = React.useState('');
 
   const refresh = React.useCallback(async () => {
-    if (!chatId) { setError('chatId ausente'); return; }
+    if (!chatId) {
+      setPaths([]);
+      setError(null);
+      setLoading(false);
+      return;
+    }
     setLoading(true); setError(null);
     try {
       const collected: string[] = [];
@@ -76,7 +81,12 @@ export default function DashboardPicker({ chatId }: Props) {
       </div>
       {error && <div className="rounded border border-red-300 bg-red-50 text-red-700 text-xs p-2 mb-2">{error}</div>}
       <div className="rounded border border-gray-200 bg-white p-2 max-h-[60vh] overflow-auto">
-        {filtered.length === 0 && <div className="text-xs text-gray-500">Nenhum dashboard encontrado</div>}
+        {!chatId && (
+          <div className="text-xs text-gray-500 p-2">
+            UI de Artifact aberta. Inicie uma sandbox para listar dashboards `.jsonr`.
+          </div>
+        )}
+        {chatId && filtered.length === 0 && <div className="text-xs text-gray-500">Nenhum dashboard encontrado</div>}
         <ul className="divide-y divide-gray-100">
           {filtered.map(p => (
             <li key={p}>
