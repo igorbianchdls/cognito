@@ -25,6 +25,22 @@ Use o catalogo para:
 
 Se houver divergencia entre pedido e catalogo: seguir catalogo e explicar ajuste.
 
+## Protocolo em Caso de Divergencia com Catalogo (obrigatorio)
+Quando o pedido do usuario nao bater com o catalogo:
+1. Nao inventar campo/model/measure.
+2. Escolher a alternativa mais proxima disponivel no catalogo.
+3. Explicar objetivamente a troca.
+4. Entregar o JSON funcional ja ajustado.
+
+Formato recomendado (curto):
+- Pedido original: <campo/model/measure pedido>
+- Catalogo permite: <opcoes relevantes>
+- Ajuste aplicado: <opcao escolhida e motivo>
+
+Exemplos:
+- Usuario pediu dimensao `regiao`; catalogo tem `territorio` -> usar `territorio` e informar.
+- Usuario pediu measure `SUM(lucro_liquido)`; catalogo nao suporta -> usar measure permitida equivalente (ex.: margem/valor) e informar.
+
 ## Escopo ERP Suportado (atual)
 - vendas.pedidos
 - compras.compras
@@ -98,6 +114,16 @@ Padroes:
 - Div com childGrow=true para grids fluidos.
 - Evitar containers redundantes.
 
+## Defaults de Layout/UX (usar salvo pedido contrario)
+- gap entre cards/charts: 12
+- padding das linhas (Div): 16
+- charts principais: height 220-260
+- KPIs em linha: usar `fr` iguais (ex.: 1,1,1,1)
+- ranking em Bar/Pie: `limit` 5-10
+- serie temporal: `limit` 12 e `orderBy.dimension = asc`
+- titulo curto e orientado a pergunta de negocio
+- evitar mais de 4 visuais pesados por linha
+
 ## Componentes e Boas Praticas
 
 ### KPI
@@ -110,6 +136,66 @@ Padroes:
 - Line: evolucao temporal.
 - limit padrao de 5-12 conforme caso.
 - orderBy normalmente por measure desc (ranking) ou dimension asc (serie temporal).
+
+## Contrato Minimo de Componentes (JSON Render atual)
+Objetivo: reduzir erro de compatibilidade do agente. Use estes formatos como base.
+
+### Theme (raiz)
+- obrigatorio na raiz
+- `props.name`: tema (ex.: light, dark)
+- `props.headerTheme`: recomendado (ex.: auto, dark, blue, slate)
+- `children`: lista dos blocos do dashboard
+
+### Header
+- `props.title` (obrigatorio na pratica)
+- `props.subtitle` (opcional)
+- `props.controlsPosition` (ex.: right, left, below)
+- `props.datePicker` (quando temporal)
+  - `visible`, `mode`, `storePath`, `actionOnChange`
+
+### Div (layout)
+- principal container de layout
+- `props.direction`: `row` ou `column`
+- `props.gap`, `padding`, `childGrow`
+- filhos em `children`
+
+### KPI
+- `props.title`, `format`
+- usar `dataQuery` (preferencial) ou `valuePath`
+- KPI agregado: `dataQuery` sem `dimension`
+- para largura relativa em linha: `props.fr`
+
+### BarChart
+- `props.title`, `format`, `height`
+- `props.dataQuery.model`, `measure`, `dimension`
+- `props.dataQuery.orderBy`, `limit` (quando ranking)
+- `props.nivo.layout` (`horizontal` ou `vertical`) quando necessario
+- `props.interaction` / `props.drill` (somente se fizer sentido)
+- `props.fr` para layout em linha
+
+### LineChart
+- `props.title`, `format`, `height`
+- `props.dataQuery.model`, `measure`, `dimension` (preferir `periodo` em serie temporal)
+- `props.dataQuery.orderBy.dimension = asc`
+- `props.nivo.curve`, `props.nivo.area` (opcional)
+- `props.fr` para layout em linha
+
+### PieChart
+- `props.title`, `format`, `height`
+- `props.dataQuery.model`, `measure`, `dimension`
+- `props.dataQuery.orderBy.measure = desc`, `limit`
+- `props.nivo.innerRadius` (opcional)
+- `props.interaction` (filtro por clique, se aplicavel)
+- `props.fr` para layout em linha
+
+### SlicerCard
+- `props.title`
+- `props.fields` (lista de filtros)
+- cada field geralmente tem:
+  - `label`, `type`, `storePath`
+  - `source` (preferir options source/catalog)
+  - `search`, `selectAll`, `clearable` quando relevante
+- `props.fr` para layout em linha
 
 ### SlicerCard
 - Preferir source.type = "options" com model + field.
@@ -136,6 +222,20 @@ Padroes:
   - dimension (ou dimensionExpr)
   - filterField (recomendado explicito)
 - Nao aplicar drill por padrao em todos os graficos.
+
+## Limitacoes Atuais do Renderer (nao prometer / nao inventar)
+- O contrato principal de dados e `dataQuery`; nao gerar SQL puro dentro do JSON.
+- Bar/Pie/Line nao sao equivalentes em todas as features; validar drill/interacao por caso.
+- Nem todo visual tem suporte a drill avancado.
+- Tabela/Pivot podem nao estar disponiveis no renderer atual; se usuario pedir, oferecer alternativa (Bar + KPI + export/CSV) ou explicar limitacao.
+- Time intelligence avancado pode exigir `dimension`/`dimensionExpr` manual dependendo do model/catalogo.
+
+## Validacao de Compatibilidade (antes de entregar)
+- Componente existe no renderer atual (Theme, Header, Div, KPI, BarChart, LineChart, PieChart, SlicerCard etc.).
+- Props principais estao em chaves esperadas (`props`, `children`, `dataQuery`, `nivo`, `interaction`, `drill`).
+- `fr` usado apenas para layout relativo de filhos em `Div` (principalmente em `direction: row`).
+- `height` definido para charts (evita visual quebrado/baixo demais).
+- `format` coerente com measure (currency/number/percent).
 
 ## Mapeamento de Negocio -> Query (heuristicas praticas)
 
@@ -182,6 +282,13 @@ Sempre validar no catalogo antes de fixar medida final.
 9. Validar JSON final.
 10. Entregar resposta objetiva com o .jsonr final.
 
+## Formato de Entrega Recomendado (para aumentar utilidade)
+Sempre que possivel, responder com:
+1. Resumo curto do dashboard (objetivo e modulo)
+2. Ajustes por divergencia com catalogo (se houver)
+3. JSONR final completo (valido)
+4. Observacoes de filtros/interacoes (somente se relevante)
+
 ## When User Asks "crie um dashboard completo"
 Sem clarificacao extensa, assumir baseline:
 - 3 a 5 KPIs
@@ -204,6 +311,8 @@ Fazer no maximo 1 pergunta de clarificacao se faltar algo critico:
 - Responder com pseudo-SQL em vez de dataQuery.
 - Ignorar filtros de periodo quando pedido e temporal.
 - Tratar estoque.estoques_atual como serie historica de saldo por de/ate.
+- Inventar props de componente fora do contrato atual do renderer.
+- Entregar dashboard "bonito" mas sem queries compatveis com catalogo.
 
 ## Checklist Final (obrigatorio)
 - JSON valido.
@@ -243,3 +352,60 @@ Fazer no maximo 1 pergunta de clarificacao se faltar algo critico:
 
 Se houver erro de execucao de query, corrigir com base no catalogo (nunca tentativa cega com campos inventados).
 
+## Snippet Minimo Operacional (KPI + Bar + filtros)
+```json
+[
+  {
+    "type": "Theme",
+    "props": { "name": "light", "headerTheme": "auto" },
+    "children": [
+      {
+        "type": "Header",
+        "props": {
+          "title": "Dashboard",
+          "controlsPosition": "right",
+          "datePicker": {
+            "visible": true,
+            "mode": "range",
+            "storePath": "filters.dateRange",
+            "actionOnChange": { "type": "refresh_data" }
+          }
+        }
+      },
+      {
+        "type": "Div",
+        "props": { "direction": "row", "gap": 12, "padding": 16, "childGrow": true },
+        "children": [
+          {
+            "type": "KPI",
+            "props": {
+              "fr": 1,
+              "title": "Total",
+              "format": "currency",
+              "dataQuery": { "model": "vendas.pedidos", "measure": "SUM(p.valor_total)", "filters": {} }
+            }
+          },
+          {
+            "type": "BarChart",
+            "props": {
+              "fr": 2,
+              "title": "Ranking",
+              "format": "currency",
+              "height": 240,
+              "dataQuery": {
+                "model": "vendas.pedidos",
+                "dimension": "cliente",
+                "measure": "SUM(itens.subtotal)",
+                "filters": {},
+                "orderBy": { "field": "measure", "dir": "desc" },
+                "limit": 8
+              },
+              "nivo": { "layout": "horizontal" }
+            }
+          }
+        ]
+      }
+    ]
+  }
+]
+```
