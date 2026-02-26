@@ -49,7 +49,7 @@ export default function ChatWorkspace({
       <SidebarInset className="h-screen overflow-hidden">
         <div className="flex h-full overflow-hidden">
           <div className="flex-1">
-            <PageContainer className={splitOpen ? "bg-slate-50" : undefined}>
+            <PageContainer>
               <div
                 className={
                   splitOpen
