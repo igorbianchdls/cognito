@@ -53,14 +53,14 @@ export default function ChatWorkspace({
               <div
                 className={
                   splitOpen
-                    ? "flex h-full min-h-0 flex-col gap-2 px-2 py-0 lg:flex-row"
+                    ? "flex h-full min-h-0 flex-col gap-2 p-2 lg:flex-row"
                     : "h-full min-h-0"
                 }
               >
                 <div
                   className={[
                     artifactExpanded ? "hidden" : "h-full min-h-0 min-w-0",
-                    splitOpen ? "w-full lg:basis-[25%] lg:max-w-[25%] lg:min-w-[360px]" : "w-full",
+                    splitOpen ? "w-full lg:basis-[25%] lg:max-w-[25%] lg:min-w-[360px] lg:py-0" : "w-full",
                   ].join(' ')}
                 >
                   <div
