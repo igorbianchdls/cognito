@@ -1,5 +1,7 @@
 'use client'
 
+import DashboardBackgroundPreview from '../_components/DashboardBackgroundPreview'
+
 export default function LandingBackgroundAuroraPage() {
   return (
     <>
@@ -9,6 +11,7 @@ export default function LandingBackgroundAuroraPage() {
         <div className="aurora a3" />
         <div className="grain" />
       </div>
+      <DashboardBackgroundPreview tone="dark" title="Aurora Executive" />
       <style jsx global>{`
         .lp-bg-aurora {
           position: relative;

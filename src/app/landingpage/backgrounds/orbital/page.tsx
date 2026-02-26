@@ -1,5 +1,7 @@
 'use client'
 
+import DashboardBackgroundPreview from '../_components/DashboardBackgroundPreview'
+
 export default function LandingBackgroundOrbitalPage() {
   return (
     <>
@@ -8,6 +10,7 @@ export default function LandingBackgroundOrbitalPage() {
         <div className="blob blob-2" />
         <div className="blob blob-3" />
       </div>
+      <DashboardBackgroundPreview tone="dark" title="Orbital Grid" />
       <style jsx global>{`
         .lp-bg-orbital {
           --bg: #030508;

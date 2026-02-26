@@ -1,5 +1,7 @@
 'use client'
 
+import DashboardBackgroundPreview from '../_components/DashboardBackgroundPreview'
+
 export default function LandingBackgroundBlueprintPage() {
   return (
     <>
@@ -7,6 +9,7 @@ export default function LandingBackgroundBlueprintPage() {
         <div className="scanline scanline-a" />
         <div className="scanline scanline-b" />
       </div>
+      <DashboardBackgroundPreview tone="dark" title="Blueprint Scan" />
       <style jsx global>{`
         .lp-bg-blueprint {
           position: relative;

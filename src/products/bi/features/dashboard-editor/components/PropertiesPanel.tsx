@@ -183,12 +183,15 @@ export default function PropertiesPanel({
   onSetNodeProp: _onSetNodeProp,
   onReplaceNodeProps: onReplaceNodePropsExternal,
 }: Props) {
-  const sourceNode = React.useMemo(() => getNodeAtPath(tree, selectedPath), [tree, selectedPath])
+  const sourceNode = React.useMemo<Record<string, any> | null>(
+    () => getNodeAtPath(tree, selectedPath),
+    [tree, selectedPath],
+  )
   const [draftProps, setDraftProps] = React.useState<Record<string, any>>({})
   const [rawPropsText, setRawPropsText] = React.useState('{}')
   const [rawPropsError, setRawPropsError] = React.useState<string | null>(null)
   const [activeTab, setActiveTab] = React.useState<TabKey>('data')
-  const node = React.useMemo(
+  const node = React.useMemo<Record<string, any> | null>(
     () => (sourceNode && typeof sourceNode === 'object' ? { ...sourceNode, props: draftProps } : sourceNode),
     [draftProps, sourceNode],
   )

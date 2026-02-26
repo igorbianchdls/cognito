@@ -1,11 +1,14 @@
 'use client'
 
+import DashboardBackgroundPreview from '../_components/DashboardBackgroundPreview'
+
 export default function LandingBackgroundDotGridDensePage() {
   return (
     <>
       <div className="lp-bg-dot-grid-dense" aria-hidden="true">
         <div className="vignette" />
       </div>
+      <DashboardBackgroundPreview tone="dark" title="Dot Grid Dense" />
       <style jsx global>{`
         .lp-bg-dot-grid-dense {
           position: relative;

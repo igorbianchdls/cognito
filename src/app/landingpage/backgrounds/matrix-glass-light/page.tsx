@@ -1,6 +1,6 @@
 'use client'
 
-import MatrixCardShowcase from '../_components/MatrixCardShowcase'
+import DashboardBackgroundPreview from '../_components/DashboardBackgroundPreview'
 
 export default function LandingBackgroundMatrixGlassLightPage() {
   return (
@@ -8,7 +8,7 @@ export default function LandingBackgroundMatrixGlassLightPage() {
       <div className="lp-bg-matrix-glass-light" aria-hidden="true">
         <div className="vignette" />
       </div>
-      <MatrixCardShowcase tone="light" />
+      <DashboardBackgroundPreview tone="light" title="Matrix Glass Light" />
       <style jsx global>{`
         .lp-bg-matrix-glass-light {
           position: relative;
