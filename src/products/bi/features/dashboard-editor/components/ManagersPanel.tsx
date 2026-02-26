@@ -39,6 +39,50 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
   const kpiColorOptions = ['#111827','#0f172a','#334155','#e5e7eb','#ffffff','#2563eb','#10b981','#ef4444'];
   const kpiSpacingOptions = ['-0.05em','-0.04em','-0.03em','-0.02em','-0.01em','0em','0.01em','0.02em','0.03em','0.04em','0.05em'];
   const kpiPaddingOptions = ['0','4','6','8','12'];
+  const borderPresetOptions = [
+    { value: 'hud_classic', label: 'Clássico (cantos)' },
+    { value: 'rounded_minimal', label: 'Minimal arredondado' },
+    { value: 'soft_card', label: 'Soft card' },
+    { value: 'sharp_clean', label: 'Reto clean' },
+    { value: 'hud_bold', label: 'HUD forte' },
+  ] as const;
+  const borderPresets: Record<string, { style?: string; width?: number; radius?: number; shadow?: string; frame?: null | { variant: 'hud'; cornerSize: number; cornerWidth: number } }> = {
+    hud_classic: {
+      style: 'solid',
+      width: 1,
+      radius: 8,
+      shadow: 'none',
+      frame: { variant: 'hud', cornerSize: 8, cornerWidth: 1 },
+    },
+    rounded_minimal: {
+      style: 'none',
+      width: 0,
+      radius: 12,
+      shadow: 'sm',
+      frame: null,
+    },
+    soft_card: {
+      style: 'none',
+      width: 0,
+      radius: 14,
+      shadow: 'md',
+      frame: null,
+    },
+    sharp_clean: {
+      style: 'solid',
+      width: 1,
+      radius: 0,
+      shadow: 'none',
+      frame: null,
+    },
+    hud_bold: {
+      style: 'solid',
+      width: 1,
+      radius: 8,
+      shadow: 'sm',
+      frame: { variant: 'hud', cornerSize: 10, cornerWidth: 2 },
+    },
+  };
 
   function readCurrent(): { name: string; headerTheme: string; managers: any } {
     try {
@@ -71,6 +115,29 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
   }
 
   const current = readCurrent();
+  const borderPresetKey = (() => {
+    const b = (current.managers?.border && typeof current.managers.border === 'object') ? current.managers.border : {};
+    const frame = (b.frame && typeof b.frame === 'object') ? b.frame : null;
+    const hasFrame = Boolean(frame && (frame.variant || frame.cornerSize !== undefined || frame.cornerWidth !== undefined));
+    for (const [key, preset] of Object.entries(borderPresets)) {
+      const sameStyle = String(b.style ?? '') === String(preset.style ?? '');
+      const sameWidth = String(b.width ?? '') === String(preset.width ?? '');
+      const sameRadius = String(b.radius ?? '') === String(preset.radius ?? '');
+      const sameShadow = String(b.shadow ?? '') === String(preset.shadow ?? '');
+      if (!sameStyle || !sameWidth || !sameRadius || !sameShadow) continue;
+      if (preset.frame == null) {
+        if (!hasFrame) return key;
+        continue;
+      }
+      if (!frame) continue;
+      const sameFrame =
+        String(frame.variant ?? '') === String(preset.frame.variant ?? '') &&
+        String(frame.cornerSize ?? '') === String(preset.frame.cornerSize ?? '') &&
+        String(frame.cornerWidth ?? '') === String(preset.frame.cornerWidth ?? '');
+      if (sameFrame) return key;
+    }
+    return 'custom';
+  })();
   const schemeToPreset = (arr?: string[]): string => {
     if (!arr) return 'custom';
     for (const [k, v] of Object.entries(colorPresets)) {
@@ -257,6 +324,44 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
             onChange={(e) => updateTheme((th: any) => { th.props.managers = th.props.managers || {}; if (e.target.value) th.props.managers.font = e.target.value; else delete th.props.managers.font; })}>
             <option value="">(padrão do tema)</option>
             {fontOptions.map(f => <option key={f} value={f}>{f}</option>)}
+          </select>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-gray-700 w-20">Borda FX</label>
+          <select
+            disabled={disabled}
+            className="text-xs border border-gray-300 rounded px-2 py-1"
+            value={borderPresetKey}
+            onChange={(e) => updateTheme((th: any) => {
+              const presetKey = e.target.value;
+              if (presetKey === 'custom') return;
+              const preset = borderPresets[presetKey];
+              if (!preset) return;
+              th.props.managers = th.props.managers || {};
+              th.props.managers.border = th.props.managers.border || {};
+              const border = th.props.managers.border;
+
+              if (preset.style !== undefined) border.style = preset.style;
+              else delete border.style;
+              if (preset.width !== undefined) border.width = preset.width;
+              else delete border.width;
+              if (preset.radius !== undefined) border.radius = preset.radius;
+              else delete border.radius;
+              if (preset.shadow !== undefined) border.shadow = preset.shadow;
+              else delete border.shadow;
+
+              if (preset.frame) {
+                border.frame = (border.frame && typeof border.frame === 'object') ? border.frame : {};
+                border.frame.variant = preset.frame.variant;
+                border.frame.cornerSize = preset.frame.cornerSize;
+                border.frame.cornerWidth = preset.frame.cornerWidth;
+              } else {
+                delete border.frame;
+              }
+            })}
+          >
+            <option value="custom">(custom)</option>
+            {borderPresetOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </div>
         {/* Borda */}
