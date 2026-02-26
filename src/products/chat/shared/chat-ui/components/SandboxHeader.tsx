@@ -32,7 +32,7 @@ export default function SandboxHeader({ onClose, onExpand, expanded, chatId }: P
           )}
         </button>
         <div className="overflow-x-auto">
-          <SandboxTabs />
+          <SandboxTabs chatId={chatId} />
         </div>
       </div>
       {/* Center: status badge */}
