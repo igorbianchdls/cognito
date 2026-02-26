@@ -58,12 +58,12 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
       style: 'none',
       width: 0,
       radius: 12,
-      shadow: 'sm',
+      shadow: 'none',
       frame: null,
     },
     soft_card: {
-      style: 'none',
-      width: 0,
+      style: 'solid',
+      width: 1,
       radius: 14,
       shadow: 'md',
       frame: null,
@@ -200,6 +200,44 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
           </select>
         </div>
         <div className="flex items-center gap-2">
+          <label className="text-xs text-gray-700 w-20">Borda FX</label>
+          <select
+            disabled={disabled}
+            className="text-xs border border-gray-300 rounded px-2 py-1"
+            value={borderPresetKey}
+            onChange={(e) => updateTheme((th: any) => {
+              const presetKey = e.target.value;
+              if (presetKey === 'custom') return;
+              const preset = borderPresets[presetKey];
+              if (!preset) return;
+              th.props.managers = th.props.managers || {};
+              th.props.managers.border = th.props.managers.border || {};
+              const border = th.props.managers.border;
+
+              if (preset.style !== undefined) border.style = preset.style;
+              else delete border.style;
+              if (preset.width !== undefined) border.width = preset.width;
+              else delete border.width;
+              if (preset.radius !== undefined) border.radius = preset.radius;
+              else delete border.radius;
+              if (preset.shadow !== undefined) border.shadow = preset.shadow;
+              else delete border.shadow;
+
+              if (preset.frame) {
+                border.frame = (border.frame && typeof border.frame === 'object') ? border.frame : {};
+                border.frame.variant = preset.frame.variant;
+                border.frame.cornerSize = preset.frame.cornerSize;
+                border.frame.cornerWidth = preset.frame.cornerWidth;
+              } else {
+                delete border.frame;
+              }
+            })}
+          >
+            <option value="custom">(custom)</option>
+            {borderPresetOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </div>
+        <div className="flex items-center gap-2">
           <label className="text-xs text-gray-700 w-20">Cards</label>
           <select
             disabled={disabled}
@@ -324,44 +362,6 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
             onChange={(e) => updateTheme((th: any) => { th.props.managers = th.props.managers || {}; if (e.target.value) th.props.managers.font = e.target.value; else delete th.props.managers.font; })}>
             <option value="">(padrão do tema)</option>
             {fontOptions.map(f => <option key={f} value={f}>{f}</option>)}
-          </select>
-        </div>
-        <div className="flex items-center gap-2">
-          <label className="text-xs text-gray-700 w-20">Borda FX</label>
-          <select
-            disabled={disabled}
-            className="text-xs border border-gray-300 rounded px-2 py-1"
-            value={borderPresetKey}
-            onChange={(e) => updateTheme((th: any) => {
-              const presetKey = e.target.value;
-              if (presetKey === 'custom') return;
-              const preset = borderPresets[presetKey];
-              if (!preset) return;
-              th.props.managers = th.props.managers || {};
-              th.props.managers.border = th.props.managers.border || {};
-              const border = th.props.managers.border;
-
-              if (preset.style !== undefined) border.style = preset.style;
-              else delete border.style;
-              if (preset.width !== undefined) border.width = preset.width;
-              else delete border.width;
-              if (preset.radius !== undefined) border.radius = preset.radius;
-              else delete border.radius;
-              if (preset.shadow !== undefined) border.shadow = preset.shadow;
-              else delete border.shadow;
-
-              if (preset.frame) {
-                border.frame = (border.frame && typeof border.frame === 'object') ? border.frame : {};
-                border.frame.variant = preset.frame.variant;
-                border.frame.cornerSize = preset.frame.cornerSize;
-                border.frame.cornerWidth = preset.frame.cornerWidth;
-              } else {
-                delete border.frame;
-              }
-            })}
-          >
-            <option value="custom">(custom)</option>
-            {borderPresetOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </div>
         {/* Borda */}
