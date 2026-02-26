@@ -901,7 +901,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
 
     return (
       <FrameSurface style={containerStyle} frame={p?.containerStyle?.frame as AnyRecord} cssVars={theme.cssVars}>
-        {title ? <div className="mb-2" style={titleStyle}>{title}</div> : null}
+        {title ? <div className="mb-0" style={titleStyle}>{title}</div> : null}
         <div className="flex flex-col" style={{ gap: `${itemGap}px` }}>
           {items.map((it, idx) => {
             const IconComp = aiSummaryIconMap[normalizeIconKey(it?.icon)] || Sparkles;
