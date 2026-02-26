@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { Mail, MessageCircle } from 'lucide-react'
 import type { JsonTree } from '@/products/bi/shared/types'
 import { getNodeAtPath } from '@/products/bi/features/dashboard-editor/lib/jsonTreeOps'
 import type { JsonNodePath } from '@/products/bi/features/dashboard-editor/types/editor-types'
@@ -15,6 +16,16 @@ type Props = {
 }
 
 type TabKey = 'data' | 'style' | 'json'
+
+const AISUMMARY_FREQUENCY_OPTIONS = [
+  { value: 'none', label: 'Não repete' },
+  { value: 'daily', label: 'Diário' },
+  { value: 'weekly', label: 'Semanal' },
+  { value: 'monthly', label: 'Mensal' },
+] as const
+
+const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'))
+const MINUTE_OPTIONS = ['00', '15', '30', '45']
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return <label className="text-[11px] font-medium text-gray-700">{children}</label>
@@ -40,6 +51,33 @@ function TextField({
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
         className="w-full rounded border border-gray-300 px-2 py-1 text-xs"
+      />
+    </div>
+  )
+}
+
+function TextAreaField({
+  label,
+  value,
+  onChange,
+  placeholder,
+  rows = 4,
+}: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+  placeholder?: string
+  rows?: number
+}) {
+  return (
+    <div className="space-y-1">
+      <FieldLabel>{label}</FieldLabel>
+      <textarea
+        value={value}
+        rows={rows}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded border border-gray-300 px-2 py-1.5 text-xs"
       />
     </div>
   )
@@ -145,6 +183,35 @@ function CheckboxField({
   )
 }
 
+function ToggleChip({
+  label,
+  icon,
+  selected,
+  onClick,
+}: {
+  label: string
+  icon: React.ReactNode
+  selected: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex items-center gap-2 rounded-md border px-2.5 py-2 text-xs transition-colors ${
+        selected
+          ? 'border-gray-900 bg-gray-900 text-white'
+          : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+      }`}
+    >
+      <span className={`inline-flex h-5 w-5 items-center justify-center rounded ${selected ? 'bg-white/15' : 'bg-gray-100'}`}>
+        {icon}
+      </span>
+      <span>{label}</span>
+    </button>
+  )
+}
+
 function getProp<T>(node: Record<string, any>, path: string, fallback: T): T {
   const parts = path.split('.').filter(Boolean)
   let curr: any = node.props || {}
@@ -153,6 +220,11 @@ function getProp<T>(node: Record<string, any>, path: string, fallback: T): T {
     curr = curr[part]
   }
   return (curr === undefined ? fallback : curr) as T
+}
+
+function getStringArrayProp(node: Record<string, any>, path: string): string[] {
+  const raw = getProp<any>(node, path, [])
+  return Array.isArray(raw) ? raw.filter((item): item is string => typeof item === 'string') : []
 }
 
 function setPropInObject(base: Record<string, any> | undefined, path: string, value: unknown) {
@@ -197,13 +269,13 @@ export default function PropertiesPanel({
   )
 
   const supportsDataTab = Boolean(
-    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard'].includes(String(node.type)),
+    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'AISummary'].includes(String(node.type)),
   )
   const supportsStyleTab = Boolean(
-    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'Card', 'Div', 'Gauge'].includes(String(node.type)),
+    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'Card', 'Div', 'Gauge', 'AISummary'].includes(String(node.type)),
   )
   const supportsFr = Boolean(
-    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Gauge', 'SlicerCard'].includes(String(node.type)),
+    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Gauge', 'SlicerCard', 'AISummary'].includes(String(node.type)),
   )
 
   React.useEffect(() => {
@@ -302,6 +374,100 @@ export default function PropertiesPanel({
 
           {selectedPath && (
             <>
+              {activeTab === 'data' && node.type === 'AISummary' && (
+                <div className="space-y-3 rounded border border-gray-200 p-2.5">
+                  <TextField
+                    label="Nome da Task/Agente"
+                    value={String(getProp(node, 'task.name', getProp(node, 'title', '')))}
+                    onChange={(v) => {
+                      const next = v.trim()
+                      onSetNodeProp(selectedPath, 'task.name', next || undefined)
+                      onSetNodeProp(selectedPath, 'title', next || undefined)
+                    }}
+                    placeholder="Ex.: Resumo diário comercial"
+                  />
+
+                  <TextAreaField
+                    label="Prompt"
+                    value={String(getProp(node, 'task.prompt', ''))}
+                    onChange={(v) => onSetNodeProp(selectedPath, 'task.prompt', v || undefined)}
+                    placeholder="Ex.: Resuma riscos, oportunidades e anomalias de vendas por filial e canal."
+                    rows={5}
+                  />
+
+                  <div className="space-y-1">
+                    <FieldLabel>Schedule</FieldLabel>
+                    <div className="grid grid-cols-[minmax(0,1fr)_92px_92px] gap-2">
+                      <select
+                        value={String(getProp(node, 'task.schedule.frequency', 'none'))}
+                        onChange={(e) => onSetNodeProp(selectedPath, 'task.schedule.frequency', e.target.value)}
+                        className="w-full rounded border border-gray-300 px-2 py-1 text-xs"
+                      >
+                        {AISUMMARY_FREQUENCY_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        value={String(getProp(node, 'task.schedule.hour', '08'))}
+                        disabled={String(getProp(node, 'task.schedule.frequency', 'none')) === 'none'}
+                        onChange={(e) => onSetNodeProp(selectedPath, 'task.schedule.hour', e.target.value)}
+                        className="w-full rounded border border-gray-300 px-2 py-1 text-xs disabled:bg-gray-100 disabled:text-gray-400"
+                      >
+                        {HOUR_OPTIONS.map((hour) => (
+                          <option key={hour} value={hour}>
+                            {hour}h
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        value={String(getProp(node, 'task.schedule.minute', '00'))}
+                        disabled={String(getProp(node, 'task.schedule.frequency', 'none')) === 'none'}
+                        onChange={(e) => onSetNodeProp(selectedPath, 'task.schedule.minute', e.target.value)}
+                        className="w-full rounded border border-gray-300 px-2 py-1 text-xs disabled:bg-gray-100 disabled:text-gray-400"
+                      >
+                        {MINUTE_OPTIONS.map((minute) => (
+                          <option key={minute} value={minute}>
+                            :{minute}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <FieldLabel>Notificações</FieldLabel>
+                    <div className="grid grid-cols-2 gap-2">
+                      <ToggleChip
+                        label="Email"
+                        icon={<Mail className="h-3.5 w-3.5" />}
+                        selected={getStringArrayProp(node, 'task.notifications.channels').includes('email')}
+                        onClick={() => {
+                          const current = getStringArrayProp(node, 'task.notifications.channels')
+                          const next = current.includes('email')
+                            ? current.filter((c) => c !== 'email')
+                            : [...current, 'email']
+                          onSetNodeProp(selectedPath, 'task.notifications.channels', next)
+                        }}
+                      />
+                      <ToggleChip
+                        label="WhatsApp"
+                        icon={<MessageCircle className="h-3.5 w-3.5" />}
+                        selected={getStringArrayProp(node, 'task.notifications.channels').includes('whatsapp')}
+                        onClick={() => {
+                          const current = getStringArrayProp(node, 'task.notifications.channels')
+                          const next = current.includes('whatsapp')
+                            ? current.filter((c) => c !== 'whatsapp')
+                            : [...current, 'whatsapp']
+                          onSetNodeProp(selectedPath, 'task.notifications.channels', next)
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {activeTab === 'data' && (node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'Header' || node.type === 'SlicerCard') && (
                 <TextField
                   label="Título"
@@ -490,7 +656,7 @@ export default function PropertiesPanel({
                     </div>
                   )}
 
-                  {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'Header' || node.type === 'SlicerCard' || node.type === 'Card') && (
+                  {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'Header' || node.type === 'SlicerCard' || node.type === 'Card' || node.type === 'AISummary') && (
                     <TextField
                       label="Título"
                       value={String(getProp(node, 'title', ''))}
@@ -506,7 +672,7 @@ export default function PropertiesPanel({
                     />
                   )}
 
-                  {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'SlicerCard' || node.type === 'Gauge') && (
+                  {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'SlicerCard' || node.type === 'Gauge' || node.type === 'AISummary') && (
                     <div className="space-y-2 rounded border border-gray-200 p-2">
                       <div className="text-[11px] font-medium text-gray-700">Container Style</div>
                       <ColorField
@@ -534,7 +700,7 @@ export default function PropertiesPanel({
                     </div>
                   )}
 
-                  {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'Header' || node.type === 'SlicerCard' || node.type === 'Card') && (
+                  {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'Header' || node.type === 'SlicerCard' || node.type === 'Card' || node.type === 'AISummary') && (
                     <div className="space-y-2 rounded border border-gray-200 p-2">
                       <div className="text-[11px] font-medium text-gray-700">Title Style</div>
                       <ColorField
@@ -555,6 +721,56 @@ export default function PropertiesPanel({
                         />
                       </div>
                     </div>
+                  )}
+
+                  {node.type === 'AISummary' && (
+                    <>
+                      <div className="space-y-2 rounded border border-gray-200 p-2">
+                        <div className="text-[11px] font-medium text-gray-700">Texto dos Itens</div>
+                        <ColorField
+                          label="itemTextStyle.color"
+                          value={String(getProp(node, 'itemTextStyle.color', ''))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'itemTextStyle.color', v || undefined)}
+                        />
+                        <div className="grid grid-cols-2 gap-2">
+                          <NumberField
+                            label="itemTextStyle.fontSize"
+                            value={Number(getProp(node, 'itemTextStyle.fontSize', '')) || ''}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'itemTextStyle.fontSize', v)}
+                          />
+                          <NumberField
+                            label="itemGap"
+                            value={Number(getProp(node, 'itemGap', '')) || ''}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'itemGap', v)}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2 rounded border border-gray-200 p-2">
+                        <div className="text-[11px] font-medium text-gray-700">Ícones</div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <NumberField
+                            label="iconBoxSize"
+                            value={Number(getProp(node, 'iconBoxSize', '')) || ''}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'iconBoxSize', v)}
+                          />
+                          <NumberField
+                            label="iconSize"
+                            value={Number(getProp(node, 'iconSize', '')) || ''}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'iconSize', v)}
+                          />
+                          <NumberField
+                            label="iconGap"
+                            value={Number(getProp(node, 'iconGap', '')) || ''}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'iconGap', v)}
+                          />
+                          <NumberField
+                            label="iconBoxRadius"
+                            value={Number(getProp(node, 'iconBoxRadius', '')) || ''}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'iconBoxRadius', v)}
+                          />
+                        </div>
+                      </div>
+                    </>
                   )}
 
                   {node.type === 'Header' && (
@@ -602,7 +818,7 @@ export default function PropertiesPanel({
                     </div>
                   )}
 
-                  {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'SlicerCard' || node.type === 'Gauge') && (
+                  {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'SlicerCard' || node.type === 'Gauge' || node.type === 'AISummary') && (
                     <CheckboxField
                       label="Borderless"
                       checked={Boolean(getProp(node, 'borderless', false))}

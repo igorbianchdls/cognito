@@ -550,6 +550,18 @@ export const catalog = {
         itemTextStyle: TitleStyleSchema.optional(),
         containerStyle: ContainerStyleSchema.optional(),
         borderless: z.boolean().optional(),
+        task: z.object({
+          name: z.string().optional(),
+          prompt: z.string().optional(),
+          schedule: z.object({
+            frequency: z.enum(['none', 'daily', 'weekly', 'monthly']).optional(),
+            hour: z.string().optional(),
+            minute: z.string().optional(),
+          }).partial().optional(),
+          notifications: z.object({
+            channels: z.array(z.enum(['email', 'whatsapp'])).default([]).optional(),
+          }).partial().optional(),
+        }).partial().optional(),
       }).strict(),
       hasChildren: false,
     },

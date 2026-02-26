@@ -137,6 +137,13 @@ Padroes:
 - limit padrao de 5-12 conforme caso.
 - orderBy normalmente por measure desc (ranking) ou dimension asc (serie temporal).
 
+### AISummary
+- Uso: card de resumo/insights de IA no dashboard (texto curto em bullets com icones).
+- Ideal para "resumo diario/semanal", alertas e highlights executivos.
+- Pode carregar configuracao de task/agente em `props.task` (nome, prompt, schedule, notificacoes).
+- Nao usar como substituto de KPI/chart; usar como complemento narrativo.
+- Em layout de linha, usar `fr` e evitar row isolada desnecessaria.
+
 ## Contrato Minimo de Componentes (JSON Render atual)
 Objetivo: reduzir erro de compatibilidade do agente. Use estes formatos como base.
 
@@ -188,6 +195,18 @@ Objetivo: reduzir erro de compatibilidade do agente. Use estes formatos como bas
 - `props.interaction` (filtro por clique, se aplicavel)
 - `props.fr` para layout em linha
 
+### AISummary
+- `props.title` (titulo visual do card)
+- `props.items` (lista de bullets com `icon`, `text`, `iconBgColor?`, `iconColor?`)
+- `props.task` (configuracao da task do agente, opcional)
+  - `task.name`
+  - `task.prompt`
+  - `task.schedule.frequency` (`none`, `daily`, `weekly`, `monthly`)
+  - `task.schedule.hour`, `task.schedule.minute`
+  - `task.notifications.channels` (`email`, `whatsapp`)
+- `props.fr` para layout em linha
+- `props.containerStyle`, `titleStyle`, `itemTextStyle` (opcional)
+
 ### SlicerCard
 - `props.title`
 - `props.fields` (lista de filtros)
@@ -229,13 +248,15 @@ Objetivo: reduzir erro de compatibilidade do agente. Use estes formatos como bas
 - Nem todo visual tem suporte a drill avancado.
 - Tabela/Pivot podem nao estar disponiveis no renderer atual; se usuario pedir, oferecer alternativa (Bar + KPI + export/CSV) ou explicar limitacao.
 - Time intelligence avancado pode exigir `dimension`/`dimensionExpr` manual dependendo do model/catalogo.
+- `AISummary` e visual/configuracional: renderer nao executa task, agendamento ou envio (backend de automacao e camada separada).
 
 ## Validacao de Compatibilidade (antes de entregar)
-- Componente existe no renderer atual (Theme, Header, Div, KPI, BarChart, LineChart, PieChart, SlicerCard etc.).
+- Componente existe no renderer atual (Theme, Header, Div, KPI, BarChart, LineChart, PieChart, SlicerCard, AISummary etc.).
 - Props principais estao em chaves esperadas (`props`, `children`, `dataQuery`, `nivo`, `interaction`, `drill`).
 - `fr` usado apenas para layout relativo de filhos em `Div` (principalmente em `direction: row`).
 - `height` definido para charts (evita visual quebrado/baixo demais).
 - `format` coerente com measure (currency/number/percent).
+- Em serie temporal, preferir `dimension: "periodo"` + catalogo; usar `dimensionExpr` manual somente se necessario e sempre derivado do catalogo.
 
 ## Mapeamento de Negocio -> Query (heuristicas praticas)
 
@@ -249,6 +270,7 @@ Objetivo: reduzir erro de compatibilidade do agente. Use estes formatos como bas
 - Gasto total: SUM(c.valor_total) quando permitido.
 - Ticket medio compras: AVG(c.valor_total) quando permitido.
 - Pedidos: COUNT() ou COUNT_DISTINCT(id) conforme catalogo.
+- Serie temporal em `compras.compras`: preferir `dimension = "periodo"`; se usar `dimensionExpr` manual, seguir o catalogo atual (defaultTimeField de `compras.compras` e `legacyDimensionExprByGrain`, hoje baseado em `data_pedido`).
 
 ### Financeiro
 - AP/AR valor total: SUM(valor_liquido) (ou alias permitido no catalogo).
@@ -310,6 +332,7 @@ Fazer no maximo 1 pergunta de clarificacao se faltar algo critico:
 - Entregar JSON invalido.
 - Responder com pseudo-SQL em vez de dataQuery.
 - Ignorar filtros de periodo quando pedido e temporal.
+- Hardcode de `dimensionExpr` temporal sem checar `defaultTimeField` / `legacyDimensionExprByGrain` do catalogo (ex.: trocar `data_pedido` por `data_emissao` por suposicao).
 - Tratar estoque.estoques_atual como serie historica de saldo por de/ate.
 - Inventar props de componente fora do contrato atual do renderer.
 - Entregar dashboard "bonito" mas sem queries compatveis com catalogo.
