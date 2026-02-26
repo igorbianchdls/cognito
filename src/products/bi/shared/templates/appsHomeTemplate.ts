@@ -26,15 +26,15 @@ export const APPS_HOME_TEMPLATE_TEXT = JSON.stringify([
           { value: 'matriz', label: 'Matriz' }, { value: 'filial-1', label: 'Filial 1' }, { value: 'filial-2', label: 'Filial 2' }
         ] } }
       ] } },
-      { type: "AISummary", props: { title: "Resumo da IA", containerStyle: { margin: "12px 16px 0", padding: 12 }, items: [
-        { icon: "brain", text: "Painel consolidado ajuda a cruzar caixa, vendas e compras para decisões semanais." },
-        { icon: "activity", text: "Mudanças bruscas em AP/AR normalmente aparecem primeiro nas distribuições por centro e filial." },
-        { icon: "badgeCheck", text: "Use filtros por status e filial para validar se a variação é operacional ou de calendário." }
-      ] } },
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "KPI", props: { title: "Recebidos (Período)", valuePath: "financeiro.kpis.recebidos_mes", format: "currency", titleStyle: { fontWeight: 600, fontSize: 12, color: "#64748b" }, valueStyle: { fontWeight: 700, fontSize: 24, color: "#0f172a" } } },
         { type: "KPI", props: { title: "Pagos (Período)", valuePath: "financeiro.kpis.pagos_mes", format: "currency" } },
         { type: "KPI", props: { title: "Geração de Caixa", valuePath: "financeiro.kpis.geracao_caixa", format: "currency", valueStyle: { fontSize: 22 } } }
+        ,{ type: "AISummary", props: { fr: 1, title: "Resumo da IA", items: [
+          { icon: "brain", text: "Painel consolidado ajuda a cruzar caixa, vendas e compras para decisões semanais." },
+          { icon: "activity", text: "Mudanças bruscas em AP/AR normalmente aparecem primeiro nas distribuições por centro e filial." },
+          { icon: "badgeCheck", text: "Use filtros por status e filial para validar se a variação é operacional ou de calendário." }
+        ] } }
       ]},
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "BarChart", props: { title: "AP por Fornecedor", dataQuery: { model: "financeiro.contas_pagar", dimension: "fornecedor", measure: "SUM(valor_liquido)", filters: {}, orderBy: { field: "measure", dir: "desc" }, limit: 6 }, format: "currency", height: 200, nivo: { layout: 'horizontal' } } },

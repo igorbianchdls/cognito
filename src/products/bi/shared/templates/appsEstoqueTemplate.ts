@@ -39,18 +39,6 @@ export const APPS_ESTOQUE_TEMPLATE_TEXT = JSON.stringify(
           },
         },
         {
-          type: 'AISummary',
-          props: {
-            title: 'Resumo da IA',
-            containerStyle: { margin: '12px 16px 0', padding: 12 },
-            items: [
-              { icon: 'package', text: 'Itens com maior valor imobilizado merecem monitoramento de giro e cobertura por almoxarifado.' },
-              { icon: 'activity', text: 'Movimentações por tipo ajudam a separar consumo real de ajustes operacionais.' },
-              { icon: 'triangleAlert', text: 'Rupturas e excesso costumam aparecer em pontos específicos antes do consolidado.' },
-            ],
-          },
-        },
-        {
           type: 'Div',
           props: { direction: 'row', gap: 12, padding: 16, justify: 'start', align: 'start', childGrow: true },
           children: [
@@ -98,6 +86,18 @@ export const APPS_ESTOQUE_TEMPLATE_TEXT = JSON.stringify(
                 format: 'number',
                 height: 240,
                 nivo: { layout: 'horizontal' },
+              },
+            },
+            {
+              type: 'AISummary',
+              props: {
+                fr: 1,
+                title: 'Resumo da IA',
+                items: [
+                  { icon: 'package', text: 'Itens com maior valor imobilizado merecem monitoramento de giro e cobertura por almoxarifado.' },
+                  { icon: 'activity', text: 'Movimentações por tipo ajudam a separar consumo real de ajustes operacionais.' },
+                  { icon: 'triangleAlert', text: 'Rupturas e excesso costumam aparecer em pontos específicos antes do consolidado.' },
+                ],
               },
             },
           ],

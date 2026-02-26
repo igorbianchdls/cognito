@@ -24,11 +24,6 @@ export const APPS_VENDAS_TEMPLATE_TEXT = JSON.stringify([
     },
     children: [
       { type: "Header", props: { title: "Dashboard de Vendas", subtitle: "Principais indicadores e cortes", align: "center", controlsPosition: "right", datePicker: { visible: true, mode: "range", position: "right", storePath: "filters.dateRange", actionOnChange: { type: "refresh_data" }, style: { padding: 6, fontFamily: "Barlow", fontSize: 12 } } } },
-      { type: "AISummary", props: { title: "Resumo da IA", containerStyle: { margin: "12px 16px 0", padding: 12 }, items: [
-        { icon: "trendingUp", text: "Receita concentrada em poucos clientes; monitore dependência dos top compradores." },
-        { icon: "sparkles", text: "Canais com melhor desempenho tendem a manter ticket médio acima da média do período." },
-        { icon: "triangleAlert", text: "Quedas em filiais específicas podem distorcer o resultado consolidado do mês." }
-      ] } },
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "KPI", props: { fr: 1, title: "Vendas", format: "currency", borderless: true, dataQuery: { model: "vendas.pedidos", measure: "SUM(p.valor_total)", filters: {} } } },
         { type: "KPI", props: { fr: 1, title: "Pedidos", format: "number", borderless: true, dataQuery: { model: "vendas.pedidos", measure: "COUNT()", filters: {} } } },
@@ -58,6 +53,11 @@ export const APPS_VENDAS_TEMPLATE_TEXT = JSON.stringify([
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "BarChart", props: { fr: 1, title: "Pedidos por Mês", dataQuery: { model: "vendas.pedidos", dimension: "mes", dimensionExpr: "TO_CHAR(DATE_TRUNC('month', data_pedido), 'YYYY-MM')", measure: "COUNT()", filters: {}, orderBy: { field: "dimension", dir: "asc" }, limit: 12 }, interaction: { clickAsFilter: false }, format: "number", height: 220, nivo: { layout: 'vertical' } } },
         { type: "BarChart", props: { fr: 1, title: "Ticket Médio por Mês", dataQuery: { model: "vendas.pedidos", dimension: "mes", dimensionExpr: "TO_CHAR(DATE_TRUNC('month', data_pedido), 'YYYY-MM')", measure: "AVG(valor_total)", filters: {}, orderBy: { field: "dimension", dir: "asc" }, limit: 12 }, interaction: { clickAsFilter: false }, format: "currency", height: 220, nivo: { layout: 'vertical' } } }
+        ,{ type: "AISummary", props: { fr: 1, title: "Resumo da IA", items: [
+          { icon: "trendingUp", text: "Receita concentrada em poucos clientes; monitore dependência dos top compradores." },
+          { icon: "sparkles", text: "Canais com melhor desempenho tendem a manter ticket médio acima da média do período." },
+          { icon: "triangleAlert", text: "Quedas em filiais específicas podem distorcer o resultado consolidado do mês." }
+        ] } }
       ]},
 
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [

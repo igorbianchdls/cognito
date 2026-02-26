@@ -32,16 +32,30 @@ export const APPS_DOCUMENTOS_TEMPLATE_TEXT = JSON.stringify(
           },
         },
         {
-          type: 'AISummary',
+          type: 'Div',
           props: {
-            title: 'Resumo da IA',
-            containerStyle: { margin: '12px 16px 0', padding: 12 },
-            items: [
-              { icon: 'badgeCheck', text: 'Monitorar templates e documentos gerados evita retrabalho em operações recorrentes.' },
-              { icon: 'sparkles', text: 'Picos de geração podem indicar campanhas, faturamento ou períodos de renovação.' },
-              { icon: 'triangleAlert', text: 'Documentos pendentes de envio/assinatura devem ser acompanhados por status.' },
-            ],
+            direction: 'row',
+            gap: 12,
+            padding: 16,
+            justify: 'start',
+            align: 'start',
+            childGrow: true,
           },
+          children: [
+            {
+              type: 'AISummary',
+              props: {
+                fr: 2,
+                title: 'Resumo da IA',
+                items: [
+                  { icon: 'badgeCheck', text: 'Monitorar templates e documentos gerados evita retrabalho em operações recorrentes.' },
+                  { icon: 'sparkles', text: 'Picos de geração podem indicar campanhas, faturamento ou períodos de renovação.' },
+                  { icon: 'triangleAlert', text: 'Documentos pendentes de envio/assinatura devem ser acompanhados por status.' },
+                ],
+              },
+            },
+            { type: 'KPI', props: { fr: 1, title: 'Últimos 30 dias', valuePath: 'documentos.kpis.ultimos_30_dias', format: 'number' } },
+          ],
         },
         {
           type: 'Div',
@@ -74,7 +88,6 @@ export const APPS_DOCUMENTOS_TEMPLATE_TEXT = JSON.stringify(
             { type: 'KPI', props: { title: 'Pendentes de Geração', valuePath: 'documentos.kpis.pendentes_geracao', format: 'number' } },
             { type: 'KPI', props: { title: 'Com Erro', valuePath: 'documentos.kpis.com_erro', format: 'number' } },
             { type: 'KPI', props: { title: 'Assinados', valuePath: 'documentos.kpis.assinados', format: 'number' } },
-            { type: 'KPI', props: { title: 'Últimos 30 dias', valuePath: 'documentos.kpis.ultimos_30_dias', format: 'number' } },
           ],
         },
       ],
