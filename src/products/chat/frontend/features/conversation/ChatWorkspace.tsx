@@ -6,6 +6,7 @@ import PageContainer from "@/components/layout/PageContainer";
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { ChatPanel, SandboxPanel } from "@/chat/ui";
+import { useChatConversationUiState } from "@/products/chat/frontend/features/conversation/ui-state/useChatConversationUiState";
 
 export type ChatEngineId =
   | "claude-sonnet"
@@ -31,10 +32,14 @@ export default function ChatWorkspace({
   autoStartSandbox,
   initialEngine,
 }: ChatWorkspaceProps) {
-  const [showSandbox, setShowSandbox] = useState(false);
-  const [sandboxExpanded, setSandboxExpanded] = useState(false);
+  const {
+    artifactOpen,
+    setArtifactOpen,
+    artifactExpanded,
+    setArtifactExpanded,
+  } = useChatConversationUiState({ chatId: initialChatId });
   const [chatId, setChatId] = useState<string | null>(null);
-  const splitOpen = showSandbox && !sandboxExpanded;
+  const splitOpen = artifactOpen && !artifactExpanded;
 
   return (
     <SidebarProvider>
@@ -52,7 +57,7 @@ export default function ChatWorkspace({
               >
                 <div
                   className={[
-                    sandboxExpanded ? "hidden" : "h-full min-h-0 min-w-0",
+                    artifactExpanded ? "hidden" : "h-full min-h-0 min-w-0",
                     splitOpen ? "w-full lg:basis-[33.333%] lg:max-w-[33.333%] lg:min-w-[360px]" : "w-full",
                   ].join(' ')}
                 >
@@ -66,10 +71,10 @@ export default function ChatWorkspace({
                     <ChatPanel
                       onOpenSandbox={(id) => {
                         setChatId(id ?? null);
-                        setShowSandbox(true);
-                        setSandboxExpanded(false);
+                        setArtifactOpen(true);
+                        setArtifactExpanded(false);
                       }}
-                      withSideMargins={!showSandbox}
+                      withSideMargins={!artifactOpen}
                       redirectOnFirstMessage={redirectOnFirstMessage}
                       initialChatId={initialChatId}
                       initialMessage={initialMessage}
@@ -81,7 +86,7 @@ export default function ChatWorkspace({
                 </div>
                 <div
                   className={[
-                    !showSandbox ? "hidden" : "h-full min-h-0 min-w-0",
+                    !artifactOpen ? "hidden" : "h-full min-h-0 min-w-0",
                     splitOpen ? "w-full lg:basis-[66.667%] lg:min-w-0" : "w-full",
                   ].join(' ')}
                 >
@@ -96,11 +101,11 @@ export default function ChatWorkspace({
                       className={splitOpen ? "border-0 rounded-none" : undefined}
                       chatId={chatId ?? undefined}
                       onClose={() => {
-                        setShowSandbox(false);
-                        setSandboxExpanded(false);
+                        setArtifactOpen(false);
+                        setArtifactExpanded(false);
                       }}
-                      onExpand={() => setSandboxExpanded(!sandboxExpanded)}
-                      expanded={sandboxExpanded}
+                      onExpand={() => setArtifactExpanded(!artifactExpanded)}
+                      expanded={artifactExpanded}
                     />
                   </div>
                 </div>
