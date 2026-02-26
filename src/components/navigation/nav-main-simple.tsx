@@ -45,7 +45,7 @@ export function NavMainSimple({
               isActive={item.isActive}
             >
               {item.icon && <item.icon style={{ width: iconSizePx, height: iconSizePx }} />}
-              <span style={itemTextStyle}>{item.title}</span>
+              <span className="group-data-[collapsible=icon]:hidden" style={itemTextStyle}>{item.title}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         ))}

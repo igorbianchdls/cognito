@@ -53,7 +53,7 @@ export function NavAirtable({
             isActive={pathname === "/airtable"}
           >
             <Table className="w-3 h-3" />
-            <span style={itemTextStyle}>Airtable</span>
+            <span className="group-data-[collapsible=icon]:hidden" style={itemTextStyle}>Airtable</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
 
@@ -65,7 +65,7 @@ export function NavAirtable({
               isActive={pathname.startsWith(`/airtable/${schema.id}`)}
             >
               <Table className="w-3 h-3 opacity-50" />
-              <span style={itemTextStyle}>{schema.name}</span>
+              <span className="group-data-[collapsible=icon]:hidden" style={itemTextStyle}>{schema.name}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         ))}

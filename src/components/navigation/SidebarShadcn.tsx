@@ -217,11 +217,11 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
           <button
             type="button"
             onClick={handleNewChat}
-            className="w-full h-8 inline-flex items-center justify-center gap-2 rounded-md bg-white border border-gray-200 text-black text-sm hover:bg-gray-50"
+            className="w-full h-8 inline-flex items-center justify-center gap-2 rounded-md bg-white border border-gray-200 text-black text-sm hover:bg-gray-50 group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:gap-0"
             title="Novo Chat"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Novo Chat</span>
+            <span className="group-data-[collapsible=icon]:hidden">Novo Chat</span>
           </button>
         </div>
         <NavMainSimple items={dataWithActiveState.navMain} groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} iconSizePx={finalIconSizePx} />
@@ -234,10 +234,10 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
             {navigationData.integrations.map((integration) => (
               <SidebarMenuItem key={integration.title}>
                 <SidebarMenuButton tooltip={integration.title}>
-                  <span style={{ width: finalIconSizePx, height: finalIconSizePx }} className="inline-flex items-center justify-center">
+                  <span data-sidebar-icon style={{ width: finalIconSizePx, height: finalIconSizePx }} className="inline-flex items-center justify-center">
                     <integration.icon className="w-full h-full" backgroundColor="transparent" />
                   </span>
-                  <span style={finalItemTextStyle}>{integration.title}</span>
+                  <span className="group-data-[collapsible=icon]:hidden" style={finalItemTextStyle}>{integration.title}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
