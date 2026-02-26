@@ -83,6 +83,45 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
       frame: { variant: 'hud', cornerSize: 10, cornerWidth: 2 },
     },
   };
+  const themeFxPresetMap: Record<string, { backgroundPreset?: string; cardStylePreset?: string; borderPreset?: string }> = {
+    none: { backgroundPreset: undefined, cardStylePreset: 'default', borderPreset: 'hud_classic' },
+    'dot-grid': { backgroundPreset: 'dot-grid', cardStylePreset: 'glass-dark', borderPreset: 'sharp_clean' },
+    'dot-grid-light': { backgroundPreset: 'dot-grid-light', cardStylePreset: 'glass-light', borderPreset: 'rounded_minimal' },
+    'dot-grid-dense': { backgroundPreset: 'dot-grid-dense', cardStylePreset: 'glass-dark', borderPreset: 'sharp_clean' },
+    'dot-grid-fade': { backgroundPreset: 'dot-grid-fade', cardStylePreset: 'glass-light', borderPreset: 'soft_card' },
+    'matrix-glass-mono': { backgroundPreset: 'matrix-glass-mono', cardStylePreset: 'glass-dark', borderPreset: 'hud_classic' },
+    'matrix-glass-light': { backgroundPreset: 'matrix-glass-light', cardStylePreset: 'glass-light', borderPreset: 'soft_card' },
+  };
+  const themeFxOptions = [
+    { value: 'custom', label: '(custom)' },
+    ...dashboardBackgroundPresetOptions.map((o) => ({ value: o.value, label: o.label })),
+  ];
+
+  function applyBorderPresetToTheme(th: any, presetKey: string) {
+    const preset = borderPresets[presetKey];
+    if (!preset) return;
+    th.props.managers = th.props.managers || {};
+    th.props.managers.border = th.props.managers.border || {};
+    const border = th.props.managers.border;
+
+    if (preset.style !== undefined) border.style = preset.style;
+    else delete border.style;
+    if (preset.width !== undefined) border.width = preset.width;
+    else delete border.width;
+    if (preset.radius !== undefined) border.radius = preset.radius;
+    else delete border.radius;
+    if (preset.shadow !== undefined) border.shadow = preset.shadow;
+    else delete border.shadow;
+
+    if (preset.frame) {
+      border.frame = (border.frame && typeof border.frame === 'object') ? border.frame : {};
+      border.frame.variant = preset.frame.variant;
+      border.frame.cornerSize = preset.frame.cornerSize;
+      border.frame.cornerWidth = preset.frame.cornerWidth;
+    } else {
+      delete border.frame;
+    }
+  }
 
   function readCurrent(): { name: string; headerTheme: string; managers: any } {
     try {
@@ -158,6 +197,19 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
     const v = String(current.managers?.cardStylePreset || '').trim();
     return cardStylePresetOptions.some((o) => o.value === v) ? v : 'default';
   })();
+  const themeFxPreset = (() => {
+    const currentBg = dashboardBgPreset;
+    const currentCard = cardStylePreset;
+    for (const [key, preset] of Object.entries(themeFxPresetMap)) {
+      const presetBg = preset.backgroundPreset ?? 'none';
+      const presetCard = preset.cardStylePreset ?? 'default';
+      const sameBg = currentBg === presetBg;
+      const sameCard = currentCard === presetCard;
+      const sameBorder = !preset.borderPreset || borderPresetKey === preset.borderPreset;
+      if (sameBg && sameCard && sameBorder) return key;
+    }
+    return 'custom';
+  })();
 
   return (
     <div className="mt-4 rounded-md bg-white p-3 border border-gray-200">
@@ -184,19 +236,24 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
           </select>
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-xs text-gray-700 w-20">Fundo FX</label>
+          <label className="text-xs text-gray-700 w-20">Tema FX</label>
           <select
             disabled={disabled}
             className="text-xs border border-gray-300 rounded px-2 py-1"
-            value={dashboardBgPreset}
+            value={themeFxPreset}
             onChange={(e) => updateTheme((th: any) => {
-              th.props.managers = th.props.managers || {};
               const v = e.target.value;
-              if (v && v !== 'none') th.props.managers.backgroundPreset = v;
+              if (v === 'custom') return;
+              const preset = themeFxPresetMap[v] || { backgroundPreset: v };
+              th.props.managers = th.props.managers || {};
+              if (preset.backgroundPreset && preset.backgroundPreset !== 'none') th.props.managers.backgroundPreset = preset.backgroundPreset;
               else delete th.props.managers.backgroundPreset;
+              if (preset.cardStylePreset && preset.cardStylePreset !== 'default') th.props.managers.cardStylePreset = preset.cardStylePreset;
+              else delete th.props.managers.cardStylePreset;
+              if (preset.borderPreset) applyBorderPresetToTheme(th, preset.borderPreset);
             })}
           >
-            {dashboardBackgroundPresetOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            {themeFxOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </div>
         <div className="flex items-center gap-2">
@@ -208,29 +265,7 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
             onChange={(e) => updateTheme((th: any) => {
               const presetKey = e.target.value;
               if (presetKey === 'custom') return;
-              const preset = borderPresets[presetKey];
-              if (!preset) return;
-              th.props.managers = th.props.managers || {};
-              th.props.managers.border = th.props.managers.border || {};
-              const border = th.props.managers.border;
-
-              if (preset.style !== undefined) border.style = preset.style;
-              else delete border.style;
-              if (preset.width !== undefined) border.width = preset.width;
-              else delete border.width;
-              if (preset.radius !== undefined) border.radius = preset.radius;
-              else delete border.radius;
-              if (preset.shadow !== undefined) border.shadow = preset.shadow;
-              else delete border.shadow;
-
-              if (preset.frame) {
-                border.frame = (border.frame && typeof border.frame === 'object') ? border.frame : {};
-                border.frame.variant = preset.frame.variant;
-                border.frame.cornerSize = preset.frame.cornerSize;
-                border.frame.cornerWidth = preset.frame.cornerWidth;
-              } else {
-                delete border.frame;
-              }
+              applyBorderPresetToTheme(th, presetKey);
             })}
           >
             <option value="custom">(custom)</option>
