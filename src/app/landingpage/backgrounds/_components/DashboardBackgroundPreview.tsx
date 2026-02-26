@@ -389,6 +389,34 @@ export default function DashboardBackgroundPreview({
             inset 0 1px 0 rgba(255, 255, 255, 0.04);
         }
 
+        .lp-bg-preview--dark .lp-db-card--kpi {
+          background:
+            linear-gradient(180deg, rgba(16, 24, 36, 0.84), rgba(10, 14, 22, 0.76)),
+            radial-gradient(circle at 12% 8%, rgba(96, 165, 250, 0.12), transparent 46%);
+          border-color: rgba(96, 165, 250, 0.14);
+        }
+
+        .lp-bg-preview--dark .lp-db-card--bars {
+          background:
+            linear-gradient(180deg, rgba(13, 21, 18, 0.82), rgba(10, 15, 14, 0.74)),
+            radial-gradient(circle at 88% 12%, rgba(52, 211, 153, 0.10), transparent 48%);
+          border-color: rgba(52, 211, 153, 0.12);
+        }
+
+        .lp-bg-preview--dark .lp-db-card--line {
+          background:
+            linear-gradient(180deg, rgba(14, 18, 28, 0.82), rgba(10, 13, 20, 0.74)),
+            radial-gradient(circle at 82% 16%, rgba(34, 211, 238, 0.08), transparent 46%);
+          border-color: rgba(34, 211, 238, 0.10);
+        }
+
+        .lp-bg-preview--dark .lp-db-card--mix {
+          background:
+            linear-gradient(180deg, rgba(23, 15, 28, 0.82), rgba(13, 10, 19, 0.74)),
+            radial-gradient(circle at 18% 14%, rgba(244, 114, 182, 0.10), transparent 48%);
+          border-color: rgba(244, 114, 182, 0.12);
+        }
+
         .lp-bg-preview--dark .lp-bg-preview__eyebrow {
           color: #cbd5e1;
         }

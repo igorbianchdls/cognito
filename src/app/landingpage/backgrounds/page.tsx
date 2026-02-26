@@ -9,10 +9,6 @@ const ITEMS = [
   { href: '/landingpage/backgrounds/matrix-glass', title: 'Matrix Glass (Color)' },
   { href: '/landingpage/backgrounds/matrix-glass-mono', title: 'Matrix Glass Mono' },
   { href: '/landingpage/backgrounds/matrix-glass-light', title: 'Matrix Glass Light' },
-  { href: '/landingpage/backgrounds/dot-grid', title: 'Dot Grid' },
-  { href: '/landingpage/backgrounds/dot-grid-light', title: 'Dot Grid Light' },
-  { href: '/landingpage/backgrounds/dot-grid-dense', title: 'Dot Grid Dense' },
-  { href: '/landingpage/backgrounds/dot-grid-fade', title: 'Dot Grid Fade' },
 ]
 
 export default function LandingBackgroundIndexPage() {
