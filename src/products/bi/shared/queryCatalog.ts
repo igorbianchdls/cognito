@@ -11,7 +11,8 @@ export type AppsTableName =
   | 'documentos.documentos'
   | 'estoque.estoques_atual'
   | 'estoque.movimentacoes'
-export type AppsModule = 'vendas' | 'compras' | 'financeiro' | 'contabilidade' | 'crm' | 'documentos' | 'estoque'
+  | 'trafegopago.desempenho_diario'
+export type AppsModule = 'vendas' | 'compras' | 'financeiro' | 'contabilidade' | 'crm' | 'documentos' | 'estoque' | 'trafegopago'
 
 export type AppsMetricFormat = 'currency' | 'number' | 'percent'
 export type AppsDimensionKind = 'attribute' | 'time'
@@ -63,6 +64,7 @@ const MONTH_EXPR_CRIADO = "TO_CHAR(DATE_TRUNC('month', criado_em), 'YYYY-MM')"
 const MONTH_EXPR_ESTOQUE_ATUALIZADO = "TO_CHAR(DATE_TRUNC('month', atualizado_em), 'YYYY-MM')"
 const MONTH_EXPR_MOVIMENTO = "TO_CHAR(DATE_TRUNC('month', data_movimento), 'YYYY-MM')"
 const MONTH_EXPR_CONTABIL_LANCAMENTO = "TO_CHAR(DATE_TRUNC('month', data_lancamento), 'YYYY-MM')"
+const MONTH_EXPR_TRAFEGO_DATA_REF = "TO_CHAR(DATE_TRUNC('month', data_ref), 'YYYY-MM')"
 
 export const APPS_QUERY_CATALOG: Record<AppsTableName, AppsTableCatalog> = {
   'vendas.pedidos': {
@@ -703,6 +705,62 @@ export const APPS_QUERY_CATALOG: Record<AppsTableName, AppsTableCatalog> = {
       { field: 'produto_id', label: 'Produto', type: 'id', operators: ['eq', 'in'] },
       { field: 'almoxarifado_id', label: 'Almoxarifado', type: 'id', operators: ['eq', 'in'] },
       { field: 'tipo_movimento', label: 'Tipo Movimento', type: 'enum', operators: ['eq', 'in'] },
+    ],
+  },
+  'trafegopago.desempenho_diario': {
+    table: 'trafegopago.desempenho_diario',
+    module: 'trafegopago',
+    description: 'Desempenho diário de tráfego pago (Meta Ads e Google Ads) por nível campaign/ad_group/ad.',
+    aliases: ['trafegopago-desempenho', 'trafegopago_desempenho', 'trafego-pago'],
+    metrics: [
+      { id: 'gasto', label: 'Gasto', format: 'currency', legacyMeasures: ['SUM(gasto)'] },
+      { id: 'receita_atribuida', label: 'Receita Atribuída', format: 'currency', legacyMeasures: ['SUM(receita_atribuida)'] },
+      { id: 'cliques', label: 'Cliques', format: 'number', legacyMeasures: ['SUM(cliques)'] },
+      { id: 'impressoes', label: 'Impressões', format: 'number', legacyMeasures: ['SUM(impressoes)'] },
+      { id: 'conversoes', label: 'Conversões', format: 'number', legacyMeasures: ['SUM(conversoes)'] },
+      { id: 'leads', label: 'Leads', format: 'number', legacyMeasures: ['SUM(leads)'] },
+      { id: 'linhas', label: 'Linhas', format: 'number', legacyMeasures: ['COUNT()'] },
+      {
+        id: 'roas',
+        label: 'ROAS',
+        format: 'number',
+        legacyMeasures: ['CASE WHEN SUM(gasto)=0 THEN 0 ELSE SUM(receita_atribuida)/SUM(gasto) END'],
+      },
+    ],
+    dimensions: [
+      { id: 'plataforma', label: 'Plataforma', kind: 'attribute', legacyDimension: 'plataforma' },
+      { id: 'nivel', label: 'Nível', kind: 'attribute', legacyDimension: 'nivel' },
+      { id: 'conta', label: 'Conta', kind: 'attribute', legacyDimension: 'conta' },
+      { id: 'conta_id', label: 'Conta ID', kind: 'attribute', legacyDimension: 'conta_id' },
+      { id: 'campanha', label: 'Campanha', kind: 'attribute', legacyDimension: 'campanha' },
+      { id: 'campanha_id', label: 'Campanha ID', kind: 'attribute', legacyDimension: 'campanha_id' },
+      { id: 'grupo', label: 'Grupo de Anúncio', kind: 'attribute', legacyDimension: 'grupo' },
+      { id: 'grupo_id', label: 'Grupo de Anúncio ID', kind: 'attribute', legacyDimension: 'grupo_id' },
+      { id: 'anuncio', label: 'Anúncio', kind: 'attribute', legacyDimension: 'anuncio' },
+      { id: 'anuncio_id', label: 'Anúncio ID', kind: 'attribute', legacyDimension: 'anuncio_id' },
+      {
+        id: 'periodo',
+        label: 'Periodo',
+        kind: 'time',
+        legacyDimension: 'periodo',
+        legacyDimensionExprByGrain: {
+          month: MONTH_EXPR_TRAFEGO_DATA_REF,
+        },
+      },
+    ],
+    defaultTimeField: 'data_ref',
+    filters: [
+      { field: 'tenant_id', label: 'Tenant', type: 'id', operators: ['eq'] },
+      { field: 'de', label: 'Data Inicial', type: 'date', operators: ['gte'] },
+      { field: 'ate', label: 'Data Final', type: 'date', operators: ['lte'] },
+      { field: 'plataforma', label: 'Plataforma', type: 'enum', operators: ['eq', 'in'] },
+      { field: 'nivel', label: 'Nível', type: 'enum', operators: ['eq', 'in'] },
+      { field: 'conta_id', label: 'Conta', type: 'id', operators: ['eq', 'in'] },
+      { field: 'campanha_id', label: 'Campanha', type: 'id', operators: ['eq', 'in'] },
+      { field: 'grupo_id', label: 'Grupo', type: 'id', operators: ['eq', 'in'] },
+      { field: 'anuncio_id', label: 'Anúncio', type: 'id', operators: ['eq', 'in'] },
+      { field: 'gasto_min', label: 'Gasto Min', type: 'number', operators: ['gte'] },
+      { field: 'gasto_max', label: 'Gasto Max', type: 'number', operators: ['lte'] },
     ],
   },
 }
