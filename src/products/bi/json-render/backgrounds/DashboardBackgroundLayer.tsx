@@ -165,6 +165,115 @@ function MatrixGlassBase({ mode }: { mode: "mono" | "light" }) {
   );
 }
 
+function OrbitalBase() {
+  return (
+    <>
+      {layer({ zIndex: 0, background: "#030508" }, "base")}
+      {layer({
+        zIndex: 1,
+        backgroundImage:
+          "linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px)",
+        backgroundSize: "48px 48px",
+      }, "grid")}
+      {layer({
+        zIndex: 2,
+        background:
+          "radial-gradient(circle at 50% 50%, rgba(0, 212, 255, 0.08), transparent 42%), radial-gradient(circle at 50% 50%, rgba(124, 58, 237, 0.06), transparent 60%)",
+      }, "rings")}
+      {layer({
+        zIndex: 3,
+        background:
+          "radial-gradient(circle at 12% 8%, rgba(124, 58, 237, 0.18), transparent 34%), radial-gradient(circle at 88% 82%, rgba(0, 212, 255, 0.16), transparent 34%), radial-gradient(circle at 30% 78%, rgba(16, 185, 129, 0.1), transparent 30%)",
+        filter: "blur(36px)",
+      }, "glow")}
+    </>
+  );
+}
+
+function BlueprintBase() {
+  return (
+    <>
+      {layer({
+        zIndex: 0,
+        background:
+          "radial-gradient(circle at 15% 18%, rgba(56, 189, 248, 0.16), transparent 36%), radial-gradient(circle at 84% 22%, rgba(14, 165, 233, 0.14), transparent 40%), radial-gradient(circle at 70% 82%, rgba(59, 130, 246, 0.12), transparent 42%), linear-gradient(180deg, #04111f 0%, #030c16 45%, #02070d 100%)",
+      }, "base")}
+      {layer({
+        zIndex: 1,
+        backgroundImage:
+          "linear-gradient(rgba(125, 211, 252, 0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(125, 211, 252, 0.045) 1px, transparent 1px), linear-gradient(rgba(14, 165, 233, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(14, 165, 233, 0.03) 1px, transparent 1px)",
+        backgroundSize: "72px 72px, 72px 72px, 18px 18px, 18px 18px",
+      }, "grid")}
+      {layer({
+        zIndex: 2,
+        background:
+          "radial-gradient(circle at center, rgba(148, 163, 184, 0.06), transparent 55%), linear-gradient(135deg, rgba(56, 189, 248, 0.05), transparent 45%, rgba(59, 130, 246, 0.04))",
+      }, "fx")}
+      {layer({
+        zIndex: 3,
+        background:
+          "repeating-linear-gradient(180deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 4px)",
+        opacity: 0.35,
+      }, "scanline")}
+    </>
+  );
+}
+
+function AuroraBase() {
+  return (
+    <>
+      {layer({ zIndex: 0, background: "#07080d" }, "base")}
+      {layer({
+        zIndex: 1,
+        background:
+          "radial-gradient(circle at 20% 10%, rgba(16, 185, 129, 0.08), transparent 30%), radial-gradient(circle at 80% 15%, rgba(59, 130, 246, 0.09), transparent 35%), radial-gradient(circle at 50% 100%, rgba(168, 85, 247, 0.08), transparent 40%)",
+      }, "ambience")}
+      {layer({
+        zIndex: 2,
+        background:
+          "radial-gradient(circle at 8% 22%, rgba(16,185,129,0.20), transparent 30%), radial-gradient(circle at 88% 16%, rgba(59,130,246,0.20), transparent 32%), radial-gradient(circle at 44% 92%, rgba(168,85,247,0.18), transparent 34%)",
+        filter: "blur(58px)",
+        opacity: 0.8,
+      }, "aurora")}
+      {layer({
+        zIndex: 3,
+        backgroundImage:
+          "linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px)",
+        backgroundSize: "56px 56px",
+        maskImage: "radial-gradient(circle at center, black 35%, transparent 95%)",
+        WebkitMaskImage: "radial-gradient(circle at center, black 35%, transparent 95%)",
+      }, "grid")}
+    </>
+  );
+}
+
+function MatrixGlassColorBase() {
+  return (
+    <>
+      {layer({
+        zIndex: 0,
+        background:
+          "radial-gradient(circle at 8% 12%, rgba(99, 102, 241, 0.16), transparent 34%), radial-gradient(circle at 90% 14%, rgba(236, 72, 153, 0.12), transparent 34%), radial-gradient(circle at 82% 84%, rgba(16, 185, 129, 0.12), transparent 36%), #06070b",
+      }, "base")}
+      {layer({
+        zIndex: 1,
+        backgroundImage:
+          "linear-gradient(rgba(148, 163, 184, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(148, 163, 184, 0.04) 1px, transparent 1px)",
+        backgroundSize: "40px 40px",
+      }, "grid")}
+      {layer({
+        zIndex: 2,
+        background:
+          "linear-gradient(120deg, rgba(255, 255, 255, 0.02), transparent 38%), linear-gradient(300deg, rgba(255, 255, 255, 0.02), transparent 42%)",
+      }, "glass")}
+      {layer({
+        zIndex: 3,
+        background: "radial-gradient(circle at center, transparent 35%, rgba(0, 0, 0, 0.42) 100%)",
+      }, "vignette")}
+    </>
+  );
+}
+
 function renderPreset(preset: DashboardBackgroundPreset) {
   switch (preset) {
     case "dot-grid":
@@ -175,6 +284,14 @@ function renderPreset(preset: DashboardBackgroundPreset) {
       return <DotGridBase mode="dark" dense />;
     case "dot-grid-fade":
       return <DotGridBase mode="dark" fade />;
+    case "orbital":
+      return <OrbitalBase />;
+    case "blueprint":
+      return <BlueprintBase />;
+    case "aurora":
+      return <AuroraBase />;
+    case "matrix-glass":
+      return <MatrixGlassColorBase />;
     case "matrix-glass-mono":
       return <MatrixGlassBase mode="mono" />;
     case "matrix-glass-light":

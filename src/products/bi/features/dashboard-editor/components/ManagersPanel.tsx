@@ -83,18 +83,103 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
       frame: { variant: 'hud', cornerSize: 10, cornerWidth: 2 },
     },
   };
-  const themeFxPresetMap: Record<string, { backgroundPreset?: string; cardStylePreset?: string; borderPreset?: string }> = {
+  const themeFxPresetMap: Record<string, {
+    backgroundPreset?: string;
+    cardStylePreset?: string;
+    borderPreset?: string;
+    borderColor?: string;
+    frameBaseColor?: string;
+    frameCornerColor?: string;
+    surface?: string;
+    h1Color?: string;
+    kpiTitleColor?: string;
+    kpiValueColor?: string;
+    colorScheme?: string[];
+  }> = {
     none: { backgroundPreset: undefined, cardStylePreset: 'default', borderPreset: 'hud_classic' },
-    'dot-grid': { backgroundPreset: 'dot-grid', cardStylePreset: 'glass-dark', borderPreset: 'sharp_clean' },
-    'dot-grid-light': { backgroundPreset: 'dot-grid-light', cardStylePreset: 'glass-light', borderPreset: 'rounded_minimal' },
-    'dot-grid-dense': { backgroundPreset: 'dot-grid-dense', cardStylePreset: 'glass-dark', borderPreset: 'sharp_clean' },
-    'dot-grid-fade': { backgroundPreset: 'dot-grid-fade', cardStylePreset: 'glass-light', borderPreset: 'soft_card' },
-    'matrix-glass-mono': { backgroundPreset: 'matrix-glass-mono', cardStylePreset: 'glass-dark', borderPreset: 'hud_classic' },
-    'matrix-glass-light': { backgroundPreset: 'matrix-glass-light', cardStylePreset: 'glass-light', borderPreset: 'soft_card' },
+    orbital: {
+      backgroundPreset: 'orbital',
+      cardStylePreset: 'glass-dark',
+      borderPreset: 'hud_classic',
+      borderColor: '#1f2937',
+      frameBaseColor: '#1f2937',
+      frameCornerColor: '#22d3ee',
+      surface: '#0b1114',
+      h1Color: '#eaf2f7',
+      kpiTitleColor: '#c7d2de',
+      kpiValueColor: '#f8fafc',
+      colorScheme: ['#22d3ee','#60a5fa','#a78bfa','#34d399','#f472b6','#f59e0b'],
+    },
+    blueprint: {
+      backgroundPreset: 'blueprint',
+      cardStylePreset: 'glass-dark',
+      borderPreset: 'hud_classic',
+      borderColor: '#20334a',
+      frameBaseColor: '#22384f',
+      frameCornerColor: '#38bdf8',
+      surface: '#08131f',
+      h1Color: '#e7f4ff',
+      kpiTitleColor: '#bad6eb',
+      kpiValueColor: '#f5fbff',
+      colorScheme: ['#38bdf8','#0ea5e9','#3b82f6','#22d3ee','#a78bfa','#34d399'],
+    },
+    aurora: {
+      backgroundPreset: 'aurora',
+      cardStylePreset: 'glass-dark',
+      borderPreset: 'soft_card',
+      borderColor: '#2a3342',
+      surface: '#0d1118',
+      h1Color: '#edf2fb',
+      kpiTitleColor: '#c7d2e1',
+      kpiValueColor: '#ffffff',
+      colorScheme: ['#10b981','#3b82f6','#a855f7','#22d3ee','#f472b6','#f59e0b'],
+    },
+    'matrix-glass': {
+      backgroundPreset: 'matrix-glass',
+      cardStylePreset: 'glass-dark',
+      borderPreset: 'hud_classic',
+      borderColor: '#2a2f3a',
+      frameBaseColor: '#2a2f3a',
+      frameCornerColor: '#8b5cf6',
+      surface: '#0c0f15',
+      h1Color: '#eef2f7',
+      kpiTitleColor: '#cbd5e1',
+      kpiValueColor: '#ffffff',
+      colorScheme: ['#8b5cf6','#ec4899','#10b981','#60a5fa','#22d3ee','#f59e0b'],
+    },
+    'matrix-glass-mono': {
+      backgroundPreset: 'matrix-glass-mono',
+      cardStylePreset: 'glass-dark',
+      borderPreset: 'hud_classic',
+      borderColor: '#1f2937',
+      frameBaseColor: '#1f2937',
+      frameCornerColor: '#34d399',
+      surface: '#0b1114',
+      h1Color: '#eaf2f7',
+      kpiTitleColor: '#c7d2de',
+      kpiValueColor: '#f8fafc',
+      colorScheme: ['#34d399','#10b981','#22d3ee','#60a5fa','#a78bfa','#f472b6'],
+    },
+    'matrix-glass-light': {
+      backgroundPreset: 'matrix-glass-light',
+      cardStylePreset: 'glass-light',
+      borderPreset: 'hud_classic',
+      borderColor: '#94a3b8',
+      frameBaseColor: '#cbd5e1',
+      frameCornerColor: '#2563eb',
+      surface: '#ffffff',
+      h1Color: '#0f172a',
+      kpiTitleColor: '#475569',
+      kpiValueColor: '#0f172a',
+      colorScheme: ['#2563eb','#10b981','#06b6d4','#8b5cf6','#f59e0b','#ef4444'],
+    },
   };
   const themeFxOptions = [
     { value: 'custom', label: '(custom)' },
-    ...dashboardBackgroundPresetOptions.map((o) => ({ value: o.value, label: o.label })),
+    { value: 'none', label: 'Nenhum' },
+    ...dashboardBackgroundPresetOptions
+      .filter((o) => ['orbital','blueprint','aurora','matrix-glass','matrix-glass-mono','matrix-glass-light'].includes(o.value))
+      .map((o) => ({ value: o.value, label: o.label })),
   ];
 
   function applyBorderPresetToTheme(th: any, presetKey: string) {
@@ -121,6 +206,53 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
     } else {
       delete border.frame;
     }
+  }
+
+  function applyThemeFxPresetToTheme(th: any, presetKey: string) {
+    const preset = themeFxPresetMap[presetKey];
+    th.props.managers = th.props.managers || {};
+    const m = th.props.managers;
+    if (!preset) {
+      if (presetKey && presetKey !== 'none') m.backgroundPreset = presetKey;
+      else delete m.backgroundPreset;
+      return;
+    }
+
+    if (preset.backgroundPreset && preset.backgroundPreset !== 'none') m.backgroundPreset = preset.backgroundPreset;
+    else delete m.backgroundPreset;
+
+    if (preset.cardStylePreset && preset.cardStylePreset !== 'default') m.cardStylePreset = preset.cardStylePreset;
+    else delete m.cardStylePreset;
+
+    if (preset.surface) m.surface = preset.surface;
+    else delete m.surface;
+
+    if (preset.borderPreset) applyBorderPresetToTheme(th, preset.borderPreset);
+
+    m.border = m.border || {};
+    if (preset.borderColor) m.border.color = preset.borderColor;
+    else delete m.border.color;
+    m.border.frame = (m.border.frame && typeof m.border.frame === 'object') ? m.border.frame : {};
+    if (preset.frameBaseColor) m.border.frame.baseColor = preset.frameBaseColor;
+    else delete m.border.frame.baseColor;
+    if (preset.frameCornerColor) m.border.frame.cornerColor = preset.frameCornerColor;
+    else delete m.border.frame.cornerColor;
+
+    m.h1 = m.h1 || {};
+    if (preset.h1Color) m.h1.color = preset.h1Color;
+    else delete m.h1.color;
+
+    m.kpi = m.kpi || {};
+    m.kpi.title = m.kpi.title || {};
+    m.kpi.value = m.kpi.value || {};
+    if (preset.kpiTitleColor) m.kpi.title.color = preset.kpiTitleColor;
+    else delete m.kpi.title.color;
+    if (preset.kpiValueColor) m.kpi.value.color = preset.kpiValueColor;
+    else delete m.kpi.value.color;
+
+    m.color = m.color || {};
+    if (preset.colorScheme) m.color.scheme = preset.colorScheme;
+    else delete m.color.scheme;
   }
 
   function readCurrent(): { name: string; headerTheme: string; managers: any } {
@@ -244,13 +376,7 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
             onChange={(e) => updateTheme((th: any) => {
               const v = e.target.value;
               if (v === 'custom') return;
-              const preset = themeFxPresetMap[v] || { backgroundPreset: v };
-              th.props.managers = th.props.managers || {};
-              if (preset.backgroundPreset && preset.backgroundPreset !== 'none') th.props.managers.backgroundPreset = preset.backgroundPreset;
-              else delete th.props.managers.backgroundPreset;
-              if (preset.cardStylePreset && preset.cardStylePreset !== 'default') th.props.managers.cardStylePreset = preset.cardStylePreset;
-              else delete th.props.managers.cardStylePreset;
-              if (preset.borderPreset) applyBorderPresetToTheme(th, preset.borderPreset);
+              applyThemeFxPresetToTheme(th, v);
             })}
           >
             {themeFxOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
