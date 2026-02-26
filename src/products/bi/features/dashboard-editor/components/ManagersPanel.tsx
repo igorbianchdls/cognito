@@ -94,6 +94,8 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
     h1Color?: string;
     kpiTitleColor?: string;
     kpiValueColor?: string;
+    slicerLabelColor?: string;
+    slicerOptionColor?: string;
     colorScheme?: string[];
   }> = {
     none: { backgroundPreset: undefined, cardStylePreset: 'default', borderPreset: 'hud_classic' },
@@ -108,6 +110,8 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
       h1Color: '#eaf2f7',
       kpiTitleColor: '#c7d2de',
       kpiValueColor: '#f8fafc',
+      slicerLabelColor: '#c7d2de',
+      slicerOptionColor: '#eaf2f7',
       colorScheme: ['#22d3ee','#60a5fa','#a78bfa','#34d399','#f472b6','#f59e0b'],
     },
     blueprint: {
@@ -121,6 +125,8 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
       h1Color: '#e7f4ff',
       kpiTitleColor: '#bad6eb',
       kpiValueColor: '#f5fbff',
+      slicerLabelColor: '#bad6eb',
+      slicerOptionColor: '#e7f4ff',
       colorScheme: ['#38bdf8','#0ea5e9','#3b82f6','#22d3ee','#a78bfa','#34d399'],
     },
     aurora: {
@@ -132,6 +138,8 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
       h1Color: '#edf2fb',
       kpiTitleColor: '#c7d2e1',
       kpiValueColor: '#ffffff',
+      slicerLabelColor: '#c7d2e1',
+      slicerOptionColor: '#edf2fb',
       colorScheme: ['#10b981','#3b82f6','#a855f7','#22d3ee','#f472b6','#f59e0b'],
     },
     'matrix-glass': {
@@ -145,6 +153,8 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
       h1Color: '#eef2f7',
       kpiTitleColor: '#cbd5e1',
       kpiValueColor: '#ffffff',
+      slicerLabelColor: '#cbd5e1',
+      slicerOptionColor: '#eef2f7',
       colorScheme: ['#8b5cf6','#ec4899','#10b981','#60a5fa','#22d3ee','#f59e0b'],
     },
     'matrix-glass-mono': {
@@ -158,6 +168,8 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
       h1Color: '#eaf2f7',
       kpiTitleColor: '#c7d2de',
       kpiValueColor: '#f8fafc',
+      slicerLabelColor: '#c7d2de',
+      slicerOptionColor: '#eaf2f7',
       colorScheme: ['#34d399','#10b981','#22d3ee','#60a5fa','#a78bfa','#f472b6'],
     },
     'matrix-glass-light': {
@@ -171,6 +183,8 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
       h1Color: '#0f172a',
       kpiTitleColor: '#475569',
       kpiValueColor: '#0f172a',
+      slicerLabelColor: '#475569',
+      slicerOptionColor: '#0f172a',
       colorScheme: ['#2563eb','#10b981','#06b6d4','#8b5cf6','#f59e0b','#ef4444'],
     },
   };
@@ -249,6 +263,14 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
     else delete m.kpi.title.color;
     if (preset.kpiValueColor) m.kpi.value.color = preset.kpiValueColor;
     else delete m.kpi.value.color;
+
+    m.slicer = m.slicer || {};
+    m.slicer.label = (m.slicer.label && typeof m.slicer.label === 'object') ? m.slicer.label : {};
+    m.slicer.option = (m.slicer.option && typeof m.slicer.option === 'object') ? m.slicer.option : {};
+    if (preset.slicerLabelColor) m.slicer.label.color = preset.slicerLabelColor;
+    else delete m.slicer.label.color;
+    if (preset.slicerOptionColor) m.slicer.option.color = preset.slicerOptionColor;
+    else delete m.slicer.option.color;
 
     m.color = m.color || {};
     if (preset.colorScheme) m.color.scheme = preset.colorScheme;
