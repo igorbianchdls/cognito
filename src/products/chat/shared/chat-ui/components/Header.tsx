@@ -71,16 +71,16 @@ export default function Header({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={handle(onStartSandbox, !busy)} className={busy ? 'pointer-events-none opacity-50' : ''}>
-              <Play className="w-4 h-4 mr-2" /> Iniciar sandbox
+              <Play className="w-4 h-4 mr-2" /> Iniciar computador
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handle(onStopSandbox, !busy && hasSandbox)} className={!hasSandbox || busy ? 'pointer-events-none opacity-50' : ''}>
-              <Square className="w-4 h-4 mr-2" /> Fechar sandbox
+              <Square className="w-4 h-4 mr-2" /> Fechar computador
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handle(onOpenArtifact, !busy)} className={busy ? 'pointer-events-none opacity-50' : ''}>
               <BarChart3 className="w-4 h-4 mr-2" /> Abrir Artifact
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handle(onWriteFiles, !busy)} className={busy ? 'pointer-events-none opacity-50' : ''}>
-              <FilePlus2 className="w-4 h-4 mr-2" /> Arquivos na Sandbox
+              <FilePlus2 className="w-4 h-4 mr-2" /> Arquivos no Computador
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

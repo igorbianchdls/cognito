@@ -45,7 +45,7 @@ export default function SandboxHeader({ onClose, onExpand, expanded, chatId }: P
         {onClose && (
           <button
             type="button"
-            aria-label="Close sandbox"
+            aria-label="Fechar computador"
             onClick={onClose}
             className="h-8 w-8 inline-flex items-center justify-center rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-800 ml-1"
           >

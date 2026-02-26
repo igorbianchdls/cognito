@@ -65,7 +65,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
 
   const startSandboxFromMenu = async () => {
     setMenuBusy(true)
-    try { await ensureStart(); } catch (err) { setSandboxStatus('error'); notifyError('sandbox', err, 'Falha ao iniciar sandbox') } finally { setMenuBusy(false) }
+    try { await ensureStart(); } catch (err) { setSandboxStatus('error'); notifyError('sandbox', err, 'Falha ao iniciar computador') } finally { setMenuBusy(false) }
   }
   const stopSandboxFromMenu = async () => {
     if (!chatId) return
@@ -78,11 +78,11 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
         setSandboxStatus('off')
       } else {
         setSandboxStatus('error')
-        notifyError('sandbox', data?.error, 'Falha ao fechar sandbox', data)
+        notifyError('sandbox', data?.error, 'Falha ao fechar computador', data)
       }
     } catch (err) {
       setSandboxStatus('error')
-      notifyError('sandbox', err, 'Falha ao fechar sandbox')
+      notifyError('sandbox', err, 'Falha ao fechar computador')
     } finally { setMenuBusy(false) }
   }
   const writeFilesFromMenu = async () => {
@@ -94,7 +94,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
       const w2 = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-write', chatId: id, path: '/vercel/sandbox/menu/info.json', content: JSON.stringify({ when: new Date().toISOString(), via: 'menu' }) }) })
       if (!w2.ok) throw new Error('Falha ao escrever info.json')
     } catch (err) {
-      notifyError('sandbox', err, 'Falha ao criar arquivos na sandbox')
+      notifyError('sandbox', err, 'Falha ao criar arquivos no computador')
     } finally { setMenuBusy(false) }
   }
 
@@ -556,7 +556,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   // Auto-start sandbox (no message) when requested via URL flag
   useEffect(() => {
     if (autoStartSandbox && initialChatId && !chatId) {
-      ensureStart().catch((err) => { setSandboxStatus('error'); notifyError('sandbox', err, 'Falha ao iniciar sandbox automaticamente') })
+      ensureStart().catch((err) => { setSandboxStatus('error'); notifyError('sandbox', err, 'Falha ao iniciar computador automaticamente') })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoStartSandbox, initialChatId])

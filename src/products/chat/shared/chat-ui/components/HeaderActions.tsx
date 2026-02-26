@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Undo2, Redo2, ClipboardList, GitBranch, Upload, Palette } from 'lucide-react';
 import { $previewJsonrPath } from '@/chat/sandbox';
 import { APPS_COLOR_PRESETS, APPS_HEADER_THEME_OPTIONS, APPS_THEME_OPTIONS } from '@/products/bi/shared/themeOptions';
+import { DASHBOARD_BACKGROUND_PRESET_OPTIONS } from '@/products/bi/json-render/backgrounds/registry';
 
 function IconButton({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -68,12 +69,113 @@ const ARTIFACT_BORDER_PRESETS: Record<string, { style?: string; width?: number; 
   hud_bold: { style: 'solid', width: 1, radius: 8, shadow: 'sm', frame: { variant: 'hud', cornerSize: 10, cornerWidth: 2 } },
 };
 
+const ARTIFACT_THEME_FX_PRESETS: Record<string, {
+  backgroundPreset?: string;
+  cardStylePreset?: string;
+  borderPreset?: string;
+  borderColor?: string;
+  frameBaseColor?: string;
+  frameCornerColor?: string;
+  surface?: string;
+  h1Color?: string;
+  kpiTitleColor?: string;
+  kpiValueColor?: string;
+  colorScheme?: string[];
+}> = {
+  none: { backgroundPreset: undefined, cardStylePreset: 'default', borderPreset: 'hud_classic' },
+  orbital: {
+    backgroundPreset: 'orbital',
+    cardStylePreset: 'glass-dark',
+    borderPreset: 'hud_classic',
+    borderColor: '#1f2937',
+    frameBaseColor: '#1f2937',
+    frameCornerColor: '#22d3ee',
+    surface: '#0b1114',
+    h1Color: '#eaf2f7',
+    kpiTitleColor: '#c7d2de',
+    kpiValueColor: '#f8fafc',
+    colorScheme: ['#22d3ee', '#60a5fa', '#a78bfa', '#34d399', '#f472b6', '#f59e0b'],
+  },
+  blueprint: {
+    backgroundPreset: 'blueprint',
+    cardStylePreset: 'glass-dark',
+    borderPreset: 'hud_classic',
+    borderColor: '#20334a',
+    frameBaseColor: '#22384f',
+    frameCornerColor: '#38bdf8',
+    surface: '#08131f',
+    h1Color: '#e7f4ff',
+    kpiTitleColor: '#bad6eb',
+    kpiValueColor: '#f5fbff',
+    colorScheme: ['#38bdf8', '#0ea5e9', '#3b82f6', '#22d3ee', '#a78bfa', '#34d399'],
+  },
+  aurora: {
+    backgroundPreset: 'aurora',
+    cardStylePreset: 'glass-dark',
+    borderPreset: 'soft_card',
+    borderColor: '#2a3342',
+    surface: '#0d1118',
+    h1Color: '#edf2fb',
+    kpiTitleColor: '#c7d2e1',
+    kpiValueColor: '#ffffff',
+    colorScheme: ['#10b981', '#3b82f6', '#a855f7', '#22d3ee', '#f472b6', '#f59e0b'],
+  },
+  'matrix-glass': {
+    backgroundPreset: 'matrix-glass',
+    cardStylePreset: 'glass-dark',
+    borderPreset: 'hud_classic',
+    borderColor: '#2a2f3a',
+    frameBaseColor: '#2a2f3a',
+    frameCornerColor: '#8b5cf6',
+    surface: '#0c0f15',
+    h1Color: '#eef2f7',
+    kpiTitleColor: '#cbd5e1',
+    kpiValueColor: '#ffffff',
+    colorScheme: ['#8b5cf6', '#ec4899', '#10b981', '#60a5fa', '#22d3ee', '#f59e0b'],
+  },
+  'matrix-glass-mono': {
+    backgroundPreset: 'matrix-glass-mono',
+    cardStylePreset: 'glass-dark',
+    borderPreset: 'hud_classic',
+    borderColor: '#1f2937',
+    frameBaseColor: '#1f2937',
+    frameCornerColor: '#34d399',
+    surface: '#0b1114',
+    h1Color: '#eaf2f7',
+    kpiTitleColor: '#c7d2de',
+    kpiValueColor: '#f8fafc',
+    colorScheme: ['#34d399', '#10b981', '#22d3ee', '#60a5fa', '#a78bfa', '#f472b6'],
+  },
+  'matrix-glass-light': {
+    backgroundPreset: 'matrix-glass-light',
+    cardStylePreset: 'glass-light',
+    borderPreset: 'hud_classic',
+    borderColor: '#94a3b8',
+    frameBaseColor: '#cbd5e1',
+    frameCornerColor: '#2563eb',
+    surface: '#ffffff',
+    h1Color: '#0f172a',
+    kpiTitleColor: '#475569',
+    kpiValueColor: '#0f172a',
+    colorScheme: ['#2563eb', '#10b981', '#06b6d4', '#8b5cf6', '#f59e0b', '#ef4444'],
+  },
+};
+
+const ARTIFACT_THEME_FX_OPTIONS = [
+  { value: 'custom', label: '(custom)' },
+  { value: 'none', label: 'Nenhum' },
+  ...DASHBOARD_BACKGROUND_PRESET_OPTIONS
+    .filter((o) => ['orbital', 'blueprint', 'aurora', 'matrix-glass', 'matrix-glass-mono', 'matrix-glass-light'].includes(o.value))
+    .map((o) => ({ value: o.value, label: o.label })),
+];
+
 export default function HeaderActions({ chatId }: HeaderActionsProps) {
   const previewPath = useStore($previewJsonrPath);
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const [themeName, setThemeName] = React.useState<string>('light');
   const [headerTheme, setHeaderTheme] = React.useState<string>('');
+  const [themeFxPreset, setThemeFxPreset] = React.useState<string>('custom');
   const [colorPreset, setColorPreset] = React.useState<string>('custom');
   const [borderPreset, setBorderPreset] = React.useState<string>('custom');
   const [error, setError] = React.useState<string | null>(null);
@@ -115,6 +217,90 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
     return 'custom';
   }, []);
 
+  const themeFxToPreset = React.useCallback((managersRaw?: any): string => {
+    const m = managersRaw && typeof managersRaw === 'object' ? managersRaw : {};
+    const bg = String(m.backgroundPreset ?? '');
+    const card = String(m.cardStylePreset ?? 'default');
+    const borderPreset = borderToPreset(m.border);
+    for (const [key, preset] of Object.entries(ARTIFACT_THEME_FX_PRESETS)) {
+      const presetBg = String(preset.backgroundPreset ?? '');
+      const presetCard = String(preset.cardStylePreset ?? 'default');
+      if (bg !== presetBg || card !== presetCard) continue;
+      if (preset.borderPreset && borderPreset !== preset.borderPreset) continue;
+      return key;
+    }
+    return 'custom';
+  }, [borderToPreset]);
+
+  const applyBorderPresetToTheme = React.useCallback((theme: any, presetKey: string) => {
+    const preset = ARTIFACT_BORDER_PRESETS[presetKey];
+    if (!preset) return;
+    theme.props.managers = theme.props.managers && typeof theme.props.managers === 'object' ? theme.props.managers : {};
+    theme.props.managers.border = theme.props.managers.border && typeof theme.props.managers.border === 'object' ? theme.props.managers.border : {};
+    const border = theme.props.managers.border;
+    if (preset.style !== undefined) border.style = preset.style; else delete border.style;
+    if (preset.width !== undefined) border.width = preset.width; else delete border.width;
+    if (preset.radius !== undefined) border.radius = preset.radius; else delete border.radius;
+    if (preset.shadow !== undefined) border.shadow = preset.shadow; else delete border.shadow;
+    if (preset.frame) {
+      border.frame = border.frame && typeof border.frame === 'object' ? border.frame : {};
+      border.frame.variant = preset.frame.variant;
+      border.frame.cornerSize = preset.frame.cornerSize;
+      border.frame.cornerWidth = preset.frame.cornerWidth;
+    } else {
+      delete border.frame;
+    }
+  }, []);
+
+  const applyThemeFxPresetToTheme = React.useCallback((theme: any, presetKey: string) => {
+    const preset = ARTIFACT_THEME_FX_PRESETS[presetKey];
+    theme.props.managers = theme.props.managers && typeof theme.props.managers === 'object' ? theme.props.managers : {};
+    const m = theme.props.managers;
+
+    if (!preset) {
+      if (presetKey && presetKey !== 'none') m.backgroundPreset = presetKey;
+      else delete m.backgroundPreset;
+      return;
+    }
+
+    if (preset.backgroundPreset && preset.backgroundPreset !== 'none') m.backgroundPreset = preset.backgroundPreset;
+    else delete m.backgroundPreset;
+
+    if (preset.cardStylePreset && preset.cardStylePreset !== 'default') m.cardStylePreset = preset.cardStylePreset;
+    else delete m.cardStylePreset;
+
+    if (preset.surface) m.surface = preset.surface;
+    else delete m.surface;
+
+    if (preset.borderPreset) applyBorderPresetToTheme(theme, preset.borderPreset);
+
+    m.border = m.border && typeof m.border === 'object' ? m.border : {};
+    if (preset.borderColor) m.border.color = preset.borderColor;
+    else delete m.border.color;
+
+    m.border.frame = m.border.frame && typeof m.border.frame === 'object' ? m.border.frame : {};
+    if (preset.frameBaseColor) m.border.frame.baseColor = preset.frameBaseColor;
+    else delete m.border.frame.baseColor;
+    if (preset.frameCornerColor) m.border.frame.cornerColor = preset.frameCornerColor;
+    else delete m.border.frame.cornerColor;
+
+    m.h1 = m.h1 && typeof m.h1 === 'object' ? m.h1 : {};
+    if (preset.h1Color) m.h1.color = preset.h1Color;
+    else delete m.h1.color;
+
+    m.kpi = m.kpi && typeof m.kpi === 'object' ? m.kpi : {};
+    m.kpi.title = m.kpi.title && typeof m.kpi.title === 'object' ? m.kpi.title : {};
+    m.kpi.value = m.kpi.value && typeof m.kpi.value === 'object' ? m.kpi.value : {};
+    if (preset.kpiTitleColor) m.kpi.title.color = preset.kpiTitleColor;
+    else delete m.kpi.title.color;
+    if (preset.kpiValueColor) m.kpi.value.color = preset.kpiValueColor;
+    else delete m.kpi.value.color;
+
+    m.color = m.color && typeof m.color === 'object' ? m.color : {};
+    if (preset.colorScheme) m.color.scheme = preset.colorScheme;
+    else delete m.color.scheme;
+  }, [applyBorderPresetToTheme]);
+
   const readCurrent = React.useCallback(async () => {
     if (!chatId || !previewPath) {
       setError('chatId/path ausente');
@@ -139,6 +325,7 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
       const scheme = Array.isArray(managers?.color?.scheme) ? managers.color.scheme : undefined;
       setThemeName(nextTheme);
       setHeaderTheme(rawHeader === 'auto' ? '' : rawHeader);
+      setThemeFxPreset(themeFxToPreset(managers));
       setColorPreset(schemeToPreset(scheme));
       setBorderPreset(borderToPreset(managers?.border));
     } catch (e: any) {
@@ -146,7 +333,7 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
     } finally {
       setLoading(false);
     }
-  }, [borderToPreset, chatId, previewPath, schemeToPreset]);
+  }, [borderToPreset, chatId, previewPath, schemeToPreset, themeFxToPreset]);
 
   React.useEffect(() => {
     if (!open) return;
@@ -154,7 +341,7 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
   }, [open, readCurrent]);
 
   const persist = React.useCallback(
-    async (next: { name?: string; headerTheme?: string; colorPreset?: string; borderPreset?: string }) => {
+    async (next: { name?: string; headerTheme?: string; themeFxPreset?: string; colorPreset?: string; borderPreset?: string }) => {
       if (!chatId || !previewPath) {
         setError('chatId/path ausente');
         return;
@@ -176,6 +363,9 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
         if (typeof next.name === 'string') theme.props.name = next.name;
         if (typeof next.headerTheme === 'string') {
           theme.props.headerTheme = next.headerTheme ? next.headerTheme : 'auto';
+        }
+        if (typeof next.themeFxPreset === 'string' && next.themeFxPreset !== 'custom') {
+          applyThemeFxPresetToTheme(theme, next.themeFxPreset);
         }
         if (typeof next.colorPreset === 'string') {
           theme.props.managers = theme.props.managers && typeof theme.props.managers === 'object' ? theme.props.managers : {};
@@ -226,6 +416,7 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
         const savedBorder = theme.props?.managers?.border;
         setThemeName(savedTheme);
         setHeaderTheme(savedHeaderRaw === 'auto' ? '' : savedHeaderRaw);
+        setThemeFxPreset(themeFxToPreset(theme.props?.managers));
         setColorPreset(schemeToPreset(savedScheme));
         setBorderPreset(borderToPreset(savedBorder));
         if (typeof window !== 'undefined') {
@@ -237,7 +428,7 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
         setLoading(false);
       }
     },
-    [borderToPreset, chatId, previewPath, schemeToPreset]
+    [applyThemeFxPresetToTheme, borderToPreset, chatId, previewPath, schemeToPreset, themeFxToPreset]
   );
 
   return (
@@ -290,6 +481,25 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
               >
                 {APPS_HEADER_THEME_OPTIONS.map((opt) => (
                   <option key={opt.value || 'auto'} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-slate-600">Tema FX</label>
+              <select
+                className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs outline-none focus:border-slate-400"
+                value={themeFxPreset}
+                disabled={loading || !chatId || !previewPath}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setThemeFxPreset(next);
+                  if (next !== 'custom') void persist({ themeFxPreset: next });
+                }}
+              >
+                {ARTIFACT_THEME_FX_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
                     {opt.label}
                   </option>
                 ))}

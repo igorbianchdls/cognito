@@ -149,7 +149,7 @@ export default function JsonRenderPreview({ chatId }: Props) {
       )}
       {!chatId && !error && !loading && (
         <div className="rounded border border-gray-200 bg-white text-gray-600 text-xs p-3">
-          UI de preview aberta. Inicie uma sandbox para carregar e renderizar arquivos `.jsonr`.
+          UI de preview aberta. Inicie um computador para carregar e renderizar arquivos `.jsonr`.
         </div>
       )}
       {error && (

@@ -87,7 +87,7 @@ export default function DashboardPicker({
       <div className={`rounded border border-gray-200 bg-white p-2 overflow-auto ${compact ? 'max-h-[340px]' : 'max-h-[60vh]'}`}>
         {!chatId && (
           <div className="text-xs text-gray-500 p-2">
-            UI de Artifact aberta. Inicie uma sandbox para listar dashboards `.jsonr`.
+            UI de Artifact aberta. Inicie um computador para listar dashboards `.jsonr`.
           </div>
         )}
         {chatId && filtered.length === 0 && <div className="text-xs text-gray-500">Nenhum dashboard encontrado</div>}

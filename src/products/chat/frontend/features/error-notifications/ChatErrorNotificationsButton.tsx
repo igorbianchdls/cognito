@@ -21,7 +21,7 @@ type Props = {
 
 function formatSource(source: string): string {
   if (source === 'api') return 'API'
-  if (source === 'sandbox') return 'Sandbox'
+  if (source === 'sandbox') return 'Computador'
   if (source === 'stream') return 'Stream'
   if (source === 'tool') return 'Tool'
   if (source === 'network') return 'Rede'
