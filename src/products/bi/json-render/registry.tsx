@@ -1253,6 +1253,9 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
           const body = { dataQuery: { model: dq.model, dimension: undefined, measure: dq.measure, filters, orderBy: dq.orderBy, limit: dq.limit } };
           const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
           const j = await res.json();
+          if (!res.ok || j?.success === false) {
+            throw new Error(String(j?.message || `Query failed (${res.status})`));
+          }
           const rows = Array.isArray(j?.rows) ? j.rows : [];
           let val: number = 0;
           if (rows.length > 0 && rows[0] && typeof rows[0] === 'object') {
@@ -1262,6 +1265,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
           }
           if (!cancelled) setServerValue(val);
         } catch (e) {
+          console.error('[BI/KPI] query failed', e);
           if (!cancelled) setServerValue(0);
         }
       }

@@ -162,9 +162,10 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
         const body = { dataQuery: { model: dq.model, dimension: effectiveDimension, dimensionExpr: effectiveDimensionExpr, measure: dq.measure, filters, orderBy: dq.orderBy, limit: dq.limit } };
         const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
         const j = await res.json();
+        if (!res.ok || j?.success === false) throw new Error(String(j?.message || `Query failed (${res.status})`));
         const rows = Array.isArray(j?.rows) ? j.rows : [];
         if (!cancelled) setServerRows(rows as any);
-      } catch (e) { if (!cancelled) setServerRows([]); }
+      } catch (e) { console.error('[BI/BarChart] query failed', e); if (!cancelled) setServerRows([]); }
     }
     run();
     return () => { cancelled = true };

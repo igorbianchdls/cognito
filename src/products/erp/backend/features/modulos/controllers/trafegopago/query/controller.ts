@@ -133,6 +133,48 @@ export async function POST(req: NextRequest) {
         'casewhensum(gasto)=0then0elsesum(receita_atribuida)/sum(gasto)end',
         { expr: 'CASE WHEN COALESCE(SUM(dd.gasto),0)=0 THEN 0 ELSE COALESCE(SUM(dd.receita_atribuida),0)/NULLIF(SUM(dd.gasto),0) END::float', alias: 'roas' },
       ],
+      [
+        'casewhensum(impressoes)=0then0elsesum(cliques)/sum(impressoes)end',
+        {
+          expr: 'CASE WHEN COALESCE(SUM(dd.impressoes),0)=0 THEN 0 ELSE COALESCE(SUM(dd.cliques),0)::float/NULLIF(SUM(dd.impressoes),0)::float END::float',
+          alias: 'ctr',
+        },
+      ],
+      [
+        'casewhensum(cliques)=0then0elsesum(gasto)/sum(cliques)end',
+        {
+          expr: 'CASE WHEN COALESCE(SUM(dd.cliques),0)=0 THEN 0 ELSE COALESCE(SUM(dd.gasto),0)::float/NULLIF(SUM(dd.cliques),0)::float END::float',
+          alias: 'cpc',
+        },
+      ],
+      [
+        'casewhensum(impressoes)=0then0else(sum(gasto)*1000.0)/sum(impressoes)end',
+        {
+          expr: 'CASE WHEN COALESCE(SUM(dd.impressoes),0)=0 THEN 0 ELSE (COALESCE(SUM(dd.gasto),0)::float * 1000.0)/NULLIF(SUM(dd.impressoes),0)::float END::float',
+          alias: 'cpm',
+        },
+      ],
+      [
+        'casewhensum(conversoes)=0then0elsesum(gasto)/sum(conversoes)end',
+        {
+          expr: 'CASE WHEN COALESCE(SUM(dd.conversoes),0)=0 THEN 0 ELSE COALESCE(SUM(dd.gasto),0)::float/NULLIF(SUM(dd.conversoes),0)::float END::float',
+          alias: 'cpa',
+        },
+      ],
+      [
+        'casewhensum(cliques)=0then0elsesum(conversoes)/sum(cliques)end',
+        {
+          expr: 'CASE WHEN COALESCE(SUM(dd.cliques),0)=0 THEN 0 ELSE COALESCE(SUM(dd.conversoes),0)::float/NULLIF(SUM(dd.cliques),0)::float END::float',
+          alias: 'cvr',
+        },
+      ],
+      [
+        'casewhensum(cliques)=0then0elsesum(leads)/sum(cliques)end',
+        {
+          expr: 'CASE WHEN COALESCE(SUM(dd.cliques),0)=0 THEN 0 ELSE COALESCE(SUM(dd.leads),0)::float/NULLIF(SUM(dd.cliques),0)::float END::float',
+          alias: 'lead_rate',
+        },
+      ],
     ])
 
     let dim = undefined as { expr: string; keyExpr?: string; alias: string } | undefined
@@ -216,4 +258,3 @@ export async function POST(req: NextRequest) {
     )
   }
 }
-
