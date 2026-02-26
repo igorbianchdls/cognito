@@ -155,18 +155,43 @@ function getProp<T>(node: Record<string, any>, path: string, fallback: T): T {
   return (curr === undefined ? fallback : curr) as T
 }
 
+function setPropInObject(base: Record<string, any> | undefined, path: string, value: unknown) {
+  const parts = path.split('.').filter(Boolean)
+  const root: Record<string, any> = base && typeof base === 'object' && !Array.isArray(base) ? { ...base } : {}
+  if (!parts.length) return root
+
+  let curr: Record<string, any> = root
+  for (let i = 0; i < parts.length - 1; i += 1) {
+    const key = parts[i]
+    const prev = curr[key]
+    curr[key] = prev && typeof prev === 'object' && !Array.isArray(prev) ? { ...prev } : {}
+    curr = curr[key]
+  }
+
+  const last = parts[parts.length - 1]
+  if (value === undefined) delete curr[last]
+  else curr[last] = value
+
+  return root
+}
+
 export default function PropertiesPanel({
   tree,
   selectedPath,
   isOpen,
   onClose,
-  onSetNodeProp,
-  onReplaceNodeProps,
+  onSetNodeProp: _onSetNodeProp,
+  onReplaceNodeProps: onReplaceNodePropsExternal,
 }: Props) {
-  const node = React.useMemo(() => getNodeAtPath(tree, selectedPath), [tree, selectedPath])
+  const sourceNode = React.useMemo(() => getNodeAtPath(tree, selectedPath), [tree, selectedPath])
+  const [draftProps, setDraftProps] = React.useState<Record<string, any>>({})
   const [rawPropsText, setRawPropsText] = React.useState('{}')
   const [rawPropsError, setRawPropsError] = React.useState<string | null>(null)
   const [activeTab, setActiveTab] = React.useState<TabKey>('data')
+  const node = React.useMemo(
+    () => (sourceNode && typeof sourceNode === 'object' ? { ...sourceNode, props: draftProps } : sourceNode),
+    [draftProps, sourceNode],
+  )
 
   const supportsDataTab = Boolean(
     node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard'].includes(String(node.type)),
@@ -179,10 +204,11 @@ export default function PropertiesPanel({
   )
 
   React.useEffect(() => {
-    const next = node?.props && typeof node.props === 'object' ? node.props : {}
+    const next = sourceNode?.props && typeof sourceNode.props === 'object' ? sourceNode.props : {}
+    setDraftProps(next)
     setRawPropsText(JSON.stringify(next, null, 2))
     setRawPropsError(null)
-  }, [node && JSON.stringify(node.props || {})])
+  }, [sourceNode && JSON.stringify(sourceNode.props || {})])
 
   React.useEffect(() => {
     if (!node) {
@@ -199,6 +225,29 @@ export default function PropertiesPanel({
     }
     setActiveTab('json')
   }, [selectedPath?.join('.'), node?.type, supportsDataTab, supportsStyleTab])
+
+  const onSetNodeProp = React.useCallback((nodePath: JsonNodePath, propPath: string, value: unknown) => {
+    if (!selectedPath || !nodePath || nodePath.join('.') !== selectedPath.join('.')) return
+    setDraftProps((prev) => {
+      const next = setPropInObject(prev, propPath, value)
+      setRawPropsText(JSON.stringify(next, null, 2))
+      setRawPropsError(null)
+      return next
+    })
+  }, [selectedPath])
+
+  const onReplaceNodeProps = React.useCallback((nodePath: JsonNodePath, props: Record<string, any>) => {
+    if (!selectedPath || !nodePath || nodePath.join('.') !== selectedPath.join('.')) return
+    const next = props && typeof props === 'object' && !Array.isArray(props) ? props : {}
+    setDraftProps(next)
+    setRawPropsText(JSON.stringify(next, null, 2))
+    setRawPropsError(null)
+  }, [selectedPath])
+
+  const draftDirty = React.useMemo(() => {
+    const current = sourceNode?.props && typeof sourceNode.props === 'object' ? sourceNode.props : {}
+    return JSON.stringify(current) !== JSON.stringify(draftProps)
+  }, [draftProps, sourceNode])
 
   if (!isOpen) return null
 
@@ -220,7 +269,7 @@ export default function PropertiesPanel({
         <div className="p-3 text-xs text-gray-500">Selecione um componente e clique em Editar no menu `...`.</div>
       ) : (
         <div className="space-y-3 p-3">
-          <div className="flex items-center gap-1 rounded border border-gray-200 bg-gray-50 p-1">
+          <div className="inline-flex items-center gap-1 rounded border border-gray-200 bg-gray-50 p-1">
             {supportsDataTab && (
               <button
                 type="button"
@@ -589,12 +638,35 @@ export default function PropertiesPanel({
                         }
                       }}
                     >
-                      Aplicar Props JSON
+                      Atualizar Rascunho JSON
                     </button>
                   </div>
                 </div>
               )}
             </>
+          )}
+
+          {selectedPath && (
+            <div className="flex items-center justify-end gap-2 border-t border-gray-100 pt-2">
+              <button
+                type="button"
+                className="rounded border border-gray-300 px-3 py-1.5 text-xs hover:bg-gray-50"
+                onClick={onClose}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={!draftDirty || Boolean(rawPropsError)}
+                className="rounded border border-gray-900 bg-gray-900 px-3 py-1.5 text-xs text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
+                onClick={() => {
+                  if (!selectedPath) return
+                  onReplaceNodePropsExternal(selectedPath, draftProps)
+                }}
+              >
+                Aplicar
+              </button>
+            </div>
           )}
         </div>
       )}
