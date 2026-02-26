@@ -52,6 +52,22 @@ type HeaderActionsProps = {
   chatId?: string;
 };
 
+const ARTIFACT_BORDER_PRESET_OPTIONS = [
+  { value: 'hud_classic', label: 'Clássico (cantos)' },
+  { value: 'rounded_minimal', label: 'Minimal arredondado' },
+  { value: 'soft_card', label: 'Soft card' },
+  { value: 'sharp_clean', label: 'Reto clean' },
+  { value: 'hud_bold', label: 'HUD forte' },
+] as const;
+
+const ARTIFACT_BORDER_PRESETS: Record<string, { style?: string; width?: number; radius?: number; shadow?: string; frame?: null | { variant: 'hud'; cornerSize: number; cornerWidth: number } }> = {
+  hud_classic: { style: 'solid', width: 1, radius: 8, shadow: 'none', frame: { variant: 'hud', cornerSize: 8, cornerWidth: 1 } },
+  rounded_minimal: { style: 'none', width: 0, radius: 12, shadow: 'none', frame: null },
+  soft_card: { style: 'solid', width: 1, radius: 14, shadow: 'md', frame: null },
+  sharp_clean: { style: 'solid', width: 1, radius: 0, shadow: 'none', frame: null },
+  hud_bold: { style: 'solid', width: 1, radius: 8, shadow: 'sm', frame: { variant: 'hud', cornerSize: 10, cornerWidth: 2 } },
+};
+
 export default function HeaderActions({ chatId }: HeaderActionsProps) {
   const previewPath = useStore($previewJsonrPath);
   const [open, setOpen] = React.useState(false);
@@ -59,6 +75,7 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
   const [themeName, setThemeName] = React.useState<string>('light');
   const [headerTheme, setHeaderTheme] = React.useState<string>('');
   const [colorPreset, setColorPreset] = React.useState<string>('custom');
+  const [borderPreset, setBorderPreset] = React.useState<string>('custom');
   const [error, setError] = React.useState<string | null>(null);
 
   const schemeToPreset = React.useCallback((arr?: string[]): string => {
@@ -70,6 +87,30 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
       ) {
         return k;
       }
+    }
+    return 'custom';
+  }, []);
+
+  const borderToPreset = React.useCallback((borderRaw?: any): string => {
+    const b = (borderRaw && typeof borderRaw === 'object') ? borderRaw : {};
+    const frame = (b.frame && typeof b.frame === 'object') ? b.frame : null;
+    const hasFrame = Boolean(frame && (frame.variant || frame.cornerSize !== undefined || frame.cornerWidth !== undefined));
+    for (const [key, preset] of Object.entries(ARTIFACT_BORDER_PRESETS)) {
+      const sameStyle = String(b.style ?? '') === String(preset.style ?? '');
+      const sameWidth = String(b.width ?? '') === String(preset.width ?? '');
+      const sameRadius = String(b.radius ?? '') === String(preset.radius ?? '');
+      const sameShadow = String(b.shadow ?? '') === String(preset.shadow ?? '');
+      if (!sameStyle || !sameWidth || !sameRadius || !sameShadow) continue;
+      if (preset.frame == null) {
+        if (!hasFrame) return key;
+        continue;
+      }
+      if (!frame) continue;
+      const sameFrame =
+        String(frame.variant ?? '') === String(preset.frame.variant ?? '') &&
+        String(frame.cornerSize ?? '') === String(preset.frame.cornerSize ?? '') &&
+        String(frame.cornerWidth ?? '') === String(preset.frame.cornerWidth ?? '');
+      if (sameFrame) return key;
     }
     return 'custom';
   }, []);
@@ -99,12 +140,13 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
       setThemeName(nextTheme);
       setHeaderTheme(rawHeader === 'auto' ? '' : rawHeader);
       setColorPreset(schemeToPreset(scheme));
+      setBorderPreset(borderToPreset(managers?.border));
     } catch (e: any) {
       setError(e?.message ? String(e.message) : 'Erro ao carregar tema');
     } finally {
       setLoading(false);
     }
-  }, [chatId, previewPath]);
+  }, [borderToPreset, chatId, previewPath, schemeToPreset]);
 
   React.useEffect(() => {
     if (!open) return;
@@ -112,7 +154,7 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
   }, [open, readCurrent]);
 
   const persist = React.useCallback(
-    async (next: { name?: string; headerTheme?: string; colorPreset?: string }) => {
+    async (next: { name?: string; headerTheme?: string; colorPreset?: string; borderPreset?: string }) => {
       if (!chatId || !previewPath) {
         setError('chatId/path ausente');
         return;
@@ -144,6 +186,26 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
             delete theme.props.managers.color.scheme;
           }
         }
+        if (typeof next.borderPreset === 'string' && next.borderPreset !== 'custom') {
+          const preset = ARTIFACT_BORDER_PRESETS[next.borderPreset];
+          if (preset) {
+            theme.props.managers = theme.props.managers && typeof theme.props.managers === 'object' ? theme.props.managers : {};
+            theme.props.managers.border = theme.props.managers.border && typeof theme.props.managers.border === 'object' ? theme.props.managers.border : {};
+            const border = theme.props.managers.border;
+            if (preset.style !== undefined) border.style = preset.style; else delete border.style;
+            if (preset.width !== undefined) border.width = preset.width; else delete border.width;
+            if (preset.radius !== undefined) border.radius = preset.radius; else delete border.radius;
+            if (preset.shadow !== undefined) border.shadow = preset.shadow; else delete border.shadow;
+            if (preset.frame) {
+              border.frame = border.frame && typeof border.frame === 'object' ? border.frame : {};
+              border.frame.variant = preset.frame.variant;
+              border.frame.cornerSize = preset.frame.cornerSize;
+              border.frame.cornerWidth = preset.frame.cornerWidth;
+            } else {
+              delete border.frame;
+            }
+          }
+        }
 
         const writeRes = await fetch('/api/chat', {
           method: 'POST',
@@ -161,9 +223,11 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
         const savedTheme = String(theme.props?.name || 'light');
         const savedHeaderRaw = typeof theme.props?.headerTheme === 'string' ? theme.props.headerTheme : 'auto';
         const savedScheme = Array.isArray(theme.props?.managers?.color?.scheme) ? theme.props.managers.color.scheme : undefined;
+        const savedBorder = theme.props?.managers?.border;
         setThemeName(savedTheme);
         setHeaderTheme(savedHeaderRaw === 'auto' ? '' : savedHeaderRaw);
         setColorPreset(schemeToPreset(savedScheme));
+        setBorderPreset(borderToPreset(savedBorder));
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('sandbox-preview-refresh', { detail: { path: previewPath } }));
         }
@@ -173,7 +237,7 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
         setLoading(false);
       }
     },
-    [chatId, previewPath, schemeToPreset]
+    [borderToPreset, chatId, previewPath, schemeToPreset]
   );
 
   return (
@@ -247,6 +311,26 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
                 {Object.keys(APPS_COLOR_PRESETS).map((key) => (
                   <option key={key} value={key}>
                     {key}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-slate-600">Borda FX</label>
+              <select
+                className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs outline-none focus:border-slate-400"
+                value={borderPreset}
+                disabled={loading || !chatId || !previewPath}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setBorderPreset(next);
+                  if (next !== 'custom') void persist({ borderPreset: next });
+                }}
+              >
+                <option value="custom">Custom</option>
+                {ARTIFACT_BORDER_PRESET_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
                   </option>
                 ))}
               </select>
