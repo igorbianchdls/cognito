@@ -5,19 +5,31 @@ import { useStore } from '@nanostores/react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Undo2, Redo2, ClipboardList, GitBranch, Upload, Palette } from 'lucide-react';
+import { Undo2, Redo2, ClipboardList, GitBranch, Upload, Palette, Save } from 'lucide-react';
 import { $previewJsonrPath } from '@/chat/sandbox';
 import { APPS_COLOR_PRESETS, APPS_HEADER_THEME_OPTIONS, APPS_THEME_OPTIONS } from '@/products/bi/shared/themeOptions';
 import { DASHBOARD_BACKGROUND_PRESET_OPTIONS } from '@/products/bi/json-render/backgrounds/registry';
 
-function IconButton({ title, children }: { title: string; children: React.ReactNode }) {
+function IconButton({
+  title,
+  children,
+  onClick,
+  disabled,
+}: {
+  title: string;
+  children: React.ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+}) {
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
           <button
             type="button"
-            className="h-8 w-8 inline-flex items-center justify-center rounded-md text-gray-700 hover:bg-gray-100"
+            onClick={onClick}
+            disabled={disabled}
+            className="h-8 w-8 inline-flex items-center justify-center rounded-md text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:hover:bg-transparent"
             aria-label={title}
             title={title}
           >
@@ -193,6 +205,8 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
   const [colorPreset, setColorPreset] = React.useState<string>('custom');
   const [borderPreset, setBorderPreset] = React.useState<string>('custom');
   const [error, setError] = React.useState<string | null>(null);
+  const [snapshotSaving, setSnapshotSaving] = React.useState(false);
+  const [snapshotStatus, setSnapshotStatus] = React.useState<string | null>(null);
 
   const schemeToPreset = React.useCallback((arr?: string[]): string => {
     if (!arr) return 'custom';
@@ -453,6 +467,32 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
     [applyThemeFxPresetToTheme, borderToPreset, chatId, previewPath, schemeToPreset, themeFxToPreset]
   );
 
+  const saveSnapshot = React.useCallback(async () => {
+    if (!chatId) {
+      setSnapshotStatus('Chat ausente');
+      return;
+    }
+    setSnapshotSaving(true);
+    setSnapshotStatus(null);
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'chat-snapshot', chatId }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string; snapshotId?: string };
+      if (!res.ok || data.ok === false) throw new Error(data.error || 'Falha ao salvar snapshot');
+      setSnapshotStatus('Snapshot salvo');
+      if (typeof window !== 'undefined') {
+        window.setTimeout(() => setSnapshotStatus((curr) => (curr === 'Snapshot salvo' ? null : curr)), 1800);
+      }
+    } catch (e: any) {
+      setSnapshotStatus(e?.message ? String(e.message) : 'Erro ao salvar snapshot');
+    } finally {
+      setSnapshotSaving(false);
+    }
+  }, [chatId]);
+
   return (
     <div className="flex items-center gap-1">
       <Popover open={open} onOpenChange={setOpen}>
@@ -588,6 +628,14 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
       <IconButton title="Upload">
         <Upload className="w-4 h-4" />
       </IconButton>
+      <IconButton title={snapshotSaving ? "Salvando snapshot..." : "Salvar snapshot"} onClick={() => { void saveSnapshot(); }} disabled={!chatId || snapshotSaving}>
+        <Save className={`w-4 h-4 ${snapshotSaving ? 'animate-pulse' : ''}`} />
+      </IconButton>
+      {snapshotStatus && (
+        <span className={`ml-1 text-[11px] ${snapshotStatus === 'Snapshot salvo' ? 'text-emerald-700' : 'text-rose-600'}`}>
+          {snapshotStatus}
+        </span>
+      )}
       {/* Deploy button removido */}
     </div>
   );
