@@ -54,7 +54,7 @@ export default function ChatWorkspace({
                 className={
                   splitOpen
                     ? "flex h-full min-h-0 flex-col gap-2 p-2 lg:flex-row"
-                    : "h-full min-h-0"
+                    : "h-full min-h-0 p-2"
                 }
               >
                 <div

@@ -2,6 +2,7 @@
 
 import type { ToolUIPart, UIMessage } from 'ai'
 import { Message } from '@/components/ai-elements/message'
+import { Response } from '@/components/ai-elements/response'
 import { Reasoning, ReasoningContent, ReasoningTrigger } from '@/components/ai-elements/reasoning'
 import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from '@/components/ai-elements/tool'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -410,9 +411,12 @@ export default function RespostaDaIa({ message, isPending = false }: Props) {
         {parts.map((part: any, index: number) => {
           if (part?.type === 'text') {
             return (
-              <div key={`txt-${index}`} className="whitespace-pre-wrap text-[15px] leading-6 text-gray-900">
+              <Response
+                key={`txt-${index}`}
+                className="text-[15px] leading-6 text-gray-900 [&_p]:my-0 [&_ol]:my-0 [&_ul]:my-0"
+              >
                 {String(part?.text || '')}
-              </div>
+              </Response>
             )
           }
 
