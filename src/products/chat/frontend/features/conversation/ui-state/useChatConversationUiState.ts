@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useStore } from "@nanostores/react";
 
 import { $sandboxActiveTab, sandboxActions, type SandboxTab } from "@/chat/sandbox";
@@ -44,9 +43,6 @@ function readStoredState(chatId?: string): StoredConversationUiState | null {
 }
 
 export function useChatConversationUiState({ chatId }: Options) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
   const activeTab = useStore($sandboxActiveTab);
 
   const [artifactOpen, setArtifactOpen] = React.useState(false);
@@ -54,20 +50,19 @@ export function useChatConversationUiState({ chatId }: Options) {
   const hydratedRef = React.useRef(false);
   const applyingUrlRef = React.useRef(false);
 
-  const urlSnapshot = React.useMemo(() => searchParams?.toString() ?? "", [searchParams]);
-
   React.useEffect(() => {
-    const qs = searchParams;
-    const urlOpen = parseBool(qs?.get("artifact"));
-    const urlExpanded = parseBool(qs?.get("artifactExpanded"));
-    const urlTab = parseTab(qs?.get("artifactTab"));
+    if (typeof window === "undefined") return;
+    const qs = new URLSearchParams(window.location.search);
+    const urlOpen = parseBool(qs.get("artifact"));
+    const urlExpanded = parseBool(qs.get("artifactExpanded"));
+    const urlTab = parseTab(qs.get("artifactTab"));
     const hasUrlState = urlOpen !== null || urlExpanded !== null || urlTab !== null;
 
     if (hasUrlState) {
       applyingUrlRef.current = true;
       if (urlOpen !== null) setArtifactOpen(urlOpen);
       if (urlExpanded !== null) setArtifactExpanded(urlExpanded);
-      if (urlTab && urlTab !== activeTab) sandboxActions.setActiveTab(urlTab);
+      if (urlTab) sandboxActions.setActiveTab(urlTab);
       hydratedRef.current = true;
       queueMicrotask(() => {
         applyingUrlRef.current = false;
@@ -80,10 +75,10 @@ export function useChatConversationUiState({ chatId }: Options) {
     if (stored) {
       if (typeof stored.artifactOpen === "boolean") setArtifactOpen(stored.artifactOpen);
       if (typeof stored.artifactExpanded === "boolean") setArtifactExpanded(stored.artifactExpanded);
-      if (stored.artifactTab && stored.artifactTab !== activeTab) sandboxActions.setActiveTab(stored.artifactTab);
+      if (stored.artifactTab) sandboxActions.setActiveTab(stored.artifactTab);
     }
     hydratedRef.current = true;
-  }, [searchParams, chatId, activeTab]);
+  }, [chatId]);
 
   React.useEffect(() => {
     if (!hydratedRef.current || applyingUrlRef.current) return;
@@ -102,10 +97,10 @@ export function useChatConversationUiState({ chatId }: Options) {
 
   React.useEffect(() => {
     if (!hydratedRef.current || applyingUrlRef.current) return;
-    if (!pathname) return;
-
-    const current = new URLSearchParams(urlSnapshot);
-    const next = new URLSearchParams(urlSnapshot);
+    if (typeof window === "undefined") return;
+    const pathname = window.location.pathname;
+    const current = new URLSearchParams(window.location.search);
+    const next = new URLSearchParams(window.location.search);
 
     if (artifactOpen) {
       next.set("artifact", "1");
@@ -120,8 +115,8 @@ export function useChatConversationUiState({ chatId }: Options) {
 
     if (current.toString() === next.toString()) return;
     const nextUrl = next.toString() ? `${pathname}?${next.toString()}` : pathname;
-    router.replace(nextUrl, { scroll: false });
-  }, [artifactOpen, artifactExpanded, activeTab, pathname, router, urlSnapshot]);
+    window.history.replaceState(window.history.state, "", nextUrl);
+  }, [artifactOpen, artifactExpanded, activeTab]);
 
   return {
     artifactOpen,
