@@ -706,6 +706,12 @@ export const APPS_METAADS_TEMPLATE_TEXT = `[
                 "#F59E0B",
                 "#EF4444"
               ],
+              "itemTextStyle": {
+                "padding": "0 8px"
+              },
+              "containerStyle": {
+                "padding": "12px 12px 16px 12px"
+              },
               "items": [
                 {
                   "icon": "trendingUp",

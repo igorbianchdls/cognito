@@ -706,6 +706,12 @@ export const APPS_GOOGLEADS_TEMPLATE_TEXT = `[
                 "#EA4335",
                 "#1A73E8"
               ],
+              "itemTextStyle": {
+                "padding": "0 8px"
+              },
+              "containerStyle": {
+                "padding": "12px 12px 16px 12px"
+              },
               "items": [
                 {
                   "icon": "badgecheck",
