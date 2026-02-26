@@ -33,7 +33,7 @@ export const APPS_GOOGLEADS_TEMPLATE_TEXT = `[
           "title": "Dashboard Google Ads",
           "subtitle": "Lumi Skin • Search, Shopping e PMax (visão DTC)",
           "align": "center",
-          "controlsPosition": "below",
+          "controlsPosition": "right",
           "datePicker": {
             "visible": true,
             "mode": "range",
@@ -57,25 +57,21 @@ export const APPS_GOOGLEADS_TEMPLATE_TEXT = `[
           "gap": 12,
           "padding": 16,
           "wrap": true,
-          "childGrow": true
+          "childGrow": true,
+          "justify": "start",
+          "align": "start"
         },
         "children": [
           {
             "type": "SlicerCard",
             "props": {
               "fr": 1,
-              "title": "Filtros de análise",
-              "layout": "horizontal",
-              "applyMode": "manual",
-              "actionOnApply": {
-                "type": "refresh_data"
-              },
+              "title": "Filtro de Contas",
               "fields": [
                 {
                   "label": "Conta",
                   "type": "list",
                   "storePath": "filters.conta_id",
-                  "width": 240,
                   "search": true,
                   "selectAll": true,
                   "clearable": true,
@@ -85,12 +81,20 @@ export const APPS_GOOGLEADS_TEMPLATE_TEXT = `[
                     "field": "conta_id",
                     "limit": 50
                   }
-                },
+                }
+              ]
+            }
+          },
+          {
+            "type": "SlicerCard",
+            "props": {
+              "fr": 1,
+              "title": "Filtro de Campanhas",
+              "fields": [
                 {
                   "label": "Campanha",
                   "type": "list",
                   "storePath": "filters.campanha_id",
-                  "width": 260,
                   "search": true,
                   "selectAll": true,
                   "clearable": true,
@@ -103,12 +107,20 @@ export const APPS_GOOGLEADS_TEMPLATE_TEXT = `[
                       "filters.conta_id"
                     ]
                   }
-                },
+                }
+              ]
+            }
+          },
+          {
+            "type": "SlicerCard",
+            "props": {
+              "fr": 1,
+              "title": "Filtro de Grupos",
+              "fields": [
                 {
                   "label": "Grupo",
                   "type": "list",
                   "storePath": "filters.grupo_id",
-                  "width": 240,
                   "search": true,
                   "selectAll": true,
                   "clearable": true,
@@ -122,12 +134,20 @@ export const APPS_GOOGLEADS_TEMPLATE_TEXT = `[
                       "filters.campanha_id"
                     ]
                   }
-                },
+                }
+              ]
+            }
+          },
+          {
+            "type": "SlicerCard",
+            "props": {
+              "fr": 1,
+              "title": "Filtro de Anúncios",
+              "fields": [
                 {
                   "label": "Anúncio",
                   "type": "list",
                   "storePath": "filters.anuncio_id",
-                  "width": 240,
                   "search": true,
                   "selectAll": true,
                   "clearable": true,
