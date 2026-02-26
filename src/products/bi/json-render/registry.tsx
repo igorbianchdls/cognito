@@ -96,7 +96,7 @@ const defaultAISummary = {
   iconSize: 16,
   iconBoxRadius: 8,
   itemTextStyle: { fontWeight: 500, fontSize: 13, color: '#334155' },
-  containerStyle: { borderColor: '#e5e7eb', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, padding: 8 },
+  containerStyle: { borderColor: '#e5e7eb', borderWidth: 1, borderStyle: 'solid', borderRadius: 8 },
   borderless: false,
 } as const;
 
