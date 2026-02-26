@@ -14,7 +14,7 @@ import {
   PromptInputModelSelectContent,
   PromptInputModelSelectItem,
 } from '@/components/ai-elements/prompt-input';
-import { Plus, BarChart3, Plug, Mic, Square, Loader2 } from 'lucide-react';
+import { Plus, BarChart3, Plug, Mic, Square, Loader2, Bot } from 'lucide-react';
 import BrandIcon from '@/components/icons/BrandIcon';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input as UiInput } from '@/components/ui/input';
@@ -206,8 +206,8 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
               const next = (v === 'claude-sonnet' || v === 'claude-haiku' || v === 'openai-gpt5' || v === 'openai-gpt5nano' || v === 'openai-gpt5mini') ? v : 'openai-gpt5mini'
               onModelChange?.(next)
             }}>
-              <PromptInputModelSelectTrigger className="min-w-0 max-w-[120px] text-gray-500 hover:text-gray-800">
-                <span className="truncate">Modelo</span>
+              <PromptInputModelSelectTrigger className="min-w-0 max-w-[72px] text-gray-500 hover:text-gray-800" title="Modelo" aria-label="Selecionar modelo">
+                <Bot size={16} />
               </PromptInputModelSelectTrigger>
               <PromptInputModelSelectContent>
                 <PromptInputModelSelectItem value="claude-sonnet">Claude Sonnet 4.5 (Agent SDK)</PromptInputModelSelectItem>
@@ -233,7 +233,6 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
             ) : (
               <PromptInputButton onClick={startRecording} variant="ghost" className="text-gray-500 hover:text-gray-800" title="Gravar áudio e transcrever">
                 <Mic size={16} />
-                <span>Microfone</span>
               </PromptInputButton>
             )}
             <PromptInputSubmit disabled={!value || recState !== 'idle'} status={status as ChatStatus} />
