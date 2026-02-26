@@ -159,12 +159,12 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
             <PromptInputButton>
               <Plus size={16} />
             </PromptInputButton>
-            {/* All Toolkits (UI only) now to the right of + */}
+            {/* Tool picker now to the right of + */}
             <Popover open={toolkitsOpen} onOpenChange={setToolkitsOpen}>
               <PopoverTrigger asChild>
                 <PromptInputButton variant="ghost" className="text-gray-500 hover:text-gray-800">
                   <Plug size={16} />
-                  <span>All Toolkits</span>
+                  <span>Tool</span>
                 </PromptInputButton>
               </PopoverTrigger>
               <PopoverContent side="top" align="start" className="w-80 p-0">
@@ -181,25 +181,28 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
                           </span>
                           <span>{t.label}</span>
                         </div>
-                        <Switch checked={!!tkEnabled[t.key]} onCheckedChange={(v)=> setTkEnabled(s=>({ ...s, [t.key]: v }))} />
+                        <Switch
+                          checked={t.key === 'composio' ? !!composioEnabled : !!tkEnabled[t.key]}
+                          disabled={t.key === 'composio' && typeof onToggleComposio !== 'function'}
+                          onCheckedChange={(v)=> {
+                            if (t.key === 'composio') {
+                              if (typeof onToggleComposio === 'function' && v !== !!composioEnabled) onToggleComposio()
+                              return
+                            }
+                            setTkEnabled(s=>({ ...s, [t.key]: v }))
+                          }}
+                        />
                       </li>
                     ))}
                   </ul>
                 </div>
-                <div className="px-3 py-2 text-xs text-gray-500 border-t">All toolkits enabled</div>
+                <div className="px-3 py-2 text-xs text-gray-500 border-t">Tools</div>
               </PopoverContent>
             </Popover>
             <PromptInputButton onClick={() => onOpenSandbox?.()}>
               <BarChart3 size={16} />
               <span>Artifact</span>
             </PromptInputButton>
-            {typeof onToggleComposio === 'function' && (
-              <PromptInputButton onClick={() => onToggleComposio?.()} variant="ghost" className="text-gray-500 hover:text-gray-800">
-                <Plug size={16} />
-                {/* Only change the text color when selected */}
-                <span className={composioEnabled ? 'text-blue-600' : undefined}>{composioEnabled ? 'ON' : 'OFF'}</span>
-              </PromptInputButton>
-            )}
 
             {/* Model selector */}
             <PromptInputModelSelect value={model} onValueChange={(v: any) => {

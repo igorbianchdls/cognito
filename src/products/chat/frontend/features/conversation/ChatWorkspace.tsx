@@ -53,7 +53,7 @@ export default function ChatWorkspace({
               <div
                 className={
                   splitOpen
-                    ? "flex h-full min-h-0 flex-col gap-2 p-2 lg:flex-row"
+                    ? "flex h-full min-h-0 flex-col gap-2 px-2 py-0 lg:flex-row"
                     : "h-full min-h-0"
                 }
               >
@@ -66,7 +66,7 @@ export default function ChatWorkspace({
                   <div
                     className={
                       splitOpen
-                        ? "h-full min-h-0 min-w-0 overflow-hidden rounded-md border border-gray-200 bg-white"
+                        ? "h-full min-h-0 min-w-0 overflow-hidden rounded-md bg-white"
                         : "h-full min-h-0 min-w-0"
                     }
                   >
