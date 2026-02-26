@@ -37,12 +37,14 @@ export default function ChatWorkspace({
     setArtifactOpen,
     artifactExpanded,
     setArtifactExpanded,
+    sidebarCollapsed,
+    setSidebarCollapsed,
   } = useChatConversationUiState({ chatId: initialChatId });
   const [chatId, setChatId] = useState<string | null>(null);
   const splitOpen = artifactOpen && !artifactExpanded;
 
   return (
-    <SidebarProvider>
+    <SidebarProvider open={!sidebarCollapsed} onOpenChange={(open) => setSidebarCollapsed(!open)}>
       <SidebarShadcn showHeaderTrigger={false} />
       <SidebarInset className="h-screen overflow-hidden">
         <div className="flex h-full overflow-hidden">

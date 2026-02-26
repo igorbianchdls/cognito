@@ -9,6 +9,7 @@ type StoredConversationUiState = {
   artifactOpen?: boolean;
   artifactExpanded?: boolean;
   artifactTab?: SandboxTab;
+  sidebarCollapsed?: boolean;
 };
 
 type Options = {
@@ -16,6 +17,7 @@ type Options = {
 };
 
 const STORAGE_PREFIX = "chat-ui:";
+const GLOBAL_SIDEBAR_KEY = "ui:sidebar:collapsed";
 
 function parseBool(input: string | null | undefined): boolean | null {
   if (input == null) return null;
@@ -42,11 +44,22 @@ function readStoredState(chatId?: string): StoredConversationUiState | null {
   }
 }
 
+function readGlobalSidebarCollapsed(): boolean | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(GLOBAL_SIDEBAR_KEY);
+    return parseBool(raw);
+  } catch {
+    return null;
+  }
+}
+
 export function useChatConversationUiState({ chatId }: Options) {
   const activeTab = useStore($sandboxActiveTab);
 
   const [artifactOpen, setArtifactOpen] = React.useState(false);
   const [artifactExpanded, setArtifactExpanded] = React.useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const hydratedRef = React.useRef(false);
   const applyingUrlRef = React.useRef(false);
 
@@ -57,6 +70,14 @@ export function useChatConversationUiState({ chatId }: Options) {
     const urlExpanded = parseBool(qs.get("artifactExpanded"));
     const urlTab = parseTab(qs.get("artifactTab"));
     const hasUrlState = urlOpen !== null || urlExpanded !== null || urlTab !== null;
+    const stored = readStoredState(chatId);
+    const restoredSidebarCollapsed =
+      typeof stored?.sidebarCollapsed === "boolean"
+        ? stored.sidebarCollapsed
+        : readGlobalSidebarCollapsed();
+    if (typeof restoredSidebarCollapsed === "boolean") {
+      setSidebarCollapsed(restoredSidebarCollapsed);
+    }
 
     if (hasUrlState) {
       applyingUrlRef.current = true;
@@ -71,7 +92,6 @@ export function useChatConversationUiState({ chatId }: Options) {
     }
 
     if (hydratedRef.current) return;
-    const stored = readStoredState(chatId);
     if (stored) {
       if (typeof stored.artifactOpen === "boolean") setArtifactOpen(stored.artifactOpen);
       if (typeof stored.artifactExpanded === "boolean") setArtifactExpanded(stored.artifactExpanded);
@@ -87,13 +107,23 @@ export function useChatConversationUiState({ chatId }: Options) {
       artifactOpen,
       artifactExpanded,
       artifactTab: activeTab,
+      sidebarCollapsed,
     };
     try {
       window.localStorage.setItem(`${STORAGE_PREFIX}${chatId}`, JSON.stringify(nextState));
     } catch {
       // ignore quota/storage errors
     }
-  }, [chatId, artifactOpen, artifactExpanded, activeTab]);
+  }, [chatId, artifactOpen, artifactExpanded, activeTab, sidebarCollapsed]);
+
+  React.useEffect(() => {
+    if (!hydratedRef.current || typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(GLOBAL_SIDEBAR_KEY, sidebarCollapsed ? "1" : "0");
+    } catch {
+      // ignore quota/storage errors
+    }
+  }, [sidebarCollapsed]);
 
   React.useEffect(() => {
     if (!hydratedRef.current || applyingUrlRef.current) return;
@@ -125,6 +155,8 @@ export function useChatConversationUiState({ chatId }: Options) {
     setArtifactExpanded,
     artifactTab: activeTab,
     setArtifactTab: (tab: SandboxTab) => sandboxActions.setActiveTab(tab),
+    sidebarCollapsed,
+    setSidebarCollapsed,
   };
 }
 
