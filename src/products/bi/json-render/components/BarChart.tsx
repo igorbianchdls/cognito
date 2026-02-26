@@ -254,6 +254,9 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   } as const;
 
   const padding = typeof nivo?.padding === 'number' ? nivo.padding : 0.3;
+  const borderRadius = typeof (nivo as AnyRecord)?.borderRadius === 'number'
+    ? Number((nivo as AnyRecord).borderRadius)
+    : 6;
   const groupMode = (nivo?.groupMode === 'stacked' ? 'stacked' : 'grouped') as 'grouped'|'stacked';
   const colorBy = (typeof (nivo as AnyRecord)?.colorBy === 'string'
     ? (nivo as AnyRecord).colorBy
@@ -366,6 +369,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
           indexBy="label"
           margin={computedMargin}
           padding={padding}
+          borderRadius={borderRadius}
           groupMode={groupMode}
           layout={layout as any}
           colorBy={colorBy}
