@@ -548,6 +548,7 @@ export const catalog = {
         iconBoxRadius: z.union([z.number(), z.string()]).optional(),
         titleStyle: TitleStyleSchema.optional(),
         itemTextStyle: TitleStyleSchema.optional(),
+        colorScheme: z.union([z.string(), z.array(z.string())]).optional(),
         containerStyle: ContainerStyleSchema.optional(),
         borderless: z.boolean().optional(),
         task: z.object({
