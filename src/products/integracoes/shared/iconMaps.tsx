@@ -75,6 +75,7 @@ export const ICON_KEY_BY_SLUG: Record<string, string> = {
   GOOGLE_ANALYTICS: 'googleanalytics',
   GOOGLEADS: 'googleads',
   METAADS: 'meta',
+  AMAZON: 'amazon',
   SLACK: 'slack',
   SHOPIFY: 'shopify',
   HUBSPOT: 'hubspot',

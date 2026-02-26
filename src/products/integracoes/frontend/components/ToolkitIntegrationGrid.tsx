@@ -13,6 +13,7 @@ type ToolkitIntegrationGridProps = {
   busySlug: string | null
   onIntegrate: (slug: string) => void
   onDisconnectUnsupported: () => void
+  priorityOrder?: readonly string[]
 }
 
 export default function ToolkitIntegrationGrid({
@@ -21,10 +22,24 @@ export default function ToolkitIntegrationGrid({
   busySlug,
   onIntegrate,
   onDisconnectUnsupported,
+  priorityOrder = [],
 }: ToolkitIntegrationGridProps) {
-  const withIcon = toolkits.filter((toolkit) => toolkitHasIcon(toolkit.slug))
-  const withoutIcon = toolkits.filter((toolkit) => !toolkitHasIcon(toolkit.slug))
-  const ordered = [...withIcon, ...withoutIcon]
+  const priorityIndex = new Map<string, number>(
+    priorityOrder.map((slug, index) => [String(slug).toUpperCase(), index]),
+  )
+  const ordered = [...toolkits].sort((a, b) => {
+    const aPriority = priorityIndex.get(String(a.slug).toUpperCase())
+    const bPriority = priorityIndex.get(String(b.slug).toUpperCase())
+    const aPinned = aPriority !== undefined
+    const bPinned = bPriority !== undefined
+    if (aPinned && bPinned && aPriority !== bPriority) return aPriority - bPriority
+    if (aPinned !== bPinned) return aPinned ? -1 : 1
+
+    const aHas = toolkitHasIcon(a.slug)
+    const bHas = toolkitHasIcon(b.slug)
+    if (aHas !== bHas) return aHas ? -1 : 1
+    return a.name.localeCompare(b.name)
+  })
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">

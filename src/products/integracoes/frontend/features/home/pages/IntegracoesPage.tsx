@@ -8,9 +8,15 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import ToolkitIntegrationGrid from '@/products/integracoes/frontend/components/ToolkitIntegrationGrid'
 import useIntegracoesComposio from '@/products/integracoes/frontend/hooks/useIntegracoesComposio'
 import { renderIntegrationLogo, toolkitHasIcon } from '@/products/integracoes/shared/iconMaps'
+import {
+  applyToolkitDescriptionOverrides,
+  DATA_CONNECTOR_TOP_PRIORITY_ORDER,
+  MCP_DESCRIPTION_OVERRIDES,
+  MCP_TOP_PRIORITY_ORDER,
+} from '@/products/integracoes/shared/catalogPresentation'
 import { DATA_CONNECTOR_EXTRA_TOOLKITS } from '@/products/integracoes/shared/dataConnectorExtras'
 import { TOOLKITS } from '@/products/integracoes/shared/toolkits'
-import type { FilterTab, ToolkitDefinition } from '@/products/integracoes/shared/types'
+import type { FilterTab, ToolkitDefinition, ToolkitStatusMap } from '@/products/integracoes/shared/types'
 
 type IntegrationKind = 'mcp' | 'data-connectors'
 
@@ -46,7 +52,9 @@ function SegmentButton({
       onClick={onClick}
       className={[
         'w-full rounded-xl border p-4 text-left transition-colors',
-        active ? 'border-black bg-gray-50' : 'border-gray-200 bg-white hover:border-gray-300',
+        active
+          ? 'border-gray-200 bg-white shadow-sm ring-1 ring-gray-200'
+          : 'border-gray-200 bg-white hover:shadow-sm',
       ].join(' ')}
     >
       <div className="flex items-start justify-between gap-3">
@@ -62,8 +70,24 @@ function SegmentButton({
   )
 }
 
-function DataConnectorGrid({ connectors }: { connectors: ToolkitDefinition[] }) {
+function DataConnectorGrid({
+  connectors,
+  tkStatus,
+}: {
+  connectors: ToolkitDefinition[]
+  tkStatus: ToolkitStatusMap
+}) {
+  const topPriorityIndex = new Map<string, number>(
+    DATA_CONNECTOR_TOP_PRIORITY_ORDER.map((slug, index) => [slug, index]),
+  )
   const ordered = [...connectors].sort((a, b) => {
+    const aPriority = topPriorityIndex.get(String(a.slug).toUpperCase())
+    const bPriority = topPriorityIndex.get(String(b.slug).toUpperCase())
+    const aPinned = aPriority !== undefined
+    const bPinned = bPriority !== undefined
+    if (aPinned && bPinned && aPriority !== bPriority) return aPriority - bPriority
+    if (aPinned !== bPinned) return aPinned ? -1 : 1
+
     const aHas = toolkitHasIcon(a.slug)
     const bHas = toolkitHasIcon(b.slug)
     if (aHas === bHas) return a.name.localeCompare(b.name)
@@ -74,6 +98,11 @@ function DataConnectorGrid({ connectors }: { connectors: ToolkitDefinition[] }) 
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
       {ordered.map((connector) => (
         <div key={connector.slug} className="border rounded p-4 bg-white" style={{ boxShadow: 'var(--shadow-3)' }}>
+          {(() => {
+            const lowerSlug = connector.slug.toLowerCase()
+            const isConnected = Boolean(tkStatus[connector.slug] ?? tkStatus[lowerSlug])
+            return (
+              <>
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               {renderIntegrationLogo(connector.slug, connector.name)}
@@ -82,20 +111,34 @@ function DataConnectorGrid({ connectors }: { connectors: ToolkitDefinition[] }) 
                 <div className="text-xs text-gray-500 truncate">{connector.description}</div>
               </div>
             </div>
-            <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-gray-600">
-              Em breve
+            <span
+              className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] ${
+                isConnected
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-blue-100 text-blue-700'
+              }`}
+            >
+              {isConnected ? 'Conectado' : 'Disponível'}
             </span>
           </div>
           <div className="mt-4 flex items-center justify-between">
-            <span className="text-xs text-gray-500">Sincronização contínua/periódica para BI</span>
+            <span className="text-xs text-gray-500">
+              {isConnected ? 'Sincronização ativa para BI' : 'Pronto para sincronização contínua/periódica'}
+            </span>
             <button
               type="button"
-              disabled
-              className="px-3 py-1.5 rounded bg-gray-100 text-gray-500 text-sm disabled:opacity-80"
+              className={`px-3 py-1.5 rounded text-sm ${
+                isConnected
+                  ? 'bg-gray-100 text-gray-700'
+                  : 'bg-black text-white'
+              }`}
             >
-              Solicitar
+              {isConnected ? 'Configurar' : 'Conectar'}
             </button>
           </div>
+              </>
+            )
+          })()}
         </div>
       ))}
     </div>
@@ -117,7 +160,10 @@ export default function IntegracoesPage() {
     loadUsers,
     handleIntegrate,
   } = useIntegracoesComposio()
-  const mcpToolkits = TOOLKITS
+  const mcpToolkits = useMemo(
+    () => applyToolkitDescriptionOverrides(TOOLKITS, MCP_DESCRIPTION_OVERRIDES),
+    [],
+  )
   const dataConnectorSamples = useMemo(() => {
     const map = new Map<string, ToolkitDefinition>()
     for (const tk of [...TOOLKITS, ...DATA_CONNECTOR_EXTRA_TOOLKITS]) {
@@ -208,6 +254,7 @@ export default function IntegracoesPage() {
                           tkStatus={tkStatus}
                           busySlug={busySlug}
                           onIntegrate={handleIntegrate}
+                          priorityOrder={MCP_TOP_PRIORITY_ORDER}
                           onDisconnectUnsupported={() =>
                             setError('Desconectar ainda não implementado')
                           }
@@ -226,7 +273,7 @@ export default function IntegracoesPage() {
                             600+ conectores
                           </span>
                         </div>
-                        <DataConnectorGrid connectors={dataConnectorSamples} />
+                        <DataConnectorGrid connectors={dataConnectorSamples} tkStatus={tkStatus} />
                       </>
                     )}
 

@@ -2,6 +2,7 @@ import type { ToolkitDefinition } from '@/products/integracoes/shared/types'
 
 // Catálogo extra de conectores de dados/BI (curado para logos disponíveis nas libs atuais).
 export const DATA_CONNECTOR_EXTRA_TOOLKITS: ToolkitDefinition[] = [
+  { slug: 'AMAZON', name: 'Amazon', description: 'Marketplace, catálogo e pedidos' },
   { slug: 'POSTGRESQL', name: 'PostgreSQL', description: 'Banco relacional para analytics e replicação' },
   { slug: 'MYSQL', name: 'MySQL', description: 'Banco relacional operacional e ETL' },
   { slug: 'MARIADB', name: 'MariaDB', description: 'Banco relacional compatível com MySQL' },
