@@ -133,6 +133,10 @@ export default function AppsHomePage() {
           <a href="/apps/estoque" className="rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100">Estoque</a>
           <a href="/apps/crm" className="rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100">CRM</a>
           <a href="/apps/documentos" className="rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100">Documentos</a>
+          <a href="/apps/amazon" className="rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100">Amazon</a>
+          <a href="/apps/mercadolivre" className="rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100">Mercado Livre</a>
+          <a href="/apps/shopee" className="rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100">Shopee</a>
+          <a href="/apps/shopify" className="rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100">Shopify</a>
         </div>
 
         <DataProvider initialData={INITIAL_APPS_HOME_DATA}>
