@@ -92,7 +92,7 @@ export const APPS_ESTOQUE_TEMPLATE_TEXT = JSON.stringify(
               type: 'AISummary',
               props: {
                 fr: 1,
-                title: 'Resumo da IA',
+                title: 'Insights da IA',
                 items: [
                   { icon: 'package', text: 'Itens com maior valor imobilizado merecem monitoramento de giro e cobertura por almoxarifado.' },
                   { icon: 'activity', text: 'Movimentações por tipo ajudam a separar consumo real de ajustes operacionais.' },

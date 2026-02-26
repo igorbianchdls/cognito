@@ -89,13 +89,14 @@ const defaultPieChart = {
 } as const;
 
 const defaultAISummary = {
+  titleStyle: { padding: '6px 0', margin: 0, textAlign: 'left' },
   itemGap: 10,
   iconGap: 10,
   iconBoxSize: 30,
   iconSize: 16,
   iconBoxRadius: 8,
   itemTextStyle: { fontWeight: 500, fontSize: 13, color: '#334155' },
-  containerStyle: { borderColor: '#e5e7eb', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, padding: 12 },
+  containerStyle: { borderColor: '#e5e7eb', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, padding: 8 },
   borderless: false,
 } as const;
 

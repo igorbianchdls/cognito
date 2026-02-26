@@ -1,7 +1,8 @@
 'use client'
 
 import React from 'react'
-import { Mail, MessageCircle } from 'lucide-react'
+import { Mail } from 'lucide-react'
+import { SiWhatsapp } from '@icons-pack/react-simple-icons'
 import type { JsonTree } from '@/products/bi/shared/types'
 import { getNodeAtPath } from '@/products/bi/features/dashboard-editor/lib/jsonTreeOps'
 import type { JsonNodePath } from '@/products/bi/features/dashboard-editor/types/editor-types'
@@ -50,7 +51,7 @@ function TextField({
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded border border-gray-300 px-2 py-1 text-xs"
+        className="w-full rounded bg-gray-100 px-2 py-1 text-xs outline-none ring-0 focus:bg-gray-50"
       />
     </div>
   )
@@ -77,7 +78,7 @@ function TextAreaField({
         rows={rows}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded border border-gray-300 px-2 py-1.5 text-xs"
+        className="w-full rounded bg-gray-100 px-2 py-1.5 text-xs outline-none ring-0 focus:bg-gray-50"
       />
     </div>
   )
@@ -99,7 +100,7 @@ function NumberField({
         type="number"
         value={value}
         onChange={(e) => onChange(e.target.value === '' ? undefined : Number(e.target.value))}
-        className="w-full rounded border border-gray-300 px-2 py-1 text-xs"
+        className="w-full rounded bg-gray-100 px-2 py-1 text-xs outline-none ring-0 focus:bg-gray-50"
       />
     </div>
   )
@@ -122,7 +123,7 @@ function SelectField({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded border border-gray-300 px-2 py-1 text-xs"
+        className="w-full rounded bg-gray-100 px-2 py-1 text-xs outline-none ring-0 focus:bg-gray-50"
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>
@@ -152,14 +153,14 @@ function ColorField({
           type="color"
           value={normalized}
           onChange={(e) => onChange(e.target.value)}
-          className="h-8 w-10 rounded border border-gray-300 bg-transparent p-0.5"
+          className="h-8 w-10 rounded bg-gray-100 p-0.5"
         />
         <input
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="#ffffff"
-          className="w-full rounded border border-gray-300 px-2 py-1 text-xs"
+          className="w-full rounded bg-gray-100 px-2 py-1 text-xs outline-none ring-0 focus:bg-gray-50"
         />
       </div>
     </div>
@@ -344,12 +345,12 @@ export default function PropertiesPanel({
         <div className="p-3 text-xs text-gray-500">Selecione um componente e clique em Editar no menu `...`.</div>
       ) : (
         <div className="space-y-3 p-3">
-          <div className="inline-flex items-center gap-1 rounded border border-gray-200 bg-gray-50 p-1">
+          <div className="inline-flex items-center gap-1 rounded bg-gray-100 p-1">
             {supportsDataTab && (
               <button
                 type="button"
                 onClick={() => setActiveTab('data')}
-                className={`rounded px-2 py-1 text-xs ${activeTab === 'data' ? 'bg-white border border-gray-300 text-gray-900' : 'text-gray-600 hover:bg-white'}`}
+                className={`rounded px-2 py-1 text-xs ${activeTab === 'data' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:bg-white'}`}
               >
                 Data
               </button>
@@ -358,7 +359,7 @@ export default function PropertiesPanel({
               <button
                 type="button"
                 onClick={() => setActiveTab('style')}
-                className={`rounded px-2 py-1 text-xs ${activeTab === 'style' ? 'bg-white border border-gray-300 text-gray-900' : 'text-gray-600 hover:bg-white'}`}
+                className={`rounded px-2 py-1 text-xs ${activeTab === 'style' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:bg-white'}`}
               >
                 Style
               </button>
@@ -366,7 +367,7 @@ export default function PropertiesPanel({
             <button
               type="button"
               onClick={() => setActiveTab('json')}
-              className={`rounded px-2 py-1 text-xs ${activeTab === 'json' ? 'bg-white border border-gray-300 text-gray-900' : 'text-gray-600 hover:bg-white'}`}
+              className={`rounded px-2 py-1 text-xs ${activeTab === 'json' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:bg-white'}`}
             >
               JSON
             </button>
@@ -401,7 +402,7 @@ export default function PropertiesPanel({
                       <select
                         value={String(getProp(node, 'task.schedule.frequency', 'none'))}
                         onChange={(e) => onSetNodeProp(selectedPath, 'task.schedule.frequency', e.target.value)}
-                        className="w-full rounded border border-gray-300 px-2 py-1 text-xs"
+                        className="w-full rounded bg-gray-100 px-2 py-1 text-xs outline-none ring-0 focus:bg-gray-50"
                       >
                         {AISUMMARY_FREQUENCY_OPTIONS.map((opt) => (
                           <option key={opt.value} value={opt.value}>
@@ -413,7 +414,7 @@ export default function PropertiesPanel({
                         value={String(getProp(node, 'task.schedule.hour', '08'))}
                         disabled={String(getProp(node, 'task.schedule.frequency', 'none')) === 'none'}
                         onChange={(e) => onSetNodeProp(selectedPath, 'task.schedule.hour', e.target.value)}
-                        className="w-full rounded border border-gray-300 px-2 py-1 text-xs disabled:bg-gray-100 disabled:text-gray-400"
+                        className="w-full rounded bg-gray-100 px-2 py-1 text-xs outline-none ring-0 focus:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400"
                       >
                         {HOUR_OPTIONS.map((hour) => (
                           <option key={hour} value={hour}>
@@ -425,7 +426,7 @@ export default function PropertiesPanel({
                         value={String(getProp(node, 'task.schedule.minute', '00'))}
                         disabled={String(getProp(node, 'task.schedule.frequency', 'none')) === 'none'}
                         onChange={(e) => onSetNodeProp(selectedPath, 'task.schedule.minute', e.target.value)}
-                        className="w-full rounded border border-gray-300 px-2 py-1 text-xs disabled:bg-gray-100 disabled:text-gray-400"
+                        className="w-full rounded bg-gray-100 px-2 py-1 text-xs outline-none ring-0 focus:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400"
                       >
                         {MINUTE_OPTIONS.map((minute) => (
                           <option key={minute} value={minute}>
@@ -453,7 +454,7 @@ export default function PropertiesPanel({
                       />
                       <ToggleChip
                         label="WhatsApp"
-                        icon={<MessageCircle className="h-3.5 w-3.5" />}
+                        icon={<SiWhatsapp size={14} />}
                         selected={getStringArrayProp(node, 'task.notifications.channels').includes('whatsapp')}
                         onClick={() => {
                           const current = getStringArrayProp(node, 'task.notifications.channels')
@@ -834,7 +835,7 @@ export default function PropertiesPanel({
                   <textarea
                     value={rawPropsText}
                     onChange={(e) => setRawPropsText(e.target.value)}
-                    className="min-h-[220px] w-full rounded border border-gray-300 p-2 font-mono text-[11px]"
+                    className="min-h-[220px] w-full rounded bg-gray-100 p-2 font-mono text-[11px] outline-none ring-0 focus:bg-gray-50"
                     spellCheck={false}
                   />
                   {rawPropsError && <div className="mt-1 text-[11px] text-red-600">{rawPropsError}</div>}

@@ -130,7 +130,7 @@ export const APPS_CONTABILIDADE_TEMPLATE_TEXT = JSON.stringify(
               type: 'AISummary',
               props: {
                 fr: 1,
-                title: 'Resumo da IA',
+                title: 'Insights da IA',
                 items: [
                   { icon: 'brain', text: 'Lançamentos concentrados em poucas contas podem mascarar variações sazonais do período.' },
                   { icon: 'activity', text: 'Compare débitos e créditos por conta antes de analisar saldo consolidado mensal.' },

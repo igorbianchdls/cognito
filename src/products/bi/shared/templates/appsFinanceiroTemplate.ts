@@ -159,7 +159,7 @@ export const APPS_FINANCEIRO_TEMPLATE_TEXT = JSON.stringify(
               type: 'AISummary',
               props: {
                 fr: 1,
-                title: 'Resumo da IA',
+                title: 'Insights da IA',
                 items: [
                   { icon: 'circledollarsign', text: 'Compare recebimentos e pagamentos para antecipar pressão de caixa no período.' },
                   { icon: 'trendingUp', text: 'Distribuições por status e fornecedor ajudam a priorizar ações operacionais.' },

@@ -93,7 +93,7 @@ export const APPS_CRM_TEMPLATE_TEXT = JSON.stringify(
               type: 'AISummary',
               props: {
                 fr: 1,
-                title: 'Resumo da IA',
+                title: 'Insights da IA',
                 items: [
                   { icon: 'trendingUp', text: 'Volume e taxa de conversão ficam mais claros quando segmentados por origem e fase do pipeline.' },
                   { icon: 'users', text: 'Distribuição por vendedor ajuda a identificar gargalos de follow-up e cobertura comercial.' },

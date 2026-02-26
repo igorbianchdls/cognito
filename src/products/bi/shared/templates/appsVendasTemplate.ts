@@ -53,7 +53,7 @@ export const APPS_VENDAS_TEMPLATE_TEXT = JSON.stringify([
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "BarChart", props: { fr: 1, title: "Pedidos por Mês", dataQuery: { model: "vendas.pedidos", dimension: "mes", dimensionExpr: "TO_CHAR(DATE_TRUNC('month', data_pedido), 'YYYY-MM')", measure: "COUNT()", filters: {}, orderBy: { field: "dimension", dir: "asc" }, limit: 12 }, interaction: { clickAsFilter: false }, format: "number", height: 220, nivo: { layout: 'vertical' } } },
         { type: "BarChart", props: { fr: 1, title: "Ticket Médio por Mês", dataQuery: { model: "vendas.pedidos", dimension: "mes", dimensionExpr: "TO_CHAR(DATE_TRUNC('month', data_pedido), 'YYYY-MM')", measure: "AVG(valor_total)", filters: {}, orderBy: { field: "dimension", dir: "asc" }, limit: 12 }, interaction: { clickAsFilter: false }, format: "currency", height: 220, nivo: { layout: 'vertical' } } }
-        ,{ type: "AISummary", props: { fr: 1, title: "Resumo da IA", items: [
+        ,{ type: "AISummary", props: { fr: 1, title: "Insights da IA", items: [
           { icon: "trendingUp", text: "Receita concentrada em poucos clientes; monitore dependência dos top compradores." },
           { icon: "sparkles", text: "Canais com melhor desempenho tendem a manter ticket médio acima da média do período." },
           { icon: "triangleAlert", text: "Quedas em filiais específicas podem distorcer o resultado consolidado do mês." }

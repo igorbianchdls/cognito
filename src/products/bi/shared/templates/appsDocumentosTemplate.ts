@@ -46,7 +46,7 @@ export const APPS_DOCUMENTOS_TEMPLATE_TEXT = JSON.stringify(
               type: 'AISummary',
               props: {
                 fr: 2,
-                title: 'Resumo da IA',
+                title: 'Insights da IA',
                 items: [
                   { icon: 'badgeCheck', text: 'Monitorar templates e documentos gerados evita retrabalho em operações recorrentes.' },
                   { icon: 'sparkles', text: 'Picos de geração podem indicar campanhas, faturamento ou períodos de renovação.' },
