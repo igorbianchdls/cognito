@@ -224,9 +224,13 @@ async function fetchOptionsFromSource(
         body: JSON.stringify(payload),
       });
       const j = await res.json();
+      if (!res.ok || j?.success === false) {
+        throw new Error(String(j?.message || `Options resolve failed (${res.status})`));
+      }
       const raw = Array.isArray(j?.options) ? j.options : [];
       return mapRawToOptions(raw, src.valueField, src.labelField);
-    } catch {
+    } catch (e) {
+      console.error('[BI/SlicerOptions] resolve failed', e);
       return [];
     }
   }

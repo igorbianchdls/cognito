@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
-import { normalizeAppsTableName } from '@/products/apps/shared/queryCatalog'
+import { normalizeAppsTableName as normalizeAppsTableNameLegacy } from '@/products/apps/shared/queryCatalog'
+import { normalizeAppsTableName as normalizeBiTableName } from '@/products/bi/shared/queryCatalog'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -11,6 +12,7 @@ type ResolveBody = {
   field?: string
   q?: string
   limit?: number
+  contextFilters?: Record<string, unknown>
 }
 
 export async function POST(req: NextRequest) {
@@ -29,12 +31,12 @@ export async function POST(req: NextRequest) {
       return Response.json({ success: false, message: 'field é obrigatório' }, { status: 400 })
     }
 
-    const canonicalModel = normalizeAppsTableName(rawModel)
+    const canonicalModel = normalizeAppsTableNameLegacy(rawModel) || normalizeBiTableName(rawModel)
     if (!canonicalModel) {
       return Response.json({ success: false, message: `model não suportado: ${rawModel}` }, { status: 400 })
     }
     const moduleSlug = canonicalModel.split('.')[0]
-    if (!moduleSlug || !['vendas', 'compras', 'financeiro', 'crm', 'estoque'].includes(moduleSlug)) {
+    if (!moduleSlug || !['vendas', 'compras', 'financeiro', 'crm', 'estoque', 'trafegopago'].includes(moduleSlug)) {
       return Response.json({ success: false, message: `módulo inválido para model: ${canonicalModel}` }, { status: 400 })
     }
 
@@ -42,6 +44,23 @@ export async function POST(req: NextRequest) {
     params.set('field', field)
     params.set('limit', String(limit))
     if (q) params.set('q', q)
+    const contextFilters =
+      body.contextFilters && typeof body.contextFilters === 'object' && !Array.isArray(body.contextFilters)
+        ? (body.contextFilters as Record<string, unknown>)
+        : {}
+    for (const [k, v] of Object.entries(contextFilters)) {
+      const key = String(k || '').trim()
+      if (!key) continue
+      if (Array.isArray(v)) {
+        for (const item of v) {
+          if (item === null || item === undefined || item === '') continue
+          params.append(key, String(item))
+        }
+        continue
+      }
+      if (v === null || v === undefined || v === '') continue
+      params.append(key, String(v))
+    }
 
     const origin = (() => {
       try {
