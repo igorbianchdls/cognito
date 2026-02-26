@@ -24,6 +24,11 @@ export const APPS_COMPRAS_TEMPLATE_TEXT = JSON.stringify([
     },
     children: [
       { type: "Header", props: { title: "Dashboard de Compras", subtitle: "Principais indicadores e cortes", align: "center", controlsPosition: "right", datePicker: { visible: true, mode: "range", position: "right", storePath: "filters.dateRange", actionOnChange: { type: "refresh_data" }, style: { padding: 6, fontFamily: "Barlow", fontSize: 12 } } } },
+      { type: "AISummary", props: { title: "Resumo da IA", containerStyle: { margin: "12px 16px 0", padding: 12 }, items: [
+        { icon: "shoppingCart", text: "Compras concentradas por fornecedor podem aumentar risco de negociação e prazo." },
+        { icon: "lightbulb", text: "Centros de custo com maior recorrência merecem revisão de contratos e limites." },
+        { icon: "triangleAlert", text: "Itens sem recebimento ou com atraso tendem a impactar o fluxo do período." }
+      ] } },
       { type: "Div", props: { direction: "row", gap: 12, padding: 16, justify: "start", align: "start", childGrow: true }, children: [
         { type: "KPI", props: { title: "Gasto", format: "currency", dataQuery: { model: "compras.compras", measure: "SUM(valor_total)", filters: {} } } },
         { type: "KPI", props: { title: "Fornecedores", format: "number", dataQuery: { model: "compras.compras", measure: "COUNT_DISTINCT(fornecedor_id)", filters: {} } } },

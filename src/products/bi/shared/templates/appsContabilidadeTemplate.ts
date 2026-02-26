@@ -33,6 +33,18 @@ export const APPS_CONTABILIDADE_TEMPLATE_TEXT = JSON.stringify(
           },
         },
         {
+          type: 'AISummary',
+          props: {
+            title: 'Resumo da IA',
+            containerStyle: { margin: '12px 16px 0', padding: 12 },
+            items: [
+              { icon: 'brain', text: 'Lançamentos concentrados em poucas contas podem mascarar variações sazonais do período.' },
+              { icon: 'activity', text: 'Compare débitos e créditos por conta antes de analisar saldo consolidado mensal.' },
+              { icon: 'triangleAlert', text: 'Diferenças de classificação contábil costumam aparecer primeiro nas contas analíticas.' },
+            ],
+          },
+        },
+        {
           type: 'Div',
           props: { direction: 'row', gap: 12, padding: 16, justify: 'start', align: 'start', childGrow: true },
           children: [

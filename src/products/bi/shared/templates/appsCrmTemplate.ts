@@ -39,6 +39,18 @@ export const APPS_CRM_TEMPLATE_TEXT = JSON.stringify(
           },
         },
         {
+          type: 'AISummary',
+          props: {
+            title: 'Resumo da IA',
+            containerStyle: { margin: '12px 16px 0', padding: 12 },
+            items: [
+              { icon: 'trendingUp', text: 'Volume e taxa de conversão ficam mais claros quando segmentados por origem e fase do pipeline.' },
+              { icon: 'users', text: 'Distribuição por vendedor ajuda a identificar gargalos de follow-up e cobertura comercial.' },
+              { icon: 'lightbulb', text: 'Leads com recorrência em fases iniciais podem indicar ajuste de qualificação.' },
+            ],
+          },
+        },
+        {
           type: 'Div',
           props: { direction: 'row', gap: 12, padding: 16, justify: 'start', align: 'start', childGrow: true },
           children: [

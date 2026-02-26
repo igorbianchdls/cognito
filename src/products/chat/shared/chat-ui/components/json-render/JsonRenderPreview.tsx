@@ -142,18 +142,22 @@ export default function JsonRenderPreview({ chatId }: Props) {
     return () => window.removeEventListener('sandbox-preview-refresh', onRefresh);
   }, []);
 
+  React.useEffect(() => {
+    if (!error) return;
+    sandboxActions.pushArtifactNotification({ source: 'preview', message: error });
+  }, [error]);
+
+  React.useEffect(() => {
+    if (!pathsError) return;
+    sandboxActions.pushArtifactNotification({ source: 'paths', message: pathsError });
+  }, [pathsError]);
+
   return (
     <div className="h-full w-full min-h-0 overflow-auto p-2 bg-gray-50">
-      {(pathsError && !error) && (
-        <div className="rounded border border-yellow-300 bg-yellow-50 text-yellow-800 text-xs p-2 mb-2">{pathsError}</div>
-      )}
       {!chatId && !error && !loading && (
         <div className="rounded border border-gray-200 bg-white text-gray-600 text-xs p-3">
           UI de preview aberta. Inicie um computador para carregar e renderizar arquivos `.jsonr`.
         </div>
-      )}
-      {error && (
-        <div className="rounded border border-red-300 bg-red-50 text-red-700 text-xs p-2">{error}</div>
       )}
       {!error && loading && (
         <div className="text-xs text-gray-500 p-2">Carregando...</div>

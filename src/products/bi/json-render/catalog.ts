@@ -531,6 +531,28 @@ export const catalog = {
       }).strict(),
       hasChildren: false,
     },
+    AISummary: {
+      props: z.object({
+        title: z.string().optional(),
+        items: z.array(z.object({
+          icon: z.string().optional(),
+          text: z.string(),
+          iconBgColor: z.string().optional(),
+          iconColor: z.string().optional(),
+        }).strict()).default([]),
+        fr: z.number().optional(),
+        itemGap: z.number().optional(),
+        iconGap: z.number().optional(),
+        iconBoxSize: z.number().optional(),
+        iconSize: z.number().optional(),
+        iconBoxRadius: z.union([z.number(), z.string()]).optional(),
+        titleStyle: TitleStyleSchema.optional(),
+        itemTextStyle: TitleStyleSchema.optional(),
+        containerStyle: ContainerStyleSchema.optional(),
+        borderless: z.boolean().optional(),
+      }).strict(),
+      hasChildren: false,
+    },
     Button: {
       props: z.object({
         label: z.string(),

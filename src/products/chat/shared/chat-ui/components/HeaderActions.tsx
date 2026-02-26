@@ -5,8 +5,9 @@ import { useStore } from '@nanostores/react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Undo2, Redo2, ClipboardList, GitBranch, Upload, Palette, Save } from 'lucide-react';
-import { $previewJsonrPath } from '@/chat/sandbox';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Undo2, Redo2, GitBranch, Upload, Palette, Save, Bell, Trash2 } from 'lucide-react';
+import { $artifactNotifications, $previewJsonrPath, sandboxActions } from '@/chat/sandbox';
 import { APPS_COLOR_PRESETS, APPS_HEADER_THEME_OPTIONS, APPS_THEME_OPTIONS } from '@/products/bi/shared/themeOptions';
 import { DASHBOARD_BACKGROUND_PRESET_OPTIONS } from '@/products/bi/json-render/backgrounds/registry';
 
@@ -197,6 +198,7 @@ const ARTIFACT_THEME_FX_OPTIONS = [
 
 export default function HeaderActions({ chatId }: HeaderActionsProps) {
   const previewPath = useStore($previewJsonrPath);
+  const artifactNotifications = useStore($artifactNotifications);
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const [themeName, setThemeName] = React.useState<string>('light');
@@ -207,6 +209,16 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
   const [error, setError] = React.useState<string | null>(null);
   const [snapshotSaving, setSnapshotSaving] = React.useState(false);
   const [snapshotStatus, setSnapshotStatus] = React.useState<string | null>(null);
+  const [notifOpen, setNotifOpen] = React.useState(false);
+  const unreadCount = React.useMemo(
+    () => artifactNotifications.reduce((acc, n) => acc + (n.read ? 0 : 1), 0),
+    [artifactNotifications]
+  );
+
+  React.useEffect(() => {
+    if (!notifOpen) return;
+    sandboxActions.markArtifactNotificationsRead();
+  }, [notifOpen]);
 
   const schemeToPreset = React.useCallback((arr?: string[]): string => {
     if (!arr) return 'custom';
@@ -619,9 +631,65 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
         <Redo2 className="w-4 h-4 text-gray-400" />
       </IconButton>
       <Separator orientation="vertical" className="h-5 mx-2" />
-      <IconButton title="Clipboard">
-        <ClipboardList className="w-4 h-4" />
-      </IconButton>
+      <Dialog open={notifOpen} onOpenChange={setNotifOpen}>
+        <DialogTrigger asChild>
+          <button
+            type="button"
+            className="relative h-8 w-8 inline-flex items-center justify-center rounded-md text-gray-700 hover:bg-gray-100"
+            aria-label="Notificações do Artifact"
+            title="Notificações do Artifact"
+          >
+            <Bell className="w-4 h-4" />
+            {unreadCount > 0 ? (
+              <span className="absolute -top-1 -right-1 min-w-[14px] h-4 px-1 rounded-full bg-red-600 text-white text-[9px] leading-4 text-center">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            ) : null}
+          </button>
+        </DialogTrigger>
+        <DialogContent className="max-w-2xl p-0 overflow-hidden">
+          <DialogHeader className="px-5 py-4 border-b">
+            <div className="flex items-start justify-between gap-3 pr-8">
+              <div>
+                <DialogTitle>Notificações do Artifact</DialogTitle>
+                <DialogDescription>
+                  {artifactNotifications.length > 0
+                    ? `${artifactNotifications.length} erro(s)/aviso(s) do preview`
+                    : 'Nenhum erro registrado no Artifact'}
+                </DialogDescription>
+              </div>
+              <button
+                type="button"
+                onClick={() => sandboxActions.clearArtifactNotifications()}
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md border border-gray-200 text-xs text-gray-700 hover:bg-gray-50"
+                disabled={artifactNotifications.length === 0}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Limpar
+              </button>
+            </div>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto p-4 space-y-3">
+            {artifactNotifications.length === 0 ? (
+              <div className="rounded-md border border-gray-200 bg-white p-3 text-sm text-gray-500">
+                Sem notificações no momento.
+              </div>
+            ) : artifactNotifications.map((n) => (
+              <div key={n.id} className="rounded-md border border-gray-200 bg-white p-3">
+                <div className="flex items-center justify-between gap-3 mb-1">
+                  <div className="text-xs font-medium text-gray-700 uppercase tracking-wide">
+                    {n.source === 'preview' ? 'Preview' : n.source === 'paths' ? 'Arquivos' : n.source === 'theme' ? 'Tema' : 'Snapshot'}
+                  </div>
+                  <div className="text-[11px] text-gray-400">
+                    {new Date(n.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                  </div>
+                </div>
+                <div className="text-sm text-gray-800 whitespace-pre-wrap break-words">{n.message}</div>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
       <IconButton title="Git">
         <GitBranch className="w-4 h-4" />
       </IconButton>

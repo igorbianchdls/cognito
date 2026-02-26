@@ -9,6 +9,7 @@ export type ThemeOverrides = {
     Div?: Record<string, unknown>;
     Slicer?: Record<string, unknown>;
     SlicerCard?: Record<string, unknown>;
+    AISummary?: Record<string, unknown>;
   };
   cssVars?: Record<string, string>;
 };

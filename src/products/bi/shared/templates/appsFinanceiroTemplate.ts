@@ -38,6 +38,18 @@ export const APPS_FINANCEIRO_TEMPLATE_TEXT = JSON.stringify(
           },
         },
         {
+          type: 'AISummary',
+          props: {
+            title: 'Resumo da IA',
+            containerStyle: { margin: '12px 16px 0', padding: 12 },
+            items: [
+              { icon: 'circledollarsign', text: 'Compare recebimentos e pagamentos para antecipar pressão de caixa no período.' },
+              { icon: 'trendingUp', text: 'Distribuições por status e fornecedor ajudam a priorizar ações operacionais.' },
+              { icon: 'triangleAlert', text: 'Títulos vencidos ou concentrados por data podem distorcer a visão semanal.' },
+            ],
+          },
+        },
+        {
           type: 'Div',
           props: { direction: 'row', gap: 12, padding: 16, justify: 'start', align: 'start', childGrow: true },
           children: [

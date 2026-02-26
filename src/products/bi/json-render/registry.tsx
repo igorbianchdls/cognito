@@ -14,7 +14,7 @@ import { buildThemeVars } from "@/products/bi/json-render/theme/themeAdapter";
 import { useDataValue, useData } from "@/products/bi/json-render/context";
 import { deepMerge } from "@/stores/ui/json-render/utils";
 import { normalizeTitleStyle, normalizeContainerStyle, applyBorderFromCssVars, ensureSurfaceBackground, applyH1FromCssVars, applyKpiTitleFromCssVars, applyKpiValueFromCssVars, applySlicerLabelFromCssVars, applySlicerOptionFromCssVars, applyDatePickerIconFromCssVars, applyDatePickerFieldFromCssVars, applyDatePickerLabelFromCssVars } from "@/products/bi/json-render/helpers";
-import { Calendar } from 'lucide-react';
+import { Calendar, Sparkles, TrendingUp, TrendingDown, TriangleAlert, AlertCircle, BadgeCheck, Lightbulb, Brain, CircleDollarSign, ShoppingCart, Users, Package, Activity, CircleHelp } from 'lucide-react';
 
 type AnyRecord = Record<string, any>;
 
@@ -88,6 +88,35 @@ const defaultPieChart = {
   nivo: { innerRadius: 0, padAngle: 0.7, cornerRadius: 3, activeOuterRadiusOffset: 8, enableArcLabels: true, arcLabelsSkipAngle: 10, arcLabelsTextColor: '#333333', margin: { top: 10, right: 10, bottom: 10, left: 10 }, animate: true, motionConfig: 'gentle' },
 } as const;
 
+const defaultAISummary = {
+  itemGap: 10,
+  iconGap: 10,
+  iconBoxSize: 30,
+  iconSize: 16,
+  iconBoxRadius: 8,
+  itemTextStyle: { fontWeight: 500, fontSize: 13, color: '#334155' },
+  containerStyle: { borderColor: '#e5e7eb', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, padding: 12 },
+  borderless: false,
+} as const;
+
+const aiSummaryIconMap: Record<string, React.ComponentType<any>> = {
+  sparkles: Sparkles,
+  trendingup: TrendingUp,
+  trendingdown: TrendingDown,
+  trianglealert: TriangleAlert,
+  alertcircle: AlertCircle,
+  badgecheck: BadgeCheck,
+  lightbulb: Lightbulb,
+  brain: Brain,
+  circledollarsign: CircleDollarSign,
+  shoppingcart: ShoppingCart,
+  users: Users,
+  package: Package,
+  activity: Activity,
+  help: CircleHelp,
+  circlehelp: CircleHelp,
+};
+
 function formatValue(val: any, fmt: "currency" | "percent" | "number"): string {
   const n = Number(val ?? 0);
   if (!Number.isFinite(n)) return String(val ?? "");
@@ -104,6 +133,26 @@ function formatValue(val: any, fmt: "currency" | "percent" | "number"): string {
 function styleVal(v: unknown): string | undefined {
   if (v === undefined || v === null) return undefined;
   return typeof v === 'number' ? `${v}px` : String(v);
+}
+
+function normalizeIconKey(input: unknown): string {
+  return String(input || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]+/g, '')
+    .replace(/[^a-z0-9]/g, '');
+}
+
+function hexToRgba(hex: string, alpha: number): string | null {
+  const raw = String(hex || '').trim();
+  const m = raw.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  if (!m) return null;
+  const v = m[1];
+  const full = v.length === 3 ? v.split('').map((c) => c + c).join('') : v;
+  const r = parseInt(full.slice(0, 2), 16);
+  const g = parseInt(full.slice(2, 4), 16);
+  const b = parseInt(full.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${Math.max(0, Math.min(1, alpha))})`;
 }
 
 function getPathValue(obj: any, path: string): any {
@@ -816,6 +865,71 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     return (
       <FrameSurface style={containerStyle} frame={p?.containerStyle?.frame as AnyRecord} cssVars={theme.cssVars}>
         <JsonRenderGauge element={{ props: p }} />
+      </FrameSurface>
+    );
+  },
+
+  AISummary: ({ element }) => {
+    const theme = useThemeOverrides();
+    const p = deepMerge(deepMerge(defaultAISummary as any, ((theme.components as any)?.AISummary || {}) as AnyRecord), (element?.props || {}) as AnyRecord) as AnyRecord;
+    const title = typeof p.title === 'string' ? p.title : undefined;
+    const items = Array.isArray(p.items) ? p.items as AnyRecord[] : [];
+    const borderless = Boolean(p.borderless);
+    const containerStyle = ensureSurfaceBackground(
+      applyBorderFromCssVars(normalizeContainerStyle(p.containerStyle, borderless), theme.cssVars),
+      theme.cssVars
+    ) as React.CSSProperties;
+    if (containerStyle) (containerStyle as AnyRecord).boxShadow = undefined;
+
+    const titleStyle = applyH1FromCssVars(normalizeTitleStyle(p.titleStyle), theme.cssVars);
+    const itemTextStyle = applySlicerOptionFromCssVars(normalizeTitleStyle(p.itemTextStyle), theme.cssVars) as React.CSSProperties | undefined;
+    const itemGap = Number.isFinite(Number(p.itemGap)) ? Number(p.itemGap) : 10;
+    const iconGap = Number.isFinite(Number(p.iconGap)) ? Number(p.iconGap) : 10;
+    const iconBoxSize = Number.isFinite(Number(p.iconBoxSize)) ? Number(p.iconBoxSize) : 30;
+    const iconSize = Number.isFinite(Number(p.iconSize)) ? Number(p.iconSize) : 16;
+    const iconBoxRadius = styleVal(p.iconBoxRadius) || '8px';
+
+    let managedScheme: string[] | undefined = undefined;
+    const rawVar = (theme.cssVars || {}).chartColorScheme as unknown as string | undefined;
+    if (rawVar) {
+      try { managedScheme = JSON.parse(rawVar); }
+      catch { managedScheme = rawVar.split(',').map((s) => s.trim()).filter(Boolean); }
+    }
+    const explicitScheme = Array.isArray(p.colorScheme) ? p.colorScheme.map(String) : (typeof p.colorScheme === 'string' ? [p.colorScheme] : []);
+    const palette = (explicitScheme.length ? explicitScheme : (managedScheme && managedScheme.length ? managedScheme : ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6']));
+
+    return (
+      <FrameSurface style={containerStyle} frame={p?.containerStyle?.frame as AnyRecord} cssVars={theme.cssVars}>
+        {title ? <div className="mb-2" style={titleStyle}>{title}</div> : null}
+        <div className="flex flex-col" style={{ gap: `${itemGap}px` }}>
+          {items.map((it, idx) => {
+            const IconComp = aiSummaryIconMap[normalizeIconKey(it?.icon)] || Sparkles;
+            const accent = String(it?.iconColor || palette[idx % palette.length] || '#3b82f6');
+            const bg = String(it?.iconBgColor || hexToRgba(accent, 0.16) || `color-mix(in srgb, ${accent} 16%, transparent)`);
+            return (
+              <div key={`ai-summary-item-${idx}`} className="flex items-start" style={{ gap: `${iconGap}px` }}>
+                <div
+                  className="inline-flex items-center justify-center shrink-0"
+                  style={{
+                    width: `${iconBoxSize}px`,
+                    height: `${iconBoxSize}px`,
+                    borderRadius: iconBoxRadius,
+                    backgroundColor: bg,
+                    border: `1px solid ${hexToRgba(accent, 0.28) || accent}`,
+                  }}
+                >
+                  <IconComp size={iconSize} style={{ color: accent }} />
+                </div>
+                <div className="text-sm leading-5 whitespace-pre-wrap break-words" style={itemTextStyle}>
+                  {String(it?.text || '')}
+                </div>
+              </div>
+            );
+          })}
+          {items.length === 0 ? (
+            <div className="text-xs text-gray-400">Sem itens</div>
+          ) : null}
+        </div>
       </FrameSurface>
     );
   },

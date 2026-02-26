@@ -32,6 +32,18 @@ export const APPS_DOCUMENTOS_TEMPLATE_TEXT = JSON.stringify(
           },
         },
         {
+          type: 'AISummary',
+          props: {
+            title: 'Resumo da IA',
+            containerStyle: { margin: '12px 16px 0', padding: 12 },
+            items: [
+              { icon: 'badgeCheck', text: 'Monitorar templates e documentos gerados evita retrabalho em operações recorrentes.' },
+              { icon: 'sparkles', text: 'Picos de geração podem indicar campanhas, faturamento ou períodos de renovação.' },
+              { icon: 'triangleAlert', text: 'Documentos pendentes de envio/assinatura devem ser acompanhados por status.' },
+            ],
+          },
+        },
+        {
           type: 'Div',
           props: {
             direction: 'row',
