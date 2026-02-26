@@ -192,29 +192,27 @@ function buildAdsDashboardTemplate(config: AdsDashboardTemplateConfig) {
                 fr: 1,
                 title: 'Filtros de análise',
                 layout: 'horizontal',
-                applyMode: 'auto',
+                applyMode: 'manual',
                 actionOnApply: { type: 'refresh_data' },
                 fields: [
                   {
                     label: 'Conta',
-                    type: 'dropdown',
+                    type: 'list',
                     storePath: 'filters.conta_id',
-                    placeholder: 'Todas as contas',
                     width: 240,
                     search: true,
+                    selectAll: true,
                     clearable: true,
-                    actionOnChange: { type: 'refresh_data' },
                     source: { type: 'options', model: MODEL, field: 'conta_id', limit: 50 },
                   },
                   {
                     label: 'Campanha',
-                    type: 'dropdown',
+                    type: 'list',
                     storePath: 'filters.campanha_id',
-                    placeholder: 'Todas as campanhas',
                     width: 260,
                     search: true,
+                    selectAll: true,
                     clearable: true,
-                    actionOnChange: { type: 'refresh_data' },
                     source: {
                       type: 'options',
                       model: MODEL,
@@ -225,13 +223,12 @@ function buildAdsDashboardTemplate(config: AdsDashboardTemplateConfig) {
                   },
                   {
                     label: 'Grupo',
-                    type: 'dropdown',
+                    type: 'list',
                     storePath: 'filters.grupo_id',
-                    placeholder: 'Todos os grupos',
                     width: 240,
                     search: true,
+                    selectAll: true,
                     clearable: true,
-                    actionOnChange: { type: 'refresh_data' },
                     source: {
                       type: 'options',
                       model: MODEL,
@@ -242,13 +239,12 @@ function buildAdsDashboardTemplate(config: AdsDashboardTemplateConfig) {
                   },
                   {
                     label: 'Anúncio',
-                    type: 'dropdown',
+                    type: 'list',
                     storePath: 'filters.anuncio_id',
-                    placeholder: 'Todos os anúncios',
                     width: 240,
                     search: true,
+                    selectAll: true,
                     clearable: true,
-                    actionOnChange: { type: 'refresh_data' },
                     source: {
                       type: 'options',
                       model: MODEL,
@@ -410,4 +406,3 @@ function buildAdsDashboardTemplate(config: AdsDashboardTemplateConfig) {
 export function buildAdsDashboardTemplateText(config: AdsDashboardTemplateConfig): string {
   return JSON.stringify(buildAdsDashboardTemplate(config), null, 2)
 }
-
