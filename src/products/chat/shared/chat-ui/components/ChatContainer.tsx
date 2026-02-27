@@ -678,13 +678,13 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'chat-status', chatId: initialChatId }),
         })
-        const data = await res.json().catch(() => ({})) as { ok?: boolean; status?: string }
+        const data = await res.json().catch(() => ({})) as { ok?: boolean; status?: string; recoverable?: boolean }
         if (cancelled) return
         if (res.ok && data && data.ok && data.status === 'running') {
           setHasPersistedChat(true)
           setChatId(initialChatId)
           setSandboxStatus('running')
-        } else if (shouldResumeFromStorage) {
+        } else if (shouldResumeFromStorage || Boolean(data?.recoverable)) {
           ensureStart().catch((err) => { if (!cancelled) { setSandboxStatus('error'); notifyError('sandbox', err, 'Falha ao retomar computador após recarregar') } })
         } else {
           setSandboxStatus('off')

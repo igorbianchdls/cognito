@@ -14,6 +14,12 @@ import {
 import { resolveComposioUserIdFromRequest } from '@/products/chat/backend/features/agents/core/context/resolveComposioUserId'
 import { APPS_VENDAS_TEMPLATE_TEXT } from '@/products/apps/shared/templates/appsVendasTemplate'
 import { APPS_COMPRAS_TEMPLATE_TEXT } from '@/products/apps/shared/templates/appsComprasTemplate'
+import {
+  clearRuntimeSession,
+  getRuntimeSession,
+  touchRuntimeSession,
+  upsertRuntimeSession,
+} from '@/products/chat/backend/features/agents/runtime/runtimeSessionStore'
 
 export const runtime = 'nodejs'
 
@@ -25,6 +31,7 @@ type ChatSession = { id: string; sandbox: Sandbox; createdAt: number; lastUsedAt
 const SESSIONS = new Map<string, ChatSession>()
 const OPENAI_SANDBOXES = new Map<string, { sandbox: Sandbox; createdAt: number; lastUsedAt: number }>()
 const genId = () => Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
+const RUNTIME_LEASE_SECONDS = 10 * 60
 const SKILL_FILES = [
   {
     path: '/vercel/sandbox/agent/skills/dashboard.md',
@@ -146,10 +153,21 @@ export async function POST(req: Request) {
     let sandbox: Sandbox | undefined
     const timeline: Array<{ name: string; ms: number; ok: boolean; exitCode?: number }> = []
     const t0 = Date.now()
+    let startupChatId: string | null = null
     try {
       // Decide chat id upfront and prefer per-chat snapshot
       const proposed = (params && typeof params.chatId === 'string' && params.chatId.trim()) ? params.chatId.trim() : null
       const id = proposed || genId()
+      startupChatId = id
+      try {
+        await upsertRuntimeSession({
+          chatId: id,
+          status: proposed ? 'resuming' : 'starting',
+          hasLocalSession: false,
+          startupMode: proposed ? 'resume-request' : 'cold-start-request',
+          leaseSeconds: RUNTIME_LEASE_SECONDS,
+        })
+      } catch {}
       const existing = SESSIONS.get(id)
       if (existing) {
         existing.lastUsedAt = Date.now()
@@ -164,6 +182,17 @@ export async function POST(req: Request) {
         existing.provider = provider
         existing.model = normalizeModel(provider, existing.model || (provider === 'openai-responses' ? 'gpt-5-mini' : 'claude-haiku-4-5-20251001'))
         await ensureSkillsInSandbox(existing.sandbox)
+        try {
+          await upsertRuntimeSession({
+            chatId: id,
+            status: 'running',
+            provider: provider,
+            model: existing.model || null,
+            startupMode: 'reused',
+            hasLocalSession: true,
+            leaseSeconds: RUNTIME_LEASE_SECONDS,
+          })
+        } catch {}
         timeline.push({ name: 'reuse-existing-session', ms: Date.now() - t0, ok: true })
         return Response.json({ ok: true, chatId: id, reused: true, startupMode: 'reused' as const, timeline })
       }
@@ -197,6 +226,15 @@ export async function POST(req: Request) {
         if (install.exitCode !== 0) {
           const [o, e] = await Promise.all([install.stdout().catch(() => ''), install.stderr().catch(() => '')])
           await sandbox.stop().catch(() => {})
+          try {
+            await upsertRuntimeSession({
+              chatId: id,
+              status: 'error',
+              lastError: 'install failed',
+              hasLocalSession: false,
+              leaseSeconds: RUNTIME_LEASE_SECONDS,
+            })
+          } catch {}
           return Response.json({ ok: false, error: 'install failed', stdout: o, stderr: e, timeline }, { status: 500 })
         }
       }
@@ -270,6 +308,17 @@ export async function POST(req: Request) {
         timeline.push({ name: 'db_set_title', ms: Date.now() - tTitle, ok: false })
       }
       const startupMode: 'snapshot' | 'cold' = usedChatSnapshot ? 'snapshot' : 'cold'
+      try {
+        await upsertRuntimeSession({
+          chatId: id,
+          status: 'running',
+          provider: initialProvider,
+          model: initialModel,
+          startupMode,
+          hasLocalSession: true,
+          leaseSeconds: RUNTIME_LEASE_SECONDS,
+        })
+      } catch {}
       const res = Response.json({
         ok: true,
         chatId: id,
@@ -283,6 +332,17 @@ export async function POST(req: Request) {
       return res
     } catch (e) {
       try { await sandbox?.stop() } catch {}
+      if (startupChatId) {
+        try {
+          await upsertRuntimeSession({
+            chatId: startupChatId,
+            status: 'error',
+            lastError: (e as Error)?.message || String(e),
+            hasLocalSession: false,
+            leaseSeconds: RUNTIME_LEASE_SECONDS,
+          })
+        } catch {}
+      }
       return Response.json({ ok: false, error: (e as Error).message }, { status: 500 })
     }
   }
@@ -290,7 +350,21 @@ export async function POST(req: Request) {
   async function chatStop({ chatId }: { chatId?: string }) {
     if (!chatId) return Response.json({ ok: false, error: 'chatId obrigatório' }, { status: 400 })
     const sess = SESSIONS.get(chatId)
-    if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
+    if (!sess) {
+      try { await clearRuntimeSession(chatId) } catch {}
+      return Response.json({ ok: true, snapshotId: null, localSession: false })
+    }
+    try {
+      await upsertRuntimeSession({
+        chatId,
+        status: 'stopping',
+        provider: sess.provider || null,
+        model: sess.model || null,
+        startupMode: 'stop-request',
+        hasLocalSession: true,
+        leaseSeconds: RUNTIME_LEASE_SECONDS,
+      })
+    } catch {}
     // Best-effort: snapshot before stopping to persist filesystem for this chat
     let snapshotId: string | null = null
     try {
@@ -304,6 +378,7 @@ export async function POST(req: Request) {
     try { await OPENAI_SANDBOXES.get(chatId)?.sandbox.stop() } catch {}
     SESSIONS.delete(chatId)
     OPENAI_SANDBOXES.delete(chatId)
+    try { await clearRuntimeSession(chatId) } catch {}
     return Response.json({ ok: true, snapshotId })
   }
 
@@ -313,6 +388,15 @@ export async function POST(req: Request) {
     const sess = SESSIONS.get(chatId)
     if (!sess) return new Response(JSON.stringify({ ok: false, error: 'chat não encontrado' }), { status: 404 })
     sess.lastUsedAt = Date.now()
+    try {
+      await touchRuntimeSession(chatId, {
+        leaseSeconds: RUNTIME_LEASE_SECONDS,
+        hasLocalSession: true,
+        provider: sess.provider || null,
+        model: sess.model || null,
+        status: 'running',
+      })
+    } catch {}
     // Best-effort: persist last user message before streaming
     try {
       const lastUser = [...history].reverse().find(m => m.role === 'user')
@@ -474,6 +558,15 @@ export async function POST(req: Request) {
               )
             }
             try { await runQuery('UPDATE chat.chats SET last_message_at = now(), updated_at = now() WHERE id = $1', [chatId]) } catch {}
+            try {
+              await touchRuntimeSession(chatId, {
+                leaseSeconds: RUNTIME_LEASE_SECONDS,
+                hasLocalSession: true,
+                provider: sess.provider || null,
+                model: sess.model || null,
+                status: 'running',
+              })
+            } catch {}
           } catch {}
           controller.enqueue(enc.encode('event: end\ndata: done\n\n'))
           controller.close()
@@ -498,6 +591,15 @@ export async function POST(req: Request) {
     sess.model = modelId
     sess.provider = 'openai-responses'
     sess.lastUsedAt = Date.now()
+    try {
+      await touchRuntimeSession(chatId, {
+        leaseSeconds: RUNTIME_LEASE_SECONDS,
+        hasLocalSession: true,
+        provider: 'openai-responses',
+        model: modelId,
+        status: 'running',
+      })
+    } catch {}
 
     const runner = getOpenAIResponsesStreamRunnerScript()
     const openAiSandbox = await getOrCreateOpenAiSandbox(chatId)
@@ -628,6 +730,15 @@ export async function POST(req: Request) {
               )
             }
             try { await runQuery('UPDATE chat.chats SET last_message_at = now(), updated_at = now() WHERE id = $1', [chatId]) } catch {}
+            try {
+              await touchRuntimeSession(chatId, {
+                leaseSeconds: RUNTIME_LEASE_SECONDS,
+                hasLocalSession: true,
+                provider: 'openai-responses',
+                model: modelId,
+                status: 'running',
+              })
+            } catch {}
           } catch {}
           controller.enqueue(enc.encode('event: end\ndata: done\n\n'))
           controller.close()
@@ -648,6 +759,15 @@ export async function POST(req: Request) {
     const slash = (prompt || '').toString().trim()
     if (!slash || !slash.startsWith('/')) return new Response(JSON.stringify({ ok: false, error: 'prompt deve começar com /' }), { status: 400 })
     sess.lastUsedAt = Date.now()
+    try {
+      await touchRuntimeSession(chatId, {
+        leaseSeconds: RUNTIME_LEASE_SECONDS,
+        hasLocalSession: true,
+        provider: sess.provider || null,
+        model: sess.model || null,
+        status: 'running',
+      })
+    } catch {}
 
     const runner = getSlashStreamRunnerScript()
     await sess.sandbox.writeFiles([{ path: '/vercel/sandbox/agent-slash-stream.mjs', content: Buffer.from(runner) }])
@@ -715,6 +835,10 @@ export async function POST(req: Request) {
     if (!chatId) return Response.json({ ok: false, error: 'chatId obrigatório' }, { status: 400 })
     const sess = SESSIONS.get(chatId)
     if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
+    sess.lastUsedAt = Date.now()
+    try {
+      await touchRuntimeSession(chatId, { leaseSeconds: RUNTIME_LEASE_SECONDS, hasLocalSession: true, status: 'running' })
+    } catch {}
     const v = validatePath(path); if (!v.ok) return Response.json({ ok: false, error: v.error }, { status: 400 })
     const target = v.path
     const script = `
@@ -739,6 +863,10 @@ try {
     if (!chatId) return Response.json({ ok: false, error: 'chatId obrigatório' }, { status: 400 })
     const sess = SESSIONS.get(chatId)
     if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
+    sess.lastUsedAt = Date.now()
+    try {
+      await touchRuntimeSession(chatId, { leaseSeconds: RUNTIME_LEASE_SECONDS, hasLocalSession: true, status: 'running' })
+    } catch {}
     const v = validatePath(path); if (!v.ok) return Response.json({ ok: false, error: v.error }, { status: 400 })
     const target = v.path
     const script = `
@@ -764,6 +892,10 @@ try {
     if (!chatId) return Response.json({ ok: false, error: 'chatId obrigatório' }, { status: 400 })
     const sess = SESSIONS.get(chatId)
     if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
+    sess.lastUsedAt = Date.now()
+    try {
+      await touchRuntimeSession(chatId, { leaseSeconds: RUNTIME_LEASE_SECONDS, hasLocalSession: true, status: 'running' })
+    } catch {}
     const v = validatePath(path); if (!v.ok) return Response.json({ ok: false, error: v.error }, { status: 400 })
     const target = v.path
     const script = `
@@ -790,6 +922,10 @@ catch(e){ console.error(String(e.message||e)); process.exit(1); }
     if (!chatId) return Response.json({ ok: false, error: 'chatId obrigatório' }, { status: 400 })
     const sess = SESSIONS.get(chatId)
     if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
+    sess.lastUsedAt = Date.now()
+    try {
+      await touchRuntimeSession(chatId, { leaseSeconds: RUNTIME_LEASE_SECONDS, hasLocalSession: true, status: 'running' })
+    } catch {}
 
     const op = (operation && typeof operation === 'object' && operation.operation)
       ? operation.operation
@@ -952,6 +1088,10 @@ process.exit(0);
     if (!chatId) return Response.json({ ok: false, error: 'chatId obrigatório' }, { status: 400 })
     const sess = SESSIONS.get(chatId)
     if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
+    sess.lastUsedAt = Date.now()
+    try {
+      await touchRuntimeSession(chatId, { leaseSeconds: RUNTIME_LEASE_SECONDS, hasLocalSession: true, status: 'running' })
+    } catch {}
     const cmd = String(command || '').trim()
     if (!cmd) return Response.json({ ok: false, error: 'command obrigatório' }, { status: 400 })
     const v = validatePath(cwd || '/vercel/sandbox')
@@ -979,14 +1119,50 @@ process.exit(0);
     if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
     sess.composioEnabled = Boolean(enabled)
     sess.lastUsedAt = Date.now()
+    try {
+      await touchRuntimeSession(chatId, {
+        leaseSeconds: RUNTIME_LEASE_SECONDS,
+        hasLocalSession: true,
+        provider: sess.provider || null,
+        model: sess.model || null,
+        status: 'running',
+      })
+    } catch {}
     return Response.json({ ok: true, enabled: sess.composioEnabled })
   }
 
   async function chatStatus({ chatId }: { chatId?: string }) {
     if (!chatId) return Response.json({ ok: true, status: 'off' as const })
+    const runtimeSession = await getRuntimeSession(chatId).catch(() => null)
     const sess = SESSIONS.get(chatId)
-    if (!sess) return Response.json({ ok: true, status: 'off' as const })
+    if (!sess) {
+      const nowMs = Date.now()
+      const leaseMs = runtimeSession?.lease_expires_at ? Date.parse(runtimeSession.lease_expires_at) : NaN
+      const leaseActive = Number.isFinite(leaseMs) && leaseMs > nowMs
+      const recoverable = Boolean(
+        runtimeSession &&
+        (runtimeSession.status === 'running' || runtimeSession.status === 'starting' || runtimeSession.status === 'resuming') &&
+        leaseActive
+      )
+      return Response.json({
+        ok: true,
+        status: 'off' as const,
+        recoverable,
+        runtimeStatus: runtimeSession?.status || null,
+        leaseExpiresAt: runtimeSession?.lease_expires_at || null,
+        lastHeartbeatAt: runtimeSession?.last_heartbeat_at || null,
+      })
+    }
     const provider = normalizeProvider(sess.provider, sess.model)
+    try {
+      await touchRuntimeSession(chatId, {
+        leaseSeconds: RUNTIME_LEASE_SECONDS,
+        hasLocalSession: true,
+        provider,
+        model: sess.model || null,
+        status: 'running',
+      })
+    } catch {}
     return Response.json({
       ok: true,
       status: 'running' as const,
@@ -996,6 +1172,9 @@ process.exit(0);
       hasOpenAiSandbox: OPENAI_SANDBOXES.has(chatId),
       composioEnabled: Boolean(sess.composioEnabled),
       lastUsedAt: sess.lastUsedAt,
+      runtimeStatus: runtimeSession?.status || 'running',
+      leaseExpiresAt: runtimeSession?.lease_expires_at || null,
+      recoverable: false,
     })
   }
 
@@ -1011,6 +1190,15 @@ process.exit(0);
       try {
         if (snapshotId) await runQuery('UPDATE chat.chats SET snapshot_id = $1, snapshot_at = now() WHERE id = $2', [snapshotId, chatId])
       } catch { /* ignore db errors */ }
+      try {
+        await touchRuntimeSession(chatId, {
+          leaseSeconds: RUNTIME_LEASE_SECONDS,
+          hasLocalSession: true,
+          provider: sess.provider || null,
+          model: sess.model || null,
+          status: 'running',
+        })
+      } catch {}
       return Response.json({ ok: true, snapshotId, ms })
     } catch (e: any) {
       return Response.json({ ok: false, error: e?.message || String(e) }, { status: 500 })
@@ -1027,6 +1215,15 @@ process.exit(0);
     sess.provider = chosenProvider
     sess.model = chosen
     sess.lastUsedAt = Date.now()
+    try {
+      await touchRuntimeSession(chatId, {
+        leaseSeconds: RUNTIME_LEASE_SECONDS,
+        hasLocalSession: true,
+        provider: chosenProvider,
+        model: chosen,
+        status: 'running',
+      })
+    } catch {}
     await ensureSkillsInSandbox(sess.sandbox)
     if (chosenProvider === 'openai-responses') {
       // Also pre-warm OpenAI dedicated sandbox (used by streaming runner).
