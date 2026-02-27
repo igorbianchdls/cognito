@@ -13,6 +13,7 @@ type ChatRow = {
   title: string | null;
   model: string;
   composio_enabled: boolean;
+  runtime_kind?: "codex" | "agentsdk";
   created_at: string;
   updated_at: string;
   last_message_at: string | null;
@@ -97,10 +98,10 @@ export default function ChatListView() {
       const id =
         (globalThis as any)?.crypto?.randomUUID?.() ||
         Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
-      router.replace(`/chat/${id}?auto=1`);
+      router.replace(`/chat/codex/${id}?auto=1`);
     } catch {
       const id = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
-      router.replace(`/chat/${id}?auto=1`);
+      router.replace(`/chat/codex/${id}?auto=1`);
     }
   };
 
@@ -129,7 +130,7 @@ export default function ChatListView() {
                           key={row.id}
                           id={row.id}
                           title={row.title}
-                          href={`/chat/${row.id}`}
+                          href={`/chat/${row.runtime_kind === "agentsdk" ? "agentsdk" : "codex"}/${row.id}`}
                           updatedAt={row.updated_at}
                           lastMessageAt={row.last_message_at}
                           selectable={selectMode}

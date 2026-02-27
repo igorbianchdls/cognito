@@ -4,8 +4,9 @@ import { useParams, useSearchParams } from "next/navigation";
 
 import ChatWorkspace from "@/products/chat/frontend/features/conversation/ChatWorkspace";
 import { useChatPrefill } from "@/products/chat/frontend/features/conversation/useChatPrefill";
+import type { ChatRuntimeKind } from "@/products/chat/frontend/features/conversation/ChatWorkspace";
 
-export default function ChatConversationPage() {
+export default function ChatConversationPage({ runtimeKind = "codex" }: { runtimeKind?: ChatRuntimeKind }) {
   const params = useParams();
   const urlId =
     typeof params?.id === "string"
@@ -17,6 +18,7 @@ export default function ChatConversationPage() {
   const auto = search?.get("auto") === "1";
 
   const { prefill, prefillEngine } = useChatPrefill(urlId);
+  const runtimeDefaultEngine = runtimeKind === "agentsdk" ? "claude-haiku" : "openai-gpt5mini";
 
   return (
     <ChatWorkspace
@@ -25,7 +27,8 @@ export default function ChatConversationPage() {
       initialMessage={prefill}
       autoSendPrefill={Boolean(prefill)}
       autoStartSandbox={auto}
-      initialEngine={prefillEngine}
+      initialEngine={prefillEngine || runtimeDefaultEngine}
+      runtimeKind={runtimeKind}
     />
   );
 }

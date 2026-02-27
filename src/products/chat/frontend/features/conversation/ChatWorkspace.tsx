@@ -15,6 +15,8 @@ export type ChatEngineId =
   | "openai-gpt5nano"
   | "openai-gpt5mini";
 
+export type ChatRuntimeKind = "codex" | "agentsdk";
+
 type ChatWorkspaceProps = {
   redirectOnFirstMessage: boolean;
   initialChatId?: string;
@@ -22,6 +24,7 @@ type ChatWorkspaceProps = {
   autoSendPrefill?: boolean;
   autoStartSandbox?: boolean;
   initialEngine?: ChatEngineId;
+  runtimeKind?: ChatRuntimeKind;
 };
 
 export default function ChatWorkspace({
@@ -31,6 +34,7 @@ export default function ChatWorkspace({
   autoSendPrefill,
   autoStartSandbox,
   initialEngine,
+  runtimeKind = "codex",
 }: ChatWorkspaceProps) {
   const {
     artifactOpen,
@@ -83,6 +87,7 @@ export default function ChatWorkspace({
                       autoSendPrefill={autoSendPrefill}
                       autoStartSandbox={autoStartSandbox}
                       initialEngine={initialEngine}
+                      runtimeKind={runtimeKind}
                     />
                   </div>
                 </div>

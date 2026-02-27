@@ -12,6 +12,7 @@ import { useChatErrorNotifications } from '@/products/chat/frontend/features/err
 
 type ChatStatus = 'idle' | 'submitted' | 'streaming' | 'error'
 type EngineId = 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5' | 'openai-gpt5mini' | 'openai-gpt5nano'
+type RuntimeKind = 'codex' | 'agentsdk'
 
 function engineToBackend(engine: EngineId): { provider: string; model: string } {
   if (engine === 'claude-sonnet') return { provider: 'claude-agent', model: 'claude-sonnet-4-5-20251001' }
@@ -31,7 +32,7 @@ function modelToEngine(modelRaw?: string): EngineId {
   return 'openai-gpt5mini'
 }
 
-export default function ChatContainer({ onOpenSandbox, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, autoStartSandbox, initialEngine }: { onOpenSandbox?: (chatId?: string) => void; withSideMargins?: boolean; redirectOnFirstMessage?: boolean; initialMessage?: string; autoSendPrefill?: boolean; initialChatId?: string; autoStartSandbox?: boolean; initialEngine?: EngineId }) {
+export default function ChatContainer({ onOpenSandbox, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, autoStartSandbox, initialEngine, runtimeKind = 'codex' }: { onOpenSandbox?: (chatId?: string) => void; withSideMargins?: boolean; redirectOnFirstMessage?: boolean; initialMessage?: string; autoSendPrefill?: boolean; initialChatId?: string; autoStartSandbox?: boolean; initialEngine?: EngineId; runtimeKind?: RuntimeKind }) {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<UIMessage[]>([])
   const isEmpty = messages.length === 0
@@ -224,13 +225,14 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
     const startPromise = (async () => {
       const resumeHint = Boolean(initialChatId && (hasPersistedChat || messages.length > 0))
       setSandboxStatus(resumeHint ? 'resuming' : 'starting')
-      const body: any = { action: 'chat-start' }
+      const body: any = { action: 'chat-start', runtimeKind }
       if (initialChatId && typeof initialChatId === 'string') body.chatId = initialChatId
       try {
         const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
         const data = await res.json().catch(() => ({})) as {
           ok?: boolean
           chatId?: string
+          runtimeKind?: RuntimeKind
           error?: string
           startupMode?: 'reused' | 'snapshot' | 'cold'
         }
@@ -274,7 +276,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
     const text = input.trim()
     if (sendLockRef.current || isSubmitBlocked) return
     if (!text) return
-    // If in first-message redirect mode and no chat started yet, redirect to /chat/[id]
+    // If in first-message redirect mode and no chat started yet, redirect to /chat/<runtime>/[id]
     if (redirectOnFirstMessage && !chatId) {
       try {
         const urlId = (typeof window !== 'undefined' && (window as any).crypto?.randomUUID)
@@ -286,7 +288,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
         } catch {}
         setStatus('submitted')
         setInput('')
-        router.replace(`/chat/${urlId}`)
+        router.replace(`/chat/${runtimeKind}/${urlId}`)
         return
       } catch (err) {
         console.error('redirect error', err)

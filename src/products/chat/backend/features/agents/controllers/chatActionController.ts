@@ -15,6 +15,11 @@ import { resolveComposioUserIdFromRequest } from '@/products/chat/backend/featur
 import { APPS_VENDAS_TEMPLATE_TEXT } from '@/products/apps/shared/templates/appsVendasTemplate'
 import { APPS_COMPRAS_TEMPLATE_TEXT } from '@/products/apps/shared/templates/appsComprasTemplate'
 import {
+  ensureChatRuntimeKindColumn,
+  normalizeRuntimeKind,
+  type ChatRuntimeKind,
+} from '@/products/chat/backend/features/chat/runtimeKindStore'
+import {
   clearRuntimeSession,
   getRuntimeSession,
   touchRuntimeSession,
@@ -27,7 +32,7 @@ type Msg = { role: 'user'|'assistant'; content: string }
 type ChatProvider = 'claude-agent' | 'openai-responses'
 
 // Simple in-memory session store
-type ChatSession = { id: string; sandbox: Sandbox; createdAt: number; lastUsedAt: number; agentToken?: string; agentTokenExp?: number; composioEnabled?: boolean; model?: string; composioUserId?: string; provider?: ChatProvider }
+type ChatSession = { id: string; sandbox: Sandbox; createdAt: number; lastUsedAt: number; agentToken?: string; agentTokenExp?: number; composioEnabled?: boolean; model?: string; composioUserId?: string; provider?: ChatProvider; runtimeKind?: ChatRuntimeKind }
 const SESSIONS = new Map<string, ChatSession>()
 const OPENAI_SANDBOXES = new Map<string, { sandbox: Sandbox; createdAt: number; lastUsedAt: number }>()
 const genId = () => Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
@@ -58,6 +63,10 @@ function inferProviderFromModel(model?: string): ChatProvider {
   if (raw.startsWith('gpt-') || raw.startsWith('o1') || raw.startsWith('o3') || raw.startsWith('o4')) return 'openai-responses'
   if (raw.includes('gpt') || raw.includes('openai')) return 'openai-responses'
   return 'claude-agent'
+}
+
+function inferProviderFromRuntimeKind(runtimeKind: ChatRuntimeKind): ChatProvider {
+  return runtimeKind === 'agentsdk' ? 'claude-agent' : 'openai-responses'
 }
 
 function normalizeProvider(rawProvider?: string, rawModel?: string): ChatProvider {
@@ -214,7 +223,7 @@ export async function POST(req: Request) {
     return { ok: true, sess: hydrated }
   }
 
-  if (action === 'chat-start') return chatStart(payload as { chatId?: string })
+  if (action === 'chat-start') return chatStart(payload as { chatId?: string; runtimeKind?: string })
   if (action === 'chat-stop') return chatStop(payload as { chatId?: string })
   if (action === 'chat-send-stream') return chatSendStream(payload as { chatId?: string; history?: Msg[]; clientMessageId?: string })
   if (action === 'chat-slash') return chatSlash(payload as { chatId?: string; prompt?: string })
@@ -230,14 +239,16 @@ export async function POST(req: Request) {
 
   return Response.json({ ok: false, error: `ação desconhecida: ${action}` }, { status: 400 })
 
-  async function chatStart(params?: { chatId?: string }) {
+  async function chatStart(params?: { chatId?: string; runtimeKind?: string }) {
     let sandbox: Sandbox | undefined
     const timeline: Array<{ name: string; ms: number; ok: boolean; exitCode?: number }> = []
     const t0 = Date.now()
     let startupChatId: string | null = null
     try {
+      try { await ensureChatRuntimeKindColumn() } catch {}
       // Decide chat id upfront and prefer per-chat snapshot
       const proposed = (params && typeof params.chatId === 'string' && params.chatId.trim()) ? params.chatId.trim() : null
+      const requestedRuntimeKind = normalizeRuntimeKind(params?.runtimeKind)
       const id = proposed || genId()
       startupChatId = id
       try {
@@ -252,6 +263,7 @@ export async function POST(req: Request) {
       const existing = SESSIONS.get(id)
       if (existing) {
         existing.lastUsedAt = Date.now()
+        if (!existing.runtimeKind) existing.runtimeKind = requestedRuntimeKind
         // Ensure agent token remains valid for tool bridge calls.
         if (!existing.agentToken || !existing.agentTokenExp || existing.agentTokenExp <= (Date.now() + 60_000)) {
           const { token, exp } = generateAgentToken(1800, id)
@@ -275,15 +287,24 @@ export async function POST(req: Request) {
           })
         } catch {}
         timeline.push({ name: 'reuse-existing-session', ms: Date.now() - t0, ok: true })
-        return Response.json({ ok: true, chatId: id, reused: true, startupMode: 'reused' as const, timeline })
+        return Response.json({
+          ok: true,
+          chatId: id,
+          runtimeKind: existing.runtimeKind || requestedRuntimeKind,
+          reused: true,
+          startupMode: 'reused' as const,
+          timeline,
+        })
       }
       let existingModel = ''
+      let persistedRuntimeKind: ChatRuntimeKind = requestedRuntimeKind
 
       let usedChatSnapshot = false
       try {
-        const rows = await runQuery<{ snapshot_id: string | null; model: string | null }>(`SELECT snapshot_id, model FROM chat.chats WHERE id = $1`, [id])
+        const rows = await runQuery<{ snapshot_id: string | null; model: string | null; runtime_kind: string | null }>(`SELECT snapshot_id, model, runtime_kind FROM chat.chats WHERE id = $1`, [id])
         const snap = (rows && rows[0] && rows[0].snapshot_id) || null
         existingModel = (rows && rows[0] && rows[0].model) ? String(rows[0].model).trim() : ''
+        persistedRuntimeKind = normalizeRuntimeKind(rows?.[0]?.runtime_kind || requestedRuntimeKind)
         if (snap && typeof snap === 'string' && snap.trim()) {
           const tSnap = Date.now()
           try {
@@ -359,16 +380,22 @@ export async function POST(req: Request) {
       const composioUserId = await resolveComposioUserIdFromRequest(req)
       // Issue short-lived agent token (opaque) and store
       const { token, exp } = generateAgentToken(1800, id)
-      const initialProvider = normalizeProvider(undefined, existingModel)
-      const initialModel = normalizeModel(initialProvider, existingModel || (initialProvider === 'openai-responses' ? 'gpt-5-mini' : 'claude-haiku-4-5-20251001'))
-      SESSIONS.set(id, { id, sandbox, createdAt: Date.now(), lastUsedAt: Date.now(), agentToken: token, agentTokenExp: exp, composioEnabled: false, model: initialModel, composioUserId, provider: initialProvider })
+      const modelHint = existingModel || (persistedRuntimeKind === 'codex' ? 'gpt-5-mini' : 'claude-haiku-4-5-20251001')
+      const initialProvider = existingModel
+        ? normalizeProvider(undefined, existingModel)
+        : inferProviderFromRuntimeKind(persistedRuntimeKind)
+      const initialModel = normalizeModel(initialProvider, modelHint)
+      SESSIONS.set(id, { id, sandbox, createdAt: Date.now(), lastUsedAt: Date.now(), agentToken: token, agentTokenExp: exp, composioEnabled: false, model: initialModel, composioUserId, provider: initialProvider, runtimeKind: persistedRuntimeKind })
       setAgentToken(id, token, exp)
       // Persist chat header (best-effort)
       const tDb = Date.now()
       try {
         await runQuery(
-          'INSERT INTO chat.chats (id, model, composio_enabled) VALUES ($1, $2, $3) ON CONFLICT (id) DO NOTHING',
-          [id, initialModel, false]
+          `INSERT INTO chat.chats (id, model, composio_enabled, runtime_kind)
+           VALUES ($1, $2, $3, $4)
+           ON CONFLICT (id) DO UPDATE
+             SET runtime_kind = COALESCE(chat.chats.runtime_kind, EXCLUDED.runtime_kind)`,
+          [id, initialModel, false, persistedRuntimeKind]
         )
         timeline.push({ name: 'db_upsert_chat', ms: Date.now() - tDb, ok: true })
       } catch (e) {
@@ -403,6 +430,7 @@ export async function POST(req: Request) {
       const res = Response.json({
         ok: true,
         chatId: id,
+        runtimeKind: persistedRuntimeKind,
         reused: false,
         startupMode,
         timeline,
@@ -1221,11 +1249,13 @@ process.exit(0);
 
   async function chatStatus({ chatId }: { chatId?: string }) {
     if (!chatId) return Response.json({ ok: true, status: 'off' as const })
-    const chatRows = await runQuery<{ snapshot_id: string | null }>(
-      `SELECT snapshot_id FROM chat.chats WHERE id = $1 LIMIT 1`,
+    try { await ensureChatRuntimeKindColumn() } catch {}
+    const chatRows = await runQuery<{ snapshot_id: string | null; runtime_kind: string | null }>(
+      `SELECT snapshot_id, runtime_kind FROM chat.chats WHERE id = $1 LIMIT 1`,
       [chatId]
     ).catch(() => [])
     const hasSnapshot = Boolean(chatRows?.[0]?.snapshot_id)
+    const persistedRuntimeKind = normalizeRuntimeKind(chatRows?.[0]?.runtime_kind)
     const runtimeSession = await getRuntimeSession(chatId).catch(() => null)
     const sess = SESSIONS.get(chatId)
     if (!sess) {
@@ -1243,6 +1273,7 @@ process.exit(0);
         status: 'off' as const,
         recoverable,
         hasSnapshot,
+        runtimeKind: persistedRuntimeKind,
         runtimeStatus: runtimeSession?.status || null,
         leaseExpiresAt: runtimeSession?.lease_expires_at || null,
         lastHeartbeatAt: runtimeSession?.last_heartbeat_at || null,
@@ -1262,6 +1293,7 @@ process.exit(0);
       ok: true,
       status: 'running' as const,
       chatId,
+      runtimeKind: sess.runtimeKind || persistedRuntimeKind,
       provider,
       model: sess.model || null,
       hasOpenAiSandbox: OPENAI_SANDBOXES.has(chatId),

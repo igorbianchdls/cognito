@@ -1,3 +1,6 @@
-import ChatHomePage from '@/products/chat/frontend/pages/ChatHomePage'
+import { redirect } from 'next/navigation'
 
-export default ChatHomePage
+export default function ChatRootPage() {
+  redirect('/chat/codex')
+}
+
