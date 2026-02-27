@@ -46,6 +46,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   const pendingStartRef = useRef<Promise<string> | null>(null)
   const sendLockRef = useRef(false)
   const scrollRestoreDoneRef = useRef(false)
+  const sandboxHintHydratedRef = useRef(false)
   // Track the assistant message for the current turn, so each user message
   // gets its own assistant response instead of appending to the first one.
   const currentAssistantIdRef = useRef<string | null>(null)
@@ -68,6 +69,11 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   const getScrollKey = () => {
     if (!initialChatId) return null
     return `chat-scroll:${initialChatId}`
+  }
+
+  const getSandboxResumeKey = () => {
+    if (!initialChatId) return null
+    return `chat-sandbox-running:${initialChatId}`
   }
 
   const saveScrollPosition = () => {
@@ -111,7 +117,26 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   }, [initialEngine])
 
   useEffect(() => {
+    const key = getSandboxResumeKey()
+    if (!key) return
+    const isFirstRunForChat = !sandboxHintHydratedRef.current
+    if (!sandboxHintHydratedRef.current) sandboxHintHydratedRef.current = true
+    if (isFirstRunForChat && sandboxStatus === 'off') return
+    try {
+      if (sandboxStatus === 'running' || sandboxStatus === 'starting' || sandboxStatus === 'resuming') {
+        sessionStorage.setItem(key, '1')
+      } else if (sandboxStatus === 'off') {
+        sessionStorage.removeItem(key)
+      }
+    } catch {
+      // ignore storage failures
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sandboxStatus, initialChatId])
+
+  useEffect(() => {
     scrollRestoreDoneRef.current = false
+    sandboxHintHydratedRef.current = false
   }, [initialChatId])
 
   useEffect(() => {
@@ -637,6 +662,15 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   useEffect(() => {
     if (!initialChatId || chatId || autoStartSandbox) return
     let cancelled = false
+    const shouldResumeFromStorage = (() => {
+      const key = getSandboxResumeKey()
+      if (!key) return false
+      try {
+        return sessionStorage.getItem(key) === '1'
+      } catch {
+        return false
+      }
+    })()
     ;(async () => {
       try {
         const res = await fetch('/api/chat', {
@@ -650,14 +684,23 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
           setHasPersistedChat(true)
           setChatId(initialChatId)
           setSandboxStatus('running')
+        } else if (shouldResumeFromStorage) {
+          ensureStart().catch((err) => { if (!cancelled) { setSandboxStatus('error'); notifyError('sandbox', err, 'Falha ao retomar computador após recarregar') } })
         } else {
           setSandboxStatus('off')
         }
       } catch {
-        if (!cancelled) setSandboxStatus('off')
+        if (!cancelled) {
+          if (shouldResumeFromStorage) {
+            ensureStart().catch((err) => { if (!cancelled) { setSandboxStatus('error'); notifyError('sandbox', err, 'Falha ao retomar computador após recarregar') } })
+          } else {
+            setSandboxStatus('off')
+          }
+        }
       }
     })()
     return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialChatId, chatId, autoStartSandbox])
 
   // Auto-start sandbox (no message) when requested via URL flag
