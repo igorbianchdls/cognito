@@ -32,6 +32,7 @@ const SESSIONS = new Map<string, ChatSession>()
 const OPENAI_SANDBOXES = new Map<string, { sandbox: Sandbox; createdAt: number; lastUsedAt: number }>()
 const genId = () => Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
 const RUNTIME_LEASE_SECONDS = 10 * 60
+const SANDBOX_TIMEOUT_MS = 10 * 60 * 1000
 const SKILL_FILES = [
   {
     path: '/vercel/sandbox/agent/skills/dashboard.md',
@@ -119,7 +120,7 @@ async function getOrCreateOpenAiSandbox(chatId: string): Promise<Sandbox> {
     await ensureOpenAiSkillsScaffold(existing.sandbox)
     return existing.sandbox
   }
-  const sandbox = await Sandbox.create({ runtime: 'node22', resources: { vcpus: 2 }, timeout: 1_800_000 })
+  const sandbox = await Sandbox.create({ runtime: 'node22', resources: { vcpus: 2 }, timeout: SANDBOX_TIMEOUT_MS })
   await ensureOpenAiSkillsScaffold(sandbox)
   OPENAI_SANDBOXES.set(chatId, { sandbox, createdAt: Date.now(), lastUsedAt: Date.now() })
   return sandbox
@@ -206,7 +207,7 @@ export async function POST(req: Request) {
         if (snap && typeof snap === 'string' && snap.trim()) {
           const tSnap = Date.now()
           try {
-            sandbox = await Sandbox.create({ source: { type: 'snapshot', snapshotId: snap.trim() }, resources: { vcpus: 2 }, timeout: 1_800_000 })
+            sandbox = await Sandbox.create({ source: { type: 'snapshot', snapshotId: snap.trim() }, resources: { vcpus: 2 }, timeout: SANDBOX_TIMEOUT_MS })
             timeline.push({ name: 'create-from-chat-snapshot', ms: Date.now() - tSnap, ok: true })
             usedChatSnapshot = true
           } catch (e) {
@@ -217,7 +218,7 @@ export async function POST(req: Request) {
 
       if (!sandbox) {
         const tCreate = Date.now()
-        sandbox = await Sandbox.create({ runtime: 'node22', resources: { vcpus: 2 }, timeout: 1_800_000 })
+        sandbox = await Sandbox.create({ runtime: 'node22', resources: { vcpus: 2 }, timeout: SANDBOX_TIMEOUT_MS })
         timeline.push({ name: 'create-sandbox', ms: Date.now() - tCreate, ok: true })
         const t1 = Date.now()
         // Install Agent SDK + CLI + zod (for MCP schemas)
