@@ -565,8 +565,15 @@ export function buildThemeVars(
     borderColor: borderSeed,
   });
   Object.assign(extraCss, headerVars);
-  if (['midnight', 'aero', 'metro'].includes(n) && (extraCss.headerDpColor || extraCss.headerDpBg)) {
-    // Use the datepicker text color first (high contrast on these dark headers).
+  const bgPreset = String((managers as AnyRecord)?.backgroundPreset || '').toLowerCase();
+  const kpiValueColor = typeof (managers as AnyRecord)?.kpi?.value?.color === 'string'
+    ? String((managers as AnyRecord).kpi.value.color)
+    : undefined;
+  if ((['midnight', 'aero', 'metro'].includes(n) || bgPreset === 'orbital') && kpiValueColor) {
+    // Keep header title color aligned with KPI value color for these dark/fx themes.
+    extraCss.headerText = kpiValueColor;
+  } else if (['midnight', 'aero', 'metro'].includes(n) && (extraCss.headerDpColor || extraCss.headerDpBg)) {
+    // Fallback: use datepicker contrast color on dark headers.
     extraCss.headerText = String(extraCss.headerDpColor || extraCss.headerDpBg);
   }
 

@@ -23,6 +23,11 @@ const BUILTIN_ALIASES: Record<string, string> = {
   'navy': 'dark',
   'sand': 'light',
   'charcoal': 'black',
+  // Elegant themes should still inherit a base Header component
+  // so header text uses CSS vars instead of hardcoded defaults.
+  'midnight': 'dark',
+  'metro': 'black',
+  'aero': 'dark',
 };
 
 export function ThemeProvider({ name, components, cssVars, children }: { name?: string; components?: ThemeOverrides['components']; cssVars?: Record<string,string>; children: React.ReactNode }) {
