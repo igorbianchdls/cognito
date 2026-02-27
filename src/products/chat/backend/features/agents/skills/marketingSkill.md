@@ -11,6 +11,21 @@ Use este skill quando o pedido envolver:
 Nao use este skill para ensinar layout JSON de dashboard.
 Para isso, use `dashboard.md`.
 
+## Fronteira de Responsabilidade (Obrigatoria)
+- Este skill define apenas contrato de dados:
+  - tabelas
+  - colunas
+  - `model/measure/dimension/filters`
+  - options de slicer
+- Este skill nao define JSON final de dashboard.
+- Estrutura visual e arquivo final sao responsabilidade de `dashboard.md`.
+
+Quando o pedido for dashboard de marketing:
+1. mapear dados neste skill
+2. gerar JSONR final com `dashboard.md`
+
+Nao gerar payload BI generico final (ex.: `kpiRow/charts/tables`) como artefato.
+
 ## Fonte de Verdade
 - `src/products/bi/shared/queryCatalog.ts`
 - `src/products/erp/backend/features/modulos/controllers/trafegopago/query/controller.ts`
@@ -84,3 +99,16 @@ Suporta cascata via `dependsOn`/`contextFilters`.
 - Nao inventar medida/dimensao fora do whitelist.
 - Quando a medida nao existir, ajustar para a mais proxima suportada e explicitar.
 - Quando slicer vier vazio, validar `options` + `dependsOn` + `contextFilters` + tenant.
+
+## Handoff Obrigatorio para Dashboard Skill
+Ao finalizar mapeamento para dashboard:
+- `targetPath`: `/vercel/sandbox/dashboard/<nome>.jsonr`
+- `format`: JSONR com raiz `Theme`
+- entregar somente campos validados no controller para:
+  - `model`
+  - `measure`
+  - `dimension`
+  - `filters`
+  - `options`
+
+Nunca usar `/vercel/sandbox/dashboards` (plural).

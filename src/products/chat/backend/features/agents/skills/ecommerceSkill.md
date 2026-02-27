@@ -11,6 +11,19 @@ Use este skill quando o pedido envolver:
 Nao use este skill para ensinar layout JSON de dashboard.
 Para isso, use `dashboard.md`.
 
+## Fronteira de Responsabilidade (Obrigatoria)
+- Este skill define contrato de dados ecommerce:
+  - models por dominio (pedidos, itens, pagamentos, envios, taxas, payouts, estoque)
+  - medidas, dimensoes e filtros suportados
+- Este skill nao define JSON visual final.
+- Estrutura de dashboard e responsabilidade de `dashboard.md`.
+
+Quando o pedido for dashboard ecommerce:
+1. mapear o contrato de dados neste skill
+2. gerar JSONR final com `dashboard.md`
+
+Nao gerar payload BI generico final (ex.: `kpiRow/charts/tables`) como artefato.
+
 ## Fonte de Verdade
 - `tmp/ecommerce_mvp_schema.sql`
 - `src/products/erp/backend/features/modulos/controllers/ecommerce/query/controller.ts`
@@ -127,3 +140,16 @@ Suporta cascata com `dependsOn`/`contextFilters`.
 - Nao misturar granularidade sem explicitar (pedido vs item vs pagamento vs payout).
 - Nao inventar model/measure/dimension fora do controller.
 - Quando houver divergencia do pedido com o schema real, aplicar ajuste compativel e explicitar.
+
+## Handoff Obrigatorio para Dashboard Skill
+Ao concluir o mapeamento para dashboard:
+- `targetPath`: `/vercel/sandbox/dashboard/<nome>.jsonr`
+- `format`: JSONR com raiz `Theme`
+- encaminhar lista validada de:
+  - `model`
+  - `measure`
+  - `dimension`
+  - `filters`
+  - `options` (quando houver slicers)
+
+Nunca usar `/vercel/sandbox/dashboards` (plural).

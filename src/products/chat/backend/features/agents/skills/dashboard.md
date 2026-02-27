@@ -1,24 +1,42 @@
 # Dashboard Skill (JSON Render)
 
-Objetivo: ensinar como criar e editar dashboards JSON Render com estrutura valida, boa UX e dataQuery compativel.
+Objetivo: ensinar como criar e editar dashboards em JSON Render com estrutura valida, boa UX e `dataQuery` compativel.
 
 Use este skill quando o pedido envolver:
-- criacao ou refactor de dashboard em `apps/*`
-- estrutura JSON (`Theme`, `Header`, `Div`, `KPI`, charts, `SlicerCard`, `AISummary`)
+- criacao/refactor de dashboard em `apps/*`
+- estrutura JSON Render (`Theme`, `Header`, `Div`, `KPI`, charts, `SlicerCard`, `AISummary`)
 - layout, filtros, interacao de chart e usabilidade
 - padronizacao de template/page/route
 
 Nao use este skill para decidir tabelas, dimensoes e metricas de negocio.
-Para dados ERP use `erpSkill.md`.
-Para dados de marketing use `marketingSkill.md`.
-Para dados de ecommerce use `ecommerceSkill.md`.
+Para isso, usar skill de dominio:
+- ERP -> `erpSkill.md`
+- Marketing -> `marketingSkill.md`
+- Ecommerce -> `ecommerceSkill.md`
 
-## Contrato de Dados
-- Sempre usar `dataQuery` (nao SQL puro no JSON).
+## Contrato Obrigatorio (Nao Negociavel)
+
+1. Formato de saida obrigatorio: JSONR de arvore (JSON Render), com `type/props/children`.
+2. Arquivo obrigatorio em:
+   - `/vercel/sandbox/dashboard/<nome>.jsonr`
+3. Nunca usar pasta `/vercel/sandbox/dashboards` (plural).
+4. Nunca retornar payload BI generico com chaves como:
+   - `kpiRow`, `charts`, `tables`, `slicers`, `dataSources`, `metadata`
+   sem arvore JSON Render.
+5. Raiz obrigatoria:
+   - primeiro bloco `Theme`.
+6. Extensao obrigatoria:
+   - `.jsonr`
+
+Se qualquer item acima falhar, o dashboard deve ser considerado invalido.
+
+## Contrato de DataQuery
+- Sempre usar `dataQuery` (nao SQL solto no JSON).
 - `model` e `measure` sao obrigatorios.
-- `dimension` e opcional; em KPI agregado nao usar `dimension`.
-- `filters`, `orderBy`, `limit` conforme objetivo do card.
+- `dimension` e opcional; em KPI agregado, evitar `dimension`.
+- `filters`, `orderBy`, `limit` conforme objetivo do bloco.
 - `dimensionExpr` apenas quando necessario.
+- Validar `model/measure/dimension/filter` no catalog/controller antes de finalizar.
 
 ## Barra Minima de Qualidade
 - Evitar dashboard "basico" com poucos blocos.
@@ -29,7 +47,7 @@ Para dados de ecommerce use `ecommerceSkill.md`.
 4. Pelo menos 1 grafico temporal + 1 grafico de distribuicao/ranking.
 5. `AISummary` com espacamento/padding legivel.
 
-## Estrutura Recomendada do Dashboard
+## Estrutura Recomendada (JSONR)
 1. `Theme` na raiz.
 2. `Header` com titulo/subtitulo e `datePicker` quando temporal.
 3. Linha de KPIs executivos.
@@ -77,7 +95,7 @@ Para dados de ecommerce use `ecommerceSkill.md`.
 - Nao substituir KPI/chart.
 - Ajustar paddings para boa leitura (`containerStyle`, `itemTextStyle`).
 
-## Validacao de Schema (obrigatorio antes de entregar)
+## Validacao de Schema (Obrigatorio Antes de Entregar)
 - Conferir props suportadas por componente no catalogo:
   - `src/products/bi/json-render/catalog.ts`
 - Se surgir erro de chave nao reconhecida (`unrecognized_keys`), remover a chave e usar alternativa suportada.
@@ -87,9 +105,14 @@ Para dados de ecommerce use `ecommerceSkill.md`.
 - Template: `src/products/bi/shared/templates/apps<Nome>Template.ts`
 - Page: `src/products/bi/features/dashboard-playground/pages/Apps<Nome>Page.tsx`
 - Route: `src/app/apps/<slug>/page.tsx`
+- Artifact runtime path:
+  - `/vercel/sandbox/dashboard/<nome>.jsonr`
 
-## Checklist Antes de Entregar
-- JSON valido e renderizavel.
+## Checklist Final (Obrigatorio)
+- JSON valido e renderizavel em JSON Render.
+- Primeiro bloco e `Theme`.
+- Arquivo salvo em `/vercel/sandbox/dashboard/*.jsonr`.
+- Nao existe uso de `/vercel/sandbox/dashboards`.
 - Todos os componentes existem no renderer atual.
 - `dataQuery.model/measure` validos para o backend.
 - Filtros globais funcionando (`dateRange` e slicers).
