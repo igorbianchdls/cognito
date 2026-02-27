@@ -17,6 +17,15 @@ Para isso, use `dashboard.md`.
 - `src/products/erp/backend/features/modulos/controllers/ecommerce/options/controller.ts`
 - `src/products/bi/shared/queryCatalog.ts`
 
+## Prioridade de Fonte (quando houver divergencia)
+- Para aceitar/rejeitar `model`, `measure`, `dimension` e `filters` em `dataQuery`, a fonte principal e:
+  - `src/products/erp/backend/features/modulos/controllers/ecommerce/query/controller.ts`
+- Para `options` de slicer, a fonte principal e:
+  - `src/products/erp/backend/features/modulos/controllers/ecommerce/options/controller.ts`
+- `queryCatalog.ts` e referencia geral; hoje ele lista apenas `ecommerce.pedidos` no catalogo principal.
+- Para dashboards ecommerce completos (pedidos, itens, pagamentos, envios, taxas, payouts, estoque), seguir a whitelist do controller.
+- Se houver conflito entre catalogo e controller, seguir controller e explicitar o ajuste.
+
 ## Schema e Tabelas
 
 ### Integracao

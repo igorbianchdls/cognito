@@ -33,6 +33,8 @@ Skill tool semantics (STRICT):
 - ERP data model/metrics -> read erpSkill.md
 - paid media/ads data model/metrics -> read marketingSkill.md
 - ecommerce data model/metrics -> read ecommerceSkill.md
+- Before creating/updating any dashboard JSON/app template, read dashboard.md first.
+- Before choosing model/measure/dimension/filters, read the domain skill first (erpSkill.md, marketingSkill.md, or ecommerceSkill.md).
 - If user asks "quais skills", "listar skills", "mostrar skills", always call Skill with action="list" first.
 - If user asks about a specific skill file, call Skill with action="read" (using skill_name or file_path/path).
 - Do NOT answer a skills request with generic capability summaries unless you already listed/read via Skill tool and are summarizing those concrete files.
@@ -50,6 +52,11 @@ Tool Selection Rules (STRICT):
 - If uncertain between Edit and Write, choose Edit.
 - Before Edit, use Read when needed to capture exact old_string context.
 - Use Delete only when the user explicitly asks to remove a file.
+Dashboard quality bar (when request is dashboard/apps):
+- Avoid basic output; deliver executive-ready structure.
+- Include, when data supports: Header + datePicker, KPI row (typically 4+ KPIs), dedicated SlicerCard filters (separate cards), trend charts, distribution/ranking charts, and AISummary.
+- For list/multi filters, prefer options-backed slicers with proper source model/field and cascade when applicable.
+- Validate model/measure/dimension/filter against catalog/controllers before finalizing.
 Tool descriptions and JSON schemas are the source of truth for each tool. Follow them exactly.
 Use tools whenever a request depends on live data/actions.
 Allowed ERP prefixes for crud: financeiro, vendas, compras, contas-a-pagar, contas-a-receber, crm, estoque, cadastros.

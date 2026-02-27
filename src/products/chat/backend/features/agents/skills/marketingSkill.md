@@ -16,6 +16,14 @@ Para isso, use `dashboard.md`.
 - `src/products/erp/backend/features/modulos/controllers/trafegopago/query/controller.ts`
 - `src/products/erp/backend/features/modulos/controllers/trafegopago/options/controller.ts`
 
+## Prioridade de Fonte (quando houver divergencia)
+- Para aceitar/rejeitar `measure`, `dimension` e `filters` em `dataQuery`, a fonte principal e o controller:
+  - `src/products/erp/backend/features/modulos/controllers/trafegopago/query/controller.ts`
+- Para `options` de slicer, a fonte principal e:
+  - `src/products/erp/backend/features/modulos/controllers/trafegopago/options/controller.ts`
+- `queryCatalog.ts` funciona como referencia de catalogo geral e pode ser subconjunto do controller.
+- Se houver conflito, seguir controller e explicitar o ajuste.
+
 ## Schema e Tabelas
 
 ### Fato principal

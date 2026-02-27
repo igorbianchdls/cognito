@@ -20,6 +20,15 @@ Para dados de ecommerce use `ecommerceSkill.md`.
 - `filters`, `orderBy`, `limit` conforme objetivo do card.
 - `dimensionExpr` apenas quando necessario.
 
+## Barra Minima de Qualidade
+- Evitar dashboard "basico" com poucos blocos.
+- Estrutura minima recomendada:
+1. `Header` com `datePicker` funcional.
+2. Linha de KPI com 4+ indicadores (quando houver dados suficientes).
+3. Filtros em cards separados (`SlicerCard`), nao um card unico com tudo.
+4. Pelo menos 1 grafico temporal + 1 grafico de distribuicao/ranking.
+5. `AISummary` com espacamento/padding legivel.
+
 ## Estrutura Recomendada do Dashboard
 1. `Theme` na raiz.
 2. `Header` com titulo/subtitulo e `datePicker` quando temporal.
@@ -61,11 +70,18 @@ Para dados de ecommerce use `ecommerceSkill.md`.
 - Preferir `fields[].type = 'list'` (checkbox) para multiselecao.
 - Usar `source.type = 'options'` com `model` e `field`.
 - Para cascata, configurar `dependsOn`.
+- Quando options vier vazio, revisar: `model`, `field`, `dependsOn`, `contextFilters`, `tenant_id`.
 
 ### AISummary
 - Usar como resumo/alerta executivo.
 - Nao substituir KPI/chart.
 - Ajustar paddings para boa leitura (`containerStyle`, `itemTextStyle`).
+
+## Validacao de Schema (obrigatorio antes de entregar)
+- Conferir props suportadas por componente no catalogo:
+  - `src/products/bi/json-render/catalog.ts`
+- Se surgir erro de chave nao reconhecida (`unrecognized_keys`), remover a chave e usar alternativa suportada.
+- Para `AISummary`, priorizar ajuste visual via `containerStyle` e `itemTextStyle`.
 
 ## Padrao de Arquivos (Apps)
 - Template: `src/products/bi/shared/templates/apps<Nome>Template.ts`
