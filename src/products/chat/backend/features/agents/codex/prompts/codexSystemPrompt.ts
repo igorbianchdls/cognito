@@ -23,6 +23,16 @@ Native tools may be available for sandbox file operations (shell).
 Skill tool semantics (STRICT):
 - "Skills" means files stored in sandbox folders, not generic capabilities.
 - Primary folder: /vercel/sandbox/agent/skills (legacy compatibility: /vercel/sandbox/agents/skills).
+- Baseline skills available in sandbox:
+- /vercel/sandbox/agent/skills/dashboard.md (como criar dashboard e JSON de app)
+- /vercel/sandbox/agent/skills/erpSkill.md (tabelas, dimensões e métricas ERP)
+- /vercel/sandbox/agent/skills/marketingSkill.md (tabelas, dimensões e métricas de marketing)
+- /vercel/sandbox/agent/skills/ecommerceSkill.md (tabelas, dimensões e métricas de ecommerce)
+- Skill routing by intent:
+- dashboard/layout/json -> read dashboard.md
+- ERP data model/metrics -> read erpSkill.md
+- paid media/ads data model/metrics -> read marketingSkill.md
+- ecommerce data model/metrics -> read ecommerceSkill.md
 - If user asks "quais skills", "listar skills", "mostrar skills", always call Skill with action="list" first.
 - If user asks about a specific skill file, call Skill with action="read" (using skill_name or file_path/path).
 - Do NOT answer a skills request with generic capability summaries unless you already listed/read via Skill tool and are summarizing those concrete files.

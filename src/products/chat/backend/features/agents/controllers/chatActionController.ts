@@ -5,7 +5,12 @@ import { getOpenAIResponsesStreamRunnerScript, seedAppToolsSkillInSandbox, seedM
 import { generateAgentToken, setAgentToken } from '@/products/chat/backend/features/agents/auth/agentTokenStore'
 import { buildClaudeSystemPrompt } from '@/products/chat/backend/features/agents/claudecode/prompts/claudeCodeSystemPrompt'
 import { buildOpenAiSystemPrompt } from '@/products/chat/backend/features/agents/codex/prompts/codexSystemPrompt'
-import { loadDashboardSkillMarkdown } from '@/products/chat/backend/features/agents/skills/dashboardSkill'
+import {
+  loadDashboardSkillMarkdown,
+  loadEcommerceSkillMarkdown,
+  loadErpSkillMarkdown,
+  loadMarketingSkillMarkdown,
+} from '@/products/chat/backend/features/agents/skills/dashboardSkill'
 import { resolveComposioUserIdFromRequest } from '@/products/chat/backend/features/agents/core/context/resolveComposioUserId'
 import { APPS_VENDAS_TEMPLATE_TEXT } from '@/products/apps/shared/templates/appsVendasTemplate'
 import { APPS_COMPRAS_TEMPLATE_TEXT } from '@/products/apps/shared/templates/appsComprasTemplate'
@@ -20,8 +25,24 @@ type ChatSession = { id: string; sandbox: Sandbox; createdAt: number; lastUsedAt
 const SESSIONS = new Map<string, ChatSession>()
 const OPENAI_SANDBOXES = new Map<string, { sandbox: Sandbox; createdAt: number; lastUsedAt: number }>()
 const genId = () => Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
-const DASHBOARD_SKILL_PATH = '/vercel/sandbox/agent/skills/dashboard.md'
-const DASHBOARD_SKILL_MD = loadDashboardSkillMarkdown()
+const SKILL_FILES = [
+  {
+    path: '/vercel/sandbox/agent/skills/dashboard.md',
+    content: loadDashboardSkillMarkdown(),
+  },
+  {
+    path: '/vercel/sandbox/agent/skills/erpSkill.md',
+    content: loadErpSkillMarkdown(),
+  },
+  {
+    path: '/vercel/sandbox/agent/skills/marketingSkill.md',
+    content: loadMarketingSkillMarkdown(),
+  },
+  {
+    path: '/vercel/sandbox/agent/skills/ecommerceSkill.md',
+    content: loadEcommerceSkillMarkdown(),
+  },
+]
 
 function inferProviderFromModel(model?: string): ChatProvider {
   const raw = (model || '').toString().trim().toLowerCase()
@@ -68,7 +89,7 @@ function normalizeModel(provider: ChatProvider, rawModel?: string): string {
   return claudeMap[raw] || 'claude-haiku-4-5-20251001'
 }
 
-async function ensureDashboardSkillInSandbox(sandbox: Sandbox, opts?: { ensureOpenAiDir?: boolean }) {
+async function ensureSkillsInSandbox(sandbox: Sandbox, opts?: { ensureOpenAiDir?: boolean }) {
   try {
     const mkdirScript = opts?.ensureOpenAiDir
       ? "const fs=require('fs');fs.mkdirSync('/vercel/sandbox/openai-chat',{recursive:true});fs.mkdirSync('/vercel/sandbox/agent/skills',{recursive:true});console.log('ok')"
@@ -76,18 +97,13 @@ async function ensureDashboardSkillInSandbox(sandbox: Sandbox, opts?: { ensureOp
     await sandbox.runCommand({ cmd: 'node', args: ['-e', mkdirScript] })
   } catch {}
   try {
-    await sandbox.writeFiles([
-      {
-        path: DASHBOARD_SKILL_PATH,
-        content: Buffer.from(DASHBOARD_SKILL_MD),
-      },
-    ])
+    await sandbox.writeFiles(SKILL_FILES.map((f) => ({ path: f.path, content: Buffer.from(f.content) })))
   } catch {}
 }
 
 async function getOrCreateOpenAiSandbox(chatId: string): Promise<Sandbox> {
   async function ensureOpenAiSkillsScaffold(sandbox: Sandbox) {
-    await ensureDashboardSkillInSandbox(sandbox, { ensureOpenAiDir: true })
+    await ensureSkillsInSandbox(sandbox, { ensureOpenAiDir: true })
   }
 
   const existing = OPENAI_SANDBOXES.get(chatId)
@@ -147,7 +163,7 @@ export async function POST(req: Request) {
         const provider = normalizeProvider(existing.provider, existing.model)
         existing.provider = provider
         existing.model = normalizeModel(provider, existing.model || (provider === 'openai-responses' ? 'gpt-5-mini' : 'claude-haiku-4-5-20251001'))
-        await ensureDashboardSkillInSandbox(existing.sandbox)
+        await ensureSkillsInSandbox(existing.sandbox)
         timeline.push({ name: 'reuse-existing-session', ms: Date.now() - t0, ok: true })
         return Response.json({ ok: true, chatId: id, reused: true, startupMode: 'reused' as const, timeline })
       }
@@ -184,7 +200,7 @@ export async function POST(req: Request) {
           return Response.json({ ok: false, error: 'install failed', stdout: o, stderr: e, timeline }, { status: 500 })
         }
       }
-      if (sandbox) await ensureDashboardSkillInSandbox(sandbox)
+      if (sandbox) await ensureSkillsInSandbox(sandbox)
       // Seed a single Tools Skill to document generic MCP tools (only when cold start)
       if (!usedChatSnapshot) {
         try {
@@ -1011,7 +1027,7 @@ process.exit(0);
     sess.provider = chosenProvider
     sess.model = chosen
     sess.lastUsedAt = Date.now()
-    await ensureDashboardSkillInSandbox(sess.sandbox)
+    await ensureSkillsInSandbox(sess.sandbox)
     if (chosenProvider === 'openai-responses') {
       // Also pre-warm OpenAI dedicated sandbox (used by streaming runner).
       try { await getOrCreateOpenAiSandbox(chatId) } catch {}
