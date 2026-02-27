@@ -1,7 +1,5 @@
 # Dashboard Skill (JSON Render)
 
-Arquivo legado. Conteudo principal migrado para `dashboard.md`.
-
 Objetivo: ensinar como criar e editar dashboards JSON Render com estrutura valida, boa UX e dataQuery compativel.
 
 Use este skill quando o pedido envolver:
@@ -31,7 +29,52 @@ Para dados de ecommerce use `ecommerceSkill.md`.
 6. Blocos temporais (`LineChart`/`BarChart` por mes/periodo).
 7. `AISummary` como leitura executiva.
 
+## Componentes e Regras
+
+### Theme
+- Definir `props.name` e `managers` (border/color).
+- Manter visual consistente entre cards/charts.
+
+### Header
+- Usar `controlsPosition: right` por padrao.
+- `datePicker.storePath`: `filters.dateRange`.
+- `actionOnChange`: `{ type: 'refresh_data' }`.
+
+### Div
+- Layout principal com `direction: row`, `wrap: true`, `childGrow: true`.
+- Defaults recomendados: `gap: 12`, `padding: 16`.
+
+### KPI
+- `dataQuery` sem `dimension` para agregados.
+- `format` coerente: `currency`, `number`, `percent`.
+
+### BarChart / PieChart / LineChart
+- Ranking: `orderBy.measure = desc`, `limit` 5-12.
+- Serie temporal: `orderBy.dimension = asc`.
+- Definir `height` (220-260) para estabilidade visual.
+- Clique para filtro global quando fizer sentido:
+  - `interaction.clickAsFilter`
+  - `interaction.filterField`
+  - `interaction.storePath`
+
+### SlicerCard
+- Preferir `fields[].type = 'list'` (checkbox) para multiselecao.
+- Usar `source.type = 'options'` com `model` e `field`.
+- Para cascata, configurar `dependsOn`.
+
+### AISummary
+- Usar como resumo/alerta executivo.
+- Nao substituir KPI/chart.
+- Ajustar paddings para boa leitura (`containerStyle`, `itemTextStyle`).
+
 ## Padrao de Arquivos (Apps)
 - Template: `src/products/bi/shared/templates/apps<Nome>Template.ts`
 - Page: `src/products/bi/features/dashboard-playground/pages/Apps<Nome>Page.tsx`
 - Route: `src/app/apps/<slug>/page.tsx`
+
+## Checklist Antes de Entregar
+- JSON valido e renderizavel.
+- Todos os componentes existem no renderer atual.
+- `dataQuery.model/measure` validos para o backend.
+- Filtros globais funcionando (`dateRange` e slicers).
+- Layout responsivo sem cards quebrados.
