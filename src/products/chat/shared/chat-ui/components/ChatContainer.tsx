@@ -39,7 +39,10 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   const [sandboxStatus, setSandboxStatus] = useState<SandboxStatus>('off')
   const [composioEnabled, setComposioEnabled] = useState<boolean>(false)
   const [model, setModel] = useState<EngineId>(initialEngine || 'openai-gpt5mini')
+  const [startLocked, setStartLocked] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
+  const pendingStartRef = useRef<Promise<string> | null>(null)
+  const sendLockRef = useRef(false)
   // Track the assistant message for the current turn, so each user message
   // gets its own assistant response instead of appending to the first one.
   const currentAssistantIdRef = useRef<string | null>(null)
@@ -108,44 +111,60 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
       setSandboxStatus('running')
       return chatId
     }
-    const resumeHint = Boolean(initialChatId && (hasPersistedChat || messages.length > 0))
-    setSandboxStatus(resumeHint ? 'resuming' : 'starting')
-    const body: any = { action: 'chat-start' }
-    if (initialChatId && typeof initialChatId === 'string') body.chatId = initialChatId
-    try {
-      const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-      const data = await res.json().catch(() => ({})) as {
-        ok?: boolean
-        chatId?: string
-        error?: string
-        startupMode?: 'reused' | 'snapshot' | 'cold'
-      }
-      if (!res.ok || data.ok === false || !data.chatId) throw new Error(data.error || 'chat-start failed')
-      setChatId(data.chatId)
-      setSandboxStatus('running')
+    if (pendingStartRef.current) return pendingStartRef.current
+
+    const startPromise = (async () => {
+      const resumeHint = Boolean(initialChatId && (hasPersistedChat || messages.length > 0))
+      setSandboxStatus(resumeHint ? 'resuming' : 'starting')
+      const body: any = { action: 'chat-start' }
+      if (initialChatId && typeof initialChatId === 'string') body.chatId = initialChatId
       try {
-        const cfg = engineToBackend(model)
-        const modelRes = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'model-set', chatId: data.chatId, provider: cfg.provider, model: cfg.model }),
-        })
-        if (!modelRes.ok) {
-          notifyError('api', `HTTP ${modelRes.status}`, 'Falha ao configurar modelo inicial')
+        const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        const data = await res.json().catch(() => ({})) as {
+          ok?: boolean
+          chatId?: string
+          error?: string
+          startupMode?: 'reused' | 'snapshot' | 'cold'
         }
-      } catch (err) {
-        notifyError('api', err, 'Falha ao configurar modelo inicial')
+        if (!res.ok || data.ok === false || !data.chatId) throw new Error(data.error || 'chat-start failed')
+        setChatId(data.chatId)
+        setSandboxStatus('running')
+        try {
+          const cfg = engineToBackend(model)
+          const modelRes = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'model-set', chatId: data.chatId, provider: cfg.provider, model: cfg.model }),
+          })
+          if (!modelRes.ok) {
+            notifyError('api', `HTTP ${modelRes.status}`, 'Falha ao configurar modelo inicial')
+          }
+        } catch (err) {
+          notifyError('api', err, 'Falha ao configurar modelo inicial')
+        }
+        return data.chatId
+      } catch (error) {
+        setSandboxStatus('error')
+        throw error
       }
-      return data.chatId
-    } catch (error) {
-      setSandboxStatus('error')
-      throw error
+    })()
+
+    pendingStartRef.current = startPromise
+    setStartLocked(true)
+    try {
+      return await startPromise
+    } finally {
+      if (pendingStartRef.current === startPromise) pendingStartRef.current = null
+      setStartLocked(false)
     }
   }
+
+  const isSubmitBlocked = startLocked || sandboxStatus === 'starting' || sandboxStatus === 'resuming' || status === 'submitted' || status === 'streaming'
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     const text = input.trim()
+    if (sendLockRef.current || isSubmitBlocked) return
     if (!text) return
     // If in first-message redirect mode and no chat started yet, redirect to /chat/[id]
     if (redirectOnFirstMessage && !chatId) {
@@ -175,6 +194,10 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   };
 
   const send = async (text: string) => {
+    if (sendLockRef.current) return
+    sendLockRef.current = true
+    try {
+    setStatus('submitted')
     const id = await ensureStart()
     // Append user message
     const userMsg: UIMessage = { id: `u-${Date.now()}`, role: 'user', parts: [{ type: 'text', text }] }
@@ -186,7 +209,6 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
     currentAssistantIdRef.current = assistantId
     setMessages(prev => [...prev, { id: assistantId, role: 'assistant', parts: [] as any }])
 
-    setStatus('submitted')
     // Stateless mode with short memory: keep only the last 5 user/assistant messages.
     const history = [...messages, userMsg]
       .filter(m => m.role === 'user' || m.role === 'assistant')
@@ -477,6 +499,9 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
       }
     }
     setStatus('idle')
+    } finally {
+      sendLockRef.current = false
+    }
   }
 
   const isEmpty = (messages || []).length === 0;
@@ -598,6 +623,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
                   onChange={setInput}
                   onSubmit={handleSubmit}
                   status={status}
+                  submitDisabled={isSubmitBlocked}
                   composioEnabled={composioEnabled}
                   model={model}
                   onToggleComposio={async () => {
@@ -682,7 +708,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
           )}
         </div>
         <div className="px-4 pb-3">
-          <InputArea value={input} onChange={setInput} onSubmit={handleSubmit} status={status} composioEnabled={composioEnabled} onToggleComposio={async () => {
+          <InputArea value={input} onChange={setInput} onSubmit={handleSubmit} status={status} submitDisabled={isSubmitBlocked} composioEnabled={composioEnabled} onToggleComposio={async () => {
             if (redirectOnFirstMessage && !chatId) {
               setComposioEnabled(!composioEnabled)
               return

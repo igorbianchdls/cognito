@@ -25,6 +25,7 @@ type Props = {
   onChange: (value: string) => void;
   onSubmit: (e: FormEvent) => void;
   status?: ChatStatus | string;
+  submitDisabled?: boolean;
   onOpenSandbox?: () => void;
   composioEnabled?: boolean;
   onToggleComposio?: () => void;
@@ -32,7 +33,7 @@ type Props = {
   onModelChange?: (m: 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5' | 'openai-gpt5mini' | 'openai-gpt5nano') => void;
 };
 
-export default function InputArea({ value, onChange, onSubmit, status = 'idle', onOpenSandbox, composioEnabled, onToggleComposio, model = 'openai-gpt5mini', onModelChange }: Props) {
+export default function InputArea({ value, onChange, onSubmit, status = 'idle', submitDisabled = false, onOpenSandbox, composioEnabled, onToggleComposio, model = 'openai-gpt5mini', onModelChange }: Props) {
   // Local-only UI state for Toolkits panel (no persistence, no backend)
   const [toolkitsOpen, setToolkitsOpen] = useState(false)
   const [tkSearch, setTkSearch] = useState('')
@@ -238,7 +239,7 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
                 <Mic size={16} />
               </PromptInputButton>
             )}
-            <PromptInputSubmit disabled={!value || recState !== 'idle'} status={status as ChatStatus} />
+            <PromptInputSubmit disabled={!value || recState !== 'idle' || submitDisabled} status={status as ChatStatus} />
           </div>
         </PromptInputToolbar>
       </PromptInput>

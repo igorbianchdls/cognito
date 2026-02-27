@@ -3,7 +3,7 @@ export type SandboxStatus = 'off' | 'starting' | 'resuming' | 'running' | 'error
 export function getSandboxStatusLabel(status: SandboxStatus): string {
   if (status === 'starting') return 'Iniciando'
   if (status === 'resuming') return 'Retomando'
-  if (status === 'running') return 'Ativa'
+  if (status === 'running') return 'Ativo'
   if (status === 'error') return 'Erro'
   return 'Desligada'
 }
@@ -15,4 +15,3 @@ export function getSandboxStatusClasses(status: SandboxStatus): string {
   if (status === 'error') return 'border-rose-200 bg-rose-50 text-rose-700'
   return 'border-gray-200 bg-gray-50 text-gray-600'
 }
-

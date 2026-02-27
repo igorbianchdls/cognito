@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { MoreHorizontal, Lock, Play, Square, FilePlus2, BarChart3 } from 'lucide-react';
+import { MoreHorizontal, Play, Square, FilePlus2, BarChart3 } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import SandboxStatusBadge from './SandboxStatusBadge';
@@ -11,7 +11,6 @@ import type { ChatErrorNotification } from '@/products/chat/frontend/features/er
 
 type HeaderProps = {
   title?: string;
-  privacy?: 'Private' | 'Public' | string;
   onStartSandbox?: () => Promise<void> | void;
   onStopSandbox?: () => Promise<void> | void;
   onWriteFiles?: () => Promise<void> | void;
@@ -27,7 +26,6 @@ type HeaderProps = {
 
 export default function Header({
   title = 'App from Mockup',
-  privacy = 'Private',
   onStartSandbox,
   onStopSandbox,
   onWriteFiles,
@@ -50,10 +48,6 @@ export default function Header({
       <div className="flex items-center gap-3 min-w-0">
         <SidebarTrigger />
         <h1 className="text-[16px] font-semibold text-gray-900 truncate">{title}</h1>
-        <span className="inline-flex items-center gap-1 rounded-full border border-gray-200 px-3 py-1 text-xs text-gray-700 bg-white">
-          <Lock className="w-3.5 h-3.5" />
-          {privacy}
-        </span>
         <SandboxStatusBadge status={sandboxStatus} />
       </div>
       <div className="flex items-center gap-3">
