@@ -393,7 +393,7 @@ export default function RespostaDaIa({ message, isPending = false }: Props) {
       <div className="w-full min-w-0 space-y-2">
         <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
           <img
-            src="https://pyxis.nymag.com/v1/imgs/bf2/b1e/6f6018c7b262f744bf717f22e291fb5b50-alfred-lede.rsquare.w400.jpg"
+            src="/avatarAlfred.png"
             alt="Alfred"
             className="w-6 h-6 rounded-sm object-cover shadow-sm ml-0.5"
           />

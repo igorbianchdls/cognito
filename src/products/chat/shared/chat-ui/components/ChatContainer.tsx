@@ -742,7 +742,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
           <div className="h-full px-4">
             <div className="h-full flex items-center justify-center">
               <div className="w-full text-center">
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">Como você vai?</h1>
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">No que você está pensando hoje?</h1>
                 <InputArea
                   value={input}
                   onChange={setInput}
