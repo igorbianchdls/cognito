@@ -32,7 +32,7 @@ function modelToEngine(modelRaw?: string): EngineId {
   return 'openai-gpt5mini'
 }
 
-export default function ChatContainer({ onOpenSandbox, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, autoStartSandbox, initialEngine, runtimeKind = 'codex' }: { onOpenSandbox?: (chatId?: string) => void; withSideMargins?: boolean; redirectOnFirstMessage?: boolean; initialMessage?: string; autoSendPrefill?: boolean; initialChatId?: string; autoStartSandbox?: boolean; initialEngine?: EngineId; runtimeKind?: RuntimeKind }) {
+export default function ChatContainer({ onOpenSandbox, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, initialEngine, runtimeKind = 'codex' }: { onOpenSandbox?: (chatId?: string) => void; withSideMargins?: boolean; redirectOnFirstMessage?: boolean; initialMessage?: string; autoSendPrefill?: boolean; initialChatId?: string; initialEngine?: EngineId; runtimeKind?: RuntimeKind }) {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<UIMessage[]>([])
   const isEmpty = messages.length === 0
@@ -47,7 +47,6 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   const pendingStartRef = useRef<Promise<string> | null>(null)
   const sendLockRef = useRef(false)
   const scrollRestoreDoneRef = useRef(false)
-  const sandboxHintHydratedRef = useRef(false)
   // Track the assistant message for the current turn, so each user message
   // gets its own assistant response instead of appending to the first one.
   const currentAssistantIdRef = useRef<string | null>(null)
@@ -70,11 +69,6 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   const getScrollKey = () => {
     if (!initialChatId) return null
     return `chat-scroll:${initialChatId}`
-  }
-
-  const getSandboxResumeKey = () => {
-    if (!initialChatId) return null
-    return `chat-sandbox-running:${initialChatId}`
   }
 
   const saveScrollPosition = () => {
@@ -118,26 +112,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   }, [initialEngine])
 
   useEffect(() => {
-    const key = getSandboxResumeKey()
-    if (!key) return
-    const isFirstRunForChat = !sandboxHintHydratedRef.current
-    if (!sandboxHintHydratedRef.current) sandboxHintHydratedRef.current = true
-    if (isFirstRunForChat && sandboxStatus === 'off') return
-    try {
-      if (sandboxStatus === 'running' || sandboxStatus === 'starting' || sandboxStatus === 'resuming') {
-        sessionStorage.setItem(key, '1')
-      } else if (sandboxStatus === 'off') {
-        sessionStorage.removeItem(key)
-      }
-    } catch {
-      // ignore storage failures
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sandboxStatus, initialChatId])
-
-  useEffect(() => {
     scrollRestoreDoneRef.current = false
-    sandboxHintHydratedRef.current = false
   }, [initialChatId])
 
   useEffect(() => {
@@ -662,17 +637,8 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
 
   // Sync sandbox status for existing chat routes that were already started.
   useEffect(() => {
-    if (!initialChatId || chatId || autoStartSandbox) return
+    if (!initialChatId || chatId) return
     let cancelled = false
-    const shouldResumeFromStorage = (() => {
-      const key = getSandboxResumeKey()
-      if (!key) return false
-      try {
-        return sessionStorage.getItem(key) === '1'
-      } catch {
-        return false
-      }
-    })()
     ;(async () => {
       try {
         const res = await fetch('/api/chat', {
@@ -680,38 +646,22 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'chat-status', chatId: initialChatId }),
         })
-        const data = await res.json().catch(() => ({})) as { ok?: boolean; status?: string; recoverable?: boolean }
+        const data = await res.json().catch(() => ({})) as { ok?: boolean; status?: string }
         if (cancelled) return
         if (res.ok && data && data.ok && data.status === 'running') {
           setHasPersistedChat(true)
           setChatId(initialChatId)
           setSandboxStatus('running')
-        } else if (shouldResumeFromStorage || Boolean(data?.recoverable)) {
-          ensureStart().catch((err) => { if (!cancelled) { setSandboxStatus('error'); notifyError('sandbox', err, 'Falha ao retomar computador após recarregar') } })
         } else {
           setSandboxStatus('off')
         }
       } catch {
-        if (!cancelled) {
-          if (shouldResumeFromStorage) {
-            ensureStart().catch((err) => { if (!cancelled) { setSandboxStatus('error'); notifyError('sandbox', err, 'Falha ao retomar computador após recarregar') } })
-          } else {
-            setSandboxStatus('off')
-          }
-        }
+        if (!cancelled) setSandboxStatus('off')
       }
     })()
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialChatId, chatId, autoStartSandbox])
-
-  // Auto-start sandbox (no message) when requested via URL flag
-  useEffect(() => {
-    if (autoStartSandbox && initialChatId && !chatId) {
-      ensureStart().catch((err) => { setSandboxStatus('error'); notifyError('sandbox', err, 'Falha ao iniciar computador automaticamente') })
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoStartSandbox, initialChatId])
+  }, [initialChatId, chatId])
   // Auto-send prefilled first message when arriving at /chat/[id]
   useEffect(() => {
     if (autoSendPrefill && initialMessage && isEmpty && status === 'idle') {

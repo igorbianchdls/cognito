@@ -22,7 +22,6 @@ type ChatWorkspaceProps = {
   initialChatId?: string;
   initialMessage?: string;
   autoSendPrefill?: boolean;
-  autoStartSandbox?: boolean;
   initialEngine?: ChatEngineId;
   runtimeKind?: ChatRuntimeKind;
 };
@@ -32,7 +31,6 @@ export default function ChatWorkspace({
   initialChatId,
   initialMessage,
   autoSendPrefill,
-  autoStartSandbox,
   initialEngine,
   runtimeKind = "codex",
 }: ChatWorkspaceProps) {
@@ -85,7 +83,6 @@ export default function ChatWorkspace({
                       initialChatId={initialChatId}
                       initialMessage={initialMessage}
                       autoSendPrefill={autoSendPrefill}
-                      autoStartSandbox={autoStartSandbox}
                       initialEngine={initialEngine}
                       runtimeKind={runtimeKind}
                     />
