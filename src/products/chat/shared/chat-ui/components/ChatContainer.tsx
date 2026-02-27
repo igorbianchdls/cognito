@@ -317,7 +317,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
     currentAssistantIdRef.current = assistantId
     setMessages(prev => [...prev, { id: assistantId, role: 'assistant', parts: [] as any }])
 
-    // Stateless mode with short memory: keep only the last 5 user/assistant messages.
+    // Stateless mode with short memory: keep only the last 10 user/assistant messages.
     const history = [...messages, userMsg]
       .filter(m => m.role === 'user' || m.role === 'assistant')
       .map((m) => {
@@ -329,7 +329,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
         return { role: m.role as 'user'|'assistant', content }
       })
       .filter((m) => m.content.length > 0)
-      .slice(-5)
+      .slice(-10)
     const body = isSlash
       ? { action: 'chat-slash', chatId: id, prompt: text }
       : { action: 'chat-send-stream', chatId: id, history, clientMessageId: userMsg.id }
@@ -789,7 +789,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
                     onOpenSandbox?.(chatId ?? undefined)
                   }}
                 />
-                <p className="mt-2 text-xs text-gray-400 text-center">Otto é uma IA e pode cometer erros. Por favor, verifique as respostas.</p>
+                <p className="mt-2 text-xs text-gray-400 text-center">Alfred é uma IA e pode cometer erros. Por favor, verifique as respostas.</p>
               </div>
             </div>
           </div>
@@ -867,7 +867,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
             sandboxActions.setActiveTab('dashboard')
             onOpenSandbox?.(chatId ?? undefined)
           }} />
-          <p className="mt-2 text-xs text-gray-400 text-center">Otto é uma IA e pode cometer erros. Por favor, verifique as respostas.</p>
+          <p className="mt-2 text-xs text-gray-400 text-center">Alfred é uma IA e pode cometer erros. Por favor, verifique as respostas.</p>
         </div>
       </div>
     </div>

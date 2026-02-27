@@ -80,7 +80,7 @@ const navigationData = {
   },
   teams: [
     {
-      name: "Otto",
+      name: "Alfred",
       logo: Cpu,
       plan: "Professional",
     },

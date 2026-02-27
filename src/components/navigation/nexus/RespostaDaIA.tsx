@@ -25,8 +25,8 @@ export default function RespostaDaIA({ message, selectedAgent: _selectedAgent }:
     <div className="w-full min-w-0 flex justify-start py-3">
       <div className="w-full min-w-0 space-y-2">
         <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-tr from-fuchsia-500 via-purple-500 to-blue-500 text-white text-[10px] leading-none shadow-sm ml-0.5">OT</span>
-          <span className="font-semibold text-gray-900 text-[16px]">Otto</span>
+          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-tr from-fuchsia-500 via-purple-500 to-blue-500 text-white text-[10px] leading-none shadow-sm ml-0.5">AL</span>
+          <span className="font-semibold text-gray-900 text-[16px]">Alfred</span>
         </div>
 
         {textParts.map((part: any, idx: number) => (
