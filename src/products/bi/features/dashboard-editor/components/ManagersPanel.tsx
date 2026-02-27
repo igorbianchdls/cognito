@@ -188,12 +188,20 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
       colorScheme: ['#2563eb','#10b981','#06b6d4','#8b5cf6','#f59e0b','#ef4444'],
     },
   };
-  const themeFxOptions = [
-    { value: 'custom', label: '(custom)' },
-    { value: 'none', label: 'Nenhum' },
-    ...dashboardBackgroundPresetOptions
-      .filter((o) => ['orbital','blueprint','aurora','matrix-glass','matrix-glass-mono','matrix-glass-light'].includes(o.value))
-      .map((o) => ({ value: o.value, label: o.label })),
+  const themeFxOptions = dashboardBackgroundPresetOptions
+    .filter((o) => ['orbital','blueprint','aurora','matrix-glass','matrix-glass-mono','matrix-glass-light'].includes(o.value))
+    .map((o) => ({ value: o.value, label: `${o.label} (FX)` }));
+  const themeFxDefaultThemeMap: Record<string, string> = {
+    orbital: 'midnight',
+    blueprint: 'navy',
+    aurora: 'dark',
+    'matrix-glass': 'black',
+    'matrix-glass-mono': 'black',
+    'matrix-glass-light': 'light',
+  };
+  const allThemeOptions = [
+    ...themeOptions,
+    ...themeFxOptions.map((o) => ({ value: `fx:${o.value}`, label: o.label })),
   ];
 
   function applyBorderPresetToTheme(th: any, presetKey: string) {
@@ -364,6 +372,9 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
     }
     return 'custom';
   })();
+  const selectedThemeOption = (themeFxPreset !== 'custom' && themeFxPreset !== 'none')
+    ? `fx:${themeFxPreset}`
+    : current.name;
 
   return (
     <div className="mt-4 rounded-md bg-white p-3 border border-gray-200">
@@ -372,9 +383,20 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
         {/* Tema */}
         <div className="flex items-center gap-2">
           <label className="text-xs text-gray-700 w-20">Tema</label>
-          <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={current.name}
-            onChange={(e) => updateTheme((th: any) => { if (!th.props) th.props = {}; th.props.name = e.target.value; })}>
-            {themeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          <select disabled={disabled} className="text-xs border border-gray-300 rounded px-2 py-1" value={selectedThemeOption}
+            onChange={(e) => updateTheme((th: any) => {
+              if (!th.props) th.props = {};
+              const v = e.target.value;
+              if (v.startsWith('fx:')) {
+                const fx = v.slice(3);
+                th.props.name = themeFxDefaultThemeMap[fx] || th.props.name || 'dark';
+                applyThemeFxPresetToTheme(th, fx);
+                return;
+              }
+              th.props.name = v;
+              applyThemeFxPresetToTheme(th, 'none');
+            })}>
+            {allThemeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </div>
         <div className="flex items-center gap-2">
@@ -387,21 +409,6 @@ export default function ManagersPanel({ jsonText, setJsonText, setTree, disabled
               else delete th.props.headerTheme;
             })}>
             {headerThemeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
-        </div>
-        <div className="flex items-center gap-2">
-          <label className="text-xs text-gray-700 w-20">Tema FX</label>
-          <select
-            disabled={disabled}
-            className="text-xs border border-gray-300 rounded px-2 py-1"
-            value={themeFxPreset}
-            onChange={(e) => updateTheme((th: any) => {
-              const v = e.target.value;
-              if (v === 'custom') return;
-              applyThemeFxPresetToTheme(th, v);
-            })}
-          >
-            {themeFxOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </div>
         <div className="flex items-center gap-2">

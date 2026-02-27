@@ -195,6 +195,14 @@ const ARTIFACT_THEME_FX_OPTIONS = [
     .filter((o) => ['orbital', 'blueprint', 'aurora', 'matrix-glass', 'matrix-glass-mono', 'matrix-glass-light'].includes(o.value))
     .map((o) => ({ value: o.value, label: o.label })),
 ];
+const ARTIFACT_THEME_FX_DEFAULT_THEME: Record<string, string> = {
+  orbital: 'midnight',
+  blueprint: 'navy',
+  aurora: 'dark',
+  'matrix-glass': 'black',
+  'matrix-glass-mono': 'black',
+  'matrix-glass-light': 'light',
+};
 
 export default function HeaderActions({ chatId }: HeaderActionsProps) {
   const previewPath = useStore($previewJsonrPath);
@@ -210,6 +218,19 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
   const [snapshotSaving, setSnapshotSaving] = React.useState(false);
   const [snapshotStatus, setSnapshotStatus] = React.useState<string | null>(null);
   const [notifOpen, setNotifOpen] = React.useState(false);
+  const allThemeOptions = React.useMemo(
+    () => [
+      ...APPS_THEME_OPTIONS,
+      ...ARTIFACT_THEME_FX_OPTIONS
+        .filter((opt) => opt.value !== 'custom' && opt.value !== 'none')
+        .map((opt) => ({ value: `fx:${opt.value}`, label: `${opt.label} (FX)` })),
+    ],
+    []
+  );
+  const selectedThemeOption = React.useMemo(
+    () => (themeFxPreset !== 'custom' && themeFxPreset !== 'none' ? `fx:${themeFxPreset}` : themeName),
+    [themeFxPreset, themeName]
+  );
   const unreadCount = React.useMemo(
     () => artifactNotifications.reduce((acc, n) => acc + (n.read ? 0 : 1), 0),
     [artifactNotifications]
@@ -526,15 +547,24 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
               <label className="text-xs text-slate-600">Tema</label>
               <select
                 className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs outline-none focus:border-slate-400"
-                value={themeName}
+                value={selectedThemeOption}
                 disabled={loading || !chatId || !previewPath}
                 onChange={(e) => {
                   const next = e.target.value;
+                  if (next.startsWith('fx:')) {
+                    const fx = next.slice(3);
+                    const baseTheme = ARTIFACT_THEME_FX_DEFAULT_THEME[fx] || themeName || 'dark';
+                    setThemeName(baseTheme);
+                    setThemeFxPreset(fx);
+                    void persist({ name: baseTheme, themeFxPreset: fx });
+                    return;
+                  }
                   setThemeName(next);
-                  void persist({ name: next });
+                  setThemeFxPreset('none');
+                  void persist({ name: next, themeFxPreset: 'none' });
                 }}
               >
-                {APPS_THEME_OPTIONS.map((opt) => (
+                {allThemeOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
                     {opt.label}
                   </option>
@@ -555,25 +585,6 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
               >
                 {APPS_HEADER_THEME_OPTIONS.map((opt) => (
                   <option key={opt.value || 'auto'} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs text-slate-600">Tema FX</label>
-              <select
-                className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs outline-none focus:border-slate-400"
-                value={themeFxPreset}
-                disabled={loading || !chatId || !previewPath}
-                onChange={(e) => {
-                  const next = e.target.value;
-                  setThemeFxPreset(next);
-                  if (next !== 'custom') void persist({ themeFxPreset: next });
-                }}
-              >
-                {ARTIFACT_THEME_FX_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
                     {opt.label}
                   </option>
                 ))}
