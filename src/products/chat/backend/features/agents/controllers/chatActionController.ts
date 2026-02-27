@@ -418,7 +418,7 @@ export async function POST(req: Request) {
     const prompt = buildClaudeSystemPrompt({
       history,
       composioEnabled: Boolean(sess.composioEnabled),
-    }).slice(0, 6000)
+    })
     const runner = getChatStreamRunnerScript()
     await sess.sandbox.writeFiles([{ path: '/vercel/sandbox/agent-chat-stream.mjs', content: Buffer.from(runner) }])
     let assistantTextBuf = ''
@@ -585,7 +585,7 @@ export async function POST(req: Request) {
     if (!apiKey) {
       return new Response(JSON.stringify({ ok: false, error: 'OPENAI_API_KEY/CODEX_API_KEY não configurada' }), { status: 500 })
     }
-    const prompt = buildOpenAiSystemPrompt({ history }).slice(0, 9000)
+    const prompt = buildOpenAiSystemPrompt({ history })
 
     const modelId = normalizeModel('openai-responses', sess.model)
     sess.model = modelId
