@@ -134,6 +134,86 @@ export async function POST(req: Request) {
     return Response.json({ ok: false, error: 'action inválida' }, { status: 400 })
   }
 
+  async function ensureLocalSession(chatId: string, reason: string): Promise<
+    | { ok: true; sess: ChatSession }
+    | { ok: false; response: Response }
+  > {
+    const existing = SESSIONS.get(chatId)
+    if (existing) return { ok: true, sess: existing }
+
+    const chatRows = await runQuery<{ id: string; snapshot_id: string | null }>(
+      `SELECT id, snapshot_id FROM chat.chats WHERE id = $1 LIMIT 1`,
+      [chatId]
+    ).catch(() => [])
+    const chatRow = chatRows?.[0] || null
+    if (!chatRow) {
+      return {
+        ok: false,
+        response: Response.json(
+          {
+            ok: false,
+            error: 'chat não encontrado',
+            code: 'SESSION_NOT_RECOVERABLE',
+            reason,
+            recoverable: false,
+          },
+          { status: 404 }
+        ),
+      }
+    }
+
+    const runtimeSession = await getRuntimeSession(chatId).catch(() => null)
+    const nowMs = Date.now()
+    const leaseMs = runtimeSession?.lease_expires_at ? Date.parse(runtimeSession.lease_expires_at) : NaN
+    const leaseActive = Number.isFinite(leaseMs) && leaseMs > nowMs
+    const recoverable = Boolean(chatRow.snapshot_id) || Boolean(
+      runtimeSession &&
+      (runtimeSession.status === 'running' || runtimeSession.status === 'starting' || runtimeSession.status === 'resuming') &&
+      leaseActive
+    )
+
+    const started = await chatStart({ chatId })
+    if (!started.ok) {
+      let payload: any = {}
+      try { payload = await started.json() } catch {}
+      const rawError = String(payload?.error || `falha ao retomar sessão para ${reason}`)
+      const rateLimited = started.status === 429 || /429|too many requests|rate[ -]?limit/i.test(rawError)
+      const status = rateLimited ? 429 : (started.status === 404 ? 404 : 503)
+      return {
+        ok: false,
+        response: Response.json(
+          {
+            ok: false,
+            error: rawError,
+            code: rateLimited ? 'SANDBOX_RATE_LIMITED' : 'SESSION_NOT_RECOVERABLE',
+            reason,
+            recoverable,
+          },
+          { status }
+        ),
+      }
+    }
+
+    const hydrated = SESSIONS.get(chatId)
+    if (!hydrated) {
+      return {
+        ok: false,
+        response: Response.json(
+          {
+            ok: false,
+            error: 'sessão não foi hidratada após retomada',
+            code: 'SESSION_NOT_RECOVERABLE',
+            reason,
+            recoverable,
+          },
+          { status: 503 }
+        ),
+      }
+    }
+
+    return { ok: true, sess: hydrated }
+  }
+
   if (action === 'chat-start') return chatStart(payload as { chatId?: string })
   if (action === 'chat-stop') return chatStop(payload as { chatId?: string })
   if (action === 'chat-send-stream') return chatSendStream(payload as { chatId?: string; history?: Msg[]; clientMessageId?: string })
@@ -386,8 +466,9 @@ export async function POST(req: Request) {
   async function chatSendStream({ chatId, history, clientMessageId }: { chatId?: string; history?: Msg[]; clientMessageId?: string }) {
     if (!chatId) return new Response(JSON.stringify({ ok: false, error: 'chatId obrigatório' }), { status: 400 })
     if (!Array.isArray(history) || !history.length) return new Response(JSON.stringify({ ok: false, error: 'history vazio' }), { status: 400 })
-    const sess = SESSIONS.get(chatId)
-    if (!sess) return new Response(JSON.stringify({ ok: false, error: 'chat não encontrado' }), { status: 404 })
+    const ensured = await ensureLocalSession(chatId, 'chat-send-stream')
+    if (!ensured.ok) return ensured.response
+    const sess = ensured.sess
     sess.lastUsedAt = Date.now()
     try {
       await touchRuntimeSession(chatId, {
@@ -755,8 +836,9 @@ export async function POST(req: Request) {
   async function chatSlash({ chatId, prompt }: { chatId?: string; prompt?: string }) {
     const enc = new TextEncoder()
     if (!chatId) return new Response(JSON.stringify({ ok: false, error: 'chatId obrigatório' }), { status: 400 })
-    const sess = SESSIONS.get(chatId)
-    if (!sess) return new Response(JSON.stringify({ ok: false, error: 'chat não encontrado' }), { status: 404 })
+    const ensured = await ensureLocalSession(chatId, 'chat-slash')
+    if (!ensured.ok) return ensured.response
+    const sess = ensured.sess
     const slash = (prompt || '').toString().trim()
     if (!slash || !slash.startsWith('/')) return new Response(JSON.stringify({ ok: false, error: 'prompt deve começar com /' }), { status: 400 })
     sess.lastUsedAt = Date.now()
@@ -834,8 +916,9 @@ export async function POST(req: Request) {
 
   async function fsList({ chatId, path }: { chatId?: string; path?: string }) {
     if (!chatId) return Response.json({ ok: false, error: 'chatId obrigatório' }, { status: 400 })
-    const sess = SESSIONS.get(chatId)
-    if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
+    const ensured = await ensureLocalSession(chatId, 'fs-list')
+    if (!ensured.ok) return ensured.response
+    const sess = ensured.sess
     sess.lastUsedAt = Date.now()
     try {
       await touchRuntimeSession(chatId, { leaseSeconds: RUNTIME_LEASE_SECONDS, hasLocalSession: true, status: 'running' })
@@ -862,8 +945,9 @@ try {
 
   async function fsRead({ chatId, path }: { chatId?: string; path?: string }) {
     if (!chatId) return Response.json({ ok: false, error: 'chatId obrigatório' }, { status: 400 })
-    const sess = SESSIONS.get(chatId)
-    if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
+    const ensured = await ensureLocalSession(chatId, 'fs-read')
+    if (!ensured.ok) return ensured.response
+    const sess = ensured.sess
     sess.lastUsedAt = Date.now()
     try {
       await touchRuntimeSession(chatId, { leaseSeconds: RUNTIME_LEASE_SECONDS, hasLocalSession: true, status: 'running' })
@@ -891,8 +975,9 @@ try {
 
   async function fsWrite({ chatId, path, content }: { chatId?: string; path?: string; content?: string }) {
     if (!chatId) return Response.json({ ok: false, error: 'chatId obrigatório' }, { status: 400 })
-    const sess = SESSIONS.get(chatId)
-    if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
+    const ensured = await ensureLocalSession(chatId, 'fs-write')
+    if (!ensured.ok) return ensured.response
+    const sess = ensured.sess
     sess.lastUsedAt = Date.now()
     try {
       await touchRuntimeSession(chatId, { leaseSeconds: RUNTIME_LEASE_SECONDS, hasLocalSession: true, status: 'running' })
@@ -921,8 +1006,9 @@ catch(e){ console.error(String(e.message||e)); process.exit(1); }
 
   async function fsApplyPatch({ chatId, operation }: { chatId?: string; operation?: any }) {
     if (!chatId) return Response.json({ ok: false, error: 'chatId obrigatório' }, { status: 400 })
-    const sess = SESSIONS.get(chatId)
-    if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
+    const ensured = await ensureLocalSession(chatId, 'fs-apply-patch')
+    if (!ensured.ok) return ensured.response
+    const sess = ensured.sess
     sess.lastUsedAt = Date.now()
     try {
       await touchRuntimeSession(chatId, { leaseSeconds: RUNTIME_LEASE_SECONDS, hasLocalSession: true, status: 'running' })
@@ -1087,8 +1173,9 @@ process.exit(0);
 
   async function sandboxShell({ chatId, command, cwd }: { chatId?: string; command?: string; cwd?: string }) {
     if (!chatId) return Response.json({ ok: false, error: 'chatId obrigatório' }, { status: 400 })
-    const sess = SESSIONS.get(chatId)
-    if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
+    const ensured = await ensureLocalSession(chatId, 'sandbox-shell')
+    if (!ensured.ok) return ensured.response
+    const sess = ensured.sess
     sess.lastUsedAt = Date.now()
     try {
       await touchRuntimeSession(chatId, { leaseSeconds: RUNTIME_LEASE_SECONDS, hasLocalSession: true, status: 'running' })
@@ -1134,21 +1221,28 @@ process.exit(0);
 
   async function chatStatus({ chatId }: { chatId?: string }) {
     if (!chatId) return Response.json({ ok: true, status: 'off' as const })
+    const chatRows = await runQuery<{ snapshot_id: string | null }>(
+      `SELECT snapshot_id FROM chat.chats WHERE id = $1 LIMIT 1`,
+      [chatId]
+    ).catch(() => [])
+    const hasSnapshot = Boolean(chatRows?.[0]?.snapshot_id)
     const runtimeSession = await getRuntimeSession(chatId).catch(() => null)
     const sess = SESSIONS.get(chatId)
     if (!sess) {
       const nowMs = Date.now()
       const leaseMs = runtimeSession?.lease_expires_at ? Date.parse(runtimeSession.lease_expires_at) : NaN
       const leaseActive = Number.isFinite(leaseMs) && leaseMs > nowMs
-      const recoverable = Boolean(
+      const recoverableByRuntime = Boolean(
         runtimeSession &&
         (runtimeSession.status === 'running' || runtimeSession.status === 'starting' || runtimeSession.status === 'resuming') &&
         leaseActive
       )
+      const recoverable = hasSnapshot || recoverableByRuntime
       return Response.json({
         ok: true,
         status: 'off' as const,
         recoverable,
+        hasSnapshot,
         runtimeStatus: runtimeSession?.status || null,
         leaseExpiresAt: runtimeSession?.lease_expires_at || null,
         lastHeartbeatAt: runtimeSession?.last_heartbeat_at || null,
@@ -1176,6 +1270,7 @@ process.exit(0);
       runtimeStatus: runtimeSession?.status || 'running',
       leaseExpiresAt: runtimeSession?.lease_expires_at || null,
       recoverable: false,
+      hasSnapshot,
     })
   }
 

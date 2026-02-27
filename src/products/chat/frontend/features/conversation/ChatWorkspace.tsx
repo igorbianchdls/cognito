@@ -72,7 +72,7 @@ export default function ChatWorkspace({
                   >
                     <ChatPanel
                       onOpenSandbox={(id) => {
-                        setChatId(id ?? null);
+                        setChatId((prev) => id ?? prev ?? initialChatId ?? null);
                         setArtifactOpen(true);
                         setArtifactExpanded(false);
                       }}

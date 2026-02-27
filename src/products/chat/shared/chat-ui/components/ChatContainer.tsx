@@ -211,7 +211,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
 
   const openArtifactFromMenu = async () => {
     sandboxActions.setActiveTab('dashboard')
-    onOpenSandbox?.(chatId ?? undefined)
+    onOpenSandbox?.(chatId ?? initialChatId ?? undefined)
   }
 
   const ensureStart = async () => {
@@ -786,7 +786,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
                   }}
                   onOpenSandbox={async () => {
                     sandboxActions.setActiveTab('dashboard')
-                    onOpenSandbox?.(chatId ?? undefined)
+                    onOpenSandbox?.(chatId ?? initialChatId ?? undefined)
                   }}
                 />
                 <p className="mt-2 text-xs text-gray-400 text-center">Alfred é uma IA e pode cometer erros. Por favor, verifique as respostas.</p>
@@ -865,7 +865,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
             }
           }} onOpenSandbox={async () => {
             sandboxActions.setActiveTab('dashboard')
-            onOpenSandbox?.(chatId ?? undefined)
+            onOpenSandbox?.(chatId ?? initialChatId ?? undefined)
           }} />
           <p className="mt-2 text-xs text-gray-400 text-center">Alfred é uma IA e pode cometer erros. Por favor, verifique as respostas.</p>
         </div>
