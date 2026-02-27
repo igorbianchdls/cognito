@@ -5,7 +5,7 @@ export function getSandboxStatusLabel(status: SandboxStatus): string {
   if (status === 'resuming') return 'Retomando'
   if (status === 'running') return 'Ativo'
   if (status === 'error') return 'Erro'
-  return 'Desligada'
+  return 'Desligado'
 }
 
 export function getSandboxStatusClasses(status: SandboxStatus): string {
