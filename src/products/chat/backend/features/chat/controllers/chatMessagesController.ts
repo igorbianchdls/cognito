@@ -13,10 +13,14 @@ export async function GET(req: Request) {
 
     const rows = await runQuery<any>(
       `SELECT id, role, content, parts, created_at
-         FROM chat.chat_messages
-        WHERE chat_id = $1
-        ORDER BY created_at ASC
-        LIMIT $2`,
+         FROM (
+           SELECT id, role, content, parts, created_at
+             FROM chat.chat_messages
+            WHERE chat_id = $1
+            ORDER BY created_at DESC, id DESC
+            LIMIT $2
+         ) recent
+        ORDER BY created_at ASC, id ASC`,
       [chatId, limit]
     )
 
@@ -25,4 +29,3 @@ export async function GET(req: Request) {
     return NextResponse.json({ ok: false, error: e?.message || String(e) }, { status: 500 })
   }
 }
-

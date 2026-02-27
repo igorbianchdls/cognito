@@ -34,6 +34,7 @@ function modelToEngine(modelRaw?: string): EngineId {
 export default function ChatContainer({ onOpenSandbox, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, autoStartSandbox, initialEngine }: { onOpenSandbox?: (chatId?: string) => void; withSideMargins?: boolean; redirectOnFirstMessage?: boolean; initialMessage?: string; autoSendPrefill?: boolean; initialChatId?: string; autoStartSandbox?: boolean; initialEngine?: EngineId }) {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<UIMessage[]>([])
+  const isEmpty = messages.length === 0
   const [chatId, setChatId] = useState<string | null>(null)
   const [status, setStatus] = useState<ChatStatus>('idle')
   const [sandboxStatus, setSandboxStatus] = useState<SandboxStatus>('off')
@@ -41,8 +42,10 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   const [model, setModel] = useState<EngineId>(initialEngine || 'openai-gpt5mini')
   const [startLocked, setStartLocked] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
+  const scrollViewportRef = useRef<HTMLDivElement | null>(null)
   const pendingStartRef = useRef<Promise<string> | null>(null)
   const sendLockRef = useRef(false)
+  const scrollRestoreDoneRef = useRef(false)
   // Track the assistant message for the current turn, so each user message
   // gets its own assistant response instead of appending to the first one.
   const currentAssistantIdRef = useRef<string | null>(null)
@@ -62,9 +65,89 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
     pushErrorNotification({ source, error, message, details })
   }
 
+  const getScrollKey = () => {
+    if (!initialChatId) return null
+    return `chat-scroll:${initialChatId}`
+  }
+
+  const saveScrollPosition = () => {
+    const key = getScrollKey()
+    const viewport = scrollViewportRef.current
+    if (!key || !viewport) return
+    try {
+      sessionStorage.setItem(key, String(Math.max(0, Math.floor(viewport.scrollTop))))
+    } catch {
+      // ignore storage failures
+    }
+  }
+
+  const restoreScrollPosition = () => {
+    const viewport = scrollViewportRef.current
+    if (!viewport) return
+
+    const key = getScrollKey()
+    let restored = false
+    if (key) {
+      try {
+        const raw = sessionStorage.getItem(key)
+        const parsed = raw == null ? NaN : Number(raw)
+        if (Number.isFinite(parsed) && parsed >= 0) {
+          const maxScrollTop = Math.max(0, viewport.scrollHeight - viewport.clientHeight)
+          viewport.scrollTop = Math.min(parsed, maxScrollTop)
+          restored = true
+        }
+      } catch {
+        // ignore storage failures
+      }
+    }
+
+    if (!restored) {
+      viewport.scrollTop = viewport.scrollHeight
+    }
+  }
+
   useEffect(() => {
     if (initialEngine) setModel(initialEngine)
   }, [initialEngine])
+
+  useEffect(() => {
+    scrollRestoreDoneRef.current = false
+  }, [initialChatId])
+
+  useEffect(() => {
+    const viewport = scrollViewportRef.current
+    if (!viewport) return
+    const onScroll = () => saveScrollPosition()
+    viewport.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      viewport.removeEventListener('scroll', onScroll)
+      saveScrollPosition()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialChatId, isEmpty])
+
+  useEffect(() => {
+    if (isEmpty) return
+    if (scrollRestoreDoneRef.current) return
+    const viewport = scrollViewportRef.current
+    if (!viewport) return
+    const raf = window.requestAnimationFrame(() => {
+      restoreScrollPosition()
+      scrollRestoreDoneRef.current = true
+    })
+    return () => window.cancelAnimationFrame(raf)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEmpty, messages.length])
+
+  useEffect(() => {
+    if (isEmpty) return
+    const onPageHide = () => saveScrollPosition()
+    window.addEventListener('pagehide', onPageHide)
+    return () => {
+      window.removeEventListener('pagehide', onPageHide)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEmpty, initialChatId])
 
   const startSandboxFromMenu = async () => {
     setMenuBusy(true)
@@ -504,7 +587,6 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
     }
   }
 
-  const isEmpty = (messages || []).length === 0;
   // Hydrate history when landing on /chat/[id] directly (no prefill auto-send)
   useEffect(() => {
     const shouldHydrate = Boolean(initialChatId) && isEmpty && !(autoSendPrefill && initialMessage)
@@ -690,7 +772,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
         onClearErrorNotifications={clearNotifications}
       />
       <div className="h-full min-w-0 grid grid-rows-[1fr_auto] min-h-0" style={withSideMargins ? { marginLeft: '20%', marginRight: '20%' } : undefined}>
-        <div className="overflow-y-auto overflow-x-hidden min-h-0 min-w-0 px-4 py-4">
+        <div ref={scrollViewportRef} className="overflow-y-auto overflow-x-hidden min-h-0 min-w-0 px-4 py-4">
           {messages.map((m) =>
             m.role === 'user' ? (
               <PerguntaDoUsuario key={m.id} message={m} />
