@@ -1,84 +1,36 @@
-# Ecommerce Skill (Tabelas, Dimensoes e Metricas)
+# Ecommerce Skill (Contrato de Dados Multicanal)
 
-Objetivo: orientar modelagem e consulta do schema `ecommerce` com foco em tabelas, colunas, dimensoes, metricas e filtros suportados.
+Objetivo: mapear dados de ecommerce para `dataQuery` de forma consistente, sem inventar schema.
 
-Use este skill quando o pedido envolver:
-- modelagem de dados de ecommerce multicanal
-- entendimento de tabelas de operacao e financeiro
-- escolha correta de models/dimensoes/medidas
-- options e filtros por plataforma/conta/loja/status
+Este skill NAO gera JSONR final.
+Para dashboard final, usar `dashboard.md`.
 
-Nao use este skill para ensinar layout JSON de dashboard.
-Para isso, use `dashboard.md`.
+## Fronteira
 
-## Fronteira de Responsabilidade (Obrigatoria)
-- Este skill define contrato de dados ecommerce:
-  - models por dominio (pedidos, itens, pagamentos, envios, taxas, payouts, estoque)
-  - medidas, dimensoes e filtros suportados
-- Este skill nao define JSON visual final.
-- Estrutura de dashboard e responsabilidade de `dashboard.md`.
+Este skill define:
+- models por dominio
+- medidas
+- dimensoes
+- filtros
+- options
+- exemplos de `dataQuery`
 
-Quando o pedido for dashboard ecommerce:
-1. mapear o contrato de dados neste skill
-2. gerar JSONR final com `dashboard.md`
+Este skill NAO define layout visual.
 
-Nao gerar payload BI generico final (ex.: `kpiRow/charts/tables`) como artefato.
+## Fontes de Verdade
 
-## Fonte de Verdade
-- `tmp/ecommerce_mvp_schema.sql`
 - `src/products/erp/backend/features/modulos/controllers/ecommerce/query/controller.ts`
 - `src/products/erp/backend/features/modulos/controllers/ecommerce/options/controller.ts`
 - `src/products/bi/shared/queryCatalog.ts`
+- `tmp/ecommerce_mvp_schema.sql`
 
-## Prioridade de Fonte (quando houver divergencia)
-- Para aceitar/rejeitar `model`, `measure`, `dimension` e `filters` em `dataQuery`, a fonte principal e:
-  - `src/products/erp/backend/features/modulos/controllers/ecommerce/query/controller.ts`
-- Para `options` de slicer, a fonte principal e:
-  - `src/products/erp/backend/features/modulos/controllers/ecommerce/options/controller.ts`
-- `queryCatalog.ts` e referencia geral; hoje ele lista apenas `ecommerce.pedidos` no catalogo principal.
-- Para dashboards ecommerce completos (pedidos, itens, pagamentos, envios, taxas, payouts, estoque), seguir a whitelist do controller.
-- Se houver conflito entre catalogo e controller, seguir controller e explicitar o ajuste.
+Prioridade em conflito:
+1. controller de query/options
+2. query catalog
+3. schema sql
 
-## Schema e Tabelas
+## Models Principais (BI)
 
-### Integracao
-- `ecommerce.canais_contas`
-- `ecommerce.canais_credenciais`
-- `ecommerce.sync_jobs`
-- `ecommerce.sync_cursores`
-- `ecommerce.webhook_eventos`
-- `ecommerce.raw_api_payloads`
-
-### Cadastros
-- `ecommerce.lojas`
-- `ecommerce.clientes`
-- `ecommerce.enderecos`
-- `ecommerce.produtos`
-- `ecommerce.produto_variantes`
-- `ecommerce.listings`
-- `ecommerce.listing_variantes`
-
-### Operacao e Financeiro
-- `ecommerce.pedidos`
-  - colunas-chave: `plataforma`, `canal_conta_id`, `loja_id`, `cliente_id`, `status`, `status_pagamento`, `status_fulfillment`, `valor_total`, `valor_pago`, `valor_reembolsado`, `valor_liquido_estimado`, `data_pedido`
-- `ecommerce.pedido_itens`
-  - colunas-chave: `pedido_id`, `produto_id`, `produto_variante_id`, `quantidade`, `preco_unitario`, `valor_total`
-- `ecommerce.pagamentos`
-  - colunas-chave: `pedido_id`, `status`, `metodo`, `provedor`, `valor_autorizado`, `valor_capturado`, `valor_taxa`, `valor_liquido`
-- `ecommerce.transacoes_pagamento`
-- `ecommerce.envios`
-- `ecommerce.eventos_fulfillment`
-- `ecommerce.devolucoes`
-- `ecommerce.reembolsos`
-- `ecommerce.taxas_pedido`
-- `ecommerce.payouts`
-- `ecommerce.payout_itens`
-
-### Estoque
-- `ecommerce.estoque_saldos`
-- `ecommerce.estoque_movimentacoes`
-
-## Models Suportados no Query BI
 - `ecommerce.pedidos`
 - `ecommerce.pedido_itens`
 - `ecommerce.pagamentos`
@@ -87,18 +39,20 @@ Nao gerar payload BI generico final (ex.: `kpiRow/charts/tables`) como artefato.
 - `ecommerce.payouts`
 - `ecommerce.estoque_saldos`
 
-## Medidas Principais
+## Medidas Canonicas
+
 - `SUM(valor_total)` (GMV)
-- `COUNT()` (pedidos/transacoes/envios)
+- `COUNT()`
 - `AVG(valor_total)` (ticket medio)
 - `SUM(valor_liquido_estimado)`
 - `SUM(valor_reembolsado)`
 - `SUM(taxa_total)`
 - `CASE WHEN SUM(valor_total)=0 THEN 0 ELSE SUM(taxa_total)/SUM(valor_total) END` (fee rate)
-- `SUM(valor_liquido)` (payout liquido)
-- `SUM(quantidade_disponivel)` (estoque)
+- `SUM(valor_liquido)`
+- `SUM(quantidade_disponivel)`
 
-## Dimensoes Principais
+## Dimensoes Canonicas
+
 - `plataforma`
 - `canal_conta`
 - `loja`
@@ -108,9 +62,10 @@ Nao gerar payload BI generico final (ex.: `kpiRow/charts/tables`) como artefato.
 - `produto`
 - `categoria`
 - `transportadora`
-- `mes` / `periodo`
+- `mes`, `periodo`
 
-## Filtros Suportados
+## Filtros Canonicos
+
 - `tenant_id`
 - `de`, `ate`
 - `plataforma`
@@ -123,8 +78,8 @@ Nao gerar payload BI generico final (ex.: `kpiRow/charts/tables`) como artefato.
 - `categoria`
 - `valor_min`, `valor_max`
 
-## Options (slicers)
-Campos de options suportados:
+## Options de Slicer
+
 - `plataforma`
 - `canal_conta_id`
 - `loja_id`
@@ -134,22 +89,97 @@ Campos de options suportados:
 - `produto_id`
 - `categoria`
 
-Suporta cascata com `dependsOn`/`contextFilters`.
+## Mapeamentos Canonicos (exemplos `dataQuery`)
+
+GMV total:
+```json
+{
+  "model": "ecommerce.pedidos",
+  "measure": "SUM(valor_total)",
+  "filters": {}
+}
+```
+
+Pedidos por plataforma:
+```json
+{
+  "model": "ecommerce.pedidos",
+  "dimension": "plataforma",
+  "measure": "COUNT()",
+  "filters": {},
+  "orderBy": { "field": "measure", "dir": "desc" }
+}
+```
+
+Ticket medio por mes:
+```json
+{
+  "model": "ecommerce.pedidos",
+  "dimension": "mes",
+  "measure": "AVG(valor_total)",
+  "filters": {},
+  "orderBy": { "field": "dimension", "dir": "asc" },
+  "limit": 12
+}
+```
+
+Taxa sobre GMV:
+```json
+{
+  "model": "ecommerce.taxas_pedido",
+  "measure": "CASE WHEN SUM(valor_total)=0 THEN 0 ELSE SUM(taxa_total)/SUM(valor_total) END",
+  "filters": {}
+}
+```
+
+Payout por plataforma:
+```json
+{
+  "model": "ecommerce.payouts",
+  "dimension": "plataforma",
+  "measure": "SUM(valor_liquido)",
+  "filters": {},
+  "orderBy": { "field": "measure", "dir": "desc" }
+}
+```
+
+Estoque por produto:
+```json
+{
+  "model": "ecommerce.estoque_saldos",
+  "dimension": "produto",
+  "measure": "SUM(quantidade_disponivel)",
+  "filters": {},
+  "orderBy": { "field": "measure", "dir": "desc" },
+  "limit": 20
+}
+```
 
 ## Regras Operacionais
-- Nao misturar granularidade sem explicitar (pedido vs item vs pagamento vs payout).
-- Nao inventar model/measure/dimension fora do controller.
-- Quando houver divergencia do pedido com o schema real, aplicar ajuste compativel e explicitar.
 
-## Handoff Obrigatorio para Dashboard Skill
-Ao concluir o mapeamento para dashboard:
-- `targetPath`: `/vercel/sandbox/dashboard/<nome>.jsonr`
-- `format`: JSONR com raiz `Theme`
-- encaminhar lista validada de:
-  - `model`
-  - `measure`
-  - `dimension`
-  - `filters`
-  - `options` (quando houver slicers)
+- Nao misturar granularidade sem declarar (pedido vs item vs pagamento vs payout).
+- Nao inventar `model/measure/dimension/filter` fora da whitelist.
+- Quando campo nao existir, usar alternativa suportada e explicar.
 
-Nunca usar `/vercel/sandbox/dashboards` (plural).
+## Formato de Handoff para Dashboard Skill
+
+```json
+{
+  "targetPath": "/vercel/sandbox/dashboard/<nome>.jsonr",
+  "queries": [
+    {
+      "id": "kpi_gmv",
+      "title": "GMV",
+      "dataQuery": {
+        "model": "ecommerce.pedidos",
+        "measure": "SUM(valor_total)",
+        "filters": {}
+      }
+    }
+  ],
+  "slicerOptions": ["plataforma", "canal_conta_id", "loja_id", "status"]
+}
+```
+
+Regra obrigatoria:
+- nunca sugerir `/vercel/sandbox/dashboards` (plural)

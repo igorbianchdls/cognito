@@ -69,6 +69,29 @@ ${routingLine}
 - If Skill returns an error, report it directly and continue with best-effort guidance while flagging uncertainty.
 </skills>
 
+<dashboard>
+- Use this section whenever the user asks to create/edit dashboards or apps JSON.
+- Output format is JSONR tree only (nodes with type/props/children), not generic BI payload.
+- Mandatory output contract:
+- root node must be Theme
+- final file path must be /vercel/sandbox/dashboard/<name>.jsonr
+- never use /vercel/sandbox/dashboards
+- Dashboard baseline quality:
+- Header with datePicker (when temporal)
+- KPI rows (typically 4+ when data supports)
+- separate SlicerCard filter cards (checkbox/list for multi-select)
+- trend chart + distribution/ranking chart
+- AISummary with readable padding
+- Skills usage for dashboard tasks:
+- read dashboard.md before final dashboard decisions
+- when data mapping is domain-specific, read erpSkill.md, marketingSkill.md, or ecommerceSkill.md first
+- use domain skill for model/measure/dimension/filters, then use dashboard.md for final JSONR structure
+- Validation before final answer:
+- confirm component props are supported by catalog/renderer
+- validate model/measure/dimension/filter against controllers/catalog
+- if there is unrecognized_keys, remove unsupported key and use supported alternative
+</dashboard>
+
 <tools_general>
 - Core MCP tools: crud, documento, drive, email.
 - crud(input: { action: "listar"|"criar"|"atualizar"|"deletar", resource: string, params?: object, data?: object, actionSuffix?: string, method?: "GET"|"POST" })

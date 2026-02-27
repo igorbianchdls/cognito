@@ -1,68 +1,44 @@
-# Marketing Skill (Tabelas, Dimensoes e Metricas)
+# Marketing Skill (Contrato de Dados Meta/Google)
 
-Objetivo: orientar modelagem e consulta de dados de marketing pago (Meta/Google), com foco em tabelas, colunas, dimensoes e metricas suportadas.
+Objetivo: mapear corretamente dados de midia paga para `dataQuery` sem inventar campos.
 
-Use este skill quando o pedido envolver:
-- schema de marketing
-- colunas por nivel (conta/campanha/grupo/anuncio)
-- medidas de performance e eficiencia
-- filtros suportados em query/options
+Este skill NAO gera JSONR final de dashboard.
+Para dashboard final, usar `dashboard.md`.
 
-Nao use este skill para ensinar layout JSON de dashboard.
-Para isso, use `dashboard.md`.
+## Fronteira
 
-## Fronteira de Responsabilidade (Obrigatoria)
-- Este skill define apenas contrato de dados:
-  - tabelas
-  - colunas
-  - `model/measure/dimension/filters`
-  - options de slicer
-- Este skill nao define JSON final de dashboard.
-- Estrutura visual e arquivo final sao responsabilidade de `dashboard.md`.
+Este skill define:
+- models/tabelas
+- medidas
+- dimensoes
+- filtros
+- options para slicers
+- exemplos de `dataQuery`
 
-Quando o pedido for dashboard de marketing:
-1. mapear dados neste skill
-2. gerar JSONR final com `dashboard.md`
+Este skill NAO define layout final.
 
-Nao gerar payload BI generico final (ex.: `kpiRow/charts/tables`) como artefato.
+## Fontes de Verdade
 
-## Fonte de Verdade
-- `src/products/bi/shared/queryCatalog.ts`
 - `src/products/erp/backend/features/modulos/controllers/trafegopago/query/controller.ts`
 - `src/products/erp/backend/features/modulos/controllers/trafegopago/options/controller.ts`
+- `src/products/bi/shared/queryCatalog.ts`
 
-## Prioridade de Fonte (quando houver divergencia)
-- Para aceitar/rejeitar `measure`, `dimension` e `filters` em `dataQuery`, a fonte principal e o controller:
-  - `src/products/erp/backend/features/modulos/controllers/trafegopago/query/controller.ts`
-- Para `options` de slicer, a fonte principal e:
-  - `src/products/erp/backend/features/modulos/controllers/trafegopago/options/controller.ts`
-- `queryCatalog.ts` funciona como referencia de catalogo geral e pode ser subconjunto do controller.
-- Se houver conflito, seguir controller e explicitar o ajuste.
+Prioridade em conflito:
+1. controller de query/options
+2. query catalog
 
-## Schema e Tabelas
+## Model Principal
 
-### Fato principal
 - `trafegopago.desempenho_diario`
-- Colunas principais:
-  - controle: `tenant_id`, `data_ref`, `plataforma`, `nivel`
-  - chaves: `conta_id`, `campanha_id`, `grupo_id`, `anuncio_id`
-  - metricas brutas: `gasto`, `receita_atribuida`, `cliques`, `impressoes`, `conversoes`, `leads`, `alcance`, `frequencia`
 
-### Dimensoes auxiliares
-- `trafegopago.contas_midia` (`id`, `nome_conta`)
-- `trafegopago.campanhas` (`id`, `nome`)
-- `trafegopago.grupos_anuncio` (`id`, `nome`)
-- `trafegopago.anuncios` (`id`, `nome`)
+## Medidas Canonicas
 
-## Medidas Suportadas (query)
 - `SUM(gasto)`
 - `SUM(receita_atribuida)`
 - `SUM(cliques)`
 - `SUM(impressoes)`
 - `SUM(conversoes)`
 - `SUM(leads)`
-- `SUM(alcance)`
-- `COUNT()`
 - `CASE WHEN SUM(gasto)=0 THEN 0 ELSE SUM(receita_atribuida)/SUM(gasto) END` (ROAS)
 - `CASE WHEN SUM(impressoes)=0 THEN 0 ELSE SUM(cliques)/SUM(impressoes) END` (CTR)
 - `CASE WHEN SUM(cliques)=0 THEN 0 ELSE SUM(gasto)/SUM(cliques) END` (CPC)
@@ -70,15 +46,18 @@ Nao gerar payload BI generico final (ex.: `kpiRow/charts/tables`) como artefato.
 - `CASE WHEN SUM(conversoes)=0 THEN 0 ELSE SUM(gasto)/SUM(conversoes) END` (CPA)
 - `CASE WHEN SUM(cliques)=0 THEN 0 ELSE SUM(conversoes)/SUM(cliques) END` (CVR)
 
-## Dimensoes Suportadas
-- `plataforma`, `nivel`
+## Dimensoes Canonicas
+
+- `plataforma`
+- `nivel`
 - `conta`, `conta_id`
 - `campanha`, `campanha_id`
 - `grupo`, `grupo_id`
 - `anuncio`, `anuncio_id`
-- `mes` / `periodo`
+- `mes`, `periodo`
 
-## Filtros Suportados
+## Filtros Canonicos
+
 - `tenant_id`
 - `de`, `ate`
 - `plataforma` (`meta_ads`, `google_ads`)
@@ -86,29 +65,88 @@ Nao gerar payload BI generico final (ex.: `kpiRow/charts/tables`) como artefato.
 - `conta_id`, `campanha_id`, `grupo_id`, `anuncio_id`
 - `gasto_min`, `gasto_max`
 
-## Options (slicers)
-Campos de options suportados:
+## Options de Slicer
+
+Campos esperados:
 - `conta_id`
 - `campanha_id`
 - `grupo_id`
 - `anuncio_id`
 
-Suporta cascata via `dependsOn`/`contextFilters`.
+Com cascata quando necessario:
+- campanha depende de conta
+- grupo depende de conta e campanha
+- anuncio depende de conta, campanha e grupo
+
+## Mapeamentos Canonicos (exemplos `dataQuery`)
+
+KPI Gasto Meta (campanha):
+```json
+{
+  "model": "trafegopago.desempenho_diario",
+  "measure": "SUM(gasto)",
+  "filters": { "plataforma": "meta_ads", "nivel": "campaign" }
+}
+```
+
+KPI CTR Google (campanha):
+```json
+{
+  "model": "trafegopago.desempenho_diario",
+  "measure": "CASE WHEN SUM(impressoes)=0 THEN 0 ELSE SUM(cliques)/SUM(impressoes) END",
+  "filters": { "plataforma": "google_ads", "nivel": "campaign" }
+}
+```
+
+Top campanhas por gasto:
+```json
+{
+  "model": "trafegopago.desempenho_diario",
+  "dimension": "campanha",
+  "measure": "SUM(gasto)",
+  "filters": { "nivel": "campaign" },
+  "orderBy": { "field": "measure", "dir": "desc" },
+  "limit": 10
+}
+```
+
+Serie mensal de conversoes:
+```json
+{
+  "model": "trafegopago.desempenho_diario",
+  "dimension": "mes",
+  "measure": "SUM(conversoes)",
+  "filters": { "nivel": "campaign" },
+  "orderBy": { "field": "dimension", "dir": "asc" },
+  "limit": 12
+}
+```
 
 ## Regras Operacionais
-- Nao inventar medida/dimensao fora do whitelist.
-- Quando a medida nao existir, ajustar para a mais proxima suportada e explicitar.
-- Quando slicer vier vazio, validar `options` + `dependsOn` + `contextFilters` + tenant.
 
-## Handoff Obrigatorio para Dashboard Skill
-Ao finalizar mapeamento para dashboard:
-- `targetPath`: `/vercel/sandbox/dashboard/<nome>.jsonr`
-- `format`: JSONR com raiz `Theme`
-- entregar somente campos validados no controller para:
-  - `model`
-  - `measure`
-  - `dimension`
-  - `filters`
-  - `options`
+- Nao inventar medida/dimensao/filtro fora da whitelist.
+- Se metrica pedida nao existir, usar equivalente suportado e explicar.
+- Se options de slicer vierem vazias, validar `field`, `dependsOn`, `contextFilters` e tenant.
 
-Nunca usar `/vercel/sandbox/dashboards` (plural).
+## Formato de Handoff para Dashboard Skill
+
+```json
+{
+  "targetPath": "/vercel/sandbox/dashboard/<nome>.jsonr",
+  "queries": [
+    {
+      "id": "kpi_ctr",
+      "title": "CTR",
+      "dataQuery": {
+        "model": "trafegopago.desempenho_diario",
+        "measure": "CASE WHEN SUM(impressoes)=0 THEN 0 ELSE SUM(cliques)/SUM(impressoes) END",
+        "filters": { "plataforma": "meta_ads", "nivel": "campaign" }
+      }
+    }
+  ],
+  "slicerOptions": ["conta_id", "campanha_id", "grupo_id", "anuncio_id"]
+}
+```
+
+Regra obrigatoria:
+- nunca sugerir `/vercel/sandbox/dashboards` (plural)

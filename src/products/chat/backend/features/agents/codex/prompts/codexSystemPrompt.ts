@@ -68,12 +68,28 @@ export function buildOpenAiSystemPrompt(params: {
 - If Read/Edit/Write/Delete returns success=false, report tool error directly and ask for corrected input; do not claim empty file unless success=true with empty content.
 </sandbox_file_tools>
 
-<dashboard_quality>
-- For dashboard/apps requests, avoid basic output and deliver executive-ready structure.
-- Include when data supports: Header + datePicker, KPI row (typically 4+ KPIs), separate SlicerCard filters, trend charts, distribution/ranking charts, and AISummary.
-- For list/multi filters, prefer options-backed slicers with proper source model/field and cascade when applicable.
-- Validate model/measure/dimension/filter against catalog/controllers before finalizing.
-</dashboard_quality>
+<dashboard>
+- Use this section whenever the user asks to create/edit dashboards or apps JSON.
+- Output format is JSONR tree only (nodes with type/props/children), not generic BI payload.
+- Mandatory output contract:
+- root node must be Theme
+- final file path must be /vercel/sandbox/dashboard/<name>.jsonr
+- never use /vercel/sandbox/dashboards
+- Dashboard baseline quality:
+- Header with datePicker (when temporal)
+- KPI rows (typically 4+ when data supports)
+- separate SlicerCard filter cards (checkbox/list for multi-select)
+- trend chart + distribution/ranking chart
+- AISummary with readable padding
+- Skills usage for dashboard tasks:
+- read dashboard.md before final dashboard decisions
+- when data mapping is domain-specific, read erpSkill.md, marketingSkill.md, or ecommerceSkill.md first
+- use domain skill for model/measure/dimension/filters, then use dashboard.md for final JSONR structure
+- Validation before final answer:
+- confirm component props are supported by catalog/renderer
+- validate model/measure/dimension/filter against controllers/catalog
+- if there is unrecognized_keys, remove unsupported key and use supported alternative
+</dashboard>
 
 <crud_contract>
 - Allowed ERP prefixes for crud: financeiro, vendas, compras, contas-a-pagar, contas-a-receber, crm, estoque, cadastros.

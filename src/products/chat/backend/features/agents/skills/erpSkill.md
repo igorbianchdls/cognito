@@ -1,121 +1,143 @@
-# ERP Skill (Tabelas, Dimensoes e Metricas)
+# ERP Skill (Contrato de Dados)
 
-Objetivo: orientar escolha correta de `model`, medidas, dimensoes e filtros do ERP para analytics/BI.
+Objetivo: mapear corretamente `model`, `measure`, `dimension`, `filters` para dominio ERP.
 
-Use este skill quando o pedido envolver:
-- quais tabelas usar por modulo ERP
-- quais dimensoes e metricas existem no catalogo
-- quais filtros sao suportados em `dataQuery`
-- mapeamento de pergunta de negocio para `model/dimension/measure/filters`
+Este skill NAO gera JSONR final de dashboard.
+Para gerar dashboard, handoff obrigatorio para `dashboard.md`.
 
-Nao use este skill para layout/JSON de dashboard.
-Para isso, use `dashboard.md`.
+## Fronteira
 
-## Fronteira de Responsabilidade (Obrigatoria)
-- Este skill define apenas:
-  - `model`
-  - `measure`
-  - `dimension`
-  - `filters`
-- Este skill nao define:
-  - estrutura JSON Render
-  - componentes visuais (`Theme`, `Header`, `KPI`, charts, `SlicerCard`, `AISummary`)
-  - caminho de arquivo de artifact
+Este skill define:
+- tabelas/models
+- metricas
+- dimensoes
+- filtros
+- exemplos de `dataQuery`
 
-Quando o pedido for "criar dashboard":
-1. Primeiro, usar este skill para mapear o contrato de dados.
-2. Depois, obrigatoriamente passar para `dashboard.md` para gerar JSONR final.
+Este skill NAO define:
+- `Theme`, `Header`, `Div`, `KPI`, charts, `SlicerCard`, `AISummary`
+- layout visual
+- arquivo final `.jsonr`
 
-Nao gerar payload BI generico final (ex.: `kpiRow/charts/tables`) como artefato de dashboard.
+## Fontes de Verdade
 
-## Fonte de Verdade
 - `src/products/bi/shared/queryCatalog.ts`
 - `GET /api/modulos/query/catalog`
-- `GET /api/modulos/query/catalog?module=<modulo>`
-- `GET /api/modulos/query/catalog?table=<tabela>`
+- controllers de query do modulo ERP
 
-## Escopo deste Skill
-- `vendas`, `compras`, `financeiro`, `contabilidade`, `crm`, `estoque`
+Se houver divergencia, priorizar o controller do modulo.
 
-Fora do escopo deste skill:
-- Marketing pago (`trafegopago`) -> usar `marketingSkill.md`
-- Ecommerce (`ecommerce.*`) -> usar `ecommerceSkill.md`
+## Models Principais
 
-## Modulos e Models Principais
-
-### Vendas
 - `vendas.pedidos`
-- Metricas comuns: `SUM(itens.subtotal)`, `SUM(valor_total)`, `COUNT()`, `AVG(valor_total)`
-- Dimensoes comuns: `cliente`, `canal_venda`, `vendedor`, `filial`, `unidade_negocio`, `categoria_receita`, `territorio`, `periodo`
-- Filtros comuns: `de`, `ate`, `status`, `cliente_id`, `vendedor_id`, `canal_venda_id`, `filial_id`
-
-### Compras
 - `compras.compras`
-- Metricas comuns: `SUM(valor_total)`, `AVG(valor_total)`, `COUNT()`, `COUNT_DISTINCT(fornecedor_id)`
-- Dimensoes comuns: `fornecedor`, `centro_custo`, `filial`, `projeto`, `categoria_despesa`, `status`, `periodo`
-- Filtros comuns: `de`, `ate`, `status`, `fornecedor_id`, `filial_id`, `valor_min`, `valor_max`
-
 - `compras.recebimentos`
-- Metricas comuns: `COUNT()`
-- Dimensoes comuns: `status`, `periodo`
-- Filtros comuns: `de`, `ate`, `status`
-
-### Financeiro
 - `financeiro.contas_pagar`
-- Metricas comuns: `SUM(valor_liquido)`/`SUM(valor)`, `COUNT()`
-- Dimensoes comuns: `fornecedor`, `centro_custo`, `departamento`, `filial`, `projeto`, `categoria_despesa`, `status`, `periodo`
-
 - `financeiro.contas_receber`
-- Metricas comuns: `SUM(valor_liquido)`/`SUM(valor)`, `COUNT()`
-- Dimensoes comuns: `cliente`, `centro_lucro`, `departamento`, `filial`, `projeto`, `categoria_receita`, `status`, `periodo`
-
-### Contabilidade
 - `contabilidade.lancamentos_contabeis`
-- Metricas comuns: `SUM(total_debitos)`, `SUM(total_creditos)`, `SUM(total_debitos - total_creditos)`, `COUNT()`
-- Dimensoes comuns: `origem`, `numero_documento`, `historico`, `periodo`
-- Filtros comuns: `de`, `ate`, `origem`
-
 - `contabilidade.lancamentos_contabeis_linhas`
-- Metricas comuns: `SUM(debito)`, `SUM(credito)`, `SUM(debito - credito)`, `COUNT()`, `COUNT_DISTINCT(lancamento_id)`, `COUNT_DISTINCT(conta_id)`
-- Dimensoes comuns: `conta`, `codigo_conta`, `tipo_conta`, `origem`, `periodo`
-- Filtros comuns: `de`, `ate`, `origem`, `conta_id`, `tipo_conta`
-
-### CRM
 - `crm.oportunidades`
-- Metricas comuns: `SUM(valor_estimado)`, `COUNT()`, `AVG(valor_estimado)`
-- Dimensoes comuns: `vendedor`, `fase`, `origem`, `conta`, `status`, `periodo`
-- Filtros comuns: `de`, `ate`, `status`, `vendedor_id`, `fase_pipeline_id`, `origem_id`, `conta_id`
-
 - `crm.leads`
-- Metricas comuns: `COUNT()`
-- Dimensoes comuns: `origem`, `responsavel`, `empresa`, `status`, `periodo`
-- Filtros comuns: `de`, `ate`, `status`, `origem_id`, `responsavel_id`
-
-### Estoque
 - `estoque.estoques_atual`
-- Metricas comuns: `SUM(quantidade)`, `SUM(valor_total)`, `COUNT_DISTINCT(produto_id)`
-- Dimensoes comuns: `produto`, `almoxarifado`, `periodo`
-- Filtros comuns: `produto_id`, `almoxarifado_id`
-- Regra: tratar como snapshot de saldo atual (nao historico transacional).
-
 - `estoque.movimentacoes`
-- Metricas comuns: `SUM(quantidade)`, `SUM(valor_total)`, `COUNT()`
-- Dimensoes comuns: `produto`, `almoxarifado`, `tipo_movimento`, `natureza`, `periodo`
-- Filtros comuns: `de`, `ate`, `produto_id`, `almoxarifado_id`, `tipo_movimento`
+
+## Mapeamentos Canonicos (exemplos `dataQuery`)
+
+Receita de vendas:
+```json
+{
+  "model": "vendas.pedidos",
+  "measure": "SUM(p.valor_total)",
+  "filters": {}
+}
+```
+
+Pedidos por vendedor:
+```json
+{
+  "model": "vendas.pedidos",
+  "dimension": "vendedor",
+  "measure": "COUNT()",
+  "filters": {},
+  "orderBy": { "field": "measure", "dir": "desc" },
+  "limit": 10
+}
+```
+
+Compras por fornecedor:
+```json
+{
+  "model": "compras.compras",
+  "dimension": "fornecedor",
+  "measure": "SUM(valor_total)",
+  "filters": { "status": "aprovado" },
+  "orderBy": { "field": "measure", "dir": "desc" },
+  "limit": 10
+}
+```
+
+Contas a receber por mes:
+```json
+{
+  "model": "financeiro.contas_receber",
+  "dimension": "mes",
+  "measure": "SUM(valor)",
+  "filters": {},
+  "orderBy": { "field": "dimension", "dir": "asc" },
+  "limit": 12
+}
+```
+
+Pipeline CRM por fase:
+```json
+{
+  "model": "crm.oportunidades",
+  "dimension": "fase",
+  "measure": "SUM(valor_estimado)",
+  "filters": { "status": "aberta" },
+  "orderBy": { "field": "measure", "dir": "desc" }
+}
+```
+
+Estoque por produto:
+```json
+{
+  "model": "estoque.estoques_atual",
+  "dimension": "produto",
+  "measure": "SUM(valor_total)",
+  "filters": {},
+  "orderBy": { "field": "measure", "dir": "desc" },
+  "limit": 20
+}
+```
 
 ## Regras Operacionais
-- Nunca inventar `model`, `measure`, `dimension` ou `filter` fora do catalogo.
-- Quando houver divergencia com o pedido do usuario, usar alternativa suportada mais proxima e explicitar ajuste.
-- Sempre validar no catalogo antes de montar `dataQuery` final.
 
-## Handoff Obrigatorio para Dashboard Skill
-Quando concluir o mapeamento de dados para dashboard, entregar para `dashboard.md`:
-- `targetPath`: `/vercel/sandbox/dashboard/<nome>.jsonr`
-- `format`: JSONR (arvore `type/props/children`, raiz `Theme`)
-- lista validada de:
-  - `model`
-  - `measure`
-  - `dimension`
-  - `filters`
+- Nao inventar `model/measure/dimension/filter` fora da whitelist.
+- Nao misturar granularidade sem explicitar (ex.: pedido vs item).
+- Quando campo pedido pelo usuario nao existir, usar o mais proximo suportado e explicar o ajuste.
 
-Nunca sugerir `/vercel/sandbox/dashboards` (plural).
+## Formato de Handoff para Dashboard Skill
+
+Ao terminar, entregar um plano de dados enxuto para `dashboard.md`:
+
+```json
+{
+  "targetPath": "/vercel/sandbox/dashboard/<nome>.jsonr",
+  "queries": [
+    {
+      "id": "kpi_receita",
+      "title": "Receita",
+      "dataQuery": {
+        "model": "vendas.pedidos",
+        "measure": "SUM(p.valor_total)",
+        "filters": {}
+      }
+    }
+  ],
+  "filters": ["dateRange", "filial_id", "vendedor_id"]
+}
+```
+
+Regra obrigatoria:
+- nunca sugerir `/vercel/sandbox/dashboards` (plural)
