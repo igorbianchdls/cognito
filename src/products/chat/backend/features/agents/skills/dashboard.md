@@ -58,6 +58,37 @@ Regras:
 - Serie temporal: `orderBy.field = "dimension"` e `dir = "asc"`.
 - Nao inventar `model/measure/dimension/filter` fora do controller/catalogo.
 
+## MUST (Obrigatorio)
+
+- O output final deve ser JSONR (arvore com `type/props/children`).
+- O root deve ser `Theme` com `props.name` string.
+- `Header.title` deve ficar em `Header` (nunca em `Theme`).
+- Todo bloco com query deve usar `dataQuery` com `model` e `measure` (string singular).
+- Em charts, usar apenas campos permitidos em `dataQuery`: `dimension`, `dimensionExpr`, `time`, `filters`, `orderBy`, `limit`.
+- Filtros multiplos devem ficar em cards separados (`SlicerCard`), um card por filtro principal.
+- Quando o filtro for multipla escolha, usar `fields[].type` como `list` ou `tile-multi` (nunca formato legado).
+- Arquivo final deve ser salvo em `/vercel/sandbox/dashboard/<nome>.jsonr`.
+- Antes de responder, revisar o JSON contra este skill e contra o catalogo.
+
+## NEVER (Proibido)
+
+- Nunca usar payload BI generico como formato final (`kpiRow`, `charts`, `tables`, `slicers`, `dataSources`, `metadata`).
+- Nunca usar `measures[]` ou `dimensions[]` dentro de `dataQuery`.
+- Nunca usar `order_by` (usar `orderBy`).
+- Nunca usar `dateField`, `defaultRange` ou `field` dentro de `Header.datePicker`.
+- Nunca usar `Theme.props.title` (titulo e subtitulo pertencem ao `Header`).
+- Nunca usar `/vercel/sandbox/dashboards` (plural).
+- Nunca inventar props fora do catalogo.
+
+## Common Mistakes (Errado -> Correto)
+
+- `Theme.props.title` -> mover para `Header.props.title`.
+- `dataQuery.measures: [{ "expr": "SUM(valor)" }]` -> `dataQuery.measure: "SUM(valor)"`.
+- `dataQuery.dimensions: [{ "field": "canal" }]` -> `dataQuery.dimension: "canal"`.
+- `order_by: "receita DESC"` -> `orderBy: { "field": "measure", "dir": "desc" }`.
+- `Header.datePicker.defaultRange` -> usar `datePicker.mode`, `datePicker.storePath` e `actionOnChange`.
+- `SlicerCard` com `type/field/model` no nivel do card -> usar `props.fields[]` com `storePath` e `source`.
+
 ## Exemplo 1 (Dashboard Marketing Completo)
 
 Arquivo esperado: `/vercel/sandbox/dashboard/metaads-completo.jsonr`
@@ -720,7 +751,288 @@ Arquivo esperado: `/vercel/sandbox/dashboard/shopify-completo.jsonr`
 ]
 ```
 
-## Exemplo 3 (Invalido e Correcao)
+## Exemplo 3 (Dashboard ERP Vendas Completo)
+
+Arquivo esperado: `/vercel/sandbox/dashboard/erp-vendas-completo.jsonr`
+
+```json
+[
+  {
+    "type": "Theme",
+    "props": {
+      "name": "light",
+      "managers": {
+        "border": {
+          "style": "solid",
+          "width": 1,
+          "color": "#bfc9d9",
+          "radius": 10
+        }
+      }
+    },
+    "children": [
+      {
+        "type": "Header",
+        "props": {
+          "title": "Dashboard ERP - Vendas",
+          "subtitle": "Receita, volume e desempenho comercial",
+          "align": "center",
+          "controlsPosition": "right",
+          "datePicker": {
+            "visible": true,
+            "mode": "range",
+            "position": "right",
+            "storePath": "filters.dateRange",
+            "actionOnChange": { "type": "refresh_data" }
+          }
+        }
+      },
+      {
+        "type": "Div",
+        "props": { "direction": "row", "gap": 12, "padding": 16, "wrap": true, "childGrow": true },
+        "children": [
+          {
+            "type": "SlicerCard",
+            "props": {
+              "fr": 1,
+              "title": "Filtro de Filiais",
+              "fields": [
+                {
+                  "label": "Filial",
+                  "type": "list",
+                  "storePath": "filters.filial_id",
+                  "search": true,
+                  "selectAll": true,
+                  "clearable": true,
+                  "source": {
+                    "type": "options",
+                    "model": "vendas.pedidos",
+                    "field": "filial_id",
+                    "pageSize": 50
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "type": "SlicerCard",
+            "props": {
+              "fr": 1,
+              "title": "Filtro de Vendedores",
+              "fields": [
+                {
+                  "label": "Vendedor",
+                  "type": "list",
+                  "storePath": "filters.vendedor_id",
+                  "search": true,
+                  "selectAll": true,
+                  "clearable": true,
+                  "source": {
+                    "type": "options",
+                    "model": "vendas.pedidos",
+                    "field": "vendedor_id",
+                    "pageSize": 80,
+                    "dependsOn": ["filters.filial_id"]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "type": "SlicerCard",
+            "props": {
+              "fr": 1,
+              "title": "Filtro de Clientes",
+              "fields": [
+                {
+                  "label": "Cliente",
+                  "type": "list",
+                  "storePath": "filters.cliente_id",
+                  "search": true,
+                  "selectAll": true,
+                  "clearable": true,
+                  "source": {
+                    "type": "options",
+                    "model": "vendas.pedidos",
+                    "field": "cliente_id",
+                    "pageSize": 80,
+                    "dependsOn": ["filters.filial_id", "filters.vendedor_id"]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "type": "SlicerCard",
+            "props": {
+              "fr": 1,
+              "title": "Filtro de Status",
+              "fields": [
+                {
+                  "label": "Status",
+                  "type": "list",
+                  "storePath": "filters.status",
+                  "search": true,
+                  "selectAll": true,
+                  "clearable": true,
+                  "source": {
+                    "type": "options",
+                    "model": "vendas.pedidos",
+                    "field": "status",
+                    "pageSize": 40,
+                    "dependsOn": ["filters.filial_id", "filters.vendedor_id", "filters.cliente_id"]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "type": "Div",
+        "props": { "direction": "row", "gap": 12, "padding": 16, "wrap": true, "childGrow": true },
+        "children": [
+          {
+            "type": "KPI",
+            "props": {
+              "fr": 1,
+              "title": "Receita",
+              "format": "currency",
+              "borderless": true,
+              "dataQuery": {
+                "model": "vendas.pedidos",
+                "measure": "SUM(p.valor_total)",
+                "filters": {}
+              }
+            }
+          },
+          {
+            "type": "KPI",
+            "props": {
+              "fr": 1,
+              "title": "Pedidos",
+              "format": "number",
+              "borderless": true,
+              "dataQuery": {
+                "model": "vendas.pedidos",
+                "measure": "COUNT()",
+                "filters": {}
+              }
+            }
+          },
+          {
+            "type": "KPI",
+            "props": {
+              "fr": 1,
+              "title": "Ticket Medio",
+              "format": "currency",
+              "borderless": true,
+              "dataQuery": {
+                "model": "vendas.pedidos",
+                "measure": "AVG(p.valor_total)",
+                "filters": {}
+              }
+            }
+          },
+          {
+            "type": "KPI",
+            "props": {
+              "fr": 1,
+              "title": "Clientes Ativos",
+              "format": "number",
+              "borderless": true,
+              "dataQuery": {
+                "model": "vendas.pedidos",
+                "measure": "COUNT_DISTINCT(cliente_id)",
+                "filters": {}
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "Div",
+        "props": { "direction": "row", "gap": 12, "padding": 16, "wrap": true, "childGrow": true },
+        "children": [
+          {
+            "type": "LineChart",
+            "props": {
+              "fr": 2,
+              "title": "Faturamento por Mes",
+              "height": 240,
+              "format": "currency",
+              "dataQuery": {
+                "model": "vendas.pedidos",
+                "dimension": "mes",
+                "measure": "SUM(p.valor_total)",
+                "filters": {},
+                "orderBy": { "field": "dimension", "dir": "asc" },
+                "limit": 12
+              }
+            }
+          },
+          {
+            "type": "BarChart",
+            "props": {
+              "fr": 1,
+              "title": "Top Vendedores por Receita",
+              "height": 240,
+              "format": "currency",
+              "dataQuery": {
+                "model": "vendas.pedidos",
+                "dimension": "vendedor",
+                "measure": "SUM(p.valor_total)",
+                "filters": {},
+                "orderBy": { "field": "measure", "dir": "desc" },
+                "limit": 10
+              }
+            }
+          },
+          {
+            "type": "PieChart",
+            "props": {
+              "fr": 1,
+              "title": "Receita por Canal",
+              "height": 240,
+              "format": "currency",
+              "dataQuery": {
+                "model": "vendas.pedidos",
+                "dimension": "canal_venda",
+                "measure": "SUM(p.valor_total)",
+                "filters": {},
+                "orderBy": { "field": "measure", "dir": "desc" },
+                "limit": 8
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "Div",
+        "props": { "direction": "row", "gap": 12, "padding": 16, "wrap": true, "childGrow": true },
+        "children": [
+          {
+            "type": "AISummary",
+            "props": {
+              "fr": 1,
+              "title": "Insights da IA",
+              "containerStyle": { "padding": "12px 12px 16px 12px" },
+              "itemTextStyle": { "padding": "0 8px" },
+              "items": [
+                { "icon": "trendingUp", "text": "Receita cresce quando canais com ticket mais alto ganham volume." },
+                { "icon": "sparkles", "text": "Top vendedores concentram faturamento e merecem replicacao de playbook." },
+                { "icon": "triangleAlert", "text": "Pedidos em status inicial por muito tempo podem reduzir conversao." }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+]
+```
+
+## Exemplo 4 (Invalido e Correcao)
 
 Invalido (nao pode):
 ```json

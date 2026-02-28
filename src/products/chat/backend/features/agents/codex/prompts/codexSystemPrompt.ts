@@ -85,10 +85,13 @@ export function buildOpenAiSystemPrompt(params: {
 - read dashboard.md before final dashboard decisions
 - when data mapping is domain-specific, read erpSkill.md, marketingSkill.md, or ecommerceSkill.md first
 - use domain skill for model/measure/dimension/filters, then use dashboard.md for final JSONR structure
+- dashboard.md is mandatory spec for dashboard JSONR; follow MUST/NEVER rules literally
+- if there is any conflict between memory/examples/user hints and dashboard.md, dashboard.md wins
 - Validation before final answer:
 - confirm component props are supported by catalog/renderer
 - validate model/measure/dimension/filter against controllers/catalog
 - if there is unrecognized_keys, remove unsupported key and use supported alternative
+- if output has syntax/schema errors, regenerate the JSONR before answering
 </dashboard>
 
 <crud_contract>
