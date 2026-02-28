@@ -58,6 +58,15 @@ Regras:
 - Serie temporal: `orderBy.field = "dimension"` e `dir = "asc"`.
 - Nao inventar `model/measure/dimension/filter` fora do controller/catalogo.
 
+## Boas Praticas de Composicao (Sugestoes)
+
+- Usar composicao semelhante aos templates existentes em `src/products/bi/shared/templates/*`.
+- Em row de KPI, pode usar varios cards; referencia pratica: ate 6 KPIs por row.
+- Em row de graficos, priorizar legibilidade; referencia pratica: ate 4 charts por row.
+- Preferir dashboards com multiplos blocos de KPI e multiplos blocos de charts quando o dominio suportar.
+- Preferir colocar os filtros (`SlicerCard`) no fim do dashboard para manter leitura executiva no topo.
+- Quando precisar decidir quais KPIs/charts entram em cada dominio, usar primeiro `erpSkill.md`, `marketingSkill.md` ou `ecommerceSkill.md`.
+
 ## MUST (Obrigatorio)
 
 - O output final deve ser JSONR (arvore com `type/props/children`).

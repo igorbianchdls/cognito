@@ -64,6 +64,42 @@ Prioridade em conflito:
 - `transportadora`
 - `mes`, `periodo`
 
+## Referencia Real de Templates (Ecommerce)
+
+Base atual observada em:
+- `src/products/bi/shared/templates/appsEcommerceTemplate.ts`
+- `src/products/bi/shared/templates/appsShopifyTemplate.ts`
+- `src/products/bi/shared/templates/appsAmazonTemplate.ts`
+- `src/products/bi/shared/templates/appsMercadoLivreTemplate.ts`
+- `src/products/bi/shared/templates/appsShopeeTemplate.ts`
+
+Dimensoes mais usadas nesses templates:
+- `plataforma`
+- `canal_conta`
+- `loja`
+- `status`
+- `status_pagamento`
+- `produto`
+- `categoria`
+- `tipo_taxa`
+- `transportadora`
+- `mes`
+
+Medidas mais usadas nesses templates:
+- `SUM(valor_total)`
+- `COUNT()`
+- `AVG(valor_total)`
+- `COUNT_DISTINCT(cliente_id)`
+- `SUM(valor_liquido_estimado)`
+- `SUM(valor_reembolsado)`
+- `SUM(taxa_total)`
+- `CASE WHEN SUM(valor_total)=0 THEN 0 ELSE SUM(taxa_total)/SUM(valor_total) END`
+- `SUM(valor_liquido)`
+- `SUM(frete_custo)`
+- `SUM(quantidade_disponivel)`
+- `SUM(quantidade)`
+- `SUM(valor)`
+
 ## Filtros Canonicos
 
 - `tenant_id`
@@ -154,6 +190,45 @@ Estoque por produto:
   "limit": 20
 }
 ```
+
+## Sugestoes de Dashboard (Nao Obrigatorio)
+
+KPIs sugeridos:
+- `ecommerce.pedidos` + `SUM(valor_total)`
+- `ecommerce.pedidos` + `COUNT()`
+- `ecommerce.pedidos` + `AVG(valor_total)`
+- `ecommerce.pedidos` + `COUNT_DISTINCT(cliente_id)`
+- `ecommerce.pedidos` + `SUM(valor_liquido_estimado)`
+- `ecommerce.pedidos` + `SUM(valor_reembolsado)`
+- `ecommerce.pedidos` + `SUM(taxa_total)`
+- `ecommerce.pedidos` + `CASE WHEN SUM(valor_total)=0 THEN 0 ELSE SUM(taxa_total)/SUM(valor_total) END`
+- `ecommerce.payouts` + `SUM(valor_liquido)`
+- `ecommerce.envios` + `COUNT()`
+- `ecommerce.envios` + `SUM(frete_custo)`
+- `ecommerce.estoque_saldos` + `SUM(quantidade_disponivel)`
+
+Graficos sugeridos:
+- `LineChart`: model `ecommerce.pedidos`, dimension `mes`, measure `SUM(valor_total)`
+- `LineChart`: model `ecommerce.pedidos`, dimension `mes`, measure `SUM(valor_liquido_estimado)`
+- `PieChart`: model `ecommerce.pedidos`, dimension `status_pagamento`, measure `COUNT()`
+- `BarChart`: model `ecommerce.pedidos`, dimension `status`, measure `COUNT()`
+- `PieChart`: model `ecommerce.pedidos`, dimension `plataforma`, measure `SUM(valor_total)`
+- `BarChart`: model `ecommerce.pedidos`, dimension `plataforma`, measure `COUNT()`
+- `BarChart`: model `ecommerce.pedidos`, dimension `loja`, measure `SUM(valor_total)`
+- `BarChart`: model `ecommerce.pedidos`, dimension `canal_conta`, measure `SUM(valor_total)`
+- `BarChart`: model `ecommerce.pedido_itens`, dimension `produto`, measure `SUM(valor_total)`
+- `BarChart`: model `ecommerce.pedido_itens`, dimension `produto`, measure `SUM(quantidade)`
+- `BarChart`: model `ecommerce.pedido_itens`, dimension `categoria`, measure `SUM(valor_total)`
+- `BarChart`: model `ecommerce.taxas_pedido`, dimension `tipo_taxa`, measure `SUM(valor)`
+- `LineChart`: model `ecommerce.payouts`, dimension `mes`, measure `SUM(valor_liquido)`
+- `BarChart`: model `ecommerce.envios`, dimension `transportadora`, measure `COUNT()`
+- `LineChart`: model `ecommerce.estoque_saldos`, dimension `mes`, measure `SUM(quantidade_disponivel)`
+- `BarChart`: model `ecommerce.pedidos`, dimension `canal_conta`, measure `AVG(valor_total)`
+- `BarChart`: model `ecommerce.pedidos`, dimension `loja`, measure `COUNT_DISTINCT(cliente_id)`
+
+Observacao de composicao:
+- manter padrao parecido com os templates de ecommerce atuais: alta densidade de KPIs e multiplos blocos de graficos;
+- filtros (plataforma, conta, loja, status etc.) podem ficar no fim do dashboard.
 
 ## Regras Operacionais
 

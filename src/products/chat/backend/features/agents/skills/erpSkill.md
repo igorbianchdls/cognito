@@ -41,6 +41,54 @@ Se houver divergencia, priorizar o controller do modulo.
 - `estoque.estoques_atual`
 - `estoque.movimentacoes`
 
+## Referencia Real de Templates (ERP Vendas)
+
+Base atual observada em:
+- `src/products/bi/shared/templates/appsVendasTemplate.ts`
+
+Dimensoes mais usadas em vendas:
+- `canal_venda`
+- `categoria_receita`
+- `cliente`
+- `vendedor`
+- `filial`
+- `unidade_negocio`
+- `territorio`
+- `mes`
+
+Medidas mais usadas em vendas:
+- `SUM(p.valor_total)`
+- `COUNT()`
+- `AVG(p.valor_total)`
+- `SUM(itens.subtotal)`
+- `AVG(valor_total)`
+
+## Sugestoes de Dashboard (Nao Obrigatorio)
+
+### Dashboard de Vendas (recomendado)
+
+KPIs sugeridos:
+- `vendas.pedidos` + `SUM(p.valor_total)`
+- `vendas.pedidos` + `COUNT()`
+- `vendas.pedidos` + `AVG(p.valor_total)`
+- `valuePath: vendas.kpis.margemBruta` (quando disponivel no payload)
+
+Graficos sugeridos:
+- `LineChart`: model `vendas.pedidos`, dimension `mes`, dimensionExpr `TO_CHAR(DATE_TRUNC('month', data_pedido), 'YYYY-MM')`, measure `SUM(itens.subtotal)`
+- `BarChart`: model `vendas.pedidos`, dimension `mes`, dimensionExpr `TO_CHAR(DATE_TRUNC('month', data_pedido), 'YYYY-MM')`, measure `COUNT()`
+- `BarChart`: model `vendas.pedidos`, dimension `mes`, dimensionExpr `TO_CHAR(DATE_TRUNC('month', data_pedido), 'YYYY-MM')`, measure `AVG(valor_total)`
+- `BarChart`: model `vendas.pedidos`, dimension `vendedor`, measure `SUM(itens.subtotal)`
+- `BarChart`: model `vendas.pedidos`, dimension `cliente`, measure `SUM(itens.subtotal)`
+- `PieChart`: model `vendas.pedidos`, dimension `canal_venda`, measure `SUM(itens.subtotal)`
+- `BarChart`: model `vendas.pedidos`, dimension `categoria_receita`, measure `SUM(itens.subtotal)`
+- `BarChart`: model `vendas.pedidos`, dimension `filial`, measure `SUM(itens.subtotal)`
+- `BarChart`: model `vendas.pedidos`, dimension `unidade_negocio`, measure `SUM(itens.subtotal)`
+- `BarChart`: model `vendas.pedidos`, dimension `territorio`, measure `SUM(itens.subtotal)`
+
+Observacao de composicao:
+- para ficar parecido com os apps atuais, usar multiplos KPIs e multiplos graficos;
+- filtros podem ficar no fim do dashboard (preferencia de leitura executiva).
+
 ## Mapeamentos Canonicos (exemplos `dataQuery`)
 
 Receita de vendas:

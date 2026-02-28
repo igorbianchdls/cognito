@@ -56,6 +56,34 @@ Prioridade em conflito:
 - `anuncio`, `anuncio_id`
 - `mes`, `periodo`
 
+## Referencia Real de Templates (Meta/Google Ads)
+
+Base atual observada em:
+- `src/products/bi/shared/templates/appsMetaAdsTemplate.ts`
+- `src/products/bi/shared/templates/appsGoogleAdsTemplate.ts`
+
+Dimensoes mais usadas nesses templates:
+- `conta_id`
+- `campanha_id`
+- `grupo_id`
+- `anuncio_id`
+- `mes`
+
+Medidas mais usadas nesses templates:
+- `SUM(gasto)`
+- `SUM(receita_atribuida)`
+- `SUM(cliques)`
+- `SUM(impressoes)`
+- `SUM(conversoes)`
+- `SUM(leads)`
+- `CASE WHEN SUM(gasto)=0 THEN 0 ELSE SUM(receita_atribuida)/SUM(gasto) END`
+- `CASE WHEN SUM(impressoes)=0 THEN 0 ELSE SUM(cliques)/SUM(impressoes) END`
+- `CASE WHEN SUM(cliques)=0 THEN 0 ELSE SUM(gasto)/SUM(cliques) END`
+- `CASE WHEN SUM(impressoes)=0 THEN 0 ELSE (SUM(gasto)*1000.0)/SUM(impressoes) END`
+- `CASE WHEN SUM(conversoes)=0 THEN 0 ELSE SUM(gasto)/SUM(conversoes) END`
+- `CASE WHEN SUM(cliques)=0 THEN 0 ELSE SUM(conversoes)/SUM(cliques) END`
+- `CASE WHEN SUM(cliques)=0 THEN 0 ELSE SUM(leads)/SUM(cliques) END`
+
 ## Filtros Canonicos
 
 - `tenant_id`
@@ -121,6 +149,40 @@ Serie mensal de conversoes:
   "limit": 12
 }
 ```
+
+## Sugestoes de Dashboard (Nao Obrigatorio)
+
+KPIs sugeridos:
+- `trafegopago.desempenho_diario` + `SUM(gasto)`
+- `trafegopago.desempenho_diario` + `SUM(receita_atribuida)`
+- `trafegopago.desempenho_diario` + `SUM(cliques)`
+- `trafegopago.desempenho_diario` + `SUM(impressoes)`
+- `trafegopago.desempenho_diario` + `SUM(conversoes)`
+- `trafegopago.desempenho_diario` + `SUM(leads)`
+- `trafegopago.desempenho_diario` + `CASE WHEN SUM(gasto)=0 THEN 0 ELSE SUM(receita_atribuida)/SUM(gasto) END`
+- `trafegopago.desempenho_diario` + `CASE WHEN SUM(impressoes)=0 THEN 0 ELSE SUM(cliques)/SUM(impressoes) END`
+- `trafegopago.desempenho_diario` + `CASE WHEN SUM(cliques)=0 THEN 0 ELSE SUM(gasto)/SUM(cliques) END`
+- `trafegopago.desempenho_diario` + `CASE WHEN SUM(impressoes)=0 THEN 0 ELSE (SUM(gasto)*1000.0)/SUM(impressoes) END`
+- `trafegopago.desempenho_diario` + `CASE WHEN SUM(conversoes)=0 THEN 0 ELSE SUM(gasto)/SUM(conversoes) END`
+- `trafegopago.desempenho_diario` + `CASE WHEN SUM(cliques)=0 THEN 0 ELSE SUM(conversoes)/SUM(cliques) END`
+- `trafegopago.desempenho_diario` + `CASE WHEN SUM(cliques)=0 THEN 0 ELSE SUM(leads)/SUM(cliques) END`
+
+Graficos sugeridos:
+- `LineChart`: model `trafegopago.desempenho_diario`, dimension `mes`, measure `SUM(gasto)`
+- `LineChart`: model `trafegopago.desempenho_diario`, dimension `mes`, measure `SUM(receita_atribuida)`
+- `LineChart`: model `trafegopago.desempenho_diario`, dimension `mes`, measure `CASE WHEN SUM(gasto)=0 THEN 0 ELSE SUM(receita_atribuida)/SUM(gasto) END`
+- `LineChart`: model `trafegopago.desempenho_diario`, dimension `mes`, measure `SUM(conversoes)`
+- `LineChart`: model `trafegopago.desempenho_diario`, dimension `mes`, measure `SUM(leads)`
+- `BarChart`: model `trafegopago.desempenho_diario`, dimension `campanha_id`, measure `SUM(gasto)`
+- `BarChart`: model `trafegopago.desempenho_diario`, dimension `campanha_id`, measure `SUM(receita_atribuida)`
+- `BarChart`: model `trafegopago.desempenho_diario`, dimension `grupo_id`, measure `SUM(conversoes)`
+- `BarChart`: model `trafegopago.desempenho_diario`, dimension `anuncio_id`, measure `SUM(conversoes)`
+- `PieChart`: model `trafegopago.desempenho_diario`, dimension `conta_id`, measure `SUM(gasto)`
+- `BarChart`: model `trafegopago.desempenho_diario`, dimension `conta_id`, measure `SUM(receita_atribuida)`
+
+Observacao de composicao:
+- manter padrao parecido com os templates existentes: varios KPIs e varios graficos;
+- filtros hierarquicos (conta -> campanha -> grupo -> anuncio) podem ficar no fim do dashboard.
 
 ## Regras Operacionais
 
