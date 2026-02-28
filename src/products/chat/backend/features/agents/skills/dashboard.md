@@ -98,6 +98,130 @@ Regras:
 - `Header.datePicker.defaultRange` -> usar `datePicker.mode`, `datePicker.storePath` e `actionOnChange`.
 - `SlicerCard` com `type/field/model` no nivel do card -> usar `props.fields[]` com `storePath` e `source`.
 
+## Erros por Componente (Guia Rapido)
+
+- `Theme`
+- errado: `props: {}` ou `props.title`
+- correto: `props: { "name": "light" }` (titulo vai no `Header`)
+
+- `Header.datePicker`
+- errado: `actionOnChange: "updateDateRange"` (string)
+- correto: `actionOnChange: { "type": "refresh_data" }` (objeto)
+- errado: `storePath: "/filters/dateRange"`
+- correto: `storePath: "filters.dateRange"`
+
+- `Div`
+- errado: componente `Row`
+- correto: componente `Div` com `direction: "row"` ou `direction: "column"`
+
+- `KPI`
+- errado: componente `KpiCard`
+- correto: componente `KPI`
+- errado em `dataQuery`: `dateField`, `granularity`, `measures[]`, `dimensions[]`
+- correto em `dataQuery`: `model`, `measure`, opcional `dimension|dimensionExpr|filters|orderBy|limit`
+
+- `SlicerCard`
+- errado: `fields: ["canal_venda"]`
+- correto: `fields: [{ "label": "...", "type": "list", "storePath": "filters.canal_venda_id", "source": { ... } }]`
+- errado: `storePath` no nivel do card
+- correto: `storePath` dentro de cada item de `fields[]`
+
+- `AISummary`
+- errado: usar `dataQuery`, `maxItems`, `storePath` direto
+- correto: usar `items` (e opcionalmente `task`, `containerStyle`, `itemTextStyle`)
+
+## Template Minimo Valido (Copiar e Adaptar)
+
+```json
+[
+  {
+    "type": "Theme",
+    "props": { "name": "light", "managers": {} },
+    "children": [
+      {
+        "type": "Header",
+        "props": {
+          "title": "Dashboard",
+          "datePicker": {
+            "visible": true,
+            "mode": "range",
+            "storePath": "filters.dateRange",
+            "actionOnChange": { "type": "refresh_data" }
+          }
+        }
+      },
+      {
+        "type": "Div",
+        "props": { "direction": "row", "gap": 12, "padding": 16, "childGrow": true },
+        "children": [
+          {
+            "type": "KPI",
+            "props": {
+              "title": "KPI",
+              "format": "number",
+              "dataQuery": {
+                "model": "vendas.pedidos",
+                "measure": "COUNT()",
+                "filters": {}
+              }
+            }
+          },
+          {
+            "type": "LineChart",
+            "props": {
+              "title": "Tendencia",
+              "height": 220,
+              "dataQuery": {
+                "model": "vendas.pedidos",
+                "dimension": "mes",
+                "measure": "COUNT()",
+                "filters": {},
+                "orderBy": { "field": "dimension", "dir": "asc" },
+                "limit": 12
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "Div",
+        "props": { "direction": "row", "gap": 12, "padding": 16, "childGrow": true },
+        "children": [
+          {
+            "type": "SlicerCard",
+            "props": {
+              "title": "Filtro",
+              "fields": [
+                {
+                  "label": "Canal",
+                  "type": "list",
+                  "storePath": "filters.canal_venda_id",
+                  "source": {
+                    "type": "options",
+                    "model": "vendas.pedidos",
+                    "field": "canal_venda_id",
+                    "pageSize": 50
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "type": "AISummary",
+            "props": {
+              "title": "Insights da IA",
+              "items": [
+                { "icon": "sparkles", "text": "Resumo curto e acionavel." }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+]
+```
+
 ## Exemplo 1 (Dashboard Marketing Completo)
 
 Arquivo esperado: `/vercel/sandbox/dashboard/metaads-completo.jsonr`

@@ -83,8 +83,11 @@ export function buildOpenAiSystemPrompt(params: {
 - AISummary with readable padding
 - Skills usage for dashboard tasks:
 - read dashboard.md before final dashboard decisions
-- when data mapping is domain-specific, read erpSkill.md, marketingSkill.md, or ecommerceSkill.md first
-- use domain skill for model/measure/dimension/filters, then use dashboard.md for final JSONR structure
+- follow dashboard.md faithfully as the canonical JSONR pattern (component names, props, dataQuery shape and examples)
+- if the user asks dashboards like vendas/compras/financeiro/crm/estoque/erp, read erpSkill.md first for dimensions/measures
+- if the user asks dashboards like meta ads/google ads/trafego pago, read marketingSkill.md first for dimensions/measures
+- if the user asks dashboards like ecommerce/amazon/mercadolivre/shopee/shopify, read ecommerceSkill.md first for dimensions/measures
+- after the domain skill, use dashboard.md for final JSONR structure
 - dashboard.md is mandatory spec for dashboard JSONR; follow MUST/NEVER rules literally
 - if there is any conflict between memory/examples/user hints and dashboard.md, dashboard.md wins
 - Validation before final answer:
