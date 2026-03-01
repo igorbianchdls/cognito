@@ -9,6 +9,7 @@ import InputArea from './InputArea';
 import { useRouter } from 'next/navigation';
 import { sandboxActions, type SandboxStatus } from '@/chat/sandbox';
 import { useChatErrorNotifications } from '@/products/chat/frontend/features/error-notifications/useChatErrorNotifications';
+import { useSandboxAutoSnapshot } from '@/products/chat/frontend/features/sandbox-autosave/useSandboxAutoSnapshot';
 
 type ChatStatus = 'idle' | 'submitted' | 'streaming' | 'error'
 type EngineId = 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5' | 'openai-gpt5mini' | 'openai-gpt5nano'
@@ -62,9 +63,15 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
     clearNotifications,
   } = useChatErrorNotifications()
 
-  const notifyError = (source: 'sandbox' | 'api' | 'stream' | 'tool' | 'network' | 'unknown', error: unknown, message: string, details?: unknown) => {
+  const notifyError = React.useCallback((source: 'sandbox' | 'api' | 'stream' | 'tool' | 'network' | 'unknown', error: unknown, message: string, details?: unknown) => {
     pushErrorNotification({ source, error, message, details })
-  }
+  }, [pushErrorNotification])
+
+  const { scheduleAutoSnapshot } = useSandboxAutoSnapshot({
+    chatId: chatId ?? initialChatId ?? null,
+    enabled: sandboxStatus === 'running',
+    onError: (error) => notifyError('sandbox', error, 'Falha no autosave de snapshot'),
+  })
 
   const getScrollKey = () => {
     if (!initialChatId) return null
@@ -460,7 +467,29 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
     // Tool correlation helpers
     const toolIndexToKey = new Map<number, string>()
     const toolCallIdToKey = new Map<string, string>()
+    const toolTouchesDashboard = new Map<string, boolean>()
     let toolKeySeq = 0
+    const extractPathFromToolInput = (inputRaw: any): string => {
+      let parsed = inputRaw
+      if (typeof parsed === 'string') {
+        try { parsed = JSON.parse(parsed) } catch { /* noop */ }
+      }
+      if (!parsed || typeof parsed !== 'object') return ''
+      if (typeof parsed.file_path === 'string') return parsed.file_path
+      if (typeof parsed.path === 'string') return parsed.path
+      return ''
+    }
+    const markDashboardTouchFromInput = (callKey: string, toolNameRaw: unknown, inputRaw: any) => {
+      const toolName = String(toolNameRaw || '').toLowerCase()
+      if (!toolName) return
+      if (toolName.includes('dashboard_builder')) {
+        toolTouchesDashboard.set(callKey, true)
+        return
+      }
+      if (toolName !== 'write' && toolName !== 'edit' && toolName !== 'delete') return
+      const path = extractPathFromToolInput(inputRaw)
+      if (path.startsWith('/vercel/sandbox/dashboard/')) toolTouchesDashboard.set(callKey, true)
+    }
     const getToolCallKey = (evt: any, idx: number, bindIdx = false): string | null => {
       const rawCallId = (typeof evt?.call_id === 'string' && evt.call_id.trim())
         ? String(evt.call_id).trim()
@@ -537,6 +566,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
             const callKey = getToolCallKey(evt, idx, true) || `ti-${idx}-${++toolKeySeq}`
             let parsed: any = undefined
             try { if (typeof evt.input !== 'undefined') parsed = evt.input } catch {}
+            markDashboardTouchFromInput(callKey, evt.name, parsed)
             updateToolPart(callKey, { state: 'input-available', input: parsed })
             lastActiveToolKey = callKey
           } else if (evt && evt.type === 'tool_start') {
@@ -561,7 +591,14 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
             } else {
               lastActiveToolKey = targetKey
             }
-            if (lastActiveToolKey) updateToolPart(lastActiveToolKey, { state: 'output-available', output: evt.output, type: `tool-${evt.tool_name || 'generic'}` })
+            if (lastActiveToolKey) {
+              updateToolPart(lastActiveToolKey, { state: 'output-available', output: evt.output, type: `tool-${evt.tool_name || 'generic'}` })
+              const doneToolName = String(evt?.tool_name || '').toLowerCase()
+              const touchedDashboard =
+                doneToolName.includes('dashboard_builder') ||
+                Boolean(toolTouchesDashboard.get(lastActiveToolKey))
+              if (touchedDashboard) scheduleAutoSnapshot('dashboard-change')
+            }
           } else if (evt && evt.type === 'tool_error') {
             activeTextPartId = null
             const idx: number = typeof evt.index === 'number' ? evt.index : 0
