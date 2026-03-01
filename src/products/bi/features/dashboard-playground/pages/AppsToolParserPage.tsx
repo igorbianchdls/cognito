@@ -53,7 +53,7 @@ const EXAMPLES: Record<ToolAction, string> = {
           dashboard_name: 'tool-parser-demo',
           widget_id: 'chart-canal',
           widget_type: 'chart',
-          container: 'principais',
+          container: 'principal',
           payload: {
             chart_type: 'bar',
             title: 'Vendas por Canal',
@@ -70,7 +70,7 @@ const EXAMPLES: Record<ToolAction, string> = {
           dashboard_name: 'tool-parser-demo',
           widget_id: 'filtro-canal',
           widget_type: 'filtro',
-          container: 'filtros',
+          container: 'principal',
           payload: {
             title: 'Canal',
             campo: 'canal_venda_id',
@@ -82,7 +82,7 @@ const EXAMPLES: Record<ToolAction, string> = {
           dashboard_name: 'tool-parser-demo',
           widget_id: 'insights-geral',
           widget_type: 'insights',
-          container: 'insights',
+          container: 'principal',
           payload: {
             title: 'Insights',
             fr: 1,

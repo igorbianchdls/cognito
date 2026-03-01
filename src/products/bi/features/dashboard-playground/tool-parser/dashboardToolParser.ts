@@ -97,7 +97,7 @@ function sanitizeKey(value: string): string {
 
 function normalizeRowKey(input: AddWidgetInput): string {
   if (input.container && input.container.trim()) return sanitizeKey(input.container)
-  return `row_${sanitizeKey(input.widget_type)}`
+  return 'principal'
 }
 
 function normalizeOrderBy(value: string | OrderBy | undefined): OrderBy | undefined {
