@@ -105,10 +105,10 @@ ${routingLine}
 - 3) call add_widget for targeted adjustments, replacements, or incremental additions.
 - 4) call get_dashboard before final delivery when user asks final JSON/state confirmation.
 - dashboard_builder actions:
-- create_dashboard: initializes Theme + Header + state.
-- add_widget: inserts or updates one widget by widget_id.
-- add_widgets_batch: inserts or updates multiple widgets in one call.
-- get_dashboard: returns current JSONR tree + parser_state + summary.
+- create_dashboard: initializes Theme + Header + state and persists file in /vercel/sandbox/dashboard/<dashboard_name>.jsonr.
+- add_widget: inserts or updates one widget by widget_id and persists file.
+- add_widgets_batch: inserts or updates multiple widgets in one call and persists file.
+- get_dashboard: returns current JSONR tree + parser_state + summary (read-only, no file write).
 - Container rule:
 - use container to group widgets in the same row (for example "principal"); same container means same row.
 - if container is omitted, default container is "principal".
@@ -126,7 +126,7 @@ ${routingLine}
 - Execution mode:
 - prefer tool execution (dashboard_builder) over manual JSONR writing.
 - when there is no approved plan for a new dashboard, propose plan first (unless user explicitly asked immediate build).
-- if user asks to persist file explicitly, first call get_dashboard and then write the returned tree to /vercel/sandbox/dashboard/<name>.jsonr.
+- create_dashboard/add_widget/add_widgets_batch already persist automatically; use file_path in tool response as source of truth.
 - never use /vercel/sandbox/dashboards
 - Dashboard baseline quality:
 - Header with datePicker (when temporal)

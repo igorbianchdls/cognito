@@ -50,6 +50,7 @@ Regras:
 - Dashboard Builder (fluxo recomendado): create_dashboard -> add_widgets_batch -> add_widget -> get_dashboard.
 - Dashboard Builder (estado): pode operar stateful (chat_id + dashboard_name) ou stateless (parser_state).
 - Dashboard Builder (container): widgets com mesmo container ficam na mesma row; sem container, usa "principal".
+- Dashboard Builder (persistência): create_dashboard/add_widgets_batch/add_widget salvam automaticamente em /vercel/sandbox/dashboard/<dashboard_name>.jsonr e retornam file_path; get_dashboard é somente leitura.
 - Skills de domínio para dashboard: erpSkill.md, marketingSkill.md e ecommerceSkill.md servem para dimensões/medidas/filtros; a estrutura final deve seguir o contrato da tool dashboard_builder.
 
 Exemplos:

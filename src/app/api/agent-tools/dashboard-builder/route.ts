@@ -48,6 +48,19 @@ function textOrUndefined(value: unknown): string | undefined {
   return out || undefined
 }
 
+function normalizeDashboardFileSlug(name: string): string {
+  const out = String(name || '')
+    .trim()
+    .replace(/[^a-zA-Z0-9_-]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '')
+  return out || 'dashboard'
+}
+
+function buildDashboardFilePath(dashboardName: string): string {
+  return `/vercel/sandbox/dashboard/${normalizeDashboardFileSlug(dashboardName)}.jsonr`
+}
+
 function normalizeAction(value: unknown): DashboardToolAction | null {
   const out = toText(value).toLowerCase()
   if (out === 'create_dashboard') return out
@@ -234,6 +247,38 @@ function buildResult(action: DashboardToolAction, state: DashboardToolParserStat
     summary: summarizeState(state),
     tree: state.tree,
     parser_state: state,
+    file_path: buildDashboardFilePath(state.dashboardName || 'dashboard'),
+  }
+}
+
+async function persistDashboardFile(params: {
+  req: NextRequest
+  chatId: string
+  dashboardName: string
+  tree: DashboardToolParserState['tree']
+}) {
+  const { req, chatId, dashboardName, tree } = params
+  if (!chatId) throw new Error('x-chat-id ausente para persistência de dashboard')
+  const filePath = buildDashboardFilePath(dashboardName)
+  const content = JSON.stringify(tree ?? [], null, 2)
+  const url = new URL('/api/chat', req.nextUrl.origin)
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      action: 'fs-write',
+      chatId,
+      path: filePath,
+      content,
+    }),
+  })
+  const payload = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string }
+  if (!res.ok || payload.ok === false) {
+    throw new Error(payload.error || `Falha ao persistir dashboard em ${filePath}`)
+  }
+  return {
+    file_path: filePath,
+    file_persisted: true as const,
   }
 }
 
@@ -263,6 +308,7 @@ export async function POST(req: NextRequest) {
     const chatId = toText(req.headers.get('x-chat-id'))
     let nextState: DashboardToolParserState
     let source: 'session' | 'payload' | 'new' = 'new'
+    const shouldPersistFile = action !== 'get_dashboard'
 
     if (action === 'create_dashboard') {
       const input = buildCreateDashboardInput(payload, dashboardName)
@@ -298,8 +344,29 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    let persistMeta: { file_path: string; file_persisted?: true } = {
+      file_path: buildDashboardFilePath(dashboardName),
+    }
+
+    if (shouldPersistFile) {
+      try {
+        persistMeta = await persistDashboardFile({
+          req,
+          chatId,
+          dashboardName,
+          tree: nextState.tree,
+        })
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        return toolErrorJson(500, 'DASHBOARD_FILE_PERSIST_ERROR', message, action)
+      }
+    }
+
     setSessionState(chatId, dashboardName, nextState)
-    return toolSuccessJson(action, buildResult(action, nextState, source))
+    return toolSuccessJson(action, {
+      ...buildResult(action, nextState, source),
+      ...persistMeta,
+    })
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     return toolErrorJson(400, 'DASHBOARD_TOOL_ERROR', message)
