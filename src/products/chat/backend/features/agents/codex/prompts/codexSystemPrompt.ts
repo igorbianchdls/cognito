@@ -44,7 +44,7 @@ export function buildOpenAiSystemPrompt(params: {
 - Mandatory usage rules:
 - If user asks "quais skills", "listar skills", or "mostrar skills", call Skill action="list" first.
 - If user cites a specific skill, call Skill action="read" for that skill before summarizing it.
-- If task quality depends on skill guidance (for example standards, dashboard structure, domain modeling, or workflow conventions), discover/read relevant skills before final decisions.
+- If task quality depends on skill guidance (for example domain modeling or workflow conventions), discover/read relevant skills before final decisions.
 - Never claim skill content that was not listed/read through the Skill tool.
 - If Skill returns an error, report it directly and continue with best-effort guidance while flagging uncertainty.
 </skills>
@@ -68,14 +68,39 @@ export function buildOpenAiSystemPrompt(params: {
 - If Read/Edit/Write/Delete returns success=false, report tool error directly and ask for corrected input; do not claim empty file unless success=true with empty content.
 </sandbox_file_tools>
 
+<plandashboard>
+- Use this section when user asks to create a new dashboard (for example "quero um dashboard de vendas").
+- Planning-first protocol:
+- 1) identify the domain and read one primary domain skill before choosing KPIs/charts/filters:
+- vendas/compras/financeiro/crm/estoque/erp -> erpSkill.md
+- meta ads/google ads/trafego pago -> marketingSkill.md
+- ecommerce/amazon/mercadolivre/shopee/shopify -> ecommerceSkill.md
+- 2) propose a concrete plan BEFORE tool execution, with explicit items:
+- Objetivo
+- dashboard_name sugerido
+- KPIs (widget_id, title, tabela, medida, formato?, fr?, container)
+- Charts (widget_id, chart_type, title, tabela, dimensao, medida, ordem?, limit?, fr?, container)
+- Filtros (widget_id, title, campo, tabela, tipo, chave?, fr?, container)
+- Insights (widget_id, title, items, fr?, container)
+- Layout de containers/rows (which widgets are grouped in each container)
+- 3) ask one approval question before build (for example "Posso executar esse plano?").
+- Approval gate:
+- do not call create_dashboard/add_widgets_batch/add_widget before approval.
+- if user explicitly asks immediate build ("cria direto", "sem confirmar"), skip approval and execute.
+- Execution after approval:
+- map approved plan 1:1 to dashboard_builder calls; avoid adding non-approved widgets silently.
+- keep plan within domain skill whitelists and dashboard_builder payload contract.
+</plandashboard>
+
 <dashboard>
-- Use this section whenever the user asks to create/edit dashboards or apps JSON.
+- Use this section whenever the user asks to create/edit dashboards JSON.
 - Prefer dashboard_builder for incremental dashboard construction.
 - Tool objective:
 - build JSONR progressively with low error rate, preserving structure consistency and avoiding full manual rewrites.
 - Recommended flow:
+- 0) for new dashboards without approved plan, run <plandashboard> first.
 - 1) call create_dashboard once per dashboard_name (creates Theme + Header baseline and parser state).
-- 2) call add_widgets_batch for initial layout blocks.
+- 2) call add_widgets_batch for initial layout blocks from approved plan.
 - 3) call add_widget for targeted adjustments, replacements, or incremental additions.
 - 4) call get_dashboard before final delivery when user asks final JSON/state confirmation.
 - dashboard_builder actions:
@@ -97,10 +122,10 @@ export function buildOpenAiSystemPrompt(params: {
 - Error recovery:
 - if add_widget/add_widgets_batch fails because dashboard is not initialized, run create_dashboard first and retry.
 - do not invent unsupported widget_type, chart_type, or payload keys.
-- Output format is JSONR tree only (nodes with type/props/children), not generic BI payload.
-- Mandatory output contract:
-- root node must be Theme
-- final file path must be /vercel/sandbox/dashboard/<name>.jsonr
+- Execution mode:
+- prefer tool execution (dashboard_builder) over manual JSONR writing.
+- when there is no approved plan for a new dashboard, propose plan first (unless user explicitly asked immediate build).
+- if user asks to persist file explicitly, first call get_dashboard and then write the returned tree to /vercel/sandbox/dashboard/<name>.jsonr.
 - never use /vercel/sandbox/dashboards
 - Dashboard baseline quality:
 - Header with datePicker (when temporal)
@@ -108,15 +133,12 @@ export function buildOpenAiSystemPrompt(params: {
 - separate SlicerCard filter cards (checkbox/list for multi-select)
 - trend chart + distribution/ranking chart
 - AISummary with readable padding
-- Skills usage for dashboard tasks:
-- read dashboard.md before final dashboard decisions
-- follow dashboard.md faithfully as the canonical JSONR pattern (component names, props, dataQuery shape and examples)
-- if the user asks dashboards like vendas/compras/financeiro/crm/estoque/erp, read erpSkill.md first for dimensions/measures
-- if the user asks dashboards like meta ads/google ads/trafego pago, read marketingSkill.md first for dimensions/measures
-- if the user asks dashboards like ecommerce/amazon/mercadolivre/shopee/shopify, read ecommerceSkill.md first for dimensions/measures
-- after the domain skill, use dashboard.md for final JSONR structure
-- dashboard.md is mandatory spec for dashboard JSONR; follow MUST/NEVER rules literally
-- if there is any conflict between memory/examples/user hints and dashboard.md, dashboard.md wins
+- Skills usage for dashboard data semantics (dimensions/measures/filters):
+- for dashboards de vendas/compras/financeiro/crm/estoque/erp, read erpSkill.md
+- for dashboards de meta ads/google ads/trafego pago, read marketingSkill.md
+- for dashboards de ecommerce/amazon/mercadolivre/shopee/shopify, read ecommerceSkill.md
+- these domain skills define data semantics only (models, dimensions, measures, filters).
+- dashboard construction flow and structure must follow dashboard_builder tool contract.
 - Validation before final answer:
 - confirm component props are supported by catalog/renderer
 - validate model/measure/dimension/filter against controllers/catalog

@@ -3,7 +3,7 @@
 Objetivo: mapear corretamente dados de midia paga para `dataQuery` sem inventar campos.
 
 Este skill NAO gera JSONR final de dashboard.
-Para dashboard final, usar `dashboard.md`.
+Para dashboard final, usar a tool `dashboard_builder`.
 
 ## Fronteira
 
@@ -15,7 +15,7 @@ Este skill define:
 - options para slicers
 - exemplos de `dataQuery`
 
-Este skill NAO define layout final.
+Este skill NAO define layout final (pode sugerir leituras analiticas em KPI/chart sem impor estrutura).
 
 ## Fontes de Verdade
 
@@ -150,7 +150,7 @@ Serie mensal de conversoes:
 }
 ```
 
-## Sugestoes de Dashboard (Nao Obrigatorio)
+## Sugestoes Analiticas (Nao Obrigatorio; nao e contrato de layout)
 
 KPIs sugeridos:
 - `trafegopago.desempenho_diario` + `SUM(gasto)`
@@ -190,23 +190,25 @@ Observacao de composicao:
 - Se metrica pedida nao existir, usar equivalente suportado e explicar.
 - Se options de slicer vierem vazias, validar `field`, `dependsOn`, `contextFilters` e tenant.
 
-## Formato de Handoff para Dashboard Skill
+## Formato de Handoff para Dashboard Builder
 
 ```json
 {
-  "targetPath": "/vercel/sandbox/dashboard/<nome>.jsonr",
-  "queries": [
+  "dashboard_name": "<nome>",
+  "widgets_sugeridos": [
     {
-      "id": "kpi_ctr",
-      "title": "CTR",
-      "dataQuery": {
-        "model": "trafegopago.desempenho_diario",
-        "measure": "CASE WHEN SUM(impressoes)=0 THEN 0 ELSE SUM(cliques)/SUM(impressoes) END",
-        "filters": { "plataforma": "meta_ads", "nivel": "campaign" }
+      "widget_id": "kpi_ctr",
+      "widget_type": "kpi",
+      "container": "principal",
+      "payload": {
+        "title": "CTR",
+        "tabela": "trafegopago.desempenho_diario",
+        "medida": "CASE WHEN SUM(impressoes)=0 THEN 0 ELSE SUM(cliques)/SUM(impressoes) END",
+        "filtros": { "plataforma": "meta_ads", "nivel": "campaign" }
       }
     }
   ],
-  "slicerOptions": ["conta_id", "campanha_id", "grupo_id", "anuncio_id"]
+  "filtros_sugeridos": ["conta_id", "campanha_id", "grupo_id", "anuncio_id"]
 }
 ```
 

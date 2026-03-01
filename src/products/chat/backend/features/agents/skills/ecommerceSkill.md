@@ -3,7 +3,7 @@
 Objetivo: mapear dados de ecommerce para `dataQuery` de forma consistente, sem inventar schema.
 
 Este skill NAO gera JSONR final.
-Para dashboard final, usar `dashboard.md`.
+Para dashboard final, usar a tool `dashboard_builder`.
 
 ## Fronteira
 
@@ -15,7 +15,7 @@ Este skill define:
 - options
 - exemplos de `dataQuery`
 
-Este skill NAO define layout visual.
+Este skill NAO define layout visual final (pode sugerir leituras analiticas em KPI/chart sem impor estrutura).
 
 ## Fontes de Verdade
 
@@ -191,7 +191,7 @@ Estoque por produto:
 }
 ```
 
-## Sugestoes de Dashboard (Nao Obrigatorio)
+## Sugestoes Analiticas (Nao Obrigatorio; nao e contrato de layout)
 
 KPIs sugeridos:
 - `ecommerce.pedidos` + `SUM(valor_total)`
@@ -236,23 +236,25 @@ Observacao de composicao:
 - Nao inventar `model/measure/dimension/filter` fora da whitelist.
 - Quando campo nao existir, usar alternativa suportada e explicar.
 
-## Formato de Handoff para Dashboard Skill
+## Formato de Handoff para Dashboard Builder
 
 ```json
 {
-  "targetPath": "/vercel/sandbox/dashboard/<nome>.jsonr",
-  "queries": [
+  "dashboard_name": "<nome>",
+  "widgets_sugeridos": [
     {
-      "id": "kpi_gmv",
-      "title": "GMV",
-      "dataQuery": {
-        "model": "ecommerce.pedidos",
-        "measure": "SUM(valor_total)",
-        "filters": {}
+      "widget_id": "kpi_gmv",
+      "widget_type": "kpi",
+      "container": "principal",
+      "payload": {
+        "title": "GMV",
+        "tabela": "ecommerce.pedidos",
+        "medida": "SUM(valor_total)",
+        "filtros": {}
       }
     }
   ],
-  "slicerOptions": ["plataforma", "canal_conta_id", "loja_id", "status"]
+  "filtros_sugeridos": ["plataforma", "canal_conta_id", "loja_id", "status"]
 }
 ```
 

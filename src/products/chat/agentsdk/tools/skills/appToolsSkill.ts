@@ -44,6 +44,13 @@ Regras:
 - Documento pode gerar PDF e salvar no Drive na mesma chamada com save_to_drive=true e drive.workspace_id.
 - Para upload de arquivo gerado em base64, prefira drive resource="drive/files/upload-base64" (action=request).
 - Para enviar anexo já salvo no Drive, prefira email action="send" com drive_file_id (sem precisar obter signed_url manualmente).
+- Dashboard Builder (planejamento para dashboard novo): antes de chamar a tool, ler a skill de domínio correta (erpSkill.md, marketingSkill.md ou ecommerceSkill.md) e propor um plano explícito com KPIs/charts/filtros/layout de containers.
+- Dashboard Builder (aprovação): para dashboard novo, pedir confirmação do plano antes de executar create_dashboard/add_widgets_batch/add_widget.
+- Dashboard Builder (exceção): se o usuário pedir execução imediata ("cria direto", "sem confirmar"), pode pular confirmação e executar.
+- Dashboard Builder (fluxo recomendado): create_dashboard -> add_widgets_batch -> add_widget -> get_dashboard.
+- Dashboard Builder (estado): pode operar stateful (chat_id + dashboard_name) ou stateless (parser_state).
+- Dashboard Builder (container): widgets com mesmo container ficam na mesma row; sem container, usa "principal".
+- Skills de domínio para dashboard: erpSkill.md, marketingSkill.md e ecommerceSkill.md servem para dimensões/medidas/filtros; a estrutura final deve seguir o contrato da tool dashboard_builder.
 
 Exemplos:
 - Listar contas financeiras:

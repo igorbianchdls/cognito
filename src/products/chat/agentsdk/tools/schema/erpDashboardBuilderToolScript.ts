@@ -1,4 +1,6 @@
-export const AGENTSDK_ERP_MCP_DASHBOARD_BUILDER_TOOL_SCRIPT = `tool('dashboard_builder','Constrói dashboards JSONR de forma incremental e previsível, reduzindo erro de estrutura versus escrever o arquivo inteiro. Fluxo recomendado: 1) create_dashboard para inicializar Theme+Header e estado; 2) add_widgets_batch para blocos iniciais; 3) add_widget para ajustes pontuais/substituições; 4) get_dashboard para retornar árvore final + parser_state. Regras: widgets com mesmo container entram na mesma row; sem container, usa principal. Estado pode ser stateful (chat_id + dashboard_name no backend) ou stateless (enviando parser_state a cada chamada). Tipos suportados: kpi, chart, filtro, insights.', {
+import { DASHBOARD_BUILDER_TOOL_DESCRIPTION } from '@/products/chat/shared/tools/dashboardBuilderContract'
+
+export const AGENTSDK_ERP_MCP_DASHBOARD_BUILDER_TOOL_SCRIPT = `tool('dashboard_builder',${JSON.stringify(DASHBOARD_BUILDER_TOOL_DESCRIPTION)}, {
   action: z.enum(['create_dashboard','add_widget','add_widgets_batch','get_dashboard']),
   dashboard_name: z.string(),
   title: z.string().optional(),

@@ -6,7 +6,6 @@ import { generateAgentToken, setAgentToken } from '@/products/chat/backend/featu
 import { buildClaudeSystemPrompt } from '@/products/chat/backend/features/agents/claudecode/prompts/claudeCodeSystemPrompt'
 import { buildOpenAiSystemPrompt } from '@/products/chat/backend/features/agents/codex/prompts/codexSystemPrompt'
 import {
-  loadDashboardSkillMarkdown,
   loadEcommerceSkillMarkdown,
   loadErpSkillMarkdown,
   loadMarketingSkillMarkdown,
@@ -39,10 +38,6 @@ const genId = () => Math.random().toString(36).slice(2) + Math.random().toString
 const RUNTIME_LEASE_SECONDS = 10 * 60
 const SANDBOX_TIMEOUT_MS = 10 * 60 * 1000
 const SKILL_FILES = [
-  {
-    path: '/vercel/sandbox/agent/skills/dashboard.md',
-    content: loadDashboardSkillMarkdown(),
-  },
   {
     path: '/vercel/sandbox/agent/skills/erpSkill.md',
     content: loadErpSkillMarkdown(),

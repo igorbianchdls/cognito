@@ -1,3 +1,8 @@
+import {
+  DASHBOARD_BUILDER_TOOL_DESCRIPTION,
+  DASHBOARD_BUILDER_TOOL_PARAMETERS,
+} from '@/products/chat/shared/tools/dashboardBuilderContract'
+
 export const codexAppFunctionTools = [
   {
     type: 'function',
@@ -340,64 +345,7 @@ export const codexAppFunctionTools = [
   {
     type: 'function',
     name: 'dashboard_builder',
-    description:
-      'Constrói dashboards JSONR de forma incremental e previsível, reduzindo erro de estrutura versus escrever o arquivo inteiro. Fluxo recomendado: 1) create_dashboard para inicializar Theme+Header e estado; 2) add_widgets_batch para blocos iniciais; 3) add_widget para ajustes pontuais/substituições; 4) get_dashboard para retornar árvore final + parser_state. Regras: widgets com mesmo container entram na mesma row; sem container, usa principal. Estado pode ser stateful (chat_id + dashboard_name no backend) ou stateless (enviando parser_state a cada chamada). Tipos suportados: kpi, chart, filtro, insights.',
-    parameters: {
-      type: 'object',
-      properties: {
-        action: {
-          type: 'string',
-          enum: ['create_dashboard', 'add_widget', 'add_widgets_batch', 'get_dashboard'],
-          description: 'Operação do parser. create_dashboard inicializa; add_widget adiciona/atualiza um; add_widgets_batch processa vários; get_dashboard lê estado atual.',
-        },
-        dashboard_name: {
-          type: 'string',
-          description: 'Nome técnico do dashboard (chave de estado). O mesmo nome deve ser reutilizado em todas as chamadas do mesmo dashboard.',
-        },
-        title: {
-          type: 'string',
-          description: 'Título do dashboard (obrigatório em create_dashboard).',
-        },
-        subtitle: {
-          type: 'string',
-          description: 'Subtítulo opcional (create_dashboard).',
-        },
-        theme: {
-          type: 'string',
-          description: 'Tema opcional (ex.: light).',
-        },
-        widget_id: {
-          type: 'string',
-          description: 'ID estável do widget (add_widget). Se já existir, o widget é atualizado/reposicionado em vez de duplicado.',
-        },
-        widget_type: {
-          type: 'string',
-          enum: ['kpi', 'chart', 'filtro', 'insights'],
-          description: 'Tipo do widget (add_widget): kpi, chart, filtro ou insights.',
-        },
-        container: {
-          type: 'string',
-          description: 'Nome da row/container de destino (opcional; default: principal). Widgets com mesmo container ficam na mesma row.',
-        },
-        payload: {
-          type: 'object',
-          additionalProperties: true,
-          description:
-            'Payload do widget conforme widget_type. kpi: {title,tabela,medida,fr?,formato?,filtros?}. chart: {chart_type,title,tabela,dimensao,medida,fr?,formato?,filtros?,limit?,ordem?,height?}. filtro: {title,campo,tabela,tipo?,chave?,fr?}. insights: {title,items,fr?}.',
-        },
-        widgets: {
-          type: 'array',
-          items: { type: 'object', additionalProperties: true },
-          description: 'Lista de widgets para add_widgets_batch. Cada item segue o mesmo contrato de add_widget: {widget_id,widget_type,container?,payload}.',
-        },
-        parser_state: {
-          type: 'object',
-          additionalProperties: true,
-          description: 'Estado opcional do parser para execução stateless. Quando enviado, esta versão do estado tem prioridade sobre sessão backend.',
-        },
-      },
-      required: ['action', 'dashboard_name'],
-      additionalProperties: true,
-    },
+    description: DASHBOARD_BUILDER_TOOL_DESCRIPTION,
+    parameters: DASHBOARD_BUILDER_TOOL_PARAMETERS,
   },
 ] as const

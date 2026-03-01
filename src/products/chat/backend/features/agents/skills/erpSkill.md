@@ -3,7 +3,7 @@
 Objetivo: mapear corretamente `model`, `measure`, `dimension`, `filters` para dominio ERP.
 
 Este skill NAO gera JSONR final de dashboard.
-Para gerar dashboard, handoff obrigatorio para `dashboard.md`.
+Para gerar dashboard final, use a tool `dashboard_builder`.
 
 ## Fronteira
 
@@ -16,7 +16,7 @@ Este skill define:
 
 Este skill NAO define:
 - `Theme`, `Header`, `Div`, `KPI`, charts, `SlicerCard`, `AISummary`
-- layout visual
+- layout visual final (pode sugerir leituras analiticas em KPI/chart sem impor estrutura)
 - arquivo final `.jsonr`
 
 ## Fontes de Verdade
@@ -63,7 +63,7 @@ Medidas mais usadas em vendas:
 - `SUM(itens.subtotal)`
 - `AVG(valor_total)`
 
-## Sugestoes de Dashboard (Nao Obrigatorio)
+## Sugestoes Analiticas (Nao Obrigatorio; nao e contrato de layout)
 
 ### Dashboard de Vendas (recomendado)
 
@@ -165,25 +165,27 @@ Estoque por produto:
 - Nao misturar granularidade sem explicitar (ex.: pedido vs item).
 - Quando campo pedido pelo usuario nao existir, usar o mais proximo suportado e explicar o ajuste.
 
-## Formato de Handoff para Dashboard Skill
+## Formato de Handoff para Dashboard Builder
 
-Ao terminar, entregar um plano de dados enxuto para `dashboard.md`:
+Ao terminar, entregar um plano de dados enxuto para consumo da `dashboard_builder`:
 
 ```json
 {
-  "targetPath": "/vercel/sandbox/dashboard/<nome>.jsonr",
-  "queries": [
+  "dashboard_name": "<nome>",
+  "widgets_sugeridos": [
     {
-      "id": "kpi_receita",
-      "title": "Receita",
-      "dataQuery": {
-        "model": "vendas.pedidos",
-        "measure": "SUM(p.valor_total)",
-        "filters": {}
+      "widget_id": "kpi_receita",
+      "widget_type": "kpi",
+      "container": "principal",
+      "payload": {
+        "title": "Receita",
+        "tabela": "vendas.pedidos",
+        "medida": "SUM(p.valor_total)",
+        "filtros": {}
       }
     }
   ],
-  "filters": ["dateRange", "filial_id", "vendedor_id"]
+  "filtros_sugeridos": ["dateRange", "filial_id", "vendedor_id"]
 }
 ```
 
