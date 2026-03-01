@@ -85,15 +85,11 @@ export type DashboardToolParserState = {
   dashboardName: string | null
   tree: JsonTree
   widgetIndexById: Record<string, WidgetIndex>
+  rowIndexByKind: Partial<Record<RowKind, number>>
   containerIndexByRow: Record<RowKind, Record<string, number>>
 }
 
-const ROW_INDEX: Record<RowKind, number> = {
-  kpi: 1,
-  chart: 2,
-  filtro: 3,
-  insights: 4,
-}
+const ROW_ORDER: RowKind[] = ['kpi', 'chart', 'filtro', 'insights']
 
 function cloneTree<T>(value: T): T {
   return value == null ? value : (JSON.parse(JSON.stringify(value)) as T)
@@ -191,16 +187,6 @@ function ensureBaseRows(tree: Array<Record<string, unknown>>) {
           actionOnChange: { type: 'refresh_data' },
         },
       },
-    }
-  }
-
-  for (const rowKind of Object.keys(ROW_INDEX) as RowKind[]) {
-    const idx = ROW_INDEX[rowKind]
-    if (!children[idx] || children[idx].type !== 'Div') {
-      children[idx] = buildRow()
-    }
-    if (!Array.isArray(children[idx].children)) {
-      children[idx].children = []
     }
   }
 
@@ -305,12 +291,62 @@ function buildNodeFromInput(input: AddWidgetInput): Record<string, unknown> {
   return buildInsightsNode(input.payload as InsightsPayload)
 }
 
-function getRowChildren(tree: Array<Record<string, unknown>>, row: RowKind): Array<Record<string, unknown>> {
+function getRowChildren(
+  state: DashboardToolParserState,
+  tree: Array<Record<string, unknown>>,
+  row: RowKind,
+): { nextState: DashboardToolParserState; children: Array<Record<string, unknown>> } {
   const theme = tree[0]
   const children = theme.children as Array<Record<string, unknown>>
-  const rowNode = children[ROW_INDEX[row]]
-  if (!Array.isArray(rowNode.children)) rowNode.children = []
-  return rowNode.children as Array<Record<string, unknown>>
+  const nextRowIndexByKind = { ...state.rowIndexByKind }
+  const mappedIndex = nextRowIndexByKind[row]
+
+  if (
+    Number.isInteger(mappedIndex) &&
+    (mappedIndex as number) >= 0 &&
+    children[mappedIndex as number] &&
+    children[mappedIndex as number].type === 'Div'
+  ) {
+    const node = children[mappedIndex as number]
+    if (!Array.isArray(node.children)) node.children = []
+    return {
+      nextState: {
+        ...state,
+        rowIndexByKind: nextRowIndexByKind,
+      },
+      children: node.children as Array<Record<string, unknown>>,
+    }
+  }
+
+  const orderIndex = ROW_ORDER.indexOf(row)
+  let insertAt = 1
+  for (let i = 0; i < orderIndex; i += 1) {
+    const prevKind = ROW_ORDER[i]
+    const prevIdx = nextRowIndexByKind[prevKind]
+    if (Number.isInteger(prevIdx)) {
+      insertAt = Math.max(insertAt, (prevIdx as number) + 1)
+    }
+  }
+
+  if (insertAt > children.length) insertAt = children.length
+  children.splice(insertAt, 0, buildRow())
+
+  for (const kind of ROW_ORDER) {
+    const idx = nextRowIndexByKind[kind]
+    if (!Number.isInteger(idx)) continue
+    if ((idx as number) >= insertAt) nextRowIndexByKind[kind] = (idx as number) + 1
+  }
+  nextRowIndexByKind[row] = insertAt
+
+  const node = children[insertAt]
+  if (!Array.isArray(node.children)) node.children = []
+  return {
+    nextState: {
+      ...state,
+      rowIndexByKind: nextRowIndexByKind,
+    },
+    children: node.children as Array<Record<string, unknown>>,
+  }
 }
 
 function isDivNode(node: unknown): node is Record<string, unknown> {
@@ -323,16 +359,15 @@ function getContainerChildren(
   row: RowKind,
   containerKey: string,
 ): { nextState: DashboardToolParserState; children: Array<Record<string, unknown>> } {
-  const rowChildren = getRowChildren(tree, row)
-  const rowContainerIndex = state.containerIndexByRow[row]
+  const rowResult = getRowChildren(state, tree, row)
+  const rowChildren = rowResult.children
+  const rowState = rowResult.nextState
+  const rowContainerIndex = rowState.containerIndexByRow[row]
   let index = rowContainerIndex[containerKey]
 
   if (!Number.isInteger(index) || index < 0 || !isDivNode(rowChildren[index])) {
-    index = rowChildren.findIndex((child) => isDivNode(child))
-    if (index < 0) {
-      rowChildren.push(buildContainerDiv())
-      index = rowChildren.length - 1
-    }
+    rowChildren.push(buildContainerDiv())
+    index = rowChildren.length - 1
     rowContainerIndex[containerKey] = index
   }
 
@@ -341,9 +376,9 @@ function getContainerChildren(
 
   return {
     nextState: {
-      ...state,
+      ...rowState,
       containerIndexByRow: {
-        ...state.containerIndexByRow,
+        ...rowState.containerIndexByRow,
         [row]: { ...rowContainerIndex, [containerKey]: index },
       },
     },
@@ -356,6 +391,7 @@ export function createEmptyParserState(): DashboardToolParserState {
     dashboardName: null,
     tree: null,
     widgetIndexById: {},
+    rowIndexByKind: {},
     containerIndexByRow: {
       kpi: {},
       chart: {},
@@ -395,6 +431,7 @@ export function createDashboard(_state: DashboardToolParserState, input: CreateD
     dashboardName: input.dashboard_name,
     tree: nextTree,
     widgetIndexById: {},
+    rowIndexByKind: {},
     containerIndexByRow: {
       kpi: {},
       chart: {},
@@ -417,6 +454,7 @@ export function addWidget(state: DashboardToolParserState, input: AddWidgetInput
     ...state,
     tree: nextTree,
     widgetIndexById: nextIndexMap,
+    rowIndexByKind: { ...state.rowIndexByKind },
     containerIndexByRow: {
       kpi: { ...state.containerIndexByRow.kpi },
       chart: { ...state.containerIndexByRow.chart },
@@ -466,6 +504,7 @@ export function addWidget(state: DashboardToolParserState, input: AddWidgetInput
     dashboardName: nextState.dashboardName,
     tree: nextTree,
     widgetIndexById: nextIndexMap,
+    rowIndexByKind: nextState.rowIndexByKind,
     containerIndexByRow: nextState.containerIndexByRow,
   }
 }
