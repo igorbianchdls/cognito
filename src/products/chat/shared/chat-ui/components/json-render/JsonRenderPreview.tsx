@@ -9,6 +9,42 @@ import { registry } from '@/products/bi/json-render/registry';
 
 type Props = { chatId?: string };
 
+type PreviewRenderBoundaryProps = {
+  resetKey: string;
+  onError: (error: unknown) => void;
+  children: React.ReactNode;
+};
+
+type PreviewRenderBoundaryState = {
+  hasError: boolean;
+};
+
+class PreviewRenderBoundary extends React.Component<PreviewRenderBoundaryProps, PreviewRenderBoundaryState> {
+  constructor(props: PreviewRenderBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(): PreviewRenderBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    this.props.onError(error);
+  }
+
+  componentDidUpdate(prevProps: PreviewRenderBoundaryProps) {
+    if (this.state.hasError && prevProps.resetKey !== this.props.resetKey) {
+      this.setState({ hasError: false });
+    }
+  }
+
+  render() {
+    if (this.state.hasError) return null;
+    return this.props.children;
+  }
+}
+
 export default function JsonRenderPreview({ chatId }: Props) {
   const jsonrPath = useStore($previewJsonrPath);
   const [content, setContent] = React.useState<string | null>(null);
@@ -23,14 +59,22 @@ export default function JsonRenderPreview({ chatId }: Props) {
   // Load persisted preview path per chat to avoid cross-chat stale paths.
   React.useEffect(() => {
     if (typeof window === 'undefined' || !chatId) return;
-    const saved = window.localStorage.getItem(`previewJsonrPath:${chatId}`);
-    if (saved && saved !== jsonrPath) sandboxActions.setPreviewPath(saved);
+    try {
+      const saved = window.localStorage.getItem(`previewJsonrPath:${chatId}`);
+      if (saved && saved !== jsonrPath) sandboxActions.setPreviewPath(saved);
+    } catch {
+      // ignore storage access errors (private mode/quota)
+    }
   }, [chatId, jsonrPath]);
 
   // Persist on change (chat-scoped).
   React.useEffect(() => {
     if (typeof window === 'undefined' || !chatId || !jsonrPath) return;
-    window.localStorage.setItem(`previewJsonrPath:${chatId}`, jsonrPath);
+    try {
+      window.localStorage.setItem(`previewJsonrPath:${chatId}`, jsonrPath);
+    } catch {
+      // ignore storage access errors (private mode/quota)
+    }
   }, [chatId, jsonrPath]);
 
   React.useEffect(() => {
@@ -175,11 +219,24 @@ export default function JsonRenderPreview({ chatId }: Props) {
       {!error && loading && (
         <div className="text-xs text-gray-500 p-2">Carregando...</div>
       )}
+      {error && !loading && (
+        <div className="rounded border border-red-300 bg-red-50 text-red-700 text-xs p-3">
+          {error}
+        </div>
+      )}
       {!error && !loading && tree && (
         <div className="rounded border border-gray-200 bg-white p-0 min-h-[420px]">
-          <DataProvider initialData={{}}>
-            <Renderer tree={tree} registry={registry} />
-          </DataProvider>
+          <PreviewRenderBoundary
+            resetKey={`${jsonrPath || ''}:${refreshTick}`}
+            onError={(err) => {
+              const message = err instanceof Error ? err.message : 'Erro ao renderizar dashboard';
+              setError(message);
+            }}
+          >
+            <DataProvider initialData={{}}>
+              <Renderer tree={tree} registry={registry} />
+            </DataProvider>
+          </PreviewRenderBoundary>
         </div>
       )}
     </div>

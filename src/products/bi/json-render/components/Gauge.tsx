@@ -30,7 +30,8 @@ export default function JsonRenderGauge({ element }: { element?: { props?: AnyRe
   const valuePath = (p.valuePath as string | undefined) || undefined;
 
   // Read value from context if valuePath provided; otherwise use props.value
-  const valueFromPath = valuePath ? useDataValue(valuePath, undefined) : undefined;
+  // Keep hook order stable across renders.
+  const valueFromPath = useDataValue(valuePath || "", undefined);
   const rawVal = (valueFromPath !== undefined ? Number(valueFromPath) : Number(p.value ?? 0));
   const val = Number.isFinite(rawVal) ? rawVal : 0;
 

@@ -1283,7 +1283,8 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const containerStyle = ensureSurfaceBackground(applyBorderFromCssVars(normalizeContainerStyle(p.containerStyle, Boolean(p.borderless)), theme.cssVars), theme.cssVars);
     if (containerStyle) (containerStyle as AnyRecord).boxShadow = undefined;
     const valuePath = (p.valuePath as string | undefined) || undefined;
-    const valueFromPath = valuePath ? useDataValue(valuePath, undefined) : undefined;
+    // Keep hook order stable across renders.
+    const valueFromPath = useDataValue(valuePath || '', undefined);
     function formatValue(val: any, fmt: 'currency'|'percent'|'number'): string {
       const n = Number(val ?? 0);
       if (!Number.isFinite(n)) return String(val ?? '');
