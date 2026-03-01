@@ -1,7 +1,6 @@
 import type { JsonTree } from '@/products/bi/shared/types'
 
-type RowKind = 'kpi' | 'chart' | 'filtro' | 'insights'
-export type WidgetType = RowKind
+export type WidgetType = 'kpi' | 'chart' | 'filtro' | 'insights'
 
 type OrderBy = {
   field?: string
@@ -76,8 +75,7 @@ export type CreateDashboardInput = {
 }
 
 type WidgetIndex = {
-  row: RowKind
-  containerKey: string
+  rowKey: string
   index: number
 }
 
@@ -85,11 +83,8 @@ export type DashboardToolParserState = {
   dashboardName: string | null
   tree: JsonTree
   widgetIndexById: Record<string, WidgetIndex>
-  rowIndexByKind: Partial<Record<RowKind, number>>
-  containerIndexByRow: Record<RowKind, Record<string, number>>
+  rowIndexByKey: Record<string, number>
 }
-
-const ROW_ORDER: RowKind[] = ['kpi', 'chart', 'filtro', 'insights']
 
 function cloneTree<T>(value: T): T {
   return value == null ? value : (JSON.parse(JSON.stringify(value)) as T)
@@ -97,12 +92,12 @@ function cloneTree<T>(value: T): T {
 
 function sanitizeKey(value: string): string {
   const raw = String(value || '').trim().toLowerCase()
-  return raw.replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '') || 'filtro'
+  return raw.replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '') || 'row'
 }
 
-function normalizeContainerKey(value?: string): string {
-  if (!value) return 'default'
-  return sanitizeKey(value) || 'default'
+function normalizeRowKey(input: AddWidgetInput): string {
+  if (input.container && input.container.trim()) return sanitizeKey(input.container)
+  return `row_${sanitizeKey(input.widget_type)}`
 }
 
 function normalizeOrderBy(value: string | OrderBy | undefined): OrderBy | undefined {
@@ -157,20 +152,7 @@ function buildRow(): Record<string, unknown> {
   }
 }
 
-function buildContainerDiv(): Record<string, unknown> {
-  return {
-    type: 'Div',
-    props: {
-      direction: 'row',
-      gap: 12,
-      wrap: true,
-      childGrow: true,
-    },
-    children: [],
-  }
-}
-
-function ensureBaseRows(tree: Array<Record<string, unknown>>) {
+function ensureHeader(tree: Array<Record<string, unknown>>) {
   const theme = tree[0]
   const children = Array.isArray(theme.children) ? (theme.children as Array<Record<string, unknown>>) : []
 
@@ -294,95 +276,28 @@ function buildNodeFromInput(input: AddWidgetInput): Record<string, unknown> {
 function getRowChildren(
   state: DashboardToolParserState,
   tree: Array<Record<string, unknown>>,
-  row: RowKind,
+  rowKey: string,
 ): { nextState: DashboardToolParserState; children: Array<Record<string, unknown>> } {
   const theme = tree[0]
   const children = theme.children as Array<Record<string, unknown>>
-  const nextRowIndexByKind = { ...state.rowIndexByKind }
-  const mappedIndex = nextRowIndexByKind[row]
+  const nextRowIndexByKey = { ...state.rowIndexByKey }
+  let rowIndex = nextRowIndexByKey[rowKey]
 
-  if (
-    Number.isInteger(mappedIndex) &&
-    (mappedIndex as number) >= 0 &&
-    children[mappedIndex as number] &&
-    children[mappedIndex as number].type === 'Div'
-  ) {
-    const node = children[mappedIndex as number]
-    if (!Array.isArray(node.children)) node.children = []
-    return {
-      nextState: {
-        ...state,
-        rowIndexByKind: nextRowIndexByKind,
-      },
-      children: node.children as Array<Record<string, unknown>>,
-    }
+  if (!Number.isInteger(rowIndex) || (rowIndex as number) < 1 || !children[rowIndex as number]) {
+    children.push(buildRow())
+    rowIndex = children.length - 1
+    nextRowIndexByKey[rowKey] = rowIndex
   }
 
-  const orderIndex = ROW_ORDER.indexOf(row)
-  let insertAt = 1
-  for (let i = 0; i < orderIndex; i += 1) {
-    const prevKind = ROW_ORDER[i]
-    const prevIdx = nextRowIndexByKind[prevKind]
-    if (Number.isInteger(prevIdx)) {
-      insertAt = Math.max(insertAt, (prevIdx as number) + 1)
-    }
-  }
+  const rowNode = children[rowIndex as number]
+  if (!Array.isArray(rowNode.children)) rowNode.children = []
 
-  if (insertAt > children.length) insertAt = children.length
-  children.splice(insertAt, 0, buildRow())
-
-  for (const kind of ROW_ORDER) {
-    const idx = nextRowIndexByKind[kind]
-    if (!Number.isInteger(idx)) continue
-    if ((idx as number) >= insertAt) nextRowIndexByKind[kind] = (idx as number) + 1
-  }
-  nextRowIndexByKind[row] = insertAt
-
-  const node = children[insertAt]
-  if (!Array.isArray(node.children)) node.children = []
   return {
     nextState: {
       ...state,
-      rowIndexByKind: nextRowIndexByKind,
+      rowIndexByKey: nextRowIndexByKey,
     },
-    children: node.children as Array<Record<string, unknown>>,
-  }
-}
-
-function isDivNode(node: unknown): node is Record<string, unknown> {
-  return Boolean(node && typeof node === 'object' && (node as { type?: string }).type === 'Div')
-}
-
-function getContainerChildren(
-  state: DashboardToolParserState,
-  tree: Array<Record<string, unknown>>,
-  row: RowKind,
-  containerKey: string,
-): { nextState: DashboardToolParserState; children: Array<Record<string, unknown>> } {
-  const rowResult = getRowChildren(state, tree, row)
-  const rowChildren = rowResult.children
-  const rowState = rowResult.nextState
-  const rowContainerIndex = rowState.containerIndexByRow[row]
-  let index = rowContainerIndex[containerKey]
-
-  if (!Number.isInteger(index) || index < 0 || !isDivNode(rowChildren[index])) {
-    rowChildren.push(buildContainerDiv())
-    index = rowChildren.length - 1
-    rowContainerIndex[containerKey] = index
-  }
-
-  const container = rowChildren[index] as Record<string, unknown>
-  if (!Array.isArray(container.children)) container.children = []
-
-  return {
-    nextState: {
-      ...rowState,
-      containerIndexByRow: {
-        ...rowState.containerIndexByRow,
-        [row]: { ...rowContainerIndex, [containerKey]: index },
-      },
-    },
-    children: container.children as Array<Record<string, unknown>>,
+    children: rowNode.children as Array<Record<string, unknown>>,
   }
 }
 
@@ -391,20 +306,14 @@ export function createEmptyParserState(): DashboardToolParserState {
     dashboardName: null,
     tree: null,
     widgetIndexById: {},
-    rowIndexByKind: {},
-    containerIndexByRow: {
-      kpi: {},
-      chart: {},
-      filtro: {},
-      insights: {},
-    },
+    rowIndexByKey: {},
   }
 }
 
 export function createDashboard(_state: DashboardToolParserState, input: CreateDashboardInput): DashboardToolParserState {
   const theme = String(input.theme || 'light').trim() || 'light'
   const nextTree = ensureThemeTree(null)
-  ensureBaseRows(nextTree)
+  ensureHeader(nextTree)
 
   const themeNode = nextTree[0]
   const themeProps = (themeNode.props || {}) as Record<string, unknown>
@@ -431,13 +340,7 @@ export function createDashboard(_state: DashboardToolParserState, input: CreateD
     dashboardName: input.dashboard_name,
     tree: nextTree,
     widgetIndexById: {},
-    rowIndexByKind: {},
-    containerIndexByRow: {
-      kpi: {},
-      chart: {},
-      filtro: {},
-      insights: {},
-    },
+    rowIndexByKey: {},
   }
 }
 
@@ -445,67 +348,57 @@ export function addWidget(state: DashboardToolParserState, input: AddWidgetInput
   requireParserReady(state, input.dashboard_name)
 
   const nextTree = ensureThemeTree(state.tree)
-  ensureBaseRows(nextTree)
+  ensureHeader(nextTree)
 
-  const row = input.widget_type
-  const containerKey = normalizeContainerKey(input.container)
+  const rowKey = normalizeRowKey(input)
   const nextIndexMap: Record<string, WidgetIndex> = { ...state.widgetIndexById }
   let nextState: DashboardToolParserState = {
     ...state,
     tree: nextTree,
     widgetIndexById: nextIndexMap,
-    rowIndexByKind: { ...state.rowIndexByKind },
-    containerIndexByRow: {
-      kpi: { ...state.containerIndexByRow.kpi },
-      chart: { ...state.containerIndexByRow.chart },
-      filtro: { ...state.containerIndexByRow.filtro },
-      insights: { ...state.containerIndexByRow.insights },
-    },
+    rowIndexByKey: { ...state.rowIndexByKey },
   }
+
   const existing = nextIndexMap[input.widget_id]
   const node = buildNodeFromInput(input)
 
   if (existing) {
-    const previousContainer = getContainerChildren(nextState, nextTree, existing.row, existing.containerKey)
-    nextState = previousContainer.nextState
-    if (previousContainer.children[existing.index]) {
-      previousContainer.children.splice(existing.index, 1)
+    const previousRow = getRowChildren(nextState, nextTree, existing.rowKey)
+    nextState = previousRow.nextState
+    if (previousRow.children[existing.index]) {
+      previousRow.children.splice(existing.index, 1)
       for (const [widgetId, indexInfo] of Object.entries(nextIndexMap)) {
         if (widgetId === input.widget_id) continue
-        if (
-          indexInfo.row === existing.row &&
-          indexInfo.containerKey === existing.containerKey &&
-          indexInfo.index > existing.index
-        ) {
+        if (indexInfo.rowKey === existing.rowKey && indexInfo.index > existing.index) {
           nextIndexMap[widgetId] = { ...indexInfo, index: indexInfo.index - 1 }
         }
       }
     }
   }
 
-  const targetContainer = getContainerChildren(nextState, nextTree, row, containerKey)
-  nextState = targetContainer.nextState
-  const rowChildren = targetContainer.children
-  const insertAt =
-    existing && existing.row === row && existing.containerKey === containerKey
-      ? Math.min(existing.index, rowChildren.length)
-      : rowChildren.length
+  const targetRow = getRowChildren(nextState, nextTree, rowKey)
+  nextState = targetRow.nextState
+  const rowChildren = targetRow.children
+
+  const insertAt = existing && existing.rowKey === rowKey
+    ? Math.min(existing.index, rowChildren.length)
+    : rowChildren.length
 
   for (const [widgetId, indexInfo] of Object.entries(nextIndexMap)) {
     if (widgetId === input.widget_id) continue
-    if (indexInfo.row === row && indexInfo.containerKey === containerKey && indexInfo.index >= insertAt) {
+    if (indexInfo.rowKey === rowKey && indexInfo.index >= insertAt) {
       nextIndexMap[widgetId] = { ...indexInfo, index: indexInfo.index + 1 }
     }
   }
+
   rowChildren.splice(insertAt, 0, node)
-  nextIndexMap[input.widget_id] = { row, containerKey, index: insertAt }
+  nextIndexMap[input.widget_id] = { rowKey, index: insertAt }
 
   return {
     dashboardName: nextState.dashboardName,
     tree: nextTree,
     widgetIndexById: nextIndexMap,
-    rowIndexByKind: nextState.rowIndexByKind,
-    containerIndexByRow: nextState.containerIndexByRow,
+    rowIndexByKey: nextState.rowIndexByKey,
   }
 }
 
