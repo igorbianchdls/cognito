@@ -27,20 +27,26 @@ export default function DashboardPicker({
     setLoading(true); setError(null);
     try {
       const collected: string[] = [];
+      let directOk = false;
+      let firstDirectError: string | null = null;
 
       // Fast path for dashboard jsonr files.
       const directDirs = ['/vercel/sandbox/dashboard'];
       for (const dir of directDirs) {
         const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-list', chatId, path: dir }) });
         const data = await res.json().catch(()=>({})) as { ok?: boolean; entries?: Array<{ name:string; path:string; type:'file'|'dir' }>; error?: string };
-        if (!res.ok || data.ok === false) continue;
+        if (!res.ok || data.ok === false) {
+          if (!firstDirectError) firstDirectError = data.error || `Falha ao listar ${dir}`;
+          continue;
+        }
+        directOk = true;
         for (const e of (data.entries||[])) {
           if (e.type === 'file' && e.path.endsWith('.jsonr')) collected.push(e.path);
         }
       }
 
-      // Fallback recursive scan if dashboard folder has no jsonr.
-      if (collected.length === 0) {
+      // Fallback recursive scan only if direct dashboard listing succeeded.
+      if (collected.length === 0 && directOk) {
         const visited = new Set<string>();
         const queue: string[] = ['/vercel/sandbox'];
         const MAX_FILES = 500, MAX_DIRS = 1000; let dirs = 0;
@@ -56,6 +62,9 @@ export default function DashboardPicker({
         }
       }
 
+      if (collected.length === 0 && !directOk && firstDirectError) {
+        setError(firstDirectError);
+      }
       collected.sort(); setPaths(collected);
     } catch (e: any) { setError(e?.message ? String(e.message) : 'Erro ao listar dashboards'); }
     finally { setLoading(false); }

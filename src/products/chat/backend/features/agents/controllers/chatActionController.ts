@@ -34,6 +34,7 @@ type ChatProvider = 'claude-agent' | 'openai-responses'
 type ChatSession = { id: string; sandbox: Sandbox; createdAt: number; lastUsedAt: number; agentToken?: string; agentTokenExp?: number; composioEnabled?: boolean; model?: string; composioUserId?: string; provider?: ChatProvider; runtimeKind?: ChatRuntimeKind }
 const SESSIONS = new Map<string, ChatSession>()
 const OPENAI_SANDBOXES = new Map<string, { sandbox: Sandbox; createdAt: number; lastUsedAt: number }>()
+const SESSION_RECOVERY_STARTS = new Map<string, Promise<{ ok: boolean; status: number; error?: string }>>()
 const genId = () => Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
 const RUNTIME_LEASE_SECONDS = 10 * 60
 const SANDBOX_TIMEOUT_MS = 10 * 60 * 1000
@@ -176,11 +177,33 @@ export async function POST(req: Request) {
       leaseActive
     )
 
-    const started = await chatStart({ chatId })
+    const ensureStarted = async (): Promise<{ ok: boolean; status: number; error?: string }> => {
+      const existing = SESSION_RECOVERY_STARTS.get(chatId)
+      if (existing) return existing
+      const startedPromise = (async () => {
+        const started = await chatStart({ chatId })
+        let payload: any = {}
+        try { payload = await started.json() } catch {}
+        const rawError = String(payload?.error || '')
+        return {
+          ok: Boolean(started.ok && payload?.ok !== false),
+          status: Number(started.status || 500),
+          error: rawError || undefined,
+        }
+      })()
+      SESSION_RECOVERY_STARTS.set(chatId, startedPromise)
+      try {
+        return await startedPromise
+      } finally {
+        if (SESSION_RECOVERY_STARTS.get(chatId) === startedPromise) {
+          SESSION_RECOVERY_STARTS.delete(chatId)
+        }
+      }
+    }
+
+    const started = await ensureStarted()
     if (!started.ok) {
-      let payload: any = {}
-      try { payload = await started.json() } catch {}
-      const rawError = String(payload?.error || `falha ao retomar sessão para ${reason}`)
+      const rawError = String(started.error || `falha ao retomar sessão para ${reason}`)
       const rateLimited = started.status === 429 || /429|too many requests|rate[ -]?limit/i.test(rawError)
       const status = rateLimited ? 429 : (started.status === 404 ? 404 : 503)
       return {

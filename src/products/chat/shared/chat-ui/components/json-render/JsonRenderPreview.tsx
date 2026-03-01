@@ -20,16 +20,18 @@ export default function JsonRenderPreview({ chatId }: Props) {
   const [loadingPaths, setLoadingPaths] = React.useState<boolean>(false);
   const [pathsError, setPathsError] = React.useState<string | null>(null);
 
-  // Load persisted preview path
+  // Load persisted preview path per chat to avoid cross-chat stale paths.
   React.useEffect(() => {
-    const saved = typeof window !== 'undefined' ? window.localStorage.getItem('previewJsonrPath') : null;
+    if (typeof window === 'undefined' || !chatId) return;
+    const saved = window.localStorage.getItem(`previewJsonrPath:${chatId}`);
     if (saved && saved !== jsonrPath) sandboxActions.setPreviewPath(saved);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  // Persist on change
+  }, [chatId, jsonrPath]);
+
+  // Persist on change (chat-scoped).
   React.useEffect(() => {
-    if (typeof window !== 'undefined' && jsonrPath) window.localStorage.setItem('previewJsonrPath', jsonrPath);
-  }, [jsonrPath]);
+    if (typeof window === 'undefined' || !chatId || !jsonrPath) return;
+    window.localStorage.setItem(`previewJsonrPath:${chatId}`, jsonrPath);
+  }, [chatId, jsonrPath]);
 
   React.useEffect(() => {
     (async () => {
@@ -44,7 +46,7 @@ export default function JsonRenderPreview({ chatId }: Props) {
         const data = await res.json().catch(() => ({})) as { ok?: boolean; content?: string; isBinary?: boolean; error?: string };
         if (!res.ok || data.ok === false) {
           // Fallback: tentar descobrir um .jsonr e usar o primeiro
-          const found = await refreshPaths();
+          const found = await refreshPaths({ allowRecursive: false });
           if (found && found.length) { sandboxActions.setPreviewPath(found[0]); setError(null); setLoading(false); return; }
           setError(data.error || `Falha ao ler arquivo ${jsonrPath}`);
           setLoading(false);
@@ -66,7 +68,7 @@ export default function JsonRenderPreview({ chatId }: Props) {
           setError(e?.message ? String(e.message) : 'JSON inválido');
         }
       } catch (e: any) {
-        const found = await refreshPaths();
+        const found = await refreshPaths({ allowRecursive: false });
         if (found && found.length) { sandboxActions.setPreviewPath(found[0]); setError(null); setLoading(false); return; }
         setError(e?.message ? String(e.message) : 'Erro ao buscar .jsonr');
       } finally {
@@ -76,22 +78,29 @@ export default function JsonRenderPreview({ chatId }: Props) {
   }, [chatId, jsonrPath, refreshTick]);
 
   // Discover .jsonr files under /vercel/sandbox
-  const refreshPaths = React.useCallback(async (): Promise<string[]> => {
+  const refreshPaths = React.useCallback(async (opts?: { allowRecursive?: boolean }): Promise<string[]> => {
     if (!chatId) {
       setPaths([]);
       setPathsError(null);
       return [];
     }
+    const allowRecursive = opts?.allowRecursive !== false;
     setLoadingPaths(true); setPathsError(null);
     try {
       const collected: string[] = [];
+      let directOk = false;
+      let firstDirectError: string | null = null;
 
       // Fast path: use dashboard folder first (where defaults live).
       const directDirs = ['/vercel/sandbox/dashboard'];
       for (const dir of directDirs) {
         const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-list', chatId, path: dir }) });
         const data = await res.json().catch(()=>({})) as { ok?: boolean; entries?: Array<{ name:string; path:string; type:'file'|'dir' }>; error?: string };
-        if (!res.ok || data.ok === false) continue;
+        if (!res.ok || data.ok === false) {
+          if (!firstDirectError) firstDirectError = data.error || `Falha ao listar ${dir}`;
+          continue;
+        }
+        directOk = true;
         const entries = data.entries || [];
         for (const e of entries) {
           if (e.type === 'file' && e.path.endsWith('.jsonr')) {
@@ -100,8 +109,8 @@ export default function JsonRenderPreview({ chatId }: Props) {
         }
       }
 
-      // Fallback path: recursive scan only if dashboard folder has no files.
-      if (collected.length === 0) {
+      // Fallback path: recursive scan only if dashboard folder check succeeded.
+      if (collected.length === 0 && allowRecursive && directOk) {
         const visited = new Set<string>();
         const queue: string[] = ['/vercel/sandbox'];
         const MAX_FILES = 500; // safeguard
@@ -121,6 +130,10 @@ export default function JsonRenderPreview({ chatId }: Props) {
             }
           }
         }
+      }
+
+      if (collected.length === 0 && !directOk && firstDirectError) {
+        setPathsError(firstDirectError);
       }
 
       collected.sort();
