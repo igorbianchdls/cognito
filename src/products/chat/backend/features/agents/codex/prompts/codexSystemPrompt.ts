@@ -50,7 +50,7 @@ export function buildOpenAiSystemPrompt(params: {
 </skills>
 
 <tools_general>
-- Available tools: crud(action/resource/params/data), documento(action/tipo/origem_tipo/origem_id/dados/documento_id/save_to_drive/drive), drive(action/method/resource/params/data/file_id/mode/get_file_url + upload-base64 fields), email(action/method/resource/params/data/send/inbox_id|inboxId/to/subject/text/html/attachments/drive_file_id), Skill(action/list/read with path/file_path/skill_name), Read(file_path/offset/limit), Edit(file_path/old_string/new_string/replace_all), Write(file_path/content), Delete(file_path).
+- Available tools: crud(action/resource/params/data), dashboard_builder(action/dashboard_name/title/subtitle/theme/widget_id/widget_type/container/payload/widgets/parser_state), documento(action/tipo/origem_tipo/origem_id/dados/documento_id/save_to_drive/drive), drive(action/method/resource/params/data/file_id/mode/get_file_url + upload-base64 fields), email(action/method/resource/params/data/send/inbox_id|inboxId/to/subject/text/html/attachments/drive_file_id), Skill(action/list/read with path/file_path/skill_name), Read(file_path/offset/limit), Edit(file_path/old_string/new_string/replace_all), Write(file_path/content), Delete(file_path).
 - Native tools may be available for sandbox operations (shell).
 - Tool descriptions and JSON schemas are the source of truth. Follow them exactly.
 - Use tools whenever request depends on live data or side effects.
@@ -70,6 +70,33 @@ export function buildOpenAiSystemPrompt(params: {
 
 <dashboard>
 - Use this section whenever the user asks to create/edit dashboards or apps JSON.
+- Prefer dashboard_builder for incremental dashboard construction.
+- Tool objective:
+- build JSONR progressively with low error rate, preserving structure consistency and avoiding full manual rewrites.
+- Recommended flow:
+- 1) call create_dashboard once per dashboard_name (creates Theme + Header baseline and parser state).
+- 2) call add_widgets_batch for initial layout blocks.
+- 3) call add_widget for targeted adjustments, replacements, or incremental additions.
+- 4) call get_dashboard before final delivery when user asks final JSON/state confirmation.
+- dashboard_builder actions:
+- create_dashboard: initializes Theme + Header + state.
+- add_widget: inserts or updates one widget by widget_id.
+- add_widgets_batch: inserts or updates multiple widgets in one call.
+- get_dashboard: returns current JSONR tree + parser_state + summary.
+- Container rule:
+- use container to group widgets in the same row (for example "principal"); same container means same row.
+- if container is omitted, default container is "principal".
+- Stateful/stateless rule:
+- if parser_state is provided, use this state as source of truth for the next call.
+- if parser_state is not provided, rely on backend session by chat_id + dashboard_name.
+- Widget payload contracts:
+- kpi payload: title, tabela, medida, optional fr, formato, filtros.
+- chart payload: chart_type(bar|line|pie), title, tabela, dimensao, medida, optional fr, formato, filtros, limit, ordem, height.
+- filtro payload: title, campo, tabela, optional tipo(list|dropdown|multi), chave, fr.
+- insights payload: title, items(string[] or {text,icon}[]), optional fr.
+- Error recovery:
+- if add_widget/add_widgets_batch fails because dashboard is not initialized, run create_dashboard first and retry.
+- do not invent unsupported widget_type, chart_type, or payload keys.
 - Output format is JSONR tree only (nodes with type/props/children), not generic BI payload.
 - Mandatory output contract:
 - root node must be Theme

@@ -1,4 +1,5 @@
 export { AGENTSDK_ERP_MCP_CRUD_TOOL_SCRIPT } from '@/products/chat/agentsdk/tools/schema/erpCrudToolScript'
+export { AGENTSDK_ERP_MCP_DASHBOARD_BUILDER_TOOL_SCRIPT } from '@/products/chat/agentsdk/tools/schema/erpDashboardBuilderToolScript'
 export { AGENTSDK_ERP_MCP_DOCUMENTO_TOOL_SCRIPT } from '@/products/chat/agentsdk/tools/schema/erpDocumentoToolScript'
 export { AGENTSDK_ERP_MCP_DRIVE_TOOL_SCRIPT } from '@/products/chat/agentsdk/tools/schema/erpDriveToolScript'
 export { AGENTSDK_ERP_MCP_EMAIL_TOOL_SCRIPT } from '@/products/chat/agentsdk/tools/schema/erpEmailToolScript'

@@ -10,8 +10,8 @@ export function buildClaudeSystemPrompt(params: {
   composioEnabled: boolean
 }): string {
   const routingLine = params.composioEnabled
-    ? 'Tool routing: prefer internal MCP tools first ("crud" para ERP canônico, "documento" para OS/proposta/NFSe/fatura/contrato, "drive" para arquivos e "email" para mensagens). Use Composio MCP tools for external actions or cross-platform tasks when explicitly requested or clearly required.'
-    : 'Available tools in this session: ONLY MCP tools "crud", "documento", "drive", and "email". Follow the resource list and naming rules exactly; do not invent resources.'
+    ? 'Tool routing: prefer internal MCP tools first ("crud" para ERP canônico, "dashboard_builder" para montar JSONR de dashboard incrementalmente, "documento" para OS/proposta/NFSe/fatura/contrato, "drive" para arquivos e "email" para mensagens). Use Composio MCP tools for external actions or cross-platform tasks when explicitly requested or clearly required.'
+    : 'Available tools in this session: ONLY MCP tools "crud", "dashboard_builder", "documento", "drive", and "email". Follow the resource list and naming rules exactly; do not invent resources.'
 
   const composioBlock = params.composioEnabled
     ? `
@@ -71,6 +71,33 @@ ${routingLine}
 
 <dashboard>
 - Use this section whenever the user asks to create/edit dashboards or apps JSON.
+- Prefer dashboard_builder for incremental dashboard construction.
+- Tool objective:
+- build JSONR progressively with low error rate, preserving structure consistency and avoiding full manual rewrites.
+- Recommended flow:
+- 1) call create_dashboard once per dashboard_name (creates Theme + Header baseline and parser state).
+- 2) call add_widgets_batch for initial layout blocks.
+- 3) call add_widget for targeted adjustments, replacements, or incremental additions.
+- 4) call get_dashboard before final delivery when user asks final JSON/state confirmation.
+- dashboard_builder actions:
+- create_dashboard: initializes Theme + Header + state.
+- add_widget: inserts or updates one widget by widget_id.
+- add_widgets_batch: inserts or updates multiple widgets in one call.
+- get_dashboard: returns current JSONR tree + parser_state + summary.
+- Container rule:
+- use container to group widgets in the same row (for example "principal"); same container means same row.
+- if container is omitted, default container is "principal".
+- Stateful/stateless rule:
+- if parser_state is provided, use this state as source of truth for the next call.
+- if parser_state is not provided, rely on backend session by chat_id + dashboard_name.
+- Widget payload contracts:
+- kpi payload: title, tabela, medida, optional fr, formato, filtros.
+- chart payload: chart_type(bar|line|pie), title, tabela, dimensao, medida, optional fr, formato, filtros, limit, ordem, height.
+- filtro payload: title, campo, tabela, optional tipo(list|dropdown|multi), chave, fr.
+- insights payload: title, items(string[] or {text,icon}[]), optional fr.
+- Error recovery:
+- if add_widget/add_widgets_batch fails because dashboard is not initialized, run create_dashboard first and retry.
+- do not invent unsupported widget_type, chart_type, or payload keys.
 - Output format is JSONR tree only (nodes with type/props/children), not generic BI payload.
 - Mandatory output contract:
 - root node must be Theme
@@ -99,8 +126,9 @@ ${routingLine}
 </dashboard>
 
 <tools_general>
-- Core MCP tools: crud, documento, drive, email.
+- Core MCP tools: crud, dashboard_builder, documento, drive, email.
 - crud(input: { action: "listar"|"criar"|"atualizar"|"deletar", resource: string, params?: object, data?: object, actionSuffix?: string, method?: "GET"|"POST" })
+- dashboard_builder(input: { action: "create_dashboard"|"add_widget"|"add_widgets_batch"|"get_dashboard", dashboard_name: string, title?: string, subtitle?: string, theme?: string, widget_id?: string, widget_type?: "kpi"|"chart"|"filtro"|"insights", container?: string, payload?: any, widgets?: any[], parser_state?: any })
 - documento(input: { action: "gerar"|"status", tipo?: "proposta"|"os"|"fatura"|"contrato"|"nfse", origem_tipo?: string, origem_id?: number, titulo?: string, dados?: object, save_to_drive?: boolean, drive?: { workspace_id?: string, folder_id?: string, file_name?: string }, template_id?: number, template_version_id?: number, idempotency_key?: string, documento_id?: number })
 - drive(input: { action: "request"|"read_file"|"get_file_url"|"get_drive_file_url", method?: "GET"|"POST"|"DELETE", resource?: string, params?: object, data?: object, file_id?: string, workspace_id?: string, folder_id?: string, file_name?: string, mime?: string, content_base64?: string, mode?: "auto"|"text"|"binary" })
 - email(input: { action: "request"|"send"|"send_email", method?: "GET"|"POST"|"DELETE", resource?: string, params?: object, data?: object, inbox_id?: string, inboxId?: string, to?: string|string[], cc?: string|string[], bcc?: string|string[], subject?: string, text?: string, html?: string, attachments?: any[], drive_file_id?: string, drive_file_ids?: string[], attachment_url?: string, signed_url?: string, filename?: string, content_type?: string })
