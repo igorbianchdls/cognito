@@ -35,7 +35,6 @@ type ChatProvider = 'claude-agent' | 'openai-responses'
 // Simple in-memory session store
 type ChatSession = { id: string; sandbox: Sandbox; createdAt: number; lastUsedAt: number; agentToken?: string; agentTokenExp?: number; composioEnabled?: boolean; model?: string; composioUserId?: string; provider?: ChatProvider; runtimeKind?: ChatRuntimeKind }
 const SESSIONS = new Map<string, ChatSession>()
-const OPENAI_SANDBOXES = new Map<string, { sandbox: Sandbox; createdAt: number; lastUsedAt: number }>()
 const SESSION_RECOVERY_STARTS = new Map<string, Promise<{ ok: boolean; status: number; error?: string }>>()
 const genId = () => Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
 const RUNTIME_LEASE_SECONDS = 10 * 60
@@ -107,33 +106,14 @@ function normalizeModel(provider: ChatProvider, rawModel?: string): string {
   return claudeMap[raw] || 'claude-haiku-4-5-20251001'
 }
 
-async function ensureSkillsInSandbox(sandbox: Sandbox, opts?: { ensureOpenAiDir?: boolean }) {
+async function ensureSkillsInSandbox(sandbox: Sandbox) {
   try {
-    const mkdirScript = opts?.ensureOpenAiDir
-      ? "const fs=require('fs');fs.mkdirSync('/vercel/sandbox/openai-chat',{recursive:true});fs.mkdirSync('/vercel/sandbox/agent/skills',{recursive:true});console.log('ok')"
-      : "const fs=require('fs');fs.mkdirSync('/vercel/sandbox/agent/skills',{recursive:true});console.log('ok')"
+    const mkdirScript = "const fs=require('fs');fs.mkdirSync('/vercel/sandbox/openai-chat',{recursive:true});fs.mkdirSync('/vercel/sandbox/agent/skills',{recursive:true});console.log('ok')"
     await sandbox.runCommand({ cmd: 'node', args: ['-e', mkdirScript] })
   } catch {}
   try {
     await sandbox.writeFiles(SKILL_FILES.map((f) => ({ path: f.path, content: Buffer.from(f.content) })))
   } catch {}
-}
-
-async function getOrCreateOpenAiSandbox(chatId: string): Promise<Sandbox> {
-  async function ensureOpenAiSkillsScaffold(sandbox: Sandbox) {
-    await ensureSkillsInSandbox(sandbox, { ensureOpenAiDir: true })
-  }
-
-  const existing = OPENAI_SANDBOXES.get(chatId)
-  if (existing) {
-    existing.lastUsedAt = Date.now()
-    await ensureOpenAiSkillsScaffold(existing.sandbox)
-    return existing.sandbox
-  }
-  const sandbox = await Sandbox.create({ runtime: 'node22', resources: { vcpus: 2 }, timeout: SANDBOX_TIMEOUT_MS })
-  await ensureOpenAiSkillsScaffold(sandbox)
-  OPENAI_SANDBOXES.set(chatId, { sandbox, createdAt: Date.now(), lastUsedAt: Date.now() })
-  return sandbox
 }
 
 export async function POST(req: Request) {
@@ -684,9 +664,7 @@ export async function POST(req: Request) {
       } catch {}
     } catch {}
     try { await sess.sandbox.stop() } catch {}
-    try { await OPENAI_SANDBOXES.get(chatId)?.sandbox.stop() } catch {}
     SESSIONS.delete(chatId)
-    OPENAI_SANDBOXES.delete(chatId)
     try { await clearRuntimeSession(chatId) } catch {}
     return Response.json({ ok: true, snapshotId })
   }
@@ -912,8 +890,7 @@ export async function POST(req: Request) {
     } catch {}
 
     const runner = getOpenAIResponsesStreamRunnerScript()
-    const openAiSandbox = await getOrCreateOpenAiSandbox(chatId)
-    await openAiSandbox.writeFiles([{ path: '/vercel/sandbox/openai-chat/agent-openai-stream.mjs', content: Buffer.from(runner) }])
+    await sess.sandbox.writeFiles([{ path: '/vercel/sandbox/openai-chat/agent-openai-stream.mjs', content: Buffer.from(runner) }])
 
     let assistantTextBuf = ''
     const assistantParts: any[] = []
@@ -937,7 +914,7 @@ export async function POST(req: Request) {
             AGENT_TENANT_ID: process.env.AGENT_TENANT_ID || '1',
           }
           if ((process.env.OPENAI_BASE_URL || '').trim()) env.OPENAI_BASE_URL = (process.env.OPENAI_BASE_URL || '').trim()
-          const cmd: any = await (openAiSandbox as any).runCommand({
+          const cmd: any = await (sess.sandbox as any).runCommand({
             cmd: 'node',
             args: ['openai-chat/agent-openai-stream.mjs', prompt],
             env,
@@ -1496,7 +1473,7 @@ process.exit(0);
       runtimeKind: sess.runtimeKind || persistedRuntimeKind,
       provider,
       model: sess.model || null,
-      hasOpenAiSandbox: OPENAI_SANDBOXES.has(chatId),
+      hasOpenAiSandbox: false,
       composioEnabled: Boolean(sess.composioEnabled),
       lastUsedAt: sess.lastUsedAt,
       runtimeStatus: runtimeSession?.status || 'running',
@@ -1553,10 +1530,7 @@ process.exit(0);
       })
     } catch {}
     await ensureSkillsInSandbox(sess.sandbox)
-    if (chosenProvider === 'openai-responses') {
-      // Also pre-warm OpenAI dedicated sandbox (used by streaming runner).
-      try { await getOrCreateOpenAiSandbox(chatId) } catch {}
-    } else {
+    if (chosenProvider !== 'openai-responses') {
       try {
         await sess.sandbox.runCommand({
           cmd: 'node',
