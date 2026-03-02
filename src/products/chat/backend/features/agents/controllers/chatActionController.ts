@@ -19,8 +19,10 @@ import {
   type ChatRuntimeKind,
 } from '@/products/chat/backend/features/chat/runtimeKindStore'
 import {
+  acquireRuntimeStartLock,
   clearRuntimeSession,
   getRuntimeSession,
+  releaseRuntimeStartLock,
   touchRuntimeSession,
   upsertRuntimeSession,
 } from '@/products/chat/backend/features/agents/runtime/runtimeSessionStore'
@@ -38,6 +40,9 @@ const SESSION_RECOVERY_STARTS = new Map<string, Promise<{ ok: boolean; status: n
 const genId = () => Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
 const RUNTIME_LEASE_SECONDS = 10 * 60
 const SANDBOX_TIMEOUT_MS = 10 * 60 * 1000
+const START_LOCK_TTL_SECONDS = 300
+const START_WAIT_TIMEOUT_MS = 15_000
+const START_WAIT_STEP_MS = 350
 const SKILL_FILES = [
   {
     path: '/vercel/sandbox/agent/skills/erpSkill.md',
@@ -139,6 +144,105 @@ export async function POST(req: Request) {
     return Response.json({ ok: false, error: 'action inválida' }, { status: 400 })
   }
 
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+  const leaseIsActive = (lease?: string | null): boolean => {
+    if (!lease) return false
+    const ms = Date.parse(lease)
+    return Number.isFinite(ms) && ms > Date.now()
+  }
+  const lockOwner = () => `inst-${process.pid || 'p'}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
+
+  async function attachSessionFromRuntime(params: {
+    chatId: string
+    runtimeSession: Awaited<ReturnType<typeof getRuntimeSession>> | null
+    runtimeKindHint?: ChatRuntimeKind
+    modelHint?: string
+  }): Promise<ChatSession | null> {
+    const existing = SESSIONS.get(params.chatId)
+    if (existing) return existing
+
+    const runtimeSession = params.runtimeSession
+    const sandboxId = String(runtimeSession?.sandbox_id || '').trim()
+    if (!sandboxId) return null
+
+    try {
+      const sandbox = await Sandbox.get({ sandboxId, timeout: SANDBOX_TIMEOUT_MS } as any)
+      await ensureSkillsInSandbox(sandbox)
+      const provider = normalizeProvider(
+        runtimeSession?.provider || undefined,
+        runtimeSession?.model || params.modelHint,
+      )
+      const fallbackModel = provider === 'openai-responses'
+        ? 'gpt-5-mini'
+        : 'claude-haiku-4-5-20251001'
+      const model = normalizeModel(provider, runtimeSession?.model || params.modelHint || fallbackModel)
+      const runtimeKind = params.runtimeKindHint || normalizeRuntimeKind(provider === 'openai-responses' ? 'codex' : 'agentsdk')
+      const { token, exp } = generateAgentToken(1800, params.chatId)
+      const local: ChatSession = {
+        id: params.chatId,
+        sandbox,
+        createdAt: Date.now(),
+        lastUsedAt: Date.now(),
+        agentToken: token,
+        agentTokenExp: exp,
+        composioEnabled: false,
+        model,
+        provider,
+        runtimeKind,
+      }
+      SESSIONS.set(params.chatId, local)
+      setAgentToken(params.chatId, token, exp)
+      try {
+        await upsertRuntimeSession({
+          chatId: params.chatId,
+          status: 'running',
+          provider,
+          model,
+          sandboxId: sandbox.sandboxId,
+          hasLocalSession: true,
+          startupMode: 'reconnected',
+          leaseSeconds: RUNTIME_LEASE_SECONDS,
+        })
+      } catch {}
+      return local
+    } catch {
+      return null
+    }
+  }
+
+  async function waitForSessionReady(params: {
+    chatId: string
+    runtimeKindHint?: ChatRuntimeKind
+    modelHint?: string
+    timeoutMs?: number
+  }): Promise<ChatSession | null> {
+    const timeoutMs = Number.isFinite(Number(params.timeoutMs))
+      ? Math.max(1000, Math.floor(Number(params.timeoutMs)))
+      : START_WAIT_TIMEOUT_MS
+    const deadline = Date.now() + timeoutMs
+
+    while (Date.now() < deadline) {
+      const existing = SESSIONS.get(params.chatId)
+      if (existing) return existing
+
+      const runtimeSession = await getRuntimeSession(params.chatId).catch(() => null)
+      if (runtimeSession && runtimeSession.status === 'running' && leaseIsActive(runtimeSession.lease_expires_at)) {
+        const attached = await attachSessionFromRuntime({
+          chatId: params.chatId,
+          runtimeSession,
+          runtimeKindHint: params.runtimeKindHint,
+          modelHint: params.modelHint,
+        })
+        if (attached) return attached
+      }
+      if (runtimeSession && (runtimeSession.status === 'off' || runtimeSession.status === 'error')) {
+        return null
+      }
+      await sleep(START_WAIT_STEP_MS)
+    }
+    return null
+  }
+
   async function ensureLocalSession(chatId: string, reason: string): Promise<
     | { ok: true; sess: ChatSession }
     | { ok: false; response: Response }
@@ -146,8 +250,8 @@ export async function POST(req: Request) {
     const existing = SESSIONS.get(chatId)
     if (existing) return { ok: true, sess: existing }
 
-    const chatRows = await runQuery<{ id: string; snapshot_id: string | null }>(
-      `SELECT id, snapshot_id FROM chat.chats WHERE id = $1 LIMIT 1`,
+    const chatRows = await runQuery<{ id: string; snapshot_id: string | null; model: string | null }>(
+      `SELECT id, snapshot_id, model FROM chat.chats WHERE id = $1 LIMIT 1`,
       [chatId]
     ).catch(() => [])
     const chatRow = chatRows?.[0] || null
@@ -168,6 +272,11 @@ export async function POST(req: Request) {
     }
 
     const runtimeSession = await getRuntimeSession(chatId).catch(() => null)
+    const runtimeKindHint = normalizeRuntimeKind(undefined)
+    const modelHint = chatRow?.model ? String(chatRow.model) : undefined
+    const attached = await attachSessionFromRuntime({ chatId, runtimeSession, runtimeKindHint, modelHint })
+    if (attached) return { ok: true, sess: attached }
+
     const nowMs = Date.now()
     const leaseMs = runtimeSession?.lease_expires_at ? Date.parse(runtimeSession.lease_expires_at) : NaN
     const leaseActive = Number.isFinite(leaseMs) && leaseMs > nowMs
@@ -184,6 +293,16 @@ export async function POST(req: Request) {
         const started = await chatStart({ chatId })
         let payload: any = {}
         try { payload = await started.json() } catch {}
+        if (started.status === 409 && String(payload?.code || '') === 'START_IN_PROGRESS') {
+          const waited = await waitForSessionReady({
+            chatId,
+            runtimeKindHint,
+            modelHint,
+          })
+          if (waited) {
+            return { ok: true, status: 200 }
+          }
+        }
         const rawError = String(payload?.error || '')
         return {
           ok: Boolean(started.ok && payload?.ok !== false),
@@ -262,6 +381,7 @@ export async function POST(req: Request) {
     const timeline: Array<{ name: string; ms: number; ok: boolean; exitCode?: number }> = []
     const t0 = Date.now()
     let startupChatId: string | null = null
+    let startupLock: { owner: string; token: string } | null = null
     try {
       try { await ensureChatRuntimeKindColumn() } catch {}
       // Decide chat id upfront and prefer per-chat snapshot
@@ -269,6 +389,56 @@ export async function POST(req: Request) {
       const requestedRuntimeKind = normalizeRuntimeKind(params?.runtimeKind)
       const id = proposed || genId()
       startupChatId = id
+      if (proposed) {
+        const runtimeSession = await getRuntimeSession(id).catch(() => null)
+        const attached = await attachSessionFromRuntime({
+          chatId: id,
+          runtimeSession,
+          runtimeKindHint: requestedRuntimeKind,
+        })
+        if (attached) {
+          timeline.push({ name: 'reconnect-runtime-session', ms: Date.now() - t0, ok: true })
+          return Response.json({
+            ok: true,
+            chatId: id,
+            runtimeKind: attached.runtimeKind || requestedRuntimeKind,
+            reused: true,
+            startupMode: 'reconnected' as const,
+            timeline,
+          })
+        }
+
+        const owner = lockOwner()
+        const lock = await acquireRuntimeStartLock({
+          chatId: id,
+          owner,
+          ttlSeconds: START_LOCK_TTL_SECONDS,
+        }).catch(() => null)
+        if (lock && (!lock.acquired || !lock.lock?.token)) {
+          const waited = await waitForSessionReady({
+            chatId: id,
+            runtimeKindHint: requestedRuntimeKind,
+          })
+          if (waited) {
+            timeline.push({ name: 'wait-start-lock', ms: Date.now() - t0, ok: true })
+            return Response.json({
+              ok: true,
+              chatId: id,
+              runtimeKind: waited.runtimeKind || requestedRuntimeKind,
+              reused: true,
+              startupMode: 'reconnected' as const,
+              timeline,
+            })
+          }
+          return Response.json(
+            { ok: false, error: 'startup em andamento para este chat', code: 'START_IN_PROGRESS' },
+            { status: 409 },
+          )
+        }
+        if (lock?.acquired && lock.lock?.token) {
+          startupLock = { owner, token: lock.lock.token }
+        }
+      }
       try {
         await upsertRuntimeSession({
           chatId: id,
@@ -299,6 +469,7 @@ export async function POST(req: Request) {
             status: 'running',
             provider: provider,
             model: existing.model || null,
+            sandboxId: existing.sandbox?.sandboxId || null,
             startupMode: 'reused',
             hasLocalSession: true,
             leaseSeconds: RUNTIME_LEASE_SECONDS,
@@ -440,6 +611,7 @@ export async function POST(req: Request) {
           status: 'running',
           provider: initialProvider,
           model: initialModel,
+          sandboxId: sandbox?.sandboxId || null,
           startupMode,
           hasLocalSession: true,
           leaseSeconds: RUNTIME_LEASE_SECONDS,
@@ -471,6 +643,16 @@ export async function POST(req: Request) {
         } catch {}
       }
       return Response.json({ ok: false, error: (e as Error).message }, { status: 500 })
+    } finally {
+      if (startupChatId && startupLock?.owner && startupLock?.token) {
+        try {
+          await releaseRuntimeStartLock({
+            chatId: startupChatId,
+            owner: startupLock.owner,
+            token: startupLock.token,
+          })
+        } catch {}
+      }
     }
   }
 
