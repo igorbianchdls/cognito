@@ -542,6 +542,8 @@ export const catalog = {
         }).strict()).default([]),
         fr: z.number().optional(),
         itemGap: z.number().optional(),
+        contentPaddingX: z.union([z.number(), z.string()]).optional(),
+        contentPaddingBottom: z.union([z.number(), z.string()]).optional(),
         iconGap: z.number().optional(),
         iconBoxSize: z.number().optional(),
         iconSize: z.number().optional(),

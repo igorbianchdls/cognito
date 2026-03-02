@@ -91,6 +91,8 @@ const defaultPieChart = {
 const defaultAISummary = {
   titleStyle: { padding: '6px 0', margin: 0, textAlign: 'left' },
   itemGap: 10,
+  contentPaddingX: 12,
+  contentPaddingBottom: 10,
   iconGap: 10,
   iconBoxSize: 30,
   iconSize: 16,
@@ -889,6 +891,8 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const titleStyle = applyH1FromCssVars(normalizeTitleStyle(p.titleStyle), theme.cssVars);
     const itemTextStyle = applySlicerOptionFromCssVars(normalizeTitleStyle(p.itemTextStyle), theme.cssVars) as React.CSSProperties | undefined;
     const itemGap = Number.isFinite(Number(p.itemGap)) ? Number(p.itemGap) : 10;
+    const contentPaddingX = styleVal(p.contentPaddingX) || '12px';
+    const contentPaddingBottom = styleVal(p.contentPaddingBottom) || '10px';
     const iconGap = Number.isFinite(Number(p.iconGap)) ? Number(p.iconGap) : 10;
     const iconBoxSize = Number.isFinite(Number(p.iconBoxSize)) ? Number(p.iconBoxSize) : 30;
     const iconSize = Number.isFinite(Number(p.iconSize)) ? Number(p.iconSize) : 16;
@@ -906,7 +910,10 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     return (
       <FrameSurface style={containerStyle} frame={p?.containerStyle?.frame as AnyRecord} cssVars={theme.cssVars}>
         {title ? <div className="mb-0" style={titleStyle}>{title}</div> : null}
-        <div className="flex flex-col" style={{ gap: `${itemGap}px` }}>
+        <div
+          className="flex flex-col"
+          style={{ gap: `${itemGap}px`, paddingLeft: contentPaddingX, paddingRight: contentPaddingX, paddingBottom: contentPaddingBottom }}
+        >
           {items.map((it, idx) => {
             const IconComp = aiSummaryIconMap[normalizeIconKey(it?.icon)] || Sparkles;
             const accent = String(it?.iconColor || palette[idx % palette.length] || '#3b82f6');
