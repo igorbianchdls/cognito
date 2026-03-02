@@ -55,7 +55,7 @@ Regras:
 - Dashboard Builder (campos obrigatórios): kpi={title,tabela,medida}; chart={chart_type,title,tabela,dimensao,medida}; filtro={title,campo,tabela}; insights={title,items}.
 - Dashboard Builder (payload KPI/chart): campo formato (quando usado) deve ser apenas "currency" | "percent" | "number".
 - Dashboard Builder (payload KPI/chart): não usar "BRL" em formato; para moeda use formato="currency".
-- Dashboard Builder (payload filtro): chave é opcional; se omitida, deriva de campo.
+- Dashboard Builder (payload filtro): chave é opcional; se omitida, deriva de campo resolvido. prefira campo *_id (ex.: vendedor_id); aliases como vendedor/cliente/canal_venda podem ser normalizados para *_id.
 - Dashboard Builder (persistência): create_dashboard/add_widgets_batch/add_widget salvam automaticamente em /vercel/sandbox/dashboard/<dashboard_name>.jsonr e retornam file_path; get_dashboard é somente leitura.
 - Dashboard Builder (execução): para criar/editar dashboard, prefira dashboard_builder em vez de editar JSONR manualmente.
 - Skills de domínio para dashboard: erpSkill.md, marketingSkill.md e ecommerceSkill.md servem para dimensões/medidas/filtros; a estrutura final deve seguir o contrato da tool dashboard_builder.

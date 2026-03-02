@@ -52,7 +52,7 @@ export const DASHBOARD_BUILD_PROMPT_BLOCK = `
 - Widget payload contracts:
 - kpi payload: title, tabela, medida, optional fr, formato, filtros. formato permitido: currency|percent|number.
 - chart payload: chart_type(bar|line|pie), title, tabela, dimensao, optional dimension_expr (or dimensionExpr), medida, optional fr, formato, filtros, limit, ordem, height. ordem aceita "field:dir" ou { field, dir }. formato permitido: currency|percent|number.
-- filtro payload: title, campo, tabela, optional tipo(list|dropdown|multi), chave, fr. chave é opcional; se omitida, deriva de campo.
+- filtro payload: title, campo, tabela, optional tipo(list|dropdown|multi), chave, fr. chave é opcional; se omitida, deriva de campo resolvido. prefira campo *_id (ex.: vendedor_id); aliases (vendedor, cliente, canal_venda) podem ser normalizados para *_id.
 - insights payload: title, items(string[] or {text,icon}[]), optional fr.
 - required fields must always be present before calling tool:
 - kpi => title,tabela,medida

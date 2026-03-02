@@ -1,5 +1,5 @@
 import type { JsonTree } from '@/products/bi/shared/types'
-import { getAppsTableCatalog } from '@/products/bi/shared/queryCatalog'
+import { getAppsTableCatalog, listAppsFilters } from '@/products/bi/shared/queryCatalog'
 
 export type WidgetType = 'kpi' | 'chart' | 'filtro' | 'insights'
 type MetricFormat = 'currency' | 'percent' | 'number'
@@ -179,6 +179,13 @@ function normalizeFormat(value: unknown): MetricFormat {
   return 'number'
 }
 
+function normalizeFieldName(value: unknown): string {
+  return String(value ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '_')
+}
+
 function toRequiredText(value: unknown, fieldName: string): string {
   const out = String(value ?? '').trim()
   if (!out) throw new Error(`${fieldName} é obrigatório`)
@@ -189,6 +196,23 @@ function toChartType(value: unknown): ChartPayload['chart_type'] {
   const out = String(value ?? '').trim().toLowerCase()
   if (out === 'bar' || out === 'line' || out === 'pie') return out
   throw new Error('payload.chart_type inválido. Use: bar, line, pie')
+}
+
+function resolveSlicerField(table: string, rawField: string): string {
+  const filters = listAppsFilters(table)
+  const normalized = normalizeFieldName(rawField)
+  if (!normalized) return normalized
+
+  const exact = filters.find((f) => normalizeFieldName(f.field) === normalized)
+  if (exact) return exact.field
+
+  if (!normalized.endsWith('_id')) {
+    const idCandidate = `${normalized}_id`
+    const idMatch = filters.find((f) => normalizeFieldName(f.field) === idCandidate)
+    if (idMatch) return idMatch.field
+  }
+
+  return normalized
 }
 
 function ensureThemeTree(tree: JsonTree): Array<Record<string, unknown>> {
@@ -320,7 +344,8 @@ function buildFiltroNode(payload: FiltroPayload): Record<string, unknown> {
   const title = toRequiredText((payload as any).title, 'payload.title')
   const campo = toRequiredText((payload as any).campo, 'payload.campo')
   const tabela = toRequiredText((payload as any).tabela, 'payload.tabela')
-  const key = sanitizeKey(payload.chave || campo)
+  const resolvedField = resolveSlicerField(tabela, campo)
+  const key = sanitizeKey(payload.chave || resolvedField)
 
   return {
     type: 'SlicerCard',
@@ -335,7 +360,7 @@ function buildFiltroNode(payload: FiltroPayload): Record<string, unknown> {
           source: {
             type: 'options',
             model: tabela,
-            field: campo,
+            field: resolvedField,
           },
         },
       ],
