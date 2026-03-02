@@ -107,6 +107,9 @@ export default function DashboardPicker({
                 type="button"
                 className={`w-full text-left px-2 py-2 text-sm hover:bg-gray-50 ${current === p ? 'bg-gray-50 font-medium' : ''}`}
                 onClick={() => {
+                  if (chatId) {
+                    try { window.localStorage.setItem(`previewJsonrPath:${chatId}`, p); } catch { /* noop */ }
+                  }
                   sandboxActions.setPreviewPath(p);
                   sandboxActions.setActiveTab('preview');
                   onSelected?.();

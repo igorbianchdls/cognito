@@ -107,6 +107,7 @@ function JsonRenderPreviewInner({ chatId }: Props) {
     disablePathStorage: false,
   });
   const safeModeActive = debugFlags.safeMode || debugFlags.disableRenderer || renderCrashed;
+  const hydratedPreviewPathForChatRef = React.useRef<string | null>(null);
 
   const refreshPaths = React.useCallback(async (): Promise<string[]> => {
     if (!chatId) {
@@ -160,8 +161,10 @@ function JsonRenderPreviewInner({ chatId }: Props) {
   React.useEffect(() => {
     if (typeof window === "undefined" || !chatId) return;
     if (debugFlags.disablePathStorage) return;
+    if (hydratedPreviewPathForChatRef.current === chatId) return;
     try {
       const saved = window.localStorage.getItem(`previewJsonrPath:${chatId}`);
+      hydratedPreviewPathForChatRef.current = chatId;
       if (saved && isValidJsonrPath(saved) && saved !== jsonrPath) {
         sandboxActions.setPreviewPath(saved);
       }
@@ -169,6 +172,12 @@ function JsonRenderPreviewInner({ chatId }: Props) {
       // ignore storage access errors
     }
   }, [chatId, jsonrPath, debugFlags.disablePathStorage]);
+
+  React.useEffect(() => {
+    if (!chatId) {
+      hydratedPreviewPathForChatRef.current = null;
+    }
+  }, [chatId]);
 
   React.useEffect(() => {
     if (typeof window === "undefined" || !chatId || !jsonrPath) return;
