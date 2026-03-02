@@ -6,7 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Undo2, Redo2, GitBranch, Upload, Palette, Save, Bell, Trash2, Check } from 'lucide-react';
+import { Undo2, Redo2, RefreshCw, Upload, Palette, Save, Bell, Trash2, Check } from 'lucide-react';
 import { $artifactNotifications, $previewJsonrPath, sandboxActions } from '@/chat/sandbox';
 import { APPS_COLOR_PRESETS, APPS_HEADER_THEME_OPTIONS, APPS_THEME_OPTIONS } from '@/products/bi/shared/themeOptions';
 import { DASHBOARD_BACKGROUND_PRESET_OPTIONS } from '@/products/bi/json-render/backgrounds/registry';
@@ -584,6 +584,11 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
     }
   }, [chatId]);
 
+  const refreshPreview = React.useCallback(() => {
+    if (typeof window === 'undefined') return;
+    window.dispatchEvent(new CustomEvent('sandbox-preview-refresh', { detail: { path: previewPath } }));
+  }, [previewPath]);
+
   return (
     <div className="flex items-center gap-1">
       <Popover open={open} onOpenChange={setOpen}>
@@ -773,8 +778,8 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
           </div>
         </DialogContent>
       </Dialog>
-      <IconButton title="Git">
-        <GitBranch className="w-4 h-4" />
+      <IconButton title="Atualizar preview" onClick={refreshPreview} disabled={!previewPath}>
+        <RefreshCw className="w-4 h-4" />
       </IconButton>
       <IconButton title="Upload">
         <Upload className="w-4 h-4" />
