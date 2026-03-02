@@ -6,7 +6,6 @@ import { $previewJsonrPath, sandboxActions } from "@/chat/sandbox";
 import { DataProvider } from "@/products/bi/json-render/context";
 import { Renderer } from "@/products/bi/json-render/renderer";
 import { registry } from "@/products/bi/json-render/registry";
-import { readPreviewDebugFlags, type PreviewDebugFlags } from "@/products/chat/shared/chat-ui/components/json-render/previewDebug";
 
 type Props = { chatId?: string };
 
@@ -94,19 +93,9 @@ function JsonRenderPreviewInner({ chatId }: Props) {
   const jsonrPath = useStore($previewJsonrPath);
   const [error, setError] = React.useState<string | null>(null);
   const [tree, setTree] = React.useState<any | any[] | null>(null);
-  const [rawJson, setRawJson] = React.useState<string>("");
   const [loading, setLoading] = React.useState<boolean>(false);
   const [refreshTick, setRefreshTick] = React.useState(0);
   const [pathsError, setPathsError] = React.useState<string | null>(null);
-  const [renderCrashed, setRenderCrashed] = React.useState(false);
-  const [debugFlags, setDebugFlags] = React.useState<PreviewDebugFlags>({
-    safeMode: false,
-    disableRenderer: false,
-    disableHeaderActions: false,
-    disableRefreshListener: false,
-    disablePathStorage: false,
-  });
-  const safeModeActive = debugFlags.safeMode || debugFlags.disableRenderer || renderCrashed;
   const hydratedPreviewPathForChatRef = React.useRef<string | null>(null);
 
   const refreshPaths = React.useCallback(async (): Promise<string[]> => {
@@ -150,17 +139,9 @@ function JsonRenderPreviewInner({ chatId }: Props) {
     }
   }, [chatId]);
 
-  React.useEffect(() => {
-    if (typeof window === "undefined") return;
-    const apply = () => setDebugFlags(readPreviewDebugFlags());
-    apply();
-    window.addEventListener("popstate", apply);
-    return () => window.removeEventListener("popstate", apply);
-  }, []);
-
+  // Hydrate once per chat to avoid overriding user selection with stale storage.
   React.useEffect(() => {
     if (typeof window === "undefined" || !chatId) return;
-    if (debugFlags.disablePathStorage) return;
     if (hydratedPreviewPathForChatRef.current === chatId) return;
     try {
       const saved = window.localStorage.getItem(`previewJsonrPath:${chatId}`);
@@ -171,23 +152,20 @@ function JsonRenderPreviewInner({ chatId }: Props) {
     } catch {
       // ignore storage access errors
     }
-  }, [chatId, jsonrPath, debugFlags.disablePathStorage]);
+  }, [chatId, jsonrPath]);
 
   React.useEffect(() => {
-    if (!chatId) {
-      hydratedPreviewPathForChatRef.current = null;
-    }
+    if (!chatId) hydratedPreviewPathForChatRef.current = null;
   }, [chatId]);
 
   React.useEffect(() => {
     if (typeof window === "undefined" || !chatId || !jsonrPath) return;
-    if (debugFlags.disablePathStorage) return;
     try {
       window.localStorage.setItem(`previewJsonrPath:${chatId}`, jsonrPath);
     } catch {
       // ignore storage access errors
     }
-  }, [chatId, jsonrPath, debugFlags.disablePathStorage]);
+  }, [chatId, jsonrPath]);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -195,8 +173,6 @@ function JsonRenderPreviewInner({ chatId }: Props) {
       setLoading(true);
       setError(null);
       setTree(null);
-      setRawJson("");
-      setRenderCrashed(false);
 
       if (!chatId) {
         if (!cancelled) setLoading(false);
@@ -254,7 +230,6 @@ function JsonRenderPreviewInner({ chatId }: Props) {
         }
 
         const txt = String(data.content ?? "");
-        if (!cancelled) setRawJson(txt);
         try {
           const parsed = JSON.parse(txt);
           if (parsed == null || typeof parsed !== "object") {
@@ -293,11 +268,10 @@ function JsonRenderPreviewInner({ chatId }: Props) {
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
-    if (debugFlags.disableRefreshListener) return;
     const onRefresh = () => setRefreshTick((v) => v + 1);
     window.addEventListener("sandbox-preview-refresh", onRefresh);
     return () => window.removeEventListener("sandbox-preview-refresh", onRefresh);
-  }, [debugFlags.disableRefreshListener]);
+  }, []);
 
   React.useEffect(() => {
     if (!error) return;
@@ -311,22 +285,6 @@ function JsonRenderPreviewInner({ chatId }: Props) {
 
   return (
     <div className="h-full w-full min-h-0 overflow-auto p-2 bg-gray-50">
-      {(debugFlags.safeMode ||
-        debugFlags.disableRenderer ||
-        debugFlags.disableHeaderActions ||
-        debugFlags.disableRefreshListener ||
-        debugFlags.disablePathStorage ||
-        renderCrashed) && (
-        <div className="mb-2 rounded border border-amber-300 bg-amber-50 text-amber-800 text-[11px] p-2">
-          Debug preview ativo:
-          {debugFlags.safeMode ? " safe_mode" : ""}
-          {debugFlags.disableRenderer ? " no_renderer" : ""}
-          {debugFlags.disableHeaderActions ? " no_header_actions" : ""}
-          {debugFlags.disableRefreshListener ? " no_refresh_listener" : ""}
-          {debugFlags.disablePathStorage ? " no_storage" : ""}
-          {renderCrashed ? " renderer_crashed" : ""}
-        </div>
-      )}
       {!chatId && !error && !loading && (
         <div className="rounded border border-gray-200 bg-white text-gray-600 text-xs p-3">
           UI de preview aberta. Inicie um computador para carregar e renderizar arquivos `.jsonr`.
@@ -336,22 +294,13 @@ function JsonRenderPreviewInner({ chatId }: Props) {
       {error && !loading && (
         <div className="rounded border border-red-300 bg-red-50 text-red-700 text-xs p-3">{error}</div>
       )}
-      {!error && !loading && safeModeActive && rawJson && (
-        <div className="rounded border border-gray-200 bg-white min-h-[420px] overflow-auto">
-          <div className="px-3 py-2 border-b text-[11px] text-gray-500">
-            Preview seguro: renderização visual desativada, exibindo JSON bruto.
-          </div>
-          <pre className="text-[11px] text-gray-800 p-3 whitespace-pre-wrap break-words">{rawJson}</pre>
-        </div>
-      )}
-      {!error && !loading && tree && !safeModeActive && (
+      {!error && !loading && tree && (
         <div className="rounded border border-gray-200 bg-white p-0 min-h-[420px]">
           <PreviewRenderBoundary
             resetKey={`${jsonrPath || ""}:${refreshTick}`}
             onError={(err) => {
               const message = err instanceof Error ? err.message : "Erro ao renderizar dashboard";
               setError(message);
-              setRenderCrashed(true);
             }}
           >
             <DataProvider initialData={{}}>
