@@ -150,6 +150,43 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEmpty, initialChatId])
 
+  // Ensure sandbox is closed when the user reloads/closes the tab.
+  // This avoids stale "running" sessions after F5 and forces a clean start on next message.
+  useEffect(() => {
+    const activeChatId = chatId || initialChatId
+    if (!activeChatId) return
+    const stopOnExit = () => {
+      if (sandboxStatus !== 'running') return
+      const payload = JSON.stringify({ action: 'chat-stop', chatId: activeChatId })
+      try {
+        if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+          const blob = new Blob([payload], { type: 'application/json' })
+          const sent = navigator.sendBeacon('/api/chat', blob)
+          if (sent) return
+        }
+      } catch {
+        // fallback below
+      }
+      try {
+        void fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload,
+          keepalive: true,
+        })
+      } catch {
+        // ignore shutdown transport errors
+      }
+    }
+
+    window.addEventListener('pagehide', stopOnExit)
+    window.addEventListener('beforeunload', stopOnExit)
+    return () => {
+      window.removeEventListener('pagehide', stopOnExit)
+      window.removeEventListener('beforeunload', stopOnExit)
+    }
+  }, [chatId, initialChatId, sandboxStatus])
+
   const startSandboxFromMenu = async () => {
     setMenuBusy(true)
     try { await ensureStart(); } catch (err) { setSandboxStatus('error'); notifyError('sandbox', err, 'Falha ao iniciar computador') } finally { setMenuBusy(false) }
@@ -696,31 +733,11 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
     return () => { cancelled = true }
   }, [initialChatId])
 
-  // Sync sandbox status for existing chat routes that were already started.
+  // On hard reload, always require a fresh start/resume handshake on next send.
+  // This prevents UI from showing "running" when backend local session/token is stale.
   useEffect(() => {
     if (!initialChatId || chatId) return
-    let cancelled = false
-    ;(async () => {
-      try {
-        const res = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'chat-status', chatId: initialChatId }),
-        })
-        const data = await res.json().catch(() => ({})) as { ok?: boolean; status?: string }
-        if (cancelled) return
-        if (res.ok && data && data.ok && data.status === 'running') {
-          setHasPersistedChat(true)
-          setChatId(initialChatId)
-          setSandboxStatus('running')
-        } else {
-          setSandboxStatus('off')
-        }
-      } catch {
-        if (!cancelled) setSandboxStatus('off')
-      }
-    })()
-    return () => { cancelled = true }
+    setSandboxStatus('off')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialChatId, chatId])
   // Auto-send prefilled first message when arriving at /chat/[id]
