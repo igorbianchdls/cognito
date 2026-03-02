@@ -1,11 +1,11 @@
 "use client";
 
-import React from 'react';
-import { useStore } from '@nanostores/react';
-import { $previewJsonrPath, sandboxActions } from '@/chat/sandbox';
-import { DataProvider } from '@/products/bi/json-render/context';
-import { Renderer } from '@/products/bi/json-render/renderer';
-import { registry } from '@/products/bi/json-render/registry';
+import React from "react";
+import { useStore } from "@nanostores/react";
+import { $previewJsonrPath, sandboxActions } from "@/chat/sandbox";
+import { DataProvider } from "@/products/bi/json-render/context";
+import { Renderer } from "@/products/bi/json-render/renderer";
+import { registry } from "@/products/bi/json-render/registry";
 
 type Props = { chatId?: string };
 
@@ -45,168 +45,234 @@ class PreviewRenderBoundary extends React.Component<PreviewRenderBoundaryProps, 
   }
 }
 
-export default function JsonRenderPreview({ chatId }: Props) {
+type ComponentBoundaryState = {
+  hasError: boolean;
+  message: string | null;
+};
+
+class ComponentBoundary extends React.Component<{ children: React.ReactNode }, ComponentBoundaryState> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, message: null };
+  }
+
+  static getDerivedStateFromError(error: unknown): ComponentBoundaryState {
+    const message = error instanceof Error ? error.message : "Erro inesperado no preview";
+    return { hasError: true, message };
+  }
+
+  componentDidCatch(error: unknown) {
+    try {
+      console.error("[JsonRenderPreview] uncaught error", error);
+    } catch {
+      // noop
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="h-full w-full min-h-0 overflow-auto p-2 bg-gray-50">
+          <div className="rounded border border-red-300 bg-red-50 text-red-700 text-xs p-3">
+            {this.state.message || "Erro inesperado no preview"}
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function isValidJsonrPath(path: string | null | undefined): path is string {
+  if (!path) return false;
+  const p = String(path).trim();
+  return p.startsWith("/vercel/sandbox/") && p.endsWith(".jsonr");
+}
+
+function JsonRenderPreviewInner({ chatId }: Props) {
   const jsonrPath = useStore($previewJsonrPath);
-  const [content, setContent] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [tree, setTree] = React.useState<any | any[] | null>(null);
   const [loading, setLoading] = React.useState<boolean>(false);
   const [refreshTick, setRefreshTick] = React.useState(0);
-  const [paths, setPaths] = React.useState<string[]>([]);
-  const [loadingPaths, setLoadingPaths] = React.useState<boolean>(false);
   const [pathsError, setPathsError] = React.useState<string | null>(null);
 
-  // Load persisted preview path per chat to avoid cross-chat stale paths.
-  React.useEffect(() => {
-    if (typeof window === 'undefined' || !chatId) return;
-    try {
-      const saved = window.localStorage.getItem(`previewJsonrPath:${chatId}`);
-      if (saved && saved !== jsonrPath) sandboxActions.setPreviewPath(saved);
-    } catch {
-      // ignore storage access errors (private mode/quota)
-    }
-  }, [chatId, jsonrPath]);
-
-  // Persist on change (chat-scoped).
-  React.useEffect(() => {
-    if (typeof window === 'undefined' || !chatId || !jsonrPath) return;
-    try {
-      window.localStorage.setItem(`previewJsonrPath:${chatId}`, jsonrPath);
-    } catch {
-      // ignore storage access errors (private mode/quota)
-    }
-  }, [chatId, jsonrPath]);
-
-  React.useEffect(() => {
-    (async () => {
-      setLoading(true);
-      setError(null);
-      setContent(null);
-      setTree(null);
-      if (!chatId) { setLoading(false); return; }
-      if (!jsonrPath) { setError('Caminho do .jsonr não configurado.'); setLoading(false); return; }
-      try {
-        const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-read', chatId, path: jsonrPath }) });
-        const data = await res.json().catch(() => ({})) as { ok?: boolean; content?: string; isBinary?: boolean; error?: string };
-        if (!res.ok || data.ok === false) {
-          // Fallback: tentar descobrir um .jsonr e usar o primeiro
-          const found = await refreshPaths({ allowRecursive: false });
-          if (found && found.length) { sandboxActions.setPreviewPath(found[0]); setError(null); setLoading(false); return; }
-          setError(data.error || `Falha ao ler arquivo ${jsonrPath}`);
-          setLoading(false);
-          return;
-        }
-        if (data.isBinary) { setError('Arquivo .jsonr binário inválido.'); setLoading(false); return; }
-        const txt = String(data.content ?? '');
-        setContent(txt);
-        try {
-          const parsed = JSON.parse(txt);
-          if (parsed == null || (typeof parsed !== 'object' && !Array.isArray(parsed))) {
-            setError('JSONR inválido: esperado objeto/array não nulo.');
-            setTree(null);
-            setLoading(false);
-            return;
-          }
-          setTree(parsed);
-        } catch (e: any) {
-          setError(e?.message ? String(e.message) : 'JSON inválido');
-        }
-      } catch (e: any) {
-        const found = await refreshPaths({ allowRecursive: false });
-        if (found && found.length) { sandboxActions.setPreviewPath(found[0]); setError(null); setLoading(false); return; }
-        setError(e?.message ? String(e.message) : 'Erro ao buscar .jsonr');
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [chatId, jsonrPath, refreshTick]);
-
-  // Discover .jsonr files under /vercel/sandbox
-  const refreshPaths = React.useCallback(async (opts?: { allowRecursive?: boolean }): Promise<string[]> => {
+  const refreshPaths = React.useCallback(async (): Promise<string[]> => {
     if (!chatId) {
-      setPaths([]);
       setPathsError(null);
       return [];
     }
-    const allowRecursive = opts?.allowRecursive !== false;
-    setLoadingPaths(true); setPathsError(null);
     try {
       const collected: string[] = [];
-      let directOk = false;
-      let firstDirectError: string | null = null;
+      const dirs = ["/vercel/sandbox/dashboard", "/vercel/sandbox"];
+      let firstErr: string | null = null;
 
-      // Fast path: use dashboard folder first (where defaults live).
-      const directDirs = ['/vercel/sandbox/dashboard'];
-      for (const dir of directDirs) {
-        const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-list', chatId, path: dir }) });
-        const data = await res.json().catch(()=>({})) as { ok?: boolean; entries?: Array<{ name:string; path:string; type:'file'|'dir' }>; error?: string };
+      for (const dir of dirs) {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "fs-list", chatId, path: dir }),
+        });
+        const data = (await res.json().catch(() => ({}))) as {
+          ok?: boolean;
+          entries?: Array<{ path: string; type: "file" | "dir" }>;
+          error?: string;
+        };
         if (!res.ok || data.ok === false) {
-          if (!firstDirectError) firstDirectError = data.error || `Falha ao listar ${dir}`;
+          if (!firstErr) firstErr = data.error || `Falha ao listar ${dir}`;
           continue;
         }
-        directOk = true;
-        const entries = data.entries || [];
-        for (const e of entries) {
-          if (e.type === 'file' && e.path.endsWith('.jsonr')) {
+        for (const e of data.entries || []) {
+          if (e.type === "file" && e.path.endsWith(".jsonr")) {
             collected.push(e.path);
           }
         }
       }
 
-      // Fallback path: recursive scan only if dashboard folder check succeeded.
-      if (collected.length === 0 && allowRecursive && directOk) {
-        const visited = new Set<string>();
-        const queue: string[] = ['/vercel/sandbox'];
-        const MAX_FILES = 500; // safeguard
-        const MAX_DIRS = 1000;
-        let dirs = 0;
-        while (queue.length && collected.length < MAX_FILES && dirs < MAX_DIRS) {
-          const dir = queue.shift()!; dirs++;
-          const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-list', chatId, path: dir }) });
-          const data = await res.json().catch(()=>({})) as { ok?: boolean; entries?: Array<{ name:string; path:string; type:'file'|'dir' }>; error?: string };
-          if (!res.ok || data.ok === false) { setPathsError(data.error || `Falha ao listar ${dir}`); break; }
-          const entries = data.entries || [];
-          for (const e of entries) {
-            if (e.type === 'dir') {
-              if (!visited.has(e.path)) { visited.add(e.path); queue.push(e.path); }
-            } else if (e.type === 'file' && e.path.endsWith('.jsonr')) {
-              collected.push(e.path);
-            }
-          }
-        }
-      }
-
-      if (collected.length === 0 && !directOk && firstDirectError) {
-        setPathsError(firstDirectError);
-      }
-
-      collected.sort();
-      setPaths(collected);
-      return collected;
+      const unique = Array.from(new Set(collected)).sort();
+      setPathsError(unique.length === 0 ? firstErr : null);
+      return unique;
     } catch (e: any) {
-      setPathsError(e?.message ? String(e.message) : 'Falha ao buscar arquivos .jsonr');
+      setPathsError(e?.message ? String(e.message) : "Falha ao buscar arquivos .jsonr");
       return [];
-    } finally {
-      setLoadingPaths(false);
     }
   }, [chatId]);
 
-  React.useEffect(() => { refreshPaths(); }, [refreshPaths]);
+  React.useEffect(() => {
+    if (typeof window === "undefined" || !chatId) return;
+    try {
+      const saved = window.localStorage.getItem(`previewJsonrPath:${chatId}`);
+      if (saved && isValidJsonrPath(saved) && saved !== jsonrPath) {
+        sandboxActions.setPreviewPath(saved);
+      }
+    } catch {
+      // ignore storage access errors
+    }
+  }, [chatId, jsonrPath]);
 
   React.useEffect(() => {
+    if (typeof window === "undefined" || !chatId || !jsonrPath) return;
+    try {
+      window.localStorage.setItem(`previewJsonrPath:${chatId}`, jsonrPath);
+    } catch {
+      // ignore storage access errors
+    }
+  }, [chatId, jsonrPath]);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setError(null);
+      setTree(null);
+
+      if (!chatId) {
+        if (!cancelled) setLoading(false);
+        return;
+      }
+      if (!jsonrPath) {
+        if (!cancelled) {
+          setError("Caminho do .jsonr não configurado.");
+          setLoading(false);
+        }
+        return;
+      }
+      if (!isValidJsonrPath(jsonrPath)) {
+        if (!cancelled) {
+          setError("Caminho inválido do .jsonr.");
+          setLoading(false);
+        }
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "fs-read", chatId, path: jsonrPath }),
+        });
+        const data = (await res.json().catch(() => ({}))) as {
+          ok?: boolean;
+          content?: string;
+          isBinary?: boolean;
+          error?: string;
+        };
+
+        if (!res.ok || data.ok === false) {
+          const found = await refreshPaths();
+          const candidate = found[0];
+          if (!cancelled && candidate && candidate !== jsonrPath) {
+            sandboxActions.setPreviewPath(candidate);
+            setLoading(false);
+            return;
+          }
+          if (!cancelled) {
+            setError(data.error || `Falha ao ler arquivo ${jsonrPath}`);
+            setLoading(false);
+          }
+          return;
+        }
+
+        if (data.isBinary) {
+          if (!cancelled) {
+            setError("Arquivo .jsonr binário inválido.");
+            setLoading(false);
+          }
+          return;
+        }
+
+        const txt = String(data.content ?? "");
+        try {
+          const parsed = JSON.parse(txt);
+          if (parsed == null || typeof parsed !== "object") {
+            if (!cancelled) {
+              setError("JSONR inválido: esperado objeto/array não nulo.");
+              setTree(null);
+            }
+          } else if (!cancelled) {
+            setTree(parsed);
+          }
+        } catch (e: any) {
+          if (!cancelled) setError(e?.message ? String(e.message) : "JSON inválido");
+        }
+      } catch (e: any) {
+        const found = await refreshPaths();
+        const candidate = found[0];
+        if (!cancelled && candidate && candidate !== jsonrPath) {
+          sandboxActions.setPreviewPath(candidate);
+          setLoading(false);
+          return;
+        }
+        if (!cancelled) setError(e?.message ? String(e.message) : "Erro ao buscar .jsonr");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [chatId, jsonrPath, refreshTick, refreshPaths]);
+
+  React.useEffect(() => {
+    void refreshPaths();
+  }, [refreshPaths]);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
     const onRefresh = () => setRefreshTick((v) => v + 1);
-    window.addEventListener('sandbox-preview-refresh', onRefresh);
-    return () => window.removeEventListener('sandbox-preview-refresh', onRefresh);
+    window.addEventListener("sandbox-preview-refresh", onRefresh);
+    return () => window.removeEventListener("sandbox-preview-refresh", onRefresh);
   }, []);
 
   React.useEffect(() => {
     if (!error) return;
-    sandboxActions.pushArtifactNotification({ source: 'preview', message: error });
+    sandboxActions.pushArtifactNotification({ source: "preview", message: error });
   }, [error]);
 
   React.useEffect(() => {
     if (!pathsError) return;
-    sandboxActions.pushArtifactNotification({ source: 'paths', message: pathsError });
+    sandboxActions.pushArtifactNotification({ source: "paths", message: pathsError });
   }, [pathsError]);
 
   return (
@@ -216,20 +282,16 @@ export default function JsonRenderPreview({ chatId }: Props) {
           UI de preview aberta. Inicie um computador para carregar e renderizar arquivos `.jsonr`.
         </div>
       )}
-      {!error && loading && (
-        <div className="text-xs text-gray-500 p-2">Carregando...</div>
-      )}
+      {!error && loading && <div className="text-xs text-gray-500 p-2">Carregando...</div>}
       {error && !loading && (
-        <div className="rounded border border-red-300 bg-red-50 text-red-700 text-xs p-3">
-          {error}
-        </div>
+        <div className="rounded border border-red-300 bg-red-50 text-red-700 text-xs p-3">{error}</div>
       )}
       {!error && !loading && tree && (
         <div className="rounded border border-gray-200 bg-white p-0 min-h-[420px]">
           <PreviewRenderBoundary
-            resetKey={`${jsonrPath || ''}:${refreshTick}`}
+            resetKey={`${jsonrPath || ""}:${refreshTick}`}
             onError={(err) => {
-              const message = err instanceof Error ? err.message : 'Erro ao renderizar dashboard';
+              const message = err instanceof Error ? err.message : "Erro ao renderizar dashboard";
               setError(message);
             }}
           >
@@ -240,5 +302,13 @@ export default function JsonRenderPreview({ chatId }: Props) {
         </div>
       )}
     </div>
+  );
+}
+
+export default function JsonRenderPreview(props: Props) {
+  return (
+    <ComponentBoundary>
+      <JsonRenderPreviewInner {...props} />
+    </ComponentBoundary>
   );
 }
