@@ -9,7 +9,6 @@ import InputArea from './InputArea';
 import { useRouter } from 'next/navigation';
 import { sandboxActions, type SandboxStatus } from '@/chat/sandbox';
 import { useChatErrorNotifications } from '@/products/chat/frontend/features/error-notifications/useChatErrorNotifications';
-import { useSandboxAutoSnapshot } from '@/products/chat/frontend/features/sandbox-autosave/useSandboxAutoSnapshot';
 
 type ChatStatus = 'idle' | 'submitted' | 'streaming' | 'error'
 type EngineId = 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5' | 'openai-gpt5mini' | 'openai-gpt5nano'
@@ -66,12 +65,6 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   const notifyError = React.useCallback((source: 'sandbox' | 'api' | 'stream' | 'tool' | 'network' | 'unknown', error: unknown, message: string, details?: unknown) => {
     pushErrorNotification({ source, error, message, details })
   }, [pushErrorNotification])
-
-  const { scheduleAutoSnapshot } = useSandboxAutoSnapshot({
-    chatId: chatId ?? initialChatId ?? null,
-    enabled: sandboxStatus === 'running',
-    onError: (error) => notifyError('sandbox', error, 'Falha no autosave de snapshot'),
-  })
 
   const getScrollKey = () => {
     if (!initialChatId) return null
@@ -475,6 +468,26 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
     const toolCallIdToKey = new Map<string, string>()
     const toolTouchesDashboard = new Map<string, boolean>()
     let toolKeySeq = 0
+    const extractPathFromToolOutput = (outputRaw: any): string => {
+      let parsed = outputRaw
+      if (typeof parsed === 'string') {
+        try { parsed = JSON.parse(parsed) } catch { /* noop */ }
+      }
+      if (!parsed || typeof parsed !== 'object') return ''
+      if (typeof parsed.file_path === 'string') return parsed.file_path
+      if (typeof parsed.path === 'string') return parsed.path
+      const data = (parsed as any).data
+      if (data && typeof data === 'object') {
+        if (typeof data.file_path === 'string') return data.file_path
+        if (typeof data.path === 'string') return data.path
+      }
+      const result = (parsed as any).result
+      if (result && typeof result === 'object') {
+        if (typeof result.file_path === 'string') return result.file_path
+        if (typeof result.path === 'string') return result.path
+      }
+      return ''
+    }
     const extractPathFromToolInput = (inputRaw: any): string => {
       let parsed = inputRaw
       if (typeof parsed === 'string') {
@@ -603,7 +616,12 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
               const touchedDashboard =
                 doneToolName.includes('dashboard_builder') ||
                 Boolean(toolTouchesDashboard.get(lastActiveToolKey))
-              if (touchedDashboard) scheduleAutoSnapshot('dashboard-change')
+              if (touchedDashboard) {
+                const outputPath = extractPathFromToolOutput(evt?.output)
+                if (outputPath.startsWith('/vercel/sandbox/dashboard/')) {
+                  sandboxActions.setPreviewPath(outputPath)
+                }
+              }
             }
           } else if (evt && evt.type === 'tool_error') {
             activeTextPartId = null
