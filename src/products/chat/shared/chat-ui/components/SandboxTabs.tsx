@@ -17,18 +17,18 @@ export default function SandboxTabs() {
 
   return (
     <Tabs value={active} onValueChange={(v) => sandboxActions.setActiveTab(v as SandboxTab)}>
-      <TabsList className="!h-9 !bg-gray-100 !border !border-gray-300 !rounded-md !p-0.5 !gap-0.5">
+      <TabsList className="!h-8 !bg-gray-100 !border !border-gray-300 !rounded-md !p-0.5 !gap-0.5">
         {tabs.map(({ key, title, icon: Icon }) => (
           <TabsTrigger
             key={key}
             value={key}
             title={title}
             aria-label={title}
-            className={cn('!h-7 !w-8 !px-0 !rounded-[6px]')}
+            className={cn('!h-6 !w-7 !px-0 !rounded-[6px]')}
             activeClassName="!bg-white !text-gray-900 !shadow-none"
             inactiveClassName="!bg-transparent !text-gray-600 hover:!text-gray-800 hover:!bg-gray-200/70"
           >
-            <Icon className="w-4 h-4" />
+            <Icon className="w-3.5 h-3.5" />
           </TabsTrigger>
         ))}
       </TabsList>
