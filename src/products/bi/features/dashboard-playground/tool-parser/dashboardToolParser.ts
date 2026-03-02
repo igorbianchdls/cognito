@@ -1,4 +1,5 @@
 import type { JsonTree } from '@/products/bi/shared/types'
+import { getAppsTableCatalog } from '@/products/bi/shared/queryCatalog'
 
 export type WidgetType = 'kpi' | 'chart' | 'filtro' | 'insights'
 type MetricFormat = 'currency' | 'percent' | 'number'
@@ -22,6 +23,8 @@ type ChartPayload = {
   title: string
   tabela: string
   dimensao: string
+  dimension_expr?: string
+  dimensionExpr?: string
   medida: string
   fr?: number
   formato?: MetricFormat | string
@@ -114,6 +117,34 @@ function normalizeOrderBy(value: string | OrderBy | undefined): OrderBy | undefi
   if (!fieldRaw) return undefined
   const dir = dirRaw === 'asc' || dirRaw === 'desc' ? dirRaw : undefined
   return { field: fieldRaw, dir }
+}
+
+function getMonthDimensionExprByTable(table: string): string | undefined {
+  const catalog = getAppsTableCatalog(table)
+  const timeField = typeof catalog?.defaultTimeField === 'string' ? catalog.defaultTimeField.trim() : ''
+  if (!timeField) return undefined
+  return `TO_CHAR(DATE_TRUNC('month', ${timeField}), 'YYYY-MM')`
+}
+
+function resolveChartDimensionExpr(payload: ChartPayload): string | undefined {
+  const explicitExpr = String(payload.dimensionExpr ?? payload.dimension_expr ?? '').trim()
+  if (explicitExpr) return explicitExpr
+
+  const dim = String(payload.dimensao || '').trim().toLowerCase()
+  const isMonthLike = dim === 'mes' || dim === 'mês' || dim === 'month' || dim === 'mensal'
+  if (!isMonthLike) return undefined
+
+  return getMonthDimensionExprByTable(payload.tabela)
+}
+
+function resolveChartOrderBy(payload: ChartPayload): OrderBy | undefined {
+  const explicit = normalizeOrderBy(payload.ordem)
+  if (explicit) return explicit
+
+  const dim = String(payload.dimensao || '').trim().toLowerCase()
+  const isTimeLike = dim === 'mes' || dim === 'mês' || dim === 'month' || dim === 'mensal' || dim === 'periodo'
+  if (isTimeLike) return { field: 'dimension', dir: 'asc' }
+  return undefined
 }
 
 function normalizeFormat(value: unknown): MetricFormat {
@@ -240,7 +271,8 @@ function buildChartNode(payload: ChartPayload): Record<string, unknown> {
     pie: 'PieChart',
   }
 
-  const orderBy = normalizeOrderBy(payload.ordem)
+  const orderBy = resolveChartOrderBy(payload)
+  const dimensionExpr = resolveChartDimensionExpr(payload)
 
   return {
     type: typeMap[payload.chart_type],
@@ -252,6 +284,7 @@ function buildChartNode(payload: ChartPayload): Record<string, unknown> {
       dataQuery: {
         model: payload.tabela,
         dimension: payload.dimensao,
+        ...(dimensionExpr ? { dimensionExpr } : {}),
         measure: payload.medida,
         filters: payload.filtros ?? {},
         ...(typeof payload.limit === 'number' ? { limit: payload.limit } : {}),

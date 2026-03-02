@@ -46,7 +46,7 @@ export const DASHBOARD_BUILDER_TOOL_PARAMETERS = {
       type: 'object',
       additionalProperties: true,
       description:
-        'Payload do widget conforme widget_type. kpi: {title,tabela,medida,fr?,formato?,filtros?}. chart: {chart_type,title,tabela,dimensao,medida,fr?,formato?,filtros?,limit?,ordem?,height?}, com ordem em "field:dir" (ex.: "measure:desc") ou {field,dir}. filtro: {title,campo,tabela,tipo?,chave?,fr?}, onde chave é opcional (se omitida deriva de campo). insights: {title,items,fr?}. formato (quando presente) deve ser exatamente: "currency" | "percent" | "number".',
+        'Payload do widget conforme widget_type. kpi: {title,tabela,medida,fr?,formato?,filtros?}. chart: {chart_type,title,tabela,dimensao,dimension_expr?|dimensionExpr?,medida,fr?,formato?,filtros?,limit?,ordem?,height?}, com ordem em "field:dir" (ex.: "measure:desc") ou {field,dir}. filtro: {title,campo,tabela,tipo?,chave?,fr?}, onde chave é opcional (se omitida deriva de campo). insights: {title,items,fr?}. formato (quando presente) deve ser exatamente: "currency" | "percent" | "number". Para séries mensais, seguir padrão dos apps: dimensao="mes" com dimension_expr (ou dimensionExpr) usando DATE_TRUNC month.',
     },
     widgets: {
       type: 'array',
