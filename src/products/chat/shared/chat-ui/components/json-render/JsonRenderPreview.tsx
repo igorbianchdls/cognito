@@ -284,7 +284,7 @@ function JsonRenderPreviewInner({ chatId }: Props) {
   }, [pathsError]);
 
   return (
-    <div className="h-full w-full min-h-0 overflow-auto p-2 bg-gray-50">
+    <div className="h-full w-full min-h-0 overflow-auto p-0 bg-gray-50">
       {!chatId && !error && !loading && (
         <div className="rounded border border-gray-200 bg-white text-gray-600 text-xs p-3">
           UI de preview aberta. Inicie um computador para carregar e renderizar arquivos `.jsonr`.
@@ -295,7 +295,7 @@ function JsonRenderPreviewInner({ chatId }: Props) {
         <div className="rounded border border-red-300 bg-red-50 text-red-700 text-xs p-3">{error}</div>
       )}
       {!error && !loading && tree && (
-        <div className="rounded border border-gray-200 bg-white p-0 min-h-[420px]">
+        <div className="rounded-none border-0 bg-white p-0 min-h-[420px]">
           <PreviewRenderBoundary
             resetKey={`${jsonrPath || ""}:${refreshTick}`}
             onError={(err) => {
