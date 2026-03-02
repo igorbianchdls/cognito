@@ -46,6 +46,7 @@ type JsonPreviewPanelProps = {
   actionHint?: string
   toolbar?: ReactNode
   propertiesPanel?: ReactNode
+  hideHeader?: boolean
   visualEditor?: {
     enabled?: boolean
     selectedPath?: JsonNodePath | null
@@ -123,7 +124,7 @@ function getSiblingAxis(tree: JsonTree, path: JsonNodePath): 'horizontal' | 'ver
   return direction === 'row' ? 'horizontal' : 'vertical'
 }
 
-export default function JsonPreviewPanel({ tree, onAction, actionHint, toolbar, propertiesPanel, visualEditor }: JsonPreviewPanelProps) {
+export default function JsonPreviewPanel({ tree, onAction, actionHint, toolbar, propertiesPanel, hideHeader, visualEditor }: JsonPreviewPanelProps) {
   const [dragIndicator, setDragIndicator] = useState<DragIndicatorState>(null)
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -265,13 +266,15 @@ export default function JsonPreviewPanel({ tree, onAction, actionHint, toolbar, 
 
   return (
     <div className="md:col-span-4">
-      <div className="mb-2 flex items-center justify-between">
-        <h2 className="text-sm font-medium text-gray-900">Preview</h2>
-        <div className="flex items-center gap-3">
-          {actionHint && <div className="text-xs text-gray-500">{actionHint}</div>}
-          {toolbar}
+      {!hideHeader && (
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-sm font-medium text-gray-900">Preview</h2>
+          <div className="flex items-center gap-3">
+            {actionHint && <div className="text-xs text-gray-500">{actionHint}</div>}
+            {toolbar}
+          </div>
         </div>
-      </div>
+      )}
       {previewContent}
       {propertiesPanel && (
         <div className="fixed inset-0 z-[120]">

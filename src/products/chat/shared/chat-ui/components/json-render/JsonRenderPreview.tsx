@@ -4,8 +4,21 @@ import React from "react";
 import { useStore } from "@nanostores/react";
 import { $previewJsonrPath, sandboxActions } from "@/chat/sandbox";
 import { DataProvider } from "@/products/bi/json-render/context";
-import { Renderer } from "@/products/bi/json-render/renderer";
-import { registry } from "@/products/bi/json-render/registry";
+import JsonPreviewPanel from "@/products/bi/features/dashboard-editor/components/JsonPreviewPanel";
+import PropertiesPanel from "@/products/bi/features/dashboard-editor/components/PropertiesPanel";
+import useDashboardVisualEditor from "@/products/bi/features/dashboard-editor/hooks/useDashboardVisualEditor";
+import type {
+  JsonNodePath,
+  NodeDropPlacement,
+  NodeMoveDirection,
+} from "@/products/bi/features/dashboard-editor/types/editor-types";
+import {
+  deleteNodeAtPath,
+  duplicateNodeAtPath,
+  moveNodeAtPath,
+  moveNodeRelativeToPath,
+  replaceNodeProps as replaceNodePropsInTree,
+} from "@/products/bi/features/dashboard-editor/lib/jsonTreeOps";
 
 type Props = { chatId?: string };
 
@@ -96,7 +109,103 @@ function JsonRenderPreviewInner({ chatId }: Props) {
   const [loading, setLoading] = React.useState<boolean>(false);
   const [refreshTick, setRefreshTick] = React.useState(0);
   const [pathsError, setPathsError] = React.useState<string | null>(null);
+  const [saving, setSaving] = React.useState<boolean>(false);
   const hydratedPreviewPathForChatRef = React.useRef<string | null>(null);
+
+  const persistTree = React.useCallback(
+    async (nextTree: any) => {
+      if (!chatId || !jsonrPath || !isValidJsonrPath(jsonrPath)) return false;
+      setSaving(true);
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "fs-write",
+            chatId,
+            path: jsonrPath,
+            content: JSON.stringify(nextTree, null, 2),
+          }),
+        });
+        const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+        if (!res.ok || data.ok === false) {
+          throw new Error(data.error || `Falha ao salvar ${jsonrPath}`);
+        }
+        return true;
+      } catch (e: any) {
+        const msg = e?.message ? String(e.message) : "Falha ao salvar dashboard";
+        sandboxActions.pushArtifactNotification({ source: "preview", message: msg });
+        return false;
+      } finally {
+        setSaving(false);
+      }
+    },
+    [chatId, jsonrPath],
+  );
+
+  const duplicateNode = React.useCallback(
+    (path: JsonNodePath) => {
+      if (!tree) return;
+      const next = duplicateNodeAtPath(tree as any, path);
+      if (next === tree) return;
+      setTree(next as any);
+      void persistTree(next);
+    },
+    [persistTree, tree],
+  );
+
+  const deleteNode = React.useCallback(
+    (path: JsonNodePath) => {
+      if (!tree) return;
+      const next = deleteNodeAtPath(tree as any, path);
+      if (next === tree) return;
+      setTree(next as any);
+      void persistTree(next);
+    },
+    [persistTree, tree],
+  );
+
+  const moveNode = React.useCallback(
+    (path: JsonNodePath, direction: NodeMoveDirection) => {
+      if (!tree) return false;
+      const next = moveNodeAtPath(tree as any, path, direction);
+      if (next === tree) return false;
+      setTree(next as any);
+      void persistTree(next);
+      return true;
+    },
+    [persistTree, tree],
+  );
+
+  const moveNodeRelative = React.useCallback(
+    (sourcePath: JsonNodePath, targetPath: JsonNodePath, placement: NodeDropPlacement) => {
+      if (!tree) return false;
+      const next = moveNodeRelativeToPath(tree as any, sourcePath, targetPath, placement);
+      if (next === tree) return false;
+      setTree(next as any);
+      void persistTree(next);
+      return true;
+    },
+    [persistTree, tree],
+  );
+
+  const replaceNodeProps = React.useCallback(
+    (path: JsonNodePath, props: Record<string, any>) => {
+      if (!tree) return;
+      const next = replaceNodePropsInTree(tree as any, path, props);
+      if (next === tree) return;
+      setTree(next as any);
+      void persistTree(next);
+    },
+    [persistTree, tree],
+  );
+
+  const visualEditor = useDashboardVisualEditor({
+    onDuplicateNode: duplicateNode,
+    onDeleteNode: deleteNode,
+    onMoveNode: moveNode,
+    onMoveNodeRelative: moveNodeRelative,
+  });
 
   const refreshPaths = React.useCallback(async (): Promise<string[]> => {
     if (!chatId) {
@@ -304,7 +413,30 @@ function JsonRenderPreviewInner({ chatId }: Props) {
             }}
           >
             <DataProvider initialData={{}}>
-              <Renderer tree={tree} registry={registry} />
+              <JsonPreviewPanel
+                tree={tree as any}
+                hideHeader
+                actionHint={saving ? "Salvando..." : "Editor visual ativo"}
+                visualEditor={{
+                  enabled: true,
+                  selectedPath: visualEditor.selectedPath,
+                  onNodeAction: visualEditor.handleNodeAction,
+                  onNodeMove: visualEditor.handleNodeMove,
+                  onNodeDropReorder: visualEditor.handleNodeDropReorder,
+                }}
+                propertiesPanel={
+                  visualEditor.isPropertiesOpen ? (
+                    <PropertiesPanel
+                      tree={tree as any}
+                      selectedPath={visualEditor.selectedPath}
+                      isOpen={visualEditor.isPropertiesOpen}
+                      onClose={visualEditor.closeProperties}
+                      onSetNodeProp={() => {}}
+                      onReplaceNodeProps={replaceNodeProps}
+                    />
+                  ) : null
+                }
+              />
             </DataProvider>
           </PreviewRenderBoundary>
         </div>
