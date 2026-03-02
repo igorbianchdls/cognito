@@ -1,6 +1,7 @@
 import type { JsonTree } from '@/products/bi/shared/types'
 
 export type WidgetType = 'kpi' | 'chart' | 'filtro' | 'insights'
+type MetricFormat = 'currency' | 'percent' | 'number'
 
 type OrderBy = {
   field?: string
@@ -12,7 +13,7 @@ type KpiPayload = {
   tabela: string
   medida: string
   fr?: number
-  formato?: 'currency' | 'percent' | 'number'
+  formato?: MetricFormat | string
   filtros?: Record<string, unknown>
 }
 
@@ -23,7 +24,7 @@ type ChartPayload = {
   dimensao: string
   medida: string
   fr?: number
-  formato?: 'currency' | 'percent' | 'number'
+  formato?: MetricFormat | string
   filtros?: Record<string, unknown>
   limit?: number
   ordem?: string | OrderBy
@@ -115,6 +116,38 @@ function normalizeOrderBy(value: string | OrderBy | undefined): OrderBy | undefi
   return { field: fieldRaw, dir }
 }
 
+function normalizeFormat(value: unknown): MetricFormat {
+  const raw = String(value ?? '').trim().toLowerCase()
+  if (!raw) return 'number'
+
+  if (
+    raw === 'currency' ||
+    raw === 'moeda' ||
+    raw === 'money' ||
+    raw === 'brl' ||
+    raw === 'r$' ||
+    raw === 'real' ||
+    raw === 'reais' ||
+    raw === 'monetario' ||
+    raw === 'monetário'
+  ) {
+    return 'currency'
+  }
+
+  if (
+    raw === 'percent' ||
+    raw === 'percentage' ||
+    raw === 'pct' ||
+    raw === '%' ||
+    raw === 'porcentagem' ||
+    raw === 'percentual'
+  ) {
+    return 'percent'
+  }
+
+  return 'number'
+}
+
 function ensureThemeTree(tree: JsonTree): Array<Record<string, unknown>> {
   const arr = Array.isArray(tree) ? cloneTree(tree) : []
 
@@ -190,7 +223,7 @@ function buildKpiNode(payload: KpiPayload): Record<string, unknown> {
     props: {
       title: payload.title,
       fr: payload.fr ?? 1,
-      format: payload.formato ?? 'number',
+      format: normalizeFormat(payload.formato),
       dataQuery: {
         model: payload.tabela,
         measure: payload.medida,
@@ -214,7 +247,7 @@ function buildChartNode(payload: ChartPayload): Record<string, unknown> {
     props: {
       title: payload.title,
       fr: payload.fr ?? 1,
-      format: payload.formato ?? 'number',
+      format: normalizeFormat(payload.formato),
       height: payload.height ?? 240,
       dataQuery: {
         model: payload.tabela,

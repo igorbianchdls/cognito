@@ -51,6 +51,8 @@ Regras:
 - Dashboard Builder (estado): pode operar stateful (chat_id + dashboard_name) ou stateless (parser_state). Em stateless, sempre reenviar o parser_state mais recente retornado pela chamada anterior.
 - Dashboard Builder (container): widgets com mesmo container ficam na mesma row; sem container, usa "principal".
 - Dashboard Builder (payload chart): ordem aceita string "field:dir" (ex.: "measure:desc") ou objeto { field, dir }.
+- Dashboard Builder (payload KPI/chart): campo formato (quando usado) deve ser apenas "currency" | "percent" | "number".
+- Dashboard Builder (payload KPI/chart): não usar "BRL" em formato; para moeda use formato="currency".
 - Dashboard Builder (payload filtro): chave é opcional; se omitida, deriva de campo.
 - Dashboard Builder (persistência): create_dashboard/add_widgets_batch/add_widget salvam automaticamente em /vercel/sandbox/dashboard/<dashboard_name>.jsonr e retornam file_path; get_dashboard é somente leitura.
 - Dashboard Builder (execução): para criar/editar dashboard, prefira dashboard_builder em vez de editar JSONR manualmente.

@@ -6,7 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Undo2, Redo2, GitBranch, Upload, Palette, Save, Bell, Trash2 } from 'lucide-react';
+import { Undo2, Redo2, GitBranch, Upload, Palette, Save, Bell, Trash2, Check } from 'lucide-react';
 import { $artifactNotifications, $previewJsonrPath, sandboxActions } from '@/chat/sandbox';
 import { APPS_COLOR_PRESETS, APPS_HEADER_THEME_OPTIONS, APPS_THEME_OPTIONS } from '@/products/bi/shared/themeOptions';
 import { DASHBOARD_BACKGROUND_PRESET_OPTIONS } from '@/products/bi/json-render/backgrounds/registry';
@@ -64,6 +64,35 @@ function normalizeToThemeTree(parsed: unknown): any[] {
 
 type HeaderActionsProps = {
   chatId?: string;
+};
+
+type ThemeVisualMeta = {
+  title: string;
+  subtitle: string;
+  swatches: string[];
+};
+
+const ARTIFACT_THEME_BASE_META: Record<string, ThemeVisualMeta> = {
+  light: { title: 'Light', subtitle: 'Neutro e limpo para leitura', swatches: ['#f8fafc', '#e2e8f0', '#94a3b8'] },
+  blue: { title: 'Blue', subtitle: 'Interface fria com foco em dados', swatches: ['#eff6ff', '#60a5fa', '#1d4ed8'] },
+  dark: { title: 'Dark', subtitle: 'Contraste alto para ambiente escuro', swatches: ['#0f172a', '#334155', '#94a3b8'] },
+  black: { title: 'Black', subtitle: 'Visual profundo com destaque forte', swatches: ['#020617', '#111827', '#4b5563'] },
+  slate: { title: 'Slate', subtitle: 'Tons grafite equilibrados', swatches: ['#1e293b', '#475569', '#94a3b8'] },
+  navy: { title: 'Navy', subtitle: 'Azul corporativo para executivo', swatches: ['#0b1739', '#1d4ed8', '#60a5fa'] },
+  sand: { title: 'Sand', subtitle: 'Paleta quente e suave', swatches: ['#fffbeb', '#f59e0b', '#b45309'] },
+  charcoal: { title: 'Charcoal', subtitle: 'Cinza carvão discreto', swatches: ['#111827', '#374151', '#9ca3af'] },
+  midnight: { title: 'Midnight', subtitle: 'Noite profunda com brilho frio', swatches: ['#020617', '#1e3a8a', '#22d3ee'] },
+  metro: { title: 'Metro', subtitle: 'Estilo urbano e direto', swatches: ['#0f172a', '#0ea5e9', '#14b8a6'] },
+  aero: { title: 'Aero', subtitle: 'Leve e vibrante com azul claro', swatches: ['#e0f2fe', '#38bdf8', '#0ea5e9'] },
+};
+
+const ARTIFACT_THEME_FX_META: Record<string, { title: string; subtitle: string }> = {
+  orbital: { title: 'Orbital FX', subtitle: 'Gradiente espacial com brilho ciano' },
+  blueprint: { title: 'Blueprint FX', subtitle: 'Estética técnica em azul profundo' },
+  aurora: { title: 'Aurora FX', subtitle: 'Mistura viva com tons iridescentes' },
+  'matrix-glass': { title: 'Matrix Glass FX', subtitle: 'Vidro escuro com energia neon' },
+  'matrix-glass-mono': { title: 'Matrix Mono FX', subtitle: 'Versão monocromática de alto contraste' },
+  'matrix-glass-light': { title: 'Matrix Light FX', subtitle: 'Vidro claro com acentos fortes' },
 };
 
 const ARTIFACT_BORDER_PRESET_OPTIONS = [
@@ -204,6 +233,16 @@ const ARTIFACT_THEME_FX_DEFAULT_THEME: Record<string, string> = {
   'matrix-glass-light': 'light',
 };
 
+function buildSwatchBackground(swatches: string[]): string {
+  const palette = swatches.filter(Boolean).slice(0, 3);
+  if (palette.length === 0) return '#cbd5e1';
+  if (palette.length === 1) return palette[0];
+  if (palette.length === 2) {
+    return `linear-gradient(135deg, ${palette[0]} 0%, ${palette[0]} 50%, ${palette[1]} 50%, ${palette[1]} 100%)`;
+  }
+  return `linear-gradient(135deg, ${palette[0]} 0%, ${palette[1]} 50%, ${palette[2]} 100%)`;
+}
+
 export default function HeaderActions({ chatId }: HeaderActionsProps) {
   const previewPath = useStore($previewJsonrPath);
   const artifactNotifications = useStore($artifactNotifications);
@@ -231,6 +270,25 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
     () => (themeFxPreset !== 'custom' && themeFxPreset !== 'none' ? `fx:${themeFxPreset}` : themeName),
     [themeFxPreset, themeName]
   );
+  const themeVisualOptions = React.useMemo(() => {
+    return allThemeOptions.map((opt) => {
+      if (opt.value.startsWith('fx:')) {
+        const fxKey = opt.value.slice(3);
+        const fxMeta = ARTIFACT_THEME_FX_META[fxKey] || {
+          title: opt.label.replace(/\s*\(FX\)\s*$/i, ''),
+          subtitle: 'Preset visual avançado',
+        };
+        const swatches = ARTIFACT_THEME_FX_PRESETS[fxKey]?.colorScheme?.slice(0, 3) || ['#64748b', '#334155', '#0f172a'];
+        return { ...opt, ...fxMeta, swatches };
+      }
+      const baseMeta = ARTIFACT_THEME_BASE_META[opt.value] || {
+        title: opt.label,
+        subtitle: 'Tema base do dashboard',
+        swatches: ['#e2e8f0', '#94a3b8', '#64748b'],
+      };
+      return { ...opt, ...baseMeta };
+    });
+  }, [allThemeOptions]);
   const unreadCount = React.useMemo(
     () => artifactNotifications.reduce((acc, n) => acc + (n.read ? 0 : 1), 0),
     [artifactNotifications]
@@ -545,31 +603,45 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
             <div className="text-xs font-medium text-slate-500">Tema do Dashboard Atual</div>
             <div className="space-y-1">
               <label className="text-xs text-slate-600">Tema</label>
-              <select
-                className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs outline-none focus:border-slate-400"
-                value={selectedThemeOption}
-                disabled={loading || !chatId || !previewPath}
-                onChange={(e) => {
-                  const next = e.target.value;
-                  if (next.startsWith('fx:')) {
-                    const fx = next.slice(3);
-                    const baseTheme = ARTIFACT_THEME_FX_DEFAULT_THEME[fx] || themeName || 'dark';
-                    setThemeName(baseTheme);
-                    setThemeFxPreset(fx);
-                    void persist({ name: baseTheme, themeFxPreset: fx });
-                    return;
-                  }
-                  setThemeName(next);
-                  setThemeFxPreset('none');
-                  void persist({ name: next, themeFxPreset: 'none' });
-                }}
-              >
-                {allThemeOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+              <div className="w-full rounded-md border border-slate-300 bg-white max-h-56 overflow-y-auto">
+                {themeVisualOptions.map((opt) => {
+                  const selected = selectedThemeOption === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      disabled={loading || !chatId || !previewPath}
+                      className={`w-full px-2 py-1.5 inline-flex items-center gap-2 border-b last:border-b-0 border-slate-100 disabled:opacity-50 disabled:cursor-not-allowed ${
+                        selected ? 'bg-slate-50' : 'hover:bg-slate-50/60'
+                      }`}
+                      onClick={() => {
+                        const next = opt.value;
+                        if (next.startsWith('fx:')) {
+                          const fx = next.slice(3);
+                          const baseTheme = ARTIFACT_THEME_FX_DEFAULT_THEME[fx] || themeName || 'dark';
+                          setThemeName(baseTheme);
+                          setThemeFxPreset(fx);
+                          void persist({ name: baseTheme, themeFxPreset: fx });
+                          return;
+                        }
+                        setThemeName(next);
+                        setThemeFxPreset('none');
+                        void persist({ name: next, themeFxPreset: 'none' });
+                      }}
+                    >
+                      <span
+                        className="h-8 w-8 rounded-md border border-slate-200 shrink-0"
+                        style={{ background: buildSwatchBackground(opt.swatches) }}
+                      />
+                      <span className="min-w-0 flex-1 text-left">
+                        <span className="block text-xs font-medium text-slate-800 truncate">{opt.title}</span>
+                        <span className="block text-[11px] text-slate-500 truncate">{opt.subtitle}</span>
+                      </span>
+                      {selected ? <Check className="w-3.5 h-3.5 text-slate-700 shrink-0" /> : null}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
             <div className="space-y-1">
               <label className="text-xs text-slate-600">Header</label>

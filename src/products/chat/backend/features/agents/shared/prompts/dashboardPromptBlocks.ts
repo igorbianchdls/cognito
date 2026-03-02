@@ -9,7 +9,7 @@ export const DASHBOARD_PLAN_PROMPT_BLOCK = `
 - 2) propose a concrete plan BEFORE tool execution, with explicit items:
 - Objetivo
 - dashboard_name sugerido
-- KPIs (widget_id, title, tabela, medida, formato?, fr?, container)
+- KPIs (widget_id, title, tabela, medida, formato?["currency"|"percent"|"number"], fr?, container)
 - Charts (widget_id, chart_type, title, tabela, dimensao, medida, ordem?, limit?, fr?, container). ordem aceita "field:dir" (ex.: "measure:desc") ou { field, dir }.
 - Filtros (widget_id, title, campo, tabela, tipo, chave?, fr?, container). chave é opcional; se omitida, deriva de campo.
 - Insights (widget_id, title, items, fr?, container)
@@ -50,10 +50,11 @@ export const DASHBOARD_BUILD_PROMPT_BLOCK = `
 - if parser_state is not provided, rely on backend session by chat_id + dashboard_name.
 - stateless best practice: always reuse the most recent parser_state returned by the immediately previous tool call.
 - Widget payload contracts:
-- kpi payload: title, tabela, medida, optional fr, formato, filtros.
-- chart payload: chart_type(bar|line|pie), title, tabela, dimensao, medida, optional fr, formato, filtros, limit, ordem, height. ordem aceita "field:dir" ou { field, dir }.
+- kpi payload: title, tabela, medida, optional fr, formato, filtros. formato permitido: currency|percent|number.
+- chart payload: chart_type(bar|line|pie), title, tabela, dimensao, medida, optional fr, formato, filtros, limit, ordem, height. ordem aceita "field:dir" ou { field, dir }. formato permitido: currency|percent|number.
 - filtro payload: title, campo, tabela, optional tipo(list|dropdown|multi), chave, fr. chave é opcional; se omitida, deriva de campo.
 - insights payload: title, items(string[] or {text,icon}[]), optional fr.
+- never send "BRL" (or other currency code/symbol) in formato; use "currency".
 - Error recovery:
 - if add_widget/add_widgets_batch fails because dashboard is not initialized, run create_dashboard first and retry.
 - do not invent unsupported widget_type, chart_type, or payload keys.
