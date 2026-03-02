@@ -10,7 +10,7 @@ export const DASHBOARD_PLAN_PROMPT_BLOCK = `
 - Objetivo
 - dashboard_name sugerido
 - KPIs (widget_id, title, tabela, medida, formato?["currency"|"percent"|"number"], fr?, container)
-- Charts (widget_id, chart_type, title, tabela, dimensao, dimension_expr?, medida, ordem?, limit?, fr?, container). ordem aceita "field:dir" (ex.: "measure:desc") ou { field, dir }.
+- Charts (widget_id, chart_type, title, tabela, dimensao, dimension_expr?, layout?(auto|vertical|horizontal), medida, ordem?, limit?, fr?, container). ordem aceita "field:dir" (ex.: "measure:desc") ou { field, dir }.
 - Filtros (widget_id, title, campo, tabela, tipo, chave?, fr?, container). chave é opcional; se omitida, deriva de campo.
 - Insights (widget_id, title, items, fr?, container)
 - Layout de containers/rows (which widgets are grouped in each container)
@@ -51,7 +51,9 @@ export const DASHBOARD_BUILD_PROMPT_BLOCK = `
 - stateless best practice: always reuse the most recent parser_state returned by the immediately previous tool call.
 - Widget payload contracts:
 - kpi payload: title, tabela, medida, optional fr, formato, filtros. formato permitido: currency|percent|number.
-- chart payload: chart_type(bar|line|pie), title, tabela, dimensao, optional dimension_expr (or dimensionExpr), medida, optional fr, formato, filtros, limit, ordem, height. ordem aceita "field:dir" ou { field, dir }. formato permitido: currency|percent|number.
+- chart payload: chart_type(bar|line|pie), title, tabela, dimensao, optional dimension_expr (or dimensionExpr), optional layout(auto|vertical|horizontal), medida, optional fr, formato, filtros, limit, ordem, height. ordem aceita "field:dir" ou { field, dir }. formato permitido: currency|percent|number.
+- layout rule (BarChart): if layout is omitted/auto, use automatic default: temporal -> vertical, categorical -> horizontal.
+- send chart.layout only when you need to force manual override; otherwise omit and keep automatic behavior.
 - filtro payload: title, campo, tabela, optional tipo(list|dropdown|multi), chave, fr. chave é opcional; se omitida, deriva de campo resolvido. prefira campo *_id (ex.: vendedor_id); aliases (vendedor, cliente, canal_venda) podem ser normalizados para *_id.
 - insights payload: title, items(string[] or {text,icon}[]), optional fr.
 - required fields must always be present before calling tool:

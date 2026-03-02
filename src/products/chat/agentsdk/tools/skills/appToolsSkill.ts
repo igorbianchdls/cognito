@@ -51,6 +51,9 @@ Regras:
 - Dashboard Builder (estado): pode operar stateful (chat_id + dashboard_name) ou stateless (parser_state). Em stateless, sempre reenviar o parser_state mais recente retornado pela chamada anterior.
 - Dashboard Builder (container): widgets com mesmo container ficam na mesma row; sem container, usa "principal".
 - Dashboard Builder (payload chart): ordem aceita string "field:dir" (ex.: "measure:desc") ou objeto { field, dir }.
+- Dashboard Builder (payload chart): layout opcional (auto|vertical|horizontal). Foco em BarChart.
+- Dashboard Builder (payload chart): quando layout for omitido/auto no BarChart, usar padrão automático: temporal -> vertical; categórico -> horizontal.
+- Dashboard Builder (payload chart): enviar layout apenas quando quiser forçar override manual; no padrão, omitir layout.
 - Dashboard Builder (payload chart): para série mensal, usar padrão dos apps: dimensao="mes" + dimension_expr (ou dimensionExpr) com DATE_TRUNC month e ordem "dimension:asc".
 - Dashboard Builder (campos obrigatórios): kpi={title,tabela,medida}; chart={chart_type,title,tabela,dimensao,medida}; filtro={title,campo,tabela}; insights={title,items}.
 - Dashboard Builder (payload KPI/chart): campo formato (quando usado) deve ser apenas "currency" | "percent" | "number".

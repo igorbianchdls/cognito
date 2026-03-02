@@ -25,6 +25,7 @@ type ChartPayload = {
   dimensao: string
   dimension_expr?: string
   dimensionExpr?: string
+  layout?: 'auto' | 'vertical' | 'horizontal' | string
   medida: string
   fr?: number
   formato?: MetricFormat | string
@@ -145,6 +146,15 @@ function resolveChartOrderBy(payload: ChartPayload): OrderBy | undefined {
   const isTimeLike = dim === 'mes' || dim === 'mês' || dim === 'month' || dim === 'mensal' || dim === 'periodo'
   if (isTimeLike) return { field: 'dimension', dir: 'asc' }
   return undefined
+}
+
+function resolveBarLayout(payload: ChartPayload): 'vertical' | 'horizontal' {
+  const raw = String((payload as any).layout ?? '').trim().toLowerCase()
+  if (raw === 'vertical' || raw === 'horizontal') return raw
+
+  const dim = String(payload.dimensao || '').trim().toLowerCase()
+  const isTimeLike = dim === 'mes' || dim === 'mês' || dim === 'month' || dim === 'mensal' || dim === 'periodo'
+  return isTimeLike ? 'vertical' : 'horizontal'
 }
 
 function normalizeFormat(value: unknown): MetricFormat {
@@ -319,6 +329,7 @@ function buildChartNode(payload: ChartPayload): Record<string, unknown> {
 
   const orderBy = resolveChartOrderBy(payload)
   const dimensionExpr = resolveChartDimensionExpr(payload)
+  const barLayout = chartType === 'bar' ? resolveBarLayout(payload) : undefined
 
   return {
     type: typeMap[chartType],
@@ -327,6 +338,7 @@ function buildChartNode(payload: ChartPayload): Record<string, unknown> {
       fr: payload.fr ?? 1,
       format: normalizeFormat(payload.formato),
       height: payload.height ?? 240,
+      ...(barLayout ? { nivo: { layout: barLayout } } : {}),
       dataQuery: {
         model: tabela,
         dimension: dimensao,
