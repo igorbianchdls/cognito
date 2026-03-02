@@ -6,6 +6,7 @@ import SandboxTabs from './SandboxTabs';
 import StatusBadge from './StatusBadge';
 import HeaderActions from './HeaderActions';
 import { X } from 'lucide-react';
+import { readPreviewDebugFlags } from '@/products/chat/shared/chat-ui/components/json-render/previewDebug';
 
 type Props = {
   onClose?: () => void;
@@ -15,6 +16,19 @@ type Props = {
 };
 
 export default function SandboxHeader({ onClose, onExpand, expanded, chatId }: Props) {
+  const [disableHeaderActions, setDisableHeaderActions] = React.useState(false);
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const apply = () => {
+      const flags = readPreviewDebugFlags();
+      setDisableHeaderActions(Boolean(flags.disableHeaderActions));
+    };
+    apply();
+    window.addEventListener('popstate', apply);
+    return () => window.removeEventListener('popstate', apply);
+  }, []);
+
   return (
     <div className="flex items-center justify-between border-b px-3 py-1 bg-white">
       {/* Left group: chevrons + tabs */}
@@ -41,7 +55,7 @@ export default function SandboxHeader({ onClose, onExpand, expanded, chatId }: P
       </div>
       {/* Right: actions + deploy + close */}
       <div className="flex items-center gap-1">
-        <HeaderActions chatId={chatId} />
+        {!disableHeaderActions && <HeaderActions chatId={chatId} />}
         {onClose && (
           <button
             type="button"
