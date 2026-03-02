@@ -1,5 +1,5 @@
 export const DASHBOARD_BUILDER_TOOL_DESCRIPTION =
-  'Constrói dashboards JSONR de forma incremental e previsível, reduzindo erros de estrutura versus escrever o arquivo inteiro manualmente. Fluxo recomendado: (1) create_dashboard para iniciar Theme+Header e estado; (2) add_widgets_batch para montar blocos iniciais; (3) add_widget para ajustes pontuais/substituições; (4) get_dashboard para retornar árvore final + parser_state para inspeção. Persistência automática: create_dashboard, add_widget e add_widgets_batch salvam o arquivo em /vercel/sandbox/dashboard/<dashboard_name>.jsonr e retornam file_path (com file_persisted=true quando houve escrita). get_dashboard é leitura do estado atual (sem escrita). Regras: widgets com mesmo container ficam na mesma row; se container não for informado, usa "principal". Estado pode ser stateful (backend mantém por chat_id + dashboard_name) ou stateless (enviando parser_state a cada chamada). Tipos suportados: kpi, chart, filtro, insights.'
+  'Constrói dashboards JSONR de forma incremental e previsível, reduzindo erros de estrutura versus escrever o arquivo inteiro manualmente. Fluxo recomendado: (1) create_dashboard para iniciar Theme+Header e estado; (2) add_widgets_batch para montar blocos iniciais; (3) add_widget para ajustes pontuais/substituições; (4) get_dashboard para retornar árvore final + parser_state para inspeção. Persistência automática: create_dashboard, add_widget e add_widgets_batch salvam o arquivo em /vercel/sandbox/dashboard/<dashboard_name>.jsonr e retornam file_path (com file_persisted=true quando houve escrita). get_dashboard é leitura do estado atual (sem escrita). Regras: widgets com mesmo container ficam na mesma row; se container não for informado, usa "principal". Estado pode ser stateful (backend mantém por chat_id + dashboard_name) ou stateless (enviando parser_state). Em modo stateless, reenviar sempre o parser_state mais recente retornado pela chamada anterior. Tipos suportados: kpi, chart, filtro, insights.'
 
 export const DASHBOARD_BUILDER_TOOL_PARAMETERS = {
   type: 'object',
@@ -46,7 +46,7 @@ export const DASHBOARD_BUILDER_TOOL_PARAMETERS = {
       type: 'object',
       additionalProperties: true,
       description:
-        'Payload do widget conforme widget_type. kpi: {title,tabela,medida,fr?,formato?,filtros?}. chart: {chart_type,title,tabela,dimensao,medida,fr?,formato?,filtros?,limit?,ordem?,height?}. filtro: {title,campo,tabela,tipo?,chave?,fr?}. insights: {title,items,fr?}.',
+        'Payload do widget conforme widget_type. kpi: {title,tabela,medida,fr?,formato?,filtros?}. chart: {chart_type,title,tabela,dimensao,medida,fr?,formato?,filtros?,limit?,ordem?,height?}, com ordem em "field:dir" (ex.: "measure:desc") ou {field,dir}. filtro: {title,campo,tabela,tipo?,chave?,fr?}, onde chave é opcional (se omitida deriva de campo). insights: {title,items,fr?}.',
     },
     widgets: {
       type: 'array',
@@ -58,7 +58,7 @@ export const DASHBOARD_BUILDER_TOOL_PARAMETERS = {
       type: 'object',
       additionalProperties: true,
       description:
-        'Estado opcional do parser para execução stateless. Quando informado, tem prioridade sobre a sessão stateful do backend.',
+        'Estado opcional do parser para execução stateless. Quando informado, tem prioridade sobre a sessão stateful do backend. Em modo stateless, use sempre o parser_state mais recente retornado pela chamada imediatamente anterior.',
     },
   },
   required: ['action', 'dashboard_name'],
