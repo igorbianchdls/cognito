@@ -1,11 +1,14 @@
 "use client";
 
 import React from 'react';
-import { ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { ChevronsLeft, ChevronsRight, ChevronDown, LayoutDashboard, X } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useStore } from '@nanostores/react';
 import SandboxTabs from './SandboxTabs';
 import StatusBadge from './StatusBadge';
 import HeaderActions from './HeaderActions';
-import { X } from 'lucide-react';
+import DashboardPicker from './json-render/DashboardPicker';
+import { $sandboxActiveTab, sandboxActions } from '@/chat/sandbox';
 
 type Props = {
   onClose?: () => void;
@@ -15,6 +18,15 @@ type Props = {
 };
 
 export default function SandboxHeader({ onClose, onExpand, expanded, chatId }: Props) {
+  const active = useStore($sandboxActiveTab);
+  const [dashboardPickerOpen, setDashboardPickerOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (active !== 'dashboard') return;
+    setDashboardPickerOpen(true);
+    sandboxActions.setActiveTab('preview');
+  }, [active]);
+
   return (
     <div className="flex items-center justify-between border-b px-3 py-1 bg-white">
       {/* Left group: chevrons + tabs */}
@@ -32,7 +44,7 @@ export default function SandboxHeader({ onClose, onExpand, expanded, chatId }: P
           )}
         </button>
         <div className="overflow-x-auto">
-          <SandboxTabs chatId={chatId} />
+          <SandboxTabs />
         </div>
       </div>
       {/* Center: status badge */}
@@ -41,6 +53,26 @@ export default function SandboxHeader({ onClose, onExpand, expanded, chatId }: P
       </div>
       {/* Right: actions + deploy + close */}
       <div className="flex items-center gap-1">
+        <Popover open={dashboardPickerOpen} onOpenChange={setDashboardPickerOpen}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              title="Selecionar dashboard"
+              aria-label="Selecionar dashboard"
+              className="h-8 px-2 inline-flex items-center justify-center rounded-md border border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100"
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              <ChevronDown className="w-3.5 h-3.5 ml-1 opacity-70" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="end" side="bottom" sideOffset={8} className="w-auto p-2">
+            <DashboardPicker
+              chatId={chatId}
+              compact
+              onSelected={() => setDashboardPickerOpen(false)}
+            />
+          </PopoverContent>
+        </Popover>
         <HeaderActions chatId={chatId} />
         {onClose && (
           <button
