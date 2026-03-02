@@ -54,6 +54,11 @@ export const DASHBOARD_BUILD_PROMPT_BLOCK = `
 - chart payload: chart_type(bar|line|pie), title, tabela, dimensao, optional dimension_expr (or dimensionExpr), medida, optional fr, formato, filtros, limit, ordem, height. ordem aceita "field:dir" ou { field, dir }. formato permitido: currency|percent|number.
 - filtro payload: title, campo, tabela, optional tipo(list|dropdown|multi), chave, fr. chave é opcional; se omitida, deriva de campo.
 - insights payload: title, items(string[] or {text,icon}[]), optional fr.
+- required fields must always be present before calling tool:
+- kpi => title,tabela,medida
+- chart => chart_type,title,tabela,dimensao,medida
+- filtro => title,campo,tabela
+- insights => title,items
 - never send "BRL" (or other currency code/symbol) in formato; use "currency".
 - for monthly series, follow /apps pattern: dimensao="mes" + dimension_expr with DATE_TRUNC month and ordem "dimension:asc".
 - Error recovery:

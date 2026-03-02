@@ -179,6 +179,18 @@ function normalizeFormat(value: unknown): MetricFormat {
   return 'number'
 }
 
+function toRequiredText(value: unknown, fieldName: string): string {
+  const out = String(value ?? '').trim()
+  if (!out) throw new Error(`${fieldName} é obrigatório`)
+  return out
+}
+
+function toChartType(value: unknown): ChartPayload['chart_type'] {
+  const out = String(value ?? '').trim().toLowerCase()
+  if (out === 'bar' || out === 'line' || out === 'pie') return out
+  throw new Error('payload.chart_type inválido. Use: bar, line, pie')
+}
+
 function ensureThemeTree(tree: JsonTree): Array<Record<string, unknown>> {
   const arr = Array.isArray(tree) ? cloneTree(tree) : []
 
@@ -249,15 +261,19 @@ function requireParserReady(state: DashboardToolParserState, dashboardName: stri
 }
 
 function buildKpiNode(payload: KpiPayload): Record<string, unknown> {
+  const title = toRequiredText((payload as any).title, 'payload.title')
+  const tabela = toRequiredText((payload as any).tabela, 'payload.tabela')
+  const medida = toRequiredText((payload as any).medida, 'payload.medida')
+
   return {
     type: 'KPI',
     props: {
-      title: payload.title,
+      title,
       fr: payload.fr ?? 1,
       format: normalizeFormat(payload.formato),
       dataQuery: {
-        model: payload.tabela,
-        measure: payload.medida,
+        model: tabela,
+        measure: medida,
         filters: payload.filtros ?? {},
       },
     },
@@ -265,6 +281,12 @@ function buildKpiNode(payload: KpiPayload): Record<string, unknown> {
 }
 
 function buildChartNode(payload: ChartPayload): Record<string, unknown> {
+  const chartType = toChartType((payload as any).chart_type)
+  const title = toRequiredText((payload as any).title, 'payload.title')
+  const tabela = toRequiredText((payload as any).tabela, 'payload.tabela')
+  const dimensao = toRequiredText((payload as any).dimensao, 'payload.dimensao')
+  const medida = toRequiredText((payload as any).medida, 'payload.medida')
+
   const typeMap: Record<ChartPayload['chart_type'], string> = {
     bar: 'BarChart',
     line: 'LineChart',
@@ -275,17 +297,17 @@ function buildChartNode(payload: ChartPayload): Record<string, unknown> {
   const dimensionExpr = resolveChartDimensionExpr(payload)
 
   return {
-    type: typeMap[payload.chart_type],
+    type: typeMap[chartType],
     props: {
-      title: payload.title,
+      title,
       fr: payload.fr ?? 1,
       format: normalizeFormat(payload.formato),
       height: payload.height ?? 240,
       dataQuery: {
-        model: payload.tabela,
-        dimension: payload.dimensao,
+        model: tabela,
+        dimension: dimensao,
         ...(dimensionExpr ? { dimensionExpr } : {}),
-        measure: payload.medida,
+        measure: medida,
         filters: payload.filtros ?? {},
         ...(typeof payload.limit === 'number' ? { limit: payload.limit } : {}),
         ...(orderBy ? { orderBy } : {}),
@@ -295,22 +317,25 @@ function buildChartNode(payload: ChartPayload): Record<string, unknown> {
 }
 
 function buildFiltroNode(payload: FiltroPayload): Record<string, unknown> {
-  const key = sanitizeKey(payload.chave || payload.campo)
+  const title = toRequiredText((payload as any).title, 'payload.title')
+  const campo = toRequiredText((payload as any).campo, 'payload.campo')
+  const tabela = toRequiredText((payload as any).tabela, 'payload.tabela')
+  const key = sanitizeKey(payload.chave || campo)
 
   return {
     type: 'SlicerCard',
     props: {
-      title: payload.title,
+      title,
       fr: payload.fr ?? 1,
       fields: [
         {
-          label: payload.title,
+          label: title,
           type: payload.tipo ?? 'list',
           storePath: `filters.${key}`,
           source: {
             type: 'options',
-            model: payload.tabela,
-            field: payload.campo,
+            model: tabela,
+            field: campo,
           },
         },
       ],
@@ -319,12 +344,16 @@ function buildFiltroNode(payload: FiltroPayload): Record<string, unknown> {
 }
 
 function buildInsightsNode(payload: InsightsPayload): Record<string, unknown> {
+  const title = toRequiredText((payload as any).title, 'payload.title')
+  const items = Array.isArray((payload as any).items) ? (payload as any).items : []
+  if (!items.length) throw new Error('payload.items é obrigatório em insights')
+
   return {
     type: 'AISummary',
     props: {
-      title: payload.title,
+      title,
       fr: payload.fr ?? 1,
-      items: payload.items.map((item) => {
+      items: items.map((item: any) => {
         if (typeof item === 'string') return { text: item }
         return { text: item.text, ...(item.icon ? { icon: item.icon } : {}) }
       }),

@@ -76,6 +76,46 @@ function normalizeWidgetType(value: unknown): AddWidgetInput['widget_type'] | nu
   return null
 }
 
+function validateWidgetPayload(widgetType: AddWidgetInput['widget_type'], payload: JsonMap, prefix = 'payload') {
+  const requiredText = (field: string) => {
+    const v = toText(payload[field])
+    if (!v) throw new Error(`${prefix}.${field} é obrigatório para widget_type=${widgetType}`)
+    return v
+  }
+
+  if (widgetType === 'kpi') {
+    requiredText('title')
+    requiredText('tabela')
+    requiredText('medida')
+    return
+  }
+
+  if (widgetType === 'chart') {
+    const chartType = requiredText('chart_type').toLowerCase()
+    if (chartType !== 'bar' && chartType !== 'line' && chartType !== 'pie') {
+      throw new Error(`${prefix}.chart_type inválido para widget_type=chart. Use: bar, line, pie`)
+    }
+    requiredText('title')
+    requiredText('tabela')
+    requiredText('dimensao')
+    requiredText('medida')
+    return
+  }
+
+  if (widgetType === 'filtro') {
+    requiredText('title')
+    requiredText('campo')
+    requiredText('tabela')
+    return
+  }
+
+  requiredText('title')
+  const items = payload.items
+  if (!Array.isArray(items) || items.length === 0) {
+    throw new Error(`${prefix}.items é obrigatório para widget_type=insights`)
+  }
+}
+
 function cloneState(state: DashboardToolParserState): DashboardToolParserState {
   return JSON.parse(JSON.stringify(state)) as DashboardToolParserState
 }
@@ -193,11 +233,14 @@ function buildAddWidgetInput(payload: JsonMap, dashboardName: string): AddWidget
     throw new Error('widget_type inválido. Use: kpi, chart, filtro, insights')
   }
 
+  const widgetPayload = toObj(payload.payload)
+  validateWidgetPayload(widgetType, widgetPayload)
+
   const input: AddWidgetInput = {
     dashboard_name: dashboardName,
     widget_id: widgetId,
     widget_type: widgetType,
-    payload: toObj(payload.payload) as AddWidgetInput['payload'],
+    payload: widgetPayload as AddWidgetInput['payload'],
     ...(textOrUndefined(payload.container) ? { container: textOrUndefined(payload.container) } : {}),
   }
   return input
@@ -215,11 +258,13 @@ function buildAddWidgetsBatchInput(payload: JsonMap, dashboardName: string): Add
     if (!widgetType) {
       throw new Error(`widgets[${index}].widget_type inválido. Use: kpi, chart, filtro, insights`)
     }
+    const itemPayload = toObj(widgetPayload.payload)
+    validateWidgetPayload(widgetType, itemPayload, `widgets[${index}].payload`)
     const item: AddWidgetInput = {
       dashboard_name: dashboardName,
       widget_id: widgetId,
       widget_type: widgetType,
-      payload: toObj(widgetPayload.payload) as AddWidgetInput['payload'],
+      payload: itemPayload as AddWidgetInput['payload'],
       ...(textOrUndefined(widgetPayload.container) ? { container: textOrUndefined(widgetPayload.container) } : {}),
     }
     return item
