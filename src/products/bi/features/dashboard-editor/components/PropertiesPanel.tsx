@@ -522,11 +522,12 @@ export default function PropertiesPanel({
                       placeholder="ex.: vendas.kpis.faturamento"
                     />
                   )}
-                  <TextField
+                  <TextAreaField
                     label="dataQuery.query"
                     value={String(getProp(node, 'dataQuery.query', ''))}
                     onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.query', v || undefined)}
                     placeholder="SELECT ... AS dimensao, ... AS valor"
+                    rows={8}
                   />
                   <TextField
                     label="dataQuery.model"
