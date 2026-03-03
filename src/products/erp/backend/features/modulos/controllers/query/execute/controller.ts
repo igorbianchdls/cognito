@@ -63,13 +63,15 @@ function bindNamedParams(sql: string, paramsSource: Record<string, unknown>) {
   const paramIndexByName = new Map<string, number>()
   const compiled = sql.replace(/\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}/g, (_, rawName: string) => {
     const name = String(rawName || '').trim()
+    const lowerName = name.toLowerCase()
+    const suffix = lowerName === 'de' || lowerName === 'ate' ? '::date' : ''
     const existing = paramIndexByName.get(name)
-    if (existing) return `$${existing}`
+    if (existing) return `$${existing}${suffix}`
     const value = normalizeParamValue(paramsSource[name])
     params.push(value)
     const nextIndex = params.length
     paramIndexByName.set(name, nextIndex)
-    return `$${nextIndex}`
+    return `$${nextIndex}${suffix}`
   })
   return { sql: compiled, params }
 }
