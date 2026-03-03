@@ -1,85 +1,39 @@
 import { BiSlicers } from '@/products/bi'
 
 const canalVendaOptionsSource = BiSlicers.createOptionsSource('vendas.pedidos', 'canal_venda_id', 50)
-const filialOptionsSource = BiSlicers.createOptionsSource('vendas.pedidos', 'filial_id', 50)
 
-const VENDAS_FILTERS_SQL = `
+const VENDAS_WHERE = `
 WHERE p.tenant_id = {{tenant_id}}
   AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
   AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
-  AND (
-    {{canal_venda_id}} IS NULL
-    OR NULLIF(regexp_replace({{canal_venda_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-    OR p.canal_venda_id::text = ANY(string_to_array(regexp_replace({{canal_venda_id}}::text, '[{}[:space:]]', '', 'g'), ','))
-  )
-  AND (
-    {{categoria_receita_id}} IS NULL
-    OR NULLIF(regexp_replace({{categoria_receita_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-    OR p.categoria_receita_id::text = ANY(string_to_array(regexp_replace({{categoria_receita_id}}::text, '[{}[:space:]]', '', 'g'), ','))
-  )
-  AND (
-    {{cliente_id}} IS NULL
-    OR NULLIF(regexp_replace({{cliente_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-    OR p.cliente_id::text = ANY(string_to_array(regexp_replace({{cliente_id}}::text, '[{}[:space:]]', '', 'g'), ','))
-  )
-  AND (
-    {{filial_id}} IS NULL
-    OR NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-    OR p.filial_id::text = ANY(string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ','))
-  )
-  AND (
-    {{territorio_id}} IS NULL
-    OR NULLIF(regexp_replace({{territorio_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-    OR p.territorio_id::text = ANY(string_to_array(regexp_replace({{territorio_id}}::text, '[{}[:space:]]', '', 'g'), ','))
-  )
-  AND (
-    {{unidade_negocio_id}} IS NULL
-    OR NULLIF(regexp_replace({{unidade_negocio_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-    OR p.unidade_negocio_id::text = ANY(string_to_array(regexp_replace({{unidade_negocio_id}}::text, '[{}[:space:]]', '', 'g'), ','))
-  )
-  AND (
-    {{vendedor_id}} IS NULL
-    OR NULLIF(regexp_replace({{vendedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-    OR p.vendedor_id::text = ANY(string_to_array(regexp_replace({{vendedor_id}}::text, '[{}[:space:]]', '', 'g'), ','))
-  )
-`.trim()
-
-const VENDAS_FROM_PEDIDOS = `
-FROM vendas.pedidos p
-`.trim()
-
-const VENDAS_FROM_ITENS = `
-FROM vendas.pedidos p
-JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-LEFT JOIN entidades.clientes c ON c.id = p.cliente_id
-LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
-LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
-LEFT JOIN comercial.territorios t ON t.id = p.territorio_id
-LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
-LEFT JOIN financeiro.categorias_receita cr ON cr.id = p.categoria_receita_id
-LEFT JOIN empresa.filiais fil ON fil.id = p.filial_id
-LEFT JOIN empresa.unidades_negocio un ON un.id = p.unidade_negocio_id
+  AND ({{canal_venda_id}} IS NULL OR p.canal_venda_id = {{canal_venda_id}})
+  AND ({{categoria_receita_id}} IS NULL OR p.categoria_receita_id = {{categoria_receita_id}})
+  AND ({{cliente_id}} IS NULL OR p.cliente_id = {{cliente_id}})
+  AND ({{filial_id}} IS NULL OR p.filial_id = {{filial_id}})
+  AND ({{territorio_id}} IS NULL OR p.territorio_id = {{territorio_id}})
+  AND ({{unidade_negocio_id}} IS NULL OR p.unidade_negocio_id = {{unidade_negocio_id}})
+  AND ({{vendedor_id}} IS NULL OR p.vendedor_id = {{vendedor_id}})
 `.trim()
 
 const QUERY_KPI_VENDAS = `
 SELECT
   COALESCE(SUM(p.valor_total), 0)::float AS value
-${VENDAS_FROM_PEDIDOS}
-${VENDAS_FILTERS_SQL}
+FROM vendas.pedidos p
+${VENDAS_WHERE}
 `.trim()
 
 const QUERY_KPI_PEDIDOS = `
 SELECT
   COUNT(DISTINCT p.id)::int AS value
-${VENDAS_FROM_PEDIDOS}
-${VENDAS_FILTERS_SQL}
+FROM vendas.pedidos p
+${VENDAS_WHERE}
 `.trim()
 
 const QUERY_KPI_TICKET_MEDIO = `
 SELECT
   COALESCE(AVG(p.valor_total), 0)::float AS value
-${VENDAS_FROM_PEDIDOS}
-${VENDAS_FILTERS_SQL}
+FROM vendas.pedidos p
+${VENDAS_WHERE}
 `.trim()
 
 const QUERY_CANAIS = `
@@ -87,8 +41,10 @@ SELECT
   cv.id AS key,
   COALESCE(cv.nome, '-') AS label,
   COALESCE(SUM(pi.subtotal), 0)::float AS value
-${VENDAS_FROM_ITENS}
-${VENDAS_FILTERS_SQL}
+FROM vendas.pedidos p
+JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+${VENDAS_WHERE}
 GROUP BY 1, 2
 ORDER BY 3 DESC
 `.trim()
@@ -98,8 +54,10 @@ SELECT
   cr.id AS key,
   COALESCE(cr.nome, '-') AS label,
   COALESCE(SUM(pi.subtotal), 0)::float AS value
-${VENDAS_FROM_ITENS}
-${VENDAS_FILTERS_SQL}
+FROM vendas.pedidos p
+JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+LEFT JOIN financeiro.categorias_receita cr ON cr.id = p.categoria_receita_id
+${VENDAS_WHERE}
 GROUP BY 1, 2
 ORDER BY 3 DESC
 `.trim()
@@ -109,8 +67,10 @@ SELECT
   c.id AS key,
   COALESCE(c.nome_fantasia, '-') AS label,
   COALESCE(SUM(pi.subtotal), 0)::float AS value
-${VENDAS_FROM_ITENS}
-${VENDAS_FILTERS_SQL}
+FROM vendas.pedidos p
+JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+LEFT JOIN entidades.clientes c ON c.id = p.cliente_id
+${VENDAS_WHERE}
 GROUP BY 1, 2
 ORDER BY 3 DESC
 `.trim()
@@ -120,8 +80,11 @@ SELECT
   v.id AS key,
   COALESCE(f.nome, '-') AS label,
   COALESCE(SUM(pi.subtotal), 0)::float AS value
-${VENDAS_FROM_ITENS}
-${VENDAS_FILTERS_SQL}
+FROM vendas.pedidos p
+JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
+LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
+${VENDAS_WHERE}
 GROUP BY 1, 2
 ORDER BY 3 DESC
 `.trim()
@@ -131,8 +94,10 @@ SELECT
   fil.id AS key,
   COALESCE(fil.nome, '-') AS label,
   COALESCE(SUM(pi.subtotal), 0)::float AS value
-${VENDAS_FROM_ITENS}
-${VENDAS_FILTERS_SQL}
+FROM vendas.pedidos p
+JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+LEFT JOIN empresa.filiais fil ON fil.id = p.filial_id
+${VENDAS_WHERE}
 GROUP BY 1, 2
 ORDER BY 3 DESC
 `.trim()
@@ -142,8 +107,10 @@ SELECT
   un.id AS key,
   COALESCE(un.nome, '-') AS label,
   COALESCE(SUM(pi.subtotal), 0)::float AS value
-${VENDAS_FROM_ITENS}
-${VENDAS_FILTERS_SQL}
+FROM vendas.pedidos p
+JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+LEFT JOIN empresa.unidades_negocio un ON un.id = p.unidade_negocio_id
+${VENDAS_WHERE}
 GROUP BY 1, 2
 ORDER BY 3 DESC
 `.trim()
@@ -153,8 +120,10 @@ SELECT
   t.id AS key,
   COALESCE(t.nome, '-') AS label,
   COALESCE(SUM(pi.subtotal), 0)::float AS value
-${VENDAS_FROM_ITENS}
-${VENDAS_FILTERS_SQL}
+FROM vendas.pedidos p
+JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+LEFT JOIN comercial.territorios t ON t.id = p.territorio_id
+${VENDAS_WHERE}
 GROUP BY 1, 2
 ORDER BY 3 DESC
 `.trim()
@@ -164,8 +133,9 @@ SELECT
   TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS key,
   TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS label,
   COALESCE(SUM(pi.subtotal), 0)::float AS value
-${VENDAS_FROM_ITENS}
-${VENDAS_FILTERS_SQL}
+FROM vendas.pedidos p
+JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+${VENDAS_WHERE}
 GROUP BY 1, 2
 ORDER BY 2 ASC
 `.trim()
@@ -175,8 +145,8 @@ SELECT
   TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS key,
   TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS label,
   COUNT(DISTINCT p.id)::int AS value
-${VENDAS_FROM_PEDIDOS}
-${VENDAS_FILTERS_SQL}
+FROM vendas.pedidos p
+${VENDAS_WHERE}
 GROUP BY 1, 2
 ORDER BY 2 ASC
 `.trim()
@@ -186,10 +156,22 @@ SELECT
   TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS key,
   TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS label,
   COALESCE(AVG(p.valor_total), 0)::float AS value
-${VENDAS_FROM_PEDIDOS}
-${VENDAS_FILTERS_SQL}
+FROM vendas.pedidos p
+${VENDAS_WHERE}
 GROUP BY 1, 2
 ORDER BY 2 ASC
+`.trim()
+
+const QUERY_PEDIDOS_POR_CANAL = `
+SELECT
+  cv.id AS key,
+  COALESCE(cv.nome, '-') AS label,
+  COUNT(DISTINCT p.id)::int AS value
+FROM vendas.pedidos p
+LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+${VENDAS_WHERE}
+GROUP BY 1, 2
+ORDER BY 3 DESC
 `.trim()
 
 export const APPS_VENDAS_TEMPLATE_TEXT = JSON.stringify([
@@ -252,7 +234,7 @@ export const APPS_VENDAS_TEMPLATE_TEXT = JSON.stringify([
       { type: 'Div', props: { direction: 'row', gap: 12, padding: 16, justify: 'start', align: 'start', childGrow: true }, children: [
         { type: 'BarChart', props: { fr: 1, title: 'Territórios', dataQuery: { query: QUERY_TERRITORIOS, xField: 'label', yField: 'value', keyField: 'key', filters: {}, limit: 6 }, interaction: { clickAsFilter: true, filterField: 'territorio_id', storePath: 'filters.territorio_id', clearOnSecondClick: true }, format: 'currency', height: 220, nivo: { layout: 'horizontal' } } },
         { type: 'BarChart', props: { fr: 1, title: 'Serviços/Categorias', dataQuery: { query: QUERY_CATEGORIAS, xField: 'label', yField: 'value', keyField: 'key', filters: {}, limit: 6 }, interaction: { clickAsFilter: true, filterField: 'categoria_receita_id', storePath: 'filters.categoria_receita_id', clearOnSecondClick: true }, format: 'currency', height: 220, nivo: { layout: 'horizontal' } } },
-        { type: 'BarChart', props: { fr: 1, title: 'Pedidos', dataQuery: { query: QUERY_CANAIS.replace('COALESCE(SUM(pi.subtotal), 0)::float', 'COUNT(DISTINCT p.id)::int'), xField: 'label', yField: 'value', keyField: 'key', filters: {}, limit: 6 }, interaction: { clickAsFilter: true, filterField: 'canal_venda_id', storePath: 'filters.canal_venda_id', clearOnSecondClick: true }, format: 'number', height: 220, nivo: { layout: 'horizontal' } } },
+        { type: 'BarChart', props: { fr: 1, title: 'Pedidos', dataQuery: { query: QUERY_PEDIDOS_POR_CANAL, xField: 'label', yField: 'value', keyField: 'key', filters: {}, limit: 6 }, interaction: { clickAsFilter: true, filterField: 'canal_venda_id', storePath: 'filters.canal_venda_id', clearOnSecondClick: true }, format: 'number', height: 220, nivo: { layout: 'horizontal' } } },
       ] },
     ],
   },
