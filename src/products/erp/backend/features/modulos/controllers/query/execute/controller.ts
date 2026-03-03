@@ -24,6 +24,18 @@ function toFiniteNumber(v: unknown): number | null {
   return Number.isFinite(n) ? n : null
 }
 
+function normalizeParamValue(value: unknown): unknown {
+  if (value === undefined || value === null) return null
+  if (typeof value === 'string') {
+    return value.trim() === '' ? null : value
+  }
+  if (Array.isArray(value)) {
+    const normalized = value.map((item) => normalizeParamValue(item)).filter((item) => item !== null)
+    return normalized.length ? normalized : null
+  }
+  return value
+}
+
 function normalizeAndAssertSafeSelectQuery(sql: string): string {
   const cleaned = sql.trim().replace(/;+\s*$/g, '')
   if (!cleaned) {
@@ -50,8 +62,8 @@ function bindNamedParams(sql: string, paramsSource: Record<string, unknown>) {
   const params: unknown[] = []
   const compiled = sql.replace(/\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}/g, (_, rawName: string) => {
     const name = String(rawName || '').trim()
-    const value = paramsSource[name]
-    params.push(value === undefined ? null : value)
+    const value = normalizeParamValue(paramsSource[name])
+    params.push(value)
     return `$${params.length}`
   })
   return { sql: compiled, params }

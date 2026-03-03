@@ -1244,12 +1244,20 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const valueKey = (p.valueKey ?? 'total') as string;
     const { data } = useData();
     const [serverValue, setServerValue] = React.useState<number>(0);
+    const [queryError, setQueryError] = React.useState<string | null>(null);
     React.useEffect(() => {
       let cancelled = false;
       async function run() {
         try {
           const isSqlQueryMode = Boolean(typeof dq?.query === 'string' && dq.query.trim())
-          if (!dq || (!isSqlQueryMode && (!dq.model || !dq.measure))) { if (!cancelled) setServerValue(0); return; }
+          if (!dq || (!isSqlQueryMode && (!dq.model || !dq.measure))) {
+            if (!cancelled) {
+              setServerValue(0);
+              setQueryError(null);
+            }
+            return;
+          }
+          if (!cancelled) setQueryError(null);
           const filters = { ...(dq.filters || {}) } as AnyRecord;
           const dr = (data as any)?.filters?.dateRange;
           if (dr && !filters.de && !filters.ate) { if (dr.from) filters.de = dr.from; if (dr.to) filters.ate = dr.to; }
@@ -1287,10 +1295,16 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
             const keys = [valueKey, 'total', 'valor_total', 'faturamento_total', 'gasto_total', 'count', 'value'];
             for (const k of keys) { if (r0[k] != null) { const n = Number(r0[k]); if (Number.isFinite(n)) { val = n; break; } } }
           }
-          if (!cancelled) setServerValue(val);
+          if (!cancelled) {
+            setServerValue(val);
+            setQueryError(null);
+          }
         } catch (e) {
           console.error('[BI/KPI] query failed', e);
-          if (!cancelled) setServerValue(0);
+          if (!cancelled) {
+            setServerValue(0);
+            setQueryError(e instanceof Error ? e.message : 'Erro ao executar query');
+          }
         }
       }
       run();
@@ -1320,6 +1334,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       <FrameSurface style={containerStyle} frame={p?.containerStyle?.frame as AnyRecord} cssVars={theme.cssVars}>
         <div className="mb-1" style={titleStyle}>{title}</div>
         <div className="text-2xl font-semibold" style={valueStyle}>{formatValue(displayValue, fmt)}{unit ? ` ${unit}` : ''}</div>
+        {queryError && <div className="mt-1 text-xs text-red-600">{queryError}</div>}
       </FrameSurface>
     );
   },

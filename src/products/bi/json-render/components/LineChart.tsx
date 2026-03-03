@@ -86,12 +86,14 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
   const shouldClickFilter = clickAsFilter && Boolean(resolvedFilterStorePath);
   const isSqlQueryMode = Boolean(typeof dq?.query === "string" && dq.query.trim());
   const [serverRows, setServerRows] = React.useState<Array<Record<string, unknown>> | null>(null);
+  const [queryError, setQueryError] = React.useState<string | null>(null);
   React.useEffect(() => {
     let cancelled = false;
     async function run() {
-      if (!dq || (!isSqlQueryMode && (!dq.model || !dq.dimension || !dq.measure))) { setServerRows(null); return; }
-      if (isSqlQueryMode && (!dq.xField || !dq.yField)) { setServerRows(null); return; }
+      if (!dq || (!isSqlQueryMode && (!dq.model || !dq.dimension || !dq.measure))) { setServerRows(null); setQueryError(null); return; }
+      if (isSqlQueryMode && (!dq.xField || !dq.yField)) { setServerRows(null); setQueryError(null); return; }
       try {
+        if (!cancelled) setQueryError(null);
         const filters = { ...(dq.filters || {}) } as AnyRecord;
         const dr = (data as any)?.filters?.dateRange;
         if (dr && !filters.de && !filters.ate) { if (dr.from) filters.de = dr.from; if (dr.to) filters.ate = dr.to; }
@@ -121,8 +123,17 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
         const j = await res.json();
         if (!res.ok || j?.success === false) throw new Error(String(j?.message || `Query failed (${res.status})`));
         const rows = Array.isArray(j?.rows) ? j.rows : [];
-        if (!cancelled) setServerRows(rows as any);
-      } catch (e) { console.error('[BI/LineChart] query failed', e); if (!cancelled) setServerRows([]); }
+        if (!cancelled) {
+          setServerRows(rows as any);
+          setQueryError(null);
+        }
+      } catch (e) {
+        console.error('[BI/LineChart] query failed', e);
+        if (!cancelled) {
+          setServerRows([]);
+          setQueryError(e instanceof Error ? e.message : 'Erro ao executar query');
+        }
+      }
     }
     run();
     return () => { cancelled = true };
@@ -266,6 +277,7 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
   return (
     <FrameSurface style={containerStyle} frame={frame} cssVars={theme.cssVars}>
       {title && <div className="mb-0" style={titleStyle}>{title}</div>}
+      {queryError && <div className="mb-2 text-xs text-red-600">{queryError}</div>}
       <div style={{ height }}>
         <ResponsiveLine
           data={seriesData}

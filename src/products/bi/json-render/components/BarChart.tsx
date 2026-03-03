@@ -133,15 +133,17 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   const canDrillDown = drillEnabled && drillLevelIndex < (drillLevels.length - 1);
   const canDrillUp = drillEnabled && drillLevelIndex > 0;
   const [serverRows, setServerRows] = React.useState<Array<Record<string, unknown>> | null>(null);
+  const [queryError, setQueryError] = React.useState<string | null>(null);
   React.useEffect(() => {
     let cancelled = false;
     async function run() {
       if (
         !dq ||
         (!isSqlQueryMode && (!dq.model || (!effectiveDimension && !effectiveDimensionExpr) || !dq.measure))
-      ) { setServerRows(null); return; }
-      if (isSqlQueryMode && (!dq.xField || !dq.yField)) { setServerRows(null); return; }
+      ) { setServerRows(null); setQueryError(null); return; }
+      if (isSqlQueryMode && (!dq.xField || !dq.yField)) { setServerRows(null); setQueryError(null); return; }
       try {
+        if (!cancelled) setQueryError(null);
         const filters = { ...(dq.filters || {}) } as AnyRecord;
         const dr = (data as any)?.filters?.dateRange;
         if (dr && !filters.de && !filters.ate) {
@@ -181,8 +183,17 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
         const j = await res.json();
         if (!res.ok || j?.success === false) throw new Error(String(j?.message || `Query failed (${res.status})`));
         const rows = Array.isArray(j?.rows) ? j.rows : [];
-        if (!cancelled) setServerRows(rows as any);
-      } catch (e) { console.error('[BI/BarChart] query failed', e); if (!cancelled) setServerRows([]); }
+        if (!cancelled) {
+          setServerRows(rows as any);
+          setQueryError(null);
+        }
+      } catch (e) {
+        console.error('[BI/BarChart] query failed', e);
+        if (!cancelled) {
+          setServerRows([]);
+          setQueryError(e instanceof Error ? e.message : 'Erro ao executar query');
+        }
+      }
     }
     run();
     return () => { cancelled = true };
@@ -358,6 +369,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   return (
     <FrameSurface style={{ ...containerStyle, overflow: 'visible' }} frame={frame} cssVars={theme.cssVars}>
       {title && <div className="mb-0" style={titleStyle}>{title}</div>}
+      {queryError && <div className="mb-2 text-xs text-red-600">{queryError}</div>}
       {drillEnabled && drill?.showBreadcrumb !== false && (
         <div className="mb-2 flex items-center gap-2 text-[11px] text-gray-500">
           <button
