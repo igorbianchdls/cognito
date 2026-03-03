@@ -60,6 +60,56 @@ const ContainerStyleSchema = z.object({
   frame: FrameStyleSchema.optional(),
 }).partial();
 
+const OrderBySchema = z
+  .object({
+    field: z.string().optional(),
+    dir: z.enum(["asc", "desc"]).optional(),
+  })
+  .partial()
+  .optional();
+
+const LegacyKpiDataQuerySchema = z.object({
+  model: z.string(),
+  measure: z.string(),
+  filters: z.record(z.any()).optional(),
+  orderBy: OrderBySchema,
+  limit: z.number().optional(),
+}).strict();
+
+const LegacyChartDataQuerySchema = z.object({
+  model: z.string(),
+  dimension: z.string().optional(),
+  dimensionExpr: z.string().optional(),
+  time: z.object({
+    column: z.string(),
+    granularity: z.enum(["day", "month", "year"]).default("month"),
+    format: z.string().optional(),
+    alias: z.string().optional(),
+  }).strict().optional(),
+  measure: z.string(),
+  filters: z.record(z.any()).optional(),
+  orderBy: OrderBySchema,
+  limit: z.number().optional(),
+}).strict();
+
+const SqlKpiDataQuerySchema = z.object({
+  query: z.string(),
+  xField: z.string().optional(),
+  yField: z.string().optional(),
+  keyField: z.string().optional(),
+  filters: z.record(z.any()).optional(),
+  limit: z.number().optional(),
+}).strict();
+
+const SqlChartDataQuerySchema = z.object({
+  query: z.string(),
+  xField: z.string(),
+  yField: z.string(),
+  keyField: z.string().optional(),
+  filters: z.record(z.any()).optional(),
+  limit: z.number().optional(),
+}).strict();
+
 export const catalog = {
   components: {
     Theme: {
@@ -264,13 +314,7 @@ export const catalog = {
       props: z.object({
         title: z.string(),
         valuePath: z.string().optional(),
-        dataQuery: z.object({
-          model: z.string(),
-          measure: z.string(),
-          filters: z.record(z.any()).optional(),
-          orderBy: z.object({ field: z.string().optional(), dir: z.enum(["asc","desc"]).optional() }).partial().optional(),
-          limit: z.number().optional(),
-        }).strict().optional(),
+        dataQuery: z.union([LegacyKpiDataQuerySchema, SqlKpiDataQuerySchema]).optional(),
         valueKey: z.string().optional(),
         format: z.enum(["currency", "percent", "number"]).default("number"),
         titleStyle: TitleStyleSchema.optional(),
@@ -286,21 +330,7 @@ export const catalog = {
       props: z.object({
         title: z.string().optional(),
         titleStyle: TitleStyleSchema.optional(),
-        dataQuery: z.object({
-          model: z.string(),
-          dimension: z.string().optional(),
-          dimensionExpr: z.string().optional(),
-          time: z.object({
-            column: z.string(),
-            granularity: z.enum(["day","month","year"]).default("month"),
-            format: z.string().optional(),
-            alias: z.string().optional(),
-          }).strict().optional(),
-          measure: z.string(),
-          filters: z.record(z.any()).optional(),
-          orderBy: z.object({ field: z.string().optional(), dir: z.enum(["asc","desc"]).optional() }).partial().optional(),
-          limit: z.number().optional(),
-        }).strict(),
+        dataQuery: z.union([LegacyChartDataQuerySchema, SqlChartDataQuerySchema]),
         drill: z.object({
           enabled: z.boolean().optional(),
           showBreadcrumb: z.boolean().optional(),
@@ -358,21 +388,7 @@ export const catalog = {
       props: z.object({
         title: z.string().optional(),
         titleStyle: TitleStyleSchema.optional(),
-        dataQuery: z.object({
-          model: z.string(),
-          dimension: z.string().optional(),
-          dimensionExpr: z.string().optional(),
-          time: z.object({
-            column: z.string(),
-            granularity: z.enum(["day","month","year"]).default("month"),
-            format: z.string().optional(),
-            alias: z.string().optional(),
-          }).strict().optional(),
-          measure: z.string(),
-          filters: z.record(z.any()).optional(),
-          orderBy: z.object({ field: z.string().optional(), dir: z.enum(["asc","desc"]).optional() }).partial().optional(),
-          limit: z.number().optional(),
-        }).strict(),
+        dataQuery: z.union([LegacyChartDataQuerySchema, SqlChartDataQuerySchema]),
         interaction: z.object({
           clickAsFilter: z.boolean().optional(),
           filterField: z.string().optional(),
@@ -413,21 +429,7 @@ export const catalog = {
       props: z.object({
         title: z.string().optional(),
         titleStyle: TitleStyleSchema.optional(),
-        dataQuery: z.object({
-          model: z.string(),
-          dimension: z.string().optional(),
-          dimensionExpr: z.string().optional(),
-          time: z.object({
-            column: z.string(),
-            granularity: z.enum(["day","month","year"]).default("month"),
-            format: z.string().optional(),
-            alias: z.string().optional(),
-          }).strict().optional(),
-          measure: z.string(),
-          filters: z.record(z.any()).optional(),
-          orderBy: z.object({ field: z.string().optional(), dir: z.enum(["asc","desc"]).optional() }).partial().optional(),
-          limit: z.number().optional(),
-        }).strict(),
+        dataQuery: z.union([LegacyChartDataQuerySchema, SqlChartDataQuerySchema]),
         interaction: z.object({
           clickAsFilter: z.boolean().optional(),
           filterField: z.string().optional(),

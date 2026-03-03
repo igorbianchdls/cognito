@@ -523,6 +523,12 @@ export default function PropertiesPanel({
                     />
                   )}
                   <TextField
+                    label="dataQuery.query"
+                    value={String(getProp(node, 'dataQuery.query', ''))}
+                    onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.query', v || undefined)}
+                    placeholder="SELECT ... AS dimensao, ... AS valor"
+                  />
+                  <TextField
                     label="dataQuery.model"
                     value={String(getProp(node, 'dataQuery.model', ''))}
                     onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.model', v || undefined)}
@@ -541,6 +547,36 @@ export default function PropertiesPanel({
                     onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.measure', v || undefined)}
                     placeholder="ex.: SUM(valor_total)"
                   />
+                  {node.type !== 'KPI' && (
+                    <>
+                      <TextField
+                        label="dataQuery.xField"
+                        value={String(getProp(node, 'dataQuery.xField', ''))}
+                        onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.xField', v || undefined)}
+                        placeholder="ex.: dimensao"
+                      />
+                      <TextField
+                        label="dataQuery.yField"
+                        value={String(getProp(node, 'dataQuery.yField', ''))}
+                        onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.yField', v || undefined)}
+                        placeholder="ex.: valor"
+                      />
+                      <TextField
+                        label="dataQuery.keyField"
+                        value={String(getProp(node, 'dataQuery.keyField', ''))}
+                        onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.keyField', v || undefined)}
+                        placeholder="ex.: dimensao_id"
+                      />
+                    </>
+                  )}
+                  {node.type === 'KPI' && (
+                    <TextField
+                      label="dataQuery.yField"
+                      value={String(getProp(node, 'dataQuery.yField', ''))}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.yField', v || undefined)}
+                      placeholder="ex.: valor"
+                    />
+                  )}
                 </>
               )}
 

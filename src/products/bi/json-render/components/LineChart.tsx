@@ -84,14 +84,14 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
   const resolvedFilterField = filterFieldFromConfig || inferFilterField(dq?.dimension);
   const resolvedFilterStorePath = filterStorePathFromConfig || (resolvedFilterField ? `filters.${resolvedFilterField}` : "");
   const shouldClickFilter = clickAsFilter && Boolean(resolvedFilterStorePath);
+  const isSqlQueryMode = Boolean(typeof dq?.query === "string" && dq.query.trim());
   const [serverRows, setServerRows] = React.useState<Array<Record<string, unknown>> | null>(null);
   React.useEffect(() => {
     let cancelled = false;
     async function run() {
-      if (!dq || !dq.model || !dq.dimension || !dq.measure) { setServerRows(null); return; }
+      if (!dq || (!isSqlQueryMode && (!dq.model || !dq.dimension || !dq.measure))) { setServerRows(null); return; }
+      if (isSqlQueryMode && (!dq.xField || !dq.yField)) { setServerRows(null); return; }
       try {
-        const mod = String(dq.model).split('.')[0];
-        const url = `/api/modulos/${mod}/query`;
         const filters = { ...(dq.filters || {}) } as AnyRecord;
         const dr = (data as any)?.filters?.dateRange;
         if (dr && !filters.de && !filters.ate) { if (dr.from) filters.de = dr.from; if (dr.to) filters.ate = dr.to; }
@@ -102,7 +102,21 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
             if (filters[k as any] === undefined) (filters as any)[k] = v as any;
           }
         }
-        const body = { dataQuery: { model: dq.model, dimension: dq.dimension, dimensionExpr: dq.dimensionExpr, measure: dq.measure, filters, orderBy: dq.orderBy, limit: dq.limit } };
+        const url = isSqlQueryMode
+          ? "/api/modulos/query/execute"
+          : `/api/modulos/${String(dq.model).split(".")[0]}/query`;
+        const body = isSqlQueryMode
+          ? {
+              dataQuery: {
+                query: dq.query,
+                xField: dq.xField,
+                yField: dq.yField,
+                keyField: dq.keyField,
+                filters,
+                limit: dq.limit,
+              },
+            }
+          : { dataQuery: { model: dq.model, dimension: dq.dimension, dimensionExpr: dq.dimensionExpr, measure: dq.measure, filters, orderBy: dq.orderBy, limit: dq.limit } };
         const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
         const j = await res.json();
         if (!res.ok || j?.success === false) throw new Error(String(j?.message || `Query failed (${res.status})`));
@@ -112,7 +126,7 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
     }
     run();
     return () => { cancelled = true };
-  }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters)]);
+  }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters), isSqlQueryMode]);
   const title = element?.props?.title as string | undefined;
   const fmt = (element?.props?.format ?? 'number') as 'currency'|'percent'|'number';
   const height = (element?.props?.height as number | undefined) ?? 220;

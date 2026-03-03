@@ -11,8 +11,12 @@ type OrderBy = {
 
 type KpiPayload = {
   title: string
-  tabela: string
-  medida: string
+  tabela?: string
+  medida?: string
+  query?: string
+  xField?: string
+  yField?: string
+  keyField?: string
   fr?: number
   formato?: MetricFormat | string
   filtros?: Record<string, unknown>
@@ -21,12 +25,16 @@ type KpiPayload = {
 type ChartPayload = {
   chart_type: 'bar' | 'line' | 'pie'
   title: string
-  tabela: string
-  dimensao: string
+  tabela?: string
+  dimensao?: string
   dimension_expr?: string
   dimensionExpr?: string
+  query?: string
+  xField?: string
+  yField?: string
+  keyField?: string
   layout?: 'auto' | 'vertical' | 'horizontal' | string
-  medida: string
+  medida?: string
   fr?: number
   formato?: MetricFormat | string
   filtros?: Record<string, unknown>
@@ -135,7 +143,9 @@ function resolveChartDimensionExpr(payload: ChartPayload): string | undefined {
   const isMonthLike = dim === 'mes' || dim === 'mês' || dim === 'month' || dim === 'mensal'
   if (!isMonthLike) return undefined
 
-  return getMonthDimensionExprByTable(payload.tabela)
+  const table = String(payload.tabela || '').trim()
+  if (!table) return undefined
+  return getMonthDimensionExprByTable(table)
 }
 
 function resolveChartOrderBy(payload: ChartPayload): OrderBy | undefined {
@@ -296,8 +306,8 @@ function requireParserReady(state: DashboardToolParserState, dashboardName: stri
 
 function buildKpiNode(payload: KpiPayload): Record<string, unknown> {
   const title = toRequiredText((payload as any).title, 'payload.title')
-  const tabela = toRequiredText((payload as any).tabela, 'payload.tabela')
-  const medida = toRequiredText((payload as any).medida, 'payload.medida')
+  const query = String((payload as any).query ?? '').trim()
+  const hasSql = Boolean(query)
 
   return {
     type: 'KPI',
@@ -305,11 +315,19 @@ function buildKpiNode(payload: KpiPayload): Record<string, unknown> {
       title,
       fr: payload.fr ?? 1,
       format: normalizeFormat(payload.formato),
-      dataQuery: {
-        model: tabela,
-        measure: medida,
-        filters: payload.filtros ?? {},
-      },
+      dataQuery: hasSql
+        ? {
+            query,
+            ...(typeof payload.yField === 'string' && payload.yField.trim() ? { yField: payload.yField.trim() } : {}),
+            ...(typeof payload.xField === 'string' && payload.xField.trim() ? { xField: payload.xField.trim() } : {}),
+            ...(typeof payload.keyField === 'string' && payload.keyField.trim() ? { keyField: payload.keyField.trim() } : {}),
+            filters: payload.filtros ?? {},
+          }
+        : {
+            model: toRequiredText((payload as any).tabela, 'payload.tabela'),
+            measure: toRequiredText((payload as any).medida, 'payload.medida'),
+            filters: payload.filtros ?? {},
+          },
     },
   }
 }
@@ -317,9 +335,8 @@ function buildKpiNode(payload: KpiPayload): Record<string, unknown> {
 function buildChartNode(payload: ChartPayload): Record<string, unknown> {
   const chartType = toChartType((payload as any).chart_type)
   const title = toRequiredText((payload as any).title, 'payload.title')
-  const tabela = toRequiredText((payload as any).tabela, 'payload.tabela')
-  const dimensao = toRequiredText((payload as any).dimensao, 'payload.dimensao')
-  const medida = toRequiredText((payload as any).medida, 'payload.medida')
+  const query = String((payload as any).query ?? '').trim()
+  const hasSql = Boolean(query)
 
   const typeMap: Record<ChartPayload['chart_type'], string> = {
     bar: 'BarChart',
@@ -339,15 +356,24 @@ function buildChartNode(payload: ChartPayload): Record<string, unknown> {
       format: normalizeFormat(payload.formato),
       height: payload.height ?? 240,
       ...(barLayout ? { nivo: { layout: barLayout } } : {}),
-      dataQuery: {
-        model: tabela,
-        dimension: dimensao,
-        ...(dimensionExpr ? { dimensionExpr } : {}),
-        measure: medida,
-        filters: payload.filtros ?? {},
-        ...(typeof payload.limit === 'number' ? { limit: payload.limit } : {}),
-        ...(orderBy ? { orderBy } : {}),
-      },
+      dataQuery: hasSql
+        ? {
+            query,
+            xField: toRequiredText((payload as any).xField, 'payload.xField'),
+            yField: toRequiredText((payload as any).yField, 'payload.yField'),
+            ...(typeof payload.keyField === 'string' && payload.keyField.trim() ? { keyField: payload.keyField.trim() } : {}),
+            filters: payload.filtros ?? {},
+            ...(typeof payload.limit === 'number' ? { limit: payload.limit } : {}),
+          }
+        : {
+            model: toRequiredText((payload as any).tabela, 'payload.tabela'),
+            dimension: toRequiredText((payload as any).dimensao, 'payload.dimensao'),
+            ...(dimensionExpr ? { dimensionExpr } : {}),
+            measure: toRequiredText((payload as any).medida, 'payload.medida'),
+            filters: payload.filtros ?? {},
+            ...(typeof payload.limit === 'number' ? { limit: payload.limit } : {}),
+            ...(orderBy ? { orderBy } : {}),
+          },
     },
   }
 }

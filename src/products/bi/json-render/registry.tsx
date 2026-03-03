@@ -1248,8 +1248,8 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       let cancelled = false;
       async function run() {
         try {
-          if (!dq || !dq.model || !dq.measure) { if (!cancelled) setServerValue(0); return; }
-          const mod = String(dq.model).split('.')[0];
+          const isSqlQueryMode = Boolean(typeof dq?.query === 'string' && dq.query.trim())
+          if (!dq || (!isSqlQueryMode && (!dq.model || !dq.measure))) { if (!cancelled) setServerValue(0); return; }
           const filters = { ...(dq.filters || {}) } as AnyRecord;
           const dr = (data as any)?.filters?.dateRange;
           if (dr && !filters.de && !filters.ate) { if (dr.from) filters.de = dr.from; if (dr.to) filters.ate = dr.to; }
@@ -1260,8 +1260,21 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
               if (filters[k as any] === undefined) (filters as any)[k] = v as any;
             }
           }
-          const url = `/api/modulos/${mod}/query`;
-          const body = { dataQuery: { model: dq.model, dimension: undefined, measure: dq.measure, filters, orderBy: dq.orderBy, limit: dq.limit } };
+          const url = isSqlQueryMode
+            ? '/api/modulos/query/execute'
+            : `/api/modulos/${String(dq.model).split('.')[0]}/query`;
+          const body = isSqlQueryMode
+            ? {
+                dataQuery: {
+                  query: dq.query,
+                  yField: dq.yField || valueKey || 'value',
+                  xField: dq.xField,
+                  keyField: dq.keyField,
+                  filters,
+                  limit: dq.limit ?? 1,
+                },
+              }
+            : { dataQuery: { model: dq.model, dimension: undefined, measure: dq.measure, filters, orderBy: dq.orderBy, limit: dq.limit } };
           const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
           const j = await res.json();
           if (!res.ok || j?.success === false) {
@@ -1301,7 +1314,8 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
         default: return new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 }).format(n);
       }
     }
-    const displayValue = (dq && dq.model && dq.measure) ? serverValue : (valueFromPath ?? 0);
+    const hasServerQuery = Boolean(dq && ((dq.model && dq.measure) || (typeof dq.query === 'string' && dq.query.trim())));
+    const displayValue = hasServerQuery ? serverValue : (valueFromPath ?? 0);
     return (
       <FrameSurface style={containerStyle} frame={p?.containerStyle?.frame as AnyRecord} cssVars={theme.cssVars}>
         <div className="mb-1" style={titleStyle}>{title}</div>
