@@ -24,7 +24,7 @@ function toFiniteNumber(v: unknown): number | null {
   return Number.isFinite(n) ? n : null
 }
 
-function assertSafeSelectQuery(sql: string) {
+function normalizeAndAssertSafeSelectQuery(sql: string): string {
   const cleaned = sql.trim().replace(/;+\s*$/g, '')
   if (!cleaned) {
     throw new Error('query vazia')
@@ -43,6 +43,7 @@ function assertSafeSelectQuery(sql: string) {
   if (blocked.test(cleaned)) {
     throw new Error('query contém comando não permitido')
   }
+  return cleaned
 }
 
 function bindNamedParams(sql: string, paramsSource: Record<string, unknown>) {
@@ -65,11 +66,11 @@ export async function POST(req: NextRequest) {
     }
 
     const dq = dqRaw as DataQuery
-    const query = typeof dq.query === 'string' ? dq.query.trim() : ''
-    if (!query) {
+    const rawQuery = typeof dq.query === 'string' ? dq.query.trim() : ''
+    if (!rawQuery) {
       return Response.json({ success: false, message: 'dataQuery.query é obrigatório' }, { status: 400 })
     }
-    assertSafeSelectQuery(query)
+    const query = normalizeAndAssertSafeSelectQuery(rawQuery)
 
     const tenantId = resolveTenantId(req.headers)
     const rawFilters = isObject(dq.filters) ? dq.filters : {}
