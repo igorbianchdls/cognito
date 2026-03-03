@@ -6,13 +6,6 @@ const VENDAS_WHERE = `
 WHERE p.tenant_id = {{tenant_id}}
   AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
   AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
-  AND ({{canal_venda_id}} IS NULL OR p.canal_venda_id = {{canal_venda_id}})
-  AND ({{categoria_receita_id}} IS NULL OR p.categoria_receita_id = {{categoria_receita_id}})
-  AND ({{cliente_id}} IS NULL OR p.cliente_id = {{cliente_id}})
-  AND ({{filial_id}} IS NULL OR p.filial_id = {{filial_id}})
-  AND ({{territorio_id}} IS NULL OR p.territorio_id = {{territorio_id}})
-  AND ({{unidade_negocio_id}} IS NULL OR p.unidade_negocio_id = {{unidade_negocio_id}})
-  AND ({{vendedor_id}} IS NULL OR p.vendedor_id = {{vendedor_id}})
 `.trim()
 
 const QUERY_KPI_VENDAS = `
