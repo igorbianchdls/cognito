@@ -106,14 +106,10 @@ function appendGenericFilterPredicate(parts: string[], key: string) {
         {{${key}}} IS NULL
         OR NOT (to_jsonb(src) ? '${safeKey}')
         OR (
-          CASE
-            WHEN jsonb_typeof(to_jsonb({{${key}}})) = 'array' THEN EXISTS (
-              SELECT 1
-              FROM jsonb_array_elements_text(to_jsonb({{${key}}})) AS flt(value)
-              WHERE flt.value = (to_jsonb(src)->>'${safeKey}')
-            )
-            ELSE (to_jsonb(src)->>'${safeKey}') = {{${key}}}::text
-          END
+          NULLIF(regexp_replace({{${key}}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+          OR (to_jsonb(src)->>'${safeKey}') = ANY(
+            string_to_array(regexp_replace({{${key}}}::text, '[{}[:space:]]', '', 'g'), ',')
+          )
         )
       )`)
 }
