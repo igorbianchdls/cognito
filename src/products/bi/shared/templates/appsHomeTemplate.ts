@@ -1,4 +1,5 @@
-export const APPS_HOME_TEMPLATE_TEXT = JSON.stringify([
+import { migrateTemplateDataQueries } from '@/products/bi/shared/templates/dataQuerySqlMigration'
+export const APPS_HOME_TEMPLATE_TEXT = JSON.stringify(migrateTemplateDataQueries([
   {
     type: "Theme",
     props: {
@@ -67,4 +68,4 @@ export const APPS_HOME_TEMPLATE_TEXT = JSON.stringify([
       { type: "BarChart", props: { title: "Gasto por Fornecedor", dataQuery: { model: "compras.compras", dimension: "fornecedor", measure: "SUM(valor_total)", filters: {}, orderBy: { field: "measure", dir: "desc" }, limit: 6 }, format: "currency", height: 200 } }
     ]
   }
-], null, 2);
+]), null, 2);

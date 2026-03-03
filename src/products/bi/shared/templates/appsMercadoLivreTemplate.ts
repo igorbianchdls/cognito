@@ -1,3 +1,4 @@
+import { migrateTemplateDataQueries } from '@/products/bi/shared/templates/dataQuerySqlMigration'
 import { BiSlicers } from '@/products/bi'
 
 const contaOptionsSource = {
@@ -26,7 +27,7 @@ const platformFilters = {
   plataforma: 'mercadolivre',
 }
 
-export const APPS_MERCADOLIVRE_TEMPLATE_TEXT = JSON.stringify(
+export const APPS_MERCADOLIVRE_TEMPLATE_TEXT = JSON.stringify(migrateTemplateDataQueries(
   [
     {
       type: 'Theme',
@@ -359,7 +360,7 @@ export const APPS_MERCADOLIVRE_TEMPLATE_TEXT = JSON.stringify(
         },
       ],
     },
-  ],
+  ]),
   null,
   2,
 )

@@ -1,4 +1,5 @@
-export const APPS_METAADS_TEMPLATE_TEXT = `[
+import { migrateTemplateTextDataQueries } from '@/products/bi/shared/templates/dataQuerySqlMigration'
+export const APPS_METAADS_TEMPLATE_TEXT = migrateTemplateTextDataQueries(`[
   {
     "type": "Theme",
     "props": {
@@ -1115,4 +1116,4 @@ export const APPS_METAADS_TEMPLATE_TEXT = `[
       }
     ]
   }
-]`
+]`)

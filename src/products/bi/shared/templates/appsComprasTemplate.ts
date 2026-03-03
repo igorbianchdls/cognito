@@ -1,9 +1,10 @@
+import { migrateTemplateDataQueries } from '@/products/bi/shared/templates/dataQuerySqlMigration'
 import { BiSlicers } from '@/products/bi'
 
 const fornecedorOptionsSource = BiSlicers.createOptionsSource('compras.compras', 'fornecedor_id', 100)
 const centroCustoOptionsSource = BiSlicers.createOptionsSource('compras.compras', 'centro_custo_id', 100)
 
-export const APPS_COMPRAS_TEMPLATE_TEXT = JSON.stringify([
+export const APPS_COMPRAS_TEMPLATE_TEXT = JSON.stringify(migrateTemplateDataQueries([
   {
     type: "Theme",
     props: {
@@ -59,4 +60,4 @@ export const APPS_COMPRAS_TEMPLATE_TEXT = JSON.stringify([
       ]}
     ]
   }
-], null, 2);
+]), null, 2);

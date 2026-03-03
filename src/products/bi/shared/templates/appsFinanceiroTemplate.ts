@@ -1,9 +1,10 @@
+import { migrateTemplateDataQueries } from '@/products/bi/shared/templates/dataQuerySqlMigration'
 import { BiSlicers } from '@/products/bi'
 
 const fornecedorOptionsSource = BiSlicers.createOptionsSource('financeiro.contas_pagar', 'fornecedor_id', 80)
 const statusOptionsSource = BiSlicers.createOptionsSource('financeiro.contas_pagar', 'status', 40)
 
-export const APPS_FINANCEIRO_TEMPLATE_TEXT = JSON.stringify(
+export const APPS_FINANCEIRO_TEMPLATE_TEXT = JSON.stringify(migrateTemplateDataQueries(
   [
     {
       type: 'Theme',
@@ -171,7 +172,7 @@ export const APPS_FINANCEIRO_TEMPLATE_TEXT = JSON.stringify(
         },
       ],
     },
-  ],
+  ]),
   null,
   2,
 )

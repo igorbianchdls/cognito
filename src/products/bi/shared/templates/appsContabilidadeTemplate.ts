@@ -1,4 +1,5 @@
-export const APPS_CONTABILIDADE_TEMPLATE_TEXT = JSON.stringify(
+import { migrateTemplateDataQueries } from '@/products/bi/shared/templates/dataQuerySqlMigration'
+export const APPS_CONTABILIDADE_TEMPLATE_TEXT = JSON.stringify(migrateTemplateDataQueries(
   [
     {
       type: 'Theme',
@@ -268,7 +269,7 @@ export const APPS_CONTABILIDADE_TEMPLATE_TEXT = JSON.stringify(
         },
       ],
     },
-  ],
+  ]),
   null,
   2,
 )

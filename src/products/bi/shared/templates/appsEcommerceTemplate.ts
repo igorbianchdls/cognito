@@ -1,3 +1,4 @@
+import { migrateTemplateDataQueries } from '@/products/bi/shared/templates/dataQuerySqlMigration'
 import { BiSlicers } from '@/products/bi'
 
 const plataformaOptionsSource = BiSlicers.createOptionsSource('ecommerce.pedidos', 'plataforma', 20)
@@ -26,7 +27,7 @@ const globalFilters = {
   tenant_id: 1,
 }
 
-export const APPS_ECOMMERCE_TEMPLATE_TEXT = JSON.stringify(
+export const APPS_ECOMMERCE_TEMPLATE_TEXT = JSON.stringify(migrateTemplateDataQueries(
   [
     {
       type: 'Theme',
@@ -369,7 +370,7 @@ export const APPS_ECOMMERCE_TEMPLATE_TEXT = JSON.stringify(
         },
       ],
     },
-  ],
+  ]),
   null,
   2,
 )

@@ -1,10 +1,11 @@
+import { migrateTemplateDataQueries } from '@/products/bi/shared/templates/dataQuerySqlMigration'
 import { BiSlicers } from '@/products/bi'
 
 const vendedorOptionsSource = BiSlicers.createOptionsSource('crm.oportunidades', 'vendedor_id', 80)
 const faseOptionsSource = BiSlicers.createOptionsSource('crm.oportunidades', 'fase_pipeline_id', 80)
 const origemOptionsSource = BiSlicers.createOptionsSource('crm.oportunidades', 'origem_id', 80)
 
-export const APPS_CRM_TEMPLATE_TEXT = JSON.stringify(
+export const APPS_CRM_TEMPLATE_TEXT = JSON.stringify(migrateTemplateDataQueries(
   [
     {
       type: 'Theme',
@@ -269,7 +270,7 @@ export const APPS_CRM_TEMPLATE_TEXT = JSON.stringify(
         },
       ],
     },
-  ],
+  ]),
   null,
   2,
 )
