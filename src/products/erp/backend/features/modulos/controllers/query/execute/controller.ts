@@ -65,12 +65,16 @@ function bindNamedParams(sql: string, paramsSource: Record<string, unknown>) {
     const name = String(rawName || '').trim()
     const lowerName = name.toLowerCase()
     const suffix = lowerName === 'de' || lowerName === 'ate' ? '::date' : ''
-    const existing = paramIndexByName.get(name)
+    const existing = paramIndexByName.get(lowerName)
     if (existing) return `$${existing}${suffix}`
-    const value = normalizeParamValue(paramsSource[name])
+    const value = normalizeParamValue(
+      Object.prototype.hasOwnProperty.call(paramsSource, name)
+        ? paramsSource[name]
+        : paramsSource[lowerName],
+    )
     params.push(value)
     const nextIndex = params.length
-    paramIndexByName.set(name, nextIndex)
+    paramIndexByName.set(lowerName, nextIndex)
     return `$${nextIndex}${suffix}`
   })
   return { sql: compiled, params }

@@ -103,8 +103,7 @@ function appendGenericFilterPredicate(parts: string[], key: string) {
   if (!IDENTIFIER_RE.test(key)) return
   const safeKey = escapeSqlLiteral(key)
   parts.push(`(
-        {{${key}}} IS NULL
-        OR NOT (to_jsonb(src) ? '${safeKey}')
+        NOT (to_jsonb(src) ? '${safeKey}')
         OR (
           NULLIF(regexp_replace({{${key}}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
           OR (to_jsonb(src)->>'${safeKey}') = ANY(
@@ -120,7 +119,7 @@ function appendRangePredicate(parts: string[], key: string, op: '>=' | '<=') {
   if (!IDENTIFIER_RE.test(base)) return
   const safeBase = escapeSqlLiteral(base)
   parts.push(`(
-        {{${key}}} IS NULL
+        {{${key}}}::numeric IS NULL
         OR NOT (to_jsonb(src) ? '${safeBase}')
         OR NULLIF((to_jsonb(src)->>'${safeBase}'), '')::numeric ${op} {{${key}}}::numeric
       )`)
@@ -134,8 +133,8 @@ function buildWhereClause(model: string, explicitFilterKeys: Iterable<string>): 
   const parts: string[] = []
   const defaultTimeField = asString(catalog?.defaultTimeField)
   if (defaultTimeField && IDENTIFIER_RE.test(defaultTimeField)) {
-    parts.push(`({{de}} IS NULL OR src.${defaultTimeField}::date >= {{de}}::date)`)
-    parts.push(`({{ate}} IS NULL OR src.${defaultTimeField}::date <= {{ate}}::date)`)
+    parts.push(`({{de}}::date IS NULL OR src.${defaultTimeField}::date >= {{de}}::date)`)
+    parts.push(`({{ate}}::date IS NULL OR src.${defaultTimeField}::date <= {{ate}}::date)`)
   }
 
   const orderedKeys = Array.from(filterKeys)
