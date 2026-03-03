@@ -60,11 +60,16 @@ function normalizeAndAssertSafeSelectQuery(sql: string): string {
 
 function bindNamedParams(sql: string, paramsSource: Record<string, unknown>) {
   const params: unknown[] = []
+  const paramIndexByName = new Map<string, number>()
   const compiled = sql.replace(/\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}/g, (_, rawName: string) => {
     const name = String(rawName || '').trim()
+    const existing = paramIndexByName.get(name)
+    if (existing) return `$${existing}`
     const value = normalizeParamValue(paramsSource[name])
     params.push(value)
-    return `$${params.length}`
+    const nextIndex = params.length
+    paramIndexByName.set(name, nextIndex)
+    return `$${nextIndex}`
   })
   return { sql: compiled, params }
 }
