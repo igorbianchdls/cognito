@@ -26,10 +26,6 @@ function asString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
 }
 
-function escapeSqlLiteral(value: string): string {
-  return value.replace(/'/g, "''")
-}
-
 function normalizeMeasureExpression(raw: string): string {
   let next = raw.trim()
   next = next.replace(/^COUNT\(\s*\)$/i, 'COUNT(*)')
@@ -101,14 +97,10 @@ function collectTemplateFilterKeys(node: unknown, out: Set<string>) {
 
 function appendGenericFilterPredicate(parts: string[], key: string) {
   if (!IDENTIFIER_RE.test(key)) return
-  const safeKey = escapeSqlLiteral(key)
   parts.push(`(
-        NOT (to_jsonb(src) ? '${safeKey}')
-        OR (
-          NULLIF(regexp_replace({{${key}}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-          OR (to_jsonb(src)->>'${safeKey}') = ANY(
-            string_to_array(regexp_replace({{${key}}}::text, '[{}[:space:]]', '', 'g'), ',')
-          )
+        NULLIF(regexp_replace({{${key}}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+        OR COALESCE(src.${key}::text, '') = ANY(
+          string_to_array(regexp_replace({{${key}}}::text, '[{}[:space:]]', '', 'g'), ',')
         )
       )`)
 }
@@ -117,11 +109,9 @@ function appendRangePredicate(parts: string[], key: string, op: '>=' | '<=') {
   if (!IDENTIFIER_RE.test(key)) return
   const base = key.slice(0, -4)
   if (!IDENTIFIER_RE.test(base)) return
-  const safeBase = escapeSqlLiteral(base)
   parts.push(`(
         {{${key}}}::numeric IS NULL
-        OR NOT (to_jsonb(src) ? '${safeBase}')
-        OR NULLIF((to_jsonb(src)->>'${safeBase}'), '')::numeric ${op} {{${key}}}::numeric
+        OR src.${base}::numeric ${op} {{${key}}}::numeric
       )`)
 }
 
@@ -189,15 +179,18 @@ function convertLegacyDataQuery(dqRaw: AnyRecord, templateFilterKeys: Set<string
 
   let query = ''
   if (hasDimension) {
-    const labelExpr = dimensionExpr
-      ? `(${normalizeMeasureExpression(dimensionExpr)})::text`
-      : `COALESCE(to_jsonb(src)->>'${escapeSqlLiteral(dimension)}', '-')`
+    const normalizedDimensionExpr = dimensionExpr ? normalizeMeasureExpression(dimensionExpr) : ''
+    const labelExpr = normalizedDimensionExpr
+      ? `(${normalizedDimensionExpr})::text`
+      : IDENTIFIER_RE.test(dimension)
+        ? `COALESCE(src.${dimension}::text, '-')`
+        : `'-'::text`
 
     let keyExpr = labelExpr
-    if (dimensionExpr && keyColumn) {
-      keyExpr = `COALESCE(to_jsonb(src)->>'${escapeSqlLiteral(keyColumn)}', (${normalizeMeasureExpression(dimensionExpr)})::text)`
-    } else if (!dimensionExpr && keyColumn && keyColumn !== dimension) {
-      keyExpr = `COALESCE(to_jsonb(src)->>'${escapeSqlLiteral(keyColumn)}', COALESCE(to_jsonb(src)->>'${escapeSqlLiteral(dimension)}', '-'))`
+    if (normalizedDimensionExpr && IDENTIFIER_RE.test(keyColumn)) {
+      keyExpr = `COALESCE(src.${keyColumn}::text, (${normalizedDimensionExpr})::text)`
+    } else if (!normalizedDimensionExpr && IDENTIFIER_RE.test(keyColumn) && keyColumn !== dimension && IDENTIFIER_RE.test(dimension)) {
+      keyExpr = `COALESCE(src.${keyColumn}::text, COALESCE(src.${dimension}::text, '-'))`
     }
 
     const orderBy = isObject(dq.orderBy) ? dq.orderBy : {}
