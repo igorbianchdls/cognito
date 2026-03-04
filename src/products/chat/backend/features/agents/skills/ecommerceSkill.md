@@ -234,6 +234,122 @@ GROUP BY 1,2
 ORDER BY 3 DESC
 ```
 
+## Queries de Exploracao (para `sql_execution`)
+
+Estas queries sao para investigacao ad-hoc e diagnostico, nao apenas KPI pronto.
+
+Como usar:
+- Elas rodam direto no `sql_execution` com `{{tenant_id}}` e periodo relativo (`CURRENT_DATE`).
+- Use como ponto de partida para responder perguntas de negocio.
+- Depois adapte janela de tempo, filtros e `LIMIT`.
+
+### 1) Participacao de GMV por plataforma (90 dias)
+Quando usar: para entender dependencia de canal/plataforma.
+
+```sql
+WITH base AS (
+  SELECT
+    COALESCE(p.plataforma, 'Sem plataforma') AS plataforma,
+    COALESCE(SUM(p.valor_total), 0)::float AS gmv
+  FROM ecommerce.pedidos p
+  WHERE p.tenant_id = {{tenant_id}}::int
+    AND p.data_pedido::date >= CURRENT_DATE - INTERVAL '90 days'
+  GROUP BY 1
+)
+SELECT
+  plataforma AS key,
+  plataforma AS label,
+  gmv AS value,
+  gmv / NULLIF(SUM(gmv) OVER (), 0) AS share_gmv
+FROM base
+ORDER BY gmv DESC
+```
+
+### 2) Top produtos com variacao (30d vs 30d anteriores)
+Quando usar: para detectar ganho/perda de tracao no mix de produtos.
+
+```sql
+SELECT
+  pi.produto_id AS key,
+  COALESCE(pr.nome, pi.titulo_item, CONCAT('Produto #', pi.produto_id::text)) AS label,
+  COALESCE(SUM(CASE WHEN p.data_pedido::date >= CURRENT_DATE - INTERVAL '30 days' THEN pi.valor_total ELSE 0 END), 0)::float AS receita_30d,
+  COALESCE(SUM(CASE WHEN p.data_pedido::date >= CURRENT_DATE - INTERVAL '60 days'
+                     AND p.data_pedido::date < CURRENT_DATE - INTERVAL '30 days'
+                    THEN pi.valor_total ELSE 0 END), 0)::float AS receita_30d_ant,
+  (
+    COALESCE(SUM(CASE WHEN p.data_pedido::date >= CURRENT_DATE - INTERVAL '30 days' THEN pi.valor_total ELSE 0 END), 0)
+    - COALESCE(SUM(CASE WHEN p.data_pedido::date >= CURRENT_DATE - INTERVAL '60 days'
+                         AND p.data_pedido::date < CURRENT_DATE - INTERVAL '30 days'
+                        THEN pi.valor_total ELSE 0 END), 0)
+  )::float AS delta_abs
+FROM ecommerce.pedido_itens pi
+LEFT JOIN ecommerce.pedidos p ON p.id = pi.pedido_id
+LEFT JOIN ecommerce.produtos pr ON pr.id = pi.produto_id
+WHERE pi.tenant_id = {{tenant_id}}::int
+  AND p.data_pedido::date >= CURRENT_DATE - INTERVAL '60 days'
+GROUP BY 1,2
+ORDER BY delta_abs DESC
+LIMIT 30
+```
+
+### 3) Matriz de status (pagamento x fulfillment)
+Quando usar: para descobrir gargalo operacional entre pagamento e entrega.
+
+```sql
+SELECT
+  COALESCE(p.status_pagamento, 'Sem status_pagamento') || ' | ' || COALESCE(p.status_fulfillment, 'Sem status_fulfillment') AS key,
+  COALESCE(p.status_pagamento, 'Sem status_pagamento') || ' | ' || COALESCE(p.status_fulfillment, 'Sem status_fulfillment') AS label,
+  COUNT(*)::int AS value
+FROM ecommerce.pedidos p
+WHERE p.tenant_id = {{tenant_id}}::int
+  AND p.data_pedido::date >= CURRENT_DATE - INTERVAL '60 days'
+GROUP BY 1,2
+ORDER BY value DESC
+LIMIT 25
+```
+
+### 4) SLA medio de entrega por transportadora (dias)
+Quando usar: para medir performance logistica e priorizar transportadoras.
+
+```sql
+SELECT
+  COALESCE(e.transportadora, 'Sem transportadora') AS key,
+  COALESCE(e.transportadora, 'Sem transportadora') AS label,
+  COALESCE(AVG(EXTRACT(EPOCH FROM (e.entregue_em - e.despachado_em)) / 86400.0), 0)::float AS value,
+  COUNT(*)::int AS entregas
+FROM ecommerce.envios e
+WHERE e.tenant_id = {{tenant_id}}::int
+  AND e.despachado_em IS NOT NULL
+  AND e.entregue_em IS NOT NULL
+  AND e.despachado_em::date >= CURRENT_DATE - INTERVAL '90 days'
+GROUP BY 1,2
+ORDER BY value ASC
+LIMIT 20
+```
+
+### 5) Rentabilidade por conta (GMV, taxa e margem estimada)
+Quando usar: para ver qual conta gera mais caixa relativo ao volume.
+
+```sql
+SELECT
+  p.canal_conta_id AS key,
+  COALESCE(cc.nome_conta, CONCAT('Conta #', p.canal_conta_id::text)) AS label,
+  COALESCE(SUM(p.valor_total), 0)::float AS gmv,
+  COALESCE(SUM(p.taxa_total), 0)::float AS taxa_total,
+  COALESCE(SUM(p.valor_liquido_estimado), 0)::float AS value,
+  CASE
+    WHEN COALESCE(SUM(p.valor_total), 0) = 0 THEN 0
+    ELSE COALESCE(SUM(p.valor_liquido_estimado), 0)::float / NULLIF(SUM(p.valor_total), 0)::float
+  END AS margem_estimada_pct
+FROM ecommerce.pedidos p
+LEFT JOIN ecommerce.canais_contas cc ON cc.id = p.canal_conta_id
+WHERE p.tenant_id = {{tenant_id}}::int
+  AND p.data_pedido::date >= CURRENT_DATE - INTERVAL '90 days'
+GROUP BY 1,2
+ORDER BY value DESC
+LIMIT 20
+```
+
 ## Regras Anti-Erro (obrigatorias)
 
 - Usar `ecommerce.canais_contas` (plural), nao `canais_conta`.

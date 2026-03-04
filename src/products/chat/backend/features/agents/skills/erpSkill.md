@@ -284,6 +284,170 @@ GROUP BY 1,2
 ORDER BY 3 DESC
 ```
 
+## Queries de Exploracao (para `sql_execution`)
+
+Estas queries nao sao widgets prontos. Sao consultas investigativas para diagnostico rapido no `sql_execution`.
+
+Como usar:
+- Elas foram escritas para rodar direto na tool (`{{tenant_id}}` + periodo relativo com `CURRENT_DATE`).
+- Primeiro rode como esta.
+- Depois ajuste janela de tempo, filtros e `LIMIT` conforme a pergunta de negocio.
+
+### 1) Concentracao de receita por cliente (Pareto 90 dias)
+Quando usar: para saber se a receita esta concentrada em poucos clientes.
+
+```sql
+WITH base AS (
+  SELECT
+    p.cliente_id,
+    COALESCE(c.nome_fantasia, CONCAT('Cliente #', p.cliente_id::text)) AS cliente,
+    COALESCE(SUM(p.valor_total), 0)::float AS receita
+  FROM vendas.pedidos p
+  LEFT JOIN entidades.clientes c ON c.id = p.cliente_id
+  WHERE p.tenant_id = {{tenant_id}}::int
+    AND p.data_pedido::date >= CURRENT_DATE - INTERVAL '90 days'
+  GROUP BY 1,2
+),
+ranked AS (
+  SELECT
+    *,
+    receita / NULLIF(SUM(receita) OVER (), 0) AS share_receita,
+    SUM(receita) OVER (ORDER BY receita DESC ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+      / NULLIF(SUM(receita) OVER (), 0) AS share_acumulada
+  FROM base
+)
+SELECT
+  cliente_id AS key,
+  cliente AS label,
+  receita AS value,
+  share_receita,
+  share_acumulada
+FROM ranked
+ORDER BY receita DESC
+LIMIT 30
+```
+
+### 2) Vendas semanais por canal com variacao vs semana anterior
+Quando usar: para detectar queda/aceleracao de canal sem esperar fechamento mensal.
+
+```sql
+WITH semanal AS (
+  SELECT
+    DATE_TRUNC('week', p.data_pedido)::date AS semana,
+    COALESCE(cv.nome, 'Sem canal') AS canal,
+    COALESCE(SUM(p.valor_total), 0)::float AS receita
+  FROM vendas.pedidos p
+  LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+  WHERE p.tenant_id = {{tenant_id}}::int
+    AND p.data_pedido::date >= CURRENT_DATE - INTERVAL '16 weeks'
+  GROUP BY 1,2
+),
+serie AS (
+  SELECT
+    *,
+    LAG(receita) OVER (PARTITION BY canal ORDER BY semana) AS receita_semana_anterior
+  FROM semanal
+)
+SELECT
+  TO_CHAR(semana, 'YYYY-MM-DD') AS key,
+  canal || ' | ' || TO_CHAR(semana, 'YYYY-MM-DD') AS label,
+  receita AS value,
+  receita_semana_anterior,
+  CASE
+    WHEN COALESCE(receita_semana_anterior, 0) = 0 THEN NULL
+    ELSE (receita - receita_semana_anterior) / NULLIF(receita_semana_anterior, 0)
+  END AS variacao_pct
+FROM serie
+ORDER BY semana DESC, receita DESC
+LIMIT 200
+```
+
+### 3) Fornecedores com maior crescimento de compras (30d vs 30d anteriores)
+Quando usar: para identificar aumento de dependencia ou mudanca de mix de compras.
+
+```sql
+WITH atual AS (
+  SELECT
+    c.fornecedor_id,
+    COALESCE(SUM(c.valor_total), 0)::float AS gasto_atual
+  FROM compras.compras c
+  WHERE c.tenant_id = {{tenant_id}}::int
+    AND c.data_pedido::date >= CURRENT_DATE - INTERVAL '30 days'
+  GROUP BY 1
+),
+anterior AS (
+  SELECT
+    c.fornecedor_id,
+    COALESCE(SUM(c.valor_total), 0)::float AS gasto_anterior
+  FROM compras.compras c
+  WHERE c.tenant_id = {{tenant_id}}::int
+    AND c.data_pedido::date >= CURRENT_DATE - INTERVAL '60 days'
+    AND c.data_pedido::date < CURRENT_DATE - INTERVAL '30 days'
+  GROUP BY 1
+)
+SELECT
+  COALESCE(a.fornecedor_id, p.fornecedor_id) AS key,
+  COALESCE(f.nome_fantasia, CONCAT('Fornecedor #', COALESCE(a.fornecedor_id, p.fornecedor_id)::text)) AS label,
+  COALESCE(a.gasto_atual, 0) AS gasto_atual,
+  COALESCE(p.gasto_anterior, 0) AS gasto_anterior,
+  (COALESCE(a.gasto_atual, 0) - COALESCE(p.gasto_anterior, 0))::float AS delta_abs,
+  CASE
+    WHEN COALESCE(p.gasto_anterior, 0) = 0 THEN NULL
+    ELSE (COALESCE(a.gasto_atual, 0) - COALESCE(p.gasto_anterior, 0)) / NULLIF(p.gasto_anterior, 0)
+  END AS delta_pct
+FROM atual a
+FULL OUTER JOIN anterior p ON p.fornecedor_id = a.fornecedor_id
+LEFT JOIN entidades.fornecedores f ON f.id = COALESCE(a.fornecedor_id, p.fornecedor_id)
+ORDER BY delta_abs DESC
+LIMIT 25
+```
+
+### 4) Aging de contas a receber vencidas
+Quando usar: para diagnosticar risco de caixa e priorizar cobranca.
+
+```sql
+SELECT
+  CASE
+    WHEN CURRENT_DATE - cr.data_vencimento::date BETWEEN 1 AND 7 THEN '01-07 dias'
+    WHEN CURRENT_DATE - cr.data_vencimento::date BETWEEN 8 AND 30 THEN '08-30 dias'
+    WHEN CURRENT_DATE - cr.data_vencimento::date BETWEEN 31 AND 60 THEN '31-60 dias'
+    ELSE '61+ dias'
+  END AS key,
+  CASE
+    WHEN CURRENT_DATE - cr.data_vencimento::date BETWEEN 1 AND 7 THEN '01-07 dias'
+    WHEN CURRENT_DATE - cr.data_vencimento::date BETWEEN 8 AND 30 THEN '08-30 dias'
+    WHEN CURRENT_DATE - cr.data_vencimento::date BETWEEN 31 AND 60 THEN '31-60 dias'
+    ELSE '61+ dias'
+  END AS label,
+  COALESCE(SUM(cr.valor_liquido), 0)::float AS value,
+  COUNT(*)::int AS titulos
+FROM financeiro.contas_receber cr
+WHERE cr.tenant_id = {{tenant_id}}::int
+  AND cr.data_vencimento::date < CURRENT_DATE
+  AND LOWER(COALESCE(cr.status, '')) NOT IN ('pago', 'baixado', 'cancelado')
+GROUP BY 1,2
+ORDER BY value DESC
+```
+
+### 5) Pipeline ponderado por fase
+Quando usar: para priorizar fase com maior impacto esperado (nao apenas volume bruto).
+
+```sql
+SELECT
+  fp.id AS key,
+  COALESCE(fp.nome, 'Sem fase') AS label,
+  COALESCE(SUM(o.valor_estimado), 0)::float AS pipeline_bruto,
+  COALESCE(SUM(o.valor_estimado * COALESCE(o.probabilidade, 0) / 100.0), 0)::float AS value,
+  COUNT(*)::int AS oportunidades
+FROM crm.oportunidades o
+LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id
+WHERE o.tenant_id = {{tenant_id}}::int
+  AND o.data_prevista::date >= CURRENT_DATE - INTERVAL '180 days'
+GROUP BY 1,2
+ORDER BY value DESC
+LIMIT 20
+```
+
 ## Regras Anti-Erro
 
 - Nao usar `to_jsonb(src)->>'campo'` quando coluna fisica existe.
