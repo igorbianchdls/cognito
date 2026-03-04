@@ -1,4 +1,9 @@
-import type { SqlExecutionRow, SqlExecutionRowValue, SqlExecutionToolViewModel } from '@/products/chat/shared/tools/sqlExecution/types'
+import type {
+  SqlExecutionChartConfig,
+  SqlExecutionRow,
+  SqlExecutionRowValue,
+  SqlExecutionToolViewModel,
+} from '@/products/chat/shared/tools/sqlExecution/types'
 
 type JsonRecord = Record<string, unknown>
 
@@ -45,6 +50,19 @@ function inferColumns(rows: SqlExecutionRow[]): string[] {
   return Object.keys(rows[0] || {})
 }
 
+function normalizeChartConfig(raw: unknown): SqlExecutionChartConfig | null {
+  if (!isRecord(raw)) return null
+  const xField = toText(raw.xField)
+  const valueField = toText(raw.valueField)
+  if (!xField || !valueField) return null
+  return {
+    xField,
+    valueField,
+    xLabel: toText(raw.xLabel),
+    yLabel: toText(raw.yLabel),
+  }
+}
+
 export function extractSqlExecutionToolViewModel(input: unknown, output: unknown): SqlExecutionToolViewModel | null {
   if (!isRecord(output)) return null
   const root = output
@@ -64,6 +82,7 @@ export function extractSqlExecutionToolViewModel(input: unknown, output: unknown
     rows,
     columns,
     count,
+    chart: normalizeChartConfig(payload.chart),
     sqlQuery: toText(payload.sql_query),
     maxRows: toNum(payload.max_rows),
     error: toText(payload.error) ?? toText(root.error),

@@ -352,7 +352,7 @@ export const codexAppFunctionTools = [
     type: 'function',
     name: 'sql_execution',
     description:
-      'Executa SQL de leitura com segurança e retorna tabela para Artifact Data Table. Aceita apenas SELECT/CTE (WITH), uma única instrução e sem placeholders posicionais ($1, $2, ...). Placeholder suportado nesta tool: somente {{tenant_id}} (bind automático do tenant atual). Placeholders como {{de}}/{{ate}} não são suportados aqui. Limite interno: 1000 linhas por execução.',
+      'Executa SQL de leitura com segurança e retorna tabela para Artifact Data Table. Também pode configurar 1 gráfico de barras no mesmo artifact via chart={xField,valueField}. Aceita apenas SELECT/CTE (WITH), uma única instrução e sem placeholders posicionais ($1, $2, ...). Placeholder suportado nesta tool: somente {{tenant_id}} (bind automático do tenant atual). Placeholders como {{de}}/{{ate}} não são suportados aqui. Limite interno: 1000 linhas por execução.',
     parameters: {
       type: 'object',
       properties: {
@@ -364,6 +364,31 @@ export const codexAppFunctionTools = [
         title: {
           type: 'string',
           description: 'Título opcional do artifact (recomendado em consultas analíticas).',
+        },
+        chart: {
+          type: 'object',
+          description:
+            'Configuração opcional de gráfico de barras no artifact. Use nomes de colunas retornadas pela própria query.',
+          properties: {
+            xField: {
+              type: 'string',
+              description: 'Coluna para eixo X (categoria). Ex.: label, mes, canal.',
+            },
+            valueField: {
+              type: 'string',
+              description: 'Coluna numérica para eixo Y (métrica). Ex.: value, total, pedidos.',
+            },
+            xLabel: {
+              type: 'string',
+              description: 'Legenda opcional do eixo X.',
+            },
+            yLabel: {
+              type: 'string',
+              description: 'Legenda opcional do eixo Y.',
+            },
+          },
+          required: ['xField', 'valueField'],
+          additionalProperties: false,
         },
       },
       required: ['sql'],

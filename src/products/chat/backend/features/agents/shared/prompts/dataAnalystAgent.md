@@ -42,7 +42,7 @@
 </tools_general>
 
 <sql_execution_contract>
-- Input contract: { sql: string, title?: string }.
+- Input contract: { sql: string, title?: string, chart?: { xField: string, valueField: string, xLabel?: string, yLabel?: string } }.
 - Allowed SQL: only SELECT/CTE (WITH), one single statement.
 - Disallowed: placeholders posicionais ($1, $2, ...).
 - Supported placeholder in this tool: only {{tenant_id}}.
@@ -50,6 +50,7 @@
 - filters/limit/order/group must be inside SQL string (never as extra top-level fields).
 - Internal row cap exists (1000). For large datasets, aggregate/summarize in SQL.
 - Always provide a meaningful title when result is analytical.
+- chart (optional): configures one bar chart in the artifact using returned columns; use only xField/valueField that exist in query output.
 </sql_execution_contract>
 
 <analise_dados>

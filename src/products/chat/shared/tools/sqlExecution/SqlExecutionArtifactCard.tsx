@@ -34,6 +34,20 @@ export function SqlExecutionArtifactCard({
   model: SqlExecutionToolViewModel
 }) {
   const columns = useMemo(() => buildColumns(model.columns), [model.columns])
+  const chartOptions = useMemo(
+    () =>
+      model.chart
+        ? {
+            xKey: model.chart.xField,
+            valueKeys: [model.chart.valueField],
+            initialChartType: 'bar',
+            chartTypes: ['bar'],
+            xLegend: model.chart.xLabel || model.chart.xField,
+            yLegend: model.chart.yLabel || model.chart.valueField,
+          }
+        : undefined,
+    [model.chart],
+  )
   const message = model.ok
     ? `Consulta executada com sucesso (${model.count} linha(s)).`
     : 'Falha ao executar consulta SQL.'
@@ -50,6 +64,7 @@ export function SqlExecutionArtifactCard({
       error={model.error || undefined}
       exportFileName={safeExportName(model.title)}
       sqlQuery={model.sqlQuery || undefined}
+      chartOptions={chartOptions}
     />
   )
 }

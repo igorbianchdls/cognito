@@ -15,6 +15,14 @@ type SqlExecutionAction = 'execute'
 type ToolPayload = {
   sql?: unknown
   title?: unknown
+  chart?: unknown
+}
+
+type ChartConfig = {
+  xField: string
+  valueField: string
+  xLabel: string | null
+  yLabel: string | null
 }
 
 function toObj(input: unknown): JsonMap {
@@ -62,6 +70,35 @@ function inferColumns(rows: Array<Record<string, unknown>>): string[] {
   return Object.keys(first)
 }
 
+function parseChartConfig(rawChart: unknown): ChartConfig | null {
+  if (rawChart == null) return null
+  const raw = toObj(rawChart)
+  const xField = toText(raw.xField)
+  const valueField = toText(raw.valueField)
+  if (!xField || !valueField) {
+    throw new Error('chart inválido: informe chart.xField e chart.valueField')
+  }
+  return {
+    xField,
+    valueField,
+    xLabel: toText(raw.xLabel),
+    yLabel: toText(raw.yLabel),
+  }
+}
+
+function assertChartColumns(chart: ChartConfig | null, columns: string[]): ChartConfig | null {
+  if (!chart) return null
+  if (!columns.length) return chart
+
+  const missingFields: string[] = []
+  if (!columns.includes(chart.xField)) missingFields.push(`xField=${chart.xField}`)
+  if (!columns.includes(chart.valueField)) missingFields.push(`valueField=${chart.valueField}`)
+  if (missingFields.length) {
+    throw new Error(`chart inválido: colunas não encontradas no resultado (${missingFields.join(', ')})`)
+  }
+  return chart
+}
+
 function unauthorized(req: NextRequest): boolean {
   const auth = req.headers.get('authorization') || ''
   const chatId = req.headers.get('x-chat-id') || ''
@@ -103,6 +140,7 @@ export async function POST(req: NextRequest) {
     const payload = toObj(await req.json().catch(() => ({}))) as ToolPayload
     const sqlRaw = toText(payload.sql)
     const titleRaw = toText(payload.title)
+    const chartRaw = parseChartConfig(payload.chart)
 
     if (!sqlRaw) {
       return toolErrorJson(400, 'invalid_input', 'sql é obrigatório')
@@ -118,6 +156,7 @@ export async function POST(req: NextRequest) {
 
     const rows = await runQuery<Record<string, unknown>>(finalSql, finalParams)
     const columns = inferColumns(rows)
+    const chart = assertChartColumns(chartRaw, columns)
 
     return toolSuccessJson('execute', {
       success: true,
@@ -125,6 +164,7 @@ export async function POST(req: NextRequest) {
       rows,
       columns,
       count: rows.length,
+      chart,
       sql_query: finalSql,
       sql_params: finalParams,
       max_rows: maxRows,

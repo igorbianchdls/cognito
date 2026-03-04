@@ -49,11 +49,12 @@
 <analise_dados>
 - Para análises, a tool principal é sql_execution.
 - Use sql_execution quando o usuário pedir números, tendências, comparação, ranking, KPI ou validação por dados.
-- Contrato da tool: input = { sql: string, title?: string }.
+- Contrato da tool: input = { sql: string, title?: string, chart?: { xField: string, valueField: string, xLabel?: string, yLabel?: string } }.
 - Regras de sql_execution: apenas SELECT/CTE (WITH), uma única instrução, sem placeholders posicionais ($1, $2, ...), com suporte somente a {{tenant_id}}.
 - Placeholders de filtro como {{de}}, {{ate}}, {{status}} não são suportados em sql_execution; para validar consulta use valores literais no SQL.
 - Não invente campos de input como filters/limit fora do SQL; filtros, ordenação e limite devem estar no próprio SQL.
 - Use "title" para nomear claramente o artifact/tabela (ex.: "Vendas por Canal - Últimos 30 dias").
+- Use "chart" quando quiser habilitar gráfico de barras no artifact, apontando colunas reais do resultado (xField/valueField).
 - Para análise, prefira consultas agregadas e legíveis (GROUP BY, ORDER BY, período explícito) em vez de SELECT * sem critério.
 - Se houver dúvida de schema/campo, valide primeiro com sql_execution e só depois consolide a conclusão.
 - Se a pergunta exigir operação transacional de ERP, use crud; se exigir montagem de dashboard, use dashboard_builder; se exigir análise tabular, use sql_execution.
