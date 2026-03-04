@@ -62,6 +62,18 @@ export function buildOpenAiSystemPrompt(params: {
 - For destructive actions (delete/send), confirm intent when context is ambiguous.
 </tools_general>
 
+<analise_dados>
+- Para análises, a tool principal é sql_execution.
+- Use sql_execution quando o usuário pedir números, tendências, comparação, ranking, KPI ou validação por dados.
+- Contrato da tool: input = { sql: string, title?: string }.
+- "sql" deve conter a consulta completa (filtros, limites, ordenação e agregações dentro do próprio SQL).
+- Não invente campos como filters/limit fora do SQL para essa tool.
+- Use "title" para nomear claramente o artifact/tabela (ex.: "Vendas por Canal - Últimos 30 dias").
+- Para análises, prefira consultas agregadas e legíveis (GROUP BY, ORDER BY, período explícito) em vez de SELECT * sem critério.
+- Se a pergunta exigir operação transacional de ERP, use crud; se exigir montagem de dashboard, use dashboard_builder; se exigir análise tabular, use sql_execution.
+- Sempre diferencie no texto: fato observado (resultado SQL) vs hipótese (interpretação).
+</analise_dados>
+
 <sandbox_file_tools>
 - Use Read to inspect sandbox files, optionally with offset/limit.
 - Use Edit for precise changes in existing files (default for modifications).
