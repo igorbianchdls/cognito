@@ -1,112 +1,185 @@
 # Marketing Skill (SQL Query-First)
 
-Objetivo: definir SQL valido para dashboards de trafego pago (Meta Ads / Google Ads) com `dataQuery.query`.
+Objetivo: definir SQL valido para dashboards de trafego pago (Meta Ads / Google Ads) usando `dataQuery.query`.
 
 Este skill NAO gera JSONR final.
-Para estrutura final, usar `dashboard_builder`.
-
-## Contrato de Dados
-
-Padrao principal:
-- KPI/Chart via `query` puro.
-- Chart deve informar `xField` e `yField`.
-- Formato legado (`model/measure/dimension`) e fallback tecnico.
+Para layout e montagem de widgets, usar `dashboard_builder`.
 
 ## Fontes de Verdade
 
-- `src/products/erp/backend/features/modulos/controllers/trafegopago/query/controller.ts`
-- `src/products/erp/backend/features/modulos/controllers/trafegopago/options/controller.ts`
-- `src/products/bi/shared/queryCatalog.ts`
+Prioridade de referencia:
+1. `src/products/erp/backend/features/modulos/controllers/trafegopago/query/controller.ts`
+2. `src/products/erp/backend/features/modulos/controllers/trafegopago/options/controller.ts`
+3. `src/products/bi/shared/queryCatalog.ts`
 
 Em conflito, priorizar controller.
 
-## Tabela Principal
+## Contrato Query-First
 
-- `trafegopago.desempenho_diario`
+- KPI: `query` retornando `value`
+- Chart: `query`, `xField`, `yField`, `keyField`
+- Evitar modo legado em templates novos
 
-## Campos de Corte Comuns
+## Modelo Canonico (Schema/Tabela/Colunas)
 
-- `plataforma`
-- `nivel`
-- `conta_id`
-- `campanha_id`
-- `grupo_id`
-- `anuncio_id`
-- `data_referencia`
+### `trafegopago.desempenho_diario`
+Colunas base (confirmadas):
+- `tenant_id`, `data_ref`
+- `plataforma`, `nivel`
+- `conta_id`, `campanha_id`, `grupo_id`, `anuncio_id`
+- `gasto`, `receita_atribuida`, `cliques`, `impressoes`, `conversoes`, `leads`
+- `alcance`, `frequencia`
+
+Joins comuns para labels:
+- `trafegopago.contas_midia cm`
+- `trafegopago.campanhas c`
+- `trafegopago.grupos_anuncio ga`
+- `trafegopago.anuncios a`
 
 ## Filtros Canonicos
 
 - `{{tenant_id}}`
-- `{{de}}`, `{{ate}}`
+- `{{de}}`, `{{ate}}` (sobre `data_ref`)
 - `{{plataforma}}`
 - `{{nivel}}`
 - `{{conta_id}}`
 - `{{campanha_id}}`
 - `{{grupo_id}}`
 - `{{anuncio_id}}`
+- `{{gasto_min}}`, `{{gasto_max}}`
 
-## Medidas Canonicas
-
-- `SUM(gasto)`
-- `SUM(receita_atribuida)`
-- `SUM(cliques)`
-- `SUM(impressoes)`
-- `SUM(conversoes)`
-- `SUM(leads)`
-- `CASE WHEN SUM(gasto)=0 THEN 0 ELSE SUM(receita_atribuida)/SUM(gasto) END` (ROAS)
-- `CASE WHEN SUM(impressoes)=0 THEN 0 ELSE SUM(cliques)/SUM(impressoes) END` (CTR)
-- `CASE WHEN SUM(cliques)=0 THEN 0 ELSE SUM(gasto)/SUM(cliques) END` (CPC)
-
-## Exemplo KPI (ROAS)
+Padrao:
 
 ```sql
-SELECT
-  CASE WHEN SUM(src.gasto)=0 THEN 0 ELSE SUM(src.receita_atribuida)/SUM(src.gasto) END::float AS value
-FROM trafegopago.desempenho_diario src
 WHERE src.tenant_id = {{tenant_id}}::int
-  AND ({{de}}::date IS NULL OR src.data_referencia::date >= {{de}}::date)
-  AND ({{ate}}::date IS NULL OR src.data_referencia::date <= {{ate}}::date)
-  AND ({{plataforma}}::text IS NULL OR src.plataforma = {{plataforma}}::text)
+  AND ({{de}}::date IS NULL OR src.data_ref::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_ref::date <= {{ate}}::date)
 ```
 
-## Exemplo Chart (Top Campanhas por Gasto)
+## KPIs Canonicos
 
+### Gasto
 ```sql
-SELECT
-  src.campanha_id::text AS key,
-  COALESCE(src.campanha_nome, src.campanha_id::text, '-') AS label,
-  COALESCE(SUM(src.gasto), 0)::float AS value
-FROM trafegopago.desempenho_diario src
-WHERE src.tenant_id = {{tenant_id}}::int
-  AND ({{de}}::date IS NULL OR src.data_referencia::date >= {{de}}::date)
-  AND ({{ate}}::date IS NULL OR src.data_referencia::date <= {{ate}}::date)
-  AND ({{nivel}}::text IS NULL OR src.nivel = {{nivel}}::text)
-GROUP BY 1,2
-ORDER BY 3 DESC
+SELECT COALESCE(SUM(dd.gasto), 0)::float AS value
+FROM trafegopago.desempenho_diario dd
+WHERE dd.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR dd.data_ref::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR dd.data_ref::date <= {{ate}}::date)
 ```
 
-## Exemplo Serie Mensal (Gasto)
+### Receita atribuida
+```sql
+SELECT COALESCE(SUM(dd.receita_atribuida), 0)::float AS value
+FROM trafegopago.desempenho_diario dd
+WHERE dd.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR dd.data_ref::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR dd.data_ref::date <= {{ate}}::date)
+```
 
+### ROAS
 ```sql
 SELECT
-  TO_CHAR(DATE_TRUNC('month', src.data_referencia), 'YYYY-MM') AS key,
-  TO_CHAR(DATE_TRUNC('month', src.data_referencia), 'YYYY-MM') AS label,
-  COALESCE(SUM(src.gasto), 0)::float AS value
-FROM trafegopago.desempenho_diario src
-WHERE src.tenant_id = {{tenant_id}}::int
-  AND ({{de}}::date IS NULL OR src.data_referencia::date >= {{de}}::date)
-  AND ({{ate}}::date IS NULL OR src.data_referencia::date <= {{ate}}::date)
+  CASE
+    WHEN COALESCE(SUM(dd.gasto), 0) = 0 THEN 0
+    ELSE COALESCE(SUM(dd.receita_atribuida), 0)::float / NULLIF(SUM(dd.gasto), 0)::float
+  END::float AS value
+FROM trafegopago.desempenho_diario dd
+WHERE dd.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR dd.data_ref::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR dd.data_ref::date <= {{ate}}::date)
+```
+
+### CTR
+```sql
+SELECT
+  CASE
+    WHEN COALESCE(SUM(dd.impressoes), 0) = 0 THEN 0
+    ELSE COALESCE(SUM(dd.cliques), 0)::float / NULLIF(SUM(dd.impressoes), 0)::float
+  END::float AS value
+FROM trafegopago.desempenho_diario dd
+WHERE dd.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR dd.data_ref::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR dd.data_ref::date <= {{ate}}::date)
+```
+
+### CPC
+```sql
+SELECT
+  CASE
+    WHEN COALESCE(SUM(dd.cliques), 0) = 0 THEN 0
+    ELSE COALESCE(SUM(dd.gasto), 0)::float / NULLIF(SUM(dd.cliques), 0)::float
+  END::float AS value
+FROM trafegopago.desempenho_diario dd
+WHERE dd.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR dd.data_ref::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR dd.data_ref::date <= {{ate}}::date)
+```
+
+## Graficos Canonicos
+
+### Gasto por mes (line)
+```sql
+SELECT
+  TO_CHAR(DATE_TRUNC('month', dd.data_ref), 'YYYY-MM') AS key,
+  TO_CHAR(DATE_TRUNC('month', dd.data_ref), 'YYYY-MM') AS label,
+  COALESCE(SUM(dd.gasto), 0)::float AS value
+FROM trafegopago.desempenho_diario dd
+WHERE dd.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR dd.data_ref::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR dd.data_ref::date <= {{ate}}::date)
 GROUP BY 1,2
 ORDER BY 2 ASC
 ```
 
-## Regras Operacionais
+### Top campanhas por gasto (bar)
+```sql
+SELECT
+  dd.campanha_id AS key,
+  COALESCE(c.nome, CONCAT('Campanha #', dd.campanha_id::text)) AS label,
+  COALESCE(SUM(dd.gasto), 0)::float AS value
+FROM trafegopago.desempenho_diario dd
+LEFT JOIN trafegopago.campanhas c ON c.id = dd.campanha_id
+WHERE dd.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR dd.data_ref::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR dd.data_ref::date <= {{ate}}::date)
+GROUP BY 1,2
+ORDER BY 3 DESC
+LIMIT 10
+```
 
-- Nao inventar campos fora do controller/catalog.
-- Nao usar conversoes implicitas de tipo em filtros; tipar placeholders.
-- Para funil hierarquico, respeitar cascata `conta -> campanha -> grupo -> anuncio`.
+### ROAS por plataforma (bar)
+```sql
+SELECT
+  COALESCE(dd.plataforma, '-') AS key,
+  COALESCE(dd.plataforma, '-') AS label,
+  CASE
+    WHEN COALESCE(SUM(dd.gasto), 0) = 0 THEN 0
+    ELSE COALESCE(SUM(dd.receita_atribuida), 0)::float / NULLIF(SUM(dd.gasto), 0)::float
+  END::float AS value
+FROM trafegopago.desempenho_diario dd
+WHERE dd.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR dd.data_ref::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR dd.data_ref::date <= {{ate}}::date)
+GROUP BY 1,2
+ORDER BY 3 DESC
+```
 
-## Handoff para dashboard_builder
+### Hierarquia de performance (conta/campanha/grupo/anuncio)
+Para drill, usar mesma base mudando somente dimensao de agrupamento:
+- conta: `dd.conta_id` + `cm.nome_conta`
+- campanha: `dd.campanha_id` + `c.nome`
+- grupo: `dd.grupo_id` + `ga.nome`
+- anuncio: `dd.anuncio_id` + `a.nome`
+
+## Regras Anti-Erro (obrigatorias)
+
+- Campo de data canonico: `data_ref` (nao usar `data_referencia` se nao existir no modelo).
+- Dimensao mensal sempre derivada via `DATE_TRUNC('month', data_ref)`.
+- Nao usar colunas inventadas fora do catalog/controller.
+- Sempre proteger divisao por zero (`NULLIF` ou `CASE`).
+- Se precisar de nome de entidade (campanha/grupo/anuncio), usar JOIN em tabela de dimensao.
+
+## Handoff para `dashboard_builder`
 
 ```json
 {
@@ -114,7 +187,7 @@ ORDER BY 2 ASC
   "payload": {
     "title": "ROAS",
     "query": "SELECT ... AS value FROM ...",
-    "formato": "percent"
+    "formato": "number"
   }
 }
 ```
