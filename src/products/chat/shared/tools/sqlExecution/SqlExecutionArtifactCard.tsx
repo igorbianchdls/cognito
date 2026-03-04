@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Table as TableIcon } from 'lucide-react'
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable'
+import type { ChartSwitcherOptions } from '@/components/charts/ChartSwitcher'
 import type { SqlExecutionRow, SqlExecutionToolViewModel } from '@/products/chat/shared/tools/sqlExecution/types'
 
 function safeExportName(title: string) {
@@ -34,7 +35,7 @@ export function SqlExecutionArtifactCard({
   model: SqlExecutionToolViewModel
 }) {
   const columns = useMemo(() => buildColumns(model.columns), [model.columns])
-  const chartOptions = useMemo(
+  const chartOptions = useMemo<ChartSwitcherOptions<SqlExecutionRow> | undefined>(
     () =>
       model.chart
         ? {
