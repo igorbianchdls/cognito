@@ -43,7 +43,7 @@ Em conflito, priorizar controller do modulo.
 - `produto_id`
 - `categoria`
 - `transportadora`
-- `data_pedido` / `mes`
+- `data_pedido` / `mes` (derivado via `DATE_TRUNC` + `TO_CHAR`, não coluna física)
 
 ## Filtros Canonicos
 
@@ -127,6 +127,7 @@ ORDER BY 2 ASC
 - Quando precisar de `produto`/`categoria`, usar `ecommerce.pedido_itens` ou join com tabela correta.
 - Nao usar `to_jsonb(src)->>'campo'` se a coluna existe.
 - Evitar joins desnecessarios.
+- Se precisar validar SQL antes de montar widget, testar via `sql_execution` e depois reutilizar a query no payload do dashboard.
 
 ## Handoff para dashboard_builder
 

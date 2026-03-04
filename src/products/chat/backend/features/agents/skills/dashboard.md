@@ -77,6 +77,7 @@ Compatibilidade:
 - Nao usar `to_jsonb(src)->>'campo'` quando coluna real existe.
 - Evitar joins sem uso.
 - Garantir alias coerentes com `xField/yField/keyField`.
+- `payload.query` é armazenado no JSONR e executado no runtime do dashboard; para teste ad-hoc de SQL, usar `sql_execution`.
 
 ## Template Minimo Valido
 
