@@ -103,7 +103,7 @@ function resolveDimensionColumn(model: string, dimension: string, keyColumn: str
     return candidate
   }
 
-  return dimension
+  return ''
 }
 
 function extractStoreFilterKey(pathValue: unknown): string {
@@ -152,6 +152,7 @@ function appendRangePredicate(parts: string[], key: string, op: '>=' | '<=') {
 
 function buildWhereClause(model: string, explicitFilterKeys: Iterable<string>): string {
   const catalog = getAppsTableCatalog(model)
+  const allowedFilterKeys = new Set((catalog?.filters || []).map((f) => asString(f.field)).filter(Boolean))
   const filterKeys = new Set<string>(explicitFilterKeys)
   filterKeys.add('tenant_id')
 
@@ -169,6 +170,7 @@ function buildWhereClause(model: string, explicitFilterKeys: Iterable<string>): 
 
   for (const key of orderedKeys) {
     if (key === 'de' || key === 'ate' || key === 'dateRange') continue
+    if (catalog && !allowedFilterKeys.has(key)) continue
     if (key.endsWith('_min') && IDENTIFIER_RE.test(key.slice(0, -4))) {
       appendRangePredicate(parts, key, '>=')
       continue

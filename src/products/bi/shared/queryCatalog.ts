@@ -12,6 +12,11 @@ export type AppsTableName =
   | 'estoque.estoques_atual'
   | 'estoque.movimentacoes'
   | 'ecommerce.pedidos'
+  | 'ecommerce.pedido_itens'
+  | 'ecommerce.taxas_pedido'
+  | 'ecommerce.payouts'
+  | 'ecommerce.envios'
+  | 'ecommerce.estoque_saldos'
   | 'trafegopago.desempenho_diario'
 export type AppsModule = 'vendas' | 'compras' | 'financeiro' | 'contabilidade' | 'crm' | 'documentos' | 'estoque' | 'ecommerce' | 'trafegopago'
 
@@ -66,6 +71,11 @@ const MONTH_EXPR_ESTOQUE_ATUALIZADO = "TO_CHAR(DATE_TRUNC('month', atualizado_em
 const MONTH_EXPR_MOVIMENTO = "TO_CHAR(DATE_TRUNC('month', data_movimento), 'YYYY-MM')"
 const MONTH_EXPR_CONTABIL_LANCAMENTO = "TO_CHAR(DATE_TRUNC('month', data_lancamento), 'YYYY-MM')"
 const MONTH_EXPR_TRAFEGO_DATA_REF = "TO_CHAR(DATE_TRUNC('month', data_ref), 'YYYY-MM')"
+const MONTH_EXPR_ECOMMERCE_PEDIDO_ITEM = "TO_CHAR(DATE_TRUNC('month', created_at), 'YYYY-MM')"
+const MONTH_EXPR_ECOMMERCE_TAXA = "TO_CHAR(DATE_TRUNC('month', competencia_em), 'YYYY-MM')"
+const MONTH_EXPR_ECOMMERCE_PAYOUT = "TO_CHAR(DATE_TRUNC('month', data_pagamento), 'YYYY-MM')"
+const MONTH_EXPR_ECOMMERCE_ENVIO = "TO_CHAR(DATE_TRUNC('month', despachado_em), 'YYYY-MM')"
+const MONTH_EXPR_ECOMMERCE_ESTOQUE = "TO_CHAR(DATE_TRUNC('month', snapshot_date), 'YYYY-MM')"
 
 export const APPS_QUERY_CATALOG: Record<AppsTableName, AppsTableCatalog> = {
   'vendas.pedidos': {
@@ -750,6 +760,180 @@ export const APPS_QUERY_CATALOG: Record<AppsTableName, AppsTableCatalog> = {
       { field: 'status_fulfillment', label: 'Status Fulfillment', type: 'enum', operators: ['eq', 'in'] },
       { field: 'valor_min', label: 'Valor Mínimo', type: 'number', operators: ['gte'] },
       { field: 'valor_max', label: 'Valor Máximo', type: 'number', operators: ['lte'] },
+    ],
+  },
+  'ecommerce.pedido_itens': {
+    table: 'ecommerce.pedido_itens',
+    module: 'ecommerce',
+    description: 'Itens dos pedidos de ecommerce.',
+    aliases: ['ecommerce-pedido-itens', 'ecommerce_pedido_itens'],
+    metrics: [
+      { id: 'valor_total', label: 'Valor Total', format: 'currency', legacyMeasures: ['SUM(valor_total)'] },
+      { id: 'quantidade', label: 'Quantidade', format: 'number', legacyMeasures: ['SUM(quantidade)'] },
+      { id: 'itens', label: 'Itens', format: 'number', legacyMeasures: ['COUNT()'] },
+    ],
+    dimensions: [
+      { id: 'produto', label: 'Produto', kind: 'attribute', legacyDimension: 'produto' },
+      { id: 'categoria', label: 'Categoria', kind: 'attribute', legacyDimension: 'categoria' },
+      { id: 'status', label: 'Status', kind: 'attribute', legacyDimension: 'status' },
+      {
+        id: 'periodo',
+        label: 'Periodo',
+        kind: 'time',
+        legacyDimension: 'periodo',
+        legacyDimensionExprByGrain: {
+          month: MONTH_EXPR_ECOMMERCE_PEDIDO_ITEM,
+        },
+      },
+    ],
+    defaultTimeField: 'created_at',
+    filters: [
+      { field: 'tenant_id', label: 'Tenant', type: 'id', operators: ['eq'] },
+      { field: 'de', label: 'Data Inicial', type: 'date', operators: ['gte'] },
+      { field: 'ate', label: 'Data Final', type: 'date', operators: ['lte'] },
+      { field: 'plataforma', label: 'Plataforma', type: 'enum', operators: ['eq', 'in'] },
+      { field: 'canal_conta_id', label: 'Conta', type: 'id', operators: ['eq', 'in'] },
+      { field: 'pedido_id', label: 'Pedido', type: 'id', operators: ['eq', 'in'] },
+      { field: 'produto_id', label: 'Produto', type: 'id', operators: ['eq', 'in'] },
+      { field: 'status', label: 'Status', type: 'enum', operators: ['eq', 'in'] },
+    ],
+  },
+  'ecommerce.taxas_pedido': {
+    table: 'ecommerce.taxas_pedido',
+    module: 'ecommerce',
+    description: 'Taxas associadas aos pedidos de ecommerce.',
+    aliases: ['ecommerce-taxas-pedido', 'ecommerce_taxas_pedido'],
+    metrics: [
+      { id: 'taxas_total', label: 'Taxas Totais', format: 'currency', legacyMeasures: ['SUM(valor)'] },
+      { id: 'linhas', label: 'Linhas', format: 'number', legacyMeasures: ['COUNT()'] },
+    ],
+    dimensions: [
+      { id: 'tipo_taxa', label: 'Tipo de Taxa', kind: 'attribute', legacyDimension: 'tipo_taxa' },
+      {
+        id: 'periodo',
+        label: 'Periodo',
+        kind: 'time',
+        legacyDimension: 'periodo',
+        legacyDimensionExprByGrain: {
+          month: MONTH_EXPR_ECOMMERCE_TAXA,
+        },
+      },
+    ],
+    defaultTimeField: 'competencia_em',
+    filters: [
+      { field: 'tenant_id', label: 'Tenant', type: 'id', operators: ['eq'] },
+      { field: 'de', label: 'Data Inicial', type: 'date', operators: ['gte'] },
+      { field: 'ate', label: 'Data Final', type: 'date', operators: ['lte'] },
+      { field: 'plataforma', label: 'Plataforma', type: 'enum', operators: ['eq', 'in'] },
+      { field: 'canal_conta_id', label: 'Conta', type: 'id', operators: ['eq', 'in'] },
+      { field: 'pedido_id', label: 'Pedido', type: 'id', operators: ['eq', 'in'] },
+      { field: 'tipo_taxa', label: 'Tipo de Taxa', type: 'enum', operators: ['eq', 'in'] },
+    ],
+  },
+  'ecommerce.payouts': {
+    table: 'ecommerce.payouts',
+    module: 'ecommerce',
+    description: 'Liquidações financeiras dos canais de ecommerce.',
+    aliases: ['ecommerce-payouts', 'ecommerce_payouts'],
+    metrics: [
+      { id: 'valor_liquido', label: 'Valor Líquido', format: 'currency', legacyMeasures: ['SUM(valor_liquido)'] },
+      { id: 'valor_bruto', label: 'Valor Bruto', format: 'currency', legacyMeasures: ['SUM(valor_bruto)'] },
+      { id: 'payouts', label: 'Payouts', format: 'number', legacyMeasures: ['COUNT()'] },
+    ],
+    dimensions: [
+      { id: 'status', label: 'Status', kind: 'attribute', legacyDimension: 'status' },
+      { id: 'canal_conta', label: 'Conta', kind: 'attribute', legacyDimension: 'canal_conta' },
+      { id: 'loja', label: 'Loja', kind: 'attribute', legacyDimension: 'loja' },
+      {
+        id: 'periodo',
+        label: 'Periodo',
+        kind: 'time',
+        legacyDimension: 'periodo',
+        legacyDimensionExprByGrain: {
+          month: MONTH_EXPR_ECOMMERCE_PAYOUT,
+        },
+      },
+    ],
+    defaultTimeField: 'data_pagamento',
+    filters: [
+      { field: 'tenant_id', label: 'Tenant', type: 'id', operators: ['eq'] },
+      { field: 'de', label: 'Data Inicial', type: 'date', operators: ['gte'] },
+      { field: 'ate', label: 'Data Final', type: 'date', operators: ['lte'] },
+      { field: 'plataforma', label: 'Plataforma', type: 'enum', operators: ['eq', 'in'] },
+      { field: 'canal_conta_id', label: 'Conta', type: 'id', operators: ['eq', 'in'] },
+      { field: 'loja_id', label: 'Loja', type: 'id', operators: ['eq', 'in'] },
+      { field: 'status', label: 'Status', type: 'enum', operators: ['eq', 'in'] },
+    ],
+  },
+  'ecommerce.envios': {
+    table: 'ecommerce.envios',
+    module: 'ecommerce',
+    description: 'Dados de envio/logística dos pedidos de ecommerce.',
+    aliases: ['ecommerce-envios', 'ecommerce_envios'],
+    metrics: [
+      { id: 'envios', label: 'Envios', format: 'number', legacyMeasures: ['COUNT()'] },
+      { id: 'frete_custo', label: 'Frete Custo', format: 'currency', legacyMeasures: ['SUM(frete_custo)'] },
+    ],
+    dimensions: [
+      { id: 'transportadora', label: 'Transportadora', kind: 'attribute', legacyDimension: 'transportadora' },
+      { id: 'status', label: 'Status', kind: 'attribute', legacyDimension: 'status' },
+      { id: 'loja', label: 'Loja', kind: 'attribute', legacyDimension: 'loja' },
+      {
+        id: 'periodo',
+        label: 'Periodo',
+        kind: 'time',
+        legacyDimension: 'periodo',
+        legacyDimensionExprByGrain: {
+          month: MONTH_EXPR_ECOMMERCE_ENVIO,
+        },
+      },
+    ],
+    defaultTimeField: 'despachado_em',
+    filters: [
+      { field: 'tenant_id', label: 'Tenant', type: 'id', operators: ['eq'] },
+      { field: 'de', label: 'Data Inicial', type: 'date', operators: ['gte'] },
+      { field: 'ate', label: 'Data Final', type: 'date', operators: ['lte'] },
+      { field: 'plataforma', label: 'Plataforma', type: 'enum', operators: ['eq', 'in'] },
+      { field: 'canal_conta_id', label: 'Conta', type: 'id', operators: ['eq', 'in'] },
+      { field: 'loja_id', label: 'Loja', type: 'id', operators: ['eq', 'in'] },
+      { field: 'status', label: 'Status', type: 'enum', operators: ['eq', 'in'] },
+      { field: 'transportadora', label: 'Transportadora', type: 'string', operators: ['eq', 'in', 'contains'] },
+    ],
+  },
+  'ecommerce.estoque_saldos': {
+    table: 'ecommerce.estoque_saldos',
+    module: 'ecommerce',
+    description: 'Saldos de estoque por SKU/listing.',
+    aliases: ['ecommerce-estoque-saldos', 'ecommerce_estoque_saldos'],
+    metrics: [
+      { id: 'quantidade_disponivel', label: 'Qtd Disponível', format: 'number', legacyMeasures: ['SUM(quantidade_disponivel)'] },
+      { id: 'quantidade_total', label: 'Qtd Total', format: 'number', legacyMeasures: ['SUM(quantidade_total)'] },
+      { id: 'skus', label: 'SKUs', format: 'number', legacyMeasures: ['COUNT_DISTINCT(produto_id)'] },
+    ],
+    dimensions: [
+      { id: 'produto', label: 'Produto', kind: 'attribute', legacyDimension: 'produto' },
+      { id: 'status', label: 'Status', kind: 'attribute', legacyDimension: 'status' },
+      { id: 'loja', label: 'Loja', kind: 'attribute', legacyDimension: 'loja' },
+      {
+        id: 'periodo',
+        label: 'Periodo',
+        kind: 'time',
+        legacyDimension: 'periodo',
+        legacyDimensionExprByGrain: {
+          month: MONTH_EXPR_ECOMMERCE_ESTOQUE,
+        },
+      },
+    ],
+    defaultTimeField: 'snapshot_date',
+    filters: [
+      { field: 'tenant_id', label: 'Tenant', type: 'id', operators: ['eq'] },
+      { field: 'de', label: 'Data Inicial', type: 'date', operators: ['gte'] },
+      { field: 'ate', label: 'Data Final', type: 'date', operators: ['lte'] },
+      { field: 'plataforma', label: 'Plataforma', type: 'enum', operators: ['eq', 'in'] },
+      { field: 'canal_conta_id', label: 'Conta', type: 'id', operators: ['eq', 'in'] },
+      { field: 'loja_id', label: 'Loja', type: 'id', operators: ['eq', 'in'] },
+      { field: 'produto_id', label: 'Produto', type: 'id', operators: ['eq', 'in'] },
+      { field: 'status', label: 'Status', type: 'enum', operators: ['eq', 'in'] },
     ],
   },
   'trafegopago.desempenho_diario': {
