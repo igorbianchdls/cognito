@@ -1,21 +1,16 @@
-# Marketing Skill (Contrato de Dados Meta/Google)
+# Marketing Skill (SQL Query-First)
 
-Objetivo: mapear corretamente dados de midia paga para `dataQuery` sem inventar campos.
+Objetivo: definir SQL valido para dashboards de trafego pago (Meta Ads / Google Ads) com `dataQuery.query`.
 
-Este skill NAO gera JSONR final de dashboard.
-Para dashboard final, usar a tool `dashboard_builder`.
+Este skill NAO gera JSONR final.
+Para estrutura final, usar `dashboard_builder`.
 
-## Fronteira
+## Contrato de Dados
 
-Este skill define:
-- models/tabelas
-- medidas
-- dimensoes
-- filtros
-- options para slicers
-- exemplos de `dataQuery`
-
-Este skill NAO define layout final (pode sugerir leituras analiticas em KPI/chart sem impor estrutura).
+Padrao principal:
+- KPI/Chart via `query` puro.
+- Chart deve informar `xField` e `yField`.
+- Formato legado (`model/measure/dimension`) e fallback tecnico.
 
 ## Fontes de Verdade
 
@@ -23,13 +18,32 @@ Este skill NAO define layout final (pode sugerir leituras analiticas em KPI/char
 - `src/products/erp/backend/features/modulos/controllers/trafegopago/options/controller.ts`
 - `src/products/bi/shared/queryCatalog.ts`
 
-Prioridade em conflito:
-1. controller de query/options
-2. query catalog
+Em conflito, priorizar controller.
 
-## Model Principal
+## Tabela Principal
 
 - `trafegopago.desempenho_diario`
+
+## Campos de Corte Comuns
+
+- `plataforma`
+- `nivel`
+- `conta_id`
+- `campanha_id`
+- `grupo_id`
+- `anuncio_id`
+- `data_referencia`
+
+## Filtros Canonicos
+
+- `{{tenant_id}}`
+- `{{de}}`, `{{ate}}`
+- `{{plataforma}}`
+- `{{nivel}}`
+- `{{conta_id}}`
+- `{{campanha_id}}`
+- `{{grupo_id}}`
+- `{{anuncio_id}}`
 
 ## Medidas Canonicas
 
@@ -42,175 +56,65 @@ Prioridade em conflito:
 - `CASE WHEN SUM(gasto)=0 THEN 0 ELSE SUM(receita_atribuida)/SUM(gasto) END` (ROAS)
 - `CASE WHEN SUM(impressoes)=0 THEN 0 ELSE SUM(cliques)/SUM(impressoes) END` (CTR)
 - `CASE WHEN SUM(cliques)=0 THEN 0 ELSE SUM(gasto)/SUM(cliques) END` (CPC)
-- `CASE WHEN SUM(impressoes)=0 THEN 0 ELSE (SUM(gasto)*1000.0)/SUM(impressoes) END` (CPM)
-- `CASE WHEN SUM(conversoes)=0 THEN 0 ELSE SUM(gasto)/SUM(conversoes) END` (CPA)
-- `CASE WHEN SUM(cliques)=0 THEN 0 ELSE SUM(conversoes)/SUM(cliques) END` (CVR)
 
-## Dimensoes Canonicas
+## Exemplo KPI (ROAS)
 
-- `plataforma`
-- `nivel`
-- `conta`, `conta_id`
-- `campanha`, `campanha_id`
-- `grupo`, `grupo_id`
-- `anuncio`, `anuncio_id`
-- `mes`, `periodo`
-
-## Referencia Real de Templates (Meta/Google Ads)
-
-Base atual observada em:
-- `src/products/bi/shared/templates/appsMetaAdsTemplate.ts`
-- `src/products/bi/shared/templates/appsGoogleAdsTemplate.ts`
-
-Dimensoes mais usadas nesses templates:
-- `conta_id`
-- `campanha_id`
-- `grupo_id`
-- `anuncio_id`
-- `mes`
-
-Medidas mais usadas nesses templates:
-- `SUM(gasto)`
-- `SUM(receita_atribuida)`
-- `SUM(cliques)`
-- `SUM(impressoes)`
-- `SUM(conversoes)`
-- `SUM(leads)`
-- `CASE WHEN SUM(gasto)=0 THEN 0 ELSE SUM(receita_atribuida)/SUM(gasto) END`
-- `CASE WHEN SUM(impressoes)=0 THEN 0 ELSE SUM(cliques)/SUM(impressoes) END`
-- `CASE WHEN SUM(cliques)=0 THEN 0 ELSE SUM(gasto)/SUM(cliques) END`
-- `CASE WHEN SUM(impressoes)=0 THEN 0 ELSE (SUM(gasto)*1000.0)/SUM(impressoes) END`
-- `CASE WHEN SUM(conversoes)=0 THEN 0 ELSE SUM(gasto)/SUM(conversoes) END`
-- `CASE WHEN SUM(cliques)=0 THEN 0 ELSE SUM(conversoes)/SUM(cliques) END`
-- `CASE WHEN SUM(cliques)=0 THEN 0 ELSE SUM(leads)/SUM(cliques) END`
-
-## Filtros Canonicos
-
-- `tenant_id`
-- `de`, `ate`
-- `plataforma` (`meta_ads`, `google_ads`)
-- `nivel` (`campaign`, `ad_group`, `ad`)
-- `conta_id`, `campanha_id`, `grupo_id`, `anuncio_id`
-- `gasto_min`, `gasto_max`
-
-## Options de Slicer
-
-Campos esperados:
-- `conta_id`
-- `campanha_id`
-- `grupo_id`
-- `anuncio_id`
-
-Com cascata quando necessario:
-- campanha depende de conta
-- grupo depende de conta e campanha
-- anuncio depende de conta, campanha e grupo
-
-## Mapeamentos Canonicos (exemplos `dataQuery`)
-
-KPI Gasto Meta (campanha):
-```json
-{
-  "model": "trafegopago.desempenho_diario",
-  "measure": "SUM(gasto)",
-  "filters": { "plataforma": "meta_ads", "nivel": "campaign" }
-}
+```sql
+SELECT
+  CASE WHEN SUM(src.gasto)=0 THEN 0 ELSE SUM(src.receita_atribuida)/SUM(src.gasto) END::float AS value
+FROM trafegopago.desempenho_diario src
+WHERE src.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR src.data_referencia::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_referencia::date <= {{ate}}::date)
+  AND ({{plataforma}}::text IS NULL OR src.plataforma = {{plataforma}}::text)
 ```
 
-KPI CTR Google (campanha):
-```json
-{
-  "model": "trafegopago.desempenho_diario",
-  "measure": "CASE WHEN SUM(impressoes)=0 THEN 0 ELSE SUM(cliques)/SUM(impressoes) END",
-  "filters": { "plataforma": "google_ads", "nivel": "campaign" }
-}
+## Exemplo Chart (Top Campanhas por Gasto)
+
+```sql
+SELECT
+  src.campanha_id::text AS key,
+  COALESCE(src.campanha_nome, src.campanha_id::text, '-') AS label,
+  COALESCE(SUM(src.gasto), 0)::float AS value
+FROM trafegopago.desempenho_diario src
+WHERE src.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR src.data_referencia::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_referencia::date <= {{ate}}::date)
+  AND ({{nivel}}::text IS NULL OR src.nivel = {{nivel}}::text)
+GROUP BY 1,2
+ORDER BY 3 DESC
 ```
 
-Top campanhas por gasto:
-```json
-{
-  "model": "trafegopago.desempenho_diario",
-  "dimension": "campanha",
-  "measure": "SUM(gasto)",
-  "filters": { "nivel": "campaign" },
-  "orderBy": { "field": "measure", "dir": "desc" },
-  "limit": 10
-}
+## Exemplo Serie Mensal (Gasto)
+
+```sql
+SELECT
+  TO_CHAR(DATE_TRUNC('month', src.data_referencia), 'YYYY-MM') AS key,
+  TO_CHAR(DATE_TRUNC('month', src.data_referencia), 'YYYY-MM') AS label,
+  COALESCE(SUM(src.gasto), 0)::float AS value
+FROM trafegopago.desempenho_diario src
+WHERE src.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR src.data_referencia::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_referencia::date <= {{ate}}::date)
+GROUP BY 1,2
+ORDER BY 2 ASC
 ```
-
-Serie mensal de conversoes:
-```json
-{
-  "model": "trafegopago.desempenho_diario",
-  "dimension": "mes",
-  "measure": "SUM(conversoes)",
-  "filters": { "nivel": "campaign" },
-  "orderBy": { "field": "dimension", "dir": "asc" },
-  "limit": 12
-}
-```
-
-## Sugestoes Analiticas (Nao Obrigatorio; nao e contrato de layout)
-
-KPIs sugeridos:
-- `trafegopago.desempenho_diario` + `SUM(gasto)`
-- `trafegopago.desempenho_diario` + `SUM(receita_atribuida)`
-- `trafegopago.desempenho_diario` + `SUM(cliques)`
-- `trafegopago.desempenho_diario` + `SUM(impressoes)`
-- `trafegopago.desempenho_diario` + `SUM(conversoes)`
-- `trafegopago.desempenho_diario` + `SUM(leads)`
-- `trafegopago.desempenho_diario` + `CASE WHEN SUM(gasto)=0 THEN 0 ELSE SUM(receita_atribuida)/SUM(gasto) END`
-- `trafegopago.desempenho_diario` + `CASE WHEN SUM(impressoes)=0 THEN 0 ELSE SUM(cliques)/SUM(impressoes) END`
-- `trafegopago.desempenho_diario` + `CASE WHEN SUM(cliques)=0 THEN 0 ELSE SUM(gasto)/SUM(cliques) END`
-- `trafegopago.desempenho_diario` + `CASE WHEN SUM(impressoes)=0 THEN 0 ELSE (SUM(gasto)*1000.0)/SUM(impressoes) END`
-- `trafegopago.desempenho_diario` + `CASE WHEN SUM(conversoes)=0 THEN 0 ELSE SUM(gasto)/SUM(conversoes) END`
-- `trafegopago.desempenho_diario` + `CASE WHEN SUM(cliques)=0 THEN 0 ELSE SUM(conversoes)/SUM(cliques) END`
-- `trafegopago.desempenho_diario` + `CASE WHEN SUM(cliques)=0 THEN 0 ELSE SUM(leads)/SUM(cliques) END`
-
-Graficos sugeridos:
-- `LineChart`: model `trafegopago.desempenho_diario`, dimension `mes`, measure `SUM(gasto)`
-- `LineChart`: model `trafegopago.desempenho_diario`, dimension `mes`, measure `SUM(receita_atribuida)`
-- `LineChart`: model `trafegopago.desempenho_diario`, dimension `mes`, measure `CASE WHEN SUM(gasto)=0 THEN 0 ELSE SUM(receita_atribuida)/SUM(gasto) END`
-- `LineChart`: model `trafegopago.desempenho_diario`, dimension `mes`, measure `SUM(conversoes)`
-- `LineChart`: model `trafegopago.desempenho_diario`, dimension `mes`, measure `SUM(leads)`
-- `BarChart`: model `trafegopago.desempenho_diario`, dimension `campanha_id`, measure `SUM(gasto)`
-- `BarChart`: model `trafegopago.desempenho_diario`, dimension `campanha_id`, measure `SUM(receita_atribuida)`
-- `BarChart`: model `trafegopago.desempenho_diario`, dimension `grupo_id`, measure `SUM(conversoes)`
-- `BarChart`: model `trafegopago.desempenho_diario`, dimension `anuncio_id`, measure `SUM(conversoes)`
-- `PieChart`: model `trafegopago.desempenho_diario`, dimension `conta_id`, measure `SUM(gasto)`
-- `BarChart`: model `trafegopago.desempenho_diario`, dimension `conta_id`, measure `SUM(receita_atribuida)`
-
-Observacao de composicao:
-- manter padrao parecido com os templates existentes: varios KPIs e varios graficos;
-- filtros hierarquicos (conta -> campanha -> grupo -> anuncio) podem ficar no fim do dashboard.
 
 ## Regras Operacionais
 
-- Nao inventar medida/dimensao/filtro fora da whitelist.
-- Se metrica pedida nao existir, usar equivalente suportado e explicar.
-- Se options de slicer vierem vazias, validar `field`, `dependsOn`, `contextFilters` e tenant.
+- Nao inventar campos fora do controller/catalog.
+- Nao usar conversoes implicitas de tipo em filtros; tipar placeholders.
+- Para funil hierarquico, respeitar cascata `conta -> campanha -> grupo -> anuncio`.
 
-## Formato de Handoff para Dashboard Builder
+## Handoff para dashboard_builder
 
 ```json
 {
-  "dashboard_name": "<nome>",
-  "widgets_sugeridos": [
-    {
-      "widget_id": "kpi_ctr",
-      "widget_type": "kpi",
-      "container": "principal",
-      "payload": {
-        "title": "CTR",
-        "tabela": "trafegopago.desempenho_diario",
-        "medida": "CASE WHEN SUM(impressoes)=0 THEN 0 ELSE SUM(cliques)/SUM(impressoes) END",
-        "filtros": { "plataforma": "meta_ads", "nivel": "campaign" }
-      }
-    }
-  ],
-  "filtros_sugeridos": ["conta_id", "campanha_id", "grupo_id", "anuncio_id"]
+  "widget_type": "kpi",
+  "payload": {
+    "title": "ROAS",
+    "query": "SELECT ... AS value FROM ...",
+    "formato": "percent"
+  }
 }
 ```
-
-Regra obrigatoria:
-- nunca sugerir `/vercel/sandbox/dashboards` (plural)

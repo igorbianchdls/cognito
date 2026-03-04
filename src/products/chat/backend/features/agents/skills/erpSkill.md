@@ -1,193 +1,143 @@
-# ERP Skill (Contrato de Dados)
+# ERP Skill (SQL Query-First)
 
-Objetivo: mapear corretamente `model`, `measure`, `dimension`, `filters` para dominio ERP.
+Objetivo: definir SQL valido para widgets de dashboard ERP usando `dataQuery.query`.
 
-Este skill NAO gera JSONR final de dashboard.
-Para gerar dashboard final, use a tool `dashboard_builder`.
+Este skill NAO define layout final JSONR.
+Para estrutura de dashboard, usar `dashboard_builder`.
 
-## Fronteira
+## Contrato de Dados
 
-Este skill define:
-- tabelas/models
-- metricas
-- dimensoes
-- filtros
-- exemplos de `dataQuery`
+Padrao principal para KPI/Chart:
 
-Este skill NAO define:
-- `Theme`, `Header`, `Div`, `KPI`, charts, `SlicerCard`, `AISummary`
-- layout visual final (pode sugerir leituras analiticas em KPI/chart sem impor estrutura)
-- arquivo final `.jsonr`
+```json
+{
+  "dataQuery": {
+    "query": "SELECT ...",
+    "xField": "label",
+    "yField": "value",
+    "keyField": "key",
+    "filters": {}
+  }
+}
+```
+
+Notas:
+- KPI: normalmente so precisa `query` (+ `yField` opcional).
+- Chart: usar sempre `query`, `xField` e `yField`.
+- Formato legado (`model/measure/dimension`) e fallback tecnico, nao padrao.
 
 ## Fontes de Verdade
 
-- `src/products/bi/shared/queryCatalog.ts`
-- `GET /api/modulos/query/catalog`
-- controllers de query do modulo ERP
+- Controllers de query/options do modulo ERP.
+- `src/products/bi/shared/queryCatalog.ts`.
+- Templates reais de apps ERP em `src/products/bi/shared/templates/`.
 
-Se houver divergencia, priorizar o controller do modulo.
+Em conflito, priorizar controller do modulo.
 
-## Models Principais
+## Tabelas ERP Mais Comuns
 
 - `vendas.pedidos`
+- `vendas.pedidos_itens`
 - `compras.compras`
 - `compras.recebimentos`
 - `financeiro.contas_pagar`
 - `financeiro.contas_receber`
-- `contabilidade.lancamentos_contabeis`
-- `contabilidade.lancamentos_contabeis_linhas`
 - `crm.oportunidades`
 - `crm.leads`
-- `estoque.estoques_atual`
 - `estoque.movimentacoes`
+- `estoque.estoques_atual`
 
-## Referencia Real de Templates (ERP Vendas)
+## Filtros Canonicos (usar placeholders)
 
-Base atual observada em:
-- `src/products/bi/shared/templates/appsVendasTemplate.ts`
+- `{{tenant_id}}`
+- `{{de}}`, `{{ate}}`
+- `{{cliente_id}}`
+- `{{vendedor_id}}`
+- `{{filial_id}}`
+- `{{canal_venda_id}}`
+- `{{categoria_receita_id}}`
+- `{{territorio_id}}`
+- `{{unidade_negocio_id}}`
 
-Dimensoes mais usadas em vendas:
-- `canal_venda`
-- `categoria_receita`
-- `cliente`
-- `vendedor`
-- `filial`
-- `unidade_negocio`
-- `territorio`
-- `mes`
+Regra:
+- Sempre tipar placeholders em comparacoes sensiveis (`::date`, `::int`, `::text`).
 
-Medidas mais usadas em vendas:
-- `SUM(p.valor_total)`
-- `COUNT()`
-- `AVG(p.valor_total)`
-- `SUM(itens.subtotal)`
-- `AVG(valor_total)`
+## Padroes SQL Recomendados
 
-## Sugestoes Analiticas (Nao Obrigatorio; nao e contrato de layout)
+Faixa de datas:
 
-### Dashboard de Vendas (recomendado)
-
-KPIs sugeridos:
-- `vendas.pedidos` + `SUM(p.valor_total)`
-- `vendas.pedidos` + `COUNT()`
-- `vendas.pedidos` + `AVG(p.valor_total)`
-- `valuePath: vendas.kpis.margemBruta` (quando disponivel no payload)
-
-Graficos sugeridos:
-- `LineChart`: model `vendas.pedidos`, dimension `mes`, dimensionExpr `TO_CHAR(DATE_TRUNC('month', data_pedido), 'YYYY-MM')`, measure `SUM(itens.subtotal)`
-- `BarChart`: model `vendas.pedidos`, dimension `mes`, dimensionExpr `TO_CHAR(DATE_TRUNC('month', data_pedido), 'YYYY-MM')`, measure `COUNT()`
-- `BarChart`: model `vendas.pedidos`, dimension `mes`, dimensionExpr `TO_CHAR(DATE_TRUNC('month', data_pedido), 'YYYY-MM')`, measure `AVG(valor_total)`
-- `BarChart`: model `vendas.pedidos`, dimension `vendedor`, measure `SUM(itens.subtotal)`
-- `BarChart`: model `vendas.pedidos`, dimension `cliente`, measure `SUM(itens.subtotal)`
-- `PieChart`: model `vendas.pedidos`, dimension `canal_venda`, measure `SUM(itens.subtotal)`
-- `BarChart`: model `vendas.pedidos`, dimension `categoria_receita`, measure `SUM(itens.subtotal)`
-- `BarChart`: model `vendas.pedidos`, dimension `filial`, measure `SUM(itens.subtotal)`
-- `BarChart`: model `vendas.pedidos`, dimension `unidade_negocio`, measure `SUM(itens.subtotal)`
-- `BarChart`: model `vendas.pedidos`, dimension `territorio`, measure `SUM(itens.subtotal)`
-
-Observacao de composicao:
-- para ficar parecido com os apps atuais, usar multiplos KPIs e multiplos graficos;
-- filtros podem ficar no fim do dashboard (preferencia de leitura executiva).
-
-## Mapeamentos Canonicos (exemplos `dataQuery`)
-
-Receita de vendas:
-```json
-{
-  "model": "vendas.pedidos",
-  "measure": "SUM(p.valor_total)",
-  "filters": {}
-}
+```sql
+AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
+AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
 ```
 
-Pedidos por vendedor:
-```json
-{
-  "model": "vendas.pedidos",
-  "dimension": "vendedor",
-  "measure": "COUNT()",
-  "filters": {},
-  "orderBy": { "field": "measure", "dir": "desc" },
-  "limit": 10
-}
+Filtro opcional escalar:
+
+```sql
+AND ({{cliente_id}}::int IS NULL OR src.cliente_id = {{cliente_id}}::int)
 ```
 
-Compras por fornecedor:
-```json
-{
-  "model": "compras.compras",
-  "dimension": "fornecedor",
-  "measure": "SUM(valor_total)",
-  "filters": { "status": "aprovado" },
-  "orderBy": { "field": "measure", "dir": "desc" },
-  "limit": 10
-}
+Serie mensal:
+
+```sql
+SELECT
+  TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'YYYY-MM') AS key,
+  TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'YYYY-MM') AS label,
+  SUM(src.valor_total)::float AS value
+...
+GROUP BY 1,2
+ORDER BY 2 ASC
 ```
 
-Contas a receber por mes:
-```json
-{
-  "model": "financeiro.contas_receber",
-  "dimension": "mes",
-  "measure": "SUM(valor)",
-  "filters": {},
-  "orderBy": { "field": "dimension", "dir": "asc" },
-  "limit": 12
-}
+## Exemplo KPI
+
+```sql
+SELECT COALESCE(SUM(src.valor_total), 0)::float AS value
+FROM vendas.pedidos src
+WHERE src.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
 ```
 
-Pipeline CRM por fase:
-```json
-{
-  "model": "crm.oportunidades",
-  "dimension": "fase",
-  "measure": "SUM(valor_estimado)",
-  "filters": { "status": "aberta" },
-  "orderBy": { "field": "measure", "dir": "desc" }
-}
-```
+## Exemplo Chart (Clientes)
 
-Estoque por produto:
-```json
-{
-  "model": "estoque.estoques_atual",
-  "dimension": "produto",
-  "measure": "SUM(valor_total)",
-  "filters": {},
-  "orderBy": { "field": "measure", "dir": "desc" },
-  "limit": 20
-}
+```sql
+SELECT
+  c.id AS key,
+  COALESCE(c.nome_fantasia, '-') AS label,
+  COALESCE(SUM(pi.subtotal), 0)::float AS value
+FROM vendas.pedidos src
+JOIN vendas.pedidos_itens pi ON pi.pedido_id = src.id
+LEFT JOIN entidades.clientes c ON c.id = src.cliente_id
+WHERE src.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
+GROUP BY 1,2
+ORDER BY 3 DESC
 ```
 
 ## Regras Operacionais
 
-- Nao inventar `model/measure/dimension/filter` fora da whitelist.
-- Nao misturar granularidade sem explicitar (ex.: pedido vs item).
-- Quando campo pedido pelo usuario nao existir, usar o mais proximo suportado e explicar o ajuste.
+- Nao usar `to_jsonb(src)->>'campo'` quando a coluna existe fisicamente.
+- Nao adicionar joins sem uso real em SELECT/WHERE/GROUP BY.
+- Nao inventar colunas fora do schema real.
+- Em caso de duvida de coluna, validar no controller/catalog antes de escrever SQL.
 
-## Formato de Handoff para Dashboard Builder
+## Handoff para dashboard_builder
 
-Ao terminar, entregar um plano de dados enxuto para consumo da `dashboard_builder`:
+Sempre entregar widgets com payload query-first:
 
 ```json
 {
-  "dashboard_name": "<nome>",
-  "widgets_sugeridos": [
-    {
-      "widget_id": "kpi_receita",
-      "widget_type": "kpi",
-      "container": "principal",
-      "payload": {
-        "title": "Receita",
-        "tabela": "vendas.pedidos",
-        "medida": "SUM(p.valor_total)",
-        "filtros": {}
-      }
-    }
-  ],
-  "filtros_sugeridos": ["dateRange", "filial_id", "vendedor_id"]
+  "widget_type": "chart",
+  "payload": {
+    "title": "Clientes",
+    "chart_type": "bar",
+    "query": "SELECT ...",
+    "xField": "label",
+    "yField": "value",
+    "keyField": "key",
+    "formato": "currency"
+  }
 }
 ```
-
-Regra obrigatoria:
-- nunca sugerir `/vercel/sandbox/dashboards` (plural)

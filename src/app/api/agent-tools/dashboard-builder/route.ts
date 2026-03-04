@@ -82,9 +82,11 @@ function validateWidgetPayload(widgetType: AddWidgetInput['widget_type'], payloa
     if (!v) throw new Error(`${prefix}.${field} é obrigatório para widget_type=${widgetType}`)
     return v
   }
+  const hasText = (field: string) => Boolean(toText(payload[field]))
 
   if (widgetType === 'kpi') {
     requiredText('title')
+    if (hasText('query')) return
     requiredText('tabela')
     requiredText('medida')
     return
@@ -96,6 +98,11 @@ function validateWidgetPayload(widgetType: AddWidgetInput['widget_type'], payloa
       throw new Error(`${prefix}.chart_type inválido para widget_type=chart. Use: bar, line, pie`)
     }
     requiredText('title')
+    if (hasText('query')) {
+      requiredText('xField')
+      requiredText('yField')
+      return
+    }
     requiredText('tabela')
     requiredText('dimensao')
     requiredText('medida')

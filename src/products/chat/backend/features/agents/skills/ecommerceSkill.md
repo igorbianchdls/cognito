@@ -1,35 +1,28 @@
-# Ecommerce Skill (Contrato de Dados Multicanal)
+# Ecommerce Skill (SQL Query-First)
 
-Objetivo: mapear dados de ecommerce para `dataQuery` de forma consistente, sem inventar schema.
+Objetivo: definir SQL valido para dashboards ecommerce (Amazon, Shopee, ML, Shopify etc.) usando `dataQuery.query`.
 
 Este skill NAO gera JSONR final.
-Para dashboard final, usar a tool `dashboard_builder`.
+Para estrutura final, usar `dashboard_builder`.
 
-## Fronteira
+## Contrato de Dados
 
-Este skill define:
-- models por dominio
-- medidas
-- dimensoes
-- filtros
-- options
-- exemplos de `dataQuery`
+Padrao principal em KPI/Chart: `query` puro.
 
-Este skill NAO define layout visual final (pode sugerir leituras analiticas em KPI/chart sem impor estrutura).
+- KPI: `query` (+ `yField` opcional).
+- Chart: `query`, `xField`, `yField` (`keyField` opcional).
+- Formato legado com `model/measure/dimension` e fallback tecnico, nao padrao.
 
 ## Fontes de Verdade
 
 - `src/products/erp/backend/features/modulos/controllers/ecommerce/query/controller.ts`
 - `src/products/erp/backend/features/modulos/controllers/ecommerce/options/controller.ts`
 - `src/products/bi/shared/queryCatalog.ts`
-- `tmp/ecommerce_mvp_schema.sql`
+- Templates em `src/products/bi/shared/templates/apps*Template.ts`
 
-Prioridade em conflito:
-1. controller de query/options
-2. query catalog
-3. schema sql
+Em conflito, priorizar controller do modulo.
 
-## Models Principais (BI)
+## Tabelas Mais Comuns
 
 - `ecommerce.pedidos`
 - `ecommerce.pedido_itens`
@@ -39,224 +32,115 @@ Prioridade em conflito:
 - `ecommerce.payouts`
 - `ecommerce.estoque_saldos`
 
-## Medidas Canonicas
-
-- `SUM(valor_total)` (GMV)
-- `COUNT()`
-- `AVG(valor_total)` (ticket medio)
-- `SUM(valor_liquido_estimado)`
-- `SUM(valor_reembolsado)`
-- `SUM(taxa_total)`
-- `CASE WHEN SUM(valor_total)=0 THEN 0 ELSE SUM(taxa_total)/SUM(valor_total) END` (fee rate)
-- `SUM(valor_liquido)`
-- `SUM(quantidade_disponivel)`
-
-## Dimensoes Canonicas
+## Campos de Corte Comuns
 
 - `plataforma`
-- `canal_conta`
-- `loja`
+- `canal_conta_id`
+- `loja_id`
 - `status`
 - `status_pagamento`
 - `status_fulfillment`
-- `produto`
+- `produto_id`
 - `categoria`
 - `transportadora`
-- `mes`, `periodo`
-
-## Referencia Real de Templates (Ecommerce)
-
-Base atual observada em:
-- `src/products/bi/shared/templates/appsEcommerceTemplate.ts`
-- `src/products/bi/shared/templates/appsShopifyTemplate.ts`
-- `src/products/bi/shared/templates/appsAmazonTemplate.ts`
-- `src/products/bi/shared/templates/appsMercadoLivreTemplate.ts`
-- `src/products/bi/shared/templates/appsShopeeTemplate.ts`
-
-Dimensoes mais usadas nesses templates:
-- `plataforma`
-- `canal_conta`
-- `loja`
-- `status`
-- `status_pagamento`
-- `produto`
-- `categoria`
-- `tipo_taxa`
-- `transportadora`
-- `mes`
-
-Medidas mais usadas nesses templates:
-- `SUM(valor_total)`
-- `COUNT()`
-- `AVG(valor_total)`
-- `COUNT_DISTINCT(cliente_id)`
-- `SUM(valor_liquido_estimado)`
-- `SUM(valor_reembolsado)`
-- `SUM(taxa_total)`
-- `CASE WHEN SUM(valor_total)=0 THEN 0 ELSE SUM(taxa_total)/SUM(valor_total) END`
-- `SUM(valor_liquido)`
-- `SUM(frete_custo)`
-- `SUM(quantidade_disponivel)`
-- `SUM(quantidade)`
-- `SUM(valor)`
+- `data_pedido` / `mes`
 
 ## Filtros Canonicos
 
-- `tenant_id`
-- `de`, `ate`
-- `plataforma`
-- `canal_conta_id`
-- `loja_id`
-- `status`
-- `status_pagamento`
-- `status_fulfillment`
-- `produto_id`
-- `categoria`
-- `valor_min`, `valor_max`
+- `{{tenant_id}}`
+- `{{de}}`, `{{ate}}`
+- `{{plataforma}}`
+- `{{canal_conta_id}}`
+- `{{loja_id}}`
+- `{{status}}`
+- `{{status_pagamento}}`
+- `{{status_fulfillment}}`
+- `{{produto_id}}`
+- `{{categoria}}`
 
-## Options de Slicer
+## Padroes SQL Recomendados
 
-- `plataforma`
-- `canal_conta_id`
-- `loja_id`
-- `status`
-- `status_pagamento`
-- `status_fulfillment`
-- `produto_id`
-- `categoria`
+Base temporal:
 
-## Mapeamentos Canonicos (exemplos `dataQuery`)
-
-GMV total:
-```json
-{
-  "model": "ecommerce.pedidos",
-  "measure": "SUM(valor_total)",
-  "filters": {}
-}
+```sql
+WHERE src.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
 ```
 
-Pedidos por plataforma:
-```json
-{
-  "model": "ecommerce.pedidos",
-  "dimension": "plataforma",
-  "measure": "COUNT()",
-  "filters": {},
-  "orderBy": { "field": "measure", "dir": "desc" }
-}
+Filtro opcional texto:
+
+```sql
+AND ({{plataforma}}::text IS NULL OR src.plataforma = {{plataforma}}::text)
 ```
 
-Ticket medio por mes:
-```json
-{
-  "model": "ecommerce.pedidos",
-  "dimension": "mes",
-  "measure": "AVG(valor_total)",
-  "filters": {},
-  "orderBy": { "field": "dimension", "dir": "asc" },
-  "limit": 12
-}
+Filtro opcional id:
+
+```sql
+AND ({{loja_id}}::int IS NULL OR src.loja_id = {{loja_id}}::int)
 ```
 
-Taxa sobre GMV:
-```json
-{
-  "model": "ecommerce.taxas_pedido",
-  "measure": "CASE WHEN SUM(valor_total)=0 THEN 0 ELSE SUM(taxa_total)/SUM(valor_total) END",
-  "filters": {}
-}
+## Exemplo KPI (GMV)
+
+```sql
+SELECT COALESCE(SUM(src.valor_total), 0)::float AS value
+FROM ecommerce.pedidos src
+WHERE src.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
 ```
 
-Payout por plataforma:
-```json
-{
-  "model": "ecommerce.payouts",
-  "dimension": "plataforma",
-  "measure": "SUM(valor_liquido)",
-  "filters": {},
-  "orderBy": { "field": "measure", "dir": "desc" }
-}
+## Exemplo Chart (Canais)
+
+```sql
+SELECT
+  cc.id AS key,
+  COALESCE(cc.nome, '-') AS label,
+  COALESCE(SUM(src.valor_total), 0)::float AS value
+FROM ecommerce.pedidos src
+LEFT JOIN ecommerce.canais_conta cc ON cc.id = src.canal_conta_id
+WHERE src.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
+GROUP BY 1,2
+ORDER BY 3 DESC
 ```
 
-Estoque por produto:
-```json
-{
-  "model": "ecommerce.estoque_saldos",
-  "dimension": "produto",
-  "measure": "SUM(quantidade_disponivel)",
-  "filters": {},
-  "orderBy": { "field": "measure", "dir": "desc" },
-  "limit": 20
-}
+## Exemplo Serie Mensal
+
+```sql
+SELECT
+  TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'YYYY-MM') AS key,
+  TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'YYYY-MM') AS label,
+  COALESCE(SUM(src.valor_total), 0)::float AS value
+FROM ecommerce.pedidos src
+WHERE src.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
+GROUP BY 1,2
+ORDER BY 2 ASC
 ```
-
-## Sugestoes Analiticas (Nao Obrigatorio; nao e contrato de layout)
-
-KPIs sugeridos:
-- `ecommerce.pedidos` + `SUM(valor_total)`
-- `ecommerce.pedidos` + `COUNT()`
-- `ecommerce.pedidos` + `AVG(valor_total)`
-- `ecommerce.pedidos` + `COUNT_DISTINCT(cliente_id)`
-- `ecommerce.pedidos` + `SUM(valor_liquido_estimado)`
-- `ecommerce.pedidos` + `SUM(valor_reembolsado)`
-- `ecommerce.pedidos` + `SUM(taxa_total)`
-- `ecommerce.pedidos` + `CASE WHEN SUM(valor_total)=0 THEN 0 ELSE SUM(taxa_total)/SUM(valor_total) END`
-- `ecommerce.payouts` + `SUM(valor_liquido)`
-- `ecommerce.envios` + `COUNT()`
-- `ecommerce.envios` + `SUM(frete_custo)`
-- `ecommerce.estoque_saldos` + `SUM(quantidade_disponivel)`
-
-Graficos sugeridos:
-- `LineChart`: model `ecommerce.pedidos`, dimension `mes`, measure `SUM(valor_total)`
-- `LineChart`: model `ecommerce.pedidos`, dimension `mes`, measure `SUM(valor_liquido_estimado)`
-- `PieChart`: model `ecommerce.pedidos`, dimension `status_pagamento`, measure `COUNT()`
-- `BarChart`: model `ecommerce.pedidos`, dimension `status`, measure `COUNT()`
-- `PieChart`: model `ecommerce.pedidos`, dimension `plataforma`, measure `SUM(valor_total)`
-- `BarChart`: model `ecommerce.pedidos`, dimension `plataforma`, measure `COUNT()`
-- `BarChart`: model `ecommerce.pedidos`, dimension `loja`, measure `SUM(valor_total)`
-- `BarChart`: model `ecommerce.pedidos`, dimension `canal_conta`, measure `SUM(valor_total)`
-- `BarChart`: model `ecommerce.pedido_itens`, dimension `produto`, measure `SUM(valor_total)`
-- `BarChart`: model `ecommerce.pedido_itens`, dimension `produto`, measure `SUM(quantidade)`
-- `BarChart`: model `ecommerce.pedido_itens`, dimension `categoria`, measure `SUM(valor_total)`
-- `BarChart`: model `ecommerce.taxas_pedido`, dimension `tipo_taxa`, measure `SUM(valor)`
-- `LineChart`: model `ecommerce.payouts`, dimension `mes`, measure `SUM(valor_liquido)`
-- `BarChart`: model `ecommerce.envios`, dimension `transportadora`, measure `COUNT()`
-- `LineChart`: model `ecommerce.estoque_saldos`, dimension `mes`, measure `SUM(quantidade_disponivel)`
-- `BarChart`: model `ecommerce.pedidos`, dimension `canal_conta`, measure `AVG(valor_total)`
-- `BarChart`: model `ecommerce.pedidos`, dimension `loja`, measure `COUNT_DISTINCT(cliente_id)`
-
-Observacao de composicao:
-- manter padrao parecido com os templates de ecommerce atuais: alta densidade de KPIs e multiplos blocos de graficos;
-- filtros (plataforma, conta, loja, status etc.) podem ficar no fim do dashboard.
 
 ## Regras Operacionais
 
-- Nao misturar granularidade sem declarar (pedido vs item vs pagamento vs payout).
-- Nao inventar `model/measure/dimension/filter` fora da whitelist.
-- Quando campo nao existir, usar alternativa suportada e explicar.
+- Nao inventar colunas inexistentes (ex.: `src.mes`, `src.produto`, `src.loja` sem validar).
+- Quando precisar de `produto`/`categoria`, usar `ecommerce.pedido_itens` ou join com tabela correta.
+- Nao usar `to_jsonb(src)->>'campo'` se a coluna existe.
+- Evitar joins desnecessarios.
 
-## Formato de Handoff para Dashboard Builder
+## Handoff para dashboard_builder
 
 ```json
 {
-  "dashboard_name": "<nome>",
-  "widgets_sugeridos": [
-    {
-      "widget_id": "kpi_gmv",
-      "widget_type": "kpi",
-      "container": "principal",
-      "payload": {
-        "title": "GMV",
-        "tabela": "ecommerce.pedidos",
-        "medida": "SUM(valor_total)",
-        "filtros": {}
-      }
-    }
-  ],
-  "filtros_sugeridos": ["plataforma", "canal_conta_id", "loja_id", "status"]
+  "widget_type": "chart",
+  "payload": {
+    "title": "Pedidos por Status",
+    "chart_type": "bar",
+    "query": "SELECT ...",
+    "xField": "label",
+    "yField": "value",
+    "keyField": "key",
+    "formato": "number"
+  }
 }
 ```
-
-Regra obrigatoria:
-- nunca sugerir `/vercel/sandbox/dashboards` (plural)

@@ -9,8 +9,8 @@ export const DASHBOARD_PLAN_PROMPT_BLOCK = `
 - 2) propose a concrete plan BEFORE tool execution, with explicit items:
 - Objetivo
 - dashboard_name sugerido
-- KPIs (widget_id, title, tabela, medida, formato?["currency"|"percent"|"number"], fr?, container)
-- Charts (widget_id, chart_type, title, tabela, dimensao, dimension_expr?, layout?(auto|vertical|horizontal), medida, ordem?, limit?, fr?, container). ordem aceita "field:dir" (ex.: "measure:desc") ou { field, dir }.
+- KPIs (widget_id, title, query, yField?, formato?["currency"|"percent"|"number"], fr?, container)
+- Charts (widget_id, chart_type, title, query, xField, yField, keyField?, layout?(auto|vertical|horizontal), ordem?, limit?, fr?, container)
 - Filtros (widget_id, title, campo, tabela, tipo, chave?, fr?, container). chave é opcional; se omitida, deriva de campo.
 - Insights (widget_id, title, items, fr?, container)
 - Layout de containers/rows (which widgets are grouped in each container)
@@ -21,6 +21,8 @@ export const DASHBOARD_PLAN_PROMPT_BLOCK = `
 - Execution after approval:
 - map approved plan 1:1 to dashboard_builder calls; avoid adding non-approved widgets silently.
 - keep plan within domain skill whitelists and dashboard_builder payload contract.
+- Compatibility note:
+- legacy payload (tabela/medida/dimensao) is fallback only; use query-first by default.
 </plandashboard>
 `.trim()
 
@@ -50,19 +52,17 @@ export const DASHBOARD_BUILD_PROMPT_BLOCK = `
 - if parser_state is not provided, rely on backend session by chat_id + dashboard_name.
 - stateless best practice: always reuse the most recent parser_state returned by the immediately previous tool call.
 - Widget payload contracts:
-- kpi payload: title, tabela, medida, optional fr, formato, filtros. formato permitido: currency|percent|number.
-- chart payload: chart_type(bar|line|pie), title, tabela, dimensao, optional dimension_expr (or dimensionExpr), optional layout(auto|vertical|horizontal), medida, optional fr, formato, filtros, limit, ordem, height. ordem aceita "field:dir" ou { field, dir }. formato permitido: currency|percent|number.
-- layout rule (BarChart): if layout is omitted/auto, use automatic default: temporal -> vertical, categorical -> horizontal.
-- send chart.layout only when you need to force manual override; otherwise omit and keep automatic behavior.
+- kpi payload (query-first): title, query, optional yField, xField, keyField, fr, formato, filtros.
+- chart payload (query-first): chart_type(bar|line|pie), title, query, xField, yField, optional keyField, optional layout(auto|vertical|horizontal), optional fr, formato, filtros, limit, ordem, height.
 - filtro payload: title, campo, tabela, optional tipo(list|dropdown|multi), chave, fr. chave é opcional; se omitida, deriva de campo resolvido. prefira campo *_id (ex.: vendedor_id); aliases (vendedor, cliente, canal_venda) podem ser normalizados para *_id.
 - insights payload: title, items(string[] or {text,icon}[]), optional fr.
-- required fields must always be present before calling tool:
-- kpi => title,tabela,medida
-- chart => chart_type,title,tabela,dimensao,medida
-- filtro => title,campo,tabela
-- insights => title,items
+- compatibility fallback:
+- kpi legado => title,tabela,medida
+- chart legado => chart_type,title,tabela,dimensao,medida
+- always prefer query-first unless user explicitly asks legacy.
+- layout rule (BarChart): if layout is omitted/auto, use automatic default: temporal -> vertical, categorical -> horizontal.
+- send chart.layout only when you need to force manual override; otherwise omit and keep automatic behavior.
 - never send "BRL" (or other currency code/symbol) in formato; use "currency".
-- for monthly series, follow /apps pattern: dimensao="mes" + dimension_expr with DATE_TRUNC month and ordem "dimension:asc".
 - Error recovery:
 - if add_widget/add_widgets_batch fails because dashboard is not initialized, run create_dashboard first and retry.
 - do not invent unsupported widget_type, chart_type, or payload keys.
@@ -78,15 +78,14 @@ export const DASHBOARD_BUILD_PROMPT_BLOCK = `
 - separate SlicerCard filter cards (checkbox/list for multi-select)
 - trend chart + distribution/ranking chart
 - AISummary with readable padding
-- Skills usage for dashboard data semantics (dimensions/measures/filters):
+- Skills usage for dashboard data semantics:
 - for dashboards de vendas/compras/financeiro/crm/estoque/erp, read erpSkill.md
 - for dashboards de meta ads/google ads/trafego pago, read marketingSkill.md
 - for dashboards de ecommerce/amazon/mercadolivre/shopee/shopify, read ecommerceSkill.md
-- these domain skills define data semantics only (models, dimensions, measures, filters).
 - dashboard construction flow and structure must follow dashboard_builder tool contract.
 - Validation before final answer:
 - confirm component props are supported by catalog/renderer
-- validate model/measure/dimension/filter against controllers/catalog
+- validate SQL, filters and aliases against domain skill/controller constraints
 - if there is unrecognized_keys, remove unsupported key and use supported alternative
 - if output has syntax/schema errors, regenerate the JSONR before answering
 </dashboard>
