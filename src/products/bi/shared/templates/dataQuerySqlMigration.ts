@@ -71,6 +71,41 @@ function inferKeyColumn(model: string, dimension: string): string {
   return ''
 }
 
+function resolveLegacyTimeDimensionExpr(model: string, dimension: string, explicitExpr: string): string {
+  const normalizedExplicit = asString(explicitExpr)
+  if (normalizedExplicit) return normalizeMeasureExpression(normalizedExplicit)
+
+  const normalizedDimension = asString(dimension).toLowerCase()
+  const isMonthAlias = normalizedDimension === 'mes' || normalizedDimension === 'mês' || normalizedDimension === 'month'
+  const isPeriodAlias = normalizedDimension === 'periodo' || normalizedDimension === 'período'
+  if (!isMonthAlias && !isPeriodAlias) return ''
+
+  const catalog = getAppsTableCatalog(model)
+  const monthExpr = catalog?.dimensions.find((d) => d.kind === 'time')?.legacyDimensionExprByGrain?.month
+  if (!monthExpr) return ''
+  return normalizeMeasureExpression(monthExpr)
+}
+
+function resolveDimensionColumn(model: string, dimension: string, keyColumn: string): string {
+  if (!IDENTIFIER_RE.test(dimension)) return ''
+  const catalog = getAppsTableCatalog(model)
+  if (!catalog) return dimension
+
+  const filterFields = new Set(catalog.filters.map((f) => f.field))
+  if (filterFields.has(dimension)) return dimension
+
+  if (IDENTIFIER_RE.test(keyColumn) && filterFields.has(keyColumn)) {
+    return keyColumn
+  }
+
+  const candidate = `${dimension}_id`
+  if (IDENTIFIER_RE.test(candidate) && filterFields.has(candidate)) {
+    return candidate
+  }
+
+  return dimension
+}
+
 function extractStoreFilterKey(pathValue: unknown): string {
   const path = asString(pathValue)
   if (!path.startsWith('filters.')) return ''
@@ -179,18 +214,24 @@ function convertLegacyDataQuery(dqRaw: AnyRecord, templateFilterKeys: Set<string
 
   let query = ''
   if (hasDimension) {
-    const normalizedDimensionExpr = dimensionExpr ? normalizeMeasureExpression(dimensionExpr) : ''
+    const normalizedDimensionExpr = resolveLegacyTimeDimensionExpr(model, dimension, dimensionExpr)
+    const dimensionColumn = normalizedDimensionExpr ? '' : resolveDimensionColumn(model, dimension, keyColumn)
     const labelExpr = normalizedDimensionExpr
       ? `(${normalizedDimensionExpr})::text`
-      : IDENTIFIER_RE.test(dimension)
-        ? `COALESCE(src.${dimension}::text, '-')`
+      : IDENTIFIER_RE.test(dimensionColumn)
+        ? `COALESCE(src.${dimensionColumn}::text, '-')`
         : `'-'::text`
 
     let keyExpr = labelExpr
     if (normalizedDimensionExpr && IDENTIFIER_RE.test(keyColumn)) {
       keyExpr = `COALESCE(src.${keyColumn}::text, (${normalizedDimensionExpr})::text)`
-    } else if (!normalizedDimensionExpr && IDENTIFIER_RE.test(keyColumn) && keyColumn !== dimension && IDENTIFIER_RE.test(dimension)) {
-      keyExpr = `COALESCE(src.${keyColumn}::text, COALESCE(src.${dimension}::text, '-'))`
+    } else if (
+      !normalizedDimensionExpr &&
+      IDENTIFIER_RE.test(keyColumn) &&
+      IDENTIFIER_RE.test(dimensionColumn) &&
+      keyColumn !== dimensionColumn
+    ) {
+      keyExpr = `COALESCE(src.${keyColumn}::text, COALESCE(src.${dimensionColumn}::text, '-'))`
     }
 
     const orderBy = isObject(dq.orderBy) ? dq.orderBy : {}
