@@ -119,4 +119,8 @@ async function callDocumento(args) {
 async function callDashboardBuilder(args) {
   return callScopedTool('/api/agent-tools/dashboard-builder', args, 'dashboard_builder');
 }
+
+async function callSqlExecution(args) {
+  return callScopedTool('/api/agent-tools/sql-execution', args, 'sql_execution');
+}
 `.trim()

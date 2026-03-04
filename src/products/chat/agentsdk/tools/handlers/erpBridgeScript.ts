@@ -138,4 +138,5 @@ async function callDrive(args){ return callScopedTool('/api/agent-tools/drive', 
 async function callEmail(args){ return callScopedTool('/api/agent-tools/email', args, 'email'); }
 async function callDocumento(args){ return callScopedTool('/api/agent-tools/documento', args, 'documento'); }
 async function callDashboardBuilder(args){ return callScopedTool('/api/agent-tools/dashboard-builder', args, 'dashboard_builder'); }
+async function callSqlExecution(args){ return callScopedTool('/api/agent-tools/sql-execution', args, 'sql_execution'); }
 `;

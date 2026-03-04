@@ -1,6 +1,6 @@
 export const APP_TOOLS_SKILL_MD = `---
 name: App MCP Tools
-description: Uso das tools internas ERP (crud, dashboard_builder, documento, drive, email) via MCP.
+description: Uso das tools internas ERP (crud, dashboard_builder, sql_execution, documento, drive, email) via MCP.
 ---
 
 As tools disponíveis (apenas via MCP):
@@ -9,6 +9,7 @@ As tools disponíveis (apenas via MCP):
 - atualizar(input: { resource: string, data?: object, actionSuffix?: string, method?: "GET"|"POST" })
 - deletar(input: { resource: string, data?: object, actionSuffix?: string, method?: "GET"|"POST" })
 - dashboard_builder(input: { action: "create_dashboard"|"add_widget"|"add_widgets_batch"|"get_dashboard", dashboard_name: string, title?: string, subtitle?: string, theme?: string, widget_id?: string, widget_type?: "kpi"|"chart"|"filtro"|"insights", container?: string, payload?: object, widgets?: object[], parser_state?: object })
+- sql_execution(input: { sql: string, title?: string })
 - documento(input: { action: "gerar"|"status", tipo?: "proposta"|"os"|"fatura"|"contrato"|"nfse", origem_tipo?: string, origem_id?: number, dados?: object, documento_id?: number, template_id?: number, template_version_id?: number, idempotency_key?: string, save_to_drive?: boolean, drive?: { workspace_id?: string, folder_id?: string, file_name?: string } })
 - drive(input: { action: "request"|"read_file"|"get_file_url", resource?: string, method?: "GET"|"POST"|"DELETE", params?: object, data?: object, file_id?: string, workspace_id?: string, folder_id?: string, file_name?: string, mime?: string, content_base64?: string })
 - email(input: { action: "request"|"send", resource?: string, method?: "GET"|"POST"|"DELETE", params?: object, data?: object, inbox_id?: string, inboxId?: string, to?: string|string[], subject?: string, text?: string, html?: string, attachments?: object[], drive_file_id?: string, drive_file_ids?: string[] })
@@ -63,6 +64,8 @@ Regras:
 - Dashboard Builder (persistência): create_dashboard/add_widgets_batch/add_widget salvam automaticamente em /vercel/sandbox/dashboard/<dashboard_name>.jsonr e retornam file_path; get_dashboard é somente leitura.
 - Dashboard Builder (execução): para criar/editar dashboard, prefira dashboard_builder em vez de editar JSONR manualmente.
 - Skills de domínio para dashboard: erpSkill.md, marketingSkill.md e ecommerceSkill.md servem para dimensões/medidas/filtros; a estrutura final deve seguir o contrato da tool dashboard_builder.
+- SQL Execution: use para executar SELECT/CTE tabular ad-hoc com renderização automática em Artifact Data Table.
+- SQL Execution: input mínimo é sql; title é opcional para exibir título no Artifact.
 
 Exemplos:
 - Listar contas financeiras:

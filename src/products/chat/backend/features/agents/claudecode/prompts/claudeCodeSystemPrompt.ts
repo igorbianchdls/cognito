@@ -14,8 +14,8 @@ export function buildClaudeSystemPrompt(params: {
   composioEnabled: boolean
 }): string {
   const routingLine = params.composioEnabled
-    ? 'Tool routing: prefer internal MCP tools first ("crud" para ERP canônico, "dashboard_builder" para montar JSONR de dashboard incrementalmente, "documento" para OS/proposta/NFSe/fatura/contrato, "drive" para arquivos e "email" para mensagens). Use Composio MCP tools for external actions or cross-platform tasks when explicitly requested or clearly required.'
-    : 'Available tools in this session: ONLY MCP tools "crud", "dashboard_builder", "documento", "drive", and "email". Follow the resource list and naming rules exactly; do not invent resources.'
+    ? 'Tool routing: prefer internal MCP tools first ("crud" para ERP canônico, "dashboard_builder" para montar JSONR de dashboard incrementalmente, "sql_execution" para executar SQL tabular, "documento" para OS/proposta/NFSe/fatura/contrato, "drive" para arquivos e "email" para mensagens). Use Composio MCP tools for external actions or cross-platform tasks when explicitly requested or clearly required.'
+    : 'Available tools in this session: ONLY MCP tools "crud", "dashboard_builder", "sql_execution", "documento", "drive", and "email". Follow the resource list and naming rules exactly; do not invent resources.'
 
   const composioBlock = params.composioEnabled
     ? `
@@ -78,9 +78,10 @@ ${DASHBOARD_PLAN_PROMPT_BLOCK}
 ${DASHBOARD_BUILD_PROMPT_BLOCK}
 
 <tools_general>
-- Core MCP tools: crud, dashboard_builder, documento, drive, email.
+- Core MCP tools: crud, dashboard_builder, sql_execution, documento, drive, email.
 - crud(input: { action: "listar"|"criar"|"atualizar"|"deletar", resource: string, params?: object, data?: object, actionSuffix?: string, method?: "GET"|"POST" })
 - dashboard_builder(input: { action: "create_dashboard"|"add_widget"|"add_widgets_batch"|"get_dashboard", dashboard_name: string, title?: string, subtitle?: string, theme?: string, widget_id?: string, widget_type?: "kpi"|"chart"|"filtro"|"insights", container?: string, payload?: any, widgets?: any[], parser_state?: any })
+- sql_execution(input: { sql: string, title?: string })
 - documento(input: { action: "gerar"|"status", tipo?: "proposta"|"os"|"fatura"|"contrato"|"nfse", origem_tipo?: string, origem_id?: number, titulo?: string, dados?: object, save_to_drive?: boolean, drive?: { workspace_id?: string, folder_id?: string, file_name?: string }, template_id?: number, template_version_id?: number, idempotency_key?: string, documento_id?: number })
 - drive(input: { action: "request"|"read_file"|"get_file_url"|"get_drive_file_url", method?: "GET"|"POST"|"DELETE", resource?: string, params?: object, data?: object, file_id?: string, workspace_id?: string, folder_id?: string, file_name?: string, mime?: string, content_base64?: string, mode?: "auto"|"text"|"binary" })
 - email(input: { action: "request"|"send"|"send_email", method?: "GET"|"POST"|"DELETE", resource?: string, params?: object, data?: object, inbox_id?: string, inboxId?: string, to?: string|string[], cc?: string|string[], bcc?: string|string[], subject?: string, text?: string, html?: string, attachments?: any[], drive_file_id?: string, drive_file_ids?: string[], attachment_url?: string, signed_url?: string, filename?: string, content_type?: string })

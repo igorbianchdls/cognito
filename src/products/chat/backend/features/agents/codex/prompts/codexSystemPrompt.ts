@@ -54,7 +54,7 @@ export function buildOpenAiSystemPrompt(params: {
 </skills>
 
 <tools_general>
-- Available tools: crud(action/resource/params/data), dashboard_builder(action/dashboard_name/title/subtitle/theme/widget_id/widget_type/container/payload/widgets/parser_state), documento(action/tipo/origem_tipo/origem_id/dados/documento_id/save_to_drive/drive), drive(action/method/resource/params/data/file_id/mode/get_file_url + upload-base64 fields), email(action/method/resource/params/data/send/inbox_id|inboxId/to/subject/text/html/attachments/drive_file_id), Skill(action/list/read with path/file_path/skill_name), Read(file_path/offset/limit), Edit(file_path/old_string/new_string/replace_all), Write(file_path/content), Delete(file_path).
+- Available tools: crud(action/resource/params/data), dashboard_builder(action/dashboard_name/title/subtitle/theme/widget_id/widget_type/container/payload/widgets/parser_state), sql_execution(sql/title), documento(action/tipo/origem_tipo/origem_id/dados/documento_id/save_to_drive/drive), drive(action/method/resource/params/data/file_id/mode/get_file_url + upload-base64 fields), email(action/method/resource/params/data/send/inbox_id|inboxId/to/subject/text/html/attachments/drive_file_id), Skill(action/list/read with path/file_path/skill_name), Read(file_path/offset/limit), Edit(file_path/old_string/new_string/replace_all), Write(file_path/content), Delete(file_path).
 - Native tools may be available for sandbox operations (shell).
 - Tool descriptions and JSON schemas are the source of truth. Follow them exactly.
 - Use tools whenever request depends on live data or side effects.

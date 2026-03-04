@@ -1,0 +1,36 @@
+"use client"
+
+import type { ToolUIPart } from 'ai'
+import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/components/ai-elements/tool'
+import type { AgentToolPartLike } from '@/products/chat/shared/tools/types'
+import { extractSqlExecutionToolViewModel } from '@/products/chat/shared/tools/sqlExecution/toViewModel'
+import { SqlExecutionArtifactCard } from '@/products/chat/shared/tools/sqlExecution/SqlExecutionArtifactCard'
+
+export function SqlExecutionToolPart({ part, idx }: { part: AgentToolPartLike; idx: number }) {
+  const callId = part.toolCallId || String(idx)
+  const shouldBeOpen = part.state === 'output-available' || part.state === 'output-error'
+  const t = part.type as string
+  const model = part.state === 'output-available' ? extractSqlExecutionToolViewModel(part.input, part.output) : null
+
+  return (
+    <div key={`t-${callId}`} className="space-y-2">
+      <Tool defaultOpen={shouldBeOpen}>
+        <ToolHeader type={t as ToolUIPart['type']} state={part.state as ToolUIPart['state']} />
+        <ToolContent>
+          {part.input !== undefined ? <ToolInput input={part.input as ToolUIPart['input']} /> : null}
+          {part.state === 'output-error' ? <ToolOutput output={null} errorText={part.errorText} /> : null}
+        </ToolContent>
+      </Tool>
+      {part.state === 'output-available' && (
+        model ? (
+          <ToolOutput output={<SqlExecutionArtifactCard model={model} />} errorText={undefined} />
+        ) : (
+          <ToolOutput
+            output={<pre className="text-xs whitespace-pre-wrap">{JSON.stringify(part.output, null, 2)}</pre>}
+            errorText={undefined}
+          />
+        )
+      )}
+    </div>
+  )
+}

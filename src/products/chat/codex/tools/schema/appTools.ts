@@ -348,4 +348,25 @@ export const codexAppFunctionTools = [
     description: DASHBOARD_BUILDER_TOOL_DESCRIPTION,
     parameters: DASHBOARD_BUILDER_TOOL_PARAMETERS,
   },
+  {
+    type: 'function',
+    name: 'sql_execution',
+    description:
+      'Executa SQL SELECT/CTE com segurança e retorna linhas tabulares para renderização em Artifact Data Table. Input mínimo: sql. Suporta {{tenant_id}} para bind automático pelo tenant atual.',
+    parameters: {
+      type: 'object',
+      properties: {
+        sql: {
+          type: 'string',
+          description: 'Query SQL obrigatória. Permitido apenas SELECT/CTE (WITH).',
+        },
+        title: {
+          type: 'string',
+          description: 'Título opcional para o card/tabela no Artifact.',
+        },
+      },
+      required: ['sql'],
+      additionalProperties: true,
+    },
+  },
 ] as const
