@@ -352,18 +352,18 @@ export const codexAppFunctionTools = [
     type: 'function',
     name: 'sql_execution',
     description:
-      'Executa SQL com segurança e retorna linhas tabulares para renderização em Artifact Data Table. Aceita apenas SELECT/CTE (WITH), uma única instrução, sem placeholders posicionais ($1, $2, ...), com suporte somente a {{tenant_id}} para bind automático do tenant atual. Limite interno de 1000 linhas por execução.',
+      'Executa SQL de leitura com segurança e retorna tabela para Artifact Data Table. Aceita apenas SELECT/CTE (WITH), uma única instrução e sem placeholders posicionais ($1, $2, ...). Placeholder suportado nesta tool: somente {{tenant_id}} (bind automático do tenant atual). Placeholders como {{de}}/{{ate}} não são suportados aqui. Limite interno: 1000 linhas por execução.',
     parameters: {
       type: 'object',
       properties: {
         sql: {
           type: 'string',
           description:
-            'Query SQL obrigatória. Regras: apenas SELECT/CTE (WITH), sem múltiplas instruções e sem placeholders posicionais ($1, $2, ...). Placeholder suportado: {{tenant_id}}.',
+            'SQL obrigatório. Regras: SELECT/CTE (WITH) apenas, sem múltiplas instruções e sem placeholders posicionais. Placeholder suportado: {{tenant_id}}. Para filtros de data/status nesta tool, use valores literais no SQL.',
         },
         title: {
           type: 'string',
-          description: 'Título opcional para o card/tabela no Artifact.',
+          description: 'Título opcional do artifact (recomendado em consultas analíticas).',
         },
       },
       required: ['sql'],
