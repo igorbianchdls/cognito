@@ -243,7 +243,7 @@ export default function JsonPreviewPanel({ tree, onAction, actionHint, toolbar, 
   ), [dragIndicator, onAction, tree, visualEditor])
 
   const previewContent = (
-    <div className="rounded-md border border-gray-200 bg-white p-0 min-h-[420px]">
+    <div className="rounded-none border-0 bg-white p-0 min-h-[420px]">
       {tree ? (
         visualEditor?.enabled ? (
           <DndContext
