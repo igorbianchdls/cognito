@@ -1,22 +1,12 @@
 import type { JsonTree } from '@/products/bi/shared/types'
-import { getAppsTableCatalog, listAppsFilters } from '@/products/bi/shared/queryCatalog'
+import { listAppsFilters } from '@/products/bi/shared/queryCatalog'
 
 export type WidgetType = 'kpi' | 'chart' | 'filtro' | 'insights'
 type MetricFormat = 'currency' | 'percent' | 'number'
 
-type OrderBy = {
-  field?: string
-  dir?: 'asc' | 'desc'
-}
-
 type KpiPayload = {
   title: string
-  tabela?: string
-  medida?: string
   query?: string
-  xField?: string
-  yField?: string
-  keyField?: string
   fr?: number
   formato?: MetricFormat | string
   filtros?: Record<string, unknown>
@@ -25,21 +15,15 @@ type KpiPayload = {
 type ChartPayload = {
   chart_type: 'bar' | 'line' | 'pie'
   title: string
-  tabela?: string
-  dimensao?: string
-  dimension_expr?: string
-  dimensionExpr?: string
   query?: string
   xField?: string
   yField?: string
   keyField?: string
   layout?: 'auto' | 'vertical' | 'horizontal' | string
-  medida?: string
   fr?: number
   formato?: MetricFormat | string
   filtros?: Record<string, unknown>
   limit?: number
-  ordem?: string | OrderBy
   height?: number
 }
 
@@ -113,57 +97,23 @@ function normalizeRowKey(input: AddWidgetInput): string {
   return 'principal'
 }
 
-function normalizeOrderBy(value: string | OrderBy | undefined): OrderBy | undefined {
-  if (!value) return undefined
-  if (typeof value === 'object') {
-    const dir = value.dir === 'asc' || value.dir === 'desc' ? value.dir : undefined
-    const field = value.field ? String(value.field) : undefined
-    if (!field && !dir) return undefined
-    return { field, dir }
-  }
-
-  const [fieldRaw, dirRaw] = String(value).split(':').map((part) => part.trim())
-  if (!fieldRaw) return undefined
-  const dir = dirRaw === 'asc' || dirRaw === 'desc' ? dirRaw : undefined
-  return { field: fieldRaw, dir }
-}
-
-function getMonthDimensionExprByTable(table: string): string | undefined {
-  const catalog = getAppsTableCatalog(table)
-  const timeField = typeof catalog?.defaultTimeField === 'string' ? catalog.defaultTimeField.trim() : ''
-  if (!timeField) return undefined
-  return `TO_CHAR(DATE_TRUNC('month', ${timeField}), 'YYYY-MM')`
-}
-
-function resolveChartDimensionExpr(payload: ChartPayload): string | undefined {
-  const explicitExpr = String(payload.dimensionExpr ?? payload.dimension_expr ?? '').trim()
-  if (explicitExpr) return explicitExpr
-
-  const dim = String(payload.dimensao || '').trim().toLowerCase()
-  const isMonthLike = dim === 'mes' || dim === 'mês' || dim === 'month' || dim === 'mensal'
-  if (!isMonthLike) return undefined
-
-  const table = String(payload.tabela || '').trim()
-  if (!table) return undefined
-  return getMonthDimensionExprByTable(table)
-}
-
-function resolveChartOrderBy(payload: ChartPayload): OrderBy | undefined {
-  const explicit = normalizeOrderBy(payload.ordem)
-  if (explicit) return explicit
-
-  const dim = String(payload.dimensao || '').trim().toLowerCase()
-  const isTimeLike = dim === 'mes' || dim === 'mês' || dim === 'month' || dim === 'mensal' || dim === 'periodo'
-  if (isTimeLike) return { field: 'dimension', dir: 'asc' }
-  return undefined
-}
-
 function resolveBarLayout(payload: ChartPayload): 'vertical' | 'horizontal' {
   const raw = String((payload as any).layout ?? '').trim().toLowerCase()
   if (raw === 'vertical' || raw === 'horizontal') return raw
 
-  const dim = String(payload.dimensao || '').trim().toLowerCase()
-  const isTimeLike = dim === 'mes' || dim === 'mês' || dim === 'month' || dim === 'mensal' || dim === 'periodo'
+  const xField = String((payload as any).xField ?? '').trim().toLowerCase()
+  const isTimeLike =
+    xField.includes('mes') ||
+    xField.includes('mês') ||
+    xField.includes('month') ||
+    xField.includes('data') ||
+    xField.includes('date') ||
+    xField.includes('period') ||
+    xField.includes('periodo') ||
+    xField.includes('período') ||
+    xField.includes('ano') ||
+    xField.includes('year')
+
   return isTimeLike ? 'vertical' : 'horizontal'
 }
 
@@ -312,8 +262,7 @@ function requireParserReady(state: DashboardToolParserState, dashboardName: stri
 
 function buildKpiNode(payload: KpiPayload): Record<string, unknown> {
   const title = toRequiredText((payload as any).title, 'payload.title')
-  const query = String((payload as any).query ?? '').trim()
-  const hasSql = Boolean(query)
+  const query = toRequiredText((payload as any).query, 'payload.query')
 
   return {
     type: 'KPI',
@@ -321,19 +270,10 @@ function buildKpiNode(payload: KpiPayload): Record<string, unknown> {
       title,
       fr: payload.fr ?? 1,
       format: normalizeFormat(payload.formato),
-      dataQuery: hasSql
-        ? {
-            query,
-            ...(typeof payload.yField === 'string' && payload.yField.trim() ? { yField: payload.yField.trim() } : {}),
-            ...(typeof payload.xField === 'string' && payload.xField.trim() ? { xField: payload.xField.trim() } : {}),
-            ...(typeof payload.keyField === 'string' && payload.keyField.trim() ? { keyField: payload.keyField.trim() } : {}),
-            filters: payload.filtros ?? {},
-          }
-        : {
-            model: toRequiredText((payload as any).tabela, 'payload.tabela'),
-            measure: toRequiredText((payload as any).medida, 'payload.medida'),
-            filters: payload.filtros ?? {},
-          },
+      dataQuery: {
+        query,
+        filters: payload.filtros ?? {},
+      },
     },
   }
 }
@@ -341,8 +281,7 @@ function buildKpiNode(payload: KpiPayload): Record<string, unknown> {
 function buildChartNode(payload: ChartPayload): Record<string, unknown> {
   const chartType = toChartType((payload as any).chart_type)
   const title = toRequiredText((payload as any).title, 'payload.title')
-  const query = String((payload as any).query ?? '').trim()
-  const hasSql = Boolean(query)
+  const query = toRequiredText((payload as any).query, 'payload.query')
 
   const typeMap: Record<ChartPayload['chart_type'], string> = {
     bar: 'BarChart',
@@ -350,8 +289,6 @@ function buildChartNode(payload: ChartPayload): Record<string, unknown> {
     pie: 'PieChart',
   }
 
-  const orderBy = resolveChartOrderBy(payload)
-  const dimensionExpr = resolveChartDimensionExpr(payload)
   const barLayout = chartType === 'bar' ? resolveBarLayout(payload) : undefined
 
   return {
@@ -362,24 +299,14 @@ function buildChartNode(payload: ChartPayload): Record<string, unknown> {
       format: normalizeFormat(payload.formato),
       height: payload.height ?? 240,
       ...(barLayout ? { nivo: { layout: barLayout } } : {}),
-      dataQuery: hasSql
-        ? {
-            query,
-            xField: toRequiredText((payload as any).xField, 'payload.xField'),
-            yField: toRequiredText((payload as any).yField, 'payload.yField'),
-            ...(typeof payload.keyField === 'string' && payload.keyField.trim() ? { keyField: payload.keyField.trim() } : {}),
-            filters: payload.filtros ?? {},
-            ...(typeof payload.limit === 'number' ? { limit: payload.limit } : {}),
-          }
-        : {
-            model: toRequiredText((payload as any).tabela, 'payload.tabela'),
-            dimension: toRequiredText((payload as any).dimensao, 'payload.dimensao'),
-            ...(dimensionExpr ? { dimensionExpr } : {}),
-            measure: toRequiredText((payload as any).medida, 'payload.medida'),
-            filters: payload.filtros ?? {},
-            ...(typeof payload.limit === 'number' ? { limit: payload.limit } : {}),
-            ...(orderBy ? { orderBy } : {}),
-          },
+      dataQuery: {
+        query,
+        xField: toRequiredText((payload as any).xField, 'payload.xField'),
+        yField: toRequiredText((payload as any).yField, 'payload.yField'),
+        ...(typeof payload.keyField === 'string' && payload.keyField.trim() ? { keyField: payload.keyField.trim() } : {}),
+        filters: payload.filtros ?? {},
+        ...(typeof payload.limit === 'number' ? { limit: payload.limit } : {}),
+      },
     },
   }
 }

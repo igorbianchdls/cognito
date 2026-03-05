@@ -52,10 +52,9 @@ Regras:
 - Dashboard Builder (payload chart): layout opcional (auto|vertical|horizontal). Foco em BarChart.
 - Dashboard Builder (payload chart): quando layout for omitido/auto no BarChart, usar padrão automático: temporal -> vertical; categórico -> horizontal.
 - Dashboard Builder (payload chart): enviar layout apenas quando quiser forçar override manual; no padrão, omitir layout.
-- Dashboard Builder (payload query-first): use query SQL em KPI/Chart sempre que possível.
+- Dashboard Builder (payload query-first): query SQL em KPI/Chart é obrigatório.
 - Dashboard Builder (payload query-first): payload.query é persistido no JSONR; não é executado pelo dashboard_builder. Para testar SQL ad-hoc, use sql_execution.
-- Dashboard Builder (campos obrigatórios query-first): kpi={title,query} (query deve retornar coluna numérica AS value); chart={chart_type,title,query,xField,yField}; filtro={title,campo,tabela}; insights={title,items}.
-- Dashboard Builder (compatibilidade): kpi/chart também aceitam legado {tabela,medida,dimensao}, mas apenas como fallback.
+- Dashboard Builder (campos obrigatórios query-first): kpi={title,query} (query deve retornar coluna numérica AS value e não deve enviar xField/yField/keyField); chart={chart_type,title,query,xField,yField}; filtro={title,campo,tabela}; insights={title,items}.
 - Dashboard Builder (payload KPI/chart): campo formato (quando usado) deve ser apenas "currency" | "percent" | "number".
 - Dashboard Builder (payload KPI/chart): não usar "BRL" em formato; para moeda use formato="currency".
 - Dashboard Builder (payload filtro): chave é opcional; se omitida, deriva de campo resolvido. prefira campo *_id (ex.: vendedor_id); aliases como vendedor/cliente/canal_venda podem ser normalizados para *_id apenas no payload de filtro (nunca inventar coluna/tabela fisica em SQL).

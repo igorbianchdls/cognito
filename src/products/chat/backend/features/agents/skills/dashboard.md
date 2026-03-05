@@ -70,8 +70,8 @@ Chart:
 ```
 
 Compatibilidade:
-- `model/measure/dimension` existe apenas como fallback tecnico.
-- Sempre preferir query pura.
+- Sem fallback legado para KPI/Chart.
+- Sempre usar query pura em `dataQuery.query`.
 
 ## Regras de Qualidade SQL
 

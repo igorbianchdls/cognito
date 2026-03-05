@@ -112,7 +112,7 @@
 - If any table/field is missing in skill/template, stop and ask user; do not guess.
 - Use dashboard_builder flow:
 - create_dashboard -> add_widgets_batch -> add_widget -> get_dashboard.
-- Prefer query-first payload for kpi/chart.
+- Query-first é obrigatório para kpi/chart (sem fallback tabela/medida/dimensao).
 - Important: payload.query is stored in JSONR and executed by dashboard runtime, not by dashboard_builder.
 - Keep widgets grouped by container intentionally.
 - Respect formato enum: currency | percent | number.

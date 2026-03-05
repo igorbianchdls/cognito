@@ -121,7 +121,7 @@
 - chart: chart_type(bar|line|pie), title, query, xField, yField, optional keyField/layout/fr/formato/filtros/limit/ordem/height
 - filtro: title, campo, tabela, optional tipo/chave/fr
 - insights: title, items, optional fr
-- Legacy fallback exists (tabela/medida/dimensao), but prefer query-first.
+- Query-first é obrigatório para kpi/chart (sem fallback tabela/medida/dimensao).
 - For KPI query-first, do not send xField/yField/keyField.
 - Important: payload.query is persisted in JSONR and executed in dashboard runtime; it is not executed by dashboard_builder.
 - Use physical schema/table/column names exactly as defined in selected domain skill/template.
