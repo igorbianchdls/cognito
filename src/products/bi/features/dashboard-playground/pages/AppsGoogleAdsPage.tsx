@@ -26,11 +26,6 @@ function AppsGoogleAdsPlayground() {
     }
   }, [dslText])
 
-  const handleFormatDsl = useCallback(() => {
-    // DSL has custom syntax; keep raw text without auto-format.
-    setDslText((current) => current)
-  }, [])
-
   const handleResetDsl = useCallback(() => {
     setDslText(APPS_GOOGLEADS_TEMPLATE_DSL)
   }, [])
@@ -47,7 +42,6 @@ function AppsGoogleAdsPlayground() {
         jsonText={dslText}
         parseError={parseError}
         onChangeText={setDslText}
-        onFormat={handleFormatDsl}
         onReset={handleResetDsl}
         showFormatButton={false}
       />
