@@ -130,9 +130,11 @@ function parseDslTree(sourceRaw: string): DslNode {
       const close = '</props>'
       const closeIndex = source.toLowerCase().indexOf(close, i)
       if (closeIndex < 0) throw new GoogleAdsDslParseError(source, top.start, 'Tag <props> nao foi fechada')
-      top.text += source.slice(i, closeIndex)
-      i = closeIndex
-      continue
+      if (closeIndex > i) {
+        top.text += source.slice(i, closeIndex)
+        i = closeIndex
+        continue
+      }
     }
 
     if (source.startsWith('<!--', i)) {
