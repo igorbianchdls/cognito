@@ -21,6 +21,15 @@ Prioridade de referencia:
 
 Se houver conflito, priorizar template.
 
+## Sugestao de Estrutura (baseada no template /apps/financeiro)
+
+- Use este baseline ao montar plano no `dashboard_builder`.
+- Ajuste apenas quando o usuario pedir layout diferente.
+- Topo: 1 row com 4 KPIs (Recebidos, Pagos, Geracao de Caixa, Titulos em AP).
+- Bloco 1: 1 row com AP por Fornecedor, AP por Categoria e AR por Cliente (3 bars).
+- Bloco 2: 1 row com Contas a Receber por Mes (line), Status de AP (bar) e AISummary.
+- Regra pratica: manter 4 KPIs no topo e 2 rows de graficos abaixo para leitura executiva rapida.
+
 ## Tabelas e Campos Canonicos
 
 ### `financeiro.contas_pagar src`

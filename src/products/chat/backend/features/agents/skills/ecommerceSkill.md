@@ -14,6 +14,20 @@ Prioridade de referencia:
 
 Em conflito, priorizar controller.
 
+## Sugestao de Estrutura (baseada no template /apps/shopify)
+
+- Use este baseline ao montar plano no `dashboard_builder`.
+- Ajuste apenas quando o usuario pedir layout diferente.
+- Topo: 1 row de filtros principais (ex.: canal, loja, status).
+- KPI row 1: 6 KPIs comerciais (GMV, Pedidos, Ticket Medio, Clientes Unicos, Receita Liquida Est., Reembolsos).
+- KPI row 2: 6 KPIs operacionais/financeiros (Taxas, Fee Rate, Payout Liquido, Envios, Frete Custo, Estoque).
+- Graficos abaixo: multiplas rows com foco em tendencia, distribuicao/ranking e operacao:
+- Row A: GMV por Mes + Pedidos por Status + GMV por Conta.
+- Row B: GMV por Loja + Receita Liquida por Mes + Status de Pagamento.
+- Row C: Top Produtos (receita/quantidade) + Taxas por Tipo.
+- Row D: Payout por Mes + Envios por Transportadora + Estoque por Mes.
+- Regra pratica: ecommerce usa 2 rows de KPI e multiplos blocos de graficos abaixo (nao comprimir em 1-2 rows).
+
 ## Contrato Query-First
 
 - KPI: `query` retornando `value`

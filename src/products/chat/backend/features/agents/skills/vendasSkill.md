@@ -25,6 +25,18 @@ Prioridade de referencia:
 
 Se houver conflito, priorizar template.
 
+## Sugestao de Estrutura (baseada no template /apps/vendas)
+
+- Use este baseline ao montar plano no `dashboard_builder`.
+- Ajuste apenas quando o usuario pedir layout diferente.
+- Topo: 1 row com 4 KPIs (Vendas, Pedidos, Ticket Medio, Margem Bruta).
+- Bloco 1: 1 row com Canais (pie), Categorias (bar), Filtro de Canais (slicer), Clientes (bar).
+- Bloco 2: 1 row com Vendedores, Filiais e Unidades de Negocio (3 bars).
+- Bloco 3: 1 row com Faturamento por Mes (line).
+- Bloco 4: 1 row com Pedidos por Mes, Ticket Medio por Mes e AISummary.
+- Bloco 5: 1 row com Territorios, Servicos/Categorias e Pedidos por Canal (3 bars).
+- Regra pratica: manter 4 KPIs no topo; expandir para 5-6 so se houver KPIs realmente uteis.
+
 ## Tabelas e Campos Canonicos
 
 ### `vendas.pedidos p`

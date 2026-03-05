@@ -18,6 +18,17 @@ Prioridade de referencia:
 
 Se houver conflito, priorizar template.
 
+## Sugestao de Estrutura (baseada no template /apps/compras)
+
+- Use este baseline ao montar plano no `dashboard_builder`.
+- Ajuste apenas quando o usuario pedir layout diferente.
+- Topo: 1 row com 4 KPIs (Gasto, Fornecedores, Pedidos, Transacoes).
+- Bloco 1: 1 row com Fornecedores (bar), Centros de Custo (bar), Filtro de Centro de Custo (slicer), Filiais (bar).
+- Bloco 2: 1 row com Categorias, Projetos e Status (Qtd) em barras.
+- Bloco 3: 1 grafico de pizza de Status.
+- Bloco 4: 1 row com Gasto por Mes, Pedidos por Mes, Ticket Medio por Mes e AISummary.
+- Regra pratica: manter 4 KPIs no topo; usar rows de graficos tematicos abaixo (segmentacao + temporal).
+
 ## Tabela Base e Lookups do Template
 
 ### `compras.compras src`

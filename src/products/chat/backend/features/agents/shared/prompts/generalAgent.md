@@ -80,15 +80,16 @@
 - financeiro/contas-a-pagar/contas-a-receber -> financeiroSkill.md
 - meta ads/google ads/trafego pago -> marketingSkill.md
 - ecommerce/amazon/mercadolivre/shopee/shopify -> ecommerceSkill.md
-- 2) Propose a concrete plan BEFORE tool execution, with explicit items:
+- 2) For layout planning, follow the "Sugestao de Estrutura" section of the selected domain skill (baseline from official template). Only diverge when user asks.
+- 3) Propose a concrete plan BEFORE tool execution, with explicit items:
 - Objetivo
 - dashboard_name sugerido
-- KPIs (widget_id, title, query, yField?, formato? [currency|percent|number], fr?, container)
+- KPIs (widget_id, title, query, formato? [currency|percent|number], fr?, container). KPI query deve retornar coluna numérica com alias `value`.
 - Charts (widget_id, chart_type, title, query, xField, yField, keyField?, layout?, ordem?, limit?, fr?, container)
 - Filtros (widget_id, title, campo, tabela, tipo, chave?, fr?, container)
 - Insights (widget_id, title, items, fr?, container)
 - Layout de containers/rows
-- 3) Ask one approval question before build.
+- 4) Ask one approval question before build.
 - Approval gate:
 - Do not call create_dashboard/add_widgets_batch/add_widget before approval.
 - If user explicitly asks immediate build ("cria direto", "sem confirmar"), skip approval and execute.
@@ -114,11 +115,12 @@
 - when parser_state is provided, use it as source of truth
 - in stateless mode, always reuse latest parser_state from previous call
 - Widget payload contracts (query-first):
-- kpi: title, query, optional yField/xField/keyField/fr/formato/filtros
+- kpi: title, query (retornando `AS value`), optional fr/formato/filtros
 - chart: chart_type(bar|line|pie), title, query, xField, yField, optional keyField/layout/fr/formato/filtros/limit/ordem/height
 - filtro: title, campo, tabela, optional tipo/chave/fr
 - insights: title, items, optional fr
 - Legacy fallback exists (tabela/medida/dimensao), but prefer query-first.
+- For KPI query-first, do not send xField/yField/keyField.
 - Important: payload.query is persisted in JSONR and executed in dashboard runtime; it is not executed by dashboard_builder.
 - Validation before final answer:
 - confirm component props are supported

@@ -129,6 +129,9 @@ export async function POST(req: NextRequest) {
       })
     } else if (yField) {
       rows = rawRows.map((r) => {
+        if (!Object.prototype.hasOwnProperty.call(r, yField)) {
+          return r
+        }
         const y = (r as Record<string, unknown>)[yField]
         const numeric = toFiniteNumber(y) ?? 0
         return {

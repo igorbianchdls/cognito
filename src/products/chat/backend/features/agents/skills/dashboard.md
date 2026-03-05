@@ -26,7 +26,8 @@ Para semantica de dados por dominio, usar:
 5. Todo KPI/Chart com dados deve usar `dataQuery`.
 6. Padrao principal de dados: `dataQuery.query` (SQL puro).
 7. Para Chart, informar `xField` e `yField` (e `keyField` quando houver).
-8. So usar props suportadas no catalogo do renderer.
+8. Para KPI query-first, a query deve retornar coluna numerica com alias `value` (sem `xField/yField/keyField`).
+9. So usar props suportadas no catalogo do renderer.
 
 ## Componentes Permitidos
 
@@ -48,7 +49,6 @@ KPI:
 {
   "dataQuery": {
     "query": "SELECT ... AS value",
-    "yField": "value",
     "filters": {}
   }
 }
@@ -78,7 +78,7 @@ Compatibilidade:
 - Tipar placeholders (`::date`, `::int`, `::text`) para evitar erro de tipo no Postgres.
 - Nao usar `to_jsonb(src)->>'campo'` quando coluna real existe.
 - Evitar joins sem uso.
-- Garantir alias coerentes com `xField/yField/keyField`.
+- Garantir alias coerentes: KPI = `value`; Chart = `key/label/value` + `xField/yField/keyField`.
 - `payload.query` é armazenado no JSONR e executado no runtime do dashboard; para teste ad-hoc de SQL, usar `sql_execution`.
 
 ## Template Minimo Valido
@@ -112,7 +112,6 @@ Compatibilidade:
               "format": "currency",
               "dataQuery": {
                 "query": "SELECT COALESCE(SUM(src.valor_total),0)::float AS value FROM vendas.pedidos src WHERE src.tenant_id={{tenant_id}}::int",
-                "yField": "value",
                 "filters": {}
               }
             }
@@ -144,6 +143,6 @@ Compatibilidade:
 
 - JSONR valido (sem chave desconhecida).
 - SQL valido para o dominio escolhido.
-- `xField/yField/keyField` batem com aliases do SELECT.
+- KPI: query retorna alias `value`; Chart: `xField/yField/keyField` batem com aliases do SELECT.
 - Filtros em `SlicerCard` apontam para campos reais (`*_id` quando aplicavel).
 - Sem caminho errado de arquivo.

@@ -1241,7 +1241,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const p = deepMerge(deepMerge(defaultKPI as any, (theme.components?.Kpi || {}) as any), (element?.props || {}) as any) as AnyRecord;
     const title = p.title as string;
     const dq = p.dataQuery as AnyRecord;
-    const valueKey = (p.valueKey ?? 'total') as string;
+    const valueKey = (p.valueKey ?? 'value') as string;
     const { data } = useData();
     const [serverValue, setServerValue] = React.useState<number>(0);
     const [queryError, setQueryError] = React.useState<string | null>(null);
@@ -1275,9 +1275,9 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
             ? {
                 dataQuery: {
                   query: dq.query,
-                  yField: dq.yField || valueKey || 'value',
-                  xField: dq.xField,
-                  keyField: dq.keyField,
+                  ...(typeof dq.yField === 'string' && dq.yField.trim() ? { yField: dq.yField.trim() } : {}),
+                  ...(typeof dq.xField === 'string' && dq.xField.trim() ? { xField: dq.xField.trim() } : {}),
+                  ...(typeof dq.keyField === 'string' && dq.keyField.trim() ? { keyField: dq.keyField.trim() } : {}),
                   filters,
                   limit: dq.limit ?? 1,
                 },
