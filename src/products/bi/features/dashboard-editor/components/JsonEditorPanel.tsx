@@ -6,8 +6,10 @@ type JsonEditorPanelProps = {
   jsonText: string
   parseError: string | null
   onChangeText: (text: string) => void
-  onFormat: () => void
+  onFormat?: () => void
   onReset: () => void
+  title?: string
+  showFormatButton?: boolean
   extra?: ReactNode
   dataPreview?: unknown
 }
@@ -18,20 +20,24 @@ export default function JsonEditorPanel({
   onChangeText,
   onFormat,
   onReset,
+  title = 'JSON',
+  showFormatButton = true,
   extra,
   dataPreview,
 }: JsonEditorPanelProps) {
   return (
     <div className="md:col-span-1">
       <div className="mb-2 flex items-center justify-between">
-        <h2 className="text-sm font-medium text-gray-900">JSON</h2>
+        <h2 className="text-sm font-medium text-gray-900">{title}</h2>
         <div className="flex items-center gap-2">
           <button onClick={onReset} className="text-xs rounded-md border border-gray-300 bg-white px-2 py-1 hover:bg-gray-50">
             Reset
           </button>
-          <button onClick={onFormat} className="text-xs rounded-md border border-gray-300 bg-white px-2 py-1 hover:bg-gray-50">
-            Formatar
-          </button>
+          {showFormatButton && onFormat ? (
+            <button onClick={onFormat} className="text-xs rounded-md border border-gray-300 bg-white px-2 py-1 hover:bg-gray-50">
+              Formatar
+            </button>
+          ) : null}
         </div>
       </div>
       <textarea

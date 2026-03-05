@@ -1,42 +1,39 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 import { DataProvider } from '@/products/bi/json-render/context'
-import {
-  JsonEditorPanel,
-  JsonPreviewPanel,
-  ManagersPanel,
-  PropertiesPanel,
-  useDashboardVisualEditor,
-  useJsonTemplateEditor,
-} from '@/products/bi/features/dashboard-editor'
+import JsonEditorPanel from '@/products/bi/features/dashboard-editor/components/JsonEditorPanel'
+import JsonPreviewPanel from '@/products/bi/features/dashboard-editor/components/JsonPreviewPanel'
+import { parseGoogleAdsDslToTree } from '@/products/bi/features/dashboard-playground/parsers/googleAdsDslParser'
 import { APPS_GOOGLEADS_TEMPLATE_DSL } from '@/products/bi/shared/templates/appsGoogleAdsTemplate'
 
 function AppsGoogleAdsPlayground() {
-  const {
-    jsonText,
-    parseError,
-    tree,
-    setJsonText,
-    setTree,
-    onChangeText,
-    onFormat,
-    onReset,
-    duplicateNode,
-    deleteNode,
-    moveNode,
-    moveNodeRelative,
-    setNodeProp,
-    replaceNodeProps,
-  } = useJsonTemplateEditor(APPS_GOOGLEADS_TEMPLATE_DSL)
+  const [dslText, setDslText] = useState(APPS_GOOGLEADS_TEMPLATE_DSL)
 
-  const visualEditor = useDashboardVisualEditor({
-    onDuplicateNode: duplicateNode,
-    onDeleteNode: deleteNode,
-    onMoveNode: moveNode,
-    onMoveNodeRelative: moveNodeRelative,
-  })
+  const { tree, parseError } = useMemo(() => {
+    try {
+      return {
+        tree: parseGoogleAdsDslToTree(dslText),
+        parseError: null as string | null,
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      return {
+        tree: [],
+        parseError: message,
+      }
+    }
+  }, [dslText])
+
+  const handleFormatDsl = useCallback(() => {
+    // DSL has custom syntax; keep raw text without auto-format.
+    setDslText((current) => current)
+  }, [])
+
+  const handleResetDsl = useCallback(() => {
+    setDslText(APPS_GOOGLEADS_TEMPLATE_DSL)
+  }, [])
 
   const handleAction = useCallback((action: any) => {
     if (action?.type !== 'refresh_data') return
@@ -46,43 +43,18 @@ function AppsGoogleAdsPlayground() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-start">
       <JsonEditorPanel
-        jsonText={jsonText}
+        title="DSL"
+        jsonText={dslText}
         parseError={parseError}
-        onChangeText={onChangeText}
-        onFormat={onFormat}
-        onReset={onReset}
-        extra={
-          <ManagersPanel
-            jsonText={jsonText}
-            setJsonText={setJsonText}
-            setTree={setTree}
-            disabled={Boolean(parseError)}
-          />
-        }
+        onChangeText={setDslText}
+        onFormat={handleFormatDsl}
+        onReset={handleResetDsl}
+        showFormatButton={false}
       />
       <JsonPreviewPanel
         tree={tree}
         onAction={handleAction}
         actionHint="Ações: Atualizar"
-        visualEditor={{
-          enabled: true,
-          selectedPath: visualEditor.selectedPath,
-          onNodeAction: visualEditor.handleNodeAction,
-          onNodeMove: visualEditor.handleNodeMove,
-          onNodeDropReorder: visualEditor.handleNodeDropReorder,
-        }}
-        propertiesPanel={
-          visualEditor.isPropertiesOpen ? (
-            <PropertiesPanel
-              tree={tree}
-              selectedPath={visualEditor.selectedPath}
-              isOpen={visualEditor.isPropertiesOpen}
-              onClose={visualEditor.closeProperties}
-              onSetNodeProp={setNodeProp}
-              onReplaceNodeProps={replaceNodeProps}
-            />
-          ) : null
-        }
       />
     </div>
   )
