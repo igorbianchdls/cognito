@@ -1,6 +1,7 @@
 "use client"
 
 import type { ToolUIPart, UIMessage } from 'ai'
+import { memo } from 'react'
 import { Message } from '@/components/ai-elements/message'
 import { Response } from '@/components/ai-elements/response'
 import { Reasoning, ReasoningContent, ReasoningTrigger } from '@/components/ai-elements/reasoning'
@@ -382,7 +383,7 @@ function CrudOutputTable({ rows, title, message, count }: { rows: CrudRow[]; tit
   )
 }
 
-export default function RespostaDaIa({ message, isPending = false }: Props) {
+function RespostaDaIa({ message, isPending = false }: Props) {
   const parts = Array.isArray(message.parts) ? message.parts : []
   const hasParts = parts.length > 0
 
@@ -486,3 +487,8 @@ export default function RespostaDaIa({ message, isPending = false }: Props) {
     </Message>
   )
 }
+
+export default memo(
+  RespostaDaIa,
+  (prev, next) => prev.message === next.message && prev.isPending === next.isPending,
+)

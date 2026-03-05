@@ -7,7 +7,7 @@ type Props = {
   message: UIMessage;
 };
 
-export default function PerguntaDoUsuario({ message }: Props) {
+function PerguntaDoUsuario({ message }: Props) {
   // Extract only text parts for this minimal UI
   const textParts = (message.parts || []).filter(p => p.type === 'text');
   if (textParts.length === 0) return null;
@@ -22,3 +22,8 @@ export default function PerguntaDoUsuario({ message }: Props) {
     </div>
   );
 }
+
+export default React.memo(
+  PerguntaDoUsuario,
+  (prev, next) => prev.message === next.message,
+);

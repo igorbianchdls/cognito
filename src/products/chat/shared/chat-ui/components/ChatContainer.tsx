@@ -14,6 +14,40 @@ type ChatStatus = 'idle' | 'submitted' | 'streaming' | 'error'
 type EngineId = 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5' | 'openai-gpt5mini' | 'openai-gpt5nano'
 type RuntimeKind = 'codex' | 'agentsdk'
 
+type ChatMessagesListProps = {
+  messages: UIMessage[]
+  status: ChatStatus
+  currentAssistantId: string | null
+}
+
+const ChatMessagesList = React.memo(
+  function ChatMessagesList({ messages, status, currentAssistantId }: ChatMessagesListProps) {
+    return (
+      <>
+        {messages.map((m) =>
+          m.role === 'user' ? (
+            <PerguntaDoUsuario key={m.id} message={m} />
+          ) : (
+            <RespostaDaIa
+              key={m.id}
+              message={m}
+              isPending={
+                ((status === 'submitted' || status === 'streaming') &&
+                  currentAssistantId === m.id &&
+                  (!Array.isArray((m as any).parts) || (m as any).parts.length === 0))
+              }
+            />
+          )
+        )}
+      </>
+    )
+  },
+  (prev, next) =>
+    prev.messages === next.messages &&
+    prev.status === next.status &&
+    prev.currentAssistantId === next.currentAssistantId,
+)
+
 function engineToBackend(engine: EngineId): { provider: string; model: string } {
   if (engine === 'claude-sonnet') return { provider: 'claude-agent', model: 'claude-sonnet-4-5-20251001' }
   if (engine === 'openai-gpt5') return { provider: 'openai-responses', model: 'gpt-5.1' }
@@ -852,21 +886,11 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
       />
       <div className="h-full min-w-0 grid grid-rows-[1fr_auto] min-h-0" style={withSideMargins ? { marginLeft: '20%', marginRight: '20%' } : undefined}>
         <div ref={scrollViewportRef} className="overflow-y-auto overflow-x-hidden min-h-0 min-w-0 px-4 py-4">
-          {messages.map((m) =>
-            m.role === 'user' ? (
-              <PerguntaDoUsuario key={m.id} message={m} />
-            ) : (
-              <RespostaDaIa
-                key={m.id}
-                message={m}
-                isPending={
-                  ((status === 'submitted' || status === 'streaming') &&
-                    currentAssistantIdRef.current === m.id &&
-                    (!Array.isArray((m as any).parts) || (m as any).parts.length === 0))
-                }
-              />
-            )
-          )}
+          <ChatMessagesList
+            messages={messages}
+            status={status}
+            currentAssistantId={currentAssistantIdRef.current}
+          />
         </div>
         <div className="px-4 pb-3">
           <InputArea value={input} onChange={setInput} onSubmit={handleSubmit} status={status} submitDisabled={isSubmitBlocked} composioEnabled={composioEnabled} onToggleComposio={async () => {
