@@ -10,7 +10,7 @@ Para estrutura/layout de dashboard, usar `dashboard_builder`.
 Use este skill para:
 - mapear schema/tabelas/campos de vendas
 - montar SQL de KPI e grafico no padrao query-first
-- diagnosticar erros comuns de query (ex.: tabela incorreta)
+- evitar SQL com nomes fisicos incorretos
 
 ## Escopo Estrito
 
@@ -24,6 +24,17 @@ Prioridade de referencia:
 2. `src/products/bi/shared/queryCatalog.ts` (entrada `vendas.pedidos`)
 
 Se houver conflito, priorizar template.
+
+## Regra Obrigatoria de Nomes Fisicos
+
+- Use apenas schema/tabelas/campos listados neste skill e no template de vendas.
+- Nao deduzir nome fisico a partir de nome semantico (ex.: "cliente", "vendedor", "canal").
+- Para vendas:
+- tabela base: `vendas.pedidos`
+- clientes: `entidades.clientes`
+- vendedores: `comercial.vendedores` + `entidades.funcionarios`
+- canal no pedido: `p.canal_venda_id` (label via `vendas.canais_venda`)
+- Se o nome nao estiver na lista canonica, pare e pergunte antes de montar query.
 
 ## Sugestao de Estrutura (baseada no template /apps/vendas)
 
@@ -174,34 +185,31 @@ GROUP BY 1, 2
 ORDER BY 3 DESC
 ```
 
-## Erros Comuns
+## Exemplos do Template (/apps/vendas)
 
-### Erro: `relation "vendas_pedidos" does not exist`
+Fonte: `src/products/bi/shared/templates/appsVendasTemplate.ts`
 
-Causa:
-- uso de nome fisico incorreto.
-
-Correto:
-- `FROM vendas.pedidos p`
-
-Incorreto:
-- `FROM vendas_pedidos`
-
-### KPI Vendas = 0 com Pedidos > 0
-
-Possiveis causas:
-- `valor_total` nulo/zero no recorte filtrado
-- janela de data atual sem faturamento
-- tenant incorreto
-
-Checklist:
-1. validar `tenant_id`
-2. validar recorte `de`/`ate`
-3. comparar `SUM(p.valor_total)` com `SUM(pi.subtotal)`
+- KPIs do template:
+- `QUERY_KPI_VENDAS` (Vendas)
+- `QUERY_KPI_PEDIDOS` (Pedidos)
+- `QUERY_KPI_TICKET_MEDIO` (Ticket Medio)
+- Grafico/serie do template:
+- `QUERY_CANAIS` (Canais)
+- `QUERY_CATEGORIAS` (Categorias)
+- `QUERY_CLIENTES` (Clientes)
+- `QUERY_VENDEDORES` (Vendedores)
+- `QUERY_FILIAIS` (Filiais)
+- `QUERY_UNIDADES` (Unidades de Negocio)
+- `QUERY_TERRITORIOS` (Territorios)
+- `QUERY_FATURAMENTO_MES` (Faturamento por Mes)
+- `QUERY_PEDIDOS_MES` (Pedidos por Mes)
+- `QUERY_TICKET_MES` (Ticket Medio por Mes)
+- `QUERY_PEDIDOS_POR_CANAL` (Pedidos por Canal)
 
 ## Checklist Antes de Entregar SQL
 
 - tabela com schema correto (ex.: `vendas.pedidos`)
+- joins/lookups com schema correto (`entidades/comercial/empresa/financeiro`) conforme lista canonica
 - filtro de tenant aplicado
 - filtro de data no padrao do template
 - aliases corretos (`value` ou `key/label/value`)

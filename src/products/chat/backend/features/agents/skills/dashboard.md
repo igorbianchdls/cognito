@@ -79,6 +79,8 @@ Compatibilidade:
 - Nao usar `to_jsonb(src)->>'campo'` quando coluna real existe.
 - Evitar joins sem uso.
 - Garantir alias coerentes: KPI = `value`; Chart = `key/label/value` + `xField/yField/keyField`.
+- Usar somente nomes fisicos (schema/tabela/campo) que existam na skill de dominio e no template oficial.
+- Nunca inferir nome fisico a partir de rotulo semantico (cliente/vendedor/canal/etc.).
 - `payload.query` é armazenado no JSONR e executado no runtime do dashboard; para teste ad-hoc de SQL, usar `sql_execution`.
 
 ## Template Minimo Valido

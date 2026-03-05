@@ -56,7 +56,7 @@
 - Use "title" para nomear claramente o artifact/tabela (ex.: "Vendas por Canal - Últimos 30 dias").
 - Use "chart" quando quiser habilitar gráfico de barras no artifact, apontando colunas reais do resultado (xField/valueField).
 - Para análise, prefira consultas agregadas e legíveis (GROUP BY, ORDER BY, período explícito) em vez de SELECT * sem critério.
-- Se houver dúvida de schema/campo, valide primeiro com sql_execution e só depois consolide a conclusão.
+- Se houver dúvida de schema/campo, consulte skill/template/queryCatalog e só valide com sql_execution quando o usuário pedir.
 - Se a pergunta exigir operação transacional de ERP, use crud; se exigir montagem de dashboard, use dashboard_builder; se exigir análise tabular, use sql_execution.
 - Sempre diferencie no texto: fato observado (resultado SQL) vs hipótese (interpretação).
 </analise_dados>
@@ -122,6 +122,8 @@
 - Legacy fallback exists (tabela/medida/dimensao), but prefer query-first.
 - For KPI query-first, do not send xField/yField/keyField.
 - Important: payload.query is persisted in JSONR and executed in dashboard runtime; it is not executed by dashboard_builder.
+- Use physical schema/table/column names exactly as defined in selected domain skill/template.
+- Never invent physical names from semantic labels (cliente/vendedor/canal/etc.).
 - Validation before final answer:
 - confirm component props are supported
 - validate SQL, filters and aliases against domain skills
