@@ -47,7 +47,7 @@ type FiltroPayload = {
   title: string
   campo: string
   tabela: string
-  tipo?: 'list' | 'dropdown' | 'multi'
+  tipo?: 'list' | 'dropdown' | 'multi' | string
   chave?: string
   fr?: number
 }
@@ -204,6 +204,12 @@ function normalizeFieldName(value: unknown): string {
     .trim()
     .toLowerCase()
     .replace(/\s+/g, '_')
+}
+
+function normalizeFiltroType(value: unknown): 'list' | 'dropdown' | 'multi' {
+  const raw = String(value ?? '').trim().toLowerCase()
+  if (raw === 'list' || raw === 'dropdown' || raw === 'multi') return raw
+  return 'list'
 }
 
 function toRequiredText(value: unknown, fieldName: string): string {
@@ -384,6 +390,7 @@ function buildFiltroNode(payload: FiltroPayload): Record<string, unknown> {
   const tabela = toRequiredText((payload as any).tabela, 'payload.tabela')
   const resolvedField = resolveSlicerField(tabela, campo)
   const key = sanitizeKey(payload.chave || resolvedField)
+  const slicerType = normalizeFiltroType((payload as any).tipo)
 
   return {
     type: 'SlicerCard',
@@ -393,7 +400,7 @@ function buildFiltroNode(payload: FiltroPayload): Record<string, unknown> {
       fields: [
         {
           label: title,
-          type: payload.tipo ?? 'list',
+          type: slicerType,
           storePath: `filters.${key}`,
           source: {
             type: 'options',

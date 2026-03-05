@@ -1,5 +1,5 @@
 export const DASHBOARD_BUILDER_TOOL_DESCRIPTION =
-  'Constrói dashboards JSONR de forma incremental e previsível. Fluxo recomendado: create_dashboard -> add_widgets_batch -> add_widget -> get_dashboard. Persistência automática em /vercel/sandbox/dashboard/<dashboard_name>.jsonr para create_dashboard/add_widget/add_widgets_batch; get_dashboard é somente leitura. Widgets com mesmo container ficam na mesma row (default: principal). Suporta modo stateful (sessão por chat_id+dashboard_name) e stateless (parser_state enviado no input, sempre reutilizando o mais recente). Tipos de widget: kpi, chart, filtro, insights. Formato numérico permitido: currency | percent | number. query-first é o padrão: payload.query em kpi/chart (chart exige xField e yField; keyField opcional). Importante: payload.query é apenas persistido no JSONR e executado no runtime do dashboard; dashboard_builder não executa SQL. Compatibilidade legada (tabela/medida/dimensao) existe como fallback.'
+  'Constrói dashboards JSONR de forma incremental e previsível. Fluxo recomendado: create_dashboard -> add_widgets_batch -> add_widget -> get_dashboard. Persistência automática em /vercel/sandbox/dashboard/<dashboard_name>.jsonr para create_dashboard/add_widget/add_widgets_batch; get_dashboard é somente leitura. Campos obrigatórios por ação: create_dashboard => dashboard_name,title; add_widget => dashboard_name,widget_id,widget_type,payload; add_widgets_batch => dashboard_name,widgets; get_dashboard => dashboard_name. Widgets com mesmo container ficam na mesma row (default: principal). Suporta modo stateful (sessão por chat_id+dashboard_name) e stateless (parser_state enviado no input, sempre reutilizando o mais recente). Prioridade de estado: parser_state > sessão. Tipos de widget: kpi, chart, filtro, insights. Formato numérico permitido: currency | percent | number. query-first é o padrão: payload.query em kpi/chart (chart exige xField e yField; keyField opcional). Em filtro, payload.tipo aceito: list | dropdown | multi. Se payload.tipo vier ausente, vazio ou inválido, o fallback padrão deve ser list. Não usar "date-range" em SlicerCard; para intervalo de datas usar Header.datePicker.mode="range". Importante: payload.query é apenas persistido no JSONR e executado no runtime do dashboard; dashboard_builder não executa SQL. Compatibilidade legada (tabela/medida/dimensao) existe como fallback.'
 
 export const DASHBOARD_BUILDER_TOOL_PARAMETERS = {
   type: 'object',
@@ -8,7 +8,7 @@ export const DASHBOARD_BUILDER_TOOL_PARAMETERS = {
       type: 'string',
       enum: ['create_dashboard', 'add_widget', 'add_widgets_batch', 'get_dashboard'],
       description:
-        'Ação da tool: create_dashboard inicializa o dashboard; add_widget adiciona/atualiza um widget; add_widgets_batch aplica múltiplos widgets; get_dashboard retorna estado atual (sem escrita).',
+        'Ação da tool: create_dashboard inicializa o dashboard (obrigatórios: dashboard_name,title); add_widget adiciona/atualiza um widget (obrigatórios: dashboard_name,widget_id,widget_type,payload); add_widgets_batch aplica múltiplos widgets (obrigatórios: dashboard_name,widgets); get_dashboard retorna estado atual (obrigatório: dashboard_name; sem escrita).',
     },
     dashboard_name: {
       type: 'string',
@@ -46,7 +46,7 @@ export const DASHBOARD_BUILDER_TOOL_PARAMETERS = {
       type: 'object',
       additionalProperties: true,
       description:
-        'Payload do widget conforme widget_type. Padrão query-first: kpi => {title,query,...}; chart => {chart_type,title,query,xField,yField,keyField?,layout?,...}; filtro => {title,campo,tabela,tipo?,chave?,...}; insights => {title,items,...}. Em chart, layout aceito: auto|vertical|horizontal (auto recomendado). ordem aceita "field:dir" ou {field,dir}. Compatibilidade legada (tabela/medida/dimensao) é fallback. formato, quando informado, deve ser exatamente: currency | percent | number.',
+        'Payload do widget conforme widget_type. Padrão query-first: kpi => {title,query,...}; chart => {chart_type,title,query,xField,yField,keyField?,layout?,...}; filtro => {title,campo,tabela,tipo?,chave?,...}; insights => {title,items,...}. Em filtro, tipo permitido: list|dropdown|multi; se tipo estiver ausente, vazio ou inválido, usar fallback list. Exemplo: tipo=\"list\" (válido), tipo=\"date-range\" (inválido em SlicerCard). Para filtro de período usar Header.datePicker.mode=\"range\". Em chart, layout aceito: auto|vertical|horizontal (auto recomendado). ordem aceita \"field:dir\" ou {field,dir}. Compatibilidade legada (tabela/medida/dimensao) é fallback. formato, quando informado, deve ser exatamente: currency | percent | number. Evite chaves fora do contrato suportado.',
     },
     widgets: {
       type: 'array',
@@ -58,7 +58,7 @@ export const DASHBOARD_BUILDER_TOOL_PARAMETERS = {
       type: 'object',
       additionalProperties: true,
       description:
-        'Estado opcional para modo stateless. Quando informado, tem prioridade sobre sessão stateful. Em modo stateless, reenviar sempre o parser_state mais recente retornado pela chamada anterior.',
+        'Estado opcional para modo stateless. Quando informado, tem prioridade sobre sessão stateful (parser_state > sessão). Em modo stateless, reenviar sempre o parser_state mais recente retornado pela chamada anterior.',
     },
   },
   required: ['action', 'dashboard_name'],
