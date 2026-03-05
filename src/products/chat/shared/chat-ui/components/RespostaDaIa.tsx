@@ -444,13 +444,12 @@ function RespostaDaIa({ message, isPending = false }: Props) {
               rawState === 'output-error'
             ) ? rawState : 'output-available'
             const showCrudTable = crudPart && crudRows !== null
-            const shouldOpen = toolState === 'output-available' || toolState === 'output-error'
             const type = String(part.type) as ToolUIPart['type']
             const headerType = crudPart ? (getCrudToolHeaderType(part?.input) || type) : type
 
             return (
               <div key={`tool-${index}`} className="space-y-2">
-                <Tool defaultOpen={shouldOpen}>
+                <Tool defaultOpen={false}>
                   <ToolHeader type={headerType} state={toolState} />
                   <ToolContent>
                     {part?.input !== undefined ? (

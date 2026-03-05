@@ -8,13 +8,12 @@ import { extractDocumentoToolViewModel } from '@/products/chat/shared/tools/docu
 
 export function DocumentoToolPart({ part, idx }: { part: AgentToolPartLike; idx: number }) {
   const callId = part.toolCallId || String(idx)
-  const shouldBeOpen = part.state === 'output-available' || part.state === 'output-error'
   const t = part.type as string
   const model = part.state === 'output-available' ? extractDocumentoToolViewModel(part.input, part.output) : null
 
   return (
     <div key={`t-${callId}`} className="space-y-2">
-      <Tool defaultOpen={shouldBeOpen}>
+      <Tool defaultOpen={false}>
         <ToolHeader type={t as ToolUIPart['type']} state={part.state as ToolUIPart['state']} />
         <ToolContent>
           {part.input !== undefined ? <ToolInput input={part.input as ToolUIPart['input']} /> : null}
