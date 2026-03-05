@@ -26,7 +26,9 @@
 <skills>
 - Use Skill action="list"/"read" when available and when task depends on domain conventions.
 - Domain routing (mandatory before writing analytical SQL or dashboard SQL):
-- ERP (vendas, compras, financeiro, crm, estoque, contabilidade, documentos): read `erpSkill.md`.
+- Vendas: read `vendasSkill.md`.
+- Compras: read `comprasSkill.md`.
+- Financeiro (contas a pagar/contas a receber): read `financeiroSkill.md`.
 - Marketing (meta ads, google ads, tráfego pago, mídia paga, performance ads): read `marketingSkill.md`.
 - Ecommerce (amazon, shopee, mercadolivre/mercado livre, shopify, marketplace, e-commerce): read `ecommerceSkill.md`.
 - If request mixes domains, read all relevant skills and keep queries isolated per domain/model.

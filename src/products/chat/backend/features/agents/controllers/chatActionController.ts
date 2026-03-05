@@ -6,9 +6,11 @@ import { generateAgentToken, setAgentToken } from '@/products/chat/backend/featu
 import { buildClaudeSystemPrompt } from '@/products/chat/backend/features/agents/claudecode/prompts/claudeCodeSystemPrompt'
 import { buildOpenAiSystemPrompt } from '@/products/chat/backend/features/agents/codex/prompts/codexSystemPrompt'
 import {
+  loadComprasSkillMarkdown,
   loadEcommerceSkillMarkdown,
-  loadErpSkillMarkdown,
+  loadFinanceiroSkillMarkdown,
   loadMarketingSkillMarkdown,
+  loadVendasSkillMarkdown,
 } from '@/products/chat/backend/features/agents/skills/dashboardSkill'
 import { resolveComposioUserIdFromRequest } from '@/products/chat/backend/features/agents/core/context/resolveComposioUserId'
 import { APPS_VENDAS_TEMPLATE_TEXT } from '@/products/apps/shared/templates/appsVendasTemplate'
@@ -44,8 +46,16 @@ const START_WAIT_TIMEOUT_MS = 15_000
 const START_WAIT_STEP_MS = 350
 const SKILL_FILES = [
   {
-    path: '/vercel/sandbox/agent/skills/erpSkill.md',
-    content: loadErpSkillMarkdown(),
+    path: '/vercel/sandbox/agent/skills/vendasSkill.md',
+    content: loadVendasSkillMarkdown(),
+  },
+  {
+    path: '/vercel/sandbox/agent/skills/comprasSkill.md',
+    content: loadComprasSkillMarkdown(),
+  },
+  {
+    path: '/vercel/sandbox/agent/skills/financeiroSkill.md',
+    content: loadFinanceiroSkillMarkdown(),
   },
   {
     path: '/vercel/sandbox/agent/skills/marketingSkill.md',

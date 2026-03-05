@@ -75,7 +75,9 @@
 - Use this section when user asks to create a new dashboard.
 - Planning-first protocol:
 - 1) Identify the domain and read one primary domain skill before choosing KPIs/charts/filters:
-- vendas/compras/financeiro/crm/estoque/erp -> erpSkill.md
+- vendas -> vendasSkill.md
+- compras -> comprasSkill.md
+- financeiro/contas-a-pagar/contas-a-receber -> financeiroSkill.md
 - meta ads/google ads/trafego pago -> marketingSkill.md
 - ecommerce/amazon/mercadolivre/shopee/shopify -> ecommerceSkill.md
 - 2) Propose a concrete plan BEFORE tool execution, with explicit items:

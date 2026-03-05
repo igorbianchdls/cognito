@@ -2,7 +2,9 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 const DASHBOARD_SKILL_RELATIVE_PATH = 'src/products/chat/backend/features/agents/skills/dashboard.md'
-const ERP_SKILL_RELATIVE_PATH = 'src/products/chat/backend/features/agents/skills/erpSkill.md'
+const VENDAS_SKILL_RELATIVE_PATH = 'src/products/chat/backend/features/agents/skills/vendasSkill.md'
+const COMPRAS_SKILL_RELATIVE_PATH = 'src/products/chat/backend/features/agents/skills/comprasSkill.md'
+const FINANCEIRO_SKILL_RELATIVE_PATH = 'src/products/chat/backend/features/agents/skills/financeiroSkill.md'
 const MARKETING_SKILL_RELATIVE_PATH = 'src/products/chat/backend/features/agents/skills/marketingSkill.md'
 const ECOMMERCE_SKILL_RELATIVE_PATH = 'src/products/chat/backend/features/agents/skills/ecommerceSkill.md'
 
@@ -13,11 +15,25 @@ Skill de dashboard indisponivel no momento.
 Use o catalogo em /api/modulos/query/catalog e gere JSON Render com dataQuery valida.
 `.trim()
 
-const ERP_SKILL_FALLBACK = `
-# ERP Skill
+const VENDAS_SKILL_FALLBACK = `
+# Vendas Skill
 
-Skill ERP indisponivel no momento.
-Use o catalogo em /api/modulos/query/catalog para mapear model, metricas, dimensoes e filtros.
+Skill de vendas indisponivel no momento.
+Use o template /apps/vendas e o catalogo em /api/modulos/query/catalog para mapear tabelas/campos e KPIs.
+`.trim()
+
+const COMPRAS_SKILL_FALLBACK = `
+# Compras Skill
+
+Skill de compras indisponivel no momento.
+Use o template /apps/compras e o catalogo em /api/modulos/query/catalog para mapear tabelas/campos e KPIs.
+`.trim()
+
+const FINANCEIRO_SKILL_FALLBACK = `
+# Financeiro Skill
+
+Skill de financeiro indisponivel no momento.
+Use o template /apps/financeiro e o catalogo em /api/modulos/query/catalog para mapear tabelas/campos e KPIs.
 `.trim()
 
 const MARKETING_SKILL_FALLBACK = `
@@ -47,8 +63,16 @@ export function loadDashboardSkillMarkdown(): string {
   return loadSkillMarkdown(DASHBOARD_SKILL_RELATIVE_PATH, DASHBOARD_SKILL_FALLBACK)
 }
 
-export function loadErpSkillMarkdown(): string {
-  return loadSkillMarkdown(ERP_SKILL_RELATIVE_PATH, ERP_SKILL_FALLBACK)
+export function loadVendasSkillMarkdown(): string {
+  return loadSkillMarkdown(VENDAS_SKILL_RELATIVE_PATH, VENDAS_SKILL_FALLBACK)
+}
+
+export function loadComprasSkillMarkdown(): string {
+  return loadSkillMarkdown(COMPRAS_SKILL_RELATIVE_PATH, COMPRAS_SKILL_FALLBACK)
+}
+
+export function loadFinanceiroSkillMarkdown(): string {
+  return loadSkillMarkdown(FINANCEIRO_SKILL_RELATIVE_PATH, FINANCEIRO_SKILL_FALLBACK)
 }
 
 export function loadMarketingSkillMarkdown(): string {

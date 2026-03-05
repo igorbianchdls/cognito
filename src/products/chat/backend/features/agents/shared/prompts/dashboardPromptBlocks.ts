@@ -3,7 +3,9 @@ export const DASHBOARD_PLAN_PROMPT_BLOCK = `
 - Use this section when user asks to create a new dashboard (for example "quero um dashboard de vendas").
 - Planning-first protocol:
 - 1) identify the domain and read one primary domain skill before choosing KPIs/charts/filters:
-- vendas/compras/financeiro/crm/estoque/erp -> erpSkill.md
+- vendas -> vendasSkill.md
+- compras -> comprasSkill.md
+- financeiro/contas-a-pagar/contas-a-receber -> financeiroSkill.md
 - meta ads/google ads/trafego pago -> marketingSkill.md
 - ecommerce/amazon/mercadolivre/shopee/shopify -> ecommerceSkill.md
 - 2) propose a concrete plan BEFORE tool execution, with explicit items:
@@ -79,7 +81,9 @@ export const DASHBOARD_BUILD_PROMPT_BLOCK = `
 - trend chart + distribution/ranking chart
 - AISummary with readable padding
 - Skills usage for dashboard data semantics:
-- for dashboards de vendas/compras/financeiro/crm/estoque/erp, read erpSkill.md
+- for dashboards de vendas, read vendasSkill.md
+- for dashboards de compras, read comprasSkill.md
+- for dashboards de financeiro, contas-a-pagar ou contas-a-receber, read financeiroSkill.md
 - for dashboards de meta ads/google ads/trafego pago, read marketingSkill.md
 - for dashboards de ecommerce/amazon/mercadolivre/shopee/shopify, read ecommerceSkill.md
 - dashboard construction flow and structure must follow dashboard_builder tool contract.

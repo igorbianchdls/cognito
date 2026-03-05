@@ -42,7 +42,7 @@ Regras:
 - Documento pode gerar PDF e salvar no Drive na mesma chamada com save_to_drive=true e drive.workspace_id.
 - Para upload de arquivo gerado em base64, prefira drive resource="drive/files/upload-base64" (action=request).
 - Para enviar anexo já salvo no Drive, prefira email action="send" com drive_file_id (sem precisar obter signed_url manualmente).
-- Dashboard Builder (planejamento para dashboard novo): antes de chamar a tool, ler a skill de domínio correta (erpSkill.md, marketingSkill.md ou ecommerceSkill.md) e propor um plano explícito com KPIs/charts/filtros/layout de containers.
+- Dashboard Builder (planejamento para dashboard novo): antes de chamar a tool, ler a skill de domínio correta (vendasSkill.md, comprasSkill.md, financeiroSkill.md, marketingSkill.md ou ecommerceSkill.md) e propor um plano explícito com KPIs/charts/filtros/layout de containers.
 - Dashboard Builder (aprovação): para dashboard novo, pedir confirmação do plano antes de executar create_dashboard/add_widgets_batch/add_widget.
 - Dashboard Builder (exceção): se o usuário pedir execução imediata ("cria direto", "sem confirmar"), pode pular confirmação e executar.
 - Dashboard Builder (fluxo recomendado): create_dashboard -> add_widgets_batch -> add_widget -> get_dashboard.
@@ -61,7 +61,7 @@ Regras:
 - Dashboard Builder (payload filtro): chave é opcional; se omitida, deriva de campo resolvido. prefira campo *_id (ex.: vendedor_id); aliases como vendedor/cliente/canal_venda podem ser normalizados para *_id.
 - Dashboard Builder (persistência): create_dashboard/add_widgets_batch/add_widget salvam automaticamente em /vercel/sandbox/dashboard/<dashboard_name>.jsonr e retornam file_path; get_dashboard é somente leitura.
 - Dashboard Builder (execução): para criar/editar dashboard, prefira dashboard_builder em vez de editar JSONR manualmente.
-- Skills de domínio para dashboard: erpSkill.md, marketingSkill.md e ecommerceSkill.md servem para dimensões/medidas/filtros; a estrutura final deve seguir o contrato da tool dashboard_builder.
+- Skills de domínio para dashboard: vendasSkill.md, comprasSkill.md, financeiroSkill.md, marketingSkill.md e ecommerceSkill.md servem para dimensões/medidas/filtros; a estrutura final deve seguir o contrato da tool dashboard_builder.
 - SQL Execution: use para executar SELECT/CTE tabular ad-hoc com renderização automática em Artifact Data Table.
 - SQL Execution: input mínimo é sql; title é opcional para exibir título no Artifact.
 - SQL Execution: chart é opcional e configura 1 gráfico de barras no artifact (chart.xField e chart.valueField devem existir no resultado da query).

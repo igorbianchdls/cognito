@@ -11,7 +11,9 @@ Use este skill para:
 
 Nao use este skill para inventar schema de negocio.
 Para semantica de dados por dominio, usar:
-- `erpSkill.md`
+- `vendasSkill.md`
+- `comprasSkill.md`
+- `financeiroSkill.md`
 - `ecommerceSkill.md`
 - `marketingSkill.md`
 
