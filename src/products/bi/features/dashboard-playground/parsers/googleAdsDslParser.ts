@@ -20,6 +20,7 @@ const TAG_TO_CATALOG_TYPE: Record<string, string> = {
   'line-chart': 'LineChart',
   'pie-chart': 'PieChart',
   'slicer-card': 'SlicerCard',
+  aisummary: 'AISummary',
   'ai-summary': 'AISummary',
 }
 
