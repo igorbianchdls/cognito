@@ -1144,5 +1144,3 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<dashboard-template name="
     </div>
   </theme>
 </dashboard-template>`
-
-export const APPS_GOOGLEADS_TEMPLATE_TEXT = APPS_GOOGLEADS_TEMPLATE_DSL
