@@ -1,5 +1,5 @@
 export const DASHBOARD_BUILDER_TOOL_DESCRIPTION =
-  'Constrói dashboards JSONR de forma incremental e previsível. Fluxo recomendado: create_dashboard -> add_widgets_batch -> add_widget -> get_dashboard. Persistência automática em /vercel/sandbox/dashboard/<dashboard_name>.jsonr para create_dashboard/add_widget/add_widgets_batch; get_dashboard é somente leitura. Campos obrigatórios por ação: create_dashboard => dashboard_name,title; add_widget => dashboard_name,widget_id,widget_type,payload; add_widgets_batch => dashboard_name,widgets; get_dashboard => dashboard_name. Widgets com mesmo container ficam na mesma row (default: principal). Suporta modo stateful (sessão por chat_id+dashboard_name) e stateless (parser_state enviado no input, sempre reutilizando o mais recente). Prioridade de estado: parser_state > sessão. Tipos de widget: kpi, chart, filtro, insights. Formato numérico permitido: currency | percent | number. query-first é o padrão: payload.query em kpi/chart (kpi deve retornar coluna numérica AS value; chart exige xField e yField; keyField opcional). Em filtro, payload.tipo aceito: list | dropdown | multi. Se payload.tipo vier ausente, vazio ou inválido, o fallback padrão deve ser list. Não usar "date-range" em SlicerCard; para intervalo de datas usar Header.datePicker.mode="range". Importante: payload.query é apenas persistido no JSONR e executado no runtime do dashboard; dashboard_builder não executa SQL. Compatibilidade legada (tabela/medida/dimensao) existe como fallback.'
+  'Constrói dashboards JSONR de forma incremental e previsível. Fluxo recomendado: create_dashboard -> add_widgets_batch -> add_widget -> get_dashboard. Persistência automática em /vercel/sandbox/dashboard/<dashboard_name>.jsonr para create_dashboard/add_widget/add_widgets_batch; get_dashboard é somente leitura. Em create_dashboard: dashboard_name define nome técnico/chave/caminho do arquivo; title define o texto visível no Header.title (podem ser diferentes). Campos obrigatórios por ação: create_dashboard => dashboard_name,title; add_widget => dashboard_name,widget_id,widget_type,payload; add_widgets_batch => dashboard_name,widgets; get_dashboard => dashboard_name. Widgets com mesmo container ficam na mesma row (default: principal). Suporta modo stateful (sessão por chat_id+dashboard_name) e stateless (parser_state enviado no input, sempre reutilizando o mais recente). Prioridade de estado: parser_state > sessão. Tipos de widget: kpi, chart, filtro, insights. Formato numérico permitido: currency | percent | number. query-first é o padrão: payload.query em kpi/chart (kpi deve retornar coluna numérica AS value; chart exige xField e yField; keyField opcional). Em filtro, payload.tipo aceito: list | dropdown | multi. Se payload.tipo vier ausente, vazio ou inválido, o fallback padrão deve ser list. Não usar "date-range" em SlicerCard; para intervalo de datas usar Header.datePicker.mode="range". Importante: payload.query é apenas persistido no JSONR e executado no runtime do dashboard; dashboard_builder não executa SQL. Compatibilidade legada (tabela/medida/dimensao) existe como fallback.'
 
 export const DASHBOARD_BUILDER_TOOL_PARAMETERS = {
   type: 'object',
@@ -8,16 +8,16 @@ export const DASHBOARD_BUILDER_TOOL_PARAMETERS = {
       type: 'string',
       enum: ['create_dashboard', 'add_widget', 'add_widgets_batch', 'get_dashboard'],
       description:
-        'Ação da tool: create_dashboard inicializa o dashboard (obrigatórios: dashboard_name,title); add_widget adiciona/atualiza um widget (obrigatórios: dashboard_name,widget_id,widget_type,payload); add_widgets_batch aplica múltiplos widgets (obrigatórios: dashboard_name,widgets); get_dashboard retorna estado atual (obrigatório: dashboard_name; sem escrita).',
+        'Ação da tool: create_dashboard inicializa o dashboard (obrigatórios: dashboard_name,title; dashboard_name = nome técnico/arquivo, title = Header.title visível); add_widget adiciona/atualiza um widget (obrigatórios: dashboard_name,widget_id,widget_type,payload); add_widgets_batch aplica múltiplos widgets (obrigatórios: dashboard_name,widgets); get_dashboard retorna estado atual (obrigatório: dashboard_name; sem escrita).',
     },
     dashboard_name: {
       type: 'string',
       description:
-        'Nome técnico do dashboard (chave de estado). Use o mesmo dashboard_name em todas as chamadas do mesmo dashboard.',
+        'Nome técnico do dashboard (chave de estado e nome do arquivo em /vercel/sandbox/dashboard/<dashboard_name>.jsonr). Use o mesmo dashboard_name em todas as chamadas do mesmo dashboard.',
     },
     title: {
       type: 'string',
-      description: 'Título do dashboard (obrigatório em create_dashboard).',
+      description: 'Título exibido no Header.title do dashboard (obrigatório em create_dashboard).',
     },
     subtitle: {
       type: 'string',
