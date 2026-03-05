@@ -12,14 +12,18 @@ Use este skill para:
 - montar SQL de KPI e grafico no padrao query-first
 - diagnosticar erros comuns de query (ex.: tabela incorreta)
 
+## Escopo Estrito
+
+Este skill cobre somente tabelas e joins usados no template atual de Vendas.
+Nao expandir para tabelas fora do template.
+
 ## Fonte de Verdade
 
 Prioridade de referencia:
 1. `src/products/bi/shared/templates/appsVendasTemplate.ts`
 2. `src/products/bi/shared/queryCatalog.ts` (entrada `vendas.pedidos`)
-3. Controllers do modulo vendas
 
-Se houver conflito, priorizar template e controller.
+Se houver conflito, priorizar template.
 
 ## Tabelas e Campos Canonicos
 
