@@ -11,7 +11,7 @@ import {
   useDashboardVisualEditor,
   useJsonTemplateEditor,
 } from '@/products/bi/features/dashboard-editor'
-import { APPS_GOOGLEADS_TEMPLATE_TEXT } from '@/products/bi/shared/templates/appsGoogleAdsTemplate'
+import { APPS_GOOGLEADS_TEMPLATE_DSL } from '@/products/bi/shared/templates/appsGoogleAdsTemplate'
 
 function AppsGoogleAdsPlayground() {
   const {
@@ -29,7 +29,7 @@ function AppsGoogleAdsPlayground() {
     moveNodeRelative,
     setNodeProp,
     replaceNodeProps,
-  } = useJsonTemplateEditor(APPS_GOOGLEADS_TEMPLATE_TEXT)
+  } = useJsonTemplateEditor(APPS_GOOGLEADS_TEMPLATE_DSL)
 
   const visualEditor = useDashboardVisualEditor({
     onDuplicateNode: duplicateNode,
