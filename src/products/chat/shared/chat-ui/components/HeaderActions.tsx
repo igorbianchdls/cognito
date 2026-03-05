@@ -10,6 +10,7 @@ import { Undo2, Redo2, RefreshCw, Upload, Palette, Save, Bell, Trash2, Check } f
 import { $artifactNotifications, $previewJsonrPath, sandboxActions } from '@/chat/sandbox';
 import { APPS_COLOR_PRESETS, APPS_HEADER_THEME_OPTIONS, APPS_THEME_OPTIONS } from '@/products/bi/shared/themeOptions';
 import { DASHBOARD_BACKGROUND_PRESET_OPTIONS } from '@/products/bi/json-render/backgrounds/registry';
+import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter';
 
 function IconButton({
   title,
@@ -66,33 +67,13 @@ type HeaderActionsProps = {
   chatId?: string;
 };
 
-type ThemeVisualMeta = {
-  title: string;
-  subtitle: string;
-  swatches: string[];
-};
-
-const ARTIFACT_THEME_BASE_META: Record<string, ThemeVisualMeta> = {
-  light: { title: 'Light', subtitle: 'Neutro e limpo para leitura', swatches: ['#f8fafc', '#e2e8f0', '#94a3b8'] },
-  blue: { title: 'Blue', subtitle: 'Interface fria com foco em dados', swatches: ['#eff6ff', '#60a5fa', '#1d4ed8'] },
-  dark: { title: 'Dark', subtitle: 'Contraste alto para ambiente escuro', swatches: ['#0f172a', '#334155', '#94a3b8'] },
-  black: { title: 'Black', subtitle: 'Visual profundo com destaque forte', swatches: ['#020617', '#111827', '#4b5563'] },
-  slate: { title: 'Slate', subtitle: 'Tons grafite equilibrados', swatches: ['#1e293b', '#475569', '#94a3b8'] },
-  navy: { title: 'Navy', subtitle: 'Azul corporativo para executivo', swatches: ['#0b1739', '#1d4ed8', '#60a5fa'] },
-  sand: { title: 'Sand', subtitle: 'Paleta quente e suave', swatches: ['#fffbeb', '#f59e0b', '#b45309'] },
-  charcoal: { title: 'Charcoal', subtitle: 'Cinza carvão discreto', swatches: ['#111827', '#374151', '#9ca3af'] },
-  midnight: { title: 'Midnight', subtitle: 'Noite profunda com brilho frio', swatches: ['#020617', '#1e3a8a', '#22d3ee'] },
-  metro: { title: 'Metro', subtitle: 'Estilo urbano e direto', swatches: ['#0f172a', '#0ea5e9', '#14b8a6'] },
-  aero: { title: 'Aero', subtitle: 'Leve e vibrante com azul claro', swatches: ['#e0f2fe', '#38bdf8', '#0ea5e9'] },
-};
-
-const ARTIFACT_THEME_FX_META: Record<string, { title: string; subtitle: string }> = {
-  orbital: { title: 'Orbital FX', subtitle: 'Gradiente espacial com brilho ciano' },
-  blueprint: { title: 'Blueprint FX', subtitle: 'Estética técnica em azul profundo' },
-  aurora: { title: 'Aurora FX', subtitle: 'Mistura viva com tons iridescentes' },
-  'matrix-glass': { title: 'Matrix Glass FX', subtitle: 'Vidro escuro com energia neon' },
-  'matrix-glass-mono': { title: 'Matrix Mono FX', subtitle: 'Versão monocromática de alto contraste' },
-  'matrix-glass-light': { title: 'Matrix Light FX', subtitle: 'Vidro claro com acentos fortes' },
+const ARTIFACT_THEME_FX_BACKGROUND_SEEDS: Record<string, string> = {
+  orbital: '#030508',
+  blueprint: '#04111f',
+  aurora: '#07080d',
+  'matrix-glass': '#06070b',
+  'matrix-glass-mono': '#060606',
+  'matrix-glass-light': '#eceef1',
 };
 
 const ARTIFACT_BORDER_PRESET_OPTIONS = [
@@ -243,6 +224,13 @@ function buildSwatchBackground(swatches: string[]): string {
   return `linear-gradient(135deg, ${palette[0]} 0%, ${palette[1]} 50%, ${palette[2]} 100%)`;
 }
 
+function formatThemeColor(value: string): string {
+  const s = String(value || '').trim();
+  if (!s) return '#000000';
+  if (s.startsWith('#')) return s.toUpperCase();
+  return s.length > 18 ? `${s.slice(0, 18)}...` : s;
+}
+
 export default function HeaderActions({ chatId }: HeaderActionsProps) {
   const previewPath = useStore($previewJsonrPath);
   const artifactNotifications = useStore($artifactNotifications);
@@ -274,19 +262,30 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
     return allThemeOptions.map((opt) => {
       if (opt.value.startsWith('fx:')) {
         const fxKey = opt.value.slice(3);
-        const fxMeta = ARTIFACT_THEME_FX_META[fxKey] || {
+        const baseTheme = ARTIFACT_THEME_FX_DEFAULT_THEME[fxKey] || 'dark';
+        const fxPreset = ARTIFACT_THEME_FX_PRESETS[fxKey];
+        const built = buildThemeVars(baseTheme);
+        const vars = (built.cssVars || {}) as Record<string, string>;
+        const background = ARTIFACT_THEME_FX_BACKGROUND_SEEDS[fxKey] || String(vars.bg || '#0f172a');
+        const surface = String(fxPreset?.surface || vars.surfaceBg || background);
+        const swatches = [background, surface, `color-mix(in srgb, ${background} 50%, ${surface} 50%)`];
+        return {
+          ...opt,
           title: opt.label.replace(/\s*\(FX\)\s*$/i, ''),
-          subtitle: 'Preset visual avançado',
+          subtitle: `Fundo ${formatThemeColor(background)} · Container ${formatThemeColor(surface)}`,
+          swatches,
         };
-        const swatches = ARTIFACT_THEME_FX_PRESETS[fxKey]?.colorScheme?.slice(0, 3) || ['#64748b', '#334155', '#0f172a'];
-        return { ...opt, ...fxMeta, swatches };
       }
-      const baseMeta = ARTIFACT_THEME_BASE_META[opt.value] || {
+      const built = buildThemeVars(opt.value);
+      const vars = (built.cssVars || {}) as Record<string, string>;
+      const background = String(vars.bg || '#f8fafc');
+      const surface = String(vars.surfaceBg || background);
+      return {
+        ...opt,
         title: opt.label,
-        subtitle: 'Tema base do dashboard',
-        swatches: ['#e2e8f0', '#94a3b8', '#64748b'],
+        subtitle: `Fundo ${formatThemeColor(background)} · Container ${formatThemeColor(surface)}`,
+        swatches: [background, surface, `color-mix(in srgb, ${background} 50%, ${surface} 50%)`],
       };
-      return { ...opt, ...baseMeta };
     });
   }, [allThemeOptions]);
   const unreadCount = React.useMemo(
