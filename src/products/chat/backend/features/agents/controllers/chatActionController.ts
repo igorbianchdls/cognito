@@ -13,9 +13,8 @@ import {
   loadVendasSkillMarkdown,
 } from '@/products/chat/backend/features/agents/skills/dashboardSkill'
 import { resolveComposioUserIdFromRequest } from '@/products/chat/backend/features/agents/core/context/resolveComposioUserId'
-import { parseDashboardTemplateDslToTree } from '@/products/bi/features/dashboard-playground/parsers/dashboardTemplateDslParser'
 import { APPS_VENDAS_TEMPLATE_DSL } from '@/products/apps/shared/templates/appsVendasTemplate'
-import { APPS_COMPRAS_TEMPLATE_TEXT } from '@/products/apps/shared/templates/appsComprasTemplate'
+import { APPS_COMPRAS_TEMPLATE_DSL } from '@/products/apps/shared/templates/appsComprasTemplate'
 import {
   ensureChatRuntimeKindColumn,
   normalizeRuntimeKind,
@@ -527,47 +526,11 @@ export async function POST(req: Request) {
           await seedAppToolsSkillInSandbox(sandbox, timeline)
         } catch {}
       }
-      // Seed default JSON Render dashboards (.jsonr)
+      // Seed default dashboards (.dsl)
       try {
-        const parseSeedJson = (raw: string): any[] => {
-          try {
-            const parsed = JSON.parse(raw)
-            const nodes = Array.isArray(parsed) ? parsed : [parsed]
-            if (!nodes[0] || nodes[0].type !== 'Theme') {
-              return [{ type: 'Theme', props: { name: 'light', headerTheme: 'auto', managers: {} }, children: nodes }]
-            }
-            const theme = nodes[0]
-            theme.props = theme.props && typeof theme.props === 'object' ? theme.props : {}
-            if (!theme.props.name) theme.props.name = 'light'
-            if (typeof theme.props.headerTheme !== 'string') theme.props.headerTheme = 'auto'
-            if (!theme.props.managers || typeof theme.props.managers !== 'object') theme.props.managers = {}
-            return nodes
-          } catch {
-            return []
-          }
-        }
-        const parseSeedDsl = (raw: string): any[] => {
-          try {
-            const parsed = parseDashboardTemplateDslToTree(raw)
-            const nodes = Array.isArray(parsed) ? parsed : [parsed]
-            if (!nodes[0] || nodes[0].type !== 'Theme') {
-              return [{ type: 'Theme', props: { name: 'light', headerTheme: 'auto', managers: {} }, children: nodes }]
-            }
-            const theme = nodes[0]
-            theme.props = theme.props && typeof theme.props === 'object' ? theme.props : {}
-            if (!theme.props.name) theme.props.name = 'light'
-            if (typeof theme.props.headerTheme !== 'string') theme.props.headerTheme = 'auto'
-            if (!theme.props.managers || typeof theme.props.managers !== 'object') theme.props.managers = {}
-            return nodes
-          } catch {
-            return []
-          }
-        }
-        const vendasObj = parseSeedDsl(APPS_VENDAS_TEMPLATE_DSL)
-        const comprasObj = parseSeedJson(APPS_COMPRAS_TEMPLATE_TEXT)
-        const seedDash = `const fs=require('fs');const p=process.env.TARGET;fs.mkdirSync(p,{recursive:true});const w=(f,c)=>{if(!fs.existsSync(f))fs.writeFileSync(f,c,'utf8');};w(p+'/vendas.jsonr',process.env.VENDAS_JSONR||'[]');w(p+'/compras.jsonr',process.env.COMPRAS_JSONR||'[]');console.log('ok');`;
-        const runSeed = await sandbox.runCommand({ cmd: 'node', args: ['-e', seedDash], env: { TARGET: '/vercel/sandbox/dashboard', VENDAS_JSONR: JSON.stringify(vendasObj), COMPRAS_JSONR: JSON.stringify(comprasObj) } })
-        timeline.push({ name: 'seed-jsonr', ms: 0, ok: runSeed.exitCode === 0, exitCode: runSeed.exitCode })
+        const seedDash = `const fs=require('fs');const p=process.env.TARGET;fs.mkdirSync(p,{recursive:true});const w=(f,c)=>{if(!fs.existsSync(f))fs.writeFileSync(f,c,'utf8');};w(p+'/vendas.dsl',process.env.VENDAS_DSL||'[]');w(p+'/compras.dsl',process.env.COMPRAS_DSL||'[]');console.log('ok');`;
+        const runSeed = await sandbox.runCommand({ cmd: 'node', args: ['-e', seedDash], env: { TARGET: '/vercel/sandbox/dashboard', VENDAS_DSL: APPS_VENDAS_TEMPLATE_DSL, COMPRAS_DSL: APPS_COMPRAS_TEMPLATE_DSL } })
+        timeline.push({ name: 'seed-dsl', ms: 0, ok: runSeed.exitCode === 0, exitCode: runSeed.exitCode })
       } catch {}
       // Seed MCP servers used by the chat runtimes
       try {

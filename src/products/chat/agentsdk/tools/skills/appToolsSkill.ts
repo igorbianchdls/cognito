@@ -53,13 +53,13 @@ Regras:
 - Dashboard Builder (payload chart): quando layout for omitido/auto no BarChart, usar padrão automático: temporal -> vertical; categórico -> horizontal.
 - Dashboard Builder (payload chart): enviar layout apenas quando quiser forçar override manual; no padrão, omitir layout.
 - Dashboard Builder (payload query-first): query SQL em KPI/Chart é obrigatório.
-- Dashboard Builder (payload query-first): payload.query é persistido no JSONR; não é executado pelo dashboard_builder. Para testar SQL ad-hoc, use sql_execution.
+- Dashboard Builder (payload query-first): payload.query é persistido no DSL; não é executado pelo dashboard_builder. Para testar SQL ad-hoc, use sql_execution.
 - Dashboard Builder (campos obrigatórios query-first): kpi={title,query} (query deve retornar coluna numérica AS value e não deve enviar xField/yField/keyField); chart={chart_type,title,query,xField,yField}; filtro={title,campo,tabela}; insights={title,items}.
 - Dashboard Builder (payload KPI/chart): campo formato (quando usado) deve ser apenas "currency" | "percent" | "number".
 - Dashboard Builder (payload KPI/chart): não usar "BRL" em formato; para moeda use formato="currency".
 - Dashboard Builder (payload filtro): chave é opcional; se omitida, deriva de campo resolvido. prefira campo *_id (ex.: vendedor_id); aliases como vendedor/cliente/canal_venda podem ser normalizados para *_id apenas no payload de filtro (nunca inventar coluna/tabela fisica em SQL).
-- Dashboard Builder (persistência): create_dashboard/add_widgets_batch/add_widget salvam automaticamente em /vercel/sandbox/dashboard/<dashboard_name>.jsonr e retornam file_path; get_dashboard é somente leitura.
-- Dashboard Builder (execução): para criar/editar dashboard, prefira dashboard_builder em vez de editar JSONR manualmente.
+- Dashboard Builder (persistência): create_dashboard/add_widgets_batch/add_widget salvam automaticamente em /vercel/sandbox/dashboard/<dashboard_name>.dsl e retornam file_path; get_dashboard é somente leitura.
+- Dashboard Builder (execução): para criar/editar dashboard, prefira dashboard_builder em vez de editar DSL manualmente.
 - Skills de domínio para dashboard: vendasSkill.md, comprasSkill.md, financeiroSkill.md, marketingSkill.md e ecommerceSkill.md servem para dimensões/medidas/filtros; a estrutura final deve seguir o contrato da tool dashboard_builder.
 - SQL Execution: use para executar SELECT/CTE tabular ad-hoc com renderização automática em Artifact Data Table.
 - SQL Execution: input mínimo é sql; title é opcional para exibir título no Artifact.

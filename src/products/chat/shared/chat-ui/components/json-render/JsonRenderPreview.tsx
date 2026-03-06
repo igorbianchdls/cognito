@@ -2,11 +2,15 @@
 
 import React from "react";
 import { useStore } from "@nanostores/react";
-import { $previewJsonrPath, sandboxActions } from "@/chat/sandbox";
+import { $previewDslPath, sandboxActions } from "@/chat/sandbox";
 import { DataProvider } from "@/products/bi/json-render/context";
 import JsonPreviewPanel from "@/products/bi/features/dashboard-editor/components/JsonPreviewPanel";
 import PropertiesPanel from "@/products/bi/features/dashboard-editor/components/PropertiesPanel";
 import useDashboardVisualEditor from "@/products/bi/features/dashboard-editor/hooks/useDashboardVisualEditor";
+import {
+  parseDashboardTemplateDslToTree,
+  renderDashboardTemplateDslFromTree,
+} from "@/products/bi/features/dashboard-playground/parsers/dashboardTemplateDslParser";
 import type {
   JsonNodePath,
   NodeDropPlacement,
@@ -96,14 +100,26 @@ class ComponentBoundary extends React.Component<{ children: React.ReactNode }, C
   }
 }
 
-function isValidJsonrPath(path: string | null | undefined): path is string {
+function isValidDslPath(path: string | null | undefined): path is string {
   if (!path) return false;
   const p = String(path).trim();
-  return p.startsWith("/vercel/sandbox/") && p.endsWith(".jsonr");
+  return p.startsWith("/vercel/sandbox/") && p.endsWith(".dsl");
+}
+
+function extractTemplateNameFromPath(path: string): string {
+  const raw = String(path || "").trim();
+  const fileName = raw.split("/").filter(Boolean).pop() || "dashboard";
+  const base = fileName.replace(/\.dsl$/i, "");
+  const normalized = base
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  return normalized || "dashboard";
 }
 
 function JsonRenderPreviewInner({ chatId }: Props) {
-  const jsonrPath = useStore($previewJsonrPath);
+  const dslPath = useStore($previewDslPath);
   const [error, setError] = React.useState<string | null>(null);
   const [tree, setTree] = React.useState<any | any[] | null>(null);
   const [loading, setLoading] = React.useState<boolean>(false);
@@ -114,22 +130,23 @@ function JsonRenderPreviewInner({ chatId }: Props) {
 
   const persistTree = React.useCallback(
     async (nextTree: any) => {
-      if (!chatId || !jsonrPath || !isValidJsonrPath(jsonrPath)) return false;
+      if (!chatId || !dslPath || !isValidDslPath(dslPath)) return false;
       setSaving(true);
       try {
+        const content = renderDashboardTemplateDslFromTree(nextTree, extractTemplateNameFromPath(dslPath));
         const res = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             action: "fs-write",
             chatId,
-            path: jsonrPath,
-            content: JSON.stringify(nextTree, null, 2),
+            path: dslPath,
+            content,
           }),
         });
         const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
         if (!res.ok || data.ok === false) {
-          throw new Error(data.error || `Falha ao salvar ${jsonrPath}`);
+          throw new Error(data.error || `Falha ao salvar ${dslPath}`);
         }
         return true;
       } catch (e: any) {
@@ -140,7 +157,7 @@ function JsonRenderPreviewInner({ chatId }: Props) {
         setSaving(false);
       }
     },
-    [chatId, jsonrPath],
+    [chatId, dslPath],
   );
 
   const duplicateNode = React.useCallback(
@@ -233,7 +250,7 @@ function JsonRenderPreviewInner({ chatId }: Props) {
           continue;
         }
         for (const e of data.entries || []) {
-          if (e.type === "file" && e.path.endsWith(".jsonr")) {
+          if (e.type === "file" && e.path.endsWith(".dsl")) {
             collected.push(e.path);
           }
         }
@@ -243,7 +260,7 @@ function JsonRenderPreviewInner({ chatId }: Props) {
       setPathsError(unique.length === 0 ? firstErr : null);
       return unique;
     } catch (e: any) {
-      setPathsError(e?.message ? String(e.message) : "Falha ao buscar arquivos .jsonr");
+      setPathsError(e?.message ? String(e.message) : "Falha ao buscar arquivos .dsl");
       return [];
     }
   }, [chatId]);
@@ -253,28 +270,28 @@ function JsonRenderPreviewInner({ chatId }: Props) {
     if (typeof window === "undefined" || !chatId) return;
     if (hydratedPreviewPathForChatRef.current === chatId) return;
     try {
-      const saved = window.localStorage.getItem(`previewJsonrPath:${chatId}`);
+      const saved = window.localStorage.getItem(`previewDslPath:${chatId}`);
       hydratedPreviewPathForChatRef.current = chatId;
-      if (saved && isValidJsonrPath(saved) && saved !== jsonrPath) {
+      if (saved && isValidDslPath(saved) && saved !== dslPath) {
         sandboxActions.setPreviewPath(saved);
       }
     } catch {
       // ignore storage access errors
     }
-  }, [chatId, jsonrPath]);
+  }, [chatId, dslPath]);
 
   React.useEffect(() => {
     if (!chatId) hydratedPreviewPathForChatRef.current = null;
   }, [chatId]);
 
   React.useEffect(() => {
-    if (typeof window === "undefined" || !chatId || !jsonrPath) return;
+    if (typeof window === "undefined" || !chatId || !dslPath) return;
     try {
-      window.localStorage.setItem(`previewJsonrPath:${chatId}`, jsonrPath);
+      window.localStorage.setItem(`previewDslPath:${chatId}`, dslPath);
     } catch {
       // ignore storage access errors
     }
-  }, [chatId, jsonrPath]);
+  }, [chatId, dslPath]);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -287,16 +304,16 @@ function JsonRenderPreviewInner({ chatId }: Props) {
         if (!cancelled) setLoading(false);
         return;
       }
-      if (!jsonrPath) {
+      if (!dslPath) {
         if (!cancelled) {
-          setError("Caminho do .jsonr não configurado.");
+          setError("Caminho do .dsl não configurado.");
           setLoading(false);
         }
         return;
       }
-      if (!isValidJsonrPath(jsonrPath)) {
+      if (!isValidDslPath(dslPath)) {
         if (!cancelled) {
-          setError("Caminho inválido do .jsonr.");
+          setError("Caminho inválido do .dsl.");
           setLoading(false);
         }
         return;
@@ -306,7 +323,7 @@ function JsonRenderPreviewInner({ chatId }: Props) {
         const res = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "fs-read", chatId, path: jsonrPath }),
+          body: JSON.stringify({ action: "fs-read", chatId, path: dslPath }),
         });
         const data = (await res.json().catch(() => ({}))) as {
           ok?: boolean;
@@ -318,13 +335,13 @@ function JsonRenderPreviewInner({ chatId }: Props) {
         if (!res.ok || data.ok === false) {
           const found = await refreshPaths();
           const candidate = found[0];
-          if (!cancelled && candidate && candidate !== jsonrPath) {
+          if (!cancelled && candidate && candidate !== dslPath) {
             sandboxActions.setPreviewPath(candidate);
             setLoading(false);
             return;
           }
           if (!cancelled) {
-            setError(data.error || `Falha ao ler arquivo ${jsonrPath}`);
+            setError(data.error || `Falha ao ler arquivo ${dslPath}`);
             setLoading(false);
           }
           return;
@@ -332,7 +349,7 @@ function JsonRenderPreviewInner({ chatId }: Props) {
 
         if (data.isBinary) {
           if (!cancelled) {
-            setError("Arquivo .jsonr binário inválido.");
+            setError("Arquivo .dsl binário inválido.");
             setLoading(false);
           }
           return;
@@ -340,27 +357,20 @@ function JsonRenderPreviewInner({ chatId }: Props) {
 
         const txt = String(data.content ?? "");
         try {
-          const parsed = JSON.parse(txt);
-          if (parsed == null || typeof parsed !== "object") {
-            if (!cancelled) {
-              setError("JSONR inválido: esperado objeto/array não nulo.");
-              setTree(null);
-            }
-          } else if (!cancelled) {
-            setTree(parsed);
-          }
+          const parsed = parseDashboardTemplateDslToTree(txt);
+          if (!cancelled) setTree(parsed as any);
         } catch (e: any) {
-          if (!cancelled) setError(e?.message ? String(e.message) : "JSON inválido");
+          if (!cancelled) setError(e?.message ? String(e.message) : "DSL inválido");
         }
       } catch (e: any) {
         const found = await refreshPaths();
         const candidate = found[0];
-        if (!cancelled && candidate && candidate !== jsonrPath) {
+        if (!cancelled && candidate && candidate !== dslPath) {
           sandboxActions.setPreviewPath(candidate);
           setLoading(false);
           return;
         }
-        if (!cancelled) setError(e?.message ? String(e.message) : "Erro ao buscar .jsonr");
+        if (!cancelled) setError(e?.message ? String(e.message) : "Erro ao buscar .dsl");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -369,7 +379,7 @@ function JsonRenderPreviewInner({ chatId }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [chatId, jsonrPath, refreshTick, refreshPaths]);
+  }, [chatId, dslPath, refreshTick, refreshPaths]);
 
   React.useEffect(() => {
     void refreshPaths();
@@ -396,7 +406,7 @@ function JsonRenderPreviewInner({ chatId }: Props) {
     <div className="h-full w-full min-h-0 overflow-auto p-0 bg-gray-50">
       {!chatId && !error && !loading && (
         <div className="rounded border border-gray-200 bg-white text-gray-600 text-xs p-3">
-          UI de preview aberta. Inicie um computador para carregar e renderizar arquivos `.jsonr`.
+          UI de preview aberta. Inicie um computador para carregar e renderizar arquivos `.dsl`.
         </div>
       )}
       {!error && loading && <div className="text-xs text-gray-500 p-2">Carregando...</div>}
@@ -406,7 +416,7 @@ function JsonRenderPreviewInner({ chatId }: Props) {
       {!error && !loading && tree && (
         <div className="rounded-none border-0 bg-white p-0 min-h-[420px]">
           <PreviewRenderBoundary
-            resetKey={`${jsonrPath || ""}:${refreshTick}`}
+            resetKey={`${dslPath || ""}:${refreshTick}`}
             onError={(err) => {
               const message = err instanceof Error ? err.message : "Erro ao renderizar dashboard";
               setError(message);

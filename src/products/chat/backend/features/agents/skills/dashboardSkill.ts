@@ -12,7 +12,7 @@ const DASHBOARD_SKILL_FALLBACK = `
 # Dashboard Skill
 
 Skill de dashboard indisponivel no momento.
-Use o catalogo em /api/modulos/query/catalog e gere JSON Render com dataQuery valida.
+Use o catalogo em /api/modulos/query/catalog e gere DSL de dashboard com dataQuery valida.
 `.trim()
 
 const VENDAS_SKILL_FALLBACK = `

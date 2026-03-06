@@ -2,7 +2,7 @@
 
 Objetivo: definir SQL valido para dashboards de trafego pago (Meta Ads / Google Ads) usando `dataQuery.query`.
 
-Este skill NAO gera JSONR final.
+Este skill NAO gera DSL final.
 Para layout e montagem de widgets, usar `dashboard_builder`.
 
 ## Fontes de Verdade

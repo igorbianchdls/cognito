@@ -254,3 +254,67 @@ export function parseDashboardTemplateDslToTree(source: string): JsonTree {
   }
   return root.children.map((node) => compileNode(source, node))
 }
+
+function sanitizeTemplateName(value: string): string {
+  const out = String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '')
+  return out || 'dashboard_template'
+}
+
+function toDslTag(type: string): string {
+  const raw = String(type || '').trim()
+  if (!raw) return 'node'
+  if (raw === 'KPI') return 'kpi'
+  if (raw === 'AISummary') return 'ai-summary'
+  return raw
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .replace(/_/g, '-')
+    .toLowerCase()
+}
+
+function renderIndent(level: number): string {
+  return '  '.repeat(level)
+}
+
+function renderPropsBlock(props: unknown, level: number): string[] {
+  if (!props || typeof props !== 'object' || Array.isArray(props) || Object.keys(props as Record<string, unknown>).length === 0) {
+    return []
+  }
+  const json = JSON.stringify(props, null, 2)
+  if (!json) return []
+  const lines = json.split('\n')
+  return [
+    `${renderIndent(level)}<props>`,
+    ...lines.map((line) => `${renderIndent(level + 1)}${line}`),
+    `${renderIndent(level)}</props>`,
+  ]
+}
+
+function renderNodeToDsl(node: unknown, level: number): string[] {
+  if (!node || typeof node !== 'object' || Array.isArray(node)) return []
+  const record = node as Record<string, unknown>
+  const tag = toDslTag(String(record.type || 'node'))
+  const lines: string[] = [`${renderIndent(level)}<${tag}>`]
+  lines.push(...renderPropsBlock(record.props, level + 1))
+
+  const children = Array.isArray(record.children) ? record.children : []
+  for (const child of children) {
+    lines.push(...renderNodeToDsl(child, level + 1))
+  }
+
+  lines.push(`${renderIndent(level)}</${tag}>`)
+  return lines
+}
+
+export function renderDashboardTemplateDslFromTree(tree: JsonTree, templateName = 'dashboard_template'): string {
+  const nodes = Array.isArray(tree) ? tree : tree ? [tree] : []
+  const rootName = sanitizeTemplateName(templateName)
+  const lines: string[] = [`<dashboard-template name="${rootName}">`]
+  for (const node of nodes) lines.push(...renderNodeToDsl(node, 1))
+  lines.push('</dashboard-template>')
+  return lines.join('\n')
+}

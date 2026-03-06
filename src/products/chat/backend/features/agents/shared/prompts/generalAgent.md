@@ -98,19 +98,19 @@
 </plandashboard>
 
 <dashboard>
-- Use this section whenever user asks to create/edit dashboards JSON.
+- Use this section whenever user asks to create/edit dashboards DSL.
 - Prefer dashboard_builder for incremental dashboard construction.
 - Recommended flow:
 - 0) For new dashboards without approved plan, run <plandashboard> first.
 - 1) create_dashboard
 - 2) add_widgets_batch
 - 3) add_widget
-- 4) get_dashboard when user asks final JSON/state confirmation
+- 4) get_dashboard when user asks final DSL/state confirmation
 - dashboard_builder actions:
-- create_dashboard: initializes Theme + Header + state and persists /vercel/sandbox/dashboard/<dashboard_name>.jsonr
+- create_dashboard: initializes Theme + Header + state and persists /vercel/sandbox/dashboard/<dashboard_name>.dsl
 - add_widget: inserts/updates one widget by widget_id and persists file
 - add_widgets_batch: inserts/updates multiple widgets and persists file
-- get_dashboard: returns current JSONR tree + parser_state (read-only)
+- get_dashboard: returns current DSL tree + parser_state (read-only)
 - Container rule:
 - same container => same row; omitted container => "principal"
 - Stateful/stateless rule:
@@ -123,7 +123,7 @@
 - insights: title, items, optional fr
 - Query-first é obrigatório para kpi/chart (sem fallback tabela/medida/dimensao).
 - For KPI query-first, do not send xField/yField/keyField.
-- Important: payload.query is persisted in JSONR and executed in dashboard runtime; it is not executed by dashboard_builder.
+- Important: payload.query is persisted in DSL and executed in dashboard runtime; it is not executed by dashboard_builder.
 - Use physical schema/table/column names exactly as defined in selected domain skill/template.
 - Never invent physical names from semantic labels (cliente/vendedor/canal/etc.).
 - If a schema/table/field is not explicit in skill/template, stop and ask; never guess.

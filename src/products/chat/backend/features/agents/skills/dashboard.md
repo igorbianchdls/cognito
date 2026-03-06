@@ -1,13 +1,13 @@
-# Dashboard Skill (JSONR + Query-First)
+# Dashboard Skill (DSL + Query-First)
 
-Objetivo: gerar dashboard JSONR valido e renderizavel, usando SQL puro em `dataQuery.query`.
+Objetivo: gerar dashboard DSL valido e renderizavel, usando SQL puro em `dataQuery.query`.
 
 ## Escopo
 
 Use este skill para:
-- criar/editar/corrigir dashboard JSONR
+- criar/editar/corrigir dashboard DSL
 - montar Theme/Header/Div/KPI/Charts/SlicerCard/AISummary
-- produzir estrutura final em arquivo `.jsonr`
+- produzir estrutura final em arquivo `.dsl`
 
 Nao use este skill para inventar schema de negocio.
 Para semantica de dados por dominio, usar:
@@ -19,9 +19,9 @@ Para semantica de dados por dominio, usar:
 
 ## Contrato Nao Negociavel
 
-1. Output final: arvore JSONR (`type`, `props`, `children`).
+1. Output final: arquivo DSL com raiz `<dashboard-template>` e componentes em tags.
 2. Primeiro node: `Theme`.
-3. Caminho obrigatorio: `/vercel/sandbox/dashboard/<nome>.jsonr`.
+3. Caminho obrigatorio: `/vercel/sandbox/dashboard/<nome>.dsl`.
 4. Nunca usar `/vercel/sandbox/dashboards`.
 5. Todo KPI/Chart com dados deve usar `dataQuery`.
 6. Padrao principal de dados: `dataQuery.query` (SQL puro).
@@ -81,19 +81,19 @@ Compatibilidade:
 - Garantir alias coerentes: KPI = `value`; Chart = `key/label/value` + `xField/yField/keyField`.
 - Usar somente nomes fisicos (schema/tabela/campo) que existam na skill de dominio e no template oficial.
 - Nunca inferir nome fisico a partir de rotulo semantico (cliente/vendedor/canal/etc.).
-- `payload.query` é armazenado no JSONR e executado no runtime do dashboard; para teste ad-hoc de SQL, usar `sql_execution`.
+- `payload.query` é armazenado no DSL e executado no runtime do dashboard; para teste ad-hoc de SQL, usar `sql_execution`.
 
 ## Template Minimo Valido
 
-```json
-[
-  {
-    "type": "Theme",
-    "props": { "name": "light", "managers": {} },
-    "children": [
-      {
-        "type": "Header",
-        "props": {
+```xml
+<dashboard-template name="dashboard_exemplo">
+  <theme>
+    <props>
+      { "name": "light", "managers": {} }
+    </props>
+    <header>
+      <props>
+        {
           "title": "Dashboard",
           "datePicker": {
             "visible": true,
@@ -102,48 +102,49 @@ Compatibilidade:
             "actionOnChange": { "type": "refresh_data" }
           }
         }
-      },
-      {
-        "type": "Div",
-        "props": { "direction": "row", "gap": 12, "padding": 16, "childGrow": true },
-        "children": [
+      </props>
+    </header>
+    <div>
+      <props>
+        { "direction": "row", "gap": 12, "padding": 16, "childGrow": true }
+      </props>
+      <kpi>
+        <props>
           {
-            "type": "KPI",
-            "props": {
-              "title": "Receita",
-              "format": "currency",
-              "dataQuery": {
-                "query": "SELECT COALESCE(SUM(src.valor_total),0)::float AS value FROM vendas.pedidos src WHERE src.tenant_id={{tenant_id}}::int",
-                "filters": {}
-              }
-            }
-          },
-          {
-            "type": "BarChart",
-            "props": {
-              "title": "Top Canais",
-              "format": "currency",
-              "height": 220,
-              "dataQuery": {
-                "query": "SELECT cv.id AS key, COALESCE(cv.nome,'-') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value FROM vendas.pedidos src JOIN vendas.pedidos_itens pi ON pi.pedido_id=src.id LEFT JOIN vendas.canais_venda cv ON cv.id=src.canal_venda_id WHERE src.tenant_id={{tenant_id}}::int GROUP BY 1,2 ORDER BY 3 DESC",
-                "xField": "label",
-                "yField": "value",
-                "keyField": "key",
-                "filters": {},
-                "limit": 10
-              }
+            "title": "Receita",
+            "format": "currency",
+            "dataQuery": {
+              "query": "SELECT COALESCE(SUM(src.valor_total),0)::float AS value FROM vendas.pedidos src WHERE src.tenant_id={{tenant_id}}::int",
+              "filters": {}
             }
           }
-        ]
-      }
-    ]
-  }
-]
+        </props>
+      </kpi>
+      <bar-chart>
+        <props>
+          {
+            "title": "Top Canais",
+            "format": "currency",
+            "height": 220,
+            "dataQuery": {
+              "query": "SELECT cv.id AS key, COALESCE(cv.nome,'-') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value FROM vendas.pedidos src JOIN vendas.pedidos_itens pi ON pi.pedido_id=src.id LEFT JOIN vendas.canais_venda cv ON cv.id=src.canal_venda_id WHERE src.tenant_id={{tenant_id}}::int GROUP BY 1,2 ORDER BY 3 DESC",
+              "xField": "label",
+              "yField": "value",
+              "keyField": "key",
+              "filters": {},
+              "limit": 10
+            }
+          }
+        </props>
+      </bar-chart>
+    </div>
+  </theme>
+</dashboard-template>
 ```
 
 ## Checklist Antes de Entregar
 
-- JSONR valido (sem chave desconhecida).
+- DSL valido (sem chave desconhecida).
 - SQL valido para o dominio escolhido.
 - KPI: query retorna alias `value`; Chart: `xField/yField/keyField` batem com aliases do SELECT.
 - Filtros em `SlicerCard` apontam para campos reais (`*_id` quando aplicavel).

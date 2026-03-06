@@ -10,6 +10,7 @@ import {
   type CreateDashboardInput,
   type DashboardToolParserState,
 } from '@/products/bi/features/dashboard-playground/tool-parser/dashboardToolParser'
+import { renderDashboardTemplateDslFromTree } from '@/products/bi/features/dashboard-playground/parsers/dashboardTemplateDslParser'
 
 export const runtime = 'nodejs'
 
@@ -58,7 +59,7 @@ function normalizeDashboardFileSlug(name: string): string {
 }
 
 function buildDashboardFilePath(dashboardName: string): string {
-  return `/vercel/sandbox/dashboard/${normalizeDashboardFileSlug(dashboardName)}.jsonr`
+  return `/vercel/sandbox/dashboard/${normalizeDashboardFileSlug(dashboardName)}.dsl`
 }
 
 function normalizeAction(value: unknown): DashboardToolAction | null {
@@ -316,7 +317,7 @@ async function persistDashboardFile(params: {
   const { req, chatId, dashboardName, tree } = params
   if (!chatId) throw new Error('x-chat-id ausente para persistência de dashboard')
   const filePath = buildDashboardFilePath(dashboardName)
-  const content = JSON.stringify(tree ?? [], null, 2)
+  const content = renderDashboardTemplateDslFromTree(tree ?? [], normalizeDashboardFileSlug(dashboardName))
   const url = new URL('/api/chat', req.nextUrl.origin)
   const res = await fetch(url, {
     method: 'POST',

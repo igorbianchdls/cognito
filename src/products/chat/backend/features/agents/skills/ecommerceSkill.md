@@ -2,7 +2,7 @@
 
 Objetivo: definir SQL valido para dashboards de ecommerce (Amazon, Shopee, Mercado Livre, Shopify etc.) usando `dataQuery.query`.
 
-Este skill NAO gera JSONR final.
+Este skill NAO gera DSL final.
 Para montagem final de dashboard/layout, usar `dashboard_builder`.
 
 ## Fontes de Verdade

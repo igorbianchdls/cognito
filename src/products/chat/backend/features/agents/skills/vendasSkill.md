@@ -2,7 +2,7 @@
 
 Objetivo: definir SQL valido para KPIs e graficos de vendas no padrao do template `src/products/bi/shared/templates/appsVendasTemplate.ts`.
 
-Este skill NAO monta JSONR completo.
+Este skill NAO monta DSL completo.
 Para estrutura/layout de dashboard, usar `dashboard_builder`.
 
 ## Escopo

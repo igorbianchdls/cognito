@@ -7,10 +7,14 @@ import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Undo2, Redo2, RefreshCw, Upload, Palette, Save, Bell, Trash2, Check } from 'lucide-react';
-import { $artifactNotifications, $previewJsonrPath, sandboxActions } from '@/chat/sandbox';
+import { $artifactNotifications, $previewDslPath, sandboxActions } from '@/chat/sandbox';
 import { APPS_COLOR_PRESETS, APPS_HEADER_THEME_OPTIONS, APPS_THEME_OPTIONS } from '@/products/bi/shared/themeOptions';
 import { DASHBOARD_BACKGROUND_PRESET_OPTIONS } from '@/products/bi/json-render/backgrounds/registry';
 import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter';
+import {
+  parseDashboardTemplateDslToTree,
+  renderDashboardTemplateDslFromTree,
+} from '@/products/bi/features/dashboard-playground/parsers/dashboardTemplateDslParser';
 
 function IconButton({
   title,
@@ -61,6 +65,18 @@ function normalizeToThemeTree(parsed: unknown): any[] {
   if (typeof theme.props.headerTheme !== 'string') theme.props.headerTheme = 'auto';
   if (!theme.props.managers || typeof theme.props.managers !== 'object') theme.props.managers = {};
   return nodes;
+}
+
+function extractTemplateNameFromPath(path: string): string {
+  const raw = String(path || '').trim();
+  const fileName = raw.split('/').filter(Boolean).pop() || 'dashboard';
+  const base = fileName.replace(/\.dsl$/i, '');
+  const normalized = base
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '');
+  return normalized || 'dashboard';
 }
 
 type HeaderActionsProps = {
@@ -232,7 +248,7 @@ function formatThemeColor(value: string): string {
 }
 
 export default function HeaderActions({ chatId }: HeaderActionsProps) {
-  const previewPath = useStore($previewJsonrPath);
+  const previewPath = useStore($previewDslPath);
   const artifactNotifications = useStore($artifactNotifications);
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
@@ -442,7 +458,7 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
       });
       const data = (await res.json().catch(() => ({}))) as { ok?: boolean; content?: string; error?: string };
       if (!res.ok || data.ok === false) throw new Error(data.error || 'Falha ao ler dashboard');
-      const parsed = JSON.parse(String(data.content ?? '[]'));
+      const parsed = parseDashboardTemplateDslToTree(String(data.content ?? ''));
       const nodes = normalizeToThemeTree(parsed);
       const props = (nodes[0] as any)?.props || {};
       const nextTheme = String(props.name || 'light');
@@ -483,7 +499,7 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
         const readData = (await readRes.json().catch(() => ({}))) as { ok?: boolean; content?: string; error?: string };
         if (!readRes.ok || readData.ok === false) throw new Error(readData.error || 'Falha ao ler dashboard');
 
-        const parsed = JSON.parse(String(readData.content ?? '[]'));
+        const parsed = parseDashboardTemplateDslToTree(String(readData.content ?? ''));
         const nodes = normalizeToThemeTree(parsed);
         const theme = nodes[0] as any;
         if (typeof next.name === 'string') theme.props.name = next.name;
@@ -530,7 +546,7 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
             action: 'fs-write',
             chatId,
             path: previewPath,
-            content: JSON.stringify(nodes, null, 2),
+            content: renderDashboardTemplateDslFromTree(nodes, extractTemplateNameFromPath(previewPath)),
           }),
         });
         const writeData = (await writeRes.json().catch(() => ({}))) as { ok?: boolean; error?: string };

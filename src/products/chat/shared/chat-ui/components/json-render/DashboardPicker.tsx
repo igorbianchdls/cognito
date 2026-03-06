@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useStore } from '@nanostores/react';
-import { $previewJsonrPath, sandboxActions } from '@/chat/sandbox';
+import { $previewDslPath, sandboxActions } from '@/chat/sandbox';
 
 type Props = { chatId?: string };
 
@@ -11,7 +11,7 @@ export default function DashboardPicker({
   compact = false,
   onSelected,
 }: Props & { compact?: boolean; onSelected?: () => void }) {
-  const current = useStore($previewJsonrPath);
+  const current = useStore($previewDslPath);
   const [paths, setPaths] = React.useState<string[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -30,7 +30,7 @@ export default function DashboardPicker({
       let directOk = false;
       let firstDirectError: string | null = null;
 
-      // Fast path for dashboard jsonr files.
+      // Fast path for dashboard dsl files.
       const directDirs = ['/vercel/sandbox/dashboard'];
       for (const dir of directDirs) {
         const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-list', chatId, path: dir }) });
@@ -41,7 +41,7 @@ export default function DashboardPicker({
         }
         directOk = true;
         for (const e of (data.entries||[])) {
-          if (e.type === 'file' && e.path.endsWith('.jsonr')) collected.push(e.path);
+          if (e.type === 'file' && e.path.endsWith('.dsl')) collected.push(e.path);
         }
       }
 
@@ -57,7 +57,7 @@ export default function DashboardPicker({
           if (!res.ok || data.ok === false) { setError(data.error || `Falha ao listar ${dir}`); break; }
           for (const e of (data.entries||[])) {
             if (e.type === 'dir') { if (!visited.has(e.path)) { visited.add(e.path); queue.push(e.path); } }
-            else if (e.type === 'file' && e.path.endsWith('.jsonr')) collected.push(e.path);
+            else if (e.type === 'file' && e.path.endsWith('.dsl')) collected.push(e.path);
           }
         }
       }
@@ -83,7 +83,7 @@ export default function DashboardPicker({
       <div className="mb-2 flex items-center gap-2">
         <input
           type="text"
-          placeholder="Filtrar dashboards (.jsonr)"
+          placeholder="Filtrar dashboards (.dsl)"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className={`border border-gray-300 rounded px-2 py-1 text-xs bg-white ${compact ? 'w-full min-w-0' : 'min-w-[220px]'}`}
@@ -96,7 +96,7 @@ export default function DashboardPicker({
       <div className={`rounded border border-gray-200 bg-white p-2 overflow-auto ${compact ? 'max-h-[340px]' : 'max-h-[60vh]'}`}>
         {!chatId && (
           <div className="text-xs text-gray-500 p-2">
-            UI de Artifact aberta. Inicie um computador para listar dashboards `.jsonr`.
+            UI de Artifact aberta. Inicie um computador para listar dashboards `.dsl`.
           </div>
         )}
         {chatId && filtered.length === 0 && <div className="text-xs text-gray-500">Nenhum dashboard encontrado</div>}
@@ -108,7 +108,7 @@ export default function DashboardPicker({
                 className={`w-full text-left px-2 py-2 text-sm hover:bg-gray-50 ${current === p ? 'bg-gray-50 font-medium' : ''}`}
                 onClick={() => {
                   if (chatId) {
-                    try { window.localStorage.setItem(`previewJsonrPath:${chatId}`, p); } catch { /* noop */ }
+                    try { window.localStorage.setItem(`previewDslPath:${chatId}`, p); } catch { /* noop */ }
                   }
                   sandboxActions.setPreviewPath(p);
                   sandboxActions.setActiveTab('preview');

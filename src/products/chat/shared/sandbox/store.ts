@@ -4,9 +4,9 @@ export type SandboxTab = 'preview' | 'code' | 'dashboard'
 
 export const $sandboxActiveTab = atom<SandboxTab>('preview')
 
-// Caminho do arquivo .jsonr na sandbox a ser usado pelo Preview
-// Padrão: /vercel/sandbox/dashboard.jsonr
-export const $previewJsonrPath = atom<string>('/vercel/sandbox/dashboard/vendas.jsonr')
+// Caminho do arquivo .dsl na sandbox a ser usado pelo Preview
+// Padrão: /vercel/sandbox/dashboard/vendas.dsl
+export const $previewDslPath = atom<string>('/vercel/sandbox/dashboard/vendas.dsl')
 
 export type ArtifactNotification = {
   id: string
@@ -20,7 +20,7 @@ export const $artifactNotifications = atom<ArtifactNotification[]>([])
 
 export const sandboxActions = {
   setActiveTab(tab: SandboxTab) { $sandboxActiveTab.set(tab) },
-  setPreviewPath(path: string) { $previewJsonrPath.set(path) },
+  setPreviewPath(path: string) { $previewDslPath.set(path) },
   pushArtifactNotification(input: { source: ArtifactNotification['source']; message: string }) {
     const msg = String(input.message || '').trim()
     if (!msg) return

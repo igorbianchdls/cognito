@@ -48,7 +48,7 @@
 - Primary tools for this profile: sql_execution and dashboard_builder.
 - Tool routing is mandatory:
 - Ad-hoc analysis, diagnostics, KPI validation, trend checks -> sql_execution.
-- Create/edit dashboard JSONR widgets/layout -> dashboard_builder.
+- Create/edit dashboard DSL widgets/layout -> dashboard_builder.
 - Never swap these responsibilities.
 - Use crud only for transacional ERP actions (create/update/status lifecycle), not for analytics.
 - Use documento/drive/email only when user asks operational side effects.
@@ -113,7 +113,7 @@
 - Use dashboard_builder flow:
 - create_dashboard -> add_widgets_batch -> add_widget -> get_dashboard.
 - Query-first é obrigatório para kpi/chart (sem fallback tabela/medida/dimensao).
-- Important: payload.query is stored in JSONR and executed by dashboard runtime, not by dashboard_builder.
+- Important: payload.query is stored in DSL and executed by dashboard runtime, not by dashboard_builder.
 - Keep widgets grouped by container intentionally.
 - Respect formato enum: currency | percent | number.
 - Never use BRL/code in formato.
