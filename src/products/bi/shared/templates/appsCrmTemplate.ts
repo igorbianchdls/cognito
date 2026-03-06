@@ -1,279 +1,474 @@
-import { migrateTemplateDataQueries } from '@/products/bi/shared/templates/dataQuerySqlMigration'
-import { BiSlicers } from '@/products/bi'
-import { renderDashboardTemplateDslFromJsonText } from '@/products/bi/shared/templates/templateDslBridge'
-
-const vendedorOptionsSource = BiSlicers.createOptionsSource('crm.oportunidades', 'vendedor_id', 80)
-const faseOptionsSource = BiSlicers.createOptionsSource('crm.oportunidades', 'fase_pipeline_id', 80)
-const origemOptionsSource = BiSlicers.createOptionsSource('crm.oportunidades', 'origem_id', 80)
-
-export const APPS_CRM_TEMPLATE_TEXT = JSON.stringify(migrateTemplateDataQueries(
-  [
-    {
-      type: 'Theme',
-      props: {
-        name: 'light',
-        managers: {
-          border: {
-            style: 'solid',
-            width: 1,
-            color: '#bfc9d9',
-            radius: 8,
-            frame: { variant: 'hud', cornerSize: 8, cornerWidth: 1 },
-          },
-        },
-      },
-      children: [
+export const APPS_CRM_TEMPLATE_DSL = String.raw`<dashboard-template name="apps_crm_template_dsl">
+  <theme>
+    <props>
+      {
+        "name": "light",
+        "managers": {
+          "border": {
+            "style": "solid",
+            "width": 1,
+            "color": "#bfc9d9",
+            "radius": 8,
+            "frame": {
+              "variant": "hud",
+              "cornerSize": 8,
+              "cornerWidth": 1
+            }
+          }
+        }
+      }
+    </props>
+    <header>
+      <props>
         {
-          type: 'Header',
-          props: {
-            title: 'Dashboard de CRM',
-            subtitle: 'Pipeline, conversão e origem de leads',
-            align: 'center',
-            controlsPosition: 'right',
-            datePicker: {
-              visible: true,
-              mode: 'range',
-              position: 'right',
-              storePath: 'filters.dateRange',
-              actionOnChange: { type: 'refresh_data' },
-              style: { padding: 6, fontFamily: 'Barlow', fontSize: 12 },
+          "title": "Dashboard de CRM",
+          "subtitle": "Pipeline, conversão e origem de leads",
+          "align": "center",
+          "controlsPosition": "right",
+          "datePicker": {
+            "visible": true,
+            "mode": "range",
+            "position": "right",
+            "storePath": "filters.dateRange",
+            "actionOnChange": {
+              "type": "refresh_data"
             },
-          },
-        },
+            "style": {
+              "padding": 6,
+              "fontFamily": "Barlow",
+              "fontSize": 12
+            }
+          }
+        }
+      </props>
+    </header>
+    <div>
+      <props>
         {
-          type: 'Div',
-          props: { direction: 'row', gap: 12, padding: 16, justify: 'start', align: 'start', childGrow: true },
-          children: [
-            { type: 'KPI', props: { title: 'Pipeline (R$)', valuePath: 'crm.kpis.faturamento', format: 'currency' } },
-            { type: 'KPI', props: { title: 'Vendas', valuePath: 'crm.kpis.vendas', format: 'number' } },
-            { type: 'KPI', props: { title: 'Oportunidades', valuePath: 'crm.kpis.oportunidades', format: 'number' } },
-            { type: 'KPI', props: { title: 'Leads', valuePath: 'crm.kpis.totalLeads', format: 'number' } },
-            { type: 'KPI', props: { title: 'Conversão', valuePath: 'crm.kpis.taxaConversao', format: 'number', unit: '%' } },
-          ],
-        },
+          "direction": "row",
+          "gap": 12,
+          "padding": 16,
+          "justify": "start",
+          "align": "start",
+          "childGrow": true
+        }
+      </props>
+      <kpi>
+        <props>
+          {
+            "title": "Pipeline (R$)",
+            "valuePath": "crm.kpis.faturamento",
+            "format": "currency"
+          }
+        </props>
+      </kpi>
+      <kpi>
+        <props>
+          {
+            "title": "Vendas",
+            "valuePath": "crm.kpis.vendas",
+            "format": "number"
+          }
+        </props>
+      </kpi>
+      <kpi>
+        <props>
+          {
+            "title": "Oportunidades",
+            "valuePath": "crm.kpis.oportunidades",
+            "format": "number"
+          }
+        </props>
+      </kpi>
+      <kpi>
+        <props>
+          {
+            "title": "Leads",
+            "valuePath": "crm.kpis.totalLeads",
+            "format": "number"
+          }
+        </props>
+      </kpi>
+      <kpi>
+        <props>
+          {
+            "title": "Conversão",
+            "valuePath": "crm.kpis.taxaConversao",
+            "format": "number",
+            "unit": "%"
+          }
+        </props>
+      </kpi>
+    </div>
+    <div>
+      <props>
         {
-          type: 'Div',
-          props: { direction: 'row', gap: 12, padding: 16, justify: 'start', align: 'start', childGrow: true },
-          children: [
-            {
-              type: 'BarChart',
-              props: {
-                fr: 2,
-                title: 'Pipeline por Vendedor',
-                dataQuery: {
-                  model: 'crm.oportunidades',
-                  dimension: 'vendedor',
-                  measure: 'SUM(valor_estimado)',
-                  filters: {},
-                  orderBy: { field: 'measure', dir: 'desc' },
-                  limit: 8,
-                },
-                format: 'currency',
-                height: 240,
-                nivo: { layout: 'horizontal' },
+          "direction": "row",
+          "gap": 12,
+          "padding": 16,
+          "justify": "start",
+          "align": "start",
+          "childGrow": true
+        }
+      </props>
+      <chart type="bar" fr="2" title="Pipeline por Vendedor" format="currency" height="240">
+        <query>
+          SELECT
+            COALESCE(src.vendedor_id::text, '-') AS key,
+            COALESCE(src.vendedor_id::text, '-') AS label,
+            SUM(valor_estimado) AS value
+          FROM crm.oportunidades src
+          WHERE
+                ({{de}}::date IS NULL OR src.data_prevista::date >= {{de}}::date)
+                AND ({{ate}}::date IS NULL OR src.data_prevista::date <= {{ate}}::date)
+                AND (
+                  NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+                  OR COALESCE(src.tenant_id::text, '') = ANY(
+                    string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+                  )
+                )
+          GROUP BY 1, 2
+          ORDER BY value DESC
+        </query>
+        <fields x="label" y="value" key="key" />
+        <nivo layout="horizontal" />
+        <props>
+          {
+            "dataQuery": {
+              "filters": {},
+              "limit": 8
+            }
+          }
+        </props>
+      </chart>
+      <chart type="bar" fr="2" title="Pipeline por Fase" format="currency" height="240">
+        <query>
+          SELECT
+            '-'::text AS key,
+            '-'::text AS label,
+            SUM(valor_estimado) AS value
+          FROM crm.oportunidades src
+          WHERE
+                ({{de}}::date IS NULL OR src.data_prevista::date >= {{de}}::date)
+                AND ({{ate}}::date IS NULL OR src.data_prevista::date <= {{ate}}::date)
+                AND (
+                  NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+                  OR COALESCE(src.tenant_id::text, '') = ANY(
+                    string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+                  )
+                )
+          GROUP BY 1, 2
+          ORDER BY value DESC
+        </query>
+        <fields x="label" y="value" key="key" />
+        <nivo layout="horizontal" />
+        <props>
+          {
+            "dataQuery": {
+              "filters": {},
+              "limit": 8
+            }
+          }
+        </props>
+      </chart>
+      <ai-summary>
+        <props>
+          {
+            "fr": 1,
+            "title": "Insights da IA",
+            "items": [
+              {
+                "icon": "trendingUp",
+                "text": "Volume e taxa de conversão ficam mais claros quando segmentados por origem e fase do pipeline."
               },
-            },
-            {
-              type: 'BarChart',
-              props: {
-                fr: 2,
-                title: 'Pipeline por Fase',
-                dataQuery: {
-                  model: 'crm.oportunidades',
-                  dimension: 'fase',
-                  measure: 'SUM(valor_estimado)',
-                  filters: {},
-                  orderBy: { field: 'measure', dir: 'desc' },
-                  limit: 8,
-                },
-                format: 'currency',
-                height: 240,
-                nivo: { layout: 'horizontal' },
+              {
+                "icon": "users",
+                "text": "Distribuição por vendedor ajuda a identificar gargalos de follow-up e cobertura comercial."
               },
-            },
-            {
-              type: 'AISummary',
-              props: {
-                fr: 1,
-                title: 'Insights da IA',
-                items: [
-                  { icon: 'trendingUp', text: 'Volume e taxa de conversão ficam mais claros quando segmentados por origem e fase do pipeline.' },
-                  { icon: 'users', text: 'Distribuição por vendedor ajuda a identificar gargalos de follow-up e cobertura comercial.' },
-                  { icon: 'lightbulb', text: 'Leads com recorrência em fases iniciais podem indicar ajuste de qualificação.' },
-                ],
-              },
-            },
-          ],
-        },
+              {
+                "icon": "lightbulb",
+                "text": "Leads com recorrência em fases iniciais podem indicar ajuste de qualificação."
+              }
+            ]
+          }
+        </props>
+      </ai-summary>
+    </div>
+    <div>
+      <props>
         {
-          type: 'Div',
-          props: { direction: 'row', gap: 12, padding: 16, justify: 'start', align: 'start', childGrow: true },
-          children: [
-            {
-              type: 'PieChart',
-              props: {
-                fr: 1,
-                title: 'Leads por Origem',
-                dataQuery: {
-                  model: 'crm.leads',
-                  dimension: 'origem',
-                  measure: 'COUNT()',
-                  filters: {},
-                  orderBy: { field: 'measure', dir: 'desc' },
-                  limit: 8,
-                },
-                format: 'number',
-                height: 260,
-                nivo: { innerRadius: 0.35 },
-              },
-            },
-            {
-              type: 'LineChart',
-              props: {
-                fr: 2,
-                title: 'Pipeline Mensal',
-                dataQuery: {
-                  model: 'crm.oportunidades',
-                  dimension: 'mes',
-                  dimensionExpr: "TO_CHAR(DATE_TRUNC('month', data_prevista), 'YYYY-MM')",
-                  measure: 'SUM(valor_estimado)',
-                  filters: {},
-                  orderBy: { field: 'dimension', dir: 'asc' },
-                  limit: 12,
-                },
-                format: 'currency',
-                height: 260,
-                nivo: { curve: 'monotoneX', area: true },
-              },
-            },
-          ],
-        },
+          "direction": "row",
+          "gap": 12,
+          "padding": 16,
+          "justify": "start",
+          "align": "start",
+          "childGrow": true
+        }
+      </props>
+      <chart type="pie" fr="1" title="Leads por Origem" format="number" height="260">
+        <query>
+          SELECT
+            COALESCE(src.origem_id::text, '-') AS key,
+            COALESCE(src.origem_id::text, '-') AS label,
+            COUNT(*) AS value
+          FROM crm.leads src
+          WHERE
+                ({{de}}::date IS NULL OR src.criado_em::date >= {{de}}::date)
+                AND ({{ate}}::date IS NULL OR src.criado_em::date <= {{ate}}::date)
+                AND (
+                  NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+                  OR COALESCE(src.tenant_id::text, '') = ANY(
+                    string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+                  )
+                )
+          GROUP BY 1, 2
+          ORDER BY value DESC
+        </query>
+        <fields x="label" y="value" key="key" />
+        <nivo inner-radius="0.35" />
+        <props>
+          {
+            "dataQuery": {
+              "filters": {},
+              "limit": 8
+            }
+          }
+        </props>
+      </chart>
+      <chart type="line" fr="2" title="Pipeline Mensal" format="currency" height="260">
+        <query>
+          SELECT
+            (TO_CHAR(DATE_TRUNC('month', data_prevista), 'YYYY-MM'))::text AS key,
+            (TO_CHAR(DATE_TRUNC('month', data_prevista), 'YYYY-MM'))::text AS label,
+            SUM(valor_estimado) AS value
+          FROM crm.oportunidades src
+          WHERE
+                ({{de}}::date IS NULL OR src.data_prevista::date >= {{de}}::date)
+                AND ({{ate}}::date IS NULL OR src.data_prevista::date <= {{ate}}::date)
+                AND (
+                  NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+                  OR COALESCE(src.tenant_id::text, '') = ANY(
+                    string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+                  )
+                )
+          GROUP BY 1, 2
+          ORDER BY label ASC
+        </query>
+        <fields x="label" y="value" key="key" />
+        <nivo curve="monotoneX" area="true" />
+        <props>
+          {
+            "dataQuery": {
+              "filters": {},
+              "limit": 12
+            }
+          }
+        </props>
+      </chart>
+    </div>
+    <div>
+      <props>
         {
-          type: 'Div',
-          props: { direction: 'row', gap: 12, padding: 16, justify: 'start', align: 'start', childGrow: true },
-          children: [
-            {
-              type: 'BarChart',
-              props: {
-                fr: 1,
-                title: 'Oportunidades por Status',
-                dataQuery: {
-                  model: 'crm.oportunidades',
-                  dimension: 'status',
-                  measure: 'COUNT()',
-                  filters: {},
-                  orderBy: { field: 'measure', dir: 'desc' },
-                  limit: 8,
-                },
-                format: 'number',
-                height: 230,
-                nivo: { layout: 'horizontal' },
-              },
-            },
-            {
-              type: 'BarChart',
-              props: {
-                fr: 1,
-                title: 'Leads por Responsável',
-                dataQuery: {
-                  model: 'crm.leads',
-                  dimension: 'responsavel',
-                  measure: 'COUNT()',
-                  filters: {},
-                  orderBy: { field: 'measure', dir: 'desc' },
-                  limit: 8,
-                },
-                format: 'number',
-                height: 230,
-                nivo: { layout: 'horizontal' },
-              },
-            },
-            {
-              type: 'BarChart',
-              props: {
-                fr: 1,
-                title: 'Pipeline por Conta',
-                dataQuery: {
-                  model: 'crm.oportunidades',
-                  dimension: 'conta',
-                  measure: 'SUM(valor_estimado)',
-                  filters: {},
-                  orderBy: { field: 'measure', dir: 'desc' },
-                  limit: 8,
-                },
-                format: 'currency',
-                height: 230,
-                nivo: { layout: 'horizontal' },
-              },
-            },
-          ],
-        },
+          "direction": "row",
+          "gap": 12,
+          "padding": 16,
+          "justify": "start",
+          "align": "start",
+          "childGrow": true
+        }
+      </props>
+      <chart type="bar" fr="1" title="Oportunidades por Status" format="number" height="230">
+        <query>
+          SELECT
+            COALESCE(src.status::text, '-') AS key,
+            COALESCE(src.status::text, '-') AS label,
+            COUNT(*) AS value
+          FROM crm.oportunidades src
+          WHERE
+                ({{de}}::date IS NULL OR src.data_prevista::date >= {{de}}::date)
+                AND ({{ate}}::date IS NULL OR src.data_prevista::date <= {{ate}}::date)
+                AND (
+                  NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+                  OR COALESCE(src.tenant_id::text, '') = ANY(
+                    string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+                  )
+                )
+          GROUP BY 1, 2
+          ORDER BY value DESC
+        </query>
+        <fields x="label" y="value" key="key" />
+        <nivo layout="horizontal" />
+        <props>
+          {
+            "dataQuery": {
+              "filters": {},
+              "limit": 8
+            }
+          }
+        </props>
+      </chart>
+      <chart type="bar" fr="1" title="Leads por Responsável" format="number" height="230">
+        <query>
+          SELECT
+            COALESCE(src.responsavel_id::text, '-') AS key,
+            COALESCE(src.responsavel_id::text, '-') AS label,
+            COUNT(*) AS value
+          FROM crm.leads src
+          WHERE
+                ({{de}}::date IS NULL OR src.criado_em::date >= {{de}}::date)
+                AND ({{ate}}::date IS NULL OR src.criado_em::date <= {{ate}}::date)
+                AND (
+                  NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+                  OR COALESCE(src.tenant_id::text, '') = ANY(
+                    string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+                  )
+                )
+          GROUP BY 1, 2
+          ORDER BY value DESC
+        </query>
+        <fields x="label" y="value" key="key" />
+        <nivo layout="horizontal" />
+        <props>
+          {
+            "dataQuery": {
+              "filters": {},
+              "limit": 8
+            }
+          }
+        </props>
+      </chart>
+      <chart type="bar" fr="1" title="Pipeline por Conta" format="currency" height="230">
+        <query>
+          SELECT
+            COALESCE(src.conta_id::text, '-') AS key,
+            COALESCE(src.conta_id::text, '-') AS label,
+            SUM(valor_estimado) AS value
+          FROM crm.oportunidades src
+          WHERE
+                ({{de}}::date IS NULL OR src.data_prevista::date >= {{de}}::date)
+                AND ({{ate}}::date IS NULL OR src.data_prevista::date <= {{ate}}::date)
+                AND (
+                  NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+                  OR COALESCE(src.tenant_id::text, '') = ANY(
+                    string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+                  )
+                )
+          GROUP BY 1, 2
+          ORDER BY value DESC
+        </query>
+        <fields x="label" y="value" key="key" />
+        <nivo layout="horizontal" />
+        <props>
+          {
+            "dataQuery": {
+              "filters": {},
+              "limit": 8
+            }
+          }
+        </props>
+      </chart>
+    </div>
+    <div>
+      <props>
         {
-          type: 'Div',
-          props: { direction: 'row', gap: 12, padding: 16, justify: 'start', align: 'start', childGrow: true },
-          children: [
-            {
-              type: 'BarChart',
-              props: {
-                fr: 1,
-                title: 'Ticket Estimado por Vendedor',
-                dataQuery: {
-                  model: 'crm.oportunidades',
-                  dimension: 'vendedor',
-                  measure: 'AVG(valor_estimado)',
-                  filters: {},
-                  orderBy: { field: 'measure', dir: 'desc' },
-                  limit: 8,
-                },
-                format: 'currency',
-                height: 230,
-                nivo: { layout: 'horizontal' },
-              },
-            },
-            {
-              type: 'LineChart',
-              props: {
-                fr: 2,
-                title: 'Leads por Mês',
-                dataQuery: {
-                  model: 'crm.leads',
-                  dimension: 'mes',
-                  dimensionExpr: "TO_CHAR(DATE_TRUNC('month', criado_em), 'YYYY-MM')",
-                  measure: 'COUNT()',
-                  filters: {},
-                  orderBy: { field: 'dimension', dir: 'asc' },
-                  limit: 12,
-                },
-                format: 'number',
-                height: 230,
-                nivo: { curve: 'monotoneX', area: true },
-              },
-            },
-            {
-              type: 'PieChart',
-              props: {
-                fr: 1,
-                title: 'Pipeline por Origem',
-                dataQuery: {
-                  model: 'crm.oportunidades',
-                  dimension: 'origem',
-                  measure: 'SUM(valor_estimado)',
-                  filters: {},
-                  orderBy: { field: 'measure', dir: 'desc' },
-                  limit: 8,
-                },
-                format: 'currency',
-                height: 230,
-                nivo: { innerRadius: 0.35 },
-              },
-            },
-          ],
-        },
-      ],
-    },
-  ]),
-  null,
-  2,
-)
-
-export const APPS_CRM_TEMPLATE_DSL = renderDashboardTemplateDslFromJsonText(APPS_CRM_TEMPLATE_TEXT, 'apps_crm_template_dsl')
+          "direction": "row",
+          "gap": 12,
+          "padding": 16,
+          "justify": "start",
+          "align": "start",
+          "childGrow": true
+        }
+      </props>
+      <chart type="bar" fr="1" title="Ticket Estimado por Vendedor" format="currency" height="230">
+        <query>
+          SELECT
+            COALESCE(src.vendedor_id::text, '-') AS key,
+            COALESCE(src.vendedor_id::text, '-') AS label,
+            AVG(valor_estimado) AS value
+          FROM crm.oportunidades src
+          WHERE
+                ({{de}}::date IS NULL OR src.data_prevista::date >= {{de}}::date)
+                AND ({{ate}}::date IS NULL OR src.data_prevista::date <= {{ate}}::date)
+                AND (
+                  NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+                  OR COALESCE(src.tenant_id::text, '') = ANY(
+                    string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+                  )
+                )
+          GROUP BY 1, 2
+          ORDER BY value DESC
+        </query>
+        <fields x="label" y="value" key="key" />
+        <nivo layout="horizontal" />
+        <props>
+          {
+            "dataQuery": {
+              "filters": {},
+              "limit": 8
+            }
+          }
+        </props>
+      </chart>
+      <chart type="line" fr="2" title="Leads por Mês" format="number" height="230">
+        <query>
+          SELECT
+            (TO_CHAR(DATE_TRUNC('month', criado_em), 'YYYY-MM'))::text AS key,
+            (TO_CHAR(DATE_TRUNC('month', criado_em), 'YYYY-MM'))::text AS label,
+            COUNT(*) AS value
+          FROM crm.leads src
+          WHERE
+                ({{de}}::date IS NULL OR src.criado_em::date >= {{de}}::date)
+                AND ({{ate}}::date IS NULL OR src.criado_em::date <= {{ate}}::date)
+                AND (
+                  NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+                  OR COALESCE(src.tenant_id::text, '') = ANY(
+                    string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+                  )
+                )
+          GROUP BY 1, 2
+          ORDER BY label ASC
+        </query>
+        <fields x="label" y="value" key="key" />
+        <nivo curve="monotoneX" area="true" />
+        <props>
+          {
+            "dataQuery": {
+              "filters": {},
+              "limit": 12
+            }
+          }
+        </props>
+      </chart>
+      <chart type="pie" fr="1" title="Pipeline por Origem" format="currency" height="230">
+        <query>
+          SELECT
+            COALESCE(src.origem_id::text, '-') AS key,
+            COALESCE(src.origem_id::text, '-') AS label,
+            SUM(valor_estimado) AS value
+          FROM crm.oportunidades src
+          WHERE
+                ({{de}}::date IS NULL OR src.data_prevista::date >= {{de}}::date)
+                AND ({{ate}}::date IS NULL OR src.data_prevista::date <= {{ate}}::date)
+                AND (
+                  NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+                  OR COALESCE(src.tenant_id::text, '') = ANY(
+                    string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+                  )
+                )
+          GROUP BY 1, 2
+          ORDER BY value DESC
+        </query>
+        <fields x="label" y="value" key="key" />
+        <nivo inner-radius="0.35" />
+        <props>
+          {
+            "dataQuery": {
+              "filters": {},
+              "limit": 8
+            }
+          }
+        </props>
+      </chart>
+    </div>
+  </theme>
+</dashboard-template>`

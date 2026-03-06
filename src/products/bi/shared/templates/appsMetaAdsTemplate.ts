@@ -432,11 +432,11 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<dashboard-template name="ap
           "childGrow": true
         }
       </props>
-      <line-chart>
+      <chart type="line" fr="1" title="Gasto por Mês" format="currency" height="250">
+        <interaction click-as-filter="false" />
+        <nivo curve="monotoneX" area="true" />
         <props>
           {
-            "fr": 1,
-            "title": "Gasto por Mês",
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
               "measure": "SUM(gasto)",
@@ -452,24 +452,15 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<dashboard-template name="ap
                 "dir": "asc"
               },
               "limit": 12
-            },
-            "format": "currency",
-            "height": 250,
-            "interaction": {
-              "clickAsFilter": false
-            },
-            "nivo": {
-              "curve": "monotoneX",
-              "area": true
             }
           }
         </props>
-      </line-chart>
-      <line-chart>
+      </chart>
+      <chart type="line" fr="1" title="Receita por Mês" format="currency" height="250">
+        <interaction click-as-filter="false" />
+        <nivo curve="monotoneX" area="true" />
         <props>
           {
-            "fr": 1,
-            "title": "Receita por Mês",
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
               "measure": "SUM(receita_atribuida)",
@@ -485,24 +476,15 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<dashboard-template name="ap
                 "dir": "asc"
               },
               "limit": 12
-            },
-            "format": "currency",
-            "height": 250,
-            "interaction": {
-              "clickAsFilter": false
-            },
-            "nivo": {
-              "curve": "monotoneX",
-              "area": true
             }
           }
         </props>
-      </line-chart>
-      <bar-chart>
+      </chart>
+      <chart type="bar" fr="1" title="ROAS por Mês" format="number" height="250">
+        <interaction click-as-filter="false" />
+        <nivo layout="vertical" />
         <props>
           {
-            "fr": 1,
-            "title": "ROAS por Mês",
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
               "measure": "CASE WHEN SUM(gasto)=0 THEN 0 ELSE SUM(receita_atribuida)/SUM(gasto) END",
@@ -518,23 +500,15 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<dashboard-template name="ap
                 "dir": "asc"
               },
               "limit": 12
-            },
-            "format": "number",
-            "height": 250,
-            "interaction": {
-              "clickAsFilter": false
-            },
-            "nivo": {
-              "layout": "vertical"
             }
           }
         </props>
-      </bar-chart>
-      <bar-chart>
+      </chart>
+      <chart type="bar" fr="1" title="CPA por Mês" format="currency" height="250">
+        <interaction click-as-filter="false" />
+        <nivo layout="vertical" />
         <props>
           {
-            "fr": 1,
-            "title": "CPA por Mês",
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
               "measure": "CASE WHEN SUM(conversoes)=0 THEN 0 ELSE SUM(gasto)/SUM(conversoes) END",
@@ -550,18 +524,10 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<dashboard-template name="ap
                 "dir": "asc"
               },
               "limit": 12
-            },
-            "format": "currency",
-            "height": 250,
-            "interaction": {
-              "clickAsFilter": false
-            },
-            "nivo": {
-              "layout": "vertical"
             }
           }
         </props>
-      </bar-chart>
+      </chart>
     </div>
     <div>
       <props>
@@ -573,11 +539,11 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<dashboard-template name="ap
           "childGrow": true
         }
       </props>
-      <line-chart>
+      <chart type="line" fr="1" title="Impressões por Mês" format="number" height="250">
+        <interaction click-as-filter="false" />
+        <nivo curve="monotoneX" area="false" />
         <props>
           {
-            "fr": 1,
-            "title": "Impressões por Mês",
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
               "measure": "SUM(impressoes)",
@@ -593,24 +559,15 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<dashboard-template name="ap
                 "dir": "asc"
               },
               "limit": 12
-            },
-            "format": "number",
-            "height": 250,
-            "interaction": {
-              "clickAsFilter": false
-            },
-            "nivo": {
-              "curve": "monotoneX",
-              "area": false
             }
           }
         </props>
-      </line-chart>
-      <line-chart>
+      </chart>
+      <chart type="line" fr="1" title="Cliques por Mês" format="number" height="250">
+        <interaction click-as-filter="false" />
+        <nivo curve="monotoneX" area="false" />
         <props>
           {
-            "fr": 1,
-            "title": "Cliques por Mês",
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
               "measure": "SUM(cliques)",
@@ -626,24 +583,15 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<dashboard-template name="ap
                 "dir": "asc"
               },
               "limit": 12
-            },
-            "format": "number",
-            "height": 250,
-            "interaction": {
-              "clickAsFilter": false
-            },
-            "nivo": {
-              "curve": "monotoneX",
-              "area": false
             }
           }
         </props>
-      </line-chart>
-      <bar-chart>
+      </chart>
+      <chart type="bar" fr="1" title="CTR por Mês" format="percent" height="250">
+        <interaction click-as-filter="false" />
+        <nivo layout="vertical" />
         <props>
           {
-            "fr": 1,
-            "title": "CTR por Mês",
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
               "measure": "CASE WHEN SUM(impressoes)=0 THEN 0 ELSE SUM(cliques)/SUM(impressoes) END",
@@ -659,23 +607,15 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<dashboard-template name="ap
                 "dir": "asc"
               },
               "limit": 12
-            },
-            "format": "percent",
-            "height": 250,
-            "interaction": {
-              "clickAsFilter": false
-            },
-            "nivo": {
-              "layout": "vertical"
             }
           }
         </props>
-      </bar-chart>
-      <bar-chart>
+      </chart>
+      <chart type="bar" fr="1" title="CVR por Mês" format="percent" height="250">
+        <interaction click-as-filter="false" />
+        <nivo layout="vertical" />
         <props>
           {
-            "fr": 1,
-            "title": "CVR por Mês",
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
               "measure": "CASE WHEN SUM(cliques)=0 THEN 0 ELSE SUM(conversoes)/SUM(cliques) END",
@@ -691,18 +631,10 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<dashboard-template name="ap
                 "dir": "asc"
               },
               "limit": 12
-            },
-            "format": "percent",
-            "height": 250,
-            "interaction": {
-              "clickAsFilter": false
-            },
-            "nivo": {
-              "layout": "vertical"
             }
           }
         </props>
-      </bar-chart>
+      </chart>
     </div>
     <div>
       <props>
@@ -714,7 +646,7 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<dashboard-template name="ap
           "childGrow": true
         }
       </props>
-      <aisummary>
+      <ai-summary>
         <props>
           {
             "fr": 1,
@@ -748,12 +680,12 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<dashboard-template name="ap
             ]
           }
         </props>
-      </aisummary>
-      <pie-chart>
+      </ai-summary>
+      <chart type="pie" fr="1" title="Participação de Gasto por Conta (Top 8)" format="currency" height="260">
+        <interaction click-as-filter="true" filter-field="conta_id" store-path="filters.conta_id" />
+        <nivo inner-radius="0.45" />
         <props>
           {
-            "fr": 1,
-            "title": "Participação de Gasto por Conta (Top 8)",
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
               "measure": "SUM(gasto)",
@@ -768,25 +700,15 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<dashboard-template name="ap
                 "dir": "desc"
               },
               "limit": 8
-            },
-            "format": "currency",
-            "height": 260,
-            "interaction": {
-              "clickAsFilter": true,
-              "filterField": "conta_id",
-              "storePath": "filters.conta_id"
-            },
-            "nivo": {
-              "innerRadius": 0.45
             }
           }
         </props>
-      </pie-chart>
-      <bar-chart>
+      </chart>
+      <chart type="bar" fr="1" title="Top Campanhas por Leads" format="number" height="260">
+        <interaction click-as-filter="true" filter-field="campanha_id" store-path="filters.campanha_id" />
+        <nivo layout="horizontal" />
         <props>
           {
-            "fr": 1,
-            "title": "Top Campanhas por Leads",
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
               "measure": "SUM(leads)",
@@ -801,25 +723,15 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<dashboard-template name="ap
                 "dir": "desc"
               },
               "limit": 8
-            },
-            "format": "number",
-            "height": 260,
-            "nivo": {
-              "layout": "horizontal"
-            },
-            "interaction": {
-              "clickAsFilter": true,
-              "filterField": "campanha_id",
-              "storePath": "filters.campanha_id"
             }
           }
         </props>
-      </bar-chart>
-      <bar-chart>
+      </chart>
+      <chart type="bar" fr="1" title="Lead Rate por Mês" format="percent" height="260">
+        <interaction click-as-filter="false" />
+        <nivo layout="vertical" />
         <props>
           {
-            "fr": 1,
-            "title": "Lead Rate por Mês",
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
               "measure": "CASE WHEN SUM(cliques)=0 THEN 0 ELSE SUM(leads)/SUM(cliques) END",
@@ -835,18 +747,10 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<dashboard-template name="ap
                 "dir": "asc"
               },
               "limit": 12
-            },
-            "format": "percent",
-            "height": 260,
-            "interaction": {
-              "clickAsFilter": false
-            },
-            "nivo": {
-              "layout": "vertical"
             }
           }
         </props>
-      </bar-chart>
+      </chart>
     </div>
     <div>
       <props>
@@ -858,11 +762,11 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<dashboard-template name="ap
           "childGrow": true
         }
       </props>
-      <bar-chart>
+      <chart type="bar" fr="1" title="Top Campanhas por Gasto" format="currency" height="260">
+        <interaction click-as-filter="true" filter-field="campanha_id" store-path="filters.campanha_id" clear-on-second-click="true" />
+        <nivo layout="horizontal" />
         <props>
           {
-            "fr": 1,
-            "title": "Top Campanhas por Gasto",
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
               "measure": "SUM(gasto)",
@@ -877,26 +781,15 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<dashboard-template name="ap
                 "dir": "desc"
               },
               "limit": 8
-            },
-            "format": "currency",
-            "height": 260,
-            "nivo": {
-              "layout": "horizontal"
-            },
-            "interaction": {
-              "clickAsFilter": true,
-              "filterField": "campanha_id",
-              "storePath": "filters.campanha_id",
-              "clearOnSecondClick": true
             }
           }
         </props>
-      </bar-chart>
-      <bar-chart>
+      </chart>
+      <chart type="bar" fr="1" title="Top Campanhas por Conversões" format="number" height="260">
+        <interaction click-as-filter="true" filter-field="campanha_id" store-path="filters.campanha_id" clear-on-second-click="true" />
+        <nivo layout="horizontal" />
         <props>
           {
-            "fr": 1,
-            "title": "Top Campanhas por Conversões",
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
               "measure": "SUM(conversoes)",
@@ -911,26 +804,15 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<dashboard-template name="ap
                 "dir": "desc"
               },
               "limit": 8
-            },
-            "format": "number",
-            "height": 260,
-            "nivo": {
-              "layout": "horizontal"
-            },
-            "interaction": {
-              "clickAsFilter": true,
-              "filterField": "campanha_id",
-              "storePath": "filters.campanha_id",
-              "clearOnSecondClick": true
             }
           }
         </props>
-      </bar-chart>
-      <bar-chart>
+      </chart>
+      <chart type="bar" fr="1" title="Top Campanhas por ROAS" format="number" height="260">
+        <interaction click-as-filter="true" filter-field="campanha_id" store-path="filters.campanha_id" clear-on-second-click="true" />
+        <nivo layout="horizontal" />
         <props>
           {
-            "fr": 1,
-            "title": "Top Campanhas por ROAS",
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
               "measure": "CASE WHEN SUM(gasto)=0 THEN 0 ELSE SUM(receita_atribuida)/SUM(gasto) END",
@@ -945,26 +827,15 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<dashboard-template name="ap
                 "dir": "desc"
               },
               "limit": 8
-            },
-            "format": "number",
-            "height": 260,
-            "nivo": {
-              "layout": "horizontal"
-            },
-            "interaction": {
-              "clickAsFilter": true,
-              "filterField": "campanha_id",
-              "storePath": "filters.campanha_id",
-              "clearOnSecondClick": true
             }
           }
         </props>
-      </bar-chart>
-      <bar-chart>
+      </chart>
+      <chart type="bar" fr="1" title="Piores Campanhas por ROAS" format="number" height="260">
+        <interaction click-as-filter="true" filter-field="campanha_id" store-path="filters.campanha_id" clear-on-second-click="true" />
+        <nivo layout="horizontal" />
         <props>
           {
-            "fr": 1,
-            "title": "Piores Campanhas por ROAS",
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
               "measure": "CASE WHEN SUM(gasto)=0 THEN 0 ELSE SUM(receita_atribuida)/SUM(gasto) END",
@@ -979,21 +850,10 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<dashboard-template name="ap
                 "dir": "asc"
               },
               "limit": 8
-            },
-            "format": "number",
-            "height": 260,
-            "nivo": {
-              "layout": "horizontal"
-            },
-            "interaction": {
-              "clickAsFilter": true,
-              "filterField": "campanha_id",
-              "storePath": "filters.campanha_id",
-              "clearOnSecondClick": true
             }
           }
         </props>
-      </bar-chart>
+      </chart>
     </div>
     <div>
       <props>
@@ -1005,11 +865,11 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<dashboard-template name="ap
           "childGrow": true
         }
       </props>
-      <bar-chart>
+      <chart type="bar" fr="1" title="Top Grupos por Gasto" format="currency" height="260">
+        <interaction click-as-filter="true" filter-field="grupo_id" store-path="filters.grupo_id" clear-on-second-click="true" />
+        <nivo layout="horizontal" />
         <props>
           {
-            "fr": 1,
-            "title": "Top Grupos por Gasto",
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
               "measure": "SUM(gasto)",
@@ -1024,26 +884,15 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<dashboard-template name="ap
                 "dir": "desc"
               },
               "limit": 8
-            },
-            "format": "currency",
-            "height": 260,
-            "nivo": {
-              "layout": "horizontal"
-            },
-            "interaction": {
-              "clickAsFilter": true,
-              "filterField": "grupo_id",
-              "storePath": "filters.grupo_id",
-              "clearOnSecondClick": true
             }
           }
         </props>
-      </bar-chart>
-      <bar-chart>
+      </chart>
+      <chart type="bar" fr="1" title="Top Grupos por ROAS" format="number" height="260">
+        <interaction click-as-filter="true" filter-field="grupo_id" store-path="filters.grupo_id" clear-on-second-click="true" />
+        <nivo layout="horizontal" />
         <props>
           {
-            "fr": 1,
-            "title": "Top Grupos por ROAS",
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
               "measure": "CASE WHEN SUM(gasto)=0 THEN 0 ELSE SUM(receita_atribuida)/SUM(gasto) END",
@@ -1058,26 +907,15 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<dashboard-template name="ap
                 "dir": "desc"
               },
               "limit": 8
-            },
-            "format": "number",
-            "height": 260,
-            "nivo": {
-              "layout": "horizontal"
-            },
-            "interaction": {
-              "clickAsFilter": true,
-              "filterField": "grupo_id",
-              "storePath": "filters.grupo_id",
-              "clearOnSecondClick": true
             }
           }
         </props>
-      </bar-chart>
-      <bar-chart>
+      </chart>
+      <chart type="bar" fr="1" title="Top Anúncios por Receita" format="currency" height="260">
+        <interaction click-as-filter="true" filter-field="anuncio_id" store-path="filters.anuncio_id" clear-on-second-click="true" />
+        <nivo layout="horizontal" />
         <props>
           {
-            "fr": 1,
-            "title": "Top Anúncios por Receita",
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
               "measure": "SUM(receita_atribuida)",
@@ -1092,26 +930,15 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<dashboard-template name="ap
                 "dir": "desc"
               },
               "limit": 8
-            },
-            "format": "currency",
-            "height": 260,
-            "nivo": {
-              "layout": "horizontal"
-            },
-            "interaction": {
-              "clickAsFilter": true,
-              "filterField": "anuncio_id",
-              "storePath": "filters.anuncio_id",
-              "clearOnSecondClick": true
             }
           }
         </props>
-      </bar-chart>
-      <bar-chart>
+      </chart>
+      <chart type="bar" fr="1" title="Top Anúncios por Conversões" format="number" height="260">
+        <interaction click-as-filter="true" filter-field="anuncio_id" store-path="filters.anuncio_id" clear-on-second-click="true" />
+        <nivo layout="horizontal" />
         <props>
           {
-            "fr": 1,
-            "title": "Top Anúncios por Conversões",
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
               "measure": "SUM(conversoes)",
@@ -1126,21 +953,10 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<dashboard-template name="ap
                 "dir": "desc"
               },
               "limit": 8
-            },
-            "format": "number",
-            "height": 260,
-            "nivo": {
-              "layout": "horizontal"
-            },
-            "interaction": {
-              "clickAsFilter": true,
-              "filterField": "anuncio_id",
-              "storePath": "filters.anuncio_id",
-              "clearOnSecondClick": true
             }
           }
         </props>
-      </bar-chart>
+      </chart>
     </div>
   </theme>
 </dashboard-template>`

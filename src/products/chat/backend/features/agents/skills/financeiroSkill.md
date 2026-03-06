@@ -289,7 +289,7 @@ LIMIT 8
 
 ## Nota de Template
 
-O template financeiro foi escrito em modo legado (`model/dimension/measure`) e migrado para query-first por `migrateTemplateDataQueries`.
+O template financeiro atual esta em DSL com `query` SQL explicita nos widgets.
 Ao criar SQL manual, manter o mesmo comportamento funcional das consultas acima.
 
 ## Erros Comuns

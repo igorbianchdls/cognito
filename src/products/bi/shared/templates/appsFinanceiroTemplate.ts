@@ -1,181 +1,294 @@
-import { migrateTemplateDataQueries } from '@/products/bi/shared/templates/dataQuerySqlMigration'
-import { BiSlicers } from '@/products/bi'
-import { renderDashboardTemplateDslFromJsonText } from '@/products/bi/shared/templates/templateDslBridge'
-
-const fornecedorOptionsSource = BiSlicers.createOptionsSource('financeiro.contas_pagar', 'fornecedor_id', 80)
-const statusOptionsSource = BiSlicers.createOptionsSource('financeiro.contas_pagar', 'status', 40)
-
-export const APPS_FINANCEIRO_TEMPLATE_TEXT = JSON.stringify(migrateTemplateDataQueries(
-  [
-    {
-      type: 'Theme',
-      props: {
-        name: 'light',
-        managers: {
-          border: {
-            style: 'solid',
-            width: 1,
-            color: '#bfc9d9',
-            radius: 8,
-            frame: { variant: 'hud', cornerSize: 8, cornerWidth: 1 },
-          },
-        },
-      },
-      children: [
+export const APPS_FINANCEIRO_TEMPLATE_DSL = String.raw`<dashboard-template name="apps_financeiro_template_dsl">
+  <theme>
+    <props>
+      {
+        "name": "light",
+        "managers": {
+          "border": {
+            "style": "solid",
+            "width": 1,
+            "color": "#bfc9d9",
+            "radius": 8,
+            "frame": {
+              "variant": "hud",
+              "cornerSize": 8,
+              "cornerWidth": 1
+            }
+          }
+        }
+      }
+    </props>
+    <header>
+      <props>
         {
-          type: 'Header',
-          props: {
-            title: 'Dashboard Financeiro',
-            subtitle: 'Contas a pagar, receber e fluxo do período',
-            align: 'center',
-            controlsPosition: 'right',
-            datePicker: {
-              visible: true,
-              mode: 'range',
-              position: 'right',
-              storePath: 'filters.dateRange',
-              actionOnChange: { type: 'refresh_data' },
-              style: { padding: 6, fontFamily: 'Barlow', fontSize: 12 },
+          "title": "Dashboard Financeiro",
+          "subtitle": "Contas a pagar, receber e fluxo do período",
+          "align": "center",
+          "controlsPosition": "right",
+          "datePicker": {
+            "visible": true,
+            "mode": "range",
+            "position": "right",
+            "storePath": "filters.dateRange",
+            "actionOnChange": {
+              "type": "refresh_data"
             },
-          },
-        },
+            "style": {
+              "padding": 6,
+              "fontFamily": "Barlow",
+              "fontSize": 12
+            }
+          }
+        }
+      </props>
+    </header>
+    <div>
+      <props>
         {
-          type: 'Div',
-          props: { direction: 'row', gap: 12, padding: 16, justify: 'start', align: 'start', childGrow: true },
-          children: [
-            { type: 'KPI', props: { title: 'Recebidos', valuePath: 'financeiro.kpis.recebidos_mes', format: 'currency' } },
-            { type: 'KPI', props: { title: 'Pagos', valuePath: 'financeiro.kpis.pagos_mes', format: 'currency' } },
-            { type: 'KPI', props: { title: 'Geração de Caixa', valuePath: 'financeiro.kpis.geracao_caixa', format: 'currency' } },
-            {
-              type: 'KPI',
-              props: {
-                title: 'Títulos em AP',
-                format: 'number',
-                dataQuery: { model: 'financeiro.contas_pagar', measure: 'COUNT()', filters: {} },
-              },
-            },
-          ],
-        },
+          "direction": "row",
+          "gap": 12,
+          "padding": 16,
+          "justify": "start",
+          "align": "start",
+          "childGrow": true
+        }
+      </props>
+      <kpi>
+        <props>
+          {
+            "title": "Recebidos",
+            "valuePath": "financeiro.kpis.recebidos_mes",
+            "format": "currency"
+          }
+        </props>
+      </kpi>
+      <kpi>
+        <props>
+          {
+            "title": "Pagos",
+            "valuePath": "financeiro.kpis.pagos_mes",
+            "format": "currency"
+          }
+        </props>
+      </kpi>
+      <kpi>
+        <props>
+          {
+            "title": "Geração de Caixa",
+            "valuePath": "financeiro.kpis.geracao_caixa",
+            "format": "currency"
+          }
+        </props>
+      </kpi>
+      <kpi>
+        <props>
+          {
+            "title": "Títulos em AP",
+            "format": "number",
+            "dataQuery": {
+              "filters": {},
+              "query": "SELECT\n  COUNT(*) AS value\nFROM financeiro.contas_pagar src\nWHERE\n      ({{de}}::date IS NULL OR src.data_vencimento::date >= {{de}}::date)\n      AND ({{ate}}::date IS NULL OR src.data_vencimento::date <= {{ate}}::date)\n      AND (\n        NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL\n        OR COALESCE(src.tenant_id::text, '') = ANY(\n          string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')\n        )\n      )",
+              "yField": "value"
+            }
+          }
+        </props>
+      </kpi>
+    </div>
+    <div>
+      <props>
         {
-          type: 'Div',
-          props: { direction: 'row', gap: 12, padding: 16, justify: 'start', align: 'start', childGrow: true },
-          children: [
-            {
-              type: 'BarChart',
-              props: {
-                fr: 1,
-                title: 'AP por Fornecedor',
-                dataQuery: {
-                  model: 'financeiro.contas_pagar',
-                  dimension: 'fornecedor',
-                  measure: 'SUM(valor_liquido)',
-                  filters: {},
-                  orderBy: { field: 'measure', dir: 'desc' },
-                  limit: 8,
-                },
-                format: 'currency',
-                height: 240,
-                nivo: { layout: 'horizontal' },
-              },
-            },
-            {
-              type: 'BarChart',
-              props: {
-                fr: 1,
-                title: 'AP por Categoria',
-                dataQuery: {
-                  model: 'financeiro.contas_pagar',
-                  dimension: 'categoria_despesa',
-                  measure: 'SUM(valor_liquido)',
-                  filters: {},
-                  orderBy: { field: 'measure', dir: 'desc' },
-                  limit: 8,
-                },
-                format: 'currency',
-                height: 240,
-                nivo: { layout: 'horizontal' },
-              },
-            },
-            {
-              type: 'BarChart',
-              props: {
-                fr: 1,
-                title: 'AR por Cliente',
-                dataQuery: {
-                  model: 'financeiro.contas_receber',
-                  dimension: 'cliente',
-                  measure: 'SUM(valor_liquido)',
-                  filters: {},
-                  orderBy: { field: 'measure', dir: 'desc' },
-                  limit: 8,
-                },
-                format: 'currency',
-                height: 240,
-                nivo: { layout: 'horizontal' },
-              },
-            },
-          ],
-        },
+          "direction": "row",
+          "gap": 12,
+          "padding": 16,
+          "justify": "start",
+          "align": "start",
+          "childGrow": true
+        }
+      </props>
+      <chart type="bar" fr="1" title="AP por Fornecedor" format="currency" height="240">
+        <query>
+          SELECT
+            COALESCE(src.fornecedor_id::text, '-') AS key,
+            COALESCE(src.fornecedor_id::text, '-') AS label,
+            SUM(valor) AS value
+          FROM financeiro.contas_pagar src
+          WHERE
+                ({{de}}::date IS NULL OR src.data_vencimento::date >= {{de}}::date)
+                AND ({{ate}}::date IS NULL OR src.data_vencimento::date <= {{ate}}::date)
+                AND (
+                  NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+                  OR COALESCE(src.tenant_id::text, '') = ANY(
+                    string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+                  )
+                )
+          GROUP BY 1, 2
+          ORDER BY value DESC
+        </query>
+        <fields x="label" y="value" key="key" />
+        <nivo layout="horizontal" />
+        <props>
+          {
+            "dataQuery": {
+              "filters": {},
+              "limit": 8
+            }
+          }
+        </props>
+      </chart>
+      <chart type="bar" fr="1" title="AP por Categoria" format="currency" height="240">
+        <query>
+          SELECT
+            COALESCE(src.categoria_despesa_id::text, '-') AS key,
+            COALESCE(src.categoria_despesa_id::text, '-') AS label,
+            SUM(valor) AS value
+          FROM financeiro.contas_pagar src
+          WHERE
+                ({{de}}::date IS NULL OR src.data_vencimento::date >= {{de}}::date)
+                AND ({{ate}}::date IS NULL OR src.data_vencimento::date <= {{ate}}::date)
+                AND (
+                  NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+                  OR COALESCE(src.tenant_id::text, '') = ANY(
+                    string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+                  )
+                )
+          GROUP BY 1, 2
+          ORDER BY value DESC
+        </query>
+        <fields x="label" y="value" key="key" />
+        <nivo layout="horizontal" />
+        <props>
+          {
+            "dataQuery": {
+              "filters": {},
+              "limit": 8
+            }
+          }
+        </props>
+      </chart>
+      <chart type="bar" fr="1" title="AR por Cliente" format="currency" height="240">
+        <query>
+          SELECT
+            COALESCE(src.cliente_id::text, '-') AS key,
+            COALESCE(src.cliente_id::text, '-') AS label,
+            SUM(valor) AS value
+          FROM financeiro.contas_receber src
+          WHERE
+                ({{de}}::date IS NULL OR src.data_vencimento::date >= {{de}}::date)
+                AND ({{ate}}::date IS NULL OR src.data_vencimento::date <= {{ate}}::date)
+                AND (
+                  NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+                  OR COALESCE(src.tenant_id::text, '') = ANY(
+                    string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+                  )
+                )
+          GROUP BY 1, 2
+          ORDER BY value DESC
+        </query>
+        <fields x="label" y="value" key="key" />
+        <nivo layout="horizontal" />
+        <props>
+          {
+            "dataQuery": {
+              "filters": {},
+              "limit": 8
+            }
+          }
+        </props>
+      </chart>
+    </div>
+    <div>
+      <props>
         {
-          type: 'Div',
-          props: { direction: 'row', gap: 12, padding: 16, justify: 'start', align: 'start', childGrow: true },
-          children: [
-            {
-              type: 'LineChart',
-              props: {
-                fr: 1,
-                title: 'Contas a Receber por Mês',
-                dataQuery: {
-                  model: 'financeiro.contas_receber',
-                  dimension: 'mes',
-                  dimensionExpr: "TO_CHAR(DATE_TRUNC('month', data_vencimento), 'YYYY-MM')",
-                  measure: 'SUM(valor_liquido)',
-                  filters: {},
-                  orderBy: { field: 'dimension', dir: 'asc' },
-                  limit: 12,
-                },
-                format: 'currency',
-                height: 240,
-                nivo: { curve: 'monotoneX', area: true },
+          "direction": "row",
+          "gap": 12,
+          "padding": 16,
+          "justify": "start",
+          "align": "start",
+          "childGrow": true
+        }
+      </props>
+      <chart type="line" fr="1" title="Contas a Receber por Mês" format="currency" height="240">
+        <query>
+          SELECT
+            (TO_CHAR(DATE_TRUNC('month', data_vencimento), 'YYYY-MM'))::text AS key,
+            (TO_CHAR(DATE_TRUNC('month', data_vencimento), 'YYYY-MM'))::text AS label,
+            SUM(valor) AS value
+          FROM financeiro.contas_receber src
+          WHERE
+                ({{de}}::date IS NULL OR src.data_vencimento::date >= {{de}}::date)
+                AND ({{ate}}::date IS NULL OR src.data_vencimento::date <= {{ate}}::date)
+                AND (
+                  NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+                  OR COALESCE(src.tenant_id::text, '') = ANY(
+                    string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+                  )
+                )
+          GROUP BY 1, 2
+          ORDER BY label ASC
+        </query>
+        <fields x="label" y="value" key="key" />
+        <nivo curve="monotoneX" area="true" />
+        <props>
+          {
+            "dataQuery": {
+              "filters": {},
+              "limit": 12
+            }
+          }
+        </props>
+      </chart>
+      <chart type="bar" fr="1" title="Status de AP" format="number" height="240">
+        <query>
+          SELECT
+            COALESCE(src.status::text, '-') AS key,
+            COALESCE(src.status::text, '-') AS label,
+            COUNT(*) AS value
+          FROM financeiro.contas_pagar src
+          WHERE
+                ({{de}}::date IS NULL OR src.data_vencimento::date >= {{de}}::date)
+                AND ({{ate}}::date IS NULL OR src.data_vencimento::date <= {{ate}}::date)
+                AND (
+                  NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+                  OR COALESCE(src.tenant_id::text, '') = ANY(
+                    string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+                  )
+                )
+          GROUP BY 1, 2
+          ORDER BY value DESC
+        </query>
+        <fields x="label" y="value" key="key" />
+        <nivo layout="horizontal" />
+        <props>
+          {
+            "dataQuery": {
+              "filters": {},
+              "limit": 8
+            }
+          }
+        </props>
+      </chart>
+      <ai-summary>
+        <props>
+          {
+            "fr": 1,
+            "title": "Insights da IA",
+            "items": [
+              {
+                "icon": "circledollarsign",
+                "text": "Compare recebimentos e pagamentos para antecipar pressão de caixa no período."
               },
-            },
-            {
-              type: 'BarChart',
-              props: {
-                fr: 1,
-                title: 'Status de AP',
-                dataQuery: {
-                  model: 'financeiro.contas_pagar',
-                  dimension: 'status',
-                  measure: 'COUNT()',
-                  filters: {},
-                  orderBy: { field: 'measure', dir: 'desc' },
-                  limit: 8,
-                },
-                format: 'number',
-                height: 240,
-                nivo: { layout: 'horizontal' },
+              {
+                "icon": "trendingUp",
+                "text": "Distribuições por status e fornecedor ajudam a priorizar ações operacionais."
               },
-            },
-            {
-              type: 'AISummary',
-              props: {
-                fr: 1,
-                title: 'Insights da IA',
-                items: [
-                  { icon: 'circledollarsign', text: 'Compare recebimentos e pagamentos para antecipar pressão de caixa no período.' },
-                  { icon: 'trendingUp', text: 'Distribuições por status e fornecedor ajudam a priorizar ações operacionais.' },
-                  { icon: 'triangleAlert', text: 'Títulos vencidos ou concentrados por data podem distorcer a visão semanal.' },
-                ],
-              },
-            },
-          ],
-        },
-      ],
-    },
-  ]),
-  null,
-  2,
-)
-
-export const APPS_FINANCEIRO_TEMPLATE_DSL = renderDashboardTemplateDslFromJsonText(APPS_FINANCEIRO_TEMPLATE_TEXT, 'apps_financeiro_template_dsl')
+              {
+                "icon": "triangleAlert",
+                "text": "Títulos vencidos ou concentrados por data podem distorcer a visão semanal."
+              }
+            ]
+          }
+        </props>
+      </ai-summary>
+    </div>
+  </theme>
+</dashboard-template>`

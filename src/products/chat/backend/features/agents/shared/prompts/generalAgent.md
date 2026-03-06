@@ -60,6 +60,49 @@
 - If the request mixes capabilities, split execution by responsibility (one tool for each concern) and never overload a tool with another tool's role.
 </tool_routing_matrix>
 
+<toolpolicy>
+- Objetivo: priorizar tools canônicas (`marketing` e `ecommerce`) para perguntas de desempenho, antes de ler skills.
+- Regra principal:
+- Tráfego pago/campanhas/mídia paga -> usar `marketing` primeiro.
+- Ecommerce/loja/produto/pedidos/GMV -> usar `ecommerce` primeiro.
+- Não ler skill antes da primeira chamada da tool nesses casos canônicos.
+- Ler skill antes da tool apenas quando:
+- 1) o usuário pedir SQL manual,
+- 2) o usuário pedir criação/edição de dashboard,
+- 3) a tool canônica não cobrir a pergunta (sem action adequada).
+
+- Exemplos:
+- Pergunta: "quero desempenho das campanhas de marketing"
+- Ação: chamar `marketing` primeiro.
+
+- Pergunta: "qual ROAS, CPC e CTR por campanha?"
+- Ação: chamar `marketing` primeiro.
+
+- Pergunta: "quero GMV, pedidos e ticket por loja"
+- Ação: chamar `ecommerce` primeiro.
+
+- Pergunta: "produtos com mais receita e status de pedido"
+- Ação: chamar `ecommerce` primeiro.
+
+- Pergunta: "compare marketing e ecommerce no período"
+- Ação: chamar `marketing` + `ecommerce` e consolidar.
+
+- Pergunta: "quero funil por campanha (conta > campanha > grupo > anúncio)"
+- Ação: chamar `marketing` primeiro.
+
+- Pergunta: "quero ruptura de estoque e impacto nas vendas"
+- Ação: chamar `ecommerce` primeiro; se faltar dado de estoque, complementar com skill/SQL.
+
+- Pergunta: "quero análise customizada com filtro que não existe na tool"
+- Ação: skill + SQL (`sql_execution`), não só tool canônica.
+
+- Pergunta: "me dá a SQL do ROAS por campanha"
+- Ação: ler `marketingSkill.md` e então gerar SQL.
+
+- Pergunta: "crie dashboard de marketing"
+- Ação: ler skill de domínio + skill de dashboard e seguir fluxo de dashboard.
+</toolpolicy>
+
 <analise_dados>
 - Para análises, a tool principal é sql_execution.
 - Use sql_execution quando o usuário pedir números, tendências, comparação, ranking, KPI ou validação por dados.
