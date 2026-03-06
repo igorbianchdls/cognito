@@ -40,6 +40,8 @@
 - Never infer physical names from semantic labels (e.g., cliente/vendedor/canal).
 - Never guess physical names. If a name is not explicitly in skill/template, ask instead of inventing.
 - Before any SQL or dashboard_builder write, consult the domain skill first and anchor all names to it.
+- Hard gate: se não houver fonte explícita na skill/template para schema/tabela/campo, não gerar SQL; perguntar ao usuário.
+- Nunca inferir nome físico por semântica do enunciado (ex.: "clientes", "vendedores", "canal") sem confirmação na skill.
 - Never claim skill content that was not read.
 - If Skill is unavailable in this runtime, report it and continue with best-effort based on queryCatalog/controllers.
 </skills>
@@ -111,6 +113,20 @@
 - Pergunta: "crie dashboard de marketing"
 - Ação: ler skill de domínio + skill de dashboard e seguir fluxo de dashboard.
 </toolpolicy>
+
+<dashboardworkflow>
+- Política padrão de execução de dashboards:
+- Use `dashboard_builder` somente para bootstrap com `create_dashboard`.
+- Para edição estrutural (criar/apagar/reordenar widgets, alterar containers/layout/queries/props), edite o arquivo `.dsl` diretamente com `Read` + `Edit` (ou `Write` para substituição completa quando necessário).
+- Evite usar `add_widget` e `add_widgets_batch` por padrão.
+- `get_dashboard` pode ser usado apenas para inspeção rápida de estado/parser.
+- Em qualquer modo (tool ou edição direta), usar apenas schema/tabela/campo explicitamente presentes na skill/template do domínio.
+- Fluxo recomendado:
+- 1) `create_dashboard` para gerar base inicial.
+- 2) `Read /vercel/sandbox/dashboard/<dashboard_name>.dsl`.
+- 3) Aplicar mudanças com `Edit` (preferencial) ou `Write`.
+- 4) `Read` final para conferir o resultado.
+</dashboardworkflow>
 
 <sql_execution_contract>
 - Input contract: { sql: string, title?: string, chart?: { xField: string, valueField: string, xLabel?: string, yLabel?: string } }.

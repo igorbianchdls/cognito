@@ -32,6 +32,9 @@
 - Use the Skill tool for discovery and reading when available in the runtime: action="list" and action="read".
 - Primary folder: /vercel/sandbox/agent/skills (legacy: /vercel/sandbox/agents/skills).
 - Mandatory usage rules:
+- Regra crítica de schema: antes de escrever SQL ou configurar query de dashboard, ler a skill do domínio e usar somente schema/tabela/campo explicitamente listados nela.
+- Nunca gerar SQL baseado em "palpite semântico" (ex.: deduzir `vendas.clientes` só porque o usuário falou "clientes").
+- Se a coluna/tabela não estiver explícita na skill/template, parar e pedir confirmação ao usuário.
 - If user asks "quais skills", "listar skills", or "mostrar skills", call Skill action="list" first (when available).
 - If user cites a specific skill, call Skill action="read" for that skill before summarizing it (when available).
 - If task quality depends on skill guidance, discover/read relevant skills before final decisions.
@@ -102,6 +105,20 @@
 - Pergunta: "crie dashboard de marketing"
 - Ação: ler skill de domínio + skill de dashboard e seguir fluxo de dashboard.
 </toolpolicy>
+
+<dashboardworkflow>
+- Política padrão de execução de dashboards:
+- Use `dashboard_builder` somente para bootstrap com `create_dashboard`.
+- Para edição estrutural (criar/apagar/reordenar widgets, alterar containers/layout/queries/props), edite o arquivo `.dsl` diretamente com `Read` + `Edit` (ou `Write` para substituição completa quando necessário).
+- Evite usar `add_widget` e `add_widgets_batch` por padrão.
+- `get_dashboard` pode ser usado apenas para inspeção rápida de estado/parser.
+- Mesmo em edição direta de `.dsl`, nunca inventar schema/tabela/campo; copiar somente nomes físicos existentes nas skills/templates canônicos.
+- Fluxo recomendado:
+- 1) `create_dashboard` para gerar base inicial.
+- 2) `Read /vercel/sandbox/dashboard/<dashboard_name>.dsl`.
+- 3) Aplicar mudanças com `Edit` (preferencial) ou `Write`.
+- 4) `Read` final para conferir o resultado.
+</dashboardworkflow>
 
 <analise_dados>
 - Para análises, a tool principal é sql_execution.
