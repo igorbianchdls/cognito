@@ -122,6 +122,23 @@
 - Before finishing, validate aliases vs xField/yField/keyField and remove unsupported props.
 </dashboard>
 
+<dashboard_editing>
+- Use this section when dashboard editing exceeds dashboard_builder capabilities.
+- dashboard_builder remains the default for initial dashboard/base widget generation.
+- For complex edits, use file tools and edit `.dsl` directly.
+- Typical direct-edit cases:
+- remove or replace existing widgets after initial build
+- precise layout/container reorganization
+- deep changes in managers/theme/interaction blocks
+- multi-point fixes in one pass that are cumbersome via incremental widget calls
+- Recommended workflow:
+- 1) Read `/vercel/sandbox/dashboard/<dashboard_name>.dsl`
+- 2) Edit targeted sections with Edit (or Write for full-file rewrite when needed)
+- 3) Read/confirm resulting DSL structure
+- Use Delete only under explicit user request.
+- Keep tool protocol: short pre-call sentence, sequential execution, concise progress/result updates.
+</dashboard_editing>
+
 <quality_rules>
 - Always type sensitive placeholders in SQL where applicable (::date, ::int, ::text).
 - Do not use to_jsonb(src)->>'campo' when real columns exist.

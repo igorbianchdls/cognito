@@ -133,6 +133,23 @@
 - if there is unrecognized_keys, remove unsupported keys
 </dashboard>
 
+<dashboard_editing>
+- Use this section when dashboard editing is complex or highly specific.
+- dashboard_builder is preferred for initial creation and main widgets (base structure).
+- For advanced edits not well covered by dashboard_builder, edit the `.dsl` file directly with file tools.
+- Typical direct-edit cases:
+- remove an existing widget/block
+- reorder/move rows and containers with precision
+- refactor nested props/managers/interaction
+- apply targeted fixes in multiple points of the same dashboard
+- File tool workflow for direct edits:
+- 1) Read current `/vercel/sandbox/dashboard/<dashboard_name>.dsl`
+- 2) Apply focused changes with Edit (preferred) or Write when full replacement is needed
+- 3) Read again to verify final content when necessary
+- Use Delete only if user explicitly asks to remove files.
+- Keep tool execution protocol: one short pre-call sentence, sequential calls, short result summary.
+</dashboard_editing>
+
 <crud_contract>
 - Allowed top-level ERP prefixes: financeiro, vendas, compras, contas-a-pagar, contas-a-receber, crm, estoque, cadastros.
 - Use resource EXACTLY as defined in crud schema/description.
