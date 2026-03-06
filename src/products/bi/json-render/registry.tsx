@@ -239,11 +239,11 @@ async function fetchOptionsFromSource(
       }
       const rows = Array.isArray(j?.rows) ? j.rows : [];
       return rows
-        .map((r: AnyRecord) => ({
+        .map((r: AnyRecord): SlicerOpt => ({
           value: (r?.value ?? r?.id ?? r?.key ?? ''),
           label: String(r?.label ?? r?.nome ?? r?.name ?? r?.value ?? r?.id ?? ''),
         }))
-        .filter((o) => o.label.trim() !== '');
+        .filter((o: SlicerOpt) => o.label.trim() !== '');
     } catch (e) {
       console.error('[BI/SlicerOptions] sql query failed', e);
       return [];
