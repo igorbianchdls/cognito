@@ -28,7 +28,8 @@ Para semantica de dados por dominio, usar:
 7. Para Chart, informar `xField` e `yField` (e `keyField` quando houver).
 8. Para KPI query-first, a query deve retornar coluna numerica com alias `value` (sem `xField/yField/keyField`).
 9. So usar props suportadas no catalogo do renderer.
-10. Preferir sintaxe sem JSON em chart: `<chart ...>`, `<query>`, `<fields />`, `<interaction />`, `<nivo />`.
+10. Header e KPI devem ser sem `<props>`, seguindo sintaxe declarativa por atributos/tags.
+11. Preferir sintaxe sem JSON em chart: `<chart ...>`, `<query>`, `<fields />`, `<interaction />`, `<nivo />`.
 
 ## Componentes Permitidos
 
@@ -92,34 +93,22 @@ Compatibilidade:
     <props>
       { "name": "light", "managers": {} }
     </props>
-    <header>
-      <props>
-        {
-          "title": "Dashboard",
-          "datePicker": {
-            "visible": true,
-            "mode": "range",
-            "storePath": "filters.dateRange",
-            "actionOnChange": { "type": "refresh_data" }
-          }
-        }
-      </props>
+    <header title="Dashboard">
+      <date-picker visible="true" mode="range" store-path="filters.dateRange">
+        <action-on-change type="refresh_data" />
+      </date-picker>
     </header>
     <div>
       <props>
         { "direction": "row", "gap": 12, "padding": 16, "childGrow": true }
       </props>
-      <kpi>
-        <props>
-          {
-            "title": "Receita",
-            "format": "currency",
-            "dataQuery": {
-              "query": "SELECT COALESCE(SUM(src.valor_total),0)::float AS value FROM vendas.pedidos src WHERE src.tenant_id={{tenant_id}}::int",
-              "filters": {}
-            }
-          }
-        </props>
+      <kpi title="Receita" format="currency">
+        <query>SELECT COALESCE(SUM(src.valor_total),0)::float AS value FROM vendas.pedidos src WHERE src.tenant_id={{tenant_id}}::int</query>
+        <data-query>
+          <filters>
+            {}
+          </filters>
+        </data-query>
       </kpi>
       <chart type="bar" title="Top Canais" format="currency" height="220">
         <query>

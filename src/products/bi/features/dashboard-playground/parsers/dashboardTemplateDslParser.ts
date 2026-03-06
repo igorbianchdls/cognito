@@ -114,7 +114,7 @@ function parseDslTree(sourceRaw: string): DslNode {
   const stack: DslNode[] = []
   let root: DslNode | null = null
   let i = 0
-  const RAW_TEXT_TAGS = new Set(['props', 'query', 'sql'])
+  const RAW_TEXT_TAGS = new Set(['props', 'query', 'sql', 'filters', 'style', 'config'])
 
   while (i < source.length) {
     const top = stack[stack.length - 1]
@@ -216,6 +216,21 @@ function parsePropsNode(source: string, node: DslNode): Record<string, unknown> 
   }
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
     throw new DashboardTemplateDslParseError(source, node.start, '<props> deve conter um objeto JSON')
+  }
+  return parsed as Record<string, unknown>
+}
+
+function parseJsonObjectNode(source: string, node: DslNode, tagName: string): Record<string, unknown> {
+  const raw = String(node.text || '').trim()
+  if (!raw) return {}
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(raw)
+  } catch {
+    throw new DashboardTemplateDslParseError(source, node.start, `JSON invalido em <${tagName}>`)
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new DashboardTemplateDslParseError(source, node.start, `<${tagName}> deve conter um objeto JSON`)
   }
   return parsed as Record<string, unknown>
 }
@@ -400,9 +415,172 @@ function compileChartNode(source: string, node: DslNode, context: CompileContext
   return out
 }
 
+function compileHeaderNode(source: string, node: DslNode): Record<string, unknown> {
+  const propsNodes = node.children.filter((child) => child.tag === 'props')
+  if (propsNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <header> aceita no maximo um <props>')
+  }
+  const propsFromAttrs = attrsToProps(node.attrs)
+  const propsFromJson = propsNodes.length ? parsePropsNode(source, propsNodes[0]) : {}
+  const props = mergeObjects(propsFromAttrs, propsFromJson)
+
+  const datePickerNodes = node.children.filter((child) => child.tag === 'date-picker')
+  if (datePickerNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <header> aceita no maximo um <date-picker>')
+  }
+
+  const configNodes = node.children.filter((child) => child.tag === 'config')
+  if (configNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <header> aceita no maximo um <config>')
+  }
+  if (configNodes.length) {
+    const cfg = parseJsonObjectNode(source, configNodes[0], 'config')
+    Object.assign(props, cfg)
+  }
+
+  if (datePickerNodes.length) {
+    const dpNode = datePickerNodes[0]
+    const dpFromAttrs = attrsToProps(dpNode.attrs)
+    const dpPropsNodes = dpNode.children.filter((child) => child.tag === 'props')
+    if (dpPropsNodes.length > 1) {
+      throw new DashboardTemplateDslParseError(source, dpNode.start, 'Tag <date-picker> aceita no maximo um <props>')
+    }
+    const dpFromJson = dpPropsNodes.length ? parsePropsNode(source, dpPropsNodes[0]) : {}
+    const datePicker = mergeObjects(dpFromAttrs, dpFromJson)
+
+    const actionNodes = dpNode.children.filter((child) => child.tag === 'action-on-change')
+    if (actionNodes.length > 1) {
+      throw new DashboardTemplateDslParseError(source, dpNode.start, 'Tag <date-picker> aceita no maximo um <action-on-change>')
+    }
+    if (actionNodes.length) {
+      const action = attrsToProps(actionNodes[0].attrs)
+      if (Object.keys(action).length) datePicker.actionOnChange = action
+    }
+
+    const styleNodes = dpNode.children.filter((child) => child.tag === 'style')
+    if (styleNodes.length > 1) {
+      throw new DashboardTemplateDslParseError(source, dpNode.start, 'Tag <date-picker> aceita no maximo um <style>')
+    }
+    if (styleNodes.length) {
+      const style = parseJsonObjectNode(source, styleNodes[0], 'style')
+      if (Object.keys(style).length) datePicker.style = style
+    }
+
+    const configNodesInDatePicker = dpNode.children.filter((child) => child.tag === 'config')
+    if (configNodesInDatePicker.length > 1) {
+      throw new DashboardTemplateDslParseError(source, dpNode.start, 'Tag <date-picker> aceita no maximo um <config>')
+    }
+    if (configNodesInDatePicker.length) {
+      Object.assign(datePicker, parseJsonObjectNode(source, configNodesInDatePicker[0], 'config'))
+    }
+
+    if (Object.keys(datePicker).length) {
+      props.datePicker = datePicker
+    }
+  }
+
+  const out: Record<string, unknown> = { type: 'Header' }
+  if (Object.keys(props).length) out.props = props
+  return out
+}
+
+function compileKpiNode(source: string, node: DslNode): Record<string, unknown> {
+  const propsNodes = node.children.filter((child) => child.tag === 'props')
+  if (propsNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <kpi> aceita no maximo um <props>')
+  }
+  const propsFromAttrs = attrsToProps(node.attrs)
+  const propsFromJson = propsNodes.length ? parsePropsNode(source, propsNodes[0]) : {}
+  const props = mergeObjects(propsFromAttrs, propsFromJson)
+
+  const queryNodes = node.children.filter((child) => child.tag === 'query' || child.tag === 'sql')
+  if (queryNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <kpi> aceita no maximo um <query>')
+  }
+
+  const dataQueryFromProps =
+    props.dataQuery && typeof props.dataQuery === 'object' && !Array.isArray(props.dataQuery)
+      ? ({ ...(props.dataQuery as Record<string, unknown>) } as Record<string, unknown>)
+      : {}
+
+  if (queryNodes.length) {
+    const queryRaw = String(queryNodes[0].text || '').trim()
+    if (queryRaw) dataQueryFromProps.query = queryRaw
+  }
+
+  const dataQueryNodes = node.children.filter((child) => child.tag === 'data-query')
+  if (dataQueryNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <kpi> aceita no maximo um <data-query>')
+  }
+  if (dataQueryNodes.length) {
+    const dqNode = dataQueryNodes[0]
+    Object.assign(dataQueryFromProps, attrsToProps(dqNode.attrs))
+
+    const dqPropsNodes = dqNode.children.filter((child) => child.tag === 'props')
+    if (dqPropsNodes.length > 1) {
+      throw new DashboardTemplateDslParseError(source, dqNode.start, 'Tag <data-query> aceita no maximo um <props>')
+    }
+    if (dqPropsNodes.length) {
+      Object.assign(dataQueryFromProps, parsePropsNode(source, dqPropsNodes[0]))
+    }
+
+    const dqQueryNodes = dqNode.children.filter((child) => child.tag === 'query' || child.tag === 'sql')
+    if (dqQueryNodes.length > 1) {
+      throw new DashboardTemplateDslParseError(source, dqNode.start, 'Tag <data-query> aceita no maximo um <query>')
+    }
+    if (dqQueryNodes.length) {
+      const dqQueryRaw = String(dqQueryNodes[0].text || '').trim()
+      if (dqQueryRaw) dataQueryFromProps.query = dqQueryRaw
+    }
+
+    const filterNodes = dqNode.children.filter((child) => child.tag === 'filters')
+    if (filterNodes.length > 1) {
+      throw new DashboardTemplateDslParseError(source, dqNode.start, 'Tag <data-query> aceita no maximo um <filters>')
+    }
+    if (filterNodes.length) {
+      dataQueryFromProps.filters = parseJsonObjectNode(source, filterNodes[0], 'filters')
+    }
+
+    const orderByNodes = dqNode.children.filter((child) => child.tag === 'order-by')
+    if (orderByNodes.length > 1) {
+      throw new DashboardTemplateDslParseError(source, dqNode.start, 'Tag <data-query> aceita no maximo um <order-by>')
+    }
+    if (orderByNodes.length) {
+      const orderBy = attrsToProps(orderByNodes[0].attrs)
+      if (Object.keys(orderBy).length) dataQueryFromProps.orderBy = orderBy
+    }
+
+    const configNodesInDataQuery = dqNode.children.filter((child) => child.tag === 'config')
+    if (configNodesInDataQuery.length > 1) {
+      throw new DashboardTemplateDslParseError(source, dqNode.start, 'Tag <data-query> aceita no maximo um <config>')
+    }
+    if (configNodesInDataQuery.length) {
+      Object.assign(dataQueryFromProps, parseJsonObjectNode(source, configNodesInDataQuery[0], 'config'))
+    }
+  }
+
+  if (Object.keys(dataQueryFromProps).length) {
+    props.dataQuery = dataQueryFromProps
+  }
+
+  const configNodes = node.children.filter((child) => child.tag === 'config')
+  if (configNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <kpi> aceita no maximo um <config>')
+  }
+  if (configNodes.length) {
+    Object.assign(props, parseJsonObjectNode(source, configNodes[0], 'config'))
+  }
+
+  const out: Record<string, unknown> = { type: 'KPI' }
+  if (Object.keys(props).length) out.props = props
+  return out
+}
+
 function compileNode(source: string, node: DslNode, context: CompileContext): Record<string, unknown> | null {
   if (node.tag === 'defaults') return null
   if (node.tag === 'chart') return compileChartNode(source, node, context)
+  if (node.tag === 'header') return compileHeaderNode(source, node)
+  if (node.tag === 'kpi') return compileKpiNode(source, node)
 
   const type = toCatalogType(node.tag)
   if (!type || type === 'Chart') {
@@ -545,6 +723,20 @@ function renderPropsBlock(props: unknown, level: number): string[] {
   ]
 }
 
+function renderJsonObjectBlock(tag: string, value: unknown, level: number): string[] {
+  if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value as Record<string, unknown>).length === 0) {
+    return []
+  }
+  const json = JSON.stringify(value, null, 2)
+  if (!json) return []
+  const lines = json.split('\n')
+  return [
+    `${renderIndent(level)}<${tag}>`,
+    ...lines.map((line) => `${renderIndent(level + 1)}${line}`),
+    `${renderIndent(level)}</${tag}>`,
+  ]
+}
+
 function renderChartNodeToDsl(node: Record<string, unknown>, level: number): string[] {
   const propsRaw =
     node.props && typeof node.props === 'object' && !Array.isArray(node.props)
@@ -634,11 +826,156 @@ function renderChartNodeToDsl(node: Record<string, unknown>, level: number): str
   return lines
 }
 
+function renderHeaderNodeToDsl(node: Record<string, unknown>, level: number): string[] {
+  const propsRaw =
+    node.props && typeof node.props === 'object' && !Array.isArray(node.props)
+      ? ({ ...(node.props as Record<string, unknown>) } as Record<string, unknown>)
+      : {}
+
+  const datePickerRaw =
+    propsRaw.datePicker && typeof propsRaw.datePicker === 'object' && !Array.isArray(propsRaw.datePicker)
+      ? ({ ...(propsRaw.datePicker as Record<string, unknown>) } as Record<string, unknown>)
+      : {}
+  delete propsRaw.datePicker
+
+  const headerAttrs: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(propsRaw)) {
+    if (v === undefined) continue
+    if (typeof v !== 'object' || v === null) {
+      headerAttrs[k] = v
+      delete propsRaw[k]
+    }
+  }
+
+  const lines: string[] = [`${renderIndent(level)}<header${renderAttrs(headerAttrs)}>`]
+
+  if (Object.keys(datePickerRaw).length) {
+    const datePickerAttrs: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(datePickerRaw)) {
+      if (v === undefined) continue
+      if (typeof v !== 'object' || v === null) {
+        datePickerAttrs[k] = v
+        delete datePickerRaw[k]
+      }
+    }
+
+    const actionOnChangeRaw =
+      datePickerRaw.actionOnChange && typeof datePickerRaw.actionOnChange === 'object' && !Array.isArray(datePickerRaw.actionOnChange)
+        ? ({ ...(datePickerRaw.actionOnChange as Record<string, unknown>) } as Record<string, unknown>)
+        : {}
+    delete datePickerRaw.actionOnChange
+
+    const styleRaw =
+      datePickerRaw.style && typeof datePickerRaw.style === 'object' && !Array.isArray(datePickerRaw.style)
+        ? ({ ...(datePickerRaw.style as Record<string, unknown>) } as Record<string, unknown>)
+        : {}
+    delete datePickerRaw.style
+
+    const hasDatePickerChildren = Object.keys(actionOnChangeRaw).length > 0 || Object.keys(styleRaw).length > 0 || Object.keys(datePickerRaw).length > 0
+    if (!hasDatePickerChildren) {
+      lines.push(`${renderIndent(level + 1)}<date-picker${renderAttrs(datePickerAttrs)} />`)
+    } else {
+      lines.push(`${renderIndent(level + 1)}<date-picker${renderAttrs(datePickerAttrs)}>`)
+      if (Object.keys(actionOnChangeRaw).length) {
+        lines.push(`${renderIndent(level + 2)}<action-on-change${renderAttrs(actionOnChangeRaw)} />`)
+      }
+      lines.push(...renderJsonObjectBlock('style', styleRaw, level + 2))
+      lines.push(...renderJsonObjectBlock('config', datePickerRaw, level + 2))
+      lines.push(`${renderIndent(level + 1)}</date-picker>`)
+    }
+  }
+
+  lines.push(...renderJsonObjectBlock('config', propsRaw, level + 1))
+  lines.push(`${renderIndent(level)}</header>`)
+  return lines
+}
+
+function renderKpiNodeToDsl(node: Record<string, unknown>, level: number): string[] {
+  const propsRaw =
+    node.props && typeof node.props === 'object' && !Array.isArray(node.props)
+      ? ({ ...(node.props as Record<string, unknown>) } as Record<string, unknown>)
+      : {}
+
+  const dataQueryRaw =
+    propsRaw.dataQuery && typeof propsRaw.dataQuery === 'object' && !Array.isArray(propsRaw.dataQuery)
+      ? ({ ...(propsRaw.dataQuery as Record<string, unknown>) } as Record<string, unknown>)
+      : {}
+  delete propsRaw.dataQuery
+
+  const kpiAttrs: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(propsRaw)) {
+    if (v === undefined) continue
+    if (typeof v !== 'object' || v === null) {
+      kpiAttrs[k] = v
+      delete propsRaw[k]
+    }
+  }
+
+  const lines: string[] = [`${renderIndent(level)}<kpi${renderAttrs(kpiAttrs)}>`]
+
+  const query = typeof dataQueryRaw.query === 'string' ? dataQueryRaw.query : ''
+  delete dataQueryRaw.query
+  if (query.trim()) {
+    lines.push(`${renderIndent(level + 1)}<query>`)
+    lines.push(query
+      .split('\n')
+      .map((line) => `${renderIndent(level + 2)}${line}`)
+      .join('\n'))
+    lines.push(`${renderIndent(level + 1)}</query>`)
+  }
+
+  if (Object.keys(dataQueryRaw).length) {
+    const dataQueryAttrs: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(dataQueryRaw)) {
+      if (v === undefined) continue
+      if (typeof v !== 'object' || v === null) {
+        dataQueryAttrs[k] = v
+        delete dataQueryRaw[k]
+      }
+    }
+
+    const filtersRaw =
+      dataQueryRaw.filters && typeof dataQueryRaw.filters === 'object' && !Array.isArray(dataQueryRaw.filters)
+        ? ({ ...(dataQueryRaw.filters as Record<string, unknown>) } as Record<string, unknown>)
+        : {}
+    delete dataQueryRaw.filters
+
+    const orderByRaw =
+      dataQueryRaw.orderBy && typeof dataQueryRaw.orderBy === 'object' && !Array.isArray(dataQueryRaw.orderBy)
+        ? ({ ...(dataQueryRaw.orderBy as Record<string, unknown>) } as Record<string, unknown>)
+        : {}
+    delete dataQueryRaw.orderBy
+
+    const hasDataQueryChildren = Object.keys(filtersRaw).length > 0 || Object.keys(orderByRaw).length > 0 || Object.keys(dataQueryRaw).length > 0
+    if (!hasDataQueryChildren) {
+      lines.push(`${renderIndent(level + 1)}<data-query${renderAttrs(dataQueryAttrs)} />`)
+    } else {
+      lines.push(`${renderIndent(level + 1)}<data-query${renderAttrs(dataQueryAttrs)}>`)
+      lines.push(...renderJsonObjectBlock('filters', filtersRaw, level + 2))
+      if (Object.keys(orderByRaw).length) {
+        lines.push(`${renderIndent(level + 2)}<order-by${renderAttrs(orderByRaw)} />`)
+      }
+      lines.push(...renderJsonObjectBlock('config', dataQueryRaw, level + 2))
+      lines.push(`${renderIndent(level + 1)}</data-query>`)
+    }
+  }
+
+  lines.push(...renderJsonObjectBlock('config', propsRaw, level + 1))
+  lines.push(`${renderIndent(level)}</kpi>`)
+  return lines
+}
+
 function renderNodeToDsl(node: unknown, level: number): string[] {
   if (!node || typeof node !== 'object' || Array.isArray(node)) return []
   const record = node as Record<string, unknown>
   if (chartTypeToAttr(String(record.type || '').trim())) {
     return renderChartNodeToDsl(record, level)
+  }
+  if (String(record.type || '').trim() === 'Header') {
+    return renderHeaderNodeToDsl(record, level)
+  }
+  if (String(record.type || '').trim() === 'KPI') {
+    return renderKpiNodeToDsl(record, level)
   }
   const tag = toDslTag(String(record.type || 'node'))
   const lines: string[] = [`${renderIndent(level)}<${tag}>`]
