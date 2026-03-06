@@ -28,6 +28,7 @@ function base64UrlDecode(input: string): string {
 function getSigningSecret(): string {
   return String(
     process.env.AGENT_TOKEN_SECRET ||
+    process.env.AGENT_INTERNAL_API_KEY ||
     process.env.NEXTAUTH_SECRET ||
     process.env.AUTH_SECRET ||
     '',
