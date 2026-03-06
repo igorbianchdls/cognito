@@ -116,6 +116,20 @@ function normalizeModel(provider: ChatProvider, rawModel?: string): string {
   return claudeMap[raw] || 'claude-haiku-4-5-20251001'
 }
 
+function nowSec(): number {
+  return Math.floor(Date.now() / 1000)
+}
+
+function ensureFreshAgentToken(chatId: string, sess: ChatSession, minTtlSeconds = 60) {
+  const threshold = nowSec() + Math.max(0, minTtlSeconds)
+  if (!sess.agentToken || !sess.agentTokenExp || sess.agentTokenExp <= threshold) {
+    const { token, exp } = generateAgentToken(1800, chatId)
+    sess.agentToken = token
+    sess.agentTokenExp = exp
+    setAgentToken(chatId, token, exp)
+  }
+}
+
 async function ensureSkillsInSandbox(sandbox: Sandbox) {
   try {
     const mkdirScript = "const fs=require('fs');fs.mkdirSync('/vercel/sandbox/openai-chat',{recursive:true});fs.mkdirSync('/vercel/sandbox/agent/skills',{recursive:true});console.log('ok')"
@@ -443,12 +457,7 @@ export async function POST(req: Request) {
         existing.lastUsedAt = Date.now()
         if (!existing.runtimeKind) existing.runtimeKind = requestedRuntimeKind
         // Ensure agent token remains valid for tool bridge calls.
-        if (!existing.agentToken || !existing.agentTokenExp || existing.agentTokenExp <= (Date.now() + 60_000)) {
-          const { token, exp } = generateAgentToken(1800, id)
-          existing.agentToken = token
-          existing.agentTokenExp = exp
-          setAgentToken(id, token, exp)
-        }
+        ensureFreshAgentToken(id, existing, 60)
         const provider = normalizeProvider(existing.provider, existing.model)
         existing.provider = provider
         existing.model = normalizeModel(provider, existing.model || (provider === 'openai-responses' ? 'gpt-5-mini' : 'claude-haiku-4-5-20251001'))
@@ -667,6 +676,7 @@ export async function POST(req: Request) {
     if (!ensured.ok) return ensured.response
     const sess = ensured.sess
     sess.lastUsedAt = Date.now()
+    ensureFreshAgentToken(chatId, sess, 60)
     try {
       await touchRuntimeSession(chatId, {
         leaseSeconds: RUNTIME_LEASE_SECONDS,
@@ -870,6 +880,7 @@ export async function POST(req: Request) {
     sess.model = modelId
     sess.provider = 'openai-responses'
     sess.lastUsedAt = Date.now()
+    ensureFreshAgentToken(chatId, sess, 60)
     try {
       await touchRuntimeSession(chatId, {
         leaseSeconds: RUNTIME_LEASE_SECONDS,
@@ -1038,6 +1049,7 @@ export async function POST(req: Request) {
     const slash = (prompt || '').toString().trim()
     if (!slash || !slash.startsWith('/')) return new Response(JSON.stringify({ ok: false, error: 'prompt deve começar com /' }), { status: 400 })
     sess.lastUsedAt = Date.now()
+    ensureFreshAgentToken(chatId, sess, 60)
     try {
       await touchRuntimeSession(chatId, {
         leaseSeconds: RUNTIME_LEASE_SECONDS,
