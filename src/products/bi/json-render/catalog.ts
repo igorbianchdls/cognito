@@ -110,6 +110,23 @@ const SqlChartDataQuerySchema = z.object({
   limit: z.number().optional(),
 }).strict();
 
+const SqlTableDataQuerySchema = z.object({
+  query: z.string(),
+  filters: z.record(z.any()).optional(),
+  limit: z.number().optional(),
+}).strict();
+
+const TableColumnSchema = z.object({
+  key: z.string(),
+  header: z.string().optional(),
+  label: z.string().optional(),
+  width: z.number().optional(),
+  format: z.enum(["text", "currency", "percent", "number"]).optional(),
+  align: z.enum(["left", "center", "right"]).optional(),
+  editable: z.boolean().optional(),
+  textColor: z.string().optional(),
+}).strict();
+
 export const catalog = {
   components: {
     Theme: {
@@ -479,6 +496,68 @@ export const catalog = {
         borderless: z.boolean().optional(),
         fr: z.number().optional(),
       }).strict(),
+      hasChildren: false,
+    },
+    Table: {
+      props: z.object({
+        title: z.string().optional(),
+        dataPath: z.string().optional(),
+        dataQuery: SqlTableDataQuerySchema.optional(),
+        columns: z.array(TableColumnSchema).optional(),
+        fr: z.number().optional(),
+        height: z.union([z.number(), z.string()]).optional(),
+        searchPlaceholder: z.string().optional(),
+        showColumnToggle: z.boolean().optional(),
+        showPagination: z.boolean().optional(),
+        pageSize: z.number().optional(),
+        enableSearch: z.boolean().optional(),
+        enableFiltering: z.boolean().optional(),
+        enableRowSelection: z.boolean().optional(),
+        selectionMode: z.enum(["single", "multiple"]).optional(),
+        defaultSortColumn: z.string().optional(),
+        defaultSortDirection: z.enum(["asc", "desc"]).optional(),
+        editableMode: z.boolean().optional(),
+        editableCells: z.union([z.enum(["all", "none"]), z.array(z.string())]).optional(),
+        editableRowActions: z.object({
+          allowAdd: z.boolean().optional(),
+          allowDelete: z.boolean().optional(),
+          allowDuplicate: z.boolean().optional(),
+        }).partial().optional(),
+        validationRules: z.record(z.any()).optional(),
+        enableValidation: z.boolean().optional(),
+        showValidationErrors: z.boolean().optional(),
+        saveBehavior: z.enum(["auto", "manual", "onBlur"]).optional(),
+        editTrigger: z.enum(["click", "doubleClick", "focus"]).optional(),
+        headerBackground: z.string().optional(),
+        headerTextColor: z.string().optional(),
+        rowHoverColor: z.string().optional(),
+        borderColor: z.string().optional(),
+        borderWidth: z.number().optional(),
+        fontSize: z.number().optional(),
+        padding: z.number().optional(),
+        headerPadding: z.number().optional(),
+        headerFontSize: z.number().optional(),
+        headerFontFamily: z.string().optional(),
+        headerFontWeight: z.string().optional(),
+        headerLetterSpacing: z.number().optional(),
+        cellFontSize: z.number().optional(),
+        cellFontFamily: z.string().optional(),
+        cellFontWeight: z.string().optional(),
+        cellTextColor: z.string().optional(),
+        cellLetterSpacing: z.number().optional(),
+        enableZebraStripes: z.boolean().optional(),
+        rowAlternateBgColor: z.string().optional(),
+        selectionColumnWidth: z.number().optional(),
+        editingCellColor: z.string().optional(),
+        validationErrorColor: z.string().optional(),
+        modifiedCellColor: z.string().optional(),
+        newRowColor: z.string().optional(),
+        titleStyle: TitleStyleSchema.optional(),
+        containerStyle: ContainerStyleSchema.optional(),
+        borderless: z.boolean().optional(),
+      }).strict().refine((p) => Boolean(p.dataPath || p.dataQuery), {
+        message: 'Table requires either dataPath or dataQuery',
+      }),
       hasChildren: false,
     },
     SlicerCard: {

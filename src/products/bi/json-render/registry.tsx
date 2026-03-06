@@ -5,6 +5,7 @@ import JsonRenderBarChart from "@/products/bi/json-render/components/BarChart";
 import JsonRenderLineChart from "@/products/bi/json-render/components/LineChart";
 import JsonRenderPieChart from "@/products/bi/json-render/components/PieChart";
 import JsonRenderGauge from "@/products/bi/json-render/components/Gauge";
+import JsonRenderTable from "@/products/bi/json-render/components/Table";
 import FrameSurface from "@/products/bi/json-render/components/FrameSurface";
 import DashboardBackgroundLayer from "@/products/bi/json-render/backgrounds/DashboardBackgroundLayer";
 import { normalizeDashboardBackgroundPreset } from "@/products/bi/json-render/backgrounds/types";
@@ -99,6 +100,22 @@ const defaultAISummary = {
   iconBoxRadius: 8,
   itemTextStyle: { fontWeight: 500, fontSize: 13, color: '#334155' },
   containerStyle: { borderColor: '#e5e7eb', borderWidth: 1, borderStyle: 'solid', borderRadius: 8 },
+  borderless: false,
+} as const;
+
+const defaultTable = {
+  pageSize: 10,
+  showPagination: true,
+  showColumnToggle: true,
+  enableSearch: true,
+  editableMode: false,
+  editableCells: 'none',
+  editableRowActions: {
+    allowAdd: false,
+    allowDelete: false,
+    allowDuplicate: false,
+  },
+  containerStyle: { borderColor: '#e5e7eb', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, padding: 12 },
   borderless: false,
 } as const;
 
@@ -859,6 +876,14 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const theme = useThemeOverrides();
     const merged = deepMerge(deepMerge(defaultPieChart as any, (theme.components?.PieChart || {}) as any), (element?.props || {}) as any);
     return <JsonRenderPieChart element={{ props: merged }} />;
+  },
+  Table: ({ element }) => {
+    const theme = useThemeOverrides();
+    const merged = deepMerge(
+      deepMerge(defaultTable as any, ((theme.components as any)?.Table || {}) as AnyRecord),
+      (element?.props || {}) as AnyRecord
+    );
+    return <JsonRenderTable element={{ props: merged }} />;
   },
 
   Gauge: ({ element }) => {
