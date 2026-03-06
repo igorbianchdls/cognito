@@ -209,6 +209,47 @@ async function fetchOptionsFromSource(
     return mapRawToOptions(opts);
   }
 
+  if (typeof src.query === 'string' && src.query.trim()) {
+    try {
+      const filters = { ...((args?.data as AnyRecord)?.filters || {}) } as AnyRecord;
+      const dr = (args?.data as AnyRecord)?.filters?.dateRange;
+      if (dr && !filters.de && !filters.ate) {
+        if (dr.from) filters.de = dr.from;
+        if (dr.to) filters.ate = dr.to;
+      }
+      if (term && filters.q === undefined) filters.q = term;
+      delete filters.dateRange;
+
+      const limitRaw = Number(src.limit ?? 200);
+      const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(2000, limitRaw)) : 200;
+      const res = await fetch('/api/modulos/query/execute', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          dataQuery: {
+            query: src.query,
+            filters,
+            limit,
+          },
+        }),
+      });
+      const j = await res.json();
+      if (!res.ok || j?.success === false) {
+        throw new Error(String(j?.message || `Query failed (${res.status})`));
+      }
+      const rows = Array.isArray(j?.rows) ? j.rows : [];
+      return rows
+        .map((r: AnyRecord) => ({
+          value: (r?.value ?? r?.id ?? r?.key ?? ''),
+          label: String(r?.label ?? r?.nome ?? r?.name ?? r?.value ?? r?.id ?? ''),
+        }))
+        .filter((o) => o.label.trim() !== '');
+    } catch (e) {
+      console.error('[BI/SlicerOptions] sql query failed', e);
+      return [];
+    }
+  }
+
   if (src.type === 'options' && typeof src.model === 'string' && typeof src.field === 'string') {
     try {
       const pageSizeRaw = Number(src.pageSize ?? src.limit ?? 50);
@@ -558,7 +599,12 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       let cancelled = false;
       async function run() {
         const tasks = await Promise.allSettled((slicers || []).map(async (s, idx) => {
-          const src = s?.source;
+          const src =
+            (s?.source && typeof s.source === 'object')
+              ? (s.source as AnyRecord)
+              : (typeof s?.query === 'string' && s.query.trim()
+                  ? ({ query: s.query, ...(Number.isFinite(Number(s?.limit)) ? { limit: Number(s.limit) } : {}) } as AnyRecord)
+                  : null);
           if (!src || typeof src !== 'object') return { idx, opts: [] as Opt[] };
           const opts = await fetchOptionsFromSource(src, { data, readByPath: getValueByPath });
           return { idx, opts };
@@ -1015,7 +1061,12 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       let cancelled = false;
       async function load() {
         const tasks = await Promise.allSettled(fields.map(async (f, idx) => {
-          const src = f?.source;
+          const src =
+            (f?.source && typeof f.source === 'object')
+              ? (f.source as AnyRecord)
+              : (typeof f?.query === 'string' && f.query.trim()
+                  ? ({ query: f.query, ...(Number.isFinite(Number(f?.limit)) ? { limit: Number(f.limit) } : {}) } as AnyRecord)
+                  : null);
           if (!src || typeof src !== 'object') return { idx, opts: [] as Opt[] };
           const term = searchMap[idx] || '';
           const opts = await fetchOptionsFromSource(src, { term, data, readByPath: getValueByPath });

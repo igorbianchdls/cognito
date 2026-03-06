@@ -61,7 +61,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<dashboard-template name="app
             "format": "currency",
             "borderless": true,
             "dataQuery": {
-              "query": "SELECT\n  COALESCE(SUM(p.valor_total), 0)::float AS value\nFROM vendas.pedidos p\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)",
+              "query": "SELECT\n  COALESCE(SUM(p.valor_total), 0)::float AS value\nFROM vendas.pedidos p\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\n  AND ({{canal_venda_id}} IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))\n  AND ({{cliente_id}} IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))",
               "yField": "value",
               "filters": {}
             }
@@ -76,7 +76,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<dashboard-template name="app
             "format": "number",
             "borderless": true,
             "dataQuery": {
-              "query": "SELECT\n  COUNT(DISTINCT p.id)::int AS value\nFROM vendas.pedidos p\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)",
+              "query": "SELECT\n  COUNT(DISTINCT p.id)::int AS value\nFROM vendas.pedidos p\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\n  AND ({{canal_venda_id}} IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))\n  AND ({{cliente_id}} IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))",
               "yField": "value",
               "filters": {}
             }
@@ -91,7 +91,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<dashboard-template name="app
             "format": "currency",
             "borderless": true,
             "dataQuery": {
-              "query": "SELECT\n  COALESCE(AVG(p.valor_total), 0)::float AS value\nFROM vendas.pedidos p\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)",
+              "query": "SELECT\n  COALESCE(AVG(p.valor_total), 0)::float AS value\nFROM vendas.pedidos p\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\n  AND ({{canal_venda_id}} IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))\n  AND ({{cliente_id}} IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))",
               "yField": "value",
               "filters": {}
             }
@@ -127,7 +127,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<dashboard-template name="app
             "fr": 1,
             "title": "Canais",
             "dataQuery": {
-              "query": "SELECT\n  cv.id AS key,\n  COALESCE(cv.nome, '-') AS label,\n  COALESCE(SUM(pi.subtotal), 0)::float AS value\nFROM vendas.pedidos p\nJOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id\nLEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\nGROUP BY 1, 2\nORDER BY 3 DESC",
+              "query": "SELECT\n  cv.id AS key,\n  COALESCE(cv.nome, '-') AS label,\n  COALESCE(SUM(pi.subtotal), 0)::float AS value\nFROM vendas.pedidos p\nJOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id\nLEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\n  AND ({{canal_venda_id}} IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))\n  AND ({{cliente_id}} IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))\nGROUP BY 1, 2\nORDER BY 3 DESC",
               "xField": "label",
               "yField": "value",
               "keyField": "key",
@@ -154,7 +154,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<dashboard-template name="app
             "fr": 2,
             "title": "Categorias",
             "dataQuery": {
-              "query": "SELECT\n  cr.id AS key,\n  COALESCE(cr.nome, '-') AS label,\n  COALESCE(SUM(pi.subtotal), 0)::float AS value\nFROM vendas.pedidos p\nJOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id\nLEFT JOIN financeiro.categorias_receita cr ON cr.id = p.categoria_receita_id\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\nGROUP BY 1, 2\nORDER BY 3 DESC",
+              "query": "SELECT\n  cr.id AS key,\n  COALESCE(cr.nome, '-') AS label,\n  COALESCE(SUM(pi.subtotal), 0)::float AS value\nFROM vendas.pedidos p\nJOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id\nLEFT JOIN financeiro.categorias_receita cr ON cr.id = p.categoria_receita_id\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\n  AND ({{canal_venda_id}} IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))\n  AND ({{cliente_id}} IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))\nGROUP BY 1, 2\nORDER BY 3 DESC",
               "xField": "label",
               "yField": "value",
               "keyField": "key",
@@ -179,18 +179,24 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<dashboard-template name="app
         <props>
           {
             "fr": 1,
-            "title": "Filtro de Canais",
+            "title": "Filtros",
             "fields": [
               {
                 "label": "Canal",
                 "type": "list",
                 "storePath": "filters.canal_venda_id",
-                "source": {
-                  "type": "options",
-                  "model": "vendas.pedidos",
-                  "field": "canal_venda_id",
-                  "pageSize": 50
-                },
+                "query": "SELECT\n  cv.id AS value,\n  COALESCE(cv.nome, '-') AS label\nFROM vendas.canais_venda cv\nORDER BY 2 ASC",
+                "limit": 200,
+                "selectAll": true,
+                "search": true,
+                "clearable": true
+              },
+              {
+                "label": "Cliente",
+                "type": "multi",
+                "storePath": "filters.cliente_id",
+                "query": "SELECT\n  c.id AS value,\n  COALESCE(c.nome_fantasia, '-') AS label\nFROM entidades.clientes c\nWHERE c.tenant_id = {{tenant_id}}\nORDER BY 2 ASC",
+                "limit": 200,
                 "selectAll": true,
                 "search": true,
                 "clearable": true
@@ -205,7 +211,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<dashboard-template name="app
             "fr": 2,
             "title": "Clientes",
             "dataQuery": {
-              "query": "SELECT\n  c.id AS key,\n  COALESCE(c.nome_fantasia, '-') AS label,\n  COALESCE(SUM(pi.subtotal), 0)::float AS value\nFROM vendas.pedidos p\nJOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id\nLEFT JOIN entidades.clientes c ON c.id = p.cliente_id\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\nGROUP BY 1, 2\nORDER BY 3 DESC",
+              "query": "SELECT\n  c.id AS key,\n  COALESCE(c.nome_fantasia, '-') AS label,\n  COALESCE(SUM(pi.subtotal), 0)::float AS value\nFROM vendas.pedidos p\nJOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id\nLEFT JOIN entidades.clientes c ON c.id = p.cliente_id\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\n  AND ({{canal_venda_id}} IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))\n  AND ({{cliente_id}} IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))\nGROUP BY 1, 2\nORDER BY 3 DESC",
               "xField": "label",
               "yField": "value",
               "keyField": "key",
@@ -241,7 +247,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<dashboard-template name="app
             "fr": 1,
             "title": "Vendedores",
             "dataQuery": {
-              "query": "SELECT\n  v.id AS key,\n  COALESCE(f.nome, '-') AS label,\n  COALESCE(SUM(pi.subtotal), 0)::float AS value\nFROM vendas.pedidos p\nJOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id\nLEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id\nLEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\nGROUP BY 1, 2\nORDER BY 3 DESC",
+              "query": "SELECT\n  v.id AS key,\n  COALESCE(f.nome, '-') AS label,\n  COALESCE(SUM(pi.subtotal), 0)::float AS value\nFROM vendas.pedidos p\nJOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id\nLEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id\nLEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\n  AND ({{canal_venda_id}} IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))\n  AND ({{cliente_id}} IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))\nGROUP BY 1, 2\nORDER BY 3 DESC",
               "xField": "label",
               "yField": "value",
               "keyField": "key",
@@ -268,7 +274,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<dashboard-template name="app
             "fr": 1,
             "title": "Filiais",
             "dataQuery": {
-              "query": "SELECT\n  fil.id AS key,\n  COALESCE(fil.nome, '-') AS label,\n  COALESCE(SUM(pi.subtotal), 0)::float AS value\nFROM vendas.pedidos p\nJOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id\nLEFT JOIN empresa.filiais fil ON fil.id = p.filial_id\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\nGROUP BY 1, 2\nORDER BY 3 DESC",
+              "query": "SELECT\n  fil.id AS key,\n  COALESCE(fil.nome, '-') AS label,\n  COALESCE(SUM(pi.subtotal), 0)::float AS value\nFROM vendas.pedidos p\nJOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id\nLEFT JOIN empresa.filiais fil ON fil.id = p.filial_id\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\n  AND ({{canal_venda_id}} IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))\n  AND ({{cliente_id}} IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))\nGROUP BY 1, 2\nORDER BY 3 DESC",
               "xField": "label",
               "yField": "value",
               "keyField": "key",
@@ -295,7 +301,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<dashboard-template name="app
             "fr": 1,
             "title": "Unidades de Negócio",
             "dataQuery": {
-              "query": "SELECT\n  un.id AS key,\n  COALESCE(un.nome, '-') AS label,\n  COALESCE(SUM(pi.subtotal), 0)::float AS value\nFROM vendas.pedidos p\nJOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id\nLEFT JOIN empresa.unidades_negocio un ON un.id = p.unidade_negocio_id\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\nGROUP BY 1, 2\nORDER BY 3 DESC",
+              "query": "SELECT\n  un.id AS key,\n  COALESCE(un.nome, '-') AS label,\n  COALESCE(SUM(pi.subtotal), 0)::float AS value\nFROM vendas.pedidos p\nJOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id\nLEFT JOIN empresa.unidades_negocio un ON un.id = p.unidade_negocio_id\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\n  AND ({{canal_venda_id}} IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))\n  AND ({{cliente_id}} IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))\nGROUP BY 1, 2\nORDER BY 3 DESC",
               "xField": "label",
               "yField": "value",
               "keyField": "key",
@@ -334,7 +340,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<dashboard-template name="app
             "fr": 3,
             "title": "Faturamento por Mês",
             "dataQuery": {
-              "query": "SELECT\n  TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS key,\n  TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS label,\n  COALESCE(SUM(pi.subtotal), 0)::float AS value\nFROM vendas.pedidos p\nJOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\nGROUP BY 1, 2\nORDER BY 2 ASC",
+              "query": "SELECT\n  TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS key,\n  TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS label,\n  COALESCE(SUM(pi.subtotal), 0)::float AS value\nFROM vendas.pedidos p\nJOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\n  AND ({{canal_venda_id}} IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))\n  AND ({{cliente_id}} IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))\nGROUP BY 1, 2\nORDER BY 2 ASC",
               "xField": "label",
               "yField": "value",
               "keyField": "key",
@@ -376,7 +382,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<dashboard-template name="app
             "enableSearch": true,
             "pageSize": 8,
             "dataQuery": {
-              "query": "SELECT\n  p.id AS pedido,\n  p.data_pedido::date AS data_pedido,\n  COALESCE(c.nome_fantasia, '-') AS cliente,\n  COALESCE(cv.nome, '-') AS canal,\n  COALESCE(f.nome, '-') AS vendedor,\n  COALESCE(p.valor_total, 0)::float AS valor_total,\n  COALESCE(p.status, '-') AS status\nFROM vendas.pedidos p\nLEFT JOIN entidades.clientes c ON c.id = p.cliente_id\nLEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id\nLEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id\nLEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\nORDER BY p.data_pedido DESC, p.id DESC",
+              "query": "SELECT\n  p.id AS pedido,\n  p.data_pedido::date AS data_pedido,\n  COALESCE(c.nome_fantasia, '-') AS cliente,\n  COALESCE(cv.nome, '-') AS canal,\n  COALESCE(f.nome, '-') AS vendedor,\n  COALESCE(p.valor_total, 0)::float AS valor_total,\n  COALESCE(p.status, '-') AS status\nFROM vendas.pedidos p\nLEFT JOIN entidades.clientes c ON c.id = p.cliente_id\nLEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id\nLEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id\nLEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\n  AND ({{canal_venda_id}} IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))\n  AND ({{cliente_id}} IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))\nORDER BY p.data_pedido DESC, p.id DESC",
               "filters": {},
               "limit": 120
             },
@@ -447,7 +453,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<dashboard-template name="app
             "fr": 1,
             "title": "Pedidos por Mês",
             "dataQuery": {
-              "query": "SELECT\n  TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS key,\n  TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS label,\n  COUNT(DISTINCT p.id)::int AS value\nFROM vendas.pedidos p\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\nGROUP BY 1, 2\nORDER BY 2 ASC",
+              "query": "SELECT\n  TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS key,\n  TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS label,\n  COUNT(DISTINCT p.id)::int AS value\nFROM vendas.pedidos p\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\n  AND ({{canal_venda_id}} IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))\n  AND ({{cliente_id}} IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))\nGROUP BY 1, 2\nORDER BY 2 ASC",
               "xField": "label",
               "yField": "value",
               "keyField": "key",
@@ -471,7 +477,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<dashboard-template name="app
             "fr": 1,
             "title": "Ticket Médio por Mês",
             "dataQuery": {
-              "query": "SELECT\n  TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS key,\n  TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS label,\n  COALESCE(AVG(p.valor_total), 0)::float AS value\nFROM vendas.pedidos p\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\nGROUP BY 1, 2\nORDER BY 2 ASC",
+              "query": "SELECT\n  TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS key,\n  TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS label,\n  COALESCE(AVG(p.valor_total), 0)::float AS value\nFROM vendas.pedidos p\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\n  AND ({{canal_venda_id}} IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))\n  AND ({{cliente_id}} IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))\nGROUP BY 1, 2\nORDER BY 2 ASC",
               "xField": "label",
               "yField": "value",
               "keyField": "key",
@@ -529,7 +535,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<dashboard-template name="app
             "fr": 1,
             "title": "Territórios",
             "dataQuery": {
-              "query": "SELECT\n  t.id AS key,\n  COALESCE(t.nome, '-') AS label,\n  COALESCE(SUM(pi.subtotal), 0)::float AS value\nFROM vendas.pedidos p\nJOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id\nLEFT JOIN comercial.territorios t ON t.id = p.territorio_id\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\nGROUP BY 1, 2\nORDER BY 3 DESC",
+              "query": "SELECT\n  t.id AS key,\n  COALESCE(t.nome, '-') AS label,\n  COALESCE(SUM(pi.subtotal), 0)::float AS value\nFROM vendas.pedidos p\nJOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id\nLEFT JOIN comercial.territorios t ON t.id = p.territorio_id\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\n  AND ({{canal_venda_id}} IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))\n  AND ({{cliente_id}} IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))\nGROUP BY 1, 2\nORDER BY 3 DESC",
               "xField": "label",
               "yField": "value",
               "keyField": "key",
@@ -556,7 +562,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<dashboard-template name="app
             "fr": 1,
             "title": "Serviços/Categorias",
             "dataQuery": {
-              "query": "SELECT\n  cr.id AS key,\n  COALESCE(cr.nome, '-') AS label,\n  COALESCE(SUM(pi.subtotal), 0)::float AS value\nFROM vendas.pedidos p\nJOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id\nLEFT JOIN financeiro.categorias_receita cr ON cr.id = p.categoria_receita_id\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\nGROUP BY 1, 2\nORDER BY 3 DESC",
+              "query": "SELECT\n  cr.id AS key,\n  COALESCE(cr.nome, '-') AS label,\n  COALESCE(SUM(pi.subtotal), 0)::float AS value\nFROM vendas.pedidos p\nJOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id\nLEFT JOIN financeiro.categorias_receita cr ON cr.id = p.categoria_receita_id\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\n  AND ({{canal_venda_id}} IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))\n  AND ({{cliente_id}} IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))\nGROUP BY 1, 2\nORDER BY 3 DESC",
               "xField": "label",
               "yField": "value",
               "keyField": "key",
@@ -583,7 +589,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<dashboard-template name="app
             "fr": 1,
             "title": "Pedidos",
             "dataQuery": {
-              "query": "SELECT\n  cv.id AS key,\n  COALESCE(cv.nome, '-') AS label,\n  COUNT(DISTINCT p.id)::int AS value\nFROM vendas.pedidos p\nLEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\nGROUP BY 1, 2\nORDER BY 3 DESC",
+              "query": "SELECT\n  cv.id AS key,\n  COALESCE(cv.nome, '-') AS label,\n  COUNT(DISTINCT p.id)::int AS value\nFROM vendas.pedidos p\nLEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\n  AND ({{canal_venda_id}} IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))\n  AND ({{cliente_id}} IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))\nGROUP BY 1, 2\nORDER BY 3 DESC",
               "xField": "label",
               "yField": "value",
               "keyField": "key",

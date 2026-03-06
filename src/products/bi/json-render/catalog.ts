@@ -245,6 +245,8 @@ export const catalog = {
             placeholder: z.string().optional(),
             clearable: z.boolean().optional(),
             width: z.union([z.number(), z.string()]).optional(),
+            query: z.string().optional(),
+            limit: z.number().optional(),
             source: z.union([
               z.object({
                 type: z.literal('static'),
@@ -578,6 +580,8 @@ export const catalog = {
           selectAll: z.boolean().optional(),
           search: z.boolean().optional(),
           width: z.union([z.number(), z.string()]).optional(),
+          query: z.string().optional(),
+          limit: z.number().optional(),
           source: z.union([
             z.object({
               type: z.literal('static'),
