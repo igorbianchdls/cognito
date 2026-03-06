@@ -9,18 +9,19 @@ import {
   ManagersPanel,
   PropertiesPanel,
   useDashboardVisualEditor,
-  useJsonTemplateEditor,
+  useDslTemplateEditor,
 } from '@/products/bi/features/dashboard-editor'
 import {
   refreshAppsVendasData,
   useAppsVendasBootstrap,
 } from '@/products/bi/features/dashboard-playground/hooks/useAppsData'
 import type { DateRange } from '@/products/bi/shared/types'
-import { APPS_VENDAS_TEMPLATE_TEXT } from '@/products/bi/shared/templates/appsVendasTemplate'
+import { APPS_VENDAS_TEMPLATE_DSL } from '@/products/bi/shared/templates/appsVendasTemplate'
 
 function AppsVendasPlayground() {
   const { data, setData, getValueByPath } = useData()
   const {
+    dslText,
     jsonText,
     parseError,
     tree,
@@ -35,7 +36,7 @@ function AppsVendasPlayground() {
     moveNodeRelative,
     setNodeProp,
     replaceNodeProps,
-  } = useJsonTemplateEditor(APPS_VENDAS_TEMPLATE_TEXT)
+  } = useDslTemplateEditor(APPS_VENDAS_TEMPLATE_DSL)
   const visualEditor = useDashboardVisualEditor({
     onDuplicateNode: duplicateNode,
     onDeleteNode: deleteNode,
@@ -58,11 +59,13 @@ function AppsVendasPlayground() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-start">
       <JsonEditorPanel
-        jsonText={jsonText}
+        title="DSL"
+        jsonText={dslText}
         parseError={parseError}
         onChangeText={onChangeText}
         onFormat={onFormat}
         onReset={onReset}
+        showFormatButton={false}
         extra={
           <ManagersPanel
             jsonText={jsonText}

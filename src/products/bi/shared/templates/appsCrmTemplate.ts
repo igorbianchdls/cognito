@@ -1,5 +1,6 @@
 import { migrateTemplateDataQueries } from '@/products/bi/shared/templates/dataQuerySqlMigration'
 import { BiSlicers } from '@/products/bi'
+import { renderDashboardTemplateDslFromJsonText } from '@/products/bi/shared/templates/templateDslBridge'
 
 const vendedorOptionsSource = BiSlicers.createOptionsSource('crm.oportunidades', 'vendedor_id', 80)
 const faseOptionsSource = BiSlicers.createOptionsSource('crm.oportunidades', 'fase_pipeline_id', 80)
@@ -274,3 +275,5 @@ export const APPS_CRM_TEMPLATE_TEXT = JSON.stringify(migrateTemplateDataQueries(
   null,
   2,
 )
+
+export const APPS_CRM_TEMPLATE_DSL = renderDashboardTemplateDslFromJsonText(APPS_CRM_TEMPLATE_TEXT, 'apps_crm_template_dsl')

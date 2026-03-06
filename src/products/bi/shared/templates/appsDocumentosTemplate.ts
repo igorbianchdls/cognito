@@ -1,4 +1,5 @@
 import { migrateTemplateDataQueries } from '@/products/bi/shared/templates/dataQuerySqlMigration'
+import { renderDashboardTemplateDslFromJsonText } from '@/products/bi/shared/templates/templateDslBridge'
 export const APPS_DOCUMENTOS_TEMPLATE_TEXT = JSON.stringify(migrateTemplateDataQueries(
   [
     {
@@ -97,3 +98,5 @@ export const APPS_DOCUMENTOS_TEMPLATE_TEXT = JSON.stringify(migrateTemplateDataQ
   null,
   2,
 )
+
+export const APPS_DOCUMENTOS_TEMPLATE_DSL = renderDashboardTemplateDslFromJsonText(APPS_DOCUMENTOS_TEMPLATE_TEXT, 'apps_documentos_template_dsl')

@@ -1,4 +1,5 @@
 import { BiSlicers } from '@/products/bi'
+import { renderDashboardTemplateDslFromJsonText } from '@/products/bi/shared/templates/templateDslBridge'
 
 const centroCustoOptionsSource = BiSlicers.createOptionsSource('compras.compras', 'centro_custo_id', 100)
 
@@ -382,3 +383,5 @@ export const APPS_COMPRAS_TEMPLATE_TEXT = JSON.stringify([
     ],
   },
 ], null, 2)
+
+export const APPS_COMPRAS_TEMPLATE_DSL = renderDashboardTemplateDslFromJsonText(APPS_COMPRAS_TEMPLATE_TEXT, 'apps_compras_template_dsl')

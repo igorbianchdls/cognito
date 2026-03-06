@@ -12,13 +12,14 @@ import {
   refreshAppsComprasData,
   useAppsComprasBootstrap,
 } from '@/products/bi/features/dashboard-playground/hooks/useAppsData'
-import useJsonTemplateEditor from '@/products/bi/features/dashboard-editor/hooks/useJsonTemplateEditor'
+import useDslTemplateEditor from '@/products/bi/features/dashboard-editor/hooks/useDslTemplateEditor'
 import type { DateRange } from '@/products/bi/shared/types'
-import { APPS_COMPRAS_TEMPLATE_TEXT } from '@/products/bi/shared/templates/appsComprasTemplate'
+import { APPS_COMPRAS_TEMPLATE_DSL } from '@/products/bi/shared/templates/appsComprasTemplate'
 
 function AppsComprasPlayground() {
   const { setData, getValueByPath } = useData()
   const {
+    dslText,
     jsonText,
     parseError,
     tree,
@@ -33,7 +34,7 @@ function AppsComprasPlayground() {
     moveNodeRelative,
     setNodeProp,
     replaceNodeProps,
-  } = useJsonTemplateEditor(APPS_COMPRAS_TEMPLATE_TEXT)
+  } = useDslTemplateEditor(APPS_COMPRAS_TEMPLATE_DSL)
   const visualEditor = useDashboardVisualEditor({
     onDuplicateNode: duplicateNode,
     onDeleteNode: deleteNode,
@@ -56,11 +57,13 @@ function AppsComprasPlayground() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-start">
       <JsonEditorPanel
-        jsonText={jsonText}
+        title="DSL"
+        jsonText={dslText}
         parseError={parseError}
         onChangeText={onChangeText}
         onFormat={onFormat}
         onReset={onReset}
+        showFormatButton={false}
         extra={
           <ManagersPanel
             jsonText={jsonText}

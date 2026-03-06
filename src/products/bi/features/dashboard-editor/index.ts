@@ -5,5 +5,6 @@ export { default as JsonPreviewPanel } from '@/products/bi/features/dashboard-ed
 export { default as ManagersPanel } from '@/products/bi/features/dashboard-editor/components/ManagersPanel'
 export { default as PropertiesPanel } from '@/products/bi/features/dashboard-editor/components/PropertiesPanel'
 export { default as useJsonTemplateEditor } from '@/products/bi/features/dashboard-editor/hooks/useJsonTemplateEditor'
+export { default as useDslTemplateEditor } from '@/products/bi/features/dashboard-editor/hooks/useDslTemplateEditor'
 export { default as useDashboardVisualEditor } from '@/products/bi/features/dashboard-editor/hooks/useDashboardVisualEditor'
 export * from '@/products/bi/features/dashboard-editor/types/editor-types'

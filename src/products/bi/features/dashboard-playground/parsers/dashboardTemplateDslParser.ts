@@ -10,20 +10,6 @@ type DslNode = {
   start: number
 }
 
-const TAG_TO_CATALOG_TYPE: Record<string, string> = {
-  theme: 'Theme',
-  header: 'Header',
-  div: 'Div',
-  card: 'Card',
-  kpi: 'KPI',
-  'bar-chart': 'BarChart',
-  'line-chart': 'LineChart',
-  'pie-chart': 'PieChart',
-  'slicer-card': 'SlicerCard',
-  aisummary: 'AISummary',
-  'ai-summary': 'AISummary',
-}
-
 function lineCol(source: string, index: number): { line: number; column: number } {
   const safe = Math.max(0, Math.min(index, source.length))
   const segment = source.slice(0, safe)
@@ -34,14 +20,14 @@ function lineCol(source: string, index: number): { line: number; column: number 
   }
 }
 
-export class GoogleAdsDslParseError extends Error {
+export class DashboardTemplateDslParseError extends Error {
   readonly line: number
   readonly column: number
 
   constructor(source: string, index: number, message: string) {
     const { line, column } = lineCol(source, index)
     super(`${message} (linha ${line}, coluna ${column})`)
-    this.name = 'GoogleAdsDslParseError'
+    this.name = 'DashboardTemplateDslParseError'
     this.line = line
     this.column = column
   }
@@ -77,7 +63,7 @@ function parseTagAttrs(source: string, content: string, startIndex: number): { n
   }
 
   const nameMatch = raw.match(/^([a-zA-Z][a-zA-Z0-9_-]*)/)
-  if (!nameMatch) throw new GoogleAdsDslParseError(source, startIndex, `Tag invalida: <${content}>`)
+  if (!nameMatch) throw new DashboardTemplateDslParseError(source, startIndex, `Tag invalida: <${content}>`)
 
   const name = nameMatch[1].toLowerCase()
   let cursor = nameMatch[0].length
@@ -88,28 +74,28 @@ function parseTagAttrs(source: string, content: string, startIndex: number): { n
     if (cursor >= raw.length) break
 
     const keyMatch = raw.slice(cursor).match(/^([a-zA-Z_][a-zA-Z0-9_:-]*)/)
-    if (!keyMatch) throw new GoogleAdsDslParseError(source, startIndex, `Atributo invalido em <${name}>`)
+    if (!keyMatch) throw new DashboardTemplateDslParseError(source, startIndex, `Atributo invalido em <${name}>`)
     const keyRaw = keyMatch[1]
     const key = keyRaw.trim().toLowerCase()
     cursor += keyRaw.length
 
     while (cursor < raw.length && /\s/.test(raw[cursor])) cursor += 1
     if (raw[cursor] !== '=') {
-      throw new GoogleAdsDslParseError(source, startIndex, `Atributo "${keyRaw}" em <${name}> deve usar = "valor"`)
+      throw new DashboardTemplateDslParseError(source, startIndex, `Atributo "${keyRaw}" em <${name}> deve usar = "valor"`)
     }
     cursor += 1
 
     while (cursor < raw.length && /\s/.test(raw[cursor])) cursor += 1
     const quote = raw[cursor]
     if (quote !== '"' && quote !== "'") {
-      throw new GoogleAdsDslParseError(source, startIndex, `Atributo "${keyRaw}" em <${name}> deve estar entre aspas`)
+      throw new DashboardTemplateDslParseError(source, startIndex, `Atributo "${keyRaw}" em <${name}> deve estar entre aspas`)
     }
     cursor += 1
 
     const valueStart = cursor
     while (cursor < raw.length && raw[cursor] !== quote) cursor += 1
     if (cursor >= raw.length) {
-      throw new GoogleAdsDslParseError(source, startIndex, `Atributo "${keyRaw}" em <${name}> nao foi fechado`)
+      throw new DashboardTemplateDslParseError(source, startIndex, `Atributo "${keyRaw}" em <${name}> nao foi fechado`)
     }
     const value = raw.slice(valueStart, cursor)
     cursor += 1
@@ -130,7 +116,7 @@ function parseDslTree(sourceRaw: string): DslNode {
     if (top?.tag === 'props') {
       const close = '</props>'
       const closeIndex = source.toLowerCase().indexOf(close, i)
-      if (closeIndex < 0) throw new GoogleAdsDslParseError(source, top.start, 'Tag <props> nao foi fechada')
+      if (closeIndex < 0) throw new DashboardTemplateDslParseError(source, top.start, 'Tag <props> nao foi fechada')
       if (closeIndex > i) {
         top.text += source.slice(i, closeIndex)
         i = closeIndex
@@ -140,7 +126,7 @@ function parseDslTree(sourceRaw: string): DslNode {
 
     if (source.startsWith('<!--', i)) {
       const end = source.indexOf('-->', i + 4)
-      if (end < 0) throw new GoogleAdsDslParseError(source, i, 'Comentario nao foi fechado')
+      if (end < 0) throw new DashboardTemplateDslParseError(source, i, 'Comentario nao foi fechado')
       i = end + 3
       continue
     }
@@ -151,7 +137,7 @@ function parseDslTree(sourceRaw: string): DslNode {
       const end = next < 0 ? source.length : next
       const text = source.slice(i, end)
       if (stack.length === 0 && text.trim()) {
-        throw new GoogleAdsDslParseError(source, i, 'Texto fora da tag raiz nao e permitido')
+        throw new DashboardTemplateDslParseError(source, i, 'Texto fora da tag raiz nao e permitido')
       }
       if (stack.length > 0) stack[stack.length - 1].text += text
       i = end
@@ -159,23 +145,23 @@ function parseDslTree(sourceRaw: string): DslNode {
     }
 
     const end = findTagEnd(source, i + 1)
-    if (end < 0) throw new GoogleAdsDslParseError(source, i, 'Tag nao foi fechada com ">"')
+    if (end < 0) throw new DashboardTemplateDslParseError(source, i, 'Tag nao foi fechada com ">"')
     const raw = source.slice(i + 1, end).trim()
-    if (!raw) throw new GoogleAdsDslParseError(source, i, 'Tag vazia nao e permitida')
+    if (!raw) throw new DashboardTemplateDslParseError(source, i, 'Tag vazia nao e permitida')
 
     if (raw.startsWith('/')) {
       const closeName = raw.slice(1).trim().toLowerCase()
       const current = stack.pop()
-      if (!current) throw new GoogleAdsDslParseError(source, i, `Tag de fechamento </${closeName}> sem abertura`)
+      if (!current) throw new DashboardTemplateDslParseError(source, i, `Tag de fechamento </${closeName}> sem abertura`)
       if (current.tag !== closeName) {
-        throw new GoogleAdsDslParseError(source, i, `Fechamento invalido: esperado </${current.tag}> e recebido </${closeName}>`)
+        throw new DashboardTemplateDslParseError(source, i, `Fechamento invalido: esperado </${current.tag}> e recebido </${closeName}>`)
       }
       if (stack.length > 0) {
         stack[stack.length - 1].children.push(current)
       } else if (!root) {
         root = current
       } else {
-        throw new GoogleAdsDslParseError(source, i, 'Apenas uma tag raiz e permitida')
+        throw new DashboardTemplateDslParseError(source, i, 'Apenas uma tag raiz e permitida')
       }
       i = end + 1
       continue
@@ -196,7 +182,7 @@ function parseDslTree(sourceRaw: string): DslNode {
       } else if (!root) {
         root = node
       } else {
-        throw new GoogleAdsDslParseError(source, i, 'Apenas uma tag raiz e permitida')
+        throw new DashboardTemplateDslParseError(source, i, 'Apenas uma tag raiz e permitida')
       }
     } else {
       stack.push(node)
@@ -207,9 +193,9 @@ function parseDslTree(sourceRaw: string): DslNode {
 
   if (stack.length) {
     const pending = stack[stack.length - 1]
-    throw new GoogleAdsDslParseError(source, pending.start, `Tag <${pending.tag}> nao foi fechada`)
+    throw new DashboardTemplateDslParseError(source, pending.start, `Tag <${pending.tag}> nao foi fechada`)
   }
-  if (!root) throw new GoogleAdsDslParseError(source, 0, 'DSL vazio ou sem tag raiz')
+  if (!root) throw new DashboardTemplateDslParseError(source, 0, 'DSL vazio ou sem tag raiz')
 
   return root
 }
@@ -221,23 +207,33 @@ function parsePropsNode(source: string, node: DslNode): Record<string, unknown> 
   try {
     parsed = JSON.parse(raw)
   } catch {
-    throw new GoogleAdsDslParseError(source, node.start, 'JSON invalido em <props>')
+    throw new DashboardTemplateDslParseError(source, node.start, 'JSON invalido em <props>')
   }
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    throw new GoogleAdsDslParseError(source, node.start, '<props> deve conter um objeto JSON')
+    throw new DashboardTemplateDslParseError(source, node.start, '<props> deve conter um objeto JSON')
   }
   return parsed as Record<string, unknown>
 }
 
+function toCatalogType(tag: string): string {
+  if (tag === 'kpi') return 'KPI'
+  if (tag === 'ai-summary' || tag === 'aisummary') return 'AISummary'
+  return tag
+    .split('-')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join('')
+}
+
 function compileNode(source: string, node: DslNode): Record<string, unknown> {
-  const type = TAG_TO_CATALOG_TYPE[node.tag]
+  const type = toCatalogType(node.tag)
   if (!type) {
-    throw new GoogleAdsDslParseError(source, node.start, `Tag <${node.tag}> nao e suportada`)
+    throw new DashboardTemplateDslParseError(source, node.start, `Tag <${node.tag}> nao e suportada`)
   }
 
   const propsNodes = node.children.filter((child) => child.tag === 'props')
   if (propsNodes.length > 1) {
-    throw new GoogleAdsDslParseError(source, node.start, `Tag <${node.tag}> aceita no maximo um <props>`)
+    throw new DashboardTemplateDslParseError(source, node.start, `Tag <${node.tag}> aceita no maximo um <props>`)
   }
 
   const props = propsNodes.length ? parsePropsNode(source, propsNodes[0]) : {}
@@ -251,10 +247,10 @@ function compileNode(source: string, node: DslNode): Record<string, unknown> {
   return out
 }
 
-export function parseGoogleAdsDslToTree(source: string): JsonTree {
+export function parseDashboardTemplateDslToTree(source: string): JsonTree {
   const root = parseDslTree(source)
   if (root.tag !== 'dashboard-template') {
-    throw new GoogleAdsDslParseError(source, root.start, `Tag raiz invalida: esperado <dashboard-template> e recebido <${root.tag}>`)
+    throw new DashboardTemplateDslParseError(source, root.start, `Tag raiz invalida: esperado <dashboard-template> e recebido <${root.tag}>`)
   }
   return root.children.map((node) => compileNode(source, node))
 }

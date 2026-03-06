@@ -9,12 +9,13 @@ import {
   ManagersPanel,
   PropertiesPanel,
   useDashboardVisualEditor,
-  useJsonTemplateEditor,
+  useDslTemplateEditor,
 } from '@/products/bi/features/dashboard-editor'
-import { APPS_SHOPIFY_TEMPLATE_TEXT } from '@/products/bi/shared/templates/appsShopifyTemplate'
+import { APPS_SHOPIFY_TEMPLATE_DSL } from '@/products/bi/shared/templates/appsShopifyTemplate'
 
 function AppsShopifyPlayground() {
   const {
+    dslText,
     jsonText,
     parseError,
     tree,
@@ -29,7 +30,7 @@ function AppsShopifyPlayground() {
     moveNodeRelative,
     setNodeProp,
     replaceNodeProps,
-  } = useJsonTemplateEditor(APPS_SHOPIFY_TEMPLATE_TEXT)
+  } = useDslTemplateEditor(APPS_SHOPIFY_TEMPLATE_DSL)
 
   const visualEditor = useDashboardVisualEditor({
     onDuplicateNode: duplicateNode,
@@ -45,11 +46,13 @@ function AppsShopifyPlayground() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-start">
       <JsonEditorPanel
-        jsonText={jsonText}
+        title="DSL"
+        jsonText={dslText}
         parseError={parseError}
         onChangeText={onChangeText}
         onFormat={onFormat}
         onReset={onReset}
+        showFormatButton={false}
         extra={
           <ManagersPanel
             jsonText={jsonText}

@@ -1,5 +1,6 @@
 import { migrateTemplateDataQueries } from '@/products/bi/shared/templates/dataQuerySqlMigration'
 import { BiSlicers } from '@/products/bi'
+import { renderDashboardTemplateDslFromJsonText } from '@/products/bi/shared/templates/templateDslBridge'
 
 const almoxarifadoOptionsSource = BiSlicers.createOptionsSource('estoque.estoques_atual', 'almoxarifado_id', 80)
 const produtoOptionsSource = BiSlicers.createOptionsSource('estoque.estoques_atual', 'produto_id', 120)
@@ -273,3 +274,5 @@ export const APPS_ESTOQUE_TEMPLATE_TEXT = JSON.stringify(migrateTemplateDataQuer
   null,
   2,
 )
+
+export const APPS_ESTOQUE_TEMPLATE_DSL = renderDashboardTemplateDslFromJsonText(APPS_ESTOQUE_TEMPLATE_TEXT, 'apps_estoque_template_dsl')

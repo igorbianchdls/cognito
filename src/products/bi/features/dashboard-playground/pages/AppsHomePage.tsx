@@ -11,9 +11,9 @@ import {
   refreshAppsHomeData,
   useAppsHomeBootstrap,
 } from '@/products/bi/features/dashboard-playground/hooks/useAppsData'
-import useJsonTemplateEditor from '@/products/bi/features/dashboard-editor/hooks/useJsonTemplateEditor'
+import useDslTemplateEditor from '@/products/bi/features/dashboard-editor/hooks/useDslTemplateEditor'
 import type { DateRange } from '@/products/bi/shared/types'
-import { APPS_HOME_TEMPLATE_TEXT } from '@/products/bi/shared/templates/appsHomeTemplate'
+import { APPS_HOME_TEMPLATE_DSL } from '@/products/bi/shared/templates/appsHomeTemplate'
 
 const INITIAL_APPS_HOME_DATA = {
   revenue: 125000,
@@ -40,6 +40,7 @@ const INITIAL_APPS_HOME_DATA = {
 function AppsHomePlayground() {
   const { data, setData, getValueByPath } = useData()
   const {
+    dslText,
     jsonText,
     parseError,
     tree,
@@ -53,7 +54,7 @@ function AppsHomePlayground() {
     setNodeProp,
     replaceNodeProps,
   } =
-    useJsonTemplateEditor(APPS_HOME_TEMPLATE_TEXT)
+    useDslTemplateEditor(APPS_HOME_TEMPLATE_DSL)
   const visualEditor = useDashboardVisualEditor({
     onDuplicateNode: duplicateNode,
     onDeleteNode: deleteNode,
@@ -84,11 +85,13 @@ function AppsHomePlayground() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-start">
       <JsonEditorPanel
-        jsonText={jsonText}
+        title="DSL"
+        jsonText={dslText}
         parseError={parseError}
         onChangeText={onChangeText}
         onFormat={onFormat}
         onReset={onReset}
+        showFormatButton={false}
         dataPreview={data}
       />
       <JsonPreviewPanel

@@ -1,5 +1,6 @@
 import { migrateTemplateDataQueries } from '@/products/bi/shared/templates/dataQuerySqlMigration'
 import { BiSlicers } from '@/products/bi'
+import { renderDashboardTemplateDslFromJsonText } from '@/products/bi/shared/templates/templateDslBridge'
 
 const contaOptionsSource = {
   ...BiSlicers.createOptionsSource('ecommerce.pedidos', 'canal_conta_id', 80),
@@ -364,3 +365,5 @@ export const APPS_AMAZON_TEMPLATE_TEXT = JSON.stringify(migrateTemplateDataQueri
   null,
   2,
 )
+
+export const APPS_AMAZON_TEMPLATE_DSL = renderDashboardTemplateDslFromJsonText(APPS_AMAZON_TEMPLATE_TEXT, 'apps_amazon_template_dsl')

@@ -1,5 +1,6 @@
 import { migrateTemplateDataQueries } from '@/products/bi/shared/templates/dataQuerySqlMigration'
 import { BiSlicers } from '@/products/bi'
+import { renderDashboardTemplateDslFromJsonText } from '@/products/bi/shared/templates/templateDslBridge'
 
 const fornecedorOptionsSource = BiSlicers.createOptionsSource('financeiro.contas_pagar', 'fornecedor_id', 80)
 const statusOptionsSource = BiSlicers.createOptionsSource('financeiro.contas_pagar', 'status', 40)
@@ -176,3 +177,5 @@ export const APPS_FINANCEIRO_TEMPLATE_TEXT = JSON.stringify(migrateTemplateDataQ
   null,
   2,
 )
+
+export const APPS_FINANCEIRO_TEMPLATE_DSL = renderDashboardTemplateDslFromJsonText(APPS_FINANCEIRO_TEMPLATE_TEXT, 'apps_financeiro_template_dsl')

@@ -9,12 +9,13 @@ import {
   ManagersPanel,
   PropertiesPanel,
   useDashboardVisualEditor,
-  useJsonTemplateEditor,
+  useDslTemplateEditor,
 } from '@/products/bi/features/dashboard-editor'
-import { APPS_METAADS_TEMPLATE_TEXT } from '@/products/bi/shared/templates/appsMetaAdsTemplate'
+import { APPS_METAADS_TEMPLATE_DSL } from '@/products/bi/shared/templates/appsMetaAdsTemplate'
 
 function AppsMetaAdsPlayground() {
   const {
+    dslText,
     jsonText,
     parseError,
     tree,
@@ -29,7 +30,7 @@ function AppsMetaAdsPlayground() {
     moveNodeRelative,
     setNodeProp,
     replaceNodeProps,
-  } = useJsonTemplateEditor(APPS_METAADS_TEMPLATE_TEXT)
+  } = useDslTemplateEditor(APPS_METAADS_TEMPLATE_DSL)
 
   const visualEditor = useDashboardVisualEditor({
     onDuplicateNode: duplicateNode,
@@ -46,11 +47,13 @@ function AppsMetaAdsPlayground() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-start">
       <JsonEditorPanel
-        jsonText={jsonText}
+        title="DSL"
+        jsonText={dslText}
         parseError={parseError}
         onChangeText={onChangeText}
         onFormat={onFormat}
         onReset={onReset}
+        showFormatButton={false}
         extra={
           <ManagersPanel
             jsonText={jsonText}
