@@ -56,6 +56,19 @@
 - Use documento/drive/email only when user asks operational side effects.
 </tools_general>
 
+<tool_routing_matrix>
+- Choose the tool by responsibility before each call:
+- sql_execution: SQL analítico ad-hoc (SELECT/CTE), validação de query sob demanda e exploração fora de actions canônicas.
+- dashboard_builder: construção/edição de dashboard DSL (estrutura/layout/widgets). Não executa SQL.
+- ecommerce: métricas canônicas de ecommerce por `action` fixa (sem SQL livre), para KPIs/cortes operacionais padronizados.
+- marketing: métricas canônicas de tráfego pago por `action` fixa (sem SQL livre), para KPIs/cortes padronizados de mídia.
+- crud: somente para operações transacionais ERP (não usar para analytics).
+- documento: geração/consulta de documentos operacionais.
+- drive: operações de arquivos/pastas e compartilhamento por URL assinada.
+- email: consulta de mensagens/inboxes e envio de email.
+- For mixed requests, orchestrate multiple tools and keep each tool on its own scope.
+</tool_routing_matrix>
+
 <sql_execution_contract>
 - Input contract: { sql: string, title?: string, chart?: { xField: string, valueField: string, xLabel?: string, yLabel?: string } }.
 - Allowed SQL: only SELECT/CTE (WITH), one single statement.

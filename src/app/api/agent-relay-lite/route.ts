@@ -543,13 +543,34 @@ function buildToolsSchema() {
     {
       type: 'function',
       name: 'ecommerce',
-      description: 'Consulta métricas canônicas de ecommerce via actions pré-definidas (sem SQL livre).',
+      description:
+        'Tool analítica canônica de ecommerce por actions fixas (sem SQL livre). Use para KPIs e cortes padrão de operação/comercial. Não use para SQL customizado; nesse caso use sql_execution. Entrada: action obrigatória + params opcionais (datas YYYY-MM-DD). Saída padronizada: rows, columns, count, chart, sql_query e sql_params.',
       parameters: {
         type: 'object',
         additionalProperties: true,
         properties: {
-          action: { type: 'string', description: 'kpis_resumo|vendas_por_canal|pedidos_por_status|faturamento_por_mes|top_produtos_receita|frete_por_transportadora' },
-          params: { type: 'object' },
+          action: {
+            type: 'string',
+            enum: ['kpis_resumo', 'vendas_por_canal', 'pedidos_por_status', 'faturamento_por_mes', 'top_produtos_receita', 'frete_por_transportadora'],
+            description:
+              'Ação analítica de ecommerce. Mapa: kpis_resumo (pedidos/receita/ticket/clientes), vendas_por_canal, pedidos_por_status, faturamento_por_mes, top_produtos_receita, frete_por_transportadora.',
+          },
+          params: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              de: { type: 'string', description: 'Data inicial (YYYY-MM-DD).' },
+              ate: { type: 'string', description: 'Data final (YYYY-MM-DD).' },
+              plataforma: { type: 'string', description: 'Filtro por plataforma (ex.: shopify).' },
+              canal_conta_id: { type: 'string', description: 'Filtro por canal/conta de venda.' },
+              loja_id: { type: 'string', description: 'Filtro por loja.' },
+              status: { type: 'string', description: 'Filtro por status do pedido.' },
+              status_pagamento: { type: 'string', description: 'Filtro por status de pagamento.' },
+              status_fulfillment: { type: 'string', description: 'Filtro por status de fulfillment/logística.' },
+              limit: { type: 'integer', description: 'Limite de linhas para rankings/séries (máximo 200).' },
+            },
+            description: 'Filtros opcionais da action. Use somente campos listados.',
+          },
         },
         required: ['action'],
       },
@@ -557,13 +578,34 @@ function buildToolsSchema() {
     {
       type: 'function',
       name: 'marketing',
-      description: 'Consulta métricas canônicas de mídia paga via actions pré-definidas (sem SQL livre).',
+      description:
+        'Tool analítica canônica de marketing/tráfego pago por actions fixas (sem SQL livre). Use para KPIs e cortes padrão de mídia. Não use para SQL customizado; nesse caso use sql_execution. Entrada: action obrigatória + params opcionais (datas YYYY-MM-DD). Saída padronizada: rows, columns, count, chart, sql_query e sql_params.',
       parameters: {
         type: 'object',
         additionalProperties: true,
         properties: {
-          action: { type: 'string', description: 'kpis_resumo|desempenho_diario|gasto_por_campanha|roas_por_campanha|gasto_por_conta|top_anuncios' },
-          params: { type: 'object' },
+          action: {
+            type: 'string',
+            enum: ['kpis_resumo', 'desempenho_diario', 'gasto_por_campanha', 'roas_por_campanha', 'gasto_por_conta', 'top_anuncios'],
+            description:
+              'Ação analítica de marketing. Mapa: kpis_resumo, desempenho_diario, gasto_por_campanha, roas_por_campanha, gasto_por_conta, top_anuncios.',
+          },
+          params: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              de: { type: 'string', description: 'Data inicial (YYYY-MM-DD).' },
+              ate: { type: 'string', description: 'Data final (YYYY-MM-DD).' },
+              plataforma: { type: 'string', description: 'Filtro por plataforma (ex.: meta_ads, google_ads).' },
+              nivel: { type: 'string', description: 'Filtro por nível analítico do dado.' },
+              conta_id: { type: 'string', description: 'Filtro por conta de mídia.' },
+              campanha_id: { type: 'string', description: 'Filtro por campanha.' },
+              grupo_id: { type: 'string', description: 'Filtro por grupo/conjunto.' },
+              anuncio_id: { type: 'string', description: 'Filtro por anúncio.' },
+              limit: { type: 'integer', description: 'Limite de linhas para rankings/séries (máximo 200).' },
+            },
+            description: 'Filtros opcionais da action. Use somente campos listados.',
+          },
         },
         required: ['action'],
       },
