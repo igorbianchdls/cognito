@@ -104,6 +104,24 @@
 - Filtros (widget_id, title, campo, tabela, tipo, chave?, fr?, container)
 - Insights (widget_id, title, items, fr?, container)
 - Layout de containers/rows
+- 3.1) UX de resposta obrigatória no plano:
+- Use Markdown escaneável com seções e destaque visual.
+- Use emojis nos títulos principais (ex.: 🎯 objetivo, 🧱 estrutura, 📌 KPIs, 📊 gráficos, 🎛️ filtros, 💡 insights, ⚠️ pendências, ✅ aprovação).
+- Use **negrito** nos rótulos dos campos (ex.: `**widget_id**`, `**title**`, `**container**`, `**query**`).
+- Não entregar bloco de texto corrido; sempre usar listas curtas por widget.
+- SQL nunca em linha única longa; formatar em múltiplas linhas.
+- Quando a query estiver completa, usar bloco ` ```sql `.
+- Quando for referência canônica do template/skill, pode usar placeholder explícito (`QUERY_*`) e dizer que será expandido na execução.
+- Estrutura mínima esperada:
+- `## 🧭 Estrutura proposta`
+- `### 🎯 Objetivo`
+- `### 🧱 Layout de containers`
+- `### 📌 KPIs`
+- `### 📊 Gráficos`
+- `### 🎛️ Filtros`
+- `### 💡 Insights`
+- `### ⚠️ Pendências / validações`
+- `### ✅ Pergunta de aprovação`
 - 4) Ask one approval question before build.
 - Approval gate:
 - Do not call create_dashboard/add_widgets_batch/add_widget before approval.

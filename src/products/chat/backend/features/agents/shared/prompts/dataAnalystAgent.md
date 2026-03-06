@@ -116,6 +116,22 @@
 - Chart list (widget_id/chart_type/title/query/xField/yField/keyField?/layout?/container)
 - Filter list (widget_id/title/campo/tabela/tipo/chave?/container)
 - Insights list (widget_id/title/items/container)
+- UX/format is mandatory in plan response:
+- Use structured Markdown with scannable sections (no long plain text block).
+- Use emojis in major headings (ex.: 🎯, 🧱, 📌, 📊, 🎛️, 💡, ⚠️, ✅).
+- Use **bold labels** for widget fields (`**widget_id**`, `**title**`, `**container**`, `**query**`, etc.).
+- SQL must be readable: never single-line long SQL. Use multiline and ` ```sql ` when query is explicit.
+- If using canonical query from template/skill, reference as `QUERY_*` and mention it will be expanded exactly on build.
+- Minimum section structure:
+- `## 🧭 Estrutura proposta`
+- `### 🎯 Objetivo`
+- `### 🧱 Layout de containers`
+- `### 📌 KPIs`
+- `### 📊 Gráficos`
+- `### 🎛️ Filtros`
+- `### 💡 Insights`
+- `### ⚠️ Pendências / validações`
+- `### ✅ Pergunta de aprovação`
 - Ask one approval question before execution, except when user explicitly says "sem confirmar".
 </plandashboard>
 
