@@ -6,7 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Undo2, Redo2, RefreshCw, Upload, Palette, Save, Bell, Trash2, Check } from 'lucide-react';
+import { Undo2, Redo2, RefreshCw, Palette, Save, Bell, Trash2, Check } from 'lucide-react';
 import { $artifactNotifications, $previewDslPath, sandboxActions } from '@/chat/sandbox';
 import { APPS_COLOR_PRESETS, APPS_HEADER_THEME_OPTIONS, APPS_THEME_OPTIONS } from '@/products/bi/shared/themeOptions';
 import { DASHBOARD_BACKGROUND_PRESET_OPTIONS } from '@/products/bi/json-render/backgrounds/registry';
@@ -795,9 +795,6 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
       </Dialog>
       <IconButton title="Atualizar preview" onClick={refreshPreview} disabled={!previewPath}>
         <RefreshCw className="w-4 h-4" />
-      </IconButton>
-      <IconButton title="Upload">
-        <Upload className="w-4 h-4" />
       </IconButton>
       <IconButton title={snapshotSaving ? "Salvando snapshot..." : "Salvar snapshot"} onClick={() => { void saveSnapshot(); }} disabled={!chatId || snapshotSaving}>
         <Save className={`w-4 h-4 ${snapshotSaving ? 'animate-pulse' : ''}`} />

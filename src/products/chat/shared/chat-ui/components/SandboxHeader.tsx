@@ -59,7 +59,7 @@ export default function SandboxHeader({ onClose, onExpand, expanded, chatId }: P
               type="button"
               title="Selecionar dashboard"
               aria-label="Selecionar dashboard"
-              className="h-8 px-2 inline-flex items-center justify-center rounded-md border border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100"
+              className="h-8 px-2 inline-flex items-center justify-center rounded-md border border-gray-300 bg-gray-100 text-gray-700 hover:bg-gray-100"
             >
               <LayoutDashboard className="w-4 h-4" />
               <ChevronDown className="w-3.5 h-3.5 ml-1 opacity-70" />

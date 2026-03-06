@@ -17,7 +17,7 @@ export default function SandboxTabs() {
 
   return (
     <Tabs value={active} onValueChange={(v) => sandboxActions.setActiveTab(v as SandboxTab)}>
-      <TabsList className="!h-8 !bg-gray-100 !border !border-gray-300 !rounded-md !p-0.5 !gap-0.5">
+      <TabsList className="!h-6 !bg-gray-100 !border !border-gray-300 !rounded-md !py-0 !px-0.5 !gap-0.5">
         {tabs.map(({ key, title, icon: Icon }) => (
           <TabsTrigger
             key={key}

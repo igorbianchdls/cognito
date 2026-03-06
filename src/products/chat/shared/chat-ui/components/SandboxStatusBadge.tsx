@@ -12,7 +12,6 @@ export default function SandboxStatusBadge({ status }: SandboxStatusBadgeProps) 
   return (
     <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs ${getSandboxStatusClasses(status)}`}>
       <Monitor className="h-3.5 w-3.5" />
-      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-80" />
       Computador: {getSandboxStatusLabel(status)}
     </span>
   );
