@@ -182,7 +182,6 @@ export default function JsonRenderTable({ element }: { element: any }) {
           const label = String(col?.header || col?.label || key);
           const width = toNumberOrUndefined(col?.width);
           const fmt = (col?.format as "text" | "currency" | "percent" | "number" | undefined) || "text";
-          const align = (col?.align as "left" | "center" | "right" | undefined) || "left";
           const textColor = typeof col?.textColor === "string" ? col.textColor : undefined;
           return {
             accessorKey: key,
@@ -191,7 +190,7 @@ export default function JsonRenderTable({ element }: { element: any }) {
             cell: ({ row }) => {
               const raw = row.getValue(key);
               return (
-                <div style={{ textAlign: align, color: textColor }}>
+                <div style={{ color: textColor }}>
                   {formatValue(raw, fmt)}
                 </div>
               );
@@ -205,14 +204,13 @@ export default function JsonRenderTable({ element }: { element: any }) {
     if (!firstRow || typeof firstRow !== "object") return [];
     return Object.keys(firstRow).map((key) => {
       const value = firstRow[key];
-      const align = typeof value === "number" ? "right" : "left";
       return {
         accessorKey: key,
         header: key,
         cell: ({ row }: AnyRecord) => {
           const raw = row.getValue(key);
           return (
-            <div style={{ textAlign: align }}>
+            <div>
               {formatValue(raw, typeof raw === "number" ? "number" : "text")}
             </div>
           );
@@ -256,11 +254,13 @@ export default function JsonRenderTable({ element }: { element: any }) {
           headerFontFamily={typeof props?.headerFontFamily === "string" ? props.headerFontFamily : fallbackFont}
           headerFontWeight={typeof props?.headerFontWeight === "string" ? props.headerFontWeight : undefined}
           headerLetterSpacing={toNumberOrUndefined(props?.headerLetterSpacing)}
+          headerTextAlign="center"
           cellFontSize={toNumberOrUndefined(props?.cellFontSize)}
           cellFontFamily={typeof props?.cellFontFamily === "string" ? props.cellFontFamily : fallbackFont}
           cellFontWeight={typeof props?.cellFontWeight === "string" ? props.cellFontWeight : undefined}
           cellTextColor={cellTextColor}
           cellLetterSpacing={toNumberOrUndefined(props?.cellLetterSpacing)}
+          cellTextAlign="center"
           enableZebraStripes={Boolean(props?.enableZebraStripes)}
           rowAlternateBgColor={typeof props?.rowAlternateBgColor === "string" ? props.rowAlternateBgColor : undefined}
           selectionColumnWidth={toNumberOrUndefined(props?.selectionColumnWidth)}
@@ -294,6 +294,7 @@ export default function JsonRenderTable({ element }: { element: any }) {
           validationErrorColor={typeof props?.validationErrorColor === "string" ? props.validationErrorColor : undefined}
           modifiedCellColor={typeof props?.modifiedCellColor === "string" ? props.modifiedCellColor : undefined}
           newRowColor={typeof props?.newRowColor === "string" ? props.newRowColor : undefined}
+          showTopBorder
           onDataChange={setRows}
         />
       </div>

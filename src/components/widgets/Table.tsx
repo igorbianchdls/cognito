@@ -73,6 +73,7 @@ interface DataTableProps<TData extends TableData> {
   rowHoverColor?: string
   borderColor?: string
   borderWidth?: number
+  showTopBorder?: boolean
   fontSize?: number
   padding?: number
   // Header padding (if different from cell padding)
@@ -82,6 +83,7 @@ interface DataTableProps<TData extends TableData> {
   headerFontFamily?: string
   headerFontWeight?: string
   headerLetterSpacing?: number
+  headerTextAlign?: 'left' | 'center' | 'right'
   // Per-column options
   columnOptions?: Record<string, {
     headerNoWrap?: boolean
@@ -97,6 +99,7 @@ interface DataTableProps<TData extends TableData> {
   cellFontWeight?: string
   cellTextColor?: string
   cellLetterSpacing?: number
+  cellTextAlign?: 'left' | 'center' | 'right'
   // Zebra rows
   enableZebraStripes?: boolean
   rowAlternateBgColor?: string
@@ -176,6 +179,7 @@ export function DataTable<TData extends TableData>({
   rowHoverColor = '#f3f4f6',
   borderColor = '#e5e7eb',
   borderWidth = 1,
+  showTopBorder = false,
   fontSize = 14,
   padding = 12,
   headerPadding,
@@ -184,6 +188,7 @@ export function DataTable<TData extends TableData>({
   headerFontFamily = 'inherit',
   headerFontWeight = 'normal',
   headerLetterSpacing,
+  headerTextAlign = 'left',
   columnOptions,
   // Cell typography props with defaults
   cellFontSize = 14,
@@ -191,6 +196,7 @@ export function DataTable<TData extends TableData>({
   cellFontWeight = 'normal',
   cellTextColor = '#1f2937',
   cellLetterSpacing,
+  cellTextAlign = 'left',
   enableZebraStripes = false,
   rowAlternateBgColor = '#fafafa',
   selectionColumnWidth = 48,
@@ -582,8 +588,9 @@ export function DataTable<TData extends TableData>({
                           fontFamily: headerFontFamily !== 'inherit' ? headerFontFamily : undefined,
                           fontWeight: headerFontWeight !== 'normal' ? headerFontWeight : undefined,
                           borderColor,
+                          borderTopWidth: showTopBorder ? borderWidth : undefined,
                           letterSpacing: typeof headerLetterSpacing === 'number' ? `${headerLetterSpacing}px` : undefined,
-                          textAlign: header.column.id === 'select' ? 'center' as const : undefined,
+                          textAlign: header.column.id === 'select' ? 'center' as const : headerTextAlign,
                           whiteSpace: columnOptions?.[header.column.id]?.headerNoWrap ? 'nowrap' : undefined,
                           overflow: columnOptions?.[header.column.id]?.headerNoWrap ? 'hidden' : undefined,
                           textOverflow: columnOptions?.[header.column.id]?.headerNoWrap ? 'ellipsis' : undefined,
@@ -676,6 +683,7 @@ export function DataTable<TData extends TableData>({
                           style={{ 
                             padding: columnKey === 'select' || columnKey === 'expand' ? '4px' : `${padding}px`,
                             borderColor,
+                            borderTopWidth: showTopBorder ? borderWidth : undefined,
                             fontSize: `${cellFontSize || fontSize}px`,
                             fontFamily: cellFontFamily !== 'inherit' ? cellFontFamily : undefined,
                             fontWeight: cellFontWeight !== 'normal' ? cellFontWeight : undefined,
@@ -683,7 +691,7 @@ export function DataTable<TData extends TableData>({
                             backgroundColor,
                             position: 'relative',
                             letterSpacing: typeof cellLetterSpacing === 'number' ? `${cellLetterSpacing}px` : undefined,
-                            textAlign: columnKey === 'select' ? 'center' as const : undefined,
+                            textAlign: columnKey === 'select' ? 'center' as const : cellTextAlign,
                             width: (columnOptions && columnOptions[columnKey]?.widthMode === 'auto')
                               ? undefined
                               : (columnOptions && columnOptions[columnKey]?.widthMode === 'fixed' && typeof columnOptions[columnKey]?.fixedWidth === 'number')
