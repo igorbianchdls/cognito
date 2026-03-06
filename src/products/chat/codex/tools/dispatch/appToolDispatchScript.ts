@@ -4,6 +4,8 @@ async function callKnownAppToolByName(toolName, parsedArgs) {
   if (toolName === 'crud') return await callCrud(args);
   if (toolName === 'dashboard_builder') return await callDashboardBuilder(args);
   if (toolName === 'sql_execution') return await callSqlExecution(args);
+  if (toolName === 'ecommerce') return await callEcommerce(args);
+  if (toolName === 'marketing') return await callMarketing(args);
   if (toolName === 'documento') return await callDocumento(args);
   if (toolName === 'drive') return await callDrive(args);
   if (toolName === 'email') return await callEmail(args);

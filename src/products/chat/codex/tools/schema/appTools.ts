@@ -395,4 +395,66 @@ export const codexAppFunctionTools = [
       additionalProperties: true,
     },
   },
+  {
+    type: 'function',
+    name: 'ecommerce',
+    description:
+      'Consulta métricas canônicas de ecommerce via actions pré-definidas (sem SQL livre). Use para leituras rápidas de KPIs e rankings operacionais/comerciais com filtros em params.',
+    parameters: {
+      type: 'object',
+      properties: {
+        action: {
+          type: 'string',
+          enum: [
+            'kpis_resumo',
+            'vendas_por_canal',
+            'pedidos_por_status',
+            'faturamento_por_mes',
+            'top_produtos_receita',
+            'frete_por_transportadora',
+          ],
+          description: 'Ação analítica de ecommerce. Cada action executa uma query fixa canônica no backend.',
+        },
+        params: {
+          type: 'object',
+          additionalProperties: true,
+          description:
+            'Filtros opcionais por action: de, ate (YYYY-MM-DD), plataforma, canal_conta_id, loja_id, status, status_pagamento, status_fulfillment, limit.',
+        },
+      },
+      required: ['action'],
+      additionalProperties: true,
+    },
+  },
+  {
+    type: 'function',
+    name: 'marketing',
+    description:
+      'Consulta métricas canônicas de tráfego pago (Meta/Google Ads) via actions pré-definidas (sem SQL livre). Use para KPIs e cortes de performance.',
+    parameters: {
+      type: 'object',
+      properties: {
+        action: {
+          type: 'string',
+          enum: [
+            'kpis_resumo',
+            'desempenho_diario',
+            'gasto_por_campanha',
+            'roas_por_campanha',
+            'gasto_por_conta',
+            'top_anuncios',
+          ],
+          description: 'Ação analítica de marketing. Cada action executa uma query fixa canônica no backend.',
+        },
+        params: {
+          type: 'object',
+          additionalProperties: true,
+          description:
+            'Filtros opcionais por action: de, ate (YYYY-MM-DD), plataforma, nivel, conta_id, campanha_id, grupo_id, anuncio_id, limit.',
+        },
+      },
+      required: ['action'],
+      additionalProperties: true,
+    },
+  },
 ] as const

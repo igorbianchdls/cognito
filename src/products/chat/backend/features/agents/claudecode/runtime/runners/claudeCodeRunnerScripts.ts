@@ -55,6 +55,8 @@ if (appToolsServerERP) {
   allowedToolsList.push('mcp__ERP__documento');
   allowedToolsList.push('mcp__ERP__drive');
   allowedToolsList.push('mcp__ERP__email');
+  allowedToolsList.push('mcp__ERP__ecommerce');
+  allowedToolsList.push('mcp__ERP__marketing');
   allowedToolsList.push('mcp__ERP__sql_execution');
 }
 try {

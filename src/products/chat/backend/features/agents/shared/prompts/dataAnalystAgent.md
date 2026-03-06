@@ -45,10 +45,12 @@
 </skills>
 
 <tools_general>
-- Primary tools for this profile: sql_execution and dashboard_builder.
+- Primary tools for this profile: sql_execution, dashboard_builder, ecommerce and marketing.
 - Tool routing is mandatory:
 - Ad-hoc analysis, diagnostics, KPI validation, trend checks -> sql_execution.
 - Create/edit dashboard DSL widgets/layout -> dashboard_builder.
+- Canonical ecommerce metrics by action (without free SQL) -> ecommerce.
+- Canonical paid-media metrics by action (without free SQL) -> marketing.
 - Never swap these responsibilities.
 - Use crud only for transacional ERP actions (create/update/status lifecycle), not for analytics.
 - Use documento/drive/email only when user asks operational side effects.

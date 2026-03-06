@@ -123,4 +123,12 @@ async function callDashboardBuilder(args) {
 async function callSqlExecution(args) {
   return callScopedTool('/api/agent-tools/sql-execution', args, 'sql_execution');
 }
+
+async function callEcommerce(args) {
+  return callScopedTool('/api/agent-tools/ecommerce', args, 'ecommerce');
+}
+
+async function callMarketing(args) {
+  return callScopedTool('/api/agent-tools/marketing', args, 'marketing');
+}
 `.trim()

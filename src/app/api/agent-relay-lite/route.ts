@@ -540,6 +540,34 @@ function buildToolsSchema() {
         required: ['action'],
       },
     },
+    {
+      type: 'function',
+      name: 'ecommerce',
+      description: 'Consulta métricas canônicas de ecommerce via actions pré-definidas (sem SQL livre).',
+      parameters: {
+        type: 'object',
+        additionalProperties: true,
+        properties: {
+          action: { type: 'string', description: 'kpis_resumo|vendas_por_canal|pedidos_por_status|faturamento_por_mes|top_produtos_receita|frete_por_transportadora' },
+          params: { type: 'object' },
+        },
+        required: ['action'],
+      },
+    },
+    {
+      type: 'function',
+      name: 'marketing',
+      description: 'Consulta métricas canônicas de mídia paga via actions pré-definidas (sem SQL livre).',
+      parameters: {
+        type: 'object',
+        additionalProperties: true,
+        properties: {
+          action: { type: 'string', description: 'kpis_resumo|desempenho_diario|gasto_por_campanha|roas_por_campanha|gasto_por_conta|top_anuncios' },
+          params: { type: 'object' },
+        },
+        required: ['action'],
+      },
+    },
   ]
 }
 
@@ -767,6 +795,28 @@ export async function POST(req: Request) {
               path: '/api/agent-tools/email',
               args: parsedArgs,
               label: 'email',
+            })
+          } else if (call.name === 'ecommerce') {
+            result = await callScopedTool({
+              origin,
+              token: toolToken,
+              internalKey: internalKey || undefined,
+              chatId,
+              tenantId,
+              path: '/api/agent-tools/ecommerce',
+              args: parsedArgs,
+              label: 'ecommerce',
+            })
+          } else if (call.name === 'marketing') {
+            result = await callScopedTool({
+              origin,
+              token: toolToken,
+              internalKey: internalKey || undefined,
+              chatId,
+              tenantId,
+              path: '/api/agent-tools/marketing',
+              args: parsedArgs,
+              label: 'marketing',
             })
           } else {
             result = { success: false, error: `tool desconhecida: ${call.name}` }
