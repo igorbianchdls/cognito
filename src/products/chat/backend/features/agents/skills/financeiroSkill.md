@@ -21,14 +21,149 @@ Prioridade de referencia:
 
 Se houver conflito, priorizar template.
 
-## Sugestao de Estrutura (baseada no template /apps/financeiro)
+## Sugestao de Dashboard (Canonico)
 
-- Use este baseline ao montar plano no `dashboard_builder`.
-- Ajuste apenas quando o usuario pedir layout diferente.
-- Topo: 1 row com 4 KPIs (Recebidos, Pagos, Geracao de Caixa, Titulos em AP).
-- Bloco 1: 1 row com AP por Fornecedor, AP por Categoria e AR por Cliente (3 bars).
-- Bloco 2: 1 row com Contas a Receber por Mes (line), Status de AP (bar) e AISummary.
-- Regra pratica: manter 4 KPIs no topo e 2 rows de graficos abaixo para leitura executiva rapida.
+Fonte canonica: `src/products/bi/shared/templates/appsFinanceiroTemplate.ts`.
+
+### KPI (descricao semantica + query literal)
+
+- KPI de Recebidos.
+
+```sql
+SELECT
+  COALESCE(SUM(src.valor_liquido), 0)::float AS value
+FROM financeiro.contas_receber src
+WHERE src.tenant_id = {{tenant_id}}
+  AND ({{de}}::date IS NULL OR src.data_vencimento::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_vencimento::date <= {{ate}}::date)
+```
+
+- KPI de Pagos.
+
+```sql
+SELECT
+  COALESCE(SUM(src.valor_liquido), 0)::float AS value
+FROM financeiro.contas_pagar src
+WHERE src.tenant_id = {{tenant_id}}
+  AND ({{de}}::date IS NULL OR src.data_vencimento::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_vencimento::date <= {{ate}}::date)
+```
+
+- KPI de Geracao de Caixa.
+
+```sql
+SELECT
+  (
+    COALESCE((
+      SELECT SUM(r.valor_liquido)
+      FROM financeiro.contas_receber r
+      WHERE r.tenant_id = {{tenant_id}}
+        AND ({{de}}::date IS NULL OR r.data_vencimento::date >= {{de}}::date)
+        AND ({{ate}}::date IS NULL OR r.data_vencimento::date <= {{ate}}::date)
+    ), 0)
+    -
+    COALESCE((
+      SELECT SUM(p.valor_liquido)
+      FROM financeiro.contas_pagar p
+      WHERE p.tenant_id = {{tenant_id}}
+        AND ({{de}}::date IS NULL OR p.data_vencimento::date >= {{de}}::date)
+        AND ({{ate}}::date IS NULL OR p.data_vencimento::date <= {{ate}}::date)
+    ), 0)
+  )::float AS value
+```
+
+- KPI de Titulos em AP.
+
+```sql
+SELECT
+  COUNT(*)::int AS value
+FROM financeiro.contas_pagar src
+WHERE src.tenant_id = {{tenant_id}}
+  AND ({{de}}::date IS NULL OR src.data_vencimento::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_vencimento::date <= {{ate}}::date)
+```
+
+### Chart (descricao semantica + query literal)
+
+- Grafico de AP por Fornecedor.
+
+```sql
+SELECT
+  COALESCE(src.fornecedor_id, 0)::text AS key,
+  COALESCE(src.fornecedor_id::text, '-') AS label,
+  COALESCE(SUM(src.valor_liquido), 0)::float AS value
+FROM financeiro.contas_pagar src
+WHERE src.tenant_id = {{tenant_id}}
+  AND ({{de}}::date IS NULL OR src.data_vencimento::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_vencimento::date <= {{ate}}::date)
+GROUP BY 1, 2
+ORDER BY 3 DESC
+LIMIT 8
+```
+
+- Grafico de AP por Categoria.
+
+```sql
+SELECT
+  COALESCE(src.categoria_despesa_id, 0)::text AS key,
+  COALESCE(src.categoria_despesa_id::text, '-') AS label,
+  COALESCE(SUM(src.valor_liquido), 0)::float AS value
+FROM financeiro.contas_pagar src
+WHERE src.tenant_id = {{tenant_id}}
+  AND ({{de}}::date IS NULL OR src.data_vencimento::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_vencimento::date <= {{ate}}::date)
+GROUP BY 1, 2
+ORDER BY 3 DESC
+LIMIT 8
+```
+
+- Grafico de AR por Cliente.
+
+```sql
+SELECT
+  COALESCE(src.cliente_id, 0)::text AS key,
+  COALESCE(src.cliente_id::text, '-') AS label,
+  COALESCE(SUM(src.valor_liquido), 0)::float AS value
+FROM financeiro.contas_receber src
+WHERE src.tenant_id = {{tenant_id}}
+  AND ({{de}}::date IS NULL OR src.data_vencimento::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_vencimento::date <= {{ate}}::date)
+GROUP BY 1, 2
+ORDER BY 3 DESC
+LIMIT 8
+```
+
+- Grafico de Contas a Receber por Mes.
+
+```sql
+SELECT
+  TO_CHAR(DATE_TRUNC('month', src.data_vencimento), 'YYYY-MM') AS key,
+  TO_CHAR(DATE_TRUNC('month', src.data_vencimento), 'YYYY-MM') AS label,
+  COALESCE(SUM(src.valor_liquido), 0)::float AS value
+FROM financeiro.contas_receber src
+WHERE src.tenant_id = {{tenant_id}}
+  AND ({{de}}::date IS NULL OR src.data_vencimento::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_vencimento::date <= {{ate}}::date)
+GROUP BY 1, 2
+ORDER BY 2 ASC
+LIMIT 12
+```
+
+- Grafico de Status de AP.
+
+```sql
+SELECT
+  COALESCE(src.status, '-') AS key,
+  COALESCE(src.status, '-') AS label,
+  COUNT(*)::int AS value
+FROM financeiro.contas_pagar src
+WHERE src.tenant_id = {{tenant_id}}
+  AND ({{de}}::date IS NULL OR src.data_vencimento::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_vencimento::date <= {{ate}}::date)
+GROUP BY 1, 2
+ORDER BY 3 DESC
+LIMIT 8
+```
 
 ## Tabelas e Campos Canonicos
 

@@ -18,17 +18,645 @@ Prioridade de referencia:
 
 Se houver conflito, priorizar template.
 
-## Sugestao de Estrutura (baseada no template /apps/compras)
+## Sugestao de Dashboard (Canonico)
 
-- Use este baseline ao montar plano no `dashboard_builder`.
-- Ajuste apenas quando o usuario pedir layout diferente.
-- Topo: 1 row com 4 KPIs (Gasto, Fornecedores, Pedidos, Transacoes).
-- Bloco 1: 1 row com Fornecedores (bar), Centros de Custo (bar), Filtro de Centro de Custo (slicer), Filiais (bar).
-- Bloco 2: 1 row com Categorias, Projetos e Status (Qtd) em barras.
-- Bloco 3: 1 grafico de pizza de Status.
-- Bloco 4: 1 row com Gasto por Mes, Pedidos por Mes, Ticket Medio por Mes e AISummary.
-- Regra pratica: manter 4 KPIs no topo; usar rows de graficos tematicos abaixo (segmentacao + temporal).
+Fonte canonica: `src/products/bi/shared/templates/appsComprasTemplate.ts`.
 
+### KPI / Chart (descricao semantica + query literal)
+
+- KPI de Gasto.
+
+```sql
+SELECT
+  COALESCE(SUM(src.valor_total), 0)::float AS value
+FROM compras.compras src
+WHERE src.tenant_id = {{tenant_id}}
+  AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
+  AND (
+    NULLIF(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.fornecedor_id::text, '') = ANY(
+      string_to_array(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.centro_custo_id::text, '') = ANY(
+      string_to_array(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.filial_id::text, '') = ANY(
+      string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.categoria_despesa_id::text, '') = ANY(
+      string_to_array(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.projeto_id::text, '') = ANY(
+      string_to_array(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+```
+
+- KPI de Fornecedores.
+
+```sql
+SELECT
+  COUNT(DISTINCT src.fornecedor_id)::int AS value
+FROM compras.compras src
+WHERE src.tenant_id = {{tenant_id}}
+  AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
+  AND (
+    NULLIF(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.fornecedor_id::text, '') = ANY(
+      string_to_array(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.centro_custo_id::text, '') = ANY(
+      string_to_array(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.filial_id::text, '') = ANY(
+      string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.categoria_despesa_id::text, '') = ANY(
+      string_to_array(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.projeto_id::text, '') = ANY(
+      string_to_array(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+```
+
+- KPI de Pedidos.
+
+```sql
+SELECT
+  COUNT(DISTINCT src.id)::int AS value
+FROM compras.compras src
+WHERE src.tenant_id = {{tenant_id}}
+  AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
+  AND (
+    NULLIF(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.fornecedor_id::text, '') = ANY(
+      string_to_array(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.centro_custo_id::text, '') = ANY(
+      string_to_array(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.filial_id::text, '') = ANY(
+      string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.categoria_despesa_id::text, '') = ANY(
+      string_to_array(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.projeto_id::text, '') = ANY(
+      string_to_array(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+```
+
+- KPI de Transacoes.
+
+```sql
+SELECT
+  COUNT(DISTINCT r.id)::int AS value
+FROM compras.recebimentos r
+JOIN compras.compras src ON src.id = r.compra_id
+WHERE src.tenant_id = {{tenant_id}}
+  AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
+  AND (
+    NULLIF(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.fornecedor_id::text, '') = ANY(
+      string_to_array(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.centro_custo_id::text, '') = ANY(
+      string_to_array(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.filial_id::text, '') = ANY(
+      string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.categoria_despesa_id::text, '') = ANY(
+      string_to_array(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.projeto_id::text, '') = ANY(
+      string_to_array(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+```
+
+- Grafico de Fornecedores.
+
+```sql
+SELECT
+  COALESCE(src.fornecedor_id, 0)::text AS key,
+  COALESCE(f.nome_fantasia, '-') AS label,
+  COALESCE(SUM(src.valor_total), 0)::float AS value
+FROM compras.compras src
+LEFT JOIN entidades.fornecedores f ON f.id = src.fornecedor_id
+WHERE src.tenant_id = {{tenant_id}}
+  AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
+  AND (
+    NULLIF(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.fornecedor_id::text, '') = ANY(
+      string_to_array(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.centro_custo_id::text, '') = ANY(
+      string_to_array(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.filial_id::text, '') = ANY(
+      string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.categoria_despesa_id::text, '') = ANY(
+      string_to_array(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.projeto_id::text, '') = ANY(
+      string_to_array(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+GROUP BY 1, 2
+ORDER BY 3 DESC
+```
+
+- Grafico de Centros de Custo.
+
+```sql
+SELECT
+  COALESCE(src.centro_custo_id, 0)::text AS key,
+  COALESCE(cc.nome, '-') AS label,
+  COALESCE(SUM(src.valor_total), 0)::float AS value
+FROM compras.compras src
+LEFT JOIN empresa.centros_custo cc ON cc.id = src.centro_custo_id
+WHERE src.tenant_id = {{tenant_id}}
+  AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
+  AND (
+    NULLIF(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.fornecedor_id::text, '') = ANY(
+      string_to_array(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.centro_custo_id::text, '') = ANY(
+      string_to_array(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.filial_id::text, '') = ANY(
+      string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.categoria_despesa_id::text, '') = ANY(
+      string_to_array(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.projeto_id::text, '') = ANY(
+      string_to_array(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+GROUP BY 1, 2
+ORDER BY 3 DESC
+```
+
+- Grafico de Filiais.
+
+```sql
+SELECT
+  COALESCE(src.filial_id, 0)::text AS key,
+  COALESCE(fil.nome, '-') AS label,
+  COALESCE(SUM(src.valor_total), 0)::float AS value
+FROM compras.compras src
+LEFT JOIN empresa.filiais fil ON fil.id = src.filial_id
+WHERE src.tenant_id = {{tenant_id}}
+  AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
+  AND (
+    NULLIF(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.fornecedor_id::text, '') = ANY(
+      string_to_array(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.centro_custo_id::text, '') = ANY(
+      string_to_array(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.filial_id::text, '') = ANY(
+      string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.categoria_despesa_id::text, '') = ANY(
+      string_to_array(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.projeto_id::text, '') = ANY(
+      string_to_array(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+GROUP BY 1, 2
+ORDER BY 3 DESC
+```
+
+- Grafico de Categorias.
+
+```sql
+SELECT
+  COALESCE(src.categoria_despesa_id, 0)::text AS key,
+  COALESCE(cd.nome, '-') AS label,
+  COALESCE(SUM(src.valor_total), 0)::float AS value
+FROM compras.compras src
+LEFT JOIN financeiro.categorias_despesa cd ON cd.id = src.categoria_despesa_id
+WHERE src.tenant_id = {{tenant_id}}
+  AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
+  AND (
+    NULLIF(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.fornecedor_id::text, '') = ANY(
+      string_to_array(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.centro_custo_id::text, '') = ANY(
+      string_to_array(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.filial_id::text, '') = ANY(
+      string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.categoria_despesa_id::text, '') = ANY(
+      string_to_array(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.projeto_id::text, '') = ANY(
+      string_to_array(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+GROUP BY 1, 2
+ORDER BY 3 DESC
+```
+
+- Grafico de Projetos.
+
+```sql
+SELECT
+  COALESCE(src.projeto_id, 0)::text AS key,
+  COALESCE(pr.nome, '-') AS label,
+  COALESCE(SUM(src.valor_total), 0)::float AS value
+FROM compras.compras src
+LEFT JOIN financeiro.projetos pr ON pr.id = src.projeto_id
+WHERE src.tenant_id = {{tenant_id}}
+  AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
+  AND (
+    NULLIF(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.fornecedor_id::text, '') = ANY(
+      string_to_array(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.centro_custo_id::text, '') = ANY(
+      string_to_array(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.filial_id::text, '') = ANY(
+      string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.categoria_despesa_id::text, '') = ANY(
+      string_to_array(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.projeto_id::text, '') = ANY(
+      string_to_array(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+GROUP BY 1, 2
+ORDER BY 3 DESC
+```
+
+- Grafico de Status (Qtd).
+
+```sql
+SELECT
+  COALESCE(src.status, '-') AS key,
+  COALESCE(src.status, '-') AS label,
+  COUNT(*)::int AS value
+FROM compras.compras src
+WHERE src.tenant_id = {{tenant_id}}
+  AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
+  AND (
+    NULLIF(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.fornecedor_id::text, '') = ANY(
+      string_to_array(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.centro_custo_id::text, '') = ANY(
+      string_to_array(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.filial_id::text, '') = ANY(
+      string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.categoria_despesa_id::text, '') = ANY(
+      string_to_array(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.projeto_id::text, '') = ANY(
+      string_to_array(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+GROUP BY 1, 2
+ORDER BY 3 DESC
+```
+
+- Grafico de Status (Pizza).
+
+```sql
+SELECT
+  COALESCE(src.status, '-') AS key,
+  COALESCE(src.status, '-') AS label,
+  COUNT(*)::int AS value
+FROM compras.compras src
+WHERE src.tenant_id = {{tenant_id}}
+  AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
+  AND (
+    NULLIF(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.fornecedor_id::text, '') = ANY(
+      string_to_array(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.centro_custo_id::text, '') = ANY(
+      string_to_array(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.filial_id::text, '') = ANY(
+      string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.categoria_despesa_id::text, '') = ANY(
+      string_to_array(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.projeto_id::text, '') = ANY(
+      string_to_array(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+GROUP BY 1, 2
+ORDER BY 3 DESC
+```
+
+- Grafico de Gasto por Mes.
+
+```sql
+SELECT
+  TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'YYYY-MM') AS key,
+  TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'YYYY-MM') AS label,
+  COALESCE(SUM(src.valor_total), 0)::float AS value
+FROM compras.compras src
+WHERE src.tenant_id = {{tenant_id}}
+  AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
+  AND (
+    NULLIF(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.fornecedor_id::text, '') = ANY(
+      string_to_array(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.centro_custo_id::text, '') = ANY(
+      string_to_array(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.filial_id::text, '') = ANY(
+      string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.categoria_despesa_id::text, '') = ANY(
+      string_to_array(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.projeto_id::text, '') = ANY(
+      string_to_array(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+GROUP BY 1, 2
+ORDER BY 2 ASC
+```
+
+- Grafico de Pedidos por Mes.
+
+```sql
+SELECT
+  TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'YYYY-MM') AS key,
+  TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'YYYY-MM') AS label,
+  COUNT(DISTINCT src.id)::int AS value
+FROM compras.compras src
+WHERE src.tenant_id = {{tenant_id}}
+  AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
+  AND (
+    NULLIF(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.fornecedor_id::text, '') = ANY(
+      string_to_array(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.centro_custo_id::text, '') = ANY(
+      string_to_array(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.filial_id::text, '') = ANY(
+      string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.categoria_despesa_id::text, '') = ANY(
+      string_to_array(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.projeto_id::text, '') = ANY(
+      string_to_array(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+GROUP BY 1, 2
+ORDER BY 2 ASC
+```
+
+- Grafico de Ticket Medio por Mes.
+
+```sql
+SELECT
+  TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'YYYY-MM') AS key,
+  TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'YYYY-MM') AS label,
+  COALESCE(AVG(src.valor_total), 0)::float AS value
+FROM compras.compras src
+WHERE src.tenant_id = {{tenant_id}}
+  AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
+  AND (
+    NULLIF(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.fornecedor_id::text, '') = ANY(
+      string_to_array(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.centro_custo_id::text, '') = ANY(
+      string_to_array(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.filial_id::text, '') = ANY(
+      string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.categoria_despesa_id::text, '') = ANY(
+      string_to_array(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+  AND (
+    NULLIF(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+    OR COALESCE(src.projeto_id::text, '') = ANY(
+      string_to_array(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+    )
+  )
+GROUP BY 1, 2
+ORDER BY 2 ASC
+```
+
+### Slicer (descricao semantica + query literal)
+
+- Slicer de Centro de Custo.
+
+```sql
+SELECT
+  DISTINCT COALESCE(src.centro_custo_id, 0)::text AS value,
+  COALESCE(cc.nome, '-') AS label
+FROM compras.compras src
+LEFT JOIN empresa.centros_custo cc ON cc.id = src.centro_custo_id
+WHERE src.tenant_id = {{tenant_id}}
+ORDER BY 2 ASC
+```
 ## Tabela Base e Lookups do Template
 
 ### `compras.compras src`

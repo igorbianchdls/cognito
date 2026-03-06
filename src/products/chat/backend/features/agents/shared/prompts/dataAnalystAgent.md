@@ -108,7 +108,7 @@
 
 <plandashboard>
 - For new dashboards, planning-first is mandatory unless user explicitly asks direct execution.
-- Before proposing widget layout, read the selected domain skill and follow its "Sugestao de Estrutura" section (baseline from official template). Only diverge when user asks.
+- Before proposing widget layout, read the selected domain skill and follow its "Sugestao de Dashboard (Canonico)" section (baseline from official template with KPIs/Charts/Slicers canonicos). Only diverge when user asks.
 - Plan must include:
 - Objective
 - dashboard_name

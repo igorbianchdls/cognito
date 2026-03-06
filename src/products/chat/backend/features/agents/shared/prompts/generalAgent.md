@@ -95,7 +95,7 @@
 - financeiro/contas-a-pagar/contas-a-receber -> financeiroSkill.md
 - meta ads/google ads/trafego pago -> marketingSkill.md
 - ecommerce/amazon/mercadolivre/shopee/shopify -> ecommerceSkill.md
-- 2) For layout planning, follow the "Sugestao de Estrutura" section of the selected domain skill (baseline from official template). Only diverge when user asks.
+- 2) For layout planning, follow the "Sugestao de Dashboard (Canonico)" section of the selected domain skill (baseline from official template with KPIs/Charts/Slicers canonicos). Only diverge when user asks.
 - 3) Propose a concrete plan BEFORE tool execution, with explicit items:
 - Objetivo
 - dashboard_name sugerido

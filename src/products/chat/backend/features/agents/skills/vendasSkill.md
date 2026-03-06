@@ -36,18 +36,302 @@ Se houver conflito, priorizar template.
 - canal no pedido: `p.canal_venda_id` (label via `vendas.canais_venda`)
 - Se o nome nao estiver na lista canonica, pare e pergunte antes de montar query.
 
-## Sugestao de Estrutura (baseada no template /apps/vendas)
+## Sugestao de Dashboard (Canonico)
 
-- Use este baseline ao montar plano no `dashboard_builder`.
-- Ajuste apenas quando o usuario pedir layout diferente.
-- Topo: 1 row com 4 KPIs (Vendas, Pedidos, Ticket Medio, Margem Bruta).
-- Bloco 1: 1 row com Canais (pie), Categorias (bar), Filtro de Canais (slicer), Clientes (bar).
-- Bloco 2: 1 row com Vendedores, Filiais e Unidades de Negocio (3 bars).
-- Bloco 3: 1 row com Faturamento por Mes (line).
-- Bloco 4: 1 row com Pedidos por Mes, Ticket Medio por Mes e AISummary.
-- Bloco 5: 1 row com Territorios, Servicos/Categorias e Pedidos por Canal (3 bars).
-- Regra pratica: manter 4 KPIs no topo; expandir para 5-6 so se houver KPIs realmente uteis.
+Fonte canonica: `src/products/bi/shared/templates/appsVendasTemplate.ts`.
 
+### KPI (descricao semantica + query literal)
+
+- KPI de Vendas.
+
+```sql
+SELECT
+  COALESCE(SUM(p.valor_total), 0)::float AS value
+FROM vendas.pedidos p
+WHERE p.tenant_id = {{tenant_id}}
+  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+  AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+  AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+```
+
+- KPI de Pedidos.
+
+```sql
+SELECT
+  COUNT(DISTINCT p.id)::int AS value
+FROM vendas.pedidos p
+WHERE p.tenant_id = {{tenant_id}}
+  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+  AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+  AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+```
+
+- KPI de Ticket Médio.
+
+```sql
+SELECT
+  COALESCE(AVG(p.valor_total), 0)::float AS value
+FROM vendas.pedidos p
+WHERE p.tenant_id = {{tenant_id}}
+  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+  AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+  AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+```
+
+- KPI de Margem Bruta.
+
+Query: Sem query SQL no template (valuePath: vendas.kpis.margemBruta).
+
+### Slicer (descricao semantica + query literal)
+
+- Slicer de Canal.
+
+```sql
+SELECT
+  cv.id AS value,
+  COALESCE(cv.nome, '-') AS label
+FROM vendas.canais_venda cv
+ORDER BY 2 ASC
+```
+
+- Slicer de Cliente.
+
+```sql
+SELECT
+  c.id AS value,
+  COALESCE(c.nome_fantasia, '-') AS label
+FROM entidades.clientes c
+WHERE c.tenant_id = {{tenant_id}}
+ORDER BY 2 ASC
+```
+
+### Chart (descricao semantica + query literal)
+
+- Grafico de Canais.
+
+```sql
+SELECT
+  cv.id AS key,
+  COALESCE(cv.nome, '-') AS label,
+  COALESCE(SUM(pi.subtotal), 0)::float AS value
+FROM vendas.pedidos p
+JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+WHERE p.tenant_id = {{tenant_id}}
+  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+  AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+  AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+GROUP BY 1, 2
+ORDER BY 3 DESC
+```
+
+- Grafico de Categorias.
+
+```sql
+SELECT
+  cr.id AS key,
+  COALESCE(cr.nome, '-') AS label,
+  COALESCE(SUM(pi.subtotal), 0)::float AS value
+FROM vendas.pedidos p
+JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+LEFT JOIN financeiro.categorias_receita cr ON cr.id = p.categoria_receita_id
+WHERE p.tenant_id = {{tenant_id}}
+  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+  AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+  AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+GROUP BY 1, 2
+ORDER BY 3 DESC
+```
+
+- Grafico de Clientes.
+
+```sql
+SELECT
+  c.id AS key,
+  COALESCE(c.nome_fantasia, '-') AS label,
+  COALESCE(SUM(pi.subtotal), 0)::float AS value
+FROM vendas.pedidos p
+JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+LEFT JOIN entidades.clientes c ON c.id = p.cliente_id
+WHERE p.tenant_id = {{tenant_id}}
+  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+  AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+  AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+GROUP BY 1, 2
+ORDER BY 3 DESC
+```
+
+- Grafico de Vendedores.
+
+```sql
+SELECT
+  v.id AS key,
+  COALESCE(f.nome, '-') AS label,
+  COALESCE(SUM(pi.subtotal), 0)::float AS value
+FROM vendas.pedidos p
+JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
+LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
+WHERE p.tenant_id = {{tenant_id}}
+  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+  AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+  AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+GROUP BY 1, 2
+ORDER BY 3 DESC
+```
+
+- Grafico de Filiais.
+
+```sql
+SELECT
+  fil.id AS key,
+  COALESCE(fil.nome, '-') AS label,
+  COALESCE(SUM(pi.subtotal), 0)::float AS value
+FROM vendas.pedidos p
+JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+LEFT JOIN empresa.filiais fil ON fil.id = p.filial_id
+WHERE p.tenant_id = {{tenant_id}}
+  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+  AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+  AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+GROUP BY 1, 2
+ORDER BY 3 DESC
+```
+
+- Grafico de Unidades de Negócio.
+
+```sql
+SELECT
+  un.id AS key,
+  COALESCE(un.nome, '-') AS label,
+  COALESCE(SUM(pi.subtotal), 0)::float AS value
+FROM vendas.pedidos p
+JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+LEFT JOIN empresa.unidades_negocio un ON un.id = p.unidade_negocio_id
+WHERE p.tenant_id = {{tenant_id}}
+  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+  AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+  AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+GROUP BY 1, 2
+ORDER BY 3 DESC
+```
+
+- Grafico de Faturamento por Mês.
+
+```sql
+SELECT
+  TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS key,
+  TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS label,
+  COALESCE(SUM(pi.subtotal), 0)::float AS value
+FROM vendas.pedidos p
+JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+WHERE p.tenant_id = {{tenant_id}}
+  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+  AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+  AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+GROUP BY 1, 2
+ORDER BY 2 ASC
+```
+
+- Grafico de Pedidos por Mês.
+
+```sql
+SELECT
+  TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS key,
+  TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS label,
+  COUNT(DISTINCT p.id)::int AS value
+FROM vendas.pedidos p
+WHERE p.tenant_id = {{tenant_id}}
+  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+  AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+  AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+GROUP BY 1, 2
+ORDER BY 2 ASC
+```
+
+- Grafico de Ticket Médio por Mês.
+
+```sql
+SELECT
+  TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS key,
+  TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS label,
+  COALESCE(AVG(p.valor_total), 0)::float AS value
+FROM vendas.pedidos p
+WHERE p.tenant_id = {{tenant_id}}
+  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+  AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+  AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+GROUP BY 1, 2
+ORDER BY 2 ASC
+```
+
+- Grafico de Territórios.
+
+```sql
+SELECT
+  t.id AS key,
+  COALESCE(t.nome, '-') AS label,
+  COALESCE(SUM(pi.subtotal), 0)::float AS value
+FROM vendas.pedidos p
+JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+LEFT JOIN comercial.territorios t ON t.id = p.territorio_id
+WHERE p.tenant_id = {{tenant_id}}
+  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+  AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+  AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+GROUP BY 1, 2
+ORDER BY 3 DESC
+```
+
+- Grafico de Serviços/Categorias.
+
+```sql
+SELECT
+  cr.id AS key,
+  COALESCE(cr.nome, '-') AS label,
+  COALESCE(SUM(pi.subtotal), 0)::float AS value
+FROM vendas.pedidos p
+JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+LEFT JOIN financeiro.categorias_receita cr ON cr.id = p.categoria_receita_id
+WHERE p.tenant_id = {{tenant_id}}
+  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+  AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+  AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+GROUP BY 1, 2
+ORDER BY 3 DESC
+```
+
+- Grafico de Pedidos.
+
+```sql
+SELECT
+  cv.id AS key,
+  COALESCE(cv.nome, '-') AS label,
+  COUNT(DISTINCT p.id)::int AS value
+FROM vendas.pedidos p
+LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+WHERE p.tenant_id = {{tenant_id}}
+  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+  AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+  AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+GROUP BY 1, 2
+ORDER BY 3 DESC
+```
 ## Tabelas e Campos Canonicos
 
 ### `vendas.pedidos p`

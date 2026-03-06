@@ -14,6 +14,206 @@ Prioridade de referencia:
 
 Em conflito, priorizar controller.
 
+## Sugestao de Dashboard (Canonico)
+
+Fonte canonica:
+- `src/products/bi/shared/templates/appsGoogleAdsTemplate.ts`
+- `src/products/bi/shared/templates/appsMetaAdsTemplate.ts`
+
+### KPI (descricao semantica + query literal)
+
+- KPI de Gasto (Campanhas).
+
+```sql
+SELECT COALESCE(SUM(dd.gasto), 0)::float AS value
+FROM trafegopago.desempenho_diario dd
+WHERE dd.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR dd.data_ref::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR dd.data_ref::date <= {{ate}}::date)
+```
+
+- KPI de Receita Atribuida.
+
+```sql
+SELECT COALESCE(SUM(dd.receita_atribuida), 0)::float AS value
+FROM trafegopago.desempenho_diario dd
+WHERE dd.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR dd.data_ref::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR dd.data_ref::date <= {{ate}}::date)
+```
+
+- KPI de ROAS.
+
+```sql
+SELECT
+  CASE
+    WHEN COALESCE(SUM(dd.gasto), 0) = 0 THEN 0
+    ELSE COALESCE(SUM(dd.receita_atribuida), 0)::float / NULLIF(SUM(dd.gasto), 0)::float
+  END::float AS value
+FROM trafegopago.desempenho_diario dd
+WHERE dd.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR dd.data_ref::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR dd.data_ref::date <= {{ate}}::date)
+```
+
+- KPI de CTR.
+
+```sql
+SELECT
+  CASE
+    WHEN COALESCE(SUM(dd.impressoes), 0) = 0 THEN 0
+    ELSE COALESCE(SUM(dd.cliques), 0)::float / NULLIF(SUM(dd.impressoes), 0)::float
+  END::float AS value
+FROM trafegopago.desempenho_diario dd
+WHERE dd.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR dd.data_ref::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR dd.data_ref::date <= {{ate}}::date)
+```
+
+- KPI de CPC.
+
+```sql
+SELECT
+  CASE
+    WHEN COALESCE(SUM(dd.cliques), 0) = 0 THEN 0
+    ELSE COALESCE(SUM(dd.gasto), 0)::float / NULLIF(SUM(dd.cliques), 0)::float
+  END::float AS value
+FROM trafegopago.desempenho_diario dd
+WHERE dd.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR dd.data_ref::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR dd.data_ref::date <= {{ate}}::date)
+```
+
+### Slicer (descricao semantica + query literal)
+
+- Slicer de Conta.
+
+```sql
+SELECT
+  cm.id AS value,
+  COALESCE(cm.nome_conta, CONCAT('Conta #', cm.id::text)) AS label
+FROM trafegopago.contas_midia cm
+WHERE cm.tenant_id = {{tenant_id}}::int
+ORDER BY 2 ASC
+```
+
+- Slicer de Campanha.
+
+```sql
+SELECT
+  c.id AS value,
+  COALESCE(c.nome, CONCAT('Campanha #', c.id::text)) AS label
+FROM trafegopago.campanhas c
+WHERE c.tenant_id = {{tenant_id}}::int
+ORDER BY 2 ASC
+```
+
+- Slicer de Grupo.
+
+```sql
+SELECT
+  ga.id AS value,
+  COALESCE(ga.nome, CONCAT('Grupo #', ga.id::text)) AS label
+FROM trafegopago.grupos_anuncio ga
+WHERE ga.tenant_id = {{tenant_id}}::int
+ORDER BY 2 ASC
+```
+
+- Slicer de Anuncio.
+
+```sql
+SELECT
+  a.id AS value,
+  COALESCE(a.nome, CONCAT('Anuncio #', a.id::text)) AS label
+FROM trafegopago.anuncios a
+WHERE a.tenant_id = {{tenant_id}}::int
+ORDER BY 2 ASC
+```
+
+### Chart (descricao semantica + query literal)
+
+- Grafico de Gasto por Mes.
+
+```sql
+SELECT
+  TO_CHAR(DATE_TRUNC('month', dd.data_ref), 'YYYY-MM') AS key,
+  TO_CHAR(DATE_TRUNC('month', dd.data_ref), 'YYYY-MM') AS label,
+  COALESCE(SUM(dd.gasto), 0)::float AS value
+FROM trafegopago.desempenho_diario dd
+WHERE dd.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR dd.data_ref::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR dd.data_ref::date <= {{ate}}::date)
+GROUP BY 1,2
+ORDER BY 2 ASC
+```
+
+- Grafico de Receita por Mes.
+
+```sql
+SELECT
+  TO_CHAR(DATE_TRUNC('month', dd.data_ref), 'YYYY-MM') AS key,
+  TO_CHAR(DATE_TRUNC('month', dd.data_ref), 'YYYY-MM') AS label,
+  COALESCE(SUM(dd.receita_atribuida), 0)::float AS value
+FROM trafegopago.desempenho_diario dd
+WHERE dd.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR dd.data_ref::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR dd.data_ref::date <= {{ate}}::date)
+GROUP BY 1,2
+ORDER BY 2 ASC
+```
+
+- Grafico de ROAS por Plataforma.
+
+```sql
+SELECT
+  COALESCE(dd.plataforma, '-') AS key,
+  COALESCE(dd.plataforma, '-') AS label,
+  CASE
+    WHEN COALESCE(SUM(dd.gasto), 0) = 0 THEN 0
+    ELSE COALESCE(SUM(dd.receita_atribuida), 0)::float / NULLIF(SUM(dd.gasto), 0)::float
+  END::float AS value
+FROM trafegopago.desempenho_diario dd
+WHERE dd.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR dd.data_ref::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR dd.data_ref::date <= {{ate}}::date)
+GROUP BY 1,2
+ORDER BY 3 DESC
+```
+
+- Grafico de Top Campanhas por Gasto.
+
+```sql
+SELECT
+  dd.campanha_id AS key,
+  COALESCE(c.nome, CONCAT('Campanha #', dd.campanha_id::text)) AS label,
+  COALESCE(SUM(dd.gasto), 0)::float AS value
+FROM trafegopago.desempenho_diario dd
+LEFT JOIN trafegopago.campanhas c ON c.id = dd.campanha_id
+WHERE dd.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR dd.data_ref::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR dd.data_ref::date <= {{ate}}::date)
+GROUP BY 1,2
+ORDER BY 3 DESC
+LIMIT 10
+```
+
+- Grafico de Top Campanhas por Leads.
+
+```sql
+SELECT
+  dd.campanha_id AS key,
+  COALESCE(c.nome, CONCAT('Campanha #', dd.campanha_id::text)) AS label,
+  COALESCE(SUM(dd.leads), 0)::float AS value
+FROM trafegopago.desempenho_diario dd
+LEFT JOIN trafegopago.campanhas c ON c.id = dd.campanha_id
+WHERE dd.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR dd.data_ref::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR dd.data_ref::date <= {{ate}}::date)
+GROUP BY 1,2
+ORDER BY 3 DESC
+LIMIT 10
+```
+
 ## Contrato Query-First
 
 - KPI: `query` retornando `value`

@@ -14,19 +14,204 @@ Prioridade de referencia:
 
 Em conflito, priorizar controller.
 
-## Sugestao de Estrutura (baseada no template /apps/shopify)
+## Sugestao de Dashboard (Canonico)
 
-- Use este baseline ao montar plano no `dashboard_builder`.
-- Ajuste apenas quando o usuario pedir layout diferente.
-- Topo: 1 row de filtros principais (ex.: canal, loja, status).
-- KPI row 1: 6 KPIs comerciais (GMV, Pedidos, Ticket Medio, Clientes Unicos, Receita Liquida Est., Reembolsos).
-- KPI row 2: 6 KPIs operacionais/financeiros (Taxas, Fee Rate, Payout Liquido, Envios, Frete Custo, Estoque).
-- Graficos abaixo: multiplas rows com foco em tendencia, distribuicao/ranking e operacao:
-- Row A: GMV por Mes + Pedidos por Status + GMV por Conta.
-- Row B: GMV por Loja + Receita Liquida por Mes + Status de Pagamento.
-- Row C: Top Produtos (receita/quantidade) + Taxas por Tipo.
-- Row D: Payout por Mes + Envios por Transportadora + Estoque por Mes.
-- Regra pratica: ecommerce usa 2 rows de KPI e multiplos blocos de graficos abaixo (nao comprimir em 1-2 rows).
+Fonte canonica: `src/products/bi/shared/templates/appsShopifyTemplate.ts` (mesmo padrao base para Amazon/Shopee/Mercado Livre com variacao de `plataforma`).
+
+### KPI (descricao semantica + query literal)
+
+- KPI de GMV.
+
+```sql
+SELECT COALESCE(SUM(p.valor_total), 0)::float AS value
+FROM ecommerce.pedidos p
+WHERE p.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR p.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR p.data_pedido::date <= {{ate}}::date)
+```
+
+- KPI de Pedidos.
+
+```sql
+SELECT COUNT(*)::int AS value
+FROM ecommerce.pedidos p
+WHERE p.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR p.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR p.data_pedido::date <= {{ate}}::date)
+```
+
+- KPI de Ticket Medio.
+
+```sql
+SELECT COALESCE(AVG(p.valor_total), 0)::float AS value
+FROM ecommerce.pedidos p
+WHERE p.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR p.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR p.data_pedido::date <= {{ate}}::date)
+```
+
+- KPI de Clientes Unicos.
+
+```sql
+SELECT COUNT(DISTINCT p.cliente_id)::int AS value
+FROM ecommerce.pedidos p
+WHERE p.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR p.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR p.data_pedido::date <= {{ate}}::date)
+```
+
+- KPI de Receita Liquida Estimada.
+
+```sql
+SELECT COALESCE(SUM(p.valor_liquido_estimado), 0)::float AS value
+FROM ecommerce.pedidos p
+WHERE p.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR p.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR p.data_pedido::date <= {{ate}}::date)
+```
+
+### Slicer (descricao semantica + query literal)
+
+- Slicer de Conta.
+
+```sql
+SELECT
+  p.canal_conta_id AS value,
+  COALESCE(cc.nome, CONCAT('Conta #', p.canal_conta_id::text)) AS label
+FROM ecommerce.pedidos p
+LEFT JOIN ecommerce.canais_contas cc ON cc.id = p.canal_conta_id
+WHERE p.tenant_id = {{tenant_id}}::int
+GROUP BY 1, 2
+ORDER BY 2 ASC
+```
+
+- Slicer de Loja.
+
+```sql
+SELECT
+  p.loja_id AS value,
+  COALESCE(l.nome, CONCAT('Loja #', p.loja_id::text)) AS label
+FROM ecommerce.pedidos p
+LEFT JOIN ecommerce.lojas l ON l.id = p.loja_id
+WHERE p.tenant_id = {{tenant_id}}::int
+GROUP BY 1, 2
+ORDER BY 2 ASC
+```
+
+- Slicer de Status do Pedido.
+
+```sql
+SELECT
+  COALESCE(p.status, '-') AS value,
+  COALESCE(p.status, '-') AS label
+FROM ecommerce.pedidos p
+WHERE p.tenant_id = {{tenant_id}}::int
+GROUP BY 1, 2
+ORDER BY 2 ASC
+```
+
+- Slicer de Status de Pagamento.
+
+```sql
+SELECT
+  COALESCE(p.status_pagamento, '-') AS value,
+  COALESCE(p.status_pagamento, '-') AS label
+FROM ecommerce.pedidos p
+WHERE p.tenant_id = {{tenant_id}}::int
+GROUP BY 1, 2
+ORDER BY 2 ASC
+```
+
+- Slicer de Status de Fulfillment.
+
+```sql
+SELECT
+  COALESCE(p.status_fulfillment, '-') AS value,
+  COALESCE(p.status_fulfillment, '-') AS label
+FROM ecommerce.pedidos p
+WHERE p.tenant_id = {{tenant_id}}::int
+GROUP BY 1, 2
+ORDER BY 2 ASC
+```
+
+### Chart (descricao semantica + query literal)
+
+- Grafico de GMV por Mes.
+
+```sql
+SELECT
+  TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS key,
+  TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS label,
+  COALESCE(SUM(p.valor_total), 0)::float AS value
+FROM ecommerce.pedidos p
+WHERE p.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR p.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR p.data_pedido::date <= {{ate}}::date)
+GROUP BY 1,2
+ORDER BY 2 ASC
+```
+
+- Grafico de Pedidos por Status.
+
+```sql
+SELECT
+  COALESCE(p.status, '-') AS key,
+  COALESCE(p.status, '-') AS label,
+  COUNT(*)::int AS value
+FROM ecommerce.pedidos p
+WHERE p.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR p.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR p.data_pedido::date <= {{ate}}::date)
+GROUP BY 1,2
+ORDER BY 3 DESC
+```
+
+- Grafico de GMV por Conta.
+
+```sql
+SELECT
+  p.canal_conta_id::text AS key,
+  COALESCE(cc.nome, CONCAT('Conta #', p.canal_conta_id::text)) AS label,
+  COALESCE(SUM(p.valor_total), 0)::float AS value
+FROM ecommerce.pedidos p
+LEFT JOIN ecommerce.canais_contas cc ON cc.id = p.canal_conta_id
+WHERE p.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR p.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR p.data_pedido::date <= {{ate}}::date)
+GROUP BY 1,2
+ORDER BY 3 DESC
+```
+
+- Grafico de GMV por Loja.
+
+```sql
+SELECT
+  p.loja_id::text AS key,
+  COALESCE(l.nome, CONCAT('Loja #', p.loja_id::text)) AS label,
+  COALESCE(SUM(p.valor_total), 0)::float AS value
+FROM ecommerce.pedidos p
+LEFT JOIN ecommerce.lojas l ON l.id = p.loja_id
+WHERE p.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR p.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR p.data_pedido::date <= {{ate}}::date)
+GROUP BY 1,2
+ORDER BY 3 DESC
+```
+
+- Grafico de Receita Liquida Estimada por Mes.
+
+```sql
+SELECT
+  TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS key,
+  TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS label,
+  COALESCE(SUM(p.valor_liquido_estimado), 0)::float AS value
+FROM ecommerce.pedidos p
+WHERE p.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR p.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR p.data_pedido::date <= {{ate}}::date)
+GROUP BY 1,2
+ORDER BY 2 ASC
+```
 
 ## Contrato Query-First
 
