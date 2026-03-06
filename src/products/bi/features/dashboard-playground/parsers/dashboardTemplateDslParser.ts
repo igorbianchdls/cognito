@@ -10,6 +10,10 @@ type DslNode = {
   start: number
 }
 
+type CompileContext = {
+  chartInteractionDefaults?: Record<string, unknown>
+}
+
 function lineCol(source: string, index: number): { line: number; column: number } {
   const safe = Math.max(0, Math.min(index, source.length))
   const segment = source.slice(0, safe)
@@ -110,13 +114,14 @@ function parseDslTree(sourceRaw: string): DslNode {
   const stack: DslNode[] = []
   let root: DslNode | null = null
   let i = 0
+  const RAW_TEXT_TAGS = new Set(['props', 'query', 'sql'])
 
   while (i < source.length) {
     const top = stack[stack.length - 1]
-    if (top?.tag === 'props') {
-      const close = '</props>'
+    if (top && RAW_TEXT_TAGS.has(top.tag)) {
+      const close = `</${top.tag}>`
       const closeIndex = source.toLowerCase().indexOf(close, i)
-      if (closeIndex < 0) throw new DashboardTemplateDslParseError(source, top.start, 'Tag <props> nao foi fechada')
+      if (closeIndex < 0) throw new DashboardTemplateDslParseError(source, top.start, `Tag <${top.tag}> nao foi fechada`)
       if (closeIndex > i) {
         top.text += source.slice(i, closeIndex)
         i = closeIndex
@@ -215,7 +220,53 @@ function parsePropsNode(source: string, node: DslNode): Record<string, unknown> 
   return parsed as Record<string, unknown>
 }
 
+function toCamelKey(input: string): string {
+  return String(input || '')
+    .trim()
+    .toLowerCase()
+    .replace(/-([a-z0-9])/g, (_, c: string) => c.toUpperCase())
+}
+
+function parsePrimitive(valueRaw: string): unknown {
+  const value = String(valueRaw ?? '').trim()
+  if (!value) return ''
+  if (value === 'true') return true
+  if (value === 'false') return false
+  if (value === 'null') return null
+  if (/^-?\d+(\.\d+)?$/.test(value)) {
+    const n = Number(value)
+    if (Number.isFinite(n)) return n
+  }
+  return valueRaw
+}
+
+function attrsToProps(attrs: AttrMap, opts?: { skip?: string[] }): Record<string, unknown> {
+  const skip = new Set((opts?.skip || []).map((s) => String(s).toLowerCase()))
+  const out: Record<string, unknown> = {}
+  for (const [rawKey, rawVal] of Object.entries(attrs || {})) {
+    const keyLower = String(rawKey || '').toLowerCase()
+    if (!keyLower || skip.has(keyLower)) continue
+    const key = toCamelKey(keyLower)
+    if (!key) continue
+    out[key] = parsePrimitive(rawVal)
+  }
+  return out
+}
+
+function mergeObjects(base: Record<string, unknown>, extra: Record<string, unknown>): Record<string, unknown> {
+  return { ...(base || {}), ...(extra || {}) }
+}
+
+function mapChartType(source: string, node: DslNode, rawType: string): string {
+  const t = String(rawType || '').trim().toLowerCase()
+  if (t === 'line') return 'LineChart'
+  if (t === 'bar') return 'BarChart'
+  if (t === 'pie') return 'PieChart'
+  throw new DashboardTemplateDslParseError(source, node.start, `Tag <chart> exige type valido: line | bar | pie`)
+}
+
 function toCatalogType(tag: string): string {
+  if (tag === 'chart') return 'Chart'
   if (tag === 'kpi') return 'KPI'
   if (tag === 'ai-summary' || tag === 'aisummary') return 'AISummary'
   return tag
@@ -225,9 +276,136 @@ function toCatalogType(tag: string): string {
     .join('')
 }
 
-function compileNode(source: string, node: DslNode): Record<string, unknown> {
+function compileDefaultsNode(source: string, node: DslNode): CompileContext {
+  const attrDefaults = attrsToProps(node.attrs)
+  const propsNodes = node.children.filter((child) => child.tag === 'props')
+  if (propsNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <defaults> aceita no maximo um <props>')
+  }
+  const jsonDefaults = propsNodes.length ? parsePropsNode(source, propsNodes[0]) : {}
+  const interactionFromAttrs: Record<string, unknown> = {}
+  for (const [kRaw, vRaw] of Object.entries(node.attrs || {})) {
+    const k = String(kRaw || '').toLowerCase()
+    if (k.startsWith('interaction-')) {
+      interactionFromAttrs[toCamelKey(k.slice('interaction-'.length))] = parsePrimitive(vRaw)
+      continue
+    }
+    if (k === 'click-as-filter') interactionFromAttrs.clickAsFilter = parsePrimitive(vRaw)
+    if (k === 'clear-on-second-click') interactionFromAttrs.clearOnSecondClick = parsePrimitive(vRaw)
+  }
+
+  const interactionNodes = node.children.filter((child) => child.tag === 'interaction')
+  if (interactionNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <defaults> aceita no maximo um <interaction>')
+  }
+  const interactionFromNode = interactionNodes.length ? attrsToProps(interactionNodes[0].attrs) : {}
+
+  const jsonInteraction =
+    jsonDefaults.interaction && typeof jsonDefaults.interaction === 'object' && !Array.isArray(jsonDefaults.interaction)
+      ? (jsonDefaults.interaction as Record<string, unknown>)
+      : {}
+
+  const mergedInteraction = {
+    ...jsonInteraction,
+    ...interactionFromNode,
+    ...interactionFromAttrs,
+  }
+
+  const fromAttrRoot =
+    attrDefaults.interaction && typeof attrDefaults.interaction === 'object' && !Array.isArray(attrDefaults.interaction)
+      ? (attrDefaults.interaction as Record<string, unknown>)
+      : {}
+
+  const finalInteraction = { ...fromAttrRoot, ...mergedInteraction }
+  if (Object.keys(finalInteraction).length === 0) return {}
+  return { chartInteractionDefaults: finalInteraction }
+}
+
+function compileChartNode(source: string, node: DslNode, context: CompileContext): Record<string, unknown> {
+  const chartType = mapChartType(source, node, String(node.attrs.type || ''))
+  const propsNodes = node.children.filter((child) => child.tag === 'props')
+  if (propsNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <chart> aceita no maximo um <props>')
+  }
+  const propsFromAttrs = attrsToProps(node.attrs, { skip: ['type'] })
+  const propsFromJson = propsNodes.length ? parsePropsNode(source, propsNodes[0]) : {}
+  const props = mergeObjects(propsFromAttrs, propsFromJson)
+
+  const queryNodes = node.children.filter((child) => child.tag === 'query' || child.tag === 'sql')
+  if (queryNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <chart> aceita no maximo um <query>')
+  }
+  const fieldsNodes = node.children.filter((child) => child.tag === 'fields')
+  if (fieldsNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <chart> aceita no maximo um <fields>')
+  }
+  const interactionNodes = node.children.filter((child) => child.tag === 'interaction')
+  if (interactionNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <chart> aceita no maximo um <interaction>')
+  }
+  const nivoNodes = node.children.filter((child) => child.tag === 'nivo')
+  if (nivoNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <chart> aceita no maximo um <nivo>')
+  }
+
+  const dataQueryFromProps =
+    props.dataQuery && typeof props.dataQuery === 'object' && !Array.isArray(props.dataQuery)
+      ? ({ ...(props.dataQuery as Record<string, unknown>) } as Record<string, unknown>)
+      : {}
+
+  if (queryNodes.length) {
+    const queryRaw = String(queryNodes[0].text || '').trim()
+    if (queryRaw) dataQueryFromProps.query = queryRaw
+  }
+
+  if (fieldsNodes.length) {
+    const attrs = fieldsNodes[0].attrs
+    const x = attrs.x || attrs.xfield || attrs['x-field']
+    const y = attrs.y || attrs.yfield || attrs.valuefield || attrs['value-field'] || attrs['y-field']
+    const key = attrs.key || attrs.keyfield || attrs['key-field']
+    if (x) dataQueryFromProps.xField = String(x)
+    if (y) dataQueryFromProps.yField = String(y)
+    if (key) dataQueryFromProps.keyField = String(key)
+  }
+
+  if (Object.keys(dataQueryFromProps).length) props.dataQuery = dataQueryFromProps
+
+  const interactionFromDefaults = context.chartInteractionDefaults || {}
+  const interactionFromProps =
+    props.interaction && typeof props.interaction === 'object' && !Array.isArray(props.interaction)
+      ? ({ ...(props.interaction as Record<string, unknown>) } as Record<string, unknown>)
+      : {}
+  const interactionFromNode = interactionNodes.length ? attrsToProps(interactionNodes[0].attrs) : {}
+  const mergedInteraction = {
+    ...interactionFromDefaults,
+    ...interactionFromProps,
+    ...interactionFromNode,
+  }
+  if (Object.keys(mergedInteraction).length) props.interaction = mergedInteraction
+
+  if (nivoNodes.length) {
+    const nivoFromNode = attrsToProps(nivoNodes[0].attrs)
+    const nivoFromProps =
+      props.nivo && typeof props.nivo === 'object' && !Array.isArray(props.nivo)
+        ? ({ ...(props.nivo as Record<string, unknown>) } as Record<string, unknown>)
+        : {}
+    props.nivo = {
+      ...nivoFromProps,
+      ...nivoFromNode,
+    }
+  }
+
+  const out: Record<string, unknown> = { type: chartType }
+  if (Object.keys(props).length) out.props = props
+  return out
+}
+
+function compileNode(source: string, node: DslNode, context: CompileContext): Record<string, unknown> | null {
+  if (node.tag === 'defaults') return null
+  if (node.tag === 'chart') return compileChartNode(source, node, context)
+
   const type = toCatalogType(node.tag)
-  if (!type) {
+  if (!type || type === 'Chart') {
     throw new DashboardTemplateDslParseError(source, node.start, `Tag <${node.tag}> nao e suportada`)
   }
 
@@ -236,10 +414,25 @@ function compileNode(source: string, node: DslNode): Record<string, unknown> {
     throw new DashboardTemplateDslParseError(source, node.start, `Tag <${node.tag}> aceita no maximo um <props>`)
   }
 
-  const props = propsNodes.length ? parsePropsNode(source, propsNodes[0]) : {}
+  const propsFromAttrs = attrsToProps(node.attrs)
+  const propsFromJson = propsNodes.length ? parsePropsNode(source, propsNodes[0]) : {}
+  const props = mergeObjects(propsFromAttrs, propsFromJson)
+  if (type === 'LineChart' || type === 'BarChart' || type === 'PieChart') {
+    const interactionFromDefaults = context.chartInteractionDefaults || {}
+    const interactionFromProps =
+      props.interaction && typeof props.interaction === 'object' && !Array.isArray(props.interaction)
+        ? (props.interaction as Record<string, unknown>)
+        : {}
+    const mergedInteraction = {
+      ...interactionFromDefaults,
+      ...interactionFromProps,
+    }
+    if (Object.keys(mergedInteraction).length) props.interaction = mergedInteraction
+  }
   const children = node.children
     .filter((child) => child.tag !== 'props')
-    .map((child) => compileNode(source, child))
+    .map((child) => compileNode(source, child, context))
+    .filter((child): child is Record<string, unknown> => Boolean(child))
 
   const out: Record<string, unknown> = { type }
   if (Object.keys(props).length) out.props = props
@@ -252,7 +445,27 @@ export function parseDashboardTemplateDslToTree(source: string): JsonTree {
   if (root.tag !== 'dashboard-template') {
     throw new DashboardTemplateDslParseError(source, root.start, `Tag raiz invalida: esperado <dashboard-template> e recebido <${root.tag}>`)
   }
-  return root.children.map((node) => compileNode(source, node))
+  function collectDefaults(nodes: DslNode[], acc: DslNode[] = []): DslNode[] {
+    for (const n of nodes) {
+      if (n.tag === 'defaults') acc.push(n)
+      if (Array.isArray(n.children) && n.children.length) collectDefaults(n.children, acc)
+    }
+    return acc
+  }
+  let context: CompileContext = {}
+  const defaultsNodes = collectDefaults(root.children)
+  for (const defaultsNode of defaultsNodes) {
+    const parsed = compileDefaultsNode(source, defaultsNode)
+    context = {
+      chartInteractionDefaults: {
+        ...(context.chartInteractionDefaults || {}),
+        ...(parsed.chartInteractionDefaults || {}),
+      },
+    }
+  }
+  return root.children
+    .map((node) => compileNode(source, node, context))
+    .filter((node): node is Record<string, unknown> => Boolean(node))
 }
 
 function sanitizeTemplateName(value: string): string {
@@ -265,9 +478,17 @@ function sanitizeTemplateName(value: string): string {
   return out || 'dashboard_template'
 }
 
+function chartTypeToAttr(type: string): 'line' | 'bar' | 'pie' | null {
+  if (type === 'LineChart') return 'line'
+  if (type === 'BarChart') return 'bar'
+  if (type === 'PieChart') return 'pie'
+  return null
+}
+
 function toDslTag(type: string): string {
   const raw = String(type || '').trim()
   if (!raw) return 'node'
+  if (chartTypeToAttr(raw)) return 'chart'
   if (raw === 'KPI') return 'kpi'
   if (raw === 'AISummary') return 'ai-summary'
   return raw
@@ -278,6 +499,36 @@ function toDslTag(type: string): string {
 
 function renderIndent(level: number): string {
   return '  '.repeat(level)
+}
+
+function toKebabKey(input: string): string {
+  return String(input || '')
+    .trim()
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .replace(/_/g, '-')
+    .toLowerCase()
+}
+
+function escapeAttr(value: string): string {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+}
+
+function renderAttrs(attrs: Record<string, unknown>): string {
+  const parts: string[] = []
+  for (const [keyRaw, valueRaw] of Object.entries(attrs || {})) {
+    if (valueRaw === undefined) continue
+    if (typeof valueRaw === 'object' && valueRaw !== null) continue
+    const key = toKebabKey(keyRaw)
+    if (!key) continue
+    const value =
+      typeof valueRaw === 'boolean'
+        ? (valueRaw ? 'true' : 'false')
+        : String(valueRaw)
+    parts.push(`${key}="${escapeAttr(value)}"`)
+  }
+  return parts.length ? ` ${parts.join(' ')}` : ''
 }
 
 function renderPropsBlock(props: unknown, level: number): string[] {
@@ -294,9 +545,101 @@ function renderPropsBlock(props: unknown, level: number): string[] {
   ]
 }
 
+function renderChartNodeToDsl(node: Record<string, unknown>, level: number): string[] {
+  const propsRaw =
+    node.props && typeof node.props === 'object' && !Array.isArray(node.props)
+      ? ({ ...(node.props as Record<string, unknown>) } as Record<string, unknown>)
+      : {}
+  const typeRaw = String(node.type || '').trim()
+  const chartType = chartTypeToAttr(typeRaw) || 'bar'
+
+  const baseAttrs: Record<string, unknown> = { type: chartType }
+  const consumedTopLevel = new Set(['dataQuery', 'interaction', 'nivo'])
+  for (const [k, v] of Object.entries(propsRaw)) {
+    if (consumedTopLevel.has(k)) continue
+    if (v === undefined) continue
+    if (typeof v !== 'object' || v === null) {
+      baseAttrs[k] = v
+      delete propsRaw[k]
+    }
+  }
+
+  const lines: string[] = [`${renderIndent(level)}<chart${renderAttrs(baseAttrs)}>`]
+
+  const dataQueryRaw =
+    propsRaw.dataQuery && typeof propsRaw.dataQuery === 'object' && !Array.isArray(propsRaw.dataQuery)
+      ? ({ ...(propsRaw.dataQuery as Record<string, unknown>) } as Record<string, unknown>)
+      : {}
+
+  const query = typeof dataQueryRaw.query === 'string' ? dataQueryRaw.query : ''
+  if (query.trim()) {
+    lines.push(`${renderIndent(level + 1)}<query>`)
+    lines.push(query
+      .split('\n')
+      .map((line) => `${renderIndent(level + 2)}${line}`)
+      .join('\n'))
+    lines.push(`${renderIndent(level + 1)}</query>`)
+    delete dataQueryRaw.query
+  }
+
+  const fieldsAttrs: Record<string, unknown> = {}
+  if (typeof dataQueryRaw.xField === 'string' && dataQueryRaw.xField.trim()) {
+    fieldsAttrs.x = dataQueryRaw.xField
+    delete dataQueryRaw.xField
+  }
+  if (typeof dataQueryRaw.yField === 'string' && dataQueryRaw.yField.trim()) {
+    fieldsAttrs.y = dataQueryRaw.yField
+    delete dataQueryRaw.yField
+  }
+  if (typeof dataQueryRaw.keyField === 'string' && dataQueryRaw.keyField.trim()) {
+    fieldsAttrs.key = dataQueryRaw.keyField
+    delete dataQueryRaw.keyField
+  }
+  if (Object.keys(fieldsAttrs).length) {
+    lines.push(`${renderIndent(level + 1)}<fields${renderAttrs(fieldsAttrs)} />`)
+  }
+
+  const interactionRaw =
+    propsRaw.interaction && typeof propsRaw.interaction === 'object' && !Array.isArray(propsRaw.interaction)
+      ? ({ ...(propsRaw.interaction as Record<string, unknown>) } as Record<string, unknown>)
+      : {}
+  if (Object.keys(interactionRaw).length) {
+    lines.push(`${renderIndent(level + 1)}<interaction${renderAttrs(interactionRaw)} />`)
+    delete propsRaw.interaction
+  }
+
+  const nivoRaw =
+    propsRaw.nivo && typeof propsRaw.nivo === 'object' && !Array.isArray(propsRaw.nivo)
+      ? ({ ...(propsRaw.nivo as Record<string, unknown>) } as Record<string, unknown>)
+      : {}
+  if (Object.keys(nivoRaw).length) {
+    lines.push(`${renderIndent(level + 1)}<nivo${renderAttrs(nivoRaw)} />`)
+    delete propsRaw.nivo
+  }
+
+  if (Object.keys(dataQueryRaw).length) {
+    propsRaw.dataQuery = dataQueryRaw
+  } else {
+    delete propsRaw.dataQuery
+  }
+
+  lines.push(...renderPropsBlock(propsRaw, level + 1))
+
+  const children = Array.isArray(node.children) ? node.children : []
+  for (const child of children) {
+    lines.push(...renderNodeToDsl(child, level + 1))
+  }
+
+  lines.push(`${renderIndent(level)}</chart>`)
+  return lines
+}
+
 function renderNodeToDsl(node: unknown, level: number): string[] {
   if (!node || typeof node !== 'object' || Array.isArray(node)) return []
   const record = node as Record<string, unknown>
+  if (chartTypeToAttr(String(record.type || '').trim())) {
+    return renderChartNodeToDsl(record, level)
+  }
   const tag = toDslTag(String(record.type || 'node'))
   const lines: string[] = [`${renderIndent(level)}<${tag}>`]
   lines.push(...renderPropsBlock(record.props, level + 1))

@@ -28,6 +28,7 @@ Para semantica de dados por dominio, usar:
 7. Para Chart, informar `xField` e `yField` (e `keyField` quando houver).
 8. Para KPI query-first, a query deve retornar coluna numerica com alias `value` (sem `xField/yField/keyField`).
 9. So usar props suportadas no catalogo do renderer.
+10. Preferir sintaxe sem JSON em chart: `<chart ...>`, `<query>`, `<fields />`, `<interaction />`, `<nivo />`.
 
 ## Componentes Permitidos
 
@@ -35,11 +36,10 @@ Para semantica de dados por dominio, usar:
 - `Header`
 - `Div`
 - `KPI`
-- `BarChart`
-- `LineChart`
-- `PieChart`
+- `Chart` (com `type="bar|line|pie"`)
 - `SlicerCard`
 - `AISummary`
+- `Defaults` (opcional, para defaults globais de interaction em charts)
 
 ## Contrato DataQuery (Padrao)
 
@@ -87,6 +87,7 @@ Compatibilidade:
 
 ```xml
 <dashboard-template name="dashboard_exemplo">
+  <defaults interaction-click-as-filter="false" clear-on-second-click="true" />
   <theme>
     <props>
       { "name": "light", "managers": {} }
@@ -120,23 +121,25 @@ Compatibilidade:
           }
         </props>
       </kpi>
-      <bar-chart>
+      <chart type="bar" title="Top Canais" format="currency" height="220">
+        <query>
+          SELECT
+            cv.id AS key,
+            COALESCE(cv.nome,'-') AS label,
+            COALESCE(SUM(pi.subtotal),0)::float AS value
+          FROM vendas.pedidos src
+          JOIN vendas.pedidos_itens pi ON pi.pedido_id=src.id
+          LEFT JOIN vendas.canais_venda cv ON cv.id=src.canal_venda_id
+          WHERE src.tenant_id={{tenant_id}}::int
+          GROUP BY 1,2
+          ORDER BY 3 DESC
+        </query>
+        <fields x="label" y="value" key="key" />
+        <interaction click-as-filter="true" filter-field="canal_venda_id" store-path="filters.canal_venda_id" />
         <props>
-          {
-            "title": "Top Canais",
-            "format": "currency",
-            "height": 220,
-            "dataQuery": {
-              "query": "SELECT cv.id AS key, COALESCE(cv.nome,'-') AS label, COALESCE(SUM(pi.subtotal),0)::float AS value FROM vendas.pedidos src JOIN vendas.pedidos_itens pi ON pi.pedido_id=src.id LEFT JOIN vendas.canais_venda cv ON cv.id=src.canal_venda_id WHERE src.tenant_id={{tenant_id}}::int GROUP BY 1,2 ORDER BY 3 DESC",
-              "xField": "label",
-              "yField": "value",
-              "keyField": "key",
-              "filters": {},
-              "limit": 10
-            }
-          }
+          { "dataQuery": { "filters": {}, "limit": 10 } }
         </props>
-      </bar-chart>
+      </chart>
     </div>
   </theme>
 </dashboard-template>
