@@ -7,6 +7,7 @@ import { Response } from '@/components/ai-elements/response'
 import { Reasoning, ReasoningContent, ReasoningTrigger } from '@/components/ai-elements/reasoning'
 import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from '@/components/ai-elements/tool'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { renderSharedToolPart } from '@/products/chat/shared/tools/toolRegistry'
 import EntityDisplay from '@/products/erp/frontend/components/EntityDisplay'
 
 type Props = { message: UIMessage; isPending?: boolean }
@@ -433,6 +434,9 @@ function RespostaDaIa({ message, isPending = false }: Props) {
           }
 
           if (typeof part?.type === 'string' && part.type.startsWith('tool-')) {
+            const sharedToolPart = renderSharedToolPart(part, index)
+            if (sharedToolPart) return sharedToolPart
+
             const crudPart = isCrudToolPart(part)
             const crudRows = crudPart ? extractCrudRows(part?.output) : null
             const crudMeta = crudPart ? extractCrudMeta(part?.output) : {}
