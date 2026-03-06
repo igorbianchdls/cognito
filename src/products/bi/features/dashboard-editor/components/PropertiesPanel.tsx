@@ -263,6 +263,8 @@ export default function PropertiesPanel({
   const [draftProps, setDraftProps] = React.useState<Record<string, any>>({})
   const [rawPropsText, setRawPropsText] = React.useState('{}')
   const [rawPropsError, setRawPropsError] = React.useState<string | null>(null)
+  const [tableColumnsText, setTableColumnsText] = React.useState('[]')
+  const [tableColumnsError, setTableColumnsError] = React.useState<string | null>(null)
   const [activeTab, setActiveTab] = React.useState<TabKey>('data')
   const node = React.useMemo<Record<string, any> | null>(
     () => (sourceNode && typeof sourceNode === 'object' ? { ...sourceNode, props: draftProps } : sourceNode),
@@ -270,13 +272,13 @@ export default function PropertiesPanel({
   )
 
   const supportsDataTab = Boolean(
-    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'AISummary'].includes(String(node.type)),
+    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'AISummary', 'Table'].includes(String(node.type)),
   )
   const supportsStyleTab = Boolean(
-    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'Card', 'Div', 'Gauge', 'AISummary'].includes(String(node.type)),
+    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'Card', 'Div', 'Gauge', 'AISummary', 'Table'].includes(String(node.type)),
   )
   const supportsFr = Boolean(
-    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Gauge', 'SlicerCard', 'AISummary'].includes(String(node.type)),
+    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Gauge', 'SlicerCard', 'AISummary', 'Table'].includes(String(node.type)),
   )
 
   React.useEffect(() => {
@@ -284,6 +286,9 @@ export default function PropertiesPanel({
     setDraftProps(next)
     setRawPropsText(JSON.stringify(next, null, 2))
     setRawPropsError(null)
+    const rawCols = Array.isArray(next.columns) ? next.columns : []
+    setTableColumnsText(JSON.stringify(rawCols, null, 2))
+    setTableColumnsError(null)
   }, [sourceNode && JSON.stringify(sourceNode.props || {})])
 
   React.useEffect(() => {
@@ -469,12 +474,159 @@ export default function PropertiesPanel({
                 </div>
               )}
 
-              {activeTab === 'data' && (node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'Header' || node.type === 'SlicerCard') && (
+              {activeTab === 'data' && (node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'Header' || node.type === 'SlicerCard' || node.type === 'Table') && (
                 <TextField
                   label="Título"
                   value={String(getProp(node, 'title', ''))}
                   onChange={(v) => onSetNodeProp(selectedPath, 'title', v || undefined)}
                 />
+              )}
+
+              {activeTab === 'data' && node.type === 'Table' && (
+                <div className="space-y-2 rounded border border-gray-200 p-2">
+                  <div className="text-[11px] font-medium text-gray-700">Dados da Tabela</div>
+                  <TextAreaField
+                    label="dataQuery.query"
+                    value={String(getProp(node, 'dataQuery.query', ''))}
+                    onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.query', v || undefined)}
+                    placeholder="SELECT ... FROM ... WHERE ..."
+                    rows={8}
+                  />
+                  <TextField
+                    label="dataPath (opcional)"
+                    value={String(getProp(node, 'dataPath', ''))}
+                    onChange={(v) => onSetNodeProp(selectedPath, 'dataPath', v || undefined)}
+                    placeholder="ex.: vendas.tabela.rows"
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <NumberField
+                      label="fr"
+                      value={Number(getProp(node, 'fr', '')) || ''}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'fr', v)}
+                    />
+                    <NumberField
+                      label="Altura"
+                      value={Number(getProp(node, 'height', '')) || ''}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'height', v)}
+                    />
+                    <NumberField
+                      label="dataQuery.limit"
+                      value={Number(getProp(node, 'dataQuery.limit', '')) || ''}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.limit', v)}
+                    />
+                    <NumberField
+                      label="pageSize"
+                      value={Number(getProp(node, 'pageSize', '')) || ''}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'pageSize', v)}
+                    />
+                  </div>
+                  <TextField
+                    label="searchPlaceholder"
+                    value={String(getProp(node, 'searchPlaceholder', ''))}
+                    onChange={(v) => onSetNodeProp(selectedPath, 'searchPlaceholder', v || undefined)}
+                    placeholder="Buscar..."
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <CheckboxField
+                      label="showColumnToggle"
+                      checked={Boolean(getProp(node, 'showColumnToggle', true))}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'showColumnToggle', v)}
+                    />
+                    <CheckboxField
+                      label="showPagination"
+                      checked={Boolean(getProp(node, 'showPagination', true))}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'showPagination', v)}
+                    />
+                    <CheckboxField
+                      label="enableSearch"
+                      checked={Boolean(getProp(node, 'enableSearch', true))}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'enableSearch', v)}
+                    />
+                    <CheckboxField
+                      label="enableRowSelection"
+                      checked={Boolean(getProp(node, 'enableRowSelection', false))}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'enableRowSelection', v)}
+                    />
+                  </div>
+                  <SelectField
+                    label="selectionMode"
+                    value={String(getProp(node, 'selectionMode', 'single'))}
+                    options={[
+                      { value: 'single', label: 'Single' },
+                      { value: 'multiple', label: 'Multiple' },
+                    ]}
+                    onChange={(v) => onSetNodeProp(selectedPath, 'selectionMode', v)}
+                  />
+                  <div className="space-y-1 rounded border border-gray-200 p-2">
+                    <div className="text-[11px] font-medium text-gray-700">Edição</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <CheckboxField
+                        label="editableMode"
+                        checked={Boolean(getProp(node, 'editableMode', false))}
+                        onChange={(v) => onSetNodeProp(selectedPath, 'editableMode', v)}
+                      />
+                      <SelectField
+                        label="editableCells"
+                        value={String(getProp(node, 'editableCells', 'none'))}
+                        options={[
+                          { value: 'none', label: 'Nenhuma' },
+                          { value: 'all', label: 'Todas' },
+                        ]}
+                        onChange={(v) => onSetNodeProp(selectedPath, 'editableCells', v)}
+                      />
+                      <CheckboxField
+                        label="allowAdd"
+                        checked={Boolean(getProp(node, 'editableRowActions.allowAdd', false))}
+                        onChange={(v) => onSetNodeProp(selectedPath, 'editableRowActions.allowAdd', v)}
+                      />
+                      <CheckboxField
+                        label="allowDelete"
+                        checked={Boolean(getProp(node, 'editableRowActions.allowDelete', false))}
+                        onChange={(v) => onSetNodeProp(selectedPath, 'editableRowActions.allowDelete', v)}
+                      />
+                      <CheckboxField
+                        label="allowDuplicate"
+                        checked={Boolean(getProp(node, 'editableRowActions.allowDuplicate', false))}
+                        onChange={(v) => onSetNodeProp(selectedPath, 'editableRowActions.allowDuplicate', v)}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <FieldLabel>columns (JSON array)</FieldLabel>
+                    <textarea
+                      value={tableColumnsText}
+                      rows={7}
+                      placeholder='[{"key":"pedido","header":"Pedido"}]'
+                      onChange={(e) => {
+                        setTableColumnsText(e.target.value)
+                        setTableColumnsError(null)
+                      }}
+                      className="w-full rounded bg-gray-100 px-2 py-1.5 text-xs outline-none ring-0 focus:bg-gray-50"
+                    />
+                    {tableColumnsError && <div className="text-[11px] text-red-600">{tableColumnsError}</div>}
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        className="rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50"
+                        onClick={() => {
+                          try {
+                            const parsed = JSON.parse(tableColumnsText)
+                            if (!Array.isArray(parsed)) {
+                              setTableColumnsError('columns deve ser um array JSON')
+                              return
+                            }
+                            onSetNodeProp(selectedPath, 'columns', parsed)
+                            setTableColumnsError(null)
+                          } catch (error) {
+                            setTableColumnsError(error instanceof Error ? error.message : 'JSON inválido')
+                          }
+                        }}
+                      >
+                        Aplicar colunas
+                      </button>
+                    </div>
+                  </div>
+                </div>
               )}
 
               {activeTab === 'data' && (node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart') && (
@@ -673,7 +825,7 @@ export default function PropertiesPanel({
                 </div>
               )}
 
-              {activeTab === 'data' && (node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'SlicerCard') && (
+              {activeTab === 'data' && (node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'SlicerCard' || node.type === 'Table') && (
                 <CheckboxField
                   label="Borderless"
                   checked={Boolean(getProp(node, 'borderless', false))}
@@ -694,7 +846,7 @@ export default function PropertiesPanel({
                     </div>
                   )}
 
-                  {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'Header' || node.type === 'SlicerCard' || node.type === 'Card' || node.type === 'AISummary') && (
+                  {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'Header' || node.type === 'SlicerCard' || node.type === 'Card' || node.type === 'AISummary' || node.type === 'Table') && (
                     <TextField
                       label="Título"
                       value={String(getProp(node, 'title', ''))}
@@ -710,7 +862,7 @@ export default function PropertiesPanel({
                     />
                   )}
 
-                  {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'SlicerCard' || node.type === 'Gauge' || node.type === 'AISummary') && (
+                  {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'SlicerCard' || node.type === 'Gauge' || node.type === 'AISummary' || node.type === 'Table') && (
                     <div className="space-y-2 rounded border border-gray-200 p-2">
                       <div className="text-[11px] font-medium text-gray-700">Container Style</div>
                       <ColorField
@@ -738,7 +890,7 @@ export default function PropertiesPanel({
                     </div>
                   )}
 
-                  {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'Header' || node.type === 'SlicerCard' || node.type === 'Card' || node.type === 'AISummary') && (
+                  {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'Header' || node.type === 'SlicerCard' || node.type === 'Card' || node.type === 'AISummary' || node.type === 'Table') && (
                     <div className="space-y-2 rounded border border-gray-200 p-2">
                       <div className="text-[11px] font-medium text-gray-700">Title Style</div>
                       <ColorField
@@ -856,7 +1008,72 @@ export default function PropertiesPanel({
                     </div>
                   )}
 
-                  {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'SlicerCard' || node.type === 'Gauge' || node.type === 'AISummary') && (
+                  {node.type === 'Table' && (
+                    <div className="space-y-2 rounded border border-gray-200 p-2">
+                      <div className="text-[11px] font-medium text-gray-700">Table Style</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <ColorField
+                          label="headerBackground"
+                          value={String(getProp(node, 'headerBackground', ''))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'headerBackground', v || undefined)}
+                        />
+                        <ColorField
+                          label="headerTextColor"
+                          value={String(getProp(node, 'headerTextColor', ''))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'headerTextColor', v || undefined)}
+                        />
+                        <ColorField
+                          label="cellTextColor"
+                          value={String(getProp(node, 'cellTextColor', ''))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'cellTextColor', v || undefined)}
+                        />
+                        <ColorField
+                          label="rowHoverColor"
+                          value={String(getProp(node, 'rowHoverColor', ''))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'rowHoverColor', v || undefined)}
+                        />
+                        <ColorField
+                          label="borderColor"
+                          value={String(getProp(node, 'borderColor', ''))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'borderColor', v || undefined)}
+                        />
+                        <ColorField
+                          label="rowAlternateBgColor"
+                          value={String(getProp(node, 'rowAlternateBgColor', ''))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'rowAlternateBgColor', v || undefined)}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <NumberField
+                          label="borderWidth"
+                          value={Number(getProp(node, 'borderWidth', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'borderWidth', v)}
+                        />
+                        <NumberField
+                          label="padding"
+                          value={Number(getProp(node, 'padding', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'padding', v)}
+                        />
+                        <NumberField
+                          label="headerFontSize"
+                          value={Number(getProp(node, 'headerFontSize', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'headerFontSize', v)}
+                        />
+                        <NumberField
+                          label="cellFontSize"
+                          value={Number(getProp(node, 'cellFontSize', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'cellFontSize', v)}
+                        />
+                      </div>
+                      <CheckboxField
+                        label="enableZebraStripes"
+                        checked={Boolean(getProp(node, 'enableZebraStripes', false))}
+                        onChange={(v) => onSetNodeProp(selectedPath, 'enableZebraStripes', v)}
+                      />
+                    </div>
+                  )}
+
+                  {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'SlicerCard' || node.type === 'Gauge' || node.type === 'AISummary' || node.type === 'Table') && (
                     <CheckboxField
                       label="Borderless"
                       checked={Boolean(getProp(node, 'borderless', false))}
