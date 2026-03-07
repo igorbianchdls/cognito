@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { JsonTree } from '@/products/bi/shared/types'
 import type {
   JsonNodePath,
@@ -34,6 +34,13 @@ export default function useDslTemplateEditor(initialTemplateDsl: string) {
   const [dslText, setDslText] = useState<string>(initialTemplateDsl)
   const [parseError, setParseError] = useState<string | null>(initial.parseError)
   const [tree, setTree] = useState<JsonTree>(initial.tree)
+
+  useEffect(() => {
+    const parsed = parseDsl(initialTemplateDsl)
+    setDslText(initialTemplateDsl)
+    setParseError(parsed.parseError)
+    setTree(parsed.tree)
+  }, [initialTemplateDsl])
 
   const replaceTree = useCallback((nextTree: JsonTree) => {
     setTree(nextTree)
