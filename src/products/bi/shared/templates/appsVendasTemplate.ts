@@ -17,18 +17,6 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         }
       }
     </Config>
-    <Header title="Dashboard de Vendas" subtitle="Principais indicadores e cortes" align="center" controlsPosition="right">
-      <DatePicker visible mode="range" position="right" storePath="filters.dateRange">
-        <ActionOnChange type="refresh_data" />
-        <Style>
-          {
-            "padding": 6,
-            "fontFamily": "Barlow",
-            "fontSize": 12
-          }
-        </Style>
-      </DatePicker>
-    </Header>
     <Div direction="row" gap={12} padding={16} align="start">
       <Sidebar width={300} minWidth={260} maxWidth={340} gap={10} padding={12} sticky top={12}>
         <CardTitle text="Filtros" marginBottom={2} />
@@ -62,6 +50,18 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         </SlicerCard>
       </Sidebar>
       <Div direction="column" gap={0} childGrow fr={1}>
+        <Header title="Dashboard de Vendas" subtitle="Principais indicadores e cortes" align="center" controlsPosition="right">
+          <DatePicker visible mode="range" position="right" storePath="filters.dateRange">
+            <ActionOnChange type="refresh_data" />
+            <Style>
+              {
+                "padding": 6,
+                "fontFamily": "Barlow",
+                "fontSize": 12
+              }
+            </Style>
+          </DatePicker>
+        </Header>
     <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
       <KPI fr={1} title="Vendas" format="currency" borderless>
         <Query>

@@ -309,6 +309,7 @@ export const catalog = {
         borderRadius: z.number().optional(),
         width: z.union([z.number(), z.string()]).optional(),
         height: z.union([z.number(), z.string()]).optional(),
+        fr: z.number().optional(),
         frame: FrameStyleSchema.optional(),
       }).strict(),
       hasChildren: true,
