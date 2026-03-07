@@ -386,7 +386,8 @@ function toCamelKey(input: string): string {
   return raw.charAt(0).toLowerCase() + raw.slice(1)
 }
 
-function parsePrimitive(valueRaw: string): unknown {
+function parsePrimitive(valueRaw: unknown): unknown {
+  if (typeof valueRaw !== 'string') return valueRaw
   const value = String(valueRaw ?? '').trim()
   if (!value) return ''
   if (value === 'true') return true
