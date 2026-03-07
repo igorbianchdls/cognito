@@ -1,6 +1,6 @@
 import type { JsonTree } from '@/products/bi/shared/types'
 
-type AttrMap = Record<string, string>
+type AttrMap = Record<string, unknown>
 
 type DslNode = {
   tag: string
@@ -39,23 +39,106 @@ export class DashboardTemplateDslParseError extends Error {
 
 function findTagEnd(source: string, start: number): number {
   let i = start
-  let quote: '"' | "'" | null = null
+  let quote: '"' | "'" | '`' | null = null
+  let braceDepth = 0
   while (i < source.length) {
     const ch = source[i]
     if (quote) {
+      if (ch === '\\') {
+        i += 2
+        continue
+      }
       if (ch === quote) quote = null
       i += 1
       continue
     }
-    if (ch === '"' || ch === "'") {
+    if (ch === '"' || ch === "'" || ch === '`') {
       quote = ch
       i += 1
       continue
     }
-    if (ch === '>') return i
+    if (ch === '{') {
+      braceDepth += 1
+      i += 1
+      continue
+    }
+    if (ch === '}') {
+      braceDepth = Math.max(0, braceDepth - 1)
+      i += 1
+      continue
+    }
+    if (ch === '>' && braceDepth === 0) return i
     i += 1
   }
   return -1
+}
+
+function decodeQuotedString(raw: string, quote: '"' | "'" | '`'): string {
+  if (!raw) return ''
+  let out = ''
+  for (let i = 0; i < raw.length; i += 1) {
+    const ch = raw[i]
+    if (ch !== '\\') {
+      out += ch
+      continue
+    }
+    const next = raw[i + 1]
+    if (next == null) break
+    i += 1
+    if (next === 'n') out += '\n'
+    else if (next === 'r') out += '\r'
+    else if (next === 't') out += '\t'
+    else if (next === quote) out += quote
+    else out += next
+  }
+  return out
+}
+
+function escapeForJsonString(input: string): string {
+  return JSON.stringify(String(input ?? '')).slice(1, -1)
+}
+
+function tryParseJsonLike(value: string): unknown {
+  const trimmed = String(value || '').trim()
+  if (!trimmed) return {}
+  try {
+    return JSON.parse(trimmed)
+  } catch {}
+
+  let normalized = trimmed
+  normalized = normalized.replace(/`([^`\\]*(?:\\.[^`\\]*)*)`/g, (_, inner: string) => `"${escapeForJsonString(decodeQuotedString(inner, '`'))}"`)
+  normalized = normalized.replace(/'([^'\\]*(?:\\.[^'\\]*)*)'/g, (_, inner: string) => `"${escapeForJsonString(decodeQuotedString(inner, '\''))}"`)
+  normalized = normalized.replace(/([{,]\s*)([A-Za-z_$][A-Za-z0-9_$-]*)(\s*:)/g, '$1"$2"$3')
+  normalized = normalized.replace(/,\s*([}\]])/g, '$1')
+  return JSON.parse(normalized)
+}
+
+function parseJsxExpression(source: string, index: number, rawExpr: string): unknown {
+  const expr = String(rawExpr || '').trim()
+  if (!expr) return ''
+  if ((expr.startsWith('`') && expr.endsWith('`')) || (expr.startsWith('"') && expr.endsWith('"')) || (expr.startsWith('\'') && expr.endsWith('\''))) {
+    const quote = expr[0] as '"' | "'" | '`'
+    return decodeQuotedString(expr.slice(1, -1), quote)
+  }
+  if (expr === 'true') return true
+  if (expr === 'false') return false
+  if (expr === 'null') return null
+  if (expr === 'undefined') return null
+  if (/^-?\d+(\.\d+)?$/.test(expr)) {
+    const n = Number(expr)
+    if (Number.isFinite(n)) return n
+  }
+  if (
+    (expr.startsWith('{') && expr.endsWith('}')) ||
+    (expr.startsWith('[') && expr.endsWith(']'))
+  ) {
+    try {
+      return tryParseJsonLike(expr)
+    } catch {
+      throw new DashboardTemplateDslParseError(source, index, `Expressao invalida em atributo JSX: {${expr}}`)
+    }
+  }
+  return expr
 }
 
 function parseTagAttrs(source: string, content: string, startIndex: number): { name: string; attrs: AttrMap; selfClosing: boolean } {
@@ -80,30 +163,86 @@ function parseTagAttrs(source: string, content: string, startIndex: number): { n
     const keyMatch = raw.slice(cursor).match(/^([a-zA-Z_][a-zA-Z0-9_:-]*)/)
     if (!keyMatch) throw new DashboardTemplateDslParseError(source, startIndex, `Atributo invalido em <${name}>`)
     const keyRaw = keyMatch[1]
-    const key = keyRaw.trim().toLowerCase()
+    const key = keyRaw.trim()
     cursor += keyRaw.length
 
     while (cursor < raw.length && /\s/.test(raw[cursor])) cursor += 1
     if (raw[cursor] !== '=') {
-      throw new DashboardTemplateDslParseError(source, startIndex, `Atributo "${keyRaw}" em <${name}> deve usar = "valor"`)
+      attrs[key] = true
+      continue
     }
     cursor += 1
 
     while (cursor < raw.length && /\s/.test(raw[cursor])) cursor += 1
-    const quote = raw[cursor]
-    if (quote !== '"' && quote !== "'") {
-      throw new DashboardTemplateDslParseError(source, startIndex, `Atributo "${keyRaw}" em <${name}> deve estar entre aspas`)
+    if (cursor >= raw.length) {
+      throw new DashboardTemplateDslParseError(source, startIndex, `Atributo "${keyRaw}" em <${name}> sem valor`)
     }
-    cursor += 1
+
+    const quote = raw[cursor]
+    if (quote === '"' || quote === "'") {
+      cursor += 1
+      const valueStart = cursor
+      while (cursor < raw.length) {
+        if (raw[cursor] === '\\') {
+          cursor += 2
+          continue
+        }
+        if (raw[cursor] === quote) break
+        cursor += 1
+      }
+      if (cursor >= raw.length) {
+        throw new DashboardTemplateDslParseError(source, startIndex, `Atributo "${keyRaw}" em <${name}> nao foi fechado`)
+      }
+      const value = raw.slice(valueStart, cursor)
+      cursor += 1
+      attrs[key] = decodeQuotedString(value, quote)
+      continue
+    }
+
+    if (quote === '{') {
+      const openIndex = cursor
+      let depth = 0
+      let innerQuote: '"' | "'" | '`' | null = null
+      while (cursor < raw.length) {
+        const ch = raw[cursor]
+        if (innerQuote) {
+          if (ch === '\\') {
+            cursor += 2
+            continue
+          }
+          if (ch === innerQuote) innerQuote = null
+          cursor += 1
+          continue
+        }
+        if (ch === '"' || ch === "'" || ch === '`') {
+          innerQuote = ch
+          cursor += 1
+          continue
+        }
+        if (ch === '{') {
+          depth += 1
+          cursor += 1
+          continue
+        }
+        if (ch === '}') {
+          depth -= 1
+          cursor += 1
+          if (depth === 0) break
+          continue
+        }
+        cursor += 1
+      }
+      if (depth !== 0) {
+        throw new DashboardTemplateDslParseError(source, startIndex, `Atributo "${keyRaw}" em <${name}> com chaves nao fechadas`)
+      }
+      const exprRaw = raw.slice(openIndex + 1, cursor - 1)
+      attrs[key] = parseJsxExpression(source, startIndex, exprRaw)
+      continue
+    }
 
     const valueStart = cursor
-    while (cursor < raw.length && raw[cursor] !== quote) cursor += 1
-    if (cursor >= raw.length) {
-      throw new DashboardTemplateDslParseError(source, startIndex, `Atributo "${keyRaw}" em <${name}> nao foi fechado`)
-    }
-    const value = raw.slice(valueStart, cursor)
-    cursor += 1
-    attrs[key] = value
+    while (cursor < raw.length && !/\s/.test(raw[cursor])) cursor += 1
+    attrs[key] = parsePrimitive(raw.slice(valueStart, cursor))
   }
 
   return { name, attrs, selfClosing }
@@ -236,10 +375,15 @@ function parseJsonObjectNode(source: string, node: DslNode, tagName: string): Re
 }
 
 function toCamelKey(input: string): string {
-  return String(input || '')
-    .trim()
-    .toLowerCase()
-    .replace(/-([a-z0-9])/g, (_, c: string) => c.toUpperCase())
+  const raw = String(input || '').trim()
+  if (!raw) return ''
+  if (/[._:-]/.test(raw)) {
+    const normalized = raw
+      .replace(/[_:.]/g, '-')
+      .toLowerCase()
+    return normalized.replace(/-([a-z0-9])/g, (_, c: string) => c.toUpperCase())
+  }
+  return raw.charAt(0).toLowerCase() + raw.slice(1)
 }
 
 function parsePrimitive(valueRaw: string): unknown {
@@ -256,14 +400,15 @@ function parsePrimitive(valueRaw: string): unknown {
 }
 
 function attrsToProps(attrs: AttrMap, opts?: { skip?: string[] }): Record<string, unknown> {
-  const skip = new Set((opts?.skip || []).map((s) => String(s).toLowerCase()))
+  const normalizeKey = (value: string) => String(value || '').trim().toLowerCase().replace(/[_:.]/g, '-')
+  const skip = new Set((opts?.skip || []).map((s) => normalizeKey(String(s))))
   const out: Record<string, unknown> = {}
   for (const [rawKey, rawVal] of Object.entries(attrs || {})) {
-    const keyLower = String(rawKey || '').toLowerCase()
-    if (!keyLower || skip.has(keyLower)) continue
-    const key = toCamelKey(keyLower)
+    const keyRaw = String(rawKey || '').trim()
+    if (!keyRaw || skip.has(normalizeKey(keyRaw))) continue
+    const key = toCamelKey(keyRaw)
     if (!key) continue
-    out[key] = parsePrimitive(rawVal)
+    out[key] = typeof rawVal === 'string' ? parsePrimitive(rawVal) : rawVal
   }
   return out
 }
@@ -281,6 +426,17 @@ function mapChartType(source: string, node: DslNode, rawType: string): string {
 }
 
 function toCatalogType(tag: string): string {
+  const normalized = String(tag || '').trim().toLowerCase()
+  if (normalized === 'dashboardtemplate') return 'DashboardTemplate'
+  if (normalized === 'theme') return 'Theme'
+  if (normalized === 'header') return 'Header'
+  if (normalized === 'div') return 'Div'
+  if (normalized === 'slicercard') return 'SlicerCard'
+  if (normalized === 'table') return 'Table'
+  if (normalized === 'linechart') return 'LineChart'
+  if (normalized === 'barchart') return 'BarChart'
+  if (normalized === 'piechart') return 'PieChart'
+  if (normalized === 'defaults') return 'Defaults'
   if (tag === 'chart') return 'Chart'
   if (tag === 'kpi') return 'KPI'
   if (tag === 'ai-summary' || tag === 'aisummary') return 'AISummary'
@@ -298,6 +454,12 @@ function compileDefaultsNode(source: string, node: DslNode): CompileContext {
     throw new DashboardTemplateDslParseError(source, node.start, 'Tag <defaults> aceita no maximo um <props>')
   }
   const jsonDefaults = propsNodes.length ? parsePropsNode(source, propsNodes[0]) : {}
+  const configNodes = node.children.filter((child) => child.tag === 'config')
+  if (configNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <defaults> aceita no maximo um <config>')
+  }
+  const configDefaults = configNodes.length ? parseJsonObjectNode(source, configNodes[0], 'config') : {}
+  const mergedDefaults = mergeObjects(jsonDefaults, configDefaults)
   const interactionFromAttrs: Record<string, unknown> = {}
   for (const [kRaw, vRaw] of Object.entries(node.attrs || {})) {
     const k = String(kRaw || '').toLowerCase()
@@ -316,8 +478,8 @@ function compileDefaultsNode(source: string, node: DslNode): CompileContext {
   const interactionFromNode = interactionNodes.length ? attrsToProps(interactionNodes[0].attrs) : {}
 
   const jsonInteraction =
-    jsonDefaults.interaction && typeof jsonDefaults.interaction === 'object' && !Array.isArray(jsonDefaults.interaction)
-      ? (jsonDefaults.interaction as Record<string, unknown>)
+    mergedDefaults.interaction && typeof mergedDefaults.interaction === 'object' && !Array.isArray(mergedDefaults.interaction)
+      ? (mergedDefaults.interaction as Record<string, unknown>)
       : {}
 
   const mergedInteraction = {
@@ -362,6 +524,13 @@ function compileChartNode(source: string, node: DslNode, context: CompileContext
   if (nivoNodes.length > 1) {
     throw new DashboardTemplateDslParseError(source, node.start, 'Tag <chart> aceita no maximo um <nivo>')
   }
+  const configNodes = node.children.filter((child) => child.tag === 'config')
+  if (configNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <chart> aceita no maximo um <config>')
+  }
+  if (configNodes.length) {
+    Object.assign(props, parseJsonObjectNode(source, configNodes[0], 'config'))
+  }
 
   const dataQueryFromProps =
     props.dataQuery && typeof props.dataQuery === 'object' && !Array.isArray(props.dataQuery)
@@ -375,9 +544,18 @@ function compileChartNode(source: string, node: DslNode, context: CompileContext
 
   if (fieldsNodes.length) {
     const attrs = fieldsNodes[0].attrs
-    const x = attrs.x || attrs.xfield || attrs['x-field']
-    const y = attrs.y || attrs.yfield || attrs.valuefield || attrs['value-field'] || attrs['y-field']
-    const key = attrs.key || attrs.keyfield || attrs['key-field']
+    const attrEntries = Object.entries(attrs || {})
+    const pickAttr = (...candidates: string[]): unknown => {
+      const set = new Set(candidates.map((k) => k.toLowerCase()))
+      for (const [k, v] of attrEntries) {
+        const kn = String(k || '').toLowerCase()
+        if (set.has(kn)) return v
+      }
+      return undefined
+    }
+    const x = pickAttr('x', 'xfield', 'x-field')
+    const y = pickAttr('y', 'yfield', 'valuefield', 'value-field', 'y-field')
+    const key = pickAttr('key', 'keyfield', 'key-field')
     if (x) dataQueryFromProps.xField = String(x)
     if (y) dataQueryFromProps.yField = String(y)
     if (key) dataQueryFromProps.keyField = String(key)
@@ -424,7 +602,7 @@ function compileHeaderNode(source: string, node: DslNode): Record<string, unknow
   const propsFromJson = propsNodes.length ? parsePropsNode(source, propsNodes[0]) : {}
   const props = mergeObjects(propsFromAttrs, propsFromJson)
 
-  const datePickerNodes = node.children.filter((child) => child.tag === 'date-picker')
+  const datePickerNodes = node.children.filter((child) => child.tag === 'date-picker' || child.tag === 'datepicker')
   if (datePickerNodes.length > 1) {
     throw new DashboardTemplateDslParseError(source, node.start, 'Tag <header> aceita no maximo um <date-picker>')
   }
@@ -448,7 +626,7 @@ function compileHeaderNode(source: string, node: DslNode): Record<string, unknow
     const dpFromJson = dpPropsNodes.length ? parsePropsNode(source, dpPropsNodes[0]) : {}
     const datePicker = mergeObjects(dpFromAttrs, dpFromJson)
 
-    const actionNodes = dpNode.children.filter((child) => child.tag === 'action-on-change')
+    const actionNodes = dpNode.children.filter((child) => child.tag === 'action-on-change' || child.tag === 'actiononchange')
     if (actionNodes.length > 1) {
       throw new DashboardTemplateDslParseError(source, dpNode.start, 'Tag <date-picker> aceita no maximo um <action-on-change>')
     }
@@ -508,7 +686,7 @@ function compileKpiNode(source: string, node: DslNode): Record<string, unknown> 
     if (queryRaw) dataQueryFromProps.query = queryRaw
   }
 
-  const dataQueryNodes = node.children.filter((child) => child.tag === 'data-query')
+  const dataQueryNodes = node.children.filter((child) => child.tag === 'data-query' || child.tag === 'dataquery')
   if (dataQueryNodes.length > 1) {
     throw new DashboardTemplateDslParseError(source, node.start, 'Tag <kpi> aceita no maximo um <data-query>')
   }
@@ -541,7 +719,7 @@ function compileKpiNode(source: string, node: DslNode): Record<string, unknown> 
       dataQueryFromProps.filters = parseJsonObjectNode(source, filterNodes[0], 'filters')
     }
 
-    const orderByNodes = dqNode.children.filter((child) => child.tag === 'order-by')
+    const orderByNodes = dqNode.children.filter((child) => child.tag === 'order-by' || child.tag === 'orderby')
     if (orderByNodes.length > 1) {
       throw new DashboardTemplateDslParseError(source, dqNode.start, 'Tag <data-query> aceita no maximo um <order-by>')
     }
@@ -591,10 +769,15 @@ function compileNode(source: string, node: DslNode, context: CompileContext): Re
   if (propsNodes.length > 1) {
     throw new DashboardTemplateDslParseError(source, node.start, `Tag <${node.tag}> aceita no maximo um <props>`)
   }
+  const configNodes = node.children.filter((child) => child.tag === 'config')
+  if (configNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, `Tag <${node.tag}> aceita no maximo um <config>`)
+  }
 
   const propsFromAttrs = attrsToProps(node.attrs)
   const propsFromJson = propsNodes.length ? parsePropsNode(source, propsNodes[0]) : {}
-  const props = mergeObjects(propsFromAttrs, propsFromJson)
+  const propsFromConfig = configNodes.length ? parseJsonObjectNode(source, configNodes[0], 'config') : {}
+  const props = mergeObjects(mergeObjects(propsFromAttrs, propsFromJson), propsFromConfig)
   if (type === 'LineChart' || type === 'BarChart' || type === 'PieChart') {
     const interactionFromDefaults = context.chartInteractionDefaults || {}
     const interactionFromProps =
@@ -608,7 +791,7 @@ function compileNode(source: string, node: DslNode, context: CompileContext): Re
     if (Object.keys(mergedInteraction).length) props.interaction = mergedInteraction
   }
   const children = node.children
-    .filter((child) => child.tag !== 'props')
+    .filter((child) => child.tag !== 'props' && child.tag !== 'config')
     .map((child) => compileNode(source, child, context))
     .filter((child): child is Record<string, unknown> => Boolean(child))
 
@@ -620,8 +803,8 @@ function compileNode(source: string, node: DslNode, context: CompileContext): Re
 
 export function parseDashboardTemplateDslToTree(source: string): JsonTree {
   const root = parseDslTree(source)
-  if (root.tag !== 'dashboard-template') {
-    throw new DashboardTemplateDslParseError(source, root.start, `Tag raiz invalida: esperado <dashboard-template> e recebido <${root.tag}>`)
+  if (root.tag !== 'dashboard-template' && root.tag !== 'dashboardtemplate') {
+    throw new DashboardTemplateDslParseError(source, root.start, `Tag raiz invalida: esperado <DashboardTemplate> e recebido <${root.tag}>`)
   }
   function collectDefaults(nodes: DslNode[], acc: DslNode[] = []): DslNode[] {
     for (const n of nodes) {
@@ -665,26 +848,30 @@ function chartTypeToAttr(type: string): 'line' | 'bar' | 'pie' | null {
 
 function toDslTag(type: string): string {
   const raw = String(type || '').trim()
-  if (!raw) return 'node'
-  if (chartTypeToAttr(raw)) return 'chart'
-  if (raw === 'KPI') return 'kpi'
-  if (raw === 'AISummary') return 'ai-summary'
+  if (!raw) return 'Node'
+  if (chartTypeToAttr(raw)) return 'Chart'
+  if (raw === 'KPI') return 'KPI'
+  if (raw === 'AISummary') return 'AISummary'
+  if (raw === 'SlicerCard') return 'SlicerCard'
+  if (raw === 'Theme') return 'Theme'
+  if (raw === 'Header') return 'Header'
+  if (raw === 'Div') return 'Div'
+  if (raw === 'Table') return 'Table'
   return raw
-    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
-    .replace(/_/g, '-')
-    .toLowerCase()
 }
 
 function renderIndent(level: number): string {
   return '  '.repeat(level)
 }
 
-function toKebabKey(input: string): string {
-  return String(input || '')
-    .trim()
-    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
-    .replace(/_/g, '-')
-    .toLowerCase()
+function toJsxKey(input: string): string {
+  const raw = String(input || '').trim()
+  if (!raw) return ''
+  if (raw.includes('-') || raw.includes('_') || raw.includes('.')) {
+    const normalized = raw.replace(/[_.]/g, '-').toLowerCase()
+    return normalized.replace(/-([a-z0-9])/g, (_, c: string) => c.toUpperCase())
+  }
+  return raw
 }
 
 function escapeAttr(value: string): string {
@@ -697,30 +884,35 @@ function renderAttrs(attrs: Record<string, unknown>): string {
   const parts: string[] = []
   for (const [keyRaw, valueRaw] of Object.entries(attrs || {})) {
     if (valueRaw === undefined) continue
-    if (typeof valueRaw === 'object' && valueRaw !== null) continue
-    const key = toKebabKey(keyRaw)
+    const key = toJsxKey(keyRaw)
     if (!key) continue
-    const value =
-      typeof valueRaw === 'boolean'
-        ? (valueRaw ? 'true' : 'false')
-        : String(valueRaw)
-    parts.push(`${key}="${escapeAttr(value)}"`)
+    if (valueRaw === true) {
+      parts.push(key)
+      continue
+    }
+    if (valueRaw === false) {
+      parts.push(`${key}={false}`)
+      continue
+    }
+    if (valueRaw === null) {
+      parts.push(`${key}={null}`)
+      continue
+    }
+    if (typeof valueRaw === 'number') {
+      parts.push(`${key}={${String(valueRaw)}}`)
+      continue
+    }
+    if (typeof valueRaw === 'string') {
+      parts.push(`${key}="${escapeAttr(valueRaw)}"`)
+      continue
+    }
+    try {
+      parts.push(`${key}={${JSON.stringify(valueRaw)}}`)
+    } catch {
+      parts.push(`${key}="${escapeAttr(String(valueRaw))}"`)
+    }
   }
   return parts.length ? ` ${parts.join(' ')}` : ''
-}
-
-function renderPropsBlock(props: unknown, level: number): string[] {
-  if (!props || typeof props !== 'object' || Array.isArray(props) || Object.keys(props as Record<string, unknown>).length === 0) {
-    return []
-  }
-  const json = JSON.stringify(props, null, 2)
-  if (!json) return []
-  const lines = json.split('\n')
-  return [
-    `${renderIndent(level)}<props>`,
-    ...lines.map((line) => `${renderIndent(level + 1)}${line}`),
-    `${renderIndent(level)}</props>`,
-  ]
 }
 
 function renderJsonObjectBlock(tag: string, value: unknown, level: number): string[] {
@@ -756,7 +948,7 @@ function renderChartNodeToDsl(node: Record<string, unknown>, level: number): str
     }
   }
 
-  const lines: string[] = [`${renderIndent(level)}<chart${renderAttrs(baseAttrs)}>`]
+  const lines: string[] = [`${renderIndent(level)}<Chart${renderAttrs(baseAttrs)}>`]
 
   const dataQueryRaw =
     propsRaw.dataQuery && typeof propsRaw.dataQuery === 'object' && !Array.isArray(propsRaw.dataQuery)
@@ -765,12 +957,12 @@ function renderChartNodeToDsl(node: Record<string, unknown>, level: number): str
 
   const query = typeof dataQueryRaw.query === 'string' ? dataQueryRaw.query : ''
   if (query.trim()) {
-    lines.push(`${renderIndent(level + 1)}<query>`)
+    lines.push(`${renderIndent(level + 1)}<Query>`)
     lines.push(query
       .split('\n')
       .map((line) => `${renderIndent(level + 2)}${line}`)
       .join('\n'))
-    lines.push(`${renderIndent(level + 1)}</query>`)
+    lines.push(`${renderIndent(level + 1)}</Query>`)
     delete dataQueryRaw.query
   }
 
@@ -788,7 +980,7 @@ function renderChartNodeToDsl(node: Record<string, unknown>, level: number): str
     delete dataQueryRaw.keyField
   }
   if (Object.keys(fieldsAttrs).length) {
-    lines.push(`${renderIndent(level + 1)}<fields${renderAttrs(fieldsAttrs)} />`)
+    lines.push(`${renderIndent(level + 1)}<Fields${renderAttrs(fieldsAttrs)} />`)
   }
 
   const interactionRaw =
@@ -796,7 +988,7 @@ function renderChartNodeToDsl(node: Record<string, unknown>, level: number): str
       ? ({ ...(propsRaw.interaction as Record<string, unknown>) } as Record<string, unknown>)
       : {}
   if (Object.keys(interactionRaw).length) {
-    lines.push(`${renderIndent(level + 1)}<interaction${renderAttrs(interactionRaw)} />`)
+    lines.push(`${renderIndent(level + 1)}<Interaction${renderAttrs(interactionRaw)} />`)
     delete propsRaw.interaction
   }
 
@@ -805,7 +997,7 @@ function renderChartNodeToDsl(node: Record<string, unknown>, level: number): str
       ? ({ ...(propsRaw.nivo as Record<string, unknown>) } as Record<string, unknown>)
       : {}
   if (Object.keys(nivoRaw).length) {
-    lines.push(`${renderIndent(level + 1)}<nivo${renderAttrs(nivoRaw)} />`)
+    lines.push(`${renderIndent(level + 1)}<Nivo${renderAttrs(nivoRaw)} />`)
     delete propsRaw.nivo
   }
 
@@ -815,14 +1007,14 @@ function renderChartNodeToDsl(node: Record<string, unknown>, level: number): str
     delete propsRaw.dataQuery
   }
 
-  lines.push(...renderPropsBlock(propsRaw, level + 1))
+  lines.push(...renderJsonObjectBlock('Config', propsRaw, level + 1))
 
   const children = Array.isArray(node.children) ? node.children : []
   for (const child of children) {
     lines.push(...renderNodeToDsl(child, level + 1))
   }
 
-  lines.push(`${renderIndent(level)}</chart>`)
+  lines.push(`${renderIndent(level)}</Chart>`)
   return lines
 }
 
@@ -847,7 +1039,7 @@ function renderHeaderNodeToDsl(node: Record<string, unknown>, level: number): st
     }
   }
 
-  const lines: string[] = [`${renderIndent(level)}<header${renderAttrs(headerAttrs)}>`]
+  const lines: string[] = [`${renderIndent(level)}<Header${renderAttrs(headerAttrs)}>`]
 
   if (Object.keys(datePickerRaw).length) {
     const datePickerAttrs: Record<string, unknown> = {}
@@ -873,20 +1065,20 @@ function renderHeaderNodeToDsl(node: Record<string, unknown>, level: number): st
 
     const hasDatePickerChildren = Object.keys(actionOnChangeRaw).length > 0 || Object.keys(styleRaw).length > 0 || Object.keys(datePickerRaw).length > 0
     if (!hasDatePickerChildren) {
-      lines.push(`${renderIndent(level + 1)}<date-picker${renderAttrs(datePickerAttrs)} />`)
+      lines.push(`${renderIndent(level + 1)}<DatePicker${renderAttrs(datePickerAttrs)} />`)
     } else {
-      lines.push(`${renderIndent(level + 1)}<date-picker${renderAttrs(datePickerAttrs)}>`)
+      lines.push(`${renderIndent(level + 1)}<DatePicker${renderAttrs(datePickerAttrs)}>`)
       if (Object.keys(actionOnChangeRaw).length) {
-        lines.push(`${renderIndent(level + 2)}<action-on-change${renderAttrs(actionOnChangeRaw)} />`)
+        lines.push(`${renderIndent(level + 2)}<ActionOnChange${renderAttrs(actionOnChangeRaw)} />`)
       }
-      lines.push(...renderJsonObjectBlock('style', styleRaw, level + 2))
-      lines.push(...renderJsonObjectBlock('config', datePickerRaw, level + 2))
-      lines.push(`${renderIndent(level + 1)}</date-picker>`)
+      lines.push(...renderJsonObjectBlock('Style', styleRaw, level + 2))
+      lines.push(...renderJsonObjectBlock('Config', datePickerRaw, level + 2))
+      lines.push(`${renderIndent(level + 1)}</DatePicker>`)
     }
   }
 
-  lines.push(...renderJsonObjectBlock('config', propsRaw, level + 1))
-  lines.push(`${renderIndent(level)}</header>`)
+  lines.push(...renderJsonObjectBlock('Config', propsRaw, level + 1))
+  lines.push(`${renderIndent(level)}</Header>`)
   return lines
 }
 
@@ -911,17 +1103,17 @@ function renderKpiNodeToDsl(node: Record<string, unknown>, level: number): strin
     }
   }
 
-  const lines: string[] = [`${renderIndent(level)}<kpi${renderAttrs(kpiAttrs)}>`]
+  const lines: string[] = [`${renderIndent(level)}<KPI${renderAttrs(kpiAttrs)}>`]
 
   const query = typeof dataQueryRaw.query === 'string' ? dataQueryRaw.query : ''
   delete dataQueryRaw.query
   if (query.trim()) {
-    lines.push(`${renderIndent(level + 1)}<query>`)
+    lines.push(`${renderIndent(level + 1)}<Query>`)
     lines.push(query
       .split('\n')
       .map((line) => `${renderIndent(level + 2)}${line}`)
       .join('\n'))
-    lines.push(`${renderIndent(level + 1)}</query>`)
+    lines.push(`${renderIndent(level + 1)}</Query>`)
   }
 
   if (Object.keys(dataQueryRaw).length) {
@@ -948,20 +1140,20 @@ function renderKpiNodeToDsl(node: Record<string, unknown>, level: number): strin
 
     const hasDataQueryChildren = Object.keys(filtersRaw).length > 0 || Object.keys(orderByRaw).length > 0 || Object.keys(dataQueryRaw).length > 0
     if (!hasDataQueryChildren) {
-      lines.push(`${renderIndent(level + 1)}<data-query${renderAttrs(dataQueryAttrs)} />`)
+      lines.push(`${renderIndent(level + 1)}<DataQuery${renderAttrs(dataQueryAttrs)} />`)
     } else {
-      lines.push(`${renderIndent(level + 1)}<data-query${renderAttrs(dataQueryAttrs)}>`)
-      lines.push(...renderJsonObjectBlock('filters', filtersRaw, level + 2))
+      lines.push(`${renderIndent(level + 1)}<DataQuery${renderAttrs(dataQueryAttrs)}>`)
+      lines.push(...renderJsonObjectBlock('Filters', filtersRaw, level + 2))
       if (Object.keys(orderByRaw).length) {
-        lines.push(`${renderIndent(level + 2)}<order-by${renderAttrs(orderByRaw)} />`)
+        lines.push(`${renderIndent(level + 2)}<OrderBy${renderAttrs(orderByRaw)} />`)
       }
-      lines.push(...renderJsonObjectBlock('config', dataQueryRaw, level + 2))
-      lines.push(`${renderIndent(level + 1)}</data-query>`)
+      lines.push(...renderJsonObjectBlock('Config', dataQueryRaw, level + 2))
+      lines.push(`${renderIndent(level + 1)}</DataQuery>`)
     }
   }
 
-  lines.push(...renderJsonObjectBlock('config', propsRaw, level + 1))
-  lines.push(`${renderIndent(level)}</kpi>`)
+  lines.push(...renderJsonObjectBlock('Config', propsRaw, level + 1))
+  lines.push(`${renderIndent(level)}</KPI>`)
   return lines
 }
 
@@ -978,8 +1170,21 @@ function renderNodeToDsl(node: unknown, level: number): string[] {
     return renderKpiNodeToDsl(record, level)
   }
   const tag = toDslTag(String(record.type || 'node'))
-  const lines: string[] = [`${renderIndent(level)}<${tag}>`]
-  lines.push(...renderPropsBlock(record.props, level + 1))
+  const propsRaw =
+    record.props && typeof record.props === 'object' && !Array.isArray(record.props)
+      ? ({ ...(record.props as Record<string, unknown>) } as Record<string, unknown>)
+      : {}
+  const baseAttrs: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(propsRaw)) {
+    if (v === undefined) continue
+    if (typeof v !== 'object' || v === null) {
+      baseAttrs[k] = v
+      delete propsRaw[k]
+    }
+  }
+
+  const lines: string[] = [`${renderIndent(level)}<${tag}${renderAttrs(baseAttrs)}>`]
+  lines.push(...renderJsonObjectBlock('Config', propsRaw, level + 1))
 
   const children = Array.isArray(record.children) ? record.children : []
   for (const child of children) {
@@ -993,8 +1198,8 @@ function renderNodeToDsl(node: unknown, level: number): string[] {
 export function renderDashboardTemplateDslFromTree(tree: JsonTree, templateName = 'dashboard_template'): string {
   const nodes = Array.isArray(tree) ? tree : tree ? [tree] : []
   const rootName = sanitizeTemplateName(templateName)
-  const lines: string[] = [`<dashboard-template name="${rootName}">`]
+  const lines: string[] = [`<DashboardTemplate name="${rootName}">`]
   for (const node of nodes) lines.push(...renderNodeToDsl(node, 1))
-  lines.push('</dashboard-template>')
+  lines.push('</DashboardTemplate>')
   return lines.join('\n')
 }
