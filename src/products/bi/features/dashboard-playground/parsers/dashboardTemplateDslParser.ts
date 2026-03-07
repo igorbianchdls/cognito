@@ -431,6 +431,7 @@ function toCatalogType(tag: string): string {
   if (normalized === 'theme') return 'Theme'
   if (normalized === 'header') return 'Header'
   if (normalized === 'div') return 'Div'
+  if (normalized === 'sidebar') return 'Sidebar'
   if (normalized === 'card') return 'Card'
   if (normalized === 'cardtitle') return 'CardTitle'
   if (normalized === 'slicercard') return 'SlicerCard'
@@ -865,6 +866,7 @@ function toDslTag(type: string): string {
   if (raw === 'Theme') return 'Theme'
   if (raw === 'Header') return 'Header'
   if (raw === 'Div') return 'Div'
+  if (raw === 'Sidebar') return 'Sidebar'
   if (raw === 'Table') return 'Table'
   return raw
 }

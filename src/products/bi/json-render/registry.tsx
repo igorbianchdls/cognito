@@ -44,6 +44,19 @@ const defaultDiv = {
   borderRadius: 0,
 } as const;
 
+const defaultSidebar = {
+  direction: 'column',
+  gap: 10,
+  justify: 'start',
+  align: 'stretch',
+  padding: 12,
+  borderWidth: 1,
+  borderStyle: 'solid',
+  borderRadius: 10,
+  sticky: false,
+  top: 12,
+} as const;
+
 // (removed old Kpi defaults)
 
 const defaultKPI = {
@@ -897,6 +910,49 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       <div style={style}>
         {wrapped}
       </div>
+    );
+  },
+  Sidebar: ({ element, children }) => {
+    const theme = useThemeOverrides();
+    const p = deepMerge(
+      deepMerge(defaultSidebar as AnyRecord, (((theme.components as any)?.Sidebar || {}) as AnyRecord)),
+      (element?.props || {}) as AnyRecord,
+    ) as AnyRecord;
+
+    const styleBase: React.CSSProperties = {
+      display: 'flex',
+      flexDirection: (p.direction ?? 'column') as any,
+      gap: styleVal(p.gap),
+      justifyContent: mapJustify(p.justify),
+      alignItems: mapAlign(p.align),
+      padding: styleVal(p.padding),
+      margin: styleVal(p.margin),
+      width: styleVal(p.width),
+      minWidth: styleVal(p.minWidth),
+      maxWidth: styleVal(p.maxWidth),
+      height: styleVal(p.height),
+      backgroundColor: p.backgroundColor,
+      borderColor: p.borderColor,
+      borderStyle: p.borderStyle || (p.borderWidth ? 'solid' : undefined),
+      borderWidth: p.borderWidth,
+      borderRadius: p.borderRadius,
+      position: p.sticky ? 'sticky' : undefined,
+      top: p.sticky ? styleVal(p.top ?? 12) : undefined,
+      overflowY: p.overflowY,
+      overflowX: p.overflowX,
+      alignSelf: p.sticky ? 'flex-start' : undefined,
+      boxSizing: 'border-box',
+    };
+    const style = ensureSurfaceBackground(
+      applyBorderFromCssVars(styleBase as AnyRecord, theme.cssVars),
+      theme.cssVars
+    ) as React.CSSProperties;
+    if (style) (style as AnyRecord).boxShadow = undefined;
+
+    return (
+      <FrameSurface style={style} frame={p?.frame as AnyRecord} cssVars={theme.cssVars}>
+        {children}
+      </FrameSurface>
     );
   },
 

@@ -275,7 +275,7 @@ export default function PropertiesPanel({
     node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'AISummary', 'Table', 'CardTitle'].includes(String(node.type)),
   )
   const supportsStyleTab = Boolean(
-    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'Card', 'CardTitle', 'Div', 'Gauge', 'AISummary', 'Table'].includes(String(node.type)),
+    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'Card', 'CardTitle', 'Div', 'Sidebar', 'Gauge', 'AISummary', 'Table'].includes(String(node.type)),
   )
   const supportsFr = Boolean(
     node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Gauge', 'SlicerCard', 'AISummary', 'Table'].includes(String(node.type)),
@@ -874,12 +874,99 @@ export default function PropertiesPanel({
                     />
                   )}
 
-                  {(node.type === 'Header' || node.type === 'Div' || node.type === 'Card') && (
+                  {(node.type === 'Header' || node.type === 'Div' || node.type === 'Card' || node.type === 'Sidebar') && (
                     <ColorField
                       label="backgroundColor"
                       value={String(getProp(node, 'backgroundColor', ''))}
                       onChange={(v) => onSetNodeProp(selectedPath, 'backgroundColor', v || undefined)}
                     />
+                  )}
+
+                  {node.type === 'Sidebar' && (
+                    <div className="space-y-2 rounded border border-gray-200 p-2">
+                      <div className="text-[11px] font-medium text-gray-700">Sidebar Layout</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <NumberField
+                          label="width"
+                          value={Number(getProp(node, 'width', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'width', v)}
+                        />
+                        <NumberField
+                          label="minWidth"
+                          value={Number(getProp(node, 'minWidth', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'minWidth', v)}
+                        />
+                        <NumberField
+                          label="maxWidth"
+                          value={Number(getProp(node, 'maxWidth', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'maxWidth', v)}
+                        />
+                        <NumberField
+                          label="height"
+                          value={Number(getProp(node, 'height', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'height', v)}
+                        />
+                        <NumberField
+                          label="gap"
+                          value={Number(getProp(node, 'gap', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'gap', v)}
+                        />
+                        <NumberField
+                          label="padding"
+                          value={Number(getProp(node, 'padding', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'padding', v)}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <SelectField
+                          label="direction"
+                          value={String(getProp(node, 'direction', 'column'))}
+                          options={[
+                            { value: 'column', label: 'Column' },
+                            { value: 'row', label: 'Row' },
+                          ]}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'direction', v)}
+                        />
+                        <CheckboxField
+                          label="sticky"
+                          checked={Boolean(getProp(node, 'sticky', false))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'sticky', v)}
+                        />
+                        <NumberField
+                          label="top"
+                          value={Number(getProp(node, 'top', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'top', v)}
+                        />
+                        <SelectField
+                          label="overflowY"
+                          value={String(getProp(node, 'overflowY', 'visible'))}
+                          options={[
+                            { value: 'visible', label: 'Visible' },
+                            { value: 'auto', label: 'Auto' },
+                            { value: 'scroll', label: 'Scroll' },
+                            { value: 'hidden', label: 'Hidden' },
+                          ]}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'overflowY', v)}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <ColorField
+                          label="borderColor"
+                          value={String(getProp(node, 'borderColor', ''))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'borderColor', v || undefined)}
+                        />
+                        <NumberField
+                          label="borderWidth"
+                          value={Number(getProp(node, 'borderWidth', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'borderWidth', v)}
+                        />
+                        <NumberField
+                          label="borderRadius"
+                          value={Number(getProp(node, 'borderRadius', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'borderRadius', v)}
+                        />
+                      </div>
+                    </div>
                   )}
 
                   {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'SlicerCard' || node.type === 'Gauge' || node.type === 'AISummary' || node.type === 'Table') && (

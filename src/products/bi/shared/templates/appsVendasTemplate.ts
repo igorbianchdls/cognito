@@ -131,34 +131,37 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
           }
         </Config>
       </Chart>
-      <SlicerCard fr={1} title="Filtros">
-        <Config>
-          {
-            "fields": [
-              {
-                "label": "Canal",
-                "type": "list",
-                "storePath": "filters.canal_venda_id",
-                "query": "SELECT\n  cv.id AS value,\n  COALESCE(cv.nome, '-') AS label\nFROM vendas.canais_venda cv\nORDER BY 2 ASC",
-                "limit": 200,
-                "selectAll": true,
-                "search": true,
-                "clearable": true
-              },
-              {
-                "label": "Cliente",
-                "type": "multi",
-                "storePath": "filters.cliente_id",
-                "query": "SELECT\n  c.id AS value,\n  COALESCE(c.nome_fantasia, '-') AS label\nFROM entidades.clientes c\nWHERE c.tenant_id = {{tenant_id}}\nORDER BY 2 ASC",
-                "limit": 200,
-                "selectAll": true,
-                "search": true,
-                "clearable": true
-              }
-            ]
-          }
-        </Config>
-      </SlicerCard>
+      <Sidebar fr={1} gap={10} padding={12} sticky top={12}>
+        <CardTitle text="Filtros" marginBottom={2} />
+        <SlicerCard borderless>
+          <Config>
+            {
+              "fields": [
+                {
+                  "label": "Canal",
+                  "type": "list",
+                  "storePath": "filters.canal_venda_id",
+                  "query": "SELECT\n  cv.id AS value,\n  COALESCE(cv.nome, '-') AS label\nFROM vendas.canais_venda cv\nORDER BY 2 ASC",
+                  "limit": 200,
+                  "selectAll": true,
+                  "search": true,
+                  "clearable": true
+                },
+                {
+                  "label": "Cliente",
+                  "type": "multi",
+                  "storePath": "filters.cliente_id",
+                  "query": "SELECT\n  c.id AS value,\n  COALESCE(c.nome_fantasia, '-') AS label\nFROM entidades.clientes c\nWHERE c.tenant_id = {{tenant_id}}\nORDER BY 2 ASC",
+                  "limit": 200,
+                  "selectAll": true,
+                  "search": true,
+                  "clearable": true
+                }
+              ]
+            }
+          </Config>
+        </SlicerCard>
+      </Sidebar>
       <Chart type="bar" fr={2} title="Clientes" format="currency" height={240}>
         <Query>
           SELECT
