@@ -1,8 +1,7 @@
-export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<dashboard-template name="apps_vendas_template_dsl">
-  <theme>
-    <props>
+export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps_vendas_template_dsl">
+  <Theme name="light">
+    <Config>
       {
-        "name": "light",
         "managers": {
           "border": {
             "style": "solid",
@@ -17,173 +16,124 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<dashboard-template name="app
           }
         }
       }
-    </props>
-    <header>
-      <props>
-        {
-          "title": "Dashboard de Vendas",
-          "subtitle": "Principais indicadores e cortes",
-          "align": "center",
-          "controlsPosition": "right",
-          "datePicker": {
-            "visible": true,
-            "mode": "range",
-            "position": "right",
-            "storePath": "filters.dateRange",
-            "actionOnChange": {
-              "type": "refresh_data"
-            },
-            "style": {
-              "padding": 6,
-              "fontFamily": "Barlow",
-              "fontSize": 12
-            }
-          }
-        }
-      </props>
-    </header>
-    <div>
-      <props>
-        {
-          "direction": "row",
-          "gap": 12,
-          "padding": 16,
-          "justify": "start",
-          "align": "start",
-          "childGrow": true
-        }
-      </props>
-      <kpi>
-        <props>
+    </Config>
+    <Header title="Dashboard de Vendas" subtitle="Principais indicadores e cortes" align="center" controlsPosition="right">
+      <DatePicker visible mode="range" position="right" storePath="filters.dateRange">
+        <ActionOnChange type="refresh_data" />
+        <Style>
           {
-            "fr": 1,
-            "title": "Vendas",
-            "format": "currency",
-            "borderless": true,
-            "dataQuery": {
-              "query": "SELECT\n  COALESCE(SUM(p.valor_total), 0)::float AS value\nFROM vendas.pedidos p\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\n  AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))\n  AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))",
-              "yField": "value",
-              "filters": {}
-            }
+            "padding": 6,
+            "fontFamily": "Barlow",
+            "fontSize": 12
           }
-        </props>
-      </kpi>
-      <kpi>
-        <props>
-          {
-            "fr": 1,
-            "title": "Pedidos",
-            "format": "number",
-            "borderless": true,
-            "dataQuery": {
-              "query": "SELECT\n  COUNT(DISTINCT p.id)::int AS value\nFROM vendas.pedidos p\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\n  AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))\n  AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))",
-              "yField": "value",
-              "filters": {}
-            }
-          }
-        </props>
-      </kpi>
-      <kpi>
-        <props>
-          {
-            "fr": 1,
-            "title": "Ticket Médio",
-            "format": "currency",
-            "borderless": true,
-            "dataQuery": {
-              "query": "SELECT\n  COALESCE(AVG(p.valor_total), 0)::float AS value\nFROM vendas.pedidos p\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\n  AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))\n  AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))",
-              "yField": "value",
-              "filters": {}
-            }
-          }
-        </props>
-      </kpi>
-      <kpi>
-        <props>
-          {
-            "fr": 1,
-            "title": "Margem Bruta",
-            "valuePath": "vendas.kpis.margemBruta",
-            "format": "currency",
-            "borderless": true
-          }
-        </props>
-      </kpi>
-    </div>
-    <div>
-      <props>
-        {
-          "direction": "row",
-          "gap": 12,
-          "padding": 16,
-          "justify": "start",
-          "align": "start",
-          "childGrow": true
-        }
-      </props>
-      <chart type="pie" fr="1" title="Canais" format="currency" height="240">
-        <query>
+        </Style>
+      </DatePicker>
+    </Header>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+      <KPI fr={1} title="Vendas" format="currency" borderless>
+        <Query>
           SELECT
-            cv.id AS key,
-            COALESCE(cv.nome, '-') AS label,
-            COALESCE(SUM(pi.subtotal), 0)::float AS value
+            COALESCE(SUM(p.valor_total), 0)::float AS value
           FROM vendas.pedidos p
-          JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-          LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
           WHERE p.tenant_id = {{tenant_id}}
             AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
             AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
             AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
             AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
-          GROUP BY 1, 2
-          ORDER BY 3 DESC
-        </query>
-        <fields x="label" y="value" key="key" />
-        <interaction click-as-filter="true" filter-field="canal_venda_id" store-path="filters.canal_venda_id" clear-on-second-click="true" />
-        <nivo inner-radius="0.35" />
-        <props>
+        </Query>
+        <DataQuery yField="value" />
+      </KPI>
+      <KPI fr={1} title="Pedidos" format="number" borderless>
+        <Query>
+          SELECT
+            COUNT(DISTINCT p.id)::int AS value
+          FROM vendas.pedidos p
+          WHERE p.tenant_id = {{tenant_id}}
+            AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+            AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+            AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+            AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+        </Query>
+        <DataQuery yField="value" />
+      </KPI>
+      <KPI fr={1} title="Ticket Médio" format="currency" borderless>
+        <Query>
+          SELECT
+            COALESCE(AVG(p.valor_total), 0)::float AS value
+          FROM vendas.pedidos p
+          WHERE p.tenant_id = {{tenant_id}}
+            AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+            AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+            AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+            AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+        </Query>
+        <DataQuery yField="value" />
+      </KPI>
+      <KPI fr={1} title="Margem Bruta" valuePath="vendas.kpis.margemBruta" format="currency" borderless>
+      </KPI>
+    </Div>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+      <Chart type="pie" fr={1} title="Canais" format="currency" height={240}>
+        <Query>
+          SELECT
+                      cv.id AS key,
+                      COALESCE(cv.nome, '-') AS label,
+                      COALESCE(SUM(pi.subtotal), 0)::float AS value
+                    FROM vendas.pedidos p
+                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                    WHERE p.tenant_id = {{tenant_id}}
+                      AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+                      AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+                      AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                      AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                    GROUP BY 1, 2
+                    ORDER BY 3 DESC
+        </Query>
+        <Fields x="label" y="value" key="key" />
+        <Interaction clickAsFilter filterField="canal_venda_id" storePath="filters.canal_venda_id" clearOnSecondClick />
+        <Nivo innerRadius={0.35} />
+        <Config>
           {
             "dataQuery": {
               "filters": {},
               "limit": 6
             }
           }
-        </props>
-      </chart>
-      <chart type="bar" fr="2" title="Categorias" format="currency" height="240">
-        <query>
+        </Config>
+      </Chart>
+      <Chart type="bar" fr={2} title="Categorias" format="currency" height={240}>
+        <Query>
           SELECT
-            cr.id AS key,
-            COALESCE(cr.nome, '-') AS label,
-            COALESCE(SUM(pi.subtotal), 0)::float AS value
-          FROM vendas.pedidos p
-          JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-          LEFT JOIN financeiro.categorias_receita cr ON cr.id = p.categoria_receita_id
-          WHERE p.tenant_id = {{tenant_id}}
-            AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-            AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
-            AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
-            AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
-          GROUP BY 1, 2
-          ORDER BY 3 DESC
-        </query>
-        <fields x="label" y="value" key="key" />
-        <interaction click-as-filter="true" filter-field="categoria_receita_id" store-path="filters.categoria_receita_id" clear-on-second-click="true" />
-        <nivo layout="horizontal" />
-        <props>
+                      cr.id AS key,
+                      COALESCE(cr.nome, '-') AS label,
+                      COALESCE(SUM(pi.subtotal), 0)::float AS value
+                    FROM vendas.pedidos p
+                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                    LEFT JOIN financeiro.categorias_receita cr ON cr.id = p.categoria_receita_id
+                    WHERE p.tenant_id = {{tenant_id}}
+                      AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+                      AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+                      AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                      AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                    GROUP BY 1, 2
+                    ORDER BY 3 DESC
+        </Query>
+        <Fields x="label" y="value" key="key" />
+        <Interaction clickAsFilter filterField="categoria_receita_id" storePath="filters.categoria_receita_id" clearOnSecondClick />
+        <Nivo layout="horizontal" />
+        <Config>
           {
             "dataQuery": {
               "filters": {},
               "limit": 6
             }
           }
-        </props>
-      </chart>
-      <slicer-card>
-        <props>
+        </Config>
+      </Chart>
+      <SlicerCard fr={1} title="Filtros">
+        <Config>
           {
-            "fr": 1,
-            "title": "Filtros",
             "fields": [
               {
                 "label": "Canal",
@@ -207,199 +157,162 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<dashboard-template name="app
               }
             ]
           }
-        </props>
-      </slicer-card>
-      <chart type="bar" fr="2" title="Clientes" format="currency" height="240">
-        <query>
+        </Config>
+      </SlicerCard>
+      <Chart type="bar" fr={2} title="Clientes" format="currency" height={240}>
+        <Query>
           SELECT
-            c.id AS key,
-            COALESCE(c.nome_fantasia, '-') AS label,
-            COALESCE(SUM(pi.subtotal), 0)::float AS value
-          FROM vendas.pedidos p
-          JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-          LEFT JOIN entidades.clientes c ON c.id = p.cliente_id
-          WHERE p.tenant_id = {{tenant_id}}
-            AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-            AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
-            AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
-            AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
-          GROUP BY 1, 2
-          ORDER BY 3 DESC
-        </query>
-        <fields x="label" y="value" key="key" />
-        <interaction click-as-filter="false" />
-        <nivo layout="horizontal" />
-        <props>
+                      c.id AS key,
+                      COALESCE(c.nome_fantasia, '-') AS label,
+                      COALESCE(SUM(pi.subtotal), 0)::float AS value
+                    FROM vendas.pedidos p
+                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                    LEFT JOIN entidades.clientes c ON c.id = p.cliente_id
+                    WHERE p.tenant_id = {{tenant_id}}
+                      AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+                      AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+                      AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                      AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                    GROUP BY 1, 2
+                    ORDER BY 3 DESC
+        </Query>
+        <Fields x="label" y="value" key="key" />
+        <Interaction clickAsFilter={false} />
+        <Nivo layout="horizontal" />
+        <Config>
           {
             "dataQuery": {
               "filters": {},
               "limit": 5
             }
           }
-        </props>
-      </chart>
-    </div>
-    <div>
-      <props>
-        {
-          "direction": "row",
-          "gap": 12,
-          "padding": 16,
-          "justify": "start",
-          "align": "start",
-          "childGrow": true
-        }
-      </props>
-      <chart type="bar" fr="1" title="Vendedores" format="currency" height="220">
-        <query>
+        </Config>
+      </Chart>
+    </Div>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+      <Chart type="bar" fr={1} title="Vendedores" format="currency" height={220}>
+        <Query>
           SELECT
-            v.id AS key,
-            COALESCE(f.nome, '-') AS label,
-            COALESCE(SUM(pi.subtotal), 0)::float AS value
-          FROM vendas.pedidos p
-          JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-          LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
-          LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
-          WHERE p.tenant_id = {{tenant_id}}
-            AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-            AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
-            AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
-            AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
-          GROUP BY 1, 2
-          ORDER BY 3 DESC
-        </query>
-        <fields x="label" y="value" key="key" />
-        <interaction click-as-filter="true" filter-field="vendedor_id" store-path="filters.vendedor_id" clear-on-second-click="true" />
-        <nivo layout="horizontal" />
-        <props>
+                      v.id AS key,
+                      COALESCE(f.nome, '-') AS label,
+                      COALESCE(SUM(pi.subtotal), 0)::float AS value
+                    FROM vendas.pedidos p
+                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                    LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
+                    LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
+                    WHERE p.tenant_id = {{tenant_id}}
+                      AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+                      AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+                      AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                      AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                    GROUP BY 1, 2
+                    ORDER BY 3 DESC
+        </Query>
+        <Fields x="label" y="value" key="key" />
+        <Interaction clickAsFilter filterField="vendedor_id" storePath="filters.vendedor_id" clearOnSecondClick />
+        <Nivo layout="horizontal" />
+        <Config>
           {
             "dataQuery": {
               "filters": {},
               "limit": 6
             }
           }
-        </props>
-      </chart>
-      <chart type="bar" fr="1" title="Filiais" format="currency" height="220">
-        <query>
+        </Config>
+      </Chart>
+      <Chart type="bar" fr={1} title="Filiais" format="currency" height={220}>
+        <Query>
           SELECT
-            fil.id AS key,
-            COALESCE(fil.nome, '-') AS label,
-            COALESCE(SUM(pi.subtotal), 0)::float AS value
-          FROM vendas.pedidos p
-          JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-          LEFT JOIN empresa.filiais fil ON fil.id = p.filial_id
-          WHERE p.tenant_id = {{tenant_id}}
-            AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-            AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
-            AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
-            AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
-          GROUP BY 1, 2
-          ORDER BY 3 DESC
-        </query>
-        <fields x="label" y="value" key="key" />
-        <interaction click-as-filter="true" filter-field="filial_id" store-path="filters.filial_id" clear-on-second-click="true" />
-        <nivo layout="horizontal" />
-        <props>
+                      fil.id AS key,
+                      COALESCE(fil.nome, '-') AS label,
+                      COALESCE(SUM(pi.subtotal), 0)::float AS value
+                    FROM vendas.pedidos p
+                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                    LEFT JOIN empresa.filiais fil ON fil.id = p.filial_id
+                    WHERE p.tenant_id = {{tenant_id}}
+                      AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+                      AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+                      AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                      AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                    GROUP BY 1, 2
+                    ORDER BY 3 DESC
+        </Query>
+        <Fields x="label" y="value" key="key" />
+        <Interaction clickAsFilter filterField="filial_id" storePath="filters.filial_id" clearOnSecondClick />
+        <Nivo layout="horizontal" />
+        <Config>
           {
             "dataQuery": {
               "filters": {},
               "limit": 6
             }
           }
-        </props>
-      </chart>
-      <chart type="bar" fr="1" title="Unidades de Negócio" format="currency" height="220">
-        <query>
+        </Config>
+      </Chart>
+      <Chart type="bar" fr={1} title="Unidades de Negócio" format="currency" height={220}>
+        <Query>
           SELECT
-            un.id AS key,
-            COALESCE(un.nome, '-') AS label,
-            COALESCE(SUM(pi.subtotal), 0)::float AS value
-          FROM vendas.pedidos p
-          JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-          LEFT JOIN empresa.unidades_negocio un ON un.id = p.unidade_negocio_id
-          WHERE p.tenant_id = {{tenant_id}}
-            AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-            AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
-            AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
-            AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
-          GROUP BY 1, 2
-          ORDER BY 3 DESC
-        </query>
-        <fields x="label" y="value" key="key" />
-        <interaction click-as-filter="true" filter-field="unidade_negocio_id" store-path="filters.unidade_negocio_id" clear-on-second-click="true" />
-        <nivo layout="horizontal" />
-        <props>
+                      un.id AS key,
+                      COALESCE(un.nome, '-') AS label,
+                      COALESCE(SUM(pi.subtotal), 0)::float AS value
+                    FROM vendas.pedidos p
+                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                    LEFT JOIN empresa.unidades_negocio un ON un.id = p.unidade_negocio_id
+                    WHERE p.tenant_id = {{tenant_id}}
+                      AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+                      AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+                      AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                      AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                    GROUP BY 1, 2
+                    ORDER BY 3 DESC
+        </Query>
+        <Fields x="label" y="value" key="key" />
+        <Interaction clickAsFilter filterField="unidade_negocio_id" storePath="filters.unidade_negocio_id" clearOnSecondClick />
+        <Nivo layout="horizontal" />
+        <Config>
           {
             "dataQuery": {
               "filters": {},
               "limit": 6
             }
           }
-        </props>
-      </chart>
-    </div>
-    <div>
-      <props>
-        {
-          "direction": "row",
-          "gap": 12,
-          "padding": 16,
-          "justify": "start",
-          "align": "start",
-          "childGrow": true
-        }
-      </props>
-      <chart type="line" fr="3" title="Faturamento por Mês" format="currency" height="240">
-        <query>
+        </Config>
+      </Chart>
+    </Div>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+      <Chart type="line" fr={3} title="Faturamento por Mês" format="currency" height={240}>
+        <Query>
           SELECT
-            TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS key,
-            TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS label,
-            COALESCE(SUM(pi.subtotal), 0)::float AS value
-          FROM vendas.pedidos p
-          JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-          WHERE p.tenant_id = {{tenant_id}}
-            AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-            AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
-            AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
-            AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
-          GROUP BY 1, 2
-          ORDER BY 2 ASC
-        </query>
-        <fields x="label" y="value" key="key" />
-        <interaction click-as-filter="false" />
-        <nivo curve="monotoneX" area="true" />
-        <props>
+                      TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS key,
+                      TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS label,
+                      COALESCE(SUM(pi.subtotal), 0)::float AS value
+                    FROM vendas.pedidos p
+                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                    WHERE p.tenant_id = {{tenant_id}}
+                      AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+                      AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+                      AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                      AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                    GROUP BY 1, 2
+                    ORDER BY 2 ASC
+        </Query>
+        <Fields x="label" y="value" key="key" />
+        <Interaction clickAsFilter={false} />
+        <Nivo curve="monotoneX" area />
+        <Config>
           {
             "dataQuery": {
               "filters": {},
               "limit": 12
             }
           }
-        </props>
-      </chart>
-    </div>
-    <div>
-      <props>
-        {
-          "direction": "row",
-          "gap": 12,
-          "padding": 16,
-          "justify": "start",
-          "align": "start",
-          "childGrow": true
-        }
-      </props>
-      <table>
-        <props>
+        </Config>
+      </Chart>
+    </Div>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+      <Table fr={3} title="Ultimos Pedidos" height={320} showColumnToggle showPagination enableSearch pageSize={8}>
+        <Config>
           {
-            "fr": 3,
-            "title": "Ultimos Pedidos",
-            "height": 320,
-            "showColumnToggle": true,
-            "showPagination": true,
-            "enableSearch": true,
-            "pageSize": 8,
             "dataQuery": {
               "query": "SELECT\n  p.id AS pedido,\n  p.data_pedido::date AS data_pedido,\n  COALESCE(c.nome_fantasia, '-') AS cliente,\n  COALESCE(cv.nome, '-') AS canal,\n  COALESCE(f.nome, '-') AS vendedor,\n  COALESCE(p.valor_total, 0)::float AS valor_total,\n  COALESCE(p.status, '-') AS status\nFROM vendas.pedidos p\nLEFT JOIN entidades.clientes c ON c.id = p.cliente_id\nLEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id\nLEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id\nLEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\n  AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))\n  AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))\nORDER BY p.data_pedido DESC, p.id DESC",
               "filters": {},
@@ -452,79 +365,67 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<dashboard-template name="app
               }
             ]
           }
-        </props>
-      </table>
-    </div>
-    <div>
-      <props>
-        {
-          "direction": "row",
-          "gap": 12,
-          "padding": 16,
-          "justify": "start",
-          "align": "start",
-          "childGrow": true
-        }
-      </props>
-      <chart type="bar" fr="1" title="Pedidos por Mês" format="number" height="220">
-        <query>
+        </Config>
+      </Table>
+    </Div>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+      <Chart type="bar" fr={1} title="Pedidos por Mês" format="number" height={220}>
+        <Query>
           SELECT
-            TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS key,
-            TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS label,
-            COUNT(DISTINCT p.id)::int AS value
-          FROM vendas.pedidos p
-          WHERE p.tenant_id = {{tenant_id}}
-            AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-            AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
-            AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
-            AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
-          GROUP BY 1, 2
-          ORDER BY 2 ASC
-        </query>
-        <fields x="label" y="value" key="key" />
-        <interaction click-as-filter="false" />
-        <nivo layout="vertical" />
-        <props>
+                      TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS key,
+                      TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS label,
+                      COUNT(DISTINCT p.id)::int AS value
+                    FROM vendas.pedidos p
+                    WHERE p.tenant_id = {{tenant_id}}
+                      AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+                      AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+                      AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                      AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                    GROUP BY 1, 2
+                    ORDER BY 2 ASC
+        </Query>
+        <Fields x="label" y="value" key="key" />
+        <Interaction clickAsFilter={false} />
+        <Nivo layout="vertical" />
+        <Config>
           {
             "dataQuery": {
               "filters": {},
               "limit": 12
             }
           }
-        </props>
-      </chart>
-      <chart type="bar" fr="1" title="Ticket Médio por Mês" format="currency" height="220">
-        <query>
+        </Config>
+      </Chart>
+      <Chart type="bar" fr={1} title="Ticket Médio por Mês" format="currency" height={220}>
+        <Query>
           SELECT
-            TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS key,
-            TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS label,
-            COALESCE(AVG(p.valor_total), 0)::float AS value
-          FROM vendas.pedidos p
-          WHERE p.tenant_id = {{tenant_id}}
-            AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-            AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
-            AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
-            AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
-          GROUP BY 1, 2
-          ORDER BY 2 ASC
-        </query>
-        <fields x="label" y="value" key="key" />
-        <interaction click-as-filter="false" />
-        <nivo layout="vertical" />
-        <props>
+                      TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS key,
+                      TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS label,
+                      COALESCE(AVG(p.valor_total), 0)::float AS value
+                    FROM vendas.pedidos p
+                    WHERE p.tenant_id = {{tenant_id}}
+                      AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+                      AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+                      AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                      AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                    GROUP BY 1, 2
+                    ORDER BY 2 ASC
+        </Query>
+        <Fields x="label" y="value" key="key" />
+        <Interaction clickAsFilter={false} />
+        <Nivo layout="vertical" />
+        <Config>
           {
             "dataQuery": {
               "filters": {},
               "limit": 12
             }
           }
-        </props>
-      </chart>
-      <ai-summary>
-        <props>
+        </Config>
+      </Chart>
+      <AISummary fr={1} title="Insights da IA">
+        <Config>
           {
-            "fr": 1,
-            "title": "Insights da IA",
             "items": [
               {
                 "icon": "trendingUp",
@@ -540,106 +441,96 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<dashboard-template name="app
               }
             ]
           }
-        </props>
-      </ai-summary>
-    </div>
-    <div>
-      <props>
-        {
-          "direction": "row",
-          "gap": 12,
-          "padding": 16,
-          "justify": "start",
-          "align": "start",
-          "childGrow": true
-        }
-      </props>
-      <chart type="bar" fr="1" title="Territórios" format="currency" height="220">
-        <query>
+        </Config>
+      </AISummary>
+    </Div>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+      <Chart type="bar" fr={1} title="Territórios" format="currency" height={220}>
+        <Query>
           SELECT
-            t.id AS key,
-            COALESCE(t.nome, '-') AS label,
-            COALESCE(SUM(pi.subtotal), 0)::float AS value
-          FROM vendas.pedidos p
-          JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-          LEFT JOIN comercial.territorios t ON t.id = p.territorio_id
-          WHERE p.tenant_id = {{tenant_id}}
-            AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-            AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
-            AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
-            AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
-          GROUP BY 1, 2
-          ORDER BY 3 DESC
-        </query>
-        <fields x="label" y="value" key="key" />
-        <interaction click-as-filter="true" filter-field="territorio_id" store-path="filters.territorio_id" clear-on-second-click="true" />
-        <nivo layout="horizontal" />
-        <props>
+                      t.id AS key,
+                      COALESCE(t.nome, '-') AS label,
+                      COALESCE(SUM(pi.subtotal), 0)::float AS value
+                    FROM vendas.pedidos p
+                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                    LEFT JOIN comercial.territorios t ON t.id = p.territorio_id
+                    WHERE p.tenant_id = {{tenant_id}}
+                      AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+                      AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+                      AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                      AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                    GROUP BY 1, 2
+                    ORDER BY 3 DESC
+        </Query>
+        <Fields x="label" y="value" key="key" />
+        <Interaction clickAsFilter filterField="territorio_id" storePath="filters.territorio_id" clearOnSecondClick />
+        <Nivo layout="horizontal" />
+        <Config>
           {
             "dataQuery": {
               "filters": {},
               "limit": 6
             }
           }
-        </props>
-      </chart>
-      <chart type="bar" fr="1" title="Serviços/Categorias" format="currency" height="220">
-        <query>
+        </Config>
+      </Chart>
+      <Chart type="bar" fr={1} title="Serviços/Categorias" format="currency" height={220}>
+        <Query>
           SELECT
-            cr.id AS key,
-            COALESCE(cr.nome, '-') AS label,
-            COALESCE(SUM(pi.subtotal), 0)::float AS value
-          FROM vendas.pedidos p
-          JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-          LEFT JOIN financeiro.categorias_receita cr ON cr.id = p.categoria_receita_id
-          WHERE p.tenant_id = {{tenant_id}}
-            AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-            AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
-            AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
-            AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
-          GROUP BY 1, 2
-          ORDER BY 3 DESC
-        </query>
-        <fields x="label" y="value" key="key" />
-        <interaction click-as-filter="true" filter-field="categoria_receita_id" store-path="filters.categoria_receita_id" clear-on-second-click="true" />
-        <nivo layout="horizontal" />
-        <props>
+                      cr.id AS key,
+                      COALESCE(cr.nome, '-') AS label,
+                      COALESCE(SUM(pi.subtotal), 0)::float AS value
+                    FROM vendas.pedidos p
+                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                    LEFT JOIN financeiro.categorias_receita cr ON cr.id = p.categoria_receita_id
+                    WHERE p.tenant_id = {{tenant_id}}
+                      AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+                      AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+                      AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                      AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                    GROUP BY 1, 2
+                    ORDER BY 3 DESC
+        </Query>
+        <Fields x="label" y="value" key="key" />
+        <Interaction clickAsFilter filterField="categoria_receita_id" storePath="filters.categoria_receita_id" clearOnSecondClick />
+        <Nivo layout="horizontal" />
+        <Config>
           {
             "dataQuery": {
               "filters": {},
               "limit": 6
             }
           }
-        </props>
-      </chart>
-      <chart type="bar" fr="1" title="Pedidos" format="number" height="220">
-        <query>
+        </Config>
+      </Chart>
+      <Chart type="bar" fr={1} title="Pedidos" format="number" height={220}>
+        <Query>
           SELECT
-            cv.id AS key,
-            COALESCE(cv.nome, '-') AS label,
-            COUNT(DISTINCT p.id)::int AS value
-          FROM vendas.pedidos p
-          LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
-          WHERE p.tenant_id = {{tenant_id}}
-            AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-            AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
-            AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
-            AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
-          GROUP BY 1, 2
-          ORDER BY 3 DESC
-        </query>
-        <fields x="label" y="value" key="key" />
-        <interaction click-as-filter="true" filter-field="canal_venda_id" store-path="filters.canal_venda_id" clear-on-second-click="true" />
-        <nivo layout="horizontal" />
-        <props>
+                      cv.id AS key,
+                      COALESCE(cv.nome, '-') AS label,
+                      COUNT(DISTINCT p.id)::int AS value
+                    FROM vendas.pedidos p
+                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                    WHERE p.tenant_id = {{tenant_id}}
+                      AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+                      AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+                      AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                      AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                    GROUP BY 1, 2
+                    ORDER BY 3 DESC
+        </Query>
+        <Fields x="label" y="value" key="key" />
+        <Interaction clickAsFilter filterField="canal_venda_id" storePath="filters.canal_venda_id" clearOnSecondClick />
+        <Nivo layout="horizontal" />
+        <Config>
           {
             "dataQuery": {
               "filters": {},
               "limit": 6
             }
           }
-        </props>
-      </chart>
-    </div>
-  </theme>
-</dashboard-template>`
+        </Config>
+      </Chart>
+    </Div>
+  </Theme>
+</DashboardTemplate>`

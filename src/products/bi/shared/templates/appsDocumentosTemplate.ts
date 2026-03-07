@@ -1,8 +1,7 @@
-export const APPS_DOCUMENTOS_TEMPLATE_DSL = String.raw`<dashboard-template name="apps_documentos_template_dsl">
-  <theme>
-    <props>
+export const APPS_DOCUMENTOS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps_documentos_template_dsl">
+  <Theme name="light">
+    <Config>
       {
-        "name": "light",
         "managers": {
           "border": {
             "style": "solid",
@@ -17,46 +16,23 @@ export const APPS_DOCUMENTOS_TEMPLATE_DSL = String.raw`<dashboard-template name=
           }
         }
       }
-    </props>
-    <header>
-      <props>
-        {
-          "title": "Dashboard de Documentos",
-          "subtitle": "Templates, versões e documentos gerados",
-          "align": "center",
-          "datePicker": {
-            "visible": true,
-            "mode": "range",
-            "position": "right",
-            "storePath": "filters.dateRange",
-            "actionOnChange": {
-              "type": "refresh_data"
-            },
-            "style": {
-              "padding": 6,
-              "fontFamily": "Barlow",
-              "fontSize": 12
-            }
-          }
-        }
-      </props>
-    </header>
-    <div>
-      <props>
-        {
-          "direction": "row",
-          "gap": 12,
-          "padding": 16,
-          "justify": "start",
-          "align": "start",
-          "childGrow": true
-        }
-      </props>
-      <ai-summary>
-        <props>
+    </Config>
+    <Header title="Dashboard de Documentos" subtitle="Templates, versões e documentos gerados" align="center">
+      <DatePicker visible mode="range" position="right" storePath="filters.dateRange">
+        <ActionOnChange type="refresh_data" />
+        <Style>
           {
-            "fr": 2,
-            "title": "Insights da IA",
+            "padding": 6,
+            "fontFamily": "Barlow",
+            "fontSize": 12
+          }
+        </Style>
+      </DatePicker>
+    </Header>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+      <AISummary fr={2} title="Insights da IA">
+        <Config>
+          {
             "items": [
               {
                 "icon": "badgeCheck",
@@ -72,105 +48,28 @@ export const APPS_DOCUMENTOS_TEMPLATE_DSL = String.raw`<dashboard-template name=
               }
             ]
           }
-        </props>
-      </ai-summary>
-      <kpi>
-        <props>
-          {
-            "fr": 1,
-            "title": "Últimos 30 dias",
-            "valuePath": "documentos.kpis.ultimos_30_dias",
-            "format": "number"
-          }
-        </props>
-      </kpi>
-    </div>
-    <div>
-      <props>
-        {
-          "direction": "row",
-          "gap": 12,
-          "padding": 16,
-          "justify": "start",
-          "align": "start",
-          "childGrow": true
-        }
-      </props>
-      <kpi>
-        <props>
-          {
-            "title": "Templates Ativos",
-            "valuePath": "documentos.kpis.templates_ativos",
-            "format": "number"
-          }
-        </props>
-      </kpi>
-      <kpi>
-        <props>
-          {
-            "title": "Versões Publicadas",
-            "valuePath": "documentos.kpis.versoes_publicadas",
-            "format": "number"
-          }
-        </props>
-      </kpi>
-      <kpi>
-        <props>
-          {
-            "title": "Documentos Gerados",
-            "valuePath": "documentos.kpis.documentos_gerados",
-            "format": "number"
-          }
-        </props>
-      </kpi>
-      <kpi>
-        <props>
-          {
-            "title": "Documentos Enviados",
-            "valuePath": "documentos.kpis.documentos_enviados",
-            "format": "number"
-          }
-        </props>
-      </kpi>
-    </div>
-    <div>
-      <props>
-        {
-          "direction": "row",
-          "gap": 12,
-          "padding": 16,
-          "justify": "start",
-          "align": "start",
-          "childGrow": true
-        }
-      </props>
-      <kpi>
-        <props>
-          {
-            "title": "Pendentes de Geração",
-            "valuePath": "documentos.kpis.pendentes_geracao",
-            "format": "number"
-          }
-        </props>
-      </kpi>
-      <kpi>
-        <props>
-          {
-            "title": "Com Erro",
-            "valuePath": "documentos.kpis.com_erro",
-            "format": "number"
-          }
-        </props>
-      </kpi>
-      <kpi>
-        <props>
-          {
-            "title": "Assinados",
-            "valuePath": "documentos.kpis.assinados",
-            "format": "number"
-          }
-        </props>
-      </kpi>
-    </div>
-  </theme>
-</dashboard-template>`
+        </Config>
+      </AISummary>
+      <KPI fr={1} title="Últimos 30 dias" valuePath="documentos.kpis.ultimos_30_dias" format="number">
+      </KPI>
+    </Div>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+      <KPI title="Templates Ativos" valuePath="documentos.kpis.templates_ativos" format="number">
+      </KPI>
+      <KPI title="Versões Publicadas" valuePath="documentos.kpis.versoes_publicadas" format="number">
+      </KPI>
+      <KPI title="Documentos Gerados" valuePath="documentos.kpis.documentos_gerados" format="number">
+      </KPI>
+      <KPI title="Documentos Enviados" valuePath="documentos.kpis.documentos_enviados" format="number">
+      </KPI>
+    </Div>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+      <KPI title="Pendentes de Geração" valuePath="documentos.kpis.pendentes_geracao" format="number">
+      </KPI>
+      <KPI title="Com Erro" valuePath="documentos.kpis.com_erro" format="number">
+      </KPI>
+      <KPI title="Assinados" valuePath="documentos.kpis.assinados" format="number">
+      </KPI>
+    </Div>
+  </Theme>
+</DashboardTemplate>`

@@ -1,8 +1,7 @@
-export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<dashboard-template name="apps_googleads_template">
-  <theme>
-    <props>
+export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps_googleads_template">
+  <Theme name="light">
+    <Config>
       {
-        "name": "light",
         "managers": {
           "border": {
             "style": "solid",
@@ -26,48 +25,23 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<dashboard-template name="
           }
         }
       }
-    </props>
-    <header>
-      <props>
-        {
-          "title": "Dashboard Google Ads",
-          "subtitle": "Lumi Skin • Search, Shopping e PMax (visão DTC)",
-          "align": "center",
-          "controlsPosition": "right",
-          "datePicker": {
-            "visible": true,
-            "mode": "range",
-            "position": "right",
-            "storePath": "filters.dateRange",
-            "actionOnChange": {
-              "type": "refresh_data"
-            },
-            "style": {
-              "padding": 6,
-              "fontFamily": "Barlow",
-              "fontSize": 12
-            }
-          }
-        }
-      </props>
-    </header>
-    <div>
-      <props>
-        {
-          "direction": "row",
-          "gap": 12,
-          "padding": 16,
-          "wrap": true,
-          "childGrow": true,
-          "justify": "start",
-          "align": "start"
-        }
-      </props>
-      <slicer-card>
-        <props>
+    </Config>
+    <Header title="Dashboard Google Ads" subtitle="Lumi Skin • Search, Shopping e PMax (visão DTC)" align="center" controlsPosition="right">
+      <DatePicker visible mode="range" position="right" storePath="filters.dateRange">
+        <ActionOnChange type="refresh_data" />
+        <Style>
           {
-            "fr": 1,
-            "title": "Filtro de Contas",
+            "padding": 6,
+            "fontFamily": "Barlow",
+            "fontSize": 12
+          }
+        </Style>
+      </DatePicker>
+    </Header>
+    <Div direction="row" gap={12} padding={16} wrap childGrow justify="start" align="start">
+      <SlicerCard fr={1} title="Filtro de Contas">
+        <Config>
+          {
             "fields": [
               {
                 "label": "Conta",
@@ -85,13 +59,11 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<dashboard-template name="
               }
             ]
           }
-        </props>
-      </slicer-card>
-      <slicer-card>
-        <props>
+        </Config>
+      </SlicerCard>
+      <SlicerCard fr={1} title="Filtro de Campanhas">
+        <Config>
           {
-            "fr": 1,
-            "title": "Filtro de Campanhas",
             "fields": [
               {
                 "label": "Campanha",
@@ -112,13 +84,11 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<dashboard-template name="
               }
             ]
           }
-        </props>
-      </slicer-card>
-      <slicer-card>
-        <props>
+        </Config>
+      </SlicerCard>
+      <SlicerCard fr={1} title="Filtro de Grupos">
+        <Config>
           {
-            "fr": 1,
-            "title": "Filtro de Grupos",
             "fields": [
               {
                 "label": "Grupo",
@@ -140,13 +110,11 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<dashboard-template name="
               }
             ]
           }
-        </props>
-      </slicer-card>
-      <slicer-card>
-        <props>
+        </Config>
+      </SlicerCard>
+      <SlicerCard fr={1} title="Filtro de Anúncios">
+        <Config>
           {
-            "fr": 1,
-            "title": "Filtro de Anúncios",
             "fields": [
               {
                 "label": "Anúncio",
@@ -169,273 +137,150 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<dashboard-template name="
               }
             ]
           }
-        </props>
-      </slicer-card>
-    </div>
-    <div>
-      <props>
-        {
-          "direction": "row",
-          "gap": 12,
-          "padding": 16,
-          "wrap": true,
-          "childGrow": true
-        }
-      </props>
-      <kpi>
-        <props>
-          {
-            "fr": 1,
-            "title": "Gasto (Campanhas)",
-            "format": "currency",
-            "borderless": true,
-            "dataQuery": {
-              "model": "trafegopago.desempenho_diario",
-              "measure": "SUM(gasto)",
-              "filters": {
-                "tenant_id": 1,
-                "plataforma": "google_ads",
-                "nivel": "campaign"
-              }
+        </Config>
+      </SlicerCard>
+    </Div>
+    <Div direction="row" gap={12} padding={16} wrap childGrow>
+      <KPI fr={1} title="Gasto (Campanhas)" format="currency" borderless>
+        <DataQuery model="trafegopago.desempenho_diario" measure="SUM(gasto)">
+          <Filters>
+            {
+              "tenant_id": 1,
+              "plataforma": "google_ads",
+              "nivel": "campaign"
             }
-          }
-        </props>
-      </kpi>
-      <kpi>
-        <props>
-          {
-            "fr": 1,
-            "title": "Receita Atribuída",
-            "format": "currency",
-            "borderless": true,
-            "dataQuery": {
-              "model": "trafegopago.desempenho_diario",
-              "measure": "SUM(receita_atribuida)",
-              "filters": {
-                "tenant_id": 1,
-                "plataforma": "google_ads",
-                "nivel": "campaign"
-              }
+          </Filters>
+        </DataQuery>
+      </KPI>
+      <KPI fr={1} title="Receita Atribuída" format="currency" borderless>
+        <DataQuery model="trafegopago.desempenho_diario" measure="SUM(receita_atribuida)">
+          <Filters>
+            {
+              "tenant_id": 1,
+              "plataforma": "google_ads",
+              "nivel": "campaign"
             }
-          }
-        </props>
-      </kpi>
-      <kpi>
-        <props>
-          {
-            "fr": 1,
-            "title": "ROAS",
-            "format": "number",
-            "borderless": true,
-            "dataQuery": {
-              "model": "trafegopago.desempenho_diario",
-              "measure": "CASE WHEN SUM(gasto)=0 THEN 0 ELSE SUM(receita_atribuida)/SUM(gasto) END",
-              "filters": {
-                "tenant_id": 1,
-                "plataforma": "google_ads",
-                "nivel": "campaign"
-              }
+          </Filters>
+        </DataQuery>
+      </KPI>
+      <KPI fr={1} title="ROAS" format="number" borderless>
+        <DataQuery model="trafegopago.desempenho_diario" measure="CASE WHEN SUM(gasto)=0 THEN 0 ELSE SUM(receita_atribuida)/SUM(gasto) END">
+          <Filters>
+            {
+              "tenant_id": 1,
+              "plataforma": "google_ads",
+              "nivel": "campaign"
             }
-          }
-        </props>
-      </kpi>
-      <kpi>
-        <props>
-          {
-            "fr": 1,
-            "title": "Cliques",
-            "format": "number",
-            "borderless": true,
-            "dataQuery": {
-              "model": "trafegopago.desempenho_diario",
-              "measure": "SUM(cliques)",
-              "filters": {
-                "tenant_id": 1,
-                "plataforma": "google_ads",
-                "nivel": "campaign"
-              }
+          </Filters>
+        </DataQuery>
+      </KPI>
+      <KPI fr={1} title="Cliques" format="number" borderless>
+        <DataQuery model="trafegopago.desempenho_diario" measure="SUM(cliques)">
+          <Filters>
+            {
+              "tenant_id": 1,
+              "plataforma": "google_ads",
+              "nivel": "campaign"
             }
-          }
-        </props>
-      </kpi>
-      <kpi>
-        <props>
-          {
-            "fr": 1,
-            "title": "Impressões",
-            "format": "number",
-            "borderless": true,
-            "dataQuery": {
-              "model": "trafegopago.desempenho_diario",
-              "measure": "SUM(impressoes)",
-              "filters": {
-                "tenant_id": 1,
-                "plataforma": "google_ads",
-                "nivel": "campaign"
-              }
+          </Filters>
+        </DataQuery>
+      </KPI>
+      <KPI fr={1} title="Impressões" format="number" borderless>
+        <DataQuery model="trafegopago.desempenho_diario" measure="SUM(impressoes)">
+          <Filters>
+            {
+              "tenant_id": 1,
+              "plataforma": "google_ads",
+              "nivel": "campaign"
             }
-          }
-        </props>
-      </kpi>
-      <kpi>
-        <props>
-          {
-            "fr": 1,
-            "title": "Conversões",
-            "format": "number",
-            "borderless": true,
-            "dataQuery": {
-              "model": "trafegopago.desempenho_diario",
-              "measure": "SUM(conversoes)",
-              "filters": {
-                "tenant_id": 1,
-                "plataforma": "google_ads",
-                "nivel": "campaign"
-              }
+          </Filters>
+        </DataQuery>
+      </KPI>
+      <KPI fr={1} title="Conversões" format="number" borderless>
+        <DataQuery model="trafegopago.desempenho_diario" measure="SUM(conversoes)">
+          <Filters>
+            {
+              "tenant_id": 1,
+              "plataforma": "google_ads",
+              "nivel": "campaign"
             }
-          }
-        </props>
-      </kpi>
-    </div>
-    <div>
-      <props>
-        {
-          "direction": "row",
-          "gap": 12,
-          "padding": 16,
-          "wrap": true,
-          "childGrow": true
-        }
-      </props>
-      <kpi>
-        <props>
-          {
-            "fr": 1,
-            "title": "Leads",
-            "format": "number",
-            "borderless": true,
-            "dataQuery": {
-              "model": "trafegopago.desempenho_diario",
-              "measure": "SUM(leads)",
-              "filters": {
-                "tenant_id": 1,
-                "plataforma": "google_ads",
-                "nivel": "campaign"
-              }
+          </Filters>
+        </DataQuery>
+      </KPI>
+    </Div>
+    <Div direction="row" gap={12} padding={16} wrap childGrow>
+      <KPI fr={1} title="Leads" format="number" borderless>
+        <DataQuery model="trafegopago.desempenho_diario" measure="SUM(leads)">
+          <Filters>
+            {
+              "tenant_id": 1,
+              "plataforma": "google_ads",
+              "nivel": "campaign"
             }
-          }
-        </props>
-      </kpi>
-      <kpi>
-        <props>
-          {
-            "fr": 1,
-            "title": "CTR",
-            "format": "percent",
-            "borderless": true,
-            "dataQuery": {
-              "model": "trafegopago.desempenho_diario",
-              "measure": "CASE WHEN SUM(impressoes)=0 THEN 0 ELSE SUM(cliques)/SUM(impressoes) END",
-              "filters": {
-                "tenant_id": 1,
-                "plataforma": "google_ads",
-                "nivel": "campaign"
-              }
+          </Filters>
+        </DataQuery>
+      </KPI>
+      <KPI fr={1} title="CTR" format="percent" borderless>
+        <DataQuery model="trafegopago.desempenho_diario" measure="CASE WHEN SUM(impressoes)=0 THEN 0 ELSE SUM(cliques)/SUM(impressoes) END">
+          <Filters>
+            {
+              "tenant_id": 1,
+              "plataforma": "google_ads",
+              "nivel": "campaign"
             }
-          }
-        </props>
-      </kpi>
-      <kpi>
-        <props>
-          {
-            "fr": 1,
-            "title": "CPC",
-            "format": "currency",
-            "borderless": true,
-            "dataQuery": {
-              "model": "trafegopago.desempenho_diario",
-              "measure": "CASE WHEN SUM(cliques)=0 THEN 0 ELSE SUM(gasto)/SUM(cliques) END",
-              "filters": {
-                "tenant_id": 1,
-                "plataforma": "google_ads",
-                "nivel": "campaign"
-              }
+          </Filters>
+        </DataQuery>
+      </KPI>
+      <KPI fr={1} title="CPC" format="currency" borderless>
+        <DataQuery model="trafegopago.desempenho_diario" measure="CASE WHEN SUM(cliques)=0 THEN 0 ELSE SUM(gasto)/SUM(cliques) END">
+          <Filters>
+            {
+              "tenant_id": 1,
+              "plataforma": "google_ads",
+              "nivel": "campaign"
             }
-          }
-        </props>
-      </kpi>
-      <kpi>
-        <props>
-          {
-            "fr": 1,
-            "title": "CPM",
-            "format": "currency",
-            "borderless": true,
-            "dataQuery": {
-              "model": "trafegopago.desempenho_diario",
-              "measure": "CASE WHEN SUM(impressoes)=0 THEN 0 ELSE (SUM(gasto)*1000.0)/SUM(impressoes) END",
-              "filters": {
-                "tenant_id": 1,
-                "plataforma": "google_ads",
-                "nivel": "campaign"
-              }
+          </Filters>
+        </DataQuery>
+      </KPI>
+      <KPI fr={1} title="CPM" format="currency" borderless>
+        <DataQuery model="trafegopago.desempenho_diario" measure="CASE WHEN SUM(impressoes)=0 THEN 0 ELSE (SUM(gasto)*1000.0)/SUM(impressoes) END">
+          <Filters>
+            {
+              "tenant_id": 1,
+              "plataforma": "google_ads",
+              "nivel": "campaign"
             }
-          }
-        </props>
-      </kpi>
-      <kpi>
-        <props>
-          {
-            "fr": 1,
-            "title": "CPA",
-            "format": "currency",
-            "borderless": true,
-            "dataQuery": {
-              "model": "trafegopago.desempenho_diario",
-              "measure": "CASE WHEN SUM(conversoes)=0 THEN 0 ELSE SUM(gasto)/SUM(conversoes) END",
-              "filters": {
-                "tenant_id": 1,
-                "plataforma": "google_ads",
-                "nivel": "campaign"
-              }
+          </Filters>
+        </DataQuery>
+      </KPI>
+      <KPI fr={1} title="CPA" format="currency" borderless>
+        <DataQuery model="trafegopago.desempenho_diario" measure="CASE WHEN SUM(conversoes)=0 THEN 0 ELSE SUM(gasto)/SUM(conversoes) END">
+          <Filters>
+            {
+              "tenant_id": 1,
+              "plataforma": "google_ads",
+              "nivel": "campaign"
             }
-          }
-        </props>
-      </kpi>
-      <kpi>
-        <props>
-          {
-            "fr": 1,
-            "title": "CVR",
-            "format": "percent",
-            "borderless": true,
-            "dataQuery": {
-              "model": "trafegopago.desempenho_diario",
-              "measure": "CASE WHEN SUM(cliques)=0 THEN 0 ELSE SUM(conversoes)/SUM(cliques) END",
-              "filters": {
-                "tenant_id": 1,
-                "plataforma": "google_ads",
-                "nivel": "campaign"
-              }
+          </Filters>
+        </DataQuery>
+      </KPI>
+      <KPI fr={1} title="CVR" format="percent" borderless>
+        <DataQuery model="trafegopago.desempenho_diario" measure="CASE WHEN SUM(cliques)=0 THEN 0 ELSE SUM(conversoes)/SUM(cliques) END">
+          <Filters>
+            {
+              "tenant_id": 1,
+              "plataforma": "google_ads",
+              "nivel": "campaign"
             }
-          }
-        </props>
-      </kpi>
-    </div>
-    <div>
-      <props>
-        {
-          "direction": "row",
-          "gap": 12,
-          "padding": 16,
-          "wrap": true,
-          "childGrow": true
-        }
-      </props>
-      <chart type="line" fr="1" title="Gasto por Mês" format="currency" height="250">
-        <interaction click-as-filter="false" />
-        <nivo curve="monotoneX" area="true" />
-        <props>
+          </Filters>
+        </DataQuery>
+      </KPI>
+    </Div>
+    <Div direction="row" gap={12} padding={16} wrap childGrow>
+      <Chart type="line" fr={1} title="Gasto por Mês" format="currency" height={250}>
+        <Interaction clickAsFilter={false} />
+        <Nivo curve="monotoneX" area />
+        <Config>
           {
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
@@ -454,12 +299,12 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<dashboard-template name="
               "limit": 12
             }
           }
-        </props>
-      </chart>
-      <chart type="line" fr="1" title="Receita por Mês" format="currency" height="250">
-        <interaction click-as-filter="false" />
-        <nivo curve="monotoneX" area="true" />
-        <props>
+        </Config>
+      </Chart>
+      <Chart type="line" fr={1} title="Receita por Mês" format="currency" height={250}>
+        <Interaction clickAsFilter={false} />
+        <Nivo curve="monotoneX" area />
+        <Config>
           {
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
@@ -478,12 +323,12 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<dashboard-template name="
               "limit": 12
             }
           }
-        </props>
-      </chart>
-      <chart type="bar" fr="1" title="ROAS por Mês" format="number" height="250">
-        <interaction click-as-filter="false" />
-        <nivo layout="vertical" />
-        <props>
+        </Config>
+      </Chart>
+      <Chart type="bar" fr={1} title="ROAS por Mês" format="number" height={250}>
+        <Interaction clickAsFilter={false} />
+        <Nivo layout="vertical" />
+        <Config>
           {
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
@@ -502,12 +347,12 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<dashboard-template name="
               "limit": 12
             }
           }
-        </props>
-      </chart>
-      <chart type="bar" fr="1" title="CPA por Mês" format="currency" height="250">
-        <interaction click-as-filter="false" />
-        <nivo layout="vertical" />
-        <props>
+        </Config>
+      </Chart>
+      <Chart type="bar" fr={1} title="CPA por Mês" format="currency" height={250}>
+        <Interaction clickAsFilter={false} />
+        <Nivo layout="vertical" />
+        <Config>
           {
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
@@ -526,23 +371,14 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<dashboard-template name="
               "limit": 12
             }
           }
-        </props>
-      </chart>
-    </div>
-    <div>
-      <props>
-        {
-          "direction": "row",
-          "gap": 12,
-          "padding": 16,
-          "wrap": true,
-          "childGrow": true
-        }
-      </props>
-      <chart type="line" fr="1" title="Impressões por Mês" format="number" height="250">
-        <interaction click-as-filter="false" />
-        <nivo curve="monotoneX" area="false" />
-        <props>
+        </Config>
+      </Chart>
+    </Div>
+    <Div direction="row" gap={12} padding={16} wrap childGrow>
+      <Chart type="line" fr={1} title="Impressões por Mês" format="number" height={250}>
+        <Interaction clickAsFilter={false} />
+        <Nivo curve="monotoneX" area={false} />
+        <Config>
           {
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
@@ -561,12 +397,12 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<dashboard-template name="
               "limit": 12
             }
           }
-        </props>
-      </chart>
-      <chart type="line" fr="1" title="Cliques por Mês" format="number" height="250">
-        <interaction click-as-filter="false" />
-        <nivo curve="monotoneX" area="false" />
-        <props>
+        </Config>
+      </Chart>
+      <Chart type="line" fr={1} title="Cliques por Mês" format="number" height={250}>
+        <Interaction clickAsFilter={false} />
+        <Nivo curve="monotoneX" area={false} />
+        <Config>
           {
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
@@ -585,12 +421,12 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<dashboard-template name="
               "limit": 12
             }
           }
-        </props>
-      </chart>
-      <chart type="bar" fr="1" title="CTR por Mês" format="percent" height="250">
-        <interaction click-as-filter="false" />
-        <nivo layout="vertical" />
-        <props>
+        </Config>
+      </Chart>
+      <Chart type="bar" fr={1} title="CTR por Mês" format="percent" height={250}>
+        <Interaction clickAsFilter={false} />
+        <Nivo layout="vertical" />
+        <Config>
           {
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
@@ -609,12 +445,12 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<dashboard-template name="
               "limit": 12
             }
           }
-        </props>
-      </chart>
-      <chart type="bar" fr="1" title="CVR por Mês" format="percent" height="250">
-        <interaction click-as-filter="false" />
-        <nivo layout="vertical" />
-        <props>
+        </Config>
+      </Chart>
+      <Chart type="bar" fr={1} title="CVR por Mês" format="percent" height={250}>
+        <Interaction clickAsFilter={false} />
+        <Nivo layout="vertical" />
+        <Config>
           {
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
@@ -633,24 +469,13 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<dashboard-template name="
               "limit": 12
             }
           }
-        </props>
-      </chart>
-    </div>
-    <div>
-      <props>
-        {
-          "direction": "row",
-          "gap": 12,
-          "padding": 16,
-          "wrap": true,
-          "childGrow": true
-        }
-      </props>
-      <ai-summary>
-        <props>
+        </Config>
+      </Chart>
+    </Div>
+    <Div direction="row" gap={12} padding={16} wrap childGrow>
+      <AISummary fr={1} title="Leituras e alertas">
+        <Config>
           {
-            "fr": 1,
-            "title": "Leituras e alertas",
             "colorScheme": [
               "#4285F4",
               "#34A853",
@@ -679,12 +504,12 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<dashboard-template name="
               }
             ]
           }
-        </props>
-      </ai-summary>
-      <chart type="pie" fr="1" title="Participação de Gasto por Conta (Top 8)" format="currency" height="260">
-        <interaction click-as-filter="true" filter-field="conta_id" store-path="filters.conta_id" />
-        <nivo inner-radius="0.45" />
-        <props>
+        </Config>
+      </AISummary>
+      <Chart type="pie" fr={1} title="Participação de Gasto por Conta (Top 8)" format="currency" height={260}>
+        <Interaction clickAsFilter filterField="conta_id" storePath="filters.conta_id" />
+        <Nivo innerRadius={0.45} />
+        <Config>
           {
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
@@ -702,12 +527,12 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<dashboard-template name="
               "limit": 8
             }
           }
-        </props>
-      </chart>
-      <chart type="bar" fr="1" title="Top Campanhas por Leads" format="number" height="260">
-        <interaction click-as-filter="true" filter-field="campanha_id" store-path="filters.campanha_id" />
-        <nivo layout="horizontal" />
-        <props>
+        </Config>
+      </Chart>
+      <Chart type="bar" fr={1} title="Top Campanhas por Leads" format="number" height={260}>
+        <Interaction clickAsFilter filterField="campanha_id" storePath="filters.campanha_id" />
+        <Nivo layout="horizontal" />
+        <Config>
           {
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
@@ -725,12 +550,12 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<dashboard-template name="
               "limit": 8
             }
           }
-        </props>
-      </chart>
-      <chart type="bar" fr="1" title="Lead Rate por Mês" format="percent" height="260">
-        <interaction click-as-filter="false" />
-        <nivo layout="vertical" />
-        <props>
+        </Config>
+      </Chart>
+      <Chart type="bar" fr={1} title="Lead Rate por Mês" format="percent" height={260}>
+        <Interaction clickAsFilter={false} />
+        <Nivo layout="vertical" />
+        <Config>
           {
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
@@ -749,23 +574,14 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<dashboard-template name="
               "limit": 12
             }
           }
-        </props>
-      </chart>
-    </div>
-    <div>
-      <props>
-        {
-          "direction": "row",
-          "gap": 12,
-          "padding": 16,
-          "wrap": true,
-          "childGrow": true
-        }
-      </props>
-      <chart type="bar" fr="1" title="Top Campanhas por Gasto" format="currency" height="260">
-        <interaction click-as-filter="true" filter-field="campanha_id" store-path="filters.campanha_id" clear-on-second-click="true" />
-        <nivo layout="horizontal" />
-        <props>
+        </Config>
+      </Chart>
+    </Div>
+    <Div direction="row" gap={12} padding={16} wrap childGrow>
+      <Chart type="bar" fr={1} title="Top Campanhas por Gasto" format="currency" height={260}>
+        <Interaction clickAsFilter filterField="campanha_id" storePath="filters.campanha_id" clearOnSecondClick />
+        <Nivo layout="horizontal" />
+        <Config>
           {
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
@@ -783,12 +599,12 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<dashboard-template name="
               "limit": 8
             }
           }
-        </props>
-      </chart>
-      <chart type="bar" fr="1" title="Top Campanhas por Cliques" format="number" height="260">
-        <interaction click-as-filter="true" filter-field="campanha_id" store-path="filters.campanha_id" clear-on-second-click="true" />
-        <nivo layout="horizontal" />
-        <props>
+        </Config>
+      </Chart>
+      <Chart type="bar" fr={1} title="Top Campanhas por Cliques" format="number" height={260}>
+        <Interaction clickAsFilter filterField="campanha_id" storePath="filters.campanha_id" clearOnSecondClick />
+        <Nivo layout="horizontal" />
+        <Config>
           {
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
@@ -806,12 +622,12 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<dashboard-template name="
               "limit": 8
             }
           }
-        </props>
-      </chart>
-      <chart type="bar" fr="1" title="Top Campanhas por ROAS" format="number" height="260">
-        <interaction click-as-filter="true" filter-field="campanha_id" store-path="filters.campanha_id" clear-on-second-click="true" />
-        <nivo layout="horizontal" />
-        <props>
+        </Config>
+      </Chart>
+      <Chart type="bar" fr={1} title="Top Campanhas por ROAS" format="number" height={260}>
+        <Interaction clickAsFilter filterField="campanha_id" storePath="filters.campanha_id" clearOnSecondClick />
+        <Nivo layout="horizontal" />
+        <Config>
           {
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
@@ -829,12 +645,12 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<dashboard-template name="
               "limit": 8
             }
           }
-        </props>
-      </chart>
-      <chart type="bar" fr="1" title="Piores Campanhas por ROAS" format="number" height="260">
-        <interaction click-as-filter="true" filter-field="campanha_id" store-path="filters.campanha_id" clear-on-second-click="true" />
-        <nivo layout="horizontal" />
-        <props>
+        </Config>
+      </Chart>
+      <Chart type="bar" fr={1} title="Piores Campanhas por ROAS" format="number" height={260}>
+        <Interaction clickAsFilter filterField="campanha_id" storePath="filters.campanha_id" clearOnSecondClick />
+        <Nivo layout="horizontal" />
+        <Config>
           {
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
@@ -852,23 +668,14 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<dashboard-template name="
               "limit": 8
             }
           }
-        </props>
-      </chart>
-    </div>
-    <div>
-      <props>
-        {
-          "direction": "row",
-          "gap": 12,
-          "padding": 16,
-          "wrap": true,
-          "childGrow": true
-        }
-      </props>
-      <chart type="bar" fr="1" title="Top Grupos por Gasto" format="currency" height="260">
-        <interaction click-as-filter="true" filter-field="grupo_id" store-path="filters.grupo_id" clear-on-second-click="true" />
-        <nivo layout="horizontal" />
-        <props>
+        </Config>
+      </Chart>
+    </Div>
+    <Div direction="row" gap={12} padding={16} wrap childGrow>
+      <Chart type="bar" fr={1} title="Top Grupos por Gasto" format="currency" height={260}>
+        <Interaction clickAsFilter filterField="grupo_id" storePath="filters.grupo_id" clearOnSecondClick />
+        <Nivo layout="horizontal" />
+        <Config>
           {
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
@@ -886,12 +693,12 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<dashboard-template name="
               "limit": 8
             }
           }
-        </props>
-      </chart>
-      <chart type="bar" fr="1" title="Top Grupos por ROAS" format="number" height="260">
-        <interaction click-as-filter="true" filter-field="grupo_id" store-path="filters.grupo_id" clear-on-second-click="true" />
-        <nivo layout="horizontal" />
-        <props>
+        </Config>
+      </Chart>
+      <Chart type="bar" fr={1} title="Top Grupos por ROAS" format="number" height={260}>
+        <Interaction clickAsFilter filterField="grupo_id" storePath="filters.grupo_id" clearOnSecondClick />
+        <Nivo layout="horizontal" />
+        <Config>
           {
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
@@ -909,12 +716,12 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<dashboard-template name="
               "limit": 8
             }
           }
-        </props>
-      </chart>
-      <chart type="bar" fr="1" title="Top Anúncios por Receita" format="currency" height="260">
-        <interaction click-as-filter="true" filter-field="anuncio_id" store-path="filters.anuncio_id" clear-on-second-click="true" />
-        <nivo layout="horizontal" />
-        <props>
+        </Config>
+      </Chart>
+      <Chart type="bar" fr={1} title="Top Anúncios por Receita" format="currency" height={260}>
+        <Interaction clickAsFilter filterField="anuncio_id" storePath="filters.anuncio_id" clearOnSecondClick />
+        <Nivo layout="horizontal" />
+        <Config>
           {
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
@@ -932,12 +739,12 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<dashboard-template name="
               "limit": 8
             }
           }
-        </props>
-      </chart>
-      <chart type="bar" fr="1" title="Top Anúncios por Conversões" format="number" height="260">
-        <interaction click-as-filter="true" filter-field="anuncio_id" store-path="filters.anuncio_id" clear-on-second-click="true" />
-        <nivo layout="horizontal" />
-        <props>
+        </Config>
+      </Chart>
+      <Chart type="bar" fr={1} title="Top Anúncios por Conversões" format="number" height={260}>
+        <Interaction clickAsFilter filterField="anuncio_id" storePath="filters.anuncio_id" clearOnSecondClick />
+        <Nivo layout="horizontal" />
+        <Config>
           {
             "dataQuery": {
               "model": "trafegopago.desempenho_diario",
@@ -955,8 +762,8 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<dashboard-template name="
               "limit": 8
             }
           }
-        </props>
-      </chart>
-    </div>
-  </theme>
-</dashboard-template>`
+        </Config>
+      </Chart>
+    </Div>
+  </Theme>
+</DashboardTemplate>`

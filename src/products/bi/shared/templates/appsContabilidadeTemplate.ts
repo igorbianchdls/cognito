@@ -1,8 +1,7 @@
-export const APPS_CONTABILIDADE_TEMPLATE_DSL = String.raw`<dashboard-template name="apps_contabilidade_template_dsl">
-  <theme>
-    <props>
+export const APPS_CONTABILIDADE_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps_contabilidade_template_dsl">
+  <Theme name="light">
+    <Config>
       {
-        "name": "light",
         "managers": {
           "border": {
             "style": "solid",
@@ -17,137 +16,23 @@ export const APPS_CONTABILIDADE_TEMPLATE_DSL = String.raw`<dashboard-template na
           }
         }
       }
-    </props>
-    <header>
-      <props>
-        {
-          "title": "Dashboard Contabilidade",
-          "subtitle": "Razao contabil, saldos e distribuicoes por conta",
-          "align": "center",
-          "controlsPosition": "right",
-          "datePicker": {
-            "visible": true,
-            "mode": "range",
-            "position": "right",
-            "storePath": "filters.dateRange",
-            "actionOnChange": {
-              "type": "refresh_data"
-            },
-            "style": {
-              "padding": 6,
-              "fontFamily": "Barlow",
-              "fontSize": 12
-            }
-          }
-        }
-      </props>
-    </header>
-    <div>
-      <props>
-        {
-          "direction": "row",
-          "gap": 12,
-          "padding": 16,
-          "justify": "start",
-          "align": "start",
-          "childGrow": true
-        }
-      </props>
-      <kpi>
-        <props>
+    </Config>
+    <Header title="Dashboard Contabilidade" subtitle="Razao contabil, saldos e distribuicoes por conta" align="center" controlsPosition="right">
+      <DatePicker visible mode="range" position="right" storePath="filters.dateRange">
+        <ActionOnChange type="refresh_data" />
+        <Style>
           {
-            "title": "Debitos no Periodo",
-            "format": "currency",
-            "dataQuery": {
-              "filters": {},
-              "query": "SELECT\n  SUM(debito) AS value\nFROM contabilidade.lancamentos_contabeis_linhas src\nWHERE\n      ({{de}}::date IS NULL OR src.data_lancamento::date >= {{de}}::date)\n      AND ({{ate}}::date IS NULL OR src.data_lancamento::date <= {{ate}}::date)\n      AND (\n        NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL\n        OR COALESCE(src.tenant_id::text, '') = ANY(\n          string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')\n        )\n      )",
-              "yField": "value"
-            }
+            "padding": 6,
+            "fontFamily": "Barlow",
+            "fontSize": 12
           }
-        </props>
-      </kpi>
-      <kpi>
-        <props>
-          {
-            "title": "Creditos no Periodo",
-            "format": "currency",
-            "dataQuery": {
-              "filters": {},
-              "query": "SELECT\n  SUM(credito) AS value\nFROM contabilidade.lancamentos_contabeis_linhas src\nWHERE\n      ({{de}}::date IS NULL OR src.data_lancamento::date >= {{de}}::date)\n      AND ({{ate}}::date IS NULL OR src.data_lancamento::date <= {{ate}}::date)\n      AND (\n        NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL\n        OR COALESCE(src.tenant_id::text, '') = ANY(\n          string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')\n        )\n      )",
-              "yField": "value"
-            }
-          }
-        </props>
-      </kpi>
-      <kpi>
-        <props>
-          {
-            "title": "Saldo (D-C)",
-            "format": "currency",
-            "dataQuery": {
-              "filters": {},
-              "query": "SELECT\n  SUM(debito - credito) AS value\nFROM contabilidade.lancamentos_contabeis_linhas src\nWHERE\n      ({{de}}::date IS NULL OR src.data_lancamento::date >= {{de}}::date)\n      AND ({{ate}}::date IS NULL OR src.data_lancamento::date <= {{ate}}::date)\n      AND (\n        NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL\n        OR COALESCE(src.tenant_id::text, '') = ANY(\n          string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')\n        )\n      )",
-              "yField": "value"
-            }
-          }
-        </props>
-      </kpi>
-      <kpi>
-        <props>
-          {
-            "title": "Lancamentos",
-            "format": "number",
-            "dataQuery": {
-              "filters": {},
-              "query": "SELECT\n  COUNT(DISTINCT lancamento_id) AS value\nFROM contabilidade.lancamentos_contabeis_linhas src\nWHERE\n      ({{de}}::date IS NULL OR src.data_lancamento::date >= {{de}}::date)\n      AND ({{ate}}::date IS NULL OR src.data_lancamento::date <= {{ate}}::date)\n      AND (\n        NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL\n        OR COALESCE(src.tenant_id::text, '') = ANY(\n          string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')\n        )\n      )",
-              "yField": "value"
-            }
-          }
-        </props>
-      </kpi>
-      <kpi>
-        <props>
-          {
-            "title": "Linhas Contabeis",
-            "format": "number",
-            "dataQuery": {
-              "filters": {},
-              "query": "SELECT\n  COUNT(*) AS value\nFROM contabilidade.lancamentos_contabeis_linhas src\nWHERE\n      ({{de}}::date IS NULL OR src.data_lancamento::date >= {{de}}::date)\n      AND ({{ate}}::date IS NULL OR src.data_lancamento::date <= {{ate}}::date)\n      AND (\n        NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL\n        OR COALESCE(src.tenant_id::text, '') = ANY(\n          string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')\n        )\n      )",
-              "yField": "value"
-            }
-          }
-        </props>
-      </kpi>
-      <kpi>
-        <props>
-          {
-            "title": "Contas Movimentadas",
-            "format": "number",
-            "dataQuery": {
-              "filters": {},
-              "query": "SELECT\n  COUNT(DISTINCT conta_id) AS value\nFROM contabilidade.lancamentos_contabeis_linhas src\nWHERE\n      ({{de}}::date IS NULL OR src.data_lancamento::date >= {{de}}::date)\n      AND ({{ate}}::date IS NULL OR src.data_lancamento::date <= {{ate}}::date)\n      AND (\n        NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL\n        OR COALESCE(src.tenant_id::text, '') = ANY(\n          string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')\n        )\n      )",
-              "yField": "value"
-            }
-          }
-        </props>
-      </kpi>
-    </div>
-    <div>
-      <props>
-        {
-          "direction": "row",
-          "gap": 12,
-          "padding": 16,
-          "justify": "start",
-          "align": "start",
-          "childGrow": true
-        }
-      </props>
-      <chart type="bar" fr="1" title="Debitos por Tipo de Conta" format="currency" height="240">
-        <query>
+        </Style>
+      </DatePicker>
+    </Header>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+      <KPI title="Debitos no Periodo" format="currency">
+        <Query>
           SELECT
-            COALESCE(src.tipo_conta::text, '-') AS key,
-            COALESCE(src.tipo_conta::text, '-') AS label,
             SUM(debito) AS value
           FROM contabilidade.lancamentos_contabeis_linhas src
           WHERE
@@ -159,25 +44,12 @@ export const APPS_CONTABILIDADE_TEMPLATE_DSL = String.raw`<dashboard-template na
                     string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
                   )
                 )
-          GROUP BY 1, 2
-          ORDER BY value DESC
-        </query>
-        <fields x="label" y="value" key="key" />
-        <nivo layout="horizontal" />
-        <props>
-          {
-            "dataQuery": {
-              "filters": {},
-              "limit": 8
-            }
-          }
-        </props>
-      </chart>
-      <chart type="bar" fr="1" title="Creditos por Tipo de Conta" format="currency" height="240">
-        <query>
+        </Query>
+        <DataQuery yField="value" />
+      </KPI>
+      <KPI title="Creditos no Periodo" format="currency">
+        <Query>
           SELECT
-            COALESCE(src.tipo_conta::text, '-') AS key,
-            COALESCE(src.tipo_conta::text, '-') AS label,
             SUM(credito) AS value
           FROM contabilidade.lancamentos_contabeis_linhas src
           WHERE
@@ -189,25 +61,142 @@ export const APPS_CONTABILIDADE_TEMPLATE_DSL = String.raw`<dashboard-template na
                     string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
                   )
                 )
-          GROUP BY 1, 2
-          ORDER BY value DESC
-        </query>
-        <fields x="label" y="value" key="key" />
-        <nivo layout="horizontal" />
-        <props>
+        </Query>
+        <DataQuery yField="value" />
+      </KPI>
+      <KPI title="Saldo (D-C)" format="currency">
+        <Query>
+          SELECT
+            SUM(debito - credito) AS value
+          FROM contabilidade.lancamentos_contabeis_linhas src
+          WHERE
+                ({{de}}::date IS NULL OR src.data_lancamento::date >= {{de}}::date)
+                AND ({{ate}}::date IS NULL OR src.data_lancamento::date <= {{ate}}::date)
+                AND (
+                  NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+                  OR COALESCE(src.tenant_id::text, '') = ANY(
+                    string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+                  )
+                )
+        </Query>
+        <DataQuery yField="value" />
+      </KPI>
+      <KPI title="Lancamentos" format="number">
+        <Query>
+          SELECT
+            COUNT(DISTINCT lancamento_id) AS value
+          FROM contabilidade.lancamentos_contabeis_linhas src
+          WHERE
+                ({{de}}::date IS NULL OR src.data_lancamento::date >= {{de}}::date)
+                AND ({{ate}}::date IS NULL OR src.data_lancamento::date <= {{ate}}::date)
+                AND (
+                  NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+                  OR COALESCE(src.tenant_id::text, '') = ANY(
+                    string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+                  )
+                )
+        </Query>
+        <DataQuery yField="value" />
+      </KPI>
+      <KPI title="Linhas Contabeis" format="number">
+        <Query>
+          SELECT
+            COUNT(*) AS value
+          FROM contabilidade.lancamentos_contabeis_linhas src
+          WHERE
+                ({{de}}::date IS NULL OR src.data_lancamento::date >= {{de}}::date)
+                AND ({{ate}}::date IS NULL OR src.data_lancamento::date <= {{ate}}::date)
+                AND (
+                  NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+                  OR COALESCE(src.tenant_id::text, '') = ANY(
+                    string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+                  )
+                )
+        </Query>
+        <DataQuery yField="value" />
+      </KPI>
+      <KPI title="Contas Movimentadas" format="number">
+        <Query>
+          SELECT
+            COUNT(DISTINCT conta_id) AS value
+          FROM contabilidade.lancamentos_contabeis_linhas src
+          WHERE
+                ({{de}}::date IS NULL OR src.data_lancamento::date >= {{de}}::date)
+                AND ({{ate}}::date IS NULL OR src.data_lancamento::date <= {{ate}}::date)
+                AND (
+                  NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+                  OR COALESCE(src.tenant_id::text, '') = ANY(
+                    string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+                  )
+                )
+        </Query>
+        <DataQuery yField="value" />
+      </KPI>
+    </Div>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+      <Chart type="bar" fr={1} title="Debitos por Tipo de Conta" format="currency" height={240}>
+        <Query>
+          SELECT
+                      COALESCE(src.tipo_conta::text, '-') AS key,
+                      COALESCE(src.tipo_conta::text, '-') AS label,
+                      SUM(debito) AS value
+                    FROM contabilidade.lancamentos_contabeis_linhas src
+                    WHERE
+                          ({{de}}::date IS NULL OR src.data_lancamento::date >= {{de}}::date)
+                          AND ({{ate}}::date IS NULL OR src.data_lancamento::date <= {{ate}}::date)
+                          AND (
+                            NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+                            OR COALESCE(src.tenant_id::text, '') = ANY(
+                              string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+                            )
+                          )
+                    GROUP BY 1, 2
+                    ORDER BY value DESC
+        </Query>
+        <Fields x="label" y="value" key="key" />
+        <Nivo layout="horizontal" />
+        <Config>
           {
             "dataQuery": {
               "filters": {},
               "limit": 8
             }
           }
-        </props>
-      </chart>
-      <ai-summary>
-        <props>
+        </Config>
+      </Chart>
+      <Chart type="bar" fr={1} title="Creditos por Tipo de Conta" format="currency" height={240}>
+        <Query>
+          SELECT
+                      COALESCE(src.tipo_conta::text, '-') AS key,
+                      COALESCE(src.tipo_conta::text, '-') AS label,
+                      SUM(credito) AS value
+                    FROM contabilidade.lancamentos_contabeis_linhas src
+                    WHERE
+                          ({{de}}::date IS NULL OR src.data_lancamento::date >= {{de}}::date)
+                          AND ({{ate}}::date IS NULL OR src.data_lancamento::date <= {{ate}}::date)
+                          AND (
+                            NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+                            OR COALESCE(src.tenant_id::text, '') = ANY(
+                              string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+                            )
+                          )
+                    GROUP BY 1, 2
+                    ORDER BY value DESC
+        </Query>
+        <Fields x="label" y="value" key="key" />
+        <Nivo layout="horizontal" />
+        <Config>
           {
-            "fr": 1,
-            "title": "Insights da IA",
+            "dataQuery": {
+              "filters": {},
+              "limit": 8
+            }
+          }
+        </Config>
+      </Chart>
+      <AISummary fr={1} title="Insights da IA">
+        <Config>
+          {
             "items": [
               {
                 "icon": "brain",
@@ -223,224 +212,194 @@ export const APPS_CONTABILIDADE_TEMPLATE_DSL = String.raw`<dashboard-template na
               }
             ]
           }
-        </props>
-      </ai-summary>
-    </div>
-    <div>
-      <props>
-        {
-          "direction": "row",
-          "gap": 12,
-          "padding": 16,
-          "justify": "start",
-          "align": "start",
-          "childGrow": true
-        }
-      </props>
-      <chart type="bar" fr="1" title="Top Contas (Debito)" format="currency" height="260">
-        <query>
+        </Config>
+      </AISummary>
+    </Div>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+      <Chart type="bar" fr={1} title="Top Contas (Debito)" format="currency" height={260}>
+        <Query>
           SELECT
-            COALESCE(src.conta_id::text, '-') AS key,
-            COALESCE(src.conta_id::text, '-') AS label,
-            SUM(debito) AS value
-          FROM contabilidade.lancamentos_contabeis_linhas src
-          WHERE
-                ({{de}}::date IS NULL OR src.data_lancamento::date >= {{de}}::date)
-                AND ({{ate}}::date IS NULL OR src.data_lancamento::date <= {{ate}}::date)
-                AND (
-                  NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                  OR COALESCE(src.tenant_id::text, '') = ANY(
-                    string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                  )
-                )
-          GROUP BY 1, 2
-          ORDER BY value DESC
-        </query>
-        <fields x="label" y="value" key="key" />
-        <nivo layout="horizontal" />
-        <props>
+                      COALESCE(src.conta_id::text, '-') AS key,
+                      COALESCE(src.conta_id::text, '-') AS label,
+                      SUM(debito) AS value
+                    FROM contabilidade.lancamentos_contabeis_linhas src
+                    WHERE
+                          ({{de}}::date IS NULL OR src.data_lancamento::date >= {{de}}::date)
+                          AND ({{ate}}::date IS NULL OR src.data_lancamento::date <= {{ate}}::date)
+                          AND (
+                            NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+                            OR COALESCE(src.tenant_id::text, '') = ANY(
+                              string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+                            )
+                          )
+                    GROUP BY 1, 2
+                    ORDER BY value DESC
+        </Query>
+        <Fields x="label" y="value" key="key" />
+        <Nivo layout="horizontal" />
+        <Config>
           {
             "dataQuery": {
               "filters": {},
               "limit": 10
             }
           }
-        </props>
-      </chart>
-      <chart type="bar" fr="1" title="Top Contas (Credito)" format="currency" height="260">
-        <query>
+        </Config>
+      </Chart>
+      <Chart type="bar" fr={1} title="Top Contas (Credito)" format="currency" height={260}>
+        <Query>
           SELECT
-            COALESCE(src.conta_id::text, '-') AS key,
-            COALESCE(src.conta_id::text, '-') AS label,
-            SUM(credito) AS value
-          FROM contabilidade.lancamentos_contabeis_linhas src
-          WHERE
-                ({{de}}::date IS NULL OR src.data_lancamento::date >= {{de}}::date)
-                AND ({{ate}}::date IS NULL OR src.data_lancamento::date <= {{ate}}::date)
-                AND (
-                  NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                  OR COALESCE(src.tenant_id::text, '') = ANY(
-                    string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                  )
-                )
-          GROUP BY 1, 2
-          ORDER BY value DESC
-        </query>
-        <fields x="label" y="value" key="key" />
-        <nivo layout="horizontal" />
-        <props>
+                      COALESCE(src.conta_id::text, '-') AS key,
+                      COALESCE(src.conta_id::text, '-') AS label,
+                      SUM(credito) AS value
+                    FROM contabilidade.lancamentos_contabeis_linhas src
+                    WHERE
+                          ({{de}}::date IS NULL OR src.data_lancamento::date >= {{de}}::date)
+                          AND ({{ate}}::date IS NULL OR src.data_lancamento::date <= {{ate}}::date)
+                          AND (
+                            NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+                            OR COALESCE(src.tenant_id::text, '') = ANY(
+                              string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+                            )
+                          )
+                    GROUP BY 1, 2
+                    ORDER BY value DESC
+        </Query>
+        <Fields x="label" y="value" key="key" />
+        <Nivo layout="horizontal" />
+        <Config>
           {
             "dataQuery": {
               "filters": {},
               "limit": 10
             }
           }
-        </props>
-      </chart>
-    </div>
-    <div>
-      <props>
-        {
-          "direction": "row",
-          "gap": 12,
-          "padding": 16,
-          "justify": "start",
-          "align": "start",
-          "childGrow": true
-        }
-      </props>
-      <chart type="line" fr="1" title="Debitos por Mes" format="currency" height="240">
-        <query>
+        </Config>
+      </Chart>
+    </Div>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+      <Chart type="line" fr={1} title="Debitos por Mes" format="currency" height={240}>
+        <Query>
           SELECT
-            (TO_CHAR(DATE_TRUNC('month', data_lancamento), 'YYYY-MM'))::text AS key,
-            (TO_CHAR(DATE_TRUNC('month', data_lancamento), 'YYYY-MM'))::text AS label,
-            SUM(debito) AS value
-          FROM contabilidade.lancamentos_contabeis_linhas src
-          WHERE
-                ({{de}}::date IS NULL OR src.data_lancamento::date >= {{de}}::date)
-                AND ({{ate}}::date IS NULL OR src.data_lancamento::date <= {{ate}}::date)
-                AND (
-                  NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                  OR COALESCE(src.tenant_id::text, '') = ANY(
-                    string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                  )
-                )
-          GROUP BY 1, 2
-          ORDER BY label ASC
-        </query>
-        <fields x="label" y="value" key="key" />
-        <nivo curve="monotoneX" area="true" />
-        <props>
+                      (TO_CHAR(DATE_TRUNC('month', data_lancamento), 'YYYY-MM'))::text AS key,
+                      (TO_CHAR(DATE_TRUNC('month', data_lancamento), 'YYYY-MM'))::text AS label,
+                      SUM(debito) AS value
+                    FROM contabilidade.lancamentos_contabeis_linhas src
+                    WHERE
+                          ({{de}}::date IS NULL OR src.data_lancamento::date >= {{de}}::date)
+                          AND ({{ate}}::date IS NULL OR src.data_lancamento::date <= {{ate}}::date)
+                          AND (
+                            NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+                            OR COALESCE(src.tenant_id::text, '') = ANY(
+                              string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+                            )
+                          )
+                    GROUP BY 1, 2
+                    ORDER BY label ASC
+        </Query>
+        <Fields x="label" y="value" key="key" />
+        <Nivo curve="monotoneX" area />
+        <Config>
           {
             "dataQuery": {
               "filters": {},
               "limit": 24
             }
           }
-        </props>
-      </chart>
-      <chart type="line" fr="1" title="Creditos por Mes" format="currency" height="240">
-        <query>
+        </Config>
+      </Chart>
+      <Chart type="line" fr={1} title="Creditos por Mes" format="currency" height={240}>
+        <Query>
           SELECT
-            (TO_CHAR(DATE_TRUNC('month', data_lancamento), 'YYYY-MM'))::text AS key,
-            (TO_CHAR(DATE_TRUNC('month', data_lancamento), 'YYYY-MM'))::text AS label,
-            SUM(credito) AS value
-          FROM contabilidade.lancamentos_contabeis_linhas src
-          WHERE
-                ({{de}}::date IS NULL OR src.data_lancamento::date >= {{de}}::date)
-                AND ({{ate}}::date IS NULL OR src.data_lancamento::date <= {{ate}}::date)
-                AND (
-                  NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                  OR COALESCE(src.tenant_id::text, '') = ANY(
-                    string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                  )
-                )
-          GROUP BY 1, 2
-          ORDER BY label ASC
-        </query>
-        <fields x="label" y="value" key="key" />
-        <nivo curve="monotoneX" area="true" />
-        <props>
+                      (TO_CHAR(DATE_TRUNC('month', data_lancamento), 'YYYY-MM'))::text AS key,
+                      (TO_CHAR(DATE_TRUNC('month', data_lancamento), 'YYYY-MM'))::text AS label,
+                      SUM(credito) AS value
+                    FROM contabilidade.lancamentos_contabeis_linhas src
+                    WHERE
+                          ({{de}}::date IS NULL OR src.data_lancamento::date >= {{de}}::date)
+                          AND ({{ate}}::date IS NULL OR src.data_lancamento::date <= {{ate}}::date)
+                          AND (
+                            NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+                            OR COALESCE(src.tenant_id::text, '') = ANY(
+                              string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+                            )
+                          )
+                    GROUP BY 1, 2
+                    ORDER BY label ASC
+        </Query>
+        <Fields x="label" y="value" key="key" />
+        <Nivo curve="monotoneX" area />
+        <Config>
           {
             "dataQuery": {
               "filters": {},
               "limit": 24
             }
           }
-        </props>
-      </chart>
-    </div>
-    <div>
-      <props>
-        {
-          "direction": "row",
-          "gap": 12,
-          "padding": 16,
-          "justify": "start",
-          "align": "start",
-          "childGrow": true
-        }
-      </props>
-      <chart type="pie" fr="1" title="Origem dos Lancamentos" format="number" height="260">
-        <query>
+        </Config>
+      </Chart>
+    </Div>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+      <Chart type="pie" fr={1} title="Origem dos Lancamentos" format="number" height={260}>
+        <Query>
           SELECT
-            COALESCE(src.origem::text, '-') AS key,
-            COALESCE(src.origem::text, '-') AS label,
-            COUNT(DISTINCT lancamento_id) AS value
-          FROM contabilidade.lancamentos_contabeis_linhas src
-          WHERE
-                ({{de}}::date IS NULL OR src.data_lancamento::date >= {{de}}::date)
-                AND ({{ate}}::date IS NULL OR src.data_lancamento::date <= {{ate}}::date)
-                AND (
-                  NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                  OR COALESCE(src.tenant_id::text, '') = ANY(
-                    string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                  )
-                )
-          GROUP BY 1, 2
-          ORDER BY value DESC
-        </query>
-        <fields x="label" y="value" key="key" />
-        <nivo inner-radius="0.35" />
-        <props>
+                      COALESCE(src.origem::text, '-') AS key,
+                      COALESCE(src.origem::text, '-') AS label,
+                      COUNT(DISTINCT lancamento_id) AS value
+                    FROM contabilidade.lancamentos_contabeis_linhas src
+                    WHERE
+                          ({{de}}::date IS NULL OR src.data_lancamento::date >= {{de}}::date)
+                          AND ({{ate}}::date IS NULL OR src.data_lancamento::date <= {{ate}}::date)
+                          AND (
+                            NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+                            OR COALESCE(src.tenant_id::text, '') = ANY(
+                              string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+                            )
+                          )
+                    GROUP BY 1, 2
+                    ORDER BY value DESC
+        </Query>
+        <Fields x="label" y="value" key="key" />
+        <Nivo innerRadius={0.35} />
+        <Config>
           {
             "dataQuery": {
               "filters": {},
               "limit": 8
             }
           }
-        </props>
-      </chart>
-      <chart type="bar" fr="1" title="Saldo por Conta (D-C)" format="currency" height="260">
-        <query>
+        </Config>
+      </Chart>
+      <Chart type="bar" fr={1} title="Saldo por Conta (D-C)" format="currency" height={260}>
+        <Query>
           SELECT
-            COALESCE(src.conta_id::text, '-') AS key,
-            COALESCE(src.conta_id::text, '-') AS label,
-            SUM(debito - credito) AS value
-          FROM contabilidade.lancamentos_contabeis_linhas src
-          WHERE
-                ({{de}}::date IS NULL OR src.data_lancamento::date >= {{de}}::date)
-                AND ({{ate}}::date IS NULL OR src.data_lancamento::date <= {{ate}}::date)
-                AND (
-                  NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                  OR COALESCE(src.tenant_id::text, '') = ANY(
-                    string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                  )
-                )
-          GROUP BY 1, 2
-          ORDER BY value DESC
-        </query>
-        <fields x="label" y="value" key="key" />
-        <nivo layout="horizontal" />
-        <props>
+                      COALESCE(src.conta_id::text, '-') AS key,
+                      COALESCE(src.conta_id::text, '-') AS label,
+                      SUM(debito - credito) AS value
+                    FROM contabilidade.lancamentos_contabeis_linhas src
+                    WHERE
+                          ({{de}}::date IS NULL OR src.data_lancamento::date >= {{de}}::date)
+                          AND ({{ate}}::date IS NULL OR src.data_lancamento::date <= {{ate}}::date)
+                          AND (
+                            NULLIF(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
+                            OR COALESCE(src.tenant_id::text, '') = ANY(
+                              string_to_array(regexp_replace({{tenant_id}}::text, '[{}[:space:]]', '', 'g'), ',')
+                            )
+                          )
+                    GROUP BY 1, 2
+                    ORDER BY value DESC
+        </Query>
+        <Fields x="label" y="value" key="key" />
+        <Nivo layout="horizontal" />
+        <Config>
           {
             "dataQuery": {
               "filters": {},
               "limit": 10
             }
           }
-        </props>
-      </chart>
-    </div>
-  </theme>
-</dashboard-template>`
+        </Config>
+      </Chart>
+    </Div>
+  </Theme>
+</DashboardTemplate>`
