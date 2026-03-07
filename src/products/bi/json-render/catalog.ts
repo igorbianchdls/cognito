@@ -315,11 +315,20 @@ export const catalog = {
     },
     Card: {
       props: z.object({
-        title: z.string(),
+        title: z.string().optional(),
         titleStyle: TitleStyleSchema.optional(),
         frame: FrameStyleSchema.optional(),
       }).strict(),
       hasChildren: true,
+    },
+    CardTitle: {
+      props: z.object({
+        text: z.string().optional(),
+        title: z.string().optional(),
+        titleStyle: TitleStyleSchema.optional(),
+        marginBottom: z.union([z.number(), z.string()]).optional(),
+      }).strict(),
+      hasChildren: false,
     },
     Metric: {
       props: z.object({

@@ -444,6 +444,19 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       </div>
     );
   },
+  CardTitle: ({ element }) => {
+    const theme = useThemeOverrides();
+    const p = deepMerge(((theme.components as any)?.CardTitle || {}) as AnyRecord, (element?.props || {}) as AnyRecord) as AnyRecord;
+    const text = String(p.text ?? p.title ?? '').trim();
+    if (!text) return null;
+    const titleStyle = applyH1FromCssVars(normalizeTitleStyle(p.titleStyle), theme.cssVars) as React.CSSProperties | undefined;
+    const marginBottom = styleVal(p.marginBottom) ?? '0px';
+    return (
+      <h3 className="text-base font-semibold text-gray-900" style={{ marginBottom, ...(titleStyle || {}) }}>
+        {text}
+      </h3>
+    );
+  },
 
   Header: ({ element, children, onAction }) => {
     const theme = useThemeOverrides();

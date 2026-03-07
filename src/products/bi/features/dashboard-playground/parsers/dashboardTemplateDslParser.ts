@@ -431,6 +431,8 @@ function toCatalogType(tag: string): string {
   if (normalized === 'theme') return 'Theme'
   if (normalized === 'header') return 'Header'
   if (normalized === 'div') return 'Div'
+  if (normalized === 'card') return 'Card'
+  if (normalized === 'cardtitle') return 'CardTitle'
   if (normalized === 'slicercard') return 'SlicerCard'
   if (normalized === 'table') return 'Table'
   if (normalized === 'linechart') return 'LineChart'
@@ -778,6 +780,12 @@ function compileNode(source: string, node: DslNode, context: CompileContext): Re
   const propsFromJson = propsNodes.length ? parsePropsNode(source, propsNodes[0]) : {}
   const propsFromConfig = configNodes.length ? parseJsonObjectNode(source, configNodes[0], 'config') : {}
   const props = mergeObjects(mergeObjects(propsFromAttrs, propsFromJson), propsFromConfig)
+  if (type === 'CardTitle') {
+    const inlineText = String(node.text || '').trim()
+    if (inlineText && props.text === undefined && props.title === undefined) {
+      props.text = inlineText
+    }
+  }
   if (type === 'LineChart' || type === 'BarChart' || type === 'PieChart') {
     const interactionFromDefaults = context.chartInteractionDefaults || {}
     const interactionFromProps =
@@ -852,6 +860,7 @@ function toDslTag(type: string): string {
   if (chartTypeToAttr(raw)) return 'Chart'
   if (raw === 'KPI') return 'KPI'
   if (raw === 'AISummary') return 'AISummary'
+  if (raw === 'CardTitle') return 'CardTitle'
   if (raw === 'SlicerCard') return 'SlicerCard'
   if (raw === 'Theme') return 'Theme'
   if (raw === 'Header') return 'Header'
