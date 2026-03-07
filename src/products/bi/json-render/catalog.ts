@@ -182,7 +182,11 @@ export const catalog = {
       props: z.object({
         title: z.string(),
         subtitle: z.string().optional(),
-        align: z.enum(["left","center","right"]).optional(),
+        direction: z.enum(["row","column"]).optional(),
+        justify: z.enum(["start","center","end","between","around","evenly"]).optional(),
+        align: z.enum(["start","center","end","stretch","left","right"]).optional(),
+        gap: z.union([z.number(), z.string()]).optional(),
+        titleAlign: z.enum(["left","center","right"]).optional(),
         backgroundColor: z.string().optional(),
         textColor: z.string().optional(),
         subtitleColor: z.string().optional(),
@@ -198,8 +202,6 @@ export const catalog = {
         width: z.union([z.number(), z.string()]).optional(),
         height: z.union([z.number(), z.string()]).optional(),
         frame: FrameStyleSchema.optional(),
-        // Optional position for all header controls (datePicker + slicers)
-        controlsPosition: z.enum(["left","right","below"]).optional(),
         datePicker: z.object({
           visible: z.boolean().optional(),
           mode: z.enum(["range","single"]).optional(),

@@ -50,8 +50,8 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         </SlicerCard>
       </Sidebar>
       <Div direction="column" gap={0} childGrow fr={1}>
-        <Header title="Dashboard de Vendas" subtitle="Principais indicadores e cortes" align="center" controlsPosition="right">
-          <DatePicker visible mode="range" position="right" storePath="filters.dateRange">
+        <Header title="Dashboard de Vendas" subtitle="Principais indicadores e cortes" direction="row" justify="between" align="center">
+          <DatePicker visible mode="range" storePath="filters.dateRange">
             <ActionOnChange type="refresh_data" />
             <Style>
               {

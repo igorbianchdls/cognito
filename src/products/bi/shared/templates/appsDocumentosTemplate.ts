@@ -17,8 +17,8 @@ export const APPS_DOCUMENTOS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="
         }
       }
     </Config>
-    <Header title="Dashboard de Documentos" subtitle="Templates, versões e documentos gerados" align="center">
-      <DatePicker visible mode="range" position="right" storePath="filters.dateRange">
+    <Header title="Dashboard de Documentos" subtitle="Templates, versões e documentos gerados" direction="row" justify="between" align="center">
+      <DatePicker visible mode="range" storePath="filters.dateRange">
         <ActionOnChange type="refresh_data" />
         <Style>
           {

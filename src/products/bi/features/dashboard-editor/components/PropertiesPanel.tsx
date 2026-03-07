@@ -782,16 +782,46 @@ export default function PropertiesPanel({
 
               {activeTab === 'data' && node.type === 'Header' && (
                 <div className="space-y-2">
-                  <SelectField
-                    label="controlsPosition"
-                    value={String(getProp(node, 'controlsPosition', 'right'))}
-                    options={[
-                      { value: 'left', label: 'Left' },
-                      { value: 'right', label: 'Right' },
-                      { value: 'below', label: 'Below' },
-                    ]}
-                    onChange={(v) => onSetNodeProp(selectedPath, 'controlsPosition', v)}
-                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <SelectField
+                      label="direction"
+                      value={String(getProp(node, 'direction', 'row'))}
+                      options={[
+                        { value: 'row', label: 'Row' },
+                        { value: 'column', label: 'Column' },
+                      ]}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'direction', v)}
+                    />
+                    <SelectField
+                      label="justify"
+                      value={String(getProp(node, 'justify', 'between'))}
+                      options={[
+                        { value: 'between', label: 'Between' },
+                        { value: 'start', label: 'Start' },
+                        { value: 'center', label: 'Center' },
+                        { value: 'end', label: 'End' },
+                        { value: 'around', label: 'Around' },
+                        { value: 'evenly', label: 'Evenly' },
+                      ]}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'justify', v)}
+                    />
+                    <SelectField
+                      label="align"
+                      value={String(getProp(node, 'align', 'center'))}
+                      options={[
+                        { value: 'center', label: 'Center' },
+                        { value: 'start', label: 'Start' },
+                        { value: 'end', label: 'End' },
+                        { value: 'stretch', label: 'Stretch' },
+                      ]}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'align', v)}
+                    />
+                    <NumberField
+                      label="gap"
+                      value={Number(getProp(node, 'gap', '')) || ''}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'gap', v)}
+                    />
+                  </div>
                   <CheckboxField
                     label="Date Picker visível"
                     checked={Boolean(getProp(node, 'datePicker.visible', false))}

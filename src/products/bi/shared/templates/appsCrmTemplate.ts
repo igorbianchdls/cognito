@@ -17,8 +17,8 @@ export const APPS_CRM_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps_cr
         }
       }
     </Config>
-    <Header title="Dashboard de CRM" subtitle="Pipeline, conversão e origem de leads" align="center" controlsPosition="right">
-      <DatePicker visible mode="range" position="right" storePath="filters.dateRange">
+    <Header title="Dashboard de CRM" subtitle="Pipeline, conversão e origem de leads" direction="row" justify="between" align="center">
+      <DatePicker visible mode="range" storePath="filters.dateRange">
         <ActionOnChange type="refresh_data" />
         <Style>
           {

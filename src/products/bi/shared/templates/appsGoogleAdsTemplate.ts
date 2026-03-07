@@ -26,8 +26,8 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="a
         }
       }
     </Config>
-    <Header title="Dashboard Google Ads" subtitle="Lumi Skin • Search, Shopping e PMax (visão DTC)" align="center" controlsPosition="right">
-      <DatePicker visible mode="range" position="right" storePath="filters.dateRange">
+    <Header title="Dashboard Google Ads" subtitle="Lumi Skin • Search, Shopping e PMax (visão DTC)" direction="row" justify="between" align="center">
+      <DatePicker visible mode="range" storePath="filters.dateRange">
         <ActionOnChange type="refresh_data" />
         <Style>
           {

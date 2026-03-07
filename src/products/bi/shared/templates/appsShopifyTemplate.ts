@@ -26,8 +26,8 @@ export const APPS_SHOPIFY_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
         }
       }
     </Config>
-    <Header title="Dashboard Shopify" subtitle="E-commerce • Vendas, logística, financeiro e estoque" align="center" controlsPosition="right">
-      <DatePicker visible mode="range" position="right" storePath="filters.dateRange">
+    <Header title="Dashboard Shopify" subtitle="E-commerce • Vendas, logística, financeiro e estoque" direction="row" justify="between" align="center">
+      <DatePicker visible mode="range" storePath="filters.dateRange">
         <ActionOnChange type="refresh_data" />
         <Style>
           {

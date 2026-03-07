@@ -26,8 +26,8 @@ export const APPS_ECOMMERCE_TEMPLATE_DSL = String.raw`<DashboardTemplate name="a
         }
       }
     </Config>
-    <Header title="Dashboard E-commerce (Consolidado)" subtitle="Amazon, Mercado Livre, Shopee e Shopify em uma visão única" align="center" controlsPosition="right">
-      <DatePicker visible mode="range" position="right" storePath="filters.dateRange">
+    <Header title="Dashboard E-commerce (Consolidado)" subtitle="Amazon, Mercado Livre, Shopee e Shopify em uma visão única" direction="row" justify="between" align="center">
+      <DatePicker visible mode="range" storePath="filters.dateRange">
         <ActionOnChange type="refresh_data" />
         <Style>
           {

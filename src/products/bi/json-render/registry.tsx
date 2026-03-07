@@ -21,7 +21,11 @@ type AnyRecord = Record<string, any>;
 
 // Defaults (local) — substituem stores globais
 const defaultHeader = {
-  align: 'left',
+  direction: 'row',
+  justify: 'between',
+  align: 'center',
+  gap: 12,
+  titleAlign: 'left',
   backgroundColor: 'transparent',
   textColor: '#111827',
   subtitleColor: '#6b7280',
@@ -370,8 +374,10 @@ function mapJustify(v?: string): React.CSSProperties['justifyContent'] | undefin
 function mapAlign(v?: string): React.CSSProperties['alignItems'] | undefined {
   switch (v) {
     case 'start': return 'flex-start';
+    case 'left': return 'flex-start';
     case 'center': return 'center';
     case 'end': return 'flex-end';
+    case 'right': return 'flex-end';
     case 'stretch': return 'stretch';
     default: return undefined;
   }
@@ -475,7 +481,11 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const theme = useThemeOverrides();
     const css = (theme.cssVars || {}) as AnyRecord;
     const p = deepMerge(deepMerge(defaultHeader as any, (theme.components?.Header || {}) as any), (element?.props || {}) as any) as AnyRecord;
-    const align = (p.align ?? 'left') as 'left'|'center'|'right';
+    const direction = (p.direction ?? 'row') as 'row' | 'column';
+    const justify = (p.justify ?? (direction === 'row' ? 'between' : 'start')) as 'start'|'center'|'end'|'between'|'around'|'evenly';
+    const align = (p.align ?? (direction === 'row' ? 'center' : 'start')) as 'start'|'center'|'end'|'stretch'|'left'|'right';
+    const titleAlign = (p.titleAlign ?? 'left') as 'left'|'center'|'right';
+    const layoutGap = styleVal(p.gap ?? (direction === 'row' ? 12 : 8));
     const containerStyle: React.CSSProperties = {
       backgroundColor: p.backgroundColor,
       color: p.textColor,
@@ -491,7 +501,6 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       borderRadius: 0,
       width: styleVal(p.width),
       height: styleVal(p.height),
-      textAlign: align,
     };
     const wrappedStyle = ensureSurfaceBackground(
       applyBorderFromCssVars(containerStyle as any, theme.cssVars),
@@ -513,7 +522,6 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     wrappedStyle.boxShadow = undefined;
     const dp = p.datePicker || {};
     const showPicker = Boolean(dp.visible);
-    const controlsPosition = (p.controlsPosition ?? dp.position ?? 'right') as 'left'|'right'|'below';
     const mode = (dp.mode ?? 'range') as 'range'|'single';
     const storePath = typeof dp.storePath === 'string' ? dp.storePath : undefined;
     const format = (typeof dp.format === 'string' && dp.format) ? dp.format : 'YYYY-MM-DD';
@@ -834,26 +842,26 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
 
     return (
       <div className="rounded-md" style={wrappedStyle}>
-        {controlsPosition === 'below' ? (
-          <>
-            <div className="flex items-center justify-between">
-              <div style={{ padding: '3px 6px' }}>
-                <div className="text-lg font-semibold" style={{ ...headerTitleStyle, fontSize: '20px' }}>{p.title}</div>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: direction,
+            justifyContent: mapJustify(justify),
+            alignItems: mapAlign(align),
+            gap: layoutGap,
+            width: '100%',
+          }}
+        >
+          <div style={{ padding: '3px 6px', textAlign: titleAlign, minWidth: 0 }}>
+            <div className="text-lg font-semibold" style={{ ...headerTitleStyle, fontSize: '20px' }}>{p.title}</div>
+            {p.subtitle ? (
+              <div className="mt-0.5 text-xs" style={{ color: p.subtitleColor }}>
+                {p.subtitle}
               </div>
-            </div>
-            {controls && <div className="mt-2">{controls}</div>}
-          </>
-        ) : (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {controlsPosition === 'left' && controls}
-              <div style={{ padding: '3px 6px' }}>
-                <div className="text-lg font-semibold" style={{ ...headerTitleStyle, fontSize: '20px' }}>{p.title}</div>
-              </div>
-            </div>
-            {controlsPosition === 'right' && controls}
+            ) : null}
           </div>
-        )}
+          {controls}
+        </div>
         {children && <div className="mt-2">{children}</div>}
       </div>
     );

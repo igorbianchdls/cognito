@@ -17,8 +17,8 @@ export const APPS_CONTABILIDADE_TEMPLATE_DSL = String.raw`<DashboardTemplate nam
         }
       }
     </Config>
-    <Header title="Dashboard Contabilidade" subtitle="Razao contabil, saldos e distribuicoes por conta" align="center" controlsPosition="right">
-      <DatePicker visible mode="range" position="right" storePath="filters.dateRange">
+    <Header title="Dashboard Contabilidade" subtitle="Razao contabil, saldos e distribuicoes por conta" direction="row" justify="between" align="center">
+      <DatePicker visible mode="range" storePath="filters.dateRange">
         <ActionOnChange type="refresh_data" />
         <Style>
           {
