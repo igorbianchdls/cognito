@@ -5,14 +5,6 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { DataTable, type TableData } from "@/components/widgets/Table";
 import { useData } from "@/products/bi/json-render/context";
 import { useThemeOverrides } from "@/products/bi/json-render/theme/ThemeContext";
-import FrameSurface from "@/products/bi/json-render/components/FrameSurface";
-import {
-  normalizeTitleStyle,
-  normalizeContainerStyle,
-  applyBorderFromCssVars,
-  ensureSurfaceBackground,
-  applyH1FromCssVars,
-} from "@/products/bi/json-render/helpers";
 
 type AnyRecord = Record<string, any>;
 type TableRow = TableData;
@@ -88,16 +80,6 @@ export default function JsonRenderTable({ element }: { element: any }) {
   const props = (element?.props || {}) as AnyRecord;
   const dq = (props?.dataQuery || {}) as AnyRecord;
   const dataPath = typeof props?.dataPath === "string" ? props.dataPath.trim() : "";
-  const title = typeof props?.title === "string" ? props.title : undefined;
-  const borderless = Boolean(props?.borderless);
-  const frame = (props?.containerStyle?.frame || undefined) as AnyRecord | undefined;
-
-  const titleStyle = applyH1FromCssVars(normalizeTitleStyle(props?.titleStyle), theme.cssVars);
-  const containerStyle = ensureSurfaceBackground(
-    applyBorderFromCssVars(normalizeContainerStyle(props?.containerStyle, borderless), theme.cssVars),
-    theme.cssVars,
-  );
-  if (containerStyle) (containerStyle as AnyRecord).boxShadow = undefined;
 
   const [rows, setRows] = React.useState<TableRow[]>([]);
   const [queryError, setQueryError] = React.useState<string | null>(null);
@@ -231,8 +213,7 @@ export default function JsonRenderTable({ element }: { element: any }) {
       : "none";
 
   return (
-    <FrameSurface style={containerStyle as React.CSSProperties | undefined} frame={frame} cssVars={theme.cssVars}>
-      {title && <div className="mb-0" style={titleStyle}>{title}</div>}
+    <div>
       {queryError && <div className="mb-2 text-xs text-red-600">{queryError}</div>}
       <div style={{ minHeight: 120, height: styleVal(props?.height), overflow: "auto" }}>
         <DataTable<TableRow>
@@ -298,6 +279,6 @@ export default function JsonRenderTable({ element }: { element: any }) {
           onDataChange={setRows}
         />
       </div>
-    </FrameSurface>
+    </div>
   );
 }

@@ -381,63 +381,68 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       </Container>
     </Container>
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
-      <Table fr={3} title="Ultimos Pedidos" height={320} showColumnToggle showPagination enableSearch pageSize={8}>
-        <Config>
-          {
-            "dataQuery": {
-              "query": "SELECT\n  p.id AS pedido,\n  p.data_pedido::date AS data_pedido,\n  COALESCE(c.nome_fantasia, '-') AS cliente,\n  COALESCE(cv.nome, '-') AS canal,\n  COALESCE(f.nome, '-') AS vendedor,\n  COALESCE(p.valor_total, 0)::float AS valor_total,\n  COALESCE(p.status, '-') AS status\nFROM vendas.pedidos p\nLEFT JOIN entidades.clientes c ON c.id = p.cliente_id\nLEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id\nLEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id\nLEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\n  AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))\n  AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))\nORDER BY p.data_pedido DESC, p.id DESC",
-              "filters": {},
-              "limit": 120
-            },
-            "columns": [
+      <Container grow={3}>
+        <Card>
+          <Title text="Ultimos Pedidos" marginBottom={8} />
+          <Table height={320} showColumnToggle showPagination enableSearch pageSize={8}>
+            <Config>
               {
-                "key": "pedido",
-                "header": "Pedido",
-                "format": "number",
-                "align": "right",
-                "width": 90
-              },
-              {
-                "key": "data_pedido",
-                "header": "Data",
-                "format": "text",
-                "width": 120
-              },
-              {
-                "key": "cliente",
-                "header": "Cliente",
-                "format": "text",
-                "width": 220
-              },
-              {
-                "key": "canal",
-                "header": "Canal",
-                "format": "text",
-                "width": 150
-              },
-              {
-                "key": "vendedor",
-                "header": "Vendedor",
-                "format": "text",
-                "width": 180
-              },
-              {
-                "key": "valor_total",
-                "header": "Valor Total",
-                "format": "currency",
-                "align": "right",
-                "width": 140
-              },
-              {
-                "key": "status",
-                "header": "Status",
-                "format": "text",
-                "width": 130
+                "dataQuery": {
+                  "query": "SELECT\n  p.id AS pedido,\n  p.data_pedido::date AS data_pedido,\n  COALESCE(c.nome_fantasia, '-') AS cliente,\n  COALESCE(cv.nome, '-') AS canal,\n  COALESCE(f.nome, '-') AS vendedor,\n  COALESCE(p.valor_total, 0)::float AS valor_total,\n  COALESCE(p.status, '-') AS status\nFROM vendas.pedidos p\nLEFT JOIN entidades.clientes c ON c.id = p.cliente_id\nLEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id\nLEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id\nLEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id\nWHERE p.tenant_id = {{tenant_id}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\n  AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))\n  AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))\nORDER BY p.data_pedido DESC, p.id DESC",
+                  "filters": {},
+                  "limit": 120
+                },
+                "columns": [
+                  {
+                    "key": "pedido",
+                    "header": "Pedido",
+                    "format": "number",
+                    "align": "right",
+                    "width": 90
+                  },
+                  {
+                    "key": "data_pedido",
+                    "header": "Data",
+                    "format": "text",
+                    "width": 120
+                  },
+                  {
+                    "key": "cliente",
+                    "header": "Cliente",
+                    "format": "text",
+                    "width": 220
+                  },
+                  {
+                    "key": "canal",
+                    "header": "Canal",
+                    "format": "text",
+                    "width": 150
+                  },
+                  {
+                    "key": "vendedor",
+                    "header": "Vendedor",
+                    "format": "text",
+                    "width": 180
+                  },
+                  {
+                    "key": "valor_total",
+                    "header": "Valor Total",
+                    "format": "currency",
+                    "align": "right",
+                    "width": 140
+                  },
+                  {
+                    "key": "status",
+                    "header": "Status",
+                    "format": "text",
+                    "width": 130
+                  }
+                ]
               }
-            ]
-          }
-        </Config>
-      </Table>
+            </Config>
+          </Table>
+        </Card>
+      </Container>
     </Container>
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Container grow={1}>
