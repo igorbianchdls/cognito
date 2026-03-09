@@ -14,7 +14,7 @@ import { mapManagersToCssVars } from "@/products/bi/json-render/theme/thememanag
 import { buildThemeVars } from "@/products/bi/json-render/theme/themeAdapter";
 import { useDataValue, useData } from "@/products/bi/json-render/context";
 import { deepMerge } from "@/stores/ui/json-render/utils";
-import { normalizeTitleStyle, normalizeContainerStyle, applyBorderFromCssVars, ensureSurfaceBackground, applyH1FromCssVars, applyKpiTitleFromCssVars, applyKpiValueFromCssVars, applySlicerLabelFromCssVars, applySlicerOptionFromCssVars, applyDatePickerIconFromCssVars, applyDatePickerFieldFromCssVars, applyDatePickerLabelFromCssVars } from "@/products/bi/json-render/helpers";
+import { normalizeTitleStyle, normalizeContainerStyle, applyBorderFromCssVars, ensureSurfaceBackground, applyH1FromCssVars, applyKpiValueFromCssVars, applySlicerLabelFromCssVars, applySlicerOptionFromCssVars, applyDatePickerIconFromCssVars, applyDatePickerFieldFromCssVars, applyDatePickerLabelFromCssVars } from "@/products/bi/json-render/helpers";
 import { Calendar, Sparkles, TrendingUp, TrendingDown, TriangleAlert, AlertCircle, BadgeCheck, Lightbulb, Brain, CircleDollarSign, ShoppingCart, Users, Package, Activity, CircleHelp } from 'lucide-react';
 
 type AnyRecord = Record<string, any>;
@@ -147,6 +147,29 @@ const aiSummaryIconMap: Record<string, React.ComponentType<any>> = {
   brain: Brain,
   circledollarsign: CircleDollarSign,
   shoppingcart: ShoppingCart,
+  users: Users,
+  package: Package,
+  activity: Activity,
+  help: CircleHelp,
+  circlehelp: CircleHelp,
+};
+
+const iconMap: Record<string, React.ComponentType<any>> = {
+  calendar: Calendar,
+  sparkles: Sparkles,
+  trendingup: TrendingUp,
+  trendingdown: TrendingDown,
+  trianglealert: TriangleAlert,
+  alertcircle: AlertCircle,
+  badgecheck: BadgeCheck,
+  lightbulb: Lightbulb,
+  brain: Brain,
+  circledollarsign: CircleDollarSign,
+  dollarsign: CircleDollarSign,
+  revenue: CircleDollarSign,
+  shoppingcart: ShoppingCart,
+  cart: ShoppingCart,
+  orders: ShoppingCart,
   users: Users,
   package: Package,
   activity: Activity,
@@ -500,6 +523,48 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       <h3 className="text-base font-semibold text-gray-900" style={{ marginBottom, ...(titleStyle || {}) }}>
         {text}
       </h3>
+    );
+  },
+  Title: ({ element }) => {
+    const theme = useThemeOverrides();
+    const titleTheme = ((((theme.components as any)?.Title || (theme.components as any)?.CardTitle) || {}) as AnyRecord);
+    const p = deepMerge(titleTheme, (element?.props || {}) as AnyRecord) as AnyRecord;
+    const text = String(p.text ?? p.title ?? '').trim();
+    if (!text) return null;
+    const titleStyle = applyH1FromCssVars(normalizeTitleStyle(p.titleStyle), theme.cssVars) as React.CSSProperties | undefined;
+    const marginBottom = styleVal(p.marginBottom) ?? '0px';
+    return (
+      <h3 className="text-base font-semibold text-gray-900" style={{ marginBottom, ...(titleStyle || {}) }}>
+        {text}
+      </h3>
+    );
+  },
+  Icon: ({ element }) => {
+    const theme = useThemeOverrides();
+    const p = (element?.props || {}) as AnyRecord;
+    const IconComp = iconMap[normalizeIconKey(p.name)] || CircleHelp;
+    const sizeRaw = Number(p.size);
+    const size = Number.isFinite(sizeRaw) && sizeRaw > 0 ? sizeRaw : 18;
+    const strokeWidthRaw = Number(p.strokeWidth);
+    const strokeWidth = Number.isFinite(strokeWidthRaw) && strokeWidthRaw > 0 ? strokeWidthRaw : 2;
+    const color = typeof p.color === 'string' && p.color.trim() ? p.color : (((theme.cssVars || {}) as AnyRecord).fg || '#0f172a');
+    const style: React.CSSProperties = {
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: p.backgroundColor,
+      borderColor: p.borderColor,
+      borderStyle: p.borderWidth ? 'solid' : undefined,
+      borderWidth: p.borderWidth,
+      borderRadius: styleVal(p.radius),
+      padding: styleVal(p.padding),
+      color,
+      flexShrink: 0,
+    };
+    return (
+      <span style={style}>
+        <IconComp size={size} strokeWidth={strokeWidth} />
+      </span>
     );
   },
 
@@ -1413,7 +1478,6 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
   KPI: ({ element }) => {
     const theme = useThemeOverrides();
     const p = deepMerge(deepMerge(defaultKPI as any, (theme.components?.Kpi || {}) as any), (element?.props || {}) as any) as AnyRecord;
-    const title = p.title as string;
     const dq = p.dataQuery as AnyRecord;
     const valueKey = (p.valueKey ?? 'value') as string;
     const { data } = useData();
@@ -1486,10 +1550,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters)]);
     const fmt = (p.format ?? 'number') as 'currency'|'percent'|'number';
     const unit = p.unit as string | undefined;
-    const titleStyle = applyKpiTitleFromCssVars(normalizeTitleStyle(p.titleStyle), theme.cssVars);
     const valueStyle = applyKpiValueFromCssVars(normalizeTitleStyle(p.valueStyle), theme.cssVars);
-    const containerStyle = ensureSurfaceBackground(applyBorderFromCssVars(normalizeContainerStyle(p.containerStyle, Boolean(p.borderless)), theme.cssVars), theme.cssVars);
-    if (containerStyle) (containerStyle as AnyRecord).boxShadow = undefined;
     const valuePath = (p.valuePath as string | undefined) || undefined;
     // Keep hook order stable across renders.
     const valueFromPath = useDataValue(valuePath || '', undefined);
@@ -1505,11 +1566,10 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const hasServerQuery = Boolean(dq && ((dq.model && dq.measure) || (typeof dq.query === 'string' && dq.query.trim())));
     const displayValue = hasServerQuery ? serverValue : (valueFromPath ?? 0);
     return (
-      <FrameSurface style={containerStyle} frame={p?.containerStyle?.frame as AnyRecord} cssVars={theme.cssVars}>
-        <div className="mb-1" style={titleStyle}>{title}</div>
+      <div>
         <div className="text-2xl font-semibold" style={valueStyle}>{formatValue(displayValue, fmt)}{unit ? ` ${unit}` : ''}</div>
         {queryError && <div className="mt-1 text-xs text-red-600">{queryError}</div>}
-      </FrameSurface>
+      </div>
     );
   },
 };

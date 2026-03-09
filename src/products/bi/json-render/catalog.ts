@@ -364,6 +364,29 @@ export const catalog = {
       }).strict(),
       hasChildren: false,
     },
+    Title: {
+      props: z.object({
+        text: z.string().optional(),
+        title: z.string().optional(),
+        titleStyle: TitleStyleSchema.optional(),
+        marginBottom: z.union([z.number(), z.string()]).optional(),
+      }).strict(),
+      hasChildren: false,
+    },
+    Icon: {
+      props: z.object({
+        name: z.string(),
+        size: z.union([z.number(), z.string()]).optional(),
+        color: z.string().optional(),
+        strokeWidth: z.union([z.number(), z.string()]).optional(),
+        backgroundColor: z.string().optional(),
+        borderColor: z.string().optional(),
+        borderWidth: z.union([z.number(), z.string()]).optional(),
+        radius: z.union([z.number(), z.string()]).optional(),
+        padding: z.union([z.number(), z.string()]).optional(),
+      }).strict(),
+      hasChildren: false,
+    },
     Metric: {
       props: z.object({
         label: z.string(),
@@ -374,7 +397,7 @@ export const catalog = {
     },
     KPI: {
       props: z.object({
-        title: z.string(),
+        title: z.string().optional(),
         valuePath: z.string().optional(),
         dataQuery: z.union([LegacyKpiDataQuerySchema, SqlKpiDataQuerySchema]).optional(),
         valueKey: z.string().optional(),

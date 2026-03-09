@@ -63,47 +63,86 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
           </DatePicker>
         </Header>
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
-      <KPI fr={1} title="Vendas" format="currency" borderless>
-        <Query>
-          SELECT
-            COALESCE(SUM(p.valor_total), 0)::float AS value
-          FROM vendas.pedidos p
-          WHERE p.tenant_id = {{tenant_id}}
-            AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-            AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
-            AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
-            AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
-        </Query>
-        <DataQuery yField="value" />
-      </KPI>
-      <KPI fr={1} title="Pedidos" format="number" borderless>
-        <Query>
-          SELECT
-            COUNT(DISTINCT p.id)::int AS value
-          FROM vendas.pedidos p
-          WHERE p.tenant_id = {{tenant_id}}
-            AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-            AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
-            AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
-            AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
-        </Query>
-        <DataQuery yField="value" />
-      </KPI>
-      <KPI fr={1} title="Ticket Médio" format="currency" borderless>
-        <Query>
-          SELECT
-            COALESCE(AVG(p.valor_total), 0)::float AS value
-          FROM vendas.pedidos p
-          WHERE p.tenant_id = {{tenant_id}}
-            AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-            AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
-            AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
-            AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
-        </Query>
-        <DataQuery yField="value" />
-      </KPI>
-      <KPI fr={1} title="Margem Bruta" valuePath="vendas.kpis.margemBruta" format="currency" borderless>
-      </KPI>
+      <Container grow={1}>
+        <Card>
+          <Container direction="row" justify="between" align="center">
+            <Container direction="column" gap={6}>
+              <Title text="Vendas" />
+              <KPI format="currency">
+                <Query>
+                  SELECT
+                    COALESCE(SUM(p.valor_total), 0)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE p.tenant_id = {{tenant_id}}
+                    AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+                    AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+                    AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                    AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                </Query>
+                <DataQuery yField="value" />
+              </KPI>
+            </Container>
+            <Icon name="circle-dollar-sign" size={18} padding={10} radius={10} backgroundColor="#e8f0fe" color="#1d4ed8" />
+          </Container>
+        </Card>
+      </Container>
+      <Container grow={1}>
+        <Card>
+          <Container direction="row" justify="between" align="center">
+            <Container direction="column" gap={6}>
+              <Title text="Pedidos" />
+              <KPI format="number">
+                <Query>
+                  SELECT
+                    COUNT(DISTINCT p.id)::int AS value
+                  FROM vendas.pedidos p
+                  WHERE p.tenant_id = {{tenant_id}}
+                    AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+                    AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+                    AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                    AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                </Query>
+                <DataQuery yField="value" />
+              </KPI>
+            </Container>
+            <Icon name="shopping-cart" size={18} padding={10} radius={10} backgroundColor="#ecfdf3" color="#047857" />
+          </Container>
+        </Card>
+      </Container>
+      <Container grow={1}>
+        <Card>
+          <Container direction="row" justify="between" align="center">
+            <Container direction="column" gap={6}>
+              <Title text="Ticket Médio" />
+              <KPI format="currency">
+                <Query>
+                  SELECT
+                    COALESCE(AVG(p.valor_total), 0)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE p.tenant_id = {{tenant_id}}
+                    AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+                    AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+                    AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                    AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                </Query>
+                <DataQuery yField="value" />
+              </KPI>
+            </Container>
+            <Icon name="activity" size={18} padding={10} radius={10} backgroundColor="#fff7ed" color="#c2410c" />
+          </Container>
+        </Card>
+      </Container>
+      <Container grow={1}>
+        <Card>
+          <Container direction="row" justify="between" align="center">
+            <Container direction="column" gap={6}>
+              <Title text="Margem Bruta" />
+              <KPI valuePath="vendas.kpis.margemBruta" format="currency" />
+            </Container>
+            <Icon name="badge-check" size={18} padding={10} radius={10} backgroundColor="#f3e8ff" color="#7c3aed" />
+          </Container>
+        </Card>
+      </Container>
     </Container>
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Chart type="pie" fr={1} title="Canais" format="currency" height={240}>

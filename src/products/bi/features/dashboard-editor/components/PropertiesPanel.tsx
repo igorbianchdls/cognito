@@ -272,10 +272,10 @@ export default function PropertiesPanel({
   )
 
   const supportsDataTab = Boolean(
-    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'AISummary', 'Table', 'CardTitle'].includes(String(node.type)),
+    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'AISummary', 'Table', 'CardTitle', 'Title', 'Icon'].includes(String(node.type)),
   )
   const supportsStyleTab = Boolean(
-    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'Card', 'CardTitle', 'Container', 'Sidebar', 'Gauge', 'AISummary', 'Table'].includes(String(node.type)),
+    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'Card', 'CardTitle', 'Title', 'Icon', 'Container', 'Sidebar', 'Gauge', 'AISummary', 'Table'].includes(String(node.type)),
   )
   const supportsFr = Boolean(
     node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Gauge', 'SlicerCard', 'AISummary', 'Table'].includes(String(node.type)),
@@ -474,7 +474,7 @@ export default function PropertiesPanel({
                 </div>
               )}
 
-              {activeTab === 'data' && (node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'Header' || node.type === 'SlicerCard' || node.type === 'Table') && (
+              {activeTab === 'data' && (node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'Header' || node.type === 'SlicerCard' || node.type === 'Table') && (
                 <TextField
                   label="Título"
                   value={String(getProp(node, 'title', ''))}
@@ -482,7 +482,7 @@ export default function PropertiesPanel({
                 />
               )}
 
-              {activeTab === 'data' && node.type === 'CardTitle' && (
+              {activeTab === 'data' && (node.type === 'CardTitle' || node.type === 'Title') && (
                 <TextField
                   label="Texto"
                   value={String(getProp(node, 'text', getProp(node, 'title', '')))}
@@ -492,6 +492,21 @@ export default function PropertiesPanel({
                     onSetNodeProp(selectedPath, 'title', next)
                   }}
                 />
+              )}
+
+              {activeTab === 'data' && node.type === 'Icon' && (
+                <div className="grid grid-cols-2 gap-2">
+                  <TextField
+                    label="name"
+                    value={String(getProp(node, 'name', ''))}
+                    onChange={(v) => onSetNodeProp(selectedPath, 'name', v || undefined)}
+                  />
+                  <NumberField
+                    label="size"
+                    value={Number(getProp(node, 'size', '')) || ''}
+                    onChange={(v) => onSetNodeProp(selectedPath, 'size', v)}
+                  />
+                </div>
               )}
 
               {activeTab === 'data' && node.type === 'Table' && (
@@ -888,13 +903,13 @@ export default function PropertiesPanel({
                     </div>
                   )}
 
-                  {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'Header' || node.type === 'SlicerCard' || node.type === 'Card' || node.type === 'CardTitle' || node.type === 'AISummary' || node.type === 'Table') && (
+                  {(node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'Header' || node.type === 'SlicerCard' || node.type === 'Card' || node.type === 'CardTitle' || node.type === 'Title' || node.type === 'AISummary' || node.type === 'Table') && (
                     <TextField
-                      label={node.type === 'CardTitle' ? 'Texto' : 'Título'}
-                      value={String(node.type === 'CardTitle' ? getProp(node, 'text', getProp(node, 'title', '')) : getProp(node, 'title', ''))}
+                      label={node.type === 'CardTitle' || node.type === 'Title' ? 'Texto' : 'Título'}
+                      value={String(node.type === 'CardTitle' || node.type === 'Title' ? getProp(node, 'text', getProp(node, 'title', '')) : getProp(node, 'title', ''))}
                       onChange={(v) => {
                         const next = v || undefined
-                        if (node.type === 'CardTitle') {
+                        if (node.type === 'CardTitle' || node.type === 'Title') {
                           onSetNodeProp(selectedPath, 'text', next)
                           onSetNodeProp(selectedPath, 'title', next)
                         } else {
@@ -902,6 +917,49 @@ export default function PropertiesPanel({
                         }
                       }}
                     />
+                  )}
+
+                  {node.type === 'Icon' && (
+                    <div className="space-y-2 rounded border border-gray-200 p-2">
+                      <div className="text-[11px] font-medium text-gray-700">Icon Style</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <ColorField
+                          label="color"
+                          value={String(getProp(node, 'color', ''))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'color', v || undefined)}
+                        />
+                        <ColorField
+                          label="backgroundColor"
+                          value={String(getProp(node, 'backgroundColor', ''))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'backgroundColor', v || undefined)}
+                        />
+                        <ColorField
+                          label="borderColor"
+                          value={String(getProp(node, 'borderColor', ''))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'borderColor', v || undefined)}
+                        />
+                        <NumberField
+                          label="borderWidth"
+                          value={Number(getProp(node, 'borderWidth', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'borderWidth', v)}
+                        />
+                        <NumberField
+                          label="strokeWidth"
+                          value={Number(getProp(node, 'strokeWidth', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'strokeWidth', v)}
+                        />
+                        <NumberField
+                          label="padding"
+                          value={Number(getProp(node, 'padding', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'padding', v)}
+                        />
+                        <NumberField
+                          label="radius"
+                          value={Number(getProp(node, 'radius', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'radius', v)}
+                        />
+                      </div>
+                    </div>
                   )}
 
                   {(node.type === 'Header' || node.type === 'Container' || node.type === 'Card' || node.type === 'Sidebar') && (
@@ -1050,7 +1108,7 @@ export default function PropertiesPanel({
                     </div>
                   )}
 
-                  {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'Header' || node.type === 'SlicerCard' || node.type === 'Card' || node.type === 'CardTitle' || node.type === 'AISummary' || node.type === 'Table') && (
+                  {(node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'Header' || node.type === 'SlicerCard' || node.type === 'Card' || node.type === 'CardTitle' || node.type === 'Title' || node.type === 'AISummary' || node.type === 'Table') && (
                     <div className="space-y-2 rounded border border-gray-200 p-2">
                       <div className="text-[11px] font-medium text-gray-700">Title Style</div>
                       <ColorField
