@@ -1004,8 +1004,16 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const kids = React.Children.toArray(children);
     const wrapped = kids.map((c, i) => {
       const itemStyle = itemStyles[i] || {};
+      const childWrapStyle: React.CSSProperties = {
+        ...itemStyle,
+        display: 'flex',
+        minWidth: 0,
+        minHeight: 0,
+      };
+      if ((p.direction ?? 'column') === 'row') childWrapStyle.alignSelf = 'stretch';
+      if ((p.direction ?? 'column') === 'column') childWrapStyle.width = '100%';
       return (
-        <div key={i} style={itemStyle}>
+        <div key={i} style={childWrapStyle}>
           {c}
         </div>
       );

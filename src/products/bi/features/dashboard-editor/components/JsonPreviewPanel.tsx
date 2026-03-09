@@ -243,7 +243,7 @@ export default function JsonPreviewPanel({ tree, onAction, actionHint, toolbar, 
   ), [dragIndicator, onAction, tree, visualEditor])
 
   const previewContent = (
-    <div className="rounded-none border-0 bg-white p-0 min-h-[420px]">
+    <div className="rounded-none border-0 bg-white p-0 min-h-[420px] h-full min-h-0">
       {tree ? (
         visualEditor?.enabled ? (
           <DndContext
@@ -265,7 +265,7 @@ export default function JsonPreviewPanel({ tree, onAction, actionHint, toolbar, 
   )
 
   return (
-    <div className="md:col-span-4">
+    <div className="md:col-span-4 min-h-0 h-full flex flex-col">
       {!hideHeader && (
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-sm font-medium text-gray-900">Preview</h2>
@@ -275,7 +275,9 @@ export default function JsonPreviewPanel({ tree, onAction, actionHint, toolbar, 
           </div>
         </div>
       )}
-      {previewContent}
+      <div className="min-h-0 flex-1">
+        {previewContent}
+      </div>
       {propertiesPanel && (
         <div className="fixed inset-0 z-[120]">
           <div className="absolute inset-0 bg-black/30" />

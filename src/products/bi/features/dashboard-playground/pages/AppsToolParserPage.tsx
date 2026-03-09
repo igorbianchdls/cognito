@@ -149,7 +149,7 @@ function ToolParserWorkspace() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-start">
+    <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-stretch">
       <div className="md:col-span-2 space-y-3">
         <div className="rounded-md border border-gray-200 bg-white p-3">
           <h2 className="text-sm font-medium text-gray-900 mb-2">Simulador de Tool</h2>

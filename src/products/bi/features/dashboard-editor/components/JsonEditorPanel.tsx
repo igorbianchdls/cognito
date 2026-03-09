@@ -26,7 +26,7 @@ export default function JsonEditorPanel({
   dataPreview,
 }: JsonEditorPanelProps) {
   return (
-    <div className="md:col-span-1">
+    <div className="md:col-span-1 min-h-0">
       <div className="mb-2 flex items-center justify-between">
         <h2 className="text-sm font-medium text-gray-900">{title}</h2>
         <div className="flex items-center gap-2">
