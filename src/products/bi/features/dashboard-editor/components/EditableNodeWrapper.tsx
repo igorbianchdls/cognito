@@ -43,6 +43,7 @@ export default function EditableNodeWrapper({
   const isTheme = type === 'Theme'
   const isRootNode = path.length === 0
   const isCompactNode = type === 'Title' || type === 'Subtitle' || type === 'CardTitle' || type === 'Icon'
+  const canShowHighlight = !isTheme && !isRootNode
   const canDuplicate = !isTheme && !isRootNode
   const canDelete = !isTheme && !isRootNode
   const canMove = !isTheme && !isRootNode
@@ -100,7 +101,9 @@ export default function EditableNodeWrapper({
   const showHoverChrome = hovered || actionMenuOpen || moveMenuOpen || selected
   const showCompactToolbar = selected || actionMenuOpen || moveMenuOpen
   const showToolbar = isCompactNode ? showCompactToolbar : showHoverChrome
-  const highlightStyle = selected
+  const highlightStyle = !canShowHighlight
+    ? undefined
+    : selected
     ? {
         outline: `2px solid rgba(${accentRgb},0.98)`,
         outlineOffset: 2,
