@@ -915,7 +915,7 @@ export default function PropertiesPanel({
                     </div>
                   )}
 
-                  {(node.type === 'Header' || node.type === 'SlicerCard' || node.type === 'Card' || node.type === 'CardTitle' || node.type === 'Title' || node.type === 'AISummary') && (
+                  {(node.type === 'Header' || node.type === 'SlicerCard' || node.type === 'Card' || node.type === 'CardTitle' || node.type === 'Title') && (
                     <TextField
                       label={node.type === 'CardTitle' || node.type === 'Title' ? 'Texto' : 'Título'}
                       value={String(node.type === 'CardTitle' || node.type === 'Title' ? getProp(node, 'text', getProp(node, 'title', '')) : getProp(node, 'title', ''))}
@@ -1177,7 +1177,7 @@ export default function PropertiesPanel({
                     </div>
                   )}
 
-                  {(node.type === 'SlicerCard' || node.type === 'Gauge' || node.type === 'AISummary') && (
+                  {(node.type === 'SlicerCard' || node.type === 'Gauge') && (
                     <div className="space-y-2 rounded border border-gray-200 p-2">
                       <div className="text-[11px] font-medium text-gray-700">Container Style</div>
                       <ColorField
@@ -1228,7 +1228,7 @@ export default function PropertiesPanel({
                     </div>
                   )}
 
-                  {(node.type === 'Header' || node.type === 'SlicerCard' || node.type === 'Card' || node.type === 'CardTitle' || node.type === 'Title' || node.type === 'AISummary') && (
+                  {(node.type === 'Header' || node.type === 'SlicerCard' || node.type === 'Card' || node.type === 'CardTitle' || node.type === 'Title') && (
                     <div className="space-y-2 rounded border border-gray-200 p-2">
                       <div className="text-[11px] font-medium text-gray-700">Title Style</div>
                       <ColorField
@@ -1411,7 +1411,7 @@ export default function PropertiesPanel({
                     </div>
                   )}
 
-                  {(node.type === 'SlicerCard' || node.type === 'Gauge' || node.type === 'AISummary') && (
+                  {(node.type === 'SlicerCard' || node.type === 'Gauge') && (
                     <CheckboxField
                       label="Borderless"
                       checked={Boolean(getProp(node, 'borderless', false))}

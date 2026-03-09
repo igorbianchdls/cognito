@@ -30,7 +30,11 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
       </DatePicker>
     </Header>
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
-      <KPI title="Gasto" format="currency">
+      <Container grow={1}>
+        <Card direction="row" justify="between" align="center" gap={12}>
+          <Container direction="column" gap={6}>
+            <Title text="Gasto" />
+            <KPI format="currency">
         <Query>
           SELECT
             COALESCE(SUM(src.valor_total), 0)::float AS value
@@ -70,8 +74,16 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
             )
         </Query>
         <DataQuery yField="value" />
-      </KPI>
-      <KPI title="Fornecedores" format="number">
+            </KPI>
+          </Container>
+          <Icon name="circle-dollar-sign" size={18} padding={10} radius={10} backgroundColor="#e8f0fe" color="#1d4ed8" />
+        </Card>
+      </Container>
+      <Container grow={1}>
+        <Card direction="row" justify="between" align="center" gap={12}>
+          <Container direction="column" gap={6}>
+            <Title text="Fornecedores" />
+            <KPI format="number">
         <Query>
           SELECT
             COUNT(DISTINCT src.fornecedor_id)::int AS value
@@ -111,8 +123,16 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
             )
         </Query>
         <DataQuery yField="value" />
-      </KPI>
-      <KPI title="Pedidos" format="number">
+            </KPI>
+          </Container>
+          <Icon name="users" size={18} padding={10} radius={10} backgroundColor="#ecfdf3" color="#047857" />
+        </Card>
+      </Container>
+      <Container grow={1}>
+        <Card direction="row" justify="between" align="center" gap={12}>
+          <Container direction="column" gap={6}>
+            <Title text="Pedidos" />
+            <KPI format="number">
         <Query>
           SELECT
             COUNT(DISTINCT src.id)::int AS value
@@ -159,8 +179,16 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
             }
           }
         </Config>
-      </KPI>
-      <KPI title="Transações" format="number">
+            </KPI>
+          </Container>
+          <Icon name="shopping-cart" size={18} padding={10} radius={10} backgroundColor="#fff7ed" color="#c2410c" />
+        </Card>
+      </Container>
+      <Container grow={1}>
+        <Card direction="row" justify="between" align="center" gap={12}>
+          <Container direction="column" gap={6}>
+            <Title text="Transações" />
+            <KPI format="number">
         <Query>
           SELECT
             COUNT(DISTINCT r.id)::int AS value
@@ -201,10 +229,17 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
             )
         </Query>
         <DataQuery yField="value" />
-      </KPI>
+            </KPI>
+          </Container>
+          <Icon name="activity" size={18} padding={10} radius={10} backgroundColor="#f3e8ff" color="#7c3aed" />
+        </Card>
+      </Container>
     </Container>
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
-      <Chart type="bar" fr={1} title="Fornecedores" format="currency" height={240}>
+      <Container grow={1}>
+        <Card>
+          <Title text="Fornecedores" marginBottom={8} />
+          <Chart type="bar" format="currency" height={240}>
         <Query>
           SELECT
                       COALESCE(src.fornecedor_id, 0)::text AS key,
@@ -258,8 +293,13 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
             }
           }
         </Config>
-      </Chart>
-      <Chart type="bar" fr={1} title="Centros de Custo" format="currency" height={240}>
+          </Chart>
+        </Card>
+      </Container>
+      <Container grow={1}>
+        <Card>
+          <Title text="Centros de Custo" marginBottom={8} />
+          <Chart type="bar" format="currency" height={240}>
         <Query>
           SELECT
                       COALESCE(src.centro_custo_id, 0)::text AS key,
@@ -313,7 +353,9 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
             }
           }
         </Config>
-      </Chart>
+          </Chart>
+        </Card>
+      </Container>
       <SlicerCard fr={1} title="Filtro Centro de Custo">
         <Config>
           {
@@ -335,7 +377,10 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
           }
         </Config>
       </SlicerCard>
-      <Chart type="bar" fr={1} title="Filiais" format="currency" height={240}>
+      <Container grow={1}>
+        <Card>
+          <Title text="Filiais" marginBottom={8} />
+          <Chart type="bar" format="currency" height={240}>
         <Query>
           SELECT
                       COALESCE(src.filial_id, 0)::text AS key,
@@ -389,10 +434,15 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
             }
           }
         </Config>
-      </Chart>
+          </Chart>
+        </Card>
+      </Container>
     </Container>
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
-      <Chart type="bar" fr={1} title="Categorias" format="currency" height={220}>
+      <Container grow={1}>
+        <Card>
+          <Title text="Categorias" marginBottom={8} />
+          <Chart type="bar" format="currency" height={220}>
         <Query>
           SELECT
                       COALESCE(src.categoria_despesa_id, 0)::text AS key,
@@ -446,8 +496,13 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
             }
           }
         </Config>
-      </Chart>
-      <Chart type="bar" fr={1} title="Projetos" format="currency" height={220}>
+          </Chart>
+        </Card>
+      </Container>
+      <Container grow={1}>
+        <Card>
+          <Title text="Projetos" marginBottom={8} />
+          <Chart type="bar" format="currency" height={220}>
         <Query>
           SELECT
                       COALESCE(src.projeto_id, 0)::text AS key,
@@ -501,8 +556,13 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
             }
           }
         </Config>
-      </Chart>
-      <Chart type="bar" fr={1} title="Status (Qtd)" format="number" height={220}>
+          </Chart>
+        </Card>
+      </Container>
+      <Container grow={1}>
+        <Card>
+          <Title text="Status (Qtd)" marginBottom={8} />
+          <Chart type="bar" format="number" height={220}>
         <Query>
           SELECT
                       COALESCE(src.status, '-') AS key,
@@ -555,10 +615,16 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
             }
           }
         </Config>
-      </Chart>
+          </Chart>
+        </Card>
+      </Container>
     </Container>
-    <Chart type="pie" fr={1} title="Status (Pizza)" format="number" height={260}>
-      <Query>
+    <Container direction="row" gap={12} padding={16} justify="start" align="start">
+      <Container grow={1}>
+        <Card>
+          <Title text="Status (Pizza)" marginBottom={8} />
+          <Chart type="pie" format="number" height={260}>
+            <Query>
         SELECT
                   COALESCE(src.status, '-') AS key,
                   COALESCE(src.status, '-') AS label,
@@ -599,20 +665,26 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
                   )
                 GROUP BY 1, 2
                 ORDER BY 3 DESC
-      </Query>
-      <Fields x="label" y="value" key="key" />
-      <Nivo innerRadius={0.35} />
-      <Config>
-        {
-          "dataQuery": {
-            "filters": {},
-            "limit": 8
-          }
-        }
-      </Config>
-    </Chart>
+            </Query>
+            <Fields x="label" y="value" key="key" />
+            <Nivo innerRadius={0.35} />
+            <Config>
+              {
+                "dataQuery": {
+                  "filters": {},
+                  "limit": 8
+                }
+              }
+            </Config>
+          </Chart>
+        </Card>
+      </Container>
+    </Container>
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
-      <Chart type="bar" fr={1} title="Gasto por Mês" format="currency" height={220}>
+      <Container grow={1}>
+        <Card>
+          <Title text="Gasto por Mês" marginBottom={8} />
+          <Chart type="bar" format="currency" height={220}>
         <Query>
           SELECT
                       TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'YYYY-MM') AS key,
@@ -665,8 +737,13 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
             }
           }
         </Config>
-      </Chart>
-      <Chart type="bar" fr={1} title="Pedidos por Mês" format="number" height={220}>
+          </Chart>
+        </Card>
+      </Container>
+      <Container grow={1}>
+        <Card>
+          <Title text="Pedidos por Mês" marginBottom={8} />
+          <Chart type="bar" format="number" height={220}>
         <Query>
           SELECT
                       TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'YYYY-MM') AS key,
@@ -719,8 +796,13 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
             }
           }
         </Config>
-      </Chart>
-      <Chart type="bar" fr={1} title="Ticket Médio por Mês" format="currency" height={220}>
+          </Chart>
+        </Card>
+      </Container>
+      <Container grow={1}>
+        <Card>
+          <Title text="Ticket Médio por Mês" marginBottom={8} />
+          <Chart type="bar" format="currency" height={220}>
         <Query>
           SELECT
                       TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'YYYY-MM') AS key,
@@ -773,8 +855,13 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
             }
           }
         </Config>
-      </Chart>
-      <AISummary fr={1} title="Insights da IA">
+          </Chart>
+        </Card>
+      </Container>
+      <Container grow={1}>
+        <Card>
+          <Title text="Insights da IA" marginBottom={8} />
+          <AISummary>
         <Config>
           {
             "items": [
@@ -793,7 +880,9 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
             ]
           }
         </Config>
-      </AISummary>
+          </AISummary>
+        </Card>
+      </Container>
     </Container>
   </Theme>
 </DashboardTemplate>`

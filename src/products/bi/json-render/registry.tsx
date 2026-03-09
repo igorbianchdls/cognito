@@ -1139,16 +1139,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
   AISummary: ({ element }) => {
     const theme = useThemeOverrides();
     const p = deepMerge(deepMerge(defaultAISummary as any, ((theme.components as any)?.AISummary || {}) as AnyRecord), (element?.props || {}) as AnyRecord) as AnyRecord;
-    const title = typeof p.title === 'string' ? p.title : undefined;
     const items = Array.isArray(p.items) ? p.items as AnyRecord[] : [];
-    const borderless = Boolean(p.borderless);
-    const containerStyle = ensureSurfaceBackground(
-      applyBorderFromCssVars(normalizeContainerStyle(p.containerStyle, borderless), theme.cssVars),
-      theme.cssVars
-    ) as React.CSSProperties;
-    if (containerStyle) (containerStyle as AnyRecord).boxShadow = undefined;
-
-    const titleStyle = applyH1FromCssVars(normalizeTitleStyle(p.titleStyle), theme.cssVars);
     const itemTextStyle = applySlicerOptionFromCssVars(normalizeTitleStyle(p.itemTextStyle), theme.cssVars) as React.CSSProperties | undefined;
     const itemGap = Number.isFinite(Number(p.itemGap)) ? Number(p.itemGap) : 10;
     const contentPaddingX = styleVal(p.contentPaddingX) || '12px';
@@ -1168,41 +1159,38 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const palette = (explicitScheme.length ? explicitScheme : (managedScheme && managedScheme.length ? managedScheme : ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6']));
 
     return (
-      <FrameSurface style={containerStyle} frame={p?.containerStyle?.frame as AnyRecord} cssVars={theme.cssVars}>
-        {title ? <div className="mb-0" style={titleStyle}>{title}</div> : null}
-        <div
-          className="flex flex-col"
-          style={{ gap: `${itemGap}px`, paddingLeft: contentPaddingX, paddingRight: contentPaddingX, paddingBottom: contentPaddingBottom }}
-        >
-          {items.map((it, idx) => {
-            const IconComp = aiSummaryIconMap[normalizeIconKey(it?.icon)] || Sparkles;
-            const accent = String(it?.iconColor || palette[idx % palette.length] || '#3b82f6');
-            const bg = String(it?.iconBgColor || hexToRgba(accent, 0.16) || `color-mix(in srgb, ${accent} 16%, transparent)`);
-            return (
-              <div key={`ai-summary-item-${idx}`} className="flex items-start" style={{ gap: `${iconGap}px` }}>
-                <div
-                  className="inline-flex items-center justify-center shrink-0"
-                  style={{
-                    width: `${iconBoxSize}px`,
-                    height: `${iconBoxSize}px`,
-                    borderRadius: iconBoxRadius,
-                    backgroundColor: bg,
-                    border: `1px solid ${hexToRgba(accent, 0.28) || accent}`,
-                  }}
-                >
-                  <IconComp size={iconSize} style={{ color: accent }} />
-                </div>
-                <div className="text-sm leading-5 whitespace-pre-wrap break-words" style={itemTextStyle}>
-                  {String(it?.text || '')}
-                </div>
+      <div
+        className="flex flex-col"
+        style={{ gap: `${itemGap}px`, paddingLeft: contentPaddingX, paddingRight: contentPaddingX, paddingBottom: contentPaddingBottom }}
+      >
+        {items.map((it, idx) => {
+          const IconComp = aiSummaryIconMap[normalizeIconKey(it?.icon)] || Sparkles;
+          const accent = String(it?.iconColor || palette[idx % palette.length] || '#3b82f6');
+          const bg = String(it?.iconBgColor || hexToRgba(accent, 0.16) || `color-mix(in srgb, ${accent} 16%, transparent)`);
+          return (
+            <div key={`ai-summary-item-${idx}`} className="flex items-start" style={{ gap: `${iconGap}px` }}>
+              <div
+                className="inline-flex items-center justify-center shrink-0"
+                style={{
+                  width: `${iconBoxSize}px`,
+                  height: `${iconBoxSize}px`,
+                  borderRadius: iconBoxRadius,
+                  backgroundColor: bg,
+                  border: `1px solid ${hexToRgba(accent, 0.28) || accent}`,
+                }}
+              >
+                <IconComp size={iconSize} style={{ color: accent }} />
               </div>
-            );
-          })}
-          {items.length === 0 ? (
-            <div className="text-xs text-gray-400">Sem itens</div>
-          ) : null}
-        </div>
-      </FrameSurface>
+              <div className="text-sm leading-5 whitespace-pre-wrap break-words" style={itemTextStyle}>
+                {String(it?.text || '')}
+              </div>
+            </div>
+          );
+        })}
+        {items.length === 0 ? (
+          <div className="text-xs text-gray-400">Sem itens</div>
+        ) : null}
+      </div>
     );
   },
 
