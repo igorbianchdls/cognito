@@ -3,9 +3,8 @@
 import React from "react";
 import { useData } from "@/products/bi/json-render/context";
 import { ResponsiveBar } from "@nivo/bar";
-import { normalizeTitleStyle, normalizeContainerStyle, buildNivoTheme, applyBorderFromCssVars, ensureSurfaceBackground, applyH1FromCssVars } from "@/products/bi/json-render/helpers";
+import { buildNivoTheme } from "@/products/bi/json-render/helpers";
 import { useThemeOverrides } from "@/products/bi/json-render/theme/ThemeContext";
-import FrameSurface from "@/products/bi/json-render/components/FrameSurface";
 
 type AnyRecord = Record<string, any>;
 
@@ -53,16 +52,10 @@ function getByPath(data: AnyRecord, path: string): any {
 export default function JsonRenderBarChart({ element }: { element: any }) {
   const { data, setData } = useData();
   const theme = useThemeOverrides();
-  const title = element?.props?.title as string | undefined;
   const fmt = (element?.props?.format ?? 'number') as 'currency'|'percent'|'number';
   const height = (element?.props?.height as number | undefined) ?? 220;
   const colorScheme = element?.props?.colorScheme as string | string[] | undefined;
   const nivo = (element?.props?.nivo as AnyRecord | undefined) || {};
-  const titleStyle = applyH1FromCssVars(normalizeTitleStyle((element?.props as AnyRecord)?.titleStyle), theme.cssVars);
-  const borderless = Boolean((element?.props as AnyRecord)?.borderless);
-  const frame = (element?.props as AnyRecord)?.containerStyle?.frame as AnyRecord | undefined;
-  const containerStyle = ensureSurfaceBackground(applyBorderFromCssVars(normalizeContainerStyle((element?.props as AnyRecord)?.containerStyle, borderless), theme.cssVars), theme.cssVars);
-  if (containerStyle) (containerStyle as AnyRecord).boxShadow = undefined;
 
   const dq = (element?.props?.dataQuery as AnyRecord | undefined);
   const drill = (element?.props?.drill as AnyRecord | undefined);
@@ -367,8 +360,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     if (canDrillDown) handleDrillDown(point);
   }, [shouldClickFilter, handleGlobalFilterClick, canDrillDown, handleDrillDown]);
   return (
-    <FrameSurface style={{ ...containerStyle, overflow: 'visible' }} frame={frame} cssVars={theme.cssVars}>
-      {title && <div className="mb-0" style={titleStyle}>{title}</div>}
+    <div style={{ overflow: 'visible' }}>
       {queryError && <div className="mb-2 text-xs text-red-600">{queryError}</div>}
       {drillEnabled && drill?.showBreadcrumb !== false && (
         <div className="mb-2 flex items-center gap-2 text-[11px] text-gray-500">
@@ -424,6 +416,6 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
           theme={nivoTheme as any}
         />
       </div>
-    </FrameSurface>
+    </div>
   );
 }

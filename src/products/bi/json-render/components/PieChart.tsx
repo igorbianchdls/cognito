@@ -3,9 +3,8 @@
 import React from "react";
 import { useData } from "@/products/bi/json-render/context";
 import { ResponsivePie } from "@nivo/pie";
-import { normalizeTitleStyle, normalizeContainerStyle, buildNivoTheme, applyBorderFromCssVars, ensureSurfaceBackground, applyH1FromCssVars } from "@/products/bi/json-render/helpers";
+import { buildNivoTheme } from "@/products/bi/json-render/helpers";
 import { useThemeOverrides } from "@/products/bi/json-render/theme/ThemeContext";
-import FrameSurface from "@/products/bi/json-render/components/FrameSurface";
 
 type AnyRecord = Record<string, any>;
 
@@ -138,16 +137,10 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
     run();
     return () => { cancelled = true };
   }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters), isSqlQueryMode]);
-  const title = element?.props?.title as string | undefined;
   const fmt = (element?.props?.format ?? 'number') as 'currency'|'percent'|'number';
   const height = (element?.props?.height as number | undefined) ?? 220;
   const colorScheme = element?.props?.colorScheme as string | string[] | undefined;
   const nivo = (element?.props?.nivo as AnyRecord | undefined) || {};
-  const titleStyle = applyH1FromCssVars(normalizeTitleStyle((element?.props as AnyRecord)?.titleStyle), theme.cssVars);
-  const borderless = Boolean((element?.props as AnyRecord)?.borderless);
-  const frame = (element?.props as AnyRecord)?.containerStyle?.frame as AnyRecord | undefined;
-  const containerStyle = ensureSurfaceBackground(applyBorderFromCssVars(normalizeContainerStyle((element?.props as AnyRecord)?.containerStyle, borderless), theme.cssVars), theme.cssVars);
-  if (containerStyle) (containerStyle as AnyRecord).boxShadow = undefined;
 
   const pieData = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
@@ -216,8 +209,7 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
     nivoTheme = t;
   }
   return (
-    <FrameSurface style={containerStyle} frame={frame} cssVars={theme.cssVars}>
-      {title && <div className="mb-0" style={titleStyle}>{title}</div>}
+    <div>
       {queryError && <div className="mb-2 text-xs text-red-600">{queryError}</div>}
       <div style={{ height }}>
         <ResponsivePie
@@ -245,6 +237,6 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
           theme={nivoTheme as any}
         />
       </div>
-    </FrameSurface>
+    </div>
   );
 }

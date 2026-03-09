@@ -137,96 +137,114 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       </Container>
     </Container>
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
-      <Chart type="pie" fr={1} title="Canais" format="currency" height={240}>
-        <Query>
-          SELECT
-                      cv.id AS key,
-                      COALESCE(cv.nome, '-') AS label,
-                      COALESCE(SUM(pi.subtotal), 0)::float AS value
-                    FROM vendas.pedidos p
-                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
-                    WHERE p.tenant_id = {{tenant_id}}
-                      AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-                      AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
-                      AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
-                      AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
-                    GROUP BY 1, 2
-                    ORDER BY 3 DESC
-        </Query>
-        <Fields x="label" y="value" key="key" />
-        <Interaction clickAsFilter filterField="canal_venda_id" storePath="filters.canal_venda_id" clearOnSecondClick />
-        <Nivo innerRadius={0.35} />
-        <Config>
-          {
-            "dataQuery": {
-              "filters": {},
-              "limit": 6
-            }
-          }
-        </Config>
-      </Chart>
-      <Chart type="bar" fr={2} title="Categorias" format="currency" height={240}>
-        <Query>
-          SELECT
-                      cr.id AS key,
-                      COALESCE(cr.nome, '-') AS label,
-                      COALESCE(SUM(pi.subtotal), 0)::float AS value
-                    FROM vendas.pedidos p
-                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-                    LEFT JOIN financeiro.categorias_receita cr ON cr.id = p.categoria_receita_id
-                    WHERE p.tenant_id = {{tenant_id}}
-                      AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-                      AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
-                      AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
-                      AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
-                    GROUP BY 1, 2
-                    ORDER BY 3 DESC
-        </Query>
-        <Fields x="label" y="value" key="key" />
-        <Interaction clickAsFilter filterField="categoria_receita_id" storePath="filters.categoria_receita_id" clearOnSecondClick />
-        <Nivo layout="horizontal" />
-        <Config>
-          {
-            "dataQuery": {
-              "filters": {},
-              "limit": 6
-            }
-          }
-        </Config>
-      </Chart>
-      <Chart type="bar" fr={2} title="Clientes" format="currency" height={240}>
-        <Query>
-          SELECT
-                      c.id AS key,
-                      COALESCE(c.nome_fantasia, '-') AS label,
-                      COALESCE(SUM(pi.subtotal), 0)::float AS value
-                    FROM vendas.pedidos p
-                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-                    LEFT JOIN entidades.clientes c ON c.id = p.cliente_id
-                    WHERE p.tenant_id = {{tenant_id}}
-                      AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-                      AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
-                      AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
-                      AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
-                    GROUP BY 1, 2
-                    ORDER BY 3 DESC
-        </Query>
-        <Fields x="label" y="value" key="key" />
-        <Interaction clickAsFilter={false} />
-        <Nivo layout="horizontal" />
-        <Config>
-          {
-            "dataQuery": {
-              "filters": {},
-              "limit": 5
-            }
-          }
-        </Config>
-      </Chart>
+      <Container grow={1}>
+        <Card>
+          <Title text="Canais" marginBottom={8} />
+          <Chart type="pie" format="currency" height={240}>
+            <Query>
+              SELECT
+                          cv.id AS key,
+                          COALESCE(cv.nome, '-') AS label,
+                          COALESCE(SUM(pi.subtotal), 0)::float AS value
+                        FROM vendas.pedidos p
+                        JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                        LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                        WHERE p.tenant_id = {{tenant_id}}
+                          AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+                          AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+                          AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                          AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                        GROUP BY 1, 2
+                        ORDER BY 3 DESC
+            </Query>
+            <Fields x="label" y="value" key="key" />
+            <Interaction clickAsFilter filterField="canal_venda_id" storePath="filters.canal_venda_id" clearOnSecondClick />
+            <Nivo innerRadius={0.35} />
+            <Config>
+              {
+                "dataQuery": {
+                  "filters": {},
+                  "limit": 6
+                }
+              }
+            </Config>
+          </Chart>
+        </Card>
+      </Container>
+      <Container grow={2}>
+        <Card>
+          <Title text="Categorias" marginBottom={8} />
+          <Chart type="bar" format="currency" height={240}>
+            <Query>
+              SELECT
+                          cr.id AS key,
+                          COALESCE(cr.nome, '-') AS label,
+                          COALESCE(SUM(pi.subtotal), 0)::float AS value
+                        FROM vendas.pedidos p
+                        JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                        LEFT JOIN financeiro.categorias_receita cr ON cr.id = p.categoria_receita_id
+                        WHERE p.tenant_id = {{tenant_id}}
+                          AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+                          AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+                          AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                          AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                        GROUP BY 1, 2
+                        ORDER BY 3 DESC
+            </Query>
+            <Fields x="label" y="value" key="key" />
+            <Interaction clickAsFilter filterField="categoria_receita_id" storePath="filters.categoria_receita_id" clearOnSecondClick />
+            <Nivo layout="horizontal" />
+            <Config>
+              {
+                "dataQuery": {
+                  "filters": {},
+                  "limit": 6
+                }
+              }
+            </Config>
+          </Chart>
+        </Card>
+      </Container>
+      <Container grow={2}>
+        <Card>
+          <Title text="Clientes" marginBottom={8} />
+          <Chart type="bar" format="currency" height={240}>
+            <Query>
+              SELECT
+                          c.id AS key,
+                          COALESCE(c.nome_fantasia, '-') AS label,
+                          COALESCE(SUM(pi.subtotal), 0)::float AS value
+                        FROM vendas.pedidos p
+                        JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                        LEFT JOIN entidades.clientes c ON c.id = p.cliente_id
+                        WHERE p.tenant_id = {{tenant_id}}
+                          AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+                          AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+                          AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                          AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                        GROUP BY 1, 2
+                        ORDER BY 3 DESC
+            </Query>
+            <Fields x="label" y="value" key="key" />
+            <Interaction clickAsFilter={false} />
+            <Nivo layout="horizontal" />
+            <Config>
+              {
+                "dataQuery": {
+                  "filters": {},
+                  "limit": 5
+                }
+              }
+            </Config>
+          </Chart>
+        </Card>
+      </Container>
     </Container>
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
-      <Chart type="bar" fr={1} title="Vendedores" format="currency" height={220}>
+      <Container grow={1}>
+        <Card>
+          <Title text="Vendedores" marginBottom={8} />
+          <Chart type="bar" format="currency" height={220}>
         <Query>
           SELECT
                       v.id AS key,
@@ -255,8 +273,13 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
             }
           }
         </Config>
-      </Chart>
-      <Chart type="bar" fr={1} title="Filiais" format="currency" height={220}>
+          </Chart>
+        </Card>
+      </Container>
+      <Container grow={1}>
+        <Card>
+          <Title text="Filiais" marginBottom={8} />
+          <Chart type="bar" format="currency" height={220}>
         <Query>
           SELECT
                       fil.id AS key,
@@ -284,8 +307,13 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
             }
           }
         </Config>
-      </Chart>
-      <Chart type="bar" fr={1} title="Unidades de Negócio" format="currency" height={220}>
+          </Chart>
+        </Card>
+      </Container>
+      <Container grow={1}>
+        <Card>
+          <Title text="Unidades de Negócio" marginBottom={8} />
+          <Chart type="bar" format="currency" height={220}>
         <Query>
           SELECT
                       un.id AS key,
@@ -313,10 +341,15 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
             }
           }
         </Config>
-      </Chart>
+          </Chart>
+        </Card>
+      </Container>
     </Container>
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
-      <Chart type="line" fr={3} title="Faturamento por Mês" format="currency" height={240}>
+      <Container grow={3}>
+        <Card>
+          <Title text="Faturamento por Mês" marginBottom={8} />
+          <Chart type="line" format="currency" height={240}>
         <Query>
           SELECT
                       TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS key,
@@ -343,7 +376,9 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
             }
           }
         </Config>
-      </Chart>
+          </Chart>
+        </Card>
+      </Container>
     </Container>
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Table fr={3} title="Ultimos Pedidos" height={320} showColumnToggle showPagination enableSearch pageSize={8}>
@@ -405,7 +440,10 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       </Table>
     </Container>
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
-      <Chart type="bar" fr={1} title="Pedidos por Mês" format="number" height={220}>
+      <Container grow={1}>
+        <Card>
+          <Title text="Pedidos por Mês" marginBottom={8} />
+          <Chart type="bar" format="number" height={220}>
         <Query>
           SELECT
                       TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS key,
@@ -431,8 +469,13 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
             }
           }
         </Config>
-      </Chart>
-      <Chart type="bar" fr={1} title="Ticket Médio por Mês" format="currency" height={220}>
+          </Chart>
+        </Card>
+      </Container>
+      <Container grow={1}>
+        <Card>
+          <Title text="Ticket Médio por Mês" marginBottom={8} />
+          <Chart type="bar" format="currency" height={220}>
         <Query>
           SELECT
                       TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS key,
@@ -458,7 +501,9 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
             }
           }
         </Config>
-      </Chart>
+          </Chart>
+        </Card>
+      </Container>
       <AISummary fr={1} title="Insights da IA">
         <Config>
           {
@@ -481,7 +526,10 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       </AISummary>
     </Container>
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
-      <Chart type="bar" fr={1} title="Territórios" format="currency" height={220}>
+      <Container grow={1}>
+        <Card>
+          <Title text="Territórios" marginBottom={8} />
+          <Chart type="bar" format="currency" height={220}>
         <Query>
           SELECT
                       t.id AS key,
@@ -509,8 +557,13 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
             }
           }
         </Config>
-      </Chart>
-      <Chart type="bar" fr={1} title="Serviços/Categorias" format="currency" height={220}>
+          </Chart>
+        </Card>
+      </Container>
+      <Container grow={1}>
+        <Card>
+          <Title text="Serviços/Categorias" marginBottom={8} />
+          <Chart type="bar" format="currency" height={220}>
         <Query>
           SELECT
                       cr.id AS key,
@@ -538,8 +591,13 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
             }
           }
         </Config>
-      </Chart>
-      <Chart type="bar" fr={1} title="Pedidos" format="number" height={220}>
+          </Chart>
+        </Card>
+      </Container>
+      <Container grow={1}>
+        <Card>
+          <Title text="Pedidos" marginBottom={8} />
+          <Chart type="bar" format="number" height={220}>
         <Query>
           SELECT
                       cv.id AS key,
@@ -566,7 +624,9 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
             }
           }
         </Config>
-      </Chart>
+          </Chart>
+        </Card>
+      </Container>
     </Container>
       </Container>
     </Container>
