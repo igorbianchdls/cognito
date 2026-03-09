@@ -1003,15 +1003,23 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
 
     const kids = React.Children.toArray(children);
     const wrapped = kids.map((c, i) => {
+      const childDef = childDefs[i] || {};
+      const childType = String(childDef?.type || '');
+      const isRow = (p.direction ?? 'column') === 'row';
+      const isSidebarChild = childType === 'Sidebar';
       const itemStyle = itemStyles[i] || {};
-      const childWrapStyle: React.CSSProperties = {
-        ...itemStyle,
-        display: 'flex',
-        minWidth: 0,
-        minHeight: 0,
-      };
-      if ((p.direction ?? 'column') === 'row') childWrapStyle.alignSelf = 'stretch';
-      if ((p.direction ?? 'column') === 'column') childWrapStyle.width = '100%';
+      const childWrapStyle: React.CSSProperties = { ...itemStyle };
+      if (isRow && isSidebarChild) {
+        childWrapStyle.display = 'flex';
+        childWrapStyle.alignSelf = 'stretch';
+        childWrapStyle.minHeight = 0;
+      }
+      if (isRow && (Number(childWrapStyle.flexGrow) > 0 || Number(childWrapStyle.flexBasis) === 0)) {
+        childWrapStyle.minWidth = 0;
+      }
+      if (!isRow) {
+        childWrapStyle.width = '100%';
+      }
       return (
         <div key={i} style={childWrapStyle}>
           {c}
