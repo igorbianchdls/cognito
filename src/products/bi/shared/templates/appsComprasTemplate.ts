@@ -17,7 +17,11 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
         }
       }
     </Config>
-    <Header title="Dashboard de Compras" subtitle="Principais indicadores e cortes" direction="row" justify="between" align="center">
+    <Header direction="row" justify="between" align="center">
+      <Container direction="column" gap={4}>
+        <Title text="Dashboard de Compras" />
+        <Subtitle text="Principais indicadores e cortes" />
+      </Container>
       <DatePicker visible mode="range" storePath="filters.dateRange">
         <ActionOnChange type="refresh_data" />
         <Style>

@@ -3,6 +3,7 @@ export type ThemeOverrides = {
     Header?: Record<string, unknown>;
     Card?: Record<string, unknown>;
     Title?: Record<string, unknown>;
+    Subtitle?: Record<string, unknown>;
     Icon?: Record<string, unknown>;
     Kpi?: Record<string, unknown>;
     BarChart?: Record<string, unknown>;
@@ -23,6 +24,7 @@ export const builtInThemes: Record<string, ThemeOverrides> = {
     components: {
       Card: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)', borderWidth: 1 },
       Header: { backgroundColor: 'var(--headerBg, var(--bg))', textColor: 'var(--headerText, var(--fg))', subtitleColor: 'var(--headerSubtitle, #bbbbbb)', borderColor: 'var(--headerBorder, var(--surfaceBorder))', borderWidth: 0, borderBottomWidth: 0, borderRadius: 0, padding: '4px 12px' },
+      Subtitle: { titleStyle: { color: 'var(--headerSubtitle, #bbbbbb)', fontSize: 12 } },
       Kpi: { format: 'currency', containerStyle: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)' } },
       Container: { gap: 12 },
       Sidebar: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)', borderWidth: 1, borderRadius: 10, padding: 12, gap: 10 },
@@ -39,6 +41,7 @@ export const builtInThemes: Record<string, ThemeOverrides> = {
     components: {
       Card: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)', borderWidth: 1, borderRadius: 8, padding: 12 },
       Header: { backgroundColor: 'var(--headerBg, var(--bg))', textColor: 'var(--headerText, var(--fg))', subtitleColor: 'var(--headerSubtitle, #a3a3a3)', borderColor: 'var(--headerBorder, var(--surfaceBorder))', borderWidth: 0, borderBottomWidth: 0, borderRadius: 0, padding: '4px 12px' },
+      Subtitle: { titleStyle: { color: 'var(--headerSubtitle, #a3a3a3)', fontSize: 12 } },
       Kpi: { format: 'number', containerStyle: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)' } },
       Container: { gap: 12 },
       Sidebar: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)', borderWidth: 1, borderRadius: 10, padding: 12, gap: 10 },
@@ -107,6 +110,7 @@ export const builtInThemes: Record<string, ThemeOverrides> = {
     components: {
       Card: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)', borderWidth: 1, borderRadius: 8, padding: 12 },
       Header: { backgroundColor: 'var(--headerBg, var(--bg))', textColor: 'var(--headerText, var(--fg))', subtitleColor: 'var(--headerSubtitle, #6b7280)', borderColor: 'var(--headerBorder, var(--surfaceBorder))', borderWidth: 0, borderBottomWidth: 0, borderRadius: 0, padding: '4px 12px' },
+      Subtitle: { titleStyle: { color: 'var(--headerSubtitle, #6b7280)', fontSize: 12 } },
       Kpi: { format: 'number' },
       Container: { gap: 12 },
       Sidebar: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)', borderWidth: 1, borderRadius: 10, padding: 12, gap: 10 },
@@ -123,6 +127,7 @@ export const builtInThemes: Record<string, ThemeOverrides> = {
     components: {
       Card: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)', borderWidth: 1, borderRadius: 8, padding: 12 },
       Header: { backgroundColor: 'var(--headerBg, var(--bg))', textColor: 'var(--headerText, var(--fg))', subtitleColor: 'var(--headerSubtitle, #0f172a)', borderColor: 'var(--headerBorder, var(--surfaceBorder))', borderWidth: 0, borderBottomWidth: 0, borderRadius: 0, padding: '4px 12px' },
+      Subtitle: { titleStyle: { color: 'var(--headerSubtitle, #0f172a)', fontSize: 12 } },
       Kpi: { format: 'currency' },
       Container: { gap: 12 },
       Sidebar: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)', borderWidth: 1, borderRadius: 10, padding: 12, gap: 10 },

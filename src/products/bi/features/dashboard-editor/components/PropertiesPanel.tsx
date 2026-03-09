@@ -272,10 +272,10 @@ export default function PropertiesPanel({
   )
 
   const supportsDataTab = Boolean(
-    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'AISummary', 'Table', 'CardTitle', 'Title', 'Icon'].includes(String(node.type)),
+    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'AISummary', 'Table', 'CardTitle', 'Title', 'Subtitle', 'Icon'].includes(String(node.type)),
   )
   const supportsStyleTab = Boolean(
-    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'Card', 'CardTitle', 'Title', 'Icon', 'Container', 'Sidebar', 'Gauge', 'AISummary', 'Table'].includes(String(node.type)),
+    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'Card', 'CardTitle', 'Title', 'Subtitle', 'Icon', 'Container', 'Sidebar', 'Gauge', 'AISummary', 'Table'].includes(String(node.type)),
   )
   const supportsFr = Boolean(
     node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Gauge', 'SlicerCard', 'AISummary', 'Table'].includes(String(node.type)),
@@ -471,7 +471,7 @@ export default function PropertiesPanel({
                 </div>
               )}
 
-              {activeTab === 'data' && (node.type === 'Header' || node.type === 'SlicerCard') && (
+              {activeTab === 'data' && node.type === 'SlicerCard' && (
                 <TextField
                   label="Título"
                   value={String(getProp(node, 'title', ''))}
@@ -479,7 +479,7 @@ export default function PropertiesPanel({
                 />
               )}
 
-              {activeTab === 'data' && (node.type === 'CardTitle' || node.type === 'Title') && (
+              {activeTab === 'data' && (node.type === 'CardTitle' || node.type === 'Title' || node.type === 'Subtitle') && (
                 <TextField
                   label="Texto"
                   value={String(getProp(node, 'text', getProp(node, 'title', '')))}
@@ -915,13 +915,13 @@ export default function PropertiesPanel({
                     </div>
                   )}
 
-                  {(node.type === 'Header' || node.type === 'SlicerCard' || node.type === 'Card' || node.type === 'CardTitle' || node.type === 'Title') && (
+                  {(node.type === 'SlicerCard' || node.type === 'Card' || node.type === 'CardTitle' || node.type === 'Title' || node.type === 'Subtitle') && (
                     <TextField
-                      label={node.type === 'CardTitle' || node.type === 'Title' ? 'Texto' : 'Título'}
-                      value={String(node.type === 'CardTitle' || node.type === 'Title' ? getProp(node, 'text', getProp(node, 'title', '')) : getProp(node, 'title', ''))}
+                      label={node.type === 'CardTitle' || node.type === 'Title' || node.type === 'Subtitle' ? 'Texto' : 'Título'}
+                      value={String(node.type === 'CardTitle' || node.type === 'Title' || node.type === 'Subtitle' ? getProp(node, 'text', getProp(node, 'title', '')) : getProp(node, 'title', ''))}
                       onChange={(v) => {
                         const next = v || undefined
-                        if (node.type === 'CardTitle' || node.type === 'Title') {
+                        if (node.type === 'CardTitle' || node.type === 'Title' || node.type === 'Subtitle') {
                           onSetNodeProp(selectedPath, 'text', next)
                           onSetNodeProp(selectedPath, 'title', next)
                         } else {
@@ -1259,7 +1259,7 @@ export default function PropertiesPanel({
                     </div>
                   )}
 
-                  {(node.type === 'Header' || node.type === 'SlicerCard' || node.type === 'Card' || node.type === 'CardTitle' || node.type === 'Title') && (
+                  {(node.type === 'Header' || node.type === 'SlicerCard' || node.type === 'Card' || node.type === 'CardTitle' || node.type === 'Title' || node.type === 'Subtitle') && (
                     <div className="space-y-2 rounded border border-gray-200 p-2">
                       <div className="text-[11px] font-medium text-gray-700">Title Style</div>
                       <ColorField

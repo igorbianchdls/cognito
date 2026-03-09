@@ -201,7 +201,7 @@ export const catalog = {
     },
     Header: {
       props: z.object({
-        title: z.string(),
+        title: z.string().optional(),
         subtitle: z.string().optional(),
         direction: z.enum(["row","column"]).optional(),
         justify: z.enum(["start","center","end","between","around","evenly"]).optional(),
@@ -380,6 +380,15 @@ export const catalog = {
       hasChildren: false,
     },
     Title: {
+      props: z.object({
+        text: z.string().optional(),
+        title: z.string().optional(),
+        titleStyle: TitleStyleSchema.optional(),
+        marginBottom: z.union([z.number(), z.string()]).optional(),
+      }).strict(),
+      hasChildren: false,
+    },
+    Subtitle: {
       props: z.object({
         text: z.string().optional(),
         title: z.string().optional(),

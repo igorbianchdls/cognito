@@ -599,7 +599,7 @@ function compileChartNode(source: string, node: DslNode, context: CompileContext
   return out
 }
 
-function compileHeaderNode(source: string, node: DslNode): Record<string, unknown> {
+function compileHeaderNode(source: string, node: DslNode, context: CompileContext): Record<string, unknown> {
   const propsNodes = node.children.filter((child) => child.tag === 'props')
   if (propsNodes.length > 1) {
     throw new DashboardTemplateDslParseError(source, node.start, 'Tag <header> aceita no maximo um <props>')
@@ -665,6 +665,11 @@ function compileHeaderNode(source: string, node: DslNode): Record<string, unknow
 
   const out: Record<string, unknown> = { type: 'Header' }
   if (Object.keys(props).length) out.props = props
+  const children = node.children
+    .filter((child) => child.tag !== 'props' && child.tag !== 'config' && child.tag !== 'date-picker' && child.tag !== 'datepicker')
+    .map((child) => compileNode(source, child, context))
+    .filter((child): child is Record<string, unknown> => Boolean(child))
+  if (children.length) out.children = children
   return out
 }
 
@@ -763,7 +768,7 @@ function compileKpiNode(source: string, node: DslNode): Record<string, unknown> 
 function compileNode(source: string, node: DslNode, context: CompileContext): Record<string, unknown> | null {
   if (node.tag === 'defaults') return null
   if (node.tag === 'chart') return compileChartNode(source, node, context)
-  if (node.tag === 'header') return compileHeaderNode(source, node)
+  if (node.tag === 'header') return compileHeaderNode(source, node, context)
   if (node.tag === 'kpi') return compileKpiNode(source, node)
   if (node.tag === 'div') {
     throw new DashboardTemplateDslParseError(source, node.start, 'Tag <Div> nao e suportada. Use <Container>')
@@ -1093,6 +1098,13 @@ function renderHeaderNodeToDsl(node: Record<string, unknown>, level: number): st
       lines.push(...renderJsonObjectBlock('Style', styleRaw, level + 2))
       lines.push(...renderJsonObjectBlock('Config', datePickerRaw, level + 2))
       lines.push(`${renderIndent(level + 1)}</DatePicker>`)
+    }
+  }
+
+  const children = Array.isArray(node.children) ? (node.children as Record<string, unknown>[]) : []
+  if (children.length) {
+    for (const child of children) {
+      lines.push(...renderNodeToDsl(child, level + 1))
     }
   }
 

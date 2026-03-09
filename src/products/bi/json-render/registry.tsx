@@ -548,6 +548,29 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       </h3>
     );
   },
+  Subtitle: ({ element }) => {
+    const theme = useThemeOverrides();
+    const subtitleTheme = ((((theme.components as any)?.Subtitle || {}) as AnyRecord));
+    const p = deepMerge(subtitleTheme, (element?.props || {}) as AnyRecord) as AnyRecord;
+    const text = String(p.text ?? p.title ?? '').trim();
+    if (!text) return null;
+    const titleStyle = (normalizeTitleStyle(p.titleStyle) || {}) as React.CSSProperties;
+    const css = (theme.cssVars || {}) as AnyRecord;
+    const marginBottom = styleVal(p.marginBottom) ?? '0px';
+    const style: React.CSSProperties = {
+      color: css.headerSubtitle || css.headerSubtitleColor || '#6b7280',
+      fontSize: '12px',
+      lineHeight: 1.4,
+      fontWeight: 400,
+      ...(titleStyle || {}),
+      marginBottom,
+    };
+    return (
+      <div className="text-xs" style={style}>
+        {text}
+      </div>
+    );
+  },
   Icon: ({ element }) => {
     const theme = useThemeOverrides();
     const p = (element?.props || {}) as AnyRecord;
@@ -584,7 +607,6 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const direction = (p.direction ?? 'row') as 'row' | 'column';
     const justify = (p.justify ?? (direction === 'row' ? 'between' : 'start')) as 'start'|'center'|'end'|'between'|'around'|'evenly';
     const align = (p.align ?? (direction === 'row' ? 'center' : 'start')) as 'start'|'center'|'end'|'stretch'|'left'|'right';
-    const titleAlign = (p.titleAlign ?? 'left') as 'left'|'center'|'right';
     const layoutGap = styleVal(p.gap ?? (direction === 'row' ? 12 : 8));
     const containerStyle: React.CSSProperties = {
       backgroundColor: p.backgroundColor,
@@ -641,11 +663,6 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       color: css.headerDpIcon || css.headerDpColor || p.textColor,
     }) as React.CSSProperties;
     const dateFieldOverride = applyDatePickerFieldFromCssVars((dp.style as any)?.fieldStyle, undefined) as React.CSSProperties | undefined;
-    const headerTitleStyle = (() => {
-      const s = applyH1FromCssVars({ color: p.textColor }, theme.cssVars) || {};
-      (s as AnyRecord).color = p.textColor;
-      return s as React.CSSProperties;
-    })();
     const { data, setData, getValueByPath } = useData();
     function toISO(d: Date) { return d.toISOString().slice(0,10); }
     function fmt(d?: string) { return d || ''; }
@@ -940,6 +957,26 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       return <div className="flex items-center gap-2 p-2">{elems}</div>;
     }, [picker, JSON.stringify(slicers), JSON.stringify(optionsMap), data]);
 
+    const hasChildren = React.Children.count(children) > 0;
+    const fallbackTitle = typeof p.title === 'string' && p.title.trim() ? p.title.trim() : '';
+    const fallbackSubtitle = typeof p.subtitle === 'string' && p.subtitle.trim() ? p.subtitle.trim() : '';
+    const fallbackHeaderTitleStyle = (() => {
+      const s = applyH1FromCssVars({ color: p.textColor }, theme.cssVars) || {};
+      (s as AnyRecord).color = p.textColor;
+      return s as React.CSSProperties;
+    })();
+    const fallbackSubtitleStyle: React.CSSProperties = {
+      color: p.subtitleColor,
+      fontSize: '12px',
+      lineHeight: 1.4,
+    };
+    const fallbackContent = (!hasChildren && (fallbackTitle || fallbackSubtitle)) ? (
+      <div style={{ padding: '3px 6px', textAlign: 'left', minWidth: 0 }}>
+        {fallbackTitle ? <div className="text-lg font-semibold" style={{ ...fallbackHeaderTitleStyle, fontSize: '20px' }}>{fallbackTitle}</div> : null}
+        {fallbackSubtitle ? <div className="mt-0.5 text-xs" style={fallbackSubtitleStyle}>{fallbackSubtitle}</div> : null}
+      </div>
+    ) : null;
+
     return (
       <div className="rounded-md" style={wrappedStyle}>
         <div
@@ -952,17 +989,9 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
             width: '100%',
           }}
         >
-          <div style={{ padding: '3px 6px', textAlign: titleAlign, minWidth: 0 }}>
-            <div className="text-lg font-semibold" style={{ ...headerTitleStyle, fontSize: '20px' }}>{p.title}</div>
-            {p.subtitle ? (
-              <div className="mt-0.5 text-xs" style={{ color: p.subtitleColor }}>
-                {p.subtitle}
-              </div>
-            ) : null}
-          </div>
+          {hasChildren ? children : fallbackContent}
           {controls}
         </div>
-        {children && <div className="mt-2">{children}</div>}
       </div>
     );
   },
