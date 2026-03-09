@@ -248,6 +248,74 @@ function setPropInObject(base: Record<string, any> | undefined, path: string, va
   return root
 }
 
+function TextSpacingFields({
+  node,
+  selectedPath,
+  onSetNodeProp,
+}: {
+  node: Record<string, any>
+  selectedPath: JsonNodePath
+  onSetNodeProp: (nodePath: JsonNodePath, propPath: string, value: unknown) => void
+}) {
+  return (
+    <div className="space-y-2 rounded border border-gray-200 p-2">
+      <div className="text-[11px] font-medium text-gray-700">Spacing</div>
+      <div className="grid grid-cols-2 gap-2">
+        <TextField
+          label="margin"
+          value={String(getProp(node, 'margin', ''))}
+          onChange={(v) => onSetNodeProp(selectedPath, 'margin', v || undefined)}
+        />
+        <TextField
+          label="padding"
+          value={String(getProp(node, 'padding', ''))}
+          onChange={(v) => onSetNodeProp(selectedPath, 'padding', v || undefined)}
+        />
+        <TextField
+          label="marginTop"
+          value={String(getProp(node, 'marginTop', ''))}
+          onChange={(v) => onSetNodeProp(selectedPath, 'marginTop', v || undefined)}
+        />
+        <TextField
+          label="paddingTop"
+          value={String(getProp(node, 'paddingTop', ''))}
+          onChange={(v) => onSetNodeProp(selectedPath, 'paddingTop', v || undefined)}
+        />
+        <TextField
+          label="marginRight"
+          value={String(getProp(node, 'marginRight', ''))}
+          onChange={(v) => onSetNodeProp(selectedPath, 'marginRight', v || undefined)}
+        />
+        <TextField
+          label="paddingRight"
+          value={String(getProp(node, 'paddingRight', ''))}
+          onChange={(v) => onSetNodeProp(selectedPath, 'paddingRight', v || undefined)}
+        />
+        <TextField
+          label="marginBottom"
+          value={String(getProp(node, 'marginBottom', ''))}
+          onChange={(v) => onSetNodeProp(selectedPath, 'marginBottom', v || undefined)}
+        />
+        <TextField
+          label="paddingBottom"
+          value={String(getProp(node, 'paddingBottom', ''))}
+          onChange={(v) => onSetNodeProp(selectedPath, 'paddingBottom', v || undefined)}
+        />
+        <TextField
+          label="marginLeft"
+          value={String(getProp(node, 'marginLeft', ''))}
+          onChange={(v) => onSetNodeProp(selectedPath, 'marginLeft', v || undefined)}
+        />
+        <TextField
+          label="paddingLeft"
+          value={String(getProp(node, 'paddingLeft', ''))}
+          onChange={(v) => onSetNodeProp(selectedPath, 'paddingLeft', v || undefined)}
+        />
+      </div>
+    </div>
+  )
+}
+
 export default function PropertiesPanel({
   tree,
   selectedPath,
@@ -1280,6 +1348,14 @@ export default function PropertiesPanel({
                         />
                       </div>
                     </div>
+                  )}
+
+                  {selectedPath && (node.type === 'CardTitle' || node.type === 'Title' || node.type === 'Subtitle') && (
+                    <TextSpacingFields
+                      node={node}
+                      selectedPath={selectedPath}
+                      onSetNodeProp={onSetNodeProp}
+                    />
                   )}
 
                   {node.type === 'AISummary' && (

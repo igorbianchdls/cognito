@@ -192,6 +192,21 @@ function styleVal(v: unknown): string | undefined {
   return typeof v === 'number' ? `${v}px` : String(v);
 }
 
+function resolveTextSpacingStyle(p: AnyRecord | undefined): React.CSSProperties {
+  return {
+    margin: styleVal(p?.margin),
+    marginTop: styleVal(p?.marginTop),
+    marginRight: styleVal(p?.marginRight),
+    marginBottom: styleVal(p?.marginBottom),
+    marginLeft: styleVal(p?.marginLeft),
+    padding: styleVal(p?.padding),
+    paddingTop: styleVal(p?.paddingTop),
+    paddingRight: styleVal(p?.paddingRight),
+    paddingBottom: styleVal(p?.paddingBottom),
+    paddingLeft: styleVal(p?.paddingLeft),
+  };
+}
+
 function toFlexNumber(v: unknown): number | undefined {
   if (typeof v === 'boolean') return v ? 1 : 0;
   const n = Number(v);
@@ -489,6 +504,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const p = deepMerge(theme.components?.Card || {}, element?.props || {}) as AnyRecord;
     const title = p.title ?? "";
     const titleStyle = applyH1FromCssVars(normalizeTitleStyle(p.titleStyle), theme.cssVars) as React.CSSProperties | undefined;
+    const css = (theme.cssVars || {}) as AnyRecord;
     const styleBase: React.CSSProperties = {
       backgroundColor: p.backgroundColor,
       borderColor: p.borderColor,
@@ -516,7 +532,20 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     };
     return (
       <FrameSurface style={style} frame={p?.frame as AnyRecord} cssVars={theme.cssVars}>
-        {title && <h3 className="text-base font-semibold text-gray-900 mb-0" style={titleStyle}>{title}</h3>}
+        {title ? (
+          <h3
+            style={{
+              margin: 0,
+              fontSize: '16px',
+              lineHeight: 1.3,
+              fontWeight: 600,
+              color: css.fg || '#0f172a',
+              ...(titleStyle || {}),
+            }}
+          >
+            {title}
+          </h3>
+        ) : null}
         <div style={contentStyle}>{children}</div>
       </FrameSurface>
     );
@@ -527,9 +556,18 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const text = String(p.text ?? p.title ?? '').trim();
     if (!text) return null;
     const titleStyle = applyH1FromCssVars(normalizeTitleStyle(p.titleStyle), theme.cssVars) as React.CSSProperties | undefined;
-    const marginBottom = styleVal(p.marginBottom) ?? '0px';
+    const css = (theme.cssVars || {}) as AnyRecord;
+    const style: React.CSSProperties = {
+      margin: 0,
+      fontSize: '16px',
+      lineHeight: 1.3,
+      fontWeight: 600,
+      color: css.fg || '#0f172a',
+      ...(titleStyle || {}),
+      ...resolveTextSpacingStyle(p),
+    };
     return (
-      <h3 className="text-base font-semibold text-gray-900" style={{ marginBottom, ...(titleStyle || {}) }}>
+      <h3 style={style}>
         {text}
       </h3>
     );
@@ -541,9 +579,18 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const text = String(p.text ?? p.title ?? '').trim();
     if (!text) return null;
     const titleStyle = applyH1FromCssVars(normalizeTitleStyle(p.titleStyle), theme.cssVars) as React.CSSProperties | undefined;
-    const marginBottom = styleVal(p.marginBottom) ?? '0px';
+    const css = (theme.cssVars || {}) as AnyRecord;
+    const style: React.CSSProperties = {
+      margin: 0,
+      fontSize: '16px',
+      lineHeight: 1.3,
+      fontWeight: 600,
+      color: css.fg || '#0f172a',
+      ...(titleStyle || {}),
+      ...resolveTextSpacingStyle(p),
+    };
     return (
-      <h3 className="text-base font-semibold text-gray-900" style={{ marginBottom, ...(titleStyle || {}) }}>
+      <h3 style={style}>
         {text}
       </h3>
     );
@@ -556,17 +603,16 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     if (!text) return null;
     const titleStyle = (normalizeTitleStyle(p.titleStyle) || {}) as React.CSSProperties;
     const css = (theme.cssVars || {}) as AnyRecord;
-    const marginBottom = styleVal(p.marginBottom) ?? '0px';
     const style: React.CSSProperties = {
       color: css.headerSubtitle || css.headerSubtitleColor || '#6b7280',
       fontSize: '12px',
       lineHeight: 1.4,
       fontWeight: 400,
       ...(titleStyle || {}),
-      marginBottom,
+      ...resolveTextSpacingStyle(p),
     };
     return (
-      <div className="text-xs" style={style}>
+      <div style={style}>
         {text}
       </div>
     );
@@ -972,8 +1018,12 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     };
     const fallbackContent = (!hasChildren && (fallbackTitle || fallbackSubtitle)) ? (
       <div style={{ padding: '3px 6px', textAlign: 'left', minWidth: 0 }}>
-        {fallbackTitle ? <div className="text-lg font-semibold" style={{ ...fallbackHeaderTitleStyle, fontSize: '20px' }}>{fallbackTitle}</div> : null}
-        {fallbackSubtitle ? <div className="mt-0.5 text-xs" style={fallbackSubtitleStyle}>{fallbackSubtitle}</div> : null}
+        {fallbackTitle ? (
+          <div style={{ fontSize: '20px', lineHeight: 1.3, fontWeight: 600, ...fallbackHeaderTitleStyle }}>
+            {fallbackTitle}
+          </div>
+        ) : null}
+        {fallbackSubtitle ? <div style={{ marginTop: '2px', ...fallbackSubtitleStyle }}>{fallbackSubtitle}</div> : null}
       </div>
     ) : null;
 

@@ -23,6 +23,21 @@ const TitleStyleSchema = z.object({
   textAlign: z.enum(["left","center","right"]).optional(),
 }).partial();
 
+const BoxSpacingValueSchema = z.union([z.number(), z.string()]).optional();
+
+const TextBlockSpacingProps = {
+  margin: BoxSpacingValueSchema,
+  marginTop: BoxSpacingValueSchema,
+  marginRight: BoxSpacingValueSchema,
+  marginBottom: BoxSpacingValueSchema,
+  marginLeft: BoxSpacingValueSchema,
+  padding: BoxSpacingValueSchema,
+  paddingTop: BoxSpacingValueSchema,
+  paddingRight: BoxSpacingValueSchema,
+  paddingBottom: BoxSpacingValueSchema,
+  paddingLeft: BoxSpacingValueSchema,
+} as const;
+
 const NivoTextSchema = z.object({
   fontFamily: z.string().optional(),
   fontSize: z.number().optional(),
@@ -375,7 +390,7 @@ export const catalog = {
         text: z.string().optional(),
         title: z.string().optional(),
         titleStyle: TitleStyleSchema.optional(),
-        marginBottom: z.union([z.number(), z.string()]).optional(),
+        ...TextBlockSpacingProps,
       }).strict(),
       hasChildren: false,
     },
@@ -384,7 +399,7 @@ export const catalog = {
         text: z.string().optional(),
         title: z.string().optional(),
         titleStyle: TitleStyleSchema.optional(),
-        marginBottom: z.union([z.number(), z.string()]).optional(),
+        ...TextBlockSpacingProps,
       }).strict(),
       hasChildren: false,
     },
@@ -393,7 +408,7 @@ export const catalog = {
         text: z.string().optional(),
         title: z.string().optional(),
         titleStyle: TitleStyleSchema.optional(),
-        marginBottom: z.union([z.number(), z.string()]).optional(),
+        ...TextBlockSpacingProps,
       }).strict(),
       hasChildren: false,
     },
