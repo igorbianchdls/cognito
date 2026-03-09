@@ -7,7 +7,7 @@ export type ThemeOverrides = {
     LineChart?: Record<string, unknown>;
     PieChart?: Record<string, unknown>;
     Table?: Record<string, unknown>;
-    Div?: Record<string, unknown>;
+    Container?: Record<string, unknown>;
     Sidebar?: Record<string, unknown>;
     Slicer?: Record<string, unknown>;
     SlicerCard?: Record<string, unknown>;
@@ -22,7 +22,7 @@ export const builtInThemes: Record<string, ThemeOverrides> = {
       Card: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)', borderWidth: 1 },
       Header: { backgroundColor: 'var(--headerBg, var(--bg))', textColor: 'var(--headerText, var(--fg))', subtitleColor: 'var(--headerSubtitle, #bbbbbb)', borderColor: 'var(--headerBorder, var(--surfaceBorder))', borderWidth: 0, borderBottomWidth: 0, borderRadius: 0, padding: '4px 12px' },
       Kpi: { format: 'currency', containerStyle: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)' } },
-      Div: { gap: 12 },
+      Container: { gap: 12 },
       Sidebar: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)', borderWidth: 1, borderRadius: 10, padding: 12, gap: 10 },
       BarChart: { containerStyle: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)' }, nivo: { gridY: false } },
       LineChart: { containerStyle: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)' }, nivo: { gridY: false } },
@@ -38,7 +38,7 @@ export const builtInThemes: Record<string, ThemeOverrides> = {
       Card: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)', borderWidth: 1, borderRadius: 8, padding: 12 },
       Header: { backgroundColor: 'var(--headerBg, var(--bg))', textColor: 'var(--headerText, var(--fg))', subtitleColor: 'var(--headerSubtitle, #a3a3a3)', borderColor: 'var(--headerBorder, var(--surfaceBorder))', borderWidth: 0, borderBottomWidth: 0, borderRadius: 0, padding: '4px 12px' },
       Kpi: { format: 'number', containerStyle: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)' } },
-      Div: { gap: 12 },
+      Container: { gap: 12 },
       Sidebar: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)', borderWidth: 1, borderRadius: 10, padding: 12, gap: 10 },
       BarChart: {
         containerStyle: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)' },
@@ -106,7 +106,7 @@ export const builtInThemes: Record<string, ThemeOverrides> = {
       Card: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)', borderWidth: 1, borderRadius: 8, padding: 12 },
       Header: { backgroundColor: 'var(--headerBg, var(--bg))', textColor: 'var(--headerText, var(--fg))', subtitleColor: 'var(--headerSubtitle, #6b7280)', borderColor: 'var(--headerBorder, var(--surfaceBorder))', borderWidth: 0, borderBottomWidth: 0, borderRadius: 0, padding: '4px 12px' },
       Kpi: { format: 'number' },
-      Div: { gap: 12 },
+      Container: { gap: 12 },
       Sidebar: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)', borderWidth: 1, borderRadius: 10, padding: 12, gap: 10 },
       BarChart: { nivo: { gridY: false } },
       LineChart: { nivo: { gridY: false, curve: 'monotoneX' } },
@@ -122,7 +122,7 @@ export const builtInThemes: Record<string, ThemeOverrides> = {
       Card: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)', borderWidth: 1, borderRadius: 8, padding: 12 },
       Header: { backgroundColor: 'var(--headerBg, var(--bg))', textColor: 'var(--headerText, var(--fg))', subtitleColor: 'var(--headerSubtitle, #0f172a)', borderColor: 'var(--headerBorder, var(--surfaceBorder))', borderWidth: 0, borderBottomWidth: 0, borderRadius: 0, padding: '4px 12px' },
       Kpi: { format: 'currency' },
-      Div: { gap: 12 },
+      Container: { gap: 12 },
       Sidebar: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)', borderWidth: 1, borderRadius: 10, padding: 12, gap: 10 },
       BarChart: { nivo: { gridY: false } },
       LineChart: { nivo: { gridY: false, curve: 'monotoneX' } },

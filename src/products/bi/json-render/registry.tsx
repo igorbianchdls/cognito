@@ -893,9 +893,10 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     );
   },
 
-  Div: ({ element, children }) => {
+  Container: ({ element, children }) => {
     const theme = useThemeOverrides();
-    const p = deepMerge(deepMerge(defaultDiv as any, (theme.components?.Div || {}) as any), (element?.props || {}) as any) as AnyRecord;
+    const containerTheme = ((theme.components as any)?.Container || {}) as AnyRecord;
+    const p = deepMerge(deepMerge(defaultDiv as any, containerTheme), (element?.props || {}) as any) as AnyRecord;
     const style: React.CSSProperties = {
       display: 'flex',
       flexDirection: (p.direction ?? 'column') as any,

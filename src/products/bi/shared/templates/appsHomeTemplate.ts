@@ -81,7 +81,7 @@ export const APPS_HOME_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps_h
         }
       </Config>
     </Header>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start">
+    <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <KPI title="Recebidos (Período)" valuePath="financeiro.kpis.recebidos_mes" format="currency">
         <Config>
           {
@@ -129,8 +129,8 @@ export const APPS_HOME_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps_h
           }
         </Config>
       </AISummary>
-    </Div>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start">
+    </Container>
+    <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Chart type="bar" title="AP por Fornecedor" format="currency" height={200}>
         <Query>
           SELECT
@@ -239,8 +239,8 @@ export const APPS_HOME_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps_h
           }
         </Config>
       </Chart>
-    </Div>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start">
+    </Container>
+    <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Card title="AP por Centro de Custo">
         <Chart type="bar" title="Centros de Custo" format="currency" height={200}>
           <Query>
@@ -355,8 +355,8 @@ export const APPS_HOME_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps_h
           </Config>
         </Chart>
       </Card>
-    </Div>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start">
+    </Container>
+    <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Card title="AR por Categoria (Receita)">
         <Chart type="bar" title="Categorias de Receita" format="currency" height={200}>
           <Query>
@@ -471,7 +471,7 @@ export const APPS_HOME_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps_h
           </Config>
         </Chart>
       </Card>
-    </Div>
+    </Container>
     <Chart type="pie" title="Canais de Venda" format="currency" height={220}>
       <Query>
         SELECT

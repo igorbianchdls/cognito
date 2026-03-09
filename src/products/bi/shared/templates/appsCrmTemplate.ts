@@ -29,7 +29,7 @@ export const APPS_CRM_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps_cr
         </Style>
       </DatePicker>
     </Header>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start">
+    <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <KPI title="Pipeline (R$)" valuePath="crm.kpis.faturamento" format="currency">
       </KPI>
       <KPI title="Vendas" valuePath="crm.kpis.vendas" format="number">
@@ -40,8 +40,8 @@ export const APPS_CRM_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps_cr
       </KPI>
       <KPI title="Conversão" valuePath="crm.kpis.taxaConversao" format="number" unit="%">
       </KPI>
-    </Div>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start">
+    </Container>
+    <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Chart type="bar" fr={2} title="Pipeline por Vendedor" format="currency" height={240}>
         <Query>
           SELECT
@@ -122,8 +122,8 @@ export const APPS_CRM_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps_cr
           }
         </Config>
       </AISummary>
-    </Div>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start">
+    </Container>
+    <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Chart type="pie" fr={1} title="Leads por Origem" format="number" height={260}>
         <Query>
           SELECT
@@ -184,8 +184,8 @@ export const APPS_CRM_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps_cr
           }
         </Config>
       </Chart>
-    </Div>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start">
+    </Container>
+    <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Chart type="bar" fr={1} title="Oportunidades por Status" format="number" height={230}>
         <Query>
           SELECT
@@ -276,8 +276,8 @@ export const APPS_CRM_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps_cr
           }
         </Config>
       </Chart>
-    </Div>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start">
+    </Container>
+    <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Chart type="bar" fr={1} title="Ticket Estimado por Vendedor" format="currency" height={230}>
         <Query>
           SELECT
@@ -368,6 +368,6 @@ export const APPS_CRM_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps_cr
           }
         </Config>
       </Chart>
-    </Div>
+    </Container>
   </Theme>
 </DashboardTemplate>`

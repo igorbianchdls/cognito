@@ -216,7 +216,7 @@ function ensureThemeTree(tree: JsonTree): Array<Record<string, unknown>> {
 
 function buildRow(): Record<string, unknown> {
   return {
-    type: 'Div',
+    type: 'Container',
     props: {
       direction: 'row',
       gap: 12,

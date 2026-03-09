@@ -120,7 +120,7 @@ function getSiblingAxis(tree: JsonTree, path: JsonNodePath): 'horizontal' | 'ver
 
   const parentPath = path.slice(0, -1)
   const parentNode = parentPath.length ? getNodeAtPath(tree, parentPath) : (tree as Record<string, any>)
-  const direction = parentNode?.type === 'Div' ? String(parentNode?.props?.direction ?? 'column') : 'column'
+  const direction = parentNode?.type === 'Container' ? String(parentNode?.props?.direction ?? 'column') : 'column'
   return direction === 'row' ? 'horizontal' : 'vertical'
 }
 

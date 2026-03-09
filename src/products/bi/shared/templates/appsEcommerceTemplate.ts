@@ -38,7 +38,7 @@ export const APPS_ECOMMERCE_TEMPLATE_DSL = String.raw`<DashboardTemplate name="a
         </Style>
       </DatePicker>
     </Header>
-    <Div direction="row" gap={12} padding={16} wrap justify="start" align="start">
+    <Container direction="row" gap={12} padding={16} wrap justify="start" align="start">
       <SlicerCard fr={1} title="Filtro de Plataformas">
         <Config>
           {
@@ -193,8 +193,8 @@ export const APPS_ECOMMERCE_TEMPLATE_DSL = String.raw`<DashboardTemplate name="a
           }
         </Config>
       </SlicerCard>
-    </Div>
-    <Div direction="row" gap={12} padding={16} wrap>
+    </Container>
+    <Container direction="row" gap={12} padding={16} wrap>
       <KPI fr={1} title="GMV Consolidado" format="currency" borderless>
         <Query>
           SELECT
@@ -549,8 +549,8 @@ export const APPS_ECOMMERCE_TEMPLATE_DSL = String.raw`<DashboardTemplate name="a
           </Filters>
         </DataQuery>
       </KPI>
-    </Div>
-    <Div direction="row" gap={12} padding={16} wrap>
+    </Container>
+    <Container direction="row" gap={12} padding={16} wrap>
       <KPI fr={1} title="Taxas de Pedido" format="currency" borderless>
         <Query>
           SELECT
@@ -857,8 +857,8 @@ export const APPS_ECOMMERCE_TEMPLATE_DSL = String.raw`<DashboardTemplate name="a
           </Filters>
         </DataQuery>
       </KPI>
-    </Div>
-    <Div direction="row" gap={12} padding={16} wrap>
+    </Container>
+    <Container direction="row" gap={12} padding={16} wrap>
       <Chart type="line" fr={2} title="GMV por Mês" format="currency" height={250}>
         <Query>
           SELECT
@@ -1065,8 +1065,8 @@ export const APPS_ECOMMERCE_TEMPLATE_DSL = String.raw`<DashboardTemplate name="a
           }
         </Config>
       </Chart>
-    </Div>
-    <Div direction="row" gap={12} padding={16} wrap>
+    </Container>
+    <Container direction="row" gap={12} padding={16} wrap>
       <Chart type="bar" fr={1} title="GMV por Loja" format="currency" height={240}>
         <Query>
           SELECT
@@ -1273,8 +1273,8 @@ export const APPS_ECOMMERCE_TEMPLATE_DSL = String.raw`<DashboardTemplate name="a
           }
         </Config>
       </Chart>
-    </Div>
-    <Div direction="row" gap={12} padding={16} wrap>
+    </Container>
+    <Container direction="row" gap={12} padding={16} wrap>
       <Chart type="bar" fr={1} title="Top Produtos por Receita" format="currency" height={260}>
         <Query>
           SELECT
@@ -1419,8 +1419,8 @@ export const APPS_ECOMMERCE_TEMPLATE_DSL = String.raw`<DashboardTemplate name="a
           }
         </Config>
       </Chart>
-    </Div>
-    <Div direction="row" gap={12} padding={16} wrap>
+    </Container>
+    <Container direction="row" gap={12} padding={16} wrap>
       <Chart type="line" fr={1} title="Payout Líquido por Mês" format="currency" height={220}>
         <Query>
           SELECT
@@ -1589,8 +1589,8 @@ export const APPS_ECOMMERCE_TEMPLATE_DSL = String.raw`<DashboardTemplate name="a
           }
         </Config>
       </Chart>
-    </Div>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start">
+    </Container>
+    <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Chart type="bar" fr={1} title="Ticket Médio por Plataforma" format="currency" height={220}>
         <Query>
           SELECT
@@ -1753,6 +1753,6 @@ export const APPS_ECOMMERCE_TEMPLATE_DSL = String.raw`<DashboardTemplate name="a
           }
         </Config>
       </AISummary>
-    </Div>
+    </Container>
   </Theme>
 </DashboardTemplate>`

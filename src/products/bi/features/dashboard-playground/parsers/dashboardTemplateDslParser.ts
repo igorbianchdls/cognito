@@ -431,7 +431,7 @@ function toCatalogType(tag: string): string {
   if (normalized === 'dashboardtemplate') return 'DashboardTemplate'
   if (normalized === 'theme') return 'Theme'
   if (normalized === 'header') return 'Header'
-  if (normalized === 'div') return 'Div'
+  if (normalized === 'container') return 'Container'
   if (normalized === 'sidebar') return 'Sidebar'
   if (normalized === 'card') return 'Card'
   if (normalized === 'cardtitle') return 'CardTitle'
@@ -763,6 +763,9 @@ function compileNode(source: string, node: DslNode, context: CompileContext): Re
   if (node.tag === 'chart') return compileChartNode(source, node, context)
   if (node.tag === 'header') return compileHeaderNode(source, node)
   if (node.tag === 'kpi') return compileKpiNode(source, node)
+  if (node.tag === 'div') {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <Div> nao e suportada. Use <Container>')
+  }
 
   const type = toCatalogType(node.tag)
   if (!type || type === 'Chart') {
@@ -866,7 +869,7 @@ function toDslTag(type: string): string {
   if (raw === 'SlicerCard') return 'SlicerCard'
   if (raw === 'Theme') return 'Theme'
   if (raw === 'Header') return 'Header'
-  if (raw === 'Div') return 'Div'
+  if (raw === 'Container') return 'Container'
   if (raw === 'Sidebar') return 'Sidebar'
   if (raw === 'Table') return 'Table'
   return raw
@@ -1187,7 +1190,7 @@ function renderNodeToDsl(node: unknown, level: number): string[] {
       ? ({ ...(record.props as Record<string, unknown>) } as Record<string, unknown>)
       : {}
   const nodeType = String(record.type || '').trim()
-  if (nodeType === 'Div') {
+  if (nodeType === 'Container') {
     delete propsRaw.childGrow
     delete propsRaw.fr
   }

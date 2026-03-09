@@ -29,7 +29,7 @@ export const APPS_DOCUMENTOS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="
         </Style>
       </DatePicker>
     </Header>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start">
+    <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <AISummary fr={2} title="Insights da IA">
         <Config>
           {
@@ -52,8 +52,8 @@ export const APPS_DOCUMENTOS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="
       </AISummary>
       <KPI fr={1} title="Últimos 30 dias" valuePath="documentos.kpis.ultimos_30_dias" format="number">
       </KPI>
-    </Div>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start">
+    </Container>
+    <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <KPI title="Templates Ativos" valuePath="documentos.kpis.templates_ativos" format="number">
       </KPI>
       <KPI title="Versões Publicadas" valuePath="documentos.kpis.versoes_publicadas" format="number">
@@ -62,14 +62,14 @@ export const APPS_DOCUMENTOS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="
       </KPI>
       <KPI title="Documentos Enviados" valuePath="documentos.kpis.documentos_enviados" format="number">
       </KPI>
-    </Div>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start">
+    </Container>
+    <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <KPI title="Pendentes de Geração" valuePath="documentos.kpis.pendentes_geracao" format="number">
       </KPI>
       <KPI title="Com Erro" valuePath="documentos.kpis.com_erro" format="number">
       </KPI>
       <KPI title="Assinados" valuePath="documentos.kpis.assinados" format="number">
       </KPI>
-    </Div>
+    </Container>
   </Theme>
 </DashboardTemplate>`

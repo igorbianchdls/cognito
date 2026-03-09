@@ -127,6 +127,26 @@ const TableColumnSchema = z.object({
   textColor: z.string().optional(),
 }).strict();
 
+const ContainerPropsSchema = z.object({
+  direction: z.enum(["row","column"]).optional(),
+  gap: z.union([z.number(), z.string()]).optional(),
+  wrap: z.boolean().optional(),
+  justify: z.enum(["start","center","end","between","around","evenly"]).optional(),
+  align: z.enum(["start","center","end","stretch"]).optional(),
+  grow: z.union([z.number(), z.boolean()]).optional(),
+  shrink: z.union([z.number(), z.boolean()]).optional(),
+  basis: z.union([z.number(), z.string()]).optional(),
+  padding: z.union([z.number(), z.string()]).optional(),
+  margin: z.union([z.number(), z.string()]).optional(),
+  backgroundColor: z.string().optional(),
+  borderColor: z.string().optional(),
+  borderWidth: z.number().optional(),
+  borderRadius: z.number().optional(),
+  width: z.union([z.number(), z.string()]).optional(),
+  height: z.union([z.number(), z.string()]).optional(),
+  frame: FrameStyleSchema.optional(),
+}).strict();
+
 export const catalog = {
   components: {
     Theme: {
@@ -295,26 +315,8 @@ export const catalog = {
       }).strict(),
       hasChildren: true,
     },
-    Div: {
-      props: z.object({
-        direction: z.enum(["row","column"]).optional(),
-        gap: z.union([z.number(), z.string()]).optional(),
-        wrap: z.boolean().optional(),
-        justify: z.enum(["start","center","end","between","around","evenly"]).optional(),
-        align: z.enum(["start","center","end","stretch"]).optional(),
-        grow: z.union([z.number(), z.boolean()]).optional(),
-        shrink: z.union([z.number(), z.boolean()]).optional(),
-        basis: z.union([z.number(), z.string()]).optional(),
-        padding: z.union([z.number(), z.string()]).optional(),
-        margin: z.union([z.number(), z.string()]).optional(),
-        backgroundColor: z.string().optional(),
-        borderColor: z.string().optional(),
-        borderWidth: z.number().optional(),
-        borderRadius: z.number().optional(),
-        width: z.union([z.number(), z.string()]).optional(),
-        height: z.union([z.number(), z.string()]).optional(),
-        frame: FrameStyleSchema.optional(),
-      }).strict(),
+    Container: {
+      props: ContainerPropsSchema,
       hasChildren: true,
     },
     Sidebar: {

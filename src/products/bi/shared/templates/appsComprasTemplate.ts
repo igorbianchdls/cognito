@@ -29,7 +29,7 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
         </Style>
       </DatePicker>
     </Header>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start">
+    <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <KPI title="Gasto" format="currency">
         <Query>
           SELECT
@@ -202,8 +202,8 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
         </Query>
         <DataQuery yField="value" />
       </KPI>
-    </Div>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start">
+    </Container>
+    <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Chart type="bar" fr={1} title="Fornecedores" format="currency" height={240}>
         <Query>
           SELECT
@@ -390,8 +390,8 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
           }
         </Config>
       </Chart>
-    </Div>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start">
+    </Container>
+    <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Chart type="bar" fr={1} title="Categorias" format="currency" height={220}>
         <Query>
           SELECT
@@ -556,7 +556,7 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
           }
         </Config>
       </Chart>
-    </Div>
+    </Container>
     <Chart type="pie" fr={1} title="Status (Pizza)" format="number" height={260}>
       <Query>
         SELECT
@@ -611,7 +611,7 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
         }
       </Config>
     </Chart>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start">
+    <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Chart type="bar" fr={1} title="Gasto por Mês" format="currency" height={220}>
         <Query>
           SELECT
@@ -794,6 +794,6 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
           }
         </Config>
       </AISummary>
-    </Div>
+    </Container>
   </Theme>
 </DashboardTemplate>`

@@ -275,7 +275,7 @@ export default function PropertiesPanel({
     node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'AISummary', 'Table', 'CardTitle'].includes(String(node.type)),
   )
   const supportsStyleTab = Boolean(
-    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'Card', 'CardTitle', 'Div', 'Sidebar', 'Gauge', 'AISummary', 'Table'].includes(String(node.type)),
+    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'Card', 'CardTitle', 'Container', 'Sidebar', 'Gauge', 'AISummary', 'Table'].includes(String(node.type)),
   )
   const supportsFr = Boolean(
     node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Gauge', 'SlicerCard', 'AISummary', 'Table'].includes(String(node.type)),
@@ -904,7 +904,7 @@ export default function PropertiesPanel({
                     />
                   )}
 
-                  {(node.type === 'Header' || node.type === 'Div' || node.type === 'Card' || node.type === 'Sidebar') && (
+                  {(node.type === 'Header' || node.type === 'Container' || node.type === 'Card' || node.type === 'Sidebar') && (
                     <ColorField
                       label="backgroundColor"
                       value={String(getProp(node, 'backgroundColor', ''))}
@@ -912,7 +912,7 @@ export default function PropertiesPanel({
                     />
                   )}
 
-                  {(node.type === 'Div' || node.type === 'Sidebar') && (
+                  {(node.type === 'Container' || node.type === 'Sidebar') && (
                     <div className="space-y-2 rounded border border-gray-200 p-2">
                       <div className="text-[11px] font-medium text-gray-700">Flex Item</div>
                       <div className="grid grid-cols-2 gap-2">
