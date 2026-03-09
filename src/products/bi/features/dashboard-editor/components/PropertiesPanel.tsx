@@ -334,12 +334,9 @@ export default function PropertiesPanel({
 
   return (
     <div className="h-full rounded-md border border-gray-200 bg-white">
-      <div className="flex items-center justify-between border-b border-gray-200 px-3 py-2">
-        <div>
-          <div className="text-xs font-semibold text-gray-900">Propriedades</div>
-          <div className="text-[11px] text-gray-500">
-            {node ? `${String(node.type)} • ${selectedPath?.join('.') || 'root'}` : 'Nenhum componente selecionado'}
-          </div>
+      <div className="flex items-center justify-between border-b border-gray-200 px-3 py-3">
+        <div className="text-3xl font-bold text-gray-900">
+          {node ? String(node.type) : 'Nenhum componente'}
         </div>
         <button type="button" onClick={onClose} className="rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50">
           Fechar
@@ -495,17 +492,24 @@ export default function PropertiesPanel({
               )}
 
               {activeTab === 'data' && node.type === 'Icon' && (
-                <div className="grid grid-cols-2 gap-2">
-                  <TextField
-                    label="name"
-                    value={String(getProp(node, 'name', ''))}
-                    onChange={(v) => onSetNodeProp(selectedPath, 'name', v || undefined)}
-                  />
-                  <NumberField
-                    label="size"
-                    value={Number(getProp(node, 'size', '')) || ''}
-                    onChange={(v) => onSetNodeProp(selectedPath, 'size', v)}
-                  />
+                <div className="space-y-2 rounded border border-gray-200 p-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <TextField
+                      label="name"
+                      value={String(getProp(node, 'name', ''))}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'name', v || undefined)}
+                    />
+                    <NumberField
+                      label="size"
+                      value={Number(getProp(node, 'size', '')) || ''}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'size', v)}
+                    />
+                    <NumberField
+                      label="strokeWidth"
+                      value={Number(getProp(node, 'strokeWidth', '')) || ''}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'strokeWidth', v)}
+                    />
+                  </div>
                 </div>
               )}
 
@@ -656,7 +660,54 @@ export default function PropertiesPanel({
                 </div>
               )}
 
-              {activeTab === 'data' && (node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart') && (
+              {activeTab === 'data' && node.type === 'KPI' && (
+                <div className="space-y-2 rounded border border-gray-200 p-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <SelectField
+                      label="Formato"
+                      value={String(getProp(node, 'format', 'number'))}
+                      options={[
+                        { value: 'number', label: 'Número' },
+                        { value: 'currency', label: 'Moeda' },
+                        { value: 'percent', label: 'Percentual' },
+                      ]}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'format', v)}
+                    />
+                    <NumberField
+                      label="fr"
+                      value={Number(getProp(node, 'fr', '')) || ''}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'fr', v)}
+                    />
+                  </div>
+                  <TextField
+                    label="valuePath"
+                    value={String(getProp(node, 'valuePath', ''))}
+                    onChange={(v) => onSetNodeProp(selectedPath, 'valuePath', v || undefined)}
+                    placeholder="ex.: vendas.kpis.faturamento"
+                  />
+                  <TextField
+                    label="unit"
+                    value={String(getProp(node, 'unit', ''))}
+                    onChange={(v) => onSetNodeProp(selectedPath, 'unit', v || undefined)}
+                    placeholder="ex.: %"
+                  />
+                  <TextAreaField
+                    label="dataQuery.query"
+                    value={String(getProp(node, 'dataQuery.query', ''))}
+                    onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.query', v || undefined)}
+                    placeholder="SELECT ... AS value"
+                    rows={8}
+                  />
+                  <TextField
+                    label="dataQuery.yField"
+                    value={String(getProp(node, 'dataQuery.yField', ''))}
+                    onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.yField', v || undefined)}
+                    placeholder="value"
+                  />
+                </div>
+              )}
+
+              {activeTab === 'data' && (node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart') && (
                 <div className="grid grid-cols-2 gap-2">
                   <SelectField
                     label="Formato"
@@ -691,16 +742,8 @@ export default function PropertiesPanel({
                 </div>
               )}
 
-              {activeTab === 'data' && (node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart') && (
+              {activeTab === 'data' && (node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart') && (
                 <>
-                  {node.type === 'KPI' && (
-                    <TextField
-                      label="valuePath"
-                      value={String(getProp(node, 'valuePath', ''))}
-                      onChange={(v) => onSetNodeProp(selectedPath, 'valuePath', v || undefined)}
-                      placeholder="ex.: vendas.kpis.faturamento"
-                    />
-                  )}
                   <TextAreaField
                     label="dataQuery.query"
                     value={String(getProp(node, 'dataQuery.query', ''))}
@@ -709,54 +752,23 @@ export default function PropertiesPanel({
                     rows={8}
                   />
                   <TextField
-                    label="dataQuery.model"
-                    value={String(getProp(node, 'dataQuery.model', ''))}
-                    onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.model', v || undefined)}
-                    placeholder="ex.: vendas.pedidos"
+                    label="dataQuery.xField"
+                    value={String(getProp(node, 'dataQuery.xField', ''))}
+                    onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.xField', v || undefined)}
+                    placeholder="ex.: dimensao"
                   />
-                  {node.type !== 'KPI' && (
-                    <TextField
-                      label="dataQuery.dimension"
-                      value={String(getProp(node, 'dataQuery.dimension', ''))}
-                      onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.dimension', v || undefined)}
-                    />
-                  )}
                   <TextField
-                    label="dataQuery.measure"
-                    value={String(getProp(node, 'dataQuery.measure', ''))}
-                    onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.measure', v || undefined)}
-                    placeholder="ex.: SUM(valor_total)"
+                    label="dataQuery.yField"
+                    value={String(getProp(node, 'dataQuery.yField', ''))}
+                    onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.yField', v || undefined)}
+                    placeholder="ex.: valor"
                   />
-                  {node.type !== 'KPI' && (
-                    <>
-                      <TextField
-                        label="dataQuery.xField"
-                        value={String(getProp(node, 'dataQuery.xField', ''))}
-                        onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.xField', v || undefined)}
-                        placeholder="ex.: dimensao"
-                      />
-                      <TextField
-                        label="dataQuery.yField"
-                        value={String(getProp(node, 'dataQuery.yField', ''))}
-                        onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.yField', v || undefined)}
-                        placeholder="ex.: valor"
-                      />
-                      <TextField
-                        label="dataQuery.keyField"
-                        value={String(getProp(node, 'dataQuery.keyField', ''))}
-                        onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.keyField', v || undefined)}
-                        placeholder="ex.: dimensao_id"
-                      />
-                    </>
-                  )}
-                  {node.type === 'KPI' && (
-                    <TextField
-                      label="dataQuery.yField"
-                      value={String(getProp(node, 'dataQuery.yField', ''))}
-                      onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.yField', v || undefined)}
-                      placeholder="ex.: valor"
-                    />
-                  )}
+                  <TextField
+                    label="dataQuery.keyField"
+                    value={String(getProp(node, 'dataQuery.keyField', ''))}
+                    onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.keyField', v || undefined)}
+                    placeholder="ex.: dimensao_id"
+                  />
                 </>
               )}
 
@@ -882,7 +894,7 @@ export default function PropertiesPanel({
                 </div>
               )}
 
-              {activeTab === 'data' && (node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'SlicerCard' || node.type === 'Table') && (
+              {activeTab === 'data' && (node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'SlicerCard' || node.type === 'Table') && (
                 <CheckboxField
                   label="Borderless"
                   checked={Boolean(getProp(node, 'borderless', false))}
@@ -970,6 +982,79 @@ export default function PropertiesPanel({
                     />
                   )}
 
+                  {node.type === 'Card' && (
+                    <div className="space-y-2 rounded border border-gray-200 p-2">
+                      <div className="text-[11px] font-medium text-gray-700">Card Layout</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <SelectField
+                          label="direction"
+                          value={String(getProp(node, 'direction', 'column'))}
+                          options={[
+                            { value: 'column', label: 'Column' },
+                            { value: 'row', label: 'Row' },
+                          ]}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'direction', v)}
+                        />
+                        <SelectField
+                          label="justify"
+                          value={String(getProp(node, 'justify', 'start'))}
+                          options={[
+                            { value: 'start', label: 'Start' },
+                            { value: 'between', label: 'Between' },
+                            { value: 'center', label: 'Center' },
+                            { value: 'end', label: 'End' },
+                            { value: 'around', label: 'Around' },
+                            { value: 'evenly', label: 'Evenly' },
+                          ]}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'justify', v)}
+                        />
+                        <SelectField
+                          label="align"
+                          value={String(getProp(node, 'align', 'stretch'))}
+                          options={[
+                            { value: 'stretch', label: 'Stretch' },
+                            { value: 'center', label: 'Center' },
+                            { value: 'start', label: 'Start' },
+                            { value: 'end', label: 'End' },
+                          ]}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'align', v)}
+                        />
+                        <NumberField
+                          label="gap"
+                          value={Number(getProp(node, 'gap', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'gap', v)}
+                        />
+                        <NumberField
+                          label="padding"
+                          value={Number(getProp(node, 'padding', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'padding', v)}
+                        />
+                      </div>
+                      <CheckboxField
+                        label="wrap"
+                        checked={Boolean(getProp(node, 'wrap', false))}
+                        onChange={(v) => onSetNodeProp(selectedPath, 'wrap', v)}
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <ColorField
+                          label="borderColor"
+                          value={String(getProp(node, 'borderColor', ''))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'borderColor', v || undefined)}
+                        />
+                        <NumberField
+                          label="borderWidth"
+                          value={Number(getProp(node, 'borderWidth', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'borderWidth', v)}
+                        />
+                        <NumberField
+                          label="borderRadius"
+                          value={Number(getProp(node, 'borderRadius', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'borderRadius', v)}
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   {(node.type === 'Container' || node.type === 'Sidebar') && (
                     <div className="space-y-2 rounded border border-gray-200 p-2">
                       <div className="text-[11px] font-medium text-gray-700">Flex Item</div>
@@ -989,6 +1074,12 @@ export default function PropertiesPanel({
                         label="basis (px, %, auto)"
                         value={String(getProp(node, 'basis', ''))}
                         onChange={(v) => onSetNodeProp(selectedPath, 'basis', v || undefined)}
+                      />
+                      <TextField
+                        label="minHeight"
+                        value={String(getProp(node, 'minHeight', ''))}
+                        onChange={(v) => onSetNodeProp(selectedPath, 'minHeight', v || undefined)}
+                        placeholder="ex.: 100%"
                       />
                     </div>
                   )}
@@ -1016,6 +1107,12 @@ export default function PropertiesPanel({
                           label="height"
                           value={Number(getProp(node, 'height', '')) || ''}
                           onChange={(v) => onSetNodeProp(selectedPath, 'height', v)}
+                        />
+                        <TextField
+                          label="minHeight"
+                          value={String(getProp(node, 'minHeight', ''))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'minHeight', v || undefined)}
+                          placeholder="ex.: 100%"
                         />
                         <NumberField
                           label="gap"
@@ -1080,7 +1177,7 @@ export default function PropertiesPanel({
                     </div>
                   )}
 
-                  {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'SlicerCard' || node.type === 'Gauge' || node.type === 'AISummary' || node.type === 'Table') && (
+                  {(node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'SlicerCard' || node.type === 'Gauge' || node.type === 'AISummary' || node.type === 'Table') && (
                     <div className="space-y-2 rounded border border-gray-200 p-2">
                       <div className="text-[11px] font-medium text-gray-700">Container Style</div>
                       <ColorField
@@ -1103,6 +1200,29 @@ export default function PropertiesPanel({
                           label="containerStyle.borderRadius"
                           value={Number(getProp(node, 'containerStyle.borderRadius', '')) || ''}
                           onChange={(v) => onSetNodeProp(selectedPath, 'containerStyle.borderRadius', v)}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {node.type === 'KPI' && (
+                    <div className="space-y-2 rounded border border-gray-200 p-2">
+                      <div className="text-[11px] font-medium text-gray-700">Value Style</div>
+                      <ColorField
+                        label="valueStyle.color"
+                        value={String(getProp(node, 'valueStyle.color', ''))}
+                        onChange={(v) => onSetNodeProp(selectedPath, 'valueStyle.color', v || undefined)}
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <NumberField
+                          label="valueStyle.fontSize"
+                          value={Number(getProp(node, 'valueStyle.fontSize', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'valueStyle.fontSize', v)}
+                        />
+                        <NumberField
+                          label="valueStyle.fontWeight"
+                          value={Number(getProp(node, 'valueStyle.fontWeight', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'valueStyle.fontWeight', v)}
                         />
                       </div>
                     </div>
@@ -1291,7 +1411,7 @@ export default function PropertiesPanel({
                     </div>
                   )}
 
-                  {(node.type === 'KPI' || node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'SlicerCard' || node.type === 'Gauge' || node.type === 'AISummary' || node.type === 'Table') && (
+                  {(node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart' || node.type === 'SlicerCard' || node.type === 'Gauge' || node.type === 'AISummary' || node.type === 'Table') && (
                     <CheckboxField
                       label="Borderless"
                       checked={Boolean(getProp(node, 'borderless', false))}

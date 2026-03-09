@@ -65,10 +65,7 @@ const defaultSidebar = {
 
 const defaultKPI = {
   format: 'number' as 'currency'|'percent'|'number',
-  titleStyle: { fontWeight: 600, fontSize: 12, color: '#64748b', textTransform: 'none', textAlign: 'left' },
   valueStyle: { fontWeight: 700, fontSize: 24, color: '#0f172a', textTransform: 'none', textAlign: 'left' },
-  containerStyle: { borderColor: '#e5e7eb', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, padding: 12 },
-  borderless: false,
 } as const;
 
 const defaultGauge = {
@@ -499,16 +496,28 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       borderStyle: p.borderWidth ? 'solid' : undefined,
       borderRadius: p.borderRadius,
       padding: styleVal(p.padding) || undefined,
+      margin: styleVal(p.margin),
+      width: styleVal(p.width),
+      height: styleVal(p.height),
     };
     const style = ensureSurfaceBackground(
       applyBorderFromCssVars(styleBase as any, theme.cssVars),
       theme.cssVars
     ) as React.CSSProperties;
     style.boxShadow = undefined;
+    const contentStyle: React.CSSProperties = {
+      display: 'flex',
+      flexDirection: (p.direction ?? 'column') as any,
+      justifyContent: mapJustify(p.justify),
+      alignItems: mapAlign(p.align),
+      gap: styleVal(p.gap ?? 8),
+      flexWrap: p.wrap ? 'wrap' : 'nowrap',
+      minWidth: 0,
+    };
     return (
       <div style={style}>
         {title && <h3 className="text-base font-semibold text-gray-900 mb-0" style={titleStyle}>{title}</h3>}
-        <div className="space-y-2">{children}</div>
+        <div style={contentStyle}>{children}</div>
       </div>
     );
   },
@@ -977,6 +986,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       borderStyle: p.borderWidth ? 'solid' : undefined,
       borderRadius: p.borderRadius,
       width: styleVal(p.width),
+      minHeight: styleVal(p.minHeight),
       height: styleVal(p.height),
     };
     const childDefs: AnyRecord[] = Array.isArray((element as any)?.children) ? (element as any).children : [];
@@ -1024,6 +1034,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       width: styleVal(p.width),
       minWidth: styleVal(p.minWidth),
       maxWidth: styleVal(p.maxWidth),
+      minHeight: styleVal(p.minHeight),
       height: styleVal(p.height),
       backgroundColor: p.backgroundColor,
       borderColor: p.borderColor,
@@ -1034,7 +1045,6 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       top: p.sticky ? styleVal(p.top ?? 12) : undefined,
       overflowY: p.overflowY,
       overflowX: p.overflowX,
-      alignSelf: p.sticky ? 'flex-start' : undefined,
       boxSizing: 'border-box',
     };
     const style = ensureSurfaceBackground(
