@@ -128,7 +128,8 @@ export default function EditableNodeWrapper({
       className="relative"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onClick={() => {
+      onClick={(e) => {
+        e.stopPropagation()
         if (isRootNode || isTheme) return
         onAction(path, 'edit')
       }}
