@@ -515,10 +515,10 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       minWidth: 0,
     };
     return (
-      <div style={style}>
+      <FrameSurface style={style} frame={p?.frame as AnyRecord} cssVars={theme.cssVars}>
         {title && <h3 className="text-base font-semibold text-gray-900 mb-0" style={titleStyle}>{title}</h3>}
         <div style={contentStyle}>{children}</div>
-      </div>
+      </FrameSurface>
     );
   },
   CardTitle: ({ element }) => {

@@ -1052,6 +1052,37 @@ export default function PropertiesPanel({
                           onChange={(v) => onSetNodeProp(selectedPath, 'borderRadius', v)}
                         />
                       </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <SelectField
+                          label="frame.variant"
+                          value={String(getProp(node, 'frame.variant', ''))}
+                          options={[
+                            { value: '', label: 'Nenhum' },
+                            { value: 'hud', label: 'HUD' },
+                          ]}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'frame.variant', v || undefined)}
+                        />
+                        <NumberField
+                          label="frame.cornerSize"
+                          value={Number(getProp(node, 'frame.cornerSize', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'frame.cornerSize', v)}
+                        />
+                        <NumberField
+                          label="frame.cornerWidth"
+                          value={Number(getProp(node, 'frame.cornerWidth', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'frame.cornerWidth', v)}
+                        />
+                        <ColorField
+                          label="frame.baseColor"
+                          value={String(getProp(node, 'frame.baseColor', ''))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'frame.baseColor', v || undefined)}
+                        />
+                        <ColorField
+                          label="frame.cornerColor"
+                          value={String(getProp(node, 'frame.cornerColor', ''))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'frame.cornerColor', v || undefined)}
+                        />
+                      </div>
                     </div>
                   )}
 
