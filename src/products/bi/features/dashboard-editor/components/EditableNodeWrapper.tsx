@@ -42,6 +42,7 @@ export default function EditableNodeWrapper({
   const rootRef = useRef<HTMLDivElement | null>(null)
   const isTheme = type === 'Theme'
   const isRootNode = path.length === 0
+  const isCompactNode = type === 'Title' || type === 'Subtitle' || type === 'CardTitle' || type === 'Icon'
   const canDuplicate = !isTheme && !isRootNode
   const canDelete = !isTheme && !isRootNode
   const canMove = !isTheme && !isRootNode
@@ -95,6 +96,28 @@ export default function EditableNodeWrapper({
     }
   }, [])
 
+  const accentRgb = '113,215,247'
+  const showHoverChrome = hovered || actionMenuOpen || moveMenuOpen || selected
+  const showCompactToolbar = selected || actionMenuOpen || moveMenuOpen
+  const showToolbar = isCompactNode ? showCompactToolbar : showHoverChrome
+  const highlightStyle = selected
+    ? {
+        outline: `2px solid rgba(${accentRgb},0.98)`,
+        outlineOffset: 2,
+        borderRadius: 6,
+        boxShadow: `0 0 0 1px rgba(${accentRgb},0.22) inset`,
+        backgroundColor: `rgba(${accentRgb},0.08)`,
+      }
+    : hovered
+      ? {
+          outline: `1px solid rgba(${accentRgb},0.92)`,
+          outlineOffset: 2,
+          borderRadius: 6,
+          boxShadow: `0 0 0 1px rgba(${accentRgb},0.16) inset`,
+          backgroundColor: `rgba(${accentRgb},0.04)`,
+        }
+      : undefined
+
   return (
     <div
       ref={(node) => {
@@ -105,11 +128,11 @@ export default function EditableNodeWrapper({
       className="relative"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{
-        outline: selected ? '2px solid rgba(59,130,246,0.7)' : undefined,
-        outlineOffset: 2,
-        borderRadius: selected ? 6 : undefined,
+      onClick={() => {
+        if (isRootNode || isTheme) return
+        onAction(path, 'edit')
       }}
+      style={highlightStyle}
     >
       {dnd?.showDropIndicator && dnd.dropPlacement && (
         <div
@@ -125,7 +148,7 @@ export default function EditableNodeWrapper({
           }
         />
       )}
-      {(hovered || actionMenuOpen || moveMenuOpen || selected) && (
+      {showToolbar && (
         <div className="pointer-events-none absolute left-2 top-2 z-40 flex items-center">
           <button
             type="button"
@@ -161,7 +184,7 @@ export default function EditableNodeWrapper({
           )}
         </div>
       )}
-      {(hovered || actionMenuOpen || moveMenuOpen || selected) && (
+      {showToolbar && (
         <div className="pointer-events-none absolute right-2 top-2 z-40 flex items-center">
           <button
             type="button"
