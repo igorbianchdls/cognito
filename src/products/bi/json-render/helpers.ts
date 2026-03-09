@@ -243,8 +243,8 @@ export function applyShadowFromCssVars(style: Record<string, any> | undefined, c
 }
 
 export function applyH1FromCssVars(style: Record<string, any> | undefined, cssVars?: Record<string, string>): Record<string, any> | undefined {
-  const out: Record<string, any> = { ...(style || {}) };
-  if (!cssVars) return Object.keys(out).length ? out : undefined;
+  const out: Record<string, any> = {};
+  if (!cssVars) return style && Object.keys(style).length ? { ...style } : undefined;
   const s = cssVars as Record<string, any>;
   if (s.h1Color) out.color = s.h1Color;
   if (s.h1FontWeight) out.fontWeight = (isNaN(Number(s.h1FontWeight)) ? s.h1FontWeight : Number(s.h1FontWeight));
@@ -267,6 +267,7 @@ export function applyH1FromCssVars(style: Record<string, any> | undefined, cssVa
     else if (/^\d+(\.\d+)?$/.test(String(pd))) out.padding = `${Number(pd)}px`;
     else out.padding = pd; // e.g. '6px 8px'
   }
+  Object.assign(out, style || {});
   return Object.keys(out).length ? out : undefined;
 }
 
