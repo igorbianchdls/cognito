@@ -145,14 +145,14 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
   const seriesData = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
     return [{
-      id: title || 'Series',
+      id: 'Series',
       data: src.map((r) => ({
         x: String((r as AnyRecord).label ?? ''),
         y: Number((r as AnyRecord).value ?? 0),
         filterKey: (r as AnyRecord).key ?? String((r as AnyRecord).label ?? ''),
       })),
     }];
-  }, [title, serverRows]);
+  }, [serverRows]);
   const seriesMinY = React.useMemo(() => {
     const values = (seriesData[0]?.data || [])
       .map((p: any) => Number(p?.y))
