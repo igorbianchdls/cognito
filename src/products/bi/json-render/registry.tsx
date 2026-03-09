@@ -172,6 +172,32 @@ function styleVal(v: unknown): string | undefined {
   return typeof v === 'number' ? `${v}px` : String(v);
 }
 
+function toFlexNumber(v: unknown): number | undefined {
+  if (typeof v === 'boolean') return v ? 1 : 0;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+function resolveFlexItemStyle(rawProps: AnyRecord | undefined): React.CSSProperties {
+  const p = (rawProps || {}) as AnyRecord;
+  const fr = Number(p.fr);
+  if (Number.isFinite(fr) && fr > 0) {
+    return { flexGrow: fr, flexShrink: 1, flexBasis: 0, minWidth: 0 };
+  }
+
+  const grow = toFlexNumber(p.grow);
+  const shrink = toFlexNumber(p.shrink);
+  const basis = styleVal(p.basis);
+
+  const out: React.CSSProperties = {};
+  if (grow !== undefined) out.flexGrow = grow;
+  if (shrink !== undefined) out.flexShrink = shrink;
+  if (basis !== undefined) out.flexBasis = basis;
+  if ((grow ?? 0) > 0 && basis === undefined) out.flexBasis = 0;
+  if ((grow ?? 0) > 0 || (Number.isFinite(fr) && fr > 0)) out.minWidth = 0;
+  return out;
+}
+
 function normalizeIconKey(input: unknown): string {
   return String(input || '')
     .trim()
@@ -887,17 +913,11 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       width: styleVal(p.width),
       height: styleVal(p.height),
     };
-    const childGrow = Boolean(p.childGrow);
-    // Read per-child fr from raw element children definitions
-    const childDefs: any[] = Array.isArray((element as any)?.children) ? (element as any).children : [];
-    const frArr: number[] = childDefs.map((ch) => {
-      const w = Number((ch?.props as any)?.fr);
-      return Number.isFinite(w) && w > 0 ? w : (childGrow ? 1 : 0);
-    });
+    const childDefs: AnyRecord[] = Array.isArray((element as any)?.children) ? (element as any).children : [];
+    const itemStyles = childDefs.map((ch) => resolveFlexItemStyle((ch?.props as AnyRecord) || {}));
+    const hasItemSizing = itemStyles.some((s) => Object.keys(s).length > 0);
 
-    // If neither childGrow nor valid fr weights, render as-is
-    const hasWeights = frArr.some((w) => w > 0);
-    if (!hasWeights) {
+    if (!hasItemSizing) {
       return (
         <div style={style}>
           {children}
@@ -907,9 +927,9 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
 
     const kids = React.Children.toArray(children);
     const wrapped = kids.map((c, i) => {
-      const weight = frArr[i] && frArr[i] > 0 ? frArr[i] : 1;
+      const itemStyle = itemStyles[i] || {};
       return (
-        <div key={i} style={{ flexGrow: weight, flexShrink: 1, flexBasis: 0, minWidth: 0 }}>
+        <div key={i} style={itemStyle}>
           {c}
         </div>
       );

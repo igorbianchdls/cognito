@@ -49,7 +49,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
           </Config>
         </SlicerCard>
       </Sidebar>
-      <Div direction="column" gap={0} childGrow fr={1}>
+      <Div direction="column" gap={0} grow={1}>
         <Header title="Dashboard de Vendas" subtitle="Principais indicadores e cortes" direction="row" justify="between" align="center">
           <DatePicker visible mode="range" storePath="filters.dateRange">
             <ActionOnChange type="refresh_data" />
@@ -62,7 +62,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
             </Style>
           </DatePicker>
         </Header>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start">
       <KPI fr={1} title="Vendas" format="currency" borderless>
         <Query>
           SELECT
@@ -105,7 +105,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       <KPI fr={1} title="Margem Bruta" valuePath="vendas.kpis.margemBruta" format="currency" borderless>
       </KPI>
     </Div>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start">
       <Chart type="pie" fr={1} title="Canais" format="currency" height={240}>
         <Query>
           SELECT
@@ -194,7 +194,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         </Config>
       </Chart>
     </Div>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start">
       <Chart type="bar" fr={1} title="Vendedores" format="currency" height={220}>
         <Query>
           SELECT
@@ -284,7 +284,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         </Config>
       </Chart>
     </Div>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start">
       <Chart type="line" fr={3} title="Faturamento por Mês" format="currency" height={240}>
         <Query>
           SELECT
@@ -314,7 +314,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         </Config>
       </Chart>
     </Div>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start">
       <Table fr={3} title="Ultimos Pedidos" height={320} showColumnToggle showPagination enableSearch pageSize={8}>
         <Config>
           {
@@ -373,7 +373,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         </Config>
       </Table>
     </Div>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start">
       <Chart type="bar" fr={1} title="Pedidos por Mês" format="number" height={220}>
         <Query>
           SELECT
@@ -449,7 +449,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         </Config>
       </AISummary>
     </Div>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start">
       <Chart type="bar" fr={1} title="Territórios" format="currency" height={220}>
         <Query>
           SELECT

@@ -912,6 +912,29 @@ export default function PropertiesPanel({
                     />
                   )}
 
+                  {(node.type === 'Div' || node.type === 'Sidebar') && (
+                    <div className="space-y-2 rounded border border-gray-200 p-2">
+                      <div className="text-[11px] font-medium text-gray-700">Flex Item</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <NumberField
+                          label="grow"
+                          value={Number(getProp(node, 'grow', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'grow', v)}
+                        />
+                        <NumberField
+                          label="shrink"
+                          value={Number(getProp(node, 'shrink', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'shrink', v)}
+                        />
+                      </div>
+                      <TextField
+                        label="basis (px, %, auto)"
+                        value={String(getProp(node, 'basis', ''))}
+                        onChange={(v) => onSetNodeProp(selectedPath, 'basis', v || undefined)}
+                      />
+                    </div>
+                  )}
+
                   {node.type === 'Sidebar' && (
                     <div className="space-y-2 rounded border border-gray-200 p-2">
                       <div className="text-[11px] font-medium text-gray-700">Sidebar Layout</div>

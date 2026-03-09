@@ -1186,6 +1186,14 @@ function renderNodeToDsl(node: unknown, level: number): string[] {
     record.props && typeof record.props === 'object' && !Array.isArray(record.props)
       ? ({ ...(record.props as Record<string, unknown>) } as Record<string, unknown>)
       : {}
+  const nodeType = String(record.type || '').trim()
+  if (nodeType === 'Div') {
+    delete propsRaw.childGrow
+    delete propsRaw.fr
+  }
+  if (nodeType === 'Sidebar') {
+    delete propsRaw.fr
+  }
   const baseAttrs: Record<string, unknown> = {}
   for (const [k, v] of Object.entries(propsRaw)) {
     if (v === undefined) continue

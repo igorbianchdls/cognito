@@ -29,7 +29,7 @@ export const APPS_FINANCEIRO_TEMPLATE_DSL = String.raw`<DashboardTemplate name="
         </Style>
       </DatePicker>
     </Header>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start">
       <KPI title="Recebidos" valuePath="financeiro.kpis.recebidos_mes" format="currency">
       </KPI>
       <KPI title="Pagos" valuePath="financeiro.kpis.pagos_mes" format="currency">
@@ -54,7 +54,7 @@ export const APPS_FINANCEIRO_TEMPLATE_DSL = String.raw`<DashboardTemplate name="
         <DataQuery yField="value" />
       </KPI>
     </Div>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start">
       <Chart type="bar" fr={1} title="AP por Fornecedor" format="currency" height={240}>
         <Query>
           SELECT
@@ -146,7 +146,7 @@ export const APPS_FINANCEIRO_TEMPLATE_DSL = String.raw`<DashboardTemplate name="
         </Config>
       </Chart>
     </Div>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start">
       <Chart type="line" fr={1} title="Contas a Receber por Mês" format="currency" height={240}>
         <Query>
           SELECT

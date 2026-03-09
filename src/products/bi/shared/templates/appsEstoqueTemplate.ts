@@ -29,7 +29,7 @@ export const APPS_ESTOQUE_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
         </Style>
       </DatePicker>
     </Header>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start">
       <KPI title="Valor em Estoque" valuePath="estoque.kpis.valor_total_estoque" format="currency">
       </KPI>
       <KPI title="Quantidade Total" valuePath="estoque.kpis.quantidade_total" format="number">
@@ -39,7 +39,7 @@ export const APPS_ESTOQUE_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
       <KPI title="Movimentações" valuePath="estoque.kpis.movimentacoes_periodo" format="number">
       </KPI>
     </Div>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start">
       <Chart type="bar" fr={1} title="Estoque por Almoxarifado" format="number" height={240}>
         <Query>
           SELECT
@@ -109,7 +109,7 @@ export const APPS_ESTOQUE_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
         </Config>
       </AISummary>
     </Div>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start">
       <Chart type="pie" fr={1} title="Movimentações por Tipo" format="number" height={260}>
         <Query>
           SELECT
@@ -159,7 +159,7 @@ export const APPS_ESTOQUE_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
         </Config>
       </Chart>
     </Div>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start">
       <Chart type="bar" fr={1} title="Valor em Estoque por Almoxarifado" format="currency" height={230}>
         <Query>
           SELECT
@@ -233,7 +233,7 @@ export const APPS_ESTOQUE_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
         </Config>
       </Chart>
     </Div>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start">
       <Chart type="bar" fr={2} title="Top Produtos por Valor Movimentado" format="currency" height={230}>
         <Query>
           SELECT

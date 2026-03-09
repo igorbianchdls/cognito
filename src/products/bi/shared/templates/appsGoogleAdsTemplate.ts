@@ -38,7 +38,7 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="a
         </Style>
       </DatePicker>
     </Header>
-    <Div direction="row" gap={12} padding={16} wrap childGrow justify="start" align="start">
+    <Div direction="row" gap={12} padding={16} wrap justify="start" align="start">
       <SlicerCard fr={1} title="Filtro de Contas">
         <Config>
           {
@@ -140,7 +140,7 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="a
         </Config>
       </SlicerCard>
     </Div>
-    <Div direction="row" gap={12} padding={16} wrap childGrow>
+    <Div direction="row" gap={12} padding={16} wrap>
       <KPI fr={1} title="Gasto (Campanhas)" format="currency" borderless>
         <DataQuery model="trafegopago.desempenho_diario" measure="SUM(gasto)">
           <Filters>
@@ -208,7 +208,7 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="a
         </DataQuery>
       </KPI>
     </Div>
-    <Div direction="row" gap={12} padding={16} wrap childGrow>
+    <Div direction="row" gap={12} padding={16} wrap>
       <KPI fr={1} title="Leads" format="number" borderless>
         <DataQuery model="trafegopago.desempenho_diario" measure="SUM(leads)">
           <Filters>
@@ -276,7 +276,7 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="a
         </DataQuery>
       </KPI>
     </Div>
-    <Div direction="row" gap={12} padding={16} wrap childGrow>
+    <Div direction="row" gap={12} padding={16} wrap>
       <Chart type="line" fr={1} title="Gasto por Mês" format="currency" height={250}>
         <Interaction clickAsFilter={false} />
         <Nivo curve="monotoneX" area />
@@ -374,7 +374,7 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="a
         </Config>
       </Chart>
     </Div>
-    <Div direction="row" gap={12} padding={16} wrap childGrow>
+    <Div direction="row" gap={12} padding={16} wrap>
       <Chart type="line" fr={1} title="Impressões por Mês" format="number" height={250}>
         <Interaction clickAsFilter={false} />
         <Nivo curve="monotoneX" area={false} />
@@ -472,7 +472,7 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="a
         </Config>
       </Chart>
     </Div>
-    <Div direction="row" gap={12} padding={16} wrap childGrow>
+    <Div direction="row" gap={12} padding={16} wrap>
       <AISummary fr={1} title="Leituras e alertas">
         <Config>
           {
@@ -577,7 +577,7 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="a
         </Config>
       </Chart>
     </Div>
-    <Div direction="row" gap={12} padding={16} wrap childGrow>
+    <Div direction="row" gap={12} padding={16} wrap>
       <Chart type="bar" fr={1} title="Top Campanhas por Gasto" format="currency" height={260}>
         <Interaction clickAsFilter filterField="campanha_id" storePath="filters.campanha_id" clearOnSecondClick />
         <Nivo layout="horizontal" />
@@ -671,7 +671,7 @@ export const APPS_GOOGLEADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="a
         </Config>
       </Chart>
     </Div>
-    <Div direction="row" gap={12} padding={16} wrap childGrow>
+    <Div direction="row" gap={12} padding={16} wrap>
       <Chart type="bar" fr={1} title="Top Grupos por Gasto" format="currency" height={260}>
         <Interaction clickAsFilter filterField="grupo_id" storePath="filters.grupo_id" clearOnSecondClick />
         <Nivo layout="horizontal" />

@@ -29,7 +29,7 @@ export const APPS_CONTABILIDADE_TEMPLATE_DSL = String.raw`<DashboardTemplate nam
         </Style>
       </DatePicker>
     </Header>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start">
       <KPI title="Debitos no Periodo" format="currency">
         <Query>
           SELECT
@@ -133,7 +133,7 @@ export const APPS_CONTABILIDADE_TEMPLATE_DSL = String.raw`<DashboardTemplate nam
         <DataQuery yField="value" />
       </KPI>
     </Div>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start">
       <Chart type="bar" fr={1} title="Debitos por Tipo de Conta" format="currency" height={240}>
         <Query>
           SELECT
@@ -215,7 +215,7 @@ export const APPS_CONTABILIDADE_TEMPLATE_DSL = String.raw`<DashboardTemplate nam
         </Config>
       </AISummary>
     </Div>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start">
       <Chart type="bar" fr={1} title="Top Contas (Debito)" format="currency" height={260}>
         <Query>
           SELECT
@@ -277,7 +277,7 @@ export const APPS_CONTABILIDADE_TEMPLATE_DSL = String.raw`<DashboardTemplate nam
         </Config>
       </Chart>
     </Div>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start">
       <Chart type="line" fr={1} title="Debitos por Mes" format="currency" height={240}>
         <Query>
           SELECT
@@ -339,7 +339,7 @@ export const APPS_CONTABILIDADE_TEMPLATE_DSL = String.raw`<DashboardTemplate nam
         </Config>
       </Chart>
     </Div>
-    <Div direction="row" gap={12} padding={16} justify="start" align="start" childGrow>
+    <Div direction="row" gap={12} padding={16} justify="start" align="start">
       <Chart type="pie" fr={1} title="Origem dos Lancamentos" format="number" height={260}>
         <Query>
           SELECT

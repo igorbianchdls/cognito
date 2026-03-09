@@ -222,7 +222,6 @@ function buildRow(): Record<string, unknown> {
       gap: 12,
       padding: 16,
       wrap: true,
-      childGrow: true,
     },
     children: [],
   }
