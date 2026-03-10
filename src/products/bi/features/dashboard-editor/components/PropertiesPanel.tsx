@@ -343,11 +343,11 @@ export default function PropertiesPanel({
   )
 
   const supportsDataTab = Boolean(
-    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'AISummary', 'Table', 'Icon'].includes(String(node.type)),
+    node && ['KPI', 'KPICompare', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'AISummary', 'Table', 'Icon'].includes(String(node.type)),
   )
   const supportsNivoTab = isChartNode
   const supportsStyleTab = Boolean(
-    node && ['KPI', 'Header', 'SlicerCard', 'Card', 'CardTitle', 'Title', 'Subtitle', 'Icon', 'Container', 'Sidebar', 'Gauge', 'AISummary', 'Table'].includes(String(node.type)),
+    node && ['KPI', 'KPICompare', 'Header', 'SlicerCard', 'Card', 'CardTitle', 'Title', 'Subtitle', 'Icon', 'Container', 'Sidebar', 'Gauge', 'AISummary', 'Table'].includes(String(node.type)),
   )
   const supportsFr = Boolean(
     node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Gauge', 'SlicerCard', 'AISummary', 'Table'].includes(String(node.type)),
@@ -777,6 +777,44 @@ export default function PropertiesPanel({
                     onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.yField', v || undefined)}
                     placeholder="value"
                   />
+                </div>
+              )}
+
+              {activeTab === 'data' && node.type === 'KPICompare' && (
+                <div className="space-y-2 rounded border border-gray-200 p-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <SelectField
+                      label="format"
+                      value={String(getProp(node, 'format', 'percent'))}
+                      options={[
+                        { value: 'percent', label: 'Percentual' },
+                        { value: 'number', label: 'Número' },
+                        { value: 'currency', label: 'Moeda' },
+                      ]}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'format', v)}
+                    />
+                    <TextField
+                      label="sourcePath"
+                      value={String(getProp(node, 'sourcePath', ''))}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'sourcePath', v || undefined)}
+                      placeholder="ex.: kpis.vendas"
+                    />
+                    <TextField
+                      label="comparisonValueField"
+                      value={String(getProp(node, 'comparisonValueField', 'delta_percent'))}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'comparisonValueField', v || undefined)}
+                    />
+                    <TextField
+                      label="labelField"
+                      value={String(getProp(node, 'labelField', 'comparison_label'))}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'labelField', v || undefined)}
+                    />
+                    <TextField
+                      label="label (override)"
+                      value={String(getProp(node, 'label', ''))}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'label', v || undefined)}
+                    />
+                  </div>
                 </div>
               )}
 
@@ -1600,6 +1638,81 @@ export default function PropertiesPanel({
                         />
                       </div>
                     </div>
+                  )}
+
+                  {node.type === 'KPICompare' && (
+                    <>
+                      <div className="space-y-2 rounded border border-gray-200 p-2">
+                        <div className="text-sm font-medium text-gray-700">Compare Style</div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <CheckboxField
+                            label="showIcon"
+                            checked={Boolean(getProp(node, 'showIcon', true))}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'showIcon', v)}
+                          />
+                          <CheckboxField
+                            label="invertDirection"
+                            checked={Boolean(getProp(node, 'invertDirection', false))}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'invertDirection', v)}
+                          />
+                          <ColorField
+                            label="positiveColor"
+                            value={String(getProp(node, 'positiveColor', ''))}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'positiveColor', v || undefined)}
+                          />
+                          <ColorField
+                            label="negativeColor"
+                            value={String(getProp(node, 'negativeColor', ''))}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'negativeColor', v || undefined)}
+                          />
+                          <ColorField
+                            label="neutralColor"
+                            value={String(getProp(node, 'neutralColor', ''))}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'neutralColor', v || undefined)}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2 rounded border border-gray-200 p-2">
+                        <div className="text-sm font-medium text-gray-700">Value Style</div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <ColorField
+                            label="valueStyle.color"
+                            value={String(getProp(node, 'valueStyle.color', ''))}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'valueStyle.color', v || undefined)}
+                          />
+                          <NumberField
+                            label="valueStyle.fontSize"
+                            value={Number(getProp(node, 'valueStyle.fontSize', '')) || ''}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'valueStyle.fontSize', v)}
+                          />
+                          <NumberField
+                            label="valueStyle.fontWeight"
+                            value={Number(getProp(node, 'valueStyle.fontWeight', '')) || ''}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'valueStyle.fontWeight', v)}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2 rounded border border-gray-200 p-2">
+                        <div className="text-sm font-medium text-gray-700">Label Style</div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <ColorField
+                            label="labelStyle.color"
+                            value={String(getProp(node, 'labelStyle.color', ''))}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'labelStyle.color', v || undefined)}
+                          />
+                          <NumberField
+                            label="labelStyle.fontSize"
+                            value={Number(getProp(node, 'labelStyle.fontSize', '')) || ''}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'labelStyle.fontSize', v)}
+                          />
+                          <NumberField
+                            label="labelStyle.fontWeight"
+                            value={Number(getProp(node, 'labelStyle.fontWeight', '')) || ''}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'labelStyle.fontWeight', v)}
+                          />
+                        </div>
+                      </div>
+                    </>
                   )}
 
                   {(node.type === 'Header' || node.type === 'SlicerCard' || node.type === 'Card' || node.type === 'CardTitle' || node.type === 'Title' || node.type === 'Subtitle') && (

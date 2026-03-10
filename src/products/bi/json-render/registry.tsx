@@ -192,6 +192,85 @@ function styleVal(v: unknown): string | undefined {
   return typeof v === 'number' ? `${v}px` : String(v);
 }
 
+function setDataByPath(prev: AnyRecord, path: string, value: any): AnyRecord {
+  const parts = String(path || '').split('.').map((s) => s.trim()).filter(Boolean);
+  if (!parts.length) return prev || {};
+  const root: AnyRecord = Array.isArray(prev) ? [...prev] as any : { ...(prev || {}) };
+  let curr: AnyRecord = root;
+  for (let i = 0; i < parts.length; i++) {
+    const key = parts[i];
+    if (i === parts.length - 1) {
+      if (value === undefined) delete curr[key];
+      else curr[key] = value;
+    } else {
+      const next = curr[key];
+      curr[key] = next && typeof next === 'object' ? { ...next } : {};
+      curr = curr[key] as AnyRecord;
+    }
+  }
+  return root;
+}
+
+function parseIsoDate(input: unknown): Date | null {
+  if (typeof input !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(input)) return null;
+  const d = new Date(`${input}T00:00:00`);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function formatIsoDate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function shiftDays(date: Date, days: number): Date {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function shiftMonthsClamped(date: Date, delta: number): Date {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const day = date.getDate();
+  const first = new Date(year, month + delta, 1);
+  const lastDay = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+  return new Date(first.getFullYear(), first.getMonth(), Math.min(day, lastDay));
+}
+
+function deriveComparisonRange(mode: unknown, fromRaw: unknown, toRaw: unknown): { from: string; to: string } | null {
+  const from = parseIsoDate(fromRaw);
+  const to = parseIsoDate(toRaw);
+  if (!from || !to) return null;
+  const normalizedMode = String(mode || '').trim();
+  if (!normalizedMode) return null;
+
+  if (normalizedMode === 'previous_period') {
+    const diffDays = Math.max(0, Math.round((to.getTime() - from.getTime()) / 86400000));
+    const compareTo = shiftDays(from, -1);
+    const compareFrom = shiftDays(compareTo, -diffDays);
+    return { from: formatIsoDate(compareFrom), to: formatIsoDate(compareTo) };
+  }
+
+  if (normalizedMode === 'previous_month') {
+    return {
+      from: formatIsoDate(shiftMonthsClamped(from, -1)),
+      to: formatIsoDate(shiftMonthsClamped(to, -1)),
+    };
+  }
+
+  if (normalizedMode === 'previous_year') {
+    const compareFrom = new Date(from);
+    compareFrom.setFullYear(compareFrom.getFullYear() - 1);
+    const compareTo = new Date(to);
+    compareTo.setFullYear(compareTo.getFullYear() - 1);
+    return { from: formatIsoDate(compareFrom), to: formatIsoDate(compareTo) };
+  }
+
+  return null;
+}
+
 function resolveTextSpacingStyle(p: AnyRecord | undefined): React.CSSProperties {
   return {
     margin: styleVal(p?.margin),
@@ -1573,7 +1652,9 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const p = deepMerge(deepMerge(defaultKPI as any, (theme.components?.Kpi || {}) as any), (element?.props || {}) as any) as AnyRecord;
     const dq = p.dataQuery as AnyRecord;
     const valueKey = (p.valueKey ?? 'value') as string;
-    const { data } = useData();
+    const resultPath = typeof p.resultPath === 'string' && p.resultPath.trim() ? p.resultPath.trim() : '';
+    const comparisonMode = typeof p.comparisonMode === 'string' ? p.comparisonMode : undefined;
+    const { data, setData } = useData();
     const [serverValue, setServerValue] = React.useState<number>(0);
     const [queryError, setQueryError] = React.useState<string | null>(null);
     React.useEffect(() => {
@@ -1592,6 +1673,12 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
           const filters = { ...(dq.filters || {}) } as AnyRecord;
           const dr = (data as any)?.filters?.dateRange;
           if (dr && !filters.de && !filters.ate) { if (dr.from) filters.de = dr.from; if (dr.to) filters.ate = dr.to; }
+          const comparisonRange = deriveComparisonRange(comparisonMode, filters.de, filters.ate);
+          if (comparisonRange) {
+            if (filters.compare_de === undefined) filters.compare_de = comparisonRange.from;
+            if (filters.compare_ate === undefined) filters.compare_ate = comparisonRange.to;
+            if (filters.comparison_mode === undefined) filters.comparison_mode = comparisonMode;
+          }
           const globalFilters = (data as any)?.filters;
           if (globalFilters && typeof globalFilters === 'object') {
             for (const [k, v] of Object.entries(globalFilters)) {
@@ -1620,27 +1707,36 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
             throw new Error(String(j?.message || `Query failed (${res.status})`));
           }
           const rows = Array.isArray(j?.rows) ? j.rows : [];
+          const firstRow = rows.length > 0 && rows[0] && typeof rows[0] === 'object'
+            ? ({ ...(rows[0] as AnyRecord) } as AnyRecord)
+            : undefined;
           let val: number = 0;
-          if (rows.length > 0 && rows[0] && typeof rows[0] === 'object') {
-            const r0 = rows[0] as AnyRecord;
+          if (firstRow) {
+            const r0 = firstRow;
             const keys = [valueKey, 'total', 'valor_total', 'faturamento_total', 'gasto_total', 'count', 'value'];
             for (const k of keys) { if (r0[k] != null) { const n = Number(r0[k]); if (Number.isFinite(n)) { val = n; break; } } }
           }
           if (!cancelled) {
             setServerValue(val);
             setQueryError(null);
+            if (resultPath) {
+              setData((prev) => setDataByPath((prev || {}) as AnyRecord, resultPath, firstRow));
+            }
           }
         } catch (e) {
           console.error('[BI/KPI] query failed', e);
           if (!cancelled) {
             setServerValue(0);
             setQueryError(e instanceof Error ? e.message : 'Erro ao executar query');
+            if (resultPath) {
+              setData((prev) => setDataByPath((prev || {}) as AnyRecord, resultPath, undefined));
+            }
           }
         }
       }
       run();
       return () => { cancelled = true };
-    }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters)]);
+    }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters), comparisonMode, resultPath]);
     const fmt = (p.format ?? 'number') as 'currency'|'percent'|'number';
     const unit = p.unit as string | undefined;
     const valueStyle = applyKpiValueFromCssVars(normalizeTitleStyle(p.valueStyle), theme.cssVars);
@@ -1662,6 +1758,49 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       <div>
         <div className="text-2xl font-semibold" style={valueStyle}>{formatValue(displayValue, fmt)}{unit ? ` ${unit}` : ''}</div>
         {queryError && <div className="mt-1 text-xs text-red-600">{queryError}</div>}
+      </div>
+    );
+  },
+  KPICompare: ({ element }) => {
+    const theme = useThemeOverrides();
+    const p = (element?.props || {}) as AnyRecord;
+    const sourcePath = typeof p.sourcePath === 'string' ? p.sourcePath : '';
+    const source = useDataValue(sourcePath, undefined) as AnyRecord | undefined;
+    const comparisonValueField = typeof p.comparisonValueField === 'string' ? p.comparisonValueField : 'delta_percent';
+    const labelField = typeof p.labelField === 'string' ? p.labelField : 'comparison_label';
+    const rawValue = source?.[comparisonValueField];
+    const numericValue = Number(rawValue ?? 0);
+    const hasNumericValue = Number.isFinite(numericValue);
+    const fmt = (p.format ?? 'percent') as 'currency'|'percent'|'number';
+    const invertDirection = Boolean(p.invertDirection);
+    const signedValue = hasNumericValue ? numericValue : 0;
+    const effectiveValue = invertDirection ? signedValue * -1 : signedValue;
+    const isPositive = effectiveValue > 0;
+    const isNegative = effectiveValue < 0;
+    const positiveColor = String(p.positiveColor || '#16a34a');
+    const negativeColor = String(p.negativeColor || '#dc2626');
+    const neutralColor = String(p.neutralColor || '#6b7280');
+    const color = isPositive ? positiveColor : isNegative ? negativeColor : neutralColor;
+    const showIcon = Boolean(p.showIcon ?? true);
+    const valueStyle = normalizeTitleStyle(p.valueStyle) as React.CSSProperties | undefined;
+    const labelStyle = normalizeTitleStyle(p.labelStyle) as React.CSSProperties | undefined;
+    const label = String(p.label || source?.[labelField] || '').trim();
+    function formatCompareValue(val: number, format: 'currency'|'percent'|'number'): string {
+      if (!Number.isFinite(val)) return '0';
+      if (format === 'currency') return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 2 }).format(val);
+      if (format === 'percent') return `${val.toFixed(1)}%`;
+      return new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 }).format(val);
+    }
+    const display = `${isPositive ? '+' : ''}${formatCompareValue(signedValue, fmt)}`;
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+        {showIcon ? (
+          isPositive ? <TrendingUp size={14} color={color} /> : isNegative ? <TrendingDown size={14} color={color} /> : <Activity size={14} color={color} />
+        ) : null}
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, minWidth: 0, flexWrap: 'wrap' }}>
+          <span style={{ color, fontSize: '12px', fontWeight: 600, ...(valueStyle || {}) }}>{display}</span>
+          {label ? <span style={{ color: neutralColor, fontSize: '12px', ...(labelStyle || {}) }}>{label}</span> : null}
+        </div>
       </div>
     );
   },

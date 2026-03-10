@@ -71,19 +71,43 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
             <Title text="Vendas" />
-            <KPI format="currency">
+            <KPI format="currency" resultPath="kpis.vendas" comparisonMode="previous_period">
               <Query>
+                WITH atual AS (
+                  SELECT
+                    COALESCE(SUM(p.valor_total), 0)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE p.tenant_id = {{tenant_id}}
+                    AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+                    AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+                    AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                    AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                ),
+                anterior AS (
+                  SELECT
+                    COALESCE(SUM(p.valor_total), 0)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE p.tenant_id = {{tenant_id}}
+                    AND {{compare_de}} IS NOT NULL
+                    AND {{compare_ate}} IS NOT NULL
+                    AND p.data_pedido::date >= {{compare_de}}::date
+                    AND p.data_pedido::date <= {{compare_ate}}::date
+                    AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                    AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                )
                 SELECT
-                  COALESCE(SUM(p.valor_total), 0)::float AS value
-                FROM vendas.pedidos p
-                WHERE p.tenant_id = {{tenant_id}}
-                  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-                  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
-                  AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
-                  AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                  atual.value AS value,
+                  anterior.value AS previous_value,
+                  CASE
+                    WHEN anterior.value = 0 THEN 0
+                    ELSE (((atual.value - anterior.value) / anterior.value) * 100)::float
+                  END AS delta_percent,
+                  'vs período anterior'::text AS comparison_label
+                FROM atual, anterior
               </Query>
               <DataQuery yField="value" />
             </KPI>
+            <KPICompare sourcePath="kpis.vendas" comparisonValueField="delta_percent" labelField="comparison_label" format="percent" />
           </Container>
           <Icon name="circle-dollar-sign" size={18} padding={10} radius={10} backgroundColor="#e8f0fe" color="#1d4ed8" />
         </Card>
@@ -92,19 +116,43 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
             <Title text="Pedidos" />
-            <KPI format="number">
+            <KPI format="number" resultPath="kpis.pedidos" comparisonMode="previous_period">
               <Query>
+                WITH atual AS (
+                  SELECT
+                    COUNT(DISTINCT p.id)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE p.tenant_id = {{tenant_id}}
+                    AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+                    AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+                    AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                    AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                ),
+                anterior AS (
+                  SELECT
+                    COUNT(DISTINCT p.id)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE p.tenant_id = {{tenant_id}}
+                    AND {{compare_de}} IS NOT NULL
+                    AND {{compare_ate}} IS NOT NULL
+                    AND p.data_pedido::date >= {{compare_de}}::date
+                    AND p.data_pedido::date <= {{compare_ate}}::date
+                    AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                    AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                )
                 SELECT
-                  COUNT(DISTINCT p.id)::int AS value
-                FROM vendas.pedidos p
-                WHERE p.tenant_id = {{tenant_id}}
-                  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-                  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
-                  AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
-                  AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                  atual.value AS value,
+                  anterior.value AS previous_value,
+                  CASE
+                    WHEN anterior.value = 0 THEN 0
+                    ELSE (((atual.value - anterior.value) / anterior.value) * 100)::float
+                  END AS delta_percent,
+                  'vs período anterior'::text AS comparison_label
+                FROM atual, anterior
               </Query>
               <DataQuery yField="value" />
             </KPI>
+            <KPICompare sourcePath="kpis.pedidos" comparisonValueField="delta_percent" labelField="comparison_label" format="percent" />
           </Container>
           <Icon name="shopping-cart" size={18} padding={10} radius={10} backgroundColor="#ecfdf3" color="#047857" />
         </Card>
@@ -113,19 +161,43 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
             <Title text="Ticket Médio" />
-            <KPI format="currency">
+            <KPI format="currency" resultPath="kpis.ticketMedio" comparisonMode="previous_period">
               <Query>
+                WITH atual AS (
+                  SELECT
+                    COALESCE(AVG(p.valor_total), 0)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE p.tenant_id = {{tenant_id}}
+                    AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+                    AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+                    AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                    AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                ),
+                anterior AS (
+                  SELECT
+                    COALESCE(AVG(p.valor_total), 0)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE p.tenant_id = {{tenant_id}}
+                    AND {{compare_de}} IS NOT NULL
+                    AND {{compare_ate}} IS NOT NULL
+                    AND p.data_pedido::date >= {{compare_de}}::date
+                    AND p.data_pedido::date <= {{compare_ate}}::date
+                    AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                    AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                )
                 SELECT
-                  COALESCE(AVG(p.valor_total), 0)::float AS value
-                FROM vendas.pedidos p
-                WHERE p.tenant_id = {{tenant_id}}
-                  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-                  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
-                  AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
-                  AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                  atual.value AS value,
+                  anterior.value AS previous_value,
+                  CASE
+                    WHEN anterior.value = 0 THEN 0
+                    ELSE (((atual.value - anterior.value) / anterior.value) * 100)::float
+                  END AS delta_percent,
+                  'vs período anterior'::text AS comparison_label
+                FROM atual, anterior
               </Query>
               <DataQuery yField="value" />
             </KPI>
+            <KPICompare sourcePath="kpis.ticketMedio" comparisonValueField="delta_percent" labelField="comparison_label" format="percent" />
           </Container>
           <Icon name="activity" size={18} padding={10} radius={10} backgroundColor="#fff7ed" color="#c2410c" />
         </Card>
