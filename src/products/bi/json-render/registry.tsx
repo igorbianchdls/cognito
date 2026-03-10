@@ -4,6 +4,7 @@ import React from "react";
 import JsonRenderBarChart from "@/products/bi/json-render/components/BarChart";
 import JsonRenderLineChart from "@/products/bi/json-render/components/LineChart";
 import JsonRenderPieChart from "@/products/bi/json-render/components/PieChart";
+import JsonRenderSparkline from "@/products/bi/json-render/components/Sparkline";
 import JsonRenderGauge from "@/products/bi/json-render/components/Gauge";
 import JsonRenderTable from "@/products/bi/json-render/components/Table";
 import FrameSurface from "@/products/bi/json-render/components/FrameSurface";
@@ -1964,5 +1965,8 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
         </div>
       </div>
     );
+  },
+  Sparkline: ({ element }) => {
+    return <JsonRenderSparkline element={element} />;
   },
 };

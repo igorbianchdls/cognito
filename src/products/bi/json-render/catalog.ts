@@ -521,6 +521,21 @@ export const catalog = {
       }).strict(),
       hasChildren: false,
     },
+    Sparkline: {
+      props: z.object({
+        dataQuery: SqlChartDataQuerySchema,
+        fr: z.number().optional(),
+        height: z.union([z.number(), z.string()]).optional(),
+        strokeColor: z.string().optional(),
+        fillColor: z.string().optional(),
+        strokeWidth: z.union([z.number(), z.string()]).optional(),
+        area: z.boolean().optional(),
+        showDots: z.boolean().optional(),
+        dotColor: z.string().optional(),
+        colorScheme: z.union([z.string(), z.array(z.string())]).optional(),
+      }).strict(),
+      hasChildren: false,
+    },
     BarChart: {
       props: z.object({
         title: z.string().optional(),

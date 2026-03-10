@@ -108,6 +108,23 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
               <DataQuery yField="value" />
             </KPI>
             <KPICompare sourcePath="kpis.vendas" comparisonValueField="delta_percent" labelField="comparison_label" format="percent" />
+            <Sparkline height={38} strokeColor="#2563eb" fillColor="rgba(37, 99, 235, 0.16)">
+              <Query>
+                SELECT
+                  TO_CHAR(p.data_pedido::date, 'YYYY-MM-DD') AS key,
+                  TO_CHAR(p.data_pedido::date, 'DD/MM') AS label,
+                  COALESCE(SUM(p.valor_total), 0)::float AS value
+                FROM vendas.pedidos p
+                WHERE p.tenant_id = {{tenant_id}}
+                  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+                  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+                  AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                  AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                GROUP BY 1, 2
+                ORDER BY 1 ASC
+              </Query>
+              <DataQuery xField="key" yField="value" limit={31} />
+            </Sparkline>
           </Container>
           <Icon name="circle-dollar-sign" size={18} padding={10} radius={10} backgroundColor="#e8f0fe" color="#1d4ed8" />
         </Card>
@@ -153,6 +170,23 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
               <DataQuery yField="value" />
             </KPI>
             <KPICompare sourcePath="kpis.pedidos" comparisonValueField="delta_percent" labelField="comparison_label" format="percent" />
+            <Sparkline height={38} strokeColor="#059669" fillColor="rgba(5, 150, 105, 0.16)">
+              <Query>
+                SELECT
+                  TO_CHAR(p.data_pedido::date, 'YYYY-MM-DD') AS key,
+                  TO_CHAR(p.data_pedido::date, 'DD/MM') AS label,
+                  COUNT(DISTINCT p.id)::float AS value
+                FROM vendas.pedidos p
+                WHERE p.tenant_id = {{tenant_id}}
+                  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+                  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+                  AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                  AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                GROUP BY 1, 2
+                ORDER BY 1 ASC
+              </Query>
+              <DataQuery xField="key" yField="value" limit={31} />
+            </Sparkline>
           </Container>
           <Icon name="shopping-cart" size={18} padding={10} radius={10} backgroundColor="#ecfdf3" color="#047857" />
         </Card>
@@ -198,6 +232,23 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
               <DataQuery yField="value" />
             </KPI>
             <KPICompare sourcePath="kpis.ticketMedio" comparisonValueField="delta_percent" labelField="comparison_label" format="percent" />
+            <Sparkline height={38} strokeColor="#ea580c" fillColor="rgba(234, 88, 12, 0.16)">
+              <Query>
+                SELECT
+                  TO_CHAR(p.data_pedido::date, 'YYYY-MM-DD') AS key,
+                  TO_CHAR(p.data_pedido::date, 'DD/MM') AS label,
+                  COALESCE(AVG(p.valor_total), 0)::float AS value
+                FROM vendas.pedidos p
+                WHERE p.tenant_id = {{tenant_id}}
+                  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+                  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+                  AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                  AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                GROUP BY 1, 2
+                ORDER BY 1 ASC
+              </Query>
+              <DataQuery xField="key" yField="value" limit={31} />
+            </Sparkline>
           </Container>
           <Icon name="activity" size={18} padding={10} radius={10} backgroundColor="#fff7ed" color="#c2410c" />
         </Card>

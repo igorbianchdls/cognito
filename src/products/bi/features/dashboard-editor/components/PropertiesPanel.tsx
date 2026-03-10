@@ -343,14 +343,14 @@ export default function PropertiesPanel({
   )
 
   const supportsDataTab = Boolean(
-    node && ['KPI', 'KPICompare', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'AISummary', 'Table', 'Icon'].includes(String(node.type)),
+    node && ['KPI', 'KPICompare', 'Sparkline', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'AISummary', 'Table', 'Icon'].includes(String(node.type)),
   )
   const supportsNivoTab = isChartNode
   const supportsStyleTab = Boolean(
-    node && ['KPI', 'KPICompare', 'Header', 'SlicerCard', 'Card', 'CardTitle', 'Title', 'Subtitle', 'Icon', 'Container', 'Sidebar', 'Gauge', 'AISummary', 'Table'].includes(String(node.type)),
+    node && ['KPI', 'KPICompare', 'Sparkline', 'Header', 'SlicerCard', 'Card', 'CardTitle', 'Title', 'Subtitle', 'Icon', 'Container', 'Sidebar', 'Gauge', 'AISummary', 'Table'].includes(String(node.type)),
   )
   const supportsFr = Boolean(
-    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Gauge', 'SlicerCard', 'AISummary', 'Table'].includes(String(node.type)),
+    node && ['KPI', 'Sparkline', 'BarChart', 'LineChart', 'PieChart', 'Gauge', 'SlicerCard', 'AISummary', 'Table'].includes(String(node.type)),
   )
 
   React.useEffect(() => {
@@ -581,6 +581,50 @@ export default function PropertiesPanel({
                       label="strokeWidth"
                       value={Number(getProp(node, 'strokeWidth', '')) || ''}
                       onChange={(v) => onSetNodeProp(selectedPath, 'strokeWidth', v)}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'data' && node.type === 'Sparkline' && (
+                <div className="space-y-2 rounded border border-gray-200 p-2">
+                  <TextAreaField
+                    label="dataQuery.query"
+                    value={String(getProp(node, 'dataQuery.query', ''))}
+                    onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.query', v || undefined)}
+                    placeholder="SELECT ... FROM ... WHERE ..."
+                    rows={6}
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <TextField
+                      label="dataQuery.xField"
+                      value={String(getProp(node, 'dataQuery.xField', ''))}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.xField', v || undefined)}
+                    />
+                    <TextField
+                      label="dataQuery.yField"
+                      value={String(getProp(node, 'dataQuery.yField', ''))}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.yField', v || undefined)}
+                    />
+                    <TextField
+                      label="dataQuery.keyField"
+                      value={String(getProp(node, 'dataQuery.keyField', ''))}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.keyField', v || undefined)}
+                    />
+                    <NumberField
+                      label="dataQuery.limit"
+                      value={Number(getProp(node, 'dataQuery.limit', '')) || ''}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.limit', v)}
+                    />
+                    <NumberField
+                      label="height"
+                      value={Number(getProp(node, 'height', '')) || ''}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'height', v)}
+                    />
+                    <NumberField
+                      label="fr"
+                      value={Number(getProp(node, 'fr', '')) || ''}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'fr', v)}
                     />
                   </div>
                 </div>
@@ -1725,6 +1769,44 @@ export default function PropertiesPanel({
                         </div>
                       </div>
                     </>
+                  )}
+
+                  {node.type === 'Sparkline' && (
+                    <div className="space-y-2 rounded border border-gray-200 p-2">
+                      <div className="text-sm font-medium text-gray-700">Sparkline Style</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <ColorField
+                          label="strokeColor"
+                          value={String(getProp(node, 'strokeColor', ''))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'strokeColor', v || undefined)}
+                        />
+                        <ColorField
+                          label="fillColor"
+                          value={String(getProp(node, 'fillColor', ''))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'fillColor', v || undefined)}
+                        />
+                        <ColorField
+                          label="dotColor"
+                          value={String(getProp(node, 'dotColor', ''))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'dotColor', v || undefined)}
+                        />
+                        <NumberField
+                          label="strokeWidth"
+                          value={Number(getProp(node, 'strokeWidth', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'strokeWidth', v)}
+                        />
+                        <CheckboxField
+                          label="area"
+                          checked={Boolean(getProp(node, 'area', true))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'area', v)}
+                        />
+                        <CheckboxField
+                          label="showDots"
+                          checked={Boolean(getProp(node, 'showDots', false))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'showDots', v)}
+                        />
+                      </div>
+                    </div>
                   )}
 
                   {(node.type === 'Header' || node.type === 'SlicerCard' || node.type === 'Card' || node.type === 'CardTitle' || node.type === 'Title' || node.type === 'Subtitle') && (
