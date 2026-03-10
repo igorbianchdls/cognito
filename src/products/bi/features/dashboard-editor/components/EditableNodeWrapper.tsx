@@ -1,9 +1,7 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { useDraggable, useDroppable } from '@dnd-kit/core'
-import { MoreHorizontal } from 'lucide-react'
-import NodeActionMenu from '@/products/bi/features/dashboard-editor/components/NodeActionMenu'
 import type {
   NodeDropPlacement,
   JsonNodePath,
@@ -36,14 +34,9 @@ export default function EditableNodeWrapper({
   children,
 }: EditableNodeWrapperProps) {
   const [hovered, setHovered] = useState(false)
-  const [actionMenuOpen, setActionMenuOpen] = useState(false)
-  const rootRef = useRef<HTMLDivElement | null>(null)
   const isTheme = type === 'Theme'
   const isRootNode = path.length === 0
-  const isCompactNode = type === 'Title' || type === 'Subtitle' || type === 'CardTitle' || type === 'Icon'
   const canShowHighlight = !isTheme && !isRootNode
-  const canDuplicate = !isTheme && !isRootNode
-  const canDelete = !isTheme && !isRootNode
   const canMove = !isTheme && !isRootNode
   const dndEnabled = Boolean(dnd?.enabled)
   const dndIdBase = path.length ? path.join('.') : 'root'
@@ -69,28 +62,7 @@ export default function EditableNodeWrapper({
     disabled: !dndEnabled || !canMove,
   })
 
-  useEffect(() => {
-    if (!actionMenuOpen) return
-    function onDocClick(event: MouseEvent) {
-      if (!rootRef.current) return
-      if (rootRef.current.contains(event.target as Node)) return
-      setActionMenuOpen(false)
-    }
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') setActionMenuOpen(false)
-    }
-    document.addEventListener('mousedown', onDocClick)
-    document.addEventListener('keydown', onKeyDown)
-    return () => {
-      document.removeEventListener('mousedown', onDocClick)
-      document.removeEventListener('keydown', onKeyDown)
-    }
-  }, [actionMenuOpen])
-
   const accentRgb = '37,99,235'
-  const showHoverChrome = hovered || selected || actionMenuOpen
-  const showCompactToolbar = selected || actionMenuOpen
-  const showToolbar = isCompactNode ? showCompactToolbar : showHoverChrome
   const highlightStyle = !canShowHighlight
     ? undefined
     : selected
@@ -114,7 +86,6 @@ export default function EditableNodeWrapper({
   return (
     <div
       ref={(node) => {
-        rootRef.current = node
         setDroppableNodeRef(node)
         setDraggableNodeRef(node)
       }}
@@ -141,40 +112,6 @@ export default function EditableNodeWrapper({
                 : { left: 6, right: 6, bottom: -2, height: 3 }
           }
         />
-      )}
-      {showToolbar && (
-        <div className="pointer-events-none absolute left-2 top-2 z-40 flex items-center">
-          <div
-            className="pointer-events-auto inline-flex items-center gap-0.5 rounded-md px-1 py-1 shadow-sm"
-            style={{
-              backgroundColor: `rgba(${accentRgb},0.98)`,
-              color: '#ffffff',
-              boxShadow: '0 8px 20px rgba(37, 99, 235, 0.28)',
-            }}
-          >
-            <button
-              type="button"
-              aria-label={`Ações do componente ${type}`}
-              className="inline-flex h-6 w-6 items-center justify-center rounded text-white/95 transition hover:bg-white/18"
-              onClick={(e) => {
-                e.stopPropagation()
-                setActionMenuOpen((prev) => !prev)
-              }}
-            >
-              <MoreHorizontal className="h-3.5 w-3.5" />
-            </button>
-            {actionMenuOpen && (
-              <NodeActionMenu
-                canDuplicate={canDuplicate}
-                canDelete={canDelete}
-                onAction={(action) => {
-                  setActionMenuOpen(false)
-                  onAction(path, action)
-                }}
-              />
-            )}
-          </div>
-        </div>
       )}
       {children}
     </div>
