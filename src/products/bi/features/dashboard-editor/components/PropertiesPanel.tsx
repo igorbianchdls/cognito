@@ -16,7 +16,7 @@ type Props = {
   onReplaceNodeProps: (nodePath: JsonNodePath, props: Record<string, any>) => void
 }
 
-type TabKey = 'data' | 'style' | 'json'
+type TabKey = 'data' | 'style' | 'nivo' | 'json'
 
 const AISUMMARY_FREQUENCY_OPTIONS = [
   { value: 'none', label: 'Não repete' },
@@ -338,12 +338,16 @@ export default function PropertiesPanel({
     () => (sourceNode && typeof sourceNode === 'object' ? { ...sourceNode, props: draftProps } : sourceNode),
     [draftProps, sourceNode],
   )
+  const isChartNode = Boolean(
+    node && ['BarChart', 'LineChart', 'PieChart'].includes(String(node.type)),
+  )
 
   const supportsDataTab = Boolean(
     node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'AISummary', 'Table', 'Icon'].includes(String(node.type)),
   )
+  const supportsNivoTab = isChartNode
   const supportsStyleTab = Boolean(
-    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'Card', 'CardTitle', 'Title', 'Subtitle', 'Icon', 'Container', 'Sidebar', 'Gauge', 'AISummary', 'Table'].includes(String(node.type)),
+    node && ['KPI', 'Header', 'SlicerCard', 'Card', 'CardTitle', 'Title', 'Subtitle', 'Icon', 'Container', 'Sidebar', 'Gauge', 'AISummary', 'Table'].includes(String(node.type)),
   )
   const supportsFr = Boolean(
     node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Gauge', 'SlicerCard', 'AISummary', 'Table'].includes(String(node.type)),
@@ -368,12 +372,16 @@ export default function PropertiesPanel({
       setActiveTab('data')
       return
     }
+    if (supportsNivoTab) {
+      setActiveTab('nivo')
+      return
+    }
     if (supportsStyleTab) {
       setActiveTab('style')
       return
     }
     setActiveTab('json')
-  }, [selectedPath?.join('.'), node?.type, supportsDataTab, supportsStyleTab])
+  }, [selectedPath?.join('.'), node?.type, supportsDataTab, supportsNivoTab, supportsStyleTab])
 
   const onSetNodeProp = React.useCallback((nodePath: JsonNodePath, propPath: string, value: unknown) => {
     if (!selectedPath || !nodePath || nodePath.join('.') !== selectedPath.join('.')) return
@@ -432,6 +440,15 @@ export default function PropertiesPanel({
                 className={`rounded px-2 py-1 text-xs ${activeTab === 'style' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:bg-white'}`}
               >
                 Style
+              </button>
+            )}
+            {supportsNivoTab && (
+              <button
+                type="button"
+                onClick={() => setActiveTab('nivo')}
+                className={`rounded px-2 py-1 text-xs ${activeTab === 'nivo' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:bg-white'}`}
+              >
+                Nivo
               </button>
             )}
             <button
@@ -828,41 +845,6 @@ export default function PropertiesPanel({
                 </>
               )}
 
-              {activeTab === 'data' && node.type === 'BarChart' && (
-                <SelectField
-                  label="Layout"
-                  value={String(getProp(node, 'nivo.layout', 'vertical'))}
-                  options={[
-                    { value: 'vertical', label: 'Vertical' },
-                    { value: 'horizontal', label: 'Horizontal' },
-                  ]}
-                  onChange={(v) => onSetNodeProp(selectedPath, 'nivo.layout', v)}
-                />
-              )}
-
-              {activeTab === 'data' && node.type === 'LineChart' && (
-                <div className="space-y-2">
-                  <TextField
-                    label="Curva"
-                    value={String(getProp(node, 'nivo.curve', 'linear'))}
-                    onChange={(v) => onSetNodeProp(selectedPath, 'nivo.curve', v || undefined)}
-                  />
-                  <CheckboxField
-                    label="Área"
-                    checked={Boolean(getProp(node, 'nivo.area', false))}
-                    onChange={(v) => onSetNodeProp(selectedPath, 'nivo.area', v)}
-                  />
-                </div>
-              )}
-
-              {activeTab === 'data' && node.type === 'PieChart' && (
-                <NumberField
-                  label="nivo.innerRadius"
-                  value={Number(getProp(node, 'nivo.innerRadius', '')) || ''}
-                  onChange={(v) => onSetNodeProp(selectedPath, 'nivo.innerRadius', v)}
-                />
-              )}
-
               {activeTab === 'data' && node.type === 'Header' && (
                 <div className="space-y-2">
                   <div className="grid grid-cols-2 gap-2">
@@ -956,6 +938,311 @@ export default function PropertiesPanel({
                   checked={Boolean(getProp(node, 'borderless', false))}
                   onChange={(v) => onSetNodeProp(selectedPath, 'borderless', v)}
                 />
+              )}
+
+              {activeTab === 'nivo' && isChartNode && (
+                <>
+                  <div className="space-y-2 rounded border border-gray-200 p-2">
+                    <div className="text-sm font-medium text-gray-700">Colors</div>
+                    <TextField
+                      label="colorScheme (separe por vírgula)"
+                      value={(() => {
+                        const raw = getProp<any>(node, 'colorScheme', '')
+                        if (Array.isArray(raw)) return raw.join(', ')
+                        return typeof raw === 'string' ? raw : ''
+                      })()}
+                      onChange={(v) => {
+                        const values = v.split(',').map((x) => x.trim()).filter(Boolean)
+                        onSetNodeProp(selectedPath, 'colorScheme', values.length ? values : undefined)
+                      }}
+                      placeholder="#3b82f6, #10b981, #f59e0b"
+                    />
+                    {node.type === 'BarChart' && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <SelectField
+                          label="nivo.colorBy"
+                          value={String(getProp(node, 'nivo.colorBy', 'indexValue'))}
+                          options={[
+                            { value: 'indexValue', label: 'indexValue' },
+                            { value: 'id', label: 'id' },
+                          ]}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'nivo.colorBy', v)}
+                        />
+                        <NumberField
+                          label="nivo.borderRadius"
+                          value={Number(getProp(node, 'nivo.borderRadius', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'nivo.borderRadius', v)}
+                        />
+                      </div>
+                    )}
+                    {node.type === 'PieChart' && (
+                      <ColorField
+                        label="nivo.arcLabelsTextColor"
+                        value={String(getProp(node, 'nivo.arcLabelsTextColor', ''))}
+                        onChange={(v) => onSetNodeProp(selectedPath, 'nivo.arcLabelsTextColor', v || undefined)}
+                      />
+                    )}
+                  </div>
+
+                  <div className="space-y-2 rounded border border-gray-200 p-2">
+                    <div className="text-sm font-medium text-gray-700">Layout</div>
+                    {node.type === 'BarChart' && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <SelectField
+                          label="nivo.layout"
+                          value={String(getProp(node, 'nivo.layout', 'vertical'))}
+                          options={[
+                            { value: 'vertical', label: 'Vertical' },
+                            { value: 'horizontal', label: 'Horizontal' },
+                          ]}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'nivo.layout', v)}
+                        />
+                        <SelectField
+                          label="nivo.groupMode"
+                          value={String(getProp(node, 'nivo.groupMode', 'grouped'))}
+                          options={[
+                            { value: 'grouped', label: 'Grouped' },
+                            { value: 'stacked', label: 'Stacked' },
+                          ]}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'nivo.groupMode', v)}
+                        />
+                        <NumberField
+                          label="nivo.padding"
+                          value={Number(getProp(node, 'nivo.padding', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'nivo.padding', v)}
+                        />
+                        <CheckboxField
+                          label="nivo.autoMargin"
+                          checked={Boolean(getProp(node, 'nivo.autoMargin', true))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'nivo.autoMargin', v)}
+                        />
+                        <NumberField
+                          label="nivo.maxLabelWidth"
+                          value={Number(getProp(node, 'nivo.maxLabelWidth', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'nivo.maxLabelWidth', v)}
+                        />
+                      </div>
+                    )}
+                    {node.type === 'LineChart' && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <TextField
+                          label="nivo.curve"
+                          value={String(getProp(node, 'nivo.curve', 'linear'))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'nivo.curve', v || undefined)}
+                        />
+                        <CheckboxField
+                          label="nivo.area"
+                          checked={Boolean(getProp(node, 'nivo.area', false))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'nivo.area', v)}
+                        />
+                        <NumberField
+                          label="nivo.areaBaselineValue"
+                          value={Number(getProp(node, 'nivo.areaBaselineValue', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'nivo.areaBaselineValue', v)}
+                        />
+                        <NumberField
+                          label="nivo.pointSize"
+                          value={Number(getProp(node, 'nivo.pointSize', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'nivo.pointSize', v)}
+                        />
+                        <CheckboxField
+                          label="nivo.autoMargin"
+                          checked={Boolean(getProp(node, 'nivo.autoMargin', true))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'nivo.autoMargin', v)}
+                        />
+                        <NumberField
+                          label="nivo.maxLabelWidth"
+                          value={Number(getProp(node, 'nivo.maxLabelWidth', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'nivo.maxLabelWidth', v)}
+                        />
+                      </div>
+                    )}
+                    {node.type === 'PieChart' && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <NumberField
+                          label="nivo.innerRadius"
+                          value={Number(getProp(node, 'nivo.innerRadius', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'nivo.innerRadius', v)}
+                        />
+                        <NumberField
+                          label="nivo.padAngle"
+                          value={Number(getProp(node, 'nivo.padAngle', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'nivo.padAngle', v)}
+                        />
+                        <NumberField
+                          label="nivo.cornerRadius"
+                          value={Number(getProp(node, 'nivo.cornerRadius', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'nivo.cornerRadius', v)}
+                        />
+                        <NumberField
+                          label="nivo.activeInnerRadiusOffset"
+                          value={Number(getProp(node, 'nivo.activeInnerRadiusOffset', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'nivo.activeInnerRadiusOffset', v)}
+                        />
+                        <NumberField
+                          label="nivo.activeOuterRadiusOffset"
+                          value={Number(getProp(node, 'nivo.activeOuterRadiusOffset', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'nivo.activeOuterRadiusOffset', v)}
+                        />
+                      </div>
+                    )}
+                    <div className="grid grid-cols-4 gap-2">
+                      <NumberField
+                        label="nivo.margin.top"
+                        value={Number(getProp(node, 'nivo.margin.top', '')) || ''}
+                        onChange={(v) => onSetNodeProp(selectedPath, 'nivo.margin.top', v)}
+                      />
+                      <NumberField
+                        label="nivo.margin.right"
+                        value={Number(getProp(node, 'nivo.margin.right', '')) || ''}
+                        onChange={(v) => onSetNodeProp(selectedPath, 'nivo.margin.right', v)}
+                      />
+                      <NumberField
+                        label="nivo.margin.bottom"
+                        value={Number(getProp(node, 'nivo.margin.bottom', '')) || ''}
+                        onChange={(v) => onSetNodeProp(selectedPath, 'nivo.margin.bottom', v)}
+                      />
+                      <NumberField
+                        label="nivo.margin.left"
+                        value={Number(getProp(node, 'nivo.margin.left', '')) || ''}
+                        onChange={(v) => onSetNodeProp(selectedPath, 'nivo.margin.left', v)}
+                      />
+                    </div>
+                  </div>
+
+                  {(node.type === 'BarChart' || node.type === 'LineChart') && (
+                    <div className="space-y-2 rounded border border-gray-200 p-2">
+                      <div className="text-sm font-medium text-gray-700">Axes</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <NumberField
+                          label="nivo.axisBottom.tickRotation"
+                          value={Number(getProp(node, 'nivo.axisBottom.tickRotation', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'nivo.axisBottom.tickRotation', v)}
+                        />
+                        <TextField
+                          label="nivo.axisBottom.legend"
+                          value={String(getProp(node, 'nivo.axisBottom.legend', ''))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'nivo.axisBottom.legend', v || undefined)}
+                        />
+                        <NumberField
+                          label="nivo.axisBottom.legendOffset"
+                          value={Number(getProp(node, 'nivo.axisBottom.legendOffset', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'nivo.axisBottom.legendOffset', v)}
+                        />
+                        {node.type === 'BarChart' ? (
+                          <NumberField
+                            label="nivo.axisBottom.maxTicks"
+                            value={Number(getProp(node, 'nivo.axisBottom.maxTicks', '')) || ''}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'nivo.axisBottom.maxTicks', v)}
+                          />
+                        ) : <div />}
+                        <TextField
+                          label="nivo.axisLeft.legend"
+                          value={String(getProp(node, 'nivo.axisLeft.legend', ''))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'nivo.axisLeft.legend', v || undefined)}
+                        />
+                        <NumberField
+                          label="nivo.axisLeft.legendOffset"
+                          value={Number(getProp(node, 'nivo.axisLeft.legendOffset', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'nivo.axisLeft.legendOffset', v)}
+                        />
+                        {node.type === 'BarChart' ? (
+                          <NumberField
+                            label="nivo.axisLeft.maxTicks"
+                            value={Number(getProp(node, 'nivo.axisLeft.maxTicks', '')) || ''}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'nivo.axisLeft.maxTicks', v)}
+                          />
+                        ) : <div />}
+                      </div>
+                    </div>
+                  )}
+
+                  {(node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart') && (
+                    <div className="space-y-2 rounded border border-gray-200 p-2">
+                      <div className="text-sm font-medium text-gray-700">Labels & Grid</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {node.type !== 'PieChart' && (
+                          <>
+                            <CheckboxField
+                              label="nivo.gridX"
+                              checked={Boolean(getProp(node, 'nivo.gridX', false))}
+                              onChange={(v) => onSetNodeProp(selectedPath, 'nivo.gridX', v)}
+                            />
+                            <CheckboxField
+                              label="nivo.gridY"
+                              checked={Boolean(getProp(node, 'nivo.gridY', false))}
+                              onChange={(v) => onSetNodeProp(selectedPath, 'nivo.gridY', v)}
+                            />
+                          </>
+                        )}
+                        {node.type === 'BarChart' && (
+                          <>
+                            <CheckboxField
+                              label="nivo.enableLabel"
+                              checked={Boolean(getProp(node, 'nivo.enableLabel', false))}
+                              onChange={(v) => onSetNodeProp(selectedPath, 'nivo.enableLabel', v)}
+                            />
+                            <NumberField
+                              label="nivo.labelSkipWidth"
+                              value={Number(getProp(node, 'nivo.labelSkipWidth', '')) || ''}
+                              onChange={(v) => onSetNodeProp(selectedPath, 'nivo.labelSkipWidth', v)}
+                            />
+                            <NumberField
+                              label="nivo.labelSkipHeight"
+                              value={Number(getProp(node, 'nivo.labelSkipHeight', '')) || ''}
+                              onChange={(v) => onSetNodeProp(selectedPath, 'nivo.labelSkipHeight', v)}
+                            />
+                          </>
+                        )}
+                        {node.type === 'PieChart' && (
+                          <>
+                            <CheckboxField
+                              label="nivo.enableArcLabels"
+                              checked={Boolean(getProp(node, 'nivo.enableArcLabels', true))}
+                              onChange={(v) => onSetNodeProp(selectedPath, 'nivo.enableArcLabels', v)}
+                            />
+                            <CheckboxField
+                              label="nivo.enableArcLinkLabels"
+                              checked={Boolean(getProp(node, 'nivo.enableArcLinkLabels', false))}
+                              onChange={(v) => onSetNodeProp(selectedPath, 'nivo.enableArcLinkLabels', v)}
+                            />
+                            <NumberField
+                              label="nivo.arcLabelsSkipAngle"
+                              value={Number(getProp(node, 'nivo.arcLabelsSkipAngle', '')) || ''}
+                              onChange={(v) => onSetNodeProp(selectedPath, 'nivo.arcLabelsSkipAngle', v)}
+                            />
+                          </>
+                        )}
+                        <NumberField
+                          label="nivo.theme.fontSize"
+                          value={Number(getProp(node, 'nivo.theme.fontSize', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'nivo.theme.fontSize', v)}
+                        />
+                        <ColorField
+                          label="nivo.theme.textColor"
+                          value={String(getProp(node, 'nivo.theme.textColor', ''))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'nivo.theme.textColor', v || undefined)}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-2 rounded border border-gray-200 p-2">
+                    <div className="text-sm font-medium text-gray-700">Motion</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <CheckboxField
+                        label="nivo.animate"
+                        checked={Boolean(getProp(node, 'nivo.animate', true))}
+                        onChange={(v) => onSetNodeProp(selectedPath, 'nivo.animate', v)}
+                      />
+                      <TextField
+                        label="nivo.motionConfig"
+                        value={String(getProp(node, 'nivo.motionConfig', 'gentle'))}
+                        onChange={(v) => onSetNodeProp(selectedPath, 'nivo.motionConfig', v || undefined)}
+                      />
+                    </div>
+                  </div>
+                </>
               )}
 
               {activeTab === 'style' && (
@@ -1413,30 +1700,6 @@ export default function PropertiesPanel({
                         label="borderColor"
                         value={String(getProp(node, 'borderColor', ''))}
                         onChange={(v) => onSetNodeProp(selectedPath, 'borderColor', v || undefined)}
-                      />
-                    </div>
-                  )}
-
-                  {(node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart') && (
-                    <div className="space-y-2 rounded border border-gray-200 p-2">
-                      <div className="text-sm font-medium text-gray-700">Chart Style</div>
-                      <NumberField
-                        label="height"
-                        value={Number(getProp(node, 'height', '')) || ''}
-                        onChange={(v) => onSetNodeProp(selectedPath, 'height', v)}
-                      />
-                      <TextField
-                        label="colorScheme (separe por vírgula)"
-                        value={(() => {
-                          const raw = getProp<any>(node, 'colorScheme', '')
-                          if (Array.isArray(raw)) return raw.join(', ')
-                          return typeof raw === 'string' ? raw : ''
-                        })()}
-                        onChange={(v) => {
-                          const values = v.split(',').map((x) => x.trim()).filter(Boolean)
-                          onSetNodeProp(selectedPath, 'colorScheme', values.length ? values : undefined)
-                        }}
-                        placeholder="#3b82f6, #10b981, #f59e0b"
                       />
                     </div>
                   )}
