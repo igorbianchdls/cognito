@@ -88,8 +88,8 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
                     COALESCE(SUM(p.valor_total), 0)::float AS value
                   FROM vendas.pedidos p
                   WHERE p.tenant_id = {{tenant_id}}
-                    AND {{compare_de}} IS NOT NULL
-                    AND {{compare_ate}} IS NOT NULL
+                    AND {{compare_de}}::date IS NOT NULL
+                    AND {{compare_ate}}::date IS NOT NULL
                     AND p.data_pedido::date >= {{compare_de}}::date
                     AND p.data_pedido::date <= {{compare_ate}}::date
                     AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
@@ -133,8 +133,8 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
                     COUNT(DISTINCT p.id)::float AS value
                   FROM vendas.pedidos p
                   WHERE p.tenant_id = {{tenant_id}}
-                    AND {{compare_de}} IS NOT NULL
-                    AND {{compare_ate}} IS NOT NULL
+                    AND {{compare_de}}::date IS NOT NULL
+                    AND {{compare_ate}}::date IS NOT NULL
                     AND p.data_pedido::date >= {{compare_de}}::date
                     AND p.data_pedido::date <= {{compare_ate}}::date
                     AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
@@ -178,8 +178,8 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
                     COALESCE(AVG(p.valor_total), 0)::float AS value
                   FROM vendas.pedidos p
                   WHERE p.tenant_id = {{tenant_id}}
-                    AND {{compare_de}} IS NOT NULL
-                    AND {{compare_ate}} IS NOT NULL
+                    AND {{compare_de}}::date IS NOT NULL
+                    AND {{compare_ate}}::date IS NOT NULL
                     AND p.data_pedido::date >= {{compare_de}}::date
                     AND p.data_pedido::date <= {{compare_ate}}::date
                     AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
