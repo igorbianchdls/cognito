@@ -340,7 +340,7 @@ export default function PropertiesPanel({
   )
 
   const supportsDataTab = Boolean(
-    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'AISummary', 'Table', 'CardTitle', 'Title', 'Subtitle', 'Icon'].includes(String(node.type)),
+    node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'AISummary', 'Table', 'Icon'].includes(String(node.type)),
   )
   const supportsStyleTab = Boolean(
     node && ['KPI', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'Card', 'CardTitle', 'Title', 'Subtitle', 'Icon', 'Container', 'Sidebar', 'Gauge', 'AISummary', 'Table'].includes(String(node.type)),
@@ -401,8 +401,8 @@ export default function PropertiesPanel({
   if (!isOpen) return null
 
   return (
-    <div className="h-full rounded-md border border-gray-200 bg-white">
-      <div className="flex items-center justify-between border-b border-gray-200 px-3 py-3">
+    <div className={`h-full rounded-md bg-white transition-colors ${draftDirty ? 'border border-sky-300 shadow-[0_0_0_1px_rgba(56,189,248,0.15)]' : 'border border-gray-200'}`}>
+      <div className={`flex items-center justify-between px-3 py-3 ${draftDirty ? 'border-b border-sky-200 bg-sky-50/70' : 'border-b border-gray-200'}`}>
         <div className="text-3xl font-bold text-gray-900">
           {node ? String(node.type) : 'Nenhum componente'}
         </div>
@@ -544,18 +544,6 @@ export default function PropertiesPanel({
                   label="Título"
                   value={String(getProp(node, 'title', ''))}
                   onChange={(v) => onSetNodeProp(selectedPath, 'title', v || undefined)}
-                />
-              )}
-
-              {activeTab === 'data' && (node.type === 'CardTitle' || node.type === 'Title' || node.type === 'Subtitle') && (
-                <TextField
-                  label="Texto"
-                  value={String(getProp(node, 'text', getProp(node, 'title', '')))}
-                  onChange={(v) => {
-                    const next = v || undefined
-                    onSetNodeProp(selectedPath, 'text', next)
-                    onSetNodeProp(selectedPath, 'title', next)
-                  }}
                 />
               )}
 
@@ -1566,10 +1554,18 @@ export default function PropertiesPanel({
           )}
 
           {selectedPath && (
-            <div className="flex items-center justify-end gap-2 border-t border-gray-100 pt-2">
+            <div className={`flex items-center justify-between gap-3 border-t pt-3 ${draftDirty ? 'border-sky-200' : 'border-gray-100'}`}>
+              <div className="min-w-0 text-sm">
+                {draftDirty ? (
+                  <span className="font-medium text-sky-700">Alterações não aplicadas</span>
+                ) : (
+                  <span className="text-gray-400">Sem alterações pendentes</span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
               <button
                 type="button"
-                className="rounded border border-gray-300 px-3 py-1.5 text-xs hover:bg-gray-50"
+                className="rounded border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50"
                 onClick={onClose}
               >
                 Cancelar
@@ -1577,7 +1573,11 @@ export default function PropertiesPanel({
               <button
                 type="button"
                 disabled={!draftDirty || Boolean(rawPropsError)}
-                className="rounded border border-gray-900 bg-gray-900 px-3 py-1.5 text-xs text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
+                className={`rounded border px-3 py-1.5 text-sm text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                  draftDirty && !rawPropsError
+                    ? 'border-sky-600 bg-sky-600 hover:bg-sky-700'
+                    : 'border-gray-900 bg-gray-900 hover:bg-black'
+                }`}
                 onClick={() => {
                   if (!selectedPath) return
                   onReplaceNodePropsExternal(selectedPath, draftProps)
@@ -1585,6 +1585,7 @@ export default function PropertiesPanel({
               >
                 Aplicar
               </button>
+              </div>
             </div>
           )}
         </div>
