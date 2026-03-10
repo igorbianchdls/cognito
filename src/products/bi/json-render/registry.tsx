@@ -591,6 +591,36 @@ function endOfMonth(date: Date) {
   return new Date(date.getFullYear(), date.getMonth() + 1, 0);
 }
 
+function pickerFontStyle(raw?: AnyRecord): React.CSSProperties {
+  if (!raw || typeof raw !== 'object') return {};
+  return {
+    fontFamily: typeof raw.fontFamily === 'string' ? raw.fontFamily : undefined,
+    fontSize: styleVal(raw.fontSize),
+    fontWeight: raw.fontWeight,
+    color: typeof raw.color === 'string' ? raw.color : undefined,
+    letterSpacing: styleVal(raw.letterSpacing),
+  };
+}
+
+function pickerButtonStyle(raw?: AnyRecord): React.CSSProperties {
+  if (!raw || typeof raw !== 'object') return {};
+  return {
+    backgroundColor: typeof raw.backgroundColor === 'string' ? raw.backgroundColor : undefined,
+    color: typeof raw.color === 'string' ? raw.color : undefined,
+    borderColor: typeof raw.borderColor === 'string' ? raw.borderColor : undefined,
+    borderWidth: styleVal(raw.borderWidth),
+    borderRadius: styleVal(raw.borderRadius),
+    paddingTop: styleVal(raw.paddingY),
+    paddingBottom: styleVal(raw.paddingY),
+    paddingLeft: styleVal(raw.paddingX),
+    paddingRight: styleVal(raw.paddingX),
+    padding: styleVal(raw.padding),
+    width: styleVal(raw.width),
+    height: styleVal(raw.height),
+    ...pickerFontStyle(raw),
+  };
+}
+
 export const registry: Record<string, React.FC<{ element: any; children?: React.ReactNode; data?: AnyRecord; onAction?: (action: any) => void }>> = {
   Card: ({ element, children }) => {
     const theme = useThemeOverrides();
@@ -786,17 +816,29 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const mode = (dp.mode ?? 'range') as 'range'|'single';
     const storePath = typeof dp.storePath === 'string' ? dp.storePath : undefined;
     const format = (typeof dp.format === 'string' && dp.format) ? dp.format : 'YYYY-MM-DD';
+    const legacyPickerTextStyle = ({
+      fontFamily: typeof (dp.style as any)?.fontFamily === 'string' ? (dp.style as any).fontFamily : undefined,
+      fontSize: styleVal((dp.style as any)?.fontSize),
+      color: typeof (dp.style as any)?.color === 'string' ? (dp.style as any).color : undefined,
+    }) as React.CSSProperties;
+    const explicitPickerTextStyle = pickerFontStyle((dp.style as any)?.textStyle as AnyRecord);
+    const pickerTextStyle = ({
+      ...legacyPickerTextStyle,
+      ...explicitPickerTextStyle,
+    }) as React.CSSProperties;
     const baseDateLabelStyle = applyDatePickerLabelFromCssVars(normalizeTitleStyle((dp.style as any)?.labelStyle), theme.cssVars) as React.CSSProperties | undefined;
     const dateLabelStyle = ({
+      ...pickerTextStyle,
       ...baseDateLabelStyle,
-      color: css.headerDpLabel || p.subtitleColor || baseDateLabelStyle?.color,
+      color: baseDateLabelStyle?.color || pickerTextStyle.color || css.headerDpLabel || p.subtitleColor,
     }) as React.CSSProperties;
     const baseDateFieldStyle = applyDatePickerFieldFromCssVars(undefined, theme.cssVars) as React.CSSProperties | undefined;
     const dateFieldStyle = ({
+      ...pickerTextStyle,
       ...baseDateFieldStyle,
-      backgroundColor: css.headerDpBg || baseDateFieldStyle?.backgroundColor,
-      color: css.headerDpColor || p.textColor || baseDateFieldStyle?.color,
-      borderColor: css.headerDpBorder || p.borderColor || baseDateFieldStyle?.borderColor,
+      backgroundColor: baseDateFieldStyle?.backgroundColor || css.headerDpBg,
+      color: baseDateFieldStyle?.color || pickerTextStyle.color || css.headerDpColor || p.textColor,
+      borderColor: baseDateFieldStyle?.borderColor || css.headerDpBorder || p.borderColor,
     }) as React.CSSProperties;
     const dateIconStyle = ({
       color: css.headerDpIcon || css.headerDpColor || p.textColor,
@@ -867,6 +909,10 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
           setData(next);
           if (dp.actionOnChange && typeof dp.actionOnChange === 'object') onAction?.(dp.actionOnChange);
         };
+        const presetButtonStyleRaw = pickerButtonStyle((dp.style as any)?.presetButtonStyle as AnyRecord);
+        const activePresetButtonStyleRaw = pickerButtonStyle((dp.style as any)?.activePresetButtonStyle as AnyRecord);
+        const calendarButtonStyleRaw = pickerButtonStyle((dp.style as any)?.calendarButtonStyle as AnyRecord);
+        const popoverStyleRaw = pickerButtonStyle((dp.style as any)?.popoverStyle as AnyRecord);
         const presetButtonStyle = (active: boolean): React.CSSProperties => ({
           display: 'inline-flex',
           alignItems: 'center',
@@ -882,6 +928,10 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
           lineHeight: 1,
           cursor: 'pointer',
           transition: 'all 120ms ease',
+          ...pickerTextStyle,
+          ...presetButtonStyleRaw,
+          ...(active ? activePresetButtonStyleRaw : {}),
+          borderStyle: 'solid',
         });
         const calendarButtonStyle: React.CSSProperties = {
           display: 'inline-flex',
@@ -894,6 +944,9 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
           backgroundColor: customPickerOpen ? (css.headerDpBg || '#eff6ff') : 'transparent',
           color: css.headerDpIcon || css.headerDpColor || '#4b5563',
           cursor: 'pointer',
+          ...pickerTextStyle,
+          ...calendarButtonStyleRaw,
+          borderStyle: 'solid',
         };
         const customPopoverStyle: React.CSSProperties = {
           position: 'absolute',
@@ -906,6 +959,8 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
           border: `1px solid ${css.headerDpBorder || '#d1d5db'}`,
           backgroundColor: css.headerDpBg || '#ffffff',
           boxShadow: '0 12px 32px rgba(15, 23, 42, 0.12)',
+          ...popoverStyleRaw,
+          borderStyle: 'solid',
         };
         picker = (
           <div className="flex items-center gap-2">

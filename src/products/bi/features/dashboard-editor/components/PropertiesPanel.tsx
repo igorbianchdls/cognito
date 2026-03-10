@@ -944,6 +944,18 @@ export default function PropertiesPanel({
                     value={String(getProp(node, 'datePicker.storePath', ''))}
                     onChange={(v) => onSetNodeProp(selectedPath, 'datePicker.storePath', v || undefined)}
                   />
+                  <TextField
+                    label="datePicker.presets"
+                    value={(() => {
+                      const raw = getProp<any>(node, 'datePicker.presets', [])
+                      return Array.isArray(raw) ? raw.join(', ') : ''
+                    })()}
+                    onChange={(v) => {
+                      const values = v.split(',').map((x) => x.trim()).filter(Boolean)
+                      onSetNodeProp(selectedPath, 'datePicker.presets', values.length ? values : undefined)
+                    }}
+                    placeholder="7d, 14d, 30d, 90d, month"
+                  />
                 </div>
               )}
 
@@ -1815,6 +1827,169 @@ export default function PropertiesPanel({
                         onChange={(v) => onSetNodeProp(selectedPath, 'borderColor', v || undefined)}
                       />
                     </div>
+                  )}
+
+                  {node.type === 'Header' && (
+                    <>
+                      <div className="space-y-2 rounded border border-gray-200 p-2">
+                        <div className="text-sm font-medium text-gray-700">Date Picker Text</div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <TextField
+                            label="datePicker.style.textStyle.fontFamily"
+                            value={String(getProp(node, 'datePicker.style.textStyle.fontFamily', getProp(node, 'datePicker.style.fontFamily', '')))}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'datePicker.style.textStyle.fontFamily', v || undefined)}
+                          />
+                          <NumberField
+                            label="datePicker.style.textStyle.fontSize"
+                            value={Number(getProp(node, 'datePicker.style.textStyle.fontSize', getProp(node, 'datePicker.style.fontSize', ''))) || ''}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'datePicker.style.textStyle.fontSize', v)}
+                          />
+                          <NumberField
+                            label="datePicker.style.textStyle.fontWeight"
+                            value={Number(getProp(node, 'datePicker.style.textStyle.fontWeight', '')) || ''}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'datePicker.style.textStyle.fontWeight', v)}
+                          />
+                          <ColorField
+                            label="datePicker.style.textStyle.color"
+                            value={String(getProp(node, 'datePicker.style.textStyle.color', getProp(node, 'datePicker.style.color', '')))}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'datePicker.style.textStyle.color', v || undefined)}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2 rounded border border-gray-200 p-2">
+                        <div className="text-sm font-medium text-gray-700">Preset Button</div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <ColorField
+                            label="datePicker.style.presetButtonStyle.backgroundColor"
+                            value={String(getProp(node, 'datePicker.style.presetButtonStyle.backgroundColor', ''))}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'datePicker.style.presetButtonStyle.backgroundColor', v || undefined)}
+                          />
+                          <ColorField
+                            label="datePicker.style.presetButtonStyle.color"
+                            value={String(getProp(node, 'datePicker.style.presetButtonStyle.color', ''))}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'datePicker.style.presetButtonStyle.color', v || undefined)}
+                          />
+                          <ColorField
+                            label="datePicker.style.presetButtonStyle.borderColor"
+                            value={String(getProp(node, 'datePicker.style.presetButtonStyle.borderColor', ''))}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'datePicker.style.presetButtonStyle.borderColor', v || undefined)}
+                          />
+                          <NumberField
+                            label="datePicker.style.presetButtonStyle.borderWidth"
+                            value={Number(getProp(node, 'datePicker.style.presetButtonStyle.borderWidth', '')) || ''}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'datePicker.style.presetButtonStyle.borderWidth', v)}
+                          />
+                          <NumberField
+                            label="datePicker.style.presetButtonStyle.borderRadius"
+                            value={Number(getProp(node, 'datePicker.style.presetButtonStyle.borderRadius', '')) || ''}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'datePicker.style.presetButtonStyle.borderRadius', v)}
+                          />
+                          <TextField
+                            label="datePicker.style.presetButtonStyle.fontFamily"
+                            value={String(getProp(node, 'datePicker.style.presetButtonStyle.fontFamily', ''))}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'datePicker.style.presetButtonStyle.fontFamily', v || undefined)}
+                          />
+                          <NumberField
+                            label="datePicker.style.presetButtonStyle.fontSize"
+                            value={Number(getProp(node, 'datePicker.style.presetButtonStyle.fontSize', '')) || ''}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'datePicker.style.presetButtonStyle.fontSize', v)}
+                          />
+                          <NumberField
+                            label="datePicker.style.presetButtonStyle.fontWeight"
+                            value={Number(getProp(node, 'datePicker.style.presetButtonStyle.fontWeight', '')) || ''}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'datePicker.style.presetButtonStyle.fontWeight', v)}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2 rounded border border-gray-200 p-2">
+                        <div className="text-sm font-medium text-gray-700">Active Preset Button</div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <ColorField
+                            label="datePicker.style.activePresetButtonStyle.backgroundColor"
+                            value={String(getProp(node, 'datePicker.style.activePresetButtonStyle.backgroundColor', ''))}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'datePicker.style.activePresetButtonStyle.backgroundColor', v || undefined)}
+                          />
+                          <ColorField
+                            label="datePicker.style.activePresetButtonStyle.color"
+                            value={String(getProp(node, 'datePicker.style.activePresetButtonStyle.color', ''))}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'datePicker.style.activePresetButtonStyle.color', v || undefined)}
+                          />
+                          <ColorField
+                            label="datePicker.style.activePresetButtonStyle.borderColor"
+                            value={String(getProp(node, 'datePicker.style.activePresetButtonStyle.borderColor', ''))}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'datePicker.style.activePresetButtonStyle.borderColor', v || undefined)}
+                          />
+                          <NumberField
+                            label="datePicker.style.activePresetButtonStyle.borderWidth"
+                            value={Number(getProp(node, 'datePicker.style.activePresetButtonStyle.borderWidth', '')) || ''}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'datePicker.style.activePresetButtonStyle.borderWidth', v)}
+                          />
+                          <NumberField
+                            label="datePicker.style.activePresetButtonStyle.borderRadius"
+                            value={Number(getProp(node, 'datePicker.style.activePresetButtonStyle.borderRadius', '')) || ''}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'datePicker.style.activePresetButtonStyle.borderRadius', v)}
+                          />
+                          <TextField
+                            label="datePicker.style.activePresetButtonStyle.fontFamily"
+                            value={String(getProp(node, 'datePicker.style.activePresetButtonStyle.fontFamily', ''))}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'datePicker.style.activePresetButtonStyle.fontFamily', v || undefined)}
+                          />
+                          <NumberField
+                            label="datePicker.style.activePresetButtonStyle.fontSize"
+                            value={Number(getProp(node, 'datePicker.style.activePresetButtonStyle.fontSize', '')) || ''}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'datePicker.style.activePresetButtonStyle.fontSize', v)}
+                          />
+                          <NumberField
+                            label="datePicker.style.activePresetButtonStyle.fontWeight"
+                            value={Number(getProp(node, 'datePicker.style.activePresetButtonStyle.fontWeight', '')) || ''}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'datePicker.style.activePresetButtonStyle.fontWeight', v)}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2 rounded border border-gray-200 p-2">
+                        <div className="text-sm font-medium text-gray-700">Calendar Button</div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <ColorField
+                            label="datePicker.style.calendarButtonStyle.backgroundColor"
+                            value={String(getProp(node, 'datePicker.style.calendarButtonStyle.backgroundColor', ''))}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'datePicker.style.calendarButtonStyle.backgroundColor', v || undefined)}
+                          />
+                          <ColorField
+                            label="datePicker.style.calendarButtonStyle.color"
+                            value={String(getProp(node, 'datePicker.style.calendarButtonStyle.color', ''))}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'datePicker.style.calendarButtonStyle.color', v || undefined)}
+                          />
+                          <ColorField
+                            label="datePicker.style.calendarButtonStyle.borderColor"
+                            value={String(getProp(node, 'datePicker.style.calendarButtonStyle.borderColor', ''))}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'datePicker.style.calendarButtonStyle.borderColor', v || undefined)}
+                          />
+                          <NumberField
+                            label="datePicker.style.calendarButtonStyle.borderWidth"
+                            value={Number(getProp(node, 'datePicker.style.calendarButtonStyle.borderWidth', '')) || ''}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'datePicker.style.calendarButtonStyle.borderWidth', v)}
+                          />
+                          <NumberField
+                            label="datePicker.style.calendarButtonStyle.borderRadius"
+                            value={Number(getProp(node, 'datePicker.style.calendarButtonStyle.borderRadius', '')) || ''}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'datePicker.style.calendarButtonStyle.borderRadius', v)}
+                          />
+                          <NumberField
+                            label="datePicker.style.calendarButtonStyle.width"
+                            value={Number(getProp(node, 'datePicker.style.calendarButtonStyle.width', '')) || ''}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'datePicker.style.calendarButtonStyle.width', v)}
+                          />
+                          <NumberField
+                            label="datePicker.style.calendarButtonStyle.height"
+                            value={Number(getProp(node, 'datePicker.style.calendarButtonStyle.height', '')) || ''}
+                            onChange={(v) => onSetNodeProp(selectedPath, 'datePicker.style.calendarButtonStyle.height', v)}
+                          />
+                        </div>
+                      </div>
+                    </>
                   )}
 
                   {node.type === 'Table' && (
