@@ -343,7 +343,7 @@ export default function PropertiesPanel({
   )
 
   const supportsDataTab = Boolean(
-    node && ['KPI', 'KPICompare', 'Sparkline', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'AISummary', 'Table', 'Icon'].includes(String(node.type)),
+    node && ['KPI', 'KPICompare', 'Sparkline', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'AISummary', 'Table', 'Icon', 'Gauge'].includes(String(node.type)),
   )
   const supportsNivoTab = isChartNode
   const supportsStyleTab = Boolean(
@@ -625,6 +625,55 @@ export default function PropertiesPanel({
                       label="fr"
                       value={Number(getProp(node, 'fr', '')) || ''}
                       onChange={(v) => onSetNodeProp(selectedPath, 'fr', v)}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'data' && node.type === 'Gauge' && (
+                <div className="space-y-2 rounded border border-gray-200 p-2">
+                  <TextAreaField
+                    label="dataQuery.query"
+                    value={String(getProp(node, 'dataQuery.query', ''))}
+                    onChange={(v) => onSetNodeProp(selectedPath, 'dataQuery.query', v || undefined)}
+                    placeholder="SELECT ... AS value"
+                    rows={6}
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <TextField
+                      label="valueField"
+                      value={String(getProp(node, 'valueField', 'value'))}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'valueField', v || undefined)}
+                    />
+                    <TextField
+                      label="valuePath"
+                      value={String(getProp(node, 'valuePath', ''))}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'valuePath', v || undefined)}
+                    />
+                    <NumberField
+                      label="min"
+                      value={Number(getProp(node, 'min', '')) || ''}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'min', v)}
+                    />
+                    <NumberField
+                      label="max"
+                      value={Number(getProp(node, 'max', '')) || ''}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'max', v)}
+                    />
+                    <NumberField
+                      label="target"
+                      value={Number(getProp(node, 'target', '')) || ''}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'target', v)}
+                    />
+                    <SelectField
+                      label="format"
+                      value={String(getProp(node, 'format', 'number'))}
+                      options={[
+                        { value: 'number', label: 'Number' },
+                        { value: 'currency', label: 'Currency' },
+                        { value: 'percent', label: 'Percent' },
+                      ]}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'format', v)}
                     />
                   </div>
                 </div>
@@ -1645,7 +1694,7 @@ export default function PropertiesPanel({
                     </div>
                   )}
 
-                  {(node.type === 'SlicerCard' || node.type === 'Gauge') && (
+                  {node.type === 'SlicerCard' && (
                     <div className="space-y-2 rounded border border-gray-200 p-2">
                       <div className="text-sm font-medium text-gray-700">Container Style</div>
                       <ColorField
@@ -2139,12 +2188,80 @@ export default function PropertiesPanel({
                     </div>
                   )}
 
-                  {(node.type === 'SlicerCard' || node.type === 'Gauge') && (
+                  {node.type === 'SlicerCard' && (
                     <CheckboxField
                       label="Borderless"
                       checked={Boolean(getProp(node, 'borderless', false))}
                       onChange={(v) => onSetNodeProp(selectedPath, 'borderless', v)}
                     />
+                  )}
+
+                  {node.type === 'Gauge' && (
+                    <div className="space-y-2 rounded border border-gray-200 p-2">
+                      <div className="text-sm font-medium text-gray-700">Gauge Style</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <ColorField
+                          label="trackColor"
+                          value={String(getProp(node, 'trackColor', ''))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'trackColor', v || undefined)}
+                        />
+                        <ColorField
+                          label="valueColor"
+                          value={String(getProp(node, 'valueColor', getProp(node, 'indicatorColor', '')))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'valueColor', v || undefined)}
+                        />
+                        <ColorField
+                          label="targetColor"
+                          value={String(getProp(node, 'targetColor', ''))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'targetColor', v || undefined)}
+                        />
+                        <NumberField
+                          label="width"
+                          value={Number(getProp(node, 'width', getProp(node, 'size', ''))) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'width', v)}
+                        />
+                        <NumberField
+                          label="height"
+                          value={Number(getProp(node, 'height', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'height', v)}
+                        />
+                        <NumberField
+                          label="thickness"
+                          value={Number(getProp(node, 'thickness', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'thickness', v)}
+                        />
+                        <NumberField
+                          label="startAngle"
+                          value={Number(getProp(node, 'startAngle', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'startAngle', v)}
+                        />
+                        <NumberField
+                          label="endAngle"
+                          value={Number(getProp(node, 'endAngle', '')) || ''}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'endAngle', v)}
+                        />
+                        <CheckboxField
+                          label="showValue"
+                          checked={Boolean(getProp(node, 'showValue', true))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'showValue', v)}
+                        />
+                        <CheckboxField
+                          label="showMinMax"
+                          checked={Boolean(getProp(node, 'showMinMax', true))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'showMinMax', v)}
+                        />
+                        <CheckboxField
+                          label="showTarget"
+                          checked={Boolean(getProp(node, 'showTarget', true))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'showTarget', v)}
+                        />
+                        <CheckboxField
+                          label="roundedCaps"
+                          checked={Boolean(getProp(node, 'roundedCaps', true))}
+                          onChange={(v) => onSetNodeProp(selectedPath, 'roundedCaps', v)}
+                        />
+                      </div>
+                    </div>
                   )}
                 </>
               )}

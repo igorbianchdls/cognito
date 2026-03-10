@@ -71,13 +71,18 @@ const defaultKPI = {
 
 const defaultGauge = {
   format: 'number' as 'currency'|'percent'|'number',
-  titleStyle: { fontWeight: 600, fontSize: 12, color: '#64748b', textTransform: 'none', textAlign: 'left' },
-  containerStyle: { borderColor: '#e5e7eb', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, padding: 12 },
-  borderless: false,
-  size: 160,
-  thickness: 14,
+  width: 220,
+  height: 130,
+  thickness: 16,
   trackColor: '#e5e7eb',
-  indicatorColor: '#3b82f6',
+  valueColor: '#2563eb',
+  targetColor: '#0f172a',
+  roundedCaps: true,
+  showValue: true,
+  showMinMax: true,
+  showTarget: true,
+  startAngle: -110,
+  endAngle: 110,
 } as const;
 
 const defaultBarChart = {
@@ -1444,16 +1449,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
   Gauge: ({ element }) => {
     const theme = useThemeOverrides();
     const p = deepMerge(deepMerge(defaultGauge as any, ((theme.components as any)?.Gauge || {}) as AnyRecord), (element?.props || {}) as any) as AnyRecord;
-    const containerStyle = ensureSurfaceBackground(
-      applyBorderFromCssVars(normalizeContainerStyle(p.containerStyle, Boolean(p.borderless)), theme.cssVars),
-      theme.cssVars
-    ) as React.CSSProperties;
-    containerStyle.boxShadow = undefined;
-    return (
-      <FrameSurface style={containerStyle} frame={p?.containerStyle?.frame as AnyRecord} cssVars={theme.cssVars}>
-        <JsonRenderGauge element={{ props: p }} />
-      </FrameSurface>
-    );
+    return <JsonRenderGauge element={{ props: p }} />;
   },
 
   AISummary: ({ element }) => {
