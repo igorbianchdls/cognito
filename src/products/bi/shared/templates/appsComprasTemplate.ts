@@ -22,7 +22,7 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
         <Title text="Dashboard de Compras" />
         <Subtitle text="Principais indicadores e cortes" />
       </Container>
-      <DatePicker visible mode="range" storePath="filters.dateRange">
+      <DatePicker visible mode="range" storePath="filters.dateRange" presets={["7d","14d","30d"]}>
         <ActionOnChange type="refresh_data" />
         <Style>
           {

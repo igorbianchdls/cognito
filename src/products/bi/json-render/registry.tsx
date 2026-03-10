@@ -577,6 +577,20 @@ function DateFieldWithIcon({ value, onChange, fieldStyle, iconStyleOverride }: {
   );
 }
 
+function addDays(date: Date, days: number) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function startOfMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function endOfMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+}
+
 export const registry: Record<string, React.FC<{ element: any; children?: React.ReactNode; data?: AnyRecord; onAction?: (action: any) => void }>> = {
   Card: ({ element, children }) => {
     const theme = useThemeOverrides();
@@ -789,6 +803,8 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     }) as React.CSSProperties;
     const dateFieldOverride = applyDatePickerFieldFromCssVars((dp.style as any)?.fieldStyle, undefined) as React.CSSProperties | undefined;
     const { data, setData, getValueByPath } = useData();
+    const [customPickerOpen, setCustomPickerOpen] = React.useState(false);
+    const customPickerRef = React.useRef<HTMLDivElement>(null);
     function toISO(d: Date) { return d.toISOString().slice(0,10); }
     function fmt(d?: string) { return d || ''; }
     function getDefaultRange() {
@@ -796,6 +812,16 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       const from = new Date(now.getFullYear(), now.getMonth(), 1);
       const to = new Date(now.getFullYear(), now.getMonth() + 1, 0);
       return { from: toISO(from), to: toISO(to) };
+    }
+    function getPresetRange(preset: '7d' | '14d' | '30d' | '90d' | 'month') {
+      const today = new Date();
+      if (preset === 'month') return { from: toISO(startOfMonth(today)), to: toISO(endOfMonth(today)) };
+      const days = Number.parseInt(preset, 10);
+      const from = addDays(today, -(days - 1));
+      return { from: toISO(from), to: toISO(today) };
+    }
+    function isSameRange(a?: { from?: string; to?: string }, b?: { from?: string; to?: string }) {
+      return String(a?.from || '') === String(b?.from || '') && String(a?.to || '') === String(b?.to || '');
     }
     function setByPath(prev: any, path: string, value: any) {
       if (!path) return prev;
@@ -813,6 +839,17 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       }
       return root;
     }
+    React.useEffect(() => {
+      if (!customPickerOpen) return;
+      function onPointerDown(ev: MouseEvent) {
+        const target = ev.target as Node | null;
+        if (customPickerRef.current && target && !customPickerRef.current.contains(target)) {
+          setCustomPickerOpen(false);
+        }
+      }
+      document.addEventListener('mousedown', onPointerDown);
+      return () => document.removeEventListener('mousedown', onPointerDown);
+    }, [customPickerOpen]);
     const stored = storePath ? getValueByPath(storePath, undefined) : undefined;
     let picker: React.ReactNode = null;
     if (showPicker) {
@@ -820,31 +857,100 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
         const curr = (stored && typeof stored === 'object')
           ? { from: fmt((stored as any).from), to: fmt((stored as any).to) }
           : getDefaultRange();
+        const presetKeys = (Array.isArray(dp.presets) && dp.presets.length
+          ? dp.presets
+          : ['7d', '14d', '30d']) as Array<'7d' | '14d' | '30d' | '90d' | 'month'>;
+        const activePreset = presetKeys.find((preset) => isSameRange(curr, getPresetRange(preset)));
+        const setRange = (range: { from: string; to: string }) => {
+          if (!storePath) return;
+          const next = setByPath(data, storePath, range);
+          setData(next);
+          if (dp.actionOnChange && typeof dp.actionOnChange === 'object') onAction?.(dp.actionOnChange);
+        };
+        const presetButtonStyle = (active: boolean): React.CSSProperties => ({
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: 32,
+          padding: '0 10px',
+          borderRadius: 8,
+          border: `1px solid ${active ? (css.headerDpBorder || '#c7d2fe') : (css.headerDpBorder || '#d1d5db')}`,
+          backgroundColor: active ? (css.headerDpBg || '#eff6ff') : 'transparent',
+          color: active ? (css.headerDpColor || css.headerDpIcon || '#0f172a') : (css.headerDpColor || '#4b5563'),
+          fontSize: 12,
+          fontWeight: active ? 600 : 500,
+          lineHeight: 1,
+          cursor: 'pointer',
+          transition: 'all 120ms ease',
+        });
+        const calendarButtonStyle: React.CSSProperties = {
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 32,
+          height: 32,
+          borderRadius: 8,
+          border: `1px solid ${css.headerDpBorder || '#d1d5db'}`,
+          backgroundColor: customPickerOpen ? (css.headerDpBg || '#eff6ff') : 'transparent',
+          color: css.headerDpIcon || css.headerDpColor || '#4b5563',
+          cursor: 'pointer',
+        };
+        const customPopoverStyle: React.CSSProperties = {
+          position: 'absolute',
+          top: 'calc(100% + 8px)',
+          right: 0,
+          zIndex: 30,
+          minWidth: 250,
+          padding: 12,
+          borderRadius: 10,
+          border: `1px solid ${css.headerDpBorder || '#d1d5db'}`,
+          backgroundColor: css.headerDpBg || '#ffffff',
+          boxShadow: '0 12px 32px rgba(15, 23, 42, 0.12)',
+        };
         picker = (
           <div className="flex items-center gap-2">
-            <DateFieldWithIcon
-              value={curr.from}
-              onChange={(val: string) => {
-                if (!storePath) return;
-                const next = setByPath(data, storePath, { from: val, to: curr.to });
-                setData(next);
-                if (dp.actionOnChange && typeof dp.actionOnChange === 'object') onAction?.(dp.actionOnChange);
-              }}
-              fieldStyle={{ ...dateFieldStyle, ...dateFieldOverride }}
-              iconStyleOverride={dateIconStyle}
-            />
-            <span className="text-xs" style={dateLabelStyle}>até</span>
-            <DateFieldWithIcon
-              value={curr.to}
-              onChange={(val: string) => {
-                if (!storePath) return;
-                const next = setByPath(data, storePath, { from: curr.from, to: val });
-                setData(next);
-                if (dp.actionOnChange && typeof dp.actionOnChange === 'object') onAction?.(dp.actionOnChange);
-              }}
-              fieldStyle={{ ...dateFieldStyle, ...dateFieldOverride }}
-              iconStyleOverride={dateIconStyle}
-            />
+            {presetKeys.map((preset) => (
+              <button
+                key={preset}
+                type="button"
+                style={presetButtonStyle(activePreset === preset)}
+                onClick={() => {
+                  setRange(getPresetRange(preset));
+                  setCustomPickerOpen(false);
+                }}
+              >
+                {preset}
+              </button>
+            ))}
+            <div ref={customPickerRef} style={{ position: 'relative' }}>
+              <button
+                type="button"
+                aria-label="Abrir período customizado"
+                style={calendarButtonStyle}
+                onClick={() => setCustomPickerOpen((prev) => !prev)}
+              >
+                <Calendar size={16} />
+              </button>
+              {customPickerOpen ? (
+                <div style={customPopoverStyle}>
+                  <div className="flex items-center gap-2">
+                    <DateFieldWithIcon
+                      value={curr.from}
+                      onChange={(val: string) => setRange({ from: val, to: curr.to })}
+                      fieldStyle={{ ...dateFieldStyle, ...dateFieldOverride }}
+                      iconStyleOverride={dateIconStyle}
+                    />
+                    <span className="text-xs" style={dateLabelStyle}>até</span>
+                    <DateFieldWithIcon
+                      value={curr.to}
+                      onChange={(val: string) => setRange({ from: curr.from, to: val })}
+                      fieldStyle={{ ...dateFieldStyle, ...dateFieldOverride }}
+                      iconStyleOverride={dateIconStyle}
+                    />
+                  </div>
+                </div>
+              ) : null}
+            </div>
           </div>
         );
       } else {

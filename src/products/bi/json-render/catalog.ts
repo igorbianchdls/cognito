@@ -244,7 +244,7 @@ export const catalog = {
           position: z.enum(["left","right","below"]).optional(),
           storePath: z.string().optional(),
           format: z.string().optional(),
-          presets: z.array(z.enum(["today","week","month"]).optional()).optional(),
+          presets: z.array(z.enum(["7d","14d","30d","90d","month"])).optional(),
           actionOnChange: z.object({ type: z.string() }).partial().optional(),
           style: z.object({
             // legacy

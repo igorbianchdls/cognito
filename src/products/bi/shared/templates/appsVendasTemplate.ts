@@ -55,7 +55,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
             <Title text="Dashboard de Vendas" />
             <Subtitle text="Principais indicadores e cortes" />
           </Container>
-          <DatePicker visible mode="range" storePath="filters.dateRange">
+          <DatePicker visible mode="range" storePath="filters.dateRange" presets={["7d","14d","30d"]}>
             <ActionOnChange type="refresh_data" />
             <Style>
               {
