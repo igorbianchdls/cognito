@@ -1,8 +1,9 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useDraggable, useDroppable } from '@dnd-kit/core'
-import { Copy, Pencil, Trash2 } from 'lucide-react'
+import { MoreHorizontal } from 'lucide-react'
+import NodeActionMenu from '@/products/bi/features/dashboard-editor/components/NodeActionMenu'
 import type {
   NodeDropPlacement,
   JsonNodePath,
@@ -35,6 +36,7 @@ export default function EditableNodeWrapper({
   children,
 }: EditableNodeWrapperProps) {
   const [hovered, setHovered] = useState(false)
+  const [actionMenuOpen, setActionMenuOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement | null>(null)
   const isTheme = type === 'Theme'
   const isRootNode = path.length === 0
@@ -42,7 +44,6 @@ export default function EditableNodeWrapper({
   const canShowHighlight = !isTheme && !isRootNode
   const canDuplicate = !isTheme && !isRootNode
   const canDelete = !isTheme && !isRootNode
-  const canEdit = !isTheme && !isRootNode
   const canMove = !isTheme && !isRootNode
   const dndEnabled = Boolean(dnd?.enabled)
   const dndIdBase = path.length ? path.join('.') : 'root'
@@ -68,9 +69,27 @@ export default function EditableNodeWrapper({
     disabled: !dndEnabled || !canMove,
   })
 
-  const accentRgb = '113,215,247'
-  const showHoverChrome = hovered || selected
-  const showCompactToolbar = selected
+  useEffect(() => {
+    if (!actionMenuOpen) return
+    function onDocClick(event: MouseEvent) {
+      if (!rootRef.current) return
+      if (rootRef.current.contains(event.target as Node)) return
+      setActionMenuOpen(false)
+    }
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') setActionMenuOpen(false)
+    }
+    document.addEventListener('mousedown', onDocClick)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', onDocClick)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [actionMenuOpen])
+
+  const accentRgb = '37,99,235'
+  const showHoverChrome = hovered || selected || actionMenuOpen
+  const showCompactToolbar = selected || actionMenuOpen
   const showToolbar = isCompactNode ? showCompactToolbar : showHoverChrome
   const highlightStyle = !canShowHighlight
     ? undefined
@@ -130,47 +149,30 @@ export default function EditableNodeWrapper({
             style={{
               backgroundColor: `rgba(${accentRgb},0.98)`,
               color: '#ffffff',
-              boxShadow: '0 8px 20px rgba(14, 165, 233, 0.22)',
+              boxShadow: '0 8px 20px rgba(37, 99, 235, 0.28)',
             }}
           >
             <button
               type="button"
-              aria-label={`Editar componente ${type}`}
+              aria-label={`Ações do componente ${type}`}
               className="inline-flex h-6 w-6 items-center justify-center rounded text-white/95 transition hover:bg-white/18"
               onClick={(e) => {
                 e.stopPropagation()
-                if (!canEdit) return
-                onAction(path, 'edit')
+                setActionMenuOpen((prev) => !prev)
               }}
             >
-              <Pencil className="h-3.5 w-3.5" />
+              <MoreHorizontal className="h-3.5 w-3.5" />
             </button>
-            <button
-              type="button"
-              aria-label={`Duplicar componente ${type}`}
-              className="inline-flex h-6 w-6 items-center justify-center rounded text-white/95 transition hover:bg-white/18 disabled:opacity-50"
-              disabled={!canDuplicate}
-              onClick={(e) => {
-                e.stopPropagation()
-                if (!canDuplicate) return
-                onAction(path, 'duplicate')
-              }}
-            >
-              <Copy className="h-3.5 w-3.5" />
-            </button>
-            <button
-              type="button"
-              aria-label={`Excluir componente ${type}`}
-              className="inline-flex h-6 w-6 items-center justify-center rounded text-white/95 transition hover:bg-white/18 disabled:opacity-50"
-              disabled={!canDelete}
-              onClick={(e) => {
-                e.stopPropagation()
-                if (!canDelete) return
-                onAction(path, 'delete')
-              }}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
+            {actionMenuOpen && (
+              <NodeActionMenu
+                canDuplicate={canDuplicate}
+                canDelete={canDelete}
+                onAction={(action) => {
+                  setActionMenuOpen(false)
+                  onAction(path, action)
+                }}
+              />
+            )}
           </div>
         </div>
       )}
