@@ -29,7 +29,7 @@ const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, 
 const MINUTE_OPTIONS = ['00', '15', '30', '45']
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
-  return <label className="text-[11px] font-medium text-gray-700">{children}</label>
+  return <label className="text-sm font-medium text-gray-700">{children}</label>
 }
 
 function TextField({
@@ -51,7 +51,7 @@ function TextField({
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded bg-gray-100 px-2 py-1 text-xs outline-none ring-0 focus:bg-gray-50"
+        className="w-full rounded bg-gray-100 px-2 py-1 text-sm outline-none ring-0 focus:bg-gray-50"
       />
     </div>
   )
@@ -78,7 +78,7 @@ function TextAreaField({
         rows={rows}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded bg-gray-100 px-2 py-1.5 text-xs outline-none ring-0 focus:bg-gray-50"
+        className="w-full rounded bg-gray-100 px-2 py-1.5 text-sm outline-none ring-0 focus:bg-gray-50"
       />
     </div>
   )
@@ -100,7 +100,7 @@ function NumberField({
         type="number"
         value={value}
         onChange={(e) => onChange(e.target.value === '' ? undefined : Number(e.target.value))}
-        className="w-full rounded bg-gray-100 px-2 py-1 text-xs outline-none ring-0 focus:bg-gray-50"
+        className="w-full rounded bg-gray-100 px-2 py-1 text-sm outline-none ring-0 focus:bg-gray-50"
       />
     </div>
   )
@@ -123,7 +123,7 @@ function SelectField({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded bg-gray-100 px-2 py-1 text-xs outline-none ring-0 focus:bg-gray-50"
+        className="w-full rounded bg-gray-100 px-2 py-1 text-sm outline-none ring-0 focus:bg-gray-50"
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>
@@ -160,7 +160,7 @@ function ColorField({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="#ffffff"
-          className="w-full rounded bg-gray-100 px-2 py-1 text-xs outline-none ring-0 focus:bg-gray-50"
+          className="w-full rounded bg-gray-100 px-2 py-1 text-sm outline-none ring-0 focus:bg-gray-50"
         />
       </div>
     </div>
@@ -177,7 +177,7 @@ function CheckboxField({
   onChange: (v: boolean) => void
 }) {
   return (
-    <label className="flex items-center gap-2 text-xs text-gray-700">
+    <label className="flex items-center gap-2 text-sm text-gray-700">
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
       <span>{label}</span>
     </label>
@@ -199,7 +199,7 @@ function ToggleChip({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-2 rounded-md border px-2.5 py-2 text-xs transition-colors ${
+      className={`inline-flex items-center gap-2 rounded-md border px-2.5 py-2 text-sm transition-colors ${
         selected
           ? 'border-gray-900 bg-gray-900 text-white'
           : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
@@ -259,7 +259,7 @@ function TextSpacingFields({
 }) {
   return (
     <div className="space-y-2 rounded border border-gray-200 p-2">
-      <div className="text-[11px] font-medium text-gray-700">Spacing</div>
+      <div className="text-sm font-medium text-gray-700">Spacing</div>
       <div className="grid grid-cols-2 gap-2">
         <TextField
           label="margin"
@@ -472,7 +472,7 @@ export default function PropertiesPanel({
                       <select
                         value={String(getProp(node, 'task.schedule.frequency', 'none'))}
                         onChange={(e) => onSetNodeProp(selectedPath, 'task.schedule.frequency', e.target.value)}
-                        className="w-full rounded bg-gray-100 px-2 py-1 text-xs outline-none ring-0 focus:bg-gray-50"
+                        className="w-full rounded bg-gray-100 px-2 py-1 text-sm outline-none ring-0 focus:bg-gray-50"
                       >
                         {AISUMMARY_FREQUENCY_OPTIONS.map((opt) => (
                           <option key={opt.value} value={opt.value}>
@@ -484,7 +484,7 @@ export default function PropertiesPanel({
                         value={String(getProp(node, 'task.schedule.hour', '08'))}
                         disabled={String(getProp(node, 'task.schedule.frequency', 'none')) === 'none'}
                         onChange={(e) => onSetNodeProp(selectedPath, 'task.schedule.hour', e.target.value)}
-                        className="w-full rounded bg-gray-100 px-2 py-1 text-xs outline-none ring-0 focus:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400"
+                        className="w-full rounded bg-gray-100 px-2 py-1 text-sm outline-none ring-0 focus:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400"
                       >
                         {HOUR_OPTIONS.map((hour) => (
                           <option key={hour} value={hour}>
@@ -496,7 +496,7 @@ export default function PropertiesPanel({
                         value={String(getProp(node, 'task.schedule.minute', '00'))}
                         disabled={String(getProp(node, 'task.schedule.frequency', 'none')) === 'none'}
                         onChange={(e) => onSetNodeProp(selectedPath, 'task.schedule.minute', e.target.value)}
-                        className="w-full rounded bg-gray-100 px-2 py-1 text-xs outline-none ring-0 focus:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400"
+                        className="w-full rounded bg-gray-100 px-2 py-1 text-sm outline-none ring-0 focus:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400"
                       >
                         {MINUTE_OPTIONS.map((minute) => (
                           <option key={minute} value={minute}>
@@ -583,7 +583,7 @@ export default function PropertiesPanel({
 
               {activeTab === 'data' && node.type === 'Table' && (
                 <div className="space-y-2 rounded border border-gray-200 p-2">
-                  <div className="text-[11px] font-medium text-gray-700">Dados da Tabela</div>
+                  <div className="text-sm font-medium text-gray-700">Dados da Tabela</div>
                   <TextAreaField
                     label="dataQuery.query"
                     value={String(getProp(node, 'dataQuery.query', ''))}
@@ -657,7 +657,7 @@ export default function PropertiesPanel({
                     onChange={(v) => onSetNodeProp(selectedPath, 'selectionMode', v)}
                   />
                   <div className="space-y-1 rounded border border-gray-200 p-2">
-                    <div className="text-[11px] font-medium text-gray-700">Edição</div>
+                    <div className="text-sm font-medium text-gray-700">Edição</div>
                     <div className="grid grid-cols-2 gap-2">
                       <CheckboxField
                         label="editableMode"
@@ -700,7 +700,7 @@ export default function PropertiesPanel({
                         setTableColumnsText(e.target.value)
                         setTableColumnsError(null)
                       }}
-                      className="w-full rounded bg-gray-100 px-2 py-1.5 text-xs outline-none ring-0 focus:bg-gray-50"
+                      className="w-full rounded bg-gray-100 px-2 py-1.5 text-sm outline-none ring-0 focus:bg-gray-50"
                     />
                     {tableColumnsError && <div className="text-[11px] text-red-600">{tableColumnsError}</div>}
                     <div className="flex justify-end">
@@ -974,7 +974,7 @@ export default function PropertiesPanel({
                 <>
                   {supportsFr && (
                     <div className="space-y-2 rounded border border-gray-200 p-2">
-                      <div className="text-[11px] font-medium text-gray-700">Layout</div>
+                      <div className="text-sm font-medium text-gray-700">Layout</div>
                       <NumberField
                         label="fr (largura relativa)"
                         value={Number(getProp(node, 'fr', '')) || ''}
@@ -1001,7 +1001,7 @@ export default function PropertiesPanel({
 
                   {node.type === 'Icon' && (
                     <div className="space-y-2 rounded border border-gray-200 p-2">
-                      <div className="text-[11px] font-medium text-gray-700">Icon Style</div>
+                      <div className="text-sm font-medium text-gray-700">Icon Style</div>
                       <div className="grid grid-cols-2 gap-2">
                         <ColorField
                           label="color"
@@ -1052,7 +1052,7 @@ export default function PropertiesPanel({
 
                   {node.type === 'Card' && (
                     <div className="space-y-2 rounded border border-gray-200 p-2">
-                      <div className="text-[11px] font-medium text-gray-700">Card Layout</div>
+                      <div className="text-sm font-medium text-gray-700">Card Layout</div>
                       <div className="grid grid-cols-2 gap-2">
                         <SelectField
                           label="direction"
@@ -1156,7 +1156,7 @@ export default function PropertiesPanel({
 
                   {(node.type === 'Container' || node.type === 'Sidebar') && (
                     <div className="space-y-2 rounded border border-gray-200 p-2">
-                      <div className="text-[11px] font-medium text-gray-700">Flex Item</div>
+                      <div className="text-sm font-medium text-gray-700">Flex Item</div>
                       <div className="grid grid-cols-2 gap-2">
                         <NumberField
                           label="grow"
@@ -1185,7 +1185,7 @@ export default function PropertiesPanel({
 
                   {node.type === 'Sidebar' && (
                     <div className="space-y-2 rounded border border-gray-200 p-2">
-                      <div className="text-[11px] font-medium text-gray-700">Sidebar Layout</div>
+                      <div className="text-sm font-medium text-gray-700">Sidebar Layout</div>
                       <div className="grid grid-cols-2 gap-2">
                         <NumberField
                           label="width"
@@ -1278,7 +1278,7 @@ export default function PropertiesPanel({
 
                   {(node.type === 'SlicerCard' || node.type === 'Gauge') && (
                     <div className="space-y-2 rounded border border-gray-200 p-2">
-                      <div className="text-[11px] font-medium text-gray-700">Container Style</div>
+                      <div className="text-sm font-medium text-gray-700">Container Style</div>
                       <ColorField
                         label="containerStyle.backgroundColor"
                         value={String(getProp(node, 'containerStyle.backgroundColor', ''))}
@@ -1306,7 +1306,7 @@ export default function PropertiesPanel({
 
                   {node.type === 'KPI' && (
                     <div className="space-y-2 rounded border border-gray-200 p-2">
-                      <div className="text-[11px] font-medium text-gray-700">Value Style</div>
+                      <div className="text-sm font-medium text-gray-700">Value Style</div>
                       <ColorField
                         label="valueStyle.color"
                         value={String(getProp(node, 'valueStyle.color', ''))}
@@ -1329,7 +1329,7 @@ export default function PropertiesPanel({
 
                   {(node.type === 'Header' || node.type === 'SlicerCard' || node.type === 'Card' || node.type === 'CardTitle' || node.type === 'Title' || node.type === 'Subtitle') && (
                     <div className="space-y-2 rounded border border-gray-200 p-2">
-                      <div className="text-[11px] font-medium text-gray-700">Title Style</div>
+                      <div className="text-sm font-medium text-gray-700">Title Style</div>
                       <ColorField
                         label="titleStyle.color"
                         value={String(getProp(node, 'titleStyle.color', ''))}
@@ -1361,7 +1361,7 @@ export default function PropertiesPanel({
                   {node.type === 'AISummary' && (
                     <>
                       <div className="space-y-2 rounded border border-gray-200 p-2">
-                        <div className="text-[11px] font-medium text-gray-700">Texto dos Itens</div>
+                        <div className="text-sm font-medium text-gray-700">Texto dos Itens</div>
                         <ColorField
                           label="itemTextStyle.color"
                           value={String(getProp(node, 'itemTextStyle.color', ''))}
@@ -1381,7 +1381,7 @@ export default function PropertiesPanel({
                         </div>
                       </div>
                       <div className="space-y-2 rounded border border-gray-200 p-2">
-                        <div className="text-[11px] font-medium text-gray-700">Ícones</div>
+                        <div className="text-sm font-medium text-gray-700">Ícones</div>
                         <div className="grid grid-cols-2 gap-2">
                           <NumberField
                             label="iconBoxSize"
@@ -1410,7 +1410,7 @@ export default function PropertiesPanel({
 
                   {node.type === 'Header' && (
                     <div className="space-y-2 rounded border border-gray-200 p-2">
-                      <div className="text-[11px] font-medium text-gray-700">Header Colors</div>
+                      <div className="text-sm font-medium text-gray-700">Header Colors</div>
                       <ColorField
                         label="textColor"
                         value={String(getProp(node, 'textColor', ''))}
@@ -1431,7 +1431,7 @@ export default function PropertiesPanel({
 
                   {(node.type === 'BarChart' || node.type === 'LineChart' || node.type === 'PieChart') && (
                     <div className="space-y-2 rounded border border-gray-200 p-2">
-                      <div className="text-[11px] font-medium text-gray-700">Chart Style</div>
+                      <div className="text-sm font-medium text-gray-700">Chart Style</div>
                       <NumberField
                         label="height"
                         value={Number(getProp(node, 'height', '')) || ''}
@@ -1455,7 +1455,7 @@ export default function PropertiesPanel({
 
                   {node.type === 'Table' && (
                     <div className="space-y-2 rounded border border-gray-200 p-2">
-                      <div className="text-[11px] font-medium text-gray-700">Table Style</div>
+                      <div className="text-sm font-medium text-gray-700">Table Style</div>
                       <div className="grid grid-cols-2 gap-2">
                         <ColorField
                           label="headerBackground"
@@ -1530,7 +1530,7 @@ export default function PropertiesPanel({
 
               {activeTab === 'json' && (
                 <div className="rounded border border-gray-200 p-2">
-                  <div className="mb-1 text-[11px] font-medium text-gray-700">Props JSON (avançado)</div>
+                  <div className="mb-1 text-sm font-medium text-gray-700">Props JSON (avançado)</div>
                   <textarea
                     value={rawPropsText}
                     onChange={(e) => setRawPropsText(e.target.value)}
