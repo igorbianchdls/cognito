@@ -189,6 +189,19 @@ export function buildNivoTheme(input?: any): Record<string, any> | undefined {
   return t;
 }
 
+export function isPlainObject(value: unknown): value is Record<string, any> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+export function omitObjectKeys<T extends Record<string, any>>(input: T | undefined, keys: string[]): Record<string, any> {
+  if (!isPlainObject(input)) return {};
+  const out: Record<string, any> = { ...input };
+  keys.forEach((key) => {
+    delete out[key];
+  });
+  return out;
+}
+
 // Apply border tokens from Theme cssVars into a container style
 export function applyBorderFromCssVars(style: Record<string, any> | undefined, cssVars?: Record<string, string>): Record<string, any> | undefined {
   const out: Record<string, any> = { ...(style || {}) };

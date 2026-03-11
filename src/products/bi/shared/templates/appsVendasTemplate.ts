@@ -353,7 +353,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
             </Query>
             <Fields x="label" y="value" key="key" />
             <Interaction clickAsFilter filterField="categoria_receita_id" storePath="filters.categoria_receita_id" clearOnSecondClick />
-            <Nivo layout="horizontal" padding={0.24} borderRadius={8} gridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
+            <Nivo layout="horizontal" padding={0.24} borderRadius={8} enableGridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
             <Config>
               {
                 "dataQuery": {
@@ -387,7 +387,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
             </Query>
             <Fields x="label" y="value" key="key" />
             <Interaction clickAsFilter={false} />
-            <Nivo layout="horizontal" padding={0.24} borderRadius={8} gridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
+            <Nivo layout="horizontal" padding={0.24} borderRadius={8} enableGridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
             <Config>
               {
                 "dataQuery": {
@@ -424,7 +424,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter filterField="vendedor_id" storePath="filters.vendedor_id" clearOnSecondClick />
-        <Nivo layout="horizontal" padding={0.24} borderRadius={8} gridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
+        <Nivo layout="horizontal" padding={0.24} borderRadius={8} enableGridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
         <Config>
           {
             "dataQuery": {
@@ -458,7 +458,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter filterField="filial_id" storePath="filters.filial_id" clearOnSecondClick />
-        <Nivo layout="horizontal" padding={0.24} borderRadius={8} gridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
+        <Nivo layout="horizontal" padding={0.24} borderRadius={8} enableGridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
         <Config>
           {
             "dataQuery": {
@@ -492,7 +492,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter filterField="unidade_negocio_id" storePath="filters.unidade_negocio_id" clearOnSecondClick />
-        <Nivo layout="horizontal" padding={0.24} borderRadius={8} gridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
+        <Nivo layout="horizontal" padding={0.24} borderRadius={8} enableGridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
         <Config>
           {
             "dataQuery": {
@@ -560,7 +560,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
           xScale={{ type: "time", format: "%Y-%m-%d", precision: "month", useUTC: false }}
           xFormat="time:%b/%y"
           curve="monotoneX"
-          area
+          enableArea
           areaOpacity={0.12}
           lineWidth={3}
           pointSize={5}
@@ -718,7 +718,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter={false} />
-        <Nivo layout="vertical" padding={0.28} borderRadius={8} gridY axisBottom={{ tickRotation: -18, legend: "Mês", legendOffset: 42 }} axisLeft={{ legend: "Pedidos", legendOffset: -34 }} />
+        <Nivo layout="vertical" padding={0.28} borderRadius={8} enableGridY axisBottom={{ tickRotation: -18, legend: "Mês", legendOffset: 42 }} axisLeft={{ legend: "Pedidos", legendOffset: -34 }} />
         <Config>
           {
             "dataQuery": {
@@ -750,7 +750,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter={false} />
-        <Nivo layout="vertical" padding={0.28} borderRadius={8} gridY axisBottom={{ tickRotation: -18, legend: "Mês", legendOffset: 42 }} axisLeft={{ legend: "Ticket Médio", legendOffset: -44 }} />
+        <Nivo layout="vertical" padding={0.28} borderRadius={8} enableGridY axisBottom={{ tickRotation: -18, legend: "Mês", legendOffset: 42 }} axisLeft={{ legend: "Ticket Médio", legendOffset: -44 }} />
         <Config>
           {
             "dataQuery": {
@@ -811,7 +811,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter filterField="territorio_id" storePath="filters.territorio_id" clearOnSecondClick />
-        <Nivo layout="horizontal" padding={0.24} borderRadius={8} gridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
+        <Nivo layout="horizontal" padding={0.24} borderRadius={8} enableGridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
         <Config>
           {
             "dataQuery": {
@@ -845,7 +845,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter filterField="categoria_receita_id" storePath="filters.categoria_receita_id" clearOnSecondClick />
-        <Nivo layout="horizontal" padding={0.24} borderRadius={8} gridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
+        <Nivo layout="horizontal" padding={0.24} borderRadius={8} enableGridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
         <Config>
           {
             "dataQuery": {
@@ -878,7 +878,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter filterField="canal_venda_id" storePath="filters.canal_venda_id" clearOnSecondClick />
-        <Nivo layout="horizontal" padding={0.24} borderRadius={8} gridX axisBottom={{ legend: "Pedidos", legendOffset: 30, maxTicks: 4 }} />
+        <Nivo layout="horizontal" padding={0.24} borderRadius={8} enableGridX axisBottom={{ legend: "Pedidos", legendOffset: 30, maxTicks: 4 }} />
         <Config>
           {
             "dataQuery": {

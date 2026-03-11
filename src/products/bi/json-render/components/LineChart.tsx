@@ -3,7 +3,7 @@
 import React from "react";
 import { useData } from "@/products/bi/json-render/context";
 import { ResponsiveLine } from "@nivo/line";
-import { buildNivoTheme } from "@/products/bi/json-render/helpers";
+import { buildNivoTheme, isPlainObject, omitObjectKeys } from "@/products/bi/json-render/helpers";
 import { useThemeOverrides } from "@/products/bi/json-render/theme/ThemeContext";
 
 type AnyRecord = Record<string, any>;
@@ -154,7 +154,7 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
   const fmt = (element?.props?.format ?? 'number') as 'currency'|'percent'|'number';
   const height = (element?.props?.height as number | undefined) ?? 220;
   const colorScheme = element?.props?.colorScheme as string | string[] | undefined;
-  const nivo = (element?.props?.nivo as AnyRecord | undefined) || {};
+  const rawNivoProps = isPlainObject(element?.props?.nivo) ? element.props.nivo as AnyRecord : {};
 
   const normalizedRows = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
@@ -217,19 +217,19 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
     try { managedScheme = JSON.parse(rawVar); }
     catch { managedScheme = rawVar.split(',').map(s => s.trim()).filter(Boolean); }
   }
-  const colors = (managedScheme && managedScheme.length)
+  const resolvedColors = (managedScheme && managedScheme.length)
     ? managedScheme
-    : (Array.isArray(colorScheme) ? colorScheme : (typeof colorScheme === 'string' ? [colorScheme] : ['#3b82f6']));
+    : (rawNivoProps.colors ?? (Array.isArray(colorScheme) ? colorScheme : (typeof colorScheme === 'string' ? [colorScheme] : ['#3b82f6'])));
 
   const baseMargin = {
-    top: Number(nivo?.margin?.top ?? 10),
-    right: Number(nivo?.margin?.right ?? 16),
-    bottom: Number(nivo?.margin?.bottom ?? 40),
-    left: Number(nivo?.margin?.left ?? 48),
+    top: Number(rawNivoProps?.margin?.top ?? 10),
+    right: Number(rawNivoProps?.margin?.right ?? 16),
+    bottom: Number(rawNivoProps?.margin?.bottom ?? 40),
+    left: Number(rawNivoProps?.margin?.left ?? 48),
   } as const;
-  const autoMargin = (nivo as AnyRecord)?.autoMargin !== false;
-  const maxLabelClamp = typeof (nivo as AnyRecord)?.maxLabelWidth === 'number' ? (nivo as AnyRecord).maxLabelWidth : 220;
-  const axisFontSize = typeof (nivo as AnyRecord)?.theme?.fontSize === 'number' ? (nivo as AnyRecord).theme.fontSize : 12;
+  const autoMargin = (rawNivoProps as AnyRecord)?.autoMargin !== false;
+  const maxLabelClamp = typeof (rawNivoProps as AnyRecord)?.maxLabelWidth === 'number' ? (rawNivoProps as AnyRecord).maxLabelWidth : 220;
+  const axisFontSize = typeof (rawNivoProps as AnyRecord)?.theme?.fontSize === 'number' ? (rawNivoProps as AnyRecord).theme.fontSize : 12;
   const managerFont = (theme.cssVars || {} as any).fontFamily as string | undefined;
   const canvasMeasure = React.useMemo(() => {
     if (typeof document === 'undefined') return null as HTMLCanvasElement | null;
@@ -263,61 +263,99 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
     return m;
   }, [baseMargin.top, baseMargin.right, baseMargin.bottom, baseMargin.left, autoMargin, JSON.stringify(seriesData[0]?.data || []), axisFontSize, managerFont]);
 
-  const axisBottom = {
-    tickSize: 5,
-    tickPadding: 5,
-    tickRotation: Number(nivo?.axisBottom?.tickRotation ?? 0),
-    legend: typeof nivo?.axisBottom?.legend === 'string' ? nivo.axisBottom.legend : undefined,
-    legendOffset: Number(nivo?.axisBottom?.legendOffset ?? 32),
-    ...(nivo?.axisBottom || {}),
-  } as const;
+  const axisBottom = rawNivoProps?.axisBottom === null
+    ? null
+    : {
+        tickSize: 5,
+        tickPadding: 5,
+        tickRotation: Number(rawNivoProps?.axisBottom?.tickRotation ?? 0),
+        legend: typeof rawNivoProps?.axisBottom?.legend === 'string' ? rawNivoProps.axisBottom.legend : undefined,
+        legendOffset: Number(rawNivoProps?.axisBottom?.legendOffset ?? 32),
+        ...(isPlainObject(rawNivoProps?.axisBottom) ? rawNivoProps.axisBottom : {}),
+      } as const;
 
-  const axisLeft = {
-    tickSize: 5,
-    tickPadding: 5,
-    tickRotation: 0,
-    legend: typeof nivo?.axisLeft?.legend === 'string' ? nivo.axisLeft.legend : undefined,
-    legendOffset: Number(nivo?.axisLeft?.legendOffset ?? 40),
-    ...(nivo?.axisLeft || {}),
-  } as const;
+  const axisLeft = rawNivoProps?.axisLeft === null
+    ? null
+    : {
+        tickSize: 5,
+        tickPadding: 5,
+        tickRotation: 0,
+        legend: typeof rawNivoProps?.axisLeft?.legend === 'string' ? rawNivoProps.axisLeft.legend : undefined,
+        legendOffset: Number(rawNivoProps?.axisLeft?.legendOffset ?? 40),
+        ...(isPlainObject(rawNivoProps?.axisLeft) ? rawNivoProps.axisLeft : {}),
+      } as const;
 
-  const gridX = Boolean(nivo?.gridX ?? false);
-  const gridY = Boolean(nivo?.gridY ?? false);
-  const curve = (typeof nivo?.curve === 'string' ? nivo.curve : 'linear') as any;
-  const enableArea = Boolean(nivo?.area ?? false);
-  const areaOpacity = typeof nivo?.areaOpacity === 'number' ? nivo.areaOpacity : undefined;
+  const enableGridX = typeof rawNivoProps?.enableGridX === 'boolean' ? rawNivoProps.enableGridX : Boolean(rawNivoProps?.gridX ?? false);
+  const enableGridY = typeof rawNivoProps?.enableGridY === 'boolean' ? rawNivoProps.enableGridY : Boolean(rawNivoProps?.gridY ?? false);
+  const curve = (typeof rawNivoProps?.curve === 'string' ? rawNivoProps.curve : 'linear') as any;
+  const enableArea = typeof rawNivoProps?.enableArea === 'boolean' ? rawNivoProps.enableArea : Boolean(rawNivoProps?.area ?? false);
+  const areaOpacity = typeof rawNivoProps?.areaOpacity === 'number' ? rawNivoProps.areaOpacity : undefined;
   const areaBaselineValue =
-    typeof nivo?.areaBaselineValue === 'number'
-      ? nivo.areaBaselineValue
+    typeof rawNivoProps?.areaBaselineValue === 'number'
+      ? rawNivoProps.areaBaselineValue
       : (enableArea && typeof seriesMinY === 'number' && seriesMinY > 0 ? seriesMinY : undefined);
-  const enablePoints = Boolean(nivo?.enablePoints ?? true);
-  const pointSize = enablePoints ? (typeof nivo?.pointSize === 'number' ? nivo.pointSize : 6) : 0;
-  const pointBorderWidth = typeof nivo?.pointBorderWidth === 'number' ? nivo.pointBorderWidth : undefined;
-  const pointColor = nivo?.pointColor;
-  const pointBorderColor = nivo?.pointBorderColor;
-  const lineWidth = typeof nivo?.lineWidth === 'number' ? nivo.lineWidth : 2;
-  const legends = Array.isArray(nivo?.legends) ? nivo.legends : undefined;
-  const markers = Array.isArray(nivo?.markers) ? nivo.markers : undefined;
-  const xScale = (nivo?.xScale && typeof nivo.xScale === 'object' && !Array.isArray(nivo.xScale))
-    ? nivo.xScale
+  const enablePoints = Boolean(rawNivoProps?.enablePoints ?? true);
+  const pointSize = enablePoints ? (typeof rawNivoProps?.pointSize === 'number' ? rawNivoProps.pointSize : 6) : 0;
+  const pointBorderWidth = typeof rawNivoProps?.pointBorderWidth === 'number' ? rawNivoProps.pointBorderWidth : undefined;
+  const pointColor = rawNivoProps?.pointColor;
+  const pointBorderColor = rawNivoProps?.pointBorderColor;
+  const lineWidth = typeof rawNivoProps?.lineWidth === 'number' ? rawNivoProps.lineWidth : 2;
+  const legends = Array.isArray(rawNivoProps?.legends) ? rawNivoProps.legends : undefined;
+  const markers = Array.isArray(rawNivoProps?.markers) ? rawNivoProps.markers : undefined;
+  const xScale = (rawNivoProps?.xScale && typeof rawNivoProps.xScale === 'object' && !Array.isArray(rawNivoProps.xScale))
+    ? rawNivoProps.xScale
     : { type: 'point' };
-  const yScale = (nivo?.yScale && typeof nivo.yScale === 'object' && !Array.isArray(nivo.yScale))
-    ? { type: 'linear', stacked: false, min: 'auto', max: 'auto', ...nivo.yScale }
+  const yScale = (rawNivoProps?.yScale && typeof rawNivoProps.yScale === 'object' && !Array.isArray(rawNivoProps.yScale))
+    ? { type: 'linear', stacked: false, min: 'auto', max: 'auto', ...rawNivoProps.yScale }
     : { type: 'linear', stacked: false, min: 'auto', max: 'auto' };
-  const xFormat = typeof nivo?.xFormat === 'string' ? nivo.xFormat : undefined;
-  const yFormat = typeof nivo?.yFormat === 'string' ? nivo.yFormat : undefined;
-  const useMesh = Boolean(nivo?.useMesh ?? true);
-  const enableSlices = nivo?.enableSlices === 'x' || nivo?.enableSlices === 'y'
-    ? nivo.enableSlices
-    : (nivo?.enableSlices === false ? false : undefined);
-  const tooltipConfig = (nivo?.tooltip && typeof nivo.tooltip === 'object' && !Array.isArray(nivo.tooltip)) ? nivo.tooltip as AnyRecord : {};
-  const animate = Boolean(nivo?.animate ?? true);
-  const motionConfig = (typeof nivo?.motionConfig === 'string' ? nivo.motionConfig : 'gentle') as any;
-
-  let nivoTheme = buildNivoTheme(nivo?.theme);
+  const xFormat = typeof rawNivoProps?.xFormat === 'string' ? rawNivoProps.xFormat : undefined;
+  const yFormat = typeof rawNivoProps?.yFormat === 'string' ? rawNivoProps.yFormat : undefined;
+  const useMesh = Boolean(rawNivoProps?.useMesh ?? true);
+  const tooltipConfig = isPlainObject(rawNivoProps?.tooltip) ? rawNivoProps.tooltip as AnyRecord : {};
+  const tooltipMode = tooltipConfig.mode === 'slice' ? 'slice' : 'point';
+  const enableSlices = rawNivoProps?.enableSlices === 'x' || rawNivoProps?.enableSlices === 'y'
+    ? rawNivoProps.enableSlices
+    : (rawNivoProps?.enableSlices === false ? false : (tooltipMode === 'slice' ? 'x' : undefined));
+  const animate = Boolean(rawNivoProps?.animate ?? true);
+  const motionConfig = (rawNivoProps?.motionConfig ?? 'gentle') as any;
+  const forwardedNivoProps = omitObjectKeys(rawNivoProps, [
+    'theme',
+    'tooltip',
+    'margin',
+    'colors',
+    'curve',
+    'lineWidth',
+    'enableGridX',
+    'enableGridY',
+    'gridX',
+    'gridY',
+    'axisBottom',
+    'axisLeft',
+    'xScale',
+    'yScale',
+    'xFormat',
+    'yFormat',
+    'pointSize',
+    'pointBorderWidth',
+    'pointColor',
+    'pointBorderColor',
+    'enableArea',
+    'area',
+    'areaOpacity',
+    'areaBaselineValue',
+    'legends',
+    'markers',
+    'useMesh',
+    'enableSlices',
+    'animate',
+    'motionConfig',
+    'autoMargin',
+    'maxLabelWidth',
+  ]);
+  let resolvedNivoTheme = buildNivoTheme(rawNivoProps?.theme);
   const fg = (theme.cssVars || {} as any).fg as string | undefined;
   if (managerFont || fg) {
-    const t: any = { ...(nivoTheme || {}) };
+    const t: any = { ...(resolvedNivoTheme || {}) };
     if (managerFont) t.fontFamily = managerFont;
     if (!t.textColor && fg) t.textColor = fg;
     t.axis = t.axis || {};
@@ -327,37 +365,78 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
     t.axis.legend.text = { ...(t.axis.legend.text || {}), ...(managerFont ? { fontFamily: managerFont } : {}), ...(fg ? { fill: fg } : {}) };
     t.labels = t.labels || {};
     t.labels.text = { ...(t.labels.text || {}), ...(managerFont ? { fontFamily: managerFont } : {}), ...(fg ? { fill: fg } : {}) };
-    nivoTheme = t;
+    resolvedNivoTheme = t;
   }
+  const resolvedNivoProps = {
+    ...forwardedNivoProps,
+    margin: computedMargin,
+    colors: resolvedColors,
+    curve,
+    lineWidth,
+    enableGridX,
+    enableGridY,
+    axisBottom,
+    axisLeft,
+    xScale,
+    yScale,
+    xFormat,
+    yFormat,
+    pointSize,
+    pointBorderWidth,
+    pointColor,
+    pointBorderColor,
+    enableArea,
+    areaOpacity,
+    areaBaselineValue,
+    legends,
+    markers,
+    useMesh,
+    enableSlices,
+    animate,
+    motionConfig,
+    theme: resolvedNivoTheme,
+  } satisfies AnyRecord;
   return (
     <div>
       {queryError && <div className="mb-2 text-xs text-red-600">{queryError}</div>}
       <div style={{ height }}>
         <ResponsiveLine
+          {...forwardedNivoProps}
           data={seriesData}
-          margin={computedMargin}
-          xScale={xScale as any}
-          yScale={yScale as any}
-          colors={colors as any}
-          curve={curve}
-          lineWidth={lineWidth}
-          enableGridX={gridX}
-          enableGridY={gridY}
-          axisBottom={axisBottom as any}
-          axisLeft={axisLeft as any}
-          xFormat={xFormat}
-          yFormat={yFormat}
-          pointSize={pointSize}
-          pointBorderWidth={pointBorderWidth}
-          pointColor={pointColor as any}
-          pointBorderColor={pointBorderColor as any}
-          enableArea={enableArea}
-          areaOpacity={areaOpacity}
-          areaBaselineValue={areaBaselineValue as any}
-          legends={legends as any}
-          markers={markers as any}
-          useMesh={useMesh}
-          enableSlices={enableSlices as any}
+          margin={resolvedNivoProps.margin as any}
+          xScale={resolvedNivoProps.xScale as any}
+          yScale={resolvedNivoProps.yScale as any}
+          colors={resolvedNivoProps.colors as any}
+          curve={resolvedNivoProps.curve as any}
+          lineWidth={resolvedNivoProps.lineWidth as any}
+          enableGridX={resolvedNivoProps.enableGridX as any}
+          enableGridY={resolvedNivoProps.enableGridY as any}
+          axisBottom={resolvedNivoProps.axisBottom as any}
+          axisLeft={resolvedNivoProps.axisLeft as any}
+          xFormat={resolvedNivoProps.xFormat as any}
+          yFormat={resolvedNivoProps.yFormat as any}
+          pointSize={resolvedNivoProps.pointSize as any}
+          pointBorderWidth={resolvedNivoProps.pointBorderWidth as any}
+          pointColor={resolvedNivoProps.pointColor as any}
+          pointBorderColor={resolvedNivoProps.pointBorderColor as any}
+          enableArea={resolvedNivoProps.enableArea as any}
+          areaOpacity={resolvedNivoProps.areaOpacity as any}
+          areaBaselineValue={resolvedNivoProps.areaBaselineValue as any}
+          legends={resolvedNivoProps.legends as any}
+          markers={resolvedNivoProps.markers as any}
+          useMesh={resolvedNivoProps.useMesh as any}
+          enableSlices={resolvedNivoProps.enableSlices as any}
+          sliceTooltip={tooltipMode === 'slice' ? ({ slice }) => (
+            <div className="rounded bg-white px-2 py-1 text-xs text-gray-700 border border-gray-200">
+              {tooltipConfig.showLabel !== false && <div className="font-medium">{String(slice.id ?? "")}</div>}
+              {slice.points.map((point) => (
+                <div key={point.id}>
+                  {Boolean(tooltipConfig.showSeries ?? true) && <span>{String(point.serieId ?? "")}: </span>}
+                  {tooltipConfig.showValue !== false && <span>{formatValue(point.data.y as any, fmt)}</span>}
+                </div>
+              ))}
+            </div>
+          ) : undefined}
           tooltip={({ point }) => (
             <div className="rounded bg-white px-2 py-1 text-xs text-gray-700 border border-gray-200">
               {tooltipConfig.showLabel !== false && <div className="font-medium">{String(point.data.xFormatted ?? point.data.x ?? "")}</div>}
@@ -366,9 +445,9 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
             </div>
           )}
           onClick={shouldClickFilter ? handleGlobalFilterClick : undefined}
-          animate={animate}
-          motionConfig={motionConfig}
-          theme={nivoTheme as any}
+          animate={resolvedNivoProps.animate as any}
+          motionConfig={resolvedNivoProps.motionConfig as any}
+          theme={resolvedNivoProps.theme as any}
         />
       </div>
     </div>

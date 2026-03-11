@@ -3,7 +3,7 @@
 import React from "react";
 import { useData } from "@/products/bi/json-render/context";
 import { ResponsivePie } from "@nivo/pie";
-import { buildNivoTheme } from "@/products/bi/json-render/helpers";
+import { buildNivoTheme, isPlainObject, omitObjectKeys } from "@/products/bi/json-render/helpers";
 import { useThemeOverrides } from "@/products/bi/json-render/theme/ThemeContext";
 
 type AnyRecord = Record<string, any>;
@@ -153,7 +153,7 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
   const fmt = (element?.props?.format ?? 'number') as 'currency'|'percent'|'number';
   const height = (element?.props?.height as number | undefined) ?? 220;
   const colorScheme = element?.props?.colorScheme as string | string[] | undefined;
-  const nivo = (element?.props?.nivo as AnyRecord | undefined) || {};
+  const rawNivoProps = isPlainObject(element?.props?.nivo) ? element.props.nivo as AnyRecord : {};
 
   const pieData = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
@@ -169,11 +169,11 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
         filterKey: keyValue ?? String(labelValue ?? ''),
       };
     });
-    if (Boolean(nivo?.sortByValue ?? false)) {
+    if (Boolean(rawNivoProps?.sortByValue ?? false)) {
       rows.sort((a, b) => b.value - a.value);
     }
     return rows;
-  }, [serverRows, xFieldName, yFieldName, keyFieldName, nivo?.sortByValue]);
+  }, [serverRows, xFieldName, yFieldName, keyFieldName, rawNivoProps?.sortByValue]);
   const handleGlobalFilterClick = React.useCallback((datum: any) => {
     if (!shouldClickFilter || !resolvedFilterStorePath) return;
     const rawValue = datum?.data?.filterKey ?? datum?.filterKey ?? datum?.id ?? datum?.label;
@@ -192,44 +192,39 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
     try { managedScheme = JSON.parse(rawVar); }
     catch { managedScheme = rawVar.split(',').map(s => s.trim()).filter(Boolean); }
   }
-  const colors = (managedScheme && managedScheme.length)
+  const resolvedColors = (managedScheme && managedScheme.length)
     ? managedScheme
-    : (Array.isArray(colorScheme) ? colorScheme : (typeof colorScheme === 'string' ? [colorScheme] : ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']));
+    : (rawNivoProps.colors ?? (Array.isArray(colorScheme) ? colorScheme : (typeof colorScheme === 'string' ? [colorScheme] : ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'])));
 
-  const margin = {
-    top: Number(nivo?.margin?.top ?? 20),
-    right: Number(nivo?.margin?.right ?? 20),
-    bottom: Number(nivo?.margin?.bottom ?? 20),
-    left: Number(nivo?.margin?.left ?? 20),
+  const resolvedMargin = {
+    top: Number(rawNivoProps?.margin?.top ?? 20),
+    right: Number(rawNivoProps?.margin?.right ?? 20),
+    bottom: Number(rawNivoProps?.margin?.bottom ?? 20),
+    left: Number(rawNivoProps?.margin?.left ?? 20),
   };
 
-  const innerRadius = typeof nivo?.innerRadius === 'number' ? nivo.innerRadius : 0;
-  const padAngle = typeof nivo?.padAngle === 'number' ? nivo.padAngle : 0.7;
-  const cornerRadius = typeof nivo?.cornerRadius === 'number' ? nivo.cornerRadius : 3;
-  const startAngle = typeof nivo?.startAngle === 'number' ? nivo.startAngle : undefined;
-  const endAngle = typeof nivo?.endAngle === 'number' ? nivo.endAngle : undefined;
-  const activeInnerRadiusOffset = typeof nivo?.activeInnerRadiusOffset === 'number' ? nivo.activeInnerRadiusOffset : 0;
-  const activeOuterRadiusOffset = typeof nivo?.activeOuterRadiusOffset === 'number' ? nivo.activeOuterRadiusOffset : 8;
-  const enableArcLabels = Boolean(nivo?.enableArcLabels ?? true);
-  const enableArcLinkLabels = Boolean(nivo?.enableArcLinkLabels ?? false);
-  const arcLabelsSkipAngle = typeof nivo?.arcLabelsSkipAngle === 'number' ? nivo.arcLabelsSkipAngle : 10;
-  const arcLabelsTextColor = typeof nivo?.arcLabelsTextColor === 'string' ? nivo.arcLabelsTextColor : '#333333';
-  const arcLinkLabelsSkipAngle = typeof nivo?.arcLinkLabelsSkipAngle === 'number' ? nivo.arcLinkLabelsSkipAngle : undefined;
-  const arcLinkLabelsTextColor = typeof nivo?.arcLinkLabelsTextColor === 'string' ? nivo.arcLinkLabelsTextColor : undefined;
-  const legends = Array.isArray(nivo?.legends) ? nivo.legends : undefined;
-  const tooltipConfig = (nivo?.tooltip && typeof nivo.tooltip === 'object' && !Array.isArray(nivo.tooltip)) ? nivo.tooltip as AnyRecord : {};
-  const animate = Boolean(nivo?.animate ?? true);
-  const motionConfig = (typeof nivo?.motionConfig === 'string' ? nivo.motionConfig : 'gentle') as any;
-  const totalValue = React.useMemo(
-    () => pieData.reduce((sum, item) => sum + Number(item.value || 0), 0),
-    [pieData]
-  );
-
-  let nivoTheme = buildNivoTheme(nivo?.theme);
+  const resolvedInnerRadius = typeof rawNivoProps?.innerRadius === 'number' ? rawNivoProps.innerRadius : 0;
+  const resolvedPadAngle = typeof rawNivoProps?.padAngle === 'number' ? rawNivoProps.padAngle : 0.7;
+  const resolvedCornerRadius = typeof rawNivoProps?.cornerRadius === 'number' ? rawNivoProps.cornerRadius : 3;
+  const resolvedStartAngle = typeof rawNivoProps?.startAngle === 'number' ? rawNivoProps.startAngle : undefined;
+  const resolvedEndAngle = typeof rawNivoProps?.endAngle === 'number' ? rawNivoProps.endAngle : undefined;
+  const resolvedActiveInnerRadiusOffset = typeof rawNivoProps?.activeInnerRadiusOffset === 'number' ? rawNivoProps.activeInnerRadiusOffset : 0;
+  const resolvedActiveOuterRadiusOffset = typeof rawNivoProps?.activeOuterRadiusOffset === 'number' ? rawNivoProps.activeOuterRadiusOffset : 8;
+  const resolvedEnableArcLabels = Boolean(rawNivoProps?.enableArcLabels ?? true);
+  const resolvedEnableArcLinkLabels = Boolean(rawNivoProps?.enableArcLinkLabels ?? false);
+  const resolvedArcLabelsSkipAngle = typeof rawNivoProps?.arcLabelsSkipAngle === 'number' ? rawNivoProps.arcLabelsSkipAngle : 10;
+  const resolvedArcLabelsTextColor = typeof rawNivoProps?.arcLabelsTextColor === 'string' ? rawNivoProps.arcLabelsTextColor : '#333333';
+  const resolvedArcLinkLabelsSkipAngle = typeof rawNivoProps?.arcLinkLabelsSkipAngle === 'number' ? rawNivoProps.arcLinkLabelsSkipAngle : undefined;
+  const resolvedArcLinkLabelsTextColor = typeof rawNivoProps?.arcLinkLabelsTextColor === 'string' ? rawNivoProps.arcLinkLabelsTextColor : undefined;
+  const resolvedLegends = Array.isArray(rawNivoProps?.legends) ? rawNivoProps.legends : undefined;
+  const tooltipConfig = isPlainObject(rawNivoProps?.tooltip) ? rawNivoProps.tooltip as AnyRecord : {};
+  const resolvedAnimate = Boolean(rawNivoProps?.animate ?? true);
+  const resolvedMotionConfig = (rawNivoProps?.motionConfig ?? 'gentle') as any;
+  let resolvedNivoTheme = buildNivoTheme(rawNivoProps?.theme);
   const managerFont = (theme.cssVars || {} as any).fontFamily as string | undefined;
   const fg = (theme.cssVars || {} as any).fg as string | undefined;
   if (managerFont || fg) {
-    const t: any = { ...(nivoTheme || {}) };
+    const t: any = { ...(resolvedNivoTheme || {}) };
     if (managerFont) t.fontFamily = managerFont;
     if (!t.textColor && fg) t.textColor = fg;
     t.labels = t.labels || {};
@@ -239,30 +234,79 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
     t.axis.ticks.text = { ...(t.axis.ticks.text || {}), ...(managerFont ? { fontFamily: managerFont } : {}), ...(fg ? { fill: fg } : {}) };
     t.axis.legend = t.axis.legend || {};
     t.axis.legend.text = { ...(t.axis.legend.text || {}), ...(managerFont ? { fontFamily: managerFont } : {}), ...(fg ? { fill: fg } : {}) };
-    nivoTheme = t;
+    resolvedNivoTheme = t;
   }
+  const resolvedNivoProps = {
+    ...rawNivoProps,
+    margin: resolvedMargin,
+    innerRadius: resolvedInnerRadius,
+    padAngle: resolvedPadAngle,
+    cornerRadius: resolvedCornerRadius,
+    startAngle: resolvedStartAngle,
+    endAngle: resolvedEndAngle,
+    activeInnerRadiusOffset: resolvedActiveInnerRadiusOffset,
+    activeOuterRadiusOffset: resolvedActiveOuterRadiusOffset,
+    colors: resolvedColors,
+    enableArcLabels: resolvedEnableArcLabels,
+    enableArcLinkLabels: resolvedEnableArcLinkLabels,
+    arcLabelsSkipAngle: resolvedArcLabelsSkipAngle,
+    arcLabelsTextColor: resolvedArcLabelsTextColor,
+    arcLinkLabelsSkipAngle: resolvedArcLinkLabelsSkipAngle,
+    arcLinkLabelsTextColor: resolvedArcLinkLabelsTextColor,
+    legends: resolvedLegends,
+    animate: resolvedAnimate,
+    motionConfig: resolvedMotionConfig,
+    theme: resolvedNivoTheme,
+  } satisfies AnyRecord;
+  const forwardedNivoProps = omitObjectKeys(resolvedNivoProps, [
+    'theme',
+    'tooltip',
+    'margin',
+    'colors',
+    'innerRadius',
+    'padAngle',
+    'cornerRadius',
+    'startAngle',
+    'endAngle',
+    'activeInnerRadiusOffset',
+    'activeOuterRadiusOffset',
+    'enableArcLabels',
+    'enableArcLinkLabels',
+    'arcLabelsSkipAngle',
+    'arcLabelsTextColor',
+    'arcLinkLabelsSkipAngle',
+    'arcLinkLabelsTextColor',
+    'legends',
+    'animate',
+    'motionConfig',
+  ]);
+  const totalValue = React.useMemo(
+    () => pieData.reduce((sum, item) => sum + Number(item.value || 0), 0),
+    [pieData]
+  );
   return (
     <div>
       {queryError && <div className="mb-2 text-xs text-red-600">{queryError}</div>}
       <div style={{ height }}>
         <ResponsivePie
+          {...forwardedNivoProps}
           data={pieData}
-          margin={margin}
-          innerRadius={innerRadius}
-          padAngle={padAngle}
-          cornerRadius={cornerRadius}
-          startAngle={startAngle}
-          endAngle={endAngle}
-          activeInnerRadiusOffset={activeInnerRadiusOffset}
-          activeOuterRadiusOffset={activeOuterRadiusOffset}
-          colors={colors as any}
-          enableArcLabels={enableArcLabels}
-          enableArcLinkLabels={enableArcLinkLabels}
-          arcLabelsSkipAngle={arcLabelsSkipAngle}
-          arcLabelsTextColor={arcLabelsTextColor}
-          arcLinkLabelsSkipAngle={arcLinkLabelsSkipAngle}
-          arcLinkLabelsTextColor={arcLinkLabelsTextColor}
-          legends={legends as any}
+          margin={resolvedNivoProps.margin as any}
+          innerRadius={resolvedNivoProps.innerRadius as any}
+          padAngle={resolvedNivoProps.padAngle as any}
+          cornerRadius={resolvedNivoProps.cornerRadius as any}
+          startAngle={resolvedNivoProps.startAngle as any}
+          endAngle={resolvedNivoProps.endAngle as any}
+          activeInnerRadiusOffset={resolvedNivoProps.activeInnerRadiusOffset as any}
+          activeOuterRadiusOffset={resolvedNivoProps.activeOuterRadiusOffset as any}
+          colors={resolvedNivoProps.colors as any}
+          enableArcLabels={resolvedNivoProps.enableArcLabels as any}
+          enableArcLinkLabels={resolvedNivoProps.enableArcLinkLabels as any}
+          arcLabelsSkipAngle={resolvedNivoProps.arcLabelsSkipAngle as any}
+          arcLabelsTextColor={resolvedNivoProps.arcLabelsTextColor as any}
+          arcLinkLabelsSkipAngle={resolvedNivoProps.arcLinkLabelsSkipAngle as any}
+          arcLinkLabelsTextColor={resolvedNivoProps.arcLinkLabelsTextColor as any}
+          legends={resolvedNivoProps.legends as any}
           tooltip={({ datum }) => (
             <div className="rounded bg-white px-2 py-1 text-xs text-gray-700 border border-gray-200">
               {tooltipConfig.showLabel !== false && <div className="font-medium">{datum.label}</div>}
@@ -273,9 +317,9 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
             </div>
           )}
           onClick={shouldClickFilter ? handleGlobalFilterClick : undefined}
-          animate={animate}
-          motionConfig={motionConfig}
-          theme={nivoTheme as any}
+          animate={resolvedNivoProps.animate as any}
+          motionConfig={resolvedNivoProps.motionConfig as any}
+          theme={resolvedNivoProps.theme as any}
         />
       </div>
     </div>

@@ -3,7 +3,7 @@
 import React from "react";
 import { useData } from "@/products/bi/json-render/context";
 import { ResponsiveBar } from "@nivo/bar";
-import { buildNivoTheme } from "@/products/bi/json-render/helpers";
+import { buildNivoTheme, isPlainObject, omitObjectKeys } from "@/products/bi/json-render/helpers";
 import { useThemeOverrides } from "@/products/bi/json-render/theme/ThemeContext";
 
 type AnyRecord = Record<string, any>;
@@ -64,7 +64,8 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   const fmt = (element?.props?.format ?? 'number') as 'currency'|'percent'|'number';
   const height = (element?.props?.height as number | undefined) ?? 220;
   const colorScheme = element?.props?.colorScheme as string | string[] | undefined;
-  const nivo = (element?.props?.nivo as AnyRecord | undefined) || {};
+  const rawNivoProps = isPlainObject(element?.props?.nivo) ? element.props.nivo as AnyRecord : {};
+  const nivo = rawNivoProps;
 
   const dq = (element?.props?.dataQuery as AnyRecord | undefined);
   const xFieldName = typeof dq?.xField === "string" ? dq.xField.trim() : "label";
@@ -271,7 +272,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   }
   const colors = (managedScheme && managedScheme.length)
     ? managedScheme
-    : (Array.isArray(colorScheme) ? colorScheme : (typeof colorScheme === 'string' ? [colorScheme] : ['#3b82f6']));
+    : (nivo.colors ?? (Array.isArray(colorScheme) ? colorScheme : (typeof colorScheme === 'string' ? [colorScheme] : ['#3b82f6'])));
 
   // Determine layout early (used by auto-margin)
   const layout = (typeof (nivo as AnyRecord)?.layout === 'string' ? (nivo as AnyRecord).layout : 'vertical') as 'vertical'|'horizontal';
@@ -325,7 +326,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
         tickValues: nivo?.axisBottom?.tickValues ?? ((layout === 'horizontal')
           ? Number(nivo?.axisBottom?.maxTicks ?? 5)
           : undefined),
-        ...(nivo?.axisBottom || {}),
+        ...(isPlainObject(nivo?.axisBottom) ? nivo.axisBottom : {}),
       } as const;
 
   const axisLeft = nivo?.axisLeft === null
@@ -339,7 +340,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
         tickValues: nivo?.axisLeft?.tickValues ?? ((layout === 'vertical')
           ? Number(nivo?.axisLeft?.maxTicks ?? 5)
           : undefined),
-        ...(nivo?.axisLeft || {}),
+        ...(isPlainObject(nivo?.axisLeft) ? nivo.axisLeft : {}),
       } as const;
 
   const padding = typeof nivo?.padding === 'number' ? nivo.padding : 0.3;
@@ -355,22 +356,54 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     : 'indexValue') as any;
   const minValue = nivo?.minValue ?? 'auto';
   const maxValue = nivo?.maxValue ?? 'auto';
-  const gridX = Boolean(nivo?.gridX ?? false);
-  const gridY = Boolean(nivo?.gridY ?? false);
+  const enableGridX = typeof nivo?.enableGridX === 'boolean' ? nivo.enableGridX : Boolean(nivo?.gridX ?? false);
+  const enableGridY = typeof nivo?.enableGridY === 'boolean' ? nivo.enableGridY : Boolean(nivo?.gridY ?? false);
   const enableLabel = Boolean(nivo?.enableLabel ?? false);
   const labelSkipWidth = typeof nivo?.labelSkipWidth === 'number' ? nivo.labelSkipWidth : 12;
   const labelSkipHeight = typeof nivo?.labelSkipHeight === 'number' ? nivo.labelSkipHeight : 12;
   const labelTextColor = nivo?.labelTextColor ?? { from: 'color', modifiers: [['darker', 1.4]] };
   const legends = Array.isArray(nivo?.legends) ? nivo.legends : undefined;
   const markers = Array.isArray(nivo?.markers) ? nivo.markers : undefined;
-  const tooltipConfig = (nivo?.tooltip && typeof nivo.tooltip === 'object' && !Array.isArray(nivo.tooltip)) ? nivo.tooltip as AnyRecord : {};
+  const tooltipConfig = isPlainObject(nivo?.tooltip) ? nivo.tooltip as AnyRecord : {};
   const animate = Boolean(nivo?.animate ?? true);
-  const motionConfig = (typeof nivo?.motionConfig === 'string' ? nivo.motionConfig : 'gentle') as any;
+  const motionConfig = (nivo?.motionConfig ?? 'gentle') as any;
+  const forwardedNivoProps = omitObjectKeys(rawNivoProps, [
+    'theme',
+    'tooltip',
+    'margin',
+    'colors',
+    'layout',
+    'padding',
+    'innerPadding',
+    'borderRadius',
+    'borderWidth',
+    'borderColor',
+    'groupMode',
+    'colorBy',
+    'minValue',
+    'maxValue',
+    'enableGridX',
+    'enableGridY',
+    'gridX',
+    'gridY',
+    'axisBottom',
+    'axisLeft',
+    'labelSkipWidth',
+    'labelSkipHeight',
+    'enableLabel',
+    'labelTextColor',
+    'legends',
+    'markers',
+    'animate',
+    'motionConfig',
+    'autoMargin',
+    'maxLabelWidth',
+  ]);
 
-  let nivoTheme = buildNivoTheme(nivo?.theme);
+  let resolvedNivoTheme = buildNivoTheme(rawNivoProps?.theme);
   const fg = (theme.cssVars || {} as any).fg as string | undefined;
   if (managerFont || fg) {
-    const t: any = { ...(nivoTheme || {}) };
+    const t: any = { ...(resolvedNivoTheme || {}) };
     if (managerFont) t.fontFamily = managerFont;
     if (!t.textColor && fg) t.textColor = fg;
     t.axis = t.axis || {};
@@ -380,8 +413,36 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     t.axis.legend.text = { ...(t.axis.legend.text || {}), ...(managerFont ? { fontFamily: managerFont } : {}), ...(fg ? { fill: fg } : {}) };
     t.labels = t.labels || {};
     t.labels.text = { ...(t.labels.text || {}), ...(managerFont ? { fontFamily: managerFont } : {}), ...(fg ? { fill: fg } : {}) };
-    nivoTheme = t;
+    resolvedNivoTheme = t;
   }
+  const resolvedNivoProps = {
+    ...rawNivoProps,
+    margin: computedMargin,
+    padding,
+    innerPadding,
+    borderRadius,
+    borderWidth,
+    borderColor,
+    groupMode,
+    layout,
+    colorBy,
+    minValue,
+    maxValue,
+    colors,
+    enableGridX,
+    enableGridY,
+    axisBottom,
+    axisLeft,
+    labelSkipWidth,
+    labelSkipHeight,
+    enableLabel,
+    labelTextColor,
+    legends,
+    markers,
+    animate,
+    motionConfig,
+    theme: resolvedNivoTheme,
+  } satisfies AnyRecord;
   const handleDrillDown = React.useCallback((point: any) => {
     if (!canDrillDown || !activeDrillLevel) return;
     const row = (point?.data || point || {}) as AnyRecord;
@@ -463,31 +524,32 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
       )}
       <div style={{ height }}>
         <ResponsiveBar
+          {...forwardedNivoProps}
           data={barData}
           keys={barSeriesKeys}
           indexBy="indexLabel"
-          margin={computedMargin}
-          padding={padding}
-          innerPadding={innerPadding}
-          borderRadius={borderRadius}
-          borderWidth={borderWidth}
-          borderColor={borderColor as any}
-          groupMode={groupMode}
-          layout={layout as any}
-          colorBy={colorBy}
-          minValue={minValue as any}
-          maxValue={maxValue as any}
-          colors={colors as any}
-          enableGridX={gridX}
-          enableGridY={gridY}
-          axisBottom={axisBottom as any}
-          axisLeft={axisLeft as any}
-          labelSkipWidth={labelSkipWidth}
-          labelSkipHeight={labelSkipHeight}
-          enableLabel={enableLabel}
-          labelTextColor={labelTextColor as any}
-          legends={legends as any}
-          markers={markers as any}
+          margin={resolvedNivoProps.margin as any}
+          padding={resolvedNivoProps.padding as any}
+          innerPadding={resolvedNivoProps.innerPadding as any}
+          borderRadius={resolvedNivoProps.borderRadius as any}
+          borderWidth={resolvedNivoProps.borderWidth as any}
+          borderColor={resolvedNivoProps.borderColor as any}
+          groupMode={resolvedNivoProps.groupMode as any}
+          layout={resolvedNivoProps.layout as any}
+          colorBy={resolvedNivoProps.colorBy as any}
+          minValue={resolvedNivoProps.minValue as any}
+          maxValue={resolvedNivoProps.maxValue as any}
+          colors={resolvedNivoProps.colors as any}
+          enableGridX={resolvedNivoProps.enableGridX as any}
+          enableGridY={resolvedNivoProps.enableGridY as any}
+          axisBottom={resolvedNivoProps.axisBottom as any}
+          axisLeft={resolvedNivoProps.axisLeft as any}
+          labelSkipWidth={resolvedNivoProps.labelSkipWidth as any}
+          labelSkipHeight={resolvedNivoProps.labelSkipHeight as any}
+          enableLabel={resolvedNivoProps.enableLabel as any}
+          labelTextColor={resolvedNivoProps.labelTextColor as any}
+          legends={resolvedNivoProps.legends as any}
+          markers={resolvedNivoProps.markers as any}
           tooltip={({ data, id, value, indexValue }) => {
             const rawData = data as AnyRecord;
             const groupTotal = Number(rawData.__groupTotal ?? 0);
@@ -510,9 +572,9 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
             );
           }}
           onClick={(canDrillDown || shouldClickFilter) ? handleChartClick : undefined}
-          animate={animate}
-          motionConfig={motionConfig}
-          theme={nivoTheme as any}
+          animate={resolvedNivoProps.animate as any}
+          motionConfig={resolvedNivoProps.motionConfig as any}
+          theme={resolvedNivoProps.theme as any}
         />
       </div>
     </div>
