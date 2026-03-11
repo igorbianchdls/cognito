@@ -16,7 +16,7 @@ import {
   type PaginationState,
   type Updater,
 } from "@tanstack/react-table"
-import { ChevronDown, ChevronLeft, ChevronRight, MoreHorizontal, Plus, Trash2, Copy, X, Check } from "lucide-react"
+import { ArrowDown, ArrowUp, ArrowUpDown, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, Download, MoreHorizontal, Trash2, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -42,6 +42,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -63,6 +64,7 @@ interface DataTableProps<TData extends TableData> {
   showColumnToggle?: boolean
   showPagination?: boolean
   pageSize?: number
+  maxHeight?: number | string
   // Server-side pagination support
   serverSidePagination?: boolean
   serverTotalRows?: number
@@ -74,6 +76,12 @@ interface DataTableProps<TData extends TableData> {
   borderColor?: string
   borderWidth?: number
   showTopBorder?: boolean
+  stickyHeader?: boolean
+  rowHover?: boolean
+  bordered?: boolean
+  rounded?: boolean
+  density?: 'compact' | 'comfortable' | 'spacious'
+  emptyMessage?: string
   fontSize?: number
   padding?: number
   // Header padding (if different from cell padding)
@@ -108,6 +116,9 @@ interface DataTableProps<TData extends TableData> {
   // Search & filtering props
   enableSearch?: boolean
   enableFiltering?: boolean
+  enableSorting?: boolean
+  enableColumnResize?: boolean
+  enableExportCsv?: boolean
   // Row selection props
   enableRowSelection?: boolean
   selectionMode?: 'single' | 'multiple'
@@ -146,6 +157,7 @@ interface DataTableProps<TData extends TableData> {
   onRowDelete?: (rowIndex: number) => void
   onRowDuplicate?: (rowIndex: number) => void
   onDataChange?: (data: TData[]) => void
+  onRowClick?: (row: TData) => void
   // Expose table API for external toolbars
   onTableReady?: (api: {
     previousPage: () => void
@@ -160,6 +172,19 @@ interface DataTableProps<TData extends TableData> {
   onPaginationChange?: (info: { pageIndex: number; pageSize: number; totalRows: number; pageCount: number }) => void
 }
 
+function resolveDensityPadding(density: 'compact' | 'comfortable' | 'spacious', fallback: number): number {
+  if (fallback !== 12) return fallback;
+  if (density === 'compact') return 8;
+  if (density === 'spacious') return 16;
+  return fallback;
+}
+
+function escapeCsvValue(value: unknown): string {
+  const str = value == null ? "" : String(value);
+  if (!/[",\n]/.test(str)) return str;
+  return `"${str.replace(/"/g, '""')}"`;
+}
+
 export function DataTable<TData extends TableData>({
   columns,
   data,
@@ -170,6 +195,7 @@ export function DataTable<TData extends TableData>({
   showColumnToggle = true,
   showPagination = true,
   pageSize = 10,
+  maxHeight,
   serverSidePagination = false,
   serverTotalRows,
   pageIndex: controlledPageIndex,
@@ -180,6 +206,12 @@ export function DataTable<TData extends TableData>({
   borderColor = '#e5e7eb',
   borderWidth = 1,
   showTopBorder = false,
+  stickyHeader = false,
+  rowHover = true,
+  bordered = false,
+  rounded = false,
+  density = 'comfortable',
+  emptyMessage = 'Nenhum resultado encontrado.',
   fontSize = 14,
   padding = 12,
   headerPadding,
@@ -202,6 +234,9 @@ export function DataTable<TData extends TableData>({
   selectionColumnWidth = 48,
   // Search & filtering props with defaults
   enableSearch = true,
+  enableSorting = true,
+  enableColumnResize = true,
+  enableExportCsv = false,
   // Row selection props with defaults
   enableRowSelection = false,
   selectionMode = 'single',
@@ -227,11 +262,14 @@ export function DataTable<TData extends TableData>({
   onRowDelete,
   onRowDuplicate,
   onDataChange,
+  onRowClick,
   onTableReady,
   onPaginationChange: onExternalPaginationChange,
 }: DataTableProps<TData>) {
   const pathname = usePathname()
   const isErpRoute = pathname?.startsWith('/erp')
+  const resolvedPadding = resolveDensityPadding(density, padding)
+  const resolvedHeaderPadding = resolveDensityPadding(density, headerPadding ?? padding)
   const [sorting, setSorting] = React.useState<SortingState>(
     defaultSortColumn ? [{ id: defaultSortColumn, desc: defaultSortDirection === 'desc' }] : []
   )
@@ -239,6 +277,7 @@ export function DataTable<TData extends TableData>({
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnSizing, setColumnSizing] = React.useState({})
+  const [globalFilter, setGlobalFilter] = React.useState("")
   
   // Editing state
   const [editingCell, setEditingCell] = React.useState<{ rowIndex: number; columnKey: string } | null>(null)
@@ -248,7 +287,7 @@ export function DataTable<TData extends TableData>({
   const [tableData, setTableData] = React.useState<TData[]>(data)
   const [newRows, setNewRows] = React.useState<Set<number>>(new Set())
   const [expandedRows, setExpandedRows] = React.useState<Set<string>>(new Set())
-  const baseHeaderPadding = headerPadding ?? padding
+  const baseHeaderPadding = resolvedHeaderPadding
   const effectiveHeaderBackground = isErpRoute ? 'rgb(252, 252, 252)' : headerBackground
   const effectiveHeaderPaddingY = isErpRoute ? Math.min(baseHeaderPadding, 6) : baseHeaderPadding
   const effectiveHeaderPaddingX = baseHeaderPadding
@@ -257,6 +296,19 @@ export function DataTable<TData extends TableData>({
   React.useEffect(() => {
     setTableData(data)
   }, [data])
+
+  React.useEffect(() => {
+    const nextVisibility = columns.reduce((acc, column) => {
+      const id = String(column.id ?? (typeof (column as { accessorKey?: unknown }).accessorKey === "string"
+        ? (column as { accessorKey?: string }).accessorKey
+        : ""))
+      if (!id) return acc
+      const meta = (column.meta || {}) as { visible?: boolean }
+      if (meta.visible === false) acc[id] = false
+      return acc
+    }, {} as VisibilityState)
+    setColumnVisibility((prev) => ({ ...nextVisibility, ...prev }))
+  }, [columns])
 
   // Helper functions for editing
   const isCellEditable = (columnKey: string): boolean => {
@@ -464,13 +516,15 @@ export function DataTable<TData extends TableData>({
     },
     manualPagination: isServer,
     pageCount: isServer ? Math.max(1, Math.ceil(((serverTotalRows ?? tableData.length) || 0) / pageSize)) : undefined,
-    enableColumnResizing: true,
+    enableSorting,
+    enableColumnResizing: enableColumnResize,
     columnResizeMode: 'onChange',
     columnResizeDirection: 'ltr',
     enableRowSelection: enableRowSelection,
     enableMultiRowSelection: selectionMode === 'multiple',
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: isServer ? undefined : getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -481,6 +535,7 @@ export function DataTable<TData extends TableData>({
     state: {
       sorting,
       columnFilters,
+      globalFilter,
       columnVisibility,
       rowSelection,
       columnSizing,
@@ -506,7 +561,6 @@ export function DataTable<TData extends TableData>({
     }
   }, [pageSize])
 
-  const globalFilter = table.getState().globalFilter
   // Notify table API to parent
   React.useEffect(() => {
     if (onTableReady) {
@@ -547,12 +601,97 @@ export function DataTable<TData extends TableData>({
     }
   }, [editingCell, editingValue])
 
+  const canShowSearch = enableSearch
+  const canShowColumnToggle = showColumnToggle
+  const visibleLeafColumns = table.getVisibleLeafColumns()
+  const hasFooter = table.getFooterGroups().some((group) =>
+    group.headers.some((header) => header.column.columnDef.footer)
+  )
+  const exportCsv = React.useCallback(() => {
+    const columnsToExport = visibleLeafColumns.filter((column) => column.id !== 'select' && column.id !== 'expand' && column.id !== 'edit-actions')
+    const headerLine = columnsToExport.map((column) => {
+      const header = column.columnDef.header
+      if (typeof header === 'string') return escapeCsvValue(header)
+      return escapeCsvValue(column.id)
+    }).join(',')
+    const bodyLines = table.getFilteredRowModel().rows.map((row) =>
+      columnsToExport.map((column) => escapeCsvValue(row.getValue(column.id))).join(',')
+    )
+    const csv = [headerLine, ...bodyLines].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = 'table-export.csv'
+    anchor.click()
+    URL.revokeObjectURL(url)
+  }, [table, visibleLeafColumns])
+
   return (
     <div className="w-full h-full" style={{ minWidth: 0 }}>
-      <div className="w-full h-full flex flex-col">
+      <div
+        className="w-full h-full flex flex-col"
+        style={{
+          border: bordered ? `${borderWidth}px solid ${borderColor}` : undefined,
+          borderRadius: rounded ? 12 : undefined,
+          overflow: 'hidden',
+        }}
+      >
+        {(canShowSearch || canShowColumnToggle || enableExportCsv) && (
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2" style={{ borderColor }}>
+            <div className="flex flex-1 flex-wrap items-center gap-2">
+              {canShowSearch && (
+                <Input
+                  value={String(globalFilter ?? "")}
+                  onChange={(e) => table.setGlobalFilter(e.target.value)}
+                  placeholder={searchPlaceholder}
+                  className="h-8 w-full max-w-xs"
+                />
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {enableExportCsv && (
+                <Button variant="outline" size="sm" onClick={exportCsv} className="h-8">
+                  <Download className="mr-2 h-4 w-4" />
+                  Exportar CSV
+                </Button>
+              )}
+              {canShowColumnToggle && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8">
+                      Colunas
+                      <ChevronDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Exibir colunas</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {table
+                      .getAllLeafColumns()
+                      .filter((column) => column.getCanHide())
+                      .map((column) => (
+                        <DropdownMenuCheckboxItem
+                          key={column.id}
+                          className="capitalize"
+                          checked={column.getIsVisible()}
+                          onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                        >
+                          {typeof column.columnDef.header === 'string' ? column.columnDef.header : column.id}
+                        </DropdownMenuCheckboxItem>
+                      ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Table Content - flex-1 overflow-auto */}
-        <div className="flex-1 overflow-auto">
+        <div
+          className="flex-1 overflow-auto"
+          style={{ maxHeight: typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight }}
+        >
           <Table
             className=""
             style={{
@@ -583,28 +722,50 @@ export function DataTable<TData extends TableData>({
                               : header.getSize(),
                           minWidth: columnOptions?.[header.column.id]?.minWidth,
                           maxWidth: columnOptions?.[header.column.id]?.maxWidth,
-                          position: 'relative',
+                          position: stickyHeader ? 'sticky' : 'relative',
+                          top: stickyHeader ? 0 : undefined,
+                          zIndex: stickyHeader ? 2 : undefined,
                           fontSize: `${headerFontSize}px`,
                           fontFamily: headerFontFamily !== 'inherit' ? headerFontFamily : undefined,
                           fontWeight: headerFontWeight !== 'normal' ? headerFontWeight : undefined,
                           borderColor,
                           borderTopWidth: showTopBorder ? borderWidth : undefined,
                           letterSpacing: typeof headerLetterSpacing === 'number' ? `${headerLetterSpacing}px` : undefined,
-                          textAlign: header.column.id === 'select' ? 'center' as const : headerTextAlign,
+                          textAlign: header.column.id === 'select'
+                            ? 'center' as const
+                            : ((header.column.columnDef.meta || {}) as { headerAlign?: 'left' | 'center' | 'right' }).headerAlign || headerTextAlign,
                           whiteSpace: columnOptions?.[header.column.id]?.headerNoWrap ? 'nowrap' : undefined,
                           overflow: columnOptions?.[header.column.id]?.headerNoWrap ? 'hidden' : undefined,
                           textOverflow: columnOptions?.[header.column.id]?.headerNoWrap ? 'ellipsis' : undefined,
                         }}
                       >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
+                        {header.isPlaceholder ? null : (
+                          <div
+                            className={cn(
+                              "flex items-center gap-1",
+                              enableSorting && header.column.getCanSort() && "cursor-pointer select-none"
+                            )}
+                            onClick={enableSorting ? header.column.getToggleSortingHandler() : undefined}
+                            title={((header.column.columnDef.meta || {}) as { headerTooltip?: string }).headerTooltip}
+                          >
+                            {flexRender(
                               header.column.columnDef.header,
                               header.getContext()
                             )}
+                            {enableSorting && header.column.getCanSort() && (
+                              header.column.getIsSorted() === 'asc' ? (
+                                <ArrowUp className="h-3.5 w-3.5" />
+                              ) : header.column.getIsSorted() === 'desc' ? (
+                                <ArrowDown className="h-3.5 w-3.5" />
+                              ) : (
+                                <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />
+                              )
+                            )}
+                          </div>
+                        )}
                         
                         {/* Column Resizer */}
-                        {header.column.getCanResize() && (
+                        {enableColumnResize && header.column.getCanResize() && (
                           <div
                             onDoubleClick={(e) => {
                               e.stopPropagation()
@@ -635,7 +796,7 @@ export function DataTable<TData extends TableData>({
                     <TableRow
                     data-state={row.getIsSelected() && "selected"}
                     className={cn(
-                      "hover:bg-gray-50 transition-colors",
+                      rowHover ? "transition-colors" : "hover:bg-transparent",
                       newRows.has(row.index) && "bg-green-50"
                     )}
                     style={{ 
@@ -647,16 +808,17 @@ export function DataTable<TData extends TableData>({
                       borderBottomWidth: borderWidth,
                     } as React.CSSProperties & { '--hover-color': string }}
                     onMouseEnter={(e) => {
-                      if (!newRows.has(row.index)) {
+                      if (rowHover && !newRows.has(row.index)) {
                         e.currentTarget.style.backgroundColor = rowHoverColor
                       }
                     }}
                     onMouseLeave={(e) => {
-                      if (!newRows.has(row.index)) {
+                      if (rowHover && !newRows.has(row.index)) {
                         const base = enableZebraStripes ? (row.index % 2 === 0 ? rowAlternateBgColor : '') : ''
                         e.currentTarget.style.backgroundColor = base
                       }
                     }}
+                    onClick={() => onRowClick?.(row.original as TData)}
                   >
                     {row.getVisibleCells().map((cell) => {
                       const rowIndex = row.index
@@ -681,7 +843,7 @@ export function DataTable<TData extends TableData>({
                             hasError && showValidationErrors && "border-red-300"
                           )}
                           style={{ 
-                            padding: columnKey === 'select' || columnKey === 'expand' ? '4px' : `${padding}px`,
+                            padding: columnKey === 'select' || columnKey === 'expand' ? '4px' : `${resolvedPadding}px`,
                             borderColor,
                             borderTopWidth: showTopBorder ? borderWidth : undefined,
                             fontSize: `${cellFontSize || fontSize}px`,
@@ -691,7 +853,9 @@ export function DataTable<TData extends TableData>({
                             backgroundColor,
                             position: 'relative',
                             letterSpacing: typeof cellLetterSpacing === 'number' ? `${cellLetterSpacing}px` : undefined,
-                            textAlign: columnKey === 'select' ? 'center' as const : cellTextAlign,
+                            textAlign: columnKey === 'select'
+                              ? 'center' as const
+                              : ((cell.column.columnDef.meta || {}) as { align?: 'left' | 'center' | 'right' }).align || cellTextAlign,
                             width: (columnOptions && columnOptions[columnKey]?.widthMode === 'auto')
                               ? undefined
                               : (columnOptions && columnOptions[columnKey]?.widthMode === 'fixed' && typeof columnOptions[columnKey]?.fixedWidth === 'number')
@@ -765,7 +929,7 @@ export function DataTable<TData extends TableData>({
                   </TableRow>
                   {enableExpand && renderDetail && expandedRows.has(row.id) && (!rowCanExpand || rowCanExpand(row.original as TData)) && (
                     <TableRow>
-                      <TableCell colSpan={tableColumns.length} style={{ padding: `${padding}px` }}>
+                      <TableCell colSpan={tableColumns.length} style={{ padding: `${resolvedPadding}px` }}>
                         {renderDetail(row.original as TData)}
                       </TableCell>
                     </TableRow>
@@ -778,7 +942,7 @@ export function DataTable<TData extends TableData>({
                     colSpan={tableColumns.length} 
                     className="h-24 text-center"
                     style={{ 
-                      padding: `${padding}px`,
+                      padding: `${resolvedPadding}px`,
                       borderColor,
                       fontSize: `${cellFontSize || fontSize}px`,
                       fontFamily: cellFontFamily !== 'inherit' ? cellFontFamily : undefined,
@@ -786,11 +950,35 @@ export function DataTable<TData extends TableData>({
                       color: cellTextColor,
                     }}
                   >
-                    Nenhum resultado encontrado.
+                    {emptyMessage}
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
+            {hasFooter && (
+              <TableFooter>
+                {table.getFooterGroups().map((footerGroup) => (
+                  <TableRow key={footerGroup.id} style={{ borderColor, borderBottomWidth: borderWidth }}>
+                    {footerGroup.headers.map((header) => (
+                      <TableCell
+                        key={header.id}
+                        style={{
+                          padding: `${resolvedPadding}px`,
+                          borderColor,
+                          fontSize: `${cellFontSize || fontSize}px`,
+                          fontFamily: cellFontFamily !== 'inherit' ? cellFontFamily : undefined,
+                          fontWeight: '600',
+                          color: cellTextColor,
+                          textAlign: ((header.column.columnDef.meta || {}) as { align?: 'left' | 'center' | 'right' }).align || cellTextAlign,
+                        }}
+                      >
+                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.footer, header.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableFooter>
+            )}
           </Table>
         </div>
 

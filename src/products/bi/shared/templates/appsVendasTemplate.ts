@@ -533,7 +533,28 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       <Container grow={3}>
         <Card>
           <Title text="Ultimos Pedidos" marginBottom={8} />
-          <Table height={320} showColumnToggle showPagination enableSearch pageSize={8}>
+          <Table
+            height={320}
+            maxHeight={420}
+            showPagination
+            pageSize={8}
+            stickyHeader
+            striped
+            rowHover
+            bordered
+            rounded
+            density="comfortable"
+            enableSearch
+            enableSorting
+            enableColumnResize
+            enableColumnVisibility
+            enableExportCsv
+            emptyMessage="Nenhum pedido encontrado para os filtros atuais."
+            loadingMessage="Carregando ultimos pedidos..."
+            defaultSort={{ accessorKey: "data_pedido", desc: true }}
+            defaultColumn={{ align: "left", headerAlign: "left", sortable: true, hideable: true, nullDisplay: "-" }}
+            toolbar={{ search: true, exportCsv: true, columnVisibility: true }}
+          >
             <Config>
               {
                 "dataQuery": {
@@ -543,50 +564,80 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
                 },
                 "columns": [
                   {
-                    "key": "pedido",
+                    "accessorKey": "pedido",
                     "header": "Pedido",
                     "format": "number",
                     "align": "right",
-                    "width": 90
+                    "headerAlign": "right",
+                    "size": 90,
+                    "minSize": 80,
+                    "maxSize": 110
                   },
                   {
-                    "key": "data_pedido",
+                    "accessorKey": "data_pedido",
                     "header": "Data",
-                    "format": "text",
-                    "width": 120
+                    "format": "date",
+                    "size": 120,
+                    "minSize": 110,
+                    "maxSize": 140
                   },
                   {
-                    "key": "cliente",
+                    "accessorKey": "cliente",
                     "header": "Cliente",
                     "format": "text",
-                    "width": 220
+                    "size": 220,
+                    "minSize": 180,
+                    "truncate": true
                   },
                   {
-                    "key": "canal",
+                    "accessorKey": "canal",
                     "header": "Canal",
                     "format": "text",
-                    "width": 150
+                    "cell": "badge",
+                    "size": 140,
+                    "meta": {
+                      "variantMap": {
+                        "e-commerce": "info",
+                        "loja fisica": "warning",
+                        "marketplace": "success"
+                      }
+                    }
                   },
                   {
-                    "key": "vendedor",
+                    "accessorKey": "vendedor",
                     "header": "Vendedor",
                     "format": "text",
-                    "width": 180
+                    "size": 180,
+                    "truncate": true
                   },
                   {
-                    "key": "valor_total",
+                    "accessorKey": "valor_total",
                     "header": "Valor Total",
                     "format": "currency",
                     "align": "right",
-                    "width": 140
+                    "headerAlign": "right",
+                    "size": 140,
+                    "footer": "sum"
                   },
                   {
-                    "key": "status",
+                    "accessorKey": "status",
                     "header": "Status",
-                    "format": "text",
-                    "width": 130
+                    "cell": "badge",
+                    "size": 130,
+                    "meta": {
+                      "variantMap": {
+                        "faturado": "success",
+                        "aprovado": "info",
+                        "pendente": "warning",
+                        "cancelado": "danger"
+                      }
+                    }
                   }
-                ]
+                ],
+                "totals": {
+                  "enabled": true,
+                  "label": "Total"
+                }
               }
             </Config>
           </Table>

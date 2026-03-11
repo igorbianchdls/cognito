@@ -2,12 +2,39 @@
 
 import React from "react";
 import type { ColumnDef } from "@tanstack/react-table";
+import { Badge } from "@/components/ui/badge";
 import { DataTable, type TableData } from "@/components/widgets/Table";
 import { useData } from "@/products/bi/json-render/context";
 import { useThemeOverrides } from "@/products/bi/json-render/theme/ThemeContext";
 
 type AnyRecord = Record<string, any>;
 type TableRow = TableData;
+type ColumnFormat = "text" | "currency" | "percent" | "number" | "date" | "datetime";
+type ColumnCellType = "text" | "badge" | "delta" | "progress" | "link";
+type AggregateMode = "sum" | "avg" | "count" | "min" | "max";
+
+type ResolvedTableColumn = {
+  id: string;
+  accessorKey: string;
+  header: string;
+  size?: number;
+  minSize?: number;
+  maxSize?: number;
+  format: ColumnFormat;
+  cell: ColumnCellType;
+  align?: "left" | "center" | "right";
+  headerAlign?: "left" | "center" | "right";
+  sortable?: boolean;
+  hideable?: boolean;
+  visible?: boolean;
+  truncate?: boolean;
+  wrap?: boolean;
+  textColor?: string;
+  headerTooltip?: string;
+  footer?: string | AggregateMode;
+  aggregate?: AggregateMode;
+  meta: AnyRecord;
+};
 
 function styleVal(v: unknown): string | undefined {
   if (v === undefined || v === null) return undefined;
@@ -28,6 +55,26 @@ function getByPath(obj: AnyRecord, path: string): unknown {
     curr = (curr as AnyRecord)[key];
   }
   return curr;
+}
+
+function setByPath(obj: AnyRecord, path: string, value: unknown): AnyRecord {
+  const parts = path.split(".").map((s) => s.trim()).filter(Boolean);
+  if (parts.length === 0) return obj;
+  const root: AnyRecord = Array.isArray(obj) ? [...obj] : { ...(obj || {}) };
+  let curr: AnyRecord = root;
+  for (let i = 0; i < parts.length - 1; i += 1) {
+    const key = parts[i];
+    const next = curr[key];
+    curr[key] = next && typeof next === "object" ? { ...next } : {};
+    curr = curr[key];
+  }
+  const last = parts[parts.length - 1];
+  if (value === undefined) {
+    delete curr[last];
+  } else {
+    curr[last] = value;
+  }
+  return root;
 }
 
 function normalizeCellValue(value: unknown): string | number | boolean | null | undefined {
@@ -55,27 +102,144 @@ function normalizeRows(input: unknown): TableRow[] {
     });
 }
 
-function formatValue(val: unknown, fmt: "text" | "currency" | "percent" | "number"): string {
-  if (fmt === "text") return val == null ? "" : String(val);
-  const n = Number(val ?? 0);
-  if (!Number.isFinite(n)) return val == null ? "" : String(val);
+function toPercentNumber(value: number): number {
+  return Math.abs(value) <= 1 ? value * 100 : value;
+}
+
+function formatValue(val: unknown, fmt: ColumnFormat, decimals?: number): string {
+  if (val == null) return "";
+  if (fmt === "text") return String(val);
+  if (fmt === "date" || fmt === "datetime") {
+    const date = val instanceof Date ? val : new Date(String(val));
+    if (Number.isNaN(date.getTime())) return String(val);
+    return new Intl.DateTimeFormat(
+      "pt-BR",
+      fmt === "date"
+        ? { dateStyle: "short" }
+        : { dateStyle: "short", timeStyle: "short" }
+    ).format(date);
+  }
+  const n = Number(val);
+  if (!Number.isFinite(n)) return String(val);
+  const fractionDigits = typeof decimals === "number" ? decimals : 2;
   switch (fmt) {
     case "currency":
       return new Intl.NumberFormat("pt-BR", {
         style: "currency",
         currency: "BRL",
-        maximumFractionDigits: 2,
+        maximumFractionDigits: fractionDigits,
       }).format(n);
     case "percent":
-      return `${(n * 100).toFixed(2)}%`;
+      return `${toPercentNumber(n).toFixed(fractionDigits)}%`;
     case "number":
     default:
-      return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 }).format(n);
+      return new Intl.NumberFormat("pt-BR", {
+        maximumFractionDigits: fractionDigits,
+      }).format(n);
   }
 }
 
+function badgeToneClass(tone?: string): string {
+  const normalized = String(tone || "").toLowerCase();
+  if (normalized === "success") return "border-green-200 bg-green-50 text-green-700";
+  if (normalized === "warning") return "border-amber-200 bg-amber-50 text-amber-700";
+  if (normalized === "danger" || normalized === "destructive") return "border-red-200 bg-red-50 text-red-700";
+  if (normalized === "info") return "border-sky-200 bg-sky-50 text-sky-700";
+  return "border-slate-200 bg-slate-50 text-slate-700";
+}
+
+function aggregateValues(values: unknown[], mode: AggregateMode): number {
+  if (mode === "count") return values.filter((value) => value !== null && value !== undefined && value !== "").length;
+  const numbers = values.map((value) => Number(value)).filter((value) => Number.isFinite(value));
+  if (numbers.length === 0) return 0;
+  if (mode === "sum") return numbers.reduce((acc, value) => acc + value, 0);
+  if (mode === "avg") return numbers.reduce((acc, value) => acc + value, 0) / numbers.length;
+  if (mode === "min") return Math.min(...numbers);
+  return Math.max(...numbers);
+}
+
+function renderCellContent(column: ResolvedTableColumn, raw: unknown, row: TableRow, nullDisplay: string) {
+  const meta = column.meta || {};
+  const decimals = typeof meta.decimals === "number" ? meta.decimals : undefined;
+  const display = raw == null || raw === "" ? nullDisplay : formatValue(raw, column.format, decimals);
+  const baseStyle: React.CSSProperties = {
+    color: column.textColor,
+    whiteSpace: column.wrap ? "normal" : "nowrap",
+    overflow: column.truncate ? "hidden" : undefined,
+    textOverflow: column.truncate ? "ellipsis" : undefined,
+  };
+
+  if (column.cell === "badge") {
+    const rawKey = String(raw ?? "");
+    const tone = meta.variantMap?.[rawKey.toLowerCase()] || meta.variantMap?.[rawKey] || meta.variant;
+    return (
+      <Badge variant="outline" className={badgeToneClass(tone)}>
+        {display}
+      </Badge>
+    );
+  }
+
+  if (column.cell === "delta") {
+    const numericValue = Number(raw ?? 0);
+    const isPositive = numericValue >= 0;
+    const positiveIsGood = meta.positiveIsGood !== false;
+    const tone = numericValue === 0
+      ? "text-slate-600"
+      : isPositive === positiveIsGood
+        ? "text-green-600"
+        : "text-red-600";
+    const prefix = numericValue > 0 ? "+" : "";
+    return (
+      <span className={`font-medium ${tone}`} style={baseStyle}>
+        {prefix}{formatValue(raw, column.format === "text" ? "number" : column.format, decimals)}
+      </span>
+    );
+  }
+
+  if (column.cell === "progress") {
+    const numericValue = Number(raw ?? 0);
+    const progressMax = Number(meta.progressMax ?? 100);
+    const normalized = progressMax === 0
+      ? 0
+      : Math.max(0, Math.min(100, (Math.abs(numericValue) <= 1 && progressMax === 100 ? numericValue * 100 : (numericValue / progressMax) * 100)));
+    return (
+      <div className="flex items-center gap-2" style={baseStyle}>
+        <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+          <div className="h-full rounded-full bg-slate-700" style={{ width: `${normalized}%` }} />
+        </div>
+        <span className="min-w-[56px] text-right">
+          {display}
+        </span>
+      </div>
+    );
+  }
+
+  if (column.cell === "link") {
+    const hrefField = typeof meta.hrefField === "string" ? meta.hrefField : "";
+    const hrefCandidate = hrefField ? getByPath(row as AnyRecord, hrefField) : raw;
+    const href = hrefCandidate == null ? "" : String(hrefCandidate);
+    const label = typeof meta.label === "string" ? meta.label : display;
+    if (!href) {
+      return <span style={baseStyle}>{label}</span>;
+    }
+    return (
+      <a
+        href={href}
+        target={typeof meta.target === "string" ? meta.target : "_blank"}
+        rel="noreferrer"
+        className="text-sky-700 underline underline-offset-2"
+        style={baseStyle}
+      >
+        {label}
+      </a>
+    );
+  }
+
+  return <span style={baseStyle}>{display}</span>;
+}
+
 export default function JsonRenderTable({ element }: { element: any }) {
-  const { data } = useData();
+  const { data, setData } = useData();
   const theme = useThemeOverrides();
   const props = (element?.props || {}) as AnyRecord;
   const dq = (props?.dataQuery || {}) as AnyRecord;
@@ -83,12 +247,13 @@ export default function JsonRenderTable({ element }: { element: any }) {
 
   const [rows, setRows] = React.useState<TableRow[]>([]);
   const [queryError, setQueryError] = React.useState<string | null>(null);
+  const [isLoading, setIsLoading] = React.useState(false);
 
   const filtersSignature = JSON.stringify((data as AnyRecord)?.filters || {});
   const dataPathRaw = React.useMemo(() => {
     if (!dataPath) return [];
-    const v = getByPath((data || {}) as AnyRecord, dataPath);
-    return Array.isArray(v) ? v : [];
+    const value = getByPath((data || {}) as AnyRecord, dataPath);
+    return Array.isArray(value) ? value : [];
   }, [data, dataPath]);
   const dataPathSignature = React.useMemo(() => JSON.stringify(dataPathRaw), [dataPathRaw]);
 
@@ -100,22 +265,26 @@ export default function JsonRenderTable({ element }: { element: any }) {
         if (!cancelled) {
           setRows(normalizeRows(dataPathRaw));
           setQueryError(null);
+          setIsLoading(false);
         }
         return;
       }
       try {
-        if (!cancelled) setQueryError(null);
+        if (!cancelled) {
+          setQueryError(null);
+          setIsLoading(true);
+        }
         const filters = { ...(dq.filters || {}) } as AnyRecord;
-        const dr = (data as AnyRecord)?.filters?.dateRange;
-        if (dr && !filters.de && !filters.ate) {
-          if (dr.from) filters.de = dr.from;
-          if (dr.to) filters.ate = dr.to;
+        const dateRange = (data as AnyRecord)?.filters?.dateRange;
+        if (dateRange && !filters.de && !filters.ate) {
+          if (dateRange.from) filters.de = dateRange.from;
+          if (dateRange.to) filters.ate = dateRange.to;
         }
         const globalFilters = (data as AnyRecord)?.filters;
         if (globalFilters && typeof globalFilters === "object") {
-          for (const [k, v] of Object.entries(globalFilters)) {
-            if (k === "dateRange") continue;
-            if (filters[k] === undefined) filters[k] = v;
+          for (const [key, value] of Object.entries(globalFilters)) {
+            if (key === "dateRange") continue;
+            if (filters[key] === undefined) filters[key] = value;
           }
         }
         const limit = toNumberOrUndefined(dq.limit);
@@ -126,25 +295,26 @@ export default function JsonRenderTable({ element }: { element: any }) {
             ...(limit ? { limit } : {}),
           },
         };
-        const res = await fetch("/api/modulos/query/execute", {
+        const response = await fetch("/api/modulos/query/execute", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify(body),
         });
-        const j = await res.json();
-        if (!res.ok || j?.success === false) {
-          throw new Error(String(j?.message || `Query failed (${res.status})`));
+        const json = await response.json();
+        if (!response.ok || json?.success === false) {
+          throw new Error(String(json?.message || `Query failed (${response.status})`));
         }
-        const queryRows = Array.isArray(j?.rows) ? j.rows : [];
         if (!cancelled) {
-          setRows(normalizeRows(queryRows));
+          setRows(normalizeRows(Array.isArray(json?.rows) ? json.rows : []));
           setQueryError(null);
+          setIsLoading(false);
         }
-      } catch (e) {
-        console.error("[BI/Table] query failed", e);
+      } catch (error) {
+        console.error("[BI/Table] query failed", error);
         if (!cancelled) {
           setRows([]);
-          setQueryError(e instanceof Error ? e.message : "Erro ao executar query");
+          setQueryError(error instanceof Error ? error.message : "Erro ao executar query");
+          setIsLoading(false);
         }
       }
     }
@@ -152,54 +322,127 @@ export default function JsonRenderTable({ element }: { element: any }) {
     return () => {
       cancelled = true;
     };
-  }, [JSON.stringify(dq), filtersSignature, dataPathSignature]);
+  }, [JSON.stringify(dq), filtersSignature, dataPathSignature, data]);
 
-  const columns = React.useMemo<ColumnDef<TableRow>[]>(() => {
+  const defaultColumn = (props?.defaultColumn || {}) as AnyRecord;
+  const totals = (props?.totals || {}) as AnyRecord;
+  const totalsEnabled = Boolean(totals?.enabled);
+  const nullDisplay = typeof defaultColumn?.nullDisplay === "string" ? defaultColumn.nullDisplay : "-";
+
+  const resolvedColumns = React.useMemo<ResolvedTableColumn[]>(() => {
     const explicit = Array.isArray(props?.columns) ? (props.columns as AnyRecord[]) : [];
     if (explicit.length > 0) {
       return explicit
-        .map((col): ColumnDef<TableRow> | null => {
-          const key = String(col?.key || "").trim();
-          if (!key) return null;
-          const label = String(col?.header || col?.label || key);
-          const width = toNumberOrUndefined(col?.width);
-          const fmt = (col?.format as "text" | "currency" | "percent" | "number" | undefined) || "text";
-          const textColor = typeof col?.textColor === "string" ? col.textColor : undefined;
+        .map((column, index): ResolvedTableColumn | null => {
+          const accessorKey = String(column?.accessorKey || column?.key || "").trim();
+          if (!accessorKey) return null;
+          const merged = { ...defaultColumn, ...column } as AnyRecord;
           return {
-            accessorKey: key,
-            header: label,
-            ...(width ? { size: width } : {}),
-            cell: ({ row }) => {
-              const raw = row.getValue(key);
-              return (
-                <div style={{ color: textColor }}>
-                  {formatValue(raw, fmt)}
-                </div>
-              );
+            id: String(merged.id || accessorKey),
+            accessorKey,
+            header: String(merged.header || merged.label || accessorKey),
+            size: toNumberOrUndefined(merged.size ?? merged.width),
+            minSize: toNumberOrUndefined(merged.minSize),
+            maxSize: toNumberOrUndefined(merged.maxSize),
+            format: (merged.format as ColumnFormat | undefined) || "text",
+            cell: (merged.cell as ColumnCellType | undefined) || "text",
+            align: merged.align,
+            headerAlign: merged.headerAlign || merged.align,
+            sortable: merged.sortable,
+            hideable: merged.hideable,
+            visible: merged.visible,
+            truncate: Boolean(merged.truncate),
+            wrap: Boolean(merged.wrap),
+            textColor: typeof merged.textColor === "string" ? merged.textColor : undefined,
+            headerTooltip: typeof merged.headerTooltip === "string" ? merged.headerTooltip : undefined,
+            footer: merged.footer,
+            aggregate: merged.aggregate,
+            meta: {
+              ...(defaultColumn?.meta || {}),
+              ...(merged.meta || {}),
+              nullDisplay: merged.nullDisplay || nullDisplay,
             },
           };
         })
-        .filter(Boolean) as ColumnDef<TableRow>[];
+        .filter(Boolean) as ResolvedTableColumn[];
     }
 
     const firstRow = rows[0] as AnyRecord | undefined;
     if (!firstRow || typeof firstRow !== "object") return [];
-    return Object.keys(firstRow).map((key) => {
-      const value = firstRow[key];
+    return Object.keys(firstRow).map((key) => ({
+      id: key,
+      accessorKey: key,
+      header: key,
+      format: typeof firstRow[key] === "number" ? "number" : "text",
+      cell: "text",
+      meta: { nullDisplay },
+    }));
+  }, [JSON.stringify(props?.columns || []), JSON.stringify(defaultColumn || {}), JSON.stringify(rows), nullDisplay]);
+
+  const columns = React.useMemo<ColumnDef<TableRow>[]>(() => (
+    resolvedColumns.map((column, index) => {
+      const footerMode = (column.footer || column.aggregate) as string | AggregateMode | undefined;
+      const baseMeta = {
+        align: column.align,
+        headerAlign: column.headerAlign,
+        visible: column.visible,
+        headerTooltip: column.headerTooltip,
+      };
+      const footer = totalsEnabled || footerMode
+        ? (ctx: any) => {
+            if (!footerMode) {
+              return index === 0 ? String(totals?.label || "Total") : "";
+            }
+            if (footerMode === "sum" || footerMode === "avg" || footerMode === "count" || footerMode === "min" || footerMode === "max") {
+              const values = ctx.table.getFilteredRowModel().rows.map((row: any) => row.getValue(column.id));
+              const aggregateValue = aggregateValues(values, footerMode);
+              return formatValue(aggregateValue, column.format === "text" ? "number" : column.format);
+            }
+            return footerMode;
+          }
+        : undefined;
+
       return {
-        accessorKey: key,
-        header: key,
-        cell: ({ row }: AnyRecord) => {
-          const raw = row.getValue(key);
-          return (
-            <div>
-              {formatValue(raw, typeof raw === "number" ? "number" : "text")}
-            </div>
-          );
-        },
+        id: column.id,
+        accessorFn: (row) => getByPath(row as AnyRecord, column.accessorKey),
+        header: column.header,
+        size: column.size,
+        minSize: column.minSize,
+        maxSize: column.maxSize,
+        enableSorting: column.sortable,
+        enableHiding: column.hideable,
+        footer,
+        meta: baseMeta,
+        cell: ({ row }) => renderCellContent(
+          column,
+          row.getValue(column.id),
+          row.original as TableRow,
+          String(column.meta?.nullDisplay || nullDisplay)
+        ),
       } as ColumnDef<TableRow>;
-    });
-  }, [JSON.stringify(props?.columns || []), JSON.stringify(rows)]);
+    })
+  ), [resolvedColumns, totalsEnabled, totals?.label, nullDisplay]);
+
+  const columnOptions = React.useMemo(() => (
+    resolvedColumns.reduce((acc, column) => {
+      acc[column.id] = {
+        headerNoWrap: !column.wrap,
+        cellNoWrap: !column.wrap,
+        widthMode: typeof column.size === "number" ? "fixed" : "auto",
+        fixedWidth: column.size,
+        minWidth: column.minSize,
+        maxWidth: column.maxSize,
+      };
+      return acc;
+    }, {} as Record<string, {
+      headerNoWrap?: boolean;
+      cellNoWrap?: boolean;
+      widthMode?: "auto" | "fixed";
+      fixedWidth?: number;
+      minWidth?: number;
+      maxWidth?: number;
+    }>)
+  ), [resolvedColumns]);
 
   const cssVars = (theme.cssVars || {}) as AnyRecord;
   const headerBackground = typeof props?.headerBackground === "string" ? props.headerBackground : "var(--surfaceBg)";
@@ -211,16 +454,54 @@ export default function JsonRenderTable({ element }: { element: any }) {
     props?.editableCells === "all" || props?.editableCells === "none" || Array.isArray(props?.editableCells)
       ? props.editableCells
       : "none";
+  const toolbar = (props?.toolbar || {}) as AnyRecord;
+  const defaultSort = (props?.defaultSort || {}) as AnyRecord;
+  const defaultSortColumn = typeof defaultSort?.accessorKey === "string"
+    ? defaultSort.accessorKey
+    : typeof props?.defaultSortColumn === "string"
+      ? props.defaultSortColumn
+      : undefined;
+  const defaultSortDirection = typeof defaultSort?.desc === "boolean"
+    ? (defaultSort.desc ? "desc" : "asc")
+    : props?.defaultSortDirection === "desc"
+      ? "desc"
+      : "asc";
+  const enableColumnVisibility = props?.enableColumnVisibility ?? props?.showColumnToggle ?? toolbar?.columnVisibility ?? true;
+  const enableExportCsv = props?.enableExportCsv ?? toolbar?.exportCsv ?? false;
+  const enableSearch = props?.enableSearch ?? toolbar?.search ?? true;
+  const rowClickAction = (props?.rowClickAction || {}) as AnyRecord;
+  const handleRowClick = React.useMemo(() => {
+    if (rowClickAction?.type !== "filter") return undefined;
+    const filterField = typeof rowClickAction?.field === "string" ? rowClickAction.field.trim() : "";
+    const valueField = typeof rowClickAction?.valueField === "string" ? rowClickAction.valueField.trim() : filterField;
+    const storePath = typeof rowClickAction?.storePath === "string" && rowClickAction.storePath.trim()
+      ? rowClickAction.storePath.trim()
+      : filterField
+        ? `filters.${filterField}`
+        : "";
+    if (!storePath || !valueField) return undefined;
+    const clearOnSecondClick = rowClickAction?.clearOnSecondClick !== false;
+    return (row: TableRow) => {
+      const nextValue = getByPath(row as AnyRecord, valueField);
+      if (nextValue === undefined || nextValue === null || nextValue === "") return;
+      setData((prev) => {
+        const current = getByPath((prev || {}) as AnyRecord, storePath);
+        const shouldClear = clearOnSecondClick && String(current ?? "") === String(nextValue);
+        return setByPath((prev || {}) as AnyRecord, storePath, shouldClear ? undefined : nextValue);
+      });
+    };
+  }, [rowClickAction, setData]);
 
   return (
     <div>
       {queryError && <div className="mb-2 text-xs text-red-600">{queryError}</div>}
-      <div style={{ minHeight: 120, height: styleVal(props?.height), overflow: "auto" }}>
+      <div style={{ minHeight: 120, height: styleVal(props?.height), maxHeight: styleVal(props?.maxHeight), overflow: "auto" }}>
         <DataTable<TableRow>
           columns={columns}
           data={rows}
+          maxHeight={props?.height ? undefined : props?.maxHeight}
           searchPlaceholder={typeof props?.searchPlaceholder === "string" ? props.searchPlaceholder : "Buscar..."}
-          showColumnToggle={props?.showColumnToggle ?? true}
+          showColumnToggle={Boolean(enableColumnVisibility)}
           showPagination={props?.showPagination ?? true}
           pageSize={toNumberOrUndefined(props?.pageSize) ?? 10}
           headerBackground={headerBackground}
@@ -228,6 +509,12 @@ export default function JsonRenderTable({ element }: { element: any }) {
           rowHoverColor={typeof props?.rowHoverColor === "string" ? props.rowHoverColor : undefined}
           borderColor={borderColor}
           borderWidth={toNumberOrUndefined(props?.borderWidth)}
+          stickyHeader={Boolean(props?.stickyHeader)}
+          rowHover={props?.rowHover !== false}
+          bordered={Boolean(props?.bordered)}
+          rounded={Boolean(props?.rounded)}
+          density={props?.density === "compact" || props?.density === "spacious" ? props.density : "comfortable"}
+          emptyMessage={typeof props?.emptyMessage === "string" ? props.emptyMessage : (isLoading ? String(props?.loadingMessage || "Carregando dados da tabela...") : "Nenhum resultado encontrado.")}
           fontSize={toNumberOrUndefined(props?.fontSize)}
           padding={toNumberOrUndefined(props?.padding)}
           headerPadding={toNumberOrUndefined(props?.headerPadding)}
@@ -235,22 +522,26 @@ export default function JsonRenderTable({ element }: { element: any }) {
           headerFontFamily={typeof props?.headerFontFamily === "string" ? props.headerFontFamily : fallbackFont}
           headerFontWeight={typeof props?.headerFontWeight === "string" ? props.headerFontWeight : undefined}
           headerLetterSpacing={toNumberOrUndefined(props?.headerLetterSpacing)}
-          headerTextAlign="center"
+          headerTextAlign={defaultColumn?.headerAlign || defaultColumn?.align || "center"}
+          columnOptions={columnOptions}
           cellFontSize={toNumberOrUndefined(props?.cellFontSize)}
           cellFontFamily={typeof props?.cellFontFamily === "string" ? props.cellFontFamily : fallbackFont}
           cellFontWeight={typeof props?.cellFontWeight === "string" ? props.cellFontWeight : undefined}
           cellTextColor={cellTextColor}
           cellLetterSpacing={toNumberOrUndefined(props?.cellLetterSpacing)}
-          cellTextAlign="center"
-          enableZebraStripes={Boolean(props?.enableZebraStripes)}
+          cellTextAlign={defaultColumn?.align || "center"}
+          enableZebraStripes={Boolean(props?.striped ?? props?.enableZebraStripes)}
           rowAlternateBgColor={typeof props?.rowAlternateBgColor === "string" ? props.rowAlternateBgColor : undefined}
           selectionColumnWidth={toNumberOrUndefined(props?.selectionColumnWidth)}
-          enableSearch={props?.enableSearch ?? true}
+          enableSearch={Boolean(enableSearch)}
           enableFiltering={Boolean(props?.enableFiltering)}
+          enableSorting={props?.enableSorting !== false}
+          enableColumnResize={props?.enableColumnResize !== false}
+          enableExportCsv={Boolean(enableExportCsv)}
           enableRowSelection={Boolean(props?.enableRowSelection)}
           selectionMode={props?.selectionMode === "multiple" ? "multiple" : "single"}
-          defaultSortColumn={typeof props?.defaultSortColumn === "string" ? props.defaultSortColumn : undefined}
-          defaultSortDirection={props?.defaultSortDirection === "desc" ? "desc" : "asc"}
+          defaultSortColumn={defaultSortColumn}
+          defaultSortDirection={defaultSortDirection}
           editableMode={Boolean(props?.editableMode)}
           editableCells={editableCells}
           editableRowActions={{
@@ -277,6 +568,7 @@ export default function JsonRenderTable({ element }: { element: any }) {
           newRowColor={typeof props?.newRowColor === "string" ? props.newRowColor : undefined}
           showTopBorder
           onDataChange={setRows}
+          onRowClick={handleRowClick}
         />
       </div>
     </div>
