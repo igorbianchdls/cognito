@@ -308,7 +308,18 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
             </Query>
             <Fields x="label" y="value" key="key" />
             <Interaction clickAsFilter filterField="canal_venda_id" storePath="filters.canal_venda_id" clearOnSecondClick />
-            <Nivo innerRadius={0.35} />
+            <Nivo
+              innerRadius={0.5}
+              padAngle={1}
+              cornerRadius={4}
+              activeOuterRadiusOffset={10}
+              sortByValue
+              enableArcLinkLabels
+              arcLinkLabelsSkipAngle={8}
+              margin={{ top: 16, right: 140, bottom: 16, left: 16 }}
+              legends={[{ anchor: "right", direction: "column", translateX: 110, itemWidth: 110, itemHeight: 18, itemsSpacing: 6, symbolSize: 12, itemDirection: "left-to-right" }]}
+              tooltip={{ showPercentOfTotal: true }}
+            />
             <Config>
               {
                 "dataQuery": {
@@ -342,7 +353,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
             </Query>
             <Fields x="label" y="value" key="key" />
             <Interaction clickAsFilter filterField="categoria_receita_id" storePath="filters.categoria_receita_id" clearOnSecondClick />
-            <Nivo layout="horizontal" />
+            <Nivo layout="horizontal" padding={0.24} borderRadius={8} gridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
             <Config>
               {
                 "dataQuery": {
@@ -376,7 +387,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
             </Query>
             <Fields x="label" y="value" key="key" />
             <Interaction clickAsFilter={false} />
-            <Nivo layout="horizontal" />
+            <Nivo layout="horizontal" padding={0.24} borderRadius={8} gridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
             <Config>
               {
                 "dataQuery": {
@@ -413,7 +424,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter filterField="vendedor_id" storePath="filters.vendedor_id" clearOnSecondClick />
-        <Nivo layout="horizontal" />
+        <Nivo layout="horizontal" padding={0.24} borderRadius={8} gridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
         <Config>
           {
             "dataQuery": {
@@ -447,7 +458,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter filterField="filial_id" storePath="filters.filial_id" clearOnSecondClick />
-        <Nivo layout="horizontal" />
+        <Nivo layout="horizontal" padding={0.24} borderRadius={8} gridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
         <Config>
           {
             "dataQuery": {
@@ -481,7 +492,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter filterField="unidade_negocio_id" storePath="filters.unidade_negocio_id" clearOnSecondClick />
-        <Nivo layout="horizontal" />
+        <Nivo layout="horizontal" padding={0.24} borderRadius={8} gridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
         <Config>
           {
             "dataQuery": {
@@ -497,31 +508,73 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Container grow={3}>
         <Card>
-          <Title text="Faturamento por Mês" marginBottom={8} />
+          <Title text="Faturamento Mensal por Canal" marginBottom={8} />
           <Chart type="line" format="currency" height={240}>
         <Query>
-          SELECT
-                      TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS key,
-                      TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS label,
-                      COALESCE(SUM(pi.subtotal), 0)::float AS value
-                    FROM vendas.pedidos p
-                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-                    WHERE p.tenant_id = {{tenant_id}}
-                      AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-                      AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
-                      AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
-                      AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
-                    GROUP BY 1, 2
-                    ORDER BY 2 ASC
+          WITH top_canais AS (
+                      SELECT
+                        p.canal_venda_id,
+                        COALESCE(SUM(pi.subtotal), 0)::float AS receita
+                      FROM vendas.pedidos p
+                      JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                      WHERE p.tenant_id = {{tenant_id}}
+                        AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+                        AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+                        AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                        AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                      GROUP BY 1
+                      ORDER BY 2 DESC
+                      LIMIT 4
+                    ),
+                    base AS (
+                      SELECT
+                        DATE_TRUNC('month', p.data_pedido)::date AS month_date,
+                        CASE
+                          WHEN tc.canal_venda_id IS NOT NULL THEN COALESCE(cv.nome, '-')
+                          ELSE 'Outros'
+                        END AS series,
+                        COALESCE(SUM(pi.subtotal), 0)::float AS value
+                      FROM vendas.pedidos p
+                      JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                      LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                      LEFT JOIN top_canais tc ON tc.canal_venda_id = p.canal_venda_id
+                      WHERE p.tenant_id = {{tenant_id}}
+                        AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+                        AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+                        AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                        AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+                      GROUP BY 1, 2
+                    )
+                    SELECT
+                      TO_CHAR(month_date, 'YYYY-MM-DD') AS key,
+                      TO_CHAR(month_date, 'MM/YY') AS label,
+                      series,
+                      SUM(value)::float AS value
+                    FROM base
+                    GROUP BY 1, 2, 3
+                    ORDER BY 1 ASC, 3 ASC
         </Query>
-        <Fields x="label" y="value" key="key" />
+        <Fields x="key" y="value" key="key" series="series" />
         <Interaction clickAsFilter={false} />
-        <Nivo curve="monotoneX" area />
+        <Nivo
+          xScale={{ type: "time", format: "%Y-%m-%d", precision: "month", useUTC: false }}
+          xFormat="time:%b/%y"
+          curve="monotoneX"
+          area
+          areaOpacity={0.12}
+          lineWidth={3}
+          pointSize={5}
+          axisBottom={{ format: "%b/%y", tickValues: "every 1 month", legend: "Mês", legendOffset: 36 }}
+          axisLeft={{ legend: "Receita", legendOffset: -44 }}
+          legends={[{ anchor: "bottom", direction: "row", translateY: 56, itemWidth: 92, itemHeight: 16, itemsSpacing: 8, symbolSize: 10, itemDirection: "left-to-right" }]}
+          tooltip={{ showSeries: true }}
+          margin={{ top: 10, right: 16, bottom: 78, left: 56 }}
+        />
         <Config>
           {
             "dataQuery": {
               "filters": {},
-              "limit": 12
+              "limit": 120
             }
           }
         </Config>
@@ -665,7 +718,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter={false} />
-        <Nivo layout="vertical" />
+        <Nivo layout="vertical" padding={0.28} borderRadius={8} gridY axisBottom={{ tickRotation: -18, legend: "Mês", legendOffset: 42 }} axisLeft={{ legend: "Pedidos", legendOffset: -34 }} />
         <Config>
           {
             "dataQuery": {
@@ -697,7 +750,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter={false} />
-        <Nivo layout="vertical" />
+        <Nivo layout="vertical" padding={0.28} borderRadius={8} gridY axisBottom={{ tickRotation: -18, legend: "Mês", legendOffset: 42 }} axisLeft={{ legend: "Ticket Médio", legendOffset: -44 }} />
         <Config>
           {
             "dataQuery": {
@@ -758,7 +811,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter filterField="territorio_id" storePath="filters.territorio_id" clearOnSecondClick />
-        <Nivo layout="horizontal" />
+        <Nivo layout="horizontal" padding={0.24} borderRadius={8} gridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
         <Config>
           {
             "dataQuery": {
@@ -792,7 +845,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter filterField="categoria_receita_id" storePath="filters.categoria_receita_id" clearOnSecondClick />
-        <Nivo layout="horizontal" />
+        <Nivo layout="horizontal" padding={0.24} borderRadius={8} gridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
         <Config>
           {
             "dataQuery": {
@@ -825,7 +878,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter filterField="canal_venda_id" storePath="filters.canal_venda_id" clearOnSecondClick />
-        <Nivo layout="horizontal" />
+        <Nivo layout="horizontal" padding={0.24} borderRadius={8} gridX axisBottom={{ legend: "Pedidos", legendOffset: 30, maxTicks: 4 }} />
         <Config>
           {
             "dataQuery": {

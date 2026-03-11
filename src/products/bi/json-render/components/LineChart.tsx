@@ -49,6 +49,15 @@ function getByPath(data: AnyRecord, path: string): any {
   return curr;
 }
 
+function getFieldValue(row: AnyRecord, preferred: string | undefined, fallbacks: string[]): unknown {
+  const candidates = [preferred, ...fallbacks].filter((value): value is string => typeof value === "string" && value.trim().length > 0);
+  for (const candidate of candidates) {
+    const direct = row[candidate];
+    if (direct !== undefined) return direct;
+  }
+  return undefined;
+}
+
 function inferFilterField(dimension?: string): string {
   const d = (dimension || '').trim().toLowerCase();
   if (!d) return '';
@@ -75,6 +84,10 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
   const { data, setData } = useData();
   const theme = useThemeOverrides();
   const dq = (element?.props?.dataQuery as AnyRecord | undefined);
+  const xFieldName = typeof dq?.xField === "string" ? dq.xField.trim() : "label";
+  const yFieldName = typeof dq?.yField === "string" ? dq.yField.trim() : "value";
+  const keyFieldName = typeof dq?.keyField === "string" ? dq.keyField.trim() : "key";
+  const seriesFieldName = typeof dq?.seriesField === "string" ? dq.seriesField.trim() : "";
   const interaction = (element?.props?.interaction as AnyRecord | undefined) || {};
   const clickAsFilter = Boolean(interaction?.clickAsFilter ?? true);
   const clearOnSecondClick = Boolean(interaction?.clearOnSecondClick ?? true);
@@ -113,6 +126,7 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
                 xField: dq.xField,
                 yField: dq.yField,
                 keyField: dq.keyField,
+                seriesField: dq.seriesField,
                 filters,
                 limit: dq.limit,
               },
@@ -142,24 +156,49 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
   const colorScheme = element?.props?.colorScheme as string | string[] | undefined;
   const nivo = (element?.props?.nivo as AnyRecord | undefined) || {};
 
-  const seriesData = React.useMemo(() => {
+  const normalizedRows = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
-    return [{
-      id: 'Series',
-      data: src.map((r) => ({
-        x: String((r as AnyRecord).label ?? ''),
-        y: Number((r as AnyRecord).value ?? 0),
-        filterKey: (r as AnyRecord).key ?? String((r as AnyRecord).label ?? ''),
-      })),
-    }];
-  }, [serverRows]);
+    return src.map((r) => {
+      const row = r as AnyRecord;
+      const xValue = getFieldValue(row, xFieldName, ["label", "x"]);
+      const yValue = getFieldValue(row, yFieldName, ["value", "y"]);
+      const keyValue = getFieldValue(row, keyFieldName, ["key", xFieldName, "label", "x"]);
+      const seriesValue = seriesFieldName ? getFieldValue(row, seriesFieldName, ["series"]) : undefined;
+      return {
+        x: xValue,
+        y: Number(yValue ?? 0),
+        filterKey: keyValue ?? xValue,
+        series: seriesFieldName ? String(seriesValue ?? "Series") : "Series",
+      };
+    });
+  }, [serverRows, xFieldName, yFieldName, keyFieldName, seriesFieldName]);
+
+  const hasSeries = Boolean(seriesFieldName);
+
+  const seriesData = React.useMemo(() => {
+    const grouped = new Map<string, Array<{ x: unknown; y: number; filterKey: unknown }>>();
+    normalizedRows.forEach((row) => {
+      const seriesId = row.series || "Series";
+      const existing = grouped.get(seriesId) || [];
+      existing.push({
+        x: row.x,
+        y: row.y,
+        filterKey: row.filterKey,
+      });
+      grouped.set(seriesId, existing);
+    });
+    return Array.from(grouped.entries()).map(([id, dataPoints]) => ({
+      id,
+      data: dataPoints,
+    }));
+  }, [normalizedRows]);
   const seriesMinY = React.useMemo(() => {
-    const values = (seriesData[0]?.data || [])
+    const values = seriesData.flatMap((serie: any) => (serie?.data || []))
       .map((p: any) => Number(p?.y))
       .filter((n: number) => Number.isFinite(n));
     if (!values.length) return undefined;
     return Math.min(...values);
-  }, [JSON.stringify(seriesData[0]?.data || [])]);
+  }, [JSON.stringify(seriesData)]);
   const handleGlobalFilterClick = React.useCallback((point: any) => {
     if (!shouldClickFilter || !resolvedFilterStorePath) return;
     const rawValue = point?.data?.filterKey ?? point?.data?.x ?? point?.id;
@@ -209,7 +248,7 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
     const m = { ...baseMargin } as { top: number; right: number; bottom: number; left: number };
     if (!autoMargin) return m;
     // Line x-axis labels are seriesData[0].data[].x
-    const labels = (seriesData[0]?.data || []).map((p: any) => String(p.x ?? ''));
+    const labels = Array.from(new Set(seriesData.flatMap((serie: any) => (serie?.data || []).map((p: any) => String(p.x ?? '')))));
     const maxW = labels.length ? Math.max(...labels.map(measureText)) : 0;
     const pad = 12;
     m.bottom = Math.max(m.bottom, Math.min(maxLabelClamp, Math.ceil(maxW) + pad));
@@ -230,6 +269,7 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
     tickRotation: Number(nivo?.axisBottom?.tickRotation ?? 0),
     legend: typeof nivo?.axisBottom?.legend === 'string' ? nivo.axisBottom.legend : undefined,
     legendOffset: Number(nivo?.axisBottom?.legendOffset ?? 32),
+    ...(nivo?.axisBottom || {}),
   } as const;
 
   const axisLeft = {
@@ -238,17 +278,39 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
     tickRotation: 0,
     legend: typeof nivo?.axisLeft?.legend === 'string' ? nivo.axisLeft.legend : undefined,
     legendOffset: Number(nivo?.axisLeft?.legendOffset ?? 40),
+    ...(nivo?.axisLeft || {}),
   } as const;
 
   const gridX = Boolean(nivo?.gridX ?? false);
   const gridY = Boolean(nivo?.gridY ?? false);
   const curve = (typeof nivo?.curve === 'string' ? nivo.curve : 'linear') as any;
   const enableArea = Boolean(nivo?.area ?? false);
+  const areaOpacity = typeof nivo?.areaOpacity === 'number' ? nivo.areaOpacity : undefined;
   const areaBaselineValue =
     typeof nivo?.areaBaselineValue === 'number'
       ? nivo.areaBaselineValue
       : (enableArea && typeof seriesMinY === 'number' && seriesMinY > 0 ? seriesMinY : undefined);
-  const pointSize = typeof nivo?.pointSize === 'number' ? nivo.pointSize : 6;
+  const enablePoints = Boolean(nivo?.enablePoints ?? true);
+  const pointSize = enablePoints ? (typeof nivo?.pointSize === 'number' ? nivo.pointSize : 6) : 0;
+  const pointBorderWidth = typeof nivo?.pointBorderWidth === 'number' ? nivo.pointBorderWidth : undefined;
+  const pointColor = nivo?.pointColor;
+  const pointBorderColor = nivo?.pointBorderColor;
+  const lineWidth = typeof nivo?.lineWidth === 'number' ? nivo.lineWidth : 2;
+  const legends = Array.isArray(nivo?.legends) ? nivo.legends : undefined;
+  const markers = Array.isArray(nivo?.markers) ? nivo.markers : undefined;
+  const xScale = (nivo?.xScale && typeof nivo.xScale === 'object' && !Array.isArray(nivo.xScale))
+    ? nivo.xScale
+    : { type: 'point' };
+  const yScale = (nivo?.yScale && typeof nivo.yScale === 'object' && !Array.isArray(nivo.yScale))
+    ? { type: 'linear', stacked: false, min: 'auto', max: 'auto', ...nivo.yScale }
+    : { type: 'linear', stacked: false, min: 'auto', max: 'auto' };
+  const xFormat = typeof nivo?.xFormat === 'string' ? nivo.xFormat : undefined;
+  const yFormat = typeof nivo?.yFormat === 'string' ? nivo.yFormat : undefined;
+  const useMesh = Boolean(nivo?.useMesh ?? true);
+  const enableSlices = nivo?.enableSlices === 'x' || nivo?.enableSlices === 'y'
+    ? nivo.enableSlices
+    : (nivo?.enableSlices === false ? false : undefined);
+  const tooltipConfig = (nivo?.tooltip && typeof nivo.tooltip === 'object' && !Array.isArray(nivo.tooltip)) ? nivo.tooltip as AnyRecord : {};
   const animate = Boolean(nivo?.animate ?? true);
   const motionConfig = (typeof nivo?.motionConfig === 'string' ? nivo.motionConfig : 'gentle') as any;
 
@@ -274,22 +336,33 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
         <ResponsiveLine
           data={seriesData}
           margin={computedMargin}
-          xScale={{ type: 'point' }}
-          yScale={{ type: 'linear', stacked: false, min: 'auto', max: 'auto' }}
+          xScale={xScale as any}
+          yScale={yScale as any}
           colors={colors as any}
           curve={curve}
+          lineWidth={lineWidth}
           enableGridX={gridX}
           enableGridY={gridY}
           axisBottom={axisBottom as any}
           axisLeft={axisLeft as any}
+          xFormat={xFormat}
+          yFormat={yFormat}
           pointSize={pointSize}
+          pointBorderWidth={pointBorderWidth}
+          pointColor={pointColor as any}
+          pointBorderColor={pointBorderColor as any}
           enableArea={enableArea}
+          areaOpacity={areaOpacity}
           areaBaselineValue={areaBaselineValue as any}
-          useMesh={true}
+          legends={legends as any}
+          markers={markers as any}
+          useMesh={useMesh}
+          enableSlices={enableSlices as any}
           tooltip={({ point }) => (
             <div className="rounded bg-white px-2 py-1 text-xs text-gray-700 border border-gray-200">
-              <div className="font-medium">{point.data.xFormatted}</div>
-              <div>{formatValue(point.data.y as any, fmt)}</div>
+              {tooltipConfig.showLabel !== false && <div className="font-medium">{String(point.data.xFormatted ?? point.data.x ?? "")}</div>}
+              {Boolean(tooltipConfig.showSeries ?? hasSeries) && <div>{String(point.serieId ?? "")}</div>}
+              {tooltipConfig.showValue !== false && <div>{formatValue(point.data.y as any, fmt)}</div>}
             </div>
           )}
           onClick={shouldClickFilter ? handleGlobalFilterClick : undefined}

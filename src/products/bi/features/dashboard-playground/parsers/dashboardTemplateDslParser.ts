@@ -564,9 +564,11 @@ function compileChartNode(source: string, node: DslNode, context: CompileContext
     const x = pickAttr('x', 'xfield', 'x-field')
     const y = pickAttr('y', 'yfield', 'valuefield', 'value-field', 'y-field')
     const key = pickAttr('key', 'keyfield', 'key-field')
+    const series = pickAttr('series', 'seriesfield', 'series-field')
     if (x) dataQueryFromProps.xField = String(x)
     if (y) dataQueryFromProps.yField = String(y)
     if (key) dataQueryFromProps.keyField = String(key)
+    if (series) dataQueryFromProps.seriesField = String(series)
   }
 
   if (Object.keys(dataQueryFromProps).length) props.dataQuery = dataQueryFromProps
@@ -1151,6 +1153,10 @@ function renderChartNodeToDsl(node: Record<string, unknown>, level: number): str
   if (typeof dataQueryRaw.keyField === 'string' && dataQueryRaw.keyField.trim()) {
     fieldsAttrs.key = dataQueryRaw.keyField
     delete dataQueryRaw.keyField
+  }
+  if (typeof dataQueryRaw.seriesField === 'string' && dataQueryRaw.seriesField.trim()) {
+    fieldsAttrs.series = dataQueryRaw.seriesField
+    delete dataQueryRaw.seriesField
   }
   if (Object.keys(fieldsAttrs).length) {
     lines.push(`${renderIndent(level + 1)}<Fields${renderAttrs(fieldsAttrs)} />`)

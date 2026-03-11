@@ -49,6 +49,15 @@ function getByPath(data: AnyRecord, path: string): any {
   return curr;
 }
 
+function getFieldValue(row: AnyRecord, preferred: string | undefined, fallbacks: string[]): unknown {
+  const candidates = [preferred, ...fallbacks].filter((value): value is string => typeof value === "string" && value.trim().length > 0);
+  for (const candidate of candidates) {
+    const direct = row[candidate];
+    if (direct !== undefined) return direct;
+  }
+  return undefined;
+}
+
 export default function JsonRenderBarChart({ element }: { element: any }) {
   const { data, setData } = useData();
   const theme = useThemeOverrides();
@@ -58,6 +67,10 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   const nivo = (element?.props?.nivo as AnyRecord | undefined) || {};
 
   const dq = (element?.props?.dataQuery as AnyRecord | undefined);
+  const xFieldName = typeof dq?.xField === "string" ? dq.xField.trim() : "label";
+  const yFieldName = typeof dq?.yField === "string" ? dq.yField.trim() : "value";
+  const keyFieldName = typeof dq?.keyField === "string" ? dq.keyField.trim() : "key";
+  const seriesFieldName = typeof dq?.seriesField === "string" ? dq.seriesField.trim() : "";
   const drill = (element?.props?.drill as AnyRecord | undefined);
   const interaction = (element?.props?.interaction as AnyRecord | undefined) || {};
   const inferFilterField = React.useCallback((dimension?: string) => {
@@ -167,6 +180,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
                 xField: dq.xField,
                 yField: dq.yField,
                 keyField: dq.keyField,
+                seriesField: dq.seriesField,
                 filters,
                 limit: dq.limit,
               },
@@ -192,14 +206,61 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     return () => { cancelled = true };
   }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters), effectiveDimension, effectiveDimensionExpr, isSqlQueryMode, drillEnabled, drillLevelIndex, JSON.stringify(drillPath)]);
 
-  const barData = React.useMemo(() => {
+  const normalizedRows = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
-    return src.map((r) => ({
-      label: String((r as AnyRecord).label ?? ''),
-      value: Number((r as AnyRecord).value ?? 0),
-      drillKey: (r as AnyRecord).key ?? String((r as AnyRecord).label ?? ''),
-    }));
-  }, [serverRows]);
+    return src.map((r) => {
+      const row = r as AnyRecord;
+      const xValue = getFieldValue(row, xFieldName, ["label", "x"]);
+      const yValue = getFieldValue(row, yFieldName, ["value", "y"]);
+      const keyValue = getFieldValue(row, keyFieldName, ["key", xFieldName, "label", "x"]);
+      const seriesValue = seriesFieldName ? getFieldValue(row, seriesFieldName, ["series"]) : undefined;
+      return {
+        label: String(xValue ?? ""),
+        value: Number(yValue ?? 0),
+        drillKey: keyValue ?? String(xValue ?? ""),
+        series: seriesFieldName ? String(seriesValue ?? "Series") : undefined,
+      };
+    });
+  }, [serverRows, xFieldName, yFieldName, keyFieldName, seriesFieldName]);
+
+  const hasSeries = Boolean(seriesFieldName);
+  const barSeriesKeys = React.useMemo(() => {
+    if (!hasSeries) return ["value"];
+    const keys = new Set<string>();
+    normalizedRows.forEach((row) => {
+      const series = String(row.series || "Series");
+      if (series) keys.add(series);
+    });
+    return Array.from(keys);
+  }, [hasSeries, normalizedRows]);
+
+  const barData = React.useMemo(() => {
+    if (!hasSeries) {
+      return normalizedRows.map((row) => ({
+        indexLabel: row.label,
+        label: row.label,
+        value: row.value,
+        drillKey: row.drillKey,
+      }));
+    }
+    const grouped = new Map<string, AnyRecord>();
+    normalizedRows.forEach((row) => {
+      const indexLabel = row.label;
+      const series = String(row.series || "Series");
+      const current = grouped.get(indexLabel) || {
+        indexLabel,
+        label: indexLabel,
+        drillKey: row.drillKey,
+        __rawKeys: {},
+        __groupTotal: 0,
+      };
+      current[series] = row.value;
+      current.__rawKeys[series] = row.drillKey;
+      current.__groupTotal += row.value;
+      grouped.set(indexLabel, current);
+    });
+    return Array.from(grouped.values());
+  }, [hasSeries, normalizedRows]);
 
   // Color manager override via Theme cssVars
   let managedScheme: string[] | undefined = undefined;
@@ -253,41 +314,56 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     return m;
   }, [baseMargin.top, baseMargin.right, baseMargin.bottom, baseMargin.left, autoMargin, barData.map(d => d.label).join('|'), layout, axisFontSize, managerFont]);
 
-  const axisBottom = {
-    tickSize: 5,
-    tickPadding: 5,
-    tickRotation: Number(nivo?.axisBottom?.tickRotation ?? 0),
-    legend: typeof nivo?.axisBottom?.legend === 'string' ? nivo.axisBottom.legend : undefined,
-    legendOffset: Number(nivo?.axisBottom?.legendOffset ?? 32),
-    tickValues: (layout === 'horizontal')
-      ? Number(nivo?.axisBottom?.maxTicks ?? 5)
-      : undefined,
-  } as const;
+  const axisBottom = nivo?.axisBottom === null
+    ? null
+    : {
+        tickSize: 5,
+        tickPadding: 5,
+        tickRotation: Number(nivo?.axisBottom?.tickRotation ?? 0),
+        legend: typeof nivo?.axisBottom?.legend === 'string' ? nivo.axisBottom.legend : undefined,
+        legendOffset: Number(nivo?.axisBottom?.legendOffset ?? 32),
+        tickValues: nivo?.axisBottom?.tickValues ?? ((layout === 'horizontal')
+          ? Number(nivo?.axisBottom?.maxTicks ?? 5)
+          : undefined),
+        ...(nivo?.axisBottom || {}),
+      } as const;
 
-  const axisLeft = {
-    tickSize: 5,
-    tickPadding: 5,
-    tickRotation: 0,
-    legend: typeof nivo?.axisLeft?.legend === 'string' ? nivo.axisLeft.legend : undefined,
-    legendOffset: Number(nivo?.axisLeft?.legendOffset ?? 40),
-    tickValues: (layout === 'vertical')
-      ? Number(nivo?.axisLeft?.maxTicks ?? 5)
-      : undefined,
-  } as const;
+  const axisLeft = nivo?.axisLeft === null
+    ? null
+    : {
+        tickSize: 5,
+        tickPadding: 5,
+        tickRotation: 0,
+        legend: typeof nivo?.axisLeft?.legend === 'string' ? nivo.axisLeft.legend : undefined,
+        legendOffset: Number(nivo?.axisLeft?.legendOffset ?? 40),
+        tickValues: nivo?.axisLeft?.tickValues ?? ((layout === 'vertical')
+          ? Number(nivo?.axisLeft?.maxTicks ?? 5)
+          : undefined),
+        ...(nivo?.axisLeft || {}),
+      } as const;
 
   const padding = typeof nivo?.padding === 'number' ? nivo.padding : 0.3;
+  const innerPadding = typeof nivo?.innerPadding === 'number' ? nivo.innerPadding : undefined;
   const borderRadius = typeof (nivo as AnyRecord)?.borderRadius === 'number'
     ? Number((nivo as AnyRecord).borderRadius)
     : 6;
+  const borderWidth = typeof nivo?.borderWidth === 'number' ? nivo.borderWidth : 0;
+  const borderColor = nivo?.borderColor;
   const groupMode = (nivo?.groupMode === 'stacked' ? 'stacked' : 'grouped') as 'grouped'|'stacked';
   const colorBy = (typeof (nivo as AnyRecord)?.colorBy === 'string'
     ? (nivo as AnyRecord).colorBy
     : 'indexValue') as any;
+  const minValue = nivo?.minValue ?? 'auto';
+  const maxValue = nivo?.maxValue ?? 'auto';
   const gridX = Boolean(nivo?.gridX ?? false);
   const gridY = Boolean(nivo?.gridY ?? false);
   const enableLabel = Boolean(nivo?.enableLabel ?? false);
   const labelSkipWidth = typeof nivo?.labelSkipWidth === 'number' ? nivo.labelSkipWidth : 12;
   const labelSkipHeight = typeof nivo?.labelSkipHeight === 'number' ? nivo.labelSkipHeight : 12;
+  const labelTextColor = nivo?.labelTextColor ?? { from: 'color', modifiers: [['darker', 1.4]] };
+  const legends = Array.isArray(nivo?.legends) ? nivo.legends : undefined;
+  const markers = Array.isArray(nivo?.markers) ? nivo.markers : undefined;
+  const tooltipConfig = (nivo?.tooltip && typeof nivo.tooltip === 'object' && !Array.isArray(nivo.tooltip)) ? nivo.tooltip as AnyRecord : {};
   const animate = Boolean(nivo?.animate ?? true);
   const motionConfig = (typeof nivo?.motionConfig === 'string' ? nivo.motionConfig : 'gentle') as any;
 
@@ -325,7 +401,8 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   const handleGlobalFilterClick = React.useCallback((point: any) => {
     if (!shouldClickFilter || !resolvedFilterStorePath) return;
     const row = (point?.data || point || {}) as AnyRecord;
-    const rawValue = row.drillKey ?? row.key ?? row.id ?? row.label ?? row.indexValue;
+    const seriesKey = String(point?.id ?? "");
+    const rawValue = row.__rawKeys?.[seriesKey] ?? row.drillKey ?? row.key ?? row.id ?? row.label ?? row.indexValue;
     if (rawValue === undefined || rawValue === null || rawValue === "") return;
     const nextValue = (typeof rawValue === "number" || typeof rawValue === "string") ? rawValue : String(rawValue);
     setData((prev) => {
@@ -387,14 +464,19 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
       <div style={{ height }}>
         <ResponsiveBar
           data={barData}
-          keys={["value"]}
-          indexBy="label"
+          keys={barSeriesKeys}
+          indexBy="indexLabel"
           margin={computedMargin}
           padding={padding}
+          innerPadding={innerPadding}
           borderRadius={borderRadius}
+          borderWidth={borderWidth}
+          borderColor={borderColor as any}
           groupMode={groupMode}
           layout={layout as any}
           colorBy={colorBy}
+          minValue={minValue as any}
+          maxValue={maxValue as any}
           colors={colors as any}
           enableGridX={gridX}
           enableGridY={gridY}
@@ -403,13 +485,30 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
           labelSkipWidth={labelSkipWidth}
           labelSkipHeight={labelSkipHeight}
           enableLabel={enableLabel}
-          labelTextColor={{ from: 'color', modifiers: [['darker', 1.4]] }}
-          tooltip={({ data }) => (
+          labelTextColor={labelTextColor as any}
+          legends={legends as any}
+          markers={markers as any}
+          tooltip={({ data, id, value, indexValue }) => {
+            const rawData = data as AnyRecord;
+            const groupTotal = Number(rawData.__groupTotal ?? 0);
+            const showLabel = tooltipConfig.showLabel !== false;
+            const showValue = tooltipConfig.showValue !== false;
+            const showSeries = Boolean(tooltipConfig.showSeries ?? hasSeries);
+            const showPercentOfGroup = Boolean(tooltipConfig.showPercentOfGroup ?? false);
+            const percentOfGroup = groupTotal > 0 && typeof value === 'number'
+              ? Number(value) / groupTotal
+              : undefined;
+            return (
             <div className="rounded bg-white px-2 py-1 text-xs text-gray-700 border border-gray-200">
-              <div className="font-medium">{(data as any).label}</div>
-              <div>{formatValue((data as any).value, fmt)}</div>
+              {showLabel && <div className="font-medium">{String(indexValue ?? rawData.label ?? "")}</div>}
+              {showSeries && <div>{String(id ?? "")}</div>}
+              {showValue && <div>{formatValue(value, fmt)}</div>}
+              {showPercentOfGroup && percentOfGroup !== undefined && (
+                <div>{`${(percentOfGroup * 100).toFixed(1)}% do grupo`}</div>
+              )}
             </div>
-          )}
+            );
+          }}
           onClick={(canDrillDown || shouldClickFilter) ? handleChartClick : undefined}
           animate={animate}
           motionConfig={motionConfig}

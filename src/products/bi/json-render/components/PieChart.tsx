@@ -49,6 +49,15 @@ function getByPath(data: AnyRecord, path: string): any {
   return curr;
 }
 
+function getFieldValue(row: AnyRecord, preferred: string | undefined, fallbacks: string[]): unknown {
+  const candidates = [preferred, ...fallbacks].filter((value): value is string => typeof value === "string" && value.trim().length > 0);
+  for (const candidate of candidates) {
+    const direct = row[candidate];
+    if (direct !== undefined) return direct;
+  }
+  return undefined;
+}
+
 function inferFilterField(dimension?: string): string {
   const d = (dimension || '').trim().toLowerCase();
   if (!d) return '';
@@ -75,6 +84,9 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
   const { data, setData } = useData();
   const theme = useThemeOverrides();
   const dq = (element?.props?.dataQuery as AnyRecord | undefined);
+  const xFieldName = typeof dq?.xField === "string" ? dq.xField.trim() : "label";
+  const yFieldName = typeof dq?.yField === "string" ? dq.yField.trim() : "value";
+  const keyFieldName = typeof dq?.keyField === "string" ? dq.keyField.trim() : "key";
   const interaction = (element?.props?.interaction as AnyRecord | undefined) || {};
   const clickAsFilter = Boolean(interaction?.clickAsFilter ?? true);
   const clearOnSecondClick = Boolean(interaction?.clearOnSecondClick ?? true);
@@ -113,6 +125,7 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
                 xField: dq.xField,
                 yField: dq.yField,
                 keyField: dq.keyField,
+                seriesField: dq.seriesField,
                 filters,
                 limit: dq.limit,
               },
@@ -144,13 +157,23 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
 
   const pieData = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
-    return src.map((r) => ({
-      id: String((r as AnyRecord).label ?? ''),
-      label: String((r as AnyRecord).label ?? ''),
-      value: Number((r as AnyRecord).value ?? 0),
-      filterKey: (r as AnyRecord).key ?? String((r as AnyRecord).label ?? ''),
-    }));
-  }, [serverRows]);
+    const rows = src.map((r) => {
+      const row = r as AnyRecord;
+      const labelValue = getFieldValue(row, xFieldName, ["label", "x"]);
+      const value = getFieldValue(row, yFieldName, ["value", "y"]);
+      const keyValue = getFieldValue(row, keyFieldName, ["key", xFieldName, "label", "x"]);
+      return {
+        id: String(labelValue ?? ''),
+        label: String(labelValue ?? ''),
+        value: Number(value ?? 0),
+        filterKey: keyValue ?? String(labelValue ?? ''),
+      };
+    });
+    if (Boolean(nivo?.sortByValue ?? false)) {
+      rows.sort((a, b) => b.value - a.value);
+    }
+    return rows;
+  }, [serverRows, xFieldName, yFieldName, keyFieldName, nivo?.sortByValue]);
   const handleGlobalFilterClick = React.useCallback((datum: any) => {
     if (!shouldClickFilter || !resolvedFilterStorePath) return;
     const rawValue = datum?.data?.filterKey ?? datum?.filterKey ?? datum?.id ?? datum?.label;
@@ -183,14 +206,24 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
   const innerRadius = typeof nivo?.innerRadius === 'number' ? nivo.innerRadius : 0;
   const padAngle = typeof nivo?.padAngle === 'number' ? nivo.padAngle : 0.7;
   const cornerRadius = typeof nivo?.cornerRadius === 'number' ? nivo.cornerRadius : 3;
+  const startAngle = typeof nivo?.startAngle === 'number' ? nivo.startAngle : undefined;
+  const endAngle = typeof nivo?.endAngle === 'number' ? nivo.endAngle : undefined;
   const activeInnerRadiusOffset = typeof nivo?.activeInnerRadiusOffset === 'number' ? nivo.activeInnerRadiusOffset : 0;
   const activeOuterRadiusOffset = typeof nivo?.activeOuterRadiusOffset === 'number' ? nivo.activeOuterRadiusOffset : 8;
   const enableArcLabels = Boolean(nivo?.enableArcLabels ?? true);
   const enableArcLinkLabels = Boolean(nivo?.enableArcLinkLabels ?? false);
   const arcLabelsSkipAngle = typeof nivo?.arcLabelsSkipAngle === 'number' ? nivo.arcLabelsSkipAngle : 10;
   const arcLabelsTextColor = typeof nivo?.arcLabelsTextColor === 'string' ? nivo.arcLabelsTextColor : '#333333';
+  const arcLinkLabelsSkipAngle = typeof nivo?.arcLinkLabelsSkipAngle === 'number' ? nivo.arcLinkLabelsSkipAngle : undefined;
+  const arcLinkLabelsTextColor = typeof nivo?.arcLinkLabelsTextColor === 'string' ? nivo.arcLinkLabelsTextColor : undefined;
+  const legends = Array.isArray(nivo?.legends) ? nivo.legends : undefined;
+  const tooltipConfig = (nivo?.tooltip && typeof nivo.tooltip === 'object' && !Array.isArray(nivo.tooltip)) ? nivo.tooltip as AnyRecord : {};
   const animate = Boolean(nivo?.animate ?? true);
   const motionConfig = (typeof nivo?.motionConfig === 'string' ? nivo.motionConfig : 'gentle') as any;
+  const totalValue = React.useMemo(
+    () => pieData.reduce((sum, item) => sum + Number(item.value || 0), 0),
+    [pieData]
+  );
 
   let nivoTheme = buildNivoTheme(nivo?.theme);
   const managerFont = (theme.cssVars || {} as any).fontFamily as string | undefined;
@@ -218,6 +251,8 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
           innerRadius={innerRadius}
           padAngle={padAngle}
           cornerRadius={cornerRadius}
+          startAngle={startAngle}
+          endAngle={endAngle}
           activeInnerRadiusOffset={activeInnerRadiusOffset}
           activeOuterRadiusOffset={activeOuterRadiusOffset}
           colors={colors as any}
@@ -225,10 +260,16 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
           enableArcLinkLabels={enableArcLinkLabels}
           arcLabelsSkipAngle={arcLabelsSkipAngle}
           arcLabelsTextColor={arcLabelsTextColor}
+          arcLinkLabelsSkipAngle={arcLinkLabelsSkipAngle}
+          arcLinkLabelsTextColor={arcLinkLabelsTextColor}
+          legends={legends as any}
           tooltip={({ datum }) => (
             <div className="rounded bg-white px-2 py-1 text-xs text-gray-700 border border-gray-200">
-              <div className="font-medium">{datum.label}</div>
-              <div>{formatValue(datum.value, fmt)}</div>
+              {tooltipConfig.showLabel !== false && <div className="font-medium">{datum.label}</div>}
+              {tooltipConfig.showValue !== false && <div>{formatValue(datum.value, fmt)}</div>}
+              {Boolean(tooltipConfig.showPercentOfTotal ?? false) && totalValue > 0 && (
+                <div>{`${((Number(datum.value || 0) / totalValue) * 100).toFixed(1)}% do total`}</div>
+              )}
             </div>
           )}
           onClick={shouldClickFilter ? handleGlobalFilterClick : undefined}

@@ -303,6 +303,9 @@ function buildChartNode(payload: ChartPayload): Record<string, unknown> {
         xField: toRequiredText((payload as any).xField, 'payload.xField'),
         yField: toRequiredText((payload as any).yField, 'payload.yField'),
         ...(typeof payload.keyField === 'string' && payload.keyField.trim() ? { keyField: payload.keyField.trim() } : {}),
+        ...(typeof (payload as any).seriesField === 'string' && (payload as any).seriesField.trim()
+          ? { seriesField: (payload as any).seriesField.trim() }
+          : {}),
         filters: payload.filtros ?? {},
         ...(typeof payload.limit === 'number' ? { limit: payload.limit } : {}),
       },
