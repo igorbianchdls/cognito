@@ -192,10 +192,14 @@ export default function JsonRenderGauge({ element }: { element?: { props?: AnyRe
   const r = Math.min(width / 2 - thickness, height - thickness - 10);
   const fullArc = describeArc(cx, cy, r, startAngle, endAngle);
   const currentAngle = startAngle + ((endAngle - startAngle) * ratio);
+  const needleInsetAngle = 4;
+  const needleStartAngle = startAngle + needleInsetAngle;
+  const needleEndAngle = endAngle - needleInsetAngle;
+  const needleAngle = needleStartAngle + ((needleEndAngle - needleStartAngle) * ratio);
   const valueArc = describeArc(cx, cy, r, startAngle, currentAngle);
   const targetAngle = startAngle + ((endAngle - startAngle) * targetRatio);
   const targetMarker = describeLineAtAngle(cx, cy, r - thickness / 2 - 4, r + thickness / 2 + 2, targetAngle);
-  const needlePath = describeNeedle(cx, cy, r - thickness / 2 - 2, currentAngle);
+  const needlePath = describeNeedle(cx, cy, r - thickness - 6, needleAngle);
   const hitStrokeWidth = Math.max(thickness + 14, 24);
   const rawSegments = Array.isArray(p.segments) ? (p.segments as Array<AnyRecord>) : [];
   const usesPercentSegments = rawSegments.length > 0 && rawSegments.every((segment) => {
@@ -315,7 +319,7 @@ export default function JsonRenderGauge({ element }: { element?: { props?: AnyRe
             d={needlePath}
             fill="none"
             stroke="#111111"
-            strokeWidth={3}
+            strokeWidth={1.5}
             strokeLinecap="round"
             style={{ pointerEvents: "none" }}
           />
