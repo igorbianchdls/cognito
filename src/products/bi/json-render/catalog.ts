@@ -830,6 +830,7 @@ export const catalog = {
         layout: z.enum(["vertical","horizontal"]).optional(),
         applyMode: z.enum(["auto","manual"]).optional(),
         actionOnApply: z.object({ type: z.string() }).partial().optional(),
+        fields: z.array(SlicerFieldPropsSchema).default([]),
       }).strict(),
       hasChildren: true,
     },
