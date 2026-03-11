@@ -321,8 +321,16 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
                   CASE WHEN atual.gasto = 0 THEN 0 ELSE (atual.receita / atual.gasto)::float END AS value,
                   CASE WHEN anterior.gasto = 0 THEN 0 ELSE (anterior.receita / anterior.gasto)::float END AS previous_value,
                   CASE
-                    WHEN (CASE WHEN anterior.gasto = 0 THEN 0 ELSE anterior.receita / anterior.gasto END) = 0 THEN 0
-                    ELSE (((CASE WHEN atual.gasto = 0 THEN 0 ELSE atual.receita / atual.gasto END) - (CASE WHEN anterior.gasto = 0 THEN 0 ELSE anterior.receita / anterior.gasto END)) / (CASE WHEN anterior.gasto = 0 THEN 1 ELSE anterior.receita / anterior.gasto END)) * 100)::float
+                    WHEN (CASE WHEN anterior.gasto = 0 THEN 0 ELSE (anterior.receita / anterior.gasto)::float END) = 0 THEN 0
+                    ELSE ((
+                      (
+                        CASE WHEN atual.gasto = 0 THEN 0 ELSE (atual.receita / atual.gasto)::float END
+                      ) - (
+                        CASE WHEN anterior.gasto = 0 THEN 0 ELSE (anterior.receita / anterior.gasto)::float END
+                      )
+                    ) / (
+                      CASE WHEN anterior.gasto = 0 THEN 0 ELSE (anterior.receita / anterior.gasto)::float END
+                    ) * 100)::float
                   END AS delta_percent,
                   'vs período anterior'::text AS comparison_label
                 FROM atual, anterior
@@ -574,8 +582,16 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
                   CASE WHEN atual.impressoes = 0 THEN 0 ELSE (atual.cliques / atual.impressoes)::float END AS value,
                   CASE WHEN anterior.impressoes = 0 THEN 0 ELSE (anterior.cliques / anterior.impressoes)::float END AS previous_value,
                   CASE
-                    WHEN (CASE WHEN anterior.impressoes = 0 THEN 0 ELSE anterior.cliques / anterior.impressoes END) = 0 THEN 0
-                    ELSE (((CASE WHEN atual.impressoes = 0 THEN 0 ELSE atual.cliques / atual.impressoes END) - (CASE WHEN anterior.impressoes = 0 THEN 0 ELSE anterior.cliques / anterior.impressoes END)) / (CASE WHEN anterior.impressoes = 0 THEN 1 ELSE anterior.cliques / anterior.impressoes END)) * 100)::float
+                    WHEN (CASE WHEN anterior.impressoes = 0 THEN 0 ELSE (anterior.cliques / anterior.impressoes)::float END) = 0 THEN 0
+                    ELSE ((
+                      (
+                        CASE WHEN atual.impressoes = 0 THEN 0 ELSE (atual.cliques / atual.impressoes)::float END
+                      ) - (
+                        CASE WHEN anterior.impressoes = 0 THEN 0 ELSE (anterior.cliques / anterior.impressoes)::float END
+                      )
+                    ) / (
+                      CASE WHEN anterior.impressoes = 0 THEN 0 ELSE (anterior.cliques / anterior.impressoes)::float END
+                    ) * 100)::float
                   END AS delta_percent,
                   'vs período anterior'::text AS comparison_label
                 FROM atual, anterior
@@ -650,8 +666,16 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
                   CASE WHEN atual.conversoes = 0 THEN 0 ELSE (atual.gasto / atual.conversoes)::float END AS value,
                   CASE WHEN anterior.conversoes = 0 THEN 0 ELSE (anterior.gasto / anterior.conversoes)::float END AS previous_value,
                   CASE
-                    WHEN (CASE WHEN anterior.conversoes = 0 THEN 0 ELSE anterior.gasto / anterior.conversoes END) = 0 THEN 0
-                    ELSE (((CASE WHEN atual.conversoes = 0 THEN 0 ELSE atual.gasto / atual.conversoes END) - (CASE WHEN anterior.conversoes = 0 THEN 0 ELSE anterior.gasto / anterior.conversoes END)) / (CASE WHEN anterior.conversoes = 0 THEN 1 ELSE anterior.gasto / anterior.conversoes END)) * 100)::float
+                    WHEN (CASE WHEN anterior.conversoes = 0 THEN 0 ELSE (anterior.gasto / anterior.conversoes)::float END) = 0 THEN 0
+                    ELSE ((
+                      (
+                        CASE WHEN atual.conversoes = 0 THEN 0 ELSE (atual.gasto / atual.conversoes)::float END
+                      ) - (
+                        CASE WHEN anterior.conversoes = 0 THEN 0 ELSE (anterior.gasto / anterior.conversoes)::float END
+                      )
+                    ) / (
+                      CASE WHEN anterior.conversoes = 0 THEN 0 ELSE (anterior.gasto / anterior.conversoes)::float END
+                    ) * 100)::float
                   END AS delta_percent,
                   'vs período anterior'::text AS comparison_label
                 FROM atual, anterior
