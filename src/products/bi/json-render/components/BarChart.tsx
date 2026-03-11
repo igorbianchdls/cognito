@@ -356,6 +356,9 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     : 'indexValue') as any;
   const minValue = nivo?.minValue ?? 'auto';
   const maxValue = nivo?.maxValue ?? 'auto';
+  const valueScale = isPlainObject(nivo?.valueScale)
+    ? { ...nivo.valueScale, min: nivo?.valueScale?.min ?? minValue, max: nivo?.valueScale?.max ?? maxValue }
+    : { type: 'linear', min: minValue, max: maxValue };
   const enableGridX = typeof nivo?.enableGridX === 'boolean' ? nivo.enableGridX : Boolean(nivo?.gridX ?? false);
   const enableGridY = typeof nivo?.enableGridY === 'boolean' ? nivo.enableGridY : Boolean(nivo?.gridY ?? false);
   const enableLabel = Boolean(nivo?.enableLabel ?? false);
@@ -428,6 +431,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     colorBy,
     minValue,
     maxValue,
+    valueScale,
     colors,
     enableGridX,
     enableGridY,
@@ -537,8 +541,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
           groupMode={resolvedNivoProps.groupMode as any}
           layout={resolvedNivoProps.layout as any}
           colorBy={resolvedNivoProps.colorBy as any}
-          minValue={resolvedNivoProps.minValue as any}
-          maxValue={resolvedNivoProps.maxValue as any}
+          valueScale={resolvedNivoProps.valueScale as any}
           colors={resolvedNivoProps.colors as any}
           enableGridX={resolvedNivoProps.enableGridX as any}
           enableGridY={resolvedNivoProps.enableGridY as any}
