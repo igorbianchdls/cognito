@@ -960,10 +960,23 @@ function compileNode(source: string, node: DslNode, context: CompileContext): Re
     }
     if (Object.keys(mergedInteraction).length) props.interaction = mergedInteraction
   }
-  const children = node.children
+  let children = node.children
     .filter((child) => child.tag !== 'props' && child.tag !== 'config')
     .map((child) => compileNode(source, child, context))
     .filter((child): child is Record<string, unknown> => Boolean(child))
+
+  if (type === 'Slicer') {
+    const explicitFields = Array.isArray(props.fields)
+      ? props.fields.filter((field): field is Record<string, unknown> => Boolean(field && typeof field === 'object' && !Array.isArray(field)))
+      : []
+    const { fields: childFields, remainingChildren } = collectSlicerFieldProps(children)
+    if (explicitFields.length > 0) {
+      props.fields = explicitFields
+    } else if (childFields.length > 0) {
+      props.fields = childFields
+    }
+    children = remainingChildren
+  }
 
   const out: Record<string, unknown> = { type }
   if (Object.keys(props).length) out.props = props
@@ -1106,6 +1119,29 @@ function renderJsonObjectBlock(tag: string, value: unknown, level: number): stri
     ...lines.map((line) => `${renderIndent(level + 1)}${line}`),
     `${renderIndent(level)}</${tag}>`,
   ]
+}
+
+function collectSlicerFieldProps(
+  children: unknown[],
+): { fields: Record<string, unknown>[]; remainingChildren: Record<string, unknown>[] } {
+  const fields: Record<string, unknown>[] = []
+  const remainingChildren: Record<string, unknown>[] = []
+
+  for (const child of children) {
+    if (!child || typeof child !== 'object' || Array.isArray(child)) continue
+    const record = child as Record<string, unknown>
+    if (String(record.type || '').trim() === 'SlicerField') {
+      const props =
+        record.props && typeof record.props === 'object' && !Array.isArray(record.props)
+          ? ({ ...(record.props as Record<string, unknown>) } as Record<string, unknown>)
+          : {}
+      if (Object.keys(props).length) fields.push(props)
+      continue
+    }
+    remainingChildren.push(record)
+  }
+
+  return { fields, remainingChildren }
 }
 
 function renderChartNodeToDsl(node: Record<string, unknown>, level: number): string[] {
@@ -1501,6 +1537,19 @@ function renderNodeToDsl(node: unknown, level: number): string[] {
   if (nodeType === 'Sidebar') {
     delete propsRaw.fr
   }
+  let children = Array.isArray(record.children) ? (record.children as unknown[]) : []
+  if (nodeType === 'Slicer') {
+    const explicitFields = Array.isArray(propsRaw.fields)
+      ? propsRaw.fields.filter((field): field is Record<string, unknown> => Boolean(field && typeof field === 'object' && !Array.isArray(field)))
+      : []
+    const { fields: childFields, remainingChildren } = collectSlicerFieldProps(children)
+    if (explicitFields.length > 0) {
+      propsRaw.fields = explicitFields
+    } else if (childFields.length > 0) {
+      propsRaw.fields = childFields
+    }
+    children = remainingChildren
+  }
   const baseAttrs: Record<string, unknown> = {}
   for (const [k, v] of Object.entries(propsRaw)) {
     if (v === undefined) continue
@@ -1513,7 +1562,6 @@ function renderNodeToDsl(node: unknown, level: number): string[] {
   const lines: string[] = [`${renderIndent(level)}<${tag}${renderAttrs(baseAttrs)}>`]
   lines.push(...renderJsonObjectBlock('Config', propsRaw, level + 1))
 
-  const children = Array.isArray(record.children) ? record.children : []
   for (const child of children) {
     lines.push(...renderNodeToDsl(child, level + 1))
   }

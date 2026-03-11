@@ -22,22 +22,32 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         <Card>
           <Title text="Filtros" marginBottom={2} />
           <Slicer>
-            <SlicerField label="Canal" type="list" storePath="filters.canal_venda_id" selectAll search clearable>
-              <Config>
-                {
-                  "query": "SELECT\n  cv.id AS value,\n  COALESCE(cv.nome, '-') AS label\nFROM vendas.canais_venda cv\nORDER BY 2 ASC",
-                  "limit": 200
-                }
-              </Config>
-            </SlicerField>
-            <SlicerField label="Cliente" type="multi" storePath="filters.cliente_id" selectAll search clearable>
-              <Config>
-                {
-                  "query": "SELECT\n  c.id AS value,\n  COALESCE(c.nome_fantasia, '-') AS label\nFROM entidades.clientes c\nWHERE c.tenant_id = {{tenant_id}}\nORDER BY 2 ASC",
-                  "limit": 200
-                }
-              </Config>
-            </SlicerField>
+            <Config>
+              {
+                "fields": [
+                  {
+                    "label": "Canal",
+                    "type": "list",
+                    "storePath": "filters.canal_venda_id",
+                    "selectAll": true,
+                    "search": true,
+                    "clearable": true,
+                    "query": "SELECT\n  cv.id AS value,\n  COALESCE(cv.nome, '-') AS label\nFROM vendas.canais_venda cv\nORDER BY 2 ASC",
+                    "limit": 200
+                  },
+                  {
+                    "label": "Cliente",
+                    "type": "multi",
+                    "storePath": "filters.cliente_id",
+                    "selectAll": true,
+                    "search": true,
+                    "clearable": true,
+                    "query": "SELECT\n  c.id AS value,\n  COALESCE(c.nome_fantasia, '-') AS label\nFROM entidades.clientes c\nWHERE c.tenant_id = {{tenant_id}}\nORDER BY 2 ASC",
+                    "limit": 200
+                  }
+                ]
+              }
+            </Config>
           </Slicer>
         </Card>
       </Sidebar>
