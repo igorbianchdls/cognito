@@ -49,6 +49,11 @@ function formatValue(val: number, fmt: "currency" | "percent" | "number"): strin
   }
 }
 
+function formatPercentValue(val: number): string {
+  if (!Number.isFinite(val)) return "0%";
+  return `${val.toFixed(0)}%`;
+}
+
 export default function JsonRenderGauge({ element }: { element?: { props?: AnyRecord } }) {
   const p = (element?.props || {}) as AnyRecord;
   const theme = useThemeOverrides();
@@ -162,8 +167,13 @@ export default function JsonRenderGauge({ element }: { element?: { props?: AnyRe
     ? firstNumericValue(row, [valueField, "value", "total", "valor_total"])
     : (valueFromPath !== undefined ? Number(valueFromPath) : Number(p.value ?? 0));
   const value = Number.isFinite(rawValue) ? rawValue : 0;
-  const clampedValue = Math.max(resolvedMin, Math.min(resolvedMax, value));
-  const ratio = resolvedMax > resolvedMin ? (clampedValue - resolvedMin) / (resolvedMax - resolvedMin) : 0;
+  const hasTargetProgress = Number.isFinite(resolvedTarget) && resolvedTarget > resolvedMin;
+  const progressBase = hasTargetProgress ? resolvedTarget : resolvedMax;
+  const clampedValue = Math.max(resolvedMin, Math.min(progressBase, value));
+  const ratio = progressBase > resolvedMin ? (clampedValue - resolvedMin) / (progressBase - resolvedMin) : 0;
+  const progressPercent = hasTargetProgress && resolvedTarget !== 0
+    ? Math.max(0, Math.min(100, (value / resolvedTarget) * 100))
+    : Math.max(0, Math.min(100, ratio * 100));
   const clampedTarget = Math.max(resolvedMin, Math.min(resolvedMax, resolvedTarget));
   const targetRatio = resolvedMax > resolvedMin ? (clampedTarget - resolvedMin) / (resolvedMax - resolvedMin) : 0;
 
@@ -175,51 +185,66 @@ export default function JsonRenderGauge({ element }: { element?: { props?: AnyRe
   const valueArc = describeArc(cx, cy, r, startAngle, currentAngle);
   const targetAngle = startAngle + ((endAngle - startAngle) * targetRatio);
   const targetMarker = describeLineAtAngle(cx, cy, r - thickness / 2 - 4, r + thickness / 2 + 2, targetAngle);
+  const subtitleText = Number.isFinite(resolvedTarget)
+    ? `${formatValue(value, format)} / ${formatValue(resolvedTarget, format)}`
+    : formatValue(value, format);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label={`Gauge ${formatValue(value, format)}`}>
-        <path
-          d={fullArc}
-          fill="none"
-          stroke={trackColor}
-          strokeWidth={thickness}
-          strokeLinecap={roundedCaps ? "round" : "butt"}
-          opacity={0.48}
-        />
-        <path
-          d={valueArc}
-          fill="none"
-          stroke={valueColor}
-          strokeWidth={thickness}
-          strokeLinecap={roundedCaps ? "round" : "butt"}
-        />
-        {showTarget && Number.isFinite(resolvedTarget) ? (
+      <div style={{ position: "relative", width: "100%", height }}>
+        <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label={`Gauge ${formatPercentValue(progressPercent)}`}>
           <path
-            d={targetMarker}
+            d={fullArc}
             fill="none"
-            stroke={targetColor}
-            strokeWidth={3}
-            strokeLinecap="round"
+            stroke={trackColor}
+            strokeWidth={thickness}
+            strokeLinecap={roundedCaps ? "round" : "butt"}
+            opacity={0.48}
           />
-        ) : null}
-      </svg>
-      {showValue ? (
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
-          <div style={{ fontSize: 24, lineHeight: 1.05, fontWeight: 700, color: (theme.cssVars as any)?.kpiValueColor || "#0f172a" }}>
-            {formatValue(value, format)}
-          </div>
-          {Number.isFinite(resolvedTarget) ? (
-            <div style={{ fontSize: 12, color: (theme.cssVars as any)?.kpiTitleColor || "#6b7280" }}>
-              Meta {formatValue(resolvedTarget, format)}
-            </div>
+          <path
+            d={valueArc}
+            fill="none"
+            stroke={valueColor}
+            strokeWidth={thickness}
+            strokeLinecap={roundedCaps ? "round" : "butt"}
+          />
+          {showTarget && Number.isFinite(resolvedTarget) && resolvedTarget !== progressBase ? (
+            <path
+              d={targetMarker}
+              fill="none"
+              stroke={targetColor}
+              strokeWidth={3}
+              strokeLinecap="round"
+            />
           ) : null}
-        </div>
-      ) : null}
+        </svg>
+        {showValue ? (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              transform: "translateY(12px)",
+              pointerEvents: "none",
+              textAlign: "center",
+            }}
+          >
+            <div style={{ fontSize: 26, lineHeight: 1, fontWeight: 700, color: (theme.cssVars as any)?.kpiValueColor || "#0f172a" }}>
+              {formatPercentValue(progressPercent)}
+            </div>
+            <div style={{ marginTop: 6, fontSize: 12, color: (theme.cssVars as any)?.kpiTitleColor || "#6b7280" }}>
+              {subtitleText}
+            </div>
+          </div>
+        ) : null}
+      </div>
       {showMinMax ? (
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: (theme.cssVars as any)?.kpiTitleColor || "#6b7280" }}>
-          <span>{formatValue(resolvedMin, format)}</span>
-          <span>{formatValue(resolvedMax, format)}</span>
+          <span>0%</span>
+          <span>100%</span>
         </div>
       ) : null}
       {queryError ? <div className="text-xs text-red-600">{queryError}</div> : null}
