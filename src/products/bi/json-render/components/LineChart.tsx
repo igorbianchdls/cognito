@@ -440,7 +440,7 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
               {tooltipConfig.showLabel !== false && <div className="font-medium">{String(slice.id ?? "")}</div>}
               {slice.points.map((point) => (
                 <div key={point.id}>
-                  {Boolean(tooltipConfig.showSeries ?? true) && <span>{String(point.serieId ?? "")}: </span>}
+                  {Boolean(tooltipConfig.showSeries ?? true) && <span>{String(point.seriesId ?? "")}: </span>}
                   {tooltipConfig.showValue !== false && <span>{formatValue(point.data.y as any, fmt)}</span>}
                 </div>
               ))}
@@ -449,7 +449,7 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
           tooltip={({ point }) => (
             <div className="rounded bg-white px-2 py-1 text-xs text-gray-700 border border-gray-200">
               {tooltipConfig.showLabel !== false && <div className="font-medium">{String(point.data.xFormatted ?? point.data.x ?? "")}</div>}
-              {Boolean(tooltipConfig.showSeries ?? hasSeries) && <div>{String(point.serieId ?? "")}</div>}
+              {Boolean(tooltipConfig.showSeries ?? hasSeries) && <div>{String(point.seriesId ?? "")}</div>}
               {tooltipConfig.showValue !== false && <div>{formatValue(point.data.y as any, fmt)}</div>}
             </div>
           )}
