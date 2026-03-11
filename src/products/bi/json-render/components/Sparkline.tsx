@@ -111,7 +111,7 @@ export default function JsonRenderSparkline({ element }: { element: any }) {
 
   const strokeColor = String(p.strokeColor || fallbackStroke);
   const fillColor = String(p.fillColor || "rgba(37, 99, 235, 0.16)");
-  const strokeWidth = stylePx(p.strokeWidth, 2);
+  const strokeWidth = stylePx(p.strokeWidth, 1);
   const height = stylePx(p.height, 42);
   const format = (p.format ?? "number") as "currency" | "percent" | "number";
   const area = p.area !== false;

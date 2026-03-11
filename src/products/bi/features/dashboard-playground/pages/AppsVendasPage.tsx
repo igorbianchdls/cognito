@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 
 import { DataProvider, useData } from '@/products/bi/json-render/context'
 import {
@@ -20,6 +20,7 @@ import { APPS_VENDAS_TEMPLATE_DSL } from '@/products/bi/shared/templates/appsVen
 
 function AppsVendasPlayground() {
   const { data, setData, getValueByPath } = useData()
+  const [editModeEnabled, setEditModeEnabled] = useState(true)
   const {
     dslText,
     jsonText,
@@ -80,15 +81,28 @@ function AppsVendasPlayground() {
         tree={tree}
         onAction={handleAction}
         actionHint="Ações: Atualizar"
+        toolbar={
+          <button
+            type="button"
+            onClick={() => setEditModeEnabled((prev) => !prev)}
+            className={`rounded border px-2.5 py-1 text-xs transition ${
+              editModeEnabled
+                ? 'border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100'
+                : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            {editModeEnabled ? 'Desativar edição' : 'Ativar edição'}
+          </button>
+        }
         visualEditor={{
-          enabled: true,
+          enabled: editModeEnabled,
           selectedPath: visualEditor.selectedPath,
           onNodeAction: visualEditor.handleNodeAction,
           onNodeMove: visualEditor.handleNodeMove,
           onNodeDropReorder: visualEditor.handleNodeDropReorder,
         }}
         propertiesPanel={
-          visualEditor.isPropertiesOpen ? (
+          editModeEnabled && visualEditor.isPropertiesOpen ? (
             <PropertiesPanel
               tree={tree}
               selectedPath={visualEditor.selectedPath}
