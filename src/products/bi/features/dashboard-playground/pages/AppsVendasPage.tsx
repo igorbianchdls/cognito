@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useState } from 'react'
+import { Editor } from '@monaco-editor/react'
 
 import { DataProvider, useData } from '@/products/bi/json-render/context'
 import {
@@ -151,11 +152,27 @@ function AppsVendasPlayground() {
             />
           ) : (
             <div className="h-full min-h-[420px] overflow-hidden rounded-md border border-gray-300 bg-white">
-              <textarea
+              <Editor
+                height="100%"
+                language="html"
                 value={dslText}
-                readOnly
-                spellCheck={false}
-                className="h-full min-h-[420px] w-full resize-none border-0 bg-white p-4 font-mono text-xs text-gray-800 focus:outline-none"
+                options={{
+                  readOnly: true,
+                  minimap: { enabled: false },
+                  fontSize: 13,
+                  lineNumbers: 'on',
+                  roundedSelection: false,
+                  scrollBeyondLastLine: false,
+                  automaticLayout: true,
+                  tabSize: 2,
+                  insertSpaces: true,
+                  wordWrap: 'on',
+                  lineHeight: 22,
+                  fontFamily: 'JetBrains Mono, Consolas, Monaco, "Courier New", monospace',
+                  smoothScrolling: true,
+                  padding: { top: 16, bottom: 16 },
+                }}
+                theme="vs-light"
               />
             </div>
           )}
