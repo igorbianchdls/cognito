@@ -152,7 +152,7 @@ function AppsVendasPlayground() {
           ) : (
             <div className="h-full min-h-[420px] overflow-hidden rounded-md border border-gray-300 bg-white">
               <textarea
-                value={jsonText}
+                value={dslText}
                 readOnly
                 spellCheck={false}
                 className="h-full min-h-[420px] w-full resize-none border-0 bg-white p-4 font-mono text-xs text-gray-800 focus:outline-none"
