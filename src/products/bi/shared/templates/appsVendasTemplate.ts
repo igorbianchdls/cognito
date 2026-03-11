@@ -22,23 +22,37 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         <Card>
           <Title text="Filtros" marginBottom={2} />
           <Container direction="column" gap={10}>
-            <Slicer label="Canal" storePath="filters.canal_venda_id" selectionMode="single" search clearable>
+            <Slicer
+              label="Canal"
+              storePath="filters.canal_venda_id"
+              selectionMode="single"
+              search
+              clearable
+              limit={200}
+              query="SELECT
+  cv.id AS value,
+  COALESCE(cv.nome, '-') AS label
+FROM vendas.canais_venda cv
+ORDER BY 2 ASC"
+            >
               <Dropdown placeholder="Todos os canais" borderColor="#d1d5db" textColor="#111827" radius={8} />
-              <Config>
-                {
-                  "query": "SELECT\n  cv.id AS value,\n  COALESCE(cv.nome, '-') AS label\nFROM vendas.canais_venda cv\nORDER BY 2 ASC",
-                  "limit": 200
-                }
-              </Config>
             </Slicer>
-            <Slicer label="Cliente" storePath="filters.cliente_id" selectionMode="multiple" search clearable selectAll>
+            <Slicer
+              label="Cliente"
+              storePath="filters.cliente_id"
+              selectionMode="multiple"
+              search
+              clearable
+              selectAll
+              limit={200}
+              query="SELECT
+  c.id AS value,
+  COALESCE(c.nome_fantasia, '-') AS label
+FROM entidades.clientes c
+WHERE c.tenant_id = {{tenant_id}}
+ORDER BY 2 ASC"
+            >
               <Checklist borderColor="#d1d5db" textColor="#111827" radius={8} maxHeight={220} itemGap={6} />
-              <Config>
-                {
-                  "query": "SELECT\n  c.id AS value,\n  COALESCE(c.nome_fantasia, '-') AS label\nFROM entidades.clientes c\nWHERE c.tenant_id = {{tenant_id}}\nORDER BY 2 ASC",
-                  "limit": 200
-                }
-              </Config>
             </Slicer>
           </Container>
         </Card>
