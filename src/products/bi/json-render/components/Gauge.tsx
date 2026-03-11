@@ -27,6 +27,11 @@ function describeLineAtAngle(cx: number, cy: number, innerR: number, outerR: num
   return `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
 }
 
+function describeNeedle(cx: number, cy: number, length: number, angleDeg: number) {
+  const tip = polarToCartesian(cx, cy, length, angleDeg);
+  return `M ${cx} ${cy} L ${tip.x} ${tip.y}`;
+}
+
 function firstNumericValue(row: AnyRecord | undefined, candidates: string[]): number {
   if (!row || typeof row !== "object") return 0;
   for (const key of candidates) {
@@ -190,6 +195,7 @@ export default function JsonRenderGauge({ element }: { element?: { props?: AnyRe
   const valueArc = describeArc(cx, cy, r, startAngle, currentAngle);
   const targetAngle = startAngle + ((endAngle - startAngle) * targetRatio);
   const targetMarker = describeLineAtAngle(cx, cy, r - thickness / 2 - 4, r + thickness / 2 + 2, targetAngle);
+  const needlePath = describeNeedle(cx, cy, r - thickness / 2 - 2, currentAngle);
   const hitStrokeWidth = Math.max(thickness + 14, 24);
   const rawSegments = Array.isArray(p.segments) ? (p.segments as Array<AnyRecord>) : [];
   const usesPercentSegments = rawSegments.length > 0 && rawSegments.every((segment) => {
@@ -271,8 +277,8 @@ export default function JsonRenderGauge({ element }: { element?: { props?: AnyRe
                 fill="none"
                 stroke={segment.color}
                 strokeWidth={thickness}
-                strokeLinecap={roundedCaps ? "round" : "butt"}
-                opacity={0.42}
+                strokeLinecap="butt"
+                opacity={1}
                 style={{ pointerEvents: "none" }}
               />
             ))
@@ -293,7 +299,7 @@ export default function JsonRenderGauge({ element }: { element?: { props?: AnyRe
             stroke={valueColor}
             strokeWidth={thickness}
             strokeLinecap={roundedCaps ? "round" : "butt"}
-            style={{ pointerEvents: "none" }}
+            style={{ pointerEvents: "none", opacity: segmentPaths.length ? 0 : 1 }}
           />
           {showTarget && Number.isFinite(resolvedTarget) && resolvedTarget !== progressBase ? (
             <path
@@ -305,6 +311,21 @@ export default function JsonRenderGauge({ element }: { element?: { props?: AnyRe
               style={{ pointerEvents: "none" }}
             />
           ) : null}
+          <path
+            d={needlePath}
+            fill="none"
+            stroke="#111111"
+            strokeWidth={3}
+            strokeLinecap="round"
+            style={{ pointerEvents: "none" }}
+          />
+          <circle
+            cx={cx}
+            cy={cy}
+            r={4}
+            fill="#111111"
+            style={{ pointerEvents: "none" }}
+          />
         </svg>
         {showValue ? (
           <div
