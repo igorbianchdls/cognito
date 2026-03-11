@@ -147,9 +147,35 @@ const SlicerFieldSourceSchema = z.union([
   }).strict(),
 ]);
 
+const SlicerVariantSchema = z.enum(["checklist", "dropdown", "tile"]);
+const SlicerSelectionModeSchema = z.enum(["single", "multiple"]);
+
+const SlicerUiPropsSchema = z.object({
+  borderColor: z.string().optional(),
+  textColor: z.string().optional(),
+  backgroundColor: z.string().optional(),
+  fontSize: z.union([z.number(), z.string()]).optional(),
+  fontWeight: z.union([z.number(), z.string()]).optional(),
+  radius: z.union([z.number(), z.string()]).optional(),
+  padding: z.union([z.number(), z.string()]).optional(),
+}).strict();
+
+const ChecklistPropsSchema = SlicerUiPropsSchema.extend({
+  maxHeight: z.union([z.number(), z.string()]).optional(),
+  itemGap: z.union([z.number(), z.string()]).optional(),
+  checkColor: z.string().optional(),
+}).strict();
+
+const DropdownPropsSchema = SlicerUiPropsSchema.extend({
+  placeholder: z.string().optional(),
+  maxHeight: z.union([z.number(), z.string()]).optional(),
+}).strict();
+
 const SlicerFieldPropsSchema = z.object({
   label: z.string().optional(),
   type: z.enum(["list", "dropdown", "multi", "tile", "tile-multi"]).default("list"),
+  variant: SlicerVariantSchema.optional(),
+  selectionMode: SlicerSelectionModeSchema.optional(),
   storePath: z.string(),
   placeholder: z.string().optional(),
   clearable: z.boolean().optional(),
@@ -831,11 +857,33 @@ export const catalog = {
         applyMode: z.enum(["auto","manual"]).optional(),
         actionOnApply: z.object({ type: z.string() }).partial().optional(),
         fields: z.array(SlicerFieldPropsSchema).default([]),
+        label: z.string().optional(),
+        type: z.enum(["list", "dropdown", "multi", "tile", "tile-multi"]).optional(),
+        variant: SlicerVariantSchema.optional(),
+        selectionMode: SlicerSelectionModeSchema.optional(),
+        storePath: z.string().optional(),
+        placeholder: z.string().optional(),
+        clearable: z.boolean().optional(),
+        selectAll: z.boolean().optional(),
+        search: z.boolean().optional(),
+        width: z.union([z.number(), z.string()]).optional(),
+        query: z.string().optional(),
+        limit: z.number().optional(),
+        source: SlicerFieldSourceSchema.optional(),
+        actionOnChange: z.object({ type: z.string() }).partial().optional(),
       }).strict(),
       hasChildren: true,
     },
     SlicerField: {
       props: SlicerFieldPropsSchema,
+      hasChildren: false,
+    },
+    Checklist: {
+      props: ChecklistPropsSchema,
+      hasChildren: false,
+    },
+    Dropdown: {
+      props: DropdownPropsSchema,
       hasChildren: false,
     },
     AISummary: {

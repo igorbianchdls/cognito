@@ -21,34 +21,26 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       <Sidebar width={300} minWidth={260} maxWidth={340} minHeight="100%" gap={10} padding={12} overflowY="auto" sticky top={12}>
         <Card>
           <Title text="Filtros" marginBottom={2} />
-          <Slicer>
-            <Config>
-              {
-                "fields": [
-                  {
-                    "label": "Canal",
-                    "type": "list",
-                    "storePath": "filters.canal_venda_id",
-                    "selectAll": true,
-                    "search": true,
-                    "clearable": true,
-                    "query": "SELECT\n  cv.id AS value,\n  COALESCE(cv.nome, '-') AS label\nFROM vendas.canais_venda cv\nORDER BY 2 ASC",
-                    "limit": 200
-                  },
-                  {
-                    "label": "Cliente",
-                    "type": "multi",
-                    "storePath": "filters.cliente_id",
-                    "selectAll": true,
-                    "search": true,
-                    "clearable": true,
-                    "query": "SELECT\n  c.id AS value,\n  COALESCE(c.nome_fantasia, '-') AS label\nFROM entidades.clientes c\nWHERE c.tenant_id = {{tenant_id}}\nORDER BY 2 ASC",
-                    "limit": 200
-                  }
-                ]
-              }
-            </Config>
-          </Slicer>
+          <Container direction="column" gap={10}>
+            <Slicer label="Canal" storePath="filters.canal_venda_id" selectionMode="single" search clearable>
+              <Dropdown placeholder="Todos os canais" borderColor="#d1d5db" textColor="#111827" radius={8} />
+              <Config>
+                {
+                  "query": "SELECT\n  cv.id AS value,\n  COALESCE(cv.nome, '-') AS label\nFROM vendas.canais_venda cv\nORDER BY 2 ASC",
+                  "limit": 200
+                }
+              </Config>
+            </Slicer>
+            <Slicer label="Cliente" storePath="filters.cliente_id" selectionMode="multiple" search clearable selectAll>
+              <Checklist borderColor="#d1d5db" textColor="#111827" radius={8} maxHeight={220} itemGap={6} />
+              <Config>
+                {
+                  "query": "SELECT\n  c.id AS value,\n  COALESCE(c.nome_fantasia, '-') AS label\nFROM entidades.clientes c\nWHERE c.tenant_id = {{tenant_id}}\nORDER BY 2 ASC",
+                  "limit": 200
+                }
+              </Config>
+            </Slicer>
+          </Container>
         </Card>
       </Sidebar>
       <Container direction="column" gap={0} grow={1} minHeight="100%">
