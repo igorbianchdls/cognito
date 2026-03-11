@@ -525,6 +525,7 @@ export const catalog = {
       props: z.object({
         dataQuery: SqlChartDataQuerySchema,
         fr: z.number().optional(),
+        format: z.enum(["currency", "percent", "number"]).default("number"),
         height: z.union([z.number(), z.string()]).optional(),
         strokeColor: z.string().optional(),
         fillColor: z.string().optional(),

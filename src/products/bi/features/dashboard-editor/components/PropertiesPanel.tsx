@@ -596,6 +596,16 @@ export default function PropertiesPanel({
                     rows={6}
                   />
                   <div className="grid grid-cols-2 gap-2">
+                    <SelectField
+                      label="format"
+                      value={String(getProp(node, 'format', 'number'))}
+                      options={[
+                        { value: 'number', label: 'Number' },
+                        { value: 'currency', label: 'Currency' },
+                        { value: 'percent', label: 'Percent' },
+                      ]}
+                      onChange={(v) => onSetNodeProp(selectedPath, 'format', v)}
+                    />
                     <TextField
                       label="dataQuery.xField"
                       value={String(getProp(node, 'dataQuery.xField', ''))}

@@ -15,6 +15,18 @@ function stylePx(value: unknown, fallback: number): number {
   return fallback;
 }
 
+function formatValue(val: number, fmt: "currency" | "percent" | "number"): string {
+  if (!Number.isFinite(val)) return "0";
+  switch (fmt) {
+    case "currency":
+      return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 2 }).format(val);
+    case "percent":
+      return `${val.toFixed(1)}%`;
+    default:
+      return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 }).format(val);
+  }
+}
+
 export default function JsonRenderSparkline({ element }: { element: any }) {
   const { data } = useData();
   const theme = useThemeOverrides();
@@ -23,6 +35,7 @@ export default function JsonRenderSparkline({ element }: { element: any }) {
   const isSqlQueryMode = Boolean(typeof dq?.query === "string" && dq.query.trim());
   const [serverRows, setServerRows] = React.useState<Array<Record<string, unknown>> | null>(null);
   const [queryError, setQueryError] = React.useState<string | null>(null);
+  const [activeIndex, setActiveIndex] = React.useState<number | null>(null);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -100,6 +113,7 @@ export default function JsonRenderSparkline({ element }: { element: any }) {
   const fillColor = String(p.fillColor || "rgba(37, 99, 235, 0.16)");
   const strokeWidth = stylePx(p.strokeWidth, 2);
   const height = stylePx(p.height, 42);
+  const format = (p.format ?? "number") as "currency" | "percent" | "number";
   const area = p.area !== false;
   const showDots = Boolean(p.showDots ?? false);
   const dotColor = String(p.dotColor || strokeColor);
@@ -147,13 +161,61 @@ export default function JsonRenderSparkline({ element }: { element: any }) {
     return <div style={{ height }} />;
   }
 
+  const activePoint = activeIndex != null ? points[activeIndex] : null;
+  const tooltipStyle: React.CSSProperties = {
+    position: "absolute",
+    left: activePoint ? `${activePoint.x}%` : "50%",
+    top: 0,
+    transform: "translate(-50%, calc(-100% - 6px))",
+    zIndex: 10,
+    minWidth: 108,
+    padding: "6px 8px",
+    borderRadius: 8,
+    border: "1px solid #d1d5db",
+    backgroundColor: "#ffffff",
+    boxShadow: "0 8px 24px rgba(15, 23, 42, 0.12)",
+    color: "#111827",
+    fontSize: 12,
+    lineHeight: 1.3,
+    pointerEvents: "none",
+    whiteSpace: "nowrap",
+  };
+
   return (
-    <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label="Sparkline">
-      {area && areaPath ? <path d={areaPath} fill={fillColor} stroke="none" /> : null}
-      <path d={linePath} fill="none" stroke={strokeColor} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
-      {showDots ? points.map((point) => (
-        <circle key={`${point.index}-${point.label}`} cx={point.x} cy={point.y} r={Math.max(1.5, strokeWidth)} fill={dotColor} />
-      )) : null}
-    </svg>
+    <div style={{ position: "relative", width: "100%", height }}>
+      {activePoint ? (
+        <div style={tooltipStyle}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", marginBottom: 2 }}>{activePoint.label}</div>
+          <div style={{ fontWeight: 600 }}>{formatValue(activePoint.value, format)}</div>
+        </div>
+      ) : null}
+      <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label="Sparkline">
+        {area && areaPath ? <path d={areaPath} fill={fillColor} stroke="none" style={{ pointerEvents: "none" }} /> : null}
+        <path d={linePath} fill="none" stroke={strokeColor} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: "none" }} />
+        {(showDots || activePoint) ? points.map((point) => (
+          <circle
+            key={`${point.index}-${point.label}`}
+            cx={point.x}
+            cy={point.y}
+            r={activePoint?.index === point.index ? Math.max(2.5, strokeWidth + 0.8) : Math.max(1.5, strokeWidth)}
+            fill={dotColor}
+            opacity={showDots || activePoint?.index === point.index ? 1 : 0}
+            style={{ pointerEvents: "none" }}
+          />
+        )) : null}
+        {points.map((point) => (
+          <circle
+            key={`hit-${point.index}-${point.label}`}
+            cx={point.x}
+            cy={point.y}
+            r={8}
+            fill="transparent"
+            style={{ cursor: "pointer" }}
+            onMouseEnter={() => setActiveIndex(point.index)}
+            onMouseLeave={() => setActiveIndex((current) => (current === point.index ? null : current))}
+          />
+        ))}
+      </svg>
+    </div>
   );
 }

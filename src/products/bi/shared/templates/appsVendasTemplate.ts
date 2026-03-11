@@ -108,7 +108,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
               <DataQuery yField="value" />
             </KPI>
             <KPICompare sourcePath="kpis.vendas" comparisonValueField="delta_percent" labelField="comparison_label" format="percent" />
-            <Sparkline height={38} strokeColor="#2563eb" fillColor="rgba(37, 99, 235, 0.16)">
+            <Sparkline height={38} format="currency" strokeColor="#2563eb" fillColor="rgba(37, 99, 235, 0.16)">
               <Query>
                 SELECT
                   TO_CHAR(p.data_pedido::date, 'YYYY-MM-DD') AS key,
@@ -170,7 +170,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
               <DataQuery yField="value" />
             </KPI>
             <KPICompare sourcePath="kpis.pedidos" comparisonValueField="delta_percent" labelField="comparison_label" format="percent" />
-            <Sparkline height={38} strokeColor="#059669" fillColor="rgba(5, 150, 105, 0.16)">
+            <Sparkline height={38} format="number" strokeColor="#059669" fillColor="rgba(5, 150, 105, 0.16)">
               <Query>
                 SELECT
                   TO_CHAR(p.data_pedido::date, 'YYYY-MM-DD') AS key,
@@ -232,7 +232,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
               <DataQuery yField="value" />
             </KPI>
             <KPICompare sourcePath="kpis.ticketMedio" comparisonValueField="delta_percent" labelField="comparison_label" format="percent" />
-            <Sparkline height={38} strokeColor="#ea580c" fillColor="rgba(234, 88, 12, 0.16)">
+            <Sparkline height={38} format="currency" strokeColor="#ea580c" fillColor="rgba(234, 88, 12, 0.16)">
               <Query>
                 SELECT
                   TO_CHAR(p.data_pedido::date, 'YYYY-MM-DD') AS key,
