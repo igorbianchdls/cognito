@@ -191,7 +191,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
           <Icon name="shopping-cart" size={18} padding={10} radius={10} backgroundColor="#ecfdf3" color="#047857" />
         </Card>
       </Container>
-      <Container grow={4}>
+      <Container grow={1}>
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
             <Title text="Ticket Médio" />
@@ -286,7 +286,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       </Container>
     </Container>
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
-      <Container grow={1}>
+      <Container grow={4}>
         <Card>
           <Title text="Canais" marginBottom={8} />
           <Chart type="pie" fr={2} format="currency" height={240}>
