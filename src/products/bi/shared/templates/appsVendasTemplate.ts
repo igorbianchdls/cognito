@@ -26,8 +26,6 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
               label="Canal"
               storePath="filters.canal_venda_id"
               selectionMode="single"
-              search
-              clearable
               limit={200}
               query="SELECT
   cv.id AS value,
@@ -41,9 +39,6 @@ ORDER BY 2 ASC"
               label="Cliente"
               storePath="filters.cliente_id"
               selectionMode="multiple"
-              search
-              clearable
-              selectAll
               limit={200}
               query="SELECT
   c.id AS value,
