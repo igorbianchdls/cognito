@@ -186,6 +186,7 @@ export default function JsonRenderGauge({ element }: { element?: { props?: AnyRe
   const valueArc = describeArc(cx, cy, r, startAngle, currentAngle);
   const targetAngle = startAngle + ((endAngle - startAngle) * targetRatio);
   const targetMarker = describeLineAtAngle(cx, cy, r - thickness / 2 - 4, r + thickness / 2 + 2, targetAngle);
+  const hitStrokeWidth = Math.max(thickness + 14, 24);
   const tooltipStyle: React.CSSProperties = {
     position: "absolute",
     left: "50%",
@@ -204,12 +205,7 @@ export default function JsonRenderGauge({ element }: { element?: { props?: AnyRe
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <div
-        style={{ position: "relative", width: "100%", height, cursor: "default" }}
-        onMouseEnter={() => setTooltipOpen(true)}
-        onMouseLeave={() => setTooltipOpen(false)}
-        onClick={() => setTooltipOpen((prev) => !prev)}
-      >
+      <div style={{ position: "relative", width: "100%", height, cursor: "default" }}>
         {tooltipOpen ? (
           <div style={tooltipStyle}>
             <div style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>Meta de Vendas</div>
@@ -227,10 +223,22 @@ export default function JsonRenderGauge({ element }: { element?: { props?: AnyRe
           <path
             d={fullArc}
             fill="none"
+            stroke="transparent"
+            strokeWidth={hitStrokeWidth}
+            strokeLinecap={roundedCaps ? "round" : "butt"}
+            style={{ pointerEvents: "stroke", cursor: "pointer" }}
+            onMouseEnter={() => setTooltipOpen(true)}
+            onMouseLeave={() => setTooltipOpen(false)}
+            onClick={() => setTooltipOpen((prev) => !prev)}
+          />
+          <path
+            d={fullArc}
+            fill="none"
             stroke={trackColor}
             strokeWidth={thickness}
             strokeLinecap={roundedCaps ? "round" : "butt"}
             opacity={0.48}
+            style={{ pointerEvents: "none" }}
           />
           <path
             d={valueArc}
@@ -238,6 +246,7 @@ export default function JsonRenderGauge({ element }: { element?: { props?: AnyRe
             stroke={valueColor}
             strokeWidth={thickness}
             strokeLinecap={roundedCaps ? "round" : "butt"}
+            style={{ pointerEvents: "none" }}
           />
           {showTarget && Number.isFinite(resolvedTarget) && resolvedTarget !== progressBase ? (
             <path
@@ -246,6 +255,7 @@ export default function JsonRenderGauge({ element }: { element?: { props?: AnyRe
               stroke={targetColor}
               strokeWidth={3}
               strokeLinecap="round"
+              style={{ pointerEvents: "none" }}
             />
           ) : null}
         </svg>

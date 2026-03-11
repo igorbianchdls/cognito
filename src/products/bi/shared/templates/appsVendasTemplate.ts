@@ -256,7 +256,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       <Container grow={1}>
         <Card>
           <Title text="Meta de Vendas" />
-          <Gauge format="currency" target={30000} min={0} max={30000} width={220} height={128} thickness={16} valueField="value">
+          <Gauge format="currency" target={250000} min={0} max={250000} width={220} height={128} thickness={16} valueField="value">
             <Query>
               SELECT
                 COALESCE(SUM(p.valor_total), 0)::float AS value
