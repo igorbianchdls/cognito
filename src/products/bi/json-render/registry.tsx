@@ -505,6 +505,299 @@ async function fetchOptionsFromSource(
   return [];
 }
 
+function resolveSlicerFields(element: any, propsFields: unknown): AnyRecord[] {
+  const explicitFields = Array.isArray(propsFields)
+    ? propsFields.filter((field): field is AnyRecord => Boolean(field && typeof field === 'object' && !Array.isArray(field)))
+    : [];
+  if (explicitFields.length > 0) return explicitFields;
+
+  const childDefs = Array.isArray(element?.children) ? element.children : [];
+  return childDefs
+    .filter((child: AnyRecord) => String(child?.type || '') === 'SlicerField')
+    .map((child: AnyRecord) => ((child?.props && typeof child.props === 'object' && !Array.isArray(child.props)) ? child.props as AnyRecord : {}))
+    .filter((field: AnyRecord) => Object.keys(field).length > 0);
+}
+
+function SlicerContent({
+  element,
+  fields,
+  layout,
+  applyMode,
+  onAction,
+  suppressFieldLabels = false,
+  padded = false,
+}: {
+  element: any;
+  fields: AnyRecord[];
+  layout: 'vertical' | 'horizontal';
+  applyMode: 'auto' | 'manual';
+  onAction?: (action: any) => void;
+  suppressFieldLabels?: boolean;
+  padded?: boolean;
+}) {
+  const theme = useThemeOverrides();
+  const { data, setData, getValueByPath } = useData();
+  const [optionsMap, setOptionsMap] = React.useState<Record<number, SlicerOpt[]>>({});
+  const [searchMap, setSearchMap] = React.useState<Record<number, string>>({});
+  const [pendingMap, setPendingMap] = React.useState<Record<number, any>>({});
+
+  function setByPath(prev: any, path: string, value: any) {
+    if (!path) return prev;
+    const parts = path.split('.').map((s) => s.trim()).filter(Boolean);
+    const root = Array.isArray(prev) ? [...prev] : { ...(prev || {}) };
+    let curr: any = root;
+    for (let i = 0; i < parts.length; i++) {
+      const k = parts[i];
+      if (i === parts.length - 1) {
+        curr[k] = value;
+      } else {
+        curr[k] = typeof curr[k] === 'object' && curr[k] !== null ? { ...curr[k] } : {};
+        curr = curr[k];
+      }
+    }
+    return root;
+  }
+
+  const effectiveGet = React.useCallback((idx: number, sp: string, isMulti: boolean) => {
+    if (applyMode === 'manual' && Object.prototype.hasOwnProperty.call(pendingMap, idx)) return pendingMap[idx];
+    const v = getValueByPath(sp, undefined);
+    return isMulti ? (Array.isArray(v) ? v : []) : (v ?? '');
+  }, [applyMode, getValueByPath, pendingMap]);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      const tasks = await Promise.allSettled(fields.map(async (field, idx) => {
+        const src =
+          (field?.source && typeof field.source === 'object')
+            ? (field.source as AnyRecord)
+            : (typeof field?.query === 'string' && field.query.trim()
+                ? ({ query: field.query, ...(Number.isFinite(Number(field?.limit)) ? { limit: Number(field.limit) } : {}) } as AnyRecord)
+                : null);
+        if (!src || typeof src !== 'object') return { idx, opts: [] as SlicerOpt[] };
+        const term = searchMap[idx] || '';
+        const opts = await fetchOptionsFromSource(src, { term, data, readByPath: getValueByPath });
+        return { idx, opts };
+      }));
+      if (cancelled) return;
+      const nextMap: Record<number, SlicerOpt[]> = {};
+      for (const task of tasks) {
+        if (task.status === 'fulfilled') nextMap[(task.value as any).idx] = (task.value as any).opts;
+      }
+      setOptionsMap(nextMap);
+    }
+    load();
+    return () => { cancelled = true };
+  }, [fields, searchMap, data, getValueByPath]);
+
+  const onChangeField = React.useCallback((idx: number, storePath: string, value: any, autoAction?: AnyRecord) => {
+    if (applyMode === 'manual') {
+      setPendingMap((prev) => ({ ...prev, [idx]: value }));
+      return;
+    }
+    const next = setByPath(data, storePath, value);
+    setData(next);
+    if (autoAction && typeof autoAction === 'object') onAction?.(autoAction);
+  }, [applyMode, data, onAction, setData]);
+
+  const onApplyAll = React.useCallback(() => {
+    let next = data;
+    for (let i = 0; i < fields.length; i += 1) {
+      const field = fields[i];
+      const storePath = String(field?.storePath || '').trim();
+      if (!storePath) continue;
+      if (Object.prototype.hasOwnProperty.call(pendingMap, i)) {
+        next = setByPath(next, storePath, pendingMap[i]);
+      }
+    }
+    setData(next);
+    const actionOnApply = element?.props?.actionOnApply;
+    if (actionOnApply && typeof actionOnApply === 'object') onAction?.(actionOnApply);
+  }, [data, element?.props?.actionOnApply, fields, onAction, pendingMap, setData]);
+
+  const wrapperClassName = `${layout === 'horizontal' ? 'flex items-start gap-3 flex-wrap' : 'space-y-3'}${padded ? ' p-2' : ''}`;
+
+  return (
+    <>
+      <div className={wrapperClassName}>
+        {fields.map((field, idx) => {
+          const storePath = String(field?.storePath || '').trim();
+          if (!storePath) return null;
+
+          const label = typeof field?.label === 'string' ? field.label : undefined;
+          const labelStyle = applySlicerLabelFromCssVars(normalizeTitleStyle((field as any)?.labelStyle), theme.cssVars);
+          const opts = optionsMap[idx] || [];
+          const width = field?.width !== undefined ? (typeof field.width === 'number' ? `${field.width}px` : field.width) : undefined;
+          const type = (field?.type || 'list') as 'list' | 'dropdown' | 'multi' | 'tile' | 'tile-multi';
+          const isMulti = type === 'tile-multi' || type === 'list' || type === 'multi';
+          const stored = effectiveGet(idx, storePath, isMulti);
+          const clearable = field?.clearable !== false;
+          const selectAll = Boolean(field?.selectAll);
+          const showSearch = Boolean(field?.search);
+
+          if (type === 'tile' || type === 'tile-multi') {
+            const onClear = () => onChangeField(idx, storePath, isMulti ? [] : undefined, field.actionOnChange);
+            return (
+              <div key={`field-${idx}`} className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
+                {label && !suppressFieldLabels && <div className="text-xs" style={labelStyle}>{label}</div>}
+                <div className="flex flex-col gap-2">
+                  {showSearch && (
+                    <input
+                      type="text"
+                      value={searchMap[idx] || ''}
+                      onChange={(e) => setSearchMap((prev) => ({ ...prev, [idx]: e.target.value }))}
+                      placeholder="Buscar..."
+                      className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs"
+                    />
+                  )}
+                  <div className="flex flex-wrap gap-2">
+                    {opts.map((option) => {
+                      const selected = isMulti ? (Array.isArray(stored) && stored.includes(option.value)) : stored === option.value;
+                      const tileCfg = ((((theme as any).components?.Slicer as any)?.tile) || (((theme as any).components?.SlicerCard as any)?.tile) || {});
+                      const base = String(tileCfg.baseClass || 'text-xs font-medium rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 active:scale-[0.98]');
+                      const selectedClass = String(tileCfg.selectedClass || 'bg-sky-600 text-white border-sky-600 hover:bg-sky-700');
+                      const unselectedClass = String(tileCfg.unselectedClass || 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200');
+                      return (
+                        <button
+                          key={String(option.value)}
+                          type="button"
+                          className={`${base} ${selected ? selectedClass : unselectedClass}`}
+                          onClick={() => {
+                            if (isMulti) {
+                              const arr = Array.isArray(stored) ? stored.slice() : [];
+                              const exists = arr.includes(option.value);
+                              const nextArr = exists ? arr.filter((v: any) => v !== option.value) : [...arr, option.value];
+                              onChangeField(idx, storePath, nextArr, field.actionOnChange);
+                            } else {
+                              const nextVal = stored === option.value ? (clearable ? undefined : option.value) : option.value;
+                              onChangeField(idx, storePath, nextVal, field.actionOnChange);
+                            }
+                          }}
+                          style={(() => {
+                            const style = applySlicerOptionFromCssVars(undefined, theme.cssVars) || {};
+                            delete (style as any).color;
+                            return style as any;
+                          })()}
+                        >
+                          {option.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {selectAll && isMulti && (
+                    <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={() => onChangeField(idx, storePath, opts.map((option) => option.value), field.actionOnChange)}>Selecionar todos</button>
+                  )}
+                  {clearable && (
+                    <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={onClear}>Limpar</button>
+                  )}
+                </div>
+              </div>
+            );
+          }
+
+          if (type === 'list') {
+            const onClear = () => onChangeField(idx, storePath, [], field.actionOnChange);
+            return (
+              <div key={`field-${idx}`} className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
+                {label && !suppressFieldLabels && <div className="text-xs" style={labelStyle}>{label}</div>}
+                <div className="flex flex-col gap-2">
+                  {showSearch && (
+                    <input
+                      type="text"
+                      value={searchMap[idx] || ''}
+                      onChange={(e) => setSearchMap((prev) => ({ ...prev, [idx]: e.target.value }))}
+                      placeholder="Buscar..."
+                      className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs"
+                    />
+                  )}
+                  <div className="flex flex-col gap-1 max-h-48 overflow-y-auto pr-1">
+                    {opts.map((option) => (
+                      <label key={String(option.value)} className="inline-flex items-center gap-2 text-xs">
+                        <input
+                          type="checkbox"
+                          className="rounded border-gray-300"
+                          checked={Array.isArray(stored) && stored.includes(option.value)}
+                          onChange={(e) => {
+                            const arr = Array.isArray(stored) ? stored.slice() : [];
+                            const nextArr = e.target.checked ? [...arr, option.value] : arr.filter((v: any) => v !== option.value);
+                            onChangeField(idx, storePath, nextArr, field.actionOnChange);
+                          }}
+                        />
+                        <span style={applySlicerOptionFromCssVars(normalizeTitleStyle((field as any)?.optionStyle), theme.cssVars)}>{option.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {selectAll && (
+                      <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={() => onChangeField(idx, storePath, opts.map((option) => option.value), field.actionOnChange)}>Selecionar todos</button>
+                    )}
+                    {clearable && (
+                      <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={onClear}>Limpar</button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          const value = type === 'multi' ? (Array.isArray(stored) ? stored : []) : (stored ?? '');
+          const onClear = () => onChangeField(idx, storePath, type === 'multi' ? [] : undefined, field.actionOnChange);
+          return (
+            <div key={`field-${idx}`} className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
+              {label && !suppressFieldLabels && <div className="text-xs" style={labelStyle}>{label}</div>}
+              <div className="flex flex-col gap-2">
+                {showSearch && (
+                  <input
+                    type="text"
+                    value={searchMap[idx] || ''}
+                    onChange={(e) => setSearchMap((prev) => ({ ...prev, [idx]: e.target.value }))}
+                    placeholder="Buscar..."
+                    className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs"
+                  />
+                )}
+                <select
+                  multiple={type === 'multi'}
+                  className="border border-gray-300 rounded px-2 py-1 text-xs"
+                  style={applySlicerOptionFromCssVars(normalizeTitleStyle((field as any)?.optionStyle), theme.cssVars) as any}
+                  value={value as any}
+                  onChange={(e) => {
+                    if (type === 'multi') {
+                      const selected: any[] = Array.from(e.target.selectedOptions)
+                        .map((option) => (option as any).value)
+                        .map((raw) => (String(Number(raw)) === raw ? Number(raw) : raw));
+                      onChangeField(idx, storePath, selected, field.actionOnChange);
+                    } else {
+                      const nextValue = e.target.value;
+                      onChangeField(idx, storePath, String(Number(nextValue)) === nextValue ? Number(nextValue) : nextValue, field.actionOnChange);
+                    }
+                  }}
+                >
+                  {(type !== 'multi' && typeof field?.placeholder === 'string' && field.placeholder) ? <option value="">{field.placeholder}</option> : null}
+                  {opts.map((option) => (
+                    <option key={String(option.value)} value={String(option.value)}>{option.label}</option>
+                  ))}
+                </select>
+              </div>
+              {clearable && (
+                <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={onClear}>Limpar</button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {applyMode === 'manual' && (
+        <div className="mt-2 flex justify-end">
+          <button type="button" onClick={onApplyAll} className="text-xs rounded-md border border-gray-300 bg-white px-2 py-1 hover:bg-gray-50">
+            Aplicar
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+
 function mapJustify(v?: string): React.CSSProperties['justifyContent'] | undefined {
   switch (v) {
     case 'start': return 'flex-start';
@@ -1509,6 +1802,25 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       </div>
     );
   },
+
+  Slicer: ({ element, onAction }) => {
+    const theme = useThemeOverrides();
+    const p = deepMerge((theme.components?.Slicer || {}) as AnyRecord, (element?.props || {}) as AnyRecord) as AnyRecord;
+    const layout = (p.layout || 'vertical') as 'vertical' | 'horizontal';
+    const applyMode = (p.applyMode || 'auto') as 'auto' | 'manual';
+    const fields = resolveSlicerFields(element, p.fields);
+    return (
+      <SlicerContent
+        element={{ ...element, props: p }}
+        fields={fields}
+        layout={layout}
+        applyMode={applyMode}
+        onAction={onAction}
+      />
+    );
+  },
+
+  SlicerField: () => null,
 
   SlicerCard: ({ element, onAction }) => {
     const theme = useThemeOverrides();

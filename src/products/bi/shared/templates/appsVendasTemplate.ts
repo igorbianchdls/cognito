@@ -19,35 +19,27 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
     </Config>
     <Container direction="row" gap={12} padding={16} align="stretch" minHeight="100%">
       <Sidebar width={300} minWidth={260} maxWidth={340} minHeight="100%" gap={10} padding={12} overflowY="auto" sticky top={12}>
-        <CardTitle text="Filtros" marginBottom={2} />
-        <SlicerCard borderless>
-          <Config>
-            {
-              "fields": [
+        <Card>
+          <Title text="Filtros" marginBottom={2} />
+          <Slicer>
+            <SlicerField label="Canal" type="list" storePath="filters.canal_venda_id" selectAll search clearable>
+              <Config>
                 {
-                  "label": "Canal",
-                  "type": "list",
-                  "storePath": "filters.canal_venda_id",
                   "query": "SELECT\n  cv.id AS value,\n  COALESCE(cv.nome, '-') AS label\nFROM vendas.canais_venda cv\nORDER BY 2 ASC",
-                  "limit": 200,
-                  "selectAll": true,
-                  "search": true,
-                  "clearable": true
-                },
-                {
-                  "label": "Cliente",
-                  "type": "multi",
-                  "storePath": "filters.cliente_id",
-                  "query": "SELECT\n  c.id AS value,\n  COALESCE(c.nome_fantasia, '-') AS label\nFROM entidades.clientes c\nWHERE c.tenant_id = {{tenant_id}}\nORDER BY 2 ASC",
-                  "limit": 200,
-                  "selectAll": true,
-                  "search": true,
-                  "clearable": true
+                  "limit": 200
                 }
-              ]
-            }
-          </Config>
-        </SlicerCard>
+              </Config>
+            </SlicerField>
+            <SlicerField label="Cliente" type="multi" storePath="filters.cliente_id" selectAll search clearable>
+              <Config>
+                {
+                  "query": "SELECT\n  c.id AS value,\n  COALESCE(c.nome_fantasia, '-') AS label\nFROM entidades.clientes c\nWHERE c.tenant_id = {{tenant_id}}\nORDER BY 2 ASC",
+                  "limit": 200
+                }
+              </Config>
+            </SlicerField>
+          </Slicer>
+        </Card>
       </Sidebar>
       <Container direction="column" gap={0} grow={1} minHeight="100%">
         <Header direction="row" justify="between" align="center">

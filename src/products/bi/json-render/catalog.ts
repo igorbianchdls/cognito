@@ -117,6 +117,51 @@ const SqlTableDataQuerySchema = z.object({
   limit: z.number().optional(),
 }).strict();
 
+const SlicerFieldSourceSchema = z.union([
+  z.object({
+    type: z.literal('static'),
+    options: z.array(z.object({ value: z.union([z.number(), z.string()]), label: z.string() })).default([]),
+  }).strict(),
+  z.object({
+    type: z.literal('api'),
+    url: z.string(),
+    method: z.enum(['GET', 'POST']).optional(),
+    valueField: z.string().optional(),
+    labelField: z.string().optional(),
+    params: z.record(z.any()).optional(),
+  }).strict(),
+  z.object({
+    type: z.literal('options'),
+    model: z.string(),
+    field: z.string(),
+    pageSize: z.number().optional(),
+    limit: z.number().optional(),
+    dependsOn: z.array(z.string()).optional(),
+  }).strict(),
+  z.object({
+    type: z.literal('query'),
+    model: z.string(),
+    dimension: z.string(),
+    filters: z.record(z.any()).optional(),
+    limit: z.number().optional(),
+  }).strict(),
+]);
+
+const SlicerFieldPropsSchema = z.object({
+  label: z.string().optional(),
+  type: z.enum(["list", "dropdown", "multi", "tile", "tile-multi"]).default("list"),
+  storePath: z.string(),
+  placeholder: z.string().optional(),
+  clearable: z.boolean().optional(),
+  selectAll: z.boolean().optional(),
+  search: z.boolean().optional(),
+  width: z.union([z.number(), z.string()]).optional(),
+  query: z.string().optional(),
+  limit: z.number().optional(),
+  source: SlicerFieldSourceSchema.optional(),
+  actionOnChange: z.object({ type: z.string() }).partial().optional(),
+}).strict();
+
 const TableColumnSchema = z.object({
   id: z.string().optional(),
   key: z.string().optional(),
@@ -775,49 +820,21 @@ export const catalog = {
         actionOnApply: z.object({ type: z.string() }).partial().optional(),
         containerStyle: ContainerStyleSchema.optional(),
         borderless: z.boolean().optional(),
-        fields: z.array(z.object({
-          label: z.string().optional(),
-          type: z.enum(["list","dropdown","multi","tile","tile-multi"]).default("list"),
-          storePath: z.string(),
-          placeholder: z.string().optional(),
-          clearable: z.boolean().optional(),
-          selectAll: z.boolean().optional(),
-          search: z.boolean().optional(),
-          width: z.union([z.number(), z.string()]).optional(),
-          query: z.string().optional(),
-          limit: z.number().optional(),
-          source: z.union([
-            z.object({
-              type: z.literal('static'),
-              options: z.array(z.object({ value: z.union([z.number(), z.string()]), label: z.string() })).default([])
-            }).strict(),
-            z.object({
-              type: z.literal('api'),
-              url: z.string(),
-              method: z.enum(['GET','POST']).optional(),
-              valueField: z.string().optional(),
-              labelField: z.string().optional(),
-              params: z.record(z.any()).optional(),
-            }).strict(),
-            z.object({
-              type: z.literal('options'),
-              model: z.string(),
-              field: z.string(),
-              pageSize: z.number().optional(),
-              limit: z.number().optional(),
-              dependsOn: z.array(z.string()).optional(),
-            }).strict(),
-            z.object({
-              type: z.literal('query'),
-              model: z.string(),
-              dimension: z.string(),
-              filters: z.record(z.any()).optional(),
-              limit: z.number().optional(),
-            }).strict(),
-          ]).optional(),
-          actionOnChange: z.object({ type: z.string() }).partial().optional(),
-        }).strict()).default([]),
+        fields: z.array(SlicerFieldPropsSchema).default([]),
       }).strict(),
+      hasChildren: false,
+    },
+    Slicer: {
+      props: z.object({
+        fr: z.number().optional(),
+        layout: z.enum(["vertical","horizontal"]).optional(),
+        applyMode: z.enum(["auto","manual"]).optional(),
+        actionOnApply: z.object({ type: z.string() }).partial().optional(),
+      }).strict(),
+      hasChildren: true,
+    },
+    SlicerField: {
+      props: SlicerFieldPropsSchema,
       hasChildren: false,
     },
     AISummary: {
