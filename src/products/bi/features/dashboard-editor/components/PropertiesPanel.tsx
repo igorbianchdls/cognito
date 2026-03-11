@@ -2209,6 +2209,22 @@ export default function PropertiesPanel({
                   {node.type === 'Gauge' && (
                     <div className="space-y-2 rounded border border-gray-200 p-2">
                       <div className="text-sm font-medium text-gray-700">Gauge Style</div>
+                      <TextAreaField
+                        label="segments (JSON)"
+                        value={(() => {
+                          const raw = getProp<any>(node, 'segments', [])
+                          return JSON.stringify(Array.isArray(raw) ? raw : [], null, 2)
+                        })()}
+                        onChange={(v) => {
+                          try {
+                            const parsed = JSON.parse(v || '[]')
+                            onSetNodeProp(selectedPath, 'segments', Array.isArray(parsed) ? parsed : undefined)
+                          } catch {
+                            // ignore while typing invalid JSON
+                          }
+                        }}
+                        rows={5}
+                      />
                       <div className="grid grid-cols-2 gap-2">
                         <ColorField
                           label="trackColor"

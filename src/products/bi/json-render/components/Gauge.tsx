@@ -54,6 +54,10 @@ function formatPercentValue(val: number): string {
   return `${val.toFixed(0)}%`;
 }
 
+function clamp01(value: number) {
+  return Math.max(0, Math.min(1, value));
+}
+
 export default function JsonRenderGauge({ element }: { element?: { props?: AnyRecord } }) {
   const p = (element?.props || {}) as AnyRecord;
   const theme = useThemeOverrides();
@@ -187,6 +191,34 @@ export default function JsonRenderGauge({ element }: { element?: { props?: AnyRe
   const targetAngle = startAngle + ((endAngle - startAngle) * targetRatio);
   const targetMarker = describeLineAtAngle(cx, cy, r - thickness / 2 - 4, r + thickness / 2 + 2, targetAngle);
   const hitStrokeWidth = Math.max(thickness + 14, 24);
+  const rawSegments = Array.isArray(p.segments) ? (p.segments as Array<AnyRecord>) : [];
+  const usesPercentSegments = rawSegments.length > 0 && rawSegments.every((segment) => {
+    const from = Number(segment?.from);
+    const to = Number(segment?.to);
+    return Number.isFinite(from) && Number.isFinite(to) && Math.max(from, to) <= 100;
+  });
+  const segmentPaths = rawSegments
+    .map((segment) => {
+      const fromRaw = Number(segment?.from);
+      const toRaw = Number(segment?.to);
+      if (!Number.isFinite(fromRaw) || !Number.isFinite(toRaw) || fromRaw === toRaw) return null;
+      const fromValue = usesPercentSegments
+        ? resolvedMin + ((progressBase - resolvedMin) * (fromRaw / 100))
+        : fromRaw;
+      const toValue = usesPercentSegments
+        ? resolvedMin + ((progressBase - resolvedMin) * (toRaw / 100))
+        : toRaw;
+      const fromRatio = progressBase > resolvedMin ? clamp01((fromValue - resolvedMin) / (progressBase - resolvedMin)) : 0;
+      const toRatio = progressBase > resolvedMin ? clamp01((toValue - resolvedMin) / (progressBase - resolvedMin)) : 0;
+      const start = startAngle + ((endAngle - startAngle) * Math.min(fromRatio, toRatio));
+      const end = startAngle + ((endAngle - startAngle) * Math.max(fromRatio, toRatio));
+      return {
+        key: `${fromRaw}-${toRaw}-${String(segment?.color || '')}`,
+        color: String(segment?.color || trackColor),
+        path: describeArc(cx, cy, r, start, end),
+      };
+    })
+    .filter((segment): segment is { key: string; color: string; path: string } => Boolean(segment));
   const tooltipStyle: React.CSSProperties = {
     position: "absolute",
     left: "50%",
@@ -231,15 +263,30 @@ export default function JsonRenderGauge({ element }: { element?: { props?: AnyRe
             onMouseLeave={() => setTooltipOpen(false)}
             onClick={() => setTooltipOpen((prev) => !prev)}
           />
-          <path
-            d={fullArc}
-            fill="none"
-            stroke={trackColor}
-            strokeWidth={thickness}
-            strokeLinecap={roundedCaps ? "round" : "butt"}
-            opacity={0.48}
-            style={{ pointerEvents: "none" }}
-          />
+          {segmentPaths.length ? (
+            segmentPaths.map((segment) => (
+              <path
+                key={segment.key}
+                d={segment.path}
+                fill="none"
+                stroke={segment.color}
+                strokeWidth={thickness}
+                strokeLinecap={roundedCaps ? "round" : "butt"}
+                opacity={0.42}
+                style={{ pointerEvents: "none" }}
+              />
+            ))
+          ) : (
+            <path
+              d={fullArc}
+              fill="none"
+              stroke={trackColor}
+              strokeWidth={thickness}
+              strokeLinecap={roundedCaps ? "round" : "butt"}
+              opacity={0.48}
+              style={{ pointerEvents: "none" }}
+            />
+          )}
           <path
             d={valueArc}
             fill="none"

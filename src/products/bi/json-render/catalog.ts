@@ -692,6 +692,11 @@ export const catalog = {
         valueColor: z.string().optional(),
         indicatorColor: z.string().optional(),
         targetColor: z.string().optional(),
+        segments: z.array(z.object({
+          from: z.number(),
+          to: z.number(),
+          color: z.string(),
+        }).strict()).optional(),
         showValue: z.boolean().optional(),
         showMinMax: z.boolean().optional(),
         showTarget: z.boolean().optional(),
