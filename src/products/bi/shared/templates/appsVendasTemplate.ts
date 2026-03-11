@@ -67,7 +67,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
           </DatePicker>
         </Header>
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
-      <Container grow={1}>
+      <Container grow={4}>
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
             <Title text="Vendas" />

@@ -47,6 +47,7 @@ type JsonPreviewPanelProps = {
   toolbar?: ReactNode
   propertiesPanel?: ReactNode
   hideHeader?: boolean
+  className?: string
   visualEditor?: {
     enabled?: boolean
     selectedPath?: JsonNodePath | null
@@ -124,7 +125,7 @@ function getSiblingAxis(tree: JsonTree, path: JsonNodePath): 'horizontal' | 'ver
   return direction === 'row' ? 'horizontal' : 'vertical'
 }
 
-export default function JsonPreviewPanel({ tree, onAction, actionHint, toolbar, propertiesPanel, hideHeader, visualEditor }: JsonPreviewPanelProps) {
+export default function JsonPreviewPanel({ tree, onAction, actionHint, toolbar, propertiesPanel, hideHeader, className, visualEditor }: JsonPreviewPanelProps) {
   const [dragIndicator, setDragIndicator] = useState<DragIndicatorState>(null)
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -265,7 +266,7 @@ export default function JsonPreviewPanel({ tree, onAction, actionHint, toolbar, 
   )
 
   return (
-    <div className="md:col-span-4 min-h-0 h-full flex flex-col">
+    <div className={className ?? "md:col-span-4 min-h-0 h-full flex flex-col"}>
       {!hideHeader && (
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-sm font-medium text-gray-900">Preview</h2>
