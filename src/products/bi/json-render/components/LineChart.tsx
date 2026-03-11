@@ -3,10 +3,19 @@
 import React from "react";
 import { useData } from "@/products/bi/json-render/context";
 import { ResponsiveLine } from "@nivo/line";
+import type { LineSeries } from "@nivo/line";
 import { buildNivoTheme, isPlainObject, omitObjectKeys } from "@/products/bi/json-render/helpers";
 import { useThemeOverrides } from "@/products/bi/json-render/theme/ThemeContext";
 
 type AnyRecord = Record<string, any>;
+type LinePointValue = string | number | Date | null;
+
+function toLinePointValue(value: unknown): LinePointValue {
+  if (value == null) return null;
+  if (value instanceof Date) return value;
+  if (typeof value === "string" || typeof value === "number") return value;
+  return String(value);
+}
 
 function formatValue(val: any, fmt: "currency" | "percent" | "number"): string {
   const n = Number(val ?? 0);
@@ -165,7 +174,7 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
       const keyValue = getFieldValue(row, keyFieldName, ["key", xFieldName, "label", "x"]);
       const seriesValue = seriesFieldName ? getFieldValue(row, seriesFieldName, ["series"]) : undefined;
       return {
-        x: xValue,
+        x: toLinePointValue(xValue),
         y: Number(yValue ?? 0),
         filterKey: keyValue ?? xValue,
         series: seriesFieldName ? String(seriesValue ?? "Series") : "Series",
@@ -175,8 +184,8 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
 
   const hasSeries = Boolean(seriesFieldName);
 
-  const seriesData = React.useMemo(() => {
-    const grouped = new Map<string, Array<{ x: unknown; y: number; filterKey: unknown }>>();
+  const seriesData = React.useMemo<LineSeries[]>(() => {
+    const grouped = new Map<string, Array<{ x: LinePointValue; y: number; filterKey: unknown }>>();
     normalizedRows.forEach((row) => {
       const seriesId = row.series || "Series";
       const existing = grouped.get(seriesId) || [];
