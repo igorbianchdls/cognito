@@ -289,7 +289,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       <Container grow={1}>
         <Card>
           <Title text="Canais" marginBottom={8} />
-          <Chart type="pie" format="currency" height={240}>
+          <Chart type="pie" fr={2} format="currency" height={240}>
             <Query>
               SELECT
                           cv.id AS key,
@@ -314,8 +314,8 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
               cornerRadius={4}
               activeOuterRadiusOffset={10}
               sortByValue
-              enableArcLinkLabels
-              arcLinkLabelsSkipAngle={8}
+              enableArcLabels={false}
+              enableArcLinkLabels={false}
               margin={{ top: 16, right: 140, bottom: 16, left: 16 }}
               legends={[{ anchor: "right", direction: "column", translateX: 110, itemWidth: 110, itemHeight: 18, itemsSpacing: 6, symbolSize: 12, itemDirection: "left-to-right" }]}
               tooltip={{ showPercentOfTotal: true }}
