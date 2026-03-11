@@ -64,6 +64,7 @@ export default function JsonRenderGauge({ element }: { element?: { props?: AnyRe
   const isSqlQueryMode = Boolean(typeof dq?.query === "string" && dq.query.trim());
   const [serverRow, setServerRow] = React.useState<AnyRecord | null>(null);
   const [queryError, setQueryError] = React.useState<string | null>(null);
+  const [tooltipOpen, setTooltipOpen] = React.useState(false);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -185,13 +186,43 @@ export default function JsonRenderGauge({ element }: { element?: { props?: AnyRe
   const valueArc = describeArc(cx, cy, r, startAngle, currentAngle);
   const targetAngle = startAngle + ((endAngle - startAngle) * targetRatio);
   const targetMarker = describeLineAtAngle(cx, cy, r - thickness / 2 - 4, r + thickness / 2 + 2, targetAngle);
-  const subtitleText = Number.isFinite(resolvedTarget)
-    ? `${formatValue(value, format)} / ${formatValue(resolvedTarget, format)}`
-    : formatValue(value, format);
+  const tooltipStyle: React.CSSProperties = {
+    position: "absolute",
+    left: "50%",
+    top: 8,
+    transform: "translateX(-50%)",
+    zIndex: 10,
+    minWidth: 168,
+    padding: "8px 10px",
+    borderRadius: 8,
+    border: "1px solid #d1d5db",
+    backgroundColor: "#ffffff",
+    boxShadow: "0 8px 24px rgba(15, 23, 42, 0.12)",
+    color: "#111827",
+    pointerEvents: "none",
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <div style={{ position: "relative", width: "100%", height }}>
+      <div
+        style={{ position: "relative", width: "100%", height, cursor: "default" }}
+        onMouseEnter={() => setTooltipOpen(true)}
+        onMouseLeave={() => setTooltipOpen(false)}
+        onClick={() => setTooltipOpen((prev) => !prev)}
+      >
+        {tooltipOpen ? (
+          <div style={tooltipStyle}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>Meta de Vendas</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "4px 10px", fontSize: 12 }}>
+              <span style={{ color: "#6b7280" }}>Atingimento</span>
+              <span style={{ fontWeight: 600 }}>{formatPercentValue(progressPercent)}</span>
+              <span style={{ color: "#6b7280" }}>Realizado</span>
+              <span style={{ fontWeight: 600 }}>{formatValue(value, format)}</span>
+              <span style={{ color: "#6b7280" }}>Meta</span>
+              <span style={{ fontWeight: 600 }}>{formatValue(resolvedTarget, format)}</span>
+            </div>
+          </div>
+        ) : null}
         <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label={`Gauge ${formatPercentValue(progressPercent)}`}>
           <path
             d={fullArc}
@@ -234,9 +265,6 @@ export default function JsonRenderGauge({ element }: { element?: { props?: AnyRe
           >
             <div style={{ fontSize: 26, lineHeight: 1, fontWeight: 700, color: (theme.cssVars as any)?.kpiValueColor || "#0f172a" }}>
               {formatPercentValue(progressPercent)}
-            </div>
-            <div style={{ marginTop: 6, fontSize: 12, color: (theme.cssVars as any)?.kpiTitleColor || "#6b7280" }}>
-              {subtitleText}
             </div>
           </div>
         ) : null}

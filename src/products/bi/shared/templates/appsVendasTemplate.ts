@@ -254,23 +254,20 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         </Card>
       </Container>
       <Container grow={1}>
-        <Card direction="row" justify="between" align="center" gap={12}>
-          <Container direction="column" gap={6}>
-            <Title text="Meta de Vendas" />
-            <Gauge format="currency" target={30000} min={0} max={30000} width={220} height={128} thickness={16} valueField="value">
-              <Query>
-                SELECT
-                  COALESCE(SUM(p.valor_total), 0)::float AS value
-                FROM vendas.pedidos p
-                WHERE p.tenant_id = {{tenant_id}}
-                  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-                  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
-                  AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
-                  AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
-              </Query>
-            </Gauge>
-          </Container>
-          <Icon name="badge-check" size={18} padding={10} radius={10} backgroundColor="#f3e8ff" color="#7c3aed" />
+        <Card>
+          <Title text="Meta de Vendas" />
+          <Gauge format="currency" target={30000} min={0} max={30000} width={220} height={128} thickness={16} valueField="value">
+            <Query>
+              SELECT
+                COALESCE(SUM(p.valor_total), 0)::float AS value
+              FROM vendas.pedidos p
+              WHERE p.tenant_id = {{tenant_id}}
+                AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
+                AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
+                AND ({{canal_venda_id}}::int[] IS NULL OR p.canal_venda_id = ANY({{canal_venda_id}}::int[]))
+                AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
+            </Query>
+          </Gauge>
         </Card>
       </Container>
     </Container>
