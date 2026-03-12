@@ -562,11 +562,21 @@ function resolveSlicerUiChild(element: any): { variant?: SlicerVariant; props: A
   return { props: {} };
 }
 
+function resolveSlicerStorePath(config: AnyRecord | null | undefined): string {
+  const explicit = String(config?.storePath || '').trim();
+  if (explicit) return explicit;
+  const field = String(config?.field || '').trim();
+  if (field) return `filters.${field}`;
+  return '';
+}
+
 function resolveSingleSlicerField(element: any, props: AnyRecord): AnyRecord | null {
-  const storePath = String(props?.storePath || '').trim();
+  const storePath = resolveSlicerStorePath(props);
   if (!storePath) return null;
   const fieldKeys = [
     'label',
+    'table',
+    'field',
     'type',
     'variant',
     'selectionMode',
@@ -585,6 +595,7 @@ function resolveSingleSlicerField(element: any, props: AnyRecord): AnyRecord | n
   for (const key of fieldKeys) {
     if (props[key] !== undefined) field[key] = props[key];
   }
+  field.storePath = storePath;
   const uiChild = resolveSlicerUiChild(element);
   if (uiChild.variant && field.variant === undefined) field.variant = uiChild.variant;
   return { ...field, ...uiChild.props };
@@ -717,7 +728,7 @@ function SlicerContent({
     let next = data;
     for (let i = 0; i < fields.length; i += 1) {
       const field = fields[i];
-      const storePath = String(field?.storePath || '').trim();
+      const storePath = resolveSlicerStorePath(field);
       if (!storePath) continue;
       if (Object.prototype.hasOwnProperty.call(pendingMap, i)) {
         next = setByPath(next, storePath, pendingMap[i]);
@@ -734,7 +745,7 @@ function SlicerContent({
     <>
       <div className={wrapperClassName}>
         {fields.map((field, idx) => {
-          const storePath = String(field?.storePath || '').trim();
+          const storePath = resolveSlicerStorePath(field);
           if (!storePath) return null;
 
           const label = typeof field?.label === 'string' ? field.label : undefined;
@@ -1556,7 +1567,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
           );
           return;
         }
-        const sp = String((s as any)?.storePath || '').trim();
+        const sp = resolveSlicerStorePath(s as AnyRecord);
         if (!sp) return;
         const lbl = typeof s?.label === 'string' ? s.label : undefined;
         const lblStyle = applySlicerLabelFromCssVars(normalizeTitleStyle((s as any)?.labelStyle), theme.cssVars);
@@ -2042,7 +2053,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       let next = data;
       for (let i = 0; i < fields.length; i++) {
         const f = fields[i];
-        const sp = String(f?.storePath || '').trim();
+        const sp = resolveSlicerStorePath(f);
         if (!sp) continue;
         if (pendingMap.hasOwnProperty(i)) next = setByPath(next, sp, pendingMap[i]);
       }
@@ -2055,7 +2066,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
         {title && <div className="mb-0" style={applyH1FromCssVars(undefined, theme.cssVars)}>{title}</div>}
         <div className={(layout === 'horizontal' ? 'flex items-start gap-3 flex-wrap' : 'space-y-3') + ' p-2'}>
           {fields.map((f, idx) => {
-            const sp = String(f?.storePath || '').trim();
+            const sp = resolveSlicerStorePath(f);
             if (!sp) return null;
             const lbl = typeof f?.label === 'string' ? f.label : undefined;
             const lblStyle = applySlicerLabelFromCssVars(normalizeTitleStyle((f as any)?.labelStyle), theme.cssVars);

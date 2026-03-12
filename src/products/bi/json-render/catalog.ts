@@ -173,10 +173,12 @@ const DropdownPropsSchema = SlicerUiPropsSchema.extend({
 
 const SlicerFieldPropsSchema = z.object({
   label: z.string().optional(),
+  table: z.string().optional(),
+  field: z.string().optional(),
   type: z.enum(["list", "dropdown", "multi", "tile", "tile-multi"]).default("list"),
   variant: SlicerVariantSchema.optional(),
   selectionMode: SlicerSelectionModeSchema.optional(),
-  storePath: z.string(),
+  storePath: z.string().optional(),
   placeholder: z.string().optional(),
   clearable: z.boolean().optional(),
   selectAll: z.boolean().optional(),
@@ -406,7 +408,9 @@ export const catalog = {
         slicers: z.array(z.union([
           z.object({
             label: z.string().optional(),
-            storePath: z.string(),
+            table: z.string().optional(),
+            field: z.string().optional(),
+            storePath: z.string().optional(),
             type: z.enum(["dropdown","multi","list","tile","tile-multi"]).default("dropdown"),
             placeholder: z.string().optional(),
             clearable: z.boolean().optional(),
@@ -858,6 +862,8 @@ export const catalog = {
         actionOnApply: z.object({ type: z.string() }).partial().optional(),
         fields: z.array(SlicerFieldPropsSchema).default([]),
         label: z.string().optional(),
+        table: z.string().optional(),
+        field: z.string().optional(),
         type: z.enum(["list", "dropdown", "multi", "tile", "tile-multi"]).optional(),
         variant: SlicerVariantSchema.optional(),
         selectionMode: SlicerSelectionModeSchema.optional(),

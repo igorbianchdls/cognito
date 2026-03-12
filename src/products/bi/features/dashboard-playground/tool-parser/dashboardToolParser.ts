@@ -318,7 +318,6 @@ function buildFiltroNode(payload: FiltroPayload): Record<string, unknown> {
   const campo = toRequiredText((payload as any).campo, 'payload.campo')
   const tabela = toRequiredText((payload as any).tabela, 'payload.tabela')
   const resolvedField = resolveSlicerField(tabela, campo)
-  const key = sanitizeKey(payload.chave || resolvedField)
   const slicerType = normalizeFiltroType((payload as any).tipo)
 
   return {
@@ -329,8 +328,9 @@ function buildFiltroNode(payload: FiltroPayload): Record<string, unknown> {
       fields: [
         {
           label: title,
+          table: tabela,
+          field: resolvedField,
           type: slicerType,
-          storePath: `filters.${key}`,
           source: {
             type: 'options',
             model: tabela,

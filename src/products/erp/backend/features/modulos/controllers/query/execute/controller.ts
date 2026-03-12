@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { runQuery } from '@/lib/postgres'
 import { resolveTenantId } from '@/lib/tenant'
+import { getAppsTableCatalog } from '@/products/bi/shared/queryCatalog'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
@@ -58,6 +59,105 @@ function normalizeAndAssertSafeSelectQuery(sql: string): string {
   return cleaned
 }
 
+type QueryTableRef = {
+  table: string
+  alias?: string
+}
+
+function isBlankFilterValue(value: unknown): boolean {
+  if (value === undefined || value === null) return true
+  if (typeof value === 'string') return value.trim() === ''
+  if (Array.isArray(value)) return value.length === 0
+  return false
+}
+
+function isSafeSqlIdentifier(value: string): boolean {
+  return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(value)
+}
+
+function extractQueryTableRefs(sql: string): QueryTableRef[] {
+  const refs: QueryTableRef[] = []
+  const pattern = /\b(from|join)\s+([a-zA-Z_][a-zA-Z0-9_]*)\.([a-zA-Z_][a-zA-Z0-9_]*)(?:\s+(?:as\s+)?([a-zA-Z_][a-zA-Z0-9_]*))?/gi
+  let match: RegExpExecArray | null
+  while ((match = pattern.exec(sql)) !== null) {
+    const schema = String(match[2] || '').trim()
+    const table = String(match[3] || '').trim()
+    const aliasRaw = String(match[4] || '').trim()
+    if (!schema || !table) continue
+    refs.push({
+      table: `${schema}.${table}`,
+      ...(aliasRaw ? { alias: aliasRaw } : {}),
+    })
+  }
+  return refs
+}
+
+function resolveMarkerTarget(sql: string, alias?: string): { table: string; ref: string } | null {
+  const refs = extractQueryTableRefs(sql)
+  if (!refs.length) return null
+  if (alias) {
+    const found = refs.find((entry) => entry.alias === alias)
+    if (!found) return null
+    return { table: found.table, ref: alias }
+  }
+  const primary = refs[0]
+  return {
+    table: primary.table,
+    ref: primary.alias || primary.table,
+  }
+}
+
+function buildFilterPredicate(field: string, value: unknown, ref: string): string | null {
+  if (!isSafeSqlIdentifier(field)) return null
+  if (field === 'tenant_id') return `${ref}.tenant_id = {{tenant_id}}`
+  if (field === 'de' || field === 'ate' || field === 'dateRange' || field === 'compare_de' || field === 'compare_ate' || field === 'comparison_mode') {
+    return null
+  }
+  if (isBlankFilterValue(value)) return null
+  if (typeof value === 'object' && !Array.isArray(value)) return null
+  if (Array.isArray(value)) {
+    const numericArray = value.every((item) => {
+      if (item === null || item === undefined || item === '') return false
+      return Number.isFinite(Number(item))
+    })
+    const cast = numericArray ? '::int[]' : '::text[]'
+    return `${ref}.${field} = ANY({{${field}}}${cast})`
+  }
+  return `${ref}.${field} = {{${field}}}`
+}
+
+function buildMarkerPredicates(sql: string, filters: Record<string, unknown>, alias?: string): string {
+  const target = resolveMarkerTarget(sql, alias)
+  if (!target) {
+    throw new Error(alias ? `não foi possível resolver alias do marcador de filtros: ${alias}` : 'não foi possível resolver tabela base do marcador de filtros')
+  }
+
+  const catalog = getAppsTableCatalog(target.table)
+  const allowedFields = catalog ? new Set(catalog.filters.map((filter) => filter.field)) : null
+  const predicates: string[] = []
+
+  if (!isBlankFilterValue(filters.tenant_id)) {
+    predicates.push(`${target.ref}.tenant_id = {{tenant_id}}`)
+  }
+
+  for (const [field, rawValue] of Object.entries(filters)) {
+    if (field === 'tenant_id' || field.startsWith('__')) continue
+    if (allowedFields && !allowedFields.has(field)) continue
+    const predicate = buildFilterPredicate(field, rawValue, target.ref)
+    if (predicate) predicates.push(predicate)
+  }
+
+  if (predicates.length === 0) return ''
+  return predicates.map((predicate, index) => `${index === 0 ? '' : '\n      '}AND ${predicate}`).join('')
+}
+
+function expandFilterMarkers(sql: string, filters: Record<string, unknown>): string {
+  return sql.replace(/\{\{\s*filters(?:\s*:\s*([a-zA-Z_][a-zA-Z0-9_]*))?\s*\}\}/g, (_, rawAlias?: string) => {
+    const alias = typeof rawAlias === 'string' ? rawAlias.trim() : ''
+    return buildMarkerPredicates(sql, filters, alias || undefined)
+  })
+}
+
 function bindNamedParams(sql: string, paramsSource: Record<string, unknown>) {
   const params: unknown[] = []
   const paramIndexByName = new Map<string, number>()
@@ -103,7 +203,8 @@ export async function POST(req: NextRequest) {
     const limitRaw = typeof dq.limit === 'number' ? dq.limit : undefined
     const limit = Math.max(1, Math.min(2000, limitRaw ?? 1000))
 
-    const { sql: boundSql, params } = bindNamedParams(query, filters)
+    const expandedQuery = expandFilterMarkers(query, filters)
+    const { sql: boundSql, params } = bindNamedParams(expandedQuery, filters)
     const finalSql = `SELECT * FROM (${boundSql}) AS q LIMIT $${params.length + 1}::int`
     const finalParams = [...params, limit]
 
