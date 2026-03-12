@@ -426,6 +426,54 @@ function mapChartType(source: string, node: DslNode, rawType: string): string {
   throw new DashboardTemplateDslParseError(source, node.start, `Tag <chart> exige type valido: line | bar | pie`)
 }
 
+function compileDataQueryNode(source: string, node: DslNode): Record<string, unknown> {
+  const dataQuery = attrsToProps(node.attrs)
+
+  const propsNodes = node.children.filter((child) => child.tag === 'props')
+  if (propsNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <data-query> aceita no maximo um <props>')
+  }
+  if (propsNodes.length) {
+    Object.assign(dataQuery, parsePropsNode(source, propsNodes[0]))
+  }
+
+  const queryNodes = node.children.filter((child) => child.tag === 'query' || child.tag === 'sql')
+  if (queryNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <data-query> aceita no maximo um <query>')
+  }
+  if (queryNodes.length) {
+    const queryRaw = String(queryNodes[0].text || '').trim()
+    if (queryRaw) dataQuery.query = queryRaw
+  }
+
+  const filterNodes = node.children.filter((child) => child.tag === 'filters')
+  if (filterNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <data-query> aceita no maximo um <filters>')
+  }
+  if (filterNodes.length) {
+    dataQuery.filters = parseJsonObjectNode(source, filterNodes[0], 'filters')
+  }
+
+  const orderByNodes = node.children.filter((child) => child.tag === 'order-by' || child.tag === 'orderby')
+  if (orderByNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <data-query> aceita no maximo um <order-by>')
+  }
+  if (orderByNodes.length) {
+    const orderBy = attrsToProps(orderByNodes[0].attrs)
+    if (Object.keys(orderBy).length) dataQuery.orderBy = orderBy
+  }
+
+  const configNodes = node.children.filter((child) => child.tag === 'config')
+  if (configNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <data-query> aceita no maximo um <config>')
+  }
+  if (configNodes.length) {
+    Object.assign(dataQuery, parseJsonObjectNode(source, configNodes[0], 'config'))
+  }
+
+  return dataQuery
+}
+
 function toCatalogType(tag: string): string {
   const normalized = String(tag || '').trim().toLowerCase()
   if (normalized === 'dashboardtemplate') return 'DashboardTemplate'
@@ -526,6 +574,10 @@ function compileChartNode(source: string, node: DslNode, context: CompileContext
   if (fieldsNodes.length > 1) {
     throw new DashboardTemplateDslParseError(source, node.start, 'Tag <chart> aceita no maximo um <fields>')
   }
+  const dataQueryNodes = node.children.filter((child) => child.tag === 'data-query' || child.tag === 'dataquery')
+  if (dataQueryNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <chart> aceita no maximo um <data-query>')
+  }
   const interactionNodes = node.children.filter((child) => child.tag === 'interaction')
   if (interactionNodes.length > 1) {
     throw new DashboardTemplateDslParseError(source, node.start, 'Tag <chart> aceita no maximo um <interaction>')
@@ -571,6 +623,10 @@ function compileChartNode(source: string, node: DslNode, context: CompileContext
     if (y) dataQueryFromProps.yField = String(y)
     if (key) dataQueryFromProps.keyField = String(key)
     if (series) dataQueryFromProps.seriesField = String(series)
+  }
+
+  if (dataQueryNodes.length) {
+    Object.assign(dataQueryFromProps, compileDataQueryNode(source, dataQueryNodes[0]))
   }
 
   if (Object.keys(dataQueryFromProps).length) props.dataQuery = dataQueryFromProps
@@ -708,50 +764,7 @@ function compileKpiNode(source: string, node: DslNode): Record<string, unknown> 
     throw new DashboardTemplateDslParseError(source, node.start, 'Tag <kpi> aceita no maximo um <data-query>')
   }
   if (dataQueryNodes.length) {
-    const dqNode = dataQueryNodes[0]
-    Object.assign(dataQueryFromProps, attrsToProps(dqNode.attrs))
-
-    const dqPropsNodes = dqNode.children.filter((child) => child.tag === 'props')
-    if (dqPropsNodes.length > 1) {
-      throw new DashboardTemplateDslParseError(source, dqNode.start, 'Tag <data-query> aceita no maximo um <props>')
-    }
-    if (dqPropsNodes.length) {
-      Object.assign(dataQueryFromProps, parsePropsNode(source, dqPropsNodes[0]))
-    }
-
-    const dqQueryNodes = dqNode.children.filter((child) => child.tag === 'query' || child.tag === 'sql')
-    if (dqQueryNodes.length > 1) {
-      throw new DashboardTemplateDslParseError(source, dqNode.start, 'Tag <data-query> aceita no maximo um <query>')
-    }
-    if (dqQueryNodes.length) {
-      const dqQueryRaw = String(dqQueryNodes[0].text || '').trim()
-      if (dqQueryRaw) dataQueryFromProps.query = dqQueryRaw
-    }
-
-    const filterNodes = dqNode.children.filter((child) => child.tag === 'filters')
-    if (filterNodes.length > 1) {
-      throw new DashboardTemplateDslParseError(source, dqNode.start, 'Tag <data-query> aceita no maximo um <filters>')
-    }
-    if (filterNodes.length) {
-      dataQueryFromProps.filters = parseJsonObjectNode(source, filterNodes[0], 'filters')
-    }
-
-    const orderByNodes = dqNode.children.filter((child) => child.tag === 'order-by' || child.tag === 'orderby')
-    if (orderByNodes.length > 1) {
-      throw new DashboardTemplateDslParseError(source, dqNode.start, 'Tag <data-query> aceita no maximo um <order-by>')
-    }
-    if (orderByNodes.length) {
-      const orderBy = attrsToProps(orderByNodes[0].attrs)
-      if (Object.keys(orderBy).length) dataQueryFromProps.orderBy = orderBy
-    }
-
-    const configNodesInDataQuery = dqNode.children.filter((child) => child.tag === 'config')
-    if (configNodesInDataQuery.length > 1) {
-      throw new DashboardTemplateDslParseError(source, dqNode.start, 'Tag <data-query> aceita no maximo um <config>')
-    }
-    if (configNodesInDataQuery.length) {
-      Object.assign(dataQueryFromProps, parseJsonObjectNode(source, configNodesInDataQuery[0], 'config'))
-    }
+    Object.assign(dataQueryFromProps, compileDataQueryNode(source, dataQueryNodes[0]))
   }
 
   if (Object.keys(dataQueryFromProps).length) {
@@ -800,29 +813,7 @@ function compileSparklineNode(source: string, node: DslNode): Record<string, unk
     throw new DashboardTemplateDslParseError(source, node.start, 'Tag <sparkline> aceita no maximo um <data-query>')
   }
   if (dataQueryNodes.length) {
-    const dqNode = dataQueryNodes[0]
-    Object.assign(dataQueryFromProps, attrsToProps(dqNode.attrs))
-    const dqPropsNodes = dqNode.children.filter((child) => child.tag === 'props')
-    if (dqPropsNodes.length > 1) {
-      throw new DashboardTemplateDslParseError(source, dqNode.start, 'Tag <data-query> aceita no maximo um <props>')
-    }
-    if (dqPropsNodes.length) {
-      Object.assign(dataQueryFromProps, parsePropsNode(source, dqPropsNodes[0]))
-    }
-    const filterNodes = dqNode.children.filter((child) => child.tag === 'filters')
-    if (filterNodes.length > 1) {
-      throw new DashboardTemplateDslParseError(source, dqNode.start, 'Tag <data-query> aceita no maximo um <filters>')
-    }
-    if (filterNodes.length) {
-      dataQueryFromProps.filters = parseJsonObjectNode(source, filterNodes[0], 'filters')
-    }
-    const configNodesInDataQuery = dqNode.children.filter((child) => child.tag === 'config')
-    if (configNodesInDataQuery.length > 1) {
-      throw new DashboardTemplateDslParseError(source, dqNode.start, 'Tag <data-query> aceita no maximo um <config>')
-    }
-    if (configNodesInDataQuery.length) {
-      Object.assign(dataQueryFromProps, parseJsonObjectNode(source, configNodesInDataQuery[0], 'config'))
-    }
+    Object.assign(dataQueryFromProps, compileDataQueryNode(source, dataQueryNodes[0]))
   }
 
   if (Object.keys(dataQueryFromProps).length) {
@@ -871,29 +862,7 @@ function compileGaugeNode(source: string, node: DslNode): Record<string, unknown
     throw new DashboardTemplateDslParseError(source, node.start, 'Tag <gauge> aceita no maximo um <data-query>')
   }
   if (dataQueryNodes.length) {
-    const dqNode = dataQueryNodes[0]
-    Object.assign(dataQueryFromProps, attrsToProps(dqNode.attrs))
-    const dqPropsNodes = dqNode.children.filter((child) => child.tag === 'props')
-    if (dqPropsNodes.length > 1) {
-      throw new DashboardTemplateDslParseError(source, dqNode.start, 'Tag <data-query> aceita no maximo um <props>')
-    }
-    if (dqPropsNodes.length) {
-      Object.assign(dataQueryFromProps, parsePropsNode(source, dqPropsNodes[0]))
-    }
-    const filterNodes = dqNode.children.filter((child) => child.tag === 'filters')
-    if (filterNodes.length > 1) {
-      throw new DashboardTemplateDslParseError(source, dqNode.start, 'Tag <data-query> aceita no maximo um <filters>')
-    }
-    if (filterNodes.length) {
-      dataQueryFromProps.filters = parseJsonObjectNode(source, filterNodes[0], 'filters')
-    }
-    const configNodesInDataQuery = dqNode.children.filter((child) => child.tag === 'config')
-    if (configNodesInDataQuery.length > 1) {
-      throw new DashboardTemplateDslParseError(source, dqNode.start, 'Tag <data-query> aceita no maximo um <config>')
-    }
-    if (configNodesInDataQuery.length) {
-      Object.assign(dataQueryFromProps, parseJsonObjectNode(source, configNodesInDataQuery[0], 'config'))
-    }
+    Object.assign(dataQueryFromProps, compileDataQueryNode(source, dataQueryNodes[0]))
   }
 
   if (Object.keys(dataQueryFromProps).length) {
@@ -1220,7 +1189,46 @@ function renderChartNodeToDsl(node: Record<string, unknown>, level: number): str
     delete propsRaw.nivo
   }
 
-  if (Object.keys(dataQueryRaw).length) {
+  const isSemanticDataQuery =
+    Object.keys(dataQueryRaw).length > 0 &&
+    typeof dataQueryRaw.query !== 'string' &&
+    Object.keys(fieldsAttrs).length === 0
+
+  if (isSemanticDataQuery) {
+    const dataQueryAttrs: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(dataQueryRaw)) {
+      if (v === undefined) continue
+      if (typeof v !== 'object' || v === null) {
+        dataQueryAttrs[k] = v
+        delete dataQueryRaw[k]
+      }
+    }
+
+    const filtersRaw =
+      dataQueryRaw.filters && typeof dataQueryRaw.filters === 'object' && !Array.isArray(dataQueryRaw.filters)
+        ? ({ ...(dataQueryRaw.filters as Record<string, unknown>) } as Record<string, unknown>)
+        : {}
+    delete dataQueryRaw.filters
+
+    const orderByRaw =
+      dataQueryRaw.orderBy && typeof dataQueryRaw.orderBy === 'object' && !Array.isArray(dataQueryRaw.orderBy)
+        ? ({ ...(dataQueryRaw.orderBy as Record<string, unknown>) } as Record<string, unknown>)
+        : {}
+    delete dataQueryRaw.orderBy
+
+    const hasDataQueryChildren = Object.keys(filtersRaw).length > 0 || Object.keys(orderByRaw).length > 0 || Object.keys(dataQueryRaw).length > 0
+    if (!hasDataQueryChildren) {
+      lines.push(`${renderIndent(level + 1)}<DataQuery${renderAttrs(dataQueryAttrs)} />`)
+    } else {
+      lines.push(`${renderIndent(level + 1)}<DataQuery${renderAttrs(dataQueryAttrs)}>`)
+      lines.push(...renderJsonObjectBlock('Filters', filtersRaw, level + 2))
+      if (Object.keys(orderByRaw).length) {
+        lines.push(`${renderIndent(level + 2)}<OrderBy${renderAttrs(orderByRaw)} />`)
+      }
+      lines.push(...renderJsonObjectBlock('Config', dataQueryRaw, level + 2))
+      lines.push(`${renderIndent(level + 1)}</DataQuery>`)
+    }
+  } else if (Object.keys(dataQueryRaw).length) {
     propsRaw.dataQuery = dataQueryRaw
   } else {
     delete propsRaw.dataQuery
