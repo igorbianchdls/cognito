@@ -75,13 +75,11 @@ export default function EditableNodeWrapper({
     ? {
         outline: `1px solid rgba(${accentRgb},0.95)`,
         outlineOffset: 2,
-        borderRadius: 6,
       }
     : hovered
       ? {
           outline: `1px solid rgba(${accentRgb},0.8)`,
           outlineOffset: 2,
-          borderRadius: 6,
         }
       : undefined
 
