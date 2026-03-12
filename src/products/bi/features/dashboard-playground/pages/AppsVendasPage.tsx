@@ -20,7 +20,7 @@ import type { DateRange } from '@/products/bi/shared/types'
 import { APPS_VENDAS_TEMPLATE_DSL } from '@/products/bi/shared/templates/appsVendasTemplate'
 
 function AppsVendasPlayground() {
-  const { data, setData, getValueByPath } = useData()
+  const { data, setData } = useData()
   const [editModeEnabled, setEditModeEnabled] = useState(true)
   const [rightTab, setRightTab] = useState<'preview' | 'code'>('preview')
   const {
@@ -53,10 +53,12 @@ function AppsVendasPlayground() {
     (action: any) => {
       if (action?.type !== 'refresh_data') return
 
-      const dateRange = getValueByPath('filters.dateRange', undefined) as DateRange | undefined
+      const dateRange = action?.dateRange && typeof action.dateRange === 'object'
+        ? (action.dateRange as DateRange)
+        : undefined
       void refreshAppsVendasData(setData, dateRange)
     },
-    [getValueByPath, setData],
+    [setData],
   )
 
   return (

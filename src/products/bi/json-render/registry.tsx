@@ -1265,9 +1265,9 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const showPicker = Boolean(dp.visible);
     const mode = (dp.mode ?? 'range') as 'range'|'single';
     const storePath = typeof dp.storePath === 'string' ? dp.storePath : undefined;
-    const effectiveStorePath = storePath || 'filters.dateRange';
     const dateTable = typeof dp.table === 'string' ? dp.table.trim() : '';
     const dateField = typeof dp.field === 'string' ? dp.field.trim() : '';
+    const isSemanticDatePicker = Boolean(dateTable && dateField);
     const format = (typeof dp.format === 'string' && dp.format) ? dp.format : 'YYYY-MM-DD';
     const legacyPickerTextStyle = ({
       fontFamily: typeof (dp.style as any)?.fontFamily === 'string' ? (dp.style as any).fontFamily : undefined,
@@ -1336,7 +1336,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       return root;
     }
     function buildDateFilterMeta(value: any) {
-      if (!dateTable || !dateField) return undefined;
+      if (!isSemanticDatePicker) return undefined;
       if (mode === 'single') {
         const singleValue = typeof value === 'string' ? value : '';
         return {
@@ -1357,11 +1357,50 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
         ...(to ? { to } : {}),
       };
     }
+    function resolveStoredDatePickerValue() {
+      if (storePath) return getValueByPath(storePath, undefined);
+      if (!isSemanticDatePicker) return undefined;
+      const raw = getValueByPath('filters.__date', undefined);
+      const marker = Array.isArray(raw)
+        ? raw.find((entry) => entry?.table === dateTable && entry?.field === dateField)
+        : raw;
+      if (!marker || marker.table !== dateTable || marker.field !== dateField) return undefined;
+      if (mode === 'single') return typeof marker.value === 'string' ? marker.value : undefined;
+      return {
+        from: fmt(marker.from),
+        to: fmt(marker.to),
+      };
+    }
+    function buildDatePickerAction(value: any) {
+      if (!dp.actionOnChange || typeof dp.actionOnChange !== 'object') return null;
+      const dateFilter = buildDateFilterMeta(value);
+      const dateRange = mode === 'single'
+        ? (() => {
+            const selected = typeof value === 'string' ? value : '';
+            return selected ? { from: selected, to: selected } : undefined;
+          })()
+        : (() => {
+            const range = value && typeof value === 'object' ? value : {};
+            const from = fmt((range as any).from);
+            const to = fmt((range as any).to);
+            return from || to ? { ...(from ? { from } : {}), ...(to ? { to } : {}) } : undefined;
+          })();
+      return {
+        ...(dp.actionOnChange as AnyRecord),
+        ...(dateRange ? { dateRange } : {}),
+        ...(dateFilter ? { dateFilter } : {}),
+      };
+    }
     function setDatePickerValue(value: any) {
-      let next = setByPath(data, effectiveStorePath, value);
-      next = setByPath(next, 'filters.__date', buildDateFilterMeta(value));
-      setData(next);
-      if (dp.actionOnChange && typeof dp.actionOnChange === 'object') onAction?.(dp.actionOnChange);
+      const dateFilter = buildDateFilterMeta(value);
+      const action = buildDatePickerAction(value);
+      setData((prev) => {
+        let next = prev;
+        if (storePath) next = setByPath(next, storePath, value);
+        if (isSemanticDatePicker) next = setByPath(next, 'filters.__date', dateFilter);
+        return next;
+      });
+      if (action) onAction?.(action);
     }
     React.useEffect(() => {
       if (!customPickerOpen) return;
@@ -1374,7 +1413,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       document.addEventListener('mousedown', onPointerDown);
       return () => document.removeEventListener('mousedown', onPointerDown);
     }, [customPickerOpen]);
-    const stored = getValueByPath(effectiveStorePath, undefined);
+    const stored = resolveStoredDatePickerValue();
     let picker: React.ReactNode = null;
     if (showPicker) {
       if (mode === 'range') {
