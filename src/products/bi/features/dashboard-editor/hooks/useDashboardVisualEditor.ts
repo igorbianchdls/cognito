@@ -35,6 +35,7 @@ export default function useDashboardVisualEditor({
 
   const closeProperties = useCallback(() => {
     setIsPropertiesOpen(false)
+    setSelectedPath(null)
   }, [])
 
   const handleNodeAction = useCallback((path: JsonNodePath, action: NodeMenuAction) => {
