@@ -320,6 +320,8 @@ export const catalog = {
           visible: z.boolean().optional(),
           mode: z.enum(["range","single"]).optional(),
           position: z.enum(["left","right","below"]).optional(),
+          table: z.string().optional(),
+          field: z.string().optional(),
           storePath: z.string().optional(),
           format: z.string().optional(),
           presets: z.array(z.enum(["7d","14d","30d","90d","month"])).optional(),
