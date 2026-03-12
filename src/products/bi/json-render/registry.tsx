@@ -14,6 +14,7 @@ import { ThemeProvider, useThemeOverrides } from "@/products/bi/json-render/them
 import { mapManagersToCssVars } from "@/products/bi/json-render/theme/thememanagers";
 import { buildThemeVars } from "@/products/bi/json-render/theme/themeAdapter";
 import { useDataValue, useData } from "@/products/bi/json-render/context";
+import { applyPrimaryDateRange } from "@/products/bi/json-render/dateFilters";
 import { deepMerge } from "@/stores/ui/json-render/utils";
 import { normalizeTitleStyle, normalizeContainerStyle, applyBorderFromCssVars, ensureSurfaceBackground, applyH1FromCssVars, applyKpiValueFromCssVars, applySlicerLabelFromCssVars, applySlicerOptionFromCssVars, applyDatePickerIconFromCssVars, applyDatePickerFieldFromCssVars, applyDatePickerLabelFromCssVars } from "@/products/bi/json-render/helpers";
 import { Calendar, Sparkles, TrendingUp, TrendingDown, TriangleAlert, AlertCircle, BadgeCheck, Lightbulb, Brain, CircleDollarSign, ShoppingCart, Users, Package, Activity, CircleHelp } from 'lucide-react';
@@ -374,12 +375,7 @@ async function fetchOptionsFromSource(
 
   if (typeof src.query === 'string' && src.query.trim()) {
     try {
-      const filters = { ...((args?.data as AnyRecord)?.filters || {}) } as AnyRecord;
-      const dr = (args?.data as AnyRecord)?.filters?.dateRange;
-      if (dr && !filters.de && !filters.ate) {
-        if (dr.from) filters.de = dr.from;
-        if (dr.to) filters.ate = dr.to;
-      }
+      const filters = applyPrimaryDateRange({ ...((args?.data as AnyRecord)?.filters || {}) } as AnyRecord, args?.data);
       if (term && filters.q === undefined) filters.q = term;
       delete filters.dateRange;
 
@@ -2356,9 +2352,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
             return;
           }
           if (!cancelled) setQueryError(null);
-          const filters = { ...(dq.filters || {}) } as AnyRecord;
-          const dr = (data as any)?.filters?.dateRange;
-          if (dr && !filters.de && !filters.ate) { if (dr.from) filters.de = dr.from; if (dr.to) filters.ate = dr.to; }
+          const filters = applyPrimaryDateRange({ ...(dq.filters || {}) } as AnyRecord, data);
           const comparisonRange = deriveComparisonRange(comparisonMode, filters.de, filters.ate);
           if (comparisonRange) {
             if (filters.compare_de === undefined) filters.compare_de = comparisonRange.from;

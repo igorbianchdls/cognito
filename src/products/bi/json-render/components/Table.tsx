@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { DataTable, type TableData } from "@/components/widgets/Table";
 import { useData } from "@/products/bi/json-render/context";
 import { useThemeOverrides } from "@/products/bi/json-render/theme/ThemeContext";
+import { applyPrimaryDateRange } from "@/products/bi/json-render/dateFilters";
 
 type AnyRecord = Record<string, any>;
 type TableRow = TableData;
@@ -274,12 +275,7 @@ export default function JsonRenderTable({ element }: { element: any }) {
           setQueryError(null);
           setIsLoading(true);
         }
-        const filters = { ...(dq.filters || {}) } as AnyRecord;
-        const dateRange = (data as AnyRecord)?.filters?.dateRange;
-        if (dateRange && !filters.de && !filters.ate) {
-          if (dateRange.from) filters.de = dateRange.from;
-          if (dateRange.to) filters.ate = dateRange.to;
-        }
+        const filters = applyPrimaryDateRange({ ...(dq.filters || {}) } as AnyRecord, data);
         const globalFilters = (data as AnyRecord)?.filters;
         if (globalFilters && typeof globalFilters === "object") {
           for (const [key, value] of Object.entries(globalFilters)) {

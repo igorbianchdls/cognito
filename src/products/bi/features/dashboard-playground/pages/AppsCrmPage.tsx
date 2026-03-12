@@ -17,7 +17,7 @@ import type { DateRange } from '@/products/bi/shared/types'
 import { APPS_CRM_TEMPLATE_DSL } from '@/products/bi/shared/templates/appsCrmTemplate'
 
 function AppsCrmPlayground() {
-  const { data, setData, getValueByPath } = useData()
+  const { data, setData } = useData()
   const {
     dslText,
     jsonText,
@@ -48,10 +48,12 @@ function AppsCrmPlayground() {
     (action: any) => {
       if (action?.type !== 'refresh_data') return
 
-      const dateRange = getValueByPath('filters.dateRange', undefined) as DateRange | undefined
+      const dateRange = action?.dateRange && typeof action.dateRange === 'object'
+        ? (action.dateRange as DateRange)
+        : undefined
       void refreshAppsCrmData(setData, dateRange)
     },
-    [getValueByPath, setData],
+    [setData],
   )
 
   return (

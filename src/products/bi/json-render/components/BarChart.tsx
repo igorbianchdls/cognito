@@ -5,6 +5,7 @@ import { useData } from "@/products/bi/json-render/context";
 import { ResponsiveBar } from "@nivo/bar";
 import { buildNivoTheme, isPlainObject, omitObjectKeys } from "@/products/bi/json-render/helpers";
 import { useThemeOverrides } from "@/products/bi/json-render/theme/ThemeContext";
+import { applyPrimaryDateRange } from "@/products/bi/json-render/dateFilters";
 
 type AnyRecord = Record<string, any>;
 
@@ -151,12 +152,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
       if (isSqlQueryMode && (!dq.xField || !dq.yField)) { setServerRows(null); setQueryError(null); return; }
       try {
         if (!cancelled) setQueryError(null);
-        const filters = { ...(dq.filters || {}) } as AnyRecord;
-        const dr = (data as any)?.filters?.dateRange;
-        if (dr && !filters.de && !filters.ate) {
-          if (dr.from) filters.de = dr.from;
-          if (dr.to) filters.ate = dr.to;
-        }
+        const filters = applyPrimaryDateRange({ ...(dq.filters || {}) } as AnyRecord, data);
         const globalFilters = (data as any)?.filters;
         if (globalFilters && typeof globalFilters === 'object') {
           for (const [k, v] of Object.entries(globalFilters)) {

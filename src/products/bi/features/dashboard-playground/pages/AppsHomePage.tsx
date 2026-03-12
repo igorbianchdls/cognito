@@ -38,7 +38,7 @@ const INITIAL_APPS_HOME_DATA = {
 }
 
 function AppsHomePlayground() {
-  const { data, setData, getValueByPath } = useData()
+  const { data, setData } = useData()
   const {
     dslText,
     jsonText,
@@ -67,7 +67,9 @@ function AppsHomePlayground() {
   const handleAction = useCallback(
     (action: any) => {
       if (action?.type === 'refresh_data') {
-        const dateRange = getValueByPath('filters.dateRange', undefined) as DateRange | undefined
+        const dateRange = action?.dateRange && typeof action.dateRange === 'object'
+          ? (action.dateRange as DateRange)
+          : undefined
         void refreshAppsHomeData(setData, dateRange)
         return
       }
@@ -79,7 +81,7 @@ function AppsHomePlayground() {
 
       console.warn('Unhandled action:', action)
     },
-    [getValueByPath, setData],
+    [setData],
   )
 
   return (

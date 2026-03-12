@@ -17,7 +17,7 @@ import type { DateRange } from '@/products/bi/shared/types'
 import { APPS_ESTOQUE_TEMPLATE_DSL } from '@/products/bi/shared/templates/appsEstoqueTemplate'
 
 function AppsEstoquePlayground() {
-  const { data, setData, getValueByPath } = useData()
+  const { data, setData } = useData()
   const {
     dslText,
     jsonText,
@@ -48,10 +48,12 @@ function AppsEstoquePlayground() {
     (action: any) => {
       if (action?.type !== 'refresh_data') return
 
-      const dateRange = getValueByPath('filters.dateRange', undefined) as DateRange | undefined
+      const dateRange = action?.dateRange && typeof action.dateRange === 'object'
+        ? (action.dateRange as DateRange)
+        : undefined
       void refreshAppsEstoqueData(setData, dateRange)
     },
-    [getValueByPath, setData],
+    [setData],
   )
 
   return (
