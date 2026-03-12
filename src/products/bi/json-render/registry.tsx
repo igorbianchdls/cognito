@@ -1265,6 +1265,9 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const showPicker = Boolean(dp.visible);
     const mode = (dp.mode ?? 'range') as 'range'|'single';
     const storePath = typeof dp.storePath === 'string' ? dp.storePath : undefined;
+    const effectiveStorePath = storePath || 'filters.dateRange';
+    const dateTable = typeof dp.table === 'string' ? dp.table.trim() : '';
+    const dateField = typeof dp.field === 'string' ? dp.field.trim() : '';
     const format = (typeof dp.format === 'string' && dp.format) ? dp.format : 'YYYY-MM-DD';
     const legacyPickerTextStyle = ({
       fontFamily: typeof (dp.style as any)?.fontFamily === 'string' ? (dp.style as any).fontFamily : undefined,
@@ -1323,13 +1326,42 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       for (let i = 0; i < parts.length; i++) {
         const k = parts[i];
         if (i === parts.length - 1) {
-          curr[k] = value;
+          if (value === undefined) delete curr[k];
+          else curr[k] = value;
         } else {
           curr[k] = typeof curr[k] === 'object' && curr[k] !== null ? { ...curr[k] } : {};
           curr = curr[k];
         }
       }
       return root;
+    }
+    function buildDateFilterMeta(value: any) {
+      if (!dateTable || !dateField) return undefined;
+      if (mode === 'single') {
+        const singleValue = typeof value === 'string' ? value : '';
+        return {
+          table: dateTable,
+          field: dateField,
+          mode: 'single',
+          ...(singleValue ? { value: singleValue } : {}),
+        };
+      }
+      const range = value && typeof value === 'object' ? value : {};
+      const from = fmt((range as any).from);
+      const to = fmt((range as any).to);
+      return {
+        table: dateTable,
+        field: dateField,
+        mode: 'range',
+        ...(from ? { from } : {}),
+        ...(to ? { to } : {}),
+      };
+    }
+    function setDatePickerValue(value: any) {
+      let next = setByPath(data, effectiveStorePath, value);
+      next = setByPath(next, 'filters.__date', buildDateFilterMeta(value));
+      setData(next);
+      if (dp.actionOnChange && typeof dp.actionOnChange === 'object') onAction?.(dp.actionOnChange);
     }
     React.useEffect(() => {
       if (!customPickerOpen) return;
@@ -1342,7 +1374,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       document.addEventListener('mousedown', onPointerDown);
       return () => document.removeEventListener('mousedown', onPointerDown);
     }, [customPickerOpen]);
-    const stored = storePath ? getValueByPath(storePath, undefined) : undefined;
+    const stored = getValueByPath(effectiveStorePath, undefined);
     let picker: React.ReactNode = null;
     if (showPicker) {
       if (mode === 'range') {
@@ -1353,12 +1385,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
           ? dp.presets
           : ['7d', '14d', '30d']) as Array<'7d' | '14d' | '30d' | '90d' | 'month'>;
         const activePreset = presetKeys.find((preset) => isSameRange(curr, getPresetRange(preset)));
-        const setRange = (range: { from: string; to: string }) => {
-          if (!storePath) return;
-          const next = setByPath(data, storePath, range);
-          setData(next);
-          if (dp.actionOnChange && typeof dp.actionOnChange === 'object') onAction?.(dp.actionOnChange);
-        };
+        const setRange = (range: { from: string; to: string }) => setDatePickerValue(range);
         const presetButtonStyleRaw = pickerButtonStyle((dp.style as any)?.presetButtonStyle as AnyRecord);
         const activePresetButtonStyleRaw = pickerButtonStyle((dp.style as any)?.activePresetButtonStyle as AnyRecord);
         const calendarButtonStyleRaw = pickerButtonStyle((dp.style as any)?.calendarButtonStyle as AnyRecord);
@@ -1465,10 +1492,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
             <DateFieldWithIcon
               value={curr}
               onChange={(val: string) => {
-                if (!storePath) return;
-                const next = setByPath(data, storePath, val);
-                setData(next);
-                if (dp.actionOnChange && typeof dp.actionOnChange === 'object') onAction?.(dp.actionOnChange);
+                setDatePickerValue(val);
               }}
               fieldStyle={{ ...dateFieldStyle, ...dateFieldOverride }}
               iconStyleOverride={dateIconStyle}

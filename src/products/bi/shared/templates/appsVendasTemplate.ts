@@ -60,7 +60,7 @@ ORDER BY 2 ASC"
             <Title text="Dashboard de Vendas" />
             <Subtitle text="Principais indicadores e cortes" />
           </Container>
-          <DatePicker visible mode="range" storePath="filters.dateRange" presets={["7d","14d","30d"]}>
+          <DatePicker visible mode="range" table="vendas.pedidos" field="data_pedido" presets={["7d","14d","30d"]}>
             <ActionOnChange type="refresh_data" />
             <Style>
               {
@@ -84,15 +84,13 @@ ORDER BY 2 ASC"
                   FROM vendas.pedidos p
                   WHERE 1=1
                     {{filters:p}}
-                    AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-                    AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
                 ),
                 anterior AS (
                   SELECT
                     COALESCE(SUM(p.valor_total), 0)::float AS value
                   FROM vendas.pedidos p
                   WHERE 1=1
-                    {{filters:p}}
+                    {{filters_no_date:p}}
                     AND {{compare_de}}::date IS NOT NULL
                     AND {{compare_ate}}::date IS NOT NULL
                     AND p.data_pedido::date >= {{compare_de}}::date
@@ -120,8 +118,6 @@ ORDER BY 2 ASC"
                 FROM vendas.pedidos p
                 WHERE 1=1
                   {{filters:p}}
-                  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-                  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
                 GROUP BY 1, 2
                 ORDER BY 1 ASC
               </Query>
@@ -143,15 +139,13 @@ ORDER BY 2 ASC"
                   FROM vendas.pedidos p
                   WHERE 1=1
                     {{filters:p}}
-                    AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-                    AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
                 ),
                 anterior AS (
                   SELECT
                     COUNT(DISTINCT p.id)::float AS value
                   FROM vendas.pedidos p
                   WHERE 1=1
-                    {{filters:p}}
+                    {{filters_no_date:p}}
                     AND {{compare_de}}::date IS NOT NULL
                     AND {{compare_ate}}::date IS NOT NULL
                     AND p.data_pedido::date >= {{compare_de}}::date
@@ -179,8 +173,6 @@ ORDER BY 2 ASC"
                 FROM vendas.pedidos p
                 WHERE 1=1
                   {{filters:p}}
-                  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-                  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
                 GROUP BY 1, 2
                 ORDER BY 1 ASC
               </Query>
@@ -202,15 +194,13 @@ ORDER BY 2 ASC"
                   FROM vendas.pedidos p
                   WHERE 1=1
                     {{filters:p}}
-                    AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-                    AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
                 ),
                 anterior AS (
                   SELECT
                     COALESCE(AVG(p.valor_total), 0)::float AS value
                   FROM vendas.pedidos p
                   WHERE 1=1
-                    {{filters:p}}
+                    {{filters_no_date:p}}
                     AND {{compare_de}}::date IS NOT NULL
                     AND {{compare_ate}}::date IS NOT NULL
                     AND p.data_pedido::date >= {{compare_de}}::date
@@ -238,8 +228,6 @@ ORDER BY 2 ASC"
                 FROM vendas.pedidos p
                 WHERE 1=1
                   {{filters:p}}
-                  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-                  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
                 GROUP BY 1, 2
                 ORDER BY 1 ASC
               </Query>
@@ -273,8 +261,6 @@ ORDER BY 2 ASC"
               FROM vendas.pedidos p
               WHERE 1=1
                 {{filters:p}}
-                AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-                AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
             </Query>
           </Gauge>
         </Card>
@@ -295,8 +281,6 @@ ORDER BY 2 ASC"
                         LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
                         WHERE 1=1
                           {{filters:p}}
-                          AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-                          AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
                         GROUP BY 1, 2
                         ORDER BY 3 DESC
             </Query>
@@ -339,8 +323,6 @@ ORDER BY 2 ASC"
                         LEFT JOIN financeiro.categorias_receita cr ON cr.id = p.categoria_receita_id
                         WHERE 1=1
                           {{filters:p}}
-                          AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-                          AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
                         GROUP BY 1, 2
                         ORDER BY 3 DESC
             </Query>
@@ -372,8 +354,6 @@ ORDER BY 2 ASC"
                         LEFT JOIN entidades.clientes c ON c.id = p.cliente_id
                         WHERE 1=1
                           {{filters:p}}
-                          AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-                          AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
                         GROUP BY 1, 2
                         ORDER BY 3 DESC
             </Query>
@@ -408,8 +388,6 @@ ORDER BY 2 ASC"
                     LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
                     WHERE 1=1
                       {{filters:p}}
-                      AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-                      AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
                     GROUP BY 1, 2
                     ORDER BY 3 DESC
         </Query>
@@ -441,8 +419,6 @@ ORDER BY 2 ASC"
                     LEFT JOIN empresa.filiais fil ON fil.id = p.filial_id
                     WHERE 1=1
                       {{filters:p}}
-                      AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-                      AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
                     GROUP BY 1, 2
                     ORDER BY 3 DESC
         </Query>
@@ -474,8 +450,6 @@ ORDER BY 2 ASC"
                     LEFT JOIN empresa.unidades_negocio un ON un.id = p.unidade_negocio_id
                     WHERE 1=1
                       {{filters:p}}
-                      AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-                      AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
                     GROUP BY 1, 2
                     ORDER BY 3 DESC
         </Query>
@@ -508,8 +482,6 @@ ORDER BY 2 ASC"
                       JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                       WHERE 1=1
                         {{filters:p}}
-                        AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-                        AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
                       GROUP BY 1
                       ORDER BY 2 DESC
                       LIMIT 4
@@ -528,8 +500,6 @@ ORDER BY 2 ASC"
                       LEFT JOIN top_canais tc ON tc.canal_venda_id = p.canal_venda_id
                       WHERE 1=1
                         {{filters:p}}
-                        AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-                        AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
                       GROUP BY 1, 2
                     )
                     SELECT
@@ -598,7 +568,7 @@ ORDER BY 2 ASC"
             <Config>
               {
                 "dataQuery": {
-                  "query": "SELECT\n  p.id AS pedido,\n  p.data_pedido::date AS data_pedido,\n  COALESCE(c.nome_fantasia, '-') AS cliente,\n  COALESCE(cv.nome, '-') AS canal,\n  COALESCE(f.nome, '-') AS vendedor,\n  COALESCE(p.valor_total, 0)::float AS valor_total,\n  COALESCE(p.status, '-') AS status\nFROM vendas.pedidos p\nLEFT JOIN entidades.clientes c ON c.id = p.cliente_id\nLEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id\nLEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id\nLEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id\nWHERE 1=1\n  {{filters:p}}\n  AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)\n  AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)\nORDER BY p.data_pedido DESC, p.id DESC",
+                  "query": "SELECT\n  p.id AS pedido,\n  p.data_pedido::date AS data_pedido,\n  COALESCE(c.nome_fantasia, '-') AS cliente,\n  COALESCE(cv.nome, '-') AS canal,\n  COALESCE(f.nome, '-') AS vendedor,\n  COALESCE(p.valor_total, 0)::float AS valor_total,\n  COALESCE(p.status, '-') AS status\nFROM vendas.pedidos p\nLEFT JOIN entidades.clientes c ON c.id = p.cliente_id\nLEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id\nLEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id\nLEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id\nWHERE 1=1\n  {{filters:p}}\nORDER BY p.data_pedido DESC, p.id DESC",
                   "filters": {},
                   "limit": 120
                 },
@@ -697,8 +667,6 @@ ORDER BY 2 ASC"
                     FROM vendas.pedidos p
                     WHERE 1=1
                       {{filters:p}}
-                      AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-                      AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
                     GROUP BY 1, 2
                     ORDER BY 2 ASC
         </Query>
@@ -728,8 +696,6 @@ ORDER BY 2 ASC"
                     FROM vendas.pedidos p
                     WHERE 1=1
                       {{filters:p}}
-                      AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-                      AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
                     GROUP BY 1, 2
                     ORDER BY 2 ASC
         </Query>
@@ -788,8 +754,6 @@ ORDER BY 2 ASC"
                     LEFT JOIN comercial.territorios t ON t.id = p.territorio_id
                     WHERE 1=1
                       {{filters:p}}
-                      AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-                      AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
                     GROUP BY 1, 2
                     ORDER BY 3 DESC
         </Query>
@@ -821,8 +785,6 @@ ORDER BY 2 ASC"
                     LEFT JOIN financeiro.categorias_receita cr ON cr.id = p.categoria_receita_id
                     WHERE 1=1
                       {{filters:p}}
-                      AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-                      AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
                     GROUP BY 1, 2
                     ORDER BY 3 DESC
         </Query>
@@ -853,8 +815,6 @@ ORDER BY 2 ASC"
                     LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
                     WHERE 1=1
                       {{filters:p}}
-                      AND ({{de}} IS NULL OR p.data_pedido::date >= {{de}}::date)
-                      AND ({{ate}} IS NULL OR p.data_pedido::date <= {{ate}}::date)
                     GROUP BY 1, 2
                     ORDER BY 3 DESC
         </Query>

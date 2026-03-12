@@ -64,6 +64,15 @@ type QueryTableRef = {
   alias?: string
 }
 
+type DateFilterMarker = {
+  table?: string
+  field?: string
+  mode?: 'range' | 'single' | string
+  from?: string
+  to?: string
+  value?: string
+}
+
 function isBlankFilterValue(value: unknown): boolean {
   if (value === undefined || value === null) return true
   if (typeof value === 'string') return value.trim() === ''
@@ -126,7 +135,45 @@ function buildFilterPredicate(field: string, value: unknown, ref: string): strin
   return `${ref}.${field} = {{${field}}}`
 }
 
-function buildMarkerPredicates(sql: string, filters: Record<string, unknown>, alias?: string): string {
+function normalizeDateFilterMarkers(filters: Record<string, unknown>): DateFilterMarker[] {
+  const raw = filters.__date
+  if (Array.isArray(raw)) {
+    return raw.filter((entry): entry is DateFilterMarker => isObject(entry))
+  }
+  if (isObject(raw)) return [raw as DateFilterMarker]
+  return []
+}
+
+function buildDatePredicates(target: { table: string; ref: string }, filters: Record<string, unknown>): string[] {
+  const dateMarkers = normalizeDateFilterMarkers(filters)
+  if (!dateMarkers.length) return []
+
+  const de = typeof filters.de === 'string' ? filters.de.trim() : ''
+  const ate = typeof filters.ate === 'string' ? filters.ate.trim() : ''
+  const predicates: string[] = []
+
+  for (const marker of dateMarkers) {
+    const markerTable = typeof marker.table === 'string' ? marker.table.trim() : ''
+    const markerField = typeof marker.field === 'string' ? marker.field.trim() : ''
+    if (!markerTable || !markerField || markerTable !== target.table || !isSafeSqlIdentifier(markerField)) continue
+
+    if (marker.mode === 'single') {
+      const value = typeof marker.value === 'string' ? marker.value.trim() : ''
+      if (value) predicates.push(`${target.ref}.${markerField}::date = {{de}}`)
+      continue
+    }
+
+    const fromValue = de || (typeof marker.from === 'string' ? marker.from.trim() : '')
+    const toValue = ate || (typeof marker.to === 'string' ? marker.to.trim() : '')
+
+    if (fromValue) predicates.push(`${target.ref}.${markerField}::date >= {{de}}`)
+    if (toValue) predicates.push(`${target.ref}.${markerField}::date <= {{ate}}`)
+  }
+
+  return predicates
+}
+
+function buildMarkerPredicates(sql: string, filters: Record<string, unknown>, alias?: string, opts?: { includeDate?: boolean }): string {
   const target = resolveMarkerTarget(sql, alias)
   if (!target) {
     throw new Error(alias ? `não foi possível resolver alias do marcador de filtros: ${alias}` : 'não foi possível resolver tabela base do marcador de filtros')
@@ -138,6 +185,10 @@ function buildMarkerPredicates(sql: string, filters: Record<string, unknown>, al
 
   if (!isBlankFilterValue(filters.tenant_id)) {
     predicates.push(`${target.ref}.tenant_id = {{tenant_id}}`)
+  }
+
+  if (opts?.includeDate !== false) {
+    predicates.push(...buildDatePredicates(target, filters))
   }
 
   for (const [field, rawValue] of Object.entries(filters)) {
@@ -152,9 +203,10 @@ function buildMarkerPredicates(sql: string, filters: Record<string, unknown>, al
 }
 
 function expandFilterMarkers(sql: string, filters: Record<string, unknown>): string {
-  return sql.replace(/\{\{\s*filters(?:\s*:\s*([a-zA-Z_][a-zA-Z0-9_]*))?\s*\}\}/g, (_, rawAlias?: string) => {
+  return sql.replace(/\{\{\s*(filters(?:_no_date)?)(?:\s*:\s*([a-zA-Z_][a-zA-Z0-9_]*))?\s*\}\}/g, (_, rawMarker: string, rawAlias?: string) => {
+    const marker = String(rawMarker || '').trim().toLowerCase()
     const alias = typeof rawAlias === 'string' ? rawAlias.trim() : ''
-    return buildMarkerPredicates(sql, filters, alias || undefined)
+    return buildMarkerPredicates(sql, filters, alias || undefined, { includeDate: marker !== 'filters_no_date' })
   })
 }
 
@@ -199,6 +251,27 @@ export async function POST(req: NextRequest) {
     const rawFilters = isObject(dq.filters) ? dq.filters : {}
     const filters: Record<string, unknown> =
       typeof rawFilters.tenant_id === 'number' ? rawFilters : { ...rawFilters, tenant_id: tenantId }
+    const dateMarkers = normalizeDateFilterMarkers(filters)
+    if (!filters.de || !filters.ate) {
+      const firstSingleMarker = dateMarkers.find((marker) => marker.mode === 'single')
+      if (firstSingleMarker && !filters.de) {
+        const value = typeof firstSingleMarker.value === 'string' ? firstSingleMarker.value.trim() : ''
+        if (value) filters.de = value
+      }
+      if (firstSingleMarker && !filters.ate) {
+        const value = typeof firstSingleMarker.value === 'string' ? firstSingleMarker.value.trim() : ''
+        if (value) filters.ate = value
+      }
+      const firstRangeMarker = dateMarkers.find((marker) => marker.mode !== 'single')
+      if (firstRangeMarker) {
+        if (!filters.de && typeof firstRangeMarker.from === 'string' && firstRangeMarker.from.trim()) {
+          filters.de = firstRangeMarker.from.trim()
+        }
+        if (!filters.ate && typeof firstRangeMarker.to === 'string' && firstRangeMarker.to.trim()) {
+          filters.ate = firstRangeMarker.to.trim()
+        }
+      }
+    }
 
     const limitRaw = typeof dq.limit === 'number' ? dq.limit : undefined
     const limit = Math.max(1, Math.min(2000, limitRaw ?? 1000))
