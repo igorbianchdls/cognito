@@ -90,11 +90,7 @@ ORDER BY 2 ASC"
                     COALESCE(SUM(p.valor_total), 0)::float AS value
                   FROM vendas.pedidos p
                   WHERE 1=1
-                    {{filters_no_date:p}}
-                    AND {{compare_de}}::date IS NOT NULL
-                    AND {{compare_ate}}::date IS NOT NULL
-                    AND p.data_pedido::date >= {{compare_de}}::date
-                    AND p.data_pedido::date <= {{compare_ate}}::date
+                    {{compare_filters:p}}
                 )
                 SELECT
                   atual.value AS value,
@@ -145,11 +141,7 @@ ORDER BY 2 ASC"
                     COUNT(DISTINCT p.id)::float AS value
                   FROM vendas.pedidos p
                   WHERE 1=1
-                    {{filters_no_date:p}}
-                    AND {{compare_de}}::date IS NOT NULL
-                    AND {{compare_ate}}::date IS NOT NULL
-                    AND p.data_pedido::date >= {{compare_de}}::date
-                    AND p.data_pedido::date <= {{compare_ate}}::date
+                    {{compare_filters:p}}
                 )
                 SELECT
                   atual.value AS value,
@@ -200,11 +192,7 @@ ORDER BY 2 ASC"
                     COALESCE(AVG(p.valor_total), 0)::float AS value
                   FROM vendas.pedidos p
                   WHERE 1=1
-                    {{filters_no_date:p}}
-                    AND {{compare_de}}::date IS NOT NULL
-                    AND {{compare_ate}}::date IS NOT NULL
-                    AND p.data_pedido::date >= {{compare_de}}::date
-                    AND p.data_pedido::date <= {{compare_ate}}::date
+                    {{compare_filters:p}}
                 )
                 SELECT
                   atual.value AS value,

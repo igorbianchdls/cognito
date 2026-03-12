@@ -144,12 +144,18 @@ function normalizeDateFilterMarkers(filters: Record<string, unknown>): DateFilte
   return []
 }
 
-function buildDatePredicates(target: { table: string; ref: string }, filters: Record<string, unknown>): string[] {
+function buildDatePredicates(
+  target: { table: string; ref: string },
+  filters: Record<string, unknown>,
+  mode: 'current' | 'compare' = 'current',
+): string[] {
   const dateMarkers = normalizeDateFilterMarkers(filters)
   if (!dateMarkers.length) return []
 
-  const de = typeof filters.de === 'string' ? filters.de.trim() : ''
-  const ate = typeof filters.ate === 'string' ? filters.ate.trim() : ''
+  const deKey = mode === 'compare' ? 'compare_de' : 'de'
+  const ateKey = mode === 'compare' ? 'compare_ate' : 'ate'
+  const de = typeof filters[deKey] === 'string' ? String(filters[deKey]).trim() : ''
+  const ate = typeof filters[ateKey] === 'string' ? String(filters[ateKey]).trim() : ''
   const predicates: string[] = []
 
   for (const marker of dateMarkers) {
@@ -158,22 +164,30 @@ function buildDatePredicates(target: { table: string; ref: string }, filters: Re
     if (!markerTable || !markerField || markerTable !== target.table || !isSafeSqlIdentifier(markerField)) continue
 
     if (marker.mode === 'single') {
-      const value = typeof marker.value === 'string' ? marker.value.trim() : ''
-      if (value) predicates.push(`${target.ref}.${markerField}::date = {{de}}`)
+      const value =
+        mode === 'compare'
+          ? de
+          : (typeof marker.value === 'string' ? marker.value.trim() : '')
+      if (value) predicates.push(`${target.ref}.${markerField}::date = {{${deKey}}}::date`)
       continue
     }
 
     const fromValue = de || (typeof marker.from === 'string' ? marker.from.trim() : '')
     const toValue = ate || (typeof marker.to === 'string' ? marker.to.trim() : '')
 
-    if (fromValue) predicates.push(`${target.ref}.${markerField}::date >= {{de}}`)
-    if (toValue) predicates.push(`${target.ref}.${markerField}::date <= {{ate}}`)
+    if (fromValue) predicates.push(`${target.ref}.${markerField}::date >= {{${deKey}}}::date`)
+    if (toValue) predicates.push(`${target.ref}.${markerField}::date <= {{${ateKey}}}::date`)
   }
 
   return predicates
 }
 
-function buildMarkerPredicates(sql: string, filters: Record<string, unknown>, alias?: string, opts?: { includeDate?: boolean }): string {
+function buildMarkerPredicates(
+  sql: string,
+  filters: Record<string, unknown>,
+  alias?: string,
+  opts?: { includeDate?: boolean; dateMode?: 'current' | 'compare' },
+): string {
   const target = resolveMarkerTarget(sql, alias)
   if (!target) {
     throw new Error(alias ? `não foi possível resolver alias do marcador de filtros: ${alias}` : 'não foi possível resolver tabela base do marcador de filtros')
@@ -188,7 +202,7 @@ function buildMarkerPredicates(sql: string, filters: Record<string, unknown>, al
   }
 
   if (opts?.includeDate !== false) {
-    predicates.push(...buildDatePredicates(target, filters))
+    predicates.push(...buildDatePredicates(target, filters, opts?.dateMode || 'current'))
   }
 
   for (const [field, rawValue] of Object.entries(filters)) {
@@ -203,10 +217,13 @@ function buildMarkerPredicates(sql: string, filters: Record<string, unknown>, al
 }
 
 function expandFilterMarkers(sql: string, filters: Record<string, unknown>): string {
-  return sql.replace(/\{\{\s*(filters(?:_no_date)?)(?:\s*:\s*([a-zA-Z_][a-zA-Z0-9_]*))?\s*\}\}/g, (_, rawMarker: string, rawAlias?: string) => {
+  return sql.replace(/\{\{\s*(filters(?:_no_date)?|compare_filters)(?:\s*:\s*([a-zA-Z_][a-zA-Z0-9_]*))?\s*\}\}/g, (_, rawMarker: string, rawAlias?: string) => {
     const marker = String(rawMarker || '').trim().toLowerCase()
     const alias = typeof rawAlias === 'string' ? rawAlias.trim() : ''
-    return buildMarkerPredicates(sql, filters, alias || undefined, { includeDate: marker !== 'filters_no_date' })
+    return buildMarkerPredicates(sql, filters, alias || undefined, {
+      includeDate: marker !== 'filters_no_date',
+      dateMode: marker === 'compare_filters' ? 'compare' : 'current',
+    })
   })
 }
 
