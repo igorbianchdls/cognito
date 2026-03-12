@@ -39,45 +39,7 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
           <Container direction="column" gap={6}>
             <Title text="Gasto" />
             <KPI format="currency">
-        <Query>
-          SELECT
-            COALESCE(SUM(src.valor_total), 0)::float AS value
-          FROM compras.compras src
-          WHERE src.tenant_id = {{tenant_id}}
-            AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
-            AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
-            AND (
-              NULLIF(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-              OR COALESCE(src.fornecedor_id::text, '') = ANY(
-                string_to_array(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-              )
-            )
-            AND (
-              NULLIF(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-              OR COALESCE(src.centro_custo_id::text, '') = ANY(
-                string_to_array(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-              )
-            )
-            AND (
-              NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-              OR COALESCE(src.filial_id::text, '') = ANY(
-                string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-              )
-            )
-            AND (
-              NULLIF(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-              OR COALESCE(src.categoria_despesa_id::text, '') = ANY(
-                string_to_array(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-              )
-            )
-            AND (
-              NULLIF(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-              OR COALESCE(src.projeto_id::text, '') = ANY(
-                string_to_array(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-              )
-            )
-        </Query>
-        <DataQuery yField="value" />
+              <DataQuery model="compras.compras" measure="gasto_total" />
             </KPI>
           </Container>
           <Icon name="circle-dollar-sign" size={18} padding={10} radius={10} backgroundColor="#e8f0fe" color="#1d4ed8" />
@@ -88,45 +50,7 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
           <Container direction="column" gap={6}>
             <Title text="Fornecedores" />
             <KPI format="number">
-        <Query>
-          SELECT
-            COUNT(DISTINCT src.fornecedor_id)::int AS value
-          FROM compras.compras src
-          WHERE src.tenant_id = {{tenant_id}}
-            AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
-            AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
-            AND (
-              NULLIF(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-              OR COALESCE(src.fornecedor_id::text, '') = ANY(
-                string_to_array(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-              )
-            )
-            AND (
-              NULLIF(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-              OR COALESCE(src.centro_custo_id::text, '') = ANY(
-                string_to_array(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-              )
-            )
-            AND (
-              NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-              OR COALESCE(src.filial_id::text, '') = ANY(
-                string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-              )
-            )
-            AND (
-              NULLIF(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-              OR COALESCE(src.categoria_despesa_id::text, '') = ANY(
-                string_to_array(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-              )
-            )
-            AND (
-              NULLIF(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-              OR COALESCE(src.projeto_id::text, '') = ANY(
-                string_to_array(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-              )
-            )
-        </Query>
-        <DataQuery yField="value" />
+              <DataQuery model="compras.compras" measure="fornecedores_unicos" />
             </KPI>
           </Container>
           <Icon name="users" size={18} padding={10} radius={10} backgroundColor="#ecfdf3" color="#047857" />
@@ -137,52 +61,14 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
           <Container direction="column" gap={6}>
             <Title text="Pedidos" />
             <KPI format="number">
-        <Query>
-          SELECT
-            COUNT(DISTINCT src.id)::int AS value
-          FROM compras.compras src
-          WHERE src.tenant_id = {{tenant_id}}
-            AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
-            AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
-            AND (
-              NULLIF(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-              OR COALESCE(src.fornecedor_id::text, '') = ANY(
-                string_to_array(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-              )
-            )
-            AND (
-              NULLIF(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-              OR COALESCE(src.centro_custo_id::text, '') = ANY(
-                string_to_array(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-              )
-            )
-            AND (
-              NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-              OR COALESCE(src.filial_id::text, '') = ANY(
-                string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-              )
-            )
-            AND (
-              NULLIF(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-              OR COALESCE(src.categoria_despesa_id::text, '') = ANY(
-                string_to_array(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-              )
-            )
-            AND (
-              NULLIF(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-              OR COALESCE(src.projeto_id::text, '') = ANY(
-                string_to_array(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-              )
-            )
-        </Query>
-        <DataQuery yField="value" />
-        <Config>
-          {
-            "valueStyle": {
-              "fontSize": 22
-            }
-          }
-        </Config>
+              <DataQuery model="compras.compras" measure="pedidos" />
+              <Config>
+                {
+                  "valueStyle": {
+                    "fontSize": 22
+                  }
+                }
+              </Config>
             </KPI>
           </Container>
           <Icon name="shopping-cart" size={18} padding={10} radius={10} backgroundColor="#fff7ed" color="#c2410c" />
@@ -193,46 +79,7 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
           <Container direction="column" gap={6}>
             <Title text="Transações" />
             <KPI format="number">
-        <Query>
-          SELECT
-            COUNT(DISTINCT r.id)::int AS value
-          FROM compras.recebimentos r
-          JOIN compras.compras src ON src.id = r.compra_id
-          WHERE src.tenant_id = {{tenant_id}}
-            AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
-            AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
-            AND (
-              NULLIF(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-              OR COALESCE(src.fornecedor_id::text, '') = ANY(
-                string_to_array(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-              )
-            )
-            AND (
-              NULLIF(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-              OR COALESCE(src.centro_custo_id::text, '') = ANY(
-                string_to_array(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-              )
-            )
-            AND (
-              NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-              OR COALESCE(src.filial_id::text, '') = ANY(
-                string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-              )
-            )
-            AND (
-              NULLIF(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-              OR COALESCE(src.categoria_despesa_id::text, '') = ANY(
-                string_to_array(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-              )
-            )
-            AND (
-              NULLIF(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-              OR COALESCE(src.projeto_id::text, '') = ANY(
-                string_to_array(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-              )
-            )
-        </Query>
-        <DataQuery yField="value" />
+              <DataQuery model="compras.compras" measure="transacoes" />
             </KPI>
           </Container>
           <Icon name="activity" size={18} padding={10} radius={10} backgroundColor="#f3e8ff" color="#7c3aed" />
@@ -244,59 +91,10 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
         <Card>
           <Title text="Fornecedores" marginBottom={8} />
           <Chart type="bar" format="currency" height={240}>
-        <Query>
-          SELECT
-                      COALESCE(src.fornecedor_id, 0)::text AS key,
-                      COALESCE(f.nome_fantasia, '-') AS label,
-                      COALESCE(SUM(src.valor_total), 0)::float AS value
-                    FROM compras.compras src
-                    LEFT JOIN entidades.fornecedores f ON f.id = src.fornecedor_id
-                    WHERE src.tenant_id = {{tenant_id}}
-                      AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
-                      AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
-                      AND (
-                        NULLIF(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.fornecedor_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.centro_custo_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.filial_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.categoria_despesa_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.projeto_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                    GROUP BY 1, 2
-                    ORDER BY 3 DESC
-        </Query>
-        <Fields x="label" y="value" key="key" />
-        <Nivo layout="horizontal" />
-        <Config>
-          {
-            "dataQuery": {
-              "filters": {},
-              "limit": 8
-            }
-          }
-        </Config>
+            <DataQuery model="compras.compras" dimension="fornecedor" measure="gasto_total" limit={8}>
+              <OrderBy field="measure" dir="desc" />
+            </DataQuery>
+            <Nivo layout="horizontal" />
           </Chart>
         </Card>
       </Container>
@@ -304,59 +102,10 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
         <Card>
           <Title text="Centros de Custo" marginBottom={8} />
           <Chart type="bar" format="currency" height={240}>
-        <Query>
-          SELECT
-                      COALESCE(src.centro_custo_id, 0)::text AS key,
-                      COALESCE(cc.nome, '-') AS label,
-                      COALESCE(SUM(src.valor_total), 0)::float AS value
-                    FROM compras.compras src
-                    LEFT JOIN empresa.centros_custo cc ON cc.id = src.centro_custo_id
-                    WHERE src.tenant_id = {{tenant_id}}
-                      AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
-                      AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
-                      AND (
-                        NULLIF(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.fornecedor_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.centro_custo_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.filial_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.categoria_despesa_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.projeto_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                    GROUP BY 1, 2
-                    ORDER BY 3 DESC
-        </Query>
-        <Fields x="label" y="value" key="key" />
-        <Nivo layout="horizontal" />
-        <Config>
-          {
-            "dataQuery": {
-              "filters": {},
-              "limit": 8
-            }
-          }
-        </Config>
+            <DataQuery model="compras.compras" dimension="centro_custo" measure="gasto_total" limit={8}>
+              <OrderBy field="measure" dir="desc" />
+            </DataQuery>
+            <Nivo layout="horizontal" />
           </Chart>
         </Card>
       </Container>
@@ -385,59 +134,10 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
         <Card>
           <Title text="Filiais" marginBottom={8} />
           <Chart type="bar" format="currency" height={240}>
-        <Query>
-          SELECT
-                      COALESCE(src.filial_id, 0)::text AS key,
-                      COALESCE(fil.nome, '-') AS label,
-                      COALESCE(SUM(src.valor_total), 0)::float AS value
-                    FROM compras.compras src
-                    LEFT JOIN empresa.filiais fil ON fil.id = src.filial_id
-                    WHERE src.tenant_id = {{tenant_id}}
-                      AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
-                      AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
-                      AND (
-                        NULLIF(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.fornecedor_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.centro_custo_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.filial_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.categoria_despesa_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.projeto_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                    GROUP BY 1, 2
-                    ORDER BY 3 DESC
-        </Query>
-        <Fields x="label" y="value" key="key" />
-        <Nivo layout="horizontal" />
-        <Config>
-          {
-            "dataQuery": {
-              "filters": {},
-              "limit": 8
-            }
-          }
-        </Config>
+            <DataQuery model="compras.compras" dimension="filial" measure="gasto_total" limit={8}>
+              <OrderBy field="measure" dir="desc" />
+            </DataQuery>
+            <Nivo layout="horizontal" />
           </Chart>
         </Card>
       </Container>
@@ -447,59 +147,10 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
         <Card>
           <Title text="Categorias" marginBottom={8} />
           <Chart type="bar" format="currency" height={220}>
-        <Query>
-          SELECT
-                      COALESCE(src.categoria_despesa_id, 0)::text AS key,
-                      COALESCE(cd.nome, '-') AS label,
-                      COALESCE(SUM(src.valor_total), 0)::float AS value
-                    FROM compras.compras src
-                    LEFT JOIN financeiro.categorias_despesa cd ON cd.id = src.categoria_despesa_id
-                    WHERE src.tenant_id = {{tenant_id}}
-                      AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
-                      AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
-                      AND (
-                        NULLIF(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.fornecedor_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.centro_custo_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.filial_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.categoria_despesa_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.projeto_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                    GROUP BY 1, 2
-                    ORDER BY 3 DESC
-        </Query>
-        <Fields x="label" y="value" key="key" />
-        <Nivo layout="horizontal" />
-        <Config>
-          {
-            "dataQuery": {
-              "filters": {},
-              "limit": 8
-            }
-          }
-        </Config>
+            <DataQuery model="compras.compras" dimension="categoria_despesa" measure="gasto_total" limit={8}>
+              <OrderBy field="measure" dir="desc" />
+            </DataQuery>
+            <Nivo layout="horizontal" />
           </Chart>
         </Card>
       </Container>
@@ -507,59 +158,10 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
         <Card>
           <Title text="Projetos" marginBottom={8} />
           <Chart type="bar" format="currency" height={220}>
-        <Query>
-          SELECT
-                      COALESCE(src.projeto_id, 0)::text AS key,
-                      COALESCE(pr.nome, '-') AS label,
-                      COALESCE(SUM(src.valor_total), 0)::float AS value
-                    FROM compras.compras src
-                    LEFT JOIN financeiro.projetos pr ON pr.id = src.projeto_id
-                    WHERE src.tenant_id = {{tenant_id}}
-                      AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
-                      AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
-                      AND (
-                        NULLIF(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.fornecedor_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.centro_custo_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.filial_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.categoria_despesa_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.projeto_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                    GROUP BY 1, 2
-                    ORDER BY 3 DESC
-        </Query>
-        <Fields x="label" y="value" key="key" />
-        <Nivo layout="horizontal" />
-        <Config>
-          {
-            "dataQuery": {
-              "filters": {},
-              "limit": 8
-            }
-          }
-        </Config>
+            <DataQuery model="compras.compras" dimension="projeto" measure="gasto_total" limit={8}>
+              <OrderBy field="measure" dir="desc" />
+            </DataQuery>
+            <Nivo layout="horizontal" />
           </Chart>
         </Card>
       </Container>
@@ -567,58 +169,10 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
         <Card>
           <Title text="Status (Qtd)" marginBottom={8} />
           <Chart type="bar" format="number" height={220}>
-        <Query>
-          SELECT
-                      COALESCE(src.status, '-') AS key,
-                      COALESCE(src.status, '-') AS label,
-                      COUNT(*)::int AS value
-                    FROM compras.compras src
-                    WHERE src.tenant_id = {{tenant_id}}
-                      AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
-                      AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
-                      AND (
-                        NULLIF(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.fornecedor_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.centro_custo_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.filial_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.categoria_despesa_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.projeto_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                    GROUP BY 1, 2
-                    ORDER BY 3 DESC
-        </Query>
-        <Fields x="label" y="value" key="key" />
-        <Nivo layout="horizontal" />
-        <Config>
-          {
-            "dataQuery": {
-              "filters": {},
-              "limit": 8
-            }
-          }
-        </Config>
+            <DataQuery model="compras.compras" dimension="status" measure="pedidos" limit={8}>
+              <OrderBy field="measure" dir="desc" />
+            </DataQuery>
+            <Nivo layout="horizontal" />
           </Chart>
         </Card>
       </Container>
@@ -628,58 +182,10 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
         <Card>
           <Title text="Status (Pizza)" marginBottom={8} />
           <Chart type="pie" format="number" height={260}>
-            <Query>
-        SELECT
-                  COALESCE(src.status, '-') AS key,
-                  COALESCE(src.status, '-') AS label,
-                  COUNT(*)::int AS value
-                FROM compras.compras src
-                WHERE src.tenant_id = {{tenant_id}}
-                  AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
-                  AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
-                  AND (
-                    NULLIF(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                    OR COALESCE(src.fornecedor_id::text, '') = ANY(
-                      string_to_array(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                    )
-                  )
-                  AND (
-                    NULLIF(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                    OR COALESCE(src.centro_custo_id::text, '') = ANY(
-                      string_to_array(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                    )
-                  )
-                  AND (
-                    NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                    OR COALESCE(src.filial_id::text, '') = ANY(
-                      string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                    )
-                  )
-                  AND (
-                    NULLIF(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                    OR COALESCE(src.categoria_despesa_id::text, '') = ANY(
-                      string_to_array(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                    )
-                  )
-                  AND (
-                    NULLIF(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                    OR COALESCE(src.projeto_id::text, '') = ANY(
-                      string_to_array(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                    )
-                  )
-                GROUP BY 1, 2
-                ORDER BY 3 DESC
-            </Query>
-            <Fields x="label" y="value" key="key" />
+            <DataQuery model="compras.compras" dimension="status" measure="pedidos" limit={8}>
+              <OrderBy field="measure" dir="desc" />
+            </DataQuery>
             <Nivo innerRadius={0.35} />
-            <Config>
-              {
-                "dataQuery": {
-                  "filters": {},
-                  "limit": 8
-                }
-              }
-            </Config>
           </Chart>
         </Card>
       </Container>
@@ -689,58 +195,10 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
         <Card>
           <Title text="Gasto por Mês" marginBottom={8} />
           <Chart type="bar" format="currency" height={220}>
-        <Query>
-          SELECT
-                      TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'YYYY-MM') AS key,
-                      TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'YYYY-MM') AS label,
-                      COALESCE(SUM(src.valor_total), 0)::float AS value
-                    FROM compras.compras src
-                    WHERE src.tenant_id = {{tenant_id}}
-                      AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
-                      AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
-                      AND (
-                        NULLIF(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.fornecedor_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.centro_custo_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.filial_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.categoria_despesa_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.projeto_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                    GROUP BY 1, 2
-                    ORDER BY 2 ASC
-        </Query>
-        <Fields x="label" y="value" key="key" />
-        <Nivo layout="vertical" />
-        <Config>
-          {
-            "dataQuery": {
-              "filters": {},
-              "limit": 12
-            }
-          }
-        </Config>
+            <DataQuery model="compras.compras" dimension="periodo" measure="gasto_total" limit={12}>
+              <OrderBy field="dimension" dir="asc" />
+            </DataQuery>
+            <Nivo layout="vertical" />
           </Chart>
         </Card>
       </Container>
@@ -748,58 +206,10 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
         <Card>
           <Title text="Pedidos por Mês" marginBottom={8} />
           <Chart type="bar" format="number" height={220}>
-        <Query>
-          SELECT
-                      TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'YYYY-MM') AS key,
-                      TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'YYYY-MM') AS label,
-                      COUNT(DISTINCT src.id)::int AS value
-                    FROM compras.compras src
-                    WHERE src.tenant_id = {{tenant_id}}
-                      AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
-                      AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
-                      AND (
-                        NULLIF(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.fornecedor_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.centro_custo_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.filial_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.categoria_despesa_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.projeto_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                    GROUP BY 1, 2
-                    ORDER BY 2 ASC
-        </Query>
-        <Fields x="label" y="value" key="key" />
-        <Nivo layout="vertical" />
-        <Config>
-          {
-            "dataQuery": {
-              "filters": {},
-              "limit": 12
-            }
-          }
-        </Config>
+            <DataQuery model="compras.compras" dimension="periodo" measure="pedidos" limit={12}>
+              <OrderBy field="dimension" dir="asc" />
+            </DataQuery>
+            <Nivo layout="vertical" />
           </Chart>
         </Card>
       </Container>
@@ -807,58 +217,10 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
         <Card>
           <Title text="Ticket Médio por Mês" marginBottom={8} />
           <Chart type="bar" format="currency" height={220}>
-        <Query>
-          SELECT
-                      TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'YYYY-MM') AS key,
-                      TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'YYYY-MM') AS label,
-                      COALESCE(AVG(src.valor_total), 0)::float AS value
-                    FROM compras.compras src
-                    WHERE src.tenant_id = {{tenant_id}}
-                      AND ({{de}}::date IS NULL OR src.data_pedido::date >= {{de}}::date)
-                      AND ({{ate}}::date IS NULL OR src.data_pedido::date <= {{ate}}::date)
-                      AND (
-                        NULLIF(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.fornecedor_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{fornecedor_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.centro_custo_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{centro_custo_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.filial_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{filial_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.categoria_despesa_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{categoria_despesa_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                      AND (
-                        NULLIF(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), '') IS NULL
-                        OR COALESCE(src.projeto_id::text, '') = ANY(
-                          string_to_array(regexp_replace({{projeto_id}}::text, '[{}[:space:]]', '', 'g'), ',')
-                        )
-                      )
-                    GROUP BY 1, 2
-                    ORDER BY 2 ASC
-        </Query>
-        <Fields x="label" y="value" key="key" />
-        <Nivo layout="vertical" />
-        <Config>
-          {
-            "dataQuery": {
-              "filters": {},
-              "limit": 12
-            }
-          }
-        </Config>
+            <DataQuery model="compras.compras" dimension="periodo" measure="ticket_medio" limit={12}>
+              <OrderBy field="dimension" dir="asc" />
+            </DataQuery>
+            <Nivo layout="vertical" />
           </Chart>
         </Card>
       </Container>
@@ -866,24 +228,24 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
         <Card>
           <Title text="Insights da IA" marginBottom={8} />
           <AISummary>
-        <Config>
-          {
-            "items": [
+            <Config>
               {
-                "icon": "shoppingCart",
-                "text": "Compras concentradas por fornecedor podem aumentar risco de negociação e prazo."
-              },
-              {
-                "icon": "lightbulb",
-                "text": "Centros de custo com maior recorrência merecem revisão de contratos e limites."
-              },
-              {
-                "icon": "triangleAlert",
-                "text": "Itens sem recebimento ou com atraso tendem a impactar o fluxo do período."
+                "items": [
+                  {
+                    "icon": "shoppingCart",
+                    "text": "Compras concentradas por fornecedor podem aumentar risco de negociação e prazo."
+                  },
+                  {
+                    "icon": "lightbulb",
+                    "text": "Centros de custo com maior recorrência merecem revisão de contratos e limites."
+                  },
+                  {
+                    "icon": "triangleAlert",
+                    "text": "Itens sem recebimento ou com atraso tendem a impactar o fluxo do período."
+                  }
+                ]
               }
-            ]
-          }
-        </Config>
+            </Config>
           </AISummary>
         </Card>
       </Container>

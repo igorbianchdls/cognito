@@ -177,6 +177,12 @@ export const APPS_QUERY_CATALOG: Record<AppsTableName, AppsTableCatalog> = {
         format: 'number',
         legacyMeasures: ['COUNT_DISTINCT(c.fornecedor_id)', 'COUNT_DISTINCT(fornecedor_id)'],
       },
+      {
+        id: 'transacoes',
+        label: 'Transacoes',
+        format: 'number',
+        legacyMeasures: ['COUNT_DISTINCT(rcv.id)', 'COUNT_DISTINCT(r.id)', 'COUNT_DISTINCT(recebimento_id)'],
+      },
     ],
     dimensions: [
       { id: 'fornecedor', label: 'Fornecedor', kind: 'attribute', legacyDimension: 'fornecedor' },
@@ -204,6 +210,7 @@ export const APPS_QUERY_CATALOG: Record<AppsTableName, AppsTableCatalog> = {
       { field: 'fornecedor_id', label: 'Fornecedor', type: 'id', operators: ['eq', 'in'] },
       { field: 'filial_id', label: 'Filial', type: 'id', operators: ['eq', 'in'] },
       { field: 'centro_custo_id', label: 'Centro de Custo', type: 'id', operators: ['eq', 'in'] },
+      { field: 'projeto_id', label: 'Projeto', type: 'id', operators: ['eq', 'in'] },
       { field: 'categoria_despesa_id', label: 'Categoria de Despesa', type: 'id', operators: ['eq', 'in'] },
       { field: 'valor_min', label: 'Valor Minimo', type: 'number', operators: ['gte'] },
       { field: 'valor_max', label: 'Valor Maximo', type: 'number', operators: ['lte'] },

@@ -10,7 +10,7 @@ type OrderBy = { field?: 'measure'|'dimension'|string; dir?: 'asc'|'desc' }
 
 type DataQuery = {
   model: string
-  dimension: string
+  dimension?: string
   measure: string
   filters?: Record<string, unknown>
   orderBy?: OrderBy
@@ -86,28 +86,26 @@ export async function POST(req: NextRequest) {
     // Measure mapping (whitelist)
     const m = measure.replace(/\s+/g, '').toLowerCase()
     let measExpr = ''
-    let measAlias = ''
+    let requiresRecebimentosJoin = false
     if (model === 'compras.compras') {
-      if (m === 'sum(c.valor_total)' || m === 'sum(valor_total)') {
+      if (m === 'gasto_total' || m === 'sum(c.valor_total)' || m === 'sum(valor_total)') {
         measExpr = 'COALESCE(SUM(c.valor_total),0)::float'
-        measAlias = 'gasto_total'
-      } else if (m === 'avg(c.valor_total)' || m === 'avg(valor_total)') {
+      } else if (m === 'ticket_medio' || m === 'avg(c.valor_total)' || m === 'avg(valor_total)') {
         measExpr = 'COALESCE(AVG(c.valor_total),0)::float'
-        measAlias = 'ticket_medio'
-      } else if (m === 'count()') {
-        measExpr = 'COUNT(*)::int'
-        measAlias = 'count'
+      } else if (m === 'pedidos' || m === 'count()') {
+        measExpr = 'COUNT(DISTINCT c.id)::int'
       } else if (m === 'count_distinct(c.id)' || m === 'count_distinct(id)') {
         measExpr = 'COUNT(DISTINCT c.id)::int'
-        measAlias = 'count'
-      } else if (m === 'count_distinct(c.fornecedor_id)' || m === 'count_distinct(fornecedor_id)') {
+      } else if (m === 'fornecedores_unicos' || m === 'count_distinct(c.fornecedor_id)' || m === 'count_distinct(fornecedor_id)') {
         measExpr = 'COUNT(DISTINCT c.fornecedor_id)::int'
-        measAlias = 'count'
+      } else if (m === 'transacoes' || m === 'count_distinct(rcv.id)' || m === 'count_distinct(r.id)' || m === 'count_distinct(recebimento_id)') {
+        measExpr = 'COUNT(DISTINCT rcv.id)::int'
+        requiresRecebimentosJoin = true
       } else {
         return Response.json({ success: false, message: `Medida não suportada: ${measure}` }, { status: 400 })
       }
     } else {
-      if (m === 'count()') { measExpr = 'COUNT(*)::int'; measAlias = 'count' }
+      if (m === 'transacoes' || m === 'count()') { measExpr = 'COUNT(*)::int' }
       else { return Response.json({ success: false, message: `Medida não suportada: ${measure}` }, { status: 400 }) }
     }
 
@@ -118,7 +116,8 @@ export async function POST(req: NextRequest) {
          LEFT JOIN empresa.centros_custo cc ON cc.id = c.centro_custo_id
          LEFT JOIN empresa.filiais fil ON fil.id = c.filial_id
          LEFT JOIN financeiro.projetos pr ON pr.id = c.projeto_id
-         LEFT JOIN financeiro.categorias_despesa cd ON cd.id = c.categoria_despesa_id`
+         LEFT JOIN financeiro.categorias_despesa cd ON cd.id = c.categoria_despesa_id
+         ${requiresRecebimentosJoin ? 'LEFT JOIN compras.recebimentos rcv ON rcv.compra_id = c.id AND rcv.tenant_id = c.tenant_id' : ''}`
       : `FROM compras.recebimentos r`
 
     // Filters (whitelist)
@@ -145,6 +144,7 @@ export async function POST(req: NextRequest) {
       addInFilter('c.fornecedor_id', (filters as any).fornecedor_id);
       addInFilter('c.filial_id', (filters as any).filial_id);
       addInFilter('c.centro_custo_id', (filters as any).centro_custo_id);
+      addInFilter('c.projeto_id', (filters as any).projeto_id);
       addInFilter('c.categoria_despesa_id', (filters as any).categoria_despesa_id);
       const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v));
       if (num((filters as any).valor_min)) { whereParts.push(`c.valor_total >= $${params.length + 1}`); params.push((filters as any).valor_min as number) }
