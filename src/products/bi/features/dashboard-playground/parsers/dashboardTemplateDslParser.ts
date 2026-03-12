@@ -491,6 +491,7 @@ function toCatalogType(tag: string): string {
   if (normalized === 'sparkline') return 'Sparkline'
   if (normalized === 'slicercard') return 'SlicerCard'
   if (normalized === 'table') return 'Table'
+  if (normalized === 'pivottable') return 'PivotTable'
   if (normalized === 'linechart') return 'LineChart'
   if (normalized === 'barchart') return 'BarChart'
   if (normalized === 'piechart') return 'PieChart'
@@ -882,6 +883,80 @@ function compileGaugeNode(source: string, node: DslNode): Record<string, unknown
   return out
 }
 
+function compilePivotSlotNode(source: string, node: DslNode, slotTag: 'rows' | 'columns' | 'values'): unknown[] {
+  const propsNodes = node.children.filter((child) => child.tag === 'props')
+  if (propsNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, `Tag <${slotTag}> aceita no maximo um <props>`)
+  }
+  const propsFromAttrs = attrsToProps(node.attrs)
+  const propsFromJson = propsNodes.length ? parsePropsNode(source, propsNodes[0]) : {}
+  const props = mergeObjects(propsFromAttrs, propsFromJson)
+  const configNodes = node.children.filter((child) => child.tag === 'config')
+  if (configNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, `Tag <${slotTag}> aceita no maximo um <config>`)
+  }
+  if (configNodes.length) {
+    Object.assign(props, parseJsonObjectNode(source, configNodes[0], 'config'))
+  }
+  if (Array.isArray(props.fields)) return props.fields
+  if (Array.isArray(props.values)) return props.values
+  if (props.field !== undefined) return [props.field]
+  if (Object.keys(props).length) return [props]
+  return []
+}
+
+function compilePivotTableNode(source: string, node: DslNode): Record<string, unknown> {
+  const propsNodes = node.children.filter((child) => child.tag === 'props')
+  if (propsNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <pivot-table> aceita no maximo um <props>')
+  }
+  const propsFromAttrs = attrsToProps(node.attrs)
+  const propsFromJson = propsNodes.length ? parsePropsNode(source, propsNodes[0]) : {}
+  const props = mergeObjects(propsFromAttrs, propsFromJson)
+
+  const queryNodes = node.children.filter((child) => child.tag === 'query' || child.tag === 'sql')
+  if (queryNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <pivot-table> aceita no maximo um <query>')
+  }
+  const rowsNodes = node.children.filter((child) => child.tag === 'rows')
+  if (rowsNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <pivot-table> aceita no maximo um <rows>')
+  }
+  const columnsNodes = node.children.filter((child) => child.tag === 'columns')
+  if (columnsNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <pivot-table> aceita no maximo um <columns>')
+  }
+  const valuesNodes = node.children.filter((child) => child.tag === 'values')
+  if (valuesNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <pivot-table> aceita no maximo um <values>')
+  }
+  const configNodes = node.children.filter((child) => child.tag === 'config')
+  if (configNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <pivot-table> aceita no maximo um <config>')
+  }
+  if (configNodes.length) {
+    Object.assign(props, parseJsonObjectNode(source, configNodes[0], 'config'))
+  }
+
+  const dataQueryFromProps =
+    props.dataQuery && typeof props.dataQuery === 'object' && !Array.isArray(props.dataQuery)
+      ? ({ ...(props.dataQuery as Record<string, unknown>) } as Record<string, unknown>)
+      : {}
+
+  if (queryNodes.length) {
+    const queryRaw = String(queryNodes[0].text || '').trim()
+    if (queryRaw) dataQueryFromProps.query = queryRaw
+  }
+  if (Object.keys(dataQueryFromProps).length) props.dataQuery = dataQueryFromProps
+  if (rowsNodes.length) props.rows = compilePivotSlotNode(source, rowsNodes[0], 'rows')
+  if (columnsNodes.length) props.columns = compilePivotSlotNode(source, columnsNodes[0], 'columns')
+  if (valuesNodes.length) props.values = compilePivotSlotNode(source, valuesNodes[0], 'values')
+
+  const out: Record<string, unknown> = { type: 'PivotTable' }
+  if (Object.keys(props).length) out.props = props
+  return out
+}
+
 function compileNode(source: string, node: DslNode, context: CompileContext): Record<string, unknown> | null {
   if (node.tag === 'defaults') return null
   if (node.tag === 'chart') return compileChartNode(source, node, context)
@@ -889,6 +964,7 @@ function compileNode(source: string, node: DslNode, context: CompileContext): Re
   if (node.tag === 'kpi') return compileKpiNode(source, node)
   if (node.tag === 'sparkline') return compileSparklineNode(source, node)
   if (node.tag === 'gauge') return compileGaugeNode(source, node)
+  if (node.tag === 'pivot-table' || node.tag === 'pivottable') return compilePivotTableNode(source, node)
   if (node.tag === 'div') {
     throw new DashboardTemplateDslParseError(source, node.start, 'Tag <Div> nao e suportada. Use <Container>')
   }
@@ -1514,6 +1590,62 @@ function renderGaugeNodeToDsl(node: Record<string, unknown>, level: number): str
   return lines
 }
 
+function renderPivotTableNodeToDsl(node: Record<string, unknown>, level: number): string[] {
+  const propsRaw =
+    node.props && typeof node.props === 'object' && !Array.isArray(node.props)
+      ? ({ ...(node.props as Record<string, unknown>) } as Record<string, unknown>)
+      : {}
+
+  const dataQueryRaw =
+    propsRaw.dataQuery && typeof propsRaw.dataQuery === 'object' && !Array.isArray(propsRaw.dataQuery)
+      ? ({ ...(propsRaw.dataQuery as Record<string, unknown>) } as Record<string, unknown>)
+      : {}
+  delete propsRaw.dataQuery
+
+  const rowsRaw = Array.isArray(propsRaw.rows) ? [...(propsRaw.rows as unknown[])] : []
+  delete propsRaw.rows
+  const columnsRaw = Array.isArray(propsRaw.columns) ? [...(propsRaw.columns as unknown[])] : []
+  delete propsRaw.columns
+  const valuesRaw = Array.isArray(propsRaw.values) ? [...(propsRaw.values as unknown[])] : []
+  delete propsRaw.values
+
+  const attrs: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(propsRaw)) {
+    if (v === undefined) continue
+    if (typeof v !== 'object' || v === null) {
+      attrs[k] = v
+      delete propsRaw[k]
+    }
+  }
+
+  const lines: string[] = [`${renderIndent(level)}<PivotTable${renderAttrs(attrs)}>`]
+  const query = typeof dataQueryRaw.query === 'string' ? dataQueryRaw.query : ''
+  delete dataQueryRaw.query
+  if (query.trim()) {
+    lines.push(`${renderIndent(level + 1)}<Query>`)
+    lines.push(query
+      .split('\n')
+      .map((line) => `${renderIndent(level + 2)}${line}`)
+      .join('\n'))
+    lines.push(`${renderIndent(level + 1)}</Query>`)
+  }
+  if (rowsRaw.length) {
+    lines.push(`${renderIndent(level + 1)}<Rows${renderAttrs({ fields: rowsRaw })} />`)
+  }
+  if (columnsRaw.length) {
+    lines.push(`${renderIndent(level + 1)}<Columns${renderAttrs({ fields: columnsRaw })} />`)
+  }
+  if (valuesRaw.length) {
+    lines.push(`${renderIndent(level + 1)}<Values${renderAttrs({ fields: valuesRaw })} />`)
+  }
+  if (Object.keys(dataQueryRaw).length) {
+    propsRaw.dataQuery = dataQueryRaw
+  }
+  lines.push(...renderJsonObjectBlock('Config', propsRaw, level + 1))
+  lines.push(`${renderIndent(level)}</PivotTable>`)
+  return lines
+}
+
 function renderNodeToDsl(node: unknown, level: number): string[] {
   if (!node || typeof node !== 'object' || Array.isArray(node)) return []
   const record = node as Record<string, unknown>
@@ -1531,6 +1663,9 @@ function renderNodeToDsl(node: unknown, level: number): string[] {
   }
   if (String(record.type || '').trim() === 'Gauge') {
     return renderGaugeNodeToDsl(record, level)
+  }
+  if (String(record.type || '').trim() === 'PivotTable') {
+    return renderPivotTableNodeToDsl(record, level)
   }
   const tag = toDslTag(String(record.type || 'node'))
   const propsRaw =

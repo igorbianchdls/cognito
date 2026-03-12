@@ -117,6 +117,26 @@ const SqlTableDataQuerySchema = z.object({
   limit: z.number().optional(),
 }).strict();
 
+const PivotFieldSchema = z.union([
+  z.string(),
+  z.object({
+    field: z.string(),
+    label: z.string().optional(),
+    nullLabel: z.string().optional(),
+  }).strict(),
+]);
+
+const PivotValueSchema = z.union([
+  z.string(),
+  z.object({
+    field: z.string(),
+    label: z.string().optional(),
+    aggregate: z.enum(["sum", "avg", "count", "min", "max"]).optional(),
+    format: z.enum(["text", "currency", "percent", "number", "date", "datetime"]).optional(),
+    decimals: z.number().optional(),
+  }).strict(),
+]);
+
 const SlicerFieldSourceSchema = z.union([
   z.object({
     type: z.literal('static'),
@@ -840,6 +860,36 @@ export const catalog = {
         borderless: z.boolean().optional(),
       }).strict().refine((p) => Boolean(p.dataPath || p.dataQuery), {
         message: 'Table requires either dataPath or dataQuery',
+      }),
+      hasChildren: false,
+    },
+    PivotTable: {
+      props: z.object({
+        title: z.string().optional(),
+        dataQuery: SqlTableDataQuerySchema,
+        rows: z.array(PivotFieldSchema).default([]),
+        columns: z.array(PivotFieldSchema).default([]),
+        values: z.array(PivotValueSchema).default([]),
+        fr: z.number().optional(),
+        height: z.union([z.number(), z.string()]).optional(),
+        maxHeight: z.union([z.number(), z.string()]).optional(),
+        stickyHeader: z.boolean().optional(),
+        bordered: z.boolean().optional(),
+        rounded: z.boolean().optional(),
+        density: z.enum(["compact", "comfortable", "spacious"]).optional(),
+        showSubtotals: z.boolean().optional(),
+        showGrandTotals: z.boolean().optional(),
+        defaultExpandedLevels: z.number().optional(),
+        enableExportCsv: z.boolean().optional(),
+        emptyMessage: z.string().optional(),
+        loadingMessage: z.string().optional(),
+        borderColor: z.string().optional(),
+        containerStyle: ContainerStyleSchema.optional(),
+        borderless: z.boolean().optional(),
+      }).strict().refine((p) => Array.isArray(p.rows) && p.rows.length > 0, {
+        message: 'PivotTable requires at least one row field',
+      }).refine((p) => Array.isArray(p.values) && p.values.length > 0, {
+        message: 'PivotTable requires at least one value field',
       }),
       hasChildren: false,
     },

@@ -7,6 +7,7 @@ import JsonRenderPieChart from "@/products/bi/json-render/components/PieChart";
 import JsonRenderSparkline from "@/products/bi/json-render/components/Sparkline";
 import JsonRenderGauge from "@/products/bi/json-render/components/Gauge";
 import JsonRenderTable from "@/products/bi/json-render/components/Table";
+import JsonRenderPivotTable from "@/products/bi/json-render/components/PivotTable";
 import FrameSurface from "@/products/bi/json-render/components/FrameSurface";
 import DashboardBackgroundLayer from "@/products/bi/json-render/backgrounds/DashboardBackgroundLayer";
 import { normalizeDashboardBackgroundPreset } from "@/products/bi/json-render/backgrounds/types";
@@ -138,6 +139,17 @@ const defaultTable = {
   },
   containerStyle: { borderColor: '#e5e7eb', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, padding: 12 },
   borderless: false,
+} as const;
+
+const defaultPivotTable = {
+  stickyHeader: true,
+  bordered: true,
+  rounded: true,
+  density: 'comfortable' as 'compact' | 'comfortable' | 'spacious',
+  showSubtotals: true,
+  showGrandTotals: true,
+  defaultExpandedLevels: 1,
+  enableExportCsv: false,
 } as const;
 
 const aiSummaryIconMap: Record<string, React.ComponentType<any>> = {
@@ -1947,6 +1959,14 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       (element?.props || {}) as AnyRecord
     );
     return <JsonRenderTable element={{ props: merged }} />;
+  },
+  PivotTable: ({ element }) => {
+    const theme = useThemeOverrides();
+    const merged = deepMerge(
+      deepMerge(defaultPivotTable as any, ((theme.components as any)?.PivotTable || {}) as AnyRecord),
+      (element?.props || {}) as AnyRecord
+    );
+    return <JsonRenderPivotTable element={{ props: merged }} />;
   },
 
   Gauge: ({ element }) => {

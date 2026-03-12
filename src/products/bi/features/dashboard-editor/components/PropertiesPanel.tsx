@@ -423,14 +423,14 @@ export default function PropertiesPanel({
   )
 
   const supportsDataTab = Boolean(
-    node && ['KPI', 'KPICompare', 'Sparkline', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'AISummary', 'Table', 'Icon', 'Gauge'].includes(String(node.type)),
+    node && ['KPI', 'KPICompare', 'Sparkline', 'BarChart', 'LineChart', 'PieChart', 'Header', 'SlicerCard', 'AISummary', 'Table', 'PivotTable', 'Icon', 'Gauge'].includes(String(node.type)),
   )
   const supportsNivoTab = isChartNode
   const supportsStyleTab = Boolean(
-    node && ['KPI', 'KPICompare', 'Sparkline', 'Header', 'SlicerCard', 'Card', 'CardTitle', 'Title', 'Subtitle', 'Icon', 'Container', 'Sidebar', 'Gauge', 'AISummary', 'Table'].includes(String(node.type)),
+    node && ['KPI', 'KPICompare', 'Sparkline', 'Header', 'SlicerCard', 'Card', 'CardTitle', 'Title', 'Subtitle', 'Icon', 'Container', 'Sidebar', 'Gauge', 'AISummary', 'Table', 'PivotTable'].includes(String(node.type)),
   )
   const supportsFr = Boolean(
-    node && ['KPI', 'Sparkline', 'BarChart', 'LineChart', 'PieChart', 'Gauge', 'SlicerCard', 'AISummary', 'Table'].includes(String(node.type)),
+    node && ['KPI', 'Sparkline', 'BarChart', 'LineChart', 'PieChart', 'Gauge', 'SlicerCard', 'AISummary', 'Table', 'PivotTable'].includes(String(node.type)),
   )
 
   React.useEffect(() => {
