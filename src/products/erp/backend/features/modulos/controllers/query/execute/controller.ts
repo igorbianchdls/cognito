@@ -144,6 +144,22 @@ function normalizeDateFilterMarkers(filters: Record<string, unknown>): DateFilte
   return []
 }
 
+function getScopedFiltersForTable(filters: Record<string, unknown>, table: string): Record<string, unknown> {
+  const raw = filters.__scoped
+  if (!isObject(raw)) return {}
+  const parts = String(table || '')
+    .split('.')
+    .map((part) => part.trim())
+    .filter(Boolean)
+  if (parts.length < 2) return {}
+  let current: unknown = raw
+  for (const part of parts) {
+    if (!isObject(current)) return {}
+    current = current[part]
+  }
+  return isObject(current) ? current : {}
+}
+
 function buildDatePredicates(
   target: { table: string; ref: string },
   filters: Record<string, unknown>,
@@ -195,9 +211,13 @@ function buildMarkerPredicates(
 
   const catalog = getAppsTableCatalog(target.table)
   const allowedFields = catalog ? new Set(catalog.filters.map((filter) => filter.field)) : null
+  const effectiveFilters: Record<string, unknown> = {
+    ...filters,
+    ...getScopedFiltersForTable(filters, target.table),
+  }
   const predicates: string[] = []
 
-  if (!isBlankFilterValue(filters.tenant_id)) {
+  if (!isBlankFilterValue(effectiveFilters.tenant_id)) {
     predicates.push(`${target.ref}.tenant_id = {{tenant_id}}`)
   }
 
@@ -205,7 +225,7 @@ function buildMarkerPredicates(
     predicates.push(...buildDatePredicates(target, filters, opts?.dateMode || 'current'))
   }
 
-  for (const [field, rawValue] of Object.entries(filters)) {
+  for (const [field, rawValue] of Object.entries(effectiveFilters)) {
     if (field === 'tenant_id' || field.startsWith('__')) continue
     if (allowedFields && !allowedFields.has(field)) continue
     const predicate = buildFilterPredicate(field, rawValue, target.ref)

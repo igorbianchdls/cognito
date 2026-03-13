@@ -665,6 +665,8 @@ export const catalog = {
         }).partial().optional(),
         interaction: z.object({
           clickAsFilter: z.boolean().optional(),
+          table: z.string().optional(),
+          field: z.string().optional(),
           filterField: z.string().optional(),
           storePath: z.string().optional(),
           clearOnSecondClick: z.boolean().optional(),
@@ -688,6 +690,8 @@ export const catalog = {
         dataQuery: z.union([LegacyChartDataQuerySchema, SqlChartDataQuerySchema]),
         interaction: z.object({
           clickAsFilter: z.boolean().optional(),
+          table: z.string().optional(),
+          field: z.string().optional(),
           filterField: z.string().optional(),
           storePath: z.string().optional(),
           clearOnSecondClick: z.boolean().optional(),
@@ -710,6 +714,8 @@ export const catalog = {
         dataQuery: z.union([LegacyChartDataQuerySchema, SqlChartDataQuerySchema]),
         interaction: z.object({
           clickAsFilter: z.boolean().optional(),
+          table: z.string().optional(),
+          field: z.string().optional(),
           filterField: z.string().optional(),
           storePath: z.string().optional(),
           clearOnSecondClick: z.boolean().optional(),

@@ -273,7 +273,7 @@ ORDER BY 2 ASC"
                         ORDER BY 3 DESC
             </Query>
             <Fields x="label" y="value" key="key" />
-            <Interaction clickAsFilter filterField="canal_venda_id" storePath="filters.canal_venda_id" clearOnSecondClick />
+            <Interaction clickAsFilter table="vendas.pedidos" field="canal_venda_id" clearOnSecondClick />
             <Nivo
               innerRadius={0.5}
               padAngle={1}
@@ -315,7 +315,7 @@ ORDER BY 2 ASC"
                         ORDER BY 3 DESC
             </Query>
             <Fields x="label" y="value" key="key" />
-            <Interaction clickAsFilter filterField="categoria_receita_id" storePath="filters.categoria_receita_id" clearOnSecondClick />
+            <Interaction clickAsFilter table="vendas.pedidos" field="categoria_receita_id" clearOnSecondClick />
             <Nivo layout="horizontal" padding={0.24} borderRadius={8} enableGridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
             <Config>
               {
@@ -380,7 +380,7 @@ ORDER BY 2 ASC"
                     ORDER BY 3 DESC
         </Query>
         <Fields x="label" y="value" key="key" />
-        <Interaction clickAsFilter filterField="vendedor_id" storePath="filters.vendedor_id" clearOnSecondClick />
+        <Interaction clickAsFilter table="vendas.pedidos" field="vendedor_id" clearOnSecondClick />
         <Nivo layout="horizontal" padding={0.24} borderRadius={8} enableGridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
         <Config>
           {
@@ -411,7 +411,7 @@ ORDER BY 2 ASC"
                     ORDER BY 3 DESC
         </Query>
         <Fields x="label" y="value" key="key" />
-        <Interaction clickAsFilter filterField="filial_id" storePath="filters.filial_id" clearOnSecondClick />
+        <Interaction clickAsFilter table="vendas.pedidos" field="filial_id" clearOnSecondClick />
         <Nivo layout="horizontal" padding={0.24} borderRadius={8} enableGridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
         <Config>
           {
@@ -442,7 +442,7 @@ ORDER BY 2 ASC"
                     ORDER BY 3 DESC
         </Query>
         <Fields x="label" y="value" key="key" />
-        <Interaction clickAsFilter filterField="unidade_negocio_id" storePath="filters.unidade_negocio_id" clearOnSecondClick />
+        <Interaction clickAsFilter table="vendas.pedidos" field="unidade_negocio_id" clearOnSecondClick />
         <Nivo layout="horizontal" padding={0.24} borderRadius={8} enableGridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
         <Config>
           {
@@ -783,7 +783,7 @@ ORDER BY 2 ASC"
                     ORDER BY 3 DESC
         </Query>
         <Fields x="label" y="value" key="key" />
-        <Interaction clickAsFilter filterField="territorio_id" storePath="filters.territorio_id" clearOnSecondClick />
+        <Interaction clickAsFilter table="vendas.pedidos" field="territorio_id" clearOnSecondClick />
         <Nivo layout="horizontal" padding={0.24} borderRadius={8} enableGridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
         <Config>
           {
@@ -814,7 +814,7 @@ ORDER BY 2 ASC"
                     ORDER BY 3 DESC
         </Query>
         <Fields x="label" y="value" key="key" />
-        <Interaction clickAsFilter filterField="categoria_receita_id" storePath="filters.categoria_receita_id" clearOnSecondClick />
+        <Interaction clickAsFilter table="vendas.pedidos" field="categoria_receita_id" clearOnSecondClick />
         <Nivo layout="horizontal" padding={0.24} borderRadius={8} enableGridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
         <Config>
           {
@@ -844,7 +844,7 @@ ORDER BY 2 ASC"
                     ORDER BY 3 DESC
         </Query>
         <Fields x="label" y="value" key="key" />
-        <Interaction clickAsFilter filterField="canal_venda_id" storePath="filters.canal_venda_id" clearOnSecondClick />
+        <Interaction clickAsFilter table="vendas.pedidos" field="canal_venda_id" clearOnSecondClick />
         <Nivo layout="horizontal" padding={0.24} borderRadius={8} enableGridX axisBottom={{ legend: "Pedidos", legendOffset: 30, maxTicks: 4 }} />
         <Config>
           {

@@ -7,6 +7,7 @@ import type { LineSeries } from "@nivo/line";
 import { buildNivoTheme, isPlainObject, omitObjectKeys } from "@/products/bi/json-render/helpers";
 import { useThemeOverrides } from "@/products/bi/json-render/theme/ThemeContext";
 import { applyPrimaryDateRange } from "@/products/bi/json-render/dateFilters";
+import { resolveInteractionFilterField, resolveInteractionFilterStorePath } from "@/products/bi/json-render/interactionFilters";
 
 type AnyRecord = Record<string, any>;
 type LinePointValue = string | number | Date | null;
@@ -101,10 +102,8 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
   const interaction = (element?.props?.interaction as AnyRecord | undefined) || {};
   const clickAsFilter = Boolean(interaction?.clickAsFilter ?? true);
   const clearOnSecondClick = Boolean(interaction?.clearOnSecondClick ?? true);
-  const filterFieldFromConfig = typeof interaction?.filterField === "string" ? interaction.filterField.trim() : "";
-  const filterStorePathFromConfig = typeof interaction?.storePath === "string" ? interaction.storePath.trim() : "";
-  const resolvedFilterField = filterFieldFromConfig || inferFilterField(dq?.dimension);
-  const resolvedFilterStorePath = filterStorePathFromConfig || (resolvedFilterField ? `filters.${resolvedFilterField}` : "");
+  const resolvedFilterField = resolveInteractionFilterField(interaction, inferFilterField(dq?.dimension));
+  const resolvedFilterStorePath = resolveInteractionFilterStorePath(interaction, resolvedFilterField);
   const shouldClickFilter = clickAsFilter && Boolean(resolvedFilterStorePath);
   const isSqlQueryMode = Boolean(typeof dq?.query === "string" && dq.query.trim());
   const [serverRows, setServerRows] = React.useState<Array<Record<string, unknown>> | null>(null);

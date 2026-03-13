@@ -6,6 +6,7 @@ import { ResponsiveBar } from "@nivo/bar";
 import { buildNivoTheme, isPlainObject, omitObjectKeys } from "@/products/bi/json-render/helpers";
 import { useThemeOverrides } from "@/products/bi/json-render/theme/ThemeContext";
 import { applyPrimaryDateRange } from "@/products/bi/json-render/dateFilters";
+import { resolveInteractionFilterField, resolveInteractionFilterStorePath } from "@/products/bi/json-render/interactionFilters";
 
 type AnyRecord = Record<string, any>;
 
@@ -120,10 +121,8 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   const drillEnabled = drilldown ? drillLevels.length > 0 : (Boolean(drill?.enabled ?? true) && drillLevels.length > 0);
   const clickAsFilter = Boolean(interaction?.clickAsFilter ?? true);
   const clearOnSecondClick = Boolean(interaction?.clearOnSecondClick ?? true);
-  const filterFieldFromConfig = typeof interaction?.filterField === "string" ? interaction.filterField.trim() : "";
-  const filterStorePathFromConfig = typeof interaction?.storePath === "string" ? interaction.storePath.trim() : "";
-  const resolvedFilterField = filterFieldFromConfig || inferFilterField(dq?.dimension);
-  const resolvedFilterStorePath = filterStorePathFromConfig || (resolvedFilterField ? `filters.${resolvedFilterField}` : "");
+  const resolvedFilterField = resolveInteractionFilterField(interaction, inferFilterField(dq?.dimension));
+  const resolvedFilterStorePath = resolveInteractionFilterStorePath(interaction, resolvedFilterField);
   const alsoWithDrill = Boolean(interaction?.alsoWithDrill ?? false);
   const shouldClickFilter = clickAsFilter && Boolean(resolvedFilterStorePath) && (!drillEnabled || alsoWithDrill);
   const [drillLevelIndex, setDrillLevelIndex] = React.useState(0);
