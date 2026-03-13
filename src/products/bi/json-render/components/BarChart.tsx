@@ -73,7 +73,9 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   const yFieldName = typeof dq?.yField === "string" ? dq.yField.trim() : "value";
   const keyFieldName = typeof dq?.keyField === "string" ? dq.keyField.trim() : "key";
   const seriesFieldName = typeof dq?.seriesField === "string" ? dq.seriesField.trim() : "";
-  const drill = (element?.props?.drill as AnyRecord | undefined);
+  const drilldown = (element?.props?.drilldown as AnyRecord | undefined);
+  const legacyDrill = (element?.props?.drill as AnyRecord | undefined);
+  const drill = drilldown || legacyDrill;
   const interaction = (element?.props?.interaction as AnyRecord | undefined) || {};
   const inferFilterField = React.useCallback((dimension?: string) => {
     const d = (dimension || '').trim().toLowerCase();
@@ -115,7 +117,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
       })
       .filter(Boolean) as Array<{ label: string; dimension?: string; dimensionExpr?: string; filterField?: string }>;
   }, [JSON.stringify(drill?.levels || []), inferFilterField]);
-  const drillEnabled = Boolean(drill?.enabled ?? true) && drillLevels.length > 0;
+  const drillEnabled = drilldown ? drillLevels.length > 0 : (Boolean(drill?.enabled ?? true) && drillLevels.length > 0);
   const clickAsFilter = Boolean(interaction?.clickAsFilter ?? true);
   const clearOnSecondClick = Boolean(interaction?.clearOnSecondClick ?? true);
   const filterFieldFromConfig = typeof interaction?.filterField === "string" ? interaction.filterField.trim() : "";

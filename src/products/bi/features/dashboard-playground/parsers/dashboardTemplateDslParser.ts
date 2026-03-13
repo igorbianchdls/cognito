@@ -583,6 +583,13 @@ function compileChartNode(source: string, node: DslNode, context: CompileContext
   if (interactionNodes.length > 1) {
     throw new DashboardTemplateDslParseError(source, node.start, 'Tag <chart> aceita no maximo um <interaction>')
   }
+  const drilldownNodes = node.children.filter((child) => child.tag === 'drilldown')
+  if (drilldownNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <chart> aceita no maximo um <drilldown>')
+  }
+  if (drilldownNodes.length && chartType !== 'BarChart') {
+    throw new DashboardTemplateDslParseError(source, drilldownNodes[0].start, 'Tag <drilldown> atualmente so e suportada em charts do tipo bar')
+  }
   const nivoNodes = node.children.filter((child) => child.tag === 'nivo')
   if (nivoNodes.length > 1) {
     throw new DashboardTemplateDslParseError(source, node.start, 'Tag <chart> aceita no maximo um <nivo>')
@@ -644,6 +651,30 @@ function compileChartNode(source: string, node: DslNode, context: CompileContext
     ...interactionFromNode,
   }
   if (Object.keys(mergedInteraction).length) props.interaction = mergedInteraction
+
+  const drilldownFromProps =
+    props.drilldown && typeof props.drilldown === 'object' && !Array.isArray(props.drilldown)
+      ? ({ ...(props.drilldown as Record<string, unknown>) } as Record<string, unknown>)
+      : {}
+  if (drilldownNodes.length) {
+    const drilldownNode = drilldownNodes[0]
+    const levelNodes = drilldownNode.children.filter((child) => child.tag === 'level')
+    const invalidChildren = drilldownNode.children.filter((child) => child.tag !== 'level')
+    if (invalidChildren.length) {
+      throw new DashboardTemplateDslParseError(source, invalidChildren[0].start, 'Tag <drilldown> aceita apenas filhos <level>')
+    }
+    const levels = levelNodes.map((levelNode) => {
+      const level = attrsToProps(levelNode.attrs)
+      if (!level.dimension && !level.dimensionExpr && !level['dimension-expr']) {
+        throw new DashboardTemplateDslParseError(source, levelNode.start, 'Tag <level> requer dimension ou dimensionExpr')
+      }
+      return level
+    })
+    const drilldownFromNode = attrsToProps(drilldownNode.attrs)
+    if (levels.length) drilldownFromNode.levels = levels
+    Object.assign(drilldownFromProps, drilldownFromNode)
+  }
+  if (Object.keys(drilldownFromProps).length) props.drilldown = drilldownFromProps
 
   if (nivoNodes.length) {
     const nivoFromNode = attrsToProps(nivoNodes[0].attrs)
@@ -1161,7 +1192,7 @@ function renderChartNodeToDsl(node: Record<string, unknown>, level: number): str
   const chartType = chartTypeToAttr(typeRaw) || 'bar'
 
   const baseAttrs: Record<string, unknown> = { type: chartType }
-  const consumedTopLevel = new Set(['dataQuery', 'interaction', 'nivo'])
+  const consumedTopLevel = new Set(['dataQuery', 'interaction', 'nivo', 'drill', 'drilldown'])
   for (const [k, v] of Object.entries(propsRaw)) {
     if (consumedTopLevel.has(k)) continue
     if (v === undefined) continue
@@ -1217,6 +1248,40 @@ function renderChartNodeToDsl(node: Record<string, unknown>, level: number): str
   if (Object.keys(interactionRaw).length) {
     lines.push(`${renderIndent(level + 1)}<Interaction${renderAttrs(interactionRaw)} />`)
     delete propsRaw.interaction
+  }
+
+  const drilldownRawSource =
+    propsRaw.drilldown && typeof propsRaw.drilldown === 'object' && !Array.isArray(propsRaw.drilldown)
+      ? ({ ...(propsRaw.drilldown as Record<string, unknown>) } as Record<string, unknown>)
+      : propsRaw.drill && typeof propsRaw.drill === 'object' && !Array.isArray(propsRaw.drill)
+        ? ({ ...(propsRaw.drill as Record<string, unknown>) } as Record<string, unknown>)
+        : {}
+  if (Object.keys(drilldownRawSource).length) {
+    const drilldownAttrs: Record<string, unknown> = {}
+    const levelsRaw = Array.isArray(drilldownRawSource.levels) ? drilldownRawSource.levels : []
+    delete drilldownRawSource.levels
+    delete drilldownRawSource.enabled
+    for (const [k, v] of Object.entries(drilldownRawSource)) {
+      if (v === undefined) continue
+      if (typeof v !== 'object' || v === null) {
+        drilldownAttrs[k] = v
+      }
+    }
+    lines.push(`${renderIndent(level + 1)}<Drilldown${renderAttrs(drilldownAttrs)}>`)
+    for (const levelRaw of levelsRaw) {
+      if (!levelRaw || typeof levelRaw !== 'object' || Array.isArray(levelRaw)) continue
+      const levelAttrs: Record<string, unknown> = {}
+      for (const [k, v] of Object.entries(levelRaw as Record<string, unknown>)) {
+        if (v === undefined) continue
+        if (typeof v !== 'object' || v === null) {
+          levelAttrs[k] = v
+        }
+      }
+      lines.push(`${renderIndent(level + 2)}<Level${renderAttrs(levelAttrs)} />`)
+    }
+    lines.push(`${renderIndent(level + 1)}</Drilldown>`)
+    delete propsRaw.drilldown
+    delete propsRaw.drill
   }
 
   const nivoRaw =

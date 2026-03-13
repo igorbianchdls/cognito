@@ -644,6 +644,15 @@ export const catalog = {
         title: z.string().optional(),
         titleStyle: TitleStyleSchema.optional(),
         dataQuery: z.union([LegacyChartDataQuerySchema, SqlChartDataQuerySchema]),
+        drilldown: z.object({
+          showBreadcrumb: z.boolean().optional(),
+          levels: z.array(z.object({
+            label: z.string().optional(),
+            dimension: z.string().optional(),
+            dimensionExpr: z.string().optional(),
+            filterField: z.string().optional(),
+          }).strict().refine((l) => Boolean(l.dimension || l.dimensionExpr), { message: 'drilldown level requires dimension or dimensionExpr' })).optional(),
+        }).strict().optional(),
         drill: z.object({
           enabled: z.boolean().optional(),
           showBreadcrumb: z.boolean().optional(),
