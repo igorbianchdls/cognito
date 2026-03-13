@@ -95,6 +95,23 @@ function getManagedPalette(rawVar: string | undefined): string[] | undefined {
   return split.length ? split : undefined;
 }
 
+function makeTreemapContent(colors: string[]) {
+  return function TreemapContent(props: any) {
+    const { x, y, width, height, name, index, payload } = props || {};
+    const color = colors[(Number(index) || 0) % colors.length] || colors[0];
+    return (
+      <g>
+        <rect x={x} y={y} width={width} height={height} style={{ fill: color, stroke: "#fff", strokeWidth: 2 }} />
+        {width > 70 && height > 24 ? (
+          <text x={x + 8} y={y + 20} fill="#fff" fontSize={12} fontWeight={600}>
+            {String(name ?? payload?.name ?? "")}
+          </text>
+        ) : null}
+      </g>
+    );
+  };
+}
+
 export default function JsonRenderTreemapChart({ element }: { element: any }) {
   const { data, setData } = useData();
   const theme = useThemeOverrides();
@@ -176,6 +193,7 @@ export default function JsonRenderTreemapChart({ element }: { element: any }) {
   const colors = managedScheme && managedScheme.length
     ? managedScheme
     : (chartProps.colors ?? (Array.isArray(colorScheme) ? colorScheme : (typeof colorScheme === "string" ? [colorScheme] : ["#3b82f6", "#10b981", "#f59e0b", "#ef4444"])));
+  const treemapContent = React.useMemo(() => makeTreemapContent(colors), [JSON.stringify(colors)]);
 
   const treeData = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
@@ -234,19 +252,7 @@ export default function JsonRenderTreemapChart({ element }: { element: any }) {
             aspectRatio={chartProps.aspectRatio ?? 4 / 3}
             isAnimationActive={Boolean(chartProps.animate ?? true)}
             onClick={shouldClickFilter ? handleNodeClick : undefined}
-            content={({ depth, x, y, width, height, name, colors: _ignored, index, payload }: any) => {
-              const color = colors[index % colors.length] || colors[0];
-              return (
-                <g>
-                  <rect x={x} y={y} width={width} height={height} style={{ fill: color, stroke: "#fff", strokeWidth: 2 }} />
-                  {width > 70 && height > 24 ? (
-                    <text x={x + 8} y={y + 20} fill="#fff" fontSize={12} fontWeight={600}>
-                      {String(name ?? payload?.name ?? "")}
-                    </text>
-                  ) : null}
-                </g>
-              );
-            }}
+            content={React.createElement(treemapContent)}
           >
             <Tooltip
               content={({ active, payload }) => {
