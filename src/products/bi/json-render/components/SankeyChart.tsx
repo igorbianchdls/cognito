@@ -228,6 +228,8 @@ export default function JsonRenderSankeyChart({ element }: { element: any }) {
     return { nodes, links };
   }, [serverRows, sourceFieldName, targetFieldName, valueFieldName, keyFieldName]);
 
+  const hasData = sankeyData.nodes.length > 0 && sankeyData.links.length > 0;
+
   const handleSankeyClick = React.useCallback((entry: AnyRecord, type: string) => {
     if (!shouldClickFilter || !resolvedFilterStorePath || type !== "node") return;
     const rawValue = entry?.payload?.filterKey ?? entry?.filterKey ?? entry?.name;
@@ -244,38 +246,42 @@ export default function JsonRenderSankeyChart({ element }: { element: any }) {
     <div>
       {queryError && <div className="mb-2 text-xs text-red-600">{queryError}</div>}
       <div style={{ height }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <Sankey
-            data={sankeyData as any}
-            node={nodeRenderer as any}
-            nodePadding={chartProps.nodePadding ?? 14}
-            nodeWidth={chartProps.nodeWidth ?? 14}
-            linkCurvature={chartProps.linkCurvature ?? 0.5}
-            iterations={chartProps.iterations ?? 32}
-            margin={chartProps.margin ?? { top: 12, right: 80, bottom: 12, left: 16 }}
-            sort={Boolean(chartProps.sort ?? true)}
-            onClick={shouldClickFilter ? handleSankeyClick : undefined}
-          >
-            <Tooltip
-              content={({ active, payload }) => {
-                if (!active || !payload?.length) return null;
-                const item = payload[0]?.payload as AnyRecord;
-                const sourceName = item?.source?.name ?? item?.payload?.source?.name;
-                const targetName = item?.target?.name ?? item?.payload?.target?.name;
-                return (
-                  <div className="rounded border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700">
-                    {sourceName && targetName ? (
-                      <div className="font-medium">{String(sourceName)} → {String(targetName)}</div>
-                    ) : (
-                      <div className="font-medium">{String(item?.name ?? "")}</div>
-                    )}
-                    <div>{formatValue(item?.value, fmt)}</div>
-                  </div>
-                );
-              }}
-            />
-          </Sankey>
-        </ResponsiveContainer>
+        {!hasData ? (
+          <div className="flex h-full items-center justify-center text-sm text-gray-400">Sem dados</div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <Sankey
+              data={sankeyData as any}
+              node={nodeRenderer as any}
+              nodePadding={chartProps.nodePadding ?? 14}
+              nodeWidth={chartProps.nodeWidth ?? 14}
+              linkCurvature={chartProps.linkCurvature ?? 0.5}
+              iterations={chartProps.iterations ?? 32}
+              margin={chartProps.margin ?? { top: 12, right: 80, bottom: 12, left: 16 }}
+              sort={Boolean(chartProps.sort ?? true)}
+              onClick={shouldClickFilter ? handleSankeyClick : undefined}
+            >
+              <Tooltip
+                content={({ active, payload }) => {
+                  if (!active || !payload?.length) return null;
+                  const item = payload[0]?.payload as AnyRecord;
+                  const sourceName = item?.source?.name ?? item?.payload?.source?.name;
+                  const targetName = item?.target?.name ?? item?.payload?.target?.name;
+                  return (
+                    <div className="rounded border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700">
+                      {sourceName && targetName ? (
+                        <div className="font-medium">{String(sourceName)} → {String(targetName)}</div>
+                      ) : (
+                        <div className="font-medium">{String(item?.name ?? "")}</div>
+                      )}
+                      <div>{formatValue(item?.value, fmt)}</div>
+                    </div>
+                  );
+                }}
+              />
+            </Sankey>
+          </ResponsiveContainer>
+        )}
       </div>
     </div>
   );

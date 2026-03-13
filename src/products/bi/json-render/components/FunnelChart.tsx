@@ -195,6 +195,8 @@ export default function JsonRenderFunnelChart({ element }: { element: any }) {
     });
   }, [serverRows, xFieldName, yFieldName, keyFieldName, JSON.stringify(colors)]);
 
+  const hasData = chartData.length > 0;
+
   const handleStepClick = React.useCallback((entry: AnyRecord) => {
     if (!shouldClickFilter || !resolvedFilterStorePath) return;
     const rawValue = entry?.payload?.filterKey ?? entry?.filterKey ?? entry?.name;
@@ -211,37 +213,41 @@ export default function JsonRenderFunnelChart({ element }: { element: any }) {
     <div>
       {queryError && <div className="mb-2 text-xs text-red-600">{queryError}</div>}
       <div style={{ height }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <RechartsFunnelChart>
-            <Tooltip
-              content={({ active, payload }) => {
-                if (!active || !payload?.length) return null;
-                const item = payload[0]?.payload as AnyRecord;
-                return (
-                  <div className="rounded border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700">
-                    <div className="font-medium">{String(item?.name ?? "")}</div>
-                    <div>{formatValue(item?.value, fmt)}</div>
-                  </div>
-                );
-              }}
-            />
-            <Legend />
-            <Funnel
-              data={chartData as any}
-              dataKey="value"
-              nameKey="name"
-              isAnimationActive={Boolean(chartProps.animate ?? true)}
-              onClick={shouldClickFilter ? handleStepClick : undefined}
-            >
-              <LabelList
-                position="right"
-                fill={fg}
-                style={{ fontFamily: managerFont, fontSize: 12 }}
-                dataKey="name"
+        {!hasData ? (
+          <div className="flex h-full items-center justify-center text-sm text-gray-400">Sem dados</div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <RechartsFunnelChart>
+              <Tooltip
+                content={({ active, payload }) => {
+                  if (!active || !payload?.length) return null;
+                  const item = payload[0]?.payload as AnyRecord;
+                  return (
+                    <div className="rounded border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700">
+                      <div className="font-medium">{String(item?.name ?? "")}</div>
+                      <div>{formatValue(item?.value, fmt)}</div>
+                    </div>
+                  );
+                }}
               />
-            </Funnel>
-          </RechartsFunnelChart>
-        </ResponsiveContainer>
+              <Legend />
+              <Funnel
+                data={chartData as any}
+                dataKey="value"
+                nameKey="name"
+                isAnimationActive={Boolean(chartProps.animate ?? true)}
+                onClick={shouldClickFilter ? handleStepClick : undefined}
+              >
+                <LabelList
+                  position="right"
+                  fill={fg}
+                  style={{ fontFamily: managerFont, fontSize: 12 }}
+                  dataKey="name"
+                />
+              </Funnel>
+            </RechartsFunnelChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </div>
   );
