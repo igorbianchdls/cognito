@@ -124,14 +124,20 @@ function normalizeSeries(rawSeries: unknown): ComposedSeriesDef[] {
   if (!Array.isArray(rawSeries)) return [];
   return rawSeries
     .filter((item): item is AnyRecord => Boolean(item) && typeof item === "object" && !Array.isArray(item))
-    .map((item) => ({
-      field: String(item.field || "").trim(),
-      type: String(item.type || "bar").trim().toLowerCase() === "line" ? "line" : "bar",
-      label: typeof item.label === "string" && item.label.trim() ? item.label : undefined,
-      color: typeof item.color === "string" && item.color.trim() ? item.color : undefined,
-      yAxis: String(item.yAxis || item.yaxis || "left").trim().toLowerCase() === "right" ? "right" : "left",
-      strokeWidth: typeof item.strokeWidth === "number" ? item.strokeWidth : undefined,
-    }))
+    .map((item): ComposedSeriesDef => {
+      const type: "bar" | "line" =
+        String(item.type || "bar").trim().toLowerCase() === "line" ? "line" : "bar";
+      const yAxis: "left" | "right" =
+        String(item.yAxis || item.yaxis || "left").trim().toLowerCase() === "right" ? "right" : "left";
+      return {
+        field: String(item.field || "").trim(),
+        type,
+        label: typeof item.label === "string" && item.label.trim() ? item.label : undefined,
+        color: typeof item.color === "string" && item.color.trim() ? item.color : undefined,
+        yAxis,
+        strokeWidth: typeof item.strokeWidth === "number" ? item.strokeWidth : undefined,
+      };
+    })
     .filter((item) => Boolean(item.field));
 }
 
