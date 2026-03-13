@@ -7,6 +7,7 @@ import JsonRenderPieChart from "@/products/bi/json-render/components/PieChart";
 import JsonRenderScatterChart from "@/products/bi/json-render/components/ScatterChart";
 import JsonRenderRadarChart from "@/products/bi/json-render/components/RadarChart";
 import JsonRenderTreemapChart from "@/products/bi/json-render/components/TreemapChart";
+import JsonRenderComposedChart from "@/products/bi/json-render/components/ComposedChart";
 import JsonRenderSparkline from "@/products/bi/json-render/components/Sparkline";
 import JsonRenderGauge from "@/products/bi/json-render/components/Gauge";
 import JsonRenderTable from "@/products/bi/json-render/components/Table";
@@ -151,6 +152,14 @@ const defaultTreemapChart = {
   titleStyle: { padding: 6, textAlign: 'left' },
   colorScheme: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
   nivo: { aspectRatio: 4 / 3, animate: true },
+} as const;
+
+const defaultComposedChart = {
+  height: 280,
+  format: 'number' as 'currency'|'percent'|'number',
+  titleStyle: { padding: 6, textAlign: 'left' },
+  colorScheme: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
+  nivo: { gridX: false, gridY: true, curve: 'monotone', animate: true },
 } as const;
 
 const defaultAISummary = {
@@ -2058,6 +2067,11 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const theme = useThemeOverrides();
     const merged = deepMerge(deepMerge(defaultTreemapChart as any, ((theme.components as any)?.TreemapChart || {}) as AnyRecord), (element?.props || {}) as AnyRecord);
     return <JsonRenderTreemapChart element={{ props: merged }} />;
+  },
+  ComposedChart: ({ element }) => {
+    const theme = useThemeOverrides();
+    const merged = deepMerge(deepMerge(defaultComposedChart as any, ((theme.components as any)?.ComposedChart || {}) as AnyRecord), (element?.props || {}) as AnyRecord);
+    return <JsonRenderComposedChart element={{ props: merged }} />;
   },
   Table: ({ element }) => {
     const theme = useThemeOverrides();

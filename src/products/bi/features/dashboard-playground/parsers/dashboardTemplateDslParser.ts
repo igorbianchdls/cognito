@@ -423,10 +423,11 @@ function mapChartType(source: string, node: DslNode, rawType: string): string {
   if (t === 'line') return 'LineChart'
   if (t === 'bar') return 'BarChart'
   if (t === 'pie') return 'PieChart'
+  if (t === 'composed') return 'ComposedChart'
   if (t === 'scatter') return 'ScatterChart'
   if (t === 'radar') return 'RadarChart'
   if (t === 'treemap') return 'TreemapChart'
-  throw new DashboardTemplateDslParseError(source, node.start, `Tag <chart> exige type valido: line | bar | pie | scatter | radar | treemap`)
+  throw new DashboardTemplateDslParseError(source, node.start, `Tag <chart> exige type valido: line | bar | pie | composed | scatter | radar | treemap`)
 }
 
 function compileDataQueryNode(source: string, node: DslNode): Record<string, unknown> {
@@ -582,6 +583,10 @@ function compileChartNode(source: string, node: DslNode, context: CompileContext
   if (dataQueryNodes.length > 1) {
     throw new DashboardTemplateDslParseError(source, node.start, 'Tag <chart> aceita no maximo um <data-query>')
   }
+  const seriesNodes = node.children.filter((child) => child.tag === 'series')
+  if (seriesNodes.length && chartType !== 'ComposedChart') {
+    throw new DashboardTemplateDslParseError(source, seriesNodes[0].start, 'Tag <series> atualmente so e suportada em charts do tipo composed')
+  }
   const interactionNodes = node.children.filter((child) => child.tag === 'interaction')
   if (interactionNodes.length > 1) {
     throw new DashboardTemplateDslParseError(source, node.start, 'Tag <chart> aceita no maximo um <interaction>')
@@ -645,6 +650,14 @@ function compileChartNode(source: string, node: DslNode, context: CompileContext
   }
 
   if (Object.keys(dataQueryFromProps).length) props.dataQuery = dataQueryFromProps
+
+  const seriesFromProps = Array.isArray(props.series) ? [...props.series] : []
+  if (seriesNodes.length) {
+    const compiledSeries = seriesNodes.map((seriesNode) => attrsToProps(seriesNode.attrs))
+    props.series = [...seriesFromProps, ...compiledSeries]
+  } else if (seriesFromProps.length) {
+    props.series = seriesFromProps
+  }
 
   const interactionFromDefaults = context.chartInteractionDefaults || {}
   const interactionFromProps =
@@ -1068,10 +1081,11 @@ function sanitizeTemplateName(value: string): string {
   return out || 'dashboard_template'
 }
 
-function chartTypeToAttr(type: string): 'line' | 'bar' | 'pie' | 'scatter' | 'radar' | 'treemap' | null {
+function chartTypeToAttr(type: string): 'line' | 'bar' | 'pie' | 'composed' | 'scatter' | 'radar' | 'treemap' | null {
   if (type === 'LineChart') return 'line'
   if (type === 'BarChart') return 'bar'
   if (type === 'PieChart') return 'pie'
+  if (type === 'ComposedChart') return 'composed'
   if (type === 'ScatterChart') return 'scatter'
   if (type === 'RadarChart') return 'radar'
   if (type === 'TreemapChart') return 'treemap'
@@ -1257,6 +1271,22 @@ function renderChartNodeToDsl(node: Record<string, unknown>, level: number): str
   }
   if (Object.keys(fieldsAttrs).length) {
     lines.push(`${renderIndent(level + 1)}<Fields${renderAttrs(fieldsAttrs)} />`)
+  }
+
+  const seriesRaw = Array.isArray(propsRaw.series) ? propsRaw.series : []
+  if (seriesRaw.length) {
+    for (const entry of seriesRaw) {
+      if (!entry || typeof entry !== 'object' || Array.isArray(entry)) continue
+      const seriesAttrs: Record<string, unknown> = {}
+      for (const [k, v] of Object.entries(entry as Record<string, unknown>)) {
+        if (v === undefined) continue
+        if (typeof v !== 'object' || v === null) {
+          seriesAttrs[k] = v
+        }
+      }
+      lines.push(`${renderIndent(level + 1)}<Series${renderAttrs(seriesAttrs)} />`)
+    }
+    delete propsRaw.series
   }
 
   const interactionRaw =

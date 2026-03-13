@@ -113,6 +113,23 @@ const SqlChartDataQuerySchema = z.object({
   limit: z.number().optional(),
 }).strict();
 
+const SqlComposedChartDataQuerySchema = z.object({
+  query: z.string(),
+  xField: z.string(),
+  keyField: z.string().optional(),
+  filters: z.record(z.any()).optional(),
+  limit: z.number().optional(),
+}).strict();
+
+const ComposedSeriesSchema = z.object({
+  field: z.string(),
+  type: z.enum(["bar", "line"]),
+  label: z.string().optional(),
+  color: z.string().optional(),
+  yAxis: z.enum(["left", "right"]).optional(),
+  strokeWidth: z.number().optional(),
+}).strict();
+
 const SqlTableDataQuerySchema = z.object({
   query: z.string(),
   filters: z.record(z.any()).optional(),
@@ -789,6 +806,28 @@ export const catalog = {
         title: z.string().optional(),
         titleStyle: TitleStyleSchema.optional(),
         dataQuery: SqlChartDataQuerySchema,
+        interaction: z.object({
+          clickAsFilter: z.boolean().optional(),
+          table: z.string().optional(),
+          field: z.string().optional(),
+          clearOnSecondClick: z.boolean().optional(),
+        }).partial().optional(),
+        containerStyle: ContainerStyleSchema.optional(),
+        borderless: z.boolean().optional(),
+        fr: z.number().optional(),
+        format: z.enum(["currency", "percent", "number"]).default("number"),
+        height: z.number().optional(),
+        colorScheme: z.union([z.string(), z.array(z.string())]).optional(),
+        nivo: NivoPropsSchema.optional(),
+      }).strict(),
+      hasChildren: false,
+    },
+    ComposedChart: {
+      props: z.object({
+        title: z.string().optional(),
+        titleStyle: TitleStyleSchema.optional(),
+        dataQuery: SqlComposedChartDataQuerySchema,
+        series: z.array(ComposedSeriesSchema).min(1),
         interaction: z.object({
           clickAsFilter: z.boolean().optional(),
           table: z.string().optional(),
