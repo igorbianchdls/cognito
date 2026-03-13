@@ -883,59 +883,13 @@ function compileGaugeNode(source: string, node: DslNode): Record<string, unknown
   return out
 }
 
-function compilePivotSlotNode(source: string, node: DslNode, slotTag: 'rows' | 'columns' | 'values'): unknown[] {
-  const propsNodes = node.children.filter((child) => child.tag === 'props')
-  if (propsNodes.length > 1) {
-    throw new DashboardTemplateDslParseError(source, node.start, `Tag <${slotTag}> aceita no maximo um <props>`)
-  }
-  const propsFromAttrs = attrsToProps(node.attrs)
-  const propsFromJson = propsNodes.length ? parsePropsNode(source, propsNodes[0]) : {}
-  const props = mergeObjects(propsFromAttrs, propsFromJson)
-  const configNodes = node.children.filter((child) => child.tag === 'config')
-  if (configNodes.length > 1) {
-    throw new DashboardTemplateDslParseError(source, node.start, `Tag <${slotTag}> aceita no maximo um <config>`)
-  }
-  if (configNodes.length) {
-    Object.assign(props, parseJsonObjectNode(source, configNodes[0], 'config'))
-  }
-  if (Array.isArray(props.fields)) return props.fields
-  if (Array.isArray(props.values)) return props.values
-  if (props.field !== undefined) return [props.field]
-  if (Object.keys(props).length) return [props]
-  return []
-}
-
 function compilePivotTableNode(source: string, node: DslNode): Record<string, unknown> {
-  const propsNodes = node.children.filter((child) => child.tag === 'props')
-  if (propsNodes.length > 1) {
-    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <pivot-table> aceita no maximo um <props>')
-  }
   const propsFromAttrs = attrsToProps(node.attrs)
-  const propsFromJson = propsNodes.length ? parsePropsNode(source, propsNodes[0]) : {}
-  const props = mergeObjects(propsFromAttrs, propsFromJson)
+  const props = { ...propsFromAttrs }
 
   const queryNodes = node.children.filter((child) => child.tag === 'query' || child.tag === 'sql')
   if (queryNodes.length > 1) {
     throw new DashboardTemplateDslParseError(source, node.start, 'Tag <pivot-table> aceita no maximo um <query>')
-  }
-  const rowsNodes = node.children.filter((child) => child.tag === 'rows')
-  if (rowsNodes.length > 1) {
-    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <pivot-table> aceita no maximo um <rows>')
-  }
-  const columnsNodes = node.children.filter((child) => child.tag === 'columns')
-  if (columnsNodes.length > 1) {
-    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <pivot-table> aceita no maximo um <columns>')
-  }
-  const valuesNodes = node.children.filter((child) => child.tag === 'values')
-  if (valuesNodes.length > 1) {
-    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <pivot-table> aceita no maximo um <values>')
-  }
-  const configNodes = node.children.filter((child) => child.tag === 'config')
-  if (configNodes.length > 1) {
-    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <pivot-table> aceita no maximo um <config>')
-  }
-  if (configNodes.length) {
-    Object.assign(props, parseJsonObjectNode(source, configNodes[0], 'config'))
   }
 
   const dataQueryFromProps =
@@ -948,9 +902,18 @@ function compilePivotTableNode(source: string, node: DslNode): Record<string, un
     if (queryRaw) dataQueryFromProps.query = queryRaw
   }
   if (Object.keys(dataQueryFromProps).length) props.dataQuery = dataQueryFromProps
-  if (rowsNodes.length) props.rows = compilePivotSlotNode(source, rowsNodes[0], 'rows')
-  if (columnsNodes.length) props.columns = compilePivotSlotNode(source, columnsNodes[0], 'columns')
-  if (valuesNodes.length) props.values = compilePivotSlotNode(source, valuesNodes[0], 'values')
+
+  const invalidChildren = node.children.filter((child) => {
+    return child.tag !== 'query' && child.tag !== 'sql'
+  })
+  if (invalidChildren.length) {
+    const invalidTag = invalidChildren[0]?.tag || 'child'
+    throw new DashboardTemplateDslParseError(
+      source,
+      invalidChildren[0]?.start ?? node.start,
+      `Tag <pivot-table> nao aceita <${invalidTag}>. Use props no proprio <PivotTable> e <Query> para SQL`,
+    )
+  }
 
   const out: Record<string, unknown> = { type: 'PivotTable' }
   if (Object.keys(props).length) out.props = props
@@ -1612,15 +1575,18 @@ function renderPivotTableNodeToDsl(node: Record<string, unknown>, level: number)
   const attrs: Record<string, unknown> = {}
   for (const [k, v] of Object.entries(propsRaw)) {
     if (v === undefined) continue
-    if (typeof v !== 'object' || v === null) {
-      attrs[k] = v
-      delete propsRaw[k]
-    }
+    attrs[k] = v
+    delete propsRaw[k]
   }
+  if (rowsRaw.length) attrs.rows = rowsRaw
+  if (columnsRaw.length) attrs.columns = columnsRaw
+  if (valuesRaw.length) attrs.values = valuesRaw
 
   const lines: string[] = [`${renderIndent(level)}<PivotTable${renderAttrs(attrs)}>`]
   const query = typeof dataQueryRaw.query === 'string' ? dataQueryRaw.query : ''
   delete dataQueryRaw.query
+  if (Object.keys(dataQueryRaw).length) attrs.dataQuery = dataQueryRaw
+  lines[0] = `${renderIndent(level)}<PivotTable${renderAttrs(attrs)}>`
   if (query.trim()) {
     lines.push(`${renderIndent(level + 1)}<Query>`)
     lines.push(query
@@ -1629,19 +1595,6 @@ function renderPivotTableNodeToDsl(node: Record<string, unknown>, level: number)
       .join('\n'))
     lines.push(`${renderIndent(level + 1)}</Query>`)
   }
-  if (rowsRaw.length) {
-    lines.push(`${renderIndent(level + 1)}<Rows${renderAttrs({ fields: rowsRaw })} />`)
-  }
-  if (columnsRaw.length) {
-    lines.push(`${renderIndent(level + 1)}<Columns${renderAttrs({ fields: columnsRaw })} />`)
-  }
-  if (valuesRaw.length) {
-    lines.push(`${renderIndent(level + 1)}<Values${renderAttrs({ fields: valuesRaw })} />`)
-  }
-  if (Object.keys(dataQueryRaw).length) {
-    propsRaw.dataQuery = dataQueryRaw
-  }
-  lines.push(...renderJsonObjectBlock('Config', propsRaw, level + 1))
   lines.push(`${renderIndent(level)}</PivotTable>`)
   return lines
 }

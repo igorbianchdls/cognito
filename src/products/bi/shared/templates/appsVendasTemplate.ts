@@ -641,6 +641,41 @@ ORDER BY 2 ASC"
           </Table>
         </Card>
       </Container>
+      <Container grow={2}>
+        <Card>
+          <Title text="Pivot de Receita por Canal e Mês" marginBottom={8} />
+          <PivotTable
+            height={320}
+            maxHeight={420}
+            stickyHeader
+            bordered
+            rounded
+            density="comfortable"
+            enableExportCsv
+            defaultExpandedLevels={1}
+            rows={["canal", "categoria"]}
+            columns={["mes"]}
+            values={[{ field: "valor", aggregate: "sum", format: "currency", label: "Receita" }]}
+            dataQuery={{ filters: {}, limit: 500 }}
+            emptyMessage="Nenhum dado encontrado para montar a pivot com os filtros atuais."
+            loadingMessage="Carregando pivot de receita..."
+          >
+            <Query>
+              SELECT
+                COALESCE(cv.nome, '-') AS canal,
+                COALESCE(cr.nome, '-') AS categoria,
+                TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'MM/YY') AS mes,
+                COALESCE(pi.subtotal, 0)::float AS valor
+              FROM vendas.pedidos p
+              JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+              LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+              LEFT JOIN financeiro.categorias_receita cr ON cr.id = p.categoria_receita_id
+              WHERE 1=1
+                {{filters:p}}
+            </Query>
+          </PivotTable>
+        </Card>
+      </Container>
     </Container>
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Container grow={1}>
