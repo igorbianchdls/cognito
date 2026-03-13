@@ -12,10 +12,8 @@ export function buildScopedFilterStorePath(table: string | undefined, field: str
   const normalizedField = typeof field === "string" ? field.trim() : "";
   if (!normalizedField) return "";
   const tableSegments = splitTableSegments(table);
-  if (tableSegments.length >= 2) {
-    return ["filters", "__scoped", ...tableSegments, normalizedField].join(".");
-  }
-  return `filters.${normalizedField}`;
+  if (tableSegments.length < 2) return "";
+  return ["filters", "__scoped", ...tableSegments, normalizedField].join(".");
 }
 
 export function resolveInteractionFilterField(
@@ -23,18 +21,13 @@ export function resolveInteractionFilterField(
   inferredField = "",
 ): string {
   const explicitField = typeof interaction?.field === "string" ? interaction.field.trim() : "";
-  if (explicitField) return explicitField;
-  const legacyField = typeof interaction?.filterField === "string" ? interaction.filterField.trim() : "";
-  if (legacyField) return legacyField;
-  return inferredField;
+  return explicitField || inferredField;
 }
 
 export function resolveInteractionFilterStorePath(
   interaction: AnyRecord | undefined,
   field: string,
 ): string {
-  const explicitStorePath = typeof interaction?.storePath === "string" ? interaction.storePath.trim() : "";
-  if (explicitStorePath) return explicitStorePath;
   const table = typeof interaction?.table === "string" ? interaction.table.trim() : "";
   return buildScopedFilterStorePath(table, field);
 }

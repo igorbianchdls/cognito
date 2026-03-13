@@ -75,8 +75,6 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   const keyFieldName = typeof dq?.keyField === "string" ? dq.keyField.trim() : "key";
   const seriesFieldName = typeof dq?.seriesField === "string" ? dq.seriesField.trim() : "";
   const drilldown = (element?.props?.drilldown as AnyRecord | undefined);
-  const legacyDrill = (element?.props?.drill as AnyRecord | undefined);
-  const drill = drilldown || legacyDrill;
   const interaction = (element?.props?.interaction as AnyRecord | undefined) || {};
   const inferFilterField = React.useCallback((dimension?: string) => {
     const d = (dimension || '').trim().toLowerCase();
@@ -100,7 +98,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     return map[d] || '';
   }, []);
   const drillLevels = React.useMemo(() => {
-    const raw = Array.isArray(drill?.levels) ? drill.levels : [];
+    const raw = Array.isArray(drilldown?.levels) ? drilldown.levels : [];
     return raw
       .map((level: any, idx: number) => {
         if (!level || typeof level !== 'object') return null;
@@ -117,8 +115,8 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
         };
       })
       .filter(Boolean) as Array<{ label: string; dimension?: string; dimensionExpr?: string; filterField?: string }>;
-  }, [JSON.stringify(drill?.levels || []), inferFilterField]);
-  const drillEnabled = drilldown ? drillLevels.length > 0 : (Boolean(drill?.enabled ?? true) && drillLevels.length > 0);
+  }, [JSON.stringify(drilldown?.levels || []), inferFilterField]);
+  const drillEnabled = drillLevels.length > 0;
   const clickAsFilter = Boolean(interaction?.clickAsFilter ?? true);
   const clearOnSecondClick = Boolean(interaction?.clearOnSecondClick ?? true);
   const resolvedFilterField = resolveInteractionFilterField(interaction, inferFilterField(dq?.dimension));
@@ -130,7 +128,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   React.useEffect(() => {
     setDrillLevelIndex(0);
     setDrillPath([]);
-  }, [JSON.stringify(drill?.levels || []), JSON.stringify(dq)]);
+  }, [JSON.stringify(drilldown?.levels || []), JSON.stringify(dq)]);
   const activeDrillLevel = drillEnabled ? drillLevels[Math.min(drillLevelIndex, drillLevels.length - 1)] : null;
   const effectiveDimension = (activeDrillLevel?.dimension && activeDrillLevel.dimension.length > 0)
     ? activeDrillLevel.dimension
@@ -501,7 +499,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   return (
     <div style={{ overflow: 'visible' }}>
       {queryError && <div className="mb-2 text-xs text-red-600">{queryError}</div>}
-      {drillEnabled && drill?.showBreadcrumb !== false && (
+      {drillEnabled && drilldown?.showBreadcrumb !== false && (
         <div className="mb-2 flex items-center gap-2 text-[11px] text-gray-500">
           <button
             type="button"

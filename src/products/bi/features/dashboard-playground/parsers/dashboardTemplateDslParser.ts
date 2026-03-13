@@ -1192,7 +1192,7 @@ function renderChartNodeToDsl(node: Record<string, unknown>, level: number): str
   const chartType = chartTypeToAttr(typeRaw) || 'bar'
 
   const baseAttrs: Record<string, unknown> = { type: chartType }
-  const consumedTopLevel = new Set(['dataQuery', 'interaction', 'nivo', 'drill', 'drilldown'])
+  const consumedTopLevel = new Set(['dataQuery', 'interaction', 'nivo', 'drilldown'])
   for (const [k, v] of Object.entries(propsRaw)) {
     if (consumedTopLevel.has(k)) continue
     if (v === undefined) continue
@@ -1253,14 +1253,11 @@ function renderChartNodeToDsl(node: Record<string, unknown>, level: number): str
   const drilldownRawSource =
     propsRaw.drilldown && typeof propsRaw.drilldown === 'object' && !Array.isArray(propsRaw.drilldown)
       ? ({ ...(propsRaw.drilldown as Record<string, unknown>) } as Record<string, unknown>)
-      : propsRaw.drill && typeof propsRaw.drill === 'object' && !Array.isArray(propsRaw.drill)
-        ? ({ ...(propsRaw.drill as Record<string, unknown>) } as Record<string, unknown>)
-        : {}
+      : {}
   if (Object.keys(drilldownRawSource).length) {
     const drilldownAttrs: Record<string, unknown> = {}
     const levelsRaw = Array.isArray(drilldownRawSource.levels) ? drilldownRawSource.levels : []
     delete drilldownRawSource.levels
-    delete drilldownRawSource.enabled
     for (const [k, v] of Object.entries(drilldownRawSource)) {
       if (v === undefined) continue
       if (typeof v !== 'object' || v === null) {
@@ -1281,7 +1278,6 @@ function renderChartNodeToDsl(node: Record<string, unknown>, level: number): str
     }
     lines.push(`${renderIndent(level + 1)}</Drilldown>`)
     delete propsRaw.drilldown
-    delete propsRaw.drill
   }
 
   const nivoRaw =
