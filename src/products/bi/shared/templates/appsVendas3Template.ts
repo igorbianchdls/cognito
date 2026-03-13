@@ -55,7 +55,7 @@ export const APPS_VENDAS3_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
               FROM vendas.pedidos p
               JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
               LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
-              LEFT JOIN core.unidades_negocio un ON un.id = p.unidade_negocio_id
+              LEFT JOIN empresa.unidades_negocio un ON un.id = p.unidade_negocio_id
               WHERE 1=1
                 {{filters:p}}
               GROUP BY 1, 2, 3
@@ -78,25 +78,25 @@ export const APPS_VENDAS3_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
 
     <Container>
       <Card>
-        <Title text="Treemap — Categorias e Produtos" marginBottom={8} />
+        <Title text="Treemap — Unidades e Territórios" marginBottom={8} />
         <Chart type="treemap" format="currency" height={360}>
           <Query>
             SELECT
-              p.id AS key,
-              COALESCE(pr.nome, '-') AS produto,
-              COALESCE(cr.nome, 'Sem categoria') AS categoria,
+              t.id AS key,
+              COALESCE(t.nome, '-') AS territorio,
+              COALESCE(un.nome, '-') AS unidade,
               COALESCE(SUM(pi.subtotal), 0)::float AS value
             FROM vendas.pedidos p
             JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-            LEFT JOIN estoque.produtos pr ON pr.id = pi.produto_id
-            LEFT JOIN financeiro.categorias_receita cr ON cr.id = p.categoria_receita_id
+            LEFT JOIN comercial.territorios t ON t.id = p.territorio_id
+            LEFT JOIN empresa.unidades_negocio un ON un.id = p.unidade_negocio_id
             WHERE 1=1
               {{filters:p}}
             GROUP BY 1, 2, 3
             ORDER BY 4 DESC
           </Query>
-          <Fields x="produto" y="value" key="key" parent="categoria" />
-          <Interaction clickAsFilter table="vendas.pedidos" field="pedido_id" clearOnSecondClick />
+          <Fields x="territorio" y="value" key="key" parent="unidade" />
+          <Interaction clickAsFilter table="vendas.pedidos" field="territorio_id" clearOnSecondClick />
           <Config>
             {
               "dataQuery": {
