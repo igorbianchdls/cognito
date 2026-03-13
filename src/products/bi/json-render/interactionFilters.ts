@@ -30,5 +30,6 @@ export function resolveInteractionFilterStorePath(
   field: string,
 ): string {
   const table = typeof interaction?.table === "string" ? interaction.table.trim() : "";
+  if (!table) return "";
   return buildScopedFilterStorePath(table, field);
 }
