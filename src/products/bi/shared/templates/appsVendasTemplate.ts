@@ -641,7 +641,9 @@ ORDER BY 2 ASC"
           </Table>
         </Card>
       </Container>
-      <Container grow={2}>
+    </Container>
+    <Container direction="row" gap={12} padding={16} justify="start" align="start">
+      <Container grow={1}>
         <Card>
           <Title text="Pivot de Receita por Canal e Mês" marginBottom={8} />
           <PivotTable
