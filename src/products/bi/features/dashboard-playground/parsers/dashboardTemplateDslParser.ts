@@ -423,7 +423,10 @@ function mapChartType(source: string, node: DslNode, rawType: string): string {
   if (t === 'line') return 'LineChart'
   if (t === 'bar') return 'BarChart'
   if (t === 'pie') return 'PieChart'
-  throw new DashboardTemplateDslParseError(source, node.start, `Tag <chart> exige type valido: line | bar | pie`)
+  if (t === 'scatter') return 'ScatterChart'
+  if (t === 'radar') return 'RadarChart'
+  if (t === 'treemap') return 'TreemapChart'
+  throw new DashboardTemplateDslParseError(source, node.start, `Tag <chart> exige type valido: line | bar | pie | scatter | radar | treemap`)
 }
 
 function compileDataQueryNode(source: string, node: DslNode): Record<string, unknown> {
@@ -626,11 +629,15 @@ function compileChartNode(source: string, node: DslNode, context: CompileContext
     const x = pickAttr('x', 'xfield', 'x-field')
     const y = pickAttr('y', 'yfield', 'valuefield', 'value-field', 'y-field')
     const key = pickAttr('key', 'keyfield', 'key-field')
-    const series = pickAttr('series', 'seriesfield', 'series-field')
-    if (x) dataQueryFromProps.xField = String(x)
-    if (y) dataQueryFromProps.yField = String(y)
-    if (key) dataQueryFromProps.keyField = String(key)
-    if (series) dataQueryFromProps.seriesField = String(series)
+  const series = pickAttr('series', 'seriesfield', 'series-field')
+  const size = pickAttr('size', 'sizefield', 'size-field')
+  const parent = pickAttr('parent', 'parentfield', 'parent-field')
+  if (x) dataQueryFromProps.xField = String(x)
+  if (y) dataQueryFromProps.yField = String(y)
+  if (key) dataQueryFromProps.keyField = String(key)
+  if (series) dataQueryFromProps.seriesField = String(series)
+  if (size) dataQueryFromProps.sizeField = String(size)
+  if (parent) dataQueryFromProps.parentField = String(parent)
   }
 
   if (dataQueryNodes.length) {
@@ -1061,10 +1068,13 @@ function sanitizeTemplateName(value: string): string {
   return out || 'dashboard_template'
 }
 
-function chartTypeToAttr(type: string): 'line' | 'bar' | 'pie' | null {
+function chartTypeToAttr(type: string): 'line' | 'bar' | 'pie' | 'scatter' | 'radar' | 'treemap' | null {
   if (type === 'LineChart') return 'line'
   if (type === 'BarChart') return 'bar'
   if (type === 'PieChart') return 'pie'
+  if (type === 'ScatterChart') return 'scatter'
+  if (type === 'RadarChart') return 'radar'
+  if (type === 'TreemapChart') return 'treemap'
   return null
 }
 
@@ -1236,6 +1246,14 @@ function renderChartNodeToDsl(node: Record<string, unknown>, level: number): str
   if (typeof dataQueryRaw.seriesField === 'string' && dataQueryRaw.seriesField.trim()) {
     fieldsAttrs.series = dataQueryRaw.seriesField
     delete dataQueryRaw.seriesField
+  }
+  if (typeof dataQueryRaw.sizeField === 'string' && dataQueryRaw.sizeField.trim()) {
+    fieldsAttrs.size = dataQueryRaw.sizeField
+    delete dataQueryRaw.sizeField
+  }
+  if (typeof dataQueryRaw.parentField === 'string' && dataQueryRaw.parentField.trim()) {
+    fieldsAttrs.parent = dataQueryRaw.parentField
+    delete dataQueryRaw.parentField
   }
   if (Object.keys(fieldsAttrs).length) {
     lines.push(`${renderIndent(level + 1)}<Fields${renderAttrs(fieldsAttrs)} />`)

@@ -4,6 +4,9 @@ import React from "react";
 import JsonRenderBarChart from "@/products/bi/json-render/components/BarChart";
 import JsonRenderLineChart from "@/products/bi/json-render/components/LineChart";
 import JsonRenderPieChart from "@/products/bi/json-render/components/PieChart";
+import JsonRenderScatterChart from "@/products/bi/json-render/components/ScatterChart";
+import JsonRenderRadarChart from "@/products/bi/json-render/components/RadarChart";
+import JsonRenderTreemapChart from "@/products/bi/json-render/components/TreemapChart";
 import JsonRenderSparkline from "@/products/bi/json-render/components/Sparkline";
 import JsonRenderGauge from "@/products/bi/json-render/components/Gauge";
 import JsonRenderTable from "@/products/bi/json-render/components/Table";
@@ -124,6 +127,30 @@ const defaultPieChart = {
   titleStyle: { padding: 6, textAlign: 'left' },
   colorScheme: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
   nivo: { innerRadius: 0, padAngle: 0.7, cornerRadius: 3, activeOuterRadiusOffset: 8, enableArcLabels: true, arcLabelsSkipAngle: 10, arcLabelsTextColor: '#333333', margin: { top: 10, right: 10, bottom: 10, left: 10 }, animate: true, motionConfig: 'gentle' },
+} as const;
+
+const defaultScatterChart = {
+  height: 260,
+  format: 'number' as 'currency'|'percent'|'number',
+  titleStyle: { padding: 6, textAlign: 'left' },
+  colorScheme: ['#3b82f6', '#10b981', '#f59e0b'],
+  nivo: { range: [60, 360], animate: true },
+} as const;
+
+const defaultRadarChart = {
+  height: 260,
+  format: 'number' as 'currency'|'percent'|'number',
+  titleStyle: { padding: 6, textAlign: 'left' },
+  colorScheme: ['#3b82f6', '#10b981', '#f59e0b'],
+  nivo: { outerRadius: '72%', fillOpacity: 0.28, animate: true },
+} as const;
+
+const defaultTreemapChart = {
+  height: 280,
+  format: 'number' as 'currency'|'percent'|'number',
+  titleStyle: { padding: 6, textAlign: 'left' },
+  colorScheme: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
+  nivo: { aspectRatio: 4 / 3, animate: true },
 } as const;
 
 const defaultAISummary = {
@@ -2016,6 +2043,21 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const theme = useThemeOverrides();
     const merged = deepMerge(deepMerge(defaultPieChart as any, (theme.components?.PieChart || {}) as any), (element?.props || {}) as any);
     return <JsonRenderPieChart element={{ props: merged }} />;
+  },
+  ScatterChart: ({ element }) => {
+    const theme = useThemeOverrides();
+    const merged = deepMerge(deepMerge(defaultScatterChart as any, ((theme.components as any)?.ScatterChart || {}) as any), (element?.props || {}) as any);
+    return <JsonRenderScatterChart element={{ props: merged }} />;
+  },
+  RadarChart: ({ element }) => {
+    const theme = useThemeOverrides();
+    const merged = deepMerge(deepMerge(defaultRadarChart as any, ((theme.components as any)?.RadarChart || {}) as any), (element?.props || {}) as any);
+    return <JsonRenderRadarChart element={{ props: merged }} />;
+  },
+  TreemapChart: ({ element }) => {
+    const theme = useThemeOverrides();
+    const merged = deepMerge(deepMerge(defaultTreemapChart as any, ((theme.components as any)?.TreemapChart || {}) as AnyRecord), (element?.props || {}) as AnyRecord);
+    return <JsonRenderTreemapChart element={{ props: merged }} />;
   },
   Table: ({ element }) => {
     const theme = useThemeOverrides();
