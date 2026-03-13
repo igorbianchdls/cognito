@@ -13,6 +13,7 @@ export function buildScopedFilterStorePath(table: string | undefined, field: str
   if (!normalizedField) return "";
   const tableSegments = splitTableSegments(table);
   if (tableSegments.length < 2) return "";
+  // Keep chart interactions scoped by table to avoid filter collisions across modules.
   return ["filters", "__scoped", ...tableSegments, normalizedField].join(".");
 }
 
