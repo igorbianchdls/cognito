@@ -16,6 +16,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import type { CurveType } from "recharts/types/shape/Curve";
 
 type AnyRecord = Record<string, any>;
 
@@ -118,6 +119,28 @@ function getManagedPalette(rawVar: string | undefined): string[] | undefined {
   } catch {}
   const split = rawVar.split(",").map((s) => s.trim()).filter(Boolean);
   return split.length ? split : undefined;
+}
+
+function resolveCurveType(raw: unknown): CurveType {
+  const value = String(raw || "").trim().toLowerCase();
+  const allowed: CurveType[] = [
+    "basis",
+    "basisClosed",
+    "basisOpen",
+    "bumpX",
+    "bumpY",
+    "bump",
+    "linear",
+    "linearClosed",
+    "natural",
+    "monotoneX",
+    "monotoneY",
+    "monotone",
+    "step",
+    "stepBefore",
+    "stepAfter",
+  ];
+  return allowed.includes(value as CurveType) ? (value as CurveType) : "monotone";
 }
 
 function normalizeSeries(rawSeries: unknown): ComposedSeriesDef[] {
@@ -226,6 +249,7 @@ export default function JsonRenderComposedChart({ element }: { element: any }) {
             : ["#3b82f6", "#10b981", "#f59e0b", "#ef4444"]));
   const fg = (theme.cssVars || ({} as any)).fg as string | undefined;
   const managerFont = (theme.cssVars || ({} as any)).fontFamily as string | undefined;
+  const lineCurve = resolveCurveType(chartProps.curve);
 
   const chartData = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
@@ -314,7 +338,7 @@ export default function JsonRenderComposedChart({ element }: { element: any }) {
                 return (
                   <Line
                     key={`${series.field}-line`}
-                    type={String(chartProps.curve || "monotone")}
+                    type={lineCurve}
                     dataKey={series.field}
                     name={series.label || series.field}
                     yAxisId={yAxisId}
