@@ -160,6 +160,37 @@ function getScopedFiltersForTable(filters: Record<string, unknown>, table: strin
   return isObject(current) ? current : {}
 }
 
+function collectScopedFilterLeaves(value: unknown, target: Record<string, unknown>) {
+  if (!isObject(value)) return
+
+  const entries = Object.entries(value)
+  const looksLikeLeaf = entries.some(([key, entryValue]) => {
+    if (key.startsWith('__')) return false
+    return !isObject(entryValue)
+  })
+
+  if (looksLikeLeaf) {
+    for (const [key, entryValue] of entries) {
+      if (key.startsWith('__')) continue
+      target[key] = entryValue
+    }
+    return
+  }
+
+  for (const [, child] of entries) {
+    collectScopedFilterLeaves(child, target)
+  }
+}
+
+function buildFilterParamSource(filters: Record<string, unknown>): Record<string, unknown> {
+  const merged: Record<string, unknown> = { ...filters }
+  const rawScoped = filters.__scoped
+  if (isObject(rawScoped)) {
+    collectScopedFilterLeaves(rawScoped, merged)
+  }
+  return merged
+}
+
 function buildDatePredicates(
   target: { table: string; ref: string },
   filters: Record<string, unknown>,
@@ -314,7 +345,7 @@ export async function POST(req: NextRequest) {
     const limit = Math.max(1, Math.min(2000, limitRaw ?? 1000))
 
     const expandedQuery = expandFilterMarkers(query, filters)
-    const { sql: boundSql, params } = bindNamedParams(expandedQuery, filters)
+    const { sql: boundSql, params } = bindNamedParams(expandedQuery, buildFilterParamSource(filters))
     const finalSql = `SELECT * FROM (${boundSql}) AS q LIMIT $${params.length + 1}::int`
     const finalParams = [...params, limit]
 
