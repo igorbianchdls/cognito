@@ -4,7 +4,7 @@ export const APPS_VENDAS3_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
     <Header direction="row" justify="between" align="center">
       <Container direction="column" gap={4}>
         <Title text="Dashboard de Vendas 3" />
-        <Subtitle text="Teste dos novos charts em Recharts: scatter, radar e treemap" />
+        <Subtitle text="Teste dos novos charts em Recharts: scatter, radar, treemap e composed" />
       </Container>
       <DatePicker visible mode="range" table="vendas.pedidos" field="data_pedido" presets={["7d","14d","30d"]} />
     </Header>
@@ -102,6 +102,40 @@ export const APPS_VENDAS3_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
               "dataQuery": {
                 "filters": {},
                 "limit": 40
+              }
+            }
+          </Config>
+        </Chart>
+      </Card>
+    </Container>
+
+    <Container>
+      <Card>
+        <Title text="Composed — Receita e Pedidos por Canal" marginBottom={8} />
+        <Chart type="composed" format="currency" height={320}>
+          <Query>
+            SELECT
+              cv.id AS key,
+              COALESCE(cv.nome, '-') AS canal,
+              COALESCE(SUM(pi.subtotal), 0)::float AS receita,
+              COUNT(DISTINCT p.id)::float AS pedidos
+            FROM vendas.pedidos p
+            JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+            LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+            WHERE 1=1
+              {{filters:p}}
+            GROUP BY 1, 2
+            ORDER BY 3 DESC
+          </Query>
+          <Fields x="canal" key="key" />
+          <Series field="receita" type="bar" label="Receita" />
+          <Series field="pedidos" type="line" label="Pedidos" yAxis="right" />
+          <Interaction clickAsFilter table="vendas.pedidos" field="canal_venda_id" clearOnSecondClick />
+          <Config>
+            {
+              "dataQuery": {
+                "filters": {},
+                "limit": 12
               }
             }
           </Config>
