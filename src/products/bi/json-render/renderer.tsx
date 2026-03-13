@@ -2,6 +2,7 @@
 
 import React from "react";
 import { catalog, validateElement } from "@/products/bi/json-render/catalog";
+import { useDataValue } from "@/products/bi/json-render/context";
 
 type AnyRecord = Record<string, any>;
 
@@ -28,6 +29,7 @@ function RenderNode({
   nodeDecorator?: RendererProps["nodeDecorator"]
   path: number[]
 }) {
+  const activeTab = useDataValue('ui.activeTab', '');
   const v = validateElement(node);
   if (!v.success) {
     const rendered = (
@@ -38,6 +40,10 @@ function RenderNode({
     return nodeDecorator ? nodeDecorator({ rendered, node, path, type: String(node?.type || '') }) : rendered;
   }
   const el = v.value;
+  const nodeTab = typeof el?.props?.tab === 'string' ? el.props.tab.trim() : '';
+  if (nodeTab && activeTab && nodeTab !== activeTab) {
+    return null;
+  }
   const Cmp = registry[el.type];
   if (!Cmp) {
     const rendered = (

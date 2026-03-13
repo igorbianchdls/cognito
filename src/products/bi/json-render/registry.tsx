@@ -64,6 +64,21 @@ const defaultSidebar = {
   top: 12,
 } as const;
 
+const defaultTab = {
+  padding: '10px 12px',
+  margin: 0,
+  backgroundColor: '#ffffff',
+  activeBackgroundColor: '#111827',
+  textColor: '#374151',
+  activeTextColor: '#ffffff',
+  borderColor: '#d1d5db',
+  activeBorderColor: '#111827',
+  borderWidth: 1,
+  radius: 8,
+  fontSize: 13,
+  fontWeight: 600,
+} as const;
+
 // (removed old Kpi defaults)
 
 const defaultKPI = {
@@ -1224,6 +1239,56 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       <span style={style}>
         <IconComp size={size} strokeWidth={strokeWidth} />
       </span>
+    );
+  },
+
+  Tab: ({ element }) => {
+    const { data, setData } = useData();
+    const p = deepMerge(defaultTab as AnyRecord, (element?.props || {}) as AnyRecord) as AnyRecord;
+    const id = String(p.id || p.label || '').trim();
+    const label = String(p.label || p.id || '').trim();
+    const activeTab = typeof data?.ui?.activeTab === 'string' ? data.ui.activeTab.trim() : '';
+    const isActive = Boolean(id) && activeTab === id;
+
+    React.useEffect(() => {
+      if (!id) return;
+      setData((prev) => {
+        const current = typeof (prev as AnyRecord)?.ui?.activeTab === 'string'
+          ? ((prev as AnyRecord).ui.activeTab as string).trim()
+          : '';
+        if (current) return prev as AnyRecord;
+        return setDataByPath((prev || {}) as AnyRecord, 'ui.activeTab', id);
+      });
+    }, [id, setData]);
+
+    const style: React.CSSProperties = {
+      display: 'block',
+      width: '100%',
+      textAlign: 'left',
+      padding: styleVal(p.padding),
+      margin: styleVal(p.margin),
+      backgroundColor: isActive ? p.activeBackgroundColor : p.backgroundColor,
+      color: isActive ? p.activeTextColor : p.textColor,
+      borderColor: isActive ? p.activeBorderColor : p.borderColor,
+      borderStyle: Number(p.borderWidth) ? 'solid' : undefined,
+      borderWidth: p.borderWidth,
+      borderRadius: styleVal(p.radius),
+      fontSize: styleVal(p.fontSize),
+      fontWeight: p.fontWeight,
+      cursor: 'pointer',
+      transition: 'background-color 120ms ease, color 120ms ease, border-color 120ms ease',
+    };
+
+    if (!id || !label) return null;
+
+    return (
+      <button
+        type="button"
+        style={style}
+        onClick={() => setData((prev) => setDataByPath((prev || {}) as AnyRecord, 'ui.activeTab', id))}
+      >
+        {label}
+      </button>
     );
   },
 

@@ -241,6 +241,7 @@ const TableColumnSchema = z.object({
 });
 
 const ContainerPropsSchema = z.object({
+  tab: z.string().optional(),
   direction: z.enum(["row","column"]).optional(),
   gap: z.union([z.number(), z.string()]).optional(),
   wrap: z.boolean().optional(),
@@ -314,6 +315,7 @@ export const catalog = {
     },
     Header: {
       props: z.object({
+        tab: z.string().optional(),
         title: z.string().optional(),
         subtitle: z.string().optional(),
         direction: z.enum(["row","column"]).optional(),
@@ -489,8 +491,30 @@ export const catalog = {
       props: ContainerPropsSchema,
       hasChildren: true,
     },
+    Tab: {
+      props: z.object({
+        id: z.string().optional(),
+        label: z.string().optional(),
+        padding: z.union([z.number(), z.string()]).optional(),
+        margin: z.union([z.number(), z.string()]).optional(),
+        backgroundColor: z.string().optional(),
+        activeBackgroundColor: z.string().optional(),
+        textColor: z.string().optional(),
+        activeTextColor: z.string().optional(),
+        borderColor: z.string().optional(),
+        activeBorderColor: z.string().optional(),
+        borderWidth: z.union([z.number(), z.string()]).optional(),
+        radius: z.union([z.number(), z.string()]).optional(),
+        fontSize: z.union([z.number(), z.string()]).optional(),
+        fontWeight: z.union([z.number(), z.string()]).optional(),
+      }).strict().refine((props) => Boolean(props.id || props.label), {
+        message: 'Tab requires id or label',
+      }),
+      hasChildren: false,
+    },
     Sidebar: {
       props: z.object({
+        tab: z.string().optional(),
         direction: z.enum(["row","column"]).optional(),
         gap: z.union([z.number(), z.string()]).optional(),
         justify: z.enum(["start","center","end","between","around","evenly"]).optional(),
@@ -520,6 +544,7 @@ export const catalog = {
     },
     Card: {
       props: z.object({
+        tab: z.string().optional(),
         title: z.string().optional(),
         titleStyle: TitleStyleSchema.optional(),
         direction: z.enum(["row","column"]).optional(),
