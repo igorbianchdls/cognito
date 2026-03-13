@@ -424,10 +424,12 @@ function mapChartType(source: string, node: DslNode, rawType: string): string {
   if (t === 'bar') return 'BarChart'
   if (t === 'pie') return 'PieChart'
   if (t === 'composed') return 'ComposedChart'
+  if (t === 'funnel') return 'FunnelChart'
+  if (t === 'sankey') return 'SankeyChart'
   if (t === 'scatter') return 'ScatterChart'
   if (t === 'radar') return 'RadarChart'
   if (t === 'treemap') return 'TreemapChart'
-  throw new DashboardTemplateDslParseError(source, node.start, `Tag <chart> exige type valido: line | bar | pie | composed | scatter | radar | treemap`)
+  throw new DashboardTemplateDslParseError(source, node.start, `Tag <chart> exige type valido: line | bar | pie | composed | funnel | sankey | scatter | radar | treemap`)
 }
 
 function compileDataQueryNode(source: string, node: DslNode): Record<string, unknown> {
@@ -637,12 +639,14 @@ function compileChartNode(source: string, node: DslNode, context: CompileContext
   const series = pickAttr('series', 'seriesfield', 'series-field')
   const size = pickAttr('size', 'sizefield', 'size-field')
   const parent = pickAttr('parent', 'parentfield', 'parent-field')
+  const target = pickAttr('target', 'targetfield', 'target-field')
   if (x) dataQueryFromProps.xField = String(x)
   if (y) dataQueryFromProps.yField = String(y)
   if (key) dataQueryFromProps.keyField = String(key)
   if (series) dataQueryFromProps.seriesField = String(series)
   if (size) dataQueryFromProps.sizeField = String(size)
   if (parent) dataQueryFromProps.parentField = String(parent)
+  if (target) dataQueryFromProps.targetField = String(target)
   }
 
   if (dataQueryNodes.length) {
@@ -1081,11 +1085,13 @@ function sanitizeTemplateName(value: string): string {
   return out || 'dashboard_template'
 }
 
-function chartTypeToAttr(type: string): 'line' | 'bar' | 'pie' | 'composed' | 'scatter' | 'radar' | 'treemap' | null {
+function chartTypeToAttr(type: string): 'line' | 'bar' | 'pie' | 'composed' | 'funnel' | 'sankey' | 'scatter' | 'radar' | 'treemap' | null {
   if (type === 'LineChart') return 'line'
   if (type === 'BarChart') return 'bar'
   if (type === 'PieChart') return 'pie'
   if (type === 'ComposedChart') return 'composed'
+  if (type === 'FunnelChart') return 'funnel'
+  if (type === 'SankeyChart') return 'sankey'
   if (type === 'ScatterChart') return 'scatter'
   if (type === 'RadarChart') return 'radar'
   if (type === 'TreemapChart') return 'treemap'
@@ -1268,6 +1274,10 @@ function renderChartNodeToDsl(node: Record<string, unknown>, level: number): str
   if (typeof dataQueryRaw.parentField === 'string' && dataQueryRaw.parentField.trim()) {
     fieldsAttrs.parent = dataQueryRaw.parentField
     delete dataQueryRaw.parentField
+  }
+  if (typeof dataQueryRaw.targetField === 'string' && dataQueryRaw.targetField.trim()) {
+    fieldsAttrs.target = dataQueryRaw.targetField
+    delete dataQueryRaw.targetField
   }
   if (Object.keys(fieldsAttrs).length) {
     lines.push(`${renderIndent(level + 1)}<Fields${renderAttrs(fieldsAttrs)} />`)

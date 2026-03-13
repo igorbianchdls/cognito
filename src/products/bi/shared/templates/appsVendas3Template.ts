@@ -4,7 +4,7 @@ export const APPS_VENDAS3_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
     <Header direction="row" justify="between" align="center">
       <Container direction="column" gap={4}>
         <Title text="Dashboard de Vendas 3" />
-        <Subtitle text="Teste dos novos charts em Recharts: scatter, radar, treemap e composed" />
+        <Subtitle text="Teste dos novos charts em Recharts: scatter, radar, treemap, composed, funnel e sankey" />
       </Container>
       <DatePicker visible mode="range" table="vendas.pedidos" field="data_pedido" presets={["7d","14d","30d"]} />
     </Header>
@@ -141,6 +141,71 @@ export const APPS_VENDAS3_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
           </Config>
         </Chart>
       </Card>
+    </Container>
+
+    <Container direction="row" gap={12} align="stretch">
+      <Container grow={1}>
+        <Card>
+          <Title text="Funnel — Receita por Categoria" marginBottom={8} />
+          <Chart type="funnel" format="currency" height={320}>
+            <Query>
+              SELECT
+                cr.id AS key,
+                COALESCE(cr.nome, '-') AS categoria,
+                COALESCE(SUM(pi.subtotal), 0)::float AS value
+              FROM vendas.pedidos p
+              JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+              LEFT JOIN financeiro.categorias_receita cr ON cr.id = p.categoria_receita_id
+              WHERE 1=1
+                {{filters:p}}
+              GROUP BY 1, 2
+              ORDER BY 3 DESC
+            </Query>
+            <Fields x="categoria" y="value" key="key" />
+            <Interaction clickAsFilter table="vendas.pedidos" field="categoria_receita_id" clearOnSecondClick />
+            <Config>
+              {
+                "dataQuery": {
+                  "filters": {},
+                  "limit": 8
+                }
+              }
+            </Config>
+          </Chart>
+        </Card>
+      </Container>
+
+      <Container grow={1}>
+        <Card>
+          <Title text="Sankey — Canal para Unidade" marginBottom={8} />
+          <Chart type="sankey" format="currency" height={360}>
+            <Query>
+              SELECT
+                cv.id AS key,
+                COALESCE(cv.nome, '-') AS canal,
+                COALESCE(un.nome, '-') AS unidade,
+                COALESCE(SUM(pi.subtotal), 0)::float AS value
+              FROM vendas.pedidos p
+              JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+              LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+              LEFT JOIN empresa.unidades_negocio un ON un.id = p.unidade_negocio_id
+              WHERE 1=1
+                {{filters:p}}
+              GROUP BY 1, 2, 3
+              ORDER BY 4 DESC
+            </Query>
+            <Fields x="canal" target="unidade" y="value" key="key" />
+            <Config>
+              {
+                "dataQuery": {
+                  "filters": {},
+                  "limit": 30
+                }
+              }
+            </Config>
+          </Chart>
+        </Card>
+      </Container>
     </Container>
   </Container>
 </DashboardTemplate>`

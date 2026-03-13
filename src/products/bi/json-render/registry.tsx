@@ -8,6 +8,8 @@ import JsonRenderScatterChart from "@/products/bi/json-render/components/Scatter
 import JsonRenderRadarChart from "@/products/bi/json-render/components/RadarChart";
 import JsonRenderTreemapChart from "@/products/bi/json-render/components/TreemapChart";
 import JsonRenderComposedChart from "@/products/bi/json-render/components/ComposedChart";
+import JsonRenderFunnelChart from "@/products/bi/json-render/components/FunnelChart";
+import JsonRenderSankeyChart from "@/products/bi/json-render/components/SankeyChart";
 import JsonRenderSparkline from "@/products/bi/json-render/components/Sparkline";
 import JsonRenderGauge from "@/products/bi/json-render/components/Gauge";
 import JsonRenderTable from "@/products/bi/json-render/components/Table";
@@ -160,6 +162,22 @@ const defaultComposedChart = {
   titleStyle: { padding: 6, textAlign: 'left' },
   colorScheme: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
   nivo: { gridX: false, gridY: true, curve: 'monotone', animate: true },
+} as const;
+
+const defaultFunnelChart = {
+  height: 300,
+  format: 'number' as 'currency'|'percent'|'number',
+  titleStyle: { padding: 6, textAlign: 'left' },
+  colorScheme: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
+  nivo: { animate: true },
+} as const;
+
+const defaultSankeyChart = {
+  height: 360,
+  format: 'number' as 'currency'|'percent'|'number',
+  titleStyle: { padding: 6, textAlign: 'left' },
+  colorScheme: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
+  nivo: { nodePadding: 14, nodeWidth: 14, linkCurvature: 0.5, iterations: 32, sort: true, animate: true },
 } as const;
 
 const defaultAISummary = {
@@ -2072,6 +2090,16 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const theme = useThemeOverrides();
     const merged = deepMerge(deepMerge(defaultComposedChart as any, ((theme.components as any)?.ComposedChart || {}) as AnyRecord), (element?.props || {}) as AnyRecord);
     return <JsonRenderComposedChart element={{ props: merged }} />;
+  },
+  FunnelChart: ({ element }) => {
+    const theme = useThemeOverrides();
+    const merged = deepMerge(deepMerge(defaultFunnelChart as any, ((theme.components as any)?.FunnelChart || {}) as AnyRecord), (element?.props || {}) as AnyRecord);
+    return <JsonRenderFunnelChart element={{ props: merged }} />;
+  },
+  SankeyChart: ({ element }) => {
+    const theme = useThemeOverrides();
+    const merged = deepMerge(deepMerge(defaultSankeyChart as any, ((theme.components as any)?.SankeyChart || {}) as AnyRecord), (element?.props || {}) as AnyRecord);
+    return <JsonRenderSankeyChart element={{ props: merged }} />;
   },
   Table: ({ element }) => {
     const theme = useThemeOverrides();
