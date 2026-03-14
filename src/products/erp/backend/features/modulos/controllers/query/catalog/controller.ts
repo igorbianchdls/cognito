@@ -5,7 +5,7 @@ import {
   listAppsTableCatalogs,
   normalizeAppsTableName,
   toLegacyModel,
-} from '@/products/apps/shared/queryCatalog'
+} from '@/products/bi/shared/queryCatalog'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
