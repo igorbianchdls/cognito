@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Download, MessageCircleMore, MoreHorizontal, Play, SearchMinus, SearchPlus, X } from 'lucide-react'
+import { Download, MessageCircleMore, Minus, MoreHorizontal, Play, Plus, Search, X } from 'lucide-react'
 
 import { parseDashboardTemplateDslToTree } from '@/products/bi/features/dashboard-playground/parsers/dashboardTemplateDslParser'
 import { DataProvider } from '@/products/bi/json-render/context'
@@ -148,18 +148,20 @@ function ReportWorkspace() {
             <button
               type="button"
               onClick={() => setZoom((current) => Math.max(0.5, Number((current - 0.1).toFixed(2))))}
-              className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+              className="flex items-center gap-1 rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
             >
-              <SearchMinus className="h-4 w-4" />
+              <Search className="h-4 w-4" />
+              <Minus className="h-3 w-3" />
               <span className="sr-only">Zoom menos</span>
             </button>
             <span className="min-w-[56px] text-center text-xs font-medium text-slate-600">{Math.round(zoom * 100)}%</span>
             <button
               type="button"
               onClick={() => setZoom((current) => Math.min(1.6, Number((current + 0.1).toFixed(2))))}
-              className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+              className="flex items-center gap-1 rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
             >
-              <SearchPlus className="h-4 w-4" />
+              <Search className="h-4 w-4" />
+              <Plus className="h-3 w-3" />
               <span className="sr-only">Zoom mais</span>
             </button>
           </div>
