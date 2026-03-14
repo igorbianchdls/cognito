@@ -1,5 +1,4 @@
 import { NextRequest } from 'next/server'
-import { normalizeAppsTableName as normalizeAppsTableNameLegacy } from '@/products/apps/shared/queryCatalog'
 import { normalizeAppsTableName as normalizeBiTableName } from '@/products/bi/shared/queryCatalog'
 
 export const dynamic = 'force-dynamic'
@@ -31,7 +30,7 @@ export async function POST(req: NextRequest) {
       return Response.json({ success: false, message: 'field é obrigatório' }, { status: 400 })
     }
 
-    const canonicalModel = normalizeAppsTableNameLegacy(rawModel) || normalizeBiTableName(rawModel)
+    const canonicalModel = normalizeBiTableName(rawModel)
     if (!canonicalModel) {
       return Response.json({ success: false, message: `model não suportado: ${rawModel}` }, { status: 400 })
     }
