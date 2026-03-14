@@ -483,6 +483,8 @@ function compileDataQueryNode(source: string, node: DslNode): Record<string, unk
 function toCatalogType(tag: string): string {
   const normalized = String(tag || '').trim().toLowerCase()
   if (normalized === 'dashboardtemplate') return 'DashboardTemplate'
+  if (normalized === 'reporttemplate') return 'ReportTemplate'
+  if (normalized === 'report') return 'Report'
   if (normalized === 'theme') return 'Theme'
   if (normalized === 'header') return 'Header'
   if (normalized === 'container') return 'Container'
@@ -1049,8 +1051,10 @@ function compileNode(source: string, node: DslNode, context: CompileContext): Re
 
 export function parseDashboardTemplateDslToTree(source: string): JsonTree {
   const root = parseDslTree(source)
-  if (root.tag !== 'dashboard-template' && root.tag !== 'dashboardtemplate') {
-    throw new DashboardTemplateDslParseError(source, root.start, `Tag raiz invalida: esperado <DashboardTemplate> e recebido <${root.tag}>`)
+  const isDashboardRoot = root.tag === 'dashboard-template' || root.tag === 'dashboardtemplate'
+  const isReportRoot = root.tag === 'report-template' || root.tag === 'reporttemplate'
+  if (!isDashboardRoot && !isReportRoot) {
+    throw new DashboardTemplateDslParseError(source, root.start, `Tag raiz invalida: esperado <DashboardTemplate> ou <ReportTemplate> e recebido <${root.tag}>`)
   }
   function collectDefaults(nodes: DslNode[], acc: DslNode[] = []): DslNode[] {
     for (const n of nodes) {
@@ -1070,9 +1074,15 @@ export function parseDashboardTemplateDslToTree(source: string): JsonTree {
       },
     }
   }
-  return root.children
+  const compiledChildren = root.children
     .map((node) => compileNode(source, node, context))
     .filter((node): node is Record<string, unknown> => Boolean(node))
+  if (isDashboardRoot) return compiledChildren
+  return {
+    type: 'ReportTemplate',
+    props: attrsToProps(root.attrs),
+    children: compiledChildren,
+  }
 }
 
 function sanitizeTemplateName(value: string): string {
@@ -1786,10 +1796,26 @@ function renderNodeToDsl(node: unknown, level: number): string[] {
 }
 
 export function renderDashboardTemplateDslFromTree(tree: JsonTree, templateName = 'dashboard_template'): string {
-  const nodes = Array.isArray(tree) ? tree : tree ? [tree] : []
-  const rootName = sanitizeTemplateName(templateName)
-  const lines: string[] = [`<DashboardTemplate name="${rootName}">`]
+  const rootRecord =
+    tree && !Array.isArray(tree) && typeof tree === 'object'
+      ? (tree as Record<string, unknown>)
+      : null
+  const isReportRoot = String(rootRecord?.type || '').trim() === 'ReportTemplate'
+  const nodes = Array.isArray(tree)
+    ? tree
+    : rootRecord && Array.isArray(rootRecord.children)
+      ? (rootRecord.children as unknown[])
+      : tree
+        ? [tree]
+        : []
+  const rootName = sanitizeTemplateName(
+    typeof rootRecord?.props === 'object' && rootRecord?.props && !Array.isArray(rootRecord.props) && typeof (rootRecord.props as Record<string, unknown>).name === 'string'
+      ? String((rootRecord.props as Record<string, unknown>).name)
+      : templateName,
+  )
+  const rootTag = isReportRoot ? 'ReportTemplate' : 'DashboardTemplate'
+  const lines: string[] = [`<${rootTag} name="${rootName}">`]
   for (const node of nodes) lines.push(...renderNodeToDsl(node, 1))
-  lines.push('</DashboardTemplate>')
+  lines.push(`</${rootTag}>`)
   return lines.join('\n')
 }
