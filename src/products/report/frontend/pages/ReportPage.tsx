@@ -65,13 +65,11 @@ function buildPageRenderTree(page: AnyRecord, themeNode: AnyRecord | null): any 
 }
 
 function ReportThumbnail({
-  tree,
   selected,
   index,
   title,
   onClick,
 }: {
-  tree: any
   selected: boolean
   index: number
   title: string
@@ -88,20 +86,10 @@ function ReportThumbnail({
       }`}
     >
       <div className="mb-2 overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm">
-        <div style={{ width: THUMB_WIDTH, height: Math.round(A4_HEIGHT * THUMB_SCALE), overflow: 'hidden' }}>
-          <div
-            style={{
-              width: A4_WIDTH,
-              height: A4_HEIGHT,
-              transform: `scale(${THUMB_SCALE})`,
-              transformOrigin: 'top left',
-              pointerEvents: 'none',
-              background: '#fff',
-            }}
-          >
-            <Renderer tree={tree} registry={registry} />
-          </div>
-        </div>
+        <div
+          style={{ width: THUMB_WIDTH, height: Math.round(A4_HEIGHT * THUMB_SCALE) }}
+          className="bg-white"
+        />
       </div>
       <div className="flex items-center gap-2 px-1">
         <div className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-600 text-xs font-semibold text-white">
@@ -177,11 +165,9 @@ function ReportWorkspace() {
             {pages.map((page, index) => {
               const pageId = getPageId(page, index)
               const pageTitle = getPageTitle(page, index)
-              const pageTree = buildPageRenderTree(page, themeNode)
               return (
                 <ReportThumbnail
                   key={pageId}
-                  tree={pageTree}
                   selected={pageId === activePageId}
                   index={index}
                   title={pageTitle}
