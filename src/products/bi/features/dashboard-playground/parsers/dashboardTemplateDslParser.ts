@@ -485,6 +485,8 @@ function toCatalogType(tag: string): string {
   if (normalized === 'dashboardtemplate') return 'DashboardTemplate'
   if (normalized === 'reporttemplate') return 'ReportTemplate'
   if (normalized === 'report') return 'Report'
+  if (normalized === 'slidetemplate') return 'SlideTemplate'
+  if (normalized === 'slide') return 'Slide'
   if (normalized === 'theme') return 'Theme'
   if (normalized === 'header') return 'Header'
   if (normalized === 'container') return 'Container'
@@ -1053,8 +1055,13 @@ export function parseDashboardTemplateDslToTree(source: string): JsonTree {
   const root = parseDslTree(source)
   const isDashboardRoot = root.tag === 'dashboard-template' || root.tag === 'dashboardtemplate'
   const isReportRoot = root.tag === 'report-template' || root.tag === 'reporttemplate'
-  if (!isDashboardRoot && !isReportRoot) {
-    throw new DashboardTemplateDslParseError(source, root.start, `Tag raiz invalida: esperado <DashboardTemplate> ou <ReportTemplate> e recebido <${root.tag}>`)
+  const isSlideRoot = root.tag === 'slide-template' || root.tag === 'slidetemplate'
+  if (!isDashboardRoot && !isReportRoot && !isSlideRoot) {
+    throw new DashboardTemplateDslParseError(
+      source,
+      root.start,
+      `Tag raiz invalida: esperado <DashboardTemplate>, <ReportTemplate> ou <SlideTemplate> e recebido <${root.tag}>`,
+    )
   }
   function collectDefaults(nodes: DslNode[], acc: DslNode[] = []): DslNode[] {
     for (const n of nodes) {
@@ -1078,6 +1085,13 @@ export function parseDashboardTemplateDslToTree(source: string): JsonTree {
     .map((node) => compileNode(source, node, context))
     .filter((node): node is Record<string, unknown> => Boolean(node))
   if (isDashboardRoot) return compiledChildren
+  if (isSlideRoot) {
+    return {
+      type: 'SlideTemplate',
+      props: attrsToProps(root.attrs),
+      children: compiledChildren,
+    }
+  }
   return {
     type: 'ReportTemplate',
     props: attrsToProps(root.attrs),
@@ -1801,6 +1815,7 @@ export function renderDashboardTemplateDslFromTree(tree: JsonTree, templateName 
       ? (tree as Record<string, unknown>)
       : null
   const isReportRoot = String(rootRecord?.type || '').trim() === 'ReportTemplate'
+  const isSlideRoot = String(rootRecord?.type || '').trim() === 'SlideTemplate'
   const nodes = Array.isArray(tree)
     ? tree
     : rootRecord && Array.isArray(rootRecord.children)
@@ -1813,7 +1828,7 @@ export function renderDashboardTemplateDslFromTree(tree: JsonTree, templateName 
       ? String((rootRecord.props as Record<string, unknown>).name)
       : templateName,
   )
-  const rootTag = isReportRoot ? 'ReportTemplate' : 'DashboardTemplate'
+  const rootTag = isReportRoot ? 'ReportTemplate' : isSlideRoot ? 'SlideTemplate' : 'DashboardTemplate'
   const lines: string[] = [`<${rootTag} name="${rootName}">`]
   for (const node of nodes) lines.push(...renderNodeToDsl(node, 1))
   lines.push(`</${rootTag}>`)
