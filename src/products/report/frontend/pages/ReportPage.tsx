@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Download, MessageCircleMore, MoreHorizontal, Play, X } from 'lucide-react'
+import { Download, MessageCircleMore, MoreHorizontal, Play, SearchMinus, SearchPlus, X } from 'lucide-react'
 
 import { parseDashboardTemplateDslToTree } from '@/products/bi/features/dashboard-playground/parsers/dashboardTemplateDslParser'
 import { DataProvider } from '@/products/bi/json-render/context'
@@ -101,13 +101,15 @@ function ReportThumbnail({
   )
 }
 
-function ReportCanvas({ tree }: { tree: any }) {
+function ReportCanvas({ tree, zoom }: { tree: any; zoom: number }) {
   return (
-    <div
-      className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.12)]"
-      style={{ width: A4_WIDTH, minWidth: A4_WIDTH, height: A4_HEIGHT }}
-    >
-      <Renderer tree={tree} registry={registry} />
+    <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}>
+      <div
+        className="overflow-hidden rounded-none border border-slate-200 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.08)]"
+        style={{ width: A4_WIDTH, minWidth: A4_WIDTH, height: A4_HEIGHT }}
+      >
+        <Renderer tree={tree} registry={registry} />
+      </div>
     </div>
   )
 }
@@ -116,6 +118,7 @@ function ReportWorkspace() {
   const parsed = useMemo(() => parseDashboardTemplateDslToTree(REPORT_TEMPLATE_DSL), [])
   const { rootName, themeNode, pages } = useMemo(() => getReportStructure(parsed), [parsed])
   const [activePageId, setActivePageId] = useState('')
+  const [zoom, setZoom] = useState(0.9)
 
   useEffect(() => {
     if (!pages.length) return
@@ -141,6 +144,25 @@ function ReportWorkspace() {
           <div className="text-sm text-slate-500">Salvo</div>
         </div>
         <div className="flex items-center gap-2">
+          <div className="mr-2 flex items-center gap-1 rounded-full border border-slate-200 bg-white px-1 py-1">
+            <button
+              type="button"
+              onClick={() => setZoom((current) => Math.max(0.5, Number((current - 0.1).toFixed(2))))}
+              className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+            >
+              <SearchMinus className="h-4 w-4" />
+              <span className="sr-only">Zoom menos</span>
+            </button>
+            <span className="min-w-[56px] text-center text-xs font-medium text-slate-600">{Math.round(zoom * 100)}%</span>
+            <button
+              type="button"
+              onClick={() => setZoom((current) => Math.min(1.6, Number((current + 0.1).toFixed(2))))}
+              className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+            >
+              <SearchPlus className="h-4 w-4" />
+              <span className="sr-only">Zoom mais</span>
+            </button>
+          </div>
           <button type="button" className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
             <MessageCircleMore className="h-4 w-4" />
           </button>
@@ -180,7 +202,7 @@ function ReportWorkspace() {
 
         <main className="min-h-0 flex-1 overflow-auto bg-[#f5f6f8]">
           <div className="mx-auto flex min-h-full items-start justify-center p-8">
-            {activePage ? <ReportCanvas tree={activeTree} /> : null}
+            {activePage ? <ReportCanvas tree={activeTree} zoom={zoom} /> : null}
           </div>
         </main>
       </div>
