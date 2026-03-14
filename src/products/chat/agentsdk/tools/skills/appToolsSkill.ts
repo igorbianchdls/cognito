@@ -1,6 +1,6 @@
 export const APP_TOOLS_SKILL_MD = `---
 name: App MCP Tools
-description: Uso das tools internas ERP (crud, dashboard_builder, sql_execution, ecommerce, marketing, documento, drive, email) via MCP.
+description: Uso das tools internas ERP (crud, dashboard_builder, sql_execution, ecommerce, marketing, drive, email) via MCP.
 ---
 
 As tools disponíveis (apenas via MCP):
@@ -9,7 +9,6 @@ As tools disponíveis (apenas via MCP):
 - sql_execution(input: { sql: string, title?: string, chart?: { xField: string, valueField: string, xLabel?: string, yLabel?: string } })
 - ecommerce(input: { action: "kpis_resumo"|"vendas_por_canal"|"pedidos_por_status"|"faturamento_por_mes"|"top_produtos_receita"|"frete_por_transportadora", params?: object })
 - marketing(input: { action: "kpis_resumo"|"desempenho_diario"|"gasto_por_campanha"|"roas_por_campanha"|"gasto_por_conta"|"top_anuncios", params?: object })
-- documento(input: { action: "gerar"|"status", tipo?: "proposta"|"os"|"fatura"|"contrato"|"nfse", origem_tipo?: string, origem_id?: number, dados?: object, documento_id?: number, template_id?: number, template_version_id?: number, idempotency_key?: string, save_to_drive?: boolean, drive?: { workspace_id?: string, folder_id?: string, file_name?: string } })
 - drive(input: { action: "request"|"read_file"|"get_file_url", resource?: string, method?: "GET"|"POST"|"DELETE", params?: object, data?: object, file_id?: string, workspace_id?: string, folder_id?: string, file_name?: string, mime?: string, content_base64?: string })
 - email(input: { action: "request"|"send", resource?: string, method?: "GET"|"POST"|"DELETE", params?: object, data?: object, inbox_id?: string, inboxId?: string, to?: string|string[], subject?: string, text?: string, html?: string, attachments?: object[], drive_file_id?: string, drive_file_ids?: string[] })
 
@@ -40,7 +39,6 @@ Regras:
 - O "resource" não pode conter ".." e deve iniciar com um dos prefixos: financeiro, vendas, compras, contas-a-pagar, contas-a-receber, crm, estoque, cadastros.
 - Contexto operacional padrão: B2B serviços como núcleo. Estoque é domínio separado e não deve ser acoplado automaticamente em todo fluxo comercial.
 - No crud, por padrão action="listar" usa actionSuffix="listar" e criar/atualizar/deletar usam seus sufixos homônimos.
-- Para proposta/OS/NFSe/fatura/contrato, use a tool documento (action gerar/status), não CRUD de documentos.
 - Documento pode gerar PDF e salvar no Drive na mesma chamada com save_to_drive=true e drive.workspace_id.
 - Para upload de arquivo gerado em base64, prefira drive resource="drive/files/upload-base64" (action=request).
 - Para enviar anexo já salvo no Drive, prefira email action="send" com drive_file_id (sem precisar obter signed_url manualmente).
@@ -98,7 +96,6 @@ Roteamento:
 - sql_execution -> /api/agent-tools/sql-execution
 - ecommerce -> /api/agent-tools/ecommerce
 - marketing -> /api/agent-tools/marketing
-- documento -> /api/agent-tools/documento
 - drive -> /api/agent-tools/drive
 - email -> /api/agent-tools/email
 

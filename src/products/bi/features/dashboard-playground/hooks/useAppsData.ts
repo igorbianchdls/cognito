@@ -180,27 +180,6 @@ async function buildCrmPatch(range?: DateRange): Promise<DataRecord> {
   }
 }
 
-async function buildDocumentosPatch(range?: DateRange): Promise<DataRecord> {
-  const effectiveRange = normalizeRange(range)
-
-  const [dashboard, documentosRows, templatesRows, versoesRows] = await Promise.all([
-    fetchModuleDashboard('documentos', { de: effectiveRange.from, ate: effectiveRange.to, limit: 8 }),
-    fetchModuleRows('documentos', 'documentos'),
-    fetchModuleRows('documentos', 'templates'),
-    fetchModuleRows('documentos', 'template-versions'),
-  ])
-
-  return {
-    documentos: {
-      documentos: documentosRows,
-      templates: templatesRows,
-      'template-versions': versoesRows,
-      dashboard: dashboard?.charts || {},
-      kpis: dashboard?.kpis || {},
-    },
-  }
-}
-
 async function buildContabilidadePatch(range?: DateRange): Promise<DataRecord> {
   const effectiveRange = normalizeRange(range)
 
@@ -259,11 +238,6 @@ export async function refreshAppsEstoqueData(setData: Dispatch<SetStateAction<Da
 
 export async function refreshAppsCrmData(setData: Dispatch<SetStateAction<DataRecord>>, range?: DateRange) {
   const patch = await buildCrmPatch(range)
-  setData((prev) => mergeByNamespace(prev || {}, patch))
-}
-
-export async function refreshAppsDocumentosData(setData: Dispatch<SetStateAction<DataRecord>>, range?: DateRange) {
-  const patch = await buildDocumentosPatch(range)
   setData((prev) => mergeByNamespace(prev || {}, patch))
 }
 
@@ -365,22 +339,6 @@ export function useAppsCrmBootstrap(setData: Dispatch<SetStateAction<DataRecord>
 
     void (async () => {
       const patch = await buildCrmPatch(undefined)
-      if (!active) return
-      setData((prev) => mergeByNamespace(prev || {}, patch))
-    })()
-
-    return () => {
-      active = false
-    }
-  }, [setData])
-}
-
-export function useAppsDocumentosBootstrap(setData: Dispatch<SetStateAction<DataRecord>>) {
-  useEffect(() => {
-    let active = true
-
-    void (async () => {
-      const patch = await buildDocumentosPatch(undefined)
       if (!active) return
       setData((prev) => mergeByNamespace(prev || {}, patch))
     })()
