@@ -122,7 +122,7 @@ export function DashboardThemeModal({
               >
                 <div
                   className={`relative overflow-hidden rounded-[14px] border transition ${
-                    isSelected ? 'border-[#111111] shadow-[0_12px_30px_rgba(17,17,17,0.16)]' : 'border-[#ececec]'
+                    isSelected ? 'border-[#0075E2] shadow-[0_12px_30px_rgba(0,117,226,0.18)]' : 'border-[#ececec]'
                   }`}
                   style={{ background: preview.background }}
                 >
@@ -155,10 +155,13 @@ export function DashboardThemeModal({
                     </div>
                   </div>
                   {isSelected ? (
-                    <div className="absolute inset-x-0 bottom-0 h-[4px] bg-[#111111]" />
+                    <div className="absolute inset-x-0 bottom-0 h-[4px] bg-[#0075E2]" />
                   ) : null}
                 </div>
-                <div className="pt-2 text-center text-[15px] font-medium tracking-[-0.02em] text-[#111111]">
+                <div
+                  className="pt-2 text-center text-[15px] font-medium tracking-[-0.02em]"
+                  style={{ color: isSelected ? '#0075E2' : '#111111' }}
+                >
                   {theme.label}
                 </div>
               </button>
