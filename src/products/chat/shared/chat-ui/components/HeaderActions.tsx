@@ -14,7 +14,7 @@ import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter';
 import {
   parseDashboardTemplateDslToTree,
   renderDashboardTemplateDslFromTree,
-} from '@/products/bi/features/dashboard-playground/parsers/dashboardTemplateDslParser';
+} from '@/products/bi/json-render/parsers/dashboardTemplateDslParser';
 
 function IconButton({
   title,
