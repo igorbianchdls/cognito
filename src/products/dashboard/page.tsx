@@ -97,7 +97,7 @@ export default function DashboardPage() {
                 <Icon icon="solar:minus-square-bold" className="h-3.5 w-3.5" />
                 <span className="sr-only">Zoom menos</span>
               </button>
-              <span className="min-w-[56px] text-center text-xs font-medium text-[#5F5F5A]">{Math.round(zoom * 100)}%</span>
+              <span className="min-w-[56px] text-center text-xs font-medium text-[#5F5F5A] leading-normal">{Math.round(zoom * 100)}%</span>
               <button
                 type="button"
                 onClick={() => setZoom((current) => Math.min(1.4, Number((current + 0.1).toFixed(2))))}
