@@ -156,7 +156,7 @@ function SlideWorkspace() {
       <header className="flex items-center justify-between border-b-[0.5px] border-[#242424] bg-[#080808] px-5 py-3 backdrop-blur">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#888888]">
-            <FileText className="h-5 w-5 text-[#080808]" />
+            <FileText className="h-4 w-4 text-[#080808]" />
           </div>
           <div className="min-w-0">
             <div className="truncate text-[16px] font-semibold text-[#D8D8D8]">{rootName}</div>
