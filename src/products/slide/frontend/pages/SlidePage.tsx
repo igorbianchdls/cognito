@@ -75,7 +75,7 @@ function SlideThumbnail({
     <button
       type="button"
       onClick={onClick}
-      className="w-full rounded-2xl px-2 py-2 text-left transition hover:bg-white/10"
+      className="w-full rounded-2xl px-2 py-2 text-left transition hover:bg-black/5"
     >
       <SlidePreviewThumbnail
         alt={`Preview do slide ${index + 1}`}
@@ -87,7 +87,7 @@ function SlideThumbnail({
       <div className="flex justify-center px-1">
         <div
           className={`flex h-6 min-w-6 items-center justify-center rounded-sm px-2 text-[14px] font-semibold ${
-            selected ? 'bg-[#0075E2] text-white' : 'text-[#D5D8DB]'
+            selected ? 'bg-[#0075E2] text-white' : 'text-[#6A6A68]'
           }`}
         >
           {index + 1}
@@ -123,6 +123,7 @@ function SlideWorkspace() {
   const parsed = useMemo(() => parseDashboardTemplateDslToTree(SLIDE_TEMPLATE_DSL), [])
   const { rootName, themeNode, pages } = useMemo(() => getSlideStructure(parsed), [parsed])
   const [activePageId, setActivePageId] = useState('')
+  const [activeView, setActiveView] = useState<'preview' | 'code'>('preview')
   const [zoom, setZoom] = useState(0.82)
   const slideElementRef = useRef<HTMLDivElement | null>(null)
 
@@ -152,56 +153,79 @@ function SlideWorkspace() {
   })
 
   return (
-    <div className="flex h-screen flex-col bg-[#080808] tracking-[-0.03em] text-[#F2F3F4]">
-      <header className="flex items-center justify-between border-b-[0.5px] border-[#1E1E1E] bg-[#080808] px-5 py-3 backdrop-blur">
+    <div className="flex h-screen flex-col bg-[#F7F7F6] tracking-[-0.03em] text-[#3F3F3D]">
+      <header className="flex items-center justify-between border-b-[0.5px] border-[#DDDDD8] bg-[#F7F7F6] px-5 py-3 backdrop-blur">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex shrink-0 items-center justify-center rounded-md bg-[#1B1B1B] p-2">
-            <Icon icon="solar:document-bold" className="h-4 w-4 text-[#FFFFFF]" />
+          <div className="flex shrink-0 items-center justify-center rounded-md border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] p-2">
+            <Icon icon="solar:document-bold" className="h-4 w-4 text-[#5F5F5A]" />
           </div>
           <div className="min-w-0">
-            <div className="truncate text-[16px] font-semibold text-[#D8D8D8]">{rootName}</div>
+            <div className="truncate text-[16px] font-semibold text-[#1F1F1D]">{rootName}</div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="mr-2 flex items-center gap-1 rounded-xl border-[0.5px] border-[#1E1E1E] bg-[#1B1B1B] px-1 py-1">
+          <div className="mr-1 flex items-center gap-1 rounded-xl border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] p-0">
+            <button
+              type="button"
+              onClick={() => setActiveView('preview')}
+              className={`m-[1px] flex items-center justify-center rounded-md p-2 transition ${
+                activeView === 'preview'
+                  ? 'bg-white text-[#1F1F1D]'
+                  : 'bg-[#ECECEB] text-[#5F5F5A] hover:bg-[#E2E2E0] hover:text-[#4F4F4B]'
+              }`}
+            >
+              <Icon icon="solar:eye-bold" className="h-4 w-4" />
+              <span className="sr-only">Visualizar apresentação</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveView('code')}
+              className={`m-[1px] flex items-center justify-center rounded-md p-2 transition ${
+                activeView === 'code'
+                  ? 'bg-white text-[#1F1F1D]'
+                  : 'bg-[#ECECEB] text-[#5F5F5A] hover:bg-[#E2E2E0] hover:text-[#4F4F4B]'
+              }`}
+            >
+              <Icon icon="solar:code-bold" className="h-4 w-4" />
+              <span className="sr-only">Visualizar DSL</span>
+            </button>
+          </div>
+          <div className="mr-2 flex items-center gap-1 rounded-xl border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] p-0">
             <button
               type="button"
               onClick={() => setZoom((current) => Math.max(0.4, Number((current - 0.1).toFixed(2))))}
-              className="flex items-center rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]"
+              className="m-[1px] flex items-center rounded-md bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]"
             >
               <Icon icon="solar:minus-square-bold" className="h-3.5 w-3.5" />
               <span className="sr-only">Zoom menos</span>
             </button>
-            <span className="min-w-[56px] text-center text-xs font-medium text-[#FFFFFF]">{Math.round(zoom * 100)}%</span>
+            <span className="min-w-[56px] text-center text-xs font-medium leading-normal text-[#5F5F5A]">{Math.round(zoom * 100)}%</span>
             <button
               type="button"
               onClick={() => setZoom((current) => Math.min(1.4, Number((current + 0.1).toFixed(2))))}
-              className="flex items-center rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]"
+              className="m-[1px] flex items-center rounded-md bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]"
             >
               <Icon icon="solar:add-square-bold" className="h-3.5 w-3.5" />
               <span className="sr-only">Zoom mais</span>
             </button>
           </div>
-          <button type="button" className="flex items-center justify-center rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
-            <Icon icon="solar:chat-round-dots-bold" className="h-4 w-4" />
-          </button>
-          <button type="button" className="flex items-center justify-center rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
+          <button type="button" className="flex items-center justify-center rounded-md border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]">
             <Icon icon="solar:download-square-bold" className="h-4 w-4" />
           </button>
-          <button type="button" className="flex items-center justify-center rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
+          <button type="button" className="flex items-center justify-center rounded-md border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]">
             <Icon icon="solar:playback-speed-bold" className="h-4 w-4" />
           </button>
-          <button type="button" className="flex items-center justify-center rounded-md bg-[#1B1B1B] px-2 py-[0.35rem] text-[14px] leading-[0] font-medium text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
+          <button type="button" className="flex items-center justify-center rounded-md border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] px-2 py-[0.35rem] text-[14px] font-medium text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]">
             Invite
           </button>
-          <button type="button" className="flex items-center justify-center rounded-md bg-[#039AFE] px-2 py-[0.35rem] text-[14px] leading-[0] font-medium text-[#FFFFFF] transition hover:bg-[#028ae0] hover:text-[#FFFFFF]">
+          <button type="button" className="flex items-center justify-center rounded-md bg-[#039AFE] px-2 py-[0.35rem] text-[14px] font-medium text-[#FFFFFF] transition hover:bg-[#028ae0] hover:text-[#FFFFFF]">
             Publish
           </button>
         </div>
       </header>
 
       <div className="flex min-h-0 flex-1">
-        <aside className="w-[210px] shrink-0 overflow-auto border-r-[0.5px] border-[#1E1E1E] bg-[#080808] px-3 py-4">
+        <aside className="w-[210px] shrink-0 overflow-auto border-r-[0.5px] border-[#DDDDD8] bg-[#F7F7F6] px-3 py-4">
           <div className="space-y-4">
             {pages.map((page, index) => {
               const pageId = getPageId(page, index)
@@ -218,10 +242,18 @@ function SlideWorkspace() {
           </div>
         </aside>
 
-        <main className="min-h-0 flex-1 overflow-auto border-r-[0.5px] border-[#1E1E1E] bg-[#121212]">
-          <div className="mx-auto flex min-h-full items-start justify-center p-8">
-            {activePage ? <SlideCanvas tree={activeTree} zoom={zoom} slideElementRef={slideElementRef} /> : null}
-          </div>
+        <main className="min-h-0 flex-1 overflow-auto border-r-[0.5px] border-[#DDDDD8] bg-[#EEEEEB]">
+          {activeView === 'preview' ? (
+            <div className="mx-auto flex min-h-full items-start justify-center p-8">
+              {activePage ? <SlideCanvas tree={activeTree} zoom={zoom} slideElementRef={slideElementRef} /> : null}
+            </div>
+          ) : (
+            <div className="mx-auto flex min-h-full max-w-[1280px] p-8">
+              <pre className="w-full overflow-auto rounded-[16px] border-[0.5px] border-[#DDDDD8] bg-[#F7F7F6] p-6 text-[13px] leading-6 text-[#2C2C29] shadow-[0_2px_6px_rgba(15,23,42,0.05)]">
+                <code>{SLIDE_TEMPLATE_DSL}</code>
+              </pre>
+            </div>
+          )}
         </main>
       </div>
     </div>

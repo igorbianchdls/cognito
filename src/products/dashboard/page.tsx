@@ -88,11 +88,11 @@ export default function DashboardPage() {
                 <span className="sr-only">Visualizar DSL</span>
               </button>
             </div>
-            <div className="mr-2 flex items-center gap-1 rounded-xl border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] px-1 py-1">
+            <div className="mr-2 flex items-center gap-1 rounded-xl border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] p-0">
               <button
                 type="button"
                 onClick={() => setZoom((current) => Math.max(0.5, Number((current - 0.1).toFixed(2))))}
-                className="flex items-center rounded-md bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]"
+                className="m-[1px] flex items-center rounded-md bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]"
               >
                 <Icon icon="solar:minus-square-bold" className="h-3.5 w-3.5" />
                 <span className="sr-only">Zoom menos</span>
@@ -101,7 +101,7 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={() => setZoom((current) => Math.min(1.4, Number((current + 0.1).toFixed(2))))}
-                className="flex items-center rounded-md bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]"
+                className="m-[1px] flex items-center rounded-md bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]"
               >
                 <Icon icon="solar:add-square-bold" className="h-3.5 w-3.5" />
                 <span className="sr-only">Zoom mais</span>
