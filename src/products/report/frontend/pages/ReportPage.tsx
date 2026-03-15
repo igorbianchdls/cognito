@@ -94,7 +94,7 @@ function ReportCanvas({ tree, zoom }: { tree: any; zoom: number }) {
   return (
     <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}>
       <div
-        className="overflow-hidden rounded-none border border-slate-200 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.08)]"
+        className="overflow-hidden rounded-none border border-slate-200 bg-white shadow-[0_2px_6px_rgba(15,23,42,0.05)]"
         style={{ width: A4_WIDTH, minWidth: A4_WIDTH, height: A4_HEIGHT }}
       >
         <Renderer tree={tree} registry={registry} />
