@@ -1,12 +1,14 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import { Download, FileText, MessageCircleMore, Minus, MoreHorizontal, Play, Plus, Search, X } from 'lucide-react'
 
 import { parseDashboardTemplateDslToTree } from '@/products/bi/json-render/parsers/dashboardTemplateDslParser'
 import { DataProvider } from '@/products/bi/json-render/context'
 import { registry } from '@/products/bi/json-render/registry'
 import { Renderer } from '@/products/bi/json-render/renderer'
+import { ReportPreviewThumbnail } from '@/products/report/preview/ReportPreviewThumbnail'
+import { useReportPreviewSnapshots } from '@/products/report/preview/useReportPreviewSnapshots'
 import { REPORT_TEMPLATE_DSL } from '@/products/report/shared/templates/reportTemplate'
 
 type AnyRecord = Record<string, any>
@@ -59,10 +61,12 @@ function buildPageRenderTree(page: AnyRecord, themeNode: AnyRecord | null): any 
 }
 
 function ReportThumbnail({
+  previewSrc,
   selected,
   index,
   onClick,
 }: {
+  previewSrc?: string
   selected: boolean
   index: number
   onClick: () => void
@@ -73,16 +77,13 @@ function ReportThumbnail({
       onClick={onClick}
       className="w-full rounded-2xl px-2 py-2 text-left transition hover:bg-white/30"
     >
-      <div
-        className={`mb-2 overflow-hidden rounded-xl bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] ${
-          selected ? 'border-[3px] border-[#0075E2]' : 'border border-slate-300'
-        }`}
-      >
-        <div
-          style={{ width: THUMB_WIDTH, height: Math.round(A4_HEIGHT * THUMB_SCALE) }}
-          className="bg-white"
-        />
-      </div>
+      <ReportPreviewThumbnail
+        alt={`Preview da página ${index + 1}`}
+        height={Math.round(A4_HEIGHT * THUMB_SCALE)}
+        selected={selected}
+        src={previewSrc}
+        width={THUMB_WIDTH}
+      />
       <div className="flex justify-center px-1">
         <div
           className={`flex h-6 min-w-6 items-center justify-center rounded-sm px-2 text-[14px] font-semibold ${
@@ -96,10 +97,19 @@ function ReportThumbnail({
   )
 }
 
-function ReportCanvas({ tree, zoom }: { tree: any; zoom: number }) {
+function ReportCanvas({
+  tree,
+  zoom,
+  reportElementRef,
+}: {
+  tree: any
+  zoom: number
+  reportElementRef: RefObject<HTMLDivElement | null>
+}) {
   return (
     <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}>
       <div
+        ref={reportElementRef}
         className="overflow-hidden rounded-none border border-slate-200 bg-white shadow-[0_2px_6px_rgba(15,23,42,0.05)]"
         style={{ width: A4_WIDTH, minWidth: A4_WIDTH, height: A4_HEIGHT }}
       >
@@ -114,6 +124,7 @@ function ReportWorkspace() {
   const { rootName, themeNode, pages } = useMemo(() => getReportStructure(parsed), [parsed])
   const [activePageId, setActivePageId] = useState('')
   const [zoom, setZoom] = useState(0.9)
+  const reportElementRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     if (!pages.length) return
@@ -130,6 +141,15 @@ function ReportWorkspace() {
     () => (activePage ? buildPageRenderTree(activePage, themeNode) : []),
     [activePage, themeNode],
   )
+  const captureKey = useMemo(
+    () => `${activePageId}:${pages.length}:${Boolean(activePage)}:${Boolean(themeNode)}`,
+    [activePageId, pages.length, activePage, themeNode],
+  )
+  const { previewsByPageId } = useReportPreviewSnapshots({
+    activePageId,
+    captureKey,
+    reportElementRef,
+  })
 
   return (
     <div className="flex h-screen flex-col bg-[#F6F6F4] tracking-[-0.03em] text-slate-800">
@@ -191,6 +211,7 @@ function ReportWorkspace() {
               return (
                 <ReportThumbnail
                   key={pageId}
+                  previewSrc={previewsByPageId[pageId]}
                   selected={pageId === activePageId}
                   index={index}
                   onClick={() => setActivePageId(pageId)}
@@ -202,7 +223,7 @@ function ReportWorkspace() {
 
         <main className="min-h-0 flex-1 overflow-auto bg-[#F6F6F4]">
           <div className="mx-auto flex min-h-full items-start justify-center p-8">
-            {activePage ? <ReportCanvas tree={activeTree} zoom={zoom} /> : null}
+            {activePage ? <ReportCanvas tree={activeTree} zoom={zoom} reportElementRef={reportElementRef} /> : null}
           </div>
         </main>
       </div>
