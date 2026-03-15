@@ -50,43 +50,43 @@ export default function DashboardPage() {
 
   return (
     <DataProvider initialData={{ ui: {}, filters: {}, dashboard: {} }}>
-      <div className="flex h-screen flex-col bg-[#080808] tracking-[-0.03em] text-[#F2F3F4]">
-        <header className="flex items-center justify-between border-b-[0.5px] border-[#1E1E1E] bg-[#080808] px-5 py-3 backdrop-blur">
+      <div className="flex h-screen flex-col bg-[#F7F7F6] tracking-[-0.03em] text-[#3F3F3D]">
+        <header className="flex items-center justify-between border-b-[0.5px] border-[#B7B7B2] bg-[#F7F7F6] px-5 py-3 backdrop-blur">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex shrink-0 items-center justify-center rounded-md bg-[#1B1B1B] p-2">
-              <Icon icon="solar:widget-5-bold" className="h-4 w-4 text-[#FFFFFF]" />
+            <div className="flex shrink-0 items-center justify-center rounded-md border-[0.5px] border-[#8D8D88] bg-[#ECECEB] p-2">
+              <Icon icon="solar:widget-5-bold" className="h-4 w-4 text-[#5F5F5A]" />
             </div>
             <div className="min-w-0">
-              <div className="truncate text-[16px] font-semibold text-[#D8D8D8]">{rootName}</div>
+              <div className="truncate text-[16px] font-semibold text-[#4F4F4B]">{rootName}</div>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <div className="mr-2 flex items-center gap-1 rounded-xl border-[0.5px] border-[#1E1E1E] bg-[#1B1B1B] px-1 py-1">
+            <div className="mr-2 flex items-center gap-1 rounded-xl border-[0.5px] border-[#8D8D88] bg-[#ECECEB] px-1 py-1">
               <button
                 type="button"
                 onClick={() => setZoom((current) => Math.max(0.5, Number((current - 0.1).toFixed(2))))}
-                className="flex items-center rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]"
+                className="flex items-center rounded-md bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]"
               >
                 <Icon icon="solar:minus-square-bold" className="h-3.5 w-3.5" />
                 <span className="sr-only">Zoom menos</span>
               </button>
-              <span className="min-w-[56px] text-center text-xs font-medium text-[#FFFFFF]">{Math.round(zoom * 100)}%</span>
+              <span className="min-w-[56px] text-center text-xs font-medium text-[#5F5F5A]">{Math.round(zoom * 100)}%</span>
               <button
                 type="button"
                 onClick={() => setZoom((current) => Math.min(1.4, Number((current + 0.1).toFixed(2))))}
-                className="flex items-center rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]"
+                className="flex items-center rounded-md bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]"
               >
                 <Icon icon="solar:add-square-bold" className="h-3.5 w-3.5" />
                 <span className="sr-only">Zoom mais</span>
               </button>
             </div>
-            <button type="button" className="flex items-center justify-center rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
+            <button type="button" className="flex items-center justify-center rounded-md border-[0.5px] border-[#8D8D88] bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]">
               <Icon icon="solar:chat-round-dots-bold" className="h-4 w-4" />
             </button>
-            <button type="button" className="flex items-center justify-center rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
+            <button type="button" className="flex items-center justify-center rounded-md border-[0.5px] border-[#8D8D88] bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]">
               <Icon icon="solar:download-square-bold" className="h-4 w-4" />
             </button>
-            <button type="button" className="flex items-center justify-center rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
+            <button type="button" className="flex items-center justify-center rounded-md border-[0.5px] border-[#8D8D88] bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]">
               <Icon icon="solar:playback-speed-bold" className="h-4 w-4" />
             </button>
             <button
@@ -95,7 +95,7 @@ export default function DashboardPage() {
                 setDraftThemeName(appliedThemeName)
                 setIsThemeModalOpen(true)
               }}
-              className="flex items-center justify-center rounded-md bg-[#1B1B1B] px-2 py-[0.35rem] text-[14px] font-medium text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]"
+              className="flex items-center justify-center rounded-md border-[0.5px] border-[#8D8D88] bg-[#ECECEB] px-2 py-[0.35rem] text-[14px] font-medium text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]"
             >
               Tema
             </button>
@@ -105,7 +105,7 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        <main className="min-h-0 flex-1 overflow-auto border-r-[0.5px] border-[#1E1E1E] bg-[#121212]">
+        <main className="min-h-0 flex-1 overflow-auto border-r-[0.5px] border-[#B7B7B2] bg-[#EEEEEB]">
           <div className="mx-auto flex min-h-full items-start justify-center p-8">
             <DashboardCanvas tree={parsed} zoom={zoom} />
           </div>
