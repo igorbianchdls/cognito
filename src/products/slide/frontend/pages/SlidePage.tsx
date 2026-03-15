@@ -1,12 +1,14 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import { Download, FileText, MessageCircleMore, Minus, MoreHorizontal, Play, Plus, Search, X } from 'lucide-react'
 
 import { parseDashboardTemplateDslToTree } from '@/products/bi/json-render/parsers/dashboardTemplateDslParser'
 import { DataProvider } from '@/products/bi/json-render/context'
 import { registry } from '@/products/bi/json-render/registry'
 import { Renderer } from '@/products/bi/json-render/renderer'
+import { SlidePreviewThumbnail } from '@/products/slide/preview/SlidePreviewThumbnail'
+import { useSlidePreviewSnapshots } from '@/products/slide/preview/useSlidePreviewSnapshots'
 import { SLIDE_TEMPLATE_DSL } from '@/products/slide/shared/templates/slideTemplate'
 
 type AnyRecord = Record<string, any>
@@ -59,10 +61,12 @@ function buildPageRenderTree(page: AnyRecord, themeNode: AnyRecord | null): any 
 }
 
 function SlideThumbnail({
+  previewSrc,
   selected,
   index,
   onClick,
 }: {
+  previewSrc?: string
   selected: boolean
   index: number
   onClick: () => void
@@ -73,16 +77,13 @@ function SlideThumbnail({
       onClick={onClick}
       className="w-full rounded-2xl px-2 py-2 text-left transition hover:bg-white/10"
     >
-      <div
-        className={`mb-2 overflow-hidden rounded-xl bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] ${
-          selected ? 'border-[3px] border-[#0075E2]' : 'border border-slate-300'
-        }`}
-      >
-        <div
-          style={{ width: THUMB_WIDTH, height: Math.round(SLIDE_HEIGHT * THUMB_SCALE) }}
-          className="bg-white"
-        />
-      </div>
+      <SlidePreviewThumbnail
+        alt={`Preview do slide ${index + 1}`}
+        height={Math.round(SLIDE_HEIGHT * THUMB_SCALE)}
+        selected={selected}
+        src={previewSrc}
+        width={THUMB_WIDTH}
+      />
       <div className="flex justify-center px-1">
         <div
           className={`flex h-6 min-w-6 items-center justify-center rounded-sm px-2 text-[14px] font-semibold ${
@@ -96,10 +97,19 @@ function SlideThumbnail({
   )
 }
 
-function SlideCanvas({ tree, zoom }: { tree: any; zoom: number }) {
+function SlideCanvas({
+  tree,
+  zoom,
+  slideElementRef,
+}: {
+  tree: any
+  zoom: number
+  slideElementRef: RefObject<HTMLDivElement | null>
+}) {
   return (
     <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}>
       <div
+        ref={slideElementRef}
         className="overflow-hidden rounded-none border border-slate-200 bg-white shadow-[0_2px_6px_rgba(15,23,42,0.05)]"
         style={{ width: SLIDE_WIDTH, minWidth: SLIDE_WIDTH, height: SLIDE_HEIGHT }}
       >
@@ -114,6 +124,7 @@ function SlideWorkspace() {
   const { rootName, themeNode, pages } = useMemo(() => getSlideStructure(parsed), [parsed])
   const [activePageId, setActivePageId] = useState('')
   const [zoom, setZoom] = useState(0.82)
+  const slideElementRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     if (!pages.length) return
@@ -130,6 +141,15 @@ function SlideWorkspace() {
     () => (activePage ? buildPageRenderTree(activePage, themeNode) : []),
     [activePage, themeNode],
   )
+  const captureKey = useMemo(
+    () => `${activePageId}:${pages.length}:${Boolean(activePage)}:${Boolean(themeNode)}`,
+    [activePageId, pages.length, activePage, themeNode],
+  )
+  const { previewsByPageId } = useSlidePreviewSnapshots({
+    activePageId,
+    captureKey,
+    slideElementRef,
+  })
 
   return (
     <div className="flex h-screen flex-col bg-[#323639] tracking-[-0.03em] text-[#F2F3F4]">
@@ -191,6 +211,7 @@ function SlideWorkspace() {
               return (
                 <SlideThumbnail
                   key={pageId}
+                  previewSrc={previewsByPageId[pageId]}
                   selected={pageId === activePageId}
                   index={index}
                   onClick={() => setActivePageId(pageId)}
@@ -202,7 +223,7 @@ function SlideWorkspace() {
 
         <main className="min-h-0 flex-1 overflow-auto bg-[#525659]">
           <div className="mx-auto flex min-h-full items-start justify-center p-8">
-            {activePage ? <SlideCanvas tree={activeTree} zoom={zoom} /> : null}
+            {activePage ? <SlideCanvas tree={activeTree} zoom={zoom} slideElementRef={slideElementRef} /> : null}
           </div>
         </main>
       </div>
