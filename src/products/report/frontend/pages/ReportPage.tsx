@@ -75,14 +75,14 @@ function ReportThumbnail({
         selected ? 'bg-transparent' : 'bg-transparent hover:bg-white/30'
       }`}
     >
-      <div className="mb-2 overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm">
+      <div className="mb-2 overflow-hidden rounded-xl border border-slate-300 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
         <div
           style={{ width: THUMB_WIDTH, height: Math.round(A4_HEIGHT * THUMB_SCALE) }}
           className="bg-white"
         />
       </div>
       <div className="flex justify-center px-1">
-        <div className="flex h-6 w-6 items-center justify-center text-xs font-semibold text-[#595957]">
+        <div className="flex h-6 w-6 items-center justify-center text-[14px] font-semibold text-[#6A6A68]">
           {index + 1}
         </div>
       </div>
@@ -132,9 +132,9 @@ function ReportWorkspace() {
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#252523]">
             <FileText className="h-5 w-5 text-[#F2F2F2]" />
           </div>
-          <div className="min-w-0 space-y-0.5">
-            <div className="truncate text-lg font-semibold text-[#595957]">{rootName}</div>
-            <div className="text-sm text-[#C3C3C0]">Salvo</div>
+          <div className="min-w-0">
+            <div className="truncate text-[16px] font-semibold text-[#595957]">{rootName}</div>
+            <div className="text-sm text-[#B4B4B1]">Salvo</div>
           </div>
         </div>
         <div className="flex items-center gap-2">
