@@ -45,7 +45,7 @@ export function useReportPreviewSnapshots({
         if (cancelled) return
         setStatusByPageId((current) => ({ ...current, [activePageId]: 'error' }))
       }
-    }, 250)
+    }, 500)
 
     return () => {
       cancelled = true
