@@ -10,7 +10,7 @@ import useDashboardVisualEditor from "@/products/bi/features/dashboard-editor/ho
 import {
   parseDashboardTemplateDslToTree,
   renderDashboardTemplateDslFromTree,
-} from "@/products/bi/features/dashboard-playground/parsers/dashboardTemplateDslParser";
+} from "@/products/bi/json-render/parsers/dashboardTemplateDslParser";
 import type {
   JsonNodePath,
   NodeDropPlacement,
