@@ -22,7 +22,7 @@ export type ThemeOverrides = {
 export const builtInThemes: Record<string, ThemeOverrides> = {
   black: {
     components: {
-      Card: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)', borderWidth: 1 },
+      Card: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)', borderWidth: 1, borderRadius: 8, padding: 12 },
       Header: { backgroundColor: 'var(--headerBg, var(--bg))', textColor: 'var(--headerText, var(--fg))', subtitleColor: 'var(--headerSubtitle, #bbbbbb)', borderColor: 'var(--headerBorder, var(--surfaceBorder))', borderWidth: 0, borderBottomWidth: 0, borderRadius: 0, padding: '4px 12px' },
       Subtitle: { titleStyle: { color: 'var(--headerSubtitle, #bbbbbb)', fontSize: 12 } },
       Kpi: { format: 'currency', containerStyle: { backgroundColor: 'var(--surfaceBg)', borderColor: 'var(--surfaceBorder)' } },
