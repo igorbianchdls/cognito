@@ -95,7 +95,7 @@ function SlideThumbnail({
         <div className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-600 text-xs font-semibold text-white">
           {index + 1}
         </div>
-        <div className="min-w-0 truncate text-xs font-medium text-slate-700">{title}</div>
+        <div className="min-w-0 truncate text-xs font-medium text-[#E6E8EA]">{title}</div>
       </div>
     </button>
   )
@@ -137,54 +137,54 @@ function SlideWorkspace() {
   )
 
   return (
-    <div className="flex h-screen flex-col bg-[#f3f5f7] text-slate-800">
-      <header className="flex items-center justify-between border-b border-slate-200 bg-white/95 px-5 py-3 backdrop-blur">
+    <div className="flex h-screen flex-col bg-[#323639] text-[#F2F3F4]">
+      <header className="flex items-center justify-between border-b border-[#454A4F] bg-[#323639] px-5 py-3 backdrop-blur">
         <div className="min-w-0">
-          <div className="truncate text-lg font-semibold text-slate-800">{rootName}</div>
-          <div className="text-sm text-slate-500">Salvo</div>
+          <div className="truncate text-lg font-semibold text-white">{rootName}</div>
+          <div className="text-sm text-[#D2D6DA]">Salvo</div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="mr-2 flex items-center gap-1 rounded-full border border-slate-200 bg-white px-1 py-1">
+          <div className="mr-2 flex items-center gap-1 rounded-full border border-[#555B61] bg-[#3A3F44] px-1 py-1">
             <button
               type="button"
               onClick={() => setZoom((current) => Math.max(0.4, Number((current - 0.1).toFixed(2))))}
-              className="flex items-center gap-1 rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+              className="flex items-center gap-1 rounded-full p-2 text-[#E6E8EA] transition hover:bg-[#4A5056] hover:text-white"
             >
               <Search className="h-4 w-4" />
               <Minus className="h-3 w-3" />
               <span className="sr-only">Zoom menos</span>
             </button>
-            <span className="min-w-[56px] text-center text-xs font-medium text-slate-600">{Math.round(zoom * 100)}%</span>
+            <span className="min-w-[56px] text-center text-xs font-medium text-[#E6E8EA]">{Math.round(zoom * 100)}%</span>
             <button
               type="button"
               onClick={() => setZoom((current) => Math.min(1.4, Number((current + 0.1).toFixed(2))))}
-              className="flex items-center gap-1 rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+              className="flex items-center gap-1 rounded-full p-2 text-[#E6E8EA] transition hover:bg-[#4A5056] hover:text-white"
             >
               <Search className="h-4 w-4" />
               <Plus className="h-3 w-3" />
               <span className="sr-only">Zoom mais</span>
             </button>
           </div>
-          <button type="button" className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
+          <button type="button" className="rounded-full p-2 text-[#E6E8EA] transition hover:bg-[#4A5056] hover:text-white">
             <MessageCircleMore className="h-4 w-4" />
           </button>
-          <button type="button" className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
+          <button type="button" className="rounded-full p-2 text-[#E6E8EA] transition hover:bg-[#4A5056] hover:text-white">
             <Download className="h-4 w-4" />
           </button>
-          <button type="button" className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
+          <button type="button" className="rounded-full p-2 text-[#E6E8EA] transition hover:bg-[#4A5056] hover:text-white">
             <Play className="h-4 w-4" />
           </button>
-          <button type="button" className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
+          <button type="button" className="rounded-full p-2 text-[#E6E8EA] transition hover:bg-[#4A5056] hover:text-white">
             <MoreHorizontal className="h-4 w-4" />
           </button>
-          <button type="button" className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
+          <button type="button" className="rounded-full p-2 text-[#E6E8EA] transition hover:bg-[#4A5056] hover:text-white">
             <X className="h-4 w-4" />
           </button>
         </div>
       </header>
 
       <div className="flex min-h-0 flex-1">
-        <aside className="w-[230px] shrink-0 overflow-auto border-r border-slate-200 bg-[#e9edf1] px-3 py-4">
+        <aside className="w-[230px] shrink-0 overflow-auto border-r border-[#454A4F] bg-[#323639] px-3 py-4">
           <div className="space-y-4">
             {pages.map((page, index) => {
               const pageId = getPageId(page, index)
@@ -202,7 +202,7 @@ function SlideWorkspace() {
           </div>
         </aside>
 
-        <main className="min-h-0 flex-1 overflow-auto bg-[#f5f6f8]">
+        <main className="min-h-0 flex-1 overflow-auto bg-[#525659]">
           <div className="mx-auto flex min-h-full items-start justify-center p-8">
             {activePage ? <SlideCanvas tree={activeTree} zoom={zoom} /> : null}
           </div>
