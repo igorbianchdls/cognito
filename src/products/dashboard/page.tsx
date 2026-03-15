@@ -54,7 +54,7 @@ export default function DashboardPage() {
       <div className="flex h-screen flex-col bg-[#F7F7F6] tracking-[-0.03em] text-[#3F3F3D]">
         <header className="flex items-center justify-between border-b-[0.5px] border-[#DDDDD8] bg-[#F7F7F6] px-5 py-3 backdrop-blur">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex shrink-0 items-center justify-center rounded-md border-[0.5px] border-[#D8D8D3] bg-[#ECECEB] p-2">
+            <div className="flex shrink-0 items-center justify-center rounded-md border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] p-2">
               <Icon icon="solar:widget-5-bold" className="h-4 w-4 text-[#5F5F5A]" />
             </div>
             <div className="min-w-0">
@@ -62,7 +62,7 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <div className="mr-1 flex items-center gap-1 rounded-xl border-[0.5px] border-[#D8D8D3] bg-[#ECECEB] p-0">
+            <div className="mr-1 flex items-center gap-1 rounded-xl border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] p-0">
               <button
                 type="button"
                 onClick={() => setActiveView('preview')}
@@ -88,7 +88,7 @@ export default function DashboardPage() {
                 <span className="sr-only">Visualizar DSL</span>
               </button>
             </div>
-            <div className="mr-2 flex items-center gap-1 rounded-xl border-[0.5px] border-[#D8D8D3] bg-[#ECECEB] px-1 py-1">
+            <div className="mr-2 flex items-center gap-1 rounded-xl border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] px-1 py-1">
               <button
                 type="button"
                 onClick={() => setZoom((current) => Math.max(0.5, Number((current - 0.1).toFixed(2))))}
@@ -107,10 +107,10 @@ export default function DashboardPage() {
                 <span className="sr-only">Zoom mais</span>
               </button>
             </div>
-            <button type="button" className="flex items-center justify-center rounded-md border-[0.5px] border-[#D8D8D3] bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]">
+            <button type="button" className="flex items-center justify-center rounded-md border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]">
               <Icon icon="solar:download-square-bold" className="h-4 w-4" />
             </button>
-            <button type="button" className="flex items-center justify-center rounded-md border-[0.5px] border-[#D8D8D3] bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]">
+            <button type="button" className="flex items-center justify-center rounded-md border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]">
               <Icon icon="solar:playback-speed-bold" className="h-4 w-4" />
             </button>
             <button
@@ -119,7 +119,7 @@ export default function DashboardPage() {
                 setDraftThemeName(appliedThemeName)
                 setIsThemeModalOpen(true)
               }}
-              className="flex items-center justify-center rounded-md border-[0.5px] border-[#D8D8D3] bg-[#ECECEB] px-2 py-[0.35rem] text-[14px] font-medium text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]"
+              className="flex items-center justify-center rounded-md border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] px-2 py-[0.35rem] text-[14px] font-medium text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]"
             >
               Tema
             </button>
