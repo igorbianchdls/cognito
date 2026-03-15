@@ -1,7 +1,7 @@
 'use client'
 
 import { RefObject, useEffect, useMemo, useRef, useState } from 'react'
-import { Download, FileText, MessageCircleMore, Minus, Play, Plus, Search } from 'lucide-react'
+import { Icon } from '@iconify/react'
 
 import { parseDashboardTemplateDslToTree } from '@/products/bi/json-render/parsers/dashboardTemplateDslParser'
 import { DataProvider } from '@/products/bi/json-render/context'
@@ -155,8 +155,8 @@ function SlideWorkspace() {
     <div className="flex h-screen flex-col bg-[#080808] tracking-[-0.03em] text-[#F2F3F4]">
       <header className="flex items-center justify-between border-b-[0.5px] border-[#1E1E1E] bg-[#080808] px-5 py-3 backdrop-blur">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#1B1B1B] p-1">
-            <FileText className="h-4 w-4 text-[#FFFFFF]" />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#1B1B1B] p-0">
+            <Icon icon="solar:document-bold" className="h-4 w-4 text-[#FFFFFF]" />
           </div>
           <div className="min-w-0">
             <div className="truncate text-[16px] font-semibold text-[#D8D8D8]">{rootName}</div>
@@ -167,31 +167,31 @@ function SlideWorkspace() {
             <button
               type="button"
               onClick={() => setZoom((current) => Math.max(0.4, Number((current - 0.1).toFixed(2))))}
-              className="flex items-center gap-1 rounded-md bg-[#1B1B1B] p-1 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]"
+              className="flex items-center gap-1 rounded-md bg-[#1B1B1B] p-0 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]"
             >
-              <Search className="h-4 w-4" />
-              <Minus className="h-3 w-3" />
+              <Icon icon="solar:magnifer-bold" className="h-4 w-4" />
+              <Icon icon="solar:minus-square-bold" className="h-3.5 w-3.5" />
               <span className="sr-only">Zoom menos</span>
             </button>
             <span className="min-w-[56px] text-center text-xs font-medium text-[#FFFFFF]">{Math.round(zoom * 100)}%</span>
             <button
               type="button"
               onClick={() => setZoom((current) => Math.min(1.4, Number((current + 0.1).toFixed(2))))}
-              className="flex items-center gap-1 rounded-md bg-[#1B1B1B] p-1 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]"
+              className="flex items-center gap-1 rounded-md bg-[#1B1B1B] p-0 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]"
             >
-              <Search className="h-4 w-4" />
-              <Plus className="h-3 w-3" />
+              <Icon icon="solar:magnifer-bold" className="h-4 w-4" />
+              <Icon icon="solar:add-square-bold" className="h-3.5 w-3.5" />
               <span className="sr-only">Zoom mais</span>
             </button>
           </div>
-          <button type="button" className="flex h-10 w-10 items-center justify-center rounded-md bg-[#1B1B1B] p-1 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
-            <MessageCircleMore className="h-4 w-4" />
+          <button type="button" className="flex h-10 w-10 items-center justify-center rounded-md bg-[#1B1B1B] p-0 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
+            <Icon icon="solar:chat-round-dots-bold" className="h-4 w-4" />
           </button>
-          <button type="button" className="flex h-10 w-10 items-center justify-center rounded-md bg-[#1B1B1B] p-1 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
-            <Download className="h-4 w-4" />
+          <button type="button" className="flex h-10 w-10 items-center justify-center rounded-md bg-[#1B1B1B] p-0 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
+            <Icon icon="solar:download-square-bold" className="h-4 w-4" />
           </button>
-          <button type="button" className="flex h-10 w-10 items-center justify-center rounded-md bg-[#1B1B1B] p-1 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
-            <Play className="h-4 w-4" />
+          <button type="button" className="flex h-10 w-10 items-center justify-center rounded-md bg-[#1B1B1B] p-0 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
+            <Icon icon="solar:playback-speed-bold" className="h-4 w-4" />
           </button>
           <button type="button" className="flex h-10 items-center justify-center rounded-md bg-[#1B1B1B] px-4 text-[14px] font-medium text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
             Invite
