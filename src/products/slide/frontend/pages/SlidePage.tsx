@@ -155,7 +155,7 @@ function SlideWorkspace() {
     <div className="flex h-screen flex-col bg-[#080808] tracking-[-0.03em] text-[#F2F3F4]">
       <header className="flex items-center justify-between border-b-[0.5px] border-[#1E1E1E] bg-[#080808] px-5 py-3 backdrop-blur">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#1B1B1B] p-0">
+          <div className="flex shrink-0 items-center justify-center rounded-md bg-[#1B1B1B] p-2">
             <Icon icon="solar:document-bold" className="h-4 w-4 text-[#FFFFFF]" />
           </div>
           <div className="min-w-0">
@@ -163,13 +163,12 @@ function SlideWorkspace() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="mr-2 flex h-10 items-center gap-1 rounded-xl border-[0.5px] border-[#1E1E1E] bg-[#1B1B1B] px-1">
+          <div className="mr-2 flex items-center gap-1 rounded-xl border-[0.5px] border-[#1E1E1E] bg-[#1B1B1B] px-1 py-1">
             <button
               type="button"
               onClick={() => setZoom((current) => Math.max(0.4, Number((current - 0.1).toFixed(2))))}
-              className="flex items-center gap-1 rounded-md bg-[#1B1B1B] p-0 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]"
+              className="flex items-center rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]"
             >
-              <Icon icon="solar:magnifer-bold" className="h-4 w-4" />
               <Icon icon="solar:minus-square-bold" className="h-3.5 w-3.5" />
               <span className="sr-only">Zoom menos</span>
             </button>
@@ -177,26 +176,25 @@ function SlideWorkspace() {
             <button
               type="button"
               onClick={() => setZoom((current) => Math.min(1.4, Number((current + 0.1).toFixed(2))))}
-              className="flex items-center gap-1 rounded-md bg-[#1B1B1B] p-0 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]"
+              className="flex items-center rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]"
             >
-              <Icon icon="solar:magnifer-bold" className="h-4 w-4" />
               <Icon icon="solar:add-square-bold" className="h-3.5 w-3.5" />
               <span className="sr-only">Zoom mais</span>
             </button>
           </div>
-          <button type="button" className="flex h-10 w-10 items-center justify-center rounded-md bg-[#1B1B1B] p-0 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
+          <button type="button" className="flex items-center justify-center rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
             <Icon icon="solar:chat-round-dots-bold" className="h-4 w-4" />
           </button>
-          <button type="button" className="flex h-10 w-10 items-center justify-center rounded-md bg-[#1B1B1B] p-0 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
+          <button type="button" className="flex items-center justify-center rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
             <Icon icon="solar:download-square-bold" className="h-4 w-4" />
           </button>
-          <button type="button" className="flex h-10 w-10 items-center justify-center rounded-md bg-[#1B1B1B] p-0 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
+          <button type="button" className="flex items-center justify-center rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
             <Icon icon="solar:playback-speed-bold" className="h-4 w-4" />
           </button>
-          <button type="button" className="flex h-10 items-center justify-center rounded-md bg-[#1B1B1B] px-4 text-[14px] font-medium text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
+          <button type="button" className="flex items-center justify-center rounded-md bg-[#1B1B1B] px-4 py-2 text-[14px] font-medium text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
             Invite
           </button>
-          <button type="button" className="flex h-10 items-center justify-center rounded-md bg-[#039AFE] px-4 text-[14px] font-medium text-[#FFFFFF] transition hover:bg-[#028ae0] hover:text-[#FFFFFF]">
+          <button type="button" className="flex items-center justify-center rounded-md bg-[#039AFE] px-4 py-2 text-[14px] font-medium text-[#FFFFFF] transition hover:bg-[#028ae0] hover:text-[#FFFFFF]">
             Publish
           </button>
         </div>
