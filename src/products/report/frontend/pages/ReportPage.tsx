@@ -126,13 +126,13 @@ function ReportWorkspace() {
   )
 
   return (
-    <div className="flex h-screen flex-col bg-[#F6F6F4] text-slate-800">
+    <div className="flex h-screen flex-col bg-[#F6F6F4] tracking-[-0.03em] text-slate-800">
       <header className="flex items-center justify-between border-b border-slate-200 bg-[#F6F6F4] px-5 py-3 backdrop-blur">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#252523]">
             <FileText className="h-5 w-5 text-[#F2F2F2]" />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 space-y-0.5">
             <div className="truncate text-lg font-semibold text-[#595957]">{rootName}</div>
             <div className="text-sm text-[#C3C3C0]">Salvo</div>
           </div>
