@@ -155,7 +155,7 @@ function SlideWorkspace() {
     <div className="flex h-screen flex-col bg-[#080808] tracking-[-0.03em] text-[#F2F3F4]">
       <header className="flex items-center justify-between border-b-[0.5px] border-[#1E1E1E] bg-[#080808] px-5 py-3 backdrop-blur">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#1B1B1B] p-2">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#1B1B1B] p-1">
             <FileText className="h-4 w-4 text-[#FFFFFF]" />
           </div>
           <div className="min-w-0">
@@ -167,7 +167,7 @@ function SlideWorkspace() {
             <button
               type="button"
               onClick={() => setZoom((current) => Math.max(0.4, Number((current - 0.1).toFixed(2))))}
-              className="flex items-center gap-1 rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]"
+              className="flex items-center gap-1 rounded-md bg-[#1B1B1B] p-1 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]"
             >
               <Search className="h-4 w-4" />
               <Minus className="h-3 w-3" />
@@ -177,20 +177,20 @@ function SlideWorkspace() {
             <button
               type="button"
               onClick={() => setZoom((current) => Math.min(1.4, Number((current + 0.1).toFixed(2))))}
-              className="flex items-center gap-1 rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]"
+              className="flex items-center gap-1 rounded-md bg-[#1B1B1B] p-1 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]"
             >
               <Search className="h-4 w-4" />
               <Plus className="h-3 w-3" />
               <span className="sr-only">Zoom mais</span>
             </button>
           </div>
-          <button type="button" className="flex h-10 w-10 items-center justify-center rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
+          <button type="button" className="flex h-10 w-10 items-center justify-center rounded-md bg-[#1B1B1B] p-1 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
             <MessageCircleMore className="h-4 w-4" />
           </button>
-          <button type="button" className="flex h-10 w-10 items-center justify-center rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
+          <button type="button" className="flex h-10 w-10 items-center justify-center rounded-md bg-[#1B1B1B] p-1 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
             <Download className="h-4 w-4" />
           </button>
-          <button type="button" className="flex h-10 w-10 items-center justify-center rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
+          <button type="button" className="flex h-10 w-10 items-center justify-center rounded-md bg-[#1B1B1B] p-1 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
             <Play className="h-4 w-4" />
           </button>
           <button type="button" className="flex h-10 items-center justify-center rounded-md bg-[#1B1B1B] px-4 text-[14px] font-medium text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
