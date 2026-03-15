@@ -7,7 +7,7 @@ import { DataProvider } from '@/products/bi/json-render/context'
 import { parseDashboardTemplateDslToTree } from '@/products/bi/json-render/parsers/dashboardTemplateDslParser'
 import { registry } from '@/products/bi/json-render/registry'
 import { Renderer } from '@/products/bi/json-render/renderer'
-import { APPS_FINANCEIRO_TEMPLATE_DSL } from '@/products/bi/shared/templates/appsFinanceiroTemplate'
+import { APPS_VENDAS_TEMPLATE_DSL } from '@/products/bi/shared/templates/appsVendasTemplate'
 
 type AnyRecord = Record<string, any>
 
@@ -34,7 +34,7 @@ function DashboardCanvas({ tree, zoom }: { tree: any; zoom: number }) {
 }
 
 export default function DashboardPage() {
-  const parsed = useMemo(() => parseDashboardTemplateDslToTree(APPS_FINANCEIRO_TEMPLATE_DSL), [])
+  const parsed = useMemo(() => parseDashboardTemplateDslToTree(APPS_VENDAS_TEMPLATE_DSL), [])
   const rootName = useMemo(() => getDashboardTitle(parsed), [parsed])
   const [zoom, setZoom] = useState(0.82)
 
