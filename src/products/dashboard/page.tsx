@@ -51,17 +51,17 @@ export default function DashboardPage() {
   return (
     <DataProvider initialData={{ ui: {}, filters: {}, dashboard: {} }}>
       <div className="flex h-screen flex-col bg-[#F7F7F6] tracking-[-0.03em] text-[#3F3F3D]">
-        <header className="flex items-center justify-between border-b-[0.5px] border-[#B7B7B2] bg-[#F7F7F6] px-5 py-3 backdrop-blur">
+        <header className="flex items-center justify-between border-b-[0.5px] border-[#CDCDC8] bg-[#F7F7F6] px-5 py-3 backdrop-blur">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex shrink-0 items-center justify-center rounded-md border-[0.5px] border-[#8D8D88] bg-[#ECECEB] p-2">
+            <div className="flex shrink-0 items-center justify-center rounded-md border-[0.5px] border-[#C7C7C2] bg-[#ECECEB] p-2">
               <Icon icon="solar:widget-5-bold" className="h-4 w-4 text-[#5F5F5A]" />
             </div>
             <div className="min-w-0">
-              <div className="truncate text-[16px] font-semibold text-[#4F4F4B]">{rootName}</div>
+              <div className="truncate text-[16px] font-semibold text-[#1F1F1D]">{rootName}</div>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <div className="mr-2 flex items-center gap-1 rounded-xl border-[0.5px] border-[#8D8D88] bg-[#ECECEB] px-1 py-1">
+            <div className="mr-2 flex items-center gap-1 rounded-xl border-[0.5px] border-[#C7C7C2] bg-[#ECECEB] px-1 py-1">
               <button
                 type="button"
                 onClick={() => setZoom((current) => Math.max(0.5, Number((current - 0.1).toFixed(2))))}
@@ -80,13 +80,13 @@ export default function DashboardPage() {
                 <span className="sr-only">Zoom mais</span>
               </button>
             </div>
-            <button type="button" className="flex items-center justify-center rounded-md border-[0.5px] border-[#8D8D88] bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]">
+            <button type="button" className="flex items-center justify-center rounded-md border-[0.5px] border-[#C7C7C2] bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]">
               <Icon icon="solar:chat-round-dots-bold" className="h-4 w-4" />
             </button>
-            <button type="button" className="flex items-center justify-center rounded-md border-[0.5px] border-[#8D8D88] bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]">
+            <button type="button" className="flex items-center justify-center rounded-md border-[0.5px] border-[#C7C7C2] bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]">
               <Icon icon="solar:download-square-bold" className="h-4 w-4" />
             </button>
-            <button type="button" className="flex items-center justify-center rounded-md border-[0.5px] border-[#8D8D88] bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]">
+            <button type="button" className="flex items-center justify-center rounded-md border-[0.5px] border-[#C7C7C2] bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]">
               <Icon icon="solar:playback-speed-bold" className="h-4 w-4" />
             </button>
             <button
@@ -95,7 +95,7 @@ export default function DashboardPage() {
                 setDraftThemeName(appliedThemeName)
                 setIsThemeModalOpen(true)
               }}
-              className="flex items-center justify-center rounded-md border-[0.5px] border-[#8D8D88] bg-[#ECECEB] px-2 py-[0.35rem] text-[14px] font-medium text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]"
+              className="flex items-center justify-center rounded-md border-[0.5px] border-[#C7C7C2] bg-[#ECECEB] px-2 py-[0.35rem] text-[14px] font-medium text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]"
             >
               Tema
             </button>
@@ -105,7 +105,7 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        <main className="min-h-0 flex-1 overflow-auto border-r-[0.5px] border-[#B7B7B2] bg-[#EEEEEB]">
+        <main className="min-h-0 flex-1 overflow-auto border-r-[0.5px] border-[#CDCDC8] bg-[#EEEEEB]">
           <div className="mx-auto flex min-h-full items-start justify-center p-8">
             <DashboardCanvas tree={parsed} zoom={zoom} />
           </div>
