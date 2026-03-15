@@ -66,7 +66,7 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={() => setActiveView('preview')}
-                className={`flex items-center justify-center rounded-md p-2 transition ${
+                className={`m-[1px] flex items-center justify-center rounded-md p-2 transition ${
                   activeView === 'preview'
                     ? 'bg-white text-[#1F1F1D]'
                     : 'bg-[#ECECEB] text-[#5F5F5A] hover:bg-[#E2E2E0] hover:text-[#4F4F4B]'
@@ -78,7 +78,7 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={() => setActiveView('code')}
-                className={`flex items-center justify-center rounded-md p-2 transition ${
+                className={`m-[1px] flex items-center justify-center rounded-md p-2 transition ${
                   activeView === 'code'
                     ? 'bg-white text-[#1F1F1D]'
                     : 'bg-[#ECECEB] text-[#5F5F5A] hover:bg-[#E2E2E0] hover:text-[#4F4F4B]'
