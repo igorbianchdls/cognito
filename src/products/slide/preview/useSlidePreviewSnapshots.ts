@@ -45,7 +45,7 @@ export function useSlidePreviewSnapshots({
         if (cancelled) return
         setStatusByPageId((current) => ({ ...current, [activePageId]: 'error' }))
       }
-    }, 500)
+    }, 1200)
 
     return () => {
       cancelled = true

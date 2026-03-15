@@ -152,8 +152,8 @@ function SlideWorkspace() {
   })
 
   return (
-    <div className="flex h-screen flex-col bg-[#323639] tracking-[-0.03em] text-[#F2F3F4]">
-      <header className="flex items-center justify-between border-b border-[#454A4F] bg-[#323639] px-5 py-3 backdrop-blur">
+    <div className="flex h-screen flex-col bg-[#080808] tracking-[-0.03em] text-[#F2F3F4]">
+      <header className="flex items-center justify-between border-b border-[#454A4F] bg-[#080808] px-5 py-3 backdrop-blur">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#252523]">
             <FileText className="h-5 w-5 text-[#F2F2F2]" />
@@ -164,47 +164,47 @@ function SlideWorkspace() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="mr-2 flex items-center gap-1 rounded-full border border-[#555B61] bg-[#3A3F44] px-1 py-1">
+          <div className="mr-2 flex items-center gap-1 rounded-lg border border-[#2B2B2B] bg-[#1B1B1B] px-1 py-1">
             <button
               type="button"
               onClick={() => setZoom((current) => Math.max(0.4, Number((current - 0.1).toFixed(2))))}
-              className="flex items-center gap-1 rounded-full p-2 text-[#E6E8EA] transition hover:bg-[#4A5056] hover:text-[#E6E8EA]"
+              className="flex items-center gap-1 rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]"
             >
               <Search className="h-4 w-4" />
               <Minus className="h-3 w-3" />
               <span className="sr-only">Zoom menos</span>
             </button>
-            <span className="min-w-[56px] text-center text-xs font-medium text-[#E6E8EA]">{Math.round(zoom * 100)}%</span>
+            <span className="min-w-[56px] text-center text-xs font-medium text-[#FFFFFF]">{Math.round(zoom * 100)}%</span>
             <button
               type="button"
               onClick={() => setZoom((current) => Math.min(1.4, Number((current + 0.1).toFixed(2))))}
-              className="flex items-center gap-1 rounded-full p-2 text-[#E6E8EA] transition hover:bg-[#4A5056] hover:text-[#E6E8EA]"
+              className="flex items-center gap-1 rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]"
             >
               <Search className="h-4 w-4" />
               <Plus className="h-3 w-3" />
               <span className="sr-only">Zoom mais</span>
             </button>
           </div>
-          <button type="button" className="rounded-full p-2 text-[#E6E8EA] transition hover:bg-[#4A5056] hover:text-[#E6E8EA]">
+          <button type="button" className="rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
             <MessageCircleMore className="h-4 w-4" />
           </button>
-          <button type="button" className="rounded-full p-2 text-[#E6E8EA] transition hover:bg-[#4A5056] hover:text-[#E6E8EA]">
+          <button type="button" className="rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
             <Download className="h-4 w-4" />
           </button>
-          <button type="button" className="rounded-full p-2 text-[#E6E8EA] transition hover:bg-[#4A5056] hover:text-[#E6E8EA]">
+          <button type="button" className="rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
             <Play className="h-4 w-4" />
           </button>
-          <button type="button" className="rounded-full p-2 text-[#E6E8EA] transition hover:bg-[#4A5056] hover:text-[#E6E8EA]">
+          <button type="button" className="rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
             <MoreHorizontal className="h-4 w-4" />
           </button>
-          <button type="button" className="rounded-full p-2 text-[#E6E8EA] transition hover:bg-[#4A5056] hover:text-[#E6E8EA]">
+          <button type="button" className="rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
             <X className="h-4 w-4" />
           </button>
         </div>
       </header>
 
       <div className="flex min-h-0 flex-1">
-        <aside className="w-[210px] shrink-0 overflow-auto border-r border-[#454A4F] bg-[#323639] px-3 py-4">
+        <aside className="w-[210px] shrink-0 overflow-auto border-r border-[#454A4F] bg-[#080808] px-3 py-4">
           <div className="space-y-4">
             {pages.map((page, index) => {
               const pageId = getPageId(page, index)
@@ -221,7 +221,7 @@ function SlideWorkspace() {
           </div>
         </aside>
 
-        <main className="min-h-0 flex-1 overflow-auto bg-[#525659]">
+        <main className="min-h-0 flex-1 overflow-auto border-r border-[#454A4F] bg-[#121212]">
           <div className="mx-auto flex min-h-full items-start justify-center p-8">
             {activePage ? <SlideCanvas tree={activeTree} zoom={zoom} slideElementRef={slideElementRef} /> : null}
           </div>
