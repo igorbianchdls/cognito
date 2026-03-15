@@ -72,7 +72,7 @@ function ReportThumbnail({
       type="button"
       onClick={onClick}
       className={`w-full rounded-2xl px-2 py-2 text-left transition ${
-        selected ? 'bg-transparent' : 'bg-transparent hover:bg-white/30'
+        selected ? 'border-2 border-[#0075E2] bg-transparent' : 'border-2 border-transparent bg-transparent hover:bg-white/30'
       }`}
     >
       <div className="mb-2 overflow-hidden rounded-xl border border-slate-300 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
@@ -82,7 +82,11 @@ function ReportThumbnail({
         />
       </div>
       <div className="flex justify-center px-1">
-        <div className="flex h-6 w-6 items-center justify-center text-[14px] font-semibold text-[#6A6A68]">
+        <div
+          className={`flex h-6 min-w-6 items-center justify-center rounded-sm px-2 text-[14px] font-semibold ${
+            selected ? 'bg-[#0075E2] text-white' : 'text-[#6A6A68]'
+          }`}
+        >
           {index + 1}
         </div>
       </div>
