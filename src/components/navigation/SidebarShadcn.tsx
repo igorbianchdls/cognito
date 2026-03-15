@@ -1,15 +1,8 @@
 "use client"
 
 import * as React from "react"
+import { Icon } from "@iconify/react"
 import { usePathname, useRouter } from "next/navigation"
-import {
-  MessageSquare,
-  Plug,
-  Cpu,
-  Plus,
-} from "lucide-react"
-import { Folder as FolderIcon } from 'lucide-react'
-import { Inbox, MessageCircle } from 'lucide-react'
 
 import MetaIcon from "@/components/icons/MetaIcon"
 import GoogleAdsIcon from "@/components/icons/GoogleAdsIcon"
@@ -34,6 +27,19 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar"
+
+function SidebarGlyph({ icon, className }: { icon: string; className?: string }) {
+  return <Icon icon={icon} className={className} />
+}
+
+const BrandIcon = (props: { className?: string }) => <SidebarGlyph icon="solar:widget-5-bold" {...props} />
+const ChatsIcon = (props: { className?: string }) => <SidebarGlyph icon="solar:chat-round-dots-bold" {...props} />
+const AutomationIcon = (props: { className?: string }) => <SidebarGlyph icon="solar:cpu-bolt-bold" {...props} />
+const IntegrationsIcon = (props: { className?: string }) => <SidebarGlyph icon="solar:plug-circle-bold" {...props} />
+const WhatsappIcon = (props: { className?: string }) => <SidebarGlyph icon="solar:chat-round-line-bold" {...props} />
+const DriveIcon = (props: { className?: string }) => <SidebarGlyph icon="solar:folder-with-files-bold" {...props} />
+const EmailIcon = (props: { className?: string }) => <SidebarGlyph icon="solar:inbox-bold" {...props} />
+const NewChatIcon = (props: { className?: string }) => <SidebarGlyph icon="solar:add-circle-bold" {...props} />
 
 // Font variable mapping helper
 function fontVar(name?: string) {
@@ -81,7 +87,7 @@ const navigationData = {
   teams: [
     {
       name: "Alfred",
-      logo: Cpu,
+      logo: BrandIcon,
       plan: "Professional",
     },
   ],
@@ -89,33 +95,33 @@ const navigationData = {
     {
       title: "Chats",
       url: "/chat/lista",
-      icon: MessageSquare,
+      icon: ChatsIcon,
     },
     {
       title: "Automacoes",
       url: "/automacoes",
-      icon: Cpu,
+      icon: AutomationIcon,
     },
     {
       title: "Integrações",
       url: "/integracoes",
-      icon: Plug,
+      icon: IntegrationsIcon,
     },
     // Keep these three at the end, in order: WhatsApp, Drive, Email
     {
       title: "WhatsApp",
       url: "/whatsapp",
-      icon: MessageCircle,
+      icon: WhatsappIcon,
     },
     {
       title: "Drive",
       url: "/drive",
-      icon: FolderIcon,
+      icon: DriveIcon,
     },
     {
       title: "Email",
       url: "/email",
-      icon: Inbox,
+      icon: EmailIcon,
     },
   ],
   integrations: [
@@ -208,7 +214,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
     >
       <SidebarHeader className={cn("h-16 p-0")} style={{ backgroundColor: 'var(--sidebar)' }}>
         <div className="h-full w-full flex items-center justify-start gap-2 px-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-          <Cpu className="h-4 w-4 text-black shrink-0" />
+          <BrandIcon className="h-4 w-4 text-black shrink-0" />
           <span className="text-black font-bold text-base leading-none group-data-[collapsible=icon]:hidden">Creatto</span>
         </div>
       </SidebarHeader>
@@ -220,7 +226,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
             className="w-full h-8 inline-flex items-center justify-center gap-2 rounded-md bg-white border border-gray-200 text-black text-sm hover:bg-gray-50 group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:gap-0"
             title="Novo Chat"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <NewChatIcon className="w-3.5 h-3.5" />
             <span className="group-data-[collapsible=icon]:hidden">Novo Chat</span>
           </button>
         </div>
