@@ -10,7 +10,7 @@ import {
   type CreateDashboardInput,
   type DashboardToolParserState,
 } from '@/products/bi/features/dashboard-playground/tool-parser/dashboardToolParser'
-import { renderDashboardTemplateDslFromTree } from '@/products/bi/features/dashboard-playground/parsers/dashboardTemplateDslParser'
+import { renderDashboardTemplateDslFromTree } from '@/products/bi/json-render/parsers/dashboardTemplateDslParser'
 
 export const runtime = 'nodejs'
 
