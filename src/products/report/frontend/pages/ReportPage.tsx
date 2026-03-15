@@ -61,12 +61,12 @@ function buildPageRenderTree(page: AnyRecord, themeNode: AnyRecord | null): any 
 }
 
 function ReportThumbnail({
-  preview,
+  previewSrc,
   selected,
   index,
   onClick,
 }: {
-  preview?: { html: string }
+  previewSrc?: string
   selected: boolean
   index: number
   onClick: () => void
@@ -80,8 +80,8 @@ function ReportThumbnail({
       <ReportPreviewThumbnail
         alt={`Preview da página ${index + 1}`}
         height={Math.round(A4_HEIGHT * THUMB_SCALE)}
-        preview={preview}
         selected={selected}
+        src={previewSrc}
         width={THUMB_WIDTH}
       />
       <div className="flex justify-center px-1">
@@ -211,7 +211,7 @@ function ReportWorkspace() {
               return (
                 <ReportThumbnail
                   key={pageId}
-                  preview={previewsByPageId[pageId]}
+                  previewSrc={previewsByPageId[pageId]}
                   selected={pageId === activePageId}
                   index={index}
                   onClick={() => setActivePageId(pageId)}
