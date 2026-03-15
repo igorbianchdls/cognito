@@ -1,7 +1,7 @@
 'use client'
 
 import { RefObject, useEffect, useMemo, useRef, useState } from 'react'
-import { Download, FileText, MessageCircleMore, Minus, MoreHorizontal, Play, Plus, Search, X } from 'lucide-react'
+import { Download, FileText, MessageCircleMore, Minus, Play, Plus, Search } from 'lucide-react'
 
 import { parseDashboardTemplateDslToTree } from '@/products/bi/json-render/parsers/dashboardTemplateDslParser'
 import { DataProvider } from '@/products/bi/json-render/context'
@@ -193,11 +193,11 @@ function SlideWorkspace() {
           <button type="button" className="flex h-10 w-10 items-center justify-center rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
             <Play className="h-4 w-4" />
           </button>
-          <button type="button" className="flex h-10 w-10 items-center justify-center rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
-            <MoreHorizontal className="h-4 w-4" />
+          <button type="button" className="flex h-10 items-center justify-center rounded-md bg-[#1B1B1B] px-4 text-[14px] font-medium text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
+            Invite
           </button>
-          <button type="button" className="flex h-10 w-10 items-center justify-center rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
-            <X className="h-4 w-4" />
+          <button type="button" className="flex h-10 items-center justify-center rounded-md bg-[#039AFE] px-4 text-[14px] font-medium text-[#FFFFFF] transition hover:bg-[#028ae0] hover:text-[#FFFFFF]">
+            Publish
           </button>
         </div>
       </header>
