@@ -1,7 +1,6 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { type LucideIcon } from "lucide-react"
 
 import {
   SidebarGroup,
@@ -10,6 +9,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+
+type SidebarIconComponent = React.ComponentType<{
+  className?: string
+  style?: React.CSSProperties
+}>
 
 export function NavMainSimple({
   items,
@@ -20,7 +24,7 @@ export function NavMainSimple({
   items: {
     title: string
     url: string
-    icon?: LucideIcon
+    icon?: SidebarIconComponent
     isActive?: boolean
   }[]
   groupLabelStyle?: React.CSSProperties
