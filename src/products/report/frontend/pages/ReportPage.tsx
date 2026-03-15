@@ -1,12 +1,14 @@
 'use client'
 
 import { RefObject, useEffect, useMemo, useRef, useState } from 'react'
-import { Download, FileText, MessageCircleMore, Minus, MoreHorizontal, Play, Plus, Search, X } from 'lucide-react'
+import { Icon } from '@iconify/react'
 
 import { parseDashboardTemplateDslToTree } from '@/products/bi/json-render/parsers/dashboardTemplateDslParser'
 import { DataProvider } from '@/products/bi/json-render/context'
 import { registry } from '@/products/bi/json-render/registry'
 import { Renderer } from '@/products/bi/json-render/renderer'
+import { ReportPdfExportStage } from '@/products/report/export/ReportPdfExportStage'
+import { useReportPdfExport } from '@/products/report/export/useReportPdfExport'
 import { ReportPreviewThumbnail } from '@/products/report/preview/ReportPreviewThumbnail'
 import { useReportPreviewSnapshots } from '@/products/report/preview/useReportPreviewSnapshots'
 import { REPORT_TEMPLATE_DSL } from '@/products/report/shared/templates/reportTemplate'
@@ -125,6 +127,7 @@ function ReportWorkspace() {
   const [activePageId, setActivePageId] = useState('')
   const [zoom, setZoom] = useState(0.9)
   const reportElementRef = useRef<HTMLDivElement | null>(null)
+  const exportElementRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     if (!pages.length) return
@@ -141,6 +144,14 @@ function ReportWorkspace() {
     () => (activePage ? buildPageRenderTree(activePage, themeNode) : []),
     [activePage, themeNode],
   )
+  const exportPages = useMemo(
+    () =>
+      pages.map((page, index) => ({
+        pageId: getPageId(page, index),
+        tree: buildPageRenderTree(page, themeNode),
+      })),
+    [pages, themeNode],
+  )
   const captureKey = useMemo(
     () => `${activePageId}:${pages.length}:${Boolean(activePage)}:${Boolean(themeNode)}`,
     [activePageId, pages.length, activePage, themeNode],
@@ -150,61 +161,73 @@ function ReportWorkspace() {
     captureKey,
     reportElementRef,
   })
+  const {
+    activeExportPage,
+    error: exportError,
+    isExporting,
+    startExport,
+  } = useReportPdfExport({
+    fileName: rootName,
+    pages: exportPages,
+    reportElementRef: exportElementRef,
+  })
 
   return (
-    <div className="flex h-screen flex-col bg-[#F6F6F4] tracking-[-0.03em] text-slate-800">
-      <header className="flex items-center justify-between border-b border-slate-200 bg-[#F6F6F4] px-5 py-3 backdrop-blur">
+    <div className="flex h-screen flex-col bg-[#080808] tracking-[-0.03em] text-[#F2F3F4]">
+      <header className="flex items-center justify-between border-b-[0.5px] border-[#1E1E1E] bg-[#080808] px-5 py-3 backdrop-blur">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#252523]">
-            <FileText className="h-5 w-5 text-[#F2F2F2]" />
+          <div className="flex shrink-0 items-center justify-center rounded-md bg-[#1B1B1B] p-2">
+            <Icon icon="solar:document-bold" className="h-4 w-4 text-[#FFFFFF]" />
           </div>
           <div className="min-w-0">
-            <div className="truncate text-[16px] font-semibold text-[#595957]">{rootName}</div>
-            <div className="text-sm text-[#B4B4B1]">Salvo</div>
+            <div className="truncate text-[16px] font-semibold text-[#D8D8D8]">{rootName}</div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="mr-2 flex items-center gap-1 rounded-full border border-slate-200 bg-white px-1 py-1">
+          <div className="mr-2 flex items-center gap-1 rounded-xl border-[0.5px] border-[#1E1E1E] bg-[#1B1B1B] px-1 py-1">
             <button
               type="button"
               onClick={() => setZoom((current) => Math.max(0.5, Number((current - 0.1).toFixed(2))))}
-              className="flex items-center gap-1 rounded-full p-2 text-[#71716F] transition hover:bg-slate-100 hover:text-[#71716F]"
+              className="flex items-center rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]"
             >
-              <Search className="h-4 w-4" />
-              <Minus className="h-3 w-3" />
+              <Icon icon="solar:minus-square-bold" className="h-3.5 w-3.5" />
               <span className="sr-only">Zoom menos</span>
             </button>
-            <span className="min-w-[56px] text-center text-xs font-medium text-slate-600">{Math.round(zoom * 100)}%</span>
+            <span className="min-w-[56px] text-center text-xs font-medium text-[#FFFFFF]">{Math.round(zoom * 100)}%</span>
             <button
               type="button"
               onClick={() => setZoom((current) => Math.min(1.6, Number((current + 0.1).toFixed(2))))}
-              className="flex items-center gap-1 rounded-full p-2 text-[#71716F] transition hover:bg-slate-100 hover:text-[#71716F]"
+              className="flex items-center rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]"
             >
-              <Search className="h-4 w-4" />
-              <Plus className="h-3 w-3" />
+              <Icon icon="solar:add-square-bold" className="h-3.5 w-3.5" />
               <span className="sr-only">Zoom mais</span>
             </button>
           </div>
-          <button type="button" className="rounded-full p-2 text-[#71716F] transition hover:bg-slate-100 hover:text-[#71716F]">
-            <MessageCircleMore className="h-4 w-4" />
+          <button type="button" className="flex items-center justify-center rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
+            <Icon icon="solar:chat-round-dots-bold" className="h-4 w-4" />
           </button>
-          <button type="button" className="rounded-full p-2 text-[#71716F] transition hover:bg-slate-100 hover:text-[#71716F]">
-            <Download className="h-4 w-4" />
+          <button type="button" className="flex items-center justify-center rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
+            <Icon icon="solar:download-square-bold" className="h-4 w-4" />
           </button>
-          <button type="button" className="rounded-full p-2 text-[#71716F] transition hover:bg-slate-100 hover:text-[#71716F]">
-            <Play className="h-4 w-4" />
+          <button type="button" className="flex items-center justify-center rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
+            <Icon icon="solar:playback-speed-bold" className="h-4 w-4" />
           </button>
-          <button type="button" className="rounded-full p-2 text-[#71716F] transition hover:bg-slate-100 hover:text-[#71716F]">
-            <MoreHorizontal className="h-4 w-4" />
+          <button type="button" className="flex items-center justify-center rounded-md bg-[#1B1B1B] px-2 py-[0.35rem] text-[14px] font-medium text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
+            Invite
           </button>
-          <button type="button" className="rounded-full p-2 text-[#71716F] transition hover:bg-slate-100 hover:text-[#71716F]">
-            <X className="h-4 w-4" />
+          <button
+            type="button"
+            onClick={startExport}
+            disabled={isExporting}
+            className="flex items-center justify-center rounded-md bg-[#039AFE] px-2 py-[0.35rem] text-[14px] font-medium text-[#FFFFFF] transition hover:bg-[#028ae0] hover:text-[#FFFFFF] disabled:cursor-default disabled:opacity-70"
+          >
+            {isExporting ? 'Exportando...' : 'Exportar'}
           </button>
         </div>
       </header>
 
       <div className="flex min-h-0 flex-1">
-        <aside className="w-[210px] shrink-0 overflow-auto border-r border-slate-200 bg-[#E5E5E5] px-3 py-4">
+        <aside className="w-[210px] shrink-0 overflow-auto border-r-[0.5px] border-[#1E1E1E] bg-[#080808] px-3 py-4">
           <div className="space-y-4">
             {pages.map((page, index) => {
               const pageId = getPageId(page, index)
@@ -221,12 +244,19 @@ function ReportWorkspace() {
           </div>
         </aside>
 
-        <main className="min-h-0 flex-1 overflow-auto bg-[#F6F6F4]">
+        <main className="min-h-0 flex-1 overflow-auto border-r-[0.5px] border-[#1E1E1E] bg-[#121212]">
           <div className="mx-auto flex min-h-full items-start justify-center p-8">
             {activePage ? <ReportCanvas tree={activeTree} zoom={zoom} reportElementRef={reportElementRef} /> : null}
           </div>
         </main>
       </div>
+      {exportError ? <div className="sr-only">{exportError}</div> : null}
+      <ReportPdfExportStage
+        height={A4_HEIGHT}
+        reportElementRef={exportElementRef}
+        tree={activeExportPage?.tree || null}
+        width={A4_WIDTH}
+      />
     </div>
   )
 }
