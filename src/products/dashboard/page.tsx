@@ -7,8 +7,6 @@ import { DataProvider } from '@/products/bi/json-render/context'
 import { parseDashboardTemplateDslToTree } from '@/products/bi/json-render/parsers/dashboardTemplateDslParser'
 import { registry } from '@/products/bi/json-render/registry'
 import { Renderer } from '@/products/bi/json-render/renderer'
-import { ThemeProvider } from '@/products/bi/json-render/theme/ThemeContext'
-import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter'
 import { APPS_THEME_OPTIONS } from '@/products/bi/shared/themeOptions'
 import { APPS_VENDAS_TEMPLATE_DSL } from '@/products/bi/shared/templates/appsVendasTemplate'
 import { DashboardThemeModal } from '@/products/dashboard/theme-modal'
@@ -27,48 +25,28 @@ function getDashboardTitle(tree: unknown) {
   return title || name || 'Dashboard'
 }
 
-function applyThemeToTree(tree: any, themeName: string) {
-  if (!tree || !Array.isArray(tree.children)) return tree
-
-  const children = tree.children.map((child: any) => {
-    if (!child || child.type !== 'Theme') return child
-    return {
-      ...child,
-      props: {
-        ...(child.props || {}),
-        name: themeName,
-      },
-    }
-  })
-
-  return {
-    ...tree,
-    children,
-  }
+function applyThemeToDsl(dsl: string, themeName: string) {
+  return dsl.replace(/<Theme\s+name="[^"]+"/, `<Theme name="${themeName}"`)
 }
 
-function DashboardCanvas({ tree, zoom, themeName }: { tree: any; zoom: number; themeName: string }) {
-  const themeVars = useMemo(() => buildThemeVars(themeName), [themeName])
-
+function DashboardCanvas({ tree, zoom }: { tree: any; zoom: number }) {
   return (
     <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}>
       <div className="min-w-[1120px] overflow-hidden rounded-none border border-slate-200 bg-white shadow-[0_2px_6px_rgba(15,23,42,0.05)]">
-        <ThemeProvider name={themeName} cssVars={themeVars.cssVars}>
-          <Renderer tree={tree} registry={registry} />
-        </ThemeProvider>
+        <Renderer tree={tree} registry={registry} />
       </div>
     </div>
   )
 }
 
 export default function DashboardPage() {
-  const parsed = useMemo(() => parseDashboardTemplateDslToTree(APPS_VENDAS_TEMPLATE_DSL), [])
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false)
   const [draftThemeName, setDraftThemeName] = useState('dark')
   const [appliedThemeName, setAppliedThemeName] = useState('dark')
   const [zoom, setZoom] = useState(0.82)
-  const themedTree = useMemo(() => applyThemeToTree(parsed, appliedThemeName), [parsed, appliedThemeName])
-  const rootName = useMemo(() => getDashboardTitle(themedTree), [themedTree])
+  const themedDsl = useMemo(() => applyThemeToDsl(APPS_VENDAS_TEMPLATE_DSL, appliedThemeName), [appliedThemeName])
+  const parsed = useMemo(() => parseDashboardTemplateDslToTree(themedDsl), [themedDsl])
+  const rootName = useMemo(() => getDashboardTitle(parsed), [parsed])
 
   return (
     <DataProvider initialData={{ ui: {}, filters: {}, dashboard: {} }}>
@@ -129,7 +107,7 @@ export default function DashboardPage() {
 
         <main className="min-h-0 flex-1 overflow-auto border-r-[0.5px] border-[#1E1E1E] bg-[#121212]">
           <div className="mx-auto flex min-h-full items-start justify-center p-8">
-            <DashboardCanvas tree={themedTree} zoom={zoom} themeName={appliedThemeName} />
+            <DashboardCanvas tree={parsed} zoom={zoom} />
           </div>
         </main>
         <DashboardThemeModal
