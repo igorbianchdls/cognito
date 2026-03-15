@@ -1,6 +1,10 @@
 'use client'
 
-export type ReportPreviewMap = Record<string, string>
+export interface ReportPreviewData {
+  html: string
+}
+
+export type ReportPreviewMap = Record<string, ReportPreviewData>
 
 export type ReportPreviewStatus = 'idle' | 'capturing' | 'ready' | 'error'
 

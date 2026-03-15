@@ -1,61 +1,29 @@
 'use client'
 
-declare global {
-  interface Window {
-    html2canvas?: (element: HTMLElement, options?: Record<string, unknown>) => Promise<HTMLCanvasElement>
-  }
-}
+import type { ReportPreviewData } from '@/products/report/preview/types'
 
-const HTML2CANVAS_SRC = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'
+function copyCanvasPixels(source: ParentNode, target: ParentNode) {
+  const sourceCanvases = Array.from(source.querySelectorAll('canvas'))
+  const targetCanvases = Array.from(target.querySelectorAll('canvas'))
 
-let html2canvasLoader: Promise<NonNullable<Window['html2canvas']>> | null = null
+  sourceCanvases.forEach((sourceCanvas, index) => {
+    const targetCanvas = targetCanvases[index]
+    if (!targetCanvas) return
 
-async function loadHtml2Canvas() {
-  if (typeof window === 'undefined') {
-    throw new Error('html2canvas is only available in the browser')
-  }
+    targetCanvas.width = sourceCanvas.width
+    targetCanvas.height = sourceCanvas.height
 
-  if (window.html2canvas) return window.html2canvas
+    const context = targetCanvas.getContext('2d')
+    if (!context) return
 
-  if (!html2canvasLoader) {
-    html2canvasLoader = new Promise((resolve, reject) => {
-      const existingScript = document.querySelector<HTMLScriptElement>(`script[data-report-preview="html2canvas"]`)
-
-      if (existingScript) {
-        existingScript.addEventListener('load', () => {
-          if (window.html2canvas) resolve(window.html2canvas)
-        })
-        existingScript.addEventListener('error', () => reject(new Error('Failed to load html2canvas')))
-        return
-      }
-
-      const script = document.createElement('script')
-      script.src = HTML2CANVAS_SRC
-      script.async = true
-      script.dataset.reportPreview = 'html2canvas'
-      script.onload = () => {
-        if (window.html2canvas) {
-          resolve(window.html2canvas)
-          return
-        }
-        reject(new Error('html2canvas did not initialize'))
-      }
-      script.onerror = () => reject(new Error('Failed to load html2canvas'))
-      document.head.appendChild(script)
-    })
-  }
-
-  return html2canvasLoader
-}
-
-export async function captureReportPreview(element: HTMLElement): Promise<string> {
-  const html2canvas = await loadHtml2Canvas()
-  const canvas = await html2canvas(element, {
-    backgroundColor: '#ffffff',
-    logging: false,
-    scale: 0.35,
-    useCORS: true,
+    context.drawImage(sourceCanvas, 0, 0)
   })
+}
 
-  return canvas.toDataURL('image/png')
+export async function captureReportPreview(element: HTMLElement): Promise<ReportPreviewData> {
+  const clone = element.cloneNode(true) as HTMLDivElement
+  copyCanvasPixels(element, clone)
+  return {
+    html: clone.innerHTML,
+  }
 }
