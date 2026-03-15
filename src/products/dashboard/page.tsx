@@ -32,7 +32,7 @@ function applyThemeToDsl(dsl: string, themeName: string) {
 function DashboardCanvas({ tree, zoom }: { tree: any; zoom: number }) {
   return (
     <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}>
-      <div className="min-w-[1120px] overflow-hidden rounded-none border border-slate-200 bg-white shadow-[0_2px_6px_rgba(15,23,42,0.05)]">
+      <div className="min-w-[1120px] overflow-hidden rounded-none bg-white shadow-[0_2px_6px_rgba(15,23,42,0.05)]">
         <Renderer tree={tree} registry={registry} />
       </div>
     </div>
