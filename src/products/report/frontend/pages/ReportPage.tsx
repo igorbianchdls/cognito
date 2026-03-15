@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Download, MessageCircleMore, Minus, MoreHorizontal, Play, Plus, Search, X } from 'lucide-react'
+import { Download, FileText, MessageCircleMore, Minus, MoreHorizontal, Play, Plus, Search, X } from 'lucide-react'
 
 import { parseDashboardTemplateDslToTree } from '@/products/bi/json-render/parsers/dashboardTemplateDslParser'
 import { DataProvider } from '@/products/bi/json-render/context'
@@ -48,12 +48,6 @@ function getPageId(page: AnyRecord, index: number): string {
   return raw || `page_${index + 1}`
 }
 
-function getPageTitle(page: AnyRecord, index: number): string {
-  const props = isRecord(page.props) ? (page.props as AnyRecord) : {}
-  const raw = typeof props.title === 'string' && props.title.trim() ? props.title.trim() : ''
-  return raw || `Página ${index + 1}`
-}
-
 function buildPageRenderTree(page: AnyRecord, themeNode: AnyRecord | null): any {
   const pageChildren = Array.isArray(page.children) ? page.children : []
   if (!themeNode) return pageChildren
@@ -67,22 +61,18 @@ function buildPageRenderTree(page: AnyRecord, themeNode: AnyRecord | null): any 
 function ReportThumbnail({
   selected,
   index,
-  title,
   onClick,
 }: {
   selected: boolean
   index: number
-  title: string
   onClick: () => void
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`w-full rounded-2xl border px-2 py-2 text-left transition ${
-        selected
-          ? 'border-blue-300 bg-white shadow-sm'
-          : 'border-transparent bg-transparent hover:border-slate-300 hover:bg-white/70'
+      className={`w-full rounded-2xl px-2 py-2 text-left transition ${
+        selected ? 'bg-transparent' : 'bg-transparent hover:bg-white/30'
       }`}
     >
       <div className="mb-2 overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm">
@@ -91,11 +81,10 @@ function ReportThumbnail({
           className="bg-white"
         />
       </div>
-      <div className="flex items-center gap-2 px-1">
-        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-600 text-xs font-semibold text-white">
+      <div className="flex justify-center px-1">
+        <div className="flex h-6 w-6 items-center justify-center text-xs font-semibold text-[#595957]">
           {index + 1}
         </div>
-        <div className="min-w-0 text-xs font-medium text-slate-700 truncate">{title}</div>
       </div>
     </button>
   )
@@ -137,18 +126,23 @@ function ReportWorkspace() {
   )
 
   return (
-    <div className="flex h-screen flex-col bg-[#f3f5f7] text-slate-800">
-      <header className="flex items-center justify-between border-b border-slate-200 bg-white/95 px-5 py-3 backdrop-blur">
-        <div className="min-w-0">
-          <div className="truncate text-lg font-semibold text-slate-800">{rootName}</div>
-          <div className="text-sm text-slate-500">Salvo</div>
+    <div className="flex h-screen flex-col bg-[#F6F6F4] text-slate-800">
+      <header className="flex items-center justify-between border-b border-slate-200 bg-[#F6F6F4] px-5 py-3 backdrop-blur">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#252523]">
+            <FileText className="h-5 w-5 text-[#F2F2F2]" />
+          </div>
+          <div className="min-w-0">
+            <div className="truncate text-lg font-semibold text-[#595957]">{rootName}</div>
+            <div className="text-sm text-[#C3C3C0]">Salvo</div>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <div className="mr-2 flex items-center gap-1 rounded-full border border-slate-200 bg-white px-1 py-1">
             <button
               type="button"
               onClick={() => setZoom((current) => Math.max(0.5, Number((current - 0.1).toFixed(2))))}
-              className="flex items-center gap-1 rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+              className="flex items-center gap-1 rounded-full p-2 text-[#71716F] transition hover:bg-slate-100 hover:text-[#71716F]"
             >
               <Search className="h-4 w-4" />
               <Minus className="h-3 w-3" />
@@ -158,43 +152,41 @@ function ReportWorkspace() {
             <button
               type="button"
               onClick={() => setZoom((current) => Math.min(1.6, Number((current + 0.1).toFixed(2))))}
-              className="flex items-center gap-1 rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+              className="flex items-center gap-1 rounded-full p-2 text-[#71716F] transition hover:bg-slate-100 hover:text-[#71716F]"
             >
               <Search className="h-4 w-4" />
               <Plus className="h-3 w-3" />
               <span className="sr-only">Zoom mais</span>
             </button>
           </div>
-          <button type="button" className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
+          <button type="button" className="rounded-full p-2 text-[#71716F] transition hover:bg-slate-100 hover:text-[#71716F]">
             <MessageCircleMore className="h-4 w-4" />
           </button>
-          <button type="button" className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
+          <button type="button" className="rounded-full p-2 text-[#71716F] transition hover:bg-slate-100 hover:text-[#71716F]">
             <Download className="h-4 w-4" />
           </button>
-          <button type="button" className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
+          <button type="button" className="rounded-full p-2 text-[#71716F] transition hover:bg-slate-100 hover:text-[#71716F]">
             <Play className="h-4 w-4" />
           </button>
-          <button type="button" className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
+          <button type="button" className="rounded-full p-2 text-[#71716F] transition hover:bg-slate-100 hover:text-[#71716F]">
             <MoreHorizontal className="h-4 w-4" />
           </button>
-          <button type="button" className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
+          <button type="button" className="rounded-full p-2 text-[#71716F] transition hover:bg-slate-100 hover:text-[#71716F]">
             <X className="h-4 w-4" />
           </button>
         </div>
       </header>
 
       <div className="flex min-h-0 flex-1">
-        <aside className="w-[210px] shrink-0 overflow-auto border-r border-slate-200 bg-[#e9edf1] px-3 py-4">
+        <aside className="w-[210px] shrink-0 overflow-auto border-r border-slate-200 bg-[#E5E5E5] px-3 py-4">
           <div className="space-y-4">
             {pages.map((page, index) => {
               const pageId = getPageId(page, index)
-              const pageTitle = getPageTitle(page, index)
               return (
                 <ReportThumbnail
                   key={pageId}
                   selected={pageId === activePageId}
                   index={index}
-                  title={pageTitle}
                   onClick={() => setActivePageId(pageId)}
                 />
               )
@@ -202,7 +194,7 @@ function ReportWorkspace() {
           </div>
         </aside>
 
-        <main className="min-h-0 flex-1 overflow-auto bg-[#f5f6f8]">
+        <main className="min-h-0 flex-1 overflow-auto bg-[#F6F6F4]">
           <div className="mx-auto flex min-h-full items-start justify-center p-8">
             {activePage ? <ReportCanvas tree={activeTree} zoom={zoom} /> : null}
           </div>
