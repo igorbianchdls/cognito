@@ -70,7 +70,8 @@ function concatUint8Arrays(parts: Uint8Array[]) {
 }
 
 function downloadPdf(bytes: Uint8Array, fileName: string) {
-  const arrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)
+  const arrayBuffer = new ArrayBuffer(bytes.byteLength)
+  new Uint8Array(arrayBuffer).set(bytes)
   const blob = new Blob([arrayBuffer], { type: 'application/pdf' })
   const url = URL.createObjectURL(blob)
   const anchor = document.createElement('a')
