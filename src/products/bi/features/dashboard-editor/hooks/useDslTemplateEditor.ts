@@ -15,7 +15,7 @@ import {
   replaceNodeProps as replaceNodePropsInTree,
   setNodePropByPath,
 } from '@/products/bi/features/dashboard-editor/lib/jsonTreeOps'
-import { parseDashboardTemplateDslToTree } from '@/products/bi/features/dashboard-playground/parsers/dashboardTemplateDslParser'
+import { parseDashboardTemplateDslToTree } from '@/products/bi/json-render/parsers/dashboardTemplateDslParser'
 
 function parseDsl(text: string): { tree: JsonTree; parseError: string | null } {
   try {

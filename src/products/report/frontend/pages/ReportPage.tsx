@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Download, MessageCircleMore, Minus, MoreHorizontal, Play, Plus, Search, X } from 'lucide-react'
 
-import { parseDashboardTemplateDslToTree } from '@/products/bi/features/dashboard-playground/parsers/dashboardTemplateDslParser'
+import { parseDashboardTemplateDslToTree } from '@/products/bi/json-render/parsers/dashboardTemplateDslParser'
 import { DataProvider } from '@/products/bi/json-render/context'
 import { registry } from '@/products/bi/json-render/registry'
 import { Renderer } from '@/products/bi/json-render/renderer'
