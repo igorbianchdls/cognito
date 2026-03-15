@@ -153,17 +153,17 @@ function SlideWorkspace() {
 
   return (
     <div className="flex h-screen flex-col bg-[#080808] tracking-[-0.03em] text-[#F2F3F4]">
-      <header className="flex items-center justify-between border-b-[0.5px] border-[#242424] bg-[#080808] px-5 py-3 backdrop-blur">
+      <header className="flex items-center justify-between border-b-[0.5px] border-[#1E1E1E] bg-[#080808] px-5 py-3 backdrop-blur">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#888888]">
-            <FileText className="h-4 w-4 text-[#080808]" />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#1B1B1B] p-2">
+            <FileText className="h-4 w-4 text-[#FFFFFF]" />
           </div>
           <div className="min-w-0">
             <div className="truncate text-[16px] font-semibold text-[#D8D8D8]">{rootName}</div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="mr-2 flex h-10 items-center gap-1 rounded-xl border-[0.5px] border-[#242424] bg-[#1B1B1B] px-1">
+          <div className="mr-2 flex h-10 items-center gap-1 rounded-xl border-[0.5px] border-[#1E1E1E] bg-[#1B1B1B] px-1">
             <button
               type="button"
               onClick={() => setZoom((current) => Math.max(0.4, Number((current - 0.1).toFixed(2))))}
@@ -203,7 +203,7 @@ function SlideWorkspace() {
       </header>
 
       <div className="flex min-h-0 flex-1">
-        <aside className="w-[210px] shrink-0 overflow-auto border-r-[0.5px] border-[#242424] bg-[#080808] px-3 py-4">
+        <aside className="w-[210px] shrink-0 overflow-auto border-r-[0.5px] border-[#1E1E1E] bg-[#080808] px-3 py-4">
           <div className="space-y-4">
             {pages.map((page, index) => {
               const pageId = getPageId(page, index)
@@ -220,7 +220,7 @@ function SlideWorkspace() {
           </div>
         </aside>
 
-        <main className="min-h-0 flex-1 overflow-auto border-r-[0.5px] border-[#242424] bg-[#121212]">
+        <main className="min-h-0 flex-1 overflow-auto border-r-[0.5px] border-[#1E1E1E] bg-[#121212]">
           <div className="mx-auto flex min-h-full items-start justify-center p-8">
             {activePage ? <SlideCanvas tree={activeTree} zoom={zoom} slideElementRef={slideElementRef} /> : null}
           </div>
