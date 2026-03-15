@@ -71,11 +71,13 @@ function ReportThumbnail({
     <button
       type="button"
       onClick={onClick}
-      className={`w-full rounded-2xl px-2 py-2 text-left transition ${
-        selected ? 'border-2 border-[#0075E2] bg-transparent' : 'border-2 border-transparent bg-transparent hover:bg-white/30'
-      }`}
+      className="w-full rounded-2xl px-2 py-2 text-left transition hover:bg-white/30"
     >
-      <div className="mb-2 overflow-hidden rounded-xl border border-slate-300 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+      <div
+        className={`mb-2 overflow-hidden rounded-xl bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] ${
+          selected ? 'border-2 border-[#0075E2]' : 'border border-slate-300'
+        }`}
+      >
         <div
           style={{ width: THUMB_WIDTH, height: Math.round(A4_HEIGHT * THUMB_SCALE) }}
           className="bg-white"

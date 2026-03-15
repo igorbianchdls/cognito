@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Download, MessageCircleMore, Minus, MoreHorizontal, Play, Plus, Search, X } from 'lucide-react'
+import { Download, FileText, MessageCircleMore, Minus, MoreHorizontal, Play, Plus, Search, X } from 'lucide-react'
 
 import { parseDashboardTemplateDslToTree } from '@/products/bi/json-render/parsers/dashboardTemplateDslParser'
 import { DataProvider } from '@/products/bi/json-render/context'
@@ -48,12 +48,6 @@ function getPageId(page: AnyRecord, index: number): string {
   return raw || `slide_${index + 1}`
 }
 
-function getPageTitle(page: AnyRecord, index: number): string {
-  const props = isRecord(page.props) ? (page.props as AnyRecord) : {}
-  const raw = typeof props.title === 'string' && props.title.trim() ? props.title.trim() : ''
-  return raw || `Slide ${index + 1}`
-}
-
 function buildPageRenderTree(page: AnyRecord, themeNode: AnyRecord | null): any {
   const pageChildren = Array.isArray(page.children) ? page.children : []
   if (!themeNode) return pageChildren
@@ -67,35 +61,36 @@ function buildPageRenderTree(page: AnyRecord, themeNode: AnyRecord | null): any 
 function SlideThumbnail({
   selected,
   index,
-  title,
   onClick,
 }: {
   selected: boolean
   index: number
-  title: string
   onClick: () => void
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`w-full rounded-2xl border px-2 py-2 text-left transition ${
-        selected
-          ? 'border-blue-300 bg-white shadow-sm'
-          : 'border-transparent bg-transparent hover:border-slate-300 hover:bg-white/70'
-      }`}
+      className="w-full rounded-2xl px-2 py-2 text-left transition hover:bg-white/10"
     >
-      <div className="mb-2 overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm">
+      <div
+        className={`mb-2 overflow-hidden rounded-xl bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] ${
+          selected ? 'border-2 border-[#0075E2]' : 'border border-slate-300'
+        }`}
+      >
         <div
           style={{ width: THUMB_WIDTH, height: Math.round(SLIDE_HEIGHT * THUMB_SCALE) }}
           className="bg-white"
         />
       </div>
-      <div className="flex items-center gap-2 px-1">
-        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-600 text-xs font-semibold text-white">
+      <div className="flex justify-center px-1">
+        <div
+          className={`flex h-6 min-w-6 items-center justify-center rounded-sm px-2 text-[14px] font-semibold ${
+            selected ? 'bg-[#0075E2] text-white' : 'text-[#D5D8DB]'
+          }`}
+        >
           {index + 1}
         </div>
-        <div className="min-w-0 truncate text-xs font-medium text-[#E6E8EA]">{title}</div>
       </div>
     </button>
   )
@@ -105,7 +100,7 @@ function SlideCanvas({ tree, zoom }: { tree: any; zoom: number }) {
   return (
     <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}>
       <div
-        className="overflow-hidden rounded-none border border-slate-200 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.08)]"
+        className="overflow-hidden rounded-none border border-slate-200 bg-white shadow-[0_2px_6px_rgba(15,23,42,0.05)]"
         style={{ width: SLIDE_WIDTH, minWidth: SLIDE_WIDTH, height: SLIDE_HEIGHT }}
       >
         <Renderer tree={tree} registry={registry} />
@@ -137,18 +132,23 @@ function SlideWorkspace() {
   )
 
   return (
-    <div className="flex h-screen flex-col bg-[#323639] text-[#F2F3F4]">
+    <div className="flex h-screen flex-col bg-[#323639] tracking-[-0.03em] text-[#F2F3F4]">
       <header className="flex items-center justify-between border-b border-[#454A4F] bg-[#323639] px-5 py-3 backdrop-blur">
-        <div className="min-w-0">
-          <div className="truncate text-lg font-semibold text-white">{rootName}</div>
-          <div className="text-sm text-[#D2D6DA]">Salvo</div>
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#252523]">
+            <FileText className="h-5 w-5 text-[#F2F2F2]" />
+          </div>
+          <div className="min-w-0">
+            <div className="truncate text-[16px] font-semibold text-white">{rootName}</div>
+            <div className="text-sm text-[#D2D6DA]">Salvo</div>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <div className="mr-2 flex items-center gap-1 rounded-full border border-[#555B61] bg-[#3A3F44] px-1 py-1">
             <button
               type="button"
               onClick={() => setZoom((current) => Math.max(0.4, Number((current - 0.1).toFixed(2))))}
-              className="flex items-center gap-1 rounded-full p-2 text-[#E6E8EA] transition hover:bg-[#4A5056] hover:text-white"
+              className="flex items-center gap-1 rounded-full p-2 text-[#E6E8EA] transition hover:bg-[#4A5056] hover:text-[#E6E8EA]"
             >
               <Search className="h-4 w-4" />
               <Minus className="h-3 w-3" />
@@ -158,43 +158,41 @@ function SlideWorkspace() {
             <button
               type="button"
               onClick={() => setZoom((current) => Math.min(1.4, Number((current + 0.1).toFixed(2))))}
-              className="flex items-center gap-1 rounded-full p-2 text-[#E6E8EA] transition hover:bg-[#4A5056] hover:text-white"
+              className="flex items-center gap-1 rounded-full p-2 text-[#E6E8EA] transition hover:bg-[#4A5056] hover:text-[#E6E8EA]"
             >
               <Search className="h-4 w-4" />
               <Plus className="h-3 w-3" />
               <span className="sr-only">Zoom mais</span>
             </button>
           </div>
-          <button type="button" className="rounded-full p-2 text-[#E6E8EA] transition hover:bg-[#4A5056] hover:text-white">
+          <button type="button" className="rounded-full p-2 text-[#E6E8EA] transition hover:bg-[#4A5056] hover:text-[#E6E8EA]">
             <MessageCircleMore className="h-4 w-4" />
           </button>
-          <button type="button" className="rounded-full p-2 text-[#E6E8EA] transition hover:bg-[#4A5056] hover:text-white">
+          <button type="button" className="rounded-full p-2 text-[#E6E8EA] transition hover:bg-[#4A5056] hover:text-[#E6E8EA]">
             <Download className="h-4 w-4" />
           </button>
-          <button type="button" className="rounded-full p-2 text-[#E6E8EA] transition hover:bg-[#4A5056] hover:text-white">
+          <button type="button" className="rounded-full p-2 text-[#E6E8EA] transition hover:bg-[#4A5056] hover:text-[#E6E8EA]">
             <Play className="h-4 w-4" />
           </button>
-          <button type="button" className="rounded-full p-2 text-[#E6E8EA] transition hover:bg-[#4A5056] hover:text-white">
+          <button type="button" className="rounded-full p-2 text-[#E6E8EA] transition hover:bg-[#4A5056] hover:text-[#E6E8EA]">
             <MoreHorizontal className="h-4 w-4" />
           </button>
-          <button type="button" className="rounded-full p-2 text-[#E6E8EA] transition hover:bg-[#4A5056] hover:text-white">
+          <button type="button" className="rounded-full p-2 text-[#E6E8EA] transition hover:bg-[#4A5056] hover:text-[#E6E8EA]">
             <X className="h-4 w-4" />
           </button>
         </div>
       </header>
 
       <div className="flex min-h-0 flex-1">
-        <aside className="w-[230px] shrink-0 overflow-auto border-r border-[#454A4F] bg-[#323639] px-3 py-4">
+        <aside className="w-[210px] shrink-0 overflow-auto border-r border-[#454A4F] bg-[#323639] px-3 py-4">
           <div className="space-y-4">
             {pages.map((page, index) => {
               const pageId = getPageId(page, index)
-              const pageTitle = getPageTitle(page, index)
               return (
                 <SlideThumbnail
                   key={pageId}
                   selected={pageId === activePageId}
                   index={index}
-                  title={pageTitle}
                   onClick={() => setActivePageId(pageId)}
                 />
               )
