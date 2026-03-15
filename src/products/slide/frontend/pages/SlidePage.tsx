@@ -191,10 +191,10 @@ function SlideWorkspace() {
           <button type="button" className="flex items-center justify-center rounded-md bg-[#1B1B1B] p-2 text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
             <Icon icon="solar:playback-speed-bold" className="h-4 w-4" />
           </button>
-          <button type="button" className="flex items-center justify-center rounded-md bg-[#1B1B1B] px-2 py-2 text-[14px] font-medium text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
+          <button type="button" className="flex items-center justify-center rounded-md bg-[#1B1B1B] px-2 py-1.5 text-[14px] font-medium text-[#FFFFFF] transition hover:bg-[#262626] hover:text-[#FFFFFF]">
             Invite
           </button>
-          <button type="button" className="flex items-center justify-center rounded-md bg-[#039AFE] px-2 py-2 text-[14px] font-medium text-[#FFFFFF] transition hover:bg-[#028ae0] hover:text-[#FFFFFF]">
+          <button type="button" className="flex items-center justify-center rounded-md bg-[#039AFE] px-2 py-1.5 text-[14px] font-medium text-[#FFFFFF] transition hover:bg-[#028ae0] hover:text-[#FFFFFF]">
             Publish
           </button>
         </div>
