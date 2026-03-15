@@ -75,7 +75,7 @@ function SlideThumbnail({
     >
       <div
         className={`mb-2 overflow-hidden rounded-xl bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] ${
-          selected ? 'border-2 border-[#0075E2]' : 'border border-slate-300'
+          selected ? 'border-[3px] border-[#0075E2]' : 'border border-slate-300'
         }`}
       >
         <div
