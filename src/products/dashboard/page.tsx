@@ -43,6 +43,7 @@ export default function DashboardPage() {
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false)
   const [draftThemeName, setDraftThemeName] = useState('dark')
   const [appliedThemeName, setAppliedThemeName] = useState('dark')
+  const [activeView, setActiveView] = useState<'preview' | 'code'>('preview')
   const [zoom, setZoom] = useState(0.82)
   const themedDsl = useMemo(() => applyThemeToDsl(APPS_VENDAS_TEMPLATE_DSL, appliedThemeName), [appliedThemeName])
   const parsed = useMemo(() => parseDashboardTemplateDslToTree(themedDsl), [themedDsl])
@@ -61,6 +62,32 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <div className="mr-1 flex items-center gap-1 rounded-xl border-[0.5px] border-[#CECEC9] bg-[#ECECEB] px-1 py-1">
+              <button
+                type="button"
+                onClick={() => setActiveView('preview')}
+                className={`flex items-center justify-center rounded-md p-2 transition ${
+                  activeView === 'preview'
+                    ? 'bg-[#0075E2] text-white'
+                    : 'bg-[#ECECEB] text-[#5F5F5A] hover:bg-[#E2E2E0] hover:text-[#4F4F4B]'
+                }`}
+              >
+                <Icon icon="solar:eye-bold" className="h-4 w-4" />
+                <span className="sr-only">Visualizar dashboard</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveView('code')}
+                className={`flex items-center justify-center rounded-md p-2 transition ${
+                  activeView === 'code'
+                    ? 'bg-[#0075E2] text-white'
+                    : 'bg-[#ECECEB] text-[#5F5F5A] hover:bg-[#E2E2E0] hover:text-[#4F4F4B]'
+                }`}
+              >
+                <Icon icon="solar:code-bold" className="h-4 w-4" />
+                <span className="sr-only">Visualizar DSL</span>
+              </button>
+            </div>
             <div className="mr-2 flex items-center gap-1 rounded-xl border-[0.5px] border-[#CECEC9] bg-[#ECECEB] px-1 py-1">
               <button
                 type="button"
@@ -80,9 +107,6 @@ export default function DashboardPage() {
                 <span className="sr-only">Zoom mais</span>
               </button>
             </div>
-            <button type="button" className="flex items-center justify-center rounded-md border-[0.5px] border-[#CECEC9] bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]">
-              <Icon icon="solar:chat-round-dots-bold" className="h-4 w-4" />
-            </button>
             <button type="button" className="flex items-center justify-center rounded-md border-[0.5px] border-[#CECEC9] bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]">
               <Icon icon="solar:download-square-bold" className="h-4 w-4" />
             </button>
@@ -106,9 +130,17 @@ export default function DashboardPage() {
         </header>
 
         <main className="min-h-0 flex-1 overflow-auto border-r-[0.5px] border-[#D4D4CF] bg-[#EEEEEB]">
-          <div className="mx-auto flex min-h-full items-start justify-center p-8">
-            <DashboardCanvas tree={parsed} zoom={zoom} />
-          </div>
+          {activeView === 'preview' ? (
+            <div className="mx-auto flex min-h-full items-start justify-center p-8">
+              <DashboardCanvas tree={parsed} zoom={zoom} />
+            </div>
+          ) : (
+            <div className="mx-auto flex min-h-full max-w-[1280px] p-8">
+              <pre className="w-full overflow-auto rounded-[16px] border-[0.5px] border-[#D4D4CF] bg-[#F7F7F6] p-6 text-[13px] leading-6 text-[#2C2C29] shadow-[0_2px_6px_rgba(15,23,42,0.05)]">
+                <code>{themedDsl}</code>
+              </pre>
+            </div>
+          )}
         </main>
         <DashboardThemeModal
           isOpen={isThemeModalOpen}
