@@ -4,6 +4,7 @@ import * as React from "react";
 
 import { applyPrimaryDateRange } from "@/products/bi/json-render/dateFilters";
 import { resolveInteractionFilterField, resolveInteractionFilterStorePath } from "@/products/bi/json-render/interactionFilters";
+import { useThemeOverrides } from "@/products/bi/json-render/theme/ThemeContext";
 
 type AnyRecord = Record<string, any>;
 
@@ -92,11 +93,22 @@ export function useChartInteraction(element: any, dimension?: string) {
 }
 
 export function useResolvedChartColors(colorScheme: string | string[] | undefined, fallback: string[]) {
+  const theme = useThemeOverrides();
   return React.useMemo(() => {
     if (Array.isArray(colorScheme) && colorScheme.length) return colorScheme;
     if (typeof colorScheme === "string" && colorScheme.trim()) return [colorScheme.trim()];
+    const rawVar = (theme.cssVars || {}).chartColorScheme as unknown as string | undefined;
+    if (rawVar) {
+      try {
+        const parsed = JSON.parse(rawVar);
+        if (Array.isArray(parsed) && parsed.length) return parsed.map(String);
+      } catch {
+        const parsed = rawVar.split(",").map((s) => s.trim()).filter(Boolean);
+        if (parsed.length) return parsed;
+      }
+    }
     return fallback;
-  }, [colorScheme, JSON.stringify(fallback)]);
+  }, [colorScheme, JSON.stringify(fallback), theme.cssVars]);
 }
 
 export function useChartServerRows(dq: AnyRecord | undefined, data: AnyRecord) {
