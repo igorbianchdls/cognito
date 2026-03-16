@@ -58,6 +58,7 @@ const RechartsPropsSchema = z.object({
   valueTickColor: z.string().optional(),
   categoryTickFontSize: z.number().optional(),
   valueTickFontSize: z.number().optional(),
+  categoryLabelMode: z.enum(["short", "first-word"]).optional(),
   axisColor: z.string().optional(),
   margin: z.object({
     top: z.number().optional(),

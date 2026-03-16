@@ -14,6 +14,13 @@ function formatCategoryLabel(value: unknown) {
   return text.length > 3 ? text.slice(0, 3) : text;
 }
 
+function formatCategoryFirstWord(value: unknown) {
+  const text = String(value ?? "").trim();
+  if (!text) return "";
+  const [firstWord = ""] = text.split(/\s+/);
+  return firstWord;
+}
+
 export default function JsonRenderHorizontalBarChart({ element }: { element: any }) {
   const { data, setData } = useData();
   const dq = (element?.props?.dataQuery as AnyRecord | undefined);
@@ -29,17 +36,18 @@ export default function JsonRenderHorizontalBarChart({ element }: { element: any
 
   const chartData = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
+    const categoryLabelMode = String(recharts.categoryLabelMode ?? "short").trim().toLowerCase();
     return src.map((row) => {
       const record = row as AnyRecord;
       const label = String(getFieldValue(record, xFieldName, ["label", "x"]) ?? "");
       return {
         label,
-        shortLabel: formatCategoryLabel(label),
+        shortLabel: categoryLabelMode === "first-word" ? formatCategoryFirstWord(label) : formatCategoryLabel(label),
         value: Number(getFieldValue(record, yFieldName, ["value", "y"]) ?? 0),
         filterKey: getFieldValue(record, keyFieldName, ["key", xFieldName, "label", "x"]),
       };
     });
-  }, [serverRows, xFieldName, yFieldName, keyFieldName]);
+  }, [serverRows, xFieldName, yFieldName, keyFieldName, recharts.categoryLabelMode]);
 
   const handleClick = React.useCallback((state: any) => {
     if (!shouldClickFilter || !resolvedFilterStorePath) return;
