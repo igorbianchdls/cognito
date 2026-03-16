@@ -71,10 +71,10 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
               <XAxis
                 type="number"
                 dataKey="value"
-                hide={Boolean(recharts.hideValueAxis ?? true)}
+                hide={Boolean(recharts.hideValueAxis ?? false)}
                 tickLine={false}
                 tickMargin={10}
-                axisLine={false}
+                axisLine={{ stroke: String(recharts.axisColor ?? "#d4d4d8") }}
                 tick={{ fill: String(recharts.valueTickColor ?? "#6b7280"), fontSize: Number(recharts.valueTickFontSize ?? 12) }}
                 tickFormatter={(value) => formatChartValue(value, fmt)}
               />
@@ -83,7 +83,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
                 type="category"
                 tickLine={false}
                 tickMargin={10}
-                axisLine={false}
+                axisLine={{ stroke: String(recharts.axisColor ?? "#d4d4d8") }}
                 interval={0}
                 tick={{ fill: String(recharts.categoryTickColor ?? "#6b7280"), fontSize: Number(recharts.categoryTickFontSize ?? 12) }}
                 tickFormatter={(value: any) => formatCategoryLabel(value)}
@@ -95,13 +95,13 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
                 dataKey="shortLabel"
                 tickLine={false}
                 tickMargin={10}
-                axisLine={false}
+                axisLine={{ stroke: String(recharts.axisColor ?? "#d4d4d8") }}
                 interval={0}
                 tick={{ fill: String(recharts.categoryTickColor ?? "#6b7280"), fontSize: Number(recharts.categoryTickFontSize ?? 12) }}
               />
               <YAxis
                 tickLine={false}
-                axisLine={false}
+                axisLine={{ stroke: String(recharts.axisColor ?? "#d4d4d8") }}
                 tick={{ fill: String(recharts.valueTickColor ?? "#6b7280"), fontSize: Number(recharts.valueTickFontSize ?? 12) }}
                 tickFormatter={(value) => formatChartValue(value, fmt)}
                 width={Number(recharts.valueAxisWidth ?? 56)}
