@@ -26,6 +26,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   const { serverRows, queryError } = useChartServerRows(dq, data as AnyRecord);
   const { clearOnSecondClick, resolvedFilterStorePath, shouldClickFilter } = useChartInteraction(element, dq?.dimension);
   const colors = useResolvedChartColors(element?.props?.colorScheme, ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6"]);
+  const isHorizontalBars = String(recharts.layout ?? "vertical").trim().toLowerCase() === "horizontal";
 
   const chartData = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
@@ -59,26 +60,55 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
         <RechartsBarChart
           accessibilityLayer
           data={chartData}
-          margin={recharts.margin || { top: 8, right: 12, left: 12, bottom: 8 }}
+          layout={isHorizontalBars ? "vertical" : "horizontal"}
+          margin={recharts.margin || (isHorizontalBars ? { top: 8, right: 12, left: 12, bottom: 8 } : { top: 8, right: 12, left: 12, bottom: 8 })}
           onClick={handleClick}
           barSize={recharts.barSize}
         >
-          <CartesianGrid vertical={false} strokeDasharray={recharts.gridDasharray || "3 3"} />
-          <XAxis
-            dataKey="shortLabel"
-            tickLine={false}
-            tickMargin={10}
-            axisLine={false}
-            interval={0}
-            tick={{ fill: String(recharts.categoryTickColor ?? "#6b7280"), fontSize: Number(recharts.categoryTickFontSize ?? 12) }}
-          />
-          <YAxis
-            tickLine={false}
-            axisLine={false}
-            tick={{ fill: String(recharts.valueTickColor ?? "#6b7280"), fontSize: Number(recharts.valueTickFontSize ?? 12) }}
-            tickFormatter={(value) => formatChartValue(value, fmt)}
-            width={Number(recharts.valueAxisWidth ?? 56)}
-          />
+          <CartesianGrid vertical={isHorizontalBars} horizontal={!isHorizontalBars} strokeDasharray={recharts.gridDasharray || "3 3"} />
+          {isHorizontalBars ? (
+            <>
+              <XAxis
+                type="number"
+                dataKey="value"
+                hide={Boolean(recharts.hideValueAxis ?? false)}
+                tickLine={false}
+                tickMargin={10}
+                axisLine={false}
+                tick={{ fill: String(recharts.valueTickColor ?? "#6b7280"), fontSize: Number(recharts.valueTickFontSize ?? 12) }}
+                tickFormatter={(value) => formatChartValue(value, fmt)}
+                width={Number(recharts.valueAxisWidth ?? 56)}
+              />
+              <YAxis
+                dataKey="shortLabel"
+                type="category"
+                tickLine={false}
+                tickMargin={10}
+                axisLine={false}
+                interval={0}
+                tick={{ fill: String(recharts.categoryTickColor ?? "#6b7280"), fontSize: Number(recharts.categoryTickFontSize ?? 12) }}
+                width={Number(recharts.categoryAxisWidth ?? 56)}
+              />
+            </>
+          ) : (
+            <>
+              <XAxis
+                dataKey="shortLabel"
+                tickLine={false}
+                tickMargin={10}
+                axisLine={false}
+                interval={0}
+                tick={{ fill: String(recharts.categoryTickColor ?? "#6b7280"), fontSize: Number(recharts.categoryTickFontSize ?? 12) }}
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tick={{ fill: String(recharts.valueTickColor ?? "#6b7280"), fontSize: Number(recharts.valueTickFontSize ?? 12) }}
+                tickFormatter={(value) => formatChartValue(value, fmt)}
+                width={Number(recharts.valueAxisWidth ?? 56)}
+              />
+            </>
+          )}
           <Tooltip
             cursor={false}
             formatter={(value: any) => formatChartValue(value, fmt)}
