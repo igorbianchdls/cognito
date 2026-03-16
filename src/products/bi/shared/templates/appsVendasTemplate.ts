@@ -673,7 +673,7 @@ ORDER BY 2 ASC"
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter={false} />
-        <Recharts layout="horizontal" radius={8} showGrid valueAxisLabel="Pedidos" xTickCount={6} />
+        <Recharts layout="vertical" radius={8} showGrid valueAxisLabel="Pedidos" xTickCount={6} />
         <Config>
           {
             "dataQuery": {
@@ -702,7 +702,7 @@ ORDER BY 2 ASC"
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter={false} />
-        <Recharts layout="horizontal" radius={8} showGrid valueAxisLabel="Ticket Médio" xTickCount={6} />
+        <Recharts layout="vertical" radius={8} showGrid valueAxisLabel="Ticket Médio" xTickCount={6} />
         <Config>
           {
             "dataQuery": {
