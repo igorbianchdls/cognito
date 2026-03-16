@@ -2,6 +2,7 @@
 
 import React from "react";
 import JsonRenderBarChart from "@/products/bi/json-render/components/BarChart";
+import JsonRenderHorizontalBarChart from "@/products/bi/json-render/components/HorizontalBarChart";
 import JsonRenderLineChart from "@/products/bi/json-render/components/LineChart";
 import JsonRenderPieChart from "@/products/bi/json-render/components/PieChart";
 import JsonRenderScatterChart from "@/products/bi/json-render/components/ScatterChart";
@@ -2057,6 +2058,11 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const theme = useThemeOverrides();
     const merged = deepMerge(deepMerge(defaultBarChart as any, (theme.components?.BarChart || {}) as any), (element?.props || {}) as any);
     return <JsonRenderBarChart element={{ props: merged }} />;
+  },
+  HorizontalBarChart: ({ element }) => {
+    const theme = useThemeOverrides();
+    const merged = deepMerge(deepMerge(defaultBarChart as any, ((theme.components as any)?.HorizontalBarChart || {}) as any), (element?.props || {}) as any);
+    return <JsonRenderHorizontalBarChart element={{ props: merged }} />;
   },
   LineChart: ({ element }) => {
     const theme = useThemeOverrides();

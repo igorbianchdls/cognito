@@ -422,6 +422,7 @@ function mapChartType(source: string, node: DslNode, rawType: string): string {
   const t = String(rawType || '').trim().toLowerCase()
   if (t === 'line') return 'LineChart'
   if (t === 'bar') return 'BarChart'
+  if (t === 'horizontal-bar') return 'HorizontalBarChart'
   if (t === 'pie') return 'PieChart'
   if (t === 'composed') return 'ComposedChart'
   if (t === 'funnel') return 'FunnelChart'
@@ -429,7 +430,7 @@ function mapChartType(source: string, node: DslNode, rawType: string): string {
   if (t === 'scatter') return 'ScatterChart'
   if (t === 'radar') return 'RadarChart'
   if (t === 'treemap') return 'TreemapChart'
-  throw new DashboardTemplateDslParseError(source, node.start, `Tag <chart> exige type valido: line | bar | pie | composed | funnel | sankey | scatter | radar | treemap`)
+  throw new DashboardTemplateDslParseError(source, node.start, `Tag <chart> exige type valido: line | bar | horizontal-bar | pie | composed | funnel | sankey | scatter | radar | treemap`)
 }
 
 function compileDataQueryNode(source: string, node: DslNode): Record<string, unknown> {
@@ -504,6 +505,7 @@ function toCatalogType(tag: string): string {
   if (normalized === 'pivottable') return 'PivotTable'
   if (normalized === 'linechart') return 'LineChart'
   if (normalized === 'barchart') return 'BarChart'
+  if (normalized === 'horizontalbarchart') return 'HorizontalBarChart'
   if (normalized === 'piechart') return 'PieChart'
   if (normalized === 'defaults') return 'Defaults'
   if (tag === 'chart') return 'Chart'
@@ -1034,6 +1036,7 @@ function compileNode(source: string, node: DslNode, context: CompileContext): Re
   if (
     type === 'LineChart' ||
     type === 'BarChart' ||
+    type === 'HorizontalBarChart' ||
     type === 'PieChart'
   ) {
     const interactionFromDefaults = context.chartInteractionDefaults || {}

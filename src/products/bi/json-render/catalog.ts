@@ -717,6 +717,27 @@ export const catalog = {
       }).strict(),
       hasChildren: false,
     },
+    HorizontalBarChart: {
+      props: z.object({
+        title: z.string().optional(),
+        titleStyle: TitleStyleSchema.optional(),
+        dataQuery: z.union([LegacyChartDataQuerySchema, SqlChartDataQuerySchema]),
+        interaction: z.object({
+          clickAsFilter: z.boolean().optional(),
+          table: z.string().optional(),
+          field: z.string().optional(),
+          clearOnSecondClick: z.boolean().optional(),
+        }).partial().optional(),
+        containerStyle: ContainerStyleSchema.optional(),
+        borderless: z.boolean().optional(),
+        fr: z.number().optional(),
+        format: z.enum(["currency", "percent", "number"]).default("number"),
+        height: z.number().optional(),
+        colorScheme: z.union([z.string(), z.array(z.string())]).optional(),
+        recharts: z.record(z.any()).optional(),
+      }).strict(),
+      hasChildren: false,
+    },
     LineChart: {
       props: z.object({
         title: z.string().optional(),

@@ -289,7 +289,7 @@ ORDER BY 2 ASC"
       <Container grow={2}>
         <Card>
           <Title text="Categorias" marginBottom={8} />
-          <Chart type="bar" format="currency" height={240}>
+          <Chart type="horizontal-bar" format="currency" height={240}>
             <Query>
               SELECT
                           cr.id AS key,
@@ -320,7 +320,7 @@ ORDER BY 2 ASC"
       <Container grow={2}>
         <Card>
           <Title text="Clientes" marginBottom={8} />
-          <Chart type="bar" format="currency" height={240}>
+          <Chart type="horizontal-bar" format="currency" height={240}>
             <Query>
               SELECT
                           c.id AS key,
