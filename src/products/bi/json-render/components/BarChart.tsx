@@ -90,9 +90,14 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
                 dataKey="label"
                 tickLine={false}
                 axisLine={false}
+                tickMargin={10}
                 interval={0}
                 minTickGap={0}
-                height={40}
+                height={48}
+                tickFormatter={(value: any) => {
+                  const text = String(value ?? "");
+                  return text.slice(0, 3);
+                }}
               />
               <YAxis
                 tickLine={false}
