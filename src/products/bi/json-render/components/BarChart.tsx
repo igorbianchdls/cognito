@@ -14,18 +14,30 @@ function formatCategoryLabel(value: unknown) {
   return text.length > 3 ? text.slice(0, 3) : text;
 }
 
+function formatCategoryFirstWord(value: unknown) {
+  const text = String(value ?? "").trim();
+  if (!text) return "";
+  const [firstWord = ""] = text.split(/\s+/);
+  return firstWord;
+}
+
 export default function JsonRenderBarChart({ element }: { element: any }) {
   const { data, setData } = useData();
+  const props = (element?.props as AnyRecord | undefined) || {};
   const dq = (element?.props?.dataQuery as AnyRecord | undefined);
   const fmt = (element?.props?.format ?? "number") as "currency" | "percent" | "number";
   const height = Number(element?.props?.height ?? 220);
-  const recharts = ((element?.props?.recharts as AnyRecord | undefined) || {});
+  const recharts = { ...((element?.props?.recharts as AnyRecord | undefined) || {}), ...props };
   const xFieldName = typeof dq?.xField === "string" ? dq.xField.trim() : "label";
   const yFieldName = typeof dq?.yField === "string" ? dq.yField.trim() : "value";
   const keyFieldName = typeof dq?.keyField === "string" ? dq.keyField.trim() : "key";
   const { serverRows, queryError } = useChartServerRows(dq, data as AnyRecord);
   const { clearOnSecondClick, resolvedFilterStorePath, shouldClickFilter } = useChartInteraction(element, dq?.dimension);
   const colors = useResolvedChartColors(element?.props?.colorScheme, ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6"]);
+  const categoryLabelMode = String(recharts.categoryLabelMode ?? "short").trim().toLowerCase();
+  const showValueAxis = recharts.showValueAxis ?? true;
+  const hideCategoryAxis = Boolean(recharts.hideCategoryAxis ?? false);
+  const showTooltip = recharts.showTooltip ?? true;
 
   const chartData = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
@@ -34,12 +46,17 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
       const label = String(getFieldValue(record, xFieldName, ["label", "x"]) ?? "");
       return {
         label,
-        shortLabel: formatCategoryLabel(label),
+        shortLabel:
+          categoryLabelMode === "first-word"
+            ? formatCategoryFirstWord(label)
+            : categoryLabelMode === "short"
+              ? formatCategoryLabel(label)
+              : label,
         value: Number(getFieldValue(record, yFieldName, ["value", "y"]) ?? 0),
         filterKey: getFieldValue(record, keyFieldName, ["key", xFieldName, "label", "x"]),
       };
     });
-  }, [serverRows, xFieldName, yFieldName, keyFieldName]);
+  }, [serverRows, xFieldName, yFieldName, keyFieldName, categoryLabelMode]);
 
   const handleClick = React.useCallback((state: any) => {
     if (!shouldClickFilter || !resolvedFilterStorePath) return;
@@ -66,6 +83,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
           <CartesianGrid vertical={false} strokeDasharray={recharts.gridDasharray || "3 3"} />
           <XAxis
             dataKey="shortLabel"
+            hide={hideCategoryAxis}
             tickLine={false}
             tickMargin={10}
             axisLine={false}
@@ -73,20 +91,23 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
             tick={{ fill: String(recharts.categoryTickColor ?? "#6b7280"), fontSize: Number(recharts.categoryTickFontSize ?? 12) }}
           />
           <YAxis
+            hide={!showValueAxis}
             tickLine={false}
             axisLine={false}
             tick={{ fill: String(recharts.valueTickColor ?? "#6b7280"), fontSize: Number(recharts.valueTickFontSize ?? 12) }}
             tickFormatter={(value) => formatChartValue(value, fmt)}
             width={Number(recharts.valueAxisWidth ?? 56)}
           />
-          <Tooltip
-            cursor={false}
-            formatter={(value: any) => formatChartValue(value, fmt)}
-            labelFormatter={(_label: any, payload: any) => {
-              const first = Array.isArray(payload) ? payload[0] : undefined;
-              return first?.payload?.label ?? "";
-            }}
-          />
+          {showTooltip ? (
+            <Tooltip
+              cursor={false}
+              formatter={(value: any) => formatChartValue(value, fmt)}
+              labelFormatter={(_label: any, payload: any) => {
+                const first = Array.isArray(payload) ? payload[0] : undefined;
+                return first?.payload?.label ?? "";
+              }}
+            />
+          ) : null}
           <Bar dataKey="value" radius={Number(recharts.radius ?? 8)}>
             {chartData.map((entry, index) => (
               <Cell key={`${entry.label}-${index}`} fill={colors[index % colors.length]} />

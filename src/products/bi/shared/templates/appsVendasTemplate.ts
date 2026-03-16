@@ -258,7 +258,7 @@ ORDER BY 2 ASC"
       <Container grow={4}>
         <Card>
           <Title text="Canais" marginBottom={8} />
-          <Chart type="pie" fr={2} format="currency" height={240}>
+          <Chart type="pie" fr={2} format="currency" height={240} innerRadius={64} outerRadius={88} paddingAngle={2} showLabels={false} showLegend>
             <Query>
               SELECT
                           cv.id AS key,
@@ -274,7 +274,6 @@ ORDER BY 2 ASC"
             </Query>
             <Fields x="label" y="value" key="key" />
             <Interaction clickAsFilter table="vendas.pedidos" field="canal_venda_id" clearOnSecondClick />
-            <Recharts innerRadius={64} outerRadius={88} paddingAngle={2} showLabels={false} showLegend />
             <Config>
               {
                 "dataQuery": {
@@ -289,7 +288,7 @@ ORDER BY 2 ASC"
       <Container grow={2}>
         <Card>
           <Title text="Categorias" marginBottom={8} />
-          <Chart type="horizontal-bar" format="currency" height={240}>
+          <Chart type="horizontal-bar" format="currency" height={240} layout="horizontal" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} categoryTickColor="#111111" valueTickColor="#111111" categoryLabelMode="first-word">
             <Query>
               SELECT
                           cr.id AS key,
@@ -305,7 +304,6 @@ ORDER BY 2 ASC"
             </Query>
             <Fields x="label" y="value" key="key" />
             <Interaction clickAsFilter table="vendas.pedidos" field="categoria_receita_id" clearOnSecondClick />
-            <Recharts layout="horizontal" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} categoryTickColor="#111111" valueTickColor="#111111" categoryLabelMode="first-word" />
             <Config>
               {
                 "dataQuery": {
@@ -320,7 +318,7 @@ ORDER BY 2 ASC"
       <Container grow={2}>
         <Card>
           <Title text="Clientes" marginBottom={8} />
-          <Chart type="horizontal-bar" format="currency" height={240}>
+          <Chart type="horizontal-bar" format="currency" height={240} layout="horizontal" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} categoryTickColor="#111111" valueTickColor="#111111" categoryLabelMode="first-word">
             <Query>
               SELECT
                           c.id AS key,
@@ -336,7 +334,6 @@ ORDER BY 2 ASC"
             </Query>
             <Fields x="label" y="value" key="key" />
             <Interaction clickAsFilter={false} />
-            <Recharts layout="horizontal" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} categoryTickColor="#111111" valueTickColor="#111111" categoryLabelMode="first-word" />
             <Config>
               {
                 "dataQuery": {
@@ -353,7 +350,7 @@ ORDER BY 2 ASC"
       <Container grow={1}>
         <Card>
           <Title text="Vendedores" marginBottom={8} />
-          <Chart type="bar" format="currency" height={220}>
+          <Chart type="bar" format="currency" height={220} layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4}>
         <Query>
           SELECT
                       v.id AS key,
@@ -370,7 +367,6 @@ ORDER BY 2 ASC"
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter table="vendas.pedidos" field="vendedor_id" clearOnSecondClick />
-        <Recharts layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} />
         <Config>
           {
             "dataQuery": {
@@ -385,7 +381,7 @@ ORDER BY 2 ASC"
       <Container grow={1}>
         <Card>
           <Title text="Filiais" marginBottom={8} />
-          <Chart type="bar" format="currency" height={220}>
+          <Chart type="bar" format="currency" height={220} layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4}>
         <Query>
           SELECT
                       fil.id AS key,
@@ -401,7 +397,6 @@ ORDER BY 2 ASC"
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter table="vendas.pedidos" field="filial_id" clearOnSecondClick />
-        <Recharts layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} />
         <Config>
           {
             "dataQuery": {
@@ -416,7 +411,7 @@ ORDER BY 2 ASC"
       <Container grow={1}>
         <Card>
           <Title text="Unidades de Negócio" marginBottom={8} />
-          <Chart type="bar" format="currency" height={220}>
+          <Chart type="bar" format="currency" height={220} layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4}>
         <Query>
           SELECT
                       un.id AS key,
@@ -432,7 +427,6 @@ ORDER BY 2 ASC"
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter table="vendas.pedidos" field="unidade_negocio_id" clearOnSecondClick />
-        <Recharts layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} />
         <Config>
           {
             "dataQuery": {
@@ -449,7 +443,7 @@ ORDER BY 2 ASC"
       <Container grow={3}>
         <Card>
           <Title text="Faturamento Mensal por Canal" marginBottom={8} />
-          <Chart type="line" format="currency" height={240}>
+          <Chart type="line" format="currency" height={240} curve="monotone" showGrid showLegend strokeWidth={3} showDots={false}>
         <Query>
           WITH top_canais AS (
                       SELECT
@@ -490,7 +484,6 @@ ORDER BY 2 ASC"
         </Query>
         <Fields x="key" y="value" key="key" series="series" />
         <Interaction clickAsFilter={false} />
-        <Recharts curve="monotone" showGrid showLegend strokeWidth={3} showDots={false} />
         <Config>
           {
             "dataQuery": {
@@ -659,7 +652,7 @@ ORDER BY 2 ASC"
       <Container grow={1}>
         <Card>
           <Title text="Pedidos por Mês" marginBottom={8} />
-          <Chart type="bar" format="number" height={220}>
+          <Chart type="bar" format="number" height={220} layout="vertical" radius={8} showGrid valueAxisLabel="Pedidos" xTickCount={6}>
         <Query>
           SELECT
                       TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS key,
@@ -673,7 +666,6 @@ ORDER BY 2 ASC"
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter={false} />
-        <Recharts layout="vertical" radius={8} showGrid valueAxisLabel="Pedidos" xTickCount={6} />
         <Config>
           {
             "dataQuery": {
@@ -688,7 +680,7 @@ ORDER BY 2 ASC"
       <Container grow={1}>
         <Card>
           <Title text="Ticket Médio por Mês" marginBottom={8} />
-          <Chart type="bar" format="currency" height={220}>
+          <Chart type="bar" format="currency" height={220} layout="vertical" radius={8} showGrid valueAxisLabel="Ticket Médio" xTickCount={6}>
         <Query>
           SELECT
                       TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS key,
@@ -702,7 +694,6 @@ ORDER BY 2 ASC"
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter={false} />
-        <Recharts layout="vertical" radius={8} showGrid valueAxisLabel="Ticket Médio" xTickCount={6} />
         <Config>
           {
             "dataQuery": {
@@ -744,7 +735,7 @@ ORDER BY 2 ASC"
       <Container grow={1}>
         <Card>
           <Title text="Territórios" marginBottom={8} />
-          <Chart type="bar" format="currency" height={220}>
+          <Chart type="bar" format="currency" height={220} layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4}>
         <Query>
           SELECT
                       t.id AS key,
@@ -760,7 +751,6 @@ ORDER BY 2 ASC"
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter table="vendas.pedidos" field="territorio_id" clearOnSecondClick />
-        <Recharts layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} />
         <Config>
           {
             "dataQuery": {
@@ -775,7 +765,7 @@ ORDER BY 2 ASC"
       <Container grow={1}>
         <Card>
           <Title text="Serviços/Categorias" marginBottom={8} />
-          <Chart type="bar" format="currency" height={220}>
+          <Chart type="bar" format="currency" height={220} layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4}>
         <Query>
           SELECT
                       cr.id AS key,
@@ -791,7 +781,6 @@ ORDER BY 2 ASC"
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter table="vendas.pedidos" field="categoria_receita_id" clearOnSecondClick />
-        <Recharts layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} />
         <Config>
           {
             "dataQuery": {
@@ -806,7 +795,7 @@ ORDER BY 2 ASC"
       <Container grow={1}>
         <Card>
           <Title text="Pedidos" marginBottom={8} />
-          <Chart type="bar" format="number" height={220}>
+          <Chart type="bar" format="number" height={220} layout="vertical" radius={8} showGrid valueAxisLabel="Pedidos" xTickCount={4}>
         <Query>
           SELECT
                       cv.id AS key,
@@ -821,7 +810,6 @@ ORDER BY 2 ASC"
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter table="vendas.pedidos" field="canal_venda_id" clearOnSecondClick />
-        <Recharts layout="vertical" radius={8} showGrid valueAxisLabel="Pedidos" xTickCount={4} />
         <Config>
           {
             "dataQuery": {

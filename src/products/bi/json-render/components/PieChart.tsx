@@ -10,16 +10,19 @@ type AnyRecord = Record<string, any>;
 
 export default function JsonRenderPieChart({ element }: { element: any }) {
   const { data, setData } = useData();
+  const props = (element?.props as AnyRecord | undefined) || {};
   const dq = (element?.props?.dataQuery as AnyRecord | undefined);
   const fmt = (element?.props?.format ?? "number") as "currency" | "percent" | "number";
   const height = (element?.props?.height as number | undefined) ?? 220;
-  const recharts = ((element?.props?.recharts as AnyRecord | undefined) || {});
+  const recharts = { ...((element?.props?.recharts as AnyRecord | undefined) || {}), ...props };
   const xFieldName = typeof dq?.xField === "string" ? dq.xField.trim() : "label";
   const yFieldName = typeof dq?.yField === "string" ? dq.yField.trim() : "value";
   const keyFieldName = typeof dq?.keyField === "string" ? dq.keyField.trim() : "key";
   const { serverRows, queryError } = useChartServerRows(dq, data as AnyRecord);
   const { clearOnSecondClick, resolvedFilterStorePath, shouldClickFilter } = useChartInteraction(element, dq?.dimension);
   const colors = useResolvedChartColors(element?.props?.colorScheme, ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"]);
+  const showTooltip = recharts.showTooltip ?? true;
+  const legendPosition = String(recharts.legendPosition ?? "right").trim().toLowerCase();
 
   const chartData = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
@@ -50,8 +53,14 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
       {queryError ? <div className="rounded border border-red-300 bg-red-50 p-2 text-xs text-red-700">{queryError}</div> : null}
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
-          <Tooltip formatter={(value: any) => formatChartValue(value, fmt)} />
-          {recharts.showLegend !== false ? <Legend /> : null}
+          {showTooltip ? <Tooltip formatter={(value: any) => formatChartValue(value, fmt)} /> : null}
+          {recharts.showLegend !== false && legendPosition !== "none" ? (
+            <Legend
+              verticalAlign={legendPosition === "bottom" ? "bottom" : "middle"}
+              align={legendPosition === "right" ? "right" : "center"}
+              layout={legendPosition === "right" ? "vertical" : "horizontal"}
+            />
+          ) : null}
           <Pie
             data={chartData}
             dataKey="value"

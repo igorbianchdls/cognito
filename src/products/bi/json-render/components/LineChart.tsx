@@ -11,10 +11,11 @@ type AnyRecord = Record<string, any>;
 export default function JsonRenderLineChart({ element }: { element: any }) {
   const { data, setData } = useData();
   const gradientId = React.useId();
+  const props = (element?.props as AnyRecord | undefined) || {};
   const dq = (element?.props?.dataQuery as AnyRecord | undefined);
   const fmt = (element?.props?.format ?? "number") as "currency" | "percent" | "number";
   const height = (element?.props?.height as number | undefined) ?? 220;
-  const recharts = ((element?.props?.recharts as AnyRecord | undefined) || {});
+  const recharts = { ...((element?.props?.recharts as AnyRecord | undefined) || {}), ...props };
   const xFieldName = typeof dq?.xField === "string" ? dq.xField.trim() : "label";
   const yFieldName = typeof dq?.yField === "string" ? dq.yField.trim() : "value";
   const keyFieldName = typeof dq?.keyField === "string" ? dq.keyField.trim() : "key";
@@ -22,6 +23,10 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
   const { serverRows, queryError } = useChartServerRows(dq, data as AnyRecord);
   const { clearOnSecondClick, resolvedFilterStorePath, shouldClickFilter } = useChartInteraction(element, dq?.dimension);
   const colors = useResolvedChartColors(element?.props?.colorScheme, ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6"]);
+  const showValueAxis = recharts.showValueAxis ?? true;
+  const hideCategoryAxis = Boolean(recharts.hideCategoryAxis ?? false);
+  const showTooltip = recharts.showTooltip ?? true;
+  const legendPosition = String(recharts.legendPosition ?? "bottom").trim().toLowerCase();
 
   const normalizedRows = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
@@ -86,10 +91,16 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
             </defs>
           ) : null}
           {recharts.showGrid !== false ? <CartesianGrid strokeDasharray={recharts.gridDasharray || "3 3"} vertical={Boolean(recharts.gridVertical)} /> : null}
-          <XAxis dataKey="x" tickLine={false} axisLine={false} />
-          <YAxis tickLine={false} axisLine={false} tickFormatter={(value) => formatChartValue(value, fmt)} />
-          <Tooltip formatter={(value: any) => formatChartValue(value, fmt)} />
-          {recharts.showLegend !== false && seriesKeys.length > 1 ? <Legend /> : null}
+          <XAxis dataKey="x" hide={hideCategoryAxis} tickLine={false} axisLine={false} />
+          <YAxis hide={!showValueAxis} tickLine={false} axisLine={false} tickFormatter={(value) => formatChartValue(value, fmt)} />
+          {showTooltip ? <Tooltip formatter={(value: any) => formatChartValue(value, fmt)} /> : null}
+          {recharts.showLegend !== false && legendPosition !== "none" && seriesKeys.length > 1 ? (
+            <Legend
+              verticalAlign={legendPosition === "bottom" ? "bottom" : "middle"}
+              align={legendPosition === "right" ? "right" : "center"}
+              layout={legendPosition === "right" ? "vertical" : "horizontal"}
+            />
+          ) : null}
           {seriesKeys.map((key, index) => (
             <Line
               key={key}
