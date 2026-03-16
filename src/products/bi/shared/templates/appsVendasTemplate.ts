@@ -274,18 +274,7 @@ ORDER BY 2 ASC"
             </Query>
             <Fields x="label" y="value" key="key" />
             <Interaction clickAsFilter table="vendas.pedidos" field="canal_venda_id" clearOnSecondClick />
-            <Nivo
-              innerRadius={0.5}
-              padAngle={1}
-              cornerRadius={4}
-              activeOuterRadiusOffset={10}
-              sortByValue
-              enableArcLabels={false}
-              enableArcLinkLabels={false}
-              margin={{ top: 16, right: 140, bottom: 16, left: 16 }}
-              legends={[{ anchor: "right", direction: "column", translateX: 110, itemWidth: 110, itemHeight: 18, itemsSpacing: 6, symbolSize: 12, itemDirection: "left-to-right" }]}
-              tooltip={{ showPercentOfTotal: true }}
-            />
+            <Recharts innerRadius={64} outerRadius={88} paddingAngle={2} showLabels={false} showLegend />
             <Config>
               {
                 "dataQuery": {
@@ -316,7 +305,7 @@ ORDER BY 2 ASC"
             </Query>
             <Fields x="label" y="value" key="key" />
             <Interaction clickAsFilter table="vendas.pedidos" field="categoria_receita_id" clearOnSecondClick />
-            <Nivo layout="horizontal" padding={0.24} borderRadius={8} enableGridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
+            <Recharts layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} />
             <Config>
               {
                 "dataQuery": {
@@ -347,7 +336,7 @@ ORDER BY 2 ASC"
             </Query>
             <Fields x="label" y="value" key="key" />
             <Interaction clickAsFilter={false} />
-            <Nivo layout="horizontal" padding={0.24} borderRadius={8} enableGridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
+            <Recharts layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} />
             <Config>
               {
                 "dataQuery": {
@@ -381,7 +370,7 @@ ORDER BY 2 ASC"
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter table="vendas.pedidos" field="vendedor_id" clearOnSecondClick />
-        <Nivo layout="horizontal" padding={0.24} borderRadius={8} enableGridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
+        <Recharts layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} />
         <Config>
           {
             "dataQuery": {
@@ -412,7 +401,7 @@ ORDER BY 2 ASC"
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter table="vendas.pedidos" field="filial_id" clearOnSecondClick />
-        <Nivo layout="horizontal" padding={0.24} borderRadius={8} enableGridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
+        <Recharts layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} />
         <Config>
           {
             "dataQuery": {
@@ -443,7 +432,7 @@ ORDER BY 2 ASC"
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter table="vendas.pedidos" field="unidade_negocio_id" clearOnSecondClick />
-        <Nivo layout="horizontal" padding={0.24} borderRadius={8} enableGridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
+        <Recharts layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} />
         <Config>
           {
             "dataQuery": {
@@ -501,20 +490,7 @@ ORDER BY 2 ASC"
         </Query>
         <Fields x="key" y="value" key="key" series="series" />
         <Interaction clickAsFilter={false} />
-        <Nivo
-          xScale={{ type: "time", format: "%Y-%m-%d", precision: "month", useUTC: false }}
-          xFormat="time:%b/%y"
-          curve="monotoneX"
-          enableArea
-          areaOpacity={0.12}
-          lineWidth={3}
-          pointSize={5}
-          axisBottom={{ format: "%b/%y", tickValues: "every 1 month", legend: "Mês", legendOffset: 36 }}
-          axisLeft={{ legend: "Receita", legendOffset: -44 }}
-          legends={[{ anchor: "bottom", direction: "row", translateY: 56, itemWidth: 92, itemHeight: 16, itemsSpacing: 8, symbolSize: 10, itemDirection: "left-to-right" }]}
-          tooltip={{ showSeries: true }}
-          margin={{ top: 10, right: 16, bottom: 78, left: 56 }}
-        />
+        <Recharts curve="monotone" showGrid showLegend strokeWidth={3} showDots={false} />
         <Config>
           {
             "dataQuery": {
@@ -697,7 +673,7 @@ ORDER BY 2 ASC"
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter={false} />
-        <Nivo layout="vertical" padding={0.28} borderRadius={8} enableGridY axisBottom={{ tickRotation: -18, legend: "Mês", legendOffset: 42 }} axisLeft={{ legend: "Pedidos", legendOffset: -34 }} />
+        <Recharts layout="horizontal" radius={8} showGrid valueAxisLabel="Pedidos" xTickCount={6} />
         <Config>
           {
             "dataQuery": {
@@ -726,7 +702,7 @@ ORDER BY 2 ASC"
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter={false} />
-        <Nivo layout="vertical" padding={0.28} borderRadius={8} enableGridY axisBottom={{ tickRotation: -18, legend: "Mês", legendOffset: 42 }} axisLeft={{ legend: "Ticket Médio", legendOffset: -44 }} />
+        <Recharts layout="horizontal" radius={8} showGrid valueAxisLabel="Ticket Médio" xTickCount={6} />
         <Config>
           {
             "dataQuery": {
@@ -784,7 +760,7 @@ ORDER BY 2 ASC"
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter table="vendas.pedidos" field="territorio_id" clearOnSecondClick />
-        <Nivo layout="horizontal" padding={0.24} borderRadius={8} enableGridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
+        <Recharts layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} />
         <Config>
           {
             "dataQuery": {
@@ -815,7 +791,7 @@ ORDER BY 2 ASC"
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter table="vendas.pedidos" field="categoria_receita_id" clearOnSecondClick />
-        <Nivo layout="horizontal" padding={0.24} borderRadius={8} enableGridX axisBottom={{ legend: "Receita", legendOffset: 30, maxTicks: 4 }} />
+        <Recharts layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} />
         <Config>
           {
             "dataQuery": {
@@ -845,7 +821,7 @@ ORDER BY 2 ASC"
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter table="vendas.pedidos" field="canal_venda_id" clearOnSecondClick />
-        <Nivo layout="horizontal" padding={0.24} borderRadius={8} enableGridX axisBottom={{ legend: "Pedidos", legendOffset: 30, maxTicks: 4 }} />
+        <Recharts layout="vertical" radius={8} showGrid valueAxisLabel="Pedidos" xTickCount={4} />
         <Config>
           {
             "dataQuery": {

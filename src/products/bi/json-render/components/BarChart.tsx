@@ -14,7 +14,6 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   const fmt = (element?.props?.format ?? "number") as "currency" | "percent" | "number";
   const height = (element?.props?.height as number | undefined) ?? 220;
   const recharts = ((element?.props?.recharts as AnyRecord | undefined) || {});
-  const nivo = ((element?.props?.nivo as AnyRecord | undefined) || {});
   const xFieldName = typeof dq?.xField === "string" ? dq.xField.trim() : "label";
   const yFieldName = typeof dq?.yField === "string" ? dq.yField.trim() : "value";
   const keyFieldName = typeof dq?.keyField === "string" ? dq.keyField.trim() : "key";
@@ -53,20 +52,19 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     return Array.from(new Set(normalizedRows.map((row) => row.series)));
   }, [normalizedRows, seriesFieldName]);
   const useCategoryColors = Boolean(recharts.colorByCategory ?? !seriesFieldName);
-  const legacyLayout = typeof nivo.layout === "string" ? nivo.layout : undefined;
-  const requestedLayout = typeof recharts.layout === "string" ? recharts.layout : legacyLayout;
-  const layout = requestedLayout === "horizontal" ? "vertical" : "horizontal";
-  const stacked = Boolean(recharts.stacked ?? (nivo.groupMode === "stacked"));
-  const margin = recharts.margin || nivo.margin || (layout === "vertical"
+  const requestedLayout = typeof recharts.layout === "string" ? recharts.layout : "horizontal";
+  const layout = requestedLayout === "vertical" ? "vertical" : "horizontal";
+  const stacked = Boolean(recharts.stacked);
+  const margin = recharts.margin || (layout === "vertical"
     ? { top: 10, right: 12, bottom: 12, left: 120 }
     : { top: 10, right: 12, bottom: 44, left: 12 });
-  const categoryAxisWidth = Number(recharts.yAxisWidth ?? nivo?.margin?.left ?? 120);
-  const radius = recharts.radius ?? nivo.borderRadius;
-  const showGrid = recharts.showGrid ?? nivo.enableGridX ?? true;
-  const xTickCount = Number(recharts.xTickCount ?? nivo?.axisBottom?.maxTicks ?? 6);
+  const categoryAxisWidth = Number(recharts.yAxisWidth ?? 120);
+  const radius = recharts.radius;
+  const showGrid = recharts.showGrid ?? true;
+  const xTickCount = Number(recharts.xTickCount ?? 6);
   const valueAxisLabel = typeof recharts.valueAxisLabel === "string"
     ? recharts.valueAxisLabel
-    : (typeof nivo?.axisBottom?.legend === "string" ? nivo.axisBottom.legend : undefined);
+    : undefined;
 
   const handleClick = React.useCallback((payload: any) => {
     if (!shouldClickFilter || !resolvedFilterStorePath) return;

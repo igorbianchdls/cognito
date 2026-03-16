@@ -608,6 +608,10 @@ function compileChartNode(source: string, node: DslNode, context: CompileContext
   if (nivoNodes.length > 1) {
     throw new DashboardTemplateDslParseError(source, node.start, 'Tag <chart> aceita no maximo um <nivo>')
   }
+  const rechartsNodes = node.children.filter((child) => child.tag === 'recharts')
+  if (rechartsNodes.length > 1) {
+    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <chart> aceita no maximo um <recharts>')
+  }
   const configNodes = node.children.filter((child) => child.tag === 'config')
   if (configNodes.length > 1) {
     throw new DashboardTemplateDslParseError(source, node.start, 'Tag <chart> aceita no maximo um <config>')
@@ -713,6 +717,18 @@ function compileChartNode(source: string, node: DslNode, context: CompileContext
     props.nivo = {
       ...nivoFromProps,
       ...nivoFromNode,
+    }
+  }
+
+  if (rechartsNodes.length) {
+    const rechartsFromNode = attrsToProps(rechartsNodes[0].attrs)
+    const rechartsFromProps =
+      props.recharts && typeof props.recharts === 'object' && !Array.isArray(props.recharts)
+        ? ({ ...(props.recharts as Record<string, unknown>) } as Record<string, unknown>)
+        : {}
+    props.recharts = {
+      ...rechartsFromProps,
+      ...rechartsFromNode,
     }
   }
 
