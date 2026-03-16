@@ -8,6 +8,7 @@ export type ChatArtifactRow = {
   type: ArtifactType
   title: string
   chat_id: string
+  runtime_kind: string | null
   snapshot_id: string | null
   file_path: string
   thumbnail_data_url: string | null
@@ -126,21 +127,24 @@ export async function listArtifacts(params?: ListArtifactsParams): Promise<ChatA
   const rows = await runQuery<ChatArtifactRow>(
     `
       SELECT
-        id,
-        type,
-        title,
-        chat_id,
-        snapshot_id,
-        file_path,
-        thumbnail_data_url,
-        status,
-        metadata,
-        created_at,
-        updated_at,
-        last_opened_at
-      FROM chat.artifacts
+        a.id,
+        a.type,
+        a.title,
+        a.chat_id,
+        c.runtime_kind,
+        a.snapshot_id,
+        a.file_path,
+        a.thumbnail_data_url,
+        a.status,
+        a.metadata,
+        a.created_at,
+        a.updated_at,
+        a.last_opened_at
+      FROM chat.artifacts a
+      LEFT JOIN chat.chats c
+        ON c.id = a.chat_id
       ${hasType ? 'WHERE type = $1' : ''}
-      ORDER BY updated_at DESC, created_at DESC
+      ORDER BY a.updated_at DESC, a.created_at DESC
       LIMIT $${hasType ? 2 : 1}
     `,
     hasType ? [params?.type, limit] : [limit],

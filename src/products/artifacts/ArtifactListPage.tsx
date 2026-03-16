@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 type ArtifactType = 'dashboard' | 'report' | 'slide'
 
@@ -9,6 +10,7 @@ type ArtifactItem = {
   type: ArtifactType
   title: string
   chat_id: string
+  runtime_kind: string | null
   snapshot_id: string | null
   file_path: string
   thumbnail_data_url: string | null
@@ -24,6 +26,7 @@ function sectionTitle(type: ArtifactType): string {
 }
 
 export default function ArtifactListPage({ type }: { type: ArtifactType }) {
+  const router = useRouter()
   const [items, setItems] = useState<ArtifactItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -54,6 +57,16 @@ export default function ArtifactListPage({ type }: { type: ArtifactType }) {
 
   const title = useMemo(() => sectionTitle(type), [type])
 
+  const handleOpenArtifact = (item: ArtifactItem) => {
+    const runtimeKind = item.runtime_kind === 'agentsdk' ? 'agentsdk' : 'codex'
+    const qs = new URLSearchParams({
+      artifact: '1',
+      artifactTab: 'preview',
+      artifactPath: item.file_path,
+    })
+    router.push(`/chat/${runtimeKind}/${encodeURIComponent(item.chat_id)}?${qs.toString()}`)
+  }
+
   return (
     <div className="min-h-screen bg-[#F7F7F6] px-8 py-8 text-[#1F1F1D]">
       <div className="mx-auto max-w-7xl">
@@ -69,9 +82,11 @@ export default function ArtifactListPage({ type }: { type: ArtifactType }) {
           items.length ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               {items.map((item) => (
-                <div
+                <button
                   key={item.id}
-                  className="overflow-hidden rounded-[18px] border-[0.5px] border-[#DDDDD8] bg-white shadow-[0_2px_6px_rgba(15,23,42,0.05)]"
+                  type="button"
+                  onClick={() => handleOpenArtifact(item)}
+                  className="overflow-hidden rounded-[18px] border-[0.5px] border-[#DDDDD8] bg-white text-left shadow-[0_2px_6px_rgba(15,23,42,0.05)] transition hover:shadow-[0_6px_18px_rgba(15,23,42,0.08)]"
                 >
                   <div className="aspect-[16/9] border-b-[0.5px] border-[#DDDDD8] bg-[#EEEEEB]">
                     {item.thumbnail_data_url ? (
@@ -90,7 +105,7 @@ export default function ArtifactListPage({ type }: { type: ArtifactType }) {
                     <div className="text-xs text-[#6A6A68]">Chat: {item.chat_id}</div>
                     <div className="text-xs text-[#6A6A68]">Atualizado: {new Date(item.updated_at).toLocaleString('pt-BR')}</div>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           ) : (

@@ -42,7 +42,7 @@ export default function ChatWorkspace({
     sidebarCollapsed,
     setSidebarCollapsed,
   } = useChatConversationUiState({ chatId: initialChatId });
-  const [chatId, setChatId] = useState<string | null>(null);
+  const [chatId, setChatId] = useState<string | null>(initialChatId ?? null);
   const splitOpen = artifactOpen && !artifactExpanded;
 
   return (
