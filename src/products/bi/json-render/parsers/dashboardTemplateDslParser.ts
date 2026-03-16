@@ -505,6 +505,9 @@ function toCatalogType(tag: string): string {
   if (normalized === 'linechart') return 'LineChart'
   if (normalized === 'barchart') return 'BarChart'
   if (normalized === 'piechart') return 'PieChart'
+  if (normalized === 'rechartslinechart') return 'RechartsLineChart'
+  if (normalized === 'rechartsbarchart') return 'RechartsBarChart'
+  if (normalized === 'rechartspiechart') return 'RechartsPieChart'
   if (normalized === 'defaults') return 'Defaults'
   if (tag === 'chart') return 'Chart'
   if (tag === 'kpi') return 'KPI'
@@ -1015,7 +1018,14 @@ function compileNode(source: string, node: DslNode, context: CompileContext): Re
       props.text = inlineText
     }
   }
-  if (type === 'LineChart' || type === 'BarChart' || type === 'PieChart') {
+  if (
+    type === 'LineChart' ||
+    type === 'BarChart' ||
+    type === 'PieChart' ||
+    type === 'RechartsLineChart' ||
+    type === 'RechartsBarChart' ||
+    type === 'RechartsPieChart'
+  ) {
     const interactionFromDefaults = context.chartInteractionDefaults || {}
     const interactionFromProps =
       props.interaction && typeof props.interaction === 'object' && !Array.isArray(props.interaction)
