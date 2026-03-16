@@ -305,7 +305,7 @@ ORDER BY 2 ASC"
             </Query>
             <Fields x="label" y="value" key="key" />
             <Interaction clickAsFilter table="vendas.pedidos" field="categoria_receita_id" clearOnSecondClick />
-            <Recharts layout="horizontal" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} />
+            <Recharts layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} />
             <Config>
               {
                 "dataQuery": {
@@ -336,7 +336,7 @@ ORDER BY 2 ASC"
             </Query>
             <Fields x="label" y="value" key="key" />
             <Interaction clickAsFilter={false} />
-            <Recharts layout="horizontal" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} />
+            <Recharts layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} />
             <Config>
               {
                 "dataQuery": {
@@ -370,7 +370,7 @@ ORDER BY 2 ASC"
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter table="vendas.pedidos" field="vendedor_id" clearOnSecondClick />
-        <Recharts layout="horizontal" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} />
+        <Recharts layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} />
         <Config>
           {
             "dataQuery": {
@@ -401,7 +401,7 @@ ORDER BY 2 ASC"
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter table="vendas.pedidos" field="filial_id" clearOnSecondClick />
-        <Recharts layout="horizontal" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} />
+        <Recharts layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} />
         <Config>
           {
             "dataQuery": {
@@ -432,7 +432,7 @@ ORDER BY 2 ASC"
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter table="vendas.pedidos" field="unidade_negocio_id" clearOnSecondClick />
-        <Recharts layout="horizontal" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} />
+        <Recharts layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} />
         <Config>
           {
             "dataQuery": {
@@ -673,7 +673,7 @@ ORDER BY 2 ASC"
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter={false} />
-        <Recharts layout="horizontal" radius={8} showGrid valueAxisLabel="Pedidos" xTickCount={6} />
+        <Recharts layout="vertical" radius={8} showGrid valueAxisLabel="Pedidos" xTickCount={6} />
         <Config>
           {
             "dataQuery": {
@@ -702,7 +702,7 @@ ORDER BY 2 ASC"
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter={false} />
-        <Recharts layout="horizontal" radius={8} showGrid valueAxisLabel="Ticket Médio" xTickCount={6} />
+        <Recharts layout="vertical" radius={8} showGrid valueAxisLabel="Ticket Médio" xTickCount={6} />
         <Config>
           {
             "dataQuery": {
@@ -760,7 +760,7 @@ ORDER BY 2 ASC"
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter table="vendas.pedidos" field="territorio_id" clearOnSecondClick />
-        <Recharts layout="horizontal" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} />
+        <Recharts layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} />
         <Config>
           {
             "dataQuery": {
@@ -791,7 +791,7 @@ ORDER BY 2 ASC"
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter table="vendas.pedidos" field="categoria_receita_id" clearOnSecondClick />
-        <Recharts layout="horizontal" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} />
+        <Recharts layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} />
         <Config>
           {
             "dataQuery": {
@@ -821,7 +821,7 @@ ORDER BY 2 ASC"
         </Query>
         <Fields x="label" y="value" key="key" />
         <Interaction clickAsFilter table="vendas.pedidos" field="canal_venda_id" clearOnSecondClick />
-        <Recharts layout="horizontal" radius={8} showGrid valueAxisLabel="Pedidos" xTickCount={4} />
+        <Recharts layout="vertical" radius={8} showGrid valueAxisLabel="Pedidos" xTickCount={4} />
         <Config>
           {
             "dataQuery": {
