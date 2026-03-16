@@ -122,7 +122,13 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
               />
             </>
           )}
-          <Tooltip formatter={(value: any) => formatChartValue(value, fmt)} />
+          <Tooltip
+            formatter={(value: any) => formatChartValue(value, fmt)}
+            labelFormatter={(label: any, payload: any) => {
+              const first = Array.isArray(payload) ? payload[0] : undefined;
+              return first?.payload?.label ?? label ?? "";
+            }}
+          />
           {recharts.showLegend !== false && seriesKeys.length > 1 ? <Legend /> : null}
           {seriesKeys.map((key, index) => (
             <Bar key={key} dataKey={key} name={key === "value" ? valueAxisLabel || "Valor" : key} fill={colors[index % colors.length]} stackId={stacked ? "stack" : undefined} radius={radius}>
