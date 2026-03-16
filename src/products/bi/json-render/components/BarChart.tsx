@@ -14,6 +14,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   const fmt = (element?.props?.format ?? "number") as "currency" | "percent" | "number";
   const height = (element?.props?.height as number | undefined) ?? 220;
   const recharts = ((element?.props?.recharts as AnyRecord | undefined) || {});
+  const nivo = ((element?.props?.nivo as AnyRecord | undefined) || {});
   const xFieldName = typeof dq?.xField === "string" ? dq.xField.trim() : "label";
   const yFieldName = typeof dq?.yField === "string" ? dq.yField.trim() : "value";
   const keyFieldName = typeof dq?.keyField === "string" ? dq.keyField.trim() : "key";
@@ -30,6 +31,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
         label: String(getFieldValue(record, xFieldName, ["label", "x"]) ?? ""),
         value: Number(getFieldValue(record, yFieldName, ["value", "y"]) ?? 0),
         filterKey: getFieldValue(record, keyFieldName, ["key", xFieldName, "label", "x"]),
+        filterLabel: String(getFieldValue(record, xFieldName, ["label", "x"]) ?? ""),
         series: seriesFieldName ? String(getFieldValue(record, seriesFieldName, ["series"]) ?? "Series") : "Series",
       };
     });
@@ -39,7 +41,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     if (!seriesFieldName) return normalizedRows;
     const byLabel = new Map<string, AnyRecord>();
     normalizedRows.forEach((row) => {
-      const current = byLabel.get(row.label) || { label: row.label, filterKey: row.filterKey };
+      const current = byLabel.get(row.label) || { label: row.label, filterKey: row.filterKey, filterLabel: row.filterLabel };
       current[row.series] = row.value;
       byLabel.set(row.label, current);
     });
@@ -51,9 +53,20 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     return Array.from(new Set(normalizedRows.map((row) => row.series)));
   }, [normalizedRows, seriesFieldName]);
   const useCategoryColors = Boolean(recharts.colorByCategory ?? !seriesFieldName);
-
-  const layout = recharts.layout === "horizontal" ? "vertical" : "horizontal";
-  const stacked = Boolean(recharts.stacked);
+  const legacyLayout = typeof nivo.layout === "string" ? nivo.layout : undefined;
+  const requestedLayout = typeof recharts.layout === "string" ? recharts.layout : legacyLayout;
+  const layout = requestedLayout === "horizontal" ? "vertical" : "horizontal";
+  const stacked = Boolean(recharts.stacked ?? (nivo.groupMode === "stacked"));
+  const margin = recharts.margin || nivo.margin || (layout === "vertical"
+    ? { top: 10, right: 12, bottom: 12, left: 120 }
+    : { top: 10, right: 12, bottom: 44, left: 12 });
+  const categoryAxisWidth = Number(recharts.yAxisWidth ?? nivo?.margin?.left ?? 120);
+  const radius = recharts.radius ?? nivo.borderRadius;
+  const showGrid = recharts.showGrid ?? nivo.enableGridX ?? true;
+  const xTickCount = Number(recharts.xTickCount ?? nivo?.axisBottom?.maxTicks ?? 6);
+  const valueAxisLabel = typeof recharts.valueAxisLabel === "string"
+    ? recharts.valueAxisLabel
+    : (typeof nivo?.axisBottom?.legend === "string" ? nivo.axisBottom.legend : undefined);
 
   const handleClick = React.useCallback((payload: any) => {
     if (!shouldClickFilter || !resolvedFilterStorePath) return;
@@ -70,23 +83,51 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     <div style={{ height, width: "100%" }}>
       {queryError ? <div className="rounded border border-red-300 bg-red-50 p-2 text-xs text-red-700">{queryError}</div> : null}
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={chartData} layout={layout} margin={recharts.margin || { top: 10, right: 12, bottom: 12, left: 0 }} onClick={handleClick} barSize={recharts.barSize}>
-          {recharts.showGrid !== false ? <CartesianGrid strokeDasharray={recharts.gridDasharray || "3 3"} vertical={layout === "vertical"} horizontal={layout === "horizontal"} /> : null}
+        <BarChart data={chartData} layout={layout} margin={margin} onClick={handleClick} barSize={recharts.barSize}>
+          {showGrid ? <CartesianGrid strokeDasharray={recharts.gridDasharray || "3 3"} vertical={layout === "vertical"} horizontal={layout === "horizontal"} /> : null}
           {layout === "horizontal" ? (
             <>
-              <XAxis dataKey="label" tickLine={false} axisLine={false} />
-              <YAxis tickLine={false} axisLine={false} tickFormatter={(value) => formatChartValue(value, fmt)} />
+              <XAxis
+                dataKey="label"
+                tickLine={false}
+                axisLine={false}
+                interval={0}
+                minTickGap={0}
+                height={40}
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(value) => formatChartValue(value, fmt)}
+                tickCount={xTickCount}
+                width={80}
+                label={valueAxisLabel ? { value: valueAxisLabel, angle: -90, position: "insideLeft" } : undefined}
+              />
             </>
           ) : (
             <>
-              <XAxis type="number" tickLine={false} axisLine={false} tickFormatter={(value) => formatChartValue(value, fmt)} />
-              <YAxis type="category" dataKey="label" tickLine={false} axisLine={false} width={recharts.yAxisWidth || 100} />
+              <XAxis
+                type="number"
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(value) => formatChartValue(value, fmt)}
+                tickCount={xTickCount}
+                label={valueAxisLabel ? { value: valueAxisLabel, position: "insideBottom", offset: -4 } : undefined}
+              />
+              <YAxis
+                type="category"
+                dataKey="label"
+                tickLine={false}
+                axisLine={false}
+                width={categoryAxisWidth}
+                interval={0}
+              />
             </>
           )}
           <Tooltip formatter={(value: any) => formatChartValue(value, fmt)} />
           {recharts.showLegend !== false && seriesKeys.length > 1 ? <Legend /> : null}
           {seriesKeys.map((key, index) => (
-            <Bar key={key} dataKey={key} fill={colors[index % colors.length]} stackId={stacked ? "stack" : undefined} radius={recharts.radius}>
+            <Bar key={key} dataKey={key} name={key === "value" ? valueAxisLabel || "Valor" : key} fill={colors[index % colors.length]} stackId={stacked ? "stack" : undefined} radius={radius}>
               {useCategoryColors
                 ? chartData.map((_: any, cellIndex: number) => <Cell key={`cell-${key}-${cellIndex}`} fill={colors[cellIndex % colors.length]} />)
                 : null}
