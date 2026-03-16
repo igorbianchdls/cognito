@@ -53,11 +53,12 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   }, [normalizedRows, seriesFieldName]);
   const useCategoryColors = Boolean(recharts.colorByCategory ?? !seriesFieldName);
   const requestedLayout = typeof recharts.layout === "string" ? recharts.layout : "vertical";
-  const layout = requestedLayout === "horizontal" ? "horizontal" : "vertical";
+  const isHorizontalBars = requestedLayout === "horizontal";
+  const rechartsLayout = isHorizontalBars ? "vertical" : "horizontal";
   const stacked = Boolean(recharts.stacked);
-  const margin = recharts.margin || (layout === "vertical"
-    ? { top: 10, right: 12, bottom: 44, left: 12 }
-    : { top: 10, right: 12, bottom: 12, left: 120 });
+  const margin = recharts.margin || (isHorizontalBars
+    ? { top: 10, right: 12, bottom: 12, left: 120 }
+    : { top: 10, right: 12, bottom: 44, left: 12 });
   const categoryAxisWidth = Number(recharts.yAxisWidth ?? 120);
   const radius = recharts.radius;
   const showGrid = recharts.showGrid ?? true;
@@ -81,9 +82,9 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     <div style={{ height, width: "100%" }}>
       {queryError ? <div className="rounded border border-red-300 bg-red-50 p-2 text-xs text-red-700">{queryError}</div> : null}
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={chartData} layout={layout} margin={margin} onClick={handleClick} barSize={recharts.barSize}>
-          {showGrid ? <CartesianGrid strokeDasharray={recharts.gridDasharray || "3 3"} vertical={layout === "horizontal"} horizontal={layout === "vertical"} /> : null}
-          {layout === "vertical" ? (
+        <BarChart data={chartData} layout={rechartsLayout} margin={margin} onClick={handleClick} barSize={recharts.barSize}>
+          {showGrid ? <CartesianGrid strokeDasharray={recharts.gridDasharray || "3 3"} vertical={isHorizontalBars} horizontal={!isHorizontalBars} /> : null}
+          {!isHorizontalBars ? (
             <>
               <XAxis
                 dataKey="label"
