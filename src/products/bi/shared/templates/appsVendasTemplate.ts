@@ -305,7 +305,7 @@ ORDER BY 2 ASC"
             </Query>
             <Fields x="label" y="value" key="key" />
             <Interaction clickAsFilter table="vendas.pedidos" field="categoria_receita_id" clearOnSecondClick />
-            <Recharts layout="horizontal" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} />
+            <Recharts layout="horizontal" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} categoryTickColor="#111111" valueTickColor="#111111" />
             <Config>
               {
                 "dataQuery": {
@@ -336,7 +336,7 @@ ORDER BY 2 ASC"
             </Query>
             <Fields x="label" y="value" key="key" />
             <Interaction clickAsFilter={false} />
-            <Recharts layout="horizontal" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} />
+            <Recharts layout="horizontal" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} categoryTickColor="#111111" valueTickColor="#111111" />
             <Config>
               {
                 "dataQuery": {
