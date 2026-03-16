@@ -17,6 +17,7 @@ type SidebarIconComponent = React.ComponentType<{
 
 export function NavMainSimple({
   items,
+  groupLabel = "Navigation",
   groupLabelStyle,
   itemTextStyle,
   iconSizePx = 12,
@@ -27,6 +28,7 @@ export function NavMainSimple({
     icon?: SidebarIconComponent
     isActive?: boolean
   }[]
+  groupLabel?: string
   groupLabelStyle?: React.CSSProperties
   itemTextStyle?: React.CSSProperties
   iconSizePx?: number
@@ -39,7 +41,7 @@ export function NavMainSimple({
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel style={groupLabelStyle}>Navigation</SidebarGroupLabel>
+      <SidebarGroupLabel style={groupLabelStyle}>{groupLabel}</SidebarGroupLabel>
       <SidebarMenu className="gap-0.5">
         {items.map((item) => (
           <SidebarMenuItem key={item.title}>

@@ -40,6 +40,9 @@ const WhatsappIcon = (props: { className?: string }) => <SidebarGlyph icon="sola
 const DriveIcon = (props: { className?: string }) => <SidebarGlyph icon="solar:folder-with-files-bold" {...props} />
 const EmailIcon = (props: { className?: string }) => <SidebarGlyph icon="solar:inbox-bold" {...props} />
 const NewChatIcon = (props: { className?: string }) => <SidebarGlyph icon="solar:add-circle-bold" {...props} />
+const DashboardsArtifactIcon = (props: { className?: string }) => <SidebarGlyph icon="solar:chart-2-bold" {...props} />
+const ReportsArtifactIcon = (props: { className?: string }) => <SidebarGlyph icon="solar:document-text-bold" {...props} />
+const SlidesArtifactIcon = (props: { className?: string }) => <SidebarGlyph icon="solar:gallery-wide-bold" {...props} />
 
 // Font variable mapping helper
 function fontVar(name?: string) {
@@ -154,6 +157,23 @@ const navigationData = {
       icon: ContaAzulIcon,
     },
   ],
+  artifacts: [
+    {
+      title: "Dashboards",
+      url: "/artifacts/dashboards",
+      icon: DashboardsArtifactIcon,
+    },
+    {
+      title: "Reports",
+      url: "/artifacts/reports",
+      icon: ReportsArtifactIcon,
+    },
+    {
+      title: "Slides",
+      url: "/artifacts/slides",
+      icon: SlidesArtifactIcon,
+    },
+  ],
 }
 
 import { cn } from "@/lib/utils"
@@ -184,7 +204,11 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
 
   const dataWithActiveState = {
     ...navigationData,
-    navMain: navMainWithActiveState
+    navMain: navMainWithActiveState,
+    artifacts: navigationData.artifacts.map(item => ({
+      ...item,
+      isActive: pathname === item.url,
+    })),
   }
 
   // Apply default values consistently (no localStorage overrides)
@@ -231,6 +255,13 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
           </button>
         </div>
         <NavMainSimple items={dataWithActiveState.navMain} groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} iconSizePx={finalIconSizePx} />
+        <NavMainSimple
+          items={dataWithActiveState.artifacts}
+          groupLabel="Artifacts"
+          groupLabelStyle={finalSectionTitleStyle}
+          itemTextStyle={finalItemTextStyle}
+          iconSizePx={finalIconSizePx}
+        />
         <NavErp groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} />
         <NavAirtable groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} />
 

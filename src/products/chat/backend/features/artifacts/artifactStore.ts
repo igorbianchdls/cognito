@@ -29,6 +29,11 @@ type UpsertArtifactInput = {
   metadata?: Record<string, unknown>
 }
 
+type ListArtifactsParams = {
+  type?: ArtifactType | null
+  limit?: number
+}
+
 let ensurePromise: Promise<void> | null = null
 
 export async function ensureArtifactsTable(): Promise<void> {
@@ -114,3 +119,31 @@ export async function upsertArtifact(input: UpsertArtifactInput): Promise<void> 
   )
 }
 
+export async function listArtifacts(params?: ListArtifactsParams): Promise<ChatArtifactRow[]> {
+  await ensureArtifactsTable()
+  const limit = Math.max(1, Math.min(200, Number(params?.limit || 50)))
+  const hasType = Boolean(params?.type)
+  const rows = await runQuery<ChatArtifactRow>(
+    `
+      SELECT
+        id,
+        type,
+        title,
+        chat_id,
+        snapshot_id,
+        file_path,
+        thumbnail_data_url,
+        status,
+        metadata,
+        created_at,
+        updated_at,
+        last_opened_at
+      FROM chat.artifacts
+      ${hasType ? 'WHERE type = $1' : ''}
+      ORDER BY updated_at DESC, created_at DESC
+      LIMIT $${hasType ? 2 : 1}
+    `,
+    hasType ? [params?.type, limit] : [limit],
+  )
+  return rows
+}
