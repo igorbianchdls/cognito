@@ -4,9 +4,6 @@ import React from "react";
 import JsonRenderBarChart from "@/products/bi/json-render/components/BarChart";
 import JsonRenderLineChart from "@/products/bi/json-render/components/LineChart";
 import JsonRenderPieChart from "@/products/bi/json-render/components/PieChart";
-import JsonRenderRechartsBarChart from "@/products/bi/json-render/components/RechartsBarChart";
-import JsonRenderRechartsLineChart from "@/products/bi/json-render/components/RechartsLineChart";
-import JsonRenderRechartsPieChart from "@/products/bi/json-render/components/RechartsPieChart";
 import JsonRenderScatterChart from "@/products/bi/json-render/components/ScatterChart";
 import JsonRenderRadarChart from "@/products/bi/json-render/components/RadarChart";
 import JsonRenderTreemapChart from "@/products/bi/json-render/components/TreemapChart";
@@ -2064,24 +2061,15 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const merged = deepMerge(deepMerge(defaultBarChart as any, (theme.components?.BarChart || {}) as any), (element?.props || {}) as any);
     return <JsonRenderBarChart element={{ props: merged }} />;
   },
-  RechartsBarChart: ({ element }) => {
-    return <JsonRenderRechartsBarChart element={element} />;
-  },
   LineChart: ({ element }) => {
     const theme = useThemeOverrides();
     const merged = deepMerge(deepMerge(defaultLineChart as any, (theme.components?.LineChart || {}) as any), (element?.props || {}) as any);
     return <JsonRenderLineChart element={{ props: merged }} />;
   },
-  RechartsLineChart: ({ element }) => {
-    return <JsonRenderRechartsLineChart element={element} />;
-  },
   PieChart: ({ element }) => {
     const theme = useThemeOverrides();
     const merged = deepMerge(deepMerge(defaultPieChart as any, (theme.components?.PieChart || {}) as any), (element?.props || {}) as any);
     return <JsonRenderPieChart element={{ props: merged }} />;
-  },
-  RechartsPieChart: ({ element }) => {
-    return <JsonRenderRechartsPieChart element={element} />;
   },
   ScatterChart: ({ element }) => {
     const theme = useThemeOverrides();
