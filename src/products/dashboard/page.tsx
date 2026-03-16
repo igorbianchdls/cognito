@@ -131,7 +131,7 @@ export default function DashboardPage() {
 
         <main className="min-h-0 flex-1 overflow-auto border-r-[0.5px] border-[#DDDDD8] bg-[#EEEEEB]">
           {activeView === 'preview' ? (
-            <div className="mx-auto flex min-h-full items-start justify-center p-8">
+            <div className="mx-auto flex min-h-full items-start justify-center p-0">
               <DashboardCanvas tree={parsed} zoom={zoom} />
             </div>
           ) : (
