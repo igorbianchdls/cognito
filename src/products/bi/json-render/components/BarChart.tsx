@@ -61,33 +61,32 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
           accessibilityLayer
           data={chartData}
           layout={isHorizontalBars ? "vertical" : "horizontal"}
-          margin={recharts.margin || (isHorizontalBars ? { top: 8, right: 12, left: 12, bottom: 8 } : { top: 8, right: 12, left: 12, bottom: 8 })}
+          margin={recharts.margin || (isHorizontalBars ? { top: 8, right: 12, left: -20, bottom: 8 } : { top: 8, right: 12, left: 12, bottom: 8 })}
           onClick={handleClick}
           barSize={recharts.barSize}
         >
-          <CartesianGrid vertical={isHorizontalBars} horizontal={!isHorizontalBars} strokeDasharray={recharts.gridDasharray || "3 3"} />
+          <CartesianGrid vertical={!isHorizontalBars} horizontal={false} strokeDasharray={recharts.gridDasharray || "3 3"} />
           {isHorizontalBars ? (
             <>
               <XAxis
                 type="number"
                 dataKey="value"
-                hide={Boolean(recharts.hideValueAxis ?? false)}
+                hide={Boolean(recharts.hideValueAxis ?? true)}
                 tickLine={false}
                 tickMargin={10}
                 axisLine={false}
                 tick={{ fill: String(recharts.valueTickColor ?? "#6b7280"), fontSize: Number(recharts.valueTickFontSize ?? 12) }}
                 tickFormatter={(value) => formatChartValue(value, fmt)}
-                width={Number(recharts.valueAxisWidth ?? 56)}
               />
               <YAxis
-                dataKey="shortLabel"
+                dataKey="label"
                 type="category"
                 tickLine={false}
                 tickMargin={10}
                 axisLine={false}
                 interval={0}
                 tick={{ fill: String(recharts.categoryTickColor ?? "#6b7280"), fontSize: Number(recharts.categoryTickFontSize ?? 12) }}
-                width={Number(recharts.categoryAxisWidth ?? 56)}
+                tickFormatter={(value: any) => formatCategoryLabel(value)}
               />
             </>
           ) : (
