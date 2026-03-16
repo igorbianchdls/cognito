@@ -66,6 +66,14 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   const valueAxisLabel = typeof recharts.valueAxisLabel === "string"
     ? recharts.valueAxisLabel
     : undefined;
+  const categoryTickStyle = {
+    fill: String(recharts.categoryTickColor ?? "#6b7280"),
+    fontSize: Number(recharts.categoryTickFontSize ?? 12),
+  };
+  const valueTickStyle = {
+    fill: String(recharts.valueTickColor ?? "#6b7280"),
+    fontSize: Number(recharts.valueTickFontSize ?? 12),
+  };
 
   const handleClick = React.useCallback((payload: any) => {
     if (!shouldClickFilter || !resolvedFilterStorePath) return;
@@ -90,6 +98,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
                 dataKey="label"
                 tickLine={false}
                 axisLine={false}
+                tick={categoryTickStyle}
                 tickMargin={10}
                 interval={0}
                 minTickGap={0}
@@ -102,6 +111,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
               <YAxis
                 tickLine={false}
                 axisLine={false}
+                tick={valueTickStyle}
                 tickFormatter={(value) => formatChartValue(value, fmt)}
                 tickCount={xTickCount}
                 width={80}
@@ -114,6 +124,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
                 type="number"
                 tickLine={false}
                 axisLine={false}
+                tick={valueTickStyle}
                 tickFormatter={(value) => formatChartValue(value, fmt)}
                 tickCount={xTickCount}
                 label={valueAxisLabel ? { value: valueAxisLabel, position: "insideBottom", offset: -4 } : undefined}
@@ -123,6 +134,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
                 dataKey="label"
                 tickLine={false}
                 axisLine={false}
+                tick={categoryTickStyle}
                 width={categoryAxisWidth}
                 interval={0}
               />
