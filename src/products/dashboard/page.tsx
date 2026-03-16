@@ -32,7 +32,7 @@ function applyThemeToDsl(dsl: string, themeName: string) {
 function DashboardCanvas({ tree, zoom }: { tree: any; zoom: number }) {
   return (
     <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}>
-      <div className="min-w-[1120px] overflow-hidden rounded-none bg-white shadow-[0_2px_6px_rgba(15,23,42,0.05)]">
+      <div className="min-w-[1120px] overflow-hidden rounded-none bg-white p-0 shadow-[0_2px_6px_rgba(15,23,42,0.05)]">
         <Renderer tree={tree} registry={registry} />
       </div>
     </div>
@@ -44,7 +44,7 @@ export default function DashboardPage() {
   const [draftThemeName, setDraftThemeName] = useState('dark')
   const [appliedThemeName, setAppliedThemeName] = useState('dark')
   const [activeView, setActiveView] = useState<'preview' | 'code'>('preview')
-  const [zoom, setZoom] = useState(0.82)
+  const [zoom, setZoom] = useState(1)
   const themedDsl = useMemo(() => applyThemeToDsl(APPS_VENDAS_TEMPLATE_DSL, appliedThemeName), [appliedThemeName])
   const parsed = useMemo(() => parseDashboardTemplateDslToTree(themedDsl), [themedDsl])
   const rootName = useMemo(() => getDashboardTitle(parsed), [parsed])
