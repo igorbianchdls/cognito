@@ -28,6 +28,7 @@ import {
   touchRuntimeSession,
   upsertRuntimeSession,
 } from '@/products/chat/backend/features/agents/runtime/runtimeSessionStore'
+import { registerArtifactsFromSnapshot } from '@/products/chat/backend/features/artifacts/registerArtifactsFromSnapshot'
 
 export const runtime = 'nodejs'
 
@@ -661,6 +662,9 @@ export async function POST(req: Request) {
       snapshotId = (snap as any)?.snapshotId || null
       try {
         if (snapshotId) await runQuery('UPDATE chat.chats SET snapshot_id = $1, snapshot_at = now() WHERE id = $2', [snapshotId, chatId])
+      } catch {}
+      try {
+        if (snapshotId) await registerArtifactsFromSnapshot({ chatId, snapshotId, sandbox: sess.sandbox })
       } catch {}
     } catch {}
     try { await sess.sandbox.stop() } catch {}
@@ -1498,6 +1502,9 @@ process.exit(0);
       try {
         if (snapshotId) await runQuery('UPDATE chat.chats SET snapshot_id = $1, snapshot_at = now() WHERE id = $2', [snapshotId, chatId])
       } catch { /* ignore db errors */ }
+      try {
+        if (snapshotId) await registerArtifactsFromSnapshot({ chatId, snapshotId, sandbox: sess.sandbox })
+      } catch {}
       try {
         await touchRuntimeSession(chatId, {
           leaseSeconds: RUNTIME_LEASE_SECONDS,
