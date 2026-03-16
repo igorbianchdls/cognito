@@ -93,14 +93,14 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
             <>
               <XAxis
                 dataKey="shortLabel"
-                tickLine={false}
+                tickLine={{ stroke: String(recharts.axisColor ?? "#d4d4d8") }}
                 tickMargin={10}
                 axisLine={{ stroke: String(recharts.axisColor ?? "#d4d4d8") }}
                 interval={0}
                 tick={{ fill: String(recharts.categoryTickColor ?? "#6b7280"), fontSize: Number(recharts.categoryTickFontSize ?? 12) }}
               />
               <YAxis
-                tickLine={false}
+                tickLine={{ stroke: String(recharts.axisColor ?? "#d4d4d8") }}
                 axisLine={{ stroke: String(recharts.axisColor ?? "#d4d4d8") }}
                 tick={{ fill: String(recharts.valueTickColor ?? "#6b7280"), fontSize: Number(recharts.valueTickFontSize ?? 12) }}
                 tickFormatter={(value) => formatChartValue(value, fmt)}
