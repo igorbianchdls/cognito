@@ -17,7 +17,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         }
       }
     </Config>
-    <Container direction="row" gap={12} padding={16} align="stretch" minHeight="100%">
+    <Container direction="row" gap={12} padding={0} align="stretch" minHeight="100%">
       <Sidebar width={300} minWidth={260} maxWidth={340} minHeight="100%" gap={10} padding={12} overflowY="auto" sticky top={12}>
         <Card>
           <Title text="Filtros" marginBottom={2} />
