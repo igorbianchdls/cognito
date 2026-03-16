@@ -10,6 +10,7 @@ type AnyRecord = Record<string, any>;
 
 export default function JsonRenderLineChart({ element }: { element: any }) {
   const { data, setData } = useData();
+  const gradientId = React.useId();
   const dq = (element?.props?.dataQuery as AnyRecord | undefined);
   const fmt = (element?.props?.format ?? "number") as "currency" | "percent" | "number";
   const height = (element?.props?.height as number | undefined) ?? 220;
@@ -53,6 +54,7 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
     if (!seriesFieldName) return ["value"];
     return Array.from(new Set(normalizedRows.map((row) => row.series)));
   }, [normalizedRows, seriesFieldName]);
+  const useSingleSeriesGradient = Boolean(recharts.singleSeriesGradient ?? (!seriesFieldName && colors.length > 1));
 
   const handleClick = React.useCallback((payload: any) => {
     if (!shouldClickFilter || !resolvedFilterStorePath) return;
@@ -70,6 +72,19 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
       {queryError ? <div className="rounded border border-red-300 bg-red-50 p-2 text-xs text-red-700">{queryError}</div> : null}
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={chartData} margin={recharts.margin || { top: 10, right: 12, bottom: 12, left: 0 }} onClick={handleClick}>
+          {useSingleSeriesGradient ? (
+            <defs>
+              <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="0">
+                {colors.map((color, index) => (
+                  <stop
+                    key={`${color}-${index}`}
+                    offset={`${(index / Math.max(colors.length - 1, 1)) * 100}%`}
+                    stopColor={color}
+                  />
+                ))}
+              </linearGradient>
+            </defs>
+          ) : null}
           {recharts.showGrid !== false ? <CartesianGrid strokeDasharray={recharts.gridDasharray || "3 3"} vertical={Boolean(recharts.gridVertical)} /> : null}
           <XAxis dataKey="x" tickLine={false} axisLine={false} />
           <YAxis tickLine={false} axisLine={false} tickFormatter={(value) => formatChartValue(value, fmt)} />
@@ -80,9 +95,9 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
               key={key}
               type={recharts.curve || "monotone"}
               dataKey={key}
-              stroke={colors[index % colors.length]}
+              stroke={useSingleSeriesGradient && seriesKeys.length === 1 ? `url(#${gradientId})` : colors[index % colors.length]}
               strokeWidth={Number(recharts.strokeWidth ?? 2)}
-              dot={recharts.showDots === true}
+              dot={recharts.showDots === true ? { fill: colors[index % colors.length], stroke: colors[index % colors.length] } : false}
               activeDot={recharts.activeDot ?? { r: 4 }}
               connectNulls={Boolean(recharts.connectNulls)}
             />

@@ -50,6 +50,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
     if (!seriesFieldName) return ["value"];
     return Array.from(new Set(normalizedRows.map((row) => row.series)));
   }, [normalizedRows, seriesFieldName]);
+  const useCategoryColors = Boolean(recharts.colorByCategory ?? !seriesFieldName);
 
   const layout = recharts.layout === "horizontal" ? "vertical" : "horizontal";
   const stacked = Boolean(recharts.stacked);
@@ -86,8 +87,8 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
           {recharts.showLegend !== false && seriesKeys.length > 1 ? <Legend /> : null}
           {seriesKeys.map((key, index) => (
             <Bar key={key} dataKey={key} fill={colors[index % colors.length]} stackId={stacked ? "stack" : undefined} radius={recharts.radius}>
-              {seriesKeys.length === 1 && !seriesFieldName
-                ? chartData.map((_: any, cellIndex: number) => <Cell key={`cell-${cellIndex}`} fill={colors[cellIndex % colors.length]} />)
+              {useCategoryColors
+                ? chartData.map((_: any, cellIndex: number) => <Cell key={`cell-${key}-${cellIndex}`} fill={colors[cellIndex % colors.length]} />)
                 : null}
             </Bar>
           ))}
