@@ -423,13 +423,16 @@ function mapChartType(source: string, node: DslNode, rawType: string): string {
   if (t === 'line') return 'LineChart'
   if (t === 'bar') return 'BarChart'
   if (t === 'pie') return 'PieChart'
+  if (t === 'recharts-line') return 'RechartsLineChart'
+  if (t === 'recharts-bar') return 'RechartsBarChart'
+  if (t === 'recharts-pie') return 'RechartsPieChart'
   if (t === 'composed') return 'ComposedChart'
   if (t === 'funnel') return 'FunnelChart'
   if (t === 'sankey') return 'SankeyChart'
   if (t === 'scatter') return 'ScatterChart'
   if (t === 'radar') return 'RadarChart'
   if (t === 'treemap') return 'TreemapChart'
-  throw new DashboardTemplateDslParseError(source, node.start, `Tag <chart> exige type valido: line | bar | pie | composed | funnel | sankey | scatter | radar | treemap`)
+  throw new DashboardTemplateDslParseError(source, node.start, `Tag <chart> exige type valido: line | bar | pie | recharts-line | recharts-bar | recharts-pie | composed | funnel | sankey | scatter | radar | treemap`)
 }
 
 function compileDataQueryNode(source: string, node: DslNode): Record<string, unknown> {

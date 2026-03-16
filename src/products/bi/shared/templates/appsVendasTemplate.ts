@@ -258,7 +258,7 @@ ORDER BY 2 ASC"
       <Container grow={4}>
         <Card>
           <Title text="Canais" marginBottom={8} />
-          <Chart type="pie" fr={2} format="currency" height={240}>
+          <Chart type="recharts-pie" fr={2} format="currency" height={240}>
             <Query>
               SELECT
                           cv.id AS key,
@@ -300,7 +300,7 @@ ORDER BY 2 ASC"
       <Container grow={2}>
         <Card>
           <Title text="Categorias" marginBottom={8} />
-          <Chart type="bar" format="currency" height={240}>
+          <Chart type="recharts-bar" format="currency" height={240}>
             <Query>
               SELECT
                           cr.id AS key,
@@ -331,7 +331,7 @@ ORDER BY 2 ASC"
       <Container grow={2}>
         <Card>
           <Title text="Clientes" marginBottom={8} />
-          <Chart type="bar" format="currency" height={240}>
+          <Chart type="recharts-bar" format="currency" height={240}>
             <Query>
               SELECT
                           c.id AS key,
@@ -364,7 +364,7 @@ ORDER BY 2 ASC"
       <Container grow={1}>
         <Card>
           <Title text="Vendedores" marginBottom={8} />
-          <Chart type="bar" format="currency" height={220}>
+          <Chart type="recharts-bar" format="currency" height={220}>
         <Query>
           SELECT
                       v.id AS key,
@@ -396,7 +396,7 @@ ORDER BY 2 ASC"
       <Container grow={1}>
         <Card>
           <Title text="Filiais" marginBottom={8} />
-          <Chart type="bar" format="currency" height={220}>
+          <Chart type="recharts-bar" format="currency" height={220}>
         <Query>
           SELECT
                       fil.id AS key,
@@ -427,7 +427,7 @@ ORDER BY 2 ASC"
       <Container grow={1}>
         <Card>
           <Title text="Unidades de Negócio" marginBottom={8} />
-          <Chart type="bar" format="currency" height={220}>
+          <Chart type="recharts-bar" format="currency" height={220}>
         <Query>
           SELECT
                       un.id AS key,
@@ -460,7 +460,7 @@ ORDER BY 2 ASC"
       <Container grow={3}>
         <Card>
           <Title text="Faturamento Mensal por Canal" marginBottom={8} />
-          <Chart type="line" format="currency" height={240}>
+          <Chart type="recharts-line" format="currency" height={240}>
         <Query>
           WITH top_canais AS (
                       SELECT
@@ -683,7 +683,7 @@ ORDER BY 2 ASC"
       <Container grow={1}>
         <Card>
           <Title text="Pedidos por Mês" marginBottom={8} />
-          <Chart type="bar" format="number" height={220}>
+          <Chart type="recharts-bar" format="number" height={220}>
         <Query>
           SELECT
                       TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS key,
@@ -712,7 +712,7 @@ ORDER BY 2 ASC"
       <Container grow={1}>
         <Card>
           <Title text="Ticket Médio por Mês" marginBottom={8} />
-          <Chart type="bar" format="currency" height={220}>
+          <Chart type="recharts-bar" format="currency" height={220}>
         <Query>
           SELECT
                       TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS key,
@@ -768,7 +768,7 @@ ORDER BY 2 ASC"
       <Container grow={1}>
         <Card>
           <Title text="Territórios" marginBottom={8} />
-          <Chart type="bar" format="currency" height={220}>
+          <Chart type="recharts-bar" format="currency" height={220}>
         <Query>
           SELECT
                       t.id AS key,
@@ -799,7 +799,7 @@ ORDER BY 2 ASC"
       <Container grow={1}>
         <Card>
           <Title text="Serviços/Categorias" marginBottom={8} />
-          <Chart type="bar" format="currency" height={220}>
+          <Chart type="recharts-bar" format="currency" height={220}>
         <Query>
           SELECT
                       cr.id AS key,
@@ -830,7 +830,7 @@ ORDER BY 2 ASC"
       <Container grow={1}>
         <Card>
           <Title text="Pedidos" marginBottom={8} />
-          <Chart type="bar" format="number" height={220}>
+          <Chart type="recharts-bar" format="number" height={220}>
         <Query>
           SELECT
                       cv.id AS key,
