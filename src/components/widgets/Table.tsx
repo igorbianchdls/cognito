@@ -637,56 +637,6 @@ export function DataTable<TData extends TableData>({
           overflow: 'hidden',
         }}
       >
-        {(canShowSearch || canShowColumnToggle || enableExportCsv) && (
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2" style={{ borderColor }}>
-            <div className="flex flex-1 flex-wrap items-center gap-2">
-              {canShowSearch && (
-                <Input
-                  value={String(globalFilter ?? "")}
-                  onChange={(e) => table.setGlobalFilter(e.target.value)}
-                  placeholder={searchPlaceholder}
-                  className="h-8 w-full max-w-xs"
-                />
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              {enableExportCsv && (
-                <Button variant="outline" size="sm" onClick={exportCsv} className="h-8">
-                  <Download className="mr-2 h-4 w-4" />
-                  Exportar CSV
-                </Button>
-              )}
-              {canShowColumnToggle && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-8">
-                      Colunas
-                      <ChevronDown className="ml-2 h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Exibir colunas</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {table
-                      .getAllLeafColumns()
-                      .filter((column) => column.getCanHide())
-                      .map((column) => (
-                        <DropdownMenuCheckboxItem
-                          key={column.id}
-                          className="capitalize"
-                          checked={column.getIsVisible()}
-                          onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                        >
-                          {typeof column.columnDef.header === 'string' ? column.columnDef.header : column.id}
-                        </DropdownMenuCheckboxItem>
-                      ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-            </div>
-          </div>
-        )}
-
         {/* Table Content - flex-1 overflow-auto */}
         <div
           className="flex-1 overflow-auto"

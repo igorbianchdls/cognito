@@ -457,39 +457,6 @@ export default function JsonRenderPivotTable({ element }: { element: any }) {
   return (
     <div>
       {queryError ? <div className="mb-2 text-xs text-red-600">{queryError}</div> : null}
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className="rounded border border-gray-300 bg-white px-2 py-1 text-xs hover:bg-gray-50"
-            onClick={() => {
-              const next = new Set<string>();
-              collectInitiallyExpandedIds(rowTree, next, rowFields.length + 1);
-              setExpandedIds(next);
-            }}
-          >
-            Expandir tudo
-          </button>
-          <button
-            type="button"
-            className="rounded border border-gray-300 bg-white px-2 py-1 text-xs hover:bg-gray-50"
-            onClick={() => setExpandedIds(new Set())}
-          >
-            Recolher tudo
-          </button>
-        </div>
-        {enableExportCsv ? (
-          <button
-            type="button"
-            className="inline-flex items-center gap-1 rounded border border-gray-300 bg-white px-2 py-1 text-xs hover:bg-gray-50"
-            onClick={exportCsv}
-          >
-            <Download size={12} />
-            Exportar CSV
-          </button>
-        ) : null}
-      </div>
-
       <div
         style={{
           minHeight: 140,
