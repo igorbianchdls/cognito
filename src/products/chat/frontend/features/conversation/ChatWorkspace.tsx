@@ -5,8 +5,9 @@ import { useState } from "react";
 import PageContainer from "@/components/layout/PageContainer";
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { ChatPanel, SandboxPanel } from "@/chat/ui";
+import { ChatPanel } from "@/chat/ui";
 import { useChatConversationUiState } from "@/products/chat/frontend/features/conversation/ui-state/useChatConversationUiState";
+import { ChatArtifactWorkspace } from "@/products/chat/frontend/features/workspace/ChatArtifactWorkspace";
 
 export type ChatEngineId =
   | "claude-sonnet"
@@ -101,7 +102,7 @@ export default function ChatWorkspace({
                         : "h-full min-h-0 min-w-0"
                     }
                   >
-                    <SandboxPanel
+                    <ChatArtifactWorkspace
                       className={splitOpen ? "border-0 rounded-none" : undefined}
                       chatId={chatId ?? undefined}
                       onClose={() => {
