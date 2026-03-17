@@ -23,7 +23,7 @@ function SandboxStatusBadge({ status }: { status: SandboxStatus }) {
     'border-gray-200 bg-gray-50 text-gray-600';
 
   return (
-    <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${tone}`}>
+    <span className={`inline-flex items-center rounded-full border px-1.5 py-0.5 text-[10px] font-medium leading-none ${tone}`}>
       {label}
     </span>
   );
@@ -64,13 +64,13 @@ export default function Header({
   };
 
   return (
-    <div className="ui-text flex min-h-[57px] w-full items-center justify-between border-b-[0.5px] border-[#DDDDD8] bg-white px-5 py-3">
-      <div className="flex items-center gap-3 min-w-0">
+    <div className="ui-text flex h-[44px] w-full items-center justify-between border-b-[0.5px] border-[#E6E6E1] bg-white px-3">
+      <div className="flex min-w-0 items-center gap-2">
         <SidebarTrigger />
-        <h1 className="text-[16px] font-semibold text-gray-900 truncate">{title}</h1>
+        <h1 className="truncate text-[13px] font-semibold leading-none text-gray-900">{title}</h1>
         <SandboxStatusBadge status={sandboxStatus} />
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         <ChatErrorNotificationsButton
           notifications={errorNotifications}
           unreadCount={errorNotificationsUnread}
@@ -80,7 +80,7 @@ export default function Header({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button type="button" className="text-gray-700 hover:text-black disabled:opacity-50" disabled={busy} aria-label="Ações do chat">
-              <MoreHorizontal className="w-5 h-5" />
+              <MoreHorizontal className="h-4 w-4" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
