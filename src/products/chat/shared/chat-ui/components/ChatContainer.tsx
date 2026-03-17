@@ -263,7 +263,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
       onOpenSandbox?.(id ?? chatId ?? initialChatId ?? undefined)
     } catch (err) {
       setSandboxStatus('error')
-      notifyError('sandbox', err, 'Falha ao abrir Artifact')
+      notifyError('sandbox', err, 'Falha ao abrir Workspace')
     }
   }
 

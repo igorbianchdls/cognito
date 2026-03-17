@@ -739,8 +739,8 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
           <button
             type="button"
             className="relative h-8 w-8 inline-flex items-center justify-center rounded-md text-gray-700 hover:bg-gray-100"
-            aria-label="Notificações do Artifact"
-            title="Notificações do Artifact"
+            aria-label="Notificações do Workspace"
+            title="Notificações do Workspace"
           >
             <Bell className="w-4 h-4" />
             {unreadCount > 0 ? (
@@ -754,11 +754,11 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
           <DialogHeader className="px-5 py-4 border-b">
             <div className="flex items-start justify-between gap-3 pr-8">
               <div>
-                <DialogTitle>Notificações do Artifact</DialogTitle>
+                <DialogTitle>Notificações do Workspace</DialogTitle>
                 <DialogDescription>
                   {artifactNotifications.length > 0
                     ? `${artifactNotifications.length} erro(s)/aviso(s) do preview`
-                    : 'Nenhum erro registrado no Artifact'}
+                    : 'Nenhum erro registrado no Workspace'}
                 </DialogDescription>
               </div>
               <button

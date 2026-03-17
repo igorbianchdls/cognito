@@ -4,10 +4,31 @@ import React from 'react';
 import { MoreHorizontal, Play, Square, FilePlus2, BarChart3 } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import SandboxStatusBadge from './SandboxStatusBadge';
 import type { SandboxStatus } from '@/chat/sandbox';
 import ChatErrorNotificationsButton from '@/products/chat/frontend/features/error-notifications/ChatErrorNotificationsButton';
 import type { ChatErrorNotification } from '@/products/chat/frontend/features/error-notifications/types';
+
+function SandboxStatusBadge({ status }: { status: SandboxStatus }) {
+  const label =
+    status === 'running' ? 'Rodando' :
+    status === 'starting' ? 'Iniciando' :
+    status === 'resuming' ? 'Retomando' :
+    status === 'stopped' ? 'Parado' :
+    status === 'error' ? 'Erro' :
+    'Off';
+
+  const tone =
+    status === 'running' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' :
+    status === 'starting' || status === 'resuming' ? 'border-amber-200 bg-amber-50 text-amber-700' :
+    status === 'error' ? 'border-rose-200 bg-rose-50 text-rose-700' :
+    'border-gray-200 bg-gray-50 text-gray-600';
+
+  return (
+    <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${tone}`}>
+      {label}
+    </span>
+  );
+}
 
 type HeaderProps = {
   title?: string;
@@ -71,7 +92,7 @@ export default function Header({
               <Square className="w-4 h-4 mr-2" /> Fechar computador
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handle(onOpenArtifact, !busy)} className={busy ? 'pointer-events-none opacity-50' : ''}>
-              <BarChart3 className="w-4 h-4 mr-2" /> Abrir Artifact
+              <BarChart3 className="w-4 h-4 mr-2" /> Abrir Workspace
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handle(onWriteFiles, !busy)} className={busy ? 'pointer-events-none opacity-50' : ''}>
               <FilePlus2 className="w-4 h-4 mr-2" /> Arquivos no Computador

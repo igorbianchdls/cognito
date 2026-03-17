@@ -202,7 +202,7 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
             </Popover>
             <PromptInputButton onClick={() => onOpenSandbox?.()}>
               <BarChart3 size={16} />
-              <span>Artifact</span>
+              <span>Workspace</span>
             </PromptInputButton>
 
             {/* Model selector */}
