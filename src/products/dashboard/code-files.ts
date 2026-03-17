@@ -10,36 +10,36 @@ export type DashboardCodeFile = {
 export function buildDashboardCodeFiles(dsl: string, themeName: string): DashboardCodeFile[] {
   return [
     {
-      path: 'dashboard.dsl',
+      path: 'app/dashboard.dsl',
       name: 'dashboard.dsl',
-      directory: '/',
+      directory: 'app',
       extension: 'dsl',
       language: 'dsl',
       content: dsl,
     },
     {
-      path: 'theme.json',
+      path: 'app/theme.json',
       name: 'theme.json',
-      directory: '/',
+      directory: 'app',
       extension: 'json',
       language: 'json',
       content: JSON.stringify(
         {
           theme: themeName,
           renderer: 'bi-json-render',
-          entrypoint: 'dashboard.dsl',
+          entrypoint: 'app/dashboard.dsl',
         },
         null,
         2,
       ),
     },
     {
-      path: 'README.md',
+      path: 'app/README.md',
       name: 'README.md',
-      directory: '/',
+      directory: 'app',
       extension: 'md',
       language: 'markdown',
-      content: `# Dashboard\n\nArquivo principal: \`dashboard.dsl\`\nTema ativo: \`${themeName}\``,
+      content: `# Dashboard\n\nArquivo principal: \`app/dashboard.dsl\`\nTema ativo: \`${themeName}\``,
     },
   ]
 }

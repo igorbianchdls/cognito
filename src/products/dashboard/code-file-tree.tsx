@@ -1,6 +1,7 @@
 'use client'
 
 import { Icon } from '@iconify/react'
+import { useMemo } from 'react'
 
 import type { DashboardCodeFile } from '@/products/dashboard/code-files'
 
@@ -26,55 +27,59 @@ export function DashboardCodeFileTree({
   selectedPath: string
   onSelect: (path: string) => void
 }) {
+  const groups = useMemo(() => {
+    const map = new Map<string, DashboardCodeFile[]>()
+    for (const file of files) {
+      const key = file.directory || 'root'
+      const bucket = map.get(key) || []
+      bucket.push(file)
+      map.set(key, bucket)
+    }
+    return Array.from(map.entries())
+  }, [files])
+
   return (
-    <aside className="flex h-full w-[280px] shrink-0 flex-col border-r-[0.5px] border-[#DDDDD8] bg-[#F3F3F1]">
-      <div className="border-b-[0.5px] border-[#DDDDD8] px-4 py-3">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6C6C68]">
-          Explorer
+    <aside className="flex h-full w-[280px] shrink-0 flex-col border-r border-[#E3E3DF] bg-[#F7F7F6]">
+      <div className="flex items-center justify-between border-b border-[#E3E3DF] px-4 py-3">
+        <div className="text-[13px] font-medium text-[#2B2B28]">
+          File Explorer
         </div>
-        <div className="mt-1 text-[13px] font-medium text-[#262624]">
-          dashboard-project
-        </div>
-      </div>
-      <div className="border-b-[0.5px] border-[#DDDDD8] px-3 py-2">
-        <div className="flex items-center gap-2 rounded-md bg-[#ECECEB] px-3 py-2 text-[12px] text-[#5D5D59]">
-          <Icon icon="solar:folder-with-files-bold" className="h-4 w-4 text-[#7A6BFF]" />
-          <span className="font-medium">root</span>
-          <span className="ml-auto text-[11px] uppercase tracking-[0.06em] text-[#8A8A85]">
-            {files.length} files
-          </span>
+        <div className="flex items-center gap-2 text-[#7B7B76]">
+          <Icon icon="solar:add-square-outline" className="h-4 w-4" />
+          <Icon icon="solar:folder-add-outline" className="h-4 w-4" />
+          <Icon icon="solar:magnifer-outline" className="h-4 w-4" />
         </div>
       </div>
-      <div className="flex-1 overflow-auto px-2 py-3">
-        {files.map((file) => {
-          const isSelected = file.path === selectedPath
-          return (
-            <button
-              key={file.path}
-              type="button"
-              onClick={() => onSelect(file.path)}
-              className={`mb-1 flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition ${
-                isSelected
-                  ? 'border-[#B8D6FF] bg-[#E7F1FF] text-[#005FCC]'
-                  : 'border-transparent text-[#3F3F3D] hover:border-[#E0E0DC] hover:bg-[#ECECEB]'
-              }`}
-            >
-              <div
-                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${
-                  isSelected ? 'bg-white text-[#005FCC]' : 'bg-[#E8E8E5] text-[#676763]'
-                }`}
-              >
-                <Icon icon={getFileIcon(file.extension)} className="h-4 w-4" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-[13px] font-medium">{file.name}</div>
-                <div className={`truncate text-[11px] ${isSelected ? 'text-[#4C83C9]' : 'text-[#81817B]'}`}>
-                  {file.directory} · {file.language}
-                </div>
-              </div>
-            </button>
-          )
-        })}
+      <div className="flex-1 overflow-auto py-2">
+        {groups.map(([directory, items]) => (
+          <div key={directory} className="mb-1">
+            <div className="flex items-center gap-1 px-3 py-1 text-[13px] text-[#4B4B47]">
+              <Icon icon="solar:alt-arrow-down-outline" className="h-3 w-3" />
+              <Icon icon="solar:folder-with-files-bold" className="h-4 w-4 text-[#E2A93B]" />
+              <span>{directory}</span>
+            </div>
+            <div className="ml-4 border-l border-[#E5E5E1] pl-2">
+              {items.map((file) => {
+                const isSelected = file.path === selectedPath
+                return (
+                  <button
+                    key={file.path}
+                    type="button"
+                    onClick={() => onSelect(file.path)}
+                    className={`flex w-full items-center gap-2 px-3 py-1.5 text-left text-[13px] ${
+                      isSelected
+                        ? 'bg-[#ECECEC] text-[#20201E]'
+                        : 'text-[#4E4E4A] hover:bg-[#F0F0EE]'
+                    }`}
+                  >
+                    <Icon icon={getFileIcon(file.extension)} className="h-4 w-4 shrink-0 text-[#6E6E69]" />
+                    <span className="truncate">{file.name}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        ))}
       </div>
     </aside>
   )
