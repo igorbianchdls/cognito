@@ -13,7 +13,6 @@ function SandboxStatusBadge({ status }: { status: SandboxStatus }) {
     status === 'running' ? 'Rodando' :
     status === 'starting' ? 'Iniciando' :
     status === 'resuming' ? 'Retomando' :
-    status === 'stopped' ? 'Parado' :
     status === 'error' ? 'Erro' :
     'Off';
 
