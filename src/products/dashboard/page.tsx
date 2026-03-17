@@ -47,12 +47,19 @@ export default function DashboardPage() {
   const [draftThemeName, setDraftThemeName] = useState('dark')
   const [appliedThemeName, setAppliedThemeName] = useState('dark')
   const [activeView, setActiveView] = useState<'preview' | 'code'>('preview')
-  const [selectedCodePath, setSelectedCodePath] = useState('dashboard.dsl')
+  const [selectedCodePath, setSelectedCodePath] = useState('app/dashboard-vendas.dsl')
+  const [selectedDashboardPath, setSelectedDashboardPath] = useState('app/dashboard-vendas.dsl')
   const [zoom, setZoom] = useState(1)
-  const themedDsl = useMemo(() => applyThemeToDsl(APPS_VENDAS_TEMPLATE_DSL, appliedThemeName), [appliedThemeName])
+  const baseDsl = useMemo(() => applyThemeToDsl(APPS_VENDAS_TEMPLATE_DSL, appliedThemeName), [appliedThemeName])
+  const codeFiles = useMemo(() => buildDashboardCodeFiles(baseDsl, appliedThemeName), [baseDsl, appliedThemeName])
+  const selectedDashboardFile = useMemo(
+    () => codeFiles.find((file) => file.path === selectedDashboardPath && file.extension === 'dsl') ?? codeFiles[0],
+    [codeFiles, selectedDashboardPath],
+  )
+  const themedDsl = selectedDashboardFile?.content ?? baseDsl
   const parsed = useMemo(() => parseDashboardTemplateDslToTree(themedDsl), [themedDsl])
   const rootName = useMemo(() => getDashboardTitle(parsed), [parsed])
-  const codeFiles = useMemo(() => buildDashboardCodeFiles(themedDsl, appliedThemeName), [themedDsl, appliedThemeName])
+  const dashboardFiles = useMemo(() => codeFiles.filter((file) => file.extension === 'dsl'), [codeFiles])
   const selectedCodeFile = useMemo(
     () => codeFiles.find((file) => file.path === selectedCodePath) ?? codeFiles[0],
     [codeFiles, selectedCodePath],
@@ -147,10 +154,18 @@ export default function DashboardPage() {
             <div className="flex min-h-full w-full">
               <DashboardCodeFileTree
                 files={codeFiles}
-                selectedPath={selectedCodeFile?.path ?? 'dashboard.dsl'}
+                selectedPath={selectedCodeFile?.path ?? 'app/dashboard-vendas.dsl'}
                 onSelect={setSelectedCodePath}
               />
-              <DashboardCodeEditorPane file={selectedCodeFile} />
+              <DashboardCodeEditorPane
+                file={selectedCodeFile}
+                dashboardFiles={dashboardFiles}
+                selectedDashboardPath={selectedDashboardPath}
+                onSelectDashboard={(path) => {
+                  setSelectedDashboardPath(path)
+                  setSelectedCodePath(path)
+                }}
+              />
             </div>
           )}
         </main>
