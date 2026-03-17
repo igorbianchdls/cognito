@@ -64,7 +64,7 @@ export default function Header({
   };
 
   return (
-    <div className="ui-text flex h-[44px] w-full items-center justify-between border-b-[0.5px] border-[#E6E6E1] bg-white px-3">
+    <div className="ui-text flex h-[44px] w-full items-center justify-between bg-white px-3">
       <div className="flex min-w-0 items-center gap-2">
         <SidebarTrigger />
         <h1 className="truncate text-[13px] font-semibold leading-none text-gray-900">{title}</h1>

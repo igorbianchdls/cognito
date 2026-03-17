@@ -236,7 +236,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
       className={cn('ui-text', borderless ? '!border-r-0 !border-l-0 !border-0' : undefined, className)}
       {...props}
     >
-      <SidebarHeader className={cn("gap-0 border-b-[0.5px] border-[#E6E6E1] p-0")} style={{ backgroundColor: 'var(--sidebar)' }}>
+      <SidebarHeader className={cn("gap-0 p-0")} style={{ backgroundColor: 'var(--sidebar)' }}>
         <div className="flex h-[43px] w-full items-center justify-start gap-2 px-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
           <BrandIcon className="h-4 w-4 text-black shrink-0" />
           <span className="text-[13px] font-bold leading-none text-black group-data-[collapsible=icon]:hidden">Creatto</span>
