@@ -9,6 +9,9 @@ import { registry } from '@/products/bi/json-render/registry'
 import { Renderer } from '@/products/bi/json-render/renderer'
 import { APPS_THEME_OPTIONS } from '@/products/bi/shared/themeOptions'
 import { APPS_VENDAS_TEMPLATE_DSL } from '@/products/bi/shared/templates/appsVendasTemplate'
+import { buildDashboardCodeFiles } from '@/products/dashboard/code-files'
+import { DashboardCodeEditorPane } from '@/products/dashboard/code-editor-pane'
+import { DashboardCodeFileTree } from '@/products/dashboard/code-file-tree'
 import { DashboardThemeModal } from '@/products/dashboard/theme-modal'
 
 type AnyRecord = Record<string, any>
@@ -44,10 +47,16 @@ export default function DashboardPage() {
   const [draftThemeName, setDraftThemeName] = useState('dark')
   const [appliedThemeName, setAppliedThemeName] = useState('dark')
   const [activeView, setActiveView] = useState<'preview' | 'code'>('preview')
+  const [selectedCodePath, setSelectedCodePath] = useState('dashboard.dsl')
   const [zoom, setZoom] = useState(1)
   const themedDsl = useMemo(() => applyThemeToDsl(APPS_VENDAS_TEMPLATE_DSL, appliedThemeName), [appliedThemeName])
   const parsed = useMemo(() => parseDashboardTemplateDslToTree(themedDsl), [themedDsl])
   const rootName = useMemo(() => getDashboardTitle(parsed), [parsed])
+  const codeFiles = useMemo(() => buildDashboardCodeFiles(themedDsl, appliedThemeName), [themedDsl, appliedThemeName])
+  const selectedCodeFile = useMemo(
+    () => codeFiles.find((file) => file.path === selectedCodePath) ?? codeFiles[0],
+    [codeFiles, selectedCodePath],
+  )
 
   return (
     <DataProvider initialData={{ ui: {}, filters: {}, dashboard: {} }}>
@@ -135,10 +144,13 @@ export default function DashboardPage() {
               <DashboardCanvas tree={parsed} zoom={zoom} />
             </div>
           ) : (
-            <div className="mx-auto flex min-h-full max-w-[1280px] p-0">
-              <pre className="w-full overflow-auto rounded-[16px] border-[0.5px] border-[#DDDDD8] bg-[#F7F7F6] p-6 text-[13px] leading-6 text-[#2C2C29] shadow-[0_2px_6px_rgba(15,23,42,0.05)]">
-                <code>{themedDsl}</code>
-              </pre>
+            <div className="flex min-h-full w-full">
+              <DashboardCodeFileTree
+                files={codeFiles}
+                selectedPath={selectedCodeFile?.path ?? 'dashboard.dsl'}
+                onSelect={setSelectedCodePath}
+              />
+              <DashboardCodeEditorPane file={selectedCodeFile} />
             </div>
           )}
         </main>
