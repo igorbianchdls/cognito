@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
-import type { PromptHistoryMessage } from '@/products/chat/backend/features/agents/shared/prompts/promptConversation'
+import type { PromptHistoryMessage } from '@/products/chat/backend/agents/shared/prompts/promptConversation'
 
 export type AgentPromptProfile = 'general' | 'data_analyst'
 
@@ -43,7 +43,7 @@ export function readAgentPromptMarkdown(profile: AgentPromptProfile): string {
   const filename = PROFILE_FILES[profile]
   const absolutePath = path.join(
     process.cwd(),
-    'src/products/chat/backend/features/agents/shared/prompts',
+    'src/products/chat/backend/agents/shared/prompts',
     filename,
   )
 

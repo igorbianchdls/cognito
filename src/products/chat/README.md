@@ -4,7 +4,7 @@ Estrutura principal da feature de chat:
 
 - `frontend/`: páginas e componentes de UI do chat.
 - `backend/`: backend interno da feature.
-  - `backend/features/agents/`: domínio principal dos agentes.
+  - `backend/agents/`: domínio principal dos agentes.
     - `controllers/`: orquestração principal do chat.
     - `shared/`: utilitários compartilhados entre provedores.
     - `auth/`: token store do bridge de agent tools.

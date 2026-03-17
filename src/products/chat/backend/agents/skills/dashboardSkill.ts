@@ -1,12 +1,12 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-const DASHBOARD_SKILL_RELATIVE_PATH = 'src/products/chat/backend/features/agents/skills/dashboard.md'
-const VENDAS_SKILL_RELATIVE_PATH = 'src/products/chat/backend/features/agents/skills/vendasSkill.md'
-const COMPRAS_SKILL_RELATIVE_PATH = 'src/products/chat/backend/features/agents/skills/comprasSkill.md'
-const FINANCEIRO_SKILL_RELATIVE_PATH = 'src/products/chat/backend/features/agents/skills/financeiroSkill.md'
-const MARKETING_SKILL_RELATIVE_PATH = 'src/products/chat/backend/features/agents/skills/marketingSkill.md'
-const ECOMMERCE_SKILL_RELATIVE_PATH = 'src/products/chat/backend/features/agents/skills/ecommerceSkill.md'
+const DASHBOARD_SKILL_RELATIVE_PATH = 'src/products/chat/backend/agents/skills/dashboard.md'
+const VENDAS_SKILL_RELATIVE_PATH = 'src/products/chat/backend/agents/skills/vendasSkill.md'
+const COMPRAS_SKILL_RELATIVE_PATH = 'src/products/chat/backend/agents/skills/comprasSkill.md'
+const FINANCEIRO_SKILL_RELATIVE_PATH = 'src/products/chat/backend/agents/skills/financeiroSkill.md'
+const MARKETING_SKILL_RELATIVE_PATH = 'src/products/chat/backend/agents/skills/marketingSkill.md'
+const ECOMMERCE_SKILL_RELATIVE_PATH = 'src/products/chat/backend/agents/skills/ecommerceSkill.md'
 
 const DASHBOARD_SKILL_FALLBACK = `
 # Dashboard Skill

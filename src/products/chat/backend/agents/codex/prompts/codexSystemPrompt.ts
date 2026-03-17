@@ -1,12 +1,12 @@
 import {
   formatConversation,
   type PromptHistoryMessage,
-} from '@/products/chat/backend/features/agents/shared/prompts/promptConversation'
+} from '@/products/chat/backend/agents/shared/prompts/promptConversation'
 import {
   readAgentPromptMarkdown,
   resolveAgentPromptProfile,
   type AgentPromptProfile,
-} from '@/products/chat/backend/features/agents/shared/prompts/agentPromptProfiles'
+} from '@/products/chat/backend/agents/shared/prompts/agentPromptProfiles'
 
 export function buildOpenAiSystemPrompt(params: {
   history: PromptHistoryMessage[]
