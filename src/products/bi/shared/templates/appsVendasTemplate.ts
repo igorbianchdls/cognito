@@ -18,42 +18,6 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       }
     </Config>
     <Container direction="row" gap={12} padding={0} align="stretch" minHeight="100%">
-      <Sidebar width={300} minWidth={260} maxWidth={340} minHeight="100%" gap={10} padding={12} overflowY="auto" sticky top={12}>
-        <Card>
-          <Title text="Filtros" marginBottom={2} />
-          <Container direction="column" gap={10}>
-            <Slicer
-              label="Canal"
-              table="vendas.pedidos"
-              field="canal_venda_id"
-              selectionMode="single"
-              limit={200}
-              query="SELECT
-  cv.id AS value,
-  COALESCE(cv.nome, '-') AS label
-FROM vendas.canais_venda cv
-ORDER BY 2 ASC"
-            >
-              <Dropdown placeholder="Todos os canais" borderColor="#d1d5db" textColor="#111827" radius={8} />
-            </Slicer>
-            <Slicer
-              label="Cliente"
-              table="vendas.pedidos"
-              field="cliente_id"
-              selectionMode="multiple"
-              limit={200}
-              query="SELECT
-  c.id AS value,
-  COALESCE(c.nome_fantasia, '-') AS label
-FROM entidades.clientes c
-WHERE c.tenant_id = {{tenant_id}}
-ORDER BY 2 ASC"
-            >
-              <Checklist borderColor="#d1d5db" textColor="#111827" radius={8} maxHeight={220} itemGap={6} />
-            </Slicer>
-          </Container>
-        </Card>
-      </Sidebar>
       <Container direction="column" gap={0} grow={1} minHeight="100%">
         <Header direction="row" justify="between" align="center">
           <Container direction="column" gap={4}>
