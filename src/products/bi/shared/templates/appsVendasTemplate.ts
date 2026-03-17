@@ -465,7 +465,6 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         <Card>
           <Title text="Ultimos Pedidos" marginBottom={8} />
           <Table
-            height={320}
             showPagination
             pageSize={8}
             stickyHeader
@@ -579,7 +578,6 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
         <Card>
           <Title text="Pivot de Receita por Canal e Mês" marginBottom={8} />
           <PivotTable
-            height={320}
             stickyHeader
             bordered
             rounded
