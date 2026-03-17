@@ -3,7 +3,7 @@
 import { Icon } from '@iconify/react'
 import { useMemo } from 'react'
 
-import type { DashboardCodeFile } from '@/products/dashboard/code-files'
+import type { DashboardCodeFile } from '@/products/dashboard/workspace/types'
 
 function getFileIcon(extension: string) {
   switch (extension) {
@@ -18,7 +18,7 @@ function getFileIcon(extension: string) {
   }
 }
 
-export function DashboardCodeFileTree({
+export function WorkspaceFileTree({
   files,
   selectedPath,
   onSelect,

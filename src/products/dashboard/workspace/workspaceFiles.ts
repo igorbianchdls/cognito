@@ -1,11 +1,4 @@
-export type DashboardCodeFile = {
-  path: string
-  name: string
-  directory: string
-  extension: string
-  language: string
-  content: string
-}
+import type { DashboardCodeFile } from '@/products/dashboard/workspace/types'
 
 function replaceDashboardCopy(dsl: string, title: string, subtitle: string) {
   return dsl
@@ -13,7 +6,7 @@ function replaceDashboardCopy(dsl: string, title: string, subtitle: string) {
     .replace(/<Subtitle text="Principais indicadores e cortes" \/>/, `<Subtitle text="${subtitle}" />`)
 }
 
-export function buildDashboardCodeFiles(dsl: string, themeName: string): DashboardCodeFile[] {
+export function buildDashboardWorkspaceFiles(dsl: string, themeName: string): DashboardCodeFile[] {
   return [
     {
       path: 'app/dashboard-vendas.dsl',

@@ -2,9 +2,9 @@
 
 import { Icon } from '@iconify/react'
 
-import type { DashboardCodeFile } from '@/products/dashboard/code-files'
+import type { DashboardCodeFile } from '@/products/dashboard/workspace/types'
 
-export function DashboardCodeEditorPane({
+export function WorkspaceCodeEditor({
   file,
   dashboardFiles,
   selectedDashboardPath,
