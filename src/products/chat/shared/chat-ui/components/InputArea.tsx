@@ -3,17 +3,28 @@
 import React, { FormEvent, useMemo, useRef, useState } from 'react';
 import type { ChatStatus } from 'ai';
 import {
+  PromptInputButton,
   PromptInput,
+  PromptInputModelSelect,
+  PromptInputModelSelectContent,
+  PromptInputModelSelectItem,
+  PromptInputModelSelectTrigger,
+  PromptInputSubmit,
   PromptInputTextarea,
   PromptInputToolbar,
   PromptInputTools,
-  PromptInputButton,
-  PromptInputSubmit,
-  PromptInputModelSelect,
-  PromptInputModelSelectTrigger,
-  PromptInputModelSelectContent,
-  PromptInputModelSelectItem,
 } from '@/components/ai-elements/prompt-input';
+import {
+  ModelSelector,
+  ModelSelectorContent,
+  ModelSelectorEmpty,
+  ModelSelectorGroup,
+  ModelSelectorInput,
+  ModelSelectorItem,
+  ModelSelectorList,
+  ModelSelectorName,
+  ModelSelectorTrigger,
+} from '@/components/ai-elements/model-selector';
 import { Plus, BarChart3, Plug, Mic, Square, Loader2, Bot } from 'lucide-react';
 import BrandIcon from '@/components/icons/BrandIcon';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -36,6 +47,7 @@ type Props = {
 };
 
 export default function InputArea({ value, onChange, onSubmit, status = 'idle', submitDisabled = false, onOpenSandbox, composioEnabled, onToggleComposio, model = 'openai-gpt5mini', onModelChange, promptProfile = 'data_analyst', onPromptProfileChange }: Props) {
+  const [promptSelectorOpen, setPromptSelectorOpen] = useState(false)
   // Local-only UI state for Toolkits panel (no persistence, no backend)
   const [toolkitsOpen, setToolkitsOpen] = useState(false)
   const [tkSearch, setTkSearch] = useState('')
@@ -58,6 +70,22 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
   const filteredTk = useMemo(() => (
     tkList.filter(t => t.label.toLowerCase().includes(tkSearch.toLowerCase()))
   ), [tkList, tkSearch])
+
+  const promptProfiles = useMemo(() => ([
+    { group: 'Especializados', id: 'data_analyst' as const, name: 'Analista de dados', subtitle: 'SQL, métricas e análise' },
+    { group: 'Especializados', id: 'dashboard_creator' as const, name: 'Dashboard creator', subtitle: 'DSL, layout e widgets' },
+    { group: 'Base', id: 'general' as const, name: 'Geral', subtitle: 'Prompt padrão do chat' },
+  ]), [])
+
+  const selectedPromptProfile = useMemo(
+    () => promptProfiles.find((item) => item.id === promptProfile) ?? promptProfiles[0],
+    [promptProfile, promptProfiles],
+  )
+
+  const promptGroups = useMemo(
+    () => [...new Set(promptProfiles.map((item) => item.group))],
+    [promptProfiles],
+  )
 
   // Audio capture + STT (ElevenLabs) — record → stop → send once → write text to input
   type RecState = 'idle' | 'recording' | 'processing' | 'error'
@@ -207,24 +235,43 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
               <span>Workspace</span>
             </PromptInputButton>
 
-            <PromptInputModelSelect
-              value={promptProfile}
-              onValueChange={(v: any) => {
-                const next = v === 'general' || v === 'dashboard_creator' ? v : 'data_analyst'
-                onPromptProfileChange?.(next)
-              }}
-            >
-              <PromptInputModelSelectTrigger className="min-w-0 max-w-[92px] text-gray-500 hover:text-gray-800" title="Prompt" aria-label="Selecionar prompt">
-                <span className="text-xs leading-none">
-                  {promptProfile === 'general' ? 'Geral' : promptProfile === 'dashboard_creator' ? 'Dashboard' : 'Analista'}
-                </span>
-              </PromptInputModelSelectTrigger>
-              <PromptInputModelSelectContent>
-                <PromptInputModelSelectItem value="data_analyst">Analista de dados</PromptInputModelSelectItem>
-                <PromptInputModelSelectItem value="dashboard_creator">Dashboard creator</PromptInputModelSelectItem>
-                <PromptInputModelSelectItem value="general">Geral</PromptInputModelSelectItem>
-              </PromptInputModelSelectContent>
-            </PromptInputModelSelect>
+            <ModelSelector open={promptSelectorOpen} onOpenChange={setPromptSelectorOpen}>
+              <ModelSelectorTrigger asChild>
+                <PromptInputButton variant="ghost" className="text-gray-500 hover:text-gray-800" title="Selecionar prompt">
+                  <span>{selectedPromptProfile.name}</span>
+                </PromptInputButton>
+              </ModelSelectorTrigger>
+              <ModelSelectorContent title="Selecionar prompt" className="sm:max-w-[420px]">
+                <ModelSelectorInput placeholder="Buscar prompt..." />
+                <ModelSelectorList>
+                  <ModelSelectorEmpty>Nenhum prompt encontrado.</ModelSelectorEmpty>
+                  {promptGroups.map((group) => (
+                    <ModelSelectorGroup heading={group} key={group}>
+                      {promptProfiles
+                        .filter((item) => item.group === group)
+                        .map((item) => (
+                          <ModelSelectorItem
+                            key={item.id}
+                            onSelect={() => {
+                              onPromptProfileChange?.(item.id)
+                              setPromptSelectorOpen(false)
+                            }}
+                            value={`${item.name} ${item.subtitle} ${item.id}`}
+                          >
+                            <div className="flex min-w-0 flex-1 flex-col">
+                              <ModelSelectorName>{item.name}</ModelSelectorName>
+                              <span className="text-xs text-muted-foreground">{item.subtitle}</span>
+                            </div>
+                            {promptProfile === item.id ? (
+                              <span className="ml-auto text-xs font-medium text-foreground">Atual</span>
+                            ) : null}
+                          </ModelSelectorItem>
+                        ))}
+                    </ModelSelectorGroup>
+                  ))}
+                </ModelSelectorList>
+              </ModelSelectorContent>
+            </ModelSelector>
 
             {/* Model selector */}
             <PromptInputModelSelect value={model} onValueChange={(v: any) => {
