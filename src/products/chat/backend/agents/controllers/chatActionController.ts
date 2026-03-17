@@ -367,8 +367,8 @@ export async function POST(req: Request) {
 
   if (action === 'chat-start') return chatStart(payload as { chatId?: string; runtimeKind?: string })
   if (action === 'chat-stop') return chatStop(payload as { chatId?: string })
-  if (action === 'chat-send-stream') return chatSendStream(payload as { chatId?: string; history?: Msg[]; clientMessageId?: string })
-  if (action === 'chat-slash') return chatSlash(payload as { chatId?: string; prompt?: string })
+  if (action === 'chat-send-stream') return chatSendStream(payload as { chatId?: string; history?: Msg[]; clientMessageId?: string; promptProfile?: string })
+  if (action === 'chat-slash') return chatSlash(payload as { chatId?: string; prompt?: string; promptProfile?: string })
   if (action === 'fs-list') return fsList(payload as { chatId?: string; path?: string })
   if (action === 'fs-read') return fsRead(payload as { chatId?: string; path?: string })
   if (action === 'fs-write') return fsWrite(payload as { chatId?: string; path?: string; content?: string })
@@ -673,7 +673,7 @@ export async function POST(req: Request) {
     return Response.json({ ok: true, snapshotId })
   }
 
-  async function chatSendStream({ chatId, history, clientMessageId }: { chatId?: string; history?: Msg[]; clientMessageId?: string }) {
+  async function chatSendStream({ chatId, history, clientMessageId, promptProfile }: { chatId?: string; history?: Msg[]; clientMessageId?: string; promptProfile?: string }) {
     if (!chatId) return new Response(JSON.stringify({ ok: false, error: 'chatId obrigatório' }), { status: 400 })
     if (!Array.isArray(history) || !history.length) return new Response(JSON.stringify({ ok: false, error: 'history vazio' }), { status: 400 })
     const ensured = await ensureLocalSession(chatId, 'chat-send-stream')
@@ -706,10 +706,11 @@ export async function POST(req: Request) {
     const provider = normalizeProvider(sess.provider, sess.model)
     sess.provider = provider
     if (provider === 'openai-responses') {
-      return chatSendStreamOpenAi({ chatId, history, sess })
+      return chatSendStreamOpenAi({ chatId, history, sess, promptProfile })
     }
     const prompt = buildClaudeSystemPrompt({
       history,
+      profile: promptProfile,
       composioEnabled: Boolean(sess.composioEnabled),
     })
     const runner = getChatStreamRunnerScript()
@@ -872,13 +873,13 @@ export async function POST(req: Request) {
     return new Response(stream, { headers: { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' } })
   }
 
-  async function chatSendStreamOpenAi({ chatId, history, sess }: { chatId: string; history: Msg[]; sess: ChatSession }) {
+  async function chatSendStreamOpenAi({ chatId, history, sess, promptProfile }: { chatId: string; history: Msg[]; sess: ChatSession; promptProfile?: string }) {
     const enc = new TextEncoder()
     const apiKey = (process.env.OPENAI_API_KEY || process.env.CODEX_API_KEY || '').trim()
     if (!apiKey) {
       return new Response(JSON.stringify({ ok: false, error: 'OPENAI_API_KEY/CODEX_API_KEY não configurada' }), { status: 500 })
     }
-    const prompt = buildOpenAiSystemPrompt({ history })
+    const prompt = buildOpenAiSystemPrompt({ history, profile: promptProfile })
 
     const modelId = normalizeModel('openai-responses', sess.model)
     sess.model = modelId
@@ -1044,7 +1045,7 @@ export async function POST(req: Request) {
     return new Response(stream, { headers: { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' } })
   }
 
-  async function chatSlash({ chatId, prompt }: { chatId?: string; prompt?: string }) {
+  async function chatSlash({ chatId, prompt, promptProfile: _promptProfile }: { chatId?: string; prompt?: string; promptProfile?: string }) {
     const enc = new TextEncoder()
     if (!chatId) return new Response(JSON.stringify({ ok: false, error: 'chatId obrigatório' }), { status: 400 })
     const ensured = await ensureLocalSession(chatId, 'chat-slash')

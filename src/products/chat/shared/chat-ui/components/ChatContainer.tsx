@@ -13,6 +13,7 @@ import { useChatErrorNotifications } from '@/products/chat/frontend/features/err
 type ChatStatus = 'idle' | 'submitted' | 'streaming' | 'error'
 type EngineId = 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5' | 'openai-gpt5mini' | 'openai-gpt5nano'
 type RuntimeKind = 'codex' | 'agentsdk'
+type PromptProfileId = 'general' | 'data_analyst' | 'dashboard_creator'
 
 type ChatMessagesListProps = {
   messages: UIMessage[]
@@ -75,6 +76,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   const [sandboxStatus, setSandboxStatus] = useState<SandboxStatus>('off')
   const [composioEnabled, setComposioEnabled] = useState<boolean>(false)
   const [model, setModel] = useState<EngineId>(initialEngine || 'openai-gpt5mini')
+  const [promptProfile, setPromptProfile] = useState<PromptProfileId>('data_analyst')
   const [startLocked, setStartLocked] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
   const scrollViewportRef = useRef<HTMLDivElement | null>(null)
@@ -385,8 +387,8 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
       .filter((m) => m.content.length > 0)
       .slice(-10)
     const body = isSlash
-      ? { action: 'chat-slash', chatId: id, prompt: text }
-      : { action: 'chat-send-stream', chatId: id, history, clientMessageId: userMsg.id }
+      ? { action: 'chat-slash', chatId: id, prompt: text, promptProfile }
+      : { action: 'chat-send-stream', chatId: id, history, clientMessageId: userMsg.id, promptProfile }
     const ac = new AbortController(); abortRef.current = ac
     const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: ac.signal })
     if (!res.ok || !res.body) throw new Error(await res.text().catch(()=> 'HTTP error'))
@@ -814,6 +816,8 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
                   status={status}
                   submitDisabled={isSubmitBlocked}
                   composioEnabled={composioEnabled}
+                  promptProfile={promptProfile}
+                  onPromptProfileChange={setPromptProfile}
                   model={model}
                   onToggleComposio={async () => {
                     // Avoid starting chat before first message when redirecting
@@ -893,7 +897,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
           />
         </div>
         <div className="px-4 pb-3">
-          <InputArea value={input} onChange={setInput} onSubmit={handleSubmit} status={status} submitDisabled={isSubmitBlocked} composioEnabled={composioEnabled} onToggleComposio={async () => {
+          <InputArea value={input} onChange={setInput} onSubmit={handleSubmit} status={status} submitDisabled={isSubmitBlocked} composioEnabled={composioEnabled} promptProfile={promptProfile} onPromptProfileChange={setPromptProfile} onToggleComposio={async () => {
             if (redirectOnFirstMessage && !chatId) {
               setComposioEnabled(!composioEnabled)
               return

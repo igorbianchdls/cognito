@@ -31,9 +31,11 @@ type Props = {
   onToggleComposio?: () => void;
   model?: 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5' | 'openai-gpt5mini' | 'openai-gpt5nano';
   onModelChange?: (m: 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5' | 'openai-gpt5mini' | 'openai-gpt5nano') => void;
+  promptProfile?: 'general' | 'data_analyst' | 'dashboard_creator';
+  onPromptProfileChange?: (p: 'general' | 'data_analyst' | 'dashboard_creator') => void;
 };
 
-export default function InputArea({ value, onChange, onSubmit, status = 'idle', submitDisabled = false, onOpenSandbox, composioEnabled, onToggleComposio, model = 'openai-gpt5mini', onModelChange }: Props) {
+export default function InputArea({ value, onChange, onSubmit, status = 'idle', submitDisabled = false, onOpenSandbox, composioEnabled, onToggleComposio, model = 'openai-gpt5mini', onModelChange, promptProfile = 'data_analyst', onPromptProfileChange }: Props) {
   // Local-only UI state for Toolkits panel (no persistence, no backend)
   const [toolkitsOpen, setToolkitsOpen] = useState(false)
   const [tkSearch, setTkSearch] = useState('')
@@ -204,6 +206,25 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
               <BarChart3 size={16} />
               <span>Workspace</span>
             </PromptInputButton>
+
+            <PromptInputModelSelect
+              value={promptProfile}
+              onValueChange={(v: any) => {
+                const next = v === 'general' || v === 'dashboard_creator' ? v : 'data_analyst'
+                onPromptProfileChange?.(next)
+              }}
+            >
+              <PromptInputModelSelectTrigger className="min-w-0 max-w-[92px] text-gray-500 hover:text-gray-800" title="Prompt" aria-label="Selecionar prompt">
+                <span className="text-xs leading-none">
+                  {promptProfile === 'general' ? 'Geral' : promptProfile === 'dashboard_creator' ? 'Dashboard' : 'Analista'}
+                </span>
+              </PromptInputModelSelectTrigger>
+              <PromptInputModelSelectContent>
+                <PromptInputModelSelectItem value="data_analyst">Analista de dados</PromptInputModelSelectItem>
+                <PromptInputModelSelectItem value="dashboard_creator">Dashboard creator</PromptInputModelSelectItem>
+                <PromptInputModelSelectItem value="general">Geral</PromptInputModelSelectItem>
+              </PromptInputModelSelectContent>
+            </PromptInputModelSelect>
 
             {/* Model selector */}
             <PromptInputModelSelect value={model} onValueChange={(v: any) => {
