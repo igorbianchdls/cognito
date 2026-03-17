@@ -1,6 +1,6 @@
-import { codexAppFunctionTools } from '@/products/chat/codex/tools/schema/appTools'
-import { CODEX_APP_TOOL_HANDLERS_SCRIPT } from '@/products/chat/codex/tools/handlers/appToolHandlersScript'
-import { CODEX_APP_TOOL_DISPATCH_SCRIPT } from '@/products/chat/codex/tools/dispatch/appToolDispatchScript'
+import { codexAppFunctionTools } from '@/products/chat/backend/agents/codex/tools/schema/appTools'
+import { CODEX_APP_TOOL_HANDLERS_SCRIPT } from '@/products/chat/backend/agents/codex/tools/handlers/appToolHandlersScript'
+import { CODEX_APP_TOOL_DISPATCH_SCRIPT } from '@/products/chat/backend/agents/codex/tools/dispatch/appToolDispatchScript'
 
 export function getOpenAIResponsesStreamRunnerScript(): string {
   return `

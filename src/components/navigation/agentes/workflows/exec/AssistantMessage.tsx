@@ -3,7 +3,7 @@
 import type { UIMessage, ToolUIPart } from 'ai'
 import { Reasoning, ReasoningTrigger, ReasoningContent } from '@/components/ai-elements/reasoning'
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/components/ai-elements/tool'
-import { renderCodexToolPart } from '@/products/chat/codex/ui/toolRegistry'
+import { renderCodexToolPart } from '@/products/chat/backend/agents/codex/ui/toolRegistry'
 
 type TextPart = { type: 'text'; text: string }
 type ReasoningPart = { type: 'reasoning'; content?: string; text?: string; state?: string }

@@ -1,4 +1,4 @@
 export * from '@/products/chat/shared/tools'
-export { renderCodexToolPart } from '@/products/chat/codex/ui/toolRegistry'
-export { renderAgentSdkToolPart } from '@/products/chat/agentsdk/ui/toolRegistry'
+export { renderCodexToolPart } from '@/products/chat/backend/agents/codex/ui/toolRegistry'
+export { renderAgentSdkToolPart } from '@/products/chat/backend/agents/agentsdk/ui/toolRegistry'
 
