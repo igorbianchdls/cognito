@@ -77,11 +77,6 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
     { group: 'Base', id: 'general' as const, name: 'Geral', subtitle: 'Prompt padrão do chat' },
   ]), [])
 
-  const selectedPromptProfile = useMemo(
-    () => promptProfiles.find((item) => item.id === promptProfile) ?? promptProfiles[0],
-    [promptProfile, promptProfiles],
-  )
-
   const promptGroups = useMemo(
     () => [...new Set(promptProfiles.map((item) => item.group))],
     [promptProfiles],
@@ -237,8 +232,14 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
 
             <ModelSelector open={promptSelectorOpen} onOpenChange={setPromptSelectorOpen}>
               <ModelSelectorTrigger asChild>
-                <PromptInputButton variant="ghost" className="text-gray-500 hover:text-gray-800" title="Selecionar prompt">
-                  <span>{selectedPromptProfile.name}</span>
+                <PromptInputButton
+                  variant="ghost"
+                  className="max-w-[92px] shrink-0 overflow-hidden text-gray-500 hover:text-gray-800"
+                  title="Selecionar prompt"
+                >
+                  <span className="truncate text-xs leading-none">
+                    {promptProfile === 'general' ? 'Geral' : promptProfile === 'dashboard_creator' ? 'Dashboard' : 'Analista'}
+                  </span>
                 </PromptInputButton>
               </ModelSelectorTrigger>
               <ModelSelectorContent title="Selecionar prompt" className="sm:max-w-[420px]">

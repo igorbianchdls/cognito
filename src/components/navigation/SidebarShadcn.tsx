@@ -236,8 +236,8 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
       className={cn('ui-text', borderless ? '!border-r-0 !border-l-0 !border-0' : undefined, className)}
       {...props}
     >
-      <SidebarHeader className={cn("h-16 border-b-[0.5px] border-[#DDDDD8] p-0")} style={{ backgroundColor: 'var(--sidebar)' }}>
-        <div className="h-full w-full flex items-center justify-start gap-2 px-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+      <SidebarHeader className={cn("border-b-[0.5px] border-[#DDDDD8] p-0")} style={{ backgroundColor: 'var(--sidebar)' }}>
+        <div className="flex min-h-[57px] w-full items-center justify-start gap-2 px-5 py-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
           <BrandIcon className="h-4 w-4 text-black shrink-0" />
           <span className="text-black font-bold text-base leading-none group-data-[collapsible=icon]:hidden">Creatto</span>
         </div>
