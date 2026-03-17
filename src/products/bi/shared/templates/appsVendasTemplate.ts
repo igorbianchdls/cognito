@@ -502,7 +502,6 @@ ORDER BY 2 ASC"
           <Title text="Ultimos Pedidos" marginBottom={8} />
           <Table
             height={320}
-            maxHeight={420}
             showPagination
             pageSize={8}
             stickyHeader
@@ -617,7 +616,6 @@ ORDER BY 2 ASC"
           <Title text="Pivot de Receita por Canal e Mês" marginBottom={8} />
           <PivotTable
             height={320}
-            maxHeight={420}
             stickyHeader
             bordered
             rounded
