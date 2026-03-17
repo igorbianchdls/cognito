@@ -64,7 +64,7 @@ export default function Header({
   };
 
   return (
-    <div className="ui-text flex items-center justify-between px-[var(--ui-pad-x)] py-[var(--ui-pad-y)] bg-white">
+    <div className="ui-text flex items-center justify-between border-b-[0.5px] border-[#DDDDD8] px-[var(--ui-pad-x)] py-[var(--ui-pad-y)] bg-white">
       <div className="flex items-center gap-3 min-w-0">
         <SidebarTrigger />
         <h1 className="text-[16px] font-semibold text-gray-900 truncate">{title}</h1>
