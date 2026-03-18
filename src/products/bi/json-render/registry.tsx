@@ -372,6 +372,43 @@ function resolveTextSpacingStyle(p: AnyRecord | undefined): React.CSSProperties 
   };
 }
 
+function resolveBoxStyle(p: AnyRecord | undefined): React.CSSProperties {
+  return {
+    ...resolveTextSpacingStyle(p),
+    backgroundColor: p?.backgroundColor,
+    borderColor: p?.borderColor,
+    borderStyle: p?.borderStyle || (p?.borderWidth ? 'solid' : undefined),
+    borderWidth: styleVal(p?.borderWidth),
+    borderRadius: styleVal(p?.borderRadius),
+    boxShadow: p?.boxShadow,
+    width: styleVal(p?.width),
+    minWidth: styleVal(p?.minWidth),
+    maxWidth: styleVal(p?.maxWidth),
+    height: styleVal(p?.height),
+    minHeight: styleVal(p?.minHeight),
+    maxHeight: styleVal(p?.maxHeight),
+    overflow: p?.overflow,
+    overflowX: p?.overflowX,
+    overflowY: p?.overflowY,
+    ...((p?.style && typeof p.style === 'object') ? p.style : {}),
+  };
+}
+
+function buildHtmlBlockStyle(p: AnyRecord | undefined): React.CSSProperties {
+  const style: React.CSSProperties = {
+    ...resolveBoxStyle(p),
+  };
+  if (p?.direction || p?.justify || p?.align || p?.gap || p?.wrap) {
+    style.display = 'flex';
+    style.flexDirection = (p?.direction ?? 'column') as any;
+    style.justifyContent = mapJustify(p?.justify);
+    style.alignItems = mapAlign(p?.align);
+    style.gap = styleVal(p?.gap);
+    style.flexWrap = p?.wrap ? 'wrap' : 'nowrap';
+  }
+  return style;
+}
+
 function toFlexNumber(v: unknown): number | undefined {
   if (typeof v === 'boolean') return v ? 1 : 0;
   const n = Number(v);
@@ -1154,21 +1191,15 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const titleStyle = applyH1FromCssVars(normalizeTitleStyle(p.titleStyle), theme.cssVars) as React.CSSProperties | undefined;
     const css = (theme.cssVars || {}) as AnyRecord;
     const styleBase: React.CSSProperties = {
-      backgroundColor: p.backgroundColor,
-      borderColor: p.borderColor,
-      borderWidth: p.borderWidth,
-      borderStyle: p.borderWidth ? 'solid' : undefined,
-      borderRadius: p.borderRadius,
+      ...resolveBoxStyle(p),
       padding: styleVal(p.padding) || undefined,
-      margin: styleVal(p.margin),
-      width: styleVal(p.width),
-      height: styleVal(p.height),
     };
     const style = ensureSurfaceBackground(
       applyBorderFromCssVars(styleBase as any, theme.cssVars),
       theme.cssVars
     ) as React.CSSProperties;
     style.boxShadow = undefined;
+    if (p.boxShadow) style.boxShadow = p.boxShadow;
     const contentStyle: React.CSSProperties = {
       display: 'flex',
       flexDirection: (p.direction ?? 'column') as any,
@@ -1304,6 +1335,81 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
   },
   Br: () => {
     return <br />;
+  },
+  Div: ({ element, children }) => {
+    const p = (element?.props || {}) as AnyRecord;
+    return <div style={buildHtmlBlockStyle(p)}>{children}</div>;
+  },
+  Section: ({ element, children }) => {
+    const p = (element?.props || {}) as AnyRecord;
+    return <section style={buildHtmlBlockStyle(p)}>{children}</section>;
+  },
+  P: ({ element, children }) => {
+    const p = (element?.props || {}) as AnyRecord;
+    const style: React.CSSProperties = {
+      margin: 0,
+      fontSize: '14px',
+      lineHeight: 1.7,
+      color: '#4b5563',
+      ...(normalizeTitleStyle(p.titleStyle) || {}),
+      ...resolveTextSpacingStyle(p),
+      ...((p.style && typeof p.style === 'object') ? p.style : {}),
+    };
+    return <p style={style}>{children}</p>;
+  },
+  H1: ({ element, children }) => {
+    const p = (element?.props || {}) as AnyRecord;
+    const style: React.CSSProperties = {
+      margin: 0,
+      fontSize: '32px',
+      lineHeight: 1.15,
+      fontWeight: 600,
+      color: '#20232A',
+      letterSpacing: '-0.03em',
+      ...(normalizeTitleStyle(p.titleStyle) || {}),
+      ...resolveTextSpacingStyle(p),
+      ...((p.style && typeof p.style === 'object') ? p.style : {}),
+    };
+    return <h1 style={style}>{children}</h1>;
+  },
+  H2: ({ element, children }) => {
+    const p = (element?.props || {}) as AnyRecord;
+    const style: React.CSSProperties = {
+      margin: 0,
+      fontSize: '24px',
+      lineHeight: 1.2,
+      fontWeight: 600,
+      color: '#20232A',
+      letterSpacing: '-0.025em',
+      ...(normalizeTitleStyle(p.titleStyle) || {}),
+      ...resolveTextSpacingStyle(p),
+      ...((p.style && typeof p.style === 'object') ? p.style : {}),
+    };
+    return <h2 style={style}>{children}</h2>;
+  },
+  H3: ({ element, children }) => {
+    const p = (element?.props || {}) as AnyRecord;
+    const style: React.CSSProperties = {
+      margin: 0,
+      fontSize: '18px',
+      lineHeight: 1.3,
+      fontWeight: 600,
+      color: '#20232A',
+      letterSpacing: '-0.02em',
+      ...(normalizeTitleStyle(p.titleStyle) || {}),
+      ...resolveTextSpacingStyle(p),
+      ...((p.style && typeof p.style === 'object') ? p.style : {}),
+    };
+    return <h3 style={style}>{children}</h3>;
+  },
+  Strong: ({ element, children }) => {
+    const p = (element?.props || {}) as AnyRecord;
+    const style: React.CSSProperties = {
+      fontWeight: 600,
+      ...(normalizeTitleStyle(p.titleStyle) || {}),
+      ...((p.style && typeof p.style === 'object') ? p.style : {}),
+    };
+    return <strong style={style}>{children}</strong>;
   },
   Icon: ({ element }) => {
     const theme = useThemeOverrides();
@@ -1975,24 +2081,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       flexWrap: p.wrap ? 'wrap' : 'nowrap',
       justifyContent: mapJustify(p.justify),
       alignItems: mapAlign(p.align),
-      padding: styleVal(p.padding),
-      paddingTop: styleVal(p.paddingTop),
-      paddingRight: styleVal(p.paddingRight),
-      paddingBottom: styleVal(p.paddingBottom),
-      paddingLeft: styleVal(p.paddingLeft),
-      margin: styleVal(p.margin),
-      marginTop: styleVal(p.marginTop),
-      marginRight: styleVal(p.marginRight),
-      marginBottom: styleVal(p.marginBottom),
-      marginLeft: styleVal(p.marginLeft),
-      backgroundColor: p.backgroundColor,
-      borderColor: p.borderColor,
-      borderWidth: p.borderWidth,
-      borderStyle: p.borderWidth ? 'solid' : undefined,
-      borderRadius: p.borderRadius,
-      width: styleVal(p.width),
-      minHeight: styleVal(p.minHeight),
-      height: styleVal(p.height),
+      ...resolveBoxStyle(p),
     };
     const childDefs: AnyRecord[] = Array.isArray((element as any)?.children) ? (element as any).children : [];
     const itemStyles = childDefs.map((ch) => resolveFlexItemStyle((ch?.props as AnyRecord) || {}));

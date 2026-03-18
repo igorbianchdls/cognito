@@ -254,7 +254,7 @@ function parseDslTree(sourceRaw: string): DslNode {
   let root: DslNode | null = null
   let i = 0
   const RAW_TEXT_TAGS = new Set(['props', 'query', 'sql', 'filters', 'style', 'config'])
-  const INLINE_TEXT_TAGS = new Set(['text', 'bold', 'strong'])
+  const INLINE_TEXT_TAGS = new Set(['text', 'bold', 'strong', 'p', 'h1', 'h2', 'h3'])
 
   while (i < source.length) {
     const top = stack[stack.length - 1]
@@ -509,12 +509,19 @@ function toCatalogType(tag: string): string {
   if (normalized === 'theme') return 'Theme'
   if (normalized === 'header') return 'Header'
   if (normalized === 'container') return 'Container'
+  if (normalized === 'div') return 'Div'
+  if (normalized === 'section') return 'Section'
   if (normalized === 'sidebar') return 'Sidebar'
   if (normalized === 'card') return 'Card'
   if (normalized === 'cardtitle') return 'CardTitle'
   if (normalized === 'title') return 'Title'
   if (normalized === 'text') return 'Text'
-  if (normalized === 'bold' || normalized === 'strong') return 'Bold'
+  if (normalized === 'p') return 'P'
+  if (normalized === 'h1') return 'H1'
+  if (normalized === 'h2') return 'H2'
+  if (normalized === 'h3') return 'H3'
+  if (normalized === 'bold') return 'Bold'
+  if (normalized === 'strong') return 'Strong'
   if (normalized === 'br') return 'Br'
   if (normalized === 'icon') return 'Icon'
   if (normalized === 'slicer') return 'Slicer'
@@ -1187,6 +1194,11 @@ function toDslTag(type: string): string {
   if (raw === 'Title') return 'Title'
   if (raw === 'Text') return 'Text'
   if (raw === 'Bold') return 'Bold'
+  if (raw === 'Strong') return 'strong'
+  if (raw === 'P') return 'p'
+  if (raw === 'H1') return 'h1'
+  if (raw === 'H2') return 'h2'
+  if (raw === 'H3') return 'h3'
   if (raw === 'Br') return 'Br'
   if (raw === 'Icon') return 'Icon'
   if (raw === 'Slicer') return 'Slicer'
@@ -1195,6 +1207,8 @@ function toDslTag(type: string): string {
   if (raw === 'Theme') return 'Theme'
   if (raw === 'Header') return 'Header'
   if (raw === 'Container') return 'Container'
+  if (raw === 'Div') return 'div'
+  if (raw === 'Section') return 'section'
   if (raw === 'Sidebar') return 'Sidebar'
   if (raw === 'Table') return 'Table'
   return raw
