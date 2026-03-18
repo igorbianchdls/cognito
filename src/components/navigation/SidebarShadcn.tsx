@@ -72,11 +72,11 @@ const DEFAULT_SECTION_TITLE_STYLE: React.CSSProperties = {
 }
 
 const DEFAULT_ITEM_TEXT_STYLE: React.CSSProperties = {
-  fontFamily: 'var(--ui-font-family)',
+  fontFamily: fontVar('Geist'),
   fontWeight: 400,
   fontSize: 'var(--ui-font-size)',
   color: 'var(--sidebar-accent-foreground)',
-  letterSpacing: '-0.02em',
+  letterSpacing: '-0.01em',
   textTransform: 'none',
 }
 
@@ -212,9 +212,9 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
   }
 
   // Apply default values consistently (no localStorage overrides)
-  const finalBgColor = bgColor ?? '#f9fafb'
-  const finalTextColor = textColor ?? '#717171'
-  const finalItemTextColor = itemTextColor ?? '#0f172a'
+  const finalBgColor = bgColor ?? '#F7F7F7'
+  const finalTextColor = textColor ?? '#4D4D4D'
+  const finalItemTextColor = itemTextColor ?? '#4D4D4D'
   const finalSectionTitleStyle = sectionTitleStyle ?? DEFAULT_SECTION_TITLE_STYLE
   const finalItemTextStyle = itemTextStyle ?? DEFAULT_ITEM_TEXT_STYLE
   const finalIconSizePx = iconSizePx ?? 12
@@ -224,8 +224,8 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
   const inlineStyleBase: React.CSSProperties = { ...(style || {}) }
   const inlineStyle = inlineStyleBase as React.CSSProperties & Record<string, string | number>
   // Defaults requested: font-size 14px, item color rgb(110,110,10), letter-spacing -0.02em, bg rgb(250,250,250)
-  inlineStyle['--sidebar'] = 'rgb(253, 253, 254)'
-  inlineStyle['--sidebar-accent-foreground'] = 'rgb(128, 128, 128)'
+  inlineStyle['--sidebar'] = finalBgColor
+  inlineStyle['--sidebar-accent-foreground'] = finalItemTextColor
   inlineStyle['--ui-font-size'] = '14px'
   inlineStyle['--ui-tracking-pct'] = '-2'
 
@@ -238,8 +238,8 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
     >
       <SidebarHeader className={cn("gap-0 p-0")} style={{ backgroundColor: 'var(--sidebar)' }}>
         <div className="flex h-[43px] w-full items-center justify-start gap-2 px-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-          <BrandIcon className="h-4 w-4 text-black shrink-0" />
-          <span className="text-[13px] font-bold leading-none text-black group-data-[collapsible=icon]:hidden">Creatto</span>
+          <BrandIcon className="h-4 w-4 shrink-0 text-[#4D4D4D]" />
+          <span className="text-[13px] font-normal leading-none tracking-[-0.01em] text-[#4D4D4D] group-data-[collapsible=icon]:hidden" style={{ fontFamily: fontVar('Geist') }}>Creatto</span>
         </div>
       </SidebarHeader>
       <SidebarContent className="ui-text">
