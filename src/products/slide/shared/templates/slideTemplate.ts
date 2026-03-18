@@ -324,4 +324,123 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
       </Container>
     </Container>
   </Slide>
+
+  <Slide id="highlights" title="Highlights">
+    <Container direction="column" gap={20} minHeight="100%" padding={44} backgroundColor="#F8FAFD">
+      <Container direction="row" justify="between" align="start">
+        <Container direction="column" gap={8}>
+          <Badge text="Executive highlights" icon="sparkles" iconColor="#2563eb" backgroundColor="#EAF2FF" borderColor="#D7E5FF" />
+          <Text text="Management Summary" titleStyle={{ fontSize: 30, fontWeight: 700, color: "#172033", letterSpacing: "-0.04em" }} />
+        </Container>
+        <Badge text="Q4 Review" backgroundColor="#FFFFFF" borderColor="#D8DEE9" />
+      </Container>
+
+      <Divider label="Priority themes" color="#D8DEE9" />
+
+      <Container direction="row" gap={16} align="stretch">
+        <Container grow={2}>
+          <Card backgroundColor="#FFFFFF" borderColor="#E5ECF8" borderWidth={1} borderRadius={24} padding={22} height="100%">
+            <List variant="icon" icon="sparkles" iconColor="#2563eb" gap={14} itemTitleStyle={{ fontSize: 15, lineHeight: 1.7, color: "#33425F" }}>
+              <ListItem>Revenue remained concentrated in the strongest channels, reinforcing the need for disciplined portfolio steering.</ListItem>
+              <ListItem icon="users">Top customer contribution remains material enough to justify account-specific retention planning.</ListItem>
+              <ListItem icon="shopping-cart">Order volume stability indicates that the quarter was driven more by mix quality than by abrupt demand swings.</ListItem>
+            </List>
+          </Card>
+        </Container>
+        <Container grow={1}>
+          <Card backgroundColor="#172033" borderColor="#172033" borderWidth={1} borderRadius={24} padding={22} height="100%">
+            <Text text="Board note" titleStyle={{ fontSize: 11, color: "#AFC0E3", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8 }} />
+            <Text text="This slide is intentionally narrative-led, acting as an executive bridge between pure KPI performance and the operational drilldowns in the following pages." titleStyle={{ fontSize: 15, lineHeight: 1.75, color: "#FFFFFF" }} />
+          </Card>
+        </Container>
+      </Container>
+    </Container>
+  </Slide>
+
+  <Slide id="risks" title="Risks">
+    <Container direction="column" gap={20} minHeight="100%" padding={44} backgroundColor="#FFFFFF">
+      <Container direction="column" gap={8}>
+        <Badge text="Risk & concentration" icon="triangle-alert" iconColor="#B45309" backgroundColor="#FFF7ED" borderColor="#FCD9BD" />
+        <Text text="Revenue Risks and Dependencies" titleStyle={{ fontSize: 30, fontWeight: 700, color: "#172033", letterSpacing: "-0.04em" }} />
+      </Container>
+
+      <Container direction="row" gap={16} align="stretch">
+        <Container grow={2}>
+          <Callout
+            title="Concentration signal"
+            icon="triangle-alert"
+            iconColor="#D97706"
+            backgroundColor="#FFF7ED"
+            borderColor="#FCD9BD"
+            borderRadius={24}
+            padding={22}
+            text="A relevant share of the quarter still depends on a limited number of channels and accounts. This is positive for execution focus, but it increases sensitivity to churn, pricing pressure and underperformance in key segments."
+          />
+        </Container>
+        <Container grow={1}>
+          <Callout
+            title="Recommended response"
+            icon="badge-check"
+            iconColor="#2563eb"
+            backgroundColor="#F4F8FF"
+            borderColor="#DCE8FB"
+            borderRadius={24}
+            padding={22}
+            text="Track key-account health weekly, expand secondary channel coverage and use the next cycle to reduce exposure to the single largest revenue clusters."
+          />
+        </Container>
+      </Container>
+
+      <Divider label="Operational follow-up" color="#E5ECF8" />
+
+      <List variant="check" iconColor="#2563eb" gap={12} itemTitleStyle={{ fontSize: 14, lineHeight: 1.7, color: "#33425F" }}>
+        <ListItem>Review the top ten customer accounts with sales leadership and classify retention risk.</ListItem>
+        <ListItem>Monitor channel-level conversion, average ticket and mix contribution as a single operating scorecard.</ListItem>
+        <ListItem>Use the next planning cycle to establish a diversification target across channels and customer cohorts.</ListItem>
+      </List>
+    </Container>
+  </Slide>
+
+  <Slide id="appendix" title="Appendix">
+    <Container direction="column" gap={18} minHeight="100%" padding={44} backgroundColor="#F8FAFD">
+      <Container direction="row" justify="between" align="center">
+        <Text text="Visual Appendix" titleStyle={{ fontSize: 30, fontWeight: 700, color: "#172033", letterSpacing: "-0.04em" }} />
+        <Badge text="Appendix" icon="package" backgroundColor="#FFFFFF" borderColor="#D8DEE9" />
+      </Container>
+
+      <Container direction="row" gap={18} align="stretch">
+        <Container grow={3}>
+          <Image
+            src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='720' viewBox='0 0 1200 720'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop stop-color='%23EAF2FF'/%3E%3Cstop offset='1' stop-color='%23F8FBFF'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1200' height='720' rx='28' fill='url(%23g)'/%3E%3Crect x='72' y='88' width='1056' height='544' rx='24' fill='%23FFFFFF' stroke='%23DCE8FB'/%3E%3Crect x='116' y='132' width='280' height='24' rx='12' fill='%232F6FED' fill-opacity='0.16'/%3E%3Crect x='116' y='188' width='460' height='18' rx='9' fill='%23172033' fill-opacity='0.12'/%3E%3Crect x='116' y='220' width='360' height='18' rx='9' fill='%23172033' fill-opacity='0.08'/%3E%3Crect x='116' y='276' width='968' height='260' rx='22' fill='%23F4F8FF'/%3E%3Cpath d='M160 470 C250 400 320 430 420 350 C520 270 620 320 720 260 C820 200 940 240 1040 170' stroke='%232F6FED' stroke-width='8' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='420' cy='350' r='10' fill='%232F6FED'/%3E%3Ccircle cx='720' cy='260' r='10' fill='%232F6FED'/%3E%3Ccircle cx='1040' cy='170' r='10' fill='%232F6FED'/%3E%3C/svg%3E"
+            alt="Executive appendix visual"
+            width="100%"
+            height={420}
+            fit="cover"
+            borderRadius={28}
+            borderWidth={1}
+            borderColor="#DCE8FB"
+          />
+        </Container>
+        <Container grow={2}>
+          <Container direction="column" gap={16} height="100%">
+            <Callout
+              title="How to use this page"
+              icon="lightbulb"
+              iconColor="#2563eb"
+              backgroundColor="#FFFFFF"
+              borderColor="#E5ECF8"
+              borderRadius={24}
+              padding={22}
+              text="Use this appendix-style slide for screenshots, mockups, market context or supporting visuals that should not compete with the analytical storyline of the main deck."
+            />
+            <List variant="icon" icon="sparkles" iconColor="#2563eb" gap={12} itemTitleStyle={{ fontSize: 14, lineHeight: 1.7, color: "#33425F" }}>
+              <ListItem>Add product screens, region maps or campaign creatives.</ListItem>
+              <ListItem icon="badge-check">Pair the image with one precise interpretation, not a long narrative block.</ListItem>
+              <ListItem icon="users">Use appendix pages to support stakeholder-specific questions in live presentation mode.</ListItem>
+            </List>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
+  </Slide>
 </SlideTemplate>`

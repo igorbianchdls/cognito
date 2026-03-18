@@ -1347,6 +1347,120 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     );
   },
 
+  Image: ({ element }) => {
+    const p = (element?.props || {}) as AnyRecord;
+    const style: React.CSSProperties = {
+      display: 'block',
+      width: styleVal(p.width),
+      height: styleVal(p.height),
+      minWidth: styleVal(p.minWidth),
+      maxWidth: styleVal(p.maxWidth),
+      minHeight: styleVal(p.minHeight),
+      maxHeight: styleVal(p.maxHeight),
+      margin: styleVal(p.margin),
+      marginTop: styleVal(p.marginTop),
+      marginRight: styleVal(p.marginRight),
+      marginBottom: styleVal(p.marginBottom),
+      marginLeft: styleVal(p.marginLeft),
+      borderColor: p.borderColor,
+      borderWidth: styleVal(p.borderWidth),
+      borderStyle: p.borderWidth ? 'solid' : undefined,
+      borderRadius: styleVal(p.borderRadius),
+      boxShadow: p.boxShadow,
+      backgroundColor: p.backgroundColor,
+      objectFit: (p.fit || 'cover') as any,
+      overflow: 'hidden',
+    };
+    return <img src={String(p.src || '')} alt={String(p.alt || '')} style={style} />;
+  },
+
+  Divider: ({ element }) => {
+    const p = (element?.props || {}) as AnyRecord;
+    const label = String(p.label || '').trim();
+    const lineColor = String(p.color || '#D9DDE5');
+    const thickness = styleVal(p.thickness) || '1px';
+    const labelStyle = (normalizeTitleStyle(p.titleStyle) || {}) as React.CSSProperties;
+    const wrapStyle: React.CSSProperties = {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px',
+      width: styleVal(p.width) || '100%',
+      ...resolveTextSpacingStyle(p),
+    };
+    const lineStyle: React.CSSProperties = {
+      flex: 1,
+      height: thickness,
+      backgroundColor: lineColor,
+      borderRadius: thickness,
+    };
+    if (!label) return <div style={{ ...wrapStyle, gap: 0 }}><div style={lineStyle} /></div>;
+    return (
+      <div style={wrapStyle}>
+        <div style={lineStyle} />
+        <span style={{ fontSize: '11px', color: '#7B8190', letterSpacing: '0.04em', textTransform: 'uppercase', ...(labelStyle || {}) }}>{label}</span>
+        <div style={lineStyle} />
+      </div>
+    );
+  },
+
+  Callout: ({ element, children }) => {
+    const p = (element?.props || {}) as AnyRecord;
+    const text = String(p.text || '').trim();
+    const title = String(p.title || '').trim();
+    const IconComp = p.icon ? (iconMap[normalizeIconKey(p.icon)] || Sparkles) : null;
+    const boxStyle: React.CSSProperties = {
+      backgroundColor: p.backgroundColor || '#F7F9FC',
+      borderColor: p.borderColor || '#E3E8F1',
+      borderWidth: styleVal(p.borderWidth ?? 1),
+      borderStyle: (p.borderWidth ?? 1) ? 'solid' : undefined,
+      borderRadius: styleVal(p.borderRadius ?? 18),
+      padding: styleVal(p.padding ?? 18),
+      ...resolveTextSpacingStyle(p),
+    };
+    const titleStyle = (normalizeTitleStyle(p.titleStyle) || {}) as React.CSSProperties;
+    const textStyle = (normalizeTitleStyle(p.textStyle) || {}) as React.CSSProperties;
+    return (
+      <div style={boxStyle}>
+        {(title || IconComp) ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: text || children ? '8px' : 0 }}>
+            {IconComp ? <IconComp size={16} style={{ color: String(p.iconColor || '#2563eb') }} /> : null}
+            {title ? <div style={{ fontSize: '13px', fontWeight: 600, color: '#1F2937', ...(titleStyle || {}) }}>{title}</div> : null}
+          </div>
+        ) : null}
+        {text ? <div style={{ fontSize: '14px', lineHeight: 1.65, color: '#4B5563', ...(textStyle || {}) }}>{text}</div> : null}
+        {!text ? children : null}
+      </div>
+    );
+  },
+
+  Badge: ({ element }) => {
+    const p = (element?.props || {}) as AnyRecord;
+    const text = String(p.text ?? p.title ?? '').trim();
+    const IconComp = p.icon ? (iconMap[normalizeIconKey(p.icon)] || Sparkles) : null;
+    const textStyle = (normalizeTitleStyle(p.titleStyle) || {}) as React.CSSProperties;
+    const style: React.CSSProperties = {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '6px',
+      backgroundColor: p.backgroundColor || '#F3F5F8',
+      borderColor: p.borderColor || '#D7DCE5',
+      borderWidth: styleVal(p.borderWidth ?? 1),
+      borderStyle: (p.borderWidth ?? 1) ? 'solid' : undefined,
+      borderRadius: styleVal(p.borderRadius ?? 999),
+      paddingTop: styleVal(p.paddingY ?? 4),
+      paddingBottom: styleVal(p.paddingY ?? 4),
+      paddingLeft: styleVal(p.paddingX ?? 10),
+      paddingRight: styleVal(p.paddingX ?? 10),
+      ...resolveTextSpacingStyle(p),
+    };
+    return (
+      <div style={style}>
+        {IconComp ? <IconComp size={14} style={{ color: String(p.iconColor || '#4B5563') }} /> : null}
+        <span style={{ fontSize: '12px', lineHeight: 1, color: '#4B5563', ...(textStyle || {}) }}>{text}</span>
+      </div>
+    );
+  },
+
   Tab: ({ element }) => {
     const { data, setData } = useData();
     const p = deepMerge(defaultTab as AnyRecord, (element?.props || {}) as AnyRecord) as AnyRecord;
