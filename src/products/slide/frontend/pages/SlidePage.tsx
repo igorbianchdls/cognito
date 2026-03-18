@@ -8,7 +8,6 @@ import { DataProvider } from '@/products/bi/json-render/context'
 import { registry } from '@/products/bi/json-render/registry'
 import { Renderer } from '@/products/bi/json-render/renderer'
 import { SlidePreviewThumbnail } from '@/products/slide/preview/SlidePreviewThumbnail'
-import { useSlidePreviewSnapshots } from '@/products/slide/preview/useSlidePreviewSnapshots'
 import { SLIDE_TEMPLATE_DSL } from '@/products/slide/shared/templates/slideTemplate'
 
 type AnyRecord = Record<string, any>
@@ -145,15 +144,7 @@ function SlideWorkspace() {
     () => (activePage ? buildPageRenderTree(activePage, themeNode) : []),
     [activePage, themeNode],
   )
-  const captureKey = useMemo(
-    () => `${activePageId}:${pages.length}:${Boolean(activePage)}:${Boolean(themeNode)}`,
-    [activePageId, pages.length, activePage, themeNode],
-  )
-  const { previewsByPageId } = useSlidePreviewSnapshots({
-    activePageId,
-    captureKey,
-    slideElementRef,
-  })
+  const previewsByPageId = useMemo(() => ({} as Record<string, string>), [])
 
   return (
     <div className="flex h-screen flex-col bg-[#F7F7F6] tracking-[-0.03em] text-[#3F3F3D]">
