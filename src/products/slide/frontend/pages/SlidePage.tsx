@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, RefObject, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, RefObject, useMemo, useRef, useState } from 'react'
 import { Icon } from '@iconify/react'
 
 import { parseDashboardTemplateDslToTree } from '@/products/bi/json-render/parsers/dashboardTemplateDslParser'
@@ -124,20 +124,15 @@ const SlideCanvas = memo(function SlideCanvas({
 function SlideWorkspace() {
   const parsed = useMemo(() => parseDashboardTemplateDslToTree(SLIDE_TEMPLATE_DSL), [])
   const { rootName, themeNode, pages } = useMemo(() => getSlideStructure(parsed), [parsed])
-  const [activePageId, setActivePageId] = useState('')
+  const initialPageId = useMemo(() => (pages.length ? getPageId(pages[0], 0) : ''), [pages])
+  const [activePageId, setActivePageId] = useState(initialPageId)
   const [activeView, setActiveView] = useState<'preview' | 'code'>('preview')
   const [zoom, setZoom] = useState(0.82)
   const slideElementRef = useRef<HTMLDivElement | null>(null)
 
-  useEffect(() => {
-    if (!pages.length) return
-    const firstId = getPageId(pages[0], 0)
-    setActivePageId((current) => current || firstId)
-  }, [pages])
-
   const activePage = useMemo(
-    () => pages.find((page, index) => getPageId(page, index) === activePageId) || pages[0] || null,
-    [pages, activePageId],
+    () => pages.find((page, index) => getPageId(page, index) === (activePageId || initialPageId)) || pages[0] || null,
+    [pages, activePageId, initialPageId],
   )
 
   const activeTree = useMemo(
@@ -227,7 +222,7 @@ function SlideWorkspace() {
                 <SlideThumbnail
                   key={pageId}
                   previewSrc={previewsByPageId[pageId]}
-                  selected={pageId === activePageId}
+                  selected={pageId === (activePageId || initialPageId)}
                   index={index}
                   onClick={() => setActivePageId(pageId)}
                 />
@@ -244,7 +239,7 @@ function SlideWorkspace() {
                   tree={activeTree}
                   zoom={zoom}
                   slideElementRef={slideElementRef}
-                  renderKey={activePageId}
+                  renderKey={activePageId || initialPageId}
                 />
               ) : null}
               
