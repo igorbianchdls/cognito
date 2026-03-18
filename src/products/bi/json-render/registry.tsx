@@ -1274,7 +1274,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const style: React.CSSProperties = {
       margin: 0,
       color: css.headerSubtitle || css.headerSubtitleColor || '#4b5563',
-      fontSize: '13px',
+      fontSize: '14px',
       lineHeight: 1.7,
       fontWeight: 400,
       whiteSpace: 'normal',
@@ -1301,6 +1301,9 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
   TextNode: ({ element }) => {
     const text = String((element?.props as AnyRecord | undefined)?.text ?? '');
     return text || null;
+  },
+  Br: () => {
+    return <br />;
   },
   Icon: ({ element }) => {
     const theme = useThemeOverrides();

@@ -709,6 +709,10 @@ export const catalog = {
       }).strict(),
       hasChildren: false,
     },
+    Br: {
+      props: z.object({}).strict(),
+      hasChildren: false,
+    },
     Icon: {
       props: z.object({
         name: z.string(),

@@ -24,7 +24,69 @@ export const REPORT_TEMPLATE_DSL = String.raw`<ReportTemplate name="last_quarter
         <Text titleStyle={{ fontSize: 13, lineHeight: 1.7, color: "#384152" }}>• The strongest regions offset weaker <Bold>small-business performance</Bold> during the quarter.</Text>
       </Container>
 
-      <Container grow={1} borderRadius={32} backgroundColor="#EAF8FF" />
+      <Container grow={1} borderRadius={32} backgroundColor="#EAF8FF" padding={24} gap={18}>
+        <Container direction="row" gap={18} align="stretch">
+          <Container grow={1}>
+            <Card
+              padding={20}
+              borderWidth={1}
+              borderColor="#D7ECF8"
+              borderRadius={20}
+              backgroundColor="#F7FCFF"
+            >
+              <Subtitle
+                text="Quarter at a glance"
+                titleStyle={{ fontSize: 11, color: "#6E7F91", letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 8 }}
+              />
+              <Title
+                text="Executive summary"
+                titleStyle={{ fontSize: 20, fontWeight: 600, color: "#1D2733", letterSpacing: "-0.03em", marginBottom: 10 }}
+              />
+              <Text titleStyle={{ fontSize: 14, lineHeight: 1.75, color: "#425063" }}>
+                The quarter closed with <Bold>stronger revenue concentration</Bold> in the main channels, while the customer base remained healthy enough to preserve diversification.
+              </Text>
+              <Text titleStyle={{ fontSize: 14, lineHeight: 1.75, color: "#425063", marginTop: 10 }}>
+                This report combines <Bold>trend analysis</Bold>, channel composition and recent order detail to support revenue review conversations.
+              </Text>
+            </Card>
+          </Container>
+
+          <Container grow={1}>
+            <Card
+              padding={20}
+              borderWidth={1}
+              borderColor="#D7ECF8"
+              borderRadius={20}
+              backgroundColor="#FFFFFF"
+            >
+              <Container direction="column" gap={6} marginBottom={10}>
+                <Subtitle
+                  text="Trend"
+                  titleStyle={{ fontSize: 11, color: "#6E7F91", letterSpacing: "0.04em", textTransform: "uppercase" }}
+                />
+                <Title
+                  text="Monthly revenue trend"
+                  titleStyle={{ fontSize: 18, fontWeight: 600, color: "#1D2733", letterSpacing: "-0.03em" }}
+                />
+              </Container>
+              <Chart type="line" format="currency" height={240} curve="monotone" showGrid={true} showDots={false} strokeWidth={3} categoryTickColor="#6E7F91" valueTickColor="#6E7F91">
+                <Query>
+                  SELECT
+                    TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'Mon') AS label,
+                    COALESCE(SUM(p.valor_total), 0)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE 1=1
+                    {{filters:p}}
+                  GROUP BY 1
+                  ORDER BY MIN(DATE_TRUNC('month', p.data_pedido))
+                  LIMIT 6
+                </Query>
+                <Fields x="label" y="value" />
+              </Chart>
+            </Card>
+          </Container>
+        </Container>
+      </Container>
     </Container>
   </Report>
 
@@ -50,14 +112,6 @@ export const REPORT_TEMPLATE_DSL = String.raw`<ReportTemplate name="last_quarter
         <Text titleStyle={{ fontSize: 13, lineHeight: 1.65, color: "#2A3140" }}>• <Bold>Breakdown by Customer</Bold></Text>
       </Container>
 
-      <Container direction="column" gap={8} marginBottom={8}>
-        <Title
-          text="Breakdown by Channel"
-          titleStyle={{ fontSize: 18, fontWeight: 600, color: "#20232A", letterSpacing: "-0.02em" }}
-        />
-        <Subtitle text="Revenue by Channel" titleStyle={{ fontSize: 11, color: "#8B8E97", textTransform: "uppercase", letterSpacing: "0.04em" }} />
-      </Container>
-
       <Card
         padding={18}
         borderWidth={1}
@@ -65,6 +119,13 @@ export const REPORT_TEMPLATE_DSL = String.raw`<ReportTemplate name="last_quarter
         borderRadius={18}
         backgroundColor="#FFFFFF"
       >
+        <Container direction="column" gap={8} marginBottom={8}>
+          <Title
+            text="Breakdown by Channel"
+            titleStyle={{ fontSize: 18, fontWeight: 600, color: "#20232A", letterSpacing: "-0.02em" }}
+          />
+          <Subtitle text="Revenue by Channel" titleStyle={{ fontSize: 11, color: "#8B8E97", textTransform: "uppercase", letterSpacing: "0.04em" }} />
+        </Container>
         <Chart type="bar" format="currency" height={340} showGrid={true} categoryTickColor="#7B8190" valueTickColor="#7B8190">
           <Query>
             SELECT
