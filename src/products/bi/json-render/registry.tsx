@@ -1191,8 +1191,15 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const titleStyle = applyH1FromCssVars(normalizeTitleStyle(p.titleStyle), theme.cssVars) as React.CSSProperties | undefined;
     const css = (theme.cssVars || {}) as AnyRecord;
     const styleBase: React.CSSProperties = {
-      ...resolveBoxStyle(p),
+      backgroundColor: p.backgroundColor,
+      borderColor: p.borderColor,
+      borderWidth: p.borderWidth,
+      borderStyle: p.borderStyle || (p.borderWidth ? 'solid' : undefined),
+      borderRadius: p.borderRadius,
       padding: styleVal(p.padding) || undefined,
+      margin: styleVal(p.margin),
+      width: styleVal(p.width),
+      height: styleVal(p.height),
     };
     const style = ensureSurfaceBackground(
       applyBorderFromCssVars(styleBase as any, theme.cssVars),
@@ -2081,7 +2088,32 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       flexWrap: p.wrap ? 'wrap' : 'nowrap',
       justifyContent: mapJustify(p.justify),
       alignItems: mapAlign(p.align),
-      ...resolveBoxStyle(p),
+      padding: styleVal(p.padding),
+      paddingTop: styleVal(p.paddingTop),
+      paddingRight: styleVal(p.paddingRight),
+      paddingBottom: styleVal(p.paddingBottom),
+      paddingLeft: styleVal(p.paddingLeft),
+      margin: styleVal(p.margin),
+      marginTop: styleVal(p.marginTop),
+      marginRight: styleVal(p.marginRight),
+      marginBottom: styleVal(p.marginBottom),
+      marginLeft: styleVal(p.marginLeft),
+      backgroundColor: p.backgroundColor,
+      borderColor: p.borderColor,
+      borderWidth: p.borderWidth,
+      borderStyle: p.borderStyle || (p.borderWidth ? 'solid' : undefined),
+      borderRadius: p.borderRadius,
+      boxShadow: p.boxShadow,
+      width: styleVal(p.width),
+      minWidth: styleVal(p.minWidth),
+      maxWidth: styleVal(p.maxWidth),
+      minHeight: styleVal(p.minHeight),
+      height: styleVal(p.height),
+      maxHeight: styleVal(p.maxHeight),
+      overflow: p.overflow,
+      overflowX: p.overflowX,
+      overflowY: p.overflowY,
+      ...((p.style && typeof p.style === 'object') ? p.style : {}),
     };
     const childDefs: AnyRecord[] = Array.isArray((element as any)?.children) ? (element as any).children : [];
     const itemStyles = childDefs.map((ch) => resolveFlexItemStyle((ch?.props as AnyRecord) || {}));
@@ -2285,57 +2317,40 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     }
     const explicitScheme = Array.isArray(p.colorScheme) ? p.colorScheme.map(String) : (typeof p.colorScheme === 'string' ? [p.colorScheme] : []);
     const palette = (explicitScheme.length ? explicitScheme : (managedScheme && managedScheme.length ? managedScheme : ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6']));
-    const borderless = Boolean(p.borderless);
-    const containerStyle = ensureSurfaceBackground(
-      applyBorderFromCssVars(normalizeContainerStyle(p.containerStyle, borderless), theme.cssVars),
-      theme.cssVars
-    ) as React.CSSProperties;
-    if (containerStyle) (containerStyle as AnyRecord).boxShadow = undefined;
-    const titleStyle = applyH1FromCssVars(normalizeTitleStyle(p.titleStyle), theme.cssVars) as React.CSSProperties | undefined;
 
     return (
-      <FrameSurface style={containerStyle} frame={p?.frame as AnyRecord} cssVars={theme.cssVars}>
-        {p.title ? (
-          <div style={{ ...(titleStyle || {}) }}>
-            {String(p.title)}
-          </div>
-        ) : null}
-        <div
-          className="flex flex-col"
-          style={{ gap: `${itemGap}px`, paddingLeft: contentPaddingX, paddingRight: contentPaddingX, paddingBottom: contentPaddingBottom }}
-        >
-          {items.map((it, idx) => {
-            const hideIcon = iconBoxSize <= 0 || iconSize <= 0;
-            const IconComp = aiSummaryIconMap[normalizeIconKey(it?.icon)] || Sparkles;
-            const accent = String(it?.iconColor || palette[idx % palette.length] || '#3b82f6');
-            const bg = String(it?.iconBgColor || hexToRgba(accent, 0.16) || `color-mix(in srgb, ${accent} 16%, transparent)`);
-            return (
-              <div key={`ai-summary-item-${idx}`} className="flex items-start" style={{ gap: hideIcon ? '0px' : `${iconGap}px` }}>
-                {!hideIcon ? (
-                  <div
-                    className="inline-flex items-center justify-center shrink-0"
-                    style={{
-                      width: `${iconBoxSize}px`,
-                      height: `${iconBoxSize}px`,
-                      borderRadius: iconBoxRadius,
-                      backgroundColor: bg,
-                      border: `1px solid ${hexToRgba(accent, 0.28) || accent}`,
-                    }}
-                  >
-                    <IconComp size={iconSize} style={{ color: accent }} />
-                  </div>
-                ) : null}
-                <div className="text-sm leading-5 whitespace-pre-wrap break-words" style={itemTextStyle}>
-                  {String(it?.text || '')}
-                </div>
+      <div
+        className="flex flex-col"
+        style={{ gap: `${itemGap}px`, paddingLeft: contentPaddingX, paddingRight: contentPaddingX, paddingBottom: contentPaddingBottom }}
+      >
+        {items.map((it, idx) => {
+          const IconComp = aiSummaryIconMap[normalizeIconKey(it?.icon)] || Sparkles;
+          const accent = String(it?.iconColor || palette[idx % palette.length] || '#3b82f6');
+          const bg = String(it?.iconBgColor || hexToRgba(accent, 0.16) || `color-mix(in srgb, ${accent} 16%, transparent)`);
+          return (
+            <div key={`ai-summary-item-${idx}`} className="flex items-start" style={{ gap: `${iconGap}px` }}>
+              <div
+                className="inline-flex items-center justify-center shrink-0"
+                style={{
+                  width: `${iconBoxSize}px`,
+                  height: `${iconBoxSize}px`,
+                  borderRadius: iconBoxRadius,
+                  backgroundColor: bg,
+                  border: `1px solid ${hexToRgba(accent, 0.28) || accent}`,
+                }}
+              >
+                <IconComp size={iconSize} style={{ color: accent }} />
               </div>
-            );
-          })}
-          {items.length === 0 ? (
-            <div className="text-xs text-gray-400">Sem itens</div>
-          ) : null}
-        </div>
-      </FrameSurface>
+              <div className="text-sm leading-5 whitespace-pre-wrap break-words" style={itemTextStyle}>
+                {String(it?.text || '')}
+              </div>
+            </div>
+          );
+        })}
+        {items.length === 0 ? (
+          <div className="text-xs text-gray-400">Sem itens</div>
+        ) : null}
+      </div>
     );
   },
 
