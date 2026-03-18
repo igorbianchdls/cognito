@@ -1041,9 +1041,6 @@ function compileNode(source: string, node: DslNode, context: CompileContext): Re
   if (node.tag === 'sparkline') return compileSparklineNode(source, node)
   if (node.tag === 'gauge') return compileGaugeNode(source, node)
   if (node.tag === 'pivot-table' || node.tag === 'pivottable') return compilePivotTableNode(source, node)
-  if (node.tag === 'div') {
-    throw new DashboardTemplateDslParseError(source, node.start, 'Tag <Div> nao e suportada. Use <Container>')
-  }
 
   const type = toCatalogType(node.tag)
   if (!type || type === 'Chart') {
