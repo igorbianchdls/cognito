@@ -254,6 +254,7 @@ function parseDslTree(sourceRaw: string): DslNode {
   let root: DslNode | null = null
   let i = 0
   const RAW_TEXT_TAGS = new Set(['props', 'query', 'sql', 'filters', 'style', 'config'])
+  const INLINE_TEXT_TAGS = new Set(['text', 'bold', 'strong'])
 
   while (i < source.length) {
     const top = stack[stack.length - 1]
@@ -283,7 +284,23 @@ function parseDslTree(sourceRaw: string): DslNode {
       if (stack.length === 0 && text.trim()) {
         throw new DashboardTemplateDslParseError(source, i, 'Texto fora da tag raiz nao e permitido')
       }
-      if (stack.length > 0) stack[stack.length - 1].text += text
+      if (stack.length > 0) {
+        const current = stack[stack.length - 1]
+        if (INLINE_TEXT_TAGS.has(current.tag)) {
+          const normalized = text.replace(/\s+/g, ' ')
+          if (normalized) {
+            current.children.push({
+              tag: '#text',
+              attrs: {},
+              children: [],
+              text: normalized,
+              start: i,
+            })
+          }
+        } else {
+          current.text += text
+        }
+      }
       i = end
       continue
     }
@@ -483,6 +500,7 @@ function compileDataQueryNode(source: string, node: DslNode): Record<string, unk
 
 function toCatalogType(tag: string): string {
   const normalized = String(tag || '').trim().toLowerCase()
+  if (normalized === '#text') return 'TextNode'
   if (normalized === 'dashboardtemplate') return 'DashboardTemplate'
   if (normalized === 'reporttemplate') return 'ReportTemplate'
   if (normalized === 'report') return 'Report'
@@ -495,6 +513,8 @@ function toCatalogType(tag: string): string {
   if (normalized === 'card') return 'Card'
   if (normalized === 'cardtitle') return 'CardTitle'
   if (normalized === 'title') return 'Title'
+  if (normalized === 'text') return 'Text'
+  if (normalized === 'bold' || normalized === 'strong') return 'Bold'
   if (normalized === 'icon') return 'Icon'
   if (normalized === 'slicer') return 'Slicer'
   if (normalized === 'slicerfield') return 'SlicerField'
@@ -998,6 +1018,14 @@ function compilePivotTableNode(source: string, node: DslNode): Record<string, un
 }
 
 function compileNode(source: string, node: DslNode, context: CompileContext): Record<string, unknown> | null {
+  if (node.tag === '#text') {
+    return {
+      type: 'TextNode',
+      props: {
+        text: String(node.text || ''),
+      },
+    }
+  }
   if (node.tag === 'defaults') return null
   if (node.tag === 'chart') return compileChartNode(source, node, context)
   if (node.tag === 'header') return compileHeaderNode(source, node, context)
@@ -1156,6 +1184,8 @@ function toDslTag(type: string): string {
   if (raw === 'AISummary') return 'AISummary'
   if (raw === 'CardTitle') return 'CardTitle'
   if (raw === 'Title') return 'Title'
+  if (raw === 'Text') return 'Text'
+  if (raw === 'Bold') return 'Bold'
   if (raw === 'Icon') return 'Icon'
   if (raw === 'Slicer') return 'Slicer'
   if (raw === 'SlicerField') return 'SlicerField'
@@ -1768,6 +1798,13 @@ function renderPivotTableNodeToDsl(node: Record<string, unknown>, level: number)
 function renderNodeToDsl(node: unknown, level: number): string[] {
   if (!node || typeof node !== 'object' || Array.isArray(node)) return []
   const record = node as Record<string, unknown>
+  if (String(record.type || '').trim() === 'TextNode') {
+    const props =
+      record.props && typeof record.props === 'object' && !Array.isArray(record.props)
+        ? (record.props as Record<string, unknown>)
+        : {}
+    return [String(props.text ?? '')]
+  }
   if (chartTypeToAttr(String(record.type || '').trim())) {
     return renderChartNodeToDsl(record, level)
   }

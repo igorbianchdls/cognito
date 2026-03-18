@@ -1265,6 +1265,43 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       </div>
     );
   },
+  Text: ({ element, children }) => {
+    const theme = useThemeOverrides();
+    const textTheme = ((((theme.components as any)?.Text || {}) as AnyRecord));
+    const p = deepMerge(textTheme, (element?.props || {}) as AnyRecord) as AnyRecord;
+    const titleStyle = (normalizeTitleStyle(p.titleStyle) || {}) as React.CSSProperties;
+    const css = (theme.cssVars || {}) as AnyRecord;
+    const style: React.CSSProperties = {
+      margin: 0,
+      color: css.headerSubtitle || css.headerSubtitleColor || '#4b5563',
+      fontSize: '13px',
+      lineHeight: 1.7,
+      fontWeight: 400,
+      whiteSpace: 'normal',
+      ...(titleStyle || {}),
+      ...resolveTextSpacingStyle(p),
+    };
+    return <p style={style}>{children}</p>;
+  },
+  Bold: ({ element, children }) => {
+    const theme = useThemeOverrides();
+    const p = ((element?.props || {}) as AnyRecord);
+    const titleStyle = (normalizeTitleStyle(p.titleStyle) || {}) as React.CSSProperties;
+    return (
+      <strong
+        style={{
+          fontWeight: 600,
+          ...(titleStyle || {}),
+        }}
+      >
+        {children}
+      </strong>
+    );
+  },
+  TextNode: ({ element }) => {
+    const text = String((element?.props as AnyRecord | undefined)?.text ?? '');
+    return text || null;
+  },
   Icon: ({ element }) => {
     const theme = useThemeOverrides();
     const p = (element?.props || {}) as AnyRecord;

@@ -62,6 +62,8 @@ const RechartsPropsSchema = z.object({
   valueTickColor: z.string().optional(),
   categoryTickFontSize: z.number().optional(),
   valueTickFontSize: z.number().optional(),
+  categoryTickMargin: z.number().optional(),
+  valueTickMargin: z.number().optional(),
   categoryLabelMode: z.enum(["short", "first-word"]).optional(),
   axisColor: z.string().optional(),
   gridDasharray: z.string().optional(),
@@ -100,6 +102,8 @@ const RechartsTopLevelProps = {
   valueTickColor: z.string().optional(),
   categoryTickFontSize: z.number().optional(),
   valueTickFontSize: z.number().optional(),
+  categoryTickMargin: z.number().optional(),
+  valueTickMargin: z.number().optional(),
   categoryLabelMode: z.enum(["short", "first-word"]).optional(),
   axisColor: z.string().optional(),
   gridDasharray: z.string().optional(),
@@ -683,6 +687,25 @@ export const catalog = {
         title: z.string().optional(),
         titleStyle: TitleStyleSchema.optional(),
         ...TextBlockSpacingProps,
+      }).strict(),
+      hasChildren: false,
+    },
+    Text: {
+      props: z.object({
+        titleStyle: TitleStyleSchema.optional(),
+        ...TextBlockSpacingProps,
+      }).strict(),
+      hasChildren: true,
+    },
+    Bold: {
+      props: z.object({
+        titleStyle: TitleStyleSchema.optional(),
+      }).strict(),
+      hasChildren: true,
+    },
+    TextNode: {
+      props: z.object({
+        text: z.string(),
       }).strict(),
       hasChildren: false,
     },

@@ -19,9 +19,9 @@ export const REPORT_TEMPLATE_DSL = String.raw`<ReportTemplate name="last_quarter
       </Container>
 
       <Container direction="column" gap={14} marginBottom={30}>
-        <Subtitle text="• Revenue grew with a clear concentration in enterprise and mid-market accounts." titleStyle={{ fontSize: 13, lineHeight: 1.7, color: "#384152" }} />
-        <Subtitle text="• Segment mix remained healthy, but country distribution shows concentration risk." titleStyle={{ fontSize: 13, lineHeight: 1.7, color: "#384152" }} />
-        <Subtitle text="• The strongest regions offset weaker small-business performance during the quarter." titleStyle={{ fontSize: 13, lineHeight: 1.7, color: "#384152" }} />
+        <Text titleStyle={{ fontSize: 13, lineHeight: 1.7, color: "#384152" }}>• <Bold>Revenue grew</Bold> with a clear concentration in enterprise and mid-market accounts.</Text>
+        <Text titleStyle={{ fontSize: 13, lineHeight: 1.7, color: "#384152" }}>• <Bold>Segment mix remained healthy</Bold>, but country distribution shows concentration risk.</Text>
+        <Text titleStyle={{ fontSize: 13, lineHeight: 1.7, color: "#384152" }}>• The strongest regions offset weaker <Bold>small-business performance</Bold> during the quarter.</Text>
       </Container>
 
       <Container grow={1} borderRadius={32} backgroundColor="#EAF8FF" />
@@ -42,12 +42,12 @@ export const REPORT_TEMPLATE_DSL = String.raw`<ReportTemplate name="last_quarter
       </Container>
 
       <Container direction="column" gap={8} marginBottom={22}>
-        <Subtitle text="This report analyzes revenue for the quarter, filtered to:" titleStyle={{ fontSize: 13, lineHeight: 1.65, color: "#4E5665" }} />
+        <Text titleStyle={{ fontSize: 13, lineHeight: 1.65, color: "#4E5665" }}>This report analyzes <Bold>revenue for the quarter</Bold>, filtered to:</Text>
         <Subtitle text="• Version: Actual" titleStyle={{ fontSize: 13, lineHeight: 1.65, color: "#2A3140" }} />
         <Subtitle text="• Scenario: Baseline" titleStyle={{ fontSize: 13, lineHeight: 1.65, color: "#2A3140" }} />
-        <Subtitle text="It provides two complementary views:" titleStyle={{ fontSize: 13, lineHeight: 1.65, color: "#4E5665", marginTop: 4 }} />
-        <Subtitle text="• Breakdown by Channel" titleStyle={{ fontSize: 13, lineHeight: 1.65, color: "#2A3140" }} />
-        <Subtitle text="• Breakdown by Customer" titleStyle={{ fontSize: 13, lineHeight: 1.65, color: "#2A3140" }} />
+        <Text titleStyle={{ fontSize: 13, lineHeight: 1.65, color: "#4E5665", marginTop: 4 }}>It provides <Bold>two complementary views</Bold>:</Text>
+        <Text titleStyle={{ fontSize: 13, lineHeight: 1.65, color: "#2A3140" }}>• <Bold>Breakdown by Channel</Bold></Text>
+        <Text titleStyle={{ fontSize: 13, lineHeight: 1.65, color: "#2A3140" }}>• <Bold>Breakdown by Customer</Bold></Text>
       </Container>
 
       <Container direction="column" gap={8} marginBottom={8}>
@@ -58,7 +58,7 @@ export const REPORT_TEMPLATE_DSL = String.raw`<ReportTemplate name="last_quarter
         <Subtitle text="Revenue by Channel" titleStyle={{ fontSize: 11, color: "#8B8E97", textTransform: "uppercase", letterSpacing: "0.04em" }} />
       </Container>
 
-      <Container
+      <Card
         marginBottom={18}
         padding={18}
         borderWidth={1}
@@ -81,11 +81,11 @@ export const REPORT_TEMPLATE_DSL = String.raw`<ReportTemplate name="last_quarter
           </Query>
           <Fields x="label" y="value" key="key" />
         </Chart>
-      </Container>
+      </Card>
 
       <Container direction="column" gap={8} marginBottom={18}>
-        <Subtitle text="• Primary channels concentrate most of the quarter revenue and should remain the focus of closer monitoring." titleStyle={{ fontSize: 12, lineHeight: 1.65, color: "#4E5665" }} />
-        <Subtitle text="• The long tail of channels still contributes diversification, but with a visibly lower share of total volume." titleStyle={{ fontSize: 12, lineHeight: 1.65, color: "#4E5665" }} />
+        <Text titleStyle={{ fontSize: 12, lineHeight: 1.65, color: "#4E5665" }}>• <Bold>Primary channels</Bold> concentrate most of the quarter revenue and should remain the focus of closer monitoring.</Text>
+        <Text titleStyle={{ fontSize: 12, lineHeight: 1.65, color: "#4E5665" }}>• The long tail of channels still contributes diversification, but with a visibly <Bold>lower share of total volume</Bold>.</Text>
       </Container>
 
       <Container direction="column" gap={8}>
@@ -93,8 +93,8 @@ export const REPORT_TEMPLATE_DSL = String.raw`<ReportTemplate name="last_quarter
           text="Breakdown by Customer"
           titleStyle={{ fontSize: 18, fontWeight: 600, color: "#20232A", letterSpacing: "-0.02em" }}
         />
-        <Subtitle text="• Revenue concentration by customer suggests a few accounts are disproportionately important to quarter performance." titleStyle={{ fontSize: 12, lineHeight: 1.65, color: "#4E5665" }} />
-        <Subtitle text="• This distribution is useful for identifying account dependency and prioritizing retention efforts." titleStyle={{ fontSize: 12, lineHeight: 1.65, color: "#4E5665" }} />
+        <Text titleStyle={{ fontSize: 12, lineHeight: 1.65, color: "#4E5665" }}>• <Bold>Revenue concentration by customer</Bold> suggests a few accounts are disproportionately important to quarter performance.</Text>
+        <Text titleStyle={{ fontSize: 12, lineHeight: 1.65, color: "#4E5665" }}>• This distribution is useful for identifying <Bold>account dependency</Bold> and prioritizing retention efforts.</Text>
       </Container>
     </Container>
   </Report>
@@ -116,7 +116,7 @@ export const REPORT_TEMPLATE_DSL = String.raw`<ReportTemplate name="last_quarter
         />
       </Container>
 
-      <Container
+      <Card
         marginBottom={20}
         padding={18}
         borderWidth={1}
@@ -142,14 +142,14 @@ export const REPORT_TEMPLATE_DSL = String.raw`<ReportTemplate name="last_quarter
           </Query>
           <Fields x="label" y="value" key="key" />
         </Chart>
-      </Container>
+      </Card>
 
       <Container direction="column" gap={8} marginBottom={18}>
-        <Subtitle text="• Top customers stand apart clearly from the rest of the portfolio in cumulative quarter revenue." titleStyle={{ fontSize: 12, lineHeight: 1.65, color: "#4E5665" }} />
-        <Subtitle text="• The current mix suggests monitoring client concentration and using this view as support for account planning." titleStyle={{ fontSize: 12, lineHeight: 1.65, color: "#4E5665" }} />
+        <Text titleStyle={{ fontSize: 12, lineHeight: 1.65, color: "#4E5665" }}>• <Bold>Top customers</Bold> stand apart clearly from the rest of the portfolio in cumulative quarter revenue.</Text>
+        <Text titleStyle={{ fontSize: 12, lineHeight: 1.65, color: "#4E5665" }}>• The current mix suggests monitoring <Bold>client concentration</Bold> and using this view as support for account planning.</Text>
       </Container>
 
-      <Container
+      <Card
         padding={18}
         borderWidth={1}
         borderColor="#E8EBF1"
@@ -175,7 +175,7 @@ export const REPORT_TEMPLATE_DSL = String.raw`<ReportTemplate name="last_quarter
             }
           </Config>
         </Table>
-      </Container>
+      </Card>
     </Container>
   </Report>
 </ReportTemplate>`

@@ -76,7 +76,7 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
     <div style={{ height, width: "100%" }}>
       {queryError ? <div className="rounded border border-red-300 bg-red-50 p-2 text-xs text-red-700">{queryError}</div> : null}
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={chartData} margin={recharts.margin || { top: 10, right: 12, bottom: 12, left: 0 }} onClick={handleClick}>
+        <LineChart data={chartData} margin={recharts.margin || { top: 10, right: 12, bottom: 12, left: 12 }} onClick={handleClick}>
           {useSingleSeriesGradient ? (
             <defs>
               <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="0">
@@ -91,8 +91,21 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
             </defs>
           ) : null}
           {recharts.showGrid !== false ? <CartesianGrid strokeDasharray={recharts.gridDasharray || "3 3"} vertical={Boolean(recharts.gridVertical)} /> : null}
-          <XAxis dataKey="x" hide={hideCategoryAxis} tickLine={false} axisLine={false} />
-          <YAxis hide={!showValueAxis} tickLine={false} axisLine={false} tickFormatter={(value) => formatChartValue(value, fmt)} />
+          <XAxis
+            dataKey="x"
+            hide={hideCategoryAxis}
+            tickLine={false}
+            axisLine={false}
+            tickMargin={Number(recharts.categoryTickMargin ?? 10)}
+          />
+          <YAxis
+            hide={!showValueAxis}
+            tickLine={false}
+            axisLine={false}
+            tickMargin={Number(recharts.valueTickMargin ?? 8)}
+            tickFormatter={(value) => formatChartValue(value, fmt)}
+            width={Number(recharts.valueAxisWidth ?? 64)}
+          />
           {showTooltip ? <Tooltip formatter={(value: any) => formatChartValue(value, fmt)} /> : null}
           {recharts.showLegend !== false && legendPosition !== "none" && seriesKeys.length > 1 ? (
             <Legend

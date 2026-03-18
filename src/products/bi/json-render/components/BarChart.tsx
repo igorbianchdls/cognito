@@ -76,7 +76,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
         <RechartsBarChart
           accessibilityLayer
           data={chartData}
-          margin={recharts.margin || { top: 8, right: 12, left: 12, bottom: 8 }}
+          margin={recharts.margin || { top: 8, right: 12, left: 18, bottom: 8 }}
           onClick={handleClick}
           barSize={recharts.barSize}
         >
@@ -85,7 +85,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
             dataKey="shortLabel"
             hide={hideCategoryAxis}
             tickLine={false}
-            tickMargin={10}
+            tickMargin={Number(recharts.categoryTickMargin ?? 10)}
             axisLine={false}
             interval={0}
             tick={{ fill: String(recharts.categoryTickColor ?? "#6b7280"), fontSize: Number(recharts.categoryTickFontSize ?? 12) }}
@@ -94,9 +94,10 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
             hide={!showValueAxis}
             tickLine={false}
             axisLine={false}
+            tickMargin={Number(recharts.valueTickMargin ?? 8)}
             tick={{ fill: String(recharts.valueTickColor ?? "#6b7280"), fontSize: Number(recharts.valueTickFontSize ?? 12) }}
             tickFormatter={(value) => formatChartValue(value, fmt)}
-            width={Number(recharts.valueAxisWidth ?? 56)}
+            width={Number(recharts.valueAxisWidth ?? 64)}
           />
           {showTooltip ? (
             <Tooltip
