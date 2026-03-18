@@ -1,6 +1,6 @@
 'use client'
 
-import { RefObject, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import { Icon } from '@iconify/react'
 
 import { parseDashboardTemplateDslToTree } from '@/products/bi/json-render/parsers/dashboardTemplateDslParser'
@@ -97,7 +97,7 @@ function SlideThumbnail({
   )
 }
 
-function SlideCanvas({
+const SlideCanvas = memo(function SlideCanvas({
   tree,
   zoom,
   slideElementRef,
@@ -120,7 +120,7 @@ function SlideCanvas({
       </div>
     </div>
   )
-}
+})
 
 function SlideWorkspace() {
   const parsed = useMemo(() => parseDashboardTemplateDslToTree(SLIDE_TEMPLATE_DSL), [])
