@@ -330,7 +330,7 @@ export const SLIDE_TEMPLATE_HTML_DSL = String.raw`<SlideTemplate name="deck_vend
   <Theme name="light" />
 
   <Slide id="cover" title="Cover">
-    <section style={{ minHeight: "100%", padding: 56, backgroundColor: "#F5F8FE", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+    <section style={{ height: "100%", padding: 48, backgroundColor: "#F5F8FE", display: "flex", flexDirection: "column", gap: 22 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 24 }}>
         <div style={{ width: "58%", display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={{ width: 120, height: 10, borderRadius: 999, backgroundColor: "#2F6FED" }} />
@@ -341,55 +341,74 @@ export const SLIDE_TEMPLATE_HTML_DSL = String.raw`<SlideTemplate name="deck_vend
           </p>
         </div>
 
-        <div style={{ width: "30%", padding: 24, backgroundColor: "#FFFFFF", border: "1px solid #D8E4F9", borderRadius: 24 }}>
+        <div style={{ width: "31%", padding: 24, backgroundColor: "#FFFFFF", border: "1px solid #D8E4F9", borderRadius: 24, boxShadow: "0 10px 28px rgba(47,111,237,0.08)" }}>
           <p style={{ margin: "0 0 10px 0", fontSize: 11, color: "#6E7FA0", letterSpacing: "0.06em", textTransform: "uppercase" }}>Presentation focus</p>
           <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "#31415E" }}>• Revenue trajectory and consistency</p>
-          <p style={{ margin: "10px 0 0 0", fontSize: 14, lineHeight: 1.6, color: "#31415E" }}>• Channel contribution and mix quality</p>
-          <p style={{ margin: "10px 0 0 0", fontSize: 14, lineHeight: 1.6, color: "#31415E" }}>• Customer concentration and latest activity</p>
+          <p style={{ margin: "12px 0 0 0", fontSize: 14, lineHeight: 1.6, color: "#31415E" }}>• Channel contribution and mix quality</p>
+          <p style={{ margin: "12px 0 0 0", fontSize: 14, lineHeight: 1.6, color: "#31415E" }}>• Customer concentration and latest activity</p>
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: 18, alignItems: "stretch" }}>
-        <div style={{ flexGrow: 3, padding: 24, backgroundColor: "#FFFFFF", border: "1px solid #D8E4F9", borderRadius: 28 }}>
+      <div style={{ display: "flex", gap: 18, alignItems: "stretch", flex: 1, minHeight: 0 }}>
+        <div style={{ flexGrow: 3, flexBasis: 0, padding: 24, backgroundColor: "#FFFFFF", border: "1px solid #D8E4F9", borderRadius: 28, boxShadow: "0 12px 32px rgba(22,32,51,0.05)", display: "flex", flexDirection: "column" }}>
           <p style={{ margin: "0 0 8px 0", fontSize: 11, color: "#6E7FA0", letterSpacing: "0.06em", textTransform: "uppercase" }}>Trend snapshot</p>
           <h3 style={{ margin: "0 0 10px 0", fontSize: 22, fontWeight: 600, letterSpacing: "-0.03em", color: "#172033" }}>Monthly revenue trajectory</h3>
-          <Chart type="line" format="currency" height={250} curve="monotone" showGrid={true} showDots={false} strokeWidth={3} categoryTickColor="#66758F" valueTickColor="#66758F">
-            <Query>
-              SELECT
-                TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'Mon') AS label,
-                MIN(DATE_TRUNC('month', p.data_pedido)) AS key,
-                COALESCE(SUM(p.valor_total), 0)::float AS value
-              FROM vendas.pedidos p
-              WHERE 1=1
-                {{filters:p}}
-              GROUP BY 1
-              ORDER BY 2 ASC
-              LIMIT 6
-            </Query>
-            <Fields x="label" y="value" key="key" />
-          </Chart>
+          <div style={{ flex: 1, minHeight: 0 }}>
+            <Chart type="line" format="currency" height={320} curve="monotone" showGrid={true} showDots={false} strokeWidth={3} categoryTickColor="#66758F" valueTickColor="#66758F">
+              <Query>
+                SELECT
+                  TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'Mon') AS label,
+                  MIN(DATE_TRUNC('month', p.data_pedido)) AS key,
+                  COALESCE(SUM(p.valor_total), 0)::float AS value
+                FROM vendas.pedidos p
+                WHERE 1=1
+                  {{filters:p}}
+                GROUP BY 1
+                ORDER BY 2 ASC
+              </Query>
+              <Fields x="label" y="value" key="key" />
+            </Chart>
+          </div>
         </div>
 
-        <div style={{ flexGrow: 2, display: "flex", flexDirection: "column", gap: 18 }}>
-          <div style={{ padding: 22, backgroundColor: "#2F6FED", borderRadius: 24 }}>
-            <p style={{ margin: "0 0 8px 0", fontSize: 11, color: "#BFD6FF", letterSpacing: "0.06em", textTransform: "uppercase" }}>Narrative</p>
-            <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: "#FFFFFF" }}>
-              The strongest commercial performance came from <strong>core channels</strong> and larger accounts, while the portfolio remained broad enough to sustain a diversified growth story.
-            </p>
-          </div>
-          <div style={{ padding: 22, backgroundColor: "#E9F2FF", border: "1px solid #D8E4F9", borderRadius: 24 }}>
-            <p style={{ margin: "0 0 8px 0", fontSize: 11, color: "#6E7FA0", letterSpacing: "0.06em", textTransform: "uppercase" }}>Format</p>
-            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65, color: "#33425F" }}>
-              Designed as a <strong>16:9 executive deck</strong> with strong hierarchy, visual rhythm and room for chart-led storytelling.
-            </p>
-          </div>
+        <div style={{ flexGrow: 2, flexBasis: 0, display: "flex", flexDirection: "column", gap: 18, minHeight: 0 }}>
+          <AISummary
+            title="Narrative"
+            containerStyle={{ backgroundColor: "#2F6FED", borderColor: "#2F6FED", borderWidth: 1, borderRadius: 24 }}
+            titleStyle={{ fontSize: 11, color: "#BFD6FF", letterSpacing: "0.06em", textTransform: "uppercase", padding: 0 }}
+            itemTextStyle={{ fontSize: 15, lineHeight: 1.7, color: "#FFFFFF" }}
+            contentPaddingX={24}
+            contentPaddingBottom={24}
+            itemGap={14}
+            iconGap={0}
+            iconBoxSize={0}
+            iconSize={0}
+            items={[
+              { text: "The strongest commercial performance came from core channels and larger accounts, while the portfolio remained broad enough to sustain a diversified growth story." }
+            ]}
+          />
+          <AISummary
+            title="Format"
+            containerStyle={{ backgroundColor: "#E9F2FF", borderColor: "#D8E4F9", borderWidth: 1, borderRadius: 24 }}
+            titleStyle={{ fontSize: 11, color: "#6E7FA0", letterSpacing: "0.06em", textTransform: "uppercase", padding: 0 }}
+            itemTextStyle={{ fontSize: 14, lineHeight: 1.65, color: "#33425F" }}
+            contentPaddingX={24}
+            contentPaddingBottom={24}
+            itemGap={12}
+            iconGap={0}
+            iconBoxSize={0}
+            iconSize={0}
+            items={[
+              { text: "Designed as a 16:9 executive deck with strong hierarchy, visual rhythm and room for chart-led storytelling." }
+            ]}
+          />
         </div>
       </div>
     </section>
   </Slide>
 
   <Slide id="summary" title="Summary">
-    <section style={{ minHeight: "100%", padding: 44, backgroundColor: "#FFFFFF", display: "flex", flexDirection: "column", gap: 18 }}>
+    <section style={{ height: "100%", padding: 44, backgroundColor: "#FFFFFF", display: "flex", flexDirection: "column", gap: 18 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
         <div>
           <p style={{ margin: "0 0 6px 0", fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }}>Executive summary</p>
@@ -457,18 +476,29 @@ export const SLIDE_TEMPLATE_HTML_DSL = String.raw`<SlideTemplate name="deck_vend
           </Chart>
         </div>
 
-        <div style={{ flexGrow: 2, padding: 24, backgroundColor: "#172033", borderRadius: 24 }}>
-          <p style={{ margin: "0 0 10px 0", fontSize: 11, color: "#AFC0E3", letterSpacing: "0.06em", textTransform: "uppercase" }}>Key takeaways</p>
-          <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65, color: "#FFFFFF" }}>• Revenue momentum stayed consistent across the selected period, with visible peaks on the strongest commercial days.</p>
-          <p style={{ margin: "10px 0 0 0", fontSize: 14, lineHeight: 1.65, color: "#FFFFFF" }}>• The relationship between order volume and average ticket suggests stability in pricing discipline.</p>
-          <p style={{ margin: "10px 0 0 0", fontSize: 14, lineHeight: 1.65, color: "#FFFFFF" }}>• This slide establishes the performance story before moving into mix and concentration analysis.</p>
-        </div>
+        <AISummary
+          title="Key takeaways"
+          containerStyle={{ backgroundColor: "#172033", borderColor: "#172033", borderWidth: 1, borderRadius: 24 }}
+          titleStyle={{ fontSize: 11, color: "#AFC0E3", letterSpacing: "0.06em", textTransform: "uppercase", padding: 0 }}
+          itemTextStyle={{ fontSize: 14, lineHeight: 1.65, color: "#FFFFFF" }}
+          contentPaddingX={24}
+          contentPaddingBottom={24}
+          itemGap={12}
+          iconGap={0}
+          iconBoxSize={0}
+          iconSize={0}
+          items={[
+            { text: "Revenue momentum stayed consistent across the selected period, with visible peaks on the strongest commercial days." },
+            { text: "The relationship between order volume and average ticket suggests stability in pricing discipline." },
+            { text: "This slide establishes the performance story before moving into mix and concentration analysis." }
+          ]}
+        />
       </div>
     </section>
   </Slide>
 
   <Slide id="mix" title="Mix">
-    <section style={{ minHeight: "100%", padding: 44, backgroundColor: "#F7F9FC", display: "flex", flexDirection: "column", gap: 18 }}>
+    <section style={{ height: "100%", padding: 44, backgroundColor: "#F7F9FC", display: "flex", flexDirection: "column", gap: 18 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
         <div>
           <p style={{ margin: "0 0 6px 0", fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }}>Commercial composition</p>
@@ -525,7 +555,7 @@ export const SLIDE_TEMPLATE_HTML_DSL = String.raw`<SlideTemplate name="deck_vend
   </Slide>
 
   <Slide id="customers" title="Customers">
-    <section style={{ minHeight: "100%", padding: 44, backgroundColor: "#FFFFFF", display: "flex", flexDirection: "column", gap: 18 }}>
+    <section style={{ height: "100%", padding: 44, backgroundColor: "#FFFFFF", display: "flex", flexDirection: "column", gap: 18 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
         <div>
           <p style={{ margin: "0 0 6px 0", fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }}>Customer concentration</p>
@@ -558,12 +588,21 @@ export const SLIDE_TEMPLATE_HTML_DSL = String.raw`<SlideTemplate name="deck_vend
         </div>
 
         <div style={{ flexGrow: 2, display: "flex", flexDirection: "column", gap: 16 }}>
-          <div style={{ padding: 20, backgroundColor: "#EFF5FF", border: "1px solid #DCE8FB", borderRadius: 22 }}>
-            <p style={{ margin: "0 0 8px 0", fontSize: 11, color: "#6A7EA1", letterSpacing: "0.06em", textTransform: "uppercase" }}>Implication</p>
-            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65, color: "#33425F" }}>
-              The leading accounts clearly dominate cumulative revenue, making this view valuable for <strong>risk monitoring</strong> and retention planning.
-            </p>
-          </div>
+          <AISummary
+            title="Implication"
+            containerStyle={{ backgroundColor: "#EFF5FF", borderColor: "#DCE8FB", borderWidth: 1, borderRadius: 22 }}
+            titleStyle={{ fontSize: 11, color: "#6A7EA1", letterSpacing: "0.06em", textTransform: "uppercase", padding: 0 }}
+            itemTextStyle={{ fontSize: 14, lineHeight: 1.65, color: "#33425F" }}
+            contentPaddingX={20}
+            contentPaddingBottom={20}
+            itemGap={12}
+            iconGap={0}
+            iconBoxSize={0}
+            iconSize={0}
+            items={[
+              { text: "The leading accounts clearly dominate cumulative revenue, making this view valuable for risk monitoring and retention planning." }
+            ]}
+          />
 
           <div style={{ padding: 20, backgroundColor: "#FFFFFF", border: "1px solid #E5ECF8", borderRadius: 22 }}>
             <p style={{ margin: "0 0 8px 0", fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }}>Latest orders</p>
