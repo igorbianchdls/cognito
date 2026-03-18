@@ -32,6 +32,7 @@ import {
   IconMicrophone,
   IconPlus,
   IconPlugConnected,
+  IconPrompt,
   IconRobot,
   IconSquareRounded,
 } from '@tabler/icons-react';
@@ -243,15 +244,11 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
               <ModelSelectorTrigger asChild>
                 <PromptInputButton
                   variant="ghost"
-                  className="max-w-[128px] shrink-0 overflow-hidden text-gray-500 hover:text-gray-800"
+                  className="max-w-[96px] shrink-0 overflow-hidden text-gray-500 hover:text-gray-800"
                   title="Selecionar prompt"
                 >
-                  <div className="flex min-w-0 flex-col items-start">
-                    <span className="text-[10px] leading-none text-gray-400">Prompt</span>
-                    <span className="truncate text-xs leading-none">
-                      {promptProfile === 'general' ? 'Geral' : promptProfile === 'dashboard_creator' ? 'Dashboard' : 'Analista'}
-                    </span>
-                  </div>
+                  <IconPrompt size={16} stroke={1.75} />
+                  <span>Prompt</span>
                 </PromptInputButton>
               </ModelSelectorTrigger>
               <ModelSelectorContent title="Selecionar prompt" className="sm:max-w-[420px]">
@@ -291,24 +288,9 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
               const next = (v === 'claude-sonnet' || v === 'claude-haiku' || v === 'openai-gpt5' || v === 'openai-gpt5nano' || v === 'openai-gpt5mini') ? v : 'openai-gpt5mini'
               onModelChange?.(next)
             }}>
-              <PromptInputModelSelectTrigger className="min-w-0 max-w-[128px] text-gray-500 hover:text-gray-800" title="Modelo" aria-label="Selecionar modelo">
-                <div className="flex min-w-0 items-center gap-2">
-                  <IconRobot size={16} stroke={1.75} />
-                  <div className="flex min-w-0 flex-col items-start">
-                    <span className="text-[10px] leading-none text-gray-400">Modelo</span>
-                    <span className="truncate text-xs leading-none">
-                      {model === 'claude-sonnet'
-                        ? 'Sonnet'
-                        : model === 'claude-haiku'
-                          ? 'Haiku'
-                          : model === 'openai-gpt5'
-                            ? 'GPT-5.1'
-                            : model === 'openai-gpt5nano'
-                              ? 'GPT-5 nano'
-                              : 'GPT-5 mini'}
-                    </span>
-                  </div>
-                </div>
+              <PromptInputModelSelectTrigger className="min-w-0 max-w-[96px] text-gray-500 hover:text-gray-800" title="Modelo" aria-label="Selecionar modelo">
+                <IconRobot size={16} stroke={1.75} />
+                <span>Modelo</span>
               </PromptInputModelSelectTrigger>
               <PromptInputModelSelectContent>
                 <PromptInputModelSelectItem value="claude-sonnet">Claude Sonnet 4.5 (Agent SDK)</PromptInputModelSelectItem>
