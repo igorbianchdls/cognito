@@ -1197,9 +1197,25 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       borderStyle: p.borderStyle || (p.borderWidth ? 'solid' : undefined),
       borderRadius: p.borderRadius,
       padding: styleVal(p.padding) || undefined,
+      paddingTop: styleVal(p.paddingTop),
+      paddingRight: styleVal(p.paddingRight),
+      paddingBottom: styleVal(p.paddingBottom),
+      paddingLeft: styleVal(p.paddingLeft),
       margin: styleVal(p.margin),
+      marginTop: styleVal(p.marginTop),
+      marginRight: styleVal(p.marginRight),
+      marginBottom: styleVal(p.marginBottom),
+      marginLeft: styleVal(p.marginLeft),
       width: styleVal(p.width),
+      minWidth: styleVal(p.minWidth),
+      maxWidth: styleVal(p.maxWidth),
+      minHeight: styleVal(p.minHeight),
       height: styleVal(p.height),
+      maxHeight: styleVal(p.maxHeight),
+      overflow: p.overflow,
+      overflowX: p.overflowX,
+      overflowY: p.overflowY,
+      ...((p.style && typeof p.style === 'object') ? p.style : {}),
     };
     const style = ensureSurfaceBackground(
       applyBorderFromCssVars(styleBase as any, theme.cssVars),
@@ -1251,6 +1267,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       fontWeight: 400,
       whiteSpace: 'normal',
       ...(titleStyle || {}),
+      ...((p.style && typeof p.style === 'object') ? p.style : {}),
       ...resolveTextSpacingStyle(p),
     };
     return <p style={style}>{text || children}</p>;
@@ -1264,6 +1281,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
         style={{
           fontWeight: 600,
           ...(titleStyle || {}),
+          ...((p.style && typeof p.style === 'object') ? p.style : {}),
         }}
       >
         {children}
@@ -1281,11 +1299,15 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const p = (element?.props || {}) as AnyRecord;
     const variant = String(p.variant || 'bullet');
     const itemGap = styleVal(p.gap) || '10px';
-    const itemTextStyle = (normalizeTitleStyle(p.itemTitleStyle) || {}) as React.CSSProperties;
+    const itemTextStyle: React.CSSProperties = {
+      ...((normalizeTitleStyle(p.itemTitleStyle) || {}) as React.CSSProperties),
+      ...((p.itemStyle && typeof p.itemStyle === 'object') ? p.itemStyle : {}),
+    };
     const listStyle: React.CSSProperties = {
       display: 'flex',
       flexDirection: 'column',
       gap: itemGap,
+      ...((p.style && typeof p.style === 'object') ? p.style : {}),
       ...resolveTextSpacingStyle(p),
     };
     const childDefs: AnyRecord[] = Array.isArray((element as any)?.children) ? (element as any).children : [];
@@ -1308,7 +1330,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
           return (
             <div key={`list-item-${index}`} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
               <div style={{ width: '16px', minWidth: '16px', display: 'flex', justifyContent: 'center', paddingTop: '2px' }}>{marker}</div>
-              <div style={{ minWidth: 0, ...itemTextStyle }}>{child}</div>
+              <div style={{ minWidth: 0, ...itemTextStyle, ...((normalizeTitleStyle(childProps.titleStyle) || {}) as React.CSSProperties), ...((childProps.style && typeof childProps.style === 'object') ? childProps.style : {}) }}>{child}</div>
             </div>
           );
         })}
@@ -1335,10 +1357,12 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       borderColor: p.borderColor,
       borderStyle: p.borderWidth ? 'solid' : undefined,
       borderWidth: p.borderWidth,
-      borderRadius: styleVal(p.radius),
+      borderRadius: styleVal(p.borderRadius ?? p.radius),
       padding: styleVal(p.padding),
       color,
       flexShrink: 0,
+      ...((p.style && typeof p.style === 'object') ? p.style : {}),
+      ...resolveTextSpacingStyle(p),
     };
     return (
       <span style={style}>
@@ -1368,8 +1392,9 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       borderRadius: styleVal(p.borderRadius),
       boxShadow: p.boxShadow,
       backgroundColor: p.backgroundColor,
-      objectFit: (p.fit || 'cover') as any,
+      objectFit: (p.objectFit || p.fit || 'cover') as any,
       overflow: 'hidden',
+      ...((p.style && typeof p.style === 'object') ? p.style : {}),
     };
     return <img src={String(p.src || '')} alt={String(p.alt || '')} style={style} />;
   },
@@ -1378,13 +1403,17 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const p = (element?.props || {}) as AnyRecord;
     const label = String(p.label || '').trim();
     const lineColor = String(p.color || '#D9DDE5');
-    const thickness = styleVal(p.thickness) || '1px';
-    const labelStyle = (normalizeTitleStyle(p.titleStyle) || {}) as React.CSSProperties;
+    const thickness = styleVal(p.height ?? p.thickness) || '1px';
+    const labelStyle: React.CSSProperties = {
+      ...((normalizeTitleStyle(p.titleStyle) || {}) as React.CSSProperties),
+      ...((p.labelStyle && typeof p.labelStyle === 'object') ? p.labelStyle : {}),
+    };
     const wrapStyle: React.CSSProperties = {
       display: 'flex',
       alignItems: 'center',
       gap: '10px',
       width: styleVal(p.width) || '100%',
+      ...((p.style && typeof p.style === 'object') ? p.style : {}),
       ...resolveTextSpacingStyle(p),
     };
     const lineStyle: React.CSSProperties = {
@@ -1415,10 +1444,17 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       borderStyle: (p.borderWidth ?? 1) ? 'solid' : undefined,
       borderRadius: styleVal(p.borderRadius ?? 18),
       padding: styleVal(p.padding ?? 18),
+      ...((p.style && typeof p.style === 'object') ? p.style : {}),
       ...resolveTextSpacingStyle(p),
     };
-    const titleStyle = (normalizeTitleStyle(p.titleStyle) || {}) as React.CSSProperties;
-    const textStyle = (normalizeTitleStyle(p.textStyle) || {}) as React.CSSProperties;
+    const titleStyle: React.CSSProperties = {
+      ...((normalizeTitleStyle(p.titleStyle) || {}) as React.CSSProperties),
+      ...((p.headerStyle && typeof p.headerStyle === 'object') ? p.headerStyle : {}),
+    };
+    const textStyle: React.CSSProperties = {
+      ...((normalizeTitleStyle(p.textStyle) || {}) as React.CSSProperties),
+      ...((p.bodyStyle && typeof p.bodyStyle === 'object') ? p.bodyStyle : {}),
+    };
     return (
       <div style={boxStyle}>
         {(title || IconComp) ? (
@@ -1451,6 +1487,12 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       paddingBottom: styleVal(p.paddingY ?? 4),
       paddingLeft: styleVal(p.paddingX ?? 10),
       paddingRight: styleVal(p.paddingX ?? 10),
+      padding: styleVal(p.padding) || undefined,
+      paddingTop: styleVal(p.paddingTop ?? p.paddingY ?? 4),
+      paddingBottom: styleVal(p.paddingBottom ?? p.paddingY ?? 4),
+      paddingLeft: styleVal(p.paddingLeft ?? p.paddingX ?? 10),
+      paddingRight: styleVal(p.paddingRight ?? p.paddingX ?? 10),
+      ...((p.style && typeof p.style === 'object') ? p.style : {}),
       ...resolveTextSpacingStyle(p),
     };
     return (
@@ -2186,22 +2228,34 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       justifyContent: mapJustify(p.justify),
       alignItems: mapAlign(p.align),
       padding: styleVal(p.padding),
+      paddingTop: styleVal(p.paddingTop),
+      paddingRight: styleVal(p.paddingRight),
+      paddingBottom: styleVal(p.paddingBottom),
+      paddingLeft: styleVal(p.paddingLeft),
       margin: styleVal(p.margin),
+      marginTop: styleVal(p.marginTop),
+      marginRight: styleVal(p.marginRight),
+      marginBottom: styleVal(p.marginBottom),
+      marginLeft: styleVal(p.marginLeft),
       width: styleVal(p.width),
       minWidth: styleVal(p.minWidth),
       maxWidth: styleVal(p.maxWidth),
       minHeight: styleVal(p.minHeight),
+      maxHeight: styleVal(p.maxHeight),
       height: styleVal(p.height),
       backgroundColor: p.backgroundColor,
       borderColor: p.borderColor,
       borderStyle: p.borderStyle || (p.borderWidth ? 'solid' : undefined),
       borderWidth: p.borderWidth,
       borderRadius: p.borderRadius,
+      boxShadow: p.boxShadow,
       position: p.sticky ? 'sticky' : undefined,
       top: p.sticky ? styleVal(p.top ?? 12) : undefined,
+      overflow: p.overflow,
       overflowY: p.overflowY,
       overflowX: p.overflowX,
       boxSizing: 'border-box',
+      ...((p.style && typeof p.style === 'object') ? p.style : {}),
     };
     const style = ensureSurfaceBackground(
       applyBorderFromCssVars(styleBase as AnyRecord, theme.cssVars),
