@@ -325,3 +325,268 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
     </Container>
   </Slide>
 </SlideTemplate>`
+
+export const SLIDE_TEMPLATE_HTML_DSL = String.raw`<SlideTemplate name="deck_vendas_html" title="Apresentação de Vendas HTML">
+  <Theme name="light" />
+
+  <Slide id="cover" title="Cover">
+    <section style={{ minHeight: "100%", padding: 56, backgroundColor: "#F5F8FE", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 24 }}>
+        <div style={{ width: "58%", display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ width: 120, height: 10, borderRadius: 999, backgroundColor: "#2F6FED" }} />
+          <p style={{ margin: 0, fontSize: 12, color: "#5D7193", letterSpacing: "0.08em", textTransform: "uppercase" }}>Q4 2025 Sales Performance Review</p>
+          <h1 style={{ margin: 0, fontSize: 44, fontWeight: 700, letterSpacing: "-0.05em", color: "#162033", lineHeight: 1.02 }}>Quarterly Sales Presentation</h1>
+          <p style={{ margin: 0, fontSize: 17, lineHeight: 1.65, color: "#4F607E", maxWidth: "86%" }}>
+            A narrative-driven executive deck using HTML-like slide DSL, with only <strong>Chart</strong>, <strong>Table</strong> and <strong>KPI</strong> as analytical components.
+          </p>
+        </div>
+
+        <div style={{ width: "30%", padding: 24, backgroundColor: "#FFFFFF", border: "1px solid #D8E4F9", borderRadius: 24 }}>
+          <p style={{ margin: "0 0 10px 0", fontSize: 11, color: "#6E7FA0", letterSpacing: "0.06em", textTransform: "uppercase" }}>Presentation focus</p>
+          <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "#31415E" }}>• Revenue trajectory and consistency</p>
+          <p style={{ margin: "10px 0 0 0", fontSize: 14, lineHeight: 1.6, color: "#31415E" }}>• Channel contribution and mix quality</p>
+          <p style={{ margin: "10px 0 0 0", fontSize: 14, lineHeight: 1.6, color: "#31415E" }}>• Customer concentration and latest activity</p>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 18, alignItems: "stretch" }}>
+        <div style={{ flexGrow: 3, padding: 24, backgroundColor: "#FFFFFF", border: "1px solid #D8E4F9", borderRadius: 28 }}>
+          <p style={{ margin: "0 0 8px 0", fontSize: 11, color: "#6E7FA0", letterSpacing: "0.06em", textTransform: "uppercase" }}>Trend snapshot</p>
+          <h3 style={{ margin: "0 0 10px 0", fontSize: 22, fontWeight: 600, letterSpacing: "-0.03em", color: "#172033" }}>Monthly revenue trajectory</h3>
+          <Chart type="line" format="currency" height={250} curve="monotone" showGrid={true} showDots={false} strokeWidth={3} categoryTickColor="#66758F" valueTickColor="#66758F">
+            <Query>
+              SELECT
+                TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'Mon') AS label,
+                MIN(DATE_TRUNC('month', p.data_pedido)) AS key,
+                COALESCE(SUM(p.valor_total), 0)::float AS value
+              FROM vendas.pedidos p
+              WHERE 1=1
+                {{filters:p}}
+              GROUP BY 1
+              ORDER BY 2 ASC
+              LIMIT 6
+            </Query>
+            <Fields x="label" y="value" key="key" />
+          </Chart>
+        </div>
+
+        <div style={{ flexGrow: 2, display: "flex", flexDirection: "column", gap: 18 }}>
+          <div style={{ padding: 22, backgroundColor: "#2F6FED", borderRadius: 24 }}>
+            <p style={{ margin: "0 0 8px 0", fontSize: 11, color: "#BFD6FF", letterSpacing: "0.06em", textTransform: "uppercase" }}>Narrative</p>
+            <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: "#FFFFFF" }}>
+              The strongest commercial performance came from <strong>core channels</strong> and larger accounts, while the portfolio remained broad enough to sustain a diversified growth story.
+            </p>
+          </div>
+          <div style={{ padding: 22, backgroundColor: "#E9F2FF", border: "1px solid #D8E4F9", borderRadius: 24 }}>
+            <p style={{ margin: "0 0 8px 0", fontSize: 11, color: "#6E7FA0", letterSpacing: "0.06em", textTransform: "uppercase" }}>Format</p>
+            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65, color: "#33425F" }}>
+              Designed as a <strong>16:9 executive deck</strong> with strong hierarchy, visual rhythm and room for chart-led storytelling.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </Slide>
+
+  <Slide id="summary" title="Summary">
+    <section style={{ minHeight: "100%", padding: 44, backgroundColor: "#FFFFFF", display: "flex", flexDirection: "column", gap: 18 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+        <div>
+          <p style={{ margin: "0 0 6px 0", fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }}>Executive summary</p>
+          <h1 style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: "-0.04em", color: "#172033" }}>Performance Overview</h1>
+        </div>
+        <p style={{ margin: 0, fontSize: 14, color: "#5C687C" }}>Quarterly operational readout across value, volume and pricing.</p>
+      </div>
+
+      <div style={{ display: "flex", gap: 14, alignItems: "stretch" }}>
+        <div style={{ flexGrow: 1, padding: 20, backgroundColor: "#F9FBFF", border: "1px solid #E5ECF8", borderRadius: 22 }}>
+          <KPI title="Revenue" format="currency">
+            <Query>
+              SELECT COALESCE(SUM(p.valor_total), 0)::float AS value
+              FROM vendas.pedidos p
+              WHERE 1=1
+                {{filters:p}}
+            </Query>
+            <DataQuery yField="value" />
+          </KPI>
+          <p style={{ margin: "8px 0 0 0", fontSize: 12, lineHeight: 1.5, color: "#6C7688" }}>Total sales booked in the selected period.</p>
+        </div>
+        <div style={{ flexGrow: 1, padding: 20, backgroundColor: "#F9FBFF", border: "1px solid #E5ECF8", borderRadius: 22 }}>
+          <KPI title="Orders" format="number">
+            <Query>
+              SELECT COUNT(*)::float AS value
+              FROM vendas.pedidos p
+              WHERE 1=1
+                {{filters:p}}
+            </Query>
+            <DataQuery yField="value" />
+          </KPI>
+          <p style={{ margin: "8px 0 0 0", fontSize: 12, lineHeight: 1.5, color: "#6C7688" }}>Commercial volume captured by the order base.</p>
+        </div>
+        <div style={{ flexGrow: 1, padding: 20, backgroundColor: "#F9FBFF", border: "1px solid #E5ECF8", borderRadius: 22 }}>
+          <KPI title="Avg. Ticket" format="currency">
+            <Query>
+              SELECT COALESCE(AVG(p.valor_total), 0)::float AS value
+              FROM vendas.pedidos p
+              WHERE 1=1
+                {{filters:p}}
+            </Query>
+            <DataQuery yField="value" />
+          </KPI>
+          <p style={{ margin: "8px 0 0 0", fontSize: 12, lineHeight: 1.5, color: "#6C7688" }}>Indicative value per transaction in the period.</p>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 16, alignItems: "stretch" }}>
+        <div style={{ flexGrow: 3, padding: 22, backgroundColor: "#FFFFFF", border: "1px solid #E5ECF8", borderRadius: 24 }}>
+          <p style={{ margin: "0 0 6px 0", fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }}>Trend analysis</p>
+          <h3 style={{ margin: "0 0 10px 0", fontSize: 22, fontWeight: 600, letterSpacing: "-0.03em", color: "#172033" }}>Daily revenue evolution</h3>
+          <Chart type="line" format="currency" height={320} curve="monotone" showGrid={true} showDots={false} strokeWidth={3} categoryTickColor="#6D7889" valueTickColor="#6D7889">
+            <Query>
+              SELECT
+                TO_CHAR(p.data_pedido::date, 'DD/MM') AS label,
+                p.data_pedido::date AS key,
+                COALESCE(SUM(p.valor_total), 0)::float AS value
+              FROM vendas.pedidos p
+              WHERE 1=1
+                {{filters:p}}
+              GROUP BY 1, 2
+              ORDER BY 2 ASC
+            </Query>
+            <Fields x="label" y="value" key="key" />
+          </Chart>
+        </div>
+
+        <div style={{ flexGrow: 2, padding: 24, backgroundColor: "#172033", borderRadius: 24 }}>
+          <p style={{ margin: "0 0 10px 0", fontSize: 11, color: "#AFC0E3", letterSpacing: "0.06em", textTransform: "uppercase" }}>Key takeaways</p>
+          <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65, color: "#FFFFFF" }}>• Revenue momentum stayed consistent across the selected period, with visible peaks on the strongest commercial days.</p>
+          <p style={{ margin: "10px 0 0 0", fontSize: 14, lineHeight: 1.65, color: "#FFFFFF" }}>• The relationship between order volume and average ticket suggests stability in pricing discipline.</p>
+          <p style={{ margin: "10px 0 0 0", fontSize: 14, lineHeight: 1.65, color: "#FFFFFF" }}>• This slide establishes the performance story before moving into mix and concentration analysis.</p>
+        </div>
+      </div>
+    </section>
+  </Slide>
+
+  <Slide id="mix" title="Mix">
+    <section style={{ minHeight: "100%", padding: 44, backgroundColor: "#F7F9FC", display: "flex", flexDirection: "column", gap: 18 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+        <div>
+          <p style={{ margin: "0 0 6px 0", fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }}>Commercial composition</p>
+          <h1 style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: "-0.04em", color: "#172033" }}>Channel Mix and Revenue Share</h1>
+        </div>
+        <p style={{ margin: 0, fontSize: 14, color: "#5C687C" }}>Comparing proportional contribution with absolute value by channel.</p>
+      </div>
+
+      <div style={{ display: "flex", gap: 16, alignItems: "stretch" }}>
+        <div style={{ flexGrow: 2, padding: 22, backgroundColor: "#FFFFFF", border: "1px solid #E5ECF8", borderRadius: 24 }}>
+          <p style={{ margin: "0 0 6px 0", fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }}>Share of total</p>
+          <h3 style={{ margin: "0 0 10px 0", fontSize: 22, fontWeight: 600, letterSpacing: "-0.03em", color: "#172033" }}>Revenue by channel</h3>
+          <Chart type="pie" format="currency" height={320} innerRadius={72} outerRadius={112} paddingAngle={2} showLabels={false} showLegend>
+            <Query>
+              SELECT
+                cv.id AS key,
+                COALESCE(cv.nome, '-') AS label,
+                COALESCE(SUM(pi.subtotal), 0)::float AS value
+              FROM vendas.pedidos p
+              JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+              LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+              WHERE 1=1
+                {{filters:p}}
+              GROUP BY 1, 2
+              ORDER BY 3 DESC
+            </Query>
+            <Fields x="label" y="value" key="key" />
+          </Chart>
+        </div>
+
+        <div style={{ flexGrow: 3, padding: 22, backgroundColor: "#FFFFFF", border: "1px solid #E5ECF8", borderRadius: 24 }}>
+          <p style={{ margin: "0 0 6px 0", fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }}>Absolute contribution</p>
+          <h3 style={{ margin: "0 0 10px 0", fontSize: 22, fontWeight: 600, letterSpacing: "-0.03em", color: "#172033" }}>Channel ranking</h3>
+          <Chart type="horizontal-bar" format="currency" height={320} layout="horizontal" radius={8} showGrid valueAxisLabel="Revenue" xTickCount={4} categoryLabelMode="first-word" categoryTickColor="#5F6D83" valueTickColor="#5F6D83">
+            <Query>
+              SELECT
+                cv.id AS key,
+                COALESCE(cv.nome, '-') AS label,
+                COALESCE(SUM(pi.subtotal), 0)::float AS value
+              FROM vendas.pedidos p
+              JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+              LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+              WHERE 1=1
+                {{filters:p}}
+              GROUP BY 1, 2
+              ORDER BY 3 DESC
+              LIMIT 6
+            </Query>
+            <Fields x="label" y="value" key="key" />
+          </Chart>
+        </div>
+      </div>
+    </section>
+  </Slide>
+
+  <Slide id="customers" title="Customers">
+    <section style={{ minHeight: "100%", padding: 44, backgroundColor: "#FFFFFF", display: "flex", flexDirection: "column", gap: 18 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+        <div>
+          <p style={{ margin: "0 0 6px 0", fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }}>Customer concentration</p>
+          <h1 style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: "-0.04em", color: "#172033" }}>Top Accounts and Recent Orders</h1>
+        </div>
+        <p style={{ margin: 0, fontSize: 14, color: "#5C687C", maxWidth: "34%" }}>A closer look at dependency on major accounts and the latest commercial activity.</p>
+      </div>
+
+      <div style={{ display: "flex", gap: 16, alignItems: "stretch" }}>
+        <div style={{ flexGrow: 3, padding: 22, backgroundColor: "#FFFFFF", border: "1px solid #E5ECF8", borderRadius: 24 }}>
+          <p style={{ margin: "0 0 6px 0", fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }}>Top accounts</p>
+          <h3 style={{ margin: "0 0 10px 0", fontSize: 22, fontWeight: 600, letterSpacing: "-0.03em", color: "#172033" }}>Revenue by customer</h3>
+          <Chart type="bar" format="currency" height={320} layout="vertical" radius={8} showGrid valueAxisLabel="Revenue" xTickCount={5} categoryTickColor="#5F6D83" valueTickColor="#5F6D83">
+            <Query>
+              SELECT
+                c.id AS key,
+                COALESCE(c.nome_fantasia, '-') AS label,
+                COALESCE(SUM(pi.subtotal), 0)::float AS value
+              FROM vendas.pedidos p
+              JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+              LEFT JOIN entidades.clientes c ON c.id = p.cliente_id
+              WHERE 1=1
+                {{filters:p}}
+              GROUP BY 1, 2
+              ORDER BY 3 DESC
+              LIMIT 8
+            </Query>
+            <Fields x="label" y="value" key="key" />
+          </Chart>
+        </div>
+
+        <div style={{ flexGrow: 2, display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ padding: 20, backgroundColor: "#EFF5FF", border: "1px solid #DCE8FB", borderRadius: 22 }}>
+            <p style={{ margin: "0 0 8px 0", fontSize: 11, color: "#6A7EA1", letterSpacing: "0.06em", textTransform: "uppercase" }}>Implication</p>
+            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65, color: "#33425F" }}>
+              The leading accounts clearly dominate cumulative revenue, making this view valuable for <strong>risk monitoring</strong> and retention planning.
+            </p>
+          </div>
+
+          <div style={{ padding: 20, backgroundColor: "#FFFFFF", border: "1px solid #E5ECF8", borderRadius: 22 }}>
+            <p style={{ margin: "0 0 8px 0", fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }}>Latest orders</p>
+            <Table pageSize={5} showPagination={false} enableSearch={false}>
+              <Config>
+                {
+                  "dataQuery": {
+                    "query": "SELECT\\n  p.id AS pedido,\\n  p.data_pedido::date AS data_pedido,\\n  COALESCE(c.nome_fantasia, '-') AS cliente,\\n  COALESCE(p.valor_total, 0)::float AS valor_total\\nFROM vendas.pedidos p\\nLEFT JOIN entidades.clientes c ON c.id = p.cliente_id\\nWHERE 1=1\\n  {{filters:p}}\\nORDER BY p.data_pedido DESC, p.id DESC",
+                    "filters": {},
+                    "limit": 5
+                  },
+                  "columns": [
+                    { "key": "pedido", "header": "Order" },
+                    { "key": "data_pedido", "header": "Date", "format": "date" },
+                    { "key": "cliente", "header": "Customer" },
+                    { "key": "valor_total", "header": "Value", "format": "currency", "align": "right" }
+                  ]
+                }
+              </Config>
+            </Table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </Slide>
+</SlideTemplate>`

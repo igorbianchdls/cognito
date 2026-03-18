@@ -9,7 +9,7 @@ import { registry } from '@/products/bi/json-render/registry'
 import { Renderer } from '@/products/bi/json-render/renderer'
 import { SlidePreviewThumbnail } from '@/products/slide/preview/SlidePreviewThumbnail'
 import { useSlidePreviewSnapshots } from '@/products/slide/preview/useSlidePreviewSnapshots'
-import { SLIDE_TEMPLATE_DSL } from '@/products/slide/shared/templates/slideTemplate'
+import { SLIDE_TEMPLATE_DSL, SLIDE_TEMPLATE_HTML_DSL } from '@/products/slide/shared/templates/slideTemplate'
 
 type AnyRecord = Record<string, any>
 
@@ -17,6 +17,21 @@ const SLIDE_WIDTH = 1280
 const SLIDE_HEIGHT = 720
 const THUMB_WIDTH = 170
 const THUMB_SCALE = THUMB_WIDTH / SLIDE_WIDTH
+
+const SLIDE_TEMPLATE_OPTIONS = [
+  {
+    id: 'dsl',
+    label: 'DSL',
+    title: 'Apresentação de Vendas',
+    dsl: SLIDE_TEMPLATE_DSL,
+  },
+  {
+    id: 'html',
+    label: 'HTML',
+    title: 'Apresentação de Vendas HTML',
+    dsl: SLIDE_TEMPLATE_HTML_DSL,
+  },
+] as const
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
@@ -120,7 +135,12 @@ function SlideCanvas({
 }
 
 function SlideWorkspace() {
-  const parsed = useMemo(() => parseDashboardTemplateDslToTree(SLIDE_TEMPLATE_DSL), [])
+  const [selectedTemplateId, setSelectedTemplateId] = useState<(typeof SLIDE_TEMPLATE_OPTIONS)[number]['id']>('dsl')
+  const selectedTemplate = useMemo(
+    () => SLIDE_TEMPLATE_OPTIONS.find((option) => option.id === selectedTemplateId) ?? SLIDE_TEMPLATE_OPTIONS[0],
+    [selectedTemplateId],
+  )
+  const parsed = useMemo(() => parseDashboardTemplateDslToTree(selectedTemplate.dsl), [selectedTemplate])
   const { rootName, themeNode, pages } = useMemo(() => getSlideStructure(parsed), [parsed])
   const [activePageId, setActivePageId] = useState('')
   const [activeView, setActiveView] = useState<'preview' | 'code'>('preview')
@@ -130,8 +150,8 @@ function SlideWorkspace() {
   useEffect(() => {
     if (!pages.length) return
     const firstId = getPageId(pages[0], 0)
-    setActivePageId((current) => current || firstId)
-  }, [pages])
+    setActivePageId(firstId)
+  }, [pages, selectedTemplateId])
 
   const activePage = useMemo(
     () => pages.find((page, index) => getPageId(page, index) === activePageId) || pages[0] || null,
@@ -164,6 +184,20 @@ function SlideWorkspace() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <label className="mr-2 flex items-center gap-2 text-[12px] text-[#6E6E68]">
+            <span>Template</span>
+            <select
+              value={selectedTemplateId}
+              onChange={(event) => setSelectedTemplateId(event.target.value as (typeof SLIDE_TEMPLATE_OPTIONS)[number]['id'])}
+              className="h-8 rounded-md border border-[#D9D9D4] bg-white px-2 text-[12px] text-[#2B2B28] outline-none"
+            >
+              {SLIDE_TEMPLATE_OPTIONS.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.title}
+                </option>
+              ))}
+            </select>
+          </label>
           <div className="mr-1 flex items-center gap-1 rounded-xl border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] p-0">
             <button
               type="button"
@@ -250,7 +284,7 @@ function SlideWorkspace() {
           ) : (
             <div className="mx-auto flex min-h-full max-w-[1280px] p-8">
               <pre className="w-full overflow-auto rounded-[16px] border-[0.5px] border-[#DDDDD8] bg-[#F7F7F6] p-6 text-[13px] leading-6 text-[#2C2C29] shadow-[0_2px_6px_rgba(15,23,42,0.05)]">
-                <code>{SLIDE_TEMPLATE_DSL}</code>
+                <code>{selectedTemplate.dsl}</code>
               </pre>
             </div>
           )}
