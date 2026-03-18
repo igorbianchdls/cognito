@@ -231,10 +231,10 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
   // Inline style with custom CSS variables (typed safely)
   const inlineStyleBase: React.CSSProperties = { ...(style || {}) }
   const inlineStyle = inlineStyleBase as React.CSSProperties & Record<string, string | number>
-  // Defaults requested: font-size 14px, item color rgb(110,110,10), letter-spacing -0.02em, bg rgb(250,250,250)
+  // Defaults requested: compact sidebar typography/colors
   inlineStyle['--sidebar'] = finalBgColor
   inlineStyle['--sidebar-accent-foreground'] = finalItemTextColor
-  inlineStyle['--ui-font-size'] = '14px'
+  inlineStyle['--ui-font-size'] = '13px'
   inlineStyle['--ui-tracking-pct'] = '-2'
 
   return (

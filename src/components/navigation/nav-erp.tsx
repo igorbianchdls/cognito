@@ -1,7 +1,17 @@
 "use client"
 
 import { usePathname, useRouter } from "next/navigation"
-import { DollarSign, ShoppingCart, Users, Package, ShoppingBag, Wrench, BookOpen, Building2, ChevronRight } from "lucide-react"
+import {
+  IconBook,
+  IconBuildingStore,
+  IconChevronRight,
+  IconCoin,
+  IconPackage,
+  IconShoppingBag,
+  IconShoppingCart,
+  IconTool,
+  IconUsers,
+} from "@tabler/icons-react"
 
 import {
   SidebarGroup,
@@ -38,9 +48,9 @@ export function NavErp({ groupLabelStyle, itemTextStyle }: { groupLabelStyle?: R
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton tooltip="Financeiro">
-                  <DollarSign className="w-3 h-3" />
+                  <IconCoin className="w-3 h-3" stroke={1.75} />
                   <span className="group-data-[collapsible=icon]:hidden" style={itemTextStyle}>Financeiro</span>
-                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                  <IconChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" stroke={1.75} />
                 </SidebarMenuButton>
               </CollapsibleTrigger>
               <CollapsibleContent>
@@ -73,9 +83,9 @@ export function NavErp({ groupLabelStyle, itemTextStyle }: { groupLabelStyle?: R
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton tooltip="Contabilidade">
-                  <BookOpen className="w-3 h-3" />
+                  <IconBook className="w-3 h-3" stroke={1.75} />
                   <span className="group-data-[collapsible=icon]:hidden" style={itemTextStyle}>Contabilidade</span>
-                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                  <IconChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" stroke={1.75} />
                 </SidebarMenuButton>
               </CollapsibleTrigger>
               <CollapsibleContent>
@@ -108,9 +118,9 @@ export function NavErp({ groupLabelStyle, itemTextStyle }: { groupLabelStyle?: R
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton tooltip="Compras">
-                  <ShoppingBag className="w-3 h-3" />
+                  <IconShoppingBag className="w-3 h-3" stroke={1.75} />
                   <span className="group-data-[collapsible=icon]:hidden" style={itemTextStyle}>Compras</span>
-                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                  <IconChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" stroke={1.75} />
                 </SidebarMenuButton>
               </CollapsibleTrigger>
               <CollapsibleContent>
@@ -144,9 +154,9 @@ export function NavErp({ groupLabelStyle, itemTextStyle }: { groupLabelStyle?: R
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton tooltip="Vendas">
-                  <ShoppingCart className="w-3 h-3" />
+                  <IconShoppingCart className="w-3 h-3" stroke={1.75} />
                   <span className="group-data-[collapsible=icon]:hidden" style={itemTextStyle}>Vendas</span>
-                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                  <IconChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" stroke={1.75} />
                 </SidebarMenuButton>
               </CollapsibleTrigger>
               <CollapsibleContent>
@@ -184,7 +194,7 @@ export function NavErp({ groupLabelStyle, itemTextStyle }: { groupLabelStyle?: R
               onClick={() => router.push("/erp/comercial")}
               isActive={pathname.startsWith("/erp/comercial")}
             >
-              <Users className="w-3 h-3" />
+              <IconUsers className="w-3 h-3" stroke={1.75} />
               <span className="group-data-[collapsible=icon]:hidden" style={itemTextStyle}>Comercial</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -199,9 +209,9 @@ export function NavErp({ groupLabelStyle, itemTextStyle }: { groupLabelStyle?: R
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton tooltip="CRM">
-                  <Users className="w-3 h-3" />
+                  <IconUsers className="w-3 h-3" stroke={1.75} />
                   <span className="group-data-[collapsible=icon]:hidden" style={itemTextStyle}>CRM</span>
-                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                  <IconChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" stroke={1.75} />
                 </SidebarMenuButton>
               </CollapsibleTrigger>
               <CollapsibleContent>
@@ -232,7 +242,7 @@ export function NavErp({ groupLabelStyle, itemTextStyle }: { groupLabelStyle?: R
               onClick={() => router.push("/erp/produtos")}
               isActive={pathname.startsWith("/erp/produtos")}
             >
-              <Package className="w-3 h-3" />
+              <IconPackage className="w-3 h-3" stroke={1.75} />
               <span className="group-data-[collapsible=icon]:hidden" style={itemTextStyle}>Produtos</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -244,7 +254,7 @@ export function NavErp({ groupLabelStyle, itemTextStyle }: { groupLabelStyle?: R
               onClick={() => router.push("/erp/servicos")}
               isActive={pathname.startsWith("/erp/servicos")}
             >
-              <Wrench className="w-3 h-3" />
+              <IconTool className="w-3 h-3" stroke={1.75} />
               <span className="group-data-[collapsible=icon]:hidden" style={itemTextStyle}>Serviços</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -259,9 +269,9 @@ export function NavErp({ groupLabelStyle, itemTextStyle }: { groupLabelStyle?: R
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton tooltip="Ordens de Serviço">
-                  <Wrench className="w-3 h-3" />
+                  <IconTool className="w-3 h-3" stroke={1.75} />
                   <span className="group-data-[collapsible=icon]:hidden" style={itemTextStyle}>Ordens de Serviço</span>
-                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                  <IconChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" stroke={1.75} />
                 </SidebarMenuButton>
               </CollapsibleTrigger>
               <CollapsibleContent>
@@ -295,9 +305,9 @@ export function NavErp({ groupLabelStyle, itemTextStyle }: { groupLabelStyle?: R
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton tooltip="Estoque">
-                  <Package className="w-3 h-3" />
+                  <IconPackage className="w-3 h-3" stroke={1.75} />
                   <span className="group-data-[collapsible=icon]:hidden" style={itemTextStyle}>Estoque</span>
-                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                  <IconChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" stroke={1.75} />
                 </SidebarMenuButton>
               </CollapsibleTrigger>
               <CollapsibleContent>
@@ -328,7 +338,7 @@ export function NavErp({ groupLabelStyle, itemTextStyle }: { groupLabelStyle?: R
               onClick={() => router.push("/erp/empresa")}
               isActive={pathname.startsWith("/erp/empresa")}
             >
-              <Building2 className="w-3 h-3" />
+              <IconBuildingStore className="w-3 h-3" stroke={1.75} />
               <span className="group-data-[collapsible=icon]:hidden" style={itemTextStyle}>Cadastros</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
