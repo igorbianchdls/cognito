@@ -370,40 +370,6 @@ const ContainerPropsSchema = z.object({
   frame: FrameStyleSchema.optional(),
 }).strict();
 
-const HtmlTextPropsSchema = z.object({
-  style: z.object({}).passthrough().optional(),
-  titleStyle: TitleStyleSchema.optional(),
-  ...TextBlockSpacingProps,
-}).strict();
-
-const HtmlBlockPropsSchema = z.object({
-  direction: z.enum(["row","column"]).optional(),
-  gap: z.union([z.number(), z.string()]).optional(),
-  wrap: z.boolean().optional(),
-  justify: z.enum(["start","center","end","between","around","evenly"]).optional(),
-  align: z.enum(["start","center","end","stretch"]).optional(),
-  grow: z.union([z.number(), z.boolean()]).optional(),
-  shrink: z.union([z.number(), z.boolean()]).optional(),
-  basis: z.union([z.number(), z.string()]).optional(),
-  ...TextBlockSpacingProps,
-  backgroundColor: z.string().optional(),
-  borderColor: z.string().optional(),
-  borderStyle: z.string().optional(),
-  borderWidth: z.union([z.number(), z.string()]).optional(),
-  borderRadius: z.union([z.number(), z.string()]).optional(),
-  boxShadow: z.string().optional(),
-  width: z.union([z.number(), z.string()]).optional(),
-  minWidth: z.union([z.number(), z.string()]).optional(),
-  maxWidth: z.union([z.number(), z.string()]).optional(),
-  minHeight: z.union([z.number(), z.string()]).optional(),
-  maxHeight: z.union([z.number(), z.string()]).optional(),
-  height: z.union([z.number(), z.string()]).optional(),
-  overflow: z.enum(["visible","hidden","auto","scroll"]).optional(),
-  overflowX: z.enum(["visible","hidden","auto","scroll"]).optional(),
-  overflowY: z.enum(["visible","hidden","auto","scroll"]).optional(),
-  style: z.object({}).passthrough().optional(),
-}).strict();
-
 export const catalog = {
   components: {
     Theme: {
@@ -716,35 +682,10 @@ export const catalog = {
       }).strict(),
       hasChildren: true,
     },
-    CardTitle: {
-      props: z.object({
-        text: z.string().optional(),
-        title: z.string().optional(),
-        titleStyle: TitleStyleSchema.optional(),
-        ...TextBlockSpacingProps,
-      }).strict(),
-      hasChildren: false,
-    },
-    Title: {
-      props: z.object({
-        text: z.string().optional(),
-        title: z.string().optional(),
-        titleStyle: TitleStyleSchema.optional(),
-        ...TextBlockSpacingProps,
-      }).strict(),
-      hasChildren: false,
-    },
-    Subtitle: {
-      props: z.object({
-        text: z.string().optional(),
-        title: z.string().optional(),
-        titleStyle: TitleStyleSchema.optional(),
-        ...TextBlockSpacingProps,
-      }).strict(),
-      hasChildren: false,
-    },
     Text: {
       props: z.object({
+        text: z.string().optional(),
+        title: z.string().optional(),
         titleStyle: TitleStyleSchema.optional(),
         ...TextBlockSpacingProps,
       }).strict(),
@@ -766,33 +707,23 @@ export const catalog = {
       props: z.object({}).strict(),
       hasChildren: false,
     },
-    Div: {
-      props: HtmlBlockPropsSchema,
-      hasChildren: true,
-    },
-    Section: {
-      props: HtmlBlockPropsSchema,
-      hasChildren: true,
-    },
-    P: {
-      props: HtmlTextPropsSchema,
-      hasChildren: true,
-    },
-    H1: {
-      props: HtmlTextPropsSchema,
-      hasChildren: true,
-    },
-    H2: {
-      props: HtmlTextPropsSchema,
-      hasChildren: true,
-    },
-    H3: {
-      props: HtmlTextPropsSchema,
-      hasChildren: true,
-    },
-    Strong: {
+    List: {
       props: z.object({
-        style: z.object({}).passthrough().optional(),
+        variant: z.enum(["bullet", "numbered", "check", "icon"]).optional(),
+        gap: z.union([z.number(), z.string()]).optional(),
+        icon: z.string().optional(),
+        iconColor: z.string().optional(),
+        markerColor: z.string().optional(),
+        titleStyle: TitleStyleSchema.optional(),
+        itemTitleStyle: TitleStyleSchema.optional(),
+        ...TextBlockSpacingProps,
+      }).strict(),
+      hasChildren: true,
+    },
+    ListItem: {
+      props: z.object({
+        icon: z.string().optional(),
+        iconColor: z.string().optional(),
         titleStyle: TitleStyleSchema.optional(),
       }).strict(),
       hasChildren: true,

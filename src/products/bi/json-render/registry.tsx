@@ -1236,77 +1236,11 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       </FrameSurface>
     );
   },
-  CardTitle: ({ element }) => {
-    const theme = useThemeOverrides();
-    const p = deepMerge(((theme.components as any)?.CardTitle || {}) as AnyRecord, (element?.props || {}) as AnyRecord) as AnyRecord;
-    const text = String(p.text ?? p.title ?? '').trim();
-    if (!text) return null;
-    const titleStyle = applyH1FromCssVars(normalizeTitleStyle(p.titleStyle), theme.cssVars) as React.CSSProperties | undefined;
-    const css = (theme.cssVars || {}) as AnyRecord;
-    const style: React.CSSProperties = {
-      margin: 0,
-      fontSize: '16px',
-      lineHeight: 1.3,
-      fontWeight: 600,
-      color: css.fg || '#0f172a',
-      ...(titleStyle || {}),
-      ...resolveTextSpacingStyle(p),
-    };
-    return (
-      <h3 style={style}>
-        {text}
-      </h3>
-    );
-  },
-  Title: ({ element }) => {
-    const theme = useThemeOverrides();
-    const titleTheme = ((((theme.components as any)?.Title || (theme.components as any)?.CardTitle) || {}) as AnyRecord);
-    const p = deepMerge(titleTheme, (element?.props || {}) as AnyRecord) as AnyRecord;
-    const text = String(p.text ?? p.title ?? '').trim();
-    if (!text) return null;
-    const titleStyle = applyH1FromCssVars(normalizeTitleStyle(p.titleStyle), theme.cssVars) as React.CSSProperties | undefined;
-    const css = (theme.cssVars || {}) as AnyRecord;
-    const style: React.CSSProperties = {
-      margin: 0,
-      fontSize: '16px',
-      lineHeight: 1.3,
-      fontWeight: 600,
-      color: css.fg || '#0f172a',
-      ...(titleStyle || {}),
-      ...resolveTextSpacingStyle(p),
-    };
-    return (
-      <h3 style={style}>
-        {text}
-      </h3>
-    );
-  },
-  Subtitle: ({ element }) => {
-    const theme = useThemeOverrides();
-    const subtitleTheme = ((((theme.components as any)?.Subtitle || {}) as AnyRecord));
-    const p = deepMerge(subtitleTheme, (element?.props || {}) as AnyRecord) as AnyRecord;
-    const text = String(p.text ?? p.title ?? '').trim();
-    if (!text) return null;
-    const titleStyle = (normalizeTitleStyle(p.titleStyle) || {}) as React.CSSProperties;
-    const css = (theme.cssVars || {}) as AnyRecord;
-    const style: React.CSSProperties = {
-      color: css.headerSubtitle || css.headerSubtitleColor || '#6b7280',
-      fontSize: '12px',
-      lineHeight: 1.4,
-      fontWeight: 400,
-      ...(titleStyle || {}),
-      ...resolveTextSpacingStyle(p),
-    };
-    return (
-      <div style={style}>
-        {text}
-      </div>
-    );
-  },
   Text: ({ element, children }) => {
     const theme = useThemeOverrides();
     const textTheme = ((((theme.components as any)?.Text || {}) as AnyRecord));
     const p = deepMerge(textTheme, (element?.props || {}) as AnyRecord) as AnyRecord;
+    const text = String(p.text ?? p.title ?? '').trim();
     const titleStyle = (normalizeTitleStyle(p.titleStyle) || {}) as React.CSSProperties;
     const css = (theme.cssVars || {}) as AnyRecord;
     const style: React.CSSProperties = {
@@ -1319,7 +1253,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       ...(titleStyle || {}),
       ...resolveTextSpacingStyle(p),
     };
-    return <p style={style}>{children}</p>;
+    return <p style={style}>{text || children}</p>;
   },
   Bold: ({ element, children }) => {
     const theme = useThemeOverrides();
@@ -1343,80 +1277,46 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
   Br: () => {
     return <br />;
   },
-  Div: ({ element, children }) => {
+  List: ({ element, children }) => {
     const p = (element?.props || {}) as AnyRecord;
-    return <div style={buildHtmlBlockStyle(p)}>{children}</div>;
-  },
-  Section: ({ element, children }) => {
-    const p = (element?.props || {}) as AnyRecord;
-    return <section style={buildHtmlBlockStyle(p)}>{children}</section>;
-  },
-  P: ({ element, children }) => {
-    const p = (element?.props || {}) as AnyRecord;
-    const style: React.CSSProperties = {
-      margin: 0,
-      fontSize: '14px',
-      lineHeight: 1.7,
-      color: '#4b5563',
-      ...(normalizeTitleStyle(p.titleStyle) || {}),
+    const variant = String(p.variant || 'bullet');
+    const itemGap = styleVal(p.gap) || '10px';
+    const itemTextStyle = (normalizeTitleStyle(p.itemTitleStyle) || {}) as React.CSSProperties;
+    const listStyle: React.CSSProperties = {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: itemGap,
       ...resolveTextSpacingStyle(p),
-      ...((p.style && typeof p.style === 'object') ? p.style : {}),
     };
-    return <p style={style}>{children}</p>;
+    const childDefs: AnyRecord[] = Array.isArray((element as any)?.children) ? (element as any).children : [];
+    return (
+      <div style={listStyle}>
+        {React.Children.toArray(children).map((child, index) => {
+          const childDef = childDefs[index] || {};
+          const childProps = (childDef?.props || {}) as AnyRecord;
+          const markerColor = String(childProps.iconColor || p.iconColor || p.markerColor || '#4b5563');
+          const iconName = String(childProps.icon || p.icon || '').trim();
+          let marker: React.ReactNode = <span style={{ color: markerColor, fontSize: '16px', lineHeight: 1 }}>•</span>;
+          if (variant === 'numbered') {
+            marker = <span style={{ color: markerColor, fontSize: '13px', fontWeight: 600, lineHeight: 1 }}>{index + 1}.</span>;
+          } else if (variant === 'check') {
+            marker = <BadgeCheck size={16} style={{ color: markerColor }} />;
+          } else if (variant === 'icon') {
+            const IconComp = iconMap[normalizeIconKey(iconName)] || Sparkles;
+            marker = <IconComp size={16} style={{ color: markerColor }} />;
+          }
+          return (
+            <div key={`list-item-${index}`} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+              <div style={{ width: '16px', minWidth: '16px', display: 'flex', justifyContent: 'center', paddingTop: '2px' }}>{marker}</div>
+              <div style={{ minWidth: 0, ...itemTextStyle }}>{child}</div>
+            </div>
+          );
+        })}
+      </div>
+    );
   },
-  H1: ({ element, children }) => {
-    const p = (element?.props || {}) as AnyRecord;
-    const style: React.CSSProperties = {
-      margin: 0,
-      fontSize: '32px',
-      lineHeight: 1.15,
-      fontWeight: 600,
-      color: '#20232A',
-      letterSpacing: '-0.03em',
-      ...(normalizeTitleStyle(p.titleStyle) || {}),
-      ...resolveTextSpacingStyle(p),
-      ...((p.style && typeof p.style === 'object') ? p.style : {}),
-    };
-    return <h1 style={style}>{children}</h1>;
-  },
-  H2: ({ element, children }) => {
-    const p = (element?.props || {}) as AnyRecord;
-    const style: React.CSSProperties = {
-      margin: 0,
-      fontSize: '24px',
-      lineHeight: 1.2,
-      fontWeight: 600,
-      color: '#20232A',
-      letterSpacing: '-0.025em',
-      ...(normalizeTitleStyle(p.titleStyle) || {}),
-      ...resolveTextSpacingStyle(p),
-      ...((p.style && typeof p.style === 'object') ? p.style : {}),
-    };
-    return <h2 style={style}>{children}</h2>;
-  },
-  H3: ({ element, children }) => {
-    const p = (element?.props || {}) as AnyRecord;
-    const style: React.CSSProperties = {
-      margin: 0,
-      fontSize: '18px',
-      lineHeight: 1.3,
-      fontWeight: 600,
-      color: '#20232A',
-      letterSpacing: '-0.02em',
-      ...(normalizeTitleStyle(p.titleStyle) || {}),
-      ...resolveTextSpacingStyle(p),
-      ...((p.style && typeof p.style === 'object') ? p.style : {}),
-    };
-    return <h3 style={style}>{children}</h3>;
-  },
-  Strong: ({ element, children }) => {
-    const p = (element?.props || {}) as AnyRecord;
-    const style: React.CSSProperties = {
-      fontWeight: 600,
-      ...(normalizeTitleStyle(p.titleStyle) || {}),
-      ...((p.style && typeof p.style === 'object') ? p.style : {}),
-    };
-    return <strong style={style}>{children}</strong>;
+  ListItem: ({ children }) => {
+    return <>{children}</>;
   },
   Icon: ({ element }) => {
     const theme = useThemeOverrides();

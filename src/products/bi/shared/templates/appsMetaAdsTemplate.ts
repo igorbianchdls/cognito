@@ -29,8 +29,8 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
 
     <Header direction="row" justify="between" align="center">
       <Container direction="column" gap={4}>
-        <Title text="Dashboard Meta Ads" />
-        <Subtitle text="Lumi Skin • Performance DTC (campanhas, grupos e anúncios)" />
+        <Text text="Dashboard Meta Ads" />
+        <Text text="Lumi Skin • Performance DTC (campanhas, grupos e anúncios)" />
       </Container>
       <DatePicker visible mode="range" storePath="filters.dateRange" presets={["7d","14d","30d"]}>
         <ActionOnChange type="refresh_data" />
@@ -142,7 +142,7 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
       <Container grow={1}>
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
-            <Title text="Gasto" />
+            <Text text="Gasto" />
             <KPI format="currency" resultPath="kpis.gasto" comparisonMode="previous_period">
               <Query>
                 WITH atual AS (
@@ -212,7 +212,7 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
       <Container grow={1}>
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
-            <Title text="Receita Atribuída" />
+            <Text text="Receita Atribuída" />
             <KPI format="currency" resultPath="kpis.receita" comparisonMode="previous_period">
               <Query>
                 WITH atual AS (
@@ -282,7 +282,7 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
       <Container grow={1}>
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
-            <Title text="ROAS" />
+            <Text text="ROAS" />
             <KPI format="number" resultPath="kpis.roas" comparisonMode="previous_period">
               <Query>
                 WITH atual AS (
@@ -366,7 +366,7 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
 
       <Container grow={1}>
         <Card>
-          <Title text="Meta de ROAS" />
+          <Text text="Meta de ROAS" />
           <Gauge
             format="number"
             target={4}
@@ -405,7 +405,7 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
       <Container grow={1}>
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
-            <Title text="Conversões" />
+            <Text text="Conversões" />
             <KPI format="number" resultPath="kpis.conversoes" comparisonMode="previous_period">
               <Query>
                 WITH atual AS (
@@ -474,7 +474,7 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
       <Container grow={1}>
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
-            <Title text="Leads" />
+            <Text text="Leads" />
             <KPI format="number" resultPath="kpis.leads" comparisonMode="previous_period">
               <Query>
                 WITH atual AS (
@@ -543,7 +543,7 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
       <Container grow={1}>
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
-            <Title text="CTR" />
+            <Text text="CTR" />
             <KPI format="percent" resultPath="kpis.ctr" comparisonMode="previous_period">
               <Query>
                 WITH atual AS (
@@ -627,7 +627,7 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
       <Container grow={1}>
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
-            <Title text="CPA" />
+            <Text text="CPA" />
             <KPI format="currency" resultPath="kpis.cpa" comparisonMode="previous_period">
               <Query>
                 WITH atual AS (
@@ -713,7 +713,7 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Container grow={1}>
         <Card>
-          <Title text="Gasto por Mês" marginBottom={8} />
+          <Text text="Gasto por Mês" marginBottom={8} />
           <Chart type="line" format="currency" height={250}>
             <Interaction clickAsFilter={false} />
             <Nivo curve="monotoneX" area />
@@ -742,7 +742,7 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
       </Container>
       <Container grow={1}>
         <Card>
-          <Title text="Receita por Mês" marginBottom={8} />
+          <Text text="Receita por Mês" marginBottom={8} />
           <Chart type="line" format="currency" height={250}>
             <Interaction clickAsFilter={false} />
             <Nivo curve="monotoneX" area />
@@ -771,7 +771,7 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
       </Container>
       <Container grow={1}>
         <Card>
-          <Title text="Lead Rate por Mês" marginBottom={8} />
+          <Text text="Lead Rate por Mês" marginBottom={8} />
           <Chart type="bar" format="percent" height={250}>
             <Interaction clickAsFilter={false} />
             <Nivo layout="vertical" />
@@ -803,7 +803,7 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Container grow={1}>
         <Card>
-          <Title text="Participação de Gasto por Conta" marginBottom={8} />
+          <Text text="Participação de Gasto por Conta" marginBottom={8} />
           <Chart type="pie" format="currency" height={260}>
             <Interaction clickAsFilter filterField="conta_id" storePath="filters.conta_id" />
             <Nivo innerRadius={0.45} />
@@ -831,7 +831,7 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
       </Container>
       <Container grow={1}>
         <Card>
-          <Title text="Top Campanhas por Gasto" marginBottom={8} />
+          <Text text="Top Campanhas por Gasto" marginBottom={8} />
           <Chart type="bar" format="currency" height={260}>
             <Interaction clickAsFilter filterField="campanha_id" storePath="filters.campanha_id" clearOnSecondClick />
             <Nivo layout="horizontal" />
@@ -859,7 +859,7 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
       </Container>
       <Container grow={1}>
         <Card>
-          <Title text="Top Campanhas por ROAS" marginBottom={8} />
+          <Text text="Top Campanhas por ROAS" marginBottom={8} />
           <Chart type="bar" format="number" height={260}>
             <Interaction clickAsFilter filterField="campanha_id" storePath="filters.campanha_id" clearOnSecondClick />
             <Nivo layout="horizontal" />
@@ -890,7 +890,7 @@ export const APPS_METAADS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Container grow={1}>
         <Card>
-          <Title text="Leituras e alertas" marginBottom={8} />
+          <Text text="Leituras e alertas" marginBottom={8} />
           <AISummary>
             <Config>
               {

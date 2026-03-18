@@ -21,8 +21,8 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       <Container direction="column" gap={0} grow={1} minHeight="100%">
         <Header direction="row" justify="between" align="center">
           <Container direction="column" gap={4}>
-            <Title text="Dashboard de Vendas" />
-            <Subtitle text="Principais indicadores e cortes" />
+            <Text text="Dashboard de Vendas" />
+            <Text text="Principais indicadores e cortes" />
           </Container>
           <DatePicker visible mode="range" table="vendas.pedidos" field="data_pedido" presets={["7d","14d","30d"]}>
             <ActionOnChange type="refresh_data" />
@@ -39,7 +39,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       <Container grow={1}>
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
-            <Title text="Vendas" />
+            <Text text="Vendas" />
             <KPI format="currency" resultPath="kpis.vendas" comparisonMode="previous_period">
               <Query>
                 WITH atual AS (
@@ -90,7 +90,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       <Container grow={1}>
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
-            <Title text="Pedidos" />
+            <Text text="Pedidos" />
             <KPI format="number" resultPath="kpis.pedidos" comparisonMode="previous_period">
               <Query>
                 WITH atual AS (
@@ -141,7 +141,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       <Container grow={1}>
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
-            <Title text="Ticket Médio" />
+            <Text text="Ticket Médio" />
             <KPI format="currency" resultPath="kpis.ticketMedio" comparisonMode="previous_period">
               <Query>
                 WITH atual AS (
@@ -191,7 +191,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       </Container>
       <Container grow={1}>
         <Card>
-          <Title text="Meta de Vendas" />
+          <Text text="Meta de Vendas" />
           <Gauge
             format="currency"
             target={250000}
@@ -221,7 +221,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Container grow={4}>
         <Card>
-          <Title text="Canais" marginBottom={8} />
+          <Text text="Canais" marginBottom={8} />
           <Chart type="pie" fr={2} format="currency" height={240} innerRadius={64} outerRadius={88} paddingAngle={2} showLabels={false} showLegend>
             <Query>
               SELECT
@@ -251,7 +251,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       </Container>
       <Container grow={2}>
         <Card>
-          <Title text="Categorias" marginBottom={8} />
+          <Text text="Categorias" marginBottom={8} />
           <Chart type="horizontal-bar" format="currency" height={240} layout="horizontal" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} categoryTickColor="#111111" valueTickColor="#111111" categoryLabelMode="first-word">
             <Query>
               SELECT
@@ -281,7 +281,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       </Container>
       <Container grow={2}>
         <Card>
-          <Title text="Clientes" marginBottom={8} />
+          <Text text="Clientes" marginBottom={8} />
           <Chart type="horizontal-bar" format="currency" height={240} layout="horizontal" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4} categoryTickColor="#111111" valueTickColor="#111111" categoryLabelMode="first-word">
             <Query>
               SELECT
@@ -313,7 +313,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Container grow={1}>
         <Card>
-          <Title text="Vendedores" marginBottom={8} />
+          <Text text="Vendedores" marginBottom={8} />
           <Chart type="bar" format="currency" height={220} layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4}>
         <Query>
           SELECT
@@ -344,7 +344,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       </Container>
       <Container grow={1}>
         <Card>
-          <Title text="Filiais" marginBottom={8} />
+          <Text text="Filiais" marginBottom={8} />
           <Chart type="bar" format="currency" height={220} layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4}>
         <Query>
           SELECT
@@ -374,7 +374,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       </Container>
       <Container grow={1}>
         <Card>
-          <Title text="Unidades de Negócio" marginBottom={8} />
+          <Text text="Unidades de Negócio" marginBottom={8} />
           <Chart type="bar" format="currency" height={220} layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4}>
         <Query>
           SELECT
@@ -406,7 +406,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Container grow={3}>
         <Card>
-          <Title text="Faturamento Mensal por Canal" marginBottom={8} />
+          <Text text="Faturamento Mensal por Canal" marginBottom={8} />
           <Chart type="line" format="currency" height={240} curve="monotone" showGrid showLegend strokeWidth={3} showDots={false}>
         <Query>
           WITH top_canais AS (
@@ -463,7 +463,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Container grow={3}>
         <Card>
-          <Title text="Ultimos Pedidos" marginBottom={8} />
+          <Text text="Ultimos Pedidos" marginBottom={8} />
           <Table
             showPagination
             pageSize={8}
@@ -576,7 +576,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Container grow={1}>
         <Card>
-          <Title text="Pivot de Receita por Canal e Mês" marginBottom={8} />
+          <Text text="Pivot de Receita por Canal e Mês" marginBottom={8} />
           <PivotTable
             stickyHeader
             bordered
@@ -611,7 +611,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Container grow={1}>
         <Card>
-          <Title text="Pedidos por Mês" marginBottom={8} />
+          <Text text="Pedidos por Mês" marginBottom={8} />
           <Chart type="bar" format="number" height={220} layout="vertical" radius={8} showGrid valueAxisLabel="Pedidos" xTickCount={6}>
         <Query>
           SELECT
@@ -639,7 +639,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       </Container>
       <Container grow={1}>
         <Card>
-          <Title text="Ticket Médio por Mês" marginBottom={8} />
+          <Text text="Ticket Médio por Mês" marginBottom={8} />
           <Chart type="bar" format="currency" height={220} layout="vertical" radius={8} showGrid valueAxisLabel="Ticket Médio" xTickCount={6}>
         <Query>
           SELECT
@@ -667,7 +667,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       </Container>
       <Container grow={1}>
         <Card>
-          <Title text="Insights da IA" marginBottom={8} />
+          <Text text="Insights da IA" marginBottom={8} />
           <AISummary>
             <Config>
               {
@@ -694,7 +694,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Container grow={1}>
         <Card>
-          <Title text="Territórios" marginBottom={8} />
+          <Text text="Territórios" marginBottom={8} />
           <Chart type="bar" format="currency" height={220} layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4}>
         <Query>
           SELECT
@@ -724,7 +724,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       </Container>
       <Container grow={1}>
         <Card>
-          <Title text="Serviços/Categorias" marginBottom={8} />
+          <Text text="Serviços/Categorias" marginBottom={8} />
           <Chart type="bar" format="currency" height={220} layout="vertical" radius={8} showGrid valueAxisLabel="Receita" xTickCount={4}>
         <Query>
           SELECT
@@ -754,7 +754,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       </Container>
       <Container grow={1}>
         <Card>
-          <Title text="Pedidos" marginBottom={8} />
+          <Text text="Pedidos" marginBottom={8} />
           <Chart type="bar" format="number" height={220} layout="vertical" radius={8} showGrid valueAxisLabel="Pedidos" xTickCount={4}>
         <Query>
           SELECT

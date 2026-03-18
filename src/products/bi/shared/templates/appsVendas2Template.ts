@@ -3,7 +3,7 @@ export const APPS_VENDAS2_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
   <Container direction="row" gap={12} padding={16} align="stretch" minHeight="100%">
     <Sidebar width={260} minWidth={220} maxWidth={280} minHeight="100%" gap={10} padding={12}>
       <Card>
-        <Title text="Tabs" marginBottom={8} />
+        <Text text="Tabs" marginBottom={8} />
         <Container direction="column" gap={8}>
           <Tab id="resumo" label="Resumo" />
           <Tab id="clientes" label="Clientes" />
@@ -15,8 +15,8 @@ export const APPS_VENDAS2_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
     <Container direction="column" gap={12} grow={1} minHeight="100%">
       <Header direction="row" justify="between" align="center">
         <Container direction="column" gap={4}>
-          <Title text="Dashboard de Vendas 2" />
-          <Subtitle text="Teste de tabs com KPIs e charts" />
+          <Text text="Dashboard de Vendas 2" />
+          <Text text="Teste de tabs com KPIs e charts" />
         </Container>
         <DatePicker visible mode="range" table="vendas.pedidos" field="data_pedido" presets={["7d","14d","30d"]} />
       </Header>
@@ -26,7 +26,7 @@ export const APPS_VENDAS2_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
         <Container direction="row" gap={12} padding={16}>
           <Container grow={1}>
             <Card>
-              <Title text="Vendas" marginBottom={6} />
+              <Text text="Vendas" marginBottom={6} />
               <KPI format="currency" resultPath="vendas2.resumo.vendas">
                 <Query>
                   SELECT
@@ -41,7 +41,7 @@ export const APPS_VENDAS2_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
           </Container>
           <Container grow={1}>
             <Card>
-              <Title text="Pedidos" marginBottom={6} />
+              <Text text="Pedidos" marginBottom={6} />
               <KPI format="number" resultPath="vendas2.resumo.pedidos">
                 <Query>
                   SELECT
@@ -56,7 +56,7 @@ export const APPS_VENDAS2_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
           </Container>
           <Container grow={1}>
             <Card>
-              <Title text="Ticket Médio" marginBottom={6} />
+              <Text text="Ticket Médio" marginBottom={6} />
               <KPI format="currency" resultPath="vendas2.resumo.ticket">
                 <Query>
                   SELECT
@@ -73,7 +73,7 @@ export const APPS_VENDAS2_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
         <Container direction="row" gap={12} padding={16}>
           <Container grow={2}>
             <Card>
-              <Title text="Faturamento Diário" marginBottom={8} />
+              <Text text="Faturamento Diário" marginBottom={8} />
               <Chart type="line" format="currency" height={260}>
                 <Query>
                   SELECT
@@ -93,7 +93,7 @@ export const APPS_VENDAS2_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
           </Container>
           <Container grow={1}>
             <Card>
-              <Title text="Canais" marginBottom={8} />
+              <Text text="Canais" marginBottom={8} />
               <Chart type="pie" format="currency" height={260}>
                 <Query>
                   SELECT
@@ -121,7 +121,7 @@ export const APPS_VENDAS2_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
         <Container direction="row" gap={12} padding={16}>
           <Container grow={1}>
             <Card>
-              <Title text="Clientes Ativos" marginBottom={6} />
+              <Text text="Clientes Ativos" marginBottom={6} />
               <KPI format="number" resultPath="vendas2.clientes.ativos">
                 <Query>
                   SELECT
@@ -136,7 +136,7 @@ export const APPS_VENDAS2_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
           </Container>
           <Container grow={2}>
             <Card>
-              <Title text="Top Clientes" marginBottom={8} />
+              <Text text="Top Clientes" marginBottom={8} />
               <Chart type="bar" format="currency" height={280}>
                 <Query>
                   SELECT
@@ -168,7 +168,7 @@ export const APPS_VENDAS2_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
         <Container direction="row" gap={12} padding={16}>
           <Container grow={1}>
             <Card>
-              <Title text="Vendedores" marginBottom={8} />
+              <Text text="Vendedores" marginBottom={8} />
               <Chart type="bar" format="currency" height={260}>
                 <Query>
                   SELECT
@@ -205,7 +205,7 @@ export const APPS_VENDAS2_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
         <Container direction="row" gap={12} padding={16}>
           <Container grow={1}>
             <Card>
-              <Title text="SKUs Vendidos" marginBottom={6} />
+              <Text text="SKUs Vendidos" marginBottom={6} />
               <KPI format="number" resultPath="vendas2.produtos.skus">
                 <Query>
                   SELECT
@@ -221,7 +221,7 @@ export const APPS_VENDAS2_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
           </Container>
           <Container grow={2}>
             <Card>
-              <Title text="Top Produtos" marginBottom={8} />
+              <Text text="Top Produtos" marginBottom={8} />
               <Chart type="bar" format="currency" height={280}>
                 <Query>
                   SELECT
@@ -253,7 +253,7 @@ export const APPS_VENDAS2_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
         <Container direction="row" gap={12} padding={16}>
           <Container grow={1}>
             <Card>
-              <Title text="Categorias de Receita" marginBottom={8} />
+              <Text text="Categorias de Receita" marginBottom={8} />
               <Chart type="bar" format="currency" height={260}>
                 <Query>
                   SELECT

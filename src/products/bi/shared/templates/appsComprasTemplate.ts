@@ -19,8 +19,8 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
     </Config>
     <Header direction="row" justify="between" align="center">
       <Container direction="column" gap={4}>
-        <Title text="Dashboard de Compras" />
-        <Subtitle text="Principais indicadores e cortes" />
+        <Text text="Dashboard de Compras" />
+        <Text text="Principais indicadores e cortes" />
       </Container>
       <DatePicker visible mode="range" storePath="filters.dateRange" presets={["7d","14d","30d"]}>
         <ActionOnChange type="refresh_data" />
@@ -37,7 +37,7 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
       <Container grow={1}>
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
-            <Title text="Gasto" />
+            <Text text="Gasto" />
             <KPI format="currency">
               <DataQuery model="compras.compras" measure="gasto_total" />
             </KPI>
@@ -48,7 +48,7 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
       <Container grow={1}>
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
-            <Title text="Fornecedores" />
+            <Text text="Fornecedores" />
             <KPI format="number">
               <DataQuery model="compras.compras" measure="fornecedores_unicos" />
             </KPI>
@@ -59,7 +59,7 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
       <Container grow={1}>
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
-            <Title text="Pedidos" />
+            <Text text="Pedidos" />
             <KPI format="number">
               <DataQuery model="compras.compras" measure="pedidos" />
               <Config>
@@ -77,7 +77,7 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
       <Container grow={1}>
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
-            <Title text="Transações" />
+            <Text text="Transações" />
             <KPI format="number">
               <DataQuery model="compras.compras" measure="transacoes" />
             </KPI>
@@ -89,7 +89,7 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Container grow={1}>
         <Card>
-          <Title text="Fornecedores" marginBottom={8} />
+          <Text text="Fornecedores" marginBottom={8} />
           <Chart type="bar" format="currency" height={240}>
             <DataQuery model="compras.compras" dimension="fornecedor" measure="gasto_total" limit={8}>
               <OrderBy field="measure" dir="desc" />
@@ -100,7 +100,7 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
       </Container>
       <Container grow={1}>
         <Card>
-          <Title text="Centros de Custo" marginBottom={8} />
+          <Text text="Centros de Custo" marginBottom={8} />
           <Chart type="bar" format="currency" height={240}>
             <DataQuery model="compras.compras" dimension="centro_custo" measure="gasto_total" limit={8}>
               <OrderBy field="measure" dir="desc" />
@@ -132,7 +132,7 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
       </SlicerCard>
       <Container grow={1}>
         <Card>
-          <Title text="Filiais" marginBottom={8} />
+          <Text text="Filiais" marginBottom={8} />
           <Chart type="bar" format="currency" height={240}>
             <DataQuery model="compras.compras" dimension="filial" measure="gasto_total" limit={8}>
               <OrderBy field="measure" dir="desc" />
@@ -145,7 +145,7 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Container grow={1}>
         <Card>
-          <Title text="Categorias" marginBottom={8} />
+          <Text text="Categorias" marginBottom={8} />
           <Chart type="bar" format="currency" height={220}>
             <DataQuery model="compras.compras" dimension="categoria_despesa" measure="gasto_total" limit={8}>
               <OrderBy field="measure" dir="desc" />
@@ -156,7 +156,7 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
       </Container>
       <Container grow={1}>
         <Card>
-          <Title text="Projetos" marginBottom={8} />
+          <Text text="Projetos" marginBottom={8} />
           <Chart type="bar" format="currency" height={220}>
             <DataQuery model="compras.compras" dimension="projeto" measure="gasto_total" limit={8}>
               <OrderBy field="measure" dir="desc" />
@@ -167,7 +167,7 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
       </Container>
       <Container grow={1}>
         <Card>
-          <Title text="Status (Qtd)" marginBottom={8} />
+          <Text text="Status (Qtd)" marginBottom={8} />
           <Chart type="bar" format="number" height={220}>
             <DataQuery model="compras.compras" dimension="status" measure="pedidos" limit={8}>
               <OrderBy field="measure" dir="desc" />
@@ -180,7 +180,7 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Container grow={1}>
         <Card>
-          <Title text="Status (Pizza)" marginBottom={8} />
+          <Text text="Status (Pizza)" marginBottom={8} />
           <Chart type="pie" format="number" height={260}>
             <DataQuery model="compras.compras" dimension="status" measure="pedidos" limit={8}>
               <OrderBy field="measure" dir="desc" />
@@ -193,7 +193,7 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
     <Container direction="row" gap={12} padding={16} justify="start" align="start">
       <Container grow={1}>
         <Card>
-          <Title text="Gasto por Mês" marginBottom={8} />
+          <Text text="Gasto por Mês" marginBottom={8} />
           <Chart type="bar" format="currency" height={220}>
             <DataQuery model="compras.compras" dimension="periodo" measure="gasto_total" limit={12}>
               <OrderBy field="dimension" dir="asc" />
@@ -204,7 +204,7 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
       </Container>
       <Container grow={1}>
         <Card>
-          <Title text="Pedidos por Mês" marginBottom={8} />
+          <Text text="Pedidos por Mês" marginBottom={8} />
           <Chart type="bar" format="number" height={220}>
             <DataQuery model="compras.compras" dimension="periodo" measure="pedidos" limit={12}>
               <OrderBy field="dimension" dir="asc" />
@@ -215,7 +215,7 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
       </Container>
       <Container grow={1}>
         <Card>
-          <Title text="Ticket Médio por Mês" marginBottom={8} />
+          <Text text="Ticket Médio por Mês" marginBottom={8} />
           <Chart type="bar" format="currency" height={220}>
             <DataQuery model="compras.compras" dimension="periodo" measure="ticket_medio" limit={12}>
               <OrderBy field="dimension" dir="asc" />
@@ -226,7 +226,7 @@ export const APPS_COMPRAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
       </Container>
       <Container grow={1}>
         <Card>
-          <Title text="Insights da IA" marginBottom={8} />
+          <Text text="Insights da IA" marginBottom={8} />
           <AISummary>
             <Config>
               {

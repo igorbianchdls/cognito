@@ -3,8 +3,8 @@ export const APPS_VENDAS3_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
   <Container direction="column" gap={12} padding={16} minHeight="100%">
     <Header direction="row" justify="between" align="center">
       <Container direction="column" gap={4}>
-        <Title text="Dashboard de Vendas 3" />
-        <Subtitle text="Teste dos novos charts em Recharts: scatter, radar, treemap, composed, funnel e sankey" />
+        <Text text="Dashboard de Vendas 3" />
+        <Text text="Teste dos novos charts em Recharts: scatter, radar, treemap, composed, funnel e sankey" />
       </Container>
       <DatePicker visible mode="range" table="vendas.pedidos" field="data_pedido" presets={["7d","14d","30d"]} />
     </Header>
@@ -12,7 +12,7 @@ export const APPS_VENDAS3_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
     <Container direction="row" gap={12} align="stretch">
       <Container grow={1}>
         <Card>
-          <Title text="Scatter — Clientes" marginBottom={8} />
+          <Text text="Scatter — Clientes" marginBottom={8} />
           <Chart type="scatter" format="number" height={320}>
             <Query>
               SELECT
@@ -44,7 +44,7 @@ export const APPS_VENDAS3_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
       </Container>
       <Container grow={1}>
         <Card>
-          <Title text="Radar — Canal x Unidade" marginBottom={8} />
+          <Text text="Radar — Canal x Unidade" marginBottom={8} />
           <Chart type="radar" format="currency" height={320}>
             <Query>
               SELECT
@@ -78,7 +78,7 @@ export const APPS_VENDAS3_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
 
     <Container>
       <Card>
-        <Title text="Treemap — Unidades e Territórios" marginBottom={8} />
+        <Text text="Treemap — Unidades e Territórios" marginBottom={8} />
         <Chart type="treemap" format="currency" height={360}>
           <Query>
             SELECT
@@ -111,7 +111,7 @@ export const APPS_VENDAS3_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
 
     <Container>
       <Card>
-        <Title text="Composed — Receita e Pedidos por Canal" marginBottom={8} />
+        <Text text="Composed — Receita e Pedidos por Canal" marginBottom={8} />
         <Chart type="composed" format="currency" height={320}>
           <Query>
             SELECT
@@ -146,7 +146,7 @@ export const APPS_VENDAS3_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
     <Container direction="row" gap={12} align="stretch">
       <Container grow={1}>
         <Card>
-          <Title text="Funnel — Receita por Categoria" marginBottom={8} />
+          <Text text="Funnel — Receita por Categoria" marginBottom={8} />
           <Chart type="funnel" format="currency" height={320}>
             <Query>
               SELECT
@@ -177,7 +177,7 @@ export const APPS_VENDAS3_TEMPLATE_DSL = String.raw`<DashboardTemplate name="app
 
       <Container grow={1}>
         <Card>
-          <Title text="Sankey — Canal para Unidade" marginBottom={8} />
+          <Text text="Sankey — Canal para Unidade" marginBottom={8} />
           <Chart type="sankey" format="currency" height={360}>
             <Query>
               SELECT

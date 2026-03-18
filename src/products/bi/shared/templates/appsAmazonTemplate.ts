@@ -224,8 +224,8 @@ export const APPS_AMAZON_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
     </Config>
     <Header direction="row" justify="between" align="center">
       <Container direction="column" gap={4}>
-        <Title text="Dashboard Amazon" />
-        <Subtitle text="E-commerce • Vendas, logística, financeiro e estoque" />
+        <Text text="Dashboard Amazon" />
+        <Text text="E-commerce • Vendas, logística, financeiro e estoque" />
       </Container>
       <DatePicker visible mode="range" storePath="filters.dateRange" presets={["7d","14d","30d"]}>
         <ActionOnChange type="refresh_data" />
@@ -376,7 +376,7 @@ export const APPS_AMAZON_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       <Container grow={1}>
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
-            <Title text="GMV" />
+            <Text text="GMV" />
             <KPI format="currency" resultPath="kpis.gmv" comparisonMode="previous_period">
               <Query>
                 ${buildComparisonKpiQuery('ecommerce.pedidos', 'data_pedido', 'SUM(valor_total)', AMAZON_PEDIDOS_FILTERS)}
@@ -397,7 +397,7 @@ export const APPS_AMAZON_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       <Container grow={1}>
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
-            <Title text="Pedidos" />
+            <Text text="Pedidos" />
             <KPI format="number" resultPath="kpis.pedidos" comparisonMode="previous_period">
               <Query>
                 ${buildComparisonKpiQuery('ecommerce.pedidos', 'data_pedido', 'COUNT(*)', AMAZON_PEDIDOS_FILTERS)}
@@ -418,7 +418,7 @@ export const APPS_AMAZON_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       <Container grow={1}>
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
-            <Title text="Ticket Médio" />
+            <Text text="Ticket Médio" />
             <KPI format="currency" resultPath="kpis.ticketMedio" comparisonMode="previous_period">
               <Query>
                 ${buildComparisonKpiQuery('ecommerce.pedidos', 'data_pedido', 'AVG(valor_total)', AMAZON_PEDIDOS_FILTERS)}
@@ -442,7 +442,7 @@ export const APPS_AMAZON_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       <Container grow={1}>
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
-            <Title text="Clientes Únicos" />
+            <Text text="Clientes Únicos" />
             <KPI format="number" resultPath="kpis.clientesUnicos" comparisonMode="previous_period">
               <Query>
                 ${buildComparisonKpiQuery('ecommerce.pedidos', 'data_pedido', 'COUNT(DISTINCT cliente_id)', AMAZON_PEDIDOS_FILTERS)}
@@ -463,7 +463,7 @@ export const APPS_AMAZON_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       <Container grow={1}>
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
-            <Title text="Receita Líquida Est." />
+            <Text text="Receita Líquida Est." />
             <KPI format="currency" resultPath="kpis.receitaLiquida" comparisonMode="previous_period">
               <Query>
                 ${buildComparisonKpiQuery('ecommerce.pedidos', 'data_pedido', 'SUM(valor_liquido_estimado)', AMAZON_PEDIDOS_FILTERS)}
@@ -484,7 +484,7 @@ export const APPS_AMAZON_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       <Container grow={1}>
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
-            <Title text="Reembolsos" />
+            <Text text="Reembolsos" />
             <KPI format="currency" resultPath="kpis.reembolsos" comparisonMode="previous_period">
               <Query>
                 ${buildComparisonKpiQuery('ecommerce.pedidos', 'data_pedido', 'SUM(valor_reembolsado)', AMAZON_PEDIDOS_FILTERS)}
@@ -508,7 +508,7 @@ export const APPS_AMAZON_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       <Container grow={1}>
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
-            <Title text="Taxas de Pedido" />
+            <Text text="Taxas de Pedido" />
             <KPI format="currency" resultPath="kpis.taxasPedido" comparisonMode="previous_period">
               <Query>
                 ${buildComparisonKpiQuery('ecommerce.pedidos', 'data_pedido', 'SUM(taxa_total)', AMAZON_PEDIDOS_FILTERS)}
@@ -529,7 +529,7 @@ export const APPS_AMAZON_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       <Container grow={1}>
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
-            <Title text="Fee Rate" />
+            <Text text="Fee Rate" />
             <KPI format="percent" resultPath="kpis.feeRate" comparisonMode="previous_period">
               <Query>
                 ${buildComparisonKpiQuery('ecommerce.pedidos', 'data_pedido', 'CASE WHEN SUM(valor_total)=0 THEN 0 ELSE SUM(taxa_total)/SUM(valor_total) END', AMAZON_PEDIDOS_FILTERS)}
@@ -550,7 +550,7 @@ export const APPS_AMAZON_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       <Container grow={1}>
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
-            <Title text="Payout Líquido" />
+            <Text text="Payout Líquido" />
             <KPI format="currency" resultPath="kpis.payoutLiquido" comparisonMode="previous_period">
               <Query>
                 ${buildComparisonKpiQuery('ecommerce.payouts', 'data_pagamento', 'SUM(valor_liquido)', AMAZON_PAYOUTS_FILTERS)}
@@ -574,7 +574,7 @@ export const APPS_AMAZON_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       <Container grow={1}>
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
-            <Title text="Envios" />
+            <Text text="Envios" />
             <KPI format="number" resultPath="kpis.envios" comparisonMode="previous_period">
               <Query>
                 ${buildComparisonKpiQuery('ecommerce.envios', 'despachado_em', 'COUNT(*)', AMAZON_ENVIOS_FILTERS)}
@@ -595,7 +595,7 @@ export const APPS_AMAZON_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       <Container grow={1}>
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
-            <Title text="Frete Custo" />
+            <Text text="Frete Custo" />
             <KPI format="currency" resultPath="kpis.freteCusto" comparisonMode="previous_period">
               <Query>
                 ${buildComparisonKpiQuery('ecommerce.envios', 'despachado_em', 'SUM(frete_custo)', AMAZON_ENVIOS_FILTERS)}
@@ -616,7 +616,7 @@ export const APPS_AMAZON_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       <Container grow={1}>
         <Card direction="row" justify="between" align="center" gap={12}>
           <Container direction="column" gap={6}>
-            <Title text="Estoque Disponível" />
+            <Text text="Estoque Disponível" />
             <KPI format="number" resultPath="kpis.estoqueDisponivel" comparisonMode="previous_period">
               <Query>
                 ${buildComparisonKpiQuery('ecommerce.estoque_saldos', 'snapshot_date', 'SUM(quantidade_disponivel)', AMAZON_ESTOQUE_FILTERS)}
@@ -636,7 +636,7 @@ export const APPS_AMAZON_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
       </Container>
       <Container grow={1}>
         <Card>
-          <Title text="Meta de Fee Rate" />
+          <Text text="Meta de Fee Rate" />
           <Gauge
             format="percent"
             target={15}

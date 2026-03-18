@@ -2,58 +2,52 @@ export const REPORT_TEMPLATE_DSL = String.raw`<ReportTemplate name="last_quarter
   <Theme name="light" />
 
   <Report id="capa" title="Cover">
-    <div style={{ minHeight: "100%", padding: 52, backgroundColor: "#ffffff", display: "flex", flexDirection: "column" }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 26 }}>
-        <p style={{ fontSize: 11, color: "#8B8E97", letterSpacing: "0.04em", textTransform: "uppercase", margin: 0 }}>
+    <Container direction="column" minHeight="100%" padding={52} backgroundColor="#FFFFFF" gap={28}>
+      <Container direction="column" gap={10}>
+        <Text titleStyle={{ fontSize: 11, color: "#8B8E97", letterSpacing: "0.04em", textTransform: "uppercase" }}>
           Q4 / 2025 / Revenue Review
-        </p>
-        <h1 style={{ fontSize: 32, fontWeight: 600, color: "#20232A", letterSpacing: "-0.03em", margin: 0 }}>
+        </Text>
+        <Text titleStyle={{ fontSize: 32, fontWeight: 600, color: "#20232A", letterSpacing: "-0.03em", lineHeight: 1.15 }}>
           Last Quarter Revenue Analysis
-        </h1>
-        <p style={{ fontSize: 14, lineHeight: 1.65, color: "#5C6470", maxWidth: "72%", margin: 0 }}>
+        </Text>
+        <Text titleStyle={{ color: "#5C6470", maxWidth: "72%" }}>
           A document-style revenue summary built in the report DSL, mixing analytical charts with narrative takeaways.
-        </p>
-      </div>
+        </Text>
+      </Container>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 30 }}>
-        <p style={{ fontSize: 13, lineHeight: 1.7, color: "#384152", margin: 0 }}>• <strong>Revenue grew</strong> with a clear concentration in enterprise and mid-market accounts.</p>
-        <p style={{ fontSize: 13, lineHeight: 1.7, color: "#384152", margin: 0 }}>• <strong>Segment mix remained healthy</strong>, but country distribution shows concentration risk.</p>
-        <p style={{ fontSize: 13, lineHeight: 1.7, color: "#384152", margin: 0 }}>• The strongest regions offset weaker <strong>small-business performance</strong> during the quarter.</p>
-      </div>
+      <List variant="check" gap={12} iconColor="#2F6FED" itemTitleStyle={{ fontSize: 13, lineHeight: 1.7, color: "#384152" }}>
+        <ListItem><Bold>Revenue grew</Bold> with a clear concentration in enterprise and mid-market accounts.</ListItem>
+        <ListItem><Bold>Segment mix remained healthy</Bold>, but country distribution shows concentration risk.</ListItem>
+        <ListItem>The strongest regions offset weaker <Bold>small-business performance</Bold> during the quarter.</ListItem>
+      </List>
 
-      <div style={{ flexGrow: 1, borderRadius: 32, backgroundColor: "#EAF8FF", padding: 24, gap: 18, display: "flex", flexDirection: "column" }}>
-        <div style={{ display: "flex", flexDirection: "row", gap: 18, alignItems: "stretch" }}>
-          <div style={{ flexGrow: 1 }}>
-            <Card
-              padding={20}
-              borderWidth={1}
-              borderColor="#D7ECF8"
-              borderRadius={20}
-              backgroundColor="#F7FCFF"
-            >
-              <p style={{ fontSize: 11, color: "#6E7F91", letterSpacing: "0.04em", textTransform: "uppercase", margin: "0 0 8px 0" }}>Quarter at a glance</p>
-              <h2 style={{ fontSize: 20, fontWeight: 600, color: "#1D2733", letterSpacing: "-0.03em", margin: "0 0 10px 0" }}>Executive summary</h2>
-              <p style={{ fontSize: 14, lineHeight: 1.75, color: "#425063", margin: 0 }}>
-                The quarter closed with <strong>stronger revenue concentration</strong> in the main channels, while the customer base remained healthy enough to preserve diversification.
-              </p>
-              <p style={{ fontSize: 14, lineHeight: 1.75, color: "#425063", margin: "10px 0 0 0" }}>
-                This report combines <strong>trend analysis</strong>, channel composition and recent order detail to support revenue review conversations.
-              </p>
+      <Container direction="column" gap={18} grow={1} padding={24} backgroundColor="#EAF8FF" borderRadius={32}>
+        <Container direction="row" gap={18} align="stretch">
+          <Container grow={1}>
+            <Card padding={20} borderWidth={1} borderColor="#D7ECF8" borderRadius={20} backgroundColor="#F7FCFF" height="100%">
+              <Text titleStyle={{ fontSize: 11, color: "#6E7F91", letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 8 }}>
+                Quarter at a glance
+              </Text>
+              <Text titleStyle={{ fontSize: 20, fontWeight: 600, color: "#1D2733", letterSpacing: "-0.03em", marginBottom: 10, lineHeight: 1.2 }}>
+                Executive summary
+              </Text>
+              <Text titleStyle={{ fontSize: 14, lineHeight: 1.75, color: "#425063" }}>
+                The quarter closed with <Bold>stronger revenue concentration</Bold> in the main channels, while the customer base remained healthy enough to preserve diversification.
+              </Text>
+              <Text titleStyle={{ fontSize: 14, lineHeight: 1.75, color: "#425063", marginTop: 10 }}>
+                This report combines <Bold>trend analysis</Bold>, channel composition and recent order detail to support revenue review conversations.
+              </Text>
             </Card>
-          </div>
+          </Container>
 
-          <div style={{ flexGrow: 1 }}>
-            <Card
-              padding={20}
-              borderWidth={1}
-              borderColor="#D7ECF8"
-              borderRadius={20}
-              backgroundColor="#FFFFFF"
-            >
-              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
-                <p style={{ fontSize: 11, color: "#6E7F91", letterSpacing: "0.04em", textTransform: "uppercase", margin: 0 }}>Trend</p>
-                <h3 style={{ fontSize: 18, fontWeight: 600, color: "#1D2733", letterSpacing: "-0.03em", margin: 0 }}>Monthly revenue trend</h3>
-              </div>
+          <Container grow={1}>
+            <Card padding={20} borderWidth={1} borderColor="#D7ECF8" borderRadius={20} backgroundColor="#FFFFFF" height="100%">
+              <Text titleStyle={{ fontSize: 11, color: "#6E7F91", letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 6 }}>
+                Trend
+              </Text>
+              <Text titleStyle={{ fontSize: 18, fontWeight: 600, color: "#1D2733", letterSpacing: "-0.03em", marginBottom: 10, lineHeight: 1.25 }}>
+                Monthly revenue trend
+              </Text>
               <Chart type="line" format="currency" height={240} curve="monotone" showGrid={true} showDots={false} strokeWidth={3} categoryTickColor="#6E7F91" valueTickColor="#6E7F91">
                 <Query>
                   SELECT
@@ -69,39 +63,41 @@ export const REPORT_TEMPLATE_DSL = String.raw`<ReportTemplate name="last_quarter
                 <Fields x="label" y="value" />
               </Chart>
             </Card>
-          </div>
-        </div>
-      </div>
-    </div>
+          </Container>
+        </Container>
+      </Container>
+    </Container>
   </Report>
 
   <Report id="summary" title="Summary">
-    <div style={{ minHeight: "100%", padding: 52, backgroundColor: "#ffffff", display: "flex", flexDirection: "column" }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 18 }}>
-        <p style={{ fontSize: 11, color: "#8B8E97", letterSpacing: "0.04em", textTransform: "uppercase", margin: 0 }}>Last Quarter Revenue Analysis</p>
-        <h1 style={{ fontSize: 28, fontWeight: 600, color: "#20232A", letterSpacing: "-0.03em", margin: 0 }}>Last Quarter Revenue Analysis</h1>
-      </div>
+    <Container direction="column" minHeight="100%" padding={52} backgroundColor="#FFFFFF" gap={22}>
+      <Container direction="column" gap={6}>
+        <Text titleStyle={{ fontSize: 11, color: "#8B8E97", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+          Last Quarter Revenue Analysis
+        </Text>
+        <Text titleStyle={{ fontSize: 28, fontWeight: 600, color: "#20232A", letterSpacing: "-0.03em", lineHeight: 1.15 }}>
+          Last Quarter Revenue Analysis
+        </Text>
+      </Container>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 22 }}>
-        <p style={{ fontSize: 13, lineHeight: 1.65, color: "#4E5665", margin: 0 }}>This report analyzes <strong>revenue for the quarter</strong>, filtered to:</p>
-        <p style={{ fontSize: 13, lineHeight: 1.65, color: "#2A3140", margin: 0 }}>• Version: Actual</p>
-        <p style={{ fontSize: 13, lineHeight: 1.65, color: "#2A3140", margin: 0 }}>• Scenario: Baseline</p>
-        <p style={{ fontSize: 13, lineHeight: 1.65, color: "#4E5665", margin: "4px 0 0 0" }}>It provides <strong>two complementary views</strong>:</p>
-        <p style={{ fontSize: 13, lineHeight: 1.65, color: "#2A3140", margin: 0 }}>• <strong>Breakdown by Channel</strong></p>
-        <p style={{ fontSize: 13, lineHeight: 1.65, color: "#2A3140", margin: 0 }}>• <strong>Breakdown by Customer</strong></p>
-      </div>
+      <Text titleStyle={{ fontSize: 13, lineHeight: 1.65, color: "#4E5665" }}>
+        This report analyzes <Bold>revenue for the quarter</Bold>, filtered to the current business context.
+      </Text>
 
-      <Card
-        padding={18}
-        borderWidth={1}
-        borderColor="#E8EBF1"
-        borderRadius={18}
-        backgroundColor="#FFFFFF"
-      >
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 8 }}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, color: "#20232A", letterSpacing: "-0.02em", margin: 0 }}>Breakdown by Channel</h3>
-          <p style={{ fontSize: 11, color: "#8B8E97", textTransform: "uppercase", letterSpacing: "0.04em", margin: 0 }}>Revenue by Channel</p>
-        </div>
+      <List variant="bullet" gap={8} markerColor="#2A3140" itemTitleStyle={{ fontSize: 13, lineHeight: 1.65, color: "#2A3140" }}>
+        <ListItem>Version: Actual</ListItem>
+        <ListItem>Scenario: Baseline</ListItem>
+        <ListItem><Bold>Breakdown by Channel</Bold></ListItem>
+        <ListItem><Bold>Breakdown by Customer</Bold></ListItem>
+      </List>
+
+      <Card padding={18} borderWidth={1} borderColor="#E8EBF1" borderRadius={18} backgroundColor="#FFFFFF">
+        <Text titleStyle={{ fontSize: 18, fontWeight: 600, color: "#20232A", letterSpacing: "-0.02em", marginBottom: 4, lineHeight: 1.25 }}>
+          Breakdown by Channel
+        </Text>
+        <Text titleStyle={{ fontSize: 11, color: "#8B8E97", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 8 }}>
+          Revenue by Channel
+        </Text>
         <Chart type="bar" format="currency" height={340} showGrid={true} categoryTickColor="#7B8190" valueTickColor="#7B8190">
           <Query>
             SELECT
@@ -119,37 +115,41 @@ export const REPORT_TEMPLATE_DSL = String.raw`<ReportTemplate name="last_quarter
         </Chart>
       </Card>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 18 }}>
-        <p style={{ fontSize: 12, lineHeight: 1.65, color: "#4E5665", margin: 0 }}>• <strong>Primary channels</strong> concentrate most of the quarter revenue and should remain the focus of closer monitoring.</p>
-        <p style={{ fontSize: 12, lineHeight: 1.65, color: "#4E5665", margin: 0 }}>• The long tail of channels still contributes diversification, but with a visibly <strong>lower share of total volume</strong>.</p>
-      </div>
+      <List variant="check" gap={8} iconColor="#2563eb" itemTitleStyle={{ fontSize: 12, lineHeight: 1.65, color: "#4E5665" }}>
+        <ListItem><Bold>Primary channels</Bold> concentrate most of the quarter revenue and should remain the focus of closer monitoring.</ListItem>
+        <ListItem>The long tail of channels still contributes diversification, but with a visibly <Bold>lower share of total volume</Bold>.</ListItem>
+      </List>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <h3 style={{ fontSize: 18, fontWeight: 600, color: "#20232A", letterSpacing: "-0.02em", margin: 0 }}>Breakdown by Customer</h3>
-        <p style={{ fontSize: 12, lineHeight: 1.65, color: "#4E5665", margin: 0 }}>• <strong>Revenue concentration by customer</strong> suggests a few accounts are disproportionately important to quarter performance.</p>
-        <p style={{ fontSize: 12, lineHeight: 1.65, color: "#4E5665", margin: 0 }}>• This distribution is useful for identifying <strong>account dependency</strong> and prioritizing retention efforts.</p>
-      </div>
-    </div>
+      <Container direction="column" gap={8}>
+        <Text titleStyle={{ fontSize: 18, fontWeight: 600, color: "#20232A", letterSpacing: "-0.02em", lineHeight: 1.25 }}>
+          Breakdown by Customer
+        </Text>
+        <List variant="bullet" gap={8} markerColor="#4E5665" itemTitleStyle={{ fontSize: 12, lineHeight: 1.65, color: "#4E5665" }}>
+          <ListItem><Bold>Revenue concentration by customer</Bold> suggests a few accounts are disproportionately important to quarter performance.</ListItem>
+          <ListItem>This distribution is useful for identifying <Bold>account dependency</Bold> and prioritizing retention efforts.</ListItem>
+        </List>
+      </Container>
+    </Container>
   </Report>
 
   <Report id="details" title="Detailed View">
-    <div style={{ minHeight: "100%", padding: 52, backgroundColor: "#ffffff", display: "flex", flexDirection: "column" }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
-        <p style={{ fontSize: 11, color: "#8B8E97", letterSpacing: "0.04em", textTransform: "uppercase", margin: 0 }}>Detailed View</p>
-        <h1 style={{ fontSize: 26, fontWeight: 600, color: "#20232A", letterSpacing: "-0.03em", margin: 0 }}>Customer and Order Details</h1>
-        <p style={{ fontSize: 13, lineHeight: 1.65, color: "#5C6470", maxWidth: "78%", margin: 0 }}>
+    <Container direction="column" minHeight="100%" padding={52} backgroundColor="#FFFFFF" gap={20}>
+      <Container direction="column" gap={6}>
+        <Text titleStyle={{ fontSize: 11, color: "#8B8E97", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+          Detailed View
+        </Text>
+        <Text titleStyle={{ fontSize: 26, fontWeight: 600, color: "#20232A", letterSpacing: "-0.03em", lineHeight: 1.15 }}>
+          Customer and Order Details
+        </Text>
+        <Text titleStyle={{ fontSize: 13, lineHeight: 1.65, color: "#5C6470", maxWidth: "78%" }}>
           The sections below combine a comparative country view with recent-order detail, keeping the report in a document-first reading flow.
-        </p>
-      </div>
+        </Text>
+      </Container>
 
-      <Card
-        padding={18}
-        borderWidth={1}
-        borderColor="#E8EBF1"
-        borderRadius={18}
-        backgroundColor="#FFFFFF"
-      >
-        <h3 style={{ fontSize: 18, fontWeight: 600, color: "#20232A", margin: "0 0 10px 0" }}>Revenue by Customer</h3>
+      <Card padding={18} borderWidth={1} borderColor="#E8EBF1" borderRadius={18} backgroundColor="#FFFFFF">
+        <Text titleStyle={{ fontSize: 18, fontWeight: 600, color: "#20232A", marginBottom: 10, lineHeight: 1.25 }}>
+          Revenue by Customer
+        </Text>
         <Chart type="bar" format="currency" height={300} showGrid={true} categoryTickColor="#7B8190" valueTickColor="#7B8190">
           <Query>
             SELECT
@@ -169,19 +169,15 @@ export const REPORT_TEMPLATE_DSL = String.raw`<ReportTemplate name="last_quarter
         </Chart>
       </Card>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 18 }}>
-        <p style={{ fontSize: 12, lineHeight: 1.65, color: "#4E5665", margin: 0 }}>• <strong>Top customers</strong> stand apart clearly from the rest of the portfolio in cumulative quarter revenue.</p>
-        <p style={{ fontSize: 12, lineHeight: 1.65, color: "#4E5665", margin: 0 }}>• The current mix suggests monitoring <strong>client concentration</strong> and using this view as support for account planning.</p>
-      </div>
+      <List variant="check" gap={8} iconColor="#2563eb" itemTitleStyle={{ fontSize: 12, lineHeight: 1.65, color: "#4E5665" }}>
+        <ListItem><Bold>Top customers</Bold> stand apart clearly from the rest of the portfolio in cumulative quarter revenue.</ListItem>
+        <ListItem>The current mix suggests monitoring <Bold>client concentration</Bold> and using this view as support for account planning.</ListItem>
+      </List>
 
-      <Card
-        padding={18}
-        borderWidth={1}
-        borderColor="#E8EBF1"
-        borderRadius={18}
-        backgroundColor="#FFFFFF"
-      >
-        <h3 style={{ fontSize: 18, fontWeight: 600, color: "#20232A", margin: "0 0 10px 0" }}>Latest Orders</h3>
+      <Card padding={18} borderWidth={1} borderColor="#E8EBF1" borderRadius={18} backgroundColor="#FFFFFF">
+        <Text titleStyle={{ fontSize: 18, fontWeight: 600, color: "#20232A", marginBottom: 10, lineHeight: 1.25 }}>
+          Latest Orders
+        </Text>
         <Table pageSize={8} showPagination={false} enableSearch={false}>
           <Config>
             {
@@ -201,6 +197,6 @@ export const REPORT_TEMPLATE_DSL = String.raw`<ReportTemplate name="last_quarter
           </Config>
         </Table>
       </Card>
-    </div>
+    </Container>
   </Report>
 </ReportTemplate>`
