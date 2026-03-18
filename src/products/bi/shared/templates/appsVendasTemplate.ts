@@ -84,7 +84,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
               <DataQuery xField="key" yField="value" limit={31} />
             </Sparkline>
           </Container>
-          <Icon name="circle-dollar-sign" size={18} padding={10} radius={10} backgroundColor="#e8f0fe" color="#1d4ed8" />
+          <Icon name="circle-dollar-sign" size={18} padding={10} borderRadius={10} backgroundColor="#e8f0fe" color="#1d4ed8" />
         </Card>
       </Container>
       <Container grow={1}>
@@ -135,7 +135,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
               <DataQuery xField="key" yField="value" limit={31} />
             </Sparkline>
           </Container>
-          <Icon name="shopping-cart" size={18} padding={10} radius={10} backgroundColor="#ecfdf3" color="#047857" />
+          <Icon name="shopping-cart" size={18} padding={10} borderRadius={10} backgroundColor="#ecfdf3" color="#047857" />
         </Card>
       </Container>
       <Container grow={1}>
@@ -186,7 +186,7 @@ export const APPS_VENDAS_TEMPLATE_DSL = String.raw`<DashboardTemplate name="apps
               <DataQuery xField="key" yField="value" limit={31} />
             </Sparkline>
           </Container>
-          <Icon name="activity" size={18} padding={10} radius={10} backgroundColor="#fff7ed" color="#c2410c" />
+          <Icon name="activity" size={18} padding={10} borderRadius={10} backgroundColor="#fff7ed" color="#c2410c" />
         </Card>
       </Container>
       <Container grow={1}>

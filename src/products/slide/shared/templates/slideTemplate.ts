@@ -7,13 +7,13 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
         <Container direction="column" gap={18} width="58%">
           <Container width={112} height={10} backgroundColor="#2F6FED" borderRadius={999} />
           <Container direction="column" gap={12}>
-            <Text text="Q4 2025 SALES PERFORMANCE REVIEW" titleStyle={{ fontSize: 12, color: "#56709A", letterSpacing: "0.08em", textTransform: "uppercase" }} />
-            <Text text="Quarterly Sales" titleStyle={{ fontSize: 42, fontWeight: 700, color: "#172033", letterSpacing: "-0.04em" }} />
-            <Text text="Executive Presentation" titleStyle={{ fontSize: 42, fontWeight: 700, color: "#172033", letterSpacing: "-0.04em", marginTop: -8 }} />
+            <Text text="Q4 2025 SALES PERFORMANCE REVIEW" style={{ fontSize: 12, color: "#56709A", letterSpacing: "0.08em", textTransform: "uppercase" }} />
+            <Text text="Quarterly Sales" style={{ fontSize: 42, fontWeight: 700, color: "#172033", letterSpacing: "-0.04em" }} />
+            <Text text="Executive Presentation" style={{ fontSize: 42, fontWeight: 700, color: "#172033", letterSpacing: "-0.04em", marginTop: -8 }} />
           </Container>
           <Text
             text="An executive-ready presentation built with the slide DSL, combining KPI framing, trend analysis, channel mix and customer concentration."
-            titleStyle={{ fontSize: 16, lineHeight: 1.65, color: "#4F607E", maxWidth: "88%" }}
+            style={{ fontSize: 16, lineHeight: 1.65, color: "#4F607E", maxWidth: "88%" }}
           />
         </Container>
 
@@ -25,11 +25,11 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
           borderWidth={1}
           borderRadius={24}
         >
-          <Text text="Presentation Focus" titleStyle={{ fontSize: 11, color: "#6C7FA0", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 10 }} />
+          <Text text="Presentation Focus" style={{ fontSize: 11, color: "#6C7FA0", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 10 }} />
           <Container direction="column" gap={10}>
-            <Text text="• Revenue momentum and trend consistency" titleStyle={{ fontSize: 14, lineHeight: 1.55, color: "#31415E" }} />
-            <Text text="• Channel mix and share of revenue" titleStyle={{ fontSize: 14, lineHeight: 1.55, color: "#31415E" }} />
-            <Text text="• Concentration across top customer accounts" titleStyle={{ fontSize: 14, lineHeight: 1.55, color: "#31415E" }} />
+            <Text text="• Revenue momentum and trend consistency" style={{ fontSize: 14, lineHeight: 1.55, color: "#31415E" }} />
+            <Text text="• Channel mix and share of revenue" style={{ fontSize: 14, lineHeight: 1.55, color: "#31415E" }} />
+            <Text text="• Concentration across top customer accounts" style={{ fontSize: 14, lineHeight: 1.55, color: "#31415E" }} />
           </Container>
         </Card>
       </Container>
@@ -44,8 +44,8 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
             borderRadius={28}
           >
             <Container direction="column" gap={8} marginBottom={10}>
-              <Text text="Trend snapshot" titleStyle={{ fontSize: 11, color: "#6C7FA0", letterSpacing: "0.06em", textTransform: "uppercase" }} />
-              <Text text="Monthly revenue trajectory" titleStyle={{ fontSize: 22, fontWeight: 600, color: "#1B2538", letterSpacing: "-0.03em" }} />
+              <Text text="Trend snapshot" style={{ fontSize: 11, color: "#6C7FA0", letterSpacing: "0.06em", textTransform: "uppercase" }} />
+              <Text text="Monthly revenue trajectory" style={{ fontSize: 22, fontWeight: 600, color: "#1B2538", letterSpacing: "-0.03em" }} />
             </Container>
             <Chart type="line" format="currency" height={250} curve="monotone" showGrid={true} showDots={false} strokeWidth={3} categoryTickColor="#66758F" valueTickColor="#66758F">
               <Query>
@@ -74,10 +74,10 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
               borderWidth={1}
               borderRadius={24}
             >
-              <Text text="Narrative" titleStyle={{ fontSize: 11, color: "#BFD6FF", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8 }} />
+              <Text text="Narrative" style={{ fontSize: 11, color: "#BFD6FF", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8 }} />
               <Text
                 text="The strongest commercial performance came from core channels and larger accounts, while the overall portfolio remained broad enough to support a diversified growth story."
-                titleStyle={{ fontSize: 15, lineHeight: 1.7, color: "#FFFFFF" }}
+                style={{ fontSize: 15, lineHeight: 1.7, color: "#FFFFFF" }}
               />
             </Card>
 
@@ -88,8 +88,8 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
               borderWidth={1}
               borderRadius={24}
             >
-              <Text text="Format" titleStyle={{ fontSize: 11, color: "#6C7FA0", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8 }} />
-              <Text text="Designed as a 16:9 executive presentation, ready to evolve into export-quality slides and narrative storytelling." titleStyle={{ fontSize: 14, lineHeight: 1.6, color: "#33425F" }} />
+              <Text text="Format" style={{ fontSize: 11, color: "#6C7FA0", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8 }} />
+              <Text text="Designed as a 16:9 executive presentation, ready to evolve into export-quality slides and narrative storytelling." style={{ fontSize: 14, lineHeight: 1.6, color: "#33425F" }} />
             </Card>
           </Container>
         </Container>
@@ -101,10 +101,10 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
     <Container direction="column" gap={18} minHeight="100%" padding={44} backgroundColor="#FFFFFF">
       <Container direction="row" justify="between" align="end">
         <Container direction="column" gap={6}>
-          <Text text="Executive summary" titleStyle={{ fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }} />
-          <Text text="Performance Overview" titleStyle={{ fontSize: 30, fontWeight: 700, color: "#172033", letterSpacing: "-0.04em" }} />
+          <Text text="Executive summary" style={{ fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }} />
+          <Text text="Performance Overview" style={{ fontSize: 30, fontWeight: 700, color: "#172033", letterSpacing: "-0.04em" }} />
         </Container>
-        <Text text="Quarterly operational readout across value, volume and pricing." titleStyle={{ fontSize: 14, color: "#5C687C" }} />
+        <Text text="Quarterly operational readout across value, volume and pricing." style={{ fontSize: 14, color: "#5C687C" }} />
       </Container>
 
       <Container direction="row" gap={14} align="stretch">
@@ -119,7 +119,7 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
               </Query>
               <DataQuery yField="value" />
             </KPI>
-            <Text text="Total sales booked in the selected period." titleStyle={{ fontSize: 12, lineHeight: 1.5, color: "#6C7688", marginTop: 8 }} />
+            <Text text="Total sales booked in the selected period." style={{ fontSize: 12, lineHeight: 1.5, color: "#6C7688", marginTop: 8 }} />
           </Card>
         </Container>
         <Container grow={1}>
@@ -133,7 +133,7 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
               </Query>
               <DataQuery yField="value" />
             </KPI>
-            <Text text="Commercial volume captured by the order base." titleStyle={{ fontSize: 12, lineHeight: 1.5, color: "#6C7688", marginTop: 8 }} />
+            <Text text="Commercial volume captured by the order base." style={{ fontSize: 12, lineHeight: 1.5, color: "#6C7688", marginTop: 8 }} />
           </Card>
         </Container>
         <Container grow={1}>
@@ -147,7 +147,7 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
               </Query>
               <DataQuery yField="value" />
             </KPI>
-            <Text text="Indicative value per transaction in the period." titleStyle={{ fontSize: 12, lineHeight: 1.5, color: "#6C7688", marginTop: 8 }} />
+            <Text text="Indicative value per transaction in the period." style={{ fontSize: 12, lineHeight: 1.5, color: "#6C7688", marginTop: 8 }} />
           </Card>
         </Container>
       </Container>
@@ -156,8 +156,8 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
         <Container grow={3}>
           <Card backgroundColor="#FFFFFF" borderColor="#E5ECF8" borderWidth={1} borderRadius={24} padding={22}>
             <Container direction="column" gap={6} marginBottom={10}>
-              <Text text="Trend analysis" titleStyle={{ fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }} />
-              <Text text="Daily revenue evolution" titleStyle={{ fontSize: 22, fontWeight: 600, color: "#172033", letterSpacing: "-0.03em" }} />
+              <Text text="Trend analysis" style={{ fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }} />
+              <Text text="Daily revenue evolution" style={{ fontSize: 22, fontWeight: 600, color: "#172033", letterSpacing: "-0.03em" }} />
             </Container>
             <Chart type="line" format="currency" height={320} curve="monotone" showGrid={true} showDots={false} strokeWidth={3} categoryTickColor="#6D7889" valueTickColor="#6D7889">
               <Query>
@@ -179,10 +179,10 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
         <Container grow={2}>
           <Card backgroundColor="#172033" borderColor="#172033" borderWidth={1} borderRadius={24} padding={24} height="100%">
             <Container direction="column" gap={10}>
-              <Text text="Key takeaways" titleStyle={{ fontSize: 11, color: "#AFC0E3", letterSpacing: "0.06em", textTransform: "uppercase" }} />
-              <Text text="• Revenue momentum stayed consistent across the selected period, with visible peaks on the strongest commercial days." titleStyle={{ fontSize: 14, lineHeight: 1.65, color: "#FFFFFF" }} />
-              <Text text="• The relationship between order volume and average ticket suggests stability in pricing discipline." titleStyle={{ fontSize: 14, lineHeight: 1.65, color: "#FFFFFF" }} />
-              <Text text="• This slide provides the headline performance story before moving into mix and concentration analysis." titleStyle={{ fontSize: 14, lineHeight: 1.65, color: "#FFFFFF" }} />
+              <Text text="Key takeaways" style={{ fontSize: 11, color: "#AFC0E3", letterSpacing: "0.06em", textTransform: "uppercase" }} />
+              <Text text="• Revenue momentum stayed consistent across the selected period, with visible peaks on the strongest commercial days." style={{ fontSize: 14, lineHeight: 1.65, color: "#FFFFFF" }} />
+              <Text text="• The relationship between order volume and average ticket suggests stability in pricing discipline." style={{ fontSize: 14, lineHeight: 1.65, color: "#FFFFFF" }} />
+              <Text text="• This slide provides the headline performance story before moving into mix and concentration analysis." style={{ fontSize: 14, lineHeight: 1.65, color: "#FFFFFF" }} />
             </Container>
           </Card>
         </Container>
@@ -194,18 +194,18 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
     <Container direction="column" gap={18} minHeight="100%" padding={44} backgroundColor="#F7F9FC">
       <Container direction="row" justify="between" align="end">
         <Container direction="column" gap={6}>
-          <Text text="Commercial composition" titleStyle={{ fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }} />
-          <Text text="Channel Mix and Revenue Share" titleStyle={{ fontSize: 30, fontWeight: 700, color: "#172033", letterSpacing: "-0.04em" }} />
+          <Text text="Commercial composition" style={{ fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }} />
+          <Text text="Channel Mix and Revenue Share" style={{ fontSize: 30, fontWeight: 700, color: "#172033", letterSpacing: "-0.04em" }} />
         </Container>
-        <Text text="Comparing proportional contribution with absolute value by channel." titleStyle={{ fontSize: 14, color: "#5C687C" }} />
+        <Text text="Comparing proportional contribution with absolute value by channel." style={{ fontSize: 14, color: "#5C687C" }} />
       </Container>
 
       <Container direction="row" gap={16} align="stretch">
         <Container grow={2}>
           <Card backgroundColor="#FFFFFF" borderColor="#E5ECF8" borderWidth={1} borderRadius={24} padding={22}>
             <Container direction="column" gap={6} marginBottom={10}>
-              <Text text="Share of total" titleStyle={{ fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }} />
-              <Text text="Revenue by channel" titleStyle={{ fontSize: 22, fontWeight: 600, color: "#172033", letterSpacing: "-0.03em" }} />
+              <Text text="Share of total" style={{ fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }} />
+              <Text text="Revenue by channel" style={{ fontSize: 22, fontWeight: 600, color: "#172033", letterSpacing: "-0.03em" }} />
             </Container>
             <Chart type="pie" format="currency" height={320} innerRadius={72} outerRadius={112} paddingAngle={2} showLabels={false} showLegend>
               <Query>
@@ -229,8 +229,8 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
         <Container grow={3}>
           <Card backgroundColor="#FFFFFF" borderColor="#E5ECF8" borderWidth={1} borderRadius={24} padding={22}>
             <Container direction="column" gap={6} marginBottom={10}>
-              <Text text="Absolute contribution" titleStyle={{ fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }} />
-              <Text text="Channel ranking" titleStyle={{ fontSize: 22, fontWeight: 600, color: "#172033", letterSpacing: "-0.03em" }} />
+              <Text text="Absolute contribution" style={{ fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }} />
+              <Text text="Channel ranking" style={{ fontSize: 22, fontWeight: 600, color: "#172033", letterSpacing: "-0.03em" }} />
             </Container>
             <Chart type="horizontal-bar" format="currency" height={320} layout="horizontal" radius={8} showGrid valueAxisLabel="Revenue" xTickCount={4} categoryLabelMode="first-word" categoryTickColor="#5F6D83" valueTickColor="#5F6D83">
               <Query>
@@ -259,18 +259,18 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
     <Container direction="column" gap={18} minHeight="100%" padding={44} backgroundColor="#FFFFFF">
       <Container direction="row" justify="between" align="end">
         <Container direction="column" gap={6}>
-          <Text text="Customer concentration" titleStyle={{ fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }} />
-          <Text text="Top Accounts and Recent Orders" titleStyle={{ fontSize: 30, fontWeight: 700, color: "#172033", letterSpacing: "-0.04em" }} />
+          <Text text="Customer concentration" style={{ fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }} />
+          <Text text="Top Accounts and Recent Orders" style={{ fontSize: 30, fontWeight: 700, color: "#172033", letterSpacing: "-0.04em" }} />
         </Container>
-        <Text text="A closer look at dependency on major accounts and the latest commercial activity." titleStyle={{ fontSize: 14, color: "#5C687C", maxWidth: "34%" }} />
+        <Text text="A closer look at dependency on major accounts and the latest commercial activity." style={{ fontSize: 14, color: "#5C687C", maxWidth: "34%" }} />
       </Container>
 
       <Container direction="row" gap={16} align="stretch">
         <Container grow={3}>
           <Card backgroundColor="#FFFFFF" borderColor="#E5ECF8" borderWidth={1} borderRadius={24} padding={22}>
             <Container direction="column" gap={6} marginBottom={10}>
-              <Text text="Top accounts" titleStyle={{ fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }} />
-              <Text text="Revenue by customer" titleStyle={{ fontSize: 22, fontWeight: 600, color: "#172033", letterSpacing: "-0.03em" }} />
+              <Text text="Top accounts" style={{ fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }} />
+              <Text text="Revenue by customer" style={{ fontSize: 22, fontWeight: 600, color: "#172033", letterSpacing: "-0.03em" }} />
             </Container>
             <Chart type="bar" format="currency" height={320} layout="vertical" radius={8} showGrid valueAxisLabel="Revenue" xTickCount={5} categoryTickColor="#5F6D83" valueTickColor="#5F6D83">
               <Query>
@@ -295,12 +295,12 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
         <Container grow={2}>
           <Container direction="column" gap={16} height="100%">
             <Card backgroundColor="#EFF5FF" borderColor="#DCE8FB" borderWidth={1} borderRadius={22} padding={20}>
-              <Text text="Implication" titleStyle={{ fontSize: 11, color: "#6A7EA1", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8 }} />
-              <Text text="The leading accounts clearly dominate cumulative revenue, which makes this view valuable for risk monitoring and retention planning." titleStyle={{ fontSize: 14, lineHeight: 1.65, color: "#33425F" }} />
+              <Text text="Implication" style={{ fontSize: 11, color: "#6A7EA1", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8 }} />
+              <Text text="The leading accounts clearly dominate cumulative revenue, which makes this view valuable for risk monitoring and retention planning." style={{ fontSize: 14, lineHeight: 1.65, color: "#33425F" }} />
             </Card>
 
             <Card backgroundColor="#FFFFFF" borderColor="#E5ECF8" borderWidth={1} borderRadius={22} padding={20}>
-              <Text text="Latest orders" titleStyle={{ fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8 }} />
+              <Text text="Latest orders" style={{ fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8 }} />
               <Table pageSize={5} showPagination={false} enableSearch={false}>
                 <Config>
                   {
@@ -330,7 +330,7 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
       <Container direction="row" justify="between" align="start">
         <Container direction="column" gap={8}>
           <Badge text="Executive highlights" icon="sparkles" iconColor="#2563eb" backgroundColor="#EAF2FF" borderColor="#D7E5FF" />
-          <Text text="Management Summary" titleStyle={{ fontSize: 30, fontWeight: 700, color: "#172033", letterSpacing: "-0.04em" }} />
+          <Text text="Management Summary" style={{ fontSize: 30, fontWeight: 700, color: "#172033", letterSpacing: "-0.04em" }} />
         </Container>
         <Badge text="Q4 Review" backgroundColor="#FFFFFF" borderColor="#D8DEE9" />
       </Container>
@@ -340,7 +340,7 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
       <Container direction="row" gap={16} align="stretch">
         <Container grow={2}>
           <Card backgroundColor="#FFFFFF" borderColor="#E5ECF8" borderWidth={1} borderRadius={24} padding={22} height="100%">
-            <List variant="icon" icon="sparkles" iconColor="#2563eb" gap={14} itemTitleStyle={{ fontSize: 15, lineHeight: 1.7, color: "#33425F" }}>
+            <List variant="icon" icon="sparkles" iconColor="#2563eb" gap={14} itemStyle={{ fontSize: 15, lineHeight: 1.7, color: "#33425F" }}>
               <ListItem>Revenue remained concentrated in the strongest channels, reinforcing the need for disciplined portfolio steering.</ListItem>
               <ListItem icon="users">Top customer contribution remains material enough to justify account-specific retention planning.</ListItem>
               <ListItem icon="shopping-cart">Order volume stability indicates that the quarter was driven more by mix quality than by abrupt demand swings.</ListItem>
@@ -349,8 +349,8 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
         </Container>
         <Container grow={1}>
           <Card backgroundColor="#172033" borderColor="#172033" borderWidth={1} borderRadius={24} padding={22} height="100%">
-            <Text text="Board note" titleStyle={{ fontSize: 11, color: "#AFC0E3", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8 }} />
-            <Text text="This slide is intentionally narrative-led, acting as an executive bridge between pure KPI performance and the operational drilldowns in the following pages." titleStyle={{ fontSize: 15, lineHeight: 1.75, color: "#FFFFFF" }} />
+            <Text text="Board note" style={{ fontSize: 11, color: "#AFC0E3", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8 }} />
+            <Text text="This slide is intentionally narrative-led, acting as an executive bridge between pure KPI performance and the operational drilldowns in the following pages." style={{ fontSize: 15, lineHeight: 1.75, color: "#FFFFFF" }} />
           </Card>
         </Container>
       </Container>
@@ -361,7 +361,7 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
     <Container direction="column" gap={20} minHeight="100%" padding={44} backgroundColor="#FFFFFF">
       <Container direction="column" gap={8}>
         <Badge text="Risk & concentration" icon="triangle-alert" iconColor="#B45309" backgroundColor="#FFF7ED" borderColor="#FCD9BD" />
-        <Text text="Revenue Risks and Dependencies" titleStyle={{ fontSize: 30, fontWeight: 700, color: "#172033", letterSpacing: "-0.04em" }} />
+        <Text text="Revenue Risks and Dependencies" style={{ fontSize: 30, fontWeight: 700, color: "#172033", letterSpacing: "-0.04em" }} />
       </Container>
 
       <Container direction="row" gap={16} align="stretch">
@@ -393,7 +393,7 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
 
       <Divider label="Operational follow-up" color="#E5ECF8" />
 
-      <List variant="check" iconColor="#2563eb" gap={12} itemTitleStyle={{ fontSize: 14, lineHeight: 1.7, color: "#33425F" }}>
+      <List variant="check" iconColor="#2563eb" gap={12} itemStyle={{ fontSize: 14, lineHeight: 1.7, color: "#33425F" }}>
         <ListItem>Review the top ten customer accounts with sales leadership and classify retention risk.</ListItem>
         <ListItem>Monitor channel-level conversion, average ticket and mix contribution as a single operating scorecard.</ListItem>
         <ListItem>Use the next planning cycle to establish a diversification target across channels and customer cohorts.</ListItem>
@@ -404,7 +404,7 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
   <Slide id="appendix" title="Appendix">
     <Container direction="column" gap={18} minHeight="100%" padding={44} backgroundColor="#F8FAFD">
       <Container direction="row" justify="between" align="center">
-        <Text text="Visual Appendix" titleStyle={{ fontSize: 30, fontWeight: 700, color: "#172033", letterSpacing: "-0.04em" }} />
+        <Text text="Visual Appendix" style={{ fontSize: 30, fontWeight: 700, color: "#172033", letterSpacing: "-0.04em" }} />
         <Badge text="Appendix" icon="package" backgroundColor="#FFFFFF" borderColor="#D8DEE9" />
       </Container>
 
@@ -415,7 +415,7 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
             alt="Executive appendix visual"
             width="100%"
             height={420}
-            fit="cover"
+            objectFit="cover"
             borderRadius={28}
             borderWidth={1}
             borderColor="#DCE8FB"
@@ -433,7 +433,7 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
               padding={22}
               text="Use this appendix-style slide for screenshots, mockups, market context or supporting visuals that should not compete with the analytical storyline of the main deck."
             />
-            <List variant="icon" icon="sparkles" iconColor="#2563eb" gap={12} itemTitleStyle={{ fontSize: 14, lineHeight: 1.7, color: "#33425F" }}>
+            <List variant="icon" icon="sparkles" iconColor="#2563eb" gap={12} itemStyle={{ fontSize: 14, lineHeight: 1.7, color: "#33425F" }}>
               <ListItem>Add product screens, region maps or campaign creatives.</ListItem>
               <ListItem icon="badge-check">Pair the image with one precise interpretation, not a long narrative block.</ListItem>
               <ListItem icon="users">Use appendix pages to support stakeholder-specific questions in live presentation mode.</ListItem>
