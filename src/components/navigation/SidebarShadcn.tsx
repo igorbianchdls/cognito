@@ -1,8 +1,20 @@
 "use client"
 
 import * as React from "react"
-import { Icon } from "@iconify/react"
 import { usePathname, useRouter } from "next/navigation"
+import {
+  IconChartBar,
+  IconCirclePlus,
+  IconFileText,
+  IconFolder,
+  IconGridDots,
+  IconInbox,
+  IconMessageCircle,
+  IconPlugConnected,
+  IconPresentation,
+  IconSettingsAutomation,
+  IconBrandWhatsapp,
+} from "@tabler/icons-react"
 
 import MetaIcon from "@/components/icons/MetaIcon"
 import GoogleAdsIcon from "@/components/icons/GoogleAdsIcon"
@@ -28,21 +40,17 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar"
 
-function SidebarGlyph({ icon, className }: { icon: string; className?: string }) {
-  return <Icon icon={icon} className={className} />
-}
-
-const BrandIcon = (props: { className?: string }) => <SidebarGlyph icon="solar:widget-5-bold" {...props} />
-const ChatsIcon = (props: { className?: string }) => <SidebarGlyph icon="solar:chat-round-dots-bold" {...props} />
-const AutomationIcon = (props: { className?: string }) => <SidebarGlyph icon="solar:cpu-bolt-bold" {...props} />
-const IntegrationsIcon = (props: { className?: string }) => <SidebarGlyph icon="solar:plug-circle-bold" {...props} />
-const WhatsappIcon = (props: { className?: string }) => <SidebarGlyph icon="solar:chat-round-line-bold" {...props} />
-const DriveIcon = (props: { className?: string }) => <SidebarGlyph icon="solar:folder-with-files-bold" {...props} />
-const EmailIcon = (props: { className?: string }) => <SidebarGlyph icon="solar:inbox-bold" {...props} />
-const NewChatIcon = (props: { className?: string }) => <SidebarGlyph icon="solar:add-circle-bold" {...props} />
-const DashboardsArtifactIcon = (props: { className?: string }) => <SidebarGlyph icon="solar:chart-2-bold" {...props} />
-const ReportsArtifactIcon = (props: { className?: string }) => <SidebarGlyph icon="solar:document-text-bold" {...props} />
-const SlidesArtifactIcon = (props: { className?: string }) => <SidebarGlyph icon="solar:gallery-wide-bold" {...props} />
+const BrandIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconGridDots stroke={1.75} {...props} />
+const ChatsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconMessageCircle stroke={1.75} {...props} />
+const AutomationIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconSettingsAutomation stroke={1.75} {...props} />
+const IntegrationsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconPlugConnected stroke={1.75} {...props} />
+const WhatsappIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconBrandWhatsapp stroke={1.75} {...props} />
+const DriveIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconFolder stroke={1.75} {...props} />
+const EmailIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconInbox stroke={1.75} {...props} />
+const NewChatIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconCirclePlus stroke={1.75} {...props} />
+const DashboardsArtifactIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconChartBar stroke={1.75} {...props} />
+const ReportsArtifactIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconFileText stroke={1.75} {...props} />
+const SlidesArtifactIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconPresentation stroke={1.75} {...props} />
 
 // Font variable mapping helper
 function fontVar(name?: string) {

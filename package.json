@@ -96,6 +96,7 @@
     "@sparticuz/chromium": "^143.0.4",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.58.0",
+    "@tabler/icons-react": "^3.40.0",
     "@tanstack/react-table": "^8.21.3",
     "@types/papaparse": "^5.3.16",
     "@udecode/cn": "^49.0.15",
