@@ -1,7 +1,13 @@
 "use client";
 
 import React from 'react';
-import { MoreHorizontal, Play, Square, FilePlus2, BarChart3 } from 'lucide-react';
+import {
+  IconChartBar,
+  IconDots,
+  IconFilePlus,
+  IconPlayerPlay,
+  IconSquareRounded,
+} from '@tabler/icons-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import type { SandboxStatus } from '@/chat/sandbox';
@@ -80,21 +86,21 @@ export default function Header({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button type="button" className="text-gray-700 hover:text-black disabled:opacity-50" disabled={busy} aria-label="Ações do chat">
-              <MoreHorizontal className="h-4 w-4" />
+              <IconDots className="h-4 w-4" stroke={1.75} />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={handle(onStartSandbox, !busy)} className={busy ? 'pointer-events-none opacity-50' : ''}>
-              <Play className="w-4 h-4 mr-2" /> Iniciar computador
+              <IconPlayerPlay className="mr-2 h-4 w-4" stroke={1.75} /> Iniciar computador
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handle(onStopSandbox, !busy && hasSandbox)} className={!hasSandbox || busy ? 'pointer-events-none opacity-50' : ''}>
-              <Square className="w-4 h-4 mr-2" /> Fechar computador
+              <IconSquareRounded className="mr-2 h-4 w-4" stroke={1.75} /> Fechar computador
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handle(onOpenArtifact, !busy)} className={busy ? 'pointer-events-none opacity-50' : ''}>
-              <BarChart3 className="w-4 h-4 mr-2" /> Abrir Workspace
+              <IconChartBar className="mr-2 h-4 w-4" stroke={1.75} /> Abrir Workspace
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handle(onWriteFiles, !busy)} className={busy ? 'pointer-events-none opacity-50' : ''}>
-              <FilePlus2 className="w-4 h-4 mr-2" /> Arquivos no Computador
+              <IconFilePlus className="mr-2 h-4 w-4" stroke={1.75} /> Arquivos no Computador
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

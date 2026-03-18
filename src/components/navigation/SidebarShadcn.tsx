@@ -234,7 +234,7 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
   // Defaults requested: compact sidebar typography/colors
   inlineStyle['--sidebar'] = finalBgColor
   inlineStyle['--sidebar-accent-foreground'] = finalItemTextColor
-  inlineStyle['--ui-font-size'] = '13px'
+  inlineStyle['--ui-font-size'] = '14px'
   inlineStyle['--ui-tracking-pct'] = '-2'
 
   return (

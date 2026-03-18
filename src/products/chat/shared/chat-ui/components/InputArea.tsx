@@ -25,7 +25,15 @@ import {
   ModelSelectorName,
   ModelSelectorTrigger,
 } from '@/components/ai-elements/model-selector';
-import { Plus, BarChart3, Plug, Mic, Square, Loader2, Bot } from 'lucide-react';
+import {
+  IconChartBar,
+  IconLoader2,
+  IconMicrophone,
+  IconPlus,
+  IconPlugConnected,
+  IconRobot,
+  IconSquareRounded,
+} from '@tabler/icons-react';
 import BrandIcon from '@/components/icons/BrandIcon';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input as UiInput } from '@/components/ui/input';
@@ -61,7 +69,7 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
   })
   const tkList = useMemo(() => ([
     { key: 'gmail', label: 'Gmail', icon: <BrandIcon brand="gmail" /> },
-    { key: 'composio', label: 'Composio', icon: <Plug className="size-4" /> },
+    { key: 'composio', label: 'Composio', icon: <IconPlugConnected className="size-4" stroke={1.75} /> },
     { key: 'github', label: 'GitHub', icon: <BrandIcon brand="github" /> },
     { key: 'gcal', label: 'Google Calendar', icon: <BrandIcon brand="gcal" /> },
     { key: 'notion', label: 'Notion', icon: <BrandIcon brand="notion" /> },
@@ -183,13 +191,13 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
           <PromptInputTools className="min-w-0 flex-1 flex-wrap">
             {/* Plus at extreme left */}
             <PromptInputButton>
-              <Plus size={16} />
+              <IconPlus size={16} stroke={1.75} />
             </PromptInputButton>
             {/* Tool picker now to the right of + */}
             <Popover open={toolkitsOpen} onOpenChange={setToolkitsOpen}>
               <PopoverTrigger asChild>
                 <PromptInputButton variant="ghost" className="text-gray-500 hover:text-gray-800">
-                  <Plug size={16} />
+                  <IconPlugConnected size={16} stroke={1.75} />
                   <span>Tool</span>
                 </PromptInputButton>
               </PopoverTrigger>
@@ -226,7 +234,7 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
               </PopoverContent>
             </Popover>
             <PromptInputButton onClick={() => onOpenSandbox?.()}>
-              <BarChart3 size={16} />
+              <IconChartBar size={16} stroke={1.75} />
               <span>Workspace</span>
             </PromptInputButton>
 
@@ -280,7 +288,7 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
               onModelChange?.(next)
             }}>
               <PromptInputModelSelectTrigger className="min-w-0 max-w-[72px] text-gray-500 hover:text-gray-800" title="Modelo" aria-label="Selecionar modelo">
-                <Bot size={16} />
+                <IconRobot size={16} stroke={1.75} />
               </PromptInputModelSelectTrigger>
               <PromptInputModelSelectContent>
                 <PromptInputModelSelectItem value="claude-sonnet">Claude Sonnet 4.5 (Agent SDK)</PromptInputModelSelectItem>
@@ -295,17 +303,17 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
             {/* Mic control button */}
             {recState === 'recording' ? (
               <PromptInputButton onClick={stopRecording} className="text-red-600 hover:text-red-700" title="Parar gravação">
-                <Square size={16} />
+                <IconSquareRounded size={16} stroke={1.75} />
                 <span>Parar</span>
               </PromptInputButton>
             ) : recState === 'processing' ? (
               <PromptInputButton disabled className="text-gray-500" title="Transcrevendo…">
-                <Loader2 className="size-4 animate-spin" />
+                <IconLoader2 className="size-4 animate-spin" stroke={1.75} />
                 <span>Transcrevendo…</span>
               </PromptInputButton>
             ) : (
               <PromptInputButton onClick={startRecording} variant="ghost" className="text-gray-500 hover:text-gray-800" title="Gravar áudio e transcrever">
-                <Mic size={16} />
+                <IconMicrophone size={16} stroke={1.75} />
               </PromptInputButton>
             )}
             <PromptInputSubmit disabled={!value || recState !== 'idle' || submitDisabled} status={status as ChatStatus} />
