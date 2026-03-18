@@ -59,7 +59,6 @@ export const REPORT_TEMPLATE_DSL = String.raw`<ReportTemplate name="last_quarter
       </Container>
 
       <Card
-        marginBottom={18}
         padding={18}
         borderWidth={1}
         borderColor="#E8EBF1"
@@ -117,7 +116,6 @@ export const REPORT_TEMPLATE_DSL = String.raw`<ReportTemplate name="last_quarter
       </Container>
 
       <Card
-        marginBottom={20}
         padding={18}
         borderWidth={1}
         borderColor="#E8EBF1"
