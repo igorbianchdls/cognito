@@ -2285,40 +2285,57 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     }
     const explicitScheme = Array.isArray(p.colorScheme) ? p.colorScheme.map(String) : (typeof p.colorScheme === 'string' ? [p.colorScheme] : []);
     const palette = (explicitScheme.length ? explicitScheme : (managedScheme && managedScheme.length ? managedScheme : ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6']));
+    const borderless = Boolean(p.borderless);
+    const containerStyle = ensureSurfaceBackground(
+      applyBorderFromCssVars(normalizeContainerStyle(p.containerStyle, borderless), theme.cssVars),
+      theme.cssVars
+    ) as React.CSSProperties;
+    if (containerStyle) (containerStyle as AnyRecord).boxShadow = undefined;
+    const titleStyle = applyH1FromCssVars(normalizeTitleStyle(p.titleStyle), theme.cssVars) as React.CSSProperties | undefined;
 
     return (
-      <div
-        className="flex flex-col"
-        style={{ gap: `${itemGap}px`, paddingLeft: contentPaddingX, paddingRight: contentPaddingX, paddingBottom: contentPaddingBottom }}
-      >
-        {items.map((it, idx) => {
-          const IconComp = aiSummaryIconMap[normalizeIconKey(it?.icon)] || Sparkles;
-          const accent = String(it?.iconColor || palette[idx % palette.length] || '#3b82f6');
-          const bg = String(it?.iconBgColor || hexToRgba(accent, 0.16) || `color-mix(in srgb, ${accent} 16%, transparent)`);
-          return (
-            <div key={`ai-summary-item-${idx}`} className="flex items-start" style={{ gap: `${iconGap}px` }}>
-              <div
-                className="inline-flex items-center justify-center shrink-0"
-                style={{
-                  width: `${iconBoxSize}px`,
-                  height: `${iconBoxSize}px`,
-                  borderRadius: iconBoxRadius,
-                  backgroundColor: bg,
-                  border: `1px solid ${hexToRgba(accent, 0.28) || accent}`,
-                }}
-              >
-                <IconComp size={iconSize} style={{ color: accent }} />
-              </div>
-              <div className="text-sm leading-5 whitespace-pre-wrap break-words" style={itemTextStyle}>
-                {String(it?.text || '')}
-              </div>
-            </div>
-          );
-        })}
-        {items.length === 0 ? (
-          <div className="text-xs text-gray-400">Sem itens</div>
+      <FrameSurface style={containerStyle} frame={p?.frame as AnyRecord} cssVars={theme.cssVars}>
+        {p.title ? (
+          <div style={{ ...(titleStyle || {}) }}>
+            {String(p.title)}
+          </div>
         ) : null}
-      </div>
+        <div
+          className="flex flex-col"
+          style={{ gap: `${itemGap}px`, paddingLeft: contentPaddingX, paddingRight: contentPaddingX, paddingBottom: contentPaddingBottom }}
+        >
+          {items.map((it, idx) => {
+            const hideIcon = iconBoxSize <= 0 || iconSize <= 0;
+            const IconComp = aiSummaryIconMap[normalizeIconKey(it?.icon)] || Sparkles;
+            const accent = String(it?.iconColor || palette[idx % palette.length] || '#3b82f6');
+            const bg = String(it?.iconBgColor || hexToRgba(accent, 0.16) || `color-mix(in srgb, ${accent} 16%, transparent)`);
+            return (
+              <div key={`ai-summary-item-${idx}`} className="flex items-start" style={{ gap: hideIcon ? '0px' : `${iconGap}px` }}>
+                {!hideIcon ? (
+                  <div
+                    className="inline-flex items-center justify-center shrink-0"
+                    style={{
+                      width: `${iconBoxSize}px`,
+                      height: `${iconBoxSize}px`,
+                      borderRadius: iconBoxRadius,
+                      backgroundColor: bg,
+                      border: `1px solid ${hexToRgba(accent, 0.28) || accent}`,
+                    }}
+                  >
+                    <IconComp size={iconSize} style={{ color: accent }} />
+                  </div>
+                ) : null}
+                <div className="text-sm leading-5 whitespace-pre-wrap break-words" style={itemTextStyle}>
+                  {String(it?.text || '')}
+                </div>
+              </div>
+            );
+          })}
+          {items.length === 0 ? (
+            <div className="text-xs text-gray-400">Sem itens</div>
+          ) : null}
+        </div>
+      </FrameSurface>
     );
   },
 

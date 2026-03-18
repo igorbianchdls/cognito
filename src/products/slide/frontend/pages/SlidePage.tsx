@@ -116,14 +116,17 @@ function SlideCanvas({
   tree,
   zoom,
   slideElementRef,
+  renderKey,
 }: {
   tree: any
   zoom: number
   slideElementRef: RefObject<HTMLDivElement | null>
+  renderKey: string
 }) {
   return (
     <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}>
       <div
+        key={renderKey}
         ref={slideElementRef}
         className="overflow-hidden rounded-none border border-slate-200 bg-white shadow-[0_2px_6px_rgba(15,23,42,0.05)]"
         style={{ width: SLIDE_WIDTH, minWidth: SLIDE_WIDTH, height: SLIDE_HEIGHT }}
@@ -279,7 +282,15 @@ function SlideWorkspace() {
         <main className="min-h-0 flex-1 overflow-auto border-r-[0.5px] border-[#DDDDD8] bg-[#EEEEEB]">
           {activeView === 'preview' ? (
             <div className="mx-auto flex min-h-full items-start justify-center p-8">
-              {activePage ? <SlideCanvas tree={activeTree} zoom={zoom} slideElementRef={slideElementRef} /> : null}
+              {activePage ? (
+                <SlideCanvas
+                  tree={activeTree}
+                  zoom={zoom}
+                  slideElementRef={slideElementRef}
+                  renderKey={`${selectedTemplateId}:${activePageId}`}
+                />
+              ) : null}
+              
             </div>
           ) : (
             <div className="mx-auto flex min-h-full max-w-[1280px] p-8">
