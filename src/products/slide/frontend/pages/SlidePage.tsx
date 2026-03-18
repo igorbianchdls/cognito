@@ -101,14 +101,17 @@ function SlideCanvas({
   tree,
   zoom,
   slideElementRef,
+  renderKey,
 }: {
   tree: any
   zoom: number
   slideElementRef: RefObject<HTMLDivElement | null>
+  renderKey: string
 }) {
   return (
     <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}>
       <div
+        key={renderKey}
         ref={slideElementRef}
         className="overflow-hidden rounded-none border border-slate-200 bg-white shadow-[0_2px_6px_rgba(15,23,42,0.05)]"
         style={{ width: SLIDE_WIDTH, minWidth: SLIDE_WIDTH, height: SLIDE_HEIGHT }}
@@ -250,6 +253,7 @@ function SlideWorkspace() {
                   tree={activeTree}
                   zoom={zoom}
                   slideElementRef={slideElementRef}
+                  renderKey={activePageId}
                 />
               ) : null}
               

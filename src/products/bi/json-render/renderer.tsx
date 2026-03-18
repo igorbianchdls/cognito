@@ -14,6 +14,19 @@ type RendererProps = {
   nodeDecorator?: (args: { rendered: React.ReactNode; node: any; path: number[]; type: string }) => React.ReactNode;
 };
 
+function getNodeKey(node: any, fallbackIndex: number, path: number[]): string {
+  const type = String(node?.type || 'node');
+  const props = node?.props && typeof node.props === 'object' ? node.props : {};
+  const explicitId =
+    typeof props.id === 'string' && props.id.trim()
+      ? props.id.trim()
+      : typeof props.key === 'string' && props.key.trim()
+        ? props.key.trim()
+        : '';
+  if (explicitId) return `${type}:${explicitId}`;
+  return `${type}:${path.join('.')}:${fallbackIndex}`;
+}
+
 function RenderNode({
   node,
   registry,
@@ -56,7 +69,7 @@ function RenderNode({
   const children = Array.isArray(el.children)
     ? el.children.map((child: any, idx: number) => (
         <RenderNode
-          key={idx}
+          key={getNodeKey(child, idx, [...path, idx])}
           node={child}
           registry={registry}
           data={data}
@@ -75,7 +88,7 @@ export function Renderer({ tree, registry, data, onAction, nodeDecorator }: Rend
     return (
       <div className="space-y-3">
         {tree.map((n, i) => (
-          <RenderNode key={i} node={n} registry={registry} data={data} onAction={onAction} nodeDecorator={nodeDecorator} path={[i]} />
+          <RenderNode key={getNodeKey(n, i, [i])} node={n} registry={registry} data={data} onAction={onAction} nodeDecorator={nodeDecorator} path={[i]} />
         ))}
       </div>
     );
