@@ -15,24 +15,13 @@ import {
   PromptInputTools,
 } from '@/components/ai-elements/prompt-input';
 import {
-  ModelSelector,
-  ModelSelectorContent,
-  ModelSelectorEmpty,
-  ModelSelectorGroup,
-  ModelSelectorInput,
-  ModelSelectorItem,
-  ModelSelectorList,
-  ModelSelectorName,
-  ModelSelectorTrigger,
-} from '@/components/ai-elements/model-selector';
-import {
   IconChartBar,
   IconCode,
   IconLoader2,
   IconMicrophone,
   IconPlus,
   IconPlugConnected,
-  IconPrompt,
+  IconSparkles,
   IconRobot,
   IconSquareRounded,
 } from '@tabler/icons-react';
@@ -57,7 +46,6 @@ type Props = {
 };
 
 export default function InputArea({ value, onChange, onSubmit, status = 'idle', submitDisabled = false, onOpenSandbox, composioEnabled, onToggleComposio, model = 'openai-gpt5mini', onModelChange, promptProfile = 'data_analyst', onPromptProfileChange }: Props) {
-  const [promptSelectorOpen, setPromptSelectorOpen] = useState(false)
   // Local-only UI state for Toolkits panel (no persistence, no backend)
   const [toolkitsOpen, setToolkitsOpen] = useState(false)
   const [tkSearch, setTkSearch] = useState('')
@@ -80,17 +68,6 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
   const filteredTk = useMemo(() => (
     tkList.filter(t => t.label.toLowerCase().includes(tkSearch.toLowerCase()))
   ), [tkList, tkSearch])
-
-  const promptProfiles = useMemo(() => ([
-    { group: 'Especializados', id: 'data_analyst' as const, name: 'Analista de dados', subtitle: 'SQL, métricas e análise' },
-    { group: 'Especializados', id: 'dashboard_creator' as const, name: 'Dashboard creator', subtitle: 'DSL, layout e widgets' },
-    { group: 'Base', id: 'general' as const, name: 'Geral', subtitle: 'Prompt padrão do chat' },
-  ]), [])
-
-  const promptGroups = useMemo(
-    () => [...new Set(promptProfiles.map((item) => item.group))],
-    [promptProfiles],
-  )
 
   // Audio capture + STT (ElevenLabs) — record → stop → send once → write text to input
   type RecState = 'idle' | 'recording' | 'processing' | 'error'
@@ -240,55 +217,30 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
               <span>Workspace</span>
             </PromptInputButton>
 
-            <ModelSelector open={promptSelectorOpen} onOpenChange={setPromptSelectorOpen}>
-              <ModelSelectorTrigger asChild>
-                <PromptInputButton
-                  variant="ghost"
-                  className="max-w-[96px] shrink-0 overflow-hidden text-gray-500 hover:text-gray-800"
-                  title="Selecionar prompt"
-                >
-                  <IconPrompt size={16} stroke={1.75} />
-                  <span>Prompt</span>
-                </PromptInputButton>
-              </ModelSelectorTrigger>
-              <ModelSelectorContent title="Selecionar prompt" className="sm:max-w-[420px]">
-                <ModelSelectorInput placeholder="Buscar prompt..." />
-                <ModelSelectorList>
-                  <ModelSelectorEmpty>Nenhum prompt encontrado.</ModelSelectorEmpty>
-                  {promptGroups.map((group) => (
-                    <ModelSelectorGroup heading={group} key={group}>
-                      {promptProfiles
-                        .filter((item) => item.group === group)
-                        .map((item) => (
-                          <ModelSelectorItem
-                            key={item.id}
-                            onSelect={() => {
-                              onPromptProfileChange?.(item.id)
-                              setPromptSelectorOpen(false)
-                            }}
-                            value={`${item.name} ${item.subtitle} ${item.id}`}
-                          >
-                            <div className="flex min-w-0 flex-1 flex-col">
-                              <ModelSelectorName>{item.name}</ModelSelectorName>
-                              <span className="text-xs text-muted-foreground">{item.subtitle}</span>
-                            </div>
-                            {promptProfile === item.id ? (
-                              <span className="ml-auto text-xs font-medium text-foreground">Atual</span>
-                            ) : null}
-                          </ModelSelectorItem>
-                        ))}
-                    </ModelSelectorGroup>
-                  ))}
-                </ModelSelectorList>
-              </ModelSelectorContent>
-            </ModelSelector>
+            <PromptInputModelSelect
+              value={promptProfile}
+              onValueChange={(v: any) => {
+                const next = v === 'general' || v === 'dashboard_creator' ? v : 'data_analyst'
+                onPromptProfileChange?.(next)
+              }}
+            >
+              <PromptInputModelSelectTrigger className="min-w-0 max-w-[108px] text-gray-500 hover:text-gray-800" title="Prompt" aria-label="Selecionar prompt">
+                <IconSparkles size={16} stroke={1.75} />
+                <span>Prompt</span>
+              </PromptInputModelSelectTrigger>
+              <PromptInputModelSelectContent>
+                <PromptInputModelSelectItem value="data_analyst">Analista de dados</PromptInputModelSelectItem>
+                <PromptInputModelSelectItem value="dashboard_creator">Dashboard creator</PromptInputModelSelectItem>
+                <PromptInputModelSelectItem value="general">Geral</PromptInputModelSelectItem>
+              </PromptInputModelSelectContent>
+            </PromptInputModelSelect>
 
             {/* Model selector */}
             <PromptInputModelSelect value={model} onValueChange={(v: any) => {
               const next = (v === 'claude-sonnet' || v === 'claude-haiku' || v === 'openai-gpt5' || v === 'openai-gpt5nano' || v === 'openai-gpt5mini') ? v : 'openai-gpt5mini'
               onModelChange?.(next)
             }}>
-              <PromptInputModelSelectTrigger className="min-w-0 max-w-[96px] text-gray-500 hover:text-gray-800" title="Modelo" aria-label="Selecionar modelo">
+              <PromptInputModelSelectTrigger className="min-w-0 max-w-[108px] text-gray-500 hover:text-gray-800" title="Modelo" aria-label="Selecionar modelo">
                 <IconRobot size={16} stroke={1.75} />
                 <span>Modelo</span>
               </PromptInputModelSelectTrigger>
