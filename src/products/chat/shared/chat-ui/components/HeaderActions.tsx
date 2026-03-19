@@ -11,10 +11,6 @@ import { $artifactNotifications, $previewDslPath, sandboxActions } from '@/chat/
 import { APPS_COLOR_PRESETS, APPS_HEADER_THEME_OPTIONS, APPS_THEME_OPTIONS } from '@/products/bi/shared/themeOptions';
 import { DASHBOARD_BACKGROUND_PRESET_OPTIONS } from '@/products/bi/json-render/backgrounds/registry';
 import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter';
-import {
-  parseDashboardTemplateDslToTree,
-  renderDashboardTemplateDslFromTree,
-} from '@/products/bi/json-render/parsers/dashboardTemplateDslParser';
 
 function IconButton({
   title,
@@ -46,37 +42,6 @@ function IconButton({
       </Tooltip>
     </TooltipProvider>
   );
-}
-
-function normalizeToThemeTree(parsed: unknown): any[] {
-  const nodes = Array.isArray(parsed) ? parsed.slice() : [parsed as any];
-  if (!nodes[0] || typeof nodes[0] !== 'object' || (nodes[0] as any).type !== 'Theme') {
-    return [
-      {
-        type: 'Theme',
-        props: { name: 'light', headerTheme: 'auto', managers: {} },
-        children: nodes,
-      },
-    ];
-  }
-  const theme = nodes[0] as any;
-  theme.props = theme.props && typeof theme.props === 'object' ? theme.props : {};
-  if (!theme.props.name) theme.props.name = 'light';
-  if (typeof theme.props.headerTheme !== 'string') theme.props.headerTheme = 'auto';
-  if (!theme.props.managers || typeof theme.props.managers !== 'object') theme.props.managers = {};
-  return nodes;
-}
-
-function extractTemplateNameFromPath(path: string): string {
-  const raw = String(path || '').trim();
-  const fileName = raw.split('/').filter(Boolean).pop() || 'dashboard';
-  const base = fileName.replace(/\.dsl$/i, '');
-  const normalized = base
-    .toLowerCase()
-    .replace(/[^a-z0-9_-]+/g, '_')
-    .replace(/_+/g, '_')
-    .replace(/^_+|_+$/g, '');
-  return normalized || 'dashboard';
 }
 
 type HeaderActionsProps = {
@@ -448,28 +413,14 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
       setError('chatId/path ausente');
       return;
     }
+    if (previewPath.endsWith('.dsl')) {
+      setError('Tema indisponivel para artefatos .dsl legados. O parser antigo foi removido.');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'fs-read', chatId, path: previewPath }),
-      });
-      const data = (await res.json().catch(() => ({}))) as { ok?: boolean; content?: string; error?: string };
-      if (!res.ok || data.ok === false) throw new Error(data.error || 'Falha ao ler dashboard');
-      const parsed = parseDashboardTemplateDslToTree(String(data.content ?? ''));
-      const nodes = normalizeToThemeTree(parsed);
-      const props = (nodes[0] as any)?.props || {};
-      const nextTheme = String(props.name || 'light');
-      const rawHeader = typeof props.headerTheme === 'string' ? props.headerTheme : 'auto';
-      const managers = props.managers && typeof props.managers === 'object' ? props.managers : {};
-      const scheme = Array.isArray(managers?.color?.scheme) ? managers.color.scheme : undefined;
-      setThemeName(nextTheme);
-      setHeaderTheme(rawHeader === 'auto' ? '' : rawHeader);
-      setThemeFxPreset(themeFxToPreset(managers));
-      setColorPreset(schemeToPreset(scheme));
-      setBorderPreset(borderToPreset(managers?.border));
+      setError('Tema indisponivel para artefatos legados.');
     } catch (e: any) {
       setError(e?.message ? String(e.message) : 'Erro ao carregar tema');
     } finally {
@@ -488,82 +439,15 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
         setError('chatId/path ausente');
         return;
       }
+      if (previewPath.endsWith('.dsl')) {
+        setError('Tema indisponivel para artefatos .dsl legados. O parser antigo foi removido.');
+        return;
+      }
       setLoading(true);
       setError(null);
       try {
-        const readRes = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'fs-read', chatId, path: previewPath }),
-        });
-        const readData = (await readRes.json().catch(() => ({}))) as { ok?: boolean; content?: string; error?: string };
-        if (!readRes.ok || readData.ok === false) throw new Error(readData.error || 'Falha ao ler dashboard');
-
-        const parsed = parseDashboardTemplateDslToTree(String(readData.content ?? ''));
-        const nodes = normalizeToThemeTree(parsed);
-        const theme = nodes[0] as any;
-        if (typeof next.name === 'string') theme.props.name = next.name;
-        if (typeof next.headerTheme === 'string') {
-          theme.props.headerTheme = next.headerTheme ? next.headerTheme : 'auto';
-        }
-        if (typeof next.themeFxPreset === 'string' && next.themeFxPreset !== 'custom') {
-          applyThemeFxPresetToTheme(theme, next.themeFxPreset);
-        }
-        if (typeof next.colorPreset === 'string') {
-          theme.props.managers = theme.props.managers && typeof theme.props.managers === 'object' ? theme.props.managers : {};
-          theme.props.managers.color = theme.props.managers.color && typeof theme.props.managers.color === 'object' ? theme.props.managers.color : {};
-          if (next.colorPreset && next.colorPreset !== 'custom') {
-            theme.props.managers.color.scheme = APPS_COLOR_PRESETS[next.colorPreset];
-          } else if (theme.props.managers.color) {
-            delete theme.props.managers.color.scheme;
-          }
-        }
-        if (typeof next.borderPreset === 'string' && next.borderPreset !== 'custom') {
-          const preset = ARTIFACT_BORDER_PRESETS[next.borderPreset];
-          if (preset) {
-            theme.props.managers = theme.props.managers && typeof theme.props.managers === 'object' ? theme.props.managers : {};
-            theme.props.managers.border = theme.props.managers.border && typeof theme.props.managers.border === 'object' ? theme.props.managers.border : {};
-            const border = theme.props.managers.border;
-            if (preset.style !== undefined) border.style = preset.style; else delete border.style;
-            if (preset.width !== undefined) border.width = preset.width; else delete border.width;
-            if (preset.radius !== undefined) border.radius = preset.radius; else delete border.radius;
-            if (preset.shadow !== undefined) border.shadow = preset.shadow; else delete border.shadow;
-            if (preset.frame) {
-              border.frame = border.frame && typeof border.frame === 'object' ? border.frame : {};
-              border.frame.variant = preset.frame.variant;
-              border.frame.cornerSize = preset.frame.cornerSize;
-              border.frame.cornerWidth = preset.frame.cornerWidth;
-            } else {
-              delete border.frame;
-            }
-          }
-        }
-
-        const writeRes = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'fs-write',
-            chatId,
-            path: previewPath,
-            content: renderDashboardTemplateDslFromTree(nodes, extractTemplateNameFromPath(previewPath)),
-          }),
-        });
-        const writeData = (await writeRes.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-        if (!writeRes.ok || writeData.ok === false) throw new Error(writeData.error || 'Falha ao salvar tema');
-
-        const savedTheme = String(theme.props?.name || 'light');
-        const savedHeaderRaw = typeof theme.props?.headerTheme === 'string' ? theme.props.headerTheme : 'auto';
-        const savedScheme = Array.isArray(theme.props?.managers?.color?.scheme) ? theme.props.managers.color.scheme : undefined;
-        const savedBorder = theme.props?.managers?.border;
-        setThemeName(savedTheme);
-        setHeaderTheme(savedHeaderRaw === 'auto' ? '' : savedHeaderRaw);
-        setThemeFxPreset(themeFxToPreset(theme.props?.managers));
-        setColorPreset(schemeToPreset(savedScheme));
-        setBorderPreset(borderToPreset(savedBorder));
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('sandbox-preview-refresh', { detail: { path: previewPath } }));
-        }
+        void next;
+        setError('Tema indisponivel para artefatos legados.');
       } catch (e: any) {
         setError(e?.message ? String(e.message) : 'Erro ao salvar tema');
       } finally {

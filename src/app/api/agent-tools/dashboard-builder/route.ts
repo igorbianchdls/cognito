@@ -10,7 +10,6 @@ import {
   type CreateDashboardInput,
   type DashboardToolParserState,
 } from '@/products/bi/features/dashboard-playground/tool-parser/dashboardToolParser'
-import { renderDashboardTemplateDslFromTree } from '@/products/bi/json-render/parsers/dashboardTemplateDslParser'
 
 export const runtime = 'nodejs'
 
@@ -314,28 +313,12 @@ async function persistDashboardFile(params: {
   dashboardName: string
   tree: DashboardToolParserState['tree']
 }) {
-  const { req, chatId, dashboardName, tree } = params
-  if (!chatId) throw new Error('x-chat-id ausente para persistência de dashboard')
+  const { dashboardName } = params
   const filePath = buildDashboardFilePath(dashboardName)
-  const content = renderDashboardTemplateDslFromTree(tree ?? [], normalizeDashboardFileSlug(dashboardName))
-  const url = new URL('/api/chat', req.nextUrl.origin)
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      action: 'fs-write',
-      chatId,
-      path: filePath,
-      content,
-    }),
-  })
-  const payload = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string }
-  if (!res.ok || payload.ok === false) {
-    throw new Error(payload.error || `Falha ao persistir dashboard em ${filePath}`)
-  }
   return {
     file_path: filePath,
-    file_persisted: true as const,
+    file_persisted: false as const,
+    persistence_warning: 'Persistencia de dashboard .dsl legada foi desativada porque o parser DSL foi removido.',
   }
 }
 
