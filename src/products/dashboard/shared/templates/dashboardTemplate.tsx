@@ -195,142 +195,11 @@ const DASHBOARD_VARIANTS: DashboardVariantConfig[] = [
   },
 ]
 
-const SALES_CHANNEL_QUERY = `
-  SELECT
-    COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
-    COALESCE(cv.nome, '-') AS label,
-    COALESCE(SUM(pi.subtotal), 0)::float AS value
-  FROM vendas.pedidos p
-  JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-  LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
-  WHERE 1=1
-    {{filters:p}}
-  GROUP BY 1, 2
-  ORDER BY 3 DESC
-`
-
-const SALES_CHANNEL_DATA_QUERY = {
-  query: SALES_CHANNEL_QUERY,
-  xField: 'label',
-  yField: 'value',
-  keyField: 'key',
-  dimension: 'canal_venda',
-  limit: 6,
-}
-
 const SALES_CHANNEL_INTERACTION = {
   table: 'vendas.pedidos',
   field: 'canal_venda_id',
   clearOnSecondClick: true,
 }
-
-const SALES_TREND_QUERY = `
-  SELECT
-    TO_CHAR(p.data_pedido::date, 'YYYY-MM-DD') AS key,
-    TO_CHAR(p.data_pedido::date, 'DD/MM') AS label,
-    COALESCE(SUM(p.valor_total), 0)::float AS value
-  FROM vendas.pedidos p
-  WHERE 1=1
-    {{filters:p}}
-  GROUP BY 1, 2
-  ORDER BY 1 ASC
-`
-
-const SALES_TREND_DATA_QUERY = {
-  query: SALES_TREND_QUERY,
-  xField: 'label',
-  yField: 'value',
-  keyField: 'key',
-  limit: 31,
-}
-
-const TOTAL_REVENUE_KPI_DATA_QUERY = {
-  query: `
-    SELECT
-      COALESCE(SUM(p.valor_total), 0)::float AS value
-    FROM vendas.pedidos p
-    WHERE 1=1
-      {{filters:p}}
-  `,
-  limit: 1,
-}
-
-const TOTAL_ORDERS_KPI_DATA_QUERY = {
-  query: `
-    SELECT
-      COUNT(*)::float AS value
-    FROM vendas.pedidos p
-    WHERE 1=1
-      {{filters:p}}
-  `,
-  limit: 1,
-}
-
-const AVG_TICKET_KPI_DATA_QUERY = {
-  query: `
-    SELECT
-      COALESCE(AVG(p.valor_total), 0)::float AS value
-    FROM vendas.pedidos p
-    WHERE 1=1
-      {{filters:p}}
-  `,
-  limit: 1,
-}
-
-const CHANNEL_SLICER_QUERY = `
-  SELECT
-    cv.id::text AS value,
-    COALESCE(cv.nome, '-') AS label
-  FROM vendas.canais_venda cv
-  ORDER BY 2 ASC
-`
-
-const ORDERS_TABLE_QUERY = `
-  SELECT
-    p.id::text AS pedido_id,
-    TO_CHAR(p.data_pedido::date, 'DD/MM/YYYY') AS data_pedido,
-    COALESCE(cv.nome, '-') AS canal,
-    COALESCE(p.status, 'Sem status') AS status,
-    COALESCE(p.valor_total, 0)::float AS valor_total
-  FROM vendas.pedidos p
-  LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
-  WHERE 1=1
-    {{filters:p}}
-  ORDER BY p.data_pedido DESC NULLS LAST, p.id DESC
-`
-
-const ORDERS_TABLE_DATA_QUERY = {
-  query: ORDERS_TABLE_QUERY,
-  limit: 12,
-}
-
-const ORDERS_TABLE_COLUMNS = [
-  { accessorKey: 'pedido_id', header: 'Pedido' },
-  { accessorKey: 'data_pedido', header: 'Data' },
-  { accessorKey: 'canal', header: 'Canal' },
-  { accessorKey: 'status', header: 'Status', cell: 'badge', meta: { variantMap: { aprovado: 'success', pendente: 'warning', cancelado: 'danger' } } },
-  { accessorKey: 'valor_total', header: 'Receita', format: 'currency', align: 'right', headerAlign: 'right' },
-]
-
-const SALES_PIVOT_QUERY = `
-  SELECT
-    COALESCE(cv.nome, '-') AS canal,
-    COALESCE(p.status, 'Sem status') AS status,
-    COALESCE(p.valor_total, 0)::float AS valor_total
-  FROM vendas.pedidos p
-  LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
-  WHERE 1=1
-    {{filters:p}}
-`
-
-const SALES_PIVOT_DATA_QUERY = {
-  query: SALES_PIVOT_QUERY,
-  limit: 400,
-}
-
-const SALES_PIVOT_ROWS = [{ field: 'canal', label: 'Canal' }]
-const SALES_PIVOT_COLUMNS = [{ field: 'status', label: 'Status' }]
-const SALES_PIVOT_VALUES = [{ field: 'valor_total', label: 'Receita', aggregate: 'sum', format: 'currency' }]
 
 function getElementTypeName(type: unknown): string {
   if (typeof type === 'string') return type
@@ -383,125 +252,6 @@ function buildPriorityItemsSource(items: string[]) {
 
 function buildDashboardTemplateSource(config: DashboardVariantConfig, themeName: string) {
   return `export function ${config.name.replace(/(^|_)([a-z])/g, (_match, _a, letter: string) => letter.toUpperCase())}() {
-  const salesChannelDataQuery = {
-    query: \`
-      SELECT
-        COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
-        COALESCE(cv.nome, '-') AS label,
-        COALESCE(SUM(pi.subtotal), 0)::float AS value
-      FROM vendas.pedidos p
-      JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-      LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
-      WHERE 1=1
-        {{filters:p}}
-      GROUP BY 1, 2
-      ORDER BY 3 DESC
-    \`,
-    xField: 'label',
-    yField: 'value',
-    keyField: 'key',
-    dimension: 'canal_venda',
-    limit: 6,
-  }
-
-  const salesTrendDataQuery = {
-    query: \`
-      SELECT
-        TO_CHAR(p.data_pedido::date, 'YYYY-MM-DD') AS key,
-        TO_CHAR(p.data_pedido::date, 'DD/MM') AS label,
-        COALESCE(SUM(p.valor_total), 0)::float AS value
-      FROM vendas.pedidos p
-      WHERE 1=1
-        {{filters:p}}
-      GROUP BY 1, 2
-      ORDER BY 1 ASC
-    \`,
-    xField: 'label',
-    yField: 'value',
-    keyField: 'key',
-    limit: 31,
-  }
-
-  const totalRevenueKpiDataQuery = {
-    query: \`
-      SELECT
-        COALESCE(SUM(p.valor_total), 0)::float AS value
-      FROM vendas.pedidos p
-      WHERE 1=1
-        {{filters:p}}
-    \`,
-    limit: 1,
-  }
-
-  const totalOrdersKpiDataQuery = {
-    query: \`
-      SELECT
-        COUNT(*)::float AS value
-      FROM vendas.pedidos p
-      WHERE 1=1
-        {{filters:p}}
-    \`,
-    limit: 1,
-  }
-
-  const avgTicketKpiDataQuery = {
-    query: \`
-      SELECT
-        COALESCE(AVG(p.valor_total), 0)::float AS value
-      FROM vendas.pedidos p
-      WHERE 1=1
-        {{filters:p}}
-    \`,
-    limit: 1,
-  }
-
-  const channelSlicerQuery = \`
-    SELECT
-      cv.id::text AS value,
-      COALESCE(cv.nome, '-') AS label
-    FROM vendas.canais_venda cv
-    ORDER BY 2 ASC
-  \`
-
-  const ordersTableDataQuery = {
-    query: \`
-      SELECT
-        p.id::text AS pedido_id,
-        TO_CHAR(p.data_pedido::date, 'DD/MM/YYYY') AS data_pedido,
-        COALESCE(cv.nome, '-') AS canal,
-        COALESCE(p.status, 'Sem status') AS status,
-        COALESCE(p.valor_total, 0)::float AS valor_total
-      FROM vendas.pedidos p
-      LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
-      WHERE 1=1
-        {{filters:p}}
-      ORDER BY p.data_pedido DESC NULLS LAST, p.id DESC
-    \`,
-    limit: 12,
-  }
-
-  const ordersTableColumns = [
-    { accessorKey: 'pedido_id', header: 'Pedido' },
-    { accessorKey: 'data_pedido', header: 'Data' },
-    { accessorKey: 'canal', header: 'Canal' },
-    { accessorKey: 'status', header: 'Status', cell: 'badge', meta: { variantMap: { aprovado: 'success', pendente: 'warning', cancelado: 'danger' } } },
-    { accessorKey: 'valor_total', header: 'Receita', format: 'currency', align: 'right', headerAlign: 'right' },
-  ]
-
-  const salesPivotDataQuery = {
-    query: \`
-      SELECT
-        COALESCE(cv.nome, '-') AS canal,
-        COALESCE(p.status, 'Sem status') AS status,
-        COALESCE(p.valor_total, 0)::float AS valor_total
-      FROM vendas.pedidos p
-      LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
-      WHERE 1=1
-        {{filters:p}}
-    \`,
-    limit: 400,
-  }
-
   return (
     <DashboardTemplate name="${config.name}" title="${config.title}">
       <Theme name="${themeName}" />
@@ -527,7 +277,20 @@ ${buildMetricCardsSource(config.metrics)}
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-            <Query dataQuery={totalRevenueKpiDataQuery} format="currency" comparisonMode="previous_period">
+            <Query
+              dataQuery={{
+                query: \`
+                  SELECT
+                    COALESCE(SUM(p.valor_total), 0)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE 1=1
+                    {{filters:p}}
+                \`,
+                limit: 1,
+              }}
+              format="currency"
+              comparisonMode="previous_period"
+            >
               <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
                 <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Receita total</h2>
@@ -535,7 +298,20 @@ ${buildMetricCardsSource(config.metrics)}
                 <p style={{ margin: 0, fontSize: 13, color: '#52647F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </Query>
-            <Query dataQuery={totalOrdersKpiDataQuery} format="number" comparisonMode="previous_period">
+            <Query
+              dataQuery={{
+                query: \`
+                  SELECT
+                    COUNT(*)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE 1=1
+                    {{filters:p}}
+                \`,
+                limit: 1,
+              }}
+              format="number"
+              comparisonMode="previous_period"
+            >
               <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
                 <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Pedidos no periodo</h2>
@@ -543,7 +319,20 @@ ${buildMetricCardsSource(config.metrics)}
                 <p style={{ margin: 0, fontSize: 13, color: '#52647F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </Query>
-            <Query dataQuery={avgTicketKpiDataQuery} format="currency" comparisonMode="previous_period">
+            <Query
+              dataQuery={{
+                query: \`
+                  SELECT
+                    COALESCE(AVG(p.valor_total), 0)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE 1=1
+                    {{filters:p}}
+                \`,
+                limit: 1,
+              }}
+              format="currency"
+              comparisonMode="previous_period"
+            >
               <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
                 <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Ticket medio</h2>
@@ -569,7 +358,13 @@ ${buildMetricCardsSource(config.metrics)}
                   search
                   clearable
                   width={280}
-                  query={channelSlicerQuery}
+                  query={\`
+                    SELECT
+                      cv.id::text AS value,
+                      COALESCE(cv.nome, '-') AS label
+                    FROM vendas.canais_venda cv
+                    ORDER BY 2 ASC
+                  \`}
                 />
               </div>
             </article>
@@ -596,7 +391,26 @@ ${buildMetricCardsSource(config.metrics)}
                 height={280}
                 format="currency"
                 colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
-                dataQuery={salesChannelDataQuery}
+                dataQuery={{
+                  query: \`
+                    SELECT
+                      COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
+                      COALESCE(cv.nome, '-') AS label,
+                      COALESCE(SUM(pi.subtotal), 0)::float AS value
+                    FROM vendas.pedidos p
+                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                    WHERE 1=1
+                      {{filters:p}}
+                    GROUP BY 1, 2
+                    ORDER BY 3 DESC
+                  \`,
+                  xField: 'label',
+                  yField: 'value',
+                  keyField: 'key',
+                  dimension: 'canal_venda',
+                  limit: 6,
+                }}
                 interaction={{ table: 'vendas.pedidos', field: 'canal_venda_id', clearOnSecondClick: true }}
                 recharts={{ categoryLabelMode: 'first-word', valueAxisWidth: 72 }}
               />
@@ -615,7 +429,26 @@ ${buildMetricCardsSource(config.metrics)}
                 height={280}
                 format="currency"
                 colorScheme={['#2563EB', '#0F766E', '#EA580C', '#7C3AED', '#DC2626']}
-                dataQuery={salesChannelDataQuery}
+                dataQuery={{
+                  query: \`
+                    SELECT
+                      COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
+                      COALESCE(cv.nome, '-') AS label,
+                      COALESCE(SUM(pi.subtotal), 0)::float AS value
+                    FROM vendas.pedidos p
+                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                    WHERE 1=1
+                      {{filters:p}}
+                    GROUP BY 1, 2
+                    ORDER BY 3 DESC
+                  \`,
+                  xField: 'label',
+                  yField: 'value',
+                  keyField: 'key',
+                  dimension: 'canal_venda',
+                  limit: 6,
+                }}
                 interaction={{ table: 'vendas.pedidos', field: 'canal_venda_id', clearOnSecondClick: true }}
                 recharts={{ innerRadius: 52, outerRadius: 92, paddingAngle: 2, showLabels: false, legendPosition: 'right' }}
               />
@@ -636,7 +469,23 @@ ${buildMetricCardsSource(config.metrics)}
                 height={280}
                 format="currency"
                 colorScheme={['#2563EB', '#60A5FA', '#93C5FD']}
-                dataQuery={salesTrendDataQuery}
+                dataQuery={{
+                  query: \`
+                    SELECT
+                      TO_CHAR(p.data_pedido::date, 'YYYY-MM-DD') AS key,
+                      TO_CHAR(p.data_pedido::date, 'DD/MM') AS label,
+                      COALESCE(SUM(p.valor_total), 0)::float AS value
+                    FROM vendas.pedidos p
+                    WHERE 1=1
+                      {{filters:p}}
+                    GROUP BY 1, 2
+                    ORDER BY 1 ASC
+                  \`,
+                  xField: 'label',
+                  yField: 'value',
+                  keyField: 'key',
+                  limit: 31,
+                }}
                 recharts={{ showDots: false, singleSeriesGradient: true, valueAxisWidth: 72 }}
               />
             </article>
@@ -666,8 +515,29 @@ ${buildPriorityItemsSource(config.priorities)}
                 bordered
                 rounded
                 stickyHeader
-                dataQuery={ordersTableDataQuery}
-                columns={ordersTableColumns}
+                dataQuery={{
+                  query: \`
+                    SELECT
+                      p.id::text AS pedido_id,
+                      TO_CHAR(p.data_pedido::date, 'DD/MM/YYYY') AS data_pedido,
+                      COALESCE(cv.nome, '-') AS canal,
+                      COALESCE(p.status, 'Sem status') AS status,
+                      COALESCE(p.valor_total, 0)::float AS valor_total
+                    FROM vendas.pedidos p
+                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                    WHERE 1=1
+                      {{filters:p}}
+                    ORDER BY p.data_pedido DESC NULLS LAST, p.id DESC
+                  \`,
+                  limit: 12,
+                }}
+                columns={[
+                  { accessorKey: 'pedido_id', header: 'Pedido' },
+                  { accessorKey: 'data_pedido', header: 'Data' },
+                  { accessorKey: 'canal', header: 'Canal' },
+                  { accessorKey: 'status', header: 'Status', cell: 'badge', meta: { variantMap: { aprovado: 'success', pendente: 'warning', cancelado: 'danger' } } },
+                  { accessorKey: 'valor_total', header: 'Receita', format: 'currency', align: 'right', headerAlign: 'right' },
+                ]}
                 enableExportCsv
               />
             </article>
@@ -687,7 +557,19 @@ ${buildPriorityItemsSource(config.priorities)}
                 stickyHeader
                 enableExportCsv
                 defaultExpandedLevels={1}
-                dataQuery={salesPivotDataQuery}
+                dataQuery={{
+                  query: \`
+                    SELECT
+                      COALESCE(cv.nome, '-') AS canal,
+                      COALESCE(p.status, 'Sem status') AS status,
+                      COALESCE(p.valor_total, 0)::float AS valor_total
+                    FROM vendas.pedidos p
+                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                    WHERE 1=1
+                      {{filters:p}}
+                  \`,
+                  limit: 400,
+                }}
                 rows={[{ field: 'canal', label: 'Canal' }]}
                 columns={[{ field: 'status', label: 'Status' }]}
                 values={[{ field: 'valor_total', label: 'Receita', aggregate: 'sum', format: 'currency' }]}
@@ -740,7 +622,20 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-            <QueryMarker dataQuery={TOTAL_REVENUE_KPI_DATA_QUERY} format="currency" comparisonMode="previous_period">
+            <QueryMarker
+              dataQuery={{
+                query: `
+                  SELECT
+                    COALESCE(SUM(p.valor_total), 0)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE 1=1
+                    {{filters:p}}
+                `,
+                limit: 1,
+              }}
+              format="currency"
+              comparisonMode="previous_period"
+            >
               <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
                 <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Receita total</h2>
@@ -748,7 +643,20 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
                 <p style={{ margin: 0, fontSize: 13, color: '#52647F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </QueryMarker>
-            <QueryMarker dataQuery={TOTAL_ORDERS_KPI_DATA_QUERY} format="number" comparisonMode="previous_period">
+            <QueryMarker
+              dataQuery={{
+                query: `
+                  SELECT
+                    COUNT(*)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE 1=1
+                    {{filters:p}}
+                `,
+                limit: 1,
+              }}
+              format="number"
+              comparisonMode="previous_period"
+            >
               <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
                 <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Pedidos no periodo</h2>
@@ -756,7 +664,20 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
                 <p style={{ margin: 0, fontSize: 13, color: '#52647F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </QueryMarker>
-            <QueryMarker dataQuery={AVG_TICKET_KPI_DATA_QUERY} format="currency" comparisonMode="previous_period">
+            <QueryMarker
+              dataQuery={{
+                query: `
+                  SELECT
+                    COALESCE(AVG(p.valor_total), 0)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE 1=1
+                    {{filters:p}}
+                `,
+                limit: 1,
+              }}
+              format="currency"
+              comparisonMode="previous_period"
+            >
               <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
                 <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Ticket medio</h2>
@@ -782,7 +703,13 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
                   search
                   clearable
                   width={280}
-                  query={CHANNEL_SLICER_QUERY}
+                  query={`
+                    SELECT
+                      cv.id::text AS value,
+                      COALESCE(cv.nome, '-') AS label
+                    FROM vendas.canais_venda cv
+                    ORDER BY 2 ASC
+                  `}
                 />
               </div>
             </article>
@@ -809,7 +736,26 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
                 height={280}
                 format="currency"
                 colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
-                dataQuery={SALES_CHANNEL_DATA_QUERY}
+                dataQuery={{
+                  query: `
+                    SELECT
+                      COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
+                      COALESCE(cv.nome, '-') AS label,
+                      COALESCE(SUM(pi.subtotal), 0)::float AS value
+                    FROM vendas.pedidos p
+                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                    WHERE 1=1
+                      {{filters:p}}
+                    GROUP BY 1, 2
+                    ORDER BY 3 DESC
+                  `,
+                  xField: 'label',
+                  yField: 'value',
+                  keyField: 'key',
+                  dimension: 'canal_venda',
+                  limit: 6,
+                }}
                 interaction={SALES_CHANNEL_INTERACTION}
                 recharts={{ categoryLabelMode: 'first-word', valueAxisWidth: 72 }}
               />
@@ -828,7 +774,26 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
                 height={280}
                 format="currency"
                 colorScheme={['#2563EB', '#0F766E', '#EA580C', '#7C3AED', '#DC2626']}
-                dataQuery={SALES_CHANNEL_DATA_QUERY}
+                dataQuery={{
+                  query: `
+                    SELECT
+                      COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
+                      COALESCE(cv.nome, '-') AS label,
+                      COALESCE(SUM(pi.subtotal), 0)::float AS value
+                    FROM vendas.pedidos p
+                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                    WHERE 1=1
+                      {{filters:p}}
+                    GROUP BY 1, 2
+                    ORDER BY 3 DESC
+                  `,
+                  xField: 'label',
+                  yField: 'value',
+                  keyField: 'key',
+                  dimension: 'canal_venda',
+                  limit: 6,
+                }}
                 interaction={SALES_CHANNEL_INTERACTION}
                 recharts={{ innerRadius: 52, outerRadius: 92, paddingAngle: 2, showLabels: false, legendPosition: 'right' }}
               />
@@ -849,7 +814,23 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
                 height={280}
                 format="currency"
                 colorScheme={['#2563EB', '#60A5FA', '#93C5FD']}
-                dataQuery={SALES_TREND_DATA_QUERY}
+                dataQuery={{
+                  query: `
+                    SELECT
+                      TO_CHAR(p.data_pedido::date, 'YYYY-MM-DD') AS key,
+                      TO_CHAR(p.data_pedido::date, 'DD/MM') AS label,
+                      COALESCE(SUM(p.valor_total), 0)::float AS value
+                    FROM vendas.pedidos p
+                    WHERE 1=1
+                      {{filters:p}}
+                    GROUP BY 1, 2
+                    ORDER BY 1 ASC
+                  `,
+                  xField: 'label',
+                  yField: 'value',
+                  keyField: 'key',
+                  limit: 31,
+                }}
                 recharts={{ showDots: false, singleSeriesGradient: true, valueAxisWidth: 72 }}
               />
             </article>
@@ -883,8 +864,29 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
                 bordered
                 rounded
                 stickyHeader
-                dataQuery={ORDERS_TABLE_DATA_QUERY}
-                columns={ORDERS_TABLE_COLUMNS}
+                dataQuery={{
+                  query: `
+                    SELECT
+                      p.id::text AS pedido_id,
+                      TO_CHAR(p.data_pedido::date, 'DD/MM/YYYY') AS data_pedido,
+                      COALESCE(cv.nome, '-') AS canal,
+                      COALESCE(p.status, 'Sem status') AS status,
+                      COALESCE(p.valor_total, 0)::float AS valor_total
+                    FROM vendas.pedidos p
+                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                    WHERE 1=1
+                      {{filters:p}}
+                    ORDER BY p.data_pedido DESC NULLS LAST, p.id DESC
+                  `,
+                  limit: 12,
+                }}
+                columns={[
+                  { accessorKey: 'pedido_id', header: 'Pedido' },
+                  { accessorKey: 'data_pedido', header: 'Data' },
+                  { accessorKey: 'canal', header: 'Canal' },
+                  { accessorKey: 'status', header: 'Status', cell: 'badge', meta: { variantMap: { aprovado: 'success', pendente: 'warning', cancelado: 'danger' } } },
+                  { accessorKey: 'valor_total', header: 'Receita', format: 'currency', align: 'right', headerAlign: 'right' },
+                ]}
                 enableExportCsv
               />
             </article>
@@ -904,10 +906,22 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
                 stickyHeader
                 enableExportCsv
                 defaultExpandedLevels={1}
-                dataQuery={SALES_PIVOT_DATA_QUERY}
-                rows={SALES_PIVOT_ROWS}
-                columns={SALES_PIVOT_COLUMNS}
-                values={SALES_PIVOT_VALUES}
+                dataQuery={{
+                  query: `
+                    SELECT
+                      COALESCE(cv.nome, '-') AS canal,
+                      COALESCE(p.status, 'Sem status') AS status,
+                      COALESCE(p.valor_total, 0)::float AS valor_total
+                    FROM vendas.pedidos p
+                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                    WHERE 1=1
+                      {{filters:p}}
+                  `,
+                  limit: 400,
+                }}
+                rows={[{ field: 'canal', label: 'Canal' }]}
+                columns={[{ field: 'status', label: 'Status' }]}
+                values={[{ field: 'valor_total', label: 'Receita', aggregate: 'sum', format: 'currency' }]}
               />
             </article>
           </section>
