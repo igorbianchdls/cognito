@@ -2,7 +2,7 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
   <Theme name="light" />
 
   <Slide id="capa" title="Capa">
-    <Container direction="column" justify="between" minHeight="100%" padding={56} backgroundColor="#F4F8FF">
+    <Container direction="column" justify="between" height="100%" padding={56} backgroundColor="#F4F8FF">
       <Container direction="row" justify="between" align="start">
         <Container direction="column" gap={18} width="58%">
           <Container width={112} height={10} backgroundColor="#2F6FED" borderRadius={999} />
@@ -98,7 +98,7 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
   </Slide>
 
   <Slide id="resumo" title="Resumo Executivo">
-    <Container direction="column" gap={18} minHeight="100%" padding={44} backgroundColor="#FFFFFF">
+    <Container direction="column" gap={18} height="100%" padding={44} backgroundColor="#FFFFFF">
       <Container direction="row" justify="between" align="end">
         <Container direction="column" gap={6}>
           <Text text="Executive summary" style={{ fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }} />
@@ -191,7 +191,7 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
   </Slide>
 
   <Slide id="mix" title="Mix Comercial">
-    <Container direction="column" gap={18} minHeight="100%" padding={44} backgroundColor="#F7F9FC">
+    <Container direction="column" gap={18} height="100%" padding={44} backgroundColor="#F7F9FC">
       <Container direction="row" justify="between" align="end">
         <Container direction="column" gap={6}>
           <Text text="Commercial composition" style={{ fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }} />
@@ -256,7 +256,7 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
   </Slide>
 
   <Slide id="clientes" title="Clientes">
-    <Container direction="column" gap={18} minHeight="100%" padding={44} backgroundColor="#FFFFFF">
+    <Container direction="column" gap={18} height="100%" padding={44} backgroundColor="#FFFFFF">
       <Container direction="row" justify="between" align="end">
         <Container direction="column" gap={6}>
           <Text text="Customer concentration" style={{ fontSize: 11, color: "#7A879B", letterSpacing: "0.06em", textTransform: "uppercase" }} />
@@ -326,7 +326,7 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
   </Slide>
 
   <Slide id="highlights" title="Highlights">
-    <Container direction="column" gap={20} minHeight="100%" padding={44} backgroundColor="#F8FAFD">
+    <Container direction="column" gap={20} height="100%" padding={44} backgroundColor="#F8FAFD">
       <Container direction="row" justify="between" align="start">
         <Container direction="column" gap={8}>
           <Badge text="Executive highlights" icon="sparkles" iconColor="#2563eb" backgroundColor="#EAF2FF" borderColor="#D7E5FF" />
@@ -358,7 +358,7 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
   </Slide>
 
   <Slide id="risks" title="Risks">
-    <Container direction="column" gap={20} minHeight="100%" padding={44} backgroundColor="#FFFFFF">
+    <Container direction="column" gap={20} height="100%" padding={44} backgroundColor="#FFFFFF">
       <Container direction="column" gap={8}>
         <Badge text="Risk & concentration" icon="triangle-alert" iconColor="#B45309" backgroundColor="#FFF7ED" borderColor="#FCD9BD" />
         <Text text="Revenue Risks and Dependencies" style={{ fontSize: 30, fontWeight: 700, color: "#172033", letterSpacing: "-0.04em" }} />
@@ -402,7 +402,7 @@ export const SLIDE_TEMPLATE_DSL = String.raw`<SlideTemplate name="deck_vendas" t
   </Slide>
 
   <Slide id="appendix" title="Appendix">
-    <Container direction="column" gap={18} minHeight="100%" padding={44} backgroundColor="#F8FAFD">
+    <Container direction="column" gap={18} height="100%" padding={44} backgroundColor="#F8FAFD">
       <Container direction="row" justify="between" align="center">
         <Text text="Visual Appendix" style={{ fontSize: 30, fontWeight: 700, color: "#172033", letterSpacing: "-0.04em" }} />
         <Badge text="Appendix" icon="package" backgroundColor="#FFFFFF" borderColor="#D8DEE9" />

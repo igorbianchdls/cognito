@@ -2137,6 +2137,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     const containerTheme = ((theme.components as any)?.Container || {}) as AnyRecord;
     const p = deepMerge(deepMerge(defaultDiv as any, containerTheme), (element?.props || {}) as any) as AnyRecord;
     const style: React.CSSProperties = {
+      boxSizing: 'border-box',
       display: 'flex',
       flexDirection: (p.direction ?? 'column') as any,
       gap: styleVal(p.gap),
@@ -2728,9 +2729,9 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     );
     return (
       <ThemeProvider name={name} cssVars={cssVars}>
-        <div style={{ position: 'relative', isolation: 'isolate' }}>
+        <div style={{ position: 'relative', isolation: 'isolate', width: '100%', height: '100%' }}>
           <DashboardBackgroundLayer preset={backgroundPreset} />
-          <div style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%' }}>
             {children}
           </div>
         </div>
