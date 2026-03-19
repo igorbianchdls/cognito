@@ -59,6 +59,10 @@ function buildPageRenderTree(page: AnyRecord, themeNode: AnyRecord | null): any 
   }
 }
 
+function cloneRenderTree<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T
+}
+
 function SlideThumbnail({
   previewSrc,
   selected,
@@ -136,7 +140,7 @@ function SlideWorkspace() {
   )
 
   const activeTree = useMemo(
-    () => (activePage ? buildPageRenderTree(activePage, themeNode) : []),
+    () => (activePage ? cloneRenderTree(buildPageRenderTree(activePage, themeNode)) : []),
     [activePage, themeNode],
   )
   const previewsByPageId = useMemo(() => ({} as Record<string, string>), [])
