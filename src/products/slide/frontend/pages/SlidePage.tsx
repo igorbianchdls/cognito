@@ -5,8 +5,7 @@ import { Icon } from '@iconify/react'
 
 import { parseDashboardTemplateDslToTree } from '@/products/bi/json-render/parsers/dashboardTemplateDslParser'
 import { DataProvider } from '@/products/bi/json-render/context'
-import { registry } from '@/products/bi/json-render/registry'
-import { Renderer } from '@/products/bi/json-render/renderer'
+import { SlideRenderer } from '@/products/slide/frontend/render/slideRegistry'
 import { SlidePreviewThumbnail } from '@/products/slide/preview/SlidePreviewThumbnail'
 import { SLIDE_TEMPLATE_DSL } from '@/products/slide/shared/templates/slideTemplate'
 
@@ -50,12 +49,20 @@ function getPageId(page: AnyRecord, index: number): string {
 }
 
 function buildPageRenderTree(page: AnyRecord, themeNode: AnyRecord | null): any {
-  const pageChildren = Array.isArray(page.children) ? page.children : []
-  if (!themeNode) return pageChildren
+  const slideNode = {
+    ...page,
+    props: {
+      ...((isRecord(page.props) ? page.props : {}) as AnyRecord),
+      width: '100%',
+      height: '100%',
+      minHeight: '100%',
+    },
+  }
+  if (!themeNode) return slideNode
   const themeChildren = Array.isArray(themeNode.children) ? themeNode.children : []
   return {
     ...themeNode,
-    children: [...themeChildren, ...pageChildren],
+    children: [...themeChildren, slideNode],
   }
 }
 
@@ -117,10 +124,10 @@ const SlideCanvas = memo(function SlideCanvas({
         key={renderKey}
         ref={slideElementRef}
         className="overflow-hidden rounded-none border border-slate-200 bg-white shadow-[0_2px_6px_rgba(15,23,42,0.05)]"
-        style={{ width: SLIDE_WIDTH, minWidth: SLIDE_WIDTH, height: SLIDE_HEIGHT }}
+        style={{ width: SLIDE_WIDTH, minWidth: SLIDE_WIDTH, height: SLIDE_HEIGHT, display: 'flex', flexDirection: 'column' }}
       >
-        <div style={{ width: '100%', height: '100%' }}>
-          <Renderer tree={tree} registry={registry} />
+        <div style={{ width: '100%', height: '100%', display: 'flex', flex: 1, minWidth: 0, minHeight: 0 }}>
+          <SlideRenderer tree={tree} />
         </div>
       </div>
     </div>

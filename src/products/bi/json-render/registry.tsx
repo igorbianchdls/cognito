@@ -2729,9 +2729,33 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     );
     return (
       <ThemeProvider name={name} cssVars={cssVars}>
-        <div style={{ position: 'relative', isolation: 'isolate', width: '100%', height: '100%' }}>
+        <div
+          style={{
+            position: 'relative',
+            isolation: 'isolate',
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1,
+            minWidth: 0,
+            minHeight: 0,
+          }}
+        >
           <DashboardBackgroundLayer preset={backgroundPreset} />
-          <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%' }}>
+          <div
+            style={{
+              position: 'relative',
+              zIndex: 1,
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              flex: 1,
+              minWidth: 0,
+              minHeight: 0,
+            }}
+          >
             {children}
           </div>
         </div>
