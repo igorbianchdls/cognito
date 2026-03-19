@@ -1,202 +1,108 @@
-export const REPORT_TEMPLATE_DSL = String.raw`<ReportTemplate name="last_quarter_revenue_analysis" title="Last Quarter Revenue Analysis">
+export const REPORT_TEMPLATE_DSL = String.raw`<ReportTemplate name="executive_report_runtime" title="Executive Report Review">
   <Theme name="light" />
 
-  <Report id="capa" title="Cover">
-    <Container direction="column" minHeight="100%" padding={52} backgroundColor="#FFFFFF" gap={28}>
-      <Container direction="column" gap={10}>
-        <Text style={{ fontSize: 11, color: "#8B8E97", letterSpacing: "0.04em", textTransform: "uppercase" }}>
-          Q4 / 2025 / Revenue Review
-        </Text>
-        <Text style={{ fontSize: 32, fontWeight: 600, color: "#20232A", letterSpacing: "-0.03em", lineHeight: 1.15 }}>
-          Last Quarter Revenue Analysis
-        </Text>
-        <Text style={{ color: "#5C6470", maxWidth: "72%" }}>
-          A document-style revenue summary built in the report DSL, mixing analytical charts with narrative takeaways.
-        </Text>
-      </Container>
+  <Report id="cover" title="Cover">
+    <section style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", height: "100%", padding: 52, backgroundColor: "#FFFFFF", gap: 28 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <p style={{ margin: 0, fontSize: 11, color: "#8B8E97", letterSpacing: "0.04em", textTransform: "uppercase" }}>Q4 / 2025 / Report Runtime Review</p>
+        <h1 style={{ margin: 0, fontSize: 32, fontWeight: 600, color: "#20232A", letterSpacing: "-0.03em", lineHeight: 1.15 }}>Executive Report Review</h1>
+        <p style={{ margin: 0, color: "#5C6470", maxWidth: "72%", lineHeight: 1.7 }}>
+          A document-style report now rendered as pure HTML, prioritizing stable pagination, reliable typography and predictable page layout before richer widgets return.
+        </p>
+      </div>
 
-      <List variant="check" gap={12} iconColor="#2F6FED" itemStyle={{ fontSize: 13, lineHeight: 1.7, color: "#384152" }}>
-        <ListItem><Bold>Revenue grew</Bold> with a clear concentration in enterprise and mid-market accounts.</ListItem>
-        <ListItem><Bold>Segment mix remained healthy</Bold>, but country distribution shows concentration risk.</ListItem>
-        <ListItem>The strongest regions offset weaker <Bold>small-business performance</Bold> during the quarter.</ListItem>
-      </List>
+      <ul style={{ margin: 0, paddingLeft: 20, display: "flex", flexDirection: "column", gap: 12, color: "#384152", fontSize: 13, lineHeight: 1.7 }}>
+        <li>Report layout no longer depends on the generic BI parser.</li>
+        <li>Text, headings and sections are authored as HTML and rendered without widget translation.</li>
+        <li>Future data components will be reintroduced only after document geometry is stable.</li>
+      </ul>
 
-      <Container direction="column" gap={18} grow={1} padding={24} backgroundColor="#EAF8FF" borderRadius={32}>
-        <Container direction="row" gap={18} align="stretch">
-          <Container grow={1}>
-            <Card padding={20} borderWidth={1} borderColor="#D7ECF8" borderRadius={20} backgroundColor="#F7FCFF" height="100%">
-              <Text style={{ fontSize: 11, color: "#6E7F91", letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 8 }}>
-                Quarter at a glance
-              </Text>
-              <Text style={{ fontSize: 20, fontWeight: 600, color: "#1D2733", letterSpacing: "-0.03em", marginBottom: 10, lineHeight: 1.2 }}>
-                Executive summary
-              </Text>
-              <Text style={{ fontSize: 14, lineHeight: 1.75, color: "#425063" }}>
-                The quarter closed with <Bold>stronger revenue concentration</Bold> in the main channels, while the customer base remained healthy enough to preserve diversification.
-              </Text>
-              <Text style={{ fontSize: 14, lineHeight: 1.75, color: "#425063", marginTop: 10 }}>
-                This report combines <Bold>trend analysis</Bold>, channel composition and recent order detail to support revenue review conversations.
-              </Text>
-            </Card>
-          </Container>
+      <section style={{ display: "flex", flexDirection: "column", gap: 18, flex: 1, padding: 24, backgroundColor: "#EAF8FF", borderRadius: 32 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18, alignItems: "stretch" }}>
+          <article style={{ padding: 20, border: "1px solid #D7ECF8", borderRadius: 20, backgroundColor: "#F7FCFF" }}>
+            <p style={{ margin: 0, marginBottom: 8, fontSize: 11, color: "#6E7F91", letterSpacing: "0.04em", textTransform: "uppercase" }}>Document behavior</p>
+            <h2 style={{ margin: 0, marginBottom: 10, fontSize: 20, fontWeight: 600, color: "#1D2733", letterSpacing: "-0.03em", lineHeight: 1.2 }}>Static report baseline</h2>
+            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: "#425063" }}>
+              The report runtime now starts from a static HTML baseline. That gives the page predictable flow and avoids accidental dashboard behavior leaking into print-style documents.
+            </p>
+          </article>
 
-          <Container grow={1}>
-            <Card padding={20} borderWidth={1} borderColor="#D7ECF8" borderRadius={20} backgroundColor="#FFFFFF" height="100%">
-              <Text style={{ fontSize: 11, color: "#6E7F91", letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 6 }}>
-                Trend
-              </Text>
-              <Text style={{ fontSize: 18, fontWeight: 600, color: "#1D2733", letterSpacing: "-0.03em", marginBottom: 10, lineHeight: 1.25 }}>
-                Monthly revenue trend
-              </Text>
-              <Chart type="line" format="currency" height={240} curve="monotone" showGrid={true} showDots={false} strokeWidth={3} categoryTickColor="#6E7F91" valueTickColor="#6E7F91">
-                <Query>
-                  SELECT
-                    TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'Mon') AS label,
-                    COALESCE(SUM(p.valor_total), 0)::float AS value
-                  FROM vendas.pedidos p
-                  WHERE 1=1
-                    {{filters:p}}
-                  GROUP BY 1
-                  ORDER BY MIN(DATE_TRUNC('month', p.data_pedido))
-                  LIMIT 6
-                </Query>
-                <Fields x="label" y="value" />
-              </Chart>
-            </Card>
-          </Container>
-        </Container>
-      </Container>
-    </Container>
+          <article style={{ padding: 20, border: "1px solid #D7ECF8", borderRadius: 20, backgroundColor: "#FFFFFF" }}>
+            <p style={{ margin: 0, marginBottom: 8, fontSize: 11, color: "#6E7F91", letterSpacing: "0.04em", textTransform: "uppercase" }}>Reading flow</p>
+            <h2 style={{ margin: 0, marginBottom: 10, fontSize: 20, fontWeight: 600, color: "#1D2733", letterSpacing: "-0.03em", lineHeight: 1.2 }}>Document-first composition</h2>
+            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: "#425063" }}>
+              Sections, paragraphs and emphasis are represented directly as HTML, so the report behaves like a real document instead of a dashboard snapshot.
+            </p>
+          </article>
+        </div>
+      </section>
+    </section>
   </Report>
 
   <Report id="summary" title="Summary">
-    <Container direction="column" minHeight="100%" padding={52} backgroundColor="#FFFFFF" gap={22}>
-      <Container direction="column" gap={6}>
-        <Text style={{ fontSize: 11, color: "#8B8E97", letterSpacing: "0.04em", textTransform: "uppercase" }}>
-          Last Quarter Revenue Analysis
-        </Text>
-        <Text style={{ fontSize: 28, fontWeight: 600, color: "#20232A", letterSpacing: "-0.03em", lineHeight: 1.15 }}>
-          Last Quarter Revenue Analysis
-        </Text>
-      </Container>
+    <section style={{ display: "flex", flexDirection: "column", minHeight: "100%", padding: 52, backgroundColor: "#FFFFFF", gap: 22 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <p style={{ margin: 0, fontSize: 11, color: "#8B8E97", letterSpacing: "0.04em", textTransform: "uppercase" }}>Executive Report Review</p>
+        <h1 style={{ margin: 0, fontSize: 28, fontWeight: 600, color: "#20232A", letterSpacing: "-0.03em", lineHeight: 1.15 }}>Why report runtime should be independent</h1>
+      </div>
 
-      <Text style={{ fontSize: 13, lineHeight: 1.65, color: "#4E5665" }}>
-        This report analyzes <Bold>revenue for the quarter</Bold>, filtered to the current business context.
-      </Text>
+      <p style={{ margin: 0, fontSize: 13, lineHeight: 1.75, color: "#4E5665" }}>
+        Reports have different constraints from slides and dashboards. They need stable vertical flow, printable page behavior and predictable section spacing.
+      </p>
 
-      <List variant="bullet" gap={8} markerColor="#2A3140" itemStyle={{ fontSize: 13, lineHeight: 1.65, color: "#2A3140" }}>
-        <ListItem>Version: Actual</ListItem>
-        <ListItem>Scenario: Baseline</ListItem>
-        <ListItem><Bold>Breakdown by Channel</Bold></ListItem>
-        <ListItem><Bold>Breakdown by Customer</Bold></ListItem>
-      </List>
+      <ul style={{ margin: 0, paddingLeft: 20, display: "flex", flexDirection: "column", gap: 8, color: "#2A3140", fontSize: 13, lineHeight: 1.65 }}>
+        <li>Document pages can expand vertically, but pagination must remain visually coherent.</li>
+        <li>HTML paragraphs and headings are easier to reason about than generic BI widgets in a report context.</li>
+        <li>The runtime can evolve incrementally after the static reading flow is solid.</li>
+      </ul>
 
-      <Card padding={18} borderWidth={1} borderColor="#E8EBF1" borderRadius={18} backgroundColor="#FFFFFF">
-        <Text style={{ fontSize: 18, fontWeight: 600, color: "#20232A", letterSpacing: "-0.02em", marginBottom: 4, lineHeight: 1.25 }}>
-          Breakdown by Channel
-        </Text>
-        <Text style={{ fontSize: 11, color: "#8B8E97", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 8 }}>
-          Revenue by Channel
-        </Text>
-        <Chart type="bar" format="currency" height={340} showGrid={true} categoryTickColor="#7B8190" valueTickColor="#7B8190">
-          <Query>
-            SELECT
-              cv.id AS key,
-              COALESCE(cv.nome, '-') AS label,
-              COALESCE(SUM(p.valor_total), 0)::float AS value
-            FROM vendas.pedidos p
-            LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
-            WHERE 1=1
-              {{filters:p}}
-            GROUP BY 1, 2
-            ORDER BY 3 DESC
-          </Query>
-          <Fields x="label" y="value" key="key" />
-        </Chart>
-      </Card>
+      <article style={{ padding: 18, border: "1px solid #E8EBF1", borderRadius: 18, backgroundColor: "#FFFFFF" }}>
+        <h2 style={{ margin: 0, marginBottom: 8, fontSize: 18, fontWeight: 600, color: "#20232A", letterSpacing: "-0.02em", lineHeight: 1.25 }}>Practical consequence</h2>
+        <p style={{ margin: 0, fontSize: 13, lineHeight: 1.75, color: "#4E5665" }}>
+          A dedicated report parser and renderer let the document focus on semantic sections and narrative flow, instead of inheriting interaction-heavy assumptions from dashboards.
+        </p>
+      </article>
 
-      <List variant="check" gap={8} iconColor="#2563eb" itemStyle={{ fontSize: 12, lineHeight: 1.65, color: "#4E5665" }}>
-        <ListItem><Bold>Primary channels</Bold> concentrate most of the quarter revenue and should remain the focus of closer monitoring.</ListItem>
-        <ListItem>The long tail of channels still contributes diversification, but with a visibly <Bold>lower share of total volume</Bold>.</ListItem>
-      </List>
-
-      <Container direction="column" gap={8}>
-        <Text style={{ fontSize: 18, fontWeight: 600, color: "#20232A", letterSpacing: "-0.02em", lineHeight: 1.25 }}>
-          Breakdown by Customer
-        </Text>
-        <List variant="bullet" gap={8} markerColor="#4E5665" itemStyle={{ fontSize: 12, lineHeight: 1.65, color: "#4E5665" }}>
-          <ListItem><Bold>Revenue concentration by customer</Bold> suggests a few accounts are disproportionately important to quarter performance.</ListItem>
-          <ListItem>This distribution is useful for identifying <Bold>account dependency</Bold> and prioritizing retention efforts.</ListItem>
-        </List>
-      </Container>
-    </Container>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
+        <article style={{ padding: 18, border: "1px solid #E8EBF1", borderRadius: 18, backgroundColor: "#FAFBFD" }}>
+          <p style={{ margin: 0, marginBottom: 8, fontSize: 11, color: "#8B8E97", letterSpacing: "0.04em", textTransform: "uppercase" }}>Before</p>
+          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: "#4E5665" }}>The report page depended on the same parser built for dashboard-style DSL structures.</p>
+        </article>
+        <article style={{ padding: 18, border: "1px solid #E8EBF1", borderRadius: 18, backgroundColor: "#FAFBFD" }}>
+          <p style={{ margin: 0, marginBottom: 8, fontSize: 11, color: "#8B8E97", letterSpacing: "0.04em", textTransform: "uppercase" }}>Now</p>
+          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: "#4E5665" }}>The report page parses and renders HTML-native sections directly, with simpler document semantics.</p>
+        </article>
+      </div>
+    </section>
   </Report>
 
-  <Report id="details" title="Detailed View">
-    <Container direction="column" minHeight="100%" padding={52} backgroundColor="#FFFFFF" gap={20}>
-      <Container direction="column" gap={6}>
-        <Text style={{ fontSize: 11, color: "#8B8E97", letterSpacing: "0.04em", textTransform: "uppercase" }}>
-          Detailed View
-        </Text>
-        <Text style={{ fontSize: 26, fontWeight: 600, color: "#20232A", letterSpacing: "-0.03em", lineHeight: 1.15 }}>
-          Customer and Order Details
-        </Text>
-        <Text style={{ fontSize: 13, lineHeight: 1.65, color: "#5C6470", maxWidth: "78%" }}>
-          The sections below combine a comparative country view with recent-order detail, keeping the report in a document-first reading flow.
-        </Text>
-      </Container>
+  <Report id="details" title="Details">
+    <section style={{ display: "flex", flexDirection: "column", minHeight: "100%", padding: 52, backgroundColor: "#FFFFFF", gap: 20 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <p style={{ margin: 0, fontSize: 11, color: "#8B8E97", letterSpacing: "0.04em", textTransform: "uppercase" }}>Implementation roadmap</p>
+        <h1 style={{ margin: 0, fontSize: 26, fontWeight: 600, color: "#20232A", letterSpacing: "-0.03em", lineHeight: 1.15 }}>What comes next</h1>
+        <p style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: "#5C6470", maxWidth: "78%" }}>
+          The first stable state is a pure HTML report. Special data components return only after the page flow remains correct in preview, thumbnails and PDF export.
+        </p>
+      </div>
 
-      <Card padding={18} borderWidth={1} borderColor="#E8EBF1" borderRadius={18} backgroundColor="#FFFFFF">
-        <Text style={{ fontSize: 18, fontWeight: 600, color: "#20232A", marginBottom: 10, lineHeight: 1.25 }}>
-          Revenue by Customer
-        </Text>
-        <Chart type="bar" format="currency" height={300} showGrid={true} categoryTickColor="#7B8190" valueTickColor="#7B8190">
-          <Query>
-            SELECT
-              c.id AS key,
-              COALESCE(c.nome_fantasia, '-') AS label,
-              COALESCE(SUM(pi.subtotal), 0)::float AS value
-            FROM vendas.pedidos p
-            JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-            LEFT JOIN entidades.clientes c ON c.id = p.cliente_id
-            WHERE 1=1
-              {{filters:p}}
-            GROUP BY 1, 2
-            ORDER BY 3 DESC
-            LIMIT 8
-          </Query>
-          <Fields x="label" y="value" key="key" />
-        </Chart>
-      </Card>
-
-      <List variant="check" gap={8} iconColor="#2563eb" itemStyle={{ fontSize: 12, lineHeight: 1.65, color: "#4E5665" }}>
-        <ListItem><Bold>Top customers</Bold> stand apart clearly from the rest of the portfolio in cumulative quarter revenue.</ListItem>
-        <ListItem>The current mix suggests monitoring <Bold>client concentration</Bold> and using this view as support for account planning.</ListItem>
-      </List>
-
-      <Card padding={18} borderWidth={1} borderColor="#E8EBF1" borderRadius={18} backgroundColor="#FFFFFF">
-        <Text style={{ fontSize: 18, fontWeight: 600, color: "#20232A", marginBottom: 10, lineHeight: 1.25 }}>
-          Latest Orders
-        </Text>
-        <Table pageSize={8} showPagination={false} enableSearch={false}>
-          <Config>
-            {
-              "dataQuery": {
-                "query": "SELECT\n  p.id AS pedido,\n  p.data_pedido::date AS data_pedido,\n  COALESCE(c.nome_fantasia, '-') AS cliente,\n  COALESCE(cv.nome, '-') AS canal,\n  COALESCE(p.valor_total, 0)::float AS valor_total\nFROM vendas.pedidos p\nLEFT JOIN entidades.clientes c ON c.id = p.cliente_id\nLEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id\nWHERE 1=1\n  {{filters:p}}\nORDER BY p.data_pedido DESC, p.id DESC",
-                "filters": {},
-                "limit": 8
-              },
-              "columns": [
-                { "key": "pedido", "header": "Pedido" },
-                { "key": "data_pedido", "header": "Data", "format": "date" },
-                { "key": "cliente", "header": "Cliente" },
-                { "key": "canal", "header": "Canal" },
-                { "key": "valor_total", "header": "Valor", "format": "currency", "align": "right" }
-              ]
-            }
-          </Config>
-        </Table>
-      </Card>
-    </Container>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 18 }}>
+        <article style={{ padding: 20, borderRadius: 18, backgroundColor: "#F8FAFC", border: "1px solid #E8EBF1" }}>
+          <p style={{ margin: 0, marginBottom: 8, fontSize: 11, color: "#8B8E97", letterSpacing: "0.04em", textTransform: "uppercase" }}>Phase 1</p>
+          <h2 style={{ margin: 0, marginBottom: 10, fontSize: 18, fontWeight: 600, color: "#20232A" }}>Static report pages</h2>
+          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: "#4E5665" }}>Validate reading flow, pagination, preview rendering and export capture with HTML-only content.</p>
+        </article>
+        <article style={{ padding: 20, borderRadius: 18, backgroundColor: "#F8FAFC", border: "1px solid #E8EBF1" }}>
+          <p style={{ margin: 0, marginBottom: 8, fontSize: 11, color: "#8B8E97", letterSpacing: "0.04em", textTransform: "uppercase" }}>Phase 2</p>
+          <h2 style={{ margin: 0, marginBottom: 10, fontSize: 18, fontWeight: 600, color: "#20232A" }}>One component at a time</h2>
+          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: "#4E5665" }}>Reintroduce charts or tables through report-specific wrappers instead of the old BI runtime.</p>
+        </article>
+        <article style={{ padding: 20, borderRadius: 18, backgroundColor: "#F8FAFC", border: "1px solid #E8EBF1" }}>
+          <p style={{ margin: 0, marginBottom: 8, fontSize: 11, color: "#8B8E97", letterSpacing: "0.04em", textTransform: "uppercase" }}>Phase 3</p>
+          <h2 style={{ margin: 0, marginBottom: 10, fontSize: 18, fontWeight: 600, color: "#20232A" }}>Richer document DSL</h2>
+          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: "#4E5665" }}>Only after runtime stability, extend the report DSL with controlled special blocks where they actually add value.</p>
+        </article>
+      </div>
+    </section>
   </Report>
 </ReportTemplate>`

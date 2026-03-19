@@ -2,8 +2,7 @@
 
 import type { RefObject } from 'react'
 
-import { registry } from '@/products/bi/json-render/registry'
-import { Renderer } from '@/products/bi/json-render/renderer'
+import { ReportRenderer } from '@/products/report/frontend/render/reportRegistry'
 
 interface ReportPdfExportStageProps {
   height: number
@@ -37,7 +36,7 @@ export function ReportPdfExportStage({
         className="overflow-hidden rounded-none border border-slate-200 bg-white"
         style={{ width, minWidth: width, height }}
       >
-        <Renderer tree={tree} registry={registry} />
+        <ReportRenderer tree={tree} />
       </div>
     </div>
   )

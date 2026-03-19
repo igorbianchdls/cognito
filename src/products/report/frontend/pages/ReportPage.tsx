@@ -3,11 +3,10 @@
 import { RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import { Icon } from '@iconify/react'
 
-import { parseDashboardTemplateDslToTree } from '@/products/bi/json-render/parsers/dashboardTemplateDslParser'
 import { DataProvider } from '@/products/bi/json-render/context'
-import { registry } from '@/products/bi/json-render/registry'
-import { Renderer } from '@/products/bi/json-render/renderer'
+import { parseReportTemplateDslToTree } from '@/products/report/parser/parseReportTemplateDsl'
 import { ReportPdfExportStage } from '@/products/report/export/ReportPdfExportStage'
+import { ReportRenderer } from '@/products/report/frontend/render/reportRegistry'
 import { useReportPdfExport } from '@/products/report/export/useReportPdfExport'
 import { ReportPreviewThumbnail } from '@/products/report/preview/ReportPreviewThumbnail'
 import { useReportPreviewSnapshots } from '@/products/report/preview/useReportPreviewSnapshots'
@@ -53,12 +52,20 @@ function getPageId(page: AnyRecord, index: number): string {
 }
 
 function buildPageRenderTree(page: AnyRecord, themeNode: AnyRecord | null): any {
-  const pageChildren = Array.isArray(page.children) ? page.children : []
-  if (!themeNode) return pageChildren
+  const reportNode = {
+    ...page,
+    props: {
+      ...((isRecord(page.props) ? page.props : {}) as AnyRecord),
+      width: '100%',
+      height: '100%',
+      minHeight: '100%',
+    },
+  }
+  if (!themeNode) return reportNode
   const themeChildren = Array.isArray(themeNode.children) ? themeNode.children : []
   return {
     ...themeNode,
-    children: [...themeChildren, ...pageChildren],
+    children: [...themeChildren, reportNode],
   }
 }
 
@@ -115,14 +122,14 @@ function ReportCanvas({
         className="overflow-hidden rounded-none border border-slate-200 bg-white shadow-[0_2px_6px_rgba(15,23,42,0.05)]"
         style={{ width: A4_WIDTH, minWidth: A4_WIDTH, height: A4_HEIGHT }}
       >
-        <Renderer tree={tree} registry={registry} />
+        <ReportRenderer tree={tree} />
       </div>
     </div>
   )
 }
 
 function ReportWorkspace() {
-  const parsed = useMemo(() => parseDashboardTemplateDslToTree(REPORT_TEMPLATE_DSL), [])
+  const parsed = useMemo(() => parseReportTemplateDslToTree(REPORT_TEMPLATE_DSL), [])
   const { rootName, themeNode, pages } = useMemo(() => getReportStructure(parsed), [parsed])
   const [activePageId, setActivePageId] = useState('')
   const [activeView, setActiveView] = useState<'preview' | 'code'>('preview')
