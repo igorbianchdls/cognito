@@ -1196,11 +1196,6 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       borderWidth: p.borderWidth,
       borderStyle: p.borderStyle || (p.borderWidth ? 'solid' : undefined),
       borderRadius: p.borderRadius,
-      padding: styleVal(p.padding) || undefined,
-      paddingTop: styleVal(p.paddingTop),
-      paddingRight: styleVal(p.paddingRight),
-      paddingBottom: styleVal(p.paddingBottom),
-      paddingLeft: styleVal(p.paddingLeft),
       margin: styleVal(p.margin),
       marginTop: styleVal(p.marginTop),
       marginRight: styleVal(p.marginRight),
@@ -1231,6 +1226,14 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
       gap: styleVal(p.gap ?? 8),
       flexWrap: p.wrap ? 'wrap' : 'nowrap',
       minWidth: 0,
+      boxSizing: 'border-box',
+      padding: styleVal(p.padding) || undefined,
+      paddingTop: styleVal(p.paddingTop),
+      paddingRight: styleVal(p.paddingRight),
+      paddingBottom: styleVal(p.paddingBottom),
+      paddingLeft: styleVal(p.paddingLeft),
+      width: '100%',
+      height: '100%',
     };
     return (
       <FrameSurface style={style} frame={p?.frame as AnyRecord} cssVars={theme.cssVars}>
