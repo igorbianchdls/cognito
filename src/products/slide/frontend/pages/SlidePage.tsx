@@ -26,7 +26,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function getElementTypeName(type: unknown): string {
   if (typeof type === 'string') return type
-  if (typeof type === 'function') return type.displayName || type.name || 'Anonymous'
+  if (typeof type === 'function') {
+    const componentType = type as Function & { displayName?: string }
+    return componentType.displayName || componentType.name || 'Anonymous'
+  }
   return 'Unknown'
 }
 
