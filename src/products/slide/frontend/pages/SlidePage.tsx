@@ -1,6 +1,6 @@
 'use client'
 
-import { Children, isValidElement, memo, ReactNode, RefObject, useMemo, useRef, useState } from 'react'
+import { isValidElement, memo, ReactNode, RefObject, useMemo, useRef, useState } from 'react'
 import { Icon } from '@iconify/react'
 
 import { DataProvider } from '@/products/bi/json-render/context'
@@ -40,7 +40,8 @@ function jsxToTree(node: ReactNode): SlideTreeNode | string | null {
 
   const props = (node.props || {}) as { children?: ReactNode } & Record<string, unknown>
   const { children, ...restProps } = props
-  const parsedChildren = Children.toArray(children as ReactNode)
+  const childNodes = Array.isArray(children) ? children : children == null ? [] : [children]
+  const parsedChildren = childNodes
     .map((child) => jsxToTree(child))
     .filter((child): child is SlideTreeNode | string => child !== null)
 
