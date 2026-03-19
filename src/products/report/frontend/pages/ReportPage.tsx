@@ -1,18 +1,22 @@
 'use client'
 
-import { RefObject, useEffect, useMemo, useRef, useState } from 'react'
+import { isValidElement, ReactNode, RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import { Icon } from '@iconify/react'
 
 import { DataProvider } from '@/products/bi/json-render/context'
-import { parseReportTemplateDslToTree } from '@/products/report/parser/parseReportTemplateDsl'
 import { ReportPdfExportStage } from '@/products/report/export/ReportPdfExportStage'
 import { ReportRenderer } from '@/products/report/frontend/render/reportRegistry'
 import { useReportPdfExport } from '@/products/report/export/useReportPdfExport'
 import { ReportPreviewThumbnail } from '@/products/report/preview/ReportPreviewThumbnail'
 import { useReportPreviewSnapshots } from '@/products/report/preview/useReportPreviewSnapshots'
-import { REPORT_TEMPLATE_DSL } from '@/products/report/shared/templates/reportTemplate'
+import { REPORT_TEMPLATE, REPORT_TEMPLATE_SOURCE } from '@/products/report/shared/templates/reportTemplate'
 
 type AnyRecord = Record<string, any>
+type ReportTreeNode = {
+  type: string
+  props: Record<string, unknown>
+  children: Array<ReportTreeNode | string>
+}
 
 const A4_WIDTH = 794
 const A4_HEIGHT = 1123
@@ -21,6 +25,34 @@ const THUMB_SCALE = THUMB_WIDTH / A4_WIDTH
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
+function getElementTypeName(type: unknown): string {
+  if (typeof type === 'string') return type
+  if (typeof type === 'function') {
+    const componentType = type as Function & { displayName?: string }
+    return componentType.displayName || componentType.name || 'Anonymous'
+  }
+  return 'Unknown'
+}
+
+function jsxToTree(node: ReactNode): ReportTreeNode | string | null {
+  if (node == null || typeof node === 'boolean') return null
+  if (typeof node === 'string' || typeof node === 'number') return String(node)
+  if (!isValidElement(node)) return null
+
+  const props = (node.props || {}) as { children?: ReactNode } & Record<string, unknown>
+  const { children, ...restProps } = props
+  const childNodes = Array.isArray(children) ? children : children == null ? [] : [children]
+  const parsedChildren = childNodes
+    .map((child) => jsxToTree(child))
+    .filter((child): child is ReportTreeNode | string => child !== null)
+
+  return {
+    type: getElementTypeName(node.type),
+    props: restProps,
+    children: parsedChildren,
+  }
 }
 
 function getReportStructure(tree: unknown): {
@@ -129,7 +161,13 @@ function ReportCanvas({
 }
 
 function ReportWorkspace() {
-  const parsed = useMemo(() => parseReportTemplateDslToTree(REPORT_TEMPLATE_DSL), [])
+  const parsed = useMemo(() => {
+    const tree = jsxToTree(REPORT_TEMPLATE)
+    if (!tree || typeof tree === 'string') {
+      throw new Error('Invalid report template root')
+    }
+    return tree
+  }, [])
   const { rootName, themeNode, pages } = useMemo(() => getReportStructure(parsed), [parsed])
   const [activePageId, setActivePageId] = useState('')
   const [activeView, setActiveView] = useState<'preview' | 'code'>('preview')
@@ -283,7 +321,7 @@ function ReportWorkspace() {
           ) : (
             <div className="mx-auto flex min-h-full max-w-[1280px] p-8">
               <pre className="w-full overflow-auto rounded-[16px] border-[0.5px] border-[#DDDDD8] bg-[#F7F7F6] p-6 text-[13px] leading-6 text-[#2C2C29] shadow-[0_2px_6px_rgba(15,23,42,0.05)]">
-                <code>{REPORT_TEMPLATE_DSL}</code>
+                <code>{REPORT_TEMPLATE_SOURCE}</code>
               </pre>
             </div>
           )}
