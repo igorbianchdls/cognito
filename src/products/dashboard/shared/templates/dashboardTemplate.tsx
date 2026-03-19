@@ -20,6 +20,9 @@ type BarChartMarkerProps = {
 
 type LineChartMarkerProps = BarChartMarkerProps
 type PieChartMarkerProps = BarChartMarkerProps
+type WidgetMarkerProps = {
+  [key: string]: unknown
+}
 
 type DashboardMetric = {
   label: string
@@ -78,19 +81,39 @@ function PieChartMarker(_: PieChartMarkerProps) {
   return null
 }
 
+function TableMarker(_: WidgetMarkerProps) {
+  return null
+}
+
+function PivotTableMarker(_: WidgetMarkerProps) {
+  return null
+}
+
+function SlicerMarker(_: WidgetMarkerProps) {
+  return null
+}
+
+function DatePickerMarker(_: WidgetMarkerProps) {
+  return null
+}
+
 DashboardTemplateMarker.displayName = 'DashboardTemplate'
 ThemeMarker.displayName = 'Theme'
 DashboardMarker.displayName = 'Dashboard'
 BarChartMarker.displayName = 'BarChart'
 LineChartMarker.displayName = 'LineChart'
 PieChartMarker.displayName = 'PieChart'
+TableMarker.displayName = 'Table'
+PivotTableMarker.displayName = 'PivotTable'
+SlicerMarker.displayName = 'Slicer'
+DatePickerMarker.displayName = 'DatePicker'
 
 const DASHBOARD_VARIANTS: DashboardVariantConfig[] = [
   {
     badge: 'Commercial Pulse',
     eyebrow: 'Q1 2026 Sales Overview',
     fileName: 'dashboard-vendas.tsx',
-    footer: 'Static dashboard baseline for validating JSX templates before widgets return.',
+    footer: 'JSX dashboard baseline with filters, charts and tabular widgets restored on top of the new runtime.',
     name: 'dashboard_vendas',
     path: 'app/dashboard-vendas.tsx',
     priorities: [
@@ -100,7 +123,7 @@ const DASHBOARD_VARIANTS: DashboardVariantConfig[] = [
     ],
     subtitle: 'Resumo comercial com foco em clareza visual e narrativa executiva.',
     summary:
-      'The dashboard is intentionally HTML-first. This version optimizes structure, spacing and readability before charts, tables or KPIs return.',
+      'The dashboard keeps the JSX-first structure, but now reconnects the BI widgets that matter most: filters, charts and tabular analysis.',
     title: 'Dashboard de Vendas',
     metrics: [
       { label: 'Receita do periodo', note: 'vs. forecast mensal', value: 'R$ 4,8M' },
@@ -112,7 +135,7 @@ const DASHBOARD_VARIANTS: DashboardVariantConfig[] = [
     badge: 'Executive Review',
     eyebrow: 'Leadership Snapshot',
     fileName: 'dashboard-executivo.tsx',
-    footer: 'Executive dashboard reduced to the minimum viable JSX structure.',
+    footer: 'Executive dashboard now keeps the JSX runtime while reconnecting interactive BI controls and widgets.',
     name: 'dashboard_executivo',
     path: 'app/dashboard-executivo.tsx',
     priorities: [
@@ -122,7 +145,7 @@ const DASHBOARD_VARIANTS: DashboardVariantConfig[] = [
     ],
     subtitle: 'Visao geral dos principais resultados para lideranca e acompanhamento semanal.',
     summary:
-      'This executive view strips the experience down to semantic sections, descriptive copy and simple metric blocks. The goal is a predictable preview surface.',
+      'This executive view stays semantic and predictable, while bringing back the interactive controls leaders actually need during review.',
     title: 'Dashboard Executivo',
     metrics: [
       { label: 'Resultado consolidado', note: 'receita liquida acumulada', value: 'R$ 9,2M' },
@@ -134,7 +157,7 @@ const DASHBOARD_VARIANTS: DashboardVariantConfig[] = [
     badge: 'Ops Focus',
     eyebrow: 'Operational Monitoring',
     fileName: 'dashboard-operacoes.tsx',
-    footer: 'Operations dashboard in plain JSX to keep the migration surface small.',
+    footer: 'Operations dashboard on JSX runtime with query-driven charts, tables and filters wired back in.',
     name: 'dashboard_operacoes',
     path: 'app/dashboard-operacoes.tsx',
     priorities: [
@@ -144,7 +167,7 @@ const DASHBOARD_VARIANTS: DashboardVariantConfig[] = [
     ],
     subtitle: 'Acompanhamento operacional e produtividade com layout simples e deterministico.',
     summary:
-      'The operations dashboard uses the same JSX-only baseline, proving that the workspace no longer depends on a string parser to render structural content.',
+      'The operations dashboard keeps the parser out of the way and proves the JSX runtime can host the existing BI widgets directly.',
     title: 'Dashboard de Operacoes',
     metrics: [
       { label: 'Tickets resolvidos', note: 'janela semanal consolidada', value: '842 itens' },
@@ -202,6 +225,61 @@ const SALES_TREND_DATA_QUERY = {
   keyField: 'key',
   limit: 31,
 }
+
+const CHANNEL_SLICER_QUERY = `
+  SELECT
+    cv.id::text AS value,
+    COALESCE(cv.nome, '-') AS label
+  FROM vendas.canais_venda cv
+  ORDER BY 2 ASC
+`
+
+const ORDERS_TABLE_QUERY = `
+  SELECT
+    p.id::text AS pedido_id,
+    TO_CHAR(p.data_pedido::date, 'DD/MM/YYYY') AS data_pedido,
+    COALESCE(cv.nome, '-') AS canal,
+    COALESCE(p.status, 'Sem status') AS status,
+    COALESCE(p.valor_total, 0)::float AS valor_total
+  FROM vendas.pedidos p
+  LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+  WHERE 1=1
+    {{filters:p}}
+  ORDER BY p.data_pedido DESC NULLS LAST, p.id DESC
+`
+
+const ORDERS_TABLE_DATA_QUERY = {
+  query: ORDERS_TABLE_QUERY,
+  limit: 12,
+}
+
+const ORDERS_TABLE_COLUMNS = [
+  { accessorKey: 'pedido_id', header: 'Pedido' },
+  { accessorKey: 'data_pedido', header: 'Data' },
+  { accessorKey: 'canal', header: 'Canal' },
+  { accessorKey: 'status', header: 'Status', cell: 'badge', meta: { variantMap: { aprovado: 'success', pendente: 'warning', cancelado: 'danger' } } },
+  { accessorKey: 'valor_total', header: 'Receita', format: 'currency', align: 'right', headerAlign: 'right' },
+]
+
+const SALES_PIVOT_QUERY = `
+  SELECT
+    COALESCE(cv.nome, '-') AS canal,
+    COALESCE(p.status, 'Sem status') AS status,
+    COALESCE(p.valor_total, 0)::float AS valor_total
+  FROM vendas.pedidos p
+  LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+  WHERE 1=1
+    {{filters:p}}
+`
+
+const SALES_PIVOT_DATA_QUERY = {
+  query: SALES_PIVOT_QUERY,
+  limit: 400,
+}
+
+const SALES_PIVOT_ROWS = [{ field: 'canal', label: 'Canal' }]
+const SALES_PIVOT_COLUMNS = [{ field: 'status', label: 'Status' }]
+const SALES_PIVOT_VALUES = [{ field: 'valor_total', label: 'Receita', aggregate: 'sum', format: 'currency' }]
 
 function getElementTypeName(type: unknown): string {
   if (typeof type === 'string') return type
@@ -293,6 +371,53 @@ function buildDashboardTemplateSource(config: DashboardVariantConfig, themeName:
     limit: 31,
   }
 
+  const channelSlicerQuery = \`
+    SELECT
+      cv.id::text AS value,
+      COALESCE(cv.nome, '-') AS label
+    FROM vendas.canais_venda cv
+    ORDER BY 2 ASC
+  \`
+
+  const ordersTableDataQuery = {
+    query: \`
+      SELECT
+        p.id::text AS pedido_id,
+        TO_CHAR(p.data_pedido::date, 'DD/MM/YYYY') AS data_pedido,
+        COALESCE(cv.nome, '-') AS canal,
+        COALESCE(p.status, 'Sem status') AS status,
+        COALESCE(p.valor_total, 0)::float AS valor_total
+      FROM vendas.pedidos p
+      LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+      WHERE 1=1
+        {{filters:p}}
+      ORDER BY p.data_pedido DESC NULLS LAST, p.id DESC
+    \`,
+    limit: 12,
+  }
+
+  const ordersTableColumns = [
+    { accessorKey: 'pedido_id', header: 'Pedido' },
+    { accessorKey: 'data_pedido', header: 'Data' },
+    { accessorKey: 'canal', header: 'Canal' },
+    { accessorKey: 'status', header: 'Status', cell: 'badge', meta: { variantMap: { aprovado: 'success', pendente: 'warning', cancelado: 'danger' } } },
+    { accessorKey: 'valor_total', header: 'Receita', format: 'currency', align: 'right', headerAlign: 'right' },
+  ]
+
+  const salesPivotDataQuery = {
+    query: \`
+      SELECT
+        COALESCE(cv.nome, '-') AS canal,
+        COALESCE(p.status, 'Sem status') AS status,
+        COALESCE(p.valor_total, 0)::float AS valor_total
+      FROM vendas.pedidos p
+      LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+      WHERE 1=1
+        {{filters:p}}
+    \`,
+    limit: 400,
+  }
+
   return (
     <DashboardTemplate name="${config.name}" title="${config.title}">
       <Theme name="${themeName}" />
@@ -315,6 +440,35 @@ function buildDashboardTemplateSource(config: DashboardVariantConfig, themeName:
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
 ${buildMetricCardsSource(config.metrics)}
+          </section>
+
+          <section style={{ display: 'grid', gridTemplateColumns: '1.35fr 0.65fr', gap: 18 }}>
+            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <p style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Global controls</p>
+                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Filtros conectados ao runtime antigo</h2>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 14 }}>
+                <DatePicker label="Periodo do pedido" table="vendas.pedidos" field="data_pedido" presets={['7d', '30d', 'month']} />
+                <Slicer
+                  label="Canal de venda"
+                  field="canal_venda_id"
+                  variant="dropdown"
+                  selectionMode="multiple"
+                  search
+                  clearable
+                  width={280}
+                  query={channelSlicerQuery}
+                />
+              </div>
+            </article>
+
+            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#EAF1FF', border: '1px solid #D7E3FA', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <p style={{ margin: 0, fontSize: 11, color: '#5E75A1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Why this matters</p>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                The JSX template now keeps the semantic structure, while filters continue to feed the BI runtime. Charts, tables and pivots read the same global filter state without bringing back the old string parser.
+              </p>
+            </article>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 18 }}>
@@ -384,6 +538,49 @@ ${buildPriorityItemsSource(config.priorities)}
             </article>
           </section>
 
+          <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 18 }}>
+            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <p style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</p>
+                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Pedidos filtrados em detalhe</h2>
+              </div>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                The table below consumes the same slicers and date markers as the charts, so the JSX dashboard keeps one shared filter model.
+              </p>
+              <Table
+                height={360}
+                bordered
+                rounded
+                stickyHeader
+                dataQuery={ordersTableDataQuery}
+                columns={ordersTableColumns}
+                enableExportCsv
+              />
+            </article>
+
+            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#EAF1FF', border: '1px solid #D7E3FA', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <p style={{ margin: 0, fontSize: 11, color: '#5E75A1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</p>
+                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Receita por canal e status</h2>
+              </div>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                PivotTable stays query-driven too, but now it sits directly inside the JSX template instead of depending on the old DSL string pipeline.
+              </p>
+              <PivotTable
+                height={360}
+                bordered
+                rounded
+                stickyHeader
+                enableExportCsv
+                defaultExpandedLevels={1}
+                dataQuery={salesPivotDataQuery}
+                rows={[{ field: 'canal', label: 'Canal' }]}
+                columns={[{ field: 'status', label: 'Status' }]}
+                values={[{ field: 'valor_total', label: 'Receita', aggregate: 'sum', format: 'currency' }]}
+              />
+            </article>
+          </section>
+
           <footer style={{ display: 'flex', justifyContent: 'space-between', gap: 18, padding: '18px 22px', borderRadius: 22, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2' }}>
             <p style={{ margin: 0, fontSize: 13, color: '#52647F', lineHeight: 1.6 }}>${config.footer}</p>
             <p style={{ margin: 0, fontSize: 13, color: '#52647F', lineHeight: 1.6 }}>Theme ativo: ${themeName}</p>
@@ -426,6 +623,35 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
                 <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: '#50627D' }}>{metric.note}</p>
               </article>
             ))}
+          </section>
+
+          <section style={{ display: 'grid', gridTemplateColumns: '1.35fr 0.65fr', gap: 18 }}>
+            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <p style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Global controls</p>
+                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Filtros conectados ao runtime antigo</h2>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 14 }}>
+                <DatePickerMarker label="Periodo do pedido" table="vendas.pedidos" field="data_pedido" presets={['7d', '30d', 'month']} />
+                <SlicerMarker
+                  label="Canal de venda"
+                  field="canal_venda_id"
+                  variant="dropdown"
+                  selectionMode="multiple"
+                  search
+                  clearable
+                  width={280}
+                  query={CHANNEL_SLICER_QUERY}
+                />
+              </div>
+            </article>
+
+            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#EAF1FF', border: '1px solid #D7E3FA', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <p style={{ margin: 0, fontSize: 11, color: '#5E75A1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Why this matters</p>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                The JSX template now keeps the semantic structure, while filters continue to feed the BI runtime. Charts, tables and pivots read the same global filter state without bringing back the old string parser.
+              </p>
+            </article>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 18 }}>
@@ -496,6 +722,49 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
                   </li>
                 ))}
               </ul>
+            </article>
+          </section>
+
+          <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 18 }}>
+            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <p style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</p>
+                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Pedidos filtrados em detalhe</h2>
+              </div>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                The table below consumes the same slicers and date markers as the charts, so the JSX dashboard keeps one shared filter model.
+              </p>
+              <TableMarker
+                height={360}
+                bordered
+                rounded
+                stickyHeader
+                dataQuery={ORDERS_TABLE_DATA_QUERY}
+                columns={ORDERS_TABLE_COLUMNS}
+                enableExportCsv
+              />
+            </article>
+
+            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#EAF1FF', border: '1px solid #D7E3FA', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <p style={{ margin: 0, fontSize: 11, color: '#5E75A1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</p>
+                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Receita por canal e status</h2>
+              </div>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                PivotTable stays query-driven too, but now it sits directly inside the JSX template instead of depending on the old DSL string pipeline.
+              </p>
+              <PivotTableMarker
+                height={360}
+                bordered
+                rounded
+                stickyHeader
+                enableExportCsv
+                defaultExpandedLevels={1}
+                dataQuery={SALES_PIVOT_DATA_QUERY}
+                rows={SALES_PIVOT_ROWS}
+                columns={SALES_PIVOT_COLUMNS}
+                values={SALES_PIVOT_VALUES}
+              />
             </article>
           </section>
 
