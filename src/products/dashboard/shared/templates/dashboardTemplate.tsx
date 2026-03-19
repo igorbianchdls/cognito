@@ -9,6 +9,15 @@ type MarkerProps = {
   title?: string
 }
 
+type BarChartMarkerProps = {
+  colorScheme?: string[]
+  dataQuery?: Record<string, unknown>
+  format?: 'currency' | 'number' | 'percent'
+  height?: number
+  interaction?: Record<string, unknown>
+  recharts?: Record<string, unknown>
+}
+
 type DashboardMetric = {
   label: string
   note: string
@@ -54,9 +63,14 @@ function DashboardMarker({ children }: MarkerProps) {
   return <>{children}</>
 }
 
+function BarChartMarker(_: BarChartMarkerProps) {
+  return null
+}
+
 DashboardTemplateMarker.displayName = 'DashboardTemplate'
 ThemeMarker.displayName = 'Theme'
 DashboardMarker.displayName = 'Dashboard'
+BarChartMarker.displayName = 'BarChart'
 
 const DASHBOARD_VARIANTS: DashboardVariantConfig[] = [
   {
@@ -127,6 +141,35 @@ const DASHBOARD_VARIANTS: DashboardVariantConfig[] = [
   },
 ]
 
+const SALES_CHANNEL_QUERY = `
+  SELECT
+    COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
+    COALESCE(cv.nome, '-') AS label,
+    COALESCE(SUM(pi.subtotal), 0)::float AS value
+  FROM vendas.pedidos p
+  JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+  LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+  WHERE 1=1
+    {{filters:p}}
+  GROUP BY 1, 2
+  ORDER BY 3 DESC
+`
+
+const SALES_CHANNEL_DATA_QUERY = {
+  query: SALES_CHANNEL_QUERY,
+  xField: 'label',
+  yField: 'value',
+  keyField: 'key',
+  dimension: 'canal_venda',
+  limit: 6,
+}
+
+const SALES_CHANNEL_INTERACTION = {
+  table: 'vendas.pedidos',
+  field: 'canal_venda_id',
+  clearOnSecondClick: true,
+}
+
 function getElementTypeName(type: unknown): string {
   if (typeof type === 'string') return type
   if (typeof type === 'function') {
@@ -178,6 +221,27 @@ function buildPriorityItemsSource(items: string[]) {
 
 function buildDashboardTemplateSource(config: DashboardVariantConfig, themeName: string) {
   return `export function ${config.name.replace(/(^|_)([a-z])/g, (_match, _a, letter: string) => letter.toUpperCase())}() {
+  const salesChannelDataQuery = {
+    query: \`
+      SELECT
+        COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
+        COALESCE(cv.nome, '-') AS label,
+        COALESCE(SUM(pi.subtotal), 0)::float AS value
+      FROM vendas.pedidos p
+      JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+      LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+      WHERE 1=1
+        {{filters:p}}
+      GROUP BY 1, 2
+      ORDER BY 3 DESC
+    \`,
+    xField: 'label',
+    yField: 'value',
+    keyField: 'key',
+    dimension: 'canal_venda',
+    limit: 6,
+  }
+
   return (
     <DashboardTemplate name="${config.name}" title="${config.title}">
       <Theme name="${themeName}" />
@@ -205,15 +269,20 @@ ${buildMetricCardsSource(config.metrics)}
           <section style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 18, flex: 1 }}>
             <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Narrative</p>
-                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>HTML-first dashboard structure</h2>
+                <p style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven chart</p>
+                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Receita por canal</h2>
               </div>
               <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
-                This dashboard is intentionally static. The objective is to prove that the workspace can render a clean JSX template before any specialized widget is layered back in.
+                This first widget is still driven by query, filters and click interaction. The template is JSX, but the chart behavior remains connected to the BI data runtime.
               </p>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
-                Instead of abstractions like cards, KPIs or charts, the template uses plain semantic HTML sections with explicit spacing and copy blocks.
-              </p>
+              <BarChart
+                height={280}
+                format="currency"
+                colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
+                dataQuery={salesChannelDataQuery}
+                interaction={{ table: 'vendas.pedidos', field: 'canal_venda_id', clearOnSecondClick: true }}
+                recharts={{ categoryLabelMode: 'first-word', valueAxisWidth: 72 }}
+              />
             </article>
 
             <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#EAF1FF', border: '1px solid #D7E3FA', display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -274,15 +343,20 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
           <section style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 18, flex: 1 }}>
             <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Narrative</p>
-                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>HTML-first dashboard structure</h2>
+                <p style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven chart</p>
+                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Receita por canal</h2>
               </div>
               <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
-                This dashboard is intentionally static. The objective is to prove that the workspace can render a clean JSX template before any specialized widget is layered back in.
+                This first widget is still driven by query, filters and click interaction. The template is JSX, but the chart behavior remains connected to the BI data runtime.
               </p>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
-                Instead of abstractions like cards, KPIs or charts, the template uses plain semantic HTML sections with explicit spacing and copy blocks.
-              </p>
+              <BarChartMarker
+                height={280}
+                format="currency"
+                colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
+                dataQuery={SALES_CHANNEL_DATA_QUERY}
+                interaction={SALES_CHANNEL_INTERACTION}
+                recharts={{ categoryLabelMode: 'first-word', valueAxisWidth: 72 }}
+              />
             </article>
 
             <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#EAF1FF', border: '1px solid #D7E3FA', display: 'flex', flexDirection: 'column', gap: 14 }}>

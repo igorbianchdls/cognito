@@ -2,8 +2,10 @@
 
 import React from 'react'
 
+import JsonRenderBarChart from '@/products/bi/json-render/components/BarChart'
 import { mapManagersToCssVars } from '@/products/bi/json-render/theme/thememanagers'
 import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter'
+import { ThemeProvider } from '@/products/bi/json-render/theme/ThemeContext'
 
 type AnyRecord = Record<string, any>
 type DashboardRenderComponent = React.FC<{
@@ -30,15 +32,6 @@ const HTML_TAGS = new Set([
   'ol',
   'li',
 ])
-
-function cssVarsToStyle(cssVars: Record<string, string> | undefined): React.CSSProperties {
-  const out: Record<string, string> = {}
-  if (!cssVars) return out as React.CSSProperties
-  for (const [key, value] of Object.entries(cssVars)) {
-    out[`--${key}`] = value
-  }
-  return out as React.CSSProperties
-}
 
 function getNodeKey(node: any, fallbackIndex: number, path: number[]): string {
   const type = String(node?.type || 'node')
@@ -74,18 +67,19 @@ function DashboardTheme({ element, children }: { element: any; children?: React.
   const cssVars = preset.cssVars || mapManagersToCssVars(managers)
 
   return (
-    <div
-      style={{
-        width: '100%',
-        minHeight: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        minWidth: 0,
-        ...cssVarsToStyle(cssVars),
-      }}
-    >
-      {children}
-    </div>
+    <ThemeProvider name={name} cssVars={cssVars}>
+      <div
+        style={{
+          width: '100%',
+          minHeight: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          minWidth: 0,
+        }}
+      >
+        {children}
+      </div>
+    </ThemeProvider>
   )
 }
 
@@ -136,6 +130,7 @@ function resolveComponent(type: string): DashboardRenderComponent | undefined {
   if (type === 'DashboardTemplate') return ({ children }) => <DashboardRoot>{children}</DashboardRoot>
   if (type === 'Theme') return ({ element, children }) => <DashboardTheme element={element}>{children}</DashboardTheme>
   if (type === 'Dashboard') return ({ children }) => <DashboardSurface>{children}</DashboardSurface>
+  if (type === 'BarChart') return ({ element }) => <JsonRenderBarChart element={element} />
   if (type === 'TextNode') return ({ element }) => <>{String((element?.props?.text as string | undefined) || '')}</>
   if (type === 'Br') return () => <br />
   if (HTML_TAGS.has(type.toLowerCase())) {
