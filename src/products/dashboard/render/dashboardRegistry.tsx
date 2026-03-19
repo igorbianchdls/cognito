@@ -10,6 +10,10 @@ import { mapManagersToCssVars } from '@/products/bi/json-render/theme/thememanag
 import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter'
 import { ThemeProvider } from '@/products/bi/json-render/theme/ThemeContext'
 import DashboardDatePicker from '@/products/dashboard/render/components/DashboardDatePicker'
+import DashboardQuery, {
+  resolveDashboardQueryTemplate,
+  useDashboardQueryResult,
+} from '@/products/dashboard/render/components/DashboardQuery'
 
 type AnyRecord = Record<string, any>
 type DashboardRenderComponent = React.FC<{
@@ -114,7 +118,14 @@ function HtmlNode({
   children?: React.ReactNode
 }) {
   const props = (element?.props || {}) as Record<string, any>
-  const content = children ?? props.text ?? props.title ?? null
+  const queryResult = useDashboardQueryResult()
+  const fallbackContent =
+    typeof props.text === 'string'
+      ? resolveDashboardQueryTemplate(props.text, queryResult)
+      : typeof props.title === 'string'
+        ? resolveDashboardQueryTemplate(props.title, queryResult)
+        : null
+  const content = children ?? fallbackContent
 
   return React.createElement(
     tag,
@@ -138,11 +149,17 @@ function resolveComponent(type: string): DashboardRenderComponent | undefined {
   if (type === 'LineChart') return ({ element }) => <JsonRenderLineChart element={element} />
   if (type === 'PieChart') return ({ element }) => <JsonRenderPieChart element={element} />
   if (type === 'KPI') return ({ element, onAction }) => <biRegistry.KPI element={element} onAction={onAction} />
+  if (type === 'Query') return ({ element, children }) => <DashboardQuery element={element}>{children}</DashboardQuery>
   if (type === 'Table') return ({ element, onAction }) => <biRegistry.Table element={element} onAction={onAction} />
   if (type === 'PivotTable') return ({ element, onAction }) => <biRegistry.PivotTable element={element} onAction={onAction} />
   if (type === 'Slicer') return ({ element, onAction }) => <biRegistry.Slicer element={element} onAction={onAction} />
   if (type === 'DatePicker') return ({ element, onAction }) => <DashboardDatePicker element={element} onAction={onAction} />
-  if (type === 'TextNode') return ({ element }) => <>{String((element?.props?.text as string | undefined) || '')}</>
+  if (type === 'TextNode') {
+    return ({ element }) => {
+      const queryResult = useDashboardQueryResult()
+      return <>{resolveDashboardQueryTemplate(String((element?.props?.text as string | undefined) || ''), queryResult)}</>
+    }
+  }
   if (type === 'Br') return () => <br />
   if (HTML_TAGS.has(type.toLowerCase())) {
     return ({ element, children }) => <HtmlNode tag={type.toLowerCase() as keyof React.JSX.IntrinsicElements} element={element}>{children}</HtmlNode>
@@ -161,8 +178,9 @@ function RenderDashboardNode({
   onAction?: (action: any) => void
   path: number[]
 }) {
+  const queryResult = useDashboardQueryResult()
   if (node == null) return null
-  if (typeof node === 'string' || typeof node === 'number') return <>{String(node)}</>
+  if (typeof node === 'string' || typeof node === 'number') return <>{resolveDashboardQueryTemplate(String(node), queryResult)}</>
   if (typeof node !== 'object') return null
 
   const type = String(node.type || '').trim()

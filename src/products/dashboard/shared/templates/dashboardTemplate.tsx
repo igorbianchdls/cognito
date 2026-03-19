@@ -85,6 +85,10 @@ function KpiMarker(_: WidgetMarkerProps) {
   return null
 }
 
+function QueryMarker({ children }: MarkerProps & WidgetMarkerProps) {
+  return <>{children}</>
+}
+
 function TableMarker(_: WidgetMarkerProps) {
   return null
 }
@@ -108,6 +112,7 @@ BarChartMarker.displayName = 'BarChart'
 LineChartMarker.displayName = 'LineChart'
 PieChartMarker.displayName = 'PieChart'
 KpiMarker.displayName = 'KPI'
+QueryMarker.displayName = 'Query'
 TableMarker.displayName = 'Table'
 PivotTableMarker.displayName = 'PivotTable'
 SlicerMarker.displayName = 'Slicer'
@@ -514,21 +519,30 @@ ${buildMetricCardsSource(config.metrics)}
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-            <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>KPI query-driven</p>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Receita total</h2>
-              <KPI dataQuery={totalRevenueKpiDataQuery} format="currency" />
-            </article>
-            <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>KPI query-driven</p>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Pedidos no periodo</h2>
-              <KPI dataQuery={totalOrdersKpiDataQuery} format="number" />
-            </article>
-            <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>KPI query-driven</p>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Ticket medio</h2>
-              <KPI dataQuery={avgTicketKpiDataQuery} format="currency" />
-            </article>
+            <Query dataQuery={totalRevenueKpiDataQuery} format="currency" comparisonMode="previous_period">
+              <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
+                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Receita total</h2>
+                <p style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: '#172033' }}>{'{{query.valueFormatted}}'}</p>
+                <p style={{ margin: 0, fontSize: 13, color: '#52647F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              </article>
+            </Query>
+            <Query dataQuery={totalOrdersKpiDataQuery} format="number" comparisonMode="previous_period">
+              <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
+                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Pedidos no periodo</h2>
+                <p style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: '#172033' }}>{'{{query.valueFormatted}}'}</p>
+                <p style={{ margin: 0, fontSize: 13, color: '#52647F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              </article>
+            </Query>
+            <Query dataQuery={avgTicketKpiDataQuery} format="currency" comparisonMode="previous_period">
+              <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
+                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Ticket medio</h2>
+                <p style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: '#172033' }}>{'{{query.valueFormatted}}'}</p>
+                <p style={{ margin: 0, fontSize: 13, color: '#52647F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              </article>
+            </Query>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.35fr 0.65fr', gap: 18 }}>
@@ -715,21 +729,30 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-            <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>KPI query-driven</p>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Receita total</h2>
-              <KpiMarker dataQuery={TOTAL_REVENUE_KPI_DATA_QUERY} format="currency" />
-            </article>
-            <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>KPI query-driven</p>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Pedidos no periodo</h2>
-              <KpiMarker dataQuery={TOTAL_ORDERS_KPI_DATA_QUERY} format="number" />
-            </article>
-            <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>KPI query-driven</p>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Ticket medio</h2>
-              <KpiMarker dataQuery={AVG_TICKET_KPI_DATA_QUERY} format="currency" />
-            </article>
+            <QueryMarker dataQuery={TOTAL_REVENUE_KPI_DATA_QUERY} format="currency" comparisonMode="previous_period">
+              <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
+                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Receita total</h2>
+                <p style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: '#172033' }}>{'{{query.valueFormatted}}'}</p>
+                <p style={{ margin: 0, fontSize: 13, color: '#52647F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              </article>
+            </QueryMarker>
+            <QueryMarker dataQuery={TOTAL_ORDERS_KPI_DATA_QUERY} format="number" comparisonMode="previous_period">
+              <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
+                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Pedidos no periodo</h2>
+                <p style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: '#172033' }}>{'{{query.valueFormatted}}'}</p>
+                <p style={{ margin: 0, fontSize: 13, color: '#52647F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              </article>
+            </QueryMarker>
+            <QueryMarker dataQuery={AVG_TICKET_KPI_DATA_QUERY} format="currency" comparisonMode="previous_period">
+              <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
+                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Ticket medio</h2>
+                <p style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: '#172033' }}>{'{{query.valueFormatted}}'}</p>
+                <p style={{ margin: 0, fontSize: 13, color: '#52647F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              </article>
+            </QueryMarker>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.35fr 0.65fr', gap: 18 }}>
