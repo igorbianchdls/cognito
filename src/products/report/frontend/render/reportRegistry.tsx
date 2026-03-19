@@ -2,9 +2,15 @@
 
 import React from 'react'
 
+import JsonRenderQuery, {
+  resolveQueryTemplate,
+  useQueryResult,
+} from '@/products/bi/json-render/components/QueryRuntime'
+import { renderChartByType } from '@/products/bi/json-render/components/chartFacade'
+import { registry as biRegistry } from '@/products/bi/json-render/registry'
+import { ThemeProvider } from '@/products/bi/json-render/theme/ThemeContext'
 import { mapManagersToCssVars } from '@/products/bi/json-render/theme/thememanagers'
 import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter'
-import { ReportChart } from '@/products/report/frontend/render/components/ReportChart'
 
 type AnyRecord = Record<string, any>
 type ReportRenderComponent = React.FC<{
@@ -71,19 +77,21 @@ function ReportTheme({ element, children }: { element: any; children?: React.Rea
   const cssVars = preset.cssVars || mapManagersToCssVars(managers)
 
   return (
-    <div
-      style={{
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        minWidth: 0,
-        minHeight: 0,
-        ...cssVarsToStyle(cssVars),
-      }}
-    >
-      {children}
-    </div>
+    <ThemeProvider name={name} cssVars={cssVars}>
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          minWidth: 0,
+          minHeight: 0,
+          ...cssVarsToStyle(cssVars),
+        }}
+      >
+        {children}
+      </div>
+    </ThemeProvider>
   )
 }
 
@@ -116,7 +124,14 @@ function HtmlNode({
   children?: React.ReactNode
 }) {
   const props = (element?.props || {}) as Record<string, any>
-  const content = children ?? props.text ?? props.title ?? null
+  const queryResult = useQueryResult()
+  const fallbackContent =
+    typeof props.text === 'string'
+      ? resolveQueryTemplate(props.text, queryResult)
+      : typeof props.title === 'string'
+        ? resolveQueryTemplate(props.title, queryResult)
+        : null
+  const content = children ?? fallbackContent
   return React.createElement(
     tag,
     {
@@ -134,8 +149,16 @@ function HtmlNode({
 function resolveComponent(type: string): ReportRenderComponent | undefined {
   if (type === 'Theme') return ({ element, children }) => <ReportTheme element={element}>{children}</ReportTheme>
   if (type === 'Report') return ({ children }) => <ReportSurface>{children}</ReportSurface>
-  if (type === 'Chart') return ({ element }) => <ReportChart element={element} />
-  if (type === 'TextNode') return ({ element }) => <>{String((element?.props?.text as string | undefined) || '')}</>
+  if (type === 'Chart') return ({ element, onAction }) => <>{renderChartByType((element?.props || {}).type, element, onAction)}</>
+  if (type === 'Query') return ({ element, children }) => <JsonRenderQuery element={element}>{children}</JsonRenderQuery>
+  if (type === 'Table') return ({ element, onAction }) => <biRegistry.Table element={element} onAction={onAction} />
+  if (type === 'PivotTable') return ({ element, onAction }) => <biRegistry.PivotTable element={element} onAction={onAction} />
+  if (type === 'TextNode') {
+    return ({ element }) => {
+      const queryResult = useQueryResult()
+      return <>{resolveQueryTemplate(String((element?.props?.text as string | undefined) || ''), queryResult)}</>
+    }
+  }
   if (type === 'Br') return () => <br />
   if (HTML_TAGS.has(type.toLowerCase())) {
     return ({ element, children }) => <HtmlNode tag={type.toLowerCase() as keyof React.JSX.IntrinsicElements} element={element}>{children}</HtmlNode>
@@ -154,8 +177,9 @@ function RenderReportNode({
   onAction?: (action: any) => void
   path: number[]
 }) {
+  const queryResult = useQueryResult()
   if (node == null) return null
-  if (typeof node === 'string' || typeof node === 'number') return <>{String(node)}</>
+  if (typeof node === 'string' || typeof node === 'number') return <>{resolveQueryTemplate(String(node), queryResult)}</>
   if (typeof node !== 'object') return null
 
   const type = String(node.type || '').trim()

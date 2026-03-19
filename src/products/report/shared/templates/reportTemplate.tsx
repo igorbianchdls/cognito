@@ -9,15 +9,47 @@ type MarkerProps = {
   title?: string
 }
 
+type QueryMarkerProps = MarkerProps & {
+  comparisonMode?: 'previous_period' | 'previous_month' | 'previous_year'
+  dataQuery?: Record<string, unknown>
+  format?: 'currency' | 'number' | 'percent'
+  resultPath?: string
+  valueKey?: string
+}
+
 type ChartMarkerProps = {
-  data?: Array<Record<string, unknown>>
+  colorScheme?: string[]
+  dataQuery?: Record<string, unknown>
+  format?: 'currency' | 'number' | 'percent'
   height?: number
-  series?: Array<string | { color?: string; key: string; label?: string }>
+  interaction?: Record<string, unknown>
+  recharts?: Record<string, unknown>
   style?: React.CSSProperties
   title?: string
-  type?: 'bar'
-  xKey?: string
-  format?: 'currency' | 'number' | 'percent'
+  type?: 'bar' | 'line' | 'pie'
+}
+
+type TableMarkerProps = {
+  bordered?: boolean
+  columns?: Array<Record<string, unknown>>
+  dataQuery?: Record<string, unknown>
+  enableExportCsv?: boolean
+  height?: number
+  rounded?: boolean
+  stickyHeader?: boolean
+}
+
+type PivotTableMarkerProps = {
+  bordered?: boolean
+  columns?: Array<Record<string, unknown>>
+  dataQuery?: Record<string, unknown>
+  defaultExpandedLevels?: number
+  enableExportCsv?: boolean
+  height?: number
+  rounded?: boolean
+  rows?: Array<Record<string, unknown>>
+  stickyHeader?: boolean
+  values?: Array<Record<string, unknown>>
 }
 
 function ReportTemplateMarker({ children }: MarkerProps) {
@@ -32,246 +64,338 @@ function ReportMarker({ children }: MarkerProps) {
   return <>{children}</>
 }
 
+function QueryMarker({ children }: QueryMarkerProps) {
+  return <>{children}</>
+}
+
 function ChartMarker(_: ChartMarkerProps) {
+  return null
+}
+
+function TableMarker(_: TableMarkerProps) {
+  return null
+}
+
+function PivotTableMarker(_: PivotTableMarkerProps) {
   return null
 }
 
 ReportTemplateMarker.displayName = 'ReportTemplate'
 ThemeMarker.displayName = 'Theme'
 ReportMarker.displayName = 'Report'
+QueryMarker.displayName = 'Query'
 ChartMarker.displayName = 'Chart'
+TableMarker.displayName = 'Table'
+PivotTableMarker.displayName = 'PivotTable'
 
-export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="executive_report_runtime" title="Executive Report Review">
+export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="executive_report_runtime" title="Executive Sales Report">
   <Theme name="light" />
 
-  <Report id="cover" title="Cover">
-    <section style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%', padding: 52, backgroundColor: '#FFFFFF', gap: 28 }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <p style={{ margin: 0, fontSize: 11, color: '#8B8E97', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Q4 / 2025 / Report Runtime Review</p>
-        <h1 style={{ margin: 0, fontSize: 32, fontWeight: 600, color: '#20232A', letterSpacing: '-0.03em', lineHeight: 1.15 }}>Executive Report Review</h1>
-        <p style={{ margin: 0, color: '#5C6470', maxWidth: '72%', lineHeight: 1.7 }}>
-          A document-style report now rendered as pure HTML, prioritizing stable pagination, reliable typography and predictable page layout before richer widgets return.
+  <Report id="summary" title="Summary">
+    <section style={{ display: 'flex', flexDirection: 'column', minHeight: '100%', padding: 52, backgroundColor: '#FFFFFF', gap: 18 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <p style={{ margin: 0, fontSize: 11, color: '#8B8E97', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Executive report</p>
+        <h1 style={{ margin: 0, fontSize: 30, fontWeight: 700, color: '#20232A', letterSpacing: '-0.03em' }}>Commercial performance summary</h1>
+        <p style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: '#556070' }}>
+          Report keeps layout in HTML and only uses data-oriented components where they add value.
         </p>
       </div>
 
-      <ul style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 12, color: '#384152', fontSize: 13, lineHeight: 1.7 }}>
-        <li>Report layout no longer depends on the generic BI parser.</li>
-        <li>Text, headings and sections are authored as HTML and rendered without widget translation.</li>
-        <li>Future data components will be reintroduced only after document geometry is stable.</li>
-      </ul>
-
-      <section style={{ display: 'flex', flexDirection: 'column', gap: 18, flex: 1, padding: 24, backgroundColor: '#EAF8FF', borderRadius: 32 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, alignItems: 'stretch' }}>
-          <article style={{ padding: 20, border: '1px solid #D7ECF8', borderRadius: 20, backgroundColor: '#F7FCFF' }}>
-            <p style={{ margin: 0, marginBottom: 8, fontSize: 11, color: '#6E7F91', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Document behavior</p>
-            <h2 style={{ margin: 0, marginBottom: 10, fontSize: 20, fontWeight: 600, color: '#1D2733', letterSpacing: '-0.03em', lineHeight: 1.2 }}>Static report baseline</h2>
-            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425063' }}>
-              The report runtime now starts from a static HTML baseline. That gives the page predictable flow and avoids accidental dashboard behavior leaking into print-style documents.
-            </p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+        <Query dataQuery={{ query: 'SELECT COALESCE(SUM(p.valor_total), 0)::float AS value FROM vendas.pedidos p WHERE 1=1 {{filters:p}}', limit: 1 }} format="currency" comparisonMode="previous_period">
+          <article style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#F9FBFD' }}>
+            <p style={{ margin: 0, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Receita</p>
+            <h2 style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#20232A', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
+            <p style={{ margin: 0, fontSize: 12, color: '#5E697B' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
           </article>
-
-          <article style={{ padding: 20, border: '1px solid #D7ECF8', borderRadius: 20, backgroundColor: '#FFFFFF' }}>
-            <p style={{ margin: 0, marginBottom: 8, fontSize: 11, color: '#6E7F91', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Reading flow</p>
-            <h2 style={{ margin: 0, marginBottom: 10, fontSize: 20, fontWeight: 600, color: '#1D2733', letterSpacing: '-0.03em', lineHeight: 1.2 }}>Document-first composition</h2>
-            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425063' }}>
-              Sections, paragraphs and emphasis are represented directly as HTML, so the report behaves like a real document instead of a dashboard snapshot.
-            </p>
+        </Query>
+        <Query dataQuery={{ query: 'SELECT COUNT(*)::float AS value FROM vendas.pedidos p WHERE 1=1 {{filters:p}}', limit: 1 }} format="number" comparisonMode="previous_period">
+          <article style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#F9FBFD' }}>
+            <p style={{ margin: 0, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pedidos</p>
+            <h2 style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#20232A', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
+            <p style={{ margin: 0, fontSize: 12, color: '#5E697B' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
           </article>
-        </div>
-      </section>
+        </Query>
+        <Query dataQuery={{ query: 'SELECT COALESCE(AVG(p.valor_total), 0)::float AS value FROM vendas.pedidos p WHERE 1=1 {{filters:p}}', limit: 1 }} format="currency" comparisonMode="previous_period">
+          <article style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#F9FBFD' }}>
+            <p style={{ margin: 0, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ticket medio</p>
+            <h2 style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#20232A', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
+            <p style={{ margin: 0, fontSize: 12, color: '#5E697B' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+          </article>
+        </Query>
+      </div>
+
+      <article style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#FFFFFF' }}>
+        <Chart
+          type="bar"
+          height={280}
+          format="currency"
+          colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
+          dataQuery={{
+            query: `
+              SELECT
+                COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
+                COALESCE(cv.nome, '-') AS label,
+                COALESCE(SUM(pi.subtotal), 0)::float AS value
+              FROM vendas.pedidos p
+              JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+              LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+              WHERE 1=1
+                {{filters:p}}
+              GROUP BY 1, 2
+              ORDER BY 3 DESC
+            `,
+            xField: 'label',
+            yField: 'value',
+            keyField: 'key',
+            dimension: 'canal_venda',
+            limit: 6,
+          }}
+          recharts={{ categoryLabelMode: 'first-word', valueAxisWidth: 72 }}
+        />
+      </article>
     </section>
   </Report>
 
-  <Report id="summary" title="Summary">
-    <section style={{ display: 'flex', flexDirection: 'column', minHeight: '100%', padding: 52, backgroundColor: '#FFFFFF', gap: 22 }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <p style={{ margin: 0, fontSize: 11, color: '#8B8E97', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Executive Report Review</p>
-        <h1 style={{ margin: 0, fontSize: 28, fontWeight: 600, color: '#20232A', letterSpacing: '-0.03em', lineHeight: 1.15 }}>Why report runtime should be independent</h1>
-      </div>
-
-      <p style={{ margin: 0, fontSize: 13, lineHeight: 1.75, color: '#4E5665' }}>
-        Reports have different constraints from slides and dashboards. They need stable vertical flow, printable page behavior and predictable section spacing.
-      </p>
-
-      <ul style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 8, color: '#2A3140', fontSize: 13, lineHeight: 1.65 }}>
-        <li>Document pages can expand vertically, but pagination must remain visually coherent.</li>
-        <li>HTML paragraphs and headings are easier to reason about than generic BI widgets in a report context.</li>
-        <li>The runtime can evolve incrementally after the static reading flow is solid.</li>
-      </ul>
-
-      <article style={{ padding: 18, border: '1px solid #E8EBF1', borderRadius: 18, backgroundColor: '#FFFFFF' }}>
-        <h2 style={{ margin: 0, marginBottom: 8, fontSize: 18, fontWeight: 600, color: '#20232A', letterSpacing: '-0.02em', lineHeight: 1.25 }}>Practical consequence</h2>
-        <p style={{ margin: 0, fontSize: 13, lineHeight: 1.75, color: '#4E5665' }}>
-          A dedicated report parser and renderer let the document focus on semantic sections and narrative flow, instead of inheriting interaction-heavy assumptions from dashboards.
-        </p>
+  <Report id="detail" title="Detail">
+    <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', minHeight: '100%', padding: 52, backgroundColor: '#FFFFFF', gap: 18 }}>
+      <article style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#FFFFFF' }}>
+        <p style={{ margin: 0, marginBottom: 10, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</p>
+        <Table
+          height={520}
+          bordered
+          rounded
+          stickyHeader
+          enableExportCsv
+          dataQuery={{
+            query: `
+              SELECT
+                p.id::text AS pedido_id,
+                TO_CHAR(p.data_pedido::date, 'DD/MM/YYYY') AS data_pedido,
+                COALESCE(cv.nome, '-') AS canal,
+                COALESCE(p.status, 'Sem status') AS status,
+                COALESCE(p.valor_total, 0)::float AS valor_total
+              FROM vendas.pedidos p
+              LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+              WHERE 1=1
+                {{filters:p}}
+              ORDER BY p.data_pedido DESC NULLS LAST, p.id DESC
+            `,
+            limit: 14,
+          }}
+          columns={[
+            { accessorKey: 'pedido_id', header: 'Pedido' },
+            { accessorKey: 'data_pedido', header: 'Data' },
+            { accessorKey: 'canal', header: 'Canal' },
+            { accessorKey: 'status', header: 'Status', cell: 'badge', meta: { variantMap: { aprovado: 'success', pendente: 'warning', cancelado: 'danger' } } },
+            { accessorKey: 'valor_total', header: 'Receita', format: 'currency', align: 'right', headerAlign: 'right' },
+          ]}
+        />
       </article>
 
-      <Chart
-        type="bar"
-        title="Runtime complexity comparison"
-        xKey="stage"
-        height={240}
-        format="number"
-        style={{ padding: 18, border: '1px solid #E8EBF1', borderRadius: 18, backgroundColor: '#FAFBFD' }}
-        data={[
-          { stage: 'Parsing', previous: 3, current: 1 },
-          { stage: 'Debug', previous: 5, current: 2 },
-          { stage: 'Layout', previous: 4, current: 2 },
-          { stage: 'Export', previous: 4, current: 2 },
-        ]}
-        series={[
-          { key: 'previous', label: 'Before', color: '#CBD5E1' },
-          { key: 'current', label: 'Now', color: '#2563EB' },
-        ]}
-      />
-    </section>
-  </Report>
-
-  <Report id="details" title="Details">
-    <section style={{ display: 'flex', flexDirection: 'column', minHeight: '100%', padding: 52, backgroundColor: '#FFFFFF', gap: 20 }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <p style={{ margin: 0, fontSize: 11, color: '#8B8E97', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Implementation roadmap</p>
-        <h1 style={{ margin: 0, fontSize: 26, fontWeight: 600, color: '#20232A', letterSpacing: '-0.03em', lineHeight: 1.15 }}>What comes next</h1>
-        <p style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: '#5C6470', maxWidth: '78%' }}>
-          The first stable state is a pure HTML report. Special data components return only after the page flow remains correct in preview, thumbnails and PDF export.
-        </p>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 18 }}>
-        <article style={{ padding: 20, borderRadius: 18, backgroundColor: '#F8FAFC', border: '1px solid #E8EBF1' }}>
-          <p style={{ margin: 0, marginBottom: 8, fontSize: 11, color: '#8B8E97', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Phase 1</p>
-          <h2 style={{ margin: 0, marginBottom: 10, fontSize: 18, fontWeight: 600, color: '#20232A' }}>Static report pages</h2>
-          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: '#4E5665' }}>Validate reading flow, pagination, preview rendering and export capture with HTML-only content.</p>
-        </article>
-        <article style={{ padding: 20, borderRadius: 18, backgroundColor: '#F8FAFC', border: '1px solid #E8EBF1' }}>
-          <p style={{ margin: 0, marginBottom: 8, fontSize: 11, color: '#8B8E97', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Phase 2</p>
-          <h2 style={{ margin: 0, marginBottom: 10, fontSize: 18, fontWeight: 600, color: '#20232A' }}>One component at a time</h2>
-          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: '#4E5665' }}>Reintroduce charts or tables through report-specific wrappers instead of the old BI runtime.</p>
-        </article>
-        <article style={{ padding: 20, borderRadius: 18, backgroundColor: '#F8FAFC', border: '1px solid #E8EBF1' }}>
-          <p style={{ margin: 0, marginBottom: 8, fontSize: 11, color: '#8B8E97', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Phase 3</p>
-          <h2 style={{ margin: 0, marginBottom: 10, fontSize: 18, fontWeight: 600, color: '#20232A' }}>Richer document DSL</h2>
-          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: '#4E5665' }}>Only after runtime stability, extend the report DSL with controlled special blocks where they actually add value.</p>
-        </article>
-      </div>
+      <article style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#F9FBFD' }}>
+        <p style={{ margin: 0, marginBottom: 10, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</p>
+        <PivotTable
+          height={520}
+          bordered
+          rounded
+          stickyHeader
+          enableExportCsv
+          defaultExpandedLevels={1}
+          dataQuery={{
+            query: `
+              SELECT
+                COALESCE(cv.nome, '-') AS canal,
+                COALESCE(p.status, 'Sem status') AS status,
+                COALESCE(p.valor_total, 0)::float AS valor_total
+              FROM vendas.pedidos p
+              LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+              WHERE 1=1
+                {{filters:p}}
+            `,
+            limit: 400,
+          }}
+          rows={[{ field: 'canal', label: 'Canal' }]}
+          columns={[{ field: 'status', label: 'Status' }]}
+          values={[{ field: 'valor_total', label: 'Receita', aggregate: 'sum', format: 'currency' }]}
+        />
+      </article>
     </section>
   </Report>
 </ReportTemplate>`
 
 export const REPORT_TEMPLATE = (
-  <ReportTemplateMarker name="executive_report_runtime" title="Executive Report Review">
+  <ReportTemplateMarker name="executive_report_runtime" title="Executive Sales Report">
     <ThemeMarker name="light" />
 
-    <ReportMarker id="cover" title="Cover">
-      <section style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%', padding: 52, backgroundColor: '#FFFFFF', gap: 28 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <p style={{ margin: 0, fontSize: 11, color: '#8B8E97', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Q4 / 2025 / Report Runtime Review</p>
-          <h1 style={{ margin: 0, fontSize: 32, fontWeight: 600, color: '#20232A', letterSpacing: '-0.03em', lineHeight: 1.15 }}>Executive Report Review</h1>
-          <p style={{ margin: 0, color: '#5C6470', maxWidth: '72%', lineHeight: 1.7 }}>
-            A document-style report now rendered as pure HTML, prioritizing stable pagination, reliable typography and predictable page layout before richer widgets return.
+    <ReportMarker id="summary" title="Summary">
+      <section style={{ display: 'flex', flexDirection: 'column', minHeight: '100%', padding: 52, backgroundColor: '#FFFFFF', gap: 18 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <p style={{ margin: 0, fontSize: 11, color: '#8B8E97', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Executive report</p>
+          <h1 style={{ margin: 0, fontSize: 30, fontWeight: 700, color: '#20232A', letterSpacing: '-0.03em' }}>Commercial performance summary</h1>
+          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: '#556070' }}>
+            Report keeps layout in HTML and only uses data-oriented components where they add value.
           </p>
         </div>
 
-        <ul style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 12, color: '#384152', fontSize: 13, lineHeight: 1.7 }}>
-          <li>Report layout no longer depends on the generic BI parser.</li>
-          <li>Text, headings and sections are authored as HTML and rendered without widget translation.</li>
-          <li>Future data components will be reintroduced only after document geometry is stable.</li>
-        </ul>
-
-        <section style={{ display: 'flex', flexDirection: 'column', gap: 18, flex: 1, padding: 24, backgroundColor: '#EAF8FF', borderRadius: 32 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, alignItems: 'stretch' }}>
-            <article style={{ padding: 20, border: '1px solid #D7ECF8', borderRadius: 20, backgroundColor: '#F7FCFF' }}>
-              <p style={{ margin: 0, marginBottom: 8, fontSize: 11, color: '#6E7F91', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Document behavior</p>
-              <h2 style={{ margin: 0, marginBottom: 10, fontSize: 20, fontWeight: 600, color: '#1D2733', letterSpacing: '-0.03em', lineHeight: 1.2 }}>Static report baseline</h2>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425063' }}>
-                The report runtime now starts from a static HTML baseline. That gives the page predictable flow and avoids accidental dashboard behavior leaking into print-style documents.
-              </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+          <QueryMarker
+            dataQuery={{
+              query: `
+                SELECT
+                  COALESCE(SUM(p.valor_total), 0)::float AS value
+                FROM vendas.pedidos p
+                WHERE 1=1
+                  {{filters:p}}
+              `,
+              limit: 1,
+            }}
+            format="currency"
+            comparisonMode="previous_period"
+          >
+            <article style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#F9FBFD' }}>
+              <p style={{ margin: 0, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Receita</p>
+              <h2 style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#20232A', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
+              <p style={{ margin: 0, fontSize: 12, color: '#5E697B' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
             </article>
-
-            <article style={{ padding: 20, border: '1px solid #D7ECF8', borderRadius: 20, backgroundColor: '#FFFFFF' }}>
-              <p style={{ margin: 0, marginBottom: 8, fontSize: 11, color: '#6E7F91', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Reading flow</p>
-              <h2 style={{ margin: 0, marginBottom: 10, fontSize: 20, fontWeight: 600, color: '#1D2733', letterSpacing: '-0.03em', lineHeight: 1.2 }}>Document-first composition</h2>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425063' }}>
-                Sections, paragraphs and emphasis are represented directly as HTML, so the report behaves like a real document instead of a dashboard snapshot.
-              </p>
+          </QueryMarker>
+          <QueryMarker
+            dataQuery={{
+              query: `
+                SELECT
+                  COUNT(*)::float AS value
+                FROM vendas.pedidos p
+                WHERE 1=1
+                  {{filters:p}}
+              `,
+              limit: 1,
+            }}
+            format="number"
+            comparisonMode="previous_period"
+          >
+            <article style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#F9FBFD' }}>
+              <p style={{ margin: 0, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pedidos</p>
+              <h2 style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#20232A', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
+              <p style={{ margin: 0, fontSize: 12, color: '#5E697B' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
             </article>
-          </div>
-        </section>
+          </QueryMarker>
+          <QueryMarker
+            dataQuery={{
+              query: `
+                SELECT
+                  COALESCE(AVG(p.valor_total), 0)::float AS value
+                FROM vendas.pedidos p
+                WHERE 1=1
+                  {{filters:p}}
+              `,
+              limit: 1,
+            }}
+            format="currency"
+            comparisonMode="previous_period"
+          >
+            <article style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#F9FBFD' }}>
+              <p style={{ margin: 0, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ticket medio</p>
+              <h2 style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#20232A', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
+              <p style={{ margin: 0, fontSize: 12, color: '#5E697B' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+            </article>
+          </QueryMarker>
+        </div>
+
+        <article style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#FFFFFF' }}>
+          <ChartMarker
+            type="bar"
+            height={280}
+            format="currency"
+            colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
+            dataQuery={{
+              query: `
+                SELECT
+                  COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
+                  COALESCE(cv.nome, '-') AS label,
+                  COALESCE(SUM(pi.subtotal), 0)::float AS value
+                FROM vendas.pedidos p
+                JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                WHERE 1=1
+                  {{filters:p}}
+                GROUP BY 1, 2
+                ORDER BY 3 DESC
+              `,
+              xField: 'label',
+              yField: 'value',
+              keyField: 'key',
+              dimension: 'canal_venda',
+              limit: 6,
+            }}
+            recharts={{ categoryLabelMode: 'first-word', valueAxisWidth: 72 }}
+          />
+        </article>
       </section>
     </ReportMarker>
 
-    <ReportMarker id="summary" title="Summary">
-      <section style={{ display: 'flex', flexDirection: 'column', minHeight: '100%', padding: 52, backgroundColor: '#FFFFFF', gap: 22 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <p style={{ margin: 0, fontSize: 11, color: '#8B8E97', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Executive Report Review</p>
-          <h1 style={{ margin: 0, fontSize: 28, fontWeight: 600, color: '#20232A', letterSpacing: '-0.03em', lineHeight: 1.15 }}>Why report runtime should be independent</h1>
-        </div>
-
-        <p style={{ margin: 0, fontSize: 13, lineHeight: 1.75, color: '#4E5665' }}>
-          Reports have different constraints from slides and dashboards. They need stable vertical flow, printable page behavior and predictable section spacing.
-        </p>
-
-        <ul style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 8, color: '#2A3140', fontSize: 13, lineHeight: 1.65 }}>
-          <li>Document pages can expand vertically, but pagination must remain visually coherent.</li>
-          <li>HTML paragraphs and headings are easier to reason about than generic BI widgets in a report context.</li>
-          <li>The runtime can evolve incrementally after the static reading flow is solid.</li>
-        </ul>
-
-        <article style={{ padding: 18, border: '1px solid #E8EBF1', borderRadius: 18, backgroundColor: '#FFFFFF' }}>
-          <h2 style={{ margin: 0, marginBottom: 8, fontSize: 18, fontWeight: 600, color: '#20232A', letterSpacing: '-0.02em', lineHeight: 1.25 }}>Practical consequence</h2>
-          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.75, color: '#4E5665' }}>
-            A dedicated report parser and renderer let the document focus on semantic sections and narrative flow, instead of inheriting interaction-heavy assumptions from dashboards.
-          </p>
+    <ReportMarker id="detail" title="Detail">
+      <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', minHeight: '100%', padding: 52, backgroundColor: '#FFFFFF', gap: 18 }}>
+        <article style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#FFFFFF' }}>
+          <p style={{ margin: 0, marginBottom: 10, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</p>
+          <TableMarker
+            height={520}
+            bordered
+            rounded
+            stickyHeader
+            enableExportCsv
+            dataQuery={{
+              query: `
+                SELECT
+                  p.id::text AS pedido_id,
+                  TO_CHAR(p.data_pedido::date, 'DD/MM/YYYY') AS data_pedido,
+                  COALESCE(cv.nome, '-') AS canal,
+                  COALESCE(p.status, 'Sem status') AS status,
+                  COALESCE(p.valor_total, 0)::float AS valor_total
+                FROM vendas.pedidos p
+                LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                WHERE 1=1
+                  {{filters:p}}
+                ORDER BY p.data_pedido DESC NULLS LAST, p.id DESC
+              `,
+              limit: 14,
+            }}
+            columns={[
+              { accessorKey: 'pedido_id', header: 'Pedido' },
+              { accessorKey: 'data_pedido', header: 'Data' },
+              { accessorKey: 'canal', header: 'Canal' },
+              { accessorKey: 'status', header: 'Status', cell: 'badge', meta: { variantMap: { aprovado: 'success', pendente: 'warning', cancelado: 'danger' } } },
+              { accessorKey: 'valor_total', header: 'Receita', format: 'currency', align: 'right', headerAlign: 'right' },
+            ]}
+          />
         </article>
 
-        <ChartMarker
-          type="bar"
-          title="Runtime complexity comparison"
-          xKey="stage"
-          height={240}
-          format="number"
-          style={{ padding: 18, border: '1px solid #E8EBF1', borderRadius: 18, backgroundColor: '#FAFBFD' }}
-          data={[
-            { stage: 'Parsing', previous: 3, current: 1 },
-            { stage: 'Debug', previous: 5, current: 2 },
-            { stage: 'Layout', previous: 4, current: 2 },
-            { stage: 'Export', previous: 4, current: 2 },
-          ]}
-          series={[
-            { key: 'previous', label: 'Before', color: '#CBD5E1' },
-            { key: 'current', label: 'Now', color: '#2563EB' },
-          ]}
-        />
-      </section>
-    </ReportMarker>
-
-    <ReportMarker id="details" title="Details">
-      <section style={{ display: 'flex', flexDirection: 'column', minHeight: '100%', padding: 52, backgroundColor: '#FFFFFF', gap: 20 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <p style={{ margin: 0, fontSize: 11, color: '#8B8E97', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Implementation roadmap</p>
-          <h1 style={{ margin: 0, fontSize: 26, fontWeight: 600, color: '#20232A', letterSpacing: '-0.03em', lineHeight: 1.15 }}>What comes next</h1>
-          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: '#5C6470', maxWidth: '78%' }}>
-            The first stable state is a pure HTML report. Special data components return only after the page flow remains correct in preview, thumbnails and PDF export.
-          </p>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 18 }}>
-          <article style={{ padding: 20, borderRadius: 18, backgroundColor: '#F8FAFC', border: '1px solid #E8EBF1' }}>
-            <p style={{ margin: 0, marginBottom: 8, fontSize: 11, color: '#8B8E97', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Phase 1</p>
-            <h2 style={{ margin: 0, marginBottom: 10, fontSize: 18, fontWeight: 600, color: '#20232A' }}>Static report pages</h2>
-            <p style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: '#4E5665' }}>Validate reading flow, pagination, preview rendering and export capture with HTML-only content.</p>
-          </article>
-          <article style={{ padding: 20, borderRadius: 18, backgroundColor: '#F8FAFC', border: '1px solid #E8EBF1' }}>
-            <p style={{ margin: 0, marginBottom: 8, fontSize: 11, color: '#8B8E97', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Phase 2</p>
-            <h2 style={{ margin: 0, marginBottom: 10, fontSize: 18, fontWeight: 600, color: '#20232A' }}>One component at a time</h2>
-            <p style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: '#4E5665' }}>Reintroduce charts or tables through report-specific wrappers instead of the old BI runtime.</p>
-          </article>
-          <article style={{ padding: 20, borderRadius: 18, backgroundColor: '#F8FAFC', border: '1px solid #E8EBF1' }}>
-            <p style={{ margin: 0, marginBottom: 8, fontSize: 11, color: '#8B8E97', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Phase 3</p>
-            <h2 style={{ margin: 0, marginBottom: 10, fontSize: 18, fontWeight: 600, color: '#20232A' }}>Richer document DSL</h2>
-            <p style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: '#4E5665' }}>Only after runtime stability, extend the report DSL with controlled special blocks where they actually add value.</p>
-          </article>
-        </div>
+        <article style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#F9FBFD' }}>
+          <p style={{ margin: 0, marginBottom: 10, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</p>
+          <PivotTableMarker
+            height={520}
+            bordered
+            rounded
+            stickyHeader
+            enableExportCsv
+            defaultExpandedLevels={1}
+            dataQuery={{
+              query: `
+                SELECT
+                  COALESCE(cv.nome, '-') AS canal,
+                  COALESCE(p.status, 'Sem status') AS status,
+                  COALESCE(p.valor_total, 0)::float AS valor_total
+                FROM vendas.pedidos p
+                LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                WHERE 1=1
+                  {{filters:p}}
+              `,
+              limit: 400,
+            }}
+            rows={[{ field: 'canal', label: 'Canal' }]}
+            columns={[{ field: 'status', label: 'Status' }]}
+            values={[{ field: 'valor_total', label: 'Receita', aggregate: 'sum', format: 'currency' }]}
+          />
+        </article>
       </section>
     </ReportMarker>
   </ReportTemplateMarker>
