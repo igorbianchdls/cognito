@@ -137,6 +137,7 @@ function resolveComponent(type: string): DashboardRenderComponent | undefined {
   if (type === 'BarChart') return ({ element }) => <JsonRenderBarChart element={element} />
   if (type === 'LineChart') return ({ element }) => <JsonRenderLineChart element={element} />
   if (type === 'PieChart') return ({ element }) => <JsonRenderPieChart element={element} />
+  if (type === 'KPI') return ({ element, onAction }) => <biRegistry.KPI element={element} onAction={onAction} />
   if (type === 'Table') return ({ element, onAction }) => <biRegistry.Table element={element} onAction={onAction} />
   if (type === 'PivotTable') return ({ element, onAction }) => <biRegistry.PivotTable element={element} onAction={onAction} />
   if (type === 'Slicer') return ({ element, onAction }) => <biRegistry.Slicer element={element} onAction={onAction} />

@@ -81,6 +81,10 @@ function PieChartMarker(_: PieChartMarkerProps) {
   return null
 }
 
+function KpiMarker(_: WidgetMarkerProps) {
+  return null
+}
+
 function TableMarker(_: WidgetMarkerProps) {
   return null
 }
@@ -103,6 +107,7 @@ DashboardMarker.displayName = 'Dashboard'
 BarChartMarker.displayName = 'BarChart'
 LineChartMarker.displayName = 'LineChart'
 PieChartMarker.displayName = 'PieChart'
+KpiMarker.displayName = 'KPI'
 TableMarker.displayName = 'Table'
 PivotTableMarker.displayName = 'PivotTable'
 SlicerMarker.displayName = 'Slicer'
@@ -224,6 +229,39 @@ const SALES_TREND_DATA_QUERY = {
   yField: 'value',
   keyField: 'key',
   limit: 31,
+}
+
+const TOTAL_REVENUE_KPI_DATA_QUERY = {
+  query: `
+    SELECT
+      COALESCE(SUM(p.valor_total), 0)::float AS value
+    FROM vendas.pedidos p
+    WHERE 1=1
+      {{filters:p}}
+  `,
+  limit: 1,
+}
+
+const TOTAL_ORDERS_KPI_DATA_QUERY = {
+  query: `
+    SELECT
+      COUNT(*)::float AS value
+    FROM vendas.pedidos p
+    WHERE 1=1
+      {{filters:p}}
+  `,
+  limit: 1,
+}
+
+const AVG_TICKET_KPI_DATA_QUERY = {
+  query: `
+    SELECT
+      COALESCE(AVG(p.valor_total), 0)::float AS value
+    FROM vendas.pedidos p
+    WHERE 1=1
+      {{filters:p}}
+  `,
+  limit: 1,
 }
 
 const CHANNEL_SLICER_QUERY = `
@@ -371,6 +409,39 @@ function buildDashboardTemplateSource(config: DashboardVariantConfig, themeName:
     limit: 31,
   }
 
+  const totalRevenueKpiDataQuery = {
+    query: \`
+      SELECT
+        COALESCE(SUM(p.valor_total), 0)::float AS value
+      FROM vendas.pedidos p
+      WHERE 1=1
+        {{filters:p}}
+    \`,
+    limit: 1,
+  }
+
+  const totalOrdersKpiDataQuery = {
+    query: \`
+      SELECT
+        COUNT(*)::float AS value
+      FROM vendas.pedidos p
+      WHERE 1=1
+        {{filters:p}}
+    \`,
+    limit: 1,
+  }
+
+  const avgTicketKpiDataQuery = {
+    query: \`
+      SELECT
+        COALESCE(AVG(p.valor_total), 0)::float AS value
+      FROM vendas.pedidos p
+      WHERE 1=1
+        {{filters:p}}
+    \`,
+    limit: 1,
+  }
+
   const channelSlicerQuery = \`
     SELECT
       cv.id::text AS value,
@@ -440,6 +511,24 @@ function buildDashboardTemplateSource(config: DashboardVariantConfig, themeName:
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
 ${buildMetricCardsSource(config.metrics)}
+          </section>
+
+          <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+            <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>KPI query-driven</p>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Receita total</h2>
+              <KPI dataQuery={totalRevenueKpiDataQuery} format="currency" />
+            </article>
+            <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>KPI query-driven</p>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Pedidos no periodo</h2>
+              <KPI dataQuery={totalOrdersKpiDataQuery} format="number" />
+            </article>
+            <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>KPI query-driven</p>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Ticket medio</h2>
+              <KPI dataQuery={avgTicketKpiDataQuery} format="currency" />
+            </article>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.35fr 0.65fr', gap: 18 }}>
@@ -623,6 +712,24 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
                 <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: '#50627D' }}>{metric.note}</p>
               </article>
             ))}
+          </section>
+
+          <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+            <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>KPI query-driven</p>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Receita total</h2>
+              <KpiMarker dataQuery={TOTAL_REVENUE_KPI_DATA_QUERY} format="currency" />
+            </article>
+            <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>KPI query-driven</p>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Pedidos no periodo</h2>
+              <KpiMarker dataQuery={TOTAL_ORDERS_KPI_DATA_QUERY} format="number" />
+            </article>
+            <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>KPI query-driven</p>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Ticket medio</h2>
+              <KpiMarker dataQuery={AVG_TICKET_KPI_DATA_QUERY} format="currency" />
+            </article>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.35fr 0.65fr', gap: 18 }}>
