@@ -94,8 +94,8 @@ export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="executive
   <Report id="summary" title="Summary">
     <section style={{ display: 'flex', flexDirection: 'column', minHeight: '100%', padding: 52, backgroundColor: '#FFFFFF', gap: 18 }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <p style={{ margin: 0, fontSize: 11, color: '#8B8E97', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Executive report</p>
-        <h1 style={{ margin: 0, fontSize: 30, fontWeight: 700, color: '#20232A', letterSpacing: '-0.03em' }}>Commercial performance summary</h1>
+        <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#8B8E97', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Executive report</p>
+        <h1 data-ui="title" style={{ margin: 0, fontSize: 30, fontWeight: 700, color: '#20232A', letterSpacing: '-0.03em' }}>Commercial performance summary</h1>
         <p style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: '#556070' }}>
           Report keeps layout in HTML and only uses data-oriented components where they add value.
         </p>
@@ -103,29 +103,29 @@ export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="executive
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
         <Query dataQuery={{ query: 'SELECT COALESCE(SUM(p.valor_total), 0)::float AS value FROM vendas.pedidos p WHERE 1=1 {{filters:p}}', limit: 1 }} format="currency" comparisonMode="previous_period">
-          <article style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#F9FBFD' }}>
-            <p style={{ margin: 0, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Receita</p>
-            <h2 style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#20232A', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
+          <article data-ui="card" style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#F9FBFD' }}>
+            <p data-ui="kpi-title" style={{ margin: 0, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Receita</p>
+            <h2 data-ui="kpi-value" style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#20232A', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
             <p style={{ margin: 0, fontSize: 12, color: '#5E697B' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
           </article>
         </Query>
         <Query dataQuery={{ query: 'SELECT COUNT(*)::float AS value FROM vendas.pedidos p WHERE 1=1 {{filters:p}}', limit: 1 }} format="number" comparisonMode="previous_period">
-          <article style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#F9FBFD' }}>
-            <p style={{ margin: 0, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pedidos</p>
-            <h2 style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#20232A', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
+          <article data-ui="card" style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#F9FBFD' }}>
+            <p data-ui="kpi-title" style={{ margin: 0, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pedidos</p>
+            <h2 data-ui="kpi-value" style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#20232A', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
             <p style={{ margin: 0, fontSize: 12, color: '#5E697B' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
           </article>
         </Query>
         <Query dataQuery={{ query: 'SELECT COALESCE(AVG(p.valor_total), 0)::float AS value FROM vendas.pedidos p WHERE 1=1 {{filters:p}}', limit: 1 }} format="currency" comparisonMode="previous_period">
-          <article style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#F9FBFD' }}>
-            <p style={{ margin: 0, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ticket medio</p>
-            <h2 style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#20232A', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
+          <article data-ui="card" style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#F9FBFD' }}>
+            <p data-ui="kpi-title" style={{ margin: 0, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ticket medio</p>
+            <h2 data-ui="kpi-value" style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#20232A', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
             <p style={{ margin: 0, fontSize: 12, color: '#5E697B' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
           </article>
         </Query>
       </div>
 
-      <article style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#FFFFFF' }}>
+      <article data-ui="card" style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#FFFFFF' }}>
         <Chart
           type="bar"
           height={280}
@@ -147,8 +147,8 @@ export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="executive
 
   <Report id="detail" title="Detail">
     <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', minHeight: '100%', padding: 52, backgroundColor: '#FFFFFF', gap: 18 }}>
-      <article style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#FFFFFF' }}>
-        <p style={{ margin: 0, marginBottom: 10, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</p>
+      <article data-ui="table-card" style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#FFFFFF' }}>
+        <p data-ui="eyebrow" style={{ margin: 0, marginBottom: 10, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</p>
         <Table
           height={520}
           bordered
@@ -169,8 +169,8 @@ export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="executive
         />
       </article>
 
-      <article style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#F9FBFD' }}>
-        <p style={{ margin: 0, marginBottom: 10, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</p>
+      <article data-ui="pivot-card" style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#F9FBFD' }}>
+        <p data-ui="eyebrow" style={{ margin: 0, marginBottom: 10, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</p>
         <PivotTable
           height={520}
           bordered
@@ -198,8 +198,8 @@ export const REPORT_TEMPLATE = (
     <ReportMarker id="summary" title="Summary">
       <section style={{ display: 'flex', flexDirection: 'column', minHeight: '100%', padding: 52, backgroundColor: '#FFFFFF', gap: 18 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <p style={{ margin: 0, fontSize: 11, color: '#8B8E97', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Executive report</p>
-          <h1 style={{ margin: 0, fontSize: 30, fontWeight: 700, color: '#20232A', letterSpacing: '-0.03em' }}>Commercial performance summary</h1>
+          <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#8B8E97', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Executive report</p>
+          <h1 data-ui="title" style={{ margin: 0, fontSize: 30, fontWeight: 700, color: '#20232A', letterSpacing: '-0.03em' }}>Commercial performance summary</h1>
           <p style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: '#556070' }}>
             Report keeps layout in HTML and only uses data-oriented components where they add value.
           </p>
@@ -220,9 +220,9 @@ export const REPORT_TEMPLATE = (
             format="currency"
             comparisonMode="previous_period"
           >
-            <article style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#F9FBFD' }}>
-              <p style={{ margin: 0, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Receita</p>
-              <h2 style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#20232A', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
+            <article data-ui="card" style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#F9FBFD' }}>
+              <p data-ui="kpi-title" style={{ margin: 0, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Receita</p>
+              <h2 data-ui="kpi-value" style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#20232A', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
               <p style={{ margin: 0, fontSize: 12, color: '#5E697B' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
             </article>
           </QueryMarker>
@@ -240,9 +240,9 @@ export const REPORT_TEMPLATE = (
             format="number"
             comparisonMode="previous_period"
           >
-            <article style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#F9FBFD' }}>
-              <p style={{ margin: 0, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pedidos</p>
-              <h2 style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#20232A', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
+            <article data-ui="card" style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#F9FBFD' }}>
+              <p data-ui="kpi-title" style={{ margin: 0, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pedidos</p>
+              <h2 data-ui="kpi-value" style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#20232A', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
               <p style={{ margin: 0, fontSize: 12, color: '#5E697B' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
             </article>
           </QueryMarker>
@@ -260,9 +260,9 @@ export const REPORT_TEMPLATE = (
             format="currency"
             comparisonMode="previous_period"
           >
-            <article style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#F9FBFD' }}>
-              <p style={{ margin: 0, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ticket medio</p>
-              <h2 style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#20232A', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
+            <article data-ui="card" style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#F9FBFD' }}>
+              <p data-ui="kpi-title" style={{ margin: 0, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ticket medio</p>
+              <h2 data-ui="kpi-value" style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#20232A', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
               <p style={{ margin: 0, fontSize: 12, color: '#5E697B' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
             </article>
           </QueryMarker>
@@ -302,8 +302,8 @@ export const REPORT_TEMPLATE = (
 
     <ReportMarker id="detail" title="Detail">
       <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', minHeight: '100%', padding: 52, backgroundColor: '#FFFFFF', gap: 18 }}>
-        <article style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#FFFFFF' }}>
-          <p style={{ margin: 0, marginBottom: 10, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</p>
+        <article data-ui="table-card" style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#FFFFFF' }}>
+          <p data-ui="eyebrow" style={{ margin: 0, marginBottom: 10, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</p>
           <TableMarker
             height={520}
             bordered
@@ -336,8 +336,8 @@ export const REPORT_TEMPLATE = (
           />
         </article>
 
-        <article style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#F9FBFD' }}>
-          <p style={{ margin: 0, marginBottom: 10, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</p>
+        <article data-ui="pivot-card" style={{ padding: 18, border: '1px solid #E5EAF2', borderRadius: 18, backgroundColor: '#F9FBFD' }}>
+          <p data-ui="eyebrow" style={{ margin: 0, marginBottom: 10, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</p>
           <PivotTableMarker
             height={520}
             bordered

@@ -12,6 +12,128 @@ export function useThemeOverrides(): ThemeOverrides {
   return useContext(ThemeContext);
 }
 
+function resolveShadowToken(value: unknown): string | undefined {
+  const token = String(value || "").trim().toLowerCase();
+  if (!token || token === "none") return undefined;
+  if (token === "sm") return "0 1px 2px rgba(15, 23, 42, 0.08)";
+  if (token === "md") return "0 4px 10px rgba(15, 23, 42, 0.10)";
+  if (token === "lg") return "0 10px 24px rgba(15, 23, 42, 0.12)";
+  if (token === "xl") return "0 18px 36px rgba(15, 23, 42, 0.14)";
+  if (token === "2xl") return "0 26px 52px rgba(15, 23, 42, 0.16)";
+  return value == null ? undefined : String(value);
+}
+
+function asRecord(input: unknown): Record<string, unknown> {
+  return input && typeof input === "object" && !Array.isArray(input) ? (input as Record<string, unknown>) : {};
+}
+
+function extractStyleLike(component: unknown): React.CSSProperties {
+  const source = asRecord(component);
+  const out: React.CSSProperties = {};
+  for (const [key, value] of Object.entries(source)) {
+    if (value == null) continue;
+    if (
+      key === "backgroundColor" ||
+      key === "color" ||
+      key === "borderColor" ||
+      key === "borderStyle" ||
+      key === "borderWidth" ||
+      key === "borderRadius" ||
+      key === "padding" ||
+      key === "fontFamily" ||
+      key === "fontWeight" ||
+      key === "fontSize" ||
+      key === "letterSpacing" ||
+      key === "lineHeight" ||
+      key === "textTransform" ||
+      key === "boxShadow"
+    ) {
+      (out as Record<string, unknown>)[key] = value;
+    }
+  }
+  return out;
+}
+
+export function getSemanticUiStyle(
+  theme: ThemeOverrides | null | undefined,
+  uiRoleRaw?: unknown,
+  tagRaw?: unknown,
+): React.CSSProperties {
+  const themeValue = theme || { components: {}, cssVars: {} };
+  const components = themeValue.components || {};
+  const cssVars = themeValue.cssVars || {};
+  const role = String(uiRoleRaw || "").trim().toLowerCase();
+  const tag = String(tagRaw || "").trim().toLowerCase();
+  const titleComponent = extractStyleLike((components as Record<string, unknown>).Title);
+  const subtitleComponent = extractStyleLike(asRecord((components as Record<string, unknown>).Subtitle).titleStyle);
+  const cardComponent = extractStyleLike((components as Record<string, unknown>).Card);
+
+  const isTitleRole = role === "title" || (!role && (tag === "h1" || tag === "h2" || tag === "h3"));
+  const isEyebrowRole = role === "eyebrow" || role === "subtitle";
+  const isCardRole = role === "card" || role === "chart-card" || role === "table-card" || role === "pivot-card";
+
+  if (isCardRole) {
+    return {
+      backgroundColor: cardComponent.backgroundColor || "var(--surfaceBg, transparent)",
+      borderColor: cardComponent.borderColor || "var(--containerBorderColor, var(--surfaceBorder, transparent))",
+      borderStyle: String(cardComponent.borderStyle || cssVars.containerBorderStyle || "solid"),
+      borderWidth: cardComponent.borderWidth || cssVars.containerBorderWidth || 1,
+      borderRadius: cardComponent.borderRadius || cssVars.containerRadius || 12,
+      boxShadow: cardComponent.boxShadow || resolveShadowToken(cssVars.containerShadow),
+      padding: cardComponent.padding,
+    };
+  }
+
+  if (isTitleRole) {
+    return {
+      color: titleComponent.color || "var(--h1Color, currentColor)",
+      fontFamily: titleComponent.fontFamily || "var(--h1FontFamily, inherit)",
+      fontWeight: titleComponent.fontWeight || "var(--h1FontWeight, inherit)",
+      fontSize: titleComponent.fontSize || undefined,
+      letterSpacing: titleComponent.letterSpacing || "var(--h1LetterSpacing, inherit)",
+      padding: titleComponent.padding || "var(--h1Padding, 0px)",
+    };
+  }
+
+  if (isEyebrowRole) {
+    return {
+      color: subtitleComponent.color || "var(--headerSubtitle, currentColor)",
+      fontFamily: subtitleComponent.fontFamily,
+      fontWeight: subtitleComponent.fontWeight,
+      fontSize: subtitleComponent.fontSize,
+      letterSpacing: subtitleComponent.letterSpacing,
+      padding: subtitleComponent.padding,
+    };
+  }
+
+  if (role === "kpi-title") {
+    return {
+      color: "var(--kpiTitleColor, currentColor)",
+      fontFamily: "var(--kpiTitleFontFamily, inherit)",
+      fontWeight: "var(--kpiTitleFontWeight, inherit)",
+      letterSpacing: "var(--kpiTitleLetterSpacing, inherit)",
+      padding: "var(--kpiTitlePadding, 0px)",
+    };
+  }
+
+  if (role === "kpi-value") {
+    return {
+      color: "var(--kpiValueColor, currentColor)",
+      fontFamily: "var(--kpiValueFontFamily, inherit)",
+      fontWeight: "var(--kpiValueFontWeight, inherit)",
+      letterSpacing: "var(--kpiValueLetterSpacing, inherit)",
+      padding: "var(--kpiValuePadding, 0px)",
+    };
+  }
+
+  return {};
+}
+
+export function useSemanticUiStyle(uiRole?: unknown, tag?: unknown): React.CSSProperties {
+  const theme = useThemeOverrides();
+  return useMemo(() => getSemanticUiStyle(theme, uiRole, tag), [theme, uiRole, tag]);
+}
+
 const BUILTIN_ALIASES: Record<string, string> = {
   // Map token themes in PT to built-in UI presets
   'branco': 'light',

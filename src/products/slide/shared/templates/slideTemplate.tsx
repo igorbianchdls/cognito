@@ -93,8 +93,8 @@ export const SLIDE_TEMPLATE_SOURCE = String.raw`<SlideTemplate title="ApresentaÃ
     <section style={{ display: 'flex', flexDirection: 'column', gap: 18, height: '100%', padding: 42, backgroundColor: '#F4F8FF' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '56%' }}>
-          <p style={{ margin: 0, fontSize: 12, color: '#5E79A5', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Q4 2025 SALES SNAPSHOT</p>
-          <h1 style={{ margin: 0, fontSize: 38, fontWeight: 700, color: '#172033', letterSpacing: '-0.04em', lineHeight: 1.04 }}>Slide runtime with data components</h1>
+          <p data-ui="eyebrow" style={{ margin: 0, fontSize: 12, color: '#5E79A5', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Q4 2025 SALES SNAPSHOT</p>
+          <h1 data-ui="title" style={{ margin: 0, fontSize: 38, fontWeight: 700, color: '#172033', letterSpacing: '-0.04em', lineHeight: 1.04 }}>Slide runtime with data components</h1>
           <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: '#4D607F' }}>
             Layout stays HTML-first. Query, Chart, Table and PivotTable return only because they are presentation-facing data blocks.
           </p>
@@ -107,29 +107,29 @@ export const SLIDE_TEMPLATE_SOURCE = String.raw`<SlideTemplate title="ApresentaÃ
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
         <Query dataQuery={{ query: 'SELECT COALESCE(SUM(p.valor_total), 0)::float AS value FROM vendas.pedidos p WHERE 1=1 {{filters:p}}', limit: 1 }} format="currency" comparisonMode="previous_period">
-          <article style={{ padding: 18, borderRadius: 20, backgroundColor: '#FFFFFF', border: '1px solid #D9E6FB' }}>
-            <p style={{ margin: 0, fontSize: 11, color: '#6A7E9F', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Receita</p>
-            <h2 style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#172033', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
+          <article data-ui="card" style={{ padding: 18, borderRadius: 20, backgroundColor: '#FFFFFF', border: '1px solid #D9E6FB' }}>
+            <p data-ui="kpi-title" style={{ margin: 0, fontSize: 11, color: '#6A7E9F', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Receita</p>
+            <h2 data-ui="kpi-value" style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#172033', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
             <p style={{ margin: 0, fontSize: 12, color: '#51637F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
           </article>
         </Query>
         <Query dataQuery={{ query: 'SELECT COUNT(*)::float AS value FROM vendas.pedidos p WHERE 1=1 {{filters:p}}', limit: 1 }} format="number" comparisonMode="previous_period">
-          <article style={{ padding: 18, borderRadius: 20, backgroundColor: '#FFFFFF', border: '1px solid #D9E6FB' }}>
-            <p style={{ margin: 0, fontSize: 11, color: '#6A7E9F', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pedidos</p>
-            <h2 style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#172033', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
+          <article data-ui="card" style={{ padding: 18, borderRadius: 20, backgroundColor: '#FFFFFF', border: '1px solid #D9E6FB' }}>
+            <p data-ui="kpi-title" style={{ margin: 0, fontSize: 11, color: '#6A7E9F', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pedidos</p>
+            <h2 data-ui="kpi-value" style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#172033', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
             <p style={{ margin: 0, fontSize: 12, color: '#51637F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
           </article>
         </Query>
         <Query dataQuery={{ query: 'SELECT COALESCE(AVG(p.valor_total), 0)::float AS value FROM vendas.pedidos p WHERE 1=1 {{filters:p}}', limit: 1 }} format="currency" comparisonMode="previous_period">
-          <article style={{ padding: 18, borderRadius: 20, backgroundColor: '#FFFFFF', border: '1px solid #D9E6FB' }}>
-            <p style={{ margin: 0, fontSize: 11, color: '#6A7E9F', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ticket medio</p>
-            <h2 style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#172033', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
+          <article data-ui="card" style={{ padding: 18, borderRadius: 20, backgroundColor: '#FFFFFF', border: '1px solid #D9E6FB' }}>
+            <p data-ui="kpi-title" style={{ margin: 0, fontSize: 11, color: '#6A7E9F', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ticket medio</p>
+            <h2 data-ui="kpi-value" style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#172033', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
             <p style={{ margin: 0, fontSize: 12, color: '#51637F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
           </article>
         </Query>
       </div>
 
-      <article style={{ flex: 1, padding: 18, borderRadius: 24, backgroundColor: '#FFFFFF', border: '1px solid #D9E6FB' }}>
+      <article data-ui="card" style={{ flex: 1, padding: 18, borderRadius: 24, backgroundColor: '#FFFFFF', border: '1px solid #D9E6FB' }}>
         <Chart
           type="line"
           height={300}
@@ -150,8 +150,8 @@ export const SLIDE_TEMPLATE_SOURCE = String.raw`<SlideTemplate title="ApresentaÃ
 
   <Slide id="detail" title="Detail">
     <section style={{ display: 'grid', gridTemplateColumns: '1.08fr 0.92fr', gap: 16, height: '100%', padding: 32, backgroundColor: '#FFFFFF' }}>
-      <article style={{ padding: 18, borderRadius: 22, backgroundColor: '#FFFFFF', border: '1px solid #E5ECF8' }}>
-        <p style={{ margin: 0, marginBottom: 10, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</p>
+      <article data-ui="table-card" style={{ padding: 18, borderRadius: 22, backgroundColor: '#FFFFFF', border: '1px solid #E5ECF8' }}>
+        <p data-ui="eyebrow" style={{ margin: 0, marginBottom: 10, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</p>
         <Table
           height={600}
           bordered
@@ -171,8 +171,8 @@ export const SLIDE_TEMPLATE_SOURCE = String.raw`<SlideTemplate title="ApresentaÃ
         />
       </article>
 
-      <article style={{ padding: 18, borderRadius: 22, backgroundColor: '#F8FBFF', border: '1px solid #E5ECF8' }}>
-        <p style={{ margin: 0, marginBottom: 10, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</p>
+      <article data-ui="pivot-card" style={{ padding: 18, borderRadius: 22, backgroundColor: '#F8FBFF', border: '1px solid #E5ECF8' }}>
+        <p data-ui="eyebrow" style={{ margin: 0, marginBottom: 10, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</p>
         <PivotTable
           height={600}
           bordered
@@ -200,8 +200,8 @@ export const SLIDE_TEMPLATE = (
       <section style={{ display: 'flex', flexDirection: 'column', gap: 18, height: '100%', padding: 42, backgroundColor: '#F4F8FF' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '56%' }}>
-            <p style={{ margin: 0, fontSize: 12, color: '#5E79A5', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Q4 2025 SALES SNAPSHOT</p>
-            <h1 style={{ margin: 0, fontSize: 38, fontWeight: 700, color: '#172033', letterSpacing: '-0.04em', lineHeight: 1.04 }}>Slide runtime with data components</h1>
+            <p data-ui="eyebrow" style={{ margin: 0, fontSize: 12, color: '#5E79A5', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Q4 2025 SALES SNAPSHOT</p>
+            <h1 data-ui="title" style={{ margin: 0, fontSize: 38, fontWeight: 700, color: '#172033', letterSpacing: '-0.04em', lineHeight: 1.04 }}>Slide runtime with data components</h1>
             <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: '#4D607F' }}>
               Layout stays HTML-first. `Query`, `Chart`, `Table` and `PivotTable` return only because they are presentation-facing data blocks.
             </p>
@@ -227,9 +227,9 @@ export const SLIDE_TEMPLATE = (
             format="currency"
             comparisonMode="previous_period"
           >
-            <article style={{ padding: 18, borderRadius: 20, backgroundColor: '#FFFFFF', border: '1px solid #D9E6FB' }}>
-              <p style={{ margin: 0, fontSize: 11, color: '#6A7E9F', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Receita</p>
-              <h2 style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#172033', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
+            <article data-ui="card" style={{ padding: 18, borderRadius: 20, backgroundColor: '#FFFFFF', border: '1px solid #D9E6FB' }}>
+              <p data-ui="kpi-title" style={{ margin: 0, fontSize: 11, color: '#6A7E9F', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Receita</p>
+              <h2 data-ui="kpi-value" style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#172033', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
               <p style={{ margin: 0, fontSize: 12, color: '#51637F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
             </article>
           </QueryMarker>
@@ -247,9 +247,9 @@ export const SLIDE_TEMPLATE = (
             format="number"
             comparisonMode="previous_period"
           >
-            <article style={{ padding: 18, borderRadius: 20, backgroundColor: '#FFFFFF', border: '1px solid #D9E6FB' }}>
-              <p style={{ margin: 0, fontSize: 11, color: '#6A7E9F', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pedidos</p>
-              <h2 style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#172033', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
+            <article data-ui="card" style={{ padding: 18, borderRadius: 20, backgroundColor: '#FFFFFF', border: '1px solid #D9E6FB' }}>
+              <p data-ui="kpi-title" style={{ margin: 0, fontSize: 11, color: '#6A7E9F', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pedidos</p>
+              <h2 data-ui="kpi-value" style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#172033', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
               <p style={{ margin: 0, fontSize: 12, color: '#51637F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
             </article>
           </QueryMarker>
@@ -267,15 +267,15 @@ export const SLIDE_TEMPLATE = (
             format="currency"
             comparisonMode="previous_period"
           >
-            <article style={{ padding: 18, borderRadius: 20, backgroundColor: '#FFFFFF', border: '1px solid #D9E6FB' }}>
-              <p style={{ margin: 0, fontSize: 11, color: '#6A7E9F', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ticket medio</p>
-              <h2 style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#172033', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
+            <article data-ui="card" style={{ padding: 18, borderRadius: 20, backgroundColor: '#FFFFFF', border: '1px solid #D9E6FB' }}>
+              <p data-ui="kpi-title" style={{ margin: 0, fontSize: 11, color: '#6A7E9F', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ticket medio</p>
+              <h2 data-ui="kpi-value" style={{ margin: '10px 0 6px 0', fontSize: 28, color: '#172033', letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</h2>
               <p style={{ margin: 0, fontSize: 12, color: '#51637F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
             </article>
           </QueryMarker>
         </div>
 
-        <article style={{ flex: 1, padding: 18, borderRadius: 24, backgroundColor: '#FFFFFF', border: '1px solid #D9E6FB' }}>
+        <article data-ui="card" style={{ flex: 1, padding: 18, borderRadius: 24, backgroundColor: '#FFFFFF', border: '1px solid #D9E6FB' }}>
           <ChartMarker
             type="line"
             height={300}
@@ -306,8 +306,8 @@ export const SLIDE_TEMPLATE = (
 
     <SlideMarker id="detail" title="Detail">
       <section style={{ display: 'grid', gridTemplateColumns: '1.08fr 0.92fr', gap: 16, height: '100%', padding: 32, backgroundColor: '#FFFFFF' }}>
-        <article style={{ padding: 18, borderRadius: 22, backgroundColor: '#FFFFFF', border: '1px solid #E5ECF8' }}>
-          <p style={{ margin: 0, marginBottom: 10, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</p>
+        <article data-ui="table-card" style={{ padding: 18, borderRadius: 22, backgroundColor: '#FFFFFF', border: '1px solid #E5ECF8' }}>
+          <p data-ui="eyebrow" style={{ margin: 0, marginBottom: 10, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</p>
           <TableMarker
             height={600}
             bordered
@@ -339,8 +339,8 @@ export const SLIDE_TEMPLATE = (
           />
         </article>
 
-        <article style={{ padding: 18, borderRadius: 22, backgroundColor: '#F8FBFF', border: '1px solid #E5ECF8' }}>
-          <p style={{ margin: 0, marginBottom: 10, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</p>
+        <article data-ui="pivot-card" style={{ padding: 18, borderRadius: 22, backgroundColor: '#F8FBFF', border: '1px solid #E5ECF8' }}>
+          <p data-ui="eyebrow" style={{ margin: 0, marginBottom: 10, fontSize: 11, color: '#7A879B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</p>
           <PivotTableMarker
             height={600}
             bordered

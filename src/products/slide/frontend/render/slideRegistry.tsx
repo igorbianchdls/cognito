@@ -8,7 +8,7 @@ import JsonRenderQuery, {
 } from '@/products/bi/json-render/components/QueryRuntime'
 import { renderChartByType } from '@/products/bi/json-render/components/chartFacade'
 import { registry as biRegistry } from '@/products/bi/json-render/registry'
-import { ThemeProvider } from '@/products/bi/json-render/theme/ThemeContext'
+import { ThemeProvider, useSemanticUiStyle } from '@/products/bi/json-render/theme/ThemeContext'
 import { mapManagersToCssVars } from '@/products/bi/json-render/theme/thememanagers'
 import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter'
 
@@ -125,6 +125,7 @@ function HtmlNode({
 }) {
   const props = (element?.props || {}) as Record<string, any>
   const queryResult = useQueryResult()
+  const semanticStyle = useSemanticUiStyle(props['data-ui'], tag)
   const fallbackContent =
     typeof props.text === 'string'
       ? resolveQueryTemplate(props.text, queryResult)
@@ -139,6 +140,7 @@ function HtmlNode({
       style: {
         boxSizing: 'border-box',
         minWidth: 0,
+        ...semanticStyle,
         ...(props.style && typeof props.style === 'object' ? props.style : {}),
       },
     },

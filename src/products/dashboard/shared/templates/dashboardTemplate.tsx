@@ -267,7 +267,7 @@ function buildDashboardTemplateSource(config: DashboardVariantConfig, themeName:
               <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: '#536783' }}>${config.subtitle}</p>
             </div>
             <article style={{ width: '28%', padding: 22, borderRadius: 24, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2' }}>
-              <p style={{ margin: 0, marginBottom: 10, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Workspace note</p>
+              <p data-ui="eyebrow" style={{ margin: 0, marginBottom: 10, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Workspace note</p>
               <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: '#31415E' }}>${config.summary}</p>
             </article>
           </header>
@@ -291,10 +291,10 @@ ${buildMetricCardsSource(config.metrics)}
               format="currency"
               comparisonMode="previous_period"
             >
-              <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
-                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Receita total</h2>
-                <p style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: '#172033' }}>{'{{query.valueFormatted}}'}</p>
+              <article data-ui="card" style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p data-ui="eyebrow" style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
+                <h2 data-ui="kpi-title" style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Receita total</h2>
+                <p data-ui="kpi-value" style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: '#172033' }}>{'{{query.valueFormatted}}'}</p>
                 <p style={{ margin: 0, fontSize: 13, color: '#52647F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </Query>
@@ -312,10 +312,10 @@ ${buildMetricCardsSource(config.metrics)}
               format="number"
               comparisonMode="previous_period"
             >
-              <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
-                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Pedidos no periodo</h2>
-                <p style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: '#172033' }}>{'{{query.valueFormatted}}'}</p>
+              <article data-ui="card" style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p data-ui="eyebrow" style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
+                <h2 data-ui="kpi-title" style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Pedidos no periodo</h2>
+                <p data-ui="kpi-value" style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: '#172033' }}>{'{{query.valueFormatted}}'}</p>
                 <p style={{ margin: 0, fontSize: 13, color: '#52647F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </Query>
@@ -333,20 +333,20 @@ ${buildMetricCardsSource(config.metrics)}
               format="currency"
               comparisonMode="previous_period"
             >
-              <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
-                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Ticket medio</h2>
-                <p style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: '#172033' }}>{'{{query.valueFormatted}}'}</p>
+              <article data-ui="card" style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p data-ui="eyebrow" style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
+                <h2 data-ui="kpi-title" style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Ticket medio</h2>
+                <p data-ui="kpi-value" style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: '#172033' }}>{'{{query.valueFormatted}}'}</p>
                 <p style={{ margin: 0, fontSize: 13, color: '#52647F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </Query>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.35fr 0.65fr', gap: 18 }}>
-            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <article data-ui="card" style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Global controls</p>
-                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Filtros conectados ao runtime antigo</h2>
+                <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Global controls</p>
+                <h2 data-ui="title" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Filtros conectados ao runtime antigo</h2>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 14 }}>
                 <DatePicker label="Periodo do pedido" table="vendas.pedidos" field="data_pedido" presets={['7d', '30d', 'month']} />
@@ -378,10 +378,10 @@ ${buildMetricCardsSource(config.metrics)}
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 18 }}>
-            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <article data-ui="card" style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven chart</p>
-                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Receita por canal</h2>
+                <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven chart</p>
+                <h2 data-ui="title" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Receita por canal</h2>
               </div>
               <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
                 This first widget is still driven by query, filters and click interaction. The template is JSX, but the chart behavior remains connected to the BI data runtime.
@@ -456,7 +456,7 @@ ${buildMetricCardsSource(config.metrics)}
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 18, flex: 1 }}>
-            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <article data-ui="table-card" style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trend</p>
                 <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Receita diaria</h2>
@@ -504,7 +504,7 @@ ${buildPriorityItemsSource(config.priorities)}
           <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 18 }}>
             <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</p>
+                <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</p>
                 <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Pedidos filtrados em detalhe</h2>
               </div>
               <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
@@ -542,10 +542,10 @@ ${buildPriorityItemsSource(config.priorities)}
               />
             </article>
 
-            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#EAF1FF', border: '1px solid #D7E3FA', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <article data-ui="pivot-card" style={{ padding: 22, borderRadius: 26, backgroundColor: '#EAF1FF', border: '1px solid #D7E3FA', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={{ margin: 0, fontSize: 11, color: '#5E75A1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</p>
-                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Receita por canal e status</h2>
+                <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#5E75A1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</p>
+                <h2 data-ui="title" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Receita por canal e status</h2>
               </div>
               <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
                 PivotTable stays query-driven too, but now it sits directly inside the JSX template instead of depending on the old DSL string pipeline.
@@ -606,7 +606,7 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
               <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: '#536783' }}>{config.subtitle}</p>
             </div>
             <article style={{ width: '28%', padding: 22, borderRadius: 24, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2' }}>
-              <p style={{ margin: 0, marginBottom: 10, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Workspace note</p>
+              <p data-ui="eyebrow" style={{ margin: 0, marginBottom: 10, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Workspace note</p>
               <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: '#31415E' }}>{config.summary}</p>
             </article>
           </header>
@@ -636,10 +636,10 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
               format="currency"
               comparisonMode="previous_period"
             >
-              <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
-                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Receita total</h2>
-                <p style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: '#172033' }}>{'{{query.valueFormatted}}'}</p>
+              <article data-ui="card" style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p data-ui="eyebrow" style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
+                <h2 data-ui="kpi-title" style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Receita total</h2>
+                <p data-ui="kpi-value" style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: '#172033' }}>{'{{query.valueFormatted}}'}</p>
                 <p style={{ margin: 0, fontSize: 13, color: '#52647F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </QueryMarker>
@@ -657,10 +657,10 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
               format="number"
               comparisonMode="previous_period"
             >
-              <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
-                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Pedidos no periodo</h2>
-                <p style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: '#172033' }}>{'{{query.valueFormatted}}'}</p>
+              <article data-ui="card" style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p data-ui="eyebrow" style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
+                <h2 data-ui="kpi-title" style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Pedidos no periodo</h2>
+                <p data-ui="kpi-value" style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: '#172033' }}>{'{{query.valueFormatted}}'}</p>
                 <p style={{ margin: 0, fontSize: 13, color: '#52647F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </QueryMarker>
@@ -678,10 +678,10 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
               format="currency"
               comparisonMode="previous_period"
             >
-              <article style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
-                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Ticket medio</h2>
-                <p style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: '#172033' }}>{'{{query.valueFormatted}}'}</p>
+              <article data-ui="card" style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p data-ui="eyebrow" style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
+                <h2 data-ui="kpi-title" style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Ticket medio</h2>
+                <p data-ui="kpi-value" style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: '#172033' }}>{'{{query.valueFormatted}}'}</p>
                 <p style={{ margin: 0, fontSize: 13, color: '#52647F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </QueryMarker>

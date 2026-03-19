@@ -8,7 +8,7 @@ import JsonRenderPieChart from '@/products/bi/json-render/components/PieChart'
 import { registry as biRegistry } from '@/products/bi/json-render/registry'
 import { mapManagersToCssVars } from '@/products/bi/json-render/theme/thememanagers'
 import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter'
-import { ThemeProvider } from '@/products/bi/json-render/theme/ThemeContext'
+import { ThemeProvider, useSemanticUiStyle } from '@/products/bi/json-render/theme/ThemeContext'
 import DashboardDatePicker from '@/products/dashboard/render/components/DashboardDatePicker'
 import DashboardQuery, {
   resolveDashboardQueryTemplate,
@@ -171,6 +171,7 @@ function HtmlNode({
 }) {
   const props = (element?.props || {}) as Record<string, any>
   const queryResult = useDashboardQueryResult()
+  const semanticStyle = useSemanticUiStyle(props['data-ui'], tag)
   const fallbackContent =
     typeof props.text === 'string'
       ? resolveDashboardQueryTemplate(props.text, queryResult)
@@ -186,6 +187,7 @@ function HtmlNode({
       style: {
         boxSizing: 'border-box',
         minWidth: 0,
+        ...semanticStyle,
         ...(props.style && typeof props.style === 'object' ? props.style : {}),
       },
     },
