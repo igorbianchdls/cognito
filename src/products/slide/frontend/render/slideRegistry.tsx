@@ -2,19 +2,43 @@
 
 import React from 'react'
 
-import { registry as biRegistry } from '@/products/bi/json-render/registry'
-import { ThemeProvider } from '@/products/bi/json-render/theme/ThemeContext'
 import { mapManagersToCssVars } from '@/products/bi/json-render/theme/thememanagers'
 import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter'
 
 type AnyRecord = Record<string, any>
-
 type SlideRenderComponent = React.FC<{
   element: any
   children?: React.ReactNode
   data?: AnyRecord
   onAction?: (action: any) => void
 }>
+
+const HTML_TAGS = new Set([
+  'div',
+  'section',
+  'article',
+  'header',
+  'footer',
+  'main',
+  'aside',
+  'p',
+  'span',
+  'h1',
+  'h2',
+  'h3',
+  'ul',
+  'ol',
+  'li',
+])
+
+function cssVarsToStyle(cssVars: Record<string, string> | undefined): React.CSSProperties {
+  const out: Record<string, string> = {}
+  if (!cssVars) return out as React.CSSProperties
+  for (const [key, value] of Object.entries(cssVars)) {
+    out[`--${key}`] = value
+  }
+  return out as React.CSSProperties
+}
 
 function getNodeKey(node: any, fallbackIndex: number, path: number[]): string {
   const type = String(node?.type || 'node')
@@ -29,28 +53,36 @@ function getNodeKey(node: any, fallbackIndex: number, path: number[]): string {
   return `${type}:${path.join('.')}:${fallbackIndex}`
 }
 
+function normalizeProps(input: Record<string, any> | undefined): Record<string, any> {
+  const props = { ...(input || {}) }
+  delete props.style
+  delete props.text
+  delete props.title
+  delete props.children
+  return props
+}
+
 function SlideTheme({ element, children }: { element: any; children?: React.ReactNode }) {
   const name = element?.props?.name as string | undefined
   const headerTheme = element?.props?.headerTheme as string | undefined
-  const mgr = (element?.props?.managers || {}) as AnyRecord
-  const preset = buildThemeVars(name, mgr as any, { headerTheme })
-  const cssVars = preset.cssVars || mapManagersToCssVars(mgr)
+  const managers = (element?.props?.managers || {}) as AnyRecord
+  const preset = buildThemeVars(name, managers as any, { headerTheme })
+  const cssVars = preset.cssVars || mapManagersToCssVars(managers)
 
   return (
-    <ThemeProvider name={name} cssVars={cssVars}>
-      <div
-        style={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          minWidth: 0,
-          minHeight: 0,
-        }}
-      >
-        {children}
-      </div>
-    </ThemeProvider>
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        minWidth: 0,
+        minHeight: 0,
+        ...cssVarsToStyle(cssVars),
+      }}
+    >
+      {children}
+    </div>
   )
 }
 
@@ -60,11 +92,12 @@ function SlideSurface({ children }: { children?: React.ReactNode }) {
       style={{
         width: '100%',
         height: '100%',
-        minWidth: 0,
-        minHeight: 0,
         display: 'flex',
         flexDirection: 'column',
+        minWidth: 0,
+        minHeight: 0,
         overflow: 'hidden',
+        boxSizing: 'border-box',
       }}
     >
       {children}
@@ -72,29 +105,59 @@ function SlideSurface({ children }: { children?: React.ReactNode }) {
   )
 }
 
-export const slideRegistry: Record<string, SlideRenderComponent> = {
-  ...biRegistry,
-  Theme: ({ element, children }) => <SlideTheme element={element}>{children}</SlideTheme>,
-  Slide: ({ children }) => <SlideSurface>{children}</SlideSurface>,
+function HtmlNode({
+  tag,
+  element,
+  children,
+}: {
+  tag: keyof React.JSX.IntrinsicElements
+  element: any
+  children?: React.ReactNode
+}) {
+  const props = (element?.props || {}) as Record<string, any>
+  const content = children ?? props.text ?? props.title ?? null
+  return React.createElement(
+    tag,
+    {
+      ...normalizeProps(props),
+      style: {
+        boxSizing: 'border-box',
+        minWidth: 0,
+        ...(props.style && typeof props.style === 'object' ? props.style : {}),
+      },
+    },
+    content,
+  )
+}
+
+function resolveComponent(type: string): SlideRenderComponent | undefined {
+  if (type === 'Theme') return ({ element, children }) => <SlideTheme element={element}>{children}</SlideTheme>
+  if (type === 'Slide') return ({ children }) => <SlideSurface>{children}</SlideSurface>
+  if (type === 'TextNode') return ({ element }) => <>{String((element?.props?.text as string | undefined) || '')}</>
+  if (type === 'Br') return () => <br />
+  if (HTML_TAGS.has(type.toLowerCase())) {
+    return ({ element, children }) => <HtmlNode tag={type.toLowerCase() as keyof React.JSX.IntrinsicElements} element={element}>{children}</HtmlNode>
+  }
+  return undefined
 }
 
 function RenderSlideNode({
   node,
-  registry,
   data,
   onAction,
   path,
 }: {
   node: any
-  registry: Record<string, SlideRenderComponent>
   data?: AnyRecord
   onAction?: (action: any) => void
   path: number[]
 }) {
-  if (!node || typeof node !== 'object') return null
+  if (node == null) return null
+  if (typeof node === 'string' || typeof node === 'number') return <>{String(node)}</>
+  if (typeof node !== 'object') return null
 
   const type = String(node.type || '').trim()
-  const Component = registry[type]
+  const Component = resolveComponent(type)
   if (!Component) {
     return (
       <div className="rounded border border-yellow-300 bg-yellow-50 p-2 text-xs text-yellow-800">
@@ -108,7 +171,6 @@ function RenderSlideNode({
         <RenderSlideNode
           key={getNodeKey(child, index, [...path, index])}
           node={child}
-          registry={registry}
           data={data}
           onAction={onAction}
           path={[...path, index]}
@@ -136,18 +198,11 @@ export function SlideRenderer({
     return (
       <>
         {tree.map((node, index) => (
-          <RenderSlideNode
-            key={getNodeKey(node, index, [index])}
-            node={node}
-            registry={slideRegistry}
-            data={data}
-            onAction={onAction}
-            path={[index]}
-          />
+          <RenderSlideNode key={getNodeKey(node, index, [index])} node={node} data={data} onAction={onAction} path={[index]} />
         ))}
       </>
     )
   }
 
-  return <RenderSlideNode node={tree} registry={slideRegistry} data={data} onAction={onAction} path={[]} />
+  return <RenderSlideNode node={tree} data={data} onAction={onAction} path={[]} />
 }
