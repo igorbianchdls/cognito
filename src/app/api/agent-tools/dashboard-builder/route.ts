@@ -384,7 +384,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    let persistMeta: { file_path: string; file_persisted?: true } = {
+    let persistMeta: { file_path: string; file_persisted?: boolean; persistence_warning?: string } = {
       file_path: buildDashboardFilePath(dashboardName),
     }
 
