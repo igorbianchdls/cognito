@@ -15,17 +15,12 @@ import {
   replaceNodeProps as replaceNodePropsInTree,
   setNodePropByPath,
 } from '@/products/bi/features/dashboard-editor/lib/jsonTreeOps'
-import { parseDashboardTemplateDslToTree } from '@/products/bi/json-render/parsers/dashboardTemplateDslParser'
 
 function parseDsl(text: string): { tree: JsonTree; parseError: string | null } {
-  try {
-    return {
-      tree: parseDashboardTemplateDslToTree(text),
-      parseError: null,
-    }
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
-    return { tree: [], parseError: message }
+  void text
+  return {
+    tree: [],
+    parseError: 'O parser DSL foi removido. Este editor legado precisa ser migrado para JSX.',
   }
 }
 
