@@ -132,19 +132,7 @@ export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="executive
           format="currency"
           colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
           dataQuery={{
-            query: `
-              SELECT
-                COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
-                COALESCE(cv.nome, '-') AS label,
-                COALESCE(SUM(pi.subtotal), 0)::float AS value
-              FROM vendas.pedidos p
-              JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-              LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
-              WHERE 1=1
-                {{filters:p}}
-              GROUP BY 1, 2
-              ORDER BY 3 DESC
-            `,
+            query: 'SELECT COALESCE(cv.id::text, COALESCE(cv.nome, \'-\')) AS key, COALESCE(cv.nome, \'-\') AS label, COALESCE(SUM(pi.subtotal), 0)::float AS value FROM vendas.pedidos p JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id WHERE 1=1 {{filters:p}} GROUP BY 1, 2 ORDER BY 3 DESC',
             xField: 'label',
             yField: 'value',
             keyField: 'key',
@@ -168,19 +156,7 @@ export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="executive
           stickyHeader
           enableExportCsv
           dataQuery={{
-            query: `
-              SELECT
-                p.id::text AS pedido_id,
-                TO_CHAR(p.data_pedido::date, 'DD/MM/YYYY') AS data_pedido,
-                COALESCE(cv.nome, '-') AS canal,
-                COALESCE(p.status, 'Sem status') AS status,
-                COALESCE(p.valor_total, 0)::float AS valor_total
-              FROM vendas.pedidos p
-              LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
-              WHERE 1=1
-                {{filters:p}}
-              ORDER BY p.data_pedido DESC NULLS LAST, p.id DESC
-            `,
+            query: 'SELECT p.id::text AS pedido_id, TO_CHAR(p.data_pedido::date, \'DD/MM/YYYY\') AS data_pedido, COALESCE(cv.nome, \'-\') AS canal, COALESCE(p.status, \'Sem status\') AS status, COALESCE(p.valor_total, 0)::float AS valor_total FROM vendas.pedidos p LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id WHERE 1=1 {{filters:p}} ORDER BY p.data_pedido DESC NULLS LAST, p.id DESC',
             limit: 14,
           }}
           columns={[
@@ -203,16 +179,7 @@ export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="executive
           enableExportCsv
           defaultExpandedLevels={1}
           dataQuery={{
-            query: `
-              SELECT
-                COALESCE(cv.nome, '-') AS canal,
-                COALESCE(p.status, 'Sem status') AS status,
-                COALESCE(p.valor_total, 0)::float AS valor_total
-              FROM vendas.pedidos p
-              LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
-              WHERE 1=1
-                {{filters:p}}
-            `,
+            query: 'SELECT COALESCE(cv.nome, \'-\') AS canal, COALESCE(p.status, \'Sem status\') AS status, COALESCE(p.valor_total, 0)::float AS valor_total FROM vendas.pedidos p LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id WHERE 1=1 {{filters:p}}',
             limit: 400,
           }}
           rows={[{ field: 'canal', label: 'Canal' }]}
