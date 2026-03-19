@@ -4,6 +4,7 @@ import React from 'react'
 
 import { mapManagersToCssVars } from '@/products/bi/json-render/theme/thememanagers'
 import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter'
+import { ReportChart } from '@/products/report/frontend/render/components/ReportChart'
 
 type AnyRecord = Record<string, any>
 type ReportRenderComponent = React.FC<{
@@ -133,6 +134,7 @@ function HtmlNode({
 function resolveComponent(type: string): ReportRenderComponent | undefined {
   if (type === 'Theme') return ({ element, children }) => <ReportTheme element={element}>{children}</ReportTheme>
   if (type === 'Report') return ({ children }) => <ReportSurface>{children}</ReportSurface>
+  if (type === 'Chart') return ({ element }) => <ReportChart element={element} />
   if (type === 'TextNode') return ({ element }) => <>{String((element?.props?.text as string | undefined) || '')}</>
   if (type === 'Br') return () => <br />
   if (HTML_TAGS.has(type.toLowerCase())) {

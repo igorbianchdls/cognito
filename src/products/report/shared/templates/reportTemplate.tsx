@@ -9,6 +9,17 @@ type MarkerProps = {
   title?: string
 }
 
+type ChartMarkerProps = {
+  data?: Array<Record<string, unknown>>
+  height?: number
+  series?: Array<string | { color?: string; key: string; label?: string }>
+  style?: React.CSSProperties
+  title?: string
+  type?: 'bar'
+  xKey?: string
+  format?: 'currency' | 'number' | 'percent'
+}
+
 function ReportTemplateMarker({ children }: MarkerProps) {
   return <>{children}</>
 }
@@ -21,9 +32,14 @@ function ReportMarker({ children }: MarkerProps) {
   return <>{children}</>
 }
 
+function ChartMarker(_: ChartMarkerProps) {
+  return null
+}
+
 ReportTemplateMarker.displayName = 'ReportTemplate'
 ThemeMarker.displayName = 'Theme'
 ReportMarker.displayName = 'Report'
+ChartMarker.displayName = 'Chart'
 
 export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="executive_report_runtime" title="Executive Report Review">
   <Theme name="light" />
@@ -90,16 +106,24 @@ export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="executive
         </p>
       </article>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
-        <article style={{ padding: 18, border: '1px solid #E8EBF1', borderRadius: 18, backgroundColor: '#FAFBFD' }}>
-          <p style={{ margin: 0, marginBottom: 8, fontSize: 11, color: '#8B8E97', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Before</p>
-          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: '#4E5665' }}>The report page depended on the same parser built for dashboard-style DSL structures.</p>
-        </article>
-        <article style={{ padding: 18, border: '1px solid #E8EBF1', borderRadius: 18, backgroundColor: '#FAFBFD' }}>
-          <p style={{ margin: 0, marginBottom: 8, fontSize: 11, color: '#8B8E97', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Now</p>
-          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: '#4E5665' }}>The report page parses and renders HTML-native sections directly, with simpler document semantics.</p>
-        </article>
-      </div>
+      <Chart
+        type="bar"
+        title="Runtime complexity comparison"
+        xKey="stage"
+        height={240}
+        format="number"
+        style={{ padding: 18, border: '1px solid #E8EBF1', borderRadius: 18, backgroundColor: '#FAFBFD' }}
+        data={[
+          { stage: 'Parsing', previous: 3, current: 1 },
+          { stage: 'Debug', previous: 5, current: 2 },
+          { stage: 'Layout', previous: 4, current: 2 },
+          { stage: 'Export', previous: 4, current: 2 },
+        ]}
+        series={[
+          { key: 'previous', label: 'Before', color: '#CBD5E1' },
+          { key: 'current', label: 'Now', color: '#2563EB' },
+        ]}
+      />
     </section>
   </Report>
 
@@ -200,16 +224,24 @@ export const REPORT_TEMPLATE = (
           </p>
         </article>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
-          <article style={{ padding: 18, border: '1px solid #E8EBF1', borderRadius: 18, backgroundColor: '#FAFBFD' }}>
-            <p style={{ margin: 0, marginBottom: 8, fontSize: 11, color: '#8B8E97', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Before</p>
-            <p style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: '#4E5665' }}>The report page depended on the same parser built for dashboard-style DSL structures.</p>
-          </article>
-          <article style={{ padding: 18, border: '1px solid #E8EBF1', borderRadius: 18, backgroundColor: '#FAFBFD' }}>
-            <p style={{ margin: 0, marginBottom: 8, fontSize: 11, color: '#8B8E97', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Now</p>
-            <p style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: '#4E5665' }}>The report page parses and renders HTML-native sections directly, with simpler document semantics.</p>
-          </article>
-        </div>
+        <ChartMarker
+          type="bar"
+          title="Runtime complexity comparison"
+          xKey="stage"
+          height={240}
+          format="number"
+          style={{ padding: 18, border: '1px solid #E8EBF1', borderRadius: 18, backgroundColor: '#FAFBFD' }}
+          data={[
+            { stage: 'Parsing', previous: 3, current: 1 },
+            { stage: 'Debug', previous: 5, current: 2 },
+            { stage: 'Layout', previous: 4, current: 2 },
+            { stage: 'Export', previous: 4, current: 2 },
+          ]}
+          series={[
+            { key: 'previous', label: 'Before', color: '#CBD5E1' },
+            { key: 'current', label: 'Now', color: '#2563EB' },
+          ]}
+        />
       </section>
     </ReportMarker>
 
