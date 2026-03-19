@@ -38,8 +38,9 @@ function jsxToTree(node: ReactNode): SlideTreeNode | string | null {
   if (typeof node === 'string' || typeof node === 'number') return String(node)
   if (!isValidElement(node)) return null
 
-  const { children, ...restProps } = (node.props || {}) as Record<string, unknown>
-  const parsedChildren = Children.toArray(children)
+  const props = (node.props || {}) as { children?: ReactNode } & Record<string, unknown>
+  const { children, ...restProps } = props
+  const parsedChildren = Children.toArray(children as ReactNode)
     .map((child) => jsxToTree(child))
     .filter((child): child is SlideTreeNode | string => child !== null)
 
