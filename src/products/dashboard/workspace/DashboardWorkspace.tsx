@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from 'react'
 
-import { parseDashboardTemplateDslToTree } from '@/products/bi/json-render/parsers/dashboardTemplateDslParser'
 import { buildDashboardWorkspaceFiles } from '@/products/dashboard/workspace/workspaceFiles'
 import { DashboardWorkspaceCode } from '@/products/dashboard/workspace/DashboardWorkspaceCode'
 import { DashboardWorkspaceHeader } from '@/products/dashboard/workspace/DashboardWorkspaceHeader'
@@ -22,36 +21,29 @@ function getDashboardTitle(tree: unknown) {
   return title || name || 'Dashboard'
 }
 
-function applyThemeToDsl(dsl: string, themeName: string) {
-  return dsl.replace(/<Theme\s+name="[^"]+"/, `<Theme name="${themeName}"`)
-}
-
 export function DashboardWorkspace({
-  baseDsl,
   appliedThemeName,
   onOpenTheme,
 }: {
-  baseDsl: string
   appliedThemeName: string
   onOpenTheme: () => void
 }) {
   const [activeView, setActiveView] = useState<'preview' | 'code'>('preview')
-  const [selectedCodePath, setSelectedCodePath] = useState('app/dashboard-vendas.dsl')
-  const [selectedDashboardPath, setSelectedDashboardPath] = useState('app/dashboard-vendas.dsl')
+  const [selectedCodePath, setSelectedCodePath] = useState('app/dashboard-vendas.tsx')
+  const [selectedDashboardPath, setSelectedDashboardPath] = useState('app/dashboard-vendas.tsx')
   const [zoom, setZoom] = useState(1)
 
-  const themedBaseDsl = useMemo(() => applyThemeToDsl(baseDsl, appliedThemeName), [baseDsl, appliedThemeName])
-  const files = useMemo(() => buildDashboardWorkspaceFiles(themedBaseDsl, appliedThemeName), [themedBaseDsl, appliedThemeName])
-  const dashboardFiles = useMemo(() => files.filter((file) => file.extension === 'dsl'), [files])
+  const files = useMemo(() => buildDashboardWorkspaceFiles(appliedThemeName), [appliedThemeName])
+  const dashboardFiles = useMemo(() => files.filter((file) => file.extension === 'tsx' && file.tree), [files])
   const selectedDashboardFile = useMemo(
-    () => files.find((file) => file.path === selectedDashboardPath && file.extension === 'dsl') ?? files[0],
-    [files, selectedDashboardPath],
+    () => dashboardFiles.find((file) => file.path === selectedDashboardPath) ?? dashboardFiles[0],
+    [dashboardFiles, selectedDashboardPath],
   )
   const selectedCodeFile = useMemo(
     () => files.find((file) => file.path === selectedCodePath) ?? files[0],
     [files, selectedCodePath],
   )
-  const parsed = useMemo(() => parseDashboardTemplateDslToTree(selectedDashboardFile?.content ?? themedBaseDsl), [selectedDashboardFile, themedBaseDsl])
+  const parsed = useMemo(() => selectedDashboardFile?.tree ?? dashboardFiles[0]?.tree ?? null, [selectedDashboardFile, dashboardFiles])
   const title = useMemo(() => getDashboardTitle(parsed), [parsed])
 
   return (

@@ -23,7 +23,7 @@ export function DashboardWorkspaceCode({
     <div className="flex min-h-full w-full">
       <WorkspaceFileTree
         files={files}
-        selectedPath={selectedFile?.path ?? 'app/dashboard-vendas.dsl'}
+        selectedPath={selectedFile?.path ?? 'app/dashboard-vendas.tsx'}
         onSelect={onSelectFile}
       />
       <WorkspaceCodeEditor

@@ -7,6 +7,7 @@ import type { DashboardCodeFile } from '@/products/dashboard/workspace/types'
 
 function getFileIcon(extension: string) {
   switch (extension) {
+    case 'tsx':
     case 'dsl':
       return 'solar:code-file-bold'
     case 'json':

@@ -1,0 +1,327 @@
+'use client'
+
+import React, { isValidElement, ReactNode } from 'react'
+
+type MarkerProps = {
+  children?: ReactNode
+  id?: string
+  name?: string
+  title?: string
+}
+
+type DashboardMetric = {
+  label: string
+  note: string
+  value: string
+}
+
+type DashboardVariantConfig = {
+  badge: string
+  eyebrow: string
+  fileName: string
+  footer: string
+  name: string
+  path: string
+  priorities: string[]
+  subtitle: string
+  summary: string
+  title: string
+  metrics: DashboardMetric[]
+}
+
+type DashboardTreeNode = {
+  type: string
+  props: Record<string, unknown>
+  children: Array<DashboardTreeNode | string>
+}
+
+export type DashboardTemplateVariant = {
+  content: string
+  name: string
+  path: string
+  tree: DashboardTreeNode
+}
+
+function DashboardTemplateMarker({ children }: MarkerProps) {
+  return <>{children}</>
+}
+
+function ThemeMarker(_: MarkerProps) {
+  return null
+}
+
+function DashboardMarker({ children }: MarkerProps) {
+  return <>{children}</>
+}
+
+DashboardTemplateMarker.displayName = 'DashboardTemplate'
+ThemeMarker.displayName = 'Theme'
+DashboardMarker.displayName = 'Dashboard'
+
+const DASHBOARD_VARIANTS: DashboardVariantConfig[] = [
+  {
+    badge: 'Commercial Pulse',
+    eyebrow: 'Q1 2026 Sales Overview',
+    fileName: 'dashboard-vendas.tsx',
+    footer: 'Static dashboard baseline for validating JSX templates before widgets return.',
+    name: 'dashboard_vendas',
+    path: 'app/dashboard-vendas.tsx',
+    priorities: [
+      'Review topline revenue performance and compare against target pacing.',
+      'Check which channels are carrying the strongest conversion momentum.',
+      'Align weekly operating actions before reintroducing richer BI widgets.',
+    ],
+    subtitle: 'Resumo comercial com foco em clareza visual e narrativa executiva.',
+    summary:
+      'The dashboard is intentionally HTML-first. This version optimizes structure, spacing and readability before charts, tables or KPIs return.',
+    title: 'Dashboard de Vendas',
+    metrics: [
+      { label: 'Receita do periodo', note: 'vs. forecast mensal', value: 'R$ 4,8M' },
+      { label: 'Pipeline ativo', note: 'oportunidades em negociacao', value: '126 deals' },
+      { label: 'Conversao media', note: 'margem comercial atual', value: '18,4%' },
+    ],
+  },
+  {
+    badge: 'Executive Review',
+    eyebrow: 'Leadership Snapshot',
+    fileName: 'dashboard-executivo.tsx',
+    footer: 'Executive dashboard reduced to the minimum viable JSX structure.',
+    name: 'dashboard_executivo',
+    path: 'app/dashboard-executivo.tsx',
+    priorities: [
+      'Keep the leadership summary concise enough for a quick read.',
+      'Highlight the few operational questions that actually require escalation.',
+      'Preserve a layout that remains stable while the runtime migrates away from DSL strings.',
+    ],
+    subtitle: 'Visao geral dos principais resultados para lideranca e acompanhamento semanal.',
+    summary:
+      'This executive view strips the experience down to semantic sections, descriptive copy and simple metric blocks. The goal is a predictable preview surface.',
+    title: 'Dashboard Executivo',
+    metrics: [
+      { label: 'Resultado consolidado', note: 'receita liquida acumulada', value: 'R$ 9,2M' },
+      { label: 'Contas prioritarias', note: 'clientes com maior impacto', value: '24 contas' },
+      { label: 'Risco operacional', note: 'itens que pedem atencao', value: '3 alertas' },
+    ],
+  },
+  {
+    badge: 'Ops Focus',
+    eyebrow: 'Operational Monitoring',
+    fileName: 'dashboard-operacoes.tsx',
+    footer: 'Operations dashboard in plain JSX to keep the migration surface small.',
+    name: 'dashboard_operacoes',
+    path: 'app/dashboard-operacoes.tsx',
+    priorities: [
+      'Track the execution baseline with readable blocks instead of dense widget grids.',
+      'Expose blockers, pending actions and owner responsibilities in plain language.',
+      'Stabilize runtime behavior before adding back live operational widgets.',
+    ],
+    subtitle: 'Acompanhamento operacional e produtividade com layout simples e deterministico.',
+    summary:
+      'The operations dashboard uses the same JSX-only baseline, proving that the workspace no longer depends on a string parser to render structural content.',
+    title: 'Dashboard de Operacoes',
+    metrics: [
+      { label: 'Tickets resolvidos', note: 'janela semanal consolidada', value: '842 itens' },
+      { label: 'SLAs no prazo', note: 'atendimento dentro da meta', value: '96,1%' },
+      { label: 'Capacidade disponivel', note: 'time alocado para backlog', value: '14 squads' },
+    ],
+  },
+]
+
+function getElementTypeName(type: unknown): string {
+  if (typeof type === 'string') return type
+  if (typeof type === 'function') {
+    const componentType = type as Function & { displayName?: string }
+    return componentType.displayName || componentType.name || 'Anonymous'
+  }
+  return 'Unknown'
+}
+
+function jsxToTree(node: ReactNode): DashboardTreeNode | string | null {
+  if (node == null || typeof node === 'boolean') return null
+  if (typeof node === 'string' || typeof node === 'number') return String(node)
+  if (!isValidElement(node)) return null
+
+  const props = (node.props || {}) as { children?: ReactNode } & Record<string, unknown>
+  const { children, ...restProps } = props
+  const childNodes = Array.isArray(children) ? children : children == null ? [] : [children]
+  const parsedChildren = childNodes
+    .map((child) => jsxToTree(child))
+    .filter((child): child is DashboardTreeNode | string => child !== null)
+
+  return {
+    type: getElementTypeName(node.type),
+    props: restProps,
+    children: parsedChildren,
+  }
+}
+
+function buildMetricCardsSource(metrics: DashboardMetric[]) {
+  return metrics
+    .map(
+      (metric) => `          <article style={{ padding: 20, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF' }}>
+            <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>${metric.label}</p>
+            <h2 style={{ margin: '10px 0 8px 0', fontSize: 32, fontWeight: 700, color: '#172033', letterSpacing: '-0.04em' }}>${metric.value}</h2>
+            <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: '#50627D' }}>${metric.note}</p>
+          </article>`,
+    )
+    .join('\n')
+}
+
+function buildPriorityItemsSource(items: string[]) {
+  return items
+    .map(
+      (item) =>
+        `              <li style={{ margin: 0, fontSize: 14, lineHeight: 1.65, color: '#32445F' }}>${item}</li>`,
+    )
+    .join('\n')
+}
+
+function buildDashboardTemplateSource(config: DashboardVariantConfig, themeName: string) {
+  return `export function ${config.name.replace(/(^|_)([a-z])/g, (_match, _a, letter: string) => letter.toUpperCase())}() {
+  return (
+    <DashboardTemplate name="${config.name}" title="${config.title}">
+      <Theme name="${themeName}" />
+      <Dashboard id="overview" title="${config.title}">
+        <section style={{ display: 'flex', flexDirection: 'column', gap: 24, minHeight: '100%', padding: 32, backgroundColor: '#F6F8FC' }}>
+          <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: '62%' }}>
+              <span style={{ display: 'inline-flex', width: 'fit-content', alignItems: 'center', borderRadius: 999, backgroundColor: '#E3EEFF', padding: '6px 12px', fontSize: 12, fontWeight: 600, color: '#1E4FBF' }}>${config.badge}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <p style={{ margin: 0, fontSize: 12, color: '#6A7E98', letterSpacing: '0.08em', textTransform: 'uppercase' }}>${config.eyebrow}</p>
+                <h1 style={{ margin: 0, fontSize: 42, fontWeight: 700, color: '#172033', letterSpacing: '-0.04em', lineHeight: 1.02 }}>${config.title}</h1>
+              </div>
+              <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: '#536783' }}>${config.subtitle}</p>
+            </div>
+            <article style={{ width: '28%', padding: 22, borderRadius: 24, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2' }}>
+              <p style={{ margin: 0, marginBottom: 10, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Workspace note</p>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: '#31415E' }}>${config.summary}</p>
+            </article>
+          </header>
+
+          <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+${buildMetricCardsSource(config.metrics)}
+          </section>
+
+          <section style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 18, flex: 1 }}>
+            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <p style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Narrative</p>
+                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>HTML-first dashboard structure</h2>
+              </div>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                This dashboard is intentionally static. The objective is to prove that the workspace can render a clean JSX template before any specialized widget is layered back in.
+              </p>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                Instead of abstractions like cards, KPIs or charts, the template uses plain semantic HTML sections with explicit spacing and copy blocks.
+              </p>
+            </article>
+
+            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#EAF1FF', border: '1px solid #D7E3FA', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <p style={{ margin: 0, fontSize: 11, color: '#5E75A1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Priorities</p>
+                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>What this view should clarify</h2>
+              </div>
+              <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
+${buildPriorityItemsSource(config.priorities)}
+              </ul>
+            </article>
+          </section>
+
+          <footer style={{ display: 'flex', justifyContent: 'space-between', gap: 18, padding: '18px 22px', borderRadius: 22, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2' }}>
+            <p style={{ margin: 0, fontSize: 13, color: '#52647F', lineHeight: 1.6 }}>${config.footer}</p>
+            <p style={{ margin: 0, fontSize: 13, color: '#52647F', lineHeight: 1.6 }}>Theme ativo: ${themeName}</p>
+          </footer>
+        </section>
+      </Dashboard>
+    </DashboardTemplate>
+  )
+}`
+}
+
+function buildDashboardTemplate(config: DashboardVariantConfig, themeName: string) {
+  return (
+    <DashboardTemplateMarker name={config.name} title={config.title}>
+      <ThemeMarker name={themeName} />
+      <DashboardMarker id="overview" title={config.title}>
+        <section style={{ display: 'flex', flexDirection: 'column', gap: 24, minHeight: '100%', padding: 32, backgroundColor: '#F6F8FC' }}>
+          <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: '62%' }}>
+              <span style={{ display: 'inline-flex', width: 'fit-content', alignItems: 'center', borderRadius: 999, backgroundColor: '#E3EEFF', padding: '6px 12px', fontSize: 12, fontWeight: 600, color: '#1E4FBF' }}>
+                {config.badge}
+              </span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <p style={{ margin: 0, fontSize: 12, color: '#6A7E98', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{config.eyebrow}</p>
+                <h1 style={{ margin: 0, fontSize: 42, fontWeight: 700, color: '#172033', letterSpacing: '-0.04em', lineHeight: 1.02 }}>{config.title}</h1>
+              </div>
+              <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: '#536783' }}>{config.subtitle}</p>
+            </div>
+            <article style={{ width: '28%', padding: 22, borderRadius: 24, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2' }}>
+              <p style={{ margin: 0, marginBottom: 10, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Workspace note</p>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: '#31415E' }}>{config.summary}</p>
+            </article>
+          </header>
+
+          <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+            {config.metrics.map((metric) => (
+              <article key={metric.label} style={{ padding: 20, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF' }}>
+                <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{metric.label}</p>
+                <h2 style={{ margin: '10px 0 8px 0', fontSize: 32, fontWeight: 700, color: '#172033', letterSpacing: '-0.04em' }}>{metric.value}</h2>
+                <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: '#50627D' }}>{metric.note}</p>
+              </article>
+            ))}
+          </section>
+
+          <section style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 18, flex: 1 }}>
+            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <p style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Narrative</p>
+                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>HTML-first dashboard structure</h2>
+              </div>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                This dashboard is intentionally static. The objective is to prove that the workspace can render a clean JSX template before any specialized widget is layered back in.
+              </p>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                Instead of abstractions like cards, KPIs or charts, the template uses plain semantic HTML sections with explicit spacing and copy blocks.
+              </p>
+            </article>
+
+            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#EAF1FF', border: '1px solid #D7E3FA', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <p style={{ margin: 0, fontSize: 11, color: '#5E75A1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Priorities</p>
+                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>What this view should clarify</h2>
+              </div>
+              <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {config.priorities.map((item) => (
+                  <li key={item} style={{ margin: 0, fontSize: 14, lineHeight: 1.65, color: '#32445F' }}>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </article>
+          </section>
+
+          <footer style={{ display: 'flex', justifyContent: 'space-between', gap: 18, padding: '18px 22px', borderRadius: 22, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2' }}>
+            <p style={{ margin: 0, fontSize: 13, color: '#52647F', lineHeight: 1.6 }}>{config.footer}</p>
+            <p style={{ margin: 0, fontSize: 13, color: '#52647F', lineHeight: 1.6 }}>Theme ativo: {themeName}</p>
+          </footer>
+        </section>
+      </DashboardMarker>
+    </DashboardTemplateMarker>
+  )
+}
+
+export function buildDashboardTemplateVariants(themeName: string): DashboardTemplateVariant[] {
+  return DASHBOARD_VARIANTS.map((variant) => {
+    const tree = jsxToTree(buildDashboardTemplate(variant, themeName))
+    if (!tree || typeof tree === 'string') {
+      throw new Error(`Invalid dashboard template root for ${variant.name}`)
+    }
+
+    return {
+      content: buildDashboardTemplateSource(variant, themeName),
+      name: variant.fileName,
+      path: variant.path,
+      tree,
+    }
+  })
+}

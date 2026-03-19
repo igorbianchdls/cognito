@@ -1,37 +1,19 @@
 import type { DashboardCodeFile } from '@/products/dashboard/workspace/types'
+import { buildDashboardTemplateVariants } from '@/products/dashboard/shared/templates/dashboardTemplate'
 
-function replaceDashboardCopy(dsl: string, title: string, subtitle: string) {
-  return dsl
-    .replace(/<Title text="Dashboard de Vendas" \/>/, `<Title text="${title}" />`)
-    .replace(/<Subtitle text="Principais indicadores e cortes" \/>/, `<Subtitle text="${subtitle}" />`)
-}
+export function buildDashboardWorkspaceFiles(themeName: string): DashboardCodeFile[] {
+  const dashboardFiles = buildDashboardTemplateVariants(themeName).map((file) => ({
+    path: file.path,
+    name: file.name,
+    directory: 'app',
+    extension: 'tsx',
+    language: 'typescript',
+    content: file.content,
+    tree: file.tree,
+  }))
 
-export function buildDashboardWorkspaceFiles(dsl: string, themeName: string): DashboardCodeFile[] {
   return [
-    {
-      path: 'app/dashboard-vendas.dsl',
-      name: 'dashboard-vendas.dsl',
-      directory: 'app',
-      extension: 'dsl',
-      language: 'dsl',
-      content: dsl,
-    },
-    {
-      path: 'app/dashboard-executivo.dsl',
-      name: 'dashboard-executivo.dsl',
-      directory: 'app',
-      extension: 'dsl',
-      language: 'dsl',
-      content: replaceDashboardCopy(dsl, 'Dashboard Executivo', 'Visao geral dos principais resultados'),
-    },
-    {
-      path: 'app/dashboard-operacoes.dsl',
-      name: 'dashboard-operacoes.dsl',
-      directory: 'app',
-      extension: 'dsl',
-      language: 'dsl',
-      content: replaceDashboardCopy(dsl, 'Dashboard de Operacoes', 'Acompanhamento operacional e produtividade'),
-    },
+    ...dashboardFiles,
     {
       path: 'app/theme.json',
       name: 'theme.json',
@@ -41,8 +23,8 @@ export function buildDashboardWorkspaceFiles(dsl: string, themeName: string): Da
       content: JSON.stringify(
         {
           theme: themeName,
-          renderer: 'bi-json-render',
-          entrypoint: 'app/dashboard-vendas.dsl',
+          renderer: 'dashboard-jsx-render',
+          entrypoint: 'app/dashboard-vendas.tsx',
         },
         null,
         2,
@@ -54,7 +36,7 @@ export function buildDashboardWorkspaceFiles(dsl: string, themeName: string): Da
       directory: 'app',
       extension: 'md',
       language: 'markdown',
-      content: `# Dashboard\n\nArquivos principais:\n- \`app/dashboard-vendas.dsl\`\n- \`app/dashboard-executivo.dsl\`\n- \`app/dashboard-operacoes.dsl\`\n\nTema ativo: \`${themeName}\``,
+      content: `# Dashboard\n\nArquivos principais:\n- \`app/dashboard-vendas.tsx\`\n- \`app/dashboard-executivo.tsx\`\n- \`app/dashboard-operacoes.tsx\`\n\nTema ativo: \`${themeName}\``,
     },
   ]
 }
