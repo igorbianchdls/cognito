@@ -18,6 +18,9 @@ type BarChartMarkerProps = {
   recharts?: Record<string, unknown>
 }
 
+type LineChartMarkerProps = BarChartMarkerProps
+type PieChartMarkerProps = BarChartMarkerProps
+
 type DashboardMetric = {
   label: string
   note: string
@@ -67,10 +70,20 @@ function BarChartMarker(_: BarChartMarkerProps) {
   return null
 }
 
+function LineChartMarker(_: LineChartMarkerProps) {
+  return null
+}
+
+function PieChartMarker(_: PieChartMarkerProps) {
+  return null
+}
+
 DashboardTemplateMarker.displayName = 'DashboardTemplate'
 ThemeMarker.displayName = 'Theme'
 DashboardMarker.displayName = 'Dashboard'
 BarChartMarker.displayName = 'BarChart'
+LineChartMarker.displayName = 'LineChart'
+PieChartMarker.displayName = 'PieChart'
 
 const DASHBOARD_VARIANTS: DashboardVariantConfig[] = [
   {
@@ -170,6 +183,26 @@ const SALES_CHANNEL_INTERACTION = {
   clearOnSecondClick: true,
 }
 
+const SALES_TREND_QUERY = `
+  SELECT
+    TO_CHAR(p.data_pedido::date, 'YYYY-MM-DD') AS key,
+    TO_CHAR(p.data_pedido::date, 'DD/MM') AS label,
+    COALESCE(SUM(p.valor_total), 0)::float AS value
+  FROM vendas.pedidos p
+  WHERE 1=1
+    {{filters:p}}
+  GROUP BY 1, 2
+  ORDER BY 1 ASC
+`
+
+const SALES_TREND_DATA_QUERY = {
+  query: SALES_TREND_QUERY,
+  xField: 'label',
+  yField: 'value',
+  keyField: 'key',
+  limit: 31,
+}
+
 function getElementTypeName(type: unknown): string {
   if (typeof type === 'string') return type
   if (typeof type === 'function') {
@@ -242,6 +275,24 @@ function buildDashboardTemplateSource(config: DashboardVariantConfig, themeName:
     limit: 6,
   }
 
+  const salesTrendDataQuery = {
+    query: \`
+      SELECT
+        TO_CHAR(p.data_pedido::date, 'YYYY-MM-DD') AS key,
+        TO_CHAR(p.data_pedido::date, 'DD/MM') AS label,
+        COALESCE(SUM(p.valor_total), 0)::float AS value
+      FROM vendas.pedidos p
+      WHERE 1=1
+        {{filters:p}}
+      GROUP BY 1, 2
+      ORDER BY 1 ASC
+    \`,
+    xField: 'label',
+    yField: 'value',
+    keyField: 'key',
+    limit: 31,
+  }
+
   return (
     <DashboardTemplate name="${config.name}" title="${config.title}">
       <Theme name="${themeName}" />
@@ -266,7 +317,7 @@ function buildDashboardTemplateSource(config: DashboardVariantConfig, themeName:
 ${buildMetricCardsSource(config.metrics)}
           </section>
 
-          <section style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 18, flex: 1 }}>
+          <section style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 18 }}>
             <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven chart</p>
@@ -282,6 +333,43 @@ ${buildMetricCardsSource(config.metrics)}
                 dataQuery={salesChannelDataQuery}
                 interaction={{ table: 'vendas.pedidos', field: 'canal_venda_id', clearOnSecondClick: true }}
                 recharts={{ categoryLabelMode: 'first-word', valueAxisWidth: 72 }}
+              />
+            </article>
+
+            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#EAF1FF', border: '1px solid #D7E3FA', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <p style={{ margin: 0, fontSize: 11, color: '#5E75A1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Distribution</p>
+                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Participacao por canal</h2>
+              </div>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                The pie view keeps the same query and filter model, but presents relative share for a quicker read during executive review.
+              </p>
+              <PieChart
+                height={280}
+                format="currency"
+                colorScheme={['#2563EB', '#0F766E', '#EA580C', '#7C3AED', '#DC2626']}
+                dataQuery={salesChannelDataQuery}
+                interaction={{ table: 'vendas.pedidos', field: 'canal_venda_id', clearOnSecondClick: true }}
+                recharts={{ innerRadius: 52, outerRadius: 92, paddingAngle: 2, showLabels: false, legendPosition: 'right' }}
+              />
+            </article>
+          </section>
+
+          <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 18, flex: 1 }}>
+            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <p style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trend</p>
+                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Receita diaria</h2>
+              </div>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                This line chart reacts to the same date picker and slicers, so the preview keeps the same operational behavior as the old dashboard runtime.
+              </p>
+              <LineChart
+                height={280}
+                format="currency"
+                colorScheme={['#2563EB', '#60A5FA', '#93C5FD']}
+                dataQuery={salesTrendDataQuery}
+                recharts={{ showDots: false, singleSeriesGradient: true, valueAxisWidth: 72 }}
               />
             </article>
 
@@ -340,7 +428,7 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
             ))}
           </section>
 
-          <section style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 18, flex: 1 }}>
+          <section style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 18 }}>
             <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven chart</p>
@@ -356,6 +444,43 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
                 dataQuery={SALES_CHANNEL_DATA_QUERY}
                 interaction={SALES_CHANNEL_INTERACTION}
                 recharts={{ categoryLabelMode: 'first-word', valueAxisWidth: 72 }}
+              />
+            </article>
+
+            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#EAF1FF', border: '1px solid #D7E3FA', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <p style={{ margin: 0, fontSize: 11, color: '#5E75A1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Distribution</p>
+                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Participacao por canal</h2>
+              </div>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                The pie view keeps the same query and filter model, but presents relative share for a quicker read during executive review.
+              </p>
+              <PieChartMarker
+                height={280}
+                format="currency"
+                colorScheme={['#2563EB', '#0F766E', '#EA580C', '#7C3AED', '#DC2626']}
+                dataQuery={SALES_CHANNEL_DATA_QUERY}
+                interaction={SALES_CHANNEL_INTERACTION}
+                recharts={{ innerRadius: 52, outerRadius: 92, paddingAngle: 2, showLabels: false, legendPosition: 'right' }}
+              />
+            </article>
+          </section>
+
+          <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 18, flex: 1 }}>
+            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <p style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trend</p>
+                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Receita diaria</h2>
+              </div>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                This line chart reacts to the same date picker and slicers, so the preview keeps the same operational behavior as the old dashboard runtime.
+              </p>
+              <LineChartMarker
+                height={280}
+                format="currency"
+                colorScheme={['#2563EB', '#60A5FA', '#93C5FD']}
+                dataQuery={SALES_TREND_DATA_QUERY}
+                recharts={{ showDots: false, singleSeriesGradient: true, valueAxisWidth: 72 }}
               />
             </article>
 

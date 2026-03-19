@@ -3,6 +3,8 @@
 import React from 'react'
 
 import JsonRenderBarChart from '@/products/bi/json-render/components/BarChart'
+import JsonRenderLineChart from '@/products/bi/json-render/components/LineChart'
+import JsonRenderPieChart from '@/products/bi/json-render/components/PieChart'
 import { mapManagersToCssVars } from '@/products/bi/json-render/theme/thememanagers'
 import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter'
 import { ThemeProvider } from '@/products/bi/json-render/theme/ThemeContext'
@@ -131,6 +133,8 @@ function resolveComponent(type: string): DashboardRenderComponent | undefined {
   if (type === 'Theme') return ({ element, children }) => <DashboardTheme element={element}>{children}</DashboardTheme>
   if (type === 'Dashboard') return ({ children }) => <DashboardSurface>{children}</DashboardSurface>
   if (type === 'BarChart') return ({ element }) => <JsonRenderBarChart element={element} />
+  if (type === 'LineChart') return ({ element }) => <JsonRenderLineChart element={element} />
+  if (type === 'PieChart') return ({ element }) => <JsonRenderPieChart element={element} />
   if (type === 'TextNode') return ({ element }) => <>{String((element?.props?.text as string | undefined) || '')}</>
   if (type === 'Br') return () => <br />
   if (HTML_TAGS.has(type.toLowerCase())) {
