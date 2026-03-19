@@ -20,6 +20,9 @@ type BarChartMarkerProps = {
 
 type LineChartMarkerProps = BarChartMarkerProps
 type PieChartMarkerProps = BarChartMarkerProps
+type ChartMarkerProps = BarChartMarkerProps & {
+  type: string
+}
 type WidgetMarkerProps = {
   [key: string]: unknown
 }
@@ -81,6 +84,10 @@ function PieChartMarker(_: PieChartMarkerProps) {
   return null
 }
 
+function ChartMarker(_: ChartMarkerProps) {
+  return null
+}
+
 function KpiMarker(_: WidgetMarkerProps) {
   return null
 }
@@ -111,6 +118,7 @@ DashboardMarker.displayName = 'Dashboard'
 BarChartMarker.displayName = 'BarChart'
 LineChartMarker.displayName = 'LineChart'
 PieChartMarker.displayName = 'PieChart'
+ChartMarker.displayName = 'Chart'
 KpiMarker.displayName = 'KPI'
 QueryMarker.displayName = 'Query'
 TableMarker.displayName = 'Table'
@@ -583,7 +591,8 @@ ${buildMetricCardsSource(config.metrics)}
               <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
                 This first widget is still driven by query, filters and click interaction. The template is JSX, but the chart behavior remains connected to the BI data runtime.
               </p>
-              <BarChart
+              <Chart
+                type="bar"
                 height={280}
                 format="currency"
                 colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
@@ -601,7 +610,8 @@ ${buildMetricCardsSource(config.metrics)}
               <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
                 The pie view keeps the same query and filter model, but presents relative share for a quicker read during executive review.
               </p>
-              <PieChart
+              <Chart
+                type="pie"
                 height={280}
                 format="currency"
                 colorScheme={['#2563EB', '#0F766E', '#EA580C', '#7C3AED', '#DC2626']}
@@ -621,7 +631,8 @@ ${buildMetricCardsSource(config.metrics)}
               <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
                 This line chart reacts to the same date picker and slicers, so the preview keeps the same operational behavior as the old dashboard runtime.
               </p>
-              <LineChart
+              <Chart
+                type="line"
                 height={280}
                 format="currency"
                 colorScheme={['#2563EB', '#60A5FA', '#93C5FD']}
@@ -793,7 +804,8 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
               <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
                 This first widget is still driven by query, filters and click interaction. The template is JSX, but the chart behavior remains connected to the BI data runtime.
               </p>
-              <BarChartMarker
+              <ChartMarker
+                type="bar"
                 height={280}
                 format="currency"
                 colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
@@ -811,7 +823,8 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
               <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
                 The pie view keeps the same query and filter model, but presents relative share for a quicker read during executive review.
               </p>
-              <PieChartMarker
+              <ChartMarker
+                type="pie"
                 height={280}
                 format="currency"
                 colorScheme={['#2563EB', '#0F766E', '#EA580C', '#7C3AED', '#DC2626']}
@@ -831,7 +844,8 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
               <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
                 This line chart reacts to the same date picker and slicers, so the preview keeps the same operational behavior as the old dashboard runtime.
               </p>
-              <LineChartMarker
+              <ChartMarker
+                type="line"
                 height={280}
                 format="currency"
                 colorScheme={['#2563EB', '#60A5FA', '#93C5FD']}

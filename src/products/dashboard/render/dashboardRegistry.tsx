@@ -23,6 +23,58 @@ type DashboardRenderComponent = React.FC<{
   onAction?: (action: any) => void
 }>
 
+function normalizeChartType(input: unknown): string {
+  const raw = String(input || '')
+    .trim()
+    .toLowerCase()
+    .replace(/_/g, '-')
+    .replace(/\s+/g, '-')
+  if (raw === 'barchart') return 'bar'
+  if (raw === 'linechart') return 'line'
+  if (raw === 'piechart') return 'pie'
+  if (raw === 'horizontalbar' || raw === 'horizontal-bar') return 'horizontal-bar'
+  if (raw === 'horizontalbarchart' || raw === 'horizontal-bar-chart') return 'horizontal-bar'
+  if (raw === 'scatterchart') return 'scatter'
+  if (raw === 'radarchart') return 'radar'
+  if (raw === 'treemapchart') return 'treemap'
+  if (raw === 'composedchart') return 'composed'
+  if (raw === 'funnelchart') return 'funnel'
+  if (raw === 'sankeychart') return 'sankey'
+  if (raw === 'gaugechart') return 'gauge'
+  return raw
+}
+
+function renderChartByType(chartType: unknown, element: any, onAction?: (action: any) => void) {
+  const normalized = normalizeChartType(chartType)
+  if (normalized === 'bar') return <JsonRenderBarChart element={element} />
+  if (normalized === 'line') return <JsonRenderLineChart element={element} />
+  if (normalized === 'pie') return <JsonRenderPieChart element={element} />
+  if (normalized === 'horizontal-bar') return <biRegistry.HorizontalBarChart element={element} onAction={onAction} />
+  if (normalized === 'scatter') return <biRegistry.ScatterChart element={element} onAction={onAction} />
+  if (normalized === 'radar') return <biRegistry.RadarChart element={element} onAction={onAction} />
+  if (normalized === 'treemap') return <biRegistry.TreemapChart element={element} onAction={onAction} />
+  if (normalized === 'composed') return <biRegistry.ComposedChart element={element} onAction={onAction} />
+  if (normalized === 'funnel') return <biRegistry.FunnelChart element={element} onAction={onAction} />
+  if (normalized === 'sankey') return <biRegistry.SankeyChart element={element} onAction={onAction} />
+  if (normalized === 'gauge') return <biRegistry.Gauge element={element} onAction={onAction} />
+
+  return (
+    <div className="rounded border border-yellow-300 bg-yellow-50 p-2 text-xs text-yellow-800">
+      Unsupported chart type: {normalized || 'unknown'}
+    </div>
+  )
+}
+
+function DashboardChart({
+  element,
+  onAction,
+}: {
+  element: any
+  onAction?: (action: any) => void
+}) {
+  return renderChartByType((element?.props || {}).type, element, onAction)
+}
+
 const HTML_TAGS = new Set([
   'div',
   'section',
@@ -145,9 +197,18 @@ function resolveComponent(type: string): DashboardRenderComponent | undefined {
   if (type === 'DashboardTemplate') return ({ children }) => <DashboardRoot>{children}</DashboardRoot>
   if (type === 'Theme') return ({ element, children }) => <DashboardTheme element={element}>{children}</DashboardTheme>
   if (type === 'Dashboard') return ({ children }) => <DashboardSurface>{children}</DashboardSurface>
-  if (type === 'BarChart') return ({ element }) => <JsonRenderBarChart element={element} />
-  if (type === 'LineChart') return ({ element }) => <JsonRenderLineChart element={element} />
-  if (type === 'PieChart') return ({ element }) => <JsonRenderPieChart element={element} />
+  if (type === 'Chart') return ({ element, onAction }) => <DashboardChart element={element} onAction={onAction} />
+  if (type === 'BarChart') return ({ element, onAction }) => <>{renderChartByType('bar', element, onAction)}</>
+  if (type === 'LineChart') return ({ element, onAction }) => <>{renderChartByType('line', element, onAction)}</>
+  if (type === 'PieChart') return ({ element, onAction }) => <>{renderChartByType('pie', element, onAction)}</>
+  if (type === 'HorizontalBarChart') return ({ element, onAction }) => <>{renderChartByType('horizontal-bar', element, onAction)}</>
+  if (type === 'ScatterChart') return ({ element, onAction }) => <>{renderChartByType('scatter', element, onAction)}</>
+  if (type === 'RadarChart') return ({ element, onAction }) => <>{renderChartByType('radar', element, onAction)}</>
+  if (type === 'TreemapChart') return ({ element, onAction }) => <>{renderChartByType('treemap', element, onAction)}</>
+  if (type === 'ComposedChart') return ({ element, onAction }) => <>{renderChartByType('composed', element, onAction)}</>
+  if (type === 'FunnelChart') return ({ element, onAction }) => <>{renderChartByType('funnel', element, onAction)}</>
+  if (type === 'SankeyChart') return ({ element, onAction }) => <>{renderChartByType('sankey', element, onAction)}</>
+  if (type === 'Gauge') return ({ element, onAction }) => <>{renderChartByType('gauge', element, onAction)}</>
   if (type === 'KPI') return ({ element, onAction }) => <biRegistry.KPI element={element} onAction={onAction} />
   if (type === 'Query') return ({ element, children }) => <DashboardQuery element={element}>{children}</DashboardQuery>
   if (type === 'Table') return ({ element, onAction }) => <biRegistry.Table element={element} onAction={onAction} />
