@@ -3,8 +3,8 @@
 import { memo, RefObject, useMemo, useRef, useState } from 'react'
 import { Icon } from '@iconify/react'
 
-import { parseDashboardTemplateDslToTree } from '@/products/bi/json-render/parsers/dashboardTemplateDslParser'
 import { DataProvider } from '@/products/bi/json-render/context'
+import { parseSlideTemplateDslToTree } from '@/products/slide/parser/parseSlideTemplateDsl'
 import { SlideRenderer } from '@/products/slide/frontend/render/slideRegistry'
 import { SlidePreviewThumbnail } from '@/products/slide/preview/SlidePreviewThumbnail'
 import { SLIDE_TEMPLATE_DSL } from '@/products/slide/shared/templates/slideTemplate'
@@ -135,7 +135,7 @@ const SlideCanvas = memo(function SlideCanvas({
 })
 
 function SlideWorkspace() {
-  const parsed = useMemo(() => parseDashboardTemplateDslToTree(SLIDE_TEMPLATE_DSL), [])
+  const parsed = useMemo(() => parseSlideTemplateDslToTree(SLIDE_TEMPLATE_DSL), [])
   const { rootName, themeNode, pages } = useMemo(() => getSlideStructure(parsed), [parsed])
   const initialPageId = useMemo(() => (pages.length ? getPageId(pages[0], 0) : ''), [pages])
   const [activePageId, setActivePageId] = useState(initialPageId)
