@@ -1,15 +1,19 @@
 'use client'
 
-import { memo, RefObject, useMemo, useRef, useState } from 'react'
+import { Children, isValidElement, memo, ReactNode, RefObject, useMemo, useRef, useState } from 'react'
 import { Icon } from '@iconify/react'
 
 import { DataProvider } from '@/products/bi/json-render/context'
-import { parseSlideTemplateDslToTree } from '@/products/slide/parser/parseSlideTemplateDsl'
 import { SlideRenderer } from '@/products/slide/frontend/render/slideRegistry'
 import { SlidePreviewThumbnail } from '@/products/slide/preview/SlidePreviewThumbnail'
-import { SLIDE_TEMPLATE_DSL } from '@/products/slide/shared/templates/slideTemplate'
+import { SLIDE_TEMPLATE, SLIDE_TEMPLATE_SOURCE } from '@/products/slide/shared/templates/slideTemplate'
 
 type AnyRecord = Record<string, any>
+type SlideTreeNode = {
+  type: string
+  props: Record<string, unknown>
+  children: Array<SlideTreeNode | string>
+}
 
 const SLIDE_WIDTH = 1280
 const SLIDE_HEIGHT = 720
@@ -18,6 +22,29 @@ const THUMB_SCALE = THUMB_WIDTH / SLIDE_WIDTH
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
+function getElementTypeName(type: unknown): string {
+  if (typeof type === 'string') return type
+  if (typeof type === 'function') return type.displayName || type.name || 'Anonymous'
+  return 'Unknown'
+}
+
+function jsxToTree(node: ReactNode): SlideTreeNode | string | null {
+  if (node == null || typeof node === 'boolean') return null
+  if (typeof node === 'string' || typeof node === 'number') return String(node)
+  if (!isValidElement(node)) return null
+
+  const { children, ...restProps } = (node.props || {}) as Record<string, unknown>
+  const parsedChildren = Children.toArray(children)
+    .map((child) => jsxToTree(child))
+    .filter((child): child is SlideTreeNode | string => child !== null)
+
+  return {
+    type: getElementTypeName(node.type),
+    props: restProps,
+    children: parsedChildren,
+  }
 }
 
 function getSlideStructure(tree: unknown): {
@@ -135,7 +162,13 @@ const SlideCanvas = memo(function SlideCanvas({
 })
 
 function SlideWorkspace() {
-  const parsed = useMemo(() => parseSlideTemplateDslToTree(SLIDE_TEMPLATE_DSL), [])
+  const parsed = useMemo(() => {
+    const tree = jsxToTree(SLIDE_TEMPLATE)
+    if (!tree || typeof tree === 'string') {
+      throw new Error('Invalid slide template root')
+    }
+    return tree
+  }, [])
   const { rootName, themeNode, pages } = useMemo(() => getSlideStructure(parsed), [parsed])
   const initialPageId = useMemo(() => (pages.length ? getPageId(pages[0], 0) : ''), [pages])
   const [activePageId, setActivePageId] = useState(initialPageId)
@@ -261,7 +294,7 @@ function SlideWorkspace() {
           ) : (
             <div className="mx-auto flex min-h-full max-w-[1280px] p-8">
               <pre className="w-full overflow-auto rounded-[16px] border-[0.5px] border-[#DDDDD8] bg-[#F7F7F6] p-6 text-[13px] leading-6 text-[#2C2C29] shadow-[0_2px_6px_rgba(15,23,42,0.05)]">
-                <code>{SLIDE_TEMPLATE_DSL}</code>
+                <code>{SLIDE_TEMPLATE_SOURCE}</code>
               </pre>
             </div>
           )}
