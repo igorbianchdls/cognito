@@ -13,7 +13,7 @@ function SlideTemplateMarker({ children }: MarkerProps) {
   return <>{children}</>
 }
 
-function ThemeMarker() {
+function ThemeMarker(_: MarkerProps) {
   return null
 }
 
