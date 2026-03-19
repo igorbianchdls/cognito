@@ -236,6 +236,7 @@ function SlideWorkspace() {
             <div className="mx-auto flex min-h-full items-start justify-center p-8">
               {activePage ? (
                 <SlideCanvas
+                  key={activePageId || initialPageId}
                   tree={activeTree}
                   zoom={zoom}
                   slideElementRef={slideElementRef}
