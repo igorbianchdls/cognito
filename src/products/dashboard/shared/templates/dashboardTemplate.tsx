@@ -72,6 +72,13 @@ export type DashboardTemplateVariant = {
   tree: DashboardTreeNode
 }
 
+type StandaloneDashboardVariant = {
+  fileName: string
+  name: string
+  path: string
+  title: string
+}
+
 function DashboardTemplateMarker({ children }: MarkerProps) {
   return <>{children}</>
 }
@@ -987,8 +994,636 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
   )
 }
 
+const CLASSIC_DASHBOARD_VARIANT: StandaloneDashboardVariant = {
+  fileName: 'dashboard-classico.tsx',
+  name: 'dashboard_classico',
+  path: 'app/dashboard-classico.tsx',
+  title: 'Dashboard Classico',
+}
+
+function buildClassicDashboardTemplateSource(themeName: string) {
+  return `export function DashboardClassico() {
+  return (
+    <DashboardTemplate name="${CLASSIC_DASHBOARD_VARIANT.name}" title="${CLASSIC_DASHBOARD_VARIANT.title}">
+      <Theme name="${themeName}" />
+      <Dashboard id="overview" title="${CLASSIC_DASHBOARD_VARIANT.title}">
+        <section style={{ display: 'flex', flexDirection: 'column', gap: 20, minHeight: '100%', padding: 28, backgroundColor: '#F5F7FB' }}>
+          <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20, padding: '20px 24px', borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <p style={{ margin: 0, fontSize: 12, color: '#6C7E97', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Executive dashboard</p>
+              <h1 style={{ margin: 0, fontSize: 34, lineHeight: 1.05, fontWeight: 700, letterSpacing: '-0.04em', color: '#172033' }}>Performance overview with the classic BI layout</h1>
+              <p style={{ margin: 0, maxWidth: 720, fontSize: 14, lineHeight: 1.65, color: '#536783' }}>
+                Header with global period control, KPI strip on top and analysis rows below. The runtime stays JSX-first, but the surface looks closer to the previous dashboard model.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, minWidth: 240 }}>
+              <p style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Global period</p>
+              <DatePicker label="Periodo do pedido" table="vendas.pedidos" field="data_pedido" presets={['7d', '30d', 'month', 'quarter']} />
+            </div>
+          </header>
+
+          <section style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: 14 }}>
+            <Query
+              dataQuery={{
+                query: \`
+                  SELECT COALESCE(SUM(p.valor_total), 0)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE 1=1
+                    {{filters:p}}
+                \`,
+                limit: 1,
+              }}
+              format="currency"
+              comparisonMode="previous_period"
+            >
+              <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p data-ui="eyebrow" style={{ margin: 0 }}>Receita</p>
+                <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
+                <p style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              </article>
+            </Query>
+
+            <Query
+              dataQuery={{
+                query: \`
+                  SELECT COUNT(*)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE 1=1
+                    {{filters:p}}
+                \`,
+                limit: 1,
+              }}
+              format="number"
+              comparisonMode="previous_period"
+            >
+              <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p data-ui="eyebrow" style={{ margin: 0 }}>Pedidos</p>
+                <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
+                <p style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              </article>
+            </Query>
+
+            <Query
+              dataQuery={{
+                query: \`
+                  SELECT COALESCE(AVG(p.valor_total), 0)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE 1=1
+                    {{filters:p}}
+                \`,
+                limit: 1,
+              }}
+              format="currency"
+              comparisonMode="previous_period"
+            >
+              <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p data-ui="eyebrow" style={{ margin: 0 }}>Ticket medio</p>
+                <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
+                <p style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              </article>
+            </Query>
+
+            <Query
+              dataQuery={{
+                query: \`
+                  SELECT COUNT(DISTINCT p.canal_venda_id)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE 1=1
+                    {{filters:p}}
+                \`,
+                limit: 1,
+              }}
+              format="number"
+              comparisonMode="previous_period"
+            >
+              <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p data-ui="eyebrow" style={{ margin: 0 }}>Canais ativos</p>
+                <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
+                <p style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              </article>
+            </Query>
+
+            <Query
+              dataQuery={{
+                query: \`
+                  SELECT COALESCE(AVG(CASE WHEN COALESCE(p.status, '') = 'aprovado' THEN 1 ELSE 0 END), 0)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE 1=1
+                    {{filters:p}}
+                \`,
+                limit: 1,
+              }}
+              format="percent"
+              comparisonMode="previous_period"
+            >
+              <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p data-ui="eyebrow" style={{ margin: 0 }}>Aprovacao</p>
+                <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
+                <p style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              </article>
+            </Query>
+          </section>
+
+          <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
+            <article data-ui="card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <p data-ui="eyebrow" style={{ margin: 0 }}>Receita por canal</p>
+                <h2 data-ui="title" style={{ margin: 0, fontSize: 22 }}>Mix comercial</h2>
+              </div>
+              <Chart
+                type="bar"
+                height={300}
+                format="currency"
+                dataQuery={{
+                  query: \`
+                    SELECT
+                      COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
+                      COALESCE(cv.nome, '-') AS label,
+                      COALESCE(SUM(pi.subtotal), 0)::float AS value
+                    FROM vendas.pedidos p
+                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                    WHERE 1=1
+                      {{filters:p}}
+                    GROUP BY 1, 2
+                    ORDER BY 3 DESC
+                  \`,
+                  xField: 'label',
+                  yField: 'value',
+                  keyField: 'key',
+                  limit: 6,
+                }}
+                interaction={{ table: 'vendas.pedidos', field: 'canal_venda_id', clearOnSecondClick: true }}
+                colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
+                recharts={{ categoryLabelMode: 'first-word', valueAxisWidth: 72 }}
+              />
+            </article>
+
+            <article data-ui="card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <p data-ui="eyebrow" style={{ margin: 0 }}>Participacao</p>
+                <h2 data-ui="title" style={{ margin: 0, fontSize: 22 }}>Share por canal</h2>
+              </div>
+              <Chart
+                type="pie"
+                height={300}
+                format="currency"
+                dataQuery={{
+                  query: \`
+                    SELECT
+                      COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
+                      COALESCE(cv.nome, '-') AS label,
+                      COALESCE(SUM(pi.subtotal), 0)::float AS value
+                    FROM vendas.pedidos p
+                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                    WHERE 1=1
+                      {{filters:p}}
+                    GROUP BY 1, 2
+                    ORDER BY 3 DESC
+                  \`,
+                  xField: 'label',
+                  yField: 'value',
+                  keyField: 'key',
+                  limit: 6,
+                }}
+                interaction={{ table: 'vendas.pedidos', field: 'canal_venda_id', clearOnSecondClick: true }}
+                colorScheme={['#2563EB', '#0F766E', '#EA580C', '#7C3AED', '#DC2626']}
+                recharts={{ innerRadius: 56, outerRadius: 96, showLabels: false, legendPosition: 'right' }}
+              />
+            </article>
+          </section>
+
+          <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
+            <article data-ui="card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <p data-ui="eyebrow" style={{ margin: 0 }}>Tendencia diaria</p>
+                <h2 data-ui="title" style={{ margin: 0, fontSize: 22 }}>Receita ao longo do periodo</h2>
+              </div>
+              <Chart
+                type="line"
+                height={300}
+                format="currency"
+                dataQuery={{
+                  query: \`
+                    SELECT
+                      TO_CHAR(p.data_pedido::date, 'YYYY-MM-DD') AS key,
+                      TO_CHAR(p.data_pedido::date, 'DD/MM') AS label,
+                      COALESCE(SUM(p.valor_total), 0)::float AS value
+                    FROM vendas.pedidos p
+                    WHERE 1=1
+                      {{filters:p}}
+                    GROUP BY 1, 2
+                    ORDER BY 1 ASC
+                  \`,
+                  xField: 'label',
+                  yField: 'value',
+                  keyField: 'key',
+                  limit: 31,
+                }}
+                colorScheme={['#2563EB', '#60A5FA', '#93C5FD']}
+                recharts={{ showDots: false, singleSeriesGradient: true, valueAxisWidth: 72 }}
+              />
+            </article>
+
+            <article data-ui="table-card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <p data-ui="eyebrow" style={{ margin: 0 }}>Detalhamento</p>
+                <h2 data-ui="title" style={{ margin: 0, fontSize: 22 }}>Pedidos filtrados</h2>
+              </div>
+              <Table
+                bordered
+                rounded
+                stickyHeader
+                dataQuery={{
+                  query: \`
+                    SELECT
+                      p.id::text AS pedido_id,
+                      TO_CHAR(p.data_pedido::date, 'DD/MM/YYYY') AS data_pedido,
+                      COALESCE(cv.nome, '-') AS canal,
+                      COALESCE(p.status, 'Sem status') AS status,
+                      COALESCE(p.valor_total, 0)::float AS valor_total
+                    FROM vendas.pedidos p
+                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                    WHERE 1=1
+                      {{filters:p}}
+                    ORDER BY p.data_pedido DESC NULLS LAST, p.id DESC
+                  \`,
+                  limit: 12,
+                }}
+                columns={[
+                  { accessorKey: 'pedido_id', header: 'Pedido' },
+                  { accessorKey: 'data_pedido', header: 'Data' },
+                  { accessorKey: 'canal', header: 'Canal' },
+                  { accessorKey: 'status', header: 'Status', cell: 'badge', meta: { variantMap: { aprovado: 'success', pendente: 'warning', cancelado: 'danger' } } },
+                  { accessorKey: 'valor_total', header: 'Receita', format: 'currency', align: 'right', headerAlign: 'right' },
+                ]}
+                enableExportCsv
+              />
+            </article>
+          </section>
+
+          <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
+            <article data-ui="card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <p data-ui="eyebrow" style={{ margin: 0 }}>Status mix</p>
+                <h2 data-ui="title" style={{ margin: 0, fontSize: 22 }}>Volume por status</h2>
+              </div>
+              <Chart
+                type="horizontal-bar"
+                height={300}
+                format="number"
+                dataQuery={{
+                  query: \`
+                    SELECT
+                      COALESCE(p.status, 'Sem status') AS label,
+                      COUNT(*)::float AS value
+                    FROM vendas.pedidos p
+                    WHERE 1=1
+                      {{filters:p}}
+                    GROUP BY 1
+                    ORDER BY 2 DESC
+                  \`,
+                  xField: 'label',
+                  yField: 'value',
+                  limit: 8,
+                }}
+                colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
+              />
+            </article>
+
+            <article data-ui="pivot-card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <p data-ui="eyebrow" style={{ margin: 0 }}>Cruzamento</p>
+                <h2 data-ui="title" style={{ margin: 0, fontSize: 22 }}>Receita por canal e status</h2>
+              </div>
+              <PivotTable
+                bordered
+                rounded
+                stickyHeader
+                enableExportCsv
+                defaultExpandedLevels={1}
+                dataQuery={{
+                  query: \`
+                    SELECT
+                      COALESCE(cv.nome, '-') AS canal,
+                      COALESCE(p.status, 'Sem status') AS status,
+                      COALESCE(p.valor_total, 0)::float AS valor_total
+                    FROM vendas.pedidos p
+                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                    WHERE 1=1
+                      {{filters:p}}
+                  \`,
+                  limit: 400,
+                }}
+                rows={[{ field: 'canal', label: 'Canal' }]}
+                columns={[{ field: 'status', label: 'Status' }]}
+                values={[{ field: 'valor_total', label: 'Receita', aggregate: 'sum', format: 'currency' }]}
+              />
+            </article>
+          </section>
+        </section>
+      </Dashboard>
+    </DashboardTemplate>
+  )
+}`
+}
+
+function buildClassicDashboardTemplate(themeName: string) {
+  return (
+    <DashboardTemplateMarker name={CLASSIC_DASHBOARD_VARIANT.name} title={CLASSIC_DASHBOARD_VARIANT.title}>
+      <ThemeMarker name={themeName} />
+      <DashboardMarker id="overview" title={CLASSIC_DASHBOARD_VARIANT.title}>
+        <section style={{ display: 'flex', flexDirection: 'column', gap: 20, minHeight: '100%', padding: 28, backgroundColor: '#F5F7FB' }}>
+          <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20, padding: '20px 24px', borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <p style={{ margin: 0, fontSize: 12, color: '#6C7E97', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Executive dashboard</p>
+              <h1 style={{ margin: 0, fontSize: 34, lineHeight: 1.05, fontWeight: 700, letterSpacing: '-0.04em', color: '#172033' }}>Performance overview with the classic BI layout</h1>
+              <p style={{ margin: 0, maxWidth: 720, fontSize: 14, lineHeight: 1.65, color: '#536783' }}>
+                Header with global period control, KPI strip on top and analysis rows below. The runtime stays JSX-first, but the surface looks closer to the previous dashboard model.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, minWidth: 240 }}>
+              <p style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Global period</p>
+              <DatePickerMarker label="Periodo do pedido" table="vendas.pedidos" field="data_pedido" presets={['7d', '30d', 'month', 'quarter']} />
+            </div>
+          </header>
+
+          <section style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: 14 }}>
+            <QueryMarker dataQuery={{ query: `
+                  SELECT COALESCE(SUM(p.valor_total), 0)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE 1=1
+                    {{filters:p}}
+                `, limit: 1 }} format="currency" comparisonMode="previous_period">
+              <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p data-ui="eyebrow" style={{ margin: 0 }}>Receita</p>
+                <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
+                <p style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              </article>
+            </QueryMarker>
+
+            <QueryMarker dataQuery={{ query: `
+                  SELECT COUNT(*)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE 1=1
+                    {{filters:p}}
+                `, limit: 1 }} format="number" comparisonMode="previous_period">
+              <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p data-ui="eyebrow" style={{ margin: 0 }}>Pedidos</p>
+                <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
+                <p style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              </article>
+            </QueryMarker>
+
+            <QueryMarker dataQuery={{ query: `
+                  SELECT COALESCE(AVG(p.valor_total), 0)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE 1=1
+                    {{filters:p}}
+                `, limit: 1 }} format="currency" comparisonMode="previous_period">
+              <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p data-ui="eyebrow" style={{ margin: 0 }}>Ticket medio</p>
+                <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
+                <p style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              </article>
+            </QueryMarker>
+
+            <QueryMarker dataQuery={{ query: `
+                  SELECT COUNT(DISTINCT p.canal_venda_id)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE 1=1
+                    {{filters:p}}
+                `, limit: 1 }} format="number" comparisonMode="previous_period">
+              <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p data-ui="eyebrow" style={{ margin: 0 }}>Canais ativos</p>
+                <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
+                <p style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              </article>
+            </QueryMarker>
+
+            <QueryMarker dataQuery={{ query: `
+                  SELECT COALESCE(AVG(CASE WHEN COALESCE(p.status, '') = 'aprovado' THEN 1 ELSE 0 END), 0)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE 1=1
+                    {{filters:p}}
+                `, limit: 1 }} format="percent" comparisonMode="previous_period">
+              <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p data-ui="eyebrow" style={{ margin: 0 }}>Aprovacao</p>
+                <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
+                <p style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              </article>
+            </QueryMarker>
+          </section>
+
+          <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
+            <article data-ui="card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <p data-ui="eyebrow" style={{ margin: 0 }}>Receita por canal</p>
+                <h2 data-ui="title" style={{ margin: 0, fontSize: 22 }}>Mix comercial</h2>
+              </div>
+              <ChartMarker
+                type="bar"
+                height={300}
+                format="currency"
+                dataQuery={{
+                  query: `
+                    SELECT
+                      COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
+                      COALESCE(cv.nome, '-') AS label,
+                      COALESCE(SUM(pi.subtotal), 0)::float AS value
+                    FROM vendas.pedidos p
+                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                    WHERE 1=1
+                      {{filters:p}}
+                    GROUP BY 1, 2
+                    ORDER BY 3 DESC
+                  `,
+                  xField: 'label',
+                  yField: 'value',
+                  keyField: 'key',
+                  limit: 6,
+                }}
+                interaction={SALES_CHANNEL_INTERACTION}
+                colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
+                recharts={{ categoryLabelMode: 'first-word', valueAxisWidth: 72 }}
+              />
+            </article>
+
+            <article data-ui="card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <p data-ui="eyebrow" style={{ margin: 0 }}>Participacao</p>
+                <h2 data-ui="title" style={{ margin: 0, fontSize: 22 }}>Share por canal</h2>
+              </div>
+              <ChartMarker
+                type="pie"
+                height={300}
+                format="currency"
+                dataQuery={{
+                  query: `
+                    SELECT
+                      COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
+                      COALESCE(cv.nome, '-') AS label,
+                      COALESCE(SUM(pi.subtotal), 0)::float AS value
+                    FROM vendas.pedidos p
+                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                    WHERE 1=1
+                      {{filters:p}}
+                    GROUP BY 1, 2
+                    ORDER BY 3 DESC
+                  `,
+                  xField: 'label',
+                  yField: 'value',
+                  keyField: 'key',
+                  limit: 6,
+                }}
+                interaction={SALES_CHANNEL_INTERACTION}
+                colorScheme={['#2563EB', '#0F766E', '#EA580C', '#7C3AED', '#DC2626']}
+                recharts={{ innerRadius: 56, outerRadius: 96, showLabels: false, legendPosition: 'right' }}
+              />
+            </article>
+          </section>
+
+          <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
+            <article data-ui="card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <p data-ui="eyebrow" style={{ margin: 0 }}>Tendencia diaria</p>
+                <h2 data-ui="title" style={{ margin: 0, fontSize: 22 }}>Receita ao longo do periodo</h2>
+              </div>
+              <ChartMarker
+                type="line"
+                height={300}
+                format="currency"
+                dataQuery={{
+                  query: `
+                    SELECT
+                      TO_CHAR(p.data_pedido::date, 'YYYY-MM-DD') AS key,
+                      TO_CHAR(p.data_pedido::date, 'DD/MM') AS label,
+                      COALESCE(SUM(p.valor_total), 0)::float AS value
+                    FROM vendas.pedidos p
+                    WHERE 1=1
+                      {{filters:p}}
+                    GROUP BY 1, 2
+                    ORDER BY 1 ASC
+                  `,
+                  xField: 'label',
+                  yField: 'value',
+                  keyField: 'key',
+                  limit: 31,
+                }}
+                colorScheme={['#2563EB', '#60A5FA', '#93C5FD']}
+                recharts={{ showDots: false, singleSeriesGradient: true, valueAxisWidth: 72 }}
+              />
+            </article>
+
+            <article data-ui="table-card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <p data-ui="eyebrow" style={{ margin: 0 }}>Detalhamento</p>
+                <h2 data-ui="title" style={{ margin: 0, fontSize: 22 }}>Pedidos filtrados</h2>
+              </div>
+              <TableMarker
+                bordered
+                rounded
+                stickyHeader
+                dataQuery={{
+                  query: `
+                    SELECT
+                      p.id::text AS pedido_id,
+                      TO_CHAR(p.data_pedido::date, 'DD/MM/YYYY') AS data_pedido,
+                      COALESCE(cv.nome, '-') AS canal,
+                      COALESCE(p.status, 'Sem status') AS status,
+                      COALESCE(p.valor_total, 0)::float AS valor_total
+                    FROM vendas.pedidos p
+                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                    WHERE 1=1
+                      {{filters:p}}
+                    ORDER BY p.data_pedido DESC NULLS LAST, p.id DESC
+                  `,
+                  limit: 12,
+                }}
+                columns={[
+                  { accessorKey: 'pedido_id', header: 'Pedido' },
+                  { accessorKey: 'data_pedido', header: 'Data' },
+                  { accessorKey: 'canal', header: 'Canal' },
+                  { accessorKey: 'status', header: 'Status', cell: 'badge', meta: { variantMap: { aprovado: 'success', pendente: 'warning', cancelado: 'danger' } } },
+                  { accessorKey: 'valor_total', header: 'Receita', format: 'currency', align: 'right', headerAlign: 'right' },
+                ]}
+                enableExportCsv
+              />
+            </article>
+          </section>
+
+          <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
+            <article data-ui="card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <p data-ui="eyebrow" style={{ margin: 0 }}>Status mix</p>
+                <h2 data-ui="title" style={{ margin: 0, fontSize: 22 }}>Volume por status</h2>
+              </div>
+              <ChartMarker
+                type="horizontal-bar"
+                height={300}
+                format="number"
+                dataQuery={{
+                  query: `
+                    SELECT
+                      COALESCE(p.status, 'Sem status') AS label,
+                      COUNT(*)::float AS value
+                    FROM vendas.pedidos p
+                    WHERE 1=1
+                      {{filters:p}}
+                    GROUP BY 1
+                    ORDER BY 2 DESC
+                  `,
+                  xField: 'label',
+                  yField: 'value',
+                  limit: 8,
+                }}
+                colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
+              />
+            </article>
+
+            <article data-ui="pivot-card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <p data-ui="eyebrow" style={{ margin: 0 }}>Cruzamento</p>
+                <h2 data-ui="title" style={{ margin: 0, fontSize: 22 }}>Receita por canal e status</h2>
+              </div>
+              <PivotTableMarker
+                bordered
+                rounded
+                stickyHeader
+                enableExportCsv
+                defaultExpandedLevels={1}
+                dataQuery={{
+                  query: `
+                    SELECT
+                      COALESCE(cv.nome, '-') AS canal,
+                      COALESCE(p.status, 'Sem status') AS status,
+                      COALESCE(p.valor_total, 0)::float AS valor_total
+                    FROM vendas.pedidos p
+                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                    WHERE 1=1
+                      {{filters:p}}
+                  `,
+                  limit: 400,
+                }}
+                rows={[{ field: 'canal', label: 'Canal' }]}
+                columns={[{ field: 'status', label: 'Status' }]}
+                values={[{ field: 'valor_total', label: 'Receita', aggregate: 'sum', format: 'currency' }]}
+              />
+            </article>
+          </section>
+        </section>
+      </DashboardMarker>
+    </DashboardTemplateMarker>
+  )
+}
+
 export function buildDashboardTemplateVariants(themeName: string): DashboardTemplateVariant[] {
-  return DASHBOARD_VARIANTS.map((variant) => {
+  const variants = DASHBOARD_VARIANTS.map((variant) => {
     const tree = jsxToTree(buildDashboardTemplate(variant, themeName))
     if (!tree || typeof tree === 'string') {
       throw new Error(`Invalid dashboard template root for ${variant.name}`)
@@ -1001,4 +1636,18 @@ export function buildDashboardTemplateVariants(themeName: string): DashboardTemp
       tree,
     }
   })
+
+  const classicTree = jsxToTree(buildClassicDashboardTemplate(themeName))
+  if (!classicTree || typeof classicTree === 'string') {
+    throw new Error(`Invalid dashboard template root for ${CLASSIC_DASHBOARD_VARIANT.name}`)
+  }
+
+  variants.push({
+    content: buildClassicDashboardTemplateSource(themeName),
+    name: CLASSIC_DASHBOARD_VARIANT.fileName,
+    path: CLASSIC_DASHBOARD_VARIANT.path,
+    tree: classicTree,
+  })
+
+  return variants
 }
