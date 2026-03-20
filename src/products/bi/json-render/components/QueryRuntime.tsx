@@ -148,6 +148,15 @@ function pickFirstNumericValue(row: AnyRecord | undefined, keys: string[]): numb
   return null
 }
 
+function pickFirstStringValue(row: AnyRecord | undefined, keys: string[]): string {
+  if (!row) return ''
+  for (const key of keys) {
+    const value = row[key]
+    if (typeof value === 'string' && value.trim()) return value.trim()
+  }
+  return ''
+}
+
 function formatNumber(value: number | null, format: QueryFormat): string {
   const numeric = Number(value)
   if (!Number.isFinite(numeric)) return '-'
@@ -194,18 +203,24 @@ function buildQueryResult({
 
   const comparisonValue = pickFirstNumericValue(row, [
     'comparison_value',
+    'comparisonValue',
     'compare_value',
+    'compareValue',
     'previous_value',
+    'previousValue',
     'valor_anterior',
     'previous_period_value',
+    'previousPeriodValue',
   ])
 
   const explicitDelta = pickFirstNumericValue(row, ['delta', 'delta_value', 'difference'])
   const explicitDeltaPercent = pickFirstNumericValue(row, [
     'delta_percent',
+    'deltaPercent',
     'variation_percent',
     'delta_pct',
     'percent_change',
+    'percentChange',
   ])
 
   const delta =
@@ -223,7 +238,8 @@ function buildQueryResult({
         : null
 
   const comparisonLabel =
-    (typeof row?.comparison_label === 'string' ? row.comparison_label : '').trim() || defaultComparisonLabel(comparisonMode)
+    pickFirstStringValue(row, ['comparison_label', 'comparisonLabel', 'compare_label', 'compareLabel']) ||
+    defaultComparisonLabel(comparisonMode)
 
   const deltaPercentDisplay =
     deltaPercent === null || !Number.isFinite(deltaPercent)
@@ -291,6 +307,50 @@ export default function JsonRenderQuery({
   React.useEffect(() => {
     let cancelled = false
 
+    async function executeQuery(queryFilters: AnyRecord) {
+      const isSqlQueryMode = typeof dq.query === 'string' && dq.query.trim()
+      const url = isSqlQueryMode
+        ? '/api/modulos/query/execute'
+        : `/api/modulos/${String(dq.model).split('.')[0]}/query`
+
+      const body = isSqlQueryMode
+        ? {
+            dataQuery: {
+              query: dq.query,
+              ...(typeof dq.yField === 'string' && dq.yField.trim() ? { yField: dq.yField.trim() } : {}),
+              ...(typeof dq.xField === 'string' && dq.xField.trim() ? { xField: dq.xField.trim() } : {}),
+              ...(typeof dq.keyField === 'string' && dq.keyField.trim() ? { keyField: dq.keyField.trim() } : {}),
+              filters: queryFilters,
+              limit: dq.limit ?? 1,
+            },
+          }
+        : {
+            dataQuery: {
+              model: dq.model,
+              dimension: undefined,
+              measure: dq.measure,
+              filters: queryFilters,
+              orderBy: dq.orderBy,
+              limit: dq.limit,
+            },
+          }
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const json = await response.json()
+      if (!response.ok || json?.success === false) {
+        throw new Error(String(json?.message || `Query failed (${response.status})`))
+      }
+
+      const rows = Array.isArray(json?.rows) ? json.rows : []
+      return rows.length > 0 && rows[0] && typeof rows[0] === 'object'
+        ? ({ ...(rows[0] as AnyRecord) } as AnyRecord)
+        : undefined
+    }
+
     async function run() {
       const isSqlQueryMode = typeof dq.query === 'string' && dq.query.trim()
       if (!dq || (!isSqlQueryMode && (!dq.model || !dq.measure))) {
@@ -323,52 +383,56 @@ export default function JsonRenderQuery({
           }
         }
 
-        const url = isSqlQueryMode
-          ? '/api/modulos/query/execute'
-          : `/api/modulos/${String(dq.model).split('.')[0]}/query`
+        const firstRow = await executeQuery(filters)
 
-        const body = isSqlQueryMode
-          ? {
-              dataQuery: {
-                query: dq.query,
-                ...(typeof dq.yField === 'string' && dq.yField.trim() ? { yField: dq.yField.trim() } : {}),
-                ...(typeof dq.xField === 'string' && dq.xField.trim() ? { xField: dq.xField.trim() } : {}),
-                ...(typeof dq.keyField === 'string' && dq.keyField.trim() ? { keyField: dq.keyField.trim() } : {}),
-                filters,
-                limit: dq.limit ?? 1,
-              },
-            }
-          : {
-              dataQuery: {
-                model: dq.model,
-                dimension: undefined,
-                measure: dq.measure,
-                filters,
-                orderBy: dq.orderBy,
-                limit: dq.limit,
-              },
-            }
-
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(body),
-        })
-        const json = await response.json()
-        if (!response.ok || json?.success === false) {
-          throw new Error(String(json?.message || `Query failed (${response.status})`))
-        }
-
-        const rows = Array.isArray(json?.rows) ? json.rows : []
-        const firstRow =
-          rows.length > 0 && rows[0] && typeof rows[0] === 'object' ? ({ ...(rows[0] as AnyRecord) } as AnyRecord) : undefined
-
-        const nextResult = buildQueryResult({
+        let rowForResult = firstRow
+        let nextResult = buildQueryResult({
           comparisonMode,
           format,
-          row: firstRow,
+          row: rowForResult,
           valueKey,
         })
+
+        const needsComparisonFallback =
+          Boolean(comparisonMode) &&
+          Boolean(comparisonRange) &&
+          nextResult.comparisonValue === null &&
+          nextResult.value !== null
+
+        if (needsComparisonFallback && comparisonRange) {
+          const comparisonFilters: AnyRecord = { ...filters }
+          delete comparisonFilters.compare_de
+          delete comparisonFilters.compare_ate
+          delete comparisonFilters.comparison_mode
+          comparisonFilters.de = comparisonRange.from
+          comparisonFilters.ate = comparisonRange.to
+
+          const comparisonRow = await executeQuery(comparisonFilters)
+          const comparisonValue = pickFirstNumericValue(comparisonRow, [
+            valueKey || 'value',
+            'total',
+            'valor_total',
+            'faturamento_total',
+            'gasto_total',
+            'count',
+            'value',
+          ])
+
+          rowForResult = {
+            ...(firstRow || {}),
+            comparison_value: comparisonValue,
+            comparisonValue,
+            comparison_label: defaultComparisonLabel(comparisonMode),
+            comparisonLabel: defaultComparisonLabel(comparisonMode),
+          }
+
+          nextResult = buildQueryResult({
+            comparisonMode,
+            format,
+            row: rowForResult,
+            valueKey,
+          })
+        }
 
         if (!cancelled) {
           setResult(nextResult)
