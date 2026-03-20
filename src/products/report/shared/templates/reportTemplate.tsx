@@ -119,6 +119,27 @@ const PANEL_STYLE: React.CSSProperties = {
   backgroundColor: '#FFFFFF',
 }
 
+const NARRATIVE_STYLE: React.CSSProperties = {
+  padding: 18,
+  borderRadius: 16,
+  border: '1px solid #E7ECF3',
+  backgroundColor: '#F8FAFD',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 10,
+}
+
+const BULLET_LIST_STYLE: React.CSSProperties = {
+  margin: 0,
+  paddingLeft: 18,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 8,
+  color: '#51607A',
+  fontSize: 14,
+  lineHeight: 1.65,
+}
+
 export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="executive_brief_report" title="Executive Revenue Brief">
   <Theme name="light" />
 
@@ -145,9 +166,28 @@ export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="executive
         </Query>
       </div>
 
+      <section style={{ padding: 18, border: '1px solid #E7ECF3', borderRadius: 16, backgroundColor: '#F8FAFD', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.72, color: '#51607A' }}>
+          <strong>Executive readout.</strong> Revenue and order volume still support a positive commercial narrative, but the overall picture is no longer explained by topline alone.
+        </p>
+        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.72, color: '#51607A' }}>
+          The more important question is now <strong>where the business is getting its growth</strong> and whether the current mix is becoming too narrow to sustain the same quality of performance over the next periods.
+        </p>
+      </section>
+
       <article style={{ padding: 16, border: '1px solid #E7ECF3', borderRadius: 16, backgroundColor: '#FFFFFF' }}>
         <Chart type="bar" height={360} format="currency" dataQuery={{ query: 'SELECT COALESCE(cv.id::text, COALESCE(cv.nome, \'-\')) AS key, COALESCE(cv.nome, \'-\') AS label, COALESCE(SUM(pi.subtotal), 0)::float AS value FROM vendas.pedidos p JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id WHERE 1=1 {{filters:p}} GROUP BY 1, 2 ORDER BY 3 DESC', xField: 'label', yField: 'value', keyField: 'key', limit: 6 }} />
       </article>
+
+      <section style={{ padding: 18, border: '1px solid #E7ECF3', borderRadius: 16, backgroundColor: '#F8FAFD', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.72, color: '#51607A' }}>
+          <strong>What the exhibit shows.</strong> A limited set of channels now defines most of the quarter&apos;s revenue baseline, which means commercial resilience depends increasingly on a smaller number of levers.
+        </p>
+        <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 8, color: '#51607A', fontSize: 14, lineHeight: 1.65 }}>
+          <li><strong>Positive:</strong> the current leaders are still generating enough scale to defend the quarter.</li>
+          <li><strong>Risk:</strong> concentration is rising faster than the topline summary alone suggests.</li>
+        </ul>
+      </section>
 
       <ul>
         <li>The top bars define most of the quarter's revenue baseline.</li>
@@ -159,9 +199,20 @@ export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="executive
   <Report id="trend" title="Trend">
     <section style={{ height: '100%', padding: 36, display: 'flex', flexDirection: 'column', gap: 18, backgroundColor: '#FFFFFF' }}>
       <header><h2 data-ui="title">Revenue trend</h2><p>One wide chart should dominate the page when the main question is trajectory.</p></header>
+      <section style={{ padding: 18, border: '1px solid #E7ECF3', borderRadius: 16, backgroundColor: '#F8FAFD', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.72, color: '#51607A' }}>
+          <strong>Interpretation frame.</strong> The central issue is no longer whether revenue is growing, but whether the current slope still justifies the same level of confidence in forward momentum.
+        </p>
+      </section>
       <article style={{ padding: 16, border: '1px solid #E7ECF3', borderRadius: 16, backgroundColor: '#FFFFFF' }}>
         <Chart type="line" height={460} format="currency" dataQuery={{ query: 'SELECT TO_CHAR(p.data_pedido::date, \'YYYY-MM-DD\') AS key, TO_CHAR(p.data_pedido::date, \'DD/MM\') AS label, COALESCE(SUM(p.valor_total), 0)::float AS value FROM vendas.pedidos p WHERE 1=1 {{filters:p}} GROUP BY 1, 2 ORDER BY 1 ASC', xField: 'label', yField: 'value', keyField: 'key', limit: 31 }} />
       </article>
+      <section style={{ padding: 18, border: '1px solid #E7ECF3', borderRadius: 16, backgroundColor: '#F8FAFD', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 8, color: '#51607A', fontSize: 14, lineHeight: 1.65 }}>
+          <li><strong>Momentum remains positive,</strong> which protects the topline story.</li>
+          <li><strong>The weaker slope matters</strong> because it suggests the next period will need more selectivity to sustain performance.</li>
+        </ul>
+      </section>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
         <article data-ui="card"><p>Momentum remains positive, but acceleration is less uniform than before.</p></article>
         <article data-ui="card"><p>The point of the chart is not just growth, but consistency of slope.</p></article>
@@ -173,9 +224,19 @@ export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="executive
   <Report id="mix" title="Mix">
     <section style={{ height: '100%', padding: 36, display: 'flex', flexDirection: 'column', gap: 18, backgroundColor: '#FFFFFF' }}>
       <header><h2 data-ui="title">Channel mix</h2><p>Charts stay full-width and the commentary stays below them.</p></header>
+      <section style={{ padding: 18, border: '1px solid #E7ECF3', borderRadius: 16, backgroundColor: '#F8FAFD', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.72, color: '#51607A' }}>
+          <strong>Why this matters.</strong> Portfolio breadth can look healthy at first glance while contribution becomes progressively more concentrated underneath.
+        </p>
+      </section>
       <article style={{ padding: 16, border: '1px solid #E7ECF3', borderRadius: 16, backgroundColor: '#FFFFFF' }}>
         <Chart type="pie" height={420} format="currency" dataQuery={{ query: 'SELECT COALESCE(cv.id::text, COALESCE(cv.nome, \'-\')) AS key, COALESCE(cv.nome, \'-\') AS label, COALESCE(SUM(pi.subtotal), 0)::float AS value FROM vendas.pedidos p JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id WHERE 1=1 {{filters:p}} GROUP BY 1, 2 ORDER BY 3 DESC', xField: 'label', yField: 'value', keyField: 'key', limit: 5 }} />
       </article>
+      <section style={{ padding: 18, border: '1px solid #E7ECF3', borderRadius: 16, backgroundColor: '#F8FAFD', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.72, color: '#51607A' }}>
+          <strong>Management implication.</strong> The current mix still supports the revenue story, but it also makes the business more sensitive to performance swings in a smaller group of channels.
+        </p>
+      </section>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
         <article data-ui="card"><p><strong>Core contributors:</strong> a small set of channels still carries most of the commercial story.</p></article>
         <article data-ui="card"><p><strong>Mid-tier support:</strong> the portfolio is not collapsed into one single revenue source.</p></article>
@@ -187,9 +248,20 @@ export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="executive
   <Report id="detail" title="Detail">
     <section style={{ height: '100%', padding: 36, display: 'flex', flexDirection: 'column', gap: 18, backgroundColor: '#FFFFFF' }}>
       <header><h2 data-ui="title">Detailed records</h2><p>The table should own the page width when detail is the goal.</p></header>
+      <section style={{ padding: 18, border: '1px solid #E7ECF3', borderRadius: 16, backgroundColor: '#F8FAFD', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.72, color: '#51607A' }}>
+          <strong>Use of detail.</strong> This page is designed for inspection, exception handling and challenge. The goal is to test whether the topline narrative is supported by transaction-level quality.
+        </p>
+      </section>
       <article data-ui="table-card" style={{ padding: 16, border: '1px solid #E7ECF3', borderRadius: 16, backgroundColor: '#FFFFFF' }}>
         <Table height={520} bordered rounded stickyHeader enableExportCsv dataQuery={{ query: 'SELECT p.id::text AS pedido_id, TO_CHAR(p.data_pedido::date, \'DD/MM/YYYY\') AS data_pedido, COALESCE(cv.nome, \'-\') AS canal, COALESCE(p.status, \'Sem status\') AS status, COALESCE(p.valor_total, 0)::float AS valor_total FROM vendas.pedidos p LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id WHERE 1=1 {{filters:p}} ORDER BY p.data_pedido DESC NULLS LAST, p.id DESC', limit: 14 }} columns={[{ accessorKey: 'pedido_id', header: 'Order' }, { accessorKey: 'data_pedido', header: 'Date' }, { accessorKey: 'canal', header: 'Channel' }, { accessorKey: 'status', header: 'Status', cell: 'badge', meta: { variantMap: { aprovado: 'success', pendente: 'warning', cancelado: 'danger' } } }, { accessorKey: 'valor_total', header: 'Revenue', format: 'currency', align: 'right', headerAlign: 'right' }]} />
       </article>
+      <section style={{ padding: 18, border: '1px solid #E7ECF3', borderRadius: 16, backgroundColor: '#F8FAFD', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 8, color: '#51607A', fontSize: 14, lineHeight: 1.65 }}>
+          <li><strong>Check status quality</strong> before assuming all topline is equally secure.</li>
+          <li><strong>Use the table</strong> to identify where channel strength is being overstated by incomplete status conversion.</li>
+        </ul>
+      </section>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
         <article data-ui="card"><p>Use this page for exceptions and spot checks.</p></article>
         <article data-ui="card"><p>Status mix matters because it explains how much of the topline is truly secured.</p></article>
@@ -201,9 +273,19 @@ export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="executive
   <Report id="appendix" title="Appendix">
     <section style={{ height: '100%', padding: 36, display: 'flex', flexDirection: 'column', gap: 18, backgroundColor: '#FFFFFF' }}>
       <header><h2 data-ui="title">Supporting appendix</h2><p>Pivot and closing notes stay stacked in one reading column.</p></header>
+      <section style={{ padding: 18, border: '1px solid #E7ECF3', borderRadius: 16, backgroundColor: '#F8FAFD', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.72, color: '#51607A' }}>
+          <strong>Appendix purpose.</strong> The pivot is not a decorative extra. It gives management a compact view of how revenue quality is distributed across channels and status categories.
+        </p>
+      </section>
       <article data-ui="pivot-card" style={{ padding: 16, border: '1px solid #E7ECF3', borderRadius: 16, backgroundColor: '#FFFFFF' }}>
         <PivotTable height={480} bordered rounded stickyHeader enableExportCsv defaultExpandedLevels={1} dataQuery={{ query: 'SELECT COALESCE(cv.nome, \'-\') AS canal, COALESCE(p.status, \'Sem status\') AS status, COALESCE(p.valor_total, 0)::float AS valor_total FROM vendas.pedidos p LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id WHERE 1=1 {{filters:p}}', limit: 400 }} rows={[{ field: 'canal', label: 'Canal' }]} columns={[{ field: 'status', label: 'Status' }]} values={[{ field: 'valor_total', label: 'Receita', aggregate: 'sum', format: 'currency' }]} />
       </article>
+      <section style={{ padding: 18, border: '1px solid #E7ECF3', borderRadius: 16, backgroundColor: '#F8FAFD', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.72, color: '#51607A' }}>
+          <strong>Closing note.</strong> A good report page alternates between evidence and explanation so that the reader never has to infer the intended conclusion alone.
+        </p>
+      </section>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
         <article data-ui="card"><p>This appendix keeps supporting detail close to the main story.</p></article>
         <article data-ui="card"><p>Wide data blocks are preferred over narrow split layouts.</p></article>
@@ -278,6 +360,15 @@ export const REPORT_TEMPLATE = (
           </QueryMarker>
         </div>
 
+        <section style={NARRATIVE_STYLE}>
+          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.72, color: '#51607A' }}>
+            <strong>Executive readout.</strong> Revenue and order volume still support a positive commercial narrative, but the overall picture is no longer explained by topline alone.
+          </p>
+          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.72, color: '#51607A' }}>
+            The more important question is now <strong>where the business is getting its growth</strong> and whether the current mix is becoming too narrow to sustain the same quality of performance over the next periods.
+          </p>
+        </section>
+
         <article style={PANEL_STYLE}>
           <ChartMarker
             type="bar"
@@ -294,6 +385,16 @@ export const REPORT_TEMPLATE = (
             recharts={{ categoryLabelMode: 'first-word', valueAxisWidth: 68 }}
           />
         </article>
+
+        <section style={NARRATIVE_STYLE}>
+          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.72, color: '#51607A' }}>
+            <strong>What the exhibit shows.</strong> A limited set of channels now defines most of the quarter&apos;s revenue baseline, which means commercial resilience depends increasingly on a smaller number of levers.
+          </p>
+          <ul style={BULLET_LIST_STYLE}>
+            <li><strong>Positive:</strong> the current leaders are still generating enough scale to defend the quarter.</li>
+            <li><strong>Risk:</strong> concentration is rising faster than the topline summary alone suggests.</li>
+          </ul>
+        </section>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
           <article data-ui="card" style={KPI_CARD_STYLE}>
@@ -329,6 +430,12 @@ export const REPORT_TEMPLATE = (
           </p>
         </header>
 
+        <section style={NARRATIVE_STYLE}>
+          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.72, color: '#51607A' }}>
+            <strong>Interpretation frame.</strong> The central issue is no longer whether revenue is growing, but whether the current slope still justifies the same level of confidence in forward momentum.
+          </p>
+        </section>
+
         <article style={PANEL_STYLE}>
           <ChartMarker
             type="line"
@@ -345,6 +452,13 @@ export const REPORT_TEMPLATE = (
             recharts={{ showDots: false, singleSeriesGradient: true, valueAxisWidth: 68 }}
           />
         </article>
+
+        <section style={NARRATIVE_STYLE}>
+          <ul style={BULLET_LIST_STYLE}>
+            <li><strong>Momentum remains positive,</strong> which protects the topline story.</li>
+            <li><strong>The weaker slope matters</strong> because it suggests the next period will need more selectivity to sustain performance.</li>
+          </ul>
+        </section>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
           <article data-ui="card" style={KPI_CARD_STYLE}>
@@ -374,6 +488,12 @@ export const REPORT_TEMPLATE = (
           </p>
         </header>
 
+        <section style={NARRATIVE_STYLE}>
+          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.72, color: '#51607A' }}>
+            <strong>Why this matters.</strong> Portfolio breadth can look healthy at first glance while contribution becomes progressively more concentrated underneath.
+          </p>
+        </section>
+
         <article style={PANEL_STYLE}>
           <ChartMarker
             type="pie"
@@ -390,6 +510,12 @@ export const REPORT_TEMPLATE = (
             recharts={{ innerRadius: 56, outerRadius: 92, showLabels: false, legendPosition: 'right' }}
           />
         </article>
+
+        <section style={NARRATIVE_STYLE}>
+          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.72, color: '#51607A' }}>
+            <strong>Management implication.</strong> The current mix still supports the revenue story, but it also makes the business more sensitive to performance swings in a smaller group of channels.
+          </p>
+        </section>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
           <article data-ui="card" style={KPI_CARD_STYLE}>
@@ -425,6 +551,12 @@ export const REPORT_TEMPLATE = (
           </p>
         </header>
 
+        <section style={NARRATIVE_STYLE}>
+          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.72, color: '#51607A' }}>
+            <strong>Use of detail.</strong> This page is designed for inspection, exception handling and challenge. The goal is to test whether the topline narrative is supported by transaction-level quality.
+          </p>
+        </section>
+
         <article data-ui="table-card" style={PANEL_STYLE}>
           <TableMarker
             height={520}
@@ -445,6 +577,13 @@ export const REPORT_TEMPLATE = (
             ]}
           />
         </article>
+
+        <section style={NARRATIVE_STYLE}>
+          <ul style={BULLET_LIST_STYLE}>
+            <li><strong>Check status quality</strong> before assuming all topline is equally secure.</li>
+            <li><strong>Use the table</strong> to identify where channel strength is being overstated by incomplete status conversion.</li>
+          </ul>
+        </section>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
           <article data-ui="card" style={KPI_CARD_STYLE}>
@@ -474,6 +613,12 @@ export const REPORT_TEMPLATE = (
           </p>
         </header>
 
+        <section style={NARRATIVE_STYLE}>
+          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.72, color: '#51607A' }}>
+            <strong>Appendix purpose.</strong> The pivot is not a decorative extra. It gives management a compact view of how revenue quality is distributed across channels and status categories.
+          </p>
+        </section>
+
         <article data-ui="pivot-card" style={PANEL_STYLE}>
           <PivotTableMarker
             height={480}
@@ -491,6 +636,12 @@ export const REPORT_TEMPLATE = (
             values={[{ field: 'valor_total', label: 'Receita', aggregate: 'sum', format: 'currency' }]}
           />
         </article>
+
+        <section style={NARRATIVE_STYLE}>
+          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.72, color: '#51607A' }}>
+            <strong>Closing note.</strong> A good report page alternates between evidence and explanation so that the reader never has to infer the intended conclusion alone.
+          </p>
+        </section>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
           <article data-ui="card" style={KPI_CARD_STYLE}>
