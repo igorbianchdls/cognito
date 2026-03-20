@@ -27,6 +27,10 @@ function asRecord(input: unknown): Record<string, unknown> {
   return input && typeof input === "object" && !Array.isArray(input) ? (input as Record<string, unknown>) : {};
 }
 
+function asStyleScalar(value: unknown): string | number | undefined {
+  return typeof value === "string" || typeof value === "number" ? value : undefined;
+}
+
 function extractStyleLike(component: unknown): React.CSSProperties {
   const source = asRecord(component);
   const out: React.CSSProperties = {};
@@ -92,11 +96,11 @@ export function getSemanticUiStyle(
       borderColor: headerComponent.borderColor || "var(--headerBorder, var(--surfaceBorder, transparent))",
       borderStyle: String(headerComponent.borderStyle || "solid"),
       borderWidth:
-        headerComponent.borderWidth ||
-        headerComponentSource.borderBottomWidth ||
-        headerComponentSource.borderTopWidth ||
+        asStyleScalar(headerComponent.borderWidth) ||
+        asStyleScalar(headerComponentSource.borderBottomWidth) ||
+        asStyleScalar(headerComponentSource.borderTopWidth) ||
         1,
-      borderRadius: headerComponent.borderRadius || 0,
+      borderRadius: asStyleScalar(headerComponent.borderRadius) || 0,
       color:
         (headerComponentSource.textColor as React.CSSProperties["color"]) ||
         headerComponent.color ||
