@@ -232,9 +232,9 @@ export const SLIDE_TEMPLATE_SOURCE = String.raw`<SlideTemplate title="Executive 
         </Query>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginTop: 16 }}>
-        <article data-ui="card"><p>Topline remains positive enough to support a constructive commercial narrative.</p></article>
-        <article data-ui="card"><p>However, growth quality matters more than topline alone because the contribution base is tightening.</p></article>
-        <article data-ui="card"><p>The following pages show where momentum is holding and where management attention is now required.</p></article>
+        <article data-ui="card"><p><strong>Topline is not the issue:</strong> revenue and order flow are still positive enough to support a constructive narrative.</p></article>
+        <article data-ui="card"><p><strong>Quality is the issue:</strong> growth matters less if it is increasingly dependent on a smaller contribution base.</p></article>
+        <article data-ui="card"><p><strong>What follows:</strong> the next pages show where momentum is holding and where management attention is now required.</p></article>
       </div>
       <div style={{ marginTop: 'auto', paddingTop: 10, borderTop: '1px solid #E6EBF3', display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#7B8798' }}>
         <span>Executive commercial review</span>
@@ -415,15 +415,36 @@ export const SLIDE_TEMPLATE = (
           </QueryMarker>
         </div>
 
+        <section
+          style={{
+            marginTop: 22,
+            padding: '28px 30px',
+            borderRadius: 12,
+            border: '1px solid #D8E1EE',
+            backgroundColor: '#F8FAFD',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 14,
+          }}
+        >
+          <p style={{ margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.10em', color: '#6E7B8D' }}>Key message</p>
+          <p style={{ margin: 0, fontSize: 31, lineHeight: 1.16, letterSpacing: '-0.05em', color: '#17243A', maxWidth: 920 }}>
+            <strong>Commercial momentum remains intact,</strong> but the business is relying on a narrower set of channels to sustain that performance.
+          </p>
+          <p style={{ margin: 0, fontSize: 16, lineHeight: 1.78, color: '#4F6078', maxWidth: 900 }}>
+            This means leadership should read the topline with more caution: the current quarter is still strong, but the <strong>quality of growth is becoming more concentrated</strong>, which raises the importance of protecting the best-performing channels and testing weaker lines more selectively.
+          </p>
+        </section>
+
         <div style={TAKEAWAY_ROW_STYLE}>
           <article data-ui="card" style={TAKEAWAY_CARD_STYLE}>
-            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: '#425571' }}>Topline remains positive enough to support a constructive commercial narrative.</p>
+            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: '#425571' }}><strong>Topline is not the issue:</strong> revenue and order flow are still positive enough to support a constructive narrative.</p>
           </article>
           <article data-ui="card" style={TAKEAWAY_CARD_STYLE}>
-            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: '#425571' }}>However, growth quality matters more than topline alone because the contribution base is tightening.</p>
+            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: '#425571' }}><strong>Quality is the issue:</strong> growth matters less if it is increasingly dependent on a smaller contribution base.</p>
           </article>
           <article data-ui="card" style={TAKEAWAY_CARD_STYLE}>
-            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: '#425571' }}>The following pages show where momentum is holding and where management attention is now required.</p>
+            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: '#425571' }}><strong>What follows:</strong> the next pages show where momentum is holding and where management attention is now required.</p>
           </article>
         </div>
 
