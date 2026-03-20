@@ -26,6 +26,18 @@ type ChartMarkerProps = BarChartMarkerProps & {
 type WidgetMarkerProps = {
   [key: string]: unknown
 }
+type TabsMarkerProps = MarkerProps & {
+  defaultValue?: string
+}
+type TabMarkerProps = MarkerProps & {
+  as?: string
+  value?: string
+}
+type TabPanelMarkerProps = MarkerProps & {
+  as?: string
+  forceMount?: boolean
+  value?: string
+}
 
 type DashboardMetric = {
   label: string
@@ -112,6 +124,18 @@ function DatePickerMarker(_: WidgetMarkerProps) {
   return null
 }
 
+function TabsMarker({ children }: TabsMarkerProps) {
+  return <>{children}</>
+}
+
+function TabMarker({ children }: TabMarkerProps) {
+  return <>{children}</>
+}
+
+function TabPanelMarker({ children }: TabPanelMarkerProps) {
+  return <>{children}</>
+}
+
 DashboardTemplateMarker.displayName = 'DashboardTemplate'
 ThemeMarker.displayName = 'Theme'
 DashboardMarker.displayName = 'Dashboard'
@@ -125,6 +149,9 @@ TableMarker.displayName = 'Table'
 PivotTableMarker.displayName = 'PivotTable'
 SlicerMarker.displayName = 'Slicer'
 DatePickerMarker.displayName = 'DatePicker'
+TabsMarker.displayName = 'Tabs'
+TabMarker.displayName = 'Tab'
+TabPanelMarker.displayName = 'TabPanel'
 
 const DASHBOARD_VARIANTS: DashboardVariantConfig[] = [
   {
@@ -377,205 +404,219 @@ ${buildMetricCardsSource(config.metrics)}
             </article>
           </section>
 
-          <section style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 18 }}>
-            <article data-ui="card" style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven chart</p>
-                <h2 data-ui="title" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Receita por canal</h2>
-              </div>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
-                This first widget is still driven by query, filters and click interaction. The template is JSX, but the chart behavior remains connected to the BI data runtime.
-              </p>
-              <Chart
-                type="bar"
-                height={280}
-                format="currency"
-                colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
-                dataQuery={{
-                  query: \`
-                    SELECT
-                      COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
-                      COALESCE(cv.nome, '-') AS label,
-                      COALESCE(SUM(pi.subtotal), 0)::float AS value
-                    FROM vendas.pedidos p
-                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
-                    WHERE 1=1
-                      {{filters:p}}
-                    GROUP BY 1, 2
-                    ORDER BY 3 DESC
-                  \`,
-                  xField: 'label',
-                  yField: 'value',
-                  keyField: 'key',
-                  dimension: 'canal_venda',
-                  limit: 6,
-                }}
-                interaction={{ table: 'vendas.pedidos', field: 'canal_venda_id', clearOnSecondClick: true }}
-                recharts={{ categoryLabelMode: 'first-word', valueAxisWidth: 72 }}
-              />
-            </article>
+          <Tabs defaultValue="commercial">
+            <div data-ui="tabs" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <Tab value="commercial">Canais</Tab>
+              <Tab value="trend">Tendencia</Tab>
+              <Tab value="details">Detalhamento</Tab>
+            </div>
 
-            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#EAF1FF', border: '1px solid #D7E3FA', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={{ margin: 0, fontSize: 11, color: '#5E75A1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Distribution</p>
-                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Participacao por canal</h2>
-              </div>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
-                The pie view keeps the same query and filter model, but presents relative share for a quicker read during executive review.
-              </p>
-              <Chart
-                type="pie"
-                height={280}
-                format="currency"
-                colorScheme={['#2563EB', '#0F766E', '#EA580C', '#7C3AED', '#DC2626']}
-                dataQuery={{
-                  query: \`
-                    SELECT
-                      COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
-                      COALESCE(cv.nome, '-') AS label,
-                      COALESCE(SUM(pi.subtotal), 0)::float AS value
-                    FROM vendas.pedidos p
-                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
-                    WHERE 1=1
-                      {{filters:p}}
-                    GROUP BY 1, 2
-                    ORDER BY 3 DESC
-                  \`,
-                  xField: 'label',
-                  yField: 'value',
-                  keyField: 'key',
-                  dimension: 'canal_venda',
-                  limit: 6,
-                }}
-                interaction={{ table: 'vendas.pedidos', field: 'canal_venda_id', clearOnSecondClick: true }}
-                recharts={{ innerRadius: 52, outerRadius: 92, paddingAngle: 2, showLabels: false, legendPosition: 'right' }}
-              />
-            </article>
-          </section>
+            <TabPanel value="commercial">
+              <section style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 18 }}>
+                <article data-ui="card" style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven chart</p>
+                    <h2 data-ui="title" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Receita por canal</h2>
+                  </div>
+                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                    This first widget is still driven by query, filters and click interaction. The template is JSX, but the chart behavior remains connected to the BI data runtime.
+                  </p>
+                  <Chart
+                    type="bar"
+                    height={280}
+                    format="currency"
+                    colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
+                    dataQuery={{
+                      query: \`
+                        SELECT
+                          COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
+                          COALESCE(cv.nome, '-') AS label,
+                          COALESCE(SUM(pi.subtotal), 0)::float AS value
+                        FROM vendas.pedidos p
+                        JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                        LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                        WHERE 1=1
+                          {{filters:p}}
+                        GROUP BY 1, 2
+                        ORDER BY 3 DESC
+                      \`,
+                      xField: 'label',
+                      yField: 'value',
+                      keyField: 'key',
+                      dimension: 'canal_venda',
+                      limit: 6,
+                    }}
+                    interaction={{ table: 'vendas.pedidos', field: 'canal_venda_id', clearOnSecondClick: true }}
+                    recharts={{ categoryLabelMode: 'first-word', valueAxisWidth: 72 }}
+                  />
+                </article>
 
-          <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 18, flex: 1 }}>
-            <article data-ui="table-card" style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trend</p>
-                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Receita diaria</h2>
-              </div>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
-                This line chart reacts to the same date picker and slicers, so the preview keeps the same operational behavior as the old dashboard runtime.
-              </p>
-              <Chart
-                type="line"
-                height={280}
-                format="currency"
-                colorScheme={['#2563EB', '#60A5FA', '#93C5FD']}
-                dataQuery={{
-                  query: \`
-                    SELECT
-                      TO_CHAR(p.data_pedido::date, 'YYYY-MM-DD') AS key,
-                      TO_CHAR(p.data_pedido::date, 'DD/MM') AS label,
-                      COALESCE(SUM(p.valor_total), 0)::float AS value
-                    FROM vendas.pedidos p
-                    WHERE 1=1
-                      {{filters:p}}
-                    GROUP BY 1, 2
-                    ORDER BY 1 ASC
-                  \`,
-                  xField: 'label',
-                  yField: 'value',
-                  keyField: 'key',
-                  limit: 31,
-                }}
-                recharts={{ showDots: false, singleSeriesGradient: true, valueAxisWidth: 72 }}
-              />
-            </article>
+                <article data-ui="card" style={{ padding: 22, borderRadius: 26, backgroundColor: '#EAF1FF', border: '1px solid #D7E3FA', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#5E75A1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Distribution</p>
+                    <h2 data-ui="title" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Participacao por canal</h2>
+                  </div>
+                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                    The pie view keeps the same query and filter model, but presents relative share for a quicker read during executive review.
+                  </p>
+                  <Chart
+                    type="pie"
+                    height={280}
+                    format="currency"
+                    colorScheme={['#2563EB', '#0F766E', '#EA580C', '#7C3AED', '#DC2626']}
+                    dataQuery={{
+                      query: \`
+                        SELECT
+                          COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
+                          COALESCE(cv.nome, '-') AS label,
+                          COALESCE(SUM(pi.subtotal), 0)::float AS value
+                        FROM vendas.pedidos p
+                        JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                        LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                        WHERE 1=1
+                          {{filters:p}}
+                        GROUP BY 1, 2
+                        ORDER BY 3 DESC
+                      \`,
+                      xField: 'label',
+                      yField: 'value',
+                      keyField: 'key',
+                      dimension: 'canal_venda',
+                      limit: 6,
+                    }}
+                    interaction={{ table: 'vendas.pedidos', field: 'canal_venda_id', clearOnSecondClick: true }}
+                    recharts={{ innerRadius: 52, outerRadius: 92, paddingAngle: 2, showLabels: false, legendPosition: 'right' }}
+                  />
+                </article>
+              </section>
+            </TabPanel>
 
-            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#EAF1FF', border: '1px solid #D7E3FA', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={{ margin: 0, fontSize: 11, color: '#5E75A1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Priorities</p>
-                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>What this view should clarify</h2>
-              </div>
-              <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <TabPanel value="trend">
+              <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 18, flex: 1 }}>
+                <article data-ui="card" style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trend</p>
+                    <h2 data-ui="title" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Receita diaria</h2>
+                  </div>
+                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                    This line chart reacts to the same date picker and slicers, so the preview keeps the same operational behavior as the old dashboard runtime.
+                  </p>
+                  <Chart
+                    type="line"
+                    height={280}
+                    format="currency"
+                    colorScheme={['#2563EB', '#60A5FA', '#93C5FD']}
+                    dataQuery={{
+                      query: \`
+                        SELECT
+                          TO_CHAR(p.data_pedido::date, 'YYYY-MM-DD') AS key,
+                          TO_CHAR(p.data_pedido::date, 'DD/MM') AS label,
+                          COALESCE(SUM(p.valor_total), 0)::float AS value
+                        FROM vendas.pedidos p
+                        WHERE 1=1
+                          {{filters:p}}
+                        GROUP BY 1, 2
+                        ORDER BY 1 ASC
+                      \`,
+                      xField: 'label',
+                      yField: 'value',
+                      keyField: 'key',
+                      limit: 31,
+                    }}
+                    recharts={{ showDots: false, singleSeriesGradient: true, valueAxisWidth: 72 }}
+                  />
+                </article>
+
+                <article data-ui="card" style={{ padding: 22, borderRadius: 26, backgroundColor: '#EAF1FF', border: '1px solid #D7E3FA', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#5E75A1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Priorities</p>
+                    <h2 data-ui="title" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>What this view should clarify</h2>
+                  </div>
+                  <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
 ${buildPriorityItemsSource(config.priorities)}
-              </ul>
-            </article>
-          </section>
+                  </ul>
+                </article>
+              </section>
+            </TabPanel>
 
-          <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 18 }}>
-            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</p>
-                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Pedidos filtrados em detalhe</h2>
-              </div>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
-                The table below consumes the same slicers and date markers as the charts, so the JSX dashboard keeps one shared filter model.
-              </p>
-              <Table
-                height={360}
-                bordered
-                rounded
-                stickyHeader
-                dataQuery={{
-                  query: \`
-                    SELECT
-                      p.id::text AS pedido_id,
-                      TO_CHAR(p.data_pedido::date, 'DD/MM/YYYY') AS data_pedido,
-                      COALESCE(cv.nome, '-') AS canal,
-                      COALESCE(p.status, 'Sem status') AS status,
-                      COALESCE(p.valor_total, 0)::float AS valor_total
-                    FROM vendas.pedidos p
-                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
-                    WHERE 1=1
-                      {{filters:p}}
-                    ORDER BY p.data_pedido DESC NULLS LAST, p.id DESC
-                  \`,
-                  limit: 12,
-                }}
-                columns={[
-                  { accessorKey: 'pedido_id', header: 'Pedido' },
-                  { accessorKey: 'data_pedido', header: 'Data' },
-                  { accessorKey: 'canal', header: 'Canal' },
-                  { accessorKey: 'status', header: 'Status', cell: 'badge', meta: { variantMap: { aprovado: 'success', pendente: 'warning', cancelado: 'danger' } } },
-                  { accessorKey: 'valor_total', header: 'Receita', format: 'currency', align: 'right', headerAlign: 'right' },
-                ]}
-                enableExportCsv
-              />
-            </article>
+            <TabPanel value="details">
+              <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 18 }}>
+                <article data-ui="table-card" style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</p>
+                    <h2 data-ui="title" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Pedidos filtrados em detalhe</h2>
+                  </div>
+                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                    The table below consumes the same slicers and date markers as the charts, so the JSX dashboard keeps one shared filter model.
+                  </p>
+                  <Table
+                    height={360}
+                    bordered
+                    rounded
+                    stickyHeader
+                    dataQuery={{
+                      query: \`
+                        SELECT
+                          p.id::text AS pedido_id,
+                          TO_CHAR(p.data_pedido::date, 'DD/MM/YYYY') AS data_pedido,
+                          COALESCE(cv.nome, '-') AS canal,
+                          COALESCE(p.status, 'Sem status') AS status,
+                          COALESCE(p.valor_total, 0)::float AS valor_total
+                        FROM vendas.pedidos p
+                        LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                        WHERE 1=1
+                          {{filters:p}}
+                        ORDER BY p.data_pedido DESC NULLS LAST, p.id DESC
+                      \`,
+                      limit: 12,
+                    }}
+                    columns={[
+                      { accessorKey: 'pedido_id', header: 'Pedido' },
+                      { accessorKey: 'data_pedido', header: 'Data' },
+                      { accessorKey: 'canal', header: 'Canal' },
+                      { accessorKey: 'status', header: 'Status', cell: 'badge', meta: { variantMap: { aprovado: 'success', pendente: 'warning', cancelado: 'danger' } } },
+                      { accessorKey: 'valor_total', header: 'Receita', format: 'currency', align: 'right', headerAlign: 'right' },
+                    ]}
+                    enableExportCsv
+                  />
+                </article>
 
-            <article data-ui="pivot-card" style={{ padding: 22, borderRadius: 26, backgroundColor: '#EAF1FF', border: '1px solid #D7E3FA', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#5E75A1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</p>
-                <h2 data-ui="title" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Receita por canal e status</h2>
-              </div>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
-                PivotTable stays query-driven too, but now it sits directly inside the JSX template instead of depending on the old DSL string pipeline.
-              </p>
-              <PivotTable
-                height={360}
-                bordered
-                rounded
-                stickyHeader
-                enableExportCsv
-                defaultExpandedLevels={1}
-                dataQuery={{
-                  query: \`
-                    SELECT
-                      COALESCE(cv.nome, '-') AS canal,
-                      COALESCE(p.status, 'Sem status') AS status,
-                      COALESCE(p.valor_total, 0)::float AS valor_total
-                    FROM vendas.pedidos p
-                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
-                    WHERE 1=1
-                      {{filters:p}}
-                  \`,
-                  limit: 400,
-                }}
-                rows={[{ field: 'canal', label: 'Canal' }]}
-                columns={[{ field: 'status', label: 'Status' }]}
-                values={[{ field: 'valor_total', label: 'Receita', aggregate: 'sum', format: 'currency' }]}
-              />
-            </article>
-          </section>
+                <article data-ui="pivot-card" style={{ padding: 22, borderRadius: 26, backgroundColor: '#EAF1FF', border: '1px solid #D7E3FA', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#5E75A1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</p>
+                    <h2 data-ui="title" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Receita por canal e status</h2>
+                  </div>
+                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                    PivotTable stays query-driven too, but now it sits directly inside the JSX template instead of depending on the old DSL string pipeline.
+                  </p>
+                  <PivotTable
+                    height={360}
+                    bordered
+                    rounded
+                    stickyHeader
+                    enableExportCsv
+                    defaultExpandedLevels={1}
+                    dataQuery={{
+                      query: \`
+                        SELECT
+                          COALESCE(cv.nome, '-') AS canal,
+                          COALESCE(p.status, 'Sem status') AS status,
+                          COALESCE(p.valor_total, 0)::float AS valor_total
+                        FROM vendas.pedidos p
+                        LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                        WHERE 1=1
+                          {{filters:p}}
+                      \`,
+                      limit: 400,
+                    }}
+                    rows={[{ field: 'canal', label: 'Canal' }]}
+                    columns={[{ field: 'status', label: 'Status' }]}
+                    values={[{ field: 'valor_total', label: 'Receita', aggregate: 'sum', format: 'currency' }]}
+                  />
+                </article>
+              </section>
+            </TabPanel>
+          </Tabs>
 
           <footer style={{ display: 'flex', justifyContent: 'space-between', gap: 18, padding: '18px 22px', borderRadius: 22, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2' }}>
             <p style={{ margin: 0, fontSize: 13, color: '#52647F', lineHeight: 1.6 }}>${config.footer}</p>
@@ -688,10 +729,10 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.35fr 0.65fr', gap: 18 }}>
-            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <article data-ui="card" style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Global controls</p>
-                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Filtros conectados ao runtime antigo</h2>
+                <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Global controls</p>
+                <h2 data-ui="title" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Filtros conectados ao runtime antigo</h2>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 14 }}>
                 <DatePickerMarker label="Periodo do pedido" table="vendas.pedidos" field="data_pedido" presets={['7d', '30d', 'month']} />
@@ -722,209 +763,223 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
             </article>
           </section>
 
-          <section style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 18 }}>
-            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven chart</p>
-                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Receita por canal</h2>
-              </div>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
-                This first widget is still driven by query, filters and click interaction. The template is JSX, but the chart behavior remains connected to the BI data runtime.
-              </p>
-              <ChartMarker
-                type="bar"
-                height={280}
-                format="currency"
-                colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
-                dataQuery={{
-                  query: `
-                    SELECT
-                      COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
-                      COALESCE(cv.nome, '-') AS label,
-                      COALESCE(SUM(pi.subtotal), 0)::float AS value
-                    FROM vendas.pedidos p
-                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
-                    WHERE 1=1
-                      {{filters:p}}
-                    GROUP BY 1, 2
-                    ORDER BY 3 DESC
-                  `,
-                  xField: 'label',
-                  yField: 'value',
-                  keyField: 'key',
-                  dimension: 'canal_venda',
-                  limit: 6,
-                }}
-                interaction={SALES_CHANNEL_INTERACTION}
-                recharts={{ categoryLabelMode: 'first-word', valueAxisWidth: 72 }}
-              />
-            </article>
+          <TabsMarker defaultValue="commercial">
+            <div data-ui="tabs" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <TabMarker value="commercial">Canais</TabMarker>
+              <TabMarker value="trend">Tendencia</TabMarker>
+              <TabMarker value="details">Detalhamento</TabMarker>
+            </div>
 
-            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#EAF1FF', border: '1px solid #D7E3FA', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={{ margin: 0, fontSize: 11, color: '#5E75A1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Distribution</p>
-                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Participacao por canal</h2>
-              </div>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
-                The pie view keeps the same query and filter model, but presents relative share for a quicker read during executive review.
-              </p>
-              <ChartMarker
-                type="pie"
-                height={280}
-                format="currency"
-                colorScheme={['#2563EB', '#0F766E', '#EA580C', '#7C3AED', '#DC2626']}
-                dataQuery={{
-                  query: `
-                    SELECT
-                      COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
-                      COALESCE(cv.nome, '-') AS label,
-                      COALESCE(SUM(pi.subtotal), 0)::float AS value
-                    FROM vendas.pedidos p
-                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
-                    WHERE 1=1
-                      {{filters:p}}
-                    GROUP BY 1, 2
-                    ORDER BY 3 DESC
-                  `,
-                  xField: 'label',
-                  yField: 'value',
-                  keyField: 'key',
-                  dimension: 'canal_venda',
-                  limit: 6,
-                }}
-                interaction={SALES_CHANNEL_INTERACTION}
-                recharts={{ innerRadius: 52, outerRadius: 92, paddingAngle: 2, showLabels: false, legendPosition: 'right' }}
-              />
-            </article>
-          </section>
+            <TabPanelMarker value="commercial">
+              <section style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 18 }}>
+                <article data-ui="card" style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven chart</p>
+                    <h2 data-ui="title" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Receita por canal</h2>
+                  </div>
+                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                    This first widget is still driven by query, filters and click interaction. The template is JSX, but the chart behavior remains connected to the BI data runtime.
+                  </p>
+                  <ChartMarker
+                    type="bar"
+                    height={280}
+                    format="currency"
+                    colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
+                    dataQuery={{
+                      query: `
+                        SELECT
+                          COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
+                          COALESCE(cv.nome, '-') AS label,
+                          COALESCE(SUM(pi.subtotal), 0)::float AS value
+                        FROM vendas.pedidos p
+                        JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                        LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                        WHERE 1=1
+                          {{filters:p}}
+                        GROUP BY 1, 2
+                        ORDER BY 3 DESC
+                      `,
+                      xField: 'label',
+                      yField: 'value',
+                      keyField: 'key',
+                      dimension: 'canal_venda',
+                      limit: 6,
+                    }}
+                    interaction={SALES_CHANNEL_INTERACTION}
+                    recharts={{ categoryLabelMode: 'first-word', valueAxisWidth: 72 }}
+                  />
+                </article>
 
-          <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 18, flex: 1 }}>
-            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trend</p>
-                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Receita diaria</h2>
-              </div>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
-                This line chart reacts to the same date picker and slicers, so the preview keeps the same operational behavior as the old dashboard runtime.
-              </p>
-              <ChartMarker
-                type="line"
-                height={280}
-                format="currency"
-                colorScheme={['#2563EB', '#60A5FA', '#93C5FD']}
-                dataQuery={{
-                  query: `
-                    SELECT
-                      TO_CHAR(p.data_pedido::date, 'YYYY-MM-DD') AS key,
-                      TO_CHAR(p.data_pedido::date, 'DD/MM') AS label,
-                      COALESCE(SUM(p.valor_total), 0)::float AS value
-                    FROM vendas.pedidos p
-                    WHERE 1=1
-                      {{filters:p}}
-                    GROUP BY 1, 2
-                    ORDER BY 1 ASC
-                  `,
-                  xField: 'label',
-                  yField: 'value',
-                  keyField: 'key',
-                  limit: 31,
-                }}
-                recharts={{ showDots: false, singleSeriesGradient: true, valueAxisWidth: 72 }}
-              />
-            </article>
+                <article data-ui="card" style={{ padding: 22, borderRadius: 26, backgroundColor: '#EAF1FF', border: '1px solid #D7E3FA', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#5E75A1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Distribution</p>
+                    <h2 data-ui="title" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Participacao por canal</h2>
+                  </div>
+                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                    The pie view keeps the same query and filter model, but presents relative share for a quicker read during executive review.
+                  </p>
+                  <ChartMarker
+                    type="pie"
+                    height={280}
+                    format="currency"
+                    colorScheme={['#2563EB', '#0F766E', '#EA580C', '#7C3AED', '#DC2626']}
+                    dataQuery={{
+                      query: `
+                        SELECT
+                          COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
+                          COALESCE(cv.nome, '-') AS label,
+                          COALESCE(SUM(pi.subtotal), 0)::float AS value
+                        FROM vendas.pedidos p
+                        JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                        LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                        WHERE 1=1
+                          {{filters:p}}
+                        GROUP BY 1, 2
+                        ORDER BY 3 DESC
+                      `,
+                      xField: 'label',
+                      yField: 'value',
+                      keyField: 'key',
+                      dimension: 'canal_venda',
+                      limit: 6,
+                    }}
+                    interaction={SALES_CHANNEL_INTERACTION}
+                    recharts={{ innerRadius: 52, outerRadius: 92, paddingAngle: 2, showLabels: false, legendPosition: 'right' }}
+                  />
+                </article>
+              </section>
+            </TabPanelMarker>
 
-            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#EAF1FF', border: '1px solid #D7E3FA', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={{ margin: 0, fontSize: 11, color: '#5E75A1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Priorities</p>
-                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>What this view should clarify</h2>
-              </div>
-              <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {config.priorities.map((item) => (
-                  <li key={item} style={{ margin: 0, fontSize: 14, lineHeight: 1.65, color: '#32445F' }}>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </article>
-          </section>
+            <TabPanelMarker value="trend">
+              <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 18, flex: 1 }}>
+                <article data-ui="card" style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trend</p>
+                    <h2 data-ui="title" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Receita diaria</h2>
+                  </div>
+                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                    This line chart reacts to the same date picker and slicers, so the preview keeps the same operational behavior as the old dashboard runtime.
+                  </p>
+                  <ChartMarker
+                    type="line"
+                    height={280}
+                    format="currency"
+                    colorScheme={['#2563EB', '#60A5FA', '#93C5FD']}
+                    dataQuery={{
+                      query: `
+                        SELECT
+                          TO_CHAR(p.data_pedido::date, 'YYYY-MM-DD') AS key,
+                          TO_CHAR(p.data_pedido::date, 'DD/MM') AS label,
+                          COALESCE(SUM(p.valor_total), 0)::float AS value
+                        FROM vendas.pedidos p
+                        WHERE 1=1
+                          {{filters:p}}
+                        GROUP BY 1, 2
+                        ORDER BY 1 ASC
+                      `,
+                      xField: 'label',
+                      yField: 'value',
+                      keyField: 'key',
+                      limit: 31,
+                    }}
+                    recharts={{ showDots: false, singleSeriesGradient: true, valueAxisWidth: 72 }}
+                  />
+                </article>
 
-          <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 18 }}>
-            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</p>
-                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Pedidos filtrados em detalhe</h2>
-              </div>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
-                The table below consumes the same slicers and date markers as the charts, so the JSX dashboard keeps one shared filter model.
-              </p>
-              <TableMarker
-                height={360}
-                bordered
-                rounded
-                stickyHeader
-                dataQuery={{
-                  query: `
-                    SELECT
-                      p.id::text AS pedido_id,
-                      TO_CHAR(p.data_pedido::date, 'DD/MM/YYYY') AS data_pedido,
-                      COALESCE(cv.nome, '-') AS canal,
-                      COALESCE(p.status, 'Sem status') AS status,
-                      COALESCE(p.valor_total, 0)::float AS valor_total
-                    FROM vendas.pedidos p
-                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
-                    WHERE 1=1
-                      {{filters:p}}
-                    ORDER BY p.data_pedido DESC NULLS LAST, p.id DESC
-                  `,
-                  limit: 12,
-                }}
-                columns={[
-                  { accessorKey: 'pedido_id', header: 'Pedido' },
-                  { accessorKey: 'data_pedido', header: 'Data' },
-                  { accessorKey: 'canal', header: 'Canal' },
-                  { accessorKey: 'status', header: 'Status', cell: 'badge', meta: { variantMap: { aprovado: 'success', pendente: 'warning', cancelado: 'danger' } } },
-                  { accessorKey: 'valor_total', header: 'Receita', format: 'currency', align: 'right', headerAlign: 'right' },
-                ]}
-                enableExportCsv
-              />
-            </article>
+                <article data-ui="card" style={{ padding: 22, borderRadius: 26, backgroundColor: '#EAF1FF', border: '1px solid #D7E3FA', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#5E75A1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Priorities</p>
+                    <h2 data-ui="title" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>What this view should clarify</h2>
+                  </div>
+                  <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {config.priorities.map((item) => (
+                      <li key={item} style={{ margin: 0, fontSize: 14, lineHeight: 1.65, color: '#32445F' }}>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              </section>
+            </TabPanelMarker>
 
-            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#EAF1FF', border: '1px solid #D7E3FA', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={{ margin: 0, fontSize: 11, color: '#5E75A1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</p>
-                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Receita por canal e status</h2>
-              </div>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
-                PivotTable stays query-driven too, but now it sits directly inside the JSX template instead of depending on the old DSL string pipeline.
-              </p>
-              <PivotTableMarker
-                height={360}
-                bordered
-                rounded
-                stickyHeader
-                enableExportCsv
-                defaultExpandedLevels={1}
-                dataQuery={{
-                  query: `
-                    SELECT
-                      COALESCE(cv.nome, '-') AS canal,
-                      COALESCE(p.status, 'Sem status') AS status,
-                      COALESCE(p.valor_total, 0)::float AS valor_total
-                    FROM vendas.pedidos p
-                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
-                    WHERE 1=1
-                      {{filters:p}}
-                  `,
-                  limit: 400,
-                }}
-                rows={[{ field: 'canal', label: 'Canal' }]}
-                columns={[{ field: 'status', label: 'Status' }]}
-                values={[{ field: 'valor_total', label: 'Receita', aggregate: 'sum', format: 'currency' }]}
-              />
-            </article>
-          </section>
+            <TabPanelMarker value="details">
+              <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 18 }}>
+                <article data-ui="table-card" style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</p>
+                    <h2 data-ui="title" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Pedidos filtrados em detalhe</h2>
+                  </div>
+                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                    The table below consumes the same slicers and date markers as the charts, so the JSX dashboard keeps one shared filter model.
+                  </p>
+                  <TableMarker
+                    height={360}
+                    bordered
+                    rounded
+                    stickyHeader
+                    dataQuery={{
+                      query: `
+                        SELECT
+                          p.id::text AS pedido_id,
+                          TO_CHAR(p.data_pedido::date, 'DD/MM/YYYY') AS data_pedido,
+                          COALESCE(cv.nome, '-') AS canal,
+                          COALESCE(p.status, 'Sem status') AS status,
+                          COALESCE(p.valor_total, 0)::float AS valor_total
+                        FROM vendas.pedidos p
+                        LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                        WHERE 1=1
+                          {{filters:p}}
+                        ORDER BY p.data_pedido DESC NULLS LAST, p.id DESC
+                      `,
+                      limit: 12,
+                    }}
+                    columns={[
+                      { accessorKey: 'pedido_id', header: 'Pedido' },
+                      { accessorKey: 'data_pedido', header: 'Data' },
+                      { accessorKey: 'canal', header: 'Canal' },
+                      { accessorKey: 'status', header: 'Status', cell: 'badge', meta: { variantMap: { aprovado: 'success', pendente: 'warning', cancelado: 'danger' } } },
+                      { accessorKey: 'valor_total', header: 'Receita', format: 'currency', align: 'right', headerAlign: 'right' },
+                    ]}
+                    enableExportCsv
+                  />
+                </article>
+
+                <article data-ui="pivot-card" style={{ padding: 22, borderRadius: 26, backgroundColor: '#EAF1FF', border: '1px solid #D7E3FA', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#5E75A1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</p>
+                    <h2 data-ui="title" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Receita por canal e status</h2>
+                  </div>
+                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                    PivotTable stays query-driven too, but now it sits directly inside the JSX template instead of depending on the old DSL string pipeline.
+                  </p>
+                  <PivotTableMarker
+                    height={360}
+                    bordered
+                    rounded
+                    stickyHeader
+                    enableExportCsv
+                    defaultExpandedLevels={1}
+                    dataQuery={{
+                      query: `
+                        SELECT
+                          COALESCE(cv.nome, '-') AS canal,
+                          COALESCE(p.status, 'Sem status') AS status,
+                          COALESCE(p.valor_total, 0)::float AS valor_total
+                        FROM vendas.pedidos p
+                        LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                        WHERE 1=1
+                          {{filters:p}}
+                      `,
+                      limit: 400,
+                    }}
+                    rows={[{ field: 'canal', label: 'Canal' }]}
+                    columns={[{ field: 'status', label: 'Status' }]}
+                    values={[{ field: 'valor_total', label: 'Receita', aggregate: 'sum', format: 'currency' }]}
+                  />
+                </article>
+              </section>
+            </TabPanelMarker>
+          </TabsMarker>
 
           <footer style={{ display: 'flex', justifyContent: 'space-between', gap: 18, padding: '18px 22px', borderRadius: 22, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2' }}>
             <p style={{ margin: 0, fontSize: 13, color: '#52647F', lineHeight: 1.6 }}>{config.footer}</p>

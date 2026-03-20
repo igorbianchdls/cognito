@@ -58,12 +58,14 @@ export function getSemanticUiStyle(
   theme: ThemeOverrides | null | undefined,
   uiRoleRaw?: unknown,
   tagRaw?: unknown,
+  state?: { active?: boolean },
 ): React.CSSProperties {
   const themeValue = theme || { components: {}, cssVars: {} };
   const components = themeValue.components || {};
   const cssVars = themeValue.cssVars || {};
   const role = String(uiRoleRaw || "").trim().toLowerCase();
   const tag = String(tagRaw || "").trim().toLowerCase();
+  const isActive = Boolean(state?.active);
   const titleComponent = extractStyleLike((components as Record<string, unknown>).Title);
   const subtitleComponent = extractStyleLike(asRecord((components as Record<string, unknown>).Subtitle).titleStyle);
   const cardComponent = extractStyleLike((components as Record<string, unknown>).Card);
@@ -126,12 +128,37 @@ export function getSemanticUiStyle(
     };
   }
 
+  if (role === "tabs") {
+    return {
+      boxSizing: "border-box",
+    };
+  }
+
+  if (role === "tab") {
+    return {
+      borderRadius: 999,
+      borderStyle: "solid",
+      borderWidth: 1,
+      borderColor: isActive ? "var(--fg, #0f172a)" : "var(--surfaceBorder, var(--containerBorderColor, #cbd5e1))",
+      backgroundColor: isActive ? "var(--fg, #0f172a)" : "var(--surfaceBg, rgba(255,255,255,0.7))",
+      color: isActive ? "var(--bg, #ffffff)" : "var(--fg, #0f172a)",
+      padding: "8px 14px",
+      fontSize: 13,
+      fontWeight: 600,
+      letterSpacing: "0.01em",
+    };
+  }
+
   return {};
 }
 
-export function useSemanticUiStyle(uiRole?: unknown, tag?: unknown): React.CSSProperties {
+export function useSemanticUiStyle(
+  uiRole?: unknown,
+  tag?: unknown,
+  state?: { active?: boolean },
+): React.CSSProperties {
   const theme = useThemeOverrides();
-  return useMemo(() => getSemanticUiStyle(theme, uiRole, tag), [theme, uiRole, tag]);
+  return useMemo(() => getSemanticUiStyle(theme, uiRole, tag, state), [theme, uiRole, tag, state?.active]);
 }
 
 const BUILTIN_ALIASES: Record<string, string> = {

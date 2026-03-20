@@ -23,6 +23,13 @@ type DashboardRenderComponent = React.FC<{
   onAction?: (action: any) => void
 }>
 
+type TabsContextValue = {
+  activeValue: string
+  setActiveValue: (value: string) => void
+}
+
+const TabsContext = React.createContext<TabsContextValue | null>(null)
+
 function normalizeChartType(input: unknown): string {
   const raw = String(input || '')
     .trim()
@@ -171,7 +178,9 @@ function HtmlNode({
 }) {
   const props = (element?.props || {}) as Record<string, any>
   const queryResult = useDashboardQueryResult()
-  const semanticStyle = useSemanticUiStyle(props['data-ui'], tag)
+  const semanticStyle = useSemanticUiStyle(props['data-ui'], tag, {
+    active: props['data-active'] === true || props['data-active'] === 'true' || props['aria-selected'] === true || props['aria-selected'] === 'true',
+  })
   const fallbackContent =
     typeof props.text === 'string'
       ? resolveDashboardQueryTemplate(props.text, queryResult)
@@ -195,10 +204,103 @@ function HtmlNode({
   )
 }
 
+function DashboardTabs({
+  element,
+  children,
+}: {
+  element: any
+  children?: React.ReactNode
+}) {
+  const defaultValue = typeof element?.props?.defaultValue === 'string' ? element.props.defaultValue : ''
+  const [activeValue, setActiveValue] = React.useState(defaultValue)
+  const contextValue = React.useMemo(() => ({ activeValue, setActiveValue }), [activeValue])
+  return <TabsContext.Provider value={contextValue}>{children}</TabsContext.Provider>
+}
+
+function DashboardTab({
+  element,
+  children,
+}: {
+  element: any
+  children?: React.ReactNode
+}) {
+  const tabs = React.useContext(TabsContext)
+  const props = (element?.props || {}) as Record<string, any>
+  const value = typeof props.value === 'string' ? props.value : ''
+  const tag = typeof props.as === 'string' ? (props.as as keyof React.JSX.IntrinsicElements) : 'button'
+  const active = tabs?.activeValue === value
+  const semanticStyle = useSemanticUiStyle('tab', tag, { active })
+  const normalizedProps = normalizeProps(props)
+  delete normalizedProps.as
+  delete normalizedProps.value
+  delete normalizedProps.defaultValue
+  delete normalizedProps['data-ui']
+  delete normalizedProps['data-active']
+
+  return React.createElement(
+    tag,
+    {
+      ...normalizedProps,
+      type: tag === 'button' ? 'button' : undefined,
+      role: props.role || 'tab',
+      'aria-selected': active,
+      'data-ui': 'tab',
+      'data-active': active ? 'true' : 'false',
+      onClick: () => tabs?.setActiveValue(value),
+      style: {
+        boxSizing: 'border-box',
+        minWidth: 0,
+        cursor: 'pointer',
+        ...semanticStyle,
+        ...(props.style && typeof props.style === 'object' ? props.style : {}),
+      },
+    },
+    children ?? props.text ?? null,
+  )
+}
+
+function DashboardTabPanel({
+  element,
+  children,
+}: {
+  element: any
+  children?: React.ReactNode
+}) {
+  const tabs = React.useContext(TabsContext)
+  const props = (element?.props || {}) as Record<string, any>
+  const value = typeof props.value === 'string' ? props.value : ''
+  const forceMount = props.forceMount === true || props.forceMount === 'true'
+  const active = tabs?.activeValue === value
+  if (!active && !forceMount) return null
+  const tag = typeof props.as === 'string' ? (props.as as keyof React.JSX.IntrinsicElements) : 'div'
+  const normalizedProps = normalizeProps(props)
+  delete normalizedProps.as
+  delete normalizedProps.value
+  delete normalizedProps.forceMount
+  return React.createElement(
+    tag,
+    {
+      ...normalizedProps,
+      role: props.role || 'tabpanel',
+      hidden: !active,
+      'data-ui': props['data-ui'] || 'tab-panel',
+      style: {
+        boxSizing: 'border-box',
+        minWidth: 0,
+        ...(props.style && typeof props.style === 'object' ? props.style : {}),
+      },
+    },
+    children,
+  )
+}
+
 function resolveComponent(type: string): DashboardRenderComponent | undefined {
   if (type === 'DashboardTemplate') return ({ children }) => <DashboardRoot>{children}</DashboardRoot>
   if (type === 'Theme') return ({ element, children }) => <DashboardTheme element={element}>{children}</DashboardTheme>
   if (type === 'Dashboard') return ({ children }) => <DashboardSurface>{children}</DashboardSurface>
+  if (type === 'Tabs') return ({ element, children }) => <DashboardTabs element={element}>{children}</DashboardTabs>
+  if (type === 'Tab') return ({ element, children }) => <DashboardTab element={element}>{children}</DashboardTab>
+  if (type === 'TabPanel') return ({ element, children }) => <DashboardTabPanel element={element}>{children}</DashboardTabPanel>
   if (type === 'Chart') return ({ element, onAction }) => <DashboardChart element={element} onAction={onAction} />
   if (type === 'BarChart') return ({ element, onAction }) => <>{renderChartByType('bar', element, onAction)}</>
   if (type === 'LineChart') return ({ element, onAction }) => <>{renderChartByType('line', element, onAction)}</>
