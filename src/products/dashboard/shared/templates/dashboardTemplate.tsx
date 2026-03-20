@@ -1,6 +1,7 @@
 'use client'
 
 import React, { isValidElement, ReactNode } from 'react'
+import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter'
 
 type MarkerProps = {
   children?: ReactNode
@@ -233,6 +234,208 @@ const SALES_CHANNEL_INTERACTION = {
   table: 'vendas.pedidos',
   field: 'canal_venda_id',
   clearOnSecondClick: true,
+}
+
+type DashboardThemeUi = {
+  chartScheme: string[]
+  page: React.CSSProperties
+  header: React.CSSProperties
+  badge: React.CSSProperties
+  noteCard: React.CSSProperties
+  metricCard: React.CSSProperties
+  queryCard: React.CSSProperties
+  panelCard: React.CSSProperties
+  panelCardAlt: React.CSSProperties
+  footer: React.CSSProperties
+  eyebrow: React.CSSProperties
+  title: React.CSSProperties
+  subtitle: React.CSSProperties
+  paragraph: React.CSSProperties
+  metricLabel: React.CSSProperties
+  metricValue: React.CSSProperties
+  metricNote: React.CSSProperties
+  kpiLabel: React.CSSProperties
+  kpiValue: React.CSSProperties
+  kpiDelta: React.CSSProperties
+}
+
+function isDarkDashboardTheme(themeName: string): boolean {
+  return ['dark', 'black', 'slate', 'navy', 'charcoal', 'midnight', 'metro', 'aero'].includes(
+    String(themeName || '').toLowerCase(),
+  )
+}
+
+function buildDashboardThemeUi(themeName: string): DashboardThemeUi {
+  const preset = buildThemeVars(themeName)
+  const cssVars = preset.cssVars || {}
+  const managers = (preset.managers || {}) as Record<string, any>
+  const chartScheme = Array.isArray(managers?.color?.scheme) && managers.color.scheme.length
+    ? (managers.color.scheme as string[])
+    : ['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE', '#0EA5E9']
+
+  const dark = isDarkDashboardTheme(themeName)
+  const primary = chartScheme[0] || '#2563EB'
+  const pageBg = String(cssVars.bg || (dark ? '#0F172A' : '#F6F8FC'))
+  const surfaceBg = String(cssVars.surfaceBg || (dark ? '#111827' : '#FFFFFF'))
+  const borderColor = String(cssVars.surfaceBorder || (dark ? '#334155' : '#DCE6F2'))
+  const textPrimary = String(cssVars.fg || cssVars.h1Color || (dark ? '#E5E7EB' : '#172033'))
+  const textSecondary = String(cssVars.headerSubtitle || cssVars.kpiTitleColor || (dark ? '#94A3B8' : '#536783'))
+  const titleColor = String(cssVars.h1Color || textPrimary)
+  const headerBg = String(cssVars.headerBg || surfaceBg)
+  const headerText = String(cssVars.headerText || titleColor)
+  const headerSubtitle = String(cssVars.headerSubtitle || textSecondary)
+  const accentSurface = `color-mix(in srgb, ${surfaceBg} 84%, ${primary} 16%)`
+  const accentBorder = `color-mix(in srgb, ${borderColor} 60%, ${primary} 40%)`
+  const accentText = dark ? '#FFFFFF' : primary
+
+  return {
+    chartScheme,
+    page: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 24,
+      minHeight: '100%',
+      padding: 32,
+      backgroundColor: pageBg,
+    },
+    header: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      gap: 24,
+      padding: 24,
+      borderRadius: 24,
+      border: `1px solid ${borderColor}`,
+      backgroundColor: headerBg,
+      color: headerText,
+    },
+    badge: {
+      display: 'inline-flex',
+      width: 'fit-content',
+      alignItems: 'center',
+      borderRadius: 999,
+      border: `1px solid ${accentBorder}`,
+      backgroundColor: accentSurface,
+      padding: '6px 12px',
+      fontSize: 12,
+      fontWeight: 600,
+      color: accentText,
+    },
+    noteCard: {
+      width: '28%',
+      padding: 22,
+      borderRadius: 24,
+      backgroundColor: accentSurface,
+      border: `1px solid ${accentBorder}`,
+    },
+    metricCard: {
+      padding: 20,
+      borderRadius: 22,
+      border: `1px solid ${borderColor}`,
+      backgroundColor: surfaceBg,
+    },
+    queryCard: {
+      padding: 22,
+      borderRadius: 22,
+      border: `1px solid ${borderColor}`,
+      backgroundColor: surfaceBg,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 8,
+    },
+    panelCard: {
+      padding: 22,
+      borderRadius: 26,
+      backgroundColor: surfaceBg,
+      border: `1px solid ${borderColor}`,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 14,
+    },
+    panelCardAlt: {
+      padding: 22,
+      borderRadius: 26,
+      backgroundColor: accentSurface,
+      border: `1px solid ${accentBorder}`,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 14,
+    },
+    footer: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      gap: 18,
+      padding: '18px 22px',
+      borderRadius: 22,
+      backgroundColor: surfaceBg,
+      border: `1px solid ${borderColor}`,
+    },
+    eyebrow: {
+      margin: 0,
+      fontSize: 11,
+      color: headerSubtitle,
+      textTransform: 'uppercase',
+      letterSpacing: '0.05em',
+    },
+    title: {
+      margin: 0,
+      fontSize: 24,
+      fontWeight: 600,
+      color: titleColor,
+      letterSpacing: '-0.03em',
+    },
+    subtitle: {
+      margin: 0,
+      fontSize: 15,
+      lineHeight: 1.7,
+      color: textSecondary,
+    },
+    paragraph: {
+      margin: 0,
+      fontSize: 14,
+      lineHeight: 1.75,
+      color: textSecondary,
+    },
+    metricLabel: {
+      margin: 0,
+      fontSize: 12,
+      color: textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: '0.05em',
+    },
+    metricValue: {
+      margin: '10px 0 8px 0',
+      fontSize: 32,
+      fontWeight: 700,
+      color: titleColor,
+      letterSpacing: '-0.04em',
+    },
+    metricNote: {
+      margin: 0,
+      fontSize: 13,
+      lineHeight: 1.6,
+      color: textSecondary,
+    },
+    kpiLabel: {
+      margin: 0,
+      fontSize: 12,
+      color: textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: '0.05em',
+    },
+    kpiValue: {
+      margin: 0,
+      fontSize: 30,
+      fontWeight: 700,
+      letterSpacing: '-0.04em',
+      color: String(cssVars.kpiValueColor || titleColor),
+    },
+    kpiDelta: {
+      margin: 0,
+      fontSize: 13,
+      color: textSecondary,
+    },
+  }
 }
 
 function getElementTypeName(type: unknown): string {
@@ -635,34 +838,35 @@ ${buildPriorityItemsSource(config.priorities)}
 }
 
 function buildDashboardTemplate(config: DashboardVariantConfig, themeName: string) {
+  const ui = buildDashboardThemeUi(themeName)
   return (
     <DashboardTemplateMarker name={config.name} title={config.title}>
       <ThemeMarker name={themeName} />
       <DashboardMarker id="overview" title={config.title}>
-        <section style={{ display: 'flex', flexDirection: 'column', gap: 24, minHeight: '100%', padding: 32, backgroundColor: '#F6F8FC' }}>
-          <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24 }}>
+        <section style={ui.page}>
+          <header style={ui.header}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: '62%' }}>
-              <span style={{ display: 'inline-flex', width: 'fit-content', alignItems: 'center', borderRadius: 999, backgroundColor: '#E3EEFF', padding: '6px 12px', fontSize: 12, fontWeight: 600, color: '#1E4FBF' }}>
+              <span style={ui.badge}>
                 {config.badge}
               </span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={{ margin: 0, fontSize: 12, color: '#6A7E98', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{config.eyebrow}</p>
-                <h1 style={{ margin: 0, fontSize: 42, fontWeight: 700, color: '#172033', letterSpacing: '-0.04em', lineHeight: 1.02 }}>{config.title}</h1>
+                <p style={{ ...ui.metricLabel, letterSpacing: '0.08em' }}>{config.eyebrow}</p>
+                <h1 style={{ margin: 0, fontSize: 42, fontWeight: 700, color: ui.title.color, letterSpacing: '-0.04em', lineHeight: 1.02 }}>{config.title}</h1>
               </div>
-              <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: '#536783' }}>{config.subtitle}</p>
+              <p style={ui.subtitle}>{config.subtitle}</p>
             </div>
-            <article style={{ width: '28%', padding: 22, borderRadius: 24, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2' }}>
-              <p data-ui="eyebrow" style={{ margin: 0, marginBottom: 10, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Workspace note</p>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: '#31415E' }}>{config.summary}</p>
+            <article style={ui.noteCard}>
+              <p data-ui="eyebrow" style={{ ...ui.eyebrow, marginBottom: 10 }}>Workspace note</p>
+              <p style={ui.paragraph}>{config.summary}</p>
             </article>
           </header>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
             {config.metrics.map((metric) => (
-              <article key={metric.label} style={{ padding: 20, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF' }}>
-                <p style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{metric.label}</p>
-                <h2 style={{ margin: '10px 0 8px 0', fontSize: 32, fontWeight: 700, color: '#172033', letterSpacing: '-0.04em' }}>{metric.value}</h2>
-                <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: '#50627D' }}>{metric.note}</p>
+              <article key={metric.label} style={ui.metricCard}>
+                <p style={ui.metricLabel}>{metric.label}</p>
+                <h2 style={ui.metricValue}>{metric.value}</h2>
+                <p style={ui.metricNote}>{metric.note}</p>
               </article>
             ))}
           </section>
@@ -682,11 +886,11 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
               format="currency"
               comparisonMode="previous_period"
             >
-              <article data-ui="card" style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <p data-ui="eyebrow" style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
-                <h2 data-ui="kpi-title" style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Receita total</h2>
-                <p data-ui="kpi-value" style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: '#172033' }}>{'{{query.valueFormatted}}'}</p>
-                <p style={{ margin: 0, fontSize: 13, color: '#52647F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              <article data-ui="card" style={ui.queryCard}>
+                <p data-ui="eyebrow" style={ui.kpiLabel}>Query-driven metric</p>
+                <h2 data-ui="kpi-title" style={{ margin: 0, fontSize: 18, fontWeight: 600, color: ui.title.color }}>Receita total</h2>
+                <p data-ui="kpi-value" style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
+                <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </QueryMarker>
             <QueryMarker
@@ -703,11 +907,11 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
               format="number"
               comparisonMode="previous_period"
             >
-              <article data-ui="card" style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <p data-ui="eyebrow" style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
-                <h2 data-ui="kpi-title" style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Pedidos no periodo</h2>
-                <p data-ui="kpi-value" style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: '#172033' }}>{'{{query.valueFormatted}}'}</p>
-                <p style={{ margin: 0, fontSize: 13, color: '#52647F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              <article data-ui="card" style={ui.queryCard}>
+                <p data-ui="eyebrow" style={ui.kpiLabel}>Query-driven metric</p>
+                <h2 data-ui="kpi-title" style={{ margin: 0, fontSize: 18, fontWeight: 600, color: ui.title.color }}>Pedidos no periodo</h2>
+                <p data-ui="kpi-value" style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
+                <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </QueryMarker>
             <QueryMarker
@@ -724,20 +928,20 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
               format="currency"
               comparisonMode="previous_period"
             >
-              <article data-ui="card" style={{ padding: 22, borderRadius: 22, border: '1px solid #DCE6F2', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <p data-ui="eyebrow" style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
-                <h2 data-ui="kpi-title" style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Ticket medio</h2>
-                <p data-ui="kpi-value" style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: '#172033' }}>{'{{query.valueFormatted}}'}</p>
-                <p style={{ margin: 0, fontSize: 13, color: '#52647F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              <article data-ui="card" style={ui.queryCard}>
+                <p data-ui="eyebrow" style={ui.kpiLabel}>Query-driven metric</p>
+                <h2 data-ui="kpi-title" style={{ margin: 0, fontSize: 18, fontWeight: 600, color: ui.title.color }}>Ticket medio</h2>
+                <p data-ui="kpi-value" style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
+                <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </QueryMarker>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.35fr 0.65fr', gap: 18 }}>
-            <article data-ui="card" style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <article data-ui="card" style={{ ...ui.panelCard, gap: 16 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Global controls</p>
-                <h2 data-ui="title" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Filtros conectados ao runtime antigo</h2>
+                <p data-ui="eyebrow" style={ui.eyebrow}>Global controls</p>
+                <h2 data-ui="title" style={ui.title}>Filtros conectados ao runtime antigo</h2>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 14 }}>
                 <DatePickerMarker label="Periodo do pedido" table="vendas.pedidos" field="data_pedido" presets={['7d', '30d', 'month']} />
@@ -760,9 +964,9 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
               </div>
             </article>
 
-            <article style={{ padding: 22, borderRadius: 26, backgroundColor: '#EAF1FF', border: '1px solid #D7E3FA', display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <p style={{ margin: 0, fontSize: 11, color: '#5E75A1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Why this matters</p>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+            <article style={{ ...ui.panelCardAlt, gap: 12 }}>
+              <p style={ui.eyebrow}>Why this matters</p>
+              <p style={ui.paragraph}>
                 The JSX template now keeps the semantic structure, while filters continue to feed the BI runtime. Charts, tables and pivots read the same global filter state without bringing back the old string parser.
               </p>
             </article>
@@ -777,19 +981,19 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
 
             <TabPanelMarker value="commercial">
               <section style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 18 }}>
-                <article data-ui="card" style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <article data-ui="card" style={ui.panelCard}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven chart</p>
-                    <h2 data-ui="title" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Receita por canal</h2>
+                    <p data-ui="eyebrow" style={ui.eyebrow}>Query-driven chart</p>
+                    <h2 data-ui="title" style={ui.title}>Receita por canal</h2>
                   </div>
-                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                  <p style={ui.paragraph}>
                     This first widget is still driven by query, filters and click interaction. The template is JSX, but the chart behavior remains connected to the BI data runtime.
                   </p>
                   <ChartMarker
                     type="bar"
                     height={280}
                     format="currency"
-                    colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
+                    colorScheme={ui.chartScheme}
                     dataQuery={{
                       query: `
                         SELECT
@@ -815,19 +1019,19 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
                   />
                 </article>
 
-                <article data-ui="card" style={{ padding: 22, borderRadius: 26, backgroundColor: '#EAF1FF', border: '1px solid #D7E3FA', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <article data-ui="card" style={ui.panelCardAlt}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#5E75A1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Distribution</p>
-                    <h2 data-ui="title" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Participacao por canal</h2>
+                    <p data-ui="eyebrow" style={ui.eyebrow}>Distribution</p>
+                    <h2 data-ui="title" style={ui.title}>Participacao por canal</h2>
                   </div>
-                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                  <p style={ui.paragraph}>
                     The pie view keeps the same query and filter model, but presents relative share for a quicker read during executive review.
                   </p>
                   <ChartMarker
                     type="pie"
                     height={280}
                     format="currency"
-                    colorScheme={['#2563EB', '#0F766E', '#EA580C', '#7C3AED', '#DC2626']}
+                    colorScheme={ui.chartScheme}
                     dataQuery={{
                       query: `
                         SELECT
@@ -857,19 +1061,19 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
 
             <TabPanelMarker value="trend">
               <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 18, flex: 1 }}>
-                <article data-ui="card" style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <article data-ui="card" style={ui.panelCard}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trend</p>
-                    <h2 data-ui="title" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Receita diaria</h2>
+                    <p data-ui="eyebrow" style={ui.eyebrow}>Trend</p>
+                    <h2 data-ui="title" style={ui.title}>Receita diaria</h2>
                   </div>
-                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                  <p style={ui.paragraph}>
                     This line chart reacts to the same date picker and slicers, so the preview keeps the same operational behavior as the old dashboard runtime.
                   </p>
                   <ChartMarker
                     type="line"
                     height={280}
                     format="currency"
-                    colorScheme={['#2563EB', '#60A5FA', '#93C5FD']}
+                    colorScheme={ui.chartScheme}
                     dataQuery={{
                       query: `
                         SELECT
@@ -891,14 +1095,14 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
                   />
                 </article>
 
-                <article data-ui="card" style={{ padding: 22, borderRadius: 26, backgroundColor: '#EAF1FF', border: '1px solid #D7E3FA', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <article data-ui="card" style={ui.panelCardAlt}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#5E75A1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Priorities</p>
-                    <h2 data-ui="title" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>What this view should clarify</h2>
+                    <p data-ui="eyebrow" style={ui.eyebrow}>Priorities</p>
+                    <h2 data-ui="title" style={ui.title}>What this view should clarify</h2>
                   </div>
                   <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {config.priorities.map((item) => (
-                      <li key={item} style={{ margin: 0, fontSize: 14, lineHeight: 1.65, color: '#32445F' }}>
+                      <li key={item} style={{ margin: 0, fontSize: 14, lineHeight: 1.65, color: ui.paragraph.color }}>
                         {item}
                       </li>
                     ))}
@@ -909,12 +1113,12 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
 
             <TabPanelMarker value="details">
               <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 18 }}>
-                <article data-ui="table-card" style={{ padding: 22, borderRadius: 26, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <article data-ui="table-card" style={ui.panelCard}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</p>
-                    <h2 data-ui="title" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Pedidos filtrados em detalhe</h2>
+                    <p data-ui="eyebrow" style={ui.eyebrow}>Table</p>
+                    <h2 data-ui="title" style={ui.title}>Pedidos filtrados em detalhe</h2>
                   </div>
-                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                  <p style={ui.paragraph}>
                     The table below consumes the same slicers and date markers as the charts, so the JSX dashboard keeps one shared filter model.
                   </p>
                   <TableMarker
@@ -948,12 +1152,12 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
                   />
                 </article>
 
-                <article data-ui="pivot-card" style={{ padding: 22, borderRadius: 26, backgroundColor: '#EAF1FF', border: '1px solid #D7E3FA', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <article data-ui="pivot-card" style={ui.panelCardAlt}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#5E75A1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</p>
-                    <h2 data-ui="title" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#172033', letterSpacing: '-0.03em' }}>Receita por canal e status</h2>
+                    <p data-ui="eyebrow" style={ui.eyebrow}>Pivot</p>
+                    <h2 data-ui="title" style={ui.title}>Receita por canal e status</h2>
                   </div>
-                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: '#425572' }}>
+                  <p style={ui.paragraph}>
                     PivotTable stays query-driven too, but now it sits directly inside the JSX template instead of depending on the old DSL string pipeline.
                   </p>
                   <PivotTableMarker
@@ -984,9 +1188,9 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
             </TabPanelMarker>
           </TabsMarker>
 
-          <footer style={{ display: 'flex', justifyContent: 'space-between', gap: 18, padding: '18px 22px', borderRadius: 22, backgroundColor: '#FFFFFF', border: '1px solid #DCE6F2' }}>
-            <p style={{ margin: 0, fontSize: 13, color: '#52647F', lineHeight: 1.6 }}>{config.footer}</p>
-            <p style={{ margin: 0, fontSize: 13, color: '#52647F', lineHeight: 1.6 }}>Theme ativo: {themeName}</p>
+          <footer style={ui.footer}>
+            <p style={{ margin: 0, fontSize: 13, color: ui.paragraph.color, lineHeight: 1.6 }}>{config.footer}</p>
+            <p style={{ margin: 0, fontSize: 13, color: ui.paragraph.color, lineHeight: 1.6 }}>Theme ativo: {themeName}</p>
           </footer>
         </section>
       </DashboardMarker>

@@ -27,10 +27,6 @@ function asRecord(input: unknown): Record<string, unknown> {
   return input && typeof input === "object" && !Array.isArray(input) ? (input as Record<string, unknown>) : {};
 }
 
-function asStyleScalar(value: unknown): string | number | undefined {
-  return typeof value === "string" || typeof value === "number" ? value : undefined;
-}
-
 function extractStyleLike(component: unknown): React.CSSProperties {
   const source = asRecord(component);
   const out: React.CSSProperties = {};
@@ -58,15 +54,6 @@ function extractStyleLike(component: unknown): React.CSSProperties {
   return out;
 }
 
-function getSemanticRole(uiRoleRaw?: unknown, tagRaw?: unknown): string {
-  const role = String(uiRoleRaw || "").trim().toLowerCase();
-  if (role) return role;
-  const tag = String(tagRaw || "").trim().toLowerCase();
-  if (tag === "header") return "header";
-  if (tag === "h1" || tag === "h2" || tag === "h3") return "title";
-  return "";
-}
-
 export function getSemanticUiStyle(
   theme: ThemeOverrides | null | undefined,
   uiRoleRaw?: unknown,
@@ -82,31 +69,10 @@ export function getSemanticUiStyle(
   const titleComponent = extractStyleLike((components as Record<string, unknown>).Title);
   const subtitleComponent = extractStyleLike(asRecord((components as Record<string, unknown>).Subtitle).titleStyle);
   const cardComponent = extractStyleLike((components as Record<string, unknown>).Card);
-  const headerComponentSource = asRecord((components as Record<string, unknown>).Header);
-  const headerComponent = extractStyleLike(headerComponentSource);
 
   const isTitleRole = role === "title" || (!role && (tag === "h1" || tag === "h2" || tag === "h3"));
   const isEyebrowRole = role === "eyebrow" || role === "subtitle";
   const isCardRole = role === "card" || role === "chart-card" || role === "table-card" || role === "pivot-card";
-  const isHeaderRole = role === "header" || (!role && tag === "header");
-
-  if (isHeaderRole) {
-    return {
-      backgroundColor: headerComponent.backgroundColor || "var(--headerBg, var(--bg, transparent))",
-      borderColor: headerComponent.borderColor || "var(--headerBorder, var(--surfaceBorder, transparent))",
-      borderStyle: String(headerComponent.borderStyle || "solid"),
-      borderWidth:
-        asStyleScalar(headerComponent.borderWidth) ||
-        asStyleScalar(headerComponentSource.borderBottomWidth) ||
-        asStyleScalar(headerComponentSource.borderTopWidth) ||
-        1,
-      borderRadius: asStyleScalar(headerComponent.borderRadius) || 0,
-      color:
-        (headerComponentSource.textColor as React.CSSProperties["color"]) ||
-        headerComponent.color ||
-        "var(--headerText, var(--fg, currentColor))",
-    };
-  }
 
   if (isCardRole) {
     return {
@@ -184,43 +150,6 @@ export function getSemanticUiStyle(
   }
 
   return {};
-}
-
-function semanticWinningKeys(roleRaw?: unknown, tagRaw?: unknown): string[] {
-  const role = getSemanticRole(roleRaw, tagRaw);
-  if (role === "header") return ["backgroundColor", "borderColor", "borderStyle", "borderWidth", "borderRadius", "boxShadow", "color"];
-  if (role === "card" || role === "chart-card" || role === "table-card" || role === "pivot-card") {
-    return ["backgroundColor", "borderColor", "borderStyle", "borderWidth", "borderRadius", "boxShadow"];
-  }
-  if (role === "title") return ["color", "fontFamily", "fontWeight", "letterSpacing"];
-  if (role === "eyebrow" || role === "subtitle") return ["color", "fontFamily", "fontWeight", "fontSize", "letterSpacing"];
-  if (role === "kpi-title" || role === "kpi-value") return ["color", "fontFamily", "fontWeight", "letterSpacing"];
-  if (role === "tab") {
-    return ["borderRadius", "borderStyle", "borderWidth", "borderColor", "backgroundColor", "color", "fontSize", "fontWeight", "letterSpacing", "padding"];
-  }
-  return [];
-}
-
-export function mergeSemanticUiStyle(
-  uiRoleRaw: unknown,
-  tagRaw: unknown,
-  semanticStyle: React.CSSProperties,
-  inlineStyle: unknown,
-): React.CSSProperties {
-  const merged: React.CSSProperties =
-    inlineStyle && typeof inlineStyle === "object" && !Array.isArray(inlineStyle)
-      ? { ...(inlineStyle as React.CSSProperties) }
-      : {};
-
-  const winningKeys = new Set(semanticWinningKeys(uiRoleRaw, tagRaw));
-  for (const [key, value] of Object.entries(semanticStyle || {})) {
-    if (value == null) continue;
-    if (!(key in merged) || winningKeys.has(key)) {
-      (merged as Record<string, unknown>)[key] = value;
-    }
-  }
-
-  return merged;
 }
 
 export function useSemanticUiStyle(
