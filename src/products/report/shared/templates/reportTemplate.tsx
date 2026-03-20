@@ -92,8 +92,8 @@ export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="pigment_s
   <Theme name="light" />
 
   <Report id="cover" title="Cover">
-    <section style={{ height: '100%', padding: 18, background: 'radial-gradient(circle at top left, rgba(114,225,255,0.45), transparent 26%), radial-gradient(circle at bottom right, rgba(255,154,211,0.42), transparent 30%), linear-gradient(180deg, #F7FBFF 0%, #FFF8FC 100%)' }}>
-      <article style={{ height: '100%', borderRadius: 22, overflow: 'hidden', backgroundColor: '#FFFFFF', border: '1px solid #E7EDF6', boxShadow: '0 10px 30px rgba(34, 47, 78, 0.08)', display: 'flex', flexDirection: 'column' }}>
+    <section style={{ height: '100%', minHeight: '100%', boxSizing: 'border-box', padding: 18, display: 'flex', background: 'radial-gradient(circle at top left, rgba(114,225,255,0.45), transparent 26%), radial-gradient(circle at bottom right, rgba(255,154,211,0.42), transparent 30%), linear-gradient(180deg, #F7FBFF 0%, #FFF8FC 100%)' }}>
+      <article style={{ flex: 1, minHeight: 0, boxSizing: 'border-box', borderRadius: 22, overflow: 'hidden', backgroundColor: '#FFFFFF', border: '1px solid #E7EDF6', boxShadow: '0 10px 30px rgba(34, 47, 78, 0.08)', display: 'flex', flexDirection: 'column' }}>
         <div style={{ height: 12, background: 'linear-gradient(90deg, #9FE8F5 0%, #DDB6FF 50%, #FFBDD6 100%)' }} />
         <div style={{ padding: '18px 24px', borderBottom: '1px solid #EEF2F7', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -160,8 +160,8 @@ export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="pigment_s
   </Report>
 
   <Report id="segment" title="Segment">
-    <section style={{ height: '100%', padding: 18, background: 'radial-gradient(circle at top left, rgba(132,239,255,0.35), transparent 28%), linear-gradient(180deg, #F7FBFF 0%, #FFFFFF 100%)' }}>
-      <article style={{ height: '100%', borderRadius: 22, overflow: 'hidden', backgroundColor: '#FFFFFF', border: '1px solid #E7EDF6', boxShadow: '0 10px 30px rgba(34, 47, 78, 0.07)', display: 'flex', flexDirection: 'column' }}>
+    <section style={{ height: '100%', minHeight: '100%', boxSizing: 'border-box', padding: 18, display: 'flex', background: 'radial-gradient(circle at top left, rgba(132,239,255,0.35), transparent 28%), linear-gradient(180deg, #F7FBFF 0%, #FFFFFF 100%)' }}>
+      <article style={{ flex: 1, minHeight: 0, boxSizing: 'border-box', borderRadius: 22, overflow: 'hidden', backgroundColor: '#FFFFFF', border: '1px solid #E7EDF6', boxShadow: '0 10px 30px rgba(34, 47, 78, 0.07)', display: 'flex', flexDirection: 'column' }}>
         <div style={{ height: 10, background: 'linear-gradient(90deg, #8EE2F5 0%, #D0E7FF 100%)' }} />
         <div style={{ padding: '18px 24px', borderBottom: '1px solid #EEF2F7', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#394459' }}>Breakdown by Segment</p>
@@ -200,14 +200,14 @@ export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="pigment_s
   </Report>
 
   <Report id="channel_mix" title="Channel Mix">
-    <section style={{ height: '100%', padding: 18, background: 'radial-gradient(circle at bottom right, rgba(255,170,216,0.34), transparent 30%), linear-gradient(180deg, #FFF9FD 0%, #FFFFFF 100%)' }}>
-      <article style={{ height: '100%', borderRadius: 22, overflow: 'hidden', backgroundColor: '#FFFFFF', border: '1px solid #E7EDF6', boxShadow: '0 10px 30px rgba(34, 47, 78, 0.07)', display: 'flex', flexDirection: 'column' }}>
+    <section style={{ height: '100%', minHeight: '100%', boxSizing: 'border-box', padding: 18, display: 'flex', background: 'radial-gradient(circle at bottom right, rgba(255,170,216,0.34), transparent 30%), linear-gradient(180deg, #FFF9FD 0%, #FFFFFF 100%)' }}>
+      <article style={{ flex: 1, minHeight: 0, boxSizing: 'border-box', borderRadius: 22, overflow: 'hidden', backgroundColor: '#FFFFFF', border: '1px solid #E7EDF6', boxShadow: '0 10px 30px rgba(34, 47, 78, 0.07)', display: 'flex', flexDirection: 'column' }}>
         <div style={{ height: 10, background: 'linear-gradient(90deg, #FFC2DE 0%, #F2D7FF 100%)' }} />
         <div style={{ padding: '18px 24px', borderBottom: '1px solid #EEF2F7', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#394459' }}>Breakdown by Country / Channel Mix</p>
           <p style={{ margin: 0, fontSize: 12, color: '#8D98AA' }}>Page 3 of 5</p>
         </div>
-        <div style={{ flex: 1, padding: '28px 34px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 22 }}>
+        <div style={{ flex: 1, padding: '28px 34px', display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 22 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <h2 data-ui="title" style={{ margin: 0, fontSize: 28, lineHeight: 1.04, letterSpacing: '-0.05em', color: '#263145' }}>Breakdown by country</h2>
             <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: '#5C697D' }}>
@@ -216,7 +216,7 @@ export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="pigment_s
             <article style={{ padding: 14, borderRadius: 18, border: '1px solid #E7EDF6', backgroundColor: '#FFFFFF' }}>
               <Chart
                 type="pie"
-                height={340}
+                height={380}
                 format="currency"
                 colorScheme={['#2E7BF7', '#5DB4FF', '#8CDDDC', '#F88CA0', '#D9B8FF']}
                 dataQuery={{
@@ -251,15 +251,15 @@ export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="pigment_s
   </Report>
 
   <Report id="exceptions" title="Exceptions">
-    <section style={{ height: '100%', padding: 18, background: 'radial-gradient(circle at top left, rgba(255,201,233,0.38), transparent 26%), linear-gradient(180deg, #FFF9FC 0%, #FFFFFF 100%)' }}>
-      <article style={{ height: '100%', borderRadius: 22, overflow: 'hidden', backgroundColor: '#FFFFFF', border: '1px solid #E7EDF6', boxShadow: '0 10px 30px rgba(34, 47, 78, 0.07)', display: 'flex', flexDirection: 'column' }}>
+    <section style={{ height: '100%', minHeight: '100%', boxSizing: 'border-box', padding: 18, display: 'flex', background: 'radial-gradient(circle at top left, rgba(255,201,233,0.38), transparent 26%), linear-gradient(180deg, #FFF9FC 0%, #FFFFFF 100%)' }}>
+      <article style={{ flex: 1, minHeight: 0, boxSizing: 'border-box', borderRadius: 22, overflow: 'hidden', backgroundColor: '#FFFFFF', border: '1px solid #E7EDF6', boxShadow: '0 10px 30px rgba(34, 47, 78, 0.07)', display: 'flex', flexDirection: 'column' }}>
         <div style={{ height: 10, background: 'linear-gradient(90deg, #FFD2E7 0%, #F0B5D7 100%)' }} />
         <div style={{ padding: '18px 24px', borderBottom: '1px solid #EEF2F7', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#394459' }}>Current Status and Proposed Solutions</p>
           <p style={{ margin: 0, fontSize: 12, color: '#8D98AA' }}>Page 4 of 5</p>
         </div>
         <div style={{ flex: 1, padding: '28px 34px', display: 'grid', gridTemplateRows: '0.44fr 0.56fr', gap: 18 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '0.92fr 1.08fr', gap: 18 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '0.78fr 1.22fr', gap: 18 }}>
             <article style={{ borderRadius: 18, backgroundColor: '#FAFCFF', border: '1px solid #E7EDF6', padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
               <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#8A95A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Summary</p>
               <h2 data-ui="title" style={{ margin: 0, fontSize: 28, lineHeight: 1.02, letterSpacing: '-0.05em', color: '#263145' }}>Low inventory detected on Week 26</h2>
@@ -314,8 +314,8 @@ export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="pigment_s
   </Report>
 
   <Report id="appendix" title="Appendix">
-    <section style={{ height: '100%', padding: 18, background: 'radial-gradient(circle at top left, rgba(121,236,255,0.28), transparent 24%), radial-gradient(circle at bottom right, rgba(255,188,224,0.26), transparent 26%), linear-gradient(180deg, #F8FBFF 0%, #FFFFFF 100%)' }}>
-      <article style={{ height: '100%', borderRadius: 22, overflow: 'hidden', backgroundColor: '#FFFFFF', border: '1px solid #E7EDF6', boxShadow: '0 10px 30px rgba(34, 47, 78, 0.07)', display: 'flex', flexDirection: 'column' }}>
+    <section style={{ height: '100%', minHeight: '100%', boxSizing: 'border-box', padding: 18, display: 'flex', background: 'radial-gradient(circle at top left, rgba(121,236,255,0.28), transparent 24%), radial-gradient(circle at bottom right, rgba(255,188,224,0.26), transparent 26%), linear-gradient(180deg, #F8FBFF 0%, #FFFFFF 100%)' }}>
+      <article style={{ flex: 1, minHeight: 0, boxSizing: 'border-box', borderRadius: 22, overflow: 'hidden', backgroundColor: '#FFFFFF', border: '1px solid #E7EDF6', boxShadow: '0 10px 30px rgba(34, 47, 78, 0.07)', display: 'flex', flexDirection: 'column' }}>
         <div style={{ height: 10, background: 'linear-gradient(90deg, #9CE7F7 0%, #EFC8FF 50%, #FFBFD8 100%)' }} />
         <div style={{ padding: '18px 24px', borderBottom: '1px solid #EEF2F7', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#394459' }}>Appendix and Supporting Detail</p>
@@ -380,8 +380,8 @@ export const REPORT_TEMPLATE = (
     <ThemeMarker name="light" />
 
     <ReportMarker id="cover" title="Cover">
-      <section style={{ height: '100%', padding: 18, background: 'radial-gradient(circle at top left, rgba(114,225,255,0.45), transparent 26%), radial-gradient(circle at bottom right, rgba(255,154,211,0.42), transparent 30%), linear-gradient(180deg, #F7FBFF 0%, #FFF8FC 100%)' }}>
-        <article style={{ height: '100%', borderRadius: 22, overflow: 'hidden', backgroundColor: '#FFFFFF', border: '1px solid #E7EDF6', boxShadow: '0 10px 30px rgba(34, 47, 78, 0.08)', display: 'flex', flexDirection: 'column' }}>
+      <section style={{ height: '100%', minHeight: '100%', boxSizing: 'border-box', padding: 18, display: 'flex', background: 'radial-gradient(circle at top left, rgba(114,225,255,0.45), transparent 26%), radial-gradient(circle at bottom right, rgba(255,154,211,0.42), transparent 30%), linear-gradient(180deg, #F7FBFF 0%, #FFF8FC 100%)' }}>
+        <article style={{ flex: 1, minHeight: 0, boxSizing: 'border-box', borderRadius: 22, overflow: 'hidden', backgroundColor: '#FFFFFF', border: '1px solid #E7EDF6', boxShadow: '0 10px 30px rgba(34, 47, 78, 0.08)', display: 'flex', flexDirection: 'column' }}>
           <div style={{ height: 12, background: 'linear-gradient(90deg, #9FE8F5 0%, #DDB6FF 50%, #FFBDD6 100%)' }} />
           <div style={{ padding: '18px 24px', borderBottom: '1px solid #EEF2F7', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -460,8 +460,8 @@ export const REPORT_TEMPLATE = (
     </ReportMarker>
 
     <ReportMarker id="segment" title="Segment">
-      <section style={{ height: '100%', padding: 18, background: 'radial-gradient(circle at top left, rgba(132,239,255,0.35), transparent 28%), linear-gradient(180deg, #F7FBFF 0%, #FFFFFF 100%)' }}>
-        <article style={{ height: '100%', borderRadius: 22, overflow: 'hidden', backgroundColor: '#FFFFFF', border: '1px solid #E7EDF6', boxShadow: '0 10px 30px rgba(34, 47, 78, 0.07)', display: 'flex', flexDirection: 'column' }}>
+      <section style={{ height: '100%', minHeight: '100%', boxSizing: 'border-box', padding: 18, display: 'flex', background: 'radial-gradient(circle at top left, rgba(132,239,255,0.35), transparent 28%), linear-gradient(180deg, #F7FBFF 0%, #FFFFFF 100%)' }}>
+        <article style={{ flex: 1, minHeight: 0, boxSizing: 'border-box', borderRadius: 22, overflow: 'hidden', backgroundColor: '#FFFFFF', border: '1px solid #E7EDF6', boxShadow: '0 10px 30px rgba(34, 47, 78, 0.07)', display: 'flex', flexDirection: 'column' }}>
           <div style={{ height: 10, background: 'linear-gradient(90deg, #8EE2F5 0%, #D0E7FF 100%)' }} />
           <div style={{ padding: '18px 24px', borderBottom: '1px solid #EEF2F7', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#394459' }}>Breakdown by Segment</p>
@@ -500,14 +500,14 @@ export const REPORT_TEMPLATE = (
     </ReportMarker>
 
     <ReportMarker id="channel_mix" title="Channel Mix">
-      <section style={{ height: '100%', padding: 18, background: 'radial-gradient(circle at bottom right, rgba(255,170,216,0.34), transparent 30%), linear-gradient(180deg, #FFF9FD 0%, #FFFFFF 100%)' }}>
-        <article style={{ height: '100%', borderRadius: 22, overflow: 'hidden', backgroundColor: '#FFFFFF', border: '1px solid #E7EDF6', boxShadow: '0 10px 30px rgba(34, 47, 78, 0.07)', display: 'flex', flexDirection: 'column' }}>
+      <section style={{ height: '100%', minHeight: '100%', boxSizing: 'border-box', padding: 18, display: 'flex', background: 'radial-gradient(circle at bottom right, rgba(255,170,216,0.34), transparent 30%), linear-gradient(180deg, #FFF9FD 0%, #FFFFFF 100%)' }}>
+        <article style={{ flex: 1, minHeight: 0, boxSizing: 'border-box', borderRadius: 22, overflow: 'hidden', backgroundColor: '#FFFFFF', border: '1px solid #E7EDF6', boxShadow: '0 10px 30px rgba(34, 47, 78, 0.07)', display: 'flex', flexDirection: 'column' }}>
           <div style={{ height: 10, background: 'linear-gradient(90deg, #FFC2DE 0%, #F2D7FF 100%)' }} />
           <div style={{ padding: '18px 24px', borderBottom: '1px solid #EEF2F7', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#394459' }}>Breakdown by Country / Channel Mix</p>
             <p style={{ margin: 0, fontSize: 12, color: '#8D98AA' }}>Page 3 of 5</p>
           </div>
-          <div style={{ flex: 1, padding: '28px 34px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 22 }}>
+        <div style={{ flex: 1, padding: '28px 34px', display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 22 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <h2 data-ui="title" style={{ margin: 0, fontSize: 28, lineHeight: 1.04, letterSpacing: '-0.05em', color: '#263145' }}>Breakdown by country</h2>
               <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: '#5C697D' }}>
@@ -516,7 +516,7 @@ export const REPORT_TEMPLATE = (
               <article style={{ padding: 14, borderRadius: 18, border: '1px solid #E7EDF6', backgroundColor: '#FFFFFF' }}>
                 <ChartMarker
                   type="pie"
-                  height={340}
+                  height={380}
                   format="currency"
                   colorScheme={['#2E7BF7', '#5DB4FF', '#8CDDDC', '#F88CA0', '#D9B8FF']}
                   dataQuery={{
@@ -551,15 +551,15 @@ export const REPORT_TEMPLATE = (
     </ReportMarker>
 
     <ReportMarker id="exceptions" title="Exceptions">
-      <section style={{ height: '100%', padding: 18, background: 'radial-gradient(circle at top left, rgba(255,201,233,0.38), transparent 26%), linear-gradient(180deg, #FFF9FC 0%, #FFFFFF 100%)' }}>
-        <article style={{ height: '100%', borderRadius: 22, overflow: 'hidden', backgroundColor: '#FFFFFF', border: '1px solid #E7EDF6', boxShadow: '0 10px 30px rgba(34, 47, 78, 0.07)', display: 'flex', flexDirection: 'column' }}>
+      <section style={{ height: '100%', minHeight: '100%', boxSizing: 'border-box', padding: 18, display: 'flex', background: 'radial-gradient(circle at top left, rgba(255,201,233,0.38), transparent 26%), linear-gradient(180deg, #FFF9FC 0%, #FFFFFF 100%)' }}>
+        <article style={{ flex: 1, minHeight: 0, boxSizing: 'border-box', borderRadius: 22, overflow: 'hidden', backgroundColor: '#FFFFFF', border: '1px solid #E7EDF6', boxShadow: '0 10px 30px rgba(34, 47, 78, 0.07)', display: 'flex', flexDirection: 'column' }}>
           <div style={{ height: 10, background: 'linear-gradient(90deg, #FFD2E7 0%, #F0B5D7 100%)' }} />
           <div style={{ padding: '18px 24px', borderBottom: '1px solid #EEF2F7', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#394459' }}>Current Status and Proposed Solutions</p>
             <p style={{ margin: 0, fontSize: 12, color: '#8D98AA' }}>Page 4 of 5</p>
           </div>
           <div style={{ flex: 1, padding: '28px 34px', display: 'grid', gridTemplateRows: '0.44fr 0.56fr', gap: 18 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '0.92fr 1.08fr', gap: 18 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '0.78fr 1.22fr', gap: 18 }}>
               <article style={{ borderRadius: 18, backgroundColor: '#FAFCFF', border: '1px solid #E7EDF6', padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#8A95A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Summary</p>
                 <h2 data-ui="title" style={{ margin: 0, fontSize: 28, lineHeight: 1.02, letterSpacing: '-0.05em', color: '#263145' }}>Low inventory detected on Week 26</h2>
@@ -614,8 +614,8 @@ export const REPORT_TEMPLATE = (
     </ReportMarker>
 
     <ReportMarker id="appendix" title="Appendix">
-      <section style={{ height: '100%', padding: 18, background: 'radial-gradient(circle at top left, rgba(121,236,255,0.28), transparent 24%), radial-gradient(circle at bottom right, rgba(255,188,224,0.26), transparent 26%), linear-gradient(180deg, #F8FBFF 0%, #FFFFFF 100%)' }}>
-        <article style={{ height: '100%', borderRadius: 22, overflow: 'hidden', backgroundColor: '#FFFFFF', border: '1px solid #E7EDF6', boxShadow: '0 10px 30px rgba(34, 47, 78, 0.07)', display: 'flex', flexDirection: 'column' }}>
+      <section style={{ height: '100%', minHeight: '100%', boxSizing: 'border-box', padding: 18, display: 'flex', background: 'radial-gradient(circle at top left, rgba(121,236,255,0.28), transparent 24%), radial-gradient(circle at bottom right, rgba(255,188,224,0.26), transparent 26%), linear-gradient(180deg, #F8FBFF 0%, #FFFFFF 100%)' }}>
+        <article style={{ flex: 1, minHeight: 0, boxSizing: 'border-box', borderRadius: 22, overflow: 'hidden', backgroundColor: '#FFFFFF', border: '1px solid #E7EDF6', boxShadow: '0 10px 30px rgba(34, 47, 78, 0.07)', display: 'flex', flexDirection: 'column' }}>
           <div style={{ height: 10, background: 'linear-gradient(90deg, #9CE7F7 0%, #EFC8FF 50%, #FFBFD8 100%)' }} />
           <div style={{ padding: '18px 24px', borderBottom: '1px solid #EEF2F7', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#394459' }}>Appendix and Supporting Detail</p>
