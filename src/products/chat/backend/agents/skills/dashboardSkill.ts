@@ -12,7 +12,7 @@ const DASHBOARD_SKILL_FALLBACK = `
 # Dashboard Skill
 
 Skill de dashboard indisponivel no momento.
-Use o catalogo em /api/modulos/query/catalog e gere DSL de dashboard com dataQuery valida.
+Use o runtime atual de dashboard em JSX, com layout HTML/JSX puro e dataQuery valida nos componentes suportados.
 `.trim()
 
 const VENDAS_SKILL_FALLBACK = `

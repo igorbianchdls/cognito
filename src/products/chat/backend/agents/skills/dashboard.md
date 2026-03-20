@@ -1,13 +1,14 @@
-# Dashboard Skill (DSL + Query-First)
+# Dashboard Skill (JSX + Query-First)
 
-Objetivo: gerar dashboard DSL valido e renderizavel, usando SQL puro em `dataQuery.query`.
+Objetivo: gerar dashboard JSX valido e renderizavel, usando SQL puro em `dataQuery.query`.
 
 ## Escopo
 
 Use este skill para:
-- criar/editar/corrigir dashboard DSL
-- montar Theme/Header/Div/KPI/Charts/SlicerCard/AISummary
-- produzir estrutura final em arquivo `.dsl`
+- criar/editar/corrigir dashboard JSX
+- montar `DashboardTemplate`, `Theme`, `Dashboard`
+- compor layout com HTML/JSX puro
+- usar componentes especiais apenas quando houver dado ou comportamento real
 
 Nao use este skill para inventar schema de negocio.
 Para semantica de dados por dominio, usar:
@@ -19,59 +20,92 @@ Para semantica de dados por dominio, usar:
 
 ## Contrato Nao Negociavel
 
-1. Output final: arquivo DSL com raiz `<dashboard-template>` e componentes em tags.
-2. Primeiro node: `Theme`.
-3. Caminho obrigatorio: `/vercel/sandbox/dashboard/<nome>.dsl`.
-4. Nunca usar `/vercel/sandbox/dashboards`.
-5. Todo KPI/Chart com dados deve usar `dataQuery`.
+1. Output final: dashboard em JSX.
+2. Estrutura minima: `DashboardTemplate` -> `Theme` -> `Dashboard`.
+3. Layout padrao: HTML/JSX puro (`div`, `section`, `article`, `header`, `footer`, `p`, `h1`, `h2`, etc.).
+4. Componentes especiais so quando houver dado ou comportamento:
+   - `Chart`
+   - `Query`
+   - `Table`
+   - `PivotTable`
+   - `Slicer`
+   - `DatePicker`
+   - `Tabs` (`Tabs`, `Tab`, `TabPanel`)
+5. Todo componente de dado deve preferir `dataQuery`.
 6. Padrao principal de dados: `dataQuery.query` (SQL puro).
-7. Para Chart, informar `xField` e `yField` (e `keyField` quando houver).
-8. Para KPI query-first, a query deve retornar coluna numerica com alias `value` (sem `xField/yField/keyField`).
-9. So usar props suportadas no catalogo do renderer.
-10. Header e KPI devem ser sem `<props>`, seguindo sintaxe declarativa por atributos/tags.
-11. Preferir sintaxe sem JSON em chart: `<chart ...>`, `<query>`, `<fields />`, `<interaction />`, `<nivo />`.
+7. Para `Chart`, informar `xField` e `yField` (e `keyField` quando houver).
+8. Para `Query` em modo KPI-like, a query deve retornar coluna numerica com alias `value`.
+9. So usar props suportadas no runtime atual.
+10. Nao regressar para DSL string.
 
 ## Componentes Permitidos
 
+Base:
+- `DashboardTemplate`
 - `Theme`
-- `Header`
-- `Div`
-- `KPI`
-- `Chart` (com `type="bar|line|pie"`)
-- `SlicerCard`
-- `AISummary`
-- `Defaults` (opcional, para defaults globais de interaction em charts)
+- `Dashboard`
+
+Layout:
+- tags HTML/JSX normais
+
+Especiais:
+- `Chart`
+- `Query`
+- `Table`
+- `PivotTable`
+- `Slicer`
+- `DatePicker`
+- `Tabs`
+- `Tab`
+- `TabPanel`
 
 ## Contrato DataQuery (Padrao)
 
-KPI:
+Query para metrica:
 
-```json
-{
-  "dataQuery": {
-    "query": "SELECT ... AS value",
-    "filters": {}
-  }
-}
+```ts
+<Query
+  dataQuery={{
+    query: `
+      SELECT COALESCE(SUM(src.valor_total), 0)::float AS value
+      FROM vendas.pedidos src
+      WHERE src.tenant_id = {{tenant_id}}::int
+    `,
+    limit: 1,
+  }}
+  format="currency"
+/>
 ```
 
 Chart:
 
-```json
-{
-  "dataQuery": {
-    "query": "SELECT ... AS key, ... AS label, ... AS value",
-    "xField": "label",
-    "yField": "value",
-    "keyField": "key",
-    "filters": {},
-    "limit": 10
-  }
-}
+```ts
+<Chart
+  type="bar"
+  dataQuery={{
+    query: `
+      SELECT
+        cv.id::text AS key,
+        COALESCE(cv.nome, '-') AS label,
+        COALESCE(SUM(pi.subtotal), 0)::float AS value
+      FROM vendas.pedidos src
+      JOIN vendas.pedidos_itens pi ON pi.pedido_id = src.id
+      LEFT JOIN vendas.canais_venda cv ON cv.id = src.canal_venda_id
+      WHERE src.tenant_id = {{tenant_id}}::int
+      GROUP BY 1, 2
+      ORDER BY 3 DESC
+    `,
+    xField: 'label',
+    yField: 'value',
+    keyField: 'key',
+    limit: 10,
+  }}
+  format="currency"
+/>
 ```
 
 Compatibilidade:
-- Sem fallback legado para KPI/Chart.
+- Sem fallback legado para DSL.
 - Sempre usar query pura em `dataQuery.query`.
 
 ## Regras de Qualidade SQL
@@ -79,65 +113,77 @@ Compatibilidade:
 - Tipar placeholders (`::date`, `::int`, `::text`) para evitar erro de tipo no Postgres.
 - Nao usar `to_jsonb(src)->>'campo'` quando coluna real existe.
 - Evitar joins sem uso.
-- Garantir alias coerentes: KPI = `value`; Chart = `key/label/value` + `xField/yField/keyField`.
+- Garantir alias coerentes:
+  - `Query` de metrica = `value`
+  - `Chart` = `key/label/value` quando aplicavel
 - Usar somente nomes fisicos (schema/tabela/campo) que existam na skill de dominio e no template oficial.
 - Nunca inferir nome fisico a partir de rotulo semantico (cliente/vendedor/canal/etc.).
-- `payload.query` é armazenado no DSL e executado no runtime do dashboard; para teste ad-hoc de SQL, usar `sql_execution`.
+- `dataQuery.query` é armazenado no JSX e executado no runtime do dashboard; para teste ad-hoc de SQL, usar `sql_execution`.
 
 ## Template Minimo Valido
 
-```xml
-<dashboard-template name="dashboard_exemplo">
-  <defaults interaction-click-as-filter="false" clear-on-second-click="true" />
-  <theme>
-    <props>
-      { "name": "light", "managers": {} }
-    </props>
-    <header title="Dashboard">
-      <date-picker visible="true" mode="range" store-path="filters.dateRange">
-        <action-on-change type="refresh_data" />
-      </date-picker>
-    </header>
-    <div>
-      <props>
-        { "direction": "row", "gap": 12, "padding": 16, "childGrow": true }
-      </props>
-      <kpi title="Receita" format="currency">
-        <query>SELECT COALESCE(SUM(src.valor_total),0)::float AS value FROM vendas.pedidos src WHERE src.tenant_id={{tenant_id}}::int</query>
-        <data-query>
-          <filters>
-            {}
-          </filters>
-        </data-query>
-      </kpi>
-      <chart type="bar" title="Top Canais" format="currency" height="220">
-        <query>
-          SELECT
-            cv.id AS key,
-            COALESCE(cv.nome,'-') AS label,
-            COALESCE(SUM(pi.subtotal),0)::float AS value
-          FROM vendas.pedidos src
-          JOIN vendas.pedidos_itens pi ON pi.pedido_id=src.id
-          LEFT JOIN vendas.canais_venda cv ON cv.id=src.canal_venda_id
-          WHERE src.tenant_id={{tenant_id}}::int
-          GROUP BY 1,2
-          ORDER BY 3 DESC
-        </query>
-        <fields x="label" y="value" key="key" />
-        <interaction click-as-filter="true" filter-field="canal_venda_id" store-path="filters.canal_venda_id" />
-        <props>
-          { "dataQuery": { "filters": {}, "limit": 10 } }
-        </props>
-      </chart>
-    </div>
-  </theme>
-</dashboard-template>
+```tsx
+<DashboardTemplate name="dashboard_exemplo" title="Dashboard Exemplo">
+  <Theme name="light" />
+  <Dashboard id="overview" title="Overview">
+    <section style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 24 }}>
+      <header style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <p data-ui="eyebrow">Revenue overview</p>
+        <h1 data-ui="title">Dashboard de vendas</h1>
+      </header>
+
+      <Query
+        dataQuery={{
+          query: `
+            SELECT COALESCE(SUM(src.valor_total), 0)::float AS value
+            FROM vendas.pedidos src
+            WHERE src.tenant_id = {{tenant_id}}::int
+          `,
+          limit: 1,
+        }}
+        format="currency"
+      >
+        <article data-ui="card" style={{ padding: 20 }}>
+          <p data-ui="kpi-title">Receita</p>
+          <h2 data-ui="kpi-value">{'{{query.valueFormatted}}'}</h2>
+        </article>
+      </Query>
+
+      <Chart
+        type="bar"
+        dataQuery={{
+          query: `
+            SELECT
+              cv.id::text AS key,
+              COALESCE(cv.nome, '-') AS label,
+              COALESCE(SUM(pi.subtotal), 0)::float AS value
+            FROM vendas.pedidos src
+            JOIN vendas.pedidos_itens pi ON pi.pedido_id = src.id
+            LEFT JOIN vendas.canais_venda cv ON cv.id = src.canal_venda_id
+            WHERE src.tenant_id = {{tenant_id}}::int
+            GROUP BY 1, 2
+            ORDER BY 3 DESC
+          `,
+          xField: 'label',
+          yField: 'value',
+          keyField: 'key',
+          limit: 10,
+        }}
+        format="currency"
+        height={280}
+      />
+    </section>
+  </Dashboard>
+</DashboardTemplate>
 ```
 
 ## Checklist Antes de Entregar
 
-- DSL valido (sem chave desconhecida).
+- JSX valido.
+- Estrutura raiz correta.
+- Componentes suportados pelo runtime.
 - SQL valido para o dominio escolhido.
-- KPI: query retorna alias `value`; Chart: `xField/yField/keyField` batem com aliases do SELECT.
-- Filtros em `SlicerCard` apontam para campos reais (`*_id` quando aplicavel).
+- `Query` de metrica retorna alias `value`.
+- `Chart` usa aliases coerentes com `xField/yField/keyField`.
 - Sem caminho errado de arquivo.
+- Sem regressao para DSL string.
