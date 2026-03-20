@@ -72,6 +72,10 @@ function ChartMarker(_: ChartMarkerProps) {
   return null
 }
 
+function CardMarker({ children }: MarkerProps) {
+  return <>{children}</>
+}
+
 function TableMarker(_: TableMarkerProps) {
   return null
 }
@@ -85,6 +89,7 @@ ThemeMarker.displayName = 'Theme'
 SlideMarker.displayName = 'Slide'
 QueryMarker.displayName = 'Query'
 ChartMarker.displayName = 'Chart'
+CardMarker.displayName = 'Card'
 TableMarker.displayName = 'Table'
 PivotTableMarker.displayName = 'PivotTable'
 

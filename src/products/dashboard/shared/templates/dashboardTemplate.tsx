@@ -108,6 +108,10 @@ function ChartMarker(_: ChartMarkerProps) {
   return null
 }
 
+function CardMarker({ children }: MarkerProps & WidgetMarkerProps) {
+  return <>{children}</>
+}
+
 function KpiMarker(_: WidgetMarkerProps) {
   return null
 }
@@ -151,6 +155,7 @@ BarChartMarker.displayName = 'BarChart'
 LineChartMarker.displayName = 'LineChart'
 PieChartMarker.displayName = 'PieChart'
 ChartMarker.displayName = 'Chart'
+CardMarker.displayName = 'Card'
 KpiMarker.displayName = 'KPI'
 QueryMarker.displayName = 'Query'
 TableMarker.displayName = 'Table'

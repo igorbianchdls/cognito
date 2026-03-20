@@ -6,6 +6,10 @@ import JsonRenderQuery, {
   resolveQueryTemplate,
   useQueryResult,
 } from '@/products/bi/json-render/components/QueryRuntime'
+import JsxCardSurface, {
+  getJsxCardSurfaceStyle,
+  isCardLikeSurface,
+} from '@/products/bi/json-render/components/JsxCardSurface'
 import { renderChartByType } from '@/products/bi/json-render/components/chartFacade'
 import { registry as biRegistry } from '@/products/bi/json-render/registry'
 import { ThemeProvider, useSemanticUiStyle } from '@/products/bi/json-render/theme/ThemeContext'
@@ -134,6 +138,22 @@ function HtmlNode({
         ? resolveQueryTemplate(props.title, queryResult)
         : null
   const content = children ?? fallbackContent
+
+  if (isCardLikeSurface(props)) {
+    return (
+      <JsxCardSurface
+        element={{
+          ...element,
+          props: {
+            ...props,
+            style: getJsxCardSurfaceStyle(props, semanticStyle),
+          },
+        }}
+      >
+        {content}
+      </JsxCardSurface>
+    )
+  }
   return React.createElement(
     tag,
     {
@@ -152,6 +172,7 @@ function HtmlNode({
 function resolveComponent(type: string): SlideRenderComponent | undefined {
   if (type === 'Theme') return ({ element, children }) => <SlideTheme element={element}>{children}</SlideTheme>
   if (type === 'Slide') return ({ children }) => <SlideSurface>{children}</SlideSurface>
+  if (type === 'Card') return ({ element, children }) => <JsxCardSurface element={element}>{children}</JsxCardSurface>
   if (type === 'Chart') return ({ element, onAction }) => <>{renderChartByType((element?.props || {}).type, element, onAction)}</>
   if (type === 'Query') return ({ element, children }) => <JsonRenderQuery element={element}>{children}</JsonRenderQuery>
   if (type === 'Table') return ({ element, onAction }) => <biRegistry.Table element={element} onAction={onAction} />

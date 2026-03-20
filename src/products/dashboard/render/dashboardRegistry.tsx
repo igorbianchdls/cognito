@@ -3,6 +3,10 @@
 import React from 'react'
 
 import JsonRenderBarChart from '@/products/bi/json-render/components/BarChart'
+import JsxCardSurface, {
+  getJsxCardSurfaceStyle,
+  isCardLikeSurface,
+} from '@/products/bi/json-render/components/JsxCardSurface'
 import JsonRenderLineChart from '@/products/bi/json-render/components/LineChart'
 import JsonRenderPieChart from '@/products/bi/json-render/components/PieChart'
 import { registry as biRegistry } from '@/products/bi/json-render/registry'
@@ -190,6 +194,22 @@ function HtmlNode({
         : null
   const content = children ?? fallbackContent
 
+  if (isCardLikeSurface(props)) {
+    return (
+      <JsxCardSurface
+        element={{
+          ...element,
+          props: {
+            ...props,
+            style: getJsxCardSurfaceStyle(props, semanticStyle),
+          },
+        }}
+      >
+        {content}
+      </JsxCardSurface>
+    )
+  }
+
   return React.createElement(
     tag,
     {
@@ -299,6 +319,7 @@ function resolveComponent(type: string): DashboardRenderComponent | undefined {
   if (type === 'DashboardTemplate') return ({ children }) => <DashboardRoot>{children}</DashboardRoot>
   if (type === 'Theme') return ({ element, children }) => <DashboardTheme element={element}>{children}</DashboardTheme>
   if (type === 'Dashboard') return ({ children }) => <DashboardSurface>{children}</DashboardSurface>
+  if (type === 'Card') return ({ element, children }) => <JsxCardSurface element={element}>{children}</JsxCardSurface>
   if (type === 'Tabs') return ({ element, children }) => <DashboardTabs element={element}>{children}</DashboardTabs>
   if (type === 'Tab') return ({ element, children }) => <DashboardTab element={element}>{children}</DashboardTab>
   if (type === 'TabPanel') return ({ element, children }) => <DashboardTabPanel element={element}>{children}</DashboardTabPanel>

@@ -19,6 +19,7 @@ type Props = {
   frame?: HudFrameConfig | null;
   cssVars?: Record<string, string>;
   className?: string;
+  domProps?: React.HTMLAttributes<HTMLDivElement>;
   children: React.ReactNode;
 };
 
@@ -207,12 +208,12 @@ function resolveFrame(frame: HudFrameConfig | null | undefined, cssVars?: Record
   return { variant, baseColor, cornerColor, cornerSize, cornerWidth };
 }
 
-export default function FrameSurface({ style, frame, cssVars, className, children }: Props) {
+export default function FrameSurface({ style, frame, cssVars, className, domProps, children }: Props) {
   const resolved = resolveFrame(frame, cssVars, style);
   const baseStyle = applyCardStylePreset(style, cssVars);
   if (!resolved) {
     return (
-      <div className={className} style={baseStyle}>
+      <div {...domProps} className={className} style={baseStyle}>
         {children}
       </div>
     );
@@ -259,7 +260,7 @@ export default function FrameSurface({ style, frame, cssVars, className, childre
   const yBottom = snapHalfPx(Math.max(0, size.height));
 
   return (
-    <div ref={rootRef} className={className} style={merged}>
+    <div {...domProps} ref={rootRef} className={className} style={merged}>
       {children}
       {size.width > 0 && size.height > 0 && (
         <svg
