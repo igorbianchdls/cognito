@@ -4,9 +4,11 @@ import React from 'react'
 
 type MarkerProps = {
   children?: React.ReactNode
+  height?: number
   id?: string
   name?: string
   title?: string
+  width?: number
 }
 
 type QueryMarkerProps = MarkerProps & {
@@ -178,7 +180,7 @@ const FOOTER_STYLE: React.CSSProperties = {
 export const SLIDE_TEMPLATE_SOURCE = String.raw`<SlideTemplate title="Executive Commercial Review" name="deck_consulting_style">
   <Theme name="light" />
 
-  <Slide id="cover" title="Cover">
+  <Slide id="cover" title="Cover" width={1280} height={720}>
     <section style={{ height: '100%', padding: 34, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', backgroundColor: '#FFFFFF', color: '#17243A' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
         <div style={{ width: 92, height: 4, borderRadius: 999, backgroundColor: '#245BDB' }} />
@@ -209,7 +211,7 @@ export const SLIDE_TEMPLATE_SOURCE = String.raw`<SlideTemplate title="Executive 
     </section>
   </Slide>
 
-  <Slide id="summary" title="Summary">
+  <Slide id="summary" title="Summary" width={1280} height={720}>
     <section style={{ height: '100%', padding: 30, display: 'flex', flexDirection: 'column', backgroundColor: '#FFFFFF', color: '#17243A' }}>
       <header style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ width: 92, height: 4, borderRadius: 999, backgroundColor: '#245BDB' }} />
@@ -258,7 +260,7 @@ export const SLIDE_TEMPLATE_SOURCE = String.raw`<SlideTemplate title="Executive 
     </section>
   </Slide>
 
-  <Slide id="trend" title="Trend">
+  <Slide id="trend" title="Trend" width={1280} height={720}>
     <section style={{ height: '100%', padding: 30, display: 'flex', flexDirection: 'column', backgroundColor: '#FFFFFF', color: '#17243A' }}>
       <header style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ width: 92, height: 4, borderRadius: 999, backgroundColor: '#245BDB' }} />
@@ -281,7 +283,7 @@ export const SLIDE_TEMPLATE_SOURCE = String.raw`<SlideTemplate title="Executive 
     </section>
   </Slide>
 
-  <Slide id="mix" title="Mix">
+  <Slide id="mix" title="Mix" width={1280} height={720}>
     <section style={{ height: '100%', padding: 30, display: 'flex', flexDirection: 'column', backgroundColor: '#FFFFFF', color: '#17243A' }}>
       <header style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ width: 92, height: 4, borderRadius: 999, backgroundColor: '#245BDB' }} />
@@ -304,7 +306,7 @@ export const SLIDE_TEMPLATE_SOURCE = String.raw`<SlideTemplate title="Executive 
     </section>
   </Slide>
 
-  <Slide id="detail" title="Detail">
+  <Slide id="detail" title="Detail" width={1280} height={720}>
     <section style={{ height: '100%', padding: 30, display: 'flex', flexDirection: 'column', backgroundColor: '#FFFFFF', color: '#17243A' }}>
       <header style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ width: 92, height: 4, borderRadius: 999, backgroundColor: '#245BDB' }} />
@@ -327,7 +329,7 @@ export const SLIDE_TEMPLATE_SOURCE = String.raw`<SlideTemplate title="Executive 
     </section>
   </Slide>
 
-  <Slide id="actions" title="Actions">
+  <Slide id="actions" title="Actions" width={1280} height={720}>
     <section style={{ height: '100%', padding: 30, display: 'flex', flexDirection: 'column', backgroundColor: '#FFFFFF', color: '#17243A' }}>
       <header style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ width: 92, height: 4, borderRadius: 999, backgroundColor: '#245BDB' }} />
@@ -355,7 +357,7 @@ export const SLIDE_TEMPLATE = (
   <SlideTemplateMarker title="Executive Commercial Review" name="deck_consulting_style">
     <ThemeMarker name="light" />
 
-    <SlideMarker id="cover" title="Cover">
+    <SlideMarker id="cover" title="Cover" width={1280} height={720}>
       <section style={{ ...PAGE_STYLE, padding: 34, justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           <div style={RULE_STYLE} />
@@ -390,7 +392,7 @@ export const SLIDE_TEMPLATE = (
       </section>
     </SlideMarker>
 
-    <SlideMarker id="summary" title="Summary">
+    <SlideMarker id="summary" title="Summary" width={1280} height={720}>
       <section style={PAGE_STYLE}>
         <header style={HEADER_STYLE}>
           <div style={RULE_STYLE} />
@@ -469,7 +471,7 @@ export const SLIDE_TEMPLATE = (
       </section>
     </SlideMarker>
 
-    <SlideMarker id="trend" title="Trend">
+    <SlideMarker id="trend" title="Trend" width={1280} height={720}>
       <section style={PAGE_STYLE}>
         <header style={HEADER_STYLE}>
           <div style={RULE_STYLE} />
@@ -513,7 +515,7 @@ export const SLIDE_TEMPLATE = (
       </section>
     </SlideMarker>
 
-    <SlideMarker id="mix" title="Mix">
+    <SlideMarker id="mix" title="Mix" width={1280} height={720}>
       <section style={PAGE_STYLE}>
         <header style={HEADER_STYLE}>
           <div style={RULE_STYLE} />
@@ -558,7 +560,7 @@ export const SLIDE_TEMPLATE = (
       </section>
     </SlideMarker>
 
-    <SlideMarker id="detail" title="Detail">
+    <SlideMarker id="detail" title="Detail" width={1280} height={720}>
       <section style={PAGE_STYLE}>
         <header style={HEADER_STYLE}>
           <div style={RULE_STYLE} />
@@ -606,7 +608,7 @@ export const SLIDE_TEMPLATE = (
       </section>
     </SlideMarker>
 
-    <SlideMarker id="actions" title="Actions">
+    <SlideMarker id="actions" title="Actions" width={1280} height={720}>
       <section style={PAGE_STYLE}>
         <header style={HEADER_STYLE}>
           <div style={RULE_STYLE} />

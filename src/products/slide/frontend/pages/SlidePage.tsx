@@ -82,6 +82,39 @@ function getPageId(page: AnyRecord, index: number): string {
   return raw || `slide_${index + 1}`
 }
 
+function getSlideDimension(page: AnyRecord | null, key: 'width' | 'height', fallback: number): number {
+  if (!page || !isRecord(page.props)) return fallback
+  const raw = (page.props as AnyRecord)[key]
+  return typeof raw === 'number' && Number.isFinite(raw) ? raw : fallback
+}
+
+function updateSlideSizeInTree(tree: SlideTreeNode, pageId: string, nextSize: { width?: number; height?: number }): SlideTreeNode {
+  if (tree.type !== 'SlideTemplate') return tree
+
+  const nextChildren = tree.children.map((child) => {
+    if (!child || typeof child === 'string') return child
+    if (child.type !== 'Slide') return child
+
+    const props = isRecord(child.props) ? (child.props as AnyRecord) : {}
+    const childPageId = typeof props.id === 'string' ? props.id.trim() : ''
+    if (childPageId !== pageId) return child
+
+    return {
+      ...child,
+      props: {
+        ...props,
+        ...(typeof nextSize.width === 'number' ? { width: nextSize.width } : {}),
+        ...(typeof nextSize.height === 'number' ? { height: nextSize.height } : {}),
+      },
+    }
+  })
+
+  return {
+    ...tree,
+    children: nextChildren,
+  }
+}
+
 function buildPageRenderTree(page: AnyRecord, themeNode: AnyRecord | null): any {
   const slideNode = {
     ...page,
@@ -219,37 +252,38 @@ const SlideCanvas = memo(function SlideCanvas({
 })
 
 function SlideWorkspace() {
-  const parsed = useMemo(() => {
+  const [templateTree, setTemplateTree] = useState<SlideTreeNode>(() => {
     const tree = jsxToTree(SLIDE_TEMPLATE)
     if (!tree || typeof tree === 'string') {
       throw new Error('Invalid slide template root')
     }
     return tree
-  }, [])
-  const { rootName, themeNode, pages } = useMemo(() => getSlideStructure(parsed), [parsed])
+  })
+  const { rootName, themeNode, pages } = useMemo(() => getSlideStructure(templateTree), [templateTree])
   const initialPageId = useMemo(() => (pages.length ? getPageId(pages[0], 0) : ''), [pages])
   const [activePageId, setActivePageId] = useState(initialPageId)
   const [activeView, setActiveView] = useState<'preview' | 'code'>('preview')
   const [zoom, setZoom] = useState(0.82)
-  const [slideWidth, setSlideWidth] = useState(DEFAULT_SLIDE_WIDTH)
-  const [slideHeight, setSlideHeight] = useState(DEFAULT_SLIDE_HEIGHT)
   const slideElementRef = useRef<HTMLDivElement | null>(null)
 
   const activePage = useMemo(
     () => pages.find((page, index) => getPageId(page, index) === (activePageId || initialPageId)) || pages[0] || null,
     [pages, activePageId, initialPageId],
   )
+  const currentPageId = activePageId || initialPageId
+  const activeSlideWidth = getSlideDimension(activePage, 'width', DEFAULT_SLIDE_WIDTH)
+  const activeSlideHeight = getSlideDimension(activePage, 'height', DEFAULT_SLIDE_HEIGHT)
 
   const activeTree = useMemo(
     () => (activePage ? cloneRenderTree(buildPageRenderTree(activePage, themeNode)) : []),
     [activePage, themeNode],
   )
   const captureKey = useMemo(
-    () => `${activePageId || initialPageId}:${pages.length}:${Boolean(activePage)}:${Boolean(themeNode)}:${slideWidth}:${slideHeight}`,
-    [activePageId, initialPageId, pages.length, activePage, themeNode, slideWidth, slideHeight],
+    () => `${currentPageId}:${pages.length}:${Boolean(activePage)}:${Boolean(themeNode)}:${activeSlideWidth}:${activeSlideHeight}`,
+    [currentPageId, pages.length, activePage, themeNode, activeSlideWidth, activeSlideHeight],
   )
   const { previewsByPageId } = useSlidePreviewSnapshots({
-    activePageId: activePageId || initialPageId,
+    activePageId: currentPageId,
     captureKey,
     slideElementRef,
   })
@@ -273,11 +307,15 @@ function SlideWorkspace() {
                 type="number"
                 min={MIN_SLIDE_WIDTH}
                 step={10}
-                value={slideWidth}
+                value={activeSlideWidth}
                 onChange={(event) => {
                   const nextValue = Number(event.target.value)
                   if (!Number.isFinite(nextValue)) return
-                  setSlideWidth(Math.max(MIN_SLIDE_WIDTH, Math.round(nextValue)))
+                  setTemplateTree((current) =>
+                    updateSlideSizeInTree(current, currentPageId, {
+                      width: Math.max(MIN_SLIDE_WIDTH, Math.round(nextValue)),
+                    }),
+                  )
                 }}
                 className="w-[72px] rounded-md border-[0.5px] border-[#D4D4CF] bg-white px-2 py-1 text-[12px] text-[#1F1F1D] outline-none"
               />
@@ -288,11 +326,15 @@ function SlideWorkspace() {
                 type="number"
                 min={MIN_SLIDE_HEIGHT}
                 step={10}
-                value={slideHeight}
+                value={activeSlideHeight}
                 onChange={(event) => {
                   const nextValue = Number(event.target.value)
                   if (!Number.isFinite(nextValue)) return
-                  setSlideHeight(Math.max(MIN_SLIDE_HEIGHT, Math.round(nextValue)))
+                  setTemplateTree((current) =>
+                    updateSlideSizeInTree(current, currentPageId, {
+                      height: Math.max(MIN_SLIDE_HEIGHT, Math.round(nextValue)),
+                    }),
+                  )
                 }}
                 className="w-[72px] rounded-md border-[0.5px] border-[#D4D4CF] bg-white px-2 py-1 text-[12px] text-[#1F1F1D] outline-none"
               />
@@ -369,8 +411,8 @@ function SlideWorkspace() {
                   previewSrc={previewsByPageId[pageId]}
                   selected={pageId === (activePageId || initialPageId)}
                   index={index}
-                  slideHeight={slideHeight}
-                  slideWidth={slideWidth}
+                  slideHeight={getSlideDimension(page, 'height', DEFAULT_SLIDE_HEIGHT)}
+                  slideWidth={getSlideDimension(page, 'width', DEFAULT_SLIDE_WIDTH)}
                   onClick={() => setActivePageId(pageId)}
                 />
               )
@@ -387,9 +429,9 @@ function SlideWorkspace() {
                   tree={activeTree}
                   zoom={zoom}
                   slideElementRef={slideElementRef}
-                  renderKey={`${activePageId || initialPageId}:${slideWidth}:${slideHeight}`}
-                  slideHeight={slideHeight}
-                  slideWidth={slideWidth}
+                  renderKey={`${currentPageId}:${activeSlideWidth}:${activeSlideHeight}`}
+                  slideHeight={activeSlideHeight}
+                  slideWidth={activeSlideWidth}
                 />
               ) : null}
               
