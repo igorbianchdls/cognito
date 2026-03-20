@@ -16,10 +16,11 @@ type SlideTreeNode = {
   children: Array<SlideTreeNode | string>
 }
 
-const SLIDE_WIDTH = 1280
-const SLIDE_HEIGHT = 720
+const DEFAULT_SLIDE_WIDTH = 1280
+const DEFAULT_SLIDE_HEIGHT = 720
 const THUMB_WIDTH = 170
-const THUMB_SCALE = THUMB_WIDTH / SLIDE_WIDTH
+const MIN_SLIDE_WIDTH = 640
+const MIN_SLIDE_HEIGHT = 360
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
@@ -107,13 +108,19 @@ function SlideThumbnail({
   previewSrc,
   selected,
   index,
+  slideHeight,
+  slideWidth,
   onClick,
 }: {
   previewSrc?: string
   selected: boolean
   index: number
+  slideHeight: number
+  slideWidth: number
   onClick: () => void
 }) {
+  const thumbHeight = Math.round(slideHeight * (THUMB_WIDTH / slideWidth))
+
   return (
     <button
       type="button"
@@ -122,7 +129,7 @@ function SlideThumbnail({
     >
       <SlidePreviewThumbnail
         alt={`Preview do slide ${index + 1}`}
-        height={Math.round(SLIDE_HEIGHT * THUMB_SCALE)}
+        height={thumbHeight}
         selected={selected}
         src={previewSrc}
         width={THUMB_WIDTH}
@@ -145,24 +152,28 @@ const SlideCanvas = memo(function SlideCanvas({
   zoom,
   slideElementRef,
   renderKey,
+  slideHeight,
+  slideWidth,
 }: {
   tree: any
   zoom: number
   slideElementRef: RefObject<HTMLDivElement | null>
   renderKey: string
+  slideHeight: number
+  slideWidth: number
 }) {
-  const [canvasHeight, setCanvasHeight] = useState(SLIDE_HEIGHT)
+  const [canvasHeight, setCanvasHeight] = useState(slideHeight)
 
   useEffect(() => {
-    setCanvasHeight(SLIDE_HEIGHT)
-  }, [renderKey])
+    setCanvasHeight(slideHeight)
+  }, [renderKey, slideHeight])
 
   useEffect(() => {
     const slideElement = slideElementRef.current
     if (!slideElement) return
 
     const updateHeight = () => {
-      const nextHeight = Math.max(SLIDE_HEIGHT, slideElement.scrollHeight)
+      const nextHeight = Math.max(slideHeight, slideElement.scrollHeight)
       setCanvasHeight((current) => (current === nextHeight ? current : nextHeight))
     }
 
@@ -182,7 +193,7 @@ const SlideCanvas = memo(function SlideCanvas({
       window.cancelAnimationFrame(frameId)
       resizeObserver.disconnect()
     }
-  }, [renderKey, slideElementRef])
+  }, [renderKey, slideElementRef, slideHeight])
 
   return (
     <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}>
@@ -191,9 +202,9 @@ const SlideCanvas = memo(function SlideCanvas({
         ref={slideElementRef}
         className="overflow-hidden rounded-none border border-slate-200 bg-white shadow-[0_2px_6px_rgba(15,23,42,0.05)]"
         style={{
-          width: SLIDE_WIDTH,
-          minWidth: SLIDE_WIDTH,
-          minHeight: SLIDE_HEIGHT,
+          width: slideWidth,
+          minWidth: slideWidth,
+          minHeight: slideHeight,
           height: canvasHeight,
           display: 'flex',
           flexDirection: 'column',
@@ -220,6 +231,8 @@ function SlideWorkspace() {
   const [activePageId, setActivePageId] = useState(initialPageId)
   const [activeView, setActiveView] = useState<'preview' | 'code'>('preview')
   const [zoom, setZoom] = useState(0.82)
+  const [slideWidth, setSlideWidth] = useState(DEFAULT_SLIDE_WIDTH)
+  const [slideHeight, setSlideHeight] = useState(DEFAULT_SLIDE_HEIGHT)
   const slideElementRef = useRef<HTMLDivElement | null>(null)
 
   const activePage = useMemo(
@@ -232,8 +245,8 @@ function SlideWorkspace() {
     [activePage, themeNode],
   )
   const captureKey = useMemo(
-    () => `${activePageId || initialPageId}:${pages.length}:${Boolean(activePage)}:${Boolean(themeNode)}`,
-    [activePageId, initialPageId, pages.length, activePage, themeNode],
+    () => `${activePageId || initialPageId}:${pages.length}:${Boolean(activePage)}:${Boolean(themeNode)}:${slideWidth}:${slideHeight}`,
+    [activePageId, initialPageId, pages.length, activePage, themeNode, slideWidth, slideHeight],
   )
   const { previewsByPageId } = useSlidePreviewSnapshots({
     activePageId: activePageId || initialPageId,
@@ -253,6 +266,38 @@ function SlideWorkspace() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <div className="mr-2 flex items-center gap-2 rounded-xl border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] px-3 py-2">
+            <label className="flex items-center gap-2 text-[12px] font-medium text-[#5F5F5A]">
+              <span>W</span>
+              <input
+                type="number"
+                min={MIN_SLIDE_WIDTH}
+                step={10}
+                value={slideWidth}
+                onChange={(event) => {
+                  const nextValue = Number(event.target.value)
+                  if (!Number.isFinite(nextValue)) return
+                  setSlideWidth(Math.max(MIN_SLIDE_WIDTH, Math.round(nextValue)))
+                }}
+                className="w-[72px] rounded-md border-[0.5px] border-[#D4D4CF] bg-white px-2 py-1 text-[12px] text-[#1F1F1D] outline-none"
+              />
+            </label>
+            <label className="flex items-center gap-2 text-[12px] font-medium text-[#5F5F5A]">
+              <span>H</span>
+              <input
+                type="number"
+                min={MIN_SLIDE_HEIGHT}
+                step={10}
+                value={slideHeight}
+                onChange={(event) => {
+                  const nextValue = Number(event.target.value)
+                  if (!Number.isFinite(nextValue)) return
+                  setSlideHeight(Math.max(MIN_SLIDE_HEIGHT, Math.round(nextValue)))
+                }}
+                className="w-[72px] rounded-md border-[0.5px] border-[#D4D4CF] bg-white px-2 py-1 text-[12px] text-[#1F1F1D] outline-none"
+              />
+            </label>
+          </div>
           <div className="mr-1 flex items-center gap-1 rounded-xl border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] p-0">
             <button
               type="button"
@@ -324,6 +369,8 @@ function SlideWorkspace() {
                   previewSrc={previewsByPageId[pageId]}
                   selected={pageId === (activePageId || initialPageId)}
                   index={index}
+                  slideHeight={slideHeight}
+                  slideWidth={slideWidth}
                   onClick={() => setActivePageId(pageId)}
                 />
               )
@@ -340,7 +387,9 @@ function SlideWorkspace() {
                   tree={activeTree}
                   zoom={zoom}
                   slideElementRef={slideElementRef}
-                  renderKey={activePageId || initialPageId}
+                  renderKey={`${activePageId || initialPageId}:${slideWidth}:${slideHeight}`}
+                  slideHeight={slideHeight}
+                  slideWidth={slideWidth}
                 />
               ) : null}
               
