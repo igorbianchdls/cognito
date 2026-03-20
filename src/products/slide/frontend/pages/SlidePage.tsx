@@ -115,6 +115,14 @@ function updateSlideSizeInTree(tree: SlideTreeNode, pageId: string, nextSize: { 
   }
 }
 
+function parseDimensionDraft(value: string, minimum: number): number | null {
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  const parsed = Number(trimmed)
+  if (!Number.isFinite(parsed)) return null
+  return Math.max(minimum, Math.round(parsed))
+}
+
 function buildPageRenderTree(page: AnyRecord, themeNode: AnyRecord | null): any {
   const slideNode = {
     ...page,
@@ -264,6 +272,8 @@ function SlideWorkspace() {
   const [activePageId, setActivePageId] = useState(initialPageId)
   const [activeView, setActiveView] = useState<'preview' | 'code'>('preview')
   const [zoom, setZoom] = useState(0.82)
+  const [widthDraft, setWidthDraft] = useState(String(DEFAULT_SLIDE_WIDTH))
+  const [heightDraft, setHeightDraft] = useState(String(DEFAULT_SLIDE_HEIGHT))
   const slideElementRef = useRef<HTMLDivElement | null>(null)
 
   const activePage = useMemo(
@@ -273,6 +283,17 @@ function SlideWorkspace() {
   const currentPageId = activePageId || initialPageId
   const activeSlideWidth = getSlideDimension(activePage, 'width', DEFAULT_SLIDE_WIDTH)
   const activeSlideHeight = getSlideDimension(activePage, 'height', DEFAULT_SLIDE_HEIGHT)
+  const parsedWidthDraft = parseDimensionDraft(widthDraft, MIN_SLIDE_WIDTH)
+  const parsedHeightDraft = parseDimensionDraft(heightDraft, MIN_SLIDE_HEIGHT)
+  const hasPendingSizeChange =
+    parsedWidthDraft !== null &&
+    parsedHeightDraft !== null &&
+    (parsedWidthDraft !== activeSlideWidth || parsedHeightDraft !== activeSlideHeight)
+
+  useEffect(() => {
+    setWidthDraft(String(activeSlideWidth))
+    setHeightDraft(String(activeSlideHeight))
+  }, [currentPageId, activeSlideWidth, activeSlideHeight])
 
   const activeTree = useMemo(
     () => (activePage ? cloneRenderTree(buildPageRenderTree(activePage, themeNode)) : []),
@@ -287,6 +308,16 @@ function SlideWorkspace() {
     captureKey,
     slideElementRef,
   })
+
+  const applyActiveSlideSize = () => {
+    if (parsedWidthDraft === null || parsedHeightDraft === null) return
+    setTemplateTree((current) =>
+      updateSlideSizeInTree(current, currentPageId, {
+        width: parsedWidthDraft,
+        height: parsedHeightDraft,
+      }),
+    )
+  }
 
   return (
     <div className="flex h-screen flex-col bg-[#F7F7F6] tracking-[-0.03em] text-[#3F3F3D]">
@@ -307,15 +338,11 @@ function SlideWorkspace() {
                 type="number"
                 min={MIN_SLIDE_WIDTH}
                 step={10}
-                value={activeSlideWidth}
-                onChange={(event) => {
-                  const nextValue = Number(event.target.value)
-                  if (!Number.isFinite(nextValue)) return
-                  setTemplateTree((current) =>
-                    updateSlideSizeInTree(current, currentPageId, {
-                      width: Math.max(MIN_SLIDE_WIDTH, Math.round(nextValue)),
-                    }),
-                  )
+                value={widthDraft}
+                onChange={(event) => setWidthDraft(event.target.value)}
+                onFocus={(event) => event.currentTarget.select()}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') applyActiveSlideSize()
                 }}
                 className="w-[72px] rounded-md border-[0.5px] border-[#D4D4CF] bg-white px-2 py-1 text-[12px] text-[#1F1F1D] outline-none"
               />
@@ -326,19 +353,25 @@ function SlideWorkspace() {
                 type="number"
                 min={MIN_SLIDE_HEIGHT}
                 step={10}
-                value={activeSlideHeight}
-                onChange={(event) => {
-                  const nextValue = Number(event.target.value)
-                  if (!Number.isFinite(nextValue)) return
-                  setTemplateTree((current) =>
-                    updateSlideSizeInTree(current, currentPageId, {
-                      height: Math.max(MIN_SLIDE_HEIGHT, Math.round(nextValue)),
-                    }),
-                  )
+                value={heightDraft}
+                onChange={(event) => setHeightDraft(event.target.value)}
+                onFocus={(event) => event.currentTarget.select()}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') applyActiveSlideSize()
                 }}
                 className="w-[72px] rounded-md border-[0.5px] border-[#D4D4CF] bg-white px-2 py-1 text-[12px] text-[#1F1F1D] outline-none"
               />
             </label>
+            {hasPendingSizeChange ? (
+              <button
+                type="button"
+                onClick={applyActiveSlideSize}
+                className="flex h-7 w-7 items-center justify-center rounded-md border-[0.5px] border-[#D4D4CF] bg-white text-[#245BDB] transition hover:bg-[#F4F8FF]"
+                aria-label="Confirmar tamanho do slide"
+              >
+                <Icon icon="solar:check-circle-bold" className="h-4 w-4" />
+              </button>
+            ) : null}
           </div>
           <div className="mr-1 flex items-center gap-1 rounded-xl border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] p-0">
             <button
