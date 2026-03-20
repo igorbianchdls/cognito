@@ -550,7 +550,6 @@ ${buildPriorityItemsSource(config.priorities)}
                     The table below consumes the same slicers and date markers as the charts, so the JSX dashboard keeps one shared filter model.
                   </p>
                   <Table
-                    height={360}
                     bordered
                     rounded
                     stickyHeader
@@ -590,7 +589,6 @@ ${buildPriorityItemsSource(config.priorities)}
                     PivotTable stays query-driven too, but now it sits directly inside the JSX template instead of depending on the old DSL string pipeline.
                   </p>
                   <PivotTable
-                    height={360}
                     bordered
                     rounded
                     stickyHeader
@@ -913,7 +911,6 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
                     The table below consumes the same slicers and date markers as the charts, so the JSX dashboard keeps one shared filter model.
                   </p>
                   <TableMarker
-                    height={360}
                     bordered
                     rounded
                     stickyHeader
@@ -953,7 +950,6 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
                     PivotTable stays query-driven too, but now it sits directly inside the JSX template instead of depending on the old DSL string pipeline.
                   </p>
                   <PivotTableMarker
-                    height={360}
                     bordered
                     rounded
                     stickyHeader
