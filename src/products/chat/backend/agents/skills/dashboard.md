@@ -59,6 +59,67 @@ Especiais:
 - `Tab`
 - `TabPanel`
 
+## Slide
+
+Quando o pedido for para `slide`, usar JSX com:
+- `SlideTemplate`
+- `Theme`
+- `Slide`
+
+Componentes especiais permitidos:
+- `Chart`
+- `Query`
+- `Table`
+- `PivotTable`
+
+Regras de composicao:
+- um slide = uma mensagem principal
+- titulo deve carregar a conclusao, nao apenas o assunto
+- um exhibit principal por slide
+- KPIs, quando existirem, em uma unica row horizontal
+- charts/tables/pivots ocupando a area principal em largura
+- cards de apoio somente abaixo do exhibit
+- evitar layout em duas colunas competindo entre si
+- usar HTML/JSX para todo o resto
+- lembrar que slide tem altura fixa: controlar o numero de blocos verticais
+
+Padrao visual preferido:
+- deck de consultoria / McKinsey
+- sobrio
+- hierarquia forte
+- pouco elemento decorativo
+- takeaways curtos abaixo do exhibit
+
+## Report
+
+Quando o pedido for para `report`, usar JSX com:
+- `ReportTemplate`
+- `Theme`
+- `Report`
+
+Componentes especiais permitidos:
+- `Chart`
+- `Query`
+- `Table`
+- `PivotTable`
+
+Regras de composicao:
+- uma coluna de leitura por pagina
+- charts/tables/pivots amplos, ocupando a largura principal
+- narrativa entre blocos de dados
+- texto explicativo antes e depois de exhibits quando isso ajudar a leitura
+- usar negrito para destacar os pontos realmente importantes
+- evitar cara de dashboard enquadrado dentro da pagina
+- nao usar `Slicer` ou `DatePicker` por padrao
+
+Ritmo sugerido de pagina:
+- header
+- row de KPIs ou introducao curta
+- texto explicativo
+- exhibit principal
+- texto/bullets de leitura
+- row final de insights, se fizer sentido
+
 ## Contrato DataQuery (Padrao)
 
 Query para metrica:

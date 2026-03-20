@@ -104,6 +104,65 @@
 - `Query` is preferred over legacy KPI composition when the goal is to render metric values inside flexible JSX.
 </special_components>
 
+<slide>
+- Slides are also JSX-first.
+- Minimum root structure:
+- `SlideTemplate`
+- `Theme`
+- `Slide`
+- Default layout rule for slides:
+- one reading column per slide
+- do not create competing left/right columns for analytical slides unless the user explicitly asks
+- KPIs should stay in a single horizontal row when present
+- charts, tables, and pivots should usually occupy the main full-width exhibit area
+- supporting cards should appear beneath the main exhibit, not beside it
+- Prefer classic consulting / McKinsey-style slide composition:
+- one conclusion-oriented headline per slide
+- one primary exhibit per slide
+- short takeaways below the exhibit
+- restrained visual language and strong hierarchy
+- For summary slides without a chart:
+- use a KPI row plus one larger editorial statement block
+- avoid leaving large empty vertical areas
+- Slides have fixed height; always think in vertical budget.
+- Keep the number of major vertical blocks limited so content does not overflow.
+- Preferred special components in slide:
+- `Chart`
+- `Query`
+- `Table`
+- `PivotTable`
+- Use HTML/JSX for everything else.
+</slide>
+
+<report>
+- Reports are also JSX-first.
+- Minimum root structure:
+- `ReportTemplate`
+- `Theme`
+- `Report`
+- Default layout rule for reports:
+- one reading column per page
+- wide charts/tables/pivots
+- narrative blocks between data blocks
+- Reports should feel like analytical documents, not dashboards inside a frame.
+- Typical page rhythm:
+- header
+- KPI row or short intro
+- narrative paragraph(s)
+- chart/table/pivot
+- another short narrative block
+- takeaway row if needed
+- Use bold emphasis inside text where important points need to stand out.
+- Prefer explanatory prose between rows of KPIs and exhibits.
+- Preferred special components in report:
+- `Chart`
+- `Query`
+- `Table`
+- `PivotTable`
+- Do not introduce `Slicer` or `DatePicker` in reports unless the user explicitly asks for an interactive report.
+- Use HTML/JSX for everything else.
+</report>
+
 <layout_rules>
 - Favor clear grouping of content by section.
 - Common layout responsibilities:
@@ -119,6 +178,11 @@
 - lower detail zone for tables/pivot tables
 - filters close to the widgets they affect
 - tabs only when multiple views would otherwise overload one page
+- For slide/report work:
+- prefer one-column composition
+- keep the primary data exhibit visually dominant
+- place narrative text between blocks when it improves reading flow
+- avoid dashboard-like left/right analytical splits by default
 </layout_rules>
 
 <query_rules>
