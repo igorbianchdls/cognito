@@ -6,6 +6,7 @@ import { Icon } from '@iconify/react'
 import { DataProvider } from '@/products/bi/json-render/context'
 import { SlideRenderer } from '@/products/slide/frontend/render/slideRegistry'
 import { SlidePreviewThumbnail } from '@/products/slide/preview/SlidePreviewThumbnail'
+import { useSlidePreviewSnapshots } from '@/products/slide/preview/useSlidePreviewSnapshots'
 import { SLIDE_TEMPLATE, SLIDE_TEMPLATE_SOURCE } from '@/products/slide/shared/templates/slideTemplate'
 
 type AnyRecord = Record<string, any>
@@ -190,7 +191,15 @@ function SlideWorkspace() {
     () => (activePage ? cloneRenderTree(buildPageRenderTree(activePage, themeNode)) : []),
     [activePage, themeNode],
   )
-  const previewsByPageId = useMemo(() => ({} as Record<string, string>), [])
+  const captureKey = useMemo(
+    () => `${activePageId || initialPageId}:${pages.length}:${Boolean(activePage)}:${Boolean(themeNode)}`,
+    [activePageId, initialPageId, pages.length, activePage, themeNode],
+  )
+  const { previewsByPageId } = useSlidePreviewSnapshots({
+    activePageId: activePageId || initialPageId,
+    captureKey,
+    slideElementRef,
+  })
 
   return (
     <div className="flex h-screen flex-col bg-[#F7F7F6] tracking-[-0.03em] text-[#3F3F3D]">
