@@ -231,11 +231,26 @@ export const SLIDE_TEMPLATE_SOURCE = String.raw`<SlideTemplate title="Executive 
           <article data-ui="card"><p data-ui="kpi-title">Active channels</p><h3 data-ui="kpi-value">{'{{query.valueFormatted}}'}</h3><p>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p></article>
         </Query>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginTop: 16 }}>
-        <article data-ui="card"><p><strong>Topline is not the issue:</strong> revenue and order flow are still positive enough to support a constructive narrative.</p></article>
-        <article data-ui="card"><p><strong>Quality is the issue:</strong> growth matters less if it is increasingly dependent on a smaller contribution base.</p></article>
-        <article data-ui="card"><p><strong>What follows:</strong> the next pages show where momentum is holding and where management attention is now required.</p></article>
-      </div>
+      <section style={{ marginTop: 20, padding: '22px 24px', borderRadius: 12, border: '1px solid #D8E1EE', backgroundColor: '#F8FAFD', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <p style={{ margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.10em', color: '#6E7B8D' }}>Key message</p>
+        <p style={{ margin: 0, fontSize: 26, lineHeight: 1.18, letterSpacing: '-0.05em', color: '#17243A', maxWidth: 920 }}>
+          <strong>Commercial momentum remains intact,</strong> but the business is relying on a narrower set of channels to sustain that performance.
+        </p>
+        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: '#4F6078', maxWidth: 900 }}>
+          Leadership should therefore read the topline with more caution: the quarter is still strong, but the <strong>quality of growth is becoming more concentrated</strong>.
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+          <div style={{ padding: '12px 14px', borderRadius: 10, backgroundColor: '#FFFFFF', border: '1px solid #E1E8F2' }}>
+            <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55, color: '#425571' }}><strong>Topline is not the issue:</strong> revenue and order flow remain supportive.</p>
+          </div>
+          <div style={{ padding: '12px 14px', borderRadius: 10, backgroundColor: '#FFFFFF', border: '1px solid #E1E8F2' }}>
+            <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55, color: '#425571' }}><strong>Quality is the issue:</strong> growth depends on a narrower contribution base.</p>
+          </div>
+          <div style={{ padding: '12px 14px', borderRadius: 10, backgroundColor: '#FFFFFF', border: '1px solid #E1E8F2' }}>
+            <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55, color: '#425571' }}><strong>What follows:</strong> the next pages isolate where management attention is now required.</p>
+          </div>
+        </div>
+      </section>
       <div style={{ marginTop: 'auto', paddingTop: 10, borderTop: '1px solid #E6EBF3', display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#7B8798' }}>
         <span>Executive commercial review</span>
         <span>1</span>
@@ -417,36 +432,35 @@ export const SLIDE_TEMPLATE = (
 
         <section
           style={{
-            marginTop: 22,
-            padding: '28px 30px',
+            marginTop: 20,
+            padding: '22px 24px',
             borderRadius: 12,
             border: '1px solid #D8E1EE',
             backgroundColor: '#F8FAFD',
             display: 'flex',
             flexDirection: 'column',
-            gap: 14,
+            gap: 12,
           }}
         >
           <p style={{ margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.10em', color: '#6E7B8D' }}>Key message</p>
-          <p style={{ margin: 0, fontSize: 31, lineHeight: 1.16, letterSpacing: '-0.05em', color: '#17243A', maxWidth: 920 }}>
+          <p style={{ margin: 0, fontSize: 26, lineHeight: 1.18, letterSpacing: '-0.05em', color: '#17243A', maxWidth: 920 }}>
             <strong>Commercial momentum remains intact,</strong> but the business is relying on a narrower set of channels to sustain that performance.
           </p>
-          <p style={{ margin: 0, fontSize: 16, lineHeight: 1.78, color: '#4F6078', maxWidth: 900 }}>
-            This means leadership should read the topline with more caution: the current quarter is still strong, but the <strong>quality of growth is becoming more concentrated</strong>, which raises the importance of protecting the best-performing channels and testing weaker lines more selectively.
+          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: '#4F6078', maxWidth: 900 }}>
+            Leadership should therefore read the topline with more caution: the quarter is still strong, but the <strong>quality of growth is becoming more concentrated</strong>.
           </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+            <div style={{ padding: '12px 14px', borderRadius: 10, backgroundColor: '#FFFFFF', border: '1px solid #E1E8F2' }}>
+              <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55, color: '#425571' }}><strong>Topline is not the issue:</strong> revenue and order flow remain supportive.</p>
+            </div>
+            <div style={{ padding: '12px 14px', borderRadius: 10, backgroundColor: '#FFFFFF', border: '1px solid #E1E8F2' }}>
+              <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55, color: '#425571' }}><strong>Quality is the issue:</strong> growth depends on a narrower contribution base.</p>
+            </div>
+            <div style={{ padding: '12px 14px', borderRadius: 10, backgroundColor: '#FFFFFF', border: '1px solid #E1E8F2' }}>
+              <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55, color: '#425571' }}><strong>What follows:</strong> the next pages isolate where management attention is now required.</p>
+            </div>
+          </div>
         </section>
-
-        <div style={TAKEAWAY_ROW_STYLE}>
-          <article data-ui="card" style={TAKEAWAY_CARD_STYLE}>
-            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: '#425571' }}><strong>Topline is not the issue:</strong> revenue and order flow are still positive enough to support a constructive narrative.</p>
-          </article>
-          <article data-ui="card" style={TAKEAWAY_CARD_STYLE}>
-            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: '#425571' }}><strong>Quality is the issue:</strong> growth matters less if it is increasingly dependent on a smaller contribution base.</p>
-          </article>
-          <article data-ui="card" style={TAKEAWAY_CARD_STYLE}>
-            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: '#425571' }}><strong>What follows:</strong> the next pages show where momentum is holding and where management attention is now required.</p>
-          </article>
-        </div>
 
         <div style={FOOTER_STYLE}>
           <span>Executive commercial review</span>
