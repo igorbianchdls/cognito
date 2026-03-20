@@ -4,9 +4,11 @@ import React from 'react'
 
 type MarkerProps = {
   children?: React.ReactNode
+  height?: number
   id?: string
   name?: string
   title?: string
+  width?: number
 }
 
 type QueryMarkerProps = MarkerProps & {
@@ -143,7 +145,7 @@ const BULLET_LIST_STYLE: React.CSSProperties = {
 export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="executive_brief_report" title="Executive Revenue Brief">
   <Theme name="light" />
 
-  <Report id="overview" title="Overview">
+  <Report id="overview" title="Overview" width={794} height={1123}>
     <section style={{ height: '100%', padding: 36, display: 'flex', flexDirection: 'column', gap: 18, backgroundColor: '#FFFFFF' }}>
       <header style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <p data-ui="eyebrow">Quarterly Revenue Brief</p>
@@ -196,7 +198,7 @@ export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="executive
     </section>
   </Report>
 
-  <Report id="trend" title="Trend">
+  <Report id="trend" title="Trend" width={794} height={1123}>
     <section style={{ height: '100%', padding: 36, display: 'flex', flexDirection: 'column', gap: 18, backgroundColor: '#FFFFFF' }}>
       <header><h2 data-ui="title">Revenue trend</h2><p>One wide chart should dominate the page when the main question is trajectory.</p></header>
       <section style={{ padding: 18, border: '1px solid #E7ECF3', borderRadius: 16, backgroundColor: '#F8FAFD', display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -221,7 +223,7 @@ export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="executive
     </section>
   </Report>
 
-  <Report id="mix" title="Mix">
+  <Report id="mix" title="Mix" width={794} height={1123}>
     <section style={{ height: '100%', padding: 36, display: 'flex', flexDirection: 'column', gap: 18, backgroundColor: '#FFFFFF' }}>
       <header><h2 data-ui="title">Channel mix</h2><p>Charts stay full-width and the commentary stays below them.</p></header>
       <section style={{ padding: 18, border: '1px solid #E7ECF3', borderRadius: 16, backgroundColor: '#F8FAFD', display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -245,7 +247,7 @@ export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="executive
     </section>
   </Report>
 
-  <Report id="detail" title="Detail">
+  <Report id="detail" title="Detail" width={794} height={1123}>
     <section style={{ height: '100%', padding: 36, display: 'flex', flexDirection: 'column', gap: 18, backgroundColor: '#FFFFFF' }}>
       <header><h2 data-ui="title">Detailed records</h2><p>The table should own the page width when detail is the goal.</p></header>
       <section style={{ padding: 18, border: '1px solid #E7ECF3', borderRadius: 16, backgroundColor: '#F8FAFD', display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -270,7 +272,7 @@ export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="executive
     </section>
   </Report>
 
-  <Report id="appendix" title="Appendix">
+  <Report id="appendix" title="Appendix" width={794} height={1123}>
     <section style={{ height: '100%', padding: 36, display: 'flex', flexDirection: 'column', gap: 18, backgroundColor: '#FFFFFF' }}>
       <header><h2 data-ui="title">Supporting appendix</h2><p>Pivot and closing notes stay stacked in one reading column.</p></header>
       <section style={{ padding: 18, border: '1px solid #E7ECF3', borderRadius: 16, backgroundColor: '#F8FAFD', display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -299,7 +301,7 @@ export const REPORT_TEMPLATE = (
   <ReportTemplateMarker name="executive_brief_report" title="Executive Revenue Brief">
     <ThemeMarker name="light" />
 
-    <ReportMarker id="overview" title="Overview">
+    <ReportMarker id="overview" title="Overview" width={794} height={1123}>
       <section style={PAGE_STYLE}>
         <header style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#8A95A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
@@ -416,7 +418,7 @@ export const REPORT_TEMPLATE = (
       </section>
     </ReportMarker>
 
-    <ReportMarker id="trend" title="Trend">
+    <ReportMarker id="trend" title="Trend" width={794} height={1123}>
       <section style={PAGE_STYLE}>
         <header style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#8A95A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
@@ -474,7 +476,7 @@ export const REPORT_TEMPLATE = (
       </section>
     </ReportMarker>
 
-    <ReportMarker id="mix" title="Mix">
+    <ReportMarker id="mix" title="Mix" width={794} height={1123}>
       <section style={PAGE_STYLE}>
         <header style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#8A95A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
@@ -537,7 +539,7 @@ export const REPORT_TEMPLATE = (
       </section>
     </ReportMarker>
 
-    <ReportMarker id="detail" title="Detail">
+    <ReportMarker id="detail" title="Detail" width={794} height={1123}>
       <section style={PAGE_STYLE}>
         <header style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#8A95A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
@@ -599,7 +601,7 @@ export const REPORT_TEMPLATE = (
       </section>
     </ReportMarker>
 
-    <ReportMarker id="appendix" title="Appendix">
+    <ReportMarker id="appendix" title="Appendix" width={794} height={1123}>
       <section style={PAGE_STYLE}>
         <header style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <p data-ui="eyebrow" style={{ margin: 0, fontSize: 11, color: '#8A95A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>

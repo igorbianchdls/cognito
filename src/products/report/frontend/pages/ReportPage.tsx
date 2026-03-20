@@ -18,10 +18,11 @@ type ReportTreeNode = {
   children: Array<ReportTreeNode | string>
 }
 
-const A4_WIDTH = 794
-const A4_HEIGHT = 1123
+const DEFAULT_REPORT_WIDTH = 794
+const DEFAULT_REPORT_HEIGHT = 1123
 const THUMB_WIDTH = 150
-const THUMB_SCALE = THUMB_WIDTH / A4_WIDTH
+const MIN_REPORT_WIDTH = 480
+const MIN_REPORT_HEIGHT = 640
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
@@ -83,6 +84,47 @@ function getPageId(page: AnyRecord, index: number): string {
   return raw || `page_${index + 1}`
 }
 
+function getReportDimension(page: AnyRecord | null, key: 'width' | 'height', fallback: number): number {
+  if (!page || !isRecord(page.props)) return fallback
+  const raw = (page.props as AnyRecord)[key]
+  return typeof raw === 'number' && Number.isFinite(raw) ? raw : fallback
+}
+
+function updateReportSizeInTree(tree: ReportTreeNode, pageId: string, nextSize: { width?: number; height?: number }): ReportTreeNode {
+  if (tree.type !== 'ReportTemplate') return tree
+
+  const nextChildren = tree.children.map((child) => {
+    if (!child || typeof child === 'string') return child
+    if (child.type !== 'Report') return child
+
+    const props = isRecord(child.props) ? (child.props as AnyRecord) : {}
+    const childPageId = typeof props.id === 'string' ? props.id.trim() : ''
+    if (childPageId !== pageId) return child
+
+    return {
+      ...child,
+      props: {
+        ...props,
+        ...(typeof nextSize.width === 'number' ? { width: nextSize.width } : {}),
+        ...(typeof nextSize.height === 'number' ? { height: nextSize.height } : {}),
+      },
+    }
+  })
+
+  return {
+    ...tree,
+    children: nextChildren,
+  }
+}
+
+function parseDimensionDraft(value: string, minimum: number): number | null {
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  const parsed = Number(trimmed)
+  if (!Number.isFinite(parsed)) return null
+  return Math.max(minimum, Math.round(parsed))
+}
+
 function buildPageRenderTree(page: AnyRecord, themeNode: AnyRecord | null): any {
   const reportNode = {
     ...page,
@@ -105,13 +147,19 @@ function ReportThumbnail({
   previewSrc,
   selected,
   index,
+  reportHeight,
+  reportWidth,
   onClick,
 }: {
   previewSrc?: string
   selected: boolean
   index: number
+  reportHeight: number
+  reportWidth: number
   onClick: () => void
 }) {
+  const thumbHeight = Math.round(reportHeight * (THUMB_WIDTH / reportWidth))
+
   return (
     <button
       type="button"
@@ -120,7 +168,7 @@ function ReportThumbnail({
     >
       <ReportPreviewThumbnail
         alt={`Preview da página ${index + 1}`}
-        height={Math.round(A4_HEIGHT * THUMB_SCALE)}
+        height={thumbHeight}
         selected={selected}
         src={previewSrc}
         width={THUMB_WIDTH}
@@ -142,17 +190,21 @@ function ReportCanvas({
   tree,
   zoom,
   reportElementRef,
+  reportHeight,
+  reportWidth,
 }: {
   tree: any
   zoom: number
   reportElementRef: RefObject<HTMLDivElement | null>
+  reportHeight: number
+  reportWidth: number
 }) {
   return (
     <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}>
       <div
         ref={reportElementRef}
         className="overflow-hidden rounded-none border border-slate-200 bg-white shadow-[0_2px_6px_rgba(15,23,42,0.05)]"
-        style={{ width: A4_WIDTH, minWidth: A4_WIDTH, height: A4_HEIGHT }}
+        style={{ width: reportWidth, minWidth: reportWidth, minHeight: reportHeight, height: reportHeight }}
       >
         <ReportRenderer tree={tree} />
       </div>
@@ -161,17 +213,19 @@ function ReportCanvas({
 }
 
 function ReportWorkspace() {
-  const parsed = useMemo(() => {
+  const [templateTree, setTemplateTree] = useState<ReportTreeNode>(() => {
     const tree = jsxToTree(REPORT_TEMPLATE)
     if (!tree || typeof tree === 'string') {
       throw new Error('Invalid report template root')
     }
     return tree
-  }, [])
-  const { rootName, themeNode, pages } = useMemo(() => getReportStructure(parsed), [parsed])
+  })
+  const { rootName, themeNode, pages } = useMemo(() => getReportStructure(templateTree), [templateTree])
   const [activePageId, setActivePageId] = useState('')
   const [activeView, setActiveView] = useState<'preview' | 'code'>('preview')
   const [zoom, setZoom] = useState(0.9)
+  const [widthDraft, setWidthDraft] = useState(String(DEFAULT_REPORT_WIDTH))
+  const [heightDraft, setHeightDraft] = useState(String(DEFAULT_REPORT_HEIGHT))
   const reportElementRef = useRef<HTMLDivElement | null>(null)
   const exportElementRef = useRef<HTMLDivElement | null>(null)
 
@@ -185,6 +239,20 @@ function ReportWorkspace() {
     () => pages.find((page, index) => getPageId(page, index) === activePageId) || pages[0] || null,
     [pages, activePageId],
   )
+  const currentPageId = activePageId || (pages.length ? getPageId(pages[0], 0) : '')
+  const activeReportWidth = getReportDimension(activePage, 'width', DEFAULT_REPORT_WIDTH)
+  const activeReportHeight = getReportDimension(activePage, 'height', DEFAULT_REPORT_HEIGHT)
+  const parsedWidthDraft = parseDimensionDraft(widthDraft, MIN_REPORT_WIDTH)
+  const parsedHeightDraft = parseDimensionDraft(heightDraft, MIN_REPORT_HEIGHT)
+  const hasPendingSizeChange =
+    parsedWidthDraft !== null &&
+    parsedHeightDraft !== null &&
+    (parsedWidthDraft !== activeReportWidth || parsedHeightDraft !== activeReportHeight)
+
+  useEffect(() => {
+    setWidthDraft(String(activeReportWidth))
+    setHeightDraft(String(activeReportHeight))
+  }, [currentPageId, activeReportWidth, activeReportHeight])
 
   const activeTree = useMemo(
     () => (activePage ? buildPageRenderTree(activePage, themeNode) : []),
@@ -199,11 +267,11 @@ function ReportWorkspace() {
     [pages, themeNode],
   )
   const captureKey = useMemo(
-    () => `${activePageId}:${pages.length}:${Boolean(activePage)}:${Boolean(themeNode)}`,
-    [activePageId, pages.length, activePage, themeNode],
+    () => `${currentPageId}:${pages.length}:${Boolean(activePage)}:${Boolean(themeNode)}:${activeReportWidth}:${activeReportHeight}`,
+    [currentPageId, pages.length, activePage, themeNode, activeReportWidth, activeReportHeight],
   )
   const { previewsByPageId } = useReportPreviewSnapshots({
-    activePageId,
+    activePageId: currentPageId,
     captureKey,
     reportElementRef,
   })
@@ -218,6 +286,16 @@ function ReportWorkspace() {
     reportElementRef: exportElementRef,
   })
 
+  const applyActiveReportSize = () => {
+    if (parsedWidthDraft === null || parsedHeightDraft === null) return
+    setTemplateTree((current) =>
+      updateReportSizeInTree(current, currentPageId, {
+        width: parsedWidthDraft,
+        height: parsedHeightDraft,
+      }),
+    )
+  }
+
   return (
     <div className="flex h-screen flex-col bg-[#F7F7F6] tracking-[-0.03em] text-[#3F3F3D]">
       <header className="flex items-center justify-between border-b-[0.5px] border-[#DDDDD8] bg-[#F7F7F6] px-5 py-3 backdrop-blur">
@@ -230,6 +308,48 @@ function ReportWorkspace() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <div className="mr-2 flex items-center gap-2 rounded-xl border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] px-3 py-2">
+            <label className="flex items-center gap-2 text-[12px] font-medium text-[#5F5F5A]">
+              <span>W</span>
+              <input
+                type="number"
+                min={MIN_REPORT_WIDTH}
+                step={10}
+                value={widthDraft}
+                onChange={(event) => setWidthDraft(event.target.value)}
+                onFocus={(event) => event.currentTarget.select()}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') applyActiveReportSize()
+                }}
+                className="w-[72px] rounded-md border-[0.5px] border-[#D4D4CF] bg-white px-2 py-1 text-[12px] text-[#1F1F1D] outline-none"
+              />
+            </label>
+            <label className="flex items-center gap-2 text-[12px] font-medium text-[#5F5F5A]">
+              <span>H</span>
+              <input
+                type="number"
+                min={MIN_REPORT_HEIGHT}
+                step={10}
+                value={heightDraft}
+                onChange={(event) => setHeightDraft(event.target.value)}
+                onFocus={(event) => event.currentTarget.select()}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') applyActiveReportSize()
+                }}
+                className="w-[72px] rounded-md border-[0.5px] border-[#D4D4CF] bg-white px-2 py-1 text-[12px] text-[#1F1F1D] outline-none"
+              />
+            </label>
+            {hasPendingSizeChange ? (
+              <button
+                type="button"
+                onClick={applyActiveReportSize}
+                className="flex h-7 w-7 items-center justify-center rounded-md border-[0.5px] border-[#D4D4CF] bg-white text-[#245BDB] transition hover:bg-[#F4F8FF]"
+                aria-label="Confirmar tamanho da página"
+              >
+                <Icon icon="solar:check-circle-bold" className="h-4 w-4" />
+              </button>
+            ) : null}
+          </div>
           <div className="mr-1 flex items-center gap-1 rounded-xl border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] p-0">
             <button
               type="button"
@@ -306,6 +426,8 @@ function ReportWorkspace() {
                   previewSrc={previewsByPageId[pageId]}
                   selected={pageId === activePageId}
                   index={index}
+                  reportHeight={getReportDimension(page, 'height', DEFAULT_REPORT_HEIGHT)}
+                  reportWidth={getReportDimension(page, 'width', DEFAULT_REPORT_WIDTH)}
                   onClick={() => setActivePageId(pageId)}
                 />
               )
@@ -316,7 +438,15 @@ function ReportWorkspace() {
         <main className="min-h-0 flex-1 overflow-auto border-r-[0.5px] border-[#DDDDD8] bg-[#EEEEEB]">
           {activeView === 'preview' ? (
             <div className="mx-auto flex min-h-full items-start justify-center p-8">
-              {activePage ? <ReportCanvas tree={activeTree} zoom={zoom} reportElementRef={reportElementRef} /> : null}
+              {activePage ? (
+                <ReportCanvas
+                  tree={activeTree}
+                  zoom={zoom}
+                  reportElementRef={reportElementRef}
+                  reportHeight={activeReportHeight}
+                  reportWidth={activeReportWidth}
+                />
+              ) : null}
             </div>
           ) : (
             <div className="mx-auto flex min-h-full max-w-[1280px] p-8">
@@ -329,10 +459,10 @@ function ReportWorkspace() {
       </div>
       {exportError ? <div className="sr-only">{exportError}</div> : null}
       <ReportPdfExportStage
-        height={A4_HEIGHT}
+        height={activeExportPage ? getReportDimension(pages.find((page, index) => getPageId(page, index) === activeExportPage.pageId) || null, 'height', DEFAULT_REPORT_HEIGHT) : DEFAULT_REPORT_HEIGHT}
         reportElementRef={exportElementRef}
         tree={activeExportPage?.tree || null}
-        width={A4_WIDTH}
+        width={activeExportPage ? getReportDimension(pages.find((page, index) => getPageId(page, index) === activeExportPage.pageId) || null, 'width', DEFAULT_REPORT_WIDTH) : DEFAULT_REPORT_WIDTH}
       />
     </div>
   )
