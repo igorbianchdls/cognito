@@ -30,6 +30,7 @@ const HTML_TAGS = new Set([
   'aside',
   'p',
   'span',
+  'strong',
   'h1',
   'h2',
   'h3',
