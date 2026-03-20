@@ -1,6 +1,6 @@
 'use client'
 
-import { isValidElement, memo, ReactNode, RefObject, useMemo, useRef, useState } from 'react'
+import { isValidElement, memo, ReactNode, RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import { Icon } from '@iconify/react'
 
 import { DataProvider } from '@/products/bi/json-render/context'
@@ -151,13 +151,53 @@ const SlideCanvas = memo(function SlideCanvas({
   slideElementRef: RefObject<HTMLDivElement | null>
   renderKey: string
 }) {
+  const [canvasHeight, setCanvasHeight] = useState(SLIDE_HEIGHT)
+
+  useEffect(() => {
+    setCanvasHeight(SLIDE_HEIGHT)
+  }, [renderKey])
+
+  useEffect(() => {
+    const slideElement = slideElementRef.current
+    if (!slideElement) return
+
+    const updateHeight = () => {
+      const nextHeight = Math.max(SLIDE_HEIGHT, slideElement.scrollHeight)
+      setCanvasHeight((current) => (current === nextHeight ? current : nextHeight))
+    }
+
+    updateHeight()
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateHeight()
+    })
+
+    resizeObserver.observe(slideElement)
+
+    const frameId = window.requestAnimationFrame(() => {
+      updateHeight()
+    })
+
+    return () => {
+      window.cancelAnimationFrame(frameId)
+      resizeObserver.disconnect()
+    }
+  }, [renderKey, slideElementRef])
+
   return (
     <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}>
       <div
         key={renderKey}
         ref={slideElementRef}
         className="overflow-hidden rounded-none border border-slate-200 bg-white shadow-[0_2px_6px_rgba(15,23,42,0.05)]"
-        style={{ width: SLIDE_WIDTH, minWidth: SLIDE_WIDTH, height: SLIDE_HEIGHT, display: 'flex', flexDirection: 'column' }}
+        style={{
+          width: SLIDE_WIDTH,
+          minWidth: SLIDE_WIDTH,
+          minHeight: SLIDE_HEIGHT,
+          height: canvasHeight,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
       >
         <div style={{ width: '100%', height: '100%', display: 'flex', flex: 1, minWidth: 0, minHeight: 0 }}>
           <SlideRenderer tree={tree} />
