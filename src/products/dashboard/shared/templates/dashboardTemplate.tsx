@@ -1246,11 +1246,11 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               format="currency"
               comparisonMode="previous_period"
             >
-              <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <Card style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Receita</p>
                 <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
                 <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </article>
+              </Card>
             </Query>
 
             <Query
@@ -1266,11 +1266,11 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               format="number"
               comparisonMode="previous_period"
             >
-              <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <Card style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Pedidos</p>
                 <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
                 <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </article>
+              </Card>
             </Query>
 
             <Query
@@ -1286,11 +1286,11 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               format="currency"
               comparisonMode="previous_period"
             >
-              <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <Card style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Ticket medio</p>
                 <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
                 <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </article>
+              </Card>
             </Query>
 
             <Query
@@ -1306,11 +1306,11 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               format="number"
               comparisonMode="previous_period"
             >
-              <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <Card style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Canais ativos</p>
                 <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
                 <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </article>
+              </Card>
             </Query>
 
             <Query
@@ -1326,16 +1326,16 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               format="percent"
               comparisonMode="previous_period"
             >
-              <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <Card style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Aprovacao</p>
                 <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
                 <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </article>
+              </Card>
             </Query>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
-            <article data-ui="card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Receita por canal</p>
                 <h2 data-ui="title" style={{ margin: 0, fontSize: 22 }}>Mix comercial</h2>
@@ -1367,9 +1367,9 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
                 recharts={{ categoryLabelMode: 'first-word', valueAxisWidth: 72 }}
               />
-            </article>
+            </Card>
 
-            <article data-ui="card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Participacao</p>
                 <h2 data-ui="title" style={{ margin: 0, fontSize: 22 }}>Share por canal</h2>
@@ -1401,11 +1401,11 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 colorScheme={['#2563EB', '#0F766E', '#EA580C', '#7C3AED', '#DC2626']}
                 recharts={{ innerRadius: 56, outerRadius: 96, showLabels: false, legendPosition: 'right' }}
               />
-            </article>
+            </Card>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
-            <article data-ui="card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Tendencia diaria</p>
                 <h2 data-ui="title" style={{ margin: 0, fontSize: 22 }}>Receita ao longo do periodo</h2>
@@ -1434,9 +1434,9 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 colorScheme={['#2563EB', '#60A5FA', '#93C5FD']}
                 recharts={{ showDots: false, singleSeriesGradient: true, valueAxisWidth: 72 }}
               />
-            </article>
+            </Card>
 
-            <article data-ui="table-card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card data-ui="table-card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Detalhamento</p>
                 <h2 data-ui="title" style={{ margin: 0, fontSize: 22 }}>Pedidos filtrados</h2>
@@ -1470,11 +1470,11 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 ]}
                 enableExportCsv
               />
-            </article>
+            </Card>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
-            <article data-ui="card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Status mix</p>
                 <h2 data-ui="title" style={{ margin: 0, fontSize: 22 }}>Volume por status</h2>
@@ -1500,9 +1500,9 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 }}
                 colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
               />
-            </article>
+            </Card>
 
-            <article data-ui="pivot-card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card data-ui="pivot-card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Cruzamento</p>
                 <h2 data-ui="title" style={{ margin: 0, fontSize: 22 }}>Receita por canal e status</h2>
@@ -1530,7 +1530,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 columns={[{ field: 'status', label: 'Status' }]}
                 values={[{ field: 'valor_total', label: 'Receita', aggregate: 'sum', format: 'currency' }]}
               />
-            </article>
+            </Card>
           </section>
         </section>
       </Dashboard>
@@ -1567,11 +1567,11 @@ function buildClassicDashboardTemplate(themeName: string) {
                   WHERE 1=1
                     {{filters:p}}
                 `, limit: 1 }} format="currency" comparisonMode="previous_period">
-              <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <CardMarker style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Receita</p>
                 <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
                 <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </article>
+              </CardMarker>
             </QueryMarker>
 
             <QueryMarker dataQuery={{ query: `
@@ -1580,11 +1580,11 @@ function buildClassicDashboardTemplate(themeName: string) {
                   WHERE 1=1
                     {{filters:p}}
                 `, limit: 1 }} format="number" comparisonMode="previous_period">
-              <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <CardMarker style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Pedidos</p>
                 <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
                 <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </article>
+              </CardMarker>
             </QueryMarker>
 
             <QueryMarker dataQuery={{ query: `
@@ -1593,11 +1593,11 @@ function buildClassicDashboardTemplate(themeName: string) {
                   WHERE 1=1
                     {{filters:p}}
                 `, limit: 1 }} format="currency" comparisonMode="previous_period">
-              <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <CardMarker style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Ticket medio</p>
                 <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
                 <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </article>
+              </CardMarker>
             </QueryMarker>
 
             <QueryMarker dataQuery={{ query: `
@@ -1606,11 +1606,11 @@ function buildClassicDashboardTemplate(themeName: string) {
                   WHERE 1=1
                     {{filters:p}}
                 `, limit: 1 }} format="number" comparisonMode="previous_period">
-              <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <CardMarker style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Canais ativos</p>
                 <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
                 <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </article>
+              </CardMarker>
             </QueryMarker>
 
             <QueryMarker dataQuery={{ query: `
@@ -1619,16 +1619,16 @@ function buildClassicDashboardTemplate(themeName: string) {
                   WHERE 1=1
                     {{filters:p}}
                 `, limit: 1 }} format="percent" comparisonMode="previous_period">
-              <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <CardMarker style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Aprovacao</p>
                 <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
                 <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </article>
+              </CardMarker>
             </QueryMarker>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
-            <article data-ui="card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <CardMarker style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Receita por canal</p>
                 <h2 data-ui="title" style={{ margin: 0, fontSize: 22 }}>Mix comercial</h2>
@@ -1660,9 +1660,9 @@ function buildClassicDashboardTemplate(themeName: string) {
                 colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
                 recharts={{ categoryLabelMode: 'first-word', valueAxisWidth: 72 }}
               />
-            </article>
+            </CardMarker>
 
-            <article data-ui="card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <CardMarker style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Participacao</p>
                 <h2 data-ui="title" style={{ margin: 0, fontSize: 22 }}>Share por canal</h2>
@@ -1694,11 +1694,11 @@ function buildClassicDashboardTemplate(themeName: string) {
                 colorScheme={['#2563EB', '#0F766E', '#EA580C', '#7C3AED', '#DC2626']}
                 recharts={{ innerRadius: 56, outerRadius: 96, showLabels: false, legendPosition: 'right' }}
               />
-            </article>
+            </CardMarker>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
-            <article data-ui="card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <CardMarker style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Tendencia diaria</p>
                 <h2 data-ui="title" style={{ margin: 0, fontSize: 22 }}>Receita ao longo do periodo</h2>
@@ -1727,9 +1727,9 @@ function buildClassicDashboardTemplate(themeName: string) {
                 colorScheme={['#2563EB', '#60A5FA', '#93C5FD']}
                 recharts={{ showDots: false, singleSeriesGradient: true, valueAxisWidth: 72 }}
               />
-            </article>
+            </CardMarker>
 
-            <article data-ui="table-card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <CardMarker data-ui="table-card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Detalhamento</p>
                 <h2 data-ui="title" style={{ margin: 0, fontSize: 22 }}>Pedidos filtrados</h2>
@@ -1763,11 +1763,11 @@ function buildClassicDashboardTemplate(themeName: string) {
                 ]}
                 enableExportCsv
               />
-            </article>
+            </CardMarker>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
-            <article data-ui="card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <CardMarker style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Status mix</p>
                 <h2 data-ui="title" style={{ margin: 0, fontSize: 22 }}>Volume por status</h2>
@@ -1793,9 +1793,9 @@ function buildClassicDashboardTemplate(themeName: string) {
                 }}
                 colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
               />
-            </article>
+            </CardMarker>
 
-            <article data-ui="pivot-card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <CardMarker data-ui="pivot-card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Cruzamento</p>
                 <h2 data-ui="title" style={{ margin: 0, fontSize: 22 }}>Receita por canal e status</h2>
@@ -1823,7 +1823,7 @@ function buildClassicDashboardTemplate(themeName: string) {
                 columns={[{ field: 'status', label: 'Status' }]}
                 values={[{ field: 'valor_total', label: 'Receita', aggregate: 'sum', format: 'currency' }]}
               />
-            </article>
+            </CardMarker>
           </section>
         </section>
       </DashboardMarker>
