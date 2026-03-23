@@ -160,16 +160,16 @@ export const REPORT_TEMPLATE_SOURCE = String.raw`<ReportTemplate name="executive
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
         <Query dataQuery={{ query: 'SELECT COALESCE(SUM(p.valor_total), 0)::float AS value FROM vendas.pedidos p WHERE 1=1 {{filters:p}}', limit: 1 }} format="currency" comparisonMode="previous_period">
-          <article data-ui="card"><p data-ui="kpi-title">Revenue</p><h2 data-ui="kpi-value">{'{{query.valueFormatted}}'}</h2><p>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p></article>
+          <article data-ui="card"><p data-ui="kpi-title">Revenue</p><h2 data-ui="kpi-value">{'{{query.valueFormatted}}'}</h2><p data-ui="kpi-delta">{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p></article>
         </Query>
         <Query dataQuery={{ query: 'SELECT COUNT(*)::float AS value FROM vendas.pedidos p WHERE 1=1 {{filters:p}}', limit: 1 }} format="number" comparisonMode="previous_period">
-          <article data-ui="card"><p data-ui="kpi-title">Orders</p><h2 data-ui="kpi-value">{'{{query.valueFormatted}}'}</h2><p>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p></article>
+          <article data-ui="card"><p data-ui="kpi-title">Orders</p><h2 data-ui="kpi-value">{'{{query.valueFormatted}}'}</h2><p data-ui="kpi-delta">{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p></article>
         </Query>
         <Query dataQuery={{ query: 'SELECT COALESCE(AVG(p.valor_total), 0)::float AS value FROM vendas.pedidos p WHERE 1=1 {{filters:p}}', limit: 1 }} format="currency" comparisonMode="previous_period">
-          <article data-ui="card"><p data-ui="kpi-title">Avg ticket</p><h2 data-ui="kpi-value">{'{{query.valueFormatted}}'}</h2><p>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p></article>
+          <article data-ui="card"><p data-ui="kpi-title">Avg ticket</p><h2 data-ui="kpi-value">{'{{query.valueFormatted}}'}</h2><p data-ui="kpi-delta">{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p></article>
         </Query>
         <Query dataQuery={{ query: 'SELECT COUNT(DISTINCT p.canal_venda_id)::float AS value FROM vendas.pedidos p WHERE 1=1 {{filters:p}}', limit: 1 }} format="number" comparisonMode="previous_period">
-          <article data-ui="card"><p data-ui="kpi-title">Active channels</p><h2 data-ui="kpi-value">{'{{query.valueFormatted}}'}</h2><p>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p></article>
+          <article data-ui="card"><p data-ui="kpi-title">Active channels</p><h2 data-ui="kpi-value">{'{{query.valueFormatted}}'}</h2><p data-ui="kpi-delta">{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p></article>
         </Query>
       </div>
 
@@ -329,7 +329,7 @@ export const REPORT_TEMPLATE = (
             <article data-ui="card" style={KPI_CARD_STYLE}>
               <p data-ui="kpi-title" style={{ margin: 0, fontSize: 10, color: '#8A95A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Revenue</p>
               <h2 data-ui="kpi-value" style={{ margin: '12px 0 6px 0', fontSize: 26, color: '#1F2C43', letterSpacing: '-0.05em' }}>{'{{query.valueFormatted}}'}</h2>
-              <p style={{ margin: 0, fontSize: 12, color: '#617089' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 12, color: '#617089' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
             </article>
           </QueryMarker>
           <QueryMarker
@@ -340,7 +340,7 @@ export const REPORT_TEMPLATE = (
             <article data-ui="card" style={KPI_CARD_STYLE}>
               <p data-ui="kpi-title" style={{ margin: 0, fontSize: 10, color: '#8A95A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Orders</p>
               <h2 data-ui="kpi-value" style={{ margin: '12px 0 6px 0', fontSize: 26, color: '#1F2C43', letterSpacing: '-0.05em' }}>{'{{query.valueFormatted}}'}</h2>
-              <p style={{ margin: 0, fontSize: 12, color: '#617089' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 12, color: '#617089' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
             </article>
           </QueryMarker>
           <QueryMarker
@@ -351,7 +351,7 @@ export const REPORT_TEMPLATE = (
             <article data-ui="card" style={KPI_CARD_STYLE}>
               <p data-ui="kpi-title" style={{ margin: 0, fontSize: 10, color: '#8A95A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Avg ticket</p>
               <h2 data-ui="kpi-value" style={{ margin: '12px 0 6px 0', fontSize: 26, color: '#1F2C43', letterSpacing: '-0.05em' }}>{'{{query.valueFormatted}}'}</h2>
-              <p style={{ margin: 0, fontSize: 12, color: '#617089' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 12, color: '#617089' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
             </article>
           </QueryMarker>
           <QueryMarker
@@ -362,7 +362,7 @@ export const REPORT_TEMPLATE = (
             <article data-ui="card" style={KPI_CARD_STYLE}>
               <p data-ui="kpi-title" style={{ margin: 0, fontSize: 10, color: '#8A95A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Active channels</p>
               <h2 data-ui="kpi-value" style={{ margin: '12px 0 6px 0', fontSize: 26, color: '#1F2C43', letterSpacing: '-0.05em' }}>{'{{query.valueFormatted}}'}</h2>
-              <p style={{ margin: 0, fontSize: 12, color: '#617089' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 12, color: '#617089' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
             </article>
           </QueryMarker>
         </div>

@@ -15,6 +15,7 @@ import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter'
 import { ThemeProvider, useSemanticUiStyle } from '@/products/bi/json-render/theme/ThemeContext'
 import DashboardDatePicker from '@/products/dashboard/render/components/DashboardDatePicker'
 import DashboardQuery, {
+  getDashboardQueryDeltaColor,
   resolveDashboardQueryTemplate,
   useDashboardQueryResult,
 } from '@/products/dashboard/render/components/DashboardQuery'
@@ -186,6 +187,7 @@ function HtmlNode({
   const semanticStyle = useSemanticUiStyle(props['data-ui'], tag, {
     active: props['data-active'] === true || props['data-active'] === 'true' || props['aria-selected'] === true || props['aria-selected'] === 'true',
   })
+  const queryDeltaColor = props['data-ui'] === 'kpi-delta' ? getDashboardQueryDeltaColor(queryResult) : undefined
   const fallbackContent =
     typeof props.text === 'string'
       ? resolveDashboardQueryTemplate(props.text, queryResult)
@@ -219,6 +221,7 @@ function HtmlNode({
         minWidth: 0,
         ...semanticStyle,
         ...(props.style && typeof props.style === 'object' ? props.style : {}),
+        ...(queryDeltaColor ? { color: queryDeltaColor } : {}),
       },
     },
     content,

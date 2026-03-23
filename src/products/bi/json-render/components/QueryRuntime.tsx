@@ -281,6 +281,22 @@ export function resolveQueryTemplate(input: string, queryResult: QueryResult | n
   })
 }
 
+export function getQueryDeltaColor(queryResult: QueryResult | null | undefined): string | undefined {
+  const deltaPercent = queryResult?.deltaPercent
+  if (typeof deltaPercent === 'number' && Number.isFinite(deltaPercent)) {
+    if (deltaPercent > 0) return '#15803D'
+    if (deltaPercent < 0) return '#DC2626'
+  }
+
+  const delta = queryResult?.delta
+  if (typeof delta === 'number' && Number.isFinite(delta)) {
+    if (delta > 0) return '#15803D'
+    if (delta < 0) return '#DC2626'
+  }
+
+  return undefined
+}
+
 export default function JsonRenderQuery({
   element,
   children,

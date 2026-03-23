@@ -3,6 +3,7 @@
 import React from 'react'
 
 import JsonRenderQuery, {
+  getQueryDeltaColor,
   resolveQueryTemplate,
   useQueryResult,
 } from '@/products/bi/json-render/components/QueryRuntime'
@@ -131,6 +132,7 @@ function HtmlNode({
   const props = (element?.props || {}) as Record<string, any>
   const queryResult = useQueryResult()
   const semanticStyle = useSemanticUiStyle(props['data-ui'], tag)
+  const queryDeltaColor = props['data-ui'] === 'kpi-delta' ? getQueryDeltaColor(queryResult) : undefined
   const fallbackContent =
     typeof props.text === 'string'
       ? resolveQueryTemplate(props.text, queryResult)
@@ -163,6 +165,7 @@ function HtmlNode({
         minWidth: 0,
         ...semanticStyle,
         ...(props.style && typeof props.style === 'object' ? props.style : {}),
+        ...(queryDeltaColor ? { color: queryDeltaColor } : {}),
       },
     },
     content,

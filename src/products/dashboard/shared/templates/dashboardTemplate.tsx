@@ -537,7 +537,7 @@ ${buildMetricCardsSource(config.metrics)}
                 <p data-ui="eyebrow" style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
                 <h2 data-ui="kpi-title" style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Receita total</h2>
                 <p data-ui="kpi-value" style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: '#172033' }}>{'{{query.valueFormatted}}'}</p>
-                <p style={{ margin: 0, fontSize: 13, color: '#52647F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 13, color: '#52647F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </Query>
             <Query
@@ -558,7 +558,7 @@ ${buildMetricCardsSource(config.metrics)}
                 <p data-ui="eyebrow" style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
                 <h2 data-ui="kpi-title" style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Pedidos no periodo</h2>
                 <p data-ui="kpi-value" style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: '#172033' }}>{'{{query.valueFormatted}}'}</p>
-                <p style={{ margin: 0, fontSize: 13, color: '#52647F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 13, color: '#52647F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </Query>
             <Query
@@ -579,7 +579,7 @@ ${buildMetricCardsSource(config.metrics)}
                 <p data-ui="eyebrow" style={{ margin: 0, fontSize: 12, color: '#70839C', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Query-driven metric</p>
                 <h2 data-ui="kpi-title" style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#172033' }}>Ticket medio</h2>
                 <p data-ui="kpi-value" style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: '#172033' }}>{'{{query.valueFormatted}}'}</p>
-                <p style={{ margin: 0, fontSize: 13, color: '#52647F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 13, color: '#52647F' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </Query>
           </section>
@@ -895,7 +895,7 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
                 <p data-ui="eyebrow" style={ui.kpiLabel}>Query-driven metric</p>
                 <h2 data-ui="kpi-title" style={{ margin: 0, fontSize: 18, fontWeight: 600, color: ui.title.color }}>Receita total</h2>
                 <p data-ui="kpi-value" style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
-                <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p data-ui="kpi-delta" style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </QueryMarker>
             <QueryMarker
@@ -916,7 +916,7 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
                 <p data-ui="eyebrow" style={ui.kpiLabel}>Query-driven metric</p>
                 <h2 data-ui="kpi-title" style={{ margin: 0, fontSize: 18, fontWeight: 600, color: ui.title.color }}>Pedidos no periodo</h2>
                 <p data-ui="kpi-value" style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
-                <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p data-ui="kpi-delta" style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </QueryMarker>
             <QueryMarker
@@ -937,7 +937,7 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
                 <p data-ui="eyebrow" style={ui.kpiLabel}>Query-driven metric</p>
                 <h2 data-ui="kpi-title" style={{ margin: 0, fontSize: 18, fontWeight: 600, color: ui.title.color }}>Ticket medio</h2>
                 <p data-ui="kpi-value" style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
-                <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p data-ui="kpi-delta" style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </QueryMarker>
           </section>
@@ -1249,7 +1249,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Receita</p>
                 <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
-                <p style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </Query>
 
@@ -1269,7 +1269,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Pedidos</p>
                 <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
-                <p style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </Query>
 
@@ -1289,7 +1289,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Ticket medio</p>
                 <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
-                <p style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </Query>
 
@@ -1309,7 +1309,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Canais ativos</p>
                 <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
-                <p style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </Query>
 
@@ -1329,7 +1329,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Aprovacao</p>
                 <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
-                <p style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </Query>
           </section>
@@ -1570,7 +1570,7 @@ function buildClassicDashboardTemplate(themeName: string) {
               <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Receita</p>
                 <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
-                <p style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </QueryMarker>
 
@@ -1583,7 +1583,7 @@ function buildClassicDashboardTemplate(themeName: string) {
               <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Pedidos</p>
                 <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
-                <p style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </QueryMarker>
 
@@ -1596,7 +1596,7 @@ function buildClassicDashboardTemplate(themeName: string) {
               <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Ticket medio</p>
                 <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
-                <p style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </QueryMarker>
 
@@ -1609,7 +1609,7 @@ function buildClassicDashboardTemplate(themeName: string) {
               <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Canais ativos</p>
                 <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
-                <p style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </QueryMarker>
 
@@ -1622,7 +1622,7 @@ function buildClassicDashboardTemplate(themeName: string) {
               <article data-ui="card" style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Aprovacao</p>
                 <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
-                <p style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 12, color: '#5C6F89' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </article>
             </QueryMarker>
           </section>
