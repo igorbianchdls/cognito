@@ -316,7 +316,7 @@ function compileSemanticQuery(dq: AnyRecord): { query: string; defaultFormat?: Q
 
   return {
     query,
-    defaultFormat: measure.defaultFormat,
+    defaultFormat: measure?.defaultFormat,
   }
 }
 
