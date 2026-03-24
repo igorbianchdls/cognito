@@ -1235,9 +1235,12 @@ function buildClassicDashboardTemplateSource(themeName: string) {
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: 14 }}>
             <Query
               dataQuery={{
-                model: 'vendas.pedidos',
-                measure: 'COALESCE(SUM(p.valor_total), 0)::float',
-                timeDimension: 'data_pedido',
+                query: \`
+                  SELECT COALESCE(SUM(p.valor_total), 0)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE 1=1
+                    {{filters:p}}
+                \`,
                 limit: 1,
               }}
               format="currency"
@@ -1252,9 +1255,12 @@ function buildClassicDashboardTemplateSource(themeName: string) {
 
             <Query
               dataQuery={{
-                model: 'vendas.pedidos',
-                measure: 'COUNT(*)::float',
-                timeDimension: 'data_pedido',
+                query: \`
+                  SELECT COUNT(*)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE 1=1
+                    {{filters:p}}
+                \`,
                 limit: 1,
               }}
               format="number"
@@ -1269,9 +1275,12 @@ function buildClassicDashboardTemplateSource(themeName: string) {
 
             <Query
               dataQuery={{
-                model: 'vendas.pedidos',
-                measure: 'COALESCE(AVG(p.valor_total), 0)::float',
-                timeDimension: 'data_pedido',
+                query: \`
+                  SELECT COALESCE(AVG(p.valor_total), 0)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE 1=1
+                    {{filters:p}}
+                \`,
                 limit: 1,
               }}
               format="currency"
@@ -1286,9 +1295,12 @@ function buildClassicDashboardTemplateSource(themeName: string) {
 
             <Query
               dataQuery={{
-                model: 'vendas.pedidos',
-                measure: 'COUNT(DISTINCT p.canal_venda_id)::float',
-                timeDimension: 'data_pedido',
+                query: \`
+                  SELECT COUNT(DISTINCT p.canal_venda_id)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE 1=1
+                    {{filters:p}}
+                \`,
                 limit: 1,
               }}
               format="number"
@@ -1303,9 +1315,12 @@ function buildClassicDashboardTemplateSource(themeName: string) {
 
             <Query
               dataQuery={{
-                model: 'vendas.pedidos',
-                measure: "COALESCE(AVG(CASE WHEN COALESCE(p.status, '') = 'aprovado' THEN 1 ELSE 0 END), 0)::float",
-                timeDimension: 'data_pedido',
+                query: \`
+                  SELECT COALESCE(AVG(CASE WHEN COALESCE(p.status, '') = 'aprovado' THEN 1 ELSE 0 END), 0)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE 1=1
+                    {{filters:p}}
+                \`,
                 limit: 1,
               }}
               format="percent"
@@ -1400,10 +1415,20 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 height={300}
                 format="currency"
                 dataQuery={{
-                  model: 'vendas.pedidos',
-                  measure: 'COALESCE(SUM(p.valor_total), 0)::float',
-                  timeDimension: 'p.data_pedido',
-                  granularity: 'day',
+                  query: \`
+                    SELECT
+                      TO_CHAR(p.data_pedido::date, 'YYYY-MM-DD') AS key,
+                      TO_CHAR(p.data_pedido::date, 'DD/MM') AS label,
+                      COALESCE(SUM(p.valor_total), 0)::float AS value
+                    FROM vendas.pedidos p
+                    WHERE 1=1
+                      {{filters:p}}
+                    GROUP BY 1, 2
+                    ORDER BY 1 ASC
+                  \`,
+                  xField: 'label',
+                  yField: 'value',
+                  keyField: 'key',
                   limit: 31,
                 }}
                 colorScheme={['#2563EB', '#60A5FA', '#93C5FD']}
@@ -1459,10 +1484,18 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 height={300}
                 format="number"
                 dataQuery={{
-                  model: 'vendas.pedidos',
-                  measure: 'COUNT(*)::float',
-                  dimension: "COALESCE(p.status, 'Sem status')",
-                  timeDimension: 'p.data_pedido',
+                  query: \`
+                    SELECT
+                      COALESCE(p.status, 'Sem status') AS label,
+                      COUNT(*)::float AS value
+                    FROM vendas.pedidos p
+                    WHERE 1=1
+                      {{filters:p}}
+                    GROUP BY 1
+                    ORDER BY 2 DESC
+                  \`,
+                  xField: 'label',
+                  yField: 'value',
                   limit: 8,
                 }}
                 colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
@@ -1528,7 +1561,12 @@ function buildClassicDashboardTemplate(themeName: string) {
           </header>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: 14 }}>
-            <QueryMarker dataQuery={{ model: 'vendas.pedidos', measure: 'COALESCE(SUM(p.valor_total), 0)::float', timeDimension: 'data_pedido', limit: 1 }} format="currency" comparisonMode="previous_period">
+            <QueryMarker dataQuery={{ query: `
+                  SELECT COALESCE(SUM(p.valor_total), 0)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE 1=1
+                    {{filters:p}}
+                `, limit: 1 }} format="currency" comparisonMode="previous_period">
               <CardMarker style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Receita</p>
                 <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
@@ -1536,7 +1574,12 @@ function buildClassicDashboardTemplate(themeName: string) {
               </CardMarker>
             </QueryMarker>
 
-            <QueryMarker dataQuery={{ model: 'vendas.pedidos', measure: 'COUNT(*)::float', timeDimension: 'data_pedido', limit: 1 }} format="number" comparisonMode="previous_period">
+            <QueryMarker dataQuery={{ query: `
+                  SELECT COUNT(*)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE 1=1
+                    {{filters:p}}
+                `, limit: 1 }} format="number" comparisonMode="previous_period">
               <CardMarker style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Pedidos</p>
                 <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
@@ -1544,7 +1587,12 @@ function buildClassicDashboardTemplate(themeName: string) {
               </CardMarker>
             </QueryMarker>
 
-            <QueryMarker dataQuery={{ model: 'vendas.pedidos', measure: 'COALESCE(AVG(p.valor_total), 0)::float', timeDimension: 'data_pedido', limit: 1 }} format="currency" comparisonMode="previous_period">
+            <QueryMarker dataQuery={{ query: `
+                  SELECT COALESCE(AVG(p.valor_total), 0)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE 1=1
+                    {{filters:p}}
+                `, limit: 1 }} format="currency" comparisonMode="previous_period">
               <CardMarker style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Ticket medio</p>
                 <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
@@ -1552,7 +1600,12 @@ function buildClassicDashboardTemplate(themeName: string) {
               </CardMarker>
             </QueryMarker>
 
-            <QueryMarker dataQuery={{ model: 'vendas.pedidos', measure: 'COUNT(DISTINCT p.canal_venda_id)::float', timeDimension: 'data_pedido', limit: 1 }} format="number" comparisonMode="previous_period">
+            <QueryMarker dataQuery={{ query: `
+                  SELECT COUNT(DISTINCT p.canal_venda_id)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE 1=1
+                    {{filters:p}}
+                `, limit: 1 }} format="number" comparisonMode="previous_period">
               <CardMarker style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Canais ativos</p>
                 <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
@@ -1560,7 +1613,12 @@ function buildClassicDashboardTemplate(themeName: string) {
               </CardMarker>
             </QueryMarker>
 
-            <QueryMarker dataQuery={{ model: 'vendas.pedidos', measure: "COALESCE(AVG(CASE WHEN COALESCE(p.status, '') = 'aprovado' THEN 1 ELSE 0 END), 0)::float", timeDimension: 'data_pedido', limit: 1 }} format="percent" comparisonMode="previous_period">
+            <QueryMarker dataQuery={{ query: `
+                  SELECT COALESCE(AVG(CASE WHEN COALESCE(p.status, '') = 'aprovado' THEN 1 ELSE 0 END), 0)::float AS value
+                  FROM vendas.pedidos p
+                  WHERE 1=1
+                    {{filters:p}}
+                `, limit: 1 }} format="percent" comparisonMode="previous_period">
               <CardMarker style={{ padding: 18, borderRadius: 20, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Aprovacao</p>
                 <p data-ui="kpi-value" style={{ margin: 0, fontSize: 28 }}>{'{{query.valueFormatted}}'}</p>
@@ -1650,10 +1708,20 @@ function buildClassicDashboardTemplate(themeName: string) {
                 height={300}
                 format="currency"
                 dataQuery={{
-                  model: 'vendas.pedidos',
-                  measure: 'COALESCE(SUM(p.valor_total), 0)::float',
-                  timeDimension: 'p.data_pedido',
-                  granularity: 'day',
+                  query: `
+                    SELECT
+                      TO_CHAR(p.data_pedido::date, 'YYYY-MM-DD') AS key,
+                      TO_CHAR(p.data_pedido::date, 'DD/MM') AS label,
+                      COALESCE(SUM(p.valor_total), 0)::float AS value
+                    FROM vendas.pedidos p
+                    WHERE 1=1
+                      {{filters:p}}
+                    GROUP BY 1, 2
+                    ORDER BY 1 ASC
+                  `,
+                  xField: 'label',
+                  yField: 'value',
+                  keyField: 'key',
                   limit: 31,
                 }}
                 colorScheme={['#2563EB', '#60A5FA', '#93C5FD']}
@@ -1709,10 +1777,18 @@ function buildClassicDashboardTemplate(themeName: string) {
                 height={300}
                 format="number"
                 dataQuery={{
-                  model: 'vendas.pedidos',
-                  measure: 'COUNT(*)::float',
-                  dimension: "COALESCE(p.status, 'Sem status')",
-                  timeDimension: 'p.data_pedido',
+                  query: `
+                    SELECT
+                      COALESCE(p.status, 'Sem status') AS label,
+                      COUNT(*)::float AS value
+                    FROM vendas.pedidos p
+                    WHERE 1=1
+                      {{filters:p}}
+                    GROUP BY 1
+                    ORDER BY 2 DESC
+                  `,
+                  xField: 'label',
+                  yField: 'value',
                   limit: 8,
                 }}
                 colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
