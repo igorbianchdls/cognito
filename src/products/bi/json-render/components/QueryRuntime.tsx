@@ -8,6 +8,58 @@ import { applyPrimaryDateRange } from '@/products/bi/json-render/dateFilters'
 type AnyRecord = Record<string, any>
 type QueryFormat = 'currency' | 'percent' | 'number'
 type ComparisonMode = 'previous_period' | 'previous_month' | 'previous_year'
+type SemanticMeasureConfig = {
+  sql: string
+  defaultFormat?: QueryFormat
+}
+type SemanticDimensionConfig = {
+  sql: string
+}
+type SemanticModelConfig = {
+  table: string
+  alias: string
+  defaultTimeDimension?: string
+  measures?: Record<string, SemanticMeasureConfig>
+  dimensions?: Record<string, SemanticDimensionConfig>
+}
+
+const SEMANTIC_QUERY_MODELS: Record<string, SemanticModelConfig> = {
+  'vendas.pedidos': {
+    table: 'vendas.pedidos',
+    alias: 'p',
+    defaultTimeDimension: 'data_pedido',
+    measures: {
+      receita_total: {
+        sql: 'COALESCE(SUM({{alias}}.valor_total), 0)::float',
+        defaultFormat: 'currency',
+      },
+      pedidos: {
+        sql: 'COUNT(*)::float',
+        defaultFormat: 'number',
+      },
+      ticket_medio: {
+        sql: 'COALESCE(AVG({{alias}}.valor_total), 0)::float',
+        defaultFormat: 'currency',
+      },
+      canais_ativos: {
+        sql: 'COUNT(DISTINCT {{alias}}.canal_venda_id)::float',
+        defaultFormat: 'number',
+      },
+      aprovacao: {
+        sql: "COALESCE(AVG(CASE WHEN COALESCE({{alias}}.status, '') = 'aprovado' THEN 100 ELSE 0 END), 0)::float",
+        defaultFormat: 'percent',
+      },
+    },
+    dimensions: {
+      status: {
+        sql: "COALESCE({{alias}}.status, 'Sem status')",
+      },
+      canal_venda_id: {
+        sql: "COALESCE({{alias}}.canal_venda_id::text, '-')",
+      },
+    },
+  },
+}
 
 export type QueryResult = {
   comparisonLabel: string
@@ -180,6 +232,94 @@ function defaultComparisonLabel(mode: unknown): string {
   return ''
 }
 
+function normalizeQueryFormat(input: unknown, fallback: QueryFormat = 'number'): QueryFormat {
+  if (input === 'currency' || input === 'percent' || input === 'number') return input
+  return fallback
+}
+
+function replaceSemanticAlias(input: string, alias: string) {
+  return input.replace(/\{\{\s*alias\s*\}\}/g, alias)
+}
+
+function resolveSemanticOrderBy(orderBy: unknown, hasDimension: boolean): string | null {
+  if (typeof orderBy === 'string' && orderBy.trim()) return orderBy.trim()
+
+  const firstRule =
+    Array.isArray(orderBy) && orderBy.length > 0 && orderBy[0] && typeof orderBy[0] === 'object'
+      ? orderBy[0]
+      : orderBy && typeof orderBy === 'object'
+        ? orderBy
+        : null
+
+  if (!firstRule) {
+    return hasDimension ? 'value DESC' : null
+  }
+
+  const fieldRaw = typeof (firstRule as AnyRecord).field === 'string' ? (firstRule as AnyRecord).field.trim() : ''
+  const directionRaw = typeof (firstRule as AnyRecord).direction === 'string'
+    ? (firstRule as AnyRecord).direction.trim()
+    : typeof (firstRule as AnyRecord).dir === 'string'
+      ? (firstRule as AnyRecord).dir.trim()
+      : 'desc'
+
+  const direction = directionRaw.toUpperCase() === 'ASC' ? 'ASC' : 'DESC'
+  const field = fieldRaw === 'dimension' ? 'label' : fieldRaw || (hasDimension ? 'value' : '')
+  if (!field) return null
+
+  return `${field} ${direction}`
+}
+
+function compileSemanticQuery(dq: AnyRecord): { query: string; defaultFormat?: QueryFormat } | null {
+  if (typeof dq?.query === 'string' && dq.query.trim()) return null
+
+  const modelId = typeof dq?.model === 'string' ? dq.model.trim() : ''
+  const measureId = typeof dq?.measure === 'string' ? dq.measure.trim() : ''
+  if (!modelId || !measureId) return null
+
+  const model = SEMANTIC_QUERY_MODELS[modelId]
+  if (!model) return null
+
+  const measure = model.measures?.[measureId]
+  const measureSql = measure ? measure.sql : measureId
+  if (!measureSql) return null
+
+  const alias = typeof dq.alias === 'string' && dq.alias.trim() ? dq.alias.trim() : model.alias
+  const dimensionId = typeof dq.dimension === 'string' ? dq.dimension.trim() : ''
+  const dimension = dimensionId
+    ? (model.dimensions?.[dimensionId] ? { sql: model.dimensions[dimensionId].sql } : { sql: dimensionId })
+    : undefined
+  const hasDimension = Boolean(dimension)
+
+  const selectParts = [
+    ...(dimension ? [`${replaceSemanticAlias(dimension.sql, alias)} AS label`] : []),
+    `${replaceSemanticAlias(measureSql, alias)} AS value`,
+  ]
+
+  let query = `SELECT\n  ${selectParts.join(',\n  ')}\nFROM ${model.table} ${alias}\nWHERE 1=1\n  {{filters:${alias}}}`
+
+  if (dimension) {
+    query += '\nGROUP BY 1'
+  }
+
+  const orderBy = resolveSemanticOrderBy(dq.orderBy, hasDimension)
+  if (orderBy) {
+    query += `\nORDER BY ${orderBy}`
+  }
+
+  const limit =
+    typeof dq.limit === 'number' && Number.isFinite(dq.limit) && dq.limit > 0
+      ? Math.floor(dq.limit)
+      : undefined
+  if (limit !== undefined) {
+    query += `\nLIMIT ${limit}`
+  }
+
+  return {
+    query,
+    defaultFormat: measure.defaultFormat,
+  }
+}
+
 function buildQueryResult({
   comparisonMode,
   format,
@@ -307,6 +447,7 @@ export default function JsonRenderQuery({
   const { data, setData } = useData()
   const props = (element?.props || {}) as AnyRecord
   const dq = (props.dataQuery || {}) as AnyRecord
+  const semanticQuery = compileSemanticQuery(dq)
   const valueKey = typeof props.valueKey === 'string' ? props.valueKey.trim() : ''
   const resultPath = typeof props.resultPath === 'string' ? props.resultPath.trim() : ''
   const comparisonMode =
@@ -315,8 +456,7 @@ export default function JsonRenderQuery({
     props.comparisonMode === 'previous_year'
       ? (props.comparisonMode as ComparisonMode)
       : undefined
-  const format: QueryFormat =
-    props.format === 'currency' || props.format === 'percent' || props.format === 'number' ? props.format : 'number'
+  const format: QueryFormat = normalizeQueryFormat(props.format, semanticQuery?.defaultFormat || 'number')
 
   const [result, setResult] = React.useState<QueryResult>(EMPTY_RESULT)
 
@@ -324,7 +464,9 @@ export default function JsonRenderQuery({
     let cancelled = false
 
     async function executeQuery(queryFilters: AnyRecord) {
-      const isSqlQueryMode = typeof dq.query === 'string' && dq.query.trim()
+      const directSql = typeof dq.query === 'string' && dq.query.trim() ? dq.query : ''
+      const compiledSql = semanticQuery?.query || ''
+      const isSqlQueryMode = Boolean(directSql || compiledSql)
       const url = isSqlQueryMode
         ? '/api/modulos/query/execute'
         : `/api/modulos/${String(dq.model).split('.')[0]}/query`
@@ -332,7 +474,7 @@ export default function JsonRenderQuery({
       const body = isSqlQueryMode
         ? {
             dataQuery: {
-              query: dq.query,
+              query: directSql || compiledSql,
               ...(typeof dq.yField === 'string' && dq.yField.trim() ? { yField: dq.yField.trim() } : {}),
               ...(typeof dq.xField === 'string' && dq.xField.trim() ? { xField: dq.xField.trim() } : {}),
               ...(typeof dq.keyField === 'string' && dq.keyField.trim() ? { keyField: dq.keyField.trim() } : {}),
@@ -368,7 +510,7 @@ export default function JsonRenderQuery({
     }
 
     async function run() {
-      const isSqlQueryMode = typeof dq.query === 'string' && dq.query.trim()
+      const isSqlQueryMode = Boolean((typeof dq.query === 'string' && dq.query.trim()) || semanticQuery?.query)
       if (!dq || (!isSqlQueryMode && (!dq.model || !dq.measure))) {
         const emptyResult = { ...EMPTY_RESULT, loading: false }
         if (!cancelled) {
