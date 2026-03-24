@@ -1400,20 +1400,10 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 height={300}
                 format="currency"
                 dataQuery={{
-                  query: \`
-                    SELECT
-                      TO_CHAR(p.data_pedido::date, 'YYYY-MM-DD') AS key,
-                      TO_CHAR(p.data_pedido::date, 'DD/MM') AS label,
-                      COALESCE(SUM(p.valor_total), 0)::float AS value
-                    FROM vendas.pedidos p
-                    WHERE 1=1
-                      {{filters:p}}
-                    GROUP BY 1, 2
-                    ORDER BY 1 ASC
-                  \`,
-                  xField: 'label',
-                  yField: 'value',
-                  keyField: 'key',
+                  model: 'vendas.pedidos',
+                  measure: 'COALESCE(SUM(p.valor_total), 0)::float',
+                  timeDimension: 'p.data_pedido',
+                  granularity: 'day',
                   limit: 31,
                 }}
                 colorScheme={['#2563EB', '#60A5FA', '#93C5FD']}
@@ -1469,18 +1459,10 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 height={300}
                 format="number"
                 dataQuery={{
-                  query: \`
-                    SELECT
-                      COALESCE(p.status, 'Sem status') AS label,
-                      COUNT(*)::float AS value
-                    FROM vendas.pedidos p
-                    WHERE 1=1
-                      {{filters:p}}
-                    GROUP BY 1
-                    ORDER BY 2 DESC
-                  \`,
-                  xField: 'label',
-                  yField: 'value',
+                  model: 'vendas.pedidos',
+                  measure: 'COUNT(*)::float',
+                  dimension: "COALESCE(p.status, 'Sem status')",
+                  timeDimension: 'p.data_pedido',
                   limit: 8,
                 }}
                 colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
@@ -1668,20 +1650,10 @@ function buildClassicDashboardTemplate(themeName: string) {
                 height={300}
                 format="currency"
                 dataQuery={{
-                  query: `
-                    SELECT
-                      TO_CHAR(p.data_pedido::date, 'YYYY-MM-DD') AS key,
-                      TO_CHAR(p.data_pedido::date, 'DD/MM') AS label,
-                      COALESCE(SUM(p.valor_total), 0)::float AS value
-                    FROM vendas.pedidos p
-                    WHERE 1=1
-                      {{filters:p}}
-                    GROUP BY 1, 2
-                    ORDER BY 1 ASC
-                  `,
-                  xField: 'label',
-                  yField: 'value',
-                  keyField: 'key',
+                  model: 'vendas.pedidos',
+                  measure: 'COALESCE(SUM(p.valor_total), 0)::float',
+                  timeDimension: 'p.data_pedido',
+                  granularity: 'day',
                   limit: 31,
                 }}
                 colorScheme={['#2563EB', '#60A5FA', '#93C5FD']}
@@ -1737,18 +1709,10 @@ function buildClassicDashboardTemplate(themeName: string) {
                 height={300}
                 format="number"
                 dataQuery={{
-                  query: `
-                    SELECT
-                      COALESCE(p.status, 'Sem status') AS label,
-                      COUNT(*)::float AS value
-                    FROM vendas.pedidos p
-                    WHERE 1=1
-                      {{filters:p}}
-                    GROUP BY 1
-                    ORDER BY 2 DESC
-                  `,
-                  xField: 'label',
-                  yField: 'value',
+                  model: 'vendas.pedidos',
+                  measure: 'COUNT(*)::float',
+                  dimension: "COALESCE(p.status, 'Sem status')",
+                  timeDimension: 'p.data_pedido',
                   limit: 8,
                 }}
                 colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
