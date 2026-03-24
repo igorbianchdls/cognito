@@ -922,7 +922,7 @@ export const catalog = {
         // xKey/yKey removed — server returns { label, value }
         fr: z.number().optional(),
         format: z.enum(["currency", "percent", "number"]).default("number"),
-        height: z.number().optional(),
+        height: z.union([z.number(), z.string()]).optional(),
         colorScheme: z.union([z.string(), z.array(z.string())]).optional(),
         ...RechartsTopLevelProps,
         nivo: NivoPropsSchema.optional(),

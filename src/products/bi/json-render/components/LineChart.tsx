@@ -14,7 +14,7 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
   const props = (element?.props as AnyRecord | undefined) || {};
   const dq = (element?.props?.dataQuery as AnyRecord | undefined);
   const fmt = (element?.props?.format ?? "number") as "currency" | "percent" | "number";
-  const height = (element?.props?.height as number | undefined) ?? 220;
+  const height = (element?.props?.height as number | string | undefined) ?? 220;
   const recharts = { ...((element?.props?.recharts as AnyRecord | undefined) || {}), ...props };
   const xFieldName = typeof dq?.xField === "string" ? dq.xField.trim() : "label";
   const yFieldName = typeof dq?.yField === "string" ? dq.yField.trim() : "value";

@@ -14,7 +14,7 @@ type BarChartMarkerProps = {
   colorScheme?: string[]
   dataQuery?: Record<string, unknown>
   format?: 'currency' | 'number' | 'percent'
-  height?: number
+  height?: number | string
   interaction?: Record<string, unknown>
   recharts?: Record<string, unknown>
 }
@@ -1405,35 +1405,37 @@ function buildClassicDashboardTemplateSource(themeName: string) {
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
-            <Card style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14, minHeight: '100%' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Tendencia diaria</p>
                 <h2 data-ui="title" style={{ margin: 0, fontSize: 22 }}>Receita ao longo do periodo</h2>
               </div>
-              <Chart
-                type="line"
-                height={300}
-                format="currency"
-                dataQuery={{
-                  query: \`
-                    SELECT
-                      TO_CHAR(p.data_pedido::date, 'YYYY-MM-DD') AS key,
-                      TO_CHAR(p.data_pedido::date, 'DD/MM') AS label,
-                      COALESCE(SUM(p.valor_total), 0)::float AS value
-                    FROM vendas.pedidos p
-                    WHERE 1=1
-                      {{filters:p}}
-                    GROUP BY 1, 2
-                    ORDER BY 1 ASC
-                  \`,
-                  xField: 'label',
-                  yField: 'value',
-                  keyField: 'key',
-                  limit: 31,
-                }}
-                colorScheme={['#2563EB', '#60A5FA', '#93C5FD']}
-                recharts={{ showDots: false, singleSeriesGradient: true, valueAxisWidth: 72 }}
-              />
+              <div style={{ flex: 1, minHeight: 300 }}>
+                <Chart
+                  type="line"
+                  height="100%"
+                  format="currency"
+                  dataQuery={{
+                    query: \`
+                      SELECT
+                        TO_CHAR(p.data_pedido::date, 'YYYY-MM-DD') AS key,
+                        TO_CHAR(p.data_pedido::date, 'DD/MM') AS label,
+                        COALESCE(SUM(p.valor_total), 0)::float AS value
+                      FROM vendas.pedidos p
+                      WHERE 1=1
+                        {{filters:p}}
+                      GROUP BY 1, 2
+                      ORDER BY 1 ASC
+                    \`,
+                    xField: 'label',
+                    yField: 'value',
+                    keyField: 'key',
+                    limit: 31,
+                  }}
+                  colorScheme={['#2563EB', '#60A5FA', '#93C5FD']}
+                  recharts={{ showDots: false, singleSeriesGradient: true, valueAxisWidth: 72 }}
+                />
+              </div>
             </Card>
 
             <Card data-ui="table-card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -1698,35 +1700,37 @@ function buildClassicDashboardTemplate(themeName: string) {
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
-            <CardMarker style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <CardMarker style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14, minHeight: '100%' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <p data-ui="eyebrow" style={{ margin: 0 }}>Tendencia diaria</p>
                 <h2 data-ui="title" style={{ margin: 0, fontSize: 22 }}>Receita ao longo do periodo</h2>
               </div>
-              <ChartMarker
-                type="line"
-                height={300}
-                format="currency"
-                dataQuery={{
-                  query: `
-                    SELECT
-                      TO_CHAR(p.data_pedido::date, 'YYYY-MM-DD') AS key,
-                      TO_CHAR(p.data_pedido::date, 'DD/MM') AS label,
-                      COALESCE(SUM(p.valor_total), 0)::float AS value
-                    FROM vendas.pedidos p
-                    WHERE 1=1
-                      {{filters:p}}
-                    GROUP BY 1, 2
-                    ORDER BY 1 ASC
-                  `,
-                  xField: 'label',
-                  yField: 'value',
-                  keyField: 'key',
-                  limit: 31,
-                }}
-                colorScheme={['#2563EB', '#60A5FA', '#93C5FD']}
-                recharts={{ showDots: false, singleSeriesGradient: true, valueAxisWidth: 72 }}
-              />
+              <div style={{ flex: 1, minHeight: 300 }}>
+                <ChartMarker
+                  type="line"
+                  height="100%"
+                  format="currency"
+                  dataQuery={{
+                    query: `
+                      SELECT
+                        TO_CHAR(p.data_pedido::date, 'YYYY-MM-DD') AS key,
+                        TO_CHAR(p.data_pedido::date, 'DD/MM') AS label,
+                        COALESCE(SUM(p.valor_total), 0)::float AS value
+                      FROM vendas.pedidos p
+                      WHERE 1=1
+                        {{filters:p}}
+                      GROUP BY 1, 2
+                      ORDER BY 1 ASC
+                    `,
+                    xField: 'label',
+                    yField: 'value',
+                    keyField: 'key',
+                    limit: 31,
+                  }}
+                  colorScheme={['#2563EB', '#60A5FA', '#93C5FD']}
+                  recharts={{ showDots: false, singleSeriesGradient: true, valueAxisWidth: 72 }}
+                />
+              </div>
             </CardMarker>
 
             <CardMarker data-ui="table-card" style={{ padding: 22, borderRadius: 24, border: '1px solid #D8E1EE', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: 14 }}>
