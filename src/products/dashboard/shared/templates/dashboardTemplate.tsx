@@ -263,6 +263,12 @@ type DashboardThemeUi = {
   chartScheme: string[]
   page: React.CSSProperties
   header: React.CSSProperties
+  headerDatePickerLabel: React.CSSProperties
+  headerDatePickerField: React.CSSProperties
+  headerDatePickerIcon: React.CSSProperties
+  headerDatePickerPreset: React.CSSProperties
+  headerDatePickerPresetActive: React.CSSProperties
+  headerDatePickerSeparator: React.CSSProperties
   badge: React.CSSProperties
   noteCard: React.CSSProperties
   metricCard: React.CSSProperties
@@ -318,9 +324,17 @@ function buildDashboardThemeUi(themeName: string, variant: 'default' | 'classic'
   const headerBg = String(cssVars.headerBg || surfaceBg)
   const headerText = String(cssVars.headerText || titleColor)
   const headerSubtitle = String(cssVars.headerSubtitle || textSecondary)
+  const headerDpBg = String(cssVars.headerDpBg || headerBg)
+  const headerDpColor = String(cssVars.headerDpColor || headerText)
+  const headerDpBorder = String(cssVars.headerDpBorder || borderColor)
+  const headerDpIcon = String(cssVars.headerDpIcon || headerDpColor)
+  const headerDpLabel = String(cssVars.headerDpLabel || headerSubtitle)
   const accentSurface = `color-mix(in srgb, ${surfaceBg} 84%, ${primary} 16%)`
   const accentBorder = `color-mix(in srgb, ${borderColor} 60%, ${primary} 40%)`
   const accentText = dark ? '#FFFFFF' : primary
+  const headerDpActiveBg = `color-mix(in srgb, ${headerDpBg} 72%, ${primary} 28%)`
+  const headerDpActiveBorder = `color-mix(in srgb, ${headerDpBorder} 55%, ${primary} 45%)`
+  const headerDpActiveColor = dark ? '#FFFFFF' : primary
   const isClassic = variant === 'classic'
   const cardFrame = isClassic ? resolveDashboardCardFrame(themeName) : null
 
@@ -345,6 +359,48 @@ function buildDashboardThemeUi(themeName: string, variant: 'default' | 'classic'
       border: `1px solid ${borderColor}`,
       backgroundColor: headerBg,
       color: headerText,
+    },
+    headerDatePickerLabel: {
+      margin: 0,
+      fontSize: 11,
+      color: headerDpLabel,
+      textTransform: 'uppercase',
+      letterSpacing: '0.06em',
+    },
+    headerDatePickerField: {
+      minHeight: 38,
+      padding: '0 10px',
+      border: `1px solid ${headerDpBorder}`,
+      borderRadius: 10,
+      backgroundColor: headerDpBg,
+      color: headerDpColor,
+      fontSize: 14,
+      fontWeight: 500,
+    },
+    headerDatePickerIcon: {
+      color: headerDpIcon,
+      fontSize: 14,
+    },
+    headerDatePickerPreset: {
+      height: 36,
+      padding: '0 12px',
+      border: `1px solid ${headerDpBorder}`,
+      borderRadius: 10,
+      backgroundColor: headerDpBg,
+      color: headerDpColor,
+      fontSize: 13,
+      fontWeight: 500,
+    },
+    headerDatePickerPresetActive: {
+      backgroundColor: headerDpActiveBg,
+      borderColor: headerDpActiveBorder,
+      color: headerDpActiveColor,
+      fontWeight: 600,
+    },
+    headerDatePickerSeparator: {
+      color: headerDpLabel,
+      fontSize: 13,
+      fontWeight: 500,
     },
     badge: {
       display: 'inline-flex',
@@ -1263,7 +1319,18 @@ function buildClassicDashboardTemplateSource(themeName: string) {
 
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, minWidth: 240 }}>
               <p style={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase' })}}>Global period</p>
-              <DatePicker label="Periodo do pedido" table="vendas.pedidos" field="data_pedido" presets={['7d', '30d', 'month', 'quarter']} />
+              <DatePicker
+                label="Periodo do pedido"
+                table="vendas.pedidos"
+                field="data_pedido"
+                presets={['7d', '30d', 'month', 'quarter']}
+                labelStyle={${JSON.stringify(ui.headerDatePickerLabel)}}
+                fieldStyle={${JSON.stringify(ui.headerDatePickerField)}}
+                iconStyle={${JSON.stringify(ui.headerDatePickerIcon)}}
+                presetButtonStyle={${JSON.stringify(ui.headerDatePickerPreset)}}
+                activePresetButtonStyle={${JSON.stringify(ui.headerDatePickerPresetActive)}}
+                separatorStyle={${JSON.stringify(ui.headerDatePickerSeparator)}}
+              />
             </div>
           </header>
 
@@ -1594,7 +1661,18 @@ function buildClassicDashboardTemplate(themeName: string) {
 
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, minWidth: 240 }}>
               <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Global period</p>
-              <DatePickerMarker label="Periodo do pedido" table="vendas.pedidos" field="data_pedido" presets={['7d', '30d', 'month', 'quarter']} />
+              <DatePickerMarker
+                label="Periodo do pedido"
+                table="vendas.pedidos"
+                field="data_pedido"
+                presets={['7d', '30d', 'month', 'quarter']}
+                labelStyle={ui.headerDatePickerLabel}
+                fieldStyle={ui.headerDatePickerField}
+                iconStyle={ui.headerDatePickerIcon}
+                presetButtonStyle={ui.headerDatePickerPreset}
+                activePresetButtonStyle={ui.headerDatePickerPresetActive}
+                separatorStyle={ui.headerDatePickerSeparator}
+              />
             </div>
           </header>
 

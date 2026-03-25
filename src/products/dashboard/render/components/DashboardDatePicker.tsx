@@ -114,15 +114,21 @@ function DateFieldWithIcon({
   value,
   onChange,
   fieldStyle,
+  iconStyle,
 }: {
   value: string
   onChange: (nextValue: string) => void
   fieldStyle?: React.CSSProperties
+  iconStyle?: React.CSSProperties
 }) {
   const theme = useThemeOverrides()
   const inputRef = React.useRef<PickerInput | null>(null)
   const iconVars = (applyDatePickerIconFromCssVars(undefined, theme.cssVars) || {}) as React.CSSProperties
-  const sizeMatch = String((iconVars as AnyRecord).fontSize || '').match(/\d+/)
+  const resolvedIconStyle = {
+    ...iconVars,
+    ...(iconStyle || {}),
+  } as React.CSSProperties
+  const sizeMatch = String((resolvedIconStyle as AnyRecord).fontSize || '').match(/\d+/)
   const iconSize = sizeMatch ? Number(sizeMatch[0]) : 14
 
   return (
@@ -166,7 +172,7 @@ function DateFieldWithIcon({
           background: 'transparent',
           cursor: 'pointer',
           padding: 0,
-          ...iconVars,
+          ...resolvedIconStyle,
         }}
       >
         <Calendar size={iconSize} />
@@ -204,6 +210,7 @@ export default function DashboardDatePicker({
   const labelStyle = {
     ...textStyle,
     ...(applyDatePickerLabelFromCssVars((styles.labelStyle || {}) as AnyRecord, theme.cssVars) || {}),
+    ...(props.labelStyle && typeof props.labelStyle === 'object' ? props.labelStyle : {}),
   } as React.CSSProperties
 
   const fieldStyle = {
@@ -215,6 +222,11 @@ export default function DashboardDatePicker({
     color: '#172033',
     ...textStyle,
     ...(applyDatePickerFieldFromCssVars((styles.fieldStyle || {}) as AnyRecord, theme.cssVars) || {}),
+    ...(props.fieldStyle && typeof props.fieldStyle === 'object' ? props.fieldStyle : {}),
+  } as React.CSSProperties
+
+  const iconStyle = {
+    ...(props.iconStyle && typeof props.iconStyle === 'object' ? props.iconStyle : {}),
   } as React.CSSProperties
 
   const baseButtonStyle = {
@@ -231,6 +243,22 @@ export default function DashboardDatePicker({
     transition: 'all 120ms ease',
     ...textStyle,
     ...pickerButtonStyle(styles.presetButtonStyle as AnyRecord | undefined),
+    ...(props.presetButtonStyle && typeof props.presetButtonStyle === 'object' ? props.presetButtonStyle : {}),
+  } as React.CSSProperties
+
+  const activePresetButtonStyle = {
+    backgroundColor: '#eaf1ff',
+    borderColor: '#8fb3f5',
+    color: '#1e4fbf',
+    fontWeight: 600,
+    ...pickerButtonStyle(styles.activePresetButtonStyle as AnyRecord | undefined),
+    ...(props.activePresetButtonStyle && typeof props.activePresetButtonStyle === 'object' ? props.activePresetButtonStyle : {}),
+  } as React.CSSProperties
+
+  const separatorStyle = {
+    ...labelStyle,
+    color: labelStyle.color || '#52647F',
+    ...(props.separatorStyle && typeof props.separatorStyle === 'object' ? props.separatorStyle : {}),
   } as React.CSSProperties
 
   function buildDateFilterMeta(value: unknown) {
@@ -331,7 +359,7 @@ export default function DashboardDatePicker({
         }}
       >
         {label ? <div style={labelStyle}>{label}</div> : null}
-        <DateFieldWithIcon value={current} onChange={setDatePickerValue} fieldStyle={fieldStyle} />
+        <DateFieldWithIcon value={current} onChange={setDatePickerValue} fieldStyle={fieldStyle} iconStyle={iconStyle} />
       </div>
     )
   }
@@ -367,11 +395,7 @@ export default function DashboardDatePicker({
               ...baseButtonStyle,
               ...(activePreset === preset
                 ? {
-                    backgroundColor: '#eaf1ff',
-                    borderColor: '#8fb3f5',
-                    color: '#1e4fbf',
-                    fontWeight: 600,
-                    ...pickerButtonStyle(styles.activePresetButtonStyle as AnyRecord | undefined),
+                    ...activePresetButtonStyle,
                   }
                 : null),
             }}
@@ -383,12 +407,14 @@ export default function DashboardDatePicker({
           value={currentRange.from}
           onChange={(from) => setDatePickerValue({ from, to: currentRange.to })}
           fieldStyle={fieldStyle}
+          iconStyle={iconStyle}
         />
-        <span style={{ ...labelStyle, color: labelStyle.color || '#52647F' }}>até</span>
+        <span style={separatorStyle}>até</span>
         <DateFieldWithIcon
           value={currentRange.to}
           onChange={(to) => setDatePickerValue({ from: currentRange.from, to })}
           fieldStyle={fieldStyle}
+          iconStyle={iconStyle}
         />
       </div>
     </div>
