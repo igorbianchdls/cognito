@@ -445,6 +445,8 @@ export default function JsonRenderTable({ element }: { element: any }) {
   const headerTextColor = typeof props?.headerTextColor === "string" ? props.headerTextColor : "#334155";
   const borderColor = typeof props?.borderColor === "string" ? props.borderColor : "#d7dbe3";
   const cellTextColor = typeof props?.cellTextColor === "string" ? props.cellTextColor : "#475569";
+  const footerBackground = typeof props?.footerBackground === "string" ? props.footerBackground : "#f8fafc";
+  const footerTextColor = typeof props?.footerTextColor === "string" ? props.footerTextColor : "#0f172a";
   const fallbackFont = typeof cssVars.fontFamily === "string" ? "var(--fontFamily)" : undefined;
   const editableCells =
     props?.editableCells === "all" || props?.editableCells === "none" || Array.isArray(props?.editableCells)
@@ -504,6 +506,8 @@ export default function JsonRenderTable({ element }: { element: any }) {
           headerTextColor={headerTextColor}
           rowHoverColor={typeof props?.rowHoverColor === "string" ? props.rowHoverColor : "#f8fafc"}
           borderColor={borderColor}
+          footerBackground={footerBackground}
+          footerTextColor={footerTextColor}
           borderWidth={toNumberOrUndefined(props?.borderWidth)}
           stickyHeader={props?.stickyHeader !== false}
           rowHover={props?.rowHover !== false}
@@ -526,8 +530,8 @@ export default function JsonRenderTable({ element }: { element: any }) {
           cellTextColor={cellTextColor}
           cellLetterSpacing={toNumberOrUndefined(props?.cellLetterSpacing)}
           cellTextAlign={defaultColumn?.align || "center"}
-          enableZebraStripes={props?.striped !== undefined || props?.enableZebraStripes !== undefined ? Boolean(props?.striped ?? props?.enableZebraStripes) : true}
-          rowAlternateBgColor={typeof props?.rowAlternateBgColor === "string" ? props.rowAlternateBgColor : "#f8fafc"}
+          enableZebraStripes={props?.striped !== undefined || props?.enableZebraStripes !== undefined ? Boolean(props?.striped ?? props?.enableZebraStripes) : false}
+          rowAlternateBgColor={typeof props?.rowAlternateBgColor === "string" ? props.rowAlternateBgColor : "#ffffff"}
           selectionColumnWidth={toNumberOrUndefined(props?.selectionColumnWidth)}
           enableSearch={Boolean(enableSearch)}
           enableFiltering={Boolean(props?.enableFiltering)}

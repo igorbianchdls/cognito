@@ -74,6 +74,8 @@ interface DataTableProps<TData extends TableData> {
   headerTextColor?: string
   rowHoverColor?: string
   borderColor?: string
+  footerBackground?: string
+  footerTextColor?: string
   borderWidth?: number
   showTopBorder?: boolean
   stickyHeader?: boolean
@@ -204,6 +206,8 @@ export function DataTable<TData extends TableData>({
   headerTextColor = '#334155',
   rowHoverColor = '#f8fafc',
   borderColor = '#d7dbe3',
+  footerBackground = '#f8fafc',
+  footerTextColor = '#0f172a',
   borderWidth = 1,
   showTopBorder = false,
   stickyHeader = true,
@@ -229,8 +233,8 @@ export function DataTable<TData extends TableData>({
   cellTextColor = '#475569',
   cellLetterSpacing,
   cellTextAlign = 'left',
-  enableZebraStripes = true,
-  rowAlternateBgColor = '#f8fafc',
+  enableZebraStripes = false,
+  rowAlternateBgColor = '#ffffff',
   selectionColumnWidth = 48,
   // Search & filtering props with defaults
   enableSearch = true,
@@ -751,8 +755,10 @@ export function DataTable<TData extends TableData>({
                     )}
                     style={{ 
                       '--hover-color': rowHoverColor,
-                      backgroundColor: enableZebraStripes && !newRows.has(row.index)
-                        ? (row.index % 2 === 0 ? rowAlternateBgColor : undefined)
+                      backgroundColor: !newRows.has(row.index)
+                        ? (enableZebraStripes
+                            ? (row.index % 2 === 0 ? rowAlternateBgColor : '#ffffff')
+                            : '#ffffff')
                         : undefined,
                       borderColor,
                       borderBottomWidth: borderWidth,
@@ -764,7 +770,7 @@ export function DataTable<TData extends TableData>({
                     }}
                     onMouseLeave={(e) => {
                       if (rowHover && !newRows.has(row.index)) {
-                        const base = enableZebraStripes ? (row.index % 2 === 0 ? rowAlternateBgColor : '') : ''
+                        const base = enableZebraStripes ? (row.index % 2 === 0 ? rowAlternateBgColor : '#ffffff') : '#ffffff'
                         e.currentTarget.style.backgroundColor = base
                       }
                     }}
@@ -906,7 +912,7 @@ export function DataTable<TData extends TableData>({
               )}
             </TableBody>
             {hasFooter && (
-              <TableFooter>
+              <TableFooter style={{ backgroundColor: footerBackground }}>
                 {table.getFooterGroups().map((footerGroup) => (
                   <TableRow key={footerGroup.id} style={{ borderColor, borderBottomWidth: borderWidth }}>
                     {footerGroup.headers.map((header) => (
@@ -915,10 +921,11 @@ export function DataTable<TData extends TableData>({
                         style={{
                           padding: `${resolvedPadding}px`,
                           borderColor,
+                          backgroundColor: footerBackground,
                           fontSize: `${cellFontSize || fontSize}px`,
                           fontFamily: cellFontFamily !== 'inherit' ? cellFontFamily : undefined,
                           fontWeight: '600',
-                          color: cellTextColor,
+                          color: footerTextColor,
                           textAlign: ((header.column.columnDef.meta || {}) as { align?: 'left' | 'center' | 'right' }).align || cellTextAlign,
                         }}
                       >
