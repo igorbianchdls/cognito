@@ -1660,6 +1660,8 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 iconStyle={${JSON.stringify({ color: '#2563EB' })}}
                 items={[
                   { icon: 'trend-up', text: 'Receita ganhou tracao nos canais proprios e manteve crescimento acima da media recente.' },
+                  { icon: 'trend-up', text: 'O volume diario segue acima da media das ultimas semanas, com melhor distribuicao ao longo do periodo.' },
+                  { text: 'Os canais com melhor retorno continuam puxando o resultado total sem depender de descontos mais agressivos.' },
                 ]}
               />
             </Card>
@@ -1671,6 +1673,8 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 iconStyle={${JSON.stringify({ color: '#F59E0B' })}}
                 items={[
                   { icon: 'alert', text: 'O mix segue concentrado em poucos canais, o que aumenta dependencia operacional.' },
+                  { icon: 'alert', text: 'Uma variacao pequena nos principais canais ainda tem impacto relevante na receita consolidada.' },
+                  { text: 'A pulverizacao do faturamento continua baixa, o que reduz margem de seguranca para os proximos ciclos.' },
                 ]}
               />
             </Card>
@@ -1682,6 +1686,8 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 iconStyle={${JSON.stringify({ color: '#10B981' })}}
                 items={[
                   { text: 'A aprovacao continua estavel, com espaco para melhorar conversao sem pressionar o ticket medio.' },
+                  { icon: 'trend-up', text: 'Existe espaco para elevar a taxa final com ajustes pontuais no topo do funil comercial.' },
+                  { text: 'O ticket medio nao mostra deterioracao, o que permite buscar ganho de eficiencia sem comprometer valor.' },
                 ]}
               />
             </Card>
@@ -2023,6 +2029,8 @@ function buildClassicDashboardTemplate(themeName: string) {
                 iconStyle={{ color: '#2563EB' }}
                 items={[
                   { icon: 'trend-up', text: 'Receita ganhou tracao nos canais proprios e manteve crescimento acima da media recente.' },
+                  { icon: 'trend-up', text: 'O volume diario segue acima da media das ultimas semanas, com melhor distribuicao ao longo do periodo.' },
+                  { text: 'Os canais com melhor retorno continuam puxando o resultado total sem depender de descontos mais agressivos.' },
                 ]}
               />
             </Card>
@@ -2034,6 +2042,8 @@ function buildClassicDashboardTemplate(themeName: string) {
                 iconStyle={{ color: '#F59E0B' }}
                 items={[
                   { icon: 'alert', text: 'O mix segue concentrado em poucos canais, o que aumenta dependencia operacional.' },
+                  { icon: 'alert', text: 'Uma variacao pequena nos principais canais ainda tem impacto relevante na receita consolidada.' },
+                  { text: 'A pulverizacao do faturamento continua baixa, o que reduz margem de seguranca para os proximos ciclos.' },
                 ]}
               />
             </Card>
@@ -2045,6 +2055,8 @@ function buildClassicDashboardTemplate(themeName: string) {
                 iconStyle={{ color: '#10B981' }}
                 items={[
                   { text: 'A aprovacao continua estavel, com espaco para melhorar conversao sem pressionar o ticket medio.' },
+                  { icon: 'trend-up', text: 'Existe espaco para elevar a taxa final com ajustes pontuais no topo do funil comercial.' },
+                  { text: 'O ticket medio nao mostra deterioracao, o que permite buscar ganho de eficiencia sem comprometer valor.' },
                 ]}
               />
             </Card>
