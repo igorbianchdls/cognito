@@ -27,17 +27,35 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   const dq = (element?.props?.dataQuery as AnyRecord | undefined);
   const fmt = (element?.props?.format ?? "number") as "currency" | "percent" | "number";
   const height = Number(element?.props?.height ?? 220);
-  const recharts = { ...((element?.props?.recharts as AnyRecord | undefined) || {}), ...props };
+  const legacyRecharts = (element?.props?.recharts as AnyRecord | undefined) || {};
+  const grid = (element?.props?.grid as AnyRecord | undefined) || {};
+  const xAxis = (element?.props?.xAxis as AnyRecord | undefined) || {};
+  const yAxis = (element?.props?.yAxis as AnyRecord | undefined) || {};
+  const tooltip = (element?.props?.tooltip as AnyRecord | undefined) || {};
+  const series = (element?.props?.series as AnyRecord | undefined) || {};
   const xFieldName = typeof dq?.xField === "string" ? dq.xField.trim() : "label";
   const yFieldName = typeof dq?.yField === "string" ? dq.yField.trim() : "value";
   const keyFieldName = typeof dq?.keyField === "string" ? dq.keyField.trim() : "key";
   const { serverRows, queryError } = useChartServerRows(dq, data as AnyRecord);
   const { clearOnSecondClick, resolvedFilterStorePath, shouldClickFilter } = useChartInteraction(element, dq?.dimension);
-  const colors = useResolvedChartColors(element?.props?.colorScheme, ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6"]);
-  const categoryLabelMode = String(recharts.categoryLabelMode ?? "short").trim().toLowerCase();
-  const showValueAxis = recharts.showValueAxis ?? true;
-  const hideCategoryAxis = Boolean(recharts.hideCategoryAxis ?? false);
-  const showTooltip = recharts.showTooltip ?? true;
+  const colors = useResolvedChartColors((element?.props?.colors as string[] | undefined) || element?.props?.colorScheme, ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6"]);
+  const categoryLabelMode = String(xAxis.labelMode ?? legacyRecharts.categoryLabelMode ?? "short").trim().toLowerCase();
+  const showValueAxis = yAxis.hide === true ? false : (legacyRecharts.showValueAxis ?? true);
+  const hideCategoryAxis = Boolean(xAxis.hide ?? legacyRecharts.hideCategoryAxis ?? false);
+  const showTooltip = tooltip.enabled ?? legacyRecharts.showTooltip ?? true;
+  const showGrid = grid.enabled ?? (legacyRecharts.showGrid ?? true);
+  const gridVertical = Boolean(grid.vertical ?? legacyRecharts.gridVertical ?? false);
+  const gridDasharray = String(grid.strokeDasharray ?? legacyRecharts.gridDasharray ?? "3 3");
+  const categoryTickMargin = Number(xAxis.tickMargin ?? legacyRecharts.categoryTickMargin ?? 10);
+  const categoryTickColor = String(xAxis.tickColor ?? legacyRecharts.categoryTickColor ?? "#6b7280");
+  const categoryTickFontSize = Number(xAxis.tickFontSize ?? legacyRecharts.categoryTickFontSize ?? 12);
+  const valueTickMargin = Number(yAxis.tickMargin ?? legacyRecharts.valueTickMargin ?? 8);
+  const valueTickColor = String(yAxis.tickColor ?? legacyRecharts.valueTickColor ?? "#6b7280");
+  const valueTickFontSize = Number(yAxis.tickFontSize ?? legacyRecharts.valueTickFontSize ?? 12);
+  const valueAxisWidth = Number(yAxis.width ?? legacyRecharts.valueAxisWidth ?? 64);
+  const barRadius = Number(series.radius ?? legacyRecharts.radius ?? 8);
+  const barSize = series.barSize ?? legacyRecharts.barSize;
+  const margin = (element?.props?.margin as AnyRecord | undefined) || legacyRecharts.margin || { top: 8, right: 12, left: 18, bottom: 8 };
 
   const chartData = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
@@ -76,28 +94,28 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
         <RechartsBarChart
           accessibilityLayer
           data={chartData}
-          margin={recharts.margin || { top: 8, right: 12, left: 18, bottom: 8 }}
+          margin={margin}
           onClick={handleClick}
-          barSize={recharts.barSize}
+          barSize={barSize}
         >
-          <CartesianGrid vertical={false} strokeDasharray={recharts.gridDasharray || "3 3"} />
+          {showGrid ? <CartesianGrid vertical={gridVertical} strokeDasharray={gridDasharray} /> : null}
           <XAxis
             dataKey="shortLabel"
             hide={hideCategoryAxis}
             tickLine={false}
-            tickMargin={Number(recharts.categoryTickMargin ?? 10)}
+            tickMargin={categoryTickMargin}
             axisLine={false}
             interval={0}
-            tick={{ fill: String(recharts.categoryTickColor ?? "#6b7280"), fontSize: Number(recharts.categoryTickFontSize ?? 12) }}
+            tick={{ fill: categoryTickColor, fontSize: categoryTickFontSize }}
           />
           <YAxis
             hide={!showValueAxis}
             tickLine={false}
             axisLine={false}
-            tickMargin={Number(recharts.valueTickMargin ?? 8)}
-            tick={{ fill: String(recharts.valueTickColor ?? "#6b7280"), fontSize: Number(recharts.valueTickFontSize ?? 12) }}
+            tickMargin={valueTickMargin}
+            tick={{ fill: valueTickColor, fontSize: valueTickFontSize }}
             tickFormatter={(value) => formatChartValue(value, fmt)}
-            width={Number(recharts.valueAxisWidth ?? 64)}
+            width={valueAxisWidth}
           />
           {showTooltip ? (
             <Tooltip
@@ -109,7 +127,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
               }}
             />
           ) : null}
-          <Bar dataKey="value" radius={Number(recharts.radius ?? 8)}>
+          <Bar dataKey="value" radius={barRadius}>
             {chartData.map((entry, index) => (
               <Cell key={`${entry.label}-${index}`} fill={colors[index % colors.length]} />
             ))}

@@ -14,15 +14,23 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
   const dq = (element?.props?.dataQuery as AnyRecord | undefined);
   const fmt = (element?.props?.format ?? "number") as "currency" | "percent" | "number";
   const height = (element?.props?.height as number | undefined) ?? 220;
-  const recharts = { ...((element?.props?.recharts as AnyRecord | undefined) || {}), ...props };
+  const legacyRecharts = (element?.props?.recharts as AnyRecord | undefined) || {};
+  const tooltip = (element?.props?.tooltip as AnyRecord | undefined) || {};
+  const legend = (element?.props?.legend as AnyRecord | undefined) || {};
+  const series = (element?.props?.series as AnyRecord | undefined) || {};
   const xFieldName = typeof dq?.xField === "string" ? dq.xField.trim() : "label";
   const yFieldName = typeof dq?.yField === "string" ? dq.yField.trim() : "value";
   const keyFieldName = typeof dq?.keyField === "string" ? dq.keyField.trim() : "key";
   const { serverRows, queryError } = useChartServerRows(dq, data as AnyRecord);
   const { clearOnSecondClick, resolvedFilterStorePath, shouldClickFilter } = useChartInteraction(element, dq?.dimension);
-  const colors = useResolvedChartColors(element?.props?.colorScheme, ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"]);
-  const showTooltip = recharts.showTooltip ?? true;
-  const legendPosition = String(recharts.legendPosition ?? "right").trim().toLowerCase();
+  const colors = useResolvedChartColors((element?.props?.colors as string[] | undefined) || element?.props?.colorScheme, ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"]);
+  const showTooltip = tooltip.enabled ?? legacyRecharts.showTooltip ?? true;
+  const legendPosition = String(legend.position ?? legacyRecharts.legendPosition ?? "right").trim().toLowerCase();
+  const showLegend = legend.enabled ?? (legacyRecharts.showLegend !== false);
+  const innerRadius = series.innerRadius ?? legacyRecharts.innerRadius ?? 0;
+  const outerRadius = series.outerRadius ?? legacyRecharts.outerRadius ?? "80%";
+  const paddingAngle = series.paddingAngle ?? legacyRecharts.paddingAngle ?? 0;
+  const showLabels = series.showLabels ?? legacyRecharts.showLabels;
 
   const chartData = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
@@ -54,7 +62,7 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           {showTooltip ? <Tooltip formatter={(value: any) => formatChartValue(value, fmt)} /> : null}
-          {recharts.showLegend !== false && legendPosition !== "none" ? (
+          {showLegend && legendPosition !== "none" ? (
             <Legend
               verticalAlign={legendPosition === "bottom" ? "bottom" : "middle"}
               align={legendPosition === "right" ? "right" : "center"}
@@ -65,10 +73,10 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
             data={chartData}
             dataKey="value"
             nameKey="name"
-            innerRadius={recharts.innerRadius ?? 0}
-            outerRadius={recharts.outerRadius ?? "80%"}
-            paddingAngle={recharts.paddingAngle ?? 0}
-            label={recharts.showLabels === true}
+            innerRadius={innerRadius}
+            outerRadius={outerRadius}
+            paddingAngle={paddingAngle}
+            label={showLabels === true}
             onClick={handleClick}
           >
             {chartData.map((_, index) => (

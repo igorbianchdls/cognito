@@ -11,12 +11,17 @@ type MarkerProps = {
 }
 
 type BarChartMarkerProps = {
-  colorScheme?: string[]
+  colors?: string[]
   dataQuery?: Record<string, unknown>
   format?: 'currency' | 'number' | 'percent'
   height?: number | string
+  grid?: Record<string, unknown>
   interaction?: Record<string, unknown>
-  recharts?: Record<string, unknown>
+  legend?: Record<string, unknown>
+  series?: Record<string, unknown>
+  tooltip?: Record<string, unknown>
+  xAxis?: Record<string, unknown>
+  yAxis?: Record<string, unknown>
 }
 
 type LineChartMarkerProps = BarChartMarkerProps
@@ -891,7 +896,7 @@ ${buildMetricCardsSource(config.metrics, ui)}
                     type="bar"
                     height={280}
                     format="currency"
-                    colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
+                    colors={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
                     dataQuery={{
                       query: \`
                         SELECT
@@ -913,7 +918,8 @@ ${buildMetricCardsSource(config.metrics, ui)}
                       limit: 6,
                     }}
                     interaction={{ table: 'vendas.pedidos', field: 'canal_venda_id', clearOnSecondClick: true }}
-                    recharts={{ categoryLabelMode: 'first-word', valueAxisWidth: 72 }}
+                    xAxis={{ labelMode: 'first-word' }}
+                    yAxis={{ width: 72 }}
                   />
                 </article>
 
@@ -929,7 +935,7 @@ ${buildMetricCardsSource(config.metrics, ui)}
                     type="pie"
                     height={280}
                     format="currency"
-                    colorScheme={['#2563EB', '#0F766E', '#EA580C', '#7C3AED', '#DC2626']}
+                    colors={['#2563EB', '#0F766E', '#EA580C', '#7C3AED', '#DC2626']}
                     dataQuery={{
                       query: \`
                         SELECT
@@ -951,7 +957,8 @@ ${buildMetricCardsSource(config.metrics, ui)}
                       limit: 6,
                     }}
                     interaction={{ table: 'vendas.pedidos', field: 'canal_venda_id', clearOnSecondClick: true }}
-                    recharts={{ innerRadius: 52, outerRadius: 92, paddingAngle: 2, showLabels: false, legendPosition: 'right' }}
+                    legend={{ enabled: true, position: 'right' }}
+                    series={{ innerRadius: 52, outerRadius: 92, paddingAngle: 2, showLabels: false }}
                   />
                 </article>
               </section>
@@ -971,7 +978,7 @@ ${buildMetricCardsSource(config.metrics, ui)}
                     type="line"
                     height={280}
                     format="currency"
-                    colorScheme={['#2563EB', '#60A5FA', '#93C5FD']}
+                    colors={['#2563EB', '#60A5FA', '#93C5FD']}
                     dataQuery={{
                       query: \`
                         SELECT
@@ -989,7 +996,8 @@ ${buildMetricCardsSource(config.metrics, ui)}
                       keyField: 'key',
                       limit: 31,
                     }}
-                    recharts={{ showDots: false, singleSeriesGradient: true, valueAxisWidth: 72 }}
+                    yAxis={{ width: 72 }}
+                    series={{ showDots: false, singleSeriesGradient: true }}
                   />
                 </article>
 
@@ -1266,7 +1274,7 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
                     type="bar"
                     height={280}
                     format="currency"
-                    colorScheme={ui.chartScheme}
+                    colors={ui.chartScheme}
                     dataQuery={{
                       query: `
                         SELECT
@@ -1288,7 +1296,8 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
                       limit: 6,
                     }}
                     interaction={SALES_CHANNEL_INTERACTION}
-                    recharts={{ categoryLabelMode: 'first-word', valueAxisWidth: 72 }}
+                    xAxis={{ labelMode: 'first-word' }}
+                    yAxis={{ width: 72 }}
                   />
                 </article>
 
@@ -1304,7 +1313,7 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
                     type="pie"
                     height={280}
                     format="currency"
-                    colorScheme={ui.chartScheme}
+                    colors={ui.chartScheme}
                     dataQuery={{
                       query: `
                         SELECT
@@ -1326,7 +1335,8 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
                       limit: 6,
                     }}
                     interaction={SALES_CHANNEL_INTERACTION}
-                    recharts={{ innerRadius: 52, outerRadius: 92, paddingAngle: 2, showLabels: false, legendPosition: 'right' }}
+                    legend={{ enabled: true, position: 'right' }}
+                    series={{ innerRadius: 52, outerRadius: 92, paddingAngle: 2, showLabels: false }}
                   />
                 </article>
               </section>
@@ -1346,7 +1356,7 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
                     type="line"
                     height={280}
                     format="currency"
-                    colorScheme={ui.chartScheme}
+                    colors={ui.chartScheme}
                     dataQuery={{
                       query: `
                         SELECT
@@ -1364,7 +1374,8 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
                       keyField: 'key',
                       limit: 31,
                     }}
-                    recharts={{ showDots: false, singleSeriesGradient: true, valueAxisWidth: 72 }}
+                    yAxis={{ width: 72 }}
+                    series={{ showDots: false, singleSeriesGradient: true }}
                   />
                 </article>
 
@@ -1662,8 +1673,9 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                   limit: 6,
                 }}
                 interaction={{ table: 'vendas.pedidos', field: 'canal_venda_id', clearOnSecondClick: true }}
-                colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
-                recharts={{ categoryLabelMode: 'first-word', valueAxisWidth: 72 }}
+                colors={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
+                xAxis={{ labelMode: 'first-word' }}
+                yAxis={{ width: 72 }}
               />
             </Card>
 
@@ -1696,8 +1708,9 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                   limit: 6,
                 }}
                 interaction={{ table: 'vendas.pedidos', field: 'canal_venda_id', clearOnSecondClick: true }}
-                colorScheme={['#2563EB', '#0F766E', '#EA580C', '#7C3AED', '#DC2626']}
-                recharts={{ innerRadius: 56, outerRadius: 96, showLabels: false, legendPosition: 'right' }}
+                colors={['#2563EB', '#0F766E', '#EA580C', '#7C3AED', '#DC2626']}
+                legend={{ enabled: true, position: 'right' }}
+                series={{ innerRadius: 56, outerRadius: 96, showLabels: false }}
               />
             </Card>
           </section>
@@ -1730,8 +1743,9 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                     keyField: 'key',
                     limit: 31,
                   }}
-                  colorScheme={['#2563EB', '#60A5FA', '#93C5FD']}
-                  recharts={{ showDots: false, singleSeriesGradient: true, valueAxisWidth: 72 }}
+                  colors={['#2563EB', '#60A5FA', '#93C5FD']}
+                  yAxis={{ width: 72 }}
+                  series={{ showDots: false, singleSeriesGradient: true }}
                 />
               </div>
             </Card>
@@ -1805,7 +1819,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                   yField: 'value',
                   limit: 8,
                 }}
-                colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
+                colors={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
               />
             </Card>
 
@@ -1986,8 +2000,9 @@ function buildClassicDashboardTemplate(themeName: string) {
                   limit: 6,
                 }}
                 interaction={SALES_CHANNEL_INTERACTION}
-                colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
-                recharts={{ categoryLabelMode: 'first-word', valueAxisWidth: 72 }}
+                colors={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
+                xAxis={{ labelMode: 'first-word' }}
+                yAxis={{ width: 72 }}
               />
             </Card>
 
@@ -2020,8 +2035,9 @@ function buildClassicDashboardTemplate(themeName: string) {
                   limit: 6,
                 }}
                 interaction={SALES_CHANNEL_INTERACTION}
-                colorScheme={['#2563EB', '#0F766E', '#EA580C', '#7C3AED', '#DC2626']}
-                recharts={{ innerRadius: 56, outerRadius: 96, showLabels: false, legendPosition: 'right' }}
+                colors={['#2563EB', '#0F766E', '#EA580C', '#7C3AED', '#DC2626']}
+                legend={{ enabled: true, position: 'right' }}
+                series={{ innerRadius: 56, outerRadius: 96, showLabels: false }}
               />
             </Card>
           </section>
@@ -2054,8 +2070,9 @@ function buildClassicDashboardTemplate(themeName: string) {
                     keyField: 'key',
                     limit: 31,
                   }}
-                  colorScheme={['#2563EB', '#60A5FA', '#93C5FD']}
-                  recharts={{ showDots: false, singleSeriesGradient: true, valueAxisWidth: 72 }}
+                  colors={['#2563EB', '#60A5FA', '#93C5FD']}
+                  yAxis={{ width: 72 }}
+                  series={{ showDots: false, singleSeriesGradient: true }}
                 />
               </div>
             </Card>
@@ -2129,7 +2146,7 @@ function buildClassicDashboardTemplate(themeName: string) {
                   yField: 'value',
                   limit: 8,
                 }}
-                colorScheme={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
+                colors={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
               />
             </Card>
 
