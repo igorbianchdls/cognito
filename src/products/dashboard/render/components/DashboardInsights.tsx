@@ -1,26 +1,13 @@
 "use client";
 
 import * as React from "react";
-import {
-  AlertTriangle,
-  Info,
-  TrendingDown,
-  TrendingUp,
-} from "lucide-react";
 
 type AnyRecord = Record<string, any>;
-
-function resolveIcon(name: unknown) {
-  const normalized = String(name || "").trim().toLowerCase();
-  if (normalized === "trend-up" || normalized === "up" || normalized === "positive") return TrendingUp;
-  if (normalized === "trend-down" || normalized === "down" || normalized === "negative") return TrendingDown;
-  if (normalized === "alert" || normalized === "warning" || normalized === "risk") return AlertTriangle;
-  return Info;
-}
 
 export default function DashboardInsights({ element }: { element: any }) {
   const props = (element?.props || {}) as AnyRecord;
   const items = Array.isArray(props.items) ? props.items : [];
+  const [openItems, setOpenItems] = React.useState<Record<number, boolean>>({});
   const title = typeof props.title === "string" && props.title.trim() ? props.title.trim() : "Insights";
   const containerStyle = props.containerStyle && typeof props.containerStyle === "object"
     ? props.containerStyle as React.CSSProperties
@@ -41,6 +28,11 @@ export default function DashboardInsights({ element }: { element: any }) {
   const itemGap = typeof props.itemGap === "number" ? props.itemGap : 12;
   const showDividers = props.showDividers === true;
   const dividerColor = typeof props.dividerColor === "string" ? props.dividerColor : "#e2e8f0";
+  const markerColor = typeof iconStyle?.backgroundColor === "string"
+    ? iconStyle.backgroundColor
+    : typeof iconStyle?.color === "string"
+      ? iconStyle.color
+      : "#2563eb";
 
   return (
     <div
@@ -69,48 +61,114 @@ export default function DashboardInsights({ element }: { element: any }) {
       <div style={{ display: "flex", flexDirection: "column" }}>
         {items.map((item, index) => {
           const record = item && typeof item === "object" ? item as AnyRecord : {};
+          const itemTitle = typeof record.title === "string" ? record.title : "";
           const text = typeof record.text === "string" ? record.text : "";
-          if (!text) return null;
-          const Icon = resolveIcon(record.icon);
-          const hasIcon = typeof record.icon === "string" && record.icon.trim().length > 0;
+          const isExpandable = Boolean(itemTitle && text);
+          const isOpen = openItems[index] === true;
+          if (!text && !itemTitle) return null;
           return (
             <div
-              key={`${text}-${index}`}
+              key={`${itemTitle || text}-${index}`}
               style={{
                 display: "flex",
-                alignItems: "flex-start",
-                gap: itemGap,
+                flexDirection: "column",
                 padding: "12px 0",
                 borderTop: showDividers && index > 0 ? `1px solid ${dividerColor}` : undefined,
                 ...itemStyle,
               }}
             >
-              {hasIcon ? (
+              {isExpandable ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOpenItems((prev) => ({ ...prev, [index]: !prev[index] }));
+                    }}
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: itemGap,
+                      width: "100%",
+                      padding: 0,
+                      border: "none",
+                      background: "transparent",
+                      cursor: "pointer",
+                      textAlign: "left",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 0,
+                        height: 0,
+                        flex: "0 0 auto",
+                        marginTop: 5,
+                        borderTop: "5px solid transparent",
+                        borderBottom: "5px solid transparent",
+                        borderLeft: `8px solid ${markerColor}`,
+                        transform: isOpen ? "rotate(90deg)" : "rotate(0deg)",
+                        transformOrigin: "35% 50%",
+                        transition: "transform 160ms ease",
+                      }}
+                    />
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: 13,
+                        fontWeight: 600,
+                        lineHeight: 1.6,
+                        color: "#475569",
+                        ...textStyle,
+                      }}
+                    >
+                      {itemTitle}
+                    </p>
+                  </button>
+                  {isOpen ? (
+                    <p
+                      style={{
+                        margin: 0,
+                        marginLeft: itemGap + 8,
+                        fontSize: 13,
+                        lineHeight: 1.6,
+                        color: "#475569",
+                        ...textStyle,
+                      }}
+                    >
+                      {text}
+                    </p>
+                  ) : null}
+                </>
+              ) : (
                 <div
                   style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flex: "0 0 auto",
-                    marginTop: 1,
-                    color: "#2563eb",
-                    ...iconStyle,
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: itemGap,
                   }}
                 >
-                  <Icon size={16} />
+                  <div
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      flex: "0 0 auto",
+                      marginTop: 8,
+                      backgroundColor: markerColor,
+                    }}
+                  />
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: 13,
+                      lineHeight: 1.6,
+                      color: "#475569",
+                      ...textStyle,
+                    }}
+                  >
+                    {text}
+                  </p>
                 </div>
-              ) : null}
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: 13,
-                  lineHeight: 1.6,
-                  color: "#475569",
-                  ...textStyle,
-                }}
-              >
-                {text}
-              </p>
+              )}
             </div>
           );
         })}
