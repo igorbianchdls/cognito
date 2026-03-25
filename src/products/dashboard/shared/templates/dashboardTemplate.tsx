@@ -32,6 +32,9 @@ type ChartMarkerProps = BarChartMarkerProps & {
 type WidgetMarkerProps = {
   [key: string]: unknown
 }
+type InsightsMarkerProps = WidgetMarkerProps & {
+  items?: Array<Record<string, unknown>>
+}
 type TextMarkerProps = MarkerProps &
   WidgetMarkerProps & {
     as?: string
@@ -149,6 +152,10 @@ function PivotTableMarker(_: WidgetMarkerProps) {
   return null
 }
 
+function InsightsMarker(_: InsightsMarkerProps) {
+  return null
+}
+
 function SlicerMarker(_: WidgetMarkerProps) {
   return null
 }
@@ -182,6 +189,7 @@ KpiMarker.displayName = 'KPI'
 QueryMarker.displayName = 'Query'
 TableMarker.displayName = 'Table'
 PivotTableMarker.displayName = 'PivotTable'
+InsightsMarker.displayName = 'Insights'
 SlicerMarker.displayName = 'Slicer'
 DatePickerMarker.displayName = 'DatePicker'
 TabsMarker.displayName = 'Tabs'
@@ -1643,6 +1651,23 @@ function buildClassicDashboardTemplateSource(themeName: string) {
             </Query>
           </section>
 
+          <section style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 18 }}>
+            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
+              <Insights
+                title="Insights"
+                titleStyle={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}
+                textStyle={${JSON.stringify({ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.65 })}}
+                iconStyle={${JSON.stringify({ color: '#2563EB' })}}
+                dividerColor={${JSON.stringify(ui.tableBorderColor)}}
+                items={[
+                  { icon: 'trend-up', text: 'Receita ganhou tracao nos canais proprios e manteve crescimento acima da media recente.' },
+                  { icon: 'alert', text: 'O mix segue concentrado em poucos canais, o que aumenta dependencia operacional.' },
+                  { text: 'A aprovacao continua estavel, com espaco para melhorar conversao sem pressionar o ticket medio.' },
+                ]}
+              />
+            </Card>
+          </section>
+
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
             <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -1968,6 +1993,23 @@ function buildClassicDashboardTemplate(themeName: string) {
                 <p style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </QueryMarker>
+          </section>
+
+          <section style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 18 }}>
+            <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
+              <InsightsMarker
+                title="Insights"
+                titleStyle={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}
+                textStyle={{ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.65 }}
+                iconStyle={{ color: '#2563EB' }}
+                dividerColor={ui.tableBorderColor}
+                items={[
+                  { icon: 'trend-up', text: 'Receita ganhou tracao nos canais proprios e manteve crescimento acima da media recente.' },
+                  { icon: 'alert', text: 'O mix segue concentrado em poucos canais, o que aumenta dependencia operacional.' },
+                  { text: 'A aprovacao continua estavel, com espaco para melhorar conversao sem pressionar o ticket medio.' },
+                ]}
+              />
+            </Card>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>

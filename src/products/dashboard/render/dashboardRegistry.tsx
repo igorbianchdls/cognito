@@ -14,6 +14,7 @@ import { mapManagersToCssVars } from '@/products/bi/json-render/theme/thememanag
 import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter'
 import { ThemeProvider, useSemanticUiStyle } from '@/products/bi/json-render/theme/ThemeContext'
 import DashboardDatePicker from '@/products/dashboard/render/components/DashboardDatePicker'
+import DashboardInsights from '@/products/dashboard/render/components/DashboardInsights'
 import DashboardQuery, {
   getDashboardQueryDeltaColor,
   resolveDashboardQueryTemplate,
@@ -345,6 +346,7 @@ function resolveComponent(type: string): DashboardRenderComponent | undefined {
   if (type === 'PivotTable') return ({ element, onAction }) => <biRegistry.PivotTable element={element} onAction={onAction} />
   if (type === 'Slicer') return ({ element, onAction }) => <biRegistry.Slicer element={element} onAction={onAction} />
   if (type === 'DatePicker') return ({ element, onAction }) => <DashboardDatePicker element={element} onAction={onAction} />
+  if (type === 'Insights') return ({ element }) => <DashboardInsights element={element} />
   if (type === 'Text') return ({ element, children }) => <DashboardText element={element}>{children}</DashboardText>
   if (type === 'TextNode') {
     return ({ element }) => {
