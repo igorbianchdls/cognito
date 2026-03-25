@@ -651,322 +651,329 @@ export function DataTable<TData extends TableData>({
       <div
         className="w-full h-full flex flex-col"
         style={{
-          border: bordered ? `${borderWidth}px solid ${borderColor}` : undefined,
-          borderRadius: rounded ? 12 : undefined,
-          overflow: 'hidden',
           ...containerStyle,
         }}
       >
-        {/* Table Content - flex-1 overflow-auto */}
         <div
-          className="flex-1 overflow-auto"
-          style={{ maxHeight: typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight }}
+          className="flex-1 min-h-0"
         >
-          <Table
-            className=""
+          <div
+            className="h-full"
             style={{
-              borderColor,
-              ...tableStyle,
+              border: bordered ? `${borderWidth}px solid ${borderColor}` : undefined,
+              borderRadius: rounded ? 12 : undefined,
+              overflow: 'hidden',
             }}
           >
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow 
-                  key={headerGroup.id}
-                  style={{ 
-                    backgroundColor: resolvedHeaderBackground,
-                    borderColor,
-                    borderBottomWidth: borderWidth,
-                  }}
-                >
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead 
-                        key={header.id}
+            <div
+              className="h-full overflow-auto"
+              style={{ maxHeight: typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight }}
+            >
+              <Table
+                className=""
+                style={{
+                  borderColor,
+                  ...tableStyle,
+                }}
+              >
+                <TableHeader>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow 
+                      key={headerGroup.id}
+                      style={{ 
+                        backgroundColor: resolvedHeaderBackground,
+                        borderColor,
+                        borderBottomWidth: borderWidth,
+                      }}
+                    >
+                      {headerGroup.headers.map((header) => {
+                        return (
+                          <TableHead 
+                            key={header.id}
+                            style={{ 
+                              color: headerTextColor,
+                              padding: header.column.id === 'select' ? '4px' : `${effectiveHeaderPaddingY}px ${effectiveHeaderPaddingX}px`,
+                              width: (columnOptions && columnOptions[header.column.id]?.widthMode === 'auto')
+                                ? undefined
+                                : (columnOptions && columnOptions[header.column.id]?.widthMode === 'fixed' && typeof columnOptions[header.column.id]?.fixedWidth === 'number')
+                                  ? columnOptions[header.column.id]!.fixedWidth
+                                  : header.getSize(),
+                              minWidth: columnOptions?.[header.column.id]?.minWidth,
+                              maxWidth: columnOptions?.[header.column.id]?.maxWidth,
+                              position: stickyHeader ? 'sticky' : 'relative',
+                              top: stickyHeader ? 0 : undefined,
+                              zIndex: stickyHeader ? 2 : undefined,
+                              fontSize: `${headerFontSize}px`,
+                              fontFamily: headerFontFamily !== 'inherit' ? headerFontFamily : undefined,
+                              fontWeight: headerFontWeight !== 'normal' ? headerFontWeight : undefined,
+                              borderColor,
+                              borderTopWidth: showTopBorder ? borderWidth : undefined,
+                              letterSpacing: typeof headerLetterSpacing === 'number' ? `${headerLetterSpacing}px` : undefined,
+                              textAlign: header.column.id === 'select'
+                                ? 'center' as const
+                                : ((header.column.columnDef.meta || {}) as { headerAlign?: 'left' | 'center' | 'right' }).headerAlign || headerTextAlign,
+                              whiteSpace: columnOptions?.[header.column.id]?.headerNoWrap ? 'nowrap' : undefined,
+                              overflow: columnOptions?.[header.column.id]?.headerNoWrap ? 'hidden' : undefined,
+                              textOverflow: columnOptions?.[header.column.id]?.headerNoWrap ? 'ellipsis' : undefined,
+                              ...headerStyle,
+                            }}
+                          >
+                            {header.isPlaceholder ? null : (
+                              <div
+                                className={cn(
+                                  "flex items-center gap-1",
+                                  enableSorting && header.column.getCanSort() && "cursor-pointer select-none"
+                                )}
+                                onClick={enableSorting ? header.column.getToggleSortingHandler() : undefined}
+                                title={((header.column.columnDef.meta || {}) as { headerTooltip?: string }).headerTooltip}
+                              >
+                                {flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext()
+                                )}
+                                {enableSorting && header.column.getCanSort() && (
+                                  header.column.getIsSorted() === 'asc' ? (
+                                    <ArrowUp className="h-3.5 w-3.5" />
+                                  ) : header.column.getIsSorted() === 'desc' ? (
+                                    <ArrowDown className="h-3.5 w-3.5" />
+                                  ) : (
+                                    <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />
+                                  )
+                                )}
+                              </div>
+                            )}
+                            
+                            {enableColumnResize && header.column.getCanResize() && (
+                              <div
+                                onDoubleClick={(e) => {
+                                  e.stopPropagation()
+                                  header.column.resetSize()
+                                }}
+                                onMouseDown={(e) => {
+                                  e.stopPropagation()
+                                  header.getResizeHandler()(e)
+                                }}
+                                onTouchStart={(e) => {
+                                  e.stopPropagation()
+                                  header.getResizeHandler()(e)
+                                }}
+                                className={`resizer ${header.column.getIsResizing() ? 'isResizing' : ''}`}
+                                data-draggable="false"
+                              />
+                            )}
+                          </TableHead>
+                        )
+                      })}
+                    </TableRow>
+                  ))}
+                </TableHeader>
+                <TableBody>
+                  {table.getRowModel().rows?.length ? (
+                    table.getRowModel().rows.map((row) => {
+                      const defaultRowBackground = enableZebraStripes
+                        ? (row.index % 2 === 0 ? rowAlternateBgColor : '#ffffff')
+                        : '#ffffff'
+                      const rowBaseBackground = !newRows.has(row.index)
+                        ? ((rowStyle?.backgroundColor as string | undefined) || defaultRowBackground)
+                        : undefined
+                      return (
+                      <React.Fragment key={row.id}>
+                        <TableRow
+                        data-state={row.getIsSelected() && "selected"}
+                        className={cn(
+                          rowHover ? "transition-colors" : "hover:bg-transparent",
+                          newRows.has(row.index) && "bg-green-50"
+                        )}
                         style={{ 
-                          color: headerTextColor,
-                          padding: header.column.id === 'select' ? '4px' : `${effectiveHeaderPaddingY}px ${effectiveHeaderPaddingX}px`,
-                          width: (columnOptions && columnOptions[header.column.id]?.widthMode === 'auto')
-                            ? undefined
-                            : (columnOptions && columnOptions[header.column.id]?.widthMode === 'fixed' && typeof columnOptions[header.column.id]?.fixedWidth === 'number')
-                              ? columnOptions[header.column.id]!.fixedWidth
-                              : header.getSize(),
-                          minWidth: columnOptions?.[header.column.id]?.minWidth,
-                          maxWidth: columnOptions?.[header.column.id]?.maxWidth,
-                          position: stickyHeader ? 'sticky' : 'relative',
-                          top: stickyHeader ? 0 : undefined,
-                          zIndex: stickyHeader ? 2 : undefined,
-                          fontSize: `${headerFontSize}px`,
-                          fontFamily: headerFontFamily !== 'inherit' ? headerFontFamily : undefined,
-                          fontWeight: headerFontWeight !== 'normal' ? headerFontWeight : undefined,
+                          '--hover-color': rowHoverColor,
                           borderColor,
-                          borderTopWidth: showTopBorder ? borderWidth : undefined,
-                          letterSpacing: typeof headerLetterSpacing === 'number' ? `${headerLetterSpacing}px` : undefined,
-                          textAlign: header.column.id === 'select'
-                            ? 'center' as const
-                            : ((header.column.columnDef.meta || {}) as { headerAlign?: 'left' | 'center' | 'right' }).headerAlign || headerTextAlign,
-                          whiteSpace: columnOptions?.[header.column.id]?.headerNoWrap ? 'nowrap' : undefined,
-                          overflow: columnOptions?.[header.column.id]?.headerNoWrap ? 'hidden' : undefined,
-                          textOverflow: columnOptions?.[header.column.id]?.headerNoWrap ? 'ellipsis' : undefined,
-                          ...headerStyle,
+                          borderBottomWidth: borderWidth,
+                          ...rowStyle,
+                          backgroundColor: rowBaseBackground,
+                        } as React.CSSProperties & { '--hover-color': string }}
+                        onMouseEnter={(e) => {
+                          if (rowHover && !newRows.has(row.index)) {
+                            e.currentTarget.style.backgroundColor = rowHoverColor
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (rowHover && !newRows.has(row.index)) {
+                            const base = rowBaseBackground || '#ffffff'
+                            e.currentTarget.style.backgroundColor = base
+                          }
+                        }}
+                        onClick={() => onRowClick?.(row.original as TData)}
+                      >
+                        {row.getVisibleCells().map((cell) => {
+                          const rowIndex = row.index
+                          const columnKey = cell.column.id
+                          const cellId = `${rowIndex}-${columnKey}`
+                          const isEditing = editingCell?.rowIndex === rowIndex && editingCell?.columnKey === columnKey
+                          const isModified = modifiedCells.has(cellId)
+                          const hasError = enableValidation && validationErrors[cellId]
+                          const isNewRow = newRows.has(rowIndex)
+                          
+                          let backgroundColor = ''
+                          if (isEditing) backgroundColor = editingCellColor
+                          else if (hasError) backgroundColor = validationErrorColor
+                          else if (isModified) backgroundColor = modifiedCellColor
+                          else if (isNewRow) backgroundColor = newRowColor
+                          
+                          return (
+                            <TableCell 
+                              key={cell.id}
+                              className={cn(
+                                isCellEditable(columnKey) && "cursor-pointer hover:bg-gray-50",
+                                hasError && showValidationErrors && "border-red-300"
+                              )}
+                              style={{ 
+                                padding: columnKey === 'select' || columnKey === 'expand' ? '4px' : `${resolvedPadding}px`,
+                                borderColor,
+                                borderTopWidth: showTopBorder ? borderWidth : undefined,
+                                fontSize: `${cellFontSize || fontSize}px`,
+                                fontFamily: cellFontFamily !== 'inherit' ? cellFontFamily : undefined,
+                                fontWeight: cellFontWeight !== 'normal' ? cellFontWeight : undefined,
+                                color: cellTextColor,
+                                position: 'relative',
+                                letterSpacing: typeof cellLetterSpacing === 'number' ? `${cellLetterSpacing}px` : undefined,
+                                textAlign: columnKey === 'select'
+                                  ? 'center' as const
+                                  : ((cell.column.columnDef.meta || {}) as { align?: 'left' | 'center' | 'right' }).align || cellTextAlign,
+                                width: (columnOptions && columnOptions[columnKey]?.widthMode === 'auto')
+                                  ? undefined
+                                  : (columnOptions && columnOptions[columnKey]?.widthMode === 'fixed' && typeof columnOptions[columnKey]?.fixedWidth === 'number')
+                                    ? columnOptions[columnKey]!.fixedWidth
+                                    : undefined,
+                                minWidth: columnOptions?.[columnKey]?.minWidth,
+                                maxWidth: columnOptions?.[columnKey]?.maxWidth,
+                                whiteSpace: columnOptions?.[columnKey]?.cellNoWrap ? 'nowrap' : undefined,
+                                overflow: columnOptions?.[columnKey]?.cellNoWrap ? 'hidden' : undefined,
+                                textOverflow: columnOptions?.[columnKey]?.cellNoWrap ? 'ellipsis' : undefined,
+                                ...cellStyle,
+                                backgroundColor: backgroundColor || cellStyle?.backgroundColor,
+                              }}
+                              onClick={(e) => {
+                                if (editTrigger === 'click' && !isEditing) {
+                                  startEditing(rowIndex, columnKey, cell.getValue() as string | number | boolean | null | undefined)
+                                }
+                              }}
+                              onDoubleClick={(e) => {
+                                if (editTrigger === 'doubleClick' && !isEditing) {
+                                  startEditing(rowIndex, columnKey, cell.getValue() as string | number | boolean | null | undefined)
+                                }
+                              }}
+                            >
+                              {isEditing ? (
+                                <div className="flex items-center gap-1">
+                                  <Input
+                                    value={editingValue}
+                                    onChange={(e) => setEditingValue(e.target.value)}
+                                    onKeyDown={handleKeyDown}
+                                    onBlur={() => {
+                                      if (saveBehavior === 'onBlur') {
+                                        saveEdit()
+                                      }
+                                    }}
+                                    className="h-6 text-xs border-0 p-0 focus:ring-0"
+                                    autoFocus
+                                  />
+                                  {saveBehavior === 'manual' && (
+                                    <div className="flex gap-1">
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-6 w-6 p-0"
+                                        onClick={saveEdit}
+                                      >
+                                        <Check className="h-3 w-3" />
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-6 w-6 p-0"
+                                        onClick={cancelEdit}
+                                      >
+                                        <X className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <>
+                                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                  {hasError && showValidationErrors && (
+                                    <div className="absolute -bottom-1 left-0 text-xs text-red-600 bg-white px-1 rounded shadow">
+                                      {validationErrors[cellId]}
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                            </TableCell>
+                          )
+                        })}
+                      </TableRow>
+                      {enableExpand && renderDetail && expandedRows.has(row.id) && (!rowCanExpand || rowCanExpand(row.original as TData)) && (
+                        <TableRow>
+                          <TableCell colSpan={tableColumns.length} style={{ padding: `${resolvedPadding}px` }}>
+                            {renderDetail(row.original as TData)}
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </React.Fragment>
+                    )})
+                  ) : (
+                    <TableRow>
+                      <TableCell 
+                        colSpan={tableColumns.length} 
+                        className="h-24 text-center"
+                        style={{ 
+                          padding: `${resolvedPadding}px`,
+                          borderColor,
+                          fontSize: `${cellFontSize || fontSize}px`,
+                          fontFamily: cellFontFamily !== 'inherit' ? cellFontFamily : undefined,
+                          fontWeight: cellFontWeight !== 'normal' ? cellFontWeight : undefined,
+                          color: cellTextColor,
+                          ...cellStyle,
                         }}
                       >
-                        {header.isPlaceholder ? null : (
-                          <div
-                            className={cn(
-                              "flex items-center gap-1",
-                              enableSorting && header.column.getCanSort() && "cursor-pointer select-none"
-                            )}
-                            onClick={enableSorting ? header.column.getToggleSortingHandler() : undefined}
-                            title={((header.column.columnDef.meta || {}) as { headerTooltip?: string }).headerTooltip}
-                          >
-                            {flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                            {enableSorting && header.column.getCanSort() && (
-                              header.column.getIsSorted() === 'asc' ? (
-                                <ArrowUp className="h-3.5 w-3.5" />
-                              ) : header.column.getIsSorted() === 'desc' ? (
-                                <ArrowDown className="h-3.5 w-3.5" />
-                              ) : (
-                                <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />
-                              )
-                            )}
-                          </div>
-                        )}
-                        
-                        {/* Column Resizer */}
-                        {enableColumnResize && header.column.getCanResize() && (
-                          <div
-                            onDoubleClick={(e) => {
-                              e.stopPropagation()
-                              header.column.resetSize()
-                            }}
-                            onMouseDown={(e) => {
-                              e.stopPropagation()
-                              header.getResizeHandler()(e)
-                            }}
-                            onTouchStart={(e) => {
-                              e.stopPropagation()
-                              header.getResizeHandler()(e)
-                            }}
-                            className={`resizer ${header.column.getIsResizing() ? 'isResizing' : ''}`}
-                            data-draggable="false"
-                          />
-                        )}
-                      </TableHead>
-                    )
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => {
-                  const defaultRowBackground = enableZebraStripes
-                    ? (row.index % 2 === 0 ? rowAlternateBgColor : '#ffffff')
-                    : '#ffffff'
-                  const rowBaseBackground = !newRows.has(row.index)
-                    ? ((rowStyle?.backgroundColor as string | undefined) || defaultRowBackground)
-                    : undefined
-                  return (
-                  <React.Fragment key={row.id}>
-                    <TableRow
-                    data-state={row.getIsSelected() && "selected"}
-                    className={cn(
-                      rowHover ? "transition-colors" : "hover:bg-transparent",
-                      newRows.has(row.index) && "bg-green-50"
-                    )}
-                    style={{ 
-                      '--hover-color': rowHoverColor,
-                      borderColor,
-                      borderBottomWidth: borderWidth,
-                      ...rowStyle,
-                      backgroundColor: rowBaseBackground,
-                    } as React.CSSProperties & { '--hover-color': string }}
-                    onMouseEnter={(e) => {
-                      if (rowHover && !newRows.has(row.index)) {
-                        e.currentTarget.style.backgroundColor = rowHoverColor
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (rowHover && !newRows.has(row.index)) {
-                        const base = rowBaseBackground || '#ffffff'
-                        e.currentTarget.style.backgroundColor = base
-                      }
-                    }}
-                    onClick={() => onRowClick?.(row.original as TData)}
-                  >
-                    {row.getVisibleCells().map((cell) => {
-                      const rowIndex = row.index
-                      const columnKey = cell.column.id
-                      const cellId = `${rowIndex}-${columnKey}`
-                      const isEditing = editingCell?.rowIndex === rowIndex && editingCell?.columnKey === columnKey
-                      const isModified = modifiedCells.has(cellId)
-                      const hasError = enableValidation && validationErrors[cellId]
-                      const isNewRow = newRows.has(rowIndex)
-                      
-                      let backgroundColor = ''
-                      if (isEditing) backgroundColor = editingCellColor
-                      else if (hasError) backgroundColor = validationErrorColor
-                      else if (isModified) backgroundColor = modifiedCellColor
-                      else if (isNewRow) backgroundColor = newRowColor
-                      
-                      return (
-                        <TableCell 
-                          key={cell.id}
-                          className={cn(
-                            isCellEditable(columnKey) && "cursor-pointer hover:bg-gray-50",
-                            hasError && showValidationErrors && "border-red-300"
-                          )}
-                          style={{ 
-                            padding: columnKey === 'select' || columnKey === 'expand' ? '4px' : `${resolvedPadding}px`,
-                            borderColor,
-                            borderTopWidth: showTopBorder ? borderWidth : undefined,
-                            fontSize: `${cellFontSize || fontSize}px`,
-                            fontFamily: cellFontFamily !== 'inherit' ? cellFontFamily : undefined,
-                            fontWeight: cellFontWeight !== 'normal' ? cellFontWeight : undefined,
-                            color: cellTextColor,
-                            position: 'relative',
-                            letterSpacing: typeof cellLetterSpacing === 'number' ? `${cellLetterSpacing}px` : undefined,
-                            textAlign: columnKey === 'select'
-                              ? 'center' as const
-                              : ((cell.column.columnDef.meta || {}) as { align?: 'left' | 'center' | 'right' }).align || cellTextAlign,
-                            width: (columnOptions && columnOptions[columnKey]?.widthMode === 'auto')
-                              ? undefined
-                              : (columnOptions && columnOptions[columnKey]?.widthMode === 'fixed' && typeof columnOptions[columnKey]?.fixedWidth === 'number')
-                                ? columnOptions[columnKey]!.fixedWidth
-                                : undefined,
-                            minWidth: columnOptions?.[columnKey]?.minWidth,
-                            maxWidth: columnOptions?.[columnKey]?.maxWidth,
-                            whiteSpace: columnOptions?.[columnKey]?.cellNoWrap ? 'nowrap' : undefined,
-                            overflow: columnOptions?.[columnKey]?.cellNoWrap ? 'hidden' : undefined,
-                            textOverflow: columnOptions?.[columnKey]?.cellNoWrap ? 'ellipsis' : undefined,
-                            ...cellStyle,
-                            backgroundColor: backgroundColor || cellStyle?.backgroundColor,
-                          }}
-                          onClick={(e) => {
-                            if (editTrigger === 'click' && !isEditing) {
-                              startEditing(rowIndex, columnKey, cell.getValue() as string | number | boolean | null | undefined)
-                            }
-                          }}
-                          onDoubleClick={(e) => {
-                            if (editTrigger === 'doubleClick' && !isEditing) {
-                              startEditing(rowIndex, columnKey, cell.getValue() as string | number | boolean | null | undefined)
-                            }
-                          }}
-                        >
-                          {isEditing ? (
-                            <div className="flex items-center gap-1">
-                              <Input
-                                value={editingValue}
-                                onChange={(e) => setEditingValue(e.target.value)}
-                                onKeyDown={handleKeyDown}
-                                onBlur={() => {
-                                  if (saveBehavior === 'onBlur') {
-                                    saveEdit()
-                                  }
-                                }}
-                                className="h-6 text-xs border-0 p-0 focus:ring-0"
-                                autoFocus
-                              />
-                              {saveBehavior === 'manual' && (
-                                <div className="flex gap-1">
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    className="h-6 w-6 p-0"
-                                    onClick={saveEdit}
-                                  >
-                                    <Check className="h-3 w-3" />
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    className="h-6 w-6 p-0"
-                                    onClick={cancelEdit}
-                                  >
-                                    <X className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <>
-                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                              {hasError && showValidationErrors && (
-                                <div className="absolute -bottom-1 left-0 text-xs text-red-600 bg-white px-1 rounded shadow">
-                                  {validationErrors[cellId]}
-                                </div>
-                              )}
-                            </>
-                          )}
-                        </TableCell>
-                      )
-                    })}
-                  </TableRow>
-                  {enableExpand && renderDetail && expandedRows.has(row.id) && (!rowCanExpand || rowCanExpand(row.original as TData)) && (
-                    <TableRow>
-                      <TableCell colSpan={tableColumns.length} style={{ padding: `${resolvedPadding}px` }}>
-                        {renderDetail(row.original as TData)}
+                        {emptyMessage}
                       </TableCell>
                     </TableRow>
                   )}
-                </React.Fragment>
-                )})
-              ) : (
-                <TableRow>
-                  <TableCell 
-                    colSpan={tableColumns.length} 
-                    className="h-24 text-center"
-                    style={{ 
-                      padding: `${resolvedPadding}px`,
-                      borderColor,
-                      fontSize: `${cellFontSize || fontSize}px`,
-                      fontFamily: cellFontFamily !== 'inherit' ? cellFontFamily : undefined,
-                      fontWeight: cellFontWeight !== 'normal' ? cellFontWeight : undefined,
-                      color: cellTextColor,
-                      ...cellStyle,
-                    }}
-                  >
-                    {emptyMessage}
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-            {hasFooter && (
-              <TableFooter style={{ backgroundColor: resolvedFooterBackground }}>
-                {table.getFooterGroups().map((footerGroup) => (
-                  <TableRow key={footerGroup.id} style={{ borderColor, borderBottomWidth: borderWidth }}>
-                    {footerGroup.headers.map((header) => (
-                      <TableCell
-                        key={header.id}
-                        style={{
-                          padding: `${resolvedPadding}px`,
-                          borderColor,
-                          backgroundColor: resolvedFooterBackground,
-                          fontSize: `${cellFontSize || fontSize}px`,
-                          fontFamily: cellFontFamily !== 'inherit' ? cellFontFamily : undefined,
-                          fontWeight: '600',
-                          color: resolvedFooterTextColor,
-                          textAlign: ((header.column.columnDef.meta || {}) as { align?: 'left' | 'center' | 'right' }).align || cellTextAlign,
-                          ...footerStyle,
-                        }}
-                      >
-                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.footer, header.getContext())}
-                      </TableCell>
+                </TableBody>
+                {hasFooter && (
+                  <TableFooter style={{ backgroundColor: resolvedFooterBackground }}>
+                    {table.getFooterGroups().map((footerGroup) => (
+                      <TableRow key={footerGroup.id} style={{ borderColor, borderBottomWidth: borderWidth }}>
+                        {footerGroup.headers.map((header) => (
+                          <TableCell
+                            key={header.id}
+                            style={{
+                              padding: `${resolvedPadding}px`,
+                              borderColor,
+                              backgroundColor: resolvedFooterBackground,
+                              fontSize: `${cellFontSize || fontSize}px`,
+                              fontFamily: cellFontFamily !== 'inherit' ? cellFontFamily : undefined,
+                              fontWeight: '600',
+                              color: resolvedFooterTextColor,
+                              textAlign: ((header.column.columnDef.meta || {}) as { align?: 'left' | 'center' | 'right' }).align || cellTextAlign,
+                              ...footerStyle,
+                            }}
+                          >
+                            {header.isPlaceholder ? null : flexRender(header.column.columnDef.footer, header.getContext())}
+                          </TableCell>
+                        ))}
+                      </TableRow>
                     ))}
-                  </TableRow>
-                ))}
-              </TableFooter>
-            )}
-          </Table>
+                  </TableFooter>
+                )}
+              </Table>
+            </div>
+          </div>
         </div>
 
-        {/* Pagination - flex-shrink-0 */}
         {showPagination && (
-          <div className="flex-shrink-0 flex items-center justify-between py-4 px-2">
+          <div className="flex-shrink-0 flex items-center justify-between px-2 pt-4">
             {/* Page Info - Left */}
             <div className="text-sm text-gray-600">
               Página {table.getState().pagination.pageIndex + 1} de {table.getPageCount()}
