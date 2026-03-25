@@ -655,20 +655,17 @@ export function DataTable<TData extends TableData>({
         }}
       >
         <div
-          style={{
-            border: bordered ? `${borderWidth}px solid ${borderColor}` : undefined,
-            borderRadius: rounded ? 12 : undefined,
-            overflow: 'hidden',
-          }}
+          className="overflow-auto"
+          style={{ maxHeight: typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight }}
         >
-          <div
-            className="overflow-auto"
-            style={{ maxHeight: typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight }}
-          >
               <Table
                 className=""
                 style={{
+                  border: bordered ? `${borderWidth}px solid ${borderColor}` : undefined,
+                  borderRadius: rounded ? 12 : undefined,
                   borderColor,
+                  borderCollapse: 'separate',
+                  borderSpacing: 0,
                   ...tableStyle,
                 }}
               >
@@ -964,7 +961,6 @@ export function DataTable<TData extends TableData>({
                   </TableFooter>
                 )}
               </Table>
-          </div>
         </div>
 
         {showPagination && (
