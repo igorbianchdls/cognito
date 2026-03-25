@@ -1566,7 +1566,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify({ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Receita</p>
                 <p style={${JSON.stringify({ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' })}}>{'{{query.valueFormatted}}'}</p>
-                <p style={${JSON.stringify({ ...ui.kpiDelta, margin: 0, fontSize: 13 })}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p data-ui="kpi-delta" style={${JSON.stringify({ ...ui.kpiDelta, margin: 0, fontSize: 13 })}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
 
@@ -1586,7 +1586,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify({ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Pedidos</p>
                 <p style={${JSON.stringify({ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' })}}>{'{{query.valueFormatted}}'}</p>
-                <p style={${JSON.stringify({ ...ui.kpiDelta, margin: 0, fontSize: 13 })}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p data-ui="kpi-delta" style={${JSON.stringify({ ...ui.kpiDelta, margin: 0, fontSize: 13 })}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
 
@@ -1606,7 +1606,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify({ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Ticket medio</p>
                 <p style={${JSON.stringify({ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' })}}>{'{{query.valueFormatted}}'}</p>
-                <p style={${JSON.stringify({ ...ui.kpiDelta, margin: 0, fontSize: 13 })}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p data-ui="kpi-delta" style={${JSON.stringify({ ...ui.kpiDelta, margin: 0, fontSize: 13 })}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
 
@@ -1626,7 +1626,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify({ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Canais ativos</p>
                 <p style={${JSON.stringify({ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' })}}>{'{{query.valueFormatted}}'}</p>
-                <p style={${JSON.stringify({ ...ui.kpiDelta, margin: 0, fontSize: 13 })}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p data-ui="kpi-delta" style={${JSON.stringify({ ...ui.kpiDelta, margin: 0, fontSize: 13 })}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
 
@@ -1646,7 +1646,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify({ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Aprovacao</p>
                 <p style={${JSON.stringify({ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' })}}>{'{{query.valueFormatted}}'}</p>
-                <p style={${JSON.stringify({ ...ui.kpiDelta, margin: 0, fontSize: 13 })}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p data-ui="kpi-delta" style={${JSON.stringify({ ...ui.kpiDelta, margin: 0, fontSize: 13 })}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
           </section>
@@ -1963,7 +1963,7 @@ function buildClassicDashboardTemplate(themeName: string) {
               <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
                 <p style={{ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Receita</p>
                 <p style={{ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
-                <p style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p data-ui="kpi-delta" style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </QueryMarker>
 
@@ -1976,7 +1976,7 @@ function buildClassicDashboardTemplate(themeName: string) {
               <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
                 <p style={{ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pedidos</p>
                 <p style={{ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
-                <p style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p data-ui="kpi-delta" style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </QueryMarker>
 
@@ -1989,7 +1989,7 @@ function buildClassicDashboardTemplate(themeName: string) {
               <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
                 <p style={{ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ticket medio</p>
                 <p style={{ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
-                <p style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p data-ui="kpi-delta" style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </QueryMarker>
 
@@ -2002,7 +2002,7 @@ function buildClassicDashboardTemplate(themeName: string) {
               <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
                 <p style={{ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Canais ativos</p>
                 <p style={{ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
-                <p style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p data-ui="kpi-delta" style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </QueryMarker>
 
@@ -2015,7 +2015,7 @@ function buildClassicDashboardTemplate(themeName: string) {
               <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
                 <p style={{ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Aprovacao</p>
                 <p style={{ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
-                <p style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p data-ui="kpi-delta" style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </QueryMarker>
           </section>
