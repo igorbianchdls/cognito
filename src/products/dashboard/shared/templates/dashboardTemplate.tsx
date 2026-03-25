@@ -1821,7 +1821,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               </div>
             </Card>
 
-            <Card${cardFrameSource} data-ui="table-card" style={${JSON.stringify(ui.panelCard)}}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <p style={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Detalhamento</p>
                 <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' })}}>Pedidos filtrados</h2>
@@ -1862,7 +1862,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 ]}
                 enableExportCsv
               />
-            </Card>
+            </div>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
@@ -2211,7 +2211,7 @@ function buildClassicDashboardTemplate(themeName: string) {
               </div>
             </Card>
 
-            <Card frame={ui.cardFrame || undefined} data-ui="table-card" style={ui.panelCard}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Detalhamento</p>
                 <h2 style={{ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Pedidos filtrados</h2>
@@ -2252,7 +2252,7 @@ function buildClassicDashboardTemplate(themeName: string) {
                 ]}
                 enableExportCsv
               />
-            </Card>
+            </div>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
