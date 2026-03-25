@@ -1651,17 +1651,36 @@ function buildClassicDashboardTemplateSource(themeName: string) {
             </Query>
           </section>
 
-          <section style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 18 }}>
+          <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 18 }}>
             <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
               <Insights
-                title="Insights"
+                title="Aceleracao"
                 titleStyle={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}
                 textStyle={${JSON.stringify({ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.65 })}}
                 iconStyle={${JSON.stringify({ color: '#2563EB' })}}
-                dividerColor={${JSON.stringify(ui.tableBorderColor)}}
                 items={[
                   { icon: 'trend-up', text: 'Receita ganhou tracao nos canais proprios e manteve crescimento acima da media recente.' },
+                ]}
+              />
+            </Card>
+            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
+              <Insights
+                title="Concentracao"
+                titleStyle={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}
+                textStyle={${JSON.stringify({ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.65 })}}
+                iconStyle={${JSON.stringify({ color: '#F59E0B' })}}
+                items={[
                   { icon: 'alert', text: 'O mix segue concentrado em poucos canais, o que aumenta dependencia operacional.' },
+                ]}
+              />
+            </Card>
+            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
+              <Insights
+                title="Conversao"
+                titleStyle={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}
+                textStyle={${JSON.stringify({ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.65 })}}
+                iconStyle={${JSON.stringify({ color: '#10B981' })}}
+                items={[
                   { text: 'A aprovacao continua estavel, com espaco para melhorar conversao sem pressionar o ticket medio.' },
                 ]}
               />
@@ -1995,17 +2014,36 @@ function buildClassicDashboardTemplate(themeName: string) {
             </QueryMarker>
           </section>
 
-          <section style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 18 }}>
+          <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 18 }}>
             <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
               <InsightsMarker
-                title="Insights"
+                title="Aceleracao"
                 titleStyle={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}
                 textStyle={{ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.65 }}
                 iconStyle={{ color: '#2563EB' }}
-                dividerColor={ui.tableBorderColor}
                 items={[
                   { icon: 'trend-up', text: 'Receita ganhou tracao nos canais proprios e manteve crescimento acima da media recente.' },
+                ]}
+              />
+            </Card>
+            <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
+              <InsightsMarker
+                title="Concentracao"
+                titleStyle={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}
+                textStyle={{ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.65 }}
+                iconStyle={{ color: '#F59E0B' }}
+                items={[
                   { icon: 'alert', text: 'O mix segue concentrado em poucos canais, o que aumenta dependencia operacional.' },
+                ]}
+              />
+            </Card>
+            <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
+              <InsightsMarker
+                title="Conversao"
+                titleStyle={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}
+                textStyle={{ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.65 }}
+                iconStyle={{ color: '#10B981' }}
+                items={[
                   { text: 'A aprovacao continua estavel, com espaco para melhorar conversao sem pressionar o ticket medio.' },
                 ]}
               />
