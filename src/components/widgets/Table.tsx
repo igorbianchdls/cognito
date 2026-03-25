@@ -828,7 +828,6 @@ export function DataTable<TData extends TableData>({
                             fontFamily: cellFontFamily !== 'inherit' ? cellFontFamily : undefined,
                             fontWeight: cellFontWeight !== 'normal' ? cellFontWeight : undefined,
                             color: cellTextColor,
-                            backgroundColor,
                             position: 'relative',
                             letterSpacing: typeof cellLetterSpacing === 'number' ? `${cellLetterSpacing}px` : undefined,
                             textAlign: columnKey === 'select'
