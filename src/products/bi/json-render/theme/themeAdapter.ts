@@ -456,95 +456,6 @@ function deepMerge<T extends AnyRecord>(a: T, b: Partial<T>): T {
   return out as T;
 }
 
-type BorderPresetConfig = {
-  style?: "none" | "solid" | "dashed" | "dotted";
-  width?: number;
-  radius?: number;
-  shadow?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
-  frame?: null | {
-    variant: "hud";
-    cornerSize: number;
-    cornerWidth: number;
-  };
-};
-
-const BORDER_PRESETS: Record<string, BorderPresetConfig> = {
-  hud_classic: {
-    style: "solid",
-    width: 1,
-    radius: 8,
-    shadow: "none",
-    frame: { variant: "hud", cornerSize: 8, cornerWidth: 1 },
-  },
-  rounded_minimal: {
-    style: "none",
-    width: 0,
-    radius: 12,
-    shadow: "none",
-    frame: null,
-  },
-  soft_card: {
-    style: "solid",
-    width: 1,
-    radius: 14,
-    shadow: "md",
-    frame: null,
-  },
-  sharp_clean: {
-    style: "solid",
-    width: 1,
-    radius: 0,
-    shadow: "none",
-    frame: null,
-  },
-  hud_bold: {
-    style: "solid",
-    width: 1,
-    radius: 8,
-    shadow: "sm",
-    frame: { variant: "hud", cornerSize: 10, cornerWidth: 2 },
-  },
-};
-
-const THEME_BORDER_PRESET_BY_NAME: Record<string, keyof typeof BORDER_PRESETS> = {
-  light: "rounded_minimal",
-  white: "rounded_minimal",
-  claro: "rounded_minimal",
-  branco: "rounded_minimal",
-  sand: "rounded_minimal",
-  blue: "soft_card",
-  azure: "soft_card",
-  "light-blue": "soft_card",
-  "cinza-claro": "soft_card",
-  dark: "hud_classic",
-  slate: "hud_classic",
-  navy: "hud_classic",
-  "cinza-escuro": "hud_classic",
-  black: "hud_classic",
-  preto: "hud_classic",
-  charcoal: "hud_classic",
-  midnight: "hud_bold",
-  metro: "hud_bold",
-  aero: "hud_bold",
-};
-
-function resolveThemeBorderPreset(name?: string, resolved?: ThemeName): BorderPresetConfig | null {
-  const candidates = [String(name || "").trim().toLowerCase(), String(resolved || "").trim().toLowerCase()].filter(Boolean);
-  for (const candidate of candidates) {
-    const presetKey = THEME_BORDER_PRESET_BY_NAME[candidate];
-    if (presetKey) return BORDER_PRESETS[presetKey];
-  }
-  return null;
-}
-
-function hasExplicitBorderOverride(managersOverride?: Managers): boolean {
-  return Boolean(
-    managersOverride &&
-      typeof managersOverride === "object" &&
-      Object.prototype.hasOwnProperty.call(managersOverride as AnyRecord, "border")
-  );
-}
-
 export function buildThemeVars(
   name?: string,
   managersOverride?: Managers,
@@ -622,18 +533,6 @@ export function buildThemeVars(
       kpi: { title: { color: '#9fb3d9' }, value: { color: '#ffffff' } },
       color: { scheme: ['#22d3ee', '#0ea5e9', '#2563eb', '#fb923c', '#f59e0b'] }
     } as Managers);
-  }
-  const themeBorderPreset = resolveThemeBorderPreset(name, resolved);
-  if (themeBorderPreset && !hasExplicitBorderOverride(managersOverride)) {
-    managers = deepMerge(managers, {
-      border: {
-        style: themeBorderPreset.style,
-        width: themeBorderPreset.width,
-        radius: themeBorderPreset.radius,
-        shadow: themeBorderPreset.shadow,
-        frame: themeBorderPreset.frame,
-      },
-    } as AnyRecord);
   }
   if (managersOverride) managers = deepMerge(managers, managersOverride as AnyRecord);
 
