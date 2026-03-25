@@ -72,7 +72,7 @@ export default function DashboardInsights({ element }: { element: any }) {
               style={{
                 display: "flex",
                 flexDirection: "column",
-                padding: "12px 0",
+                padding: "8px 0",
                 borderTop: showDividers && index > 0 ? `1px solid ${dividerColor}` : undefined,
                 ...itemStyle,
               }}
