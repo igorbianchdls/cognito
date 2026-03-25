@@ -57,6 +57,7 @@ export default function DashboardText({ element, children }: DashboardTextProps)
       style: {
         boxSizing: "border-box",
         minWidth: 0,
+        ...semanticStyle,
         color: props.color,
         fontSize: props.fontSize,
         fontWeight: props.fontWeight,
@@ -64,7 +65,6 @@ export default function DashboardText({ element, children }: DashboardTextProps)
         letterSpacing: props.letterSpacing,
         lineHeight: props.lineHeight,
         textTransform: props.textTransform,
-        ...semanticStyle,
         ...(props.style && typeof props.style === "object" ? props.style : {}),
         ...(queryDeltaColor ? { color: queryDeltaColor } : {}),
       },
