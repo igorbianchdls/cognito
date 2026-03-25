@@ -114,7 +114,7 @@ export default function DashboardInsights({ element }: { element: any }) {
                       style={{
                         margin: 0,
                         fontSize: 13,
-                        fontWeight: 600,
+                        fontWeight: 500,
                         lineHeight: 1.6,
                         color: "#475569",
                         ...textStyle,
