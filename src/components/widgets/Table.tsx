@@ -649,26 +649,22 @@ export function DataTable<TData extends TableData>({
   return (
     <div className="w-full h-full" style={{ minWidth: 0 }}>
       <div
-        className="w-full h-full flex flex-col"
+        className="w-full flex flex-col"
         style={{
           ...containerStyle,
         }}
       >
         <div
-          className="flex-1 min-h-0"
+          style={{
+            border: bordered ? `${borderWidth}px solid ${borderColor}` : undefined,
+            borderRadius: rounded ? 12 : undefined,
+            overflow: 'hidden',
+          }}
         >
           <div
-            className="h-full"
-            style={{
-              border: bordered ? `${borderWidth}px solid ${borderColor}` : undefined,
-              borderRadius: rounded ? 12 : undefined,
-              overflow: 'hidden',
-            }}
+            className="overflow-auto"
+            style={{ maxHeight: typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight }}
           >
-            <div
-              className="h-full overflow-auto"
-              style={{ maxHeight: typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight }}
-            >
               <Table
                 className=""
                 style={{
@@ -968,7 +964,6 @@ export function DataTable<TData extends TableData>({
                   </TableFooter>
                 )}
               </Table>
-            </div>
           </div>
         </div>
 
