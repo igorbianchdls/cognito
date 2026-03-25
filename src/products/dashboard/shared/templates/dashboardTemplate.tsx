@@ -1254,15 +1254,15 @@ function buildClassicDashboardTemplateSource(themeName: string) {
         <section style={${JSON.stringify(ui.page)}}>
           <header style={${JSON.stringify(ui.header)}}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <Text type="eyebrow" as="p" color="${String(ui.metricLabel.color || ui.eyebrow.color || '')}" fontSize={12} letterSpacing="0.08em" textTransform="uppercase" style={{ margin: 0 }}>Executive dashboard</Text>
-              <Text type="page-title" as="h1" color="${String(ui.title.color || '')}" fontSize={34} lineHeight={1.05} fontWeight={700} letterSpacing="-0.04em" style={{ margin: 0 }}>Performance overview with the classic BI layout</Text>
-              <Text type="body" as="p" color="${String(ui.paragraph.color || '')}" fontSize={14} lineHeight={1.65} style={{ margin: 0, maxWidth: 720 }}>
+              <p style={${JSON.stringify({ ...ui.metricLabel, margin: 0, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase' })}}>Executive dashboard</p>
+              <h1 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 34, lineHeight: 1.05, fontWeight: 700, letterSpacing: '-0.04em' })}}>Performance overview with the classic BI layout</h1>
+              <p style={${JSON.stringify({ ...ui.paragraph, margin: 0, maxWidth: 720, fontSize: 14, lineHeight: 1.65 })}}>
                 Header with global period control, KPI strip on top and analysis rows below. The runtime stays JSX-first, but the surface looks closer to the previous dashboard model.
-              </Text>
+              </p>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, minWidth: 240 }}>
-              <Text type="eyebrow" as="p" color="${String(ui.eyebrow.color || '')}" fontSize={11} letterSpacing="0.06em" textTransform="uppercase" style={{ margin: 0 }}>Global period</Text>
+              <p style={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase' })}}>Global period</p>
               <DatePicker label="Periodo do pedido" table="vendas.pedidos" field="data_pedido" presets={['7d', '30d', 'month', 'quarter']} />
             </div>
           </header>
@@ -1282,9 +1282,9 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               comparisonMode="previous_period"
             >
               <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
-                <Text type="kpi-title" as="p" color="${String(ui.kpiLabel.color || ui.eyebrow.color || '')}" fontSize={12} textTransform="uppercase" letterSpacing="0.05em" style={{ margin: 0 }}>Receita</Text>
-                <Text type="kpi-value" as="p" color="${String(ui.kpiValue.color || '')}" fontSize={28} fontWeight={700} letterSpacing="-0.04em" style={{ margin: 0 }}>{'{{query.valueFormatted}}'}</Text>
-                <Text type="kpi-delta" as="p" color="${String(ui.kpiDelta.color || '')}" fontSize={13} style={{ margin: 0 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</Text>
+                <p style={${JSON.stringify({ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Receita</p>
+                <p style={${JSON.stringify({ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' })}}>{'{{query.valueFormatted}}'}</p>
+                <p style={${JSON.stringify({ ...ui.kpiDelta, margin: 0, fontSize: 13 })}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
 
@@ -1302,9 +1302,9 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               comparisonMode="previous_period"
             >
               <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
-                <Text type="kpi-title" as="p" color="${String(ui.kpiLabel.color || ui.eyebrow.color || '')}" fontSize={12} textTransform="uppercase" letterSpacing="0.05em" style={{ margin: 0 }}>Pedidos</Text>
-                <Text type="kpi-value" as="p" color="${String(ui.kpiValue.color || '')}" fontSize={28} fontWeight={700} letterSpacing="-0.04em" style={{ margin: 0 }}>{'{{query.valueFormatted}}'}</Text>
-                <Text type="kpi-delta" as="p" color="${String(ui.kpiDelta.color || '')}" fontSize={13} style={{ margin: 0 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</Text>
+                <p style={${JSON.stringify({ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Pedidos</p>
+                <p style={${JSON.stringify({ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' })}}>{'{{query.valueFormatted}}'}</p>
+                <p style={${JSON.stringify({ ...ui.kpiDelta, margin: 0, fontSize: 13 })}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
 
@@ -1322,9 +1322,9 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               comparisonMode="previous_period"
             >
               <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
-                <Text type="kpi-title" as="p" color="${String(ui.kpiLabel.color || ui.eyebrow.color || '')}" fontSize={12} textTransform="uppercase" letterSpacing="0.05em" style={{ margin: 0 }}>Ticket medio</Text>
-                <Text type="kpi-value" as="p" color="${String(ui.kpiValue.color || '')}" fontSize={28} fontWeight={700} letterSpacing="-0.04em" style={{ margin: 0 }}>{'{{query.valueFormatted}}'}</Text>
-                <Text type="kpi-delta" as="p" color="${String(ui.kpiDelta.color || '')}" fontSize={13} style={{ margin: 0 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</Text>
+                <p style={${JSON.stringify({ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Ticket medio</p>
+                <p style={${JSON.stringify({ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' })}}>{'{{query.valueFormatted}}'}</p>
+                <p style={${JSON.stringify({ ...ui.kpiDelta, margin: 0, fontSize: 13 })}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
 
@@ -1342,9 +1342,9 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               comparisonMode="previous_period"
             >
               <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
-                <Text type="kpi-title" as="p" color="${String(ui.kpiLabel.color || ui.eyebrow.color || '')}" fontSize={12} textTransform="uppercase" letterSpacing="0.05em" style={{ margin: 0 }}>Canais ativos</Text>
-                <Text type="kpi-value" as="p" color="${String(ui.kpiValue.color || '')}" fontSize={28} fontWeight={700} letterSpacing="-0.04em" style={{ margin: 0 }}>{'{{query.valueFormatted}}'}</Text>
-                <Text type="kpi-delta" as="p" color="${String(ui.kpiDelta.color || '')}" fontSize={13} style={{ margin: 0 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</Text>
+                <p style={${JSON.stringify({ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Canais ativos</p>
+                <p style={${JSON.stringify({ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' })}}>{'{{query.valueFormatted}}'}</p>
+                <p style={${JSON.stringify({ ...ui.kpiDelta, margin: 0, fontSize: 13 })}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
 
@@ -1362,9 +1362,9 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               comparisonMode="previous_period"
             >
               <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
-                <Text type="kpi-title" as="p" color="${String(ui.kpiLabel.color || ui.eyebrow.color || '')}" fontSize={12} textTransform="uppercase" letterSpacing="0.05em" style={{ margin: 0 }}>Aprovacao</Text>
-                <Text type="kpi-value" as="p" color="${String(ui.kpiValue.color || '')}" fontSize={28} fontWeight={700} letterSpacing="-0.04em" style={{ margin: 0 }}>{'{{query.valueFormatted}}'}</Text>
-                <Text type="kpi-delta" as="p" color="${String(ui.kpiDelta.color || '')}" fontSize={13} style={{ margin: 0 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</Text>
+                <p style={${JSON.stringify({ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Aprovacao</p>
+                <p style={${JSON.stringify({ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' })}}>{'{{query.valueFormatted}}'}</p>
+                <p style={${JSON.stringify({ ...ui.kpiDelta, margin: 0, fontSize: 13 })}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
           </section>
@@ -1372,8 +1372,8 @@ function buildClassicDashboardTemplateSource(themeName: string) {
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
             <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <Text type="eyebrow" as="p" color="${String(ui.eyebrow.color || '')}" fontSize={11} textTransform="uppercase" letterSpacing="0.05em" style={{ margin: 0 }}>Receita por canal</Text>
-                <Text type="chart-title" as="h2" color="${String(ui.title.color || '')}" fontSize={22} fontWeight={600} letterSpacing="-0.03em" style={{ margin: 0 }}>Mix comercial</Text>
+                <p style={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Receita por canal</p>
+                <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' })}}>Mix comercial</h2>
               </div>
               <Chart
                 type="bar"
@@ -1406,8 +1406,8 @@ function buildClassicDashboardTemplateSource(themeName: string) {
 
             <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <Text type="eyebrow" as="p" color="${String(ui.eyebrow.color || '')}" fontSize={11} textTransform="uppercase" letterSpacing="0.05em" style={{ margin: 0 }}>Participacao</Text>
-                <Text type="chart-title" as="h2" color="${String(ui.title.color || '')}" fontSize={22} fontWeight={600} letterSpacing="-0.03em" style={{ margin: 0 }}>Share por canal</Text>
+                <p style={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Participacao</p>
+                <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' })}}>Share por canal</h2>
               </div>
               <Chart
                 type="pie"
@@ -1442,8 +1442,8 @@ function buildClassicDashboardTemplateSource(themeName: string) {
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
             <Card${cardFrameSource} style={{ ...${JSON.stringify(ui.panelCard)}, minHeight: '100%' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <Text type="eyebrow" as="p" color="${String(ui.eyebrow.color || '')}" fontSize={11} textTransform="uppercase" letterSpacing="0.05em" style={{ margin: 0 }}>Tendencia diaria</Text>
-                <Text type="chart-title" as="h2" color="${String(ui.title.color || '')}" fontSize={22} fontWeight={600} letterSpacing="-0.03em" style={{ margin: 0 }}>Receita ao longo do periodo</Text>
+                <p style={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Tendencia diaria</p>
+                <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' })}}>Receita ao longo do periodo</h2>
               </div>
               <div style={{ flex: 1, minHeight: 300 }}>
                 <Chart
@@ -1475,8 +1475,8 @@ function buildClassicDashboardTemplateSource(themeName: string) {
 
             <Card${cardFrameSource} data-ui="table-card" style={${JSON.stringify(ui.panelCard)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <Text type="eyebrow" as="p" color="${String(ui.eyebrow.color || '')}" fontSize={11} textTransform="uppercase" letterSpacing="0.05em" style={{ margin: 0 }}>Detalhamento</Text>
-                <Text type="chart-title" as="h2" color="${String(ui.title.color || '')}" fontSize={22} fontWeight={600} letterSpacing="-0.03em" style={{ margin: 0 }}>Pedidos filtrados</Text>
+                <p style={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Detalhamento</p>
+                <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' })}}>Pedidos filtrados</h2>
               </div>
               <Table
                 bordered
@@ -1513,8 +1513,8 @@ function buildClassicDashboardTemplateSource(themeName: string) {
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
             <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <Text type="eyebrow" as="p" color="${String(ui.eyebrow.color || '')}" fontSize={11} textTransform="uppercase" letterSpacing="0.05em" style={{ margin: 0 }}>Status mix</Text>
-                <Text type="chart-title" as="h2" color="${String(ui.title.color || '')}" fontSize={22} fontWeight={600} letterSpacing="-0.03em" style={{ margin: 0 }}>Volume por status</Text>
+                <p style={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Status mix</p>
+                <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' })}}>Volume por status</h2>
               </div>
               <Chart
                 type="horizontal-bar"
@@ -1541,8 +1541,8 @@ function buildClassicDashboardTemplateSource(themeName: string) {
 
             <Card${cardFrameSource} data-ui="pivot-card" style={${JSON.stringify(ui.panelCardAlt)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <Text type="eyebrow" as="p" color="${String(ui.eyebrow.color || '')}" fontSize={11} textTransform="uppercase" letterSpacing="0.05em" style={{ margin: 0 }}>Cruzamento</Text>
-                <Text type="chart-title" as="h2" color="${String(ui.title.color || '')}" fontSize={22} fontWeight={600} letterSpacing="-0.03em" style={{ margin: 0 }}>Receita por canal e status</Text>
+                <p style={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Cruzamento</p>
+                <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' })}}>Receita por canal e status</h2>
               </div>
               <PivotTable
                 bordered
@@ -1585,15 +1585,15 @@ function buildClassicDashboardTemplate(themeName: string) {
         <section style={ui.page}>
           <header style={ui.header}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <Text type="eyebrow" as="p" color={String(ui.metricLabel.color || ui.eyebrow.color || '')} fontSize={12} letterSpacing="0.08em" textTransform="uppercase" style={{ margin: 0 }}>Executive dashboard</Text>
-              <Text type="page-title" as="h1" color={String(ui.title.color || '')} fontSize={34} lineHeight={1.05} fontWeight={700} letterSpacing="-0.04em" style={{ margin: 0 }}>Performance overview with the classic BI layout</Text>
-              <Text type="body" as="p" color={String(ui.paragraph.color || '')} fontSize={14} lineHeight={1.65} style={{ margin: 0, maxWidth: 720 }}>
+              <p style={{ ...ui.metricLabel, margin: 0, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Executive dashboard</p>
+              <h1 style={{ ...ui.title, margin: 0, fontSize: 34, lineHeight: 1.05, fontWeight: 700, letterSpacing: '-0.04em' }}>Performance overview with the classic BI layout</h1>
+              <p style={{ ...ui.paragraph, margin: 0, maxWidth: 720, fontSize: 14, lineHeight: 1.65 }}>
                 Header with global period control, KPI strip on top and analysis rows below. The runtime stays JSX-first, but the surface looks closer to the previous dashboard model.
-              </Text>
+              </p>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, minWidth: 240 }}>
-              <Text type="eyebrow" as="p" color={String(ui.eyebrow.color || '')} fontSize={11} letterSpacing="0.06em" textTransform="uppercase" style={{ margin: 0 }}>Global period</Text>
+              <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Global period</p>
               <DatePickerMarker label="Periodo do pedido" table="vendas.pedidos" field="data_pedido" presets={['7d', '30d', 'month', 'quarter']} />
             </div>
           </header>
@@ -1606,9 +1606,9 @@ function buildClassicDashboardTemplate(themeName: string) {
                     {{filters:p}}
                 `, limit: 1 }} format="currency" comparisonMode="previous_period">
               <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
-                <Text type="kpi-title" as="p" color={String(ui.kpiLabel.color || ui.eyebrow.color || '')} fontSize={12} textTransform="uppercase" letterSpacing="0.05em" style={{ margin: 0 }}>Receita</Text>
-                <Text type="kpi-value" as="p" color={String(ui.kpiValue.color || '')} fontSize={28} fontWeight={700} letterSpacing="-0.04em" style={{ margin: 0 }}>{'{{query.valueFormatted}}'}</Text>
-                <Text type="kpi-delta" as="p" color={String(ui.kpiDelta.color || '')} fontSize={13} style={{ margin: 0 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</Text>
+                <p style={{ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Receita</p>
+                <p style={{ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
+                <p style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </QueryMarker>
 
@@ -1619,9 +1619,9 @@ function buildClassicDashboardTemplate(themeName: string) {
                     {{filters:p}}
                 `, limit: 1 }} format="number" comparisonMode="previous_period">
               <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
-                <Text type="kpi-title" as="p" color={String(ui.kpiLabel.color || ui.eyebrow.color || '')} fontSize={12} textTransform="uppercase" letterSpacing="0.05em" style={{ margin: 0 }}>Pedidos</Text>
-                <Text type="kpi-value" as="p" color={String(ui.kpiValue.color || '')} fontSize={28} fontWeight={700} letterSpacing="-0.04em" style={{ margin: 0 }}>{'{{query.valueFormatted}}'}</Text>
-                <Text type="kpi-delta" as="p" color={String(ui.kpiDelta.color || '')} fontSize={13} style={{ margin: 0 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</Text>
+                <p style={{ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pedidos</p>
+                <p style={{ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
+                <p style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </QueryMarker>
 
@@ -1632,9 +1632,9 @@ function buildClassicDashboardTemplate(themeName: string) {
                     {{filters:p}}
                 `, limit: 1 }} format="currency" comparisonMode="previous_period">
               <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
-                <Text type="kpi-title" as="p" color={String(ui.kpiLabel.color || ui.eyebrow.color || '')} fontSize={12} textTransform="uppercase" letterSpacing="0.05em" style={{ margin: 0 }}>Ticket medio</Text>
-                <Text type="kpi-value" as="p" color={String(ui.kpiValue.color || '')} fontSize={28} fontWeight={700} letterSpacing="-0.04em" style={{ margin: 0 }}>{'{{query.valueFormatted}}'}</Text>
-                <Text type="kpi-delta" as="p" color={String(ui.kpiDelta.color || '')} fontSize={13} style={{ margin: 0 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</Text>
+                <p style={{ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ticket medio</p>
+                <p style={{ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
+                <p style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </QueryMarker>
 
@@ -1645,9 +1645,9 @@ function buildClassicDashboardTemplate(themeName: string) {
                     {{filters:p}}
                 `, limit: 1 }} format="number" comparisonMode="previous_period">
               <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
-                <Text type="kpi-title" as="p" color={String(ui.kpiLabel.color || ui.eyebrow.color || '')} fontSize={12} textTransform="uppercase" letterSpacing="0.05em" style={{ margin: 0 }}>Canais ativos</Text>
-                <Text type="kpi-value" as="p" color={String(ui.kpiValue.color || '')} fontSize={28} fontWeight={700} letterSpacing="-0.04em" style={{ margin: 0 }}>{'{{query.valueFormatted}}'}</Text>
-                <Text type="kpi-delta" as="p" color={String(ui.kpiDelta.color || '')} fontSize={13} style={{ margin: 0 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</Text>
+                <p style={{ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Canais ativos</p>
+                <p style={{ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
+                <p style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </QueryMarker>
 
@@ -1658,9 +1658,9 @@ function buildClassicDashboardTemplate(themeName: string) {
                     {{filters:p}}
                 `, limit: 1 }} format="percent" comparisonMode="previous_period">
               <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
-                <Text type="kpi-title" as="p" color={String(ui.kpiLabel.color || ui.eyebrow.color || '')} fontSize={12} textTransform="uppercase" letterSpacing="0.05em" style={{ margin: 0 }}>Aprovacao</Text>
-                <Text type="kpi-value" as="p" color={String(ui.kpiValue.color || '')} fontSize={28} fontWeight={700} letterSpacing="-0.04em" style={{ margin: 0 }}>{'{{query.valueFormatted}}'}</Text>
-                <Text type="kpi-delta" as="p" color={String(ui.kpiDelta.color || '')} fontSize={13} style={{ margin: 0 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</Text>
+                <p style={{ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Aprovacao</p>
+                <p style={{ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
+                <p style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </QueryMarker>
           </section>
@@ -1668,8 +1668,8 @@ function buildClassicDashboardTemplate(themeName: string) {
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
             <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <Text type="eyebrow" as="p" color={String(ui.eyebrow.color || '')} fontSize={11} textTransform="uppercase" letterSpacing="0.05em" style={{ margin: 0 }}>Receita por canal</Text>
-                <Text type="chart-title" as="h2" color={String(ui.title.color || '')} fontSize={22} fontWeight={600} letterSpacing="-0.03em" style={{ margin: 0 }}>Mix comercial</Text>
+                <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Receita por canal</p>
+                <h2 style={{ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Mix comercial</h2>
               </div>
               <ChartMarker
                 type="bar"
@@ -1702,8 +1702,8 @@ function buildClassicDashboardTemplate(themeName: string) {
 
             <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <Text type="eyebrow" as="p" color={String(ui.eyebrow.color || '')} fontSize={11} textTransform="uppercase" letterSpacing="0.05em" style={{ margin: 0 }}>Participacao</Text>
-                <Text type="chart-title" as="h2" color={String(ui.title.color || '')} fontSize={22} fontWeight={600} letterSpacing="-0.03em" style={{ margin: 0 }}>Share por canal</Text>
+                <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Participacao</p>
+                <h2 style={{ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Share por canal</h2>
               </div>
               <ChartMarker
                 type="pie"
@@ -1738,8 +1738,8 @@ function buildClassicDashboardTemplate(themeName: string) {
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
             <Card frame={ui.cardFrame || undefined} style={{ ...ui.panelCard, minHeight: '100%' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <Text type="eyebrow" as="p" color={String(ui.eyebrow.color || '')} fontSize={11} textTransform="uppercase" letterSpacing="0.05em" style={{ margin: 0 }}>Tendencia diaria</Text>
-                <Text type="chart-title" as="h2" color={String(ui.title.color || '')} fontSize={22} fontWeight={600} letterSpacing="-0.03em" style={{ margin: 0 }}>Receita ao longo do periodo</Text>
+                <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tendencia diaria</p>
+                <h2 style={{ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Receita ao longo do periodo</h2>
               </div>
               <div style={{ flex: 1, minHeight: 300 }}>
                 <ChartMarker
@@ -1771,8 +1771,8 @@ function buildClassicDashboardTemplate(themeName: string) {
 
             <Card frame={ui.cardFrame || undefined} data-ui="table-card" style={ui.panelCard}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <Text type="eyebrow" as="p" color={String(ui.eyebrow.color || '')} fontSize={11} textTransform="uppercase" letterSpacing="0.05em" style={{ margin: 0 }}>Detalhamento</Text>
-                <Text type="chart-title" as="h2" color={String(ui.title.color || '')} fontSize={22} fontWeight={600} letterSpacing="-0.03em" style={{ margin: 0 }}>Pedidos filtrados</Text>
+                <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Detalhamento</p>
+                <h2 style={{ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Pedidos filtrados</h2>
               </div>
               <TableMarker
                 bordered
@@ -1809,8 +1809,8 @@ function buildClassicDashboardTemplate(themeName: string) {
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
             <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <Text type="eyebrow" as="p" color={String(ui.eyebrow.color || '')} fontSize={11} textTransform="uppercase" letterSpacing="0.05em" style={{ margin: 0 }}>Status mix</Text>
-                <Text type="chart-title" as="h2" color={String(ui.title.color || '')} fontSize={22} fontWeight={600} letterSpacing="-0.03em" style={{ margin: 0 }}>Volume por status</Text>
+                <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status mix</p>
+                <h2 style={{ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Volume por status</h2>
               </div>
               <ChartMarker
                 type="horizontal-bar"
@@ -1837,8 +1837,8 @@ function buildClassicDashboardTemplate(themeName: string) {
 
             <Card frame={ui.cardFrame || undefined} data-ui="pivot-card" style={ui.panelCardAlt}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <Text type="eyebrow" as="p" color={String(ui.eyebrow.color || '')} fontSize={11} textTransform="uppercase" letterSpacing="0.05em" style={{ margin: 0 }}>Cruzamento</Text>
-                <Text type="chart-title" as="h2" color={String(ui.title.color || '')} fontSize={22} fontWeight={600} letterSpacing="-0.03em" style={{ margin: 0 }}>Receita por canal e status</Text>
+                <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cruzamento</p>
+                <h2 style={{ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Receita por canal e status</h2>
               </div>
               <PivotTableMarker
                 bordered
