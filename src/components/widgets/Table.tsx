@@ -661,11 +661,7 @@ export function DataTable<TData extends TableData>({
               <Table
                 className=""
                 style={{
-                  border: bordered ? `${borderWidth}px solid ${borderColor}` : undefined,
-                  borderRadius: rounded ? 12 : undefined,
                   borderColor,
-                  borderCollapse: 'separate',
-                  borderSpacing: 0,
                   ...tableStyle,
                 }}
               >
