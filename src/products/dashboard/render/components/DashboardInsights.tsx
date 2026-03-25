@@ -8,12 +8,8 @@ export default function DashboardInsights({ element }: { element: any }) {
   const props = (element?.props || {}) as AnyRecord;
   const items = Array.isArray(props.items) ? props.items : [];
   const [openItems, setOpenItems] = React.useState<Record<number, boolean>>({});
-  const title = typeof props.title === "string" && props.title.trim() ? props.title.trim() : "Insights";
   const containerStyle = props.containerStyle && typeof props.containerStyle === "object"
     ? props.containerStyle as React.CSSProperties
-    : undefined;
-  const titleStyle = props.titleStyle && typeof props.titleStyle === "object"
-    ? props.titleStyle as React.CSSProperties
     : undefined;
   const itemStyle = props.itemStyle && typeof props.itemStyle === "object"
     ? props.itemStyle as React.CSSProperties
@@ -44,20 +40,6 @@ export default function DashboardInsights({ element }: { element: any }) {
         ...containerStyle,
       }}
     >
-      <p
-        style={{
-          margin: 0,
-          fontSize: 12,
-          fontWeight: 600,
-          color: "#64748b",
-          textTransform: "uppercase",
-          letterSpacing: "0.05em",
-          ...titleStyle,
-        }}
-      >
-        {title}
-      </p>
-
       <div style={{ display: "flex", flexDirection: "column" }}>
         {items.map((item, index) => {
           const record = item && typeof item === "object" ? item as AnyRecord : {};

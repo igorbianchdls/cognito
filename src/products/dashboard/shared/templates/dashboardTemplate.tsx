@@ -1564,7 +1564,10 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               comparisonMode="previous_period"
             >
               <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
-                <p style={${JSON.stringify({ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Receita</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <p style={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Faturamento</p>
+                  <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' })}}>Receita</h2>
+                </div>
                 <p style={${JSON.stringify({ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' })}}>{'{{query.valueFormatted}}'}</p>
                 <p data-ui="kpi-delta" style={${JSON.stringify({ ...ui.kpiDelta, margin: 0, fontSize: 13 })}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
@@ -1584,7 +1587,10 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               comparisonMode="previous_period"
             >
               <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
-                <p style={${JSON.stringify({ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Pedidos</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <p style={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Volume</p>
+                  <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' })}}>Pedidos</h2>
+                </div>
                 <p style={${JSON.stringify({ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' })}}>{'{{query.valueFormatted}}'}</p>
                 <p data-ui="kpi-delta" style={${JSON.stringify({ ...ui.kpiDelta, margin: 0, fontSize: 13 })}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
@@ -1604,7 +1610,10 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               comparisonMode="previous_period"
             >
               <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
-                <p style={${JSON.stringify({ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Ticket medio</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <p style={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Eficiência</p>
+                  <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' })}}>Ticket medio</h2>
+                </div>
                 <p style={${JSON.stringify({ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' })}}>{'{{query.valueFormatted}}'}</p>
                 <p data-ui="kpi-delta" style={${JSON.stringify({ ...ui.kpiDelta, margin: 0, fontSize: 13 })}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
@@ -1624,7 +1633,10 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               comparisonMode="previous_period"
             >
               <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
-                <p style={${JSON.stringify({ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Canais ativos</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <p style={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Cobertura</p>
+                  <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' })}}>Canais ativos</h2>
+                </div>
                 <p style={${JSON.stringify({ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' })}}>{'{{query.valueFormatted}}'}</p>
                 <p data-ui="kpi-delta" style={${JSON.stringify({ ...ui.kpiDelta, margin: 0, fontSize: 13 })}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
@@ -1644,7 +1656,10 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               comparisonMode="previous_period"
             >
               <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
-                <p style={${JSON.stringify({ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Aprovacao</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <p style={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Qualidade</p>
+                  <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' })}}>Aprovacao</h2>
+                </div>
                 <p style={${JSON.stringify({ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' })}}>{'{{query.valueFormatted}}'}</p>
                 <p data-ui="kpi-delta" style={${JSON.stringify({ ...ui.kpiDelta, margin: 0, fontSize: 13 })}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
@@ -1653,9 +1668,11 @@ function buildClassicDashboardTemplateSource(themeName: string) {
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 18 }}>
             <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' })}}>Aceleracao recente</h2>
+                <p style={${JSON.stringify({ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.6 })}}>Leituras sobre os vetores que estao puxando o crescimento do periodo.</p>
+              </div>
               <Insights
-                title="Aceleracao"
-                titleStyle={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}
                 textStyle={${JSON.stringify({ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.65 })}}
                 iconStyle={${JSON.stringify({ color: '#2563EB' })}}
                 items={[
@@ -1666,9 +1683,11 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               />
             </Card>
             <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' })}}>Concentracao de receita</h2>
+                <p style={${JSON.stringify({ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.6 })}}>Pontos de atencao sobre dependencia de canais e distribuicao do faturamento.</p>
+              </div>
               <Insights
-                title="Concentracao"
-                titleStyle={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}
                 textStyle={${JSON.stringify({ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.65 })}}
                 iconStyle={${JSON.stringify({ color: '#F59E0B' })}}
                 items={[
@@ -1679,9 +1698,11 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               />
             </Card>
             <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' })}}>Conversao e qualidade</h2>
+                <p style={${JSON.stringify({ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.6 })}}>Sinais de eficiencia comercial sem pressao adicional sobre o ticket medio.</p>
+              </div>
               <Insights
-                title="Conversao"
-                titleStyle={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}
                 textStyle={${JSON.stringify({ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.65 })}}
                 iconStyle={${JSON.stringify({ color: '#10B981' })}}
                 items={[
@@ -1961,7 +1982,10 @@ function buildClassicDashboardTemplate(themeName: string) {
                     {{filters:p}}
                 `, limit: 1 }} format="currency" comparisonMode="previous_period">
               <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
-                <p style={{ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Receita</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Faturamento</p>
+                  <h2 style={{ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Receita</h2>
+                </div>
                 <p style={{ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
                 <p data-ui="kpi-delta" style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
@@ -1974,7 +1998,10 @@ function buildClassicDashboardTemplate(themeName: string) {
                     {{filters:p}}
                 `, limit: 1 }} format="number" comparisonMode="previous_period">
               <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
-                <p style={{ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pedidos</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Volume</p>
+                  <h2 style={{ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Pedidos</h2>
+                </div>
                 <p style={{ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
                 <p data-ui="kpi-delta" style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
@@ -1987,7 +2014,10 @@ function buildClassicDashboardTemplate(themeName: string) {
                     {{filters:p}}
                 `, limit: 1 }} format="currency" comparisonMode="previous_period">
               <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
-                <p style={{ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ticket medio</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Eficiência</p>
+                  <h2 style={{ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Ticket medio</h2>
+                </div>
                 <p style={{ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
                 <p data-ui="kpi-delta" style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
@@ -2000,7 +2030,10 @@ function buildClassicDashboardTemplate(themeName: string) {
                     {{filters:p}}
                 `, limit: 1 }} format="number" comparisonMode="previous_period">
               <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
-                <p style={{ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Canais ativos</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cobertura</p>
+                  <h2 style={{ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Canais ativos</h2>
+                </div>
                 <p style={{ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
                 <p data-ui="kpi-delta" style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
@@ -2013,7 +2046,10 @@ function buildClassicDashboardTemplate(themeName: string) {
                     {{filters:p}}
                 `, limit: 1 }} format="percent" comparisonMode="previous_period">
               <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
-                <p style={{ ...ui.kpiLabel, margin: 0, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Aprovacao</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Qualidade</p>
+                  <h2 style={{ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Aprovacao</h2>
+                </div>
                 <p style={{ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
                 <p data-ui="kpi-delta" style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
@@ -2022,9 +2058,11 @@ function buildClassicDashboardTemplate(themeName: string) {
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 18 }}>
             <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <h2 style={{ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Aceleracao recente</h2>
+                <p style={{ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.6 }}>Leituras sobre os vetores que estao puxando o crescimento do periodo.</p>
+              </div>
               <InsightsMarker
-                title="Aceleracao"
-                titleStyle={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}
                 textStyle={{ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.65 }}
                 iconStyle={{ color: '#2563EB' }}
                 items={[
@@ -2035,9 +2073,11 @@ function buildClassicDashboardTemplate(themeName: string) {
               />
             </Card>
             <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <h2 style={{ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Concentracao de receita</h2>
+                <p style={{ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.6 }}>Pontos de atencao sobre dependencia de canais e distribuicao do faturamento.</p>
+              </div>
               <InsightsMarker
-                title="Concentracao"
-                titleStyle={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}
                 textStyle={{ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.65 }}
                 iconStyle={{ color: '#F59E0B' }}
                 items={[
@@ -2048,9 +2088,11 @@ function buildClassicDashboardTemplate(themeName: string) {
               />
             </Card>
             <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <h2 style={{ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Conversao e qualidade</h2>
+                <p style={{ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.6 }}>Sinais de eficiencia comercial sem pressao adicional sobre o ticket medio.</p>
+              </div>
               <InsightsMarker
-                title="Conversao"
-                titleStyle={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}
                 textStyle={{ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.65 }}
                 iconStyle={{ color: '#10B981' }}
                 items={[
