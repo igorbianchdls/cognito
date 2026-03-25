@@ -197,6 +197,11 @@ const defaultTable = {
   showPagination: true,
   showColumnToggle: true,
   enableSearch: true,
+  stickyHeader: true,
+  bordered: true,
+  rounded: true,
+  density: 'comfortable' as 'compact' | 'comfortable' | 'spacious',
+  striped: true,
   editableMode: false,
   editableCells: 'none',
   editableRowActions: {

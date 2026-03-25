@@ -441,10 +441,10 @@ export default function JsonRenderTable({ element }: { element: any }) {
   ), [resolvedColumns]);
 
   const cssVars = (theme.cssVars || {}) as AnyRecord;
-  const headerBackground = typeof props?.headerBackground === "string" ? props.headerBackground : "var(--surfaceBg)";
-  const headerTextColor = typeof props?.headerTextColor === "string" ? props.headerTextColor : "var(--fg)";
-  const borderColor = typeof props?.borderColor === "string" ? props.borderColor : "var(--surfaceBorder)";
-  const cellTextColor = typeof props?.cellTextColor === "string" ? props.cellTextColor : "var(--fg)";
+  const headerBackground = typeof props?.headerBackground === "string" ? props.headerBackground : "#f8fafc";
+  const headerTextColor = typeof props?.headerTextColor === "string" ? props.headerTextColor : "#334155";
+  const borderColor = typeof props?.borderColor === "string" ? props.borderColor : "#d7dbe3";
+  const cellTextColor = typeof props?.cellTextColor === "string" ? props.cellTextColor : "#475569";
   const fallbackFont = typeof cssVars.fontFamily === "string" ? "var(--fontFamily)" : undefined;
   const editableCells =
     props?.editableCells === "all" || props?.editableCells === "none" || Array.isArray(props?.editableCells)
@@ -502,13 +502,13 @@ export default function JsonRenderTable({ element }: { element: any }) {
           pageSize={toNumberOrUndefined(props?.pageSize) ?? 10}
           headerBackground={headerBackground}
           headerTextColor={headerTextColor}
-          rowHoverColor={typeof props?.rowHoverColor === "string" ? props.rowHoverColor : undefined}
+          rowHoverColor={typeof props?.rowHoverColor === "string" ? props.rowHoverColor : "#f8fafc"}
           borderColor={borderColor}
           borderWidth={toNumberOrUndefined(props?.borderWidth)}
-          stickyHeader={Boolean(props?.stickyHeader)}
+          stickyHeader={props?.stickyHeader !== false}
           rowHover={props?.rowHover !== false}
-          bordered={Boolean(props?.bordered)}
-          rounded={Boolean(props?.rounded)}
+          bordered={props?.bordered !== false}
+          rounded={props?.rounded !== false}
           density={props?.density === "compact" || props?.density === "spacious" ? props.density : "comfortable"}
           emptyMessage={typeof props?.emptyMessage === "string" ? props.emptyMessage : (isLoading ? String(props?.loadingMessage || "Carregando dados da tabela...") : "Nenhum resultado encontrado.")}
           fontSize={toNumberOrUndefined(props?.fontSize)}
@@ -516,7 +516,7 @@ export default function JsonRenderTable({ element }: { element: any }) {
           headerPadding={toNumberOrUndefined(props?.headerPadding)}
           headerFontSize={toNumberOrUndefined(props?.headerFontSize)}
           headerFontFamily={typeof props?.headerFontFamily === "string" ? props.headerFontFamily : fallbackFont}
-          headerFontWeight={typeof props?.headerFontWeight === "string" ? props.headerFontWeight : undefined}
+          headerFontWeight={typeof props?.headerFontWeight === "string" ? props.headerFontWeight : "600"}
           headerLetterSpacing={toNumberOrUndefined(props?.headerLetterSpacing)}
           headerTextAlign={defaultColumn?.headerAlign || defaultColumn?.align || "center"}
           columnOptions={columnOptions}
@@ -526,8 +526,8 @@ export default function JsonRenderTable({ element }: { element: any }) {
           cellTextColor={cellTextColor}
           cellLetterSpacing={toNumberOrUndefined(props?.cellLetterSpacing)}
           cellTextAlign={defaultColumn?.align || "center"}
-          enableZebraStripes={Boolean(props?.striped ?? props?.enableZebraStripes)}
-          rowAlternateBgColor={typeof props?.rowAlternateBgColor === "string" ? props.rowAlternateBgColor : undefined}
+          enableZebraStripes={props?.striped !== undefined || props?.enableZebraStripes !== undefined ? Boolean(props?.striped ?? props?.enableZebraStripes) : true}
+          rowAlternateBgColor={typeof props?.rowAlternateBgColor === "string" ? props.rowAlternateBgColor : "#f8fafc"}
           selectionColumnWidth={toNumberOrUndefined(props?.selectionColumnWidth)}
           enableSearch={Boolean(enableSearch)}
           enableFiltering={Boolean(props?.enableFiltering)}
