@@ -40,6 +40,9 @@ type BITableProps = {
   columns: BITableColumn[];
   height?: string | number;
   maxHeight?: string | number;
+  bordered?: boolean;
+  rounded?: boolean;
+  radius?: number;
   pageSize?: number;
   showPagination?: boolean;
   stickyHeader?: boolean;
@@ -225,6 +228,9 @@ export default function BITable({
   columns,
   height,
   maxHeight,
+  bordered = false,
+  rounded = false,
+  radius = 12,
   pageSize = 10,
   showPagination = true,
   stickyHeader = true,
@@ -337,7 +343,15 @@ export default function BITable({
 
   return (
     <div style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: showPagination ? 12 : 0 }}>
-      <div style={{ overflow: "auto", height: styleVal(height), maxHeight: styleVal(maxHeight) }}>
+      <div
+        style={{
+          overflow: "auto",
+          height: styleVal(height),
+          maxHeight: styleVal(maxHeight),
+          border: bordered ?                                                             `1px solid ${borderColor}` : undefined,
+          borderRadius: rounded ? radius : undefined,
+        }}
+      >
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize }}>
           <thead>
             <tr style={{ backgroundColor: (headerStyle?.backgroundColor as string | undefined) || headerBackground }}>

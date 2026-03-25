@@ -267,6 +267,9 @@ export default function JsonRenderTable({ element }: { element: any }) {
         columns={resolvedColumns}
         height={styleVal(props?.height)}
         maxHeight={props?.height ? undefined : styleVal(props?.maxHeight)}
+        bordered={props?.bordered !== false}
+        rounded={Boolean(props?.rounded)}
+        radius={toNumberOrUndefined(props?.radius) ?? 12}
         pageSize={toNumberOrUndefined(props?.pageSize) ?? 10}
         showPagination={props?.showPagination ?? true}
         stickyHeader={props?.stickyHeader !== false}

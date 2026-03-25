@@ -1829,6 +1829,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               <Table
                 bordered
                 rounded
+                radius={12}
                 stickyHeader
                 striped={false}
                 borderColor={${JSON.stringify(ui.tableBorderColor)}}
@@ -2219,6 +2220,7 @@ function buildClassicDashboardTemplate(themeName: string) {
               <TableMarker
                 bordered
                 rounded
+                radius={12}
                 stickyHeader
                 striped={false}
                 borderColor={ui.tableBorderColor}
