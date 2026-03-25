@@ -2347,9 +2347,8 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     return <JsonRenderSankeyChart element={{ props: merged }} />;
   },
   Table: ({ element }) => {
-    const theme = useThemeOverrides();
     const merged = deepMerge(
-      deepMerge(defaultTable as any, ((theme.components as any)?.Table || {}) as AnyRecord),
+      defaultTable as any,
       (element?.props || {}) as AnyRecord
     );
     return <JsonRenderTable element={{ props: merged }} />;
