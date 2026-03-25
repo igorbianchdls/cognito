@@ -63,7 +63,7 @@ export default function JsonRenderHorizontalBarChart({ element }: { element: any
         filterKey: getFieldValue(record, keyFieldName, ["key", xFieldName, "label", "x"]),
       };
     });
-  }, [serverRows, xFieldName, yFieldName, keyFieldName, recharts.categoryLabelMode]);
+  }, [serverRows, xFieldName, yFieldName, keyFieldName, categoryLabelMode]);
 
   const handleClick = React.useCallback((state: any) => {
     if (!shouldClickFilter || !resolvedFilterStorePath) return;
