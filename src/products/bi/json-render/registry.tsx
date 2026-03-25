@@ -201,7 +201,7 @@ const defaultTable = {
   bordered: true,
   rounded: true,
   density: 'comfortable' as 'compact' | 'comfortable' | 'spacious',
-  striped: true,
+  striped: false,
   editableMode: false,
   editableCells: 'none',
   editableRowActions: {
