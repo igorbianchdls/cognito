@@ -39,7 +39,7 @@ export default function DashboardInsights({ element }: { element: any }) {
     : undefined;
   const gap = typeof props.gap === "number" ? props.gap : 12;
   const itemGap = typeof props.itemGap === "number" ? props.itemGap : 12;
-  const showDividers = props.showDividers !== false;
+  const showDividers = props.showDividers === true;
   const dividerColor = typeof props.dividerColor === "string" ? props.dividerColor : "#e2e8f0";
 
   return (
