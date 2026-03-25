@@ -77,6 +77,12 @@ interface DataTableProps<TData extends TableData> {
   footerBackground?: string
   footerTextColor?: string
   borderWidth?: number
+  containerStyle?: React.CSSProperties
+  tableStyle?: React.CSSProperties
+  headerStyle?: React.CSSProperties
+  rowStyle?: React.CSSProperties
+  cellStyle?: React.CSSProperties
+  footerStyle?: React.CSSProperties
   showTopBorder?: boolean
   stickyHeader?: boolean
   rowHover?: boolean
@@ -209,6 +215,12 @@ export function DataTable<TData extends TableData>({
   footerBackground = '#f8fafc',
   footerTextColor = '#0f172a',
   borderWidth = 1,
+  containerStyle,
+  tableStyle,
+  headerStyle,
+  rowStyle,
+  cellStyle,
+  footerStyle,
   showTopBorder = false,
   stickyHeader = true,
   rowHover = true,
@@ -295,6 +307,9 @@ export function DataTable<TData extends TableData>({
   const effectiveHeaderBackground = isErpRoute ? 'rgb(252, 252, 252)' : headerBackground
   const effectiveHeaderPaddingY = isErpRoute ? Math.min(baseHeaderPadding, 6) : baseHeaderPadding
   const effectiveHeaderPaddingX = baseHeaderPadding
+  const resolvedHeaderBackground = (headerStyle?.backgroundColor as string | undefined) || effectiveHeaderBackground
+  const resolvedFooterBackground = (footerStyle?.backgroundColor as string | undefined) || footerBackground
+  const resolvedFooterTextColor = (footerStyle?.color as string | undefined) || footerTextColor
   
   // Update table data when external data changes
   React.useEffect(() => {
@@ -639,6 +654,7 @@ export function DataTable<TData extends TableData>({
           border: bordered ? `${borderWidth}px solid ${borderColor}` : undefined,
           borderRadius: rounded ? 12 : undefined,
           overflow: 'hidden',
+          ...containerStyle,
         }}
       >
         {/* Table Content - flex-1 overflow-auto */}
@@ -650,6 +666,7 @@ export function DataTable<TData extends TableData>({
             className=""
             style={{
               borderColor,
+              ...tableStyle,
             }}
           >
             <TableHeader>
@@ -657,7 +674,7 @@ export function DataTable<TData extends TableData>({
                 <TableRow 
                   key={headerGroup.id}
                   style={{ 
-                    backgroundColor: effectiveHeaderBackground,
+                    backgroundColor: resolvedHeaderBackground,
                     borderColor,
                     borderBottomWidth: borderWidth,
                   }}
@@ -691,6 +708,7 @@ export function DataTable<TData extends TableData>({
                           whiteSpace: columnOptions?.[header.column.id]?.headerNoWrap ? 'nowrap' : undefined,
                           overflow: columnOptions?.[header.column.id]?.headerNoWrap ? 'hidden' : undefined,
                           textOverflow: columnOptions?.[header.column.id]?.headerNoWrap ? 'ellipsis' : undefined,
+                          ...headerStyle,
                         }}
                       >
                         {header.isPlaceholder ? null : (
@@ -745,7 +763,14 @@ export function DataTable<TData extends TableData>({
             </TableHeader>
             <TableBody>
               {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
+                table.getRowModel().rows.map((row) => {
+                  const defaultRowBackground = enableZebraStripes
+                    ? (row.index % 2 === 0 ? rowAlternateBgColor : '#ffffff')
+                    : '#ffffff'
+                  const rowBaseBackground = !newRows.has(row.index)
+                    ? ((rowStyle?.backgroundColor as string | undefined) || defaultRowBackground)
+                    : undefined
+                  return (
                   <React.Fragment key={row.id}>
                     <TableRow
                     data-state={row.getIsSelected() && "selected"}
@@ -755,13 +780,11 @@ export function DataTable<TData extends TableData>({
                     )}
                     style={{ 
                       '--hover-color': rowHoverColor,
-                      backgroundColor: !newRows.has(row.index)
-                        ? (enableZebraStripes
-                            ? (row.index % 2 === 0 ? rowAlternateBgColor : '#ffffff')
-                            : '#ffffff')
-                        : undefined,
+                      backgroundColor: rowBaseBackground,
                       borderColor,
                       borderBottomWidth: borderWidth,
+                      ...rowStyle,
+                      backgroundColor: rowBaseBackground,
                     } as React.CSSProperties & { '--hover-color': string }}
                     onMouseEnter={(e) => {
                       if (rowHover && !newRows.has(row.index)) {
@@ -770,7 +793,7 @@ export function DataTable<TData extends TableData>({
                     }}
                     onMouseLeave={(e) => {
                       if (rowHover && !newRows.has(row.index)) {
-                        const base = enableZebraStripes ? (row.index % 2 === 0 ? rowAlternateBgColor : '#ffffff') : '#ffffff'
+                        const base = rowBaseBackground || '#ffffff'
                         e.currentTarget.style.backgroundColor = base
                       }
                     }}
@@ -822,6 +845,8 @@ export function DataTable<TData extends TableData>({
                             whiteSpace: columnOptions?.[columnKey]?.cellNoWrap ? 'nowrap' : undefined,
                             overflow: columnOptions?.[columnKey]?.cellNoWrap ? 'hidden' : undefined,
                             textOverflow: columnOptions?.[columnKey]?.cellNoWrap ? 'ellipsis' : undefined,
+                            ...cellStyle,
+                            backgroundColor: backgroundColor || cellStyle?.backgroundColor,
                           }}
                           onClick={(e) => {
                             if (editTrigger === 'click' && !isEditing) {
@@ -891,7 +916,7 @@ export function DataTable<TData extends TableData>({
                     </TableRow>
                   )}
                 </React.Fragment>
-                ))
+                )})
               ) : (
                 <TableRow>
                   <TableCell 
@@ -904,6 +929,7 @@ export function DataTable<TData extends TableData>({
                       fontFamily: cellFontFamily !== 'inherit' ? cellFontFamily : undefined,
                       fontWeight: cellFontWeight !== 'normal' ? cellFontWeight : undefined,
                       color: cellTextColor,
+                      ...cellStyle,
                     }}
                   >
                     {emptyMessage}
@@ -912,7 +938,7 @@ export function DataTable<TData extends TableData>({
               )}
             </TableBody>
             {hasFooter && (
-              <TableFooter style={{ backgroundColor: footerBackground }}>
+              <TableFooter style={{ backgroundColor: resolvedFooterBackground }}>
                 {table.getFooterGroups().map((footerGroup) => (
                   <TableRow key={footerGroup.id} style={{ borderColor, borderBottomWidth: borderWidth }}>
                     {footerGroup.headers.map((header) => (
@@ -921,12 +947,13 @@ export function DataTable<TData extends TableData>({
                         style={{
                           padding: `${resolvedPadding}px`,
                           borderColor,
-                          backgroundColor: footerBackground,
+                          backgroundColor: resolvedFooterBackground,
                           fontSize: `${cellFontSize || fontSize}px`,
                           fontFamily: cellFontFamily !== 'inherit' ? cellFontFamily : undefined,
                           fontWeight: '600',
-                          color: footerTextColor,
+                          color: resolvedFooterTextColor,
                           textAlign: ((header.column.columnDef.meta || {}) as { align?: 'left' | 'center' | 'right' }).align || cellTextAlign,
+                          ...footerStyle,
                         }}
                       >
                         {header.isPlaceholder ? null : flexRender(header.column.columnDef.footer, header.getContext())}

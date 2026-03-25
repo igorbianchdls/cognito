@@ -269,6 +269,10 @@ type DashboardThemeUi = {
   headerDatePickerPreset: React.CSSProperties
   headerDatePickerPresetActive: React.CSSProperties
   headerDatePickerSeparator: React.CSSProperties
+  tableHeaderStyle: React.CSSProperties
+  tableRowStyle: React.CSSProperties
+  tableCellStyle: React.CSSProperties
+  tableFooterStyle: React.CSSProperties
   tableHeaderBackground: string
   tableHeaderTextColor: string
   tableBorderColor: string
@@ -277,6 +281,15 @@ type DashboardThemeUi = {
   tableRowAlternateBgColor: string
   tableFooterBackground: string
   tableFooterTextColor: string
+  pivotContainerStyle: React.CSSProperties
+  pivotHeaderStyle: React.CSSProperties
+  pivotHeaderTotalStyle: React.CSSProperties
+  pivotRowLabelStyle: React.CSSProperties
+  pivotCellStyle: React.CSSProperties
+  pivotRowTotalStyle: React.CSSProperties
+  pivotFooterStyle: React.CSSProperties
+  pivotEmptyStateStyle: React.CSSProperties
+  pivotExpandButtonStyle: React.CSSProperties
   pivotBackgroundColor: string
   pivotHeaderBackground: string
   pivotHeaderTextColor: string
@@ -450,6 +463,83 @@ function buildDashboardThemeUi(themeName: string, variant: 'default' | 'classic'
       fontSize: 13,
       fontWeight: 500,
     },
+    tableHeaderStyle: {
+      backgroundColor: tableHeaderBackground,
+      color: tableHeaderTextColor,
+      fontSize: 14,
+      fontWeight: 600,
+      padding: '12px 14px',
+    },
+    tableRowStyle: {
+      backgroundColor: '#ffffff',
+    },
+    tableCellStyle: {
+      color: tableCellTextColor,
+      fontSize: 14,
+      fontWeight: 400,
+      padding: '12px 14px',
+    },
+    tableFooterStyle: {
+      backgroundColor: tableFooterBackground,
+      color: tableFooterTextColor,
+      fontSize: 14,
+      fontWeight: 600,
+      padding: '12px 14px',
+    },
+    pivotContainerStyle: {
+      backgroundColor: pivotBackgroundColor,
+    },
+    pivotHeaderStyle: {
+      backgroundColor: pivotHeaderBackground,
+      color: pivotHeaderTextColor,
+      fontSize: 14,
+      fontWeight: 600,
+      padding: '9px 10px',
+    },
+    pivotHeaderTotalStyle: {
+      backgroundColor: pivotHeaderTotalBackground,
+      color: pivotHeaderTotalTextColor,
+      fontSize: 14,
+      fontWeight: 600,
+      padding: '9px 10px',
+    },
+    pivotRowLabelStyle: {
+      backgroundColor: pivotBackgroundColor,
+      color: pivotRowLabelColor,
+      fontSize: 14,
+      padding: '9px 10px',
+    },
+    pivotCellStyle: {
+      backgroundColor: pivotBackgroundColor,
+      color: pivotCellTextColor,
+      fontSize: 14,
+      padding: '9px 10px',
+    },
+    pivotRowTotalStyle: {
+      backgroundColor: pivotRowTotalBackground,
+      color: pivotRowTotalTextColor,
+      fontSize: 14,
+      fontWeight: 500,
+      padding: '9px 10px',
+    },
+    pivotFooterStyle: {
+      backgroundColor: pivotFooterBackground,
+      color: pivotFooterTextColor,
+      fontSize: 14,
+      fontWeight: 600,
+      padding: '9px 10px',
+    },
+    pivotEmptyStateStyle: {
+      color: pivotMutedTextColor,
+      fontSize: 14,
+      padding: '18px 12px',
+    },
+    pivotExpandButtonStyle: {
+      backgroundColor: pivotExpandButtonBackground,
+      borderColor: pivotExpandButtonBorderColor,
+      color: pivotExpandButtonColor,
+      hoverBackgroundColor: pivotExpandButtonHoverBackground,
+    } as React.CSSProperties,
     tableHeaderBackground,
     tableHeaderTextColor,
     tableBorderColor,
@@ -930,14 +1020,12 @@ ${buildPriorityItemsSource(config.priorities)}
                     rounded
                     stickyHeader
                     striped={false}
-                    headerBackground={${JSON.stringify(ui.tableHeaderBackground)}}
-                    headerTextColor={${JSON.stringify(ui.tableHeaderTextColor)}}
                     borderColor={${JSON.stringify(ui.tableBorderColor)}}
-                    cellTextColor={${JSON.stringify(ui.tableCellTextColor)}}
                     rowHoverColor={${JSON.stringify(ui.tableRowHoverColor)}}
-                    rowAlternateBgColor={${JSON.stringify(ui.tableRowAlternateBgColor)}}
-                    footerBackground={${JSON.stringify(ui.tableFooterBackground)}}
-                    footerTextColor={${JSON.stringify(ui.tableFooterTextColor)}}
+                    headerStyle={${JSON.stringify(ui.tableHeaderStyle)}}
+                    rowStyle={${JSON.stringify(ui.tableRowStyle)}}
+                    cellStyle={${JSON.stringify(ui.tableCellStyle)}}
+                    footerStyle={${JSON.stringify(ui.tableFooterStyle)}}
                     dataQuery={{
                       query: \`
                         SELECT
@@ -977,23 +1065,16 @@ ${buildPriorityItemsSource(config.priorities)}
                     bordered
                     rounded
                     stickyHeader
-                    backgroundColor={${JSON.stringify(ui.pivotBackgroundColor)}}
                     borderColor={${JSON.stringify(ui.tableBorderColor)}}
-                    headerBackground={${JSON.stringify(ui.pivotHeaderBackground)}}
-                    headerTextColor={${JSON.stringify(ui.pivotHeaderTextColor)}}
-                    headerTotalBackground={${JSON.stringify(ui.pivotHeaderTotalBackground)}}
-                    headerTotalTextColor={${JSON.stringify(ui.pivotHeaderTotalTextColor)}}
-                    cellTextColor={${JSON.stringify(ui.pivotCellTextColor)}}
-                    rowLabelColor={${JSON.stringify(ui.pivotRowLabelColor)}}
-                    rowTotalBackground={${JSON.stringify(ui.pivotRowTotalBackground)}}
-                    rowTotalTextColor={${JSON.stringify(ui.pivotRowTotalTextColor)}}
-                    footerBackground={${JSON.stringify(ui.pivotFooterBackground)}}
-                    footerTextColor={${JSON.stringify(ui.pivotFooterTextColor)}}
-                    mutedTextColor={${JSON.stringify(ui.pivotMutedTextColor)}}
-                    expandButtonBackground={${JSON.stringify(ui.pivotExpandButtonBackground)}}
-                    expandButtonBorderColor={${JSON.stringify(ui.pivotExpandButtonBorderColor)}}
-                    expandButtonColor={${JSON.stringify(ui.pivotExpandButtonColor)}}
-                    expandButtonHoverBackground={${JSON.stringify(ui.pivotExpandButtonHoverBackground)}}
+                    containerStyle={${JSON.stringify(ui.pivotContainerStyle)}}
+                    headerStyle={${JSON.stringify(ui.pivotHeaderStyle)}}
+                    headerTotalStyle={${JSON.stringify(ui.pivotHeaderTotalStyle)}}
+                    rowLabelStyle={${JSON.stringify(ui.pivotRowLabelStyle)}}
+                    cellStyle={${JSON.stringify(ui.pivotCellStyle)}}
+                    rowTotalStyle={${JSON.stringify(ui.pivotRowTotalStyle)}}
+                    footerStyle={${JSON.stringify(ui.pivotFooterStyle)}}
+                    emptyStateStyle={${JSON.stringify(ui.pivotEmptyStateStyle)}}
+                    expandButtonStyle={${JSON.stringify(ui.pivotExpandButtonStyle)}}
                     enableExportCsv
                     defaultExpandedLevels={1}
                     dataQuery={{
@@ -1318,14 +1399,12 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
                     rounded
                     stickyHeader
                     striped={false}
-                    headerBackground={ui.tableHeaderBackground}
-                    headerTextColor={ui.tableHeaderTextColor}
                     borderColor={ui.tableBorderColor}
-                    cellTextColor={ui.tableCellTextColor}
                     rowHoverColor={ui.tableRowHoverColor}
-                    rowAlternateBgColor={ui.tableRowAlternateBgColor}
-                    footerBackground={ui.tableFooterBackground}
-                    footerTextColor={ui.tableFooterTextColor}
+                    headerStyle={ui.tableHeaderStyle}
+                    rowStyle={ui.tableRowStyle}
+                    cellStyle={ui.tableCellStyle}
+                    footerStyle={ui.tableFooterStyle}
                     dataQuery={{
                       query: `
                         SELECT
@@ -1365,23 +1444,16 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
                     bordered
                     rounded
                     stickyHeader
-                    backgroundColor={ui.pivotBackgroundColor}
                     borderColor={ui.tableBorderColor}
-                    headerBackground={ui.pivotHeaderBackground}
-                    headerTextColor={ui.pivotHeaderTextColor}
-                    headerTotalBackground={ui.pivotHeaderTotalBackground}
-                    headerTotalTextColor={ui.pivotHeaderTotalTextColor}
-                    cellTextColor={ui.pivotCellTextColor}
-                    rowLabelColor={ui.pivotRowLabelColor}
-                    rowTotalBackground={ui.pivotRowTotalBackground}
-                    rowTotalTextColor={ui.pivotRowTotalTextColor}
-                    footerBackground={ui.pivotFooterBackground}
-                    footerTextColor={ui.pivotFooterTextColor}
-                    mutedTextColor={ui.pivotMutedTextColor}
-                    expandButtonBackground={ui.pivotExpandButtonBackground}
-                    expandButtonBorderColor={ui.pivotExpandButtonBorderColor}
-                    expandButtonColor={ui.pivotExpandButtonColor}
-                    expandButtonHoverBackground={ui.pivotExpandButtonHoverBackground}
+                    containerStyle={ui.pivotContainerStyle}
+                    headerStyle={ui.pivotHeaderStyle}
+                    headerTotalStyle={ui.pivotHeaderTotalStyle}
+                    rowLabelStyle={ui.pivotRowLabelStyle}
+                    cellStyle={ui.pivotCellStyle}
+                    rowTotalStyle={ui.pivotRowTotalStyle}
+                    footerStyle={ui.pivotFooterStyle}
+                    emptyStateStyle={ui.pivotEmptyStateStyle}
+                    expandButtonStyle={ui.pivotExpandButtonStyle}
                     enableExportCsv
                     defaultExpandedLevels={1}
                     dataQuery={{
@@ -1674,14 +1746,12 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 rounded
                 stickyHeader
                 striped={false}
-                headerBackground={${JSON.stringify(ui.tableHeaderBackground)}}
-                headerTextColor={${JSON.stringify(ui.tableHeaderTextColor)}}
                 borderColor={${JSON.stringify(ui.tableBorderColor)}}
-                cellTextColor={${JSON.stringify(ui.tableCellTextColor)}}
                 rowHoverColor={${JSON.stringify(ui.tableRowHoverColor)}}
-                rowAlternateBgColor={${JSON.stringify(ui.tableRowAlternateBgColor)}}
-                footerBackground={${JSON.stringify(ui.tableFooterBackground)}}
-                footerTextColor={${JSON.stringify(ui.tableFooterTextColor)}}
+                headerStyle={${JSON.stringify(ui.tableHeaderStyle)}}
+                rowStyle={${JSON.stringify(ui.tableRowStyle)}}
+                cellStyle={${JSON.stringify(ui.tableCellStyle)}}
+                footerStyle={${JSON.stringify(ui.tableFooterStyle)}}
                 dataQuery={{
                   query: \`
                     SELECT
@@ -1748,23 +1818,16 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 bordered
                 rounded
                 stickyHeader
-                backgroundColor={${JSON.stringify(ui.pivotBackgroundColor)}}
                 borderColor={${JSON.stringify(ui.tableBorderColor)}}
-                headerBackground={${JSON.stringify(ui.pivotHeaderBackground)}}
-                headerTextColor={${JSON.stringify(ui.pivotHeaderTextColor)}}
-                headerTotalBackground={${JSON.stringify(ui.pivotHeaderTotalBackground)}}
-                headerTotalTextColor={${JSON.stringify(ui.pivotHeaderTotalTextColor)}}
-                cellTextColor={${JSON.stringify(ui.pivotCellTextColor)}}
-                rowLabelColor={${JSON.stringify(ui.pivotRowLabelColor)}}
-                rowTotalBackground={${JSON.stringify(ui.pivotRowTotalBackground)}}
-                rowTotalTextColor={${JSON.stringify(ui.pivotRowTotalTextColor)}}
-                footerBackground={${JSON.stringify(ui.pivotFooterBackground)}}
-                footerTextColor={${JSON.stringify(ui.pivotFooterTextColor)}}
-                mutedTextColor={${JSON.stringify(ui.pivotMutedTextColor)}}
-                expandButtonBackground={${JSON.stringify(ui.pivotExpandButtonBackground)}}
-                expandButtonBorderColor={${JSON.stringify(ui.pivotExpandButtonBorderColor)}}
-                expandButtonColor={${JSON.stringify(ui.pivotExpandButtonColor)}}
-                expandButtonHoverBackground={${JSON.stringify(ui.pivotExpandButtonHoverBackground)}}
+                containerStyle={${JSON.stringify(ui.pivotContainerStyle)}}
+                headerStyle={${JSON.stringify(ui.pivotHeaderStyle)}}
+                headerTotalStyle={${JSON.stringify(ui.pivotHeaderTotalStyle)}}
+                rowLabelStyle={${JSON.stringify(ui.pivotRowLabelStyle)}}
+                cellStyle={${JSON.stringify(ui.pivotCellStyle)}}
+                rowTotalStyle={${JSON.stringify(ui.pivotRowTotalStyle)}}
+                footerStyle={${JSON.stringify(ui.pivotFooterStyle)}}
+                emptyStateStyle={${JSON.stringify(ui.pivotEmptyStateStyle)}}
+                expandButtonStyle={${JSON.stringify(ui.pivotExpandButtonStyle)}}
                 enableExportCsv
                 defaultExpandedLevels={1}
                 dataQuery={{
@@ -2007,14 +2070,12 @@ function buildClassicDashboardTemplate(themeName: string) {
                 rounded
                 stickyHeader
                 striped={false}
-                headerBackground={ui.tableHeaderBackground}
-                headerTextColor={ui.tableHeaderTextColor}
                 borderColor={ui.tableBorderColor}
-                cellTextColor={ui.tableCellTextColor}
                 rowHoverColor={ui.tableRowHoverColor}
-                rowAlternateBgColor={ui.tableRowAlternateBgColor}
-                footerBackground={ui.tableFooterBackground}
-                footerTextColor={ui.tableFooterTextColor}
+                headerStyle={ui.tableHeaderStyle}
+                rowStyle={ui.tableRowStyle}
+                cellStyle={ui.tableCellStyle}
+                footerStyle={ui.tableFooterStyle}
                 dataQuery={{
                   query: `
                     SELECT
@@ -2081,23 +2142,16 @@ function buildClassicDashboardTemplate(themeName: string) {
                 bordered
                 rounded
                 stickyHeader
-                backgroundColor={ui.pivotBackgroundColor}
                 borderColor={ui.tableBorderColor}
-                headerBackground={ui.pivotHeaderBackground}
-                headerTextColor={ui.pivotHeaderTextColor}
-                headerTotalBackground={ui.pivotHeaderTotalBackground}
-                headerTotalTextColor={ui.pivotHeaderTotalTextColor}
-                cellTextColor={ui.pivotCellTextColor}
-                rowLabelColor={ui.pivotRowLabelColor}
-                rowTotalBackground={ui.pivotRowTotalBackground}
-                rowTotalTextColor={ui.pivotRowTotalTextColor}
-                footerBackground={ui.pivotFooterBackground}
-                footerTextColor={ui.pivotFooterTextColor}
-                mutedTextColor={ui.pivotMutedTextColor}
-                expandButtonBackground={ui.pivotExpandButtonBackground}
-                expandButtonBorderColor={ui.pivotExpandButtonBorderColor}
-                expandButtonColor={ui.pivotExpandButtonColor}
-                expandButtonHoverBackground={ui.pivotExpandButtonHoverBackground}
+                containerStyle={ui.pivotContainerStyle}
+                headerStyle={ui.pivotHeaderStyle}
+                headerTotalStyle={ui.pivotHeaderTotalStyle}
+                rowLabelStyle={ui.pivotRowLabelStyle}
+                cellStyle={ui.pivotCellStyle}
+                rowTotalStyle={ui.pivotRowTotalStyle}
+                footerStyle={ui.pivotFooterStyle}
+                emptyStateStyle={ui.pivotEmptyStateStyle}
+                expandButtonStyle={ui.pivotExpandButtonStyle}
                 enableExportCsv
                 defaultExpandedLevels={1}
                 dataQuery={{

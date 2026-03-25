@@ -508,6 +508,12 @@ export default function JsonRenderTable({ element }: { element: any }) {
           borderColor={borderColor}
           footerBackground={footerBackground}
           footerTextColor={footerTextColor}
+          containerStyle={props?.containerStyle && typeof props.containerStyle === "object" ? props.containerStyle as React.CSSProperties : undefined}
+          tableStyle={props?.tableStyle && typeof props.tableStyle === "object" ? props.tableStyle as React.CSSProperties : undefined}
+          headerStyle={props?.headerStyle && typeof props.headerStyle === "object" ? props.headerStyle as React.CSSProperties : undefined}
+          rowStyle={props?.rowStyle && typeof props.rowStyle === "object" ? props.rowStyle as React.CSSProperties : undefined}
+          cellStyle={props?.cellStyle && typeof props.cellStyle === "object" ? props.cellStyle as React.CSSProperties : undefined}
+          footerStyle={props?.footerStyle && typeof props.footerStyle === "object" ? props.footerStyle as React.CSSProperties : undefined}
           borderWidth={toNumberOrUndefined(props?.borderWidth)}
           stickyHeader={props?.stickyHeader !== false}
           rowHover={props?.rowHover !== false}

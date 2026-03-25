@@ -467,6 +467,31 @@ export default function JsonRenderPivotTable({ element }: { element: any }) {
   const expandButtonBorderColor = typeof props?.expandButtonBorderColor === "string" ? props.expandButtonBorderColor : "#e5e7eb";
   const expandButtonColor = typeof props?.expandButtonColor === "string" ? props.expandButtonColor : "#475569";
   const expandButtonHoverBackground = typeof props?.expandButtonHoverBackground === "string" ? props.expandButtonHoverBackground : "#f8fafc";
+  const containerStyle = props?.containerStyle && typeof props.containerStyle === "object" ? props.containerStyle as React.CSSProperties : undefined;
+  const headerStyle = props?.headerStyle && typeof props.headerStyle === "object" ? props.headerStyle as React.CSSProperties : undefined;
+  const headerTotalStyle = props?.headerTotalStyle && typeof props.headerTotalStyle === "object" ? props.headerTotalStyle as React.CSSProperties : undefined;
+  const rowLabelStyle = props?.rowLabelStyle && typeof props.rowLabelStyle === "object" ? props.rowLabelStyle as React.CSSProperties : undefined;
+  const cellStyle = props?.cellStyle && typeof props.cellStyle === "object" ? props.cellStyle as React.CSSProperties : undefined;
+  const rowTotalStyle = props?.rowTotalStyle && typeof props.rowTotalStyle === "object" ? props.rowTotalStyle as React.CSSProperties : undefined;
+  const footerStyle = props?.footerStyle && typeof props.footerStyle === "object" ? props.footerStyle as React.CSSProperties : undefined;
+  const emptyStateStyle = props?.emptyStateStyle && typeof props.emptyStateStyle === "object" ? props.emptyStateStyle as React.CSSProperties : undefined;
+  const expandButtonStyle = props?.expandButtonStyle && typeof props.expandButtonStyle === "object" ? props.expandButtonStyle as React.CSSProperties : undefined;
+  const resolvedContainerBackground = (containerStyle?.backgroundColor as string | undefined) || backgroundColor;
+  const resolvedHeaderBackground = (headerStyle?.backgroundColor as string | undefined) || headerBackground;
+  const resolvedHeaderTextColor = (headerStyle?.color as string | undefined) || headerTextColor;
+  const resolvedHeaderTotalBackground = (headerTotalStyle?.backgroundColor as string | undefined) || headerTotalBackground;
+  const resolvedHeaderTotalTextColor = (headerTotalStyle?.color as string | undefined) || headerTotalTextColor;
+  const resolvedRowLabelColor = (rowLabelStyle?.color as string | undefined) || rowLabelColor;
+  const resolvedCellTextColor = (cellStyle?.color as string | undefined) || cellTextColor;
+  const resolvedRowTotalBackground = (rowTotalStyle?.backgroundColor as string | undefined) || rowTotalBackground;
+  const resolvedRowTotalTextColor = (rowTotalStyle?.color as string | undefined) || rowTotalTextColor;
+  const resolvedFooterBackground = (footerStyle?.backgroundColor as string | undefined) || footerBackground;
+  const resolvedFooterTextColor = (footerStyle?.color as string | undefined) || footerTextColor;
+  const resolvedMutedTextColor = (emptyStateStyle?.color as string | undefined) || mutedTextColor;
+  const resolvedExpandButtonBackground = (expandButtonStyle?.backgroundColor as string | undefined) || expandButtonBackground;
+  const resolvedExpandButtonBorderColor = (expandButtonStyle?.borderColor as string | undefined) || expandButtonBorderColor;
+  const resolvedExpandButtonColor = (expandButtonStyle?.color as string | undefined) || expandButtonColor;
+  const resolvedExpandButtonHoverBackground = ((expandButtonStyle as any)?.hoverBackgroundColor as string | undefined) || expandButtonHoverBackground;
   const rounded = props?.rounded !== false;
   const stickyHeader = Boolean(props?.stickyHeader);
 
@@ -481,17 +506,18 @@ export default function JsonRenderPivotTable({ element }: { element: any }) {
           overflow: "auto",
           border: props?.bordered === false ? undefined : `1px solid ${borderColor}`,
           borderRadius: rounded ? 8 : 0,
-          backgroundColor,
+          backgroundColor: resolvedContainerBackground,
+          ...containerStyle,
         }}
       >
         <table className="w-full border-collapse text-sm">
           <thead
-            style={stickyHeader ? { position: "sticky", top: 0, zIndex: 2, backgroundColor: headerBackground } : { backgroundColor: headerBackground }}
+            style={stickyHeader ? { position: "sticky", top: 0, zIndex: 2, backgroundColor: resolvedHeaderBackground } : { backgroundColor: resolvedHeaderBackground }}
           >
             <tr>
               <th
                 className="border-b border-r text-left font-semibold"
-                style={{ padding: rowPadding, borderColor, backgroundColor: headerBackground, color: headerTextColor }}
+                style={{ padding: rowPadding, borderColor, backgroundColor: resolvedHeaderBackground, color: resolvedHeaderTextColor, ...headerStyle }}
               >
                 {headerLabel}
               </th>
@@ -500,7 +526,7 @@ export default function JsonRenderPivotTable({ element }: { element: any }) {
                   <th
                     key={`${column.key}:${valueField.field}`}
                     className="border-b border-r text-right font-semibold"
-                    style={{ padding: rowPadding, borderColor, minWidth: 120, backgroundColor: headerBackground, color: headerTextColor }}
+                    style={{ padding: rowPadding, borderColor, minWidth: 120, backgroundColor: resolvedHeaderBackground, color: resolvedHeaderTextColor, ...headerStyle }}
                   >
                     {column.key === ALL_COLUMN_KEY ? valueField.label : `${column.label} - ${valueField.label}`}
                   </th>
@@ -511,7 +537,7 @@ export default function JsonRenderPivotTable({ element }: { element: any }) {
                     <th
                       key={`grand-total:${valueField.field}`}
                       className="border-b text-right font-semibold"
-                      style={{ padding: rowPadding, borderColor, minWidth: 120, backgroundColor: headerTotalBackground, color: headerTotalTextColor }}
+                      style={{ padding: rowPadding, borderColor, minWidth: 120, backgroundColor: resolvedHeaderTotalBackground, color: resolvedHeaderTotalTextColor, ...headerTotalStyle }}
                     >
                       Total - {valueField.label}
                     </th>
@@ -525,7 +551,7 @@ export default function JsonRenderPivotTable({ element }: { element: any }) {
                 <td
                   colSpan={1 + (columnEntries.length * valueFields.length) + (showGrandTotals ? valueFields.length : 0)}
                   className="text-center text-sm"
-                  style={{ padding: "18px 12px", color: mutedTextColor }}
+                  style={{ padding: "18px 12px", color: resolvedMutedTextColor, ...emptyStateStyle }}
                 >
                   {loadingMessage}
                 </td>
@@ -535,7 +561,7 @@ export default function JsonRenderPivotTable({ element }: { element: any }) {
                 <td
                   colSpan={1 + (columnEntries.length * valueFields.length) + (showGrandTotals ? valueFields.length : 0)}
                   className="text-center text-sm"
-                  style={{ padding: "18px 12px", color: mutedTextColor }}
+                  style={{ padding: "18px 12px", color: resolvedMutedTextColor, ...emptyStateStyle }}
                 >
                   {emptyMessage}
                 </td>
@@ -548,7 +574,7 @@ export default function JsonRenderPivotTable({ element }: { element: any }) {
                 <tr key={node.id} className="border-b" style={{ borderColor }}>
                   <td
                     className="border-r text-left"
-                    style={{ padding: rowPadding, borderColor, color: rowLabelColor, backgroundColor }}
+                    style={{ padding: rowPadding, borderColor, color: resolvedRowLabelColor, backgroundColor: resolvedContainerBackground, ...rowLabelStyle }}
                   >
                     <div
                       className="flex items-center gap-2"
@@ -560,15 +586,16 @@ export default function JsonRenderPivotTable({ element }: { element: any }) {
                           aria-label={isExpanded ? "Recolher grupo" : "Expandir grupo"}
                           className="inline-flex h-5 w-5 items-center justify-center rounded border"
                           style={{
-                            borderColor: expandButtonBorderColor,
-                            backgroundColor: expandButtonBackground,
-                            color: expandButtonColor,
+                            borderColor: resolvedExpandButtonBorderColor,
+                            backgroundColor: resolvedExpandButtonBackground,
+                            color: resolvedExpandButtonColor,
+                            ...expandButtonStyle,
                           }}
                           onMouseEnter={(event) => {
-                            event.currentTarget.style.backgroundColor = expandButtonHoverBackground;
+                            event.currentTarget.style.backgroundColor = resolvedExpandButtonHoverBackground;
                           }}
                           onMouseLeave={(event) => {
-                            event.currentTarget.style.backgroundColor = expandButtonBackground;
+                            event.currentTarget.style.backgroundColor = resolvedExpandButtonBackground;
                           }}
                           onClick={() => handleToggle(node.id)}
                         >
@@ -587,7 +614,7 @@ export default function JsonRenderPivotTable({ element }: { element: any }) {
                         <td
                           key={`${node.id}:${column.key}:${valueField.field}`}
                           className="border-r text-right"
-                          style={{ padding: rowPadding, borderColor, color: cellTextColor, backgroundColor }}
+                          style={{ padding: rowPadding, borderColor, color: resolvedCellTextColor, backgroundColor: resolvedContainerBackground, ...cellStyle }}
                         >
                           {numeric === null ? "" : formatValue(numeric, valueField.format, valueField.decimals)}
                         </td>
@@ -599,7 +626,7 @@ export default function JsonRenderPivotTable({ element }: { element: any }) {
                         <td
                           key={`${node.id}:grand-total:${valueField.field}`}
                           className="text-right font-medium"
-                          style={{ padding: rowPadding, backgroundColor: rowTotalBackground, color: rowTotalTextColor }}
+                          style={{ padding: rowPadding, backgroundColor: resolvedRowTotalBackground, color: resolvedRowTotalTextColor, ...rowTotalStyle }}
                         >
                           {shouldRenderNodeTotals
                             ? formatValue(aggregateRows(node.rows, valueField), valueField.format, valueField.decimals)
@@ -613,8 +640,8 @@ export default function JsonRenderPivotTable({ element }: { element: any }) {
           </tbody>
           {showGrandTotals && preparedRows.length > 0 ? (
             <tfoot>
-              <tr className="border-t-2" style={{ borderColor, backgroundColor: footerBackground }}>
-                <td className="border-r font-semibold" style={{ padding: rowPadding, borderColor, color: footerTextColor, backgroundColor: footerBackground }}>
+              <tr className="border-t-2" style={{ borderColor, backgroundColor: resolvedFooterBackground }}>
+                <td className="border-r font-semibold" style={{ padding: rowPadding, borderColor, color: resolvedFooterTextColor, backgroundColor: resolvedFooterBackground, ...footerStyle }}>
                   Total geral
                 </td>
                 {columnEntries.flatMap((column) => (
@@ -622,7 +649,7 @@ export default function JsonRenderPivotTable({ element }: { element: any }) {
                     <td
                       key={`footer:${column.key}:${valueField.field}`}
                       className="border-r text-right font-semibold"
-                      style={{ padding: rowPadding, borderColor, color: footerTextColor, backgroundColor: footerBackground }}
+                      style={{ padding: rowPadding, borderColor, color: resolvedFooterTextColor, backgroundColor: resolvedFooterBackground, ...footerStyle }}
                     >
                       {formatValue(
                         resolveNodeValue(preparedRows, column.key, valueField),
@@ -636,7 +663,7 @@ export default function JsonRenderPivotTable({ element }: { element: any }) {
                   <td
                     key={`footer:grand-total:${valueField.field}`}
                     className="text-right font-semibold"
-                    style={{ padding: rowPadding, color: footerTextColor, backgroundColor: footerBackground }}
+                    style={{ padding: rowPadding, color: resolvedFooterTextColor, backgroundColor: resolvedFooterBackground, ...footerStyle }}
                   >
                     {formatValue(
                       aggregateRows(preparedRows, valueField),
