@@ -70,7 +70,13 @@ export function getSemanticUiStyle(
   const subtitleComponent = extractStyleLike(asRecord((components as Record<string, unknown>).Subtitle).titleStyle);
   const cardComponent = extractStyleLike((components as Record<string, unknown>).Card);
 
-  const isTitleRole = role === "title" || (!role && (tag === "h1" || tag === "h2" || tag === "h3"));
+  const isTitleRole =
+    role === "title" ||
+    role === "page-title" ||
+    role === "chart-title" ||
+    role === "section-title" ||
+    role === "table-title" ||
+    (!role && (tag === "h1" || tag === "h2" || tag === "h3"));
   const isEyebrowRole = role === "eyebrow" || role === "subtitle";
   const isCardRole = role === "card" || role === "chart-card" || role === "table-card" || role === "pivot-card";
 
@@ -108,6 +114,12 @@ export function getSemanticUiStyle(
     };
   }
 
+  if (role === "body" || role === "chart-body" || role === "table-body") {
+    return {
+      fontFamily: "var(--fontFamily, inherit)",
+    };
+  }
+
   if (role === "kpi-title") {
     return {
       color: "var(--kpiTitleColor, currentColor)",
@@ -125,6 +137,12 @@ export function getSemanticUiStyle(
       fontWeight: "var(--kpiValueFontWeight, inherit)",
       letterSpacing: "var(--kpiValueLetterSpacing, inherit)",
       padding: "var(--kpiValuePadding, 0px)",
+    };
+  }
+
+  if (role === "kpi-delta") {
+    return {
+      fontFamily: "var(--fontFamily, inherit)",
     };
   }
 

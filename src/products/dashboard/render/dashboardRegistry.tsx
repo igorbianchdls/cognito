@@ -19,6 +19,7 @@ import DashboardQuery, {
   resolveDashboardQueryTemplate,
   useDashboardQueryResult,
 } from '@/products/dashboard/render/components/DashboardQuery'
+import DashboardText from '@/products/dashboard/render/components/DashboardText'
 
 type AnyRecord = Record<string, any>
 type DashboardRenderComponent = React.FC<{
@@ -344,6 +345,7 @@ function resolveComponent(type: string): DashboardRenderComponent | undefined {
   if (type === 'PivotTable') return ({ element, onAction }) => <biRegistry.PivotTable element={element} onAction={onAction} />
   if (type === 'Slicer') return ({ element, onAction }) => <biRegistry.Slicer element={element} onAction={onAction} />
   if (type === 'DatePicker') return ({ element, onAction }) => <DashboardDatePicker element={element} onAction={onAction} />
+  if (type === 'Text') return ({ element, children }) => <DashboardText element={element}>{children}</DashboardText>
   if (type === 'TextNode') {
     return ({ element }) => {
       const queryResult = useDashboardQueryResult()
