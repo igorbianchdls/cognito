@@ -11,6 +11,7 @@ export default function DashboardPage() {
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false)
   const [draftThemeName, setDraftThemeName] = useState('dark')
   const [appliedThemeName, setAppliedThemeName] = useState('dark')
+  const [themeModalBaseName, setThemeModalBaseName] = useState('dark')
 
   return (
     <DataProvider initialData={{ ui: {}, filters: {}, dashboard: {} }}>
@@ -18,19 +19,32 @@ export default function DashboardPage() {
         <DashboardWorkspace
           appliedThemeName={appliedThemeName}
           onOpenTheme={() => {
+            setThemeModalBaseName(appliedThemeName)
             setDraftThemeName(appliedThemeName)
             setIsThemeModalOpen(true)
           }}
         />
         <DashboardThemeModal
           isOpen={isThemeModalOpen}
-          onClose={() => setIsThemeModalOpen(false)}
+          onClose={() => {
+            setDraftThemeName(themeModalBaseName)
+            setAppliedThemeName(themeModalBaseName)
+            setIsThemeModalOpen(false)
+          }}
           onConfirm={() => {
             setAppliedThemeName(draftThemeName)
             setIsThemeModalOpen(false)
           }}
-          onSelect={setDraftThemeName}
+          onRevert={() => {
+            setDraftThemeName(themeModalBaseName)
+            setAppliedThemeName(themeModalBaseName)
+          }}
+          onSelect={(themeName) => {
+            setDraftThemeName(themeName)
+            setAppliedThemeName(themeName)
+          }}
           selectedTheme={draftThemeName}
+          revertDisabled={draftThemeName === themeModalBaseName}
           themes={APPS_THEME_OPTIONS}
         />
       </>

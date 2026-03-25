@@ -79,7 +79,9 @@ interface DashboardThemeModalProps {
   isOpen: boolean
   onClose: () => void
   onConfirm: () => void
+  onRevert: () => void
   onSelect: (themeValue: string) => void
+  revertDisabled?: boolean
   selectedTheme: string
   themes: ThemeOption[]
 }
@@ -88,7 +90,9 @@ export function DashboardThemeModal({
   isOpen,
   onClose,
   onConfirm,
+  onRevert,
   onSelect,
+  revertDisabled = false,
   selectedTheme,
   themes,
 }: DashboardThemeModalProps) {
@@ -169,7 +173,15 @@ export function DashboardThemeModal({
           })}
         </div>
 
-        <div className="mt-7 flex justify-end">
+        <div className="mt-7 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={onRevert}
+            disabled={revertDisabled}
+            className="rounded-[12px] border border-[#d4d4d4] bg-white px-5 py-3 text-[15px] font-medium tracking-[-0.02em] text-[#3a3a3a] transition hover:bg-[#f5f5f5] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Voltar
+          </button>
           <button
             type="button"
             onClick={onConfirm}
