@@ -780,7 +780,6 @@ export function DataTable<TData extends TableData>({
                     )}
                     style={{ 
                       '--hover-color': rowHoverColor,
-                      backgroundColor: rowBaseBackground,
                       borderColor,
                       borderBottomWidth: borderWidth,
                       ...rowStyle,
