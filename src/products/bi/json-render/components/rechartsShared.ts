@@ -83,19 +83,20 @@ export function getChartSeriesDefs(
   if (Array.isArray(input)) {
     const defs = input
       .filter((entry): entry is AnyRecord => Boolean(entry) && typeof entry === "object" && !Array.isArray(entry))
-      .map((entry) => {
+      .map<DashboardChartSeriesDef | null>((entry) => {
         const dataKey = toTrimmedText(entry.dataKey ?? entry.field);
         const typeRaw = toTrimmedText(entry.type).toLowerCase();
         const axisRaw = toTrimmedText(entry.axis ?? entry.yAxis ?? entry.yaxis).toLowerCase();
         if (!dataKey) return null;
-        return {
+        const normalized: DashboardChartSeriesDef = {
           dataKey,
           ...(typeof entry.label === "string" && entry.label.trim() ? { label: entry.label.trim() } : {}),
           ...(typeof entry.color === "string" && entry.color.trim() ? { color: entry.color.trim() } : {}),
           ...(typeRaw === "line" || typeRaw === "area" || typeRaw === "bar" ? { type: typeRaw as DashboardChartSeriesDef["type"] } : {}),
           ...(axisRaw === "right" ? { axis: "right" as const } : {}),
           ...(typeof entry.strokeWidth === "number" ? { strokeWidth: entry.strokeWidth } : {}),
-        } satisfies DashboardChartSeriesDef;
+        };
+        return normalized;
       })
       .filter((entry): entry is DashboardChartSeriesDef => Boolean(entry));
     if (defs.length) return defs;
