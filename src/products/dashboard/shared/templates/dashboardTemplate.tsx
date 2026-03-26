@@ -4,6 +4,9 @@ import React, { isValidElement, ReactNode } from 'react'
 import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter'
 import { buildComprasDashboardTemplateVariant } from '@/products/dashboard/shared/templates/dashboardComprasTemplate'
 import { buildFinanceiroDashboardTemplateVariant } from '@/products/dashboard/shared/templates/dashboardFinanceiroTemplate'
+import { buildGoogleAdsDashboardTemplateVariant } from '@/products/dashboard/shared/templates/dashboardGoogleAdsTemplate'
+import { buildMetaAdsDashboardTemplateVariant } from '@/products/dashboard/shared/templates/dashboardMetaAdsTemplate'
+import { buildShopifyDashboardTemplateVariant } from '@/products/dashboard/shared/templates/dashboardShopifyTemplate'
 
 type MarkerProps = {
   children?: ReactNode
@@ -2348,6 +2351,9 @@ export function buildDashboardTemplateVariants(themeName: string): DashboardTemp
 
   variants.push(buildComprasDashboardTemplateVariant(themeName))
   variants.push(buildFinanceiroDashboardTemplateVariant(themeName))
+  variants.push(buildMetaAdsDashboardTemplateVariant(themeName))
+  variants.push(buildGoogleAdsDashboardTemplateVariant(themeName))
+  variants.push(buildShopifyDashboardTemplateVariant(themeName))
 
   return variants
 }
