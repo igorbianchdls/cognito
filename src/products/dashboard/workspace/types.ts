@@ -5,5 +5,4 @@ export type DashboardCodeFile = {
   extension: string
   language: string
   content: string
-  tree?: any
 }

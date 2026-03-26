@@ -9,7 +9,6 @@ export function buildDashboardWorkspaceFiles(themeName: string): DashboardCodeFi
     extension: 'tsx',
     language: 'typescript',
     content: file.content,
-    tree: file.tree,
   }))
 
   return [
@@ -36,7 +35,7 @@ export function buildDashboardWorkspaceFiles(themeName: string): DashboardCodeFi
       directory: 'app',
       extension: 'md',
       language: 'markdown',
-      content: `# Dashboard\n\nArquivos principais:\n- \`app/dashboard-vendas.tsx\`\n- \`app/dashboard-executivo.tsx\`\n- \`app/dashboard-operacoes.tsx\`\n\nTema ativo: \`${themeName}\``,
+      content: `# Dashboard\n\nArquivos principais:\n- \`app/dashboard-vendas.tsx\`\n- \`app/dashboard-executivo.tsx\`\n- \`app/dashboard-operacoes.tsx\`\n- \`app/dashboard-classico.tsx\`\n- \`app/dashboard-compras.tsx\`\n- \`app/dashboard-financeiro.tsx\`\n\nTema ativo: \`${themeName}\``,
     },
   ]
 }

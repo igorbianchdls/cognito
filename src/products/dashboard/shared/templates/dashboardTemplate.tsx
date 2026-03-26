@@ -2,6 +2,8 @@
 
 import React, { isValidElement, ReactNode } from 'react'
 import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter'
+import { buildComprasDashboardTemplateVariant } from '@/products/dashboard/shared/templates/dashboardComprasTemplate'
+import { buildFinanceiroDashboardTemplateVariant } from '@/products/dashboard/shared/templates/dashboardFinanceiroTemplate'
 
 type MarkerProps = {
   children?: ReactNode
@@ -90,7 +92,6 @@ export type DashboardTemplateVariant = {
   content: string
   name: string
   path: string
-  tree: DashboardTreeNode
 }
 
 type StandaloneDashboardVariant = {
@@ -2333,31 +2334,20 @@ function buildClassicDashboardTemplate(themeName: string) {
 }
 
 export function buildDashboardTemplateVariants(themeName: string): DashboardTemplateVariant[] {
-  const variants = DASHBOARD_VARIANTS.map((variant) => {
-    const tree = jsxToTree(buildDashboardTemplate(variant, themeName))
-    if (!tree || typeof tree === 'string') {
-      throw new Error(`Invalid dashboard template root for ${variant.name}`)
-    }
-
-    return {
-      content: buildDashboardTemplateSource(variant, themeName),
-      name: variant.fileName,
-      path: variant.path,
-      tree,
-    }
-  })
-
-  const classicTree = jsxToTree(buildClassicDashboardTemplate(themeName))
-  if (!classicTree || typeof classicTree === 'string') {
-    throw new Error(`Invalid dashboard template root for ${CLASSIC_DASHBOARD_VARIANT.name}`)
-  }
+  const variants = DASHBOARD_VARIANTS.map((variant) => ({
+    content: buildDashboardTemplateSource(variant, themeName),
+    name: variant.fileName,
+    path: variant.path,
+  }))
 
   variants.push({
     content: buildClassicDashboardTemplateSource(themeName),
     name: CLASSIC_DASHBOARD_VARIANT.fileName,
     path: CLASSIC_DASHBOARD_VARIANT.path,
-    tree: classicTree,
   })
+
+  variants.push(buildComprasDashboardTemplateVariant(themeName))
+  variants.push(buildFinanceiroDashboardTemplateVariant(themeName))
 
   return variants
 }
