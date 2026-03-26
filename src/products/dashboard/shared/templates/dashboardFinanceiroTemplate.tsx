@@ -189,13 +189,13 @@ function buildFinanceiroDashboardSource(themeName: string) {
                     GROUP BY 1, 2
                     ORDER BY 3 DESC
                   \`,
-                  xField: 'label',
-                  yField: 'value',
-                  keyField: 'key',
                   limit: 8,
                 }}
+                xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
+                series={[
+                  { dataKey: 'value', label: 'Contas a pagar', color: '${ui.chartScheme[0]}' },
+                ]}
                 yAxis={{ width: 86 }}
-                xAxis={{ labelMode: 'first-word' }}
               />
             </article>
 
@@ -221,13 +221,14 @@ function buildFinanceiroDashboardSource(themeName: string) {
                     GROUP BY 1, 2
                     ORDER BY 3 DESC
                   \`,
-                  xField: 'label',
-                  yField: 'value',
-                  keyField: 'key',
                   limit: 6,
                 }}
+                categoryKey="label"
                 legend={{ enabled: true, position: 'right' }}
-                series={{ innerRadius: 54, outerRadius: 92, paddingAngle: 2, showLabels: false }}
+                series={[
+                  { dataKey: 'value', label: 'Titulos', color: '${ui.chartScheme[0]}' },
+                ]}
+                recharts={{ innerRadius: 54, outerRadius: 92, paddingAngle: 2, showLabels: false }}
               />
             </article>
           </section>
@@ -256,13 +257,14 @@ function buildFinanceiroDashboardSource(themeName: string) {
                     GROUP BY 1, 2
                     ORDER BY 1 ASC
                   \`,
-                  xField: 'label',
-                  yField: 'value',
-                  keyField: 'key',
                   limit: 12,
                 }}
+                xAxis={{ dataKey: 'label' }}
+                series={[
+                  { dataKey: 'value', label: 'Recebimentos', color: '${ui.chartScheme[0]}' },
+                ]}
                 yAxis={{ width: 86 }}
-                series={{ showDots: false, singleSeriesGradient: true }}
+                recharts={{ showDots: false, singleSeriesGradient: true }}
               />
             </article>
 
@@ -289,13 +291,13 @@ function buildFinanceiroDashboardSource(themeName: string) {
                     GROUP BY 1, 2
                     ORDER BY 3 DESC
                   \`,
-                  xField: 'label',
-                  yField: 'value',
-                  keyField: 'key',
                   limit: 6,
                 }}
+                xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
+                series={[
+                  { dataKey: 'value', label: 'Recebimentos', color: '${ui.chartScheme[0]}' },
+                ]}
                 yAxis={{ width: 86 }}
-                xAxis={{ labelMode: 'first-word' }}
               />
             </article>
           </section>

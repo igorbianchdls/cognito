@@ -23,7 +23,7 @@ export function buildDashboardWorkspaceFiles(themeName: string): DashboardCodeFi
         {
           theme: themeName,
           renderer: 'dashboard-jsx-render',
-          entrypoint: 'app/dashboard-vendas.tsx',
+          entrypoint: 'app/dashboard-classico.tsx',
         },
         null,
         2,
@@ -35,7 +35,7 @@ export function buildDashboardWorkspaceFiles(themeName: string): DashboardCodeFi
       directory: 'app',
       extension: 'md',
       language: 'markdown',
-      content: `# Dashboard\n\nArquivos principais:\n- \`app/dashboard-vendas.tsx\`\n- \`app/dashboard-executivo.tsx\`\n- \`app/dashboard-operacoes.tsx\`\n- \`app/dashboard-classico.tsx\`\n- \`app/dashboard-compras.tsx\`\n- \`app/dashboard-financeiro.tsx\`\n- \`app/dashboard-metaads.tsx\`\n- \`app/dashboard-googleads.tsx\`\n- \`app/dashboard-shopify.tsx\`\n\nTema ativo: \`${themeName}\``,
+      content: `# Dashboard\n\nArquivos principais:\n- \`app/dashboard-classico.tsx\`\n- \`app/dashboard-compras.tsx\`\n- \`app/dashboard-financeiro.tsx\`\n- \`app/dashboard-metaads.tsx\`\n- \`app/dashboard-googleads.tsx\`\n- \`app/dashboard-shopify.tsx\`\n\nTema ativo: \`${themeName}\``,
     },
   ]
 }

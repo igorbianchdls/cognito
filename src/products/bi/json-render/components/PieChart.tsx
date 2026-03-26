@@ -4,7 +4,17 @@ import * as React from "react";
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
 import { useData } from "@/products/bi/json-render/context";
-import { formatChartValue, getByPath, getFieldValue, setByPath, useChartInteraction, useChartServerRows, useResolvedChartColors } from "@/products/bi/json-render/components/rechartsShared";
+import {
+  formatChartValue,
+  getByPath,
+  getChartRequestFields,
+  getChartStyleSeriesConfig,
+  getFieldValue,
+  setByPath,
+  useChartInteraction,
+  useChartServerRows,
+  useResolvedChartColors,
+} from "@/products/bi/json-render/components/rechartsShared";
 
 type AnyRecord = Record<string, any>;
 
@@ -17,33 +27,36 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
   const legacyRecharts = (element?.props?.recharts as AnyRecord | undefined) || {};
   const tooltip = (element?.props?.tooltip as AnyRecord | undefined) || {};
   const legend = (element?.props?.legend as AnyRecord | undefined) || {};
-  const series = (element?.props?.series as AnyRecord | undefined) || {};
-  const xFieldName = typeof dq?.xField === "string" ? dq.xField.trim() : "label";
-  const yFieldName = typeof dq?.yField === "string" ? dq.yField.trim() : "value";
-  const keyFieldName = typeof dq?.keyField === "string" ? dq.keyField.trim() : "key";
-  const { serverRows, queryError } = useChartServerRows(dq, data as AnyRecord);
+  const seriesStyle = getChartStyleSeriesConfig(element?.props?.series);
+  const { categoryDataKey, keyField, seriesDefs, valueDataKey } = getChartRequestFields(props, dq, { defaultSeriesType: "bar" });
+  const { serverRows, queryError } = useChartServerRows(dq, data as AnyRecord, {
+    xField: categoryDataKey,
+    yField: valueDataKey,
+    keyField,
+  });
   const { clearOnSecondClick, resolvedFilterStorePath, shouldClickFilter } = useChartInteraction(element, dq?.dimension);
   const colors = useResolvedChartColors((element?.props?.colors as string[] | undefined) || element?.props?.colorScheme, ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"]);
   const showTooltip = tooltip.enabled ?? legacyRecharts.showTooltip ?? true;
   const legendPosition = String(legend.position ?? legacyRecharts.legendPosition ?? "right").trim().toLowerCase();
   const showLegend = legend.enabled ?? (legacyRecharts.showLegend !== false);
-  const innerRadius = series.innerRadius ?? legacyRecharts.innerRadius ?? 0;
-  const outerRadius = series.outerRadius ?? legacyRecharts.outerRadius ?? "80%";
-  const paddingAngle = series.paddingAngle ?? legacyRecharts.paddingAngle ?? 0;
-  const showLabels = series.showLabels ?? legacyRecharts.showLabels;
+  const innerRadius = seriesStyle.innerRadius ?? legacyRecharts.innerRadius ?? 0;
+  const outerRadius = seriesStyle.outerRadius ?? legacyRecharts.outerRadius ?? "80%";
+  const paddingAngle = seriesStyle.paddingAngle ?? legacyRecharts.paddingAngle ?? 0;
+  const showLabels = seriesStyle.showLabels ?? legacyRecharts.showLabels;
 
   const chartData = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
+    const primarySeries = seriesDefs[0]?.dataKey || "value";
     return src.map((row) => {
       const record = row as AnyRecord;
-      const label = String(getFieldValue(record, xFieldName, ["label", "x"]) ?? "");
+      const label = String(getFieldValue(record, categoryDataKey, ["label", "x"]) ?? "");
       return {
         name: label,
-        value: Number(getFieldValue(record, yFieldName, ["value", "y"]) ?? 0),
-        filterKey: getFieldValue(record, keyFieldName, ["key", xFieldName, "label", "x"]),
+        value: Number(getFieldValue(record, primarySeries, ["value", "y"]) ?? 0),
+        filterKey: getFieldValue(record, keyField, ["key", categoryDataKey, "label", "x"]),
       };
     });
-  }, [serverRows, xFieldName, yFieldName, keyFieldName]);
+  }, [serverRows, categoryDataKey, keyField, seriesDefs]);
 
   const handleClick = React.useCallback((entry: any) => {
     if (!shouldClickFilter || !resolvedFilterStorePath) return;

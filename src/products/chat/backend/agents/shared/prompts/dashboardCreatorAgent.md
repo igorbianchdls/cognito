@@ -121,14 +121,16 @@
     - Main props:
       - `type`
       - `dataQuery.query`
-      - `dataQuery.xField`
-      - `dataQuery.yField`
-      - `dataQuery.keyField`
       - `dataQuery.limit`
+      - `xAxis.dataKey`
+      - `categoryKey` for `pie`
+      - `series`
       - `format`
       - `height`
-    - Rule: SQL aliases must match `xField`, `yField`, and `keyField` exactly.
+    - Rule: SQL aliases must match `xAxis.dataKey`, `categoryKey`, and each `series[].dataKey` exactly.
     - Rule: when the chart should react to dashboard filters, wire them explicitly in SQL.
+    - Rule: for `bar`, `line`, and `composed`, prefer `xAxis={{ dataKey: '...' }}` plus `series={[{ dataKey: '...' }]}`.
+    - Rule: for `pie`, prefer `categoryKey="..."` plus `series={[{ dataKey: '...' }]}`.
     - Recommended `type` values:
       - `bar`
       - `line`
@@ -260,11 +262,12 @@ export function DashboardExemploKpiChart() {
                 GROUP BY 1, 2
                 ORDER BY 3 DESC
               `,
-              xField: 'label',
-              yField: 'value',
-              keyField: 'key',
               limit: 8,
             }}
+            xAxis={{ dataKey: 'label' }}
+            series={[
+              { dataKey: 'value', label: 'Receita', color: '#2563eb' },
+            ]}
           />
         </section>
       </Dashboard>
@@ -485,8 +488,9 @@ export function DashboardExemploTabsTable() {
 - comparison can be composed in JSX instead of using legacy closed widgets
 - For `Chart`:
 - SQL aliases must match configured fields exactly
-- use `xField` and `yField`
-- use `keyField` when relevant
+- use `xAxis.dataKey` for `bar`, `line`, and `composed`
+- use `categoryKey` for `pie`
+- use `series[].dataKey` for measures
 - keep chart configuration minimal and valid
 - Never invent table or field names from user wording.
 - Always consult the appropriate domain skill before writing or changing dashboard SQL.

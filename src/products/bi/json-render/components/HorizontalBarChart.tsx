@@ -4,7 +4,17 @@ import * as React from "react";
 import { Bar, BarChart as RechartsBarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { useData } from "@/products/bi/json-render/context";
-import { formatChartValue, getByPath, getFieldValue, setByPath, useChartInteraction, useChartServerRows, useResolvedChartColors } from "@/products/bi/json-render/components/rechartsShared";
+import {
+  formatChartValue,
+  getByPath,
+  getChartRequestFields,
+  getChartStyleSeriesConfig,
+  getFieldValue,
+  setByPath,
+  useChartInteraction,
+  useChartServerRows,
+  useResolvedChartColors,
+} from "@/products/bi/json-render/components/rechartsShared";
 
 type AnyRecord = Record<string, any>;
 
@@ -31,11 +41,13 @@ export default function JsonRenderHorizontalBarChart({ element }: { element: any
   const xAxis = (element?.props?.xAxis as AnyRecord | undefined) || {};
   const yAxis = (element?.props?.yAxis as AnyRecord | undefined) || {};
   const tooltip = (element?.props?.tooltip as AnyRecord | undefined) || {};
-  const series = (element?.props?.series as AnyRecord | undefined) || {};
-  const xFieldName = typeof dq?.xField === "string" ? dq.xField.trim() : "label";
-  const yFieldName = typeof dq?.yField === "string" ? dq.yField.trim() : "value";
-  const keyFieldName = typeof dq?.keyField === "string" ? dq.keyField.trim() : "key";
-  const { serverRows, queryError } = useChartServerRows(dq, data as AnyRecord);
+  const seriesStyle = getChartStyleSeriesConfig(element?.props?.series);
+  const { axisDataKey, keyField, seriesDefs, valueDataKey } = getChartRequestFields(props, dq, { defaultSeriesType: "bar" });
+  const { serverRows, queryError } = useChartServerRows(dq, data as AnyRecord, {
+    xField: axisDataKey,
+    yField: valueDataKey,
+    keyField,
+  });
   const { clearOnSecondClick, resolvedFilterStorePath, shouldClickFilter } = useChartInteraction(element, dq?.dimension);
   const colors = useResolvedChartColors((element?.props?.colors as string[] | undefined) || element?.props?.colorScheme, ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6"]);
   const showValueAxis = xAxis.hide === true ? false : (legacyRecharts.showValueAxis ?? true);
@@ -47,23 +59,24 @@ export default function JsonRenderHorizontalBarChart({ element }: { element: any
   const categoryTickColor = String(yAxis.tickColor ?? legacyRecharts.categoryTickColor ?? "#6b7280");
   const categoryTickFontSize = Number(yAxis.tickFontSize ?? legacyRecharts.categoryTickFontSize ?? 12);
   const axisColor = String((xAxis.axisColor ?? yAxis.axisColor ?? legacyRecharts.axisColor) ?? "#d4d4d8");
-  const barRadius = Number(series.radius ?? legacyRecharts.radius ?? 5);
-  const barSize = series.barSize ?? legacyRecharts.barSize;
+  const barRadius = Number(seriesStyle.radius ?? legacyRecharts.radius ?? 5);
+  const barSize = seriesStyle.barSize ?? legacyRecharts.barSize;
   const margin = (element?.props?.margin as AnyRecord | undefined) || legacyRecharts.margin || { left: -20, right: 12, top: 8, bottom: 8 };
 
   const chartData = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
+    const primarySeries = seriesDefs[0]?.dataKey || "value";
     return src.map((row) => {
       const record = row as AnyRecord;
-      const label = String(getFieldValue(record, xFieldName, ["label", "x"]) ?? "");
+      const label = String(getFieldValue(record, axisDataKey, ["label", "x"]) ?? "");
       return {
         label,
         shortLabel: categoryLabelMode === "first-word" ? formatCategoryFirstWord(label) : formatCategoryLabel(label),
-        value: Number(getFieldValue(record, yFieldName, ["value", "y"]) ?? 0),
-        filterKey: getFieldValue(record, keyFieldName, ["key", xFieldName, "label", "x"]),
+        value: Number(getFieldValue(record, primarySeries, ["value", "y"]) ?? 0),
+        filterKey: getFieldValue(record, keyField, ["key", axisDataKey, "label", "x"]),
       };
     });
-  }, [serverRows, xFieldName, yFieldName, keyFieldName, categoryLabelMode]);
+  }, [serverRows, axisDataKey, keyField, categoryLabelMode, seriesDefs]);
 
   const handleClick = React.useCallback((state: any) => {
     if (!shouldClickFilter || !resolvedFilterStorePath) return;

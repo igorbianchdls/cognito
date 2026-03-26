@@ -183,8 +183,8 @@ const SqlKpiDataQuerySchema = z.object({
 
 const SqlChartDataQuerySchema = z.object({
   query: z.string(),
-  xField: z.string(),
-  yField: z.string(),
+  xField: z.string().optional(),
+  yField: z.string().optional(),
   keyField: z.string().optional(),
   seriesField: z.string().optional(),
   sizeField: z.string().optional(),
@@ -196,20 +196,46 @@ const SqlChartDataQuerySchema = z.object({
 
 const SqlComposedChartDataQuerySchema = z.object({
   query: z.string(),
-  xField: z.string(),
+  xField: z.string().optional(),
   keyField: z.string().optional(),
   filters: z.record(z.any()).optional(),
   limit: z.number().optional(),
 }).strict();
 
+const ChartAxisSchema = z.object({
+  dataKey: z.string().optional(),
+  hide: z.boolean().optional(),
+  labelMode: z.enum(["short", "first-word"]).optional(),
+  tickMargin: z.number().optional(),
+  tickColor: z.string().optional(),
+  tickFontSize: z.number().optional(),
+  width: z.number().optional(),
+}).partial().strict();
+
+const ChartSeriesSchema = z.object({
+  dataKey: z.string(),
+  label: z.string().optional(),
+  color: z.string().optional(),
+  type: z.enum(["bar", "line", "area"]).optional(),
+  axis: z.enum(["left", "right"]).optional(),
+  strokeWidth: z.number().optional(),
+}).strict();
+
+const ChartSeriesStyleSchema = z.record(z.any());
+const ChartSeriesPropSchema = z.union([z.array(ChartSeriesSchema), ChartSeriesStyleSchema]).optional();
+
 const ComposedSeriesSchema = z.object({
-  field: z.string(),
+  field: z.string().optional(),
+  dataKey: z.string().optional(),
   type: z.enum(["bar", "line"]),
   label: z.string().optional(),
   color: z.string().optional(),
   yAxis: z.enum(["left", "right"]).optional(),
+  axis: z.enum(["left", "right"]).optional(),
   strokeWidth: z.number().optional(),
-}).strict();
+}).strict().refine((value) => Boolean(value.field || value.dataKey), {
+  message: "Composed series requires field or dataKey",
+});
 
 const SqlTableDataQuerySchema = z.object({
   query: z.string(),
@@ -919,11 +945,17 @@ export const catalog = {
         }).partial().optional(),
         containerStyle: ContainerStyleSchema.optional(),
         borderless: z.boolean().optional(),
-        // xKey/yKey removed — server returns { label, value }
+        categoryKey: z.string().optional(),
         fr: z.number().optional(),
         format: z.enum(["currency", "percent", "number"]).default("number"),
         height: z.union([z.number(), z.string()]).optional(),
         colorScheme: z.union([z.string(), z.array(z.string())]).optional(),
+        grid: z.record(z.any()).optional(),
+        legend: z.record(z.any()).optional(),
+        series: ChartSeriesPropSchema,
+        tooltip: z.record(z.any()).optional(),
+        xAxis: ChartAxisSchema.optional(),
+        yAxis: ChartAxisSchema.optional(),
         ...RechartsTopLevelProps,
         nivo: NivoPropsSchema.optional(),
         recharts: RechartsPropsSchema.optional(),
@@ -947,6 +979,12 @@ export const catalog = {
         format: z.enum(["currency", "percent", "number"]).default("number"),
         height: z.number().optional(),
         colorScheme: z.union([z.string(), z.array(z.string())]).optional(),
+        grid: z.record(z.any()).optional(),
+        legend: z.record(z.any()).optional(),
+        series: ChartSeriesPropSchema,
+        tooltip: z.record(z.any()).optional(),
+        xAxis: ChartAxisSchema.optional(),
+        yAxis: ChartAxisSchema.optional(),
         ...RechartsTopLevelProps,
         recharts: RechartsPropsSchema.optional(),
       }).strict(),
@@ -965,11 +1003,17 @@ export const catalog = {
         }).partial().optional(),
         containerStyle: ContainerStyleSchema.optional(),
         borderless: z.boolean().optional(),
-        // xKey/yKey removed — server returns { label, value }
+        categoryKey: z.string().optional(),
         fr: z.number().optional(),
         format: z.enum(["currency", "percent", "number"]).default("number"),
         height: z.number().optional(),
         colorScheme: z.union([z.string(), z.array(z.string())]).optional(),
+        grid: z.record(z.any()).optional(),
+        legend: z.record(z.any()).optional(),
+        series: ChartSeriesPropSchema,
+        tooltip: z.record(z.any()).optional(),
+        xAxis: ChartAxisSchema.optional(),
+        yAxis: ChartAxisSchema.optional(),
         ...RechartsTopLevelProps,
         nivo: NivoPropsSchema.optional(),
         recharts: RechartsPropsSchema.optional(),
@@ -989,11 +1033,15 @@ export const catalog = {
         }).partial().optional(),
         containerStyle: ContainerStyleSchema.optional(),
         borderless: z.boolean().optional(),
-        // xKey/yKey removed — server returns { label, value }
+        categoryKey: z.string().optional(),
         fr: z.number().optional(),
         format: z.enum(["currency", "percent", "number"]).default("number"),
         height: z.number().optional(),
         colorScheme: z.union([z.string(), z.array(z.string())]).optional(),
+        legend: z.record(z.any()).optional(),
+        series: ChartSeriesPropSchema,
+        tooltip: z.record(z.any()).optional(),
+        xAxis: ChartAxisSchema.optional(),
         ...RechartsTopLevelProps,
         nivo: NivoPropsSchema.optional(),
         recharts: RechartsPropsSchema.optional(),
@@ -1017,6 +1065,11 @@ export const catalog = {
         format: z.enum(["currency", "percent", "number"]).default("number"),
         height: z.number().optional(),
         colorScheme: z.union([z.string(), z.array(z.string())]).optional(),
+        grid: z.record(z.any()).optional(),
+        legend: z.record(z.any()).optional(),
+        tooltip: z.record(z.any()).optional(),
+        xAxis: ChartAxisSchema.optional(),
+        yAxis: ChartAxisSchema.optional(),
         nivo: NivoPropsSchema.optional(),
       }).strict(),
       hasChildren: false,

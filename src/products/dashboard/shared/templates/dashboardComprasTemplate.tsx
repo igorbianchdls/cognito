@@ -177,13 +177,13 @@ function buildComprasDashboardSource(themeName: string) {
                     GROUP BY 1, 2
                     ORDER BY 3 DESC
                   \`,
-                  xField: 'label',
-                  yField: 'value',
-                  keyField: 'key',
                   limit: 8,
                 }}
+                xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
+                series={[
+                  { dataKey: 'value', label: 'Gasto', color: '${ui.chartScheme[0]}' },
+                ]}
                 yAxis={{ width: 86 }}
-                xAxis={{ labelMode: 'first-word' }}
               />
             </article>
 
@@ -211,13 +211,14 @@ function buildComprasDashboardSource(themeName: string) {
                     GROUP BY 1, 2
                     ORDER BY 3 DESC
                   \`,
-                  xField: 'label',
-                  yField: 'value',
-                  keyField: 'key',
                   limit: 6,
                 }}
+                categoryKey="label"
                 legend={{ enabled: true, position: 'right' }}
-                series={{ innerRadius: 54, outerRadius: 92, paddingAngle: 2, showLabels: false }}
+                series={[
+                  { dataKey: 'value', label: 'Gasto', color: '${ui.chartScheme[0]}' },
+                ]}
+                recharts={{ innerRadius: 54, outerRadius: 92, paddingAngle: 2, showLabels: false }}
               />
             </article>
           </section>
@@ -246,13 +247,14 @@ function buildComprasDashboardSource(themeName: string) {
                     GROUP BY 1, 2
                     ORDER BY 1 ASC
                   \`,
-                  xField: 'label',
-                  yField: 'value',
-                  keyField: 'key',
                   limit: 12,
                 }}
+                xAxis={{ dataKey: 'label' }}
+                series={[
+                  { dataKey: 'value', label: 'Gasto', color: '${ui.chartScheme[0]}' },
+                ]}
                 yAxis={{ width: 86 }}
-                series={{ showDots: false, singleSeriesGradient: true }}
+                recharts={{ showDots: false, singleSeriesGradient: true }}
               />
             </article>
 
@@ -278,12 +280,12 @@ function buildComprasDashboardSource(themeName: string) {
                     GROUP BY 1, 2
                     ORDER BY 3 DESC
                   \`,
-                  xField: 'label',
-                  yField: 'value',
-                  keyField: 'key',
                   limit: 8,
                 }}
-                xAxis={{ labelMode: 'first-word' }}
+                xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
+                series={[
+                  { dataKey: 'value', label: 'Pedidos', color: '${ui.chartScheme[0]}' },
+                ]}
               />
             </article>
           </section>

@@ -8,6 +8,15 @@ import { useThemeOverrides } from "@/products/bi/json-render/theme/ThemeContext"
 
 type AnyRecord = Record<string, any>;
 
+export type DashboardChartSeriesDef = {
+  axis?: "left" | "right";
+  color?: string;
+  dataKey: string;
+  label?: string;
+  strokeWidth?: number;
+  type?: "bar" | "line" | "area";
+};
+
 export function formatChartValue(val: any, fmt: "currency" | "percent" | "number"): string {
   const n = Number(val ?? 0);
   if (!Number.isFinite(n)) return String(val ?? "");
@@ -55,6 +64,81 @@ export function getFieldValue(row: AnyRecord, preferred: string | undefined, fal
     if (direct !== undefined) return direct;
   }
   return undefined;
+}
+
+function toTrimmedText(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+export function getChartStyleSeriesConfig(input: unknown): AnyRecord {
+  if (input && typeof input === "object" && !Array.isArray(input)) return input as AnyRecord;
+  return {};
+}
+
+export function getChartSeriesDefs(
+  input: unknown,
+  fallbackDataKey?: string,
+  fallbackType: DashboardChartSeriesDef["type"] = "bar",
+): DashboardChartSeriesDef[] {
+  if (Array.isArray(input)) {
+    const defs = input
+      .filter((entry): entry is AnyRecord => Boolean(entry) && typeof entry === "object" && !Array.isArray(entry))
+      .map((entry) => {
+        const dataKey = toTrimmedText(entry.dataKey ?? entry.field);
+        const typeRaw = toTrimmedText(entry.type).toLowerCase();
+        const axisRaw = toTrimmedText(entry.axis ?? entry.yAxis ?? entry.yaxis).toLowerCase();
+        if (!dataKey) return null;
+        return {
+          dataKey,
+          ...(typeof entry.label === "string" && entry.label.trim() ? { label: entry.label.trim() } : {}),
+          ...(typeof entry.color === "string" && entry.color.trim() ? { color: entry.color.trim() } : {}),
+          ...(typeRaw === "line" || typeRaw === "area" || typeRaw === "bar" ? { type: typeRaw as DashboardChartSeriesDef["type"] } : {}),
+          ...(axisRaw === "right" ? { axis: "right" as const } : {}),
+          ...(typeof entry.strokeWidth === "number" ? { strokeWidth: entry.strokeWidth } : {}),
+        } satisfies DashboardChartSeriesDef;
+      })
+      .filter((entry): entry is DashboardChartSeriesDef => Boolean(entry));
+    if (defs.length) return defs;
+  }
+
+  const fallback = toTrimmedText(fallbackDataKey);
+  if (!fallback) return [];
+  return [{ dataKey: fallback, type: fallbackType }];
+}
+
+export function getChartAxisDataKey(props: AnyRecord | undefined, dq: AnyRecord | undefined, fallback = "label"): string {
+  const xAxis = (props?.xAxis as AnyRecord | undefined) || {};
+  return toTrimmedText(xAxis.dataKey) || toTrimmedText(dq?.xField) || fallback;
+}
+
+export function getChartCategoryDataKey(props: AnyRecord | undefined, dq: AnyRecord | undefined, fallback = "label"): string {
+  return toTrimmedText(props?.categoryKey) || getChartAxisDataKey(props, dq, fallback);
+}
+
+export function getChartKeyField(props: AnyRecord | undefined, dq: AnyRecord | undefined, fallback: string): string {
+  return toTrimmedText(dq?.keyField) || toTrimmedText(props?.keyField) || fallback;
+}
+
+export function getChartRequestFields(
+  props: AnyRecord | undefined,
+  dq: AnyRecord | undefined,
+  opts?: { categoryFallback?: string; defaultSeriesType?: DashboardChartSeriesDef["type"] },
+) {
+  const axisDataKey = getChartAxisDataKey(props, dq, opts?.categoryFallback || "label");
+  const categoryDataKey = getChartCategoryDataKey(props, dq, opts?.categoryFallback || axisDataKey || "label");
+  const seriesDefs = getChartSeriesDefs(props?.series, dq?.yField, opts?.defaultSeriesType || "bar");
+  const keyField = getChartKeyField(props, dq, axisDataKey || categoryDataKey || "key");
+  const seriesField = toTrimmedText(dq?.seriesField);
+  const valueDataKey = seriesDefs[0]?.dataKey || toTrimmedText(dq?.yField);
+
+  return {
+    axisDataKey,
+    categoryDataKey,
+    keyField,
+    seriesDefs,
+    seriesField,
+    valueDataKey,
+  };
 }
 
 export function inferFilterField(dimension?: string): string {
@@ -111,7 +195,16 @@ export function useResolvedChartColors(colorScheme: string | string[] | undefine
   }, [colorScheme, JSON.stringify(fallback), theme.cssVars]);
 }
 
-export function useChartServerRows(dq: AnyRecord | undefined, data: AnyRecord) {
+export function useChartServerRows(
+  dq: AnyRecord | undefined,
+  data: AnyRecord,
+  resolvedFields?: {
+    keyField?: string;
+    seriesField?: string;
+    xField?: string;
+    yField?: string;
+  },
+) {
   const isSqlQueryMode = Boolean(typeof dq?.query === "string" && dq.query.trim());
   const [serverRows, setServerRows] = React.useState<Array<Record<string, unknown>> | null>(null);
   const [queryError, setQueryError] = React.useState<string | null>(null);
@@ -124,7 +217,11 @@ export function useChartServerRows(dq: AnyRecord | undefined, data: AnyRecord) {
         setQueryError(null);
         return;
       }
-      if (isSqlQueryMode && (!dq.xField || !dq.yField)) {
+      const resolvedXField = toTrimmedText(resolvedFields?.xField) || toTrimmedText(dq?.xField);
+      const resolvedYField = toTrimmedText(resolvedFields?.yField) || toTrimmedText(dq?.yField);
+      const resolvedKeyField = toTrimmedText(resolvedFields?.keyField) || toTrimmedText(dq?.keyField);
+      const resolvedSeriesField = toTrimmedText(resolvedFields?.seriesField) || toTrimmedText(dq?.seriesField);
+      if (isSqlQueryMode && (!resolvedXField || !resolvedYField)) {
         setServerRows(null);
         setQueryError(null);
         return;
@@ -146,10 +243,10 @@ export function useChartServerRows(dq: AnyRecord | undefined, data: AnyRecord) {
           ? {
               dataQuery: {
                 query: dq.query,
-                xField: dq.xField,
-                yField: dq.yField,
-                keyField: dq.keyField,
-                seriesField: dq.seriesField,
+                xField: resolvedXField,
+                yField: resolvedYField,
+                keyField: resolvedKeyField,
+                seriesField: resolvedSeriesField,
                 filters,
                 limit: dq.limit,
               },
@@ -187,7 +284,7 @@ export function useChartServerRows(dq: AnyRecord | undefined, data: AnyRecord) {
     return () => {
       cancelled = true;
     };
-  }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters), isSqlQueryMode]);
+  }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters), JSON.stringify(resolvedFields), isSqlQueryMode]);
 
   return { queryError, serverRows };
 }

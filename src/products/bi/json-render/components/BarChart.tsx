@@ -1,10 +1,20 @@
 "use client";
 
 import * as React from "react";
-import { Bar, BarChart as RechartsBarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart as RechartsBarChart, CartesianGrid, Cell, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { useData } from "@/products/bi/json-render/context";
-import { formatChartValue, getByPath, getFieldValue, setByPath, useChartInteraction, useChartServerRows, useResolvedChartColors } from "@/products/bi/json-render/components/rechartsShared";
+import {
+  formatChartValue,
+  getByPath,
+  getChartRequestFields,
+  getChartStyleSeriesConfig,
+  getFieldValue,
+  setByPath,
+  useChartInteraction,
+  useChartServerRows,
+  useResolvedChartColors,
+} from "@/products/bi/json-render/components/rechartsShared";
 
 type AnyRecord = Record<string, any>;
 
@@ -32,17 +42,22 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   const xAxis = (element?.props?.xAxis as AnyRecord | undefined) || {};
   const yAxis = (element?.props?.yAxis as AnyRecord | undefined) || {};
   const tooltip = (element?.props?.tooltip as AnyRecord | undefined) || {};
-  const series = (element?.props?.series as AnyRecord | undefined) || {};
-  const xFieldName = typeof dq?.xField === "string" ? dq.xField.trim() : "label";
-  const yFieldName = typeof dq?.yField === "string" ? dq.yField.trim() : "value";
-  const keyFieldName = typeof dq?.keyField === "string" ? dq.keyField.trim() : "key";
-  const { serverRows, queryError } = useChartServerRows(dq, data as AnyRecord);
+  const legend = (element?.props?.legend as AnyRecord | undefined) || {};
+  const seriesStyle = getChartStyleSeriesConfig(element?.props?.series);
+  const { axisDataKey, keyField, seriesDefs, valueDataKey } = getChartRequestFields(props, dq, { defaultSeriesType: "bar" });
+  const { serverRows, queryError } = useChartServerRows(dq, data as AnyRecord, {
+    xField: axisDataKey,
+    yField: valueDataKey,
+    keyField,
+  });
   const { clearOnSecondClick, resolvedFilterStorePath, shouldClickFilter } = useChartInteraction(element, dq?.dimension);
   const colors = useResolvedChartColors((element?.props?.colors as string[] | undefined) || element?.props?.colorScheme, ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6"]);
   const categoryLabelMode = String(xAxis.labelMode ?? legacyRecharts.categoryLabelMode ?? "short").trim().toLowerCase();
   const showValueAxis = yAxis.hide === true ? false : (legacyRecharts.showValueAxis ?? true);
   const hideCategoryAxis = Boolean(xAxis.hide ?? legacyRecharts.hideCategoryAxis ?? false);
   const showTooltip = tooltip.enabled ?? legacyRecharts.showTooltip ?? true;
+  const showLegend = legend.enabled ?? legacyRecharts.showLegend ?? seriesDefs.length > 1;
+  const legendPosition = String(legend.position ?? legacyRecharts.legendPosition ?? "bottom").trim().toLowerCase();
   const showGrid = grid.enabled ?? (legacyRecharts.showGrid ?? true);
   const gridVertical = Boolean(grid.vertical ?? legacyRecharts.gridVertical ?? false);
   const gridDasharray = String(grid.strokeDasharray ?? legacyRecharts.gridDasharray ?? "3 3");
@@ -53,16 +68,16 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   const valueTickColor = String(yAxis.tickColor ?? legacyRecharts.valueTickColor ?? "#6b7280");
   const valueTickFontSize = Number(yAxis.tickFontSize ?? legacyRecharts.valueTickFontSize ?? 12);
   const valueAxisWidth = Number(yAxis.width ?? legacyRecharts.valueAxisWidth ?? 64);
-  const barRadius = Number(series.radius ?? legacyRecharts.radius ?? 8);
-  const barSize = series.barSize ?? legacyRecharts.barSize;
+  const barRadius = Number(seriesStyle.radius ?? legacyRecharts.radius ?? 8);
+  const barSize = seriesStyle.barSize ?? legacyRecharts.barSize;
   const margin = (element?.props?.margin as AnyRecord | undefined) || legacyRecharts.margin || { top: 8, right: 12, left: 18, bottom: 8 };
 
   const chartData = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
     return src.map((row) => {
       const record = row as AnyRecord;
-      const label = String(getFieldValue(record, xFieldName, ["label", "x"]) ?? "");
-      return {
+      const label = String(getFieldValue(record, axisDataKey, ["label", "x"]) ?? "");
+      const normalized: AnyRecord = {
         label,
         shortLabel:
           categoryLabelMode === "first-word"
@@ -70,11 +85,20 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
             : categoryLabelMode === "short"
               ? formatCategoryLabel(label)
               : label,
-        value: Number(getFieldValue(record, yFieldName, ["value", "y"]) ?? 0),
-        filterKey: getFieldValue(record, keyFieldName, ["key", xFieldName, "label", "x"]),
+        filterKey: getFieldValue(record, keyField, ["key", axisDataKey, "label", "x"]),
       };
+      for (const [index, seriesDef] of seriesDefs.entries()) {
+        normalized[seriesDef.dataKey] = Number(
+          getFieldValue(
+            record,
+            seriesDef.dataKey,
+            index === 0 ? ["value", "y"] : [seriesDef.dataKey],
+          ) ?? 0,
+        );
+      }
+      return normalized;
     });
-  }, [serverRows, xFieldName, yFieldName, keyFieldName, categoryLabelMode]);
+  }, [serverRows, axisDataKey, keyField, categoryLabelMode, seriesDefs]);
 
   const handleClick = React.useCallback((state: any) => {
     if (!shouldClickFilter || !resolvedFilterStorePath) return;
@@ -127,11 +151,31 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
               }}
             />
           ) : null}
-          <Bar dataKey="value" radius={barRadius}>
-            {chartData.map((entry, index) => (
-              <Cell key={`${entry.label}-${index}`} fill={colors[index % colors.length]} />
-            ))}
-          </Bar>
+          {showLegend && legendPosition !== "none" ? (
+            <Legend
+              verticalAlign={legendPosition === "bottom" ? "bottom" : "middle"}
+              align={legendPosition === "right" ? "right" : "center"}
+              layout={legendPosition === "right" ? "vertical" : "horizontal"}
+            />
+          ) : null}
+          {seriesDefs.map((seriesDef, seriesIndex) => (
+            <Bar
+              key={seriesDef.dataKey}
+              dataKey={seriesDef.dataKey}
+              name={seriesDef.label ?? seriesDef.dataKey}
+              fill={seriesDef.color ?? colors[seriesIndex % colors.length]}
+              radius={barRadius}
+            >
+              {seriesDefs.length === 1
+                ? chartData.map((entry, index) => (
+                    <Cell
+                      key={`${entry.label}-${index}`}
+                      fill={seriesDef.color ?? colors[index % colors.length]}
+                    />
+                  ))
+                : null}
+            </Bar>
+          ))}
         </RechartsBarChart>
       </ResponsiveContainer>
     </div>

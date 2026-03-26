@@ -16,8 +16,8 @@ export function DashboardWorkspace({
   onOpenTheme: () => void
 }) {
   const [activeView, setActiveView] = useState<'preview' | 'code'>('preview')
-  const [selectedCodePath, setSelectedCodePath] = useState('app/dashboard-vendas.tsx')
-  const [selectedDashboardPath, setSelectedDashboardPath] = useState('app/dashboard-vendas.tsx')
+  const [selectedCodePath, setSelectedCodePath] = useState('app/dashboard-classico.tsx')
+  const [selectedDashboardPath, setSelectedDashboardPath] = useState('app/dashboard-classico.tsx')
   const [zoom, setZoom] = useState(1)
 
   const files = useMemo(() => buildDashboardWorkspaceFiles(appliedThemeName), [appliedThemeName])

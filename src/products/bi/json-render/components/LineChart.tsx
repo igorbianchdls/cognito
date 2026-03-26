@@ -4,7 +4,17 @@ import * as React from "react";
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { useData } from "@/products/bi/json-render/context";
-import { formatChartValue, getByPath, getFieldValue, setByPath, useChartInteraction, useChartServerRows, useResolvedChartColors } from "@/products/bi/json-render/components/rechartsShared";
+import {
+  formatChartValue,
+  getByPath,
+  getChartRequestFields,
+  getChartStyleSeriesConfig,
+  getFieldValue,
+  setByPath,
+  useChartInteraction,
+  useChartServerRows,
+  useResolvedChartColors,
+} from "@/products/bi/json-render/components/rechartsShared";
 
 type AnyRecord = Record<string, any>;
 
@@ -21,65 +31,103 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
   const yAxis = (element?.props?.yAxis as AnyRecord | undefined) || {};
   const tooltip = (element?.props?.tooltip as AnyRecord | undefined) || {};
   const legend = (element?.props?.legend as AnyRecord | undefined) || {};
-  const series = (element?.props?.series as AnyRecord | undefined) || {};
-  const xFieldName = typeof dq?.xField === "string" ? dq.xField.trim() : "label";
-  const yFieldName = typeof dq?.yField === "string" ? dq.yField.trim() : "value";
-  const keyFieldName = typeof dq?.keyField === "string" ? dq.keyField.trim() : "key";
-  const seriesFieldName = typeof dq?.seriesField === "string" ? dq.seriesField.trim() : "";
-  const { serverRows, queryError } = useChartServerRows(dq, data as AnyRecord);
+  const seriesStyle = getChartStyleSeriesConfig(element?.props?.series);
+  const { axisDataKey, keyField, seriesDefs, seriesField, valueDataKey } = getChartRequestFields(props, dq, { defaultSeriesType: "line" });
+  const { serverRows, queryError } = useChartServerRows(dq, data as AnyRecord, {
+    xField: axisDataKey,
+    yField: valueDataKey,
+    keyField,
+    seriesField,
+  });
   const { clearOnSecondClick, resolvedFilterStorePath, shouldClickFilter } = useChartInteraction(element, dq?.dimension);
   const colors = useResolvedChartColors((element?.props?.colors as string[] | undefined) || element?.props?.colorScheme, ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6"]);
   const showValueAxis = yAxis.hide === true ? false : (legacyRecharts.showValueAxis ?? true);
   const hideCategoryAxis = Boolean(xAxis.hide ?? legacyRecharts.hideCategoryAxis ?? false);
   const showTooltip = tooltip.enabled ?? legacyRecharts.showTooltip ?? true;
   const legendPosition = String(legend.position ?? legacyRecharts.legendPosition ?? "bottom").trim().toLowerCase();
-  const showLegend = legend.enabled ?? (legacyRecharts.showLegend !== false);
+  const showLegend = legend.enabled ?? (legacyRecharts.showLegend ?? seriesDefs.length > 1);
   const showGrid = grid.enabled ?? (legacyRecharts.showGrid ?? true);
   const gridVertical = Boolean(grid.vertical ?? legacyRecharts.gridVertical);
   const gridDasharray = String(grid.strokeDasharray ?? legacyRecharts.gridDasharray ?? "3 3");
   const categoryTickMargin = Number(xAxis.tickMargin ?? legacyRecharts.categoryTickMargin ?? 10);
   const valueTickMargin = Number(yAxis.tickMargin ?? legacyRecharts.valueTickMargin ?? 8);
   const valueAxisWidth = Number(yAxis.width ?? legacyRecharts.valueAxisWidth ?? 64);
-  const strokeWidth = Number(series.strokeWidth ?? legacyRecharts.strokeWidth ?? 2);
-  const showDots = series.showDots ?? legacyRecharts.showDots;
-  const activeDot = series.activeDot ?? legacyRecharts.activeDot ?? { r: 4 };
-  const curve = series.curve ?? legacyRecharts.curve ?? "monotone";
-  const singleSeriesGradient = series.singleSeriesGradient ?? legacyRecharts.singleSeriesGradient;
-  const connectNulls = Boolean(series.connectNulls ?? legacyRecharts.connectNulls);
+  const strokeWidth = Number(seriesStyle.strokeWidth ?? legacyRecharts.strokeWidth ?? 2);
+  const showDots = seriesStyle.showDots ?? legacyRecharts.showDots;
+  const activeDot = seriesStyle.activeDot ?? legacyRecharts.activeDot ?? { r: 4 };
+  const curve = seriesStyle.curve ?? legacyRecharts.curve ?? "monotone";
+  const singleSeriesGradient = seriesStyle.singleSeriesGradient ?? legacyRecharts.singleSeriesGradient;
+  const connectNulls = Boolean(seriesStyle.connectNulls ?? legacyRecharts.connectNulls);
   const margin = (element?.props?.margin as AnyRecord | undefined) || legacyRecharts.margin || { top: 10, right: 12, bottom: 12, left: 12 };
 
   const normalizedRows = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
     return src.map((row) => {
       const record = row as AnyRecord;
-      return {
-        x: getFieldValue(record, xFieldName, ["label", "x"]),
-        y: Number(getFieldValue(record, yFieldName, ["value", "y"]) ?? 0),
-        filterKey: getFieldValue(record, keyFieldName, ["key", xFieldName, "label", "x"]),
-        series: seriesFieldName ? String(getFieldValue(record, seriesFieldName, ["series"]) ?? "Series") : "Series",
+      const normalized: AnyRecord = {
+        x: getFieldValue(record, axisDataKey, ["label", "x"]),
+        filterKey: getFieldValue(record, keyField, ["key", axisDataKey, "label", "x"]),
+        series: seriesField ? String(getFieldValue(record, seriesField, ["series"]) ?? "Series") : "Series",
       };
+      for (const [index, seriesDef] of seriesDefs.entries()) {
+        normalized[seriesDef.dataKey] = Number(
+          getFieldValue(
+            record,
+            seriesDef.dataKey,
+            index === 0 ? ["value", "y"] : [seriesDef.dataKey],
+          ) ?? 0,
+        );
+      }
+      return normalized;
     });
-  }, [serverRows, xFieldName, yFieldName, keyFieldName, seriesFieldName]);
+  }, [serverRows, axisDataKey, keyField, seriesField, seriesDefs]);
 
   const chartData = React.useMemo(() => {
-    if (!seriesFieldName) {
-      return normalizedRows.map((row) => ({ x: String(row.x ?? ""), value: row.y, filterKey: row.filterKey }));
+    if (seriesDefs.length > 1) {
+      return normalizedRows.map((row) => {
+        const next: AnyRecord = {
+          x: String(row.x ?? ""),
+          filterKey: row.filterKey,
+        };
+        for (const seriesDef of seriesDefs) {
+          next[seriesDef.dataKey] = Number(row[seriesDef.dataKey] ?? 0);
+        }
+        return next;
+      });
+    }
+    if (!seriesField) {
+      const singleSeries = seriesDefs[0]?.dataKey || "value";
+      return normalizedRows.map((row) => ({ x: String(row.x ?? ""), [singleSeries]: Number(row[singleSeries] ?? 0), filterKey: row.filterKey }));
     }
     const byX = new Map<string, AnyRecord>();
     normalizedRows.forEach((row) => {
       const key = String(row.x ?? "");
       const current = byX.get(key) || { x: key, filterKey: row.filterKey };
-      current[row.series] = row.y;
+      current[row.series] = Number(row[seriesDefs[0]?.dataKey || "value"] ?? 0);
       byX.set(key, current);
     });
     return Array.from(byX.values());
-  }, [normalizedRows, seriesFieldName]);
+  }, [normalizedRows, seriesField, seriesDefs]);
 
   const seriesKeys = React.useMemo(() => {
-    if (!seriesFieldName) return ["value"];
+    if (seriesDefs.length > 1) return seriesDefs.map((seriesDef) => seriesDef.dataKey);
+    if (!seriesField) return [seriesDefs[0]?.dataKey || "value"];
     return Array.from(new Set(normalizedRows.map((row) => row.series)));
-  }, [normalizedRows, seriesFieldName]);
-  const useSingleSeriesGradient = Boolean(singleSeriesGradient ?? (!seriesFieldName && colors.length > 1));
+  }, [normalizedRows, seriesField, seriesDefs]);
+  const renderedSeries = React.useMemo(
+    () =>
+      seriesKeys.map((key, index) => {
+        const seriesDef = seriesDefs.find((entry) => entry.dataKey === key);
+        return {
+          key,
+          label: seriesDef?.label ?? key,
+          stroke: seriesDef?.color ?? colors[index % colors.length],
+          strokeWidth: seriesDef?.strokeWidth ?? strokeWidth,
+        };
+      }),
+    [seriesKeys, seriesDefs, colors, strokeWidth],
+  );
+  const useSingleSeriesGradient = Boolean(singleSeriesGradient ?? (!seriesField && seriesDefs.length <= 1 && colors.length > 1));
 
   const handleClick = React.useCallback((payload: any) => {
     if (!shouldClickFilter || !resolvedFilterStorePath) return;
@@ -134,14 +182,15 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
               layout={legendPosition === "right" ? "vertical" : "horizontal"}
             />
           ) : null}
-          {seriesKeys.map((key, index) => (
+          {renderedSeries.map((entry) => (
             <Line
-              key={key}
+              key={entry.key}
               type={curve}
-              dataKey={key}
-              stroke={useSingleSeriesGradient && seriesKeys.length === 1 ? `url(#${gradientId})` : colors[index % colors.length]}
-              strokeWidth={strokeWidth}
-              dot={showDots === true ? { fill: colors[index % colors.length], stroke: colors[index % colors.length] } : false}
+              dataKey={entry.key}
+              name={entry.label}
+              stroke={useSingleSeriesGradient && renderedSeries.length === 1 ? `url(#${gradientId})` : entry.stroke}
+              strokeWidth={entry.strokeWidth}
+              dot={showDots === true ? { fill: entry.stroke, stroke: entry.stroke } : false}
               activeDot={activeDot}
               connectNulls={connectNulls}
             />

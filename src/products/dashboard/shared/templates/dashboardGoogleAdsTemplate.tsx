@@ -220,13 +220,13 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                         GROUP BY 1, 2
                         ORDER BY 3 DESC
                       \`,
-                      xField: 'label',
-                      yField: 'value',
-                      keyField: 'key',
                       limit: 8,
                     }}
+                    xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
+                    series={[
+                      { dataKey: 'value', label: 'Gasto', color: '${ui.chartScheme[0]}' },
+                    ]}
                     yAxis={{ width: 86 }}
-                    xAxis={{ labelMode: 'first-word' }}
                   />
                 </article>
 
@@ -254,13 +254,13 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                         GROUP BY 1, 2
                         ORDER BY 3 DESC
                       \`,
-                      xField: 'label',
-                      yField: 'value',
-                      keyField: 'key',
                       limit: 6,
                     }}
+                    xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
+                    series={[
+                      { dataKey: 'value', label: 'CTR', color: '${ui.chartScheme[0]}' },
+                    ]}
                     yAxis={{ width: 86 }}
-                    xAxis={{ labelMode: 'first-word' }}
                   />
                 </article>
               </section>
@@ -292,13 +292,14 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                         GROUP BY 1, 2
                         ORDER BY 1 ASC
                       \`,
-                      xField: 'label',
-                      yField: 'value',
-                      keyField: 'key',
                       limit: 12,
                     }}
+                    xAxis={{ dataKey: 'label' }}
+                    series={[
+                      { dataKey: 'value', label: 'Gasto', color: '${ui.chartScheme[0]}' },
+                    ]}
                     yAxis={{ width: 86 }}
-                    series={{ showDots: false, singleSeriesGradient: true }}
+                    recharts={{ showDots: false, singleSeriesGradient: true }}
                   />
                 </article>
 
@@ -326,12 +327,12 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                           GROUP BY 1, 2
                           ORDER BY 1 ASC
                         \`,
-                        xField: 'label',
-                        yField: 'value',
-                        keyField: 'key',
                         limit: 12,
                       }}
-                      xAxis={{ labelMode: 'first-word' }}
+                      xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
+                      series={[
+                        { dataKey: 'value', label: 'CVR', color: '${ui.chartScheme[0]}' },
+                      ]}
                     />
                   </article>
                   <article style={${JSON.stringify(ui.panelCardAlt)}}>

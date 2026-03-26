@@ -151,9 +151,9 @@ function normalizeSeries(rawSeries: unknown): ComposedSeriesDef[] {
       const type: "bar" | "line" =
         String(item.type || "bar").trim().toLowerCase() === "line" ? "line" : "bar";
       const yAxis: "left" | "right" =
-        String(item.yAxis || item.yaxis || "left").trim().toLowerCase() === "right" ? "right" : "left";
+        String(item.axis || item.yAxis || item.yaxis || "left").trim().toLowerCase() === "right" ? "right" : "left";
       return {
-        field: String(item.field || "").trim(),
+        field: String(item.dataKey || item.field || "").trim(),
         type,
         label: typeof item.label === "string" && item.label.trim() ? item.label : undefined,
         color: typeof item.color === "string" && item.color.trim() ? item.color : undefined,
@@ -167,9 +167,14 @@ function normalizeSeries(rawSeries: unknown): ComposedSeriesDef[] {
 export default function JsonRenderComposedChart({ element }: { element: any }) {
   const { data, setData } = useData();
   const theme = useThemeOverrides();
+  const props = (element?.props || {}) as AnyRecord;
   const dq = element?.props?.dataQuery as AnyRecord | undefined;
   const seriesDefs = React.useMemo(() => normalizeSeries(element?.props?.series), [element?.props?.series]);
-  const xFieldName = typeof dq?.xField === "string" ? dq.xField.trim() : "label";
+  const xAxis = (props.xAxis as AnyRecord | undefined) || {};
+  const xFieldName =
+    (typeof xAxis.dataKey === "string" && xAxis.dataKey.trim()) ||
+    (typeof dq?.xField === "string" && dq.xField.trim()) ||
+    "label";
   const keyFieldName = typeof dq?.keyField === "string" ? dq.keyField.trim() : "key";
   const interaction = (element?.props?.interaction as AnyRecord | undefined) || {};
   const clickAsFilter = Boolean(interaction?.clickAsFilter ?? true);
@@ -183,7 +188,7 @@ export default function JsonRenderComposedChart({ element }: { element: any }) {
   React.useEffect(() => {
     let cancelled = false;
     async function run() {
-      if (!dq?.query || !dq.xField || !seriesDefs.length) {
+      if (!dq?.query || !xFieldName || !seriesDefs.length) {
         setServerRows(null);
         setQueryError(null);
         return;
@@ -203,7 +208,7 @@ export default function JsonRenderComposedChart({ element }: { element: any }) {
           body: JSON.stringify({
             dataQuery: {
               query: dq.query,
-              xField: dq.xField,
+              xField: xFieldName,
               yField: seriesDefs[0]?.field,
               keyField: dq.keyField,
               filters,
@@ -231,7 +236,7 @@ export default function JsonRenderComposedChart({ element }: { element: any }) {
     return () => {
       cancelled = true;
     };
-  }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters), JSON.stringify(seriesDefs)]);
+  }, [JSON.stringify(dq), JSON.stringify((data as any)?.filters), JSON.stringify(seriesDefs), xFieldName]);
 
   const fmt = (element?.props?.format ?? "number") as "currency" | "percent" | "number";
   const height = (element?.props?.height as number | undefined) ?? 280;

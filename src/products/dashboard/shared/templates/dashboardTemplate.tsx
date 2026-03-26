@@ -200,74 +200,7 @@ TabsMarker.displayName = 'Tabs'
 TabMarker.displayName = 'Tab'
 TabPanelMarker.displayName = 'TabPanel'
 
-const DASHBOARD_VARIANTS: DashboardVariantConfig[] = [
-  {
-    badge: 'Commercial Pulse',
-    eyebrow: 'Q1 2026 Sales Overview',
-    fileName: 'dashboard-vendas.tsx',
-    footer: 'JSX dashboard baseline with filters, charts and tabular widgets restored on top of the new runtime.',
-    name: 'dashboard_vendas',
-    path: 'app/dashboard-vendas.tsx',
-    priorities: [
-      'Review topline revenue performance and compare against target pacing.',
-      'Check which channels are carrying the strongest conversion momentum.',
-      'Align weekly operating actions before reintroducing richer BI widgets.',
-    ],
-    subtitle: 'Resumo comercial com foco em clareza visual e narrativa executiva.',
-    summary:
-      'The dashboard keeps the JSX-first structure, but now reconnects the BI widgets that matter most: filters, charts and tabular analysis.',
-    title: 'Dashboard de Vendas',
-    metrics: [
-      { label: 'Receita do periodo', note: 'vs. forecast mensal', value: 'R$ 4,8M' },
-      { label: 'Pipeline ativo', note: 'oportunidades em negociacao', value: '126 deals' },
-      { label: 'Conversao media', note: 'margem comercial atual', value: '18,4%' },
-    ],
-  },
-  {
-    badge: 'Executive Review',
-    eyebrow: 'Leadership Snapshot',
-    fileName: 'dashboard-executivo.tsx',
-    footer: 'Executive dashboard now keeps the JSX runtime while reconnecting interactive BI controls and widgets.',
-    name: 'dashboard_executivo',
-    path: 'app/dashboard-executivo.tsx',
-    priorities: [
-      'Keep the leadership summary concise enough for a quick read.',
-      'Highlight the few operational questions that actually require escalation.',
-      'Preserve a layout that remains stable while the runtime migrates away from DSL strings.',
-    ],
-    subtitle: 'Visao geral dos principais resultados para lideranca e acompanhamento semanal.',
-    summary:
-      'This executive view stays semantic and predictable, while bringing back the interactive controls leaders actually need during review.',
-    title: 'Dashboard Executivo',
-    metrics: [
-      { label: 'Resultado consolidado', note: 'receita liquida acumulada', value: 'R$ 9,2M' },
-      { label: 'Contas prioritarias', note: 'clientes com maior impacto', value: '24 contas' },
-      { label: 'Risco operacional', note: 'itens que pedem atencao', value: '3 alertas' },
-    ],
-  },
-  {
-    badge: 'Ops Focus',
-    eyebrow: 'Operational Monitoring',
-    fileName: 'dashboard-operacoes.tsx',
-    footer: 'Operations dashboard on JSX runtime with query-driven charts, tables and filters wired back in.',
-    name: 'dashboard_operacoes',
-    path: 'app/dashboard-operacoes.tsx',
-    priorities: [
-      'Track the execution baseline with readable blocks instead of dense widget grids.',
-      'Expose blockers, pending actions and owner responsibilities in plain language.',
-      'Stabilize runtime behavior before adding back live operational widgets.',
-    ],
-    subtitle: 'Acompanhamento operacional e produtividade com layout simples e deterministico.',
-    summary:
-      'The operations dashboard keeps the parser out of the way and proves the JSX runtime can host the existing BI widgets directly.',
-    title: 'Dashboard de Operacoes',
-    metrics: [
-      { label: 'Tickets resolvidos', note: 'janela semanal consolidada', value: '842 itens' },
-      { label: 'SLAs no prazo', note: 'atendimento dentro da meta', value: '96,1%' },
-      { label: 'Capacidade disponivel', note: 'time alocado para backlog', value: '14 squads' },
-    ],
-  },
-]
+const DASHBOARD_VARIANTS: DashboardVariantConfig[] = []
 
 const SALES_CHANNEL_INTERACTION = {
   table: 'vendas.pedidos',
@@ -1511,6 +1444,8 @@ function buildDashboardTemplate(config: DashboardVariantConfig, themeName: strin
   )
 }
 
+void buildDashboardTemplate
+
 const CLASSIC_DASHBOARD_VARIANT: StandaloneDashboardVariant = {
   fileName: 'dashboard-classico.tsx',
   name: 'dashboard_classico',
@@ -1742,14 +1677,14 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                     GROUP BY 1, 2
                     ORDER BY 3 DESC
                   \`,
-                  xField: 'label',
-                  yField: 'value',
-                  keyField: 'key',
                   limit: 6,
                 }}
                 interaction={{ table: 'vendas.pedidos', field: 'canal_venda_id', clearOnSecondClick: true }}
                 colors={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
-                xAxis={{ labelMode: 'first-word' }}
+                xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
+                series={[
+                  { dataKey: 'value', label: 'Receita', color: '#2563EB' },
+                ]}
                 yAxis={{ width: 72 }}
               />
             </Card>
@@ -1777,15 +1712,16 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                     GROUP BY 1, 2
                     ORDER BY 3 DESC
                   \`,
-                  xField: 'label',
-                  yField: 'value',
-                  keyField: 'key',
                   limit: 6,
                 }}
                 interaction={{ table: 'vendas.pedidos', field: 'canal_venda_id', clearOnSecondClick: true }}
                 colors={['#2563EB', '#0F766E', '#EA580C', '#7C3AED', '#DC2626']}
+                categoryKey="label"
                 legend={{ enabled: true, position: 'right' }}
-                series={{ innerRadius: 56, outerRadius: 96, showLabels: false }}
+                series={[
+                  { dataKey: 'value', label: 'Receita', color: '#2563EB' },
+                ]}
+                recharts={{ innerRadius: 56, outerRadius: 96, showLabels: false }}
               />
             </Card>
           </section>
@@ -1813,14 +1749,15 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                       GROUP BY 1, 2
                       ORDER BY 1 ASC
                     \`,
-                    xField: 'label',
-                    yField: 'value',
-                    keyField: 'key',
                     limit: 31,
                   }}
                   colors={['#2563EB', '#60A5FA', '#93C5FD']}
+                  xAxis={{ dataKey: 'label' }}
+                  series={[
+                    { dataKey: 'value', label: 'Receita', color: '#2563EB' },
+                  ]}
                   yAxis={{ width: 72 }}
-                  series={{ showDots: false, singleSeriesGradient: true }}
+                  recharts={{ showDots: false, singleSeriesGradient: true }}
                 />
               </div>
             </Card>
@@ -1891,11 +1828,13 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                     GROUP BY 1
                     ORDER BY 2 DESC
                   \`,
-                  xField: 'label',
-                  yField: 'value',
                   limit: 8,
                 }}
                 colors={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
+                xAxis={{ dataKey: 'label' }}
+                series={[
+                  { dataKey: 'value', label: 'Pedidos', color: '#2563EB' },
+                ]}
               />
             </Card>
 
