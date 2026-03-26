@@ -12,6 +12,8 @@ const FINANCEIRO_VARIANT = {
 function buildFinanceiroDashboardSource(themeName: string) {
   const ui = buildDashboardModuleUi(themeName)
   return `export function DashboardFinanceiro() {
+  const CHART_COLORS = ['#0F766E', '#14B8A6', '#2DD4BF', '#5EEAD4', '#99F6E4']
+
   return (
     <DashboardTemplate name="${FINANCEIRO_VARIANT.name}" title="${FINANCEIRO_VARIANT.title}">
       <Theme name="${themeName}" />
@@ -175,7 +177,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
                 type="bar"
                 height={320}
                 format="currency"
-                colors={${JSON.stringify(ui.chartScheme)}}
+                colors={CHART_COLORS}
                 dataQuery={{
                   query: \`
                     SELECT
@@ -193,7 +195,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
                 }}
                 xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
                 series={[
-                  { dataKey: 'value', label: 'Contas a pagar', color: '${ui.chartScheme[0]}' },
+                  { dataKey: 'value', label: 'Contas a pagar' },
                 ]}
                 yAxis={{ width: 86 }}
               />
@@ -208,7 +210,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
                 type="pie"
                 height={320}
                 format="number"
-                colors={${JSON.stringify(ui.chartScheme)}}
+                colors={CHART_COLORS}
                 dataQuery={{
                   query: \`
                     SELECT
@@ -226,7 +228,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
                 categoryKey="label"
                 legend={{ enabled: true, position: 'right' }}
                 series={[
-                  { dataKey: 'value', label: 'Titulos', color: '${ui.chartScheme[0]}' },
+                  { dataKey: 'value', label: 'Titulos' },
                 ]}
                 recharts={{ innerRadius: 54, outerRadius: 92, paddingAngle: 2, showLabels: false }}
               />
@@ -244,7 +246,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
                 type="line"
                 height={320}
                 format="currency"
-                colors={${JSON.stringify(ui.chartScheme)}}
+                colors={CHART_COLORS}
                 dataQuery={{
                   query: \`
                     SELECT
@@ -261,7 +263,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
                 }}
                 xAxis={{ dataKey: 'label' }}
                 series={[
-                  { dataKey: 'value', label: 'Recebimentos', color: '${ui.chartScheme[0]}' },
+                  { dataKey: 'value', label: 'Recebimentos' },
                 ]}
                 yAxis={{ width: 86 }}
                 recharts={{ showDots: false, singleSeriesGradient: true }}
@@ -277,7 +279,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
                 type="bar"
                 height={320}
                 format="currency"
-                colors={${JSON.stringify(ui.chartScheme)}}
+                colors={CHART_COLORS}
                 dataQuery={{
                   query: \`
                     SELECT
@@ -295,7 +297,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
                 }}
                 xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
                 series={[
-                  { dataKey: 'value', label: 'Recebimentos', color: '${ui.chartScheme[0]}' },
+                  { dataKey: 'value', label: 'Recebimentos' },
                 ]}
                 yAxis={{ width: 86 }}
               />

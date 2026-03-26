@@ -12,6 +12,8 @@ const COMPRAS_VARIANT = {
 function buildComprasDashboardSource(themeName: string) {
   const ui = buildDashboardModuleUi(themeName)
   return `export function DashboardCompras() {
+  const CHART_COLORS = ['#1D4ED8', '#3B82F6', '#60A5FA', '#93C5FD', '#BFDBFE']
+
   return (
     <DashboardTemplate name="${COMPRAS_VARIANT.name}" title="${COMPRAS_VARIANT.title}">
       <Theme name="${themeName}" />
@@ -163,7 +165,7 @@ function buildComprasDashboardSource(themeName: string) {
                 type="bar"
                 height={320}
                 format="currency"
-                colors={${JSON.stringify(ui.chartScheme)}}
+                colors={CHART_COLORS}
                 dataQuery={{
                   query: \`
                     SELECT
@@ -181,7 +183,7 @@ function buildComprasDashboardSource(themeName: string) {
                 }}
                 xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
                 series={[
-                  { dataKey: 'value', label: 'Gasto', color: '${ui.chartScheme[0]}' },
+                  { dataKey: 'value', label: 'Gasto' },
                 ]}
                 yAxis={{ width: 86 }}
               />
@@ -197,7 +199,7 @@ function buildComprasDashboardSource(themeName: string) {
                 type="pie"
                 height={320}
                 format="currency"
-                colors={${JSON.stringify(ui.chartScheme)}}
+                colors={CHART_COLORS}
                 dataQuery={{
                   query: \`
                     SELECT
@@ -216,7 +218,7 @@ function buildComprasDashboardSource(themeName: string) {
                 categoryKey="label"
                 legend={{ enabled: true, position: 'right' }}
                 series={[
-                  { dataKey: 'value', label: 'Gasto', color: '${ui.chartScheme[0]}' },
+                  { dataKey: 'value', label: 'Gasto' },
                 ]}
                 recharts={{ innerRadius: 54, outerRadius: 92, paddingAngle: 2, showLabels: false }}
               />
@@ -234,7 +236,7 @@ function buildComprasDashboardSource(themeName: string) {
                 type="line"
                 height={320}
                 format="currency"
-                colors={${JSON.stringify(ui.chartScheme)}}
+                colors={CHART_COLORS}
                 dataQuery={{
                   query: \`
                     SELECT
@@ -251,7 +253,7 @@ function buildComprasDashboardSource(themeName: string) {
                 }}
                 xAxis={{ dataKey: 'label' }}
                 series={[
-                  { dataKey: 'value', label: 'Gasto', color: '${ui.chartScheme[0]}' },
+                  { dataKey: 'value', label: 'Gasto' },
                 ]}
                 yAxis={{ width: 86 }}
                 recharts={{ showDots: false, singleSeriesGradient: true }}
@@ -267,7 +269,7 @@ function buildComprasDashboardSource(themeName: string) {
                 type="bar"
                 height={320}
                 format="number"
-                colors={${JSON.stringify(ui.chartScheme)}}
+                colors={CHART_COLORS}
                 dataQuery={{
                   query: \`
                     SELECT
@@ -284,7 +286,7 @@ function buildComprasDashboardSource(themeName: string) {
                 }}
                 xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
                 series={[
-                  { dataKey: 'value', label: 'Pedidos', color: '${ui.chartScheme[0]}' },
+                  { dataKey: 'value', label: 'Pedidos' },
                 ]}
               />
             </article>

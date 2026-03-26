@@ -1457,6 +1457,8 @@ function buildClassicDashboardTemplateSource(themeName: string) {
   const ui = buildDashboardThemeUi(themeName, 'classic')
   const cardFrameSource = buildFramePropSource(ui.cardFrame)
   return `export function DashboardClassico() {
+  const CHART_COLORS = ['#0F766E', '#14B8A6', '#2DD4BF', '#5EEAD4', '#99F6E4']
+
   return (
     <DashboardTemplate name="${CLASSIC_DASHBOARD_VARIANT.name}" title="${CLASSIC_DASHBOARD_VARIANT.title}">
       <Theme name="${themeName}" />
@@ -1680,10 +1682,10 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                   limit: 6,
                 }}
                 interaction={{ table: 'vendas.pedidos', field: 'canal_venda_id', clearOnSecondClick: true }}
-                colors={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
+                colors={CHART_COLORS}
                 xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
                 series={[
-                  { dataKey: 'value', label: 'Receita', color: '#2563EB' },
+                  { dataKey: 'value', label: 'Receita' },
                 ]}
                 yAxis={{ width: 72 }}
               />
@@ -1715,11 +1717,11 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                   limit: 6,
                 }}
                 interaction={{ table: 'vendas.pedidos', field: 'canal_venda_id', clearOnSecondClick: true }}
-                colors={['#2563EB', '#0F766E', '#EA580C', '#7C3AED', '#DC2626']}
+                colors={CHART_COLORS}
                 categoryKey="label"
                 legend={{ enabled: true, position: 'right' }}
                 series={[
-                  { dataKey: 'value', label: 'Receita', color: '#2563EB' },
+                  { dataKey: 'value', label: 'Receita' },
                 ]}
                 recharts={{ innerRadius: 56, outerRadius: 96, showLabels: false }}
               />
@@ -1751,10 +1753,10 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                     \`,
                     limit: 31,
                   }}
-                  colors={['#2563EB', '#60A5FA', '#93C5FD']}
+                  colors={CHART_COLORS}
                   xAxis={{ dataKey: 'label' }}
                   series={[
-                    { dataKey: 'value', label: 'Receita', color: '#2563EB' },
+                    { dataKey: 'value', label: 'Receita' },
                   ]}
                   yAxis={{ width: 72 }}
                   recharts={{ showDots: false, singleSeriesGradient: true }}
@@ -1830,10 +1832,10 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                   \`,
                   limit: 8,
                 }}
-                colors={['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE']}
+                colors={CHART_COLORS}
                 xAxis={{ dataKey: 'label' }}
                 series={[
-                  { dataKey: 'value', label: 'Pedidos', color: '#2563EB' },
+                  { dataKey: 'value', label: 'Pedidos' },
                 ]}
               />
             </Card>

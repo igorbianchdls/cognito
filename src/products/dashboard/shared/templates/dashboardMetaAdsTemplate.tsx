@@ -12,6 +12,8 @@ const METAADS_VARIANT = {
 function buildMetaAdsDashboardSource(themeName: string) {
   const ui = buildDashboardModuleUi(themeName)
   return `export function DashboardMetaAds() {
+  const CHART_COLORS = ['#7C3AED', '#8B5CF6', '#A78BFA', '#C4B5FD', '#DDD6FE']
+
   return (
     <DashboardTemplate name="${METAADS_VARIANT.name}" title="${METAADS_VARIANT.title}">
       <Theme name="${themeName}" />
@@ -205,7 +207,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
                     type="bar"
                     height={320}
                     format="currency"
-                    colors={${JSON.stringify(ui.chartScheme)}}
+                    colors={CHART_COLORS}
                     dataQuery={{
                       query: \`
                         SELECT
@@ -223,7 +225,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
                     }}
                     xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
                     series={[
-                      { dataKey: 'value', label: 'Gasto', color: '${ui.chartScheme[0]}' },
+                      { dataKey: 'value', label: 'Gasto' },
                     ]}
                     yAxis={{ width: 86 }}
                   />
@@ -239,7 +241,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
                     type="pie"
                     height={320}
                     format="currency"
-                    colors={${JSON.stringify(ui.chartScheme)}}
+                    colors={CHART_COLORS}
                     dataQuery={{
                       query: \`
                         SELECT
@@ -258,7 +260,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
                     categoryKey="label"
                     legend={{ enabled: true, position: 'right' }}
                     series={[
-                      { dataKey: 'value', label: 'Gasto', color: '${ui.chartScheme[0]}' },
+                      { dataKey: 'value', label: 'Gasto' },
                     ]}
                     recharts={{ innerRadius: 54, outerRadius: 92, paddingAngle: 2, showLabels: false }}
                   />
@@ -278,7 +280,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
                     type="line"
                     height={320}
                     format="number"
-                    colors={${JSON.stringify(ui.chartScheme)}}
+                    colors={CHART_COLORS}
                     dataQuery={{
                       query: \`
                         SELECT
@@ -296,7 +298,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
                     }}
                     xAxis={{ dataKey: 'label' }}
                     series={[
-                      { dataKey: 'value', label: 'ROAS', color: '${ui.chartScheme[0]}' },
+                      { dataKey: 'value', label: 'ROAS' },
                     ]}
                     yAxis={{ width: 86 }}
                     recharts={{ showDots: false, singleSeriesGradient: true }}
@@ -313,7 +315,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
                       type="bar"
                       height={220}
                       format="number"
-                      colors={${JSON.stringify(ui.chartScheme)}}
+                      colors={CHART_COLORS}
                       dataQuery={{
                         query: \`
                           SELECT
@@ -331,7 +333,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
                       }}
                       xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
                       series={[
-                        { dataKey: 'value', label: 'Leads', color: '${ui.chartScheme[0]}' },
+                        { dataKey: 'value', label: 'Leads' },
                       ]}
                     />
                   </article>

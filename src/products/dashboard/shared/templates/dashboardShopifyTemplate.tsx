@@ -12,6 +12,8 @@ const SHOPIFY_VARIANT = {
 function buildShopifyDashboardSource(themeName: string) {
   const ui = buildDashboardModuleUi(themeName)
   return `export function DashboardShopify() {
+  const CHART_COLORS = ['#DC2626', '#EF4444', '#F87171', '#FCA5A5', '#FECACA']
+
   return (
     <DashboardTemplate name="${SHOPIFY_VARIANT.name}" title="${SHOPIFY_VARIANT.title}">
       <Theme name="${themeName}" />
@@ -198,7 +200,7 @@ function buildShopifyDashboardSource(themeName: string) {
                     type="bar"
                     height={320}
                     format="currency"
-                    colors={${JSON.stringify(ui.chartScheme)}}
+                    colors={CHART_COLORS}
                     dataQuery={{
                       query: \`
                         SELECT
@@ -215,7 +217,7 @@ function buildShopifyDashboardSource(themeName: string) {
                     }}
                     xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
                     series={[
-                      { dataKey: 'value', label: 'GMV', color: '${ui.chartScheme[0]}' },
+                      { dataKey: 'value', label: 'GMV' },
                     ]}
                     yAxis={{ width: 86 }}
                   />
@@ -231,7 +233,7 @@ function buildShopifyDashboardSource(themeName: string) {
                     type="pie"
                     height={320}
                     format="number"
-                    colors={${JSON.stringify(ui.chartScheme)}}
+                    colors={CHART_COLORS}
                     dataQuery={{
                       query: \`
                         SELECT
@@ -249,7 +251,7 @@ function buildShopifyDashboardSource(themeName: string) {
                     categoryKey="label"
                     legend={{ enabled: true, position: 'right' }}
                     series={[
-                      { dataKey: 'value', label: 'Pedidos', color: '${ui.chartScheme[0]}' },
+                      { dataKey: 'value', label: 'Pedidos' },
                     ]}
                     recharts={{ innerRadius: 54, outerRadius: 92, paddingAngle: 2, showLabels: false }}
                   />
@@ -269,7 +271,7 @@ function buildShopifyDashboardSource(themeName: string) {
                     type="line"
                     height={320}
                     format="currency"
-                    colors={${JSON.stringify(ui.chartScheme)}}
+                    colors={CHART_COLORS}
                     dataQuery={{
                       query: \`
                         SELECT
@@ -286,7 +288,7 @@ function buildShopifyDashboardSource(themeName: string) {
                     }}
                     xAxis={{ dataKey: 'label' }}
                     series={[
-                      { dataKey: 'value', label: 'GMV', color: '${ui.chartScheme[0]}' },
+                      { dataKey: 'value', label: 'GMV' },
                     ]}
                     yAxis={{ width: 86 }}
                     recharts={{ showDots: false, singleSeriesGradient: true }}
@@ -303,7 +305,7 @@ function buildShopifyDashboardSource(themeName: string) {
                       type="bar"
                       height={220}
                       format="number"
-                      colors={${JSON.stringify(ui.chartScheme)}}
+                      colors={CHART_COLORS}
                       dataQuery={{
                         query: \`
                           SELECT
@@ -320,7 +322,7 @@ function buildShopifyDashboardSource(themeName: string) {
                       }}
                       xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
                       series={[
-                        { dataKey: 'value', label: 'Pedidos', color: '${ui.chartScheme[0]}' },
+                        { dataKey: 'value', label: 'Pedidos' },
                       ]}
                     />
                   </article>

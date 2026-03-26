@@ -12,6 +12,8 @@ const GOOGLEADS_VARIANT = {
 function buildGoogleAdsDashboardSource(themeName: string) {
   const ui = buildDashboardModuleUi(themeName)
   return `export function DashboardGoogleAds() {
+  const CHART_COLORS = ['#EA580C', '#F97316', '#FB923C', '#FDBA74', '#FED7AA']
+
   return (
     <DashboardTemplate name="${GOOGLEADS_VARIANT.name}" title="${GOOGLEADS_VARIANT.title}">
       <Theme name="${themeName}" />
@@ -206,7 +208,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                     type="bar"
                     height={320}
                     format="currency"
-                    colors={${JSON.stringify(ui.chartScheme)}}
+                    colors={CHART_COLORS}
                     dataQuery={{
                       query: \`
                         SELECT
@@ -224,7 +226,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                     }}
                     xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
                     series={[
-                      { dataKey: 'value', label: 'Gasto', color: '${ui.chartScheme[0]}' },
+                      { dataKey: 'value', label: 'Gasto' },
                     ]}
                     yAxis={{ width: 86 }}
                   />
@@ -240,7 +242,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                     type="bar"
                     height={320}
                     format="percent"
-                    colors={${JSON.stringify(ui.chartScheme)}}
+                    colors={CHART_COLORS}
                     dataQuery={{
                       query: \`
                         SELECT
@@ -258,7 +260,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                     }}
                     xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
                     series={[
-                      { dataKey: 'value', label: 'CTR', color: '${ui.chartScheme[0]}' },
+                      { dataKey: 'value', label: 'CTR' },
                     ]}
                     yAxis={{ width: 86 }}
                   />
@@ -278,7 +280,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                     type="line"
                     height={320}
                     format="currency"
-                    colors={${JSON.stringify(ui.chartScheme)}}
+                    colors={CHART_COLORS}
                     dataQuery={{
                       query: \`
                         SELECT
@@ -296,7 +298,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                     }}
                     xAxis={{ dataKey: 'label' }}
                     series={[
-                      { dataKey: 'value', label: 'Gasto', color: '${ui.chartScheme[0]}' },
+                      { dataKey: 'value', label: 'Gasto' },
                     ]}
                     yAxis={{ width: 86 }}
                     recharts={{ showDots: false, singleSeriesGradient: true }}
@@ -313,7 +315,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                       type="bar"
                       height={220}
                       format="percent"
-                      colors={${JSON.stringify(ui.chartScheme)}}
+                      colors={CHART_COLORS}
                       dataQuery={{
                         query: \`
                           SELECT
@@ -331,7 +333,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                       }}
                       xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
                       series={[
-                        { dataKey: 'value', label: 'CVR', color: '${ui.chartScheme[0]}' },
+                        { dataKey: 'value', label: 'CVR' },
                       ]}
                     />
                   </article>
