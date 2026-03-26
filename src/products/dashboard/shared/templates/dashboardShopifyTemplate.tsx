@@ -35,7 +35,7 @@ function buildShopifyDashboardSource(themeName: string) {
           </header>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 18 }}>
-            <article style={${JSON.stringify(ui.panelCard)}}>
+            <Card style={${JSON.stringify(ui.panelCard)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={${JSON.stringify(ui.eyebrow)}}>Global controls</p>
                 <h2 style={${JSON.stringify(ui.title)}}>Periodo, loja e status</h2>
@@ -90,12 +90,12 @@ function buildShopifyDashboardSource(themeName: string) {
                   \`}
                 />
               </div>
-            </article>
+            </Card>
 
-            <article style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card style={${JSON.stringify(ui.panelCardAlt)}}>
               <p style={${JSON.stringify(ui.eyebrow)}}>Leitura esperada</p>
               <p style={${JSON.stringify(ui.paragraph)}}>Primeiro confira GMV e pedidos, depois veja se o mix de pagamento e fulfillment esta sustentando a operacao sem vazamento em reembolso.</p>
-            </article>
+            </Card>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 16 }}>
@@ -112,12 +112,12 @@ function buildShopifyDashboardSource(themeName: string) {
               format="currency"
               comparisonMode="previous_period"
             >
-              <article style={${JSON.stringify(ui.queryCard)}}>
+              <Card style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Receita bruta</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>GMV</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
                 <p style={${JSON.stringify(ui.kpiDelta)}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </article>
+              </Card>
             </Query>
             <Query
               dataQuery={{
@@ -132,12 +132,12 @@ function buildShopifyDashboardSource(themeName: string) {
               format="number"
               comparisonMode="previous_period"
             >
-              <article style={${JSON.stringify(ui.queryCard)}}>
+              <Card style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Volume</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Pedidos</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
                 <p style={${JSON.stringify(ui.kpiDelta)}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </article>
+              </Card>
             </Query>
             <Query
               dataQuery={{
@@ -152,12 +152,12 @@ function buildShopifyDashboardSource(themeName: string) {
               format="currency"
               comparisonMode="previous_period"
             >
-              <article style={${JSON.stringify(ui.queryCard)}}>
+              <Card style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Monetizacao</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Ticket medio</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
                 <p style={${JSON.stringify(ui.kpiDelta)}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </article>
+              </Card>
             </Query>
             <Query
               dataQuery={{
@@ -172,12 +172,12 @@ function buildShopifyDashboardSource(themeName: string) {
               format="currency"
               comparisonMode="previous_period"
             >
-              <article style={${JSON.stringify(ui.queryCard)}}>
+              <Card style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Leakage</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Reembolsos</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
                 <p style={${JSON.stringify(ui.kpiDelta)}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </article>
+              </Card>
             </Query>
           </section>
 
@@ -190,7 +190,7 @@ function buildShopifyDashboardSource(themeName: string) {
 
             <TabPanel value="sales">
               <section style={{ display: 'grid', gridTemplateColumns: '1.25fr 1fr', gap: 18 }}>
-                <article style={${JSON.stringify(ui.panelCard)}}>
+                <Card style={${JSON.stringify(ui.panelCard)}}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={${JSON.stringify(ui.eyebrow)}}>Store mix</p>
                     <h2 style={${JSON.stringify(ui.title)}}>GMV por loja</h2>
@@ -221,9 +221,9 @@ function buildShopifyDashboardSource(themeName: string) {
                     ]}
                     yAxis={{ width: 86 }}
                   />
-                </article>
+                </Card>
 
-                <article style={${JSON.stringify(ui.panelCardAlt)}}>
+                <Card style={${JSON.stringify(ui.panelCardAlt)}}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={${JSON.stringify(ui.eyebrow)}}>Payment mix</p>
                     <h2 style={${JSON.stringify(ui.title)}}>Pedidos por status de pagamento</h2>
@@ -255,13 +255,13 @@ function buildShopifyDashboardSource(themeName: string) {
                     ]}
                     recharts={{ innerRadius: 54, outerRadius: 92, paddingAngle: 2, showLabels: false }}
                   />
-                </article>
+                </Card>
               </section>
             </TabPanel>
 
             <TabPanel value="operations">
               <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 18 }}>
-                <article style={${JSON.stringify(ui.panelCard)}}>
+                <Card style={${JSON.stringify(ui.panelCard)}}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={${JSON.stringify(ui.eyebrow)}}>Trend</p>
                     <h2 style={${JSON.stringify(ui.title)}}>GMV por mes</h2>
@@ -293,10 +293,10 @@ function buildShopifyDashboardSource(themeName: string) {
                     yAxis={{ width: 86 }}
                     recharts={{ showDots: false, singleSeriesGradient: true }}
                   />
-                </article>
+                </Card>
 
                 <section style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 18 }}>
-                  <article style={${JSON.stringify(ui.panelCardAlt)}}>
+                  <Card style={${JSON.stringify(ui.panelCardAlt)}}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       <p style={${JSON.stringify(ui.eyebrow)}}>Fulfillment</p>
                       <h2 style={${JSON.stringify(ui.title)}}>Pedidos por fulfillment</h2>
@@ -325,8 +325,8 @@ function buildShopifyDashboardSource(themeName: string) {
                         { dataKey: 'value', label: 'Pedidos' },
                       ]}
                     />
-                  </article>
-                  <article style={${JSON.stringify(ui.panelCardAlt)}}>
+                  </Card>
+                  <Card style={${JSON.stringify(ui.panelCardAlt)}}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                       <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Leituras operacionais</h2>
                       <p style={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.6 }}>Perguntas para o time alinhar comercial, pagamento e fulfillment.</p>
@@ -340,14 +340,14 @@ function buildShopifyDashboardSource(themeName: string) {
                         { text: 'Lojas com ticket maior e reembolso alto pedem leitura de sortimento, frete, promessa comercial e operacao de entrega.' },
                       ]}
                     />
-                  </article>
+                  </Card>
                 </section>
               </section>
             </TabPanel>
 
             <TabPanel value="details">
               <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 18 }}>
-                <article style={${JSON.stringify(ui.panelCard)}}>
+                <Card style={${JSON.stringify(ui.panelCard)}}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={${JSON.stringify(ui.eyebrow)}}>Table</p>
                     <h2 style={${JSON.stringify(ui.title)}}>Pedidos no detalhe</h2>
@@ -388,9 +388,9 @@ function buildShopifyDashboardSource(themeName: string) {
                       { accessorKey: 'valor_total', header: 'Valor', format: 'currency', align: 'right', headerAlign: 'right' },
                     ]}
                   />
-                </article>
+                </Card>
 
-                <article style={${JSON.stringify(ui.panelCardAlt)}}>
+                <Card style={${JSON.stringify(ui.panelCardAlt)}}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={${JSON.stringify(ui.eyebrow)}}>Pivot</p>
                     <h2 style={${JSON.stringify(ui.title)}}>Loja por pagamento</h2>
@@ -427,7 +427,7 @@ function buildShopifyDashboardSource(themeName: string) {
                     columns={[{ field: 'status_pagamento', label: 'Pagamento' }]}
                     values={[{ field: 'valor_total', label: 'GMV', aggregate: 'sum', format: 'currency' }]}
                   />
-                </article>
+                </Card>
               </section>
             </TabPanel>
           </Tabs>

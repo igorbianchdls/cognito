@@ -50,7 +50,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
           </header>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 16 }}>
-            <article style={${JSON.stringify(ui.panelCard)}}>
+            <Card style={${JSON.stringify(ui.panelCard)}}>
               <p style={${JSON.stringify(ui.eyebrow)}}>Filtro</p>
               <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Status</h2>
               <Slicer
@@ -70,9 +70,9 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   ORDER BY 2 ASC
                 \`}
               />
-            </article>
+            </Card>
 
-            <article style={${JSON.stringify(ui.panelCard)}}>
+            <Card style={${JSON.stringify(ui.panelCard)}}>
               <p style={${JSON.stringify(ui.eyebrow)}}>Filtro</p>
               <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Categoria despesa</h2>
               <Slicer
@@ -93,9 +93,9 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   ORDER BY 2 ASC
                 \`}
               />
-            </article>
+            </Card>
 
-            <article style={${JSON.stringify(ui.panelCard)}}>
+            <Card style={${JSON.stringify(ui.panelCard)}}>
               <p style={${JSON.stringify(ui.eyebrow)}}>Filtro</p>
               <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Fornecedor</h2>
               <Slicer
@@ -116,25 +116,25 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   ORDER BY 2 ASC
                 \`}
               />
-            </article>
+            </Card>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 16 }}>
             <Query dataQuery={{ query: \`SELECT COALESCE(SUM(cr.valor_liquido), 0)::float AS value FROM financeiro.contas_receber cr WHERE 1=1 {{filters:cr}}\`, limit: 1 }} format="currency" comparisonMode="previous_period">
-              <article style={${JSON.stringify(ui.queryCard)}}>
+              <Card style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Recebimentos</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Contas a receber</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
                 <p style={${JSON.stringify(ui.kpiDelta)}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </article>
+              </Card>
             </Query>
             <Query dataQuery={{ query: \`SELECT COALESCE(SUM(cp.valor_liquido), 0)::float AS value FROM financeiro.contas_pagar cp WHERE 1=1 {{filters:cp}}\`, limit: 1 }} format="currency" comparisonMode="previous_period">
-              <article style={${JSON.stringify(ui.queryCard)}}>
+              <Card style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Pagamentos</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Contas a pagar</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
                 <p style={${JSON.stringify(ui.kpiDelta)}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </article>
+              </Card>
             </Query>
             <Query
               dataQuery={{
@@ -149,25 +149,25 @@ function buildFinanceiroDashboardSource(themeName: string) {
               format="currency"
               comparisonMode="previous_period"
             >
-              <article style={${JSON.stringify(ui.queryCard)}}>
+              <Card style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Caixa</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Geracao liquida</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
                 <p style={${JSON.stringify(ui.kpiDelta)}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </article>
+              </Card>
             </Query>
             <Query dataQuery={{ query: \`SELECT COUNT(*)::float AS value FROM financeiro.contas_pagar cp WHERE 1=1 {{filters:cp}}\`, limit: 1 }} format="number" comparisonMode="previous_period">
-              <article style={${JSON.stringify(ui.queryCard)}}>
+              <Card style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Carga operacional</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Titulos em AP</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
                 <p style={${JSON.stringify(ui.kpiDelta)}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </article>
+              </Card>
             </Query>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.25fr 1fr', gap: 18 }}>
-            <article style={${JSON.stringify(ui.panelCard)}}>
+            <Card style={${JSON.stringify(ui.panelCard)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={${JSON.stringify(ui.eyebrow)}}>AP exposure</p>
                 <h2 style={${JSON.stringify(ui.title)}}>Contas a pagar por fornecedor</h2>
@@ -199,9 +199,9 @@ function buildFinanceiroDashboardSource(themeName: string) {
                 ]}
                 yAxis={{ width: 86 }}
               />
-            </article>
+            </Card>
 
-            <article style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card style={${JSON.stringify(ui.panelCardAlt)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={${JSON.stringify(ui.eyebrow)}}>Status mix</p>
                 <h2 style={${JSON.stringify(ui.title)}}>Titulos por status</h2>
@@ -232,11 +232,11 @@ function buildFinanceiroDashboardSource(themeName: string) {
                 ]}
                 recharts={{ innerRadius: 54, outerRadius: 92, paddingAngle: 2, showLabels: false }}
               />
-            </article>
+            </Card>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 18 }}>
-            <article style={${JSON.stringify(ui.panelCard)}}>
+            <Card style={${JSON.stringify(ui.panelCard)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={${JSON.stringify(ui.eyebrow)}}>AR trend</p>
                 <h2 style={${JSON.stringify(ui.title)}}>Recebimentos por mes</h2>
@@ -268,9 +268,9 @@ function buildFinanceiroDashboardSource(themeName: string) {
                 yAxis={{ width: 86 }}
                 recharts={{ showDots: false, singleSeriesGradient: true }}
               />
-            </article>
+            </Card>
 
-            <article style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card style={${JSON.stringify(ui.panelCardAlt)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={${JSON.stringify(ui.eyebrow)}}>AR coverage</p>
                 <h2 style={${JSON.stringify(ui.title)}}>Recebimentos por cliente</h2>
@@ -301,11 +301,11 @@ function buildFinanceiroDashboardSource(themeName: string) {
                 ]}
                 yAxis={{ width: 86 }}
               />
-            </article>
+            </Card>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 18 }}>
-            <article style={${JSON.stringify(ui.panelCard)}}>
+            <Card style={${JSON.stringify(ui.panelCard)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={${JSON.stringify(ui.eyebrow)}}>Table</p>
                 <h2 style={${JSON.stringify(ui.title)}}>Titulos de contas a pagar</h2>
@@ -348,9 +348,9 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   { accessorKey: 'valor_liquido', header: 'Valor', format: 'currency', align: 'right', headerAlign: 'right' },
                 ]}
               />
-            </article>
+            </Card>
 
-            <article style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card style={${JSON.stringify(ui.panelCardAlt)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={${JSON.stringify(ui.eyebrow)}}>Pivot</p>
                 <h2 style={${JSON.stringify(ui.title)}}>Fornecedor por status</h2>
@@ -388,11 +388,11 @@ function buildFinanceiroDashboardSource(themeName: string) {
                 columns={[{ field: 'status', label: 'Status' }]}
                 values={[{ field: 'valor_liquido', label: 'Valor', aggregate: 'sum', format: 'currency' }]}
               />
-            </article>
+            </Card>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 18 }}>
-            <article style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card style={${JSON.stringify(ui.panelCardAlt)}}>
               <p style={${JSON.stringify(ui.eyebrow)}}>Insight</p>
               <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Liquidez</h2>
               <Insights
@@ -402,9 +402,9 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   { text: 'A distancia entre AP e AR precisa ser lida junto com vencimento para separar risco de liquidez de simples concentracao pontual.' },
                 ]}
               />
-            </article>
+            </Card>
 
-            <article style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card style={${JSON.stringify(ui.panelCardAlt)}}>
               <p style={${JSON.stringify(ui.eyebrow)}}>Insight</p>
               <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Concentracao</h2>
               <Insights
@@ -414,9 +414,9 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   { text: 'Fornecedores muito concentrados aumentam a sensibilidade do caixa a renegociacao, atraso e risco de vencimento relevante.' },
                 ]}
               />
-            </article>
+            </Card>
 
-            <article style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card style={${JSON.stringify(ui.panelCardAlt)}}>
               <p style={${JSON.stringify(ui.eyebrow)}}>Insight</p>
               <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Status operacional</h2>
               <Insights
@@ -426,7 +426,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   { text: 'Titulos vencidos, parciais ou concentrados em poucas categorias tendem a esconder pressao operacional que nao aparece apenas no agregado monetario.' },
                 ]}
               />
-            </article>
+            </Card>
           </section>
 
           <footer style={${JSON.stringify(ui.footer)}}>

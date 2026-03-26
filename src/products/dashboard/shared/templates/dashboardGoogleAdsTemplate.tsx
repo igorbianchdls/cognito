@@ -35,7 +35,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
           </header>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 18 }}>
-            <article style={${JSON.stringify(ui.panelCard)}}>
+            <Card style={${JSON.stringify(ui.panelCard)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={${JSON.stringify(ui.eyebrow)}}>Global controls</p>
                 <h2 style={${JSON.stringify(ui.title)}}>Periodo, conta e grupo</h2>
@@ -92,12 +92,12 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                   \`}
                 />
               </div>
-            </article>
+            </Card>
 
-            <article style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card style={${JSON.stringify(ui.panelCardAlt)}}>
               <p style={${JSON.stringify(ui.eyebrow)}}>Leitura esperada</p>
               <p style={${JSON.stringify(ui.paragraph)}}>Comece por volume e retorno, depois confronte CTR, CVR e CPA para separar problema de demanda, criativo ou pagina.</p>
-            </article>
+            </Card>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 16 }}>
@@ -115,12 +115,12 @@ function buildGoogleAdsDashboardSource(themeName: string) {
               format="currency"
               comparisonMode="previous_period"
             >
-              <article style={${JSON.stringify(ui.queryCard)}}>
+              <Card style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Investimento</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Gasto</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
                 <p style={${JSON.stringify(ui.kpiDelta)}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </article>
+              </Card>
             </Query>
             <Query
               dataQuery={{
@@ -136,12 +136,12 @@ function buildGoogleAdsDashboardSource(themeName: string) {
               format="currency"
               comparisonMode="previous_period"
             >
-              <article style={${JSON.stringify(ui.queryCard)}}>
+              <Card style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Retorno</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Receita atribuida</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
                 <p style={${JSON.stringify(ui.kpiDelta)}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </article>
+              </Card>
             </Query>
             <Query
               dataQuery={{
@@ -158,12 +158,12 @@ function buildGoogleAdsDashboardSource(themeName: string) {
               format="number"
               comparisonMode="previous_period"
             >
-              <article style={${JSON.stringify(ui.queryCard)}}>
+              <Card style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Eficiencia</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>ROAS</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
                 <p style={${JSON.stringify(ui.kpiDelta)}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </article>
+              </Card>
             </Query>
             <Query
               dataQuery={{
@@ -180,12 +180,12 @@ function buildGoogleAdsDashboardSource(themeName: string) {
               format="currency"
               comparisonMode="previous_period"
             >
-              <article style={${JSON.stringify(ui.queryCard)}}>
+              <Card style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Custo</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>CPA</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
                 <p style={${JSON.stringify(ui.kpiDelta)}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </article>
+              </Card>
             </Query>
           </section>
 
@@ -198,7 +198,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
 
             <TabPanel value="performance">
               <section style={{ display: 'grid', gridTemplateColumns: '1.25fr 1fr', gap: 18 }}>
-                <article style={${JSON.stringify(ui.panelCard)}}>
+                <Card style={${JSON.stringify(ui.panelCard)}}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={${JSON.stringify(ui.eyebrow)}}>Top spend</p>
                     <h2 style={${JSON.stringify(ui.title)}}>Gasto por campanha</h2>
@@ -230,9 +230,9 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                     ]}
                     yAxis={{ width: 86 }}
                   />
-                </article>
+                </Card>
 
-                <article style={${JSON.stringify(ui.panelCardAlt)}}>
+                <Card style={${JSON.stringify(ui.panelCardAlt)}}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={${JSON.stringify(ui.eyebrow)}}>Rate quality</p>
                     <h2 style={${JSON.stringify(ui.title)}}>CTR por conta</h2>
@@ -264,13 +264,13 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                     ]}
                     yAxis={{ width: 86 }}
                   />
-                </article>
+                </Card>
               </section>
             </TabPanel>
 
             <TabPanel value="acquisition">
               <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 18 }}>
-                <article style={${JSON.stringify(ui.panelCard)}}>
+                <Card style={${JSON.stringify(ui.panelCard)}}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={${JSON.stringify(ui.eyebrow)}}>Trend</p>
                     <h2 style={${JSON.stringify(ui.title)}}>Gasto por mes</h2>
@@ -303,10 +303,10 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                     yAxis={{ width: 86 }}
                     recharts={{ showDots: false, singleSeriesGradient: true }}
                   />
-                </article>
+                </Card>
 
                 <section style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 18 }}>
-                  <article style={${JSON.stringify(ui.panelCardAlt)}}>
+                  <Card style={${JSON.stringify(ui.panelCardAlt)}}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       <p style={${JSON.stringify(ui.eyebrow)}}>Conversion quality</p>
                       <h2 style={${JSON.stringify(ui.title)}}>CVR por mes</h2>
@@ -336,8 +336,8 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                         { dataKey: 'value', label: 'CVR' },
                       ]}
                     />
-                  </article>
-                  <article style={${JSON.stringify(ui.panelCardAlt)}}>
+                  </Card>
+                  <Card style={${JSON.stringify(ui.panelCardAlt)}}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                       <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Leituras operacionais</h2>
                       <p style={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.6 }}>Perguntas para separar problema de volume, relevancia ou eficiencia de pagina.</p>
@@ -351,14 +351,14 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                         { text: 'Contas com muito clique e pouca receita atribuida precisam ser lidas junto com conversao e valor medio do pedido.' },
                       ]}
                     />
-                  </article>
+                  </Card>
                 </section>
               </section>
             </TabPanel>
 
             <TabPanel value="details">
               <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 18 }}>
-                <article style={${JSON.stringify(ui.panelCard)}}>
+                <Card style={${JSON.stringify(ui.panelCard)}}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={${JSON.stringify(ui.eyebrow)}}>Table</p>
                     <h2 style={${JSON.stringify(ui.title)}}>Campanhas no detalhe</h2>
@@ -401,9 +401,9 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                       { accessorKey: 'roas', header: 'ROAS', format: 'number', align: 'right', headerAlign: 'right' },
                     ]}
                   />
-                </article>
+                </Card>
 
-                <article style={${JSON.stringify(ui.panelCardAlt)}}>
+                <Card style={${JSON.stringify(ui.panelCardAlt)}}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={${JSON.stringify(ui.eyebrow)}}>Pivot</p>
                     <h2 style={${JSON.stringify(ui.title)}}>Conta por campanha</h2>
@@ -441,7 +441,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                     columns={[{ field: 'campanha', label: 'Campanha' }]}
                     values={[{ field: 'gasto', label: 'Gasto', aggregate: 'sum', format: 'currency' }]}
                   />
-                </article>
+                </Card>
               </section>
             </TabPanel>
           </Tabs>

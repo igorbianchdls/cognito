@@ -50,7 +50,7 @@ function buildComprasDashboardSource(themeName: string) {
           </header>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 16 }}>
-            <article style={${JSON.stringify(ui.panelCard)}}>
+            <Card style={${JSON.stringify(ui.panelCard)}}>
               <p style={${JSON.stringify(ui.eyebrow)}}>Filtro</p>
               <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Fornecedor</h2>
               <Slicer
@@ -71,9 +71,9 @@ function buildComprasDashboardSource(themeName: string) {
                   ORDER BY 2 ASC
                 \`}
               />
-            </article>
+            </Card>
 
-            <article style={${JSON.stringify(ui.panelCard)}}>
+            <Card style={${JSON.stringify(ui.panelCard)}}>
               <p style={${JSON.stringify(ui.eyebrow)}}>Filtro</p>
               <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Centro de custo</h2>
               <Slicer
@@ -94,9 +94,9 @@ function buildComprasDashboardSource(themeName: string) {
                   ORDER BY 2 ASC
                 \`}
               />
-            </article>
+            </Card>
 
-            <article style={${JSON.stringify(ui.panelCard)}}>
+            <Card style={${JSON.stringify(ui.panelCard)}}>
               <p style={${JSON.stringify(ui.eyebrow)}}>Filtro</p>
               <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Status</h2>
               <Slicer
@@ -116,46 +116,46 @@ function buildComprasDashboardSource(themeName: string) {
                   ORDER BY 2 ASC
                 \`}
               />
-            </article>
+            </Card>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 16 }}>
             <Query dataQuery={{ query: \`SELECT COALESCE(SUM(c.valor_total), 0)::float AS value FROM compras.compras c WHERE 1=1 {{filters:c}}\`, limit: 1 }} format="currency" comparisonMode="previous_period">
-              <article style={${JSON.stringify(ui.queryCard)}}>
+              <Card style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Gasto total</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Valor comprado</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
                 <p style={${JSON.stringify(ui.kpiDelta)}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </article>
+              </Card>
             </Query>
             <Query dataQuery={{ query: \`SELECT COUNT(DISTINCT c.fornecedor_id)::float AS value FROM compras.compras c WHERE 1=1 {{filters:c}}\`, limit: 1 }} format="number" comparisonMode="previous_period">
-              <article style={${JSON.stringify(ui.queryCard)}}>
+              <Card style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Base ativa</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Fornecedores</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
                 <p style={${JSON.stringify(ui.kpiDelta)}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </article>
+              </Card>
             </Query>
             <Query dataQuery={{ query: \`SELECT COUNT(DISTINCT c.id)::float AS value FROM compras.compras c WHERE 1=1 {{filters:c}}\`, limit: 1 }} format="number" comparisonMode="previous_period">
-              <article style={${JSON.stringify(ui.queryCard)}}>
+              <Card style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Volume</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Pedidos</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
                 <p style={${JSON.stringify(ui.kpiDelta)}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </article>
+              </Card>
             </Query>
             <Query dataQuery={{ query: \`SELECT COALESCE(AVG(c.valor_total), 0)::float AS value FROM compras.compras c WHERE 1=1 {{filters:c}}\`, limit: 1 }} format="currency" comparisonMode="previous_period">
-              <article style={${JSON.stringify(ui.queryCard)}}>
+              <Card style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Eficiencia</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Ticket medio</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
                 <p style={${JSON.stringify(ui.kpiDelta)}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </article>
+              </Card>
             </Query>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.25fr 1fr', gap: 18 }}>
-            <article style={${JSON.stringify(ui.panelCard)}}>
+            <Card style={${JSON.stringify(ui.panelCard)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={${JSON.stringify(ui.eyebrow)}}>Top spend</p>
                 <h2 style={${JSON.stringify(ui.title)}}>Gasto por fornecedor</h2>
@@ -187,9 +187,9 @@ function buildComprasDashboardSource(themeName: string) {
                 ]}
                 yAxis={{ width: 86 }}
               />
-            </article>
+            </Card>
 
-            <article style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card style={${JSON.stringify(ui.panelCardAlt)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={${JSON.stringify(ui.eyebrow)}}>Allocation</p>
                 <h2 style={${JSON.stringify(ui.title)}}>Gasto por categoria</h2>
@@ -222,11 +222,11 @@ function buildComprasDashboardSource(themeName: string) {
                 ]}
                 recharts={{ innerRadius: 54, outerRadius: 92, paddingAngle: 2, showLabels: false }}
               />
-            </article>
+            </Card>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 18 }}>
-            <article style={${JSON.stringify(ui.panelCard)}}>
+            <Card style={${JSON.stringify(ui.panelCard)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={${JSON.stringify(ui.eyebrow)}}>Trend</p>
                 <h2 style={${JSON.stringify(ui.title)}}>Gasto por mes</h2>
@@ -258,9 +258,9 @@ function buildComprasDashboardSource(themeName: string) {
                 yAxis={{ width: 86 }}
                 recharts={{ showDots: false, singleSeriesGradient: true }}
               />
-            </article>
+            </Card>
 
-            <article style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card style={${JSON.stringify(ui.panelCardAlt)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={${JSON.stringify(ui.eyebrow)}}>Status mix</p>
                 <h2 style={${JSON.stringify(ui.title)}}>Pedidos por status</h2>
@@ -289,11 +289,11 @@ function buildComprasDashboardSource(themeName: string) {
                   { dataKey: 'value', label: 'Pedidos' },
                 ]}
               />
-            </article>
+            </Card>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 18 }}>
-            <article style={${JSON.stringify(ui.panelCard)}}>
+            <Card style={${JSON.stringify(ui.panelCard)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={${JSON.stringify(ui.eyebrow)}}>Table</p>
                 <h2 style={${JSON.stringify(ui.title)}}>Pedidos de compra no detalhe</h2>
@@ -337,9 +337,9 @@ function buildComprasDashboardSource(themeName: string) {
                   { accessorKey: 'valor_total', header: 'Valor', format: 'currency', align: 'right', headerAlign: 'right' },
                 ]}
               />
-            </article>
+            </Card>
 
-            <article style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card style={${JSON.stringify(ui.panelCardAlt)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={${JSON.stringify(ui.eyebrow)}}>Pivot</p>
                 <h2 style={${JSON.stringify(ui.title)}}>Categoria por status</h2>
@@ -377,11 +377,11 @@ function buildComprasDashboardSource(themeName: string) {
                 columns={[{ field: 'status', label: 'Status' }]}
                 values={[{ field: 'valor_total', label: 'Valor', aggregate: 'sum', format: 'currency' }]}
               />
-            </article>
+            </Card>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 18 }}>
-            <article style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card style={${JSON.stringify(ui.panelCardAlt)}}>
               <p style={${JSON.stringify(ui.eyebrow)}}>Insight</p>
               <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Concentracao em fornecedores</h2>
               <Insights
@@ -391,9 +391,9 @@ function buildComprasDashboardSource(themeName: string) {
                   { text: 'Se poucos fornecedores concentram a maior parte do gasto, a negociacao fica mais sensivel a prazo, ruptura e dependencia comercial.' },
                 ]}
               />
-            </article>
+            </Card>
 
-            <article style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card style={${JSON.stringify(ui.panelCardAlt)}}>
               <p style={${JSON.stringify(ui.eyebrow)}}>Insight</p>
               <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Pressao por centro de custo</h2>
               <Insights
@@ -403,9 +403,9 @@ function buildComprasDashboardSource(themeName: string) {
                   { text: 'Centro de custo acima da media precisa ser lido junto com categoria para separar compra pontual de uma tendencia estrutural de gasto.' },
                 ]}
               />
-            </article>
+            </Card>
 
-            <article style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card style={${JSON.stringify(ui.panelCardAlt)}}>
               <p style={${JSON.stringify(ui.eyebrow)}}>Insight</p>
               <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Risco operacional</h2>
               <Insights
@@ -415,7 +415,7 @@ function buildComprasDashboardSource(themeName: string) {
                   { text: 'Status com muito volume em analise ou parcial costuma indicar gargalo entre pedido, recebimento e pagamento.' },
                 ]}
               />
-            </article>
+            </Card>
           </section>
 
           <footer style={${JSON.stringify(ui.footer)}}>
