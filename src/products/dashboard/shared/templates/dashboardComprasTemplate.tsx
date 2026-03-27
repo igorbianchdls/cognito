@@ -1,7 +1,11 @@
 'use client'
 
-import { buildDashboardModuleUi, buildFramePropSource } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
-import { DASHBOARD_TEMPLATE_PALETTES } from '@/products/dashboard/shared/templates/dashboardTemplatePalettes'
+import {
+  buildDashboardModuleUi,
+  buildFramePropSource,
+  getDashboardTemplatePalette,
+  getDashboardTemplateThemeName,
+} from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
 
 const COMPRAS_VARIANT = {
   fileName: 'dashboard-compras.tsx',
@@ -11,15 +15,16 @@ const COMPRAS_VARIANT = {
 }
 
 function buildComprasDashboardSource(themeName: string) {
-  const ui = buildDashboardModuleUi(themeName)
+  const resolvedThemeName = getDashboardTemplateThemeName('compras', themeName)
+  const ui = buildDashboardModuleUi(resolvedThemeName)
   const cardFrameSource = buildFramePropSource(ui.cardFrame)
-  const chartColors = DASHBOARD_TEMPLATE_PALETTES.compras
+  const chartColors = getDashboardTemplatePalette('compras')
   return `export function DashboardCompras() {
   const CHART_COLORS = ${JSON.stringify(chartColors)}
 
   return (
     <DashboardTemplate name="${COMPRAS_VARIANT.name}" title="${COMPRAS_VARIANT.title}">
-      <Theme name="${themeName}" />
+      <Theme name="${resolvedThemeName}" />
       <Dashboard id="overview" title="${COMPRAS_VARIANT.title}">
         <section style={${JSON.stringify(ui.page)}}>
           <header style={${JSON.stringify(ui.header)}}>
@@ -419,7 +424,7 @@ function buildComprasDashboardSource(themeName: string) {
 
           <footer style={${JSON.stringify(ui.footer)}}>
             <p style={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.6 }}>Template JSX de compras com filtros dedicados, queries SQL explicitas e leitura completa em uma unica pagina.</p>
-            <p style={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: ${themeName}</p>
+            <p style={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: ${resolvedThemeName}</p>
           </footer>
         </section>
       </Dashboard>

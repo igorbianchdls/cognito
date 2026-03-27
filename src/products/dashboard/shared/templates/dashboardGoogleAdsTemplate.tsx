@@ -1,7 +1,11 @@
 'use client'
 
-import { buildDashboardModuleUi, buildFramePropSource } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
-import { DASHBOARD_TEMPLATE_PALETTES } from '@/products/dashboard/shared/templates/dashboardTemplatePalettes'
+import {
+  buildDashboardModuleUi,
+  buildFramePropSource,
+  getDashboardTemplatePalette,
+  getDashboardTemplateThemeName,
+} from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
 
 const GOOGLEADS_VARIANT = {
   fileName: 'dashboard-googleads.tsx',
@@ -11,15 +15,16 @@ const GOOGLEADS_VARIANT = {
 }
 
 function buildGoogleAdsDashboardSource(themeName: string) {
-  const ui = buildDashboardModuleUi(themeName)
+  const resolvedThemeName = getDashboardTemplateThemeName('googleads', themeName)
+  const ui = buildDashboardModuleUi(resolvedThemeName)
   const cardFrameSource = buildFramePropSource(ui.cardFrame)
-  const chartColors = DASHBOARD_TEMPLATE_PALETTES.googleads
+  const chartColors = getDashboardTemplatePalette('googleads')
   return `export function DashboardGoogleAds() {
   const CHART_COLORS = ${JSON.stringify(chartColors)}
 
   return (
     <DashboardTemplate name="${GOOGLEADS_VARIANT.name}" title="${GOOGLEADS_VARIANT.title}">
-      <Theme name="${themeName}" />
+      <Theme name="${resolvedThemeName}" />
       <Dashboard id="overview" title="${GOOGLEADS_VARIANT.title}">
         <section style={${JSON.stringify(ui.page)}}>
           <header style={${JSON.stringify(ui.header)}}>
@@ -449,7 +454,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
 
           <footer style={${JSON.stringify(ui.footer)}}>
             <p style={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.6 }}>Template JSX para Google Ads com volume, retorno e eficiencia em um unico arquivo TSX no formato novo do dashboard.</p>
-            <p style={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: ${themeName}</p>
+            <p style={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: ${resolvedThemeName}</p>
           </footer>
         </section>
       </Dashboard>

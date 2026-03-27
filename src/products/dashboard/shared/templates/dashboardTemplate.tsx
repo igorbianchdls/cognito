@@ -7,7 +7,7 @@ import { buildFinanceiroDashboardTemplateVariant } from '@/products/dashboard/sh
 import { buildGoogleAdsDashboardTemplateVariant } from '@/products/dashboard/shared/templates/dashboardGoogleAdsTemplate'
 import { buildMetaAdsDashboardTemplateVariant } from '@/products/dashboard/shared/templates/dashboardMetaAdsTemplate'
 import { buildShopifyDashboardTemplateVariant } from '@/products/dashboard/shared/templates/dashboardShopifyTemplate'
-import { DASHBOARD_TEMPLATE_PALETTES } from '@/products/dashboard/shared/templates/dashboardTemplatePalettes'
+import { getDashboardTemplatePalette, getDashboardTemplateThemeName } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
 
 type MarkerProps = {
   children?: ReactNode
@@ -1455,15 +1455,16 @@ const CLASSIC_DASHBOARD_VARIANT: StandaloneDashboardVariant = {
 }
 
 function buildClassicDashboardTemplateSource(themeName: string) {
-  const ui = buildDashboardThemeUi(themeName, 'classic')
+  const resolvedThemeName = getDashboardTemplateThemeName('classic', themeName)
+  const ui = buildDashboardThemeUi(resolvedThemeName, 'classic')
   const cardFrameSource = buildFramePropSource(ui.cardFrame)
-  const chartColors = DASHBOARD_TEMPLATE_PALETTES.classic
+  const chartColors = getDashboardTemplatePalette('classic')
   return `export function DashboardClassico() {
   const CHART_COLORS = ${JSON.stringify(chartColors)}
 
   return (
     <DashboardTemplate name="${CLASSIC_DASHBOARD_VARIANT.name}" title="${CLASSIC_DASHBOARD_VARIANT.title}">
-      <Theme name="${themeName}" />
+      <Theme name="${resolvedThemeName}" />
       <Dashboard id="overview" title="${CLASSIC_DASHBOARD_VARIANT.title}">
         <section style={${JSON.stringify(ui.page)}}>
           <header style={${JSON.stringify(ui.header)}}>

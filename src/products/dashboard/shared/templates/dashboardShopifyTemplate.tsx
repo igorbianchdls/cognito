@@ -1,7 +1,11 @@
 'use client'
 
-import { buildDashboardModuleUi, buildFramePropSource } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
-import { DASHBOARD_TEMPLATE_PALETTES } from '@/products/dashboard/shared/templates/dashboardTemplatePalettes'
+import {
+  buildDashboardModuleUi,
+  buildFramePropSource,
+  getDashboardTemplatePalette,
+  getDashboardTemplateThemeName,
+} from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
 
 const SHOPIFY_VARIANT = {
   fileName: 'dashboard-shopify.tsx',
@@ -11,15 +15,16 @@ const SHOPIFY_VARIANT = {
 }
 
 function buildShopifyDashboardSource(themeName: string) {
-  const ui = buildDashboardModuleUi(themeName)
+  const resolvedThemeName = getDashboardTemplateThemeName('shopify', themeName)
+  const ui = buildDashboardModuleUi(resolvedThemeName)
   const cardFrameSource = buildFramePropSource(ui.cardFrame)
-  const chartColors = DASHBOARD_TEMPLATE_PALETTES.shopify
+  const chartColors = getDashboardTemplatePalette('shopify')
   return `export function DashboardShopify() {
   const CHART_COLORS = ${JSON.stringify(chartColors)}
 
   return (
     <DashboardTemplate name="${SHOPIFY_VARIANT.name}" title="${SHOPIFY_VARIANT.title}">
-      <Theme name="${themeName}" />
+      <Theme name="${resolvedThemeName}" />
       <Dashboard id="overview" title="${SHOPIFY_VARIANT.title}">
         <section style={${JSON.stringify(ui.page)}}>
           <header style={${JSON.stringify(ui.header)}}>
@@ -435,7 +440,7 @@ function buildShopifyDashboardSource(themeName: string) {
 
           <footer style={${JSON.stringify(ui.footer)}}>
             <p style={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.6 }}>Template JSX para Shopify com leitura comercial e operacional, adaptado do app legado para o formato novo do dashboard.</p>
-            <p style={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: ${themeName}</p>
+            <p style={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: ${resolvedThemeName}</p>
           </footer>
         </section>
       </Dashboard>

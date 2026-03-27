@@ -2,6 +2,50 @@
 
 import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter'
 
+export type DashboardTemplateKey = 'classic' | 'compras' | 'financeiro' | 'metaads' | 'googleads' | 'shopify'
+
+export const DASHBOARD_TEMPLATE_PALETTES: Record<DashboardTemplateKey, readonly string[]> = {
+  classic: ['#0F766E', '#14B8A6', '#2DD4BF', '#5EEAD4', '#99F6E4'],
+  compras: ['#1D4ED8', '#3B82F6', '#60A5FA', '#93C5FD', '#BFDBFE'],
+  financeiro: ['#0F766E', '#14B8A6', '#2DD4BF', '#5EEAD4', '#99F6E4'],
+  metaads: ['#7C3AED', '#8B5CF6', '#A78BFA', '#C4B5FD', '#DDD6FE'],
+  googleads: ['#EA580C', '#F97316', '#FB923C', '#FDBA74', '#FED7AA'],
+  shopify: ['#DC2626', '#EF4444', '#F87171', '#FCA5A5', '#FECACA'],
+}
+
+export const DASHBOARD_TEMPLATE_DEFAULT_THEMES: Record<DashboardTemplateKey, string> = {
+  classic: 'aero',
+  compras: 'blue',
+  financeiro: 'sand',
+  metaads: 'midnight',
+  googleads: 'metro',
+  shopify: 'light',
+}
+
+type DashboardModuleThemeTokens = {
+  chartScheme: string[]
+  cardFrame: { variant: 'hud'; cornerSize: number; cornerWidth: number } | null
+  dark: boolean
+  primary: string
+  pageBg: string
+  surfaceBg: string
+  borderColor: string
+  textPrimary: string
+  textSecondary: string
+  headerBg: string
+  headerText: string
+  headerSubtitle: string
+  headerDpBg: string
+  headerDpColor: string
+  headerDpBorder: string
+  headerDpIcon: string
+  headerDpLabel: string
+  accentSurface: string
+  accentBorder: string
+  headerDpActiveBg: string
+  headerDpActiveBorder: string
+}
+
 export type DashboardModuleUi = {
   chartScheme: string[]
   cardFrame: { variant: 'hud'; cornerSize: number; cornerWidth: number } | null
@@ -58,7 +102,15 @@ export function buildFramePropSource(frame: DashboardModuleUi['cardFrame']): str
   return frame ? ` frame={${JSON.stringify(frame)}}` : ''
 }
 
-export function buildDashboardModuleUi(themeName: string): DashboardModuleUi {
+export function getDashboardTemplatePalette(template: DashboardTemplateKey): string[] {
+  return [...DASHBOARD_TEMPLATE_PALETTES[template]]
+}
+
+export function getDashboardTemplateThemeName(template: DashboardTemplateKey, fallbackThemeName?: string): string {
+  return DASHBOARD_TEMPLATE_DEFAULT_THEMES[template] || fallbackThemeName || 'light'
+}
+
+function resolveDashboardModuleThemeTokens(themeName: string): DashboardModuleThemeTokens {
   const preset = buildThemeVars(themeName)
   const cssVars = preset.cssVars || {}
   const managers = (preset.managers || {}) as Record<string, any>
@@ -88,6 +140,57 @@ export function buildDashboardModuleUi(themeName: string): DashboardModuleUi {
   const headerDpActiveBg = `color-mix(in srgb, ${headerDpBg} 72%, ${primary} 28%)`
   const headerDpActiveBorder = `color-mix(in srgb, ${headerDpBorder} 55%, ${primary} 45%)`
   const cardFrame = resolveDashboardCardFrame(themeName)
+
+  return {
+    chartScheme,
+    cardFrame,
+    dark,
+    primary,
+    pageBg,
+    surfaceBg,
+    borderColor,
+    textPrimary,
+    textSecondary,
+    headerBg,
+    headerText,
+    headerSubtitle,
+    headerDpBg,
+    headerDpColor,
+    headerDpBorder,
+    headerDpIcon,
+    headerDpLabel,
+    accentSurface,
+    accentBorder,
+    headerDpActiveBg,
+    headerDpActiveBorder,
+  }
+}
+
+export function buildDashboardModuleUi(themeName: string): DashboardModuleUi {
+  const tokens = resolveDashboardModuleThemeTokens(themeName)
+  const {
+    chartScheme,
+    cardFrame,
+    dark,
+    primary,
+    pageBg,
+    surfaceBg,
+    borderColor,
+    textPrimary,
+    textSecondary,
+    headerBg,
+    headerText,
+    headerSubtitle,
+    headerDpBg,
+    headerDpColor,
+    headerDpBorder,
+    headerDpIcon,
+    headerDpLabel,
+    accentSurface,
+    accentBorder,
+    headerDpActiveBg,
+    headerDpActiveBorder,
+  } = tokens
 
   return {
     chartScheme,

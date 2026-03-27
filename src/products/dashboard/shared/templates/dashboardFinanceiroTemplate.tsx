@@ -1,7 +1,11 @@
 'use client'
 
-import { buildDashboardModuleUi, buildFramePropSource } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
-import { DASHBOARD_TEMPLATE_PALETTES } from '@/products/dashboard/shared/templates/dashboardTemplatePalettes'
+import {
+  buildDashboardModuleUi,
+  buildFramePropSource,
+  getDashboardTemplatePalette,
+  getDashboardTemplateThemeName,
+} from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
 
 const FINANCEIRO_VARIANT = {
   fileName: 'dashboard-financeiro.tsx',
@@ -11,15 +15,16 @@ const FINANCEIRO_VARIANT = {
 }
 
 function buildFinanceiroDashboardSource(themeName: string) {
-  const ui = buildDashboardModuleUi(themeName)
+  const resolvedThemeName = getDashboardTemplateThemeName('financeiro', themeName)
+  const ui = buildDashboardModuleUi(resolvedThemeName)
   const cardFrameSource = buildFramePropSource(ui.cardFrame)
-  const chartColors = DASHBOARD_TEMPLATE_PALETTES.financeiro
+  const chartColors = getDashboardTemplatePalette('financeiro')
   return `export function DashboardFinanceiro() {
   const CHART_COLORS = ${JSON.stringify(chartColors)}
 
   return (
     <DashboardTemplate name="${FINANCEIRO_VARIANT.name}" title="${FINANCEIRO_VARIANT.title}">
-      <Theme name="${themeName}" />
+      <Theme name="${resolvedThemeName}" />
       <Dashboard id="overview" title="${FINANCEIRO_VARIANT.title}">
         <section style={${JSON.stringify(ui.page)}}>
           <header style={${JSON.stringify(ui.header)}}>
@@ -430,7 +435,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
 
           <footer style={${JSON.stringify(ui.footer)}}>
             <p style={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.6 }}>Template JSX financeiro com AP, AR e geracao de caixa em uma unica pagina, com filtros dedicados e blocos operacionais sequenciais.</p>
-            <p style={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: ${themeName}</p>
+            <p style={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: ${resolvedThemeName}</p>
           </footer>
         </section>
       </Dashboard>

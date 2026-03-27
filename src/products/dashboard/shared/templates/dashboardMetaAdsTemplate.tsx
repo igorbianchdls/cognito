@@ -1,7 +1,11 @@
 'use client'
 
-import { buildDashboardModuleUi, buildFramePropSource } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
-import { DASHBOARD_TEMPLATE_PALETTES } from '@/products/dashboard/shared/templates/dashboardTemplatePalettes'
+import {
+  buildDashboardModuleUi,
+  buildFramePropSource,
+  getDashboardTemplatePalette,
+  getDashboardTemplateThemeName,
+} from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
 
 const METAADS_VARIANT = {
   fileName: 'dashboard-metaads.tsx',
@@ -11,15 +15,16 @@ const METAADS_VARIANT = {
 }
 
 function buildMetaAdsDashboardSource(themeName: string) {
-  const ui = buildDashboardModuleUi(themeName)
+  const resolvedThemeName = getDashboardTemplateThemeName('metaads', themeName)
+  const ui = buildDashboardModuleUi(resolvedThemeName)
   const cardFrameSource = buildFramePropSource(ui.cardFrame)
-  const chartColors = DASHBOARD_TEMPLATE_PALETTES.metaads
+  const chartColors = getDashboardTemplatePalette('metaads')
   return `export function DashboardMetaAds() {
   const CHART_COLORS = ${JSON.stringify(chartColors)}
 
   return (
     <DashboardTemplate name="${METAADS_VARIANT.name}" title="${METAADS_VARIANT.title}">
-      <Theme name="${themeName}" />
+      <Theme name="${resolvedThemeName}" />
       <Dashboard id="overview" title="${METAADS_VARIANT.title}">
         <section style={${JSON.stringify(ui.page)}}>
           <header style={${JSON.stringify(ui.header)}}>
@@ -449,7 +454,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
 
           <footer style={${JSON.stringify(ui.footer)}}>
             <p style={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.6 }}>Template JSX para Meta Ads com filtros de paid social, KPIs comparativos e widgets de analise no formato novo do dashboard.</p>
-            <p style={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: ${themeName}</p>
+            <p style={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: ${resolvedThemeName}</p>
           </footer>
         </section>
       </Dashboard>

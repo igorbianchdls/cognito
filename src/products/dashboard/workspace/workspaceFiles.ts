@@ -1,5 +1,6 @@
 import type { DashboardCodeFile } from '@/products/dashboard/workspace/types'
 import { buildDashboardTemplateVariants } from '@/products/dashboard/shared/templates/dashboardTemplate'
+import { DASHBOARD_TEMPLATE_DEFAULT_THEMES } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
 
 export function buildDashboardWorkspaceFiles(themeName: string): DashboardCodeFile[] {
   const dashboardFiles = buildDashboardTemplateVariants(themeName).map((file) => ({
@@ -22,6 +23,7 @@ export function buildDashboardWorkspaceFiles(themeName: string): DashboardCodeFi
       content: JSON.stringify(
         {
           theme: themeName,
+          templateThemes: DASHBOARD_TEMPLATE_DEFAULT_THEMES,
           renderer: 'dashboard-jsx-render',
           entrypoint: 'app/dashboard-classico.tsx',
         },
@@ -35,7 +37,7 @@ export function buildDashboardWorkspaceFiles(themeName: string): DashboardCodeFi
       directory: 'app',
       extension: 'md',
       language: 'markdown',
-      content: `# Dashboard\n\nArquivos principais:\n- \`app/dashboard-classico.tsx\`\n- \`app/dashboard-compras.tsx\`\n- \`app/dashboard-financeiro.tsx\`\n- \`app/dashboard-metaads.tsx\`\n- \`app/dashboard-googleads.tsx\`\n- \`app/dashboard-shopify.tsx\`\n\nTema ativo: \`${themeName}\``,
+      content: `# Dashboard\n\nArquivos principais:\n- \`app/dashboard-classico.tsx\` (\`${DASHBOARD_TEMPLATE_DEFAULT_THEMES.classic}\`)\n- \`app/dashboard-compras.tsx\` (\`${DASHBOARD_TEMPLATE_DEFAULT_THEMES.compras}\`)\n- \`app/dashboard-financeiro.tsx\` (\`${DASHBOARD_TEMPLATE_DEFAULT_THEMES.financeiro}\`)\n- \`app/dashboard-metaads.tsx\` (\`${DASHBOARD_TEMPLATE_DEFAULT_THEMES.metaads}\`)\n- \`app/dashboard-googleads.tsx\` (\`${DASHBOARD_TEMPLATE_DEFAULT_THEMES.googleads}\`)\n- \`app/dashboard-shopify.tsx\` (\`${DASHBOARD_TEMPLATE_DEFAULT_THEMES.shopify}\`)\n\nTema global do workspace: \`${themeName}\`\nCada template ativo usa seu proprio tema padrao.`,
     },
   ]
 }
