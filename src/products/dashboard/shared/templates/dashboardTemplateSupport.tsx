@@ -32,6 +32,7 @@ type DashboardModuleThemeTokens = {
   borderColor: string
   textPrimary: string
   textSecondary: string
+  kpiValueColor: string
   headerBg: string
   headerText: string
   headerSubtitle: string
@@ -127,6 +128,7 @@ function resolveDashboardModuleThemeTokens(themeName: string): DashboardModuleTh
   const borderColor = String(cssVars.surfaceBorder || (dark ? '#334155' : '#DCE6F2'))
   const textPrimary = String(cssVars.fg || cssVars.h1Color || (dark ? '#E5E7EB' : '#172033'))
   const textSecondary = String(cssVars.headerSubtitle || cssVars.kpiTitleColor || (dark ? '#94A3B8' : '#536783'))
+  const kpiValueColor = String(cssVars.kpiValueColor || textPrimary)
   const headerBg = String(cssVars.headerBg || surfaceBg)
   const headerText = String(cssVars.headerText || textPrimary)
   const headerSubtitle = String(cssVars.headerSubtitle || textSecondary)
@@ -151,6 +153,7 @@ function resolveDashboardModuleThemeTokens(themeName: string): DashboardModuleTh
     borderColor,
     textPrimary,
     textSecondary,
+    kpiValueColor,
     headerBg,
     headerText,
     headerSubtitle,
@@ -178,6 +181,7 @@ export function buildDashboardModuleUi(themeName: string): DashboardModuleUi {
     borderColor,
     textPrimary,
     textSecondary,
+    kpiValueColor,
     headerBg,
     headerText,
     headerSubtitle,
@@ -311,7 +315,7 @@ export function buildDashboardModuleUi(themeName: string): DashboardModuleUi {
       fontSize: 30,
       fontWeight: 700,
       letterSpacing: '-0.04em',
-      color: String(cssVars.kpiValueColor || textPrimary),
+      color: kpiValueColor,
     },
     kpiDelta: {
       margin: 0,
