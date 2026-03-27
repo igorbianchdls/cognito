@@ -143,3 +143,21 @@ export function getDashboardTitleFromSource(source: string, fallback = 'Dashboar
 
   return fallback
 }
+
+export function getDashboardThemeNameFromSource(source: string, fallback = 'light') {
+  const themeMatch = String(source || '').match(/<Theme\b[^>]*\bname="([^"]+)"/)
+  if (themeMatch?.[1]?.trim()) return themeMatch[1].trim()
+  return fallback
+}
+
+export function replaceDashboardThemeNameInSource(source: string, nextThemeName: string) {
+  const cleanSource = String(source || '')
+  const normalizedThemeName = String(nextThemeName || '').trim()
+  if (!normalizedThemeName) return cleanSource
+
+  if (/<Theme\b[^>]*\bname="[^"]+"/.test(cleanSource)) {
+    return cleanSource.replace(/(<Theme\b[^>]*\bname=")([^"]+)(")/, `$1${normalizedThemeName}$3`)
+  }
+
+  return cleanSource
+}
