@@ -15,7 +15,7 @@ const COMPRAS_VARIANT = {
 }
 
 function buildComprasDashboardSource(themeName: string) {
-  const resolvedThemeName = getDashboardTemplateThemeName('compras', themeName)
+  const resolvedThemeName = themeName || getDashboardTemplateThemeName('compras')
   const ui = buildDashboardModuleUi(resolvedThemeName)
   const cardFrameSource = buildFramePropSource(ui.cardFrame)
   const chartColors = getDashboardTemplatePalette('compras')
@@ -433,9 +433,9 @@ function buildComprasDashboardSource(themeName: string) {
 }`
 }
 
-export function buildComprasDashboardTemplateVariant(themeName: string) {
+export function buildComprasDashboardTemplateVariant(themeName?: string) {
   return {
-    content: buildComprasDashboardSource(themeName),
+    content: buildComprasDashboardSource(themeName || ''),
     name: COMPRAS_VARIANT.fileName,
     path: COMPRAS_VARIANT.path,
   }

@@ -15,7 +15,7 @@ const GOOGLEADS_VARIANT = {
 }
 
 function buildGoogleAdsDashboardSource(themeName: string) {
-  const resolvedThemeName = getDashboardTemplateThemeName('googleads', themeName)
+  const resolvedThemeName = themeName || getDashboardTemplateThemeName('googleads')
   const ui = buildDashboardModuleUi(resolvedThemeName)
   const cardFrameSource = buildFramePropSource(ui.cardFrame)
   const chartColors = getDashboardTemplatePalette('googleads')
@@ -463,9 +463,9 @@ function buildGoogleAdsDashboardSource(themeName: string) {
 }`
 }
 
-export function buildGoogleAdsDashboardTemplateVariant(themeName: string) {
+export function buildGoogleAdsDashboardTemplateVariant(themeName?: string) {
   return {
-    content: buildGoogleAdsDashboardSource(themeName),
+    content: buildGoogleAdsDashboardSource(themeName || ''),
     name: GOOGLEADS_VARIANT.fileName,
     path: GOOGLEADS_VARIANT.path,
   }

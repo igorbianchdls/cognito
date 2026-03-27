@@ -15,7 +15,7 @@ const SHOPIFY_VARIANT = {
 }
 
 function buildShopifyDashboardSource(themeName: string) {
-  const resolvedThemeName = getDashboardTemplateThemeName('shopify', themeName)
+  const resolvedThemeName = themeName || getDashboardTemplateThemeName('shopify')
   const ui = buildDashboardModuleUi(resolvedThemeName)
   const cardFrameSource = buildFramePropSource(ui.cardFrame)
   const chartColors = getDashboardTemplatePalette('shopify')
@@ -449,9 +449,9 @@ function buildShopifyDashboardSource(themeName: string) {
 }`
 }
 
-export function buildShopifyDashboardTemplateVariant(themeName: string) {
+export function buildShopifyDashboardTemplateVariant(themeName?: string) {
   return {
-    content: buildShopifyDashboardSource(themeName),
+    content: buildShopifyDashboardSource(themeName || ''),
     name: SHOPIFY_VARIANT.fileName,
     path: SHOPIFY_VARIANT.path,
   }

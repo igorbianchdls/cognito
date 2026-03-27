@@ -15,7 +15,7 @@ const FINANCEIRO_VARIANT = {
 }
 
 function buildFinanceiroDashboardSource(themeName: string) {
-  const resolvedThemeName = getDashboardTemplateThemeName('financeiro', themeName)
+  const resolvedThemeName = themeName || getDashboardTemplateThemeName('financeiro')
   const ui = buildDashboardModuleUi(resolvedThemeName)
   const cardFrameSource = buildFramePropSource(ui.cardFrame)
   const chartColors = getDashboardTemplatePalette('financeiro')
@@ -444,9 +444,9 @@ function buildFinanceiroDashboardSource(themeName: string) {
 }`
 }
 
-export function buildFinanceiroDashboardTemplateVariant(themeName: string) {
+export function buildFinanceiroDashboardTemplateVariant(themeName?: string) {
   return {
-    content: buildFinanceiroDashboardSource(themeName),
+    content: buildFinanceiroDashboardSource(themeName || ''),
     name: FINANCEIRO_VARIANT.fileName,
     path: FINANCEIRO_VARIANT.path,
   }

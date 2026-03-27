@@ -1455,7 +1455,7 @@ const CLASSIC_DASHBOARD_VARIANT: StandaloneDashboardVariant = {
 }
 
 function buildClassicDashboardTemplateSource(themeName: string) {
-  const resolvedThemeName = getDashboardTemplateThemeName('classic', themeName)
+  const resolvedThemeName = themeName || getDashboardTemplateThemeName('classic')
   const ui = buildDashboardThemeUi(resolvedThemeName, 'classic')
   const cardFrameSource = buildFramePropSource(ui.cardFrame)
   const chartColors = getDashboardTemplatePalette('classic')
@@ -2288,16 +2288,32 @@ export function buildDashboardTemplateVariants(themeName: string): DashboardTemp
   }))
 
   variants.push({
-    content: buildClassicDashboardTemplateSource(themeName),
+    content: buildClassicDashboardTemplateSource(''),
     name: CLASSIC_DASHBOARD_VARIANT.fileName,
     path: CLASSIC_DASHBOARD_VARIANT.path,
   })
 
-  variants.push(buildComprasDashboardTemplateVariant(themeName))
-  variants.push(buildFinanceiroDashboardTemplateVariant(themeName))
-  variants.push(buildMetaAdsDashboardTemplateVariant(themeName))
-  variants.push(buildGoogleAdsDashboardTemplateVariant(themeName))
-  variants.push(buildShopifyDashboardTemplateVariant(themeName))
+  variants.push(buildComprasDashboardTemplateVariant())
+  variants.push(buildFinanceiroDashboardTemplateVariant())
+  variants.push(buildMetaAdsDashboardTemplateVariant())
+  variants.push(buildGoogleAdsDashboardTemplateVariant())
+  variants.push(buildShopifyDashboardTemplateVariant())
 
   return variants
+}
+
+export function buildDashboardTemplateVariantByPath(path: string, themeName: string): DashboardTemplateVariant | null {
+  if (path === CLASSIC_DASHBOARD_VARIANT.path) {
+    return {
+      content: buildClassicDashboardTemplateSource(themeName),
+      name: CLASSIC_DASHBOARD_VARIANT.fileName,
+      path: CLASSIC_DASHBOARD_VARIANT.path,
+    }
+  }
+  if (path === 'app/dashboard-compras.tsx') return buildComprasDashboardTemplateVariant(themeName)
+  if (path === 'app/dashboard-financeiro.tsx') return buildFinanceiroDashboardTemplateVariant(themeName)
+  if (path === 'app/dashboard-metaads.tsx') return buildMetaAdsDashboardTemplateVariant(themeName)
+  if (path === 'app/dashboard-googleads.tsx') return buildGoogleAdsDashboardTemplateVariant(themeName)
+  if (path === 'app/dashboard-shopify.tsx') return buildShopifyDashboardTemplateVariant(themeName)
+  return null
 }

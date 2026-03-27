@@ -4,11 +4,11 @@ import { useMemo, useState } from 'react'
 
 import { APPS_THEME_OPTIONS } from '@/products/bi/shared/themeOptions'
 import { DashboardThemeModal } from '@/products/dashboard/theme-modal'
+import { buildDashboardTemplateVariantByPath } from '@/products/dashboard/shared/templates/dashboardTemplate'
 import { buildDashboardWorkspaceFiles } from '@/products/dashboard/workspace/workspaceFiles'
 import {
   getDashboardThemeNameFromSource,
   getDashboardTitleFromSource,
-  replaceDashboardThemeNameInSource,
 } from '@/products/dashboard/workspace/compileDashboardSource'
 import { DashboardWorkspaceCode } from '@/products/dashboard/workspace/DashboardWorkspaceCode'
 import { DashboardWorkspaceHeader } from '@/products/dashboard/workspace/DashboardWorkspaceHeader'
@@ -53,8 +53,9 @@ export function DashboardWorkspace({
 
   function applyThemeToSelectedDashboard(themeName: string) {
     if (!selectedDashboardFile) return
-    const nextContent = replaceDashboardThemeNameInSource(selectedDashboardFile.content, themeName)
-    updateFileContent(selectedDashboardFile.path, nextContent)
+    const nextVariant = buildDashboardTemplateVariantByPath(selectedDashboardFile.path, themeName)
+    if (!nextVariant) return
+    updateFileContent(selectedDashboardFile.path, nextVariant.content)
   }
 
   return (

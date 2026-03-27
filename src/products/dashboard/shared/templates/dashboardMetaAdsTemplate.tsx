@@ -15,7 +15,7 @@ const METAADS_VARIANT = {
 }
 
 function buildMetaAdsDashboardSource(themeName: string) {
-  const resolvedThemeName = getDashboardTemplateThemeName('metaads', themeName)
+  const resolvedThemeName = themeName || getDashboardTemplateThemeName('metaads')
   const ui = buildDashboardModuleUi(resolvedThemeName)
   const cardFrameSource = buildFramePropSource(ui.cardFrame)
   const chartColors = getDashboardTemplatePalette('metaads')
@@ -463,9 +463,9 @@ function buildMetaAdsDashboardSource(themeName: string) {
 }`
 }
 
-export function buildMetaAdsDashboardTemplateVariant(themeName: string) {
+export function buildMetaAdsDashboardTemplateVariant(themeName?: string) {
   return {
-    content: buildMetaAdsDashboardSource(themeName),
+    content: buildMetaAdsDashboardSource(themeName || ''),
     name: METAADS_VARIANT.fileName,
     path: METAADS_VARIANT.path,
   }

@@ -107,8 +107,8 @@ export function getDashboardTemplatePalette(template: DashboardTemplateKey): str
   return [...DASHBOARD_TEMPLATE_PALETTES[template]]
 }
 
-export function getDashboardTemplateThemeName(template: DashboardTemplateKey, fallbackThemeName?: string): string {
-  return DASHBOARD_TEMPLATE_DEFAULT_THEMES[template] || fallbackThemeName || 'light'
+export function getDashboardTemplateThemeName(template: DashboardTemplateKey): string {
+  return DASHBOARD_TEMPLATE_DEFAULT_THEMES[template] || 'light'
 }
 
 function resolveDashboardModuleThemeTokens(themeName: string): DashboardModuleThemeTokens {
