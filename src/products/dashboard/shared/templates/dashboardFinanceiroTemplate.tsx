@@ -1,6 +1,7 @@
 'use client'
 
-import { buildDashboardModuleUi } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
+import { buildDashboardModuleUi, buildFramePropSource } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
+import { DASHBOARD_TEMPLATE_PALETTES } from '@/products/dashboard/shared/templates/dashboardTemplatePalettes'
 
 const FINANCEIRO_VARIANT = {
   fileName: 'dashboard-financeiro.tsx',
@@ -11,8 +12,10 @@ const FINANCEIRO_VARIANT = {
 
 function buildFinanceiroDashboardSource(themeName: string) {
   const ui = buildDashboardModuleUi(themeName)
+  const cardFrameSource = buildFramePropSource(ui.cardFrame)
+  const chartColors = DASHBOARD_TEMPLATE_PALETTES.financeiro
   return `export function DashboardFinanceiro() {
-  const CHART_COLORS = ['#0F766E', '#14B8A6', '#2DD4BF', '#5EEAD4', '#99F6E4']
+  const CHART_COLORS = ${JSON.stringify(chartColors)}
 
   return (
     <DashboardTemplate name="${FINANCEIRO_VARIANT.name}" title="${FINANCEIRO_VARIANT.title}">
@@ -42,15 +45,11 @@ function buildFinanceiroDashboardSource(themeName: string) {
                 activePresetButtonStyle={${JSON.stringify(ui.headerDatePickerPresetActive)}}
                 separatorStyle={${JSON.stringify(ui.headerDatePickerSeparator)}}
               />
-              <article style={{ ...${JSON.stringify(ui.noteCard)}, width: '100%', minWidth: 0 }}>
-                <p style={${JSON.stringify(ui.eyebrow)}}>Workspace note</p>
-                <p style={${JSON.stringify(ui.paragraph)}}>O template financeiro agora fica em pagina unica, com blocos de AP, AR e caixa no mesmo fluxo de leitura e sem depender do pipeline antigo em DSL.</p>
-              </article>
             </div>
           </header>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 16 }}>
-            <Card style={${JSON.stringify(ui.panelCard)}}>
+            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
               <p style={${JSON.stringify(ui.eyebrow)}}>Filtro</p>
               <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Status</h2>
               <Slicer
@@ -72,7 +71,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
               />
             </Card>
 
-            <Card style={${JSON.stringify(ui.panelCard)}}>
+            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
               <p style={${JSON.stringify(ui.eyebrow)}}>Filtro</p>
               <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Categoria despesa</h2>
               <Slicer
@@ -95,7 +94,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
               />
             </Card>
 
-            <Card style={${JSON.stringify(ui.panelCard)}}>
+            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
               <p style={${JSON.stringify(ui.eyebrow)}}>Filtro</p>
               <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Fornecedor</h2>
               <Slicer
@@ -121,7 +120,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 16 }}>
             <Query dataQuery={{ query: \`SELECT COALESCE(SUM(cr.valor_liquido), 0)::float AS value FROM financeiro.contas_receber cr WHERE 1=1 {{filters:cr}}\`, limit: 1 }} format="currency" comparisonMode="previous_period">
-              <Card style={${JSON.stringify(ui.queryCard)}}>
+              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Recebimentos</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Contas a receber</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
@@ -129,7 +128,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
               </Card>
             </Query>
             <Query dataQuery={{ query: \`SELECT COALESCE(SUM(cp.valor_liquido), 0)::float AS value FROM financeiro.contas_pagar cp WHERE 1=1 {{filters:cp}}\`, limit: 1 }} format="currency" comparisonMode="previous_period">
-              <Card style={${JSON.stringify(ui.queryCard)}}>
+              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Pagamentos</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Contas a pagar</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
@@ -149,7 +148,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
               format="currency"
               comparisonMode="previous_period"
             >
-              <Card style={${JSON.stringify(ui.queryCard)}}>
+              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Caixa</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Geracao liquida</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
@@ -157,7 +156,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
               </Card>
             </Query>
             <Query dataQuery={{ query: \`SELECT COUNT(*)::float AS value FROM financeiro.contas_pagar cp WHERE 1=1 {{filters:cp}}\`, limit: 1 }} format="number" comparisonMode="previous_period">
-              <Card style={${JSON.stringify(ui.queryCard)}}>
+              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Carga operacional</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Titulos em AP</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
@@ -167,7 +166,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.25fr 1fr', gap: 18 }}>
-            <Card style={${JSON.stringify(ui.panelCard)}}>
+            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={${JSON.stringify(ui.eyebrow)}}>AP exposure</p>
                 <h2 style={${JSON.stringify(ui.title)}}>Contas a pagar por fornecedor</h2>
@@ -201,7 +200,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
               />
             </Card>
 
-            <Card style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={${JSON.stringify(ui.eyebrow)}}>Status mix</p>
                 <h2 style={${JSON.stringify(ui.title)}}>Titulos por status</h2>
@@ -236,7 +235,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 18 }}>
-            <Card style={${JSON.stringify(ui.panelCard)}}>
+            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={${JSON.stringify(ui.eyebrow)}}>AR trend</p>
                 <h2 style={${JSON.stringify(ui.title)}}>Recebimentos por mes</h2>
@@ -270,7 +269,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
               />
             </Card>
 
-            <Card style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={${JSON.stringify(ui.eyebrow)}}>AR coverage</p>
                 <h2 style={${JSON.stringify(ui.title)}}>Recebimentos por cliente</h2>
@@ -305,7 +304,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 18 }}>
-            <Card style={${JSON.stringify(ui.panelCard)}}>
+            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={${JSON.stringify(ui.eyebrow)}}>Table</p>
                 <h2 style={${JSON.stringify(ui.title)}}>Titulos de contas a pagar</h2>
@@ -350,7 +349,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
               />
             </Card>
 
-            <Card style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={${JSON.stringify(ui.eyebrow)}}>Pivot</p>
                 <h2 style={${JSON.stringify(ui.title)}}>Fornecedor por status</h2>
@@ -392,7 +391,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 18 }}>
-            <Card style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
               <p style={${JSON.stringify(ui.eyebrow)}}>Insight</p>
               <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Liquidez</h2>
               <Insights
@@ -404,7 +403,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
               />
             </Card>
 
-            <Card style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
               <p style={${JSON.stringify(ui.eyebrow)}}>Insight</p>
               <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Concentracao</h2>
               <Insights
@@ -416,7 +415,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
               />
             </Card>
 
-            <Card style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
               <p style={${JSON.stringify(ui.eyebrow)}}>Insight</p>
               <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Status operacional</h2>
               <Insights

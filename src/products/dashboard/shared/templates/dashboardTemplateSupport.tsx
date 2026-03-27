@@ -4,6 +4,7 @@ import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter'
 
 export type DashboardModuleUi = {
   chartScheme: string[]
+  cardFrame: { variant: 'hud'; cornerSize: number; cornerWidth: number } | null
   page: React.CSSProperties
   header: React.CSSProperties
   badge: React.CSSProperties
@@ -42,6 +43,21 @@ export type DashboardModuleUi = {
   pivotExpandButtonStyle: React.CSSProperties
 }
 
+function resolveDashboardCardFrame(themeName: string) {
+  const key = String(themeName || '').toLowerCase()
+  if (['midnight', 'metro', 'aero'].includes(key)) {
+    return { variant: 'hud' as const, cornerSize: 10, cornerWidth: 2 }
+  }
+  if (['light', 'white', 'claro', 'branco', 'sand'].includes(key)) {
+    return { variant: 'hud' as const, cornerSize: 6, cornerWidth: 1 }
+  }
+  return { variant: 'hud' as const, cornerSize: 8, cornerWidth: 1 }
+}
+
+export function buildFramePropSource(frame: DashboardModuleUi['cardFrame']): string {
+  return frame ? ` frame={${JSON.stringify(frame)}}` : ''
+}
+
 export function buildDashboardModuleUi(themeName: string): DashboardModuleUi {
   const preset = buildThemeVars(themeName)
   const cssVars = preset.cssVars || {}
@@ -71,9 +87,11 @@ export function buildDashboardModuleUi(themeName: string): DashboardModuleUi {
   const accentBorder = `color-mix(in srgb, ${borderColor} 60%, ${primary} 40%)`
   const headerDpActiveBg = `color-mix(in srgb, ${headerDpBg} 72%, ${primary} 28%)`
   const headerDpActiveBorder = `color-mix(in srgb, ${headerDpBorder} 55%, ${primary} 45%)`
+  const cardFrame = resolveDashboardCardFrame(themeName)
 
   return {
     chartScheme,
+    cardFrame,
     page: {
       display: 'flex',
       flexDirection: 'column',
@@ -118,7 +136,7 @@ export function buildDashboardModuleUi(themeName: string): DashboardModuleUi {
     },
     queryCard: {
       padding: 22,
-      borderRadius: 22,
+      borderRadius: cardFrame ? 0 : 22,
       border: `1px solid ${borderColor}`,
       backgroundColor: surfaceBg,
       display: 'flex',
@@ -127,7 +145,7 @@ export function buildDashboardModuleUi(themeName: string): DashboardModuleUi {
     },
     panelCard: {
       padding: 22,
-      borderRadius: 24,
+      borderRadius: cardFrame ? 0 : 24,
       backgroundColor: surfaceBg,
       border: `1px solid ${borderColor}`,
       display: 'flex',
@@ -136,7 +154,7 @@ export function buildDashboardModuleUi(themeName: string): DashboardModuleUi {
     },
     panelCardAlt: {
       padding: 22,
-      borderRadius: 24,
+      borderRadius: cardFrame ? 0 : 24,
       backgroundColor: accentSurface,
       border: `1px solid ${accentBorder}`,
       display: 'flex',

@@ -1,6 +1,7 @@
 'use client'
 
-import { buildDashboardModuleUi } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
+import { buildDashboardModuleUi, buildFramePropSource } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
+import { DASHBOARD_TEMPLATE_PALETTES } from '@/products/dashboard/shared/templates/dashboardTemplatePalettes'
 
 const METAADS_VARIANT = {
   fileName: 'dashboard-metaads.tsx',
@@ -11,8 +12,10 @@ const METAADS_VARIANT = {
 
 function buildMetaAdsDashboardSource(themeName: string) {
   const ui = buildDashboardModuleUi(themeName)
+  const cardFrameSource = buildFramePropSource(ui.cardFrame)
+  const chartColors = DASHBOARD_TEMPLATE_PALETTES.metaads
   return `export function DashboardMetaAds() {
-  const CHART_COLORS = ['#7C3AED', '#8B5CF6', '#A78BFA', '#C4B5FD', '#DDD6FE']
+  const CHART_COLORS = ${JSON.stringify(chartColors)}
 
   return (
     <DashboardTemplate name="${METAADS_VARIANT.name}" title="${METAADS_VARIANT.title}">
@@ -28,31 +31,29 @@ function buildMetaAdsDashboardSource(themeName: string) {
               </div>
               <p style={${JSON.stringify(ui.subtitle)}}>Adaptacao do template legado de apps para JSX com tags, queries SQL explicitas e leitura de paid social no runtime novo do workspace.</p>
             </div>
-            <article style={${JSON.stringify(ui.noteCard)}}>
-              <p style={${JSON.stringify(ui.eyebrow)}}>Workspace note</p>
-              <p style={${JSON.stringify(ui.paragraph)}}>O dashboard fixa a plataforma em Meta Ads e expande a leitura para gasto, receita atribuida, ROAS e conversao sem depender do modelo antigo em DSL.</p>
-            </article>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '34%', minWidth: 320 }}>
+              <DatePicker
+                label="Periodo de performance"
+                table="trafegopago.desempenho_diario"
+                field="data_ref"
+                presets={['7d', '14d', '30d', '90d']}
+                labelStyle={${JSON.stringify(ui.headerDatePickerLabel)}}
+                fieldStyle={${JSON.stringify(ui.headerDatePickerField)}}
+                iconStyle={${JSON.stringify(ui.headerDatePickerIcon)}}
+                presetButtonStyle={${JSON.stringify(ui.headerDatePickerPreset)}}
+                activePresetButtonStyle={${JSON.stringify(ui.headerDatePickerPresetActive)}}
+                separatorStyle={${JSON.stringify(ui.headerDatePickerSeparator)}}
+              />
+            </div>
           </header>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 18 }}>
-            <Card style={${JSON.stringify(ui.panelCard)}}>
+            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={${JSON.stringify(ui.eyebrow)}}>Global controls</p>
-                <h2 style={${JSON.stringify(ui.title)}}>Periodo, conta e campanha</h2>
+                <p style={${JSON.stringify(ui.eyebrow)}}>Filters</p>
+                <h2 style={${JSON.stringify(ui.title)}}>Conta e campanha</h2>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 14 }}>
-                <DatePicker
-                  label="Periodo de performance"
-                  table="trafegopago.desempenho_diario"
-                  field="data_ref"
-                  presets={['7d', '14d', '30d', '90d']}
-                  labelStyle={${JSON.stringify(ui.headerDatePickerLabel)}}
-                  fieldStyle={${JSON.stringify(ui.headerDatePickerField)}}
-                  iconStyle={${JSON.stringify(ui.headerDatePickerIcon)}}
-                  presetButtonStyle={${JSON.stringify(ui.headerDatePickerPreset)}}
-                  activePresetButtonStyle={${JSON.stringify(ui.headerDatePickerPresetActive)}}
-                  separatorStyle={${JSON.stringify(ui.headerDatePickerSeparator)}}
-                />
                 <Slicer
                   label="Conta"
                   field="conta_id"
@@ -94,7 +95,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
               </div>
             </Card>
 
-            <Card style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
               <p style={${JSON.stringify(ui.eyebrow)}}>Leitura esperada</p>
               <p style={${JSON.stringify(ui.paragraph)}}>Primeiro veja o pacing de gasto e retorno, depois abra concentracao por campanha e finalmente desca para o detalhe de anuncios e grupos quando houver desbalanceamento.</p>
             </Card>
@@ -115,7 +116,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
               format="currency"
               comparisonMode="previous_period"
             >
-              <Card style={${JSON.stringify(ui.queryCard)}}>
+              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Investimento</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Gasto</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
@@ -136,7 +137,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
               format="currency"
               comparisonMode="previous_period"
             >
-              <Card style={${JSON.stringify(ui.queryCard)}}>
+              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Retorno</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Receita atribuida</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
@@ -158,7 +159,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
               format="number"
               comparisonMode="previous_period"
             >
-              <Card style={${JSON.stringify(ui.queryCard)}}>
+              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Eficiencia</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>ROAS</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
@@ -179,7 +180,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
               format="number"
               comparisonMode="previous_period"
             >
-              <Card style={${JSON.stringify(ui.queryCard)}}>
+              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Resultado</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Conversoes</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
@@ -197,7 +198,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
 
             <TabPanel value="performance">
               <section style={{ display: 'grid', gridTemplateColumns: '1.25fr 1fr', gap: 18 }}>
-                <Card style={${JSON.stringify(ui.panelCard)}}>
+                <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={${JSON.stringify(ui.eyebrow)}}>Budget concentration</p>
                     <h2 style={${JSON.stringify(ui.title)}}>Gasto por campanha</h2>
@@ -231,7 +232,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
                   />
                 </Card>
 
-                <Card style={${JSON.stringify(ui.panelCardAlt)}}>
+                <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={${JSON.stringify(ui.eyebrow)}}>Share</p>
                     <h2 style={${JSON.stringify(ui.title)}}>Participacao por conta</h2>
@@ -270,7 +271,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
 
             <TabPanel value="efficiency">
               <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 18 }}>
-                <Card style={${JSON.stringify(ui.panelCard)}}>
+                <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={${JSON.stringify(ui.eyebrow)}}>Trend</p>
                     <h2 style={${JSON.stringify(ui.title)}}>ROAS por dia</h2>
@@ -306,7 +307,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
                 </Card>
 
                 <section style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 18 }}>
-                  <Card style={${JSON.stringify(ui.panelCardAlt)}}>
+                  <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       <p style={${JSON.stringify(ui.eyebrow)}}>Funnel</p>
                       <h2 style={${JSON.stringify(ui.title)}}>Leads por campanha</h2>
@@ -337,7 +338,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
                       ]}
                     />
                   </Card>
-                  <Card style={${JSON.stringify(ui.panelCardAlt)}}>
+                  <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                       <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Leituras operacionais</h2>
                       <p style={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.6 }}>Hipoteses para revisar campanhas, criativos e distribuicao de budget.</p>
@@ -358,7 +359,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
 
             <TabPanel value="details">
               <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 18 }}>
-                <Card style={${JSON.stringify(ui.panelCard)}}>
+                <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={${JSON.stringify(ui.eyebrow)}}>Table</p>
                     <h2 style={${JSON.stringify(ui.title)}}>Campanhas no detalhe</h2>
@@ -403,7 +404,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
                   />
                 </Card>
 
-                <Card style={${JSON.stringify(ui.panelCardAlt)}}>
+                <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={${JSON.stringify(ui.eyebrow)}}>Pivot</p>
                     <h2 style={${JSON.stringify(ui.title)}}>Conta por campanha</h2>

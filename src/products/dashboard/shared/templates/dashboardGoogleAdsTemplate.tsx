@@ -1,6 +1,7 @@
 'use client'
 
-import { buildDashboardModuleUi } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
+import { buildDashboardModuleUi, buildFramePropSource } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
+import { DASHBOARD_TEMPLATE_PALETTES } from '@/products/dashboard/shared/templates/dashboardTemplatePalettes'
 
 const GOOGLEADS_VARIANT = {
   fileName: 'dashboard-googleads.tsx',
@@ -11,8 +12,10 @@ const GOOGLEADS_VARIANT = {
 
 function buildGoogleAdsDashboardSource(themeName: string) {
   const ui = buildDashboardModuleUi(themeName)
+  const cardFrameSource = buildFramePropSource(ui.cardFrame)
+  const chartColors = DASHBOARD_TEMPLATE_PALETTES.googleads
   return `export function DashboardGoogleAds() {
-  const CHART_COLORS = ['#EA580C', '#F97316', '#FB923C', '#FDBA74', '#FED7AA']
+  const CHART_COLORS = ${JSON.stringify(chartColors)}
 
   return (
     <DashboardTemplate name="${GOOGLEADS_VARIANT.name}" title="${GOOGLEADS_VARIANT.title}">
@@ -28,31 +31,29 @@ function buildGoogleAdsDashboardSource(themeName: string) {
               </div>
               <p style={${JSON.stringify(ui.subtitle)}}>Versao JSX do template legado com foco em volume, eficiencia e aquisicao, agora no formato novo do workspace sem DSL.</p>
             </div>
-            <article style={${JSON.stringify(ui.noteCard)}}>
-              <p style={${JSON.stringify(ui.eyebrow)}}>Workspace note</p>
-              <p style={${JSON.stringify(ui.paragraph)}}>A leitura fixa a plataforma em Google Ads e reorganiza os blocos para gasto, receita, ROAS, CTR, CPA e funil de conversao com queries explicitas.</p>
-            </article>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '34%', minWidth: 320 }}>
+              <DatePicker
+                label="Periodo de performance"
+                table="trafegopago.desempenho_diario"
+                field="data_ref"
+                presets={['7d', '14d', '30d', '90d']}
+                labelStyle={${JSON.stringify(ui.headerDatePickerLabel)}}
+                fieldStyle={${JSON.stringify(ui.headerDatePickerField)}}
+                iconStyle={${JSON.stringify(ui.headerDatePickerIcon)}}
+                presetButtonStyle={${JSON.stringify(ui.headerDatePickerPreset)}}
+                activePresetButtonStyle={${JSON.stringify(ui.headerDatePickerPresetActive)}}
+                separatorStyle={${JSON.stringify(ui.headerDatePickerSeparator)}}
+              />
+            </div>
           </header>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 18 }}>
-            <Card style={${JSON.stringify(ui.panelCard)}}>
+            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={${JSON.stringify(ui.eyebrow)}}>Global controls</p>
-                <h2 style={${JSON.stringify(ui.title)}}>Periodo, conta e grupo</h2>
+                <p style={${JSON.stringify(ui.eyebrow)}}>Filters</p>
+                <h2 style={${JSON.stringify(ui.title)}}>Conta e grupo</h2>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 14 }}>
-                <DatePicker
-                  label="Periodo de performance"
-                  table="trafegopago.desempenho_diario"
-                  field="data_ref"
-                  presets={['7d', '14d', '30d', '90d']}
-                  labelStyle={${JSON.stringify(ui.headerDatePickerLabel)}}
-                  fieldStyle={${JSON.stringify(ui.headerDatePickerField)}}
-                  iconStyle={${JSON.stringify(ui.headerDatePickerIcon)}}
-                  presetButtonStyle={${JSON.stringify(ui.headerDatePickerPreset)}}
-                  activePresetButtonStyle={${JSON.stringify(ui.headerDatePickerPresetActive)}}
-                  separatorStyle={${JSON.stringify(ui.headerDatePickerSeparator)}}
-                />
                 <Slicer
                   label="Conta"
                   field="conta_id"
@@ -94,7 +95,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
               </div>
             </Card>
 
-            <Card style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
               <p style={${JSON.stringify(ui.eyebrow)}}>Leitura esperada</p>
               <p style={${JSON.stringify(ui.paragraph)}}>Comece por volume e retorno, depois confronte CTR, CVR e CPA para separar problema de demanda, criativo ou pagina.</p>
             </Card>
@@ -115,7 +116,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
               format="currency"
               comparisonMode="previous_period"
             >
-              <Card style={${JSON.stringify(ui.queryCard)}}>
+              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Investimento</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Gasto</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
@@ -136,7 +137,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
               format="currency"
               comparisonMode="previous_period"
             >
-              <Card style={${JSON.stringify(ui.queryCard)}}>
+              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Retorno</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Receita atribuida</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
@@ -158,7 +159,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
               format="number"
               comparisonMode="previous_period"
             >
-              <Card style={${JSON.stringify(ui.queryCard)}}>
+              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Eficiencia</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>ROAS</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
@@ -180,7 +181,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
               format="currency"
               comparisonMode="previous_period"
             >
-              <Card style={${JSON.stringify(ui.queryCard)}}>
+              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Custo</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>CPA</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
@@ -198,7 +199,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
 
             <TabPanel value="performance">
               <section style={{ display: 'grid', gridTemplateColumns: '1.25fr 1fr', gap: 18 }}>
-                <Card style={${JSON.stringify(ui.panelCard)}}>
+                <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={${JSON.stringify(ui.eyebrow)}}>Top spend</p>
                     <h2 style={${JSON.stringify(ui.title)}}>Gasto por campanha</h2>
@@ -232,7 +233,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                   />
                 </Card>
 
-                <Card style={${JSON.stringify(ui.panelCardAlt)}}>
+                <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={${JSON.stringify(ui.eyebrow)}}>Rate quality</p>
                     <h2 style={${JSON.stringify(ui.title)}}>CTR por conta</h2>
@@ -270,7 +271,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
 
             <TabPanel value="acquisition">
               <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 18 }}>
-                <Card style={${JSON.stringify(ui.panelCard)}}>
+                <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={${JSON.stringify(ui.eyebrow)}}>Trend</p>
                     <h2 style={${JSON.stringify(ui.title)}}>Gasto por mes</h2>
@@ -306,7 +307,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                 </Card>
 
                 <section style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 18 }}>
-                  <Card style={${JSON.stringify(ui.panelCardAlt)}}>
+                  <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       <p style={${JSON.stringify(ui.eyebrow)}}>Conversion quality</p>
                       <h2 style={${JSON.stringify(ui.title)}}>CVR por mes</h2>
@@ -337,7 +338,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                       ]}
                     />
                   </Card>
-                  <Card style={${JSON.stringify(ui.panelCardAlt)}}>
+                  <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                       <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Leituras operacionais</h2>
                       <p style={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.6 }}>Perguntas para separar problema de volume, relevancia ou eficiencia de pagina.</p>
@@ -358,7 +359,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
 
             <TabPanel value="details">
               <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 18 }}>
-                <Card style={${JSON.stringify(ui.panelCard)}}>
+                <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={${JSON.stringify(ui.eyebrow)}}>Table</p>
                     <h2 style={${JSON.stringify(ui.title)}}>Campanhas no detalhe</h2>
@@ -403,7 +404,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                   />
                 </Card>
 
-                <Card style={${JSON.stringify(ui.panelCardAlt)}}>
+                <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={${JSON.stringify(ui.eyebrow)}}>Pivot</p>
                     <h2 style={${JSON.stringify(ui.title)}}>Conta por campanha</h2>

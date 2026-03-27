@@ -7,6 +7,7 @@ import { buildFinanceiroDashboardTemplateVariant } from '@/products/dashboard/sh
 import { buildGoogleAdsDashboardTemplateVariant } from '@/products/dashboard/shared/templates/dashboardGoogleAdsTemplate'
 import { buildMetaAdsDashboardTemplateVariant } from '@/products/dashboard/shared/templates/dashboardMetaAdsTemplate'
 import { buildShopifyDashboardTemplateVariant } from '@/products/dashboard/shared/templates/dashboardShopifyTemplate'
+import { DASHBOARD_TEMPLATE_PALETTES } from '@/products/dashboard/shared/templates/dashboardTemplatePalettes'
 
 type MarkerProps = {
   children?: ReactNode
@@ -1456,8 +1457,9 @@ const CLASSIC_DASHBOARD_VARIANT: StandaloneDashboardVariant = {
 function buildClassicDashboardTemplateSource(themeName: string) {
   const ui = buildDashboardThemeUi(themeName, 'classic')
   const cardFrameSource = buildFramePropSource(ui.cardFrame)
+  const chartColors = DASHBOARD_TEMPLATE_PALETTES.classic
   return `export function DashboardClassico() {
-  const CHART_COLORS = ['#0F766E', '#14B8A6', '#2DD4BF', '#5EEAD4', '#99F6E4']
+  const CHART_COLORS = ${JSON.stringify(chartColors)}
 
   return (
     <DashboardTemplate name="${CLASSIC_DASHBOARD_VARIANT.name}" title="${CLASSIC_DASHBOARD_VARIANT.title}">

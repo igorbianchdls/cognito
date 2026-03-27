@@ -1,6 +1,7 @@
 'use client'
 
-import { buildDashboardModuleUi } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
+import { buildDashboardModuleUi, buildFramePropSource } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
+import { DASHBOARD_TEMPLATE_PALETTES } from '@/products/dashboard/shared/templates/dashboardTemplatePalettes'
 
 const SHOPIFY_VARIANT = {
   fileName: 'dashboard-shopify.tsx',
@@ -11,8 +12,10 @@ const SHOPIFY_VARIANT = {
 
 function buildShopifyDashboardSource(themeName: string) {
   const ui = buildDashboardModuleUi(themeName)
+  const cardFrameSource = buildFramePropSource(ui.cardFrame)
+  const chartColors = DASHBOARD_TEMPLATE_PALETTES.shopify
   return `export function DashboardShopify() {
-  const CHART_COLORS = ['#DC2626', '#EF4444', '#F87171', '#FCA5A5', '#FECACA']
+  const CHART_COLORS = ${JSON.stringify(chartColors)}
 
   return (
     <DashboardTemplate name="${SHOPIFY_VARIANT.name}" title="${SHOPIFY_VARIANT.title}">
@@ -28,31 +31,29 @@ function buildShopifyDashboardSource(themeName: string) {
               </div>
               <p style={${JSON.stringify(ui.subtitle)}}>Migracao do template legado para JSX com tags, preservando GMV, pedidos, ticket, operacao de pagamento e fulfillment no mesmo dashboard.</p>
             </div>
-            <article style={${JSON.stringify(ui.noteCard)}}>
-              <p style={${JSON.stringify(ui.eyebrow)}}>Workspace note</p>
-              <p style={${JSON.stringify(ui.paragraph)}}>O filtro de plataforma fica fixo em Shopify e o dashboard prioriza leitura comercial e operacional em um unico arquivo TSX no runtime novo.</p>
-            </article>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '34%', minWidth: 320 }}>
+              <DatePicker
+                label="Periodo do pedido"
+                table="ecommerce.pedidos"
+                field="data_pedido"
+                presets={['7d', '30d', '90d', 'month']}
+                labelStyle={${JSON.stringify(ui.headerDatePickerLabel)}}
+                fieldStyle={${JSON.stringify(ui.headerDatePickerField)}}
+                iconStyle={${JSON.stringify(ui.headerDatePickerIcon)}}
+                presetButtonStyle={${JSON.stringify(ui.headerDatePickerPreset)}}
+                activePresetButtonStyle={${JSON.stringify(ui.headerDatePickerPresetActive)}}
+                separatorStyle={${JSON.stringify(ui.headerDatePickerSeparator)}}
+              />
+            </div>
           </header>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 18 }}>
-            <Card style={${JSON.stringify(ui.panelCard)}}>
+            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={${JSON.stringify(ui.eyebrow)}}>Global controls</p>
-                <h2 style={${JSON.stringify(ui.title)}}>Periodo, loja e status</h2>
+                <p style={${JSON.stringify(ui.eyebrow)}}>Filters</p>
+                <h2 style={${JSON.stringify(ui.title)}}>Loja e status</h2>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 14 }}>
-                <DatePicker
-                  label="Periodo do pedido"
-                  table="ecommerce.pedidos"
-                  field="data_pedido"
-                  presets={['7d', '30d', '90d', 'month']}
-                  labelStyle={${JSON.stringify(ui.headerDatePickerLabel)}}
-                  fieldStyle={${JSON.stringify(ui.headerDatePickerField)}}
-                  iconStyle={${JSON.stringify(ui.headerDatePickerIcon)}}
-                  presetButtonStyle={${JSON.stringify(ui.headerDatePickerPreset)}}
-                  activePresetButtonStyle={${JSON.stringify(ui.headerDatePickerPresetActive)}}
-                  separatorStyle={${JSON.stringify(ui.headerDatePickerSeparator)}}
-                />
                 <Slicer
                   label="Loja"
                   field="loja_id"
@@ -92,7 +93,7 @@ function buildShopifyDashboardSource(themeName: string) {
               </div>
             </Card>
 
-            <Card style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
               <p style={${JSON.stringify(ui.eyebrow)}}>Leitura esperada</p>
               <p style={${JSON.stringify(ui.paragraph)}}>Primeiro confira GMV e pedidos, depois veja se o mix de pagamento e fulfillment esta sustentando a operacao sem vazamento em reembolso.</p>
             </Card>
@@ -112,7 +113,7 @@ function buildShopifyDashboardSource(themeName: string) {
               format="currency"
               comparisonMode="previous_period"
             >
-              <Card style={${JSON.stringify(ui.queryCard)}}>
+              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Receita bruta</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>GMV</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
@@ -132,7 +133,7 @@ function buildShopifyDashboardSource(themeName: string) {
               format="number"
               comparisonMode="previous_period"
             >
-              <Card style={${JSON.stringify(ui.queryCard)}}>
+              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Volume</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Pedidos</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
@@ -152,7 +153,7 @@ function buildShopifyDashboardSource(themeName: string) {
               format="currency"
               comparisonMode="previous_period"
             >
-              <Card style={${JSON.stringify(ui.queryCard)}}>
+              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Monetizacao</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Ticket medio</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
@@ -172,7 +173,7 @@ function buildShopifyDashboardSource(themeName: string) {
               format="currency"
               comparisonMode="previous_period"
             >
-              <Card style={${JSON.stringify(ui.queryCard)}}>
+              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
                 <p style={${JSON.stringify(ui.kpiLabel)}}>Leakage</p>
                 <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Reembolsos</h2>
                 <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
@@ -190,7 +191,7 @@ function buildShopifyDashboardSource(themeName: string) {
 
             <TabPanel value="sales">
               <section style={{ display: 'grid', gridTemplateColumns: '1.25fr 1fr', gap: 18 }}>
-                <Card style={${JSON.stringify(ui.panelCard)}}>
+                <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={${JSON.stringify(ui.eyebrow)}}>Store mix</p>
                     <h2 style={${JSON.stringify(ui.title)}}>GMV por loja</h2>
@@ -223,7 +224,7 @@ function buildShopifyDashboardSource(themeName: string) {
                   />
                 </Card>
 
-                <Card style={${JSON.stringify(ui.panelCardAlt)}}>
+                <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={${JSON.stringify(ui.eyebrow)}}>Payment mix</p>
                     <h2 style={${JSON.stringify(ui.title)}}>Pedidos por status de pagamento</h2>
@@ -261,7 +262,7 @@ function buildShopifyDashboardSource(themeName: string) {
 
             <TabPanel value="operations">
               <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 18 }}>
-                <Card style={${JSON.stringify(ui.panelCard)}}>
+                <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={${JSON.stringify(ui.eyebrow)}}>Trend</p>
                     <h2 style={${JSON.stringify(ui.title)}}>GMV por mes</h2>
@@ -296,7 +297,7 @@ function buildShopifyDashboardSource(themeName: string) {
                 </Card>
 
                 <section style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 18 }}>
-                  <Card style={${JSON.stringify(ui.panelCardAlt)}}>
+                  <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       <p style={${JSON.stringify(ui.eyebrow)}}>Fulfillment</p>
                       <h2 style={${JSON.stringify(ui.title)}}>Pedidos por fulfillment</h2>
@@ -326,7 +327,7 @@ function buildShopifyDashboardSource(themeName: string) {
                       ]}
                     />
                   </Card>
-                  <Card style={${JSON.stringify(ui.panelCardAlt)}}>
+                  <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                       <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Leituras operacionais</h2>
                       <p style={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.6 }}>Perguntas para o time alinhar comercial, pagamento e fulfillment.</p>
@@ -347,7 +348,7 @@ function buildShopifyDashboardSource(themeName: string) {
 
             <TabPanel value="details">
               <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 18 }}>
-                <Card style={${JSON.stringify(ui.panelCard)}}>
+                <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={${JSON.stringify(ui.eyebrow)}}>Table</p>
                     <h2 style={${JSON.stringify(ui.title)}}>Pedidos no detalhe</h2>
@@ -390,7 +391,7 @@ function buildShopifyDashboardSource(themeName: string) {
                   />
                 </Card>
 
-                <Card style={${JSON.stringify(ui.panelCardAlt)}}>
+                <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={${JSON.stringify(ui.eyebrow)}}>Pivot</p>
                     <h2 style={${JSON.stringify(ui.title)}}>Loja por pagamento</h2>
