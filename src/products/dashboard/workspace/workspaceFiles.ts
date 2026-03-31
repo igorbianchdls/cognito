@@ -1,6 +1,7 @@
 import type { DashboardCodeFile } from '@/products/dashboard/workspace/types'
 import { buildDashboardTemplateVariants } from '@/products/dashboard/shared/templates/dashboardTemplate'
 import { DASHBOARD_TEMPLATE_DEFAULT_THEMES } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
+import { buildDashboardChartColorsFileSource } from '@/products/dashboard/workspace/chartPalettes'
 
 export function buildDashboardWorkspaceFiles(themeName: string): DashboardCodeFile[] {
   const dashboardFiles = buildDashboardTemplateVariants(themeName).map((file) => ({
@@ -14,6 +15,14 @@ export function buildDashboardWorkspaceFiles(themeName: string): DashboardCodeFi
 
   return [
     ...dashboardFiles,
+    {
+      path: 'app/chart-colors.ts',
+      name: 'chart-colors.ts',
+      directory: 'app',
+      extension: 'ts',
+      language: 'typescript',
+      content: buildDashboardChartColorsFileSource(),
+    },
     {
       path: 'app/theme.json',
       name: 'theme.json',

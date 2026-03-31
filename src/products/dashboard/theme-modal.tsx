@@ -1,14 +1,9 @@
 'use client'
 
 import type { ThemeOption } from '@/products/bi/shared/themeOptions'
+import type { DashboardChartPaletteOption } from '@/products/dashboard/workspace/chartPalettes'
 
 export type DashboardAppearanceMode = 'theme' | 'colors'
-
-export type DashboardChartPaletteOption = {
-  value: string
-  label: string
-  colors: string[]
-}
 
 function getThemePreviewStyle(theme: string) {
   const styles: Record<string, { background: string; accent: string; border: string; title: string }> = {

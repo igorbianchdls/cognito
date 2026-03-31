@@ -6,9 +6,12 @@ import { APPS_THEME_OPTIONS } from '@/products/bi/shared/themeOptions'
 import {
   DashboardThemeModal,
   type DashboardAppearanceMode,
-  type DashboardChartPaletteOption,
 } from '@/products/dashboard/theme-modal'
 import { buildDashboardTemplateVariantByPath } from '@/products/dashboard/shared/templates/dashboardTemplate'
+import {
+  DASHBOARD_CHART_PALETTE_OPTIONS,
+  getDashboardChartPaletteValueFromColors,
+} from '@/products/dashboard/workspace/chartPalettes'
 import { buildDashboardWorkspaceFiles } from '@/products/dashboard/workspace/workspaceFiles'
 import {
   getDashboardChartColorsFromSource,
@@ -19,21 +22,6 @@ import {
 import { DashboardWorkspaceCode } from '@/products/dashboard/workspace/DashboardWorkspaceCode'
 import { DashboardWorkspaceHeader } from '@/products/dashboard/workspace/DashboardWorkspaceHeader'
 import { DashboardWorkspacePreview } from '@/products/dashboard/workspace/DashboardWorkspacePreview'
-
-const CHART_PALETTE_OPTIONS: DashboardChartPaletteOption[] = [
-  { value: 'teal', label: 'Teal', colors: ['#0F766E', '#14B8A6', '#2DD4BF', '#5EEAD4', '#99F6E4'] },
-  { value: 'blue', label: 'Blue', colors: ['#1D4ED8', '#3B82F6', '#60A5FA', '#93C5FD', '#BFDBFE'] },
-  { value: 'purple', label: 'Purple', colors: ['#7C3AED', '#8B5CF6', '#A78BFA', '#C4B5FD', '#DDD6FE'] },
-  { value: 'orange', label: 'Orange', colors: ['#EA580C', '#F97316', '#FB923C', '#FDBA74', '#FED7AA'] },
-  { value: 'red', label: 'Red', colors: ['#DC2626', '#EF4444', '#F87171', '#FCA5A5', '#FECACA'] },
-  { value: 'lime', label: 'Lime', colors: ['#4D7C0F', '#65A30D', '#84CC16', '#A3E635', '#BEF264'] },
-]
-
-function getChartPaletteValueFromColors(colors: string[]) {
-  const normalized = JSON.stringify(colors || [])
-  const matched = CHART_PALETTE_OPTIONS.find((option) => JSON.stringify(option.colors) === normalized)
-  return matched?.value || CHART_PALETTE_OPTIONS[0].value
-}
 
 export function DashboardWorkspace({
   initialThemeName,
@@ -49,8 +37,8 @@ export function DashboardWorkspace({
   const [appearanceMode, setAppearanceMode] = useState<DashboardAppearanceMode>('theme')
   const [draftThemeName, setDraftThemeName] = useState('light')
   const [themeModalBaseName, setThemeModalBaseName] = useState('light')
-  const [draftChartPalette, setDraftChartPalette] = useState(CHART_PALETTE_OPTIONS[0].value)
-  const [chartPaletteBaseName, setChartPaletteBaseName] = useState(CHART_PALETTE_OPTIONS[0].value)
+  const [draftChartPalette, setDraftChartPalette] = useState(DASHBOARD_CHART_PALETTE_OPTIONS[0].value)
+  const [chartPaletteBaseName, setChartPaletteBaseName] = useState(DASHBOARD_CHART_PALETTE_OPTIONS[0].value)
   const dashboardFiles = useMemo(() => files.filter((file) => file.extension === 'tsx'), [files])
   const selectedDashboardFile = useMemo(
     () => dashboardFiles.find((file) => file.path === selectedDashboardPath) ?? dashboardFiles[0],
@@ -69,7 +57,10 @@ export function DashboardWorkspace({
     [selectedDashboardFile],
   )
   const selectedChartPalette = useMemo(
-    () => getChartPaletteValueFromColors(getDashboardChartColorsFromSource(selectedDashboardFile?.content ?? '', CHART_PALETTE_OPTIONS[0].colors)),
+    () =>
+      getDashboardChartPaletteValueFromColors(
+        getDashboardChartColorsFromSource(selectedDashboardFile?.content ?? '', DASHBOARD_CHART_PALETTE_OPTIONS[0].colors),
+      ),
     [selectedDashboardFile],
   )
 
@@ -83,7 +74,7 @@ export function DashboardWorkspace({
     if (!selectedDashboardFile) return
     const nextVariant = buildDashboardTemplateVariantByPath(selectedDashboardFile.path, themeName)
     if (!nextVariant) return
-    const nextPalette = CHART_PALETTE_OPTIONS.find((option) => option.value === chartPaletteValue)?.colors
+    const nextPalette = DASHBOARD_CHART_PALETTE_OPTIONS.find((option) => option.value === chartPaletteValue)?.colors
     const nextContent = nextPalette
       ? replaceDashboardChartColorsInSource(nextVariant.content, nextPalette)
       : nextVariant.content
@@ -155,7 +146,7 @@ export function DashboardWorkspace({
         }}
         selectedTheme={draftThemeName}
         selectedChartPalette={draftChartPalette}
-        chartPalettes={CHART_PALETTE_OPTIONS}
+        chartPalettes={DASHBOARD_CHART_PALETTE_OPTIONS}
         revertDisabled={draftThemeName === themeModalBaseName && draftChartPalette === chartPaletteBaseName}
         themes={APPS_THEME_OPTIONS}
       />

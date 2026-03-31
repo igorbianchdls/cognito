@@ -28,7 +28,7 @@ export function WorkspaceCodeEditor({
             <Icon icon="solar:close-circle-outline" className="h-3.5 w-3.5 text-[#9B9B95]" />
           </div>
           <label className="flex items-center gap-2 pb-2 text-[12px] text-[#6E6E68]">
-            <span>Dashboard</span>
+            <span>Arquivo</span>
             <select
               value={selectedDashboardPath}
               onChange={(event) => onSelectDashboard(event.target.value)}

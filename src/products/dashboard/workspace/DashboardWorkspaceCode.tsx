@@ -19,18 +19,25 @@ export function DashboardWorkspaceCode({
   onSelectFile: (path: string) => void
   onSelectDashboard: (path: string) => void
 }) {
+  const dashboardFilePaths = new Set(dashboardFiles.map((dashboardFile) => dashboardFile.path))
+
+  function handleSelectPath(path: string) {
+    onSelectFile(path)
+    if (dashboardFilePaths.has(path)) onSelectDashboard(path)
+  }
+
   return (
     <div className="flex min-h-full w-full">
       <WorkspaceFileTree
         files={files}
         selectedPath={selectedFile?.path ?? 'app/dashboard-classico.tsx'}
-        onSelect={onSelectFile}
+        onSelect={handleSelectPath}
       />
       <WorkspaceCodeEditor
         file={selectedFile}
-        dashboardFiles={dashboardFiles}
-        selectedDashboardPath={selectedDashboardPath}
-        onSelectDashboard={onSelectDashboard}
+        dashboardFiles={files}
+        selectedDashboardPath={selectedFile?.path ?? selectedDashboardPath}
+        onSelectDashboard={handleSelectPath}
       />
     </div>
   )
