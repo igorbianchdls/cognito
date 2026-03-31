@@ -1,6 +1,6 @@
 'use client'
 
-import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter'
+import { resolveDashboardTemplateThemeTokens } from '@/products/dashboard/shared/templates/dashboardTemplateThemes'
 
 export type DashboardTemplateKey = 'classic' | 'compras' | 'financeiro' | 'metaads' | 'googleads' | 'shopify'
 
@@ -112,70 +112,42 @@ export function getDashboardTemplateThemeName(template: DashboardTemplateKey): s
 }
 
 function resolveDashboardModuleThemeTokens(themeName: string): DashboardModuleThemeTokens {
-  const preset = buildThemeVars(themeName)
-  const cssVars = preset.cssVars || {}
-  const managers = (preset.managers || {}) as Record<string, any>
-  const chartScheme = Array.isArray(managers?.color?.scheme) && managers.color.scheme.length
-    ? (managers.color.scheme as string[])
-    : ['#2563EB', '#0F766E', '#EA580C', '#7C3AED', '#DC2626']
-
-  const dark = ['dark', 'black', 'slate', 'navy', 'charcoal', 'midnight', 'metro', 'aero'].includes(
-    String(themeName || '').toLowerCase(),
-  )
-  const primary = chartScheme[0] || '#2563EB'
-  const pageBg = String(cssVars.bg || (dark ? '#0F172A' : '#F6F8FC'))
-  const surfaceBg = String(cssVars.surfaceBg || (dark ? '#111827' : '#FFFFFF'))
-  const borderColor = String(cssVars.surfaceBorder || (dark ? '#334155' : '#DCE6F2'))
-  const textPrimary = String(cssVars.fg || cssVars.h1Color || (dark ? '#E5E7EB' : '#172033'))
-  const textSecondary = String(cssVars.headerSubtitle || cssVars.kpiTitleColor || (dark ? '#94A3B8' : '#536783'))
-  const kpiValueColor = String(cssVars.kpiValueColor || textPrimary)
-  const headerBg = String(cssVars.headerBg || surfaceBg)
-  const headerText = String(cssVars.headerText || textPrimary)
-  const headerSubtitle = String(cssVars.headerSubtitle || textSecondary)
-  const headerDpBg = String(cssVars.headerDpBg || headerBg)
-  const headerDpColor = String(cssVars.headerDpColor || headerText)
-  const headerDpBorder = String(cssVars.headerDpBorder || borderColor)
-  const headerDpIcon = String(cssVars.headerDpIcon || headerDpColor)
-  const headerDpLabel = String(cssVars.headerDpLabel || headerSubtitle)
-  const accentSurface = `color-mix(in srgb, ${surfaceBg} 84%, ${primary} 16%)`
-  const accentBorder = `color-mix(in srgb, ${borderColor} 60%, ${primary} 40%)`
-  const headerDpActiveBg = `color-mix(in srgb, ${headerDpBg} 72%, ${primary} 28%)`
-  const headerDpActiveBorder = `color-mix(in srgb, ${headerDpBorder} 55%, ${primary} 45%)`
+  const theme = resolveDashboardTemplateThemeTokens(themeName)
+  const chartScheme = [theme.primary, theme.accentBorder, theme.textSecondary, theme.surfaceBorder, theme.headerSubtitle]
   const cardFrame = resolveDashboardCardFrame(themeName)
 
   return {
     chartScheme,
     cardFrame,
-    dark,
-    primary,
-    pageBg,
-    surfaceBg,
-    borderColor,
-    textPrimary,
-    textSecondary,
-    kpiValueColor,
-    headerBg,
-    headerText,
-    headerSubtitle,
-    headerDpBg,
-    headerDpColor,
-    headerDpBorder,
-    headerDpIcon,
-    headerDpLabel,
-    accentSurface,
-    accentBorder,
-    headerDpActiveBg,
-    headerDpActiveBorder,
+    dark: theme.dark,
+    primary: theme.primary,
+    pageBg: theme.pageBg,
+    surfaceBg: theme.surfaceBg,
+    borderColor: theme.surfaceBorder,
+    textPrimary: theme.textPrimary,
+    textSecondary: theme.textSecondary,
+    kpiValueColor: theme.kpiValueColor,
+    headerBg: theme.headerBg,
+    headerText: theme.headerText,
+    headerSubtitle: theme.headerSubtitle,
+    headerDpBg: theme.headerDatePickerBg,
+    headerDpColor: theme.headerDatePickerColor,
+    headerDpBorder: theme.headerDatePickerBorder,
+    headerDpIcon: theme.headerDatePickerIcon,
+    headerDpLabel: theme.headerDatePickerLabel,
+    accentSurface: theme.accentSurface,
+    accentBorder: theme.accentBorder,
+    headerDpActiveBg: theme.headerDatePickerActiveBg,
+    headerDpActiveBorder: theme.headerDatePickerActiveBorder,
   }
 }
 
 export function buildDashboardModuleUi(themeName: string): DashboardModuleUi {
   const tokens = resolveDashboardModuleThemeTokens(themeName)
+  const theme = resolveDashboardTemplateThemeTokens(themeName)
   const {
     chartScheme,
     cardFrame,
-    dark,
-    primary,
     pageBg,
     surfaceBg,
     borderColor,
@@ -228,7 +200,7 @@ export function buildDashboardModuleUi(themeName: string): DashboardModuleUi {
       padding: '6px 12px',
       fontSize: 12,
       fontWeight: 600,
-      color: dark ? '#FFFFFF' : primary,
+      color: theme.accentText,
     },
     noteCard: {
       width: '30%',
@@ -356,7 +328,7 @@ export function buildDashboardModuleUi(themeName: string): DashboardModuleUi {
     headerDatePickerPresetActive: {
       backgroundColor: headerDpActiveBg,
       borderColor: headerDpActiveBorder,
-      color: dark ? '#FFFFFF' : primary,
+      color: theme.headerDatePickerActiveText,
       fontWeight: 600,
     },
     headerDatePickerSeparator: {

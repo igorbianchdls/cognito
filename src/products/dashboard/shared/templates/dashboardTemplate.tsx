@@ -1,13 +1,13 @@
 'use client'
 
 import type * as React from 'react'
-import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter'
 import { buildComprasDashboardTemplateVariant } from '@/products/dashboard/shared/templates/dashboardComprasTemplate'
 import { buildFinanceiroDashboardTemplateVariant } from '@/products/dashboard/shared/templates/dashboardFinanceiroTemplate'
 import { buildGoogleAdsDashboardTemplateVariant } from '@/products/dashboard/shared/templates/dashboardGoogleAdsTemplate'
 import { buildMetaAdsDashboardTemplateVariant } from '@/products/dashboard/shared/templates/dashboardMetaAdsTemplate'
 import { buildShopifyDashboardTemplateVariant } from '@/products/dashboard/shared/templates/dashboardShopifyTemplate'
 import { getDashboardTemplatePalette, getDashboardTemplateThemeName } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
+import { resolveDashboardTemplateThemeTokens } from '@/products/dashboard/shared/templates/dashboardTemplateThemes'
 
 export type DashboardTemplateVariant = {
   content: string
@@ -105,37 +105,29 @@ function buildFramePropSource(frame: DashboardThemeUi['cardFrame']): string {
 }
 
 function buildDashboardThemeUi(themeName: string, variant: 'default' | 'classic' = 'default'): DashboardThemeUi {
-  const preset = buildThemeVars(themeName)
-  const cssVars = preset.cssVars || {}
-  const managers = (preset.managers || {}) as Record<string, any>
-  const chartScheme = Array.isArray(managers?.color?.scheme) && managers.color.scheme.length
-    ? (managers.color.scheme as string[])
-    : ['#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE', '#0EA5E9']
+  const theme = resolveDashboardTemplateThemeTokens(themeName)
+  const chartScheme = [theme.primary, theme.accentBorder, theme.textSecondary, theme.surfaceBorder, theme.headerSubtitle]
 
-  const dark = ['dark', 'black', 'slate', 'navy', 'charcoal', 'midnight', 'metro', 'aero'].includes(
-    String(themeName || '').toLowerCase(),
-  )
-  const primary = chartScheme[0] || '#2563EB'
-  const pageBg = String(cssVars.bg || (dark ? '#0F172A' : '#F6F8FC'))
-  const surfaceBg = String(cssVars.surfaceBg || (dark ? '#111827' : '#FFFFFF'))
-  const borderColor = String(cssVars.surfaceBorder || (dark ? '#334155' : '#DCE6F2'))
-  const textPrimary = String(cssVars.fg || cssVars.h1Color || (dark ? '#E5E7EB' : '#172033'))
-  const textSecondary = String(cssVars.headerSubtitle || cssVars.kpiTitleColor || (dark ? '#94A3B8' : '#536783'))
-  const titleColor = String(cssVars.h1Color || textPrimary)
-  const headerBg = String(cssVars.headerBg || surfaceBg)
-  const headerText = String(cssVars.headerText || titleColor)
-  const headerSubtitle = String(cssVars.headerSubtitle || textSecondary)
-  const headerDpBg = String(cssVars.headerDpBg || headerBg)
-  const headerDpColor = String(cssVars.headerDpColor || headerText)
-  const headerDpBorder = String(cssVars.headerDpBorder || borderColor)
-  const headerDpIcon = String(cssVars.headerDpIcon || headerDpColor)
-  const headerDpLabel = String(cssVars.headerDpLabel || headerSubtitle)
-  const accentSurface = `color-mix(in srgb, ${surfaceBg} 84%, ${primary} 16%)`
-  const accentBorder = `color-mix(in srgb, ${borderColor} 60%, ${primary} 40%)`
-  const accentText = dark ? '#FFFFFF' : primary
-  const headerDpActiveBg = `color-mix(in srgb, ${headerDpBg} 72%, ${primary} 28%)`
-  const headerDpActiveBorder = `color-mix(in srgb, ${headerDpBorder} 55%, ${primary} 45%)`
-  const headerDpActiveColor = dark ? '#FFFFFF' : primary
+  const pageBg = theme.pageBg
+  const surfaceBg = theme.surfaceBg
+  const borderColor = theme.surfaceBorder
+  const textPrimary = theme.textPrimary
+  const textSecondary = theme.textSecondary
+  const titleColor = theme.titleColor
+  const headerBg = theme.headerBg
+  const headerText = theme.headerText
+  const headerSubtitle = theme.headerSubtitle
+  const headerDpBg = theme.headerDatePickerBg
+  const headerDpColor = theme.headerDatePickerColor
+  const headerDpBorder = theme.headerDatePickerBorder
+  const headerDpIcon = theme.headerDatePickerIcon
+  const headerDpLabel = theme.headerDatePickerLabel
+  const accentSurface = theme.accentSurface
+  const accentBorder = theme.accentBorder
+  const accentText = theme.accentText
+  const headerDpActiveBg = theme.headerDatePickerActiveBg
+  const headerDpActiveBorder = theme.headerDatePickerActiveBorder
+  const headerDpActiveColor = theme.headerDatePickerActiveText
   const tableHeaderBackground = '#f8fafc'
   const tableHeaderTextColor = '#334155'
   const tableBorderColor = '#d7dbe3'
@@ -447,7 +439,7 @@ function buildDashboardThemeUi(themeName: string, variant: 'default' | 'classic'
       fontSize: 30,
       fontWeight: 700,
       letterSpacing: '-0.04em',
-      color: String(cssVars.kpiValueColor || titleColor),
+      color: theme.kpiValueColor,
     },
     kpiDelta: {
       margin: 0,
