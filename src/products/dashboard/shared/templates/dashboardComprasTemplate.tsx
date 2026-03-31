@@ -1,6 +1,8 @@
 'use client'
 
 import {
+  buildDashboardInlineUiSource,
+  buildDashboardThemeImportSource,
   getDashboardTemplatePalette,
   getDashboardTemplateThemeName,
 } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
@@ -16,13 +18,13 @@ function buildComprasDashboardSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('compras')
   const chartColors = getDashboardTemplatePalette('compras')
   return `import { DASHBOARD_CHART_PALETTES } from './chart-colors'
-import { resolveDashboardUi } from './dashboard-ui'
+${buildDashboardThemeImportSource()}
 
 export function DashboardCompras() {
   const THEME_NAME = ${JSON.stringify(resolvedThemeName)}
   const CHART_PALETTE = 'blue'
   const CHART_COLORS = DASHBOARD_CHART_PALETTES[CHART_PALETTE] ?? ${JSON.stringify(chartColors)}
-  const ui = resolveDashboardUi(THEME_NAME)
+${buildDashboardInlineUiSource()}
 
   return (
     <DashboardTemplate name="${COMPRAS_VARIANT.name}" title="${COMPRAS_VARIANT.title}">

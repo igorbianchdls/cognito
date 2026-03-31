@@ -1,6 +1,8 @@
 'use client'
 
 import {
+  buildDashboardInlineUiSource,
+  buildDashboardThemeImportSource,
   getDashboardTemplatePalette,
   getDashboardTemplateThemeName,
 } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
@@ -16,13 +18,13 @@ function buildFinanceiroDashboardSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('financeiro')
   const chartColors = getDashboardTemplatePalette('financeiro')
   return `import { DASHBOARD_CHART_PALETTES } from './chart-colors'
-import { resolveDashboardUi } from './dashboard-ui'
+${buildDashboardThemeImportSource()}
 
 export function DashboardFinanceiro() {
   const THEME_NAME = ${JSON.stringify(resolvedThemeName)}
   const CHART_PALETTE = 'teal'
   const CHART_COLORS = DASHBOARD_CHART_PALETTES[CHART_PALETTE] ?? ${JSON.stringify(chartColors)}
-  const ui = resolveDashboardUi(THEME_NAME)
+${buildDashboardInlineUiSource()}
 
   return (
     <DashboardTemplate name="${FINANCEIRO_VARIANT.name}" title="${FINANCEIRO_VARIANT.title}">

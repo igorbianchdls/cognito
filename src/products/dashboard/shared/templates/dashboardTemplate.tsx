@@ -6,7 +6,12 @@ import { buildFinanceiroDashboardTemplateVariant } from '@/products/dashboard/sh
 import { buildGoogleAdsDashboardTemplateVariant } from '@/products/dashboard/shared/templates/dashboardGoogleAdsTemplate'
 import { buildMetaAdsDashboardTemplateVariant } from '@/products/dashboard/shared/templates/dashboardMetaAdsTemplate'
 import { buildShopifyDashboardTemplateVariant } from '@/products/dashboard/shared/templates/dashboardShopifyTemplate'
-import { getDashboardTemplatePalette, getDashboardTemplateThemeName } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
+import {
+  buildDashboardInlineUiSource,
+  buildDashboardThemeImportSource,
+  getDashboardTemplatePalette,
+  getDashboardTemplateThemeName,
+} from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
 import { resolveDashboardTemplateThemeTokens } from '@/products/dashboard/shared/templates/dashboardTemplateThemes'
 
 export type DashboardTemplateVariant = {
@@ -456,13 +461,13 @@ function buildClassicDashboardTemplateSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('classic')
   const chartColors = getDashboardTemplatePalette('classic')
   return `import { DASHBOARD_CHART_PALETTES } from './chart-colors'
-import { resolveDashboardUi } from './dashboard-ui'
+${buildDashboardThemeImportSource()}
 
 export function DashboardClassico() {
   const THEME_NAME = ${JSON.stringify(resolvedThemeName)}
   const CHART_PALETTE = 'teal'
   const CHART_COLORS = DASHBOARD_CHART_PALETTES[CHART_PALETTE] ?? ${JSON.stringify(chartColors)}
-  const ui = resolveDashboardUi(THEME_NAME, 'classic')
+${buildDashboardInlineUiSource('classic')}
 
   return (
     <DashboardTemplate name="${CLASSIC_DASHBOARD_VARIANT.name}" title="${CLASSIC_DASHBOARD_VARIANT.title}">
