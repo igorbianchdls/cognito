@@ -1,0 +1,684 @@
+import { DASHBOARD_CHART_PALETTES } from './chart-colors'
+import { resolveDashboardThemeTokens } from './theme-tokens'
+
+export function DashboardShopify() {
+  const THEME_NAME = "light"
+  const CHART_PALETTE = 'red'
+  const CHART_COLORS = DASHBOARD_CHART_PALETTES[CHART_PALETTE] ?? ["#DC2626","#EF4444","#F87171","#FCA5A5","#FECACA"]
+  const theme = resolveDashboardThemeTokens(THEME_NAME)
+  const isClassic = false
+  const key = String(THEME_NAME || '').toLowerCase()
+  const cardFrame = ['midnight', 'metro', 'aero'].includes(key)
+    ? { variant: 'hud' as const, cornerSize: 10, cornerWidth: 2 }
+    : ['light', 'white', 'claro', 'branco', 'sand'].includes(key)
+      ? { variant: 'hud' as const, cornerSize: 6, cornerWidth: 1 }
+      : { variant: 'hud' as const, cornerSize: 8, cornerWidth: 1 }
+  const ui = {
+    cardFrame,
+    page: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: isClassic ? 20 : 24,
+      minHeight: '100%',
+      padding: isClassic ? 28 : 32,
+      backgroundColor: theme.pageBg,
+    },
+    header: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      gap: isClassic ? 20 : 24,
+      padding: isClassic ? '20px 24px' : 24,
+      borderRadius: isClassic && cardFrame ? 0 : 24,
+      border: `1px solid ${theme.surfaceBorder}`,
+      backgroundColor: theme.headerBg,
+      color: theme.headerText,
+    },
+    badge: {
+      display: 'inline-flex',
+      width: 'fit-content',
+      alignItems: 'center',
+      borderRadius: 999,
+      border: `1px solid ${theme.accentBorder}`,
+      backgroundColor: theme.accentSurface,
+      padding: '6px 12px',
+      fontSize: 12,
+      fontWeight: 600,
+      color: theme.accentText,
+    },
+    queryCard: {
+      padding: 22,
+      borderRadius: isClassic && cardFrame ? 0 : 22,
+      border: `1px solid ${theme.surfaceBorder}`,
+      backgroundColor: theme.surfaceBg,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 8,
+    },
+    panelCard: {
+      padding: 22,
+      borderRadius: cardFrame ? 0 : 24,
+      backgroundColor: theme.surfaceBg,
+      border: `1px solid ${theme.surfaceBorder}`,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 14,
+    },
+    panelCardAlt: {
+      padding: 22,
+      borderRadius: cardFrame ? 0 : 24,
+      backgroundColor: theme.accentSurface,
+      border: `1px solid ${theme.accentBorder}`,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 14,
+    },
+    footer: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      gap: 18,
+      padding: isClassic ? '16px 20px' : '18px 22px',
+      borderRadius: isClassic && cardFrame ? 0 : 22,
+      backgroundColor: theme.surfaceBg,
+      border: `1px solid ${theme.surfaceBorder}`,
+    },
+    eyebrow: {
+      margin: 0,
+      fontSize: 11,
+      color: theme.headerSubtitle,
+      textTransform: 'uppercase',
+      letterSpacing: '0.05em',
+    },
+    title: {
+      margin: 0,
+      fontSize: isClassic ? 22 : 24,
+      fontWeight: 600,
+      color: theme.titleColor,
+      letterSpacing: '-0.03em',
+    },
+    subtitle: {
+      margin: 0,
+      fontSize: 15,
+      lineHeight: 1.7,
+      color: theme.textSecondary,
+    },
+    paragraph: {
+      margin: 0,
+      fontSize: 14,
+      lineHeight: 1.75,
+      color: theme.textSecondary,
+    },
+    metricLabel: {
+      margin: 0,
+      fontSize: 12,
+      color: theme.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: '0.05em',
+    },
+    kpiLabel: {
+      margin: 0,
+      fontSize: 12,
+      color: theme.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: '0.05em',
+    },
+    kpiValue: {
+      margin: 0,
+      fontSize: 30,
+      fontWeight: 700,
+      letterSpacing: '-0.04em',
+      color: theme.kpiValueColor,
+    },
+    kpiDelta: {
+      margin: 0,
+      fontSize: 13,
+      color: theme.textSecondary,
+    },
+    headerDatePickerLabel: {
+      margin: 0,
+      fontSize: 11,
+      color: theme.headerDatePickerLabel,
+      textTransform: 'uppercase',
+      letterSpacing: '0.06em',
+    },
+    headerDatePickerField: {
+      minHeight: 38,
+      padding: '0 10px',
+      border: `1px solid ${theme.headerDatePickerBorder}`,
+      borderRadius: 10,
+      backgroundColor: theme.headerDatePickerBg,
+      color: theme.headerDatePickerColor,
+      fontSize: 14,
+      fontWeight: 500,
+    },
+    headerDatePickerIcon: {
+      color: theme.headerDatePickerIcon,
+      fontSize: 14,
+    },
+    headerDatePickerPreset: {
+      height: 36,
+      padding: '0 12px',
+      border: `1px solid ${theme.headerDatePickerBorder}`,
+      borderRadius: 10,
+      backgroundColor: theme.headerDatePickerBg,
+      color: theme.headerDatePickerColor,
+      fontSize: 13,
+      fontWeight: 500,
+    },
+    headerDatePickerPresetActive: {
+      backgroundColor: theme.headerDatePickerActiveBg,
+      borderColor: theme.headerDatePickerActiveBorder,
+      color: theme.headerDatePickerActiveText,
+      fontWeight: 600,
+    },
+    headerDatePickerSeparator: {
+      color: theme.headerDatePickerLabel,
+      fontSize: 13,
+      fontWeight: 500,
+    },
+    tableHeaderStyle: {
+      backgroundColor: '#f8fafc',
+      color: '#334155',
+      fontSize: 14,
+      fontWeight: 600,
+      padding: '12px 14px',
+    },
+    tableRowStyle: {
+      backgroundColor: '#ffffff',
+    },
+    tableCellStyle: {
+      color: '#475569',
+      fontSize: 14,
+      fontWeight: 400,
+      padding: '12px 14px',
+    },
+    tableFooterStyle: {
+      backgroundColor: '#f8fafc',
+      color: '#0f172a',
+      fontSize: 14,
+      fontWeight: 600,
+      padding: '12px 14px',
+    },
+    tableBorderColor: '#d7dbe3',
+    tableRowHoverColor: '#f8fafc',
+    pivotContainerStyle: {
+      backgroundColor: '#ffffff',
+    },
+    pivotHeaderStyle: {
+      backgroundColor: '#f8fafc',
+      color: '#334155',
+      fontSize: 14,
+      fontWeight: 600,
+      padding: '9px 10px',
+    },
+    pivotHeaderTotalStyle: {
+      backgroundColor: '#f1f5f9',
+      color: '#1e293b',
+      fontSize: 14,
+      fontWeight: 600,
+      padding: '9px 10px',
+    },
+    pivotRowLabelStyle: {
+      backgroundColor: '#ffffff',
+      color: '#1e293b',
+      fontSize: 14,
+      padding: '9px 10px',
+    },
+    pivotCellStyle: {
+      backgroundColor: '#ffffff',
+      color: '#475569',
+      fontSize: 14,
+      padding: '9px 10px',
+    },
+    pivotRowTotalStyle: {
+      backgroundColor: '#f8fafc',
+      color: '#1e293b',
+      fontSize: 14,
+      fontWeight: 500,
+      padding: '9px 10px',
+    },
+    pivotFooterStyle: {
+      backgroundColor: '#f1f5f9',
+      color: '#0f172a',
+      fontSize: 14,
+      fontWeight: 600,
+      padding: '9px 10px',
+    },
+    pivotEmptyStateStyle: {
+      color: '#64748b',
+      fontSize: 14,
+      padding: '18px 12px',
+    },
+    pivotExpandButtonStyle: {
+      backgroundColor: '#ffffff',
+      borderColor: '#e5e7eb',
+      color: '#475569',
+      hoverBackgroundColor: '#f8fafc',
+    },
+  }
+
+  return (
+    <DashboardTemplate name="dashboard_shopify" title="Dashboard Shopify">
+      <Theme name={THEME_NAME} />
+      <Dashboard id="overview" title="Dashboard Shopify">
+        <section style={ui.page}>
+          <header style={ui.header}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: '64%' }}>
+              <span style={ui.badge}>E-commerce Core</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <p style={ui.eyebrow}>Shopify para vendas, pagamento e fulfillment</p>
+                <h1 style={{ ...ui.title, fontSize: 40, lineHeight: 1.02, fontWeight: 700, letterSpacing: '-0.04em' }}>Dashboard Shopify</h1>
+              </div>
+              <p style={ui.subtitle}>Migracao do template legado para JSX com tags, preservando GMV, pedidos, ticket, operacao de pagamento e fulfillment no mesmo dashboard.</p>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '34%', minWidth: 320 }}>
+              <DatePicker
+                label="Periodo do pedido"
+                table="ecommerce.pedidos"
+                field="data_pedido"
+                presets={['7d', '30d', '90d', 'month']}
+                labelStyle={ui.headerDatePickerLabel}
+                fieldStyle={ui.headerDatePickerField}
+                iconStyle={ui.headerDatePickerIcon}
+                presetButtonStyle={ui.headerDatePickerPreset}
+                activePresetButtonStyle={ui.headerDatePickerPresetActive}
+                separatorStyle={ui.headerDatePickerSeparator}
+              />
+            </div>
+          </header>
+
+          <section style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 18 }}>
+            <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <p style={ui.eyebrow}>Filters</p>
+                <h2 style={ui.title}>Loja e status</h2>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 14 }}>
+                <Slicer
+                  label="Loja"
+                  field="loja_id"
+                  variant="dropdown"
+                  selectionMode="multiple"
+                  search
+                  clearable
+                  width={220}
+                  query={`
+                    SELECT DISTINCT
+                      src.loja_id::text AS value,
+                      COALESCE(src.loja_id::text, 'Sem loja') AS label
+                    FROM ecommerce.pedidos src
+                    WHERE src.plataforma = 'shopify'
+                      AND src.loja_id IS NOT NULL
+                    ORDER BY 2 ASC
+                  `}
+                />
+                <Slicer
+                  label="Pagamento"
+                  field="status_pagamento"
+                  variant="dropdown"
+                  selectionMode="multiple"
+                  search
+                  clearable
+                  width={220}
+                  query={`
+                    SELECT DISTINCT
+                      src.status_pagamento::text AS value,
+                      COALESCE(src.status_pagamento, 'Sem status') AS label
+                    FROM ecommerce.pedidos src
+                    WHERE src.plataforma = 'shopify'
+                      AND COALESCE(src.status_pagamento, '') <> ''
+                    ORDER BY 2 ASC
+                  `}
+                />
+              </div>
+            </Card>
+
+            <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
+              <p style={ui.eyebrow}>Leitura esperada</p>
+              <p style={ui.paragraph}>Primeiro confira GMV e pedidos, depois veja se o mix de pagamento e fulfillment esta sustentando a operacao sem vazamento em reembolso.</p>
+            </Card>
+          </section>
+
+          <section style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 16 }}>
+            <Query
+              dataQuery={{
+                query: `
+                  SELECT COALESCE(SUM(src.valor_total), 0)::float AS value
+                  FROM ecommerce.pedidos src
+                  WHERE src.plataforma = 'shopify'
+                    {{filters:src}}
+                `,
+                limit: 1,
+              }}
+              format="currency"
+              comparisonMode="previous_period"
+            >
+              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
+                <p style={ui.kpiLabel}>Receita bruta</p>
+                <h2 style={{ ...ui.title, fontSize: 20 }}>GMV</h2>
+                <p style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
+                <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              </Card>
+            </Query>
+            <Query
+              dataQuery={{
+                query: `
+                  SELECT COUNT(*)::float AS value
+                  FROM ecommerce.pedidos src
+                  WHERE src.plataforma = 'shopify'
+                    {{filters:src}}
+                `,
+                limit: 1,
+              }}
+              format="number"
+              comparisonMode="previous_period"
+            >
+              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
+                <p style={ui.kpiLabel}>Volume</p>
+                <h2 style={{ ...ui.title, fontSize: 20 }}>Pedidos</h2>
+                <p style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
+                <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              </Card>
+            </Query>
+            <Query
+              dataQuery={{
+                query: `
+                  SELECT COALESCE(AVG(src.valor_total), 0)::float AS value
+                  FROM ecommerce.pedidos src
+                  WHERE src.plataforma = 'shopify'
+                    {{filters:src}}
+                `,
+                limit: 1,
+              }}
+              format="currency"
+              comparisonMode="previous_period"
+            >
+              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
+                <p style={ui.kpiLabel}>Monetizacao</p>
+                <h2 style={{ ...ui.title, fontSize: 20 }}>Ticket medio</h2>
+                <p style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
+                <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              </Card>
+            </Query>
+            <Query
+              dataQuery={{
+                query: `
+                  SELECT COALESCE(SUM(src.valor_reembolsado), 0)::float AS value
+                  FROM ecommerce.pedidos src
+                  WHERE src.plataforma = 'shopify'
+                    {{filters:src}}
+                `,
+                limit: 1,
+              }}
+              format="currency"
+              comparisonMode="previous_period"
+            >
+              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
+                <p style={ui.kpiLabel}>Leakage</p>
+                <h2 style={{ ...ui.title, fontSize: 20 }}>Reembolsos</h2>
+                <p style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
+                <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              </Card>
+            </Query>
+          </section>
+
+          <Tabs defaultValue="sales">
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <Tab value="sales">Sales</Tab>
+              <Tab value="operations">Operations</Tab>
+              <Tab value="details">Detalhamento</Tab>
+            </div>
+
+            <TabPanel value="sales">
+              <section style={{ display: 'grid', gridTemplateColumns: '1.25fr 1fr', gap: 18 }}>
+                <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <p style={ui.eyebrow}>Store mix</p>
+                    <h2 style={ui.title}>GMV por loja</h2>
+                  </div>
+                  <p style={ui.paragraph}>Distribui o faturamento por loja para separar concentracao de receita, assimetria de sortimento e dependencia comercial.</p>
+                  <Chart
+                    type="bar"
+                    height={320}
+                    format="currency"
+                    colors={CHART_COLORS}
+                    dataQuery={{
+                      query: `
+                        SELECT
+                          COALESCE(src.loja_id::text, 'sem_loja') AS key,
+                          COALESCE(src.loja_id::text, 'Sem loja') AS label,
+                          COALESCE(SUM(src.valor_total), 0)::float AS value
+                        FROM ecommerce.pedidos src
+                        WHERE src.plataforma = 'shopify'
+                          {{filters:src}}
+                        GROUP BY 1, 2
+                        ORDER BY 3 DESC
+                      `,
+                      limit: 8,
+                    }}
+                    xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
+                    series={[
+                      { dataKey: 'value', label: 'GMV' },
+                    ]}
+                    yAxis={{ width: 86 }}
+                  />
+                </Card>
+
+                <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <p style={ui.eyebrow}>Payment mix</p>
+                    <h2 style={ui.title}>Pedidos por status de pagamento</h2>
+                  </div>
+                  <p style={ui.paragraph}>Ajuda a medir o quanto do volume ja virou caixa e quanto ainda esta pendente, em risco ou parcialmente capturado.</p>
+                  <Chart
+                    type="pie"
+                    height={320}
+                    format="number"
+                    colors={CHART_COLORS}
+                    dataQuery={{
+                      query: `
+                        SELECT
+                          COALESCE(src.status_pagamento, 'sem_status') AS key,
+                          COALESCE(src.status_pagamento, 'Sem status') AS label,
+                          COUNT(*)::float AS value
+                        FROM ecommerce.pedidos src
+                        WHERE src.plataforma = 'shopify'
+                          {{filters:src}}
+                        GROUP BY 1, 2
+                        ORDER BY 3 DESC
+                      `,
+                      limit: 6,
+                    }}
+                    categoryKey="label"
+                    legend={{ enabled: true, position: 'right' }}
+                    series={[
+                      { dataKey: 'value', label: 'Pedidos' },
+                    ]}
+                    recharts={{ innerRadius: 54, outerRadius: 92, paddingAngle: 2, showLabels: false }}
+                  />
+                </Card>
+              </section>
+            </TabPanel>
+
+            <TabPanel value="operations">
+              <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 18 }}>
+                <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <p style={ui.eyebrow}>Trend</p>
+                    <h2 style={ui.title}>GMV por mes</h2>
+                  </div>
+                  <p style={ui.paragraph}>Serie mensal para confrontar aceleracao de vendas com carga operacional e pressao de reembolso.</p>
+                  <Chart
+                    type="line"
+                    height={320}
+                    format="currency"
+                    colors={CHART_COLORS}
+                    dataQuery={{
+                      query: `
+                        SELECT
+                          TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'YYYY-MM') AS key,
+                          TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'MM/YYYY') AS label,
+                          COALESCE(SUM(src.valor_total), 0)::float AS value
+                        FROM ecommerce.pedidos src
+                        WHERE src.plataforma = 'shopify'
+                          {{filters:src}}
+                        GROUP BY 1, 2
+                        ORDER BY 1 ASC
+                      `,
+                      limit: 12,
+                    }}
+                    xAxis={{ dataKey: 'label' }}
+                    series={[
+                      { dataKey: 'value', label: 'GMV' },
+                    ]}
+                    yAxis={{ width: 86 }}
+                    recharts={{ showDots: false, singleSeriesGradient: true }}
+                  />
+                </Card>
+
+                <section style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 18 }}>
+                  <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <p style={ui.eyebrow}>Fulfillment</p>
+                      <h2 style={ui.title}>Pedidos por fulfillment</h2>
+                    </div>
+                    <Chart
+                      type="bar"
+                      height={220}
+                      format="number"
+                      colors={CHART_COLORS}
+                      dataQuery={{
+                        query: `
+                          SELECT
+                            COALESCE(src.status_fulfillment, 'sem_status') AS key,
+                            COALESCE(src.status_fulfillment, 'Sem status') AS label,
+                            COUNT(*)::float AS value
+                          FROM ecommerce.pedidos src
+                          WHERE src.plataforma = 'shopify'
+                            {{filters:src}}
+                          GROUP BY 1, 2
+                          ORDER BY 3 DESC
+                        `,
+                        limit: 6,
+                      }}
+                      xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
+                      series={[
+                        { dataKey: 'value', label: 'Pedidos' },
+                      ]}
+                    />
+                  </Card>
+                  <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <h2 style={{ ...ui.title, fontSize: 20 }}>Leituras operacionais</h2>
+                      <p style={{ ...ui.paragraph, fontSize: 13, lineHeight: 1.6 }}>Perguntas para o time alinhar comercial, pagamento e fulfillment.</p>
+                    </div>
+                    <Insights
+                      textStyle={{ ...ui.paragraph, fontSize: 13, lineHeight: 1.65 }}
+                      iconStyle={{ color: '#008060' }}
+                      items={[
+                        { text: 'GMV crescendo com status de pagamento pendente alto pode mascarar receita ainda nao capturada.' },
+                        { text: 'Fulfillment atrasado ou parcial costuma antecipar cancelamento, suporte e reembolso no ciclo seguinte.' },
+                        { text: 'Lojas com ticket maior e reembolso alto pedem leitura de sortimento, frete, promessa comercial e operacao de entrega.' },
+                      ]}
+                    />
+                  </Card>
+                </section>
+              </section>
+            </TabPanel>
+
+            <TabPanel value="details">
+              <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 18 }}>
+                <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <p style={ui.eyebrow}>Table</p>
+                    <h2 style={ui.title}>Pedidos no detalhe</h2>
+                  </div>
+                  <Table
+                    bordered
+                    rounded
+                    stickyHeader
+                    borderColor={ui.tableBorderColor}
+                    rowHoverColor={ui.tableRowHoverColor}
+                    headerStyle={ui.tableHeaderStyle}
+                    rowStyle={ui.tableRowStyle}
+                    cellStyle={ui.tableCellStyle}
+                    footerStyle={ui.tableFooterStyle}
+                    enableExportCsv
+                    dataQuery={{
+                      query: `
+                        SELECT
+                          CONCAT('#', src.id::text) AS pedido,
+                          TO_CHAR(src.data_pedido::date, 'DD/MM/YYYY') AS data_pedido,
+                          COALESCE(src.loja_id::text, 'Sem loja') AS loja,
+                          COALESCE(src.status_pagamento, 'Sem status') AS status_pagamento,
+                          COALESCE(src.status_fulfillment, 'Sem status') AS status_fulfillment,
+                          COALESCE(src.valor_total, 0)::float AS valor_total
+                        FROM ecommerce.pedidos src
+                        WHERE src.plataforma = 'shopify'
+                          {{filters:src}}
+                        ORDER BY src.data_pedido DESC NULLS LAST, src.id DESC
+                      `,
+                      limit: 12,
+                    }}
+                    columns={[
+                      { accessorKey: 'pedido', header: 'Pedido' },
+                      { accessorKey: 'data_pedido', header: 'Data' },
+                      { accessorKey: 'loja', header: 'Loja' },
+                      { accessorKey: 'status_pagamento', header: 'Pagamento', cell: 'badge' },
+                      { accessorKey: 'status_fulfillment', header: 'Fulfillment', cell: 'badge' },
+                      { accessorKey: 'valor_total', header: 'Valor', format: 'currency', align: 'right', headerAlign: 'right' },
+                    ]}
+                  />
+                </Card>
+
+                <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <p style={ui.eyebrow}>Pivot</p>
+                    <h2 style={ui.title}>Loja por pagamento</h2>
+                  </div>
+                  <PivotTable
+                    bordered
+                    rounded
+                    stickyHeader
+                    borderColor={ui.tableBorderColor}
+                    containerStyle={ui.pivotContainerStyle}
+                    headerStyle={ui.pivotHeaderStyle}
+                    headerTotalStyle={ui.pivotHeaderTotalStyle}
+                    rowLabelStyle={ui.pivotRowLabelStyle}
+                    cellStyle={ui.pivotCellStyle}
+                    rowTotalStyle={ui.pivotRowTotalStyle}
+                    footerStyle={ui.pivotFooterStyle}
+                    emptyStateStyle={ui.pivotEmptyStateStyle}
+                    expandButtonStyle={ui.pivotExpandButtonStyle}
+                    enableExportCsv
+                    defaultExpandedLevels={1}
+                    dataQuery={{
+                      query: `
+                        SELECT
+                          COALESCE(src.loja_id::text, 'Sem loja') AS loja,
+                          COALESCE(src.status_pagamento, 'Sem status') AS status_pagamento,
+                          COALESCE(src.valor_total, 0)::float AS valor_total
+                        FROM ecommerce.pedidos src
+                        WHERE src.plataforma = 'shopify'
+                          {{filters:src}}
+                      `,
+                      limit: 400,
+                    }}
+                    rows={[{ field: 'loja', label: 'Loja' }]}
+                    columns={[{ field: 'status_pagamento', label: 'Pagamento' }]}
+                    values={[{ field: 'valor_total', label: 'GMV', aggregate: 'sum', format: 'currency' }]}
+                  />
+                </Card>
+              </section>
+            </TabPanel>
+          </Tabs>
+
+          <footer style={ui.footer}>
+            <p style={{ ...ui.paragraph, fontSize: 13, lineHeight: 1.6 }}>Template JSX para Shopify com leitura comercial e operacional, adaptado do app legado para o formato novo do dashboard.</p>
+            <p style={{ ...ui.paragraph, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: {THEME_NAME}</p>
+          </footer>
+        </section>
+      </Dashboard>
+    </DashboardTemplate>
+  )
+}

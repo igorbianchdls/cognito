@@ -1,39 +1,14 @@
 import type { DashboardCodeFile } from '@/products/dashboard/workspace/types'
-import { buildDashboardTemplateVariants } from '@/products/dashboard/shared/templates/dashboardTemplate'
 import {
   DASHBOARD_TEMPLATE_DEFAULT_THEMES,
 } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
-import { buildDashboardThemeTokensFileSource } from '@/products/dashboard/shared/templates/dashboardTemplateThemes'
-import { buildDashboardChartColorsFileSource } from '@/products/dashboard/workspace/chartPalettes'
+import { DASHBOARD_REAL_WORKSPACE_FILES } from '@/products/dashboard/workspace/realWorkspaceFileSources'
 
 export function buildDashboardWorkspaceFiles(themeName: string): DashboardCodeFile[] {
-  const dashboardFiles = buildDashboardTemplateVariants(themeName).map((file) => ({
-    path: file.path,
-    name: file.name,
-    directory: 'app',
-    extension: 'tsx',
-    language: 'typescript',
-    content: file.content,
-  }))
+  const appFiles = DASHBOARD_REAL_WORKSPACE_FILES.map((file) => ({ ...file }))
 
   return [
-    ...dashboardFiles,
-    {
-      path: 'app/chart-colors.ts',
-      name: 'chart-colors.ts',
-      directory: 'app',
-      extension: 'ts',
-      language: 'typescript',
-      content: buildDashboardChartColorsFileSource(),
-    },
-    {
-      path: 'app/theme-tokens.ts',
-      name: 'theme-tokens.ts',
-      directory: 'app',
-      extension: 'ts',
-      language: 'typescript',
-      content: buildDashboardThemeTokensFileSource(),
-    },
+    ...appFiles,
     {
       path: 'app/theme.json',
       name: 'theme.json',

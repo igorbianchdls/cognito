@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "dashboard:workspace:sources": "node scripts/generate-dashboard-workspace-sources.mjs",
     "service:hello": "node services/hello-service.mjs",
     "sandbox:agent-verify": "node scripts/sandbox-agent-verify.mjs",
     "safe:npm": "node scripts/safe-npm-install.mjs",
