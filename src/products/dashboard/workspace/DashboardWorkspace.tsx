@@ -15,8 +15,10 @@ import {
 import { buildDashboardWorkspaceFiles } from '@/products/dashboard/workspace/workspaceFiles'
 import {
   getDashboardChartColorsFromSource,
+  getDashboardChartPaletteNameFromSource,
   getDashboardThemeNameFromSource,
   getDashboardTitleFromSource,
+  replaceDashboardChartPaletteNameInSource,
   replaceDashboardChartColorsInSource,
 } from '@/products/dashboard/workspace/compileDashboardSource'
 import { DashboardWorkspaceCode } from '@/products/dashboard/workspace/DashboardWorkspaceCode'
@@ -57,10 +59,14 @@ export function DashboardWorkspace({
     [selectedDashboardFile],
   )
   const selectedChartPalette = useMemo(
-    () =>
-      getDashboardChartPaletteValueFromColors(
-        getDashboardChartColorsFromSource(selectedDashboardFile?.content ?? '', DASHBOARD_CHART_PALETTE_OPTIONS[0].colors),
-      ),
+    () => {
+      const source = selectedDashboardFile?.content ?? ''
+      const paletteName = getDashboardChartPaletteNameFromSource(source, '')
+      if (paletteName) return paletteName
+      return getDashboardChartPaletteValueFromColors(
+        getDashboardChartColorsFromSource(source, DASHBOARD_CHART_PALETTE_OPTIONS[0].colors),
+      )
+    },
     [selectedDashboardFile],
   )
 
@@ -76,7 +82,10 @@ export function DashboardWorkspace({
     if (!nextVariant) return
     const nextPalette = DASHBOARD_CHART_PALETTE_OPTIONS.find((option) => option.value === chartPaletteValue)?.colors
     const nextContent = nextPalette
-      ? replaceDashboardChartColorsInSource(nextVariant.content, nextPalette)
+      ? replaceDashboardChartPaletteNameInSource(
+          replaceDashboardChartColorsInSource(nextVariant.content, nextPalette),
+          chartPaletteValue,
+        )
       : nextVariant.content
     updateFileContent(selectedDashboardFile.path, nextContent)
   }
@@ -101,7 +110,7 @@ export function DashboardWorkspace({
         />
         <main className="min-h-0 flex-1 overflow-auto border-r-[0.5px] border-[#DDDDD8] bg-[#EEEEEB]">
           {activeView === 'preview' ? (
-            <DashboardWorkspacePreview source={selectedDashboardFile?.content ?? ''} zoom={zoom} />
+            <DashboardWorkspacePreview sourcePath={selectedDashboardFile?.path ?? ''} files={files} zoom={zoom} />
           ) : (
             <DashboardWorkspaceCode
               files={files}

@@ -19,15 +19,21 @@ function buildMetaAdsDashboardSource(themeName: string) {
   const ui = buildDashboardModuleUi(resolvedThemeName)
   const cardFrameSource = buildFramePropSource(ui.cardFrame)
   const chartColors = getDashboardTemplatePalette('metaads')
-  return `export function DashboardMetaAds() {
-  const CHART_COLORS = ${JSON.stringify(chartColors)}
+  return `import { DASHBOARD_CHART_PALETTES } from './chart-colors'
+import { resolveDashboardThemeTokens } from './theme-tokens'
+
+export function DashboardMetaAds() {
+  const THEME_NAME = ${JSON.stringify(resolvedThemeName)}
+  const THEME = resolveDashboardThemeTokens(THEME_NAME)
+  const CHART_PALETTE = 'purple'
+  const CHART_COLORS = DASHBOARD_CHART_PALETTES[CHART_PALETTE] ?? ${JSON.stringify(chartColors)}
 
   return (
     <DashboardTemplate name="${METAADS_VARIANT.name}" title="${METAADS_VARIANT.title}">
-      <Theme name="${resolvedThemeName}" />
+      <Theme name={THEME_NAME} />
       <Dashboard id="overview" title="${METAADS_VARIANT.title}">
-        <section style={${JSON.stringify(ui.page)}}>
-          <header style={${JSON.stringify(ui.header)}}>
+        <section style={{ ...${JSON.stringify(ui.page)}, backgroundColor: THEME.pageBg }}>
+          <header style={{ ...${JSON.stringify(ui.header)}, backgroundColor: THEME.headerBg, color: THEME.headerText, border: \`1px solid \${THEME.surfaceBorder}\` }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: '64%' }}>
               <span style={${JSON.stringify(ui.badge)}}>Paid Social</span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>

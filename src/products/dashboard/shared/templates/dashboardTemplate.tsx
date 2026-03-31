@@ -461,15 +461,21 @@ function buildClassicDashboardTemplateSource(themeName: string) {
   const ui = buildDashboardThemeUi(resolvedThemeName, 'classic')
   const cardFrameSource = buildFramePropSource(ui.cardFrame)
   const chartColors = getDashboardTemplatePalette('classic')
-  return `export function DashboardClassico() {
-  const CHART_COLORS = ${JSON.stringify(chartColors)}
+  return `import { DASHBOARD_CHART_PALETTES } from './chart-colors'
+import { resolveDashboardThemeTokens } from './theme-tokens'
+
+export function DashboardClassico() {
+  const THEME_NAME = ${JSON.stringify(resolvedThemeName)}
+  const THEME = resolveDashboardThemeTokens(THEME_NAME)
+  const CHART_PALETTE = 'teal'
+  const CHART_COLORS = DASHBOARD_CHART_PALETTES[CHART_PALETTE] ?? ${JSON.stringify(chartColors)}
 
   return (
     <DashboardTemplate name="${CLASSIC_DASHBOARD_VARIANT.name}" title="${CLASSIC_DASHBOARD_VARIANT.title}">
-      <Theme name="${resolvedThemeName}" />
+      <Theme name={THEME_NAME} />
       <Dashboard id="overview" title="${CLASSIC_DASHBOARD_VARIANT.title}">
-        <section style={${JSON.stringify(ui.page)}}>
-          <header style={${JSON.stringify(ui.header)}}>
+        <section style={{ ...${JSON.stringify(ui.page)}, backgroundColor: THEME.pageBg }}>
+          <header style={{ ...${JSON.stringify(ui.header)}, backgroundColor: THEME.headerBg, color: THEME.headerText, border: \`1px solid \${THEME.surfaceBorder}\` }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <p style={${JSON.stringify({ ...ui.metricLabel, margin: 0, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase' })}}>Executive dashboard</p>
               <h1 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 34, lineHeight: 1.05, fontWeight: 700, letterSpacing: '-0.04em' })}}>Performance overview with the classic BI layout</h1>

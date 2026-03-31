@@ -4,8 +4,17 @@ import { useEffect, useState } from 'react'
 
 import { DashboardRenderer } from '@/products/dashboard/render/dashboardRegistry'
 import { compileDashboardSourceToTree } from '@/products/dashboard/workspace/compileDashboardSource'
+import type { DashboardCodeFile } from '@/products/dashboard/workspace/types'
 
-export function DashboardWorkspacePreview({ source, zoom }: { source: string; zoom: number }) {
+export function DashboardWorkspacePreview({
+  sourcePath,
+  files,
+  zoom,
+}: {
+  sourcePath: string
+  files: DashboardCodeFile[]
+  zoom: number
+}) {
   const [tree, setTree] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -16,7 +25,7 @@ export function DashboardWorkspacePreview({ source, zoom }: { source: string; zo
       try {
         setError(null)
         setTree(null)
-        const nextTree = await compileDashboardSourceToTree(source)
+        const nextTree = await compileDashboardSourceToTree(sourcePath, files)
         if (!cancelled) setTree(nextTree)
       } catch (err) {
         if (!cancelled) {
@@ -30,7 +39,7 @@ export function DashboardWorkspacePreview({ source, zoom }: { source: string; zo
     return () => {
       cancelled = true
     }
-  }, [source])
+  }, [sourcePath, files])
 
   return (
     <div className="mx-auto flex min-h-full items-start justify-center p-0">
