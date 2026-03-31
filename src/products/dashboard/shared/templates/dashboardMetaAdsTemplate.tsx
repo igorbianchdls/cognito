@@ -1,8 +1,6 @@
 'use client'
 
 import {
-  buildDashboardModuleUi,
-  buildFramePropSource,
   getDashboardTemplatePalette,
   getDashboardTemplateThemeName,
 } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
@@ -16,31 +14,29 @@ const METAADS_VARIANT = {
 
 function buildMetaAdsDashboardSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('metaads')
-  const ui = buildDashboardModuleUi(resolvedThemeName)
-  const cardFrameSource = buildFramePropSource(ui.cardFrame)
   const chartColors = getDashboardTemplatePalette('metaads')
   return `import { DASHBOARD_CHART_PALETTES } from './chart-colors'
-import { resolveDashboardThemeTokens } from './theme-tokens'
+import { resolveDashboardUi } from './dashboard-ui'
 
 export function DashboardMetaAds() {
   const THEME_NAME = ${JSON.stringify(resolvedThemeName)}
-  const THEME = resolveDashboardThemeTokens(THEME_NAME)
   const CHART_PALETTE = 'purple'
   const CHART_COLORS = DASHBOARD_CHART_PALETTES[CHART_PALETTE] ?? ${JSON.stringify(chartColors)}
+  const ui = resolveDashboardUi(THEME_NAME)
 
   return (
     <DashboardTemplate name="${METAADS_VARIANT.name}" title="${METAADS_VARIANT.title}">
       <Theme name={THEME_NAME} />
       <Dashboard id="overview" title="${METAADS_VARIANT.title}">
-        <section style={{ ...${JSON.stringify(ui.page)}, backgroundColor: THEME.pageBg }}>
-          <header style={{ ...${JSON.stringify(ui.header)}, backgroundColor: THEME.headerBg, color: THEME.headerText, border: \`1px solid \${THEME.surfaceBorder}\` }}>
+        <section style={ui.page}>
+          <header style={ui.header}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: '64%' }}>
-              <span style={${JSON.stringify(ui.badge)}}>Paid Social</span>
+              <span style={ui.badge}>Paid Social</span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={${JSON.stringify(ui.eyebrow)}}>Meta Ads performance por conta, campanha e criativo</p>
-                <h1 style={{ ...${JSON.stringify(ui.title)}, fontSize: 40, lineHeight: 1.02, fontWeight: 700, letterSpacing: '-0.04em' }}>Dashboard Meta Ads</h1>
+                <p style={ui.eyebrow}>Meta Ads performance por conta, campanha e criativo</p>
+                <h1 style={{ ...ui.title, fontSize: 40, lineHeight: 1.02, fontWeight: 700, letterSpacing: '-0.04em' }}>Dashboard Meta Ads</h1>
               </div>
-              <p style={${JSON.stringify(ui.subtitle)}}>Adaptacao do template legado de apps para JSX com tags, queries SQL explicitas e leitura de paid social no runtime novo do workspace.</p>
+              <p style={ui.subtitle}>Adaptacao do template legado de apps para JSX com tags, queries SQL explicitas e leitura de paid social no runtime novo do workspace.</p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '34%', minWidth: 320 }}>
               <DatePicker
@@ -48,21 +44,21 @@ export function DashboardMetaAds() {
                 table="trafegopago.desempenho_diario"
                 field="data_ref"
                 presets={['7d', '14d', '30d', '90d']}
-                labelStyle={${JSON.stringify(ui.headerDatePickerLabel)}}
-                fieldStyle={${JSON.stringify(ui.headerDatePickerField)}}
-                iconStyle={${JSON.stringify(ui.headerDatePickerIcon)}}
-                presetButtonStyle={${JSON.stringify(ui.headerDatePickerPreset)}}
-                activePresetButtonStyle={${JSON.stringify(ui.headerDatePickerPresetActive)}}
-                separatorStyle={${JSON.stringify(ui.headerDatePickerSeparator)}}
+                labelStyle={ui.headerDatePickerLabel}
+                fieldStyle={ui.headerDatePickerField}
+                iconStyle={ui.headerDatePickerIcon}
+                presetButtonStyle={ui.headerDatePickerPreset}
+                activePresetButtonStyle={ui.headerDatePickerPresetActive}
+                separatorStyle={ui.headerDatePickerSeparator}
               />
             </div>
           </header>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 18 }}>
-            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
+            <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={${JSON.stringify(ui.eyebrow)}}>Filters</p>
-                <h2 style={${JSON.stringify(ui.title)}}>Conta e campanha</h2>
+                <p style={ui.eyebrow}>Filters</p>
+                <h2 style={ui.title}>Conta e campanha</h2>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 14 }}>
                 <Slicer
@@ -106,9 +102,9 @@ export function DashboardMetaAds() {
               </div>
             </Card>
 
-            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
-              <p style={${JSON.stringify(ui.eyebrow)}}>Leitura esperada</p>
-              <p style={${JSON.stringify(ui.paragraph)}}>Primeiro veja o pacing de gasto e retorno, depois abra concentracao por campanha e finalmente desca para o detalhe de anuncios e grupos quando houver desbalanceamento.</p>
+            <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
+              <p style={ui.eyebrow}>Leitura esperada</p>
+              <p style={ui.paragraph}>Primeiro veja o pacing de gasto e retorno, depois abra concentracao por campanha e finalmente desca para o detalhe de anuncios e grupos quando houver desbalanceamento.</p>
             </Card>
           </section>
 
@@ -127,11 +123,11 @@ export function DashboardMetaAds() {
               format="currency"
               comparisonMode="previous_period"
             >
-              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
-                <p style={${JSON.stringify(ui.kpiLabel)}}>Investimento</p>
-                <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Gasto</h2>
-                <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
-                <p style={${JSON.stringify(ui.kpiDelta)}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
+                <p style={ui.kpiLabel}>Investimento</p>
+                <h2 style={{ ...ui.title, fontSize: 20 }}>Gasto</h2>
+                <p style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
+                <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
             <Query
@@ -148,11 +144,11 @@ export function DashboardMetaAds() {
               format="currency"
               comparisonMode="previous_period"
             >
-              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
-                <p style={${JSON.stringify(ui.kpiLabel)}}>Retorno</p>
-                <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Receita atribuida</h2>
-                <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
-                <p style={${JSON.stringify(ui.kpiDelta)}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
+                <p style={ui.kpiLabel}>Retorno</p>
+                <h2 style={{ ...ui.title, fontSize: 20 }}>Receita atribuida</h2>
+                <p style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
+                <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
             <Query
@@ -170,11 +166,11 @@ export function DashboardMetaAds() {
               format="number"
               comparisonMode="previous_period"
             >
-              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
-                <p style={${JSON.stringify(ui.kpiLabel)}}>Eficiencia</p>
-                <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>ROAS</h2>
-                <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
-                <p style={${JSON.stringify(ui.kpiDelta)}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
+                <p style={ui.kpiLabel}>Eficiencia</p>
+                <h2 style={{ ...ui.title, fontSize: 20 }}>ROAS</h2>
+                <p style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
+                <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
             <Query
@@ -191,11 +187,11 @@ export function DashboardMetaAds() {
               format="number"
               comparisonMode="previous_period"
             >
-              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
-                <p style={${JSON.stringify(ui.kpiLabel)}}>Resultado</p>
-                <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Conversoes</h2>
-                <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
-                <p style={${JSON.stringify(ui.kpiDelta)}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
+                <p style={ui.kpiLabel}>Resultado</p>
+                <h2 style={{ ...ui.title, fontSize: 20 }}>Conversoes</h2>
+                <p style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
+                <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
           </section>
@@ -209,12 +205,12 @@ export function DashboardMetaAds() {
 
             <TabPanel value="performance">
               <section style={{ display: 'grid', gridTemplateColumns: '1.25fr 1fr', gap: 18 }}>
-                <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
+                <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <p style={${JSON.stringify(ui.eyebrow)}}>Budget concentration</p>
-                    <h2 style={${JSON.stringify(ui.title)}}>Gasto por campanha</h2>
+                    <p style={ui.eyebrow}>Budget concentration</p>
+                    <h2 style={ui.title}>Gasto por campanha</h2>
                   </div>
-                  <p style={${JSON.stringify(ui.paragraph)}}>Identifica quais campanhas carregam a maior parte do investimento e merecem inspeccao imediata de criativo e audiencia.</p>
+                  <p style={ui.paragraph}>Identifica quais campanhas carregam a maior parte do investimento e merecem inspeccao imediata de criativo e audiencia.</p>
                   <Chart
                     type="bar"
                     height={320}
@@ -243,12 +239,12 @@ export function DashboardMetaAds() {
                   />
                 </Card>
 
-                <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
+                <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <p style={${JSON.stringify(ui.eyebrow)}}>Share</p>
-                    <h2 style={${JSON.stringify(ui.title)}}>Participacao por conta</h2>
+                    <p style={ui.eyebrow}>Share</p>
+                    <h2 style={ui.title}>Participacao por conta</h2>
                   </div>
-                  <p style={${JSON.stringify(ui.paragraph)}}>Mostra concentracao de budget entre contas, o que ajuda a separar escala sustentavel de dependencia excessiva de um unico portfolio.</p>
+                  <p style={ui.paragraph}>Mostra concentracao de budget entre contas, o que ajuda a separar escala sustentavel de dependencia excessiva de um unico portfolio.</p>
                   <Chart
                     type="pie"
                     height={320}
@@ -282,12 +278,12 @@ export function DashboardMetaAds() {
 
             <TabPanel value="efficiency">
               <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 18 }}>
-                <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
+                <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <p style={${JSON.stringify(ui.eyebrow)}}>Trend</p>
-                    <h2 style={${JSON.stringify(ui.title)}}>ROAS por dia</h2>
+                    <p style={ui.eyebrow}>Trend</p>
+                    <h2 style={ui.title}>ROAS por dia</h2>
                   </div>
-                  <p style={${JSON.stringify(ui.paragraph)}}>Serie curta para acompanhar deterioracao ou recuperacao de eficiencia sem sair do dashboard principal.</p>
+                  <p style={ui.paragraph}>Serie curta para acompanhar deterioracao ou recuperacao de eficiencia sem sair do dashboard principal.</p>
                   <Chart
                     type="line"
                     height={320}
@@ -318,10 +314,10 @@ export function DashboardMetaAds() {
                 </Card>
 
                 <section style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 18 }}>
-                  <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
+                  <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <p style={${JSON.stringify(ui.eyebrow)}}>Funnel</p>
-                      <h2 style={${JSON.stringify(ui.title)}}>Leads por campanha</h2>
+                      <p style={ui.eyebrow}>Funnel</p>
+                      <h2 style={ui.title}>Leads por campanha</h2>
                     </div>
                     <Chart
                       type="bar"
@@ -349,13 +345,13 @@ export function DashboardMetaAds() {
                       ]}
                     />
                   </Card>
-                  <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
+                  <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Leituras operacionais</h2>
-                      <p style={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.6 }}>Hipoteses para revisar campanhas, criativos e distribuicao de budget.</p>
+                      <h2 style={{ ...ui.title, fontSize: 20 }}>Leituras operacionais</h2>
+                      <p style={{ ...ui.paragraph, fontSize: 13, lineHeight: 1.6 }}>Hipoteses para revisar campanhas, criativos e distribuicao de budget.</p>
                     </div>
                     <Insights
-                      textStyle={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.65 }}
+                      textStyle={{ ...ui.paragraph, fontSize: 13, lineHeight: 1.65 }}
                       iconStyle={{ color: '#1877F2' }}
                       items={[
                         { text: 'ROAS caindo com gasto crescente costuma sinalizar saturacao de audiencia ou criativo perdendo tracao.' },
@@ -370,21 +366,21 @@ export function DashboardMetaAds() {
 
             <TabPanel value="details">
               <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 18 }}>
-                <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
+                <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <p style={${JSON.stringify(ui.eyebrow)}}>Table</p>
-                    <h2 style={${JSON.stringify(ui.title)}}>Campanhas no detalhe</h2>
+                    <p style={ui.eyebrow}>Table</p>
+                    <h2 style={ui.title}>Campanhas no detalhe</h2>
                   </div>
                   <Table
                     bordered
                     rounded
                     stickyHeader
-                    borderColor={${JSON.stringify(ui.tableBorderColor)}}
-                    rowHoverColor={${JSON.stringify(ui.tableRowHoverColor)}}
-                    headerStyle={${JSON.stringify(ui.tableHeaderStyle)}}
-                    rowStyle={${JSON.stringify(ui.tableRowStyle)}}
-                    cellStyle={${JSON.stringify(ui.tableCellStyle)}}
-                    footerStyle={${JSON.stringify(ui.tableFooterStyle)}}
+                    borderColor={ui.tableBorderColor}
+                    rowHoverColor={ui.tableRowHoverColor}
+                    headerStyle={ui.tableHeaderStyle}
+                    rowStyle={ui.tableRowStyle}
+                    cellStyle={ui.tableCellStyle}
+                    footerStyle={ui.tableFooterStyle}
                     enableExportCsv
                     dataQuery={{
                       query: \`
@@ -415,25 +411,25 @@ export function DashboardMetaAds() {
                   />
                 </Card>
 
-                <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
+                <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <p style={${JSON.stringify(ui.eyebrow)}}>Pivot</p>
-                    <h2 style={${JSON.stringify(ui.title)}}>Conta por campanha</h2>
+                    <p style={ui.eyebrow}>Pivot</p>
+                    <h2 style={ui.title}>Conta por campanha</h2>
                   </div>
                   <PivotTable
                     bordered
                     rounded
                     stickyHeader
-                    borderColor={${JSON.stringify(ui.tableBorderColor)}}
-                    containerStyle={${JSON.stringify(ui.pivotContainerStyle)}}
-                    headerStyle={${JSON.stringify(ui.pivotHeaderStyle)}}
-                    headerTotalStyle={${JSON.stringify(ui.pivotHeaderTotalStyle)}}
-                    rowLabelStyle={${JSON.stringify(ui.pivotRowLabelStyle)}}
-                    cellStyle={${JSON.stringify(ui.pivotCellStyle)}}
-                    rowTotalStyle={${JSON.stringify(ui.pivotRowTotalStyle)}}
-                    footerStyle={${JSON.stringify(ui.pivotFooterStyle)}}
-                    emptyStateStyle={${JSON.stringify(ui.pivotEmptyStateStyle)}}
-                    expandButtonStyle={${JSON.stringify(ui.pivotExpandButtonStyle)}}
+                    borderColor={ui.tableBorderColor}
+                    containerStyle={ui.pivotContainerStyle}
+                    headerStyle={ui.pivotHeaderStyle}
+                    headerTotalStyle={ui.pivotHeaderTotalStyle}
+                    rowLabelStyle={ui.pivotRowLabelStyle}
+                    cellStyle={ui.pivotCellStyle}
+                    rowTotalStyle={ui.pivotRowTotalStyle}
+                    footerStyle={ui.pivotFooterStyle}
+                    emptyStateStyle={ui.pivotEmptyStateStyle}
+                    expandButtonStyle={ui.pivotExpandButtonStyle}
                     enableExportCsv
                     defaultExpandedLevels={1}
                     dataQuery={{
@@ -458,9 +454,9 @@ export function DashboardMetaAds() {
             </TabPanel>
           </Tabs>
 
-          <footer style={${JSON.stringify(ui.footer)}}>
-            <p style={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.6 }}>Template JSX para Meta Ads com filtros de paid social, KPIs comparativos e widgets de analise no formato novo do dashboard.</p>
-            <p style={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: ${resolvedThemeName}</p>
+          <footer style={ui.footer}>
+            <p style={{ ...ui.paragraph, fontSize: 13, lineHeight: 1.6 }}>Template JSX para Meta Ads com filtros de paid social, KPIs comparativos e widgets de analise no formato novo do dashboard.</p>
+            <p style={{ ...ui.paragraph, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: {THEME_NAME}</p>
           </footer>
         </section>
       </Dashboard>

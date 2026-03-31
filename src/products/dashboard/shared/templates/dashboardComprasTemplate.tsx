@@ -1,8 +1,6 @@
 'use client'
 
 import {
-  buildDashboardModuleUi,
-  buildFramePropSource,
   getDashboardTemplatePalette,
   getDashboardTemplateThemeName,
 } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
@@ -16,31 +14,29 @@ const COMPRAS_VARIANT = {
 
 function buildComprasDashboardSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('compras')
-  const ui = buildDashboardModuleUi(resolvedThemeName)
-  const cardFrameSource = buildFramePropSource(ui.cardFrame)
   const chartColors = getDashboardTemplatePalette('compras')
   return `import { DASHBOARD_CHART_PALETTES } from './chart-colors'
-import { resolveDashboardThemeTokens } from './theme-tokens'
+import { resolveDashboardUi } from './dashboard-ui'
 
 export function DashboardCompras() {
   const THEME_NAME = ${JSON.stringify(resolvedThemeName)}
-  const THEME = resolveDashboardThemeTokens(THEME_NAME)
   const CHART_PALETTE = 'blue'
   const CHART_COLORS = DASHBOARD_CHART_PALETTES[CHART_PALETTE] ?? ${JSON.stringify(chartColors)}
+  const ui = resolveDashboardUi(THEME_NAME)
 
   return (
     <DashboardTemplate name="${COMPRAS_VARIANT.name}" title="${COMPRAS_VARIANT.title}">
       <Theme name={THEME_NAME} />
       <Dashboard id="overview" title="${COMPRAS_VARIANT.title}">
-        <section style={{ ...${JSON.stringify(ui.page)}, backgroundColor: THEME.pageBg }}>
-          <header style={{ ...${JSON.stringify(ui.header)}, backgroundColor: THEME.headerBg, color: THEME.headerText, border: \`1px solid \${THEME.surfaceBorder}\` }}>
+        <section style={ui.page}>
+          <header style={ui.header}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: '58%' }}>
-              <span style={${JSON.stringify(ui.badge)}}>Procurement Review</span>
+              <span style={ui.badge}>Procurement Review</span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={${JSON.stringify(ui.eyebrow)}}>Compras, fornecedores e alocacao de gasto</p>
-                <h1 style={{ ...${JSON.stringify(ui.title)}, fontSize: 40, lineHeight: 1.02, fontWeight: 700, letterSpacing: '-0.04em' }}>Dashboard de Compras</h1>
+                <p style={ui.eyebrow}>Compras, fornecedores e alocacao de gasto</p>
+                <h1 style={{ ...ui.title, fontSize: 40, lineHeight: 1.02, fontWeight: 700, letterSpacing: '-0.04em' }}>Dashboard de Compras</h1>
               </div>
-              <p style={${JSON.stringify(ui.subtitle)}}>Leitura em pagina unica com KPIs no topo, filtros dedicados, distribuicao de gasto, serie temporal e detalhamento operacional sem DSL.</p>
+              <p style={ui.subtitle}>Leitura em pagina unica com KPIs no topo, filtros dedicados, distribuicao de gasto, serie temporal e detalhamento operacional sem DSL.</p>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '34%', minWidth: 320 }}>
@@ -49,20 +45,20 @@ export function DashboardCompras() {
                 table="compras.compras"
                 field="data_pedido"
                 presets={['7d', '30d', '90d', 'month']}
-                labelStyle={${JSON.stringify(ui.headerDatePickerLabel)}}
-                fieldStyle={${JSON.stringify(ui.headerDatePickerField)}}
-                iconStyle={${JSON.stringify(ui.headerDatePickerIcon)}}
-                presetButtonStyle={${JSON.stringify(ui.headerDatePickerPreset)}}
-                activePresetButtonStyle={${JSON.stringify(ui.headerDatePickerPresetActive)}}
-                separatorStyle={${JSON.stringify(ui.headerDatePickerSeparator)}}
+                labelStyle={ui.headerDatePickerLabel}
+                fieldStyle={ui.headerDatePickerField}
+                iconStyle={ui.headerDatePickerIcon}
+                presetButtonStyle={ui.headerDatePickerPreset}
+                activePresetButtonStyle={ui.headerDatePickerPresetActive}
+                separatorStyle={ui.headerDatePickerSeparator}
               />
             </div>
           </header>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 16 }}>
-            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
-              <p style={${JSON.stringify(ui.eyebrow)}}>Filtro</p>
-              <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Fornecedor</h2>
+            <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
+              <p style={ui.eyebrow}>Filtro</p>
+              <h2 style={{ ...ui.title, fontSize: 20 }}>Fornecedor</h2>
               <Slicer
                 label="Fornecedor"
                 field="fornecedor_id"
@@ -83,9 +79,9 @@ export function DashboardCompras() {
               />
             </Card>
 
-            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
-              <p style={${JSON.stringify(ui.eyebrow)}}>Filtro</p>
-              <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Centro de custo</h2>
+            <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
+              <p style={ui.eyebrow}>Filtro</p>
+              <h2 style={{ ...ui.title, fontSize: 20 }}>Centro de custo</h2>
               <Slicer
                 label="Centro de custo"
                 field="centro_custo_id"
@@ -106,9 +102,9 @@ export function DashboardCompras() {
               />
             </Card>
 
-            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
-              <p style={${JSON.stringify(ui.eyebrow)}}>Filtro</p>
-              <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Status</h2>
+            <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
+              <p style={ui.eyebrow}>Filtro</p>
+              <h2 style={{ ...ui.title, fontSize: 20 }}>Status</h2>
               <Slicer
                 label="Status"
                 field="status"
@@ -131,46 +127,46 @@ export function DashboardCompras() {
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 16 }}>
             <Query dataQuery={{ query: \`SELECT COALESCE(SUM(c.valor_total), 0)::float AS value FROM compras.compras c WHERE 1=1 {{filters:c}}\`, limit: 1 }} format="currency" comparisonMode="previous_period">
-              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
-                <p style={${JSON.stringify(ui.kpiLabel)}}>Gasto total</p>
-                <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Valor comprado</h2>
-                <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
-                <p style={${JSON.stringify(ui.kpiDelta)}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
+                <p style={ui.kpiLabel}>Gasto total</p>
+                <h2 style={{ ...ui.title, fontSize: 20 }}>Valor comprado</h2>
+                <p style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
+                <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
             <Query dataQuery={{ query: \`SELECT COUNT(DISTINCT c.fornecedor_id)::float AS value FROM compras.compras c WHERE 1=1 {{filters:c}}\`, limit: 1 }} format="number" comparisonMode="previous_period">
-              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
-                <p style={${JSON.stringify(ui.kpiLabel)}}>Base ativa</p>
-                <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Fornecedores</h2>
-                <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
-                <p style={${JSON.stringify(ui.kpiDelta)}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
+                <p style={ui.kpiLabel}>Base ativa</p>
+                <h2 style={{ ...ui.title, fontSize: 20 }}>Fornecedores</h2>
+                <p style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
+                <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
             <Query dataQuery={{ query: \`SELECT COUNT(DISTINCT c.id)::float AS value FROM compras.compras c WHERE 1=1 {{filters:c}}\`, limit: 1 }} format="number" comparisonMode="previous_period">
-              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
-                <p style={${JSON.stringify(ui.kpiLabel)}}>Volume</p>
-                <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Pedidos</h2>
-                <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
-                <p style={${JSON.stringify(ui.kpiDelta)}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
+                <p style={ui.kpiLabel}>Volume</p>
+                <h2 style={{ ...ui.title, fontSize: 20 }}>Pedidos</h2>
+                <p style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
+                <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
             <Query dataQuery={{ query: \`SELECT COALESCE(AVG(c.valor_total), 0)::float AS value FROM compras.compras c WHERE 1=1 {{filters:c}}\`, limit: 1 }} format="currency" comparisonMode="previous_period">
-              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
-                <p style={${JSON.stringify(ui.kpiLabel)}}>Eficiencia</p>
-                <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Ticket medio</h2>
-                <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
-                <p style={${JSON.stringify(ui.kpiDelta)}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
+                <p style={ui.kpiLabel}>Eficiencia</p>
+                <h2 style={{ ...ui.title, fontSize: 20 }}>Ticket medio</h2>
+                <p style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
+                <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.25fr 1fr', gap: 18 }}>
-            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
+            <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={${JSON.stringify(ui.eyebrow)}}>Top spend</p>
-                <h2 style={${JSON.stringify(ui.title)}}>Gasto por fornecedor</h2>
+                <p style={ui.eyebrow}>Top spend</p>
+                <h2 style={ui.title}>Gasto por fornecedor</h2>
               </div>
-              <p style={${JSON.stringify(ui.paragraph)}}>Corte principal para identificar concentracao de compras e dependencia de poucos parceiros no periodo filtrado.</p>
+              <p style={ui.paragraph}>Corte principal para identificar concentracao de compras e dependencia de poucos parceiros no periodo filtrado.</p>
               <Chart
                 type="bar"
                 height={320}
@@ -199,12 +195,12 @@ export function DashboardCompras() {
               />
             </Card>
 
-            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={${JSON.stringify(ui.eyebrow)}}>Allocation</p>
-                <h2 style={${JSON.stringify(ui.title)}}>Gasto por categoria</h2>
+                <p style={ui.eyebrow}>Allocation</p>
+                <h2 style={ui.title}>Gasto por categoria</h2>
               </div>
-              <p style={${JSON.stringify(ui.paragraph)}}>Mostra em qual categoria de despesa o volume de compras esta se acumulando no periodo.</p>
+              <p style={ui.paragraph}>Mostra em qual categoria de despesa o volume de compras esta se acumulando no periodo.</p>
               <Chart
                 type="pie"
                 height={320}
@@ -236,12 +232,12 @@ export function DashboardCompras() {
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 18 }}>
-            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
+            <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={${JSON.stringify(ui.eyebrow)}}>Trend</p>
-                <h2 style={${JSON.stringify(ui.title)}}>Gasto por mes</h2>
+                <p style={ui.eyebrow}>Trend</p>
+                <h2 style={ui.title}>Gasto por mes</h2>
               </div>
-              <p style={${JSON.stringify(ui.paragraph)}}>Serie mensal para entender aceleracao ou desaceleracao de compras sem depender do motor DSL antigo.</p>
+              <p style={ui.paragraph}>Serie mensal para entender aceleracao ou desaceleracao de compras sem depender do motor DSL antigo.</p>
               <Chart
                 type="line"
                 height={320}
@@ -270,10 +266,10 @@ export function DashboardCompras() {
               />
             </Card>
 
-            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={${JSON.stringify(ui.eyebrow)}}>Status mix</p>
-                <h2 style={${JSON.stringify(ui.title)}}>Pedidos por status</h2>
+                <p style={ui.eyebrow}>Status mix</p>
+                <h2 style={ui.title}>Pedidos por status</h2>
               </div>
               <Chart
                 type="bar"
@@ -303,21 +299,21 @@ export function DashboardCompras() {
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 18 }}>
-            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
+            <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={${JSON.stringify(ui.eyebrow)}}>Table</p>
-                <h2 style={${JSON.stringify(ui.title)}}>Pedidos de compra no detalhe</h2>
+                <p style={ui.eyebrow}>Table</p>
+                <h2 style={ui.title}>Pedidos de compra no detalhe</h2>
               </div>
               <Table
                 bordered
                 rounded
                 stickyHeader
-                borderColor={${JSON.stringify(ui.tableBorderColor)}}
-                rowHoverColor={${JSON.stringify(ui.tableRowHoverColor)}}
-                headerStyle={${JSON.stringify(ui.tableHeaderStyle)}}
-                rowStyle={${JSON.stringify(ui.tableRowStyle)}}
-                cellStyle={${JSON.stringify(ui.tableCellStyle)}}
-                footerStyle={${JSON.stringify(ui.tableFooterStyle)}}
+                borderColor={ui.tableBorderColor}
+                rowHoverColor={ui.tableRowHoverColor}
+                headerStyle={ui.tableHeaderStyle}
+                rowStyle={ui.tableRowStyle}
+                cellStyle={ui.tableCellStyle}
+                footerStyle={ui.tableFooterStyle}
                 enableExportCsv
                 dataQuery={{
                   query: \`
@@ -349,25 +345,25 @@ export function DashboardCompras() {
               />
             </Card>
 
-            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={${JSON.stringify(ui.eyebrow)}}>Pivot</p>
-                <h2 style={${JSON.stringify(ui.title)}}>Categoria por status</h2>
+                <p style={ui.eyebrow}>Pivot</p>
+                <h2 style={ui.title}>Categoria por status</h2>
               </div>
               <PivotTable
                 bordered
                 rounded
                 stickyHeader
-                borderColor={${JSON.stringify(ui.tableBorderColor)}}
-                containerStyle={${JSON.stringify(ui.pivotContainerStyle)}}
-                headerStyle={${JSON.stringify(ui.pivotHeaderStyle)}}
-                headerTotalStyle={${JSON.stringify(ui.pivotHeaderTotalStyle)}}
-                rowLabelStyle={${JSON.stringify(ui.pivotRowLabelStyle)}}
-                cellStyle={${JSON.stringify(ui.pivotCellStyle)}}
-                rowTotalStyle={${JSON.stringify(ui.pivotRowTotalStyle)}}
-                footerStyle={${JSON.stringify(ui.pivotFooterStyle)}}
-                emptyStateStyle={${JSON.stringify(ui.pivotEmptyStateStyle)}}
-                expandButtonStyle={${JSON.stringify(ui.pivotExpandButtonStyle)}}
+                borderColor={ui.tableBorderColor}
+                containerStyle={ui.pivotContainerStyle}
+                headerStyle={ui.pivotHeaderStyle}
+                headerTotalStyle={ui.pivotHeaderTotalStyle}
+                rowLabelStyle={ui.pivotRowLabelStyle}
+                cellStyle={ui.pivotCellStyle}
+                rowTotalStyle={ui.pivotRowTotalStyle}
+                footerStyle={ui.pivotFooterStyle}
+                emptyStateStyle={ui.pivotEmptyStateStyle}
+                expandButtonStyle={ui.pivotExpandButtonStyle}
                 enableExportCsv
                 defaultExpandedLevels={1}
                 dataQuery={{
@@ -391,11 +387,11 @@ export function DashboardCompras() {
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 18 }}>
-            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
-              <p style={${JSON.stringify(ui.eyebrow)}}>Insight</p>
-              <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Concentracao em fornecedores</h2>
+            <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
+              <p style={ui.eyebrow}>Insight</p>
+              <h2 style={{ ...ui.title, fontSize: 20 }}>Concentracao em fornecedores</h2>
               <Insights
-                textStyle={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.65 }}
+                textStyle={{ ...ui.paragraph, fontSize: 13, lineHeight: 1.65 }}
                 iconStyle={{ color: '#2563EB' }}
                 items={[
                   { text: 'Se poucos fornecedores concentram a maior parte do gasto, a negociacao fica mais sensivel a prazo, ruptura e dependencia comercial.' },
@@ -403,11 +399,11 @@ export function DashboardCompras() {
               />
             </Card>
 
-            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
-              <p style={${JSON.stringify(ui.eyebrow)}}>Insight</p>
-              <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Pressao por centro de custo</h2>
+            <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
+              <p style={ui.eyebrow}>Insight</p>
+              <h2 style={{ ...ui.title, fontSize: 20 }}>Pressao por centro de custo</h2>
               <Insights
-                textStyle={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.65 }}
+                textStyle={{ ...ui.paragraph, fontSize: 13, lineHeight: 1.65 }}
                 iconStyle={{ color: '#0F766E' }}
                 items={[
                   { text: 'Centro de custo acima da media precisa ser lido junto com categoria para separar compra pontual de uma tendencia estrutural de gasto.' },
@@ -415,11 +411,11 @@ export function DashboardCompras() {
               />
             </Card>
 
-            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
-              <p style={${JSON.stringify(ui.eyebrow)}}>Insight</p>
-              <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Risco operacional</h2>
+            <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
+              <p style={ui.eyebrow}>Insight</p>
+              <h2 style={{ ...ui.title, fontSize: 20 }}>Risco operacional</h2>
               <Insights
-                textStyle={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.65 }}
+                textStyle={{ ...ui.paragraph, fontSize: 13, lineHeight: 1.65 }}
                 iconStyle={{ color: '#EA580C' }}
                 items={[
                   { text: 'Status com muito volume em analise ou parcial costuma indicar gargalo entre pedido, recebimento e pagamento.' },
@@ -428,9 +424,9 @@ export function DashboardCompras() {
             </Card>
           </section>
 
-          <footer style={${JSON.stringify(ui.footer)}}>
-            <p style={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.6 }}>Template JSX de compras com filtros dedicados, queries SQL explicitas e leitura completa em uma unica pagina.</p>
-            <p style={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: ${resolvedThemeName}</p>
+          <footer style={ui.footer}>
+            <p style={{ ...ui.paragraph, fontSize: 13, lineHeight: 1.6 }}>Template JSX de compras com filtros dedicados, queries SQL explicitas e leitura completa em uma unica pagina.</p>
+            <p style={{ ...ui.paragraph, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: {THEME_NAME}</p>
           </footer>
         </section>
       </Dashboard>

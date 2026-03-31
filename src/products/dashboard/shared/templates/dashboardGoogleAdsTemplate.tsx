@@ -1,8 +1,6 @@
 'use client'
 
 import {
-  buildDashboardModuleUi,
-  buildFramePropSource,
   getDashboardTemplatePalette,
   getDashboardTemplateThemeName,
 } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
@@ -16,31 +14,29 @@ const GOOGLEADS_VARIANT = {
 
 function buildGoogleAdsDashboardSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('googleads')
-  const ui = buildDashboardModuleUi(resolvedThemeName)
-  const cardFrameSource = buildFramePropSource(ui.cardFrame)
   const chartColors = getDashboardTemplatePalette('googleads')
   return `import { DASHBOARD_CHART_PALETTES } from './chart-colors'
-import { resolveDashboardThemeTokens } from './theme-tokens'
+import { resolveDashboardUi } from './dashboard-ui'
 
 export function DashboardGoogleAds() {
   const THEME_NAME = ${JSON.stringify(resolvedThemeName)}
-  const THEME = resolveDashboardThemeTokens(THEME_NAME)
   const CHART_PALETTE = 'orange'
   const CHART_COLORS = DASHBOARD_CHART_PALETTES[CHART_PALETTE] ?? ${JSON.stringify(chartColors)}
+  const ui = resolveDashboardUi(THEME_NAME)
 
   return (
     <DashboardTemplate name="${GOOGLEADS_VARIANT.name}" title="${GOOGLEADS_VARIANT.title}">
       <Theme name={THEME_NAME} />
       <Dashboard id="overview" title="${GOOGLEADS_VARIANT.title}">
-        <section style={{ ...${JSON.stringify(ui.page)}, backgroundColor: THEME.pageBg }}>
-          <header style={{ ...${JSON.stringify(ui.header)}, backgroundColor: THEME.headerBg, color: THEME.headerText, border: \`1px solid \${THEME.surfaceBorder}\` }}>
+        <section style={ui.page}>
+          <header style={ui.header}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: '64%' }}>
-              <span style={${JSON.stringify(ui.badge)}}>Paid Search</span>
+              <span style={ui.badge}>Paid Search</span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={${JSON.stringify(ui.eyebrow)}}>Google Ads para Search, Shopping e PMax</p>
-                <h1 style={{ ...${JSON.stringify(ui.title)}, fontSize: 40, lineHeight: 1.02, fontWeight: 700, letterSpacing: '-0.04em' }}>Dashboard Google Ads</h1>
+                <p style={ui.eyebrow}>Google Ads para Search, Shopping e PMax</p>
+                <h1 style={{ ...ui.title, fontSize: 40, lineHeight: 1.02, fontWeight: 700, letterSpacing: '-0.04em' }}>Dashboard Google Ads</h1>
               </div>
-              <p style={${JSON.stringify(ui.subtitle)}}>Versao JSX do template legado com foco em volume, eficiencia e aquisicao, agora no formato novo do workspace sem DSL.</p>
+              <p style={ui.subtitle}>Versao JSX do template legado com foco em volume, eficiencia e aquisicao, agora no formato novo do workspace sem DSL.</p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '34%', minWidth: 320 }}>
               <DatePicker
@@ -48,21 +44,21 @@ export function DashboardGoogleAds() {
                 table="trafegopago.desempenho_diario"
                 field="data_ref"
                 presets={['7d', '14d', '30d', '90d']}
-                labelStyle={${JSON.stringify(ui.headerDatePickerLabel)}}
-                fieldStyle={${JSON.stringify(ui.headerDatePickerField)}}
-                iconStyle={${JSON.stringify(ui.headerDatePickerIcon)}}
-                presetButtonStyle={${JSON.stringify(ui.headerDatePickerPreset)}}
-                activePresetButtonStyle={${JSON.stringify(ui.headerDatePickerPresetActive)}}
-                separatorStyle={${JSON.stringify(ui.headerDatePickerSeparator)}}
+                labelStyle={ui.headerDatePickerLabel}
+                fieldStyle={ui.headerDatePickerField}
+                iconStyle={ui.headerDatePickerIcon}
+                presetButtonStyle={ui.headerDatePickerPreset}
+                activePresetButtonStyle={ui.headerDatePickerPresetActive}
+                separatorStyle={ui.headerDatePickerSeparator}
               />
             </div>
           </header>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 18 }}>
-            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
+            <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={${JSON.stringify(ui.eyebrow)}}>Filters</p>
-                <h2 style={${JSON.stringify(ui.title)}}>Conta e grupo</h2>
+                <p style={ui.eyebrow}>Filters</p>
+                <h2 style={ui.title}>Conta e grupo</h2>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 14 }}>
                 <Slicer
@@ -106,9 +102,9 @@ export function DashboardGoogleAds() {
               </div>
             </Card>
 
-            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
-              <p style={${JSON.stringify(ui.eyebrow)}}>Leitura esperada</p>
-              <p style={${JSON.stringify(ui.paragraph)}}>Comece por volume e retorno, depois confronte CTR, CVR e CPA para separar problema de demanda, criativo ou pagina.</p>
+            <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
+              <p style={ui.eyebrow}>Leitura esperada</p>
+              <p style={ui.paragraph}>Comece por volume e retorno, depois confronte CTR, CVR e CPA para separar problema de demanda, criativo ou pagina.</p>
             </Card>
           </section>
 
@@ -127,11 +123,11 @@ export function DashboardGoogleAds() {
               format="currency"
               comparisonMode="previous_period"
             >
-              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
-                <p style={${JSON.stringify(ui.kpiLabel)}}>Investimento</p>
-                <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Gasto</h2>
-                <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
-                <p style={${JSON.stringify(ui.kpiDelta)}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
+                <p style={ui.kpiLabel}>Investimento</p>
+                <h2 style={{ ...ui.title, fontSize: 20 }}>Gasto</h2>
+                <p style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
+                <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
             <Query
@@ -148,11 +144,11 @@ export function DashboardGoogleAds() {
               format="currency"
               comparisonMode="previous_period"
             >
-              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
-                <p style={${JSON.stringify(ui.kpiLabel)}}>Retorno</p>
-                <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Receita atribuida</h2>
-                <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
-                <p style={${JSON.stringify(ui.kpiDelta)}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
+                <p style={ui.kpiLabel}>Retorno</p>
+                <h2 style={{ ...ui.title, fontSize: 20 }}>Receita atribuida</h2>
+                <p style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
+                <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
             <Query
@@ -170,11 +166,11 @@ export function DashboardGoogleAds() {
               format="number"
               comparisonMode="previous_period"
             >
-              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
-                <p style={${JSON.stringify(ui.kpiLabel)}}>Eficiencia</p>
-                <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>ROAS</h2>
-                <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
-                <p style={${JSON.stringify(ui.kpiDelta)}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
+                <p style={ui.kpiLabel}>Eficiencia</p>
+                <h2 style={{ ...ui.title, fontSize: 20 }}>ROAS</h2>
+                <p style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
+                <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
             <Query
@@ -192,11 +188,11 @@ export function DashboardGoogleAds() {
               format="currency"
               comparisonMode="previous_period"
             >
-              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
-                <p style={${JSON.stringify(ui.kpiLabel)}}>Custo</p>
-                <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>CPA</h2>
-                <p style={${JSON.stringify(ui.kpiValue)}}>{'{{query.valueFormatted}}'}</p>
-                <p style={${JSON.stringify(ui.kpiDelta)}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
+                <p style={ui.kpiLabel}>Custo</p>
+                <h2 style={{ ...ui.title, fontSize: 20 }}>CPA</h2>
+                <p style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
+                <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
           </section>
@@ -210,12 +206,12 @@ export function DashboardGoogleAds() {
 
             <TabPanel value="performance">
               <section style={{ display: 'grid', gridTemplateColumns: '1.25fr 1fr', gap: 18 }}>
-                <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
+                <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <p style={${JSON.stringify(ui.eyebrow)}}>Top spend</p>
-                    <h2 style={${JSON.stringify(ui.title)}}>Gasto por campanha</h2>
+                    <p style={ui.eyebrow}>Top spend</p>
+                    <h2 style={ui.title}>Gasto por campanha</h2>
                   </div>
-                  <p style={${JSON.stringify(ui.paragraph)}}>Ajuda a isolar onde Search, Shopping ou PMax estao carregando o budget antes de abrir o funil de qualidade.</p>
+                  <p style={ui.paragraph}>Ajuda a isolar onde Search, Shopping ou PMax estao carregando o budget antes de abrir o funil de qualidade.</p>
                   <Chart
                     type="bar"
                     height={320}
@@ -244,12 +240,12 @@ export function DashboardGoogleAds() {
                   />
                 </Card>
 
-                <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
+                <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <p style={${JSON.stringify(ui.eyebrow)}}>Rate quality</p>
-                    <h2 style={${JSON.stringify(ui.title)}}>CTR por conta</h2>
+                    <p style={ui.eyebrow}>Rate quality</p>
+                    <h2 style={ui.title}>CTR por conta</h2>
                   </div>
-                  <p style={${JSON.stringify(ui.paragraph)}}>Mistura de volume e relevancia para mostrar quais contas sustentam cliques qualificados e quais dependem de impressao sem resposta.</p>
+                  <p style={ui.paragraph}>Mistura de volume e relevancia para mostrar quais contas sustentam cliques qualificados e quais dependem de impressao sem resposta.</p>
                   <Chart
                     type="bar"
                     height={320}
@@ -282,12 +278,12 @@ export function DashboardGoogleAds() {
 
             <TabPanel value="acquisition">
               <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 18 }}>
-                <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
+                <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <p style={${JSON.stringify(ui.eyebrow)}}>Trend</p>
-                    <h2 style={${JSON.stringify(ui.title)}}>Gasto por mes</h2>
+                    <p style={ui.eyebrow}>Trend</p>
+                    <h2 style={ui.title}>Gasto por mes</h2>
                   </div>
-                  <p style={${JSON.stringify(ui.paragraph)}}>Serie para confrontar aceleracao de investimento com as mudancas de qualidade de trafego ao longo do periodo.</p>
+                  <p style={ui.paragraph}>Serie para confrontar aceleracao de investimento com as mudancas de qualidade de trafego ao longo do periodo.</p>
                   <Chart
                     type="line"
                     height={320}
@@ -318,10 +314,10 @@ export function DashboardGoogleAds() {
                 </Card>
 
                 <section style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 18 }}>
-                  <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
+                  <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <p style={${JSON.stringify(ui.eyebrow)}}>Conversion quality</p>
-                      <h2 style={${JSON.stringify(ui.title)}}>CVR por mes</h2>
+                      <p style={ui.eyebrow}>Conversion quality</p>
+                      <h2 style={ui.title}>CVR por mes</h2>
                     </div>
                     <Chart
                       type="bar"
@@ -349,13 +345,13 @@ export function DashboardGoogleAds() {
                       ]}
                     />
                   </Card>
-                  <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
+                  <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <h2 style={{ ...${JSON.stringify(ui.title)}, fontSize: 20 }}>Leituras operacionais</h2>
-                      <p style={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.6 }}>Perguntas para separar problema de volume, relevancia ou eficiencia de pagina.</p>
+                      <h2 style={{ ...ui.title, fontSize: 20 }}>Leituras operacionais</h2>
+                      <p style={{ ...ui.paragraph, fontSize: 13, lineHeight: 1.6 }}>Perguntas para separar problema de volume, relevancia ou eficiencia de pagina.</p>
                     </div>
                     <Insights
-                      textStyle={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.65 }}
+                      textStyle={{ ...ui.paragraph, fontSize: 13, lineHeight: 1.65 }}
                       iconStyle={{ color: '#4285F4' }}
                       items={[
                         { text: 'Gasto subindo com CTR e CVR em queda costuma indicar keyword ou audiencia sem aderencia real.' },
@@ -370,21 +366,21 @@ export function DashboardGoogleAds() {
 
             <TabPanel value="details">
               <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 18 }}>
-                <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
+                <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <p style={${JSON.stringify(ui.eyebrow)}}>Table</p>
-                    <h2 style={${JSON.stringify(ui.title)}}>Campanhas no detalhe</h2>
+                    <p style={ui.eyebrow}>Table</p>
+                    <h2 style={ui.title}>Campanhas no detalhe</h2>
                   </div>
                   <Table
                     bordered
                     rounded
                     stickyHeader
-                    borderColor={${JSON.stringify(ui.tableBorderColor)}}
-                    rowHoverColor={${JSON.stringify(ui.tableRowHoverColor)}}
-                    headerStyle={${JSON.stringify(ui.tableHeaderStyle)}}
-                    rowStyle={${JSON.stringify(ui.tableRowStyle)}}
-                    cellStyle={${JSON.stringify(ui.tableCellStyle)}}
-                    footerStyle={${JSON.stringify(ui.tableFooterStyle)}}
+                    borderColor={ui.tableBorderColor}
+                    rowHoverColor={ui.tableRowHoverColor}
+                    headerStyle={ui.tableHeaderStyle}
+                    rowStyle={ui.tableRowStyle}
+                    cellStyle={ui.tableCellStyle}
+                    footerStyle={ui.tableFooterStyle}
                     enableExportCsv
                     dataQuery={{
                       query: \`
@@ -415,25 +411,25 @@ export function DashboardGoogleAds() {
                   />
                 </Card>
 
-                <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
+                <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <p style={${JSON.stringify(ui.eyebrow)}}>Pivot</p>
-                    <h2 style={${JSON.stringify(ui.title)}}>Conta por campanha</h2>
+                    <p style={ui.eyebrow}>Pivot</p>
+                    <h2 style={ui.title}>Conta por campanha</h2>
                   </div>
                   <PivotTable
                     bordered
                     rounded
                     stickyHeader
-                    borderColor={${JSON.stringify(ui.tableBorderColor)}}
-                    containerStyle={${JSON.stringify(ui.pivotContainerStyle)}}
-                    headerStyle={${JSON.stringify(ui.pivotHeaderStyle)}}
-                    headerTotalStyle={${JSON.stringify(ui.pivotHeaderTotalStyle)}}
-                    rowLabelStyle={${JSON.stringify(ui.pivotRowLabelStyle)}}
-                    cellStyle={${JSON.stringify(ui.pivotCellStyle)}}
-                    rowTotalStyle={${JSON.stringify(ui.pivotRowTotalStyle)}}
-                    footerStyle={${JSON.stringify(ui.pivotFooterStyle)}}
-                    emptyStateStyle={${JSON.stringify(ui.pivotEmptyStateStyle)}}
-                    expandButtonStyle={${JSON.stringify(ui.pivotExpandButtonStyle)}}
+                    borderColor={ui.tableBorderColor}
+                    containerStyle={ui.pivotContainerStyle}
+                    headerStyle={ui.pivotHeaderStyle}
+                    headerTotalStyle={ui.pivotHeaderTotalStyle}
+                    rowLabelStyle={ui.pivotRowLabelStyle}
+                    cellStyle={ui.pivotCellStyle}
+                    rowTotalStyle={ui.pivotRowTotalStyle}
+                    footerStyle={ui.pivotFooterStyle}
+                    emptyStateStyle={ui.pivotEmptyStateStyle}
+                    expandButtonStyle={ui.pivotExpandButtonStyle}
                     enableExportCsv
                     defaultExpandedLevels={1}
                     dataQuery={{
@@ -458,9 +454,9 @@ export function DashboardGoogleAds() {
             </TabPanel>
           </Tabs>
 
-          <footer style={${JSON.stringify(ui.footer)}}>
-            <p style={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.6 }}>Template JSX para Google Ads com volume, retorno e eficiencia em um unico arquivo TSX no formato novo do dashboard.</p>
-            <p style={{ ...${JSON.stringify(ui.paragraph)}, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: ${resolvedThemeName}</p>
+          <footer style={ui.footer}>
+            <p style={{ ...ui.paragraph, fontSize: 13, lineHeight: 1.6 }}>Template JSX para Google Ads com volume, retorno e eficiencia em um unico arquivo TSX no formato novo do dashboard.</p>
+            <p style={{ ...ui.paragraph, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: {THEME_NAME}</p>
           </footer>
         </section>
       </Dashboard>

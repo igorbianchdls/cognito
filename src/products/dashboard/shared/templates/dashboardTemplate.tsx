@@ -100,10 +100,6 @@ function resolveDashboardCardFrame(themeName: string) {
   return { variant: 'hud' as const, cornerSize: 8, cornerWidth: 1 }
 }
 
-function buildFramePropSource(frame: DashboardThemeUi['cardFrame']): string {
-  return frame ? ` frame={${JSON.stringify(frame)}}` : ''
-}
-
 function buildDashboardThemeUi(themeName: string, variant: 'default' | 'classic' = 'default'): DashboardThemeUi {
   const theme = resolveDashboardTemplateThemeTokens(themeName)
   const chartScheme = [theme.primary, theme.accentBorder, theme.textSecondary, theme.surfaceBorder, theme.headerSubtitle]
@@ -458,45 +454,43 @@ const CLASSIC_DASHBOARD_VARIANT: StandaloneDashboardVariant = {
 
 function buildClassicDashboardTemplateSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('classic')
-  const ui = buildDashboardThemeUi(resolvedThemeName, 'classic')
-  const cardFrameSource = buildFramePropSource(ui.cardFrame)
   const chartColors = getDashboardTemplatePalette('classic')
   return `import { DASHBOARD_CHART_PALETTES } from './chart-colors'
-import { resolveDashboardThemeTokens } from './theme-tokens'
+import { resolveDashboardUi } from './dashboard-ui'
 
 export function DashboardClassico() {
   const THEME_NAME = ${JSON.stringify(resolvedThemeName)}
-  const THEME = resolveDashboardThemeTokens(THEME_NAME)
   const CHART_PALETTE = 'teal'
   const CHART_COLORS = DASHBOARD_CHART_PALETTES[CHART_PALETTE] ?? ${JSON.stringify(chartColors)}
+  const ui = resolveDashboardUi(THEME_NAME, 'classic')
 
   return (
     <DashboardTemplate name="${CLASSIC_DASHBOARD_VARIANT.name}" title="${CLASSIC_DASHBOARD_VARIANT.title}">
       <Theme name={THEME_NAME} />
       <Dashboard id="overview" title="${CLASSIC_DASHBOARD_VARIANT.title}">
-        <section style={{ ...${JSON.stringify(ui.page)}, backgroundColor: THEME.pageBg }}>
-          <header style={{ ...${JSON.stringify(ui.header)}, backgroundColor: THEME.headerBg, color: THEME.headerText, border: \`1px solid \${THEME.surfaceBorder}\` }}>
+        <section style={ui.page}>
+          <header style={ui.header}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <p style={${JSON.stringify({ ...ui.metricLabel, margin: 0, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase' })}}>Executive dashboard</p>
-              <h1 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 34, lineHeight: 1.05, fontWeight: 700, letterSpacing: '-0.04em' })}}>Performance overview with the classic BI layout</h1>
-              <p style={${JSON.stringify({ ...ui.paragraph, margin: 0, maxWidth: 720, fontSize: 14, lineHeight: 1.65 })}}>
+              <p style={{ ...ui.metricLabel, margin: 0, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Executive dashboard</p>
+              <h1 style={{ ...ui.title, margin: 0, fontSize: 34, lineHeight: 1.05, fontWeight: 700, letterSpacing: '-0.04em' }}>Performance overview with the classic BI layout</h1>
+              <p style={{ ...ui.paragraph, margin: 0, maxWidth: 720, fontSize: 14, lineHeight: 1.65 }}>
                 Header with global period control, KPI strip on top and analysis rows below. The runtime stays JSX-first, but the surface looks closer to the previous dashboard model.
               </p>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, minWidth: 240 }}>
-              <p style={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase' })}}>Global period</p>
+              <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Global period</p>
               <DatePicker
                 label="Periodo do pedido"
                 table="vendas.pedidos"
                 field="data_pedido"
                 presets={['7d', '30d', 'month', 'quarter']}
-                labelStyle={${JSON.stringify(ui.headerDatePickerLabel)}}
-                fieldStyle={${JSON.stringify(ui.headerDatePickerField)}}
-                iconStyle={${JSON.stringify(ui.headerDatePickerIcon)}}
-                presetButtonStyle={${JSON.stringify(ui.headerDatePickerPreset)}}
-                activePresetButtonStyle={${JSON.stringify(ui.headerDatePickerPresetActive)}}
-                separatorStyle={${JSON.stringify(ui.headerDatePickerSeparator)}}
+                labelStyle={ui.headerDatePickerLabel}
+                fieldStyle={ui.headerDatePickerField}
+                iconStyle={ui.headerDatePickerIcon}
+                presetButtonStyle={ui.headerDatePickerPreset}
+                activePresetButtonStyle={ui.headerDatePickerPresetActive}
+                separatorStyle={ui.headerDatePickerSeparator}
               />
             </div>
           </header>
@@ -515,13 +509,13 @@ export function DashboardClassico() {
               format="currency"
               comparisonMode="previous_period"
             >
-              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
+              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <p style={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Faturamento</p>
-                  <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' })}}>Receita</h2>
+                  <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Faturamento</p>
+                  <h2 style={{ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Receita</h2>
                 </div>
-                <p style={${JSON.stringify({ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' })}}>{'{{query.valueFormatted}}'}</p>
-                <p data-ui="kpi-delta" style={${JSON.stringify({ ...ui.kpiDelta, margin: 0, fontSize: 13 })}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p style={{ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
+                <p data-ui="kpi-delta" style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
 
@@ -538,13 +532,13 @@ export function DashboardClassico() {
               format="number"
               comparisonMode="previous_period"
             >
-              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
+              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <p style={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Volume</p>
-                  <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' })}}>Pedidos</h2>
+                  <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Volume</p>
+                  <h2 style={{ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Pedidos</h2>
                 </div>
-                <p style={${JSON.stringify({ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' })}}>{'{{query.valueFormatted}}'}</p>
-                <p data-ui="kpi-delta" style={${JSON.stringify({ ...ui.kpiDelta, margin: 0, fontSize: 13 })}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p style={{ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
+                <p data-ui="kpi-delta" style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
 
@@ -561,13 +555,13 @@ export function DashboardClassico() {
               format="currency"
               comparisonMode="previous_period"
             >
-              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
+              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <p style={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Eficiência</p>
-                  <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' })}}>Ticket medio</h2>
+                  <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Eficiência</p>
+                  <h2 style={{ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Ticket medio</h2>
                 </div>
-                <p style={${JSON.stringify({ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' })}}>{'{{query.valueFormatted}}'}</p>
-                <p data-ui="kpi-delta" style={${JSON.stringify({ ...ui.kpiDelta, margin: 0, fontSize: 13 })}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p style={{ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
+                <p data-ui="kpi-delta" style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
 
@@ -584,13 +578,13 @@ export function DashboardClassico() {
               format="number"
               comparisonMode="previous_period"
             >
-              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
+              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <p style={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Cobertura</p>
-                  <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' })}}>Canais ativos</h2>
+                  <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cobertura</p>
+                  <h2 style={{ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Canais ativos</h2>
                 </div>
-                <p style={${JSON.stringify({ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' })}}>{'{{query.valueFormatted}}'}</p>
-                <p data-ui="kpi-delta" style={${JSON.stringify({ ...ui.kpiDelta, margin: 0, fontSize: 13 })}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p style={{ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
+                <p data-ui="kpi-delta" style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
 
@@ -607,26 +601,26 @@ export function DashboardClassico() {
               format="percent"
               comparisonMode="previous_period"
             >
-              <Card${cardFrameSource} style={${JSON.stringify(ui.queryCard)}}>
+              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <p style={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Qualidade</p>
-                  <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' })}}>Aprovacao</h2>
+                  <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Qualidade</p>
+                  <h2 style={{ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Aprovacao</h2>
                 </div>
-                <p style={${JSON.stringify({ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' })}}>{'{{query.valueFormatted}}'}</p>
-                <p data-ui="kpi-delta" style={${JSON.stringify({ ...ui.kpiDelta, margin: 0, fontSize: 13 })}}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p style={{ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
+                <p data-ui="kpi-delta" style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 18 }}>
-            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' })}}>Aceleracao recente</h2>
-                <p style={${JSON.stringify({ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.6 })}}>Leituras sobre os vetores que estao puxando o crescimento do periodo.</p>
+                <h2 style={{ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Aceleracao recente</h2>
+                <p style={{ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.6 }}>Leituras sobre os vetores que estao puxando o crescimento do periodo.</p>
               </div>
               <Insights
-                textStyle={${JSON.stringify({ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.65 })}}
-                iconStyle={${JSON.stringify({ color: '#2563EB' })}}
+                textStyle={{ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.65 }}
+                iconStyle={{ color: '#2563EB' }}
                 items={[
                   { title: 'Receita acima da media recente', text: 'Receita ganhou tracao nos canais proprios e manteve crescimento acima da media recente.' },
                   { title: 'Volume mais regular no periodo', text: 'O volume diario segue acima da media das ultimas semanas, com melhor distribuicao ao longo do periodo.' },
@@ -634,14 +628,14 @@ export function DashboardClassico() {
                 ]}
               />
             </Card>
-            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' })}}>Concentracao de receita</h2>
-                <p style={${JSON.stringify({ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.6 })}}>Pontos de atencao sobre dependencia de canais e distribuicao do faturamento.</p>
+                <h2 style={{ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Concentracao de receita</h2>
+                <p style={{ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.6 }}>Pontos de atencao sobre dependencia de canais e distribuicao do faturamento.</p>
               </div>
               <Insights
-                textStyle={${JSON.stringify({ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.65 })}}
-                iconStyle={${JSON.stringify({ color: '#F59E0B' })}}
+                textStyle={{ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.65 }}
+                iconStyle={{ color: '#F59E0B' }}
                 items={[
                   { text: 'O mix segue concentrado em poucos canais, o que aumenta dependencia operacional.' },
                   { text: 'Uma variacao pequena nos principais canais ainda tem impacto relevante na receita consolidada.' },
@@ -649,14 +643,14 @@ export function DashboardClassico() {
                 ]}
               />
             </Card>
-            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' })}}>Conversao e qualidade</h2>
-                <p style={${JSON.stringify({ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.6 })}}>Sinais de eficiencia comercial sem pressao adicional sobre o ticket medio.</p>
+                <h2 style={{ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Conversao e qualidade</h2>
+                <p style={{ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.6 }}>Sinais de eficiencia comercial sem pressao adicional sobre o ticket medio.</p>
               </div>
               <Insights
-                textStyle={${JSON.stringify({ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.65 })}}
-                iconStyle={${JSON.stringify({ color: '#10B981' })}}
+                textStyle={{ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.65 }}
+                iconStyle={{ color: '#10B981' }}
                 items={[
                   { text: 'A aprovacao continua estavel, com espaco para melhorar conversao sem pressionar o ticket medio.' },
                   { text: 'Existe espaco para elevar a taxa final com ajustes pontuais no topo do funil comercial.' },
@@ -667,10 +661,10 @@ export function DashboardClassico() {
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
-            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
+            <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <p style={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Receita por canal</p>
-                <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' })}}>Mix comercial</h2>
+                <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Receita por canal</p>
+                <h2 style={{ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Mix comercial</h2>
               </div>
               <Chart
                 type="bar"
@@ -702,10 +696,10 @@ export function DashboardClassico() {
               />
             </Card>
 
-            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <p style={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Participacao</p>
-                <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' })}}>Share por canal</h2>
+                <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Participacao</p>
+                <h2 style={{ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Share por canal</h2>
               </div>
               <Chart
                 type="pie"
@@ -740,10 +734,10 @@ export function DashboardClassico() {
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
-            <Card${cardFrameSource} style={{ ...${JSON.stringify(ui.panelCard)}, minHeight: '100%' }}>
+            <Card frame={ui.cardFrame || undefined} style={{ ...ui.panelCard, minHeight: '100%' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <p style={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Tendencia diaria</p>
-                <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' })}}>Receita ao longo do periodo</h2>
+                <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tendencia diaria</p>
+                <h2 style={{ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Receita ao longo do periodo</h2>
               </div>
               <div style={{ flex: 1, minHeight: 300 }}>
                 <Chart
@@ -777,8 +771,8 @@ export function DashboardClassico() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <p style={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Detalhamento</p>
-                <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' })}}>Pedidos filtrados</h2>
+                <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Detalhamento</p>
+                <h2 style={{ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Pedidos filtrados</h2>
               </div>
               <Table
                 bordered
@@ -786,12 +780,12 @@ export function DashboardClassico() {
                 radius={12}
                 stickyHeader
                 striped={false}
-                borderColor={${JSON.stringify(ui.tableBorderColor)}}
-                rowHoverColor={${JSON.stringify(ui.tableRowHoverColor)}}
-                headerStyle={${JSON.stringify(ui.tableHeaderStyle)}}
-                rowStyle={${JSON.stringify(ui.tableRowStyle)}}
-                cellStyle={${JSON.stringify(ui.tableCellStyle)}}
-                footerStyle={${JSON.stringify(ui.tableFooterStyle)}}
+                borderColor={ui.tableBorderColor}
+                rowHoverColor={ui.tableRowHoverColor}
+                headerStyle={ui.tableHeaderStyle}
+                rowStyle={ui.tableRowStyle}
+                cellStyle={ui.tableCellStyle}
+                footerStyle={ui.tableFooterStyle}
                 dataQuery={{
                   query: \`
                     SELECT
@@ -821,10 +815,10 @@ export function DashboardClassico() {
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
-            <Card${cardFrameSource} style={${JSON.stringify(ui.panelCard)}}>
+            <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <p style={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Status mix</p>
-                <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' })}}>Volume por status</h2>
+                <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status mix</p>
+                <h2 style={{ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Volume por status</h2>
               </div>
               <Chart
                 type="horizontal-bar"
@@ -851,25 +845,25 @@ export function DashboardClassico() {
               />
             </Card>
 
-            <Card${cardFrameSource} data-ui="pivot-card" style={${JSON.stringify(ui.panelCardAlt)}}>
+            <Card frame={ui.cardFrame || undefined} data-ui="pivot-card" style={ui.panelCardAlt}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <p style={${JSON.stringify({ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' })}}>Cruzamento</p>
-                <h2 style={${JSON.stringify({ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' })}}>Receita por canal e status</h2>
+                <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cruzamento</p>
+                <h2 style={{ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Receita por canal e status</h2>
               </div>
               <PivotTable
                 bordered
                 rounded
                 stickyHeader
-                borderColor={${JSON.stringify(ui.tableBorderColor)}}
-                containerStyle={${JSON.stringify(ui.pivotContainerStyle)}}
-                headerStyle={${JSON.stringify(ui.pivotHeaderStyle)}}
-                headerTotalStyle={${JSON.stringify(ui.pivotHeaderTotalStyle)}}
-                rowLabelStyle={${JSON.stringify(ui.pivotRowLabelStyle)}}
-                cellStyle={${JSON.stringify(ui.pivotCellStyle)}}
-                rowTotalStyle={${JSON.stringify(ui.pivotRowTotalStyle)}}
-                footerStyle={${JSON.stringify(ui.pivotFooterStyle)}}
-                emptyStateStyle={${JSON.stringify(ui.pivotEmptyStateStyle)}}
-                expandButtonStyle={${JSON.stringify(ui.pivotExpandButtonStyle)}}
+                borderColor={ui.tableBorderColor}
+                containerStyle={ui.pivotContainerStyle}
+                headerStyle={ui.pivotHeaderStyle}
+                headerTotalStyle={ui.pivotHeaderTotalStyle}
+                rowLabelStyle={ui.pivotRowLabelStyle}
+                cellStyle={ui.pivotCellStyle}
+                rowTotalStyle={ui.pivotRowTotalStyle}
+                footerStyle={ui.pivotFooterStyle}
+                emptyStateStyle={ui.pivotEmptyStateStyle}
+                expandButtonStyle={ui.pivotExpandButtonStyle}
                 enableExportCsv
                 defaultExpandedLevels={1}
                 dataQuery={{
@@ -914,20 +908,4 @@ export function buildDashboardTemplateVariants(themeName: string): DashboardTemp
   variants.push(buildShopifyDashboardTemplateVariant())
 
   return variants
-}
-
-export function buildDashboardTemplateVariantByPath(path: string, themeName: string): DashboardTemplateVariant | null {
-  if (path === CLASSIC_DASHBOARD_VARIANT.path) {
-    return {
-      content: buildClassicDashboardTemplateSource(themeName),
-      name: CLASSIC_DASHBOARD_VARIANT.fileName,
-      path: CLASSIC_DASHBOARD_VARIANT.path,
-    }
-  }
-  if (path === 'app/dashboard-compras.tsx') return buildComprasDashboardTemplateVariant(themeName)
-  if (path === 'app/dashboard-financeiro.tsx') return buildFinanceiroDashboardTemplateVariant(themeName)
-  if (path === 'app/dashboard-metaads.tsx') return buildMetaAdsDashboardTemplateVariant(themeName)
-  if (path === 'app/dashboard-googleads.tsx') return buildGoogleAdsDashboardTemplateVariant(themeName)
-  if (path === 'app/dashboard-shopify.tsx') return buildShopifyDashboardTemplateVariant(themeName)
-  return null
 }

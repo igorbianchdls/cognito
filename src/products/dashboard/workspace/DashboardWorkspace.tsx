@@ -7,7 +7,6 @@ import {
   DashboardThemeModal,
   type DashboardAppearanceMode,
 } from '@/products/dashboard/theme-modal'
-import { buildDashboardTemplateVariantByPath } from '@/products/dashboard/shared/templates/dashboardTemplate'
 import {
   DASHBOARD_CHART_PALETTE_OPTIONS,
   getDashboardChartPaletteValueFromColors,
@@ -19,7 +18,7 @@ import {
   getDashboardThemeNameFromSource,
   getDashboardTitleFromSource,
   replaceDashboardChartPaletteNameInSource,
-  replaceDashboardChartColorsInSource,
+  replaceDashboardThemeNameInSource,
 } from '@/products/dashboard/workspace/compileDashboardSource'
 import { DashboardWorkspaceCode } from '@/products/dashboard/workspace/DashboardWorkspaceCode'
 import { DashboardWorkspaceHeader } from '@/products/dashboard/workspace/DashboardWorkspaceHeader'
@@ -78,15 +77,10 @@ export function DashboardWorkspace({
 
   function applyAppearanceToSelectedDashboard(themeName: string, chartPaletteValue: string) {
     if (!selectedDashboardFile) return
-    const nextVariant = buildDashboardTemplateVariantByPath(selectedDashboardFile.path, themeName)
-    if (!nextVariant) return
-    const nextPalette = DASHBOARD_CHART_PALETTE_OPTIONS.find((option) => option.value === chartPaletteValue)?.colors
-    const nextContent = nextPalette
-      ? replaceDashboardChartPaletteNameInSource(
-          replaceDashboardChartColorsInSource(nextVariant.content, nextPalette),
-          chartPaletteValue,
-        )
-      : nextVariant.content
+    const nextContent = replaceDashboardChartPaletteNameInSource(
+      replaceDashboardThemeNameInSource(selectedDashboardFile.content, themeName),
+      chartPaletteValue,
+    )
     updateFileContent(selectedDashboardFile.path, nextContent)
   }
 

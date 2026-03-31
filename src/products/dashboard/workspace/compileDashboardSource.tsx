@@ -222,6 +222,28 @@ export function getDashboardThemeNameFromSource(source: string, fallback = 'ligh
   return fallback
 }
 
+export function replaceDashboardThemeNameInSource(source: string, nextThemeName: string) {
+  const cleanSource = String(source || '')
+  const normalizedThemeName = String(nextThemeName || '').trim()
+  if (!normalizedThemeName) return cleanSource
+
+  if (/const\s+THEME_NAME\s*=/.test(cleanSource)) {
+    return cleanSource.replace(
+      /const\s+THEME_NAME\s*=\s*['"][^'"]+['"]/,
+      `const THEME_NAME = '${normalizedThemeName}'`,
+    )
+  }
+
+  if (/<Theme\b[^>]*\bname=/.test(cleanSource)) {
+    return cleanSource.replace(
+      /<Theme\b([^>]*)\bname=(?:"[^"]*"|\{'[^']*'\}|\{"[^"]*"\})/,
+      `<Theme$1name="${normalizedThemeName}"`,
+    )
+  }
+
+  return cleanSource
+}
+
 export function getDashboardChartColorsFromSource(source: string, fallback: string[] = []) {
   const paletteNameMatch = String(source || '').match(/const\s+CHART_PALETTE\s*=\s*['"]([^'"]+)['"]/)
   if (paletteNameMatch?.[1]?.trim()) return [...fallback]
@@ -239,18 +261,6 @@ export function getDashboardChartColorsFromSource(source: string, fallback: stri
   }
 
   return [...fallback]
-}
-
-export function replaceDashboardChartColorsInSource(source: string, nextColors: string[]) {
-  const cleanSource = String(source || '')
-  if (!Array.isArray(nextColors) || !nextColors.length) return cleanSource
-
-  if (!/const\s+CHART_COLORS\s*=/.test(cleanSource)) return cleanSource
-
-  return cleanSource.replace(
-    /const\s+CHART_COLORS\s*=\s*\[[\s\S]*?\]/,
-    `const CHART_COLORS = ${JSON.stringify(nextColors)}`,
-  )
 }
 
 export function getDashboardChartPaletteNameFromSource(source: string, fallback: string) {
