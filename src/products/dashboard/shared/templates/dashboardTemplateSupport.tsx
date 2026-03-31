@@ -99,8 +99,8 @@ export function buildDashboardInlineUiSource(variant: DashboardUiVariant = 'defa
     panelCardAlt: {
       padding: 22,
       borderRadius: cardFrame ? 0 : 24,
-      backgroundColor: theme.accentSurface,
-      border: \`1px solid \${theme.accentBorder}\`,
+      backgroundColor: theme.surfaceBg,
+      border: \`1px solid \${theme.surfaceBorder}\`,
       display: 'flex',
       flexDirection: 'column',
       gap: 14,

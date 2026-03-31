@@ -367,8 +367,8 @@ function buildDashboardThemeUi(themeName: string, variant: 'default' | 'classic'
     panelCardAlt: {
       padding: 22,
       borderRadius: isClassic && cardFrame ? 0 : isClassic ? 24 : 26,
-      backgroundColor: isClassic ? surfaceBg : accentSurface,
-      border: `1px solid ${isClassic ? borderColor : accentBorder}`,
+      backgroundColor: surfaceBg,
+      border: `1px solid ${borderColor}`,
       display: 'flex',
       flexDirection: 'column',
       gap: 14,
