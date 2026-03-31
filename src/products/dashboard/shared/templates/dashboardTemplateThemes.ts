@@ -313,3 +313,25 @@ export function resolveDashboardTemplateThemeTokens(themeName: string): Dashboar
   }
   return DASHBOARD_TEMPLATE_THEME_TOKENS[aliases[key] || key] || DASHBOARD_TEMPLATE_THEME_TOKENS.light
 }
+
+export function buildDashboardThemeTokensFileSource() {
+  const entries = Object.entries(DASHBOARD_TEMPLATE_THEME_TOKENS)
+    .map(([name, tokens]) => `  ${name}: ${JSON.stringify(tokens, null, 2).replace(/\n/g, '\n  ')},`)
+    .join('\n')
+
+  return `export const DASHBOARD_THEME_TOKENS = {
+${entries}
+} as const
+
+export function resolveDashboardThemeTokens(themeName: string) {
+  const key = String(themeName || 'light').trim().toLowerCase()
+  const aliases = {
+    white: 'light',
+    claro: 'light',
+    branco: 'light',
+  } as const
+
+  return DASHBOARD_THEME_TOKENS[aliases[key as keyof typeof aliases] || key as keyof typeof DASHBOARD_THEME_TOKENS] || DASHBOARD_THEME_TOKENS.light
+}
+`
+}

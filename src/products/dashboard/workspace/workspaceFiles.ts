@@ -1,6 +1,7 @@
 import type { DashboardCodeFile } from '@/products/dashboard/workspace/types'
 import { buildDashboardTemplateVariants } from '@/products/dashboard/shared/templates/dashboardTemplate'
 import { DASHBOARD_TEMPLATE_DEFAULT_THEMES } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
+import { buildDashboardThemeTokensFileSource } from '@/products/dashboard/shared/templates/dashboardTemplateThemes'
 import { buildDashboardChartColorsFileSource } from '@/products/dashboard/workspace/chartPalettes'
 
 export function buildDashboardWorkspaceFiles(themeName: string): DashboardCodeFile[] {
@@ -22,6 +23,14 @@ export function buildDashboardWorkspaceFiles(themeName: string): DashboardCodeFi
       extension: 'ts',
       language: 'typescript',
       content: buildDashboardChartColorsFileSource(),
+    },
+    {
+      path: 'app/theme-tokens.ts',
+      name: 'theme-tokens.ts',
+      directory: 'app',
+      extension: 'ts',
+      language: 'typescript',
+      content: buildDashboardThemeTokensFileSource(),
     },
     {
       path: 'app/theme.json',
