@@ -149,3 +149,31 @@ export function getDashboardThemeNameFromSource(source: string, fallback = 'ligh
   if (themeMatch?.[1]?.trim()) return themeMatch[1].trim()
   return fallback
 }
+
+export function getDashboardChartColorsFromSource(source: string, fallback: string[] = []) {
+  const colorsMatch = String(source || '').match(/const\s+CHART_COLORS\s*=\s*(\[[\s\S]*?\])/)
+  if (!colorsMatch?.[1]) return [...fallback]
+
+  try {
+    const parsed = JSON.parse(colorsMatch[1])
+    if (Array.isArray(parsed) && parsed.every((value) => typeof value === 'string')) {
+      return [...parsed]
+    }
+  } catch {
+    return [...fallback]
+  }
+
+  return [...fallback]
+}
+
+export function replaceDashboardChartColorsInSource(source: string, nextColors: string[]) {
+  const cleanSource = String(source || '')
+  if (!Array.isArray(nextColors) || !nextColors.length) return cleanSource
+
+  if (!/const\s+CHART_COLORS\s*=/.test(cleanSource)) return cleanSource
+
+  return cleanSource.replace(
+    /const\s+CHART_COLORS\s*=\s*\[[\s\S]*?\]/,
+    `const CHART_COLORS = ${JSON.stringify(nextColors)}`,
+  )
+}

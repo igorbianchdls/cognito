@@ -2,6 +2,14 @@
 
 import type { ThemeOption } from '@/products/bi/shared/themeOptions'
 
+export type DashboardAppearanceMode = 'theme' | 'colors'
+
+export type DashboardChartPaletteOption = {
+  value: string
+  label: string
+  colors: string[]
+}
+
 function getThemePreviewStyle(theme: string) {
   const styles: Record<string, { background: string; accent: string; border: string; title: string }> = {
     light: {
@@ -80,9 +88,14 @@ interface DashboardThemeModalProps {
   onClose: () => void
   onConfirm: () => void
   onRevert: () => void
+  mode: DashboardAppearanceMode
+  onModeChange: (mode: DashboardAppearanceMode) => void
   onSelect: (themeValue: string) => void
+  onSelectChartPalette: (paletteValue: string) => void
   revertDisabled?: boolean
   selectedTheme: string
+  selectedChartPalette: string
+  chartPalettes: DashboardChartPaletteOption[]
   themes: ThemeOption[]
 }
 
@@ -91,9 +104,14 @@ export function DashboardThemeModal({
   onClose,
   onConfirm,
   onRevert,
+  mode,
+  onModeChange,
   onSelect,
+  onSelectChartPalette,
   revertDisabled = false,
   selectedTheme,
+  selectedChartPalette,
+  chartPalettes,
   themes,
 }: DashboardThemeModalProps) {
   if (!isOpen) return null
@@ -102,7 +120,9 @@ export function DashboardThemeModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-6 py-10">
       <div className="w-full max-w-[860px] rounded-[24px] bg-white p-6 shadow-[0_20px_80px_rgba(0,0,0,0.28)]">
         <div className="mb-5 flex items-start justify-between">
-          <div className="text-[28px] font-semibold tracking-[-0.03em] text-[#111111]">Selecionar um tema</div>
+          <div className="text-[28px] font-semibold tracking-[-0.03em] text-[#111111]">
+            {mode === 'theme' ? 'Selecionar um tema' : 'Selecionar cores do chart'}
+          </div>
           <button
             type="button"
             onClick={onClose}
@@ -112,66 +132,124 @@ export function DashboardThemeModal({
           </button>
         </div>
 
-        <div className="grid grid-cols-3 gap-x-4 gap-y-5">
-          {themes.map((theme) => {
-            const preview = getThemePreviewStyle(theme.value)
-            const isSelected = selectedTheme === theme.value
-
-            return (
-              <button
-                key={theme.value}
-                type="button"
-                onClick={() => onSelect(theme.value)}
-                className="text-left"
-              >
-                <div
-                  className={`relative overflow-hidden rounded-[14px] border transition ${
-                    isSelected ? 'border-[#0075E2] shadow-[0_12px_30px_rgba(0,117,226,0.18)]' : 'border-[#ececec]'
-                  }`}
-                  style={{ background: preview.background }}
-                >
-                  <div className="h-[106px] w-full p-4">
-                    <div className="mb-3 flex items-center justify-between">
-                      <div
-                        className="h-2.5 w-14 rounded-full"
-                        style={{ backgroundColor: preview.accent }}
-                      />
-                      <div
-                        className="h-2.5 w-2.5 rounded-full"
-                        style={{ backgroundColor: preview.border }}
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <div
-                        className="w-[56%] text-[12px] font-semibold tracking-[-0.03em]"
-                        style={{ color: preview.title }}
-                      >
-                        {theme.label}
-                      </div>
-                      <div
-                        className="h-2.5 w-[68%] rounded-full opacity-80"
-                        style={{ backgroundColor: `${preview.title}20` }}
-                      />
-                      <div
-                        className="h-2.5 w-[42%] rounded-full opacity-65"
-                        style={{ backgroundColor: `${preview.title}16` }}
-                      />
-                    </div>
-                  </div>
-                  {isSelected ? (
-                    <div className="absolute inset-x-0 bottom-0 h-[4px] bg-[#0075E2]" />
-                  ) : null}
-                </div>
-                <div
-                  className="pt-2 text-center text-[15px] font-medium tracking-[-0.02em]"
-                  style={{ color: isSelected ? '#0075E2' : '#111111' }}
-                >
-                  {theme.label}
-                </div>
-              </button>
-            )
-          })}
+        <div className="mb-5 flex gap-2 rounded-[14px] bg-[#f4f4f3] p-1">
+          <button
+            type="button"
+            onClick={() => onModeChange('theme')}
+            className={`rounded-[12px] px-4 py-2 text-[14px] font-medium tracking-[-0.02em] transition ${
+              mode === 'theme' ? 'bg-white text-[#111111] shadow-sm' : 'text-[#6a6a67] hover:text-[#111111]'
+            }`}
+          >
+            Tema
+          </button>
+          <button
+            type="button"
+            onClick={() => onModeChange('colors')}
+            className={`rounded-[12px] px-4 py-2 text-[14px] font-medium tracking-[-0.02em] transition ${
+              mode === 'colors' ? 'bg-white text-[#111111] shadow-sm' : 'text-[#6a6a67] hover:text-[#111111]'
+            }`}
+          >
+            Cores
+          </button>
         </div>
+
+        {mode === 'theme' ? (
+          <div className="grid grid-cols-3 gap-x-4 gap-y-5">
+            {themes.map((theme) => {
+              const preview = getThemePreviewStyle(theme.value)
+              const isSelected = selectedTheme === theme.value
+
+              return (
+                <button
+                  key={theme.value}
+                  type="button"
+                  onClick={() => onSelect(theme.value)}
+                  className="text-left"
+                >
+                  <div
+                    className={`relative overflow-hidden rounded-[14px] border transition ${
+                      isSelected ? 'border-[#0075E2] shadow-[0_12px_30px_rgba(0,117,226,0.18)]' : 'border-[#ececec]'
+                    }`}
+                    style={{ background: preview.background }}
+                  >
+                    <div className="h-[106px] w-full p-4">
+                      <div className="mb-3 flex items-center justify-between">
+                        <div
+                          className="h-2.5 w-14 rounded-full"
+                          style={{ backgroundColor: preview.accent }}
+                        />
+                        <div
+                          className="h-2.5 w-2.5 rounded-full"
+                          style={{ backgroundColor: preview.border }}
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <div
+                          className="w-[56%] text-[12px] font-semibold tracking-[-0.03em]"
+                          style={{ color: preview.title }}
+                        >
+                          {theme.label}
+                        </div>
+                        <div
+                          className="h-2.5 w-[68%] rounded-full opacity-80"
+                          style={{ backgroundColor: `${preview.title}20` }}
+                        />
+                        <div
+                          className="h-2.5 w-[42%] rounded-full opacity-65"
+                          style={{ backgroundColor: `${preview.title}16` }}
+                        />
+                      </div>
+                    </div>
+                    {isSelected ? (
+                      <div className="absolute inset-x-0 bottom-0 h-[4px] bg-[#0075E2]" />
+                    ) : null}
+                  </div>
+                  <div
+                    className="pt-2 text-center text-[15px] font-medium tracking-[-0.02em]"
+                    style={{ color: isSelected ? '#0075E2' : '#111111' }}
+                  >
+                    {theme.label}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-x-4 gap-y-5">
+            {chartPalettes.map((palette) => {
+              const isSelected = selectedChartPalette === palette.value
+
+              return (
+                <button
+                  key={palette.value}
+                  type="button"
+                  onClick={() => onSelectChartPalette(palette.value)}
+                  className="text-left"
+                >
+                  <div
+                    className={`relative overflow-hidden rounded-[14px] border bg-white p-4 transition ${
+                      isSelected ? 'border-[#0075E2] shadow-[0_12px_30px_rgba(0,117,226,0.18)]' : 'border-[#ececec]'
+                    }`}
+                  >
+                    <div className="mb-4 flex gap-2">
+                      {palette.colors.map((color) => (
+                        <div
+                          key={color}
+                          className="h-16 flex-1 rounded-[10px]"
+                          style={{ backgroundColor: color }}
+                        />
+                      ))}
+                    </div>
+                    <div className="text-[15px] font-medium tracking-[-0.02em] text-[#111111]">{palette.label}</div>
+                    {isSelected ? (
+                      <div className="absolute inset-x-0 bottom-0 h-[4px] bg-[#0075E2]" />
+                    ) : null}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        )}
 
         <div className="mt-7 flex justify-end gap-3">
           <button
