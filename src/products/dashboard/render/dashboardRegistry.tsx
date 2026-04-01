@@ -112,15 +112,18 @@ function DashboardTheme({ element, children }: { element: any; children?: React.
   const preset = buildThemeVars(name, managers as any, { headerTheme })
   const themeTokens = resolveDashboardTemplateThemeTokens(name || 'light')
   const baseCssVars = preset.cssVars || mapManagersToCssVars(managers)
-  const cssVars = {
+  const cssVars: Record<string, string> = {
     ...baseCssVars,
     chartColorScheme: JSON.stringify(resolveDashboardChartPaletteColors(chartPalette)),
-    containerFrameVariant: baseCssVars.containerFrameVariant || themeTokens.cardFrame?.variant,
-    containerFrameCornerSize:
-      baseCssVars.containerFrameCornerSize || (themeTokens.cardFrame ? String(themeTokens.cardFrame.cornerSize) : undefined),
-    containerFrameCornerWidth:
-      baseCssVars.containerFrameCornerWidth || (themeTokens.cardFrame ? String(themeTokens.cardFrame.cornerWidth) : undefined),
   }
+  const containerFrameVariant = baseCssVars.containerFrameVariant || themeTokens.cardFrame?.variant
+  const containerFrameCornerSize =
+    baseCssVars.containerFrameCornerSize || (themeTokens.cardFrame ? String(themeTokens.cardFrame.cornerSize) : undefined)
+  const containerFrameCornerWidth =
+    baseCssVars.containerFrameCornerWidth || (themeTokens.cardFrame ? String(themeTokens.cardFrame.cornerWidth) : undefined)
+  if (containerFrameVariant) cssVars.containerFrameVariant = containerFrameVariant
+  if (containerFrameCornerSize) cssVars.containerFrameCornerSize = containerFrameCornerSize
+  if (containerFrameCornerWidth) cssVars.containerFrameCornerWidth = containerFrameCornerWidth
 
   return (
     <ThemeProvider name={name} cssVars={cssVars}>
