@@ -30,10 +30,10 @@ ${buildDashboardInlineUiSource()}
     <DashboardTemplate name="${GOOGLEADS_VARIANT.name}" title="${GOOGLEADS_VARIANT.title}">
       <Theme name={THEME_NAME} />
       <Dashboard id="overview" title="${GOOGLEADS_VARIANT.title}">
-        <section style={ui.page}>
-          <header style={ui.header}>
+        <section style={{ display: 'flex', flexDirection: 'column', gap: isClassic ? 20 : 24, minHeight: '100%', padding: isClassic ? 28 : 32, backgroundColor: theme.pageBg }}>
+          <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: isClassic ? 20 : 24, padding: isClassic ? '20px 24px' : 24, borderRadius: isClassic && cardFrame ? 0 : 24, border: `1px solid \${theme.surfaceBorder}`, backgroundColor: theme.headerBg, color: theme.headerText }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: '64%' }}>
-              <span style={ui.badge}>Paid Search</span>
+              <span style={{ display: 'inline-flex', width: 'fit-content', alignItems: 'center', borderRadius: 999, border: `1px solid \${theme.accentBorder}`, backgroundColor: theme.accentSurface, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: theme.accentText }}>Paid Search</span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={ui.eyebrow}>Google Ads para Search, Shopping e PMax</p>
                 <h1 style={{ ...ui.title, fontSize: 40, lineHeight: 1.02, fontWeight: 700, letterSpacing: '-0.04em' }}>Dashboard Google Ads</h1>
@@ -57,7 +57,7 @@ ${buildDashboardInlineUiSource()}
           </header>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 18 }}>
-            <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
+            <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: `1px solid \${theme.surfaceBorder}`, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={ui.eyebrow}>Filters</p>
                 <h2 style={ui.title}>Conta e grupo</h2>
@@ -106,7 +106,7 @@ ${buildDashboardInlineUiSource()}
               </div>
             </Card>
 
-            <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
+            <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: `1px solid \${theme.surfaceBorder}`, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <p style={ui.eyebrow}>Leitura esperada</p>
               <p style={ui.paragraph}>Comece por volume e retorno, depois confronte CTR, CVR e CPA para separar problema de demanda, criativo ou pagina.</p>
             </Card>
@@ -127,7 +127,7 @@ ${buildDashboardInlineUiSource()}
               format="currency"
               comparisonMode="previous_period"
             >
-              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
+              <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: isClassic && cardFrame ? 0 : 22, border: `1px solid \${theme.surfaceBorder}`, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p style={ui.kpiLabel}>Investimento</p>
                 <h2 style={{ ...ui.title, fontSize: 20 }}>Gasto</h2>
                 <p style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
@@ -148,7 +148,7 @@ ${buildDashboardInlineUiSource()}
               format="currency"
               comparisonMode="previous_period"
             >
-              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
+              <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: isClassic && cardFrame ? 0 : 22, border: `1px solid \${theme.surfaceBorder}`, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p style={ui.kpiLabel}>Retorno</p>
                 <h2 style={{ ...ui.title, fontSize: 20 }}>Receita atribuida</h2>
                 <p style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
@@ -170,7 +170,7 @@ ${buildDashboardInlineUiSource()}
               format="number"
               comparisonMode="previous_period"
             >
-              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
+              <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: isClassic && cardFrame ? 0 : 22, border: `1px solid \${theme.surfaceBorder}`, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p style={ui.kpiLabel}>Eficiencia</p>
                 <h2 style={{ ...ui.title, fontSize: 20 }}>ROAS</h2>
                 <p style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
@@ -192,7 +192,7 @@ ${buildDashboardInlineUiSource()}
               format="currency"
               comparisonMode="previous_period"
             >
-              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
+              <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: isClassic && cardFrame ? 0 : 22, border: `1px solid \${theme.surfaceBorder}`, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p style={ui.kpiLabel}>Custo</p>
                 <h2 style={{ ...ui.title, fontSize: 20 }}>CPA</h2>
                 <p style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
@@ -210,7 +210,7 @@ ${buildDashboardInlineUiSource()}
 
             <TabPanel value="performance">
               <section style={{ display: 'grid', gridTemplateColumns: '1.25fr 1fr', gap: 18 }}>
-                <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
+                <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: `1px solid \${theme.surfaceBorder}`, display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={ui.eyebrow}>Top spend</p>
                     <h2 style={ui.title}>Gasto por campanha</h2>
@@ -244,7 +244,7 @@ ${buildDashboardInlineUiSource()}
                   />
                 </Card>
 
-                <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
+                <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: `1px solid \${theme.surfaceBorder}`, display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={ui.eyebrow}>Rate quality</p>
                     <h2 style={ui.title}>CTR por conta</h2>
@@ -282,7 +282,7 @@ ${buildDashboardInlineUiSource()}
 
             <TabPanel value="acquisition">
               <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 18 }}>
-                <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
+                <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: `1px solid \${theme.surfaceBorder}`, display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={ui.eyebrow}>Trend</p>
                     <h2 style={ui.title}>Gasto por mes</h2>
@@ -318,7 +318,7 @@ ${buildDashboardInlineUiSource()}
                 </Card>
 
                 <section style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 18 }}>
-                  <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
+                  <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: `1px solid \${theme.surfaceBorder}`, display: 'flex', flexDirection: 'column', gap: 14 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       <p style={ui.eyebrow}>Conversion quality</p>
                       <h2 style={ui.title}>CVR por mes</h2>
@@ -349,7 +349,7 @@ ${buildDashboardInlineUiSource()}
                       ]}
                     />
                   </Card>
-                  <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
+                  <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: `1px solid \${theme.surfaceBorder}`, display: 'flex', flexDirection: 'column', gap: 14 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                       <h2 style={{ ...ui.title, fontSize: 20 }}>Leituras operacionais</h2>
                       <p style={{ ...ui.paragraph, fontSize: 13, lineHeight: 1.6 }}>Perguntas para separar problema de volume, relevancia ou eficiencia de pagina.</p>
@@ -370,7 +370,7 @@ ${buildDashboardInlineUiSource()}
 
             <TabPanel value="details">
               <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 18 }}>
-                <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
+                <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: `1px solid \${theme.surfaceBorder}`, display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={ui.eyebrow}>Table</p>
                     <h2 style={ui.title}>Campanhas no detalhe</h2>
@@ -415,7 +415,7 @@ ${buildDashboardInlineUiSource()}
                   />
                 </Card>
 
-                <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
+                <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: `1px solid \${theme.surfaceBorder}`, display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <p style={ui.eyebrow}>Pivot</p>
                     <h2 style={ui.title}>Conta por campanha</h2>
@@ -458,7 +458,7 @@ ${buildDashboardInlineUiSource()}
             </TabPanel>
           </Tabs>
 
-          <footer style={ui.footer}>
+          <footer style={{ display: 'flex', justifyContent: 'space-between', gap: 18, padding: isClassic ? '16px 20px' : '18px 22px', borderRadius: isClassic && cardFrame ? 0 : 22, backgroundColor: theme.surfaceBg, border: `1px solid \${theme.surfaceBorder}` }}>
             <p style={{ ...ui.paragraph, fontSize: 13, lineHeight: 1.6 }}>Template JSX para Google Ads com volume, retorno e eficiencia em um unico arquivo TSX no formato novo do dashboard.</p>
             <p style={{ ...ui.paragraph, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: {THEME_NAME}</p>
           </footer>

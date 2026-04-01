@@ -30,10 +30,10 @@ ${buildDashboardInlineUiSource()}
     <DashboardTemplate name="${COMPRAS_VARIANT.name}" title="${COMPRAS_VARIANT.title}">
       <Theme name={THEME_NAME} />
       <Dashboard id="overview" title="${COMPRAS_VARIANT.title}">
-        <section style={ui.page}>
-          <header style={ui.header}>
+        <section style={{ display: 'flex', flexDirection: 'column', gap: isClassic ? 20 : 24, minHeight: '100%', padding: isClassic ? 28 : 32, backgroundColor: theme.pageBg }}>
+          <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: isClassic ? 20 : 24, padding: isClassic ? '20px 24px' : 24, borderRadius: isClassic && cardFrame ? 0 : 24, border: `1px solid \${theme.surfaceBorder}`, backgroundColor: theme.headerBg, color: theme.headerText }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: '58%' }}>
-              <span style={ui.badge}>Procurement Review</span>
+              <span style={{ display: 'inline-flex', width: 'fit-content', alignItems: 'center', borderRadius: 999, border: `1px solid \${theme.accentBorder}`, backgroundColor: theme.accentSurface, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: theme.accentText }}>Procurement Review</span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={ui.eyebrow}>Compras, fornecedores e alocacao de gasto</p>
                 <h1 style={{ ...ui.title, fontSize: 40, lineHeight: 1.02, fontWeight: 700, letterSpacing: '-0.04em' }}>Dashboard de Compras</h1>
@@ -58,7 +58,7 @@ ${buildDashboardInlineUiSource()}
           </header>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 16 }}>
-            <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
+            <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: `1px solid \${theme.surfaceBorder}`, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <p style={ui.eyebrow}>Filtro</p>
               <h2 style={{ ...ui.title, fontSize: 20 }}>Fornecedor</h2>
               <Filter
@@ -82,7 +82,7 @@ ${buildDashboardInlineUiSource()}
               </Filter>
             </Card>
 
-            <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
+            <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: `1px solid \${theme.surfaceBorder}`, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <p style={ui.eyebrow}>Filtro</p>
               <h2 style={{ ...ui.title, fontSize: 20 }}>Centro de custo</h2>
               <Filter
@@ -106,7 +106,7 @@ ${buildDashboardInlineUiSource()}
               </Filter>
             </Card>
 
-            <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
+            <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: `1px solid \${theme.surfaceBorder}`, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <p style={ui.eyebrow}>Filtro</p>
               <h2 style={{ ...ui.title, fontSize: 20 }}>Status</h2>
               <Filter
@@ -132,7 +132,7 @@ ${buildDashboardInlineUiSource()}
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 16 }}>
             <Query dataQuery={{ query: \`SELECT COALESCE(SUM(c.valor_total), 0)::float AS value FROM compras.compras c WHERE 1=1 {{filters:c}}\`, limit: 1 }} format="currency" comparisonMode="previous_period">
-              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
+              <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: isClassic && cardFrame ? 0 : 22, border: `1px solid \${theme.surfaceBorder}`, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p style={ui.kpiLabel}>Gasto total</p>
                 <h2 style={{ ...ui.title, fontSize: 20 }}>Valor comprado</h2>
                 <p style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
@@ -140,7 +140,7 @@ ${buildDashboardInlineUiSource()}
               </Card>
             </Query>
             <Query dataQuery={{ query: \`SELECT COUNT(DISTINCT c.fornecedor_id)::float AS value FROM compras.compras c WHERE 1=1 {{filters:c}}\`, limit: 1 }} format="number" comparisonMode="previous_period">
-              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
+              <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: isClassic && cardFrame ? 0 : 22, border: `1px solid \${theme.surfaceBorder}`, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p style={ui.kpiLabel}>Base ativa</p>
                 <h2 style={{ ...ui.title, fontSize: 20 }}>Fornecedores</h2>
                 <p style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
@@ -148,7 +148,7 @@ ${buildDashboardInlineUiSource()}
               </Card>
             </Query>
             <Query dataQuery={{ query: \`SELECT COUNT(DISTINCT c.id)::float AS value FROM compras.compras c WHERE 1=1 {{filters:c}}\`, limit: 1 }} format="number" comparisonMode="previous_period">
-              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
+              <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: isClassic && cardFrame ? 0 : 22, border: `1px solid \${theme.surfaceBorder}`, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p style={ui.kpiLabel}>Volume</p>
                 <h2 style={{ ...ui.title, fontSize: 20 }}>Pedidos</h2>
                 <p style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
@@ -156,7 +156,7 @@ ${buildDashboardInlineUiSource()}
               </Card>
             </Query>
             <Query dataQuery={{ query: \`SELECT COALESCE(AVG(c.valor_total), 0)::float AS value FROM compras.compras c WHERE 1=1 {{filters:c}}\`, limit: 1 }} format="currency" comparisonMode="previous_period">
-              <Card frame={ui.cardFrame || undefined} style={ui.queryCard}>
+              <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: isClassic && cardFrame ? 0 : 22, border: `1px solid \${theme.surfaceBorder}`, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p style={ui.kpiLabel}>Eficiencia</p>
                 <h2 style={{ ...ui.title, fontSize: 20 }}>Ticket medio</h2>
                 <p style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
@@ -166,7 +166,7 @@ ${buildDashboardInlineUiSource()}
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.25fr 1fr', gap: 18 }}>
-            <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
+            <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: `1px solid \${theme.surfaceBorder}`, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={ui.eyebrow}>Top spend</p>
                 <h2 style={ui.title}>Gasto por fornecedor</h2>
@@ -200,7 +200,7 @@ ${buildDashboardInlineUiSource()}
               />
             </Card>
 
-            <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
+            <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: `1px solid \${theme.surfaceBorder}`, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={ui.eyebrow}>Allocation</p>
                 <h2 style={ui.title}>Gasto por categoria</h2>
@@ -237,7 +237,7 @@ ${buildDashboardInlineUiSource()}
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 18 }}>
-            <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
+            <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: `1px solid \${theme.surfaceBorder}`, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={ui.eyebrow}>Trend</p>
                 <h2 style={ui.title}>Gasto por mes</h2>
@@ -271,7 +271,7 @@ ${buildDashboardInlineUiSource()}
               />
             </Card>
 
-            <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
+            <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: `1px solid \${theme.surfaceBorder}`, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={ui.eyebrow}>Status mix</p>
                 <h2 style={ui.title}>Pedidos por status</h2>
@@ -304,7 +304,7 @@ ${buildDashboardInlineUiSource()}
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 18 }}>
-            <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
+            <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: `1px solid \${theme.surfaceBorder}`, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={ui.eyebrow}>Table</p>
                 <h2 style={ui.title}>Pedidos de compra no detalhe</h2>
@@ -350,7 +350,7 @@ ${buildDashboardInlineUiSource()}
               />
             </Card>
 
-            <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
+            <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: `1px solid \${theme.surfaceBorder}`, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={ui.eyebrow}>Pivot</p>
                 <h2 style={ui.title}>Categoria por status</h2>
@@ -392,7 +392,7 @@ ${buildDashboardInlineUiSource()}
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 18 }}>
-            <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
+            <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: `1px solid \${theme.surfaceBorder}`, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <p style={ui.eyebrow}>Insight</p>
               <h2 style={{ ...ui.title, fontSize: 20 }}>Concentracao em fornecedores</h2>
               <Insights
@@ -404,7 +404,7 @@ ${buildDashboardInlineUiSource()}
               />
             </Card>
 
-            <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
+            <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: `1px solid \${theme.surfaceBorder}`, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <p style={ui.eyebrow}>Insight</p>
               <h2 style={{ ...ui.title, fontSize: 20 }}>Pressao por centro de custo</h2>
               <Insights
@@ -416,7 +416,7 @@ ${buildDashboardInlineUiSource()}
               />
             </Card>
 
-            <Card frame={ui.cardFrame || undefined} style={ui.panelCardAlt}>
+            <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: `1px solid \${theme.surfaceBorder}`, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <p style={ui.eyebrow}>Insight</p>
               <h2 style={{ ...ui.title, fontSize: 20 }}>Risco operacional</h2>
               <Insights
@@ -429,7 +429,7 @@ ${buildDashboardInlineUiSource()}
             </Card>
           </section>
 
-          <footer style={ui.footer}>
+          <footer style={{ display: 'flex', justifyContent: 'space-between', gap: 18, padding: isClassic ? '16px 20px' : '18px 22px', borderRadius: isClassic && cardFrame ? 0 : 22, backgroundColor: theme.surfaceBg, border: `1px solid \${theme.surfaceBorder}` }}>
             <p style={{ ...ui.paragraph, fontSize: 13, lineHeight: 1.6 }}>Template JSX de compras com filtros dedicados, queries SQL explicitas e leitura completa em uma unica pagina.</p>
             <p style={{ ...ui.paragraph, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: {THEME_NAME}</p>
           </footer>
