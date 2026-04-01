@@ -306,13 +306,13 @@ const SlicerUiPropsSchema = z.object({
   padding: z.union([z.number(), z.string()]).optional(),
 }).strict();
 
-const ChecklistPropsSchema = SlicerUiPropsSchema.extend({
+const OptionListPropsSchema = SlicerUiPropsSchema.extend({
   maxHeight: z.union([z.number(), z.string()]).optional(),
   itemGap: z.union([z.number(), z.string()]).optional(),
   checkColor: z.string().optional(),
 }).strict();
 
-const DropdownPropsSchema = SlicerUiPropsSchema.extend({
+const SelectPropsSchema = SlicerUiPropsSchema.extend({
   placeholder: z.string().optional(),
   maxHeight: z.union([z.number(), z.string()]).optional(),
 }).strict();
@@ -321,10 +321,7 @@ const SlicerFieldPropsSchema = z.object({
   label: z.string().optional(),
   table: z.string().optional(),
   field: z.string().optional(),
-  type: z.enum(["list", "dropdown", "multi", "tile", "tile-multi"]).default("list"),
-  variant: SlicerVariantSchema.optional(),
   mode: SlicerSelectionModeSchema.optional(),
-  selectionMode: SlicerSelectionModeSchema.optional(),
   storePath: z.string().optional(),
   placeholder: z.string().optional(),
   clearable: z.boolean().optional(),
@@ -1371,33 +1368,6 @@ export const catalog = {
       }).strict(),
       hasChildren: false,
     },
-    Slicer: {
-      props: z.object({
-        fr: z.number().optional(),
-        layout: z.enum(["vertical","horizontal"]).optional(),
-        applyMode: z.enum(["auto","manual"]).optional(),
-        actionOnApply: z.object({ type: z.string() }).partial().optional(),
-        fields: z.array(SlicerFieldPropsSchema).default([]),
-        label: z.string().optional(),
-        table: z.string().optional(),
-        field: z.string().optional(),
-        type: z.enum(["list", "dropdown", "multi", "tile", "tile-multi"]).optional(),
-        variant: SlicerVariantSchema.optional(),
-        mode: SlicerSelectionModeSchema.optional(),
-        selectionMode: SlicerSelectionModeSchema.optional(),
-        storePath: z.string().optional(),
-        placeholder: z.string().optional(),
-        clearable: z.boolean().optional(),
-        selectAll: z.boolean().optional(),
-        search: z.boolean().optional(),
-        width: z.union([z.number(), z.string()]).optional(),
-        query: z.string().optional(),
-        limit: z.number().optional(),
-        source: SlicerFieldSourceSchema.optional(),
-        actionOnChange: z.object({ type: z.string() }).partial().optional(),
-      }).strict(),
-      hasChildren: true,
-    },
     Filter: {
       props: z.object({
         fr: z.number().optional(),
@@ -1408,10 +1378,7 @@ export const catalog = {
         label: z.string().optional(),
         table: z.string().optional(),
         field: z.string().optional(),
-        type: z.enum(["list", "dropdown", "multi", "tile", "tile-multi"]).optional(),
-        variant: SlicerVariantSchema.optional(),
         mode: SlicerSelectionModeSchema.optional(),
-        selectionMode: SlicerSelectionModeSchema.optional(),
         storePath: z.string().optional(),
         placeholder: z.string().optional(),
         clearable: z.boolean().optional(),
@@ -1429,20 +1396,12 @@ export const catalog = {
       props: SlicerFieldPropsSchema,
       hasChildren: false,
     },
-    Checklist: {
-      props: ChecklistPropsSchema,
-      hasChildren: false,
-    },
     OptionList: {
-      props: ChecklistPropsSchema,
-      hasChildren: false,
-    },
-    Dropdown: {
-      props: DropdownPropsSchema,
+      props: OptionListPropsSchema,
       hasChildren: false,
     },
     Select: {
-      props: DropdownPropsSchema,
+      props: SelectPropsSchema,
       hasChildren: false,
     },
     AISummary: {

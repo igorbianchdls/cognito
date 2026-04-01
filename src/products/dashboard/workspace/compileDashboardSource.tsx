@@ -44,7 +44,6 @@ const runtimeScope = {
   Table: leafComponent('Table'),
   PivotTable: leafComponent('PivotTable'),
   Filter: passthroughComponent('Filter'),
-  Slicer: leafComponent('Slicer'),
   Select: leafComponent('Select'),
   OptionList: leafComponent('OptionList'),
   DatePicker: leafComponent('DatePicker'),

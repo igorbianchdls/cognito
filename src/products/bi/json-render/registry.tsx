@@ -638,20 +638,11 @@ function resolveSlicerFields(element: any, propsFields: unknown): AnyRecord[] {
 type SlicerVariant = 'checklist' | 'dropdown' | 'tile';
 type SlicerSelectionMode = 'single' | 'multiple';
 
-function mapLegacySlicerType(type: unknown): { variant: SlicerVariant; selectionMode: SlicerSelectionMode } {
-  const normalized = String(type || '').trim();
-  if (normalized === 'dropdown') return { variant: 'dropdown', selectionMode: 'single' };
-  if (normalized === 'multi') return { variant: 'dropdown', selectionMode: 'multiple' };
-  if (normalized === 'tile') return { variant: 'tile', selectionMode: 'single' };
-  if (normalized === 'tile-multi') return { variant: 'tile', selectionMode: 'multiple' };
-  return { variant: 'checklist', selectionMode: 'multiple' };
-}
-
 function resolveSlicerUiChild(element: any): { variant?: SlicerVariant; props: AnyRecord } {
   const childDefs = Array.isArray(element?.children) ? element.children : [];
   for (const child of childDefs) {
     const type = String((child as AnyRecord)?.type || '').trim();
-    if (type === 'Checklist' || type === 'OptionList') {
+    if (type === 'OptionList') {
       return {
         variant: 'checklist',
         props: ((child as AnyRecord)?.props && typeof (child as AnyRecord).props === 'object' && !Array.isArray((child as AnyRecord).props))
@@ -659,7 +650,7 @@ function resolveSlicerUiChild(element: any): { variant?: SlicerVariant; props: A
           : {},
       };
     }
-    if (type === 'Dropdown' || type === 'Select') {
+    if (type === 'Select') {
       return {
         variant: 'dropdown',
         props: ((child as AnyRecord)?.props && typeof (child as AnyRecord).props === 'object' && !Array.isArray((child as AnyRecord).props))
@@ -694,10 +685,7 @@ function resolveSingleSlicerField(element: any, props: AnyRecord): AnyRecord | n
     'label',
     'table',
     'field',
-    'type',
-    'variant',
     'mode',
-    'selectionMode',
     'storePath',
     'placeholder',
     'clearable',
@@ -727,17 +715,14 @@ function resolveSlicerDefinitions(element: any, props: AnyRecord): AnyRecord[] {
 }
 
 function resolveSlicerPresentation(field: AnyRecord): { variant: SlicerVariant; selectionMode: SlicerSelectionMode } {
-  const fromLegacy = mapLegacySlicerType(field?.type);
   const variant =
     field?.variant === 'dropdown' || field?.variant === 'tile' || field?.variant === 'checklist'
       ? (field.variant as SlicerVariant)
-      : fromLegacy.variant;
+      : 'checklist';
   const selectionMode =
-    field?.selectionMode === 'single' || field?.selectionMode === 'multiple'
-      ? (field.selectionMode as SlicerSelectionMode)
-      : field?.mode === 'single' || field?.mode === 'multiple'
-        ? (field.mode as SlicerSelectionMode)
-      : fromLegacy.selectionMode;
+    field?.mode === 'single' || field?.mode === 'multiple'
+      ? (field.mode as SlicerSelectionMode)
+      : 'multiple';
   return { variant, selectionMode };
 }
 
@@ -905,7 +890,7 @@ function SlicerContent({
                   <div className="flex flex-wrap gap-2">
                     {opts.map((option) => {
                       const selected = isMulti ? (Array.isArray(stored) && stored.includes(option.value)) : stored === option.value;
-                      const tileCfg = ((((theme as any).components?.Slicer as any)?.tile) || (((theme as any).components?.SlicerCard as any)?.tile) || {});
+                      const tileCfg = ((((theme as any).components?.Filter as any)?.tile) || (((theme as any).components?.SlicerCard as any)?.tile) || {});
                       const base = String(tileCfg.baseClass || 'text-xs font-medium rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 active:scale-[0.98]');
                       const selectedClass = String(tileCfg.selectedClass || 'bg-sky-600 text-white border-sky-600 hover:bg-sky-700');
                       const unselectedClass = String(tileCfg.unselectedClass || 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200');
@@ -1999,7 +1984,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
               <div className="flex items-center gap-2 flex-wrap">
                 {opts.map((o) => {
                   const selected = isMulti ? (current as any[]).includes(o.value) : current === o.value;
-                  const tileCfg = (((theme as any).components?.Slicer as any)?.tile) || {};
+                  const tileCfg = (((theme as any).components?.Filter as any)?.tile) || {};
                       const base = String(tileCfg.baseClass || 'text-xs font-medium rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 active:scale-[0.98]');
                   const selectedClass = String(tileCfg.selectedClass || 'bg-sky-600 text-white border-sky-600 hover:bg-sky-700');
                   const unselectedClass = String(tileCfg.unselectedClass || 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200');
@@ -2429,26 +2414,9 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     );
   },
 
-  Slicer: ({ element, onAction }) => {
-    const theme = useThemeOverrides();
-    const p = deepMerge((theme.components?.Slicer || {}) as AnyRecord, (element?.props || {}) as AnyRecord) as AnyRecord;
-    const layout = (p.layout || 'vertical') as 'vertical' | 'horizontal';
-    const applyMode = (p.applyMode || 'auto') as 'auto' | 'manual';
-    const fields = resolveSlicerDefinitions(element, p);
-    return (
-      <SlicerContent
-        element={{ ...element, props: p }}
-        fields={fields}
-        layout={layout}
-        applyMode={applyMode}
-        onAction={onAction}
-      />
-    );
-  },
-
   Filter: ({ element, onAction }) => {
     const theme = useThemeOverrides();
-    const p = deepMerge((theme.components?.Slicer || {}) as AnyRecord, (element?.props || {}) as AnyRecord) as AnyRecord;
+    const p = deepMerge((theme.components?.Filter || {}) as AnyRecord, (element?.props || {}) as AnyRecord) as AnyRecord;
     const layout = (p.layout || 'vertical') as 'vertical' | 'horizontal';
     const applyMode = (p.applyMode || 'auto') as 'auto' | 'manual';
     const fields = resolveSlicerDefinitions(element, p);
@@ -2464,8 +2432,6 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
   },
 
   SlicerField: () => null,
-  Checklist: () => null,
-  Dropdown: () => null,
   OptionList: () => null,
   Select: () => null,
 
@@ -2591,7 +2557,7 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
                     <div className="flex flex-wrap gap-2">
                       {opts.map((o) => {
                         const selected = isMulti ? (Array.isArray(stored) && stored.includes(o.value)) : (stored === o.value);
-                        const tileCfgCard = ((((theme as any).components?.SlicerCard as any)?.tile) || (((theme as any).components?.Slicer as any)?.tile) || {});
+                        const tileCfgCard = ((((theme as any).components?.SlicerCard as any)?.tile) || (((theme as any).components?.Filter as any)?.tile) || {});
                         const base = String(tileCfgCard.baseClass || 'text-xs font-medium rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 active:scale-[0.98]');
                         const selectedClass = String(tileCfgCard.selectedClass || 'bg-sky-600 text-white border-sky-600 hover:bg-sky-700');
                         const unselectedClass = String(tileCfgCard.unselectedClass || 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200');
