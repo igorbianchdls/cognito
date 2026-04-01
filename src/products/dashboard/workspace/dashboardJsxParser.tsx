@@ -2,15 +2,17 @@
 
 import React, { isValidElement, ReactNode } from 'react'
 
+import { validateDashboardTree } from '@/products/dashboard/workspace/validateDashboardTree'
+
 // Pipeline oficial do workspace:
 // TSX/JSX source -> transpile -> module evaluation -> React element -> dashboard tree
 
-type WorkspaceSourceFile = {
+export type WorkspaceSourceFile = {
   path: string
   content: string
 }
 
-type DashboardTreeNode = {
+export type DashboardTreeNode = {
   type: string
   props: Record<string, unknown>
   children: Array<DashboardTreeNode | string>
@@ -205,6 +207,7 @@ export async function parseDashboardJsxToTree(entryPath: string, files: Workspac
   if (!tree || typeof tree === 'string') {
     throw new Error('Nao foi possivel derivar a arvore do dashboard a partir do JSX')
   }
+  validateDashboardTree(tree)
   return tree
 }
 

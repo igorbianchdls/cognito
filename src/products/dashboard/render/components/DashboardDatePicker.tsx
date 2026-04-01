@@ -12,7 +12,7 @@ import {
 import { useThemeOverrides } from '@/products/bi/json-render/theme/ThemeContext'
 
 type AnyRecord = Record<string, any>
-type DatePickerPreset = '7d' | '14d' | '30d' | '90d' | 'month'
+type DatePickerPreset = '7d' | '14d' | '30d' | '90d' | 'month' | 'quarter'
 type PickerInput = HTMLInputElement & { showPicker?: () => void }
 
 function styleVal(value: unknown): string | undefined {
@@ -32,6 +32,16 @@ function startOfMonth(date: Date) {
 
 function endOfMonth(date: Date) {
   return new Date(date.getFullYear(), date.getMonth() + 1, 0)
+}
+
+function startOfQuarter(date: Date) {
+  const quarterStartMonth = Math.floor(date.getMonth() / 3) * 3
+  return new Date(date.getFullYear(), quarterStartMonth, 1)
+}
+
+function endOfQuarter(date: Date) {
+  const quarterStartMonth = Math.floor(date.getMonth() / 3) * 3
+  return new Date(date.getFullYear(), quarterStartMonth + 3, 0)
 }
 
 function toISO(date: Date) {
@@ -97,6 +107,12 @@ function getPresetRange(preset: DatePickerPreset) {
     return {
       from: toISO(startOfMonth(today)),
       to: toISO(endOfMonth(today)),
+    }
+  }
+  if (preset === 'quarter') {
+    return {
+      from: toISO(startOfQuarter(today)),
+      to: toISO(endOfQuarter(today)),
     }
   }
   const days = Number.parseInt(preset, 10)
@@ -203,7 +219,7 @@ export default function DashboardDatePicker({
     .map((preset) => String(preset).trim())
     .filter(
       (preset): preset is DatePickerPreset =>
-        preset === '7d' || preset === '14d' || preset === '30d' || preset === '90d' || preset === 'month',
+        preset === '7d' || preset === '14d' || preset === '30d' || preset === '90d' || preset === 'month' || preset === 'quarter',
     )
 
   const textStyle = pickerFontStyle(styles.textStyle as AnyRecord | undefined)
