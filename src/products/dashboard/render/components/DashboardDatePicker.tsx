@@ -10,9 +10,10 @@ import {
   applyDatePickerLabelFromCssVars,
 } from '@/products/bi/json-render/helpers'
 import { useThemeOverrides } from '@/products/bi/json-render/theme/ThemeContext'
+import { DASHBOARD_SUPPORTED_DATE_PICKER_PRESETS } from '@/products/dashboard/workspace/dashboardContract'
 
 type AnyRecord = Record<string, any>
-type DatePickerPreset = '7d' | '14d' | '30d' | '90d' | 'month' | 'quarter'
+type DatePickerPreset = (typeof DASHBOARD_SUPPORTED_DATE_PICKER_PRESETS)[number]
 type PickerInput = HTMLInputElement & { showPicker?: () => void }
 
 function styleVal(value: unknown): string | undefined {
@@ -219,7 +220,7 @@ export default function DashboardDatePicker({
     .map((preset) => String(preset).trim())
     .filter(
       (preset): preset is DatePickerPreset =>
-        preset === '7d' || preset === '14d' || preset === '30d' || preset === '90d' || preset === 'month' || preset === 'quarter',
+        DASHBOARD_SUPPORTED_DATE_PICKER_PRESETS.includes(preset as DatePickerPreset),
     )
 
   const textStyle = pickerFontStyle(styles.textStyle as AnyRecord | undefined)

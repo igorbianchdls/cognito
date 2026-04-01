@@ -1,84 +1,15 @@
 'use client'
 
+import {
+  DASHBOARD_SUPPORTED_CHART_TYPE_SET,
+  DASHBOARD_SUPPORTED_COMPONENT_SET,
+  DASHBOARD_SUPPORTED_DATE_PICKER_PRESET_SET,
+  DASHBOARD_SUPPORTED_HTML_TAG_SET,
+  normalizeDashboardChartType,
+} from '@/products/dashboard/workspace/dashboardContract'
 import type { DashboardTreeNode } from '@/products/dashboard/workspace/dashboardJsxParser'
 
 type DashboardTreeChild = DashboardTreeNode | string
-
-const SUPPORTED_COMPONENTS = new Set([
-  'DashboardTemplate',
-  'Theme',
-  'Dashboard',
-  'Card',
-  'Tabs',
-  'Tab',
-  'TabPanel',
-  'Query',
-  'Chart',
-  'BarChart',
-  'LineChart',
-  'PieChart',
-  'HorizontalBarChart',
-  'ScatterChart',
-  'RadarChart',
-  'TreemapChart',
-  'ComposedChart',
-  'FunnelChart',
-  'SankeyChart',
-  'Gauge',
-  'KPI',
-  'Table',
-  'PivotTable',
-  'Filter',
-  'Select',
-  'OptionList',
-  'DatePicker',
-  'Insights',
-  'Text',
-  'TextNode',
-  'Br',
-])
-
-const SUPPORTED_HTML_TAGS = new Set([
-  'div',
-  'section',
-  'article',
-  'header',
-  'footer',
-  'main',
-  'aside',
-  'p',
-  'span',
-  'strong',
-  'h1',
-  'h2',
-  'h3',
-  'ul',
-  'ol',
-  'li',
-])
-
-const SUPPORTED_DATE_PICKER_PRESETS = new Set(['7d', '14d', '30d', '90d', 'month', 'quarter'])
-
-function normalizeChartType(input: unknown): string {
-  const raw = String(input || '')
-    .trim()
-    .toLowerCase()
-    .replace(/_/g, '-')
-    .replace(/\s+/g, '-')
-  if (raw === 'barchart') return 'bar'
-  if (raw === 'linechart') return 'line'
-  if (raw === 'piechart') return 'pie'
-  if (raw === 'horizontalbar' || raw === 'horizontal-bar') return 'horizontal-bar'
-  if (raw === 'horizontalbarchart' || raw === 'horizontal-bar-chart') return 'horizontal-bar'
-  if (raw === 'scatterchart') return 'scatter'
-  if (raw === 'radarchart') return 'radar'
-  if (raw === 'treemapchart') return 'treemap'
-  if (raw === 'composedchart') return 'composed'
-  if (raw === 'funnelchart') return 'funnel'
-  if (raw === 'sankeychart') return 'sankey'
-  if (raw === 'gaugechart') return 'gauge'
-  return raw
-}
 
 function formatNodePath(path: number[]): string {
   return path.length === 0 ? 'root' : path.join('.')
@@ -106,13 +37,12 @@ function ensureObjectProp(node: DashboardTreeNode, propName: string, path: numbe
 function validateChartNode(node: DashboardTreeNode, path: number[]) {
   if (node.type !== 'Chart') return
   ensureStringProp(node, 'type', path)
-  const normalizedType = normalizeChartType(node.props.type)
+  const normalizedType = normalizeDashboardChartType(node.props.type)
   if (!normalizedType) {
     throw new Error(`Chart.type invalido em ${formatNodePath(path)}`)
   }
 
-  const allowed = new Set(['bar', 'line', 'pie', 'horizontal-bar', 'scatter', 'radar', 'treemap', 'composed', 'funnel', 'sankey', 'gauge'])
-  if (!allowed.has(normalizedType)) {
+  if (!DASHBOARD_SUPPORTED_CHART_TYPE_SET.has(normalizedType)) {
     throw new Error(`Chart.type="${String(node.props.type)}" nao suportado em ${formatNodePath(path)}`)
   }
 
@@ -143,7 +73,7 @@ function validateDatePickerNode(node: DashboardTreeNode, path: number[]) {
   if (!Array.isArray(presets)) return
   for (let index = 0; index < presets.length; index += 1) {
     const preset = String(presets[index] || '').trim()
-    if (!SUPPORTED_DATE_PICKER_PRESETS.has(preset)) {
+    if (!DASHBOARD_SUPPORTED_DATE_PICKER_PRESET_SET.has(preset)) {
       throw new Error(`DatePicker.presets[${index}]="${preset}" nao suportado em ${formatNodePath(path)}`)
     }
   }
@@ -211,7 +141,7 @@ function validateTabsNode(node: DashboardTreeNode, path: number[]) {
 function validateNode(node: DashboardTreeNode, path: number[]) {
   const type = String(node.type || '').trim()
   const isSupported =
-    SUPPORTED_COMPONENTS.has(type) || SUPPORTED_HTML_TAGS.has(type.toLowerCase())
+    DASHBOARD_SUPPORTED_COMPONENT_SET.has(type) || DASHBOARD_SUPPORTED_HTML_TAG_SET.has(type.toLowerCase())
 
   if (!isSupported) {
     throw new Error(`Componente nao suportado: ${type || 'Unknown'} em ${formatNodePath(path)}`)

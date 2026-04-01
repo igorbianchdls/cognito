@@ -21,6 +21,10 @@ import DashboardQuery, {
   useDashboardQueryResult,
 } from '@/products/dashboard/render/components/DashboardQuery'
 import DashboardText from '@/products/dashboard/render/components/DashboardText'
+import {
+  DASHBOARD_SUPPORTED_HTML_TAG_SET,
+  normalizeDashboardChartType,
+} from '@/products/dashboard/workspace/dashboardContract'
 
 type AnyRecord = Record<string, any>
 type DashboardRenderComponent = React.FC<{
@@ -37,29 +41,8 @@ type TabsContextValue = {
 
 const TabsContext = React.createContext<TabsContextValue | null>(null)
 
-function normalizeChartType(input: unknown): string {
-  const raw = String(input || '')
-    .trim()
-    .toLowerCase()
-    .replace(/_/g, '-')
-    .replace(/\s+/g, '-')
-  if (raw === 'barchart') return 'bar'
-  if (raw === 'linechart') return 'line'
-  if (raw === 'piechart') return 'pie'
-  if (raw === 'horizontalbar' || raw === 'horizontal-bar') return 'horizontal-bar'
-  if (raw === 'horizontalbarchart' || raw === 'horizontal-bar-chart') return 'horizontal-bar'
-  if (raw === 'scatterchart') return 'scatter'
-  if (raw === 'radarchart') return 'radar'
-  if (raw === 'treemapchart') return 'treemap'
-  if (raw === 'composedchart') return 'composed'
-  if (raw === 'funnelchart') return 'funnel'
-  if (raw === 'sankeychart') return 'sankey'
-  if (raw === 'gaugechart') return 'gauge'
-  return raw
-}
-
 function renderChartByType(chartType: unknown, element: any, onAction?: (action: any) => void) {
-  const normalized = normalizeChartType(chartType)
+  const normalized = normalizeDashboardChartType(chartType)
   if (normalized === 'bar') return <JsonRenderBarChart element={element} />
   if (normalized === 'line') return <JsonRenderLineChart element={element} />
   if (normalized === 'pie') return <JsonRenderPieChart element={element} />
@@ -88,25 +71,6 @@ function DashboardChart({
 }) {
   return renderChartByType((element?.props || {}).type, element, onAction)
 }
-
-const HTML_TAGS = new Set([
-  'div',
-  'section',
-  'article',
-  'header',
-  'footer',
-  'main',
-  'aside',
-  'p',
-  'span',
-  'strong',
-  'h1',
-  'h2',
-  'h3',
-  'ul',
-  'ol',
-  'li',
-])
 
 function getNodeKey(node: any, fallbackIndex: number, path: number[]): string {
   const type = String(node?.type || 'node')
@@ -357,7 +321,7 @@ function resolveComponent(type: string): DashboardRenderComponent | undefined {
     }
   }
   if (type === 'Br') return () => <br />
-  if (HTML_TAGS.has(type.toLowerCase())) {
+  if (DASHBOARD_SUPPORTED_HTML_TAG_SET.has(type.toLowerCase())) {
     return ({ element, children }) => <HtmlNode tag={type.toLowerCase() as keyof React.JSX.IntrinsicElements} element={element}>{children}</HtmlNode>
   }
   return undefined
