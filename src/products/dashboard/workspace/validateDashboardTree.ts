@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  DASHBOARD_SUPPORTED_CHART_PALETTE_SET,
   DASHBOARD_SUPPORTED_CHART_TYPE_SET,
   DASHBOARD_SUPPORTED_COMPONENT_SET,
   DASHBOARD_SUPPORTED_DATE_PICKER_PRESET_SET,
@@ -88,6 +89,12 @@ function validateFilterNode(node: DashboardTreeNode, path: number[]) {
 function validateThemeNode(node: DashboardTreeNode, path: number[]) {
   if (node.type !== 'Theme') return
   ensureStringProp(node, 'name', path)
+  const chartPalette = node.props?.chartPalette
+  if (chartPalette == null) return
+  const normalizedChartPalette = String(chartPalette || '').trim().toLowerCase()
+  if (!normalizedChartPalette || !DASHBOARD_SUPPORTED_CHART_PALETTE_SET.has(normalizedChartPalette)) {
+    throw new Error(`Theme.chartPalette="${String(chartPalette)}" nao suportado em ${formatNodePath(path)}`)
+  }
 }
 
 function validateDashboardNode(node: DashboardTreeNode, path: number[]) {

@@ -1,5 +1,7 @@
 'use client'
 
+import { DASHBOARD_CHART_PALETTE_OPTIONS } from '@/products/dashboard/workspace/chartPalettes'
+
 export const DASHBOARD_SUPPORTED_COMPONENTS = [
   'DashboardTemplate',
   'Theme',
@@ -83,6 +85,20 @@ export const DASHBOARD_SUPPORTED_DATE_PICKER_PRESETS = [
 ] as const
 
 export const DASHBOARD_SUPPORTED_DATE_PICKER_PRESET_SET = new Set<string>(DASHBOARD_SUPPORTED_DATE_PICKER_PRESETS)
+
+export const DASHBOARD_SUPPORTED_CHART_PALETTES = DASHBOARD_CHART_PALETTE_OPTIONS.map((option) => option.value) as string[]
+
+export const DASHBOARD_SUPPORTED_CHART_PALETTE_SET = new Set<string>(DASHBOARD_SUPPORTED_CHART_PALETTES)
+
+export const DASHBOARD_DEFAULT_CHART_PALETTE = DASHBOARD_CHART_PALETTE_OPTIONS[0]?.value || 'teal'
+
+export function resolveDashboardChartPaletteColors(input: unknown): string[] {
+  const normalized = String(input || '')
+    .trim()
+    .toLowerCase()
+  const matched = DASHBOARD_CHART_PALETTE_OPTIONS.find((option) => option.value === normalized)
+  return [...(matched?.colors || DASHBOARD_CHART_PALETTE_OPTIONS[0]?.colors || [])]
+}
 
 export function normalizeDashboardChartType(input: unknown): string {
   const raw = String(input || '')

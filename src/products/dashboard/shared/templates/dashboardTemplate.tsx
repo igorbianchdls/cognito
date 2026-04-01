@@ -8,7 +8,6 @@ import { buildMetaAdsDashboardTemplateVariant } from '@/products/dashboard/share
 import { buildShopifyDashboardTemplateVariant } from '@/products/dashboard/shared/templates/dashboardShopifyTemplate'
 import {
   buildDashboardThemeImportSource,
-  getDashboardTemplatePalette,
   getDashboardTemplateThemeName,
 } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
 import { resolveDashboardTemplateThemeTokens } from '@/products/dashboard/shared/templates/dashboardTemplateThemes'
@@ -458,17 +457,12 @@ const CLASSIC_DASHBOARD_VARIANT: StandaloneDashboardVariant = {
 
 function buildClassicDashboardTemplateSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('classic')
-  const chartColors = getDashboardTemplatePalette('classic')
-  return `import { DASHBOARD_CHART_PALETTES } from './chart-colors'
-${buildDashboardThemeImportSource()}
+  return `${buildDashboardThemeImportSource()}
 
 export function DashboardClassico() {
-  const THEME_NAME = ${JSON.stringify(resolvedThemeName)}
-  const CHART_PALETTE = 'teal'
-  const CHART_COLORS = DASHBOARD_CHART_PALETTES[CHART_PALETTE] ?? ${JSON.stringify(chartColors)}
-  const theme = resolveDashboardThemeTokens(THEME_NAME)
+  const theme = resolveDashboardThemeTokens(${JSON.stringify(resolvedThemeName)})
   const isClassic = true
-  const key = String(THEME_NAME || '').toLowerCase()
+  const key = ${JSON.stringify(resolvedThemeName)}.toLowerCase()
   const cardFrame = ['midnight', 'metro', 'aero'].includes(key)
     ? { variant: 'hud' as const, cornerSize: 10, cornerWidth: 2 }
     : ['light', 'white', 'claro', 'branco', 'sand'].includes(key)
@@ -478,7 +472,7 @@ export function DashboardClassico() {
 
   return (
     <DashboardTemplate name="${CLASSIC_DASHBOARD_VARIANT.name}" title="${CLASSIC_DASHBOARD_VARIANT.title}">
-      <Theme name={THEME_NAME} />
+      <Theme name="${resolvedThemeName}" chartPalette="teal" />
       <Dashboard id="overview" title="${CLASSIC_DASHBOARD_VARIANT.title}">
         <section style={{ display: 'flex', flexDirection: 'column', gap: isClassic ? 20 : 24, minHeight: '100%', padding: isClassic ? 28 : 32, backgroundColor: theme.pageBg }}>
           <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: isClassic ? 20 : 24, padding: isClassic ? '20px 24px' : 24, borderRadius: isClassic && cardFrame ? 0 : 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.headerBg, color: theme.headerText }}>
@@ -699,7 +693,6 @@ export function DashboardClassico() {
                   limit: 6,
                 }}
                 interaction={{ table: 'vendas.pedidos', field: 'canal_venda_id', clearOnSecondClick: true }}
-                colors={CHART_COLORS}
                 xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
                 series={[
                   { dataKey: 'value', label: 'Receita' },
@@ -734,7 +727,6 @@ export function DashboardClassico() {
                   limit: 6,
                 }}
                 interaction={{ table: 'vendas.pedidos', field: 'canal_venda_id', clearOnSecondClick: true }}
-                colors={CHART_COLORS}
                 categoryKey="label"
                 legend={{ enabled: true, position: 'right' }}
                 series={[
@@ -782,7 +774,6 @@ export function DashboardClassico() {
                     \`,
                     limit: 31,
                   }}
-                  colors={CHART_COLORS}
                   xAxis={{ dataKey: 'label' }}
                   series={[
                     { dataKey: 'value', label: 'Receita' },
@@ -861,7 +852,6 @@ export function DashboardClassico() {
                   \`,
                   limit: 8,
                 }}
-                colors={CHART_COLORS}
                 xAxis={{ dataKey: 'label' }}
                 series={[
                   { dataKey: 'value', label: 'Pedidos' },

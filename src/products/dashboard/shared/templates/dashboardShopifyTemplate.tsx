@@ -2,7 +2,6 @@
 
 import {
   buildDashboardThemeImportSource,
-  getDashboardTemplatePalette,
   getDashboardTemplateThemeName,
 } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
 
@@ -15,17 +14,12 @@ const SHOPIFY_VARIANT = {
 
 function buildShopifyDashboardSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('shopify')
-  const chartColors = getDashboardTemplatePalette('shopify')
-  return `import { DASHBOARD_CHART_PALETTES } from './chart-colors'
-${buildDashboardThemeImportSource()}
+  return `${buildDashboardThemeImportSource()}
 
 export function DashboardShopify() {
-  const THEME_NAME = ${JSON.stringify(resolvedThemeName)}
-  const CHART_PALETTE = 'red'
-  const CHART_COLORS = DASHBOARD_CHART_PALETTES[CHART_PALETTE] ?? ${JSON.stringify(chartColors)}
-  const theme = resolveDashboardThemeTokens(THEME_NAME)
+  const theme = resolveDashboardThemeTokens(${JSON.stringify(resolvedThemeName)})
   const isClassic = false
-  const key = String(THEME_NAME || '').toLowerCase()
+  const key = ${JSON.stringify(resolvedThemeName)}.toLowerCase()
   const cardFrame = ['midnight', 'metro', 'aero'].includes(key)
     ? { variant: 'hud' as const, cornerSize: 10, cornerWidth: 2 }
     : ['light', 'white', 'claro', 'branco', 'sand'].includes(key)
@@ -35,7 +29,7 @@ export function DashboardShopify() {
 
   return (
     <DashboardTemplate name="${SHOPIFY_VARIANT.name}" title="${SHOPIFY_VARIANT.title}">
-      <Theme name={THEME_NAME} />
+      <Theme name="${resolvedThemeName}" chartPalette="red" />
       <Dashboard id="overview" title="${SHOPIFY_VARIANT.title}">
         <section style={{ display: 'flex', flexDirection: 'column', gap: isClassic ? 20 : 24, minHeight: '100%', padding: isClassic ? 28 : 32, backgroundColor: theme.pageBg }}>
           <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: isClassic ? 20 : 24, padding: isClassic ? '20px 24px' : 24, borderRadius: isClassic && cardFrame ? 0 : 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.headerBg, color: theme.headerText }}>
@@ -221,7 +215,6 @@ export function DashboardShopify() {
                     type="bar"
                     height={320}
                     format="currency"
-                    colors={CHART_COLORS}
                     dataQuery={{
                       query: \`
                         SELECT
@@ -254,7 +247,6 @@ export function DashboardShopify() {
                     type="pie"
                     height={320}
                     format="number"
-                    colors={CHART_COLORS}
                     dataQuery={{
                       query: \`
                         SELECT
@@ -292,7 +284,6 @@ export function DashboardShopify() {
                     type="line"
                     height={320}
                     format="currency"
-                    colors={CHART_COLORS}
                     dataQuery={{
                       query: \`
                         SELECT
@@ -326,7 +317,6 @@ export function DashboardShopify() {
                       type="bar"
                       height={220}
                       format="number"
-                      colors={CHART_COLORS}
                       dataQuery={{
                         query: \`
                           SELECT
@@ -455,7 +445,7 @@ export function DashboardShopify() {
 
           <footer style={{ display: 'flex', justifyContent: 'space-between', gap: 18, padding: isClassic ? '16px 20px' : '18px 22px', borderRadius: isClassic && cardFrame ? 0 : 22, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder }}>
             <p style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Template JSX para Shopify com leitura comercial e operacional, adaptado do app legado para o formato novo do dashboard.</p>
-            <p style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: {THEME_NAME}</p>
+            <p style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: ${resolvedThemeName}</p>
           </footer>
         </section>
       </Dashboard>

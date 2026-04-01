@@ -22,8 +22,10 @@ import DashboardQuery, {
 } from '@/products/dashboard/render/components/DashboardQuery'
 import DashboardText from '@/products/dashboard/render/components/DashboardText'
 import {
+  DASHBOARD_DEFAULT_CHART_PALETTE,
   DASHBOARD_SUPPORTED_HTML_TAG_SET,
   normalizeDashboardChartType,
+  resolveDashboardChartPaletteColors,
 } from '@/products/dashboard/workspace/dashboardContract'
 
 type AnyRecord = Record<string, any>
@@ -100,10 +102,17 @@ function DashboardRoot({ children }: { children?: React.ReactNode }) {
 
 function DashboardTheme({ element, children }: { element: any; children?: React.ReactNode }) {
   const name = element?.props?.name as string | undefined
+  const chartPalette =
+    typeof element?.props?.chartPalette === 'string' && element.props.chartPalette.trim()
+      ? String(element.props.chartPalette).trim().toLowerCase()
+      : DASHBOARD_DEFAULT_CHART_PALETTE
   const headerTheme = element?.props?.headerTheme as string | undefined
   const managers = (element?.props?.managers || {}) as AnyRecord
   const preset = buildThemeVars(name, managers as any, { headerTheme })
-  const cssVars = preset.cssVars || mapManagersToCssVars(managers)
+  const cssVars = {
+    ...(preset.cssVars || mapManagersToCssVars(managers)),
+    chartColorScheme: JSON.stringify(resolveDashboardChartPaletteColors(chartPalette)),
+  }
 
   return (
     <ThemeProvider name={name} cssVars={cssVars}>

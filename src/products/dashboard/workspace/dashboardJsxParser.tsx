@@ -2,6 +2,7 @@
 
 import React, { isValidElement, ReactNode } from 'react'
 
+import { resolveDashboardChartPaletteColors } from '@/products/dashboard/workspace/dashboardContract'
 import { validateDashboardTree } from '@/products/dashboard/workspace/validateDashboardTree'
 
 // Pipeline oficial do workspace:
@@ -225,11 +226,14 @@ export function getDashboardTitleFromSource(source: string, fallback = 'Dashboar
 }
 
 export function getDashboardThemeNameFromSource(source: string, fallback = 'light') {
-  const themeConstMatch = String(source || '').match(/const\s+THEME_NAME\s*=\s*['"]([^'"]+)['"]/)
-  if (themeConstMatch?.[1]?.trim()) return themeConstMatch[1].trim()
-
   const themeMatch = String(source || '').match(/<Theme\b[^>]*\bname="([^"]+)"/)
   if (themeMatch?.[1]?.trim()) return themeMatch[1].trim()
+
+  const themeTokenMatch = String(source || '').match(/resolveDashboardThemeTokens\((['"])([^'"]+)\1\)/)
+  if (themeTokenMatch?.[2]?.trim()) return themeTokenMatch[2].trim()
+
+  const themeConstMatch = String(source || '').match(/const\s+THEME_NAME\s*=\s*['"]([^'"]+)['"]/)
+  if (themeConstMatch?.[1]?.trim()) return themeConstMatch[1].trim()
   return fallback
 }
 
@@ -238,26 +242,48 @@ export function replaceDashboardThemeNameInSource(source: string, nextThemeName:
   const normalizedThemeName = String(nextThemeName || '').trim()
   if (!normalizedThemeName) return cleanSource
 
-  if (/const\s+THEME_NAME\s*=/.test(cleanSource)) {
-    return cleanSource.replace(
-      /const\s+THEME_NAME\s*=\s*['"][^'"]+['"]/,
-      `const THEME_NAME = '${normalizedThemeName}'`,
-    )
-  }
+  let nextSource = cleanSource
 
-  if (/<Theme\b[^>]*\bname=/.test(cleanSource)) {
-    return cleanSource.replace(
+  if (/<Theme\b[^>]*\bname=/.test(nextSource)) {
+    nextSource = nextSource.replace(
       /<Theme\b([^>]*)\bname=(?:"[^"]*"|\{'[^']*'\}|\{"[^"]*"\})/,
       `<Theme$1name="${normalizedThemeName}"`,
     )
   }
 
-  return cleanSource
+  nextSource = nextSource.replace(
+    /resolveDashboardThemeTokens\((['"])[^'"]+\1\)/,
+    `resolveDashboardThemeTokens('${normalizedThemeName}')`,
+  )
+  nextSource = nextSource.replace(
+    /const key = (['"])[^'"]+\1\.toLowerCase\(\)/,
+    `const key = '${normalizedThemeName}'.toLowerCase()`,
+  )
+  nextSource = nextSource.replace(
+    /Theme ativo:\s*[^<{]+/g,
+    `Theme ativo: ${normalizedThemeName}`,
+  )
+
+  if (/const\s+THEME_NAME\s*=/.test(cleanSource)) {
+    nextSource = nextSource.replace(
+      /const\s+THEME_NAME\s*=\s*['"][^'"]+['"]/,
+      `const THEME_NAME = '${normalizedThemeName}'`,
+    )
+  }
+
+  return nextSource
 }
 
 export function getDashboardChartColorsFromSource(source: string, fallback: string[] = []) {
+  const themePaletteMatch = String(source || '').match(/<Theme\b[^>]*\bchartPalette="([^"]+)"/)
+  if (themePaletteMatch?.[1]?.trim()) {
+    return resolveDashboardChartPaletteColors(themePaletteMatch[1].trim())
+  }
+
   const paletteNameMatch = String(source || '').match(/const\s+CHART_PALETTE\s*=\s*['"]([^'"]+)['"]/)
-  if (paletteNameMatch?.[1]?.trim()) return [...fallback]
+  if (paletteNameMatch?.[1]?.trim()) {
+    return resolveDashboardChartPaletteColors(paletteNameMatch[1].trim())
+  }
 
   const colorsMatch = String(source || '').match(/const\s+CHART_COLORS\s*=\s*(\[[\s\S]*?\])/)
   if (!colorsMatch?.[1]) return [...fallback]
@@ -275,6 +301,9 @@ export function getDashboardChartColorsFromSource(source: string, fallback: stri
 }
 
 export function getDashboardChartPaletteNameFromSource(source: string, fallback: string) {
+  const themeMatch = String(source || '').match(/<Theme\b[^>]*\bchartPalette="([^"]+)"/)
+  if (themeMatch?.[1]?.trim()) return themeMatch[1].trim()
+
   const paletteMatch = String(source || '').match(/const\s+CHART_PALETTE\s*=\s*['"]([^'"]+)['"]/)
   if (paletteMatch?.[1]?.trim()) return paletteMatch[1].trim()
   return fallback
@@ -285,12 +314,26 @@ export function replaceDashboardChartPaletteNameInSource(source: string, nextPal
   const normalizedPaletteName = String(nextPaletteName || '').trim()
   if (!normalizedPaletteName) return cleanSource
 
+  let nextSource = cleanSource
+
+  if (/<Theme\b[^>]*\bchartPalette=/.test(nextSource)) {
+    nextSource = nextSource.replace(
+      /<Theme\b([^>]*)\bchartPalette=(?:"[^"]*"|\{'[^']*'\}|\{"[^"]*"\})/,
+      `<Theme$1chartPalette="${normalizedPaletteName}"`,
+    )
+  } else if (/<Theme\b[^>]*\/>/.test(nextSource)) {
+    nextSource = nextSource.replace(
+      /<Theme\b([^>]*)\/>/,
+      `<Theme$1 chartPalette="${normalizedPaletteName}" />`,
+    )
+  }
+
   if (/const\s+CHART_PALETTE\s*=/.test(cleanSource)) {
-    return cleanSource.replace(
+    nextSource = nextSource.replace(
       /const\s+CHART_PALETTE\s*=\s*['"][^'"]+['"]/,
       `const CHART_PALETTE = '${normalizedPaletteName}'`,
     )
   }
 
-  return cleanSource
+  return nextSource
 }
