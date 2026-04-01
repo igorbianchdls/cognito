@@ -52,13 +52,13 @@ export function WorkspaceCodeEditor({
         </div>
       </div>
       <div className="min-h-0 flex-1 overflow-auto">
-        <div className="min-h-full bg-white">
+        <div className="min-h-full min-w-full w-max bg-white">
           {lines.map((line, index) => (
-            <div key={index} className="flex min-w-full font-mono text-[13px] leading-7">
-              <div className="select-none border-r border-[#EFEFEA] px-4 text-right text-[#A0A09A]">
+            <div key={index} className="flex font-mono text-[13px] leading-7">
+              <div className="shrink-0 select-none border-r border-[#EFEFEA] px-4 text-right text-[#A0A09A]">
                 {index + 1}
               </div>
-              <pre className="min-w-0 flex-1 overflow-x-auto px-4 text-[#2E2E2B]">
+              <pre className="px-4 text-[#2E2E2B]">
                 <code>{line || ' '}</code>
               </pre>
             </div>
