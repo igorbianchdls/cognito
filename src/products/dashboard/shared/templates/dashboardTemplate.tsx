@@ -7,7 +7,6 @@ import { buildGoogleAdsDashboardTemplateVariant } from '@/products/dashboard/sha
 import { buildMetaAdsDashboardTemplateVariant } from '@/products/dashboard/shared/templates/dashboardMetaAdsTemplate'
 import { buildShopifyDashboardTemplateVariant } from '@/products/dashboard/shared/templates/dashboardShopifyTemplate'
 import {
-  buildDashboardInlineUiSource,
   buildDashboardThemeImportSource,
   getDashboardTemplatePalette,
   getDashboardTemplateThemeName,
@@ -467,7 +466,15 @@ export function DashboardClassico() {
   const THEME_NAME = ${JSON.stringify(resolvedThemeName)}
   const CHART_PALETTE = 'teal'
   const CHART_COLORS = DASHBOARD_CHART_PALETTES[CHART_PALETTE] ?? ${JSON.stringify(chartColors)}
-${buildDashboardInlineUiSource('classic')}
+  const theme = resolveDashboardThemeTokens(THEME_NAME)
+  const isClassic = true
+  const key = String(THEME_NAME || '').toLowerCase()
+  const cardFrame = ['midnight', 'metro', 'aero'].includes(key)
+    ? { variant: 'hud' as const, cornerSize: 10, cornerWidth: 2 }
+    : ['light', 'white', 'claro', 'branco', 'sand'].includes(key)
+      ? { variant: 'hud' as const, cornerSize: 6, cornerWidth: 1 }
+      : { variant: 'hud' as const, cornerSize: 8, cornerWidth: 1 }
+
 
   return (
     <DashboardTemplate name="${CLASSIC_DASHBOARD_VARIANT.name}" title="${CLASSIC_DASHBOARD_VARIANT.title}">
@@ -476,26 +483,26 @@ ${buildDashboardInlineUiSource('classic')}
         <section style={{ display: 'flex', flexDirection: 'column', gap: isClassic ? 20 : 24, minHeight: '100%', padding: isClassic ? 28 : 32, backgroundColor: theme.pageBg }}>
           <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: isClassic ? 20 : 24, padding: isClassic ? '20px 24px' : 24, borderRadius: isClassic && cardFrame ? 0 : 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.headerBg, color: theme.headerText }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <p style={{ ...ui.metricLabel, margin: 0, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Executive dashboard</p>
-              <h1 style={{ ...ui.title, margin: 0, fontSize: 34, lineHeight: 1.05, fontWeight: 700, letterSpacing: '-0.04em' }}>Performance overview with the classic BI layout</h1>
-              <p style={{ ...ui.paragraph, margin: 0, maxWidth: 720, fontSize: 14, lineHeight: 1.65 }}>
+              <p style={{ ...{ margin: 0, fontSize: 12, color: theme.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em' }, margin: 0, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Executive dashboard</p>
+              <h1 style={{ ...{ margin: 0, fontSize: isClassic ? 22 : 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 34, lineHeight: 1.05, fontWeight: 700, letterSpacing: '-0.04em' }}>Performance overview with the classic BI layout</h1>
+              <p style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, margin: 0, maxWidth: 720, fontSize: 14, lineHeight: 1.65 }}>
                 Header with global period control, KPI strip on top and analysis rows below. The runtime stays JSX-first, but the surface looks closer to the previous dashboard model.
               </p>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, minWidth: 240 }}>
-              <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Global period</p>
+              <p style={{ ...{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }, margin: 0, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Global period</p>
               <DatePicker
                 label="Periodo do pedido"
                 table="vendas.pedidos"
                 field="data_pedido"
                 presets={['7d', '30d', 'month', 'quarter']}
-                labelStyle={ui.headerDatePickerLabel}
-                fieldStyle={ui.headerDatePickerField}
-                iconStyle={ui.headerDatePickerIcon}
-                presetButtonStyle={ui.headerDatePickerPreset}
-                activePresetButtonStyle={ui.headerDatePickerPresetActive}
-                separatorStyle={ui.headerDatePickerSeparator}
+                labelStyle={{ margin: 0, fontSize: 11, color: theme.headerDatePickerLabel, textTransform: 'uppercase', letterSpacing: '0.06em' }}
+                fieldStyle={{ minHeight: 38, padding: '0 10px', border: '1px solid ' + theme.headerDatePickerBorder, borderRadius: 10, backgroundColor: theme.headerDatePickerBg, color: theme.headerDatePickerColor, fontSize: 14, fontWeight: 500 }}
+                iconStyle={{ color: theme.headerDatePickerIcon, fontSize: 14 }}
+                presetButtonStyle={{ height: 36, padding: '0 12px', border: '1px solid ' + theme.headerDatePickerBorder, borderRadius: 10, backgroundColor: theme.headerDatePickerBg, color: theme.headerDatePickerColor, fontSize: 13, fontWeight: 500 }}
+                activePresetButtonStyle={{ backgroundColor: theme.headerDatePickerActiveBg, borderColor: theme.headerDatePickerActiveBorder, color: theme.headerDatePickerActiveText, fontWeight: 600 }}
+                separatorStyle={{ color: theme.headerDatePickerLabel, fontSize: 13, fontWeight: 500 }}
               />
             </div>
           </header>
@@ -516,11 +523,11 @@ ${buildDashboardInlineUiSource('classic')}
             >
               <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: isClassic && cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Faturamento</p>
-                  <h2 style={{ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Receita</h2>
+                  <p style={{ ...{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Faturamento</p>
+                  <h2 style={{ ...{ margin: 0, fontSize: isClassic ? 22 : 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Receita</h2>
                 </div>
-                <p style={{ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
-                <p data-ui="kpi-delta" style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p style={{ ...{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
+                <p data-ui="kpi-delta" style={{ ...{ margin: 0, fontSize: 13, color: theme.textSecondary }, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
 
@@ -539,11 +546,11 @@ ${buildDashboardInlineUiSource('classic')}
             >
               <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: isClassic && cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Volume</p>
-                  <h2 style={{ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Pedidos</h2>
+                  <p style={{ ...{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Volume</p>
+                  <h2 style={{ ...{ margin: 0, fontSize: isClassic ? 22 : 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Pedidos</h2>
                 </div>
-                <p style={{ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
-                <p data-ui="kpi-delta" style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p style={{ ...{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
+                <p data-ui="kpi-delta" style={{ ...{ margin: 0, fontSize: 13, color: theme.textSecondary }, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
 
@@ -562,11 +569,11 @@ ${buildDashboardInlineUiSource('classic')}
             >
               <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: isClassic && cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Eficiência</p>
-                  <h2 style={{ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Ticket medio</h2>
+                  <p style={{ ...{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Eficiência</p>
+                  <h2 style={{ ...{ margin: 0, fontSize: isClassic ? 22 : 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Ticket medio</h2>
                 </div>
-                <p style={{ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
-                <p data-ui="kpi-delta" style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p style={{ ...{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
+                <p data-ui="kpi-delta" style={{ ...{ margin: 0, fontSize: 13, color: theme.textSecondary }, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
 
@@ -585,11 +592,11 @@ ${buildDashboardInlineUiSource('classic')}
             >
               <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: isClassic && cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cobertura</p>
-                  <h2 style={{ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Canais ativos</h2>
+                  <p style={{ ...{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cobertura</p>
+                  <h2 style={{ ...{ margin: 0, fontSize: isClassic ? 22 : 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Canais ativos</h2>
                 </div>
-                <p style={{ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
-                <p data-ui="kpi-delta" style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p style={{ ...{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
+                <p data-ui="kpi-delta" style={{ ...{ margin: 0, fontSize: 13, color: theme.textSecondary }, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
 
@@ -608,11 +615,11 @@ ${buildDashboardInlineUiSource('classic')}
             >
               <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: isClassic && cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Qualidade</p>
-                  <h2 style={{ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Aprovacao</h2>
+                  <p style={{ ...{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Qualidade</p>
+                  <h2 style={{ ...{ margin: 0, fontSize: isClassic ? 22 : 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Aprovacao</h2>
                 </div>
-                <p style={{ ...ui.kpiValue, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
-                <p data-ui="kpi-delta" style={{ ...ui.kpiDelta, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p style={{ ...{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
+                <p data-ui="kpi-delta" style={{ ...{ margin: 0, fontSize: 13, color: theme.textSecondary }, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
           </section>
@@ -620,11 +627,11 @@ ${buildDashboardInlineUiSource('classic')}
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 18 }}>
             <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <h2 style={{ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Aceleracao recente</h2>
-                <p style={{ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.6 }}>Leituras sobre os vetores que estao puxando o crescimento do periodo.</p>
+                <h2 style={{ ...{ margin: 0, fontSize: isClassic ? 22 : 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Aceleracao recente</h2>
+                <p style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, margin: 0, fontSize: 13, lineHeight: 1.6 }}>Leituras sobre os vetores que estao puxando o crescimento do periodo.</p>
               </div>
               <Insights
-                textStyle={{ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.65 }}
+                textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, margin: 0, fontSize: 13, lineHeight: 1.65 }}
                 iconStyle={{ color: '#2563EB' }}
                 items={[
                   { title: 'Receita acima da media recente', text: 'Receita ganhou tracao nos canais proprios e manteve crescimento acima da media recente.' },
@@ -635,11 +642,11 @@ ${buildDashboardInlineUiSource('classic')}
             </Card>
             <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <h2 style={{ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Concentracao de receita</h2>
-                <p style={{ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.6 }}>Pontos de atencao sobre dependencia de canais e distribuicao do faturamento.</p>
+                <h2 style={{ ...{ margin: 0, fontSize: isClassic ? 22 : 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Concentracao de receita</h2>
+                <p style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, margin: 0, fontSize: 13, lineHeight: 1.6 }}>Pontos de atencao sobre dependencia de canais e distribuicao do faturamento.</p>
               </div>
               <Insights
-                textStyle={{ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.65 }}
+                textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, margin: 0, fontSize: 13, lineHeight: 1.65 }}
                 iconStyle={{ color: '#F59E0B' }}
                 items={[
                   { text: 'O mix segue concentrado em poucos canais, o que aumenta dependencia operacional.' },
@@ -650,11 +657,11 @@ ${buildDashboardInlineUiSource('classic')}
             </Card>
             <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <h2 style={{ ...ui.title, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Conversao e qualidade</h2>
-                <p style={{ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.6 }}>Sinais de eficiencia comercial sem pressao adicional sobre o ticket medio.</p>
+                <h2 style={{ ...{ margin: 0, fontSize: isClassic ? 22 : 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Conversao e qualidade</h2>
+                <p style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, margin: 0, fontSize: 13, lineHeight: 1.6 }}>Sinais de eficiencia comercial sem pressao adicional sobre o ticket medio.</p>
               </div>
               <Insights
-                textStyle={{ ...ui.paragraph, margin: 0, fontSize: 13, lineHeight: 1.65 }}
+                textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, margin: 0, fontSize: 13, lineHeight: 1.65 }}
                 iconStyle={{ color: '#10B981' }}
                 items={[
                   { text: 'A aprovacao continua estavel, com espaco para melhorar conversao sem pressionar o ticket medio.' },
@@ -668,8 +675,8 @@ ${buildDashboardInlineUiSource('classic')}
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
             <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Receita por canal</p>
-                <h2 style={{ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Mix comercial</h2>
+                <p style={{ ...{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Receita por canal</p>
+                <h2 style={{ ...{ margin: 0, fontSize: isClassic ? 22 : 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Mix comercial</h2>
               </div>
               <Chart
                 type="bar"
@@ -703,8 +710,8 @@ ${buildDashboardInlineUiSource('classic')}
 
             <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Participacao</p>
-                <h2 style={{ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Share por canal</h2>
+                <p style={{ ...{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Participacao</p>
+                <h2 style={{ ...{ margin: 0, fontSize: isClassic ? 22 : 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Share por canal</h2>
               </div>
               <Chart
                 type="pie"
@@ -753,8 +760,8 @@ ${buildDashboardInlineUiSource('classic')}
               }}
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tendencia diaria</p>
-                <h2 style={{ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Receita ao longo do periodo</h2>
+                <p style={{ ...{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tendencia diaria</p>
+                <h2 style={{ ...{ margin: 0, fontSize: isClassic ? 22 : 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Receita ao longo do periodo</h2>
               </div>
               <div style={{ flex: 1, minHeight: 300 }}>
                 <Chart
@@ -788,8 +795,8 @@ ${buildDashboardInlineUiSource('classic')}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Detalhamento</p>
-                <h2 style={{ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Pedidos filtrados</h2>
+                <p style={{ ...{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Detalhamento</p>
+                <h2 style={{ ...{ margin: 0, fontSize: isClassic ? 22 : 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Pedidos filtrados</h2>
               </div>
               <Table
                 bordered
@@ -797,12 +804,12 @@ ${buildDashboardInlineUiSource('classic')}
                 radius={12}
                 stickyHeader
                 striped={false}
-                borderColor={ui.tableBorderColor}
-                rowHoverColor={ui.tableRowHoverColor}
-                headerStyle={ui.tableHeaderStyle}
-                rowStyle={ui.tableRowStyle}
-                cellStyle={ui.tableCellStyle}
-                footerStyle={ui.tableFooterStyle}
+                borderColor={'#d7dbe3'}
+                rowHoverColor={'#f8fafc'}
+                headerStyle={{ backgroundColor: '#f8fafc', color: '#334155', fontSize: 14, fontWeight: 600, padding: '12px 14px' }}
+                rowStyle={{ backgroundColor: '#ffffff' }}
+                cellStyle={{ color: '#475569', fontSize: 14, fontWeight: 400, padding: '12px 14px' }}
+                footerStyle={{ backgroundColor: '#f8fafc', color: '#0f172a', fontSize: 14, fontWeight: 600, padding: '12px 14px' }}
                 dataQuery={{
                   query: \`
                     SELECT
@@ -834,8 +841,8 @@ ${buildDashboardInlineUiSource('classic')}
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
             <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status mix</p>
-                <h2 style={{ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Volume por status</h2>
+                <p style={{ ...{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status mix</p>
+                <h2 style={{ ...{ margin: 0, fontSize: isClassic ? 22 : 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Volume por status</h2>
               </div>
               <Chart
                 type="horizontal-bar"
@@ -864,23 +871,23 @@ ${buildDashboardInlineUiSource('classic')}
 
             <Card frame={cardFrame || undefined} data-ui="pivot-card" style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <p style={{ ...ui.eyebrow, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cruzamento</p>
-                <h2 style={{ ...ui.title, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Receita por canal e status</h2>
+                <p style={{ ...{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cruzamento</p>
+                <h2 style={{ ...{ margin: 0, fontSize: isClassic ? 22 : 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Receita por canal e status</h2>
               </div>
               <PivotTable
                 bordered
                 rounded
                 stickyHeader
-                borderColor={ui.tableBorderColor}
-                containerStyle={ui.pivotContainerStyle}
-                headerStyle={ui.pivotHeaderStyle}
-                headerTotalStyle={ui.pivotHeaderTotalStyle}
-                rowLabelStyle={ui.pivotRowLabelStyle}
-                cellStyle={ui.pivotCellStyle}
-                rowTotalStyle={ui.pivotRowTotalStyle}
-                footerStyle={ui.pivotFooterStyle}
-                emptyStateStyle={ui.pivotEmptyStateStyle}
-                expandButtonStyle={ui.pivotExpandButtonStyle}
+                borderColor={'#d7dbe3'}
+                containerStyle={{ backgroundColor: '#ffffff' }}
+                headerStyle={{ backgroundColor: '#f8fafc', color: '#334155', fontSize: 14, fontWeight: 600, padding: '9px 10px' }}
+                headerTotalStyle={{ backgroundColor: '#f1f5f9', color: '#1e293b', fontSize: 14, fontWeight: 600, padding: '9px 10px' }}
+                rowLabelStyle={{ backgroundColor: '#ffffff', color: '#1e293b', fontSize: 14, padding: '9px 10px' }}
+                cellStyle={{ backgroundColor: '#ffffff', color: '#475569', fontSize: 14, padding: '9px 10px' }}
+                rowTotalStyle={{ backgroundColor: '#f8fafc', color: '#1e293b', fontSize: 14, fontWeight: 500, padding: '9px 10px' }}
+                footerStyle={{ backgroundColor: '#f1f5f9', color: '#0f172a', fontSize: 14, fontWeight: 600, padding: '9px 10px' }}
+                emptyStateStyle={{ color: '#64748b', fontSize: 14, padding: '18px 12px' }}
+                expandButtonStyle={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb', color: '#475569', hoverBackgroundColor: '#f8fafc' }}
                 enableExportCsv
                 defaultExpandedLevels={1}
                 dataQuery={{

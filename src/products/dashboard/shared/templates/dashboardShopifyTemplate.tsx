@@ -1,7 +1,6 @@
 'use client'
 
 import {
-  buildDashboardInlineUiSource,
   buildDashboardThemeImportSource,
   getDashboardTemplatePalette,
   getDashboardTemplateThemeName,
@@ -24,7 +23,15 @@ export function DashboardShopify() {
   const THEME_NAME = ${JSON.stringify(resolvedThemeName)}
   const CHART_PALETTE = 'red'
   const CHART_COLORS = DASHBOARD_CHART_PALETTES[CHART_PALETTE] ?? ${JSON.stringify(chartColors)}
-${buildDashboardInlineUiSource()}
+  const theme = resolveDashboardThemeTokens(THEME_NAME)
+  const isClassic = false
+  const key = String(THEME_NAME || '').toLowerCase()
+  const cardFrame = ['midnight', 'metro', 'aero'].includes(key)
+    ? { variant: 'hud' as const, cornerSize: 10, cornerWidth: 2 }
+    : ['light', 'white', 'claro', 'branco', 'sand'].includes(key)
+      ? { variant: 'hud' as const, cornerSize: 6, cornerWidth: 1 }
+      : { variant: 'hud' as const, cornerSize: 8, cornerWidth: 1 }
+
 
   return (
     <DashboardTemplate name="${SHOPIFY_VARIANT.name}" title="${SHOPIFY_VARIANT.title}">
@@ -35,10 +42,10 @@ ${buildDashboardInlineUiSource()}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: '64%' }}>
               <span style={{ display: 'inline-flex', width: 'fit-content', alignItems: 'center', borderRadius: 999, border: '1px solid ' + theme.accentBorder, backgroundColor: theme.accentSurface, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: theme.accentText }}>E-commerce Core</span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={ui.eyebrow}>Shopify para vendas, pagamento e fulfillment</p>
-                <h1 style={{ ...ui.title, fontSize: 40, lineHeight: 1.02, fontWeight: 700, letterSpacing: '-0.04em' }}>Dashboard Shopify</h1>
+                <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Shopify para vendas, pagamento e fulfillment</p>
+                <h1 style={{ ...{ margin: 0, fontSize: isClassic ? 22 : 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 40, lineHeight: 1.02, fontWeight: 700, letterSpacing: '-0.04em' }}>Dashboard Shopify</h1>
               </div>
-              <p style={ui.subtitle}>Migracao do template legado para JSX com tags, preservando GMV, pedidos, ticket, operacao de pagamento e fulfillment no mesmo dashboard.</p>
+              <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: theme.textSecondary }}>Migracao do template legado para JSX com tags, preservando GMV, pedidos, ticket, operacao de pagamento e fulfillment no mesmo dashboard.</p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '34%', minWidth: 320 }}>
               <DatePicker
@@ -46,12 +53,12 @@ ${buildDashboardInlineUiSource()}
                 table="ecommerce.pedidos"
                 field="data_pedido"
                 presets={['7d', '30d', '90d', 'month']}
-                labelStyle={ui.headerDatePickerLabel}
-                fieldStyle={ui.headerDatePickerField}
-                iconStyle={ui.headerDatePickerIcon}
-                presetButtonStyle={ui.headerDatePickerPreset}
-                activePresetButtonStyle={ui.headerDatePickerPresetActive}
-                separatorStyle={ui.headerDatePickerSeparator}
+                labelStyle={{ margin: 0, fontSize: 11, color: theme.headerDatePickerLabel, textTransform: 'uppercase', letterSpacing: '0.06em' }}
+                fieldStyle={{ minHeight: 38, padding: '0 10px', border: '1px solid ' + theme.headerDatePickerBorder, borderRadius: 10, backgroundColor: theme.headerDatePickerBg, color: theme.headerDatePickerColor, fontSize: 14, fontWeight: 500 }}
+                iconStyle={{ color: theme.headerDatePickerIcon, fontSize: 14 }}
+                presetButtonStyle={{ height: 36, padding: '0 12px', border: '1px solid ' + theme.headerDatePickerBorder, borderRadius: 10, backgroundColor: theme.headerDatePickerBg, color: theme.headerDatePickerColor, fontSize: 13, fontWeight: 500 }}
+                activePresetButtonStyle={{ backgroundColor: theme.headerDatePickerActiveBg, borderColor: theme.headerDatePickerActiveBorder, color: theme.headerDatePickerActiveText, fontWeight: 600 }}
+                separatorStyle={{ color: theme.headerDatePickerLabel, fontSize: 13, fontWeight: 500 }}
               />
             </div>
           </header>
@@ -59,8 +66,8 @@ ${buildDashboardInlineUiSource()}
           <section style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 18 }}>
             <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={ui.eyebrow}>Filters</p>
-                <h2 style={ui.title}>Loja e status</h2>
+                <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filters</p>
+                <h2 style={{ margin: 0, fontSize: isClassic ? 22 : 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Loja e status</h2>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 14 }}>
                 <Filter
@@ -107,8 +114,8 @@ ${buildDashboardInlineUiSource()}
             </Card>
 
             <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <p style={ui.eyebrow}>Leitura esperada</p>
-              <p style={ui.paragraph}>Primeiro confira GMV e pedidos, depois veja se o mix de pagamento e fulfillment esta sustentando a operacao sem vazamento em reembolso.</p>
+              <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Leitura esperada</p>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Primeiro confira GMV e pedidos, depois veja se o mix de pagamento e fulfillment esta sustentando a operacao sem vazamento em reembolso.</p>
             </Card>
           </section>
 
@@ -127,10 +134,10 @@ ${buildDashboardInlineUiSource()}
               comparisonMode="previous_period"
             >
               <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: isClassic && cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <p style={ui.kpiLabel}>Receita bruta</p>
-                <h2 style={{ ...ui.title, fontSize: 20 }}>GMV</h2>
-                <p style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
-                <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p style={{ margin: 0, fontSize: 12, color: theme.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Receita bruta</p>
+                <h2 style={{ ...{ margin: 0, fontSize: isClassic ? 22 : 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>GMV</h2>
+                <p style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }}>{'{{query.valueFormatted}}'}</p>
+                <p style={{ margin: 0, fontSize: 13, color: theme.textSecondary }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
             <Query
@@ -147,10 +154,10 @@ ${buildDashboardInlineUiSource()}
               comparisonMode="previous_period"
             >
               <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: isClassic && cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <p style={ui.kpiLabel}>Volume</p>
-                <h2 style={{ ...ui.title, fontSize: 20 }}>Pedidos</h2>
-                <p style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
-                <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p style={{ margin: 0, fontSize: 12, color: theme.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Volume</p>
+                <h2 style={{ ...{ margin: 0, fontSize: isClassic ? 22 : 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Pedidos</h2>
+                <p style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }}>{'{{query.valueFormatted}}'}</p>
+                <p style={{ margin: 0, fontSize: 13, color: theme.textSecondary }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
             <Query
@@ -167,10 +174,10 @@ ${buildDashboardInlineUiSource()}
               comparisonMode="previous_period"
             >
               <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: isClassic && cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <p style={ui.kpiLabel}>Monetizacao</p>
-                <h2 style={{ ...ui.title, fontSize: 20 }}>Ticket medio</h2>
-                <p style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
-                <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p style={{ margin: 0, fontSize: 12, color: theme.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Monetizacao</p>
+                <h2 style={{ ...{ margin: 0, fontSize: isClassic ? 22 : 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Ticket medio</h2>
+                <p style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }}>{'{{query.valueFormatted}}'}</p>
+                <p style={{ margin: 0, fontSize: 13, color: theme.textSecondary }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
             <Query
@@ -187,10 +194,10 @@ ${buildDashboardInlineUiSource()}
               comparisonMode="previous_period"
             >
               <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: isClassic && cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <p style={ui.kpiLabel}>Leakage</p>
-                <h2 style={{ ...ui.title, fontSize: 20 }}>Reembolsos</h2>
-                <p style={ui.kpiValue}>{'{{query.valueFormatted}}'}</p>
-                <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+                <p style={{ margin: 0, fontSize: 12, color: theme.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Leakage</p>
+                <h2 style={{ ...{ margin: 0, fontSize: isClassic ? 22 : 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Reembolsos</h2>
+                <p style={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }}>{'{{query.valueFormatted}}'}</p>
+                <p style={{ margin: 0, fontSize: 13, color: theme.textSecondary }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
           </section>
@@ -206,10 +213,10 @@ ${buildDashboardInlineUiSource()}
               <section style={{ display: 'grid', gridTemplateColumns: '1.25fr 1fr', gap: 18 }}>
                 <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <p style={ui.eyebrow}>Store mix</p>
-                    <h2 style={ui.title}>GMV por loja</h2>
+                    <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Store mix</p>
+                    <h2 style={{ margin: 0, fontSize: isClassic ? 22 : 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>GMV por loja</h2>
                   </div>
-                  <p style={ui.paragraph}>Distribui o faturamento por loja para separar concentracao de receita, assimetria de sortimento e dependencia comercial.</p>
+                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Distribui o faturamento por loja para separar concentracao de receita, assimetria de sortimento e dependencia comercial.</p>
                   <Chart
                     type="bar"
                     height={320}
@@ -239,10 +246,10 @@ ${buildDashboardInlineUiSource()}
 
                 <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <p style={ui.eyebrow}>Payment mix</p>
-                    <h2 style={ui.title}>Pedidos por status de pagamento</h2>
+                    <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Payment mix</p>
+                    <h2 style={{ margin: 0, fontSize: isClassic ? 22 : 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Pedidos por status de pagamento</h2>
                   </div>
-                  <p style={ui.paragraph}>Ajuda a medir o quanto do volume ja virou caixa e quanto ainda esta pendente, em risco ou parcialmente capturado.</p>
+                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Ajuda a medir o quanto do volume ja virou caixa e quanto ainda esta pendente, em risco ou parcialmente capturado.</p>
                   <Chart
                     type="pie"
                     height={320}
@@ -277,10 +284,10 @@ ${buildDashboardInlineUiSource()}
               <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 18 }}>
                 <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <p style={ui.eyebrow}>Trend</p>
-                    <h2 style={ui.title}>GMV por mes</h2>
+                    <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trend</p>
+                    <h2 style={{ margin: 0, fontSize: isClassic ? 22 : 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>GMV por mes</h2>
                   </div>
-                  <p style={ui.paragraph}>Serie mensal para confrontar aceleracao de vendas com carga operacional e pressao de reembolso.</p>
+                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Serie mensal para confrontar aceleracao de vendas com carga operacional e pressao de reembolso.</p>
                   <Chart
                     type="line"
                     height={320}
@@ -312,8 +319,8 @@ ${buildDashboardInlineUiSource()}
                 <section style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 18 }}>
                   <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <p style={ui.eyebrow}>Fulfillment</p>
-                      <h2 style={ui.title}>Pedidos por fulfillment</h2>
+                      <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Fulfillment</p>
+                      <h2 style={{ margin: 0, fontSize: isClassic ? 22 : 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Pedidos por fulfillment</h2>
                     </div>
                     <Chart
                       type="bar"
@@ -342,11 +349,11 @@ ${buildDashboardInlineUiSource()}
                   </Card>
                   <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <h2 style={{ ...ui.title, fontSize: 20 }}>Leituras operacionais</h2>
-                      <p style={{ ...ui.paragraph, fontSize: 13, lineHeight: 1.6 }}>Perguntas para o time alinhar comercial, pagamento e fulfillment.</p>
+                      <h2 style={{ ...{ margin: 0, fontSize: isClassic ? 22 : 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Leituras operacionais</h2>
+                      <p style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Perguntas para o time alinhar comercial, pagamento e fulfillment.</p>
                     </div>
                     <Insights
-                      textStyle={{ ...ui.paragraph, fontSize: 13, lineHeight: 1.65 }}
+                      textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.65 }}
                       iconStyle={{ color: '#008060' }}
                       items={[
                         { text: 'GMV crescendo com status de pagamento pendente alto pode mascarar receita ainda nao capturada.' },
@@ -363,19 +370,19 @@ ${buildDashboardInlineUiSource()}
               <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 18 }}>
                 <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <p style={ui.eyebrow}>Table</p>
-                    <h2 style={ui.title}>Pedidos no detalhe</h2>
+                    <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</p>
+                    <h2 style={{ margin: 0, fontSize: isClassic ? 22 : 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Pedidos no detalhe</h2>
                   </div>
                   <Table
                     bordered
                     rounded
                     stickyHeader
-                    borderColor={ui.tableBorderColor}
-                    rowHoverColor={ui.tableRowHoverColor}
-                    headerStyle={ui.tableHeaderStyle}
-                    rowStyle={ui.tableRowStyle}
-                    cellStyle={ui.tableCellStyle}
-                    footerStyle={ui.tableFooterStyle}
+                    borderColor={'#d7dbe3'}
+                    rowHoverColor={'#f8fafc'}
+                    headerStyle={{ backgroundColor: '#f8fafc', color: '#334155', fontSize: 14, fontWeight: 600, padding: '12px 14px' }}
+                    rowStyle={{ backgroundColor: '#ffffff' }}
+                    cellStyle={{ color: '#475569', fontSize: 14, fontWeight: 400, padding: '12px 14px' }}
+                    footerStyle={{ backgroundColor: '#f8fafc', color: '#0f172a', fontSize: 14, fontWeight: 600, padding: '12px 14px' }}
                     enableExportCsv
                     dataQuery={{
                       query: \`
@@ -406,23 +413,23 @@ ${buildDashboardInlineUiSource()}
 
                 <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <p style={ui.eyebrow}>Pivot</p>
-                    <h2 style={ui.title}>Loja por pagamento</h2>
+                    <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</p>
+                    <h2 style={{ margin: 0, fontSize: isClassic ? 22 : 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Loja por pagamento</h2>
                   </div>
                   <PivotTable
                     bordered
                     rounded
                     stickyHeader
-                    borderColor={ui.tableBorderColor}
-                    containerStyle={ui.pivotContainerStyle}
-                    headerStyle={ui.pivotHeaderStyle}
-                    headerTotalStyle={ui.pivotHeaderTotalStyle}
-                    rowLabelStyle={ui.pivotRowLabelStyle}
-                    cellStyle={ui.pivotCellStyle}
-                    rowTotalStyle={ui.pivotRowTotalStyle}
-                    footerStyle={ui.pivotFooterStyle}
-                    emptyStateStyle={ui.pivotEmptyStateStyle}
-                    expandButtonStyle={ui.pivotExpandButtonStyle}
+                    borderColor={'#d7dbe3'}
+                    containerStyle={{ backgroundColor: '#ffffff' }}
+                    headerStyle={{ backgroundColor: '#f8fafc', color: '#334155', fontSize: 14, fontWeight: 600, padding: '9px 10px' }}
+                    headerTotalStyle={{ backgroundColor: '#f1f5f9', color: '#1e293b', fontSize: 14, fontWeight: 600, padding: '9px 10px' }}
+                    rowLabelStyle={{ backgroundColor: '#ffffff', color: '#1e293b', fontSize: 14, padding: '9px 10px' }}
+                    cellStyle={{ backgroundColor: '#ffffff', color: '#475569', fontSize: 14, padding: '9px 10px' }}
+                    rowTotalStyle={{ backgroundColor: '#f8fafc', color: '#1e293b', fontSize: 14, fontWeight: 500, padding: '9px 10px' }}
+                    footerStyle={{ backgroundColor: '#f1f5f9', color: '#0f172a', fontSize: 14, fontWeight: 600, padding: '9px 10px' }}
+                    emptyStateStyle={{ color: '#64748b', fontSize: 14, padding: '18px 12px' }}
+                    expandButtonStyle={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb', color: '#475569', hoverBackgroundColor: '#f8fafc' }}
                     enableExportCsv
                     defaultExpandedLevels={1}
                     dataQuery={{
@@ -447,8 +454,8 @@ ${buildDashboardInlineUiSource()}
           </Tabs>
 
           <footer style={{ display: 'flex', justifyContent: 'space-between', gap: 18, padding: isClassic ? '16px 20px' : '18px 22px', borderRadius: isClassic && cardFrame ? 0 : 22, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder }}>
-            <p style={{ ...ui.paragraph, fontSize: 13, lineHeight: 1.6 }}>Template JSX para Shopify com leitura comercial e operacional, adaptado do app legado para o formato novo do dashboard.</p>
-            <p style={{ ...ui.paragraph, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: {THEME_NAME}</p>
+            <p style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Template JSX para Shopify com leitura comercial e operacional, adaptado do app legado para o formato novo do dashboard.</p>
+            <p style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: {THEME_NAME}</p>
           </footer>
         </section>
       </Dashboard>
