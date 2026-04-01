@@ -1,7 +1,6 @@
 'use client'
 
 import {
-  buildDashboardThemeImportSource,
   getDashboardTemplateThemeName,
 } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
 
@@ -14,15 +13,8 @@ const METAADS_VARIANT = {
 
 function buildMetaAdsDashboardSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('metaads')
-  return `${buildDashboardThemeImportSource()}
-
-export function DashboardMetaAds() {
-  const theme = resolveDashboardThemeTokens(${JSON.stringify(resolvedThemeName)})
-
-  return (
-    <DashboardTemplate name="${METAADS_VARIANT.name}" title="${METAADS_VARIANT.title}">
+  return `<Dashboard id="overview" title="${METAADS_VARIANT.title}">
       <Theme name="${resolvedThemeName}" chartPalette="purple" />
-      <Dashboard id="overview" title="${METAADS_VARIANT.title}">
         <section style={{ display: 'flex', flexDirection: 'column', gap: 24, minHeight: '100%', padding: 32, backgroundColor: theme.pageBg }}>
           <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24, padding: 24, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.headerBg, color: theme.headerText }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: '64%' }}>
@@ -454,10 +446,7 @@ export function DashboardMetaAds() {
             <p style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: ${resolvedThemeName}</p>
           </footer>
         </section>
-      </Dashboard>
-    </DashboardTemplate>
-  )
-}`
+    </Dashboard>`
 }
 
 export function buildMetaAdsDashboardTemplateVariant(themeName?: string) {

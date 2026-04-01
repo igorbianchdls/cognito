@@ -7,7 +7,6 @@ import { buildGoogleAdsDashboardTemplateVariant } from '@/products/dashboard/sha
 import { buildMetaAdsDashboardTemplateVariant } from '@/products/dashboard/shared/templates/dashboardMetaAdsTemplate'
 import { buildShopifyDashboardTemplateVariant } from '@/products/dashboard/shared/templates/dashboardShopifyTemplate'
 import {
-  buildDashboardThemeImportSource,
   getDashboardTemplateThemeName,
 } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
 import { resolveDashboardTemplateThemeTokens } from '@/products/dashboard/shared/templates/dashboardTemplateThemes'
@@ -443,15 +442,8 @@ const CLASSIC_DASHBOARD_VARIANT: StandaloneDashboardVariant = {
 
 function buildClassicDashboardTemplateSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('classic')
-  return `${buildDashboardThemeImportSource()}
-
-export function DashboardClassico() {
-  const theme = resolveDashboardThemeTokens(${JSON.stringify(resolvedThemeName)})
-
-  return (
-    <DashboardTemplate name="${CLASSIC_DASHBOARD_VARIANT.name}" title="${CLASSIC_DASHBOARD_VARIANT.title}">
+  return `<Dashboard id="overview" title="${CLASSIC_DASHBOARD_VARIANT.title}">
       <Theme name="${resolvedThemeName}" chartPalette="teal" />
-      <Dashboard id="overview" title="${CLASSIC_DASHBOARD_VARIANT.title}">
         <section style={{ display: 'flex', flexDirection: 'column', gap: 20, minHeight: '100%', padding: 28, backgroundColor: theme.pageBg }}>
           <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20, padding: '20px 24px', borderRadius: theme.cardFrame ? 0 : 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.headerBg, color: theme.headerText }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -878,10 +870,7 @@ export function DashboardClassico() {
             </Card>
           </section>
         </section>
-      </Dashboard>
-    </DashboardTemplate>
-  )
-}`
+    </Dashboard>`
 }
 
 export function buildDashboardTemplateVariants(themeName: string): DashboardTemplateVariant[] {

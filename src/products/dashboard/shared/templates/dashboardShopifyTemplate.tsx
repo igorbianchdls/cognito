@@ -1,7 +1,6 @@
 'use client'
 
 import {
-  buildDashboardThemeImportSource,
   getDashboardTemplateThemeName,
 } from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
 
@@ -14,15 +13,8 @@ const SHOPIFY_VARIANT = {
 
 function buildShopifyDashboardSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('shopify')
-  return `${buildDashboardThemeImportSource()}
-
-export function DashboardShopify() {
-  const theme = resolveDashboardThemeTokens(${JSON.stringify(resolvedThemeName)})
-
-  return (
-    <DashboardTemplate name="${SHOPIFY_VARIANT.name}" title="${SHOPIFY_VARIANT.title}">
+  return `<Dashboard id="overview" title="${SHOPIFY_VARIANT.title}">
       <Theme name="${resolvedThemeName}" chartPalette="red" />
-      <Dashboard id="overview" title="${SHOPIFY_VARIANT.title}">
         <section style={{ display: 'flex', flexDirection: 'column', gap: 24, minHeight: '100%', padding: 32, backgroundColor: theme.pageBg }}>
           <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24, padding: 24, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.headerBg, color: theme.headerText }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: '64%' }}>
@@ -440,10 +432,7 @@ export function DashboardShopify() {
             <p style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: ${resolvedThemeName}</p>
           </footer>
         </section>
-      </Dashboard>
-    </DashboardTemplate>
-  )
-}`
+    </Dashboard>`
 }
 
 export function buildShopifyDashboardTemplateVariant(themeName?: string) {

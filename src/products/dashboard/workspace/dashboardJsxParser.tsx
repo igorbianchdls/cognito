@@ -35,7 +35,7 @@ function leafComponent(name: string): RuntimeComponent {
 
 const runtimeScope = {
   DashboardTemplate: passthroughComponent('DashboardTemplate'),
-  Theme: leafComponent('Theme'),
+  Theme: passthroughComponent('Theme'),
   Dashboard: passthroughComponent('Dashboard'),
   Card: passthroughComponent('Card'),
   Tabs: passthroughComponent('Tabs'),
@@ -87,6 +87,31 @@ function jsxToTree(node: ReactNode): DashboardTreeNode | string | null {
 
 function sanitizeSource(source: string) {
   return String(source || '').replace(/^[\uFEFF]/, '').trim()
+}
+
+function wrapRootDashboardSource(source: string) {
+  const cleanSource = sanitizeSource(source)
+  if (!/^<Dashboard\b/.test(cleanSource)) return cleanSource
+
+  const themeTagMatch = cleanSource.match(/<Theme\b[^>]*\/>/)
+  const themeTagSource = themeTagMatch?.[0] || `<Theme name="light" />`
+  const themeNameMatch = themeTagSource.match(/\bname="([^"]+)"/)
+  const resolvedThemeName = themeNameMatch?.[1]?.trim() || 'light'
+  const dashboardSource = themeTagMatch ? cleanSource.replace(themeTagMatch[0], '').trim() : cleanSource
+  const themeOpenTag = themeTagSource.replace(/\/>\s*$/, '>')
+
+  return `import { resolveDashboardThemeTokens } from './theme-tokens'
+
+export default function __DashboardEntry() {
+  const theme = resolveDashboardThemeTokens(${JSON.stringify(resolvedThemeName)})
+
+  return (
+    ${themeOpenTag}
+      ${dashboardSource}
+    </Theme>
+  )
+}
+`
 }
 
 function normalizeWorkspacePath(path: string) {
@@ -153,7 +178,8 @@ export async function parseDashboardJsxToTree(entryPath: string, files: Workspac
     const normalizedModulePath = normalizeWorkspacePath(modulePath)
     if (cache.has(normalizedModulePath)) return cache.get(normalizedModulePath)!
 
-    const moduleSource = sanitizeSource(filesMap.get(normalizedModulePath) || '')
+    const rawModuleSource = filesMap.get(normalizedModulePath) || ''
+    const moduleSource = wrapRootDashboardSource(rawModuleSource)
     if (!moduleSource) throw new Error(`Arquivo nao encontrado no preview do workspace: ${normalizedModulePath}`)
 
     const transpiled = ts.transpileModule(moduleSource, {
