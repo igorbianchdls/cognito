@@ -442,8 +442,7 @@ const CLASSIC_DASHBOARD_VARIANT: StandaloneDashboardVariant = {
 
 function buildClassicDashboardTemplateSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('classic')
-  return `<Dashboard id="overview" title="${CLASSIC_DASHBOARD_VARIANT.title}">
-      <Theme name="${resolvedThemeName}" chartPalette="teal" />
+  return `<Dashboard id="overview" title="${CLASSIC_DASHBOARD_VARIANT.title}" theme="${resolvedThemeName}" chartPalette="teal">
         <section style={{ display: 'flex', flexDirection: 'column', gap: 20, minHeight: '100%', padding: 28, backgroundColor: theme.pageBg }}>
           <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20, padding: '20px 24px', borderRadius: theme.cardFrame ? 0 : 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.headerBg, color: theme.headerText }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -486,9 +485,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               comparisonMode="previous_period"
             >
               <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <h2 style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Receita</h2>
-                </div>
+                <h2 style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Receita</h2>
                 <p style={{ ...{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
                 <p data-ui="kpi-delta" style={{ ...{ margin: 0, fontSize: 13, color: theme.textSecondary }, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
@@ -508,9 +505,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               comparisonMode="previous_period"
             >
               <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <h2 style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Pedidos</h2>
-                </div>
+                <h2 style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Pedidos</h2>
                 <p style={{ ...{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
                 <p data-ui="kpi-delta" style={{ ...{ margin: 0, fontSize: 13, color: theme.textSecondary }, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
@@ -530,9 +525,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               comparisonMode="previous_period"
             >
               <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <h2 style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Ticket medio</h2>
-                </div>
+                <h2 style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Ticket medio</h2>
                 <p style={{ ...{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
                 <p data-ui="kpi-delta" style={{ ...{ margin: 0, fontSize: 13, color: theme.textSecondary }, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
@@ -552,9 +545,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               comparisonMode="previous_period"
             >
               <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <h2 style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Canais ativos</h2>
-                </div>
+                <h2 style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Canais ativos</h2>
                 <p style={{ ...{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
                 <p data-ui="kpi-delta" style={{ ...{ margin: 0, fontSize: 13, color: theme.textSecondary }, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
@@ -574,9 +565,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               comparisonMode="previous_period"
             >
               <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <h2 style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Aprovacao</h2>
-                </div>
+                <h2 style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Aprovacao</h2>
                 <p style={{ ...{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
                 <p data-ui="kpi-delta" style={{ ...{ margin: 0, fontSize: 13, color: theme.textSecondary }, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>

@@ -13,8 +13,7 @@ const GOOGLEADS_VARIANT = {
 
 function buildGoogleAdsDashboardSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('googleads')
-  return `<Dashboard id="overview" title="${GOOGLEADS_VARIANT.title}">
-      <Theme name="${resolvedThemeName}" chartPalette="orange" />
+  return `<Dashboard id="overview" title="${GOOGLEADS_VARIANT.title}" theme="${resolvedThemeName}" chartPalette="orange">
         <section style={{ display: 'flex', flexDirection: 'column', gap: 24, minHeight: '100%', padding: 32, backgroundColor: theme.pageBg }}>
           <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24, padding: 24, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.headerBg, color: theme.headerText }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: '64%' }}>

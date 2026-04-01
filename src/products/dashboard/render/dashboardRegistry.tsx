@@ -101,17 +101,27 @@ function DashboardRoot({ children }: { children?: React.ReactNode }) {
   return <>{children}</>
 }
 
-function DashboardTheme({ element, children }: { element: any; children?: React.ReactNode }) {
-  const name = element?.props?.name as string | undefined
+function renderDashboardThemeLayer({
+  themeName,
+  chartPaletteName,
+  headerTheme,
+  managers,
+  children,
+}: {
+  themeName?: string
+  chartPaletteName?: string
+  headerTheme?: string
+  managers?: AnyRecord
+  children?: React.ReactNode
+}) {
+  const name = themeName
   const chartPalette =
-    typeof element?.props?.chartPalette === 'string' && element.props.chartPalette.trim()
-      ? String(element.props.chartPalette).trim().toLowerCase()
+    typeof chartPaletteName === 'string' && chartPaletteName.trim()
+      ? String(chartPaletteName).trim().toLowerCase()
       : DASHBOARD_DEFAULT_CHART_PALETTE
-  const headerTheme = element?.props?.headerTheme as string | undefined
-  const managers = (element?.props?.managers || {}) as AnyRecord
-  const preset = buildThemeVars(name, managers as any, { headerTheme })
+  const preset = buildThemeVars(name, (managers || {}) as any, { headerTheme })
   const themeTokens = resolveDashboardTemplateThemeTokens(name || 'light')
-  const baseCssVars = preset.cssVars || mapManagersToCssVars(managers)
+  const baseCssVars = preset.cssVars || mapManagersToCssVars((managers || {}) as any)
   const cssVars: Record<string, string> = {
     ...baseCssVars,
     chartColorScheme: JSON.stringify(resolveDashboardChartPaletteColors(chartPalette)),
@@ -142,8 +152,20 @@ function DashboardTheme({ element, children }: { element: any; children?: React.
   )
 }
 
-function DashboardSurface({ children }: { children?: React.ReactNode }) {
-  return (
+function DashboardTheme({ element, children }: { element: any; children?: React.ReactNode }) {
+  const props = (element?.props || {}) as AnyRecord
+  return renderDashboardThemeLayer({
+    themeName: typeof props.name === 'string' ? props.name : undefined,
+    chartPaletteName: typeof props.chartPalette === 'string' ? props.chartPalette : undefined,
+    headerTheme: typeof props.headerTheme === 'string' ? props.headerTheme : undefined,
+    managers: (props.managers || {}) as AnyRecord,
+    children,
+  })
+}
+
+function DashboardSurface({ element, children }: { element: any; children?: React.ReactNode }) {
+  const props = (element?.props || {}) as AnyRecord
+  const content = (
     <div
       style={{
         width: '100%',
@@ -156,6 +178,20 @@ function DashboardSurface({ children }: { children?: React.ReactNode }) {
     >
       {children}
     </div>
+  )
+
+  if (typeof props.theme === 'string' && props.theme.trim()) {
+    return renderDashboardThemeLayer({
+      themeName: props.theme,
+      chartPaletteName: typeof props.chartPalette === 'string' ? props.chartPalette : undefined,
+      headerTheme: typeof props.headerTheme === 'string' ? props.headerTheme : undefined,
+      managers: (props.managers || {}) as AnyRecord,
+      children: content,
+    })
+  }
+
+  return (
+    content
   )
 }
 
@@ -307,7 +343,7 @@ function DashboardTabPanel({
 function resolveComponent(type: string): DashboardRenderComponent | undefined {
   if (type === 'DashboardTemplate') return ({ children }) => <DashboardRoot>{children}</DashboardRoot>
   if (type === 'Theme') return ({ element, children }) => <DashboardTheme element={element}>{children}</DashboardTheme>
-  if (type === 'Dashboard') return ({ children }) => <DashboardSurface>{children}</DashboardSurface>
+  if (type === 'Dashboard') return ({ element, children }) => <DashboardSurface element={element}>{children}</DashboardSurface>
   if (type === 'Card') return ({ element, children }) => <JsxCardSurface element={element}>{children}</JsxCardSurface>
   if (type === 'Tabs') return ({ element, children }) => <DashboardTabs element={element}>{children}</DashboardTabs>
   if (type === 'Tab') return ({ element, children }) => <DashboardTab element={element}>{children}</DashboardTab>

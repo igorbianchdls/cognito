@@ -100,7 +100,22 @@ function validateThemeNode(node: DashboardTreeNode, path: number[]) {
 function validateDashboardNode(node: DashboardTreeNode, path: number[]) {
   if (node.type !== 'DashboardTemplate' && node.type !== 'Dashboard') return
   ensureStringProp(node, 'title', path)
-  if (node.type === 'Dashboard') ensureStringProp(node, 'id', path)
+  if (node.type === 'Dashboard') {
+    ensureStringProp(node, 'id', path)
+
+    const themeName = node.props?.theme
+    if (themeName != null && (typeof themeName !== 'string' || !themeName.trim())) {
+      throw new Error(`Dashboard.theme invalido em ${formatNodePath(path)}`)
+    }
+
+    const chartPalette = node.props?.chartPalette
+    if (chartPalette != null) {
+      const normalizedChartPalette = String(chartPalette || '').trim().toLowerCase()
+      if (!normalizedChartPalette || !DASHBOARD_SUPPORTED_CHART_PALETTE_SET.has(normalizedChartPalette)) {
+        throw new Error(`Dashboard.chartPalette="${String(chartPalette)}" nao suportado em ${formatNodePath(path)}`)
+      }
+    }
+  }
 }
 
 function collectTabsContract(node: DashboardTreeNode) {
