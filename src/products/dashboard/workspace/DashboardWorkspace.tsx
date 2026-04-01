@@ -19,7 +19,7 @@ import {
   getDashboardTitleFromSource,
   replaceDashboardChartPaletteNameInSource,
   replaceDashboardThemeNameInSource,
-} from '@/products/dashboard/workspace/compileDashboardSource'
+} from '@/products/dashboard/workspace/dashboardJsxParser'
 import { DashboardWorkspaceCode } from '@/products/dashboard/workspace/DashboardWorkspaceCode'
 import { DashboardWorkspaceHeader } from '@/products/dashboard/workspace/DashboardWorkspaceHeader'
 import { DashboardWorkspacePreview } from '@/products/dashboard/workspace/DashboardWorkspacePreview'

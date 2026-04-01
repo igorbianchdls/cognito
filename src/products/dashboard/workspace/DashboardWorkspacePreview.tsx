@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 
 import { DashboardRenderer } from '@/products/dashboard/render/dashboardRegistry'
-import { compileDashboardSourceToTree } from '@/products/dashboard/workspace/compileDashboardSource'
+import { parseDashboardJsxToTree } from '@/products/dashboard/workspace/dashboardJsxParser'
 import type { DashboardCodeFile } from '@/products/dashboard/workspace/types'
 
 export function DashboardWorkspacePreview({
@@ -25,7 +25,7 @@ export function DashboardWorkspacePreview({
       try {
         setError(null)
         setTree(null)
-        const nextTree = await compileDashboardSourceToTree(sourcePath, files)
+        const nextTree = await parseDashboardJsxToTree(sourcePath, files)
         if (!cancelled) setTree(nextTree)
       } catch (err) {
         if (!cancelled) {

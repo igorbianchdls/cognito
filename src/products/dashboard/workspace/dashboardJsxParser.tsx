@@ -2,6 +2,9 @@
 
 import React, { isValidElement, ReactNode } from 'react'
 
+// Pipeline oficial do workspace:
+// TSX/JSX source -> transpile -> module evaluation -> React element -> dashboard tree
+
 type WorkspaceSourceFile = {
   path: string
   content: string
@@ -136,7 +139,7 @@ function resolveDashboardExport(moduleExports: Record<string, unknown>) {
   return null
 }
 
-export async function compileDashboardSourceToTree(entryPath: string, files: WorkspaceSourceFile[]): Promise<DashboardTreeNode> {
+export async function parseDashboardJsxToTree(entryPath: string, files: WorkspaceSourceFile[]): Promise<DashboardTreeNode> {
   const ts = await import('typescript')
   const runtimeKeys = Object.keys(runtimeScope)
   const runtimeValues = Object.values(runtimeScope)
@@ -204,6 +207,9 @@ export async function compileDashboardSourceToTree(entryPath: string, files: Wor
   }
   return tree
 }
+
+// Temporary alias while callers migrate to the parser-oriented name.
+export const compileDashboardSourceToTree = parseDashboardJsxToTree
 
 export function getDashboardTitleFromSource(source: string, fallback = 'Dashboard') {
   const templateTitleMatch = String(source || '').match(/<DashboardTemplate\b[^>]*\btitle="([^"]+)"/)
