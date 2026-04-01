@@ -678,6 +678,13 @@ function resolveSlicerStorePath(config: AnyRecord | null | undefined): string {
   return '';
 }
 
+function resolveSlicerFieldBinding(config: AnyRecord | null | undefined): { key: string; table: string; field: string } | null {
+  const key = String(config?.field || '').trim();
+  const table = String(config?.table || '').trim();
+  if (!key || !table) return null;
+  return { key, table, field: key };
+}
+
 function resolveSingleSlicerField(element: any, props: AnyRecord): AnyRecord | null {
   const storePath = resolveSlicerStorePath(props);
   if (!storePath) return null;
@@ -824,10 +831,15 @@ function SlicerContent({
       setPendingMap((prev) => ({ ...prev, [idx]: value }));
       return;
     }
-    const next = setByPath(data, storePath, value);
+    const field = fields[idx];
+    let next = setByPath(data, storePath, value);
+    const binding = resolveSlicerFieldBinding(field);
+    if (binding) {
+      next = setByPath(next, `filters.__fields.${binding.key}`, { table: binding.table, field: binding.field });
+    }
     setData(next);
     if (autoAction && typeof autoAction === 'object') onAction?.(autoAction);
-  }, [applyMode, data, onAction, setData]);
+  }, [applyMode, data, fields, onAction, setData]);
 
   const onApplyAll = React.useCallback(() => {
     let next = data;
@@ -837,6 +849,10 @@ function SlicerContent({
       if (!storePath) continue;
       if (Object.prototype.hasOwnProperty.call(pendingMap, i)) {
         next = setByPath(next, storePath, pendingMap[i]);
+        const binding = resolveSlicerFieldBinding(field);
+        if (binding) {
+          next = setByPath(next, `filters.__fields.${binding.key}`, { table: binding.table, field: binding.field });
+        }
       }
     }
     setData(next);

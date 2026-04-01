@@ -65,6 +65,7 @@ ${buildDashboardInlineUiSource()}
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 14 }}>
                 <Filter
                   label="Conta"
+                  table="trafegopago.desempenho_diario"
                   field="conta_id"
                   mode="multiple"
                   search
@@ -85,6 +86,7 @@ ${buildDashboardInlineUiSource()}
                 </Filter>
                 <Filter
                   label="Campanha"
+                  table="trafegopago.desempenho_diario"
                   field="campanha_id"
                   mode="multiple"
                   search
@@ -120,7 +122,7 @@ ${buildDashboardInlineUiSource()}
                   FROM trafegopago.desempenho_diario src
                   WHERE src.plataforma = 'meta_ads'
                     AND src.nivel = 'campaign'
-                    {{filters:src}}
+                    {{filters}}
                 \`,
                 limit: 1,
               }}
@@ -141,7 +143,7 @@ ${buildDashboardInlineUiSource()}
                   FROM trafegopago.desempenho_diario src
                   WHERE src.plataforma = 'meta_ads'
                     AND src.nivel = 'campaign'
-                    {{filters:src}}
+                    {{filters}}
                 \`,
                 limit: 1,
               }}
@@ -163,7 +165,7 @@ ${buildDashboardInlineUiSource()}
                   FROM trafegopago.desempenho_diario src
                   WHERE src.plataforma = 'meta_ads'
                     AND src.nivel = 'campaign'
-                    {{filters:src}}
+                    {{filters}}
                 \`,
                 limit: 1,
               }}
@@ -184,7 +186,7 @@ ${buildDashboardInlineUiSource()}
                   FROM trafegopago.desempenho_diario src
                   WHERE src.plataforma = 'meta_ads'
                     AND src.nivel = 'campaign'
-                    {{filters:src}}
+                    {{filters}}
                 \`,
                 limit: 1,
               }}
@@ -229,7 +231,7 @@ ${buildDashboardInlineUiSource()}
                         FROM trafegopago.desempenho_diario src
                         WHERE src.plataforma = 'meta_ads'
                           AND src.nivel = 'campaign'
-                          {{filters:src}}
+                          {{filters}}
                         GROUP BY 1, 2
                         ORDER BY 3 DESC
                       \`,
@@ -263,7 +265,7 @@ ${buildDashboardInlineUiSource()}
                         FROM trafegopago.desempenho_diario src
                         WHERE src.plataforma = 'meta_ads'
                           AND src.nivel = 'campaign'
-                          {{filters:src}}
+                          {{filters}}
                         GROUP BY 1, 2
                         ORDER BY 3 DESC
                       \`,
@@ -302,7 +304,7 @@ ${buildDashboardInlineUiSource()}
                         FROM trafegopago.desempenho_diario src
                         WHERE src.plataforma = 'meta_ads'
                           AND src.nivel = 'campaign'
-                          {{filters:src}}
+                          {{filters}}
                         GROUP BY 1, 2
                         ORDER BY 1 ASC
                       \`,
@@ -337,7 +339,7 @@ ${buildDashboardInlineUiSource()}
                           FROM trafegopago.desempenho_diario src
                           WHERE src.plataforma = 'meta_ads'
                             AND src.nivel = 'campaign'
-                            {{filters:src}}
+                            {{filters}}
                           GROUP BY 1, 2
                           ORDER BY 3 DESC
                         \`,
@@ -398,7 +400,7 @@ ${buildDashboardInlineUiSource()}
                         FROM trafegopago.desempenho_diario src
                         WHERE src.plataforma = 'meta_ads'
                           AND src.nivel = 'campaign'
-                          {{filters:src}}
+                          {{filters}}
                         GROUP BY 1, 2
                         ORDER BY gasto DESC, campanha ASC
                       \`,
@@ -445,7 +447,7 @@ ${buildDashboardInlineUiSource()}
                         FROM trafegopago.desempenho_diario src
                         WHERE src.plataforma = 'meta_ads'
                           AND src.nivel = 'campaign'
-                          {{filters:src}}
+                          {{filters}}
                       \`,
                       limit: 300,
                     }}

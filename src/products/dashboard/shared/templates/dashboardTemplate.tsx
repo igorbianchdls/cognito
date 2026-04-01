@@ -507,7 +507,7 @@ ${buildDashboardInlineUiSource('classic')}
                   SELECT COALESCE(SUM(p.valor_total), 0)::float AS value
                   FROM vendas.pedidos p
                   WHERE 1=1
-                    {{filters:p}}
+                    {{filters}}
                 \`,
                 limit: 1,
               }}
@@ -530,7 +530,7 @@ ${buildDashboardInlineUiSource('classic')}
                   SELECT COUNT(*)::float AS value
                   FROM vendas.pedidos p
                   WHERE 1=1
-                    {{filters:p}}
+                    {{filters}}
                 \`,
                 limit: 1,
               }}
@@ -553,7 +553,7 @@ ${buildDashboardInlineUiSource('classic')}
                   SELECT COALESCE(AVG(p.valor_total), 0)::float AS value
                   FROM vendas.pedidos p
                   WHERE 1=1
-                    {{filters:p}}
+                    {{filters}}
                 \`,
                 limit: 1,
               }}
@@ -576,7 +576,7 @@ ${buildDashboardInlineUiSource('classic')}
                   SELECT COUNT(DISTINCT p.canal_venda_id)::float AS value
                   FROM vendas.pedidos p
                   WHERE 1=1
-                    {{filters:p}}
+                    {{filters}}
                 \`,
                 limit: 1,
               }}
@@ -599,7 +599,7 @@ ${buildDashboardInlineUiSource('classic')}
                   SELECT COALESCE(AVG(CASE WHEN COALESCE(p.status, '') = 'aprovado' THEN 1 ELSE 0 END), 0)::float AS value
                   FROM vendas.pedidos p
                   WHERE 1=1
-                    {{filters:p}}
+                    {{filters}}
                 \`,
                 limit: 1,
               }}
@@ -685,7 +685,7 @@ ${buildDashboardInlineUiSource('classic')}
                     JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                     LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
                     WHERE 1=1
-                      {{filters:p}}
+                      {{filters}}
                     GROUP BY 1, 2
                     ORDER BY 3 DESC
                   \`,
@@ -720,7 +720,7 @@ ${buildDashboardInlineUiSource('classic')}
                     JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
                     LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
                     WHERE 1=1
-                      {{filters:p}}
+                      {{filters}}
                     GROUP BY 1, 2
                     ORDER BY 3 DESC
                   \`,
@@ -769,7 +769,7 @@ ${buildDashboardInlineUiSource('classic')}
                         COALESCE(SUM(p.valor_total), 0)::float AS value
                       FROM vendas.pedidos p
                       WHERE 1=1
-                        {{filters:p}}
+                        {{filters}}
                       GROUP BY 1, 2
                       ORDER BY 1 ASC
                     \`,
@@ -814,7 +814,7 @@ ${buildDashboardInlineUiSource('classic')}
                     FROM vendas.pedidos p
                     LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
                     WHERE 1=1
-                      {{filters:p}}
+                      {{filters}}
                     ORDER BY p.data_pedido DESC NULLS LAST, p.id DESC
                   \`,
                   limit: 12,
@@ -848,7 +848,7 @@ ${buildDashboardInlineUiSource('classic')}
                       COUNT(*)::float AS value
                     FROM vendas.pedidos p
                     WHERE 1=1
-                      {{filters:p}}
+                      {{filters}}
                     GROUP BY 1
                     ORDER BY 2 DESC
                   \`,
@@ -892,7 +892,7 @@ ${buildDashboardInlineUiSource('classic')}
                     FROM vendas.pedidos p
                     LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
                     WHERE 1=1
-                      {{filters:p}}
+                      {{filters}}
                   \`,
                   limit: 400,
                 }}

@@ -65,6 +65,7 @@ ${buildDashboardInlineUiSource()}
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 14 }}>
                 <Filter
                   label="Loja"
+                  table="ecommerce.pedidos"
                   field="loja_id"
                   mode="multiple"
                   search
@@ -84,6 +85,7 @@ ${buildDashboardInlineUiSource()}
                 </Filter>
                 <Filter
                   label="Pagamento"
+                  table="ecommerce.pedidos"
                   field="status_pagamento"
                   mode="multiple"
                   search
@@ -117,7 +119,7 @@ ${buildDashboardInlineUiSource()}
                   SELECT COALESCE(SUM(src.valor_total), 0)::float AS value
                   FROM ecommerce.pedidos src
                   WHERE src.plataforma = 'shopify'
-                    {{filters:src}}
+                    {{filters}}
                 \`,
                 limit: 1,
               }}
@@ -137,7 +139,7 @@ ${buildDashboardInlineUiSource()}
                   SELECT COUNT(*)::float AS value
                   FROM ecommerce.pedidos src
                   WHERE src.plataforma = 'shopify'
-                    {{filters:src}}
+                    {{filters}}
                 \`,
                 limit: 1,
               }}
@@ -157,7 +159,7 @@ ${buildDashboardInlineUiSource()}
                   SELECT COALESCE(AVG(src.valor_total), 0)::float AS value
                   FROM ecommerce.pedidos src
                   WHERE src.plataforma = 'shopify'
-                    {{filters:src}}
+                    {{filters}}
                 \`,
                 limit: 1,
               }}
@@ -177,7 +179,7 @@ ${buildDashboardInlineUiSource()}
                   SELECT COALESCE(SUM(src.valor_reembolsado), 0)::float AS value
                   FROM ecommerce.pedidos src
                   WHERE src.plataforma = 'shopify'
-                    {{filters:src}}
+                    {{filters}}
                 \`,
                 limit: 1,
               }}
@@ -221,7 +223,7 @@ ${buildDashboardInlineUiSource()}
                           COALESCE(SUM(src.valor_total), 0)::float AS value
                         FROM ecommerce.pedidos src
                         WHERE src.plataforma = 'shopify'
-                          {{filters:src}}
+                          {{filters}}
                         GROUP BY 1, 2
                         ORDER BY 3 DESC
                       \`,
@@ -254,7 +256,7 @@ ${buildDashboardInlineUiSource()}
                           COUNT(*)::float AS value
                         FROM ecommerce.pedidos src
                         WHERE src.plataforma = 'shopify'
-                          {{filters:src}}
+                          {{filters}}
                         GROUP BY 1, 2
                         ORDER BY 3 DESC
                       \`,
@@ -292,7 +294,7 @@ ${buildDashboardInlineUiSource()}
                           COALESCE(SUM(src.valor_total), 0)::float AS value
                         FROM ecommerce.pedidos src
                         WHERE src.plataforma = 'shopify'
-                          {{filters:src}}
+                          {{filters}}
                         GROUP BY 1, 2
                         ORDER BY 1 ASC
                       \`,
@@ -326,7 +328,7 @@ ${buildDashboardInlineUiSource()}
                             COUNT(*)::float AS value
                           FROM ecommerce.pedidos src
                           WHERE src.plataforma = 'shopify'
-                            {{filters:src}}
+                            {{filters}}
                           GROUP BY 1, 2
                           ORDER BY 3 DESC
                         \`,
@@ -386,7 +388,7 @@ ${buildDashboardInlineUiSource()}
                           COALESCE(src.valor_total, 0)::float AS valor_total
                         FROM ecommerce.pedidos src
                         WHERE src.plataforma = 'shopify'
-                          {{filters:src}}
+                          {{filters}}
                         ORDER BY src.data_pedido DESC NULLS LAST, src.id DESC
                       \`,
                       limit: 12,
@@ -431,7 +433,7 @@ ${buildDashboardInlineUiSource()}
                           COALESCE(src.valor_total, 0)::float AS valor_total
                         FROM ecommerce.pedidos src
                         WHERE src.plataforma = 'shopify'
-                          {{filters:src}}
+                          {{filters}}
                       \`,
                       limit: 400,
                     }}

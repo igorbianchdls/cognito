@@ -73,6 +73,11 @@ type DateFilterMarker = {
   value?: string
 }
 
+type FilterFieldBinding = {
+  table?: string
+  field?: string
+}
+
 function isBlankFilterValue(value: unknown): boolean {
   if (value === undefined || value === null) return true
   if (typeof value === 'string') return value.trim() === ''
@@ -101,8 +106,22 @@ function extractQueryTableRefs(sql: string): QueryTableRef[] {
   return refs
 }
 
-function resolveMarkerTarget(sql: string, alias?: string): { table: string; ref: string } | null {
-  const refs = extractQueryTableRefs(sql)
+function extractScopedQueryTableRefs(sql: string, markerIndex?: number): QueryTableRef[] {
+  if (!Number.isFinite(markerIndex)) return extractQueryTableRefs(sql)
+  const stack: number[] = []
+  for (let i = 0; i < Number(markerIndex); i += 1) {
+    const char = sql[i]
+    if (char === '(') stack.push(i + 1)
+    else if (char === ')' && stack.length > 0) stack.pop()
+  }
+  const scopeStart = stack.length > 0 ? stack[stack.length - 1] : 0
+  const scopedSql = sql.slice(scopeStart, Number(markerIndex))
+  const scopedRefs = extractQueryTableRefs(scopedSql)
+  return scopedRefs.length > 0 ? scopedRefs : extractQueryTableRefs(sql)
+}
+
+function resolveMarkerTarget(sql: string, alias?: string, markerIndex?: number): { table: string; ref: string } | null {
+  const refs = extractScopedQueryTableRefs(sql, markerIndex)
   if (!refs.length) return null
   if (alias) {
     const found = refs.find((entry) => entry.alias === alias)
@@ -116,10 +135,10 @@ function resolveMarkerTarget(sql: string, alias?: string): { table: string; ref:
   }
 }
 
-function buildFilterPredicate(field: string, value: unknown, ref: string): string | null {
-  if (!isSafeSqlIdentifier(field)) return null
-  if (field === 'tenant_id') return `${ref}.tenant_id = {{tenant_id}}`
-  if (field === 'de' || field === 'ate' || field === 'dateRange' || field === 'compare_de' || field === 'compare_ate' || field === 'comparison_mode') {
+function buildFilterPredicate(column: string, value: unknown, ref: string, paramName = column): string | null {
+  if (!isSafeSqlIdentifier(column) || !isSafeSqlIdentifier(paramName)) return null
+  if (column === 'tenant_id') return `${ref}.tenant_id = {{tenant_id}}`
+  if (column === 'de' || column === 'ate' || column === 'dateRange' || column === 'compare_de' || column === 'compare_ate' || column === 'comparison_mode') {
     return null
   }
   if (isBlankFilterValue(value)) return null
@@ -130,9 +149,9 @@ function buildFilterPredicate(field: string, value: unknown, ref: string): strin
       return Number.isFinite(Number(item))
     })
     const cast = numericArray ? '::int[]' : '::text[]'
-    return `${ref}.${field} = ANY({{${field}}}${cast})`
+    return `${ref}.${column} = ANY({{${paramName}}}${cast})`
   }
-  return `${ref}.${field} = {{${field}}}`
+  return `${ref}.${column} = {{${paramName}}}`
 }
 
 function normalizeDateFilterMarkers(filters: Record<string, unknown>): DateFilterMarker[] {
@@ -142,6 +161,29 @@ function normalizeDateFilterMarkers(filters: Record<string, unknown>): DateFilte
   }
   if (isObject(raw)) return [raw as DateFilterMarker]
   return []
+}
+
+function normalizeFilterFieldBindings(filters: Record<string, unknown>): Record<string, FilterFieldBinding> {
+  const raw = filters.__fields
+  if (!isObject(raw)) return {}
+  const bindings: Record<string, FilterFieldBinding> = {}
+  for (const [key, value] of Object.entries(raw)) {
+    if (!isObject(value)) continue
+    const table = typeof value.table === 'string' ? value.table.trim() : ''
+    const field = typeof value.field === 'string' ? value.field.trim() : ''
+    if (!table || !field) continue
+    bindings[key] = { table, field }
+  }
+  return bindings
+}
+
+function buildRefByTable(refs: QueryTableRef[]): Map<string, QueryTableRef> {
+  const map = new Map<string, QueryTableRef>()
+  for (const ref of refs) {
+    if (!ref.table || map.has(ref.table)) continue
+    map.set(ref.table, ref)
+  }
+  return map
 }
 
 function getScopedFiltersForTable(filters: Record<string, unknown>, table: string): Record<string, unknown> {
@@ -229,38 +271,146 @@ function buildDatePredicates(
   return predicates
 }
 
+function buildDatePredicatesForRefs(
+  refs: QueryTableRef[],
+  filters: Record<string, unknown>,
+  mode: 'current' | 'compare' = 'current',
+): string[] {
+  if (!refs.length) return []
+  const refByTable = buildRefByTable(refs)
+  const dateMarkers = normalizeDateFilterMarkers(filters)
+  if (!dateMarkers.length) return []
+
+  const deKey = mode === 'compare' ? 'compare_de' : 'de'
+  const ateKey = mode === 'compare' ? 'compare_ate' : 'ate'
+  const de = typeof filters[deKey] === 'string' ? String(filters[deKey]).trim() : ''
+  const ate = typeof filters[ateKey] === 'string' ? String(filters[ateKey]).trim() : ''
+  const predicates: string[] = []
+
+  for (const marker of dateMarkers) {
+    const markerTable = typeof marker.table === 'string' ? marker.table.trim() : ''
+    const markerField = typeof marker.field === 'string' ? marker.field.trim() : ''
+    if (!markerTable || !markerField || !isSafeSqlIdentifier(markerField)) continue
+    const ref = refByTable.get(markerTable)
+    if (!ref) continue
+    const targetRef = ref.alias || ref.table
+
+    if (marker.mode === 'single') {
+      const value =
+        mode === 'compare'
+          ? de
+          : (typeof marker.value === 'string' ? marker.value.trim() : '')
+      if (value) predicates.push(`${targetRef}.${markerField}::date = {{${deKey}}}::date`)
+      continue
+    }
+
+    const fromValue = de || (typeof marker.from === 'string' ? marker.from.trim() : '')
+    const toValue = ate || (typeof marker.to === 'string' ? marker.to.trim() : '')
+
+    if (fromValue) predicates.push(`${targetRef}.${markerField}::date >= {{${deKey}}}::date`)
+    if (toValue) predicates.push(`${targetRef}.${markerField}::date <= {{${ateKey}}}::date`)
+  }
+
+  return predicates
+}
+
 function buildMarkerPredicates(
   sql: string,
   filters: Record<string, unknown>,
   alias?: string,
   opts?: { includeDate?: boolean; dateMode?: 'current' | 'compare' },
+  markerIndex?: number,
 ): string {
-  const target = resolveMarkerTarget(sql, alias)
-  if (!target) {
+  const refs = extractScopedQueryTableRefs(sql, markerIndex)
+  if (!refs.length) {
     throw new Error(alias ? `não foi possível resolver alias do marcador de filtros: ${alias}` : 'não foi possível resolver tabela base do marcador de filtros')
   }
 
-  const catalog = getAppsTableCatalog(target.table)
-  const allowedFields = catalog ? new Set(catalog.filters.map((filter) => filter.field)) : null
-  const effectiveFilters: Record<string, unknown> = {
-    ...filters,
-    ...getScopedFiltersForTable(filters, target.table),
-  }
+  const bindings = normalizeFilterFieldBindings(filters)
   const predicates: string[] = []
 
-  if (!isBlankFilterValue(effectiveFilters.tenant_id)) {
-    predicates.push(`${target.ref}.tenant_id = {{tenant_id}}`)
-  }
+  if (alias) {
+    const target = resolveMarkerTarget(sql, alias, markerIndex)
+    if (!target) {
+      throw new Error(`não foi possível resolver alias do marcador de filtros: ${alias}`)
+    }
 
-  if (opts?.includeDate !== false) {
-    predicates.push(...buildDatePredicates(target, filters, opts?.dateMode || 'current'))
-  }
+    const catalog = getAppsTableCatalog(target.table)
+    const allowedFields = catalog ? new Set(catalog.filters.map((filter) => filter.field)) : null
+    const effectiveFilters: Record<string, unknown> = {
+      ...filters,
+      ...getScopedFiltersForTable(filters, target.table),
+    }
 
-  for (const [field, rawValue] of Object.entries(effectiveFilters)) {
-    if (field === 'tenant_id' || field.startsWith('__')) continue
-    if (allowedFields && !allowedFields.has(field)) continue
-    const predicate = buildFilterPredicate(field, rawValue, target.ref)
-    if (predicate) predicates.push(predicate)
+    if (!isBlankFilterValue(effectiveFilters.tenant_id)) {
+      predicates.push(`${target.ref}.tenant_id = {{tenant_id}}`)
+    }
+
+    if (opts?.includeDate !== false) {
+      predicates.push(...buildDatePredicates(target, filters, opts?.dateMode || 'current'))
+    }
+
+    for (const [field, rawValue] of Object.entries(effectiveFilters)) {
+      if (field === 'tenant_id' || field.startsWith('__')) continue
+      const binding = bindings[field]
+      const resolvedColumn = binding?.table === target.table && binding.field ? binding.field : field
+      if (allowedFields && !allowedFields.has(resolvedColumn)) continue
+      const predicate = buildFilterPredicate(resolvedColumn, rawValue, target.ref, field)
+      if (predicate) predicates.push(predicate)
+    }
+  } else {
+    const refByTable = buildRefByTable(refs)
+    const seenPredicateKeys = new Set<string>()
+
+    if (opts?.includeDate !== false) {
+      predicates.push(...buildDatePredicatesForRefs(refs, filters, opts?.dateMode || 'current'))
+    }
+
+    for (const ref of refs) {
+      const effectiveFilters: Record<string, unknown> = {
+        ...filters,
+        ...getScopedFiltersForTable(filters, ref.table),
+      }
+      if (!isBlankFilterValue(effectiveFilters.tenant_id)) {
+        const key = `${ref.table}:tenant_id`
+        if (!seenPredicateKeys.has(key)) {
+          seenPredicateKeys.add(key)
+          predicates.push(`${ref.alias || ref.table}.tenant_id = {{tenant_id}}`)
+        }
+      }
+    }
+
+    const fallbackTarget = refs[0]
+    const fallbackCatalog = fallbackTarget ? getAppsTableCatalog(fallbackTarget.table) : null
+    const fallbackAllowedFields = fallbackCatalog ? new Set(fallbackCatalog.filters.map((filter) => filter.field)) : null
+
+    for (const [field, rawValue] of Object.entries(filters)) {
+      if (field === 'tenant_id' || field.startsWith('__')) continue
+      const binding = bindings[field]
+      if (binding?.table && binding?.field) {
+        const ref = refByTable.get(binding.table)
+        if (!ref) continue
+        const catalog = getAppsTableCatalog(binding.table)
+        const allowedFields = catalog ? new Set(catalog.filters.map((filter) => filter.field)) : null
+        if (allowedFields && !allowedFields.has(binding.field)) continue
+        const key = `${ref.table}:${field}:${binding.field}`
+        if (seenPredicateKeys.has(key)) continue
+        const predicate = buildFilterPredicate(binding.field, rawValue, ref.alias || ref.table, field)
+        if (!predicate) continue
+        seenPredicateKeys.add(key)
+        predicates.push(predicate)
+        continue
+      }
+
+      if (!fallbackTarget) continue
+      if (fallbackAllowedFields && !fallbackAllowedFields.has(field)) continue
+      const key = `${fallbackTarget.table}:${field}:${field}`
+      if (seenPredicateKeys.has(key)) continue
+      const predicate = buildFilterPredicate(field, rawValue, fallbackTarget.alias || fallbackTarget.table)
+      if (!predicate) continue
+      seenPredicateKeys.add(key)
+      predicates.push(predicate)
+    }
   }
 
   if (predicates.length === 0) return ''
@@ -268,13 +418,13 @@ function buildMarkerPredicates(
 }
 
 function expandFilterMarkers(sql: string, filters: Record<string, unknown>): string {
-  return sql.replace(/\{\{\s*(filters(?:_no_date)?|compare_filters)(?:\s*:\s*([a-zA-Z_][a-zA-Z0-9_]*))?\s*\}\}/g, (_, rawMarker: string, rawAlias?: string) => {
+  return sql.replace(/\{\{\s*(filters(?:_no_date)?|compare_filters)(?:\s*:\s*([a-zA-Z_][a-zA-Z0-9_]*))?\s*\}\}/g, (_, rawMarker: string, rawAlias: string | undefined, offset: number) => {
     const marker = String(rawMarker || '').trim().toLowerCase()
     const alias = typeof rawAlias === 'string' ? rawAlias.trim() : ''
     return buildMarkerPredicates(sql, filters, alias || undefined, {
       includeDate: marker !== 'filters_no_date',
       dateMode: marker === 'compare_filters' ? 'compare' : 'current',
-    })
+    }, offset)
   })
 }
 

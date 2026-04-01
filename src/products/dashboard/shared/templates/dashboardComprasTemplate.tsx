@@ -63,6 +63,7 @@ ${buildDashboardInlineUiSource()}
               <h2 style={{ ...ui.title, fontSize: 20 }}>Fornecedor</h2>
               <Filter
                 label="Fornecedor"
+                table="compras.compras"
                 field="fornecedor_id"
                 mode="multiple"
                 search
@@ -87,6 +88,7 @@ ${buildDashboardInlineUiSource()}
               <h2 style={{ ...ui.title, fontSize: 20 }}>Centro de custo</h2>
               <Filter
                 label="Centro de custo"
+                table="compras.compras"
                 field="centro_custo_id"
                 mode="multiple"
                 search
@@ -111,6 +113,7 @@ ${buildDashboardInlineUiSource()}
               <h2 style={{ ...ui.title, fontSize: 20 }}>Status</h2>
               <Filter
                 label="Status"
+                table="compras.compras"
                 field="status"
                 mode="multiple"
                 search
@@ -131,7 +134,7 @@ ${buildDashboardInlineUiSource()}
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 16 }}>
-            <Query dataQuery={{ query: \`SELECT COALESCE(SUM(c.valor_total), 0)::float AS value FROM compras.compras c WHERE 1=1 {{filters:c}}\`, limit: 1 }} format="currency" comparisonMode="previous_period">
+            <Query dataQuery={{ query: \`SELECT COALESCE(SUM(c.valor_total), 0)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period">
               <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: isClassic && cardFrame ? 0 : 22, border: `1px solid \${theme.surfaceBorder}`, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p style={ui.kpiLabel}>Gasto total</p>
                 <h2 style={{ ...ui.title, fontSize: 20 }}>Valor comprado</h2>
@@ -139,7 +142,7 @@ ${buildDashboardInlineUiSource()}
                 <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
-            <Query dataQuery={{ query: \`SELECT COUNT(DISTINCT c.fornecedor_id)::float AS value FROM compras.compras c WHERE 1=1 {{filters:c}}\`, limit: 1 }} format="number" comparisonMode="previous_period">
+            <Query dataQuery={{ query: \`SELECT COUNT(DISTINCT c.fornecedor_id)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }} format="number" comparisonMode="previous_period">
               <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: isClassic && cardFrame ? 0 : 22, border: `1px solid \${theme.surfaceBorder}`, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p style={ui.kpiLabel}>Base ativa</p>
                 <h2 style={{ ...ui.title, fontSize: 20 }}>Fornecedores</h2>
@@ -147,7 +150,7 @@ ${buildDashboardInlineUiSource()}
                 <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
-            <Query dataQuery={{ query: \`SELECT COUNT(DISTINCT c.id)::float AS value FROM compras.compras c WHERE 1=1 {{filters:c}}\`, limit: 1 }} format="number" comparisonMode="previous_period">
+            <Query dataQuery={{ query: \`SELECT COUNT(DISTINCT c.id)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }} format="number" comparisonMode="previous_period">
               <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: isClassic && cardFrame ? 0 : 22, border: `1px solid \${theme.surfaceBorder}`, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p style={ui.kpiLabel}>Volume</p>
                 <h2 style={{ ...ui.title, fontSize: 20 }}>Pedidos</h2>
@@ -155,7 +158,7 @@ ${buildDashboardInlineUiSource()}
                 <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
-            <Query dataQuery={{ query: \`SELECT COALESCE(AVG(c.valor_total), 0)::float AS value FROM compras.compras c WHERE 1=1 {{filters:c}}\`, limit: 1 }} format="currency" comparisonMode="previous_period">
+            <Query dataQuery={{ query: \`SELECT COALESCE(AVG(c.valor_total), 0)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period">
               <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: isClassic && cardFrame ? 0 : 22, border: `1px solid \${theme.surfaceBorder}`, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p style={ui.kpiLabel}>Eficiencia</p>
                 <h2 style={{ ...ui.title, fontSize: 20 }}>Ticket medio</h2>
@@ -186,7 +189,7 @@ ${buildDashboardInlineUiSource()}
                     FROM compras.compras src
                     LEFT JOIN entidades.fornecedores f ON f.id = src.fornecedor_id
                     WHERE 1=1
-                      {{filters:src}}
+                      {{filters}}
                     GROUP BY 1, 2
                     ORDER BY 3 DESC
                   \`,
@@ -220,7 +223,7 @@ ${buildDashboardInlineUiSource()}
                     FROM compras.compras src
                     LEFT JOIN financeiro.categorias_despesa cd ON cd.id = src.categoria_despesa_id
                     WHERE 1=1
-                      {{filters:src}}
+                      {{filters}}
                     GROUP BY 1, 2
                     ORDER BY 3 DESC
                   \`,
@@ -256,7 +259,7 @@ ${buildDashboardInlineUiSource()}
                       COALESCE(SUM(src.valor_total), 0)::float AS value
                     FROM compras.compras src
                     WHERE 1=1
-                      {{filters:src}}
+                      {{filters}}
                     GROUP BY 1, 2
                     ORDER BY 1 ASC
                   \`,
@@ -289,7 +292,7 @@ ${buildDashboardInlineUiSource()}
                       COUNT(*)::float AS value
                     FROM compras.compras src
                     WHERE 1=1
-                      {{filters:src}}
+                      {{filters}}
                     GROUP BY 1, 2
                     ORDER BY 3 DESC
                   \`,
@@ -334,7 +337,7 @@ ${buildDashboardInlineUiSource()}
                     LEFT JOIN entidades.fornecedores f ON f.id = c.fornecedor_id
                     LEFT JOIN empresa.centros_custo cc ON cc.id = c.centro_custo_id
                     WHERE 1=1
-                      {{filters:c}}
+                      {{filters}}
                     ORDER BY c.data_pedido DESC NULLS LAST, c.id DESC
                   \`,
                   limit: 12,
@@ -380,7 +383,7 @@ ${buildDashboardInlineUiSource()}
                     FROM compras.compras c
                     LEFT JOIN financeiro.categorias_despesa cd ON cd.id = c.categoria_despesa_id
                     WHERE 1=1
-                      {{filters:c}}
+                      {{filters}}
                   \`,
                   limit: 400,
                 }}

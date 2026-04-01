@@ -63,6 +63,7 @@ ${buildDashboardInlineUiSource()}
               <h2 style={{ ...ui.title, fontSize: 20 }}>Status</h2>
               <Filter
                 label="Status"
+                table="financeiro.contas_pagar"
                 field="status"
                 mode="multiple"
                 search
@@ -86,6 +87,7 @@ ${buildDashboardInlineUiSource()}
               <h2 style={{ ...ui.title, fontSize: 20 }}>Categoria despesa</h2>
               <Filter
                 label="Categoria despesa"
+                table="financeiro.contas_pagar"
                 field="categoria_despesa_id"
                 mode="multiple"
                 search
@@ -110,6 +112,7 @@ ${buildDashboardInlineUiSource()}
               <h2 style={{ ...ui.title, fontSize: 20 }}>Fornecedor</h2>
               <Filter
                 label="Fornecedor"
+                table="financeiro.contas_pagar"
                 field="fornecedor_id"
                 mode="multiple"
                 search
@@ -131,7 +134,7 @@ ${buildDashboardInlineUiSource()}
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 16 }}>
-            <Query dataQuery={{ query: \`SELECT COALESCE(SUM(cr.valor_liquido), 0)::float AS value FROM financeiro.contas_receber cr WHERE 1=1 {{filters:cr}}\`, limit: 1 }} format="currency" comparisonMode="previous_period">
+            <Query dataQuery={{ query: \`SELECT COALESCE(SUM(cr.valor_liquido), 0)::float AS value FROM financeiro.contas_receber cr WHERE 1=1 {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period">
               <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: isClassic && cardFrame ? 0 : 22, border: `1px solid \${theme.surfaceBorder}`, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p style={ui.kpiLabel}>Recebimentos</p>
                 <h2 style={{ ...ui.title, fontSize: 20 }}>Contas a receber</h2>
@@ -139,7 +142,7 @@ ${buildDashboardInlineUiSource()}
                 <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
-            <Query dataQuery={{ query: \`SELECT COALESCE(SUM(cp.valor_liquido), 0)::float AS value FROM financeiro.contas_pagar cp WHERE 1=1 {{filters:cp}}\`, limit: 1 }} format="currency" comparisonMode="previous_period">
+            <Query dataQuery={{ query: \`SELECT COALESCE(SUM(cp.valor_liquido), 0)::float AS value FROM financeiro.contas_pagar cp WHERE 1=1 {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period">
               <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: isClassic && cardFrame ? 0 : 22, border: `1px solid \${theme.surfaceBorder}`, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p style={ui.kpiLabel}>Pagamentos</p>
                 <h2 style={{ ...ui.title, fontSize: 20 }}>Contas a pagar</h2>
@@ -151,8 +154,8 @@ ${buildDashboardInlineUiSource()}
               dataQuery={{
                 query: \`
                   SELECT (
-                    COALESCE((SELECT SUM(cr.valor_liquido) FROM financeiro.contas_receber cr WHERE 1=1 {{filters:cr}}), 0)
-                    - COALESCE((SELECT SUM(cp.valor_liquido) FROM financeiro.contas_pagar cp WHERE 1=1 {{filters:cp}}), 0)
+                    COALESCE((SELECT SUM(cr.valor_liquido) FROM financeiro.contas_receber cr WHERE 1=1 {{filters}}), 0)
+                    - COALESCE((SELECT SUM(cp.valor_liquido) FROM financeiro.contas_pagar cp WHERE 1=1 {{filters}}), 0)
                   )::float AS value
                 \`,
                 limit: 1,
@@ -167,7 +170,7 @@ ${buildDashboardInlineUiSource()}
                 <p style={ui.kpiDelta}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
-            <Query dataQuery={{ query: \`SELECT COUNT(*)::float AS value FROM financeiro.contas_pagar cp WHERE 1=1 {{filters:cp}}\`, limit: 1 }} format="number" comparisonMode="previous_period">
+            <Query dataQuery={{ query: \`SELECT COUNT(*)::float AS value FROM financeiro.contas_pagar cp WHERE 1=1 {{filters}}\`, limit: 1 }} format="number" comparisonMode="previous_period">
               <Card frame={cardFrame || undefined} style={{ padding: 22, borderRadius: isClassic && cardFrame ? 0 : 22, border: `1px solid \${theme.surfaceBorder}`, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <p style={ui.kpiLabel}>Carga operacional</p>
                 <h2 style={{ ...ui.title, fontSize: 20 }}>Titulos em AP</h2>
@@ -198,7 +201,7 @@ ${buildDashboardInlineUiSource()}
                     FROM financeiro.contas_pagar cp
                     LEFT JOIN entidades.fornecedores f ON f.id = cp.fornecedor_id
                     WHERE 1=1
-                      {{filters:cp}}
+                      {{filters}}
                     GROUP BY 1, 2
                     ORDER BY 3 DESC
                   \`,
@@ -230,7 +233,7 @@ ${buildDashboardInlineUiSource()}
                       COUNT(*)::float AS value
                     FROM financeiro.contas_pagar cp
                     WHERE 1=1
-                      {{filters:cp}}
+                      {{filters}}
                     GROUP BY 1, 2
                     ORDER BY 3 DESC
                   \`,
@@ -266,7 +269,7 @@ ${buildDashboardInlineUiSource()}
                       COALESCE(SUM(cr.valor_liquido), 0)::float AS value
                     FROM financeiro.contas_receber cr
                     WHERE 1=1
-                      {{filters:cr}}
+                      {{filters}}
                     GROUP BY 1, 2
                     ORDER BY 1 ASC
                   \`,
@@ -300,7 +303,7 @@ ${buildDashboardInlineUiSource()}
                     FROM financeiro.contas_receber cr
                     LEFT JOIN entidades.clientes cli ON cli.id = cr.cliente_id
                     WHERE 1=1
-                      {{filters:cr}}
+                      {{filters}}
                     GROUP BY 1, 2
                     ORDER BY 3 DESC
                   \`,
@@ -345,7 +348,7 @@ ${buildDashboardInlineUiSource()}
                     LEFT JOIN entidades.fornecedores f ON f.id = cp.fornecedor_id
                     LEFT JOIN financeiro.categorias_despesa cd ON cd.id = cp.categoria_despesa_id
                     WHERE 1=1
-                      {{filters:cp}}
+                      {{filters}}
                     ORDER BY cp.data_vencimento ASC NULLS LAST, cp.id DESC
                   \`,
                   limit: 12,
@@ -391,7 +394,7 @@ ${buildDashboardInlineUiSource()}
                     FROM financeiro.contas_pagar cp
                     LEFT JOIN entidades.fornecedores f ON f.id = cp.fornecedor_id
                     WHERE 1=1
-                      {{filters:cp}}
+                      {{filters}}
                   \`,
                   limit: 400,
                 }}
