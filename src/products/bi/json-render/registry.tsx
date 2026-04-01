@@ -651,7 +651,7 @@ function resolveSlicerUiChild(element: any): { variant?: SlicerVariant; props: A
   const childDefs = Array.isArray(element?.children) ? element.children : [];
   for (const child of childDefs) {
     const type = String((child as AnyRecord)?.type || '').trim();
-    if (type === 'Checklist') {
+    if (type === 'Checklist' || type === 'OptionList') {
       return {
         variant: 'checklist',
         props: ((child as AnyRecord)?.props && typeof (child as AnyRecord).props === 'object' && !Array.isArray((child as AnyRecord).props))
@@ -659,7 +659,7 @@ function resolveSlicerUiChild(element: any): { variant?: SlicerVariant; props: A
           : {},
       };
     }
-    if (type === 'Dropdown') {
+    if (type === 'Dropdown' || type === 'Select') {
       return {
         variant: 'dropdown',
         props: ((child as AnyRecord)?.props && typeof (child as AnyRecord).props === 'object' && !Array.isArray((child as AnyRecord).props))
@@ -696,6 +696,7 @@ function resolveSingleSlicerField(element: any, props: AnyRecord): AnyRecord | n
     'field',
     'type',
     'variant',
+    'mode',
     'selectionMode',
     'storePath',
     'placeholder',
@@ -734,6 +735,8 @@ function resolveSlicerPresentation(field: AnyRecord): { variant: SlicerVariant; 
   const selectionMode =
     field?.selectionMode === 'single' || field?.selectionMode === 'multiple'
       ? (field.selectionMode as SlicerSelectionMode)
+      : field?.mode === 'single' || field?.mode === 'multiple'
+        ? (field.mode as SlicerSelectionMode)
       : fromLegacy.selectionMode;
   return { variant, selectionMode };
 }
@@ -2443,9 +2446,28 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
     );
   },
 
+  Filter: ({ element, onAction }) => {
+    const theme = useThemeOverrides();
+    const p = deepMerge((theme.components?.Slicer || {}) as AnyRecord, (element?.props || {}) as AnyRecord) as AnyRecord;
+    const layout = (p.layout || 'vertical') as 'vertical' | 'horizontal';
+    const applyMode = (p.applyMode || 'auto') as 'auto' | 'manual';
+    const fields = resolveSlicerDefinitions(element, p);
+    return (
+      <SlicerContent
+        element={{ ...element, props: p }}
+        fields={fields}
+        layout={layout}
+        applyMode={applyMode}
+        onAction={onAction}
+      />
+    );
+  },
+
   SlicerField: () => null,
   Checklist: () => null,
   Dropdown: () => null,
+  OptionList: () => null,
+  Select: () => null,
 
   SlicerCard: ({ element, onAction }) => {
     const theme = useThemeOverrides();

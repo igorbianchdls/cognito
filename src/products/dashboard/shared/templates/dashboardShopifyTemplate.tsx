@@ -63,11 +63,10 @@ ${buildDashboardInlineUiSource()}
                 <h2 style={ui.title}>Loja e status</h2>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 14 }}>
-                <Slicer
+                <Filter
                   label="Loja"
                   field="loja_id"
-                  variant="dropdown"
-                  selectionMode="multiple"
+                  mode="multiple"
                   search
                   clearable
                   width={220}
@@ -80,12 +79,13 @@ ${buildDashboardInlineUiSource()}
                       AND src.loja_id IS NOT NULL
                     ORDER BY 2 ASC
                   \`}
-                />
-                <Slicer
+                >
+                  <Select />
+                </Filter>
+                <Filter
                   label="Pagamento"
                   field="status_pagamento"
-                  variant="dropdown"
-                  selectionMode="multiple"
+                  mode="multiple"
                   search
                   clearable
                   width={220}
@@ -98,7 +98,9 @@ ${buildDashboardInlineUiSource()}
                       AND COALESCE(src.status_pagamento, '') <> ''
                     ORDER BY 2 ASC
                   \`}
-                />
+                >
+                  <Select />
+                </Filter>
               </div>
             </Card>
 

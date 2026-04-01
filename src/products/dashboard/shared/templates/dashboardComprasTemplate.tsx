@@ -61,11 +61,10 @@ ${buildDashboardInlineUiSource()}
             <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
               <p style={ui.eyebrow}>Filtro</p>
               <h2 style={{ ...ui.title, fontSize: 20 }}>Fornecedor</h2>
-              <Slicer
+              <Filter
                 label="Fornecedor"
                 field="fornecedor_id"
-                variant="dropdown"
-                selectionMode="multiple"
+                mode="multiple"
                 search
                 clearable
                 width="100%"
@@ -78,17 +77,18 @@ ${buildDashboardInlineUiSource()}
                   WHERE src.fornecedor_id IS NOT NULL
                   ORDER BY 2 ASC
                 \`}
-              />
+              >
+                <Select />
+              </Filter>
             </Card>
 
             <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
               <p style={ui.eyebrow}>Filtro</p>
               <h2 style={{ ...ui.title, fontSize: 20 }}>Centro de custo</h2>
-              <Slicer
+              <Filter
                 label="Centro de custo"
                 field="centro_custo_id"
-                variant="dropdown"
-                selectionMode="multiple"
+                mode="multiple"
                 search
                 clearable
                 width="100%"
@@ -101,17 +101,18 @@ ${buildDashboardInlineUiSource()}
                   WHERE src.centro_custo_id IS NOT NULL
                   ORDER BY 2 ASC
                 \`}
-              />
+              >
+                <Select />
+              </Filter>
             </Card>
 
             <Card frame={ui.cardFrame || undefined} style={ui.panelCard}>
               <p style={ui.eyebrow}>Filtro</p>
               <h2 style={{ ...ui.title, fontSize: 20 }}>Status</h2>
-              <Slicer
+              <Filter
                 label="Status"
                 field="status"
-                variant="dropdown"
-                selectionMode="multiple"
+                mode="multiple"
                 search
                 clearable
                 width="100%"
@@ -123,7 +124,9 @@ ${buildDashboardInlineUiSource()}
                   WHERE COALESCE(src.status, '') <> ''
                   ORDER BY 2 ASC
                 \`}
-              />
+              >
+                <Select />
+              </Filter>
             </Card>
           </section>
 

@@ -344,7 +344,10 @@ function resolveComponent(type: string): DashboardRenderComponent | undefined {
   if (type === 'Query') return ({ element, children }) => <DashboardQuery element={element}>{children}</DashboardQuery>
   if (type === 'Table') return ({ element, onAction }) => <biRegistry.Table element={element} onAction={onAction} />
   if (type === 'PivotTable') return ({ element, onAction }) => <biRegistry.PivotTable element={element} onAction={onAction} />
+  if (type === 'Filter') return ({ element, onAction }) => <biRegistry.Slicer element={element} onAction={onAction} />
   if (type === 'Slicer') return ({ element, onAction }) => <biRegistry.Slicer element={element} onAction={onAction} />
+  if (type === 'Select') return () => null
+  if (type === 'OptionList') return () => null
   if (type === 'DatePicker') return ({ element, onAction }) => <DashboardDatePicker element={element} onAction={onAction} />
   if (type === 'Insights') return ({ element }) => <DashboardInsights element={element} />
   if (type === 'Text') return ({ element, children }) => <DashboardText element={element}>{children}</DashboardText>

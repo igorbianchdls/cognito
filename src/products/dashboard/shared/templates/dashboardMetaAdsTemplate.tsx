@@ -63,11 +63,10 @@ ${buildDashboardInlineUiSource()}
                 <h2 style={ui.title}>Conta e campanha</h2>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 14 }}>
-                <Slicer
+                <Filter
                   label="Conta"
                   field="conta_id"
-                  variant="dropdown"
-                  selectionMode="multiple"
+                  mode="multiple"
                   search
                   clearable
                   width={220}
@@ -81,12 +80,13 @@ ${buildDashboardInlineUiSource()}
                       AND src.conta_id IS NOT NULL
                     ORDER BY 2 ASC
                   \`}
-                />
-                <Slicer
+                >
+                  <Select />
+                </Filter>
+                <Filter
                   label="Campanha"
                   field="campanha_id"
-                  variant="dropdown"
-                  selectionMode="multiple"
+                  mode="multiple"
                   search
                   clearable
                   width={240}
@@ -100,7 +100,9 @@ ${buildDashboardInlineUiSource()}
                       AND src.campanha_id IS NOT NULL
                     ORDER BY 2 ASC
                   \`}
-                />
+                >
+                  <Select />
+                </Filter>
               </div>
             </Card>
 
