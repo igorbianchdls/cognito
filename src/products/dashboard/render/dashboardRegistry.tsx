@@ -21,6 +21,7 @@ import DashboardQuery, {
   useDashboardQueryResult,
 } from '@/products/dashboard/render/components/DashboardQuery'
 import DashboardText from '@/products/dashboard/render/components/DashboardText'
+import { resolveDashboardTemplateThemeTokens } from '@/products/dashboard/shared/templates/dashboardTemplateThemes'
 import {
   DASHBOARD_DEFAULT_CHART_PALETTE,
   DASHBOARD_SUPPORTED_HTML_TAG_SET,
@@ -109,9 +110,16 @@ function DashboardTheme({ element, children }: { element: any; children?: React.
   const headerTheme = element?.props?.headerTheme as string | undefined
   const managers = (element?.props?.managers || {}) as AnyRecord
   const preset = buildThemeVars(name, managers as any, { headerTheme })
+  const themeTokens = resolveDashboardTemplateThemeTokens(name || 'light')
+  const baseCssVars = preset.cssVars || mapManagersToCssVars(managers)
   const cssVars = {
-    ...(preset.cssVars || mapManagersToCssVars(managers)),
+    ...baseCssVars,
     chartColorScheme: JSON.stringify(resolveDashboardChartPaletteColors(chartPalette)),
+    containerFrameVariant: baseCssVars.containerFrameVariant || themeTokens.cardFrame?.variant,
+    containerFrameCornerSize:
+      baseCssVars.containerFrameCornerSize || (themeTokens.cardFrame ? String(themeTokens.cardFrame.cornerSize) : undefined),
+    containerFrameCornerWidth:
+      baseCssVars.containerFrameCornerWidth || (themeTokens.cardFrame ? String(themeTokens.cardFrame.cornerWidth) : undefined),
   }
 
   return (

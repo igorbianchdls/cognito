@@ -2,6 +2,11 @@
 
 export type DashboardTemplateThemeTokens = {
   dark: boolean
+  cardFrame: {
+    variant: 'hud'
+    cornerSize: number
+    cornerWidth: number
+  } | null
   primary: string
   pageBg: string
   surfaceBg: string
@@ -29,6 +34,7 @@ export type DashboardTemplateThemeTokens = {
 export const DASHBOARD_TEMPLATE_THEME_TOKENS: Record<string, DashboardTemplateThemeTokens> = {
   light: {
     dark: false,
+    cardFrame: { variant: 'hud', cornerSize: 6, cornerWidth: 1 },
     primary: '#2563EB',
     pageBg: '#F6F8FC',
     surfaceBg: '#FFFFFF',
@@ -54,6 +60,7 @@ export const DASHBOARD_TEMPLATE_THEME_TOKENS: Record<string, DashboardTemplateTh
   },
   blue: {
     dark: false,
+    cardFrame: { variant: 'hud', cornerSize: 8, cornerWidth: 1 },
     primary: '#1D4ED8',
     pageBg: '#EEF4FF',
     surfaceBg: '#FFFFFF',
@@ -79,6 +86,7 @@ export const DASHBOARD_TEMPLATE_THEME_TOKENS: Record<string, DashboardTemplateTh
   },
   dark: {
     dark: true,
+    cardFrame: { variant: 'hud', cornerSize: 8, cornerWidth: 1 },
     primary: '#60A5FA',
     pageBg: '#111827',
     surfaceBg: '#1F2937',
@@ -104,6 +112,7 @@ export const DASHBOARD_TEMPLATE_THEME_TOKENS: Record<string, DashboardTemplateTh
   },
   black: {
     dark: true,
+    cardFrame: { variant: 'hud', cornerSize: 8, cornerWidth: 1 },
     primary: '#F59E0B',
     pageBg: '#050505',
     surfaceBg: '#111111',
@@ -129,6 +138,7 @@ export const DASHBOARD_TEMPLATE_THEME_TOKENS: Record<string, DashboardTemplateTh
   },
   slate: {
     dark: true,
+    cardFrame: { variant: 'hud', cornerSize: 8, cornerWidth: 1 },
     primary: '#22D3EE',
     pageBg: '#1E293B',
     surfaceBg: '#334155',
@@ -154,6 +164,7 @@ export const DASHBOARD_TEMPLATE_THEME_TOKENS: Record<string, DashboardTemplateTh
   },
   navy: {
     dark: true,
+    cardFrame: { variant: 'hud', cornerSize: 8, cornerWidth: 1 },
     primary: '#93C5FD',
     pageBg: '#0B1020',
     surfaceBg: '#11203B',
@@ -179,6 +190,7 @@ export const DASHBOARD_TEMPLATE_THEME_TOKENS: Record<string, DashboardTemplateTh
   },
   sand: {
     dark: false,
+    cardFrame: { variant: 'hud', cornerSize: 6, cornerWidth: 1 },
     primary: '#C08457',
     pageBg: '#FAF7F0',
     surfaceBg: '#FFFFFF',
@@ -204,6 +216,7 @@ export const DASHBOARD_TEMPLATE_THEME_TOKENS: Record<string, DashboardTemplateTh
   },
   charcoal: {
     dark: true,
+    cardFrame: { variant: 'hud', cornerSize: 8, cornerWidth: 1 },
     primary: '#10B981',
     pageBg: '#111111',
     surfaceBg: '#222222',
@@ -229,6 +242,7 @@ export const DASHBOARD_TEMPLATE_THEME_TOKENS: Record<string, DashboardTemplateTh
   },
   midnight: {
     dark: true,
+    cardFrame: { variant: 'hud', cornerSize: 10, cornerWidth: 2 },
     primary: '#38BDF8',
     pageBg: '#020617',
     surfaceBg: '#111827',
@@ -254,6 +268,7 @@ export const DASHBOARD_TEMPLATE_THEME_TOKENS: Record<string, DashboardTemplateTh
   },
   metro: {
     dark: true,
+    cardFrame: { variant: 'hud', cornerSize: 10, cornerWidth: 2 },
     primary: '#F43F5E',
     pageBg: '#141414',
     surfaceBg: '#262626',
@@ -279,6 +294,7 @@ export const DASHBOARD_TEMPLATE_THEME_TOKENS: Record<string, DashboardTemplateTh
   },
   aero: {
     dark: true,
+    cardFrame: { variant: 'hud', cornerSize: 10, cornerWidth: 2 },
     primary: '#0369A1',
     pageBg: '#DFF6FF',
     surfaceBg: '#EAF8FF',
