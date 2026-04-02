@@ -7,7 +7,7 @@ import {
   DASHBOARD_SUPPORTED_DATE_PICKER_PRESET_SET,
   DASHBOARD_SUPPORTED_HTML_TAG_SET,
   normalizeDashboardChartType,
-} from '@/products/dashboard/workspace/dashboardContract'
+} from '@/products/dashboard/contract/dashboardContract'
 import type { DashboardTreeNode } from '@/products/dashboard/workspace/dashboardJsxParser'
 
 type DashboardTreeChild = DashboardTreeNode | string

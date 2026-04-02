@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 
-import { DashboardRenderer } from '@/products/dashboard/render/dashboardRegistry'
+import { DashboardRenderer } from '@/products/dashboard/renderer/dashboardRenderer'
 import { parseDashboardJsxToTree } from '@/products/dashboard/workspace/dashboardJsxParser'
 import type { DashboardCodeFile } from '@/products/dashboard/workspace/types'
 

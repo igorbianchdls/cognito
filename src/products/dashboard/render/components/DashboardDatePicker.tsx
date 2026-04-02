@@ -10,7 +10,7 @@ import {
   applyDatePickerLabelFromCssVars,
 } from '@/products/bi/json-render/helpers'
 import { useThemeOverrides } from '@/products/bi/json-render/theme/ThemeContext'
-import { DASHBOARD_SUPPORTED_DATE_PICKER_PRESETS } from '@/products/dashboard/workspace/dashboardContract'
+import { DASHBOARD_SUPPORTED_DATE_PICKER_PRESETS } from '@/products/dashboard/contract/dashboardContract'
 
 type AnyRecord = Record<string, any>
 type DatePickerPreset = (typeof DASHBOARD_SUPPORTED_DATE_PICKER_PRESETS)[number]

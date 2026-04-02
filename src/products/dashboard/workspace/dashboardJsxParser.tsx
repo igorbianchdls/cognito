@@ -5,8 +5,8 @@ import {
   type ArtifactTreeNode as DashboardTreeNode,
   type WorkspaceSourceFile,
 } from '@/products/artifacts/core/parser/artifactJsxParser'
-import { resolveDashboardChartPaletteColors } from '@/products/dashboard/workspace/dashboardContract'
-import { validateDashboardTree } from '@/products/dashboard/workspace/validateDashboardTree'
+import { resolveDashboardChartPaletteColors } from '@/products/dashboard/contract/dashboardContract'
+import { validateDashboardTree } from '@/products/dashboard/validator/validateDashboardTree'
 
 export type { WorkspaceSourceFile }
 export type { DashboardTreeNode }

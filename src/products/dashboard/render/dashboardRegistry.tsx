@@ -27,7 +27,7 @@ import {
   DASHBOARD_SUPPORTED_HTML_TAG_SET,
   normalizeDashboardChartType,
   resolveDashboardChartPaletteColors,
-} from '@/products/dashboard/workspace/dashboardContract'
+} from '@/products/dashboard/contract/dashboardContract'
 
 type AnyRecord = Record<string, any>
 type DashboardRenderComponent = React.FC<{
