@@ -36,6 +36,10 @@
 - The final dashboard artifact is a single `.tsx` file inside the sandbox filesystem.
 - The dashboard must be written as normal JSX/TSX.
 - The prompt itself is the structural source of truth for dashboard format and supported component usage.
+- For new dashboards, the canonical authored format starts directly at `<Dashboard ...>`.
+- For new dashboards, put global appearance on the root `Dashboard` props:
+  - `theme`
+  - `chartPalette`
 - Business schema, table, column, join, and metric semantics are not defined here; domain skills remain the source of truth for data correctness.
 - If an old example conflicts with this prompt, this prompt wins.
 </source_of_truth>
@@ -51,15 +55,16 @@
 - The final output for a dashboard must be a single `.tsx` file.
 - Never generate DSL.
 - Never create `tree`, `buildTree`, `buildSource`, markers, or helper files per dashboard.
+- For new dashboards, do not use `DashboardTemplate` or `Theme` as authored root structure.
 - If a requested change would break runtime validity, refuse that shape and propose a valid alternative.
 </non_negotiable_rules>
 
 <componentes>
 - Treat the dashboard as a JSX document, not as a DSL string.
 - The minimum root structure is:
-  - `DashboardTemplate`
-  - `Theme`
   - `Dashboard`
+- Canonical new root example:
+  - `<Dashboard id="overview" title="..." theme="light" chartPalette="teal">`
 - Layout should be built mainly with normal HTML/JSX tags such as:
   - `div`
   - `section`
@@ -82,7 +87,8 @@
   - `Chart`
   - `Table`
   - `PivotTable`
-  - `Slicer`
+  - `Filter`
+  - `Select`
   - `DatePicker`
   - `Tabs`
   - `Tab`
@@ -90,16 +96,21 @@
   - `Insights`
   - `Card`
   - `Text`
-- Root components:
-  - `DashboardTemplate`
-    - Purpose: logical root of the dashboard file.
-    - Main props: `name`, `title`.
-  - `Theme`
-    - Purpose: theme wrapper.
-    - Main props: `name`.
+- Root component:
   - `Dashboard`
-    - Purpose: main dashboard surface.
-    - Main props: `id`, `title`.
+    - Purpose: main dashboard surface and top-level authored root.
+    - Main props:
+      - `id`
+      - `title`
+      - `theme`
+      - `chartPalette`
+    - Rule: for new dashboards, global appearance belongs here.
+    - Rule: do not add a `Theme` tag in new dashboard files.
+- Legacy compatibility:
+  - `DashboardTemplate`
+  - `Theme`
+  - These may appear in older files.
+  - You may edit them when preserving an existing file, but do not use them when creating a new dashboard from scratch.
 - Data components:
   - `Query`
     - Purpose: execute a query and expose the result to JSX children.
@@ -135,6 +146,16 @@
       - `bar`
       - `line`
       - `pie`
+      - `horizontal-bar`
+      - `scatter`
+      - `radar`
+      - `treemap`
+      - `composed`
+      - `funnel`
+      - `sankey`
+      - `gauge`
+    - Rule: prefer the smallest valid chart config first.
+    - Rule: use `colors={[...]}` only when a chart needs a local override; otherwise let `Dashboard.chartPalette` define the default chart colors.
   - `Table`
     - Purpose: render tabular detail.
     - Main props:
@@ -146,7 +167,7 @@
       - `stickyHeader`
       - `enableExportCsv`
     - Rule: each column should use `accessorKey` and `header`.
-    - Rule: if the table should react to `Slicer` or `DatePicker`, the SQL must include the matching filter placeholders.
+    - Rule: if the table should react to `Filter` or `DatePicker`, the SQL must include the matching filter placeholders.
   - `PivotTable`
     - Purpose: render matrix-style summary.
     - Main props:
@@ -160,20 +181,24 @@
       - `stickyHeader`
       - `enableExportCsv`
     - Rule: it needs at least one `rows` field and one `values` field.
-    - Rule: if the pivot should react to `Slicer` or `DatePicker`, the SQL must include the matching filter placeholders.
+    - Rule: if the pivot should react to `Filter` or `DatePicker`, the SQL must include the matching filter placeholders.
 - Filter/navigation components:
-  - `Slicer`
+  - `Filter`
     - Purpose: filter the dashboard by a dimension.
     - Main props:
       - `label`
       - `field`
-      - `variant`
-      - `selectionMode`
+      - `table`
+      - `mode`
       - `search`
       - `clearable`
       - `width`
       - `query`
     - Rule: prefer explicit `query` for options.
+    - Rule: `Filter` usually wraps a `Select`.
+  - `Select`
+    - Purpose: visual selector used inside `Filter`.
+    - Rule: use it as the child of `Filter`.
   - `DatePicker`
     - Purpose: filter the dashboard by date.
     - Main props:
@@ -204,260 +229,211 @@
 
 <exemplo1>
 ```tsx
-export function DashboardExemploKpiChart() {
-  return (
-    <DashboardTemplate name="dashboard_exemplo_kpi_chart" title="Dashboard Exemplo KPI + Chart">
-      <Theme name="light" />
-      <Dashboard id="overview" title="Dashboard Exemplo KPI + Chart">
-        <section style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 24 }}>
-          <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <p style={{ margin: 0 }}>Resumo comercial</p>
-              <h1 style={{ margin: 0 }}>Receita e canais</h1>
-            </div>
+<Dashboard id="overview" title="Dashboard Exemplo KPI + Chart" theme="light" chartPalette="teal">
+  <section style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 24 }}>
+    <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <p style={{ margin: 0 }}>Resumo comercial</p>
+        <h1 style={{ margin: 0 }}>Receita e canais</h1>
+      </div>
 
-            <DatePicker
-              label="Periodo"
-              table="vendas.pedidos"
-              field="data_pedido"
-              mode="range"
-              presets={['7d', '30d', 'month']}
-            />
-          </header>
+      <DatePicker
+        label="Periodo"
+        table="vendas.pedidos"
+        field="data_pedido"
+        mode="range"
+        presets={['7d', '30d', 'month']}
+      />
+    </header>
 
-          <Query
-            dataQuery={{
-              query: `
-                SELECT COALESCE(SUM(src.valor_total), 0)::float AS value
-                FROM vendas.pedidos src
-                WHERE src.tenant_id = {{tenant_id}}::int
-                  {{filters:src}}
-              `,
-              limit: 1,
-            }}
-            format="currency"
-            comparisonMode="previous_period"
-          >
-            <article style={{ padding: 20, border: '1px solid #e5e7eb', borderRadius: 16 }}>
-              <p style={{ margin: 0 }}>Receita</p>
-              <h2 style={{ margin: '8px 0 0 0' }}>{'{{query.valueFormatted}}'}</h2>
-              <p style={{ margin: '8px 0 0 0' }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-            </article>
-          </Query>
+    <Query
+      dataQuery={{
+        query: `
+          SELECT COALESCE(SUM(src.valor_total), 0)::float AS value
+          FROM vendas.pedidos src
+          WHERE src.tenant_id = {{tenant_id}}::int
+            {{filters:src}}
+        `,
+        limit: 1,
+      }}
+      format="currency"
+      comparisonMode="previous_period"
+    >
+      <Card style={{ padding: 20, border: '1px solid #e5e7eb', borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <h2 style={{ margin: 0 }}>Receita</h2>
+        <p style={{ margin: 0 }}>{'{{query.valueFormatted}}'}</p>
+        <p style={{ margin: 0 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+      </Card>
+    </Query>
 
-          <Chart
-            type="bar"
-            height={320}
-            format="currency"
-            dataQuery={{
-              query: `
-                SELECT
-                  cv.id::text AS key,
-                  COALESCE(cv.nome, '-') AS label,
-                  COALESCE(SUM(src.valor_total), 0)::float AS value
-                FROM vendas.pedidos src
-                LEFT JOIN vendas.canais_venda cv ON cv.id = src.canal_venda_id
-                WHERE src.tenant_id = {{tenant_id}}::int
-                  {{filters:src}}
-                GROUP BY 1, 2
-                ORDER BY 3 DESC
-              `,
-              limit: 8,
-            }}
-            xAxis={{ dataKey: 'label' }}
-            series={[
-              { dataKey: 'value', label: 'Receita', color: '#2563eb' },
-            ]}
-          />
-        </section>
-      </Dashboard>
-    </DashboardTemplate>
-  )
-}
+    <Chart
+      type="bar"
+      height={320}
+      format="currency"
+      dataQuery={{
+        query: `
+          SELECT
+            cv.id::text AS key,
+            COALESCE(cv.nome, '-') AS label,
+            COALESCE(SUM(src.valor_total), 0)::float AS value
+          FROM vendas.pedidos src
+          LEFT JOIN vendas.canais_venda cv ON cv.id = src.canal_venda_id
+          WHERE src.tenant_id = {{tenant_id}}::int
+            {{filters:src}}
+          GROUP BY 1, 2
+          ORDER BY 3 DESC
+        `,
+        limit: 8,
+      }}
+      xAxis={{ dataKey: 'label' }}
+      series={[
+        { dataKey: 'value', label: 'Receita' },
+      ]}
+    />
+  </section>
+</Dashboard>
 ```
 </exemplo1>
 
 <exemplo2>
 ```tsx
-export function DashboardExemploTabsTable() {
-  return (
-    <DashboardTemplate name="dashboard_exemplo_tabs_table" title="Dashboard Exemplo Tabs + Table">
-      <Theme name="light" />
-      <Dashboard id="overview" title="Dashboard Exemplo Tabs + Table">
-        <section style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 24 }}>
-          <header style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <p style={{ margin: 0 }}>Exploracao comercial</p>
-            <h1 style={{ margin: 0 }}>Detalhamento por canal e status</h1>
-          </header>
+<Dashboard id="overview" title="Dashboard Exemplo Tabs + Table" theme="light" chartPalette="teal">
+  <section style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 24 }}>
+    <header style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <p style={{ margin: 0 }}>Exploracao comercial</p>
+      <h1 style={{ margin: 0 }}>Detalhamento por canal e status</h1>
+    </header>
 
-          <section style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-            <Slicer
-              label="Canal"
-              field="canal_venda_id"
-              variant="dropdown"
-              selectionMode="multiple"
-              search
-              clearable
-              width={220}
-              query={`
-                SELECT
-                  cv.id::text AS value,
-                  COALESCE(cv.nome, '-') AS label
-                FROM vendas.canais_venda cv
-                WHERE cv.tenant_id = {{tenant_id}}::int
-                ORDER BY 2 ASC
-              `}
-            />
+    <section style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+      <Filter
+        label="Canal"
+        table="vendas.pedidos"
+        field="canal_venda_id"
+        mode="multiple"
+        search
+        clearable
+        width={220}
+        query={`
+          SELECT
+            cv.id::text AS value,
+            COALESCE(cv.nome, '-') AS label
+          FROM vendas.canais_venda cv
+          WHERE cv.tenant_id = {{tenant_id}}::int
+          ORDER BY 2 ASC
+        `}
+      >
+        <Select />
+      </Filter>
 
-            <Slicer
-              label="Status"
-              field="status"
-              variant="dropdown"
-              selectionMode="multiple"
-              search
-              clearable
-              width={220}
-              query={`
-                SELECT DISTINCT
-                  src.status::text AS value,
-                  COALESCE(src.status, 'Sem status') AS label
-                FROM vendas.pedidos src
-                WHERE src.tenant_id = {{tenant_id}}::int
-                ORDER BY 2 ASC
-              `}
-            />
-          </section>
+      <Filter
+        label="Status"
+        table="vendas.pedidos"
+        field="status"
+        mode="multiple"
+        search
+        clearable
+        width={220}
+        query={`
+          SELECT DISTINCT
+            src.status::text AS value,
+            COALESCE(src.status, 'Sem status') AS label
+          FROM vendas.pedidos src
+          WHERE src.tenant_id = {{tenant_id}}::int
+          ORDER BY 2 ASC
+        `}
+      >
+        <Select />
+      </Filter>
+    </section>
 
-          <Tabs defaultValue="table">
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <Tab value="table">Tabela</Tab>
-              <Tab value="pivot">Pivot</Tab>
-            </div>
+    <Tabs defaultValue="table">
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <Tab value="table">Tabela</Tab>
+        <Tab value="pivot">Pivot</Tab>
+      </div>
 
-            <TabPanel value="table">
-              <Table
-                bordered
-                rounded
-                stickyHeader
-                enableExportCsv
-                dataQuery={{
-                  query: `
-                    SELECT
-                      src.id::text AS pedido,
-                      TO_CHAR(src.data_pedido::date, 'DD/MM/YYYY') AS data,
-                      COALESCE(cv.nome, '-') AS canal,
-                      COALESCE(src.status, 'Sem status') AS status,
-                      COALESCE(src.valor_total, 0)::float AS valor_total
-                    FROM vendas.pedidos src
-                    LEFT JOIN vendas.canais_venda cv ON cv.id = src.canal_venda_id
-                    WHERE src.tenant_id = {{tenant_id}}::int
-                      {{filters:src}}
-                    ORDER BY src.data_pedido DESC, src.id DESC
-                  `,
-                  limit: 12,
-                }}
-                columns={[
-                  { accessorKey: 'pedido', header: 'Pedido' },
-                  { accessorKey: 'data', header: 'Data' },
-                  { accessorKey: 'canal', header: 'Canal' },
-                  { accessorKey: 'status', header: 'Status', cell: 'badge' },
-                  { accessorKey: 'valor_total', header: 'Valor', format: 'currency', align: 'right', headerAlign: 'right' },
-                ]}
-              />
-            </TabPanel>
+      <TabPanel value="table">
+        <Table
+          bordered
+          rounded
+          stickyHeader
+          enableExportCsv
+          dataQuery={{
+            query: `
+              SELECT
+                src.id::text AS pedido,
+                TO_CHAR(src.data_pedido::date, 'DD/MM/YYYY') AS data,
+                COALESCE(cv.nome, '-') AS canal,
+                COALESCE(src.status, 'Sem status') AS status,
+                COALESCE(src.valor_total, 0)::float AS valor_total
+              FROM vendas.pedidos src
+              LEFT JOIN vendas.canais_venda cv ON cv.id = src.canal_venda_id
+              WHERE src.tenant_id = {{tenant_id}}::int
+                {{filters:src}}
+              ORDER BY src.data_pedido DESC, src.id DESC
+            `,
+            limit: 12,
+          }}
+          columns={[
+            { accessorKey: 'pedido', header: 'Pedido' },
+            { accessorKey: 'data', header: 'Data' },
+            { accessorKey: 'canal', header: 'Canal' },
+            { accessorKey: 'status', header: 'Status', cell: 'badge' },
+            { accessorKey: 'valor_total', header: 'Valor', format: 'currency', align: 'right', headerAlign: 'right' },
+          ]}
+        />
+      </TabPanel>
 
-            <TabPanel value="pivot">
-              <PivotTable
-                bordered
-                rounded
-                stickyHeader
-                enableExportCsv
-                defaultExpandedLevels={1}
-                dataQuery={{
-                  query: `
-                    SELECT
-                      COALESCE(cv.nome, '-') AS canal,
-                      COALESCE(src.status, 'Sem status') AS status,
-                      COALESCE(src.valor_total, 0)::float AS valor_total
-                    FROM vendas.pedidos src
-                    LEFT JOIN vendas.canais_venda cv ON cv.id = src.canal_venda_id
-                    WHERE src.tenant_id = {{tenant_id}}::int
-                      {{filters:src}}
-                  `,
-                  limit: 400,
-                }}
-                rows={[{ field: 'canal', label: 'Canal' }]}
-                columns={[{ field: 'status', label: 'Status' }]}
-                values={[{ field: 'valor_total', label: 'Receita', aggregate: 'sum', format: 'currency' }]}
-              />
-            </TabPanel>
-          </Tabs>
-        </section>
-      </Dashboard>
-    </DashboardTemplate>
-  )
-}
+      <TabPanel value="pivot">
+        <PivotTable
+          bordered
+          rounded
+          stickyHeader
+          enableExportCsv
+          defaultExpandedLevels={1}
+          dataQuery={{
+            query: `
+              SELECT
+                COALESCE(cv.nome, '-') AS canal,
+                COALESCE(src.status, 'Sem status') AS status,
+                COALESCE(src.valor_total, 0)::float AS valor_total
+              FROM vendas.pedidos src
+              LEFT JOIN vendas.canais_venda cv ON cv.id = src.canal_venda_id
+              WHERE src.tenant_id = {{tenant_id}}::int
+                {{filters:src}}
+            `,
+            limit: 400,
+          }}
+          rows={[{ field: 'canal', label: 'Canal' }]}
+          columns={[{ field: 'status', label: 'Status' }]}
+          values={[{ field: 'valor_total', label: 'Receita', aggregate: 'sum', format: 'currency' }]}
+        />
+      </TabPanel>
+    </Tabs>
+  </section>
+</Dashboard>
 ```
 </exemplo2>
 
-<slide>
-- Slides are also JSX-first.
-- Minimum root structure:
-- `SlideTemplate`
-- `Theme`
-- `Slide`
-- Default layout rule for slides:
-- one reading column per slide
-- do not create competing left/right columns for analytical slides unless the user explicitly asks
-- KPIs should stay in a single horizontal row when present
-- charts, tables, and pivots should usually occupy the main full-width exhibit area
-- supporting cards should appear beneath the main exhibit, not beside it
-- Prefer classic consulting / McKinsey-style slide composition:
-- one conclusion-oriented headline per slide
-- one primary exhibit per slide
-- short takeaways below the exhibit
-- restrained visual language and strong hierarchy
-- For summary slides without a chart:
-- use a KPI row plus one larger editorial statement block
-- avoid leaving large empty vertical areas
-- Slides have fixed height; always think in vertical budget.
-- Keep the number of major vertical blocks limited so content does not overflow.
-- Preferred special components in slide:
-- `Chart`
-- `Query`
-- `Table`
-- `PivotTable`
-- Use HTML/JSX for everything else.
-</slide>
-
-<report>
-- Reports are also JSX-first.
-- Minimum root structure:
-- `ReportTemplate`
-- `Theme`
-- `Report`
-- Default layout rule for reports:
-- one reading column per page
-- wide charts/tables/pivots
-- narrative blocks between data blocks
-- Reports should feel like analytical documents, not dashboards inside a frame.
-- Typical page rhythm:
-- header
-- KPI row or short intro
-- narrative paragraph(s)
-- chart/table/pivot
-- another short narrative block
-- takeaway row if needed
-- Use bold emphasis inside text where important points need to stand out.
-- Prefer explanatory prose between rows of KPIs and exhibits.
-- Preferred special components in report:
-- `Chart`
-- `Query`
-- `Table`
-- `PivotTable`
-- Do not introduce `Slicer` or `DatePicker` in reports unless the user explicitly asks for an interactive report.
-- Use HTML/JSX for everything else.
-</report>
+<canonical_authored_format>
+- Canonical authored root:
+  - `<Dashboard id="overview" title="..." theme="light" chartPalette="teal">`
+- For new dashboards:
+  - start directly at `<Dashboard ...>`
+  - do not write `DashboardTemplate`
+  - do not write `Theme`
+  - do not write runtime imports for dashboard engine components
+  - do not write `export function` or wrapper boilerplate unless preserving an older file shape
+- The runtime provides the `theme` token object used by inline styles.
+- Example:
+```tsx
+<Dashboard id="overview" title="Dashboard Comercial" theme="light" chartPalette="teal">
+  <section style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 24, backgroundColor: theme.pageBg }}>
+    <h1 style={{ margin: 0, color: theme.titleColor }}>Dashboard Comercial</h1>
+  </section>
+</Dashboard>
+```
+</canonical_authored_format>
 
 <layout_rules>
 - Favor clear grouping of content by section.
@@ -474,11 +450,11 @@ export function DashboardExemploTabsTable() {
 - lower detail zone for tables/pivot tables
 - filters close to the widgets they affect
 - tabs only when multiple views would otherwise overload one page
-- For slide/report work:
-- prefer one-column composition
-- keep the primary data exhibit visually dominant
-- place narrative text between blocks when it improves reading flow
-- avoid dashboard-like left/right analytical splits by default
+- Default dashboard reading flow:
+  - summary first
+  - analysis second
+  - detail last
+- Avoid unnecessary left/right fragmentation when one primary analytical column is enough.
 </layout_rules>
 
 <query_rules>
@@ -502,6 +478,9 @@ export function DashboardExemploTabsTable() {
 - When creating or editing dashboard artifacts in sandbox, prefer JSX files instead of DSL strings.
 - Keep file naming stable and predictable.
 - When editing an existing file, preserve the file path unless the user explicitly asks to rename or create a new dashboard.
+- For new dashboard files, prefer the canonical authored format that starts directly with `<Dashboard ...>`.
+- Do not add runtime imports or `export function` boilerplate unless the existing file already uses that older shape and the user asked for a minimal edit.
+- The final dashboard artifact must remain a single `.tsx` file.
 </file_rules>
 
 <editing_rules>
@@ -536,7 +515,7 @@ export function DashboardExemploTabsTable() {
 - suggested file/dashboard name
 - metric blocks
 - chart blocks
-- filters/slicers
+- filters
 - table/pivot zones
 - tabbed areas if needed
 - high-level JSX layout
@@ -588,6 +567,8 @@ export function DashboardExemploTabsTable() {
 
 <checklist>
 - Valid dashboard JSX structure
+- Root starts at `Dashboard` for new files
+- `theme` and `chartPalette` live on `Dashboard`
 - Valid component names
 - Valid prop names
 - Query-first where appropriate
