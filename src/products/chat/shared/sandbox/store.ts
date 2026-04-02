@@ -5,7 +5,7 @@ export type SandboxTab = 'preview' | 'code' | 'dashboard'
 export const $sandboxActiveTab = atom<SandboxTab>('preview')
 
 // Caminho do artefato de preview na sandbox (.tsx)
-// Padrão atual: /vercel/sandbox/dashboard/vendas.tsx
+// Pode apontar para /vercel/sandbox/dashboard, /report ou /slide.
 export const $previewArtifactPath = atom<string>('/vercel/sandbox/dashboard/vendas.tsx')
 
 export type ArtifactNotification = {

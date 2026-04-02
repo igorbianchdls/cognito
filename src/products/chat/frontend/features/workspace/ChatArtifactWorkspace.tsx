@@ -35,7 +35,7 @@ export function ChatArtifactWorkspace({
   const activeTab = useStore($sandboxActiveTab)
   const previewPath = useStore($previewArtifactPath)
   const [zoom, setZoom] = useState(1)
-  const [dashboardPickerOpen, setDashboardPickerOpen] = useState(false)
+  const [artifactPickerOpen, setArtifactPickerOpen] = useState(false)
   const activeView = activeTab === 'code' ? 'code' : 'preview'
   const title = useMemo(() => getTitleFromPreviewPath(previewPath), [previewPath])
 
@@ -51,21 +51,21 @@ export function ChatArtifactWorkspace({
         showChromeActions={false}
         extraActions={
           <>
-            <Popover open={dashboardPickerOpen} onOpenChange={setDashboardPickerOpen}>
+            <Popover open={artifactPickerOpen} onOpenChange={setArtifactPickerOpen}>
               <PopoverTrigger asChild>
                 <button
                   type="button"
-                  title="Selecionar dashboard"
-                  aria-label="Selecionar dashboard"
+                  title="Selecionar artefato"
+                  aria-label="Selecionar artefato"
                   className="flex items-center justify-center rounded-md border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] px-2 py-[0.35rem] text-[14px] font-medium text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]"
                 >
                   <Icon icon="solar:widget-5-bold" className="mr-1 h-4 w-4" />
-                  Dashboards
+                  Artefatos
                   <Icon icon="solar:alt-arrow-down-outline" className="ml-1 h-3.5 w-3.5" />
                 </button>
               </PopoverTrigger>
               <PopoverContent align="end" side="bottom" sideOffset={8} className="w-auto p-2">
-                <DashboardPicker chatId={chatId} compact onSelected={() => setDashboardPickerOpen(false)} />
+                <DashboardPicker chatId={chatId} compact onSelected={() => setArtifactPickerOpen(false)} />
               </PopoverContent>
             </Popover>
             <HeaderActions chatId={chatId} />

@@ -15,6 +15,8 @@ import {
 import { resolveComposioUserIdFromRequest } from '@/products/chat/backend/agents/core/context/resolveComposioUserId'
 import { buildClassicDashboardTemplateVariant } from '@/products/artifacts/dashboard/templates/dashboardTemplate'
 import { buildComprasDashboardTemplateVariant } from '@/products/artifacts/dashboard/templates/dashboardComprasTemplate'
+import { REPORT_TEMPLATE_SOURCE } from '@/products/artifacts/report/templates/reportTemplate'
+import { SLIDE_TEMPLATE_SOURCE } from '@/products/artifacts/slide/templates/slideTemplate'
 import {
   ensureChatRuntimeKindColumn,
   normalizeRuntimeKind,
@@ -536,21 +538,32 @@ export async function POST(req: Request) {
           await seedAppToolsSkillInSandbox(sandbox, timeline)
         } catch {}
       }
-      // Seed default dashboards (.tsx)
+      // Seed default artifacts (.tsx)
       try {
         const vendasSeed = buildClassicDashboardTemplateVariant().content
         const comprasSeed = buildComprasDashboardTemplateVariant().content
-        const seedDash = `const fs=require('fs');const p=process.env.TARGET;fs.mkdirSync(p,{recursive:true});const w=(f,c)=>{if(!fs.existsSync(f))fs.writeFileSync(f,c,'utf8');};w(p+'/vendas.tsx',process.env.VENDAS_TSX||'');w(p+'/compras.tsx',process.env.COMPRAS_TSX||'');console.log('ok');`;
+        const reportSeed = REPORT_TEMPLATE_SOURCE
+        const slideSeed = SLIDE_TEMPLATE_SOURCE
+        const seedArtifacts = `
+const fs=require('fs');
+const write=(dir,file,content)=>{fs.mkdirSync(dir,{recursive:true});const path=dir+'/'+file;if(!fs.existsSync(path))fs.writeFileSync(path,content,'utf8');};
+write('/vercel/sandbox/dashboard','vendas.tsx',process.env.VENDAS_TSX||'');
+write('/vercel/sandbox/dashboard','compras.tsx',process.env.COMPRAS_TSX||'');
+write('/vercel/sandbox/report','report.tsx',process.env.REPORT_TSX||'');
+write('/vercel/sandbox/slide','deck.tsx',process.env.SLIDE_TSX||'');
+console.log('ok');
+`;
         const runSeed = await sandbox.runCommand({
           cmd: 'node',
-          args: ['-e', seedDash],
+          args: ['-e', seedArtifacts],
           env: {
-            TARGET: '/vercel/sandbox/dashboard',
             VENDAS_TSX: vendasSeed,
             COMPRAS_TSX: comprasSeed,
+            REPORT_TSX: reportSeed,
+            SLIDE_TSX: slideSeed,
           },
         })
-        timeline.push({ name: 'seed-dashboard-tsx', ms: 0, ok: runSeed.exitCode === 0, exitCode: runSeed.exitCode })
+        timeline.push({ name: 'seed-artifact-tsx', ms: 0, ok: runSeed.exitCode === 0, exitCode: runSeed.exitCode })
       } catch {}
       // Seed MCP servers used by the chat runtimes
       try {

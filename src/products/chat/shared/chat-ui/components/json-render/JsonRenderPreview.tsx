@@ -3,10 +3,24 @@
 import React from "react";
 import { useStore } from "@nanostores/react";
 import { DashboardRenderer } from "@/products/artifacts/dashboard/renderer/dashboardRenderer";
-import { parseDashboardJsxToTree, type WorkspaceSourceFile } from "@/products/artifacts/dashboard/parser/dashboardJsxParser";
+import { ReportRenderer } from "@/products/artifacts/report/renderer/reportRenderer";
+import { SlideRenderer } from "@/products/artifacts/slide/renderer/slideRenderer";
+import {
+  parseArtifactJsxToTree,
+  type WorkspaceSourceFile,
+} from "@/products/artifacts/core/parser/artifactJsxParser";
+import {
+  buildPagedArtifactRenderTree,
+  getPagedArtifactDimension,
+  getPagedArtifactStructure,
+} from "@/products/artifacts/core/workspace/pagedArtifactTree";
 import { $previewArtifactPath, sandboxActions } from "@/chat/sandbox";
 
 type Props = { chatId?: string };
+type LoadedPreview =
+  | { kind: "dashboard"; tree: any }
+  | { kind: "report"; tree: any; width: number; height: number }
+  | { kind: "slide"; tree: any; width: number; height: number };
 
 type PreviewRenderBoundaryProps = {
   resetKey: string;
@@ -178,11 +192,74 @@ async function loadPreviewTsxFiles(chatId: string, entryPath: string): Promise<W
   return Array.from(files, ([path, content]) => ({ path, content }));
 }
 
+function buildLoadedPreview(parsed: Awaited<ReturnType<typeof parseArtifactJsxToTree>>): LoadedPreview {
+  if (parsed.kind === "dashboard") {
+    return { kind: "dashboard", tree: parsed.tree };
+  }
+
+  if (parsed.kind === "report") {
+    const { themeNode, pages } = getPagedArtifactStructure(parsed.tree, {
+      rootType: "ReportTemplate",
+      pageType: "Report",
+      fallbackRootName: "Relatório",
+    });
+    const firstPage = pages[0];
+    if (!firstPage) {
+      throw new Error("Nenhuma página de report encontrada no artifact.");
+    }
+    return {
+      kind: "report",
+      tree: buildPagedArtifactRenderTree(firstPage, themeNode),
+      width: getPagedArtifactDimension(firstPage, "width", 794),
+      height: getPagedArtifactDimension(firstPage, "height", 1123),
+    };
+  }
+
+  const { themeNode, pages } = getPagedArtifactStructure(parsed.tree, {
+    rootType: "SlideTemplate",
+    pageType: "Slide",
+    fallbackRootName: "Apresentação",
+  });
+  const firstPage = pages[0];
+  if (!firstPage) {
+    throw new Error("Nenhum slide encontrado no artifact.");
+  }
+  return {
+    kind: "slide",
+    tree: buildPagedArtifactRenderTree(firstPage, themeNode),
+    width: getPagedArtifactDimension(firstPage, "width", 1280),
+    height: getPagedArtifactDimension(firstPage, "height", 720),
+  };
+}
+
+function PreviewCanvas({ preview }: { preview: LoadedPreview }) {
+  if (preview.kind === "dashboard") {
+    return <DashboardRenderer tree={preview.tree} />;
+  }
+
+  const Renderer = preview.kind === "report" ? ReportRenderer : SlideRenderer;
+  return (
+    <div className="flex justify-center p-4">
+      <div
+        className="overflow-hidden rounded-none border border-slate-200 bg-white shadow-[0_2px_6px_rgba(15,23,42,0.05)]"
+        style={{
+          width: preview.width,
+          minWidth: preview.width,
+          height: preview.height,
+          minHeight: preview.height,
+        }}
+      >
+        <Renderer tree={preview.tree} />
+      </div>
+    </div>
+  );
+}
+
 function JsonRenderPreviewInner({ chatId }: Props) {
   const previewPath = useStore($previewArtifactPath);
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState<boolean>(false);
-  const [tree, setTree] = React.useState<any>(null);
+  const [preview, setPreview] = React.useState<LoadedPreview | null>(null);
   const [refreshTick, setRefreshTick] = React.useState(0);
   const [pathsError, setPathsError] = React.useState<string | null>(null);
   const hydratedPreviewPathForChatRef = React.useRef<string | null>(null);
@@ -194,7 +271,7 @@ function JsonRenderPreviewInner({ chatId }: Props) {
     }
     try {
       const collected: string[] = [];
-      const dirs = ["/vercel/sandbox/dashboard", "/vercel/sandbox"];
+      const dirs = ["/vercel/sandbox/dashboard", "/vercel/sandbox/report", "/vercel/sandbox/slide", "/vercel/sandbox"];
       let firstErr: string | null = null;
 
       for (const dir of dirs) {
@@ -261,7 +338,7 @@ function JsonRenderPreviewInner({ chatId }: Props) {
     (async () => {
       setLoading(true);
       setError(null);
-      setTree(null);
+      setPreview(null);
 
       if (!chatId) {
         if (!cancelled) setLoading(false);
@@ -285,8 +362,9 @@ function JsonRenderPreviewInner({ chatId }: Props) {
 
       try {
         const files = await loadPreviewTsxFiles(chatId, previewPath);
-        const nextTree = await parseDashboardJsxToTree(previewPath, files);
-        if (!cancelled) setTree(nextTree);
+        const parsed = await parseArtifactJsxToTree(previewPath, files);
+        const nextPreview = buildLoadedPreview(parsed);
+        if (!cancelled) setPreview(nextPreview);
       } catch (e: any) {
         const found = await refreshPaths();
         const candidate = found[0];
@@ -335,7 +413,7 @@ function JsonRenderPreviewInner({ chatId }: Props) {
         </div>
       )}
       {!error && loading && <div className="text-xs text-gray-500 p-2">Carregando...</div>}
-      {!error && !loading && tree && <DashboardRenderer tree={tree} />}
+      {!error && !loading && preview && <PreviewCanvas preview={preview} />}
       {error && !loading && (
         <div className="rounded border border-red-300 bg-red-50 text-red-700 text-xs p-3">{error}</div>
       )}

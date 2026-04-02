@@ -33,8 +33,8 @@ export default function DashboardPicker({
       let directOk = false;
       let firstDirectError: string | null = null;
 
-      // Fast path for dashboard tsx files.
-      const directDirs = ['/vercel/sandbox/dashboard'];
+      // Fast path for artifact tsx files.
+      const directDirs = ['/vercel/sandbox/dashboard', '/vercel/sandbox/report', '/vercel/sandbox/slide'];
       for (const dir of directDirs) {
         const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-list', chatId, path: dir }) });
         const data = await res.json().catch(()=>({})) as { ok?: boolean; entries?: Array<{ name:string; path:string; type:'file'|'dir' }>; error?: string };
@@ -69,7 +69,7 @@ export default function DashboardPicker({
         setError(firstDirectError);
       }
       collected.sort(comparePreviewPaths); setPaths(collected);
-    } catch (e: any) { setError(e?.message ? String(e.message) : 'Erro ao listar dashboards'); }
+    } catch (e: any) { setError(e?.message ? String(e.message) : 'Erro ao listar artefatos'); }
     finally { setLoading(false); }
   }, [chatId, comparePreviewPaths, isPreviewFile]);
 
@@ -86,7 +86,7 @@ export default function DashboardPicker({
       <div className="mb-2 flex items-center gap-2">
         <input
           type="text"
-          placeholder="Filtrar dashboards (.tsx)"
+          placeholder="Filtrar artefatos (.tsx)"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className={`border border-gray-300 rounded px-2 py-1 text-xs bg-white ${compact ? 'w-full min-w-0' : 'min-w-[220px]'}`}
@@ -99,10 +99,10 @@ export default function DashboardPicker({
       <div className={`rounded border border-gray-200 bg-white p-2 overflow-auto ${compact ? 'max-h-[340px]' : 'max-h-[60vh]'}`}>
         {!chatId && (
           <div className="text-xs text-gray-500 p-2">
-            UI de Workspace aberta. Inicie um computador para listar dashboards `.tsx`.
+            UI de Workspace aberta. Inicie um computador para listar artefatos `.tsx`.
           </div>
         )}
-        {chatId && filtered.length === 0 && <div className="text-xs text-gray-500">Nenhum dashboard encontrado</div>}
+        {chatId && filtered.length === 0 && <div className="text-xs text-gray-500">Nenhum artefato encontrado</div>}
         <ul className="divide-y divide-gray-100">
           {filtered.map(p => (
             <li key={p}>
