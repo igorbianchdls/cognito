@@ -4,6 +4,8 @@ import { memo, RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import { Icon } from '@iconify/react'
 
 import { parseArtifactJsxToTree, type ArtifactTreeNode } from '@/products/artifacts/core/parser/artifactJsxParser'
+import { ArtifactPreviewThumbnail } from '@/products/artifacts/core/preview/ArtifactPreviewThumbnail'
+import { usePagedArtifactPreviewSnapshots } from '@/products/artifacts/core/preview/usePagedArtifactPreviewSnapshots'
 import { ArtifactDocumentTitle } from '@/products/artifacts/core/workspace/components/ArtifactDocumentTitle'
 import { ArtifactSizeControls } from '@/products/artifacts/core/workspace/components/ArtifactSizeControls'
 import { ArtifactSourceCodePanel } from '@/products/artifacts/core/workspace/components/ArtifactSourceCodePanel'
@@ -21,8 +23,6 @@ import {
   updatePagedArtifactSizeInTree,
 } from '@/products/artifacts/core/workspace/pagedArtifactTree'
 import { SlideRenderer } from '@/products/slide/renderer/slideRenderer'
-import { SlidePreviewThumbnail } from '@/products/slide/preview/SlidePreviewThumbnail'
-import { useSlidePreviewSnapshots } from '@/products/slide/preview/useSlidePreviewSnapshots'
 import { SLIDE_TEMPLATE_SOURCE } from '@/products/slide/templates/slideTemplate'
 import { validateSlideTree } from '@/products/slide/validator/validateSlideTree'
 
@@ -53,7 +53,7 @@ function SlideThumbnail({
 
   return (
     <PagedArtifactThumbnailButton selected={selected} index={index} onClick={onClick}>
-      <SlidePreviewThumbnail
+      <ArtifactPreviewThumbnail
         alt={`Preview do slide ${index + 1}`}
         height={thumbHeight}
         selected={selected}
@@ -206,10 +206,10 @@ export function SlideWorkspace() {
     () => `${currentPageId}:${pages.length}:${Boolean(activePage)}:${Boolean(themeNode)}:${activeSlideWidth}:${activeSlideHeight}`,
     [currentPageId, pages.length, activePage, themeNode, activeSlideWidth, activeSlideHeight],
   )
-  const { previewsByPageId } = useSlidePreviewSnapshots({
+  const { previewsByPageId } = usePagedArtifactPreviewSnapshots({
     activePageId: currentPageId,
     captureKey,
-    slideElementRef,
+    elementRef: slideElementRef,
   })
 
   const applyActiveSlideSize = () => {

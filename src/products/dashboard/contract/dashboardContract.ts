@@ -1,6 +1,6 @@
 'use client'
 
-import { DASHBOARD_CHART_PALETTE_OPTIONS } from '@/products/dashboard/workspace/chartPalettes'
+import { DASHBOARD_CHART_PALETTE_OPTIONS } from '@/products/dashboard/chartPalettes'
 
 export const DASHBOARD_SUPPORTED_COMPONENTS = [
   'DashboardTemplate',

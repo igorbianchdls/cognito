@@ -1,6 +1,6 @@
 'use client'
 
-interface ReportPreviewThumbnailProps {
+interface ArtifactPreviewThumbnailProps {
   alt: string
   height: number
   selected: boolean
@@ -8,7 +8,13 @@ interface ReportPreviewThumbnailProps {
   width: number
 }
 
-export function ReportPreviewThumbnail({ alt, height, selected, src, width }: ReportPreviewThumbnailProps) {
+export function ArtifactPreviewThumbnail({
+  alt,
+  height,
+  selected,
+  src,
+  width,
+}: ArtifactPreviewThumbnailProps) {
   return (
     <div
       className={`mb-2 overflow-hidden rounded-xl bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] ${

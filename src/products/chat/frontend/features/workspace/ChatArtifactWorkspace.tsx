@@ -8,7 +8,7 @@ import { useMemo, useState } from 'react'
 import FileExplorer from '@/components/file-explorer/FileExplorer'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { sandboxActions, $previewArtifactPath, $sandboxActiveTab } from '@/chat/sandbox'
-import { DashboardWorkspaceHeader } from '@/products/dashboard/workspace/DashboardWorkspaceHeader'
+import { ArtifactWorkspaceHeader } from '@/products/artifacts/core/workspace/components/ArtifactWorkspaceHeader'
 import HeaderActions from '@/products/chat/shared/chat-ui/components/HeaderActions'
 import DashboardPicker from '@/products/chat/shared/chat-ui/components/json-render/DashboardPicker'
 import JsonRenderPreview from '@/products/chat/shared/chat-ui/components/json-render/JsonRenderPreview'
@@ -40,7 +40,7 @@ export function ChatArtifactWorkspace({
 
   return (
     <div className={`flex h-full min-h-0 w-full flex-col overflow-hidden ${className ?? ''}`}>
-      <DashboardWorkspaceHeader
+      <ArtifactWorkspaceHeader
         title={title}
         titleIcon="solar:document-bold"
         activeView={activeView}

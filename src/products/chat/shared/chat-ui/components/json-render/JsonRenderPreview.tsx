@@ -3,7 +3,7 @@
 import React from "react";
 import { useStore } from "@nanostores/react";
 import { DashboardRenderer } from "@/products/dashboard/renderer/dashboardRenderer";
-import { parseDashboardJsxToTree, type WorkspaceSourceFile } from "@/products/dashboard/workspace/dashboardJsxParser";
+import { parseDashboardJsxToTree, type WorkspaceSourceFile } from "@/products/dashboard/parser/dashboardJsxParser";
 import { $previewArtifactPath, sandboxActions } from "@/chat/sandbox";
 
 type Props = { chatId?: string };

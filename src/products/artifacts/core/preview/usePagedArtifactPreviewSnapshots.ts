@@ -2,29 +2,29 @@
 
 import { RefObject, useEffect, useRef, useState } from 'react'
 
-import { captureSlidePreview } from '@/products/slide/preview/captureSlidePreview'
-import type { SlidePreviewMap, SlidePreviewStatusMap } from '@/products/slide/preview/types'
+import { captureArtifactPreview } from '@/products/artifacts/core/preview/captureArtifactPreview'
+import type { ArtifactPreviewMap, ArtifactPreviewStatusMap } from '@/products/artifacts/core/preview/types'
 
-interface UseSlidePreviewSnapshotsParams {
+interface UsePagedArtifactPreviewSnapshotsParams {
   activePageId: string
   captureKey: string
-  slideElementRef: RefObject<HTMLDivElement | null>
+  elementRef: RefObject<HTMLDivElement | null>
 }
 
-export function useSlidePreviewSnapshots({
+export function usePagedArtifactPreviewSnapshots({
   activePageId,
   captureKey,
-  slideElementRef,
-}: UseSlidePreviewSnapshotsParams) {
-  const [previewsByPageId, setPreviewsByPageId] = useState<SlidePreviewMap>({})
-  const [statusByPageId, setStatusByPageId] = useState<SlidePreviewStatusMap>({})
+  elementRef,
+}: UsePagedArtifactPreviewSnapshotsParams) {
+  const [previewsByPageId, setPreviewsByPageId] = useState<ArtifactPreviewMap>({})
+  const [statusByPageId, setStatusByPageId] = useState<ArtifactPreviewStatusMap>({})
   const lastCaptureKeyByPageIdRef = useRef<Record<string, string>>({})
 
   useEffect(() => {
     if (!activePageId) return
 
-    const slideElement = slideElementRef.current
-    if (!slideElement) return
+    const artifactElement = elementRef.current
+    if (!artifactElement) return
 
     const currentCaptureKey = lastCaptureKeyByPageIdRef.current[activePageId]
     if (currentCaptureKey === captureKey && previewsByPageId[activePageId]) return
@@ -35,7 +35,7 @@ export function useSlidePreviewSnapshots({
 
     const timeoutId = window.setTimeout(async () => {
       try {
-        const preview = await captureSlidePreview(slideElement)
+        const preview = await captureArtifactPreview(artifactElement)
         if (cancelled) return
 
         lastCaptureKeyByPageIdRef.current[activePageId] = captureKey
@@ -51,7 +51,7 @@ export function useSlidePreviewSnapshots({
       cancelled = true
       window.clearTimeout(timeoutId)
     }
-  }, [activePageId, captureKey, previewsByPageId, slideElementRef])
+  }, [activePageId, captureKey, previewsByPageId, elementRef])
 
   return {
     previewsByPageId,

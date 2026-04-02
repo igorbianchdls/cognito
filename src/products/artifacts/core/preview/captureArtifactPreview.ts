@@ -2,7 +2,7 @@
 
 import { toPng } from 'html-to-image'
 
-export async function captureSlidePreview(element: HTMLElement): Promise<string> {
+export async function captureArtifactPreview(element: HTMLElement): Promise<string> {
   return toPng(element, {
     backgroundColor: '#ffffff',
     cacheBust: true,

@@ -21,7 +21,6 @@ export async function parseDashboardJsxToTree(entryPath: string, files: Workspac
   return tree
 }
 
-// Temporary alias while callers migrate to the parser-oriented name.
 export const compileDashboardSourceToTree = parseDashboardJsxToTree
 
 export function getDashboardTitleFromSource(source: string, fallback = 'Dashboard') {

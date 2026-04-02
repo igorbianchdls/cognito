@@ -4,6 +4,8 @@ import { RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import { Icon } from '@iconify/react'
 
 import { parseArtifactJsxToTree, type ArtifactTreeNode } from '@/products/artifacts/core/parser/artifactJsxParser'
+import { ArtifactPreviewThumbnail } from '@/products/artifacts/core/preview/ArtifactPreviewThumbnail'
+import { usePagedArtifactPreviewSnapshots } from '@/products/artifacts/core/preview/usePagedArtifactPreviewSnapshots'
 import { ArtifactDocumentTitle } from '@/products/artifacts/core/workspace/components/ArtifactDocumentTitle'
 import { ArtifactSizeControls } from '@/products/artifacts/core/workspace/components/ArtifactSizeControls'
 import { ArtifactSourceCodePanel } from '@/products/artifacts/core/workspace/components/ArtifactSourceCodePanel'
@@ -23,8 +25,6 @@ import { ReportPdfExportStage } from '@/products/report/export/ReportPdfExportSt
 import { ReportRenderer } from '@/products/report/renderer/reportRenderer'
 import { validateReportTree } from '@/products/report/validator/validateReportTree'
 import { useReportPdfExport } from '@/products/report/export/useReportPdfExport'
-import { ReportPreviewThumbnail } from '@/products/report/preview/ReportPreviewThumbnail'
-import { useReportPreviewSnapshots } from '@/products/report/preview/useReportPreviewSnapshots'
 import { REPORT_TEMPLATE_SOURCE } from '@/products/report/templates/reportTemplate'
 
 type ReportTreeNode = ArtifactTreeNode
@@ -54,7 +54,7 @@ function ReportThumbnail({
 
   return (
     <PagedArtifactThumbnailButton selected={selected} index={index} onClick={onClick}>
-      <ReportPreviewThumbnail
+      <ArtifactPreviewThumbnail
         alt={`Preview da página ${index + 1}`}
         height={thumbHeight}
         selected={selected}
@@ -176,10 +176,10 @@ export function ReportWorkspace() {
     () => `${currentPageId}:${pages.length}:${Boolean(activePage)}:${Boolean(themeNode)}:${activeReportWidth}:${activeReportHeight}`,
     [currentPageId, pages.length, activePage, themeNode, activeReportWidth, activeReportHeight],
   )
-  const { previewsByPageId } = useReportPreviewSnapshots({
+  const { previewsByPageId } = usePagedArtifactPreviewSnapshots({
     activePageId: currentPageId,
     captureKey,
-    reportElementRef,
+    elementRef: reportElementRef,
   })
   const {
     activeExportPage,

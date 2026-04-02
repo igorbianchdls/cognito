@@ -1,7 +1,7 @@
 'use client'
 
 import type { ThemeOption } from '@/products/bi/shared/themeOptions'
-import type { DashboardChartPaletteOption } from '@/products/dashboard/workspace/chartPalettes'
+import type { DashboardChartPaletteOption } from '@/products/dashboard/chartPalettes'
 
 export type DashboardAppearanceMode = 'theme' | 'colors'
 
@@ -258,7 +258,7 @@ export function DashboardThemeModal({
           <button
             type="button"
             onClick={onConfirm}
-            className="rounded-[12px] bg-[#9b9b9b] px-5 py-3 text-[15px] font-medium tracking-[-0.02em] text-white transition hover:bg-[#7f7f7f]"
+            className="rounded-[12px] bg-[#111111] px-5 py-3 text-[15px] font-medium tracking-[-0.02em] text-white transition hover:bg-[#2a2a2a]"
           >
             Confirmar
           </button>

@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react'
 
+import { parseDashboardJsxToTree } from '@/products/dashboard/parser/dashboardJsxParser'
 import { DashboardRenderer } from '@/products/dashboard/renderer/dashboardRenderer'
-import { parseDashboardJsxToTree } from '@/products/dashboard/workspace/dashboardJsxParser'
 import type { DashboardCodeFile } from '@/products/dashboard/workspace/types'
 
 export function DashboardWorkspacePreview({

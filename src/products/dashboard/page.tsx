@@ -1,12 +1,12 @@
 'use client'
 
-import { DataProvider } from '@/products/bi/json-render/context'
+import { ArtifactWorkspacePage } from '@/products/artifacts/core/workspace/ArtifactWorkspacePage'
 import { DashboardWorkspace } from '@/products/dashboard/workspace/DashboardWorkspace'
 
 export default function DashboardPage() {
   return (
-    <DataProvider initialData={{ ui: {}, filters: {}, dashboard: {} }}>
+    <ArtifactWorkspacePage initialData={{ ui: {}, filters: {}, dashboard: {} }}>
       <DashboardWorkspace initialThemeName="dark" />
-    </DataProvider>
+    </ArtifactWorkspacePage>
   )
 }

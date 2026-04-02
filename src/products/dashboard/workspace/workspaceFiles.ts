@@ -4,7 +4,7 @@ import {
   DASHBOARD_TEMPLATE_DEFAULT_THEMES,
 } from '@/products/dashboard/templates/dashboardTemplateSupport'
 import { buildDashboardThemeTokensFileSource } from '@/products/dashboard/templates/dashboardTemplateThemes'
-import { buildDashboardChartColorsFileSource } from '@/products/dashboard/workspace/chartPalettes'
+import { buildDashboardChartColorsFileSource } from '@/products/dashboard/chartPalettes'
 
 export function buildDashboardWorkspaceFiles(themeName: string): DashboardCodeFile[] {
   const dashboardFiles = buildDashboardTemplateVariants(themeName).map((file) => ({

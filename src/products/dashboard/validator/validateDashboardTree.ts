@@ -8,7 +8,7 @@ import {
   DASHBOARD_SUPPORTED_HTML_TAG_SET,
   normalizeDashboardChartType,
 } from '@/products/dashboard/contract/dashboardContract'
-import type { DashboardTreeNode } from '@/products/dashboard/workspace/dashboardJsxParser'
+import type { DashboardTreeNode } from '@/products/dashboard/parser/dashboardJsxParser'
 
 type DashboardTreeChild = DashboardTreeNode | string
 

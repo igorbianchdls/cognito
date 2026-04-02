@@ -6,11 +6,11 @@ import { APPS_THEME_OPTIONS } from '@/products/bi/shared/themeOptions'
 import {
   DashboardThemeModal,
   type DashboardAppearanceMode,
-} from '@/products/dashboard/theme-modal'
+} from '@/products/dashboard/workspace/DashboardThemeModal'
 import {
   DASHBOARD_CHART_PALETTE_OPTIONS,
   getDashboardChartPaletteValueFromColors,
-} from '@/products/dashboard/workspace/chartPalettes'
+} from '@/products/dashboard/chartPalettes'
 import { buildDashboardWorkspaceFiles } from '@/products/dashboard/workspace/workspaceFiles'
 import {
   getDashboardChartColorsFromSource,
@@ -19,9 +19,9 @@ import {
   getDashboardTitleFromSource,
   replaceDashboardChartPaletteNameInSource,
   replaceDashboardThemeNameInSource,
-} from '@/products/dashboard/workspace/dashboardJsxParser'
+} from '@/products/dashboard/parser/dashboardJsxParser'
+import { ArtifactWorkspaceHeader } from '@/products/artifacts/core/workspace/components/ArtifactWorkspaceHeader'
 import { DashboardWorkspaceCode } from '@/products/dashboard/workspace/DashboardWorkspaceCode'
-import { DashboardWorkspaceHeader } from '@/products/dashboard/workspace/DashboardWorkspaceHeader'
 import { DashboardWorkspacePreview } from '@/products/dashboard/workspace/DashboardWorkspacePreview'
 
 export function DashboardWorkspace({
@@ -87,7 +87,7 @@ export function DashboardWorkspace({
   return (
     <>
       <div className="flex h-screen flex-col bg-[#F7F7F6] tracking-[-0.03em] text-[#3F3F3D]">
-        <DashboardWorkspaceHeader
+        <ArtifactWorkspaceHeader
           title={title}
           activeView={activeView}
           zoom={zoom}
