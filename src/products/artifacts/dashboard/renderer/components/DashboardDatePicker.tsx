@@ -348,6 +348,13 @@ export default function DashboardDatePicker({
     typeof fieldStyle.border === 'string'
       ? fieldStyle.border
       : `1px solid ${typeof fieldStyle.borderColor === 'string' ? fieldStyle.borderColor : '#d7e3fa'}`
+  const resolvedFieldBorderColor =
+    typeof fieldStyle.borderColor === 'string'
+      ? fieldStyle.borderColor
+      : (() => {
+          const match = String(resolvedFieldBorder).match(/solid\s+(.+)$/)
+          return match?.[1] || '#d7e3fa'
+        })()
 
   const iconStyle = {
     ...(props.iconStyle && typeof props.iconStyle === 'object' ? props.iconStyle : {}),
@@ -359,6 +366,9 @@ export default function DashboardDatePicker({
     justifyContent: 'center',
     height: 36,
     border: resolvedFieldBorder,
+    borderStyle: 'solid',
+    borderWidth: 1,
+    borderColor: resolvedFieldBorderColor,
     borderRadius: 10,
     backgroundColor: '#ffffff',
     color: '#425572',
@@ -377,6 +387,8 @@ export default function DashboardDatePicker({
   const activePresetButtonStyle = {
     backgroundColor: '#eaf1ff',
     border: resolvedFieldBorder,
+    borderStyle: 'solid',
+    borderWidth: 1,
     borderColor: '#8fb3f5',
     color: '#1e4fbf',
     fontWeight: 600,
