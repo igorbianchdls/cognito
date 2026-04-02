@@ -17,6 +17,14 @@ export default function DashboardPicker({
   const [error, setError] = React.useState<string | null>(null);
   const [query, setQuery] = React.useState('');
 
+  const isPreviewFile = React.useCallback((path: string) => path.endsWith('.dsl') || path.endsWith('.tsx'), []);
+  const comparePreviewPaths = React.useCallback((a: string, b: string) => {
+    const aIsTsx = a.endsWith('.tsx');
+    const bIsTsx = b.endsWith('.tsx');
+    if (aIsTsx !== bIsTsx) return aIsTsx ? -1 : 1;
+    return a.localeCompare(b);
+  }, []);
+
   const refresh = React.useCallback(async () => {
     if (!chatId) {
       setPaths([]);
@@ -41,7 +49,7 @@ export default function DashboardPicker({
         }
         directOk = true;
         for (const e of (data.entries||[])) {
-          if (e.type === 'file' && e.path.endsWith('.dsl')) collected.push(e.path);
+          if (e.type === 'file' && isPreviewFile(e.path)) collected.push(e.path);
         }
       }
 
@@ -57,7 +65,7 @@ export default function DashboardPicker({
           if (!res.ok || data.ok === false) { setError(data.error || `Falha ao listar ${dir}`); break; }
           for (const e of (data.entries||[])) {
             if (e.type === 'dir') { if (!visited.has(e.path)) { visited.add(e.path); queue.push(e.path); } }
-            else if (e.type === 'file' && e.path.endsWith('.dsl')) collected.push(e.path);
+            else if (e.type === 'file' && isPreviewFile(e.path)) collected.push(e.path);
           }
         }
       }
@@ -65,10 +73,10 @@ export default function DashboardPicker({
       if (collected.length === 0 && !directOk && firstDirectError) {
         setError(firstDirectError);
       }
-      collected.sort(); setPaths(collected);
+      collected.sort(comparePreviewPaths); setPaths(collected);
     } catch (e: any) { setError(e?.message ? String(e.message) : 'Erro ao listar dashboards'); }
     finally { setLoading(false); }
-  }, [chatId]);
+  }, [chatId, comparePreviewPaths, isPreviewFile]);
 
   React.useEffect(() => { refresh(); }, [refresh]);
 
@@ -83,7 +91,7 @@ export default function DashboardPicker({
       <div className="mb-2 flex items-center gap-2">
         <input
           type="text"
-          placeholder="Filtrar dashboards (.dsl)"
+          placeholder="Filtrar dashboards (.tsx, .dsl)"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className={`border border-gray-300 rounded px-2 py-1 text-xs bg-white ${compact ? 'w-full min-w-0' : 'min-w-[220px]'}`}
@@ -96,7 +104,7 @@ export default function DashboardPicker({
       <div className={`rounded border border-gray-200 bg-white p-2 overflow-auto ${compact ? 'max-h-[340px]' : 'max-h-[60vh]'}`}>
         {!chatId && (
           <div className="text-xs text-gray-500 p-2">
-            UI de Workspace aberta. Inicie um computador para listar dashboards `.dsl`.
+            UI de Workspace aberta. Inicie um computador para listar dashboards `.tsx` e `.dsl`.
           </div>
         )}
         {chatId && filtered.length === 0 && <div className="text-xs text-gray-500">Nenhum dashboard encontrado</div>}

@@ -14,8 +14,8 @@ import DashboardPicker from '@/products/chat/shared/chat-ui/components/json-rend
 import JsonRenderPreview from '@/products/chat/shared/chat-ui/components/json-render/JsonRenderPreview'
 
 function getTitleFromPreviewPath(path: string) {
-  const fileName = String(path || '').split('/').filter(Boolean).pop() || 'workspace.dsl'
-  return fileName.replace(/\.dsl$/i, '') || 'workspace'
+  const fileName = String(path || '').split('/').filter(Boolean).pop() || 'workspace'
+  return fileName.replace(/\.(dsl|tsx)$/i, '') || 'workspace'
 }
 
 export function ChatArtifactWorkspace({

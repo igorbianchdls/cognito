@@ -2,6 +2,8 @@
 
 import React from "react";
 import { useStore } from "@nanostores/react";
+import { DashboardRenderer } from "@/products/dashboard/render/dashboardRegistry";
+import { parseDashboardJsxToTree, type WorkspaceSourceFile } from "@/products/dashboard/workspace/dashboardJsxParser";
 import { $previewDslPath, sandboxActions } from "@/chat/sandbox";
 
 type Props = { chatId?: string };
@@ -80,16 +82,108 @@ class ComponentBoundary extends React.Component<{ children: React.ReactNode }, C
   }
 }
 
-function isValidDslPath(path: string | null | undefined): path is string {
-  if (!path) return false;
+function getPreviewArtifactKind(path: string | null | undefined): "dsl" | "tsx" | null {
+  if (!path) return null;
   const p = String(path).trim();
-  return p.startsWith("/vercel/sandbox/") && p.endsWith(".dsl");
+  if (!p.startsWith("/vercel/sandbox/")) return null;
+  if (p.endsWith(".dsl")) return "dsl";
+  if (p.endsWith(".tsx")) return "tsx";
+  return null;
+}
+
+function isSupportedPreviewPath(path: string | null | undefined): path is string {
+  return getPreviewArtifactKind(path) !== null;
+}
+
+function comparePreviewPaths(a: string, b: string) {
+  const aKind = getPreviewArtifactKind(a);
+  const bKind = getPreviewArtifactKind(b);
+  if (aKind !== bKind) {
+    if (aKind === "tsx") return -1;
+    if (bKind === "tsx") return 1;
+  }
+  return a.localeCompare(b);
+}
+
+function dirname(path: string) {
+  const normalized = String(path || "").replace(/\\/g, "/");
+  const index = normalized.lastIndexOf("/");
+  return index === -1 ? "" : normalized.slice(0, index);
+}
+
+async function readSandboxTextFile(chatId: string, path: string) {
+  const res = await fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "fs-read", chatId, path }),
+  });
+  const data = (await res.json().catch(() => ({}))) as {
+    ok?: boolean;
+    content?: string;
+    isBinary?: boolean;
+    error?: string;
+  };
+  if (!res.ok || data.ok === false) {
+    throw new Error(data.error || `Falha ao ler arquivo ${path}`);
+  }
+  if (data.isBinary) {
+    throw new Error(`Arquivo binario nao suportado no preview: ${path}`);
+  }
+  return String(data.content || "");
+}
+
+async function loadPreviewTsxFiles(chatId: string, entryPath: string): Promise<WorkspaceSourceFile[]> {
+  const sourceExtPattern = /\.(ts|tsx|js|jsx)$/i;
+  const entryContent = await readSandboxTextFile(chatId, entryPath);
+  const files = new Map<string, string>([[entryPath, entryContent]]);
+  const dir = dirname(entryPath);
+  if (!dir) return [{ path: entryPath, content: entryContent }];
+
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "fs-list", chatId, path: dir }),
+    });
+    const data = (await res.json().catch(() => ({}))) as {
+      ok?: boolean;
+      entries?: Array<{ path: string; type: "file" | "dir" }>;
+      error?: string;
+    };
+    if (!res.ok || data.ok === false) {
+      throw new Error(data.error || `Falha ao listar ${dir}`);
+    }
+
+    const siblingPaths = (data.entries || [])
+      .filter((entry) => entry.type === "file" && sourceExtPattern.test(entry.path))
+      .map((entry) => entry.path)
+      .filter((path) => path !== entryPath);
+
+    const siblingReads = await Promise.all(
+      siblingPaths.map(async (path) => {
+        try {
+          return { path, content: await readSandboxTextFile(chatId, path) };
+        } catch {
+          return null;
+        }
+      }),
+    );
+
+    for (const file of siblingReads) {
+      if (file) files.set(file.path, file.content);
+    }
+  } catch {
+    // Fallback to the entry file only.
+  }
+
+  return Array.from(files, ([path, content]) => ({ path, content }));
 }
 
 function JsonRenderPreviewInner({ chatId }: Props) {
-  const dslPath = useStore($previewDslPath);
+  const previewPath = useStore($previewDslPath);
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState<boolean>(false);
+  const [tree, setTree] = React.useState<any>(null);
   const [refreshTick, setRefreshTick] = React.useState(0);
   const [pathsError, setPathsError] = React.useState<string | null>(null);
   const hydratedPreviewPathForChatRef = React.useRef<string | null>(null);
@@ -120,17 +214,17 @@ function JsonRenderPreviewInner({ chatId }: Props) {
           continue;
         }
         for (const e of data.entries || []) {
-          if (e.type === "file" && e.path.endsWith(".dsl")) {
+          if (e.type === "file" && (e.path.endsWith(".dsl") || e.path.endsWith(".tsx"))) {
             collected.push(e.path);
           }
         }
       }
 
-      const unique = Array.from(new Set(collected)).sort();
+      const unique = Array.from(new Set(collected)).sort(comparePreviewPaths);
       setPathsError(unique.length === 0 ? firstErr : null);
       return unique;
     } catch (e: any) {
-      setPathsError(e?.message ? String(e.message) : "Falha ao buscar arquivos .dsl");
+      setPathsError(e?.message ? String(e.message) : "Falha ao buscar arquivos de preview");
       return [];
     }
   }, [chatId]);
@@ -142,100 +236,74 @@ function JsonRenderPreviewInner({ chatId }: Props) {
     try {
       const saved = window.localStorage.getItem(`previewDslPath:${chatId}`);
       hydratedPreviewPathForChatRef.current = chatId;
-      if (saved && isValidDslPath(saved) && saved !== dslPath) {
+      if (saved && isSupportedPreviewPath(saved) && saved !== previewPath) {
         sandboxActions.setPreviewPath(saved);
       }
     } catch {
       // ignore storage access errors
     }
-  }, [chatId, dslPath]);
+  }, [chatId, previewPath]);
 
   React.useEffect(() => {
     if (!chatId) hydratedPreviewPathForChatRef.current = null;
   }, [chatId]);
 
   React.useEffect(() => {
-    if (typeof window === "undefined" || !chatId || !dslPath) return;
+    if (typeof window === "undefined" || !chatId || !previewPath) return;
     try {
-      window.localStorage.setItem(`previewDslPath:${chatId}`, dslPath);
+      window.localStorage.setItem(`previewDslPath:${chatId}`, previewPath);
     } catch {
       // ignore storage access errors
     }
-  }, [chatId, dslPath]);
+  }, [chatId, previewPath]);
 
   React.useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
       setError(null);
+      setTree(null);
 
       if (!chatId) {
         if (!cancelled) setLoading(false);
         return;
       }
-      if (!dslPath) {
+      if (!previewPath) {
         if (!cancelled) {
-          setError("Caminho do .dsl não configurado.");
+          setError("Caminho do preview nao configurado.");
           setLoading(false);
         }
         return;
       }
-      if (!isValidDslPath(dslPath)) {
+      const kind = getPreviewArtifactKind(previewPath);
+      if (!kind) {
         if (!cancelled) {
-          setError("Caminho inválido do .dsl.");
+          setError("Caminho invalido do preview.");
           setLoading(false);
         }
         return;
       }
 
       try {
-        const res = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "fs-read", chatId, path: dslPath }),
-        });
-        const data = (await res.json().catch(() => ({}))) as {
-          ok?: boolean;
-          content?: string;
-          isBinary?: boolean;
-          error?: string;
-        };
-
-        if (!res.ok || data.ok === false) {
-          const found = await refreshPaths();
-          const candidate = found[0];
-          if (!cancelled && candidate && candidate !== dslPath) {
-            sandboxActions.setPreviewPath(candidate);
-            setLoading(false);
-            return;
-          }
+        if (kind === "tsx") {
+          const files = await loadPreviewTsxFiles(chatId, previewPath);
+          const nextTree = await parseDashboardJsxToTree(previewPath, files);
+          if (!cancelled) setTree(nextTree);
+        } else {
+          await readSandboxTextFile(chatId, previewPath);
           if (!cancelled) {
-            setError(data.error || `Falha ao ler arquivo ${dslPath}`);
-            setLoading(false);
+            setError("Preview de artefatos .dsl foi removido. Use dashboards .tsx.");
           }
-          return;
-        }
-
-        if (data.isBinary) {
-          if (!cancelled) {
-            setError("Arquivo .dsl binário inválido.");
-            setLoading(false);
-          }
-          return;
-        }
-
-        if (!cancelled) {
-          setError("Preview de artefatos .dsl foi removido. Dashboard, report e slide agora usam JSX.");
         }
       } catch (e: any) {
         const found = await refreshPaths();
         const candidate = found[0];
-        if (!cancelled && candidate && candidate !== dslPath) {
+        if (!cancelled && candidate && candidate !== previewPath) {
           sandboxActions.setPreviewPath(candidate);
           setLoading(false);
           return;
         }
-        if (!cancelled) setError(e?.message ? String(e.message) : "Erro ao buscar .dsl");
+        if (!cancelled) setError(e?.message ? String(e.message) : "Erro ao carregar preview");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -244,7 +312,7 @@ function JsonRenderPreviewInner({ chatId }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [chatId, dslPath, refreshTick, refreshPaths]);
+  }, [chatId, previewPath, refreshTick, refreshPaths]);
 
   React.useEffect(() => {
     void refreshPaths();
@@ -271,10 +339,11 @@ function JsonRenderPreviewInner({ chatId }: Props) {
     <div className="h-full w-full min-h-0 overflow-auto p-0 bg-gray-50">
       {!chatId && !error && !loading && (
         <div className="rounded border border-gray-200 bg-white text-gray-600 text-xs p-3">
-          UI de preview aberta. Inicie um computador para carregar e renderizar arquivos `.dsl`.
+          UI de preview aberta. Inicie um computador para carregar e renderizar dashboards `.tsx`.
         </div>
       )}
       {!error && loading && <div className="text-xs text-gray-500 p-2">Carregando...</div>}
+      {!error && !loading && tree && <DashboardRenderer tree={tree} />}
       {error && !loading && (
         <div className="rounded border border-red-300 bg-red-50 text-red-700 text-xs p-3">{error}</div>
       )}

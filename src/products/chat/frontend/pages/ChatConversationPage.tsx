@@ -23,7 +23,10 @@ export default function ChatConversationPage({ runtimeKind = "codex" }: { runtim
   useEffect(() => {
     if (!urlId) return;
     const artifactPath = (searchParams.get("artifactPath") || "").trim();
-    if (!artifactPath || !artifactPath.startsWith("/vercel/sandbox/") || !artifactPath.endsWith(".dsl")) return;
+    const isSupportedArtifact =
+      artifactPath.startsWith("/vercel/sandbox/") &&
+      (artifactPath.endsWith(".dsl") || artifactPath.endsWith(".tsx"));
+    if (!artifactPath || !isSupportedArtifact) return;
     sandboxActions.setPreviewPath(artifactPath);
     sandboxActions.setActiveTab("preview");
     try {

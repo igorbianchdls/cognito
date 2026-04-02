@@ -417,6 +417,10 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
       setError('Tema indisponivel para artefatos .dsl legados. O parser antigo foi removido.');
       return;
     }
+    if (previewPath.endsWith('.tsx')) {
+      setError('Edicao rapida de tema ainda nao esta disponivel para dashboards .tsx neste painel.');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -441,6 +445,10 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
       }
       if (previewPath.endsWith('.dsl')) {
         setError('Tema indisponivel para artefatos .dsl legados. O parser antigo foi removido.');
+        return;
+      }
+      if (previewPath.endsWith('.tsx')) {
+        setError('Edicao rapida de tema ainda nao esta disponivel para dashboards .tsx neste painel.');
         return;
       }
       setLoading(true);
