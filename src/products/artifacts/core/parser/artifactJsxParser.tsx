@@ -2,7 +2,7 @@
 
 import React, { isValidElement, ReactNode } from 'react'
 
-import { resolveDashboardTemplateThemeTokens as resolveDashboardThemeTokens } from '@/products/dashboard/templates/dashboardTemplateThemes'
+import { resolveDashboardTemplateThemeTokens as resolveDashboardThemeTokens } from '@/products/artifacts/dashboard/templates/dashboardTemplateThemes'
 import type {
   ArtifactKind,
   ArtifactTreeNode,

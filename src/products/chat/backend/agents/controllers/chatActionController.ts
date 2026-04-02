@@ -13,8 +13,8 @@ import {
   loadVendasSkillMarkdown,
 } from '@/products/chat/backend/agents/skills/dashboardSkill'
 import { resolveComposioUserIdFromRequest } from '@/products/chat/backend/agents/core/context/resolveComposioUserId'
-import { buildClassicDashboardTemplateVariant } from '@/products/dashboard/templates/dashboardTemplate'
-import { buildComprasDashboardTemplateVariant } from '@/products/dashboard/templates/dashboardComprasTemplate'
+import { buildClassicDashboardTemplateVariant } from '@/products/artifacts/dashboard/templates/dashboardTemplate'
+import { buildComprasDashboardTemplateVariant } from '@/products/artifacts/dashboard/templates/dashboardComprasTemplate'
 import {
   ensureChatRuntimeKindColumn,
   normalizeRuntimeKind,

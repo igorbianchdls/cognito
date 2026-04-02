@@ -1,3 +1,3 @@
-import SlidePage from '@/products/slide/page'
+import SlidePage from '@/products/artifacts/slide/page'
 
 export default SlidePage

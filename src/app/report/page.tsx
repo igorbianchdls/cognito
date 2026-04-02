@@ -1,3 +1,3 @@
-import ReportPage from '@/products/report/page'
+import ReportPage from '@/products/artifacts/report/page'
 
 export default ReportPage

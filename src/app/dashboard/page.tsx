@@ -1,3 +1,3 @@
-import DashboardPage from '@/products/dashboard/page'
+import DashboardPage from '@/products/artifacts/dashboard/page'
 
 export default DashboardPage
