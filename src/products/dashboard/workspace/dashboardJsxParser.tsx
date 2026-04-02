@@ -9,6 +9,7 @@ import { resolveDashboardChartPaletteColors } from '@/products/dashboard/workspa
 import { validateDashboardTree } from '@/products/dashboard/workspace/validateDashboardTree'
 
 export type { WorkspaceSourceFile }
+export type { DashboardTreeNode }
 
 export async function parseDashboardJsxToTree(entryPath: string, files: WorkspaceSourceFile[]): Promise<DashboardTreeNode> {
   const parsed = await parseArtifactJsxToTree(entryPath, files)
