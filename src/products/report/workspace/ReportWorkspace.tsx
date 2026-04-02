@@ -4,6 +4,14 @@ import { RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import { Icon } from '@iconify/react'
 
 import { parseArtifactJsxToTree, type ArtifactTreeNode } from '@/products/artifacts/core/parser/artifactJsxParser'
+import {
+  buildPagedArtifactRenderTree,
+  getArtifactPageId,
+  getPagedArtifactDimension,
+  getPagedArtifactStructure,
+  parseArtifactDimensionDraft,
+  updatePagedArtifactSizeInTree,
+} from '@/products/artifacts/core/workspace/pagedArtifactTree'
 import { ReportPdfExportStage } from '@/products/report/export/ReportPdfExportStage'
 import { ReportRenderer } from '@/products/report/renderer/reportRenderer'
 import { validateReportTree } from '@/products/report/validator/validateReportTree'
@@ -12,7 +20,6 @@ import { ReportPreviewThumbnail } from '@/products/report/preview/ReportPreviewT
 import { useReportPreviewSnapshots } from '@/products/report/preview/useReportPreviewSnapshots'
 import { REPORT_TEMPLATE_SOURCE } from '@/products/report/templates/reportTemplate'
 
-type AnyRecord = Record<string, any>
 type ReportTreeNode = ArtifactTreeNode
 
 const DEFAULT_REPORT_WIDTH = 794
@@ -20,97 +27,6 @@ const DEFAULT_REPORT_HEIGHT = 1123
 const THUMB_WIDTH = 150
 const MIN_REPORT_WIDTH = 480
 const MIN_REPORT_HEIGHT = 640
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
-}
-
-function getReportStructure(tree: unknown): {
-  rootName: string
-  themeNode: AnyRecord | null
-  pages: AnyRecord[]
-} {
-  if (!isRecord(tree) || String(tree.type || '').trim() !== 'ReportTemplate') {
-    return { rootName: 'Relatório', themeNode: null, pages: [] }
-  }
-  const props = isRecord(tree.props) ? (tree.props as AnyRecord) : {}
-  const children = Array.isArray(tree.children) ? tree.children.filter(isRecord) : []
-  const themeNode = children.find((child) => String(child.type || '').trim() === 'Theme') as AnyRecord | undefined
-  const pages = children.filter((child) => String(child.type || '').trim() === 'Report') as AnyRecord[]
-  return {
-    rootName:
-      typeof props.title === 'string' && props.title.trim()
-        ? props.title
-        : (typeof props.name === 'string' && props.name.trim() ? props.name : 'Relatório'),
-    themeNode: themeNode || null,
-    pages,
-  }
-}
-
-function getPageId(page: AnyRecord, index: number): string {
-  const props = isRecord(page.props) ? (page.props as AnyRecord) : {}
-  const raw = typeof props.id === 'string' && props.id.trim() ? props.id.trim() : ''
-  return raw || `page_${index + 1}`
-}
-
-function getReportDimension(page: AnyRecord | null, key: 'width' | 'height', fallback: number): number {
-  if (!page || !isRecord(page.props)) return fallback
-  const raw = (page.props as AnyRecord)[key]
-  return typeof raw === 'number' && Number.isFinite(raw) ? raw : fallback
-}
-
-function updateReportSizeInTree(tree: ReportTreeNode, pageId: string, nextSize: { width?: number; height?: number }): ReportTreeNode {
-  if (tree.type !== 'ReportTemplate') return tree
-
-  const nextChildren = tree.children.map((child) => {
-    if (!child || typeof child === 'string') return child
-    if (child.type !== 'Report') return child
-
-    const props = isRecord(child.props) ? (child.props as AnyRecord) : {}
-    const childPageId = typeof props.id === 'string' ? props.id.trim() : ''
-    if (childPageId !== pageId) return child
-
-    return {
-      ...child,
-      props: {
-        ...props,
-        ...(typeof nextSize.width === 'number' ? { width: nextSize.width } : {}),
-        ...(typeof nextSize.height === 'number' ? { height: nextSize.height } : {}),
-      },
-    }
-  })
-
-  return {
-    ...tree,
-    children: nextChildren,
-  }
-}
-
-function parseDimensionDraft(value: string, minimum: number): number | null {
-  const trimmed = value.trim()
-  if (!trimmed) return null
-  const parsed = Number(trimmed)
-  if (!Number.isFinite(parsed)) return null
-  return Math.max(minimum, Math.round(parsed))
-}
-
-function buildPageRenderTree(page: AnyRecord, themeNode: AnyRecord | null): any {
-  const reportNode = {
-    ...page,
-    props: {
-      ...((isRecord(page.props) ? page.props : {}) as AnyRecord),
-      width: '100%',
-      height: '100%',
-      minHeight: '100%',
-    },
-  }
-  if (!themeNode) return reportNode
-  const themeChildren = Array.isArray(themeNode.children) ? themeNode.children : []
-  return {
-    ...themeNode,
-    children: [...themeChildren, reportNode],
-  }
-}
 
 function ReportThumbnail({
   previewSrc,
@@ -213,7 +129,10 @@ export function ReportWorkspace() {
     }
   }, [])
 
-  const { rootName, themeNode, pages } = useMemo(() => getReportStructure(templateTree), [templateTree])
+  const { rootName, themeNode, pages } = useMemo(
+    () => getPagedArtifactStructure(templateTree, { rootType: 'ReportTemplate', pageType: 'Report', fallbackRootName: 'Relatório' }),
+    [templateTree],
+  )
   const [activePageId, setActivePageId] = useState('')
   const [activeView, setActiveView] = useState<'preview' | 'code'>('preview')
   const [zoom, setZoom] = useState(0.9)
@@ -224,19 +143,19 @@ export function ReportWorkspace() {
 
   useEffect(() => {
     if (!pages.length) return
-    const firstId = getPageId(pages[0], 0)
+    const firstId = getArtifactPageId(pages[0], 0, 'page')
     setActivePageId((current) => current || firstId)
   }, [pages])
 
   const activePage = useMemo(
-    () => pages.find((page, index) => getPageId(page, index) === activePageId) || pages[0] || null,
+    () => pages.find((page, index) => getArtifactPageId(page, index, 'page') === activePageId) || pages[0] || null,
     [pages, activePageId],
   )
-  const currentPageId = activePageId || (pages.length ? getPageId(pages[0], 0) : '')
-  const activeReportWidth = getReportDimension(activePage, 'width', DEFAULT_REPORT_WIDTH)
-  const activeReportHeight = getReportDimension(activePage, 'height', DEFAULT_REPORT_HEIGHT)
-  const parsedWidthDraft = parseDimensionDraft(widthDraft, MIN_REPORT_WIDTH)
-  const parsedHeightDraft = parseDimensionDraft(heightDraft, MIN_REPORT_HEIGHT)
+  const currentPageId = activePageId || (pages.length ? getArtifactPageId(pages[0], 0, 'page') : '')
+  const activeReportWidth = getPagedArtifactDimension(activePage, 'width', DEFAULT_REPORT_WIDTH)
+  const activeReportHeight = getPagedArtifactDimension(activePage, 'height', DEFAULT_REPORT_HEIGHT)
+  const parsedWidthDraft = parseArtifactDimensionDraft(widthDraft, MIN_REPORT_WIDTH)
+  const parsedHeightDraft = parseArtifactDimensionDraft(heightDraft, MIN_REPORT_HEIGHT)
   const hasPendingSizeChange =
     parsedWidthDraft !== null &&
     parsedHeightDraft !== null &&
@@ -248,14 +167,14 @@ export function ReportWorkspace() {
   }, [currentPageId, activeReportWidth, activeReportHeight])
 
   const activeTree = useMemo(
-    () => (activePage ? buildPageRenderTree(activePage, themeNode) : []),
+    () => (activePage ? buildPagedArtifactRenderTree(activePage, themeNode) : []),
     [activePage, themeNode],
   )
   const exportPages = useMemo(
     () =>
       pages.map((page, index) => ({
-        pageId: getPageId(page, index),
-        tree: buildPageRenderTree(page, themeNode),
+        pageId: getArtifactPageId(page, index, 'page'),
+        tree: buildPagedArtifactRenderTree(page, themeNode),
       })),
     [pages, themeNode],
   )
@@ -282,10 +201,10 @@ export function ReportWorkspace() {
   const applyActiveReportSize = () => {
     if (parsedWidthDraft === null || parsedHeightDraft === null) return
     setTemplateTree((current) => current
-      ? updateReportSizeInTree(current, currentPageId, {
+      ? updatePagedArtifactSizeInTree(current, currentPageId, {
         width: parsedWidthDraft,
         height: parsedHeightDraft,
-      })
+      }, { rootType: 'ReportTemplate', pageType: 'Report' })
       : current)
   }
 
@@ -428,15 +347,15 @@ export function ReportWorkspace() {
         <aside className="w-[210px] shrink-0 overflow-auto border-r-[0.5px] border-[#DDDDD8] bg-[#F7F7F6] px-3 py-4">
           <div className="space-y-4">
             {pages.map((page, index) => {
-              const pageId = getPageId(page, index)
+              const pageId = getArtifactPageId(page, index, 'page')
               return (
                 <ReportThumbnail
                   key={pageId}
                   previewSrc={previewsByPageId[pageId]}
                   selected={pageId === activePageId}
                   index={index}
-                  reportHeight={getReportDimension(page, 'height', DEFAULT_REPORT_HEIGHT)}
-                  reportWidth={getReportDimension(page, 'width', DEFAULT_REPORT_WIDTH)}
+                  reportHeight={getPagedArtifactDimension(page, 'height', DEFAULT_REPORT_HEIGHT)}
+                  reportWidth={getPagedArtifactDimension(page, 'width', DEFAULT_REPORT_WIDTH)}
                   onClick={() => setActivePageId(pageId)}
                 />
               )
@@ -468,10 +387,10 @@ export function ReportWorkspace() {
       </div>
       {exportError ? <div className="sr-only">{exportError}</div> : null}
       <ReportPdfExportStage
-        height={activeExportPage ? getReportDimension(pages.find((page, index) => getPageId(page, index) === activeExportPage.pageId) || null, 'height', DEFAULT_REPORT_HEIGHT) : DEFAULT_REPORT_HEIGHT}
+        height={activeExportPage ? getPagedArtifactDimension(pages.find((page, index) => getArtifactPageId(page, index, 'page') === activeExportPage.pageId) || null, 'height', DEFAULT_REPORT_HEIGHT) : DEFAULT_REPORT_HEIGHT}
         reportElementRef={exportElementRef}
         tree={activeExportPage?.tree || null}
-        width={activeExportPage ? getReportDimension(pages.find((page, index) => getPageId(page, index) === activeExportPage.pageId) || null, 'width', DEFAULT_REPORT_WIDTH) : DEFAULT_REPORT_WIDTH}
+        width={activeExportPage ? getPagedArtifactDimension(pages.find((page, index) => getArtifactPageId(page, index, 'page') === activeExportPage.pageId) || null, 'width', DEFAULT_REPORT_WIDTH) : DEFAULT_REPORT_WIDTH}
       />
     </div>
   )

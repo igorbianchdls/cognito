@@ -4,13 +4,21 @@ import { memo, RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import { Icon } from '@iconify/react'
 
 import { parseArtifactJsxToTree, type ArtifactTreeNode } from '@/products/artifacts/core/parser/artifactJsxParser'
+import {
+  buildPagedArtifactRenderTree,
+  cloneArtifactTree,
+  getArtifactPageId,
+  getPagedArtifactDimension,
+  getPagedArtifactStructure,
+  parseArtifactDimensionDraft,
+  updatePagedArtifactSizeInTree,
+} from '@/products/artifacts/core/workspace/pagedArtifactTree'
 import { SlideRenderer } from '@/products/slide/renderer/slideRenderer'
 import { SlidePreviewThumbnail } from '@/products/slide/preview/SlidePreviewThumbnail'
 import { useSlidePreviewSnapshots } from '@/products/slide/preview/useSlidePreviewSnapshots'
 import { SLIDE_TEMPLATE_SOURCE } from '@/products/slide/templates/slideTemplate'
 import { validateSlideTree } from '@/products/slide/validator/validateSlideTree'
 
-type AnyRecord = Record<string, any>
 type SlideTreeNode = ArtifactTreeNode
 
 const DEFAULT_SLIDE_WIDTH = 1280
@@ -18,101 +26,6 @@ const DEFAULT_SLIDE_HEIGHT = 720
 const THUMB_WIDTH = 170
 const MIN_SLIDE_WIDTH = 640
 const MIN_SLIDE_HEIGHT = 360
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
-}
-
-function getSlideStructure(tree: unknown): {
-  rootName: string
-  themeNode: AnyRecord | null
-  pages: AnyRecord[]
-} {
-  if (!isRecord(tree) || String(tree.type || '').trim() !== 'SlideTemplate') {
-    return { rootName: 'Apresentação', themeNode: null, pages: [] }
-  }
-  const props = isRecord(tree.props) ? (tree.props as AnyRecord) : {}
-  const children = Array.isArray(tree.children) ? tree.children.filter(isRecord) : []
-  const themeNode = children.find((child) => String(child.type || '').trim() === 'Theme') as AnyRecord | undefined
-  const pages = children.filter((child) => String(child.type || '').trim() === 'Slide') as AnyRecord[]
-  return {
-    rootName:
-      typeof props.title === 'string' && props.title.trim()
-        ? props.title
-        : (typeof props.name === 'string' && props.name.trim() ? props.name : 'Apresentação'),
-    themeNode: themeNode || null,
-    pages,
-  }
-}
-
-function getPageId(page: AnyRecord, index: number): string {
-  const props = isRecord(page.props) ? (page.props as AnyRecord) : {}
-  const raw = typeof props.id === 'string' && props.id.trim() ? props.id.trim() : ''
-  return raw || `slide_${index + 1}`
-}
-
-function getSlideDimension(page: AnyRecord | null, key: 'width' | 'height', fallback: number): number {
-  if (!page || !isRecord(page.props)) return fallback
-  const raw = (page.props as AnyRecord)[key]
-  return typeof raw === 'number' && Number.isFinite(raw) ? raw : fallback
-}
-
-function updateSlideSizeInTree(tree: SlideTreeNode, pageId: string, nextSize: { width?: number; height?: number }): SlideTreeNode {
-  if (tree.type !== 'SlideTemplate') return tree
-
-  const nextChildren = tree.children.map((child) => {
-    if (!child || typeof child === 'string') return child
-    if (child.type !== 'Slide') return child
-
-    const props = isRecord(child.props) ? (child.props as AnyRecord) : {}
-    const childPageId = typeof props.id === 'string' ? props.id.trim() : ''
-    if (childPageId !== pageId) return child
-
-    return {
-      ...child,
-      props: {
-        ...props,
-        ...(typeof nextSize.width === 'number' ? { width: nextSize.width } : {}),
-        ...(typeof nextSize.height === 'number' ? { height: nextSize.height } : {}),
-      },
-    }
-  })
-
-  return {
-    ...tree,
-    children: nextChildren,
-  }
-}
-
-function parseDimensionDraft(value: string, minimum: number): number | null {
-  const trimmed = value.trim()
-  if (!trimmed) return null
-  const parsed = Number(trimmed)
-  if (!Number.isFinite(parsed)) return null
-  return Math.max(minimum, Math.round(parsed))
-}
-
-function buildPageRenderTree(page: AnyRecord, themeNode: AnyRecord | null): any {
-  const slideNode = {
-    ...page,
-    props: {
-      ...((isRecord(page.props) ? page.props : {}) as AnyRecord),
-      width: '100%',
-      height: '100%',
-      minHeight: '100%',
-    },
-  }
-  if (!themeNode) return slideNode
-  const themeChildren = Array.isArray(themeNode.children) ? themeNode.children : []
-  return {
-    ...themeNode,
-    children: [...themeChildren, slideNode],
-  }
-}
-
-function cloneRenderTree<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value)) as T
-}
 
 function SlideThumbnail({
   previewSrc,
@@ -260,8 +173,11 @@ export function SlideWorkspace() {
     }
   }, [])
 
-  const { rootName, themeNode, pages } = useMemo(() => getSlideStructure(templateTree), [templateTree])
-  const initialPageId = useMemo(() => (pages.length ? getPageId(pages[0], 0) : ''), [pages])
+  const { rootName, themeNode, pages } = useMemo(
+    () => getPagedArtifactStructure(templateTree, { rootType: 'SlideTemplate', pageType: 'Slide', fallbackRootName: 'Apresentação' }),
+    [templateTree],
+  )
+  const initialPageId = useMemo(() => (pages.length ? getArtifactPageId(pages[0], 0, 'slide') : ''), [pages])
   const [activePageId, setActivePageId] = useState(initialPageId)
   const [activeView, setActiveView] = useState<'preview' | 'code'>('preview')
   const [zoom, setZoom] = useState(0.82)
@@ -270,14 +186,14 @@ export function SlideWorkspace() {
   const slideElementRef = useRef<HTMLDivElement | null>(null)
 
   const activePage = useMemo(
-    () => pages.find((page, index) => getPageId(page, index) === (activePageId || initialPageId)) || pages[0] || null,
+    () => pages.find((page, index) => getArtifactPageId(page, index, 'slide') === (activePageId || initialPageId)) || pages[0] || null,
     [pages, activePageId, initialPageId],
   )
   const currentPageId = activePageId || initialPageId
-  const activeSlideWidth = getSlideDimension(activePage, 'width', DEFAULT_SLIDE_WIDTH)
-  const activeSlideHeight = getSlideDimension(activePage, 'height', DEFAULT_SLIDE_HEIGHT)
-  const parsedWidthDraft = parseDimensionDraft(widthDraft, MIN_SLIDE_WIDTH)
-  const parsedHeightDraft = parseDimensionDraft(heightDraft, MIN_SLIDE_HEIGHT)
+  const activeSlideWidth = getPagedArtifactDimension(activePage, 'width', DEFAULT_SLIDE_WIDTH)
+  const activeSlideHeight = getPagedArtifactDimension(activePage, 'height', DEFAULT_SLIDE_HEIGHT)
+  const parsedWidthDraft = parseArtifactDimensionDraft(widthDraft, MIN_SLIDE_WIDTH)
+  const parsedHeightDraft = parseArtifactDimensionDraft(heightDraft, MIN_SLIDE_HEIGHT)
   const hasPendingSizeChange =
     parsedWidthDraft !== null &&
     parsedHeightDraft !== null &&
@@ -289,7 +205,7 @@ export function SlideWorkspace() {
   }, [currentPageId, activeSlideWidth, activeSlideHeight])
 
   const activeTree = useMemo(
-    () => (activePage ? cloneRenderTree(buildPageRenderTree(activePage, themeNode)) : []),
+    () => (activePage ? cloneArtifactTree(buildPagedArtifactRenderTree(activePage, themeNode)) : []),
     [activePage, themeNode],
   )
   const captureKey = useMemo(
@@ -305,10 +221,10 @@ export function SlideWorkspace() {
   const applyActiveSlideSize = () => {
     if (parsedWidthDraft === null || parsedHeightDraft === null) return
     setTemplateTree((current) => current
-      ? updateSlideSizeInTree(current, currentPageId, {
+      ? updatePagedArtifactSizeInTree(current, currentPageId, {
         width: parsedWidthDraft,
         height: parsedHeightDraft,
-      })
+      }, { rootType: 'SlideTemplate', pageType: 'Slide' })
       : current)
   }
 
@@ -446,15 +362,15 @@ export function SlideWorkspace() {
         <aside className="w-[210px] shrink-0 overflow-auto border-r-[0.5px] border-[#DDDDD8] bg-[#F7F7F6] px-3 py-4">
           <div className="space-y-4">
             {pages.map((page, index) => {
-              const pageId = getPageId(page, index)
+              const pageId = getArtifactPageId(page, index, 'slide')
               return (
                 <SlideThumbnail
                   key={pageId}
                   previewSrc={previewsByPageId[pageId]}
                   selected={pageId === (activePageId || initialPageId)}
                   index={index}
-                  slideHeight={getSlideDimension(page, 'height', DEFAULT_SLIDE_HEIGHT)}
-                  slideWidth={getSlideDimension(page, 'width', DEFAULT_SLIDE_WIDTH)}
+                  slideHeight={getPagedArtifactDimension(page, 'height', DEFAULT_SLIDE_HEIGHT)}
+                  slideWidth={getPagedArtifactDimension(page, 'width', DEFAULT_SLIDE_WIDTH)}
                   onClick={() => setActivePageId(pageId)}
                 />
               )
