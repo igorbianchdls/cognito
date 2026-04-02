@@ -227,75 +227,118 @@
   - do not create helper artifacts per dashboard
 </componentes>
 
-<exemplo1>
+<expected_output>
 ```tsx
 <Dashboard id="overview" title="Dashboard Exemplo KPI + Chart" theme="light" chartPalette="teal">
-  <section style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 24 }}>
-    <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <p style={{ margin: 0 }}>Resumo comercial</p>
-        <h1 style={{ margin: 0 }}>Receita e canais</h1>
+  <section style={{ display: 'flex', flexDirection: 'column', gap: 24, minHeight: '100%', backgroundColor: theme.pageBg }}>
+    <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24, padding: 24, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 720 }}>
+        <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          Resumo comercial
+        </p>
+        <h1 style={{ margin: 0, fontSize: 40, lineHeight: 1.02, fontWeight: 700, letterSpacing: '-0.04em', color: theme.titleColor }}>
+          Receita e canais
+        </h1>
+        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: theme.textSecondary }}>
+          Cabecalho com periodo global, KPIs no topo e leitura principal em linha abaixo.
+        </p>
       </div>
 
-      <DatePicker
-        label="Periodo"
-        table="vendas.pedidos"
-        field="data_pedido"
-        mode="range"
-        presets={['7d', '30d', 'month']}
-      />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: 340 }}>
+        <DatePicker
+          label="Periodo"
+          table="vendas.pedidos"
+          field="data_pedido"
+          mode="range"
+          presets={['7d', '30d', 'month']}
+          labelStyle={{ margin: 0, fontSize: 11, color: theme.headerDatePickerLabel, textTransform: 'uppercase', letterSpacing: '0.06em' }}
+          fieldStyle={{ minHeight: 38, padding: '0 10px', border: '1px solid ' + theme.headerDatePickerBorder, borderRadius: 10, backgroundColor: theme.headerDatePickerBg, color: theme.headerDatePickerColor, fontSize: 14, fontWeight: 500 }}
+          iconStyle={{ color: theme.headerDatePickerIcon, fontSize: 14 }}
+          presetButtonStyle={{ height: 36, border: '1px solid ' + theme.headerDatePickerBorder, borderRadius: 10, backgroundColor: theme.headerDatePickerBg, color: theme.headerDatePickerColor, fontSize: 13, fontWeight: 500 }}
+          activePresetButtonStyle={{ backgroundColor: theme.headerDatePickerActiveBg, borderColor: theme.headerDatePickerActiveBorder, color: theme.headerDatePickerActiveText, fontWeight: 600 }}
+        />
+      </div>
     </header>
 
-    <Query
-      dataQuery={{
-        query: `
-          SELECT COALESCE(SUM(src.valor_total), 0)::float AS value
-          FROM vendas.pedidos src
-          WHERE src.tenant_id = {{tenant_id}}::int
-            {{filters:src}}
-        `,
-        limit: 1,
-      }}
-      format="currency"
-      comparisonMode="previous_period"
-    >
-      <Card style={{ padding: 20, border: '1px solid #e5e7eb', borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <h2 style={{ margin: 0 }}>Receita</h2>
-        <p style={{ margin: 0 }}>{'{{query.valueFormatted}}'}</p>
-        <p style={{ margin: 0 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-      </Card>
-    </Query>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, padding: '0 28px 28px' }}>
+      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 16 }}>
+        <Query
+          dataQuery={{
+            query: `
+              SELECT COALESCE(SUM(src.valor_total), 0)::float AS value
+              FROM vendas.pedidos src
+              WHERE src.tenant_id = {{tenant_id}}::int
+                {{filters:src}}
+            `,
+            limit: 1,
+          }}
+          format="currency"
+          comparisonMode="previous_period"
+        >
+          <Card style={{ padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 600, color: theme.titleColor }}>Receita</h2>
+            <p style={{ margin: 0, fontSize: 28, fontWeight: 700, color: theme.kpiValueColor }}>{'{{query.valueFormatted}}'}</p>
+            <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 13, color: theme.textSecondary }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
+          </Card>
+        </Query>
+      </section>
 
-    <Chart
-      type="bar"
-      height={320}
-      format="currency"
-      dataQuery={{
-        query: `
-          SELECT
-            cv.id::text AS key,
-            COALESCE(cv.nome, '-') AS label,
-            COALESCE(SUM(src.valor_total), 0)::float AS value
-          FROM vendas.pedidos src
-          LEFT JOIN vendas.canais_venda cv ON cv.id = src.canal_venda_id
-          WHERE src.tenant_id = {{tenant_id}}::int
-            {{filters:src}}
-          GROUP BY 1, 2
-          ORDER BY 3 DESC
-        `,
-        limit: 8,
-      }}
-      xAxis={{ dataKey: 'label' }}
-      series={[
-        { dataKey: 'value', label: 'Receita' },
-      ]}
-    />
+      <section style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 18 }}>
+        <Card style={{ padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 600, color: theme.titleColor }}>Receita por canal</h2>
+          <Chart
+            type="bar"
+            height={320}
+            format="currency"
+            dataQuery={{
+              query: `
+                SELECT
+                  COALESCE(cv.nome, '-') AS canal,
+                  COALESCE(SUM(src.valor_total), 0)::float AS valor
+                FROM vendas.pedidos src
+                LEFT JOIN vendas.canais_venda cv ON cv.id = src.canal_venda_id
+                WHERE src.tenant_id = {{tenant_id}}::int
+                  {{filters:src}}
+                GROUP BY 1
+                ORDER BY 2 DESC
+              `,
+              limit: 8,
+            }}
+            xAxis={{ dataKey: 'canal' }}
+            series={[{ dataKey: 'valor', label: 'Receita' }]}
+          />
+        </Card>
+
+        <Card style={{ padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 600, color: theme.titleColor }}>Canal</h2>
+          <Filter
+            label="Canal"
+            table="vendas.pedidos"
+            field="canal_venda_id"
+            mode="multiple"
+            search
+            clearable
+            width="100%"
+            query={`
+              SELECT
+                cv.id::text AS value,
+                COALESCE(cv.nome, '-') AS label
+              FROM vendas.canais_venda cv
+              WHERE cv.tenant_id = {{tenant_id}}::int
+              ORDER BY 2 ASC
+            `}
+          >
+            <Select />
+          </Filter>
+        </Card>
+      </section>
+    </div>
   </section>
 </Dashboard>
 ```
-</exemplo1>
+</expected_output>
 
-<exemplo2>
+<expected_output_2>
 ```tsx
 <Dashboard id="overview" title="Dashboard Exemplo Tabs + Table" theme="light" chartPalette="teal">
   <section style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 24 }}>
@@ -413,7 +456,7 @@
   </section>
 </Dashboard>
 ```
-</exemplo2>
+</expected_output_2>
 
 <canonical_authored_format>
 - Canonical authored root:
