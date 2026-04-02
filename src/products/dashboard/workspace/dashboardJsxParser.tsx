@@ -4,7 +4,7 @@ import {
   parseArtifactJsxToTree,
   type ArtifactTreeNode as DashboardTreeNode,
   type WorkspaceSourceFile,
-} from '@/products/artifacts/shared/artifactJsxParser'
+} from '@/products/artifacts/core/parser/artifactJsxParser'
 import { resolveDashboardChartPaletteColors } from '@/products/dashboard/workspace/dashboardContract'
 import { validateDashboardTree } from '@/products/dashboard/workspace/validateDashboardTree'
 
