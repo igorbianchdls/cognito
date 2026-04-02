@@ -365,11 +365,6 @@ export default function DashboardDatePicker({
     alignItems: 'center',
     justifyContent: 'center',
     height: 36,
-    border: resolvedFieldBorder,
-    borderStyle: 'solid',
-    borderWidth: 1,
-    borderColor: resolvedFieldBorderColor,
-    borderRadius: 10,
     backgroundColor: '#ffffff',
     color: '#425572',
     cursor: 'pointer',
@@ -382,14 +377,12 @@ export default function DashboardDatePicker({
       : (props.buttonStyle && typeof props.buttonStyle === 'object' ? props.buttonStyle : {})),
     paddingLeft: 12,
     paddingRight: 12,
+    border: 'none',
+    boxShadow: 'none',
   } as React.CSSProperties
 
   const activePresetButtonStyle = {
     backgroundColor: '#eaf1ff',
-    border: resolvedFieldBorder,
-    borderStyle: 'solid',
-    borderWidth: 1,
-    borderColor: '#8fb3f5',
     color: '#1e4fbf',
     fontWeight: 600,
     ...pickerFontStyle(styles.activePresetButtonStyle as AnyRecord | undefined),
@@ -397,6 +390,34 @@ export default function DashboardDatePicker({
     ...(props.activePresetButtonStyle && typeof props.activePresetButtonStyle === 'object'
       ? props.activePresetButtonStyle
       : {}),
+    border: 'none',
+    boxShadow: 'none',
+  } as React.CSSProperties
+
+  const basePresetFrameStyle = {
+    display: 'inline-flex',
+    alignItems: 'stretch',
+    justifyContent: 'stretch',
+    border: resolvedFieldBorder,
+    borderStyle: 'solid',
+    borderWidth: 1,
+    borderColor: resolvedFieldBorderColor,
+    borderRadius: 10,
+    backgroundColor: typeof fieldStyle.backgroundColor === 'string' ? fieldStyle.backgroundColor : '#ffffff',
+    overflow: 'hidden',
+    flexShrink: 0,
+  } as React.CSSProperties
+
+  const activePresetFrameStyle = {
+    ...basePresetFrameStyle,
+    borderColor:
+      typeof activePresetButtonStyle.borderColor === 'string'
+        ? activePresetButtonStyle.borderColor
+        : resolvedFieldBorderColor,
+    backgroundColor:
+      typeof activePresetButtonStyle.backgroundColor === 'string'
+        ? activePresetButtonStyle.backgroundColor
+        : basePresetFrameStyle.backgroundColor,
   } as React.CSSProperties
 
   const separatorStyle = {
@@ -616,17 +637,21 @@ export default function DashboardDatePicker({
                   currentValue === getPresetRange(preset).to &&
                   !isSemanticDatePicker)
               return (
-                <button
+                <div
                   key={preset}
-                  type="button"
-                  onClick={() => applyPreset(preset)}
-                  style={{
-                    ...baseButtonStyle,
-                    ...(isActive ? activePresetButtonStyle : null),
-                  }}
+                  style={isActive ? activePresetFrameStyle : basePresetFrameStyle}
                 >
-                  {preset}
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPreset(preset)}
+                    style={{
+                      ...baseButtonStyle,
+                      ...(isActive ? activePresetButtonStyle : null),
+                    }}
+                  >
+                    {preset}
+                  </button>
+                </div>
               )
             })}
           </div>
