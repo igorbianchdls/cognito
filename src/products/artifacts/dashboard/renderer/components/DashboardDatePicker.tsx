@@ -344,6 +344,11 @@ export default function DashboardDatePicker({
     ...(props.fieldStyle && typeof props.fieldStyle === 'object' ? props.fieldStyle : {}),
   } as React.CSSProperties
 
+  const resolvedFieldBorder =
+    typeof fieldStyle.border === 'string'
+      ? fieldStyle.border
+      : `1px solid ${typeof fieldStyle.borderColor === 'string' ? fieldStyle.borderColor : '#d7e3fa'}`
+
   const iconStyle = {
     ...(props.iconStyle && typeof props.iconStyle === 'object' ? props.iconStyle : {}),
   } as React.CSSProperties
@@ -353,7 +358,7 @@ export default function DashboardDatePicker({
     alignItems: 'center',
     justifyContent: 'center',
     height: 36,
-    border: '1px solid #d7e3fa',
+    border: resolvedFieldBorder,
     borderRadius: 10,
     backgroundColor: '#ffffff',
     color: '#425572',
@@ -371,6 +376,7 @@ export default function DashboardDatePicker({
 
   const activePresetButtonStyle = {
     backgroundColor: '#eaf1ff',
+    border: resolvedFieldBorder,
     borderColor: '#8fb3f5',
     color: '#1e4fbf',
     fontWeight: 600,
