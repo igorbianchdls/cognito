@@ -353,7 +353,6 @@ export default function DashboardDatePicker({
     alignItems: 'center',
     justifyContent: 'center',
     height: 36,
-    padding: '0 12px',
     border: '1px solid #d7e3fa',
     borderRadius: 10,
     backgroundColor: '#ffffff',
@@ -366,6 +365,8 @@ export default function DashboardDatePicker({
     ...((props.presetButtonStyle && typeof props.presetButtonStyle === 'object')
       ? props.presetButtonStyle
       : (props.buttonStyle && typeof props.buttonStyle === 'object' ? props.buttonStyle : {})),
+    paddingLeft: 12,
+    paddingRight: 12,
   } as React.CSSProperties
 
   const activePresetButtonStyle = {
