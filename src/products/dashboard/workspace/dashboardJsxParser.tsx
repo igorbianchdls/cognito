@@ -2,6 +2,7 @@
 
 import React, { isValidElement, ReactNode } from 'react'
 
+import { resolveDashboardThemeTokens } from '@/products/dashboard/shared/templates/dashboardTemplateThemes'
 import { resolveDashboardChartPaletteColors } from '@/products/dashboard/workspace/dashboardContract'
 import { validateDashboardTree } from '@/products/dashboard/workspace/validateDashboardTree'
 
@@ -111,10 +112,8 @@ function wrapRootDashboardSource(source: string) {
     dashboardSource = dashboardSource.replace(/<Dashboard\b/, `<Dashboard chartPalette="${resolvedChartPalette}"`)
   }
 
-  return `import { resolveDashboardThemeTokens } from './theme-tokens'
-
-export default function __DashboardEntry() {
-  const theme = resolveDashboardThemeTokens(${JSON.stringify(resolvedThemeName)})
+  return `export default function __DashboardEntry() {
+  const theme = __resolveDashboardThemeTokens(${JSON.stringify(resolvedThemeName)})
 
   return (
     ${dashboardSource}
@@ -163,6 +162,13 @@ function resolveLocalImport(fromPath: string, request: string, filesMap: Map<str
   return candidates.find((candidate) => filesMap.has(candidate)) || null
 }
 
+function isThemeTokensImport(fromPath: string, request: string) {
+  if (!request.startsWith('.')) return false
+  const baseDir = dirname(fromPath)
+  const targetBase = joinPath(baseDir, request)
+  return /(^|\/)theme-tokens$/i.test(targetBase)
+}
+
 function resolveDashboardExport(moduleExports: Record<string, unknown>) {
   const directDefault = moduleExports.default
   if (typeof directDefault === 'function') return directDefault as (...args: any[]) => ReactNode
@@ -204,6 +210,7 @@ export async function parseDashboardJsxToTree(entryPath: string, files: Workspac
     const evaluator = new Function(
       'React',
       '__require',
+      '__resolveDashboardThemeTokens',
       ...runtimeKeys,
       `
         const module = { exports: {} };
@@ -218,6 +225,9 @@ export async function parseDashboardJsxToTree(entryPath: string, files: Workspac
       React,
       (request: string) => {
         if (request === 'react') return React
+        if (isThemeTokensImport(normalizedModulePath, request)) {
+          return { resolveDashboardThemeTokens }
+        }
         if (request.startsWith('.')) {
           const resolvedImport = resolveLocalImport(normalizedModulePath, request, filesMap)
           if (!resolvedImport) {
@@ -227,6 +237,7 @@ export async function parseDashboardJsxToTree(entryPath: string, files: Workspac
         }
         throw new Error('Imports externos nao sao suportados no preview do workspace: ' + request)
       },
+      resolveDashboardThemeTokens,
       ...runtimeValues,
     )
 
