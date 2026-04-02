@@ -7,6 +7,8 @@ import {
 } from '@/products/artifacts/shared/artifactJsxParser'
 import { validateDashboardTree } from '@/products/dashboard/workspace/validateDashboardTree'
 
+export type { WorkspaceSourceFile }
+
 export async function parseDashboardJsxToTree(entryPath: string, files: WorkspaceSourceFile[]): Promise<DashboardTreeNode> {
   const parsed = await parseArtifactJsxToTree(entryPath, files)
   if (parsed.kind !== 'dashboard') {
