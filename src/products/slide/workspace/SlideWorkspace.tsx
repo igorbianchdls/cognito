@@ -4,10 +4,11 @@ import { memo, RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import { Icon } from '@iconify/react'
 
 import { parseArtifactJsxToTree, type ArtifactTreeNode } from '@/products/artifacts/core/parser/artifactJsxParser'
-import { SlideRenderer } from '@/products/slide/frontend/render/slideRegistry'
+import { SlideRenderer } from '@/products/slide/renderer/slideRenderer'
 import { SlidePreviewThumbnail } from '@/products/slide/preview/SlidePreviewThumbnail'
 import { useSlidePreviewSnapshots } from '@/products/slide/preview/useSlidePreviewSnapshots'
-import { SLIDE_TEMPLATE_SOURCE } from '@/products/slide/shared/templates/slideTemplate'
+import { SLIDE_TEMPLATE_SOURCE } from '@/products/slide/templates/slideTemplate'
+import { validateSlideTree } from '@/products/slide/validator/validateSlideTree'
 
 type AnyRecord = Record<string, any>
 type SlideTreeNode = ArtifactTreeNode
@@ -243,6 +244,7 @@ export function SlideWorkspace() {
         if (parsed.kind !== 'slide') {
           throw new Error(`Template de slide retornou root inesperado: ${parsed.kind}`)
         }
+        validateSlideTree(parsed.tree as SlideTreeNode)
         if (!cancelled) setTemplateTree(parsed.tree as SlideTreeNode)
       } catch (error) {
         if (!cancelled) {

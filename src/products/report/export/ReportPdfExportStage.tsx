@@ -2,7 +2,7 @@
 
 import type { RefObject } from 'react'
 
-import { ReportRenderer } from '@/products/report/frontend/render/reportRegistry'
+import { ReportRenderer } from '@/products/report/renderer/reportRenderer'
 
 interface ReportPdfExportStageProps {
   height: number

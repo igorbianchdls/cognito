@@ -5,11 +5,12 @@ import { Icon } from '@iconify/react'
 
 import { parseArtifactJsxToTree, type ArtifactTreeNode } from '@/products/artifacts/core/parser/artifactJsxParser'
 import { ReportPdfExportStage } from '@/products/report/export/ReportPdfExportStage'
-import { ReportRenderer } from '@/products/report/frontend/render/reportRegistry'
+import { ReportRenderer } from '@/products/report/renderer/reportRenderer'
+import { validateReportTree } from '@/products/report/validator/validateReportTree'
 import { useReportPdfExport } from '@/products/report/export/useReportPdfExport'
 import { ReportPreviewThumbnail } from '@/products/report/preview/ReportPreviewThumbnail'
 import { useReportPreviewSnapshots } from '@/products/report/preview/useReportPreviewSnapshots'
-import { REPORT_TEMPLATE_SOURCE } from '@/products/report/shared/templates/reportTemplate'
+import { REPORT_TEMPLATE_SOURCE } from '@/products/report/templates/reportTemplate'
 
 type AnyRecord = Record<string, any>
 type ReportTreeNode = ArtifactTreeNode
@@ -196,6 +197,7 @@ export function ReportWorkspace() {
         if (parsed.kind !== 'report') {
           throw new Error(`Template de report retornou root inesperado: ${parsed.kind}`)
         }
+        validateReportTree(parsed.tree as ReportTreeNode)
         if (!cancelled) setTemplateTree(parsed.tree as ReportTreeNode)
       } catch (error) {
         if (!cancelled) {
