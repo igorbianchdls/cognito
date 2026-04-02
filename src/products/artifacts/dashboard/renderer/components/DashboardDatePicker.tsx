@@ -127,6 +127,29 @@ function isSameRange(a?: { from?: string; to?: string }, b?: { from?: string; to
   return String(a?.from || '') === String(b?.from || '') && String(a?.to || '') === String(b?.to || '')
 }
 
+function fmtDate(value: unknown) {
+  return typeof value === 'string' ? value : ''
+}
+
+function updateDateFilterMarkers(
+  prev: AnyRecord,
+  marker: AnyRecord | undefined,
+  dateTable: string,
+  dateField: string,
+): AnyRecord {
+  const current: AnyRecord = Array.isArray(prev) ? [...prev] : { ...(prev || {}) }
+  const raw = (current?.filters as AnyRecord | undefined)?.__date
+  const entries = Array.isArray(raw)
+    ? raw.filter((entry): entry is AnyRecord => entry != null && typeof entry === 'object')
+    : raw && typeof raw === 'object'
+      ? [raw as AnyRecord]
+      : []
+
+  const nextEntries = entries.filter((entry) => !(entry.table === dateTable && entry.field === dateField))
+  if (marker) nextEntries.push(marker)
+  return setByPath(current || {}, 'filters.__date', nextEntries.length === 0 ? undefined : nextEntries.length === 1 ? nextEntries[0] : nextEntries)
+}
+
 function DateFieldWithIcon({
   value,
   onChange,
@@ -291,32 +314,100 @@ export default function DashboardDatePicker({
     ...(props.separatorStyle && typeof props.separatorStyle === 'object' ? props.separatorStyle : {}),
   } as React.CSSProperties
 
-  const rangeValue = (getValueByPath(storePath) || {}) as AnyRecord
+  function buildDateFilterMeta(value: string | { from: string; to: string }) {
+    if (!isSemanticDatePicker) return undefined
+    if (mode === 'single') {
+      const singleValue = typeof value === 'string' ? value : ''
+      return {
+        table: dateTable,
+        field: dateField,
+        mode: 'single',
+        ...(singleValue ? { value: singleValue } : {}),
+      }
+    }
+    const range = value && typeof value === 'object' ? value : {}
+    const from = fmtDate((range as AnyRecord).from)
+    const to = fmtDate((range as AnyRecord).to)
+    return {
+      table: dateTable,
+      field: dateField,
+      mode: 'range',
+      ...(from ? { from } : {}),
+      ...(to ? { to } : {}),
+    }
+  }
+
+  function resolveStoredDatePickerValue() {
+    if (storePath) return getValueByPath(storePath, undefined)
+    if (!isSemanticDatePicker) return undefined
+    const raw = getValueByPath('filters.__date', undefined)
+    const marker = Array.isArray(raw)
+      ? raw.find((entry) => entry?.table === dateTable && entry?.field === dateField)
+      : raw
+    if (!marker || marker.table !== dateTable || marker.field !== dateField) return undefined
+    if (mode === 'single') return typeof marker.value === 'string' ? marker.value : undefined
+    return {
+      from: fmtDate(marker.from),
+      to: fmtDate(marker.to),
+    }
+  }
+
+  function buildDatePickerAction(value: string | { from: string; to: string }) {
+    if (!props.actionOnChange || typeof props.actionOnChange !== 'object') return null
+    const dateFilter = buildDateFilterMeta(value)
+    const dateRange =
+      mode === 'single'
+        ? (() => {
+            const selected = typeof value === 'string' ? value : ''
+            return selected ? { from: selected, to: selected } : undefined
+          })()
+        : (() => {
+            const range = value && typeof value === 'object' ? value : {}
+            const from = fmtDate((range as AnyRecord).from)
+            const to = fmtDate((range as AnyRecord).to)
+            return from || to ? { ...(from ? { from } : {}), ...(to ? { to } : {}) } : undefined
+          })()
+    return {
+      ...(props.actionOnChange as AnyRecord),
+      ...(dateRange ? { dateRange } : {}),
+      ...(dateFilter ? { dateFilter } : {}),
+    }
+  }
+
+  const storedValue = resolveStoredDatePickerValue()
   const currentValue =
     mode === 'single'
-      ? typeof rangeValue === 'string'
-        ? rangeValue
-        : typeof rangeValue?.value === 'string'
-          ? rangeValue.value
+      ? typeof storedValue === 'string'
+        ? storedValue
+        : typeof (storedValue as AnyRecord | undefined)?.value === 'string'
+          ? (storedValue as AnyRecord).value
           : ''
       : {
-          from: typeof rangeValue?.from === 'string' ? rangeValue.from : '',
-          to: typeof rangeValue?.to === 'string' ? rangeValue.to : '',
+          from: fmtDate((storedValue as AnyRecord | undefined)?.from),
+          to: fmtDate((storedValue as AnyRecord | undefined)?.to),
         }
 
   function updateValue(nextValue: string | { from: string; to: string }) {
-    if (storePath) {
-      setData((prev: AnyRecord) => setByPath(prev || {}, storePath, nextValue))
+    const dateFilter = buildDateFilterMeta(nextValue)
+    const action = buildDatePickerAction(nextValue)
+    setData((prev: AnyRecord) => {
+      let next = prev || {}
+      if (storePath) next = setByPath(next, storePath, nextValue)
+      if (isSemanticDatePicker) next = updateDateFilterMarkers(next, dateFilter, dateTable, dateField)
+      return next
+    })
+    if (action) {
+      onAction?.(action)
+      return
     }
-    if (onAction) {
-      onAction({
-        type: 'datePickerChange',
-        table: dateTable,
-        field: dateField,
-        mode,
-        value: nextValue,
-      })
-    }
+    onAction?.({
+      type: 'datePickerChange',
+      table: dateTable,
+      field: dateField,
+      mode,
+      value: nextValue,
+      ...(dateFilter ? { dateFilter } : {}),
+    })
   }
 
   function applyPreset(preset: DatePickerPreset) {
