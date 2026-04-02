@@ -131,6 +131,15 @@ function fmtDate(value: unknown) {
   return typeof value === 'string' ? value : ''
 }
 
+function formatRangeLabel(value: { from?: string; to?: string }) {
+  const from = fmtDate(value.from)
+  const to = fmtDate(value.to)
+  if (from && to) return `${from} ate ${to}`
+  if (from) return from
+  if (to) return to
+  return 'Selecionar periodo'
+}
+
 function updateDateFilterMarkers(
   prev: AnyRecord,
   marker: AnyRecord | undefined,
@@ -221,6 +230,69 @@ function DateFieldWithIcon({
   )
 }
 
+function DateRangeSummaryField({
+  value,
+  onClick,
+  fieldStyle,
+  iconStyle,
+}: {
+  value: { from?: string; to?: string }
+  onClick: () => void
+  fieldStyle?: React.CSSProperties
+  iconStyle?: React.CSSProperties
+}) {
+  const theme = useThemeOverrides()
+  const iconVars = (applyDatePickerIconFromCssVars(undefined, theme.cssVars) || {}) as React.CSSProperties
+  const resolvedIconStyle = {
+    ...iconVars,
+    ...(iconStyle || {}),
+  } as React.CSSProperties
+  const sizeMatch = String((resolvedIconStyle as AnyRecord).fontSize || '').match(/\d+/)
+  const iconSize = sizeMatch ? Number(sizeMatch[0]) : 14
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        position: 'relative',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        minWidth: 220,
+        width: '100%',
+        textAlign: 'left',
+        cursor: 'pointer',
+        ...fieldStyle,
+      }}
+    >
+      <span
+        style={{
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          minWidth: 0,
+          flex: 1,
+        }}
+      >
+        {formatRangeLabel(value)}
+      </span>
+      <span
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginLeft: 8,
+          flexShrink: 0,
+          ...resolvedIconStyle,
+        }}
+      >
+        <Calendar size={iconSize} />
+      </span>
+    </button>
+  )
+}
+
 export default function DashboardDatePicker({
   element,
   onAction,
@@ -230,6 +302,8 @@ export default function DashboardDatePicker({
 }) {
   const theme = useThemeOverrides()
   const { setData, getValueByPath } = useData()
+  const [customPickerOpen, setCustomPickerOpen] = React.useState(false)
+  const customPickerRef = React.useRef<HTMLDivElement | null>(null)
   const props = (element?.props || {}) as AnyRecord
   const styles = (props.style || {}) as AnyRecord
 
@@ -387,6 +461,18 @@ export default function DashboardDatePicker({
           to: fmtDate((storedValue as AnyRecord | undefined)?.to),
         }
 
+  React.useEffect(() => {
+    if (!customPickerOpen) return
+    function onPointerDown(event: MouseEvent) {
+      const target = event.target as Node | null
+      if (customPickerRef.current && target && !customPickerRef.current.contains(target)) {
+        setCustomPickerOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onPointerDown)
+    return () => document.removeEventListener('mousedown', onPointerDown)
+  }, [customPickerOpen])
+
   function updateValue(nextValue: string | { from: string; to: string }) {
     const dateFilter = buildDateFilterMeta(nextValue)
     const action = buildDatePickerAction(nextValue)
@@ -413,6 +499,7 @@ export default function DashboardDatePicker({
   function applyPreset(preset: DatePickerPreset) {
     const nextRange = getPresetRange(preset)
     updateValue(mode === 'single' ? nextRange.to : nextRange)
+    setCustomPickerOpen(false)
   }
 
   const selectedPreset =
@@ -447,31 +534,57 @@ export default function DashboardDatePicker({
             iconStyle={iconStyle}
           />
         ) : (
-          <>
-            <DateFieldWithIcon
-              value={typeof currentValue === 'object' ? currentValue.from || '' : ''}
-              onChange={(nextValue) =>
-                updateValue({
-                  from: nextValue,
-                  to: typeof currentValue === 'object' ? currentValue.to || '' : '',
-                })
-              }
+          <div ref={customPickerRef} style={{ position: 'relative', minWidth: 220, flex: '1 1 220px' }}>
+            <DateRangeSummaryField
+              value={typeof currentValue === 'object' ? currentValue : {}}
+              onClick={() => setCustomPickerOpen((prev) => !prev)}
               fieldStyle={fieldStyle}
               iconStyle={iconStyle}
             />
-            <span style={separatorStyle}>ate</span>
-            <DateFieldWithIcon
-              value={typeof currentValue === 'object' ? currentValue.to || '' : ''}
-              onChange={(nextValue) =>
-                updateValue({
-                  from: typeof currentValue === 'object' ? currentValue.from || '' : '',
-                  to: nextValue,
-                })
-              }
-              fieldStyle={fieldStyle}
-              iconStyle={iconStyle}
-            />
-          </>
+            {customPickerOpen ? (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 8px)',
+                  left: 0,
+                  zIndex: 30,
+                  minWidth: 320,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: 12,
+                  borderRadius: 12,
+                  border: typeof fieldStyle.border === 'string' ? fieldStyle.border : '1px solid #d7e3fa',
+                  backgroundColor: typeof fieldStyle.backgroundColor === 'string' ? fieldStyle.backgroundColor : '#ffffff',
+                  boxShadow: '0 12px 32px rgba(15, 23, 42, 0.12)',
+                }}
+              >
+                <DateFieldWithIcon
+                  value={typeof currentValue === 'object' ? currentValue.from || '' : ''}
+                  onChange={(nextValue) =>
+                    updateValue({
+                      from: nextValue,
+                      to: typeof currentValue === 'object' ? currentValue.to || '' : '',
+                    })
+                  }
+                  fieldStyle={fieldStyle}
+                  iconStyle={iconStyle}
+                />
+                <span style={separatorStyle}>ate</span>
+                <DateFieldWithIcon
+                  value={typeof currentValue === 'object' ? currentValue.to || '' : ''}
+                  onChange={(nextValue) =>
+                    updateValue({
+                      from: typeof currentValue === 'object' ? currentValue.from || '' : '',
+                      to: nextValue,
+                    })
+                  }
+                  fieldStyle={fieldStyle}
+                  iconStyle={iconStyle}
+                />
+              </div>
+            ) : null}
+          </div>
         )}
 
         {presets.length > 0 ? (
