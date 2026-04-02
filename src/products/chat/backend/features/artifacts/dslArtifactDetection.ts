@@ -13,7 +13,7 @@ function cleanTitle(value: string | null | undefined): string {
 
 function fileNameToTitle(filePath: string): string {
   const name = filePath.split('/').pop() || filePath
-  const stem = name.replace(/\.dsl$/i, '')
+  const stem = name.replace(/\.(dsl|tsx)$/i, '')
   return stem
     .split(/[-_]/g)
     .filter(Boolean)
@@ -22,7 +22,7 @@ function fileNameToTitle(filePath: string): string {
 }
 
 function extractRootAttrs(content: string): { tag: string | null; title: string | null; name: string | null } {
-  const root = content.match(/<\s*(DashboardTemplate|ReportTemplate|SlideTemplate)\b([^>]*)>/i)
+  const root = content.match(/<\s*(Dashboard|DashboardTemplate|ReportTemplate|SlideTemplate)\b([^>]*)>/i)
   if (!root) return { tag: null, title: null, name: null }
   const attrs = root[2] || ''
   const title = attrs.match(/\btitle="([^"]+)"/i)?.[1] || null
@@ -32,7 +32,7 @@ function extractRootAttrs(content: string): { tag: string | null; title: string 
 
 export function detectArtifactFromDsl(filePath: string, content: string): DetectedArtifact | null {
   const normalizedPath = String(filePath || '').trim()
-  if (!normalizedPath.endsWith('.dsl')) return null
+  if (!/\.(dsl|tsx)$/i.test(normalizedPath)) return null
 
   const lowerPath = normalizedPath.toLowerCase()
   const root = extractRootAttrs(content)
@@ -41,6 +41,7 @@ export function detectArtifactFromDsl(filePath: string, content: string): Detect
   if (lowerPath.includes('/dashboard/')) type = 'dashboard'
   else if (lowerPath.includes('/report/')) type = 'report'
   else if (lowerPath.includes('/slide/')) type = 'slide'
+  else if (root.tag === 'Dashboard') type = 'dashboard'
   else if (root.tag === 'DashboardTemplate') type = 'dashboard'
   else if (root.tag === 'ReportTemplate') type = 'report'
   else if (root.tag === 'SlideTemplate') type = 'slide'
@@ -54,8 +55,7 @@ export function detectArtifactFromDsl(filePath: string, content: string): Detect
     filePath: normalizedPath,
     metadata: {
       rootTag: root.tag,
-      source: 'dsl',
+      source: normalizedPath.toLowerCase().endsWith('.tsx') ? 'jsx' : 'dsl',
     },
   }
 }
-

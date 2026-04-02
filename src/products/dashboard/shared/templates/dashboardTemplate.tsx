@@ -857,14 +857,18 @@ function buildClassicDashboardTemplateSource(themeName: string) {
     </Dashboard>`
 }
 
+export function buildClassicDashboardTemplateVariant(themeName?: string) {
+  return {
+    content: buildClassicDashboardTemplateSource(themeName || ''),
+    name: CLASSIC_DASHBOARD_VARIANT.fileName,
+    path: CLASSIC_DASHBOARD_VARIANT.path,
+  }
+}
+
 export function buildDashboardTemplateVariants(themeName: string): DashboardTemplateVariant[] {
   const variants: DashboardTemplateVariant[] = []
 
-  variants.push({
-    content: buildClassicDashboardTemplateSource(''),
-    name: CLASSIC_DASHBOARD_VARIANT.fileName,
-    path: CLASSIC_DASHBOARD_VARIANT.path,
-  })
+  variants.push(buildClassicDashboardTemplateVariant())
 
   variants.push(buildComprasDashboardTemplateVariant())
   variants.push(buildFinanceiroDashboardTemplateVariant())

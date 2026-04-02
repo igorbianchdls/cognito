@@ -20,7 +20,7 @@ function walk(dir) {
   for (const entry of entries) {
     const abs = path.join(dir, entry.name);
     if (entry.isDirectory()) walk(abs);
-    else if (entry.isFile() && abs.endsWith('.dsl')) {
+    else if (entry.isFile() && (abs.endsWith('.dsl') || abs.endsWith('.tsx'))) {
       try {
         out.push({ path: abs, content: fs.readFileSync(abs, 'utf8') });
       } catch {}

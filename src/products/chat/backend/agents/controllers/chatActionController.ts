@@ -13,8 +13,8 @@ import {
   loadVendasSkillMarkdown,
 } from '@/products/chat/backend/agents/skills/dashboardSkill'
 import { resolveComposioUserIdFromRequest } from '@/products/chat/backend/agents/core/context/resolveComposioUserId'
-import { APPS_VENDAS_TEMPLATE_DSL } from '@/products/bi/shared/templates/appsVendasTemplate'
-import { APPS_COMPRAS_TEMPLATE_DSL } from '@/products/bi/shared/templates/appsComprasTemplate'
+import { buildClassicDashboardTemplateVariant } from '@/products/dashboard/shared/templates/dashboardTemplate'
+import { buildComprasDashboardTemplateVariant } from '@/products/dashboard/shared/templates/dashboardComprasTemplate'
 import {
   ensureChatRuntimeKindColumn,
   normalizeRuntimeKind,
@@ -536,11 +536,21 @@ export async function POST(req: Request) {
           await seedAppToolsSkillInSandbox(sandbox, timeline)
         } catch {}
       }
-      // Seed default dashboards (.dsl)
+      // Seed default dashboards (.tsx)
       try {
-        const seedDash = `const fs=require('fs');const p=process.env.TARGET;fs.mkdirSync(p,{recursive:true});const w=(f,c)=>{if(!fs.existsSync(f))fs.writeFileSync(f,c,'utf8');};w(p+'/vendas.dsl',process.env.VENDAS_DSL||'[]');w(p+'/compras.dsl',process.env.COMPRAS_DSL||'[]');console.log('ok');`;
-        const runSeed = await sandbox.runCommand({ cmd: 'node', args: ['-e', seedDash], env: { TARGET: '/vercel/sandbox/dashboard', VENDAS_DSL: APPS_VENDAS_TEMPLATE_DSL, COMPRAS_DSL: APPS_COMPRAS_TEMPLATE_DSL } })
-        timeline.push({ name: 'seed-dsl', ms: 0, ok: runSeed.exitCode === 0, exitCode: runSeed.exitCode })
+        const vendasSeed = buildClassicDashboardTemplateVariant().content
+        const comprasSeed = buildComprasDashboardTemplateVariant().content
+        const seedDash = `const fs=require('fs');const p=process.env.TARGET;fs.mkdirSync(p,{recursive:true});const w=(f,c)=>{if(!fs.existsSync(f))fs.writeFileSync(f,c,'utf8');};w(p+'/vendas.tsx',process.env.VENDAS_TSX||'');w(p+'/compras.tsx',process.env.COMPRAS_TSX||'');console.log('ok');`;
+        const runSeed = await sandbox.runCommand({
+          cmd: 'node',
+          args: ['-e', seedDash],
+          env: {
+            TARGET: '/vercel/sandbox/dashboard',
+            VENDAS_TSX: vendasSeed,
+            COMPRAS_TSX: comprasSeed,
+          },
+        })
+        timeline.push({ name: 'seed-dashboard-tsx', ms: 0, ok: runSeed.exitCode === 0, exitCode: runSeed.exitCode })
       } catch {}
       // Seed MCP servers used by the chat runtimes
       try {
