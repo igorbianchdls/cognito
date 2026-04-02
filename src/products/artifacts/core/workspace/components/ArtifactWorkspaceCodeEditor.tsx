@@ -2,18 +2,20 @@
 
 import { Icon } from '@iconify/react'
 
-import type { DashboardCodeFile } from '@/products/dashboard/workspace/types'
+import type { ArtifactCodeFile } from '@/products/artifacts/core/workspace/types'
 
-export function WorkspaceCodeEditor({
+export function ArtifactWorkspaceCodeEditor({
   file,
-  dashboardFiles,
-  selectedDashboardPath,
-  onSelectDashboard,
+  selectableFiles,
+  selectedSelectablePath,
+  onSelectSelectable,
+  selectableLabel = 'Arquivo',
 }: {
-  file: DashboardCodeFile | undefined
-  dashboardFiles: DashboardCodeFile[]
-  selectedDashboardPath: string
-  onSelectDashboard: (path: string) => void
+  file: ArtifactCodeFile | undefined
+  selectableFiles: ArtifactCodeFile[]
+  selectedSelectablePath: string
+  onSelectSelectable: (path: string) => void
+  selectableLabel?: string
 }) {
   const lines = (file?.content ?? '').split('\n')
   const breadcrumbs = file?.path.split('/') ?? []
@@ -28,15 +30,15 @@ export function WorkspaceCodeEditor({
             <Icon icon="solar:close-circle-outline" className="h-3.5 w-3.5 text-[#9B9B95]" />
           </div>
           <label className="flex items-center gap-2 pb-2 text-[12px] text-[#6E6E68]">
-            <span>Arquivo</span>
+            <span>{selectableLabel}</span>
             <select
-              value={selectedDashboardPath}
-              onChange={(event) => onSelectDashboard(event.target.value)}
+              value={selectedSelectablePath}
+              onChange={(event) => onSelectSelectable(event.target.value)}
               className="h-8 rounded-md border border-[#D9D9D4] bg-white px-2 text-[12px] text-[#2B2B28] outline-none"
             >
-              {dashboardFiles.map((dashboardFile) => (
-                <option key={dashboardFile.path} value={dashboardFile.path}>
-                  {dashboardFile.name}
+              {selectableFiles.map((selectableFile) => (
+                <option key={selectableFile.path} value={selectableFile.path}>
+                  {selectableFile.name}
                 </option>
               ))}
             </select>

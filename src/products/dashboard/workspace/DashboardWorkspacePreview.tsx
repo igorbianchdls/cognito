@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react'
 
+import { ArtifactPreviewStage } from '@/products/artifacts/core/workspace/components/ArtifactPreviewStage'
+import type { ArtifactCodeFile } from '@/products/artifacts/core/workspace/types'
 import { parseDashboardJsxToTree } from '@/products/dashboard/parser/dashboardJsxParser'
 import { DashboardRenderer } from '@/products/dashboard/renderer/dashboardRenderer'
-import type { DashboardCodeFile } from '@/products/dashboard/workspace/types'
 
 export function DashboardWorkspacePreview({
   sourcePath,
@@ -12,7 +13,7 @@ export function DashboardWorkspacePreview({
   zoom,
 }: {
   sourcePath: string
-  files: DashboardCodeFile[]
+  files: ArtifactCodeFile[]
   zoom: number
 }) {
   const [tree, setTree] = useState<any>(null)
@@ -42,20 +43,16 @@ export function DashboardWorkspacePreview({
   }, [sourcePath, files])
 
   return (
-    <div className="mx-auto flex min-h-full items-start justify-center p-0">
-      <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}>
-        <div className="min-w-[1120px] overflow-hidden rounded-none bg-white p-0 shadow-[0_2px_6px_rgba(15,23,42,0.05)]">
-          {error ? (
-            <div className="p-6 text-sm text-red-700">
-              {error}
-            </div>
-          ) : tree ? (
-            <DashboardRenderer tree={tree} />
-          ) : (
-            <div className="p-6 text-sm text-gray-500">Compilando preview...</div>
-          )}
+    <ArtifactPreviewStage zoom={zoom} contentClassName="min-w-[1120px] overflow-hidden rounded-none bg-white p-0 shadow-[0_2px_6px_rgba(15,23,42,0.05)]">
+      {error ? (
+        <div className="p-6 text-sm text-red-700">
+          {error}
         </div>
-      </div>
-    </div>
+      ) : tree ? (
+        <DashboardRenderer tree={tree} />
+      ) : (
+        <div className="p-6 text-sm text-gray-500">Compilando preview...</div>
+      )}
+    </ArtifactPreviewStage>
   )
 }

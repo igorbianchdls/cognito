@@ -1,4 +1,4 @@
-import type { DashboardCodeFile } from '@/products/dashboard/workspace/types'
+import type { ArtifactCodeFile } from '@/products/artifacts/core/workspace/types'
 import { buildDashboardTemplateVariants } from '@/products/dashboard/templates/dashboardTemplate'
 import {
   DASHBOARD_TEMPLATE_DEFAULT_THEMES,
@@ -6,7 +6,7 @@ import {
 import { buildDashboardThemeTokensFileSource } from '@/products/dashboard/templates/dashboardTemplateThemes'
 import { buildDashboardChartColorsFileSource } from '@/products/dashboard/chartPalettes'
 
-export function buildDashboardWorkspaceFiles(themeName: string): DashboardCodeFile[] {
+export function buildDashboardWorkspaceFiles(themeName: string): ArtifactCodeFile[] {
   const dashboardFiles = buildDashboardTemplateVariants(themeName).map((file) => ({
     path: file.path,
     name: file.name,

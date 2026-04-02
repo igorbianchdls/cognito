@@ -1,4 +1,4 @@
-export type DashboardCodeFile = {
+export type ArtifactCodeFile = {
   path: string
   name: string
   directory: string

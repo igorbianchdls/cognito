@@ -3,7 +3,7 @@
 import { Icon } from '@iconify/react'
 import { useMemo } from 'react'
 
-import type { DashboardCodeFile } from '@/products/dashboard/workspace/types'
+import type { ArtifactCodeFile } from '@/products/artifacts/core/workspace/types'
 
 function getFileIcon(extension: string) {
   switch (extension) {
@@ -19,17 +19,17 @@ function getFileIcon(extension: string) {
   }
 }
 
-export function WorkspaceFileTree({
+export function ArtifactWorkspaceFileTree({
   files,
   selectedPath,
   onSelect,
 }: {
-  files: DashboardCodeFile[]
+  files: ArtifactCodeFile[]
   selectedPath: string
   onSelect: (path: string) => void
 }) {
   const groups = useMemo(() => {
-    const map = new Map<string, DashboardCodeFile[]>()
+    const map = new Map<string, ArtifactCodeFile[]>()
     for (const file of files) {
       const key = file.directory || 'root'
       const bucket = map.get(key) || []
@@ -42,9 +42,7 @@ export function WorkspaceFileTree({
   return (
     <aside className="flex h-full w-[280px] shrink-0 flex-col border-r border-[#E3E3DF] bg-[#F7F7F6]">
       <div className="flex items-center justify-between border-b border-[#E3E3DF] px-4 py-3">
-        <div className="text-[13px] font-medium text-[#2B2B28]">
-          File Explorer
-        </div>
+        <div className="text-[13px] font-medium text-[#2B2B28]">File Explorer</div>
         <div className="flex items-center gap-2 text-[#7B7B76]">
           <Icon icon="solar:add-square-outline" className="h-4 w-4" />
           <Icon icon="solar:folder-add-outline" className="h-4 w-4" />
@@ -68,9 +66,7 @@ export function WorkspaceFileTree({
                     type="button"
                     onClick={() => onSelect(file.path)}
                     className={`flex w-full items-center gap-2 px-3 py-1.5 text-left text-[13px] ${
-                      isSelected
-                        ? 'bg-[#ECECEC] text-[#20201E]'
-                        : 'text-[#4E4E4A] hover:bg-[#F0F0EE]'
+                      isSelected ? 'bg-[#ECECEC] text-[#20201E]' : 'text-[#4E4E4A] hover:bg-[#F0F0EE]'
                     }`}
                   >
                     <Icon icon={getFileIcon(file.extension)} className="h-4 w-4 shrink-0 text-[#6E6E69]" />

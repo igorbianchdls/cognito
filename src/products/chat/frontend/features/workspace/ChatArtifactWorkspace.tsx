@@ -8,6 +8,7 @@ import { useMemo, useState } from 'react'
 import FileExplorer from '@/components/file-explorer/FileExplorer'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { sandboxActions, $previewArtifactPath, $sandboxActiveTab } from '@/chat/sandbox'
+import { ArtifactPreviewStage } from '@/products/artifacts/core/workspace/components/ArtifactPreviewStage'
 import { ArtifactWorkspaceHeader } from '@/products/artifacts/core/workspace/components/ArtifactWorkspaceHeader'
 import HeaderActions from '@/products/chat/shared/chat-ui/components/HeaderActions'
 import DashboardPicker from '@/products/chat/shared/chat-ui/components/json-render/DashboardPicker'
@@ -95,13 +96,9 @@ export function ChatArtifactWorkspace({
         {activeView === 'code' ? (
           <FileExplorer chatId={chatId} />
         ) : (
-          <div className="mx-auto flex min-h-full items-start justify-center p-0">
-            <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top center', width: '100%' }}>
-              <div className="overflow-hidden rounded-none bg-white p-0 shadow-[0_2px_6px_rgba(15,23,42,0.05)]">
-                <JsonRenderPreview chatId={chatId} />
-              </div>
-            </div>
-          </div>
+          <ArtifactPreviewStage zoom={zoom} scaledStyle={{ width: '100%' }}>
+            <JsonRenderPreview chatId={chatId} />
+          </ArtifactPreviewStage>
         )}
       </div>
     </div>

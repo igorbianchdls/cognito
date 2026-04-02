@@ -1,8 +1,8 @@
 'use client'
 
-import type { DashboardCodeFile } from '@/products/dashboard/workspace/types'
-import { WorkspaceCodeEditor } from '@/products/dashboard/workspace/WorkspaceCodeEditor'
-import { WorkspaceFileTree } from '@/products/dashboard/workspace/WorkspaceFileTree'
+import { ArtifactWorkspaceCodeEditor } from '@/products/artifacts/core/workspace/components/ArtifactWorkspaceCodeEditor'
+import { ArtifactWorkspaceFileTree } from '@/products/artifacts/core/workspace/components/ArtifactWorkspaceFileTree'
+import type { ArtifactCodeFile } from '@/products/artifacts/core/workspace/types'
 
 export function DashboardWorkspaceCode({
   files,
@@ -12,9 +12,9 @@ export function DashboardWorkspaceCode({
   onSelectFile,
   onSelectDashboard,
 }: {
-  files: DashboardCodeFile[]
-  selectedFile: DashboardCodeFile | undefined
-  dashboardFiles: DashboardCodeFile[]
+  files: ArtifactCodeFile[]
+  selectedFile: ArtifactCodeFile | undefined
+  dashboardFiles: ArtifactCodeFile[]
   selectedDashboardPath: string
   onSelectFile: (path: string) => void
   onSelectDashboard: (path: string) => void
@@ -28,16 +28,17 @@ export function DashboardWorkspaceCode({
 
   return (
     <div className="flex min-h-full w-full">
-      <WorkspaceFileTree
+      <ArtifactWorkspaceFileTree
         files={files}
         selectedPath={selectedFile?.path ?? 'app/dashboard-classico.tsx'}
         onSelect={handleSelectPath}
       />
-      <WorkspaceCodeEditor
+      <ArtifactWorkspaceCodeEditor
         file={selectedFile}
-        dashboardFiles={files}
-        selectedDashboardPath={selectedFile?.path ?? selectedDashboardPath}
-        onSelectDashboard={handleSelectPath}
+        selectableFiles={files}
+        selectedSelectablePath={selectedFile?.path ?? selectedDashboardPath}
+        onSelectSelectable={handleSelectPath}
+        selectableLabel="Arquivo"
       />
     </div>
   )
