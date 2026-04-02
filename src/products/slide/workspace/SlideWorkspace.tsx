@@ -4,6 +4,13 @@ import { memo, RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import { Icon } from '@iconify/react'
 
 import { parseArtifactJsxToTree, type ArtifactTreeNode } from '@/products/artifacts/core/parser/artifactJsxParser'
+import { ArtifactDocumentTitle } from '@/products/artifacts/core/workspace/components/ArtifactDocumentTitle'
+import { ArtifactSizeControls } from '@/products/artifacts/core/workspace/components/ArtifactSizeControls'
+import { ArtifactSourceCodePanel } from '@/products/artifacts/core/workspace/components/ArtifactSourceCodePanel'
+import { ArtifactViewModeToggle } from '@/products/artifacts/core/workspace/components/ArtifactViewModeToggle'
+import { ArtifactWorkspaceStatusScreen } from '@/products/artifacts/core/workspace/components/ArtifactWorkspaceStatusScreen'
+import { ArtifactZoomControls } from '@/products/artifacts/core/workspace/components/ArtifactZoomControls'
+import { PagedArtifactThumbnailButton } from '@/products/artifacts/core/workspace/components/PagedArtifactThumbnailButton'
 import {
   buildPagedArtifactRenderTree,
   cloneArtifactTree,
@@ -45,11 +52,7 @@ function SlideThumbnail({
   const thumbHeight = Math.round(slideHeight * (THUMB_WIDTH / slideWidth))
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="w-full rounded-2xl px-2 py-2 text-left transition hover:bg-black/5"
-    >
+    <PagedArtifactThumbnailButton selected={selected} index={index} onClick={onClick}>
       <SlidePreviewThumbnail
         alt={`Preview do slide ${index + 1}`}
         height={thumbHeight}
@@ -57,16 +60,7 @@ function SlideThumbnail({
         src={previewSrc}
         width={THUMB_WIDTH}
       />
-      <div className="flex justify-center px-1">
-        <div
-          className={`flex h-6 min-w-6 items-center justify-center rounded-sm px-2 text-[14px] font-semibold ${
-            selected ? 'bg-[#0075E2] text-white' : 'text-[#6A6A68]'
-          }`}
-        >
-          {index + 1}
-        </div>
-      </div>
-    </button>
+    </PagedArtifactThumbnailButton>
   )
 }
 
@@ -229,120 +223,39 @@ export function SlideWorkspace() {
   }
 
   if (templateError) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-[#F7F7F6] p-8 text-sm text-red-700">
-        {templateError}
-      </div>
-    )
+    return <ArtifactWorkspaceStatusScreen message={templateError} tone="error" />
   }
 
   if (!templateTree) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-[#F7F7F6] p-8 text-sm text-[#5F5F5A]">
-        Carregando slide...
-      </div>
-    )
+    return <ArtifactWorkspaceStatusScreen message="Carregando slide..." />
   }
 
   return (
     <div className="flex h-screen flex-col bg-[#F7F7F6] tracking-[-0.03em] text-[#3F3F3D]">
       <header className="flex items-center justify-between border-b-[0.5px] border-[#DDDDD8] bg-[#F7F7F6] px-5 py-3 backdrop-blur">
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="flex shrink-0 items-center justify-center rounded-md border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] p-2">
-            <Icon icon="solar:document-bold" className="h-4 w-4 text-[#5F5F5A]" />
-          </div>
-          <div className="min-w-0">
-            <div className="truncate text-[16px] font-semibold text-[#1F1F1D]">{rootName}</div>
-          </div>
-        </div>
+        <ArtifactDocumentTitle title={rootName} />
         <div className="flex items-center gap-2">
-          <div className="mr-2 flex items-center gap-2 rounded-xl border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] px-3 py-2">
-            <label className="flex items-center gap-2 text-[12px] font-medium text-[#5F5F5A]">
-              <span>W</span>
-              <input
-                type="number"
-                min={MIN_SLIDE_WIDTH}
-                step={10}
-                value={widthDraft}
-                onChange={(event) => setWidthDraft(event.target.value)}
-                onFocus={(event) => event.currentTarget.select()}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') applyActiveSlideSize()
-                }}
-                className="w-[72px] rounded-md border-[0.5px] border-[#D4D4CF] bg-white px-2 py-1 text-[12px] text-[#1F1F1D] outline-none"
-              />
-            </label>
-            <label className="flex items-center gap-2 text-[12px] font-medium text-[#5F5F5A]">
-              <span>H</span>
-              <input
-                type="number"
-                min={MIN_SLIDE_HEIGHT}
-                step={10}
-                value={heightDraft}
-                onChange={(event) => setHeightDraft(event.target.value)}
-                onFocus={(event) => event.currentTarget.select()}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') applyActiveSlideSize()
-                }}
-                className="w-[72px] rounded-md border-[0.5px] border-[#D4D4CF] bg-white px-2 py-1 text-[12px] text-[#1F1F1D] outline-none"
-              />
-            </label>
-            {hasPendingSizeChange ? (
-              <button
-                type="button"
-                onClick={applyActiveSlideSize}
-                className="flex h-7 w-7 items-center justify-center rounded-md border-[0.5px] border-[#D4D4CF] bg-white text-[#245BDB] transition hover:bg-[#F4F8FF]"
-                aria-label="Confirmar tamanho do slide"
-              >
-                <Icon icon="solar:check-circle-bold" className="h-4 w-4" />
-              </button>
-            ) : null}
-          </div>
-          <div className="mr-1 flex items-center gap-1 rounded-xl border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] p-0">
-            <button
-              type="button"
-              onClick={() => setActiveView('preview')}
-              className={`m-[1px] flex items-center justify-center rounded-md p-2 transition ${
-                activeView === 'preview'
-                  ? 'bg-white text-[#1F1F1D]'
-                  : 'bg-[#ECECEB] text-[#5F5F5A] hover:bg-[#E2E2E0] hover:text-[#4F4F4B]'
-              }`}
-            >
-              <Icon icon="solar:eye-bold" className="h-4 w-4" />
-              <span className="sr-only">Visualizar apresentação</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveView('code')}
-              className={`m-[1px] flex items-center justify-center rounded-md p-2 transition ${
-                activeView === 'code'
-                  ? 'bg-white text-[#1F1F1D]'
-                  : 'bg-[#ECECEB] text-[#5F5F5A] hover:bg-[#E2E2E0] hover:text-[#4F4F4B]'
-              }`}
-            >
-              <Icon icon="solar:code-bold" className="h-4 w-4" />
-              <span className="sr-only">Visualizar JSX</span>
-            </button>
-          </div>
-          <div className="mr-2 flex items-center gap-1 rounded-xl border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] p-0">
-            <button
-              type="button"
-              onClick={() => setZoom((current) => Math.max(0.4, Number((current - 0.1).toFixed(2))))}
-              className="m-[1px] flex items-center rounded-md bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]"
-            >
-              <Icon icon="solar:minus-square-bold" className="h-3.5 w-3.5" />
-              <span className="sr-only">Zoom menos</span>
-            </button>
-            <span className="min-w-[56px] text-center text-xs font-medium leading-normal text-[#5F5F5A]">{Math.round(zoom * 100)}%</span>
-            <button
-              type="button"
-              onClick={() => setZoom((current) => Math.min(1.4, Number((current + 0.1).toFixed(2))))}
-              className="m-[1px] flex items-center rounded-md bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]"
-            >
-              <Icon icon="solar:add-square-bold" className="h-3.5 w-3.5" />
-              <span className="sr-only">Zoom mais</span>
-            </button>
-          </div>
+          <ArtifactSizeControls
+            minWidth={MIN_SLIDE_WIDTH}
+            minHeight={MIN_SLIDE_HEIGHT}
+            widthValue={widthDraft}
+            heightValue={heightDraft}
+            onWidthChange={setWidthDraft}
+            onHeightChange={setHeightDraft}
+            onApply={applyActiveSlideSize}
+            hasPendingChange={hasPendingSizeChange}
+            confirmAriaLabel="Confirmar tamanho do slide"
+          />
+          <ArtifactViewModeToggle
+            activeView={activeView}
+            previewLabel="Visualizar apresentação"
+            onChange={setActiveView}
+          />
+          <ArtifactZoomControls
+            zoom={zoom}
+            onDecrease={() => setZoom((current) => Math.max(0.4, Number((current - 0.1).toFixed(2))))}
+            onIncrease={() => setZoom((current) => Math.min(1.4, Number((current + 0.1).toFixed(2))))}
+          />
           <button type="button" className="flex items-center justify-center rounded-md border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]">
             <Icon icon="solar:download-square-bold" className="h-4 w-4" />
           </button>
@@ -394,11 +307,7 @@ export function SlideWorkspace() {
               ) : null}
             </div>
           ) : (
-            <div className="mx-auto flex min-h-full max-w-[1280px] p-8">
-              <pre className="w-full overflow-auto rounded-[16px] border-[0.5px] border-[#DDDDD8] bg-[#F7F7F6] p-6 text-[13px] leading-6 text-[#2C2C29] shadow-[0_2px_6px_rgba(15,23,42,0.05)]">
-                <code>{SLIDE_TEMPLATE_SOURCE}</code>
-              </pre>
-            </div>
+            <ArtifactSourceCodePanel source={SLIDE_TEMPLATE_SOURCE} />
           )}
         </main>
       </div>
