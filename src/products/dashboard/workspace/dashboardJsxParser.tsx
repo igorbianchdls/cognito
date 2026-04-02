@@ -2,7 +2,7 @@
 
 import React, { isValidElement, ReactNode } from 'react'
 
-import { resolveDashboardThemeTokens } from '@/products/dashboard/shared/templates/dashboardTemplateThemes'
+import { resolveDashboardTemplateThemeTokens as resolveDashboardThemeTokens } from '@/products/dashboard/shared/templates/dashboardTemplateThemes'
 import { resolveDashboardChartPaletteColors } from '@/products/dashboard/workspace/dashboardContract'
 import { validateDashboardTree } from '@/products/dashboard/workspace/validateDashboardTree'
 
