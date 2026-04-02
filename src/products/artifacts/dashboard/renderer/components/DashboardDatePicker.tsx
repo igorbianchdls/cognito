@@ -230,6 +230,11 @@ export default function DashboardDatePicker({
     ...(props.labelStyle && typeof props.labelStyle === 'object' ? props.labelStyle : {}),
   } as React.CSSProperties
 
+  const containerStyle = {
+    ...(styles.containerStyle && typeof styles.containerStyle === 'object' ? styles.containerStyle : {}),
+    ...(props.containerStyle && typeof props.containerStyle === 'object' ? props.containerStyle : {}),
+  } as React.CSSProperties
+
   const fieldStyle = {
     minHeight: 38,
     padding: '0 10px',
@@ -258,9 +263,32 @@ export default function DashboardDatePicker({
     color: '#425572',
     cursor: 'pointer',
     transition: 'all 120ms ease',
-    ...pickerFontStyle(styles.buttonStyle as AnyRecord | undefined),
-    ...pickerButtonStyle((styles.buttonStyle || {}) as AnyRecord),
-    ...(props.buttonStyle && typeof props.buttonStyle === 'object' ? props.buttonStyle : {}),
+    ...textStyle,
+    ...pickerFontStyle((styles.presetButtonStyle || styles.buttonStyle) as AnyRecord | undefined),
+    ...pickerButtonStyle((styles.presetButtonStyle || styles.buttonStyle || {}) as AnyRecord),
+    ...((props.presetButtonStyle && typeof props.presetButtonStyle === 'object')
+      ? props.presetButtonStyle
+      : (props.buttonStyle && typeof props.buttonStyle === 'object' ? props.buttonStyle : {})),
+  } as React.CSSProperties
+
+  const activePresetButtonStyle = {
+    backgroundColor: '#eaf1ff',
+    borderColor: '#8fb3f5',
+    color: '#1e4fbf',
+    fontWeight: 600,
+    ...pickerFontStyle(styles.activePresetButtonStyle as AnyRecord | undefined),
+    ...pickerButtonStyle((styles.activePresetButtonStyle || {}) as AnyRecord),
+    ...(props.activePresetButtonStyle && typeof props.activePresetButtonStyle === 'object'
+      ? props.activePresetButtonStyle
+      : {}),
+  } as React.CSSProperties
+
+  const separatorStyle = {
+    ...labelStyle,
+    color: labelStyle.color || '#64748b',
+    fontSize: 13,
+    ...(styles.separatorStyle && typeof styles.separatorStyle === 'object' ? styles.separatorStyle : {}),
+    ...(props.separatorStyle && typeof props.separatorStyle === 'object' ? props.separatorStyle : {}),
   } as React.CSSProperties
 
   const rangeValue = (getValueByPath(storePath) || {}) as AnyRecord
@@ -308,6 +336,7 @@ export default function DashboardDatePicker({
         flexDirection: 'column',
         gap: 10,
         minWidth: 0,
+        ...containerStyle,
       }}
     >
       {label ? <div style={labelStyle}>{label}</div> : null}
@@ -339,7 +368,7 @@ export default function DashboardDatePicker({
               fieldStyle={fieldStyle}
               iconStyle={iconStyle}
             />
-            <span style={{ color: '#64748b', fontSize: 13 }}>ate</span>
+            <span style={separatorStyle}>ate</span>
             <DateFieldWithIcon
               value={typeof currentValue === 'object' ? currentValue.to || '' : ''}
               onChange={(nextValue) =>
@@ -370,9 +399,7 @@ export default function DashboardDatePicker({
                   onClick={() => applyPreset(preset)}
                   style={{
                     ...baseButtonStyle,
-                    backgroundColor: isActive ? '#eff6ff' : baseButtonStyle.backgroundColor,
-                    borderColor: isActive ? '#93c5fd' : baseButtonStyle.borderColor,
-                    color: isActive ? '#1d4ed8' : baseButtonStyle.color,
+                    ...(isActive ? activePresetButtonStyle : null),
                   }}
                 >
                   {preset}
