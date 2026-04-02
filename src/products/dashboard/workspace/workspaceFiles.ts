@@ -1,9 +1,9 @@
 import type { DashboardCodeFile } from '@/products/dashboard/workspace/types'
-import { buildDashboardTemplateVariants } from '@/products/dashboard/shared/templates/dashboardTemplate'
+import { buildDashboardTemplateVariants } from '@/products/dashboard/templates/dashboardTemplate'
 import {
   DASHBOARD_TEMPLATE_DEFAULT_THEMES,
-} from '@/products/dashboard/shared/templates/dashboardTemplateSupport'
-import { buildDashboardThemeTokensFileSource } from '@/products/dashboard/shared/templates/dashboardTemplateThemes'
+} from '@/products/dashboard/templates/dashboardTemplateSupport'
+import { buildDashboardThemeTokensFileSource } from '@/products/dashboard/templates/dashboardTemplateThemes'
 import { buildDashboardChartColorsFileSource } from '@/products/dashboard/workspace/chartPalettes'
 
 export function buildDashboardWorkspaceFiles(themeName: string): DashboardCodeFile[] {
