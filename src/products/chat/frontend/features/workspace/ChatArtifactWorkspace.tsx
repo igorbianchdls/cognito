@@ -7,7 +7,7 @@ import { useMemo, useState } from 'react'
 
 import FileExplorer from '@/components/file-explorer/FileExplorer'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { sandboxActions, $previewDslPath, $sandboxActiveTab } from '@/chat/sandbox'
+import { sandboxActions, $previewArtifactPath, $sandboxActiveTab } from '@/chat/sandbox'
 import { DashboardWorkspaceHeader } from '@/products/dashboard/workspace/DashboardWorkspaceHeader'
 import HeaderActions from '@/products/chat/shared/chat-ui/components/HeaderActions'
 import DashboardPicker from '@/products/chat/shared/chat-ui/components/json-render/DashboardPicker'
@@ -32,7 +32,7 @@ export function ChatArtifactWorkspace({
   className?: string
 }) {
   const activeTab = useStore($sandboxActiveTab)
-  const previewPath = useStore($previewDslPath)
+  const previewPath = useStore($previewArtifactPath)
   const [zoom, setZoom] = useState(1)
   const [dashboardPickerOpen, setDashboardPickerOpen] = useState(false)
   const activeView = activeTab === 'code' ? 'code' : 'preview'

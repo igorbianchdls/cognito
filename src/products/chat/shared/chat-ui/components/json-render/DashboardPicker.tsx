@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useStore } from '@nanostores/react';
-import { $previewDslPath, sandboxActions } from '@/chat/sandbox';
+import { $previewArtifactPath, sandboxActions } from '@/chat/sandbox';
 
 type Props = { chatId?: string };
 
@@ -11,19 +11,14 @@ export default function DashboardPicker({
   compact = false,
   onSelected,
 }: Props & { compact?: boolean; onSelected?: () => void }) {
-  const current = useStore($previewDslPath);
+  const current = useStore($previewArtifactPath);
   const [paths, setPaths] = React.useState<string[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [query, setQuery] = React.useState('');
 
-  const isPreviewFile = React.useCallback((path: string) => path.endsWith('.dsl') || path.endsWith('.tsx'), []);
-  const comparePreviewPaths = React.useCallback((a: string, b: string) => {
-    const aIsTsx = a.endsWith('.tsx');
-    const bIsTsx = b.endsWith('.tsx');
-    if (aIsTsx !== bIsTsx) return aIsTsx ? -1 : 1;
-    return a.localeCompare(b);
-  }, []);
+  const isPreviewFile = React.useCallback((path: string) => path.endsWith('.tsx'), []);
+  const comparePreviewPaths = React.useCallback((a: string, b: string) => a.localeCompare(b), []);
 
   const refresh = React.useCallback(async () => {
     if (!chatId) {
@@ -38,7 +33,7 @@ export default function DashboardPicker({
       let directOk = false;
       let firstDirectError: string | null = null;
 
-      // Fast path for dashboard dsl files.
+      // Fast path for dashboard tsx files.
       const directDirs = ['/vercel/sandbox/dashboard'];
       for (const dir of directDirs) {
         const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-list', chatId, path: dir }) });
@@ -91,7 +86,7 @@ export default function DashboardPicker({
       <div className="mb-2 flex items-center gap-2">
         <input
           type="text"
-          placeholder="Filtrar dashboards (.tsx, .dsl)"
+          placeholder="Filtrar dashboards (.tsx)"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className={`border border-gray-300 rounded px-2 py-1 text-xs bg-white ${compact ? 'w-full min-w-0' : 'min-w-[220px]'}`}
@@ -104,7 +99,7 @@ export default function DashboardPicker({
       <div className={`rounded border border-gray-200 bg-white p-2 overflow-auto ${compact ? 'max-h-[340px]' : 'max-h-[60vh]'}`}>
         {!chatId && (
           <div className="text-xs text-gray-500 p-2">
-            UI de Workspace aberta. Inicie um computador para listar dashboards `.tsx` e `.dsl`.
+            UI de Workspace aberta. Inicie um computador para listar dashboards `.tsx`.
           </div>
         )}
         {chatId && filtered.length === 0 && <div className="text-xs text-gray-500">Nenhum dashboard encontrado</div>}
@@ -116,8 +111,8 @@ export default function DashboardPicker({
                 className={`w-full text-left px-2 py-2 text-sm hover:bg-gray-50 ${current === p ? 'bg-gray-50 font-medium' : ''}`}
                 onClick={() => {
                   if (chatId) {
-                    try { window.localStorage.setItem(`previewDslPath:${chatId}`, p); } catch { /* noop */ }
-                  }
+                    try { window.localStorage.setItem(`previewArtifactPath:${chatId}`, p); } catch { /* noop */ }
+                  } 
                   sandboxActions.setPreviewPath(p);
                   sandboxActions.setActiveTab('preview');
                   onSelected?.();

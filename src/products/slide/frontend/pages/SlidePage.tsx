@@ -1,20 +1,17 @@
 'use client'
 
-import { isValidElement, memo, ReactNode, RefObject, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import { Icon } from '@iconify/react'
 
+import { parseArtifactJsxToTree, type ArtifactTreeNode } from '@/products/artifacts/shared/artifactJsxParser'
 import { DataProvider } from '@/products/bi/json-render/context'
 import { SlideRenderer } from '@/products/slide/frontend/render/slideRegistry'
 import { SlidePreviewThumbnail } from '@/products/slide/preview/SlidePreviewThumbnail'
 import { useSlidePreviewSnapshots } from '@/products/slide/preview/useSlidePreviewSnapshots'
-import { SLIDE_TEMPLATE, SLIDE_TEMPLATE_SOURCE } from '@/products/slide/shared/templates/slideTemplate'
+import { SLIDE_TEMPLATE_SOURCE } from '@/products/slide/shared/templates/slideTemplate'
 
 type AnyRecord = Record<string, any>
-type SlideTreeNode = {
-  type: string
-  props: Record<string, unknown>
-  children: Array<SlideTreeNode | string>
-}
+type SlideTreeNode = ArtifactTreeNode
 
 const DEFAULT_SLIDE_WIDTH = 1280
 const DEFAULT_SLIDE_HEIGHT = 720
@@ -24,34 +21,6 @@ const MIN_SLIDE_HEIGHT = 360
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
-}
-
-function getElementTypeName(type: unknown): string {
-  if (typeof type === 'string') return type
-  if (typeof type === 'function') {
-    const componentType = type as Function & { displayName?: string }
-    return componentType.displayName || componentType.name || 'Anonymous'
-  }
-  return 'Unknown'
-}
-
-function jsxToTree(node: ReactNode): SlideTreeNode | string | null {
-  if (node == null || typeof node === 'boolean') return null
-  if (typeof node === 'string' || typeof node === 'number') return String(node)
-  if (!isValidElement(node)) return null
-
-  const props = (node.props || {}) as { children?: ReactNode } & Record<string, unknown>
-  const { children, ...restProps } = props
-  const childNodes = Array.isArray(children) ? children : children == null ? [] : [children]
-  const parsedChildren = childNodes
-    .map((child) => jsxToTree(child))
-    .filter((child): child is SlideTreeNode | string => child !== null)
-
-  return {
-    type: getElementTypeName(node.type),
-    props: restProps,
-    children: parsedChildren,
-  }
 }
 
 function getSlideStructure(tree: unknown): {
@@ -260,13 +229,36 @@ const SlideCanvas = memo(function SlideCanvas({
 })
 
 function SlideWorkspace() {
-  const [templateTree, setTemplateTree] = useState<SlideTreeNode>(() => {
-    const tree = jsxToTree(SLIDE_TEMPLATE)
-    if (!tree || typeof tree === 'string') {
-      throw new Error('Invalid slide template root')
+  const [templateTree, setTemplateTree] = useState<SlideTreeNode | null>(null)
+  const [templateError, setTemplateError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function run() {
+      try {
+        setTemplateError(null)
+        const parsed = await parseArtifactJsxToTree('slide-template.tsx', [
+          { path: 'slide-template.tsx', content: SLIDE_TEMPLATE_SOURCE },
+        ])
+        if (parsed.kind !== 'slide') {
+          throw new Error(`Template de slide retornou root inesperado: ${parsed.kind}`)
+        }
+        if (!cancelled) setTemplateTree(parsed.tree as SlideTreeNode)
+      } catch (error) {
+        if (!cancelled) {
+          setTemplateTree(null)
+          setTemplateError((error as Error).message || 'Falha ao carregar template de slide')
+        }
+      }
     }
-    return tree
-  })
+
+    void run()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const { rootName, themeNode, pages } = useMemo(() => getSlideStructure(templateTree), [templateTree])
   const initialPageId = useMemo(() => (pages.length ? getPageId(pages[0], 0) : ''), [pages])
   const [activePageId, setActivePageId] = useState(initialPageId)
@@ -311,11 +303,27 @@ function SlideWorkspace() {
 
   const applyActiveSlideSize = () => {
     if (parsedWidthDraft === null || parsedHeightDraft === null) return
-    setTemplateTree((current) =>
-      updateSlideSizeInTree(current, currentPageId, {
+    setTemplateTree((current) => current
+      ? updateSlideSizeInTree(current, currentPageId, {
         width: parsedWidthDraft,
         height: parsedHeightDraft,
-      }),
+      })
+      : current)
+  }
+
+  if (templateError) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#F7F7F6] p-8 text-sm text-red-700">
+        {templateError}
+      </div>
+    )
+  }
+
+  if (!templateTree) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#F7F7F6] p-8 text-sm text-[#5F5F5A]">
+        Carregando slide...
+      </div>
     )
   }
 
@@ -396,7 +404,7 @@ function SlideWorkspace() {
               }`}
             >
               <Icon icon="solar:code-bold" className="h-4 w-4" />
-              <span className="sr-only">Visualizar DSL</span>
+              <span className="sr-only">Visualizar JSX</span>
             </button>
           </div>
           <div className="mr-2 flex items-center gap-1 rounded-xl border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] p-0">

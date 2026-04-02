@@ -25,12 +25,12 @@ export default function ChatConversationPage({ runtimeKind = "codex" }: { runtim
     const artifactPath = (searchParams.get("artifactPath") || "").trim();
     const isSupportedArtifact =
       artifactPath.startsWith("/vercel/sandbox/") &&
-      (artifactPath.endsWith(".dsl") || artifactPath.endsWith(".tsx"));
+      artifactPath.endsWith(".tsx");
     if (!artifactPath || !isSupportedArtifact) return;
     sandboxActions.setPreviewPath(artifactPath);
     sandboxActions.setActiveTab("preview");
     try {
-      window.localStorage.setItem(`previewDslPath:${urlId}`, artifactPath);
+      window.localStorage.setItem(`previewArtifactPath:${urlId}`, artifactPath);
     } catch {
       // noop
     }

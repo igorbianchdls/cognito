@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Undo2, Redo2, RefreshCw, Palette, Save, Bell, Trash2, Check } from 'lucide-react';
-import { $artifactNotifications, $previewDslPath, sandboxActions } from '@/chat/sandbox';
+import { $artifactNotifications, $previewArtifactPath, sandboxActions } from '@/chat/sandbox';
 import { APPS_COLOR_PRESETS, APPS_HEADER_THEME_OPTIONS, APPS_THEME_OPTIONS } from '@/products/bi/shared/themeOptions';
 import { DASHBOARD_BACKGROUND_PRESET_OPTIONS } from '@/products/bi/json-render/backgrounds/registry';
 import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter';
@@ -213,7 +213,7 @@ function formatThemeColor(value: string): string {
 }
 
 export default function HeaderActions({ chatId }: HeaderActionsProps) {
-  const previewPath = useStore($previewDslPath);
+  const previewPath = useStore($previewArtifactPath);
   const artifactNotifications = useStore($artifactNotifications);
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
@@ -413,10 +413,6 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
       setError('chatId/path ausente');
       return;
     }
-    if (previewPath.endsWith('.dsl')) {
-      setError('Tema indisponivel para artefatos .dsl legados. O parser antigo foi removido.');
-      return;
-    }
     if (previewPath.endsWith('.tsx')) {
       setError('Edicao rapida de tema ainda nao esta disponivel para dashboards .tsx neste painel.');
       return;
@@ -441,10 +437,6 @@ export default function HeaderActions({ chatId }: HeaderActionsProps) {
     async (next: { name?: string; headerTheme?: string; themeFxPreset?: string; colorPreset?: string; borderPreset?: string }) => {
       if (!chatId || !previewPath) {
         setError('chatId/path ausente');
-        return;
-      }
-      if (previewPath.endsWith('.dsl')) {
-        setError('Tema indisponivel para artefatos .dsl legados. O parser antigo foi removido.');
         return;
       }
       if (previewPath.endsWith('.tsx')) {

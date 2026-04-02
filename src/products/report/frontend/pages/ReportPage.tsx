@@ -1,22 +1,19 @@
 'use client'
 
-import { isValidElement, ReactNode, RefObject, useEffect, useMemo, useRef, useState } from 'react'
+import { RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import { Icon } from '@iconify/react'
 
+import { parseArtifactJsxToTree, type ArtifactTreeNode } from '@/products/artifacts/shared/artifactJsxParser'
 import { DataProvider } from '@/products/bi/json-render/context'
 import { ReportPdfExportStage } from '@/products/report/export/ReportPdfExportStage'
 import { ReportRenderer } from '@/products/report/frontend/render/reportRegistry'
 import { useReportPdfExport } from '@/products/report/export/useReportPdfExport'
 import { ReportPreviewThumbnail } from '@/products/report/preview/ReportPreviewThumbnail'
 import { useReportPreviewSnapshots } from '@/products/report/preview/useReportPreviewSnapshots'
-import { REPORT_TEMPLATE, REPORT_TEMPLATE_SOURCE } from '@/products/report/shared/templates/reportTemplate'
+import { REPORT_TEMPLATE_SOURCE } from '@/products/report/shared/templates/reportTemplate'
 
 type AnyRecord = Record<string, any>
-type ReportTreeNode = {
-  type: string
-  props: Record<string, unknown>
-  children: Array<ReportTreeNode | string>
-}
+type ReportTreeNode = ArtifactTreeNode
 
 const DEFAULT_REPORT_WIDTH = 794
 const DEFAULT_REPORT_HEIGHT = 1123
@@ -26,34 +23,6 @@ const MIN_REPORT_HEIGHT = 640
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
-}
-
-function getElementTypeName(type: unknown): string {
-  if (typeof type === 'string') return type
-  if (typeof type === 'function') {
-    const componentType = type as Function & { displayName?: string }
-    return componentType.displayName || componentType.name || 'Anonymous'
-  }
-  return 'Unknown'
-}
-
-function jsxToTree(node: ReactNode): ReportTreeNode | string | null {
-  if (node == null || typeof node === 'boolean') return null
-  if (typeof node === 'string' || typeof node === 'number') return String(node)
-  if (!isValidElement(node)) return null
-
-  const props = (node.props || {}) as { children?: ReactNode } & Record<string, unknown>
-  const { children, ...restProps } = props
-  const childNodes = Array.isArray(children) ? children : children == null ? [] : [children]
-  const parsedChildren = childNodes
-    .map((child) => jsxToTree(child))
-    .filter((child): child is ReportTreeNode | string => child !== null)
-
-  return {
-    type: getElementTypeName(node.type),
-    props: restProps,
-    children: parsedChildren,
-  }
 }
 
 function getReportStructure(tree: unknown): {
@@ -213,13 +182,36 @@ function ReportCanvas({
 }
 
 function ReportWorkspace() {
-  const [templateTree, setTemplateTree] = useState<ReportTreeNode>(() => {
-    const tree = jsxToTree(REPORT_TEMPLATE)
-    if (!tree || typeof tree === 'string') {
-      throw new Error('Invalid report template root')
+  const [templateTree, setTemplateTree] = useState<ReportTreeNode | null>(null)
+  const [templateError, setTemplateError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function run() {
+      try {
+        setTemplateError(null)
+        const parsed = await parseArtifactJsxToTree('report-template.tsx', [
+          { path: 'report-template.tsx', content: REPORT_TEMPLATE_SOURCE },
+        ])
+        if (parsed.kind !== 'report') {
+          throw new Error(`Template de report retornou root inesperado: ${parsed.kind}`)
+        }
+        if (!cancelled) setTemplateTree(parsed.tree as ReportTreeNode)
+      } catch (error) {
+        if (!cancelled) {
+          setTemplateTree(null)
+          setTemplateError((error as Error).message || 'Falha ao carregar template de report')
+        }
+      }
     }
-    return tree
-  })
+
+    void run()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const { rootName, themeNode, pages } = useMemo(() => getReportStructure(templateTree), [templateTree])
   const [activePageId, setActivePageId] = useState('')
   const [activeView, setActiveView] = useState<'preview' | 'code'>('preview')
@@ -288,11 +280,27 @@ function ReportWorkspace() {
 
   const applyActiveReportSize = () => {
     if (parsedWidthDraft === null || parsedHeightDraft === null) return
-    setTemplateTree((current) =>
-      updateReportSizeInTree(current, currentPageId, {
+    setTemplateTree((current) => current
+      ? updateReportSizeInTree(current, currentPageId, {
         width: parsedWidthDraft,
         height: parsedHeightDraft,
-      }),
+      })
+      : current)
+  }
+
+  if (templateError) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#F7F7F6] p-8 text-sm text-red-700">
+        {templateError}
+      </div>
+    )
+  }
+
+  if (!templateTree) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#F7F7F6] p-8 text-sm text-[#5F5F5A]">
+        Carregando report...
+      </div>
     )
   }
 
@@ -373,7 +381,7 @@ function ReportWorkspace() {
               }`}
             >
               <Icon icon="solar:code-bold" className="h-4 w-4" />
-              <span className="sr-only">Visualizar DSL</span>
+              <span className="sr-only">Visualizar JSX</span>
             </button>
           </div>
           <div className="mr-2 flex items-center gap-1 rounded-xl border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] p-0">

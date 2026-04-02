@@ -1,6 +1,6 @@
 import type { Sandbox } from '@vercel/sandbox'
 
-import { detectArtifactFromDsl } from '@/products/chat/backend/features/artifacts/dslArtifactDetection'
+import { detectArtifactFromFile } from '@/products/chat/backend/features/artifacts/artifactFileDetection'
 import { upsertArtifact } from '@/products/chat/backend/features/artifacts/artifactStore'
 
 type SandboxDslEntry = {
@@ -51,7 +51,7 @@ export async function registerArtifactsFromSnapshot(params: {
   const { chatId, snapshotId, sandbox } = params
   const entries = await readDslEntriesFromSandbox(sandbox)
   for (const entry of entries) {
-    const detected = detectArtifactFromDsl(entry.path, entry.content)
+    const detected = detectArtifactFromFile(entry.path, entry.content)
     if (!detected) continue
     await upsertArtifact({
       type: detected.type,

@@ -1,6 +1,6 @@
 export {
   $sandboxActiveTab,
-  $previewDslPath,
+  $previewArtifactPath,
   sandboxActions,
   type SandboxTab,
 } from '@/products/chat/shared/sandbox/store'

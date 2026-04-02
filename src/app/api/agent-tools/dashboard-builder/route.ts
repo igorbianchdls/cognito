@@ -57,10 +57,6 @@ function normalizeDashboardFileSlug(name: string): string {
   return out || 'dashboard'
 }
 
-function buildDashboardFilePath(dashboardName: string): string {
-  return `/vercel/sandbox/dashboard/${normalizeDashboardFileSlug(dashboardName)}.dsl`
-}
-
 function normalizeAction(value: unknown): DashboardToolAction | null {
   const out = toText(value).toLowerCase()
   if (out === 'create_dashboard') return out
@@ -303,7 +299,7 @@ function buildResult(action: DashboardToolAction, state: DashboardToolParserStat
     summary: summarizeState(state),
     tree: state.tree,
     parser_state: state,
-    file_path: buildDashboardFilePath(state.dashboardName || 'dashboard'),
+    file_path: '',
   }
 }
 
@@ -314,11 +310,11 @@ async function persistDashboardFile(params: {
   tree: DashboardToolParserState['tree']
 }) {
   const { dashboardName } = params
-  const filePath = buildDashboardFilePath(dashboardName)
+  void dashboardName
   return {
-    file_path: filePath,
+    file_path: '',
     file_persisted: false as const,
-    persistence_warning: 'Persistencia de dashboard .dsl legada foi desativada porque o parser DSL foi removido.',
+    persistence_warning: 'Persistencia legada de dashboard foi desativada. O fluxo oficial agora usa dashboards .tsx.',
   }
 }
 
@@ -385,7 +381,7 @@ export async function POST(req: NextRequest) {
     }
 
     let persistMeta: { file_path: string; file_persisted?: boolean; persistence_warning?: string } = {
-      file_path: buildDashboardFilePath(dashboardName),
+      file_path: '',
     }
 
     if (shouldPersistFile) {

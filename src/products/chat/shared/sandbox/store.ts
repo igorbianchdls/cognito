@@ -4,9 +4,9 @@ export type SandboxTab = 'preview' | 'code' | 'dashboard'
 
 export const $sandboxActiveTab = atom<SandboxTab>('preview')
 
-// Caminho do artefato de preview na sandbox (.tsx ou .dsl legado)
+// Caminho do artefato de preview na sandbox (.tsx)
 // Padrão atual: /vercel/sandbox/dashboard/vendas.tsx
-export const $previewDslPath = atom<string>('/vercel/sandbox/dashboard/vendas.tsx')
+export const $previewArtifactPath = atom<string>('/vercel/sandbox/dashboard/vendas.tsx')
 
 export type ArtifactNotification = {
   id: string
@@ -20,7 +20,7 @@ export const $artifactNotifications = atom<ArtifactNotification[]>([])
 
 export const sandboxActions = {
   setActiveTab(tab: SandboxTab) { $sandboxActiveTab.set(tab) },
-  setPreviewPath(path: string) { $previewDslPath.set(path) },
+  setPreviewPath(path: string) { $previewArtifactPath.set(path) },
   pushArtifactNotification(input: { source: ArtifactNotification['source']; message: string }) {
     const msg = String(input.message || '').trim()
     if (!msg) return

@@ -4,7 +4,7 @@ import React from "react";
 import { useStore } from "@nanostores/react";
 import { DashboardRenderer } from "@/products/dashboard/render/dashboardRegistry";
 import { parseDashboardJsxToTree, type WorkspaceSourceFile } from "@/products/dashboard/workspace/dashboardJsxParser";
-import { $previewDslPath, sandboxActions } from "@/chat/sandbox";
+import { $previewArtifactPath, sandboxActions } from "@/chat/sandbox";
 
 type Props = { chatId?: string };
 
@@ -82,11 +82,10 @@ class ComponentBoundary extends React.Component<{ children: React.ReactNode }, C
   }
 }
 
-function getPreviewArtifactKind(path: string | null | undefined): "dsl" | "tsx" | null {
+function getPreviewArtifactKind(path: string | null | undefined): "tsx" | null {
   if (!path) return null;
   const p = String(path).trim();
   if (!p.startsWith("/vercel/sandbox/")) return null;
-  if (p.endsWith(".dsl")) return "dsl";
   if (p.endsWith(".tsx")) return "tsx";
   return null;
 }
@@ -180,7 +179,7 @@ async function loadPreviewTsxFiles(chatId: string, entryPath: string): Promise<W
 }
 
 function JsonRenderPreviewInner({ chatId }: Props) {
-  const previewPath = useStore($previewDslPath);
+  const previewPath = useStore($previewArtifactPath);
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState<boolean>(false);
   const [tree, setTree] = React.useState<any>(null);
@@ -214,7 +213,7 @@ function JsonRenderPreviewInner({ chatId }: Props) {
           continue;
         }
         for (const e of data.entries || []) {
-          if (e.type === "file" && (e.path.endsWith(".dsl") || e.path.endsWith(".tsx"))) {
+          if (e.type === "file" && e.path.endsWith(".tsx")) {
             collected.push(e.path);
           }
         }
@@ -234,7 +233,7 @@ function JsonRenderPreviewInner({ chatId }: Props) {
     if (typeof window === "undefined" || !chatId) return;
     if (hydratedPreviewPathForChatRef.current === chatId) return;
     try {
-      const saved = window.localStorage.getItem(`previewDslPath:${chatId}`);
+      const saved = window.localStorage.getItem(`previewArtifactPath:${chatId}`);
       hydratedPreviewPathForChatRef.current = chatId;
       if (saved && isSupportedPreviewPath(saved) && saved !== previewPath) {
         sandboxActions.setPreviewPath(saved);
@@ -251,7 +250,7 @@ function JsonRenderPreviewInner({ chatId }: Props) {
   React.useEffect(() => {
     if (typeof window === "undefined" || !chatId || !previewPath) return;
     try {
-      window.localStorage.setItem(`previewDslPath:${chatId}`, previewPath);
+      window.localStorage.setItem(`previewArtifactPath:${chatId}`, previewPath);
     } catch {
       // ignore storage access errors
     }
@@ -285,16 +284,9 @@ function JsonRenderPreviewInner({ chatId }: Props) {
       }
 
       try {
-        if (kind === "tsx") {
-          const files = await loadPreviewTsxFiles(chatId, previewPath);
-          const nextTree = await parseDashboardJsxToTree(previewPath, files);
-          if (!cancelled) setTree(nextTree);
-        } else {
-          await readSandboxTextFile(chatId, previewPath);
-          if (!cancelled) {
-            setError("Preview de artefatos .dsl foi removido. Use dashboards .tsx.");
-          }
-        }
+        const files = await loadPreviewTsxFiles(chatId, previewPath);
+        const nextTree = await parseDashboardJsxToTree(previewPath, files);
+        if (!cancelled) setTree(nextTree);
       } catch (e: any) {
         const found = await refreshPaths();
         const candidate = found[0];
@@ -339,7 +331,7 @@ function JsonRenderPreviewInner({ chatId }: Props) {
     <div className="h-full w-full min-h-0 overflow-auto p-0 bg-gray-50">
       {!chatId && !error && !loading && (
         <div className="rounded border border-gray-200 bg-white text-gray-600 text-xs p-3">
-          UI de preview aberta. Inicie um computador para carregar e renderizar dashboards `.tsx`.
+          UI de preview aberta. Inicie um computador para carregar e renderizar artefatos `.tsx`.
         </div>
       )}
       {!error && loading && <div className="text-xs text-gray-500 p-2">Carregando...</div>}
