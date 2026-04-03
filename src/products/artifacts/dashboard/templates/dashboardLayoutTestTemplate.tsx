@@ -28,6 +28,44 @@ function buildLayoutTestDashboardSource(themeName: string) {
     </header>
 
     <Vertical gap={20}>
+      <Horizontal gap={16} columns={12} rowHeight={140}>
+        <Panel id="kpi-test-a" span={6} rows={1}>
+          <Query
+            dataQuery={{
+              query: \`
+                SELECT 128::float AS value
+              \`,
+              limit: 1,
+            }}
+            format="number"
+          >
+            <Card style={{ height: '100%', padding: 18, borderRadius: 20, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 10 }}>
+              <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>KPI Teste A</p>
+              <h2 style={{ margin: 0, fontSize: 30, fontWeight: 700, color: theme.kpiValueColor }}>{'{{query.valueFormatted}}'}</h2>
+              <p style={{ margin: 0, fontSize: 14, color: theme.textSecondary }}>Query + Card dentro de Panel, para validar resize.</p>
+            </Card>
+          </Query>
+        </Panel>
+
+        <Panel id="kpi-test-b" span={6} rows={2}>
+          <Query
+            dataQuery={{
+              query: \`
+                SELECT 8420::float AS value
+              \`,
+              limit: 1,
+            }}
+            format="currency"
+          >
+            <Card style={{ height: '100%', padding: 18, borderRadius: 20, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 10 }}>
+              <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>KPI Teste B</p>
+              <h2 style={{ margin: 0, fontSize: 30, fontWeight: 700, color: theme.kpiValueColor }}>{'{{query.valueFormatted}}'}</h2>
+              <p style={{ margin: 0, fontSize: 14, color: theme.textSecondary }}>Este bloco tem duas rows para evidenciar resize vertical com KPI.</p>
+            </Card>
+          </Query>
+        </Panel>
+      </Horizontal>
+
       <Horizontal gap={16} columns={12} rowHeight={120}>
         <Panel id="test-a" span={4} rows={1}>
           <Card style={{ height: '100%', padding: 18, borderRadius: 20, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
@@ -67,6 +105,7 @@ function buildLayoutTestDashboardSource(themeName: string) {
                 type="line"
                 height="100%"
                 format="number"
+                margin={{ top: 10, right: 12, bottom: 12, left: 4 }}
                 dataQuery={{
                   query: \`
                     SELECT *
