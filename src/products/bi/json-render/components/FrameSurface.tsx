@@ -211,9 +211,18 @@ function resolveFrame(frame: HudFrameConfig | null | undefined, cssVars?: Record
 export default function FrameSurface({ style, frame, cssVars, className, domProps, children }: Props) {
   const resolved = resolveFrame(frame, cssVars, style);
   const baseStyle = applyCardStylePreset(style, cssVars);
+  const radiusFromCss = cssVars && cssVars.containerRadius ? toNumber(cssVars.containerRadius, NaN) : NaN;
   if (!resolved) {
+    const nextStyle: React.CSSProperties = { ...(baseStyle || {}) };
+    if (Number.isFinite(radiusFromCss)) {
+      nextStyle.borderRadius = radiusFromCss;
+      nextStyle.borderTopLeftRadius = radiusFromCss;
+      nextStyle.borderTopRightRadius = radiusFromCss;
+      nextStyle.borderBottomRightRadius = radiusFromCss;
+      nextStyle.borderBottomLeftRadius = radiusFromCss;
+    }
     return (
-      <div {...domProps} className={className} style={baseStyle}>
+      <div {...domProps} className={className} style={nextStyle}>
         {children}
       </div>
     );

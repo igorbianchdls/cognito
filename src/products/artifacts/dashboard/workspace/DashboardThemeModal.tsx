@@ -265,12 +265,24 @@ export function DashboardThemeModal({
             })}
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-x-4 gap-y-5">
-            {borderPresets.map((preset) => {
+          <div className="grid grid-cols-2 gap-4">
+            {[
+              { title: 'Com HUD', items: borderPresets.filter((preset) => preset.value.startsWith('hud') || preset.value === 'theme_default') },
+              { title: 'Sem HUD', items: borderPresets.filter((preset) => !(preset.value.startsWith('hud') || preset.value === 'theme_default')) },
+            ].map((group) => (
+              <div key={group.title} className="rounded-[18px] border border-[#ececec] bg-[#fafafa] p-4">
+                <div className="mb-3 text-[13px] font-semibold tracking-[-0.02em] text-[#4a4a46]">{group.title}</div>
+                <div className="space-y-4">
+            {group.items.map((preset) => {
               const isSelected = selectedBorderPreset === preset.value
-              const isHud = preset.value === 'theme_default' || preset.value === 'hud_bold'
-              const borderRadius = isHud ? 0 : 16
+              const isHud = preset.value === 'theme_default' || preset.value === 'hud_compact' || preset.value === 'hud_bold'
+              const borderRadius =
+                preset.value === 'rounded_minimal' ? 18 :
+                preset.value === 'rounded_soft' ? 12 :
+                preset.value === 'straight_clean' ? 0 :
+                0
               const cornerStroke = preset.value === 'hud_bold' ? 2 : 1
+              const cornerInset = preset.value === 'hud_compact' ? 16 : 12
 
               return (
                 <button
@@ -294,10 +306,10 @@ export function DashboardThemeModal({
                       />
                       {isHud ? (
                         <>
-                          <div className="absolute left-[12px] top-[12px] h-4 w-4 border-l border-t border-[#5b7899]" style={{ borderLeftWidth: cornerStroke, borderTopWidth: cornerStroke }} />
-                          <div className="absolute right-[12px] top-[12px] h-4 w-4 border-r border-t border-[#5b7899]" style={{ borderRightWidth: cornerStroke, borderTopWidth: cornerStroke }} />
-                          <div className="absolute bottom-[12px] left-[12px] h-4 w-4 border-b border-l border-[#5b7899]" style={{ borderBottomWidth: cornerStroke, borderLeftWidth: cornerStroke }} />
-                          <div className="absolute bottom-[12px] right-[12px] h-4 w-4 border-b border-r border-[#5b7899]" style={{ borderBottomWidth: cornerStroke, borderRightWidth: cornerStroke }} />
+                          <div className="absolute h-4 w-4 border-l border-t border-[#5b7899]" style={{ left: cornerInset, top: cornerInset, borderLeftWidth: cornerStroke, borderTopWidth: cornerStroke }} />
+                          <div className="absolute h-4 w-4 border-r border-t border-[#5b7899]" style={{ right: cornerInset, top: cornerInset, borderRightWidth: cornerStroke, borderTopWidth: cornerStroke }} />
+                          <div className="absolute h-4 w-4 border-b border-l border-[#5b7899]" style={{ left: cornerInset, bottom: cornerInset, borderBottomWidth: cornerStroke, borderLeftWidth: cornerStroke }} />
+                          <div className="absolute h-4 w-4 border-b border-r border-[#5b7899]" style={{ right: cornerInset, bottom: cornerInset, borderBottomWidth: cornerStroke, borderRightWidth: cornerStroke }} />
                         </>
                       ) : null}
                     </div>
@@ -310,6 +322,9 @@ export function DashboardThemeModal({
                 </button>
               )
             })}
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
