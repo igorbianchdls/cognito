@@ -59,7 +59,7 @@ function buildContainersDashboardSource(themeName: string) {
                   format="currency"
                   comparisonMode="previous_period"
                 >
-                  <Card style={{ padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <Card style={{ height: '100%', padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}>
                     <h2 style={{ margin: 0, fontSize: 20, fontWeight: 600, color: theme.titleColor }}>Receita</h2>
                     <p style={{ margin: 0, fontSize: 28, fontWeight: 700, color: theme.kpiValueColor }}>{'{{query.valueFormatted}}'}</p>
                     <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 13, color: theme.textSecondary }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
@@ -81,7 +81,7 @@ function buildContainersDashboardSource(themeName: string) {
                   format="number"
                   comparisonMode="previous_period"
                 >
-                  <Card style={{ padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <Card style={{ height: '100%', padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}>
                     <h2 style={{ margin: 0, fontSize: 20, fontWeight: 600, color: theme.titleColor }}>Pedidos</h2>
                     <p style={{ margin: 0, fontSize: 28, fontWeight: 700, color: theme.kpiValueColor }}>{'{{query.valueFormatted}}'}</p>
                     <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 13, color: theme.textSecondary }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
@@ -103,7 +103,7 @@ function buildContainersDashboardSource(themeName: string) {
                   format="currency"
                   comparisonMode="previous_period"
                 >
-                  <Card style={{ padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <Card style={{ height: '100%', padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}>
                     <h2 style={{ margin: 0, fontSize: 20, fontWeight: 600, color: theme.titleColor }}>Ticket medio</h2>
                     <p style={{ margin: 0, fontSize: 28, fontWeight: 700, color: theme.kpiValueColor }}>{'{{query.valueFormatted}}'}</p>
                     <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 13, color: theme.textSecondary }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
@@ -114,7 +114,7 @@ function buildContainersDashboardSource(themeName: string) {
 
             <Horizontal gap={18} align="stretch" columns={12} rowHeight={420}>
               <Panel id="chart-receita-canal" span={8} rows={1}>
-                <Card style={{ padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <Card style={{ height: '100%', padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <h2 style={{ margin: 0, fontSize: 20, fontWeight: 600, color: theme.titleColor }}>Receita por canal</h2>
                   <Chart
                     type="bar"
@@ -141,8 +141,8 @@ function buildContainersDashboardSource(themeName: string) {
               </Panel>
 
               <Panel id="filters-side" span={4} rows={1}>
-                <Vertical gap={18}>
-                  <Card style={{ padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <Vertical gap={18} style={{ height: '100%' }}>
+                  <Card style={{ flex: 1, minHeight: 0, padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 14 }}>
                     <h2 style={{ margin: 0, fontSize: 20, fontWeight: 600, color: theme.titleColor }}>Canal</h2>
                     <Filter
                       label="Canal"
@@ -165,7 +165,7 @@ function buildContainersDashboardSource(themeName: string) {
                     </Filter>
                   </Card>
 
-                  <Card style={{ padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <Card style={{ flex: 1, minHeight: 0, padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Leitura esperada</p>
                     <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: theme.textSecondary }}>
                       Este exemplo usa containers semanticos para organizar cabecalho, KPIs e linha analitica sem depender de HTML livre em toda parte.
