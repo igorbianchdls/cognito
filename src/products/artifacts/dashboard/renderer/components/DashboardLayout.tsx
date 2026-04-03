@@ -1,6 +1,8 @@
 'use client'
 
 import React from 'react'
+import { useDraggable, useDroppable } from '@dnd-kit/core'
+import { CSS } from '@dnd-kit/utilities'
 import GridLayout, { WidthProvider, type Layout } from 'react-grid-layout'
 
 import { DashboardLayoutEditContext } from '@/products/artifacts/dashboard/renderer/components/DashboardLayoutContext'
@@ -23,37 +25,22 @@ function getElementPath(element: any) {
   return Array.isArray(raw) ? raw.filter((value) => typeof value === 'number') : []
 }
 
-function createDropHandlers(
+function useStructuralDropTarget(
   layoutEdit: React.ContextType<typeof DashboardLayoutEditContext>,
   path: number[],
   targetType: 'vertical' | 'horizontal',
 ) {
-  if (!layoutEdit.enabled) return {}
   const targetKey = `${targetType}:${getPathKey(path)}`
+  const { setNodeRef, isOver } = useDroppable({
+    id: targetKey,
+    disabled: !layoutEdit.enabled,
+    data: { path, targetType },
+  })
+
   return {
-    onDragEnter: (event: React.DragEvent) => {
-      if (!layoutEdit.structuralDrag) return
-      event.preventDefault()
-      event.stopPropagation()
-      layoutEdit.setHoverTargetKey(targetKey)
-    },
-    onDragOver: (event: React.DragEvent) => {
-      if (!layoutEdit.structuralDrag) return
-      event.preventDefault()
-      event.stopPropagation()
-      layoutEdit.setHoverTargetKey(targetKey)
-    },
-    onDragLeave: (event: React.DragEvent) => {
-      if (!layoutEdit.structuralDrag) return
-      event.stopPropagation()
-      if (layoutEdit.hoverTargetKey === targetKey) layoutEdit.setHoverTargetKey(null)
-    },
-    onDrop: (event: React.DragEvent) => {
-      if (!layoutEdit.structuralDrag) return
-      event.preventDefault()
-      event.stopPropagation()
-      layoutEdit.movePanelToContainer(path, targetType)
-    },
+    dropRef: setNodeRef,
+    targetKey,
+    structuralActive: layoutEdit.enabled && isOver && Boolean(layoutEdit.structuralDrag),
   }
 }
 
@@ -73,11 +60,10 @@ export function DashboardVertical({
   const layoutEdit = React.useContext(DashboardLayoutEditContext)
   const props = (element?.props || {}) as AnyRecord
   const path = getElementPath(element)
-  const targetKey = `vertical:${getPathKey(path)}`
-  const structuralActive = layoutEdit.enabled && layoutEdit.hoverTargetKey === targetKey && Boolean(layoutEdit.structuralDrag)
+  const { dropRef, structuralActive } = useStructuralDropTarget(layoutEdit, path, 'vertical')
   return (
     <div
-      {...createDropHandlers(layoutEdit, path, 'vertical')}
+      ref={dropRef}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -109,8 +95,7 @@ export function DashboardHorizontal({
   const editableLayout = layoutEdit.enabled
   const props = (element?.props || {}) as AnyRecord
   const path = getElementPath(element)
-  const targetKey = `horizontal:${getPathKey(path)}`
-  const structuralActive = editableLayout && layoutEdit.hoverTargetKey === targetKey && Boolean(layoutEdit.structuralDrag)
+  const { dropRef, structuralActive } = useStructuralDropTarget(layoutEdit, path, 'horizontal')
   const childNodes = Array.isArray(element?.children) ? element.children : []
   const childArray = React.Children.toArray(children).filter(isRenderableLayoutChild)
   const panelNodes = childNodes.filter((child: any) => child && typeof child === 'object' && child.type === 'Panel')
@@ -184,7 +169,7 @@ export function DashboardHorizontal({
 
     return (
       <div
-        {...createDropHandlers(layoutEdit, path, 'horizontal')}
+        ref={dropRef}
         style={{
           minWidth: 0,
           width: styleDimension(props.width),
@@ -230,7 +215,7 @@ export function DashboardHorizontal({
 
   return (
       <div
-        {...createDropHandlers(layoutEdit, path, 'horizontal')}
+        ref={dropRef}
         style={{
           display: 'flex',
           flexDirection: 'row',
@@ -447,6 +432,17 @@ export function DashboardPanel({
       ? props.id.trim()
       : `panel-${getPathKey(path)}`
   const span = Math.max(1, toNumericLayoutValue(props.span, 1))
+  const draggableId = `panel:${panelId}:${getPathKey(path)}`
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, isDragging } = useDraggable({
+    id: draggableId,
+    disabled: !editableLayout,
+    data: {
+      kind: 'panel',
+      panelId,
+      panelPath: path,
+      span,
+    },
+  })
   const grow =
     typeof props.grow === 'number'
       ? props.grow
@@ -456,6 +452,7 @@ export function DashboardPanel({
 
   return (
     <div
+      ref={setNodeRef}
       style={{
         position: 'relative',
         display: 'flex',
@@ -469,19 +466,17 @@ export function DashboardPanel({
         minWidth: styleDimension(props.minWidth) ?? 0,
         maxWidth: styleDimension(props.maxWidth),
         padding: styleDimension(props.padding),
+        transform: transform ? CSS.Translate.toString(transform) : undefined,
+        opacity: isDragging ? 0.5 : undefined,
         ...(props.style && typeof props.style === 'object' ? props.style : {}),
       }}
     >
       {editableLayout ? (
         <button
+          ref={setActivatorNodeRef}
           type="button"
-          draggable
-          onDragStart={(event) => {
-            layoutEdit.startStructuralDrag({ panelId, panelPath: path, span })
-            event.dataTransfer.effectAllowed = 'move'
-            event.dataTransfer.setData('text/plain', panelId)
-          }}
-          onDragEnd={() => layoutEdit.endStructuralDrag()}
+          {...attributes}
+          {...listeners}
           style={{
             position: 'absolute',
             top: 8,
@@ -495,6 +490,7 @@ export function DashboardPanel({
             lineHeight: 1,
             padding: '6px 8px',
             cursor: 'grab',
+            touchAction: 'none',
           }}
           title="Mover painel para outro container"
           aria-label="Mover painel para outro container"

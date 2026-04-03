@@ -1,6 +1,17 @@
 'use client'
 
 import React from 'react'
+import {
+  closestCenter,
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragOverEvent,
+  type DragStartEvent,
+} from '@dnd-kit/core'
 
 import JsonRenderBarChart from '@/products/bi/json-render/components/BarChart'
 import JsxCardSurface, {
@@ -468,6 +479,11 @@ export function DashboardRenderer({
 }) {
   const [structuralDrag, setStructuralDrag] = React.useState<{ panelId: string; panelPath: number[]; span: number } | null>(null)
   const [hoverTargetKey, setHoverTargetKey] = React.useState<string | null>(null)
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 6 },
+    }),
+  )
   const layoutEditValue = React.useMemo(
     () => ({
       enabled: editableLayout,
@@ -489,19 +505,111 @@ export function DashboardRenderer({
     [editableLayout, hoverTargetKey, onStructuralMove, structuralDrag],
   )
 
+  function handleStructuralDragStart(event: DragStartEvent) {
+    const data = event.active.data.current as
+      | { kind?: string; panelId?: string; panelPath?: number[]; span?: number }
+      | undefined
+    if (!data || data.kind !== 'panel' || !Array.isArray(data.panelPath)) return
+    setStructuralDrag({
+      panelId: typeof data.panelId === 'string' ? data.panelId : String(event.active.id),
+      panelPath: data.panelPath,
+      span: typeof data.span === 'number' && Number.isFinite(data.span) ? data.span : 1,
+    })
+  }
+
+  function handleStructuralDragOver(event: DragOverEvent) {
+    const targetId = typeof event.over?.id === 'string' ? event.over.id : null
+    setHoverTargetKey(targetId)
+  }
+
+  function resetStructuralDrag() {
+    setStructuralDrag(null)
+    setHoverTargetKey(null)
+  }
+
+  function handleStructuralDragEnd(event: DragEndEvent) {
+    const overData = event.over?.data.current as
+      | { path?: number[]; targetType?: 'vertical' | 'horizontal' }
+      | undefined
+    if (
+      structuralDrag &&
+      overData &&
+      Array.isArray(overData.path) &&
+      (overData.targetType === 'vertical' || overData.targetType === 'horizontal') &&
+      onStructuralMove
+    ) {
+      onStructuralMove(structuralDrag.panelPath, overData.path, overData.targetType)
+    }
+    resetStructuralDrag()
+  }
+
   if (Array.isArray(tree)) {
     return (
       <DashboardLayoutEditContext.Provider value={layoutEditValue}>
-        {tree.map((node, index) => (
-          <RenderDashboardNode key={getNodeKey(node, index, [index])} node={node} data={data} onAction={onAction} path={[index]} />
-        ))}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleStructuralDragStart}
+          onDragOver={handleStructuralDragOver}
+          onDragEnd={handleStructuralDragEnd}
+          onDragCancel={resetStructuralDrag}
+        >
+          {tree.map((node, index) => (
+            <RenderDashboardNode key={getNodeKey(node, index, [index])} node={node} data={data} onAction={onAction} path={[index]} />
+          ))}
+          <DragOverlay>
+            {structuralDrag ? (
+              <div
+                style={{
+                  border: '1px solid rgba(148,163,184,0.45)',
+                  backgroundColor: 'rgba(255,255,255,0.96)',
+                  color: '#0f172a',
+                  borderRadius: 12,
+                  padding: '10px 12px',
+                  boxShadow: '0 10px 30px rgba(15,23,42,0.12)',
+                  fontSize: 12,
+                  fontWeight: 600,
+                }}
+              >
+                mover bloco
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
       </DashboardLayoutEditContext.Provider>
     )
   }
 
   return (
     <DashboardLayoutEditContext.Provider value={layoutEditValue}>
-      <RenderDashboardNode node={tree} data={data} onAction={onAction} path={[]} />
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleStructuralDragStart}
+        onDragOver={handleStructuralDragOver}
+        onDragEnd={handleStructuralDragEnd}
+        onDragCancel={resetStructuralDrag}
+      >
+        <RenderDashboardNode node={tree} data={data} onAction={onAction} path={[]} />
+        <DragOverlay>
+          {structuralDrag ? (
+            <div
+              style={{
+                border: '1px solid rgba(148,163,184,0.45)',
+                backgroundColor: 'rgba(255,255,255,0.96)',
+                color: '#0f172a',
+                borderRadius: 12,
+                padding: '10px 12px',
+                boxShadow: '0 10px 30px rgba(15,23,42,0.12)',
+                fontSize: 12,
+                fontWeight: 600,
+              }}
+            >
+              mover bloco
+            </div>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
     </DashboardLayoutEditContext.Provider>
   )
 }
