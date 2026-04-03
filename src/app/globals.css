@@ -217,6 +217,74 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   outline-offset: 2px;
 }
 
+.dashboard-rgl {
+  min-width: 0;
+}
+
+.dashboard-rgl .react-grid-item {
+  transition: all 180ms ease;
+}
+
+.dashboard-rgl .react-grid-placeholder {
+  border-radius: 20px;
+  background: rgba(96, 165, 250, 0.14);
+  border: 1px dashed rgba(37, 99, 235, 0.45);
+}
+
+.dashboard-panel-edit-shell {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+}
+
+.dashboard-panel-edit-body {
+  height: 100%;
+  min-height: 0;
+}
+
+.dashboard-panel-drag-handle {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.9);
+  background: rgba(255, 255, 255, 0.92);
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #475569;
+  cursor: grab;
+  user-select: none;
+}
+
+.dashboard-panel-drag-handle:active {
+  cursor: grabbing;
+}
+
+.dashboard-rgl .react-resizable-handle {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  width: 10px;
+  height: 56px;
+  transform: translateY(-50%);
+  cursor: ew-resize;
+}
+
+.dashboard-rgl .react-resizable-handle::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.9);
+}
+
 /* AG Grid: Using Theming API (themeQuartz) - no CSS imports needed */
 
 /* Force remove all focus styles for AI SDK Elements */

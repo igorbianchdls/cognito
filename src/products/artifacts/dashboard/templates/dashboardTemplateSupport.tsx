@@ -1,9 +1,10 @@
 'use client'
 
-export type DashboardTemplateKey = 'classic' | 'compras' | 'financeiro' | 'metaads' | 'googleads' | 'shopify'
+export type DashboardTemplateKey = 'classic' | 'containers' | 'compras' | 'financeiro' | 'metaads' | 'googleads' | 'shopify'
 
 export const DASHBOARD_TEMPLATE_DEFAULT_THEMES: Record<DashboardTemplateKey, string> = {
   classic: 'aero',
+  containers: 'light',
   compras: 'blue',
   financeiro: 'sand',
   metaads: 'midnight',

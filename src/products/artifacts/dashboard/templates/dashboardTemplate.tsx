@@ -1,6 +1,7 @@
 'use client'
 
 import type * as React from 'react'
+import { buildContainersDashboardTemplateVariant } from '@/products/artifacts/dashboard/templates/dashboardContainersTemplate'
 import { buildComprasDashboardTemplateVariant } from '@/products/artifacts/dashboard/templates/dashboardComprasTemplate'
 import { buildFinanceiroDashboardTemplateVariant } from '@/products/artifacts/dashboard/templates/dashboardFinanceiroTemplate'
 import { buildGoogleAdsDashboardTemplateVariant } from '@/products/artifacts/dashboard/templates/dashboardGoogleAdsTemplate'
@@ -871,6 +872,7 @@ export function buildDashboardTemplateVariants(themeName: string): DashboardTemp
   const variants: DashboardTemplateVariant[] = []
 
   variants.push(buildClassicDashboardTemplateVariant())
+  variants.push(buildContainersDashboardTemplateVariant())
 
   variants.push(buildComprasDashboardTemplateVariant())
   variants.push(buildFinanceiroDashboardTemplateVariant())

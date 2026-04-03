@@ -49,7 +49,7 @@ export function DashboardWorkspacePreview({
           {error}
         </div>
       ) : tree ? (
-        <DashboardRenderer tree={tree} />
+        <DashboardRenderer tree={tree} editableLayout />
       ) : (
         <div className="p-6 text-sm text-gray-500">Compilando preview...</div>
       )}
