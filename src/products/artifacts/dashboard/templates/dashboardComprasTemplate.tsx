@@ -42,7 +42,7 @@ function buildComprasDashboardSource(themeName: string) {
           </header>
 
           <Grid columns={12} rowHeight={32} gap={18}>
-            <Panel id="compras-filter-fornecedor" span={4}>
+            <Panel id="compras-filter-fornecedor" x={0} y={0} span={4} rows={6}>
             <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filtro</p>
               <h2 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Fornecedor</h2>
@@ -69,7 +69,7 @@ function buildComprasDashboardSource(themeName: string) {
             </Card>
             </Panel>
 
-            <Panel id="compras-filter-centro-custo" span={4}>
+            <Panel id="compras-filter-centro-custo" x={4} y={0} span={4} rows={6}>
             <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filtro</p>
               <h2 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Centro de custo</h2>
@@ -96,7 +96,7 @@ function buildComprasDashboardSource(themeName: string) {
             </Card>
             </Panel>
 
-            <Panel id="compras-filter-status" span={4}>
+            <Panel id="compras-filter-status" x={8} y={0} span={4} rows={6}>
             <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filtro</p>
               <h2 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Status</h2>
@@ -122,7 +122,7 @@ function buildComprasDashboardSource(themeName: string) {
             </Card>
             </Panel>
 
-            <Panel id="compras-kpi-valor" span={3}>
+            <Panel id="compras-kpi-valor" x={0} y={6} span={3} rows={4}>
             <Query dataQuery={{ query: \`SELECT COALESCE(SUM(c.valor_total), 0)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period">
               <Card style={{ padding: 22, borderRadius: 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <h2 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Valor comprado</h2>
@@ -131,7 +131,7 @@ function buildComprasDashboardSource(themeName: string) {
               </Card>
             </Query>
             </Panel>
-            <Panel id="compras-kpi-fornecedores" span={3}>
+            <Panel id="compras-kpi-fornecedores" x={3} y={6} span={3} rows={4}>
             <Query dataQuery={{ query: \`SELECT COUNT(DISTINCT c.fornecedor_id)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }} format="number" comparisonMode="previous_period">
               <Card style={{ padding: 22, borderRadius: 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <h2 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Fornecedores</h2>
@@ -140,7 +140,7 @@ function buildComprasDashboardSource(themeName: string) {
               </Card>
             </Query>
             </Panel>
-            <Panel id="compras-kpi-pedidos" span={3}>
+            <Panel id="compras-kpi-pedidos" x={6} y={6} span={3} rows={4}>
             <Query dataQuery={{ query: \`SELECT COUNT(DISTINCT c.id)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }} format="number" comparisonMode="previous_period">
               <Card style={{ padding: 22, borderRadius: 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <h2 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Pedidos</h2>
@@ -149,7 +149,7 @@ function buildComprasDashboardSource(themeName: string) {
               </Card>
             </Query>
             </Panel>
-            <Panel id="compras-kpi-ticket" span={3}>
+            <Panel id="compras-kpi-ticket" x={9} y={6} span={3} rows={4}>
             <Query dataQuery={{ query: \`SELECT COALESCE(AVG(c.valor_total), 0)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period">
               <Card style={{ padding: 22, borderRadius: 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <h2 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Ticket medio</h2>
@@ -159,7 +159,7 @@ function buildComprasDashboardSource(themeName: string) {
             </Query>
             </Panel>
 
-            <Panel id="compras-chart-fornecedor" span={7} rows={16}>
+            <Panel id="compras-chart-fornecedor" x={0} y={10} span={7} rows={16}>
             <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Top spend</p>
@@ -196,7 +196,7 @@ function buildComprasDashboardSource(themeName: string) {
             </Card>
             </Panel>
 
-            <Panel id="compras-chart-categoria" span={5} rows={16}>
+            <Panel id="compras-chart-categoria" x={7} y={10} span={5} rows={16}>
             <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Allocation</p>
@@ -234,7 +234,7 @@ function buildComprasDashboardSource(themeName: string) {
             </Card>
             </Panel>
 
-            <Panel id="compras-chart-trend" span={7} rows={16}>
+            <Panel id="compras-chart-trend" x={0} y={26} span={7} rows={16}>
             <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trend</p>
@@ -271,7 +271,7 @@ function buildComprasDashboardSource(themeName: string) {
             </Card>
             </Panel>
 
-            <Panel id="compras-chart-status" span={5} rows={16}>
+            <Panel id="compras-chart-status" x={7} y={26} span={5} rows={16}>
             <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status mix</p>
@@ -305,7 +305,7 @@ function buildComprasDashboardSource(themeName: string) {
             </Card>
             </Panel>
 
-            <Panel id="compras-table" span={8} rows={18}>
+            <Panel id="compras-table" x={0} y={42} span={8} rows={18}>
             <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</p>
@@ -353,7 +353,7 @@ function buildComprasDashboardSource(themeName: string) {
             </Card>
             </Panel>
 
-            <Panel id="compras-pivot" span={4} rows={18}>
+            <Panel id="compras-pivot" x={8} y={42} span={4} rows={18}>
             <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</p>
@@ -395,7 +395,7 @@ function buildComprasDashboardSource(themeName: string) {
             </Card>
             </Panel>
 
-            <Panel id="compras-insight-concentracao" span={4}>
+            <Panel id="compras-insight-concentracao" x={0} y={60} span={4} rows={6}>
             <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <h2 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Concentracao em fornecedores</h2>
@@ -410,7 +410,7 @@ function buildComprasDashboardSource(themeName: string) {
             </Card>
             </Panel>
 
-            <Panel id="compras-insight-centro" span={4}>
+            <Panel id="compras-insight-centro" x={4} y={60} span={4} rows={6}>
             <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <h2 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Pressao por centro de custo</h2>
@@ -425,7 +425,7 @@ function buildComprasDashboardSource(themeName: string) {
             </Card>
             </Panel>
 
-            <Panel id="compras-insight-risco" span={4}>
+            <Panel id="compras-insight-risco" x={8} y={60} span={4} rows={6}>
             <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <h2 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Risco operacional</h2>
