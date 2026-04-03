@@ -56,7 +56,21 @@ export function DashboardHorizontal({
   const panelNodes = childNodes.filter((child: any) => child && typeof child === 'object' && child.type === 'Panel')
   const columns = Math.max(1, toNumericLayoutValue(props.columns, 12))
   const gap = toNumericLayoutValue(props.gap, 16)
-  const rowHeight = Math.max(72, toNumericLayoutValue(props.rowHeight, 220))
+  const rowHeight = Math.max(8, toNumericLayoutValue(props.rowHeight, 220))
+  const autoSizedOnceRef = React.useRef<Set<string>>(new Set())
+  const bodyRefs = React.useRef<Record<string, HTMLDivElement | null>>({})
+  const autoHeightPanelIds = React.useMemo(
+    () =>
+      new Set(
+        panelNodes
+          .filter((panelNode: any) => {
+            const rows = panelNode?.props?.rows
+            return rows === undefined || rows === null || String(rows).trim() === ''
+          })
+          .map((panelNode: any, index: number) => String(panelNode?.props?.id || `panel-${index}`)),
+      ),
+    [panelNodes],
+  )
   const panelLayoutSeed = panelNodes
     .map((panelNode: any, index: number) =>
       [
@@ -73,6 +87,33 @@ export function DashboardHorizontal({
   React.useEffect(() => {
     setLayout(defaultLayouts)
   }, [defaultLayouts])
+
+  React.useEffect(() => {
+    autoSizedOnceRef.current = new Set()
+  }, [panelLayoutSeed])
+
+  React.useLayoutEffect(() => {
+    if (!editableLayout || autoHeightPanelIds.size === 0) return
+
+    const rowUnit = rowHeight + gap
+    setLayout((prev) => {
+      let changed = false
+      const next = prev.map((item) => {
+        if (!autoHeightPanelIds.has(item.i) || autoSizedOnceRef.current.has(item.i)) return item
+        const bodyEl = bodyRefs.current[item.i]
+        const measured = Math.ceil(bodyEl?.scrollHeight || 0)
+        autoSizedOnceRef.current.add(item.i)
+        if (!measured) return item
+        const nextRows = Math.max(item.minH ?? 1, Math.ceil((measured + gap) / rowUnit))
+        if (nextRows !== item.h) {
+          changed = true
+          return { ...item, h: nextRows }
+        }
+        return item
+      })
+      return changed ? next : prev
+    })
+  }, [editableLayout, autoHeightPanelIds, rowHeight, gap, panelLayoutSeed])
 
   if (editableLayout && panelNodes.length > 0 && panelNodes.length === childArray.length) {
     const childById = new Map(
@@ -107,7 +148,14 @@ export function DashboardHorizontal({
           {layout.map((item) => (
             <div key={item.i} className="dashboard-panel-edit-shell">
               <div className="dashboard-panel-drag-handle">move</div>
-              <div className="dashboard-panel-edit-body">{childById.get(item.i) ?? null}</div>
+              <div
+                className="dashboard-panel-edit-body"
+                ref={(node) => {
+                  bodyRefs.current[item.i] = node
+                }}
+              >
+                {childById.get(item.i) ?? null}
+              </div>
             </div>
           ))}
         </AutoWidthGridLayout>

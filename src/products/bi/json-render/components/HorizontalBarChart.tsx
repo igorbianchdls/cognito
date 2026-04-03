@@ -36,7 +36,7 @@ export default function JsonRenderHorizontalBarChart({ element }: { element: any
   const props = (element?.props as AnyRecord | undefined) || {};
   const dq = (element?.props?.dataQuery as AnyRecord | undefined);
   const fmt = (element?.props?.format ?? "number") as "currency" | "percent" | "number";
-  const height = Number(element?.props?.height ?? 220);
+  const height = (element?.props?.height as number | string | undefined) ?? 220;
   const legacyRecharts = (element?.props?.recharts as AnyRecord | undefined) || {};
   const xAxis = (element?.props?.xAxis as AnyRecord | undefined) || {};
   const yAxis = (element?.props?.yAxis as AnyRecord | undefined) || {};

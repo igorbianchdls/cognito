@@ -23,7 +23,7 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
   const props = (element?.props as AnyRecord | undefined) || {};
   const dq = (element?.props?.dataQuery as AnyRecord | undefined);
   const fmt = (element?.props?.format ?? "number") as "currency" | "percent" | "number";
-  const height = (element?.props?.height as number | undefined) ?? 220;
+  const height = (element?.props?.height as number | string | undefined) ?? 220;
   const legacyRecharts = (element?.props?.recharts as AnyRecord | undefined) || {};
   const tooltip = (element?.props?.tooltip as AnyRecord | undefined) || {};
   const legend = (element?.props?.legend as AnyRecord | undefined) || {};
