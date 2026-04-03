@@ -64,7 +64,7 @@ function buildComprasDashboardSource(themeName: string) {
                   ORDER BY 2 ASC
                 \`}
               >
-                <Select />
+                <OptionList />
               </Filter>
             </Card>
             </Panel>
@@ -91,7 +91,7 @@ function buildComprasDashboardSource(themeName: string) {
                   ORDER BY 2 ASC
                 \`}
               >
-                <Select />
+                <OptionList />
               </Filter>
             </Card>
             </Panel>
@@ -117,7 +117,7 @@ function buildComprasDashboardSource(themeName: string) {
                   ORDER BY 2 ASC
                 \`}
               >
-                <Select />
+                <OptionList />
               </Filter>
             </Card>
             </Panel>
