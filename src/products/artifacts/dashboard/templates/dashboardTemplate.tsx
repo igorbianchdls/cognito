@@ -646,33 +646,35 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 <p style={{ ...{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Receita por canal</p>
                 <h2 style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Mix comercial</h2>
               </div>
-              <Chart
-                type="bar"
-                height={300}
-                format="currency"
-                dataQuery={{
-                  query: \`
-                    SELECT
-                      COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
-                      COALESCE(cv.nome, '-') AS label,
-                      COALESCE(SUM(pi.subtotal), 0)::float AS value
-                    FROM vendas.pedidos p
-                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
-                    WHERE 1=1
-                      {{filters}}
-                    GROUP BY 1, 2
-                    ORDER BY 3 DESC
-                  \`,
-                  limit: 6,
-                }}
-                interaction={{ table: 'vendas.pedidos', field: 'canal_venda_id', clearOnSecondClick: true }}
-                xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
-                series={[
-                  { dataKey: 'value', label: 'Receita' },
-                ]}
-                yAxis={{ width: 72 }}
-              />
+              <div style={{ flex: 1, minHeight: 0 }}>
+                <Chart
+                  type="bar"
+                  height="100%"
+                  format="currency"
+                  dataQuery={{
+                    query: \`
+                      SELECT
+                        COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
+                        COALESCE(cv.nome, '-') AS label,
+                        COALESCE(SUM(pi.subtotal), 0)::float AS value
+                      FROM vendas.pedidos p
+                      JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                      LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                      WHERE 1=1
+                        {{filters}}
+                      GROUP BY 1, 2
+                      ORDER BY 3 DESC
+                    \`,
+                    limit: 6,
+                  }}
+                  interaction={{ table: 'vendas.pedidos', field: 'canal_venda_id', clearOnSecondClick: true }}
+                  xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
+                  series={[
+                    { dataKey: 'value', label: 'Receita' },
+                  ]}
+                  yAxis={{ width: 72 }}
+                />
+              </div>
             </Card>
             </Panel>
 
@@ -682,34 +684,36 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 <p style={{ ...{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Participacao</p>
                 <h2 style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Share por canal</h2>
               </div>
-              <Chart
-                type="pie"
-                height={300}
-                format="currency"
-                dataQuery={{
-                  query: \`
-                    SELECT
-                      COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
-                      COALESCE(cv.nome, '-') AS label,
-                      COALESCE(SUM(pi.subtotal), 0)::float AS value
-                    FROM vendas.pedidos p
-                    JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
-                    LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
-                    WHERE 1=1
-                      {{filters}}
-                    GROUP BY 1, 2
-                    ORDER BY 3 DESC
-                  \`,
-                  limit: 6,
-                }}
-                interaction={{ table: 'vendas.pedidos', field: 'canal_venda_id', clearOnSecondClick: true }}
-                categoryKey="label"
-                legend={{ enabled: true, position: 'right' }}
-                series={[
-                  { dataKey: 'value', label: 'Receita' },
-                ]}
-                recharts={{ innerRadius: 56, outerRadius: 96, showLabels: false }}
-              />
+              <div style={{ flex: 1, minHeight: 0 }}>
+                <Chart
+                  type="pie"
+                  height="100%"
+                  format="currency"
+                  dataQuery={{
+                    query: \`
+                      SELECT
+                        COALESCE(cv.id::text, COALESCE(cv.nome, '-')) AS key,
+                        COALESCE(cv.nome, '-') AS label,
+                        COALESCE(SUM(pi.subtotal), 0)::float AS value
+                      FROM vendas.pedidos p
+                      JOIN vendas.pedidos_itens pi ON pi.pedido_id = p.id
+                      LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+                      WHERE 1=1
+                        {{filters}}
+                      GROUP BY 1, 2
+                      ORDER BY 3 DESC
+                    \`,
+                    limit: 6,
+                  }}
+                  interaction={{ table: 'vendas.pedidos', field: 'canal_venda_id', clearOnSecondClick: true }}
+                  categoryKey="label"
+                  legend={{ enabled: true, position: 'right' }}
+                  series={[
+                    { dataKey: 'value', label: 'Receita' },
+                  ]}
+                  recharts={{ innerRadius: 56, outerRadius: 96, showLabels: false }}
+                />
+              </div>
             </Card>
             </Panel>
           </Horizontal>
@@ -817,28 +821,30 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 <p style={{ ...{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status mix</p>
                 <h2 style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Volume por status</h2>
               </div>
-              <Chart
-                type="horizontal-bar"
-                height={300}
-                format="number"
-                dataQuery={{
-                  query: \`
-                    SELECT
-                      COALESCE(p.status, 'Sem status') AS label,
-                      COUNT(*)::float AS value
-                    FROM vendas.pedidos p
-                    WHERE 1=1
-                      {{filters}}
-                    GROUP BY 1
-                    ORDER BY 2 DESC
-                  \`,
-                  limit: 8,
-                }}
-                xAxis={{ dataKey: 'label' }}
-                series={[
-                  { dataKey: 'value', label: 'Pedidos' },
-                ]}
-              />
+              <div style={{ flex: 1, minHeight: 0 }}>
+                <Chart
+                  type="horizontal-bar"
+                  height="100%"
+                  format="number"
+                  dataQuery={{
+                    query: \`
+                      SELECT
+                        COALESCE(p.status, 'Sem status') AS label,
+                        COUNT(*)::float AS value
+                      FROM vendas.pedidos p
+                      WHERE 1=1
+                        {{filters}}
+                      GROUP BY 1
+                      ORDER BY 2 DESC
+                    \`,
+                    limit: 8,
+                  }}
+                  xAxis={{ dataKey: 'label' }}
+                  series={[
+                    { dataKey: 'value', label: 'Pedidos' },
+                  ]}
+                />
+              </div>
             </Card>
             </Panel>
 
