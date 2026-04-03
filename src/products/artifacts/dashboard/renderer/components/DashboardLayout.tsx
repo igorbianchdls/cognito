@@ -14,6 +14,12 @@ type AnyRecord = Record<string, any>
 
 const AutoWidthGridLayout = WidthProvider(GridLayout)
 
+function isRenderableLayoutChild(child: React.ReactNode) {
+  if (child === null || child === undefined || child === false) return false
+  if (typeof child === 'string') return child.trim().length > 0
+  return true
+}
+
 export function DashboardVertical({
   element,
   children,
@@ -52,7 +58,7 @@ export function DashboardHorizontal({
   const editableLayout = React.useContext(DashboardLayoutEditContext)
   const props = (element?.props || {}) as AnyRecord
   const childNodes = Array.isArray(element?.children) ? element.children : []
-  const childArray = React.Children.toArray(children)
+  const childArray = React.Children.toArray(children).filter(isRenderableLayoutChild)
   const panelNodes = childNodes.filter((child: any) => child && typeof child === 'object' && child.type === 'Panel')
   const columns = Math.max(1, toNumericLayoutValue(props.columns, 12))
   const gap = toNumericLayoutValue(props.gap, 16)
@@ -78,6 +84,8 @@ export function DashboardHorizontal({
         String(panelNode?.props?.span ?? ''),
         String(panelNode?.props?.rows ?? ''),
         String(panelNode?.props?.minSpan ?? ''),
+        String(panelNode?.props?.x ?? ''),
+        String(panelNode?.props?.y ?? ''),
       ].join(':'),
     )
     .join('|')
@@ -194,7 +202,7 @@ export function DashboardGrid({
   const editableLayout = React.useContext(DashboardLayoutEditContext)
   const props = (element?.props || {}) as AnyRecord
   const childNodes = Array.isArray(element?.children) ? element.children : []
-  const childArray = React.Children.toArray(children)
+  const childArray = React.Children.toArray(children).filter(isRenderableLayoutChild)
   const panelNodes = childNodes.filter((child: any) => child && typeof child === 'object' && child.type === 'Panel')
   const columns = Math.max(1, toNumericLayoutValue(props.columns, 12))
   const gap = toNumericLayoutValue(props.gap, 16)
@@ -220,6 +228,8 @@ export function DashboardGrid({
         String(panelNode?.props?.span ?? ''),
         String(panelNode?.props?.rows ?? ''),
         String(panelNode?.props?.minSpan ?? ''),
+        String(panelNode?.props?.x ?? ''),
+        String(panelNode?.props?.y ?? ''),
       ].join(':'),
     )
     .join('|')
@@ -325,8 +335,30 @@ export function DashboardGrid({
                 key={String(panelNode?.props?.id || `panel-${index}`)}
                 style={{
                   minWidth: 0,
-                  gridColumn: `span ${span}`,
-                  ...(rows ? { gridRow: `span ${rows}`, minHeight: rows * rowHeight + Math.max(rows - 1, 0) * gap } : {}),
+                  gridColumn: `${
+                    (() => {
+                      const rawX = panelNode?.props?.x
+                      const hasX = !(rawX === undefined || rawX === null || String(rawX).trim() === '')
+                      if (!hasX) return `span ${span}`
+                      const x = Math.max(0, Math.min(columns - 1, toNumericLayoutValue(rawX, 0)))
+                      return `${x + 1} / span ${Math.min(span, columns - x || columns)}`
+                    })()
+                  }`,
+                  ...(() => {
+                    const rawY = panelNode?.props?.y
+                    const hasY = !(rawY === undefined || rawY === null || String(rawY).trim() === '')
+                    if (!rows && !hasY) return {}
+                    const base: Record<string, string | number> = {}
+                    if (hasY) {
+                      const y = Math.max(0, toNumericLayoutValue(rawY, 0))
+                      base.gridRowStart = y + 1
+                    }
+                    if (rows) {
+                      base.gridRowEnd = `span ${rows}`
+                      base.minHeight = rows * rowHeight + Math.max(rows - 1, 0) * gap
+                    }
+                    return base
+                  })(),
                 }}
               >
                 {childArray[index] ?? null}

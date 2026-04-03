@@ -29,6 +29,24 @@ export function buildPanelLayout(panelNodes: AnyRecord[], cols: number): Layout[
   return panelNodes.map((panelNode, index) => {
     const span = Math.max(1, Math.min(safeCols, toNumericLayoutValue(panelNode?.props?.span, fallbackSpan)))
     const rows = Math.max(1, toNumericLayoutValue(panelNode?.props?.rows, 1))
+    const rawX = panelNode?.props?.x
+    const rawY = panelNode?.props?.y
+    const hasExplicitX = !(rawX === undefined || rawX === null || String(rawX).trim() === '')
+    const hasExplicitY = !(rawY === undefined || rawY === null || String(rawY).trim() === '')
+
+    if (hasExplicitX || hasExplicitY) {
+      const x = Math.max(0, Math.min(safeCols - 1, toNumericLayoutValue(rawX, 0)))
+      const y = Math.max(0, toNumericLayoutValue(rawY, 0))
+      return {
+        i: String(panelNode?.props?.id || `panel-${index}`),
+        x,
+        y,
+        w: Math.min(span, safeCols - x || safeCols),
+        h: rows,
+        minW: Math.max(1, toNumericLayoutValue(panelNode?.props?.minSpan, 2)),
+        minH: 1,
+      }
+    }
 
     if (nextX + span > safeCols) {
       nextX = 0
