@@ -6,6 +6,7 @@ import { ArtifactPreviewStage } from '@/products/artifacts/core/workspace/compon
 import type { ArtifactCodeFile } from '@/products/artifacts/core/workspace/types'
 import { parseDashboardJsxToTree } from '@/products/artifacts/dashboard/parser/dashboardJsxParser'
 import { DashboardRenderer } from '@/products/artifacts/dashboard/renderer/dashboardRenderer'
+import { movePanelBetweenContainers } from '@/products/artifacts/dashboard/renderer/components/dashboardLayoutTree'
 
 export function DashboardWorkspacePreview({
   sourcePath,
@@ -42,6 +43,13 @@ export function DashboardWorkspacePreview({
     }
   }, [sourcePath, files])
 
+  function handleStructuralMove(sourcePathIndices: number[], targetPathIndices: number[], targetType: 'vertical' | 'horizontal') {
+    setTree((currentTree: any) => {
+      if (!currentTree || typeof currentTree !== 'object') return currentTree
+      return movePanelBetweenContainers(currentTree, sourcePathIndices, targetPathIndices, targetType)
+    })
+  }
+
   return (
     <ArtifactPreviewStage zoom={zoom} contentClassName="min-w-[1120px] overflow-hidden rounded-none bg-white p-0 shadow-[0_2px_6px_rgba(15,23,42,0.05)]">
       {error ? (
@@ -49,7 +57,7 @@ export function DashboardWorkspacePreview({
           {error}
         </div>
       ) : tree ? (
-        <DashboardRenderer tree={tree} editableLayout />
+        <DashboardRenderer tree={tree} editableLayout onStructuralMove={handleStructuralMove} />
       ) : (
         <div className="p-6 text-sm text-gray-500">Compilando preview...</div>
       )}

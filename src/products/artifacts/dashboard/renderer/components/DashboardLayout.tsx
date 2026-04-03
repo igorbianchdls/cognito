@@ -14,6 +14,49 @@ type AnyRecord = Record<string, any>
 
 const AutoWidthGridLayout = WidthProvider(GridLayout)
 
+function getPathKey(path: number[] | undefined) {
+  return Array.isArray(path) && path.length > 0 ? path.join('.') : 'root'
+}
+
+function getElementPath(element: any) {
+  const raw = element?.props?.__path
+  return Array.isArray(raw) ? raw.filter((value) => typeof value === 'number') : []
+}
+
+function createDropHandlers(
+  layoutEdit: React.ContextType<typeof DashboardLayoutEditContext>,
+  path: number[],
+  targetType: 'vertical' | 'horizontal',
+) {
+  if (!layoutEdit.enabled) return {}
+  const targetKey = `${targetType}:${getPathKey(path)}`
+  return {
+    onDragEnter: (event: React.DragEvent) => {
+      if (!layoutEdit.structuralDrag) return
+      event.preventDefault()
+      event.stopPropagation()
+      layoutEdit.setHoverTargetKey(targetKey)
+    },
+    onDragOver: (event: React.DragEvent) => {
+      if (!layoutEdit.structuralDrag) return
+      event.preventDefault()
+      event.stopPropagation()
+      layoutEdit.setHoverTargetKey(targetKey)
+    },
+    onDragLeave: (event: React.DragEvent) => {
+      if (!layoutEdit.structuralDrag) return
+      event.stopPropagation()
+      if (layoutEdit.hoverTargetKey === targetKey) layoutEdit.setHoverTargetKey(null)
+    },
+    onDrop: (event: React.DragEvent) => {
+      if (!layoutEdit.structuralDrag) return
+      event.preventDefault()
+      event.stopPropagation()
+      layoutEdit.movePanelToContainer(path, targetType)
+    },
+  }
+}
+
 function isRenderableLayoutChild(child: React.ReactNode) {
   if (child === null || child === undefined || child === false) return false
   if (typeof child === 'string') return child.trim().length > 0
@@ -27,9 +70,14 @@ export function DashboardVertical({
   element: any
   children?: React.ReactNode
 }) {
+  const layoutEdit = React.useContext(DashboardLayoutEditContext)
   const props = (element?.props || {}) as AnyRecord
+  const path = getElementPath(element)
+  const targetKey = `vertical:${getPathKey(path)}`
+  const structuralActive = layoutEdit.enabled && layoutEdit.hoverTargetKey === targetKey && Boolean(layoutEdit.structuralDrag)
   return (
     <div
+      {...createDropHandlers(layoutEdit, path, 'vertical')}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -40,6 +88,8 @@ export function DashboardVertical({
         padding: styleDimension(props.padding),
         width: styleDimension(props.width),
         maxWidth: styleDimension(props.maxWidth),
+        outline: structuralActive ? '2px solid rgba(37,99,235,0.45)' : undefined,
+        backgroundColor: structuralActive ? 'rgba(37,99,235,0.05)' : undefined,
         ...(props.style && typeof props.style === 'object' ? props.style : {}),
       }}
     >
@@ -55,8 +105,12 @@ export function DashboardHorizontal({
   element: any
   children?: React.ReactNode
 }) {
-  const editableLayout = React.useContext(DashboardLayoutEditContext)
+  const layoutEdit = React.useContext(DashboardLayoutEditContext)
+  const editableLayout = layoutEdit.enabled
   const props = (element?.props || {}) as AnyRecord
+  const path = getElementPath(element)
+  const targetKey = `horizontal:${getPathKey(path)}`
+  const structuralActive = editableLayout && layoutEdit.hoverTargetKey === targetKey && Boolean(layoutEdit.structuralDrag)
   const childNodes = Array.isArray(element?.children) ? element.children : []
   const childArray = React.Children.toArray(children).filter(isRenderableLayoutChild)
   const panelNodes = childNodes.filter((child: any) => child && typeof child === 'object' && child.type === 'Panel')
@@ -130,11 +184,14 @@ export function DashboardHorizontal({
 
     return (
       <div
+        {...createDropHandlers(layoutEdit, path, 'horizontal')}
         style={{
           minWidth: 0,
           width: styleDimension(props.width),
           maxWidth: styleDimension(props.maxWidth),
           padding: styleDimension(props.padding),
+          outline: structuralActive ? '2px solid rgba(37,99,235,0.45)' : undefined,
+          backgroundColor: structuralActive ? 'rgba(37,99,235,0.05)' : undefined,
           ...(props.style && typeof props.style === 'object' ? props.style : {}),
         }}
       >
@@ -172,21 +229,24 @@ export function DashboardHorizontal({
   }
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'row',
-        minWidth: 0,
+      <div
+        {...createDropHandlers(layoutEdit, path, 'horizontal')}
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          minWidth: 0,
         gap,
         alignItems: typeof props.align === 'string' ? props.align : undefined,
         justifyContent: typeof props.justify === 'string' ? props.justify : undefined,
-        flexWrap: props.wrap === true || props.wrap === 'true' ? 'wrap' : 'nowrap',
-        padding: styleDimension(props.padding),
-        width: styleDimension(props.width),
-        maxWidth: styleDimension(props.maxWidth),
-        ...(props.style && typeof props.style === 'object' ? props.style : {}),
-      }}
-    >
+          flexWrap: props.wrap === true || props.wrap === 'true' ? 'wrap' : 'nowrap',
+          padding: styleDimension(props.padding),
+          width: styleDimension(props.width),
+          maxWidth: styleDimension(props.maxWidth),
+          outline: structuralActive ? '2px solid rgba(37,99,235,0.45)' : undefined,
+          backgroundColor: structuralActive ? 'rgba(37,99,235,0.05)' : undefined,
+          ...(props.style && typeof props.style === 'object' ? props.style : {}),
+        }}
+      >
       {children}
     </div>
   )
@@ -199,7 +259,8 @@ export function DashboardGrid({
   element: any
   children?: React.ReactNode
 }) {
-  const editableLayout = React.useContext(DashboardLayoutEditContext)
+  const layoutEdit = React.useContext(DashboardLayoutEditContext)
+  const editableLayout = layoutEdit.enabled
   const props = (element?.props || {}) as AnyRecord
   const childNodes = Array.isArray(element?.children) ? element.children : []
   const childArray = React.Children.toArray(children).filter(isRenderableLayoutChild)
@@ -377,8 +438,15 @@ export function DashboardPanel({
   element: any
   children?: React.ReactNode
 }) {
-  const editableLayout = React.useContext(DashboardLayoutEditContext)
+  const layoutEdit = React.useContext(DashboardLayoutEditContext)
+  const editableLayout = layoutEdit.enabled
   const props = (element?.props || {}) as AnyRecord
+  const path = getElementPath(element)
+  const panelId =
+    typeof props.id === 'string' && props.id.trim()
+      ? props.id.trim()
+      : `panel-${getPathKey(path)}`
+  const span = Math.max(1, toNumericLayoutValue(props.span, 1))
   const grow =
     typeof props.grow === 'number'
       ? props.grow
@@ -389,6 +457,7 @@ export function DashboardPanel({
   return (
     <div
       style={{
+        position: 'relative',
         display: 'flex',
         flexDirection: 'column',
         flexGrow: Number.isFinite(grow as number) ? (grow as number) : undefined,
@@ -403,6 +472,36 @@ export function DashboardPanel({
         ...(props.style && typeof props.style === 'object' ? props.style : {}),
       }}
     >
+      {editableLayout ? (
+        <button
+          type="button"
+          draggable
+          onDragStart={(event) => {
+            layoutEdit.startStructuralDrag({ panelId, panelPath: path, span })
+            event.dataTransfer.effectAllowed = 'move'
+            event.dataTransfer.setData('text/plain', panelId)
+          }}
+          onDragEnd={() => layoutEdit.endStructuralDrag()}
+          style={{
+            position: 'absolute',
+            top: 8,
+            right: 8,
+            zIndex: 3,
+            border: '1px solid rgba(148,163,184,0.5)',
+            backgroundColor: 'rgba(255,255,255,0.92)',
+            color: '#334155',
+            borderRadius: 999,
+            fontSize: 11,
+            lineHeight: 1,
+            padding: '6px 8px',
+            cursor: 'grab',
+          }}
+          title="Mover painel para outro container"
+          aria-label="Mover painel para outro container"
+        >
+          mover bloco
+        </button>
+      ) : null}
       <div
         style={{
           display: 'flex',

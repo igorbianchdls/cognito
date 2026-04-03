@@ -423,6 +423,17 @@ function RenderDashboardNode({
     )
   }
 
+  const shouldAttachLayoutPath = type === 'Grid' || type === 'Vertical' || type === 'Horizontal' || type === 'Panel'
+  const element = shouldAttachLayoutPath
+    ? {
+        ...node,
+        props: {
+          ...((node?.props && typeof node.props === 'object') ? node.props : {}),
+          __path: path,
+        },
+      }
+    : node
+
   const children = Array.isArray(node.children)
     ? node.children.map((child: any, index: number) => (
         <RenderDashboardNode
@@ -436,7 +447,7 @@ function RenderDashboardNode({
     : null
 
   return (
-    <Component element={node} data={data} onAction={onAction}>
+    <Component element={element} data={data} onAction={onAction}>
       {children}
     </Component>
   )
@@ -447,15 +458,40 @@ export function DashboardRenderer({
   data,
   onAction,
   editableLayout = false,
+  onStructuralMove,
 }: {
   tree: any
   data?: AnyRecord
   onAction?: (action: any) => void
   editableLayout?: boolean
+  onStructuralMove?: (sourcePath: number[], targetPath: number[], targetType: 'vertical' | 'horizontal') => void
 }) {
+  const [structuralDrag, setStructuralDrag] = React.useState<{ panelId: string; panelPath: number[]; span: number } | null>(null)
+  const [hoverTargetKey, setHoverTargetKey] = React.useState<string | null>(null)
+  const layoutEditValue = React.useMemo(
+    () => ({
+      enabled: editableLayout,
+      structuralDrag,
+      hoverTargetKey,
+      startStructuralDrag: (drag: { panelId: string; panelPath: number[]; span: number }) => setStructuralDrag(drag),
+      endStructuralDrag: () => {
+        setStructuralDrag(null)
+        setHoverTargetKey(null)
+      },
+      setHoverTargetKey,
+      movePanelToContainer: (targetPath: number[], targetType: 'vertical' | 'horizontal') => {
+        if (!structuralDrag || !onStructuralMove) return
+        onStructuralMove(structuralDrag.panelPath, targetPath, targetType)
+        setStructuralDrag(null)
+        setHoverTargetKey(null)
+      },
+    }),
+    [editableLayout, hoverTargetKey, onStructuralMove, structuralDrag],
+  )
+
   if (Array.isArray(tree)) {
     return (
-      <DashboardLayoutEditContext.Provider value={editableLayout}>
+      <DashboardLayoutEditContext.Provider value={layoutEditValue}>
         {tree.map((node, index) => (
           <RenderDashboardNode key={getNodeKey(node, index, [index])} node={node} data={data} onAction={onAction} path={[index]} />
         ))}
@@ -464,7 +500,7 @@ export function DashboardRenderer({
   }
 
   return (
-    <DashboardLayoutEditContext.Provider value={editableLayout}>
+    <DashboardLayoutEditContext.Provider value={layoutEditValue}>
       <RenderDashboardNode node={tree} data={data} onAction={onAction} path={[]} />
     </DashboardLayoutEditContext.Provider>
   )
