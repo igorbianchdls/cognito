@@ -101,7 +101,7 @@ export function DashboardHorizontal({
           isDraggable
           isResizable
           draggableHandle=".dashboard-panel-drag-handle"
-          resizeHandles={['e']}
+          resizeHandles={['e', 's', 'se']}
           onLayoutChange={(nextLayout) => setLayout(nextLayout)}
         >
           {layout.map((item) => (

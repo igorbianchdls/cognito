@@ -261,6 +261,9 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   color: #475569;
   cursor: grab;
   user-select: none;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms ease;
 }
 
 .dashboard-panel-drag-handle:active {
@@ -276,6 +279,9 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   display: block;
   box-sizing: border-box;
   z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms ease;
 }
 
 .react-resizable-handle-e {
@@ -284,6 +290,30 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   width: 12px;
   height: 100%;
   cursor: ew-resize;
+}
+
+.react-resizable-handle-s {
+  left: 0;
+  bottom: -6px;
+  width: 100%;
+  height: 12px;
+  cursor: ns-resize;
+}
+
+.react-resizable-handle-se {
+  right: -6px;
+  bottom: -6px;
+  width: 14px;
+  height: 14px;
+  cursor: nwse-resize;
+}
+
+.dashboard-panel-edit-shell:hover .dashboard-panel-drag-handle,
+.dashboard-panel-edit-shell:hover .react-resizable-handle,
+.dashboard-panel-edit-shell:focus-within .dashboard-panel-drag-handle,
+.dashboard-panel-edit-shell:focus-within .react-resizable-handle {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 /* AG Grid: Using Theming API (themeQuartz) - no CSS imports needed */
