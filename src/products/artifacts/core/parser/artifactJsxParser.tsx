@@ -103,9 +103,11 @@ function wrapArtifactRootSource(source: string) {
     const themeTagSource = themeTagMatch?.[0] || ''
     const dashboardThemeMatch = cleanSource.match(/<Dashboard\b[^>]*\btheme="([^"]+)"/)
     const dashboardPaletteMatch = cleanSource.match(/<Dashboard\b[^>]*\bchartPalette="([^"]+)"/)
+    const dashboardBorderPresetMatch = cleanSource.match(/<Dashboard\b[^>]*\bborderPreset="([^"]+)"/)
     const themeNameMatch = themeTagSource.match(/\bname="([^"]+)"/)
     const themePaletteMatch = themeTagSource.match(/\bchartPalette="([^"]+)"/)
     const resolvedThemeName = dashboardThemeMatch?.[1]?.trim() || themeNameMatch?.[1]?.trim() || 'light'
+    const resolvedBorderPreset = dashboardBorderPresetMatch?.[1]?.trim() || 'theme_default'
     let dashboardSource = themeTagMatch ? cleanSource.replace(themeTagSource, '').trim() : cleanSource
 
     if (!dashboardThemeMatch?.[1]?.trim()) {
@@ -118,7 +120,7 @@ function wrapArtifactRootSource(source: string) {
     }
 
     return `export default function __ArtifactEntry() {
-  const theme = __resolveDashboardThemeTokens(${JSON.stringify(resolvedThemeName)})
+  const theme = __resolveDashboardThemeTokens(${JSON.stringify(resolvedThemeName)}, ${JSON.stringify(resolvedBorderPreset)})
 
   return (
     ${dashboardSource}

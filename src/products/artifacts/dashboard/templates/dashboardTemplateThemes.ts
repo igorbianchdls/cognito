@@ -1,5 +1,7 @@
 'use client'
 
+import { resolveDashboardBorderFramePreset, type DashboardBorderPreset } from '@/products/artifacts/dashboard/borderPresets'
+
 export type DashboardTemplateThemeTokens = {
   dark: boolean
   cardFrame: {
@@ -320,14 +322,21 @@ export const DASHBOARD_TEMPLATE_THEME_TOKENS: Record<string, DashboardTemplateTh
   },
 }
 
-export function resolveDashboardTemplateThemeTokens(themeName: string): DashboardTemplateThemeTokens {
+export function resolveDashboardTemplateThemeTokens(
+  themeName: string,
+  borderPreset?: DashboardBorderPreset | string,
+): DashboardTemplateThemeTokens {
   const key = String(themeName || 'light').trim().toLowerCase()
   const aliases: Record<string, string> = {
     white: 'light',
     claro: 'light',
     branco: 'light',
   }
-  return DASHBOARD_TEMPLATE_THEME_TOKENS[aliases[key] || key] || DASHBOARD_TEMPLATE_THEME_TOKENS.light
+  const resolved = DASHBOARD_TEMPLATE_THEME_TOKENS[aliases[key] || key] || DASHBOARD_TEMPLATE_THEME_TOKENS.light
+  return {
+    ...resolved,
+    cardFrame: resolveDashboardBorderFramePreset(borderPreset, resolved.cardFrame),
+  }
 }
 
 export function buildDashboardThemeTokensFileSource() {

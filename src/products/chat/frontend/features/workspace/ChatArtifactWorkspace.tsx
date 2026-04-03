@@ -15,10 +15,13 @@ import {
   DASHBOARD_CHART_PALETTE_OPTIONS,
   getDashboardChartPaletteValueFromColors,
 } from '@/products/artifacts/dashboard/chartPalettes'
+import { DASHBOARD_BORDER_PRESET_OPTIONS } from '@/products/artifacts/dashboard/borderPresets'
 import {
+  getDashboardBorderPresetFromSource,
   getDashboardChartColorsFromSource,
   getDashboardChartPaletteNameFromSource,
   getDashboardThemeNameFromSource,
+  replaceDashboardBorderPresetInSource,
   replaceDashboardChartPaletteNameInSource,
   replaceDashboardThemeNameInSource,
 } from '@/products/artifacts/dashboard/parser/dashboardJsxParser'
@@ -101,6 +104,8 @@ export function ChatArtifactWorkspace({
   const [themeModalBaseName, setThemeModalBaseName] = useState('light')
   const [draftChartPalette, setDraftChartPalette] = useState(DASHBOARD_CHART_PALETTE_OPTIONS[0].value)
   const [chartPaletteBaseName, setChartPaletteBaseName] = useState(DASHBOARD_CHART_PALETTE_OPTIONS[0].value)
+  const [draftBorderPreset, setDraftBorderPreset] = useState(DASHBOARD_BORDER_PRESET_OPTIONS[0].value)
+  const [borderPresetBaseName, setBorderPresetBaseName] = useState(DASHBOARD_BORDER_PRESET_OPTIONS[0].value)
   const [dashboardSource, setDashboardSource] = useState('')
   const [themeBusy, setThemeBusy] = useState(false)
 
@@ -124,10 +129,13 @@ export function ChatArtifactWorkspace({
           || getDashboardChartPaletteValueFromColors(
             getDashboardChartColorsFromSource(source, DASHBOARD_CHART_PALETTE_OPTIONS[0].colors),
           )
+        const borderPreset = getDashboardBorderPresetFromSource(source, DASHBOARD_BORDER_PRESET_OPTIONS[0].value)
         setThemeModalBaseName(themeName)
         setDraftThemeName(themeName)
         setChartPaletteBaseName(paletteName)
         setDraftChartPalette(paletteName)
+        setBorderPresetBaseName(borderPreset)
+        setDraftBorderPreset(borderPreset)
       } catch {
         if (!cancelled) setDashboardSource('')
       }
@@ -139,11 +147,14 @@ export function ChatArtifactWorkspace({
     }
   }, [chatId, isDashboardArtifact, previewPath])
 
-  async function applyDashboardAppearance(themeName: string, chartPaletteValue: string) {
+  async function applyDashboardAppearance(themeName: string, chartPaletteValue: string, borderPreset: string) {
     if (!chatId || !previewPath || !isDashboardArtifact) return
-    const nextContent = replaceDashboardChartPaletteNameInSource(
-      replaceDashboardThemeNameInSource(dashboardSource, themeName),
-      chartPaletteValue,
+    const nextContent = replaceDashboardBorderPresetInSource(
+      replaceDashboardChartPaletteNameInSource(
+        replaceDashboardThemeNameInSource(dashboardSource, themeName),
+        chartPaletteValue,
+      ),
+      borderPreset,
     )
     setThemeBusy(true)
     try {
@@ -238,35 +249,48 @@ export function ChatArtifactWorkspace({
       <DashboardThemeModal
         isOpen={themeModalOpen}
         onClose={() => {
-          void applyDashboardAppearance(themeModalBaseName, chartPaletteBaseName)
+          void applyDashboardAppearance(themeModalBaseName, chartPaletteBaseName, borderPresetBaseName)
           setDraftThemeName(themeModalBaseName)
           setDraftChartPalette(chartPaletteBaseName)
+          setDraftBorderPreset(borderPresetBaseName)
           setThemeModalOpen(false)
         }}
         onConfirm={() => {
           setThemeModalBaseName(draftThemeName)
           setChartPaletteBaseName(draftChartPalette)
+          setBorderPresetBaseName(draftBorderPreset)
           setThemeModalOpen(false)
         }}
         onRevert={() => {
-          void applyDashboardAppearance(themeModalBaseName, chartPaletteBaseName)
+          void applyDashboardAppearance(themeModalBaseName, chartPaletteBaseName, borderPresetBaseName)
           setDraftThemeName(themeModalBaseName)
           setDraftChartPalette(chartPaletteBaseName)
+          setDraftBorderPreset(borderPresetBaseName)
         }}
         mode={appearanceMode}
         onModeChange={setAppearanceMode}
         onSelect={(themeName) => {
           setDraftThemeName(themeName)
-          void applyDashboardAppearance(themeName, draftChartPalette)
+          void applyDashboardAppearance(themeName, draftChartPalette, draftBorderPreset)
         }}
         onSelectChartPalette={(paletteValue) => {
           setDraftChartPalette(paletteValue)
-          void applyDashboardAppearance(draftThemeName, paletteValue)
+          void applyDashboardAppearance(draftThemeName, paletteValue, draftBorderPreset)
+        }}
+        onSelectBorderPreset={(borderPreset) => {
+          setDraftBorderPreset(borderPreset)
+          void applyDashboardAppearance(draftThemeName, draftChartPalette, borderPreset)
         }}
         selectedTheme={draftThemeName}
         selectedChartPalette={draftChartPalette}
+        selectedBorderPreset={draftBorderPreset}
         chartPalettes={DASHBOARD_CHART_PALETTE_OPTIONS}
-        revertDisabled={draftThemeName === themeModalBaseName && draftChartPalette === chartPaletteBaseName}
+        borderPresets={DASHBOARD_BORDER_PRESET_OPTIONS}
+        revertDisabled={
+          draftThemeName === themeModalBaseName
+          && draftChartPalette === chartPaletteBaseName
+          && draftBorderPreset === borderPresetBaseName
+        }
         themes={APPS_THEME_OPTIONS}
       />
     </>

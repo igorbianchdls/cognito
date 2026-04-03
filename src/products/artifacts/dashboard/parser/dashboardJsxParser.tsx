@@ -48,6 +48,16 @@ export function getDashboardThemeNameFromSource(source: string, fallback = 'ligh
   return fallback
 }
 
+export function getDashboardBorderPresetFromSource(source: string, fallback = 'theme_default') {
+  const dashboardBorderMatch = String(source || '').match(/<Dashboard\b[^>]*\bborderPreset="([^"]+)"/)
+  if (dashboardBorderMatch?.[1]?.trim()) return dashboardBorderMatch[1].trim()
+
+  const borderConstMatch = String(source || '').match(/const\s+BORDER_PRESET\s*=\s*['"]([^'"]+)['"]/)
+  if (borderConstMatch?.[1]?.trim()) return borderConstMatch[1].trim()
+
+  return fallback
+}
+
 export function replaceDashboardThemeNameInSource(source: string, nextThemeName: string) {
   const cleanSource = String(source || '')
   const normalizedThemeName = String(nextThemeName || '').trim()
@@ -89,6 +99,35 @@ export function replaceDashboardThemeNameInSource(source: string, nextThemeName:
     nextSource = nextSource.replace(
       /const\s+THEME_NAME\s*=\s*['"][^'"]+['"]/,
       `const THEME_NAME = '${normalizedThemeName}'`,
+    )
+  }
+
+  return nextSource
+}
+
+export function replaceDashboardBorderPresetInSource(source: string, nextBorderPreset: string) {
+  const cleanSource = String(source || '')
+  const normalizedBorderPreset = String(nextBorderPreset || '').trim()
+  if (!normalizedBorderPreset) return cleanSource
+
+  let nextSource = cleanSource
+
+  if (/<Dashboard\b[^>]*\bborderPreset=/.test(nextSource)) {
+    nextSource = nextSource.replace(
+      /<Dashboard\b([^>]*)\bborderPreset=(?:"[^"]*"|\{'[^']*'\}|\{"[^"]*"\})/,
+      `<Dashboard$1borderPreset="${normalizedBorderPreset}"`,
+    )
+  } else if (/<Dashboard\b/.test(nextSource)) {
+    nextSource = nextSource.replace(
+      /<Dashboard\b/,
+      `<Dashboard borderPreset="${normalizedBorderPreset}"`,
+    )
+  }
+
+  if (/const\s+BORDER_PRESET\s*=/.test(cleanSource)) {
+    nextSource = nextSource.replace(
+      /const\s+BORDER_PRESET\s*=\s*['"][^'"]+['"]/,
+      `const BORDER_PRESET = '${normalizedBorderPreset}'`,
     )
   }
 

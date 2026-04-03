@@ -13,6 +13,7 @@ import { registry as biRegistry } from '@/products/bi/json-render/registry'
 import { mapManagersToCssVars } from '@/products/bi/json-render/theme/thememanagers'
 import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter'
 import { ThemeProvider, useSemanticUiStyle } from '@/products/bi/json-render/theme/ThemeContext'
+import { resolveDashboardBorderRadiusPreset } from '@/products/artifacts/dashboard/borderPresets'
 import DashboardDatePicker from '@/products/artifacts/dashboard/renderer/components/DashboardDatePicker'
 import DashboardInsights from '@/products/artifacts/dashboard/renderer/components/DashboardInsights'
 import { DashboardGrid, DashboardHorizontal, DashboardPanel, DashboardVertical } from '@/products/artifacts/dashboard/renderer/components/DashboardLayout'
@@ -105,12 +106,14 @@ function DashboardRoot({ children }: { children?: React.ReactNode }) {
 function renderDashboardThemeLayer({
   themeName,
   chartPaletteName,
+  borderPreset,
   headerTheme,
   managers,
   children,
 }: {
   themeName?: string
   chartPaletteName?: string
+  borderPreset?: string
   headerTheme?: string
   managers?: AnyRecord
   children?: React.ReactNode
@@ -121,7 +124,7 @@ function renderDashboardThemeLayer({
       ? String(chartPaletteName).trim().toLowerCase()
       : DASHBOARD_DEFAULT_CHART_PALETTE
   const preset = buildThemeVars(name, (managers || {}) as any, { headerTheme })
-  const themeTokens = resolveDashboardTemplateThemeTokens(name || 'light')
+  const themeTokens = resolveDashboardTemplateThemeTokens(name || 'light', borderPreset)
   const baseCssVars = preset.cssVars || mapManagersToCssVars((managers || {}) as any)
   const cssVars: Record<string, string> = {
     ...baseCssVars,
@@ -132,9 +135,11 @@ function renderDashboardThemeLayer({
     baseCssVars.containerFrameCornerSize || (themeTokens.cardFrame ? String(themeTokens.cardFrame.cornerSize) : undefined)
   const containerFrameCornerWidth =
     baseCssVars.containerFrameCornerWidth || (themeTokens.cardFrame ? String(themeTokens.cardFrame.cornerWidth) : undefined)
+  const containerRadius = resolveDashboardBorderRadiusPreset(borderPreset, themeTokens.cardFrame ? 0 : 24)
   if (containerFrameVariant) cssVars.containerFrameVariant = containerFrameVariant
   if (containerFrameCornerSize) cssVars.containerFrameCornerSize = containerFrameCornerSize
   if (containerFrameCornerWidth) cssVars.containerFrameCornerWidth = containerFrameCornerWidth
+  cssVars.containerRadius = String(containerRadius)
 
   return (
     <ThemeProvider name={name} cssVars={cssVars}>
@@ -158,6 +163,7 @@ function DashboardTheme({ element, children }: { element: any; children?: React.
   return renderDashboardThemeLayer({
     themeName: typeof props.name === 'string' ? props.name : undefined,
     chartPaletteName: typeof props.chartPalette === 'string' ? props.chartPalette : undefined,
+    borderPreset: typeof props.borderPreset === 'string' ? props.borderPreset : undefined,
     headerTheme: typeof props.headerTheme === 'string' ? props.headerTheme : undefined,
     managers: (props.managers || {}) as AnyRecord,
     children,
@@ -185,6 +191,7 @@ function DashboardSurface({ element, children }: { element: any; children?: Reac
     return renderDashboardThemeLayer({
       themeName: props.theme,
       chartPaletteName: typeof props.chartPalette === 'string' ? props.chartPalette : undefined,
+      borderPreset: typeof props.borderPreset === 'string' ? props.borderPreset : undefined,
       headerTheme: typeof props.headerTheme === 'string' ? props.headerTheme : undefined,
       managers: (props.managers || {}) as AnyRecord,
       children: content,

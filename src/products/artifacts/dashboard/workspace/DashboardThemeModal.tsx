@@ -2,8 +2,9 @@
 
 import type { ThemeOption } from '@/products/bi/shared/themeOptions'
 import type { DashboardChartPaletteOption } from '@/products/artifacts/dashboard/chartPalettes'
+import type { DashboardBorderPresetOption } from '@/products/artifacts/dashboard/borderPresets'
 
-export type DashboardAppearanceMode = 'theme' | 'colors'
+export type DashboardAppearanceMode = 'theme' | 'colors' | 'border'
 
 function getThemePreviewStyle(theme: string) {
   const styles: Record<string, { background: string; accent: string; border: string; title: string }> = {
@@ -87,10 +88,13 @@ interface DashboardThemeModalProps {
   onModeChange: (mode: DashboardAppearanceMode) => void
   onSelect: (themeValue: string) => void
   onSelectChartPalette: (paletteValue: string) => void
+  onSelectBorderPreset: (borderPresetValue: string) => void
   revertDisabled?: boolean
   selectedTheme: string
   selectedChartPalette: string
+  selectedBorderPreset: string
   chartPalettes: DashboardChartPaletteOption[]
+  borderPresets: DashboardBorderPresetOption[]
   themes: ThemeOption[]
 }
 
@@ -103,10 +107,13 @@ export function DashboardThemeModal({
   onModeChange,
   onSelect,
   onSelectChartPalette,
+  onSelectBorderPreset,
   revertDisabled = false,
   selectedTheme,
   selectedChartPalette,
+  selectedBorderPreset,
   chartPalettes,
+  borderPresets,
   themes,
 }: DashboardThemeModalProps) {
   if (!isOpen) return null
@@ -116,7 +123,11 @@ export function DashboardThemeModal({
       <div className="w-full max-w-[860px] rounded-[24px] bg-white p-6 shadow-[0_20px_80px_rgba(0,0,0,0.28)]">
         <div className="mb-5 flex items-start justify-between">
           <div className="text-[28px] font-semibold tracking-[-0.03em] text-[#111111]">
-            {mode === 'theme' ? 'Selecionar um tema' : 'Selecionar cores do chart'}
+            {mode === 'theme'
+              ? 'Selecionar um tema'
+              : mode === 'colors'
+                ? 'Selecionar cores do chart'
+                : 'Selecionar uma borda'}
           </div>
           <button
             type="button"
@@ -145,6 +156,15 @@ export function DashboardThemeModal({
             }`}
           >
             Cores
+          </button>
+          <button
+            type="button"
+            onClick={() => onModeChange('border')}
+            className={`rounded-[12px] px-4 py-2 text-[14px] font-medium tracking-[-0.02em] transition ${
+              mode === 'border' ? 'bg-white text-[#111111] shadow-sm' : 'text-[#6a6a67] hover:text-[#111111]'
+            }`}
+          >
+            Borda
           </button>
         </div>
 
@@ -209,7 +229,7 @@ export function DashboardThemeModal({
               )
             })}
           </div>
-        ) : (
+        ) : mode === 'colors' ? (
           <div className="grid grid-cols-3 gap-x-4 gap-y-5">
             {chartPalettes.map((palette) => {
               const isSelected = selectedChartPalette === palette.value
@@ -236,6 +256,53 @@ export function DashboardThemeModal({
                       ))}
                     </div>
                     <div className="text-[15px] font-medium tracking-[-0.02em] text-[#111111]">{palette.label}</div>
+                    {isSelected ? (
+                      <div className="absolute inset-x-0 bottom-0 h-[4px] bg-[#0075E2]" />
+                    ) : null}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-x-4 gap-y-5">
+            {borderPresets.map((preset) => {
+              const isSelected = selectedBorderPreset === preset.value
+              const isHud = preset.value === 'theme_default' || preset.value === 'hud_bold'
+              const borderRadius = isHud ? 0 : 16
+              const cornerStroke = preset.value === 'hud_bold' ? 2 : 1
+
+              return (
+                <button
+                  key={preset.value}
+                  type="button"
+                  onClick={() => onSelectBorderPreset(preset.value)}
+                  className="text-left"
+                >
+                  <div
+                    className={`relative overflow-hidden rounded-[14px] border bg-white p-4 transition ${
+                      isSelected ? 'border-[#0075E2] shadow-[0_12px_30px_rgba(0,117,226,0.18)]' : 'border-[#ececec]'
+                    }`}
+                  >
+                    <div className="relative h-[108px] w-full rounded-[12px] bg-[#f6f7f8]">
+                      <div
+                        className="absolute inset-[12px] border bg-white"
+                        style={{
+                          borderColor: '#d6dde6',
+                          borderRadius,
+                        }}
+                      />
+                      {isHud ? (
+                        <>
+                          <div className="absolute left-[12px] top-[12px] h-4 w-4 border-l border-t border-[#5b7899]" style={{ borderLeftWidth: cornerStroke, borderTopWidth: cornerStroke }} />
+                          <div className="absolute right-[12px] top-[12px] h-4 w-4 border-r border-t border-[#5b7899]" style={{ borderRightWidth: cornerStroke, borderTopWidth: cornerStroke }} />
+                          <div className="absolute bottom-[12px] left-[12px] h-4 w-4 border-b border-l border-[#5b7899]" style={{ borderBottomWidth: cornerStroke, borderLeftWidth: cornerStroke }} />
+                          <div className="absolute bottom-[12px] right-[12px] h-4 w-4 border-b border-r border-[#5b7899]" style={{ borderBottomWidth: cornerStroke, borderRightWidth: cornerStroke }} />
+                        </>
+                      ) : null}
+                    </div>
+                    <div className="mt-4 text-[15px] font-medium tracking-[-0.02em] text-[#111111]">{preset.label}</div>
+                    <div className="mt-1 text-[12px] leading-5 text-[#6a6a67]">{preset.description}</div>
                     {isSelected ? (
                       <div className="absolute inset-x-0 bottom-0 h-[4px] bg-[#0075E2]" />
                     ) : null}
