@@ -4,7 +4,6 @@
 
 /* React Grid Layout CSS */
 @import "react-grid-layout/css/styles.css";
-@import "react-resizable/css/styles.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -266,6 +265,25 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 
 .dashboard-panel-drag-handle:active {
   cursor: grabbing;
+}
+
+.react-resizable {
+  position: relative;
+}
+
+.react-resizable-handle {
+  position: absolute;
+  display: block;
+  box-sizing: border-box;
+  z-index: 10;
+}
+
+.react-resizable-handle-e {
+  top: 0;
+  right: -6px;
+  width: 12px;
+  height: 100%;
+  cursor: ew-resize;
 }
 
 /* AG Grid: Using Theming API (themeQuartz) - no CSS imports needed */
