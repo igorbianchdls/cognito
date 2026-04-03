@@ -32,6 +32,7 @@ const runtimeScope = {
   Dashboard: passthroughComponent('Dashboard'),
   Report: passthroughComponent('Report'),
   Slide: passthroughComponent('Slide'),
+  Grid: passthroughComponent('Grid'),
   Vertical: passthroughComponent('Vertical'),
   Horizontal: passthroughComponent('Horizontal'),
   Panel: passthroughComponent('Panel'),

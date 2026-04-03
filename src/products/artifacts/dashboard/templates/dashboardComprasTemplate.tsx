@@ -14,7 +14,7 @@ const COMPRAS_VARIANT = {
 function buildComprasDashboardSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('compras')
   return `<Dashboard id="overview" title="${COMPRAS_VARIANT.title}" theme="${resolvedThemeName}" chartPalette="blue">
-        <section style={{ display: 'flex', flexDirection: 'column', gap: 24, minHeight: '100%', padding: 32, backgroundColor: theme.pageBg }}>
+        <Vertical gap={24} style={{ minHeight: '100%', padding: 32, backgroundColor: theme.pageBg }}>
           <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24, padding: 24, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: '58%' }}>
               <span style={{ display: 'inline-flex', width: 'fit-content', alignItems: 'center', borderRadius: 999, border: '1px solid ' + theme.accentBorder, backgroundColor: theme.accentSurface, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: theme.accentText }}>Procurement Review</span>
@@ -41,7 +41,8 @@ function buildComprasDashboardSource(themeName: string) {
             </div>
           </header>
 
-          <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 16 }}>
+          <Grid columns={12} rowHeight={32} gap={18}>
+            <Panel id="compras-filter-fornecedor" span={4}>
             <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filtro</p>
               <h2 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Fornecedor</h2>
@@ -66,7 +67,9 @@ function buildComprasDashboardSource(themeName: string) {
                 <Select />
               </Filter>
             </Card>
+            </Panel>
 
+            <Panel id="compras-filter-centro-custo" span={4}>
             <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filtro</p>
               <h2 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Centro de custo</h2>
@@ -91,7 +94,9 @@ function buildComprasDashboardSource(themeName: string) {
                 <Select />
               </Filter>
             </Card>
+            </Panel>
 
+            <Panel id="compras-filter-status" span={4}>
             <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filtro</p>
               <h2 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Status</h2>
@@ -115,9 +120,9 @@ function buildComprasDashboardSource(themeName: string) {
                 <Select />
               </Filter>
             </Card>
-          </section>
+            </Panel>
 
-          <section style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 16 }}>
+            <Panel id="compras-kpi-valor" span={3}>
             <Query dataQuery={{ query: \`SELECT COALESCE(SUM(c.valor_total), 0)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period">
               <Card style={{ padding: 22, borderRadius: 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <h2 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Valor comprado</h2>
@@ -125,6 +130,8 @@ function buildComprasDashboardSource(themeName: string) {
                 <p style={{ margin: 0, fontSize: 13, color: theme.textSecondary }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
+            </Panel>
+            <Panel id="compras-kpi-fornecedores" span={3}>
             <Query dataQuery={{ query: \`SELECT COUNT(DISTINCT c.fornecedor_id)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }} format="number" comparisonMode="previous_period">
               <Card style={{ padding: 22, borderRadius: 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <h2 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Fornecedores</h2>
@@ -132,6 +139,8 @@ function buildComprasDashboardSource(themeName: string) {
                 <p style={{ margin: 0, fontSize: 13, color: theme.textSecondary }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
+            </Panel>
+            <Panel id="compras-kpi-pedidos" span={3}>
             <Query dataQuery={{ query: \`SELECT COUNT(DISTINCT c.id)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }} format="number" comparisonMode="previous_period">
               <Card style={{ padding: 22, borderRadius: 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <h2 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Pedidos</h2>
@@ -139,6 +148,8 @@ function buildComprasDashboardSource(themeName: string) {
                 <p style={{ margin: 0, fontSize: 13, color: theme.textSecondary }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
+            </Panel>
+            <Panel id="compras-kpi-ticket" span={3}>
             <Query dataQuery={{ query: \`SELECT COALESCE(AVG(c.valor_total), 0)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period">
               <Card style={{ padding: 22, borderRadius: 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <h2 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Ticket medio</h2>
@@ -146,144 +157,156 @@ function buildComprasDashboardSource(themeName: string) {
                 <p style={{ margin: 0, fontSize: 13, color: theme.textSecondary }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
-          </section>
+            </Panel>
 
-          <section style={{ display: 'grid', gridTemplateColumns: '1.25fr 1fr', gap: 18 }}>
-            <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Panel id="compras-chart-fornecedor" span={7} rows={16}>
+            <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Top spend</p>
                 <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Gasto por fornecedor</h2>
               </div>
               <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Corte principal para identificar concentracao de compras e dependencia de poucos parceiros no periodo filtrado.</p>
-              <Chart
-                type="bar"
-                height={320}
-                format="currency"
-                dataQuery={{
-                  query: \`
-                    SELECT
-                      COALESCE(src.fornecedor_id::text, '0') AS key,
-                      COALESCE(f.nome_fantasia, 'Sem fornecedor') AS label,
-                      COALESCE(SUM(src.valor_total), 0)::float AS value
-                    FROM compras.compras src
-                    LEFT JOIN entidades.fornecedores f ON f.id = src.fornecedor_id
-                    WHERE 1=1
-                      {{filters}}
-                    GROUP BY 1, 2
-                    ORDER BY 3 DESC
-                  \`,
-                  limit: 8,
-                }}
-                xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
-                series={[
-                  { dataKey: 'value', label: 'Gasto' },
-                ]}
-                yAxis={{ width: 86 }}
-              />
+              <div style={{ flex: 1, minHeight: 0 }}>
+                <Chart
+                  type="bar"
+                  height="100%"
+                  format="currency"
+                  dataQuery={{
+                    query: \`
+                      SELECT
+                        COALESCE(src.fornecedor_id::text, '0') AS key,
+                        COALESCE(f.nome_fantasia, 'Sem fornecedor') AS label,
+                        COALESCE(SUM(src.valor_total), 0)::float AS value
+                      FROM compras.compras src
+                      LEFT JOIN entidades.fornecedores f ON f.id = src.fornecedor_id
+                      WHERE 1=1
+                        {{filters}}
+                      GROUP BY 1, 2
+                      ORDER BY 3 DESC
+                    \`,
+                    limit: 8,
+                  }}
+                  xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
+                  series={[
+                    { dataKey: 'value', label: 'Gasto' },
+                  ]}
+                  yAxis={{ width: 86 }}
+                />
+              </div>
             </Card>
+            </Panel>
 
-            <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Panel id="compras-chart-categoria" span={5} rows={16}>
+            <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Allocation</p>
                 <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Gasto por categoria</h2>
               </div>
               <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Mostra em qual categoria de despesa o volume de compras esta se acumulando no periodo.</p>
-              <Chart
-                type="pie"
-                height={320}
-                format="currency"
-                dataQuery={{
-                  query: \`
-                    SELECT
-                      COALESCE(src.categoria_despesa_id::text, '0') AS key,
-                      COALESCE(cd.nome, 'Sem categoria') AS label,
-                      COALESCE(SUM(src.valor_total), 0)::float AS value
-                    FROM compras.compras src
-                    LEFT JOIN financeiro.categorias_despesa cd ON cd.id = src.categoria_despesa_id
-                    WHERE 1=1
-                      {{filters}}
-                    GROUP BY 1, 2
-                    ORDER BY 3 DESC
-                  \`,
-                  limit: 6,
-                }}
-                categoryKey="label"
-                legend={{ enabled: true, position: 'right' }}
-                series={[
-                  { dataKey: 'value', label: 'Gasto' },
-                ]}
-                recharts={{ innerRadius: 54, outerRadius: 92, paddingAngle: 2, showLabels: false }}
-              />
+              <div style={{ flex: 1, minHeight: 0 }}>
+                <Chart
+                  type="pie"
+                  height="100%"
+                  format="currency"
+                  dataQuery={{
+                    query: \`
+                      SELECT
+                        COALESCE(src.categoria_despesa_id::text, '0') AS key,
+                        COALESCE(cd.nome, 'Sem categoria') AS label,
+                        COALESCE(SUM(src.valor_total), 0)::float AS value
+                      FROM compras.compras src
+                      LEFT JOIN financeiro.categorias_despesa cd ON cd.id = src.categoria_despesa_id
+                      WHERE 1=1
+                        {{filters}}
+                      GROUP BY 1, 2
+                      ORDER BY 3 DESC
+                    \`,
+                    limit: 6,
+                  }}
+                  categoryKey="label"
+                  legend={{ enabled: true, position: 'right' }}
+                  series={[
+                    { dataKey: 'value', label: 'Gasto' },
+                  ]}
+                  recharts={{ innerRadius: 54, outerRadius: 92, paddingAngle: 2, showLabels: false }}
+                />
+              </div>
             </Card>
-          </section>
+            </Panel>
 
-          <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 18 }}>
-            <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Panel id="compras-chart-trend" span={7} rows={16}>
+            <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trend</p>
                 <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Gasto por mes</h2>
               </div>
               <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Serie mensal para entender aceleracao ou desaceleracao de compras sem depender do motor DSL antigo.</p>
-              <Chart
-                type="line"
-                height={320}
-                format="currency"
-                dataQuery={{
-                  query: \`
-                    SELECT
-                      TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'YYYY-MM') AS key,
-                      TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'MM/YYYY') AS label,
-                      COALESCE(SUM(src.valor_total), 0)::float AS value
-                    FROM compras.compras src
-                    WHERE 1=1
-                      {{filters}}
-                    GROUP BY 1, 2
-                    ORDER BY 1 ASC
-                  \`,
-                  limit: 12,
-                }}
-                xAxis={{ dataKey: 'label' }}
-                series={[
-                  { dataKey: 'value', label: 'Gasto' },
-                ]}
-                yAxis={{ width: 86 }}
-                recharts={{ showDots: false, singleSeriesGradient: true }}
-              />
+              <div style={{ flex: 1, minHeight: 0 }}>
+                <Chart
+                  type="line"
+                  height="100%"
+                  format="currency"
+                  dataQuery={{
+                    query: \`
+                      SELECT
+                        TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'YYYY-MM') AS key,
+                        TO_CHAR(DATE_TRUNC('month', src.data_pedido), 'MM/YYYY') AS label,
+                        COALESCE(SUM(src.valor_total), 0)::float AS value
+                      FROM compras.compras src
+                      WHERE 1=1
+                        {{filters}}
+                      GROUP BY 1, 2
+                      ORDER BY 1 ASC
+                    \`,
+                    limit: 12,
+                  }}
+                  xAxis={{ dataKey: 'label' }}
+                  series={[
+                    { dataKey: 'value', label: 'Gasto' },
+                  ]}
+                  yAxis={{ width: 86 }}
+                  recharts={{ showDots: false, singleSeriesGradient: true }}
+                />
+              </div>
             </Card>
+            </Panel>
 
-            <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Panel id="compras-chart-status" span={5} rows={16}>
+            <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status mix</p>
                 <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Pedidos por status</h2>
               </div>
-              <Chart
-                type="bar"
-                height={320}
-                format="number"
-                dataQuery={{
-                  query: \`
-                    SELECT
-                      COALESCE(src.status, 'sem_status') AS key,
-                      COALESCE(src.status, 'Sem status') AS label,
-                      COUNT(*)::float AS value
-                    FROM compras.compras src
-                    WHERE 1=1
-                      {{filters}}
-                    GROUP BY 1, 2
-                    ORDER BY 3 DESC
-                  \`,
-                  limit: 8,
-                }}
-                xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
-                series={[
-                  { dataKey: 'value', label: 'Pedidos' },
-                ]}
-              />
+              <div style={{ flex: 1, minHeight: 0 }}>
+                <Chart
+                  type="bar"
+                  height="100%"
+                  format="number"
+                  dataQuery={{
+                    query: \`
+                      SELECT
+                        COALESCE(src.status, 'sem_status') AS key,
+                        COALESCE(src.status, 'Sem status') AS label,
+                        COUNT(*)::float AS value
+                      FROM compras.compras src
+                      WHERE 1=1
+                        {{filters}}
+                      GROUP BY 1, 2
+                      ORDER BY 3 DESC
+                    \`,
+                    limit: 8,
+                  }}
+                  xAxis={{ dataKey: 'label', labelMode: 'first-word' }}
+                  series={[
+                    { dataKey: 'value', label: 'Pedidos' },
+                  ]}
+                />
+              </div>
             </Card>
-          </section>
+            </Panel>
 
-          <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 18 }}>
-            <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Panel id="compras-table" span={8} rows={18}>
+            <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</p>
                 <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Pedidos de compra no detalhe</h2>
@@ -328,8 +351,10 @@ function buildComprasDashboardSource(themeName: string) {
                 ]}
               />
             </Card>
+            </Panel>
 
-            <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Panel id="compras-pivot" span={4} rows={18}>
+            <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</p>
                 <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Categoria por status</h2>
@@ -368,9 +393,9 @@ function buildComprasDashboardSource(themeName: string) {
                 values={[{ field: 'valor_total', label: 'Valor', aggregate: 'sum', format: 'currency' }]}
               />
             </Card>
-          </section>
+            </Panel>
 
-          <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 18 }}>
+            <Panel id="compras-insight-concentracao" span={4}>
             <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <h2 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Concentracao em fornecedores</h2>
@@ -383,7 +408,9 @@ function buildComprasDashboardSource(themeName: string) {
                 ]}
               />
             </Card>
+            </Panel>
 
+            <Panel id="compras-insight-centro" span={4}>
             <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <h2 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Pressao por centro de custo</h2>
@@ -396,7 +423,9 @@ function buildComprasDashboardSource(themeName: string) {
                 ]}
               />
             </Card>
+            </Panel>
 
+            <Panel id="compras-insight-risco" span={4}>
             <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <h2 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Risco operacional</h2>
@@ -409,13 +438,14 @@ function buildComprasDashboardSource(themeName: string) {
                 ]}
               />
             </Card>
-          </section>
+            </Panel>
+          </Grid>
 
           <footer style={{ display: 'flex', justifyContent: 'space-between', gap: 18, padding: '18px 22px', borderRadius: 22, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder }}>
             <p style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Template JSX de compras com filtros dedicados, queries SQL explicitas e leitura completa em uma unica pagina.</p>
             <p style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: ${resolvedThemeName}</p>
           </footer>
-        </section>
+        </Vertical>
     </Dashboard>`
 }
 

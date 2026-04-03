@@ -6,6 +6,7 @@ export const DASHBOARD_SUPPORTED_COMPONENTS = [
   'DashboardTemplate',
   'Theme',
   'Dashboard',
+  'Grid',
   'Vertical',
   'Horizontal',
   'Panel',

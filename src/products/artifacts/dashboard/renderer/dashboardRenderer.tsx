@@ -15,7 +15,7 @@ import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter'
 import { ThemeProvider, useSemanticUiStyle } from '@/products/bi/json-render/theme/ThemeContext'
 import DashboardDatePicker from '@/products/artifacts/dashboard/renderer/components/DashboardDatePicker'
 import DashboardInsights from '@/products/artifacts/dashboard/renderer/components/DashboardInsights'
-import { DashboardHorizontal, DashboardPanel, DashboardVertical } from '@/products/artifacts/dashboard/renderer/components/DashboardLayout'
+import { DashboardGrid, DashboardHorizontal, DashboardPanel, DashboardVertical } from '@/products/artifacts/dashboard/renderer/components/DashboardLayout'
 import { DashboardLayoutEditContext } from '@/products/artifacts/dashboard/renderer/components/DashboardLayoutContext'
 import DashboardQuery, {
   getDashboardQueryDeltaColor,
@@ -343,6 +343,7 @@ function resolveComponent(type: string): DashboardRenderComponent | undefined {
   if (type === 'DashboardTemplate') return ({ children }) => <DashboardRoot>{children}</DashboardRoot>
   if (type === 'Theme') return ({ element, children }) => <DashboardTheme element={element}>{children}</DashboardTheme>
   if (type === 'Dashboard') return ({ element, children }) => <DashboardSurface element={element}>{children}</DashboardSurface>
+  if (type === 'Grid') return ({ element, children }) => <DashboardGrid element={element}>{children}</DashboardGrid>
   if (type === 'Vertical') return ({ element, children }) => <DashboardVertical element={element}>{children}</DashboardVertical>
   if (type === 'Horizontal') return ({ element, children }) => <DashboardHorizontal element={element}>{children}</DashboardHorizontal>
   if (type === 'Panel') return ({ element, children }) => <DashboardPanel element={element}>{children}</DashboardPanel>
