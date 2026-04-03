@@ -143,6 +143,7 @@ export function DashboardPanel({
   element: any
   children?: React.ReactNode
 }) {
+  const editableLayout = React.useContext(DashboardLayoutEditContext)
   const props = (element?.props || {}) as AnyRecord
   const grow =
     typeof props.grow === 'number'
@@ -154,10 +155,13 @@ export function DashboardPanel({
   return (
     <div
       style={{
+        display: 'flex',
+        flexDirection: 'column',
         flexGrow: Number.isFinite(grow as number) ? (grow as number) : undefined,
         flexShrink: props.shrink === false || props.shrink === 'false' ? 0 : 1,
         flexBasis: styleDimension(props.basis),
         width: styleDimension(props.width),
+        height: editableLayout ? '100%' : undefined,
         minHeight: styleDimension(props.minHeight),
         minWidth: styleDimension(props.minWidth) ?? 0,
         maxWidth: styleDimension(props.maxWidth),
@@ -165,7 +169,17 @@ export function DashboardPanel({
         ...(props.style && typeof props.style === 'object' ? props.style : {}),
       }}
     >
-      {children}
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: 0,
+          height: editableLayout ? '100%' : undefined,
+          flex: editableLayout ? 1 : undefined,
+        }}
+      >
+        {children}
+      </div>
     </div>
   )
 }
