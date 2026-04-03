@@ -14,9 +14,11 @@ type AnyRecord = Record<string, any>
 
 const AutoWidthGridLayout = WidthProvider(GridLayout)
 
-function DashboardResizeHandle() {
-  return <span className="dashboard-panel-resize-handle" />
-}
+const DashboardResizeHandle = React.forwardRef<HTMLSpanElement, React.HTMLAttributes<HTMLSpanElement>>(
+  function DashboardResizeHandle(props, ref) {
+    return <span ref={ref} {...props} className="dashboard-panel-resize-handle" />
+  },
+)
 
 export function DashboardVertical({
   element,
@@ -106,7 +108,7 @@ export function DashboardHorizontal({
           isResizable
           draggableHandle=".dashboard-panel-drag-handle"
           resizeHandles={['e']}
-          resizeHandle={<DashboardResizeHandle />}
+          resizeHandle={(axis, ref) => <DashboardResizeHandle ref={ref} data-axis={axis} />}
           onLayoutChange={(nextLayout) => setLayout(nextLayout)}
         >
           {layout.map((item) => (
