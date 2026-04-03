@@ -445,17 +445,17 @@ const CLASSIC_DASHBOARD_VARIANT: StandaloneDashboardVariant = {
 function buildClassicDashboardTemplateSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('classic')
   return `<Dashboard id="overview" title="${CLASSIC_DASHBOARD_VARIANT.title}" theme="${resolvedThemeName}" chartPalette="teal">
-        <section style={{ display: 'flex', flexDirection: 'column', gap: 20, minHeight: '100%', backgroundColor: theme.pageBg }}>
+        <Vertical gap={20} style={{ minHeight: '100%', backgroundColor: theme.pageBg }}>
           <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20, padding: '20px 24px', borderRadius: theme.cardFrame ? 0 : 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <Vertical gap={8}>
               <p style={{ ...{ margin: 0, fontSize: 12, color: theme.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em' }, margin: 0, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Executive dashboard</p>
               <h1 style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 34, lineHeight: 1.05, fontWeight: 700, letterSpacing: '-0.04em' }}>Performance overview with the classic BI layout</h1>
               <p style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, margin: 0, maxWidth: 720, fontSize: 14, lineHeight: 1.65 }}>
                 Header with global period control, KPI strip on top and analysis rows below. The runtime stays JSX-first, but the surface looks closer to the previous dashboard model.
               </p>
-            </div>
+            </Vertical>
 
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, minWidth: 240 }}>
+            <Vertical gap={10} style={{ alignItems: 'flex-end', minWidth: 240 }}>
               <p style={{ ...{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }, margin: 0, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Global period</p>
               <DatePicker
                 label="Periodo do pedido"
@@ -469,11 +469,12 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 activePresetButtonStyle={{ backgroundColor: theme.headerDatePickerActiveBg, borderColor: theme.headerDatePickerActiveBorder, color: theme.headerDatePickerActiveText, fontWeight: 600 }}
                 separatorStyle={{ color: theme.headerDatePickerLabel, fontSize: 13, fontWeight: 500 }}
               />
-            </div>
+            </Vertical>
           </header>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20, padding: '0 28px 28px' }}>
-          <section style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: 14 }}>
+          <Vertical gap={20} style={{ padding: '0 28px 28px' }}>
+          <Horizontal gap={14} columns={20} rowHeight={32}>
+            <Panel id="classic-kpi-receita" span={4} rows={4}>
             <Query
               dataQuery={{
                 query: \`
@@ -493,7 +494,9 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 <p data-ui="kpi-delta" style={{ ...{ margin: 0, fontSize: 13, color: theme.textSecondary }, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
+            </Panel>
 
+            <Panel id="classic-kpi-pedidos" span={4} rows={4}>
             <Query
               dataQuery={{
                 query: \`
@@ -513,7 +516,9 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 <p data-ui="kpi-delta" style={{ ...{ margin: 0, fontSize: 13, color: theme.textSecondary }, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
+            </Panel>
 
+            <Panel id="classic-kpi-ticket" span={4} rows={4}>
             <Query
               dataQuery={{
                 query: \`
@@ -533,7 +538,9 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 <p data-ui="kpi-delta" style={{ ...{ margin: 0, fontSize: 13, color: theme.textSecondary }, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
+            </Panel>
 
+            <Panel id="classic-kpi-canais" span={4} rows={4}>
             <Query
               dataQuery={{
                 query: \`
@@ -553,7 +560,9 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 <p data-ui="kpi-delta" style={{ ...{ margin: 0, fontSize: 13, color: theme.textSecondary }, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
+            </Panel>
 
+            <Panel id="classic-kpi-aprovacao" span={4} rows={4}>
             <Query
               dataQuery={{
                 query: \`
@@ -573,9 +582,11 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 <p data-ui="kpi-delta" style={{ ...{ margin: 0, fontSize: 13, color: theme.textSecondary }, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
               </Card>
             </Query>
-          </section>
+            </Panel>
+          </Horizontal>
 
-          <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 18 }}>
+          <Horizontal gap={18} columns={12} rowHeight={32}>
+            <Panel id="classic-insight-aceleracao" span={4} rows={10}>
             <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <h2 style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Aceleracao recente</h2>
@@ -591,6 +602,8 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 ]}
               />
             </Card>
+            </Panel>
+            <Panel id="classic-insight-concentracao" span={4} rows={10}>
             <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <h2 style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Concentracao de receita</h2>
@@ -606,6 +619,8 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 ]}
               />
             </Card>
+            </Panel>
+            <Panel id="classic-insight-conversao" span={4} rows={10}>
             <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <h2 style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Conversao e qualidade</h2>
@@ -621,9 +636,11 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 ]}
               />
             </Card>
-          </section>
+            </Panel>
+          </Horizontal>
 
-          <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
+          <Horizontal gap={18} columns={12} rowHeight={32}>
+            <Panel id="classic-chart-mix" span={6} rows={12}>
             <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <p style={{ ...{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Receita por canal</p>
@@ -657,7 +674,9 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 yAxis={{ width: 72 }}
               />
             </Card>
+            </Panel>
 
+            <Panel id="classic-chart-share" span={6} rows={12}>
             <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <p style={{ ...{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Participacao</p>
@@ -692,9 +711,11 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 recharts={{ innerRadius: 56, outerRadius: 96, showLabels: false }}
               />
             </Card>
-          </section>
+            </Panel>
+          </Horizontal>
 
-          <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
+          <Horizontal gap={18} columns={12} rowHeight={32}>
+            <Panel id="classic-chart-tendencia" span={6} rows={14}>
             <Card
              
               style={{
@@ -740,8 +761,10 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 />
               </div>
             </Card>
+            </Panel>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
+            <Panel id="classic-table-pedidos" span={6} rows={14}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0, height: '100%' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <p style={{ ...{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Detalhamento</p>
                 <h2 style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Pedidos filtrados</h2>
@@ -784,9 +807,11 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 enableExportCsv
               />
             </div>
-          </section>
+            </Panel>
+          </Horizontal>
 
-          <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
+          <Horizontal gap={18} columns={12} rowHeight={32}>
+            <Panel id="classic-chart-status" span={6} rows={12}>
             <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <p style={{ ...{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status mix</p>
@@ -815,7 +840,9 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 ]}
               />
             </Card>
+            </Panel>
 
+            <Panel id="classic-pivot-canal-status" span={6} rows={12}>
             <Card data-ui="pivot-card" style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <p style={{ ...{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cruzamento</p>
@@ -855,9 +882,10 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 values={[{ field: 'valor_total', label: 'Receita', aggregate: 'sum', format: 'currency' }]}
               />
             </Card>
-          </section>
-          </div>
-        </section>
+            </Panel>
+          </Horizontal>
+          </Vertical>
+        </Vertical>
 </Dashboard>`
 }
 
