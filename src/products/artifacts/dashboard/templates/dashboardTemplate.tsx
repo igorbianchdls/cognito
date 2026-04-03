@@ -2,6 +2,7 @@
 
 import type * as React from 'react'
 import { buildContainersDashboardTemplateVariant } from '@/products/artifacts/dashboard/templates/dashboardContainersTemplate'
+import { buildLayoutTestDashboardTemplateVariant } from '@/products/artifacts/dashboard/templates/dashboardLayoutTestTemplate'
 import { buildComprasDashboardTemplateVariant } from '@/products/artifacts/dashboard/templates/dashboardComprasTemplate'
 import { buildFinanceiroDashboardTemplateVariant } from '@/products/artifacts/dashboard/templates/dashboardFinanceiroTemplate'
 import { buildGoogleAdsDashboardTemplateVariant } from '@/products/artifacts/dashboard/templates/dashboardGoogleAdsTemplate'
@@ -873,6 +874,7 @@ export function buildDashboardTemplateVariants(themeName: string): DashboardTemp
 
   variants.push(buildClassicDashboardTemplateVariant())
   variants.push(buildContainersDashboardTemplateVariant())
+  variants.push(buildLayoutTestDashboardTemplateVariant())
 
   variants.push(buildComprasDashboardTemplateVariant())
   variants.push(buildFinanceiroDashboardTemplateVariant())

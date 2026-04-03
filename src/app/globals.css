@@ -238,8 +238,19 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 }
 
 .dashboard-panel-edit-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   height: 100%;
   min-height: 0;
+}
+
+.dashboard-panel-edit-body > * {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
 }
 
 .dashboard-panel-drag-handle {
