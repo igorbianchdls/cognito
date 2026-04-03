@@ -1,7 +1,6 @@
 'use client'
 
 import React from 'react'
-import GridLayout, { WidthProvider, type Layout } from 'react-grid-layout'
 
 import JsonRenderBarChart from '@/products/bi/json-render/components/BarChart'
 import JsxCardSurface, {
@@ -16,6 +15,8 @@ import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter'
 import { ThemeProvider, useSemanticUiStyle } from '@/products/bi/json-render/theme/ThemeContext'
 import DashboardDatePicker from '@/products/artifacts/dashboard/renderer/components/DashboardDatePicker'
 import DashboardInsights from '@/products/artifacts/dashboard/renderer/components/DashboardInsights'
+import { DashboardHorizontal, DashboardPanel, DashboardVertical } from '@/products/artifacts/dashboard/renderer/components/DashboardLayout'
+import { DashboardLayoutEditContext } from '@/products/artifacts/dashboard/renderer/components/DashboardLayoutContext'
 import DashboardQuery, {
   getDashboardQueryDeltaColor,
   resolveDashboardQueryTemplate,
@@ -44,52 +45,6 @@ type TabsContextValue = {
 }
 
 const TabsContext = React.createContext<TabsContextValue | null>(null)
-const DashboardLayoutEditContext = React.createContext(false)
-const AutoWidthGridLayout = WidthProvider(GridLayout)
-
-function toNumericLayoutValue(value: unknown, fallback: number) {
-  if (typeof value === 'number' && Number.isFinite(value)) return value
-  if (typeof value === 'string' && value.trim()) {
-    const parsed = Number(value)
-    if (Number.isFinite(parsed)) return parsed
-  }
-  return fallback
-}
-
-function buildPanelLayout(panelNodes: any[], cols: number): Layout[] {
-  const safeCols = Math.max(1, cols)
-  const fallbackSpan = Math.max(1, Math.floor(safeCols / Math.max(panelNodes.length, 1)))
-  let nextX = 0
-  let nextY = 0
-  let currentRowHeight = 1
-
-  return panelNodes.map((panelNode, index) => {
-    const span = Math.max(1, Math.min(safeCols, toNumericLayoutValue(panelNode?.props?.span, fallbackSpan)))
-    const rows = Math.max(1, toNumericLayoutValue(panelNode?.props?.rows, 1))
-
-    if (nextX + span > safeCols) {
-      nextX = 0
-      nextY += currentRowHeight
-      currentRowHeight = rows
-    } else {
-      currentRowHeight = Math.max(currentRowHeight, rows)
-    }
-
-    const item: Layout = {
-      i: String(panelNode?.props?.id || `panel-${index}`),
-      x: nextX,
-      y: nextY,
-      w: span,
-      h: rows,
-      minW: Math.max(1, toNumericLayoutValue(panelNode?.props?.minSpan, 2)),
-      minH: 1,
-    }
-
-    nextX += span
-    return item
-  })
-}
-
 function renderChartByType(chartType: unknown, element: any, onAction?: (action: any) => void) {
   const normalized = normalizeDashboardChartType(chartType)
   if (normalized === 'bar') return <JsonRenderBarChart element={element} />
@@ -237,148 +192,6 @@ function DashboardSurface({ element, children }: { element: any; children?: Reac
   }
 
   return content
-}
-
-function styleDimension(value: unknown): string | number | undefined {
-  if (typeof value === 'number') return value
-  if (typeof value === 'string' && value.trim()) return value
-  return undefined
-}
-
-function DashboardVertical({ element, children }: { element: any; children?: React.ReactNode }) {
-  const props = (element?.props || {}) as AnyRecord
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        minWidth: 0,
-        gap: styleDimension(props.gap) ?? 16,
-        alignItems: typeof props.align === 'string' ? props.align : undefined,
-        justifyContent: typeof props.justify === 'string' ? props.justify : undefined,
-        padding: styleDimension(props.padding),
-        width: styleDimension(props.width),
-        maxWidth: styleDimension(props.maxWidth),
-        ...(props.style && typeof props.style === 'object' ? props.style : {}),
-      }}
-    >
-      {children}
-    </div>
-  )
-}
-
-function DashboardHorizontal({ element, children }: { element: any; children?: React.ReactNode }) {
-  const editableLayout = React.useContext(DashboardLayoutEditContext)
-  const props = (element?.props || {}) as AnyRecord
-  const childNodes = Array.isArray(element?.children) ? element.children : []
-  const childArray = React.Children.toArray(children)
-  const panelNodes = childNodes.filter((child: any) => child && typeof child === 'object' && child.type === 'Panel')
-  const columns = Math.max(1, toNumericLayoutValue(props.columns, 12))
-  const gap = toNumericLayoutValue(props.gap, 16)
-  const rowHeight = Math.max(72, toNumericLayoutValue(props.rowHeight, 220))
-  const panelLayoutSeed = panelNodes
-    .map((panelNode: any, index: number) =>
-      [
-        String(panelNode?.props?.id || `panel-${index}`),
-        String(panelNode?.props?.span ?? ''),
-        String(panelNode?.props?.rows ?? ''),
-        String(panelNode?.props?.minSpan ?? ''),
-      ].join(':'),
-    )
-    .join('|')
-  const defaultLayouts = React.useMemo(() => buildPanelLayout(panelNodes, columns), [panelLayoutSeed, columns])
-  const [layout, setLayout] = React.useState<Layout[]>(defaultLayouts)
-
-  React.useEffect(() => {
-    setLayout(defaultLayouts)
-  }, [defaultLayouts])
-
-  if (editableLayout && panelNodes.length > 0 && panelNodes.length === childArray.length) {
-    const childById = new Map(childArray.map((child, index) => [String(panelNodes[index]?.props?.id || `panel-${index}`), child]))
-    return (
-      <div
-        style={{
-          minWidth: 0,
-          width: styleDimension(props.width),
-          maxWidth: styleDimension(props.maxWidth),
-          padding: styleDimension(props.padding),
-          ...(props.style && typeof props.style === 'object' ? props.style : {}),
-        }}
-      >
-        <AutoWidthGridLayout
-          className="dashboard-rgl"
-          layout={layout}
-          cols={columns}
-          rowHeight={rowHeight}
-          margin={[gap, gap]}
-          containerPadding={[0, 0]}
-          compactType={null}
-          preventCollision={false}
-          isDraggable
-          isResizable
-          draggableHandle=".dashboard-panel-drag-handle"
-          resizeHandles={['e']}
-          onLayoutChange={(nextLayout) => setLayout(nextLayout)}
-        >
-          {layout.map((item) => (
-            <div key={item.i} className="dashboard-panel-edit-shell">
-              <div className="dashboard-panel-drag-handle">move</div>
-              <div className="dashboard-panel-edit-body">
-                {childById.get(item.i) ?? null}
-              </div>
-            </div>
-          ))}
-        </AutoWidthGridLayout>
-      </div>
-    )
-  }
-
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'row',
-        minWidth: 0,
-        gap: gap,
-        alignItems: typeof props.align === 'string' ? props.align : undefined,
-        justifyContent: typeof props.justify === 'string' ? props.justify : undefined,
-        flexWrap: props.wrap === true || props.wrap === 'true' ? 'wrap' : 'nowrap',
-        padding: styleDimension(props.padding),
-        width: styleDimension(props.width),
-        maxWidth: styleDimension(props.maxWidth),
-        ...(props.style && typeof props.style === 'object' ? props.style : {}),
-      }}
-    >
-      {children}
-    </div>
-  )
-}
-
-function DashboardPanel({ element, children }: { element: any; children?: React.ReactNode }) {
-  const props = (element?.props || {}) as AnyRecord
-  const grow =
-    typeof props.grow === 'number'
-      ? props.grow
-      : typeof props.grow === 'string' && props.grow.trim()
-        ? Number(props.grow)
-        : undefined
-  return (
-    <div
-      style={{
-        flexGrow: Number.isFinite(grow as number) ? (grow as number) : undefined,
-        flexShrink: props.shrink === false || props.shrink === 'false' ? 0 : 1,
-        flexBasis: styleDimension(props.basis),
-        width: styleDimension(props.width),
-        minHeight: styleDimension(props.minHeight),
-        minWidth: styleDimension(props.minWidth) ?? 0,
-        maxWidth: styleDimension(props.maxWidth),
-        padding: styleDimension(props.padding),
-        ...(props.style && typeof props.style === 'object' ? props.style : {}),
-      }}
-    >
-      {children}
-    </div>
-  )
 }
 
 function HtmlNode({

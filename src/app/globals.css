@@ -267,20 +267,24 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   cursor: grabbing;
 }
 
-.dashboard-rgl .react-resizable-handle {
+.dashboard-rgl .react-resizable-handle,
+.dashboard-panel-resize-handle {
   position: absolute;
   top: 50%;
-  right: 4px;
-  width: 10px;
-  height: 56px;
+  right: -6px;
+  z-index: 20;
+  width: 18px;
+  height: 72px;
   transform: translateY(-50%);
   cursor: ew-resize;
+  touch-action: none;
 }
 
-.dashboard-rgl .react-resizable-handle::after {
+.dashboard-rgl .react-resizable-handle::after,
+.dashboard-panel-resize-handle::after {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: 6px;
   border-radius: 999px;
   background: rgba(148, 163, 184, 0.9);
 }
