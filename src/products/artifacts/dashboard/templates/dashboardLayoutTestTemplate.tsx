@@ -57,9 +57,34 @@ function buildLayoutTestDashboardSource(themeName: string) {
       <Horizontal gap={16} columns={12} rowHeight={90}>
         <Panel id="test-d" span={7} rows={2}>
           <Card style={{ height: '100%', padding: 18, borderRadius: 20, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Panel D</p>
-            <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: theme.titleColor }}>span 7 / rows 2</h2>
-            <p style={{ margin: 0, fontSize: 14, color: theme.textSecondary }}>Teste de resize diagonal e reorder.</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Panel D</p>
+              <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: theme.titleColor }}>Chart responsivo</h2>
+              <p style={{ margin: 0, fontSize: 14, color: theme.textSecondary }}>Este painel usa um chart simples para validar resize vertical dentro de Card.</p>
+            </div>
+            <div style={{ flex: 1, minHeight: 0 }}>
+              <Chart
+                type="line"
+                height="100%"
+                format="number"
+                dataQuery={{
+                  query: `
+                    SELECT *
+                    FROM (
+                      VALUES
+                        ('Seg', 12::float),
+                        ('Ter', 18::float),
+                        ('Qua', 9::float),
+                        ('Qui', 22::float),
+                        ('Sex', 16::float)
+                    ) AS sample(label, value)
+                  `,
+                  limit: 5,
+                }}
+                xAxis={{ dataKey: 'label' }}
+                series={[{ dataKey: 'value', label: 'Teste' }]}
+              />
+            </div>
           </Card>
         </Panel>
 
