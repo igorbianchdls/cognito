@@ -475,6 +475,7 @@ export function DashboardPanel({
     >
       {editableLayout ? (
         <button
+          className="dashboard-panel-structural-handle"
           ref={setActivatorNodeRef}
           type="button"
           {...attributes}

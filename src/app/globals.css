@@ -281,6 +281,12 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   cursor: grabbing;
 }
 
+.dashboard-panel-structural-handle {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms ease;
+}
+
 .react-resizable {
   position: relative;
 }
@@ -320,8 +326,10 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 }
 
 .dashboard-panel-edit-shell:hover .dashboard-panel-drag-handle,
+.dashboard-panel-edit-shell:hover .dashboard-panel-structural-handle,
 .dashboard-panel-edit-shell:hover .react-resizable-handle,
 .dashboard-panel-edit-shell:focus-within .dashboard-panel-drag-handle,
+.dashboard-panel-edit-shell:focus-within .dashboard-panel-structural-handle,
 .dashboard-panel-edit-shell:focus-within .react-resizable-handle {
   opacity: 1;
   pointer-events: auto;
