@@ -15,7 +15,7 @@ import {
   DASHBOARD_CHART_PALETTE_OPTIONS,
   getDashboardChartPaletteValueFromColors,
 } from '@/products/artifacts/dashboard/chartPalettes'
-import { DASHBOARD_BORDER_PRESET_OPTIONS } from '@/products/artifacts/dashboard/borderPresets'
+import { DASHBOARD_BORDER_PRESET_OPTIONS, type DashboardBorderPreset } from '@/products/artifacts/dashboard/borderPresets'
 import {
   getDashboardBorderPresetFromSource,
   getDashboardChartColorsFromSource,
@@ -104,8 +104,8 @@ export function ChatArtifactWorkspace({
   const [themeModalBaseName, setThemeModalBaseName] = useState('light')
   const [draftChartPalette, setDraftChartPalette] = useState(DASHBOARD_CHART_PALETTE_OPTIONS[0].value)
   const [chartPaletteBaseName, setChartPaletteBaseName] = useState(DASHBOARD_CHART_PALETTE_OPTIONS[0].value)
-  const [draftBorderPreset, setDraftBorderPreset] = useState(DASHBOARD_BORDER_PRESET_OPTIONS[0].value)
-  const [borderPresetBaseName, setBorderPresetBaseName] = useState(DASHBOARD_BORDER_PRESET_OPTIONS[0].value)
+  const [draftBorderPreset, setDraftBorderPreset] = useState<DashboardBorderPreset>(DASHBOARD_BORDER_PRESET_OPTIONS[0].value)
+  const [borderPresetBaseName, setBorderPresetBaseName] = useState<DashboardBorderPreset>(DASHBOARD_BORDER_PRESET_OPTIONS[0].value)
   const [dashboardSource, setDashboardSource] = useState('')
   const [themeBusy, setThemeBusy] = useState(false)
 
@@ -129,7 +129,7 @@ export function ChatArtifactWorkspace({
           || getDashboardChartPaletteValueFromColors(
             getDashboardChartColorsFromSource(source, DASHBOARD_CHART_PALETTE_OPTIONS[0].colors),
           )
-        const borderPreset = getDashboardBorderPresetFromSource(source, DASHBOARD_BORDER_PRESET_OPTIONS[0].value)
+        const borderPreset = getDashboardBorderPresetFromSource(source, DASHBOARD_BORDER_PRESET_OPTIONS[0].value) as DashboardBorderPreset
         setThemeModalBaseName(themeName)
         setDraftThemeName(themeName)
         setChartPaletteBaseName(paletteName)
@@ -278,7 +278,7 @@ export function ChatArtifactWorkspace({
           void applyDashboardAppearance(draftThemeName, paletteValue, draftBorderPreset)
         }}
         onSelectBorderPreset={(borderPreset) => {
-          setDraftBorderPreset(borderPreset)
+          setDraftBorderPreset(borderPreset as DashboardBorderPreset)
           void applyDashboardAppearance(draftThemeName, draftChartPalette, borderPreset)
         }}
         selectedTheme={draftThemeName}

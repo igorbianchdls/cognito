@@ -11,7 +11,7 @@ import {
   DASHBOARD_CHART_PALETTE_OPTIONS,
   getDashboardChartPaletteValueFromColors,
 } from '@/products/artifacts/dashboard/chartPalettes'
-import { DASHBOARD_BORDER_PRESET_OPTIONS } from '@/products/artifacts/dashboard/borderPresets'
+import { DASHBOARD_BORDER_PRESET_OPTIONS, type DashboardBorderPreset } from '@/products/artifacts/dashboard/borderPresets'
 import { buildDashboardWorkspaceFiles } from '@/products/artifacts/dashboard/workspace/workspaceFiles'
 import {
   getDashboardBorderPresetFromSource,
@@ -43,8 +43,8 @@ export function DashboardWorkspace({
   const [themeModalBaseName, setThemeModalBaseName] = useState('light')
   const [draftChartPalette, setDraftChartPalette] = useState(DASHBOARD_CHART_PALETTE_OPTIONS[0].value)
   const [chartPaletteBaseName, setChartPaletteBaseName] = useState(DASHBOARD_CHART_PALETTE_OPTIONS[0].value)
-  const [draftBorderPreset, setDraftBorderPreset] = useState(DASHBOARD_BORDER_PRESET_OPTIONS[0].value)
-  const [borderPresetBaseName, setBorderPresetBaseName] = useState(DASHBOARD_BORDER_PRESET_OPTIONS[0].value)
+  const [draftBorderPreset, setDraftBorderPreset] = useState<DashboardBorderPreset>(DASHBOARD_BORDER_PRESET_OPTIONS[0].value)
+  const [borderPresetBaseName, setBorderPresetBaseName] = useState<DashboardBorderPreset>(DASHBOARD_BORDER_PRESET_OPTIONS[0].value)
   const dashboardFiles = useMemo(() => files.filter((file) => file.extension === 'tsx'), [files])
   const selectedDashboardFile = useMemo(
     () => dashboardFiles.find((file) => file.path === selectedDashboardPath) ?? dashboardFiles[0],
@@ -74,7 +74,7 @@ export function DashboardWorkspace({
     [selectedDashboardFile],
   )
   const selectedBorderPreset = useMemo(
-    () => getDashboardBorderPresetFromSource(selectedDashboardFile?.content ?? '', DASHBOARD_BORDER_PRESET_OPTIONS[0].value),
+    () => getDashboardBorderPresetFromSource(selectedDashboardFile?.content ?? '', DASHBOARD_BORDER_PRESET_OPTIONS[0].value) as DashboardBorderPreset,
     [selectedDashboardFile],
   )
 
@@ -164,7 +164,7 @@ export function DashboardWorkspace({
           applyAppearanceToSelectedDashboard(draftThemeName, paletteValue, draftBorderPreset)
         }}
         onSelectBorderPreset={(borderPreset) => {
-          setDraftBorderPreset(borderPreset)
+          setDraftBorderPreset(borderPreset as DashboardBorderPreset)
           applyAppearanceToSelectedDashboard(draftThemeName, draftChartPalette, borderPreset)
         }}
         selectedTheme={draftThemeName}
