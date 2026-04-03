@@ -68,7 +68,7 @@ function buildLayoutTestDashboardSource(themeName: string) {
                 height="100%"
                 format="number"
                 dataQuery={{
-                  query: `
+                  query: \`
                     SELECT *
                     FROM (
                       VALUES
@@ -78,7 +78,7 @@ function buildLayoutTestDashboardSource(themeName: string) {
                         ('Qui', 22::float),
                         ('Sex', 16::float)
                     ) AS sample(label, value)
-                  `,
+                  \`,
                   limit: 5,
                 }}
                 xAxis={{ dataKey: 'label' }}
