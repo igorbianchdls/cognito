@@ -29,18 +29,19 @@ function useStructuralDropTarget(
   layoutEdit: React.ContextType<typeof DashboardLayoutEditContext>,
   path: number[],
   targetType: 'vertical' | 'horizontal',
+  enabled = true,
 ) {
   const targetKey = `${targetType}:${getPathKey(path)}`
   const { setNodeRef, isOver } = useDroppable({
     id: targetKey,
-    disabled: !layoutEdit.enabled,
+    disabled: !layoutEdit.enabled || !enabled,
     data: { path, targetType },
   })
 
   return {
     dropRef: setNodeRef,
     targetKey,
-    structuralActive: layoutEdit.enabled && isOver && Boolean(layoutEdit.structuralDrag),
+    structuralActive: layoutEdit.enabled && enabled && isOver && Boolean(layoutEdit.structuralDrag),
   }
 }
 
@@ -60,7 +61,8 @@ export function DashboardVertical({
   const layoutEdit = React.useContext(DashboardLayoutEditContext)
   const props = (element?.props || {}) as AnyRecord
   const path = getElementPath(element)
-  const { dropRef, structuralActive } = useStructuralDropTarget(layoutEdit, path, 'vertical')
+  const dropTargetEnabled = props.dropTarget !== false && props.dropTarget !== 'false'
+  const { dropRef, structuralActive } = useStructuralDropTarget(layoutEdit, path, 'vertical', dropTargetEnabled)
   return (
     <div
       ref={dropRef}

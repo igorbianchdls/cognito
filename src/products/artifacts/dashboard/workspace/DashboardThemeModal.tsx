@@ -266,14 +266,7 @@ export function DashboardThemeModal({
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-4">
-            {[
-              { title: 'Com HUD', items: borderPresets.filter((preset) => preset.value.startsWith('hud') || preset.value === 'theme_default') },
-              { title: 'Sem HUD', items: borderPresets.filter((preset) => !(preset.value.startsWith('hud') || preset.value === 'theme_default')) },
-            ].map((group) => (
-              <div key={group.title} className="rounded-[18px] border border-[#ececec] bg-[#fafafa] p-4">
-                <div className="mb-3 text-[13px] font-semibold tracking-[-0.02em] text-[#4a4a46]">{group.title}</div>
-                <div className="space-y-4">
-            {group.items.map((preset) => {
+            {borderPresets.map((preset) => {
               const isSelected = selectedBorderPreset === preset.value
               const isHud = preset.value === 'theme_default' || preset.value === 'hud_compact' || preset.value === 'hud_bold'
               const borderRadius =
@@ -322,9 +315,6 @@ export function DashboardThemeModal({
                 </button>
               )
             })}
-                </div>
-              </div>
-            ))}
           </div>
         )}
 

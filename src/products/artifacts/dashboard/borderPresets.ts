@@ -15,12 +15,12 @@ export type DashboardBorderPresetOption = {
 }
 
 export const DASHBOARD_BORDER_PRESET_OPTIONS: DashboardBorderPresetOption[] = [
-  { value: 'theme_default', label: 'HUD padrão', description: 'Usa a moldura padrão do tema atual.' },
-  { value: 'hud_compact', label: 'HUD compacto', description: 'Mantém a moldura SVG com cantos menores.' },
-  { value: 'hud_bold', label: 'HUD forte', description: 'Mantém a moldura SVG com cantos mais fortes.' },
-  { value: 'rounded_minimal', label: 'Arredondado', description: 'Remove a moldura SVG e usa raio amplo.' },
-  { value: 'rounded_soft', label: 'Arredondado suave', description: 'Remove a moldura SVG e usa raio médio.' },
-  { value: 'straight_clean', label: 'Reto clean', description: 'Remove a moldura SVG e zera o raio dos cards.' },
+  { value: 'theme_default', label: 'Padrão', description: 'Usa o estilo padrão do tema atual.' },
+  { value: 'hud_compact', label: 'Compacta', description: 'Moldura com cantos menores e leitura mais contida.' },
+  { value: 'hud_bold', label: 'Marcada', description: 'Moldura mais forte e mais presente no card.' },
+  { value: 'rounded_minimal', label: 'Arredondada', description: 'Borda simples com raio amplo.' },
+  { value: 'rounded_soft', label: 'Suave', description: 'Borda simples com raio médio.' },
+  { value: 'straight_clean', label: 'Reta', description: 'Borda simples com cantos retos.' },
 ]
 
 export type DashboardCardFrame =
