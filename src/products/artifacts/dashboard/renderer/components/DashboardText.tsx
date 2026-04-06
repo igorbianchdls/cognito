@@ -18,6 +18,7 @@ function normalizeProps(input: Record<string, any> | undefined): Record<string, 
   const props = { ...(input || {}) }
   delete props.as
   delete props.type
+  delete props.variant
   delete props.style
   delete props.text
   delete props.title
@@ -32,13 +33,20 @@ function normalizeProps(input: Record<string, any> | undefined): Record<string, 
   return props
 }
 
+function resolveTextRole(props: Record<string, any>): string {
+  if (typeof props.variant === 'string' && props.variant.trim()) return props.variant.trim().toLowerCase()
+  if (typeof props.type === 'string' && props.type.trim()) return props.type.trim().toLowerCase()
+  return 'body'
+}
+
 export default function DashboardText({ element, children }: DashboardTextProps) {
   const props = (element?.props || {}) as Record<string, any>
   const queryResult = useDashboardQueryResult()
   const tag = typeof props.as === 'string' ? (props.as as keyof React.JSX.IntrinsicElements) : 'p'
-  const textType = typeof props.type === 'string' ? props.type : 'body'
+  const textType = resolveTextRole(props)
   const semanticStyle = useSemanticUiStyle(textType, tag)
-  const queryDeltaColor = textType === 'kpi-delta' ? getDashboardQueryDeltaColor(queryResult) : undefined
+  const queryDeltaColor =
+    textType === 'kpi-delta' || textType === 'kpi-compare' ? getDashboardQueryDeltaColor(queryResult) : undefined
 
   const fallbackContent =
     typeof props.text === 'string'
@@ -57,6 +65,7 @@ export default function DashboardText({ element, children }: DashboardTextProps)
       style: {
         boxSizing: 'border-box',
         minWidth: 0,
+        margin: 0,
         ...semanticStyle,
         color: props.color,
         fontSize: props.fontSize,

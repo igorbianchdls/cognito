@@ -123,18 +123,12 @@ function buildFinanceiroDashboardSource(themeName: string) {
               dataQuery={{ query: \`SELECT COALESCE(SUM(cr.valor_liquido), 0)::float AS value FROM financeiro.contas_receber cr WHERE 1=1 {{filters}}\`, limit: 1 }}
               format="currency"
               comparisonMode="previous_period"
-              cardStyle={{ padding: 22, borderRadius: 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}
-              titleStyle={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}
-              valueStyle={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }}
             />
             <KPI
               title="Contas a pagar"
               dataQuery={{ query: \`SELECT COALESCE(SUM(cp.valor_liquido), 0)::float AS value FROM financeiro.contas_pagar cp WHERE 1=1 {{filters}}\`, limit: 1 }}
               format="currency"
               comparisonMode="previous_period"
-              cardStyle={{ padding: 22, borderRadius: 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}
-              titleStyle={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}
-              valueStyle={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }}
             />
             <KPI
               title="Geracao liquida"
@@ -149,18 +143,12 @@ function buildFinanceiroDashboardSource(themeName: string) {
               }}
               format="currency"
               comparisonMode="previous_period"
-              cardStyle={{ padding: 22, borderRadius: 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}
-              titleStyle={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}
-              valueStyle={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }}
             />
             <KPI
               title="Titulos em AP"
               dataQuery={{ query: \`SELECT COUNT(*)::float AS value FROM financeiro.contas_pagar cp WHERE 1=1 {{filters}}\`, limit: 1 }}
               format="number"
               comparisonMode="previous_period"
-              cardStyle={{ padding: 22, borderRadius: 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}
-              titleStyle={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}
-              valueStyle={{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }}
             />
           </section>
 

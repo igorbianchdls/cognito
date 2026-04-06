@@ -40,10 +40,6 @@ function buildLayoutTestDashboardSource(themeName: string) {
             }}
             format="number"
             description="KPI dentro de Panel, para validar resize."
-            cardStyle={{ height: '100%', padding: 18, borderRadius: 20, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 10 }}
-            titleStyle={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}
-            valueStyle={{ margin: 0, fontSize: 30, fontWeight: 700, color: theme.kpiValueColor }}
-            descriptionStyle={{ margin: 0, fontSize: 14, color: theme.textSecondary }}
           />
         </Panel>
 
@@ -58,10 +54,6 @@ function buildLayoutTestDashboardSource(themeName: string) {
             }}
             format="currency"
             description="Este bloco tem duas rows para evidenciar resize vertical com KPI."
-            cardStyle={{ height: '100%', padding: 18, borderRadius: 20, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 10 }}
-            titleStyle={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}
-            valueStyle={{ margin: 0, fontSize: 30, fontWeight: 700, color: theme.kpiValueColor }}
-            descriptionStyle={{ margin: 0, fontSize: 14, color: theme.textSecondary }}
           />
         </Panel>
       </Horizontal>

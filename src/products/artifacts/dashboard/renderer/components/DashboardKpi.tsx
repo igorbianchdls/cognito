@@ -5,6 +5,7 @@ import React from 'react'
 import JsxCardSurface from '@/products/bi/json-render/components/JsxCardSurface'
 import { useData, useDataValue } from '@/products/bi/json-render/context'
 import { applyPrimaryDateRange } from '@/products/bi/json-render/dateFilters'
+import { useSemanticUiStyle, useThemeOverrides } from '@/products/bi/json-render/theme/ThemeContext'
 
 type AnyRecord = Record<string, any>
 type ValueFormat = 'currency' | 'percent' | 'number'
@@ -113,10 +114,13 @@ export default function DashboardKpi({
   element: any
 }) {
   const props = (element?.props || {}) as AnyRecord
+  const theme = useThemeOverrides()
+  const themeKpi = ((theme.components || {}) as AnyRecord).Kpi as AnyRecord | undefined
   const dataQuery = (props.dataQuery || {}) as AnyRecord
   const valueKey = typeof props.valueKey === 'string' && props.valueKey.trim() ? props.valueKey.trim() : 'value'
-  const format = props.format === 'currency' || props.format === 'percent' || props.format === 'number'
-    ? (props.format as ValueFormat)
+  const formatSource = props.format ?? themeKpi?.format
+  const format = formatSource === 'currency' || formatSource === 'percent' || formatSource === 'number'
+    ? (formatSource as ValueFormat)
     : 'number'
   const comparisonMode =
     props.comparisonMode === 'previous_period' ||
@@ -132,6 +136,27 @@ export default function DashboardKpi({
   const title = typeof props.title === 'string' ? props.title : ''
   const description = typeof props.description === 'string' ? props.description : ''
   const valuePath = typeof props.valuePath === 'string' && props.valuePath.trim() ? props.valuePath.trim() : ''
+  const themeContainerStyle =
+    themeKpi?.containerStyle && typeof themeKpi.containerStyle === 'object'
+      ? (themeKpi.containerStyle as React.CSSProperties)
+      : undefined
+  const themeTitleStyle =
+    themeKpi?.titleStyle && typeof themeKpi.titleStyle === 'object'
+      ? (themeKpi.titleStyle as React.CSSProperties)
+      : undefined
+  const themeValueStyle =
+    themeKpi?.valueStyle && typeof themeKpi.valueStyle === 'object'
+      ? (themeKpi.valueStyle as React.CSSProperties)
+      : undefined
+  const themeDescriptionStyle =
+    themeKpi?.descriptionStyle && typeof themeKpi.descriptionStyle === 'object'
+      ? (themeKpi.descriptionStyle as React.CSSProperties)
+      : undefined
+  const themeComparisonStyle =
+    themeKpi?.comparisonStyle && typeof themeKpi.comparisonStyle === 'object'
+      ? (themeKpi.comparisonStyle as React.CSSProperties)
+      : undefined
+  const styleOverride = props.style && typeof props.style === 'object' ? (props.style as React.CSSProperties) : undefined
   const cardStyle = props.cardStyle && typeof props.cardStyle === 'object' ? (props.cardStyle as React.CSSProperties) : undefined
   const titleStyle = props.titleStyle && typeof props.titleStyle === 'object' ? (props.titleStyle as React.CSSProperties) : undefined
   const valueStyle = props.valueStyle && typeof props.valueStyle === 'object' ? (props.valueStyle as React.CSSProperties) : undefined
@@ -146,6 +171,10 @@ export default function DashboardKpi({
   const positiveColor = typeof props.positiveColor === 'string' ? props.positiveColor : '#15803D'
   const negativeColor = typeof props.negativeColor === 'string' ? props.negativeColor : '#DC2626'
   const neutralColor = typeof props.neutralColor === 'string' ? props.neutralColor : '#64748B'
+  const titleSemanticStyle = useSemanticUiStyle('kpi-title', 'p')
+  const valueSemanticStyle = useSemanticUiStyle('kpi-value', 'div')
+  const descriptionSemanticStyle = useSemanticUiStyle('muted', 'p')
+  const comparisonSemanticStyle = useSemanticUiStyle('kpi-compare', 'p')
 
   const { data } = useData()
   const valueFromPath = useDataValue(valuePath || '', undefined)
@@ -367,33 +396,69 @@ export default function DashboardKpi({
         props: {
           style: {
             height: '100%',
-            padding: 22,
             display: 'flex',
             flexDirection: 'column',
             gap: 8,
+            padding: 22,
+            ...(themeContainerStyle || {}),
+            ...(styleOverride || {}),
             ...(cardStyle || {}),
           },
         },
       }}
     >
-      {title ? <h2 style={{ margin: 0, ...(titleStyle || {}) }}>{title}</h2> : null}
-      <div style={{ margin: 0, ...(valueStyle || {}) }}>
+      {title ? (
+        <p
+          data-ui="kpi-title"
+          style={{
+            margin: 0,
+            ...titleSemanticStyle,
+            ...(themeTitleStyle || {}),
+            ...(titleStyle || {}),
+          }}
+        >
+          {title}
+        </p>
+      ) : null}
+      <div
+        data-ui="kpi-value"
+        style={{
+          margin: 0,
+          ...valueSemanticStyle,
+          ...(themeValueStyle || {}),
+          ...(valueStyle || {}),
+        }}
+      >
         {formattedValue}
         {unit ? ` ${unit}` : ''}
       </div>
       {canRenderComparison ? (
         <p
+          data-ui="kpi-compare"
           style={{
             margin: 0,
-            color: comparisonColor,
-            fontSize: 13,
+            ...comparisonSemanticStyle,
+            ...(themeComparisonStyle || {}),
             ...(comparisonStyle || {}),
+            color: comparisonColor,
           }}
         >
           {queryState.loading ? '...' : comparisonText}
         </p>
       ) : null}
-      {description ? <p style={{ margin: 0, ...(descriptionStyle || {}) }}>{description}</p> : null}
+      {description ? (
+        <p
+          data-ui="description"
+          style={{
+            margin: 0,
+            ...descriptionSemanticStyle,
+            ...(themeDescriptionStyle || {}),
+            ...(descriptionStyle || {}),
+          }}
+        >
+          {description}
+        </p>
+      ) : null}
       {queryState.error ? <div className="mt-1 text-xs text-red-600">{queryState.error}</div> : null}
     </JsxCardSurface>
   )

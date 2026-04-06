@@ -12,6 +12,7 @@ export type H1Manager = {
 export type KpiTextManager = {
   font?: string
   weight?: string | number
+  size?: string | number
   color?: string
   letterSpacing?: string | number
   padding?: string | number
@@ -158,11 +159,13 @@ export function mapManagersToCssVars(managers: Managers | undefined): Record<str
     const v = (k.value && typeof k.value === 'object') ? k.value as AnyRecord : {}
     if (t.font) cssVars.kpiTitleFontFamily = String(t.font)
     if (t.weight !== undefined) cssVars.kpiTitleFontWeight = String(t.weight)
+    if (t.size !== undefined) cssVars.kpiTitleFontSize = String(t.size)
     if (t.color) cssVars.kpiTitleColor = String(t.color)
     if (t.letterSpacing !== undefined) cssVars.kpiTitleLetterSpacing = String(t.letterSpacing)
     if (t.padding !== undefined) cssVars.kpiTitlePadding = String(t.padding)
     if (v.font) cssVars.kpiValueFontFamily = String(v.font)
     if (v.weight !== undefined) cssVars.kpiValueFontWeight = String(v.weight)
+    if (v.size !== undefined) cssVars.kpiValueFontSize = String(v.size)
     if (v.color) cssVars.kpiValueColor = String(v.color)
     if (v.letterSpacing !== undefined) cssVars.kpiValueLetterSpacing = String(v.letterSpacing)
     if (v.padding !== undefined) cssVars.kpiValuePadding = String(v.padding)

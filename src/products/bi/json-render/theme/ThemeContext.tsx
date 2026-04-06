@@ -72,13 +72,16 @@ export function getSemanticUiStyle(
 
   const isTitleRole =
     role === "title" ||
+    role === "card-title" ||
     role === "page-title" ||
     role === "chart-title" ||
     role === "section-title" ||
     role === "table-title" ||
     (!role && (tag === "h1" || tag === "h2" || tag === "h3"));
-  const isEyebrowRole = role === "eyebrow" || role === "subtitle";
+  const isEyebrowRole = role === "eyebrow" || role === "subtitle" || role === "card-subtitle";
   const isCardRole = role === "card" || role === "chart-card" || role === "table-card" || role === "pivot-card";
+  const isBodyRole = role === "body" || role === "card-body" || role === "chart-body" || role === "table-body";
+  const isMutedRole = role === "muted" || role === "description" || role === "card-description";
 
   if (isCardRole) {
     return {
@@ -97,7 +100,7 @@ export function getSemanticUiStyle(
       color: titleComponent.color || "var(--h1Color, currentColor)",
       fontFamily: titleComponent.fontFamily || "var(--h1FontFamily, inherit)",
       fontWeight: titleComponent.fontWeight || "var(--h1FontWeight, inherit)",
-      fontSize: titleComponent.fontSize || undefined,
+      fontSize: titleComponent.fontSize || "var(--h1FontSize, inherit)",
       letterSpacing: titleComponent.letterSpacing || "var(--h1LetterSpacing, inherit)",
       padding: titleComponent.padding || "var(--h1Padding, 0px)",
     };
@@ -114,17 +117,28 @@ export function getSemanticUiStyle(
     };
   }
 
-  if (role === "body" || role === "chart-body" || role === "table-body") {
+  if (isBodyRole) {
     return {
       fontFamily: "var(--fontFamily, inherit)",
+      color: "var(--fg, currentColor)",
+      lineHeight: 1.6,
     };
   }
 
-  if (role === "kpi-title") {
+  if (isMutedRole) {
+    return {
+      fontFamily: "var(--fontFamily, inherit)",
+      color: "var(--textSecondary, var(--headerSubtitle, currentColor))",
+      lineHeight: 1.6,
+    };
+  }
+
+  if (role === "kpi-title" || role === "kpi-label") {
     return {
       color: "var(--kpiTitleColor, currentColor)",
       fontFamily: "var(--kpiTitleFontFamily, inherit)",
       fontWeight: "var(--kpiTitleFontWeight, inherit)",
+      fontSize: "var(--kpiTitleFontSize, inherit)",
       letterSpacing: "var(--kpiTitleLetterSpacing, inherit)",
       padding: "var(--kpiTitlePadding, 0px)",
     };
@@ -135,14 +149,20 @@ export function getSemanticUiStyle(
       color: "var(--kpiValueColor, currentColor)",
       fontFamily: "var(--kpiValueFontFamily, inherit)",
       fontWeight: "var(--kpiValueFontWeight, inherit)",
+      fontSize: "var(--kpiValueFontSize, inherit)",
       letterSpacing: "var(--kpiValueLetterSpacing, inherit)",
       padding: "var(--kpiValuePadding, 0px)",
+      lineHeight: 1,
     };
   }
 
-  if (role === "kpi-delta") {
+  if (role === "kpi-delta" || role === "kpi-compare") {
     return {
       fontFamily: "var(--fontFamily, inherit)",
+      color: "var(--textSecondary, var(--headerSubtitle, currentColor))",
+      fontSize: 13,
+      fontWeight: 500,
+      lineHeight: 1.4,
     };
   }
 

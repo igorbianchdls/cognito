@@ -377,6 +377,7 @@ function buildManagersFromTokens(tokens: DesignTokens, name: ThemeName): Manager
       title: {
         font: fontPrimary,
         weight: tokens.typography?.fontWeight?.semibold ?? 600,
+        size: tokens.typography?.fontSize?.sm ?? 14,
         color: textSecondary,
         letterSpacing: '-0.01em',
         padding: 0,
@@ -384,6 +385,7 @@ function buildManagersFromTokens(tokens: DesignTokens, name: ThemeName): Manager
       value: {
         font: fontPrimary,
         weight: tokens.typography?.fontWeight?.bold ?? 700,
+        size: 32,
         color: textPrimary,
         letterSpacing: '-0.02em',
         padding: 0,
@@ -544,6 +546,7 @@ export function buildThemeVars(
   const colors = (tokens.colors || {}) as AnyRecord;
   // Base from tokens
   if (colors?.text?.primary) extraCss.fg = String(colors.text.primary);
+  if (colors?.text?.secondary) extraCss.textSecondary = String(colors.text.secondary);
   if (colors?.border) extraCss.surfaceBorder = String(colors.border);
   // Override fg/surfaceBorder if managers defined custom ones via overrides above
   if (managers?.kpi?.value?.color) extraCss.fg = String(managers.kpi.value.color);
