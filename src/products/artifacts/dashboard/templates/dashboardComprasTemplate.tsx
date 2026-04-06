@@ -19,10 +19,10 @@ function buildComprasDashboardSource(themeName: string) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: '58%' }}>
               <span style={{ display: 'inline-flex', width: 'fit-content', alignItems: 'center', borderRadius: 999, border: '1px solid ' + theme.accentBorder, backgroundColor: theme.accentSurface, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: theme.accentText }}>Procurement Review</span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Compras, fornecedores e alocacao de gasto</p>
-                <h1 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 40, lineHeight: 1.02, fontWeight: 700, letterSpacing: '-0.04em' }}>Dashboard de Compras</h1>
+                <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Compras, fornecedores e alocacao de gasto</Text>
+                <Text as="h1" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 40, lineHeight: 1.02, fontWeight: 700, letterSpacing: '-0.04em' }}>Dashboard de Compras</Text>
               </div>
-              <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: theme.textSecondary }}>Leitura em pagina unica com KPIs no topo, filtros dedicados, distribuicao de gasto, serie temporal e detalhamento operacional sem DSL.</p>
+              <Text style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: theme.textSecondary }}>Leitura em pagina unica com KPIs no topo, filtros dedicados, distribuicao de gasto, serie temporal e detalhamento operacional sem DSL.</Text>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '34%', minWidth: 320 }}>
@@ -44,8 +44,8 @@ function buildComprasDashboardSource(themeName: string) {
           <Grid columns={12} rowHeight={32} gap={18}>
             <Panel id="compras-filter-fornecedor" x={0} y={0} span={4} rows={6}>
             <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filtro</p>
-              <h2 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Fornecedor</h2>
+              <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filtro</Text>
+              <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Fornecedor</Text>
               <Filter
                 label="Fornecedor"
                 table="compras.compras"
@@ -71,8 +71,8 @@ function buildComprasDashboardSource(themeName: string) {
 
             <Panel id="compras-filter-centro-custo" x={4} y={0} span={4} rows={6}>
             <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filtro</p>
-              <h2 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Centro de custo</h2>
+              <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filtro</Text>
+              <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Centro de custo</Text>
               <Filter
                 label="Centro de custo"
                 table="compras.compras"
@@ -98,8 +98,8 @@ function buildComprasDashboardSource(themeName: string) {
 
             <Panel id="compras-filter-status" x={8} y={0} span={4} rows={6}>
             <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filtro</p>
-              <h2 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Status</h2>
+              <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filtro</Text>
+              <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Status</Text>
               <Filter
                 label="Status"
                 table="compras.compras"
@@ -158,10 +158,10 @@ function buildComprasDashboardSource(themeName: string) {
             <Panel id="compras-chart-fornecedor" x={0} y={10} span={7} rows={16}>
             <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Top spend</p>
-                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Gasto por fornecedor</h2>
+                <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Top spend</Text>
+                <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Gasto por fornecedor</Text>
               </div>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Corte principal para identificar concentracao de compras e dependencia de poucos parceiros no periodo filtrado.</p>
+              <Text style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Corte principal para identificar concentracao de compras e dependencia de poucos parceiros no periodo filtrado.</Text>
               <div style={{ flex: 1, minHeight: 0 }}>
                 <Chart
                   type="bar"
@@ -195,10 +195,10 @@ function buildComprasDashboardSource(themeName: string) {
             <Panel id="compras-chart-categoria" x={7} y={10} span={5} rows={16}>
             <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Allocation</p>
-                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Gasto por categoria</h2>
+                <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Allocation</Text>
+                <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Gasto por categoria</Text>
               </div>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Mostra em qual categoria de despesa o volume de compras esta se acumulando no periodo.</p>
+              <Text style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Mostra em qual categoria de despesa o volume de compras esta se acumulando no periodo.</Text>
               <div style={{ flex: 1, minHeight: 0 }}>
                 <Chart
                   type="pie"
@@ -233,10 +233,10 @@ function buildComprasDashboardSource(themeName: string) {
             <Panel id="compras-chart-trend" x={0} y={26} span={7} rows={16}>
             <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trend</p>
-                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Gasto por mes</h2>
+                <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trend</Text>
+                <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Gasto por mes</Text>
               </div>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Serie mensal para entender aceleracao ou desaceleracao de compras sem depender do motor DSL antigo.</p>
+              <Text style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Serie mensal para entender aceleracao ou desaceleracao de compras sem depender do motor DSL antigo.</Text>
               <div style={{ flex: 1, minHeight: 0 }}>
                 <Chart
                   type="line"
@@ -270,8 +270,8 @@ function buildComprasDashboardSource(themeName: string) {
             <Panel id="compras-chart-status" x={7} y={26} span={5} rows={16}>
             <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status mix</p>
-                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Pedidos por status</h2>
+                <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status mix</Text>
+                <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Pedidos por status</Text>
               </div>
               <div style={{ flex: 1, minHeight: 0 }}>
                 <Chart
@@ -304,8 +304,8 @@ function buildComprasDashboardSource(themeName: string) {
             <Panel id="compras-table" x={0} y={42} span={8} rows={18}>
             <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</p>
-                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Pedidos de compra no detalhe</h2>
+                <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</Text>
+                <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Pedidos de compra no detalhe</Text>
               </div>
               <Table
                 bordered
@@ -352,8 +352,8 @@ function buildComprasDashboardSource(themeName: string) {
             <Panel id="compras-pivot" x={8} y={42} span={4} rows={18}>
             <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</p>
-                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Categoria por status</h2>
+                <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</Text>
+                <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Categoria por status</Text>
               </div>
               <PivotTable
                 bordered
@@ -394,7 +394,7 @@ function buildComprasDashboardSource(themeName: string) {
             <Panel id="compras-insight-concentracao" x={0} y={60} span={4} rows={6}>
             <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <h2 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Concentracao em fornecedores</h2>
+                <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Concentracao em fornecedores</Text>
               </div>
               <Insights
                 textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.65 }}
@@ -409,7 +409,7 @@ function buildComprasDashboardSource(themeName: string) {
             <Panel id="compras-insight-centro" x={4} y={60} span={4} rows={6}>
             <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <h2 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Pressao por centro de custo</h2>
+                <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Pressao por centro de custo</Text>
               </div>
               <Insights
                 textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.65 }}
@@ -424,7 +424,7 @@ function buildComprasDashboardSource(themeName: string) {
             <Panel id="compras-insight-risco" x={8} y={60} span={4} rows={6}>
             <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <h2 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Risco operacional</h2>
+                <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Risco operacional</Text>
               </div>
               <Insights
                 textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.65 }}
@@ -438,8 +438,8 @@ function buildComprasDashboardSource(themeName: string) {
           </Grid>
 
           <footer style={{ display: 'flex', justifyContent: 'space-between', gap: 18, padding: '18px 22px', borderRadius: 22, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder }}>
-            <p style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Template JSX de compras com filtros dedicados, queries SQL explicitas e leitura completa em uma unica pagina.</p>
-            <p style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: ${resolvedThemeName}</p>
+            <Text style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Template JSX de compras com filtros dedicados, queries SQL explicitas e leitura completa em uma unica pagina.</Text>
+            <Text style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: ${resolvedThemeName}</Text>
           </footer>
         </Vertical>
     </Dashboard>`

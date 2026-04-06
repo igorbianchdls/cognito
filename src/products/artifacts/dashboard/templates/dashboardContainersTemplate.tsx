@@ -17,15 +17,15 @@ function buildContainersDashboardSource(themeName: string) {
         <Vertical gap={24} style={{ minHeight: '100%', backgroundColor: theme.pageBg }}>
           <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24, padding: 24, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
             <Vertical gap={8} style={{ maxWidth: 720 }}>
-              <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 Layout semantico em containers
-              </p>
-              <h1 style={{ margin: 0, fontSize: 40, lineHeight: 1.02, fontWeight: 700, letterSpacing: '-0.04em', color: theme.titleColor }}>
+              </Text>
+              <Text as="h1" style={{ margin: 0, fontSize: 40, lineHeight: 1.02, fontWeight: 700, letterSpacing: '-0.04em', color: theme.titleColor }}>
                 Dashboard com Vertical, Horizontal e Panel
-              </h1>
-              <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: theme.textSecondary }}>
+              </Text>
+              <Text style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: theme.textSecondary }}>
                 Exemplo de autoria mais proxima de containers de BI, mantendo KPI, Chart e Cards normais.
-              </p>
+              </Text>
             </Vertical>
 
             <Panel id="global-period" width={340}>
@@ -100,7 +100,7 @@ function buildContainersDashboardSource(themeName: string) {
             <Horizontal gap={18} align="stretch" columns={12} rowHeight={420}>
               <Panel id="chart-receita-canal" span={8} rows={1}>
                 <Card style={{ height: '100%', padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  <h2 style={{ margin: 0, fontSize: 20, fontWeight: 600, color: theme.titleColor }}>Receita por canal</h2>
+                  <Text as="h2" style={{ margin: 0, fontSize: 20, fontWeight: 600, color: theme.titleColor }}>Receita por canal</Text>
                   <Chart
                     type="bar"
                     height={320}
@@ -128,7 +128,7 @@ function buildContainersDashboardSource(themeName: string) {
               <Panel id="filters-side" span={4} rows={1}>
                 <Vertical gap={18} style={{ height: '100%' }}>
                   <Card style={{ flex: 1, minHeight: 0, padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 14 }}>
-                    <h2 style={{ margin: 0, fontSize: 20, fontWeight: 600, color: theme.titleColor }}>Canal</h2>
+                    <Text as="h2" style={{ margin: 0, fontSize: 20, fontWeight: 600, color: theme.titleColor }}>Canal</Text>
                     <Filter
                       label="Canal"
                       table="vendas.pedidos"
@@ -151,10 +151,10 @@ function buildContainersDashboardSource(themeName: string) {
                   </Card>
 
                   <Card style={{ flex: 1, minHeight: 0, padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Leitura esperada</p>
-                    <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: theme.textSecondary }}>
+                    <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Leitura esperada</Text>
+                    <Text style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: theme.textSecondary }}>
                       Este exemplo usa containers semanticos para organizar cabecalho, KPIs e linha analitica sem depender de HTML livre em toda parte.
-                    </p>
+                    </Text>
                   </Card>
                 </Vertical>
               </Panel>

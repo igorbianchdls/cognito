@@ -16,15 +16,15 @@ function buildLayoutTestDashboardSource(themeName: string) {
   return `<Dashboard id="layout-test" title="${LAYOUT_TEST_VARIANT.title}" theme="${resolvedThemeName}" chartPalette="teal">
   <Vertical gap={24} style={{ width: '1600px', minHeight: '100%', backgroundColor: theme.pageBg, padding: 24 }}>
     <header style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 24, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.headerBg }}>
-      <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+      <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
         Teste puro de layout
-      </p>
-      <h1 style={{ margin: 0, fontSize: 34, lineHeight: 1.02, fontWeight: 700, letterSpacing: '-0.04em', color: theme.titleColor }}>
+      </Text>
+      <Text as="h1" style={{ margin: 0, fontSize: 34, lineHeight: 1.02, fontWeight: 700, letterSpacing: '-0.04em', color: theme.titleColor }}>
         Resize horizontal e vertical
-      </h1>
-      <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: theme.textSecondary }}>
+      </Text>
+      <Text style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: theme.textSecondary }}>
         Exemplo minimo com KPI e Chart, sem Query, para provar o comportamento do grid.
-      </p>
+      </Text>
     </header>
 
     <Vertical gap={20}>
@@ -61,25 +61,25 @@ function buildLayoutTestDashboardSource(themeName: string) {
       <Horizontal gap={16} columns={12} rowHeight={32}>
         <Panel id="test-a" span={4} rows={4}>
           <Card style={{ height: '100%', padding: 18, borderRadius: 20, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Panel A</p>
-            <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: theme.titleColor }}>span 4 / rows 4</h2>
-            <p style={{ margin: 0, fontSize: 14, color: theme.textSecondary }}>Use este bloco para testar largura e altura.</p>
+            <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Panel A</Text>
+            <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 700, color: theme.titleColor }}>span 4 / rows 4</Text>
+            <Text style={{ margin: 0, fontSize: 14, color: theme.textSecondary }}>Use este bloco para testar largura e altura.</Text>
           </Card>
         </Panel>
 
         <Panel id="test-b" span={4} rows={8}>
           <Card style={{ height: '100%', padding: 18, borderRadius: 20, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Panel B</p>
-            <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: theme.titleColor }}>span 4 / rows 8</h2>
-            <p style={{ margin: 0, fontSize: 14, color: theme.textSecondary }}>A altura aqui precisa crescer claramente.</p>
+            <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Panel B</Text>
+            <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 700, color: theme.titleColor }}>span 4 / rows 8</Text>
+            <Text style={{ margin: 0, fontSize: 14, color: theme.textSecondary }}>A altura aqui precisa crescer claramente.</Text>
           </Card>
         </Panel>
 
         <Panel id="test-c" span={4} rows={12}>
           <Card style={{ height: '100%', padding: 18, borderRadius: 20, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Panel C</p>
-            <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: theme.titleColor }}>span 4 / rows 12</h2>
-            <p style={{ margin: 0, fontSize: 14, color: theme.textSecondary }}>Este bloco deixa o resize vertical bem evidente.</p>
+            <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Panel C</Text>
+            <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 700, color: theme.titleColor }}>span 4 / rows 12</Text>
+            <Text style={{ margin: 0, fontSize: 14, color: theme.textSecondary }}>Este bloco deixa o resize vertical bem evidente.</Text>
           </Card>
         </Panel>
       </Horizontal>
@@ -88,9 +88,9 @@ function buildLayoutTestDashboardSource(themeName: string) {
         <Panel id="test-d" span={7} rows={6}>
           <Card style={{ height: '100%', padding: 18, borderRadius: 20, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Panel D</p>
-              <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: theme.titleColor }}>Chart responsivo</h2>
-              <p style={{ margin: 0, fontSize: 14, color: theme.textSecondary }}>Este painel usa um chart simples para validar resize vertical dentro de Card.</p>
+              <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Panel D</Text>
+              <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 700, color: theme.titleColor }}>Chart responsivo</Text>
+              <Text style={{ margin: 0, fontSize: 14, color: theme.textSecondary }}>Este painel usa um chart simples para validar resize vertical dentro de Card.</Text>
             </div>
             <div style={{ flex: 1, minHeight: 0 }}>
               <Chart
@@ -121,9 +121,9 @@ function buildLayoutTestDashboardSource(themeName: string) {
 
         <Panel id="test-e" span={5} rows={3}>
           <Card style={{ height: '100%', padding: 18, borderRadius: 20, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Panel E</p>
-            <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: theme.titleColor }}>span 5 / rows 3</h2>
-            <p style={{ margin: 0, fontSize: 14, color: theme.textSecondary }}>Sem conteúdo complexo para mascarar o comportamento do grid.</p>
+            <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Panel E</Text>
+            <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 700, color: theme.titleColor }}>span 5 / rows 3</Text>
+            <Text style={{ margin: 0, fontSize: 14, color: theme.textSecondary }}>Sem conteúdo complexo para mascarar o comportamento do grid.</Text>
           </Card>
         </Panel>
       </Horizontal>

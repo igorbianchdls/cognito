@@ -19,10 +19,10 @@ function buildShopifyDashboardSource(themeName: string) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: '64%' }}>
               <span style={{ display: 'inline-flex', width: 'fit-content', alignItems: 'center', borderRadius: 999, border: '1px solid ' + theme.accentBorder, backgroundColor: theme.accentSurface, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: theme.accentText }}>E-commerce Core</span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Shopify para vendas, pagamento e fulfillment</p>
-                <h1 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 40, lineHeight: 1.02, fontWeight: 700, letterSpacing: '-0.04em' }}>Dashboard Shopify</h1>
+                <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Shopify para vendas, pagamento e fulfillment</Text>
+                <Text as="h1" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 40, lineHeight: 1.02, fontWeight: 700, letterSpacing: '-0.04em' }}>Dashboard Shopify</Text>
               </div>
-              <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: theme.textSecondary }}>Migracao do template legado para JSX com tags, preservando GMV, pedidos, ticket, operacao de pagamento e fulfillment no mesmo dashboard.</p>
+              <Text style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: theme.textSecondary }}>Migracao do template legado para JSX com tags, preservando GMV, pedidos, ticket, operacao de pagamento e fulfillment no mesmo dashboard.</Text>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '34%', minWidth: 320 }}>
               <DatePicker
@@ -43,8 +43,8 @@ function buildShopifyDashboardSource(themeName: string) {
           <section style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 18 }}>
             <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filters</p>
-                <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Loja e status</h2>
+                <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filters</Text>
+                <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Loja e status</Text>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 14 }}>
                 <Filter
@@ -91,8 +91,8 @@ function buildShopifyDashboardSource(themeName: string) {
             </Card>
 
             <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Leitura esperada</p>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Primeiro confira GMV e pedidos, depois veja se o mix de pagamento e fulfillment esta sustentando a operacao sem vazamento em reembolso.</p>
+              <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Leitura esperada</Text>
+              <Text style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Primeiro confira GMV e pedidos, depois veja se o mix de pagamento e fulfillment esta sustentando a operacao sem vazamento em reembolso.</Text>
             </Card>
           </section>
 
@@ -166,10 +166,10 @@ function buildShopifyDashboardSource(themeName: string) {
               <section style={{ display: 'grid', gridTemplateColumns: '1.25fr 1fr', gap: 18 }}>
                 <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Store mix</p>
-                    <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>GMV por loja</h2>
+                    <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Store mix</Text>
+                    <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>GMV por loja</Text>
                   </div>
-                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Distribui o faturamento por loja para separar concentracao de receita, assimetria de sortimento e dependencia comercial.</p>
+                  <Text style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Distribui o faturamento por loja para separar concentracao de receita, assimetria de sortimento e dependencia comercial.</Text>
                   <Chart
                     type="bar"
                     height={320}
@@ -198,10 +198,10 @@ function buildShopifyDashboardSource(themeName: string) {
 
                 <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Payment mix</p>
-                    <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Pedidos por status de pagamento</h2>
+                    <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Payment mix</Text>
+                    <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Pedidos por status de pagamento</Text>
                   </div>
-                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Ajuda a medir o quanto do volume ja virou caixa e quanto ainda esta pendente, em risco ou parcialmente capturado.</p>
+                  <Text style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Ajuda a medir o quanto do volume ja virou caixa e quanto ainda esta pendente, em risco ou parcialmente capturado.</Text>
                   <Chart
                     type="pie"
                     height={320}
@@ -235,10 +235,10 @@ function buildShopifyDashboardSource(themeName: string) {
               <section style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 18 }}>
                 <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trend</p>
-                    <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>GMV por mes</h2>
+                    <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trend</Text>
+                    <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>GMV por mes</Text>
                   </div>
-                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Serie mensal para confrontar aceleracao de vendas com carga operacional e pressao de reembolso.</p>
+                  <Text style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Serie mensal para confrontar aceleracao de vendas com carga operacional e pressao de reembolso.</Text>
                   <Chart
                     type="line"
                     height={320}
@@ -269,8 +269,8 @@ function buildShopifyDashboardSource(themeName: string) {
                 <section style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 18 }}>
                   <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Fulfillment</p>
-                      <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Pedidos por fulfillment</h2>
+                      <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Fulfillment</Text>
+                      <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Pedidos por fulfillment</Text>
                     </div>
                     <Chart
                       type="bar"
@@ -298,8 +298,8 @@ function buildShopifyDashboardSource(themeName: string) {
                   </Card>
                   <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <h2 style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Leituras operacionais</h2>
-                      <p style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Perguntas para o time alinhar comercial, pagamento e fulfillment.</p>
+                      <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Leituras operacionais</Text>
+                      <Text style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Perguntas para o time alinhar comercial, pagamento e fulfillment.</Text>
                     </div>
                     <Insights
                       textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.65 }}
@@ -319,8 +319,8 @@ function buildShopifyDashboardSource(themeName: string) {
               <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 18 }}>
                 <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</p>
-                    <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Pedidos no detalhe</h2>
+                    <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</Text>
+                    <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Pedidos no detalhe</Text>
                   </div>
                   <Table
                     bordered
@@ -362,8 +362,8 @@ function buildShopifyDashboardSource(themeName: string) {
 
                 <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</p>
-                    <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Loja por pagamento</h2>
+                    <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</Text>
+                    <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Loja por pagamento</Text>
                   </div>
                   <PivotTable
                     bordered
@@ -403,8 +403,8 @@ function buildShopifyDashboardSource(themeName: string) {
           </Tabs>
 
           <footer style={{ display: 'flex', justifyContent: 'space-between', gap: 18, padding: '18px 22px', borderRadius: 22, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder }}>
-            <p style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Template JSX para Shopify com leitura comercial e operacional, adaptado do app legado para o formato novo do dashboard.</p>
-            <p style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: ${resolvedThemeName}</p>
+            <Text style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Template JSX para Shopify com leitura comercial e operacional, adaptado do app legado para o formato novo do dashboard.</Text>
+            <Text style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: ${resolvedThemeName}</Text>
           </footer>
         </section>
     </Dashboard>`
