@@ -14,7 +14,7 @@ const CONTAINERS_VARIANT = {
 function buildContainersDashboardSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('containers')
   return `<Dashboard id="overview" title="${CONTAINERS_VARIANT.title}" theme="${resolvedThemeName}" chartPalette="teal">
-        <Vertical gap={24} style={{ minHeight: '100%', backgroundColor: theme.pageBg }}>
+        <Vertical gap={24} style={{ width: '1600px', minHeight: '100%', backgroundColor: theme.pageBg }}>
           <Horizontal columns={12} rowHeight={18} gap={18}>
             <Panel id="containers-header" span={12} rows={8}>
               <header style={{ height: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24, padding: 24, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>

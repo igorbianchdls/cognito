@@ -14,7 +14,7 @@ const SHOPIFY_VARIANT = {
 function buildShopifyDashboardSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('shopify')
   return `<Dashboard id="overview" title="${SHOPIFY_VARIANT.title}" theme="${resolvedThemeName}" chartPalette="red">
-        <Vertical gap={18} style={{ minHeight: '100%', padding: 32, backgroundColor: theme.pageBg }}>
+        <Vertical gap={18} style={{ width: '1600px', minHeight: '100%', padding: 32, backgroundColor: theme.pageBg }}>
           <Horizontal columns={12} rowHeight={18} gap={18}>
             <Panel id="shopify-header" span={12} rows={8}>
           <header style={{ height: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24, padding: 24, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
