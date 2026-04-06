@@ -15,17 +15,21 @@ function buildLayoutTestDashboardSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('layouttest')
   return `<Dashboard id="layout-test" title="${LAYOUT_TEST_VARIANT.title}" theme="${resolvedThemeName}" chartPalette="teal">
   <Vertical gap={24} style={{ width: '1600px', minHeight: '100%', backgroundColor: theme.pageBg, padding: 24 }}>
-    <header style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 24, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.headerBg }}>
-      <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-        Teste puro de layout
-      </Text>
-      <Text as="h1" style={{ margin: 0, fontSize: 34, lineHeight: 1.02, fontWeight: 700, letterSpacing: '-0.04em', color: theme.titleColor }}>
-        Resize horizontal e vertical
-      </Text>
-      <Text style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: theme.textSecondary }}>
-        Exemplo minimo com KPI e Chart, sem Query, para provar o comportamento do grid.
-      </Text>
-    </header>
+    <Horizontal columns={12} rowHeight={18} gap={18}>
+      <Panel id="layout-test-header" span={12} rows={6}>
+        <header style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 24, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.headerBg }}>
+          <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            Teste puro de layout
+          </Text>
+          <Text as="h1" style={{ margin: 0, fontSize: 34, lineHeight: 1.02, fontWeight: 700, letterSpacing: '-0.04em', color: theme.titleColor }}>
+            Resize horizontal e vertical
+          </Text>
+          <Text style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: theme.textSecondary }}>
+            Exemplo minimo com KPI e Chart, sem Query, para provar o comportamento do grid.
+          </Text>
+        </header>
+      </Panel>
+    </Horizontal>
 
     <Vertical gap={20}>
       <Horizontal gap={16} columns={12} rowHeight={32}>

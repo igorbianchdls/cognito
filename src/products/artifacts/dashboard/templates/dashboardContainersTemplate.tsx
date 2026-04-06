@@ -15,33 +15,37 @@ function buildContainersDashboardSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('containers')
   return `<Dashboard id="overview" title="${CONTAINERS_VARIANT.title}" theme="${resolvedThemeName}" chartPalette="teal">
         <Vertical gap={24} style={{ minHeight: '100%', backgroundColor: theme.pageBg }}>
-          <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24, padding: 24, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
-            <Vertical gap={8} style={{ maxWidth: 720 }}>
-              <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                Layout semantico em containers
-              </Text>
-              <Text as="h1" style={{ margin: 0, fontSize: 40, lineHeight: 1.02, fontWeight: 700, letterSpacing: '-0.04em', color: theme.titleColor }}>
-                Dashboard com Vertical, Horizontal e Panel
-              </Text>
-              <Text style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: theme.textSecondary }}>
-                Exemplo de autoria mais proxima de containers de BI, mantendo KPI, Chart e Cards normais.
-              </Text>
-            </Vertical>
+          <Horizontal columns={12} rowHeight={18} gap={18}>
+            <Panel id="containers-header" span={12} rows={8}>
+              <header style={{ height: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24, padding: 24, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
+                <Vertical gap={8} style={{ maxWidth: 720 }}>
+                  <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    Layout semantico em containers
+                  </Text>
+                  <Text as="h1" style={{ margin: 0, fontSize: 40, lineHeight: 1.02, fontWeight: 700, letterSpacing: '-0.04em', color: theme.titleColor }}>
+                    Dashboard com Vertical, Horizontal e Panel
+                  </Text>
+                  <Text style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: theme.textSecondary }}>
+                    Exemplo de autoria mais proxima de containers de BI, mantendo KPI, Chart e Cards normais.
+                  </Text>
+                </Vertical>
 
-            <Panel id="global-period" width={340}>
-              <DatePicker
-                label="Periodo do pedido"
-                table="vendas.pedidos"
-                field="data_pedido"
-                presets={['7d', '30d', 'month']}
-                labelStyle={{ margin: 0, fontSize: 11, color: theme.headerDatePickerLabel, textTransform: 'uppercase', letterSpacing: '0.06em' }}
-                fieldStyle={{ minHeight: 38, padding: '0 10px', border: '1px solid ' + theme.headerDatePickerBorder, borderRadius: 10, backgroundColor: theme.headerDatePickerBg, color: theme.headerDatePickerColor, fontSize: 14, fontWeight: 500 }}
-                iconStyle={{ color: theme.headerDatePickerIcon, fontSize: 14 }}
-                presetButtonStyle={{ height: 36, border: '1px solid ' + theme.headerDatePickerBorder, borderRadius: 10, backgroundColor: theme.headerDatePickerBg, color: theme.headerDatePickerColor, fontSize: 13, fontWeight: 500 }}
-                activePresetButtonStyle={{ backgroundColor: theme.headerDatePickerActiveBg, borderColor: theme.headerDatePickerActiveBorder, color: theme.headerDatePickerActiveText, fontWeight: 600 }}
-              />
+                <Panel id="global-period" width={340}>
+                  <DatePicker
+                    label="Periodo do pedido"
+                    table="vendas.pedidos"
+                    field="data_pedido"
+                    presets={['7d', '30d', 'month']}
+                    labelStyle={{ margin: 0, fontSize: 11, color: theme.headerDatePickerLabel, textTransform: 'uppercase', letterSpacing: '0.06em' }}
+                    fieldStyle={{ minHeight: 38, padding: '0 10px', border: '1px solid ' + theme.headerDatePickerBorder, borderRadius: 10, backgroundColor: theme.headerDatePickerBg, color: theme.headerDatePickerColor, fontSize: 14, fontWeight: 500 }}
+                    iconStyle={{ color: theme.headerDatePickerIcon, fontSize: 14 }}
+                    presetButtonStyle={{ height: 36, border: '1px solid ' + theme.headerDatePickerBorder, borderRadius: 10, backgroundColor: theme.headerDatePickerBg, color: theme.headerDatePickerColor, fontSize: 13, fontWeight: 500 }}
+                    activePresetButtonStyle={{ backgroundColor: theme.headerDatePickerActiveBg, borderColor: theme.headerDatePickerActiveBorder, color: theme.headerDatePickerActiveText, fontWeight: 600 }}
+                  />
+                </Panel>
+              </header>
             </Panel>
-          </header>
+          </Horizontal>
 
           <Vertical gap={24} padding="0 28px 28px">
             <Horizontal gap={16} columns={12} rowHeight={170}>
