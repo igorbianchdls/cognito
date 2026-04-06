@@ -4,7 +4,11 @@ import React from 'react'
 
 import { useData, useDataValue } from '@/products/bi/json-render/context'
 import { applyPrimaryDateRange } from '@/products/bi/json-render/dateFilters'
-import { useSemanticUiStyle, useThemeOverrides } from '@/products/bi/json-render/theme/ThemeContext'
+import { useThemeOverrides } from '@/products/bi/json-render/theme/ThemeContext'
+import {
+  resolveDashboardTextStyle,
+  useDashboardThemeSelection,
+} from '@/products/artifacts/dashboard/renderer/dashboardThemeConfig'
 
 type AnyRecord = Record<string, any>
 type ValueFormat = 'currency' | 'percent' | 'number'
@@ -113,6 +117,7 @@ export default function DashboardKpi({
   element: any
 }) {
   const props = (element?.props || {}) as AnyRecord
+  const { themeName } = useDashboardThemeSelection()
   const theme = useThemeOverrides()
   const themeKpi = ((theme.components || {}) as AnyRecord).Kpi as AnyRecord | undefined
   const dataQuery = (props.dataQuery || {}) as AnyRecord
@@ -166,10 +171,10 @@ export default function DashboardKpi({
   const positiveColor = typeof props.positiveColor === 'string' ? props.positiveColor : '#15803D'
   const negativeColor = typeof props.negativeColor === 'string' ? props.negativeColor : '#DC2626'
   const neutralColor = typeof props.neutralColor === 'string' ? props.neutralColor : '#64748B'
-  const titleSemanticStyle = useSemanticUiStyle('kpi-title', 'p')
-  const valueSemanticStyle = useSemanticUiStyle('kpi-value', 'div')
-  const descriptionSemanticStyle = useSemanticUiStyle('muted', 'p')
-  const comparisonSemanticStyle = useSemanticUiStyle('kpi-compare', 'p')
+  const titleSemanticStyle = resolveDashboardTextStyle('kpi-title', themeName)
+  const valueSemanticStyle = resolveDashboardTextStyle('kpi-value', themeName)
+  const descriptionSemanticStyle = resolveDashboardTextStyle('body-muted', themeName)
+  const comparisonSemanticStyle = resolveDashboardTextStyle('kpi-compare', themeName)
 
   const { data } = useData()
   const valueFromPath = useDataValue(valuePath || '', undefined)

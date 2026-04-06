@@ -2,12 +2,15 @@
 
 import React from 'react'
 
-import { useSemanticUiStyle } from '@/products/bi/json-render/theme/ThemeContext'
 import {
   getDashboardQueryDeltaColor,
   resolveDashboardQueryTemplate,
   useDashboardQueryResult,
 } from '@/products/artifacts/dashboard/renderer/components/DashboardQuery'
+import {
+  resolveDashboardTextStyle,
+  useDashboardThemeSelection,
+} from '@/products/artifacts/dashboard/renderer/dashboardThemeConfig'
 
 type DashboardTextProps = {
   element: any
@@ -42,9 +45,10 @@ function resolveTextRole(props: Record<string, any>): string {
 export default function DashboardText({ element, children }: DashboardTextProps) {
   const props = (element?.props || {}) as Record<string, any>
   const queryResult = useDashboardQueryResult()
+  const { themeName } = useDashboardThemeSelection()
   const tag = typeof props.as === 'string' ? (props.as as keyof React.JSX.IntrinsicElements) : 'p'
   const textType = resolveTextRole(props)
-  const semanticStyle = useSemanticUiStyle(textType, tag)
+  const semanticStyle = resolveDashboardTextStyle(textType, themeName)
   const queryDeltaColor =
     textType === 'kpi-delta' || textType === 'kpi-compare' ? getDashboardQueryDeltaColor(queryResult) : undefined
 
