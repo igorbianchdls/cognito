@@ -1,0 +1,659 @@
+'use client'
+
+import React from 'react'
+
+import { applyPrimaryDateRange } from '@/products/bi/json-render/dateFilters'
+import {
+  applySlicerLabelFromCssVars,
+  applySlicerOptionFromCssVars,
+  normalizeTitleStyle,
+} from '@/products/bi/json-render/helpers'
+import { useData } from '@/products/bi/json-render/context'
+import { useThemeOverrides } from '@/products/bi/json-render/theme/ThemeContext'
+import { deepMerge } from '@/stores/ui/json-render/utils'
+
+type AnyRecord = Record<string, any>
+type SlicerOpt = { value: string | number; label: string }
+type SlicerVariant = 'checklist' | 'dropdown' | 'tile'
+type SlicerSelectionMode = 'single' | 'multiple'
+
+function styleVal(v: unknown): string | undefined {
+  if (v === undefined || v === null) return undefined
+  return typeof v === 'number' ? `${v}px` : String(v)
+}
+
+function getPathValue(obj: any, path: string): any {
+  if (!path || !obj || typeof obj !== 'object') return undefined
+  const parts = path.split('.').map((s) => s.trim()).filter(Boolean)
+  let curr = obj as any
+  for (const part of parts) {
+    if (curr == null || typeof curr !== 'object') return undefined
+    curr = curr[part]
+  }
+  return curr
+}
+
+function mapRawToOptions(raw: any[], valueField?: string, labelField?: string): SlicerOpt[] {
+  const vf = valueField || 'value'
+  const lf = labelField || 'label'
+  return raw.map((r: any) => ({
+    value: r?.[vf] ?? r?.value,
+    label: String(r?.[lf] ?? r?.label ?? r?.name ?? r?.nome ?? ''),
+  }))
+}
+
+async function fetchOptionsFromSource(
+  src: AnyRecord,
+  args: { term?: string; data?: AnyRecord; readByPath?: (path: string, fallback?: any) => any },
+): Promise<SlicerOpt[]> {
+  if (!src || typeof src !== 'object') return []
+  const term = String(args.term || '').trim()
+
+  if (src.type === 'static') {
+    const opts = Array.isArray(src.options) ? src.options : []
+    return mapRawToOptions(opts)
+  }
+
+  if (typeof src.query === 'string' && src.query.trim()) {
+    try {
+      const filters = applyPrimaryDateRange({ ...((args?.data as AnyRecord)?.filters || {}) } as AnyRecord, args?.data)
+      if (term && filters.q === undefined) filters.q = term
+      delete filters.dateRange
+
+      const limitRaw = Number(src.limit ?? 200)
+      const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(2000, limitRaw)) : 200
+      const res = await fetch('/api/modulos/query/execute', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          dataQuery: {
+            query: src.query,
+            filters,
+            limit,
+          },
+        }),
+      })
+      const j = await res.json()
+      if (!res.ok || j?.success === false) {
+        throw new Error(String(j?.message || `Query failed (${res.status})`))
+      }
+      const rows = Array.isArray(j?.rows) ? j.rows : []
+      return rows
+        .map((r: AnyRecord): SlicerOpt => ({
+          value: r?.value ?? r?.id ?? r?.key ?? '',
+          label: String(r?.label ?? r?.nome ?? r?.name ?? r?.value ?? r?.id ?? ''),
+        }))
+        .filter((o: SlicerOpt) => o.label.trim() !== '')
+    } catch (e) {
+      console.error('[Dashboard/Filter] sql query failed', e)
+      return []
+    }
+  }
+
+  if (src.type === 'options' && typeof src.model === 'string' && typeof src.field === 'string') {
+    try {
+      const pageSizeRaw = Number(src.pageSize ?? src.limit ?? 50)
+      const limit = Number.isFinite(pageSizeRaw) ? Math.max(1, Math.min(200, pageSizeRaw)) : 50
+      const payload: AnyRecord = {
+        model: src.model,
+        field: src.field,
+        limit,
+      }
+      if (term) payload.q = term
+
+      const dependsOn = Array.isArray(src.dependsOn)
+        ? src.dependsOn.filter((p: any) => typeof p === 'string' && p.trim())
+        : []
+      if (dependsOn.length) {
+        const contextFilters: AnyRecord = {}
+        for (const depPath of dependsOn) {
+          const depKey = String(depPath).split('.').pop() || String(depPath)
+          const depVal = args.readByPath
+            ? args.readByPath(String(depPath), undefined)
+            : getPathValue(args.data, String(depPath))
+          if (depVal !== undefined && depVal !== null && depVal !== '' && (!Array.isArray(depVal) || depVal.length > 0)) {
+            contextFilters[depKey] = depVal
+          }
+        }
+        if (Object.keys(contextFilters).length > 0) {
+          payload.contextFilters = contextFilters
+        }
+      }
+
+      const res = await fetch('/api/modulos/options/resolve', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const j = await res.json()
+      if (!res.ok || j?.success === false) {
+        throw new Error(String(j?.message || `Options resolve failed (${res.status})`))
+      }
+      const raw = Array.isArray(j?.options) ? j.options : []
+      return mapRawToOptions(raw, src.valueField, src.labelField)
+    } catch (e) {
+      console.error('[Dashboard/Filter] options resolve failed', e)
+      return []
+    }
+  }
+
+  if (src.type === 'api' && typeof src.url === 'string' && src.url) {
+    try {
+      const method = (src.method || 'GET').toUpperCase()
+      let url = src.url as string
+      if (method === 'GET' && term) url += (url.includes('?') ? '&' : '?') + 'q=' + encodeURIComponent(term)
+      const res = await fetch(url, {
+        method,
+        headers: { 'content-type': 'application/json' },
+        ...(method === 'POST' ? { body: JSON.stringify({ ...(src.params || {}), ...(term ? { q: term } : {}) }) } : {}),
+      })
+      const j = await res.json()
+      const raw = Array.isArray(j?.options) ? j.options : (Array.isArray(j?.rows) ? j.rows : [])
+      return mapRawToOptions(raw, src.valueField, src.labelField)
+    } catch {
+      return []
+    }
+  }
+
+  if (src.type === 'query' && typeof src.model === 'string' && typeof src.dimension === 'string') {
+    try {
+      const mod = String(src.model).split('.')[0]
+      const body = {
+        dataQuery: {
+          model: src.model,
+          dimension: src.dimension,
+          measure: 'COUNT()',
+          filters: src.filters || {},
+          orderBy: { field: 'dimension', dir: 'asc' },
+          limit: src.limit || 100,
+        },
+      }
+      const res = await fetch(`/api/modulos/${mod}/query`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const j = await res.json()
+      const rows = Array.isArray(j?.rows) ? j.rows : []
+      return rows.map((r: any) => ({ value: r?.label ?? '', label: String(r?.label ?? '') }))
+    } catch {
+      return []
+    }
+  }
+
+  return []
+}
+
+function resolveSlicerFields(element: any, propsFields: unknown): AnyRecord[] {
+  const explicitFields = Array.isArray(propsFields)
+    ? propsFields.filter((field): field is AnyRecord => Boolean(field && typeof field === 'object' && !Array.isArray(field)))
+    : []
+  if (explicitFields.length > 0) return explicitFields
+
+  const childDefs = Array.isArray(element?.children) ? element.children : []
+  return childDefs
+    .filter((child: AnyRecord) => String(child?.type || '') === 'SlicerField')
+    .map((child: AnyRecord) => ((child?.props && typeof child.props === 'object' && !Array.isArray(child.props)) ? child.props as AnyRecord : {}))
+    .filter((field: AnyRecord) => Object.keys(field).length > 0)
+}
+
+function resolveSlicerUiChild(element: any): { variant?: SlicerVariant; props: AnyRecord } {
+  const childDefs = Array.isArray(element?.children) ? element.children : []
+  for (const child of childDefs) {
+    const type = String((child as AnyRecord)?.type || '').trim()
+    if (type === 'OptionList') {
+      return {
+        variant: 'checklist',
+        props:
+          (child as AnyRecord)?.props && typeof (child as AnyRecord).props === 'object' && !Array.isArray((child as AnyRecord).props)
+            ? ((child as AnyRecord).props as AnyRecord)
+            : {},
+      }
+    }
+    if (type === 'Select') {
+      return {
+        variant: 'dropdown',
+        props:
+          (child as AnyRecord)?.props && typeof (child as AnyRecord).props === 'object' && !Array.isArray((child as AnyRecord).props)
+            ? ((child as AnyRecord).props as AnyRecord)
+            : {},
+      }
+    }
+    if (type === 'Tile') {
+      return {
+        variant: 'tile',
+        props:
+          (child as AnyRecord)?.props && typeof (child as AnyRecord).props === 'object' && !Array.isArray((child as AnyRecord).props)
+            ? ((child as AnyRecord).props as AnyRecord)
+            : {},
+      }
+    }
+  }
+  return { props: {} }
+}
+
+function resolveSlicerStorePath(config: AnyRecord | null | undefined): string {
+  const explicit = String(config?.storePath || '').trim()
+  if (explicit) return explicit
+  const field = String(config?.field || '').trim()
+  if (field) return `filters.${field}`
+  return ''
+}
+
+function resolveSlicerFieldBinding(config: AnyRecord | null | undefined): { key: string; table: string; field: string } | null {
+  const key = String(config?.field || '').trim()
+  const table = String(config?.table || '').trim()
+  if (!key || !table) return null
+  return { key, table, field: key }
+}
+
+function resolveSingleSlicerField(element: any, props: AnyRecord): AnyRecord | null {
+  const storePath = resolveSlicerStorePath(props)
+  if (!storePath) return null
+  const fieldKeys = [
+    'label',
+    'table',
+    'field',
+    'mode',
+    'storePath',
+    'placeholder',
+    'clearable',
+    'selectAll',
+    'search',
+    'width',
+    'query',
+    'limit',
+    'source',
+    'actionOnChange',
+  ] as const
+  const field: AnyRecord = {}
+  for (const key of fieldKeys) {
+    if (props[key] !== undefined) field[key] = props[key]
+  }
+  field.storePath = storePath
+  const uiChild = resolveSlicerUiChild(element)
+  if (uiChild.variant && field.variant === undefined) field.variant = uiChild.variant
+  return { ...field, ...uiChild.props }
+}
+
+function resolveSlicerDefinitions(element: any, props: AnyRecord): AnyRecord[] {
+  const fields = resolveSlicerFields(element, props.fields)
+  if (fields.length > 0) return fields
+  const single = resolveSingleSlicerField(element, props)
+  return single ? [single] : []
+}
+
+function resolveSlicerPresentation(field: AnyRecord): { variant: SlicerVariant; selectionMode: SlicerSelectionMode } {
+  const variant =
+    field?.variant === 'dropdown' || field?.variant === 'tile' || field?.variant === 'checklist'
+      ? (field.variant as SlicerVariant)
+      : 'checklist'
+  const selectionMode =
+    field?.mode === 'single' || field?.mode === 'multiple'
+      ? (field.mode as SlicerSelectionMode)
+      : 'multiple'
+  return { variant, selectionMode }
+}
+
+function buildSlicerControlStyle(field: AnyRecord): React.CSSProperties {
+  return {
+    borderColor: typeof field?.borderColor === 'string' ? field.borderColor : undefined,
+    color: typeof field?.textColor === 'string' ? field.textColor : undefined,
+    backgroundColor: typeof field?.backgroundColor === 'string' ? field.backgroundColor : undefined,
+    fontSize: styleVal(field?.fontSize),
+    fontWeight: field?.fontWeight as React.CSSProperties['fontWeight'],
+    borderRadius: styleVal(field?.radius),
+    padding: styleVal(field?.padding),
+  }
+}
+
+function buildSlicerOptionTextStyle(field: AnyRecord, baseStyle: React.CSSProperties): React.CSSProperties {
+  return {
+    ...baseStyle,
+    color: typeof field?.textColor === 'string' ? field.textColor : baseStyle.color,
+    fontSize: styleVal(field?.fontSize) || baseStyle.fontSize,
+    fontWeight: (field?.fontWeight as React.CSSProperties['fontWeight']) ?? baseStyle.fontWeight,
+  }
+}
+
+function SlicerContent({
+  element,
+  fields,
+  layout,
+  applyMode,
+  onAction,
+  suppressFieldLabels = false,
+  padded = false,
+}: {
+  element: any
+  fields: AnyRecord[]
+  layout: 'vertical' | 'horizontal'
+  applyMode: 'auto' | 'manual'
+  onAction?: (action: any) => void
+  suppressFieldLabels?: boolean
+  padded?: boolean
+}) {
+  const theme = useThemeOverrides()
+  const { data, setData, getValueByPath } = useData()
+  const [optionsMap, setOptionsMap] = React.useState<Record<number, SlicerOpt[]>>({})
+  const [searchMap, setSearchMap] = React.useState<Record<number, string>>({})
+  const [pendingMap, setPendingMap] = React.useState<Record<number, any>>({})
+
+  function setByPath(prev: any, path: string, value: any) {
+    if (!path) return prev
+    const parts = path.split('.').map((s) => s.trim()).filter(Boolean)
+    const root = Array.isArray(prev) ? [...prev] : { ...(prev || {}) }
+    let curr: any = root
+    for (let i = 0; i < parts.length; i += 1) {
+      const k = parts[i]
+      if (i === parts.length - 1) {
+        curr[k] = value
+      } else {
+        curr[k] = typeof curr[k] === 'object' && curr[k] !== null ? { ...curr[k] } : {}
+        curr = curr[k]
+      }
+    }
+    return root
+  }
+
+  const effectiveGet = React.useCallback((idx: number, sp: string, isMulti: boolean) => {
+    if (applyMode === 'manual' && Object.prototype.hasOwnProperty.call(pendingMap, idx)) return pendingMap[idx]
+    const v = getValueByPath(sp, undefined)
+    return isMulti ? (Array.isArray(v) ? v : []) : (v ?? '')
+  }, [applyMode, getValueByPath, pendingMap])
+
+  React.useEffect(() => {
+    let cancelled = false
+    async function load() {
+      const tasks = await Promise.allSettled(fields.map(async (field, idx) => {
+        const src =
+          field?.source && typeof field.source === 'object'
+            ? (field.source as AnyRecord)
+            : (typeof field?.query === 'string' && field.query.trim()
+                ? ({ query: field.query, ...(Number.isFinite(Number(field?.limit)) ? { limit: Number(field.limit) } : {}) } as AnyRecord)
+                : null)
+        if (!src || typeof src !== 'object') return { idx, opts: [] as SlicerOpt[] }
+        const term = searchMap[idx] || ''
+        const opts = await fetchOptionsFromSource(src, { term, data, readByPath: getValueByPath })
+        return { idx, opts }
+      }))
+      if (cancelled) return
+      const nextMap: Record<number, SlicerOpt[]> = {}
+      for (const task of tasks) {
+        if (task.status === 'fulfilled') nextMap[(task.value as any).idx] = (task.value as any).opts
+      }
+      setOptionsMap(nextMap)
+    }
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [fields, searchMap, data, getValueByPath])
+
+  const onChangeField = React.useCallback((idx: number, storePath: string, value: any, autoAction?: AnyRecord) => {
+    if (applyMode === 'manual') {
+      setPendingMap((prev) => ({ ...prev, [idx]: value }))
+      return
+    }
+    const field = fields[idx]
+    let next = setByPath(data, storePath, value)
+    const binding = resolveSlicerFieldBinding(field)
+    if (binding) {
+      next = setByPath(next, `filters.__fields.${binding.key}`, { table: binding.table, field: binding.field })
+    }
+    setData(next)
+    if (autoAction && typeof autoAction === 'object') onAction?.(autoAction)
+  }, [applyMode, data, fields, onAction, setData])
+
+  const onApplyAll = React.useCallback(() => {
+    let next = data
+    for (let i = 0; i < fields.length; i += 1) {
+      const field = fields[i]
+      const storePath = resolveSlicerStorePath(field)
+      if (!storePath) continue
+      if (Object.prototype.hasOwnProperty.call(pendingMap, i)) {
+        next = setByPath(next, storePath, pendingMap[i])
+        const binding = resolveSlicerFieldBinding(field)
+        if (binding) {
+          next = setByPath(next, `filters.__fields.${binding.key}`, { table: binding.table, field: binding.field })
+        }
+      }
+    }
+    setData(next)
+    const actionOnApply = element?.props?.actionOnApply
+    if (actionOnApply && typeof actionOnApply === 'object') onAction?.(actionOnApply)
+  }, [data, element?.props?.actionOnApply, fields, onAction, pendingMap, setData])
+
+  const wrapperClassName = `${layout === 'horizontal' ? 'flex items-start gap-3 flex-wrap' : 'space-y-3'}${padded ? ' p-2' : ''}`
+
+  return (
+    <>
+      <div className={wrapperClassName}>
+        {fields.map((field, idx) => {
+          const storePath = resolveSlicerStorePath(field)
+          if (!storePath) return null
+
+          const label = typeof field?.label === 'string' ? field.label : undefined
+          const labelStyle = applySlicerLabelFromCssVars(normalizeTitleStyle(field?.labelStyle), theme.cssVars)
+          const opts = optionsMap[idx] || []
+          const width = field?.width !== undefined ? (typeof field.width === 'number' ? `${field.width}px` : field.width) : undefined
+          const { variant, selectionMode } = resolveSlicerPresentation(field)
+          const isMulti = selectionMode === 'multiple'
+          const stored = effectiveGet(idx, storePath, isMulti)
+          const clearable = field?.clearable !== false
+          const selectAll = Boolean(field?.selectAll)
+          const showSearch = Boolean(field?.search)
+          const controlStyle = buildSlicerControlStyle(field)
+          const optionTextStyle = buildSlicerOptionTextStyle(
+            field,
+            (applySlicerOptionFromCssVars(normalizeTitleStyle(field?.optionStyle), theme.cssVars) || {}) as React.CSSProperties,
+          )
+          const listMaxHeight = styleVal(field?.maxHeight) || '12rem'
+          const itemGap = styleVal(field?.itemGap) || '0.25rem'
+
+          if (variant === 'tile') {
+            const onClear = () => onChangeField(idx, storePath, isMulti ? [] : undefined, field.actionOnChange)
+            return (
+              <div key={`field-${idx}`} className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
+                {label && !suppressFieldLabels && <div className="text-xs" style={labelStyle}>{label}</div>}
+                <div className="flex flex-col gap-2">
+                  {showSearch && (
+                    <input
+                      type="text"
+                      value={searchMap[idx] || ''}
+                      onChange={(e) => setSearchMap((prev) => ({ ...prev, [idx]: e.target.value }))}
+                      placeholder="Buscar..."
+                      className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs"
+                      style={controlStyle}
+                    />
+                  )}
+                  <div className="flex flex-wrap gap-2">
+                    {opts.map((option) => {
+                      const selected = isMulti ? (Array.isArray(stored) && stored.includes(option.value)) : stored === option.value
+                      const tileCfg = ((((theme as any).components?.Filter as any)?.tile) || (((theme as any).components?.SlicerCard as any)?.tile) || {})
+                      const base = String(tileCfg.baseClass || 'text-xs font-medium rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 active:scale-[0.98]')
+                      const selectedClass = String(tileCfg.selectedClass || 'bg-sky-600 text-white border-sky-600 hover:bg-sky-700')
+                      const unselectedClass = String(tileCfg.unselectedClass || 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200')
+                      return (
+                        <button
+                          key={String(option.value)}
+                          type="button"
+                          className={`${base} ${selected ? selectedClass : unselectedClass}`}
+                          onClick={() => {
+                            if (isMulti) {
+                              const arr = Array.isArray(stored) ? stored.slice() : []
+                              const exists = arr.includes(option.value)
+                              const nextArr = exists ? arr.filter((v: any) => v !== option.value) : [...arr, option.value]
+                              onChangeField(idx, storePath, nextArr, field.actionOnChange)
+                            } else {
+                              const nextVal = stored === option.value ? (clearable ? undefined : option.value) : option.value
+                              onChangeField(idx, storePath, nextVal, field.actionOnChange)
+                            }
+                          }}
+                          style={(() => {
+                            const style = applySlicerOptionFromCssVars(undefined, theme.cssVars) || {}
+                            delete (style as any).color
+                            return { ...(style as any), ...controlStyle } as any
+                          })()}
+                        >
+                          {option.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {selectAll && isMulti && (
+                    <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={() => onChangeField(idx, storePath, opts.map((option) => option.value), field.actionOnChange)}>Selecionar todos</button>
+                  )}
+                  {clearable && (
+                    <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={onClear}>Limpar</button>
+                  )}
+                </div>
+              </div>
+            )
+          }
+
+          if (variant === 'checklist') {
+            const onClear = () => onChangeField(idx, storePath, isMulti ? [] : undefined, field.actionOnChange)
+            return (
+              <div key={`field-${idx}`} className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
+                {label && !suppressFieldLabels && <div className="text-xs" style={labelStyle}>{label}</div>}
+                <div className="flex flex-col gap-2">
+                  {showSearch && (
+                    <input
+                      type="text"
+                      value={searchMap[idx] || ''}
+                      onChange={(e) => setSearchMap((prev) => ({ ...prev, [idx]: e.target.value }))}
+                      placeholder="Buscar..."
+                      className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs"
+                      style={controlStyle}
+                    />
+                  )}
+                  <div
+                    className="flex flex-col overflow-y-auto rounded-md border border-gray-300 px-2 py-2 pr-1"
+                    style={{
+                      ...controlStyle,
+                      gap: itemGap,
+                      maxHeight: listMaxHeight,
+                    }}
+                  >
+                    {opts.map((option) => (
+                      <label key={String(option.value)} className="inline-flex items-center gap-2 text-xs">
+                        <input
+                          type={isMulti ? 'checkbox' : 'radio'}
+                          className="rounded border-gray-300"
+                          style={{ accentColor: typeof field?.checkColor === 'string' ? field.checkColor : undefined }}
+                          name={isMulti ? undefined : `slicer-${idx}`}
+                          checked={isMulti ? (Array.isArray(stored) && stored.includes(option.value)) : stored === option.value}
+                          onChange={(e) => {
+                            if (isMulti) {
+                              const arr = Array.isArray(stored) ? stored.slice() : []
+                              const nextArr = e.target.checked ? [...arr, option.value] : arr.filter((v: any) => v !== option.value)
+                              onChangeField(idx, storePath, nextArr, field.actionOnChange)
+                              return
+                            }
+                            onChangeField(idx, storePath, option.value, field.actionOnChange)
+                          }}
+                        />
+                        <span style={optionTextStyle}>{option.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {selectAll && isMulti && (
+                      <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={() => onChangeField(idx, storePath, opts.map((option) => option.value), field.actionOnChange)}>Selecionar todos</button>
+                    )}
+                    {clearable && (
+                      <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={onClear}>Limpar</button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )
+          }
+
+          const value = isMulti ? (Array.isArray(stored) ? stored : []) : (stored ?? '')
+          const onClear = () => onChangeField(idx, storePath, isMulti ? [] : undefined, field.actionOnChange)
+          return (
+            <div key={`field-${idx}`} className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
+              {label && !suppressFieldLabels && <div className="text-xs" style={labelStyle}>{label}</div>}
+              <div className="flex flex-col gap-2">
+                {showSearch && (
+                  <input
+                    type="text"
+                    value={searchMap[idx] || ''}
+                    onChange={(e) => setSearchMap((prev) => ({ ...prev, [idx]: e.target.value }))}
+                    placeholder="Buscar..."
+                    className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs"
+                    style={controlStyle}
+                  />
+                )}
+                <select
+                  multiple={isMulti}
+                  className="border border-gray-300 rounded px-2 py-1 text-xs"
+                  style={{ ...optionTextStyle, ...controlStyle, maxHeight: styleVal(field?.maxHeight) } as any}
+                  value={value as any}
+                  onChange={(e) => {
+                    if (isMulti) {
+                      const selected: any[] = Array.from(e.target.selectedOptions)
+                        .map((option) => (option as any).value)
+                        .map((raw) => (String(Number(raw)) === raw ? Number(raw) : raw))
+                      onChangeField(idx, storePath, selected, field.actionOnChange)
+                    } else {
+                      const nextValue = e.target.value
+                      if (nextValue === '') {
+                        onChangeField(idx, storePath, undefined, field.actionOnChange)
+                        return
+                      }
+                      onChangeField(idx, storePath, String(Number(nextValue)) === nextValue ? Number(nextValue) : nextValue, field.actionOnChange)
+                    }
+                  }}
+                >
+                  {!isMulti && typeof field?.placeholder === 'string' && field.placeholder ? <option value="">{field.placeholder}</option> : null}
+                  {opts.map((option) => (
+                    <option key={String(option.value)} value={String(option.value)}>{option.label}</option>
+                  ))}
+                </select>
+              </div>
+              {clearable && (
+                <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={onClear}>Limpar</button>
+              )}
+            </div>
+          )
+        })}
+      </div>
+      {applyMode === 'manual' && (
+        <div className="mt-2 flex justify-end">
+          <button type="button" onClick={onApplyAll} className="text-xs rounded-md border border-gray-300 bg-white px-2 py-1 hover:bg-gray-50">
+            Aplicar
+          </button>
+        </div>
+      )}
+    </>
+  )
+}
+
+export default function DashboardFilter({
+  element,
+  onAction,
+}: {
+  element: any
+  onAction?: (action: any) => void
+}) {
+  const theme = useThemeOverrides()
+  const p = deepMerge((theme.components?.Filter || {}) as AnyRecord, (element?.props || {}) as AnyRecord) as AnyRecord
+  const layout = (p.layout || 'vertical') as 'vertical' | 'horizontal'
+  const applyMode = (p.applyMode || 'auto') as 'auto' | 'manual'
+  const fields = resolveSlicerDefinitions(element, p)
+
+  return (
+    <SlicerContent
+      element={{ ...element, props: p }}
+      fields={fields}
+      layout={layout}
+      applyMode={applyMode}
+      onAction={onAction}
+    />
+  )
+}

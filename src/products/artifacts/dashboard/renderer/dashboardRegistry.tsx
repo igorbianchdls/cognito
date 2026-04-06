@@ -3,18 +3,28 @@
 import React from 'react'
 
 import JsonRenderBarChart from '@/products/bi/json-render/components/BarChart'
+import JsonRenderComposedChart from '@/products/bi/json-render/components/ComposedChart'
+import JsonRenderFunnelChart from '@/products/bi/json-render/components/FunnelChart'
+import JsonRenderGauge from '@/products/bi/json-render/components/Gauge'
+import JsonRenderHorizontalBarChart from '@/products/bi/json-render/components/HorizontalBarChart'
 import JsxCardSurface, {
   getJsxCardSurfaceStyle,
   isCardLikeSurface,
 } from '@/products/bi/json-render/components/JsxCardSurface'
 import JsonRenderLineChart from '@/products/bi/json-render/components/LineChart'
 import JsonRenderPieChart from '@/products/bi/json-render/components/PieChart'
-import { registry as biRegistry } from '@/products/bi/json-render/registry'
+import JsonRenderPivotTable from '@/products/bi/json-render/components/PivotTable'
+import JsonRenderRadarChart from '@/products/bi/json-render/components/RadarChart'
+import JsonRenderSankeyChart from '@/products/bi/json-render/components/SankeyChart'
+import JsonRenderScatterChart from '@/products/bi/json-render/components/ScatterChart'
+import JsonRenderTable from '@/products/bi/json-render/components/Table'
+import JsonRenderTreemapChart from '@/products/bi/json-render/components/TreemapChart'
 import { mapManagersToCssVars } from '@/products/bi/json-render/theme/thememanagers'
 import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter'
-import { ThemeProvider, useSemanticUiStyle } from '@/products/bi/json-render/theme/ThemeContext'
+import { ThemeProvider, useSemanticUiStyle, useThemeOverrides } from '@/products/bi/json-render/theme/ThemeContext'
 import { resolveDashboardBorderRadiusPreset } from '@/products/artifacts/dashboard/borderPresets'
 import DashboardDatePicker from '@/products/artifacts/dashboard/renderer/components/DashboardDatePicker'
+import DashboardFilter from '@/products/artifacts/dashboard/renderer/components/DashboardFilter'
 import DashboardInsights from '@/products/artifacts/dashboard/renderer/components/DashboardInsights'
 import DashboardKpi from '@/products/artifacts/dashboard/renderer/components/DashboardKpi'
 import { DashboardGrid, DashboardHorizontal, DashboardPanel, DashboardVertical } from '@/products/artifacts/dashboard/renderer/components/DashboardLayout'
@@ -31,6 +41,7 @@ import {
   resolveDashboardChartPaletteColors,
 } from '@/products/artifacts/dashboard/contract/dashboardContract'
 import { resolveDashboardTemplateThemeTokens } from '@/products/artifacts/dashboard/templates/dashboardTemplateThemes'
+import { deepMerge } from '@/stores/ui/json-render/utils'
 
 type AnyRecord = Record<string, any>
 
@@ -48,19 +59,186 @@ type TabsContextValue = {
 
 const TabsContext = React.createContext<TabsContextValue | null>(null)
 
+const defaultGauge = {
+  format: 'number' as 'currency' | 'percent' | 'number',
+  width: 220,
+  height: 130,
+  thickness: 16,
+  trackColor: '#e5e7eb',
+  valueColor: '#2563eb',
+  targetColor: '#0f172a',
+  roundedCaps: true,
+  showValue: true,
+  showMinMax: true,
+  showTarget: true,
+  startAngle: -110,
+  endAngle: 110,
+} as const
+
+const defaultBarChart = {
+  height: 220,
+  format: 'number' as 'currency' | 'percent' | 'number',
+  titleStyle: { padding: 8, textAlign: 'left' },
+  nivo: {
+    layout: 'vertical',
+    padding: 0.3,
+    groupMode: 'grouped',
+    gridX: false,
+    gridY: false,
+    axisBottom: { tickRotation: 0, legendOffset: 32 },
+    axisLeft: { legendOffset: 40 },
+    margin: { top: 10, right: 10, bottom: 40, left: 48 },
+    animate: true,
+    motionConfig: 'gentle',
+  },
+} as const
+
+const defaultScatterChart = {
+  height: 260,
+  format: 'number' as 'currency' | 'percent' | 'number',
+  titleStyle: { padding: 6, textAlign: 'left' },
+  colorScheme: ['#3b82f6', '#10b981', '#f59e0b'],
+  nivo: { range: [60, 360], animate: true },
+} as const
+
+const defaultRadarChart = {
+  height: 260,
+  format: 'number' as 'currency' | 'percent' | 'number',
+  titleStyle: { padding: 6, textAlign: 'left' },
+  colorScheme: ['#3b82f6', '#10b981', '#f59e0b'],
+  nivo: { outerRadius: '72%', fillOpacity: 0.28, animate: true },
+} as const
+
+const defaultTreemapChart = {
+  height: 280,
+  format: 'number' as 'currency' | 'percent' | 'number',
+  titleStyle: { padding: 6, textAlign: 'left' },
+  colorScheme: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
+  nivo: { aspectRatio: 4 / 3, animate: true },
+} as const
+
+const defaultComposedChart = {
+  height: 280,
+  format: 'number' as 'currency' | 'percent' | 'number',
+  titleStyle: { padding: 6, textAlign: 'left' },
+  colorScheme: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
+  nivo: { gridX: false, gridY: true, curve: 'monotone', animate: true },
+} as const
+
+const defaultFunnelChart = {
+  height: 300,
+  format: 'number' as 'currency' | 'percent' | 'number',
+  titleStyle: { padding: 6, textAlign: 'left' },
+  colorScheme: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
+  nivo: { animate: true },
+} as const
+
+const defaultSankeyChart = {
+  height: 360,
+  format: 'number' as 'currency' | 'percent' | 'number',
+  titleStyle: { padding: 6, textAlign: 'left' },
+  colorScheme: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
+  nivo: { nodePadding: 14, nodeWidth: 14, linkCurvature: 0.5, iterations: 32, sort: true, animate: true },
+} as const
+
+const defaultTable = {
+  pageSize: 10,
+  showPagination: true,
+  showColumnToggle: true,
+  enableSearch: true,
+  stickyHeader: true,
+  bordered: true,
+  rounded: true,
+  density: 'comfortable' as 'compact' | 'comfortable' | 'spacious',
+  striped: false,
+  editableMode: false,
+  editableCells: 'none',
+  editableRowActions: {
+    allowAdd: false,
+    allowDelete: false,
+    allowDuplicate: false,
+  },
+  containerStyle: { borderColor: '#e5e7eb', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, padding: 12 },
+  borderless: false,
+} as const
+
+const defaultPivotTable = {
+  stickyHeader: true,
+  bordered: true,
+  rounded: true,
+  density: 'comfortable' as 'compact' | 'comfortable' | 'spacious',
+  showSubtotals: true,
+  showGrandTotals: true,
+  defaultExpandedLevels: 1,
+  enableExportCsv: false,
+  containerStyle: { borderColor: '#e5e7eb', borderWidth: 1, borderStyle: 'solid', borderRadius: 8 },
+} as const
+
+function useMergedElementProps(
+  element: any,
+  defaults: AnyRecord,
+  componentName: string,
+): { props: AnyRecord } {
+  const theme = useThemeOverrides()
+  const themeComponent = ((theme.components as AnyRecord | undefined)?.[componentName] || {}) as AnyRecord
+  return {
+    props: deepMerge(deepMerge(defaults, themeComponent), (element?.props || {}) as AnyRecord),
+  }
+}
+
+function DashboardHorizontalBarChart({ element }: { element: any }) {
+  return <JsonRenderHorizontalBarChart element={useMergedElementProps(element, defaultBarChart as AnyRecord, 'HorizontalBarChart')} />
+}
+
+function DashboardScatterChart({ element }: { element: any }) {
+  return <JsonRenderScatterChart element={useMergedElementProps(element, defaultScatterChart as AnyRecord, 'ScatterChart')} />
+}
+
+function DashboardRadarChart({ element }: { element: any }) {
+  return <JsonRenderRadarChart element={useMergedElementProps(element, defaultRadarChart as AnyRecord, 'RadarChart')} />
+}
+
+function DashboardTreemapChart({ element }: { element: any }) {
+  return <JsonRenderTreemapChart element={useMergedElementProps(element, defaultTreemapChart as AnyRecord, 'TreemapChart')} />
+}
+
+function DashboardComposedChart({ element }: { element: any }) {
+  return <JsonRenderComposedChart element={useMergedElementProps(element, defaultComposedChart as AnyRecord, 'ComposedChart')} />
+}
+
+function DashboardFunnelChart({ element }: { element: any }) {
+  return <JsonRenderFunnelChart element={useMergedElementProps(element, defaultFunnelChart as AnyRecord, 'FunnelChart')} />
+}
+
+function DashboardSankeyChart({ element }: { element: any }) {
+  return <JsonRenderSankeyChart element={useMergedElementProps(element, defaultSankeyChart as AnyRecord, 'SankeyChart')} />
+}
+
+function DashboardGauge({ element }: { element: any }) {
+  return <JsonRenderGauge element={useMergedElementProps(element, defaultGauge as AnyRecord, 'Gauge')} />
+}
+
+function DashboardTable({ element }: { element: any }) {
+  return <JsonRenderTable element={{ props: deepMerge(defaultTable as AnyRecord, (element?.props || {}) as AnyRecord) }} />
+}
+
+function DashboardPivotTable({ element }: { element: any }) {
+  return <JsonRenderPivotTable element={useMergedElementProps(element, defaultPivotTable as AnyRecord, 'PivotTable')} />
+}
+
 function renderChartByType(chartType: unknown, element: any, onAction?: (action: any) => void) {
   const normalized = normalizeDashboardChartType(chartType)
   if (normalized === 'bar') return <JsonRenderBarChart element={element} />
   if (normalized === 'line') return <JsonRenderLineChart element={element} />
   if (normalized === 'pie') return <JsonRenderPieChart element={element} />
-  if (normalized === 'horizontal-bar') return <biRegistry.HorizontalBarChart element={element} onAction={onAction} />
-  if (normalized === 'scatter') return <biRegistry.ScatterChart element={element} onAction={onAction} />
-  if (normalized === 'radar') return <biRegistry.RadarChart element={element} onAction={onAction} />
-  if (normalized === 'treemap') return <biRegistry.TreemapChart element={element} onAction={onAction} />
-  if (normalized === 'composed') return <biRegistry.ComposedChart element={element} onAction={onAction} />
-  if (normalized === 'funnel') return <biRegistry.FunnelChart element={element} onAction={onAction} />
-  if (normalized === 'sankey') return <biRegistry.SankeyChart element={element} onAction={onAction} />
-  if (normalized === 'gauge') return <biRegistry.Gauge element={element} onAction={onAction} />
+  if (normalized === 'horizontal-bar') return <DashboardHorizontalBarChart element={element} />
+  if (normalized === 'scatter') return <DashboardScatterChart element={element} />
+  if (normalized === 'radar') return <DashboardRadarChart element={element} />
+  if (normalized === 'treemap') return <DashboardTreemapChart element={element} />
+  if (normalized === 'composed') return <DashboardComposedChart element={element} />
+  if (normalized === 'funnel') return <DashboardFunnelChart element={element} />
+  if (normalized === 'sankey') return <DashboardSankeyChart element={element} />
+  if (normalized === 'gauge') return <DashboardGauge element={element} />
 
   return (
     <div className="rounded border border-yellow-300 bg-yellow-50 p-2 text-xs text-yellow-800">
@@ -405,9 +583,9 @@ export const dashboardRegistry: Record<string, DashboardRenderComponent> = {
   Gauge: ({ element, onAction }) => <>{renderChartByType('gauge', element, onAction)}</>,
   KPI: ({ element }) => <DashboardKpi element={element} />,
   Query: ({ element, children }) => <DashboardQuery element={element}>{children}</DashboardQuery>,
-  Table: ({ element, onAction }) => <biRegistry.Table element={element} onAction={onAction} />,
-  PivotTable: ({ element, onAction }) => <biRegistry.PivotTable element={element} onAction={onAction} />,
-  Filter: ({ element, onAction }) => <biRegistry.Filter element={element} onAction={onAction} />,
+  Table: ({ element }) => <DashboardTable element={element} />,
+  PivotTable: ({ element }) => <DashboardPivotTable element={element} />,
+  Filter: ({ element, onAction }) => <DashboardFilter element={element} onAction={onAction} />,
   Select: () => null,
   OptionList: () => null,
   DatePicker: ({ element, onAction }) => <DashboardDatePicker element={element} onAction={onAction} />,
