@@ -2,10 +2,8 @@
 
 import React from 'react'
 
-import FrameSurface from '@/products/bi/json-render/components/FrameSurface'
+import FrameSurface, { type HudFrameConfig } from '@/products/bi/json-render/components/FrameSurface'
 import { useSemanticUiStyle, useThemeOverrides } from '@/products/bi/json-render/theme/ThemeContext'
-
-type AnyRecord = Record<string, any>
 
 function normalizeCardDomProps(input: Record<string, any> | undefined): Record<string, any> {
   const props = { ...(input || {}) }
@@ -48,6 +46,46 @@ function isCardRole(role: unknown): boolean {
   )
 }
 
+function getCardFrameVar(cssVars: Record<string, string> | undefined, role: string, suffix: string): string | undefined {
+  if (!cssVars) return undefined
+  const rolePrefix =
+    role === 'kpi-card'
+      ? 'kpiCard'
+      : role === 'chart-card'
+        ? 'chartCard'
+        : role === 'table-card'
+          ? 'tableCard'
+          : role === 'pivot-card'
+            ? 'pivotCard'
+            : role === 'filter-card'
+              ? 'filterCard'
+              : role === 'note-card'
+                ? 'noteCard'
+                : 'card'
+  return cssVars[`${rolePrefix}${suffix}`] || cssVars[`card${suffix}`]
+}
+
+function resolveCardFrame(
+  props: Record<string, any>,
+  role: string,
+  cssVars: Record<string, string> | undefined,
+): HudFrameConfig | null | undefined {
+  if (Object.prototype.hasOwnProperty.call(props, 'frame')) {
+    return props.frame as HudFrameConfig | null | undefined
+  }
+
+  const variant = getCardFrameVar(cssVars, role, 'FrameVariant')
+  if (variant !== 'hud') return undefined
+
+  return {
+    variant: 'hud',
+    baseColor: getCardFrameVar(cssVars, role, 'FrameBaseColor'),
+    cornerColor: getCardFrameVar(cssVars, role, 'FrameCornerColor'),
+    cornerSize: getCardFrameVar(cssVars, role, 'FrameCornerSize'),
+    cornerWidth: getCardFrameVar(cssVars, role, 'FrameCornerWidth'),
+  }
+}
+
 export function getJsxCardSurfaceStyle(props: Record<string, any>, semanticStyle: React.CSSProperties): React.CSSProperties {
   return {
     boxSizing: 'border-box',
@@ -74,11 +112,12 @@ export default function JsxCardSurface({
   const semanticStyle = useSemanticUiStyle(role, 'div')
   const style = getJsxCardSurfaceStyle(props, semanticStyle)
   const domProps = normalizeCardDomProps({ ...props, 'data-ui': role })
+  const frame = resolveCardFrame(props, role, theme.cssVars)
 
   return (
     <FrameSurface
       style={style}
-      frame={props.frame as AnyRecord}
+      frame={frame}
       cssVars={theme.cssVars}
       className={typeof props.className === 'string' ? props.className : undefined}
       domProps={domProps}

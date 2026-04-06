@@ -292,20 +292,31 @@ function renderDashboardThemeLayer({
       : DASHBOARD_DEFAULT_CHART_PALETTE
   const preset = buildThemeVars(name, (managers || {}) as any, { headerTheme })
   const themeTokens = resolveDashboardTemplateThemeTokens(name || 'light', borderPreset)
-  const baseCssVars = preset.cssVars || mapManagersToCssVars((managers || {}) as any)
+  const {
+    containerFrameVariant: baseContainerFrameVariant,
+    containerFrameBaseColor: baseContainerFrameBaseColor,
+    containerFrameCornerColor: baseContainerFrameCornerColor,
+    containerFrameCornerSize: baseContainerFrameCornerSize,
+    containerFrameCornerWidth: baseContainerFrameCornerWidth,
+    ...baseCssVars
+  } = (preset.cssVars || mapManagersToCssVars((managers || {}) as any)) as Record<string, string>
   const cssVars: Record<string, string> = {
     ...baseCssVars,
     chartColorScheme: JSON.stringify(resolveDashboardChartPaletteColors(chartPalette)),
   }
-  const containerFrameVariant = baseCssVars.containerFrameVariant || themeTokens.cardFrame?.variant
-  const containerFrameCornerSize =
-    baseCssVars.containerFrameCornerSize || (themeTokens.cardFrame ? String(themeTokens.cardFrame.cornerSize) : undefined)
-  const containerFrameCornerWidth =
-    baseCssVars.containerFrameCornerWidth || (themeTokens.cardFrame ? String(themeTokens.cardFrame.cornerWidth) : undefined)
+  const cardFrameVariant = baseContainerFrameVariant || themeTokens.cardFrame?.variant
+  const cardFrameBaseColor = baseContainerFrameBaseColor
+  const cardFrameCornerColor = baseContainerFrameCornerColor
+  const cardFrameCornerSize =
+    baseContainerFrameCornerSize || (themeTokens.cardFrame ? String(themeTokens.cardFrame.cornerSize) : undefined)
+  const cardFrameCornerWidth =
+    baseContainerFrameCornerWidth || (themeTokens.cardFrame ? String(themeTokens.cardFrame.cornerWidth) : undefined)
   const containerRadius = resolveDashboardBorderRadiusPreset(borderPreset, themeTokens.cardFrame ? 0 : 24)
-  if (containerFrameVariant) cssVars.containerFrameVariant = containerFrameVariant
-  if (containerFrameCornerSize) cssVars.containerFrameCornerSize = containerFrameCornerSize
-  if (containerFrameCornerWidth) cssVars.containerFrameCornerWidth = containerFrameCornerWidth
+  if (cardFrameVariant) cssVars.cardFrameVariant = cardFrameVariant
+  if (cardFrameBaseColor) cssVars.cardFrameBaseColor = cardFrameBaseColor
+  if (cardFrameCornerColor) cssVars.cardFrameCornerColor = cardFrameCornerColor
+  if (cardFrameCornerSize) cssVars.cardFrameCornerSize = cardFrameCornerSize
+  if (cardFrameCornerWidth) cssVars.cardFrameCornerWidth = cardFrameCornerWidth
   cssVars.containerRadius = String(containerRadius)
   const components = {
     Card: {
