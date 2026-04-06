@@ -4,13 +4,11 @@ import React from 'react'
 import { Calendar } from 'lucide-react'
 
 import { useData } from '@/products/bi/json-render/context'
-import {
-  applyDatePickerFieldFromCssVars,
-  applyDatePickerIconFromCssVars,
-  applyDatePickerLabelFromCssVars,
-} from '@/products/bi/json-render/helpers'
-import { useThemeOverrides } from '@/products/bi/json-render/theme/ThemeContext'
 import { DASHBOARD_SUPPORTED_DATE_PICKER_PRESETS } from '@/products/artifacts/dashboard/contract/dashboardContract'
+import {
+  resolveDashboardDatePickerTheme,
+  useDashboardThemeSelection,
+} from '@/products/artifacts/dashboard/renderer/dashboardThemeConfig'
 
 type AnyRecord = Record<string, any>
 type DatePickerPreset = (typeof DASHBOARD_SUPPORTED_DATE_PICKER_PRESETS)[number]
@@ -170,11 +168,8 @@ function DateFieldWithIcon({
   fieldStyle?: React.CSSProperties
   iconStyle?: React.CSSProperties
 }) {
-  const theme = useThemeOverrides()
   const inputRef = React.useRef<PickerInput | null>(null)
-  const iconVars = (applyDatePickerIconFromCssVars(undefined, theme.cssVars) || {}) as React.CSSProperties
   const resolvedIconStyle = {
-    ...iconVars,
     ...(iconStyle || {}),
   } as React.CSSProperties
   const sizeMatch = String((resolvedIconStyle as AnyRecord).fontSize || '').match(/\d+/)
@@ -241,10 +236,7 @@ function DateRangeSummaryField({
   fieldStyle?: React.CSSProperties
   iconStyle?: React.CSSProperties
 }) {
-  const theme = useThemeOverrides()
-  const iconVars = (applyDatePickerIconFromCssVars(undefined, theme.cssVars) || {}) as React.CSSProperties
   const resolvedIconStyle = {
-    ...iconVars,
     ...(iconStyle || {}),
   } as React.CSSProperties
   const sizeMatch = String((resolvedIconStyle as AnyRecord).fontSize || '').match(/\d+/)
@@ -300,8 +292,9 @@ export default function DashboardDatePicker({
   element: any
   onAction?: (action: any) => void
 }) {
-  const theme = useThemeOverrides()
   const { setData, getValueByPath } = useData()
+  const { themeName } = useDashboardThemeSelection()
+  const theme = resolveDashboardDatePickerTheme(themeName)
   const [customPickerOpen, setCustomPickerOpen] = React.useState(false)
   const customPickerRef = React.useRef<HTMLDivElement | null>(null)
   const props = (element?.props || {}) as AnyRecord
@@ -322,25 +315,22 @@ export default function DashboardDatePicker({
 
   const textStyle = pickerFontStyle(styles.textStyle as AnyRecord | undefined)
   const labelStyle = {
+    ...theme.labelStyle,
     ...textStyle,
-    ...(applyDatePickerLabelFromCssVars((styles.labelStyle || {}) as AnyRecord, theme.cssVars) || {}),
+    ...(styles.labelStyle && typeof styles.labelStyle === 'object' ? styles.labelStyle : {}),
     ...(props.labelStyle && typeof props.labelStyle === 'object' ? props.labelStyle : {}),
   } as React.CSSProperties
 
   const containerStyle = {
+    ...(theme.containerStyle || {}),
     ...(styles.containerStyle && typeof styles.containerStyle === 'object' ? styles.containerStyle : {}),
     ...(props.containerStyle && typeof props.containerStyle === 'object' ? props.containerStyle : {}),
   } as React.CSSProperties
 
   const fieldStyle = {
-    minHeight: 38,
-    padding: '0 10px',
-    border: '1px solid #d7e3fa',
-    borderRadius: 10,
-    backgroundColor: '#ffffff',
-    color: '#172033',
+    ...theme.fieldStyle,
     ...textStyle,
-    ...(applyDatePickerFieldFromCssVars((styles.fieldStyle || {}) as AnyRecord, theme.cssVars) || {}),
+    ...(styles.fieldStyle && typeof styles.fieldStyle === 'object' ? styles.fieldStyle : {}),
     ...(props.fieldStyle && typeof props.fieldStyle === 'object' ? props.fieldStyle : {}),
   } as React.CSSProperties
 
@@ -357,6 +347,7 @@ export default function DashboardDatePicker({
         })()
 
   const iconStyle = {
+    ...(theme.iconStyle || {}),
     ...(props.iconStyle && typeof props.iconStyle === 'object' ? props.iconStyle : {}),
   } as React.CSSProperties
 
@@ -364,9 +355,7 @@ export default function DashboardDatePicker({
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 36,
-    backgroundColor: '#ffffff',
-    color: '#425572',
+    ...theme.presetButtonStyle,
     cursor: 'pointer',
     transition: 'all 120ms ease',
     ...textStyle,
@@ -382,9 +371,7 @@ export default function DashboardDatePicker({
   } as React.CSSProperties
 
   const activePresetButtonStyle = {
-    backgroundColor: '#eaf1ff',
-    color: '#1e4fbf',
-    fontWeight: 600,
+    ...theme.activePresetButtonStyle,
     ...pickerFontStyle(styles.activePresetButtonStyle as AnyRecord | undefined),
     ...pickerButtonStyle((styles.activePresetButtonStyle || {}) as AnyRecord),
     ...(props.activePresetButtonStyle && typeof props.activePresetButtonStyle === 'object'
@@ -421,9 +408,7 @@ export default function DashboardDatePicker({
   } as React.CSSProperties
 
   const separatorStyle = {
-    ...labelStyle,
-    color: labelStyle.color || '#64748b',
-    fontSize: 13,
+    ...theme.separatorStyle,
     ...(styles.separatorStyle && typeof styles.separatorStyle === 'object' ? styles.separatorStyle : {}),
     ...(props.separatorStyle && typeof props.separatorStyle === 'object' ? props.separatorStyle : {}),
   } as React.CSSProperties
@@ -593,10 +578,7 @@ export default function DashboardDatePicker({
                   alignItems: 'center',
                   gap: 8,
                   padding: 12,
-                  borderRadius: 12,
-                  border: typeof fieldStyle.border === 'string' ? fieldStyle.border : '1px solid #d7e3fa',
-                  backgroundColor: typeof fieldStyle.backgroundColor === 'string' ? fieldStyle.backgroundColor : '#ffffff',
-                  boxShadow: '0 12px 32px rgba(15, 23, 42, 0.12)',
+                  ...theme.popoverStyle,
                 }}
               >
                 <DateFieldWithIcon

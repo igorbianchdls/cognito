@@ -58,6 +58,52 @@ export type DashboardTextVariantKey =
 
 export type DashboardTextStyle = React.CSSProperties
 export type DashboardTextThemeConfigEntry = Record<DashboardTextVariantKey, DashboardTextStyle>
+export type DashboardDatePickerThemeConfigEntry = {
+  containerStyle: React.CSSProperties
+  labelStyle: React.CSSProperties
+  fieldStyle: React.CSSProperties
+  iconStyle: React.CSSProperties
+  presetButtonStyle: React.CSSProperties
+  activePresetButtonStyle: React.CSSProperties
+  separatorStyle: React.CSSProperties
+  popoverStyle: React.CSSProperties
+}
+export type DashboardInsightsThemeConfigEntry = {
+  containerStyle: React.CSSProperties
+  itemStyle: React.CSSProperties
+  titleStyle: React.CSSProperties
+  textStyle: React.CSSProperties
+  iconStyle: React.CSSProperties
+  dividerColor: string
+}
+export type DashboardFilterThemeConfigEntry = {
+  labelStyle: React.CSSProperties
+  controlStyle: React.CSSProperties
+  optionTextStyle: React.CSSProperties
+  actionStyle: React.CSSProperties
+  applyButtonStyle: React.CSSProperties
+  tileSelectedStyle: React.CSSProperties
+  tileUnselectedStyle: React.CSSProperties
+  checkColor: string
+}
+export type DashboardTabThemeConfigEntry = {
+  base: React.CSSProperties
+  active: React.CSSProperties
+}
+export type DashboardChartThemeConfigEntry = {
+  xAxis: AnyRecord
+  yAxis: AnyRecord
+  grid: AnyRecord
+  tooltip: AnyRecord
+  legend: AnyRecord
+  titleStyle: React.CSSProperties
+  colorScheme: string[]
+  margin: AnyRecord
+}
+export type DashboardTableThemeConfigEntry = AnyRecord
+export type DashboardPivotTableThemeConfigEntry = AnyRecord
+export type DashboardGaugeThemeConfigEntry = AnyRecord
+type AnyRecord = Record<string, any>
 
 type DashboardThemeSelection = {
   themeName: string
@@ -305,11 +351,304 @@ function buildDashboardTextThemeConfigEntry(tokens: DashboardTemplateThemeTokens
   }
 }
 
+function buildDashboardDatePickerThemeConfigEntry(tokens: DashboardTemplateThemeTokens): DashboardDatePickerThemeConfigEntry {
+  const fieldBorder = `1px solid ${tokens.headerDatePickerBorder}`
+  const fieldBackground = tokens.headerDatePickerBg
+  const fieldColor = tokens.headerDatePickerColor
+  return {
+    containerStyle: {},
+    labelStyle: {
+      color: tokens.headerDatePickerLabel,
+      fontSize: 11,
+      fontWeight: 600,
+      lineHeight: 1.4,
+      letterSpacing: '0.06em',
+      textTransform: 'uppercase',
+      margin: 0,
+    },
+    fieldStyle: {
+      minHeight: 38,
+      padding: '0 10px',
+      border: fieldBorder,
+      borderRadius: 10,
+      backgroundColor: fieldBackground,
+      color: fieldColor,
+      fontSize: 14,
+      fontWeight: 500,
+    },
+    iconStyle: {
+      color: tokens.headerDatePickerIcon,
+      fontSize: 14,
+    },
+    presetButtonStyle: {
+      height: 36,
+      backgroundColor: fieldBackground,
+      color: fieldColor,
+      fontSize: 13,
+      fontWeight: 500,
+    },
+    activePresetButtonStyle: {
+      backgroundColor: tokens.headerDatePickerActiveBg,
+      borderColor: tokens.headerDatePickerActiveBorder,
+      color: tokens.headerDatePickerActiveText,
+      fontSize: 13,
+      fontWeight: 600,
+    },
+    separatorStyle: {
+      color: tokens.headerDatePickerLabel,
+      fontSize: 13,
+      fontWeight: 500,
+      lineHeight: 1.4,
+    },
+    popoverStyle: {
+      border: fieldBorder,
+      borderRadius: 12,
+      backgroundColor: fieldBackground,
+      boxShadow: tokens.dark ? '0 12px 32px rgba(0, 0, 0, 0.35)' : '0 12px 32px rgba(15, 23, 42, 0.12)',
+    },
+  }
+}
+
+function buildDashboardInsightsThemeConfigEntry(tokens: DashboardTemplateThemeTokens): DashboardInsightsThemeConfigEntry {
+  return {
+    containerStyle: {},
+    itemStyle: {},
+    titleStyle: {
+      color: tokens.titleColor,
+      fontSize: 13,
+      fontWeight: 600,
+      lineHeight: 1.6,
+    },
+    textStyle: {
+      color: tokens.textSecondary,
+      fontSize: 13,
+      fontWeight: 400,
+      lineHeight: 1.6,
+    },
+    iconStyle: {
+      backgroundColor: tokens.primary,
+      color: tokens.primary,
+    },
+    dividerColor: tokens.surfaceBorder,
+  }
+}
+
+function buildDashboardFilterThemeConfigEntry(tokens: DashboardTemplateThemeTokens): DashboardFilterThemeConfigEntry {
+  return {
+    labelStyle: {
+      color: tokens.textSecondary,
+      fontSize: 11,
+      fontWeight: 600,
+      lineHeight: 1.4,
+      letterSpacing: '0.06em',
+      textTransform: 'uppercase',
+    },
+    controlStyle: {
+      borderColor: tokens.surfaceBorder,
+      backgroundColor: tokens.surfaceBg,
+      color: tokens.textPrimary,
+      fontSize: 13,
+      fontWeight: 500,
+      borderRadius: 10,
+    },
+    optionTextStyle: {
+      color: tokens.textPrimary,
+      fontSize: 13,
+      fontWeight: 500,
+      lineHeight: 1.5,
+    },
+    actionStyle: {
+      color: tokens.primary,
+      fontSize: 11,
+      fontWeight: 600,
+    },
+    applyButtonStyle: {
+      border: `1px solid ${tokens.surfaceBorder}`,
+      borderRadius: 10,
+      backgroundColor: tokens.surfaceBg,
+      color: tokens.textPrimary,
+      fontSize: 12,
+      fontWeight: 600,
+      padding: '6px 10px',
+    },
+    tileSelectedStyle: {
+      backgroundColor: tokens.primary,
+      borderColor: tokens.primary,
+      color: '#ffffff',
+    },
+    tileUnselectedStyle: {
+      backgroundColor: tokens.accentSurface,
+      borderColor: tokens.accentBorder,
+      color: tokens.textPrimary,
+    },
+    checkColor: tokens.primary,
+  }
+}
+
+function buildDashboardTabThemeConfigEntry(tokens: DashboardTemplateThemeTokens): DashboardTabThemeConfigEntry {
+  return {
+    base: {
+      border: `1px solid ${tokens.surfaceBorder}`,
+      borderRadius: 999,
+      backgroundColor: tokens.surfaceBg,
+      color: tokens.textSecondary,
+      padding: '8px 12px',
+      fontSize: 13,
+      fontWeight: 500,
+      lineHeight: 1.2,
+    },
+    active: {
+      backgroundColor: tokens.accentSurface,
+      borderColor: tokens.accentBorder,
+      color: tokens.titleColor,
+      fontWeight: 600,
+    },
+  }
+}
+
+function buildDashboardChartThemeConfigEntry(tokens: DashboardTemplateThemeTokens): DashboardChartThemeConfigEntry {
+  return {
+    xAxis: {
+      tickColor: tokens.textSecondary,
+      tickFontSize: 12,
+      tickMargin: 10,
+    },
+    yAxis: {
+      tickColor: tokens.textSecondary,
+      tickFontSize: 12,
+      tickMargin: 8,
+      width: 64,
+    },
+    grid: {
+      enabled: true,
+      vertical: false,
+      stroke: tokens.surfaceBorder,
+      strokeDasharray: '3 3',
+    },
+    tooltip: {
+      enabled: true,
+      contentStyle: {
+        backgroundColor: tokens.surfaceBg,
+        border: `1px solid ${tokens.surfaceBorder}`,
+        borderRadius: 12,
+        color: tokens.textPrimary,
+      },
+      itemStyle: {
+        color: tokens.textPrimary,
+      },
+      labelStyle: {
+        color: tokens.textSecondary,
+      },
+    },
+    legend: {
+      enabled: true,
+      wrapperStyle: {
+        color: tokens.textSecondary,
+        fontSize: 12,
+      },
+    },
+    titleStyle: {
+      color: tokens.titleColor,
+      padding: 6,
+      textAlign: 'left',
+    },
+    colorScheme: [tokens.primary, '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+    margin: { top: 10, right: 12, bottom: 12, left: 12 },
+  }
+}
+
+function buildDashboardTableThemeConfigEntry(tokens: DashboardTemplateThemeTokens): DashboardTableThemeConfigEntry {
+  return {
+    borderColor: tokens.surfaceBorder,
+    headerBackground: tokens.accentSurface,
+    headerTextColor: tokens.titleColor,
+    footerBackground: tokens.accentSurface,
+    footerTextColor: tokens.titleColor,
+    cellTextColor: tokens.textPrimary,
+    rowHoverColor: tokens.accentSurface,
+    rowAlternateBgColor: tokens.surfaceBg,
+    radius: 12,
+    containerStyle: {
+      borderColor: tokens.surfaceBorder,
+      borderWidth: 1,
+      borderStyle: 'solid',
+      borderRadius: 12,
+      backgroundColor: tokens.surfaceBg,
+    },
+  }
+}
+
+function buildDashboardPivotTableThemeConfigEntry(tokens: DashboardTemplateThemeTokens): DashboardPivotTableThemeConfigEntry {
+  return {
+    borderColor: tokens.surfaceBorder,
+    backgroundColor: tokens.surfaceBg,
+    headerBackground: tokens.accentSurface,
+    headerTextColor: tokens.titleColor,
+    headerTotalBackground: tokens.pageBg,
+    headerTotalTextColor: tokens.titleColor,
+    cellTextColor: tokens.textPrimary,
+    rowLabelColor: tokens.titleColor,
+    rowTotalBackground: tokens.accentSurface,
+    rowTotalTextColor: tokens.titleColor,
+    footerBackground: tokens.pageBg,
+    footerTextColor: tokens.titleColor,
+    mutedTextColor: tokens.textSecondary,
+    expandButtonBackground: tokens.surfaceBg,
+    expandButtonBorderColor: tokens.surfaceBorder,
+    expandButtonColor: tokens.textSecondary,
+    expandButtonHoverBackground: tokens.accentSurface,
+    containerStyle: {
+      borderColor: tokens.surfaceBorder,
+      borderWidth: 1,
+      borderStyle: 'solid',
+      borderRadius: 12,
+      backgroundColor: tokens.surfaceBg,
+    },
+  }
+}
+
+function buildDashboardGaugeThemeConfigEntry(tokens: DashboardTemplateThemeTokens): DashboardGaugeThemeConfigEntry {
+  return {
+    trackColor: tokens.surfaceBorder,
+    valueColor: tokens.primary,
+    targetColor: tokens.titleColor,
+    tooltipStyle: {
+      backgroundColor: tokens.surfaceBg,
+      border: `1px solid ${tokens.surfaceBorder}`,
+      color: tokens.textPrimary,
+    },
+  }
+}
+
 export const DASHBOARD_THEME_CONFIG: Record<string, DashboardThemeConfigEntry> = Object.fromEntries(
   Object.entries(DASHBOARD_TEMPLATE_THEME_TOKENS).map(([name, tokens]) => [name, buildDashboardThemeConfigEntry(tokens)]),
 )
 export const DASHBOARD_TEXT_THEME_CONFIG: Record<string, DashboardTextThemeConfigEntry> = Object.fromEntries(
   Object.entries(DASHBOARD_TEMPLATE_THEME_TOKENS).map(([name, tokens]) => [name, buildDashboardTextThemeConfigEntry(tokens)]),
+)
+export const DASHBOARD_DATE_PICKER_THEME_CONFIG: Record<string, DashboardDatePickerThemeConfigEntry> = Object.fromEntries(
+  Object.entries(DASHBOARD_TEMPLATE_THEME_TOKENS).map(([name, tokens]) => [name, buildDashboardDatePickerThemeConfigEntry(tokens)]),
+)
+export const DASHBOARD_INSIGHTS_THEME_CONFIG: Record<string, DashboardInsightsThemeConfigEntry> = Object.fromEntries(
+  Object.entries(DASHBOARD_TEMPLATE_THEME_TOKENS).map(([name, tokens]) => [name, buildDashboardInsightsThemeConfigEntry(tokens)]),
+)
+export const DASHBOARD_FILTER_THEME_CONFIG: Record<string, DashboardFilterThemeConfigEntry> = Object.fromEntries(
+  Object.entries(DASHBOARD_TEMPLATE_THEME_TOKENS).map(([name, tokens]) => [name, buildDashboardFilterThemeConfigEntry(tokens)]),
+)
+export const DASHBOARD_TAB_THEME_CONFIG: Record<string, DashboardTabThemeConfigEntry> = Object.fromEntries(
+  Object.entries(DASHBOARD_TEMPLATE_THEME_TOKENS).map(([name, tokens]) => [name, buildDashboardTabThemeConfigEntry(tokens)]),
+)
+export const DASHBOARD_CHART_THEME_CONFIG: Record<string, DashboardChartThemeConfigEntry> = Object.fromEntries(
+  Object.entries(DASHBOARD_TEMPLATE_THEME_TOKENS).map(([name, tokens]) => [name, buildDashboardChartThemeConfigEntry(tokens)]),
+)
+export const DASHBOARD_TABLE_THEME_CONFIG: Record<string, DashboardTableThemeConfigEntry> = Object.fromEntries(
+  Object.entries(DASHBOARD_TEMPLATE_THEME_TOKENS).map(([name, tokens]) => [name, buildDashboardTableThemeConfigEntry(tokens)]),
+)
+export const DASHBOARD_PIVOT_TABLE_THEME_CONFIG: Record<string, DashboardPivotTableThemeConfigEntry> = Object.fromEntries(
+  Object.entries(DASHBOARD_TEMPLATE_THEME_TOKENS).map(([name, tokens]) => [name, buildDashboardPivotTableThemeConfigEntry(tokens)]),
+)
+export const DASHBOARD_GAUGE_THEME_CONFIG: Record<string, DashboardGaugeThemeConfigEntry> = Object.fromEntries(
+  Object.entries(DASHBOARD_TEMPLATE_THEME_TOKENS).map(([name, tokens]) => [name, buildDashboardGaugeThemeConfigEntry(tokens)]),
 )
 
 export function resolveDashboardCardTheme(
@@ -364,6 +703,97 @@ export function resolveDashboardTextStyle(role: string | undefined, themeName?: 
   return theme[resolveDashboardTextVariantKey(role)]
 }
 
+export function resolveDashboardDatePickerTheme(themeName?: string): DashboardDatePickerThemeConfigEntry {
+  const key = resolveThemeKey(themeName)
+  const tokens = DASHBOARD_TEMPLATE_THEME_TOKENS[key] || DASHBOARD_TEMPLATE_THEME_TOKENS.light
+  return buildDashboardDatePickerThemeConfigEntry(tokens)
+}
+
+export function resolveDashboardInsightsTheme(themeName?: string): DashboardInsightsThemeConfigEntry {
+  const key = resolveThemeKey(themeName)
+  const tokens = DASHBOARD_TEMPLATE_THEME_TOKENS[key] || DASHBOARD_TEMPLATE_THEME_TOKENS.light
+  return buildDashboardInsightsThemeConfigEntry(tokens)
+}
+
+export function resolveDashboardFilterTheme(themeName?: string): DashboardFilterThemeConfigEntry {
+  const key = resolveThemeKey(themeName)
+  const tokens = DASHBOARD_TEMPLATE_THEME_TOKENS[key] || DASHBOARD_TEMPLATE_THEME_TOKENS.light
+  return buildDashboardFilterThemeConfigEntry(tokens)
+}
+
+export function resolveDashboardTabStyle(themeName?: string, active?: boolean): React.CSSProperties {
+  const key = resolveThemeKey(themeName)
+  const tokens = DASHBOARD_TEMPLATE_THEME_TOKENS[key] || DASHBOARD_TEMPLATE_THEME_TOKENS.light
+  const theme = buildDashboardTabThemeConfigEntry(tokens)
+  return active ? { ...theme.base, ...theme.active } : theme.base
+}
+
+export function resolveDashboardChartTheme(themeName?: string): DashboardChartThemeConfigEntry {
+  const key = resolveThemeKey(themeName)
+  const tokens = DASHBOARD_TEMPLATE_THEME_TOKENS[key] || DASHBOARD_TEMPLATE_THEME_TOKENS.light
+  return buildDashboardChartThemeConfigEntry(tokens)
+}
+
+export function resolveDashboardTableTheme(themeName?: string): DashboardTableThemeConfigEntry {
+  const key = resolveThemeKey(themeName)
+  const tokens = DASHBOARD_TEMPLATE_THEME_TOKENS[key] || DASHBOARD_TEMPLATE_THEME_TOKENS.light
+  return buildDashboardTableThemeConfigEntry(tokens)
+}
+
+export function resolveDashboardPivotTableTheme(themeName?: string): DashboardPivotTableThemeConfigEntry {
+  const key = resolveThemeKey(themeName)
+  const tokens = DASHBOARD_TEMPLATE_THEME_TOKENS[key] || DASHBOARD_TEMPLATE_THEME_TOKENS.light
+  return buildDashboardPivotTableThemeConfigEntry(tokens)
+}
+
+export function resolveDashboardGaugeTheme(themeName?: string): DashboardGaugeThemeConfigEntry {
+  const key = resolveThemeKey(themeName)
+  const tokens = DASHBOARD_TEMPLATE_THEME_TOKENS[key] || DASHBOARD_TEMPLATE_THEME_TOKENS.light
+  return buildDashboardGaugeThemeConfigEntry(tokens)
+}
+
+const DASHBOARD_TEXT_ROLE_SET = new Set<string>([
+  'body',
+  'body-muted',
+  'body-sm',
+  'small-muted',
+  'lead',
+  'eyebrow',
+  'eyebrow-strong',
+  'page-title',
+  'page-title-sm',
+  'section-title',
+  'section-title-md',
+  'section-title-sm',
+  'section-title-strong',
+  'chart-title',
+  'chart-eyebrow',
+  'table-title',
+  'pivot-title',
+  'filter-title',
+  'insights-title',
+  'insights-title-sm',
+  'kpi-title',
+  'kpi-value',
+  'kpi-compare',
+  'kpi-delta',
+  'muted',
+  'subtitle',
+  'title',
+])
+
+export function resolveDashboardNodeStyle(
+  role: string | undefined,
+  themeName?: string,
+  options?: { active?: boolean },
+): React.CSSProperties {
+  const key = String(role || '').trim().toLowerCase()
+  if (!key) return {}
+  if (key === 'tab') return resolveDashboardTabStyle(themeName, options?.active)
+  if (DASHBOARD_TEXT_ROLE_SET.has(key)) return resolveDashboardTextStyle(key, themeName)
+  return {}
+}
+
 export function resolveDashboardCardVariantKey(props: Record<string, any> | undefined): DashboardCardVariantKey {
   const variant = typeof props?.variant === 'string' ? props.variant.trim().toLowerCase() : ''
   if (variant === 'kpi') return 'kpiCard'
@@ -407,6 +837,30 @@ export function buildDashboardThemeConfigFileSource() {
   const textEntries = Object.entries(DASHBOARD_TEXT_THEME_CONFIG)
     .map(([name, config]) => `  ${name}: ${JSON.stringify(config, null, 2).replace(/\n/g, '\n  ')},`)
     .join('\n')
+  const datePickerEntries = Object.entries(DASHBOARD_DATE_PICKER_THEME_CONFIG)
+    .map(([name, config]) => `  ${name}: ${JSON.stringify(config, null, 2).replace(/\n/g, '\n  ')},`)
+    .join('\n')
+  const insightsEntries = Object.entries(DASHBOARD_INSIGHTS_THEME_CONFIG)
+    .map(([name, config]) => `  ${name}: ${JSON.stringify(config, null, 2).replace(/\n/g, '\n  ')},`)
+    .join('\n')
+  const filterEntries = Object.entries(DASHBOARD_FILTER_THEME_CONFIG)
+    .map(([name, config]) => `  ${name}: ${JSON.stringify(config, null, 2).replace(/\n/g, '\n  ')},`)
+    .join('\n')
+  const tabEntries = Object.entries(DASHBOARD_TAB_THEME_CONFIG)
+    .map(([name, config]) => `  ${name}: ${JSON.stringify(config, null, 2).replace(/\n/g, '\n  ')},`)
+    .join('\n')
+  const chartEntries = Object.entries(DASHBOARD_CHART_THEME_CONFIG)
+    .map(([name, config]) => `  ${name}: ${JSON.stringify(config, null, 2).replace(/\n/g, '\n  ')},`)
+    .join('\n')
+  const tableEntries = Object.entries(DASHBOARD_TABLE_THEME_CONFIG)
+    .map(([name, config]) => `  ${name}: ${JSON.stringify(config, null, 2).replace(/\n/g, '\n  ')},`)
+    .join('\n')
+  const pivotEntries = Object.entries(DASHBOARD_PIVOT_TABLE_THEME_CONFIG)
+    .map(([name, config]) => `  ${name}: ${JSON.stringify(config, null, 2).replace(/\n/g, '\n  ')},`)
+    .join('\n')
+  const gaugeEntries = Object.entries(DASHBOARD_GAUGE_THEME_CONFIG)
+    .map(([name, config]) => `  ${name}: ${JSON.stringify(config, null, 2).replace(/\n/g, '\n  ')},`)
+    .join('\n')
 
   return `export const DASHBOARD_CARD_THEME_CONFIG = {
 ${cardEntries}
@@ -416,7 +870,47 @@ export const DASHBOARD_TEXT_THEME_CONFIG = {
 ${textEntries}
 } as const
 
+export const DASHBOARD_DATE_PICKER_THEME_CONFIG = {
+${datePickerEntries}
+} as const
+
+export const DASHBOARD_INSIGHTS_THEME_CONFIG = {
+${insightsEntries}
+} as const
+
+export const DASHBOARD_FILTER_THEME_CONFIG = {
+${filterEntries}
+} as const
+
+export const DASHBOARD_TAB_THEME_CONFIG = {
+${tabEntries}
+} as const
+
+export const DASHBOARD_CHART_THEME_CONFIG = {
+${chartEntries}
+} as const
+
+export const DASHBOARD_TABLE_THEME_CONFIG = {
+${tableEntries}
+} as const
+
+export const DASHBOARD_PIVOT_TABLE_THEME_CONFIG = {
+${pivotEntries}
+} as const
+
+export const DASHBOARD_GAUGE_THEME_CONFIG = {
+${gaugeEntries}
+} as const
+
 export type DashboardCardThemeConfig = typeof DASHBOARD_CARD_THEME_CONFIG
 export type DashboardTextThemeConfig = typeof DASHBOARD_TEXT_THEME_CONFIG
+export type DashboardDatePickerThemeConfig = typeof DASHBOARD_DATE_PICKER_THEME_CONFIG
+export type DashboardInsightsThemeConfig = typeof DASHBOARD_INSIGHTS_THEME_CONFIG
+export type DashboardFilterThemeConfig = typeof DASHBOARD_FILTER_THEME_CONFIG
+export type DashboardTabThemeConfig = typeof DASHBOARD_TAB_THEME_CONFIG
+export type DashboardChartThemeConfig = typeof DASHBOARD_CHART_THEME_CONFIG
+export type DashboardTableThemeConfig = typeof DASHBOARD_TABLE_THEME_CONFIG
+export type DashboardPivotTableThemeConfig = typeof DASHBOARD_PIVOT_TABLE_THEME_CONFIG
+export type DashboardGaugeThemeConfig = typeof DASHBOARD_GAUGE_THEME_CONFIG
 `
 }

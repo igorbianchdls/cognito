@@ -3,13 +3,11 @@
 import React from 'react'
 
 import { applyPrimaryDateRange } from '@/products/bi/json-render/dateFilters'
-import {
-  applySlicerLabelFromCssVars,
-  applySlicerOptionFromCssVars,
-  normalizeTitleStyle,
-} from '@/products/bi/json-render/helpers'
 import { useData } from '@/products/bi/json-render/context'
-import { useThemeOverrides } from '@/products/bi/json-render/theme/ThemeContext'
+import {
+  resolveDashboardFilterTheme,
+  useDashboardThemeSelection,
+} from '@/products/artifacts/dashboard/renderer/dashboardThemeConfig'
 import { deepMerge } from '@/stores/ui/json-render/utils'
 
 type AnyRecord = Record<string, any>
@@ -333,7 +331,8 @@ function SlicerContent({
   suppressFieldLabels?: boolean
   padded?: boolean
 }) {
-  const theme = useThemeOverrides()
+  const { themeName } = useDashboardThemeSelection()
+  const theme = resolveDashboardFilterTheme(themeName)
   const { data, setData, getValueByPath } = useData()
   const [optionsMap, setOptionsMap] = React.useState<Record<number, SlicerOpt[]>>({})
   const [searchMap, setSearchMap] = React.useState<Record<number, string>>({})
@@ -434,7 +433,10 @@ function SlicerContent({
           if (!storePath) return null
 
           const label = typeof field?.label === 'string' ? field.label : undefined
-          const labelStyle = applySlicerLabelFromCssVars(normalizeTitleStyle(field?.labelStyle), theme.cssVars)
+          const labelStyle = {
+            ...theme.labelStyle,
+            ...(field?.labelStyle && typeof field.labelStyle === 'object' ? field.labelStyle : {}),
+          } as React.CSSProperties
           const opts = optionsMap[idx] || []
           const width = field?.width !== undefined ? (typeof field.width === 'number' ? `${field.width}px` : field.width) : undefined
           const { variant, selectionMode } = resolveSlicerPresentation(field)
@@ -446,7 +448,10 @@ function SlicerContent({
           const controlStyle = buildSlicerControlStyle(field)
           const optionTextStyle = buildSlicerOptionTextStyle(
             field,
-            (applySlicerOptionFromCssVars(normalizeTitleStyle(field?.optionStyle), theme.cssVars) || {}) as React.CSSProperties,
+            {
+              ...theme.optionTextStyle,
+              ...(field?.optionStyle && typeof field.optionStyle === 'object' ? field.optionStyle : {}),
+            } as React.CSSProperties,
           )
           const listMaxHeight = styleVal(field?.maxHeight) || '12rem'
           const itemGap = styleVal(field?.itemGap) || '0.25rem'
@@ -470,15 +475,12 @@ function SlicerContent({
                   <div className="flex flex-wrap gap-2">
                     {opts.map((option) => {
                       const selected = isMulti ? (Array.isArray(stored) && stored.includes(option.value)) : stored === option.value
-                      const tileCfg = ((((theme as any).components?.Filter as any)?.tile) || (((theme as any).components?.SlicerCard as any)?.tile) || {})
-                      const base = String(tileCfg.baseClass || 'text-xs font-medium rounded-md min-w-[110px] h-9 px-3 transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 active:scale-[0.98]')
-                      const selectedClass = String(tileCfg.selectedClass || 'bg-sky-600 text-white border-sky-600 hover:bg-sky-700')
-                      const unselectedClass = String(tileCfg.unselectedClass || 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200')
+                      const base = 'text-xs font-medium rounded-md min-w-[110px] h-9 px-3 border transition-all focus:outline-none active:scale-[0.98]'
                       return (
                         <button
                           key={String(option.value)}
                           type="button"
-                          className={`${base} ${selected ? selectedClass : unselectedClass}`}
+                          className={base}
                           onClick={() => {
                             if (isMulti) {
                               const arr = Array.isArray(stored) ? stored.slice() : []
@@ -491,9 +493,10 @@ function SlicerContent({
                             }
                           }}
                           style={(() => {
-                            const style = applySlicerOptionFromCssVars(undefined, theme.cssVars) || {}
-                            delete (style as any).color
-                            return { ...(style as any), ...controlStyle } as any
+                            return {
+                              ...(selected ? theme.tileSelectedStyle : theme.tileUnselectedStyle),
+                              ...controlStyle,
+                            } as any
                           })()}
                         >
                           {option.label}
@@ -504,10 +507,10 @@ function SlicerContent({
                 </div>
                 <div className="flex items-center gap-2">
                   {selectAll && isMulti && (
-                    <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={() => onChangeField(idx, storePath, opts.map((option) => option.value), field.actionOnChange)}>Selecionar todos</button>
+                    <button type="button" style={theme.actionStyle} onClick={() => onChangeField(idx, storePath, opts.map((option) => option.value), field.actionOnChange)}>Selecionar todos</button>
                   )}
                   {clearable && (
-                    <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={onClear}>Limpar</button>
+                    <button type="button" style={theme.actionStyle} onClick={onClear}>Limpar</button>
                   )}
                 </div>
               </div>
@@ -543,7 +546,7 @@ function SlicerContent({
                         <input
                           type={isMulti ? 'checkbox' : 'radio'}
                           className="rounded border-gray-300"
-                          style={{ accentColor: typeof field?.checkColor === 'string' ? field.checkColor : undefined }}
+                          style={{ accentColor: typeof field?.checkColor === 'string' ? field.checkColor : theme.checkColor }}
                           name={isMulti ? undefined : `slicer-${idx}`}
                           checked={isMulti ? (Array.isArray(stored) && stored.includes(option.value)) : stored === option.value}
                           onChange={(e) => {
@@ -562,10 +565,10 @@ function SlicerContent({
                   </div>
                   <div className="flex items-center gap-2">
                     {selectAll && isMulti && (
-                      <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={() => onChangeField(idx, storePath, opts.map((option) => option.value), field.actionOnChange)}>Selecionar todos</button>
+                      <button type="button" style={theme.actionStyle} onClick={() => onChangeField(idx, storePath, opts.map((option) => option.value), field.actionOnChange)}>Selecionar todos</button>
                     )}
                     {clearable && (
-                      <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={onClear}>Limpar</button>
+                      <button type="button" style={theme.actionStyle} onClick={onClear}>Limpar</button>
                     )}
                   </div>
                 </div>
@@ -617,7 +620,7 @@ function SlicerContent({
                 </select>
               </div>
               {clearable && (
-                <button type="button" className="text-[11px] text-blue-600 hover:underline" onClick={onClear}>Limpar</button>
+                <button type="button" style={theme.actionStyle} onClick={onClear}>Limpar</button>
               )}
             </div>
           )
@@ -625,7 +628,7 @@ function SlicerContent({
       </div>
       {applyMode === 'manual' && (
         <div className="mt-2 flex justify-end">
-          <button type="button" onClick={onApplyAll} className="text-xs rounded-md border border-gray-300 bg-white px-2 py-1 hover:bg-gray-50">
+          <button type="button" onClick={onApplyAll} style={theme.applyButtonStyle}>
             Aplicar
           </button>
         </div>
@@ -641,8 +644,7 @@ export default function DashboardFilter({
   element: any
   onAction?: (action: any) => void
 }) {
-  const theme = useThemeOverrides()
-  const p = deepMerge((theme.components?.Filter || {}) as AnyRecord, (element?.props || {}) as AnyRecord) as AnyRecord
+  const p = deepMerge({} as AnyRecord, (element?.props || {}) as AnyRecord) as AnyRecord
   const layout = (p.layout || 'vertical') as 'vertical' | 'horizontal'
   const applyMode = (p.applyMode || 'auto') as 'auto' | 'manual'
   const fields = resolveSlicerDefinitions(element, p)

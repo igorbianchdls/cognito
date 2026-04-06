@@ -43,6 +43,10 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
   const outerRadius = seriesStyle.outerRadius ?? legacyRecharts.outerRadius ?? "80%";
   const paddingAngle = seriesStyle.paddingAngle ?? legacyRecharts.paddingAngle ?? 0;
   const showLabels = seriesStyle.showLabels ?? legacyRecharts.showLabels;
+  const tooltipContentStyle = tooltip.contentStyle && typeof tooltip.contentStyle === "object" ? tooltip.contentStyle as React.CSSProperties : undefined;
+  const tooltipItemStyle = tooltip.itemStyle && typeof tooltip.itemStyle === "object" ? tooltip.itemStyle as React.CSSProperties : undefined;
+  const tooltipLabelStyle = tooltip.labelStyle && typeof tooltip.labelStyle === "object" ? tooltip.labelStyle as React.CSSProperties : undefined;
+  const legendWrapperStyle = legend.wrapperStyle && typeof legend.wrapperStyle === "object" ? legend.wrapperStyle as React.CSSProperties : undefined;
 
   const chartData = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
@@ -74,12 +78,13 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
       {queryError ? <div className="rounded border border-red-300 bg-red-50 p-2 text-xs text-red-700">{queryError}</div> : null}
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
-          {showTooltip ? <Tooltip formatter={(value: any) => formatChartValue(value, fmt)} /> : null}
+          {showTooltip ? <Tooltip formatter={(value: any) => formatChartValue(value, fmt)} contentStyle={tooltipContentStyle} itemStyle={tooltipItemStyle} labelStyle={tooltipLabelStyle} /> : null}
           {showLegend && legendPosition !== "none" ? (
             <Legend
               verticalAlign={legendPosition === "bottom" ? "bottom" : "middle"}
               align={legendPosition === "right" ? "right" : "center"}
               layout={legendPosition === "right" ? "vertical" : "horizontal"}
+              wrapperStyle={legendWrapperStyle}
             />
           ) : null}
           <Pie

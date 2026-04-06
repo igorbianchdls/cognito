@@ -239,6 +239,7 @@ export default function JsonRenderGauge({ element }: { element?: { props?: AnyRe
     boxShadow: "0 8px 24px rgba(15, 23, 42, 0.12)",
     color: "#111827",
     pointerEvents: "none",
+    ...(p.tooltipStyle && typeof p.tooltipStyle === "object" ? p.tooltipStyle as React.CSSProperties : {}),
   };
 
   return (

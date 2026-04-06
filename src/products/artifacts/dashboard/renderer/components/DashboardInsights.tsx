@@ -2,10 +2,17 @@
 
 import * as React from 'react'
 
+import {
+  resolveDashboardInsightsTheme,
+  useDashboardThemeSelection,
+} from '@/products/artifacts/dashboard/renderer/dashboardThemeConfig'
+
 type AnyRecord = Record<string, any>
 
 export default function DashboardInsights({ element }: { element: any }) {
   const props = (element?.props || {}) as AnyRecord
+  const { themeName } = useDashboardThemeSelection()
+  const theme = resolveDashboardInsightsTheme(themeName)
   const items = Array.isArray(props.items) ? props.items : []
   const [openItems, setOpenItems] = React.useState<Record<number, boolean>>({})
   const containerStyle = props.containerStyle && typeof props.containerStyle === 'object'
@@ -23,12 +30,14 @@ export default function DashboardInsights({ element }: { element: any }) {
   const gap = typeof props.gap === 'number' ? props.gap : 12
   const itemGap = typeof props.itemGap === 'number' ? props.itemGap : 12
   const showDividers = props.showDividers === true
-  const dividerColor = typeof props.dividerColor === 'string' ? props.dividerColor : '#e2e8f0'
+  const dividerColor = typeof props.dividerColor === 'string' ? props.dividerColor : theme.dividerColor
   const markerColor = typeof iconStyle?.backgroundColor === 'string'
     ? iconStyle.backgroundColor
     : typeof iconStyle?.color === 'string'
       ? iconStyle.color
-      : '#2563eb'
+      : typeof theme.iconStyle.backgroundColor === 'string'
+        ? theme.iconStyle.backgroundColor
+        : '#2563eb'
 
   return (
     <div
@@ -37,6 +46,7 @@ export default function DashboardInsights({ element }: { element: any }) {
         flexDirection: 'column',
         gap,
         minWidth: 0,
+        ...theme.containerStyle,
         ...containerStyle,
       }}
     >
@@ -56,6 +66,7 @@ export default function DashboardInsights({ element }: { element: any }) {
                 flexDirection: 'column',
                 padding: '8px 0',
                 borderTop: showDividers && index > 0 ? `1px solid ${dividerColor}` : undefined,
+                ...theme.itemStyle,
                 ...itemStyle,
               }}
             >
@@ -95,10 +106,7 @@ export default function DashboardInsights({ element }: { element: any }) {
                     <p
                       style={{
                         margin: 0,
-                        fontSize: 13,
-                        fontWeight: 500,
-                        lineHeight: 1.6,
-                        color: '#475569',
+                        ...theme.titleStyle,
                         ...textStyle,
                       }}
                     >
@@ -110,9 +118,7 @@ export default function DashboardInsights({ element }: { element: any }) {
                       style={{
                         margin: 0,
                         marginLeft: itemGap + 8,
-                        fontSize: 13,
-                        lineHeight: 1.6,
-                        color: '#475569',
+                        ...theme.textStyle,
                         ...textStyle,
                       }}
                     >
@@ -135,15 +141,14 @@ export default function DashboardInsights({ element }: { element: any }) {
                       borderRadius: '50%',
                       flex: '0 0 auto',
                       marginTop: 8,
+                      ...theme.iconStyle,
                       backgroundColor: markerColor,
                     }}
                   />
                   <p
                     style={{
                       margin: 0,
-                      fontSize: 13,
-                      lineHeight: 1.6,
-                      color: '#475569',
+                      ...theme.textStyle,
                       ...textStyle,
                     }}
                   >

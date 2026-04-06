@@ -48,9 +48,14 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
   const showLegend = legend.enabled ?? (legacyRecharts.showLegend ?? seriesDefs.length > 1);
   const showGrid = grid.enabled ?? (legacyRecharts.showGrid ?? true);
   const gridVertical = Boolean(grid.vertical ?? legacyRecharts.gridVertical);
+  const gridStroke = String(grid.stroke ?? legacyRecharts.gridStroke ?? "#e5e7eb");
   const gridDasharray = String(grid.strokeDasharray ?? legacyRecharts.gridDasharray ?? "3 3");
   const categoryTickMargin = Number(xAxis.tickMargin ?? legacyRecharts.categoryTickMargin ?? 10);
+  const categoryTickColor = String(xAxis.tickColor ?? legacyRecharts.categoryTickColor ?? "#6b7280");
+  const categoryTickFontSize = Number(xAxis.tickFontSize ?? legacyRecharts.categoryTickFontSize ?? 12);
   const valueTickMargin = Number(yAxis.tickMargin ?? legacyRecharts.valueTickMargin ?? 8);
+  const valueTickColor = String(yAxis.tickColor ?? legacyRecharts.valueTickColor ?? "#6b7280");
+  const valueTickFontSize = Number(yAxis.tickFontSize ?? legacyRecharts.valueTickFontSize ?? 12);
   const valueAxisWidth = Number(yAxis.width ?? legacyRecharts.valueAxisWidth ?? 64);
   const strokeWidth = Number(seriesStyle.strokeWidth ?? legacyRecharts.strokeWidth ?? 2);
   const showDots = seriesStyle.showDots ?? legacyRecharts.showDots;
@@ -59,6 +64,10 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
   const singleSeriesGradient = seriesStyle.singleSeriesGradient ?? legacyRecharts.singleSeriesGradient;
   const connectNulls = Boolean(seriesStyle.connectNulls ?? legacyRecharts.connectNulls);
   const margin = (element?.props?.margin as AnyRecord | undefined) || legacyRecharts.margin || { top: 10, right: 12, bottom: 12, left: 12 };
+  const tooltipContentStyle = tooltip.contentStyle && typeof tooltip.contentStyle === "object" ? tooltip.contentStyle as React.CSSProperties : undefined;
+  const tooltipItemStyle = tooltip.itemStyle && typeof tooltip.itemStyle === "object" ? tooltip.itemStyle as React.CSSProperties : undefined;
+  const tooltipLabelStyle = tooltip.labelStyle && typeof tooltip.labelStyle === "object" ? tooltip.labelStyle as React.CSSProperties : undefined;
+  const legendWrapperStyle = legend.wrapperStyle && typeof legend.wrapperStyle === "object" ? legend.wrapperStyle as React.CSSProperties : undefined;
 
   const normalizedRows = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
@@ -158,28 +167,31 @@ export default function JsonRenderLineChart({ element }: { element: any }) {
               </linearGradient>
             </defs>
           ) : null}
-          {showGrid ? <CartesianGrid strokeDasharray={gridDasharray} vertical={gridVertical} /> : null}
+          {showGrid ? <CartesianGrid stroke={gridStroke} strokeDasharray={gridDasharray} vertical={gridVertical} /> : null}
           <XAxis
             dataKey="x"
             hide={hideCategoryAxis}
             tickLine={false}
             axisLine={false}
             tickMargin={categoryTickMargin}
+            tick={{ fill: categoryTickColor, fontSize: categoryTickFontSize }}
           />
           <YAxis
             hide={!showValueAxis}
             tickLine={false}
             axisLine={false}
             tickMargin={valueTickMargin}
+            tick={{ fill: valueTickColor, fontSize: valueTickFontSize }}
             tickFormatter={(value) => formatChartValue(value, fmt)}
             width={valueAxisWidth}
           />
-          {showTooltip ? <Tooltip formatter={(value: any) => formatChartValue(value, fmt)} /> : null}
+          {showTooltip ? <Tooltip formatter={(value: any) => formatChartValue(value, fmt)} contentStyle={tooltipContentStyle} itemStyle={tooltipItemStyle} labelStyle={tooltipLabelStyle} /> : null}
           {showLegend && legendPosition !== "none" && seriesKeys.length > 1 ? (
             <Legend
               verticalAlign={legendPosition === "bottom" ? "bottom" : "middle"}
               align={legendPosition === "right" ? "right" : "center"}
               layout={legendPosition === "right" ? "vertical" : "horizontal"}
+              wrapperStyle={legendWrapperStyle}
             />
           ) : null}
           {renderedSeries.map((entry) => (

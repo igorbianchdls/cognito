@@ -60,6 +60,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   const legendPosition = String(legend.position ?? legacyRecharts.legendPosition ?? "bottom").trim().toLowerCase();
   const showGrid = grid.enabled ?? (legacyRecharts.showGrid ?? true);
   const gridVertical = Boolean(grid.vertical ?? legacyRecharts.gridVertical ?? false);
+  const gridStroke = String(grid.stroke ?? legacyRecharts.gridStroke ?? "#e5e7eb");
   const gridDasharray = String(grid.strokeDasharray ?? legacyRecharts.gridDasharray ?? "3 3");
   const categoryTickMargin = Number(xAxis.tickMargin ?? legacyRecharts.categoryTickMargin ?? 10);
   const categoryTickColor = String(xAxis.tickColor ?? legacyRecharts.categoryTickColor ?? "#6b7280");
@@ -71,6 +72,10 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
   const barRadius = Number(seriesStyle.radius ?? legacyRecharts.radius ?? 8);
   const barSize = seriesStyle.barSize ?? legacyRecharts.barSize;
   const margin = (element?.props?.margin as AnyRecord | undefined) || legacyRecharts.margin || { top: 8, right: 12, left: 18, bottom: 8 };
+  const tooltipContentStyle = tooltip.contentStyle && typeof tooltip.contentStyle === "object" ? tooltip.contentStyle as React.CSSProperties : undefined;
+  const tooltipItemStyle = tooltip.itemStyle && typeof tooltip.itemStyle === "object" ? tooltip.itemStyle as React.CSSProperties : undefined;
+  const tooltipLabelStyle = tooltip.labelStyle && typeof tooltip.labelStyle === "object" ? tooltip.labelStyle as React.CSSProperties : undefined;
+  const legendWrapperStyle = legend.wrapperStyle && typeof legend.wrapperStyle === "object" ? legend.wrapperStyle as React.CSSProperties : undefined;
 
   const chartData = React.useMemo(() => {
     const src = Array.isArray(serverRows) ? serverRows : [];
@@ -122,7 +127,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
           onClick={handleClick}
           barSize={barSize}
         >
-          {showGrid ? <CartesianGrid vertical={gridVertical} strokeDasharray={gridDasharray} /> : null}
+          {showGrid ? <CartesianGrid vertical={gridVertical} stroke={gridStroke} strokeDasharray={gridDasharray} /> : null}
           <XAxis
             dataKey="shortLabel"
             hide={hideCategoryAxis}
@@ -145,6 +150,9 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
             <Tooltip
               cursor={false}
               formatter={(value: any) => formatChartValue(value, fmt)}
+              contentStyle={tooltipContentStyle}
+              itemStyle={tooltipItemStyle}
+              labelStyle={tooltipLabelStyle}
               labelFormatter={(_label: any, payload: any) => {
                 const first = Array.isArray(payload) ? payload[0] : undefined;
                 return first?.payload?.label ?? "";
@@ -156,6 +164,7 @@ export default function JsonRenderBarChart({ element }: { element: any }) {
               verticalAlign={legendPosition === "bottom" ? "bottom" : "middle"}
               align={legendPosition === "right" ? "right" : "center"}
               layout={legendPosition === "right" ? "vertical" : "horizontal"}
+              wrapperStyle={legendWrapperStyle}
             />
           ) : null}
           {seriesDefs.map((seriesDef, seriesIndex) => (

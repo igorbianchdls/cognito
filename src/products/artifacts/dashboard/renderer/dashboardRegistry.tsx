@@ -15,8 +15,15 @@ import JsonRenderSankeyChart from '@/products/bi/json-render/components/SankeyCh
 import JsonRenderScatterChart from '@/products/bi/json-render/components/ScatterChart'
 import JsonRenderTable from '@/products/bi/json-render/components/Table'
 import JsonRenderTreemapChart from '@/products/bi/json-render/components/TreemapChart'
-import { useSemanticUiStyle, useThemeOverrides } from '@/products/bi/json-render/theme/ThemeContext'
-import { DashboardThemeSelectionProvider } from '@/products/artifacts/dashboard/renderer/dashboardThemeConfig'
+import {
+  DashboardThemeSelectionProvider,
+  resolveDashboardChartTheme,
+  resolveDashboardGaugeTheme,
+  resolveDashboardNodeStyle,
+  resolveDashboardPivotTableTheme,
+  resolveDashboardTableTheme,
+  useDashboardThemeSelection,
+} from '@/products/artifacts/dashboard/renderer/dashboardThemeConfig'
 import DashboardCardSurface from '@/products/artifacts/dashboard/renderer/components/DashboardCardSurface'
 import DashboardDatePicker from '@/products/artifacts/dashboard/renderer/components/DashboardDatePicker'
 import DashboardFilter from '@/products/artifacts/dashboard/renderer/components/DashboardFilter'
@@ -171,8 +178,25 @@ function useMergedElementProps(
   defaults: AnyRecord,
   componentName: string,
 ): { props: AnyRecord } {
-  const theme = useThemeOverrides()
-  const themeComponent = ((theme.components as AnyRecord | undefined)?.[componentName] || {}) as AnyRecord
+  const { themeName } = useDashboardThemeSelection()
+  const chartTheme = resolveDashboardChartTheme(themeName)
+  const themeComponent =
+    componentName === 'Gauge'
+      ? (resolveDashboardGaugeTheme(themeName) as AnyRecord)
+      : componentName === 'Table'
+        ? (resolveDashboardTableTheme(themeName) as AnyRecord)
+        : componentName === 'PivotTable'
+          ? (resolveDashboardPivotTableTheme(themeName) as AnyRecord)
+          : ({
+              titleStyle: chartTheme.titleStyle,
+              colorScheme: chartTheme.colorScheme,
+              grid: chartTheme.grid,
+              xAxis: chartTheme.xAxis,
+              yAxis: chartTheme.yAxis,
+              tooltip: chartTheme.tooltip,
+              legend: chartTheme.legend,
+              margin: chartTheme.margin,
+            } as AnyRecord)
   return {
     props: deepMerge(deepMerge(defaults, themeComponent), (element?.props || {}) as AnyRecord),
   }
@@ -211,7 +235,7 @@ function DashboardGauge({ element }: { element: any }) {
 }
 
 function DashboardTable({ element }: { element: any }) {
-  return <JsonRenderTable element={{ props: deepMerge(defaultTable as AnyRecord, (element?.props || {}) as AnyRecord) }} />
+  return <JsonRenderTable element={useMergedElementProps(element, defaultTable as AnyRecord, 'Table')} />
 }
 
 function DashboardPivotTable({ element }: { element: any }) {
@@ -246,7 +270,21 @@ function DashboardChart({
   element: any
   onAction?: (action: any) => void
 }) {
-  return renderChartByType((element?.props || {}).type, element, onAction)
+  const { themeName } = useDashboardThemeSelection()
+  const chartTheme = resolveDashboardChartTheme(themeName)
+  const type = (element?.props || {}).type
+  const defaults = {
+    titleStyle: chartTheme.titleStyle,
+    colorScheme: chartTheme.colorScheme,
+    grid: chartTheme.grid,
+    xAxis: chartTheme.xAxis,
+    yAxis: chartTheme.yAxis,
+    tooltip: chartTheme.tooltip,
+    legend: chartTheme.legend,
+    margin: chartTheme.margin,
+    ...(normalizeDashboardChartType(type) === 'gauge' ? resolveDashboardGaugeTheme(themeName) : {}),
+  } as AnyRecord
+  return renderChartByType(type, { ...element, props: deepMerge(defaults, (element?.props || {}) as AnyRecord) }, onAction)
 }
 
 function normalizeProps(input: Record<string, any> | undefined): Record<string, any> {
@@ -348,7 +386,8 @@ function HtmlNode({
 }) {
   const props = (element?.props || {}) as Record<string, any>
   const queryResult = useDashboardQueryResult()
-  const semanticStyle = useSemanticUiStyle(props['data-ui'], tag, {
+  const { themeName } = useDashboardThemeSelection()
+  const semanticStyle = resolveDashboardNodeStyle(props['data-ui'], themeName, {
     active: props['data-active'] === true || props['data-active'] === 'true' || props['aria-selected'] === true || props['aria-selected'] === 'true',
   })
   const queryDeltaColor = props['data-ui'] === 'kpi-delta' ? getDashboardQueryDeltaColor(queryResult) : undefined
@@ -398,10 +437,11 @@ function DashboardTab({
 }) {
   const tabs = React.useContext(TabsContext)
   const props = (element?.props || {}) as Record<string, any>
+  const { themeName } = useDashboardThemeSelection()
   const value = typeof props.value === 'string' ? props.value : ''
   const tag = typeof props.as === 'string' ? (props.as as keyof React.JSX.IntrinsicElements) : 'button'
   const active = tabs?.activeValue === value
-  const semanticStyle = useSemanticUiStyle('tab', tag, { active })
+  const semanticStyle = resolveDashboardNodeStyle('tab', themeName, { active })
   const normalizedProps = normalizeProps(props)
   delete normalizedProps.as
   delete normalizedProps.value
@@ -484,17 +524,17 @@ export const dashboardRegistry: Record<string, DashboardRenderComponent> = {
   Tab: ({ element, children }) => <DashboardTab element={element}>{children}</DashboardTab>,
   TabPanel: ({ element, children }) => <DashboardTabPanel element={element}>{children}</DashboardTabPanel>,
   Chart: ({ element, onAction }) => <DashboardChart element={element} onAction={onAction} />,
-  BarChart: ({ element, onAction }) => <>{renderChartByType('bar', element, onAction)}</>,
-  LineChart: ({ element, onAction }) => <>{renderChartByType('line', element, onAction)}</>,
-  PieChart: ({ element, onAction }) => <>{renderChartByType('pie', element, onAction)}</>,
-  HorizontalBarChart: ({ element, onAction }) => <>{renderChartByType('horizontal-bar', element, onAction)}</>,
-  ScatterChart: ({ element, onAction }) => <>{renderChartByType('scatter', element, onAction)}</>,
-  RadarChart: ({ element, onAction }) => <>{renderChartByType('radar', element, onAction)}</>,
-  TreemapChart: ({ element, onAction }) => <>{renderChartByType('treemap', element, onAction)}</>,
-  ComposedChart: ({ element, onAction }) => <>{renderChartByType('composed', element, onAction)}</>,
-  FunnelChart: ({ element, onAction }) => <>{renderChartByType('funnel', element, onAction)}</>,
-  SankeyChart: ({ element, onAction }) => <>{renderChartByType('sankey', element, onAction)}</>,
-  Gauge: ({ element, onAction }) => <>{renderChartByType('gauge', element, onAction)}</>,
+  BarChart: ({ element, onAction }) => <DashboardChart element={{ ...element, props: { ...(element?.props || {}), type: 'bar' } }} onAction={onAction} />,
+  LineChart: ({ element, onAction }) => <DashboardChart element={{ ...element, props: { ...(element?.props || {}), type: 'line' } }} onAction={onAction} />,
+  PieChart: ({ element, onAction }) => <DashboardChart element={{ ...element, props: { ...(element?.props || {}), type: 'pie' } }} onAction={onAction} />,
+  HorizontalBarChart: ({ element, onAction }) => <DashboardChart element={{ ...element, props: { ...(element?.props || {}), type: 'horizontal-bar' } }} onAction={onAction} />,
+  ScatterChart: ({ element, onAction }) => <DashboardChart element={{ ...element, props: { ...(element?.props || {}), type: 'scatter' } }} onAction={onAction} />,
+  RadarChart: ({ element, onAction }) => <DashboardChart element={{ ...element, props: { ...(element?.props || {}), type: 'radar' } }} onAction={onAction} />,
+  TreemapChart: ({ element, onAction }) => <DashboardChart element={{ ...element, props: { ...(element?.props || {}), type: 'treemap' } }} onAction={onAction} />,
+  ComposedChart: ({ element, onAction }) => <DashboardChart element={{ ...element, props: { ...(element?.props || {}), type: 'composed' } }} onAction={onAction} />,
+  FunnelChart: ({ element, onAction }) => <DashboardChart element={{ ...element, props: { ...(element?.props || {}), type: 'funnel' } }} onAction={onAction} />,
+  SankeyChart: ({ element, onAction }) => <DashboardChart element={{ ...element, props: { ...(element?.props || {}), type: 'sankey' } }} onAction={onAction} />,
+  Gauge: ({ element, onAction }) => <DashboardChart element={{ ...element, props: { ...(element?.props || {}), type: 'gauge' } }} onAction={onAction} />,
   KPI: ({ element }) => <DashboardKpi element={element} />,
   Query: ({ element, children }) => <DashboardQuery element={element}>{children}</DashboardQuery>,
   Table: ({ element }) => <DashboardTable element={element} />,
