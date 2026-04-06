@@ -42,6 +42,18 @@ function resolveTextRole(props: Record<string, any>): string {
   return 'body'
 }
 
+function pickExplicitTextStyle(props: Record<string, any>): React.CSSProperties {
+  const style: React.CSSProperties = {}
+  if (props.color !== undefined) style.color = props.color
+  if (props.fontSize !== undefined) style.fontSize = props.fontSize
+  if (props.fontWeight !== undefined) style.fontWeight = props.fontWeight
+  if (props.fontFamily !== undefined) style.fontFamily = props.fontFamily
+  if (props.letterSpacing !== undefined) style.letterSpacing = props.letterSpacing
+  if (props.lineHeight !== undefined) style.lineHeight = props.lineHeight
+  if (props.textTransform !== undefined) style.textTransform = props.textTransform
+  return style
+}
+
 export default function DashboardText({ element, children }: DashboardTextProps) {
   const props = (element?.props || {}) as Record<string, any>
   const queryResult = useDashboardQueryResult()
@@ -71,13 +83,7 @@ export default function DashboardText({ element, children }: DashboardTextProps)
         minWidth: 0,
         margin: 0,
         ...semanticStyle,
-        color: props.color,
-        fontSize: props.fontSize,
-        fontWeight: props.fontWeight,
-        fontFamily: props.fontFamily,
-        letterSpacing: props.letterSpacing,
-        lineHeight: props.lineHeight,
-        textTransform: props.textTransform,
+        ...pickExplicitTextStyle(props),
         ...(props.style && typeof props.style === 'object' ? props.style : {}),
         ...(queryDeltaColor ? { color: queryDeltaColor } : {}),
       },
