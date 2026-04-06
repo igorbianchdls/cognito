@@ -159,6 +159,84 @@ export function getSemanticUiStyle(
     };
   }
 
+  if (role === "page-title") {
+    return {
+      color: titleComponent.color || "var(--h1Color, currentColor)",
+      fontFamily: titleComponent.fontFamily || "var(--h1FontFamily, inherit)",
+      fontWeight: titleComponent.fontWeight || "var(--pageTitleFontWeight, 700)",
+      fontSize: titleComponent.fontSize || "var(--pageTitleFontSize, 40px)",
+      letterSpacing: titleComponent.letterSpacing || "var(--pageTitleLetterSpacing, -0.04em)",
+      lineHeight: "var(--pageTitleLineHeight, 1.02)",
+    };
+  }
+
+  if (role === "page-title-sm") {
+    return {
+      color: titleComponent.color || "var(--h1Color, currentColor)",
+      fontFamily: titleComponent.fontFamily || "var(--h1FontFamily, inherit)",
+      fontWeight: titleComponent.fontWeight || "var(--pageTitleSmallFontWeight, 700)",
+      fontSize: titleComponent.fontSize || "var(--pageTitleSmallFontSize, 34px)",
+      letterSpacing: titleComponent.letterSpacing || "var(--pageTitleSmallLetterSpacing, -0.04em)",
+      lineHeight: "var(--pageTitleSmallLineHeight, 1.05)",
+    };
+  }
+
+  if (role === "section-title") {
+    return {
+      color: titleComponent.color || "var(--h1Color, currentColor)",
+      fontFamily: titleComponent.fontFamily || "var(--h1FontFamily, inherit)",
+      fontWeight: titleComponent.fontWeight || "var(--sectionTitleFontWeight, 600)",
+      fontSize: titleComponent.fontSize || "var(--sectionTitleFontSize, 24px)",
+      letterSpacing: titleComponent.letterSpacing || "var(--sectionTitleLetterSpacing, -0.03em)",
+      lineHeight: "var(--sectionTitleLineHeight, 1.2)",
+    };
+  }
+
+  if (role === "section-title-md") {
+    return {
+      color: titleComponent.color || "var(--h1Color, currentColor)",
+      fontFamily: titleComponent.fontFamily || "var(--h1FontFamily, inherit)",
+      fontWeight: titleComponent.fontWeight || "var(--sectionTitleMediumFontWeight, 600)",
+      fontSize: titleComponent.fontSize || "var(--sectionTitleMediumFontSize, 22px)",
+      letterSpacing: titleComponent.letterSpacing || "var(--sectionTitleMediumLetterSpacing, -0.03em)",
+      lineHeight: "var(--sectionTitleMediumLineHeight, 1.2)",
+    };
+  }
+
+  if (role === "section-title-sm") {
+    return {
+      color: titleComponent.color || "var(--h1Color, currentColor)",
+      fontFamily: titleComponent.fontFamily || "var(--h1FontFamily, inherit)",
+      fontWeight: titleComponent.fontWeight || "var(--sectionTitleSmallFontWeight, 600)",
+      fontSize: titleComponent.fontSize || "var(--sectionTitleSmallFontSize, 20px)",
+      letterSpacing: titleComponent.letterSpacing || "var(--sectionTitleSmallLetterSpacing, -0.03em)",
+      lineHeight: "var(--sectionTitleSmallLineHeight, 1.25)",
+    };
+  }
+
+  if (role === "section-title-strong") {
+    return {
+      color: titleComponent.color || "var(--h1Color, currentColor)",
+      fontFamily: titleComponent.fontFamily || "var(--h1FontFamily, inherit)",
+      fontWeight: titleComponent.fontWeight || "var(--sectionTitleStrongFontWeight, 700)",
+      fontSize: titleComponent.fontSize || "var(--sectionTitleStrongFontSize, 24px)",
+      letterSpacing: titleComponent.letterSpacing || "var(--sectionTitleStrongLetterSpacing, -0.03em)",
+      lineHeight: "var(--sectionTitleStrongLineHeight, 1.2)",
+    };
+  }
+
+  if (role === "eyebrow-strong") {
+    return {
+      color: subtitleComponent.color || "var(--headerSubtitle, currentColor)",
+      fontFamily: subtitleComponent.fontFamily,
+      fontWeight: subtitleComponent.fontWeight || 600,
+      fontSize: subtitleComponent.fontSize || 12,
+      letterSpacing: subtitleComponent.letterSpacing || "0.08em",
+      textTransform: "uppercase",
+      lineHeight: 1.3,
+    };
+  }
+
   if (isTitleRole) {
     return {
       color: titleComponent.color || "var(--h1Color, currentColor)",
@@ -174,10 +252,48 @@ export function getSemanticUiStyle(
     return {
       color: subtitleComponent.color || "var(--headerSubtitle, currentColor)",
       fontFamily: subtitleComponent.fontFamily,
-      fontWeight: subtitleComponent.fontWeight,
-      fontSize: subtitleComponent.fontSize,
-      letterSpacing: subtitleComponent.letterSpacing,
+      fontWeight: subtitleComponent.fontWeight || 600,
+      fontSize: subtitleComponent.fontSize || 11,
+      letterSpacing: subtitleComponent.letterSpacing || "0.05em",
+      textTransform: "uppercase",
+      lineHeight: 1.3,
       padding: subtitleComponent.padding,
+    };
+  }
+
+  if (role === "lead") {
+    return {
+      fontFamily: "var(--fontFamily, inherit)",
+      color: "var(--textSecondary, var(--headerSubtitle, currentColor))",
+      fontSize: 15,
+      lineHeight: 1.7,
+    };
+  }
+
+  if (role === "body-muted") {
+    return {
+      fontFamily: "var(--fontFamily, inherit)",
+      color: "var(--textSecondary, var(--headerSubtitle, currentColor))",
+      fontSize: 14,
+      lineHeight: 1.75,
+    };
+  }
+
+  if (role === "body-sm") {
+    return {
+      fontFamily: "var(--fontFamily, inherit)",
+      color: "var(--textSecondary, var(--headerSubtitle, currentColor))",
+      fontSize: 14,
+      lineHeight: 1.6,
+    };
+  }
+
+  if (role === "small-muted" || role === "footer-text") {
+    return {
+      fontFamily: "var(--fontFamily, inherit)",
+      color: "var(--textSecondary, var(--headerSubtitle, currentColor))",
+      fontSize: 13,
+      lineHeight: 1.6,
     };
   }
 

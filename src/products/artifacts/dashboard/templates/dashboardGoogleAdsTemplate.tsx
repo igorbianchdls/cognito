@@ -21,10 +21,10 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: '64%' }}>
                   <span style={{ display: 'inline-flex', width: 'fit-content', alignItems: 'center', borderRadius: 999, border: '1px solid ' + theme.accentBorder, backgroundColor: theme.accentSurface, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: theme.accentText }}>Paid Search</span>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Google Ads para Search, Shopping e PMax</Text>
-                    <Text as="h1" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 40, lineHeight: 1.02, fontWeight: 700, letterSpacing: '-0.04em' }}>Dashboard Google Ads</Text>
+                    <Text variant="eyebrow">Google Ads para Search, Shopping e PMax</Text>
+                    <Text as="h1" variant="page-title">Dashboard Google Ads</Text>
                   </div>
-                  <Text style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: theme.textSecondary }}>Versao JSX do template legado com foco em volume, eficiencia e aquisicao, agora no formato novo do workspace sem DSL.</Text>
+                  <Text variant="lead">Versao JSX do template legado com foco em volume, eficiencia e aquisicao, agora no formato novo do workspace sem DSL.</Text>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '34%', minWidth: 320 }}>
                   <DatePicker
@@ -48,8 +48,8 @@ function buildGoogleAdsDashboardSource(themeName: string) {
             <Panel id="googleads-filters" span={8} rows={6}>
               <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filters</Text>
-                  <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Conta e grupo</Text>
+                  <Text variant="eyebrow">Filters</Text>
+                  <Text as="h2" variant="section-title">Conta e grupo</Text>
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 14 }}>
                   <Filter
@@ -100,8 +100,8 @@ function buildGoogleAdsDashboardSource(themeName: string) {
 
             <Panel id="googleads-reading" span={4} rows={6}>
               <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Leitura esperada</Text>
-                <Text style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Comece por volume e retorno, depois confronte CTR, CVR e CPA para separar problema de demanda, criativo ou pagina.</Text>
+                <Text variant="eyebrow">Leitura esperada</Text>
+                <Text variant="body-muted">Comece por volume e retorno, depois confronte CTR, CVR e CPA para separar problema de demanda, criativo ou pagina.</Text>
               </Card>
             </Panel>
           </Horizontal>
@@ -197,10 +197,10 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                     <Panel id="googleads-performance-spend" span={7} rows={12}>
                       <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Top spend</Text>
-                          <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Gasto por campanha</Text>
+                          <Text variant="eyebrow">Top spend</Text>
+                          <Text as="h2" variant="section-title">Gasto por campanha</Text>
                         </div>
-                        <Text style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Ajuda a isolar onde Search, Shopping ou PMax estao carregando o budget antes de abrir o funil de qualidade.</Text>
+                        <Text variant="body-muted">Ajuda a isolar onde Search, Shopping ou PMax estao carregando o budget antes de abrir o funil de qualidade.</Text>
                         <Chart
                           type="bar"
                           height={320}
@@ -232,10 +232,10 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                     <Panel id="googleads-performance-ctr" span={5} rows={12}>
                       <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rate quality</Text>
-                          <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>CTR por conta</Text>
+                          <Text variant="eyebrow">Rate quality</Text>
+                          <Text as="h2" variant="section-title">CTR por conta</Text>
                         </div>
-                        <Text style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Mistura de volume e relevancia para mostrar quais contas sustentam cliques qualificados e quais dependem de impressao sem resposta.</Text>
+                        <Text variant="body-muted">Mistura de volume e relevancia para mostrar quais contas sustentam cliques qualificados e quais dependem de impressao sem resposta.</Text>
                         <Chart
                           type="bar"
                           height={320}
@@ -273,10 +273,10 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                     <Panel id="googleads-acquisition-trend" span={7} rows={12}>
                       <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trend</Text>
-                          <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Gasto por mes</Text>
+                          <Text variant="eyebrow">Trend</Text>
+                          <Text as="h2" variant="section-title">Gasto por mes</Text>
                         </div>
-                        <Text style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Serie para confrontar aceleracao de investimento com as mudancas de qualidade de trafego ao longo do periodo.</Text>
+                        <Text variant="body-muted">Serie para confrontar aceleracao de investimento com as mudancas de qualidade de trafego ao longo do periodo.</Text>
                         <Chart
                           type="line"
                           height={320}
@@ -311,8 +311,8 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                         <Panel id="googleads-acquisition-cvr" grow={1}>
                           <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                              <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Conversion quality</Text>
-                              <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>CVR por mes</Text>
+                              <Text variant="eyebrow">Conversion quality</Text>
+                              <Text as="h2" variant="section-title">CVR por mes</Text>
                             </div>
                             <Chart
                               type="bar"
@@ -344,8 +344,8 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                         <Panel id="googleads-acquisition-insights" grow={1}>
                           <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                              <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Leituras operacionais</Text>
-                              <Text style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Perguntas para separar problema de volume, relevancia ou eficiencia de pagina.</Text>
+                              <Text as="h2" variant="section-title-sm">Leituras operacionais</Text>
+                              <Text variant="small-muted">Perguntas para separar problema de volume, relevancia ou eficiencia de pagina.</Text>
                             </div>
                             <Insights
                               textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.65 }}
@@ -370,8 +370,8 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                     <Panel id="googleads-details-table" span={8} rows={16}>
                       <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</Text>
-                          <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Campanhas no detalhe</Text>
+                          <Text variant="eyebrow">Table</Text>
+                          <Text as="h2" variant="section-title">Campanhas no detalhe</Text>
                         </div>
                         <Table
                           bordered
@@ -417,8 +417,8 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                     <Panel id="googleads-details-pivot" span={4} rows={16}>
                       <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</Text>
-                          <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Conta por campanha</Text>
+                          <Text variant="eyebrow">Pivot</Text>
+                          <Text as="h2" variant="section-title">Conta por campanha</Text>
                         </div>
                         <PivotTable
                           bordered
@@ -464,8 +464,8 @@ function buildGoogleAdsDashboardSource(themeName: string) {
           <Horizontal columns={12} rowHeight={18} gap={18}>
             <Panel id="googleads-footer" span={12} rows={3}>
               <footer style={{ height: '100%', display: 'flex', justifyContent: 'space-between', gap: 18, padding: '18px 22px', borderRadius: 22, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder }}>
-                <Text style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Template JSX para Google Ads com volume, retorno e eficiencia em um unico arquivo TSX no formato novo do dashboard.</Text>
-                <Text style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: ${resolvedThemeName}</Text>
+                <Text variant="small-muted">Template JSX para Google Ads com volume, retorno e eficiencia em um unico arquivo TSX no formato novo do dashboard.</Text>
+                <Text variant="small-muted">Theme ativo: ${resolvedThemeName}</Text>
               </footer>
             </Panel>
           </Horizontal>

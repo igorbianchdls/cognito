@@ -21,10 +21,10 @@ function buildComprasDashboardSource(themeName: string) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: '58%' }}>
                 <span style={{ display: 'inline-flex', width: 'fit-content', alignItems: 'center', borderRadius: 999, border: '1px solid ' + theme.accentBorder, backgroundColor: theme.accentSurface, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: theme.accentText }}>Procurement Review</span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Compras, fornecedores e alocacao de gasto</Text>
-                  <Text as="h1" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 40, lineHeight: 1.02, fontWeight: 700, letterSpacing: '-0.04em' }}>Dashboard de Compras</Text>
+                  <Text variant="eyebrow">Compras, fornecedores e alocacao de gasto</Text>
+                  <Text as="h1" variant="page-title">Dashboard de Compras</Text>
                 </div>
-                <Text style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: theme.textSecondary }}>Leitura em pagina unica com KPIs no topo, filtros dedicados, distribuicao de gasto, serie temporal e detalhamento operacional sem DSL.</Text>
+                <Text variant="lead">Leitura em pagina unica com KPIs no topo, filtros dedicados, distribuicao de gasto, serie temporal e detalhamento operacional sem DSL.</Text>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '34%', minWidth: 320 }}>
@@ -48,8 +48,8 @@ function buildComprasDashboardSource(themeName: string) {
           <Horizontal columns={12} rowHeight={18} gap={18}>
             <Panel id="compras-filter-fornecedor" span={4} rows={6}>
             <Card style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filtro</Text>
-              <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Fornecedor</Text>
+              <Text variant="eyebrow">Filtro</Text>
+              <Text as="h2" variant="section-title-sm">Fornecedor</Text>
               <Filter
                 label="Fornecedor"
                 table="compras.compras"
@@ -75,8 +75,8 @@ function buildComprasDashboardSource(themeName: string) {
 
             <Panel id="compras-filter-centro-custo" span={4} rows={6}>
             <Card style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filtro</Text>
-              <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Centro de custo</Text>
+              <Text variant="eyebrow">Filtro</Text>
+              <Text as="h2" variant="section-title-sm">Centro de custo</Text>
               <Filter
                 label="Centro de custo"
                 table="compras.compras"
@@ -102,8 +102,8 @@ function buildComprasDashboardSource(themeName: string) {
 
             <Panel id="compras-filter-status" span={4} rows={6}>
             <Card style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filtro</Text>
-              <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Status</Text>
+              <Text variant="eyebrow">Filtro</Text>
+              <Text as="h2" variant="section-title-sm">Status</Text>
               <Filter
                 label="Status"
                 table="compras.compras"
@@ -166,10 +166,10 @@ function buildComprasDashboardSource(themeName: string) {
             <Panel id="compras-chart-fornecedor" span={7} rows={16}>
             <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Top spend</Text>
-                <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Gasto por fornecedor</Text>
+                <Text variant="eyebrow">Top spend</Text>
+                <Text as="h2" variant="section-title">Gasto por fornecedor</Text>
               </div>
-              <Text style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Corte principal para identificar concentracao de compras e dependencia de poucos parceiros no periodo filtrado.</Text>
+              <Text variant="body-muted">Corte principal para identificar concentracao de compras e dependencia de poucos parceiros no periodo filtrado.</Text>
               <div style={{ flex: 1, minHeight: 0 }}>
                 <Chart
                   type="bar"
@@ -203,10 +203,10 @@ function buildComprasDashboardSource(themeName: string) {
             <Panel id="compras-chart-categoria" span={5} rows={16}>
             <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Allocation</Text>
-                <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Gasto por categoria</Text>
+                <Text variant="eyebrow">Allocation</Text>
+                <Text as="h2" variant="section-title">Gasto por categoria</Text>
               </div>
-              <Text style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Mostra em qual categoria de despesa o volume de compras esta se acumulando no periodo.</Text>
+              <Text variant="body-muted">Mostra em qual categoria de despesa o volume de compras esta se acumulando no periodo.</Text>
               <div style={{ flex: 1, minHeight: 0 }}>
                 <Chart
                   type="pie"
@@ -243,10 +243,10 @@ function buildComprasDashboardSource(themeName: string) {
             <Panel id="compras-chart-trend" span={7} rows={16}>
             <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trend</Text>
-                <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Gasto por mes</Text>
+                <Text variant="eyebrow">Trend</Text>
+                <Text as="h2" variant="section-title">Gasto por mes</Text>
               </div>
-              <Text style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Serie mensal para entender aceleracao ou desaceleracao de compras sem depender do motor DSL antigo.</Text>
+              <Text variant="body-muted">Serie mensal para entender aceleracao ou desaceleracao de compras sem depender do motor DSL antigo.</Text>
               <div style={{ flex: 1, minHeight: 0 }}>
                 <Chart
                   type="line"
@@ -280,8 +280,8 @@ function buildComprasDashboardSource(themeName: string) {
             <Panel id="compras-chart-status" span={5} rows={16}>
             <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status mix</Text>
-                <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Pedidos por status</Text>
+                <Text variant="eyebrow">Status mix</Text>
+                <Text as="h2" variant="section-title">Pedidos por status</Text>
               </div>
               <div style={{ flex: 1, minHeight: 0 }}>
                 <Chart
@@ -316,8 +316,8 @@ function buildComprasDashboardSource(themeName: string) {
             <Panel id="compras-table" span={8} rows={18}>
             <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</Text>
-                <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Pedidos de compra no detalhe</Text>
+                <Text variant="eyebrow">Table</Text>
+                <Text as="h2" variant="section-title">Pedidos de compra no detalhe</Text>
               </div>
               <Table
                 bordered
@@ -364,8 +364,8 @@ function buildComprasDashboardSource(themeName: string) {
             <Panel id="compras-pivot" span={4} rows={18}>
             <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</Text>
-                <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Categoria por status</Text>
+                <Text variant="eyebrow">Pivot</Text>
+                <Text as="h2" variant="section-title">Categoria por status</Text>
               </div>
               <PivotTable
                 bordered
@@ -408,7 +408,7 @@ function buildComprasDashboardSource(themeName: string) {
             <Panel id="compras-insight-concentracao" span={4} rows={6}>
             <Card style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Concentracao em fornecedores</Text>
+                <Text as="h2" variant="section-title-sm">Concentracao em fornecedores</Text>
               </div>
               <Insights
                 textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.65 }}
@@ -423,7 +423,7 @@ function buildComprasDashboardSource(themeName: string) {
             <Panel id="compras-insight-centro" span={4} rows={6}>
             <Card style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Pressao por centro de custo</Text>
+                <Text as="h2" variant="section-title-sm">Pressao por centro de custo</Text>
               </div>
               <Insights
                 textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.65 }}
@@ -438,7 +438,7 @@ function buildComprasDashboardSource(themeName: string) {
             <Panel id="compras-insight-risco" span={4} rows={6}>
             <Card style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Risco operacional</Text>
+                <Text as="h2" variant="section-title-sm">Risco operacional</Text>
               </div>
               <Insights
                 textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.65 }}
@@ -454,8 +454,8 @@ function buildComprasDashboardSource(themeName: string) {
           <Horizontal columns={12} rowHeight={18} gap={18}>
             <Panel id="compras-footer" span={12} rows={3}>
             <footer style={{ height: '100%', display: 'flex', justifyContent: 'space-between', gap: 18, padding: '18px 22px', borderRadius: 22, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder }}>
-              <Text style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Template JSX de compras com filtros dedicados, queries SQL explicitas e leitura completa em uma unica pagina.</Text>
-              <Text style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: ${resolvedThemeName}</Text>
+              <Text variant="small-muted">Template JSX de compras com filtros dedicados, queries SQL explicitas e leitura completa em uma unica pagina.</Text>
+              <Text variant="small-muted">Theme ativo: ${resolvedThemeName}</Text>
             </footer>
             </Panel>
           </Horizontal>

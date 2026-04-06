@@ -21,10 +21,10 @@ function buildMetaAdsDashboardSource(themeName: string) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: '64%' }}>
                   <span style={{ display: 'inline-flex', width: 'fit-content', alignItems: 'center', borderRadius: 999, border: '1px solid ' + theme.accentBorder, backgroundColor: theme.accentSurface, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: theme.accentText }}>Paid Social</span>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Meta Ads performance por conta, campanha e criativo</Text>
-                    <Text as="h1" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 40, lineHeight: 1.02, fontWeight: 700, letterSpacing: '-0.04em' }}>Dashboard Meta Ads</Text>
+                    <Text variant="eyebrow">Meta Ads performance por conta, campanha e criativo</Text>
+                    <Text as="h1" variant="page-title">Dashboard Meta Ads</Text>
                   </div>
-                  <Text style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: theme.textSecondary }}>Adaptacao do template legado de apps para JSX com tags, queries SQL explicitas e leitura de paid social no runtime novo do workspace.</Text>
+                  <Text variant="lead">Adaptacao do template legado de apps para JSX com tags, queries SQL explicitas e leitura de paid social no runtime novo do workspace.</Text>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '34%', minWidth: 320 }}>
                   <DatePicker
@@ -48,8 +48,8 @@ function buildMetaAdsDashboardSource(themeName: string) {
             <Panel id="metaads-filters" span={8} rows={6}>
               <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filters</Text>
-                  <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Conta e campanha</Text>
+                  <Text variant="eyebrow">Filters</Text>
+                  <Text as="h2" variant="section-title">Conta e campanha</Text>
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 14 }}>
                   <Filter label="Conta" table="trafegopago.desempenho_diario" field="conta_id" mode="multiple" search clearable width={220} query={\`
@@ -81,8 +81,8 @@ function buildMetaAdsDashboardSource(themeName: string) {
             </Panel>
             <Panel id="metaads-reading" span={4} rows={6}>
               <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Leitura esperada</Text>
-                <Text style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Primeiro veja o pacing de gasto e retorno, depois abra concentracao por campanha e finalmente desca para o detalhe de anuncios e grupos quando houver desbalanceamento.</Text>
+                <Text variant="eyebrow">Leitura esperada</Text>
+                <Text variant="body-muted">Primeiro veja o pacing de gasto e retorno, depois abra concentracao por campanha e finalmente desca para o detalhe de anuncios e grupos quando houver desbalanceamento.</Text>
               </Card>
             </Panel>
           </Horizontal>
@@ -112,10 +112,10 @@ function buildMetaAdsDashboardSource(themeName: string) {
                     <Panel id="metaads-performance-gasto" span={7} rows={12}>
                       <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Budget concentration</Text>
-                          <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Gasto por campanha</Text>
+                          <Text variant="eyebrow">Budget concentration</Text>
+                          <Text as="h2" variant="section-title">Gasto por campanha</Text>
                         </div>
-                        <Text style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Identifica quais campanhas carregam a maior parte do investimento e merecem inspeccao imediata de criativo e audiencia.</Text>
+                        <Text variant="body-muted">Identifica quais campanhas carregam a maior parte do investimento e merecem inspeccao imediata de criativo e audiencia.</Text>
                         <Chart type="bar" height={320} format="currency" dataQuery={{ query: \`
                           SELECT
                             COALESCE(src.campanha_id::text, 'sem_campanha') AS key,
@@ -134,10 +134,10 @@ function buildMetaAdsDashboardSource(themeName: string) {
                     <Panel id="metaads-performance-share" span={5} rows={12}>
                       <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Share</Text>
-                          <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Participacao por conta</Text>
+                          <Text variant="eyebrow">Share</Text>
+                          <Text as="h2" variant="section-title">Participacao por conta</Text>
                         </div>
-                        <Text style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Mostra concentracao de budget entre contas, o que ajuda a separar escala sustentavel de dependencia excessiva de um unico portfolio.</Text>
+                        <Text variant="body-muted">Mostra concentracao de budget entre contas, o que ajuda a separar escala sustentavel de dependencia excessiva de um unico portfolio.</Text>
                         <Chart type="pie" height={320} format="currency" dataQuery={{ query: \`
                           SELECT
                             COALESCE(src.conta_id::text, 'sem_conta') AS key,
@@ -162,10 +162,10 @@ function buildMetaAdsDashboardSource(themeName: string) {
                     <Panel id="metaads-efficiency-roas" span={7} rows={12}>
                       <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trend</Text>
-                          <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>ROAS por dia</Text>
+                          <Text variant="eyebrow">Trend</Text>
+                          <Text as="h2" variant="section-title">ROAS por dia</Text>
                         </div>
-                        <Text style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Serie curta para acompanhar deterioracao ou recuperacao de eficiencia sem sair do dashboard principal.</Text>
+                        <Text variant="body-muted">Serie curta para acompanhar deterioracao ou recuperacao de eficiencia sem sair do dashboard principal.</Text>
                         <Chart type="line" height={320} format="number" dataQuery={{ query: \`
                           SELECT
                             TO_CHAR(src.data_ref::date, 'YYYY-MM-DD') AS key,
@@ -186,8 +186,8 @@ function buildMetaAdsDashboardSource(themeName: string) {
                         <Panel id="metaads-efficiency-funnel" grow={1}>
                           <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                              <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Funnel</Text>
-                              <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Leads por campanha</Text>
+                              <Text variant="eyebrow">Funnel</Text>
+                              <Text as="h2" variant="section-title">Leads por campanha</Text>
                             </div>
                             <Chart type="bar" height={220} format="number" dataQuery={{ query: \`
                               SELECT
@@ -206,8 +206,8 @@ function buildMetaAdsDashboardSource(themeName: string) {
                         <Panel id="metaads-efficiency-insights" grow={1}>
                           <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                              <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Leituras operacionais</Text>
-                              <Text style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Hipoteses para revisar campanhas, criativos e distribuicao de budget.</Text>
+                              <Text as="h2" variant="section-title-sm">Leituras operacionais</Text>
+                              <Text variant="small-muted">Hipoteses para revisar campanhas, criativos e distribuicao de budget.</Text>
                             </div>
                             <Insights textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.65 }} iconStyle={{ color: '#1877F2' }} items={[
                               { text: 'ROAS caindo com gasto crescente costuma sinalizar saturacao de audiencia ou criativo perdendo tracao.' },
@@ -228,8 +228,8 @@ function buildMetaAdsDashboardSource(themeName: string) {
                     <Panel id="metaads-details-table" span={8} rows={16}>
                       <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</Text>
-                          <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Campanhas no detalhe</Text>
+                          <Text variant="eyebrow">Table</Text>
+                          <Text as="h2" variant="section-title">Campanhas no detalhe</Text>
                         </div>
                         <Table bordered rounded stickyHeader borderColor={'#d7dbe3'} rowHoverColor={'#f8fafc'} headerStyle={{ backgroundColor: '#f8fafc', color: '#334155', fontSize: 14, fontWeight: 600, padding: '12px 14px' }} rowStyle={{ backgroundColor: '#ffffff' }} cellStyle={{ color: '#475569', fontSize: 14, fontWeight: 400, padding: '12px 14px' }} footerStyle={{ backgroundColor: '#f8fafc', color: '#0f172a', fontSize: 14, fontWeight: 600, padding: '12px 14px' }} enableExportCsv dataQuery={{ query: \`
                           SELECT
@@ -258,8 +258,8 @@ function buildMetaAdsDashboardSource(themeName: string) {
                     <Panel id="metaads-details-pivot" span={4} rows={16}>
                       <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</Text>
-                          <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Conta por campanha</Text>
+                          <Text variant="eyebrow">Pivot</Text>
+                          <Text as="h2" variant="section-title">Conta por campanha</Text>
                         </div>
                         <PivotTable bordered rounded stickyHeader borderColor={'#d7dbe3'} containerStyle={{ backgroundColor: '#ffffff' }} headerStyle={{ backgroundColor: '#f8fafc', color: '#334155', fontSize: 14, fontWeight: 600, padding: '9px 10px' }} headerTotalStyle={{ backgroundColor: '#f1f5f9', color: '#1e293b', fontSize: 14, fontWeight: 600, padding: '9px 10px' }} rowLabelStyle={{ backgroundColor: '#ffffff', color: '#1e293b', fontSize: 14, padding: '9px 10px' }} cellStyle={{ backgroundColor: '#ffffff', color: '#475569', fontSize: 14, padding: '9px 10px' }} rowTotalStyle={{ backgroundColor: '#f8fafc', color: '#1e293b', fontSize: 14, fontWeight: 500, padding: '9px 10px' }} footerStyle={{ backgroundColor: '#f1f5f9', color: '#0f172a', fontSize: 14, fontWeight: 600, padding: '9px 10px' }} emptyStateStyle={{ color: '#64748b', fontSize: 14, padding: '18px 12px' }} expandButtonStyle={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb', color: '#475569', hoverBackgroundColor: '#f8fafc' }} enableExportCsv defaultExpandedLevels={1} dataQuery={{ query: \`
                           SELECT
@@ -282,8 +282,8 @@ function buildMetaAdsDashboardSource(themeName: string) {
           <Horizontal columns={12} rowHeight={18} gap={18}>
             <Panel id="metaads-footer" span={12} rows={3}>
               <footer style={{ height: '100%', display: 'flex', justifyContent: 'space-between', gap: 18, padding: '18px 22px', borderRadius: 22, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder }}>
-                <Text style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Template JSX para Meta Ads com filtros de paid social, KPIs comparativos e widgets de analise no formato novo do dashboard.</Text>
-                <Text style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Theme ativo: ${resolvedThemeName}</Text>
+                <Text variant="small-muted">Template JSX para Meta Ads com filtros de paid social, KPIs comparativos e widgets de analise no formato novo do dashboard.</Text>
+                <Text variant="small-muted">Theme ativo: ${resolvedThemeName}</Text>
               </footer>
             </Panel>
           </Horizontal>
