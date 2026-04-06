@@ -360,3 +360,66 @@ export function resolveDashboardThemeTokens(themeName: string) {
 }
 `
 }
+
+export function buildDashboardTemplateThemesFileSource() {
+  const entries = Object.entries(DASHBOARD_TEMPLATE_THEME_TOKENS)
+    .map(([name, tokens]) => `  ${name}: ${JSON.stringify(tokens, null, 2).replace(/\n/g, '\n  ')},`)
+    .join('\n')
+
+  return `'use client'
+
+import { resolveDashboardBorderFramePreset, type DashboardBorderPreset } from '@/products/artifacts/dashboard/borderPresets'
+
+export type DashboardTemplateThemeTokens = {
+  dark: boolean
+  cardFrame: {
+    variant: 'hud'
+    cornerSize: number
+    cornerWidth: number
+  } | null
+  primary: string
+  pageBg: string
+  surfaceBg: string
+  surfaceBorder: string
+  textPrimary: string
+  textSecondary: string
+  titleColor: string
+  kpiValueColor: string
+  headerBg: string
+  headerText: string
+  headerSubtitle: string
+  headerDatePickerBg: string
+  headerDatePickerColor: string
+  headerDatePickerBorder: string
+  headerDatePickerIcon: string
+  headerDatePickerLabel: string
+  accentSurface: string
+  accentBorder: string
+  accentText: string
+  headerDatePickerActiveBg: string
+  headerDatePickerActiveBorder: string
+  headerDatePickerActiveText: string
+}
+
+export const DASHBOARD_TEMPLATE_THEME_TOKENS: Record<string, DashboardTemplateThemeTokens> = {
+${entries}
+}
+
+export function resolveDashboardTemplateThemeTokens(
+  themeName: string,
+  borderPreset?: DashboardBorderPreset | string,
+): DashboardTemplateThemeTokens {
+  const key = String(themeName || 'light').trim().toLowerCase()
+  const aliases: Record<string, string> = {
+    white: 'light',
+    claro: 'light',
+    branco: 'light',
+  }
+  const resolved = DASHBOARD_TEMPLATE_THEME_TOKENS[aliases[key] || key] || DASHBOARD_TEMPLATE_THEME_TOKENS.light
+  return {
+    ...resolved,
+    cardFrame: resolveDashboardBorderFramePreset(borderPreset, resolved.cardFrame),
+  }
+}
+`
+}
