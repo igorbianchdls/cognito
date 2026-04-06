@@ -19,9 +19,7 @@ import JsonRenderSankeyChart from '@/products/bi/json-render/components/SankeyCh
 import JsonRenderScatterChart from '@/products/bi/json-render/components/ScatterChart'
 import JsonRenderTable from '@/products/bi/json-render/components/Table'
 import JsonRenderTreemapChart from '@/products/bi/json-render/components/TreemapChart'
-import { mapManagersToCssVars } from '@/products/bi/json-render/theme/thememanagers'
-import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter'
-import { ThemeProvider, useSemanticUiStyle, useThemeOverrides } from '@/products/bi/json-render/theme/ThemeContext'
+import { useSemanticUiStyle, useThemeOverrides } from '@/products/bi/json-render/theme/ThemeContext'
 import DashboardDatePicker from '@/products/artifacts/dashboard/renderer/components/DashboardDatePicker'
 import DashboardFilter from '@/products/artifacts/dashboard/renderer/components/DashboardFilter'
 import DashboardInsights from '@/products/artifacts/dashboard/renderer/components/DashboardInsights'
@@ -34,12 +32,9 @@ import DashboardQuery, {
 } from '@/products/artifacts/dashboard/renderer/components/DashboardQuery'
 import DashboardText from '@/products/artifacts/dashboard/renderer/components/DashboardText'
 import {
-  DASHBOARD_DEFAULT_CHART_PALETTE,
   DASHBOARD_SUPPORTED_HTML_TAG_SET,
   normalizeDashboardChartType,
-  resolveDashboardChartPaletteColors,
 } from '@/products/artifacts/dashboard/contract/dashboardContract'
-import { resolveDashboardRendererTheme } from '@/products/artifacts/dashboard/renderer/dashboardThemeConfig'
 import { deepMerge } from '@/stores/ui/json-render/utils'
 
 type AnyRecord = Record<string, any>
@@ -270,11 +265,11 @@ function DashboardRoot({ children }: { children?: React.ReactNode }) {
 }
 
 function renderDashboardThemeLayer({
-  themeName,
-  chartPaletteName,
-  borderPreset,
-  headerTheme,
-  managers,
+  themeName: _themeName,
+  chartPaletteName: _chartPaletteName,
+  borderPreset: _borderPreset,
+  headerTheme: _headerTheme,
+  managers: _managers,
   children,
 }: {
   themeName?: string
@@ -284,33 +279,18 @@ function renderDashboardThemeLayer({
   managers?: AnyRecord
   children?: React.ReactNode
 }) {
-  const name = themeName
-  const chartPalette =
-    typeof chartPaletteName === 'string' && chartPaletteName.trim()
-      ? String(chartPaletteName).trim().toLowerCase()
-      : DASHBOARD_DEFAULT_CHART_PALETTE
-  const preset = buildThemeVars(name, (managers || {}) as any, { headerTheme })
-  const rendererTheme = resolveDashboardRendererTheme({
-    themeName: name,
-    borderPreset,
-    baseCssVars: (preset.cssVars || mapManagersToCssVars((managers || {}) as any)) as Record<string, string>,
-    chartPaletteColors: resolveDashboardChartPaletteColors(chartPalette),
-  })
-
   return (
-    <ThemeProvider name={name} cssVars={rendererTheme.cssVars} components={rendererTheme.components}>
-      <div
-        style={{
-          width: '100%',
-          minHeight: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          minWidth: 0,
-        }}
-      >
-        {children}
-      </div>
-    </ThemeProvider>
+    <div
+      style={{
+        width: '100%',
+        minHeight: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        minWidth: 0,
+      }}
+    >
+      {children}
+    </div>
   )
 }
 
