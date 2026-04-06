@@ -487,6 +487,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 limit: 1,
               }}
               format="currency"
+              comparisonMode="previous_period"
               cardStyle={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}
               titleStyle={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}
               valueStyle={{ ...{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}
@@ -506,6 +507,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 limit: 1,
               }}
               format="number"
+              comparisonMode="previous_period"
               cardStyle={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}
               titleStyle={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}
               valueStyle={{ ...{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}
@@ -525,6 +527,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 limit: 1,
               }}
               format="currency"
+              comparisonMode="previous_period"
               cardStyle={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}
               titleStyle={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}
               valueStyle={{ ...{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}
@@ -544,6 +547,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 limit: 1,
               }}
               format="number"
+              comparisonMode="previous_period"
               cardStyle={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}
               titleStyle={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}
               valueStyle={{ ...{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}
@@ -563,6 +567,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 limit: 1,
               }}
               format="percent"
+              comparisonMode="previous_period"
               cardStyle={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}
               titleStyle={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}
               valueStyle={{ ...{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}

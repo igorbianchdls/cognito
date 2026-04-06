@@ -58,6 +58,7 @@ function buildContainersDashboardSource(themeName: string) {
                     limit: 1,
                   }}
                   format="currency"
+                  comparisonMode="previous_period"
                   cardStyle={{ height: '100%', padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}
                   titleStyle={{ margin: 0, fontSize: 20, fontWeight: 600, color: theme.titleColor }}
                   valueStyle={{ margin: 0, fontSize: 28, fontWeight: 700, color: theme.kpiValueColor }}
@@ -77,6 +78,7 @@ function buildContainersDashboardSource(themeName: string) {
                     limit: 1,
                   }}
                   format="number"
+                  comparisonMode="previous_period"
                   cardStyle={{ height: '100%', padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}
                   titleStyle={{ margin: 0, fontSize: 20, fontWeight: 600, color: theme.titleColor }}
                   valueStyle={{ margin: 0, fontSize: 28, fontWeight: 700, color: theme.kpiValueColor }}
@@ -96,6 +98,7 @@ function buildContainersDashboardSource(themeName: string) {
                     limit: 1,
                   }}
                   format="currency"
+                  comparisonMode="previous_period"
                   cardStyle={{ height: '100%', padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}
                   titleStyle={{ margin: 0, fontSize: 20, fontWeight: 600, color: theme.titleColor }}
                   valueStyle={{ margin: 0, fontSize: 28, fontWeight: 700, color: theme.kpiValueColor }}

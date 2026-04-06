@@ -53,6 +53,7 @@ function validateChartNode(node: DashboardTreeNode, path: number[]) {
 function validateKpiNode(node: DashboardTreeNode, path: number[]) {
   if (node.type !== 'KPI') return
   const valuePath = typeof node.props?.valuePath === 'string' ? node.props.valuePath.trim() : ''
+  const comparisonMode = typeof node.props?.comparisonMode === 'string' ? node.props.comparisonMode.trim() : ''
   const hasDataQuery =
     Boolean(node.props?.dataQuery) &&
     typeof node.props?.dataQuery === 'object' &&
@@ -74,6 +75,15 @@ function validateKpiNode(node: DashboardTreeNode, path: number[]) {
     if (!hasSqlQuery && !hasLegacyQuery) {
       throw new Error(`KPI.dataQuery invalido em ${formatNodePath(path)}`)
     }
+  }
+
+  if (
+    comparisonMode &&
+    comparisonMode !== 'previous_period' &&
+    comparisonMode !== 'previous_month' &&
+    comparisonMode !== 'previous_year'
+  ) {
+    throw new Error(`KPI.comparisonMode="${comparisonMode}" nao suportado em ${formatNodePath(path)}`)
   }
 }
 
