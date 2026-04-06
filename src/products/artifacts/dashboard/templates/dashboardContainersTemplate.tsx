@@ -15,9 +15,8 @@ function buildContainersDashboardSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('containers')
   return `<Dashboard id="overview" title="${CONTAINERS_VARIANT.title}" theme="${resolvedThemeName}" chartPalette="teal">
         <Vertical gap={24} style={{ width: '1600px', minHeight: '100%', backgroundColor: theme.pageBg }}>
-          <Horizontal columns={12} rowHeight={18} gap={18}>
-            <Panel id="containers-header" span={12} rows={8}>
-              <header style={{ height: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24, padding: 24, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
+          <Horizontal gap={18}>
+              <header style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24, padding: 24, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
                 <Vertical gap={8} style={{ maxWidth: 720 }}>
                   <Text variant="eyebrow">
                     Layout semantico em containers
@@ -30,7 +29,7 @@ function buildContainersDashboardSource(themeName: string) {
                   </Text>
                 </Vertical>
 
-                <Panel id="global-period" width={340}>
+                <div style={{ width: 340 }}>
                   <DatePicker
                     label="Periodo do pedido"
                     table="vendas.pedidos"
@@ -42,9 +41,8 @@ function buildContainersDashboardSource(themeName: string) {
                     presetButtonStyle={{ height: 36, border: '1px solid ' + theme.headerDatePickerBorder, borderRadius: 10, backgroundColor: theme.headerDatePickerBg, color: theme.headerDatePickerColor, fontSize: 13, fontWeight: 500 }}
                     activePresetButtonStyle={{ backgroundColor: theme.headerDatePickerActiveBg, borderColor: theme.headerDatePickerActiveBorder, color: theme.headerDatePickerActiveText, fontWeight: 600 }}
                   />
-                </Panel>
+                </div>
               </header>
-            </Panel>
           </Horizontal>
 
           <Vertical gap={24} padding="0 28px 28px">

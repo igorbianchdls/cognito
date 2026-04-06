@@ -15,9 +15,8 @@ function buildShopifyDashboardSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('shopify')
   return `<Dashboard id="overview" title="${SHOPIFY_VARIANT.title}" theme="${resolvedThemeName}" chartPalette="red">
         <Vertical gap={18} style={{ width: '1600px', minHeight: '100%', padding: 32, backgroundColor: theme.pageBg }}>
-          <Horizontal columns={12} rowHeight={18} gap={18}>
-            <Panel id="shopify-header" span={12} rows={8}>
-          <header style={{ height: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24, padding: 24, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
+          <Horizontal gap={18}>
+          <header style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24, padding: 24, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: '64%' }}>
               <span style={{ display: 'inline-flex', width: 'fit-content', alignItems: 'center', borderRadius: 999, border: '1px solid ' + theme.accentBorder, backgroundColor: theme.accentSurface, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: theme.accentText }}>E-commerce Core</span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -41,7 +40,6 @@ function buildShopifyDashboardSource(themeName: string) {
               />
             </div>
           </header>
-            </Panel>
           </Horizontal>
 
           <Horizontal columns={12} rowHeight={18} gap={18}>

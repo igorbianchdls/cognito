@@ -446,9 +446,8 @@ function buildClassicDashboardTemplateSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('classic')
   return `<Dashboard id="overview" title="${CLASSIC_DASHBOARD_VARIANT.title}" theme="${resolvedThemeName}" chartPalette="teal">
         <Vertical gap={20} dropTarget={false} style={{ width: '1600px', minHeight: '100%', backgroundColor: theme.pageBg }}>
-          <Horizontal gap={18} columns={12} rowHeight={18}>
-            <Panel id="classic-header" span={12} rows={8}>
-              <header style={{ height: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20, padding: '20px 24px', borderRadius: theme.cardFrame ? 0 : 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
+          <Horizontal gap={18}>
+              <header style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20, padding: '20px 24px', borderRadius: theme.cardFrame ? 0 : 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
                 <Vertical gap={8}>
                   <Text variant="eyebrow-strong">Executive dashboard</Text>
                   <Text as="h1" variant="page-title-sm">Performance overview with the classic BI layout</Text>
@@ -473,7 +472,6 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                   />
                 </Vertical>
               </header>
-            </Panel>
           </Horizontal>
 
           <Vertical gap={20} style={{ padding: '0 28px 28px' }}>

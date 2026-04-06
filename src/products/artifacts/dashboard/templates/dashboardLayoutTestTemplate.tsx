@@ -15,9 +15,8 @@ function buildLayoutTestDashboardSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('layouttest')
   return `<Dashboard id="layout-test" title="${LAYOUT_TEST_VARIANT.title}" theme="${resolvedThemeName}" chartPalette="teal">
   <Vertical gap={24} style={{ width: '1600px', minHeight: '100%', backgroundColor: theme.pageBg, padding: 24 }}>
-    <Horizontal columns={12} rowHeight={18} gap={18}>
-      <Panel id="layout-test-header" span={12} rows={6}>
-        <header style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 24, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.headerBg }}>
+    <Horizontal gap={18}>
+        <header style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 24, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.headerBg }}>
           <Text variant="eyebrow">
             Teste puro de layout
           </Text>
@@ -28,7 +27,6 @@ function buildLayoutTestDashboardSource(themeName: string) {
             Exemplo minimo com KPI e Chart, sem Query, para provar o comportamento do grid.
           </Text>
         </header>
-      </Panel>
     </Horizontal>
 
     <Vertical gap={20}>
