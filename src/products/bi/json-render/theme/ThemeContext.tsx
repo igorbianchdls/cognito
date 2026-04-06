@@ -69,6 +69,13 @@ export function getSemanticUiStyle(
   const titleComponent = extractStyleLike((components as Record<string, unknown>).Title);
   const subtitleComponent = extractStyleLike(asRecord((components as Record<string, unknown>).Subtitle).titleStyle);
   const cardComponent = extractStyleLike((components as Record<string, unknown>).Card);
+  const kpiCardComponent = extractStyleLike((components as Record<string, unknown>).KpiCard);
+  const chartCardComponent = extractStyleLike((components as Record<string, unknown>).ChartCard);
+  const tableCardComponent = extractStyleLike((components as Record<string, unknown>).TableCard);
+  const pivotCardComponent = extractStyleLike((components as Record<string, unknown>).PivotCard);
+  const filterCardComponent = extractStyleLike((components as Record<string, unknown>).FilterCard);
+  const noteCardComponent = extractStyleLike((components as Record<string, unknown>).NoteCard);
+  const legacyKpiContainerComponent = extractStyleLike(asRecord((components as Record<string, unknown>).Kpi).containerStyle);
 
   const isTitleRole =
     role === "title" ||
@@ -79,19 +86,76 @@ export function getSemanticUiStyle(
     role === "table-title" ||
     (!role && (tag === "h1" || tag === "h2" || tag === "h3"));
   const isEyebrowRole = role === "eyebrow" || role === "subtitle" || role === "card-subtitle";
-  const isCardRole = role === "card" || role === "chart-card" || role === "table-card" || role === "pivot-card";
+  const isCardRole =
+    role === "card" ||
+    role === "chart-card" ||
+    role === "table-card" ||
+    role === "pivot-card" ||
+    role === "kpi-card" ||
+    role === "filter-card" ||
+    role === "note-card";
   const isBodyRole = role === "body" || role === "card-body" || role === "chart-body" || role === "table-body";
   const isMutedRole = role === "muted" || role === "description" || role === "card-description";
 
   if (isCardRole) {
+    const variantComponent =
+      role === "kpi-card"
+        ? { ...legacyKpiContainerComponent, ...kpiCardComponent }
+        : role === "chart-card"
+          ? chartCardComponent
+          : role === "table-card"
+            ? tableCardComponent
+            : role === "pivot-card"
+              ? pivotCardComponent
+              : role === "filter-card"
+                ? filterCardComponent
+                : role === "note-card"
+                  ? noteCardComponent
+                  : {};
+    const fallbackBackgroundColor =
+      role === "kpi-card"
+        ? "var(--kpiCardBg, var(--surfaceBg, transparent))"
+        : role === "chart-card"
+          ? "var(--chartCardBg, var(--surfaceBg, transparent))"
+          : role === "table-card"
+            ? "var(--tableCardBg, var(--surfaceBg, transparent))"
+            : role === "pivot-card"
+              ? "var(--pivotCardBg, var(--surfaceBg, transparent))"
+              : role === "filter-card"
+                ? "var(--filterCardBg, var(--surfaceBg, transparent))"
+                : role === "note-card"
+                  ? "var(--noteCardBg, var(--surfaceBg, transparent))"
+                  : "var(--surfaceBg, transparent)";
+    const fallbackBorderColor =
+      role === "kpi-card"
+        ? "var(--kpiCardBorder, var(--containerBorderColor, var(--surfaceBorder, transparent)))"
+        : role === "chart-card"
+          ? "var(--chartCardBorder, var(--containerBorderColor, var(--surfaceBorder, transparent)))"
+          : role === "table-card"
+            ? "var(--tableCardBorder, var(--containerBorderColor, var(--surfaceBorder, transparent)))"
+            : role === "pivot-card"
+              ? "var(--pivotCardBorder, var(--containerBorderColor, var(--surfaceBorder, transparent)))"
+              : role === "filter-card"
+                ? "var(--filterCardBorder, var(--containerBorderColor, var(--surfaceBorder, transparent)))"
+                : role === "note-card"
+                  ? "var(--noteCardBorder, var(--containerBorderColor, var(--surfaceBorder, transparent)))"
+                  : "var(--containerBorderColor, var(--surfaceBorder, transparent))";
+    const backgroundColor =
+      role === "card"
+        ? cardComponent.backgroundColor || fallbackBackgroundColor
+        : variantComponent.backgroundColor || fallbackBackgroundColor || cardComponent.backgroundColor || "var(--surfaceBg, transparent)";
+    const borderColor =
+      role === "card"
+        ? cardComponent.borderColor || fallbackBorderColor
+        : variantComponent.borderColor || fallbackBorderColor || cardComponent.borderColor || "var(--containerBorderColor, var(--surfaceBorder, transparent))";
     return {
-      backgroundColor: cardComponent.backgroundColor || "var(--surfaceBg, transparent)",
-      borderColor: cardComponent.borderColor || "var(--containerBorderColor, var(--surfaceBorder, transparent))",
-      borderStyle: String(cardComponent.borderStyle || cssVars.containerBorderStyle || "solid"),
-      borderWidth: cardComponent.borderWidth || cssVars.containerBorderWidth || 1,
-      borderRadius: cardComponent.borderRadius || cssVars.containerRadius || 12,
-      boxShadow: cardComponent.boxShadow || resolveShadowToken(cssVars.containerShadow),
-      padding: cardComponent.padding,
+      backgroundColor,
+      borderColor,
+      borderStyle: String(variantComponent.borderStyle || cardComponent.borderStyle || cssVars.containerBorderStyle || "solid"),
+      borderWidth: variantComponent.borderWidth || cardComponent.borderWidth || cssVars.containerBorderWidth || 1,
+      borderRadius: variantComponent.borderRadius || cardComponent.borderRadius || cssVars.containerRadius || 12,
+      boxShadow: variantComponent.boxShadow || cardComponent.boxShadow || resolveShadowToken(cssVars.containerShadow),
+      padding: variantComponent.padding || cardComponent.padding,
     };
   }
 

@@ -566,7 +566,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
 
           <Horizontal gap={18} columns={12} rowHeight={32}>
             <Panel id="classic-insight-aceleracao" span={4} rows={10}>
-            <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <Text as="h2" style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Aceleracao recente</Text>
                 <Text style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, margin: 0, fontSize: 13, lineHeight: 1.6 }}>Leituras sobre os vetores que estao puxando o crescimento do periodo.</Text>
@@ -583,7 +583,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
             </Card>
             </Panel>
             <Panel id="classic-insight-concentracao" span={4} rows={10}>
-            <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <Text as="h2" style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Concentracao de receita</Text>
                 <Text style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, margin: 0, fontSize: 13, lineHeight: 1.6 }}>Pontos de atencao sobre dependencia de canais e distribuicao do faturamento.</Text>
@@ -600,7 +600,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
             </Card>
             </Panel>
             <Panel id="classic-insight-conversao" span={4} rows={10}>
-            <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <Text as="h2" style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Conversao e qualidade</Text>
                 <Text style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, margin: 0, fontSize: 13, lineHeight: 1.6 }}>Sinais de eficiencia comercial sem pressao adicional sobre o ticket medio.</Text>
@@ -620,7 +620,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
 
           <Horizontal gap={18} columns={12} rowHeight={32}>
             <Panel id="classic-chart-mix" span={6} rows={12}>
-            <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <Text style={{ ...{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Receita por canal</Text>
                 <Text as="h2" style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Mix comercial</Text>
@@ -658,7 +658,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
             </Panel>
 
             <Panel id="classic-chart-share" span={6} rows={12}>
-            <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <Text style={{ ...{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Participacao</Text>
                 <Text as="h2" style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Share por canal</Text>
@@ -795,7 +795,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
 
           <Horizontal gap={18} columns={12} rowHeight={32}>
             <Panel id="classic-chart-status" span={6} rows={12}>
-            <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <Text style={{ ...{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status mix</Text>
                 <Text as="h2" style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Volume por status</Text>
@@ -828,7 +828,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
             </Panel>
 
             <Panel id="classic-pivot-canal-status" span={6} rows={12}>
-            <Card data-ui="pivot-card" style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card variant="pivot" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <Text style={{ ...{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }, margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cruzamento</Text>
                 <Text as="h2" style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.03em' }}>Receita por canal e status</Text>

@@ -46,7 +46,7 @@ function buildShopifyDashboardSource(themeName: string) {
 
           <Horizontal columns={12} rowHeight={18} gap={18}>
             <Panel id="shopify-filters" span={8} rows={6}>
-            <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filters</Text>
                 <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Loja e status</Text>
@@ -97,7 +97,7 @@ function buildShopifyDashboardSource(themeName: string) {
             </Panel>
 
             <Panel id="shopify-reading" span={4} rows={6}>
-            <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Leitura esperada</Text>
               <Text style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Primeiro confira GMV e pedidos, depois veja se o mix de pagamento e fulfillment esta sustentando a operacao sem vazamento em reembolso.</Text>
             </Card>
@@ -127,7 +127,7 @@ function buildShopifyDashboardSource(themeName: string) {
               <Vertical gap={18}>
               <Horizontal columns={12} rowHeight={18} gap={18}>
                 <Panel id="shopify-sales-gmv" span={7} rows={12}>
-                <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <Card style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Store mix</Text>
                     <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>GMV por loja</Text>
@@ -161,7 +161,7 @@ function buildShopifyDashboardSource(themeName: string) {
                 </Panel>
 
                 <Panel id="shopify-sales-payment" span={5} rows={12}>
-                <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <Card style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Payment mix</Text>
                     <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Pedidos por status de pagamento</Text>
@@ -202,7 +202,7 @@ function buildShopifyDashboardSource(themeName: string) {
               <Vertical gap={18}>
               <Horizontal columns={12} rowHeight={18} gap={18}>
                 <Panel id="shopify-ops-trend" span={7} rows={12}>
-                <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <Card style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trend</Text>
                     <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>GMV por mes</Text>
@@ -239,7 +239,7 @@ function buildShopifyDashboardSource(themeName: string) {
                 <Panel id="shopify-ops-side" span={5} rows={12}>
                 <Vertical gap={18} style={{ height: '100%' }}>
                   <Panel id="shopify-ops-fulfillment" grow={1}>
-                  <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <Card style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Fulfillment</Text>
                       <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Pedidos por fulfillment</Text>
@@ -270,7 +270,7 @@ function buildShopifyDashboardSource(themeName: string) {
                   </Card>
                   </Panel>
                   <Panel id="shopify-ops-insights" grow={1}>
-                  <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <Card style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                       <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Leituras operacionais</Text>
                       <Text style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Perguntas para o time alinhar comercial, pagamento e fulfillment.</Text>
@@ -296,7 +296,7 @@ function buildShopifyDashboardSource(themeName: string) {
               <Vertical gap={18}>
               <Horizontal columns={12} rowHeight={18} gap={18}>
                 <Panel id="shopify-details-table" span={8} rows={16}>
-                <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <Card style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</Text>
                     <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Pedidos no detalhe</Text>
@@ -341,7 +341,7 @@ function buildShopifyDashboardSource(themeName: string) {
                 </Panel>
 
                 <Panel id="shopify-details-pivot" span={4} rows={16}>
-                <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <Card style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</Text>
                     <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Loja por pagamento</Text>

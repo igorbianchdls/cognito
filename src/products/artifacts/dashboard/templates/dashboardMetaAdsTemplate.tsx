@@ -46,7 +46,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
 
           <Horizontal columns={12} rowHeight={18} gap={18}>
             <Panel id="metaads-filters" span={8} rows={6}>
-              <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filters</Text>
                   <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Conta e campanha</Text>
@@ -80,7 +80,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
               </Card>
             </Panel>
             <Panel id="metaads-reading" span={4} rows={6}>
-              <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Leitura esperada</Text>
                 <Text style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Primeiro veja o pacing de gasto e retorno, depois abra concentracao por campanha e finalmente desca para o detalhe de anuncios e grupos quando houver desbalanceamento.</Text>
               </Card>
@@ -110,7 +110,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
                 <Vertical gap={18}>
                   <Horizontal columns={12} rowHeight={18} gap={18}>
                     <Panel id="metaads-performance-gasto" span={7} rows={12}>
-                      <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Budget concentration</Text>
                           <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Gasto por campanha</Text>
@@ -132,7 +132,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
                     </Panel>
 
                     <Panel id="metaads-performance-share" span={5} rows={12}>
-                      <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Share</Text>
                           <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Participacao por conta</Text>
@@ -160,7 +160,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
                 <Vertical gap={18}>
                   <Horizontal columns={12} rowHeight={18} gap={18}>
                     <Panel id="metaads-efficiency-roas" span={7} rows={12}>
-                      <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trend</Text>
                           <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>ROAS por dia</Text>
@@ -184,7 +184,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
                     <Panel id="metaads-efficiency-side" span={5} rows={12}>
                       <Vertical gap={18} style={{ height: '100%' }}>
                         <Panel id="metaads-efficiency-funnel" grow={1}>
-                          <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                          <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                               <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Funnel</Text>
                               <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Leads por campanha</Text>
@@ -204,7 +204,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
                           </Card>
                         </Panel>
                         <Panel id="metaads-efficiency-insights" grow={1}>
-                          <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                          <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                               <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Leituras operacionais</Text>
                               <Text style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Hipoteses para revisar campanhas, criativos e distribuicao de budget.</Text>
@@ -226,7 +226,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
                 <Vertical gap={18}>
                   <Horizontal columns={12} rowHeight={18} gap={18}>
                     <Panel id="metaads-details-table" span={8} rows={16}>
-                      <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</Text>
                           <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Campanhas no detalhe</Text>
@@ -256,7 +256,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
                       </Card>
                     </Panel>
                     <Panel id="metaads-details-pivot" span={4} rows={16}>
-                      <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</Text>
                           <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Conta por campanha</Text>

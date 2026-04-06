@@ -129,9 +129,48 @@ function renderDashboardThemeLayer({
   if (containerFrameCornerSize) cssVars.containerFrameCornerSize = containerFrameCornerSize
   if (containerFrameCornerWidth) cssVars.containerFrameCornerWidth = containerFrameCornerWidth
   cssVars.containerRadius = String(containerRadius)
+  const components = {
+    Card: {
+      backgroundColor: 'var(--surfaceBg)',
+      borderColor: 'var(--surfaceBorder)',
+      borderWidth: 1,
+      borderRadius: 'var(--containerRadius)',
+      padding: 22,
+    },
+    KpiCard: {
+      backgroundColor: 'var(--kpiCardBg, var(--surfaceBg))',
+      borderColor: 'var(--kpiCardBorder, var(--surfaceBorder))',
+      padding: 22,
+    },
+    ChartCard: {
+      backgroundColor: 'var(--chartCardBg, var(--surfaceBg))',
+      borderColor: 'var(--chartCardBorder, var(--surfaceBorder))',
+      padding: 22,
+    },
+    TableCard: {
+      backgroundColor: 'var(--tableCardBg, var(--surfaceBg))',
+      borderColor: 'var(--tableCardBorder, var(--surfaceBorder))',
+      padding: 22,
+    },
+    PivotCard: {
+      backgroundColor: 'var(--pivotCardBg, var(--surfaceBg))',
+      borderColor: 'var(--pivotCardBorder, var(--surfaceBorder))',
+      padding: 22,
+    },
+    FilterCard: {
+      backgroundColor: 'var(--filterCardBg, var(--surfaceBg))',
+      borderColor: 'var(--filterCardBorder, var(--surfaceBorder))',
+      padding: 22,
+    },
+    NoteCard: {
+      backgroundColor: 'var(--noteCardBg, var(--surfaceBg))',
+      borderColor: 'var(--noteCardBorder, var(--surfaceBorder))',
+      padding: 22,
+    },
+  } as const
 
   return (
-    <ThemeProvider name={name} cssVars={cssVars}>
+    <ThemeProvider name={name} cssVars={cssVars} components={components}>
       <div
         style={{
           width: '100%',

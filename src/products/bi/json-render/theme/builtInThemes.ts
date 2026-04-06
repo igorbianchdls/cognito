@@ -2,6 +2,12 @@ export type ThemeOverrides = {
   components: {
     Header?: Record<string, unknown>;
     Card?: Record<string, unknown>;
+    KpiCard?: Record<string, unknown>;
+    ChartCard?: Record<string, unknown>;
+    TableCard?: Record<string, unknown>;
+    PivotCard?: Record<string, unknown>;
+    FilterCard?: Record<string, unknown>;
+    NoteCard?: Record<string, unknown>;
     Title?: Record<string, unknown>;
     Subtitle?: Record<string, unknown>;
     Icon?: Record<string, unknown>;

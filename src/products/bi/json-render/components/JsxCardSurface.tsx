@@ -11,16 +11,41 @@ function normalizeCardDomProps(input: Record<string, any> | undefined): Record<s
   const props = { ...(input || {}) }
   delete props.style
   delete props.frame
+  delete props.variant
   delete props.children
   delete props.text
   return props
+}
+
+function resolveCardRole(props: Record<string, any> | undefined): string {
+  const rawRole = props?.['data-ui']
+  if (typeof rawRole === 'string' && rawRole.trim()) return rawRole.trim().toLowerCase()
+
+  const rawVariant = props?.variant
+  const variant = typeof rawVariant === 'string' ? rawVariant.trim().toLowerCase() : ''
+  if (variant === 'chart') return 'chart-card'
+  if (variant === 'table') return 'table-card'
+  if (variant === 'pivot') return 'pivot-card'
+  if (variant === 'kpi') return 'kpi-card'
+  if (variant === 'filter') return 'filter-card'
+  if (variant === 'note') return 'note-card'
+
+  return 'card'
 }
 
 function isCardRole(role: unknown): boolean {
   const normalized = String(role || '')
     .trim()
     .toLowerCase()
-  return normalized === 'card' || normalized === 'chart-card' || normalized === 'table-card' || normalized === 'pivot-card'
+  return (
+    normalized === 'card' ||
+    normalized === 'chart-card' ||
+    normalized === 'table-card' ||
+    normalized === 'pivot-card' ||
+    normalized === 'kpi-card' ||
+    normalized === 'filter-card' ||
+    normalized === 'note-card'
+  )
 }
 
 export function getJsxCardSurfaceStyle(props: Record<string, any>, semanticStyle: React.CSSProperties): React.CSSProperties {
@@ -33,7 +58,7 @@ export function getJsxCardSurfaceStyle(props: Record<string, any>, semanticStyle
 }
 
 export function isCardLikeSurface(props: Record<string, any> | undefined): boolean {
-  return isCardRole(props?.['data-ui'])
+  return isCardRole(resolveCardRole(props))
 }
 
 export default function JsxCardSurface({
@@ -44,7 +69,7 @@ export default function JsxCardSurface({
   children?: React.ReactNode
 }) {
   const props = (element?.props || {}) as Record<string, any>
-  const role = props['data-ui'] || 'card'
+  const role = resolveCardRole(props)
   const theme = useThemeOverrides()
   const semanticStyle = useSemanticUiStyle(role, 'div')
   const style = getJsxCardSurfaceStyle(props, semanticStyle)

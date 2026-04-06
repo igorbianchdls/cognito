@@ -46,7 +46,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
 
           <Horizontal columns={12} rowHeight={18} gap={18}>
             <Panel id="googleads-filters" span={8} rows={6}>
-              <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filters</Text>
                   <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Conta e grupo</Text>
@@ -99,7 +99,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
             </Panel>
 
             <Panel id="googleads-reading" span={4} rows={6}>
-              <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Leitura esperada</Text>
                 <Text style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }}>Comece por volume e retorno, depois confronte CTR, CVR e CPA para separar problema de demanda, criativo ou pagina.</Text>
               </Card>
@@ -195,7 +195,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                 <Vertical gap={18}>
                   <Horizontal columns={12} rowHeight={18} gap={18}>
                     <Panel id="googleads-performance-spend" span={7} rows={12}>
-                      <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Top spend</Text>
                           <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Gasto por campanha</Text>
@@ -230,7 +230,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                     </Panel>
 
                     <Panel id="googleads-performance-ctr" span={5} rows={12}>
-                      <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rate quality</Text>
                           <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>CTR por conta</Text>
@@ -271,7 +271,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                 <Vertical gap={18}>
                   <Horizontal columns={12} rowHeight={18} gap={18}>
                     <Panel id="googleads-acquisition-trend" span={7} rows={12}>
-                      <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trend</Text>
                           <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Gasto por mes</Text>
@@ -309,7 +309,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                     <Panel id="googleads-acquisition-side" span={5} rows={12}>
                       <Vertical gap={18} style={{ height: '100%' }}>
                         <Panel id="googleads-acquisition-cvr" grow={1}>
-                          <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                          <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                               <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Conversion quality</Text>
                               <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>CVR por mes</Text>
@@ -342,7 +342,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                         </Panel>
 
                         <Panel id="googleads-acquisition-insights" grow={1}>
-                          <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                          <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                               <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Leituras operacionais</Text>
                               <Text style={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, fontSize: 13, lineHeight: 1.6 }}>Perguntas para separar problema de volume, relevancia ou eficiencia de pagina.</Text>
@@ -368,7 +368,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                 <Vertical gap={18}>
                   <Horizontal columns={12} rowHeight={18} gap={18}>
                     <Panel id="googleads-details-table" span={8} rows={16}>
-                      <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</Text>
                           <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Campanhas no detalhe</Text>
@@ -415,7 +415,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                     </Panel>
 
                     <Panel id="googleads-details-pivot" span={4} rows={16}>
-                      <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</Text>
                           <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Conta por campanha</Text>

@@ -103,7 +103,7 @@ function buildContainersDashboardSource(themeName: string) {
 
             <Horizontal gap={18} align="stretch" columns={12} rowHeight={420}>
               <Panel id="chart-receita-canal" span={8} rows={1}>
-                <Card style={{ height: '100%', padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <Text as="h2" style={{ margin: 0, fontSize: 20, fontWeight: 600, color: theme.titleColor }}>Receita por canal</Text>
                   <Chart
                     type="bar"
@@ -131,7 +131,7 @@ function buildContainersDashboardSource(themeName: string) {
 
               <Panel id="filters-side" span={4} rows={1}>
                 <Vertical gap={18} style={{ height: '100%' }}>
-                  <Card style={{ flex: 1, minHeight: 0, padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <Card style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
                     <Text as="h2" style={{ margin: 0, fontSize: 20, fontWeight: 600, color: theme.titleColor }}>Canal</Text>
                     <Filter
                       label="Canal"
@@ -154,7 +154,7 @@ function buildContainersDashboardSource(themeName: string) {
                     </Filter>
                   </Card>
 
-                  <Card style={{ flex: 1, minHeight: 0, padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <Card style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Leitura esperada</Text>
                     <Text style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: theme.textSecondary }}>
                       Este exemplo usa containers semanticos para organizar cabecalho, KPIs e linha analitica sem depender de HTML livre em toda parte.

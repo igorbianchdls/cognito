@@ -136,10 +136,6 @@ export default function DashboardKpi({
   const title = typeof props.title === 'string' ? props.title : ''
   const description = typeof props.description === 'string' ? props.description : ''
   const valuePath = typeof props.valuePath === 'string' && props.valuePath.trim() ? props.valuePath.trim() : ''
-  const themeContainerStyle =
-    themeKpi?.containerStyle && typeof themeKpi.containerStyle === 'object'
-      ? (themeKpi.containerStyle as React.CSSProperties)
-      : undefined
   const themeTitleStyle =
     themeKpi?.titleStyle && typeof themeKpi.titleStyle === 'object'
       ? (themeKpi.titleStyle as React.CSSProperties)
@@ -394,13 +390,12 @@ export default function DashboardKpi({
       element={{
         type: 'Card',
         props: {
+          variant: typeof props.variant === 'string' && props.variant.trim() ? props.variant.trim() : 'kpi',
           style: {
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
             gap: 8,
-            padding: 22,
-            ...(themeContainerStyle || {}),
             ...(styleOverride || {}),
             ...(cardStyle || {}),
           },

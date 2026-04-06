@@ -47,7 +47,7 @@ function buildComprasDashboardSource(themeName: string) {
 
           <Horizontal columns={12} rowHeight={18} gap={18}>
             <Panel id="compras-filter-fornecedor" span={4} rows={6}>
-            <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filtro</Text>
               <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Fornecedor</Text>
               <Filter
@@ -74,7 +74,7 @@ function buildComprasDashboardSource(themeName: string) {
             </Panel>
 
             <Panel id="compras-filter-centro-custo" span={4} rows={6}>
-            <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filtro</Text>
               <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Centro de custo</Text>
               <Filter
@@ -101,7 +101,7 @@ function buildComprasDashboardSource(themeName: string) {
             </Panel>
 
             <Panel id="compras-filter-status" span={4} rows={6}>
-            <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filtro</Text>
               <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Status</Text>
               <Filter
@@ -164,7 +164,7 @@ function buildComprasDashboardSource(themeName: string) {
 
           <Horizontal columns={12} rowHeight={18} gap={18}>
             <Panel id="compras-chart-fornecedor" span={7} rows={16}>
-            <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Top spend</Text>
                 <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Gasto por fornecedor</Text>
@@ -201,7 +201,7 @@ function buildComprasDashboardSource(themeName: string) {
             </Panel>
 
             <Panel id="compras-chart-categoria" span={5} rows={16}>
-            <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Allocation</Text>
                 <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Gasto por categoria</Text>
@@ -241,7 +241,7 @@ function buildComprasDashboardSource(themeName: string) {
 
           <Horizontal columns={12} rowHeight={18} gap={18}>
             <Panel id="compras-chart-trend" span={7} rows={16}>
-            <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trend</Text>
                 <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Gasto por mes</Text>
@@ -278,7 +278,7 @@ function buildComprasDashboardSource(themeName: string) {
             </Panel>
 
             <Panel id="compras-chart-status" span={5} rows={16}>
-            <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status mix</Text>
                 <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Pedidos por status</Text>
@@ -314,7 +314,7 @@ function buildComprasDashboardSource(themeName: string) {
 
           <Horizontal columns={12} rowHeight={18} gap={18}>
             <Panel id="compras-table" span={8} rows={18}>
-            <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</Text>
                 <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Pedidos de compra no detalhe</Text>
@@ -362,7 +362,7 @@ function buildComprasDashboardSource(themeName: string) {
             </Panel>
 
             <Panel id="compras-pivot" span={4} rows={18}>
-            <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</Text>
                 <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Categoria por status</Text>
@@ -406,7 +406,7 @@ function buildComprasDashboardSource(themeName: string) {
 
           <Horizontal columns={12} rowHeight={18} gap={18}>
             <Panel id="compras-insight-concentracao" span={4} rows={6}>
-            <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Concentracao em fornecedores</Text>
               </div>
@@ -421,7 +421,7 @@ function buildComprasDashboardSource(themeName: string) {
             </Panel>
 
             <Panel id="compras-insight-centro" span={4} rows={6}>
-            <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Pressao por centro de custo</Text>
               </div>
@@ -436,7 +436,7 @@ function buildComprasDashboardSource(themeName: string) {
             </Panel>
 
             <Panel id="compras-insight-risco" span={4} rows={6}>
-            <Card style={{ padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Risco operacional</Text>
               </div>

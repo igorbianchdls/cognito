@@ -47,7 +47,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
 
           <Horizontal columns={12} rowHeight={18} gap={16}>
             <Panel id="financeiro-filter-status" span={4} rows={6}>
-              <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filtro</Text>
                 <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Status</Text>
                 <Filter
@@ -73,7 +73,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
             </Panel>
 
             <Panel id="financeiro-filter-categoria" span={4} rows={6}>
-              <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filtro</Text>
                 <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Categoria despesa</Text>
                 <Filter
@@ -100,7 +100,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
             </Panel>
 
             <Panel id="financeiro-filter-fornecedor" span={4} rows={6}>
-              <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filtro</Text>
                 <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Fornecedor</Text>
                 <Filter
@@ -172,7 +172,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
 
           <Horizontal columns={12} rowHeight={18} gap={18}>
             <Panel id="financeiro-chart-ap" span={7} rows={12}>
-              <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>AP exposure</Text>
                   <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Contas a pagar por fornecedor</Text>
@@ -207,7 +207,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
             </Panel>
 
             <Panel id="financeiro-chart-status" span={5} rows={12}>
-              <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status mix</Text>
                   <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Titulos por status</Text>
@@ -243,7 +243,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
 
           <Horizontal columns={12} rowHeight={18} gap={18}>
             <Panel id="financeiro-chart-ar" span={7} rows={12}>
-              <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>AR trend</Text>
                   <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Recebimentos por mes</Text>
@@ -278,7 +278,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
             </Panel>
 
             <Panel id="financeiro-chart-clientes" span={5} rows={12}>
-              <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>AR coverage</Text>
                   <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Recebimentos por cliente</Text>
@@ -314,7 +314,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
 
           <Horizontal columns={12} rowHeight={18} gap={18}>
             <Panel id="financeiro-table-ap" span={8} rows={16}>
-              <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Table</Text>
                   <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Titulos de contas a pagar</Text>
@@ -361,7 +361,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
             </Panel>
 
             <Panel id="financeiro-pivot-status" span={4} rows={16}>
-              <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <Text style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pivot</Text>
                   <Text as="h2" style={{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }}>Fornecedor por status</Text>
@@ -405,7 +405,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
 
           <Horizontal columns={12} rowHeight={18} gap={18}>
             <Panel id="financeiro-insight-liquidez" span={4} rows={7}>
-              <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Liquidez</Text>
                 </div>
@@ -420,7 +420,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
             </Panel>
 
             <Panel id="financeiro-insight-concentracao" span={4} rows={7}>
-              <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Concentracao</Text>
                 </div>
@@ -435,7 +435,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
             </Panel>
 
             <Panel id="financeiro-insight-status" span={4} rows={7}>
-              <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 24, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <Text as="h2" style={{ ...{ margin: 0, fontSize: 24, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, fontSize: 20 }}>Status operacional</Text>
                 </div>
