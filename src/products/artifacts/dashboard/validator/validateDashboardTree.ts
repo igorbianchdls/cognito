@@ -50,6 +50,33 @@ function validateChartNode(node: DashboardTreeNode, path: number[]) {
   ensureObjectProp(node, 'dataQuery', path)
 }
 
+function validateKpiNode(node: DashboardTreeNode, path: number[]) {
+  if (node.type !== 'KPI') return
+  const valuePath = typeof node.props?.valuePath === 'string' ? node.props.valuePath.trim() : ''
+  const hasDataQuery =
+    Boolean(node.props?.dataQuery) &&
+    typeof node.props?.dataQuery === 'object' &&
+    !Array.isArray(node.props?.dataQuery)
+
+  if (!valuePath && !hasDataQuery) {
+    throw new Error(`KPI requer valuePath ou dataQuery em ${formatNodePath(path)}`)
+  }
+
+  if (hasDataQuery) {
+    const dataQuery = node.props?.dataQuery as Record<string, unknown>
+    const hasSqlQuery = typeof dataQuery.query === 'string' && dataQuery.query.trim()
+    const hasLegacyQuery =
+      typeof dataQuery.model === 'string' &&
+      dataQuery.model.trim() &&
+      typeof dataQuery.measure === 'string' &&
+      dataQuery.measure.trim()
+
+    if (!hasSqlQuery && !hasLegacyQuery) {
+      throw new Error(`KPI.dataQuery invalido em ${formatNodePath(path)}`)
+    }
+  }
+}
+
 function validateQueryNode(node: DashboardTreeNode, path: number[]) {
   if (node.type !== 'Query') return
   const dataQuery = ensureObjectProp(node, 'dataQuery', path)
@@ -172,6 +199,7 @@ function validateNode(node: DashboardTreeNode, path: number[]) {
   validateThemeNode(node, path)
   validateDashboardNode(node, path)
   validateFilterNode(node, path)
+  validateKpiNode(node, path)
   validateQueryNode(node, path)
   validateChartNode(node, path)
   validateTableNode(node, path)

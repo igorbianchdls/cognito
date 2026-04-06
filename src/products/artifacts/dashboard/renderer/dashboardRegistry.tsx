@@ -16,6 +16,7 @@ import { ThemeProvider, useSemanticUiStyle } from '@/products/bi/json-render/the
 import { resolveDashboardBorderRadiusPreset } from '@/products/artifacts/dashboard/borderPresets'
 import DashboardDatePicker from '@/products/artifacts/dashboard/renderer/components/DashboardDatePicker'
 import DashboardInsights from '@/products/artifacts/dashboard/renderer/components/DashboardInsights'
+import DashboardKpi from '@/products/artifacts/dashboard/renderer/components/DashboardKpi'
 import { DashboardGrid, DashboardHorizontal, DashboardPanel, DashboardVertical } from '@/products/artifacts/dashboard/renderer/components/DashboardLayout'
 import DashboardQuery, {
   getDashboardQueryDeltaColor,
@@ -363,7 +364,7 @@ export const dashboardRegistry: Record<string, DashboardRenderComponent> = {
   FunnelChart: ({ element, onAction }) => <>{renderChartByType('funnel', element, onAction)}</>,
   SankeyChart: ({ element, onAction }) => <>{renderChartByType('sankey', element, onAction)}</>,
   Gauge: ({ element, onAction }) => <>{renderChartByType('gauge', element, onAction)}</>,
-  KPI: ({ element, onAction }) => <biRegistry.KPI element={element} onAction={onAction} />,
+  KPI: ({ element }) => <DashboardKpi element={element} />,
   Query: ({ element, children }) => <DashboardQuery element={element}>{children}</DashboardQuery>,
   Table: ({ element, onAction }) => <biRegistry.Table element={element} onAction={onAction} />,
   PivotTable: ({ element, onAction }) => <biRegistry.PivotTable element={element} onAction={onAction} />,

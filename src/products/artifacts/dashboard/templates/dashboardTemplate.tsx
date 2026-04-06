@@ -475,7 +475,8 @@ function buildClassicDashboardTemplateSource(themeName: string) {
           <Vertical gap={20} style={{ padding: '0 28px 28px' }}>
           <Horizontal gap={14} columns={20} rowHeight={32}>
             <Panel id="classic-kpi-receita" span={4} rows={4}>
-            <Query
+            <KPI
+              title="Receita"
               dataQuery={{
                 query: \`
                   SELECT COALESCE(SUM(p.valor_total), 0)::float AS value
@@ -486,18 +487,15 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 limit: 1,
               }}
               format="currency"
-              comparisonMode="previous_period"
-            >
-              <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}>
-                <h2 style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Receita</h2>
-                <p style={{ ...{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
-                <p data-ui="kpi-delta" style={{ ...{ margin: 0, fontSize: 13, color: theme.textSecondary }, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </Card>
-            </Query>
+              cardStyle={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}
+              titleStyle={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}
+              valueStyle={{ ...{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}
+            />
             </Panel>
 
             <Panel id="classic-kpi-pedidos" span={4} rows={4}>
-            <Query
+            <KPI
+              title="Pedidos"
               dataQuery={{
                 query: \`
                   SELECT COUNT(*)::float AS value
@@ -508,18 +506,15 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 limit: 1,
               }}
               format="number"
-              comparisonMode="previous_period"
-            >
-              <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}>
-                <h2 style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Pedidos</h2>
-                <p style={{ ...{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
-                <p data-ui="kpi-delta" style={{ ...{ margin: 0, fontSize: 13, color: theme.textSecondary }, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </Card>
-            </Query>
+              cardStyle={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}
+              titleStyle={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}
+              valueStyle={{ ...{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}
+            />
             </Panel>
 
             <Panel id="classic-kpi-ticket" span={4} rows={4}>
-            <Query
+            <KPI
+              title="Ticket medio"
               dataQuery={{
                 query: \`
                   SELECT COALESCE(AVG(p.valor_total), 0)::float AS value
@@ -530,18 +525,15 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 limit: 1,
               }}
               format="currency"
-              comparisonMode="previous_period"
-            >
-              <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}>
-                <h2 style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Ticket medio</h2>
-                <p style={{ ...{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
-                <p data-ui="kpi-delta" style={{ ...{ margin: 0, fontSize: 13, color: theme.textSecondary }, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </Card>
-            </Query>
+              cardStyle={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}
+              titleStyle={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}
+              valueStyle={{ ...{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}
+            />
             </Panel>
 
             <Panel id="classic-kpi-canais" span={4} rows={4}>
-            <Query
+            <KPI
+              title="Canais ativos"
               dataQuery={{
                 query: \`
                   SELECT COUNT(DISTINCT p.canal_venda_id)::float AS value
@@ -552,18 +544,15 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 limit: 1,
               }}
               format="number"
-              comparisonMode="previous_period"
-            >
-              <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}>
-                <h2 style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Canais ativos</h2>
-                <p style={{ ...{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
-                <p data-ui="kpi-delta" style={{ ...{ margin: 0, fontSize: 13, color: theme.textSecondary }, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </Card>
-            </Query>
+              cardStyle={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}
+              titleStyle={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}
+              valueStyle={{ ...{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}
+            />
             </Panel>
 
             <Panel id="classic-kpi-aprovacao" span={4} rows={4}>
-            <Query
+            <KPI
+              title="Aprovacao"
               dataQuery={{
                 query: \`
                   SELECT COALESCE(AVG(CASE WHEN COALESCE(p.status, '') = 'aprovado' THEN 1 ELSE 0 END), 0)::float AS value
@@ -574,14 +563,10 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 limit: 1,
               }}
               format="percent"
-              comparisonMode="previous_period"
-            >
-              <Card style={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}>
-                <h2 style={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}>Aprovacao</h2>
-                <p style={{ ...{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}>{'{{query.valueFormatted}}'}</p>
-                <p data-ui="kpi-delta" style={{ ...{ margin: 0, fontSize: 13, color: theme.textSecondary }, margin: 0, fontSize: 13 }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-              </Card>
-            </Query>
+              cardStyle={{ height: '100%', padding: 22, borderRadius: theme.cardFrame ? 0 : 22, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}
+              titleStyle={{ ...{ margin: 0, fontSize: 22, fontWeight: 600, color: theme.titleColor, letterSpacing: '-0.03em' }, margin: 0, fontSize: 20, fontWeight: 600, letterSpacing: '-0.03em' }}
+              valueStyle={{ ...{ margin: 0, fontSize: 30, fontWeight: 700, letterSpacing: '-0.04em', color: theme.kpiValueColor }, margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.04em' }}
+            />
             </Panel>
           </Horizontal>
 

@@ -24,7 +24,7 @@ function buildContainersDashboardSource(themeName: string) {
                 Dashboard com Vertical, Horizontal e Panel
               </h1>
               <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: theme.textSecondary }}>
-                Exemplo de autoria mais proxima de containers de BI, mantendo Query, Chart e Cards normais.
+                Exemplo de autoria mais proxima de containers de BI, mantendo KPI, Chart e Cards normais.
               </p>
             </Vertical>
 
@@ -46,7 +46,8 @@ function buildContainersDashboardSource(themeName: string) {
           <Vertical gap={24} padding="0 28px 28px">
             <Horizontal gap={16} columns={12} rowHeight={170}>
               <Panel id="kpi-receita" span={4} rows={1}>
-                <Query
+                <KPI
+                  title="Receita"
                   dataQuery={{
                     query: \`
                       SELECT COALESCE(SUM(src.valor_total), 0)::float AS value
@@ -57,18 +58,15 @@ function buildContainersDashboardSource(themeName: string) {
                     limit: 1,
                   }}
                   format="currency"
-                  comparisonMode="previous_period"
-                >
-                  <Card style={{ height: '100%', padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}>
-                    <h2 style={{ margin: 0, fontSize: 20, fontWeight: 600, color: theme.titleColor }}>Receita</h2>
-                    <p style={{ margin: 0, fontSize: 28, fontWeight: 700, color: theme.kpiValueColor }}>{'{{query.valueFormatted}}'}</p>
-                    <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 13, color: theme.textSecondary }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-                  </Card>
-                </Query>
+                  cardStyle={{ height: '100%', padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}
+                  titleStyle={{ margin: 0, fontSize: 20, fontWeight: 600, color: theme.titleColor }}
+                  valueStyle={{ margin: 0, fontSize: 28, fontWeight: 700, color: theme.kpiValueColor }}
+                />
               </Panel>
 
               <Panel id="kpi-pedidos" span={4} rows={1}>
-                <Query
+                <KPI
+                  title="Pedidos"
                   dataQuery={{
                     query: \`
                       SELECT COUNT(*)::float AS value
@@ -79,18 +77,15 @@ function buildContainersDashboardSource(themeName: string) {
                     limit: 1,
                   }}
                   format="number"
-                  comparisonMode="previous_period"
-                >
-                  <Card style={{ height: '100%', padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}>
-                    <h2 style={{ margin: 0, fontSize: 20, fontWeight: 600, color: theme.titleColor }}>Pedidos</h2>
-                    <p style={{ margin: 0, fontSize: 28, fontWeight: 700, color: theme.kpiValueColor }}>{'{{query.valueFormatted}}'}</p>
-                    <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 13, color: theme.textSecondary }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-                  </Card>
-                </Query>
+                  cardStyle={{ height: '100%', padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}
+                  titleStyle={{ margin: 0, fontSize: 20, fontWeight: 600, color: theme.titleColor }}
+                  valueStyle={{ margin: 0, fontSize: 28, fontWeight: 700, color: theme.kpiValueColor }}
+                />
               </Panel>
 
               <Panel id="kpi-ticket" span={4} rows={1}>
-                <Query
+                <KPI
+                  title="Ticket medio"
                   dataQuery={{
                     query: \`
                       SELECT COALESCE(AVG(src.valor_total), 0)::float AS value
@@ -101,14 +96,10 @@ function buildContainersDashboardSource(themeName: string) {
                     limit: 1,
                   }}
                   format="currency"
-                  comparisonMode="previous_period"
-                >
-                  <Card style={{ height: '100%', padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}>
-                    <h2 style={{ margin: 0, fontSize: 20, fontWeight: 600, color: theme.titleColor }}>Ticket medio</h2>
-                    <p style={{ margin: 0, fontSize: 28, fontWeight: 700, color: theme.kpiValueColor }}>{'{{query.valueFormatted}}'}</p>
-                    <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 13, color: theme.textSecondary }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-                  </Card>
-                </Query>
+                  cardStyle={{ height: '100%', padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}
+                  titleStyle={{ margin: 0, fontSize: 20, fontWeight: 600, color: theme.titleColor }}
+                  valueStyle={{ margin: 0, fontSize: 28, fontWeight: 700, color: theme.kpiValueColor }}
+                />
               </Panel>
             </Horizontal>
 
