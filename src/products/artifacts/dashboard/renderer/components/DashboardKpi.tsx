@@ -2,10 +2,10 @@
 
 import React from 'react'
 
-import JsxCardSurface from '@/products/bi/json-render/components/JsxCardSurface'
 import { useData, useDataValue } from '@/products/bi/json-render/context'
 import { applyPrimaryDateRange } from '@/products/bi/json-render/dateFilters'
 import { useSemanticUiStyle, useThemeOverrides } from '@/products/bi/json-render/theme/ThemeContext'
+import DashboardCardSurface from '@/products/artifacts/dashboard/renderer/components/DashboardCardSurface'
 
 type AnyRecord = Record<string, any>
 type ValueFormat = 'currency' | 'percent' | 'number'
@@ -386,7 +386,7 @@ export default function DashboardKpi({
     : formatValue(displayValue, format)
 
   return (
-    <JsxCardSurface
+    <DashboardCardSurface
       element={{
         type: 'Card',
         props: {
@@ -455,6 +455,6 @@ export default function DashboardKpi({
         </p>
       ) : null}
       {queryState.error ? <div className="mt-1 text-xs text-red-600">{queryState.error}</div> : null}
-    </JsxCardSurface>
+    </DashboardCardSurface>
   )
 }

@@ -7,10 +7,6 @@ import JsonRenderComposedChart from '@/products/bi/json-render/components/Compos
 import JsonRenderFunnelChart from '@/products/bi/json-render/components/FunnelChart'
 import JsonRenderGauge from '@/products/bi/json-render/components/Gauge'
 import JsonRenderHorizontalBarChart from '@/products/bi/json-render/components/HorizontalBarChart'
-import JsxCardSurface, {
-  getJsxCardSurfaceStyle,
-  isCardLikeSurface,
-} from '@/products/bi/json-render/components/JsxCardSurface'
 import JsonRenderLineChart from '@/products/bi/json-render/components/LineChart'
 import JsonRenderPieChart from '@/products/bi/json-render/components/PieChart'
 import JsonRenderPivotTable from '@/products/bi/json-render/components/PivotTable'
@@ -20,6 +16,8 @@ import JsonRenderScatterChart from '@/products/bi/json-render/components/Scatter
 import JsonRenderTable from '@/products/bi/json-render/components/Table'
 import JsonRenderTreemapChart from '@/products/bi/json-render/components/TreemapChart'
 import { useSemanticUiStyle, useThemeOverrides } from '@/products/bi/json-render/theme/ThemeContext'
+import { DashboardThemeSelectionProvider } from '@/products/artifacts/dashboard/renderer/dashboardThemeConfig'
+import DashboardCardSurface from '@/products/artifacts/dashboard/renderer/components/DashboardCardSurface'
 import DashboardDatePicker from '@/products/artifacts/dashboard/renderer/components/DashboardDatePicker'
 import DashboardFilter from '@/products/artifacts/dashboard/renderer/components/DashboardFilter'
 import DashboardInsights from '@/products/artifacts/dashboard/renderer/components/DashboardInsights'
@@ -280,17 +278,19 @@ function renderDashboardThemeLayer({
   children?: React.ReactNode
 }) {
   return (
-    <div
-      style={{
-        width: '100%',
-        minHeight: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        minWidth: 0,
-      }}
-    >
-      {children}
-    </div>
+    <DashboardThemeSelectionProvider themeName={_themeName} borderPreset={_borderPreset}>
+      <div
+        style={{
+          width: '100%',
+          minHeight: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          minWidth: 0,
+        }}
+      >
+        {children}
+      </div>
+    </DashboardThemeSelectionProvider>
   )
 }
 
@@ -359,22 +359,6 @@ function HtmlNode({
         ? resolveDashboardQueryTemplate(props.title, queryResult)
         : null
   const content = children ?? fallbackContent
-
-  if (isCardLikeSurface(props)) {
-    return (
-      <JsxCardSurface
-        element={{
-          ...element,
-          props: {
-            ...props,
-            style: getJsxCardSurfaceStyle(props, semanticStyle),
-          },
-        }}
-      >
-        {content}
-      </JsxCardSurface>
-    )
-  }
 
   return React.createElement(
     tag,
@@ -495,7 +479,7 @@ export const dashboardRegistry: Record<string, DashboardRenderComponent> = {
   Vertical: ({ element, children }) => <DashboardVertical element={element}>{children}</DashboardVertical>,
   Horizontal: ({ element, children }) => <DashboardHorizontal element={element}>{children}</DashboardHorizontal>,
   Panel: ({ element, children }) => <DashboardPanel element={element}>{children}</DashboardPanel>,
-  Card: ({ element, children }) => <JsxCardSurface element={element}>{children}</JsxCardSurface>,
+  Card: ({ element, children }) => <DashboardCardSurface element={element}>{children}</DashboardCardSurface>,
   Tabs: ({ element, children }) => <DashboardTabs element={element}>{children}</DashboardTabs>,
   Tab: ({ element, children }) => <DashboardTab element={element}>{children}</DashboardTab>,
   TabPanel: ({ element, children }) => <DashboardTabPanel element={element}>{children}</DashboardTabPanel>,
