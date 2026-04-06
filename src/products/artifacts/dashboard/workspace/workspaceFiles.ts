@@ -3,6 +3,7 @@ import { buildDashboardTemplateVariants } from '@/products/artifacts/dashboard/t
 import {
   DASHBOARD_TEMPLATE_DEFAULT_THEMES,
 } from '@/products/artifacts/dashboard/templates/dashboardTemplateSupport'
+import { buildDashboardThemeConfigFileSource } from '@/products/artifacts/dashboard/renderer/dashboardThemeConfig'
 import { buildDashboardThemeTokensFileSource } from '@/products/artifacts/dashboard/templates/dashboardTemplateThemes'
 import { buildDashboardChartColorsFileSource } from '@/products/artifacts/dashboard/chartPalettes'
 
@@ -35,6 +36,14 @@ export function buildDashboardWorkspaceFiles(themeName: string): ArtifactCodeFil
       content: buildDashboardThemeTokensFileSource(),
     },
     {
+      path: 'app/dashboardThemeConfig.ts',
+      name: 'dashboardThemeConfig.ts',
+      directory: 'app',
+      extension: 'ts',
+      language: 'typescript',
+      content: buildDashboardThemeConfigFileSource(),
+    },
+    {
       path: 'app/theme.json',
       name: 'theme.json',
       directory: 'app',
@@ -57,7 +66,7 @@ export function buildDashboardWorkspaceFiles(themeName: string): ArtifactCodeFil
       directory: 'app',
       extension: 'md',
       language: 'markdown',
-      content: `# Dashboard\n\nArquivos principais:\n- \`app/dashboard-classico.tsx\` (\`${DASHBOARD_TEMPLATE_DEFAULT_THEMES.classic}\`)\n- \`app/dashboard-containers.tsx\` (\`${DASHBOARD_TEMPLATE_DEFAULT_THEMES.containers}\`)\n- \`app/dashboard-layout-test.tsx\` (\`${DASHBOARD_TEMPLATE_DEFAULT_THEMES.layouttest}\`)\n- \`app/dashboard-compras.tsx\` (\`${DASHBOARD_TEMPLATE_DEFAULT_THEMES.compras}\`)\n- \`app/dashboard-financeiro.tsx\` (\`${DASHBOARD_TEMPLATE_DEFAULT_THEMES.financeiro}\`)\n- \`app/dashboard-metaads.tsx\` (\`${DASHBOARD_TEMPLATE_DEFAULT_THEMES.metaads}\`)\n- \`app/dashboard-googleads.tsx\` (\`${DASHBOARD_TEMPLATE_DEFAULT_THEMES.googleads}\`)\n- \`app/dashboard-shopify.tsx\` (\`${DASHBOARD_TEMPLATE_DEFAULT_THEMES.shopify}\`)\n\nArquivos auxiliares:\n- \`app/chart-colors.ts\`\n- \`app/theme-tokens.ts\`\n\nTema global do workspace: \`${themeName}\`\nCada template ativo usa seu proprio tema padrao.`,
+      content: `# Dashboard\n\nArquivos principais:\n- \`app/dashboard-classico.tsx\` (\`${DASHBOARD_TEMPLATE_DEFAULT_THEMES.classic}\`)\n- \`app/dashboard-containers.tsx\` (\`${DASHBOARD_TEMPLATE_DEFAULT_THEMES.containers}\`)\n- \`app/dashboard-layout-test.tsx\` (\`${DASHBOARD_TEMPLATE_DEFAULT_THEMES.layouttest}\`)\n- \`app/dashboard-compras.tsx\` (\`${DASHBOARD_TEMPLATE_DEFAULT_THEMES.compras}\`)\n- \`app/dashboard-financeiro.tsx\` (\`${DASHBOARD_TEMPLATE_DEFAULT_THEMES.financeiro}\`)\n- \`app/dashboard-metaads.tsx\` (\`${DASHBOARD_TEMPLATE_DEFAULT_THEMES.metaads}\`)\n- \`app/dashboard-googleads.tsx\` (\`${DASHBOARD_TEMPLATE_DEFAULT_THEMES.googleads}\`)\n- \`app/dashboard-shopify.tsx\` (\`${DASHBOARD_TEMPLATE_DEFAULT_THEMES.shopify}\`)\n\nArquivos auxiliares:\n- \`app/chart-colors.ts\`\n- \`app/theme-tokens.ts\`\n- \`app/dashboardThemeConfig.ts\`\n\nTema global do workspace: \`${themeName}\`\nCada template ativo usa seu proprio tema padrao.`,
     },
   ]
 }

@@ -22,7 +22,6 @@ import JsonRenderTreemapChart from '@/products/bi/json-render/components/Treemap
 import { mapManagersToCssVars } from '@/products/bi/json-render/theme/thememanagers'
 import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter'
 import { ThemeProvider, useSemanticUiStyle, useThemeOverrides } from '@/products/bi/json-render/theme/ThemeContext'
-import { resolveDashboardBorderRadiusPreset } from '@/products/artifacts/dashboard/borderPresets'
 import DashboardDatePicker from '@/products/artifacts/dashboard/renderer/components/DashboardDatePicker'
 import DashboardFilter from '@/products/artifacts/dashboard/renderer/components/DashboardFilter'
 import DashboardInsights from '@/products/artifacts/dashboard/renderer/components/DashboardInsights'
@@ -40,7 +39,7 @@ import {
   normalizeDashboardChartType,
   resolveDashboardChartPaletteColors,
 } from '@/products/artifacts/dashboard/contract/dashboardContract'
-import { resolveDashboardTemplateThemeTokens } from '@/products/artifacts/dashboard/templates/dashboardTemplateThemes'
+import { resolveDashboardRendererTheme } from '@/products/artifacts/dashboard/renderer/dashboardThemeConfig'
 import { deepMerge } from '@/stores/ui/json-render/utils'
 
 type AnyRecord = Record<string, any>
@@ -291,75 +290,15 @@ function renderDashboardThemeLayer({
       ? String(chartPaletteName).trim().toLowerCase()
       : DASHBOARD_DEFAULT_CHART_PALETTE
   const preset = buildThemeVars(name, (managers || {}) as any, { headerTheme })
-  const themeTokens = resolveDashboardTemplateThemeTokens(name || 'light', borderPreset)
-  const {
-    containerFrameVariant: baseContainerFrameVariant,
-    containerFrameBaseColor: baseContainerFrameBaseColor,
-    containerFrameCornerColor: baseContainerFrameCornerColor,
-    containerFrameCornerSize: baseContainerFrameCornerSize,
-    containerFrameCornerWidth: baseContainerFrameCornerWidth,
-    ...baseCssVars
-  } = (preset.cssVars || mapManagersToCssVars((managers || {}) as any)) as Record<string, string>
-  const cssVars: Record<string, string> = {
-    ...baseCssVars,
-    chartColorScheme: JSON.stringify(resolveDashboardChartPaletteColors(chartPalette)),
-  }
-  const cardFrameVariant = baseContainerFrameVariant || themeTokens.cardFrame?.variant
-  const cardFrameBaseColor = baseContainerFrameBaseColor
-  const cardFrameCornerColor = baseContainerFrameCornerColor
-  const cardFrameCornerSize =
-    baseContainerFrameCornerSize || (themeTokens.cardFrame ? String(themeTokens.cardFrame.cornerSize) : undefined)
-  const cardFrameCornerWidth =
-    baseContainerFrameCornerWidth || (themeTokens.cardFrame ? String(themeTokens.cardFrame.cornerWidth) : undefined)
-  const containerRadius = resolveDashboardBorderRadiusPreset(borderPreset, themeTokens.cardFrame ? 0 : 24)
-  if (cardFrameVariant) cssVars.cardFrameVariant = cardFrameVariant
-  if (cardFrameBaseColor) cssVars.cardFrameBaseColor = cardFrameBaseColor
-  if (cardFrameCornerColor) cssVars.cardFrameCornerColor = cardFrameCornerColor
-  if (cardFrameCornerSize) cssVars.cardFrameCornerSize = cardFrameCornerSize
-  if (cardFrameCornerWidth) cssVars.cardFrameCornerWidth = cardFrameCornerWidth
-  cssVars.containerRadius = String(containerRadius)
-  const components = {
-    Card: {
-      backgroundColor: 'var(--surfaceBg)',
-      borderColor: 'var(--surfaceBorder)',
-      borderWidth: 1,
-      borderRadius: 'var(--containerRadius)',
-      padding: 22,
-    },
-    KpiCard: {
-      backgroundColor: 'var(--kpiCardBg, var(--surfaceBg))',
-      borderColor: 'var(--kpiCardBorder, var(--surfaceBorder))',
-      padding: 22,
-    },
-    ChartCard: {
-      backgroundColor: 'var(--chartCardBg, var(--surfaceBg))',
-      borderColor: 'var(--chartCardBorder, var(--surfaceBorder))',
-      padding: 22,
-    },
-    TableCard: {
-      backgroundColor: 'var(--tableCardBg, var(--surfaceBg))',
-      borderColor: 'var(--tableCardBorder, var(--surfaceBorder))',
-      padding: 22,
-    },
-    PivotCard: {
-      backgroundColor: 'var(--pivotCardBg, var(--surfaceBg))',
-      borderColor: 'var(--pivotCardBorder, var(--surfaceBorder))',
-      padding: 22,
-    },
-    FilterCard: {
-      backgroundColor: 'var(--filterCardBg, var(--surfaceBg))',
-      borderColor: 'var(--filterCardBorder, var(--surfaceBorder))',
-      padding: 22,
-    },
-    NoteCard: {
-      backgroundColor: 'var(--noteCardBg, var(--surfaceBg))',
-      borderColor: 'var(--noteCardBorder, var(--surfaceBorder))',
-      padding: 22,
-    },
-  } as const
+  const rendererTheme = resolveDashboardRendererTheme({
+    themeName: name,
+    borderPreset,
+    baseCssVars: (preset.cssVars || mapManagersToCssVars((managers || {}) as any)) as Record<string, string>,
+    chartPaletteColors: resolveDashboardChartPaletteColors(chartPalette),
+  })
 
   return (
-    <ThemeProvider name={name} cssVars={cssVars} components={components}>
+    <ThemeProvider name={name} cssVars={rendererTheme.cssVars} components={rendererTheme.components}>
       <div
         style={{
           width: '100%',
