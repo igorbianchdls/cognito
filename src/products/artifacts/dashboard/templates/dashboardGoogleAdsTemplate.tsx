@@ -108,74 +108,82 @@ function buildGoogleAdsDashboardSource(themeName: string) {
 
           <Horizontal columns={12} rowHeight={18} gap={16}>
             <Panel id="googleads-kpi-gasto" span={3} rows={4}>
-              <KPI
-                title="Gasto"
-                dataQuery={{
-                  query: \`
-                    SELECT COALESCE(SUM(src.gasto), 0)::float AS value
-                    FROM trafegopago.desempenho_diario src
-                    WHERE src.plataforma = 'google_ads'
-                      AND src.nivel = 'campaign'
-                      {{filters}}
-                  \`,
-                  limit: 1,
-                }}
-                format="currency"
-                comparisonMode="previous_period"
-              />
+              <Card variant="kpi" style={{ height: '100%' }}>
+                <KPI
+                  title="Gasto"
+                  dataQuery={{
+                    query: \`
+                      SELECT COALESCE(SUM(src.gasto), 0)::float AS value
+                      FROM trafegopago.desempenho_diario src
+                      WHERE src.plataforma = 'google_ads'
+                        AND src.nivel = 'campaign'
+                        {{filters}}
+                    \`,
+                    limit: 1,
+                  }}
+                  format="currency"
+                  comparisonMode="previous_period"
+                />
+              </Card>
             </Panel>
             <Panel id="googleads-kpi-receita" span={3} rows={4}>
-              <KPI
-                title="Receita atribuida"
-                dataQuery={{
-                  query: \`
-                    SELECT COALESCE(SUM(src.receita_atribuida), 0)::float AS value
-                    FROM trafegopago.desempenho_diario src
-                    WHERE src.plataforma = 'google_ads'
-                      AND src.nivel = 'campaign'
-                      {{filters}}
-                  \`,
-                  limit: 1,
-                }}
-                format="currency"
-                comparisonMode="previous_period"
-              />
+              <Card variant="kpi" style={{ height: '100%' }}>
+                <KPI
+                  title="Receita atribuida"
+                  dataQuery={{
+                    query: \`
+                      SELECT COALESCE(SUM(src.receita_atribuida), 0)::float AS value
+                      FROM trafegopago.desempenho_diario src
+                      WHERE src.plataforma = 'google_ads'
+                        AND src.nivel = 'campaign'
+                        {{filters}}
+                    \`,
+                    limit: 1,
+                  }}
+                  format="currency"
+                  comparisonMode="previous_period"
+                />
+              </Card>
             </Panel>
             <Panel id="googleads-kpi-roas" span={3} rows={4}>
-              <KPI
-                title="ROAS"
-                dataQuery={{
-                  query: \`
-                    SELECT
-                      CASE WHEN COALESCE(SUM(src.gasto), 0) = 0 THEN 0 ELSE (SUM(src.receita_atribuida) / SUM(src.gasto))::float END AS value
-                    FROM trafegopago.desempenho_diario src
-                    WHERE src.plataforma = 'google_ads'
-                      AND src.nivel = 'campaign'
-                      {{filters}}
-                  \`,
-                  limit: 1,
-                }}
-                format="number"
-                comparisonMode="previous_period"
-              />
+              <Card variant="kpi" style={{ height: '100%' }}>
+                <KPI
+                  title="ROAS"
+                  dataQuery={{
+                    query: \`
+                      SELECT
+                        CASE WHEN COALESCE(SUM(src.gasto), 0) = 0 THEN 0 ELSE (SUM(src.receita_atribuida) / SUM(src.gasto))::float END AS value
+                      FROM trafegopago.desempenho_diario src
+                      WHERE src.plataforma = 'google_ads'
+                        AND src.nivel = 'campaign'
+                        {{filters}}
+                    \`,
+                    limit: 1,
+                  }}
+                  format="number"
+                  comparisonMode="previous_period"
+                />
+              </Card>
             </Panel>
             <Panel id="googleads-kpi-cpa" span={3} rows={4}>
-              <KPI
-                title="CPA"
-                dataQuery={{
-                  query: \`
-                    SELECT
-                      CASE WHEN COALESCE(SUM(src.conversoes), 0) = 0 THEN 0 ELSE (SUM(src.gasto) / SUM(src.conversoes))::float END AS value
-                    FROM trafegopago.desempenho_diario src
-                    WHERE src.plataforma = 'google_ads'
-                      AND src.nivel = 'campaign'
-                      {{filters}}
-                  \`,
-                  limit: 1,
-                }}
-                format="currency"
-                comparisonMode="previous_period"
-              />
+              <Card variant="kpi" style={{ height: '100%' }}>
+                <KPI
+                  title="CPA"
+                  dataQuery={{
+                    query: \`
+                      SELECT
+                        CASE WHEN COALESCE(SUM(src.conversoes), 0) = 0 THEN 0 ELSE (SUM(src.gasto) / SUM(src.conversoes))::float END AS value
+                      FROM trafegopago.desempenho_diario src
+                      WHERE src.plataforma = 'google_ads'
+                        AND src.nivel = 'campaign'
+                        {{filters}}
+                    \`,
+                    limit: 1,
+                  }}
+                  format="currency"
+                  comparisonMode="previous_period"
+                />
+              </Card>
             </Panel>
           </Horizontal>
 

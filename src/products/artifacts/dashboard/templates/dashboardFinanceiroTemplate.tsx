@@ -129,44 +129,52 @@ function buildFinanceiroDashboardSource(themeName: string) {
 
           <Horizontal columns={12} rowHeight={18} gap={16}>
             <Panel id="financeiro-kpi-ar" span={3} rows={4}>
-              <KPI
-                title="Contas a receber"
-                dataQuery={{ query: \`SELECT COALESCE(SUM(cr.valor_liquido), 0)::float AS value FROM financeiro.contas_receber cr WHERE 1=1 {{filters}}\`, limit: 1 }}
-                format="currency"
-                comparisonMode="previous_period"
-              />
+              <Card variant="kpi" style={{ height: '100%' }}>
+                <KPI
+                  title="Contas a receber"
+                  dataQuery={{ query: \`SELECT COALESCE(SUM(cr.valor_liquido), 0)::float AS value FROM financeiro.contas_receber cr WHERE 1=1 {{filters}}\`, limit: 1 }}
+                  format="currency"
+                  comparisonMode="previous_period"
+                />
+              </Card>
             </Panel>
             <Panel id="financeiro-kpi-ap" span={3} rows={4}>
-              <KPI
-                title="Contas a pagar"
-                dataQuery={{ query: \`SELECT COALESCE(SUM(cp.valor_liquido), 0)::float AS value FROM financeiro.contas_pagar cp WHERE 1=1 {{filters}}\`, limit: 1 }}
-                format="currency"
-                comparisonMode="previous_period"
-              />
+              <Card variant="kpi" style={{ height: '100%' }}>
+                <KPI
+                  title="Contas a pagar"
+                  dataQuery={{ query: \`SELECT COALESCE(SUM(cp.valor_liquido), 0)::float AS value FROM financeiro.contas_pagar cp WHERE 1=1 {{filters}}\`, limit: 1 }}
+                  format="currency"
+                  comparisonMode="previous_period"
+                />
+              </Card>
             </Panel>
             <Panel id="financeiro-kpi-geracao" span={3} rows={4}>
-              <KPI
-                title="Geracao liquida"
-                dataQuery={{
-                  query: \`
-                    SELECT (
-                      COALESCE((SELECT SUM(cr.valor_liquido) FROM financeiro.contas_receber cr WHERE 1=1 {{filters}}), 0)
-                      - COALESCE((SELECT SUM(cp.valor_liquido) FROM financeiro.contas_pagar cp WHERE 1=1 {{filters}}), 0)
-                    )::float AS value
-                  \`,
-                  limit: 1,
-                }}
-                format="currency"
-                comparisonMode="previous_period"
-              />
+              <Card variant="kpi" style={{ height: '100%' }}>
+                <KPI
+                  title="Geracao liquida"
+                  dataQuery={{
+                    query: \`
+                      SELECT (
+                        COALESCE((SELECT SUM(cr.valor_liquido) FROM financeiro.contas_receber cr WHERE 1=1 {{filters}}), 0)
+                        - COALESCE((SELECT SUM(cp.valor_liquido) FROM financeiro.contas_pagar cp WHERE 1=1 {{filters}}), 0)
+                      )::float AS value
+                    \`,
+                    limit: 1,
+                  }}
+                  format="currency"
+                  comparisonMode="previous_period"
+                />
+              </Card>
             </Panel>
             <Panel id="financeiro-kpi-titulos" span={3} rows={4}>
-              <KPI
-                title="Titulos em AP"
-                dataQuery={{ query: \`SELECT COUNT(*)::float AS value FROM financeiro.contas_pagar cp WHERE 1=1 {{filters}}\`, limit: 1 }}
-                format="number"
-                comparisonMode="previous_period"
-              />
+              <Card variant="kpi" style={{ height: '100%' }}>
+                <KPI
+                  title="Titulos em AP"
+                  dataQuery={{ query: \`SELECT COUNT(*)::float AS value FROM financeiro.contas_pagar cp WHERE 1=1 {{filters}}\`, limit: 1 }}
+                  format="number"
+                  comparisonMode="previous_period"
+                />
+              </Card>
             </Panel>
           </Horizontal>
 

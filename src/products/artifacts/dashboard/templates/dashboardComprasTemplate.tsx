@@ -129,36 +129,44 @@ function buildComprasDashboardSource(themeName: string) {
 
           <Horizontal columns={12} rowHeight={18} gap={16}>
             <Panel id="compras-kpi-valor" span={3} rows={4}>
-            <KPI
-              title="Valor comprado"
-              dataQuery={{ query: \`SELECT COALESCE(SUM(c.valor_total), 0)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }}
-              format="currency"
-              comparisonMode="previous_period"
-            />
+              <Card variant="kpi" style={{ height: '100%' }}>
+                <KPI
+                  title="Valor comprado"
+                  dataQuery={{ query: \`SELECT COALESCE(SUM(c.valor_total), 0)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }}
+                  format="currency"
+                  comparisonMode="previous_period"
+                />
+              </Card>
             </Panel>
             <Panel id="compras-kpi-fornecedores" span={3} rows={4}>
-            <KPI
-              title="Fornecedores"
-              dataQuery={{ query: \`SELECT COUNT(DISTINCT c.fornecedor_id)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }}
-              format="number"
-              comparisonMode="previous_period"
-            />
+              <Card variant="kpi" style={{ height: '100%' }}>
+                <KPI
+                  title="Fornecedores"
+                  dataQuery={{ query: \`SELECT COUNT(DISTINCT c.fornecedor_id)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }}
+                  format="number"
+                  comparisonMode="previous_period"
+                />
+              </Card>
             </Panel>
             <Panel id="compras-kpi-pedidos" span={3} rows={4}>
-            <KPI
-              title="Pedidos"
-              dataQuery={{ query: \`SELECT COUNT(DISTINCT c.id)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }}
-              format="number"
-              comparisonMode="previous_period"
-            />
+              <Card variant="kpi" style={{ height: '100%' }}>
+                <KPI
+                  title="Pedidos"
+                  dataQuery={{ query: \`SELECT COUNT(DISTINCT c.id)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }}
+                  format="number"
+                  comparisonMode="previous_period"
+                />
+              </Card>
             </Panel>
             <Panel id="compras-kpi-ticket" span={3} rows={4}>
-            <KPI
-              title="Ticket medio"
-              dataQuery={{ query: \`SELECT COALESCE(AVG(c.valor_total), 0)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }}
-              format="currency"
-              comparisonMode="previous_period"
-            />
+              <Card variant="kpi" style={{ height: '100%' }}>
+                <KPI
+                  title="Ticket medio"
+                  dataQuery={{ query: \`SELECT COALESCE(AVG(c.valor_total), 0)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }}
+                  format="currency"
+                  comparisonMode="previous_period"
+                />
+              </Card>
             </Panel>
           </Horizontal>
 

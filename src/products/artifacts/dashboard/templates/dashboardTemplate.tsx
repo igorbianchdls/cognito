@@ -479,88 +479,98 @@ function buildClassicDashboardTemplateSource(themeName: string) {
           <Vertical gap={20} style={{ padding: '0 28px 28px' }}>
           <Horizontal gap={14} columns={20} rowHeight={32}>
             <Panel id="classic-kpi-receita" span={4} rows={4}>
-            <KPI
-              title="Receita"
-              dataQuery={{
-                query: \`
-                  SELECT COALESCE(SUM(p.valor_total), 0)::float AS value
-                  FROM vendas.pedidos p
-                  WHERE 1=1
-                    {{filters}}
-                \`,
-                limit: 1,
-              }}
-              format="currency"
-              comparisonMode="previous_period"
-            />
+              <Card variant="kpi" style={{ height: '100%' }}>
+                <KPI
+                  title="Receita"
+                  dataQuery={{
+                    query: \`
+                      SELECT COALESCE(SUM(p.valor_total), 0)::float AS value
+                      FROM vendas.pedidos p
+                      WHERE 1=1
+                        {{filters}}
+                    \`,
+                    limit: 1,
+                  }}
+                  format="currency"
+                  comparisonMode="previous_period"
+                />
+              </Card>
             </Panel>
 
             <Panel id="classic-kpi-pedidos" span={4} rows={4}>
-            <KPI
-              title="Pedidos"
-              dataQuery={{
-                query: \`
-                  SELECT COUNT(*)::float AS value
-                  FROM vendas.pedidos p
-                  WHERE 1=1
-                    {{filters}}
-                \`,
-                limit: 1,
-              }}
-              format="number"
-              comparisonMode="previous_period"
-            />
+              <Card variant="kpi" style={{ height: '100%' }}>
+                <KPI
+                  title="Pedidos"
+                  dataQuery={{
+                    query: \`
+                      SELECT COUNT(*)::float AS value
+                      FROM vendas.pedidos p
+                      WHERE 1=1
+                        {{filters}}
+                    \`,
+                    limit: 1,
+                  }}
+                  format="number"
+                  comparisonMode="previous_period"
+                />
+              </Card>
             </Panel>
 
             <Panel id="classic-kpi-ticket" span={4} rows={4}>
-            <KPI
-              title="Ticket medio"
-              dataQuery={{
-                query: \`
-                  SELECT COALESCE(AVG(p.valor_total), 0)::float AS value
-                  FROM vendas.pedidos p
-                  WHERE 1=1
-                    {{filters}}
-                \`,
-                limit: 1,
-              }}
-              format="currency"
-              comparisonMode="previous_period"
-            />
+              <Card variant="kpi" style={{ height: '100%' }}>
+                <KPI
+                  title="Ticket medio"
+                  dataQuery={{
+                    query: \`
+                      SELECT COALESCE(AVG(p.valor_total), 0)::float AS value
+                      FROM vendas.pedidos p
+                      WHERE 1=1
+                        {{filters}}
+                    \`,
+                    limit: 1,
+                  }}
+                  format="currency"
+                  comparisonMode="previous_period"
+                />
+              </Card>
             </Panel>
 
             <Panel id="classic-kpi-canais" span={4} rows={4}>
-            <KPI
-              title="Canais ativos"
-              dataQuery={{
-                query: \`
-                  SELECT COUNT(DISTINCT p.canal_venda_id)::float AS value
-                  FROM vendas.pedidos p
-                  WHERE 1=1
-                    {{filters}}
-                \`,
-                limit: 1,
-              }}
-              format="number"
-              comparisonMode="previous_period"
-            />
+              <Card variant="kpi" style={{ height: '100%' }}>
+                <KPI
+                  title="Canais ativos"
+                  dataQuery={{
+                    query: \`
+                      SELECT COUNT(DISTINCT p.canal_venda_id)::float AS value
+                      FROM vendas.pedidos p
+                      WHERE 1=1
+                        {{filters}}
+                    \`,
+                    limit: 1,
+                  }}
+                  format="number"
+                  comparisonMode="previous_period"
+                />
+              </Card>
             </Panel>
 
             <Panel id="classic-kpi-aprovacao" span={4} rows={4}>
-            <KPI
-              title="Aprovacao"
-              dataQuery={{
-                query: \`
-                  SELECT COALESCE(AVG(CASE WHEN COALESCE(p.status, '') = 'aprovado' THEN 1 ELSE 0 END), 0)::float AS value
-                  FROM vendas.pedidos p
-                  WHERE 1=1
-                    {{filters}}
-                \`,
-                limit: 1,
-              }}
-              format="percent"
-              comparisonMode="previous_period"
-            />
+              <Card variant="kpi" style={{ height: '100%' }}>
+                <KPI
+                  title="Aprovacao"
+                  dataQuery={{
+                    query: \`
+                      SELECT COALESCE(AVG(CASE WHEN COALESCE(p.status, '') = 'aprovado' THEN 1 ELSE 0 END), 0)::float AS value
+                      FROM vendas.pedidos p
+                      WHERE 1=1
+                        {{filters}}
+                    \`,
+                    limit: 1,
+                  }}
+                  format="percent"
+                  comparisonMode="previous_period"
+                />
+              </Card>
             </Panel>
           </Horizontal>
 

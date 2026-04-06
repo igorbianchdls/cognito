@@ -5,7 +5,6 @@ import React from 'react'
 import { useData, useDataValue } from '@/products/bi/json-render/context'
 import { applyPrimaryDateRange } from '@/products/bi/json-render/dateFilters'
 import { useSemanticUiStyle, useThemeOverrides } from '@/products/bi/json-render/theme/ThemeContext'
-import DashboardCardSurface from '@/products/artifacts/dashboard/renderer/components/DashboardCardSurface'
 
 type AnyRecord = Record<string, any>
 type ValueFormat = 'currency' | 'percent' | 'number'
@@ -386,20 +385,14 @@ export default function DashboardKpi({
     : formatValue(displayValue, format)
 
   return (
-    <DashboardCardSurface
-      element={{
-        type: 'Card',
-        props: {
-          variant: typeof props.variant === 'string' && props.variant.trim() ? props.variant.trim() : 'kpi',
-          style: {
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 8,
-            ...(styleOverride || {}),
-            ...(cardStyle || {}),
-          },
-        },
+    <div
+      style={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+        ...(styleOverride || {}),
+        ...(cardStyle || {}),
       }}
     >
       {title ? (
@@ -455,6 +448,6 @@ export default function DashboardKpi({
         </p>
       ) : null}
       {queryState.error ? <div className="mt-1 text-xs text-red-600">{queryState.error}</div> : null}
-    </DashboardCardSurface>
+    </div>
   )
 }

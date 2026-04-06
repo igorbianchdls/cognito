@@ -50,54 +50,60 @@ function buildContainersDashboardSource(themeName: string) {
           <Vertical gap={24} padding="0 28px 28px">
             <Horizontal gap={16} columns={12} rowHeight={170}>
               <Panel id="kpi-receita" span={4} rows={1}>
-                <KPI
-                  title="Receita"
-                  dataQuery={{
-                    query: \`
-                      SELECT COALESCE(SUM(src.valor_total), 0)::float AS value
-                      FROM vendas.pedidos src
-                      WHERE src.tenant_id = {{tenant_id}}::int
-                        {{filters:src}}
-                    \`,
-                    limit: 1,
-                  }}
-                  format="currency"
-                  comparisonMode="previous_period"
-                />
+                <Card variant="kpi" style={{ height: '100%' }}>
+                  <KPI
+                    title="Receita"
+                    dataQuery={{
+                      query: \`
+                        SELECT COALESCE(SUM(src.valor_total), 0)::float AS value
+                        FROM vendas.pedidos src
+                        WHERE src.tenant_id = {{tenant_id}}::int
+                          {{filters:src}}
+                      \`,
+                      limit: 1,
+                    }}
+                    format="currency"
+                    comparisonMode="previous_period"
+                  />
+                </Card>
               </Panel>
 
               <Panel id="kpi-pedidos" span={4} rows={1}>
-                <KPI
-                  title="Pedidos"
-                  dataQuery={{
-                    query: \`
-                      SELECT COUNT(*)::float AS value
-                      FROM vendas.pedidos src
-                      WHERE src.tenant_id = {{tenant_id}}::int
-                        {{filters:src}}
-                    \`,
-                    limit: 1,
-                  }}
-                  format="number"
-                  comparisonMode="previous_period"
-                />
+                <Card variant="kpi" style={{ height: '100%' }}>
+                  <KPI
+                    title="Pedidos"
+                    dataQuery={{
+                      query: \`
+                        SELECT COUNT(*)::float AS value
+                        FROM vendas.pedidos src
+                        WHERE src.tenant_id = {{tenant_id}}::int
+                          {{filters:src}}
+                      \`,
+                      limit: 1,
+                    }}
+                    format="number"
+                    comparisonMode="previous_period"
+                  />
+                </Card>
               </Panel>
 
               <Panel id="kpi-ticket" span={4} rows={1}>
-                <KPI
-                  title="Ticket medio"
-                  dataQuery={{
-                    query: \`
-                      SELECT COALESCE(AVG(src.valor_total), 0)::float AS value
-                      FROM vendas.pedidos src
-                      WHERE src.tenant_id = {{tenant_id}}::int
-                        {{filters:src}}
-                    \`,
-                    limit: 1,
-                  }}
-                  format="currency"
-                  comparisonMode="previous_period"
-                />
+                <Card variant="kpi" style={{ height: '100%' }}>
+                  <KPI
+                    title="Ticket medio"
+                    dataQuery={{
+                      query: \`
+                        SELECT COALESCE(AVG(src.valor_total), 0)::float AS value
+                        FROM vendas.pedidos src
+                        WHERE src.tenant_id = {{tenant_id}}::int
+                          {{filters:src}}
+                      \`,
+                      limit: 1,
+                    }}
+                    format="currency"
+                    comparisonMode="previous_period"
+                  />
+                </Card>
               </Panel>
             </Horizontal>
 

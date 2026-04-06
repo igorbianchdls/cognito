@@ -34,31 +34,35 @@ function buildLayoutTestDashboardSource(themeName: string) {
     <Vertical gap={20}>
       <Horizontal gap={16} columns={12} rowHeight={32}>
         <Panel id="kpi-test-a" span={6} rows={4}>
-          <KPI
-            title="KPI Teste A"
-            dataQuery={{
-              query: \`
-                SELECT 128::float AS value
-              \`,
-              limit: 1,
-            }}
-            format="number"
-            description="KPI dentro de Panel, para validar resize."
-          />
+          <Card variant="kpi" style={{ height: '100%' }}>
+            <KPI
+              title="KPI Teste A"
+              dataQuery={{
+                query: \`
+                  SELECT 128::float AS value
+                \`,
+                limit: 1,
+              }}
+              format="number"
+              description="KPI dentro de Panel, para validar resize."
+            />
+          </Card>
         </Panel>
 
         <Panel id="kpi-test-b" span={6} rows={9}>
-          <KPI
-            title="KPI Teste B"
-            dataQuery={{
-              query: \`
-                SELECT 8420::float AS value
-              \`,
-              limit: 1,
-            }}
-            format="currency"
-            description="Este bloco tem duas rows para evidenciar resize vertical com KPI."
-          />
+          <Card variant="kpi" style={{ height: '100%' }}>
+            <KPI
+              title="KPI Teste B"
+              dataQuery={{
+                query: \`
+                  SELECT 8420::float AS value
+                \`,
+                limit: 1,
+              }}
+              format="currency"
+              description="Este bloco tem duas rows para evidenciar resize vertical com KPI."
+            />
+          </Card>
         </Panel>
       </Horizontal>
 

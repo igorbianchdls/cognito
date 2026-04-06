@@ -105,10 +105,10 @@ function buildShopifyDashboardSource(themeName: string) {
           </Horizontal>
 
           <Horizontal columns={12} rowHeight={18} gap={16}>
-            <Panel id="shopify-kpi-gmv" span={3} rows={4}><KPI title="GMV" dataQuery={{ query: \`SELECT COALESCE(SUM(src.valor_total), 0)::float AS value FROM ecommerce.pedidos src WHERE src.plataforma = 'shopify' {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period" /></Panel>
-            <Panel id="shopify-kpi-pedidos" span={3} rows={4}><KPI title="Pedidos" dataQuery={{ query: \`SELECT COUNT(*)::float AS value FROM ecommerce.pedidos src WHERE src.plataforma = 'shopify' {{filters}}\`, limit: 1 }} format="number" comparisonMode="previous_period" /></Panel>
-            <Panel id="shopify-kpi-ticket" span={3} rows={4}><KPI title="Ticket medio" dataQuery={{ query: \`SELECT COALESCE(AVG(src.valor_total), 0)::float AS value FROM ecommerce.pedidos src WHERE src.plataforma = 'shopify' {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period" /></Panel>
-            <Panel id="shopify-kpi-reembolsos" span={3} rows={4}><KPI title="Reembolsos" dataQuery={{ query: \`SELECT COALESCE(SUM(src.valor_reembolsado), 0)::float AS value FROM ecommerce.pedidos src WHERE src.plataforma = 'shopify' {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period" /></Panel>
+            <Panel id="shopify-kpi-gmv" span={3} rows={4}><Card variant="kpi" style={{ height: '100%' }}><KPI title="GMV" dataQuery={{ query: \`SELECT COALESCE(SUM(src.valor_total), 0)::float AS value FROM ecommerce.pedidos src WHERE src.plataforma = 'shopify' {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period" /></Card></Panel>
+            <Panel id="shopify-kpi-pedidos" span={3} rows={4}><Card variant="kpi" style={{ height: '100%' }}><KPI title="Pedidos" dataQuery={{ query: \`SELECT COUNT(*)::float AS value FROM ecommerce.pedidos src WHERE src.plataforma = 'shopify' {{filters}}\`, limit: 1 }} format="number" comparisonMode="previous_period" /></Card></Panel>
+            <Panel id="shopify-kpi-ticket" span={3} rows={4}><Card variant="kpi" style={{ height: '100%' }}><KPI title="Ticket medio" dataQuery={{ query: \`SELECT COALESCE(AVG(src.valor_total), 0)::float AS value FROM ecommerce.pedidos src WHERE src.plataforma = 'shopify' {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period" /></Card></Panel>
+            <Panel id="shopify-kpi-reembolsos" span={3} rows={4}><Card variant="kpi" style={{ height: '100%' }}><KPI title="Reembolsos" dataQuery={{ query: \`SELECT COALESCE(SUM(src.valor_reembolsado), 0)::float AS value FROM ecommerce.pedidos src WHERE src.plataforma = 'shopify' {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period" /></Card></Panel>
           </Horizontal>
 
           <Tabs defaultValue="sales">
