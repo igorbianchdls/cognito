@@ -149,7 +149,7 @@ export function DashboardThemeSelectionProvider({
     [borderPreset, parent.borderPreset, parent.themeName, themeName],
   )
 
-  return <DashboardThemeSelectionContext.Provider value={value}>{children}</DashboardThemeSelectionContext.Provider>
+  return React.createElement(DashboardThemeSelectionContext.Provider, { value }, children)
 }
 
 export function useDashboardThemeSelection() {
