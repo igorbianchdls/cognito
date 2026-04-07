@@ -46,6 +46,7 @@ const runtimeScope = {
   LineChart: leafComponent('LineChart'),
   PieChart: leafComponent('PieChart'),
   KPI: leafComponent('KPI'),
+  KPICompare: leafComponent('KPICompare'),
   Table: leafComponent('Table'),
   PivotTable: leafComponent('PivotTable'),
   Filter: passthroughComponent('Filter'),
