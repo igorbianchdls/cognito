@@ -144,8 +144,8 @@ function useMergedElementProps(
   defaults: AnyRecord,
   componentName: string,
 ): { props: AnyRecord } {
-  const { themeName } = useDashboardThemeSelection()
-  const chartTheme = resolveDashboardChartTheme(themeName)
+  const { chartPaletteName, themeName } = useDashboardThemeSelection()
+  const chartTheme = resolveDashboardChartTheme(themeName, chartPaletteName)
   const themeComponent =
     componentName === 'Gauge'
       ? (resolveDashboardGaugeTheme(themeName) as AnyRecord)
@@ -224,8 +224,8 @@ function DashboardChart({
   element: any
   onAction?: (action: any) => void
 }) {
-  const { themeName } = useDashboardThemeSelection()
-  const chartTheme = resolveDashboardChartTheme(themeName)
+  const { chartPaletteName, themeName } = useDashboardThemeSelection()
+  const chartTheme = resolveDashboardChartTheme(themeName, chartPaletteName)
   const type = (element?.props || {}).type
   const defaults = {
     titleStyle: chartTheme.titleStyle,
@@ -270,7 +270,11 @@ function renderDashboardThemeLayer({
   children?: React.ReactNode
 }) {
   return (
-    <DashboardThemeSelectionProvider themeName={_themeName} borderPreset={_borderPreset}>
+    <DashboardThemeSelectionProvider
+      themeName={_themeName}
+      chartPaletteName={_chartPaletteName}
+      borderPreset={_borderPreset}
+    >
       <div
         style={{
           width: '100%',
@@ -290,7 +294,6 @@ function DashboardTheme({ element, children }: { element: any; children?: React.
   const props = (element?.props || {}) as AnyRecord
   return renderDashboardThemeLayer({
     themeName: typeof props.name === 'string' ? props.name : undefined,
-    chartPaletteName: typeof props.chartPalette === 'string' ? props.chartPalette : undefined,
     borderPreset: typeof props.borderPreset === 'string' ? props.borderPreset : undefined,
     headerTheme: typeof props.headerTheme === 'string' ? props.headerTheme : undefined,
     managers: (props.managers || {}) as AnyRecord,

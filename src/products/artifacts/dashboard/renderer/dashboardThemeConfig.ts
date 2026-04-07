@@ -4,6 +4,7 @@ import React from 'react'
 
 import type { HudFrameConfig } from '@/products/bi/json-render/components/FrameSurface'
 import { resolveDashboardBorderRadiusPreset, resolveDashboardBorderFramePreset, type DashboardBorderPreset } from '@/products/artifacts/dashboard/borderPresets'
+import { DASHBOARD_DEFAULT_CHART_PALETTE, resolveDashboardChartPaletteColors } from '@/products/artifacts/dashboard/contract/dashboardContract'
 import {
   DASHBOARD_TEMPLATE_THEME_TOKENS,
   type DashboardTemplateThemeTokens,
@@ -107,10 +108,12 @@ type AnyRecord = Record<string, any>
 
 type DashboardThemeSelection = {
   themeName: string
+  chartPaletteName?: string
   borderPreset?: string
 }
 
 const DashboardThemeSelectionContext = React.createContext<DashboardThemeSelection>({
+  chartPaletteName: DASHBOARD_DEFAULT_CHART_PALETTE,
   themeName: 'light',
 })
 
@@ -552,7 +555,7 @@ function buildDashboardChartThemeConfigEntry(tokens: DashboardTemplateThemeToken
       padding: 6,
       textAlign: 'left',
     },
-    colorScheme: [tokens.primary, '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+    colorScheme: resolveDashboardChartPaletteColors(DASHBOARD_DEFAULT_CHART_PALETTE),
     margin: { top: 10, right: 12, bottom: 12, left: 12 },
   }
 }
@@ -728,10 +731,16 @@ export function resolveDashboardTabStyle(themeName?: string, active?: boolean): 
   return active ? { ...theme.base, ...theme.active } : theme.base
 }
 
-export function resolveDashboardChartTheme(themeName?: string): DashboardChartThemeConfigEntry {
+export function resolveDashboardChartTheme(
+  themeName?: string,
+  chartPaletteName?: string,
+): DashboardChartThemeConfigEntry {
   const key = resolveThemeKey(themeName)
   const tokens = DASHBOARD_TEMPLATE_THEME_TOKENS[key] || DASHBOARD_TEMPLATE_THEME_TOKENS.light
-  return buildDashboardChartThemeConfigEntry(tokens)
+  return {
+    ...buildDashboardChartThemeConfigEntry(tokens),
+    colorScheme: resolveDashboardChartPaletteColors(chartPaletteName || DASHBOARD_DEFAULT_CHART_PALETTE),
+  }
 }
 
 export function resolveDashboardTableTheme(themeName?: string): DashboardTableThemeConfigEntry {
@@ -807,20 +816,26 @@ export function resolveDashboardCardVariantKey(props: Record<string, any> | unde
 
 export function DashboardThemeSelectionProvider({
   themeName,
+  chartPaletteName,
   borderPreset,
   children,
 }: {
   themeName?: string
+  chartPaletteName?: string
   borderPreset?: string
   children?: React.ReactNode
 }) {
   const parent = React.useContext(DashboardThemeSelectionContext)
   const value = React.useMemo<DashboardThemeSelection>(
     () => ({
+      chartPaletteName:
+        typeof chartPaletteName === 'string' && chartPaletteName.trim()
+          ? chartPaletteName
+          : parent.chartPaletteName,
       themeName: typeof themeName === 'string' && themeName.trim() ? themeName : parent.themeName,
       borderPreset: typeof borderPreset === 'string' && borderPreset.trim() ? borderPreset : parent.borderPreset,
     }),
-    [borderPreset, parent.borderPreset, parent.themeName, themeName],
+    [borderPreset, chartPaletteName, parent.borderPreset, parent.chartPaletteName, parent.themeName, themeName],
   )
 
   return React.createElement(DashboardThemeSelectionContext.Provider, { value }, children)

@@ -140,11 +140,6 @@ export function getDashboardChartColorsFromSource(source: string, fallback: stri
     return resolveDashboardChartPaletteColors(dashboardPaletteMatch[1].trim())
   }
 
-  const themePaletteMatch = String(source || '').match(/<Theme\b[^>]*\bchartPalette="([^"]+)"/)
-  if (themePaletteMatch?.[1]?.trim()) {
-    return resolveDashboardChartPaletteColors(themePaletteMatch[1].trim())
-  }
-
   const paletteNameMatch = String(source || '').match(/const\s+CHART_PALETTE\s*=\s*['"]([^'"]+)['"]/)
   if (paletteNameMatch?.[1]?.trim()) {
     return resolveDashboardChartPaletteColors(paletteNameMatch[1].trim())
@@ -169,9 +164,6 @@ export function getDashboardChartPaletteNameFromSource(source: string, fallback:
   const dashboardMatch = String(source || '').match(/<Dashboard\b[^>]*\bchartPalette="([^"]+)"/)
   if (dashboardMatch?.[1]?.trim()) return dashboardMatch[1].trim()
 
-  const themeMatch = String(source || '').match(/<Theme\b[^>]*\bchartPalette="([^"]+)"/)
-  if (themeMatch?.[1]?.trim()) return themeMatch[1].trim()
-
   const paletteMatch = String(source || '').match(/const\s+CHART_PALETTE\s*=\s*['"]([^'"]+)['"]/)
   if (paletteMatch?.[1]?.trim()) return paletteMatch[1].trim()
   return fallback
@@ -193,16 +185,6 @@ export function replaceDashboardChartPaletteNameInSource(source: string, nextPal
     nextSource = nextSource.replace(
       /<Dashboard\b/,
       `<Dashboard chartPalette="${normalizedPaletteName}"`,
-    )
-  } else if (/<Theme\b[^>]*\bchartPalette=/.test(nextSource)) {
-    nextSource = nextSource.replace(
-      /<Theme\b([^>]*)\bchartPalette=(?:"[^"]*"|\{'[^']*'\}|\{"[^"]*"\})/,
-      `<Theme$1chartPalette="${normalizedPaletteName}"`,
-    )
-  } else if (/<Theme\b[^>]*\/>/.test(nextSource)) {
-    nextSource = nextSource.replace(
-      /<Theme\b([^>]*)\/>/,
-      `<Theme$1 chartPalette="${normalizedPaletteName}" />`,
     )
   }
 
