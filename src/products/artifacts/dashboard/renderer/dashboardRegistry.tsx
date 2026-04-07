@@ -29,6 +29,7 @@ import DashboardDatePicker from '@/products/artifacts/dashboard/renderer/compone
 import DashboardFilter from '@/products/artifacts/dashboard/renderer/components/DashboardFilter'
 import DashboardInsights from '@/products/artifacts/dashboard/renderer/components/DashboardInsights'
 import DashboardKpi from '@/products/artifacts/dashboard/renderer/components/DashboardKpi'
+import { DashboardKpiCompare } from '@/products/artifacts/dashboard/renderer/components/DashboardKpiCompare'
 import { DashboardGrid, DashboardHorizontal, DashboardPanel, DashboardVertical } from '@/products/artifacts/dashboard/renderer/components/DashboardLayout'
 import DashboardQuery, {
   getDashboardQueryDeltaColor,
@@ -535,7 +536,8 @@ export const dashboardRegistry: Record<string, DashboardRenderComponent> = {
   FunnelChart: ({ element, onAction }) => <DashboardChart element={{ ...element, props: { ...(element?.props || {}), type: 'funnel' } }} onAction={onAction} />,
   SankeyChart: ({ element, onAction }) => <DashboardChart element={{ ...element, props: { ...(element?.props || {}), type: 'sankey' } }} onAction={onAction} />,
   Gauge: ({ element, onAction }) => <DashboardChart element={{ ...element, props: { ...(element?.props || {}), type: 'gauge' } }} onAction={onAction} />,
-  KPI: ({ element }) => <DashboardKpi element={element} />,
+  KPI: ({ element, children }) => <DashboardKpi element={element}>{children}</DashboardKpi>,
+  KPICompare: ({ element }) => <DashboardKpiCompare element={element} />,
   Query: ({ element, children }) => <DashboardQuery element={element}>{children}</DashboardQuery>,
   Table: ({ element }) => <DashboardTable element={element} />,
   PivotTable: ({ element }) => <DashboardPivotTable element={element} />,

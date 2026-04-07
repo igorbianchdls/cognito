@@ -491,7 +491,9 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                   }}
                   format="currency"
                   comparisonMode="previous_period"
-                />
+                >
+                  <KPICompare />
+                </KPI>
               </Card>
             </Panel>
 
@@ -510,7 +512,9 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                   }}
                   format="number"
                   comparisonMode="previous_period"
-                />
+                >
+                  <KPICompare />
+                </KPI>
               </Card>
             </Panel>
 
@@ -529,7 +533,9 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                   }}
                   format="currency"
                   comparisonMode="previous_period"
-                />
+                >
+                  <KPICompare />
+                </KPI>
               </Card>
             </Panel>
 
@@ -548,7 +554,9 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                   }}
                   format="number"
                   comparisonMode="previous_period"
-                />
+                >
+                  <KPICompare />
+                </KPI>
               </Card>
             </Panel>
 
@@ -567,7 +575,9 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                   }}
                   format="percent"
                   comparisonMode="previous_period"
-                />
+                >
+                  <KPICompare />
+                </KPI>
               </Card>
             </Panel>
           </Horizontal>

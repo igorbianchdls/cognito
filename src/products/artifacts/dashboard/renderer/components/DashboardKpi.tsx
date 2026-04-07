@@ -5,6 +5,8 @@ import React from 'react'
 import { useData, useDataValue } from '@/products/bi/json-render/context'
 import { applyPrimaryDateRange } from '@/products/bi/json-render/dateFilters'
 import { useThemeOverrides } from '@/products/bi/json-render/theme/ThemeContext'
+import { DashboardKpiCompare } from '@/products/artifacts/dashboard/renderer/components/DashboardKpiCompare'
+import { DashboardKpiCompareContext } from '@/products/artifacts/dashboard/renderer/components/DashboardKpiContext'
 import {
   resolveDashboardTextStyle,
   useDashboardThemeSelection,
@@ -113,8 +115,10 @@ function hasServerQuery(dataQuery: AnyRecord | undefined) {
 
 export default function DashboardKpi({
   element,
+  children,
 }: {
   element: any
+  children?: React.ReactNode
 }) {
   const props = (element?.props || {}) as AnyRecord
   const { themeName } = useDashboardThemeSelection()
@@ -152,10 +156,6 @@ export default function DashboardKpi({
     themeKpi?.descriptionStyle && typeof themeKpi.descriptionStyle === 'object'
       ? (themeKpi.descriptionStyle as React.CSSProperties)
       : undefined
-  const themeComparisonStyle =
-    themeKpi?.comparisonStyle && typeof themeKpi.comparisonStyle === 'object'
-      ? (themeKpi.comparisonStyle as React.CSSProperties)
-      : undefined
   const styleOverride = props.style && typeof props.style === 'object' ? (props.style as React.CSSProperties) : undefined
   const cardStyle = props.cardStyle && typeof props.cardStyle === 'object' ? (props.cardStyle as React.CSSProperties) : undefined
   const titleStyle = props.titleStyle && typeof props.titleStyle === 'object' ? (props.titleStyle as React.CSSProperties) : undefined
@@ -174,7 +174,6 @@ export default function DashboardKpi({
   const titleSemanticStyle = resolveDashboardTextStyle('kpi-title', themeName)
   const valueSemanticStyle = resolveDashboardTextStyle('kpi-value', themeName)
   const descriptionSemanticStyle = resolveDashboardTextStyle('body-muted', themeName)
-  const comparisonSemanticStyle = resolveDashboardTextStyle('kpi-compare', themeName)
 
   const { data } = useData()
   const valueFromPath = useDataValue(valuePath || '', undefined)
@@ -388,71 +387,74 @@ export default function DashboardKpi({
   const formattedValue = queryState.loading && hasServerQuery(dataQuery)
     ? '...'
     : formatValue(displayValue, format)
+  const childArray = React.Children.toArray(children)
+  const hasExplicitComparisonNode = childArray.some(
+    (child) => React.isValidElement(child) && child.type === DashboardKpiCompare,
+  )
+  const comparisonContextValue = React.useMemo(
+    () => ({
+      canRenderComparison,
+      comparisonColor,
+      comparisonStyle,
+      comparisonText,
+      loading: queryState.loading,
+    }),
+    [canRenderComparison, comparisonColor, comparisonStyle, comparisonText, queryState.loading],
+  )
 
   return (
-    <div
-      style={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 8,
-        ...(styleOverride || {}),
-        ...(cardStyle || {}),
-      }}
-    >
-      {title ? (
-        <p
-          data-ui="kpi-title"
-          style={{
-            margin: 0,
-            ...titleSemanticStyle,
-            ...(themeTitleStyle || {}),
-            ...(titleStyle || {}),
-          }}
-        >
-          {title}
-        </p>
-      ) : null}
+    <DashboardKpiCompareContext.Provider value={comparisonContextValue}>
       <div
-        data-ui="kpi-value"
         style={{
-          margin: 0,
-          ...valueSemanticStyle,
-          ...(themeValueStyle || {}),
-          ...(valueStyle || {}),
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 8,
+          ...(styleOverride || {}),
+          ...(cardStyle || {}),
         }}
       >
-        {formattedValue}
-        {unit ? ` ${unit}` : ''}
+        {title ? (
+          <p
+            data-ui="kpi-title"
+            style={{
+              margin: 0,
+              ...titleSemanticStyle,
+              ...(themeTitleStyle || {}),
+              ...(titleStyle || {}),
+            }}
+          >
+            {title}
+          </p>
+        ) : null}
+        <div
+          data-ui="kpi-value"
+          style={{
+            margin: 0,
+            ...valueSemanticStyle,
+            ...(themeValueStyle || {}),
+            ...(valueStyle || {}),
+          }}
+        >
+          {formattedValue}
+          {unit ? ` ${unit}` : ''}
+        </div>
+        {hasExplicitComparisonNode ? childArray : <DashboardKpiCompare element={{ props: {} }} />}
+        {description ? (
+          <p
+            data-ui="description"
+            style={{
+              margin: 0,
+              ...descriptionSemanticStyle,
+              ...(themeDescriptionStyle || {}),
+              ...(descriptionStyle || {}),
+            }}
+          >
+            {description}
+          </p>
+        ) : null}
+        {queryState.error ? <div className="mt-1 text-xs text-red-600">{queryState.error}</div> : null}
       </div>
-      {canRenderComparison ? (
-        <p
-          data-ui="kpi-compare"
-          style={{
-            margin: 0,
-            ...comparisonSemanticStyle,
-            ...(themeComparisonStyle || {}),
-            ...(comparisonStyle || {}),
-            color: comparisonColor,
-          }}
-        >
-          {queryState.loading ? '...' : comparisonText}
-        </p>
-      ) : null}
-      {description ? (
-        <p
-          data-ui="description"
-          style={{
-            margin: 0,
-            ...descriptionSemanticStyle,
-            ...(themeDescriptionStyle || {}),
-            ...(descriptionStyle || {}),
-          }}
-        >
-          {description}
-        </p>
-      ) : null}
-      {queryState.error ? <div className="mt-1 text-xs text-red-600">{queryState.error}</div> : null}
-    </div>
+    </DashboardKpiCompareContext.Provider>
   )
 }
