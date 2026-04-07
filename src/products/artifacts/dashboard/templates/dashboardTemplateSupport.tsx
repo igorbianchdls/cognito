@@ -3,7 +3,7 @@
 export type DashboardTemplateKey = 'classic' | 'containers' | 'layouttest' | 'compras' | 'financeiro' | 'metaads' | 'googleads' | 'shopify'
 
 export const DASHBOARD_TEMPLATE_DEFAULT_THEMES: Record<DashboardTemplateKey, string> = {
-  classic: 'aero',
+  classic: 'light',
   containers: 'light',
   layouttest: 'light',
   compras: 'blue',

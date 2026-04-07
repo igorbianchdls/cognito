@@ -32,6 +32,10 @@ export function DashboardWorkspace({
 }: {
   initialThemeName: string
 }) {
+  const dashboardThemeOptions = useMemo(
+    () => APPS_THEME_OPTIONS.filter((option) => String(option.value).trim().toLowerCase() !== 'aero'),
+    [],
+  )
   const [activeView, setActiveView] = useState<'preview' | 'code'>('preview')
   const [selectedCodePath, setSelectedCodePath] = useState('app/dashboard-classico.tsx')
   const [selectedDashboardPath, setSelectedDashboardPath] = useState('app/dashboard-classico.tsx')
@@ -177,7 +181,7 @@ export function DashboardWorkspace({
           && draftChartPalette === chartPaletteBaseName
           && draftBorderPreset === borderPresetBaseName
         }
-        themes={APPS_THEME_OPTIONS}
+        themes={dashboardThemeOptions}
       />
     </>
   )

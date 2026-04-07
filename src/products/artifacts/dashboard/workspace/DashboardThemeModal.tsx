@@ -68,12 +68,6 @@ function getThemePreviewStyle(theme: string) {
       border: '#404040',
       title: '#fafafa',
     },
-    aero: {
-      background: 'linear-gradient(135deg, #dff6ff 0%, #9ad0ec 55%, #4f8fbf 100%)',
-      accent: '#0369a1',
-      border: '#7dd3fc',
-      title: '#082f49',
-    },
   }
 
   return styles[theme] || styles.light
