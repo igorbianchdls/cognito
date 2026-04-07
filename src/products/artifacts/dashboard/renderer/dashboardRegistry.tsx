@@ -9,19 +9,15 @@ import JsonRenderGauge from '@/products/bi/json-render/components/Gauge'
 import JsonRenderHorizontalBarChart from '@/products/bi/json-render/components/HorizontalBarChart'
 import JsonRenderLineChart from '@/products/bi/json-render/components/LineChart'
 import JsonRenderPieChart from '@/products/bi/json-render/components/PieChart'
-import JsonRenderPivotTable from '@/products/bi/json-render/components/PivotTable'
 import JsonRenderRadarChart from '@/products/bi/json-render/components/RadarChart'
 import JsonRenderSankeyChart from '@/products/bi/json-render/components/SankeyChart'
 import JsonRenderScatterChart from '@/products/bi/json-render/components/ScatterChart'
-import JsonRenderTable from '@/products/bi/json-render/components/Table'
 import JsonRenderTreemapChart from '@/products/bi/json-render/components/TreemapChart'
 import {
   DashboardThemeSelectionProvider,
   resolveDashboardChartTheme,
   resolveDashboardGaugeTheme,
   resolveDashboardNodeStyle,
-  resolveDashboardPivotTableTheme,
-  resolveDashboardTableTheme,
   useDashboardThemeSelection,
 } from '@/products/artifacts/dashboard/renderer/dashboardThemeConfig'
 import DashboardCardSurface from '@/products/artifacts/dashboard/renderer/components/DashboardCardSurface'
@@ -31,11 +27,13 @@ import DashboardInsights from '@/products/artifacts/dashboard/renderer/component
 import DashboardKpi from '@/products/artifacts/dashboard/renderer/components/DashboardKpi'
 import { DashboardKpiCompare } from '@/products/artifacts/dashboard/renderer/components/DashboardKpiCompare'
 import { DashboardGrid, DashboardHorizontal, DashboardPanel, DashboardVertical } from '@/products/artifacts/dashboard/renderer/components/DashboardLayout'
+import DashboardPivotTable from '@/products/artifacts/dashboard/renderer/components/DashboardPivotTable'
 import DashboardQuery, {
   getDashboardQueryDeltaColor,
   resolveDashboardQueryTemplate,
   useDashboardQueryResult,
 } from '@/products/artifacts/dashboard/renderer/components/DashboardQuery'
+import DashboardTable from '@/products/artifacts/dashboard/renderer/components/DashboardTable'
 import DashboardText from '@/products/artifacts/dashboard/renderer/components/DashboardText'
 import {
   DASHBOARD_SUPPORTED_HTML_TAG_SET,
@@ -141,39 +139,6 @@ const defaultSankeyChart = {
   nivo: { nodePadding: 14, nodeWidth: 14, linkCurvature: 0.5, iterations: 32, sort: true, animate: true },
 } as const
 
-const defaultTable = {
-  pageSize: 10,
-  showPagination: true,
-  showColumnToggle: true,
-  enableSearch: true,
-  stickyHeader: true,
-  bordered: true,
-  rounded: true,
-  density: 'comfortable' as 'compact' | 'comfortable' | 'spacious',
-  striped: false,
-  editableMode: false,
-  editableCells: 'none',
-  editableRowActions: {
-    allowAdd: false,
-    allowDelete: false,
-    allowDuplicate: false,
-  },
-  containerStyle: { borderColor: '#e5e7eb', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, padding: 12 },
-  borderless: false,
-} as const
-
-const defaultPivotTable = {
-  stickyHeader: true,
-  bordered: true,
-  rounded: true,
-  density: 'comfortable' as 'compact' | 'comfortable' | 'spacious',
-  showSubtotals: true,
-  showGrandTotals: true,
-  defaultExpandedLevels: 1,
-  enableExportCsv: false,
-  containerStyle: { borderColor: '#e5e7eb', borderWidth: 1, borderStyle: 'solid', borderRadius: 8 },
-} as const
-
 function useMergedElementProps(
   element: any,
   defaults: AnyRecord,
@@ -184,20 +149,16 @@ function useMergedElementProps(
   const themeComponent =
     componentName === 'Gauge'
       ? (resolveDashboardGaugeTheme(themeName) as AnyRecord)
-      : componentName === 'Table'
-        ? (resolveDashboardTableTheme(themeName) as AnyRecord)
-        : componentName === 'PivotTable'
-          ? (resolveDashboardPivotTableTheme(themeName) as AnyRecord)
-          : ({
-              titleStyle: chartTheme.titleStyle,
-              colorScheme: chartTheme.colorScheme,
-              grid: chartTheme.grid,
-              xAxis: chartTheme.xAxis,
-              yAxis: chartTheme.yAxis,
-              tooltip: chartTheme.tooltip,
-              legend: chartTheme.legend,
-              margin: chartTheme.margin,
-            } as AnyRecord)
+      : ({
+          titleStyle: chartTheme.titleStyle,
+          colorScheme: chartTheme.colorScheme,
+          grid: chartTheme.grid,
+          xAxis: chartTheme.xAxis,
+          yAxis: chartTheme.yAxis,
+          tooltip: chartTheme.tooltip,
+          legend: chartTheme.legend,
+          margin: chartTheme.margin,
+        } as AnyRecord)
   return {
     props: deepMerge(deepMerge(defaults, themeComponent), (element?.props || {}) as AnyRecord),
   }
@@ -233,14 +194,6 @@ function DashboardSankeyChart({ element }: { element: any }) {
 
 function DashboardGauge({ element }: { element: any }) {
   return <JsonRenderGauge element={useMergedElementProps(element, defaultGauge as AnyRecord, 'Gauge')} />
-}
-
-function DashboardTable({ element }: { element: any }) {
-  return <JsonRenderTable element={useMergedElementProps(element, defaultTable as AnyRecord, 'Table')} />
-}
-
-function DashboardPivotTable({ element }: { element: any }) {
-  return <JsonRenderPivotTable element={useMergedElementProps(element, defaultPivotTable as AnyRecord, 'PivotTable')} />
 }
 
 function renderChartByType(chartType: unknown, element: any, onAction?: (action: any) => void) {
