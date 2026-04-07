@@ -28,6 +28,7 @@ export const DASHBOARD_SUPPORTED_COMPONENTS = [
   'SankeyChart',
   'Gauge',
   'KPI',
+  'KPICompare',
   'Table',
   'PivotTable',
   'Filter',
