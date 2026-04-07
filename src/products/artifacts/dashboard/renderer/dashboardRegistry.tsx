@@ -23,6 +23,7 @@ import {
 import DashboardCardSurface from '@/products/artifacts/dashboard/renderer/components/DashboardCardSurface'
 import DashboardDatePicker from '@/products/artifacts/dashboard/renderer/components/DashboardDatePicker'
 import DashboardFilter from '@/products/artifacts/dashboard/renderer/components/DashboardFilter'
+import DashboardIcon from '@/products/artifacts/dashboard/renderer/components/DashboardIcon'
 import DashboardInsights from '@/products/artifacts/dashboard/renderer/components/DashboardInsights'
 import DashboardKpi from '@/products/artifacts/dashboard/renderer/components/DashboardKpi'
 import { DashboardKpiCompare } from '@/products/artifacts/dashboard/renderer/components/DashboardKpiCompare'
@@ -477,6 +478,7 @@ export const dashboardRegistry: Record<string, DashboardRenderComponent> = {
   Horizontal: ({ element, children }) => <DashboardHorizontal element={element}>{children}</DashboardHorizontal>,
   Panel: ({ element, children }) => <DashboardPanel element={element}>{children}</DashboardPanel>,
   Card: ({ element, children }) => <DashboardCardSurface element={element}>{children}</DashboardCardSurface>,
+  Icon: ({ element }) => <DashboardIcon element={element} />,
   Tabs: ({ element, children }) => <DashboardTabs element={element}>{children}</DashboardTabs>,
   Tab: ({ element, children }) => <DashboardTab element={element}>{children}</DashboardTab>,
   TabPanel: ({ element, children }) => <DashboardTabPanel element={element}>{children}</DashboardTabPanel>,

@@ -478,6 +478,15 @@ function buildClassicDashboardTemplateSource(themeName: string) {
           <Horizontal gap={14} columns={20} rowHeight={32}>
             <Panel id="classic-kpi-receita" span={4} rows={4}>
               <Card variant="kpi" style={{ height: '100%' }}>
+                <Icon
+                  name="DollarSign"
+                  size={18}
+                  padding={10}
+                  color="#1D4ED8"
+                  backgroundColor="#DBEAFE"
+                  borderColor="#BFDBFE"
+                  style={{ marginBottom: 12 }}
+                />
                 <KPI
                   title="Receita"
                   dataQuery={{
@@ -499,6 +508,15 @@ function buildClassicDashboardTemplateSource(themeName: string) {
 
             <Panel id="classic-kpi-pedidos" span={4} rows={4}>
               <Card variant="kpi" style={{ height: '100%' }}>
+                <Icon
+                  name="ShoppingCart"
+                  size={18}
+                  padding={10}
+                  color="#15803D"
+                  backgroundColor="#DCFCE7"
+                  borderColor="#BBF7D0"
+                  style={{ marginBottom: 12 }}
+                />
                 <KPI
                   title="Pedidos"
                   dataQuery={{
@@ -520,6 +538,15 @@ function buildClassicDashboardTemplateSource(themeName: string) {
 
             <Panel id="classic-kpi-ticket" span={4} rows={4}>
               <Card variant="kpi" style={{ height: '100%' }}>
+                <Icon
+                  name="Ticket"
+                  size={18}
+                  padding={10}
+                  color="#C2410C"
+                  backgroundColor="#FFEDD5"
+                  borderColor="#FED7AA"
+                  style={{ marginBottom: 12 }}
+                />
                 <KPI
                   title="Ticket medio"
                   dataQuery={{
@@ -541,6 +568,15 @@ function buildClassicDashboardTemplateSource(themeName: string) {
 
             <Panel id="classic-kpi-canais" span={4} rows={4}>
               <Card variant="kpi" style={{ height: '100%' }}>
+                <Icon
+                  name="Network"
+                  size={18}
+                  padding={10}
+                  color="#7C3AED"
+                  backgroundColor="#F3E8FF"
+                  borderColor="#DDD6FE"
+                  style={{ marginBottom: 12 }}
+                />
                 <KPI
                   title="Canais ativos"
                   dataQuery={{
@@ -562,6 +598,15 @@ function buildClassicDashboardTemplateSource(themeName: string) {
 
             <Panel id="classic-kpi-aprovacao" span={4} rows={4}>
               <Card variant="kpi" style={{ height: '100%' }}>
+                <Icon
+                  name="ShieldCheck"
+                  size={18}
+                  padding={10}
+                  color="#0F766E"
+                  backgroundColor="#CCFBF1"
+                  borderColor="#99F6E4"
+                  style={{ marginBottom: 12 }}
+                />
                 <KPI
                   title="Aprovacao"
                   dataQuery={{

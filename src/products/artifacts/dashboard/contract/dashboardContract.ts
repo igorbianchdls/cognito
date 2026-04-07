@@ -11,6 +11,7 @@ export const DASHBOARD_SUPPORTED_COMPONENTS = [
   'Horizontal',
   'Panel',
   'Card',
+  'Icon',
   'Tabs',
   'Tab',
   'TabPanel',
