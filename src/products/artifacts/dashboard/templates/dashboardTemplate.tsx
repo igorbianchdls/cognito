@@ -476,18 +476,19 @@ function buildClassicDashboardTemplateSource(themeName: string) {
 
           <Vertical gap={20} style={{ padding: '0 28px 28px' }}>
           <Horizontal gap={14} columns={20} rowHeight={32}>
-            <Card id="classic-kpi-receita" span={4} rows={4} variant="kpi" style={{ height: '100%' }}>
-                <Icon
-                  name="DollarSign"
-                  size={18}
-                  padding={10}
-                  color="#1D4ED8"
-                  backgroundColor="#DBEAFE"
-                  borderColor="#BFDBFE"
-                  style={{ marginBottom: 12 }}
-                />
+            <Card id="classic-kpi-receita" span={4} rows={4} variant="kpi" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <Icon
+                    name="DollarSign"
+                    size={18}
+                    padding={10}
+                    color="#1D4ED8"
+                    backgroundColor="#DBEAFE"
+                    borderColor="#BFDBFE"
+                  />
+                  <Text variant="eyebrow">Receita</Text>
+                </div>
                 <KPI
-                  title="Receita"
                   dataQuery={{
                     query: \`
                       SELECT COALESCE(SUM(p.valor_total), 0)::float AS value
@@ -499,23 +500,25 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                   }}
                   format="currency"
                   comparisonMode="previous_period"
+                  style={{ flex: 1 }}
                 >
                   <KPICompare />
                 </KPI>
             </Card>
 
-            <Card id="classic-kpi-pedidos" span={4} rows={4} variant="kpi" style={{ height: '100%' }}>
-                <Icon
-                  name="ShoppingCart"
-                  size={18}
-                  padding={10}
-                  color="#15803D"
-                  backgroundColor="#DCFCE7"
-                  borderColor="#BBF7D0"
-                  style={{ marginBottom: 12 }}
-                />
+            <Card id="classic-kpi-pedidos" span={4} rows={4} variant="kpi" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <Icon
+                    name="ShoppingCart"
+                    size={18}
+                    padding={10}
+                    color="#15803D"
+                    backgroundColor="#DCFCE7"
+                    borderColor="#BBF7D0"
+                  />
+                  <Text variant="eyebrow">Pedidos</Text>
+                </div>
                 <KPI
-                  title="Pedidos"
                   dataQuery={{
                     query: \`
                       SELECT COUNT(*)::float AS value
@@ -527,23 +530,25 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                   }}
                   format="number"
                   comparisonMode="previous_period"
+                  style={{ flex: 1 }}
                 >
                   <KPICompare />
                 </KPI>
             </Card>
 
-            <Card id="classic-kpi-ticket" span={4} rows={4} variant="kpi" style={{ height: '100%' }}>
-                <Icon
-                  name="Ticket"
-                  size={18}
-                  padding={10}
-                  color="#C2410C"
-                  backgroundColor="#FFEDD5"
-                  borderColor="#FED7AA"
-                  style={{ marginBottom: 12 }}
-                />
+            <Card id="classic-kpi-ticket" span={4} rows={4} variant="kpi" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <Icon
+                    name="Ticket"
+                    size={18}
+                    padding={10}
+                    color="#C2410C"
+                    backgroundColor="#FFEDD5"
+                    borderColor="#FED7AA"
+                  />
+                  <Text variant="eyebrow">Ticket medio</Text>
+                </div>
                 <KPI
-                  title="Ticket medio"
                   dataQuery={{
                     query: \`
                       SELECT COALESCE(AVG(p.valor_total), 0)::float AS value
@@ -555,23 +560,25 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                   }}
                   format="currency"
                   comparisonMode="previous_period"
+                  style={{ flex: 1 }}
                 >
                   <KPICompare />
                 </KPI>
             </Card>
 
-            <Card id="classic-kpi-canais" span={4} rows={4} variant="kpi" style={{ height: '100%' }}>
-                <Icon
-                  name="Network"
-                  size={18}
-                  padding={10}
-                  color="#7C3AED"
-                  backgroundColor="#F3E8FF"
-                  borderColor="#DDD6FE"
-                  style={{ marginBottom: 12 }}
-                />
+            <Card id="classic-kpi-canais" span={4} rows={4} variant="kpi" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <Icon
+                    name="Network"
+                    size={18}
+                    padding={10}
+                    color="#7C3AED"
+                    backgroundColor="#F3E8FF"
+                    borderColor="#DDD6FE"
+                  />
+                  <Text variant="eyebrow">Canais ativos</Text>
+                </div>
                 <KPI
-                  title="Canais ativos"
                   dataQuery={{
                     query: \`
                       SELECT COUNT(DISTINCT p.canal_venda_id)::float AS value
@@ -583,23 +590,25 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                   }}
                   format="number"
                   comparisonMode="previous_period"
+                  style={{ flex: 1 }}
                 >
                   <KPICompare />
                 </KPI>
             </Card>
 
-            <Card id="classic-kpi-aprovacao" span={4} rows={4} variant="kpi" style={{ height: '100%' }}>
-                <Icon
-                  name="ShieldCheck"
-                  size={18}
-                  padding={10}
-                  color="#0F766E"
-                  backgroundColor="#CCFBF1"
-                  borderColor="#99F6E4"
-                  style={{ marginBottom: 12 }}
-                />
+            <Card id="classic-kpi-aprovacao" span={4} rows={4} variant="kpi" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <Icon
+                    name="ShieldCheck"
+                    size={18}
+                    padding={10}
+                    color="#0F766E"
+                    backgroundColor="#CCFBF1"
+                    borderColor="#99F6E4"
+                  />
+                  <Text variant="eyebrow">Aprovacao</Text>
+                </div>
                 <KPI
-                  title="Aprovacao"
                   dataQuery={{
                     query: \`
                       SELECT COALESCE(AVG(CASE WHEN COALESCE(p.status, '') = 'aprovado' THEN 1 ELSE 0 END), 0)::float AS value
@@ -611,6 +620,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                   }}
                   format="percent"
                   comparisonMode="previous_period"
+                  style={{ flex: 1 }}
                 >
                   <KPICompare />
                 </KPI>
