@@ -31,8 +31,7 @@ function buildLayoutTestDashboardSource(themeName: string) {
 
     <Vertical gap={20}>
       <Horizontal gap={16} columns={12} rowHeight={32}>
-        <Panel id="kpi-test-a" span={6} rows={4}>
-          <Card variant="kpi" style={{ height: '100%' }}>
+        <Card id="kpi-test-a" span={6} rows={4} variant="kpi" style={{ height: '100%' }}>
             <KPI
               title="KPI Teste A"
               dataQuery={{
@@ -42,13 +41,11 @@ function buildLayoutTestDashboardSource(themeName: string) {
                 limit: 1,
               }}
               format="number"
-              description="KPI dentro de Panel, para validar resize."
+              description="KPI dentro de Card, para validar resize."
             />
           </Card>
-        </Panel>
 
-        <Panel id="kpi-test-b" span={6} rows={9}>
-          <Card variant="kpi" style={{ height: '100%' }}>
+        <Card id="kpi-test-b" span={6} rows={9} variant="kpi" style={{ height: '100%' }}>
             <KPI
               title="KPI Teste B"
               dataQuery={{
@@ -61,42 +58,34 @@ function buildLayoutTestDashboardSource(themeName: string) {
               description="Este bloco tem duas rows para evidenciar resize vertical com KPI."
             />
           </Card>
-        </Panel>
       </Horizontal>
 
       <Horizontal gap={16} columns={12} rowHeight={32}>
-        <Panel id="test-a" span={4} rows={4}>
-          <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <Text variant="eyebrow">Panel A</Text>
+        <Card id="test-a" span={4} rows={4} style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <Text variant="eyebrow">Card A</Text>
             <Text as="h2" variant="section-title-strong">span 4 / rows 4</Text>
             <Text variant="body-sm">Use este bloco para testar largura e altura.</Text>
           </Card>
-        </Panel>
 
-        <Panel id="test-b" span={4} rows={8}>
-          <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <Text variant="eyebrow">Panel B</Text>
+        <Card id="test-b" span={4} rows={8} style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <Text variant="eyebrow">Card B</Text>
             <Text as="h2" variant="section-title-strong">span 4 / rows 8</Text>
             <Text variant="body-sm">A altura aqui precisa crescer claramente.</Text>
           </Card>
-        </Panel>
 
-        <Panel id="test-c" span={4} rows={12}>
-          <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <Text variant="eyebrow">Panel C</Text>
+        <Card id="test-c" span={4} rows={12} style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <Text variant="eyebrow">Card C</Text>
             <Text as="h2" variant="section-title-strong">span 4 / rows 12</Text>
             <Text variant="body-sm">Este bloco deixa o resize vertical bem evidente.</Text>
           </Card>
-        </Panel>
       </Horizontal>
 
       <Horizontal gap={16} columns={12} rowHeight={32}>
-        <Panel id="test-d" span={7} rows={6}>
-          <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <Card id="test-d" span={7} rows={6} style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <Text variant="eyebrow">Panel D</Text>
+              <Text variant="eyebrow">Card D</Text>
               <Text as="h2" variant="section-title-strong">Chart responsivo</Text>
-              <Text variant="body-sm">Este painel usa um chart simples para validar resize vertical dentro de Card.</Text>
+              <Text variant="body-sm">Este bloco usa um chart simples para validar resize vertical dentro de Card.</Text>
             </div>
             <div style={{ flex: 1, minHeight: 0 }}>
               <Chart
@@ -123,15 +112,12 @@ function buildLayoutTestDashboardSource(themeName: string) {
               />
             </div>
           </Card>
-        </Panel>
 
-        <Panel id="test-e" span={5} rows={3}>
-          <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <Text variant="eyebrow">Panel E</Text>
+        <Card id="test-e" span={5} rows={3} style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <Text variant="eyebrow">Card E</Text>
             <Text as="h2" variant="section-title-strong">span 5 / rows 3</Text>
             <Text variant="body-sm">Sem conteúdo complexo para mascarar o comportamento do grid.</Text>
           </Card>
-        </Panel>
       </Horizontal>
     </Vertical>
   </Vertical>

@@ -22,7 +22,7 @@ function buildContainersDashboardSource(themeName: string) {
                     Layout semantico em containers
                   </Text>
                   <Text as="h1" variant="page-title">
-                    Dashboard com Vertical, Horizontal e Panel
+                    Dashboard com Vertical, Horizontal e Card
                   </Text>
                   <Text variant="lead">
                     Exemplo de autoria mais proxima de containers de BI, mantendo KPI, Chart e Cards normais.
@@ -47,8 +47,7 @@ function buildContainersDashboardSource(themeName: string) {
 
           <Vertical gap={24} padding="0 28px 28px">
             <Horizontal gap={16} columns={12} rowHeight={170}>
-              <Panel id="kpi-receita" span={4} rows={1}>
-                <Card variant="kpi" style={{ height: '100%' }}>
+              <Card id="kpi-receita" span={4} rows={1} variant="kpi" style={{ height: '100%' }}>
                   <KPI
                     title="Receita"
                     dataQuery={{
@@ -66,10 +65,8 @@ function buildContainersDashboardSource(themeName: string) {
                     <KPICompare />
                   </KPI>
                 </Card>
-              </Panel>
 
-              <Panel id="kpi-pedidos" span={4} rows={1}>
-                <Card variant="kpi" style={{ height: '100%' }}>
+              <Card id="kpi-pedidos" span={4} rows={1} variant="kpi" style={{ height: '100%' }}>
                   <KPI
                     title="Pedidos"
                     dataQuery={{
@@ -87,10 +84,8 @@ function buildContainersDashboardSource(themeName: string) {
                     <KPICompare />
                   </KPI>
                 </Card>
-              </Panel>
 
-              <Panel id="kpi-ticket" span={4} rows={1}>
-                <Card variant="kpi" style={{ height: '100%' }}>
+              <Card id="kpi-ticket" span={4} rows={1} variant="kpi" style={{ height: '100%' }}>
                   <KPI
                     title="Ticket medio"
                     dataQuery={{
@@ -108,12 +103,10 @@ function buildContainersDashboardSource(themeName: string) {
                     <KPICompare />
                   </KPI>
                 </Card>
-              </Panel>
             </Horizontal>
 
             <Horizontal gap={18} align="stretch" columns={12} rowHeight={420}>
-              <Panel id="chart-receita-canal" span={8} rows={1}>
-                <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <Card id="chart-receita-canal" span={8} rows={1} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <Text as="h2" variant="section-title-sm">Receita por canal</Text>
                   <Chart
                     type="bar"
@@ -137,9 +130,8 @@ function buildContainersDashboardSource(themeName: string) {
                     series={[{ dataKey: 'valor', label: 'Receita' }]}
                   />
                 </Card>
-              </Panel>
 
-              <Panel id="filters-side" span={4} rows={1}>
+              <Card id="filters-side" span={4} rows={1}>
                 <Vertical gap={18} style={{ height: '100%' }}>
                   <Card style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
                     <Text as="h2" variant="section-title-sm">Canal</Text>
@@ -171,7 +163,7 @@ function buildContainersDashboardSource(themeName: string) {
                     </Text>
                   </Card>
                 </Vertical>
-              </Panel>
+              </Card>
             </Horizontal>
           </Vertical>
         </Vertical>

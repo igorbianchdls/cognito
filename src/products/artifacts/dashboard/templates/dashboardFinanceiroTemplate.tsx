@@ -44,8 +44,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
           </Horizontal>
 
           <Horizontal columns={12} rowHeight={18} gap={16}>
-            <Panel id="financeiro-filter-status" span={4} rows={6}>
-              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card id="financeiro-filter-status" span={4} rows={6} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <Text variant="eyebrow">Filtro</Text>
                 <Text as="h2" variant="section-title-sm">Status</Text>
                 <Filter
@@ -68,10 +67,8 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   <Select />
                 </Filter>
               </Card>
-            </Panel>
 
-            <Panel id="financeiro-filter-categoria" span={4} rows={6}>
-              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card id="financeiro-filter-categoria" span={4} rows={6} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <Text variant="eyebrow">Filtro</Text>
                 <Text as="h2" variant="section-title-sm">Categoria despesa</Text>
                 <Filter
@@ -95,10 +92,8 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   <Select />
                 </Filter>
               </Card>
-            </Panel>
 
-            <Panel id="financeiro-filter-fornecedor" span={4} rows={6}>
-              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card id="financeiro-filter-fornecedor" span={4} rows={6} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <Text variant="eyebrow">Filtro</Text>
                 <Text as="h2" variant="section-title-sm">Fornecedor</Text>
                 <Filter
@@ -122,12 +117,10 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   <Select />
                 </Filter>
               </Card>
-            </Panel>
           </Horizontal>
 
           <Horizontal columns={12} rowHeight={18} gap={16}>
-            <Panel id="financeiro-kpi-ar" span={3} rows={4}>
-              <Card variant="kpi" style={{ height: '100%' }}>
+            <Card id="financeiro-kpi-ar" span={3} rows={4} variant="kpi" style={{ height: '100%' }}>
                 <KPI
                   title="Contas a receber"
                   dataQuery={{ query: \`SELECT COALESCE(SUM(cr.valor_liquido), 0)::float AS value FROM financeiro.contas_receber cr WHERE 1=1 {{filters}}\`, limit: 1 }}
@@ -137,9 +130,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   <KPICompare />
                 </KPI>
               </Card>
-            </Panel>
-            <Panel id="financeiro-kpi-ap" span={3} rows={4}>
-              <Card variant="kpi" style={{ height: '100%' }}>
+            <Card id="financeiro-kpi-ap" span={3} rows={4} variant="kpi" style={{ height: '100%' }}>
                 <KPI
                   title="Contas a pagar"
                   dataQuery={{ query: \`SELECT COALESCE(SUM(cp.valor_liquido), 0)::float AS value FROM financeiro.contas_pagar cp WHERE 1=1 {{filters}}\`, limit: 1 }}
@@ -149,9 +140,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   <KPICompare />
                 </KPI>
               </Card>
-            </Panel>
-            <Panel id="financeiro-kpi-geracao" span={3} rows={4}>
-              <Card variant="kpi" style={{ height: '100%' }}>
+            <Card id="financeiro-kpi-geracao" span={3} rows={4} variant="kpi" style={{ height: '100%' }}>
                 <KPI
                   title="Geracao liquida"
                   dataQuery={{
@@ -169,9 +158,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   <KPICompare />
                 </KPI>
               </Card>
-            </Panel>
-            <Panel id="financeiro-kpi-titulos" span={3} rows={4}>
-              <Card variant="kpi" style={{ height: '100%' }}>
+            <Card id="financeiro-kpi-titulos" span={3} rows={4} variant="kpi" style={{ height: '100%' }}>
                 <KPI
                   title="Titulos em AP"
                   dataQuery={{ query: \`SELECT COUNT(*)::float AS value FROM financeiro.contas_pagar cp WHERE 1=1 {{filters}}\`, limit: 1 }}
@@ -181,12 +168,10 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   <KPICompare />
                 </KPI>
               </Card>
-            </Panel>
           </Horizontal>
 
           <Horizontal columns={12} rowHeight={18} gap={18}>
-            <Panel id="financeiro-chart-ap" span={7} rows={12}>
-              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card id="financeiro-chart-ap" span={7} rows={12} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <Text variant="eyebrow">AP exposure</Text>
                   <Text as="h2" variant="section-title">Contas a pagar por fornecedor</Text>
@@ -218,10 +203,8 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   yAxis={{ width: 86 }}
                 />
               </Card>
-            </Panel>
 
-            <Panel id="financeiro-chart-status" span={5} rows={12}>
-              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card id="financeiro-chart-status" span={5} rows={12} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <Text variant="eyebrow">Status mix</Text>
                   <Text as="h2" variant="section-title">Titulos por status</Text>
@@ -252,12 +235,10 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   recharts={{ innerRadius: 54, outerRadius: 92, paddingAngle: 2, showLabels: false }}
                 />
               </Card>
-            </Panel>
           </Horizontal>
 
           <Horizontal columns={12} rowHeight={18} gap={18}>
-            <Panel id="financeiro-chart-ar" span={7} rows={12}>
-              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card id="financeiro-chart-ar" span={7} rows={12} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <Text variant="eyebrow">AR trend</Text>
                   <Text as="h2" variant="section-title">Recebimentos por mes</Text>
@@ -289,10 +270,8 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   recharts={{ showDots: false, singleSeriesGradient: true }}
                 />
               </Card>
-            </Panel>
 
-            <Panel id="financeiro-chart-clientes" span={5} rows={12}>
-              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card id="financeiro-chart-clientes" span={5} rows={12} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <Text variant="eyebrow">AR coverage</Text>
                   <Text as="h2" variant="section-title">Recebimentos por cliente</Text>
@@ -323,12 +302,10 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   yAxis={{ width: 86 }}
                 />
               </Card>
-            </Panel>
           </Horizontal>
 
           <Horizontal columns={12} rowHeight={18} gap={18}>
-            <Panel id="financeiro-table-ap" span={8} rows={16}>
-              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card id="financeiro-table-ap" span={8} rows={16} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <Text variant="eyebrow">Table</Text>
                   <Text as="h2" variant="section-title">Titulos de contas a pagar</Text>
@@ -372,10 +349,8 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   ]}
                 />
               </Card>
-            </Panel>
 
-            <Panel id="financeiro-pivot-status" span={4} rows={16}>
-              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card id="financeiro-pivot-status" span={4} rows={16} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <Text variant="eyebrow">Pivot</Text>
                   <Text as="h2" variant="section-title">Fornecedor por status</Text>
@@ -414,12 +389,10 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   values={[{ field: 'valor_liquido', label: 'Valor', aggregate: 'sum', format: 'currency' }]}
                 />
               </Card>
-            </Panel>
           </Horizontal>
 
           <Horizontal columns={12} rowHeight={18} gap={18}>
-            <Panel id="financeiro-insight-liquidez" span={4} rows={7}>
-              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card id="financeiro-insight-liquidez" span={4} rows={7} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <Text as="h2" variant="section-title-sm">Liquidez</Text>
                 </div>
@@ -431,10 +404,8 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   ]}
                 />
               </Card>
-            </Panel>
 
-            <Panel id="financeiro-insight-concentracao" span={4} rows={7}>
-              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card id="financeiro-insight-concentracao" span={4} rows={7} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <Text as="h2" variant="section-title-sm">Concentracao</Text>
                 </div>
@@ -446,10 +417,8 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   ]}
                 />
               </Card>
-            </Panel>
 
-            <Panel id="financeiro-insight-status" span={4} rows={7}>
-              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card id="financeiro-insight-status" span={4} rows={7} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <Text as="h2" variant="section-title-sm">Status operacional</Text>
                 </div>
@@ -461,16 +430,15 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   ]}
                 />
               </Card>
-            </Panel>
           </Horizontal>
 
           <Horizontal columns={12} rowHeight={18} gap={18}>
-            <Panel id="financeiro-footer" span={12} rows={3}>
+            <Card id="financeiro-footer" span={12} rows={3}>
               <footer style={{ height: '100%', display: 'flex', justifyContent: 'space-between', gap: 18, padding: '18px 22px', borderRadius: 22, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder }}>
                 <Text variant="small-muted">Template JSX financeiro com AP, AR e geracao de caixa em uma unica pagina, com filtros dedicados e blocos operacionais sequenciais.</Text>
                 <Text variant="small-muted">Theme ativo: ${resolvedThemeName}</Text>
               </footer>
-            </Panel>
+            </Card>
           </Horizontal>
         </Vertical>
     </Dashboard>`

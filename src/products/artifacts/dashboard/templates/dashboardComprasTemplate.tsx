@@ -16,7 +16,7 @@ function buildComprasDashboardSource(themeName: string) {
   return `<Dashboard id="overview" title="${COMPRAS_VARIANT.title}" theme="${resolvedThemeName}" chartPalette="blue">
         <Tabs defaultValue="overview">
           <Horizontal gap={24} style={{ width: '1600px', minHeight: '100%', padding: 32, backgroundColor: theme.pageBg, alignItems: 'flex-start' }}>
-            <Panel id="compras-sidebar" width={320} shrink={false}>
+            <Card id="compras-sidebar" width={320} shrink={false}>
               <Vertical gap={18} style={{ position: 'sticky', top: 24 }}>
                 <Card style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                   <Vertical gap={10}>
@@ -123,15 +123,14 @@ function buildComprasDashboardSource(themeName: string) {
                   </Filter>
                 </Card>
               </Vertical>
-            </Panel>
+            </Card>
 
-            <Panel id="compras-main" grow={1}>
+            <Card id="compras-main" grow={1}>
               <Vertical gap={18} style={{ minWidth: 0 }}>
                 <TabPanel value="overview">
                   <Vertical gap={18}>
                     <Horizontal columns={12} rowHeight={18} gap={16}>
-                      <Panel id="compras-kpi-valor" span={3} rows={4}>
-                        <Card variant="kpi" style={{ height: '100%' }}>
+                      <Card id="compras-kpi-valor" span={3} rows={4} variant="kpi" style={{ height: '100%' }}>
                           <KPI
                             title="Valor comprado"
                             dataQuery={{ query: \`SELECT COALESCE(SUM(c.valor_total), 0)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }}
@@ -141,9 +140,7 @@ function buildComprasDashboardSource(themeName: string) {
                             <KPICompare />
                           </KPI>
                         </Card>
-                      </Panel>
-                      <Panel id="compras-kpi-fornecedores" span={3} rows={4}>
-                        <Card variant="kpi" style={{ height: '100%' }}>
+                      <Card id="compras-kpi-fornecedores" span={3} rows={4} variant="kpi" style={{ height: '100%' }}>
                           <KPI
                             title="Fornecedores"
                             dataQuery={{ query: \`SELECT COUNT(DISTINCT c.fornecedor_id)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }}
@@ -153,9 +150,7 @@ function buildComprasDashboardSource(themeName: string) {
                             <KPICompare />
                           </KPI>
                         </Card>
-                      </Panel>
-                      <Panel id="compras-kpi-pedidos" span={3} rows={4}>
-                        <Card variant="kpi" style={{ height: '100%' }}>
+                      <Card id="compras-kpi-pedidos" span={3} rows={4} variant="kpi" style={{ height: '100%' }}>
                           <KPI
                             title="Pedidos"
                             dataQuery={{ query: \`SELECT COUNT(DISTINCT c.id)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }}
@@ -165,9 +160,7 @@ function buildComprasDashboardSource(themeName: string) {
                             <KPICompare />
                           </KPI>
                         </Card>
-                      </Panel>
-                      <Panel id="compras-kpi-ticket" span={3} rows={4}>
-                        <Card variant="kpi" style={{ height: '100%' }}>
+                      <Card id="compras-kpi-ticket" span={3} rows={4} variant="kpi" style={{ height: '100%' }}>
                           <KPI
                             title="Ticket medio"
                             dataQuery={{ query: \`SELECT COALESCE(AVG(c.valor_total), 0)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }}
@@ -177,12 +170,10 @@ function buildComprasDashboardSource(themeName: string) {
                             <KPICompare />
                           </KPI>
                         </Card>
-                      </Panel>
                     </Horizontal>
 
                     <Horizontal columns={12} rowHeight={18} gap={18}>
-                      <Panel id="compras-chart-fornecedor" span={7} rows={16}>
-                      <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <Card id="compras-chart-fornecedor" span={7} rows={16} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <Text variant="eyebrow">Top spend</Text>
                           <Text as="h2" variant="section-title">Gasto por fornecedor</Text>
@@ -216,10 +207,8 @@ function buildComprasDashboardSource(themeName: string) {
                           />
                         </div>
                       </Card>
-                      </Panel>
 
-                      <Panel id="compras-chart-categoria" span={5} rows={16}>
-                      <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <Card id="compras-chart-categoria" span={5} rows={16} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <Text variant="eyebrow">Allocation</Text>
                           <Text as="h2" variant="section-title">Gasto por categoria</Text>
@@ -254,12 +243,10 @@ function buildComprasDashboardSource(themeName: string) {
                           />
                         </div>
                       </Card>
-                      </Panel>
                     </Horizontal>
 
                     <Horizontal columns={12} rowHeight={18} gap={18}>
-                      <Panel id="compras-chart-trend" span={7} rows={16}>
-                      <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <Card id="compras-chart-trend" span={7} rows={16} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <Text variant="eyebrow">Trend</Text>
                           <Text as="h2" variant="section-title">Gasto por mes</Text>
@@ -293,10 +280,8 @@ function buildComprasDashboardSource(themeName: string) {
                           />
                         </div>
                       </Card>
-                      </Panel>
 
-                      <Panel id="compras-chart-status" span={5} rows={16}>
-                      <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <Card id="compras-chart-status" span={5} rows={16} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <Text variant="eyebrow">Status mix</Text>
                           <Text as="h2" variant="section-title">Pedidos por status</Text>
@@ -327,7 +312,6 @@ function buildComprasDashboardSource(themeName: string) {
                           />
                         </div>
                       </Card>
-                      </Panel>
                     </Horizontal>
                   </Vertical>
                 </TabPanel>
@@ -335,8 +319,7 @@ function buildComprasDashboardSource(themeName: string) {
                 <TabPanel value="details">
                   <Vertical gap={18}>
                     <Horizontal columns={12} rowHeight={18} gap={18}>
-                      <Panel id="compras-table" span={8} rows={18}>
-                      <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <Card id="compras-table" span={8} rows={18} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <Text variant="eyebrow">Table</Text>
                           <Text as="h2" variant="section-title">Pedidos de compra no detalhe</Text>
@@ -381,10 +364,8 @@ function buildComprasDashboardSource(themeName: string) {
                           ]}
                         />
                       </Card>
-                      </Panel>
 
-                      <Panel id="compras-pivot" span={4} rows={18}>
-                      <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <Card id="compras-pivot" span={4} rows={18} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <Text variant="eyebrow">Pivot</Text>
                           <Text as="h2" variant="section-title">Categoria por status</Text>
@@ -423,7 +404,6 @@ function buildComprasDashboardSource(themeName: string) {
                           values={[{ field: 'valor_total', label: 'Valor', aggregate: 'sum', format: 'currency' }]}
                         />
                       </Card>
-                      </Panel>
                     </Horizontal>
                   </Vertical>
                 </TabPanel>
@@ -431,8 +411,7 @@ function buildComprasDashboardSource(themeName: string) {
                 <TabPanel value="insights">
                   <Vertical gap={18}>
                     <Horizontal columns={12} rowHeight={18} gap={18}>
-                      <Panel id="compras-insight-concentracao" span={4} rows={6}>
-                      <Card style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <Card id="compras-insight-concentracao" span={4} rows={6} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                           <Text as="h2" variant="section-title-sm">Concentracao em fornecedores</Text>
                         </div>
@@ -444,10 +423,8 @@ function buildComprasDashboardSource(themeName: string) {
                           ]}
                         />
                       </Card>
-                      </Panel>
 
-                      <Panel id="compras-insight-centro" span={4} rows={6}>
-                      <Card style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <Card id="compras-insight-centro" span={4} rows={6} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                           <Text as="h2" variant="section-title-sm">Pressao por centro de custo</Text>
                         </div>
@@ -459,10 +436,8 @@ function buildComprasDashboardSource(themeName: string) {
                           ]}
                         />
                       </Card>
-                      </Panel>
 
-                      <Panel id="compras-insight-risco" span={4} rows={6}>
-                      <Card style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <Card id="compras-insight-risco" span={4} rows={6} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                           <Text as="h2" variant="section-title-sm">Risco operacional</Text>
                         </div>
@@ -474,21 +449,20 @@ function buildComprasDashboardSource(themeName: string) {
                           ]}
                         />
                       </Card>
-                      </Panel>
                     </Horizontal>
                   </Vertical>
                 </TabPanel>
 
                 <Horizontal columns={12} rowHeight={18} gap={18}>
-                  <Panel id="compras-footer" span={12} rows={3}>
+                  <Card id="compras-footer" span={12} rows={3}>
                   <footer style={{ height: '100%', display: 'flex', justifyContent: 'space-between', gap: 18, padding: '18px 22px', borderRadius: 22, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder }}>
                     <Text variant="small-muted">Template JSX de compras com sidebar, tabs laterais e queries SQL explicitas.</Text>
                     <Text variant="small-muted">Theme ativo: ${resolvedThemeName}</Text>
                   </footer>
-                  </Panel>
+                  </Card>
                 </Horizontal>
               </Vertical>
-            </Panel>
+            </Card>
           </Horizontal>
         </Tabs>
     </Dashboard>`

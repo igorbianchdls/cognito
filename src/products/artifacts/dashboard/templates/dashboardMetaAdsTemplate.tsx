@@ -43,8 +43,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
           </Horizontal>
 
           <Horizontal columns={12} rowHeight={18} gap={18}>
-            <Panel id="metaads-filters" span={8} rows={6}>
-              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card id="metaads-filters" span={8} rows={6} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <Text variant="eyebrow">Filters</Text>
                   <Text as="h2" variant="section-title">Conta e campanha</Text>
@@ -76,39 +75,35 @@ function buildMetaAdsDashboardSource(themeName: string) {
                   </Filter>
                 </div>
               </Card>
-            </Panel>
-            <Panel id="metaads-reading" span={4} rows={6}>
-              <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card id="metaads-reading" span={4} rows={6} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <Text variant="eyebrow">Leitura esperada</Text>
                 <Text variant="body-muted">Primeiro veja o pacing de gasto e retorno, depois abra concentracao por campanha e finalmente desca para o detalhe de anuncios e grupos quando houver desbalanceamento.</Text>
               </Card>
-            </Panel>
           </Horizontal>
 
           <Horizontal columns={12} rowHeight={18} gap={16}>
-            <Panel id="metaads-kpi-gasto" span={3} rows={4}><Card variant="kpi" style={{ height: '100%' }}><KPI title="Gasto" dataQuery={{ query: \`SELECT COALESCE(SUM(src.gasto), 0)::float AS value FROM trafegopago.desempenho_diario src WHERE src.plataforma = 'meta_ads' AND src.nivel = 'campaign' {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period"><KPICompare /></KPI></Card></Panel>
-            <Panel id="metaads-kpi-receita" span={3} rows={4}><Card variant="kpi" style={{ height: '100%' }}><KPI title="Receita atribuida" dataQuery={{ query: \`SELECT COALESCE(SUM(src.receita_atribuida), 0)::float AS value FROM trafegopago.desempenho_diario src WHERE src.plataforma = 'meta_ads' AND src.nivel = 'campaign' {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period"><KPICompare /></KPI></Card></Panel>
-            <Panel id="metaads-kpi-roas" span={3} rows={4}><Card variant="kpi" style={{ height: '100%' }}><KPI title="ROAS" dataQuery={{ query: \`SELECT CASE WHEN COALESCE(SUM(src.gasto), 0) = 0 THEN 0 ELSE (SUM(src.receita_atribuida) / SUM(src.gasto))::float END AS value FROM trafegopago.desempenho_diario src WHERE src.plataforma = 'meta_ads' AND src.nivel = 'campaign' {{filters}}\`, limit: 1 }} format="number" comparisonMode="previous_period"><KPICompare /></KPI></Card></Panel>
-            <Panel id="metaads-kpi-conversoes" span={3} rows={4}><Card variant="kpi" style={{ height: '100%' }}><KPI title="Conversoes" dataQuery={{ query: \`SELECT COALESCE(SUM(src.conversoes), 0)::float AS value FROM trafegopago.desempenho_diario src WHERE src.plataforma = 'meta_ads' AND src.nivel = 'campaign' {{filters}}\`, limit: 1 }} format="number" comparisonMode="previous_period"><KPICompare /></KPI></Card></Panel>
+            <Card id="metaads-kpi-gasto" span={3} rows={4} variant="kpi" style={{ height: '100%' }}><KPI title="Gasto" dataQuery={{ query: \`SELECT COALESCE(SUM(src.gasto), 0)::float AS value FROM trafegopago.desempenho_diario src WHERE src.plataforma = 'meta_ads' AND src.nivel = 'campaign' {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period"><KPICompare /></KPI></Card>
+            <Card id="metaads-kpi-receita" span={3} rows={4} variant="kpi" style={{ height: '100%' }}><KPI title="Receita atribuida" dataQuery={{ query: \`SELECT COALESCE(SUM(src.receita_atribuida), 0)::float AS value FROM trafegopago.desempenho_diario src WHERE src.plataforma = 'meta_ads' AND src.nivel = 'campaign' {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period"><KPICompare /></KPI></Card>
+            <Card id="metaads-kpi-roas" span={3} rows={4} variant="kpi" style={{ height: '100%' }}><KPI title="ROAS" dataQuery={{ query: \`SELECT CASE WHEN COALESCE(SUM(src.gasto), 0) = 0 THEN 0 ELSE (SUM(src.receita_atribuida) / SUM(src.gasto))::float END AS value FROM trafegopago.desempenho_diario src WHERE src.plataforma = 'meta_ads' AND src.nivel = 'campaign' {{filters}}\`, limit: 1 }} format="number" comparisonMode="previous_period"><KPICompare /></KPI></Card>
+            <Card id="metaads-kpi-conversoes" span={3} rows={4} variant="kpi" style={{ height: '100%' }}><KPI title="Conversoes" dataQuery={{ query: \`SELECT COALESCE(SUM(src.conversoes), 0)::float AS value FROM trafegopago.desempenho_diario src WHERE src.plataforma = 'meta_ads' AND src.nivel = 'campaign' {{filters}}\`, limit: 1 }} format="number" comparisonMode="previous_period"><KPICompare /></KPI></Card>
           </Horizontal>
 
           <Tabs defaultValue="performance">
             <Vertical gap={18}>
               <Horizontal columns={12} rowHeight={18} gap={10}>
-                <Panel id="metaads-tabs" span={12} rows={2}>
+                <Card id="metaads-tabs" span={12} rows={2}>
                   <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                     <Tab value="performance">Performance</Tab>
                     <Tab value="efficiency">Eficiencia</Tab>
                     <Tab value="details">Detalhamento</Tab>
                   </div>
-                </Panel>
+                </Card>
               </Horizontal>
 
               <TabPanel value="performance">
                 <Vertical gap={18}>
                   <Horizontal columns={12} rowHeight={18} gap={18}>
-                    <Panel id="metaads-performance-gasto" span={7} rows={12}>
-                      <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <Card id="metaads-performance-gasto" span={7} rows={12} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <Text variant="eyebrow">Budget concentration</Text>
                           <Text as="h2" variant="section-title">Gasto por campanha</Text>
@@ -127,10 +122,8 @@ function buildMetaAdsDashboardSource(themeName: string) {
                           ORDER BY 3 DESC
                         \`, limit: 8 }} xAxis={{ dataKey: 'label', labelMode: 'first-word' }} series={[{ dataKey: 'value', label: 'Gasto' }]} yAxis={{ width: 86 }} />
                       </Card>
-                    </Panel>
 
-                    <Panel id="metaads-performance-share" span={5} rows={12}>
-                      <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <Card id="metaads-performance-share" span={5} rows={12} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <Text variant="eyebrow">Share</Text>
                           <Text as="h2" variant="section-title">Participacao por conta</Text>
@@ -149,7 +142,6 @@ function buildMetaAdsDashboardSource(themeName: string) {
                           ORDER BY 3 DESC
                         \`, limit: 6 }} categoryKey="label" legend={{ enabled: true, position: 'right' }} series={[{ dataKey: 'value', label: 'Gasto' }]} recharts={{ innerRadius: 54, outerRadius: 92, paddingAngle: 2, showLabels: false }} />
                       </Card>
-                    </Panel>
                   </Horizontal>
                 </Vertical>
               </TabPanel>
@@ -157,8 +149,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
               <TabPanel value="efficiency">
                 <Vertical gap={18}>
                   <Horizontal columns={12} rowHeight={18} gap={18}>
-                    <Panel id="metaads-efficiency-roas" span={7} rows={12}>
-                      <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <Card id="metaads-efficiency-roas" span={7} rows={12} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <Text variant="eyebrow">Trend</Text>
                           <Text as="h2" variant="section-title">ROAS por dia</Text>
@@ -177,12 +168,10 @@ function buildMetaAdsDashboardSource(themeName: string) {
                           ORDER BY 1 ASC
                         \`, limit: 31 }} xAxis={{ dataKey: 'label' }} series={[{ dataKey: 'value', label: 'ROAS' }]} yAxis={{ width: 86 }} recharts={{ showDots: false, singleSeriesGradient: true }} />
                       </Card>
-                    </Panel>
 
-                    <Panel id="metaads-efficiency-side" span={5} rows={12}>
+                    <Card id="metaads-efficiency-side" span={5} rows={12}>
                       <Vertical gap={18} style={{ height: '100%' }}>
-                        <Panel id="metaads-efficiency-funnel" grow={1}>
-                          <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                        <Card id="metaads-efficiency-funnel" grow={1} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                               <Text variant="eyebrow">Funnel</Text>
                               <Text as="h2" variant="section-title">Leads por campanha</Text>
@@ -200,9 +189,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
                               ORDER BY 3 DESC
                             \`, limit: 6 }} xAxis={{ dataKey: 'label', labelMode: 'first-word' }} series={[{ dataKey: 'value', label: 'Leads' }]} />
                           </Card>
-                        </Panel>
-                        <Panel id="metaads-efficiency-insights" grow={1}>
-                          <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                        <Card id="metaads-efficiency-insights" grow={1} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                               <Text as="h2" variant="section-title-sm">Leituras operacionais</Text>
                               <Text variant="small-muted">Hipoteses para revisar campanhas, criativos e distribuicao de budget.</Text>
@@ -213,9 +200,8 @@ function buildMetaAdsDashboardSource(themeName: string) {
                               { text: 'Conversao ou lead estavel com gasto acelerando pede leitura conjunta de frequencia, criativo e pagina de destino.' },
                             ]} />
                           </Card>
-                        </Panel>
                       </Vertical>
-                    </Panel>
+                    </Card>
                   </Horizontal>
                 </Vertical>
               </TabPanel>
@@ -223,8 +209,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
               <TabPanel value="details">
                 <Vertical gap={18}>
                   <Horizontal columns={12} rowHeight={18} gap={18}>
-                    <Panel id="metaads-details-table" span={8} rows={16}>
-                      <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <Card id="metaads-details-table" span={8} rows={16} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <Text variant="eyebrow">Table</Text>
                           <Text as="h2" variant="section-title">Campanhas no detalhe</Text>
@@ -252,9 +237,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
                           { accessorKey: 'conversoes', header: 'Conversoes', format: 'number', align: 'right', headerAlign: 'right' },
                         ]} />
                       </Card>
-                    </Panel>
-                    <Panel id="metaads-details-pivot" span={4} rows={16}>
-                      <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <Card id="metaads-details-pivot" span={4} rows={16} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <Text variant="eyebrow">Pivot</Text>
                           <Text as="h2" variant="section-title">Conta por campanha</Text>
@@ -270,7 +253,6 @@ function buildMetaAdsDashboardSource(themeName: string) {
                             {{filters}}
                         \`, limit: 300 }} rows={[{ field: 'conta', label: 'Conta' }]} columns={[{ field: 'campanha', label: 'Campanha' }]} values={[{ field: 'gasto', label: 'Gasto', aggregate: 'sum', format: 'currency' }]} />
                       </Card>
-                    </Panel>
                   </Horizontal>
                 </Vertical>
               </TabPanel>
@@ -278,12 +260,12 @@ function buildMetaAdsDashboardSource(themeName: string) {
           </Tabs>
 
           <Horizontal columns={12} rowHeight={18} gap={18}>
-            <Panel id="metaads-footer" span={12} rows={3}>
+            <Card id="metaads-footer" span={12} rows={3}>
               <footer style={{ height: '100%', display: 'flex', justifyContent: 'space-between', gap: 18, padding: '18px 22px', borderRadius: 22, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder }}>
                 <Text variant="small-muted">Template JSX para Meta Ads com filtros de paid social, KPIs comparativos e widgets de analise no formato novo do dashboard.</Text>
                 <Text variant="small-muted">Theme ativo: ${resolvedThemeName}</Text>
               </footer>
-            </Panel>
+            </Card>
           </Horizontal>
         </Vertical>
     </Dashboard>`
