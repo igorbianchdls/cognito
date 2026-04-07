@@ -65,7 +65,13 @@
   - `Dashboard`
 - Canonical new root example:
   - `<Dashboard id="overview" title="..." theme="light" chartPalette="teal">`
-- Layout should be built mainly with normal HTML/JSX tags such as:
+- For new dashboards, prefer container-first layout composition:
+  - `Vertical`
+  - `Horizontal`
+  - `Panel`
+  - `Card`
+  - `Text`
+- HTML/JSX tags are still allowed and useful for local structure such as:
   - `div`
   - `section`
   - `article`
@@ -82,7 +88,11 @@
   - `ul`
   - `ol`
   - `li`
+- HTML should not be the default backbone of a new dashboard when `Vertical`, `Horizontal`, and `Panel` express the structure more clearly.
 - Supported dashboard-specific components are:
+  - `Vertical`
+  - `Horizontal`
+  - `Panel`
   - `Query`
   - `Chart`
   - `Table`
@@ -111,6 +121,41 @@
   - `Theme`
   - These may appear in older files.
   - You may edit them when preserving an existing file, but do not use them when creating a new dashboard from scratch.
+- Layout components:
+  - `Vertical`
+    - Purpose: stack sections or rows vertically.
+    - Common props:
+      - `gap`
+      - `padding`
+      - `width`
+      - `maxWidth`
+      - `align`
+      - `justify`
+    - Rule: use `Vertical` as the main page flow for new dashboards.
+  - `Horizontal`
+    - Purpose: create rows of panels or side-by-side sections.
+    - Common props:
+      - `gap`
+      - `columns`
+      - `rowHeight`
+      - `padding`
+      - `width`
+      - `maxWidth`
+      - `align`
+      - `justify`
+      - `wrap`
+    - Rule: when using `Panel` children, prefer `columns` + `rowHeight` and let the renderer manage the row structure.
+  - `Panel`
+    - Purpose: position one block inside a `Horizontal` or flexible container.
+    - Common props:
+      - `id`
+      - `span`
+      - `rows`
+      - `grow`
+      - `padding`
+      - `width`
+      - `minHeight`
+    - Rule: in dashboards that follow the current template style, panels are the canonical place for KPI/chart/table/filter blocks.
 - Data components:
   - `Query`
     - Purpose: execute a query and expose the result to JSX children.
@@ -219,8 +264,37 @@
     - Main props:
       - `value`
       - `forceMount`
+- Styling policy:
+  - Inline `style` is optional, not required.
+  - The renderer already provides useful default styling through theme/variant for:
+    - `Card`
+    - `Text`
+    - `KPI`
+    - `DatePicker`
+    - `Filter`
+    - `Chart`
+    - `Table`
+    - `PivotTable`
+  - Use `style` only for:
+    - local override
+    - visual exception
+    - spacing or sizing adjustment that is not already covered by the component contract
+    - editorial or layout polish specific to one block
+  - Do not manually restyle every block by default.
+  - Prefer semantic props and variants before adding inline style.
+  - For layout containers, prefer structural props such as:
+    - `gap`
+    - `columns`
+    - `rowHeight`
+    - `span`
+    - `rows`
+    - `padding`
+    - `width`
+    - `grow`
+    before falling back to custom `style`.
 - General rules:
-  - use HTML/JSX for layout and text structure
+  - use container-first layout for new dashboards
+  - use HTML/JSX for local structure and supporting content
   - use dashboard-specific components only for real data or behavior
   - output a single `.tsx` file
   - do not generate DSL
@@ -229,63 +303,98 @@
 
 <expected_output>
 ```tsx
-<Dashboard id="overview" title="Dashboard Exemplo KPI + Chart" theme="light" chartPalette="teal">
-  <section style={{ display: 'flex', flexDirection: 'column', gap: 24, minHeight: '100%', backgroundColor: theme.pageBg }}>
-    <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24, padding: 24, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 720 }}>
-        <p style={{ margin: 0, fontSize: 11, color: theme.headerSubtitle, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-          Resumo comercial
-        </p>
-        <h1 style={{ margin: 0, fontSize: 40, lineHeight: 1.02, fontWeight: 700, letterSpacing: '-0.04em', color: theme.titleColor }}>
-          Receita e canais
-        </h1>
-        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: theme.textSecondary }}>
-          Cabecalho com periodo global, KPIs no topo e leitura principal em linha abaixo.
-        </p>
-      </div>
+<Dashboard id="overview" title="Dashboard Comercial" theme="light" chartPalette="teal">
+  <Vertical gap={24} padding={28} width="1600px">
+    <Horizontal gap={18}>
+      <Panel id="header" span={12}>
+        <Card>
+          <Vertical gap={10}>
+            <Text variant="eyebrow">Resumo comercial</Text>
+            <Text as="h1" variant="page-title">Receita e canais</Text>
+            <Text variant="lead">
+              Use containers para organizar a estrutura principal. Evite estilizar tudo manualmente.
+            </Text>
+            <DatePicker
+              label="Periodo"
+              table="vendas.pedidos"
+              field="data_pedido"
+              mode="range"
+              presets={['7d', '30d', 'month']}
+            />
+          </Vertical>
+        </Card>
+      </Panel>
+    </Horizontal>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: 340 }}>
-        <DatePicker
-          label="Periodo"
-          table="vendas.pedidos"
-          field="data_pedido"
-          mode="range"
-          presets={['7d', '30d', 'month']}
-          labelStyle={{ margin: 0, fontSize: 11, color: theme.headerDatePickerLabel, textTransform: 'uppercase', letterSpacing: '0.06em' }}
-          fieldStyle={{ minHeight: 38, padding: '0 10px', border: '1px solid ' + theme.headerDatePickerBorder, borderRadius: 10, backgroundColor: theme.headerDatePickerBg, color: theme.headerDatePickerColor, fontSize: 14, fontWeight: 500 }}
-          iconStyle={{ color: theme.headerDatePickerIcon, fontSize: 14 }}
-          presetButtonStyle={{ height: 36, border: '1px solid ' + theme.headerDatePickerBorder, borderRadius: 10, backgroundColor: theme.headerDatePickerBg, color: theme.headerDatePickerColor, fontSize: 13, fontWeight: 500 }}
-          activePresetButtonStyle={{ backgroundColor: theme.headerDatePickerActiveBg, borderColor: theme.headerDatePickerActiveBorder, color: theme.headerDatePickerActiveText, fontWeight: 600 }}
-        />
-      </div>
-    </header>
+    <Horizontal columns={12} rowHeight={18} gap={16}>
+      <Panel id="kpi-receita" span={4} rows={4}>
+        <Card variant="kpi">
+          <KPI
+            title="Receita"
+            dataQuery={{
+              query: `
+                SELECT COALESCE(SUM(src.valor_total), 0)::float AS value
+                FROM vendas.pedidos src
+                WHERE src.tenant_id = {{tenant_id}}::int
+                  {{filters:src}}
+              `,
+              limit: 1,
+            }}
+            format="currency"
+            comparisonMode="previous_period"
+          >
+            <KPICompare />
+          </KPI>
+        </Card>
+      </Panel>
 
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, padding: '0 28px 28px' }}>
-      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 16 }}>
-        <Query
-          dataQuery={{
-            query: `
-              SELECT COALESCE(SUM(src.valor_total), 0)::float AS value
-              FROM vendas.pedidos src
-              WHERE src.tenant_id = {{tenant_id}}::int
-                {{filters:src}}
-            `,
-            limit: 1,
-          }}
-          format="currency"
-          comparisonMode="previous_period"
-        >
-          <Card style={{ padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 600, color: theme.titleColor }}>Receita</h2>
-            <p style={{ margin: 0, fontSize: 28, fontWeight: 700, color: theme.kpiValueColor }}>{'{{query.valueFormatted}}'}</p>
-            <p data-ui="kpi-delta" style={{ margin: 0, fontSize: 13, color: theme.textSecondary }}>{'{{query.deltaPercentDisplay}} {{query.comparisonLabel}}'}</p>
-          </Card>
-        </Query>
-      </section>
+      <Panel id="kpi-pedidos" span={4} rows={4}>
+        <Card variant="kpi">
+          <KPI
+            title="Pedidos"
+            dataQuery={{
+              query: `
+                SELECT COUNT(*)::float AS value
+                FROM vendas.pedidos src
+                WHERE src.tenant_id = {{tenant_id}}::int
+                  {{filters:src}}
+              `,
+              limit: 1,
+            }}
+            format="number"
+            comparisonMode="previous_period"
+          >
+            <KPICompare />
+          </KPI>
+        </Card>
+      </Panel>
 
-      <section style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 18 }}>
-        <Card style={{ padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 600, color: theme.titleColor }}>Receita por canal</h2>
+      <Panel id="kpi-ticket" span={4} rows={4}>
+        <Card variant="kpi">
+          <KPI
+            title="Ticket medio"
+            dataQuery={{
+              query: `
+                SELECT COALESCE(AVG(src.valor_total), 0)::float AS value
+                FROM vendas.pedidos src
+                WHERE src.tenant_id = {{tenant_id}}::int
+                  {{filters:src}}
+              `,
+              limit: 1,
+            }}
+            format="currency"
+            comparisonMode="previous_period"
+          >
+            <KPICompare />
+          </KPI>
+        </Card>
+      </Panel>
+    </Horizontal>
+
+    <Horizontal columns={12} rowHeight={18} gap={18}>
+      <Panel id="chart-canal" span={8} rows={12}>
+        <Card variant="chart">
+          <Text variant="section-title">Receita por canal</Text>
           <Chart
             type="bar"
             height={320}
@@ -308,9 +417,11 @@
             series={[{ dataKey: 'valor', label: 'Receita' }]}
           />
         </Card>
+      </Panel>
 
-        <Card style={{ padding: 22, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.surfaceBg, display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 600, color: theme.titleColor }}>Canal</h2>
+      <Panel id="filter-canal" span={4} rows={12}>
+        <Card variant="filter">
+          <Text variant="filter-title">Canal</Text>
           <Filter
             label="Canal"
             table="vendas.pedidos"
@@ -331,76 +442,73 @@
             <Select />
           </Filter>
         </Card>
-      </section>
-    </div>
-  </section>
+      </Panel>
+    </Horizontal>
+  </Vertical>
 </Dashboard>
 ```
 </expected_output>
 
 <expected_output_2>
 ```tsx
-<Dashboard id="overview" title="Dashboard Exemplo Tabs + Table" theme="light" chartPalette="teal">
-  <section style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 24 }}>
-    <header style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <p style={{ margin: 0 }}>Exploracao comercial</p>
-      <h1 style={{ margin: 0 }}>Detalhamento por canal e status</h1>
-    </header>
+<Dashboard id="overview" title="Exploracao comercial" theme="light" chartPalette="teal">
+  <Vertical gap={18} padding={24}>
+    <Horizontal columns={12} rowHeight={18} gap={18}>
+      <Panel id="filters" span={12} rows={5}>
+        <Card variant="filter">
+          <Horizontal gap={12} wrap>
+            <Filter
+              label="Canal"
+              table="vendas.pedidos"
+              field="canal_venda_id"
+              mode="multiple"
+              search
+              clearable
+              width={220}
+              query={`
+                SELECT
+                  cv.id::text AS value,
+                  COALESCE(cv.nome, '-') AS label
+                FROM vendas.canais_venda cv
+                WHERE cv.tenant_id = {{tenant_id}}::int
+                ORDER BY 2 ASC
+              `}
+            >
+              <Select />
+            </Filter>
 
-    <section style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-      <Filter
-        label="Canal"
-        table="vendas.pedidos"
-        field="canal_venda_id"
-        mode="multiple"
-        search
-        clearable
-        width={220}
-        query={`
-          SELECT
-            cv.id::text AS value,
-            COALESCE(cv.nome, '-') AS label
-          FROM vendas.canais_venda cv
-          WHERE cv.tenant_id = {{tenant_id}}::int
-          ORDER BY 2 ASC
-        `}
-      >
-        <Select />
-      </Filter>
-
-      <Filter
-        label="Status"
-        table="vendas.pedidos"
-        field="status"
-        mode="multiple"
-        search
-        clearable
-        width={220}
-        query={`
-          SELECT DISTINCT
-            src.status::text AS value,
-            COALESCE(src.status, 'Sem status') AS label
-          FROM vendas.pedidos src
-          WHERE src.tenant_id = {{tenant_id}}::int
-          ORDER BY 2 ASC
-        `}
-      >
-        <Select />
-      </Filter>
-    </section>
+            <Filter
+              label="Status"
+              table="vendas.pedidos"
+              field="status"
+              mode="multiple"
+              search
+              clearable
+              width={220}
+              query={`
+                SELECT DISTINCT
+                  src.status::text AS value,
+                  COALESCE(src.status, 'Sem status') AS label
+                FROM vendas.pedidos src
+                WHERE src.tenant_id = {{tenant_id}}::int
+                ORDER BY 2 ASC
+              `}
+            >
+              <Select />
+            </Filter>
+          </Horizontal>
+        </Card>
+      </Panel>
+    </Horizontal>
 
     <Tabs defaultValue="table">
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <Horizontal gap={8}>
         <Tab value="table">Tabela</Tab>
         <Tab value="pivot">Pivot</Tab>
-      </div>
+      </Horizontal>
 
       <TabPanel value="table">
         <Table
-          bordered
-          rounded
-          stickyHeader
-          enableExportCsv
           dataQuery={{
             query: `
               SELECT
@@ -429,11 +537,6 @@
 
       <TabPanel value="pivot">
         <PivotTable
-          bordered
-          rounded
-          stickyHeader
-          enableExportCsv
-          defaultExpandedLevels={1}
           dataQuery={{
             query: `
               SELECT
@@ -453,10 +556,25 @@
         />
       </TabPanel>
     </Tabs>
-  </section>
+  </Vertical>
 </Dashboard>
 ```
 </expected_output_2>
+
+<expected_output_style_override>
+```tsx
+<Panel id="reading" span={4} rows={8}>
+  <Card variant="note" style={{ minHeight: '100%' }}>
+    <Vertical gap={10}>
+      <Text variant="eyebrow">Leitura</Text>
+      <Text variant="body-muted">
+        Use `style` para override local e intencional, nao como requisito padrao de todos os blocos.
+      </Text>
+    </Vertical>
+  </Card>
+</Panel>
+```
+</expected_output_style_override>
 
 <canonical_authored_format>
 - Canonical authored root:
@@ -467,19 +585,30 @@
   - do not write `Theme`
   - do not write runtime imports for dashboard engine components
   - do not write `export function` or wrapper boilerplate unless preserving an older file shape
-- The runtime provides the `theme` token object used by inline styles.
+- The runtime provides the `theme` token object used by inline styles when an override is actually needed.
+- New dashboards should usually start from:
+  - `Dashboard`
+  - `Vertical`
+  - `Horizontal`
+  - `Panel`
+  - `Card`
+  - `Text`
 - Example:
 ```tsx
 <Dashboard id="overview" title="Dashboard Comercial" theme="light" chartPalette="teal">
-  <section style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 24, backgroundColor: theme.pageBg }}>
-    <h1 style={{ margin: 0, color: theme.titleColor }}>Dashboard Comercial</h1>
-  </section>
+  <Vertical gap={16} padding={24}>
+    <Text as="h1" variant="page-title">Dashboard Comercial</Text>
+  </Vertical>
 </Dashboard>
 ```
 </canonical_authored_format>
 
 <layout_rules>
 - Favor clear grouping of content by section.
+- Prefer container-first composition for new dashboards:
+  - `Vertical` for page flow
+  - `Horizontal` for rows
+  - `Panel` for positioned blocks
 - Common layout responsibilities:
 - page-level structure
 - summary zone
@@ -493,12 +622,45 @@
 - lower detail zone for tables/pivot tables
 - filters close to the widgets they affect
 - tabs only when multiple views would otherwise overload one page
+- Use HTML tags such as `header`, `section`, or `div` for local structure, not as a forced replacement for the container primitives.
 - Default dashboard reading flow:
   - summary first
   - analysis second
   - detail last
 - Avoid unnecessary left/right fragmentation when one primary analytical column is enough.
 </layout_rules>
+
+<style_rules>
+- Inline `style` is optional, not required.
+- Renderer/theme defaults already cover a large part of the visual system for:
+  - `Card`
+  - `Text`
+  - `KPI`
+  - `DatePicker`
+  - `Filter`
+  - `Chart`
+  - `Table`
+  - `PivotTable`
+- Prefer semantic props and variants before adding `style`.
+- Prefer structural props on layout containers before adding `style`:
+  - `gap`
+  - `columns`
+  - `rowHeight`
+  - `span`
+  - `rows`
+  - `padding`
+  - `width`
+  - `grow`
+- Good reasons to use `style`:
+  - local exception
+  - one-off spacing or sizing adjustment
+  - editorial block with intentional visual deviation
+  - polish that is not already expressed by component props
+- Bad default behavior:
+  - manually rewriting border, radius, background, color, and typography on every block
+  - treating `style` as mandatory on every `Card`, `Text`, `DatePicker`, or `Filter`
+  - rebuilding the whole visual system inline instead of using the renderer defaults
+</style_rules>
 
 <query_rules>
 - Query-first is the default for `Query`, `Chart`, `Table`, and `PivotTable`.
@@ -572,6 +734,8 @@
 - Do not invent SQL schema/table/column names.
 - Do not regress to legacy dashboard DSL.
 - Do not treat HTML/JSX as forbidden; it is the correct default layout layer.
+- Do not ignore `Vertical`, `Horizontal`, and `Panel` in new dashboards when they clearly express the layout better than raw HTML wrappers.
+- Do not manually style every block by default.
 - Do not silently change working semantics of a chart/table just to satisfy a visual request.
 - Do not collapse a user's dashboard into an invalid or partial file.
 </forbidden>
@@ -612,11 +776,13 @@
 - Valid dashboard JSX structure
 - Root starts at `Dashboard` for new files
 - `theme` and `chartPalette` live on `Dashboard`
+- Container-first layout used when appropriate
 - Valid component names
 - Valid prop names
 - Query-first where appropriate
 - `Query`/`Chart` aliases match runtime expectations
 - No invented schema/table/column names
+- `style` used only where there is a real override or exception
 - Layout is intentional and readable
 - Output is compatible with the current runtime direction
 </checklist>
