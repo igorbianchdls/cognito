@@ -133,7 +133,9 @@ function buildComprasDashboardSource(themeName: string) {
                   dataQuery={{ query: \`SELECT COALESCE(SUM(c.valor_total), 0)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }}
                   format="currency"
                   comparisonMode="previous_period"
-                />
+                >
+                  <KPICompare />
+                </KPI>
               </Card>
             </Panel>
             <Panel id="compras-kpi-fornecedores" span={3} rows={4}>
@@ -143,7 +145,9 @@ function buildComprasDashboardSource(themeName: string) {
                   dataQuery={{ query: \`SELECT COUNT(DISTINCT c.fornecedor_id)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }}
                   format="number"
                   comparisonMode="previous_period"
-                />
+                >
+                  <KPICompare />
+                </KPI>
               </Card>
             </Panel>
             <Panel id="compras-kpi-pedidos" span={3} rows={4}>
@@ -153,7 +157,9 @@ function buildComprasDashboardSource(themeName: string) {
                   dataQuery={{ query: \`SELECT COUNT(DISTINCT c.id)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }}
                   format="number"
                   comparisonMode="previous_period"
-                />
+                >
+                  <KPICompare />
+                </KPI>
               </Card>
             </Panel>
             <Panel id="compras-kpi-ticket" span={3} rows={4}>
@@ -163,7 +169,9 @@ function buildComprasDashboardSource(themeName: string) {
                   dataQuery={{ query: \`SELECT COALESCE(AVG(c.valor_total), 0)::float AS value FROM compras.compras c WHERE 1=1 {{filters}}\`, limit: 1 }}
                   format="currency"
                   comparisonMode="previous_period"
-                />
+                >
+                  <KPICompare />
+                </KPI>
               </Card>
             </Panel>
           </Horizontal>

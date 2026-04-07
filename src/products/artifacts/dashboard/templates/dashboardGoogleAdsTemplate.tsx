@@ -121,7 +121,9 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                   }}
                   format="currency"
                   comparisonMode="previous_period"
-                />
+                >
+                  <KPICompare />
+                </KPI>
               </Card>
             </Panel>
             <Panel id="googleads-kpi-receita" span={3} rows={4}>
@@ -140,7 +142,9 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                   }}
                   format="currency"
                   comparisonMode="previous_period"
-                />
+                >
+                  <KPICompare />
+                </KPI>
               </Card>
             </Panel>
             <Panel id="googleads-kpi-roas" span={3} rows={4}>
@@ -160,7 +164,9 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                   }}
                   format="number"
                   comparisonMode="previous_period"
-                />
+                >
+                  <KPICompare />
+                </KPI>
               </Card>
             </Panel>
             <Panel id="googleads-kpi-cpa" span={3} rows={4}>
@@ -180,7 +186,9 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                   }}
                   format="currency"
                   comparisonMode="previous_period"
-                />
+                >
+                  <KPICompare />
+                </KPI>
               </Card>
             </Panel>
           </Horizontal>

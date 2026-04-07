@@ -62,7 +62,9 @@ function buildContainersDashboardSource(themeName: string) {
                     }}
                     format="currency"
                     comparisonMode="previous_period"
-                  />
+                  >
+                    <KPICompare />
+                  </KPI>
                 </Card>
               </Panel>
 
@@ -81,7 +83,9 @@ function buildContainersDashboardSource(themeName: string) {
                     }}
                     format="number"
                     comparisonMode="previous_period"
-                  />
+                  >
+                    <KPICompare />
+                  </KPI>
                 </Card>
               </Panel>
 
@@ -100,7 +104,9 @@ function buildContainersDashboardSource(themeName: string) {
                     }}
                     format="currency"
                     comparisonMode="previous_period"
-                  />
+                  >
+                    <KPICompare />
+                  </KPI>
                 </Card>
               </Panel>
             </Horizontal>

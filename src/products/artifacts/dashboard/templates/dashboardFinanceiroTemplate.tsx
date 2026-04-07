@@ -133,7 +133,9 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   dataQuery={{ query: \`SELECT COALESCE(SUM(cr.valor_liquido), 0)::float AS value FROM financeiro.contas_receber cr WHERE 1=1 {{filters}}\`, limit: 1 }}
                   format="currency"
                   comparisonMode="previous_period"
-                />
+                >
+                  <KPICompare />
+                </KPI>
               </Card>
             </Panel>
             <Panel id="financeiro-kpi-ap" span={3} rows={4}>
@@ -143,7 +145,9 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   dataQuery={{ query: \`SELECT COALESCE(SUM(cp.valor_liquido), 0)::float AS value FROM financeiro.contas_pagar cp WHERE 1=1 {{filters}}\`, limit: 1 }}
                   format="currency"
                   comparisonMode="previous_period"
-                />
+                >
+                  <KPICompare />
+                </KPI>
               </Card>
             </Panel>
             <Panel id="financeiro-kpi-geracao" span={3} rows={4}>
@@ -161,7 +165,9 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   }}
                   format="currency"
                   comparisonMode="previous_period"
-                />
+                >
+                  <KPICompare />
+                </KPI>
               </Card>
             </Panel>
             <Panel id="financeiro-kpi-titulos" span={3} rows={4}>
@@ -171,7 +177,9 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   dataQuery={{ query: \`SELECT COUNT(*)::float AS value FROM financeiro.contas_pagar cp WHERE 1=1 {{filters}}\`, limit: 1 }}
                   format="number"
                   comparisonMode="previous_period"
-                />
+                >
+                  <KPICompare />
+                </KPI>
               </Card>
             </Panel>
           </Horizontal>
