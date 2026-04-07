@@ -37,6 +37,7 @@ const runtimeScope = {
   Horizontal: passthroughComponent('Horizontal'),
   Panel: passthroughComponent('Panel'),
   Card: passthroughComponent('Card'),
+  Icon: leafComponent('Icon'),
   Tabs: passthroughComponent('Tabs'),
   Tab: passthroughComponent('Tab'),
   TabPanel: passthroughComponent('TabPanel'),
