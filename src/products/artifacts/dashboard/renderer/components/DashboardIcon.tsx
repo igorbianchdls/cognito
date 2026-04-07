@@ -15,12 +15,12 @@ function resolveLucideIcon(name: unknown) {
   const raw = typeof name === 'string' ? name.trim() : ''
   if (!raw) return null
 
-  const registry = LucideIcons as unknown as Record<string, React.ComponentType<any>>
+  const registry = LucideIcons as unknown as Record<string, React.ElementType | undefined>
   const direct = registry[raw]
-  if (typeof direct === 'function') return direct
+  if (direct) return direct
 
   const normalized = registry[toPascalCase(raw)]
-  if (typeof normalized === 'function') return normalized
+  if (normalized) return normalized
 
   return null
 }
