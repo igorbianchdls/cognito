@@ -44,7 +44,7 @@ function buildComprasDashboardSource(themeName: string) {
           </Horizontal>
 
           <Horizontal columns={12} rowHeight={18} gap={18}>
-            <Panel id="compras-filter-fornecedor" span={4} rows={6}>
+            <Panel id="compras-filter-fornecedor" span={4}>
             <Card style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <Text variant="eyebrow">Filtro</Text>
               <Text as="h2" variant="section-title-sm">Fornecedor</Text>
@@ -71,7 +71,7 @@ function buildComprasDashboardSource(themeName: string) {
             </Card>
             </Panel>
 
-            <Panel id="compras-filter-centro-custo" span={4} rows={6}>
+            <Panel id="compras-filter-centro-custo" span={4}>
             <Card style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <Text variant="eyebrow">Filtro</Text>
               <Text as="h2" variant="section-title-sm">Centro de custo</Text>
@@ -98,7 +98,7 @@ function buildComprasDashboardSource(themeName: string) {
             </Card>
             </Panel>
 
-            <Panel id="compras-filter-status" span={4} rows={6}>
+            <Panel id="compras-filter-status" span={4}>
             <Card style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <Text variant="eyebrow">Filtro</Text>
               <Text as="h2" variant="section-title-sm">Status</Text>

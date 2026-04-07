@@ -70,6 +70,7 @@
   - `Horizontal`
   - `Panel`
   - `Card`
+  - `Icon`
   - `Text`
 - HTML/JSX tags are still allowed and useful for local structure such as:
   - `div`
@@ -93,6 +94,7 @@
   - `Vertical`
   - `Horizontal`
   - `Panel`
+  - `Icon`
   - `Query`
   - `Chart`
   - `Table`
@@ -156,6 +158,27 @@
       - `width`
       - `minHeight`
     - Rule: in dashboards that follow the current template style, panels are the canonical place for KPI/chart/table/filter blocks.
+- Visual primitives:
+  - `Card`
+    - Purpose: provide themed surface, spacing, border, and card variants such as KPI/chart/filter/note.
+    - Common props:
+      - `variant`
+      - `style`
+    - Rule: prefer `Card` variants and renderer defaults before manually restyling the surface.
+  - `Icon`
+    - Purpose: render a Lucide icon inside a small badge with background and border.
+    - Main props:
+      - `name`
+      - `size`
+      - `color`
+      - `backgroundColor`
+      - `borderColor`
+      - `padding`
+      - `radius`
+      - `boxSize`
+    - Rule: `name` should be a valid Lucide icon name such as `DollarSign`, `ShoppingCart`, `Ticket`, `Network`, or `ShieldCheck`.
+    - Rule: use `Icon` for KPI/header/supporting visual cues, not as a replacement for textual labels.
+    - Rule: prefer `color`, `backgroundColor`, `borderColor`, and `padding` before using generic `style`.
 - Data components:
   - `Query`
     - Purpose: execute a query and expose the result to JSX children.
@@ -275,6 +298,13 @@
     - `Chart`
     - `Table`
     - `PivotTable`
+  - `Icon` is a visual primitive with explicit visual props. It usually does not need generic `style`; prefer:
+    - `color`
+    - `backgroundColor`
+    - `borderColor`
+    - `padding`
+    - `size`
+    - `radius`
   - Use `style` only for:
     - local override
     - visual exception
@@ -329,6 +359,15 @@
     <Horizontal columns={12} rowHeight={18} gap={16}>
       <Panel id="kpi-receita" span={4} rows={4}>
         <Card variant="kpi">
+          <Icon
+            name="DollarSign"
+            size={18}
+            padding={10}
+            color="#1D4ED8"
+            backgroundColor="#DBEAFE"
+            borderColor="#BFDBFE"
+            style={{ marginBottom: 12 }}
+          />
           <KPI
             title="Receita"
             dataQuery={{
@@ -350,6 +389,15 @@
 
       <Panel id="kpi-pedidos" span={4} rows={4}>
         <Card variant="kpi">
+          <Icon
+            name="ShoppingCart"
+            size={18}
+            padding={10}
+            color="#15803D"
+            backgroundColor="#DCFCE7"
+            borderColor="#BBF7D0"
+            style={{ marginBottom: 12 }}
+          />
           <KPI
             title="Pedidos"
             dataQuery={{
@@ -371,6 +419,15 @@
 
       <Panel id="kpi-ticket" span={4} rows={4}>
         <Card variant="kpi">
+          <Icon
+            name="Ticket"
+            size={18}
+            padding={10}
+            color="#C2410C"
+            backgroundColor="#FFEDD5"
+            borderColor="#FED7AA"
+            style={{ marginBottom: 12 }}
+          />
           <KPI
             title="Ticket medio"
             dataQuery={{
@@ -566,6 +623,14 @@
 <Panel id="reading" span={4} rows={8}>
   <Card variant="note" style={{ minHeight: '100%' }}>
     <Vertical gap={10}>
+      <Icon
+        name="Info"
+        size={16}
+        padding={8}
+        color="#0F172A"
+        backgroundColor="#F8FAFC"
+        borderColor="#E2E8F0"
+      />
       <Text variant="eyebrow">Leitura</Text>
       <Text variant="body-muted">
         Use `style` para override local e intencional, nao como requisito padrao de todos os blocos.
@@ -592,6 +657,7 @@
   - `Horizontal`
   - `Panel`
   - `Card`
+  - `Icon`
   - `Text`
 - Example:
 ```tsx
@@ -641,6 +707,7 @@
   - `Chart`
   - `Table`
   - `PivotTable`
+- `Icon` is different: its main customization usually comes from component props like `color`, `backgroundColor`, `borderColor`, `padding`, `size`, and `radius`, not from generic `style`.
 - Prefer semantic props and variants before adding `style`.
 - Prefer structural props on layout containers before adding `style`:
   - `gap`
@@ -656,6 +723,14 @@
   - one-off spacing or sizing adjustment
   - editorial block with intentional visual deviation
   - polish that is not already expressed by component props
+- For `Icon`, prefer:
+  - `color`
+  - `backgroundColor`
+  - `borderColor`
+  - `padding`
+  - `size`
+  - `radius`
+  before using generic `style`.
 - Bad default behavior:
   - manually rewriting border, radius, background, color, and typography on every block
   - treating `style` as mandatory on every `Card`, `Text`, `DatePicker`, or `Filter`
@@ -781,6 +856,7 @@
 - Valid prop names
 - Query-first where appropriate
 - `Query`/`Chart` aliases match runtime expectations
+- `Icon` uses a valid Lucide name when present
 - No invented schema/table/column names
 - `style` used only where there is a real override or exception
 - Layout is intentional and readable
