@@ -8,7 +8,7 @@ import { useThemeOverrides } from '@/products/bi/json-render/theme/ThemeContext'
 import { DashboardKpiCompare } from '@/products/artifacts/dashboard/renderer/components/DashboardKpiCompare'
 import { DashboardKpiCompareContext } from '@/products/artifacts/dashboard/renderer/components/DashboardKpiContext'
 import {
-  resolveDashboardTextStyle,
+  resolveDashboardKpiTheme,
   useDashboardThemeSelection,
 } from '@/products/artifacts/dashboard/renderer/dashboardThemeConfig'
 
@@ -144,18 +144,7 @@ export default function DashboardKpi({
   const title = typeof props.title === 'string' ? props.title : ''
   const description = typeof props.description === 'string' ? props.description : ''
   const valuePath = typeof props.valuePath === 'string' && props.valuePath.trim() ? props.valuePath.trim() : ''
-  const themeTitleStyle =
-    themeKpi?.titleStyle && typeof themeKpi.titleStyle === 'object'
-      ? (themeKpi.titleStyle as React.CSSProperties)
-      : undefined
-  const themeValueStyle =
-    themeKpi?.valueStyle && typeof themeKpi.valueStyle === 'object'
-      ? (themeKpi.valueStyle as React.CSSProperties)
-      : undefined
-  const themeDescriptionStyle =
-    themeKpi?.descriptionStyle && typeof themeKpi.descriptionStyle === 'object'
-      ? (themeKpi.descriptionStyle as React.CSSProperties)
-      : undefined
+  const kpiTheme = resolveDashboardKpiTheme(themeName)
   const styleOverride = props.style && typeof props.style === 'object' ? (props.style as React.CSSProperties) : undefined
   const cardStyle = props.cardStyle && typeof props.cardStyle === 'object' ? (props.cardStyle as React.CSSProperties) : undefined
   const titleStyle = props.titleStyle && typeof props.titleStyle === 'object' ? (props.titleStyle as React.CSSProperties) : undefined
@@ -171,9 +160,6 @@ export default function DashboardKpi({
   const positiveColor = typeof props.positiveColor === 'string' ? props.positiveColor : '#15803D'
   const negativeColor = typeof props.negativeColor === 'string' ? props.negativeColor : '#DC2626'
   const neutralColor = typeof props.neutralColor === 'string' ? props.neutralColor : '#64748B'
-  const titleSemanticStyle = resolveDashboardTextStyle('kpi-title', themeName)
-  const valueSemanticStyle = resolveDashboardTextStyle('kpi-value', themeName)
-  const descriptionSemanticStyle = resolveDashboardTextStyle('body-muted', themeName)
 
   const { data } = useData()
   const valueFromPath = useDataValue(valuePath || '', undefined)
@@ -409,7 +395,7 @@ export default function DashboardKpi({
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
-          gap: 8,
+          ...kpiTheme.style,
           ...(styleOverride || {}),
           ...(cardStyle || {}),
         }}
@@ -419,8 +405,7 @@ export default function DashboardKpi({
             data-ui="kpi-title"
             style={{
               margin: 0,
-              ...titleSemanticStyle,
-              ...(themeTitleStyle || {}),
+              ...kpiTheme.titleStyle,
               ...(titleStyle || {}),
             }}
           >
@@ -431,8 +416,7 @@ export default function DashboardKpi({
           data-ui="kpi-value"
           style={{
             margin: 0,
-            ...valueSemanticStyle,
-            ...(themeValueStyle || {}),
+            ...kpiTheme.valueStyle,
             ...(valueStyle || {}),
           }}
         >
@@ -445,8 +429,7 @@ export default function DashboardKpi({
             data-ui="description"
             style={{
               margin: 0,
-              ...descriptionSemanticStyle,
-              ...(themeDescriptionStyle || {}),
+              ...kpiTheme.descriptionStyle,
               ...(descriptionStyle || {}),
             }}
           >

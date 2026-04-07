@@ -830,6 +830,65 @@ export function useDashboardThemeSelection() {
   return React.useContext(DashboardThemeSelectionContext)
 }
 
+export type DashboardKpiTheme = {
+  compare: {
+    style: React.CSSProperties
+  }
+  descriptionStyle: React.CSSProperties
+  style: React.CSSProperties
+  titleStyle: React.CSSProperties
+  valueStyle: React.CSSProperties
+}
+
+const DASHBOARD_KPI_THEME_NAMES = [
+  'light',
+  'blue',
+  'dark',
+  'black',
+  'slate',
+  'navy',
+  'sand',
+  'charcoal',
+  'midnight',
+  'metro',
+] as const
+
+export const DASHBOARD_KPI_THEME_CONFIG: Record<string, DashboardKpiTheme> = Object.fromEntries(
+  DASHBOARD_KPI_THEME_NAMES.map((themeName) => [
+    themeName,
+    {
+      style: {
+        alignItems: 'flex-start',
+        gap: 8,
+      },
+      titleStyle: {
+        ...resolveDashboardTextStyle('kpi-title', themeName),
+      },
+      valueStyle: {
+        ...resolveDashboardTextStyle('kpi-value', themeName),
+      },
+      descriptionStyle: {
+        ...resolveDashboardTextStyle('body-muted', themeName),
+      },
+      compare: {
+        style: {
+          ...resolveDashboardTextStyle('kpi-compare', themeName),
+        },
+      },
+    },
+  ]),
+)
+
+export function resolveDashboardKpiTheme(themeName: string): DashboardKpiTheme {
+  const key = String(themeName || 'light').trim().toLowerCase()
+  const aliases: Record<string, string> = {
+    branco: 'light',
+    claro: 'light',
+    white: 'light',
+  }
+  return DASHBOARD_KPI_THEME_CONFIG[aliases[key] || key] || DASHBOARD_KPI_THEME_CONFIG.light
+}
+
 export function buildDashboardThemeConfigFileSource() {
   const cardEntries = Object.entries(DASHBOARD_THEME_CONFIG)
     .map(([name, config]) => `  ${name}: ${JSON.stringify(config, null, 2).replace(/\n/g, '\n  ')},`)
@@ -859,6 +918,9 @@ export function buildDashboardThemeConfigFileSource() {
     .map(([name, config]) => `  ${name}: ${JSON.stringify(config, null, 2).replace(/\n/g, '\n  ')},`)
     .join('\n')
   const gaugeEntries = Object.entries(DASHBOARD_GAUGE_THEME_CONFIG)
+    .map(([name, config]) => `  ${name}: ${JSON.stringify(config, null, 2).replace(/\n/g, '\n  ')},`)
+    .join('\n')
+  const kpiEntries = Object.entries(DASHBOARD_KPI_THEME_CONFIG)
     .map(([name, config]) => `  ${name}: ${JSON.stringify(config, null, 2).replace(/\n/g, '\n  ')},`)
     .join('\n')
 
@@ -902,6 +964,10 @@ export const DASHBOARD_GAUGE_THEME_CONFIG = {
 ${gaugeEntries}
 } as const
 
+export const DASHBOARD_KPI_THEME_CONFIG = {
+${kpiEntries}
+} as const
+
 export type DashboardCardThemeConfig = typeof DASHBOARD_CARD_THEME_CONFIG
 export type DashboardTextThemeConfig = typeof DASHBOARD_TEXT_THEME_CONFIG
 export type DashboardDatePickerThemeConfig = typeof DASHBOARD_DATE_PICKER_THEME_CONFIG
@@ -912,5 +978,6 @@ export type DashboardChartThemeConfig = typeof DASHBOARD_CHART_THEME_CONFIG
 export type DashboardTableThemeConfig = typeof DASHBOARD_TABLE_THEME_CONFIG
 export type DashboardPivotTableThemeConfig = typeof DASHBOARD_PIVOT_TABLE_THEME_CONFIG
 export type DashboardGaugeThemeConfig = typeof DASHBOARD_GAUGE_THEME_CONFIG
+export type DashboardKpiThemeConfig = typeof DASHBOARD_KPI_THEME_CONFIG
 `
 }

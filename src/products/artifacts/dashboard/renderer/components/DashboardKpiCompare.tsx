@@ -2,14 +2,11 @@
 
 import React from 'react'
 
-import { useThemeOverrides } from '@/products/bi/json-render/theme/ThemeContext'
 import { DashboardKpiCompareContext } from '@/products/artifacts/dashboard/renderer/components/DashboardKpiContext'
 import {
-  resolveDashboardTextStyle,
+  resolveDashboardKpiTheme,
   useDashboardThemeSelection,
 } from '@/products/artifacts/dashboard/renderer/dashboardThemeConfig'
-
-type AnyRecord = Record<string, any>
 
 export function DashboardKpiCompare({
   element,
@@ -18,16 +15,10 @@ export function DashboardKpiCompare({
 }) {
   const context = React.useContext(DashboardKpiCompareContext)
   const { themeName } = useDashboardThemeSelection()
-  const theme = useThemeOverrides()
-  const themeKpi = ((theme.components || {}) as AnyRecord).Kpi as AnyRecord | undefined
-  const props = (element?.props || {}) as AnyRecord
+  const props = (element?.props || {}) as Record<string, any>
+  const kpiTheme = resolveDashboardKpiTheme(themeName)
   const styleOverride = props.style && typeof props.style === 'object' ? (props.style as React.CSSProperties) : undefined
   const colorOverride = typeof props.color === 'string' ? props.color : undefined
-  const semanticStyle = resolveDashboardTextStyle('kpi-compare', themeName)
-  const themeComparisonStyle =
-    themeKpi?.comparisonStyle && typeof themeKpi.comparisonStyle === 'object'
-      ? (themeKpi.comparisonStyle as React.CSSProperties)
-      : undefined
 
   if (!context?.canRenderComparison) return null
 
@@ -36,8 +27,7 @@ export function DashboardKpiCompare({
       data-ui="kpi-compare"
       style={{
         margin: 0,
-        ...semanticStyle,
-        ...(themeComparisonStyle || {}),
+        ...kpiTheme.compare.style,
         ...(context.comparisonStyle || {}),
         ...(styleOverride || {}),
         color: colorOverride || context.comparisonColor,
@@ -47,4 +37,3 @@ export function DashboardKpiCompare({
     </p>
   )
 }
-
