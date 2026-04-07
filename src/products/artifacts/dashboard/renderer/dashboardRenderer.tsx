@@ -40,11 +40,13 @@ function RenderDashboardNode({
   data,
   onAction,
   path,
+  parentType,
 }: {
   node: any
   data?: AnyRecord
   onAction?: (action: any) => void
   path: number[]
+  parentType?: string
 }) {
   const queryResult = useDashboardQueryResult()
   if (node == null) return null
@@ -61,13 +63,16 @@ function RenderDashboardNode({
     )
   }
 
-  const shouldAttachLayoutPath = type === 'Grid' || type === 'Vertical' || type === 'Horizontal' || type === 'Panel'
+  const layoutParent = parentType === 'Grid' || parentType === 'Vertical' || parentType === 'Horizontal'
+  const shouldAttachLayoutPath =
+    type === 'Grid' || type === 'Vertical' || type === 'Horizontal' || type === 'Panel' || type === 'Card'
   const element = shouldAttachLayoutPath
     ? {
         ...node,
         props: {
           ...((node?.props && typeof node.props === 'object') ? node.props : {}),
           __path: path,
+          __layoutItem: layoutParent && (type === 'Panel' || type === 'Card'),
         },
       }
     : node
@@ -80,6 +85,7 @@ function RenderDashboardNode({
           data={data}
           onAction={onAction}
           path={[...path, index]}
+          parentType={type}
         />
       ))
     : null

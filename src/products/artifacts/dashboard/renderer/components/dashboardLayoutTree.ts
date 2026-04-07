@@ -8,6 +8,10 @@ type DashboardNode = {
   children?: Array<DashboardNode | string>
 }
 
+function isStructuralLayoutNode(node: DashboardNode | string | null | undefined): node is DashboardNode {
+  return Boolean(node && typeof node === 'object' && (node.type === 'Panel' || node.type === 'Card'))
+}
+
 function cloneNode<T>(value: T): T {
   if (Array.isArray(value)) return value.map((item) => cloneNode(item)) as T
   if (value && typeof value === 'object') {
@@ -97,7 +101,7 @@ function getHorizontalColumns(node: DashboardNode) {
 
 function sumChildSpans(node: DashboardNode) {
   return (Array.isArray(node.children) ? node.children : []).reduce((total, child) => {
-    if (!child || typeof child !== 'object' || child.type !== 'Panel') return total
+    if (!isStructuralLayoutNode(child)) return total
     return total + getPanelSpan(child)
   }, 0)
 }

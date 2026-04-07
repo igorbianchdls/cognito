@@ -51,6 +51,10 @@ function isRenderableLayoutChild(child: React.ReactNode) {
   return true
 }
 
+function isStructuralLayoutNode(child: any) {
+  return child && typeof child === 'object' && (child.type === 'Panel' || child.type === 'Card')
+}
+
 export function DashboardVertical({
   element,
   children,
@@ -100,7 +104,7 @@ export function DashboardHorizontal({
   const { dropRef, structuralActive } = useStructuralDropTarget(layoutEdit, path, 'horizontal')
   const childNodes = Array.isArray(element?.children) ? element.children : []
   const childArray = React.Children.toArray(children).filter(isRenderableLayoutChild)
-  const panelNodes = childNodes.filter((child: any) => child && typeof child === 'object' && child.type === 'Panel')
+  const panelNodes = childNodes.filter((child: any) => isStructuralLayoutNode(child))
   const columns = Math.max(1, toNumericLayoutValue(props.columns, 12))
   const gap = toNumericLayoutValue(props.gap, 16)
   const rowHeight = Math.max(8, toNumericLayoutValue(props.rowHeight, 220))
@@ -251,7 +255,7 @@ export function DashboardGrid({
   const props = (element?.props || {}) as AnyRecord
   const childNodes = Array.isArray(element?.children) ? element.children : []
   const childArray = React.Children.toArray(children).filter(isRenderableLayoutChild)
-  const panelNodes = childNodes.filter((child: any) => child && typeof child === 'object' && child.type === 'Panel')
+  const panelNodes = childNodes.filter((child: any) => isStructuralLayoutNode(child))
   const columns = Math.max(1, toNumericLayoutValue(props.columns, 12))
   const gap = toNumericLayoutValue(props.gap, 16)
   const rowHeight = Math.max(8, toNumericLayoutValue(props.rowHeight, 220))
