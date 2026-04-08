@@ -23,9 +23,18 @@ import {
   replaceDashboardChartPaletteNameInSource,
   replaceDashboardThemeNameInSource,
 } from '@/products/artifacts/dashboard/parser/dashboardJsxParser'
+import type { DashboardAppearanceOverrides } from '@/products/artifacts/dashboard/renderer/dashboardThemeConfig'
 import { ArtifactWorkspaceHeader } from '@/products/artifacts/core/workspace/components/ArtifactWorkspaceHeader'
 import { DashboardWorkspaceCode } from '@/products/artifacts/dashboard/workspace/DashboardWorkspaceCode'
 import { DashboardWorkspacePreview } from '@/products/artifacts/dashboard/workspace/DashboardWorkspacePreview'
+
+function cloneAppearanceOverrides(overrides: DashboardAppearanceOverrides): DashboardAppearanceOverrides {
+  return JSON.parse(JSON.stringify(overrides || {})) as DashboardAppearanceOverrides
+}
+
+function areAppearanceOverridesEqual(left: DashboardAppearanceOverrides, right: DashboardAppearanceOverrides) {
+  return JSON.stringify(left || {}) === JSON.stringify(right || {})
+}
 
 export function DashboardWorkspace({
   initialThemeName,
@@ -49,6 +58,8 @@ export function DashboardWorkspace({
   const [chartPaletteBaseName, setChartPaletteBaseName] = useState(DASHBOARD_CHART_PALETTE_OPTIONS[0].value)
   const [draftBorderPreset, setDraftBorderPreset] = useState<DashboardBorderPreset>(DASHBOARD_BORDER_PRESET_OPTIONS[0].value)
   const [borderPresetBaseName, setBorderPresetBaseName] = useState<DashboardBorderPreset>(DASHBOARD_BORDER_PRESET_OPTIONS[0].value)
+  const [draftAppearanceOverrides, setDraftAppearanceOverrides] = useState<DashboardAppearanceOverrides>({})
+  const [appearanceOverridesBase, setAppearanceOverridesBase] = useState<DashboardAppearanceOverrides>({})
   const dashboardFiles = useMemo(() => files.filter((file) => file.extension === 'tsx'), [files])
   const selectedDashboardFile = useMemo(
     () => dashboardFiles.find((file) => file.path === selectedDashboardPath) ?? dashboardFiles[0],
@@ -117,12 +128,19 @@ export function DashboardWorkspace({
             setDraftChartPalette(selectedChartPalette)
             setBorderPresetBaseName(selectedBorderPreset)
             setDraftBorderPreset(selectedBorderPreset)
+            setAppearanceOverridesBase(cloneAppearanceOverrides(draftAppearanceOverrides))
+            setDraftAppearanceOverrides(cloneAppearanceOverrides(draftAppearanceOverrides))
             setIsThemeModalOpen(true)
           }}
         />
         <main className="min-h-0 flex-1 overflow-auto border-r-[0.5px] border-[#DDDDD8] bg-[#EEEEEB]">
           {activeView === 'preview' ? (
-            <DashboardWorkspacePreview sourcePath={selectedDashboardFile?.path ?? ''} files={files} zoom={zoom} />
+            <DashboardWorkspacePreview
+              sourcePath={selectedDashboardFile?.path ?? ''}
+              files={files}
+              zoom={zoom}
+              appearanceOverrides={draftAppearanceOverrides}
+            />
           ) : (
             <DashboardWorkspaceCode
               files={files}
@@ -146,6 +164,7 @@ export function DashboardWorkspace({
           setDraftThemeName(themeModalBaseName)
           setDraftChartPalette(chartPaletteBaseName)
           setDraftBorderPreset(borderPresetBaseName)
+          setDraftAppearanceOverrides(cloneAppearanceOverrides(appearanceOverridesBase))
           setIsThemeModalOpen(false)
         }}
         onConfirm={() => {
@@ -156,6 +175,7 @@ export function DashboardWorkspace({
           setDraftThemeName(themeModalBaseName)
           setDraftChartPalette(chartPaletteBaseName)
           setDraftBorderPreset(borderPresetBaseName)
+          setDraftAppearanceOverrides(cloneAppearanceOverrides(appearanceOverridesBase))
         }}
         mode={appearanceMode}
         onModeChange={setAppearanceMode}
@@ -171,6 +191,8 @@ export function DashboardWorkspace({
           setDraftBorderPreset(borderPreset as DashboardBorderPreset)
           applyAppearanceToSelectedDashboard(draftThemeName, draftChartPalette, borderPreset)
         }}
+        appearanceOverrides={draftAppearanceOverrides}
+        onAppearanceOverridesChange={setDraftAppearanceOverrides}
         selectedTheme={draftThemeName}
         selectedChartPalette={draftChartPalette}
         selectedBorderPreset={draftBorderPreset}
@@ -180,6 +202,7 @@ export function DashboardWorkspace({
           draftThemeName === themeModalBaseName
           && draftChartPalette === chartPaletteBaseName
           && draftBorderPreset === borderPresetBaseName
+          && areAppearanceOverridesEqual(draftAppearanceOverrides, appearanceOverridesBase)
         }
         themes={dashboardThemeOptions}
       />

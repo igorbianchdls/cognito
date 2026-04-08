@@ -7,6 +7,7 @@ import { useData } from '@/products/bi/json-render/context'
 import { DASHBOARD_SUPPORTED_DATE_PICKER_PRESETS } from '@/products/artifacts/dashboard/contract/dashboardContract'
 import {
   resolveDashboardDatePickerTheme,
+  useDashboardHeaderScope,
   useDashboardThemeSelection,
 } from '@/products/artifacts/dashboard/renderer/dashboardThemeConfig'
 
@@ -293,8 +294,9 @@ export default function DashboardDatePicker({
   onAction?: (action: any) => void
 }) {
   const { setData, getValueByPath } = useData()
-  const { themeName } = useDashboardThemeSelection()
-  const theme = resolveDashboardDatePickerTheme(themeName)
+  const isInHeader = useDashboardHeaderScope()
+  const { appearanceOverrides, themeName } = useDashboardThemeSelection()
+  const theme = resolveDashboardDatePickerTheme(themeName, isInHeader ? appearanceOverrides : undefined)
   const [customPickerOpen, setCustomPickerOpen] = React.useState(false)
   const customPickerRef = React.useRef<HTMLDivElement | null>(null)
   const props = (element?.props || {}) as AnyRecord

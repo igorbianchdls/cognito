@@ -9,6 +9,7 @@ import {
   DASHBOARD_TEMPLATE_THEME_TOKENS,
   type DashboardTemplateThemeTokens,
 } from '@/products/artifacts/dashboard/templates/dashboardTemplateThemes'
+import { deepMerge } from '@/stores/ui/json-render/utils'
 
 export type DashboardCardVariantKey =
   | 'card'
@@ -106,16 +107,57 @@ export type DashboardPivotTableThemeConfigEntry = AnyRecord
 export type DashboardGaugeThemeConfigEntry = AnyRecord
 type AnyRecord = Record<string, any>
 
+export type DashboardChartAppearanceOverrides = {
+  card?: Partial<DashboardCardStyle>
+  title?: React.CSSProperties
+  graph?: {
+    axes?: {
+      x?: AnyRecord
+      y?: AnyRecord
+    }
+    grid?: AnyRecord
+    legend?: AnyRecord
+    tooltip?: AnyRecord
+    margin?: AnyRecord
+  }
+}
+
+export type DashboardKpiAppearanceOverrides = {
+  card?: Partial<DashboardCardStyle>
+  compare?: React.CSSProperties
+  container?: React.CSSProperties
+  description?: React.CSSProperties
+  title?: React.CSSProperties
+  value?: React.CSSProperties
+}
+
+export type DashboardHeaderAppearanceOverrides = {
+  card?: React.CSSProperties
+  datePicker?: Partial<DashboardDatePickerThemeConfigEntry>
+  eyebrow?: React.CSSProperties
+  subtitle?: React.CSSProperties
+  title?: React.CSSProperties
+}
+
+export type DashboardAppearanceOverrides = {
+  chart?: DashboardChartAppearanceOverrides
+  header?: DashboardHeaderAppearanceOverrides
+  kpi?: DashboardKpiAppearanceOverrides
+}
+
 type DashboardThemeSelection = {
+  appearanceOverrides?: DashboardAppearanceOverrides
   themeName: string
   chartPaletteName?: string
   borderPreset?: string
 }
 
 const DashboardThemeSelectionContext = React.createContext<DashboardThemeSelection>({
+  appearanceOverrides: {},
   chartPaletteName: DASHBOARD_DEFAULT_CHART_PALETTE,
   themeName: 'light',
 })
+const DashboardHeaderScopeContext = React.createContext(false)
 
 const DASHBOARD_THEME_ALIASES: Record<string, string> = {
   white: 'light',
@@ -126,6 +168,19 @@ const DASHBOARD_THEME_ALIASES: Record<string, string> = {
 function resolveThemeKey(themeName: string | undefined) {
   const key = String(themeName || 'light').trim().toLowerCase()
   return DASHBOARD_THEME_ALIASES[key] || key
+}
+
+function deepMergeOrClone<T extends object>(base: T, override?: Partial<T> | null): T {
+  if (!override || typeof override !== 'object') return deepMerge({}, base) as T
+  return deepMerge(deepMerge({}, base), override as Record<string, any>) as T
+}
+
+function mergeAppearanceOverrides(
+  base: DashboardAppearanceOverrides | undefined,
+  override: DashboardAppearanceOverrides | undefined,
+) {
+  if (!override || typeof override !== 'object') return base || {}
+  return deepMerge(deepMerge({}, base || {}), override as Record<string, any>) as DashboardAppearanceOverrides
 }
 
 function buildFrame(tokens: DashboardTemplateThemeTokens, borderPreset?: DashboardBorderPreset | string): HudFrameConfig | null {
@@ -657,10 +712,17 @@ export const DASHBOARD_GAUGE_THEME_CONFIG: Record<string, DashboardGaugeThemeCon
 export function resolveDashboardCardTheme(
   themeName?: string,
   borderPreset?: DashboardBorderPreset | string,
+  appearanceOverrides?: DashboardAppearanceOverrides,
 ): DashboardThemeConfigEntry {
   const key = resolveThemeKey(themeName)
   const tokens = DASHBOARD_TEMPLATE_THEME_TOKENS[key] || DASHBOARD_TEMPLATE_THEME_TOKENS.light
-  return buildDashboardThemeConfigEntry(tokens, borderPreset)
+  const theme = buildDashboardThemeConfigEntry(tokens, borderPreset)
+
+  return {
+    ...theme,
+    chartCard: deepMergeOrClone(theme.chartCard, appearanceOverrides?.chart?.card),
+    kpiCard: deepMergeOrClone(theme.kpiCard, appearanceOverrides?.kpi?.card),
+  }
 }
 
 export function resolveDashboardTextVariantKey(role?: string): DashboardTextVariantKey {
@@ -701,15 +763,22 @@ export function resolveDashboardTextTheme(themeName?: string): DashboardTextThem
   return buildDashboardTextThemeConfigEntry(tokens)
 }
 
-export function resolveDashboardTextStyle(role: string | undefined, themeName?: string): DashboardTextStyle {
+export function resolveDashboardTextStyle(
+  role: string | undefined,
+  themeName?: string,
+  _appearanceOverrides?: DashboardAppearanceOverrides,
+): DashboardTextStyle {
   const theme = resolveDashboardTextTheme(themeName)
   return theme[resolveDashboardTextVariantKey(role)]
 }
 
-export function resolveDashboardDatePickerTheme(themeName?: string): DashboardDatePickerThemeConfigEntry {
+export function resolveDashboardDatePickerTheme(
+  themeName?: string,
+  appearanceOverrides?: DashboardAppearanceOverrides,
+): DashboardDatePickerThemeConfigEntry {
   const key = resolveThemeKey(themeName)
   const tokens = DASHBOARD_TEMPLATE_THEME_TOKENS[key] || DASHBOARD_TEMPLATE_THEME_TOKENS.light
-  return buildDashboardDatePickerThemeConfigEntry(tokens)
+  return deepMergeOrClone(buildDashboardDatePickerThemeConfigEntry(tokens), appearanceOverrides?.header?.datePicker)
 }
 
 export function resolveDashboardInsightsTheme(themeName?: string): DashboardInsightsThemeConfigEntry {
@@ -734,12 +803,24 @@ export function resolveDashboardTabStyle(themeName?: string, active?: boolean): 
 export function resolveDashboardChartTheme(
   themeName?: string,
   chartPaletteName?: string,
+  appearanceOverrides?: DashboardAppearanceOverrides,
 ): DashboardChartThemeConfigEntry {
   const key = resolveThemeKey(themeName)
   const tokens = DASHBOARD_TEMPLATE_THEME_TOKENS[key] || DASHBOARD_TEMPLATE_THEME_TOKENS.light
-  return {
+  const baseTheme = {
     ...buildDashboardChartThemeConfigEntry(tokens),
     colorScheme: resolveDashboardChartPaletteColors(chartPaletteName || DASHBOARD_DEFAULT_CHART_PALETTE),
+  }
+
+  return {
+    ...baseTheme,
+    titleStyle: deepMergeOrClone(baseTheme.titleStyle, appearanceOverrides?.chart?.title),
+    xAxis: deepMergeOrClone(baseTheme.xAxis, appearanceOverrides?.chart?.graph?.axes?.x),
+    yAxis: deepMergeOrClone(baseTheme.yAxis, appearanceOverrides?.chart?.graph?.axes?.y),
+    grid: deepMergeOrClone(baseTheme.grid, appearanceOverrides?.chart?.graph?.grid),
+    legend: deepMergeOrClone(baseTheme.legend, appearanceOverrides?.chart?.graph?.legend),
+    tooltip: deepMergeOrClone(baseTheme.tooltip, appearanceOverrides?.chart?.graph?.tooltip),
+    margin: deepMergeOrClone(baseTheme.margin, appearanceOverrides?.chart?.graph?.margin),
   }
 }
 
@@ -794,12 +875,13 @@ const DASHBOARD_TEXT_ROLE_SET = new Set<string>([
 export function resolveDashboardNodeStyle(
   role: string | undefined,
   themeName?: string,
+  appearanceOverrides?: DashboardAppearanceOverrides,
   options?: { active?: boolean },
 ): React.CSSProperties {
   const key = String(role || '').trim().toLowerCase()
   if (!key) return {}
   if (key === 'tab') return resolveDashboardTabStyle(themeName, options?.active)
-  if (DASHBOARD_TEXT_ROLE_SET.has(key)) return resolveDashboardTextStyle(key, themeName)
+  if (DASHBOARD_TEXT_ROLE_SET.has(key)) return resolveDashboardTextStyle(key, themeName, appearanceOverrides)
   return {}
 }
 
@@ -815,11 +897,13 @@ export function resolveDashboardCardVariantKey(props: Record<string, any> | unde
 }
 
 export function DashboardThemeSelectionProvider({
+  appearanceOverrides,
   themeName,
   chartPaletteName,
   borderPreset,
   children,
 }: {
+  appearanceOverrides?: DashboardAppearanceOverrides
   themeName?: string
   chartPaletteName?: string
   borderPreset?: string
@@ -828,6 +912,7 @@ export function DashboardThemeSelectionProvider({
   const parent = React.useContext(DashboardThemeSelectionContext)
   const value = React.useMemo<DashboardThemeSelection>(
     () => ({
+      appearanceOverrides: mergeAppearanceOverrides(parent.appearanceOverrides, appearanceOverrides),
       chartPaletteName:
         typeof chartPaletteName === 'string' && chartPaletteName.trim()
           ? chartPaletteName
@@ -835,7 +920,7 @@ export function DashboardThemeSelectionProvider({
       themeName: typeof themeName === 'string' && themeName.trim() ? themeName : parent.themeName,
       borderPreset: typeof borderPreset === 'string' && borderPreset.trim() ? borderPreset : parent.borderPreset,
     }),
-    [borderPreset, chartPaletteName, parent.borderPreset, parent.chartPaletteName, parent.themeName, themeName],
+    [appearanceOverrides, borderPreset, chartPaletteName, parent.appearanceOverrides, parent.borderPreset, parent.chartPaletteName, parent.themeName, themeName],
   )
 
   return React.createElement(DashboardThemeSelectionContext.Provider, { value }, children)
@@ -843,6 +928,18 @@ export function DashboardThemeSelectionProvider({
 
 export function useDashboardThemeSelection() {
   return React.useContext(DashboardThemeSelectionContext)
+}
+
+export function DashboardHeaderScopeProvider({
+  children,
+}: {
+  children?: React.ReactNode
+}) {
+  return React.createElement(DashboardHeaderScopeContext.Provider, { value: true }, children)
+}
+
+export function useDashboardHeaderScope() {
+  return React.useContext(DashboardHeaderScopeContext)
 }
 
 export type DashboardKpiTheme = {
@@ -894,14 +991,84 @@ export const DASHBOARD_KPI_THEME_CONFIG: Record<string, DashboardKpiTheme> = Obj
   ]),
 )
 
-export function resolveDashboardKpiTheme(themeName: string): DashboardKpiTheme {
+export function resolveDashboardKpiTheme(
+  themeName: string,
+  appearanceOverrides?: DashboardAppearanceOverrides,
+): DashboardKpiTheme {
   const key = String(themeName || 'light').trim().toLowerCase()
   const aliases: Record<string, string> = {
     branco: 'light',
     claro: 'light',
     white: 'light',
   }
-  return DASHBOARD_KPI_THEME_CONFIG[aliases[key] || key] || DASHBOARD_KPI_THEME_CONFIG.light
+  const theme = DASHBOARD_KPI_THEME_CONFIG[aliases[key] || key] || DASHBOARD_KPI_THEME_CONFIG.light
+  return {
+    ...theme,
+    style: deepMergeOrClone(theme.style, appearanceOverrides?.kpi?.container),
+    titleStyle: deepMergeOrClone(theme.titleStyle, appearanceOverrides?.kpi?.title),
+    valueStyle: deepMergeOrClone(theme.valueStyle, appearanceOverrides?.kpi?.value),
+    descriptionStyle: deepMergeOrClone(theme.descriptionStyle, appearanceOverrides?.kpi?.description),
+    compare: {
+      ...theme.compare,
+      style: deepMergeOrClone(theme.compare.style, appearanceOverrides?.kpi?.compare),
+    },
+  }
+}
+
+export type DashboardHeaderTheme = {
+  card: React.CSSProperties
+  eyebrow: React.CSSProperties
+  subtitle: React.CSSProperties
+  title: React.CSSProperties
+}
+
+export function resolveDashboardHeaderTheme(
+  themeName?: string,
+  borderPreset?: DashboardBorderPreset | string,
+  appearanceOverrides?: DashboardAppearanceOverrides,
+): DashboardHeaderTheme {
+  const key = resolveThemeKey(themeName)
+  const tokens = DASHBOARD_TEMPLATE_THEME_TOKENS[key] || DASHBOARD_TEMPLATE_THEME_TOKENS.light
+  const radius = resolveDashboardBorderRadiusPreset(borderPreset, tokens.cardFrame ? 0 : 24)
+  const textTheme = buildDashboardTextThemeConfigEntry(tokens)
+  const baseTheme: DashboardHeaderTheme = {
+    card: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      gap: 24,
+      padding: '20px 24px',
+      borderRadius: radius,
+      border: `1px solid ${tokens.surfaceBorder}`,
+      backgroundColor: tokens.headerBg,
+      color: tokens.headerText,
+    },
+    eyebrow: textTheme['eyebrow-strong'],
+    title: textTheme['page-title'],
+    subtitle: textTheme.lead,
+  }
+
+  return {
+    card: deepMergeOrClone(baseTheme.card, appearanceOverrides?.header?.card),
+    eyebrow: deepMergeOrClone(baseTheme.eyebrow, appearanceOverrides?.header?.eyebrow),
+    title: deepMergeOrClone(baseTheme.title, appearanceOverrides?.header?.title),
+    subtitle: deepMergeOrClone(baseTheme.subtitle, appearanceOverrides?.header?.subtitle),
+  }
+}
+
+export function resolveDashboardHeaderCardOverride(appearanceOverrides?: DashboardAppearanceOverrides): React.CSSProperties {
+  return appearanceOverrides?.header?.card || {}
+}
+
+export function resolveDashboardHeaderTextOverride(
+  role: string | undefined,
+  appearanceOverrides?: DashboardAppearanceOverrides,
+): React.CSSProperties {
+  const key = resolveDashboardTextVariantKey(role)
+  if (key === 'eyebrow' || key === 'eyebrow-strong') return appearanceOverrides?.header?.eyebrow || {}
+  if (key === 'page-title' || key === 'page-title-sm') return appearanceOverrides?.header?.title || {}
+  if (key === 'lead' || key === 'body-muted') return appearanceOverrides?.header?.subtitle || {}
+  return {}
 }
 
 export function buildDashboardThemeConfigFileSource() {

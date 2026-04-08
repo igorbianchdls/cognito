@@ -14,9 +14,9 @@ export function DashboardKpiCompare({
   element: any
 }) {
   const context = React.useContext(DashboardKpiCompareContext)
-  const { themeName } = useDashboardThemeSelection()
+  const { appearanceOverrides, themeName } = useDashboardThemeSelection()
   const props = (element?.props || {}) as Record<string, any>
-  const kpiTheme = resolveDashboardKpiTheme(themeName)
+  const kpiTheme = resolveDashboardKpiTheme(themeName, appearanceOverrides)
   const styleOverride = props.style && typeof props.style === 'object' ? (props.style as React.CSSProperties) : undefined
   const colorOverride = typeof props.color === 'string' ? props.color : undefined
 

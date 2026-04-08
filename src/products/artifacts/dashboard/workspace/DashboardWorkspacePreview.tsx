@@ -7,15 +7,18 @@ import type { ArtifactCodeFile } from '@/products/artifacts/core/workspace/types
 import { parseDashboardJsxToTree } from '@/products/artifacts/dashboard/parser/dashboardJsxParser'
 import { DashboardRenderer } from '@/products/artifacts/dashboard/renderer/dashboardRenderer'
 import { movePanelBetweenContainers } from '@/products/artifacts/dashboard/renderer/components/dashboardLayoutTree'
+import type { DashboardAppearanceOverrides } from '@/products/artifacts/dashboard/renderer/dashboardThemeConfig'
 
 export function DashboardWorkspacePreview({
   sourcePath,
   files,
   zoom,
+  appearanceOverrides,
 }: {
   sourcePath: string
   files: ArtifactCodeFile[]
   zoom: number
+  appearanceOverrides?: DashboardAppearanceOverrides
 }) {
   const [tree, setTree] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
@@ -57,7 +60,12 @@ export function DashboardWorkspacePreview({
           {error}
         </div>
       ) : tree ? (
-        <DashboardRenderer tree={tree} editableLayout onStructuralMove={handleStructuralMove} />
+        <DashboardRenderer
+          tree={tree}
+          editableLayout
+          onStructuralMove={handleStructuralMove}
+          appearanceOverrides={appearanceOverrides}
+        />
       ) : (
         <div className="p-6 text-sm text-gray-500">Compilando preview...</div>
       )}

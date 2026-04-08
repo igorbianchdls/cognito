@@ -14,8 +14,10 @@ import JsonRenderSankeyChart from '@/products/bi/json-render/components/SankeyCh
 import JsonRenderScatterChart from '@/products/bi/json-render/components/ScatterChart'
 import JsonRenderTreemapChart from '@/products/bi/json-render/components/TreemapChart'
 import {
+  DashboardHeaderScopeProvider,
   DashboardThemeSelectionProvider,
   resolveDashboardChartTheme,
+  resolveDashboardHeaderCardOverride,
   resolveDashboardGaugeTheme,
   resolveDashboardNodeStyle,
   useDashboardThemeSelection,
@@ -145,8 +147,8 @@ function useMergedElementProps(
   defaults: AnyRecord,
   componentName: string,
 ): { props: AnyRecord } {
-  const { chartPaletteName, themeName } = useDashboardThemeSelection()
-  const chartTheme = resolveDashboardChartTheme(themeName, chartPaletteName)
+  const { appearanceOverrides, chartPaletteName, themeName } = useDashboardThemeSelection()
+  const chartTheme = resolveDashboardChartTheme(themeName, chartPaletteName, appearanceOverrides)
   const themeComponent =
     componentName === 'Gauge'
       ? (resolveDashboardGaugeTheme(themeName) as AnyRecord)
@@ -225,8 +227,8 @@ function DashboardChart({
   element: any
   onAction?: (action: any) => void
 }) {
-  const { chartPaletteName, themeName } = useDashboardThemeSelection()
-  const chartTheme = resolveDashboardChartTheme(themeName, chartPaletteName)
+  const { appearanceOverrides, chartPaletteName, themeName } = useDashboardThemeSelection()
+  const chartTheme = resolveDashboardChartTheme(themeName, chartPaletteName, appearanceOverrides)
   const type = (element?.props || {}).type
   const defaults = {
     titleStyle: chartTheme.titleStyle,
@@ -344,10 +346,11 @@ function HtmlNode({
 }) {
   const props = (element?.props || {}) as Record<string, any>
   const queryResult = useDashboardQueryResult()
-  const { themeName } = useDashboardThemeSelection()
-  const semanticStyle = resolveDashboardNodeStyle(props['data-ui'], themeName, {
+  const { appearanceOverrides, themeName } = useDashboardThemeSelection()
+  const semanticStyle = resolveDashboardNodeStyle(props['data-ui'], themeName, appearanceOverrides, {
     active: props['data-active'] === true || props['data-active'] === 'true' || props['aria-selected'] === true || props['aria-selected'] === 'true',
   })
+  const headerStyle = tag === 'header' ? resolveDashboardHeaderCardOverride(appearanceOverrides) : {}
   const queryDeltaColor = props['data-ui'] === 'kpi-delta' ? getDashboardQueryDeltaColor(queryResult) : undefined
   const fallbackContent =
     typeof props.text === 'string'
@@ -357,7 +360,7 @@ function HtmlNode({
         : null
   const content = children ?? fallbackContent
 
-  return React.createElement(
+  const node = React.createElement(
     tag,
     {
       ...normalizeProps(props),
@@ -366,11 +369,18 @@ function HtmlNode({
         minWidth: 0,
         ...semanticStyle,
         ...(props.style && typeof props.style === 'object' ? props.style : {}),
+        ...(tag === 'header' ? headerStyle : {}),
         ...(queryDeltaColor ? { color: queryDeltaColor } : {}),
       },
     },
     content,
   )
+
+  if (tag === 'header') {
+    return <DashboardHeaderScopeProvider>{node}</DashboardHeaderScopeProvider>
+  }
+
+  return node
 }
 
 function DashboardTabs({
@@ -395,11 +405,11 @@ function DashboardTab({
 }) {
   const tabs = React.useContext(TabsContext)
   const props = (element?.props || {}) as Record<string, any>
-  const { themeName } = useDashboardThemeSelection()
+  const { appearanceOverrides, themeName } = useDashboardThemeSelection()
   const value = typeof props.value === 'string' ? props.value : ''
   const tag = typeof props.as === 'string' ? (props.as as keyof React.JSX.IntrinsicElements) : 'button'
   const active = tabs?.activeValue === value
-  const semanticStyle = resolveDashboardNodeStyle('tab', themeName, { active })
+  const semanticStyle = resolveDashboardNodeStyle('tab', themeName, appearanceOverrides, { active })
   const normalizedProps = normalizeProps(props)
   delete normalizedProps.as
   delete normalizedProps.value

@@ -69,8 +69,8 @@ export default function DashboardCardSurface({
   const layoutEdit = React.useContext(DashboardLayoutEditContext)
   const editableLayout = layoutEdit.enabled
   const layoutItem = props.__layoutItem === true
-  const { themeName, borderPreset } = useDashboardThemeSelection()
-  const theme = resolveDashboardCardTheme(themeName, borderPreset)
+  const { appearanceOverrides, themeName, borderPreset } = useDashboardThemeSelection()
+  const theme = resolveDashboardCardTheme(themeName, borderPreset, appearanceOverrides)
   const variantKey = resolveDashboardCardVariantKey(props)
   const variantTheme = theme[variantKey]
   const inlineStyle = props.style && typeof props.style === 'object' ? (props.style as React.CSSProperties) : undefined

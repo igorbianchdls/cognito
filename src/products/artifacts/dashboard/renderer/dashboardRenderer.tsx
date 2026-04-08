@@ -18,6 +18,10 @@ import {
   resolveDashboardQueryTemplate,
   useDashboardQueryResult,
 } from '@/products/artifacts/dashboard/renderer/components/DashboardQuery'
+import {
+  DashboardThemeSelectionProvider,
+  type DashboardAppearanceOverrides,
+} from '@/products/artifacts/dashboard/renderer/dashboardThemeConfig'
 import { resolveDashboardComponent } from '@/products/artifacts/dashboard/renderer/dashboardRegistry'
 
 type AnyRecord = Record<string, any>
@@ -103,12 +107,14 @@ export function DashboardRenderer({
   onAction,
   editableLayout = false,
   onStructuralMove,
+  appearanceOverrides,
 }: {
   tree: any
   data?: AnyRecord
   onAction?: (action: any) => void
   editableLayout?: boolean
   onStructuralMove?: (sourcePath: number[], targetPath: number[], targetType: 'vertical' | 'horizontal') => void
+  appearanceOverrides?: DashboardAppearanceOverrides
 }) {
   const [structuralDrag, setStructuralDrag] = React.useState<{ panelId: string; panelPath: number[]; span: number } | null>(null)
   const [hoverTargetKey, setHoverTargetKey] = React.useState<string | null>(null)
@@ -178,6 +184,45 @@ export function DashboardRenderer({
 
   if (Array.isArray(tree)) {
     return (
+      <DashboardThemeSelectionProvider appearanceOverrides={appearanceOverrides}>
+        <DashboardLayoutEditContext.Provider value={layoutEditValue}>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleStructuralDragStart}
+            onDragOver={handleStructuralDragOver}
+            onDragEnd={handleStructuralDragEnd}
+            onDragCancel={resetStructuralDrag}
+          >
+            {tree.map((node, index) => (
+              <RenderDashboardNode key={getNodeKey(node, index, [index])} node={node} data={data} onAction={onAction} path={[index]} />
+            ))}
+            <DragOverlay>
+              {structuralDrag ? (
+                <div
+                  style={{
+                    border: '1px solid rgba(148,163,184,0.45)',
+                    backgroundColor: 'rgba(255,255,255,0.96)',
+                    color: '#0f172a',
+                    borderRadius: 12,
+                    padding: '10px 12px',
+                    boxShadow: '0 10px 30px rgba(15,23,42,0.12)',
+                    fontSize: 12,
+                    fontWeight: 600,
+                  }}
+                >
+                  mover bloco
+                </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+        </DashboardLayoutEditContext.Provider>
+      </DashboardThemeSelectionProvider>
+    )
+  }
+
+  return (
+    <DashboardThemeSelectionProvider appearanceOverrides={appearanceOverrides}>
       <DashboardLayoutEditContext.Provider value={layoutEditValue}>
         <DndContext
           sensors={sensors}
@@ -187,9 +232,7 @@ export function DashboardRenderer({
           onDragEnd={handleStructuralDragEnd}
           onDragCancel={resetStructuralDrag}
         >
-          {tree.map((node, index) => (
-            <RenderDashboardNode key={getNodeKey(node, index, [index])} node={node} data={data} onAction={onAction} path={[index]} />
-          ))}
+          <RenderDashboardNode node={tree} data={data} onAction={onAction} path={[]} />
           <DragOverlay>
             {structuralDrag ? (
               <div
@@ -210,39 +253,6 @@ export function DashboardRenderer({
           </DragOverlay>
         </DndContext>
       </DashboardLayoutEditContext.Provider>
-    )
-  }
-
-  return (
-    <DashboardLayoutEditContext.Provider value={layoutEditValue}>
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleStructuralDragStart}
-        onDragOver={handleStructuralDragOver}
-        onDragEnd={handleStructuralDragEnd}
-        onDragCancel={resetStructuralDrag}
-      >
-        <RenderDashboardNode node={tree} data={data} onAction={onAction} path={[]} />
-        <DragOverlay>
-          {structuralDrag ? (
-            <div
-              style={{
-                border: '1px solid rgba(148,163,184,0.45)',
-                backgroundColor: 'rgba(255,255,255,0.96)',
-                color: '#0f172a',
-                borderRadius: 12,
-                padding: '10px 12px',
-                boxShadow: '0 10px 30px rgba(15,23,42,0.12)',
-                fontSize: 12,
-                fontWeight: 600,
-              }}
-            >
-              mover bloco
-            </div>
-          ) : null}
-        </DragOverlay>
-      </DndContext>
-    </DashboardLayoutEditContext.Provider>
+    </DashboardThemeSelectionProvider>
   )
 }

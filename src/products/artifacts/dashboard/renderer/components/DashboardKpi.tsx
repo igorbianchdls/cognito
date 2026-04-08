@@ -121,7 +121,7 @@ export default function DashboardKpi({
   children?: React.ReactNode
 }) {
   const props = (element?.props || {}) as AnyRecord
-  const { themeName } = useDashboardThemeSelection()
+  const { appearanceOverrides, themeName } = useDashboardThemeSelection()
   const theme = useThemeOverrides()
   const themeKpi = ((theme.components || {}) as AnyRecord).Kpi as AnyRecord | undefined
   const dataQuery = (props.dataQuery || {}) as AnyRecord
@@ -144,7 +144,7 @@ export default function DashboardKpi({
   const title = typeof props.title === 'string' ? props.title : ''
   const description = typeof props.description === 'string' ? props.description : ''
   const valuePath = typeof props.valuePath === 'string' && props.valuePath.trim() ? props.valuePath.trim() : ''
-  const kpiTheme = resolveDashboardKpiTheme(themeName)
+  const kpiTheme = resolveDashboardKpiTheme(themeName, appearanceOverrides)
   const styleOverride = props.style && typeof props.style === 'object' ? (props.style as React.CSSProperties) : undefined
   const cardStyle = props.cardStyle && typeof props.cardStyle === 'object' ? (props.cardStyle as React.CSSProperties) : undefined
   const titleStyle = props.titleStyle && typeof props.titleStyle === 'object' ? (props.titleStyle as React.CSSProperties) : undefined

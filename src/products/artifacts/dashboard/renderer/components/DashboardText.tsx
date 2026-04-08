@@ -8,7 +8,9 @@ import {
   useDashboardQueryResult,
 } from '@/products/artifacts/dashboard/renderer/components/DashboardQuery'
 import {
+  resolveDashboardHeaderTextOverride,
   resolveDashboardTextStyle,
+  useDashboardHeaderScope,
   useDashboardThemeSelection,
 } from '@/products/artifacts/dashboard/renderer/dashboardThemeConfig'
 
@@ -57,10 +59,12 @@ function pickExplicitTextStyle(props: Record<string, any>): React.CSSProperties 
 export default function DashboardText({ element, children }: DashboardTextProps) {
   const props = (element?.props || {}) as Record<string, any>
   const queryResult = useDashboardQueryResult()
-  const { themeName } = useDashboardThemeSelection()
+  const isInHeader = useDashboardHeaderScope()
+  const { appearanceOverrides, themeName } = useDashboardThemeSelection()
   const tag = typeof props.as === 'string' ? (props.as as keyof React.JSX.IntrinsicElements) : 'p'
   const textType = resolveTextRole(props)
-  const semanticStyle = resolveDashboardTextStyle(textType, themeName)
+  const semanticStyle = resolveDashboardTextStyle(textType, themeName, appearanceOverrides)
+  const headerTextOverride = isInHeader ? resolveDashboardHeaderTextOverride(textType, appearanceOverrides) : {}
   const queryDeltaColor =
     textType === 'kpi-delta' || textType === 'kpi-compare' ? getDashboardQueryDeltaColor(queryResult) : undefined
 
@@ -85,6 +89,7 @@ export default function DashboardText({ element, children }: DashboardTextProps)
         ...semanticStyle,
         ...pickExplicitTextStyle(props),
         ...(props.style && typeof props.style === 'object' ? props.style : {}),
+        ...headerTextOverride,
         ...(queryDeltaColor ? { color: queryDeltaColor } : {}),
       },
     },
