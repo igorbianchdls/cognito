@@ -15,7 +15,7 @@ import {
   type DashboardAppearanceOverrides,
 } from '@/products/artifacts/dashboard/renderer/dashboardThemeConfig'
 
-export type DashboardAppearanceMode = 'theme' | 'colors' | 'kpi' | 'chart' | 'header' | 'insights'
+export type DashboardAppearanceMode = 'theme' | 'kpi' | 'chart' | 'header' | 'insights'
 
 const DASHBOARD_FONT_OPTIONS = [
   { label: 'Tema', value: '' },
@@ -467,7 +467,6 @@ export function DashboardThemeModal({
 
   const titles: Record<DashboardAppearanceMode, string> = {
     theme: 'Selecionar um tema',
-    colors: 'Selecionar cores do chart',
     kpi: 'Editar UI global dos KPIs',
     chart: 'Editar UI global dos charts',
     header: 'Editar UI global do header',
@@ -595,6 +594,45 @@ export function DashboardThemeModal({
     )
   }
 
+  function renderChartPaletteOptions() {
+    return (
+      <div className="grid grid-cols-3 gap-x-4 gap-y-5">
+        {chartPalettes.map((palette) => {
+          const isSelected = selectedChartPalette === palette.value
+
+          return (
+            <button
+              key={palette.value}
+              type="button"
+              onClick={() => onSelectChartPalette(palette.value)}
+              className="text-left"
+            >
+              <div
+                className={`relative overflow-hidden rounded-[14px] border bg-white p-4 transition ${
+                  isSelected ? 'border-[#0075E2] shadow-[0_12px_30px_rgba(0,117,226,0.18)]' : 'border-[#ececec]'
+                }`}
+              >
+                <div className="mb-4 flex gap-2">
+                  {palette.colors.map((color) => (
+                    <div
+                      key={color}
+                      className="h-16 flex-1 rounded-[10px]"
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
+                <div className="text-[15px] font-medium tracking-[-0.02em] text-[#111111]">{palette.label}</div>
+                {isSelected ? (
+                  <div className="absolute inset-x-0 bottom-0 h-[4px] bg-[#0075E2]" />
+                ) : null}
+              </div>
+            </button>
+          )
+        })}
+      </div>
+    )
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-6 py-10">
       <div className="flex max-h-[88vh] w-full max-w-[960px] flex-col rounded-[24px] bg-white p-6 shadow-[0_20px_80px_rgba(0,0,0,0.28)]">
@@ -612,9 +650,8 @@ export function DashboardThemeModal({
         <div className="mb-5 flex flex-wrap gap-2 rounded-[14px] bg-[#f4f4f3] p-1">
           {[
             ['theme', 'Tema'],
-            ['colors', 'Cores'],
             ['kpi', 'KPI'],
-            ['chart', 'Chart'],
+            ['chart', 'Grafic'],
             ['header', 'Header'],
             ['insights', 'Insights'],
           ].map(([value, label]) => (
@@ -640,41 +677,6 @@ export function DashboardThemeModal({
               <PanelSection title="Borda" description="Escolha o preset global de borda dos cards." defaultOpen>
                 {renderBorderOptions()}
               </PanelSection>
-            </div>
-          ) : mode === 'colors' ? (
-            <div className="grid grid-cols-3 gap-x-4 gap-y-5">
-              {chartPalettes.map((palette) => {
-                const isSelected = selectedChartPalette === palette.value
-
-                return (
-                  <button
-                    key={palette.value}
-                    type="button"
-                    onClick={() => onSelectChartPalette(palette.value)}
-                    className="text-left"
-                  >
-                    <div
-                      className={`relative overflow-hidden rounded-[14px] border bg-white p-4 transition ${
-                        isSelected ? 'border-[#0075E2] shadow-[0_12px_30px_rgba(0,117,226,0.18)]' : 'border-[#ececec]'
-                      }`}
-                    >
-                      <div className="mb-4 flex gap-2">
-                        {palette.colors.map((color) => (
-                          <div
-                            key={color}
-                            className="h-16 flex-1 rounded-[10px]"
-                            style={{ backgroundColor: color }}
-                          />
-                        ))}
-                      </div>
-                      <div className="text-[15px] font-medium tracking-[-0.02em] text-[#111111]">{palette.label}</div>
-                      {isSelected ? (
-                        <div className="absolute inset-x-0 bottom-0 h-[4px] bg-[#0075E2]" />
-                      ) : null}
-                    </div>
-                  </button>
-                )
-              })}
             </div>
           ) : mode === 'kpi' ? (
             <div className="space-y-3">
@@ -726,6 +728,10 @@ export function DashboardThemeModal({
             </div>
           ) : mode === 'chart' ? (
             <div className="space-y-3">
+              <PanelSection title="Cores do Gráfico" description="Escolha a paleta global aplicada aos charts." defaultOpen>
+                {renderChartPaletteOptions()}
+              </PanelSection>
+
               <PanelSection title="Card" description="Card global dos charts." defaultOpen>
                 {renderCardStyleEditor({
                   style: cardTheme.chartCard,
