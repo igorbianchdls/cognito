@@ -945,7 +945,7 @@ function buildClassicGridDashboardTemplateSource(themeName: string) {
     )
     .replace(
       `<Vertical gap={20} style={{ padding: '0 28px 28px' }}>`,
-      `<Grid columns={20} gap={18} rowHeight={32} style={{ padding: '0 28px 28px' }}>`,
+      `<Grid columns={24} gap={18} rowHeight={16} style={{ padding: '0 28px 28px' }}>`,
     )
     .replace(`<Horizontal gap={14} columns={20} rowHeight={32}>`, '')
     .replace(`</Horizontal>\n\n          <Horizontal gap={18} columns={12} rowHeight={32}>`, '')
@@ -953,15 +953,20 @@ function buildClassicGridDashboardTemplateSource(themeName: string) {
     .replace(`</Horizontal>\n\n          <Horizontal gap={18} columns={12} rowHeight={32}>`, '')
     .replace(`</Horizontal>\n\n          <Horizontal gap={18} columns={12} rowHeight={32}>`, '')
     .replace(`</Horizontal>\n          </Vertical>`, `</Grid>`)
-    .replace(`id="classic-insight-aceleracao" span={4}`, `id="classic-insight-aceleracao" span={7}`)
-    .replace(`id="classic-insight-concentracao" span={4}`, `id="classic-insight-concentracao" span={7}`)
-    .replace(`id="classic-insight-conversao" span={4}`, `id="classic-insight-conversao" span={6}`)
-    .replace(`id="classic-chart-mix" span={6}`, `id="classic-chart-mix" span={10}`)
-    .replace(`id="classic-chart-share" span={6}`, `id="classic-chart-share" span={10}`)
-    .replace(`id="classic-chart-tendencia"\n              span={6}`, `id="classic-chart-tendencia"\n              span={10}`)
-    .replace(`id="classic-table-pedidos" span={6}`, `id="classic-table-pedidos" span={10}`)
-    .replace(`id="classic-chart-status" span={6}`, `id="classic-chart-status" span={10}`)
-    .replace(`id="classic-pivot-canal-status" span={6}`, `id="classic-pivot-canal-status" span={10}`)
+    .replace(`id="classic-kpi-receita" span={4}`, `id="classic-kpi-receita" span={5}`)
+    .replace(`id="classic-kpi-pedidos" span={4}`, `id="classic-kpi-pedidos" span={5}`)
+    .replace(`id="classic-kpi-ticket" span={4}`, `id="classic-kpi-ticket" span={5}`)
+    .replace(`id="classic-kpi-canais" span={4}`, `id="classic-kpi-canais" span={5}`)
+    .replace(`id="classic-kpi-aprovacao" span={4}`, `id="classic-kpi-aprovacao" span={4}`)
+    .replace(`id="classic-insight-aceleracao" span={4}`, `id="classic-insight-aceleracao" span={8}`)
+    .replace(`id="classic-insight-concentracao" span={4}`, `id="classic-insight-concentracao" span={8}`)
+    .replace(`id="classic-insight-conversao" span={4}`, `id="classic-insight-conversao" span={8}`)
+    .replace(`id="classic-chart-mix" span={6}`, `id="classic-chart-mix" span={12}`)
+    .replace(`id="classic-chart-share" span={6}`, `id="classic-chart-share" span={12}`)
+    .replace(`id="classic-chart-tendencia"\n              span={6}`, `id="classic-chart-tendencia"\n              span={12}`)
+    .replace(`id="classic-table-pedidos" span={6}`, `id="classic-table-pedidos" span={12}`)
+    .replace(`id="classic-chart-status" span={6}`, `id="classic-chart-status" span={12}`)
+    .replace(`id="classic-pivot-canal-status" span={6}`, `id="classic-pivot-canal-status" span={12}`)
 }
 
 export function buildClassicGridDashboardTemplateVariant(themeName?: string) {
