@@ -17,6 +17,16 @@ import {
 
 export type DashboardAppearanceMode = 'theme' | 'colors' | 'border' | 'kpi' | 'chart' | 'header' | 'insights'
 
+const DASHBOARD_FONT_OPTIONS = [
+  { label: 'Tema', value: '' },
+  { label: 'Inter', value: 'Inter, sans-serif' },
+  { label: 'Manrope', value: 'Manrope, sans-serif' },
+  { label: 'IBM Plex Sans', value: '"IBM Plex Sans", sans-serif' },
+  { label: 'DM Sans', value: '"DM Sans", sans-serif' },
+  { label: 'Plus Jakarta Sans', value: '"Plus Jakarta Sans", sans-serif' },
+  { label: 'Space Grotesk', value: '"Space Grotesk", sans-serif' },
+] as const
+
 function getThemePreviewStyle(theme: string) {
   const styles: Record<string, { background: string; accent: string; border: string; title: string }> = {
     light: {
@@ -242,6 +252,28 @@ function NumberInput({
   )
 }
 
+function FontSelect({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (value: string) => void
+}) {
+  return (
+    <select
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      className="h-10 rounded-[12px] border border-[#d9d9d4] bg-white px-3 text-[13px] text-[#111111] outline-none transition focus:border-[#0075E2]"
+    >
+      {DASHBOARD_FONT_OPTIONS.map((option) => (
+        <option key={option.label} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  )
+}
+
 function ColorInput({
   value,
   onChange,
@@ -350,6 +382,9 @@ function renderTextStyleEditor({
       </Field>
       <Field label="Peso">
         <TextInput value={toInputValue(style.fontWeight)} onChange={(value) => onSet(['fontWeight'], value.trim() || undefined)} placeholder="500" />
+      </Field>
+      <Field label="Fonte">
+        <FontSelect value={toInputValue(style.fontFamily)} onChange={(value) => onSet(['fontFamily'], value || undefined)} />
       </Field>
       <Field label="Line height">
         <TextInput value={toInputValue(style.lineHeight)} onChange={(value) => onSet(['lineHeight'], value.trim() || undefined)} placeholder="1.4" />
@@ -851,6 +886,12 @@ export function DashboardThemeModal({
                       <Field label="Min height">
                         <TextInput value={toInputValue(datePickerTheme.fieldStyle.minHeight)} onChange={(value) => setOverride(['header', 'datePicker', 'fieldStyle', 'minHeight'], value.trim() || undefined)} placeholder="38" />
                       </Field>
+                      <Field label="Fonte">
+                        <FontSelect value={toInputValue(datePickerTheme.fieldStyle.fontFamily)} onChange={(value) => setOverride(['header', 'datePicker', 'fieldStyle', 'fontFamily'], value || undefined)} />
+                      </Field>
+                      <Field label="Peso">
+                        <TextInput value={toInputValue(datePickerTheme.fieldStyle.fontWeight)} onChange={(value) => setOverride(['header', 'datePicker', 'fieldStyle', 'fontWeight'], value.trim() || undefined)} placeholder="500" />
+                      </Field>
                     </FieldGrid>
                   </PanelSection>
 
@@ -875,6 +916,9 @@ export function DashboardThemeModal({
                       <Field label="Peso">
                         <TextInput value={toInputValue(datePickerTheme.presetButtonStyle.fontWeight)} onChange={(value) => setOverride(['header', 'datePicker', 'presetButtonStyle', 'fontWeight'], value.trim() || undefined)} placeholder="500" />
                       </Field>
+                      <Field label="Fonte">
+                        <FontSelect value={toInputValue(datePickerTheme.presetButtonStyle.fontFamily)} onChange={(value) => setOverride(['header', 'datePicker', 'presetButtonStyle', 'fontFamily'], value || undefined)} />
+                      </Field>
                     </FieldGrid>
                   </PanelSection>
 
@@ -891,6 +935,9 @@ export function DashboardThemeModal({
                       </Field>
                       <Field label="Peso">
                         <TextInput value={toInputValue(datePickerTheme.activePresetButtonStyle.fontWeight)} onChange={(value) => setOverride(['header', 'datePicker', 'activePresetButtonStyle', 'fontWeight'], value.trim() || undefined)} placeholder="600" />
+                      </Field>
+                      <Field label="Fonte">
+                        <FontSelect value={toInputValue(datePickerTheme.activePresetButtonStyle.fontFamily)} onChange={(value) => setOverride(['header', 'datePicker', 'activePresetButtonStyle', 'fontFamily'], value || undefined)} />
                       </Field>
                     </FieldGrid>
                   </PanelSection>
