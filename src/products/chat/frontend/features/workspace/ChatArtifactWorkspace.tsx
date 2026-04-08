@@ -29,6 +29,7 @@ import {
   DashboardThemeModal,
   type DashboardAppearanceMode,
 } from '@/products/artifacts/dashboard/workspace/DashboardThemeModal'
+import type { DashboardAppearanceOverrides } from '@/products/artifacts/dashboard/renderer/dashboardThemeConfig'
 import HeaderActions from '@/products/chat/shared/chat-ui/components/HeaderActions'
 import DashboardPicker from '@/products/chat/shared/chat-ui/components/json-render/DashboardPicker'
 import JsonRenderPreview from '@/products/chat/shared/chat-ui/components/json-render/JsonRenderPreview'
@@ -40,6 +41,14 @@ function getTitleFromPreviewPath(path: string) {
 
 function isDashboardArtifactPath(path: string) {
   return String(path || '').startsWith('/vercel/sandbox/dashboard/') && String(path || '').endsWith('.tsx')
+}
+
+function cloneAppearanceOverrides(overrides: DashboardAppearanceOverrides): DashboardAppearanceOverrides {
+  return JSON.parse(JSON.stringify(overrides || {})) as DashboardAppearanceOverrides
+}
+
+function areAppearanceOverridesEqual(left: DashboardAppearanceOverrides, right: DashboardAppearanceOverrides) {
+  return JSON.stringify(left || {}) === JSON.stringify(right || {})
 }
 
 async function readSandboxTextFile(chatId: string, path: string) {
@@ -106,6 +115,8 @@ export function ChatArtifactWorkspace({
   const [chartPaletteBaseName, setChartPaletteBaseName] = useState(DASHBOARD_CHART_PALETTE_OPTIONS[0].value)
   const [draftBorderPreset, setDraftBorderPreset] = useState<DashboardBorderPreset>(DASHBOARD_BORDER_PRESET_OPTIONS[0].value)
   const [borderPresetBaseName, setBorderPresetBaseName] = useState<DashboardBorderPreset>(DASHBOARD_BORDER_PRESET_OPTIONS[0].value)
+  const [draftAppearanceOverrides, setDraftAppearanceOverrides] = useState<DashboardAppearanceOverrides>({})
+  const [appearanceOverridesBase, setAppearanceOverridesBase] = useState<DashboardAppearanceOverrides>({})
   const [dashboardSource, setDashboardSource] = useState('')
   const [themeBusy, setThemeBusy] = useState(false)
 
@@ -204,6 +215,8 @@ export function ChatArtifactWorkspace({
                   disabled={themeBusy}
                   onClick={() => {
                     setAppearanceMode('theme')
+                    setAppearanceOverridesBase(cloneAppearanceOverrides(draftAppearanceOverrides))
+                    setDraftAppearanceOverrides(cloneAppearanceOverrides(draftAppearanceOverrides))
                     setThemeModalOpen(true)
                   }}
                   className="flex items-center justify-center rounded-md border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] px-2 py-[0.35rem] text-[14px] font-medium text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B] disabled:cursor-default disabled:opacity-60"
@@ -253,12 +266,14 @@ export function ChatArtifactWorkspace({
           setDraftThemeName(themeModalBaseName)
           setDraftChartPalette(chartPaletteBaseName)
           setDraftBorderPreset(borderPresetBaseName)
+          setDraftAppearanceOverrides(cloneAppearanceOverrides(appearanceOverridesBase))
           setThemeModalOpen(false)
         }}
         onConfirm={() => {
           setThemeModalBaseName(draftThemeName)
           setChartPaletteBaseName(draftChartPalette)
           setBorderPresetBaseName(draftBorderPreset)
+          setAppearanceOverridesBase(cloneAppearanceOverrides(draftAppearanceOverrides))
           setThemeModalOpen(false)
         }}
         onRevert={() => {
@@ -266,6 +281,7 @@ export function ChatArtifactWorkspace({
           setDraftThemeName(themeModalBaseName)
           setDraftChartPalette(chartPaletteBaseName)
           setDraftBorderPreset(borderPresetBaseName)
+          setDraftAppearanceOverrides(cloneAppearanceOverrides(appearanceOverridesBase))
         }}
         mode={appearanceMode}
         onModeChange={setAppearanceMode}
@@ -281,6 +297,8 @@ export function ChatArtifactWorkspace({
           setDraftBorderPreset(borderPreset as DashboardBorderPreset)
           void applyDashboardAppearance(draftThemeName, draftChartPalette, borderPreset)
         }}
+        appearanceOverrides={draftAppearanceOverrides}
+        onAppearanceOverridesChange={setDraftAppearanceOverrides}
         selectedTheme={draftThemeName}
         selectedChartPalette={draftChartPalette}
         selectedBorderPreset={draftBorderPreset}
@@ -290,6 +308,7 @@ export function ChatArtifactWorkspace({
           draftThemeName === themeModalBaseName
           && draftChartPalette === chartPaletteBaseName
           && draftBorderPreset === borderPresetBaseName
+          && areAppearanceOverridesEqual(draftAppearanceOverrides, appearanceOverridesBase)
         }
         themes={APPS_THEME_OPTIONS}
       />
