@@ -4,6 +4,8 @@ import React from 'react'
 
 import { applyPrimaryDateRange } from '@/products/bi/json-render/dateFilters'
 import { useData } from '@/products/bi/json-render/context'
+import { FilterEditorModal } from '@/products/artifacts/dashboard/editors/filter/FilterEditorModal'
+import { EditableComponentOverlay } from '@/products/artifacts/dashboard/editors/shared/EditableComponentOverlay'
 import {
   resolveDashboardFilterTheme,
   useDashboardThemeSelection,
@@ -648,14 +650,40 @@ export default function DashboardFilter({
   const layout = (p.layout || 'vertical') as 'vertical' | 'horizontal'
   const applyMode = (p.applyMode || 'auto') as 'auto' | 'manual'
   const fields = resolveSlicerDefinitions(element, p)
+  const [isEditorOpen, setIsEditorOpen] = React.useState(false)
+  const [editorDraft, setEditorDraft] = React.useState(() => ({
+    prompt: typeof p.prompt === 'string' ? p.prompt : '',
+    layout,
+    applyMode,
+    fields: fields.map((field) => ({
+      label: typeof field?.label === 'string' ? field.label : '',
+      field: typeof field?.field === 'string' ? field.field : '',
+      variant: typeof field?.variant === 'string' ? field.variant : 'checklist',
+      mode: typeof field?.mode === 'string' ? field.mode : 'multiple',
+    })),
+  }))
 
   return (
-    <SlicerContent
-      element={{ ...element, props: p }}
-      fields={fields}
-      layout={layout}
-      applyMode={applyMode}
-      onAction={onAction}
-    />
+    <>
+      <EditableComponentOverlay onEdit={() => setIsEditorOpen(true)} forceVisible={isEditorOpen}>
+        <SlicerContent
+          element={{ ...element, props: p }}
+          fields={fields}
+          layout={layout}
+          applyMode={applyMode}
+          onAction={onAction}
+        />
+      </EditableComponentOverlay>
+
+      <FilterEditorModal
+        isOpen={isEditorOpen}
+        initialValue={editorDraft}
+        onClose={() => setIsEditorOpen(false)}
+        onSave={(value) => {
+          setEditorDraft(value)
+          setIsEditorOpen(false)
+        }}
+      />
+    </>
   )
 }

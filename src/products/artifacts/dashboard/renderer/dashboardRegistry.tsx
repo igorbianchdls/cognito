@@ -13,6 +13,9 @@ import JsonRenderRadarChart from '@/products/bi/json-render/components/RadarChar
 import JsonRenderSankeyChart from '@/products/bi/json-render/components/SankeyChart'
 import JsonRenderScatterChart from '@/products/bi/json-render/components/ScatterChart'
 import JsonRenderTreemapChart from '@/products/bi/json-render/components/TreemapChart'
+import { ChartEditorModal } from '@/products/artifacts/dashboard/editors/chart/ChartEditorModal'
+import { HeaderEditorModal } from '@/products/artifacts/dashboard/editors/header/HeaderEditorModal'
+import { EditableComponentOverlay } from '@/products/artifacts/dashboard/editors/shared/EditableComponentOverlay'
 import {
   DashboardHeaderScopeProvider,
   DashboardThemeSelectionProvider,
@@ -230,6 +233,18 @@ function DashboardChart({
   const { appearanceOverrides, chartPaletteName, themeName } = useDashboardThemeSelection()
   const chartTheme = resolveDashboardChartTheme(themeName, chartPaletteName, appearanceOverrides)
   const type = (element?.props || {}).type
+  const props = (element?.props || {}) as AnyRecord
+  const [isEditorOpen, setIsEditorOpen] = React.useState(false)
+  const [editorDraft, setEditorDraft] = React.useState(() => ({
+    prompt: typeof props.prompt === 'string' ? props.prompt : '',
+    chartType: typeof type === 'string' ? type : 'bar',
+    format: typeof props.format === 'string' ? props.format : 'number',
+    height: props.height === undefined ? '' : String(props.height),
+    query:
+      props.dataQuery && typeof props.dataQuery === 'object' && typeof (props.dataQuery as AnyRecord).query === 'string'
+        ? String((props.dataQuery as AnyRecord).query)
+        : '',
+  }))
   const defaults = {
     titleStyle: chartTheme.titleStyle,
     colorScheme: chartTheme.colorScheme,
@@ -241,7 +256,24 @@ function DashboardChart({
     margin: chartTheme.margin,
     ...(normalizeDashboardChartType(type) === 'gauge' ? resolveDashboardGaugeTheme(themeName) : {}),
   } as AnyRecord
-  return renderChartByType(type, { ...element, props: deepMerge(defaults, (element?.props || {}) as AnyRecord) }, onAction)
+  const chartNode = renderChartByType(type, { ...element, props: deepMerge(defaults, (element?.props || {}) as AnyRecord) }, onAction)
+
+  return (
+    <>
+      <EditableComponentOverlay onEdit={() => setIsEditorOpen(true)} forceVisible={isEditorOpen}>
+        {chartNode}
+      </EditableComponentOverlay>
+      <ChartEditorModal
+        isOpen={isEditorOpen}
+        initialValue={editorDraft}
+        onClose={() => setIsEditorOpen(false)}
+        onSave={(value) => {
+          setEditorDraft(value)
+          setIsEditorOpen(false)
+        }}
+      />
+    </>
+  )
 }
 
 function normalizeProps(input: Record<string, any> | undefined): Record<string, any> {
@@ -352,6 +384,13 @@ function HtmlNode({
   })
   const headerStyle = tag === 'header' ? resolveDashboardHeaderCardOverride(appearanceOverrides) : {}
   const queryDeltaColor = props['data-ui'] === 'kpi-delta' ? getDashboardQueryDeltaColor(queryResult) : undefined
+  const [isHeaderEditorOpen, setIsHeaderEditorOpen] = React.useState(false)
+  const [headerEditorDraft, setHeaderEditorDraft] = React.useState(() => ({
+    prompt: typeof props.prompt === 'string' ? props.prompt : '',
+    eyebrow: '',
+    title: '',
+    subtitle: '',
+  }))
   const fallbackContent =
     typeof props.text === 'string'
       ? resolveDashboardQueryTemplate(props.text, queryResult)
@@ -377,7 +416,24 @@ function HtmlNode({
   )
 
   if (tag === 'header') {
-    return <DashboardHeaderScopeProvider>{node}</DashboardHeaderScopeProvider>
+    return (
+      <DashboardHeaderScopeProvider>
+        <>
+          <EditableComponentOverlay onEdit={() => setIsHeaderEditorOpen(true)} forceVisible={isHeaderEditorOpen}>
+            {node}
+          </EditableComponentOverlay>
+          <HeaderEditorModal
+            isOpen={isHeaderEditorOpen}
+            initialValue={headerEditorDraft}
+            onClose={() => setIsHeaderEditorOpen(false)}
+            onSave={(value) => {
+              setHeaderEditorDraft(value)
+              setIsHeaderEditorOpen(false)
+            }}
+          />
+        </>
+      </DashboardHeaderScopeProvider>
+    )
   }
 
   return node

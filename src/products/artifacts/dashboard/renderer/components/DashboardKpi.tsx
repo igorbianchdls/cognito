@@ -5,6 +5,8 @@ import React from 'react'
 import { useData, useDataValue } from '@/products/bi/json-render/context'
 import { applyPrimaryDateRange } from '@/products/bi/json-render/dateFilters'
 import { useThemeOverrides } from '@/products/bi/json-render/theme/ThemeContext'
+import { KpiEditorModal } from '@/products/artifacts/dashboard/editors/kpi/KpiEditorModal'
+import { EditableComponentOverlay } from '@/products/artifacts/dashboard/editors/shared/EditableComponentOverlay'
 import { DashboardKpiCompare } from '@/products/artifacts/dashboard/renderer/components/DashboardKpiCompare'
 import { DashboardKpiCompareContext } from '@/products/artifacts/dashboard/renderer/components/DashboardKpiContext'
 import {
@@ -160,6 +162,14 @@ export default function DashboardKpi({
   const positiveColor = typeof props.positiveColor === 'string' ? props.positiveColor : '#15803D'
   const negativeColor = typeof props.negativeColor === 'string' ? props.negativeColor : '#DC2626'
   const neutralColor = typeof props.neutralColor === 'string' ? props.neutralColor : '#64748B'
+  const [isEditorOpen, setIsEditorOpen] = React.useState(false)
+  const [editorDraft, setEditorDraft] = React.useState(() => ({
+    prompt: typeof props.prompt === 'string' ? props.prompt : '',
+    title,
+    description,
+    format,
+    unit,
+  }))
 
   const { data } = useData()
   const valueFromPath = useDataValue(valuePath || '', undefined)
@@ -390,54 +400,68 @@ export default function DashboardKpi({
 
   return (
     <DashboardKpiCompareContext.Provider value={comparisonContextValue}>
-      <div
-        style={{
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          ...kpiTheme.style,
-          ...(styleOverride || {}),
-          ...(cardStyle || {}),
-        }}
-      >
-        {title ? (
-          <p
-            data-ui="kpi-title"
+      <>
+        <EditableComponentOverlay onEdit={() => setIsEditorOpen(true)} forceVisible={isEditorOpen}>
+          <div
             style={{
-              margin: 0,
-              ...kpiTheme.titleStyle,
-              ...(titleStyle || {}),
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              ...kpiTheme.style,
+              ...(styleOverride || {}),
+              ...(cardStyle || {}),
             }}
           >
-            {title}
-          </p>
-        ) : null}
-        <div
-          data-ui="kpi-value"
-          style={{
-            margin: 0,
-            ...kpiTheme.valueStyle,
-            ...(valueStyle || {}),
+            {title ? (
+              <p
+                data-ui="kpi-title"
+                style={{
+                  margin: 0,
+                  ...kpiTheme.titleStyle,
+                  ...(titleStyle || {}),
+                }}
+              >
+                {title}
+              </p>
+            ) : null}
+            <div
+              data-ui="kpi-value"
+              style={{
+                margin: 0,
+                ...kpiTheme.valueStyle,
+                ...(valueStyle || {}),
+              }}
+            >
+              {formattedValue}
+              {unit ? ` ${unit}` : ''}
+            </div>
+            {hasExplicitComparisonNode ? childArray : <DashboardKpiCompare element={{ props: {} }} />}
+            {description ? (
+              <p
+                data-ui="description"
+                style={{
+                  margin: 0,
+                  ...kpiTheme.descriptionStyle,
+                  ...(descriptionStyle || {}),
+                }}
+              >
+                {description}
+              </p>
+            ) : null}
+            {queryState.error ? <div className="mt-1 text-xs text-red-600">{queryState.error}</div> : null}
+          </div>
+        </EditableComponentOverlay>
+
+        <KpiEditorModal
+          isOpen={isEditorOpen}
+          initialValue={editorDraft}
+          onClose={() => setIsEditorOpen(false)}
+          onSave={(value) => {
+            setEditorDraft(value)
+            setIsEditorOpen(false)
           }}
-        >
-          {formattedValue}
-          {unit ? ` ${unit}` : ''}
-        </div>
-        {hasExplicitComparisonNode ? childArray : <DashboardKpiCompare element={{ props: {} }} />}
-        {description ? (
-          <p
-            data-ui="description"
-            style={{
-              margin: 0,
-              ...kpiTheme.descriptionStyle,
-              ...(descriptionStyle || {}),
-            }}
-          >
-            {description}
-          </p>
-        ) : null}
-        {queryState.error ? <div className="mt-1 text-xs text-red-600">{queryState.error}</div> : null}
-      </div>
+        />
+      </>
     </DashboardKpiCompareContext.Provider>
   )
 }
