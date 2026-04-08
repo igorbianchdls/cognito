@@ -9,6 +9,8 @@ export type EditableInsightItem = {
   text: string
 }
 
+type InsightScheduleFrequency = 'daily' | 'weekly' | 'no_repeat'
+
 export function InsightsEditorModal({
   isOpen,
   initialPrompt,
@@ -22,13 +24,28 @@ export function InsightsEditorModal({
   onClose: () => void
   onSave: (value: { prompt: string; items: EditableInsightItem[] }) => void
 }) {
+  const sectionBackground = '#f4f6f8'
   const [prompt, setPrompt] = React.useState(initialPrompt)
   const [items, setItems] = React.useState<EditableInsightItem[]>(initialItems)
+  const [schedule, setSchedule] = React.useState<{
+    frequency: InsightScheduleFrequency
+    date: string
+    time: string
+  }>({
+    frequency: 'no_repeat',
+    date: '',
+    time: '',
+  })
 
   React.useEffect(() => {
     if (!isOpen) return
     setPrompt(initialPrompt)
     setItems(initialItems)
+    setSchedule({
+      frequency: 'no_repeat',
+      date: '',
+      time: '',
+    })
   }, [initialItems, initialPrompt, isOpen])
 
   function updateItem(index: number, patch: Partial<EditableInsightItem>) {
@@ -114,7 +131,7 @@ export function InsightsEditorModal({
             padding: 18,
             border: '1px solid #e7edf5',
             borderRadius: 20,
-            background: '#ffffff',
+            background: sectionBackground,
           }}
         >
           <div>
@@ -140,6 +157,106 @@ export function InsightsEditorModal({
               background: '#fcfdff',
             }}
           />
+        </section>
+
+        <section
+          style={{
+            display: 'grid',
+            gap: 10,
+            padding: 18,
+            border: '1px solid #e7edf5',
+            borderRadius: 20,
+            background: sectionBackground,
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>Schedule</div>
+            <p style={{ margin: '6px 0 0', fontSize: 13, lineHeight: 1.6, color: '#64748b' }}>
+              Agendamento visual da execução futura desse bloco.
+            </p>
+          </div>
+          <div
+            style={{
+              display: 'grid',
+              gap: 12,
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            }}
+          >
+            <label style={{ display: 'grid', gap: 6 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>Frequência</span>
+              <select
+                value={schedule.frequency}
+                onChange={(event) => {
+                  setSchedule((current) => ({
+                    ...current,
+                    frequency: event.target.value as InsightScheduleFrequency,
+                  }))
+                }}
+                style={{
+                  height: 44,
+                  border: '1px solid #d9e2ec',
+                  borderRadius: 14,
+                  padding: '0 14px',
+                  fontSize: 14,
+                  color: '#0f172a',
+                  outline: 'none',
+                  background: '#ffffff',
+                }}
+              >
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="no_repeat">No repeat</option>
+              </select>
+            </label>
+
+            <label style={{ display: 'grid', gap: 6 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>Data</span>
+              <input
+                type="date"
+                value={schedule.date}
+                onChange={(event) => {
+                  setSchedule((current) => ({
+                    ...current,
+                    date: event.target.value,
+                  }))
+                }}
+                style={{
+                  height: 44,
+                  border: '1px solid #d9e2ec',
+                  borderRadius: 14,
+                  padding: '0 14px',
+                  fontSize: 14,
+                  color: '#0f172a',
+                  outline: 'none',
+                  background: '#ffffff',
+                }}
+              />
+            </label>
+
+            <label style={{ display: 'grid', gap: 6 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>Horário</span>
+              <input
+                type="time"
+                value={schedule.time}
+                onChange={(event) => {
+                  setSchedule((current) => ({
+                    ...current,
+                    time: event.target.value,
+                  }))
+                }}
+                style={{
+                  height: 44,
+                  border: '1px solid #d9e2ec',
+                  borderRadius: 14,
+                  padding: '0 14px',
+                  fontSize: 14,
+                  color: '#0f172a',
+                  outline: 'none',
+                  background: '#ffffff',
+                }}
+              />
+            </label>
+          </div>
         </section>
 
         <section
@@ -190,7 +307,7 @@ export function InsightsEditorModal({
                   padding: 18,
                   border: '1px solid #e7edf5',
                   borderRadius: 20,
-                  background: '#ffffff',
+                  background: sectionBackground,
                 }}
               >
                 <div
