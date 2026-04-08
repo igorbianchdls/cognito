@@ -11,6 +11,8 @@ export const APPS_THEME_OPTIONS: ThemeOption[] = [
   { value: 'charcoal', label: 'Charcoal' },
   { value: 'midnight', label: 'Midnight' },
   { value: 'metro', label: 'Metro' },
+  { value: 'ocean_glass', label: 'Ocean Glass' },
+  { value: 'emerald_glass', label: 'Emerald Glass' },
   { value: 'aero', label: 'Aero' },
 ];
 

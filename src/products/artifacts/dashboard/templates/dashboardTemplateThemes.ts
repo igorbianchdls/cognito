@@ -13,6 +13,9 @@ export type DashboardTemplateThemeTokens = {
   pageBg: string
   surfaceBg: string
   surfaceBorder: string
+  surfaceBlur?: string
+  surfaceShadow?: string
+  surfaceBackgroundImage?: string
   textPrimary: string
   textSecondary: string
   titleColor: string
@@ -294,6 +297,64 @@ export const DASHBOARD_TEMPLATE_THEME_TOKENS: Record<string, DashboardTemplateTh
     headerDatePickerActiveBorder: '#F43F5E',
     headerDatePickerActiveText: '#FFFFFF',
   },
+  ocean_glass: {
+    dark: true,
+    cardFrame: { variant: 'hud', cornerSize: 10, cornerWidth: 2 },
+    primary: '#38BDF8',
+    pageBg: '#07111F',
+    surfaceBg: 'rgba(255,255,255,0.10)',
+    surfaceBorder: 'rgba(255,255,255,0.18)',
+    surfaceBlur: 'blur(18px)',
+    surfaceShadow: '0 18px 48px rgba(3, 10, 24, 0.34)',
+    surfaceBackgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.06) 100%)',
+    textPrimary: '#F4F8FC',
+    textSecondary: 'rgba(244,248,252,0.72)',
+    titleColor: '#F8FBFF',
+    kpiValueColor: '#FFFFFF',
+    headerBg: 'rgba(9, 21, 38, 0.74)',
+    headerText: '#F8FBFF',
+    headerSubtitle: 'rgba(244,248,252,0.72)',
+    headerDatePickerBg: 'rgba(255,255,255,0.08)',
+    headerDatePickerColor: '#F4F8FC',
+    headerDatePickerBorder: 'rgba(255,255,255,0.18)',
+    headerDatePickerIcon: '#A5E3FB',
+    headerDatePickerLabel: 'rgba(244,248,252,0.72)',
+    accentSurface: 'rgba(125,211,252,0.16)',
+    accentBorder: 'rgba(125,211,252,0.28)',
+    accentText: '#E0F7FF',
+    headerDatePickerActiveBg: 'rgba(56,189,248,0.18)',
+    headerDatePickerActiveBorder: '#7DD3FC',
+    headerDatePickerActiveText: '#FFFFFF',
+  },
+  emerald_glass: {
+    dark: true,
+    cardFrame: { variant: 'hud', cornerSize: 10, cornerWidth: 2 },
+    primary: '#34D399',
+    pageBg: '#081A17',
+    surfaceBg: 'rgba(255,255,255,0.10)',
+    surfaceBorder: 'rgba(184,255,230,0.18)',
+    surfaceBlur: 'blur(18px)',
+    surfaceShadow: '0 18px 48px rgba(3, 14, 11, 0.32)',
+    surfaceBackgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.05) 100%)',
+    textPrimary: '#F2FFFB',
+    textSecondary: 'rgba(227,255,246,0.72)',
+    titleColor: '#F7FFFC',
+    kpiValueColor: '#FFFFFF',
+    headerBg: 'rgba(10, 28, 24, 0.76)',
+    headerText: '#F7FFFC',
+    headerSubtitle: 'rgba(227,255,246,0.72)',
+    headerDatePickerBg: 'rgba(255,255,255,0.08)',
+    headerDatePickerColor: '#F2FFFB',
+    headerDatePickerBorder: 'rgba(184,255,230,0.18)',
+    headerDatePickerIcon: '#6EE7B7',
+    headerDatePickerLabel: 'rgba(227,255,246,0.72)',
+    accentSurface: 'rgba(52,211,153,0.16)',
+    accentBorder: 'rgba(110,231,183,0.28)',
+    accentText: '#ECFFF7',
+    headerDatePickerActiveBg: 'rgba(52,211,153,0.18)',
+    headerDatePickerActiveBorder: '#6EE7B7',
+    headerDatePickerActiveText: '#FFFFFF',
+  },
 }
 
 export function resolveDashboardTemplateThemeTokens(
@@ -355,6 +416,9 @@ export type DashboardTemplateThemeTokens = {
   pageBg: string
   surfaceBg: string
   surfaceBorder: string
+  surfaceBlur?: string
+  surfaceShadow?: string
+  surfaceBackgroundImage?: string
   textPrimary: string
   textSecondary: string
   titleColor: string

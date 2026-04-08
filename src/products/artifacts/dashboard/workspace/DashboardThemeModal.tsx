@@ -89,6 +89,18 @@ function getThemePreviewStyle(theme: string) {
       border: '#404040',
       title: '#fafafa',
     },
+    ocean_glass: {
+      background: 'linear-gradient(135deg, #07111F 0%, #0E2238 55%, #163A59 100%)',
+      accent: '#7DD3FC',
+      border: 'rgba(255,255,255,0.22)',
+      title: '#F4F8FC',
+    },
+    emerald_glass: {
+      background: 'linear-gradient(135deg, #081A17 0%, #0F2E29 55%, #17453B 100%)',
+      accent: '#6EE7B7',
+      border: 'rgba(184,255,230,0.22)',
+      title: '#F2FFFB',
+    },
   }
 
   return styles[theme] || styles.light

@@ -28,6 +28,9 @@ export type DashboardCardStyle = {
   borderRadius: number
   padding: number
   boxShadow?: string
+  backdropFilter?: string
+  WebkitBackdropFilter?: string
+  backgroundImage?: string
   frame: HudFrameConfig | null
 }
 
@@ -216,6 +219,10 @@ function buildDashboardThemeConfigEntry(
     borderStyle: 'solid',
     borderRadius: radius,
     padding: 22,
+    backgroundImage: tokens.surfaceBackgroundImage,
+    backdropFilter: tokens.surfaceBlur,
+    WebkitBackdropFilter: tokens.surfaceBlur,
+    boxShadow: tokens.surfaceShadow,
     frame,
   }
 
@@ -988,6 +995,8 @@ const DASHBOARD_KPI_THEME_NAMES = [
   'charcoal',
   'midnight',
   'metro',
+  'ocean_glass',
+  'emerald_glass',
 ] as const
 
 export const DASHBOARD_KPI_THEME_CONFIG: Record<string, DashboardKpiTheme> = Object.fromEntries(
