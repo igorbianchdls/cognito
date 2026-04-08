@@ -133,6 +133,16 @@ function parseNumberInput(value: string) {
   return Number.isFinite(numeric) ? numeric : undefined
 }
 
+function normalizeColorForPicker(value: string) {
+  const normalized = String(value || '').trim()
+  if (/^#[0-9a-f]{6}$/i.test(normalized)) return normalized
+  if (/^#[0-9a-f]{3}$/i.test(normalized)) {
+    const [, r, g, b] = normalized
+    return `#${r}${r}${g}${g}${b}${b}`.toLowerCase()
+  }
+  return '#000000'
+}
+
 function PanelSection({
   title,
   description,
@@ -238,9 +248,28 @@ function ColorInput({
   value: string
   onChange: (value: string) => void
 }) {
+  const inputRef = React.useRef<HTMLInputElement | null>(null)
+  const pickerValue = normalizeColorForPicker(value)
+
   return (
     <div className="flex items-center gap-2 rounded-[12px] border border-[#d9d9d4] bg-white px-3">
-      <div className="h-4 w-4 rounded-full border border-black/10" style={{ backgroundColor: value || 'transparent' }} />
+      <input
+        ref={inputRef}
+        type="color"
+        value={pickerValue}
+        onChange={(event) => onChange(event.target.value)}
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden="true"
+      />
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        className="flex h-6 w-6 items-center justify-center rounded-full border border-black/10"
+        style={{ backgroundColor: value || 'transparent' }}
+        aria-label="Selecionar cor"
+        title="Selecionar cor"
+      />
       <input
         type="text"
         value={value}
