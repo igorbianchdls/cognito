@@ -85,7 +85,7 @@ export default function DashboardCardSurface({
       : `card-${getPathKey(path)}`
   const span = Math.max(1, toNumericLayoutValue(props.span, 1))
   const draggableId = `panel:${panelId}:${getPathKey(path)}`
-  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, isDragging } = useDraggable({
+  const { setNodeRef, transform, isDragging } = useDraggable({
     id: draggableId,
     disabled: !editableLayout || !layoutItem,
     data: {
@@ -163,34 +163,6 @@ export default function DashboardCardSurface({
         opacity: isDragging ? 0.5 : undefined,
       }}
     >
-      {editableLayout && layoutItem ? (
-        <button
-          className="dashboard-panel-structural-handle"
-          ref={setActivatorNodeRef}
-          type="button"
-          {...attributes}
-          {...listeners}
-          style={{
-            position: 'absolute',
-            top: 8,
-            right: 8,
-            zIndex: 3,
-            border: '1px solid rgba(148,163,184,0.5)',
-            backgroundColor: 'rgba(255,255,255,0.92)',
-            color: '#334155',
-            borderRadius: 999,
-            fontSize: 11,
-            lineHeight: 1,
-            padding: '6px 8px',
-            cursor: 'grab',
-            touchAction: 'none',
-          }}
-          title="Mover painel para outro container"
-          aria-label="Mover painel para outro container"
-        >
-          mover bloco
-        </button>
-      ) : null}
       {cardElement}
     </div>
   )
