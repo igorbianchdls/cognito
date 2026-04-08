@@ -24,7 +24,8 @@ export function InsightsEditorModal({
   onClose: () => void
   onSave: (value: { prompt: string; items: EditableInsightItem[] }) => void
 }) {
-  const sectionBackground = '#f4f6f8'
+  const sectionBackground = '#ffffff'
+  const fieldBackground = '#f4f6f8'
   const [prompt, setPrompt] = React.useState(initialPrompt)
   const [items, setItems] = React.useState<EditableInsightItem[]>(initialItems)
   const [schedule, setSchedule] = React.useState<{
@@ -129,7 +130,6 @@ export function InsightsEditorModal({
             display: 'grid',
             gap: 10,
             padding: 18,
-            border: '1px solid #e7edf5',
             borderRadius: 20,
             background: sectionBackground,
           }}
@@ -147,14 +147,14 @@ export function InsightsEditorModal({
             style={{
               minHeight: 120,
               resize: 'vertical',
-              border: '1px solid #d9e2ec',
+              border: 'none',
               borderRadius: 16,
               padding: '14px 16px',
               fontSize: 14,
               lineHeight: 1.65,
               color: '#0f172a',
               outline: 'none',
-              background: '#fcfdff',
+              background: fieldBackground,
             }}
           />
         </section>
@@ -164,7 +164,6 @@ export function InsightsEditorModal({
             display: 'grid',
             gap: 10,
             padding: 18,
-            border: '1px solid #e7edf5',
             borderRadius: 20,
             background: sectionBackground,
           }}
@@ -194,13 +193,13 @@ export function InsightsEditorModal({
                 }}
                 style={{
                   height: 44,
-                  border: '1px solid #d9e2ec',
+                  border: 'none',
                   borderRadius: 14,
                   padding: '0 14px',
                   fontSize: 14,
                   color: '#0f172a',
                   outline: 'none',
-                  background: '#ffffff',
+                  background: fieldBackground,
                 }}
               >
                 <option value="daily">Daily</option>
@@ -222,13 +221,13 @@ export function InsightsEditorModal({
                 }}
                 style={{
                   height: 44,
-                  border: '1px solid #d9e2ec',
+                  border: 'none',
                   borderRadius: 14,
                   padding: '0 14px',
                   fontSize: 14,
                   color: '#0f172a',
                   outline: 'none',
-                  background: '#ffffff',
+                  background: fieldBackground,
                 }}
               />
             </label>
@@ -246,13 +245,13 @@ export function InsightsEditorModal({
                 }}
                 style={{
                   height: 44,
-                  border: '1px solid #d9e2ec',
+                  border: 'none',
                   borderRadius: 14,
                   padding: '0 14px',
                   fontSize: 14,
                   color: '#0f172a',
                   outline: 'none',
-                  background: '#ffffff',
+                  background: fieldBackground,
                 }}
               />
             </label>
@@ -305,7 +304,6 @@ export function InsightsEditorModal({
                   display: 'grid',
                   gap: 10,
                   padding: 18,
-                  border: '1px solid #e7edf5',
                   borderRadius: 20,
                   background: sectionBackground,
                 }}
@@ -346,13 +344,13 @@ export function InsightsEditorModal({
                     placeholder="Título opcional"
                     style={{
                       height: 44,
-                      border: '1px solid #d9e2ec',
+                      border: 'none',
                       borderRadius: 14,
                       padding: '0 14px',
                       fontSize: 14,
                       color: '#0f172a',
                       outline: 'none',
-                      background: '#fcfdff',
+                      background: fieldBackground,
                     }}
                   />
                 </label>
@@ -366,14 +364,14 @@ export function InsightsEditorModal({
                     style={{
                       minHeight: 110,
                       resize: 'vertical',
-                      border: '1px solid #d9e2ec',
+                      border: 'none',
                       borderRadius: 14,
                       padding: '12px 14px',
                       fontSize: 14,
                       lineHeight: 1.65,
                       color: '#0f172a',
                       outline: 'none',
-                      background: '#fcfdff',
+                      background: fieldBackground,
                     }}
                   />
                 </label>
