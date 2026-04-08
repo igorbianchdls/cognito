@@ -442,6 +442,13 @@ const CLASSIC_DASHBOARD_VARIANT: StandaloneDashboardVariant = {
   title: 'Dashboard Classico',
 }
 
+const CLASSIC_GRID_DASHBOARD_VARIANT: StandaloneDashboardVariant = {
+  fileName: 'dashboard-classico-grid.tsx',
+  name: 'dashboard_classico_grid',
+  path: 'app/dashboard-classico-grid.tsx',
+  title: 'Dashboard Classico Grid',
+}
+
 function buildClassicDashboardTemplateSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('classic')
   return `<Dashboard id="overview" title="${CLASSIC_DASHBOARD_VARIANT.title}" theme="${resolvedThemeName}" chartPalette="teal">
@@ -929,10 +936,47 @@ export function buildClassicDashboardTemplateVariant(themeName?: string) {
   }
 }
 
+function buildClassicGridDashboardTemplateSource(themeName: string) {
+  const resolvedThemeName = themeName || getDashboardTemplateThemeName('classicgrid')
+  return buildClassicDashboardTemplateSource(resolvedThemeName)
+    .replace(
+      `title="${CLASSIC_DASHBOARD_VARIANT.title}"`,
+      `title="${CLASSIC_GRID_DASHBOARD_VARIANT.title}"`,
+    )
+    .replace(
+      `<Vertical gap={20} style={{ padding: '0 28px 28px' }}>`,
+      `<Grid columns={20} gap={18} rowHeight={32} style={{ padding: '0 28px 28px' }}>`,
+    )
+    .replace(`<Horizontal gap={14} columns={20} rowHeight={32}>`, '')
+    .replace(`</Horizontal>\n\n          <Horizontal gap={18} columns={12} rowHeight={32}>`, '')
+    .replace(`</Horizontal>\n\n          <Horizontal gap={18} columns={12} rowHeight={32}>`, '')
+    .replace(`</Horizontal>\n\n          <Horizontal gap={18} columns={12} rowHeight={32}>`, '')
+    .replace(`</Horizontal>\n\n          <Horizontal gap={18} columns={12} rowHeight={32}>`, '')
+    .replace(`</Horizontal>\n          </Vertical>`, `</Grid>`)
+    .replace(`id="classic-insight-aceleracao" span={4}`, `id="classic-insight-aceleracao" span={7}`)
+    .replace(`id="classic-insight-concentracao" span={4}`, `id="classic-insight-concentracao" span={7}`)
+    .replace(`id="classic-insight-conversao" span={4}`, `id="classic-insight-conversao" span={6}`)
+    .replace(`id="classic-chart-mix" span={6}`, `id="classic-chart-mix" span={10}`)
+    .replace(`id="classic-chart-share" span={6}`, `id="classic-chart-share" span={10}`)
+    .replace(`id="classic-chart-tendencia"\n              span={6}`, `id="classic-chart-tendencia"\n              span={10}`)
+    .replace(`id="classic-table-pedidos" span={6}`, `id="classic-table-pedidos" span={10}`)
+    .replace(`id="classic-chart-status" span={6}`, `id="classic-chart-status" span={10}`)
+    .replace(`id="classic-pivot-canal-status" span={6}`, `id="classic-pivot-canal-status" span={10}`)
+}
+
+export function buildClassicGridDashboardTemplateVariant(themeName?: string) {
+  return {
+    content: buildClassicGridDashboardTemplateSource(themeName || ''),
+    name: CLASSIC_GRID_DASHBOARD_VARIANT.fileName,
+    path: CLASSIC_GRID_DASHBOARD_VARIANT.path,
+  }
+}
+
 export function buildDashboardTemplateVariants(themeName: string): DashboardTemplateVariant[] {
   const variants: DashboardTemplateVariant[] = []
 
   variants.push(buildClassicDashboardTemplateVariant())
+  variants.push(buildClassicGridDashboardTemplateVariant())
   variants.push(buildContainersDashboardTemplateVariant())
   variants.push(buildLayoutTestDashboardTemplateVariant())
 
