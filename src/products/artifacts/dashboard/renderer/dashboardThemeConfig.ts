@@ -139,9 +139,19 @@ export type DashboardHeaderAppearanceOverrides = {
   title?: React.CSSProperties
 }
 
+export type DashboardInsightsAppearanceOverrides = {
+  container?: React.CSSProperties
+  dividerColor?: string
+  icon?: React.CSSProperties
+  item?: React.CSSProperties
+  text?: React.CSSProperties
+  title?: React.CSSProperties
+}
+
 export type DashboardAppearanceOverrides = {
   chart?: DashboardChartAppearanceOverrides
   header?: DashboardHeaderAppearanceOverrides
+  insights?: DashboardInsightsAppearanceOverrides
   kpi?: DashboardKpiAppearanceOverrides
 }
 
@@ -781,10 +791,25 @@ export function resolveDashboardDatePickerTheme(
   return deepMergeOrClone(buildDashboardDatePickerThemeConfigEntry(tokens), appearanceOverrides?.header?.datePicker)
 }
 
-export function resolveDashboardInsightsTheme(themeName?: string): DashboardInsightsThemeConfigEntry {
+export function resolveDashboardInsightsTheme(
+  themeName?: string,
+  appearanceOverrides?: DashboardAppearanceOverrides,
+): DashboardInsightsThemeConfigEntry {
   const key = resolveThemeKey(themeName)
   const tokens = DASHBOARD_TEMPLATE_THEME_TOKENS[key] || DASHBOARD_TEMPLATE_THEME_TOKENS.light
-  return buildDashboardInsightsThemeConfigEntry(tokens)
+  const theme = buildDashboardInsightsThemeConfigEntry(tokens)
+  return {
+    ...theme,
+    containerStyle: deepMergeOrClone(theme.containerStyle, appearanceOverrides?.insights?.container),
+    itemStyle: deepMergeOrClone(theme.itemStyle, appearanceOverrides?.insights?.item),
+    titleStyle: deepMergeOrClone(theme.titleStyle, appearanceOverrides?.insights?.title),
+    textStyle: deepMergeOrClone(theme.textStyle, appearanceOverrides?.insights?.text),
+    iconStyle: deepMergeOrClone(theme.iconStyle, appearanceOverrides?.insights?.icon),
+    dividerColor:
+      typeof appearanceOverrides?.insights?.dividerColor === 'string' && appearanceOverrides.insights.dividerColor.trim()
+        ? appearanceOverrides.insights.dividerColor.trim()
+        : theme.dividerColor,
+  }
 }
 
 export function resolveDashboardFilterTheme(themeName?: string): DashboardFilterThemeConfigEntry {

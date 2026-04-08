@@ -10,11 +10,12 @@ import {
   resolveDashboardChartTheme,
   resolveDashboardDatePickerTheme,
   resolveDashboardHeaderTheme,
+  resolveDashboardInsightsTheme,
   resolveDashboardKpiTheme,
   type DashboardAppearanceOverrides,
 } from '@/products/artifacts/dashboard/renderer/dashboardThemeConfig'
 
-export type DashboardAppearanceMode = 'theme' | 'colors' | 'border' | 'kpi' | 'chart' | 'header'
+export type DashboardAppearanceMode = 'theme' | 'colors' | 'border' | 'kpi' | 'chart' | 'header' | 'insights'
 
 function getThemePreviewStyle(theme: string) {
   const styles: Record<string, { background: string; accent: string; border: string; title: string }> = {
@@ -408,6 +409,7 @@ export function DashboardThemeModal({
 
   const cardTheme = resolveDashboardCardTheme(selectedTheme, selectedBorderPreset, appearanceOverrides)
   const chartTheme = resolveDashboardChartTheme(selectedTheme, selectedChartPalette, appearanceOverrides)
+  const insightsTheme = resolveDashboardInsightsTheme(selectedTheme, appearanceOverrides)
   const kpiTheme = resolveDashboardKpiTheme(selectedTheme, appearanceOverrides)
   const headerTheme = resolveDashboardHeaderTheme(selectedTheme, selectedBorderPreset, appearanceOverrides)
   const datePickerTheme = resolveDashboardDatePickerTheme(selectedTheme, appearanceOverrides)
@@ -423,6 +425,7 @@ export function DashboardThemeModal({
     kpi: 'Editar UI global dos KPIs',
     chart: 'Editar UI global dos charts',
     header: 'Editar UI global do header',
+    insights: 'Editar UI global dos insights',
   }
 
   return (
@@ -447,6 +450,7 @@ export function DashboardThemeModal({
             ['kpi', 'KPI'],
             ['chart', 'Chart'],
             ['header', 'Header'],
+            ['insights', 'Insights'],
           ].map(([value, label]) => (
             <button
               key={value}
@@ -772,7 +776,7 @@ export function DashboardThemeModal({
                 </div>
               </PanelSection>
             </div>
-          ) : (
+          ) : mode === 'header' ? (
             <div className="space-y-3">
               <PanelSection title="Card" description="Container do header do dashboard." defaultOpen>
                 <FieldGrid>
@@ -898,6 +902,63 @@ export function DashboardThemeModal({
                     })}
                   </PanelSection>
                 </div>
+              </PanelSection>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <PanelSection title="Container" description="Bloco externo do componente de insights." defaultOpen>
+                <FieldGrid>
+                  <Field label="Gap">
+                    <TextInput value={toInputValue(insightsTheme.containerStyle.gap)} onChange={(value) => setOverride(['insights', 'container', 'gap'], value.trim() || undefined)} placeholder="12" />
+                  </Field>
+                  <Field label="Min width">
+                    <TextInput value={toInputValue(insightsTheme.containerStyle.minWidth)} onChange={(value) => setOverride(['insights', 'container', 'minWidth'], value.trim() || undefined)} placeholder="0" />
+                  </Field>
+                </FieldGrid>
+              </PanelSection>
+
+              <PanelSection title="Item" description="Linha individual de cada insight.">
+                <FieldGrid>
+                  <Field label="Padding">
+                    <TextInput value={toInputValue(insightsTheme.itemStyle.padding)} onChange={(value) => setOverride(['insights', 'item', 'padding'], value.trim() || undefined)} placeholder="8px 0" />
+                  </Field>
+                  <Field label="Background">
+                    <ColorInput value={toInputValue(insightsTheme.itemStyle.backgroundColor)} onChange={(value) => setOverride(['insights', 'item', 'backgroundColor'], value.trim() || undefined)} />
+                  </Field>
+                </FieldGrid>
+              </PanelSection>
+
+              <PanelSection title="Title" description="Titulo expansivel dos insights com heading.">
+                {renderTextStyleEditor({
+                  style: insightsTheme.titleStyle as Record<string, any>,
+                  onSet: (path, value) => setOverride(['insights', 'title', ...path], value),
+                })}
+              </PanelSection>
+
+              <PanelSection title="Text" description="Texto principal de cada insight.">
+                {renderTextStyleEditor({
+                  style: insightsTheme.textStyle as Record<string, any>,
+                  onSet: (path, value) => setOverride(['insights', 'text', ...path], value),
+                })}
+              </PanelSection>
+
+              <PanelSection title="Marker" description="Cor e visual do marcador lateral.">
+                <FieldGrid>
+                  <Field label="Cor">
+                    <ColorInput value={toInputValue(insightsTheme.iconStyle.backgroundColor || insightsTheme.iconStyle.color)} onChange={(value) => setOverride(['insights', 'icon', 'backgroundColor'], value.trim() || undefined)} />
+                  </Field>
+                  <Field label="Texto/Icon color">
+                    <ColorInput value={toInputValue(insightsTheme.iconStyle.color)} onChange={(value) => setOverride(['insights', 'icon', 'color'], value.trim() || undefined)} />
+                  </Field>
+                </FieldGrid>
+              </PanelSection>
+
+              <PanelSection title="Divider" description="Cor do divisor entre itens quando habilitado.">
+                <FieldGrid>
+                  <Field label="Divider color">
+                    <ColorInput value={toInputValue(insightsTheme.dividerColor)} onChange={(value) => setOverride(['insights', 'dividerColor'], value.trim() || undefined)} />
+                  </Field>
+                </FieldGrid>
               </PanelSection>
             </div>
           )}

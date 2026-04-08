@@ -11,8 +11,8 @@ type AnyRecord = Record<string, any>
 
 export default function DashboardInsights({ element }: { element: any }) {
   const props = (element?.props || {}) as AnyRecord
-  const { themeName } = useDashboardThemeSelection()
-  const theme = resolveDashboardInsightsTheme(themeName)
+  const { appearanceOverrides, themeName } = useDashboardThemeSelection()
+  const theme = resolveDashboardInsightsTheme(themeName, appearanceOverrides)
   const items = Array.isArray(props.items) ? props.items : []
   const [openItems, setOpenItems] = React.useState<Record<number, boolean>>({})
   const containerStyle = props.containerStyle && typeof props.containerStyle === 'object'
