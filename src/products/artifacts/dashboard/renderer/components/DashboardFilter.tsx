@@ -317,6 +317,38 @@ function buildSlicerOptionTextStyle(field: AnyRecord, baseStyle: React.CSSProper
   }
 }
 
+function matchesSlicerValue(optionValue: string | number, selectedValue: unknown) {
+  return optionValue === selectedValue || String(optionValue) === String(selectedValue)
+}
+
+function resolveDropdownSummary(
+  opts: SlicerOpt[],
+  stored: unknown,
+  isMulti: boolean,
+  placeholder?: string,
+) {
+  const fallback = placeholder || 'Todos'
+  if (isMulti) {
+    const values = Array.isArray(stored) ? stored : []
+    if (values.length === 0) return fallback
+    if (opts.length > 0 && values.length >= opts.length) return 'Todos'
+    if (values.length === 1) {
+      const match = opts.find((option) => values.some((value) => matchesSlicerValue(option.value, value)))
+      return match?.label || String(values[0])
+    }
+    return `${values.length} selecionados`
+  }
+
+  if (stored === undefined || stored === null || stored === '') return fallback
+  const match = opts.find((option) => matchesSlicerValue(option.value, stored))
+  return match?.label || String(stored)
+}
+
+function hasDropdownSelection(stored: unknown, isMulti: boolean) {
+  if (isMulti) return Array.isArray(stored) && stored.length > 0
+  return !(stored === undefined || stored === null || stored === '')
+}
+
 function SlicerContent({
   element,
   fields,
@@ -340,6 +372,8 @@ function SlicerContent({
   const [optionsMap, setOptionsMap] = React.useState<Record<number, SlicerOpt[]>>({})
   const [searchMap, setSearchMap] = React.useState<Record<number, string>>({})
   const [pendingMap, setPendingMap] = React.useState<Record<number, any>>({})
+  const [openDropdownIndex, setOpenDropdownIndex] = React.useState<number | null>(null)
+  const dropdownRefs = React.useRef<Record<number, HTMLDivElement | null>>({})
 
   function setByPath(prev: any, path: string, value: any) {
     if (!path) return prev
@@ -391,6 +425,30 @@ function SlicerContent({
       cancelled = true
     }
   }, [fields, searchMap, data, getValueByPath])
+
+  React.useEffect(() => {
+    if (openDropdownIndex === null) return
+
+    function handlePointerDown(event: MouseEvent | TouchEvent) {
+      const wrapper = dropdownRefs.current[openDropdownIndex]
+      if (wrapper && event.target instanceof Node && !wrapper.contains(event.target)) {
+        setOpenDropdownIndex(null)
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') setOpenDropdownIndex(null)
+    }
+
+    document.addEventListener('mousedown', handlePointerDown)
+    document.addEventListener('touchstart', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown)
+      document.removeEventListener('touchstart', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [openDropdownIndex])
 
   const onChangeField = React.useCallback((idx: number, storePath: string, value: any, autoAction?: AnyRecord) => {
     if (applyMode === 'manual') {
@@ -579,52 +637,255 @@ function SlicerContent({
             )
           }
 
-          const value = isMulti ? (Array.isArray(stored) ? stored : []) : (stored ?? '')
           const onClear = () => onChangeField(idx, storePath, isMulti ? [] : undefined, field.actionOnChange)
+          const dropdownSummary = resolveDropdownSummary(
+            opts,
+            stored,
+            isMulti,
+            typeof field?.placeholder === 'string' ? field.placeholder : undefined,
+          )
+          const hasSelection = hasDropdownSelection(stored, isMulti)
+          const isDropdownOpen = openDropdownIndex === idx
           return (
-            <div key={`field-${idx}`} className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
+            <div
+              key={`field-${idx}`}
+              className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'}
+              style={{ width }}
+            >
               {label && !suppressFieldLabels && <div className="text-xs" style={labelStyle}>{label}</div>}
-              <div className="flex flex-col gap-2">
-                {showSearch && (
-                  <input
-                    type="text"
-                    value={searchMap[idx] || ''}
-                    onChange={(e) => setSearchMap((prev) => ({ ...prev, [idx]: e.target.value }))}
-                    placeholder="Buscar..."
-                    className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs"
-                    style={controlStyle}
-                  />
-                )}
-                <select
-                  multiple={isMulti}
-                  className="border border-gray-300 rounded px-2 py-1 text-xs"
-                  style={{ ...optionTextStyle, ...controlStyle, maxHeight: styleVal(field?.maxHeight) } as any}
-                  value={value as any}
-                  onChange={(e) => {
-                    if (isMulti) {
-                      const selected: any[] = Array.from(e.target.selectedOptions)
-                        .map((option) => (option as any).value)
-                        .map((raw) => (String(Number(raw)) === raw ? Number(raw) : raw))
-                      onChangeField(idx, storePath, selected, field.actionOnChange)
-                    } else {
-                      const nextValue = e.target.value
-                      if (nextValue === '') {
-                        onChangeField(idx, storePath, undefined, field.actionOnChange)
-                        return
-                      }
-                      onChangeField(idx, storePath, String(Number(nextValue)) === nextValue ? Number(nextValue) : nextValue, field.actionOnChange)
-                    }
+              <div
+                ref={(node) => {
+                  dropdownRefs.current[idx] = node
+                }}
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  minWidth: 0,
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setOpenDropdownIndex((current) => current === idx ? null : idx)}
+                  style={{
+                    width: '100%',
+                    minHeight: 42,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                    border: `1px solid ${isDropdownOpen ? '#60a5fa' : '#cbd5e1'}`,
+                    borderRadius: 8,
+                    padding: '10px 12px',
+                    background: '#ffffff',
+                    color: '#0f172a',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    boxShadow: isDropdownOpen ? '0 0 0 3px rgba(96, 165, 250, 0.18)' : 'none',
+                    ...optionTextStyle,
+                    ...controlStyle,
                   }}
                 >
-                  {!isMulti && typeof field?.placeholder === 'string' && field.placeholder ? <option value="">{field.placeholder}</option> : null}
-                  {opts.map((option) => (
-                    <option key={String(option.value)} value={String(option.value)}>{option.label}</option>
-                  ))}
-                </select>
+                  <span
+                    style={{
+                      minWidth: 0,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      color: hasSelection ? '#0f172a' : '#64748b',
+                      fontWeight: hasSelection ? 500 : 400,
+                    }}
+                  >
+                    {dropdownSummary}
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                    {isMulti && Array.isArray(stored) && stored.length > 1 && (
+                      <span
+                        style={{
+                          minWidth: 22,
+                          height: 22,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRadius: 999,
+                          padding: '0 8px',
+                          background: '#e2e8f0',
+                          color: '#334155',
+                          fontSize: 11,
+                          fontWeight: 700,
+                        }}
+                      >
+                        {stored.length}
+                      </span>
+                    )}
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        color: '#64748b',
+                        fontSize: 12,
+                        transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                        transition: 'transform 160ms ease',
+                      }}
+                    >
+                      ▼
+                    </span>
+                  </span>
+                </button>
+
+                {isDropdownOpen && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 'calc(100% + 6px)',
+                      left: 0,
+                      zIndex: 30,
+                      width: '100%',
+                      minWidth: 220,
+                      display: 'grid',
+                      gap: 8,
+                      padding: 8,
+                      border: '1px solid #dbe2ea',
+                      borderRadius: 10,
+                      background: '#ffffff',
+                      boxShadow: '0 14px 28px rgba(15, 23, 42, 0.14)',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 10,
+                        padding: '4px 4px 2px',
+                      }}
+                    >
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                        {label || 'Filtro'}
+                      </div>
+                      <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                        {opts.length} opcoes
+                      </div>
+                    </div>
+
+                    {showSearch && (
+                      <input
+                        type="text"
+                        value={searchMap[idx] || ''}
+                        onChange={(e) => setSearchMap((prev) => ({ ...prev, [idx]: e.target.value }))}
+                        placeholder="Buscar..."
+                        className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs"
+                        style={{
+                          border: '1px solid #dbe2ea',
+                          borderRadius: 8,
+                          padding: '10px 12px',
+                          fontSize: 13,
+                          color: '#0f172a',
+                          outline: 'none',
+                          width: '100%',
+                          background: '#f8fafc',
+                        }}
+                      />
+                    )}
+
+                    <div
+                      style={{
+                        display: 'grid',
+                        gap: itemGap,
+                        maxHeight: listMaxHeight,
+                        overflowY: 'auto',
+                        paddingRight: 4,
+                      }}
+                    >
+                      {opts.length > 0 ? opts.map((option) => {
+                        const checked = isMulti
+                          ? (Array.isArray(stored) && stored.some((value) => matchesSlicerValue(option.value, value)))
+                          : matchesSlicerValue(option.value, stored)
+
+                        return (
+                          <label
+                            key={String(option.value)}
+                            className="transition-colors hover:bg-slate-100"
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 10,
+                              minHeight: 36,
+                              padding: '8px 10px',
+                              borderRadius: 8,
+                              background: checked ? 'rgba(37, 99, 235, 0.10)' : '#ffffff',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <input
+                              type={isMulti ? 'checkbox' : 'radio'}
+                              className="rounded border-gray-300"
+                              style={{ accentColor: typeof field?.checkColor === 'string' ? field.checkColor : theme.checkColor }}
+                              name={isMulti ? undefined : `dropdown-slicer-${idx}`}
+                              checked={checked}
+                              onChange={(event) => {
+                                if (isMulti) {
+                                  const arr = Array.isArray(stored) ? stored.slice() : []
+                                  const exists = arr.some((value) => matchesSlicerValue(option.value, value))
+                                  const nextArr = event.target.checked
+                                    ? (exists ? arr : [...arr, option.value])
+                                    : arr.filter((value) => !matchesSlicerValue(option.value, value))
+                                  onChangeField(idx, storePath, nextArr, field.actionOnChange)
+                                  return
+                                }
+
+                                onChangeField(
+                                  idx,
+                                  storePath,
+                                  checked && clearable ? undefined : option.value,
+                                  field.actionOnChange,
+                                )
+                                setOpenDropdownIndex(null)
+                              }}
+                            />
+                            <span style={optionTextStyle}>{option.label}</span>
+                          </label>
+                        )
+                      }) : (
+                        <div style={{ fontSize: 12, color: '#64748b', padding: '4px 2px' }}>
+                          Nenhuma opcao encontrada.
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        {selectAll && isMulti && (
+                          <button
+                            type="button"
+                            style={theme.actionStyle}
+                            onClick={() => onChangeField(idx, storePath, opts.map((option) => option.value), field.actionOnChange)}
+                          >
+                            Selecionar todos
+                          </button>
+                        )}
+                        {clearable && (
+                          <button
+                            type="button"
+                            style={theme.actionStyle}
+                            onClick={() => {
+                              onClear()
+                              setOpenDropdownIndex(null)
+                            }}
+                          >
+                            Limpar
+                          </button>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        style={theme.actionStyle}
+                        onClick={() => setOpenDropdownIndex(null)}
+                      >
+                        Fechar
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-              {clearable && (
-                <button type="button" style={theme.actionStyle} onClick={onClear}>Limpar</button>
-              )}
             </div>
           )
         })}
