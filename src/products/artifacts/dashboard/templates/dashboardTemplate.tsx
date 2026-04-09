@@ -453,7 +453,8 @@ function buildClassicDashboardTemplateSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('classic')
   return `<Dashboard id="overview" title="${CLASSIC_DASHBOARD_VARIANT.title}" theme="${resolvedThemeName}" chartPalette="teal">
         <Vertical gap={20} dropTarget={false} style={{ width: '1600px', minHeight: '100%', backgroundColor: theme.pageBg }}>
-          <Horizontal gap={18}>
+          <Grid columns={12} gap={0} rowHeight={32} style={{ padding: 0 }}>
+            <Panel id="classic-header" span={12}>
               <header style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20, padding: '20px 24px', borderRadius: theme.cardFrame ? 0 : 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
                 <Vertical gap={8}>
                   <Text variant="eyebrow-strong">Executive dashboard</Text>
@@ -479,7 +480,8 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                   />
                 </Vertical>
               </header>
-          </Horizontal>
+            </Panel>
+          </Grid>
 
           <Vertical gap={20} style={{ padding: '0 28px 28px' }}>
           <Horizontal gap={14} columns={20} rowHeight={32}>
