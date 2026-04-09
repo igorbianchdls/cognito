@@ -26,6 +26,18 @@ import { resolveDashboardComponent } from '@/products/artifacts/dashboard/render
 
 type AnyRecord = Record<string, any>
 
+function hasStructuralLayoutProps(node: any) {
+  const props = node?.props
+  if (!props || typeof props !== 'object') return false
+  return (
+    props.span !== undefined ||
+    props.rows !== undefined ||
+    props.x !== undefined ||
+    props.y !== undefined ||
+    props.minSpan !== undefined
+  )
+}
+
 function getNodeKey(node: any, fallbackIndex: number, path: number[]): string {
   const type = String(node?.type || 'node')
   const props = node?.props && typeof node.props === 'object' ? node.props : {}
@@ -68,15 +80,16 @@ function RenderDashboardNode({
   }
 
   const layoutParent = parentType === 'Grid' || parentType === 'Vertical' || parentType === 'Horizontal'
+  const structuralLayoutItem = type === 'Panel' || type === 'Card' || hasStructuralLayoutProps(node)
   const shouldAttachLayoutPath =
-    type === 'Grid' || type === 'Vertical' || type === 'Horizontal' || type === 'Panel' || type === 'Card'
+    type === 'Grid' || type === 'Vertical' || type === 'Horizontal' || structuralLayoutItem
   const element = shouldAttachLayoutPath
     ? {
         ...node,
         props: {
           ...((node?.props && typeof node.props === 'object') ? node.props : {}),
           __path: path,
-          __layoutItem: layoutParent && (type === 'Panel' || type === 'Card'),
+          __layoutItem: layoutParent && structuralLayoutItem,
         },
       }
     : node

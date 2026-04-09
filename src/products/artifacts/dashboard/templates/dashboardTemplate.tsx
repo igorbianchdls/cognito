@@ -454,33 +454,31 @@ function buildClassicDashboardTemplateSource(themeName: string) {
   return `<Dashboard id="overview" title="${CLASSIC_DASHBOARD_VARIANT.title}" theme="${resolvedThemeName}" chartPalette="teal">
         <Vertical gap={20} dropTarget={false} style={{ width: '1600px', minHeight: '100%', backgroundColor: theme.pageBg }}>
           <Grid columns={12} gap={0} rowHeight={32} style={{ padding: 0 }}>
-            <Panel id="classic-header" span={12}>
-              <header style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20, padding: '20px 24px', borderRadius: theme.cardFrame ? 0 : 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
-                <Vertical gap={8}>
-                  <Text variant="eyebrow-strong">Executive dashboard</Text>
-                  <Text as="h1" variant="page-title-sm">Performance overview with the classic BI layout</Text>
-                  <Text variant="body-muted" style={{ maxWidth: 720 }}>
-                    Header with global period control, KPI strip on top and analysis rows below. The runtime stays JSX-first, but the surface looks closer to the previous dashboard model.
-                  </Text>
-                </Vertical>
+            <header id="classic-header" span={12} rows={5} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20, padding: '20px 24px', borderRadius: theme.cardFrame ? 0 : 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
+              <Vertical gap={8}>
+                <Text variant="eyebrow-strong">Executive dashboard</Text>
+                <Text as="h1" variant="page-title-sm">Performance overview with the classic BI layout</Text>
+                <Text variant="body-muted" style={{ maxWidth: 720 }}>
+                  Header with global period control, KPI strip on top and analysis rows below. The runtime stays JSX-first, but the surface looks closer to the previous dashboard model.
+                </Text>
+              </Vertical>
 
-                <Vertical gap={10} style={{ alignItems: 'flex-end', minWidth: 240 }}>
-                  <Text variant="eyebrow">Global period</Text>
-                  <DatePicker
-                    label="Periodo do pedido"
-                    table="vendas.pedidos"
-                    field="data_pedido"
-                    presets={['7d', '30d', 'month', 'quarter']}
-                    labelStyle={{ margin: 0, fontSize: 11, color: theme.headerDatePickerLabel, textTransform: 'uppercase', letterSpacing: '0.06em' }}
-                    fieldStyle={{ minHeight: 38, padding: '0 10px', border: '1px solid ' + theme.headerDatePickerBorder, borderRadius: 10, backgroundColor: theme.headerDatePickerBg, color: theme.headerDatePickerColor, fontSize: 14, fontWeight: 500 }}
-                    iconStyle={{ color: theme.headerDatePickerIcon, fontSize: 14 }}
-                    presetButtonStyle={{ height: 36, padding: '0 12px', border: '1px solid ' + theme.headerDatePickerBorder, borderRadius: 10, backgroundColor: theme.headerDatePickerBg, color: theme.headerDatePickerColor, fontSize: 13, fontWeight: 500 }}
-                    activePresetButtonStyle={{ backgroundColor: theme.headerDatePickerActiveBg, borderColor: theme.headerDatePickerActiveBorder, color: theme.headerDatePickerActiveText, fontWeight: 600 }}
-                    separatorStyle={{ color: theme.headerDatePickerLabel, fontSize: 13, fontWeight: 500 }}
-                  />
-                </Vertical>
-              </header>
-            </Panel>
+              <Vertical gap={10} style={{ alignItems: 'flex-end', minWidth: 240 }}>
+                <Text variant="eyebrow">Global period</Text>
+                <DatePicker
+                  label="Periodo do pedido"
+                  table="vendas.pedidos"
+                  field="data_pedido"
+                  presets={['7d', '30d', 'month', 'quarter']}
+                  labelStyle={{ margin: 0, fontSize: 11, color: theme.headerDatePickerLabel, textTransform: 'uppercase', letterSpacing: '0.06em' }}
+                  fieldStyle={{ minHeight: 38, padding: '0 10px', border: '1px solid ' + theme.headerDatePickerBorder, borderRadius: 10, backgroundColor: theme.headerDatePickerBg, color: theme.headerDatePickerColor, fontSize: 14, fontWeight: 500 }}
+                  iconStyle={{ color: theme.headerDatePickerIcon, fontSize: 14 }}
+                  presetButtonStyle={{ height: 36, padding: '0 12px', border: '1px solid ' + theme.headerDatePickerBorder, borderRadius: 10, backgroundColor: theme.headerDatePickerBg, color: theme.headerDatePickerColor, fontSize: 13, fontWeight: 500 }}
+                  activePresetButtonStyle={{ backgroundColor: theme.headerDatePickerActiveBg, borderColor: theme.headerDatePickerActiveBorder, color: theme.headerDatePickerActiveText, fontWeight: 600 }}
+                  separatorStyle={{ color: theme.headerDatePickerLabel, fontSize: 13, fontWeight: 500 }}
+                />
+              </Vertical>
+            </header>
           </Grid>
 
           <Vertical gap={20} style={{ padding: '0 28px 28px' }}>

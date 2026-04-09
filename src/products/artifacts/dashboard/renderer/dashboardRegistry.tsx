@@ -282,6 +282,13 @@ function normalizeProps(input: Record<string, any> | undefined): Record<string, 
   delete props.text
   delete props.title
   delete props.children
+  delete props.__path
+  delete props.__layoutItem
+  delete props.span
+  delete props.rows
+  delete props.minSpan
+  delete props.x
+  delete props.y
   return props
 }
 

@@ -51,8 +51,24 @@ function isRenderableLayoutChild(child: React.ReactNode) {
   return true
 }
 
+function hasStructuralLayoutProps(child: any) {
+  const props = child?.props
+  if (!props || typeof props !== 'object') return false
+  return (
+    props.span !== undefined ||
+    props.rows !== undefined ||
+    props.x !== undefined ||
+    props.y !== undefined ||
+    props.minSpan !== undefined
+  )
+}
+
 function isStructuralLayoutNode(child: any) {
-  return child && typeof child === 'object' && (child.type === 'Panel' || child.type === 'Card')
+  return child && typeof child === 'object' && (
+    child.type === 'Panel' ||
+    child.type === 'Card' ||
+    hasStructuralLayoutProps(child)
+  )
 }
 
 export function DashboardVertical({
