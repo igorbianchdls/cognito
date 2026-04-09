@@ -944,7 +944,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                   ORDER BY 2 ASC
                 \`}
               >
-                <Select />
+                <OptionList />
               </Filter>
             </Card>
 
@@ -967,7 +967,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                   ORDER BY 2 ASC
                 \`}
               >
-                <Select />
+                <OptionList />
               </Filter>
             </Card>
 
@@ -991,7 +991,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                   ORDER BY 2 ASC
                 \`}
               >
-                <Select />
+                <OptionList />
               </Filter>
             </Card>
           </Horizontal>
