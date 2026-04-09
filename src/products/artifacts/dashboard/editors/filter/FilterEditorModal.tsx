@@ -151,7 +151,7 @@ export function FilterEditorModal({
               <span style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>Layout</span>
               <select
                 value={value.layout}
-                onChange={(event) => patch({ layout: event.target.value })}
+                onChange={(event) => patch({ layout: event.target.value as FilterDraft['layout'] })}
                 style={{
                   height: 44,
                   border: 'none',
@@ -172,7 +172,7 @@ export function FilterEditorModal({
               <span style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>Apply mode</span>
               <select
                 value={value.applyMode}
-                onChange={(event) => patch({ applyMode: event.target.value })}
+                onChange={(event) => patch({ applyMode: event.target.value as FilterDraft['applyMode'] })}
                 style={{
                   height: 44,
                   border: 'none',
