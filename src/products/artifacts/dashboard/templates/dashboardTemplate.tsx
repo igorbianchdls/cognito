@@ -923,6 +923,78 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               />
             </Card>
           </Horizontal>
+
+          <Horizontal gap={18} columns={12} rowHeight={32}>
+            <Card id="classic-filter-canal" span={4} rows={6} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <Text variant="eyebrow">Filtro</Text>
+              <Text as="h2" variant="section-title-sm">Canal</Text>
+              <Filter
+                label="Canal"
+                table="vendas.pedidos"
+                field="canal_venda_id"
+                mode="multiple"
+                search
+                clearable
+                width="100%"
+                query={\`
+                  SELECT
+                    cv.id::text AS value,
+                    COALESCE(cv.nome, '-') AS label
+                  FROM vendas.canais_venda cv
+                  ORDER BY 2 ASC
+                \`}
+              >
+                <Select />
+              </Filter>
+            </Card>
+
+            <Card id="classic-filter-cliente" span={4} rows={6} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <Text variant="eyebrow">Filtro</Text>
+              <Text as="h2" variant="section-title-sm">Cliente</Text>
+              <Filter
+                label="Cliente"
+                table="vendas.pedidos"
+                field="cliente_id"
+                mode="multiple"
+                search
+                clearable
+                width="100%"
+                query={\`
+                  SELECT
+                    c.id::text AS value,
+                    COALESCE(c.nome_fantasia, '-') AS label
+                  FROM entidades.clientes c
+                  ORDER BY 2 ASC
+                \`}
+              >
+                <Select />
+              </Filter>
+            </Card>
+
+            <Card id="classic-filter-status" span={4} rows={6} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <Text variant="eyebrow">Filtro</Text>
+              <Text as="h2" variant="section-title-sm">Status</Text>
+              <Filter
+                label="Status"
+                table="vendas.pedidos"
+                field="status"
+                mode="multiple"
+                search
+                clearable
+                width="100%"
+                query={\`
+                  SELECT DISTINCT
+                    LOWER(src.status)::text AS value,
+                    COALESCE(src.status, 'Sem status') AS label
+                  FROM vendas.pedidos src
+                  WHERE COALESCE(src.status, '') <> ''
+                  ORDER BY 2 ASC
+                \`}
+              >
+                <Select />
+              </Filter>
+            </Card>
+          </Horizontal>
           </Vertical>
         </Vertical>
 </Dashboard>`
@@ -952,6 +1024,7 @@ function buildClassicGridDashboardTemplateSource(themeName: string) {
     .replace(`</Horizontal>\n\n          <Horizontal gap={18} columns={12} rowHeight={32}>`, '')
     .replace(`</Horizontal>\n\n          <Horizontal gap={18} columns={12} rowHeight={32}>`, '')
     .replace(`</Horizontal>\n\n          <Horizontal gap={18} columns={12} rowHeight={32}>`, '')
+    .replace(`</Horizontal>\n\n          <Horizontal gap={18} columns={12} rowHeight={32}>`, '')
     .replace(`</Horizontal>\n          </Vertical>`, `</Grid>`)
     .replace(`id="classic-kpi-receita" span={4}`, `id="classic-kpi-receita" span={5}`)
     .replace(`id="classic-kpi-pedidos" span={4}`, `id="classic-kpi-pedidos" span={5}`)
@@ -967,6 +1040,9 @@ function buildClassicGridDashboardTemplateSource(themeName: string) {
     .replace(`id="classic-table-pedidos" span={6}`, `id="classic-table-pedidos" span={12}`)
     .replace(`id="classic-chart-status" span={6}`, `id="classic-chart-status" span={12}`)
     .replace(`id="classic-pivot-canal-status" span={6}`, `id="classic-pivot-canal-status" span={12}`)
+    .replace(`id="classic-filter-canal" span={4}`, `id="classic-filter-canal" span={8}`)
+    .replace(`id="classic-filter-cliente" span={4}`, `id="classic-filter-cliente" span={8}`)
+    .replace(`id="classic-filter-status" span={4}`, `id="classic-filter-status" span={8}`)
 }
 
 export function buildClassicGridDashboardTemplateVariant(themeName?: string) {
