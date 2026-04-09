@@ -935,6 +935,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 variant="checklist"
                 mode="multiple"
                 search
+                searchBar={false}
                 clearable
                 width="100%"
                 query={\`
@@ -957,6 +958,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 variant="checklist"
                 mode="multiple"
                 search
+                searchBar={false}
                 clearable
                 width="100%"
                 query={\`

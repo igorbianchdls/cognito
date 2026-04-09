@@ -271,6 +271,7 @@ function resolveSingleSlicerField(element: any, props: AnyRecord): AnyRecord | n
     'clearable',
     'selectAll',
     'search',
+    'searchBar',
     'width',
     'query',
     'limit',
@@ -484,7 +485,7 @@ function SlicerContent({
           const stored = effectiveGet(idx, storePath, isMulti)
           const clearable = field?.clearable !== false
           const selectAll = Boolean(field?.selectAll)
-          const showSearch = Boolean(field?.search)
+          const showSearch = field?.searchBar === undefined ? Boolean(field?.search) : Boolean(field?.searchBar)
           const controlStyle = buildSlicerControlStyle(field)
           const optionTextStyle = buildSlicerOptionTextStyle(
             field,
