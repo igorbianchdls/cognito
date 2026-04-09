@@ -454,7 +454,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
   return `<Dashboard id="overview" title="${CLASSIC_DASHBOARD_VARIANT.title}" theme="${resolvedThemeName}" chartPalette="teal">
         <Vertical gap={20} dropTarget={false} style={{ width: '1600px', minHeight: '100%', backgroundColor: theme.pageBg }}>
           <Grid columns={12} gap={0} rowHeight={32} style={{ padding: 0 }}>
-            <header id="classic-header" span={12} rows={5} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20, padding: '20px 24px', borderRadius: theme.cardFrame ? 0 : 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
+            <header id="classic-header" span={12} rows={5} style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20, padding: '20px 24px', borderRadius: theme.cardFrame ? 0 : 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
               <Vertical gap={8}>
                 <Text variant="eyebrow-strong">Executive dashboard</Text>
                 <Text as="h1" variant="page-title-sm">Performance overview with the classic BI layout</Text>
@@ -483,7 +483,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
 
           <Vertical gap={20} style={{ padding: '0 28px 28px' }}>
           <Horizontal gap={14} columns={20} rowHeight={32}>
-            <Card id="classic-kpi-receita" span={4} rows={4} variant="kpi" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card id="classic-kpi-receita" span={4} rows={4} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <Icon
                     name="DollarSign"
@@ -513,7 +513,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 </KPI>
             </Card>
 
-            <Card id="classic-kpi-pedidos" span={4} rows={4} variant="kpi" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card id="classic-kpi-pedidos" span={4} rows={4} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <Icon
                     name="ShoppingCart"
@@ -543,7 +543,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 </KPI>
             </Card>
 
-            <Card id="classic-kpi-ticket" span={4} rows={4} variant="kpi" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card id="classic-kpi-ticket" span={4} rows={4} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <Icon
                     name="Ticket"
@@ -573,7 +573,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 </KPI>
             </Card>
 
-            <Card id="classic-kpi-canais" span={4} rows={4} variant="kpi" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card id="classic-kpi-canais" span={4} rows={4} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <Icon
                     name="Network"
@@ -603,7 +603,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 </KPI>
             </Card>
 
-            <Card id="classic-kpi-aprovacao" span={4} rows={4} variant="kpi" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Card id="classic-kpi-aprovacao" span={4} rows={4} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <Icon
                     name="ShieldCheck"
