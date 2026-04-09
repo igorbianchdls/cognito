@@ -358,23 +358,6 @@ function hasDropdownSelection(stored: unknown, isMulti: boolean) {
   return !(stored === undefined || stored === null || stored === '')
 }
 
-function resolveDropdownMeta(
-  opts: SlicerOpt[],
-  stored: unknown,
-  isMulti: boolean,
-) {
-  if (isMulti) {
-    const values = Array.isArray(stored) ? stored : []
-    if (values.length === 0) return `${opts.length} opcoes`
-    if (opts.length > 0 && values.length >= opts.length) return 'Todas as opcoes'
-    if (values.length === 1) return '1 opcao selecionada'
-    return `${values.length} opcoes selecionadas`
-  }
-
-  if (stored === undefined || stored === null || stored === '') return `${opts.length} opcoes`
-  return '1 opcao selecionada'
-}
-
 function SlicerContent({
   element,
   fields,
@@ -645,7 +628,6 @@ function SlicerContent({
             isMulti,
             typeof field?.placeholder === 'string' ? field.placeholder : undefined,
           )
-          const dropdownMeta = resolveDropdownMeta(opts, stored, isMulti)
           const hasSelection = hasDropdownSelection(stored, isMulti)
           const isDropdownOpen = openDropdownIndex === idx
           return (
@@ -661,19 +643,16 @@ function SlicerContent({
                     type="button"
                     style={{
                       width: '100%',
-                      minHeight: 54,
+                      minHeight: 42,
                       display: 'flex',
-                      alignItems: 'stretch',
-                      justifyContent: 'space-between',
-                      gap: 12,
+                      alignItems: 'center',
                       border: `1px solid ${isDropdownOpen ? '#60a5fa' : '#d5dde7'}`,
-                      borderRadius: 12,
-                      padding: 0,
-                      background: isDropdownOpen ? '#f8fbff' : '#ffffff',
+                      borderRadius: 8,
+                      padding: '10px 14px',
+                      background: '#ffffff',
                       color: '#0f172a',
                       cursor: 'pointer',
                       textAlign: 'left',
-                      overflow: 'hidden',
                       boxShadow: isDropdownOpen
                         ? '0 0 0 3px rgba(96, 165, 250, 0.14)'
                         : '0 1px 2px rgba(15, 23, 42, 0.04)',
@@ -683,72 +662,17 @@ function SlicerContent({
                     <span
                       style={{
                         minWidth: 0,
-                        flex: 1,
-                        display: 'grid',
-                        gap: 2,
-                        padding: '9px 12px 9px 14px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        color: hasSelection ? '#0f172a' : '#475569',
+                        fontSize: 14,
+                        lineHeight: 1.3,
+                        fontWeight: hasSelection ? 600 : 500,
+                        ...(optionTextStyle || {}),
                       }}
                     >
-                      <span
-                        style={{
-                          fontSize: 10,
-                          lineHeight: 1.2,
-                          letterSpacing: '0.06em',
-                          textTransform: 'uppercase',
-                          color: '#94a3b8',
-                          fontWeight: 700,
-                        }}
-                      >
-                        {hasSelection ? 'Selecionado' : 'Filtro'}
-                      </span>
-                      <span
-                        style={{
-                          minWidth: 0,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          color: hasSelection ? '#0f172a' : '#475569',
-                          fontSize: 14,
-                          lineHeight: 1.3,
-                          fontWeight: hasSelection ? 600 : 500,
-                          ...(optionTextStyle || {}),
-                        }}
-                      >
-                        {dropdownSummary}
-                      </span>
-                      <span
-                        style={{
-                          fontSize: 11,
-                          lineHeight: 1.2,
-                          color: '#94a3b8',
-                          fontWeight: 500,
-                        }}
-                      >
-                        {dropdownMeta}
-                      </span>
-                    </span>
-                    <span
-                      style={{
-                        width: 44,
-                        flexShrink: 0,
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderLeft: `1px solid ${isDropdownOpen ? '#bfdbfe' : '#e2e8f0'}`,
-                        background: isDropdownOpen ? '#eff6ff' : '#f8fafc',
-                      }}
-                    >
-                      <span
-                        aria-hidden="true"
-                        style={{
-                          color: isDropdownOpen ? '#2563eb' : '#64748b',
-                          fontSize: 13,
-                          transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                          transition: 'transform 160ms ease',
-                        }}
-                      >
-                        ▼
-                      </span>
+                      {dropdownSummary}
                     </span>
                   </button>
                 </PopoverTrigger>
