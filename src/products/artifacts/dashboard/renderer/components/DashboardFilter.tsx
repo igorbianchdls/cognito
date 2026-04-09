@@ -642,26 +642,32 @@ function SlicerContent({
                   <button
                     type="button"
                     style={{
+                      ...(controlStyle || {}),
                       width: '100%',
                       minHeight: 42,
                       display: 'flex',
                       alignItems: 'center',
                       border: `1px solid ${isDropdownOpen ? '#60a5fa' : '#d5dde7'}`,
-                      borderRadius: 8,
-                      padding: '10px 14px',
+                      borderRadius: 12,
+                      padding: 0,
                       background: '#ffffff',
                       color: '#0f172a',
                       cursor: 'pointer',
                       textAlign: 'left',
+                      overflow: 'hidden',
                       boxShadow: isDropdownOpen
                         ? '0 0 0 3px rgba(96, 165, 250, 0.14)'
                         : '0 1px 2px rgba(15, 23, 42, 0.04)',
-                      ...(controlStyle || {}),
                     }}
                   >
                     <span
                       style={{
                         minWidth: 0,
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        minHeight: 42,
+                        padding: '0 14px',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
