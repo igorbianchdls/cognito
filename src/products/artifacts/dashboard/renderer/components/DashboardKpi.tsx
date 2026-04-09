@@ -5,7 +5,7 @@ import React from 'react'
 import { useData, useDataValue } from '@/products/bi/json-render/context'
 import { applyPrimaryDateRange } from '@/products/bi/json-render/dateFilters'
 import { useThemeOverrides } from '@/products/bi/json-render/theme/ThemeContext'
-import { KpiEditorModal } from '@/products/artifacts/dashboard/editors/kpi/KpiEditorModal'
+import { KpiEditorModal, type KpiDraft } from '@/products/artifacts/dashboard/editors/kpi/KpiEditorModal'
 import { EditableComponentOverlay } from '@/products/artifacts/dashboard/editors/shared/EditableComponentOverlay'
 import { DashboardKpiCompare } from '@/products/artifacts/dashboard/renderer/components/DashboardKpiCompare'
 import { DashboardKpiCompareContext } from '@/products/artifacts/dashboard/renderer/components/DashboardKpiContext'
@@ -163,7 +163,7 @@ export default function DashboardKpi({
   const negativeColor = typeof props.negativeColor === 'string' ? props.negativeColor : '#DC2626'
   const neutralColor = typeof props.neutralColor === 'string' ? props.neutralColor : '#64748B'
   const [isEditorOpen, setIsEditorOpen] = React.useState(false)
-  const [editorDraft, setEditorDraft] = React.useState(() => ({
+  const [editorDraft, setEditorDraft] = React.useState<KpiDraft>(() => ({
     prompt: typeof props.prompt === 'string' ? props.prompt : '',
     title,
     description,

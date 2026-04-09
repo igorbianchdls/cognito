@@ -4,11 +4,11 @@ import * as React from 'react'
 
 import { ComponentEditorModalShell } from '@/products/artifacts/dashboard/editors/shared/ComponentEditorModalShell'
 
-type KpiDraft = {
+export type KpiDraft = {
   prompt: string
   title: string
   description: string
-  format: string
+  format: 'currency' | 'percent' | 'number'
   unit: string
 }
 
@@ -201,7 +201,7 @@ export function KpiEditorModal({
               <span style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>Formato</span>
               <select
                 value={value.format}
-                onChange={(event) => patch({ format: event.target.value })}
+                onChange={(event) => patch({ format: event.target.value as KpiDraft['format'] })}
                 style={{
                   height: 44,
                   border: 'none',
