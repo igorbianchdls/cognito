@@ -932,6 +932,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 label="Canal"
                 table="vendas.pedidos"
                 field="canal_venda_id"
+                variant="checklist"
                 mode="multiple"
                 search
                 clearable
@@ -943,9 +944,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                   FROM vendas.canais_venda cv
                   ORDER BY 2 ASC
                 \`}
-              >
-                <OptionList />
-              </Filter>
+              />
             </Card>
 
             <Card id="classic-filter-cliente" span={4} rows={6} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -955,6 +954,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 label="Cliente"
                 table="vendas.pedidos"
                 field="cliente_id"
+                variant="checklist"
                 mode="multiple"
                 search
                 clearable
@@ -966,9 +966,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                   FROM entidades.clientes c
                   ORDER BY 2 ASC
                 \`}
-              >
-                <OptionList />
-              </Filter>
+              />
             </Card>
 
             <Card id="classic-filter-status" span={4} rows={6} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -978,6 +976,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 label="Status"
                 table="vendas.pedidos"
                 field="status"
+                variant="dropdown"
                 mode="multiple"
                 search
                 clearable
@@ -990,9 +989,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                   WHERE COALESCE(src.status, '') <> ''
                   ORDER BY 2 ASC
                 \`}
-              >
-                <OptionList />
-              </Filter>
+              />
             </Card>
           </Horizontal>
           </Vertical>

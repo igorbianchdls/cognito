@@ -250,10 +250,12 @@ function resolveSlicerFieldBinding(config: AnyRecord | null | undefined): { key:
 function resolveSingleSlicerField(element: any, props: AnyRecord): AnyRecord | null {
   const storePath = resolveSlicerStorePath(props)
   if (!storePath) return null
+  const uiChild = resolveSlicerUiChild(element)
   const fieldKeys = [
     'label',
     'table',
     'field',
+    'variant',
     'mode',
     'storePath',
     'placeholder',
@@ -266,14 +268,13 @@ function resolveSingleSlicerField(element: any, props: AnyRecord): AnyRecord | n
     'source',
     'actionOnChange',
   ] as const
-  const field: AnyRecord = {}
+  const field: AnyRecord = { ...(uiChild.props || {}) }
   for (const key of fieldKeys) {
     if (props[key] !== undefined) field[key] = props[key]
   }
   field.storePath = storePath
-  const uiChild = resolveSlicerUiChild(element)
   if (uiChild.variant && field.variant === undefined) field.variant = uiChild.variant
-  return { ...field, ...uiChild.props }
+  return field
 }
 
 function resolveSlicerDefinitions(element: any, props: AnyRecord): AnyRecord[] {
