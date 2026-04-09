@@ -579,9 +579,8 @@ function SlicerContent({
                     />
                   )}
                   <div
-                    className="flex flex-col overflow-y-auto rounded-md border border-gray-300 px-2 py-2 pr-1"
+                    className="flex flex-col overflow-y-auto"
                     style={{
-                      ...controlStyle,
                       gap: itemGap,
                       maxHeight: listMaxHeight,
                     }}
