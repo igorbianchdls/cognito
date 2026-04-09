@@ -4,17 +4,17 @@ import * as React from 'react'
 
 import { ComponentEditorModalShell } from '@/products/artifacts/dashboard/editors/shared/ComponentEditorModalShell'
 
-type FilterFieldDraft = {
+export type FilterFieldDraft = {
   label: string
   field: string
   variant: string
   mode: string
 }
 
-type FilterDraft = {
+export type FilterDraft = {
   prompt: string
-  layout: string
-  applyMode: string
+  layout: 'vertical' | 'horizontal'
+  applyMode: 'auto' | 'manual'
   fields: FilterFieldDraft[]
 }
 

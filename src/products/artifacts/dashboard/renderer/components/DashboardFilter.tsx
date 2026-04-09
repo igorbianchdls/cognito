@@ -4,7 +4,7 @@ import React from 'react'
 
 import { applyPrimaryDateRange } from '@/products/bi/json-render/dateFilters'
 import { useData } from '@/products/bi/json-render/context'
-import { FilterEditorModal } from '@/products/artifacts/dashboard/editors/filter/FilterEditorModal'
+import { FilterEditorModal, type FilterDraft } from '@/products/artifacts/dashboard/editors/filter/FilterEditorModal'
 import { EditableComponentOverlay } from '@/products/artifacts/dashboard/editors/shared/EditableComponentOverlay'
 import {
   resolveDashboardFilterTheme,
@@ -651,7 +651,7 @@ export default function DashboardFilter({
   const applyMode = (p.applyMode || 'auto') as 'auto' | 'manual'
   const fields = resolveSlicerDefinitions(element, p)
   const [isEditorOpen, setIsEditorOpen] = React.useState(false)
-  const [editorDraft, setEditorDraft] = React.useState(() => ({
+  const [editorDraft, setEditorDraft] = React.useState<FilterDraft>(() => ({
     prompt: typeof p.prompt === 'string' ? p.prompt : '',
     layout,
     applyMode,
