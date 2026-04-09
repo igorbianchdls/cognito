@@ -973,25 +973,58 @@ function buildClassicDashboardTemplateSource(themeName: string) {
 
             <Card id="classic-filter-status" span={4} rows={6} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <Text variant="eyebrow">Filtro</Text>
-              <Text as="h2" variant="section-title-sm">Status</Text>
-              <Filter
-                label="Status"
-                table="vendas.pedidos"
-                field="status"
-                variant="dropdown"
-                mode="multiple"
-                search
-                clearable
-                width="100%"
-                query={\`
-                  SELECT DISTINCT
-                    LOWER(src.status)::text AS value,
-                    COALESCE(src.status, 'Sem status') AS label
-                  FROM vendas.pedidos src
-                  WHERE COALESCE(src.status, '') <> ''
-                  ORDER BY 2 ASC
-                \`}
-              />
+              <Text as="h2" variant="section-title-sm">Seletores</Text>
+              <Vertical gap={10}>
+                <Filter
+                  label="Status"
+                  table="vendas.pedidos"
+                  field="status"
+                  variant="dropdown"
+                  mode="multiple"
+                  clearable
+                  width="100%"
+                  query={\`
+                    SELECT DISTINCT
+                      LOWER(src.status)::text AS value,
+                      COALESCE(src.status, 'Sem status') AS label
+                    FROM vendas.pedidos src
+                    WHERE COALESCE(src.status, '') <> ''
+                    ORDER BY 2 ASC
+                  \`}
+                />
+                <Filter
+                  label="Regiao"
+                  table="entidades.clientes"
+                  field="regiao"
+                  variant="dropdown"
+                  mode="multiple"
+                  clearable
+                  width="100%"
+                  query={\`
+                    SELECT DISTINCT
+                      LOWER(COALESCE(c.regiao, 'sem regiao'))::text AS value,
+                      COALESCE(c.regiao, 'Sem regiao') AS label
+                    FROM entidades.clientes c
+                    ORDER BY 2 ASC
+                  \`}
+                />
+                <Filter
+                  label="UF"
+                  table="entidades.clientes"
+                  field="uf"
+                  variant="dropdown"
+                  mode="multiple"
+                  clearable
+                  width="100%"
+                  query={\`
+                    SELECT DISTINCT
+                      LOWER(COALESCE(c.estado, 'sem uf'))::text AS value,
+                      COALESCE(c.estado, 'Sem UF') AS label
+                    FROM entidades.clientes c
+                    ORDER BY 2 ASC
+                  \`}
+                />
+              </Vertical>
             </Card>
           </Horizontal>
           </Vertical>
