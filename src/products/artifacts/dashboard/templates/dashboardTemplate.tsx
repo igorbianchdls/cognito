@@ -932,7 +932,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 label="Canal"
                 table="vendas.pedidos"
                 field="canal_venda_id"
-                variant="checklist"
+                variant="verticallist"
                 mode="multiple"
                 search
                 searchBar={false}
@@ -955,7 +955,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
                 label="Cliente"
                 table="vendas.pedidos"
                 field="cliente_id"
-                variant="checklist"
+                variant="verticallist"
                 mode="multiple"
                 search
                 searchBar={false}

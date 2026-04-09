@@ -23,7 +23,7 @@ import { deepMerge } from '@/stores/ui/json-render/utils'
 
 type AnyRecord = Record<string, any>
 type SlicerOpt = { value: string | number; label: string }
-type SlicerVariant = 'checklist' | 'dropdown' | 'tile'
+type SlicerVariant = 'verticallist' | 'dropdown' | 'tile'
 type SlicerSelectionMode = 'single' | 'multiple'
 
 function styleVal(v: unknown): string | undefined {
@@ -212,7 +212,7 @@ function resolveSlicerUiChild(element: any): { variant?: SlicerVariant; props: A
     const type = String((child as AnyRecord)?.type || '').trim()
     if (type === 'OptionList') {
       return {
-        variant: 'checklist',
+        variant: 'verticallist',
         props:
           (child as AnyRecord)?.props && typeof (child as AnyRecord).props === 'object' && !Array.isArray((child as AnyRecord).props)
             ? ((child as AnyRecord).props as AnyRecord)
@@ -296,9 +296,11 @@ function resolveSlicerDefinitions(element: any, props: AnyRecord): AnyRecord[] {
 
 function resolveSlicerPresentation(field: AnyRecord): { variant: SlicerVariant; selectionMode: SlicerSelectionMode } {
   const variant =
-    field?.variant === 'dropdown' || field?.variant === 'tile' || field?.variant === 'checklist'
+    field?.variant === 'dropdown' || field?.variant === 'tile' || field?.variant === 'verticallist'
       ? (field.variant as SlicerVariant)
-      : 'checklist'
+      : field?.variant === 'checklist'
+        ? 'verticallist'
+        : 'verticallist'
   const selectionMode =
     field?.mode === 'single' || field?.mode === 'multiple'
       ? (field.mode as SlicerSelectionMode)
@@ -336,8 +338,9 @@ function resolveDropdownSummary(
   stored: unknown,
   isMulti: boolean,
   placeholder?: string,
+  label?: string,
 ) {
-  const fallback = placeholder || 'Todos'
+  const fallback = placeholder || label || 'Selecionar'
   if (isMulti) {
     const values = Array.isArray(stored) ? stored : []
     if (values.length === 0) return fallback
@@ -557,7 +560,7 @@ function SlicerContent({
             )
           }
 
-          if (variant === 'checklist') {
+          if (variant === 'verticallist') {
             const onClear = () => onChangeField(idx, storePath, isMulti ? [] : undefined, field.actionOnChange)
             return (
               <div key={`field-${idx}`} className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
@@ -620,6 +623,7 @@ function SlicerContent({
             stored,
             isMulti,
             typeof field?.placeholder === 'string' ? field.placeholder : undefined,
+            typeof field?.label === 'string' ? field.label : undefined,
           )
           const hasSelection = hasDropdownSelection(stored, isMulti)
           const isDropdownOpen = openDropdownIndex === idx
@@ -655,7 +659,7 @@ function SlicerContent({
                     <span
                       style={{
                         minWidth: 0,
-                        width: '100%',
+                        flex: 1,
                         display: 'flex',
                         alignItems: 'center',
                         minHeight: 42,
@@ -671,6 +675,18 @@ function SlicerContent({
                       }}
                     >
                       {dropdownSummary}
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        paddingRight: 14,
+                        color: '#64748b',
+                        fontSize: 13,
+                        lineHeight: 1,
+                        flexShrink: 0,
+                      }}
+                    >
+                      \/
                     </span>
                   </button>
                 </PopoverTrigger>
@@ -834,7 +850,9 @@ export default function DashboardFilter({
     fields: fields.map((field) => ({
       label: typeof field?.label === 'string' ? field.label : '',
       field: typeof field?.field === 'string' ? field.field : '',
-      variant: typeof field?.variant === 'string' ? field.variant : 'checklist',
+      variant: typeof field?.variant === 'string'
+        ? (field.variant === 'checklist' ? 'verticallist' : field.variant)
+        : 'verticallist',
       mode: typeof field?.mode === 'string' ? field.mode : 'multiple',
     })),
   }))
