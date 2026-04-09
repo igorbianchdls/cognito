@@ -428,9 +428,10 @@ function SlicerContent({
 
   React.useEffect(() => {
     if (openDropdownIndex === null) return
+    const activeDropdownIndex = openDropdownIndex
 
     function handlePointerDown(event: MouseEvent | TouchEvent) {
-      const wrapper = dropdownRefs.current[openDropdownIndex]
+      const wrapper = dropdownRefs.current[activeDropdownIndex]
       if (wrapper && event.target instanceof Node && !wrapper.contains(event.target)) {
         setOpenDropdownIndex(null)
       }
