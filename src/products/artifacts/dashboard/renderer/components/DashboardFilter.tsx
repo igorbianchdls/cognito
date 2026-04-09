@@ -477,11 +477,6 @@ function SlicerContent({
           const storePath = resolveSlicerStorePath(field)
           if (!storePath) return null
 
-          const label = typeof field?.label === 'string' ? field.label : undefined
-          const labelStyle = {
-            ...theme.labelStyle,
-            ...(field?.labelStyle && typeof field.labelStyle === 'object' ? field.labelStyle : {}),
-          } as React.CSSProperties
           const opts = optionsMap[idx] || []
           const width = field?.width !== undefined ? (typeof field.width === 'number' ? `${field.width}px` : field.width) : undefined
           const { variant, selectionMode } = resolveSlicerPresentation(field)
@@ -505,7 +500,6 @@ function SlicerContent({
             const onClear = () => onChangeField(idx, storePath, isMulti ? [] : undefined, field.actionOnChange)
             return (
               <div key={`field-${idx}`} className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
-                {label && !suppressFieldLabels && <div className="text-xs" style={labelStyle}>{label}</div>}
                 <div className="flex flex-col gap-2">
                   {showSearch && (
                     <input
@@ -566,7 +560,6 @@ function SlicerContent({
             const onClear = () => onChangeField(idx, storePath, isMulti ? [] : undefined, field.actionOnChange)
             return (
               <div key={`field-${idx}`} className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'} style={{ width }}>
-                {label && !suppressFieldLabels && <div className="text-xs" style={labelStyle}>{label}</div>}
                 <div className="flex flex-col gap-2">
                   {showSearch && (
                     <input
@@ -629,13 +622,12 @@ function SlicerContent({
           )
           const hasSelection = hasDropdownSelection(stored, isMulti)
           const isDropdownOpen = openDropdownIndex === idx
-          return (
-            <div
-              key={`field-${idx}`}
-              className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'}
-              style={{ width }}
-            >
-              {label && !suppressFieldLabels && <div className="text-xs" style={labelStyle}>{label}</div>}
+            return (
+              <div
+                key={`field-${idx}`}
+                className={layout === 'horizontal' ? 'flex items-center gap-2' : 'space-y-1'}
+                style={{ width }}
+              >
               <Popover open={isDropdownOpen} onOpenChange={(nextOpen) => setOpenDropdownIndex(nextOpen ? idx : null)}>
                 <PopoverTrigger asChild>
                   <button
@@ -697,7 +689,7 @@ function SlicerContent({
                     }}
                   >
                     <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                      {label || 'Filtro'}
+                      Selecao
                     </div>
                     <div style={{ fontSize: 11, color: '#94a3b8' }}>
                       {opts.length} opcoes
