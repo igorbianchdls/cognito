@@ -93,14 +93,16 @@
 - Supported dashboard-specific components are:
   - `Vertical`
   - `Horizontal`
+  - `Grid`
   - `Panel`
   - `Icon`
+  - `KPI`
+  - `KPICompare`
   - `Query`
   - `Chart`
   - `Table`
   - `PivotTable`
   - `Filter`
-  - `Select`
   - `DatePicker`
   - `Tabs`
   - `Tab`
@@ -121,8 +123,19 @@
 - Legacy compatibility:
   - `DashboardTemplate`
   - `Theme`
+  - `Select`
+  - `OptionList`
+  - `Tile`
+  - `HorizontalBarChart`
+  - `ScatterChart`
+  - `RadarChart`
+  - `TreemapChart`
+  - `ComposedChart`
+  - `FunnelChart`
+  - `SankeyChart`
+  - `Gauge`
   - These may appear in older files.
-  - You may edit them when preserving an existing file, but do not use them when creating a new dashboard from scratch.
+  - You may edit them when preserving an existing file, but do not use them when creating a new dashboard from scratch when a canonical prop-based shape exists.
 - Layout components:
   - `Vertical`
     - Purpose: stack sections or rows vertically.
@@ -147,6 +160,23 @@
       - `justify`
       - `wrap`
     - Rule: when using `Panel` children, prefer `columns` + `rowHeight` and let the renderer manage the row structure.
+  - `Grid`
+    - Purpose: place structural items in an explicit grid.
+    - Common props:
+      - `columns`
+      - `gap`
+      - `rowHeight`
+      - `padding`
+      - `width`
+      - `maxWidth`
+    - Rule: use `Grid` when the layout is clearly grid-shaped or when a block should span rows/columns explicitly.
+    - Rule: inside `Grid`, structural children may use:
+      - `span`
+      - `rows`
+      - `x`
+      - `y`
+      - `minSpan`
+    - Rule: this can be used on `Panel`, `Card`, or supported HTML nodes when the runtime already treats them as structural layout items.
   - `Panel`
     - Purpose: position one block inside a `Horizontal` or flexible container.
     - Common props:
@@ -180,6 +210,19 @@
     - Rule: use `Icon` for KPI/header/supporting visual cues, not as a replacement for textual labels.
     - Rule: prefer `color`, `backgroundColor`, `borderColor`, and `padding` before using generic `style`.
 - Data components:
+  - `KPI`
+    - Purpose: render a metric from query data.
+    - Main props:
+      - `dataQuery.query`
+      - `dataQuery.limit`
+      - `format`
+      - `comparisonMode`
+      - `style`
+    - Rule: KPI queries should usually return a numeric alias `value`.
+    - Rule: when comparison is needed, prefer composing it with `KPICompare` instead of inventing a custom closed widget.
+  - `KPICompare`
+    - Purpose: render the comparison/delta area inside `KPI`.
+    - Rule: use it as a child of `KPI` when comparison output is desired.
   - `Query`
     - Purpose: execute a query and expose the result to JSX children.
     - Main props:
@@ -222,6 +265,11 @@
       - `funnel`
       - `sankey`
       - `gauge`
+    - Rule: for new dashboards, prefer `Chart type="..."` instead of direct legacy aliases like `HorizontalBarChart` or `Gauge`.
+      - `composed`
+      - `funnel`
+      - `sankey`
+      - `gauge`
     - Rule: prefer the smallest valid chart config first.
     - Rule: use `colors={[...]}` only when a chart needs a local override; otherwise let `Dashboard.chartPalette` define the default chart colors.
   - `Table`
@@ -257,16 +305,23 @@
       - `label`
       - `field`
       - `table`
+      - `variant`
       - `mode`
       - `search`
+      - `searchBar`
       - `clearable`
       - `width`
       - `query`
     - Rule: prefer explicit `query` for options.
-    - Rule: `Filter` usually wraps a `Select`.
-  - `Select`
-    - Purpose: visual selector used inside `Filter`.
-    - Rule: use it as the child of `Filter`.
+    - Rule: for new dashboards, prefer `variant` directly on `Filter`.
+    - Rule: valid canonical variants are:
+      - `dropdown`
+      - `verticallist`
+      - `tile`
+    - Rule: `verticallist` is the canonical name; do not author new dashboards with `checklist`.
+    - Rule: `search` controls option querying/filter behavior.
+    - Rule: `searchBar` controls whether the search input is visually shown.
+    - Rule: legacy authored children like `Select`, `OptionList`, or `Tile` may appear in old files, but new dashboards should not depend on them.
   - `DatePicker`
     - Purpose: filter the dashboard by date.
     - Main props:
@@ -287,6 +342,19 @@
     - Main props:
       - `value`
       - `forceMount`
+  - `Insights`
+    - Purpose: render an AI-oriented insight block.
+    - Main props:
+      - `prompt`
+      - `schedule`
+      - `textStyle`
+      - `iconStyle`
+      - `gap`
+      - `itemGap`
+      - `showDividers`
+    - Rule: for new dashboards, the source should store `prompt` and optional `schedule`, not authored insight `items`.
+    - Rule: the runtime/editor may show placeholder items until real AI-generated insights exist.
+    - Rule: legacy files may still contain `items`; preserve them only when editing an older file that already uses that shape.
 - Styling policy:
   - Inline `style` is optional, not required.
   - The renderer already provides useful default styling through theme/variant for:
@@ -324,6 +392,9 @@
     before falling back to custom `style`.
 - General rules:
   - use container-first layout for new dashboards
+  - when the dashboard is meant to have resizable structural blocks, prefer `Grid` as the main authored layout
+  - treat the main analytical blocks as structural items with `span` and `rows`
+  - when a `header` must be part of the resizable structure, place it inside `Grid` with structural props such as `span` and `rows`
   - use HTML/JSX for local structure and supporting content
   - use dashboard-specific components only for real data or behavior
   - output a single `.tsx` file
@@ -335,30 +406,26 @@
 ```tsx
 <Dashboard id="overview" title="Dashboard Comercial" theme="light" chartPalette="teal">
   <Vertical gap={24} padding={28} width="1600px">
-    <Horizontal gap={18}>
-      <Panel id="header" span={12}>
-        <Card>
-          <Vertical gap={10}>
-            <Text variant="eyebrow">Resumo comercial</Text>
-            <Text as="h1" variant="page-title">Receita e canais</Text>
-            <Text variant="lead">
-              Use containers para organizar a estrutura principal. Evite estilizar tudo manualmente.
-            </Text>
-            <DatePicker
-              label="Periodo"
-              table="vendas.pedidos"
-              field="data_pedido"
-              mode="range"
-              presets={['7d', '30d', 'month']}
-            />
-          </Vertical>
-        </Card>
-      </Panel>
-    </Horizontal>
+    <Grid columns={12} rowHeight={18} gap={18}>
+      <header id="header" span={12} rows={6} style={{ display: 'flex', justifyContent: 'space-between', gap: 20, padding: '20px 24px' }}>
+        <Vertical gap={10}>
+          <Text variant="eyebrow">Resumo comercial</Text>
+          <Text as="h1" variant="page-title">Receita e canais</Text>
+          <Text variant="lead">
+            Use `Grid` quando o dashboard precisar de blocos redimensionaveis, inclusive no header.
+          </Text>
+        </Vertical>
+        <DatePicker
+          label="Periodo"
+          table="vendas.pedidos"
+          field="data_pedido"
+          mode="range"
+          presets={['7d', '30d', 'month']}
+        />
+      </header>
 
-    <Horizontal columns={12} rowHeight={18} gap={16}>
-      <Panel id="kpi-receita" span={4} rows={4}>
-        <Card variant="kpi">
+      <Card id="kpi-receita" span={4} rows={4} variant="kpi">
+        <Vertical gap={12}>
           <Icon
             name="DollarSign"
             size={18}
@@ -384,11 +451,11 @@
           >
             <KPICompare />
           </KPI>
-        </Card>
-      </Panel>
+        </Vertical>
+      </Card>
 
-      <Panel id="kpi-pedidos" span={4} rows={4}>
-        <Card variant="kpi">
+      <Card id="kpi-pedidos" span={4} rows={4} variant="kpi">
+        <Vertical gap={12}>
           <Icon
             name="ShoppingCart"
             size={18}
@@ -414,11 +481,11 @@
           >
             <KPICompare />
           </KPI>
-        </Card>
-      </Panel>
+        </Vertical>
+      </Card>
 
-      <Panel id="kpi-ticket" span={4} rows={4}>
-        <Card variant="kpi">
+      <Card id="kpi-ticket" span={4} rows={4} variant="kpi">
+        <Vertical gap={12}>
           <Icon
             name="Ticket"
             size={18}
@@ -444,63 +511,57 @@
           >
             <KPICompare />
           </KPI>
-        </Card>
-      </Panel>
-    </Horizontal>
+        </Vertical>
+      </Card>
 
-    <Horizontal columns={12} rowHeight={18} gap={18}>
-      <Panel id="chart-canal" span={8} rows={12}>
-        <Card variant="chart">
-          <Text variant="section-title">Receita por canal</Text>
-          <Chart
-            type="bar"
-            height={320}
-            format="currency"
-            dataQuery={{
-              query: `
-                SELECT
-                  COALESCE(cv.nome, '-') AS canal,
-                  COALESCE(SUM(src.valor_total), 0)::float AS valor
-                FROM vendas.pedidos src
-                LEFT JOIN vendas.canais_venda cv ON cv.id = src.canal_venda_id
-                WHERE src.tenant_id = {{tenant_id}}::int
-                  {{filters:src}}
-                GROUP BY 1
-                ORDER BY 2 DESC
-              `,
-              limit: 8,
-            }}
-            xAxis={{ dataKey: 'canal' }}
-            series={[{ dataKey: 'valor', label: 'Receita' }]}
-          />
-        </Card>
-      </Panel>
-
-      <Panel id="filter-canal" span={4} rows={12}>
-        <Card variant="filter">
-          <Text variant="filter-title">Canal</Text>
-          <Filter
-            label="Canal"
-            table="vendas.pedidos"
-            field="canal_venda_id"
-            mode="multiple"
-            search
-            clearable
-            width="100%"
-            query={`
+      <Card id="chart-canal" span={8} rows={12} variant="chart">
+        <Text variant="section-title">Receita por canal</Text>
+        <Chart
+          type="bar"
+          height={320}
+          format="currency"
+          dataQuery={{
+            query: `
               SELECT
-                cv.id::text AS value,
-                COALESCE(cv.nome, '-') AS label
-              FROM vendas.canais_venda cv
-              WHERE cv.tenant_id = {{tenant_id}}::int
-              ORDER BY 2 ASC
-            `}
-          >
-            <Select />
-          </Filter>
-        </Card>
-      </Panel>
-    </Horizontal>
+                COALESCE(cv.nome, '-') AS canal,
+                COALESCE(SUM(src.valor_total), 0)::float AS valor
+              FROM vendas.pedidos src
+              LEFT JOIN vendas.canais_venda cv ON cv.id = src.canal_venda_id
+              WHERE src.tenant_id = {{tenant_id}}::int
+                {{filters:src}}
+              GROUP BY 1
+              ORDER BY 2 DESC
+            `,
+            limit: 8,
+          }}
+          xAxis={{ dataKey: 'canal' }}
+          series={[{ dataKey: 'valor', label: 'Receita' }]}
+        />
+      </Card>
+
+      <Card id="filter-canal" span={4} rows={12} variant="filter">
+        <Text variant="filter-title">Canal</Text>
+        <Filter
+          label="Canal"
+          table="vendas.pedidos"
+          field="canal_venda_id"
+          variant="verticallist"
+          mode="multiple"
+          search
+          searchBar={false}
+          clearable
+          width="100%"
+          query={`
+            SELECT
+              cv.id::text AS value,
+              COALESCE(cv.nome, '-') AS label
+            FROM vendas.canais_venda cv
+            WHERE cv.tenant_id = {{tenant_id}}::int
+            ORDER BY 2 ASC
+          `}
+        />
+      </Card>
+    </Grid>
   </Vertical>
 </Dashboard>
 ```
@@ -510,16 +571,17 @@
 ```tsx
 <Dashboard id="overview" title="Exploracao comercial" theme="light" chartPalette="teal">
   <Vertical gap={18} padding={24}>
-    <Horizontal columns={12} rowHeight={18} gap={18}>
-      <Panel id="filters" span={12} rows={5}>
-        <Card variant="filter">
-          <Horizontal gap={12} wrap>
+    <Grid columns={12} rowHeight={18} gap={18}>
+      <Card id="filters" span={12} rows={5} variant="filter">
+        <Horizontal gap={12} wrap>
             <Filter
               label="Canal"
               table="vendas.pedidos"
               field="canal_venda_id"
+              variant="verticallist"
               mode="multiple"
               search
+              searchBar={false}
               clearable
               width={220}
               query={`
@@ -530,14 +592,13 @@
                 WHERE cv.tenant_id = {{tenant_id}}::int
                 ORDER BY 2 ASC
               `}
-            >
-              <Select />
-            </Filter>
+            />
 
             <Filter
               label="Status"
               table="vendas.pedidos"
               field="status"
+              variant="dropdown"
               mode="multiple"
               search
               clearable
@@ -550,69 +611,68 @@
                 WHERE src.tenant_id = {{tenant_id}}::int
                 ORDER BY 2 ASC
               `}
-            >
-              <Select />
-            </Filter>
+            />
+        </Horizontal>
+      </Card>
+
+      <Card id="detail-tabs" span={12} rows={16}>
+        <Tabs defaultValue="table">
+          <Horizontal gap={8}>
+            <Tab value="table">Tabela</Tab>
+            <Tab value="pivot">Pivot</Tab>
           </Horizontal>
-        </Card>
-      </Panel>
-    </Horizontal>
 
-    <Tabs defaultValue="table">
-      <Horizontal gap={8}>
-        <Tab value="table">Tabela</Tab>
-        <Tab value="pivot">Pivot</Tab>
-      </Horizontal>
+          <TabPanel value="table">
+            <Table
+              dataQuery={{
+                query: `
+                  SELECT
+                    src.id::text AS pedido,
+                    TO_CHAR(src.data_pedido::date, 'DD/MM/YYYY') AS data,
+                    COALESCE(cv.nome, '-') AS canal,
+                    COALESCE(src.status, 'Sem status') AS status,
+                    COALESCE(src.valor_total, 0)::float AS valor_total
+                  FROM vendas.pedidos src
+                  LEFT JOIN vendas.canais_venda cv ON cv.id = src.canal_venda_id
+                  WHERE src.tenant_id = {{tenant_id}}::int
+                    {{filters:src}}
+                  ORDER BY src.data_pedido DESC, src.id DESC
+                `,
+                limit: 12,
+              }}
+              columns={[
+                { accessorKey: 'pedido', header: 'Pedido' },
+                { accessorKey: 'data', header: 'Data' },
+                { accessorKey: 'canal', header: 'Canal' },
+                { accessorKey: 'status', header: 'Status', cell: 'badge' },
+                { accessorKey: 'valor_total', header: 'Valor', format: 'currency', align: 'right', headerAlign: 'right' },
+              ]}
+            />
+          </TabPanel>
 
-      <TabPanel value="table">
-        <Table
-          dataQuery={{
-            query: `
-              SELECT
-                src.id::text AS pedido,
-                TO_CHAR(src.data_pedido::date, 'DD/MM/YYYY') AS data,
-                COALESCE(cv.nome, '-') AS canal,
-                COALESCE(src.status, 'Sem status') AS status,
-                COALESCE(src.valor_total, 0)::float AS valor_total
-              FROM vendas.pedidos src
-              LEFT JOIN vendas.canais_venda cv ON cv.id = src.canal_venda_id
-              WHERE src.tenant_id = {{tenant_id}}::int
-                {{filters:src}}
-              ORDER BY src.data_pedido DESC, src.id DESC
-            `,
-            limit: 12,
-          }}
-          columns={[
-            { accessorKey: 'pedido', header: 'Pedido' },
-            { accessorKey: 'data', header: 'Data' },
-            { accessorKey: 'canal', header: 'Canal' },
-            { accessorKey: 'status', header: 'Status', cell: 'badge' },
-            { accessorKey: 'valor_total', header: 'Valor', format: 'currency', align: 'right', headerAlign: 'right' },
-          ]}
-        />
-      </TabPanel>
-
-      <TabPanel value="pivot">
-        <PivotTable
-          dataQuery={{
-            query: `
-              SELECT
-                COALESCE(cv.nome, '-') AS canal,
-                COALESCE(src.status, 'Sem status') AS status,
-                COALESCE(src.valor_total, 0)::float AS valor_total
-              FROM vendas.pedidos src
-              LEFT JOIN vendas.canais_venda cv ON cv.id = src.canal_venda_id
-              WHERE src.tenant_id = {{tenant_id}}::int
-                {{filters:src}}
-            `,
-            limit: 400,
-          }}
-          rows={[{ field: 'canal', label: 'Canal' }]}
-          columns={[{ field: 'status', label: 'Status' }]}
-          values={[{ field: 'valor_total', label: 'Receita', aggregate: 'sum', format: 'currency' }]}
-        />
-      </TabPanel>
-    </Tabs>
+          <TabPanel value="pivot">
+            <PivotTable
+              dataQuery={{
+                query: `
+                  SELECT
+                    COALESCE(cv.nome, '-') AS canal,
+                    COALESCE(src.status, 'Sem status') AS status,
+                    COALESCE(src.valor_total, 0)::float AS valor_total
+                  FROM vendas.pedidos src
+                  LEFT JOIN vendas.canais_venda cv ON cv.id = src.canal_venda_id
+                  WHERE src.tenant_id = {{tenant_id}}::int
+                    {{filters:src}}
+                `,
+                limit: 400,
+              }}
+              rows={[{ field: 'canal', label: 'Canal' }]}
+              columns={[{ field: 'status', label: 'Status' }]}
+              values={[{ field: 'valor_total', label: 'Receita', aggregate: 'sum', format: 'currency' }]}
+            />
+          </TabPanel>
+        </Tabs>
+      </Card>
+    </Grid>
   </Vertical>
 </Dashboard>
 ```
