@@ -2,7 +2,11 @@
 
 import * as React from 'react'
 
-import { InsightsEditorModal, type EditableInsightItem } from '@/products/artifacts/dashboard/editors/insights/InsightsEditorModal'
+import {
+  InsightsEditorModal,
+  type EditableInsightItem,
+  type InsightSchedule,
+} from '@/products/artifacts/dashboard/editors/insights/InsightsEditorModal'
 import { EditableComponentOverlay } from '@/products/artifacts/dashboard/editors/shared/EditableComponentOverlay'
 import {
   resolveDashboardInsightsTheme,
@@ -11,11 +15,53 @@ import {
 
 type AnyRecord = Record<string, any>
 
+function resolveInsightSchedule(input: unknown): InsightSchedule {
+  const record = input && typeof input === 'object' ? input as AnyRecord : {}
+  return {
+    frequency:
+      record.frequency === 'daily' || record.frequency === 'weekly' || record.frequency === 'no_repeat'
+        ? record.frequency
+        : 'no_repeat',
+    date: typeof record.date === 'string' ? record.date : '',
+    time: typeof record.time === 'string' ? record.time : '',
+  }
+}
+
+function buildPlaceholderInsightItems(prompt: string, schedule: InsightSchedule): EditableInsightItem[] {
+  const normalizedPrompt = prompt.trim()
+  const promptPreview = normalizedPrompt
+    ? normalizedPrompt.length > 120
+      ? `${normalizedPrompt.slice(0, 117)}...`
+      : normalizedPrompt
+    : 'Defina um prompt para orientar a geracao futura dos insights.'
+
+  const scheduleSummary =
+    schedule.frequency === 'no_repeat' && !schedule.date && !schedule.time
+      ? 'Sem schedule definido. O bloco permanece com placeholders ate existir execucao automatica.'
+      : `Schedule configurado como ${schedule.frequency}${schedule.date ? ` em ${schedule.date}` : ''}${schedule.time ? ` as ${schedule.time}` : ''}.`
+
+  return [
+    {
+      title: 'Prompt configurado',
+      text: promptPreview,
+    },
+    {
+      title: 'Placeholder local',
+      text: 'Os itens reais deste bloco devem vir da IA. Enquanto isso, a interface mostra placeholders gerados localmente.',
+    },
+    {
+      title: 'Agendamento',
+      text: scheduleSummary,
+    },
+  ]
+}
+
 export default function DashboardInsights({ element }: { element: any }) {
   const props = (element?.props || {}) as AnyRecord
   const { appearanceOverrides, themeName } = useDashboardThemeSelection()
   const theme = resolveDashboardInsightsTheme(themeName, appearanceOverrides)
   const propPrompt = typeof props.prompt === 'string' ? props.prompt : ''
+  const propSchedule = React.useMemo(() => resolveInsightSchedule(props.schedule), [props.schedule])
   const propItems = React.useMemo<EditableInsightItem[]>(
     () => (Array.isArray(props.items) ? props.items : [])
       .map((item) => {
@@ -30,7 +76,9 @@ export default function DashboardInsights({ element }: { element: any }) {
   )
   const itemsSignature = React.useMemo(() => JSON.stringify(propItems), [propItems])
   const [prompt, setPrompt] = React.useState(propPrompt)
-  const [items, setItems] = React.useState<EditableInsightItem[]>(propItems)
+  const [schedule, setSchedule] = React.useState<InsightSchedule>(propSchedule)
+  const placeholderItems = React.useMemo(() => buildPlaceholderInsightItems(prompt, schedule), [prompt, schedule])
+  const items = propItems.length > 0 ? propItems : placeholderItems
   const [openItems, setOpenItems] = React.useState<Record<number, boolean>>({})
   const [isEditorOpen, setIsEditorOpen] = React.useState(false)
   const containerStyle = props.containerStyle && typeof props.containerStyle === 'object'
@@ -62,9 +110,9 @@ export default function DashboardInsights({ element }: { element: any }) {
   }, [propPrompt])
 
   React.useEffect(() => {
-    setItems(propItems)
+    setSchedule(propSchedule)
     setOpenItems({})
-  }, [itemsSignature, propItems])
+  }, [itemsSignature, propItems, propSchedule])
 
   return (
     <>
@@ -195,11 +243,11 @@ export default function DashboardInsights({ element }: { element: any }) {
       <InsightsEditorModal
         isOpen={isEditorOpen}
         initialPrompt={prompt}
-        initialItems={items}
+        initialSchedule={schedule}
         onClose={() => setIsEditorOpen(false)}
         onSave={(value) => {
           setPrompt(value.prompt)
-          setItems(value.items)
+          setSchedule(value.schedule)
           setOpenItems({})
           setIsEditorOpen(false)
         }}

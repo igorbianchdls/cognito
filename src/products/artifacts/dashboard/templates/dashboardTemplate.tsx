@@ -643,11 +643,8 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               <Insights
                 textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, margin: 0, fontSize: 13, lineHeight: 1.65 }}
                 iconStyle={{ color: '#2563EB' }}
-                items={[
-                  { title: 'Receita acima da media recente', text: 'Receita ganhou tracao nos canais proprios e manteve crescimento acima da media recente.' },
-                  { title: 'Volume mais regular no periodo', text: 'O volume diario segue acima da media das ultimas semanas, com melhor distribuicao ao longo do periodo.' },
-                  { title: 'Melhor retorno sem mais desconto', text: 'Os canais com melhor retorno continuam puxando o resultado total sem depender de descontos mais agressivos.' },
-                ]}
+                prompt="Gerar insights sobre aceleracao recente de receita, ganho nos canais proprios, regularidade do volume e melhora de retorno sem aumentar descontos."
+                schedule={{ frequency: 'weekly', date: '', time: '09:00' }}
               />
             </Card>
             <Card id="classic-insight-concentracao" span={4} rows={10} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -658,11 +655,8 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               <Insights
                 textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, margin: 0, fontSize: 13, lineHeight: 1.65 }}
                 iconStyle={{ color: '#F59E0B' }}
-                items={[
-                  { text: 'O mix segue concentrado em poucos canais, o que aumenta dependencia operacional.' },
-                  { text: 'Uma variacao pequena nos principais canais ainda tem impacto relevante na receita consolidada.' },
-                  { text: 'A pulverizacao do faturamento continua baixa, o que reduz margem de seguranca para os proximos ciclos.' },
-                ]}
+                prompt="Gerar insights sobre concentracao de receita, dependencia de poucos canais e risco operacional da baixa pulverizacao do faturamento."
+                schedule={{ frequency: 'weekly', date: '', time: '09:00' }}
               />
             </Card>
             <Card id="classic-insight-conversao" span={4} rows={10} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -673,11 +667,8 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               <Insights
                 textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, margin: 0, fontSize: 13, lineHeight: 1.65 }}
                 iconStyle={{ color: '#10B981' }}
-                items={[
-                  { text: 'A aprovacao continua estavel, com espaco para melhorar conversao sem pressionar o ticket medio.' },
-                  { text: 'Existe espaco para elevar a taxa final com ajustes pontuais no topo do funil comercial.' },
-                  { text: 'O ticket medio nao mostra deterioracao, o que permite buscar ganho de eficiencia sem comprometer valor.' },
-                ]}
+                prompt="Gerar insights sobre conversao, estabilidade da aprovacao, ganhos no topo do funil e preservacao do ticket medio."
+                schedule={{ frequency: 'weekly', date: '', time: '09:00' }}
               />
             </Card>
           </Horizontal>
