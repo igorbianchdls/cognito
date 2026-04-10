@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useStore } from '@nanostores/react';
-import { $previewArtifactPath, sandboxActions } from '@/chat/sandbox';
+import { $previewArtifactPath, fetchPreviewArtifactPaths, sandboxActions } from '@/chat/sandbox';
 
 type Props = { chatId?: string };
 
@@ -17,9 +17,6 @@ export default function DashboardPicker({
   const [error, setError] = React.useState<string | null>(null);
   const [query, setQuery] = React.useState('');
 
-  const isPreviewFile = React.useCallback((path: string) => path.endsWith('.tsx'), []);
-  const comparePreviewPaths = React.useCallback((a: string, b: string) => a.localeCompare(b), []);
-
   const refresh = React.useCallback(async () => {
     if (!chatId) {
       setPaths([]);
@@ -29,49 +26,12 @@ export default function DashboardPicker({
     }
     setLoading(true); setError(null);
     try {
-      const collected: string[] = [];
-      let directOk = false;
-      let firstDirectError: string | null = null;
-
-      // Fast path for artifact tsx files.
-      const directDirs = ['/vercel/sandbox/dashboard', '/vercel/sandbox/report', '/vercel/sandbox/slide'];
-      for (const dir of directDirs) {
-        const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-list', chatId, path: dir }) });
-        const data = await res.json().catch(()=>({})) as { ok?: boolean; entries?: Array<{ name:string; path:string; type:'file'|'dir' }>; error?: string };
-        if (!res.ok || data.ok === false) {
-          if (!firstDirectError) firstDirectError = data.error || `Falha ao listar ${dir}`;
-          continue;
-        }
-        directOk = true;
-        for (const e of (data.entries||[])) {
-          if (e.type === 'file' && isPreviewFile(e.path)) collected.push(e.path);
-        }
-      }
-
-      // Fallback recursive scan only if direct dashboard listing succeeded.
-      if (collected.length === 0 && directOk) {
-        const visited = new Set<string>();
-        const queue: string[] = ['/vercel/sandbox'];
-        const MAX_FILES = 500, MAX_DIRS = 1000; let dirs = 0;
-        while (queue.length && collected.length < MAX_FILES && dirs < MAX_DIRS) {
-          const dir = queue.shift()!; dirs++;
-          const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-list', chatId, path: dir }) });
-          const data = await res.json().catch(()=>({})) as { ok?: boolean; entries?: Array<{ name:string; path:string; type:'file'|'dir' }>; error?: string };
-          if (!res.ok || data.ok === false) { setError(data.error || `Falha ao listar ${dir}`); break; }
-          for (const e of (data.entries||[])) {
-            if (e.type === 'dir') { if (!visited.has(e.path)) { visited.add(e.path); queue.push(e.path); } }
-            else if (e.type === 'file' && isPreviewFile(e.path)) collected.push(e.path);
-          }
-        }
-      }
-
-      if (collected.length === 0 && !directOk && firstDirectError) {
-        setError(firstDirectError);
-      }
-      collected.sort(comparePreviewPaths); setPaths(collected);
+      const { paths: nextPaths, error: nextError } = await fetchPreviewArtifactPaths(chatId);
+      setPaths(nextPaths);
+      setError(nextError);
     } catch (e: any) { setError(e?.message ? String(e.message) : 'Erro ao listar artefatos'); }
     finally { setLoading(false); }
-  }, [chatId, comparePreviewPaths, isPreviewFile]);
+  }, [chatId]);
 
   React.useEffect(() => { refresh(); }, [refresh]);
 

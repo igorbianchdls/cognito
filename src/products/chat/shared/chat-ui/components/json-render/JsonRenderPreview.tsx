@@ -14,7 +14,13 @@ import {
   getPagedArtifactDimension,
   getPagedArtifactStructure,
 } from "@/products/artifacts/core/workspace/pagedArtifactTree";
-import { $previewArtifactPath, sandboxActions } from "@/chat/sandbox";
+import {
+  $previewArtifactPath,
+  fetchPreviewArtifactPaths,
+  getPreviewArtifactKind,
+  isSupportedPreviewPath,
+  sandboxActions,
+} from "@/chat/sandbox";
 
 type Props = { chatId?: string };
 type LoadedPreview =
@@ -94,28 +100,6 @@ class ComponentBoundary extends React.Component<{ children: React.ReactNode }, C
     }
     return this.props.children;
   }
-}
-
-function getPreviewArtifactKind(path: string | null | undefined): "tsx" | null {
-  if (!path) return null;
-  const p = String(path).trim();
-  if (!p.startsWith("/vercel/sandbox/")) return null;
-  if (p.endsWith(".tsx")) return "tsx";
-  return null;
-}
-
-function isSupportedPreviewPath(path: string | null | undefined): path is string {
-  return getPreviewArtifactKind(path) !== null;
-}
-
-function comparePreviewPaths(a: string, b: string) {
-  const aKind = getPreviewArtifactKind(a);
-  const bKind = getPreviewArtifactKind(b);
-  if (aKind !== bKind) {
-    if (aKind === "tsx") return -1;
-    if (bKind === "tsx") return 1;
-  }
-  return a.localeCompare(b);
 }
 
 function dirname(path: string) {
@@ -264,55 +248,30 @@ function JsonRenderPreviewInner({ chatId }: Props) {
   const [pathsError, setPathsError] = React.useState<string | null>(null);
   const hydratedPreviewPathForChatRef = React.useRef<string | null>(null);
 
-  const refreshPaths = React.useCallback(async (): Promise<string[]> => {
+  const refreshPaths = React.useCallback(async (): Promise<{ paths: string[]; error: string | null }> => {
     if (!chatId) {
       setPathsError(null);
-      return [];
+      return { paths: [], error: null };
     }
     try {
-      const collected: string[] = [];
-      const dirs = ["/vercel/sandbox/dashboard", "/vercel/sandbox/report", "/vercel/sandbox/slide", "/vercel/sandbox"];
-      let firstErr: string | null = null;
-
-      for (const dir of dirs) {
-        const res = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "fs-list", chatId, path: dir }),
-        });
-        const data = (await res.json().catch(() => ({}))) as {
-          ok?: boolean;
-          entries?: Array<{ path: string; type: "file" | "dir" }>;
-          error?: string;
-        };
-        if (!res.ok || data.ok === false) {
-          if (!firstErr) firstErr = data.error || `Falha ao listar ${dir}`;
-          continue;
-        }
-        for (const e of data.entries || []) {
-          if (e.type === "file" && e.path.endsWith(".tsx")) {
-            collected.push(e.path);
-          }
-        }
-      }
-
-      const unique = Array.from(new Set(collected)).sort(comparePreviewPaths);
-      setPathsError(unique.length === 0 ? firstErr : null);
-      return unique;
+      const result = await fetchPreviewArtifactPaths(chatId);
+      setPathsError(result.error);
+      return result;
     } catch (e: any) {
-      setPathsError(e?.message ? String(e.message) : "Falha ao buscar arquivos de preview");
-      return [];
+      const message = e?.message ? String(e.message) : "Falha ao buscar arquivos de preview";
+      setPathsError(message);
+      return { paths: [], error: message };
     }
   }, [chatId]);
 
-  // Hydrate once per chat to avoid overriding user selection with stale storage.
+  // Hydrate once per chat without overriding an explicit current selection.
   React.useEffect(() => {
     if (typeof window === "undefined" || !chatId) return;
     if (hydratedPreviewPathForChatRef.current === chatId) return;
     try {
       const saved = window.localStorage.getItem(`previewArtifactPath:${chatId}`);
       hydratedPreviewPathForChatRef.current = chatId;
-      if (saved && isSupportedPreviewPath(saved) && saved !== previewPath) {
+      if (!previewPath && saved && isSupportedPreviewPath(saved) && saved !== previewPath) {
         sandboxActions.setPreviewPath(saved);
       }
     } catch {
@@ -344,14 +303,36 @@ function JsonRenderPreviewInner({ chatId }: Props) {
         if (!cancelled) setLoading(false);
         return;
       }
-      if (!previewPath) {
+
+      const { paths: found, error: refreshError } = await refreshPaths();
+      const hasCurrentPath = !!previewPath && found.includes(previewPath);
+      const activePath = hasCurrentPath ? previewPath : (found[0] || "");
+
+      if ((!previewPath || !hasCurrentPath) && activePath && activePath !== previewPath) {
         if (!cancelled) {
-          setError("Caminho do preview nao configurado.");
+          sandboxActions.setPreviewPath(activePath);
           setLoading(false);
         }
         return;
       }
-      const kind = getPreviewArtifactKind(previewPath);
+
+      if ((!previewPath || !hasCurrentPath) && !activePath) {
+        if (typeof window !== "undefined" && chatId) {
+          try {
+            window.localStorage.removeItem(`previewArtifactPath:${chatId}`);
+          } catch {
+            // ignore storage access errors
+          }
+        }
+        if (!cancelled) {
+          if (previewPath) sandboxActions.setPreviewPath("");
+          setError(refreshError || "Nenhum artefato .tsx encontrado na sandbox.");
+          setLoading(false);
+        }
+        return;
+      }
+
+      const kind = getPreviewArtifactKind(activePath);
       if (!kind) {
         if (!cancelled) {
           setError("Caminho invalido do preview.");
@@ -361,14 +342,14 @@ function JsonRenderPreviewInner({ chatId }: Props) {
       }
 
       try {
-        const files = await loadPreviewTsxFiles(chatId, previewPath);
-        const parsed = await parseArtifactJsxToTree(previewPath, files);
+        const files = await loadPreviewTsxFiles(chatId, activePath);
+        const parsed = await parseArtifactJsxToTree(activePath, files);
         const nextPreview = buildLoadedPreview(parsed);
         if (!cancelled) setPreview(nextPreview);
       } catch (e: any) {
-        const found = await refreshPaths();
-        const candidate = found[0];
-        if (!cancelled && candidate && candidate !== previewPath) {
+        const { paths: refreshed } = await refreshPaths();
+        const candidate = refreshed.find((path) => path !== activePath) || "";
+        if (!cancelled && candidate && candidate !== activePath) {
           sandboxActions.setPreviewPath(candidate);
           setLoading(false);
           return;
