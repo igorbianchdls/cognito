@@ -87,6 +87,85 @@ function appendReasoning(delta) {
   emit('reasoning_delta', { text });
 }
 
+function syncBufferedText(nextText, currentText, appendFn) {
+  const incoming = String(nextText || '');
+  const current = String(currentText || '');
+  if (!incoming) return;
+  if (!current) {
+    appendFn(incoming);
+    return;
+  }
+  if (incoming === current) return;
+  if (incoming.startsWith(current)) {
+    const missing = incoming.slice(current.length);
+    if (missing) appendFn(missing);
+    return;
+  }
+}
+
+function extractAssistantTextFromOutputItem(item) {
+  if (!item || typeof item !== 'object') return '';
+  const itemType = String(item.type || '').toLowerCase();
+  const itemRole = String(item.role || '').toLowerCase();
+  const isAssistantMessage =
+    itemRole === 'assistant' ||
+    itemType === 'message' ||
+    itemType === 'assistant' ||
+    itemType === 'output_message';
+  if (!isAssistantMessage) return '';
+
+  const chunks = [];
+  if (Array.isArray(item.content)) {
+    for (const part of item.content) {
+      if (!part || typeof part !== 'object') continue;
+      const partType = String(part.type || '').toLowerCase();
+      if (
+        partType === 'output_text' ||
+        partType === 'text' ||
+        partType === 'input_text' ||
+        partType === 'summary_text'
+      ) {
+        const txt = extractText(part);
+        if (txt) chunks.push(txt);
+      }
+    }
+  }
+
+  if (!chunks.length) {
+    const fallback = extractText(item);
+    if (fallback) chunks.push(fallback);
+  }
+
+  return chunks.join('');
+}
+
+function extractReasoningTextFromOutputItem(item) {
+  if (!item || typeof item !== 'object') return '';
+  const chunks = [];
+  const scanPart = (part) => {
+    if (!part || typeof part !== 'object') return;
+    const partType = String(part.type || '').toLowerCase();
+    if (
+      partType === 'reasoning' ||
+      partType === 'reasoning_text' ||
+      partType === 'reasoning_summary' ||
+      partType === 'reasoning_summary_text' ||
+      partType === 'summary'
+    ) {
+      const txt = extractText(part);
+      if (txt) chunks.push(txt);
+    }
+  };
+
+  if (Array.isArray(item.content)) {
+    for (const part of item.content) scanPart(part);
+  } else {
+    scanPart(item);
+  }
+
+  return chunks.join('');
+}
+
 function isSafeResource(resource) {
   try {
     if (!resource || typeof resource !== 'string') return false;
@@ -917,6 +996,8 @@ while (!done && turn < 10) {
     }
     if (type === 'response.output_item.done') {
       const item = ev?.item;
+      syncBufferedText(extractAssistantTextFromOutputItem(item), assistantText, appendAssistant);
+      syncBufferedText(extractReasoningTextFromOutputItem(item), reasoningText, appendReasoning);
       const normalized = normalizeToolCallItem(item);
       if (normalized) fallbackToolCalls.push(normalized);
       return;

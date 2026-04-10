@@ -440,6 +440,57 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
         return copy
       })
     }
+    const syncFinalAssistantText = (finalText: string) => {
+      const nextText = String(finalText || '')
+      if (!nextText) return
+      ensureAssistantMessage()
+      setMessages(prev => {
+        const copy = prev.slice()
+        const targetId = currentAssistantIdRef.current
+        let idx = targetId ? copy.findIndex(m => m.id === targetId) : -1
+        if (idx === -1) idx = copy.findIndex(m => m.role === 'assistant')
+        if (idx === -1) return copy
+
+        const parts = (copy[idx].parts || []).slice()
+        const textIndexes: number[] = []
+        let currentText = ''
+        for (let partIdx = 0; partIdx < parts.length; partIdx += 1) {
+          const part = parts[partIdx] as any
+          if (part?.type === 'text' && typeof part?.text === 'string') {
+            textIndexes.push(partIdx)
+            currentText += part.text
+          }
+        }
+
+        if (currentText === nextText) return copy
+
+        let missing = ''
+        if (!currentText) {
+          missing = nextText
+        } else if (nextText.startsWith(currentText)) {
+          missing = nextText.slice(currentText.length)
+        } else {
+          return copy
+        }
+
+        if (!missing) return copy
+
+        if (textIndexes.length > 0) {
+          const lastTextIdx = textIndexes[textIndexes.length - 1]
+          const currentPart = parts[lastTextIdx] as any
+          parts[lastTextIdx] = {
+            ...currentPart,
+            type: 'text',
+            text: String(currentPart?.text || '') + missing,
+          } as any
+        } else {
+          parts.push({ type: 'text', text: missing } as any)
+        }
+
+        copy[idx] = { ...copy[idx], parts }
+        return copy
+      })
+    }
     const ensureReasoningPart = () => {
       ensureAssistantMessage()
       setMessages(prev => {
@@ -707,6 +758,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
             }
             notifyError('tool', evt?.error, `Erro na tool ${evt?.tool_name || 'desconhecida'}`, evt)
           } else if (evt && evt.type === 'final') {
+            if (typeof evt.text === 'string') syncFinalAssistantText(evt.text)
             setStatus('idle')
           } else if (evt && evt.type === 'error') {
             setStatus('error')
