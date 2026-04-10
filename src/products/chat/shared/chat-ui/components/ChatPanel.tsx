@@ -6,7 +6,6 @@ import ChatContainer from './ChatContainer';
 type ChatPanelProps = {
   className?: string;
   style?: React.CSSProperties;
-  onOpenSandbox?: (chatId?: string) => void;
   withSideMargins?: boolean;
   // New props for routing/auto-send flow
   redirectOnFirstMessage?: boolean;
@@ -17,11 +16,10 @@ type ChatPanelProps = {
   runtimeKind?: 'codex' | 'agentsdk';
 };
 
-export default function ChatPanel({ className, style, onOpenSandbox, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, initialEngine, runtimeKind }: ChatPanelProps) {
+export default function ChatPanel({ className, style, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, initialEngine, runtimeKind }: ChatPanelProps) {
   return (
     <div className={`ui-text h-full min-h-0 w-full overflow-hidden ${className ?? ''}`} style={style}>
       <ChatContainer
-        onOpenSandbox={onOpenSandbox}
         withSideMargins={withSideMargins}
         redirectOnFirstMessage={redirectOnFirstMessage}
         initialMessage={initialMessage}

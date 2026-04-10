@@ -6,8 +6,7 @@ import Header from './Header';
 import PerguntaDoUsuario from './PerguntaDoUsuario';
 import RespostaDaIa from './RespostaDaIa';
 import InputArea from './InputArea';
-import { useRouter } from 'next/navigation';
-import { sandboxActions, type SandboxStatus } from '@/chat/sandbox';
+import type { SandboxStatus } from '@/chat/sandbox';
 import { useChatErrorNotifications } from '@/products/chat/frontend/features/error-notifications/useChatErrorNotifications';
 
 type ChatStatus = 'idle' | 'submitted' | 'streaming' | 'error'
@@ -67,7 +66,7 @@ function modelToEngine(modelRaw?: string): EngineId {
   return 'openai-gpt5mini'
 }
 
-export default function ChatContainer({ onOpenSandbox, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, initialEngine, runtimeKind = 'codex' }: { onOpenSandbox?: (chatId?: string) => void; withSideMargins?: boolean; redirectOnFirstMessage?: boolean; initialMessage?: string; autoSendPrefill?: boolean; initialChatId?: string; initialEngine?: EngineId; runtimeKind?: RuntimeKind }) {
+export default function ChatContainer({ withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, initialEngine, runtimeKind = 'codex' }: { withSideMargins?: boolean; redirectOnFirstMessage?: boolean; initialMessage?: string; autoSendPrefill?: boolean; initialChatId?: string; initialEngine?: EngineId; runtimeKind?: RuntimeKind }) {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<UIMessage[]>([])
   const isEmpty = messages.length === 0
@@ -86,7 +85,6 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
   // Track the assistant message for the current turn, so each user message
   // gets its own assistant response instead of appending to the first one.
   const currentAssistantIdRef = useRef<string | null>(null)
-  const router = useRouter()
   const [menuBusy, setMenuBusy] = useState(false)
   const [headerTitle, setHeaderTitle] = useState<string | undefined>(undefined)
   const [hasPersistedChat, setHasPersistedChat] = useState<boolean>(false)
@@ -256,17 +254,6 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
     } catch (err) {
       notifyError('sandbox', err, 'Falha ao criar arquivos no computador')
     } finally { setMenuBusy(false) }
-  }
-
-  const openArtifactFromMenu = async () => {
-    try {
-      const id = await ensureStart()
-      sandboxActions.setActiveTab('dashboard')
-      onOpenSandbox?.(id ?? chatId ?? initialChatId ?? undefined)
-    } catch (err) {
-      setSandboxStatus('error')
-      notifyError('sandbox', err, 'Falha ao abrir Workspace')
-    }
   }
 
   const ensureStart = async () => {
@@ -590,49 +577,7 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
     // Tool correlation helpers
     const toolIndexToKey = new Map<number, string>()
     const toolCallIdToKey = new Map<string, string>()
-    const toolTouchesDashboard = new Map<string, boolean>()
     let toolKeySeq = 0
-    const extractPathFromToolOutput = (outputRaw: any): string => {
-      let parsed = outputRaw
-      if (typeof parsed === 'string') {
-        try { parsed = JSON.parse(parsed) } catch { /* noop */ }
-      }
-      if (!parsed || typeof parsed !== 'object') return ''
-      if (typeof parsed.file_path === 'string') return parsed.file_path
-      if (typeof parsed.path === 'string') return parsed.path
-      const data = (parsed as any).data
-      if (data && typeof data === 'object') {
-        if (typeof data.file_path === 'string') return data.file_path
-        if (typeof data.path === 'string') return data.path
-      }
-      const result = (parsed as any).result
-      if (result && typeof result === 'object') {
-        if (typeof result.file_path === 'string') return result.file_path
-        if (typeof result.path === 'string') return result.path
-      }
-      return ''
-    }
-    const extractPathFromToolInput = (inputRaw: any): string => {
-      let parsed = inputRaw
-      if (typeof parsed === 'string') {
-        try { parsed = JSON.parse(parsed) } catch { /* noop */ }
-      }
-      if (!parsed || typeof parsed !== 'object') return ''
-      if (typeof parsed.file_path === 'string') return parsed.file_path
-      if (typeof parsed.path === 'string') return parsed.path
-      return ''
-    }
-    const markDashboardTouchFromInput = (callKey: string, toolNameRaw: unknown, inputRaw: any) => {
-      const toolName = String(toolNameRaw || '').toLowerCase()
-      if (!toolName) return
-      if (toolName.includes('dashboard_builder')) {
-        toolTouchesDashboard.set(callKey, true)
-        return
-      }
-      if (toolName !== 'write' && toolName !== 'edit' && toolName !== 'delete') return
-      const path = extractPathFromToolInput(inputRaw)
-      if (path.startsWith('/vercel/sandbox/dashboard/')) toolTouchesDashboard.set(callKey, true)
-    }
     const getToolCallKey = (evt: any, idx: number, bindIdx = false): string | null => {
       const rawCallId = (typeof evt?.call_id === 'string' && evt.call_id.trim())
         ? String(evt.call_id).trim()
@@ -709,7 +654,6 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
             const callKey = getToolCallKey(evt, idx, true) || `ti-${idx}-${++toolKeySeq}`
             let parsed: any = undefined
             try { if (typeof evt.input !== 'undefined') parsed = evt.input } catch {}
-            markDashboardTouchFromInput(callKey, evt.name, parsed)
             updateToolPart(callKey, { state: 'input-available', input: parsed })
             lastActiveToolKey = callKey
           } else if (evt && evt.type === 'tool_start') {
@@ -736,16 +680,6 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
             }
             if (lastActiveToolKey) {
               updateToolPart(lastActiveToolKey, { state: 'output-available', output: evt.output, type: `tool-${evt.tool_name || 'generic'}` })
-              const doneToolName = String(evt?.tool_name || '').toLowerCase()
-              const touchedDashboard =
-                doneToolName.includes('dashboard_builder') ||
-                Boolean(toolTouchesDashboard.get(lastActiveToolKey))
-              if (touchedDashboard) {
-                const outputPath = extractPathFromToolOutput(evt?.output)
-                if (outputPath.startsWith('/vercel/sandbox/dashboard/')) {
-                  sandboxActions.setPreviewPath(outputPath)
-                }
-              }
             }
           } else if (evt && evt.type === 'tool_error') {
             activeTextPartId = null
@@ -850,7 +784,6 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
           onStartSandbox={startSandboxFromMenu}
           onStopSandbox={stopSandboxFromMenu}
           onWriteFiles={writeFilesFromMenu}
-          onOpenArtifact={openArtifactFromMenu}
           errorNotifications={errorNotifications}
           errorNotificationsUnread={errorNotificationsUnread}
           onMarkAllErrorNotificationsRead={markAllAsRead}
@@ -904,16 +837,6 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
                       notifyError('api', err, 'Falha ao alterar modelo')
                     }
                   }}
-                  onOpenSandbox={async () => {
-                    try {
-                      const id = await ensureStart()
-                      sandboxActions.setActiveTab('dashboard')
-                      onOpenSandbox?.(id ?? chatId ?? initialChatId ?? undefined)
-                    } catch (err) {
-                      setSandboxStatus('error')
-                      notifyError('sandbox', err, 'Falha ao abrir Artifact')
-                    }
-                  }}
                 />
                 <p className="mt-2 text-xs text-gray-400 text-center">Alfred é uma IA e pode cometer erros. Por favor, verifique as respostas.</p>
               </div>
@@ -934,7 +857,6 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
         onStartSandbox={startSandboxFromMenu}
         onStopSandbox={stopSandboxFromMenu}
         onWriteFiles={writeFilesFromMenu}
-        onOpenArtifact={openArtifactFromMenu}
         errorNotifications={errorNotifications}
         errorNotificationsUnread={errorNotificationsUnread}
         onMarkAllErrorNotificationsRead={markAllAsRead}
@@ -978,15 +900,6 @@ export default function ChatContainer({ onOpenSandbox, withSideMargins, redirect
               if (!res.ok) notifyError('api', `HTTP ${res.status}`, 'Falha ao alterar modelo')
             } catch (err) {
               notifyError('api', err, 'Falha ao alterar modelo')
-            }
-          }} onOpenSandbox={async () => {
-            try {
-              const id = await ensureStart()
-              sandboxActions.setActiveTab('dashboard')
-              onOpenSandbox?.(id ?? chatId ?? initialChatId ?? undefined)
-            } catch (err) {
-              setSandboxStatus('error')
-              notifyError('sandbox', err, 'Falha ao abrir Artifact')
             }
           }} />
           <p className="mt-2 text-xs text-gray-400 text-center">Alfred é uma IA e pode cometer erros. Por favor, verifique as respostas.</p>

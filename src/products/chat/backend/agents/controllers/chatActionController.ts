@@ -13,10 +13,6 @@ import {
   loadVendasSkillMarkdown,
 } from '@/products/chat/backend/agents/skills/dashboardSkill'
 import { resolveComposioUserIdFromRequest } from '@/products/chat/backend/agents/core/context/resolveComposioUserId'
-import { buildClassicDashboardTemplateVariant } from '@/products/artifacts/dashboard/templates/dashboardTemplate'
-import { buildComprasDashboardTemplateVariant } from '@/products/artifacts/dashboard/templates/dashboardComprasTemplate'
-import { REPORT_TEMPLATE_SOURCE } from '@/products/artifacts/report/templates/reportTemplate'
-import { SLIDE_TEMPLATE_SOURCE } from '@/products/artifacts/slide/templates/slideTemplate'
 import {
   ensureChatRuntimeKindColumn,
   normalizeRuntimeKind,
@@ -30,7 +26,6 @@ import {
   touchRuntimeSession,
   upsertRuntimeSession,
 } from '@/products/chat/backend/agents/runtime/runtimeSessionStore'
-import { registerArtifactsFromSnapshot } from '@/products/chat/backend/features/artifacts/registerArtifactsFromSnapshot'
 
 export const runtime = 'nodejs'
 
@@ -538,33 +533,6 @@ export async function POST(req: Request) {
           await seedAppToolsSkillInSandbox(sandbox, timeline)
         } catch {}
       }
-      // Seed default artifacts (.tsx)
-      try {
-        const vendasSeed = buildClassicDashboardTemplateVariant().content
-        const comprasSeed = buildComprasDashboardTemplateVariant().content
-        const reportSeed = REPORT_TEMPLATE_SOURCE
-        const slideSeed = SLIDE_TEMPLATE_SOURCE
-        const seedArtifacts = `
-const fs=require('fs');
-const write=(dir,file,content)=>{fs.mkdirSync(dir,{recursive:true});const path=dir+'/'+file;if(!fs.existsSync(path))fs.writeFileSync(path,content,'utf8');};
-write('/vercel/sandbox/dashboard','vendas.tsx',process.env.VENDAS_TSX||'');
-write('/vercel/sandbox/dashboard','compras.tsx',process.env.COMPRAS_TSX||'');
-write('/vercel/sandbox/report','report.tsx',process.env.REPORT_TSX||'');
-write('/vercel/sandbox/slide','deck.tsx',process.env.SLIDE_TSX||'');
-console.log('ok');
-`;
-        const runSeed = await sandbox.runCommand({
-          cmd: 'node',
-          args: ['-e', seedArtifacts],
-          env: {
-            VENDAS_TSX: vendasSeed,
-            COMPRAS_TSX: comprasSeed,
-            REPORT_TSX: reportSeed,
-            SLIDE_TSX: slideSeed,
-          },
-        })
-        timeline.push({ name: 'seed-artifact-tsx', ms: 0, ok: runSeed.exitCode === 0, exitCode: runSeed.exitCode })
-      } catch {}
       // Seed MCP servers used by the chat runtimes
       try {
         await seedMcpServersInSandbox(sandbox)
@@ -685,9 +653,6 @@ console.log('ok');
       snapshotId = (snap as any)?.snapshotId || null
       try {
         if (snapshotId) await runQuery('UPDATE chat.chats SET snapshot_id = $1, snapshot_at = now() WHERE id = $2', [snapshotId, chatId])
-      } catch {}
-      try {
-        if (snapshotId) await registerArtifactsFromSnapshot({ chatId, snapshotId, sandbox: sess.sandbox })
       } catch {}
     } catch {}
     try { await sess.sandbox.stop() } catch {}
@@ -1526,9 +1491,6 @@ process.exit(0);
       try {
         if (snapshotId) await runQuery('UPDATE chat.chats SET snapshot_id = $1, snapshot_at = now() WHERE id = $2', [snapshotId, chatId])
       } catch { /* ignore db errors */ }
-      try {
-        if (snapshotId) await registerArtifactsFromSnapshot({ chatId, snapshotId, sandbox: sess.sandbox })
-      } catch {}
       try {
         await touchRuntimeSession(chatId, {
           leaseSeconds: RUNTIME_LEASE_SECONDS,

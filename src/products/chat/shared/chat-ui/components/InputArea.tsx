@@ -15,8 +15,6 @@ import {
   PromptInputTools,
 } from '@/components/ai-elements/prompt-input';
 import {
-  IconChartBar,
-  IconCode,
   IconLoader2,
   IconMicrophone,
   IconPlus,
@@ -36,7 +34,6 @@ type Props = {
   onSubmit: (e: FormEvent) => void;
   status?: ChatStatus | string;
   submitDisabled?: boolean;
-  onOpenSandbox?: () => void;
   composioEnabled?: boolean;
   onToggleComposio?: () => void;
   model?: 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5' | 'openai-gpt5mini' | 'openai-gpt5nano';
@@ -45,7 +42,7 @@ type Props = {
   onPromptProfileChange?: (p: 'general' | 'data_analyst' | 'dashboard_creator') => void;
 };
 
-export default function InputArea({ value, onChange, onSubmit, status = 'idle', submitDisabled = false, onOpenSandbox, composioEnabled, onToggleComposio, model = 'openai-gpt5mini', onModelChange, promptProfile = 'data_analyst', onPromptProfileChange }: Props) {
+export default function InputArea({ value, onChange, onSubmit, status = 'idle', submitDisabled = false, composioEnabled, onToggleComposio, model = 'openai-gpt5mini', onModelChange, promptProfile = 'data_analyst', onPromptProfileChange }: Props) {
   // Local-only UI state for Toolkits panel (no persistence, no backend)
   const [toolkitsOpen, setToolkitsOpen] = useState(false)
   const [tkSearch, setTkSearch] = useState('')
@@ -212,11 +209,6 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
                 <div className="px-3 py-2 text-xs text-gray-500 border-t">Tools</div>
               </PopoverContent>
             </Popover>
-            <PromptInputButton onClick={() => onOpenSandbox?.()}>
-              <IconCode size={16} stroke={1.75} />
-              <span>Workspace</span>
-            </PromptInputButton>
-
             <PromptInputModelSelect
               value={promptProfile}
               onValueChange={(v: any) => {

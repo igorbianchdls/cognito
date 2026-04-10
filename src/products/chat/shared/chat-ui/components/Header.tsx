@@ -2,7 +2,6 @@
 
 import React from 'react';
 import {
-  IconChartBar,
   IconDots,
   IconFilePlus,
   IconPlayerPlay,
@@ -40,7 +39,6 @@ type HeaderProps = {
   onStartSandbox?: () => Promise<void> | void;
   onStopSandbox?: () => Promise<void> | void;
   onWriteFiles?: () => Promise<void> | void;
-  onOpenArtifact?: () => Promise<void> | void;
   busy?: boolean;
   hasSandbox?: boolean;
   sandboxStatus?: SandboxStatus;
@@ -55,7 +53,6 @@ export default function Header({
   onStartSandbox,
   onStopSandbox,
   onWriteFiles,
-  onOpenArtifact,
   busy = false,
   hasSandbox = false,
   sandboxStatus = 'off',
@@ -95,9 +92,6 @@ export default function Header({
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handle(onStopSandbox, !busy && hasSandbox)} className={!hasSandbox || busy ? 'pointer-events-none opacity-50' : ''}>
               <IconSquareRounded className="mr-2 h-4 w-4" stroke={1.75} /> Fechar computador
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handle(onOpenArtifact, !busy)} className={busy ? 'pointer-events-none opacity-50' : ''}>
-              <IconChartBar className="mr-2 h-4 w-4" stroke={1.75} /> Abrir Workspace
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handle(onWriteFiles, !busy)} className={busy ? 'pointer-events-none opacity-50' : ''}>
               <IconFilePlus className="mr-2 h-4 w-4" stroke={1.75} /> Arquivos no Computador
