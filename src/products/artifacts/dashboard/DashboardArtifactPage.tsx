@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
+import { ArtifactWorkspaceHeader } from '@/products/artifacts/core/workspace/components/ArtifactWorkspaceHeader'
 import { ArtifactWorkspacePage } from '@/products/artifacts/core/workspace/ArtifactWorkspacePage'
 import type { ArtifactCodeFile } from '@/products/artifacts/core/workspace/types'
 import { applyDashboardTreeLayoutToSource } from '@/products/artifacts/dashboard/source/dashboardLayoutPersistence'
@@ -46,6 +47,7 @@ export function DashboardArtifactPage({
   updatedAt,
 }: DashboardArtifactPageProps) {
   const [activeView, setActiveView] = useState<'preview' | 'code'>('preview')
+  const [zoom, setZoom] = useState(0.72)
   const [draftSource, setDraftSource] = useState(source)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -131,86 +133,84 @@ export function DashboardArtifactPage({
 
   return (
     <ArtifactWorkspacePage initialData={{ ui: {}, filters: {}, dashboard: {} }}>
-      <main className="min-h-screen bg-[#f5f3ef] px-6 py-8 text-[#2d2a26]">
-        <div className="mx-auto flex max-w-[1500px] flex-col gap-6">
-          <header className="rounded-3xl border border-[#ddd5ca] bg-white px-6 py-5 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#8a7f73]">Artifacts / Dashboards</p>
-            <div className="mt-2 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-              <div className="min-w-0">
-                <h1 className="truncate text-3xl font-semibold tracking-[-0.04em]">{title}</h1>
-                <p className="mt-2 text-sm text-[#6b6259]">
-                  id: {artifactId}
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2 text-xs text-[#6b6259]">
-                <label className="flex items-center gap-2 rounded-full border border-[#ddd5ca] bg-[#f8f5ef] px-3 py-1.5">
-                  <span>versão:</span>
-                  <select
-                    value={String(version)}
-                    onChange={(event) => handleVersionChange(event.target.value)}
-                    className="bg-transparent text-xs font-medium text-[#2d2a26] outline-none"
-                  >
-                    {availableVersions.map((item) => (
-                      <option key={`${item.kind}-${item.version}`} value={String(item.version)}>
-                        {`v${item.version}`}
-                        {item.change_summary ? ` - ${item.change_summary}` : ''}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <span className="rounded-full border border-[#ddd5ca] bg-[#f8f5ef] px-3 py-1.5">status: {status}</span>
-                <span className="rounded-full border border-[#ddd5ca] bg-[#f8f5ef] px-3 py-1.5">draft: v{version}</span>
-                {isDirty ? (
-                  <span className="rounded-full border border-amber-300 bg-amber-50 px-3 py-1.5 text-amber-800">alterações não salvas</span>
-                ) : null}
-                <span className="rounded-full border border-[#ddd5ca] bg-[#f8f5ef] px-3 py-1.5">
-                  atualizado: {formatDate(updatedAt)}
-                </span>
-                <button
-                  type="button"
-                  onClick={handleSave}
-                  disabled={!isDirty || isHistoricalVersion || saving}
-                  className={`rounded-full px-3 py-1.5 text-xs font-medium ${
-                    !isDirty || isHistoricalVersion || saving
-                      ? 'cursor-not-allowed bg-[#e9e2d7] text-[#9a8f82]'
-                      : 'bg-[#2d2a26] text-white'
-                  }`}
-                >
-                  {saving ? 'Salvando...' : 'Salvar'}
-                </button>
-              </div>
+      <div className="flex h-screen flex-col bg-[#F7F7F6] tracking-[-0.03em] text-[#3F3F3D]">
+        <ArtifactWorkspaceHeader
+          title={title}
+          titleIcon="solar:database-bold"
+          activeView={activeView}
+          zoom={zoom}
+          onChangeView={setActiveView}
+          onZoomChange={setZoom}
+          showChromeActions={false}
+          leadingActions={
+            <div className="rounded-md border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] px-2 py-1 text-[11px] font-medium uppercase tracking-[0.14em] text-[#5F5F5A]">
+              Artifacts
             </div>
-            {isHistoricalVersion ? (
-              <p className="mt-3 text-xs text-[#8a7f73]">
-                Você está vendo uma versão histórica. Para salvar mudanças, volte para a draft atual.
-              </p>
-            ) : null}
-            {saveError ? <p className="mt-3 text-sm text-red-700">{saveError}</p> : null}
-            {saveMessage ? <p className="mt-3 text-sm text-emerald-700">{saveMessage}</p> : null}
-          </header>
+          }
+          extraActions={
+            <>
+              <div className="flex items-center gap-2 rounded-xl border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] px-3 py-[0.35rem] text-[12px] font-medium text-[#5F5F5A]">
+                <span>v</span>
+                <select
+                  value={String(version)}
+                  onChange={(event) => handleVersionChange(event.target.value)}
+                  className="bg-transparent text-[12px] font-medium text-[#1F1F1D] outline-none"
+                >
+                  {availableVersions.map((item) => (
+                    <option key={`${item.kind}-${item.version}`} value={String(item.version)}>
+                      {`v${item.version}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="rounded-md border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] px-2 py-[0.35rem] text-[12px] font-medium text-[#5F5F5A]">
+                {status}
+              </div>
+              <div className="rounded-md border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] px-2 py-[0.35rem] text-[12px] font-medium text-[#5F5F5A]">
+                {`draft v${version}`}
+              </div>
+              {isDirty ? (
+                <div className="rounded-md border-[0.5px] border-amber-300 bg-amber-50 px-2 py-[0.35rem] text-[12px] font-medium text-amber-800">
+                  alterações não salvas
+                </div>
+              ) : null}
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={!isDirty || isHistoricalVersion || saving}
+                className={`flex items-center justify-center rounded-md px-2 py-[0.35rem] text-[14px] font-medium transition ${
+                  !isDirty || isHistoricalVersion || saving
+                    ? 'cursor-not-allowed bg-[#E2E2E0] text-[#9A9A95]'
+                    : 'bg-[#039AFE] text-white hover:bg-[#028ae0]'
+                }`}
+              >
+                {saving ? 'Salvando...' : 'Salvar'}
+              </button>
+            </>
+          }
+        />
 
-          <section className="rounded-3xl border border-[#ddd5ca] bg-white shadow-sm">
+        <main className="min-h-0 flex-1 overflow-auto border-r-[0.5px] border-[#DDDDD8] bg-[#EEEEEB] px-6 py-6">
+          <div className="mx-auto flex max-w-[1500px] flex-col gap-4">
+            <section className="rounded-2xl border-[0.5px] border-[#DDDDD8] bg-[#F7F7F6] px-4 py-3 text-sm text-[#5F5F5A]">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <span>{`id: ${artifactId}`}</span>
+                <span>{`atualizado: ${formatDate(updatedAt)}`}</span>
+                {isHistoricalVersion ? (
+                  <span className="text-[#8B5E00]">Você está vendo uma versão histórica. Para salvar mudanças, volte para a draft atual.</span>
+                ) : null}
+                {saveError ? <span className="text-red-700">{saveError}</span> : null}
+                {saveMessage ? <span className="text-emerald-700">{saveMessage}</span> : null}
+              </div>
+            </section>
+
+            <section className="rounded-3xl border border-[#ddd5ca] bg-white shadow-sm">
             <div className="flex items-center justify-between border-b border-[#ebe4da] px-4 py-3">
               <div className="text-sm font-medium tracking-[-0.02em]">Dashboard Persistido</div>
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setActiveView('preview')}
-                  className={`rounded-full px-3 py-1.5 text-xs font-medium ${
-                    activeView === 'preview' ? 'bg-[#2d2a26] text-white' : 'bg-[#f3eee6] text-[#5c544c]'
-                  }`}
-                >
-                  Preview
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveView('code')}
-                  className={`rounded-full px-3 py-1.5 text-xs font-medium ${
-                    activeView === 'code' ? 'bg-[#2d2a26] text-white' : 'bg-[#f3eee6] text-[#5c544c]'
-                  }`}
-                >
-                  Source
-                </button>
+                <span className="rounded-full border border-[#ddd5ca] bg-[#f8f5ef] px-3 py-1.5 text-xs font-medium text-[#5c544c]">
+                  {activeView === 'preview' ? 'Preview' : 'Source'}
+                </span>
               </div>
             </div>
 
@@ -219,7 +219,7 @@ export function DashboardArtifactPage({
                 <DashboardWorkspacePreview
                   sourcePath="app/dashboard.tsx"
                   files={files}
-                  zoom={0.72}
+                  zoom={zoom}
                   onTreeChange={handleTreeChange}
                 />
               </div>
@@ -230,9 +230,10 @@ export function DashboardArtifactPage({
                 </pre>
               </div>
             )}
-          </section>
-        </div>
-      </main>
+            </section>
+          </div>
+        </main>
+      </div>
     </ArtifactWorkspacePage>
   )
 }
