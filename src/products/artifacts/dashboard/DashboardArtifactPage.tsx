@@ -192,16 +192,15 @@ export function DashboardArtifactPage({
 
         <main className="min-h-0 flex-1 overflow-auto border-r-[0.5px] border-[#DDDDD8] bg-[#EEEEEB] px-6 py-6">
           <div className="mx-auto flex max-w-[1500px] flex-col gap-4">
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-1 text-sm text-[#5F5F5A]">
-              <span>{`id: ${artifactId}`}</span>
-              <span>{`atualizado: ${formatDate(updatedAt)}`}</span>
-              <span>{activeView === 'preview' ? 'Preview ativo' : 'Source ativo'}</span>
-              {isHistoricalVersion ? (
-                <span className="text-[#8B5E00]">Você está vendo uma versão histórica. Para salvar mudanças, volte para a draft atual.</span>
-              ) : null}
-              {saveError ? <span className="text-red-700">{saveError}</span> : null}
-              {saveMessage ? <span className="text-emerald-700">{saveMessage}</span> : null}
-            </div>
+            {isHistoricalVersion || saveError || saveMessage ? (
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-1 text-sm text-[#5F5F5A]">
+                {isHistoricalVersion ? (
+                  <span className="text-[#8B5E00]">Você está vendo uma versão histórica. Para salvar mudanças, volte para a draft atual.</span>
+                ) : null}
+                {saveError ? <span className="text-red-700">{saveError}</span> : null}
+                {saveMessage ? <span className="text-emerald-700">{saveMessage}</span> : null}
+              </div>
+            ) : null}
 
             {activeView === 'preview' ? (
               <DashboardWorkspacePreview
