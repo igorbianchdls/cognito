@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 
 import {
   readDashboardArtifact,
+  listDashboards,
   listDashboardSourceVersions,
   ArtifactToolError,
 } from '@/products/artifacts/backend/dashboardArtifactsService'
@@ -24,14 +25,16 @@ export default async function ArtifactDashboardByIdPage({
     : undefined
 
   try {
-    const [artifact, versions] = await Promise.all([
+    const [artifact, versions, dashboards] = await Promise.all([
       readDashboardArtifact({ artifactId: id, kind: 'draft', ...(version ? { version } : {}) }),
       listDashboardSourceVersions(id, 'draft'),
+      listDashboards(),
     ])
 
     return (
       <DashboardArtifactPage
         artifactId={artifact.artifact_id}
+        dashboards={dashboards}
         title={artifact.title}
         status={artifact.status}
         version={artifact.version}

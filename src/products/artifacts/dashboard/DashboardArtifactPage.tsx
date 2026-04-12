@@ -31,6 +31,7 @@ import {
 import { applyDashboardTreeLayoutToSource } from '@/products/artifacts/dashboard/source/dashboardLayoutPersistence'
 import { DashboardWorkspacePreview } from '@/products/artifacts/dashboard/workspace/DashboardWorkspacePreview'
 import type { DashboardAppearanceOverrides } from '@/products/artifacts/dashboard/renderer/dashboardThemeConfig'
+import type { DashboardListItem } from '@/products/artifacts/backend/dashboardArtifactsService'
 
 type DashboardSourceVersionListItem = {
   version: number
@@ -41,6 +42,7 @@ type DashboardSourceVersionListItem = {
 
 type DashboardArtifactPageProps = {
   artifactId: string
+  dashboards: DashboardListItem[]
   title: string
   status: string
   version: number
@@ -76,6 +78,7 @@ function formatDate(value: string) {
 
 export function DashboardArtifactPage({
   artifactId,
+  dashboards,
   title,
   status,
   version,
@@ -178,6 +181,11 @@ export function DashboardArtifactPage({
     router.push(query ? `${pathname}?${query}` : pathname)
   }
 
+  function handleDashboardChange(nextDashboardId: string) {
+    if (!nextDashboardId || nextDashboardId === artifactId) return
+    router.push(`/artifacts/dashboards/${nextDashboardId}`)
+  }
+
   const handleTreeChange = useCallback((nextTree: any) => {
     setDraftSource((currentDraftSource) => applyDashboardTreeLayoutToSource(currentDraftSource, nextTree))
     setSaveError(null)
@@ -245,6 +253,20 @@ export function DashboardArtifactPage({
           }
           extraActions={
             <>
+              <div className="flex items-center gap-2 rounded-xl border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] px-3 py-[0.35rem] text-[12px] font-medium text-[#5F5F5A]">
+                <span>Dashboard</span>
+                <select
+                  value={artifactId}
+                  onChange={(event) => handleDashboardChange(event.target.value)}
+                  className="max-w-[240px] bg-transparent text-[12px] font-medium text-[#1F1F1D] outline-none"
+                >
+                  {dashboards.map((dashboard) => (
+                    <option key={dashboard.id} value={dashboard.id}>
+                      {dashboard.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="flex items-center gap-2 rounded-xl border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] px-3 py-[0.35rem] text-[12px] font-medium text-[#5F5F5A]">
                 <span>v</span>
                 <select
