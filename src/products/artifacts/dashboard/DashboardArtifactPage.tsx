@@ -192,45 +192,31 @@ export function DashboardArtifactPage({
 
         <main className="min-h-0 flex-1 overflow-auto border-r-[0.5px] border-[#DDDDD8] bg-[#EEEEEB] px-6 py-6">
           <div className="mx-auto flex max-w-[1500px] flex-col gap-4">
-            <section className="rounded-2xl border-[0.5px] border-[#DDDDD8] bg-[#F7F7F6] px-4 py-3 text-sm text-[#5F5F5A]">
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                <span>{`id: ${artifactId}`}</span>
-                <span>{`atualizado: ${formatDate(updatedAt)}`}</span>
-                {isHistoricalVersion ? (
-                  <span className="text-[#8B5E00]">Você está vendo uma versão histórica. Para salvar mudanças, volte para a draft atual.</span>
-                ) : null}
-                {saveError ? <span className="text-red-700">{saveError}</span> : null}
-                {saveMessage ? <span className="text-emerald-700">{saveMessage}</span> : null}
-              </div>
-            </section>
-
-            <section className="rounded-3xl border border-[#ddd5ca] bg-white shadow-sm">
-            <div className="flex items-center justify-between border-b border-[#ebe4da] px-4 py-3">
-              <div className="text-sm font-medium tracking-[-0.02em]">Dashboard Persistido</div>
-              <div className="flex items-center gap-2">
-                <span className="rounded-full border border-[#ddd5ca] bg-[#f8f5ef] px-3 py-1.5 text-xs font-medium text-[#5c544c]">
-                  {activeView === 'preview' ? 'Preview' : 'Source'}
-                </span>
-              </div>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-1 text-sm text-[#5F5F5A]">
+              <span>{`id: ${artifactId}`}</span>
+              <span>{`atualizado: ${formatDate(updatedAt)}`}</span>
+              <span>{activeView === 'preview' ? 'Preview ativo' : 'Source ativo'}</span>
+              {isHistoricalVersion ? (
+                <span className="text-[#8B5E00]">Você está vendo uma versão histórica. Para salvar mudanças, volte para a draft atual.</span>
+              ) : null}
+              {saveError ? <span className="text-red-700">{saveError}</span> : null}
+              {saveMessage ? <span className="text-emerald-700">{saveMessage}</span> : null}
             </div>
 
             {activeView === 'preview' ? (
-              <div className="overflow-auto bg-[#ebe7df] p-5">
-                <DashboardWorkspacePreview
-                  sourcePath="app/dashboard.tsx"
-                  files={files}
-                  zoom={zoom}
-                  onTreeChange={handleTreeChange}
-                />
-              </div>
+              <DashboardWorkspacePreview
+                sourcePath="app/dashboard.tsx"
+                files={files}
+                zoom={zoom}
+                onTreeChange={handleTreeChange}
+              />
             ) : (
-              <div className="overflow-auto bg-[#1f1b18] p-0">
+              <div className="overflow-auto border-[0.5px] border-[#DDDDD8] bg-[#1f1b18]">
                 <pre className="min-w-full overflow-x-auto p-5 text-sm leading-6 text-[#f6f2eb]">
                   <code>{draftSource}</code>
                 </pre>
               </div>
             )}
-            </section>
           </div>
         </main>
       </div>
