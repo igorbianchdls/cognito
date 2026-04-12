@@ -17,6 +17,13 @@ export type DashboardListItem = {
   updated_at: string
 }
 
+export type DashboardSourceVersionListItem = {
+  version: number
+  kind: ArtifactSourceKind
+  change_summary: string | null
+  created_at: string
+}
+
 type DashboardRow = {
   id: string
   workspace_id: string | null
@@ -277,6 +284,37 @@ export async function listDashboards(limit = 100): Promise<DashboardListItem[]> 
        ORDER BY updated_at DESC, created_at DESC
        LIMIT $1::int`,
       [safeLimit],
+    )
+  } catch (error) {
+    return mapDbError(error)
+  }
+}
+
+export async function listDashboardSourceVersions(
+  artifactId: string,
+  kind: ArtifactSourceKind = 'draft',
+  limit = 100,
+): Promise<DashboardSourceVersionListItem[]> {
+  const normalizedArtifactId = toText(artifactId)
+  if (!normalizedArtifactId) {
+    throw new ArtifactToolError(400, 'invalid_input', 'artifact_id é obrigatório')
+  }
+
+  const safeLimit = Number.isInteger(limit) && limit > 0 ? Math.min(limit, 200) : 100
+
+  try {
+    return await runQuery<DashboardSourceVersionListItem>(
+      `SELECT
+         version,
+         kind,
+         change_summary,
+         created_at
+       FROM artifacts.dashboard_sources
+       WHERE dashboard_id = $1::uuid
+         AND kind = $2::text
+       ORDER BY version DESC
+       LIMIT $3::int`,
+      [normalizedArtifactId, kind, safeLimit],
     )
   } catch (error) {
     return mapDbError(error)

@@ -1,16 +1,25 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { ArtifactWorkspacePage } from '@/products/artifacts/core/workspace/ArtifactWorkspacePage'
 import type { ArtifactCodeFile } from '@/products/artifacts/core/workspace/types'
 import { DashboardWorkspacePreview } from '@/products/artifacts/dashboard/workspace/DashboardWorkspacePreview'
+
+type DashboardSourceVersionListItem = {
+  version: number
+  kind: 'draft' | 'published'
+  change_summary: string | null
+  created_at: string
+}
 
 type DashboardArtifactPageProps = {
   artifactId: string
   title: string
   status: string
   version: number
+  availableVersions: DashboardSourceVersionListItem[]
   source: string
   updatedAt: string
 }
@@ -29,10 +38,14 @@ export function DashboardArtifactPage({
   title,
   status,
   version,
+  availableVersions,
   source,
   updatedAt,
 }: DashboardArtifactPageProps) {
   const [activeView, setActiveView] = useState<'preview' | 'code'>('preview')
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const files = useMemo<ArtifactCodeFile[]>(
     () => [
       {
@@ -47,6 +60,17 @@ export function DashboardArtifactPage({
     [source],
   )
 
+  function handleVersionChange(nextVersion: string) {
+    const params = new URLSearchParams(searchParams?.toString() || '')
+    if (!nextVersion || Number(nextVersion) === version) {
+      params.delete('version')
+    } else {
+      params.set('version', nextVersion)
+    }
+    const query = params.toString()
+    router.push(query ? `${pathname}?${query}` : pathname)
+  }
+
   return (
     <ArtifactWorkspacePage initialData={{ ui: {}, filters: {}, dashboard: {} }}>
       <main className="min-h-screen bg-[#f5f3ef] px-6 py-8 text-[#2d2a26]">
@@ -60,7 +84,22 @@ export function DashboardArtifactPage({
                   id: {artifactId}
                 </p>
               </div>
-              <div className="flex flex-wrap gap-2 text-xs text-[#6b6259]">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-[#6b6259]">
+                <label className="flex items-center gap-2 rounded-full border border-[#ddd5ca] bg-[#f8f5ef] px-3 py-1.5">
+                  <span>versão:</span>
+                  <select
+                    value={String(version)}
+                    onChange={(event) => handleVersionChange(event.target.value)}
+                    className="bg-transparent text-xs font-medium text-[#2d2a26] outline-none"
+                  >
+                    {availableVersions.map((item) => (
+                      <option key={`${item.kind}-${item.version}`} value={String(item.version)}>
+                        {`v${item.version}`}
+                        {item.change_summary ? ` - ${item.change_summary}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </label>
                 <span className="rounded-full border border-[#ddd5ca] bg-[#f8f5ef] px-3 py-1.5">status: {status}</span>
                 <span className="rounded-full border border-[#ddd5ca] bg-[#f8f5ef] px-3 py-1.5">draft: v{version}</span>
                 <span className="rounded-full border border-[#ddd5ca] bg-[#f8f5ef] px-3 py-1.5">
