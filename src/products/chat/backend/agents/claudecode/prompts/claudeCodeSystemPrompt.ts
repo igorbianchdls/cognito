@@ -11,7 +11,7 @@ import {
 const CLAUDE_EXTERNAL_TOOLS_ENABLED_BLOCK = `
 <external_tools_runtime>
 - Composio MCP está habilitado nesta sessão.
-- Priorize tools internas (crud, dashboard_builder, sql_execution, ecommerce, marketing, documento, drive, email).
+- Priorize tools internas (artifact_read, artifact_write, artifact_patch, crud, dashboard_builder, sql_execution, ecommerce, marketing, documento, drive, email).
 - Use Composio para ações externas/cross-platform quando necessário.
 - Antes de ações irreversíveis fora do ERP (ex.: envio externo), confirme intenção quando o contexto for ambíguo.
 </external_tools_runtime>
@@ -20,7 +20,7 @@ const CLAUDE_EXTERNAL_TOOLS_ENABLED_BLOCK = `
 const CLAUDE_EXTERNAL_TOOLS_DISABLED_BLOCK = `
 <external_tools_runtime>
 - Composio MCP não está habilitado nesta sessão.
-- Use somente tools internas disponíveis: crud, dashboard_builder, sql_execution, ecommerce, marketing, documento, drive e email.
+- Use somente tools internas disponíveis: artifact_read, artifact_write, artifact_patch, crud, dashboard_builder, sql_execution, ecommerce, marketing, documento, drive e email.
 </external_tools_runtime>
 `.trim()
 

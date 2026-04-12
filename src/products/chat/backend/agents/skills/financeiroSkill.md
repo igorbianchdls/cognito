@@ -3,7 +3,7 @@
 Objetivo: definir SQL valido para KPIs e graficos financeiros no padrao do template `src/products/bi/shared/templates/appsFinanceiroTemplate.ts`.
 
 Este skill NAO monta DSL completo.
-Para estrutura/layout de dashboard, usar `dashboard_builder`.
+Para estrutura/layout e persistencia final de dashboard, usar `artifact_write` e `artifact_patch` (com `artifact_read` para inspecao do estado atual).
 
 ## Escopo Estrito
 

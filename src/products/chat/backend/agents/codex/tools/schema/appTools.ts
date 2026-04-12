@@ -1,4 +1,12 @@
 import {
+  ARTIFACT_PATCH_TOOL_DESCRIPTION,
+  ARTIFACT_PATCH_TOOL_PARAMETERS,
+  ARTIFACT_READ_TOOL_DESCRIPTION,
+  ARTIFACT_READ_TOOL_PARAMETERS,
+  ARTIFACT_WRITE_TOOL_DESCRIPTION,
+  ARTIFACT_WRITE_TOOL_PARAMETERS,
+} from '@/products/chat/shared/tools/artifactToolsContract'
+import {
   DASHBOARD_BUILDER_TOOL_DESCRIPTION,
   DASHBOARD_BUILDER_TOOL_PARAMETERS,
 } from '@/products/chat/shared/tools/dashboardBuilderContract'
@@ -254,6 +262,24 @@ export const codexAppFunctionTools = [
       required: ['action'],
       additionalProperties: true,
     },
+  },
+  {
+    type: 'function',
+    name: 'artifact_read',
+    description: ARTIFACT_READ_TOOL_DESCRIPTION,
+    parameters: ARTIFACT_READ_TOOL_PARAMETERS,
+  },
+  {
+    type: 'function',
+    name: 'artifact_write',
+    description: ARTIFACT_WRITE_TOOL_DESCRIPTION,
+    parameters: ARTIFACT_WRITE_TOOL_PARAMETERS,
+  },
+  {
+    type: 'function',
+    name: 'artifact_patch',
+    description: ARTIFACT_PATCH_TOOL_DESCRIPTION,
+    parameters: ARTIFACT_PATCH_TOOL_PARAMETERS,
   },
   {
     type: 'function',

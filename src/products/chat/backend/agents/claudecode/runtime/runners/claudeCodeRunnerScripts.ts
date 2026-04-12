@@ -50,6 +50,9 @@ try {
 // Build allowed tools list: ERP tools + all Composio tools
 const allowedToolsList = [];
 if (appToolsServerERP) {
+  allowedToolsList.push('mcp__ERP__artifact_read');
+  allowedToolsList.push('mcp__ERP__artifact_write');
+  allowedToolsList.push('mcp__ERP__artifact_patch');
   allowedToolsList.push('mcp__ERP__crud');
   allowedToolsList.push('mcp__ERP__dashboard_builder');
   allowedToolsList.push('mcp__ERP__documento');

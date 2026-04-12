@@ -434,6 +434,68 @@ function buildToolsSchema() {
   return [
     {
       type: 'function',
+      name: 'artifact_read',
+      description: 'Lê um dashboard persistido no banco via artifact_id e retorna source TSX, versão draft/published e metadados.',
+      parameters: {
+        type: 'object',
+        additionalProperties: true,
+        properties: {
+          artifact_id: { type: 'string' },
+          kind: { type: 'string', description: 'draft|published' },
+          version: { type: 'integer' },
+        },
+        required: ['artifact_id'],
+      },
+    },
+    {
+      type: 'function',
+      name: 'artifact_write',
+      description: 'Cria dashboard novo no banco ou sobrescreve completamente o draft de um dashboard existente. Para update, exige artifact_id + expected_version.',
+      parameters: {
+        type: 'object',
+        additionalProperties: true,
+        properties: {
+          artifact_id: { type: 'string' },
+          expected_version: { type: 'integer' },
+          title: { type: 'string' },
+          source: { type: 'string' },
+          workspace_id: { type: 'string' },
+          slug: { type: 'string' },
+          metadata: { type: 'object' },
+          change_summary: { type: 'string' },
+        },
+        required: ['source'],
+      },
+    },
+    {
+      type: 'function',
+      name: 'artifact_patch',
+      description: 'Aplica patch versionado em dashboard persistido. Suporta replace_text e replace_full_source.',
+      parameters: {
+        type: 'object',
+        additionalProperties: true,
+        properties: {
+          artifact_id: { type: 'string' },
+          expected_version: { type: 'integer' },
+          operation: {
+            type: 'object',
+            additionalProperties: true,
+            properties: {
+              type: { type: 'string', description: 'replace_text|replace_full_source' },
+              old_string: { type: 'string' },
+              new_string: { type: 'string' },
+              replace_all: { type: 'boolean' },
+              source: { type: 'string' },
+              change_summary: { type: 'string' },
+            },
+            required: ['type'],
+          },
+        },
+        required: ['artifact_id', 'expected_version', 'operation'],
+      },
+    },
+    {
+      type: 'function',
       name: 'crud',
       description: 'Executa operações no ERP para recursos permitidos (CRUD + ações de negócio como aprovar, concluir, cancelar, baixar, estornar e reabrir em recursos transacionais).',
       parameters: {
@@ -626,6 +688,7 @@ function buildRelayInstructions() {
     'Sempre que possível, entregue uma síntese executiva antes dos detalhes técnicos (o que foi feito, resultado, próximo passo recomendado).',
     'Se faltar contexto crítico para executar (ex.: destinatário, ID, aprovação, recurso exato), faça uma pergunta curta e específica em vez de assumir.',
     'Se a solicitação for ambígua, proponha a interpretação mais útil e confirme rapidamente antes de ações irreversíveis.',
+    'Para dashboards persistidos, prefira artifact_read/artifact_write/artifact_patch em vez de filesystem efêmero.',
     'Para ações irreversíveis ou sensíveis (ex.: enviar email, deletar, cancelar, estornar), confirme a intenção quando o contexto não estiver explicitamente claro.',
     'Quando uma ação falhar, explique em linguagem de negócio (não só erro técnico), diga o impacto e proponha a melhor alternativa prática.',
     'Evite respostas longas e burocráticas. Em Telegram, prefira mensagens curtas, objetivas e acionáveis.',
@@ -796,7 +859,40 @@ export async function POST(req: Request) {
         let ok = true
 
         try {
-          if (call.name === 'crud') {
+          if (call.name === 'artifact_read') {
+            result = await callScopedTool({
+              origin,
+              token: toolToken,
+              internalKey: internalKey || undefined,
+              chatId,
+              tenantId,
+              path: '/api/agent-tools/artifact-read',
+              args: parsedArgs,
+              label: 'artifact_read',
+            })
+          } else if (call.name === 'artifact_write') {
+            result = await callScopedTool({
+              origin,
+              token: toolToken,
+              internalKey: internalKey || undefined,
+              chatId,
+              tenantId,
+              path: '/api/agent-tools/artifact-write',
+              args: parsedArgs,
+              label: 'artifact_write',
+            })
+          } else if (call.name === 'artifact_patch') {
+            result = await callScopedTool({
+              origin,
+              token: toolToken,
+              internalKey: internalKey || undefined,
+              chatId,
+              tenantId,
+              path: '/api/agent-tools/artifact-patch',
+              args: parsedArgs,
+              label: 'artifact_patch',
+            })
+          } else if (call.name === 'crud') {
             result = await callCrudTool({
               origin,
               token: toolToken,

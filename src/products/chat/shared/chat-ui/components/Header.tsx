@@ -3,13 +3,12 @@
 import React from 'react';
 import {
   IconDots,
-  IconFilePlus,
   IconPlayerPlay,
   IconSquareRounded,
 } from '@tabler/icons-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import type { SandboxStatus } from '@/chat/sandbox';
+import type { SandboxStatus } from '@/products/chat/shared/sandbox/status';
 import ChatErrorNotificationsButton from '@/products/chat/frontend/features/error-notifications/ChatErrorNotificationsButton';
 import type { ChatErrorNotification } from '@/products/chat/frontend/features/error-notifications/types';
 
@@ -38,7 +37,6 @@ type HeaderProps = {
   title?: string;
   onStartSandbox?: () => Promise<void> | void;
   onStopSandbox?: () => Promise<void> | void;
-  onWriteFiles?: () => Promise<void> | void;
   busy?: boolean;
   hasSandbox?: boolean;
   sandboxStatus?: SandboxStatus;
@@ -52,7 +50,6 @@ export default function Header({
   title = 'App from Mockup',
   onStartSandbox,
   onStopSandbox,
-  onWriteFiles,
   busy = false,
   hasSandbox = false,
   sandboxStatus = 'off',
@@ -92,9 +89,6 @@ export default function Header({
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handle(onStopSandbox, !busy && hasSandbox)} className={!hasSandbox || busy ? 'pointer-events-none opacity-50' : ''}>
               <IconSquareRounded className="mr-2 h-4 w-4" stroke={1.75} /> Fechar computador
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handle(onWriteFiles, !busy)} className={busy ? 'pointer-events-none opacity-50' : ''}>
-              <IconFilePlus className="mr-2 h-4 w-4" stroke={1.75} /> Arquivos no Computador
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

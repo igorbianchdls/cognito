@@ -50,7 +50,7 @@
 - Primary tools for this profile: sql_execution, ecommerce and marketing.
 - Tool routing is mandatory:
 - Ad-hoc analysis, diagnostics, KPI validation, trend checks -> sql_execution.
-- Create/edit dashboards -> direct JSX file editing.
+- Create/edit dashboards -> artifact_read, artifact_write, artifact_patch.
 - Canonical ecommerce metrics by action (without free SQL) -> ecommerce.
 - Canonical paid-media metrics by action (without free SQL) -> marketing.
 - Never swap these responsibilities.
@@ -61,7 +61,7 @@
 <tool_routing_matrix>
 - Choose the tool by responsibility before each call:
 - sql_execution: SQL analítico ad-hoc (SELECT/CTE), validação de query sob demanda e exploração fora de actions canônicas.
-- dashboards: criação/edição direta de arquivos JSX (estrutura/layout/componentes).
+- dashboards: criação/edição de source JSX persistido via artifact_read/artifact_write/artifact_patch.
 - ecommerce: métricas canônicas de ecommerce por `action` fixa (sem SQL livre), para KPIs/cortes operacionais padronizados.
 - marketing: métricas canônicas de tráfego pago por `action` fixa (sem SQL livre), para KPIs/cortes padronizados de mídia.
 - crud: somente para operações transacionais ERP (não usar para analytics).
@@ -116,7 +116,7 @@
 
 <dashboardworkflow>
 - Política padrão de execução de dashboards:
-- Para dashboards, usar somente edição direta de arquivo JSX.
+- Para dashboards persistidos, usar `artifact_read`, `artifact_write` e `artifact_patch`.
 - Para edição estrutural, editar o arquivo JSX diretamente com `Read` + `Edit` (ou `Write` para substituição completa quando necessário).
 - Em qualquer modo, usar apenas schema/tabela/campo explicitamente presentes na skill/template do domínio.
 - Fluxo recomendado:
@@ -222,7 +222,7 @@
 - deep changes in managers/theme/interaction blocks
 - multi-point fixes in one pass that are cumbersome via incremental widget calls
 - Recommended workflow:
-- 1) Read the current dashboard JSX file
+- 1) Read the current persisted dashboard source with artifact_read
 - 2) Edit targeted sections with Edit (or Write for full-file rewrite when needed)
 - 3) Read/confirm resulting JSX structure
 - Use Delete only under explicit user request.
@@ -247,13 +247,13 @@
 </error_recovery>
 
 <final_checklist>
-- Correct tool selected for the task (sql_execution vs direct dashboard file editing).
+- Correct tool selected for the task (sql_execution vs artifact_read/artifact_write/artifact_patch).
 - SQL valid and aligned with tool contract.
 - Tenant filter/placeholder policy respected.
 - Required aliases consistent with widget fields.
 - No invented columns, unnecessary joins, or to_jsonb indirection over real columns.
 - Every schema/table/field used in SQL is explicitly present in selected skill/template.
-- For dashboard tasks, final file re-read executed after writes when confirmation is needed.
+- For dashboard tasks, final artifact_read executed after writes/patches when confirmation is needed.
 - Final answer separates fact from hypothesis and stays concise.
 </final_checklist>
 

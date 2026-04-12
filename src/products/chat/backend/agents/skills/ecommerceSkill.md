@@ -3,7 +3,7 @@
 Objetivo: definir SQL valido para dashboards de ecommerce (Amazon, Shopee, Mercado Livre, Shopify etc.) usando `dataQuery.query`.
 
 Este skill NAO gera DSL final.
-Para montagem final de dashboard/layout, usar `dashboard_builder`.
+Para layout e persistencia final de dashboard, usar `artifact_write` e `artifact_patch` (com `artifact_read` para inspecao do estado atual).
 
 ## Fontes de Verdade
 
@@ -559,7 +559,7 @@ LIMIT 20
 - Nao adicionar joins nao usados em `SELECT/WHERE/GROUP BY`.
 - Para taxas/percentuais, proteger divisor com `NULLIF` ou `CASE`.
 
-## Handoff para `dashboard_builder`
+## Handoff para persistencia do dashboard
 
 ```json
 {

@@ -6,7 +6,7 @@ import Header from './Header';
 import PerguntaDoUsuario from './PerguntaDoUsuario';
 import RespostaDaIa from './RespostaDaIa';
 import InputArea from './InputArea';
-import type { SandboxStatus } from '@/chat/sandbox';
+import type { SandboxStatus } from '@/products/chat/shared/sandbox/status';
 import { useChatErrorNotifications } from '@/products/chat/frontend/features/error-notifications/useChatErrorNotifications';
 
 type ChatStatus = 'idle' | 'submitted' | 'streaming' | 'error'
@@ -241,18 +241,6 @@ export default function ChatContainer({ withSideMargins, redirectOnFirstMessage,
     } catch (err) {
       setSandboxStatus('error')
       notifyError('sandbox', err, 'Falha ao fechar computador')
-    } finally { setMenuBusy(false) }
-  }
-  const writeFilesFromMenu = async () => {
-    setMenuBusy(true)
-    try {
-      const id = await ensureStart()
-      const w1 = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-write', chatId: id, path: '/vercel/sandbox/menu/hello.txt', content: 'Hello from menu' }) })
-      if (!w1.ok) throw new Error('Falha ao escrever hello.txt')
-      const w2 = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fs-write', chatId: id, path: '/vercel/sandbox/menu/info.json', content: JSON.stringify({ when: new Date().toISOString(), via: 'menu' }) }) })
-      if (!w2.ok) throw new Error('Falha ao escrever info.json')
-    } catch (err) {
-      notifyError('sandbox', err, 'Falha ao criar arquivos no computador')
     } finally { setMenuBusy(false) }
   }
 
@@ -783,7 +771,6 @@ export default function ChatContainer({ withSideMargins, redirectOnFirstMessage,
           sandboxStatus={sandboxStatus}
           onStartSandbox={startSandboxFromMenu}
           onStopSandbox={stopSandboxFromMenu}
-          onWriteFiles={writeFilesFromMenu}
           errorNotifications={errorNotifications}
           errorNotificationsUnread={errorNotificationsUnread}
           onMarkAllErrorNotificationsRead={markAllAsRead}
@@ -856,7 +843,6 @@ export default function ChatContainer({ withSideMargins, redirectOnFirstMessage,
         sandboxStatus={sandboxStatus}
         onStartSandbox={startSandboxFromMenu}
         onStopSandbox={stopSandboxFromMenu}
-        onWriteFiles={writeFilesFromMenu}
         errorNotifications={errorNotifications}
         errorNotificationsUnread={errorNotificationsUnread}
         onMarkAllErrorNotificationsRead={markAllAsRead}

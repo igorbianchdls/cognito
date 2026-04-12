@@ -2,6 +2,9 @@ export const CODEX_APP_TOOL_DISPATCH_SCRIPT = `
 async function callKnownAppToolByName(toolName, parsedArgs) {
   const args = parsedArgs && typeof parsedArgs === 'object' ? parsedArgs : {};
   if (toolName === 'crud') return await callCrud(args);
+  if (toolName === 'artifact_read') return await callArtifactRead(args);
+  if (toolName === 'artifact_write') return await callArtifactWrite(args);
+  if (toolName === 'artifact_patch') return await callArtifactPatch(args);
   if (toolName === 'dashboard_builder') return await callDashboardBuilder(args);
   if (toolName === 'sql_execution') return await callSqlExecution(args);
   if (toolName === 'ecommerce') return await callEcommerce(args);

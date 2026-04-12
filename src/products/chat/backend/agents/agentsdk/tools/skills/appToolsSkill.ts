@@ -1,9 +1,12 @@
 export const APP_TOOLS_SKILL_MD = `---
 name: App MCP Tools
-description: Uso das tools internas ERP (crud, dashboard_builder, sql_execution, ecommerce, marketing, drive, email) via MCP.
+description: Uso das tools internas ERP/database-first (artifact_read, artifact_write, artifact_patch, crud, dashboard_builder, sql_execution, ecommerce, marketing, drive, email) via MCP.
 ---
 
 As tools disponíveis (apenas via MCP):
+- artifact_read(input: { artifact_id: string, kind?: "draft"|"published", version?: number })
+- artifact_write(input: { artifact_id?: string, expected_version?: number, title?: string, source: string, workspace_id?: string, slug?: string, metadata?: object, change_summary?: string })
+- artifact_patch(input: { artifact_id: string, expected_version: number, operation: { type: "replace_text"|"replace_full_source", old_string?: string, new_string?: string, replace_all?: boolean, source?: string, change_summary?: string } })
 - crud(input: { action: "listar"|"criar"|"atualizar"|"deletar"|"aprovar"|"concluir"|"baixar"|"estornar"|"cancelar"|"reabrir"|"marcar_como_recebido"|"marcar_recebimento_parcial", resource: string, params?: object, data?: object, actionSuffix?: string, method?: "GET"|"POST" })
 - dashboard_builder(input: { action: "create_dashboard"|"add_widget"|"add_widgets_batch"|"get_dashboard", dashboard_name: string, title?: string, subtitle?: string, theme?: string, widget_id?: string, widget_type?: "kpi"|"chart"|"filtro"|"insights", container?: string, payload?: object, widgets?: object[], parser_state?: object })
 - sql_execution(input: { sql: string, title?: string, chart?: { xField: string, valueField: string, xLabel?: string, yLabel?: string } })
@@ -42,6 +45,9 @@ Regras:
 - Documento pode gerar PDF e salvar no Drive na mesma chamada com save_to_drive=true e drive.workspace_id.
 - Para upload de arquivo gerado em base64, prefira drive resource="drive/files/upload-base64" (action=request).
 - Para enviar anexo já salvo no Drive, prefira email action="send" com drive_file_id (sem precisar obter signed_url manualmente).
+- Artifact tools: use artifact_read para inspecionar dashboard persistido, artifact_write para criar/sobrescrever draft completo e artifact_patch para edições incrementais versionadas.
+- Artifact tools: artifact_write sem artifact_id cria dashboard novo; com artifact_id exige expected_version e grava nova versão draft.
+- Artifact tools: artifact_patch sempre exige expected_version e nunca edita published diretamente; ele cria nova versão draft.
 - Dashboard Builder (planejamento para dashboard novo): antes de chamar a tool, ler a skill de domínio correta (vendasSkill.md, comprasSkill.md, financeiroSkill.md, marketingSkill.md ou ecommerceSkill.md) e propor um plano explícito com KPIs/charts/filtros/layout de containers.
 - Dashboard Builder (aprovação): para dashboard novo, pedir confirmação do plano antes de executar create_dashboard/add_widgets_batch/add_widget.
 - Dashboard Builder (exceção): se o usuário pedir execução imediata ("cria direto", "sem confirmar"), pode pular confirmação e executar.
@@ -59,8 +65,8 @@ Regras:
 - Dashboard Builder (payload KPI/chart): não usar "BRL" em formato; para moeda use formato="currency".
 - Dashboard Builder (payload filtro): chave é opcional; se omitida, deriva de campo resolvido. prefira campo *_id (ex.: vendedor_id); aliases como vendedor/cliente/canal_venda podem ser normalizados para *_id apenas no payload de filtro (nunca inventar coluna/tabela fisica em SQL).
 - Dashboard Builder (persistência): fluxo legado; a tool não salva mais arquivos nem atualiza preview automaticamente.
-- Dashboard Builder (execução): prefira criar/editar dashboards .tsx diretamente, em vez de usar dashboard_builder.
-- Skills de domínio para dashboard: vendasSkill.md, comprasSkill.md, financeiroSkill.md, marketingSkill.md e ecommerceSkill.md servem para dimensões/medidas/filtros; a estrutura final deve seguir o contrato da tool dashboard_builder.
+- Dashboard Builder (execução): legado para planejamento incremental. Para persistência oficial database-first, prefira artifact_write e artifact_patch.
+- Skills de domínio para dashboard: vendasSkill.md, comprasSkill.md, financeiroSkill.md, marketingSkill.md e ecommerceSkill.md servem para dimensões/medidas/filtros; a persistência final deve usar artifact_read/artifact_write/artifact_patch.
 - SQL Execution: use para executar SELECT/CTE tabular ad-hoc com renderização automática em Artifact Data Table.
 - SQL Execution: input mínimo é sql; title é opcional para exibir título no Artifact.
 - SQL Execution: chart é opcional e configura 1 gráfico de barras no artifact (chart.xField e chart.valueField devem existir no resultado da query).
@@ -92,6 +98,9 @@ Exemplos:
 
 Roteamento:
 - crud -> /api/agent-tools/<resource>/<acao>
+- artifact_read -> /api/agent-tools/artifact-read
+- artifact_write -> /api/agent-tools/artifact-write
+- artifact_patch -> /api/agent-tools/artifact-patch
 - dashboard_builder -> /api/agent-tools/dashboard-builder
 - sql_execution -> /api/agent-tools/sql-execution
 - ecommerce -> /api/agent-tools/ecommerce

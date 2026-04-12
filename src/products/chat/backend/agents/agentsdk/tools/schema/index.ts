@@ -1,3 +1,6 @@
+export { AGENTSDK_ERP_MCP_ARTIFACT_PATCH_TOOL_SCRIPT } from '@/products/chat/backend/agents/agentsdk/tools/schema/erpArtifactPatchToolScript'
+export { AGENTSDK_ERP_MCP_ARTIFACT_READ_TOOL_SCRIPT } from '@/products/chat/backend/agents/agentsdk/tools/schema/erpArtifactReadToolScript'
+export { AGENTSDK_ERP_MCP_ARTIFACT_WRITE_TOOL_SCRIPT } from '@/products/chat/backend/agents/agentsdk/tools/schema/erpArtifactWriteToolScript'
 export { AGENTSDK_ERP_MCP_CRUD_TOOL_SCRIPT } from '@/products/chat/backend/agents/agentsdk/tools/schema/erpCrudToolScript'
 export { AGENTSDK_ERP_MCP_DASHBOARD_BUILDER_TOOL_SCRIPT } from '@/products/chat/backend/agents/agentsdk/tools/schema/erpDashboardBuilderToolScript'
 export { AGENTSDK_ERP_MCP_DRIVE_TOOL_SCRIPT } from '@/products/chat/backend/agents/agentsdk/tools/schema/erpDriveToolScript'

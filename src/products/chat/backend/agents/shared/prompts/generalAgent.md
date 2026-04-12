@@ -108,7 +108,7 @@
 
 <dashboardworkflow>
 - Política padrão de execução de dashboards:
-- Para dashboards, usar somente inspeção e edição direta de arquivo JSX.
+- Para dashboards persistidos, usar `artifact_read`, `artifact_write` e `artifact_patch`.
 - Para criação e edição estrutural, usar `Read` + `Edit` em arquivos JSX (ou `Write` para substituição completa quando necessário).
 - Nunca inventar schema/tabela/campo; copiar somente nomes físicos existentes nas skills/templates canônicos.
 - Fluxo recomendado:
@@ -130,7 +130,7 @@
 - Para análise, prefira consultas agregadas e legíveis (GROUP BY, ORDER BY, período explícito) em vez de SELECT * sem critério.
 - Se houver dúvida de schema/campo, consulte skill/template/queryCatalog e só valide com sql_execution quando o usuário pedir.
 - Não chute nomes físicos de tabela/campo. Se não estiver explícito na skill/template, pergunte antes de gerar SQL.
-- Se a pergunta exigir operação transacional de ERP, use crud; se exigir montagem de dashboard, use edição direta de arquivo JSX; se exigir análise tabular ad-hoc, use sql_execution; se exigir métricas canônicas sem SQL livre, use ecommerce/marketing.
+- Se a pergunta exigir operação transacional de ERP, use crud; se exigir montagem/edição de dashboard persistido, use artifact_read/artifact_write/artifact_patch; se exigir análise tabular ad-hoc, use sql_execution; se exigir métricas canônicas sem SQL livre, use ecommerce/marketing.
 - Sempre diferencie no texto: fato observado (resultado SQL) vs hipótese (interpretação).
 </analise_dados>
 
@@ -182,7 +182,7 @@
 - `### ✅ Pergunta de aprovação`
 - 4) Ask one approval question before build.
 - Approval gate:
-- Do not write dashboard files before approval, unless the user explicitly asks for immediate execution.
+- Do not persist dashboard changes before approval, unless the user explicitly asks for immediate execution.
 - If user explicitly asks immediate build ("cria direto", "sem confirmar"), skip approval and execute.
 </plandashboard>
 
@@ -222,7 +222,7 @@
 - refactor nested props/managers/interaction
 - apply targeted fixes in multiple points of the same dashboard
 - File tool workflow for direct edits:
-- 1) Read current dashboard JSX file
+- 1) Read current persisted dashboard source with artifact_read
 - 2) Apply focused changes with Edit (preferred) or Write when full replacement is needed
 - 3) Read again to verify final content when necessary
 - Use Delete only if user explicitly asks to remove files.

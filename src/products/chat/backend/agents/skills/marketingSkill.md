@@ -3,7 +3,7 @@
 Objetivo: definir SQL valido para dashboards de trafego pago (Meta Ads / Google Ads) usando `dataQuery.query`.
 
 Este skill NAO gera DSL final.
-Para layout e montagem de widgets, usar `dashboard_builder`.
+Para layout e persistencia final de dashboard, usar `artifact_write` e `artifact_patch` (com `artifact_read` para inspecao do estado atual).
 
 ## Fontes de Verdade
 
@@ -528,7 +528,7 @@ ORDER BY gasto DESC
 - Sempre proteger divisao por zero (`NULLIF` ou `CASE`).
 - Se precisar de nome de entidade (campanha/grupo/anuncio), usar JOIN em tabela de dimensao.
 
-## Handoff para `dashboard_builder`
+## Handoff para persistencia do dashboard
 
 ```json
 {
