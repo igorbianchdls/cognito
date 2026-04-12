@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 import type { DashboardListItem } from '@/products/artifacts/backend/dashboardArtifactsService'
 
 function formatDate(value: string) {
@@ -52,7 +54,12 @@ export function DashboardListPage({ dashboards }: { dashboards: DashboardListIte
                   className="grid grid-cols-[minmax(280px,2fr)_120px_120px_140px_180px] gap-4 px-6 py-5 text-sm"
                 >
                   <div className="min-w-0">
-                    <div className="truncate font-medium tracking-[-0.02em]">{dashboard.title}</div>
+                    <Link
+                      href={`/artifacts/dashboards/${dashboard.id}`}
+                      className="truncate font-medium tracking-[-0.02em] text-[#2d2a26] underline-offset-4 hover:underline"
+                    >
+                      {dashboard.title}
+                    </Link>
                     <div className="mt-1 truncate text-xs text-[#8a7f73]">
                       id: {dashboard.id}
                       {dashboard.slug ? `  |  slug: ${dashboard.slug}` : ''}
