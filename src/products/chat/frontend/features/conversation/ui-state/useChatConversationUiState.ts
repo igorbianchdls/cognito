@@ -4,6 +4,8 @@ import React from "react";
 
 type StoredConversationUiState = {
   sidebarCollapsed?: boolean;
+  workspaceOpen?: boolean;
+  selectedArtifactId?: string | null;
 };
 
 type Options = {
@@ -45,6 +47,8 @@ function readGlobalSidebarCollapsed(): boolean | null {
 
 export function useChatConversationUiState({ chatId }: Options) {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
+  const [workspaceOpen, setWorkspaceOpen] = React.useState(false);
+  const [selectedArtifactId, setSelectedArtifactId] = React.useState<string | null>(null);
   const hydratedRef = React.useRef(false);
 
   React.useEffect(() => {
@@ -57,6 +61,14 @@ export function useChatConversationUiState({ chatId }: Options) {
     if (typeof restoredSidebarCollapsed === "boolean") {
       setSidebarCollapsed(restoredSidebarCollapsed);
     }
+    if (typeof stored?.workspaceOpen === "boolean") {
+      setWorkspaceOpen(stored.workspaceOpen);
+    }
+    if (typeof stored?.selectedArtifactId === "string" && stored.selectedArtifactId.trim()) {
+      setSelectedArtifactId(stored.selectedArtifactId);
+    } else {
+      setSelectedArtifactId(null);
+    }
 
     if (hydratedRef.current) return;
     hydratedRef.current = true;
@@ -67,13 +79,15 @@ export function useChatConversationUiState({ chatId }: Options) {
     if (!chatId || typeof window === "undefined") return;
     const nextState: StoredConversationUiState = {
       sidebarCollapsed,
+      workspaceOpen,
+      selectedArtifactId,
     };
     try {
       window.localStorage.setItem(`${STORAGE_PREFIX}${chatId}`, JSON.stringify(nextState));
     } catch {
       // ignore quota/storage errors
     }
-  }, [chatId, sidebarCollapsed]);
+  }, [chatId, sidebarCollapsed, workspaceOpen, selectedArtifactId]);
 
   React.useEffect(() => {
     if (!hydratedRef.current || typeof window === "undefined") return;
@@ -87,6 +101,10 @@ export function useChatConversationUiState({ chatId }: Options) {
   return {
     sidebarCollapsed,
     setSidebarCollapsed,
+    workspaceOpen,
+    setWorkspaceOpen,
+    selectedArtifactId,
+    setSelectedArtifactId,
   };
 }
 

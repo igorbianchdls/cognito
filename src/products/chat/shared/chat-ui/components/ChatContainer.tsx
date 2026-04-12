@@ -67,7 +67,7 @@ function modelToEngine(modelRaw?: string): EngineId {
   return 'openai-gpt5mini'
 }
 
-export default function ChatContainer({ withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, initialEngine, runtimeKind = 'codex' }: { withSideMargins?: boolean; redirectOnFirstMessage?: boolean; initialMessage?: string; autoSendPrefill?: boolean; initialChatId?: string; initialEngine?: EngineId; runtimeKind?: RuntimeKind }) {
+export default function ChatContainer({ withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, initialEngine, runtimeKind = 'codex', workspaceOpen = false, onToggleWorkspace }: { withSideMargins?: boolean; redirectOnFirstMessage?: boolean; initialMessage?: string; autoSendPrefill?: boolean; initialChatId?: string; initialEngine?: EngineId; runtimeKind?: RuntimeKind; workspaceOpen?: boolean; onToggleWorkspace?: () => void }) {
   const router = useRouter()
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<UIMessage[]>([])
@@ -826,6 +826,8 @@ export default function ChatContainer({ withSideMargins, redirectOnFirstMessage,
                       notifyError('api', err, 'Falha ao alterar modelo')
                     }
                   }}
+                  workspaceOpen={workspaceOpen}
+                  onToggleWorkspace={onToggleWorkspace}
                 />
                 <p className="mt-2 text-xs text-gray-400 text-center">Alfred é uma IA e pode cometer erros. Por favor, verifique as respostas.</p>
               </div>
@@ -859,7 +861,7 @@ export default function ChatContainer({ withSideMargins, redirectOnFirstMessage,
           />
         </div>
         <div className="px-4 pb-3">
-          <InputArea value={input} onChange={setInput} onSubmit={handleSubmit} status={status} submitDisabled={isSubmitBlocked} composioEnabled={composioEnabled} promptProfile={promptProfile} onPromptProfileChange={setPromptProfile} onToggleComposio={async () => {
+          <InputArea value={input} onChange={setInput} onSubmit={handleSubmit} status={status} submitDisabled={isSubmitBlocked} composioEnabled={composioEnabled} promptProfile={promptProfile} onPromptProfileChange={setPromptProfile} workspaceOpen={workspaceOpen} onToggleWorkspace={onToggleWorkspace} onToggleComposio={async () => {
             if (redirectOnFirstMessage && !chatId) {
               setComposioEnabled(!composioEnabled)
               return

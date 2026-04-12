@@ -22,6 +22,7 @@ import {
   IconSparkles,
   IconRobot,
   IconSquareRounded,
+  IconLayoutSidebarRightExpand,
 } from '@tabler/icons-react';
 import BrandIcon from '@/components/icons/BrandIcon';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -40,9 +41,11 @@ type Props = {
   onModelChange?: (m: 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5' | 'openai-gpt5mini' | 'openai-gpt5nano') => void;
   promptProfile?: 'general' | 'data_analyst' | 'dashboard_creator';
   onPromptProfileChange?: (p: 'general' | 'data_analyst' | 'dashboard_creator') => void;
+  workspaceOpen?: boolean;
+  onToggleWorkspace?: () => void;
 };
 
-export default function InputArea({ value, onChange, onSubmit, status = 'idle', submitDisabled = false, composioEnabled, onToggleComposio, model = 'openai-gpt5mini', onModelChange, promptProfile = 'data_analyst', onPromptProfileChange }: Props) {
+export default function InputArea({ value, onChange, onSubmit, status = 'idle', submitDisabled = false, composioEnabled, onToggleComposio, model = 'openai-gpt5mini', onModelChange, promptProfile = 'data_analyst', onPromptProfileChange, workspaceOpen = false, onToggleWorkspace }: Props) {
   // Local-only UI state for Toolkits panel (no persistence, no backend)
   const [toolkitsOpen, setToolkitsOpen] = useState(false)
   const [tkSearch, setTkSearch] = useState('')
@@ -169,6 +172,12 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
             <PromptInputButton>
               <IconPlus size={16} stroke={1.75} />
             </PromptInputButton>
+            {typeof onToggleWorkspace === 'function' ? (
+              <PromptInputButton variant="ghost" className="text-gray-500 hover:text-gray-800" onClick={onToggleWorkspace}>
+                <IconLayoutSidebarRightExpand size={16} stroke={1.75} />
+                <span>{workspaceOpen ? 'Fechar workspace' : 'Workspace'}</span>
+              </PromptInputButton>
+            ) : null}
             {/* Tool picker now to the right of + */}
             <Popover open={toolkitsOpen} onOpenChange={setToolkitsOpen}>
               <PopoverTrigger asChild>

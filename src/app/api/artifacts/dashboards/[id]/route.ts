@@ -1,11 +1,61 @@
 import { NextRequest } from 'next/server'
 
-import { ArtifactToolError, writeDashboardArtifact } from '@/products/artifacts/backend/dashboardArtifactsService'
+import {
+  ArtifactToolError,
+  listDashboardSourceVersions,
+  readDashboardArtifact,
+  writeDashboardArtifact,
+} from '@/products/artifacts/backend/dashboardArtifactsService'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 export const maxDuration = 60
+
+export async function GET(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await context.params
+    const url = new URL(req.url)
+    const rawVersion = url.searchParams.get('version')
+    const version = rawVersion && Number.isInteger(Number(rawVersion)) && Number(rawVersion) > 0
+      ? Number(rawVersion)
+      : undefined
+
+    const [artifact, versions] = await Promise.all([
+      readDashboardArtifact({ artifactId: id, kind: 'draft', ...(version ? { version } : {}) }),
+      listDashboardSourceVersions(id, 'draft'),
+    ])
+
+    return Response.json({
+      ok: true,
+      artifact,
+      versions,
+    })
+  } catch (error) {
+    if (error instanceof ArtifactToolError) {
+      return Response.json(
+        {
+          ok: false,
+          code: error.code,
+          error: error.message,
+          ...(error.details ? { details: error.details } : {}),
+        },
+        { status: error.status },
+      )
+    }
+
+    return Response.json(
+      {
+        ok: false,
+        error: error instanceof Error ? error.message : 'Erro interno ao carregar dashboard',
+      },
+      { status: 500 },
+    )
+  }
+}
 
 export async function PATCH(
   req: NextRequest,

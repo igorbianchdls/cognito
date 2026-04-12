@@ -14,9 +14,11 @@ type ChatPanelProps = {
   initialChatId?: string;
   initialEngine?: 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5' | 'openai-gpt5nano' | 'openai-gpt5mini';
   runtimeKind?: 'codex' | 'agentsdk';
+  workspaceOpen?: boolean;
+  onToggleWorkspace?: () => void;
 };
 
-export default function ChatPanel({ className, style, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, initialEngine, runtimeKind }: ChatPanelProps) {
+export default function ChatPanel({ className, style, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, initialEngine, runtimeKind, workspaceOpen, onToggleWorkspace }: ChatPanelProps) {
   return (
     <div className={`ui-text h-full min-h-0 w-full overflow-hidden ${className ?? ''}`} style={style}>
       <ChatContainer
@@ -27,6 +29,8 @@ export default function ChatPanel({ className, style, withSideMargins, redirectO
         initialChatId={initialChatId}
         initialEngine={initialEngine}
         runtimeKind={runtimeKind}
+        workspaceOpen={workspaceOpen}
+        onToggleWorkspace={onToggleWorkspace}
       />
     </div>
   );
