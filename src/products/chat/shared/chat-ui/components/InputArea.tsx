@@ -175,7 +175,7 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
             {typeof onToggleWorkspace === 'function' ? (
               <PromptInputButton variant="ghost" className="text-gray-500 hover:text-gray-800" onClick={onToggleWorkspace}>
                 <IconLayoutSidebarRightExpand size={16} stroke={1.75} />
-                <span>{workspaceOpen ? 'Fechar workspace' : 'Workspace'}</span>
+                <span>Workspace</span>
               </PromptInputButton>
             ) : null}
             {/* Tool picker now to the right of + */}
