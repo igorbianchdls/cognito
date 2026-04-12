@@ -1,10 +1,11 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { ArtifactWorkspacePage } from '@/products/artifacts/core/workspace/ArtifactWorkspacePage'
 import type { ArtifactCodeFile } from '@/products/artifacts/core/workspace/types'
+import { applyDashboardTreeLayoutToSource } from '@/products/artifacts/dashboard/source/dashboardLayoutPersistence'
 import { DashboardWorkspacePreview } from '@/products/artifacts/dashboard/workspace/DashboardWorkspacePreview'
 
 type DashboardSourceVersionListItem = {
@@ -19,6 +20,7 @@ type DashboardArtifactPageProps = {
   title: string
   status: string
   version: number
+  currentDraftVersion: number
   availableVersions: DashboardSourceVersionListItem[]
   source: string
   updatedAt: string
@@ -38,14 +40,21 @@ export function DashboardArtifactPage({
   title,
   status,
   version,
+  currentDraftVersion,
   availableVersions,
   source,
   updatedAt,
 }: DashboardArtifactPageProps) {
   const [activeView, setActiveView] = useState<'preview' | 'code'>('preview')
+  const [draftSource, setDraftSource] = useState(source)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [saveMessage, setSaveMessage] = useState<string | null>(null)
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const isHistoricalVersion = version !== currentDraftVersion
+  const isDirty = draftSource !== source
   const files = useMemo<ArtifactCodeFile[]>(
     () => [
       {
@@ -54,11 +63,17 @@ export function DashboardArtifactPage({
         directory: 'app',
         extension: 'tsx',
         language: 'typescript',
-        content: source,
+        content: draftSource,
       },
     ],
-    [source],
+    [draftSource],
   )
+
+  useEffect(() => {
+    setDraftSource(source)
+    setSaveError(null)
+    setSaveMessage(null)
+  }, [source, version])
 
   function handleVersionChange(nextVersion: string) {
     const params = new URLSearchParams(searchParams?.toString() || '')
@@ -69,6 +84,49 @@ export function DashboardArtifactPage({
     }
     const query = params.toString()
     router.push(query ? `${pathname}?${query}` : pathname)
+  }
+
+  const handleTreeChange = useCallback((nextTree: any) => {
+    setDraftSource(applyDashboardTreeLayoutToSource(source, nextTree))
+    setSaveError(null)
+    setSaveMessage(null)
+  }, [source])
+
+  async function handleSave() {
+    if (!isDirty || isHistoricalVersion || saving) return
+
+    try {
+      setSaving(true)
+      setSaveError(null)
+      setSaveMessage(null)
+
+      const response = await fetch(`/api/artifacts/dashboards/${artifactId}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          expected_version: currentDraftVersion,
+          title,
+          source: draftSource,
+          change_summary: 'Ajuste de layout',
+        }),
+      })
+
+      const json = await response.json().catch(() => ({}))
+      if (!response.ok || json?.ok === false) {
+        throw new Error(String(json?.error || `Falha ao salvar (${response.status})`))
+      }
+
+      const params = new URLSearchParams(searchParams?.toString() || '')
+      params.delete('version')
+      const query = params.toString()
+      setSaveMessage(`Layout salvo como v${json?.artifact?.next_version ?? currentDraftVersion + 1}`)
+      router.replace(query ? `${pathname}?${query}` : pathname)
+      router.refresh()
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : 'Erro ao salvar dashboard')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -102,11 +160,33 @@ export function DashboardArtifactPage({
                 </label>
                 <span className="rounded-full border border-[#ddd5ca] bg-[#f8f5ef] px-3 py-1.5">status: {status}</span>
                 <span className="rounded-full border border-[#ddd5ca] bg-[#f8f5ef] px-3 py-1.5">draft: v{version}</span>
+                {isDirty ? (
+                  <span className="rounded-full border border-amber-300 bg-amber-50 px-3 py-1.5 text-amber-800">alterações não salvas</span>
+                ) : null}
                 <span className="rounded-full border border-[#ddd5ca] bg-[#f8f5ef] px-3 py-1.5">
                   atualizado: {formatDate(updatedAt)}
                 </span>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={!isDirty || isHistoricalVersion || saving}
+                  className={`rounded-full px-3 py-1.5 text-xs font-medium ${
+                    !isDirty || isHistoricalVersion || saving
+                      ? 'cursor-not-allowed bg-[#e9e2d7] text-[#9a8f82]'
+                      : 'bg-[#2d2a26] text-white'
+                  }`}
+                >
+                  {saving ? 'Salvando...' : 'Salvar'}
+                </button>
               </div>
             </div>
+            {isHistoricalVersion ? (
+              <p className="mt-3 text-xs text-[#8a7f73]">
+                Você está vendo uma versão histórica. Para salvar mudanças, volte para a draft atual.
+              </p>
+            ) : null}
+            {saveError ? <p className="mt-3 text-sm text-red-700">{saveError}</p> : null}
+            {saveMessage ? <p className="mt-3 text-sm text-emerald-700">{saveMessage}</p> : null}
           </header>
 
           <section className="rounded-3xl border border-[#ddd5ca] bg-white shadow-sm">
@@ -136,12 +216,17 @@ export function DashboardArtifactPage({
 
             {activeView === 'preview' ? (
               <div className="overflow-auto bg-[#ebe7df] p-5">
-                <DashboardWorkspacePreview sourcePath="app/dashboard.tsx" files={files} zoom={0.72} />
+                <DashboardWorkspacePreview
+                  sourcePath="app/dashboard.tsx"
+                  files={files}
+                  zoom={0.72}
+                  onTreeChange={handleTreeChange}
+                />
               </div>
             ) : (
               <div className="overflow-auto bg-[#1f1b18] p-0">
                 <pre className="min-w-full overflow-x-auto p-5 text-sm leading-6 text-[#f6f2eb]">
-                  <code>{source}</code>
+                  <code>{draftSource}</code>
                 </pre>
               </div>
             )}

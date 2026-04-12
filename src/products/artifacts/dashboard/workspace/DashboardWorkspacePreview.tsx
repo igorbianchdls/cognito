@@ -6,19 +6,22 @@ import { ArtifactPreviewStage } from '@/products/artifacts/core/workspace/compon
 import type { ArtifactCodeFile } from '@/products/artifacts/core/workspace/types'
 import { parseDashboardJsxToTree } from '@/products/artifacts/dashboard/parser/dashboardJsxParser'
 import { DashboardRenderer } from '@/products/artifacts/dashboard/renderer/dashboardRenderer'
-import { movePanelBetweenContainers } from '@/products/artifacts/dashboard/renderer/components/dashboardLayoutTree'
+import { applyPanelLayoutChanges } from '@/products/artifacts/dashboard/renderer/components/dashboardLayoutTree'
 import type { DashboardAppearanceOverrides } from '@/products/artifacts/dashboard/renderer/dashboardThemeConfig'
+import type { Layout } from 'react-grid-layout'
 
 export function DashboardWorkspacePreview({
   sourcePath,
   files,
   zoom,
   appearanceOverrides,
+  onTreeChange,
 }: {
   sourcePath: string
   files: ArtifactCodeFile[]
   zoom: number
   appearanceOverrides?: DashboardAppearanceOverrides
+  onTreeChange?: (tree: any) => void
 }) {
   const [tree, setTree] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
@@ -31,7 +34,10 @@ export function DashboardWorkspacePreview({
         setError(null)
         setTree(null)
         const nextTree = await parseDashboardJsxToTree(sourcePath, files)
-        if (!cancelled) setTree(nextTree)
+        if (!cancelled) {
+          setTree(nextTree)
+          onTreeChange?.(nextTree)
+        }
       } catch (err) {
         if (!cancelled) {
           setTree(null)
@@ -44,12 +50,14 @@ export function DashboardWorkspacePreview({
     return () => {
       cancelled = true
     }
-  }, [sourcePath, files])
+  }, [sourcePath, files, onTreeChange])
 
-  function handleStructuralMove(sourcePathIndices: number[], targetPathIndices: number[], targetType: 'vertical' | 'horizontal') {
+  function handlePanelLayoutChange(nextLayout: Layout[]) {
     setTree((currentTree: any) => {
       if (!currentTree || typeof currentTree !== 'object') return currentTree
-      return movePanelBetweenContainers(currentTree, sourcePathIndices, targetPathIndices, targetType)
+      const nextTree = applyPanelLayoutChanges(currentTree, nextLayout)
+      onTreeChange?.(nextTree)
+      return nextTree
     })
   }
 
@@ -63,7 +71,7 @@ export function DashboardWorkspacePreview({
         <DashboardRenderer
           tree={tree}
           editableLayout
-          onStructuralMove={handleStructuralMove}
+          onPanelLayoutChange={handlePanelLayoutChange}
           appearanceOverrides={appearanceOverrides}
         />
       ) : (

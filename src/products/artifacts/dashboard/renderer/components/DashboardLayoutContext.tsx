@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import type { Layout } from 'react-grid-layout'
 
 export type DashboardStructuralDrag = {
   panelId: string
@@ -18,6 +19,7 @@ export type DashboardLayoutEditContextValue = {
   endStructuralDrag: () => void
   setHoverTargetKey: (key: string | null) => void
   movePanelToContainer: (targetPath: number[], targetType: DashboardLayoutDropTargetType) => void
+  applyPanelLayout: (nextLayout: Layout[]) => void
 }
 
 const noop = () => {}
@@ -30,4 +32,5 @@ export const DashboardLayoutEditContext = React.createContext<DashboardLayoutEdi
   endStructuralDrag: noop,
   setHoverTargetKey: noop,
   movePanelToContainer: noop,
+  applyPanelLayout: noop,
 })

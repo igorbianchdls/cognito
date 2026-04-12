@@ -215,7 +215,10 @@ export function DashboardHorizontal({
           isResizable
           draggableHandle=".dashboard-panel-drag-handle"
           resizeHandles={['e', 's', 'se']}
-          onLayoutChange={(nextLayout) => setLayout(nextLayout)}
+          onLayoutChange={(nextLayout) => {
+            setLayout(nextLayout)
+            layoutEdit.applyPanelLayout(nextLayout)
+          }}
         >
           {layout.map((item) => (
             <div key={item.i} className="dashboard-panel-edit-shell">
@@ -363,7 +366,10 @@ export function DashboardGrid({
           isResizable
           draggableHandle=".dashboard-panel-drag-handle"
           resizeHandles={['e', 's', 'se']}
-          onLayoutChange={(nextLayout) => setLayout(nextLayout)}
+          onLayoutChange={(nextLayout) => {
+            setLayout(nextLayout)
+            layoutEdit.applyPanelLayout(nextLayout)
+          }}
         >
           {layout.map((item) => (
             <div key={item.i} className="dashboard-panel-edit-shell">

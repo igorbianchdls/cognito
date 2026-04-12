@@ -1,5 +1,7 @@
 'use client'
 
+import type { Layout } from 'react-grid-layout'
+
 type AnyRecord = Record<string, any>
 
 type DashboardNode = {
@@ -113,6 +115,41 @@ function clearPanelGridPosition(panel: DashboardNode) {
     delete nextPanel.props.y
   }
   return nextPanel
+}
+
+export function applyPanelLayoutChanges(
+  root: DashboardNode,
+  nextLayout: Layout[],
+) {
+  const nextTree = cloneNode(root)
+  const entries = new Map(
+    nextLayout.map((item) => [
+      String(item.i),
+      {
+        span: Math.max(1, Math.round(item.w)),
+        rows: Math.max(1, Math.round(item.h)),
+      },
+    ]),
+  )
+
+  function walk(node: DashboardNode | string) {
+    if (!node || typeof node !== 'object') return
+    const id = typeof node.props?.id === 'string' ? node.props.id.trim() : ''
+    if (id && entries.has(id)) {
+      const layout = entries.get(id)!
+      node.props = {
+        ...(node.props || {}),
+        span: layout.span,
+        rows: layout.rows,
+      }
+    }
+    for (const child of Array.isArray(node.children) ? node.children : []) {
+      walk(child)
+    }
+  }
+
+  walk(nextTree)
+  return nextTree
 }
 
 export function movePanelBetweenContainers(

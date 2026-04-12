@@ -12,6 +12,7 @@ import {
   type DragOverEvent,
   type DragStartEvent,
 } from '@dnd-kit/core'
+import type { Layout } from 'react-grid-layout'
 
 import { DashboardLayoutEditContext } from '@/products/artifacts/dashboard/renderer/components/DashboardLayoutContext'
 import {
@@ -120,6 +121,7 @@ export function DashboardRenderer({
   onAction,
   editableLayout = false,
   onStructuralMove,
+  onPanelLayoutChange,
   appearanceOverrides,
 }: {
   tree: any
@@ -127,6 +129,7 @@ export function DashboardRenderer({
   onAction?: (action: any) => void
   editableLayout?: boolean
   onStructuralMove?: (sourcePath: number[], targetPath: number[], targetType: 'vertical' | 'horizontal') => void
+  onPanelLayoutChange?: (nextLayout: Layout[]) => void
   appearanceOverrides?: DashboardAppearanceOverrides
 }) {
   const [structuralDrag, setStructuralDrag] = React.useState<{ panelId: string; panelPath: number[]; span: number } | null>(null)
@@ -147,6 +150,10 @@ export function DashboardRenderer({
         setHoverTargetKey(null)
       },
       setHoverTargetKey,
+      applyPanelLayout: (nextLayout: Layout[]) => {
+        if (!editableLayout || !onPanelLayoutChange) return
+        onPanelLayoutChange(nextLayout)
+      },
       movePanelToContainer: (targetPath: number[], targetType: 'vertical' | 'horizontal') => {
         if (!structuralDrag || !onStructuralMove) return
         onStructuralMove(structuralDrag.panelPath, targetPath, targetType)
@@ -154,7 +161,7 @@ export function DashboardRenderer({
         setHoverTargetKey(null)
       },
     }),
-    [editableLayout, hoverTargetKey, onStructuralMove, structuralDrag],
+    [editableLayout, hoverTargetKey, onPanelLayoutChange, onStructuralMove, structuralDrag],
   )
 
   function handleStructuralDragStart(event: DragStartEvent) {
