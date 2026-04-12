@@ -52,6 +52,7 @@ export type DashboardArtifactWorkspaceProps = {
   source: string
   updatedAt: string
   containerHeightClass?: 'h-screen' | 'h-full'
+  showHeaderStatusBadges?: boolean
   onSelectDashboard?: (dashboardId: string) => void
   onSelectVersion?: (version: number | null) => void
   onSaveSuccess?: (nextVersion: number) => void | Promise<void>
@@ -83,6 +84,7 @@ export function DashboardArtifactWorkspace({
   source,
   updatedAt: _updatedAt,
   containerHeightClass = 'h-screen',
+  showHeaderStatusBadges = true,
   onSelectDashboard,
   onSelectVersion,
   onSaveSuccess,
@@ -296,12 +298,16 @@ export function DashboardArtifactWorkspace({
                   ))}
                 </select>
               </div>
-              <div className="rounded-md border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] px-2 py-[0.35rem] text-[12px] font-medium text-[#5F5F5A]">
-                {status}
-              </div>
-              <div className="rounded-md border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] px-2 py-[0.35rem] text-[12px] font-medium text-[#5F5F5A]">
-                {`draft v${version}`}
-              </div>
+              {showHeaderStatusBadges ? (
+                <>
+                  <div className="rounded-md border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] px-2 py-[0.35rem] text-[12px] font-medium text-[#5F5F5A]">
+                    {status}
+                  </div>
+                  <div className="rounded-md border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] px-2 py-[0.35rem] text-[12px] font-medium text-[#5F5F5A]">
+                    {`draft v${version}`}
+                  </div>
+                </>
+              ) : null}
               {isDirty ? (
                 <div className="rounded-md border-[0.5px] border-amber-300 bg-amber-50 px-2 py-[0.35rem] text-[12px] font-medium text-amber-800">
                   alterações não salvas
