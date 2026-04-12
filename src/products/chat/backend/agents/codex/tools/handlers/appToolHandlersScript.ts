@@ -112,10 +112,6 @@ async function callEmail(args) {
   return callScopedTool('/api/agent-tools/email', args, 'email');
 }
 
-async function callDashboardBuilder(args) {
-  return callScopedTool('/api/agent-tools/dashboard-builder', args, 'dashboard_builder');
-}
-
 async function callArtifactRead(args) {
   return callScopedTool('/api/agent-tools/artifact-read', args, 'artifact_read');
 }

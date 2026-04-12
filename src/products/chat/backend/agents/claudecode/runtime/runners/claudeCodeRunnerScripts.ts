@@ -54,7 +54,6 @@ if (appToolsServerERP) {
   allowedToolsList.push('mcp__ERP__artifact_write');
   allowedToolsList.push('mcp__ERP__artifact_patch');
   allowedToolsList.push('mcp__ERP__crud');
-  allowedToolsList.push('mcp__ERP__dashboard_builder');
   allowedToolsList.push('mcp__ERP__documento');
   allowedToolsList.push('mcp__ERP__drive');
   allowedToolsList.push('mcp__ERP__email');

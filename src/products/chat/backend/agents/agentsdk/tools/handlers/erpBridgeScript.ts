@@ -139,7 +139,6 @@ async function callEmail(args){ return callScopedTool('/api/agent-tools/email', 
 async function callArtifactRead(args){ return callScopedTool('/api/agent-tools/artifact-read', args, 'artifact_read'); }
 async function callArtifactWrite(args){ return callScopedTool('/api/agent-tools/artifact-write', args, 'artifact_write'); }
 async function callArtifactPatch(args){ return callScopedTool('/api/agent-tools/artifact-patch', args, 'artifact_patch'); }
-async function callDashboardBuilder(args){ return callScopedTool('/api/agent-tools/dashboard-builder', args, 'dashboard_builder'); }
 async function callSqlExecution(args){ return callScopedTool('/api/agent-tools/sql-execution', args, 'sql_execution'); }
 async function callEcommerce(args){ return callScopedTool('/api/agent-tools/ecommerce', args, 'ecommerce'); }
 async function callMarketing(args){ return callScopedTool('/api/agent-tools/marketing', args, 'marketing'); }

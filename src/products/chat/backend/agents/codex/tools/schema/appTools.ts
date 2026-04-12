@@ -6,10 +6,6 @@ import {
   ARTIFACT_WRITE_TOOL_DESCRIPTION,
   ARTIFACT_WRITE_TOOL_PARAMETERS,
 } from '@/products/chat/shared/tools/artifactToolsContract'
-import {
-  DASHBOARD_BUILDER_TOOL_DESCRIPTION,
-  DASHBOARD_BUILDER_TOOL_PARAMETERS,
-} from '@/products/chat/shared/tools/dashboardBuilderContract'
 
 export const codexAppFunctionTools = [
   {
@@ -280,12 +276,6 @@ export const codexAppFunctionTools = [
     name: 'artifact_patch',
     description: ARTIFACT_PATCH_TOOL_DESCRIPTION,
     parameters: ARTIFACT_PATCH_TOOL_PARAMETERS,
-  },
-  {
-    type: 'function',
-    name: 'dashboard_builder',
-    description: DASHBOARD_BUILDER_TOOL_DESCRIPTION,
-    parameters: DASHBOARD_BUILDER_TOOL_PARAMETERS,
   },
   {
     type: 'function',

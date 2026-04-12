@@ -4,6 +4,19 @@ type JsonMap = Record<string, unknown>
 
 export type ArtifactSourceKind = 'draft' | 'published'
 
+export type DashboardListItem = {
+  id: string
+  title: string
+  slug: string | null
+  status: 'draft' | 'published' | 'archived'
+  workspace_id: string | null
+  created_from_chat_id: string | null
+  current_draft_version: number | null
+  current_published_version: number | null
+  created_at: string
+  updated_at: string
+}
+
 type DashboardRow = {
   id: string
   workspace_id: string | null
@@ -243,6 +256,31 @@ function mapDbError(error: unknown): never {
   }
   if (error instanceof ArtifactToolError) throw error
   throw new ArtifactToolError(500, 'artifact_persistence_error', err?.message || 'erro interno ao persistir artifact')
+}
+
+export async function listDashboards(limit = 100): Promise<DashboardListItem[]> {
+  const safeLimit = Number.isInteger(limit) && limit > 0 ? Math.min(limit, 200) : 100
+  try {
+    return await runQuery<DashboardListItem>(
+      `SELECT
+         id::text,
+         title,
+         slug,
+         status,
+         workspace_id::text AS workspace_id,
+         created_from_chat_id,
+         current_draft_version,
+         current_published_version,
+         created_at,
+         updated_at
+       FROM artifacts.dashboards
+       ORDER BY updated_at DESC, created_at DESC
+       LIMIT $1::int`,
+      [safeLimit],
+    )
+  } catch (error) {
+    return mapDbError(error)
+  }
 }
 
 export async function readDashboardArtifact(input: ReadArtifactInput) {
