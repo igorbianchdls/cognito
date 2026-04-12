@@ -2,6 +2,7 @@
 
 import React, { useState, FormEvent, useRef, useEffect } from 'react';
 import type { UIMessage } from 'ai';
+import { useRouter } from 'next/navigation';
 import Header from './Header';
 import PerguntaDoUsuario from './PerguntaDoUsuario';
 import RespostaDaIa from './RespostaDaIa';
@@ -67,6 +68,7 @@ function modelToEngine(modelRaw?: string): EngineId {
 }
 
 export default function ChatContainer({ withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, initialEngine, runtimeKind = 'codex' }: { withSideMargins?: boolean; redirectOnFirstMessage?: boolean; initialMessage?: string; autoSendPrefill?: boolean; initialChatId?: string; initialEngine?: EngineId; runtimeKind?: RuntimeKind }) {
+  const router = useRouter()
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<UIMessage[]>([])
   const isEmpty = messages.length === 0
