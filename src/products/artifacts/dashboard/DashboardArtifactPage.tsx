@@ -47,7 +47,7 @@ export function DashboardArtifactPage({
   updatedAt,
 }: DashboardArtifactPageProps) {
   const [activeView, setActiveView] = useState<'preview' | 'code'>('preview')
-  const [zoom, setZoom] = useState(0.72)
+  const [zoom, setZoom] = useState(1)
   const [draftSource, setDraftSource] = useState(source)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -190,10 +190,10 @@ export function DashboardArtifactPage({
           }
         />
 
-        <main className="min-h-0 flex-1 overflow-auto border-r-[0.5px] border-[#DDDDD8] bg-[#EEEEEB] px-6 py-6">
-          <div className="mx-auto flex max-w-[1500px] flex-col gap-4">
+        <main className="min-h-0 flex-1 overflow-auto border-r-[0.5px] border-[#DDDDD8] bg-[#EEEEEB]">
+          <div className="flex flex-col gap-4">
             {isHistoricalVersion || saveError || saveMessage ? (
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-1 text-sm text-[#5F5F5A]">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 pt-4 text-sm text-[#5F5F5A]">
                 {isHistoricalVersion ? (
                   <span className="text-[#8B5E00]">Você está vendo uma versão histórica. Para salvar mudanças, volte para a draft atual.</span>
                 ) : null}
