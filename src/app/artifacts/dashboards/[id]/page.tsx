@@ -36,6 +36,7 @@ export default async function ArtifactDashboardByIdPage({
         status={artifact.status}
         version={artifact.version}
         currentDraftVersion={artifact.current_draft_version ?? artifact.version}
+        metadata={artifact.metadata}
         availableVersions={versions}
         source={artifact.source}
         updatedAt={artifact.updated_at}

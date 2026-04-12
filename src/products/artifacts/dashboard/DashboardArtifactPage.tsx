@@ -3,11 +3,34 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
+import { APPS_THEME_OPTIONS } from '@/products/bi/shared/themeOptions'
+import {
+  DASHBOARD_CHART_PALETTE_OPTIONS,
+  getDashboardChartPaletteValueFromColors,
+} from '@/products/artifacts/dashboard/chartPalettes'
+import {
+  DASHBOARD_BORDER_PRESET_OPTIONS,
+  type DashboardBorderPreset,
+} from '@/products/artifacts/dashboard/borderPresets'
 import { ArtifactWorkspaceHeader } from '@/products/artifacts/core/workspace/components/ArtifactWorkspaceHeader'
 import { ArtifactWorkspacePage } from '@/products/artifacts/core/workspace/ArtifactWorkspacePage'
 import type { ArtifactCodeFile } from '@/products/artifacts/core/workspace/types'
+import {
+  DashboardThemeModal,
+  type DashboardAppearanceMode,
+} from '@/products/artifacts/dashboard/workspace/DashboardThemeModal'
+import {
+  getDashboardBorderPresetFromSource,
+  getDashboardChartColorsFromSource,
+  getDashboardChartPaletteNameFromSource,
+  getDashboardThemeNameFromSource,
+  replaceDashboardBorderPresetInSource,
+  replaceDashboardChartPaletteNameInSource,
+  replaceDashboardThemeNameInSource,
+} from '@/products/artifacts/dashboard/parser/dashboardJsxParser'
 import { applyDashboardTreeLayoutToSource } from '@/products/artifacts/dashboard/source/dashboardLayoutPersistence'
 import { DashboardWorkspacePreview } from '@/products/artifacts/dashboard/workspace/DashboardWorkspacePreview'
+import type { DashboardAppearanceOverrides } from '@/products/artifacts/dashboard/renderer/dashboardThemeConfig'
 
 type DashboardSourceVersionListItem = {
   version: number
@@ -22,9 +45,24 @@ type DashboardArtifactPageProps = {
   status: string
   version: number
   currentDraftVersion: number
+  metadata: Record<string, unknown>
   availableVersions: DashboardSourceVersionListItem[]
   source: string
   updatedAt: string
+}
+
+function cloneAppearanceOverrides(overrides: DashboardAppearanceOverrides): DashboardAppearanceOverrides {
+  return JSON.parse(JSON.stringify(overrides || {})) as DashboardAppearanceOverrides
+}
+
+function areAppearanceOverridesEqual(left: DashboardAppearanceOverrides, right: DashboardAppearanceOverrides) {
+  return JSON.stringify(left || {}) === JSON.stringify(right || {})
+}
+
+function readAppearanceOverridesFromMetadata(metadata: Record<string, unknown>): DashboardAppearanceOverrides {
+  const value = metadata?.appearanceOverrides
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
+  return cloneAppearanceOverrides(value as DashboardAppearanceOverrides)
 }
 
 function formatDate(value: string) {
@@ -42,13 +80,30 @@ export function DashboardArtifactPage({
   status,
   version,
   currentDraftVersion,
+  metadata,
   availableVersions,
   source,
   updatedAt,
 }: DashboardArtifactPageProps) {
+  const dashboardThemeOptions = useMemo(
+    () => APPS_THEME_OPTIONS.filter((option) => String(option.value).trim().toLowerCase() !== 'aero'),
+    [],
+  )
   const [activeView, setActiveView] = useState<'preview' | 'code'>('preview')
   const [zoom, setZoom] = useState(1)
   const [draftSource, setDraftSource] = useState(source)
+  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false)
+  const [appearanceMode, setAppearanceMode] = useState<DashboardAppearanceMode>('theme')
+  const [themeModalBaseSource, setThemeModalBaseSource] = useState(source)
+  const [draftThemeName, setDraftThemeName] = useState('light')
+  const [themeModalBaseName, setThemeModalBaseName] = useState('light')
+  const [draftChartPalette, setDraftChartPalette] = useState(DASHBOARD_CHART_PALETTE_OPTIONS[0].value)
+  const [chartPaletteBaseName, setChartPaletteBaseName] = useState(DASHBOARD_CHART_PALETTE_OPTIONS[0].value)
+  const [draftBorderPreset, setDraftBorderPreset] = useState<DashboardBorderPreset>(DASHBOARD_BORDER_PRESET_OPTIONS[0].value)
+  const [borderPresetBaseName, setBorderPresetBaseName] = useState<DashboardBorderPreset>(DASHBOARD_BORDER_PRESET_OPTIONS[0].value)
+  const [loadedAppearanceOverrides, setLoadedAppearanceOverrides] = useState<DashboardAppearanceOverrides>({})
+  const [draftAppearanceOverrides, setDraftAppearanceOverrides] = useState<DashboardAppearanceOverrides>({})
+  const [appearanceOverridesBase, setAppearanceOverridesBase] = useState<DashboardAppearanceOverrides>({})
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
@@ -56,7 +111,8 @@ export function DashboardArtifactPage({
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const isHistoricalVersion = version !== currentDraftVersion
-  const isDirty = draftSource !== source
+  const hasAppearanceChanges = !areAppearanceOverridesEqual(draftAppearanceOverrides, loadedAppearanceOverrides)
+  const isDirty = draftSource !== source || hasAppearanceChanges
   const files = useMemo<ArtifactCodeFile[]>(
     () => [
       {
@@ -72,10 +128,44 @@ export function DashboardArtifactPage({
   )
 
   useEffect(() => {
+    const sourceThemeName = getDashboardThemeNameFromSource(source, 'light')
+    const sourceChartPalette = (() => {
+      const paletteName = getDashboardChartPaletteNameFromSource(source, '')
+      if (paletteName) return paletteName
+      return getDashboardChartPaletteValueFromColors(
+        getDashboardChartColorsFromSource(source, DASHBOARD_CHART_PALETTE_OPTIONS[0].colors),
+      )
+    })()
+    const sourceBorderPreset = getDashboardBorderPresetFromSource(
+      source,
+      DASHBOARD_BORDER_PRESET_OPTIONS[0].value,
+    ) as DashboardBorderPreset
+    const appearanceOverrides = readAppearanceOverridesFromMetadata(metadata)
+
     setDraftSource(source)
+    setThemeModalBaseSource(source)
+    setDraftThemeName(sourceThemeName)
+    setThemeModalBaseName(sourceThemeName)
+    setDraftChartPalette(sourceChartPalette)
+    setChartPaletteBaseName(sourceChartPalette)
+    setDraftBorderPreset(sourceBorderPreset)
+    setBorderPresetBaseName(sourceBorderPreset)
+    setLoadedAppearanceOverrides(appearanceOverrides)
+    setDraftAppearanceOverrides(cloneAppearanceOverrides(appearanceOverrides))
+    setAppearanceOverridesBase(cloneAppearanceOverrides(appearanceOverrides))
     setSaveError(null)
     setSaveMessage(null)
-  }, [source, version])
+  }, [source, version, metadata])
+
+  function applyAppearanceToSource(baseSource: string, themeName: string, chartPaletteValue: string, borderPreset: string) {
+    return replaceDashboardBorderPresetInSource(
+      replaceDashboardChartPaletteNameInSource(
+        replaceDashboardThemeNameInSource(baseSource, themeName),
+        chartPaletteValue,
+      ),
+      borderPreset,
+    )
+  }
 
   function handleVersionChange(nextVersion: string) {
     const params = new URLSearchParams(searchParams?.toString() || '')
@@ -89,10 +179,10 @@ export function DashboardArtifactPage({
   }
 
   const handleTreeChange = useCallback((nextTree: any) => {
-    setDraftSource(applyDashboardTreeLayoutToSource(source, nextTree))
+    setDraftSource((currentDraftSource) => applyDashboardTreeLayoutToSource(currentDraftSource, nextTree))
     setSaveError(null)
     setSaveMessage(null)
-  }, [source])
+  }, [])
 
   async function handleSave() {
     if (!isDirty || isHistoricalVersion || saving) return
@@ -109,7 +199,11 @@ export function DashboardArtifactPage({
           expected_version: currentDraftVersion,
           title,
           source: draftSource,
-          change_summary: 'Ajuste de layout',
+          metadata: {
+            ...metadata,
+            appearanceOverrides: draftAppearanceOverrides,
+          },
+          change_summary: 'Ajustes do dashboard',
         }),
       })
 
@@ -121,7 +215,9 @@ export function DashboardArtifactPage({
       const params = new URLSearchParams(searchParams?.toString() || '')
       params.delete('version')
       const query = params.toString()
-      setSaveMessage(`Layout salvo como v${json?.artifact?.next_version ?? currentDraftVersion + 1}`)
+      setSaveMessage(`Alterações salvas como v${json?.artifact?.next_version ?? currentDraftVersion + 1}`)
+      setLoadedAppearanceOverrides(cloneAppearanceOverrides(draftAppearanceOverrides))
+      setThemeModalBaseSource(draftSource)
       router.replace(query ? `${pathname}?${query}` : pathname)
       router.refresh()
     } catch (error) {
@@ -176,6 +272,26 @@ export function DashboardArtifactPage({
               ) : null}
               <button
                 type="button"
+                onClick={() => {
+                  setAppearanceMode('theme')
+                  setThemeModalBaseSource(draftSource)
+                  setThemeModalBaseName(draftThemeName)
+                  setChartPaletteBaseName(draftChartPalette)
+                  setBorderPresetBaseName(draftBorderPreset)
+                  setAppearanceOverridesBase(cloneAppearanceOverrides(draftAppearanceOverrides))
+                  setIsThemeModalOpen(true)
+                }}
+                disabled={isHistoricalVersion}
+                className={`flex items-center justify-center rounded-md border-[0.5px] px-2 py-[0.35rem] text-[14px] font-medium transition ${
+                  isHistoricalVersion
+                    ? 'cursor-not-allowed border-[#DDDDD8] bg-[#ECECEB] text-[#9A9A95]'
+                    : 'border-[#DDDDD8] bg-[#ECECEB] text-[#5F5F5A] hover:bg-[#E2E2E0] hover:text-[#4F4F4B]'
+                }`}
+              >
+                Tema
+              </button>
+              <button
+                type="button"
                 onClick={handleSave}
                 disabled={!isDirty || isHistoricalVersion || saving}
                 className={`flex items-center justify-center rounded-md px-2 py-[0.35rem] text-[14px] font-medium transition ${
@@ -207,6 +323,7 @@ export function DashboardArtifactPage({
                 sourcePath="app/dashboard.tsx"
                 files={files}
                 zoom={zoom}
+                appearanceOverrides={draftAppearanceOverrides}
                 onTreeChange={handleTreeChange}
               />
             ) : (
@@ -219,6 +336,62 @@ export function DashboardArtifactPage({
           </div>
         </main>
       </div>
+
+      <DashboardThemeModal
+        isOpen={isThemeModalOpen}
+        onClose={() => {
+          setDraftThemeName(themeModalBaseName)
+          setDraftChartPalette(chartPaletteBaseName)
+          setDraftBorderPreset(borderPresetBaseName)
+          setDraftAppearanceOverrides(cloneAppearanceOverrides(appearanceOverridesBase))
+          setDraftSource(themeModalBaseSource)
+          setIsThemeModalOpen(false)
+        }}
+        onConfirm={() => {
+          setIsThemeModalOpen(false)
+        }}
+        onRevert={() => {
+          setDraftThemeName(themeModalBaseName)
+          setDraftChartPalette(chartPaletteBaseName)
+          setDraftBorderPreset(borderPresetBaseName)
+          setDraftAppearanceOverrides(cloneAppearanceOverrides(appearanceOverridesBase))
+          setDraftSource(themeModalBaseSource)
+        }}
+        mode={appearanceMode}
+        onModeChange={setAppearanceMode}
+        onSelect={(themeName) => {
+          setDraftThemeName(themeName)
+          setDraftSource((currentDraftSource) =>
+            applyAppearanceToSource(currentDraftSource, themeName, draftChartPalette, draftBorderPreset),
+          )
+        }}
+        onSelectChartPalette={(paletteValue) => {
+          setDraftChartPalette(paletteValue)
+          setDraftSource((currentDraftSource) =>
+            applyAppearanceToSource(currentDraftSource, draftThemeName, paletteValue, draftBorderPreset),
+          )
+        }}
+        onSelectBorderPreset={(borderPreset) => {
+          setDraftBorderPreset(borderPreset as DashboardBorderPreset)
+          setDraftSource((currentDraftSource) =>
+            applyAppearanceToSource(currentDraftSource, draftThemeName, draftChartPalette, borderPreset),
+          )
+        }}
+        appearanceOverrides={draftAppearanceOverrides}
+        onAppearanceOverridesChange={setDraftAppearanceOverrides}
+        selectedTheme={draftThemeName}
+        selectedChartPalette={draftChartPalette}
+        selectedBorderPreset={draftBorderPreset}
+        chartPalettes={DASHBOARD_CHART_PALETTE_OPTIONS}
+        borderPresets={DASHBOARD_BORDER_PRESET_OPTIONS}
+        revertDisabled={
+          draftThemeName === themeModalBaseName &&
+          draftChartPalette === chartPaletteBaseName &&
+          draftBorderPreset === borderPresetBaseName &&
+          areAppearanceOverridesEqual(draftAppearanceOverrides, appearanceOverridesBase)
+        }
+        themes={dashboardThemeOptions}
+      />
     </ArtifactWorkspacePage>
   )
 }
