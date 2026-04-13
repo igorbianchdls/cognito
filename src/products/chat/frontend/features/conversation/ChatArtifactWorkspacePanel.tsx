@@ -162,6 +162,7 @@ export function ChatArtifactWorkspacePanel({
       source={artifact.source}
       updatedAt={artifact.updated_at}
       containerHeightClass="h-full"
+      allowSourceEditing
       showHeaderStatusBadges={false}
       onSelectDashboard={(dashboardId) => {
         setSelectedVersion(null)
