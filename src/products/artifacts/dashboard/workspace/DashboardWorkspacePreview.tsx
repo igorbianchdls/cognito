@@ -62,7 +62,12 @@ export function DashboardWorkspacePreview({
   }
 
   return (
-    <ArtifactPreviewStage zoom={zoom} contentClassName="min-w-[1120px] overflow-hidden rounded-none bg-white p-0 shadow-[0_2px_6px_rgba(15,23,42,0.05)]">
+    <ArtifactPreviewStage
+      zoom={zoom}
+      outerClassName="flex min-h-full w-full items-start p-0"
+      scaledStyle={{ width: '100%' }}
+      contentClassName="w-full min-w-0 overflow-hidden rounded-none bg-white p-0 shadow-[0_2px_6px_rgba(15,23,42,0.05)]"
+    >
       {error ? (
         <div className="p-6 text-sm text-red-700">
           {error}
