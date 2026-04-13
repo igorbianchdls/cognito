@@ -39,8 +39,8 @@ type Props = {
   onToggleComposio?: () => void;
   model?: 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5' | 'openai-gpt5mini';
   onModelChange?: (m: 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5' | 'openai-gpt5mini') => void;
-  promptProfile?: 'general' | 'data_analyst' | 'dashboard_creator';
-  onPromptProfileChange?: (p: 'general' | 'data_analyst' | 'dashboard_creator') => void;
+  promptProfile?: 'general' | 'data_analyst' | 'dashboard_creator' | 'dashboard_analyst';
+  onPromptProfileChange?: (p: 'general' | 'data_analyst' | 'dashboard_creator' | 'dashboard_analyst') => void;
   workspaceOpen?: boolean;
   onToggleWorkspace?: () => void;
 };
@@ -221,7 +221,7 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
             <PromptInputModelSelect
               value={promptProfile}
               onValueChange={(v: any) => {
-                const next = v === 'general' || v === 'dashboard_creator' ? v : 'data_analyst'
+                const next = v === 'general' || v === 'dashboard_creator' || v === 'dashboard_analyst' ? v : 'data_analyst'
                 onPromptProfileChange?.(next)
               }}
             >
@@ -231,6 +231,7 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
               </PromptInputModelSelectTrigger>
               <PromptInputModelSelectContent>
                 <PromptInputModelSelectItem value="data_analyst">Analista de dados</PromptInputModelSelectItem>
+                <PromptInputModelSelectItem value="dashboard_analyst">Dashboard + dados</PromptInputModelSelectItem>
                 <PromptInputModelSelectItem value="dashboard_creator">Dashboard creator</PromptInputModelSelectItem>
                 <PromptInputModelSelectItem value="general">Geral</PromptInputModelSelectItem>
               </PromptInputModelSelectContent>

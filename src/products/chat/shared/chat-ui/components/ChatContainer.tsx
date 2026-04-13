@@ -13,7 +13,7 @@ import { useChatErrorNotifications } from '@/products/chat/frontend/features/err
 type ChatStatus = 'idle' | 'submitted' | 'streaming' | 'error'
 type EngineId = 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5' | 'openai-gpt5mini'
 type RuntimeKind = 'codex' | 'agentsdk'
-type PromptProfileId = 'general' | 'data_analyst' | 'dashboard_creator'
+type PromptProfileId = 'general' | 'data_analyst' | 'dashboard_creator' | 'dashboard_analyst'
 
 type ChatMessagesListProps = {
   messages: UIMessage[]

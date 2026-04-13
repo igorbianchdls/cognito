@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import type { PromptHistoryMessage } from '@/products/chat/backend/agents/shared/prompts/promptConversation'
 
-export type AgentPromptProfile = 'general' | 'data_analyst' | 'dashboard_creator'
+export type AgentPromptProfile = 'general' | 'data_analyst' | 'dashboard_creator' | 'dashboard_analyst'
 
 type ResolveProfileInput = {
   requestedProfile?: string | null
@@ -13,6 +13,7 @@ const PROFILE_FILES: Record<AgentPromptProfile, string> = {
   general: 'generalAgent.md',
   data_analyst: 'dataAnalystAgent.md',
   dashboard_creator: 'dashboardCreatorAgent.md',
+  dashboard_analyst: 'dashboardAnalystAgent.md',
 }
 
 const PROFILE_CACHE = new Map<AgentPromptProfile, string>()
@@ -32,6 +33,15 @@ export function normalizeAgentPromptProfile(raw?: string | null): AgentPromptPro
     value === 'dashboard_creator_agent'
   ) {
     return 'dashboard_creator'
+  }
+  if (
+    value === 'dashboard_analyst' ||
+    value === 'dashboard-analyst' ||
+    value === 'dashboardanalyst' ||
+    value === 'dashboard_analyst_agent' ||
+    value === 'dashboardanalystagent'
+  ) {
+    return 'dashboard_analyst'
   }
   return null
 }
