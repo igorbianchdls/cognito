@@ -14,7 +14,7 @@ const LAYOUT_TEST_VARIANT = {
 function buildLayoutTestDashboardSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('layouttest')
   return `<Dashboard id="layout-test" title="${LAYOUT_TEST_VARIANT.title}" theme="${resolvedThemeName}" chartPalette="teal">
-  <Vertical gap={24} style={{ width: '1600px', minHeight: '100%', backgroundColor: theme.pageBg, padding: 24 }}>
+  <Vertical gap={24} style={{ width: '100%', minHeight: '100%', backgroundColor: theme.pageBg, padding: 24 }}>
     <Horizontal gap={18}>
         <header style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8, padding: 24, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, backgroundColor: theme.headerBg }}>
           <Text variant="eyebrow">

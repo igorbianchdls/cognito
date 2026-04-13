@@ -15,7 +15,7 @@ function buildComprasDashboardSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('compras')
   return `<Dashboard id="overview" title="${COMPRAS_VARIANT.title}" theme="${resolvedThemeName}" chartPalette="blue">
         <Tabs defaultValue="overview">
-          <Horizontal gap={24} style={{ width: '1600px', minHeight: '100%', padding: 32, backgroundColor: theme.pageBg, alignItems: 'flex-start' }}>
+          <Horizontal gap={24} style={{ width: '100%', minHeight: '100%', padding: 32, backgroundColor: theme.pageBg, alignItems: 'flex-start' }}>
             <Card id="compras-sidebar" width={320} shrink={false}>
               <Vertical gap={18} style={{ position: 'sticky', top: 24 }}>
                 <Card style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
