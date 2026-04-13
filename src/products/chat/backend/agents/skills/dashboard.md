@@ -37,6 +37,7 @@ Para semantica de dados por dominio, usar:
 8. Para `Query` em modo KPI-like, a query deve retornar coluna numerica com alias `value`.
 9. So usar props suportadas no runtime atual.
 10. Nao regressar para DSL string.
+11. `Chart`, `Table` e `PivotTable` so devem usar sizing fluido para preencher card/painel quando a cadeia de altura do container estiver explicitamente resolvida.
 
 ## Componentes Permitidos
 
@@ -162,8 +163,47 @@ Chart:
     limit: 10,
   }}
   format="currency"
+  height={320}
 />
 ```
+
+Chart responsivo dentro de card redimensionavel:
+
+```tsx
+<Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+  <Text as="h2">Receita por canal</Text>
+  <div style={{ flex: 1, minHeight: 0 }}>
+    <Chart
+      type="bar"
+      height="100%"
+      dataQuery={{
+        query: `
+          SELECT
+            cv.id::text AS key,
+            COALESCE(cv.nome, '-') AS label,
+            COALESCE(SUM(pi.subtotal), 0)::float AS value
+          FROM vendas.pedidos src
+          JOIN vendas.pedidos_itens pi ON pi.pedido_id = src.id
+          LEFT JOIN vendas.canais_venda cv ON cv.id = src.canal_venda_id
+          WHERE src.tenant_id = {{tenant_id}}::int
+          GROUP BY 1, 2
+          ORDER BY 3 DESC
+        `,
+        xField: 'label',
+        yField: 'value',
+        keyField: 'key',
+        limit: 10,
+      }}
+      format="currency"
+    />
+  </div>
+</Card>
+```
+
+Regra pratica de sizing:
+- se houver duvida sobre a cadeia de altura, prefira `height={320}` no `Chart`
+- so use `height="100%"` quando o card tiver `height: '100%'` e o wrapper interno tiver `flex: 1` com `minHeight: 0`
+- aplicar a mesma logica para `Table` e `PivotTable` quando precisarem ocupar a area restante do card
 
 Compatibilidade:
 - Sem fallback legado para DSL.

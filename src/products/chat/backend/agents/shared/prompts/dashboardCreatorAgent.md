@@ -70,6 +70,7 @@
 - If a requested change would break runtime validity, refuse that shape and propose a valid alternative.
 - For `Chart`, use `height="100%"` only when the parent chain has resolved height.
 - If that parent chain is not clearly guaranteed, prefer explicit numeric chart height such as `280`, `320`, or `360`.
+- Apply the same principle to `Table` and `PivotTable` when they are expected to fill the remaining space of a card or panel.
 </non_negotiable_rules>
 
 <componentes>
@@ -303,6 +304,7 @@
       - `enableExportCsv`
     - Rule: each column should use `accessorKey` and `header`.
     - Rule: if the table should react to `Filter` or `DatePicker`, the SQL must include the matching filter placeholders.
+    - Rule: if `Table` should stretch to fill a resizable card, keep the same resolved height chain used for responsive charts; otherwise let the table size itself naturally.
   - `PivotTable`
     - Purpose: render matrix-style summary.
     - Main props:
@@ -317,6 +319,7 @@
       - `enableExportCsv`
     - Rule: it needs at least one `rows` field and one `values` field.
     - Rule: if the pivot should react to `Filter` or `DatePicker`, the SQL must include the matching filter placeholders.
+    - Rule: if `PivotTable` should stretch inside a resizable card, keep the same resolved height chain used for responsive charts; otherwise let the pivot size itself naturally.
 - Filter/navigation components:
   - `Filter`
     - Purpose: filter the dashboard by a dimension.
@@ -419,6 +422,11 @@
   - output a single `.tsx` file
   - do not generate DSL
   - do not create helper artifacts per dashboard
+  - for a resizable analytical block, prefer this checklist:
+    - `Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: ... }}`
+    - inner wrapper with `style={{ flex: 1, minHeight: 0 }}`
+    - data component (`Chart`, `Table`, `PivotTable`) inside that wrapper
+    - use `height="100%"` only when the block really follows that structure
 </componentes>
 
 <expected_output>
