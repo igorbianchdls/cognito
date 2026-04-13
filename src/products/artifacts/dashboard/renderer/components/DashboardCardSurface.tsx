@@ -123,6 +123,8 @@ export default function DashboardCardSurface({
       : {}),
     ...styleWithoutFrame,
   } as React.CSSProperties
+  const wrapperHeight = styleDimension(inlineStyle?.height) ?? (editableLayout && layoutItem ? '100%' : undefined)
+  const wrapperMinHeight = styleDimension(props.minHeight) ?? styleDimension(inlineStyle?.minHeight)
 
   const cardElement = (
     <JsxCardSurface
@@ -154,8 +156,8 @@ export default function DashboardCardSurface({
         flexShrink: props.shrink === false || props.shrink === 'false' ? 0 : 1,
         flexBasis: styleDimension(props.basis),
         width: styleDimension(props.width),
-        height: editableLayout && layoutItem ? '100%' : undefined,
-        minHeight: styleDimension(props.minHeight),
+        height: wrapperHeight,
+        minHeight: wrapperMinHeight,
         minWidth: styleDimension(props.minWidth) ?? 0,
         maxWidth: styleDimension(props.maxWidth),
         padding: styleDimension(props.padding),
