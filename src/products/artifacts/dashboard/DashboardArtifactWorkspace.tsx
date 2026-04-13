@@ -358,8 +358,12 @@ export function DashboardArtifactWorkspace({
           }
         />
 
-        <main className="min-h-0 flex-1 overflow-auto border-r-[0.5px] border-[#DDDDD8] bg-[#EEEEEB]">
-          <div className="flex flex-col gap-4">
+        <main
+          className={`min-h-0 flex-1 border-r-[0.5px] border-[#DDDDD8] bg-[#EEEEEB] ${
+            activeView === 'preview' ? 'overflow-auto' : 'overflow-hidden'
+          }`}
+        >
+          <div className={`flex ${activeView === 'code' ? 'h-full min-h-0' : ''} flex-col gap-4`}>
             {isHistoricalVersion || saveError || saveMessage ? (
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 pt-4 text-sm text-[#5F5F5A]">
                 {isHistoricalVersion ? (
@@ -380,15 +384,17 @@ export function DashboardArtifactWorkspace({
               />
             ) : (
               allowSourceEditing ? (
-                <ArtifactWorkspaceCodeEditor
-                  file={files[0]}
-                  selectableFiles={files}
-                  selectedSelectablePath={files[0]?.path ?? 'app/dashboard.tsx'}
-                  onSelectSelectable={() => {}}
-                  editable
-                  disabled={isHistoricalVersion}
-                  onChange={handleSourceChange}
-                />
+                <div className="min-h-0 flex-1">
+                  <ArtifactWorkspaceCodeEditor
+                    file={files[0]}
+                    selectableFiles={files}
+                    selectedSelectablePath={files[0]?.path ?? 'app/dashboard.tsx'}
+                    onSelectSelectable={() => {}}
+                    editable
+                    disabled={isHistoricalVersion}
+                    onChange={handleSourceChange}
+                  />
+                </div>
               ) : (
                 <div className="overflow-auto border-[0.5px] border-[#DDDDD8] bg-[#1f1b18]">
                   <pre className="min-w-full overflow-x-auto p-5 text-sm leading-6 text-[#f6f2eb]">

@@ -1,8 +1,18 @@
 'use client'
 
 import { Icon } from '@iconify/react'
+import { Editor } from '@monaco-editor/react'
 
 import type { ArtifactCodeFile } from '@/products/artifacts/core/workspace/types'
+
+function resolveEditorLanguage(file: ArtifactCodeFile | undefined) {
+  if (!file) return 'plaintext'
+  if (file.extension === 'tsx' || file.extension === 'ts') return 'typescript'
+  if (file.extension === 'jsx' || file.extension === 'js') return 'javascript'
+  if (file.extension === 'json') return 'json'
+  if (file.extension === 'md') return 'markdown'
+  return file.language || 'plaintext'
+}
 
 export function ArtifactWorkspaceCodeEditor({
   file,
@@ -27,7 +37,7 @@ export function ArtifactWorkspaceCodeEditor({
   const breadcrumbs = file?.path.split('/') ?? []
 
   return (
-    <section className="flex min-w-0 flex-1 flex-col bg-[#FFFFFF]">
+    <section className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#FFFFFF]">
       <div className="border-b border-[#E3E3DF] bg-[#FAFAF8]">
         <div className="flex items-center justify-between gap-3 px-4 pt-2">
           <div className="flex items-center gap-2 rounded-t-md border border-b-0 border-[#E3E3DF] bg-white px-3 py-2 text-[13px] text-[#2B2B28]">
@@ -59,17 +69,34 @@ export function ArtifactWorkspaceCodeEditor({
           ))}
         </div>
       </div>
-      <div className="min-h-0 flex-1 overflow-auto">
+      <div className={`min-h-0 flex-1 ${editable ? 'overflow-hidden' : 'overflow-auto'}`}>
         {editable ? (
-          <textarea
-            value={file?.content ?? ''}
-            onChange={(event) => onChange?.(event.target.value)}
-            disabled={disabled}
-            spellCheck={false}
-            className={`h-full min-h-full w-full resize-none border-0 bg-white px-4 py-4 font-mono text-[13px] leading-7 text-[#2E2E2B] outline-none ${
-              disabled ? 'cursor-not-allowed text-[#8A8A84]' : ''
-            }`}
-          />
+          <div className="h-full min-h-0">
+            <Editor
+              height="100%"
+              language={resolveEditorLanguage(file)}
+              value={file?.content ?? ''}
+              onChange={(value) => onChange?.(value ?? '')}
+              theme="vs-dark"
+              options={{
+                readOnly: disabled,
+                automaticLayout: true,
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                wordWrap: 'off',
+                lineNumbers: 'on',
+                fontSize: 13,
+                lineHeight: 28,
+                tabSize: 2,
+                insertSpaces: true,
+                padding: { top: 16, bottom: 16 },
+                fontFamily: 'JetBrains Mono, Consolas, Monaco, "Courier New", monospace',
+                smoothScrolling: true,
+                cursorBlinking: 'smooth',
+                renderLineHighlight: 'gutter',
+              }}
+            />
+          </div>
         ) : (
           <div className="min-h-full min-w-full w-max bg-white">
             {lines.map((line, index) => (
