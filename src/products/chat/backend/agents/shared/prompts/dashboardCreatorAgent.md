@@ -68,6 +68,8 @@
 - Never create `tree`, `buildTree`, `buildSource`, markers, or helper files per dashboard.
 - For new dashboards, do not use `DashboardTemplate` or `Theme` as authored root structure.
 - If a requested change would break runtime validity, refuse that shape and propose a valid alternative.
+- For `Chart`, use `height="100%"` only when the parent chain has resolved height.
+- If that parent chain is not clearly guaranteed, prefer explicit numeric chart height such as `280`, `320`, or `360`.
 </non_negotiable_rules>
 
 <componentes>
@@ -264,6 +266,12 @@
     - Rule: when the chart should react to dashboard filters, wire them explicitly in SQL.
     - Rule: for `bar`, `line`, and `composed`, prefer `xAxis={{ dataKey: '...' }}` plus `series={[{ dataKey: '...' }]}`.
     - Rule: for `pie`, prefer `categoryKey="..."` plus `series={[{ dataKey: '...' }]}`.
+    - Rule: `height="100%"` is valid only when the chart sits inside a fully resolved height chain.
+    - Rule: for responsive `height="100%"`, use this structure:
+      - `Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: ... }}`
+      - inner wrapper around the chart with `style={{ flex: 1, minHeight: 0 }}`
+      - then `Chart height="100%"`
+    - Rule: if that structure is missing or uncertain, use numeric height such as `height={320}`.
     - Recommended `type` values:
       - `bar`
       - `line`
@@ -525,29 +533,31 @@
         </Vertical>
       </Card>
 
-      <Card id="chart-canal" span={8} rows={12} variant="chart">
+      <Card id="chart-canal" span={8} rows={12} variant="chart" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
         <Text variant="section-title">Receita por canal</Text>
-        <Chart
-          type="bar"
-          height={320}
-          format="currency"
-          dataQuery={{
-            query: `
-              SELECT
-                COALESCE(cv.nome, '-') AS canal,
-                COALESCE(SUM(src.valor_total), 0)::float AS valor
-              FROM vendas.pedidos src
-              LEFT JOIN vendas.canais_venda cv ON cv.id = src.canal_venda_id
-              WHERE src.tenant_id = {{tenant_id}}::int
-                {{filters:src}}
-              GROUP BY 1
-              ORDER BY 2 DESC
-            `,
-            limit: 8,
-          }}
-          xAxis={{ dataKey: 'canal' }}
-          series={[{ dataKey: 'valor', label: 'Receita' }]}
-        />
+        <div style={{ flex: 1, minHeight: 0 }}>
+          <Chart
+            type="bar"
+            height="100%"
+            format="currency"
+            dataQuery={{
+              query: `
+                SELECT
+                  COALESCE(cv.nome, '-') AS canal,
+                  COALESCE(SUM(src.valor_total), 0)::float AS valor
+                FROM vendas.pedidos src
+                LEFT JOIN vendas.canais_venda cv ON cv.id = src.canal_venda_id
+                WHERE src.tenant_id = {{tenant_id}}::int
+                  {{filters:src}}
+                GROUP BY 1
+                ORDER BY 2 DESC
+              `,
+              limit: 8,
+            }}
+            xAxis={{ dataKey: 'canal' }}
+            series={[{ dataKey: 'valor', label: 'Receita' }]}
+          />
+        </div>
       </Card>
 
       <Card id="filter-canal" span={4} rows={12} variant="filter">
