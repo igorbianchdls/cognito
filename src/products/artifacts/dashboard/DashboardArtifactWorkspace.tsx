@@ -384,7 +384,7 @@ export function DashboardArtifactWorkspace({
               />
             ) : (
               allowSourceEditing ? (
-                <div className="min-h-0 flex-1">
+                <div className="flex min-h-0 flex-1">
                   <ArtifactWorkspaceCodeEditor
                     file={files[0]}
                     selectableFiles={files}

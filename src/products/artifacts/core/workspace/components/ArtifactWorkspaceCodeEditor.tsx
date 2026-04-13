@@ -37,7 +37,7 @@ export function ArtifactWorkspaceCodeEditor({
   const breadcrumbs = file?.path.split('/') ?? []
 
   return (
-    <section className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#FFFFFF]">
+    <section className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[#FFFFFF]">
       <div className="border-b border-[#E3E3DF] bg-[#FAFAF8]">
         <div className="flex items-center justify-between gap-3 px-4 pt-2">
           <div className="flex items-center gap-2 rounded-t-md border border-b-0 border-[#E3E3DF] bg-white px-3 py-2 text-[13px] text-[#2B2B28]">
@@ -69,9 +69,9 @@ export function ArtifactWorkspaceCodeEditor({
           ))}
         </div>
       </div>
-      <div className={`min-h-0 flex-1 ${editable ? 'overflow-hidden' : 'overflow-auto'}`}>
+      <div className={`min-h-0 flex-1 ${editable ? 'flex overflow-hidden' : 'overflow-auto'}`}>
         {editable ? (
-          <div className="h-full min-h-0">
+          <div className="flex min-h-0 flex-1">
             <Editor
               height="100%"
               language={resolveEditorLanguage(file)}
