@@ -6,8 +6,8 @@ Objetivo: gerar dashboard JSX valido e renderizavel, usando SQL puro em `dataQue
 
 Use este skill para:
 - criar/editar/corrigir dashboard JSX
-- montar `DashboardTemplate`, `Theme`, `Dashboard`
-- compor layout com HTML/JSX puro
+- montar dashboard persistido em JSX/TSX
+- compor layout com `Vertical`, `Horizontal`, `Grid`, `Panel`, `Card`, `Text`, `Icon` e HTML/JSX local quando fizer sentido
 - usar componentes especiais apenas quando houver dado ou comportamento real
 
 Nao use este skill para inventar schema de negocio.
@@ -21,44 +21,64 @@ Para semantica de dados por dominio, usar:
 ## Contrato Nao Negociavel
 
 1. Output final: dashboard em JSX.
-2. Estrutura minima: `DashboardTemplate` -> `Theme` -> `Dashboard`.
-3. Layout padrao: HTML/JSX puro (`div`, `section`, `article`, `header`, `footer`, `p`, `h1`, `h2`, etc.).
-4. Componentes especiais so quando houver dado ou comportamento:
+2. Para dashboard novo, a estrutura canonica comeca direto em `<Dashboard ...>`.
+3. Para dashboard novo, nao usar `DashboardTemplate` nem `Theme` como raiz autoral.
+4. Layout padrao: `Vertical`, `Horizontal`, `Grid`, `Panel`, `Card`, `Text`, `Icon` e HTML/JSX local (`div`, `section`, `article`, `header`, `footer`, `p`, `h1`, `h2`, etc.) quando isso deixar a estrutura mais clara.
+5. Componentes especiais so quando houver dado ou comportamento:
+   - `KPI`
+   - `KPICompare`
    - `Chart`
    - `Query`
    - `Table`
    - `PivotTable`
-   - `Slicer`
+   - `Filter`
    - `DatePicker`
    - `Tabs` (`Tabs`, `Tab`, `TabPanel`)
-5. Todo componente de dado deve preferir `dataQuery`.
-6. Padrao principal de dados: `dataQuery.query` (SQL puro).
-7. Para `Chart`, informar `xField` e `yField` (e `keyField` quando houver).
-8. Para `Query` em modo KPI-like, a query deve retornar coluna numerica com alias `value`.
-9. So usar props suportadas no runtime atual.
-10. Nao regressar para DSL string.
-11. `Chart`, `Table` e `PivotTable` so devem usar sizing fluido para preencher card/painel quando a cadeia de altura do container estiver explicitamente resolvida.
+   - `Insights`
+6. Todo componente de dado deve preferir `dataQuery`.
+7. Padrao principal de dados: `dataQuery.query` (SQL puro).
+8. Para `Chart`, usar aliases e props coerentes com o runtime atual.
+9. Para `Query` em modo KPI-like, a query deve retornar coluna numerica com alias `value`.
+10. So usar props suportadas no runtime atual.
+11. Nao regressar para DSL string.
+12. `Chart`, `Table` e `PivotTable` so devem usar sizing fluido para preencher card/painel quando a cadeia de altura do container estiver explicitamente resolvida.
+13. Para dashboard persistido, usar `artifact_write` para criar/substituir source completo, `artifact_read` para inspecionar e `artifact_patch` para edicoes focadas.
 
 ## Componentes Permitidos
 
 Base:
-- `DashboardTemplate`
-- `Theme`
 - `Dashboard`
 
 Layout:
-- tags HTML/JSX normais
+- `Vertical`
+- `Horizontal`
+- `Grid`
+- `Panel`
+- `Card`
+- `Text`
+- `Icon`
+- tags HTML/JSX normais para estrutura local
 
 Especiais:
+- `KPI`
+- `KPICompare`
 - `Chart`
 - `Query`
 - `Table`
 - `PivotTable`
-- `Slicer`
+- `Filter`
 - `DatePicker`
 - `Tabs`
 - `Tab`
 - `TabPanel`
+- `Insights`
+
+Compatibilidade legada:
+- `DashboardTemplate`
+- `Theme`
+- outros componentes legados podem aparecer em arquivos antigos
+- ao editar dashboard antigo, preserve a estrutura legada quando isso for mais seguro
+- ao criar dashboard novo, nao use `DashboardTemplate` nem `Theme`
 
 ## Slide
 
@@ -111,7 +131,7 @@ Regras de composicao:
 - texto explicativo antes e depois de exhibits quando isso ajudar a leitura
 - usar negrito para destacar os pontos realmente importantes
 - evitar cara de dashboard enquadrado dentro da pagina
-- nao usar `Slicer` ou `DatePicker` por padrao
+- nao usar `Filter` ou `DatePicker` por padrao
 
 Ritmo sugerido de pagina:
 - header
@@ -157,11 +177,10 @@ Chart:
       GROUP BY 1, 2
       ORDER BY 3 DESC
     `,
-    xField: 'label',
-    yField: 'value',
-    keyField: 'key',
     limit: 10,
   }}
+  xAxis={{ dataKey: 'label' }}
+  series={[{ dataKey: 'value', label: 'Receita' }]}
   format="currency"
   height={320}
 />
@@ -189,11 +208,10 @@ Chart responsivo dentro de card redimensionavel:
           GROUP BY 1, 2
           ORDER BY 3 DESC
         `,
-        xField: 'label',
-        yField: 'value',
-        keyField: 'key',
         limit: 10,
       }}
+      xAxis={{ dataKey: 'label' }}
+      series={[{ dataKey: 'value', label: 'Receita' }]}
       format="currency"
     />
   </div>
@@ -224,58 +242,71 @@ Compatibilidade:
 ## Template Minimo Valido
 
 ```tsx
-<DashboardTemplate name="dashboard_exemplo" title="Dashboard Exemplo">
-  <Theme name="light" />
-  <Dashboard id="overview" title="Overview">
-    <section style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 24 }}>
-      <header style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <p data-ui="eyebrow">Revenue overview</p>
-        <h1 data-ui="title">Dashboard de vendas</h1>
-      </header>
+<Dashboard id="overview" title="Dashboard de Vendas" theme="light" chartPalette="teal">
+  <Vertical gap={24} padding={24} width="100%">
+    <header style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <Text variant="eyebrow">Revenue overview</Text>
+      <Text as="h1" variant="page-title">Dashboard de vendas</Text>
+    </header>
 
-      <Query
-        dataQuery={{
-          query: `
-            SELECT COALESCE(SUM(src.valor_total), 0)::float AS value
-            FROM vendas.pedidos src
-            WHERE src.tenant_id = {{tenant_id}}::int
-          `,
-          limit: 1,
-        }}
-        format="currency"
-      >
-        <article data-ui="card" style={{ padding: 20 }}>
-          <p data-ui="kpi-title">Receita</p>
-          <h2 data-ui="kpi-value">{'{{query.valueFormatted}}'}</h2>
-        </article>
-      </Query>
+    <Grid columns={12} rowHeight={16} gap={18}>
+      <Card id="kpi-receita" span={4} rows={8} variant="kpi">
+        <Vertical gap={12}>
+          <Icon
+            name="DollarSign"
+            size={18}
+            padding={10}
+            color="#1D4ED8"
+            backgroundColor="#DBEAFE"
+            borderColor="#BFDBFE"
+          />
+          <KPI
+            title="Receita"
+            dataQuery={{
+              query: `
+                SELECT COALESCE(SUM(src.valor_total), 0)::float AS value
+                FROM vendas.pedidos src
+                WHERE src.tenant_id = {{tenant_id}}::int
+              `,
+              limit: 1,
+            }}
+            format="currency"
+          >
+            <KPICompare />
+          </KPI>
+        </Vertical>
+      </Card>
 
-      <Chart
-        type="bar"
-        dataQuery={{
-          query: `
-            SELECT
-              cv.id::text AS key,
-              COALESCE(cv.nome, '-') AS label,
-              COALESCE(SUM(pi.subtotal), 0)::float AS value
-            FROM vendas.pedidos src
-            JOIN vendas.pedidos_itens pi ON pi.pedido_id = src.id
-            LEFT JOIN vendas.canais_venda cv ON cv.id = src.canal_venda_id
-            WHERE src.tenant_id = {{tenant_id}}::int
-            GROUP BY 1, 2
-            ORDER BY 3 DESC
-          `,
-          xField: 'label',
-          yField: 'value',
-          keyField: 'key',
-          limit: 10,
-        }}
-        format="currency"
-        height={280}
-      />
-    </section>
-  </Dashboard>
-</DashboardTemplate>
+      <Card id="chart-canal" span={8} rows={16} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <Text variant="section-title">Receita por canal</Text>
+        <div style={{ flex: 1, minHeight: 0 }}>
+          <Chart
+            type="bar"
+            height="100%"
+            dataQuery={{
+              query: `
+                SELECT
+                  cv.id::text AS key,
+                  COALESCE(cv.nome, '-') AS label,
+                  COALESCE(SUM(pi.subtotal), 0)::float AS value
+                FROM vendas.pedidos src
+                JOIN vendas.pedidos_itens pi ON pi.pedido_id = src.id
+                LEFT JOIN vendas.canais_venda cv ON cv.id = src.canal_venda_id
+                WHERE src.tenant_id = {{tenant_id}}::int
+                GROUP BY 1, 2
+                ORDER BY 3 DESC
+              `,
+              limit: 10,
+            }}
+            xAxis={{ dataKey: 'label' }}
+            series={[{ dataKey: 'value', label: 'Receita' }]}
+            format="currency"
+          />
+        </div>
+      </Card>
+    </Grid>
+  </Vertical>
+</Dashboard>
 ```
 
 ## Checklist Antes de Entregar
@@ -285,6 +316,6 @@ Compatibilidade:
 - Componentes suportados pelo runtime.
 - SQL valido para o dominio escolhido.
 - `Query` de metrica retorna alias `value`.
-- `Chart` usa aliases coerentes com `xField/yField/keyField`.
+- `Chart` usa aliases/props coerentes com `xAxis`, `series` e o shape do resultado.
 - Sem caminho errado de arquivo.
 - Sem regressao para DSL string.
