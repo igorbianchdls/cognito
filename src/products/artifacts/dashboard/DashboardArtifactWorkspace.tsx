@@ -12,6 +12,7 @@ import {
   DASHBOARD_BORDER_PRESET_OPTIONS,
   type DashboardBorderPreset,
 } from '@/products/artifacts/dashboard/borderPresets'
+import { ArtifactWorkspaceCodeEditor } from '@/products/artifacts/core/workspace/components/ArtifactWorkspaceCodeEditor'
 import { ArtifactWorkspaceHeader } from '@/products/artifacts/core/workspace/components/ArtifactWorkspaceHeader'
 import { ArtifactWorkspacePage } from '@/products/artifacts/core/workspace/ArtifactWorkspacePage'
 import type { ArtifactCodeFile } from '@/products/artifacts/core/workspace/types'
@@ -52,6 +53,7 @@ export type DashboardArtifactWorkspaceProps = {
   source: string
   updatedAt: string
   containerHeightClass?: 'h-screen' | 'h-full'
+  allowSourceEditing?: boolean
   showHeaderStatusBadges?: boolean
   onSelectDashboard?: (dashboardId: string) => void
   onSelectVersion?: (version: number | null) => void
@@ -84,6 +86,7 @@ export function DashboardArtifactWorkspace({
   source,
   updatedAt: _updatedAt,
   containerHeightClass = 'h-screen',
+  allowSourceEditing = false,
   showHeaderStatusBadges = true,
   onSelectDashboard,
   onSelectVersion,
@@ -199,6 +202,12 @@ export function DashboardArtifactWorkspace({
 
   const handleTreeChange = useCallback((nextTree: any) => {
     setDraftSource((currentDraftSource) => applyDashboardTreeLayoutToSource(currentDraftSource, nextTree))
+    setSaveError(null)
+    setSaveMessage(null)
+  }, [])
+
+  const handleSourceChange = useCallback((nextSource: string) => {
+    setDraftSource(nextSource)
     setSaveError(null)
     setSaveMessage(null)
   }, [])
@@ -370,11 +379,23 @@ export function DashboardArtifactWorkspace({
                 onTreeChange={handleTreeChange}
               />
             ) : (
-              <div className="overflow-auto border-[0.5px] border-[#DDDDD8] bg-[#1f1b18]">
-                <pre className="min-w-full overflow-x-auto p-5 text-sm leading-6 text-[#f6f2eb]">
-                  <code>{draftSource}</code>
-                </pre>
-              </div>
+              allowSourceEditing ? (
+                <ArtifactWorkspaceCodeEditor
+                  file={files[0]}
+                  selectableFiles={files}
+                  selectedSelectablePath={files[0]?.path ?? 'app/dashboard.tsx'}
+                  onSelectSelectable={() => {}}
+                  editable
+                  disabled={isHistoricalVersion}
+                  onChange={handleSourceChange}
+                />
+              ) : (
+                <div className="overflow-auto border-[0.5px] border-[#DDDDD8] bg-[#1f1b18]">
+                  <pre className="min-w-full overflow-x-auto p-5 text-sm leading-6 text-[#f6f2eb]">
+                    <code>{draftSource}</code>
+                  </pre>
+                </div>
+              )
             )}
           </div>
         </main>

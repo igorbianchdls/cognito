@@ -43,6 +43,7 @@ export default async function ArtifactDashboardByIdPage({
         availableVersions={versions}
         source={artifact.source}
         updatedAt={artifact.updated_at}
+        allowSourceEditing
       />
     )
   } catch (error) {

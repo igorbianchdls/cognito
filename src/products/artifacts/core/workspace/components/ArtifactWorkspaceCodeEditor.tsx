@@ -10,12 +10,18 @@ export function ArtifactWorkspaceCodeEditor({
   selectedSelectablePath,
   onSelectSelectable,
   selectableLabel = 'Arquivo',
+  editable = false,
+  disabled = false,
+  onChange,
 }: {
   file: ArtifactCodeFile | undefined
   selectableFiles: ArtifactCodeFile[]
   selectedSelectablePath: string
   onSelectSelectable: (path: string) => void
   selectableLabel?: string
+  editable?: boolean
+  disabled?: boolean
+  onChange?: (content: string) => void
 }) {
   const lines = (file?.content ?? '').split('\n')
   const breadcrumbs = file?.path.split('/') ?? []
@@ -54,18 +60,30 @@ export function ArtifactWorkspaceCodeEditor({
         </div>
       </div>
       <div className="min-h-0 flex-1 overflow-auto">
-        <div className="min-h-full min-w-full w-max bg-white">
-          {lines.map((line, index) => (
-            <div key={index} className="flex font-mono text-[13px] leading-7">
-              <div className="shrink-0 select-none border-r border-[#EFEFEA] px-4 text-right text-[#A0A09A]">
-                {index + 1}
+        {editable ? (
+          <textarea
+            value={file?.content ?? ''}
+            onChange={(event) => onChange?.(event.target.value)}
+            disabled={disabled}
+            spellCheck={false}
+            className={`h-full min-h-full w-full resize-none border-0 bg-white px-4 py-4 font-mono text-[13px] leading-7 text-[#2E2E2B] outline-none ${
+              disabled ? 'cursor-not-allowed text-[#8A8A84]' : ''
+            }`}
+          />
+        ) : (
+          <div className="min-h-full min-w-full w-max bg-white">
+            {lines.map((line, index) => (
+              <div key={index} className="flex font-mono text-[13px] leading-7">
+                <div className="shrink-0 select-none border-r border-[#EFEFEA] px-4 text-right text-[#A0A09A]">
+                  {index + 1}
+                </div>
+                <pre className="px-4 text-[#2E2E2B]">
+                  <code>{line || ' '}</code>
+                </pre>
               </div>
-              <pre className="px-4 text-[#2E2E2B]">
-                <code>{line || ' '}</code>
-              </pre>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   )
