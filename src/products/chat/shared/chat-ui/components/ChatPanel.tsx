@@ -16,9 +16,10 @@ type ChatPanelProps = {
   runtimeKind?: 'codex' | 'agentsdk';
   workspaceOpen?: boolean;
   onToggleWorkspace?: () => void;
+  onActivateArtifact?: (artifactId: string) => void;
 };
 
-export default function ChatPanel({ className, style, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, initialEngine, runtimeKind, workspaceOpen, onToggleWorkspace }: ChatPanelProps) {
+export default function ChatPanel({ className, style, withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, initialEngine, runtimeKind, workspaceOpen, onToggleWorkspace, onActivateArtifact }: ChatPanelProps) {
   return (
     <div className={`ui-text h-full min-h-0 w-full overflow-hidden ${className ?? ''}`} style={style}>
       <ChatContainer
@@ -31,6 +32,7 @@ export default function ChatPanel({ className, style, withSideMargins, redirectO
         runtimeKind={runtimeKind}
         workspaceOpen={workspaceOpen}
         onToggleWorkspace={onToggleWorkspace}
+        onActivateArtifact={onActivateArtifact}
       />
     </div>
   );

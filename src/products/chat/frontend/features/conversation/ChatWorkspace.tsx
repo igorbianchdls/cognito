@@ -60,6 +60,10 @@ export default function ChatWorkspace({
                   runtimeKind={runtimeKind}
                   workspaceOpen={workspaceOpen}
                   onToggleWorkspace={() => setWorkspaceOpen(!workspaceOpen)}
+                  onActivateArtifact={(artifactId) => {
+                    setSelectedArtifactId(artifactId)
+                    setWorkspaceOpen(true)
+                  }}
                 />
               </div>
             </PageContainer>

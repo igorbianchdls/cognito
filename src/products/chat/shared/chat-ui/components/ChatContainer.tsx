@@ -67,7 +67,40 @@ function modelToEngine(modelRaw?: string): EngineId {
   return 'openai-gpt5mini'
 }
 
-export default function ChatContainer({ withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, initialEngine, runtimeKind = 'codex', workspaceOpen = false, onToggleWorkspace }: { withSideMargins?: boolean; redirectOnFirstMessage?: boolean; initialMessage?: string; autoSendPrefill?: boolean; initialChatId?: string; initialEngine?: EngineId; runtimeKind?: RuntimeKind; workspaceOpen?: boolean; onToggleWorkspace?: () => void }) {
+function extractArtifactIdFromToolOutput(output: unknown): string | null {
+  const visited = new Set<unknown>()
+
+  const visit = (value: unknown): string | null => {
+    if (value == null) return null
+    if (typeof value === 'string') return null
+    if (typeof value !== 'object') return null
+    if (visited.has(value)) return null
+    visited.add(value)
+
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        const nested = visit(item)
+        if (nested) return nested
+      }
+      return null
+    }
+
+    const record = value as Record<string, unknown>
+    const direct = record.artifact_id
+    if (typeof direct === 'string' && direct.trim()) return direct.trim()
+
+    for (const key of ['data', 'result', 'artifact']) {
+      const nested = visit(record[key])
+      if (nested) return nested
+    }
+
+    return null
+  }
+
+  return visit(output)
+}
+
+export default function ChatContainer({ withSideMargins, redirectOnFirstMessage, initialMessage, autoSendPrefill, initialChatId, initialEngine, runtimeKind = 'codex', workspaceOpen = false, onToggleWorkspace, onActivateArtifact }: { withSideMargins?: boolean; redirectOnFirstMessage?: boolean; initialMessage?: string; autoSendPrefill?: boolean; initialChatId?: string; initialEngine?: EngineId; runtimeKind?: RuntimeKind; workspaceOpen?: boolean; onToggleWorkspace?: () => void; onActivateArtifact?: (artifactId: string) => void }) {
   const router = useRouter()
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<UIMessage[]>([])
@@ -670,6 +703,11 @@ export default function ChatContainer({ withSideMargins, redirectOnFirstMessage,
             }
             if (lastActiveToolKey) {
               updateToolPart(lastActiveToolKey, { state: 'output-available', output: evt.output, type: `tool-${evt.tool_name || 'generic'}` })
+            }
+            const toolName = typeof evt.tool_name === 'string' ? evt.tool_name : ''
+            if ((toolName === 'artifact_write' || toolName === 'artifact_patch') && onActivateArtifact) {
+              const artifactId = extractArtifactIdFromToolOutput(evt.output)
+              if (artifactId) onActivateArtifact(artifactId)
             }
           } else if (evt && evt.type === 'tool_error') {
             activeTextPartId = null
