@@ -12,7 +12,7 @@ type ChatPanelProps = {
   initialMessage?: string;
   autoSendPrefill?: boolean;
   initialChatId?: string;
-  initialEngine?: 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5' | 'openai-gpt5nano' | 'openai-gpt5mini';
+  initialEngine?: 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5' | 'openai-gpt5mini';
   runtimeKind?: 'codex' | 'agentsdk';
   workspaceOpen?: boolean;
   onToggleWorkspace?: () => void;

@@ -11,7 +11,6 @@ export type ChatEngineId =
   | "claude-sonnet"
   | "claude-haiku"
   | "openai-gpt5"
-  | "openai-gpt5nano"
   | "openai-gpt5mini";
 
 export type ChatRuntimeKind = "codex" | "agentsdk";

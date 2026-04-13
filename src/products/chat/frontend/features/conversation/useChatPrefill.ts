@@ -24,7 +24,6 @@ export function useChatPrefill(chatId?: string) {
         rawEngine === "claude-sonnet" ||
         rawEngine === "claude-haiku" ||
         rawEngine === "openai-gpt5" ||
-        rawEngine === "openai-gpt5nano" ||
         rawEngine === "openai-gpt5mini"
       ) {
         setPrefillEngine(rawEngine);

@@ -90,10 +90,15 @@ function normalizeModel(provider: ChatProvider, rawModel?: string): string {
     const openaiMap: Record<string, string> = {
       'gpt-5': 'gpt-5',
       'gpt5': 'gpt-5',
+      'gpt-5.4': 'gpt-5.4',
+      'gpt5.4': 'gpt-5.4',
       'gpt-5.1': 'gpt-5.1',
       'gpt5.1': 'gpt-5.1',
       'gpt-5.2': 'gpt-5.2',
       'gpt5.2': 'gpt-5.2',
+      'gpt-5.4-mini': 'gpt-5.4-mini',
+      'gpt5.4-mini': 'gpt-5.4-mini',
+      'gpt54mini': 'gpt-5.4-mini',
       'gpt-5-mini': 'gpt-5-mini',
       'gpt5-mini': 'gpt-5-mini',
       'gpt5mini': 'gpt-5-mini',
@@ -101,7 +106,7 @@ function normalizeModel(provider: ChatProvider, rawModel?: string): string {
       'gpt5-nano': 'gpt-5-nano',
       'gpt5nano': 'gpt-5-nano',
     }
-    return openaiMap[raw] || 'gpt-5-mini'
+    return openaiMap[raw] || 'gpt-5.4-mini'
   }
   const claudeMap: Record<string, string> = {
     'sonnet': 'claude-sonnet-4-5-20251001',
@@ -175,7 +180,7 @@ export async function POST(req: Request) {
         runtimeSession?.model || params.modelHint,
       )
       const fallbackModel = provider === 'openai-responses'
-        ? 'gpt-5-mini'
+        ? 'gpt-5.4-mini'
         : 'claude-haiku-4-5-20251001'
       const model = normalizeModel(provider, runtimeSession?.model || params.modelHint || fallbackModel)
       const runtimeKind = params.runtimeKindHint || normalizeRuntimeKind(provider === 'openai-responses' ? 'codex' : 'agentsdk')
@@ -458,7 +463,7 @@ export async function POST(req: Request) {
         ensureFreshAgentToken(id, existing, 60)
         const provider = normalizeProvider(existing.provider, existing.model)
         existing.provider = provider
-        existing.model = normalizeModel(provider, existing.model || (provider === 'openai-responses' ? 'gpt-5-mini' : 'claude-haiku-4-5-20251001'))
+        existing.model = normalizeModel(provider, existing.model || (provider === 'openai-responses' ? 'gpt-5.4-mini' : 'claude-haiku-4-5-20251001'))
         await ensureSkillsInSandbox(existing.sandbox)
         try {
           await upsertRuntimeSession({
@@ -541,7 +546,7 @@ export async function POST(req: Request) {
       const composioUserId = await resolveComposioUserIdFromRequest(req)
       // Issue short-lived agent token (opaque) and store
       const { token, exp } = generateAgentToken(1800, id)
-      const modelHint = existingModel || (persistedRuntimeKind === 'codex' ? 'gpt-5-mini' : 'claude-haiku-4-5-20251001')
+      const modelHint = existingModel || (persistedRuntimeKind === 'codex' ? 'gpt-5.4-mini' : 'claude-haiku-4-5-20251001')
       const initialProvider = existingModel
         ? normalizeProvider(undefined, existingModel)
         : inferProviderFromRuntimeKind(persistedRuntimeKind)
@@ -1511,7 +1516,7 @@ process.exit(0);
     const sess = SESSIONS.get(chatId)
     if (!sess) return Response.json({ ok: false, error: 'chat não encontrado' }, { status: 404 })
     const chosenProvider = normalizeProvider(provider, model || sess.model)
-    const fallbackModel = chosenProvider === 'openai-responses' ? 'gpt-5-mini' : 'claude-haiku-4-5-20251001'
+    const fallbackModel = chosenProvider === 'openai-responses' ? 'gpt-5.4-mini' : 'claude-haiku-4-5-20251001'
     const chosen = normalizeModel(chosenProvider, model || sess.model || fallbackModel)
     sess.provider = chosenProvider
     sess.model = chosen

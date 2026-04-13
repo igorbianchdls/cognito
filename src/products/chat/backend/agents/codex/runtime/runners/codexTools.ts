@@ -5,7 +5,7 @@ import { CODEX_APP_TOOL_DISPATCH_SCRIPT } from '@/products/chat/backend/agents/c
 export function getOpenAIResponsesStreamRunnerScript(): string {
   return `
 const prompt = process.argv[2] || '';
-const modelId = process.env.AGENT_MODEL || 'gpt-5-mini';
+const modelId = process.env.AGENT_MODEL || 'gpt-5.4-mini';
 const apiKey = process.env.OPENAI_API_KEY || process.env.CODEX_API_KEY || '';
 const baseAppUrl = process.env.AGENT_BASE_URL || '';
 const toolToken = process.env.AGENT_TOOL_TOKEN || '';
@@ -430,7 +430,7 @@ async function callSkill(args) {
 
 function supportsNativeShellTool(model) {
   const m = String(model || '').toLowerCase().trim();
-  return m.startsWith('gpt-5.1') || m.startsWith('gpt-5.2');
+  return m.startsWith('gpt-5.1') || m.startsWith('gpt-5.2') || m.startsWith('gpt-5.4');
 }
 
 async function callShell(args) {
