@@ -22,6 +22,11 @@ export function EditableComponentOverlay({
       onMouseLeave={() => setIsHovered(false)}
       style={{
         position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        width: '100%',
+        height: '100%',
+        minHeight: 0,
         minWidth: 0,
       }}
     >

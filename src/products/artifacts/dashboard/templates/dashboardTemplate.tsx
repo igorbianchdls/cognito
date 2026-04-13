@@ -682,7 +682,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               <div style={{ flex: 1, minHeight: 0 }}>
                 <Chart
                   type="bar"
-                  height={320}
+                  height="100%"
                   format="currency"
                   dataQuery={{
                     query: \`
@@ -718,7 +718,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               <div style={{ flex: 1, minHeight: 0 }}>
                 <Chart
                   type="pie"
-                  height={320}
+                  height="100%"
                   format="currency"
                   dataQuery={{
                     query: \`
@@ -771,7 +771,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               <div style={{ flex: 1, minHeight: 300 }}>
                 <Chart
                   type="line"
-                  height={320}
+                  height="100%"
                   format="currency"
                   dataQuery={{
                     query: \`
@@ -851,7 +851,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
               <div style={{ flex: 1, minHeight: 0 }}>
                 <Chart
                   type="horizontal-bar"
-                  height={320}
+                  height="100%"
                   format="number"
                   dataQuery={{
                     query: \`
