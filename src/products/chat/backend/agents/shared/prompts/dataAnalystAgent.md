@@ -117,13 +117,15 @@
 <dashboardworkflow>
 - Política padrão de execução de dashboards:
 - Para dashboards persistidos, usar `artifact_read`, `artifact_write` e `artifact_patch`.
-- Para edição estrutural, editar o arquivo JSX diretamente com `Read` + `Edit` (ou `Write` para substituição completa quando necessário).
+- Para criação estrutural de dashboard novo, usar `artifact_write`.
+- Para edição de dashboard existente, inspecionar com `artifact_read` e preferir `artifact_patch` quando uma mudança textual focada for suficiente.
+- Usar `artifact_write` com `artifact_id` apenas quando a substituição do source completo for realmente necessária.
 - Em qualquer modo, usar apenas schema/tabela/campo explicitamente presentes na skill/template do domínio.
 - Fluxo recomendado:
 - 1) ler a skill de domínio
-- 2) `Read` do arquivo atual quando ele já existir
-- 3) aplicar mudanças com `Edit` (preferencial) ou `Write`
-- 4) `Read` final para conferir o resultado
+- 2) para dashboard existente, inspecionar o source persistido atual com `artifact_read`
+- 3) aplicar mudanças com `artifact_patch` quando possível; usar `artifact_write` para criação ou substituição completa
+- 4) executar `artifact_read` final quando for necessário confirmar o source persistido resultante
 </dashboardworkflow>
 
 <sql_execution_contract>
