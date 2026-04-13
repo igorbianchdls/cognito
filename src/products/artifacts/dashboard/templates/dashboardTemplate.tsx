@@ -456,11 +456,7 @@ function buildClassicDashboardTemplateSource(themeName: string) {
           <Grid columns={12} gap={0} rowHeight={16} style={{ padding: 0 }}>
             <header id="classic-header" span={12} rows={10} style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20, padding: '20px 24px', borderRadius: theme.cardFrame ? 0 : 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
               <Vertical gap={8}>
-                <Text variant="eyebrow-strong">Executive dashboard</Text>
                 <Text as="h1" variant="page-title-sm">Performance overview with the classic BI layout</Text>
-                <Text variant="body-muted" style={{ maxWidth: 720 }}>
-                  Header with global period control, KPI strip on top and analysis rows below. The runtime stays JSX-first, but the surface looks closer to the previous dashboard model.
-                </Text>
               </Vertical>
 
               <Vertical gap={10} style={{ alignItems: 'flex-end', minWidth: 240 }}>
