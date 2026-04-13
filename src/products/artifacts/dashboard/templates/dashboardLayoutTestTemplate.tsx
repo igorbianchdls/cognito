@@ -30,8 +30,8 @@ function buildLayoutTestDashboardSource(themeName: string) {
     </Horizontal>
 
     <Vertical gap={20}>
-      <Horizontal gap={16} columns={12} rowHeight={32}>
-        <Card id="kpi-test-a" span={6} rows={4} variant="kpi" style={{ height: '100%' }}>
+      <Horizontal gap={16} columns={12} rowHeight={16}>
+        <Card id="kpi-test-a" span={6} rows={8} variant="kpi" style={{ height: '100%' }}>
             <KPI
               title="KPI Teste A"
               dataQuery={{
@@ -45,7 +45,7 @@ function buildLayoutTestDashboardSource(themeName: string) {
             />
           </Card>
 
-        <Card id="kpi-test-b" span={6} rows={9} variant="kpi" style={{ height: '100%' }}>
+        <Card id="kpi-test-b" span={6} rows={18} variant="kpi" style={{ height: '100%' }}>
             <KPI
               title="KPI Teste B"
               dataQuery={{
@@ -55,33 +55,33 @@ function buildLayoutTestDashboardSource(themeName: string) {
                 limit: 1,
               }}
               format="currency"
-              description="Este bloco tem duas rows para evidenciar resize vertical com KPI."
+              description="Este bloco usa mais rows para evidenciar resize vertical com KPI."
             />
           </Card>
       </Horizontal>
 
-      <Horizontal gap={16} columns={12} rowHeight={32}>
-        <Card id="test-a" span={4} rows={4} style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+      <Horizontal gap={16} columns={12} rowHeight={16}>
+        <Card id="test-a" span={4} rows={8} style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <Text variant="eyebrow">Card A</Text>
-            <Text as="h2" variant="section-title-strong">span 4 / rows 4</Text>
+            <Text as="h2" variant="section-title-strong">span 4 / rows 8</Text>
             <Text variant="body-sm">Use este bloco para testar largura e altura.</Text>
           </Card>
 
-        <Card id="test-b" span={4} rows={8} style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <Card id="test-b" span={4} rows={16} style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <Text variant="eyebrow">Card B</Text>
-            <Text as="h2" variant="section-title-strong">span 4 / rows 8</Text>
+            <Text as="h2" variant="section-title-strong">span 4 / rows 16</Text>
             <Text variant="body-sm">A altura aqui precisa crescer claramente.</Text>
           </Card>
 
-        <Card id="test-c" span={4} rows={12} style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <Card id="test-c" span={4} rows={24} style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <Text variant="eyebrow">Card C</Text>
-            <Text as="h2" variant="section-title-strong">span 4 / rows 12</Text>
+            <Text as="h2" variant="section-title-strong">span 4 / rows 24</Text>
             <Text variant="body-sm">Este bloco deixa o resize vertical bem evidente.</Text>
           </Card>
       </Horizontal>
 
-      <Horizontal gap={16} columns={12} rowHeight={32}>
-        <Card id="test-d" span={7} rows={6} style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+      <Horizontal gap={16} columns={12} rowHeight={16}>
+        <Card id="test-d" span={7} rows={12} style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <Text variant="eyebrow">Card D</Text>
               <Text as="h2" variant="section-title-strong">Chart responsivo</Text>
@@ -113,9 +113,9 @@ function buildLayoutTestDashboardSource(themeName: string) {
             </div>
           </Card>
 
-        <Card id="test-e" span={5} rows={3} style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <Card id="test-e" span={5} rows={6} style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <Text variant="eyebrow">Card E</Text>
-            <Text as="h2" variant="section-title-strong">span 5 / rows 3</Text>
+            <Text as="h2" variant="section-title-strong">span 5 / rows 6</Text>
             <Text variant="body-sm">Sem conteúdo complexo para mascarar o comportamento do grid.</Text>
           </Card>
       </Horizontal>

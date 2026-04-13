@@ -433,7 +433,7 @@
 ```tsx
 <Dashboard id="overview" title="Dashboard Comercial" theme="light" chartPalette="teal">
   <Vertical gap={24} padding={28} width="1600px">
-    <Grid columns={12} rowHeight={18} gap={18}>
+    <Grid columns={12} rowHeight={16} gap={18}>
       <header id="header" span={12} rows={6} style={{ display: 'flex', justifyContent: 'space-between', gap: 20, padding: '20px 24px' }}>
         <Vertical gap={10}>
           <Text variant="eyebrow">Resumo comercial</Text>
@@ -600,7 +600,7 @@
 ```tsx
 <Dashboard id="overview" title="Exploracao comercial" theme="light" chartPalette="teal">
   <Vertical gap={18} padding={24}>
-    <Grid columns={12} rowHeight={18} gap={18}>
+    <Grid columns={12} rowHeight={16} gap={18}>
       <Card id="filters" span={12} rows={5} variant="filter">
         <Horizontal gap={12} wrap>
             <Filter
