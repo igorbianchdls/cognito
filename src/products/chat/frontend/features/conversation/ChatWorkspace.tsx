@@ -47,7 +47,7 @@ export default function ChatWorkspace({
       <SidebarShadcn showHeaderTrigger={false} />
       <SidebarInset className="h-screen overflow-hidden">
         <div className="flex h-full overflow-hidden">
-          <div className={workspaceOpen ? "min-w-0 basis-1/3 border-r border-[#E6E6E2]" : "min-w-0 flex-1"}>
+          <div className={workspaceOpen ? "min-w-0 basis-1/4 border-r border-[#E6E6E2]" : "min-w-0 flex-1"}>
             <PageContainer>
               <div className="h-full min-h-0 p-0">
                 <ChatPanel
@@ -65,7 +65,7 @@ export default function ChatWorkspace({
             </PageContainer>
           </div>
           {workspaceOpen ? (
-            <div className="min-w-0 basis-2/3 bg-[#F7F7F6]">
+            <div className="min-w-0 basis-3/4 bg-[#F7F7F6]">
               <ChatArtifactWorkspacePanel
                 selectedArtifactId={selectedArtifactId}
                 onSelectArtifactId={setSelectedArtifactId}
