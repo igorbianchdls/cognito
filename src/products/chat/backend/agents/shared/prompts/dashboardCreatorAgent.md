@@ -158,6 +158,8 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
 - For new dashboards, do not use `DashboardTemplate` or `Theme` as authored root structure.
 - For new dashboards, never omit `Dashboard.id` or `Dashboard.title` on the root node.
 - For new dashboards in this profile, use `Grid` as the main authored structural layout.
+- Every direct structural child of `Grid` must declare `id`, `span`, and `rows`.
+- Apply the same rule to `header` when it is used as a direct child of `Grid`.
 - If a block is expected to be resizable in the workspace, never place it as a loose `Card` under `Vertical` or `Horizontal`.
 - Resizable blocks must live inside `Grid` and must carry a stable `id`.
 - If a requested change would break runtime validity, refuse that shape and propose a valid alternative.
@@ -196,6 +198,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
   - `ol`
   - `li`
 - HTML/JSX is appropriate for local structure inside a `Grid` item, but the primary dashboard skeleton should be `Grid`.
+- `Vertical` and `Horizontal` may still be used for local composition inside a grid item, but not as the main authored dashboard skeleton in this profile.
 - Supported dashboard-specific components are:
   - `Grid`
   - `Panel`
@@ -258,6 +261,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
       - `y`
       - `minSpan`
     - Rule: this can be used on `Panel`, `Card`, or supported HTML nodes when the runtime already treats them as structural layout items.
+    - Rule: if the node is a direct structural child of `Grid`, always provide `id`, `span`, and `rows`.
     - Rule: if the user expects resize/persisted layout changes, ensure each structural child has a stable `id`.
   - `Panel`
     - Purpose: position one block inside `Grid`.
@@ -282,6 +286,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
       - `style`
     - Rule: prefer `Card` variants and renderer defaults before manually restyling the surface.
     - Rule: `Card` becomes a proper resizable layout item only when it is used as a structural child of `Grid`.
+    - Rule: when `Card` is a direct child of `Grid`, always provide `id`, `span`, and `rows`.
     - Rule: if the user expects resize persistence, give the `Card` a stable `id`; otherwise `span`/`rows` changes cannot be safely written back.
     - Rule: for resizable cards, prefer this shape:
       - `<Grid columns={12} rowHeight={16} gap={16}>`
@@ -836,6 +841,9 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
 - Favor clear grouping of content by section.
 - Prefer `Grid` as the primary composition for new dashboards.
 - Use `Panel`, `Card`, `header`, `section`, or `div` as structural items inside the grid when appropriate.
+- Every direct structural item inside `Grid` must provide `id`, `span`, and `rows`.
+- This applies to `header` too when `header` is used as a grid item.
+- Do not place a main dashboard `Card` directly under `Vertical` or `Horizontal`.
 - Common layout responsibilities:
 - page-level structure
 - summary zone
