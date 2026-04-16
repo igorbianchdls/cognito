@@ -619,7 +619,7 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 </KPI>
           </Card>
 
-          <Card id="classic-insight-aceleracao" span={8} rows={20} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <Card id="classic-insight-aceleracao" span={8} rows={10} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <Text as="h2" variant="section-title-sm">Aceleracao recente</Text>
                 <Text variant="small-muted">Leituras sobre os vetores que estao puxando o crescimento do periodo.</Text>
@@ -632,7 +632,7 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
               />
           </Card>
 
-          <Card id="classic-insight-concentracao" span={8} rows={20} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <Card id="classic-insight-concentracao" span={8} rows={10} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <Text as="h2" variant="section-title-sm">Concentracao de receita</Text>
                 <Text variant="small-muted">Pontos de atencao sobre dependencia de canais e distribuicao do faturamento.</Text>
@@ -645,7 +645,7 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
               />
           </Card>
 
-          <Card id="classic-insight-conversao" span={8} rows={20} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <Card id="classic-insight-conversao" span={8} rows={10} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <Text as="h2" variant="section-title-sm">Conversao e qualidade</Text>
                 <Text variant="small-muted">Sinais de eficiencia comercial sem pressao adicional sobre o ticket medio.</Text>

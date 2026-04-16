@@ -534,8 +534,8 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
       />
     </header>
 
-    <Card id="kpi-receita" span={4} rows={4} variant="kpi">
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <Card id="kpi-receita" span={4} rows={5} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <Icon
           name="DollarSign"
           size={18}
@@ -543,10 +543,11 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
           color="#1D4ED8"
           backgroundColor="#DBEAFE"
           borderColor="#BFDBFE"
-          style={{ marginBottom: 12 }}
         />
+        <Text variant="eyebrow">Receita</Text>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <KPI
-          title="Receita"
           dataQuery={{
             query: `
               SELECT COALESCE(SUM(src.valor_total), 0)::float AS value
@@ -558,14 +559,15 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
           }}
           format="currency"
           comparisonMode="previous_period"
+          style={{ flex: 1 }}
         >
           <KPICompare />
         </KPI>
       </div>
     </Card>
 
-      <Card id="kpi-pedidos" span={4} rows={4} variant="kpi">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <Card id="kpi-pedidos" span={4} rows={5} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Icon
             name="ShoppingCart"
             size={18}
@@ -573,10 +575,11 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
             color="#15803D"
             backgroundColor="#DCFCE7"
             borderColor="#BBF7D0"
-            style={{ marginBottom: 12 }}
           />
+          <Text variant="eyebrow">Pedidos</Text>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <KPI
-            title="Pedidos"
             dataQuery={{
               query: `
                 SELECT COUNT(*)::float AS value
@@ -588,14 +591,15 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
             }}
             format="number"
             comparisonMode="previous_period"
+            style={{ flex: 1 }}
           >
             <KPICompare />
           </KPI>
         </div>
       </Card>
 
-      <Card id="kpi-ticket" span={4} rows={4} variant="kpi">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <Card id="kpi-ticket" span={4} rows={5} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Icon
             name="Ticket"
             size={18}
@@ -603,10 +607,11 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
             color="#C2410C"
             backgroundColor="#FFEDD5"
             borderColor="#FED7AA"
-            style={{ marginBottom: 12 }}
           />
+          <Text variant="eyebrow">Ticket medio</Text>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <KPI
-            title="Ticket medio"
             dataQuery={{
               query: `
                 SELECT COALESCE(AVG(src.valor_total), 0)::float AS value
@@ -618,6 +623,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
             }}
             format="currency"
             comparisonMode="previous_period"
+            style={{ flex: 1 }}
           >
             <KPICompare />
           </KPI>
@@ -671,6 +677,13 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
             WHERE cv.tenant_id = {{tenant_id}}::int
             ORDER BY 2 ASC
           `}
+        />
+      </Card>
+
+      <Card id="insight-canais" span={12} rows={10}>
+        <Insights
+          prompt="Gerar insights curtos sobre concentracao de receita, desempenho por canal e sinais de aceleracao comercial."
+          schedule={{ frequency: 'weekly', date: '', time: '09:00' }}
         />
       </Card>
   </Grid>
@@ -740,6 +753,13 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
           `}
         />
         </div>
+      </Card>
+
+      <Card id="insight-operacao" span={12} rows={10}>
+        <Insights
+          prompt="Gerar insights sobre comportamento do funil comercial, estabilidade de status e efeitos do mix de canais no periodo."
+          schedule={{ frequency: 'weekly', date: '', time: '09:00' }}
+        />
       </Card>
 
       <Card id="detail-tabs" span={12} rows={16}>
@@ -867,9 +887,19 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
       </div>
     </Card>
 
-    <Card id="kpi-aprovacao" span={4} rows={4} variant="kpi">
+    <Card id="kpi-aprovacao" span={4} rows={5} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <Icon
+          name="ShieldCheck"
+          size={18}
+          padding={10}
+          color="#0F766E"
+          backgroundColor="#CCFBF1"
+          borderColor="#99F6E4"
+        />
+        <Text variant="eyebrow">Aprovacao</Text>
+      </div>
       <KPI
-        title="Aprovacao"
         dataQuery={{
           query: `
             SELECT
@@ -882,6 +912,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
         }}
         format="percent"
         comparisonMode="previous_period"
+        style={{ flex: 1 }}
       >
         <KPICompare />
       </KPI>
@@ -938,6 +969,13 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
           { accessorKey: 'status', header: 'Status' },
           { accessorKey: 'valor_total', header: 'Receita', format: 'currency', align: 'right', headerAlign: 'right' },
         ]}
+      />
+    </Card>
+
+    <Card id="insight-aprovacao" span={12} rows={10}>
+      <Insights
+        prompt="Gerar insights sobre aprovacao, ritmo diario de receita e pontos de atencao nos pedidos recentes."
+        schedule={{ frequency: 'weekly', date: '', time: '09:00' }}
       />
     </Card>
   </Grid>
