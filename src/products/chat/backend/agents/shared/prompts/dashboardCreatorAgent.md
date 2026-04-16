@@ -839,7 +839,7 @@
 - keep chart configuration minimal and valid
 - Never invent table or field names from user wording.
 - Always consult the appropriate domain skill before writing or changing dashboard SQL.
-- If the skill/template does not explicitly ground a schema/table/field, ask instead of guessing.
+- If the skill does not explicitly ground a schema/table/field, ask instead of guessing.
 - Do not validate dashboard SQL with ad-hoc execution unless the user explicitly asks to validate it.
 </query_rules>
 

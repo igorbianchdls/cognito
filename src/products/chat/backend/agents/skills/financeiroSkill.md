@@ -1,29 +1,30 @@
 # Financeiro Skill (SQL Query-First para /apps/financeiro)
 
-Objetivo: definir SQL valido para KPIs e graficos financeiros no padrao do template `src/products/bi/shared/templates/appsFinanceiroTemplate.ts`.
+Objetivo: definir SQL valido para KPIs, filtros e graficos financeiros no padrao canonico consolidado neste proprio skill.
 
 Este skill NAO monta DSL completo.
 Para estrutura/layout e persistencia final de dashboard, usar `artifact_write` e `artifact_patch` (com `artifact_read` para inspecao do estado atual).
 
 ## Escopo Estrito
 
-Este skill cobre somente tabelas usadas no template atual de Financeiro:
+Este skill cobre somente tabelas, filtros e metricas explicitamente listados aqui:
 - `financeiro.contas_pagar`
 - `financeiro.contas_receber`
 
-Nao expandir para outras tabelas fora do template.
+Nao expandir para outras tabelas fora deste skill sem confirmacao explicita.
 
 ## Fonte de Verdade
 
 Prioridade de referencia:
-1. `src/products/bi/shared/templates/appsFinanceiroTemplate.ts`
-2. `src/products/bi/shared/queryCatalog.ts` (entradas de contas a pagar/receber)
+1. este skill
+2. `src/products/bi/shared/queryCatalog.ts` (entradas de contas a pagar/receber) quando disponivel
 
-Se houver conflito, priorizar template.
+Se houver conflito entre memoria do agente e este skill, priorizar este skill.
+Nao procurar template externo adicional via shell apenas para completar esta referencia.
 
 ## Sugestao de Dashboard (Canonico)
 
-Fonte canonica: `src/products/bi/shared/templates/appsFinanceiroTemplate.ts`.
+Fonte canonica: este skill.
 
 ### KPI (descricao semantica + query literal)
 
@@ -168,13 +169,13 @@ LIMIT 8
 ## Tabelas e Campos Canonicos
 
 ### `financeiro.contas_pagar src`
-Colunas usadas no template:
+Colunas canonicas:
 - `id`, `tenant_id`, `data_vencimento`, `status`
 - `valor_liquido`
 - `fornecedor_id`, `categoria_despesa_id`
 
 ### `financeiro.contas_receber src`
-Colunas usadas no template:
+Colunas canonicas:
 - `id`, `tenant_id`, `data_vencimento`, `status`
 - `valor_liquido`
 - `cliente_id`
@@ -193,7 +194,7 @@ WHERE src.tenant_id = {{tenant_id}}
 - Chart: query deve retornar `key`, `label`, `value`
 - Serie mensal: usar `TO_CHAR(DATE_TRUNC('month', src.data_vencimento), 'YYYY-MM')`
 
-## KPIs Canonicos (Template)
+## KPIs Canonicos
 
 ### Titulos em AP
 
@@ -205,7 +206,7 @@ WHERE src.tenant_id = {{tenant_id}}
   AND ({{ate}}::date IS NULL OR src.data_vencimento::date <= {{ate}}::date)
 ```
 
-## Graficos Canonicos (Template)
+## Graficos Canonicos
 
 ### AP por Fornecedor
 
@@ -287,10 +288,10 @@ ORDER BY 3 DESC
 LIMIT 8
 ```
 
-## Nota de Template
+## Nota Canonica
 
-O template financeiro atual esta em DSL com `query` SQL explicita nos widgets.
-Ao criar SQL manual, manter o mesmo comportamento funcional das consultas acima.
+Este skill ja consolida a referencia operacional de Financeiro.
+Ao criar SQL manual, manter o mesmo comportamento funcional das consultas acima sem depender de template externo.
 
 ## Erros Comuns
 
@@ -307,14 +308,14 @@ Incorreto:
 ### Serie mensal inconsistente
 
 Causa comum:
-- usar campo de data diferente do template.
+- usar campo de data diferente do padrao canonico deste skill.
 
 Padrao:
 - `data_vencimento` com `DATE_TRUNC('month', ...)`.
 
 ## Checklist Antes de Entregar SQL
 
-- usar somente `contas_pagar` e `contas_receber` do template atual
+- usar somente `contas_pagar` e `contas_receber` listadas neste skill
 - aplicar `tenant_id` e janela `de/ate`
 - manter aliases `value` (KPI) e `key/label/value` (Chart)
 - manter ordenacao mensal ascendente nas series temporais

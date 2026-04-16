@@ -8,15 +8,18 @@ Para layout e persistencia final de dashboard, usar `artifact_write` e `artifact
 ## Fontes de Verdade
 
 Prioridade de referencia:
-1. `src/products/erp/backend/features/modulos/controllers/ecommerce/query/controller.ts`
-2. `src/products/erp/backend/features/modulos/controllers/ecommerce/options/controller.ts`
-3. `src/products/bi/shared/queryCatalog.ts`
+1. este skill
+2. `src/products/erp/backend/features/modulos/controllers/ecommerce/query/controller.ts`
+3. `src/products/erp/backend/features/modulos/controllers/ecommerce/options/controller.ts`
+4. `src/products/bi/shared/queryCatalog.ts`
 
-Em conflito, priorizar controller.
+Se houver conflito entre memoria do agente e este skill, priorizar este skill.
+Nao procurar template externo adicional via shell apenas para completar esta referencia.
 
 ## Sugestao de Dashboard (Canonico)
 
-Fonte canonica: `src/products/bi/shared/templates/appsShopifyTemplate.ts` (mesmo padrao base para Amazon/Shopee/Mercado Livre com variacao de `plataforma`).
+Fonte canonica: este skill.
+Os exemplos abaixo ja consolidam o padrao canonico de dashboard de ecommerce para Amazon, Shopee, Mercado Livre, Shopify e plataformas similares.
 
 ### KPI (descricao semantica + query literal)
 
@@ -70,9 +73,9 @@ WHERE p.tenant_id = {{tenant_id}}::int
   AND ({{ate}}::date IS NULL OR p.data_pedido::date <= {{ate}}::date)
 ```
 
-### Slicer (descricao semantica + query literal)
+### Filter (descricao semantica + query literal)
 
-- Slicer de Conta.
+- Filter de Conta.
 
 ```sql
 SELECT
@@ -85,7 +88,7 @@ GROUP BY 1, 2
 ORDER BY 2 ASC
 ```
 
-- Slicer de Loja.
+- Filter de Loja.
 
 ```sql
 SELECT
@@ -98,7 +101,7 @@ GROUP BY 1, 2
 ORDER BY 2 ASC
 ```
 
-- Slicer de Status do Pedido.
+- Filter de Status do Pedido.
 
 ```sql
 SELECT
@@ -110,7 +113,7 @@ GROUP BY 1, 2
 ORDER BY 2 ASC
 ```
 
-- Slicer de Status de Pagamento.
+- Filter de Status de Pagamento.
 
 ```sql
 SELECT
@@ -122,7 +125,7 @@ GROUP BY 1, 2
 ORDER BY 2 ASC
 ```
 
-- Slicer de Status de Fulfillment.
+- Filter de Status de Fulfillment.
 
 ```sql
 SELECT
@@ -216,8 +219,9 @@ ORDER BY 2 ASC
 ## Contrato Query-First
 
 - KPI: `query` retornando `value`
-- Chart: `query`, `xField`, `yField` (`keyField` recomendado)
-- Evitar formato legado (`model/measure/dimension`) em novos templates
+- Filter: `query` retornando `value`, `label`
+- Chart: `query` retornando `key`, `label`, `value`
+- Ao persistir no dashboard, preferir `dataQuery.query` com `xAxis`/`series`; evitar formato legado (`model/measure/dimension`)
 
 ## Modelos Canonicos (Schema/Tabela/Colunas)
 
@@ -563,15 +567,19 @@ LIMIT 20
 
 ```json
 {
-  "widget_type": "chart",
-  "payload": {
-    "title": "Top Produtos",
-    "chart_type": "bar",
-    "query": "SELECT ...",
-    "xField": "label",
-    "yField": "value",
-    "keyField": "key",
-    "formato": "currency"
-  }
+  "type": "bar",
+  "title": "Top Produtos",
+  "dataQuery": {
+    "query": "SELECT ..."
+  },
+  "xAxis": "label",
+  "series": [
+    {
+      "key": "value",
+      "label": "GMV",
+      "color": "var(--chart-1)"
+    }
+  ],
+  "format": "currency"
 }
 ```

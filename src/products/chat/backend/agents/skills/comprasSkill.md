@@ -1,26 +1,27 @@
 # Compras Skill (SQL Query-First para /apps/compras)
 
-Objetivo: definir SQL valido para KPIs e graficos de compras no padrao do template `src/products/bi/shared/templates/appsComprasTemplate.ts`.
+Objetivo: definir SQL valido para KPIs, filtros e graficos de compras no padrao canonico consolidado neste proprio skill.
 
 Este skill NAO monta DSL completo.
 Para estrutura/layout e persistencia final de dashboard, usar `artifact_write` e `artifact_patch` (com `artifact_read` para inspecao do estado atual).
 
 ## Escopo Estrito
 
-Este skill cobre somente tabelas e joins usados no template atual de Compras.
-Nao expandir para tabelas fora do template.
+Este skill cobre somente tabelas, joins, filtros e metricas explicitamente listados aqui.
+Nao expandir para tabelas fora deste skill sem confirmacao explicita.
 
 ## Fonte de Verdade
 
 Prioridade de referencia:
-1. `src/products/bi/shared/templates/appsComprasTemplate.ts`
-2. `src/products/bi/shared/queryCatalog.ts` (entrada `compras.compras`)
+1. este skill
+2. `src/products/bi/shared/queryCatalog.ts` (entrada `compras.compras`) quando disponivel
 
-Se houver conflito, priorizar template.
+Se houver conflito entre memoria do agente e este skill, priorizar este skill.
+Nao procurar template externo adicional via shell apenas para completar esta referencia.
 
 ## Sugestao de Dashboard (Canonico)
 
-Fonte canonica: `src/products/bi/shared/templates/appsComprasTemplate.ts`.
+Fonte canonica: este skill.
 
 ### KPI / Chart (descricao semantica + query literal)
 
@@ -644,9 +645,9 @@ GROUP BY 1, 2
 ORDER BY 2 ASC
 ```
 
-### Slicer (descricao semantica + query literal)
+### Filter (descricao semantica + query literal)
 
-- Slicer de Centro de Custo.
+- Filter de Centro de Custo.
 
 ```sql
 SELECT
@@ -657,15 +658,15 @@ LEFT JOIN empresa.centros_custo cc ON cc.id = src.centro_custo_id
 WHERE src.tenant_id = {{tenant_id}}
 ORDER BY 2 ASC
 ```
-## Tabela Base e Lookups do Template
+## Tabelas e Lookups Canonicos
 
 ### `compras.compras src`
-Colunas usadas no template:
+Colunas canonicas:
 - `id`, `tenant_id`, `data_pedido`, `status`
 - `valor_total`
 - `fornecedor_id`, `centro_custo_id`, `filial_id`, `categoria_despesa_id`, `projeto_id`
 
-### Lookups usados no template
+### Lookups canonicos
 - `entidades.fornecedores f` (`id`, `nome_fantasia`)
 - `empresa.centros_custo cc` (`id`, `nome`)
 - `empresa.filiais fil` (`id`, `nome`)
@@ -855,12 +856,12 @@ Incorreto:
 Causa comum:
 - enviar string sem tratar formato de array/lista.
 
-Padrao do template:
+Padrao canonico deste skill:
 - usar `regexp_replace` + `string_to_array` + `ANY`.
 
 ## Checklist Antes de Entregar SQL
 
-- usar somente tabelas do template atual de Compras
+- usar somente tabelas, joins e filtros listados neste skill
 - aplicar tenant + data (`de`/`ate`)
 - manter aliases `value` (KPI) e `key/label/value` (Chart)
 - manter cast e ordem temporal em series mensais

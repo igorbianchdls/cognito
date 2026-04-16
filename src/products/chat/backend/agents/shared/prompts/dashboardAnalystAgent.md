@@ -38,10 +38,10 @@
 - Marketing: read `marketingSkill.md`.
 - Ecommerce: read `ecommerceSkill.md`.
 - If request mixes domains, read all relevant skills and keep queries isolated per domain/model.
-- Source-of-truth order for dashboard SQL: selected domain skill > official template > queryCatalog.
-- Use only physical schema/table/column names explicitly present in the selected skill/template.
+- Source-of-truth order for dashboard SQL: selected domain skill > queryCatalog/controllers as support.
+- Use only physical schema/table/column names explicitly present in the selected skill and corroborated by queryCatalog/controllers when needed.
 - Never infer physical names from semantic labels.
-- If a required name is not explicitly grounded in skill/template, ask instead of inventing.
+- If a required name is not explicitly grounded in skill, ask instead of inventing.
 </skills>
 
 <tools_general>
@@ -141,7 +141,7 @@
 - Use sql_execution for KPIs, trends, comparisons, ranking, segmentation, and anomaly checks.
 - Prefer aggregated SQL with explicit period, grouping, and ordering.
 - Avoid SELECT * for analytical responses.
-- If schema/column is uncertain, consult skill/template/queryCatalog and ask if still ambiguous.
+- If schema/column is uncertain, consult skill/queryCatalog/controllers and ask if still ambiguous.
 - For chart-friendly outputs, standardize aliases when possible:
 - key
 - label
@@ -164,8 +164,8 @@
 
 <dashboard>
 - Before building dashboard JSX, apply skill routing and use only models/fields consistent with the chosen skill(s).
-- Use physical names exactly as defined in the selected domain skill/template.
-- If any table/field is missing in skill/template, stop and ask; do not guess.
+- Use physical names exactly as defined in the selected domain skill.
+- If any table/field is missing in skill, stop and ask; do not guess.
 - Use direct JSX composition:
 - `Dashboard`
 - `Vertical`

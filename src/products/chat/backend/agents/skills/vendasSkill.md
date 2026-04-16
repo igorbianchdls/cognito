@@ -1,6 +1,6 @@
-# Vendas Skill (SQL Query-First para /apps/vendas)
+# Vendas Skill (SQL Query-First para Vendas)
 
-Objetivo: definir SQL valido para KPIs e graficos de vendas no padrao do template `src/products/bi/shared/templates/appsVendasTemplate.ts`.
+Objetivo: definir SQL valido para KPIs, filtros e graficos de vendas no padrao canônico consolidado neste próprio skill.
 
 Este skill NAO monta DSL completo.
 Para estrutura/layout e persistencia final de dashboard, usar `artifact_write` e `artifact_patch` (com `artifact_read` para inspecao do estado atual).
@@ -14,20 +14,21 @@ Use este skill para:
 
 ## Escopo Estrito
 
-Este skill cobre somente tabelas e joins usados no template atual de Vendas.
-Nao expandir para tabelas fora do template.
+Este skill cobre somente tabelas, joins, filtros e métricas explicitamente listados aqui.
+Nao expandir para tabelas fora deste skill sem confirmação explícita.
 
 ## Fonte de Verdade
 
 Prioridade de referencia:
-1. `src/products/bi/shared/templates/appsVendasTemplate.ts`
-2. `src/products/bi/shared/queryCatalog.ts` (entrada `vendas.pedidos`)
+1. este skill
+2. `src/products/bi/shared/queryCatalog.ts` (entrada `vendas.pedidos`) quando disponível
 
-Se houver conflito, priorizar template.
+Se houver conflito entre memória do agente e este skill, priorizar este skill.
+Nao procurar template externo adicional via shell apenas para completar esta referência.
 
 ## Regra Obrigatoria de Nomes Fisicos
 
-- Use apenas schema/tabelas/campos listados neste skill e no template de vendas.
+- Use apenas schema/tabelas/campos listados neste skill.
 - Nao deduzir nome fisico a partir de nome semantico (ex.: "cliente", "vendedor", "canal").
 - Para vendas:
 - tabela base: `vendas.pedidos`
@@ -38,7 +39,7 @@ Se houver conflito, priorizar template.
 
 ## Sugestao de Dashboard (Canonico)
 
-Fonte canonica: `src/products/bi/shared/templates/appsVendasTemplate.ts`.
+Fonte canonica: este skill.
 
 ### KPI (descricao semantica + query literal)
 
@@ -83,11 +84,11 @@ WHERE p.tenant_id = {{tenant_id}}
 
 - KPI de Margem Bruta.
 
-Query: Sem query SQL no template (valuePath: vendas.kpis.margemBruta).
+Nao ha query SQL canônica consolidada neste skill para margem bruta. Se o usuário pedir isso, confirmar a fonte do custo antes de montar a métrica.
 
-### Slicer (descricao semantica + query literal)
+### Filter (descricao semantica + query literal)
 
-- Slicer de Canal.
+- Filter de Canal.
 
 ```sql
 SELECT
@@ -97,7 +98,7 @@ FROM vendas.canais_venda cv
 ORDER BY 2 ASC
 ```
 
-- Slicer de Cliente.
+- Filter de Cliente.
 
 ```sql
 SELECT
@@ -335,18 +336,18 @@ ORDER BY 3 DESC
 ## Tabelas e Campos Canonicos
 
 ### `vendas.pedidos p`
-Colunas usadas no template:
+Colunas canônicas:
 - `id`, `tenant_id`, `data_pedido`, `status`
 - `valor_total`
 - `cliente_id`, `vendedor_id`, `canal_venda_id`
 - `filial_id`, `unidade_negocio_id`, `territorio_id`, `categoria_receita_id`
 
 ### `vendas.pedidos_itens pi`
-Colunas usadas no template:
+Colunas canônicas:
 - `pedido_id`
 - `subtotal`
 
-### Lookups usados no template
+### Lookups canônicos
 - `vendas.canais_venda cv` (`id`, `nome`)
 - `financeiro.categorias_receita cr` (`id`, `nome`)
 - `entidades.clientes c` (`id`, `nome_fantasia`)
@@ -469,15 +470,13 @@ GROUP BY 1, 2
 ORDER BY 3 DESC
 ```
 
-## Exemplos do Template (/apps/vendas)
+## Exemplos Canônicos de Referência
 
-Fonte: `src/products/bi/shared/templates/appsVendasTemplate.ts`
-
-- KPIs do template:
+- KPIs canônicos:
 - `QUERY_KPI_VENDAS` (Vendas)
 - `QUERY_KPI_PEDIDOS` (Pedidos)
 - `QUERY_KPI_TICKET_MEDIO` (Ticket Medio)
-- Grafico/serie do template:
+- Graficos/series canônicos:
 - `QUERY_CANAIS` (Canais)
 - `QUERY_CATEGORIAS` (Categorias)
 - `QUERY_CLIENTES` (Clientes)
@@ -495,6 +494,7 @@ Fonte: `src/products/bi/shared/templates/appsVendasTemplate.ts`
 - tabela com schema correto (ex.: `vendas.pedidos`)
 - joins/lookups com schema correto (`entidades/comercial/empresa/financeiro`) conforme lista canonica
 - filtro de tenant aplicado
-- filtro de data no padrao do template
+- filtro de data no padrao canônico deste skill
 - aliases corretos (`value` ou `key/label/value`)
 - joins apenas quando necessarios
+- nao depender de template externo fora deste skill para decidir schema, joins ou nomes fisicos

@@ -8,17 +8,18 @@ Para layout e persistencia final de dashboard, usar `artifact_write` e `artifact
 ## Fontes de Verdade
 
 Prioridade de referencia:
-1. `src/products/erp/backend/features/modulos/controllers/trafegopago/query/controller.ts`
-2. `src/products/erp/backend/features/modulos/controllers/trafegopago/options/controller.ts`
-3. `src/products/bi/shared/queryCatalog.ts`
+1. este skill
+2. `src/products/erp/backend/features/modulos/controllers/trafegopago/query/controller.ts`
+3. `src/products/erp/backend/features/modulos/controllers/trafegopago/options/controller.ts`
+4. `src/products/bi/shared/queryCatalog.ts`
 
-Em conflito, priorizar controller.
+Se houver conflito entre memoria do agente e este skill, priorizar este skill.
+Nao procurar template externo adicional via shell apenas para completar esta referencia.
 
 ## Sugestao de Dashboard (Canonico)
 
-Fonte canonica:
-- `src/products/bi/shared/templates/appsGoogleAdsTemplate.ts`
-- `src/products/bi/shared/templates/appsMetaAdsTemplate.ts`
+Fonte canonica: este skill.
+Os exemplos abaixo ja consolidam o padrao canonico de dashboard de marketing para Meta Ads e Google Ads.
 
 ### KPI (descricao semantica + query literal)
 
@@ -84,9 +85,9 @@ WHERE dd.tenant_id = {{tenant_id}}::int
   AND ({{ate}}::date IS NULL OR dd.data_ref::date <= {{ate}}::date)
 ```
 
-### Slicer (descricao semantica + query literal)
+### Filter (descricao semantica + query literal)
 
-- Slicer de Conta.
+- Filter de Conta.
 
 ```sql
 SELECT
@@ -97,7 +98,7 @@ WHERE cm.tenant_id = {{tenant_id}}::int
 ORDER BY 2 ASC
 ```
 
-- Slicer de Campanha.
+- Filter de Campanha.
 
 ```sql
 SELECT
@@ -108,7 +109,7 @@ WHERE c.tenant_id = {{tenant_id}}::int
 ORDER BY 2 ASC
 ```
 
-- Slicer de Grupo.
+- Filter de Grupo.
 
 ```sql
 SELECT
@@ -119,7 +120,7 @@ WHERE ga.tenant_id = {{tenant_id}}::int
 ORDER BY 2 ASC
 ```
 
-- Slicer de Anuncio.
+- Filter de Anuncio.
 
 ```sql
 SELECT
@@ -217,8 +218,9 @@ LIMIT 10
 ## Contrato Query-First
 
 - KPI: `query` retornando `value`
-- Chart: `query`, `xField`, `yField`, `keyField`
-- Evitar modo legado em templates novos
+- Filter: `query` retornando `value`, `label`
+- Chart: `query` retornando `key`, `label`, `value`
+- Ao persistir no dashboard, preferir `dataQuery.query` com `xAxis`/`series`; evitar formato legado
 
 ## Modelo Canonico (Schema/Tabela/Colunas)
 
@@ -532,11 +534,11 @@ ORDER BY gasto DESC
 
 ```json
 {
-  "widget_type": "kpi",
-  "payload": {
-    "title": "ROAS",
-    "query": "SELECT ... AS value FROM ...",
-    "formato": "number"
-  }
+  "type": "kpi",
+  "title": "ROAS",
+  "dataQuery": {
+    "query": "SELECT ... AS value FROM ..."
+  },
+  "format": "number"
 }
 ```
