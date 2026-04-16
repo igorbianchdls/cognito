@@ -517,52 +517,52 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
 ```tsx
 <Dashboard id="overview" title="Dashboard Comercial" theme="light" chartPalette="teal">
   <Grid columns={12} rowHeight={16} gap={18} padding={28} width="100%">
-      <header id="header" span={12} rows={6} style={{ display: 'flex', justifyContent: 'space-between', gap: 20, padding: '20px 24px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <Text variant="eyebrow">Resumo comercial</Text>
-          <Text as="h1" variant="page-title">Receita e canais</Text>
-          <Text variant="lead">
-            Use `Grid` como layout principal quando o dashboard precisar de blocos redimensionaveis, inclusive no header.
-          </Text>
-        </div>
-        <DatePicker
-          label="Periodo"
-          table="vendas.pedidos"
-          field="data_pedido"
-          mode="range"
-          presets={['7d', '30d', 'month']}
-        />
-      </header>
+    <header id="header" span={12} rows={6} style={{ display: 'flex', justifyContent: 'space-between', gap: 20, padding: '20px 24px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <Text variant="eyebrow">Resumo comercial</Text>
+        <Text as="h1" variant="page-title">Receita e canais</Text>
+        <Text variant="lead">
+          Use `Grid` como layout principal quando o dashboard precisar de blocos redimensionaveis, inclusive no header.
+        </Text>
+      </div>
+      <DatePicker
+        label="Periodo"
+        table="vendas.pedidos"
+        field="data_pedido"
+        mode="range"
+        presets={['7d', '30d', 'month']}
+      />
+    </header>
 
-      <Card id="kpi-receita" span={4} rows={4} variant="kpi">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <Icon
-            name="DollarSign"
-            size={18}
-            padding={10}
-            color="#1D4ED8"
-            backgroundColor="#DBEAFE"
-            borderColor="#BFDBFE"
-            style={{ marginBottom: 12 }}
-          />
-          <KPI
-            title="Receita"
-            dataQuery={{
-              query: `
-                SELECT COALESCE(SUM(src.valor_total), 0)::float AS value
-                FROM vendas.pedidos src
-                WHERE src.tenant_id = {{tenant_id}}::int
-                  {{filters:src}}
-              `,
-              limit: 1,
-            }}
-            format="currency"
-            comparisonMode="previous_period"
-          >
-            <KPICompare />
-          </KPI>
-        </div>
-      </Card>
+    <Card id="kpi-receita" span={4} rows={4} variant="kpi">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <Icon
+          name="DollarSign"
+          size={18}
+          padding={10}
+          color="#1D4ED8"
+          backgroundColor="#DBEAFE"
+          borderColor="#BFDBFE"
+          style={{ marginBottom: 12 }}
+        />
+        <KPI
+          title="Receita"
+          dataQuery={{
+            query: `
+              SELECT COALESCE(SUM(src.valor_total), 0)::float AS value
+              FROM vendas.pedidos src
+              WHERE src.tenant_id = {{tenant_id}}::int
+                {{filters:src}}
+            `,
+            limit: 1,
+          }}
+          format="currency"
+          comparisonMode="previous_period"
+        >
+          <KPICompare />
+        </KPI>
+      </div>
+    </Card>
 
       <Card id="kpi-pedidos" span={4} rows={4} variant="kpi">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -681,47 +681,64 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
 <expected_output_2>
 ```tsx
 <Dashboard id="overview" title="Exploracao comercial" theme="light" chartPalette="teal">
-    <Grid columns={12} rowHeight={16} gap={18} padding={24}>
-      <Card id="filters" span={12} rows={5} variant="filter">
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <Filter
-              label="Canal"
-              table="vendas.pedidos"
-              field="canal_venda_id"
-              variant="verticallist"
-              mode="multiple"
-              search
-              searchBar={false}
-              clearable
-              width={220}
-              query={`
-                SELECT
-                  cv.id::text AS value,
-                  COALESCE(cv.nome, '-') AS label
-                FROM vendas.canais_venda cv
-                WHERE cv.tenant_id = {{tenant_id}}::int
-                ORDER BY 2 ASC
-              `}
-            />
+  <Grid columns={12} rowHeight={16} gap={18} padding={24}>
+    <header id="header" span={12} rows={6} style={{ display: 'flex', justifyContent: 'space-between', gap: 20, padding: '20px 24px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <Text variant="eyebrow">Exploracao comercial</Text>
+        <Text as="h1" variant="page-title">Filtros, tabela e pivot</Text>
+        <Text variant="lead">
+          Mantenha o mesmo esqueleto estrutural: `Dashboard`, `header` e `Grid`, variando apenas o conteudo analitico.
+        </Text>
+      </div>
+      <DatePicker
+        label="Periodo"
+        table="vendas.pedidos"
+        field="data_pedido"
+        mode="range"
+        presets={['7d', '30d', 'month']}
+      />
+    </header>
 
-            <Filter
-              label="Status"
-              table="vendas.pedidos"
-              field="status"
-              variant="dropdown"
-              mode="multiple"
-              search
-              clearable
-              width={220}
-              query={`
-                SELECT DISTINCT
-                  src.status::text AS value,
-                  COALESCE(src.status, 'Sem status') AS label
-                FROM vendas.pedidos src
-                WHERE src.tenant_id = {{tenant_id}}::int
-                ORDER BY 2 ASC
-              `}
-            />
+    <Card id="filters" span={12} rows={5} variant="filter">
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+        <Filter
+          label="Canal"
+          table="vendas.pedidos"
+          field="canal_venda_id"
+          variant="verticallist"
+          mode="multiple"
+          search
+          searchBar={false}
+          clearable
+          width={220}
+          query={`
+            SELECT
+              cv.id::text AS value,
+              COALESCE(cv.nome, '-') AS label
+            FROM vendas.canais_venda cv
+            WHERE cv.tenant_id = {{tenant_id}}::int
+            ORDER BY 2 ASC
+          `}
+        />
+
+        <Filter
+          label="Status"
+          table="vendas.pedidos"
+          field="status"
+          variant="dropdown"
+          mode="multiple"
+          search
+          clearable
+          width={220}
+          query={`
+            SELECT DISTINCT
+              src.status::text AS value,
+              COALESCE(src.status, 'Sem status') AS label
+            FROM vendas.pedidos src
+            WHERE src.tenant_id = {{tenant_id}}::int
+            ORDER BY 2 ASC
+          `}
+        />
         </div>
       </Card>
 
