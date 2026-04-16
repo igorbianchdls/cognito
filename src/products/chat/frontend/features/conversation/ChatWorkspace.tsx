@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+
 import PageContainer from "@/components/layout/PageContainer";
 import { SidebarShadcn } from "@/components/navigation/SidebarShadcn";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -40,6 +42,11 @@ export default function ChatWorkspace({
     selectedArtifactId,
     setSelectedArtifactId,
   } = useChatConversationUiState({ chatId: initialChatId });
+
+  useEffect(() => {
+    if (!workspaceOpen) return;
+    setSidebarCollapsed(true);
+  }, [workspaceOpen, setSidebarCollapsed]);
 
   return (
     <SidebarProvider open={!sidebarCollapsed} onOpenChange={(open) => setSidebarCollapsed(!open)}>

@@ -46,7 +46,7 @@ function readGlobalSidebarCollapsed(): boolean | null {
 }
 
 export function useChatConversationUiState({ chatId }: Options) {
-  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(true);
   const [workspaceOpen, setWorkspaceOpen] = React.useState(false);
   const [selectedArtifactId, setSelectedArtifactId] = React.useState<string | null>(null);
   const hydratedRef = React.useRef(false);

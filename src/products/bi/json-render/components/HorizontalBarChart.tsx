@@ -34,6 +34,7 @@ function formatCategoryFirstWord(value: unknown) {
 export default function JsonRenderHorizontalBarChart({ element }: { element: any }) {
   const { data, setData } = useData();
   const props = (element?.props as AnyRecord | undefined) || {};
+  const rootStyle = props.style && typeof props.style === "object" ? props.style as React.CSSProperties : undefined;
   const dq = (element?.props?.dataQuery as AnyRecord | undefined);
   const fmt = (element?.props?.format ?? "number") as "currency" | "percent" | "number";
   const height = (element?.props?.height as number | string | undefined) ?? 220;
@@ -90,7 +91,7 @@ export default function JsonRenderHorizontalBarChart({ element }: { element: any
   }, [shouldClickFilter, resolvedFilterStorePath, setData, clearOnSecondClick]);
 
   return (
-    <div style={{ height, width: "100%" }}>
+    <div style={{ width: "100%", height, ...rootStyle }}>
       {queryError ? <div className="rounded border border-red-300 bg-red-50 p-2 text-xs text-red-700">{queryError}</div> : null}
       <ResponsiveContainer width="100%" height="100%">
         <RechartsBarChart
