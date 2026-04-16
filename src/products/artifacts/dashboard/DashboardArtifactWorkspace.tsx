@@ -114,6 +114,7 @@ export function DashboardArtifactWorkspace({
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
+  const [previewRefreshKey, setPreviewRefreshKey] = useState(0)
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -324,6 +325,32 @@ export function DashboardArtifactWorkspace({
               ) : null}
               <button
                 type="button"
+                onClick={() => setPreviewRefreshKey((current) => current + 1)}
+                disabled={activeView !== 'preview'}
+                aria-label="Atualizar preview"
+                title="Atualizar preview"
+                className={`flex items-center justify-center rounded-md border-[0.5px] px-2 py-[0.35rem] text-[14px] transition ${
+                  activeView !== 'preview'
+                    ? 'cursor-not-allowed border-[#DDDDD8] bg-[#ECECEB] text-[#9A9A95]'
+                    : 'border-[#DDDDD8] bg-[#ECECEB] text-[#5F5F5A] hover:bg-[#E2E2E0] hover:text-[#4F4F4B]'
+                }`}
+              >
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 16 16"
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M13.5 3.5v3h-3" />
+                  <path d="M12.6 6.5A5.25 5.25 0 1 0 13 10" />
+                </svg>
+              </button>
+              <button
+                type="button"
                 onClick={() => {
                   setAppearanceMode('theme')
                   setThemeModalBaseSource(draftSource)
@@ -376,6 +403,7 @@ export function DashboardArtifactWorkspace({
 
             {activeView === 'preview' ? (
               <DashboardWorkspacePreview
+                key={previewRefreshKey}
                 sourcePath="app/dashboard.tsx"
                 files={files}
                 zoom={zoom}
