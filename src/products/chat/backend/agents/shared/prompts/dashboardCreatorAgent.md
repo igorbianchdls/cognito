@@ -804,6 +804,147 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
 ```
 </expected_output_2>
 
+<expected_output_3>
+```tsx
+<Dashboard id="overview" title="Operacao comercial" theme="light" chartPalette="teal">
+  <Grid columns={12} rowHeight={16} gap={18} padding={24}>
+    <header id="header" span={12} rows={6} style={{ display: 'flex', justifyContent: 'space-between', gap: 20, padding: '20px 24px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <Text variant="eyebrow">Operacao comercial</Text>
+        <Text as="h1" variant="page-title">Receita, aprovacao e pedidos</Text>
+        <Text variant="lead">
+          Repita o mesmo esqueleto estrutural e varie os blocos analiticos de acordo com a pergunta do usuario.
+        </Text>
+      </div>
+      <DatePicker
+        label="Periodo"
+        table="vendas.pedidos"
+        field="data_pedido"
+        mode="range"
+        presets={['7d', '30d', 'month']}
+      />
+    </header>
+
+    <Card id="filter-status" span={12} rows={5} variant="filter">
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+        <Filter
+          label="Status"
+          table="vendas.pedidos"
+          field="status"
+          variant="dropdown"
+          mode="multiple"
+          search
+          clearable
+          width={220}
+          query={`
+            SELECT DISTINCT
+              src.status::text AS value,
+              COALESCE(src.status, 'Sem status') AS label
+            FROM vendas.pedidos src
+            WHERE src.tenant_id = {{tenant_id}}::int
+            ORDER BY 2 ASC
+          `}
+        />
+        <Filter
+          label="Cliente"
+          table="vendas.pedidos"
+          field="cliente_id"
+          variant="verticallist"
+          mode="multiple"
+          search
+          searchBar={false}
+          clearable
+          width={260}
+          query={`
+            SELECT
+              c.id::text AS value,
+              COALESCE(c.nome_fantasia, '-') AS label
+            FROM entidades.clientes c
+            WHERE c.tenant_id = {{tenant_id}}::int
+            ORDER BY 2 ASC
+          `}
+        />
+      </div>
+    </Card>
+
+    <Card id="kpi-aprovacao" span={4} rows={4} variant="kpi">
+      <KPI
+        title="Aprovacao"
+        dataQuery={{
+          query: `
+            SELECT
+              COALESCE(AVG(CASE WHEN COALESCE(src.status, '') = 'aprovado' THEN 1 ELSE 0 END), 0)::float AS value
+            FROM vendas.pedidos src
+            WHERE src.tenant_id = {{tenant_id}}::int
+              {{filters:src}}
+          `,
+          limit: 1,
+        }}
+        format="percent"
+        comparisonMode="previous_period"
+      >
+        <KPICompare />
+      </KPI>
+    </Card>
+
+    <Card id="chart-diario" span={8} rows={12} variant="chart" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <Text variant="section-title">Receita por dia</Text>
+      <Chart
+        type="line"
+        height="100%"
+        style={{ minHeight: 280 }}
+        format="currency"
+        dataQuery={{
+          query: `
+            SELECT
+              TO_CHAR(src.data_pedido::date, 'YYYY-MM-DD') AS key,
+              TO_CHAR(src.data_pedido::date, 'DD/MM') AS label,
+              COALESCE(SUM(src.valor_total), 0)::float AS valor
+            FROM vendas.pedidos src
+            WHERE src.tenant_id = {{tenant_id}}::int
+              {{filters:src}}
+            GROUP BY 1, 2
+            ORDER BY 1 ASC
+          `,
+          limit: 31,
+        }}
+        xAxis={{ dataKey: 'label' }}
+        series={[{ dataKey: 'valor', label: 'Receita' }]}
+      />
+    </Card>
+
+    <Card id="table-pedidos" span={12} rows={16}>
+      <Table
+        dataQuery={{
+          query: `
+            SELECT
+              src.id::text AS pedido,
+              TO_CHAR(src.data_pedido::date, 'DD/MM/YYYY') AS data,
+              COALESCE(c.nome_fantasia, '-') AS cliente,
+              COALESCE(src.status, 'Sem status') AS status,
+              COALESCE(src.valor_total, 0)::float AS valor_total
+            FROM vendas.pedidos src
+            LEFT JOIN entidades.clientes c ON c.id = src.cliente_id
+            WHERE src.tenant_id = {{tenant_id}}::int
+              {{filters:src}}
+            ORDER BY src.data_pedido DESC, src.id DESC
+          `,
+          limit: 12,
+        }}
+        columns={[
+          { accessorKey: 'pedido', header: 'Pedido' },
+          { accessorKey: 'data', header: 'Data' },
+          { accessorKey: 'cliente', header: 'Cliente' },
+          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'valor_total', header: 'Receita', format: 'currency', align: 'right', headerAlign: 'right' },
+        ]}
+      />
+    </Card>
+  </Grid>
+</Dashboard>
+```
+</expected_output_3>
+
 <expected_output_style_override>
 ```tsx
 <Panel id="reading" span={4} rows={8}>
