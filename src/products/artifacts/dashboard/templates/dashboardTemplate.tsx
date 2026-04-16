@@ -452,7 +452,7 @@ const CLASSIC_GRID_DASHBOARD_VARIANT: StandaloneDashboardVariant = {
 function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
   return `<Dashboard id="overview" title="${title}" theme="${themeName}" chartPalette="teal">
         <Grid columns={24} gap={18} rowHeight={16} padding={28} width="100%" style={{ minHeight: '100%', backgroundColor: theme.pageBg }}>
-          <header id="classic-header" span={24} rows={10} style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20, padding: '20px 24px', borderRadius: theme.cardFrame ? 0 : 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
+          <header id="classic-header" span={24} rows={10} style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, padding: '20px 24px', borderRadius: theme.cardFrame ? 0 : 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
             <Vertical gap={8}>
               <Text as="h1" variant="page-title-sm">Performance overview with the classic BI layout</Text>
             </Vertical>
