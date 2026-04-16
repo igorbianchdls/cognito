@@ -157,6 +157,8 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
 - Never create `tree`, `buildTree`, `buildSource`, markers, or helper files per dashboard.
 - For new dashboards, do not use `DashboardTemplate` or `Theme` as authored root structure.
 - For new dashboards, never omit `Dashboard.id` or `Dashboard.title` on the root node.
+- If a block is expected to be resizable in the workspace, never place it as a loose `Card` directly under `Vertical`.
+- Resizable blocks must live inside `Horizontal` or `Grid` and must carry a stable `id`.
 - If a requested change would break runtime validity, refuse that shape and propose a valid alternative.
 - For `Chart`, use `height="100%"` only when the parent chain has resolved height.
 - If that parent chain is not clearly guaranteed, prefer explicit numeric chart height such as `280`, `320`, or `360`.
@@ -251,6 +253,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
       - `align`
       - `justify`
     - Rule: use `Vertical` as the main page flow for new dashboards.
+    - Rule: do not expect direct `Card` children of `Vertical` to become resizable layout blocks by default.
   - `Horizontal`
     - Purpose: create rows of panels or side-by-side sections.
     - Common props:
@@ -263,7 +266,8 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
       - `align`
       - `justify`
       - `wrap`
-    - Rule: when using `Panel` children, prefer `columns` + `rowHeight` and let the renderer manage the row structure.
+    - Rule: when using resizable blocks, prefer `columns` + `rowHeight` and let the renderer manage the row structure.
+    - Rule: resizable `Card` or `Panel` children should include `id`, `span`, and usually `rows`.
   - `Grid`
     - Purpose: place structural items in an explicit grid.
     - Common props:
@@ -281,6 +285,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
       - `y`
       - `minSpan`
     - Rule: this can be used on `Panel`, `Card`, or supported HTML nodes when the runtime already treats them as structural layout items.
+    - Rule: if the user expects resize/persisted layout changes, ensure each structural child has a stable `id`.
   - `Panel`
     - Purpose: position one block inside a `Horizontal` or flexible container.
     - Common props:
@@ -292,13 +297,23 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
       - `width`
       - `minHeight`
     - Rule: in dashboards that follow the current template style, panels are the canonical place for KPI/chart/table/filter blocks.
+    - Rule: if the block must be resizable, always provide `id`, `span`, and `rows`.
 - Visual primitives:
   - `Card`
     - Purpose: provide themed surface, spacing, border, and card variants such as KPI/chart/filter/note.
     - Common props:
+      - `id`
+      - `span`
+      - `rows`
       - `variant`
       - `style`
     - Rule: prefer `Card` variants and renderer defaults before manually restyling the surface.
+    - Rule: `Card` becomes a proper resizable layout item only when it is used as a structural child of `Horizontal` or `Grid`.
+    - Rule: if the user expects resize persistence, give the `Card` a stable `id`; otherwise `span`/`rows` changes cannot be safely written back.
+    - Rule: for resizable cards, prefer this shape:
+      - `<Horizontal columns={12} rowHeight={16} gap={16}>`
+      - `<Card id="..." span={...} rows={...}>...</Card>`
+      - `</Horizontal>`
   - `Icon`
     - Purpose: render a Lucide icon inside a small badge with background and border.
     - Main props:
