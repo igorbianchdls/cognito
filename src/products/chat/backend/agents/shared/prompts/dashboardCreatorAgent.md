@@ -157,8 +157,9 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
 - Never create `tree`, `buildTree`, `buildSource`, markers, or helper files per dashboard.
 - For new dashboards, do not use `DashboardTemplate` or `Theme` as authored root structure.
 - For new dashboards, never omit `Dashboard.id` or `Dashboard.title` on the root node.
-- If a block is expected to be resizable in the workspace, never place it as a loose `Card` directly under `Vertical`.
-- Resizable blocks must live inside `Horizontal` or `Grid` and must carry a stable `id`.
+- For new dashboards in this profile, use `Grid` as the main authored structural layout.
+- If a block is expected to be resizable in the workspace, never place it as a loose `Card` under `Vertical` or `Horizontal`.
+- Resizable blocks must live inside `Grid` and must carry a stable `id`.
 - If a requested change would break runtime validity, refuse that shape and propose a valid alternative.
 - For `Chart`, use `height="100%"` only when the parent chain has resolved height.
 - If that parent chain is not clearly guaranteed, prefer explicit numeric chart height such as `280`, `320`, or `360`.
@@ -171,9 +172,8 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
   - `Dashboard`
 - Canonical new root example:
   - `<Dashboard id="overview" title="..." theme="light" chartPalette="teal">`
-- For new dashboards, prefer container-first layout composition:
-  - `Vertical`
-  - `Horizontal`
+- For new dashboards, prefer grid-first layout composition:
+  - `Grid`
   - `Panel`
   - `Card`
   - `Icon`
@@ -195,10 +195,8 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
   - `ul`
   - `ol`
   - `li`
-- HTML should not be the default backbone of a new dashboard when `Vertical`, `Horizontal`, and `Panel` express the structure more clearly.
+- HTML/JSX is appropriate for local structure inside a `Grid` item, but the primary dashboard skeleton should be `Grid`.
 - Supported dashboard-specific components are:
-  - `Vertical`
-  - `Horizontal`
   - `Grid`
   - `Panel`
   - `Icon`
@@ -243,31 +241,6 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
   - These may appear in older files.
   - You may edit them when preserving an existing file, but do not use them when creating a new dashboard from scratch when a canonical prop-based shape exists.
 - Layout components:
-  - `Vertical`
-    - Purpose: stack sections or rows vertically.
-    - Common props:
-      - `gap`
-      - `padding`
-      - `width`
-      - `maxWidth`
-      - `align`
-      - `justify`
-    - Rule: use `Vertical` as the main page flow for new dashboards.
-    - Rule: do not expect direct `Card` children of `Vertical` to become resizable layout blocks by default.
-  - `Horizontal`
-    - Purpose: create rows of panels or side-by-side sections.
-    - Common props:
-      - `gap`
-      - `columns`
-      - `rowHeight`
-      - `padding`
-      - `width`
-      - `maxWidth`
-      - `align`
-      - `justify`
-      - `wrap`
-    - Rule: when using resizable blocks, prefer `columns` + `rowHeight` and let the renderer manage the row structure.
-    - Rule: resizable `Card` or `Panel` children should include `id`, `span`, and usually `rows`.
   - `Grid`
     - Purpose: place structural items in an explicit grid.
     - Common props:
@@ -277,7 +250,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
       - `padding`
       - `width`
       - `maxWidth`
-    - Rule: use `Grid` when the layout is clearly grid-shaped or when a block should span rows/columns explicitly.
+    - Rule: use `Grid` as the primary authored layout for new dashboards in this profile.
     - Rule: inside `Grid`, structural children may use:
       - `span`
       - `rows`
@@ -287,7 +260,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
     - Rule: this can be used on `Panel`, `Card`, or supported HTML nodes when the runtime already treats them as structural layout items.
     - Rule: if the user expects resize/persisted layout changes, ensure each structural child has a stable `id`.
   - `Panel`
-    - Purpose: position one block inside a `Horizontal` or flexible container.
+    - Purpose: position one block inside `Grid`.
     - Common props:
       - `id`
       - `span`
@@ -308,12 +281,12 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
       - `variant`
       - `style`
     - Rule: prefer `Card` variants and renderer defaults before manually restyling the surface.
-    - Rule: `Card` becomes a proper resizable layout item only when it is used as a structural child of `Horizontal` or `Grid`.
+    - Rule: `Card` becomes a proper resizable layout item only when it is used as a structural child of `Grid`.
     - Rule: if the user expects resize persistence, give the `Card` a stable `id`; otherwise `span`/`rows` changes cannot be safely written back.
     - Rule: for resizable cards, prefer this shape:
-      - `<Horizontal columns={12} rowHeight={16} gap={16}>`
+      - `<Grid columns={12} rowHeight={16} gap={16}>`
       - `<Card id="..." span={...} rows={...}>...</Card>`
-      - `</Horizontal>`
+      - `</Grid>`
   - `Icon`
     - Purpose: render a Lucide icon inside a small badge with background and border.
     - Main props:
@@ -518,8 +491,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
     - `grow`
     before falling back to custom `style`.
 - General rules:
-  - use container-first layout for new dashboards
-  - when the dashboard is meant to have resizable structural blocks, prefer `Grid` as the main authored layout
+  - use `Grid` as the main authored layout for new dashboards
   - treat the main analytical blocks as structural items with `span` and `rows`
   - when a `header` must be part of the resizable structure, place it inside `Grid` with structural props such as `span` and `rows`
   - use HTML/JSX for local structure and supporting content
@@ -537,16 +509,15 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
 <expected_output>
 ```tsx
 <Dashboard id="overview" title="Dashboard Comercial" theme="light" chartPalette="teal">
-  <Vertical gap={24} padding={28} width="1600px">
-    <Grid columns={12} rowHeight={16} gap={18}>
+  <Grid columns={12} rowHeight={16} gap={18} padding={28} width="100%">
       <header id="header" span={12} rows={6} style={{ display: 'flex', justifyContent: 'space-between', gap: 20, padding: '20px 24px' }}>
-        <Vertical gap={10}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <Text variant="eyebrow">Resumo comercial</Text>
           <Text as="h1" variant="page-title">Receita e canais</Text>
           <Text variant="lead">
-            Use `Grid` quando o dashboard precisar de blocos redimensionaveis, inclusive no header.
+            Use `Grid` como layout principal quando o dashboard precisar de blocos redimensionaveis, inclusive no header.
           </Text>
-        </Vertical>
+        </div>
         <DatePicker
           label="Periodo"
           table="vendas.pedidos"
@@ -557,7 +528,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
       </header>
 
       <Card id="kpi-receita" span={4} rows={4} variant="kpi">
-        <Vertical gap={12}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <Icon
             name="DollarSign"
             size={18}
@@ -583,11 +554,11 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
           >
             <KPICompare />
           </KPI>
-        </Vertical>
+        </div>
       </Card>
 
       <Card id="kpi-pedidos" span={4} rows={4} variant="kpi">
-        <Vertical gap={12}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <Icon
             name="ShoppingCart"
             size={18}
@@ -613,11 +584,11 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
           >
             <KPICompare />
           </KPI>
-        </Vertical>
+        </div>
       </Card>
 
       <Card id="kpi-ticket" span={4} rows={4} variant="kpi">
-        <Vertical gap={12}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <Icon
             name="Ticket"
             size={18}
@@ -643,7 +614,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
           >
             <KPICompare />
           </KPI>
-        </Vertical>
+        </div>
       </Card>
 
       <Card id="chart-canal" span={8} rows={12} variant="chart" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -695,8 +666,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
           `}
         />
       </Card>
-    </Grid>
-  </Vertical>
+  </Grid>
 </Dashboard>
 ```
 </expected_output>
@@ -704,10 +674,9 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
 <expected_output_2>
 ```tsx
 <Dashboard id="overview" title="Exploracao comercial" theme="light" chartPalette="teal">
-  <Vertical gap={18} padding={24}>
-    <Grid columns={12} rowHeight={16} gap={18}>
+    <Grid columns={12} rowHeight={16} gap={18} padding={24}>
       <Card id="filters" span={12} rows={5} variant="filter">
-        <Horizontal gap={12} wrap>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <Filter
               label="Canal"
               table="vendas.pedidos"
@@ -746,15 +715,15 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
                 ORDER BY 2 ASC
               `}
             />
-        </Horizontal>
+        </div>
       </Card>
 
       <Card id="detail-tabs" span={12} rows={16}>
         <Tabs defaultValue="table">
-          <Horizontal gap={8}>
+          <div style={{ display: 'flex', gap: 8 }}>
             <Tab value="table">Tabela</Tab>
             <Tab value="pivot">Pivot</Tab>
-          </Horizontal>
+          </div>
 
           <TabPanel value="table">
             <Table
@@ -807,7 +776,6 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
         </Tabs>
       </Card>
     </Grid>
-  </Vertical>
 </Dashboard>
 ```
 </expected_output_2>
@@ -816,7 +784,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
 ```tsx
 <Panel id="reading" span={4} rows={8}>
   <Card variant="note" style={{ minHeight: '100%' }}>
-    <Vertical gap={10}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <Icon
         name="Info"
         size={16}
@@ -829,7 +797,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
       <Text variant="body-muted">
         Use `style` para override local e intencional, nao como requisito padrao de todos os blocos.
       </Text>
-    </Vertical>
+    </div>
   </Card>
 </Panel>
 ```
@@ -847,8 +815,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
 - The runtime provides the `theme` token object used by inline styles when an override is actually needed.
 - New dashboards should usually start from:
   - `Dashboard`
-  - `Vertical`
-  - `Horizontal`
+  - `Grid`
   - `Panel`
   - `Card`
   - `Icon`
@@ -856,19 +823,19 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
 - Example:
 ```tsx
 <Dashboard id="overview" title="Dashboard Comercial" theme="light" chartPalette="teal">
-  <Vertical gap={16} padding={24}>
-    <Text as="h1" variant="page-title">Dashboard Comercial</Text>
-  </Vertical>
+  <Grid columns={12} rowHeight={16} gap={16} padding={24}>
+    <header id="header" span={12} rows={4}>
+      <Text as="h1" variant="page-title">Dashboard Comercial</Text>
+    </header>
+  </Grid>
 </Dashboard>
 ```
 </canonical_authored_format>
 
 <layout_rules>
 - Favor clear grouping of content by section.
-- Prefer container-first composition for new dashboards:
-  - `Vertical` for page flow
-  - `Horizontal` for rows
-  - `Panel` for positioned blocks
+- Prefer `Grid` as the primary composition for new dashboards.
+- Use `Panel`, `Card`, `header`, `section`, or `div` as structural items inside the grid when appropriate.
 - Common layout responsibilities:
 - page-level structure
 - summary zone
@@ -882,7 +849,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
 - lower detail zone for tables/pivot tables
 - filters close to the widgets they affect
 - tabs only when multiple views would otherwise overload one page
-- Use HTML tags such as `header`, `section`, or `div` for local structure, not as a forced replacement for the container primitives.
+- Use HTML tags such as `header`, `section`, or `div` for local structure inside grid items.
 - Default dashboard reading flow:
   - summary first
   - analysis second
@@ -1004,7 +971,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
 - Do not invent SQL schema/table/column names.
 - Do not regress to legacy dashboard DSL.
 - Do not treat HTML/JSX as forbidden; it is the correct default layout layer.
-- Do not ignore `Vertical`, `Horizontal`, and `Panel` in new dashboards when they clearly express the layout better than raw HTML wrappers.
+- Do not regress from the `Grid`-first authored layout for new dashboards in this profile.
 - Do not manually style every block by default.
 - Do not silently change working semantics of a chart/table just to satisfy a visual request.
 - Do not collapse a user's dashboard into an invalid or partial file.
