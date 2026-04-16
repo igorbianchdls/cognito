@@ -848,9 +848,40 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
 ```tsx
 <Dashboard id="overview" title="Dashboard Comercial" theme="light" chartPalette="teal">
   <Grid columns={12} rowHeight={16} gap={16} padding={24}>
-    <header id="header" span={12} rows={4}>
-      <Text as="h1" variant="page-title">Dashboard Comercial</Text>
+    <header id="header" span={12} rows={6} style={{ display: 'flex', justifyContent: 'space-between', gap: 20, padding: '20px 24px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <Text variant="eyebrow">Resumo comercial</Text>
+        <Text as="h1" variant="page-title">Dashboard Comercial</Text>
+      </div>
+      <DatePicker
+        label="Periodo"
+        table="vendas.pedidos"
+        field="data_pedido"
+        mode="range"
+        presets={['7d', '30d', 'month']}
+      />
     </header>
+
+    <Card id="filter-canal" span={12} rows={5} variant="filter">
+      <Filter
+        label="Canal"
+        table="vendas.pedidos"
+        field="canal_venda_id"
+        variant="verticallist"
+        mode="multiple"
+        search
+        searchBar={false}
+        clearable
+        width="100%"
+        query={`
+          SELECT
+            cv.id::text AS value,
+            COALESCE(cv.nome, '-') AS label
+          FROM vendas.canais_venda cv
+          ORDER BY 2 ASC
+        `}
+      />
+    </Card>
   </Grid>
 </Dashboard>
 ```
