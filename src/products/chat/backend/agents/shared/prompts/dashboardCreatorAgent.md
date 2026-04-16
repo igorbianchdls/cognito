@@ -351,11 +351,11 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
     - Rule: for `bar`, `line`, and `composed`, prefer `xAxis={{ dataKey: '...' }}` plus `series={[{ dataKey: '...' }]}`.
     - Rule: for `pie`, prefer `categoryKey="..."` plus `series={[{ dataKey: '...' }]}`.
     - Rule: `height="100%"` is valid only when the chart sits inside a fully resolved height chain.
-    - Rule: for responsive `height="100%"`, use this structure:
-      - `Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: ... }}`
-      - inner wrapper around the chart with `style={{ flex: 1, minHeight: 0 }}`
-      - then `Chart height="100%"`
-    - Rule: if that structure is missing or uncertain, use numeric height such as `height={320}`.
+    - Rule: for responsive `height="100%"`, the parent block must still resolve height correctly.
+    - Rule: when the card layout is vertical with title/content above the chart, prefer `Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: ... }}`.
+    - Rule: `Chart` already assumes `flex: 1` by default in the runtime, so do not add an extra wrapper only to force `flex: 1` unless a real local exception requires it.
+    - Rule: use `style` on `Chart` mainly for things like `minHeight` or explicit override, not as mandatory boilerplate.
+    - Rule: if the height chain is missing or uncertain, use numeric height such as `height={320}`.
     - Recommended `type` values:
       - `bar`
       - `line`
@@ -436,6 +436,8 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
       - `mode`
       - `presets`
     - Rule: prefer semantic mode using `table` + `field`.
+    - Rule: by default, author `DatePicker` in the minimal form and rely on renderer/theme defaults for visual styling.
+    - Rule: only add explicit style props like `labelStyle`, `fieldStyle`, `iconStyle`, `presetButtonStyle`, `activePresetButtonStyle`, or `separatorStyle` when there is a real local exception.
   - `Tabs`
     - Purpose: group conditional views.
     - Main prop: `defaultValue`.
@@ -506,8 +508,8 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
   - do not create helper artifacts per dashboard
   - for a resizable analytical block, prefer this checklist:
     - `Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: ... }}`
-    - inner wrapper with `style={{ flex: 1, minHeight: 0 }}`
-    - data component (`Chart`, `Table`, `PivotTable`) inside that wrapper
+    - data component (`Chart`, `Table`, `PivotTable`) directly inside the card or local structure
+    - `Chart` already defaults to `flex: 1`; only add `style` when you need local `minHeight` or a real override
     - use `height="100%"` only when the block really follows that structure
 </componentes>
 
