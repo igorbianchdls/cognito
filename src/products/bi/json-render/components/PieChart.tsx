@@ -75,7 +75,7 @@ export default function JsonRenderPieChart({ element }: { element: any }) {
   }, [shouldClickFilter, resolvedFilterStorePath, setData, clearOnSecondClick]);
 
   return (
-    <div style={{ width: "100%", height, ...rootStyle }}>
+    <div style={{ width: "100%", height, flex: 1, ...rootStyle }}>
       {queryError ? <div className="rounded border border-red-300 bg-red-50 p-2 text-xs text-red-700">{queryError}</div> : null}
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>

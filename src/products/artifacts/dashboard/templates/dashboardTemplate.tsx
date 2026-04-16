@@ -474,7 +474,7 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
             </Vertical>
           </header>
 
-          <Card id="classic-kpi-receita" span={5} rows={8} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <Card id="classic-kpi-receita" span={5} rows={4} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <Icon
                     name="DollarSign"
@@ -504,7 +504,7 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 </KPI>
           </Card>
 
-          <Card id="classic-kpi-pedidos" span={5} rows={8} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <Card id="classic-kpi-pedidos" span={5} rows={4} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <Icon
                     name="ShoppingCart"
@@ -534,7 +534,7 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 </KPI>
           </Card>
 
-          <Card id="classic-kpi-ticket" span={5} rows={8} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <Card id="classic-kpi-ticket" span={5} rows={4} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <Icon
                     name="Ticket"
@@ -564,7 +564,7 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 </KPI>
           </Card>
 
-          <Card id="classic-kpi-canais" span={5} rows={8} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <Card id="classic-kpi-canais" span={5} rows={4} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <Icon
                     name="Network"
@@ -594,7 +594,7 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 </KPI>
           </Card>
 
-          <Card id="classic-kpi-aprovacao" span={4} rows={8} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <Card id="classic-kpi-aprovacao" span={4} rows={4} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <Icon
                     name="ShieldCheck"
@@ -672,7 +672,7 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 type="bar"
                 height="100%"
                 format="currency"
-                style={{ flex: 1, minHeight: 0 }}
+                style={{ minHeight: 0 }}
                 dataQuery={{
                   query: \`
                     SELECT
@@ -707,7 +707,7 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 type="pie"
                 height="100%"
                 format="currency"
-                style={{ flex: 1, minHeight: 0 }}
+                style={{ minHeight: 0 }}
                 dataQuery={{
                   query: \`
                     SELECT
@@ -757,7 +757,7 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 type="line"
                 height="100%"
                 format="currency"
-                style={{ flex: 1, minHeight: 300 }}
+                style={{ minHeight: 300 }}
                 dataQuery={{
                   query: \`
                     SELECT
@@ -834,7 +834,7 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 type="horizontal-bar"
                 height="100%"
                 format="number"
-                style={{ flex: 1, minHeight: 0 }}
+                style={{ minHeight: 0 }}
                 dataQuery={{
                   query: \`
                     SELECT

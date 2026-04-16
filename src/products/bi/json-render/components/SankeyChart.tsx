@@ -114,6 +114,8 @@ function makeNodeRenderer(colors: string[]) {
 export default function JsonRenderSankeyChart({ element }: { element: any }) {
   const { data, setData } = useData();
   const theme = useThemeOverrides();
+  const props = (element?.props || {}) as AnyRecord;
+  const rootStyle = props.style && typeof props.style === "object" ? props.style as React.CSSProperties : undefined;
   const dq = element?.props?.dataQuery as AnyRecord | undefined;
   const sourceFieldName = typeof dq?.xField === "string" ? dq.xField.trim() : "source";
   const targetFieldName =
@@ -243,7 +245,7 @@ export default function JsonRenderSankeyChart({ element }: { element: any }) {
   }, [shouldClickFilter, resolvedFilterStorePath, setData, clearOnSecondClick]);
 
   return (
-    <div>
+    <div style={{ width: "100%", height, flex: 1, ...rootStyle }}>
       {queryError && <div className="mb-2 text-xs text-red-600">{queryError}</div>}
       <div style={{ height }}>
         {!hasData ? (

@@ -66,6 +66,7 @@ function clamp01(value: number) {
 
 export default function JsonRenderGauge({ element }: { element?: { props?: AnyRecord } }) {
   const p = (element?.props || {}) as AnyRecord;
+  const rootStyle = p.style && typeof p.style === "object" ? p.style as React.CSSProperties : undefined;
   const theme = useThemeOverrides();
   const { data } = useData();
   const valuePath = (p.valuePath as string | undefined) || undefined;
@@ -243,7 +244,7 @@ export default function JsonRenderGauge({ element }: { element?: { props?: AnyRe
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "100%", height, flex: 1, ...rootStyle }}>
       <div style={{ position: "relative", width: "100%", height, cursor: "default" }}>
         {tooltipOpen ? (
           <div style={tooltipStyle}>
