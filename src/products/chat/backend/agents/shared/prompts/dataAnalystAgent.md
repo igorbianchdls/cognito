@@ -211,6 +211,7 @@
 - `Icon`
 - HTML/JSX puro para estrutura local
 - componentes especiais só para dado ou comportamento (`KPI`, `KPICompare`, `Chart`, `Query`, `Table`, `PivotTable`, `Filter`, `DatePicker`, `Tabs`, `Insights`)
+- for new dashboards, the root `Dashboard` must always include a non-empty `id` and `title`
 - for new dashboards, start directly at `<Dashboard ...>` and put global appearance on root props (`theme`, `chartPalette`)
 - do not use `DashboardTemplate` or `Theme` as authored root structure for new dashboards
 - Query-first é obrigatório nos componentes de dados.

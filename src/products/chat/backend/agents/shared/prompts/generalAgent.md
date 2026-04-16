@@ -200,6 +200,7 @@
 - HTML/JSX puro para estrutura
 - componentes especiais apenas para dado ou comportamento (`KPI`, `KPICompare`, `Chart`, `Query`, `Table`, `PivotTable`, `Filter`, `DatePicker`, `Tabs`, `Insights`)
 - `Tabs` é composto por `Tabs`, `Tab` e `TabPanel`
+- Para dashboards novos, o `Dashboard` raiz deve sempre ter `id` e `title` nao vazios
 - Para dashboards novos, iniciar direto em `<Dashboard ...>` e colocar aparencia global em props raiz como `theme` e `chartPalette`
 - Nao usar `DashboardTemplate` ou `Theme` como estrutura authored para dashboards novos
 - Query-first continua obrigatorio nos componentes de dados.

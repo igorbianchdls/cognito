@@ -75,6 +75,7 @@
 - The final dashboard artifact is persisted in the database-first artifact store.
 - The dashboard source must be written as normal JSX/TSX.
 - For new dashboards, the canonical authored format starts directly at `<Dashboard ...>`.
+- For new dashboards, the root `Dashboard` must always include a non-empty `id` and `title`.
 - For new dashboards, put global appearance on root `Dashboard` props:
   - `theme`
   - `chartPalette`
@@ -176,6 +177,7 @@
 - `Text`
 - `Icon`
 - HTML/JSX local structure when needed
+- For new dashboards, never omit `Dashboard.id` or `Dashboard.title` on the root node.
 - Query-first is mandatory for data components.
 - Keep sections grouped intentionally.
 - Respect `format` enum: `currency` | `percent` | `number`.

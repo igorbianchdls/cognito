@@ -51,6 +51,8 @@ export const DASHBOARD_CHART_PALETTE_OPTIONS: DashboardChartPaletteOption[] = [
     label: 'Tropical',
     colors: ['#0F766E', '#06B6D4', '#3B82F6', '#8B5CF6', '#EC4899', '#F97316', '#EAB308', '#84CC16'],
   },
+  // Alias tolerated in generated sources to avoid hard validation failures.
+  { value: 'default', label: 'Default', colors: ['#0F766E', '#14B8A6', '#2DD4BF', '#5EEAD4', '#99F6E4'] },
 ]
 
 export function getDashboardChartPaletteValueFromColors(colors: string[]) {
