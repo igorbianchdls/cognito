@@ -45,7 +45,7 @@ type Props = {
   onToggleWorkspace?: () => void;
 };
 
-export default function InputArea({ value, onChange, onSubmit, status = 'idle', submitDisabled = false, composioEnabled, onToggleComposio, model = 'openai-gpt5mini', onModelChange, promptProfile = 'data_analyst', onPromptProfileChange, workspaceOpen = false, onToggleWorkspace }: Props) {
+export default function InputArea({ value, onChange, onSubmit, status = 'idle', submitDisabled = false, composioEnabled, onToggleComposio, model = 'openai-gpt5mini', onModelChange, promptProfile = 'dashboard_creator', onPromptProfileChange, workspaceOpen = false, onToggleWorkspace }: Props) {
   // Local-only UI state for Toolkits panel (no persistence, no backend)
   const [toolkitsOpen, setToolkitsOpen] = useState(false)
   const [tkSearch, setTkSearch] = useState('')
@@ -221,7 +221,7 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
             <PromptInputModelSelect
               value={promptProfile}
               onValueChange={(v: any) => {
-                const next = v === 'general' || v === 'dashboard_creator' || v === 'dashboard_analyst' ? v : 'data_analyst'
+                const next = v === 'general' || v === 'data_analyst' || v === 'dashboard_analyst' ? v : 'dashboard_creator'
                 onPromptProfileChange?.(next)
               }}
             >

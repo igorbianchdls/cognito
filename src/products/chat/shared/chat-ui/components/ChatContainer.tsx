@@ -110,7 +110,7 @@ export default function ChatContainer({ withSideMargins, redirectOnFirstMessage,
   const [sandboxStatus, setSandboxStatus] = useState<SandboxStatus>('off')
   const [composioEnabled, setComposioEnabled] = useState<boolean>(false)
   const [model, setModel] = useState<EngineId>(initialEngine || 'openai-gpt5mini')
-  const [promptProfile, setPromptProfile] = useState<PromptProfileId>('data_analyst')
+  const [promptProfile, setPromptProfile] = useState<PromptProfileId>('dashboard_creator')
   const [startLocked, setStartLocked] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
   const scrollViewportRef = useRef<HTMLDivElement | null>(null)

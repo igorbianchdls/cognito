@@ -53,7 +53,7 @@ export function resolveAgentPromptProfile(input: ResolveProfileInput): AgentProm
   const requested = normalizeAgentPromptProfile(input.requestedProfile)
   if (requested) return requested
 
-  return 'data_analyst'
+  return 'dashboard_creator'
 }
 
 export function readAgentPromptMarkdown(profile: AgentPromptProfile): string {
