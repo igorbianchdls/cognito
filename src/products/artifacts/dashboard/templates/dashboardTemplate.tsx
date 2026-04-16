@@ -658,7 +658,7 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
               />
           </Card>
 
-          <Card id="classic-chart-mix" span={12} rows={24} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <Card id="classic-chart-mix" span={12} rows={12} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <Text variant="eyebrow">Receita por canal</Text>
                 <Text as="h2" variant="section-title-md">Mix comercial</Text>
@@ -693,7 +693,7 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
               />
           </Card>
 
-          <Card id="classic-chart-share" span={12} rows={24} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <Card id="classic-chart-share" span={12} rows={12} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <Text variant="eyebrow">Participacao</Text>
                 <Text as="h2" variant="section-title-md">Share por canal</Text>
@@ -732,7 +732,7 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
           <Card
             id="classic-chart-tendencia"
             span={12}
-            rows={28}
+            rows={12}
             style={{
               padding: 22,
               borderRadius: theme.cardFrame ? 0 : 24,
@@ -820,7 +820,7 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
               />
           </Card>
 
-          <Card id="classic-chart-status" span={12} rows={24} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <Card id="classic-chart-status" span={12} rows={12} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <Text variant="eyebrow">Status mix</Text>
                 <Text as="h2" variant="section-title-md">Volume por status</Text>
@@ -850,7 +850,7 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
               />
           </Card>
 
-          <Card id="classic-pivot-canal-status" span={12} rows={24} variant="pivot" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <Card id="classic-pivot-canal-status" span={12} rows={12} variant="pivot" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <Text variant="eyebrow">Cruzamento</Text>
                 <Text as="h2" variant="section-title-md">Receita por canal e status</Text>

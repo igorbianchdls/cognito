@@ -630,7 +630,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
         </div>
       </Card>
 
-      <Card id="chart-canal" span={8} rows={8} variant="chart" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <Card id="chart-canal" span={8} rows={24} variant="chart" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
         <Text variant="section-title">Receita por canal</Text>
         <div style={{ flex: 1, minHeight: 0 }}>
           <Chart
@@ -680,7 +680,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
         />
       </Card>
 
-      <Card id="insight-canais" span={12} rows={6}>
+      <Card id="insight-canais" span={12} rows={10}>
         <Insights
           prompt="Gerar insights curtos sobre concentracao de receita, desempenho por canal e sinais de aceleracao comercial."
           schedule={{ frequency: 'weekly', date: '', time: '09:00' }}
@@ -755,7 +755,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
         </div>
       </Card>
 
-      <Card id="insight-operacao" span={12} rows={6}>
+      <Card id="insight-operacao" span={12} rows={10}>
         <Insights
           prompt="Gerar insights sobre comportamento do funil comercial, estabilidade de status e efeitos do mix de canais no periodo."
           schedule={{ frequency: 'weekly', date: '', time: '09:00' }}
@@ -918,7 +918,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
       </KPI>
     </Card>
 
-    <Card id="chart-diario" span={8} rows={8} variant="chart" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <Card id="chart-diario" span={8} rows={28} variant="chart" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
       <Text variant="section-title">Receita por dia</Text>
       <Chart
         type="line"
@@ -972,7 +972,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
       />
     </Card>
 
-    <Card id="insight-aprovacao" span={12} rows={6}>
+    <Card id="insight-aprovacao" span={12} rows={10}>
       <Insights
         prompt="Gerar insights sobre aprovacao, ritmo diario de receita e pontos de atencao nos pedidos recentes."
         schedule={{ frequency: 'weekly', date: '', time: '09:00' }}
