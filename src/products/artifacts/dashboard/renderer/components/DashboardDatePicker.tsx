@@ -633,6 +633,8 @@ export default function DashboardDatePicker({
                     style={{
                       ...baseButtonStyle,
                       ...(isActive ? activePresetButtonStyle : null),
+                      padding: '0 14px',
+                      fontWeight: isActive ? 600 : (baseButtonStyle.fontWeight ?? 500),
                     }}
                   >
                     {preset}
