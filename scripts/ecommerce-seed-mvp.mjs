@@ -97,6 +97,11 @@ function startOfUtcDay(date) {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0));
 }
 
+function parseDateOnly(iso) {
+  const [y, m, d] = String(iso || "").split("-").map(Number);
+  return new Date(Date.UTC(y || 1970, (m || 1) - 1, d || 1, 0, 0, 0, 0));
+}
+
 function addDays(date, n) {
   const d = new Date(date.getTime());
   d.setUTCDate(d.getUTCDate() + n);
@@ -1018,8 +1023,10 @@ async function main() {
 
   const rng = createRng(seed);
   const runTag = makeRunTag(seed);
-  const endDate = startOfUtcDay(new Date());
-  const startDate = addDays(endDate, -(days - 1));
+  const startArg = String(getArg("--start") || "").trim();
+  const endArg = String(getArg("--end") || "").trim();
+  const endDate = endArg ? startOfUtcDay(parseDateOnly(endArg)) : startOfUtcDay(new Date());
+  const startDate = startArg ? startOfUtcDay(parseDateOnly(startArg)) : addDays(endDate, -(days - 1));
   const nowIso = new Date().toISOString();
 
   const client = dryRun
