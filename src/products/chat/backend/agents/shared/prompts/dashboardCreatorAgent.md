@@ -290,7 +290,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
     - Rule: when `Card` is a direct child of `Grid`, always provide `id`, `span`, and `rows`.
     - Rule: if the user expects resize persistence, give the `Card` a stable `id`; otherwise `span`/`rows` changes cannot be safely written back.
     - Rule: for resizable cards, prefer this shape:
-      - `<Grid columns={12} rowHeight={16} gap={16}>`
+      - `<Grid columns={24} rowHeight={16} gap={16}>`
       - `<Card id="..." span={...} rows={...}>...</Card>`
       - `</Grid>`
   - `Icon`
@@ -534,9 +534,9 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
     />
   </header>
 
-  <Grid columns={12} rowHeight={16} gap={18} padding={28} width="100%">
+  <Grid columns={24} rowHeight={16} gap={18} padding={28} width="100%">
 
-    <Card id="kpi-receita" span={4} rows={5} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <Card id="kpi-receita" span={8} rows={5} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <Icon
           name="DollarSign"
@@ -568,7 +568,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
       </div>
     </Card>
 
-      <Card id="kpi-pedidos" span={4} rows={5} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <Card id="kpi-pedidos" span={8} rows={5} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Icon
             name="ShoppingCart"
@@ -600,7 +600,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
         </div>
       </Card>
 
-      <Card id="kpi-ticket" span={4} rows={5} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <Card id="kpi-ticket" span={8} rows={5} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Icon
             name="Ticket"
@@ -632,7 +632,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
         </div>
       </Card>
 
-      <Card id="chart-canal" span={8} rows={24} variant="chart" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <Card id="chart-canal" span={16} rows={24} variant="chart" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
         <Text variant="section-title">Receita por canal</Text>
         <div style={{ flex: 1, minHeight: 0 }}>
           <Chart
@@ -659,7 +659,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
         </div>
       </Card>
 
-      <Card id="filter-canal" span={4} rows={12} variant="filter">
+      <Card id="filter-canal" span={8} rows={12} variant="filter">
         <Text variant="filter-title">Canal</Text>
         <Filter
           label="Canal"
@@ -682,7 +682,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
         />
       </Card>
 
-      <Card id="insight-canais" span={12} rows={10}>
+      <Card id="insight-canais" span={24} rows={10}>
         <Insights
           prompt="Gerar insights curtos sobre concentracao de receita, desempenho por canal e sinais de aceleracao comercial."
           schedule={{ frequency: 'weekly', date: '', time: '09:00' }}
@@ -713,9 +713,9 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
     />
   </header>
 
-  <Grid columns={12} rowHeight={16} gap={18} padding={24}>
+  <Grid columns={24} rowHeight={16} gap={18} padding={24}>
 
-    <Card id="filter-canal" span={6} rows={5} variant="filter">
+    <Card id="filter-canal" span={12} rows={5} variant="filter">
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         <Filter
           label="Canal"
@@ -739,7 +739,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
       </div>
     </Card>
 
-    <Card id="filter-status" span={6} rows={5} variant="filter">
+    <Card id="filter-status" span={12} rows={5} variant="filter">
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         <Filter
           label="Status"
@@ -762,14 +762,14 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
       </div>
     </Card>
 
-      <Card id="insight-operacao" span={12} rows={10}>
+      <Card id="insight-operacao" span={24} rows={10}>
         <Insights
           prompt="Gerar insights sobre comportamento do funil comercial, estabilidade de status e efeitos do mix de canais no periodo."
           schedule={{ frequency: 'weekly', date: '', time: '09:00' }}
         />
       </Card>
 
-      <Card id="detail-tabs" span={12} rows={16}>
+      <Card id="detail-tabs" span={24} rows={16}>
         <Tabs defaultValue="table">
           <div style={{ display: 'flex', gap: 8 }}>
             <Tab value="table">Tabela</Tab>
@@ -851,9 +851,9 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
     />
   </header>
 
-  <Grid columns={12} rowHeight={16} gap={18} padding={24}>
+  <Grid columns={24} rowHeight={16} gap={18} padding={24}>
 
-    <Card id="filter-status" span={6} rows={5} variant="filter">
+    <Card id="filter-status" span={12} rows={5} variant="filter">
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         <Filter
           label="Status"
@@ -876,7 +876,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
       </div>
     </Card>
 
-    <Card id="filter-cliente" span={6} rows={5} variant="filter">
+    <Card id="filter-cliente" span={12} rows={5} variant="filter">
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         <Filter
           label="Cliente"
@@ -900,7 +900,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
       </div>
     </Card>
 
-    <Card id="kpi-aprovacao" span={4} rows={5} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <Card id="kpi-aprovacao" span={8} rows={5} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <Icon
           name="ShieldCheck"
@@ -931,7 +931,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
       </KPI>
     </Card>
 
-    <Card id="chart-diario" span={8} rows={28} variant="chart" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <Card id="chart-diario" span={16} rows={28} variant="chart" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
       <Text variant="section-title">Receita por dia</Text>
       <Chart
         type="line"
@@ -957,7 +957,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
       />
     </Card>
 
-    <Card id="table-pedidos" span={12} rows={16}>
+    <Card id="table-pedidos" span={24} rows={16}>
       <Table
         dataQuery={{
           query: `
@@ -985,7 +985,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
       />
     </Card>
 
-    <Card id="insight-aprovacao" span={12} rows={10}>
+    <Card id="insight-aprovacao" span={24} rows={10}>
       <Insights
         prompt="Gerar insights sobre aprovacao, ritmo diario de receita e pontos de atencao nos pedidos recentes."
         schedule={{ frequency: 'weekly', date: '', time: '09:00' }}
@@ -998,7 +998,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
 
 <expected_output_style_override>
 ```tsx
-<Panel id="reading" span={4} rows={8}>
+<Panel id="reading" span={8} rows={8}>
   <Card variant="note" style={{ minHeight: '100%' }}>
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <Icon
@@ -1054,8 +1054,8 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
     />
   </header>
 
-  <Grid columns={12} rowHeight={16} gap={16} padding={24}>
-    <Card id="filter-canal" span={6} rows={5} variant="filter">
+  <Grid columns={24} rowHeight={16} gap={16} padding={24}>
+    <Card id="filter-canal" span={12} rows={5} variant="filter">
       <Filter
         label="Canal"
         table="vendas.pedidos"
@@ -1076,7 +1076,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
       />
     </Card>
 
-    <Card id="filter-status" span={6} rows={5} variant="filter">
+    <Card id="filter-status" span={12} rows={5} variant="filter">
       <Filter
         label="Status"
         table="vendas.pedidos"
