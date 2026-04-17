@@ -379,6 +379,8 @@ export default function DashboardDatePicker({
     ...(props.activePresetButtonStyle && typeof props.activePresetButtonStyle === 'object'
       ? props.activePresetButtonStyle
       : {}),
+    padding: '0 14px',
+    fontWeight: 600,
     border: 'none',
     boxShadow: 'none',
   } as React.CSSProperties

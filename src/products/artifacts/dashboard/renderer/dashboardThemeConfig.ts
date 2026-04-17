@@ -457,14 +457,14 @@ function buildDashboardDatePickerThemeConfigEntry(tokens: DashboardTemplateTheme
     },
     presetButtonStyle: {
       height: 36,
-      padding: '0 12px',
+      padding: '0 14px',
       backgroundColor: fieldBackground,
       color: fieldColor,
       fontSize: 13,
       fontWeight: 500,
     },
     activePresetButtonStyle: {
-      padding: '0 12px',
+      padding: '0 14px',
       backgroundColor: tokens.headerDatePickerActiveBg,
       borderColor: tokens.headerDatePickerActiveBorder,
       color: tokens.headerDatePickerActiveText,
