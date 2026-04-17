@@ -194,9 +194,10 @@ ${base.whereClause}
       sql: `
 SELECT
   COALESCE(p.canal_conta_id::text, '-') AS key,
-  COALESCE(p.canal_conta_id::text, '-') AS label,
+  COALESCE(cc.nome_conta, CONCAT('Conta #', p.canal_conta_id::text), '-') AS label,
   COALESCE(SUM(p.valor_total), 0)::float AS value
 FROM ecommerce.pedidos p
+LEFT JOIN ecommerce.canais_contas cc ON cc.id = p.canal_conta_id
 ${base.whereClause}
 GROUP BY 1, 2
 ORDER BY 3 DESC

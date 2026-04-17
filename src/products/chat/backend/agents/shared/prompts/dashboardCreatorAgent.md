@@ -55,6 +55,8 @@
 - The dashboard source must be written as normal JSX/TSX.
 - The prompt itself is the structural source of truth for dashboard format and supported component usage.
 - `<camposvendas>` below is the data source of truth for Vendas dashboards in this profile.
+- `<camposmarketing>` below defines the canonical marketing data contract available in this profile for Meta Ads and Google Ads analysis.
+- `<camposecommerce>` below defines the canonical ecommerce data contract available in this profile for Shopify, Shopee, Mercado Livre, and Amazon analysis.
 - For new dashboards, the canonical authored format starts directly at `<Dashboard ...>`.
 - For new dashboards, the root `Dashboard` must always include a non-empty `id` and `title`.
 - For new dashboards, put global appearance on the root `Dashboard` props:
@@ -149,6 +151,283 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
   - Pedidos por Mes
   - Ticket Medio por Mes
 </camposvendas>
+
+<camposmarketing>
+- Scope: this section defines the canonical marketing/trafego pago contract available in this profile.
+- Hard rule: use only the schemas, tables, fields, joins, filters, and metrics explicitly defined in this section when grounding marketing analysis or future marketing dashboard expansion.
+- Hard rule: if the user asks for a marketing field not listed here, ask instead of guessing.
+- Base fact table:
+  - `trafegopago.desempenho_diario dd`
+    - allowed columns:
+      - `tenant_id`
+      - `data_ref`
+      - `plataforma`
+      - `nivel`
+      - `conta_id`
+      - `campanha_id`
+      - `grupo_id`
+      - `anuncio_id`
+      - `gasto`
+      - `receita_atribuida`
+      - `cliques`
+      - `impressoes`
+      - `conversoes`
+      - `leads`
+      - `alcance`
+      - `frequencia`
+- Allowed lookups:
+  - `trafegopago.contas_midia cm` -> `id`, `nome_conta`
+  - `trafegopago.campanhas c` -> `id`, `nome`
+  - `trafegopago.grupos_anuncio ga` -> `id`, `nome`
+  - `trafegopago.anuncios a` -> `id`, `nome`
+- Canonical joins:
+```sql
+LEFT JOIN trafegopago.contas_midia cm ON cm.id = dd.conta_id
+LEFT JOIN trafegopago.campanhas c ON c.id = dd.campanha_id
+LEFT JOIN trafegopago.grupos_anuncio ga ON ga.id = dd.grupo_id
+LEFT JOIN trafegopago.anuncios a ON a.id = dd.anuncio_id
+```
+- Canonical filter base:
+```sql
+WHERE dd.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR dd.data_ref::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR dd.data_ref::date <= {{ate}}::date)
+```
+- Allowed dashboard placeholders for Marketing:
+  - `{{tenant_id}}`
+  - `{{de}}`
+  - `{{ate}}`
+  - `{{plataforma}}`
+  - `{{nivel}}`
+  - `{{conta_id}}`
+  - `{{campanha_id}}`
+  - `{{grupo_id}}`
+  - `{{anuncio_id}}`
+  - `{{gasto_min}}`
+  - `{{gasto_max}}`
+- Canonical optional filter clauses:
+```sql
+AND ({{plataforma}} IS NULL OR dd.plataforma = {{plataforma}}::text)
+AND ({{nivel}} IS NULL OR dd.nivel = {{nivel}}::text)
+AND ({{conta_id}}::int[] IS NULL OR dd.conta_id = ANY({{conta_id}}::int[]))
+AND ({{campanha_id}}::int[] IS NULL OR dd.campanha_id = ANY({{campanha_id}}::int[]))
+AND ({{grupo_id}}::int[] IS NULL OR dd.grupo_id = ANY({{grupo_id}}::int[]))
+AND ({{anuncio_id}}::int[] IS NULL OR dd.anuncio_id = ANY({{anuncio_id}}::int[]))
+AND ({{gasto_min}} IS NULL OR dd.gasto >= {{gasto_min}}::numeric)
+AND ({{gasto_max}} IS NULL OR dd.gasto <= {{gasto_max}}::numeric)
+```
+- Query-first contract for Marketing:
+  - KPI queries must return alias `value`
+  - Chart queries must return aliases `key`, `label`, `value`
+  - Monthly series must use `TO_CHAR(DATE_TRUNC('month', dd.data_ref), 'YYYY-MM')`
+- Canonical KPIs:
+  - Gasto: `SUM(dd.gasto)`
+  - Receita Atribuida: `SUM(dd.receita_atribuida)`
+  - Cliques: `SUM(dd.cliques)`
+  - Impressoes: `SUM(dd.impressoes)`
+  - Conversoes: `SUM(dd.conversoes)`
+  - Leads: `SUM(dd.leads)`
+  - ROAS: `CASE WHEN SUM(dd.gasto)=0 THEN 0 ELSE SUM(dd.receita_atribuida)/SUM(dd.gasto) END`
+  - CTR: `CASE WHEN SUM(dd.impressoes)=0 THEN 0 ELSE SUM(dd.cliques)::float/SUM(dd.impressoes)::float END`
+  - CPC: `CASE WHEN SUM(dd.cliques)=0 THEN 0 ELSE SUM(dd.gasto)::float/SUM(dd.cliques)::float END`
+  - CPM: `CASE WHEN SUM(dd.impressoes)=0 THEN 0 ELSE (SUM(dd.gasto)::float*1000.0)/SUM(dd.impressoes)::float END`
+  - CPA: `CASE WHEN SUM(dd.conversoes)=0 THEN 0 ELSE SUM(dd.gasto)::float/SUM(dd.conversoes)::float END`
+  - CVR: `CASE WHEN SUM(dd.cliques)=0 THEN 0 ELSE SUM(dd.conversoes)::float/SUM(dd.cliques)::float END`
+  - Lead Rate: `CASE WHEN SUM(dd.cliques)=0 THEN 0 ELSE SUM(dd.leads)::float/SUM(dd.cliques)::float END`
+- Canonical filters:
+  - Plataforma -> `dd.plataforma`
+  - Nivel -> `dd.nivel`
+  - Conta -> `trafegopago.contas_midia`
+  - Campanha -> `trafegopago.campanhas`
+  - Grupo -> `trafegopago.grupos_anuncio`
+  - Anuncio -> `trafegopago.anuncios`
+- Canonical charts:
+  - Gasto por Mes
+  - Receita por Mes
+  - ROAS por Plataforma
+  - Gasto por Conta
+  - Top Campanhas por Gasto
+  - Top Campanhas por Leads
+  - Top Anuncios por Gasto
+  - Desempenho Diario
+</camposmarketing>
+
+<camposecommerce>
+- Scope: this section defines the canonical ecommerce contract available in this profile.
+- Hard rule: use only the schemas, tables, fields, joins, filters, and metrics explicitly defined in this section when grounding ecommerce analysis or future ecommerce dashboard expansion.
+- Hard rule: if the user asks for an ecommerce field not listed here, ask instead of guessing.
+- Base order table:
+  - `ecommerce.pedidos p`
+    - allowed columns:
+      - `id`
+      - `tenant_id`
+      - `data_pedido`
+      - `plataforma`
+      - `canal_conta_id`
+      - `loja_id`
+      - `cliente_id`
+      - `status`
+      - `status_pagamento`
+      - `status_fulfillment`
+      - `valor_total`
+      - `valor_pago`
+      - `valor_reembolsado`
+      - `valor_liquido_estimado`
+      - `frete_total`
+      - `desconto_total`
+      - `taxa_total`
+- Item table:
+  - `ecommerce.pedido_itens pi`
+    - allowed columns:
+      - `pedido_id`
+      - `produto_id`
+      - `produto_variante_id`
+      - `sku`
+      - `titulo_item`
+      - `quantidade`
+      - `preco_unitario`
+      - `valor_total`
+      - `status`
+- Payment table:
+  - `ecommerce.pagamentos pg`
+    - allowed columns:
+      - `pedido_id`
+      - `status`
+      - `metodo`
+      - `provedor`
+      - `data_autorizacao`
+      - `data_captura`
+      - `valor_autorizado`
+      - `valor_capturado`
+      - `valor_taxa`
+      - `valor_liquido`
+- Shipping table:
+  - `ecommerce.envios e`
+    - allowed columns:
+      - `pedido_id`
+      - `status`
+      - `transportadora`
+      - `despachado_em`
+      - `entregue_em`
+      - `prazo_dias`
+      - `frete_cobrado`
+      - `frete_custo`
+- Fee table:
+  - `ecommerce.taxas_pedido t`
+    - allowed columns:
+      - `pedido_id`
+      - `tipo_taxa`
+      - `competencia_em`
+      - `valor`
+      - `aliquota`
+- Payout table:
+  - `ecommerce.payouts py`
+    - allowed columns:
+      - `tenant_id`
+      - `plataforma`
+      - `canal_conta_id`
+      - `loja_id`
+      - `status`
+      - `periodo_inicio`
+      - `periodo_fim`
+      - `data_pagamento`
+      - `valor_bruto`
+      - `valor_taxas`
+      - `valor_reembolsos`
+      - `valor_liquido`
+- Inventory snapshot table:
+  - `ecommerce.estoque_saldos es`
+    - allowed columns:
+      - `tenant_id`
+      - `plataforma`
+      - `canal_conta_id`
+      - `loja_id`
+      - `produto_id`
+      - `produto_variante_id`
+      - `status`
+      - `capturado_em`
+      - `source_updated_at`
+      - `created_at`
+      - `quantidade_disponivel`
+      - `quantidade_reservada`
+      - `quantidade_total`
+- Allowed lookups:
+  - `ecommerce.canais_contas cc` -> `id`, `nome_conta`
+  - `ecommerce.lojas l` -> `id`, `nome`
+  - `ecommerce.clientes c` -> `id`, `nome`
+  - `ecommerce.produtos pr` -> `id`, `nome`, `categoria`
+  - `ecommerce.produto_variantes pv` -> `id`, `sku`
+- Canonical joins:
+```sql
+LEFT JOIN ecommerce.canais_contas cc ON cc.id = p.canal_conta_id
+LEFT JOIN ecommerce.lojas l ON l.id = p.loja_id
+LEFT JOIN ecommerce.clientes c ON c.id = p.cliente_id
+LEFT JOIN ecommerce.produtos pr ON pr.id = pi.produto_id
+LEFT JOIN ecommerce.produto_variantes pv ON pv.id = pi.produto_variante_id
+```
+- Canonical filter base for orders:
+```sql
+WHERE p.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR p.data_pedido::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR p.data_pedido::date <= {{ate}}::date)
+```
+- Allowed dashboard placeholders for Ecommerce:
+  - `{{tenant_id}}`
+  - `{{de}}`
+  - `{{ate}}`
+  - `{{plataforma}}`
+  - `{{canal_conta_id}}`
+  - `{{loja_id}}`
+  - `{{status}}`
+  - `{{status_pagamento}}`
+  - `{{status_fulfillment}}`
+  - `{{produto_id}}`
+  - `{{categoria}}`
+- Canonical optional filter clauses:
+```sql
+AND ({{plataforma}} IS NULL OR p.plataforma = {{plataforma}}::text)
+AND ({{canal_conta_id}}::int[] IS NULL OR p.canal_conta_id = ANY({{canal_conta_id}}::int[]))
+AND ({{loja_id}}::int[] IS NULL OR p.loja_id = ANY({{loja_id}}::int[]))
+AND ({{status}} IS NULL OR p.status = {{status}}::text)
+AND ({{status_pagamento}} IS NULL OR p.status_pagamento = {{status_pagamento}}::text)
+AND ({{status_fulfillment}} IS NULL OR p.status_fulfillment = {{status_fulfillment}}::text)
+```
+- Query-first contract for Ecommerce:
+  - KPI queries must return alias `value`
+  - Chart queries must return aliases `key`, `label`, `value`
+  - Monthly series over orders must use `TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM')`
+- Canonical KPIs:
+  - GMV / Receita Bruta: `SUM(p.valor_total)`
+  - Pedidos: `COUNT(DISTINCT p.id)`
+  - Ticket Medio: `AVG(p.valor_total)`
+  - Clientes Unicos: `COUNT(DISTINCT p.cliente_id)`
+  - Valor Pago: `SUM(p.valor_pago)`
+  - Valor Reembolsado: `SUM(p.valor_reembolsado)`
+  - Valor Liquido Estimado: `SUM(p.valor_liquido_estimado)`
+  - Fee Rate: `CASE WHEN SUM(p.valor_total)=0 THEN 0 ELSE SUM(p.taxa_total)/SUM(p.valor_total) END`
+  - Taxa Cancelamento: `CASE WHEN COUNT(*)=0 THEN 0 ELSE SUM(CASE WHEN p.status='cancelado' THEN 1 ELSE 0 END)::float/COUNT(*)::float END`
+  - Taxa Reembolso: `CASE WHEN COUNT(*)=0 THEN 0 ELSE SUM(CASE WHEN COALESCE(p.valor_reembolsado,0)>0 THEN 1 ELSE 0 END)::float/COUNT(*)::float END`
+- Canonical filters:
+  - Plataforma -> `p.plataforma`
+  - Canal / Conta -> `ecommerce.canais_contas`
+  - Loja -> `ecommerce.lojas`
+  - Status -> `p.status`
+  - Status Pagamento -> `p.status_pagamento`
+  - Status Fulfillment -> `p.status_fulfillment`
+  - Produto -> `ecommerce.produtos`
+  - Categoria -> `ecommerce.produtos.categoria`
+- Canonical charts:
+  - Vendas por Canal
+  - Pedidos por Status
+  - Faturamento por Mes
+  - Top Produtos por Receita
+  - Frete por Transportadora
+  - GMV por Plataforma
+  - Pedidos por Loja
+  - Fee Rate por Canal
+  - Envios por Status
+  - Valor Liquido por Payout
+</camposecommerce>
 
 <non_negotiable_rules>
 - Always produce valid dashboard JSX.
