@@ -15,14 +15,11 @@ import { cn } from '@/lib/utils';
 import {
   ChevronLeft,
   ChevronRight,
-  Copy,
   Download,
-  CheckCircle,
   AlertCircle,
   Table as TableIcon,
   Code,
   BarChart3,
-  Palette,
   Calendar as CalendarIcon,
   type LucideIcon
 } from 'lucide-react';
@@ -30,7 +27,6 @@ import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ChartSwitcher, type ChartSwitcherOptions } from '@/components/charts/ChartSwitcher';
 import { buildThemeVars } from '@/products/bi/json-render/theme/themeAdapter';
-import { APPS_HEADER_THEME_OPTIONS, APPS_THEME_OPTIONS } from '@/products/bi/shared/themeOptions';
 import {
   ColumnDef,
   flexRender,
@@ -101,15 +97,14 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
   onHeaderDateRangeChange,
 }: ArtifactDataTableProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [copied, setCopied] = useState(false);
   const [viewMode, setViewMode] = useState<'table' | 'sql' | 'chart'>('table');
 
   // Header date range state (independente do ChartSwitcher)
   const [hdrPreset, setHdrPreset] = useState<string>('');
   const [hdrFrom, setHdrFrom] = useState<string>('');
   const [hdrTo, setHdrTo] = useState<string>('');
-  const [themeName, setThemeName] = useState<string>('light');
-  const [headerThemeName, setHeaderThemeName] = useState<string>('');
+  const themeName = 'light';
+  const headerThemeName = '';
 
   useEffect(() => {
     if (!sqlQuery && viewMode === 'sql') {
@@ -177,16 +172,6 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
     },
   });
 
-  const handleCopyJSON = async () => {
-    try {
-      await navigator.clipboard.writeText(JSON.stringify(data, null, 2));
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Erro ao copiar:', err);
-    }
-  };
-
   const handleDownloadCSV = () => {
     if (!data || data.length === 0) return;
 
@@ -245,58 +230,6 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
         </div>
 
       <ArtifactActions>
-        <Popover>
-          <PopoverTrigger asChild>
-            <ArtifactAction
-              icon={Palette}
-              tooltip="Tema"
-              variant="outline"
-              size="icon"
-              style={headerActionStyle}
-            />
-          </PopoverTrigger>
-          <PopoverContent align="end" sideOffset={8} className="w-72 p-3">
-            <div className="space-y-3">
-              <div className="text-xs font-medium text-slate-500">Tema do Dashboard</div>
-              <div className="space-y-2">
-                <label className="text-xs text-slate-600">Tema</label>
-                <select
-                  className="h-8 w-full rounded border border-slate-300 bg-white px-2 text-sm"
-                  value={themeName}
-                  onChange={(e) => setThemeName(e.target.value)}
-                >
-                  {APPS_THEME_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs text-slate-600">Tema do Header</label>
-                <select
-                  className="h-8 w-full rounded border border-slate-300 bg-white px-2 text-sm"
-                  value={headerThemeName}
-                  onChange={(e) => setHeaderThemeName(e.target.value)}
-                >
-                  {APPS_HEADER_THEME_OPTIONS.map((opt) => (
-                    <option key={opt.value || 'auto'} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex justify-end">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setThemeName('light');
-                    setHeaderThemeName('');
-                  }}
-                >
-                  Resetar
-                </Button>
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
         {headerDateFilter && onHeaderDateRangeChange && (
           <Popover>
             <PopoverTrigger asChild>
@@ -396,13 +329,6 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
               onClick={() => setViewMode('chart')}
             />
           )}
-          <ArtifactAction
-            icon={copied ? CheckCircle : Copy}
-            tooltip={copied ? "Copiado!" : "Copiar JSON"}
-            onClick={handleCopyJSON}
-            className={copied ? "text-green-600" : ""}
-            style={headerActionStyle}
-          />
           <ArtifactAction
             icon={Download}
             tooltip="Exportar CSV"
