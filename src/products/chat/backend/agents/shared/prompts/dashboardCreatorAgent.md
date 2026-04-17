@@ -57,6 +57,7 @@
 - `<camposvendas>` below is the data source of truth for Vendas dashboards in this profile.
 - `<camposmarketing>` below defines the canonical marketing data contract available in this profile for Meta Ads and Google Ads analysis.
 - `<camposecommerce>` below defines the canonical ecommerce data contract available in this profile for Shopify, Shopee, Mercado Livre, and Amazon analysis.
+- `<camposfinanceiro>` below defines the canonical financeiro data contract available in this profile for contas a pagar and contas a receber analysis.
 - For new dashboards, the canonical authored format starts directly at `<Dashboard ...>`.
 - For new dashboards, the root `Dashboard` must always include a non-empty `id` and `title`.
 - For new dashboards, put global appearance on the root `Dashboard` props:
@@ -150,6 +151,31 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
   - Faturamento por Mes
   - Pedidos por Mes
   - Ticket Medio por Mes
+- Good dashboard KPI ideas for Vendas:
+  - Vendas
+  - Pedidos
+  - Ticket Medio
+  - Clientes Atendidos
+  - Canais Ativos
+  - Vendedores Ativos
+  - Filiais Ativas
+  - Unidades de Negocio Ativas
+  - Territorios Ativos
+  - Receita Media por Cliente
+- Good dashboard chart ideas for Vendas:
+  - Faturamento por Mes
+  - Pedidos por Mes
+  - Ticket Medio por Mes
+  - Vendas por Canal
+  - Vendas por Categoria de Receita
+  - Top Clientes por Vendas
+  - Top Vendedores por Vendas
+  - Vendas por Filial
+  - Vendas por Unidade de Negocio
+  - Vendas por Territorio
+- Good dashboard table ideas for Vendas:
+  - Tabela de Pedidos com data_pedido, cliente, canal, vendedor, filial, status e valor_total
+  - Tabela de Clientes ou Vendedores com total de vendas, quantidade de pedidos e ticket medio
 </camposvendas>
 
 <camposmarketing>
@@ -250,6 +276,33 @@ AND ({{gasto_max}} IS NULL OR dd.gasto <= {{gasto_max}}::numeric)
   - Top Campanhas por Leads
   - Top Anuncios por Gasto
   - Desempenho Diario
+- Good dashboard KPI ideas for Marketing:
+  - Gasto Total
+  - Receita Atribuida
+  - ROAS
+  - Cliques
+  - Impressoes
+  - Conversoes
+  - Leads
+  - CTR
+  - CPC
+  - CPM
+  - CPA
+  - CVR
+- Good dashboard chart ideas for Marketing:
+  - Gasto por Mes
+  - Receita Atribuida por Mes
+  - ROAS por Plataforma
+  - Gasto por Conta
+  - Top Campanhas por Gasto
+  - Top Campanhas por Leads
+  - Top Anuncios por Gasto
+  - CTR por Campanha
+  - CPC por Plataforma
+  - Conversoes por Dia
+- Good dashboard table ideas for Marketing:
+  - Tabela de Campanhas com gasto, receita atribuida, ROAS, cliques, conversoes e leads
+  - Tabela de Anuncios com plataforma, campanha, grupo, gasto, CTR, CPC e CPA
 </camposmarketing>
 
 <camposecommerce>
@@ -427,7 +480,180 @@ AND ({{status_fulfillment}} IS NULL OR p.status_fulfillment = {{status_fulfillme
   - Fee Rate por Canal
   - Envios por Status
   - Valor Liquido por Payout
+- Good dashboard KPI ideas for Ecommerce:
+  - GMV
+  - Pedidos
+  - Ticket Medio
+  - Clientes Unicos
+  - Valor Pago
+  - Valor Reembolsado
+  - Valor Liquido Estimado
+  - Fee Rate
+  - Taxa de Cancelamento
+  - Taxa de Reembolso
+  - Frete Total
+  - Desconto Total
+- Good dashboard chart ideas for Ecommerce:
+  - Vendas por Canal
+  - Pedidos por Status
+  - Faturamento por Mes
+  - Top Produtos por Receita
+  - Frete por Transportadora
+  - GMV por Plataforma
+  - Pedidos por Loja
+  - Fee Rate por Canal
+  - Envios por Status
+  - Valor Liquido por Payout
+  - Ticket Medio por Plataforma
+  - Reembolsos por Mes
+- Good dashboard table ideas for Ecommerce:
+  - Tabela de Pedidos com plataforma, canal, loja, status, status pagamento, status fulfillment e valor_total
+  - Tabela de Produtos com produto, SKU, quantidade, receita de itens e categoria
 </camposecommerce>
+
+<camposfinanceiro>
+- Scope: this section defines the canonical financeiro contract available in this profile.
+- Hard rule: use only the schemas, tables, fields, joins, filters, and metrics explicitly defined in this section when grounding financeiro analysis or future financeiro dashboard expansion.
+- Hard rule: if the user asks for a financeiro field not listed here, ask instead of guessing.
+- Base payable table:
+  - `financeiro.contas_pagar cp`
+    - allowed columns:
+      - `id`
+      - `tenant_id`
+      - `data_vencimento`
+      - `data_pagamento`
+      - `status`
+      - `valor_liquido`
+      - `fornecedor_id`
+      - `categoria_despesa_id`
+      - `centro_custo_id`
+- Base receivable table:
+  - `financeiro.contas_receber cr`
+    - allowed columns:
+      - `id`
+      - `tenant_id`
+      - `data_vencimento`
+      - `status`
+      - `valor_liquido`
+      - `cliente_id`
+      - `categoria_receita_id`
+      - `centro_lucro_id`
+- Allowed lookups:
+  - `entidades.fornecedores f` -> `id`, `nome_fantasia`
+  - `entidades.clientes cli` -> `id`, `nome_fantasia`
+  - `financeiro.categorias_despesa catd` -> `id`, `nome`
+  - `financeiro.categorias_receita catr` -> `id`, `nome`
+  - `empresa.centros_custo cc` -> `id`, `nome`
+  - `empresa.centros_lucro cl` -> `id`, `nome`
+- Canonical joins for AP:
+```sql
+LEFT JOIN entidades.fornecedores f ON f.id = cp.fornecedor_id
+LEFT JOIN financeiro.categorias_despesa catd ON catd.id = cp.categoria_despesa_id
+LEFT JOIN empresa.centros_custo cc ON cc.id = cp.centro_custo_id
+```
+- Canonical joins for AR:
+```sql
+LEFT JOIN entidades.clientes cli ON cli.id = cr.cliente_id
+LEFT JOIN financeiro.categorias_receita catr ON catr.id = cr.categoria_receita_id
+LEFT JOIN empresa.centros_lucro cl ON cl.id = cr.centro_lucro_id
+```
+- Canonical filter base for AP:
+```sql
+WHERE cp.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR cp.data_vencimento::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR cp.data_vencimento::date <= {{ate}}::date)
+```
+- Canonical filter base for AR:
+```sql
+WHERE cr.tenant_id = {{tenant_id}}::int
+  AND ({{de}}::date IS NULL OR cr.data_vencimento::date >= {{de}}::date)
+  AND ({{ate}}::date IS NULL OR cr.data_vencimento::date <= {{ate}}::date)
+```
+- Allowed dashboard placeholders for Financeiro:
+  - `{{tenant_id}}`
+  - `{{de}}`
+  - `{{ate}}`
+  - `{{status}}`
+  - `{{fornecedor_id}}`
+  - `{{cliente_id}}`
+  - `{{categoria_despesa_id}}`
+  - `{{categoria_receita_id}}`
+  - `{{centro_custo_id}}`
+  - `{{centro_lucro_id}}`
+- Canonical optional filter clauses for AP:
+```sql
+AND ({{status}} IS NULL OR cp.status = {{status}}::text)
+AND ({{fornecedor_id}}::int[] IS NULL OR cp.fornecedor_id = ANY({{fornecedor_id}}::int[]))
+AND ({{categoria_despesa_id}}::int[] IS NULL OR cp.categoria_despesa_id = ANY({{categoria_despesa_id}}::int[]))
+AND ({{centro_custo_id}}::int[] IS NULL OR cp.centro_custo_id = ANY({{centro_custo_id}}::int[]))
+```
+- Canonical optional filter clauses for AR:
+```sql
+AND ({{status}} IS NULL OR cr.status = {{status}}::text)
+AND ({{cliente_id}}::int[] IS NULL OR cr.cliente_id = ANY({{cliente_id}}::int[]))
+AND ({{categoria_receita_id}}::int[] IS NULL OR cr.categoria_receita_id = ANY({{categoria_receita_id}}::int[]))
+AND ({{centro_lucro_id}}::int[] IS NULL OR cr.centro_lucro_id = ANY({{centro_lucro_id}}::int[]))
+```
+- Query-first contract for Financeiro:
+  - KPI queries must return alias `value`
+  - Chart queries must return aliases `key`, `label`, `value`
+  - Monthly series must use `TO_CHAR(DATE_TRUNC('month', src.data_vencimento), 'YYYY-MM')`
+- Canonical KPIs:
+  - Recebidos / A Receber: `SUM(cr.valor_liquido)`
+  - Pagos / A Pagar: `SUM(cp.valor_liquido)`
+  - Titulos em AP: `COUNT(*)` over `financeiro.contas_pagar`
+  - Titulos em AR: `COUNT(*)` over `financeiro.contas_receber`
+  - Geracao de Caixa: `SUM(cr.valor_liquido) - SUM(cp.valor_liquido)`
+  - Ticket Medio de AP: `AVG(cp.valor_liquido)`
+  - Ticket Medio de AR: `AVG(cr.valor_liquido)`
+  - Fornecedores Ativos: `COUNT(DISTINCT cp.fornecedor_id)`
+  - Clientes em Aberto: `COUNT(DISTINCT cr.cliente_id)`
+  - Categorias Ativas: `COUNT(DISTINCT cp.categoria_despesa_id)` or `COUNT(DISTINCT cr.categoria_receita_id)`
+- Canonical filters:
+  - Status -> `cp.status` or `cr.status`
+  - Fornecedor -> `entidades.fornecedores`
+  - Cliente -> `entidades.clientes`
+  - Categoria Despesa -> `financeiro.categorias_despesa`
+  - Categoria Receita -> `financeiro.categorias_receita`
+  - Centro de Custo -> `empresa.centros_custo`
+  - Centro de Lucro -> `empresa.centros_lucro`
+- Canonical charts:
+  - AP por Fornecedor
+  - AP por Categoria de Despesa
+  - AR por Cliente
+  - AR por Categoria de Receita
+  - Contas a Receber por Mes
+  - Contas a Pagar por Mes
+  - Status de AP
+  - Status de AR
+  - Fluxo Liquido por Mes
+  - Top Fornecedores por Valor
+- Good dashboard KPI ideas for Financeiro:
+  - Total a Receber
+  - Total a Pagar
+  - Geracao de Caixa
+  - Titulos em AP
+  - Titulos em AR
+  - Ticket Medio AP
+  - Ticket Medio AR
+  - Fornecedores Ativos
+  - Clientes em Aberto
+  - Categorias Ativas
+- Good dashboard chart ideas for Financeiro:
+  - AP por Fornecedor
+  - AP por Categoria de Despesa
+  - AR por Cliente
+  - AR por Categoria de Receita
+  - Contas a Receber por Mes
+  - Contas a Pagar por Mes
+  - Fluxo Liquido por Mes
+  - Status de AP
+  - Status de AR
+  - Top Fornecedores por Valor
+- Good dashboard table ideas for Financeiro:
+  - Tabela de Contas a Pagar com data_vencimento, fornecedor, categoria, status e valor_liquido
+  - Tabela de Contas a Receber com data_vencimento, cliente, categoria, status e valor_liquido
+</camposfinanceiro>
 
 <non_negotiable_rules>
 - Always produce valid dashboard JSX.
