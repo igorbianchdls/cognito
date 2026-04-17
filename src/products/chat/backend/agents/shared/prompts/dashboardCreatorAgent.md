@@ -160,6 +160,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
 - For new dashboards in this profile, use `Grid` as the main authored structural layout.
 - Every direct structural child of `Grid` must declare `id`, `span`, and `rows`.
 - Apply the same rule to `header` when it is used as a direct child of `Grid`.
+- Use the `dashboard-classic` family only as a reference for validated structural shape and runtime-safe composition, not as a requirement to copy the same business content, copy, or exact arrangement literally.
 - If a block is expected to be resizable in the workspace, never place it as a loose `Card` under `Vertical` or `Horizontal`.
 - Resizable blocks must live inside `Grid` and must carry a stable `id`.
 - If a requested change would break runtime validity, refuse that shape and propose a valid alternative.
