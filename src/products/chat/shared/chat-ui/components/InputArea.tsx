@@ -46,8 +46,6 @@ type Props = {
 };
 
 export default function InputArea({ value, onChange, onSubmit, status = 'idle', submitDisabled = false, composioEnabled, onToggleComposio, model = 'openai-gpt5mini', onModelChange, promptProfile = 'dashboard_creator', onPromptProfileChange, workspaceOpen = false, onToggleWorkspace }: Props) {
-  // Local-only UI state for Toolkits panel (no persistence, no backend)
-  const [toolkitsOpen, setToolkitsOpen] = useState(false)
   const [tkSearch, setTkSearch] = useState('')
   const [tkEnabled, setTkEnabled] = useState<Record<string, boolean>>({
     gmail: true,
