@@ -457,12 +457,14 @@ function buildDashboardDatePickerThemeConfigEntry(tokens: DashboardTemplateTheme
     },
     presetButtonStyle: {
       height: 36,
+      padding: '0 12px',
       backgroundColor: fieldBackground,
       color: fieldColor,
       fontSize: 13,
       fontWeight: 500,
     },
     activePresetButtonStyle: {
+      padding: '0 12px',
       backgroundColor: tokens.headerDatePickerActiveBg,
       borderColor: tokens.headerDatePickerActiveBorder,
       color: tokens.headerDatePickerActiveText,
@@ -1054,6 +1056,23 @@ export type DashboardHeaderTheme = {
   eyebrow: React.CSSProperties
   subtitle: React.CSSProperties
   title: React.CSSProperties
+}
+
+export type DashboardPageTheme = {
+  shell: React.CSSProperties
+}
+
+export function resolveDashboardPageTheme(
+  themeName?: string,
+): DashboardPageTheme {
+  const key = resolveThemeKey(themeName)
+  const tokens = DASHBOARD_TEMPLATE_THEME_TOKENS[key] || DASHBOARD_TEMPLATE_THEME_TOKENS.light
+  return {
+    shell: {
+      backgroundColor: tokens.pageBg,
+      color: tokens.textPrimary,
+    },
+  }
 }
 
 export function resolveDashboardHeaderTheme(

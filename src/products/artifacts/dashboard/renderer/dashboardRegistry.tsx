@@ -21,8 +21,10 @@ import {
   DashboardThemeSelectionProvider,
   resolveDashboardChartTheme,
   resolveDashboardHeaderCardOverride,
+  resolveDashboardHeaderTheme,
   resolveDashboardGaugeTheme,
   resolveDashboardNodeStyle,
+  resolveDashboardPageTheme,
   useDashboardThemeSelection,
 } from '@/products/artifacts/dashboard/renderer/dashboardThemeConfig'
 import DashboardCardSurface from '@/products/artifacts/dashboard/renderer/components/DashboardCardSurface'
@@ -311,6 +313,7 @@ function renderDashboardThemeLayer({
   managers?: AnyRecord
   children?: React.ReactNode
 }) {
+  const pageTheme = resolveDashboardPageTheme(_themeName)
   return (
     <DashboardThemeSelectionProvider
       themeName={_themeName}
@@ -324,6 +327,7 @@ function renderDashboardThemeLayer({
           display: 'flex',
           flexDirection: 'column',
           minWidth: 0,
+          ...pageTheme.shell,
         }}
       >
         {children}
@@ -385,10 +389,11 @@ function HtmlNode({
 }) {
   const props = (element?.props || {}) as Record<string, any>
   const queryResult = useDashboardQueryResult()
-  const { appearanceOverrides, themeName } = useDashboardThemeSelection()
+  const { appearanceOverrides, themeName, borderPreset } = useDashboardThemeSelection()
   const semanticStyle = resolveDashboardNodeStyle(props['data-ui'], themeName, appearanceOverrides, {
     active: props['data-active'] === true || props['data-active'] === 'true' || props['aria-selected'] === true || props['aria-selected'] === 'true',
   })
+  const headerTheme = tag === 'header' ? resolveDashboardHeaderTheme(themeName, borderPreset, appearanceOverrides) : undefined
   const headerStyle = tag === 'header' ? resolveDashboardHeaderCardOverride(appearanceOverrides) : {}
   const queryDeltaColor = props['data-ui'] === 'kpi-delta' ? getDashboardQueryDeltaColor(queryResult) : undefined
   const [isHeaderEditorOpen, setIsHeaderEditorOpen] = React.useState(false)
@@ -414,8 +419,9 @@ function HtmlNode({
         boxSizing: 'border-box',
         minWidth: 0,
         ...semanticStyle,
-        ...(props.style && typeof props.style === 'object' ? props.style : {}),
+        ...(tag === 'header' ? (headerTheme?.card || {}) : {}),
         ...(tag === 'header' ? headerStyle : {}),
+        ...(props.style && typeof props.style === 'object' ? props.style : {}),
         ...(queryDeltaColor ? { color: queryDeltaColor } : {}),
       },
     },
