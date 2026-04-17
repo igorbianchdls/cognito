@@ -84,11 +84,25 @@ export type DashboardInsightsThemeConfigEntry = {
 export type DashboardFilterThemeConfigEntry = {
   labelStyle: React.CSSProperties
   controlStyle: React.CSSProperties
+  searchInputStyle: React.CSSProperties
   optionTextStyle: React.CSSProperties
   actionStyle: React.CSSProperties
   applyButtonStyle: React.CSSProperties
   tileSelectedStyle: React.CSSProperties
   tileUnselectedStyle: React.CSSProperties
+  dropdownTriggerStyle: React.CSSProperties
+  dropdownTriggerOpenStyle: React.CSSProperties
+  dropdownValueStyle: React.CSSProperties
+  dropdownPlaceholderStyle: React.CSSProperties
+  dropdownChevronStyle: React.CSSProperties
+  dropdownPopoverStyle: React.CSSProperties
+  dropdownPopoverHeaderLabelStyle: React.CSSProperties
+  dropdownPopoverHeaderMetaStyle: React.CSSProperties
+  dropdownCommandStyle: React.CSSProperties
+  dropdownItemStyle: React.CSSProperties
+  dropdownItemSelectedStyle: React.CSSProperties
+  dropdownIndicatorCheckedStyle: React.CSSProperties
+  dropdownIndicatorUncheckedStyle: React.CSSProperties
   checkColor: string
 }
 export type DashboardTabThemeConfigEntry = {
@@ -528,6 +542,14 @@ function buildDashboardFilterThemeConfigEntry(tokens: DashboardTemplateThemeToke
       fontWeight: 500,
       borderRadius: 10,
     },
+    searchInputStyle: {
+      border: `1px solid ${tokens.surfaceBorder}`,
+      backgroundColor: tokens.surfaceBg,
+      color: tokens.textPrimary,
+      borderRadius: 8,
+      padding: '6px 8px',
+      fontSize: 12,
+    },
     optionTextStyle: {
       color: tokens.textPrimary,
       fontSize: 13,
@@ -557,6 +579,81 @@ function buildDashboardFilterThemeConfigEntry(tokens: DashboardTemplateThemeToke
       backgroundColor: tokens.accentSurface,
       borderColor: tokens.accentBorder,
       color: tokens.textPrimary,
+    },
+    dropdownTriggerStyle: {
+      width: '100%',
+      minHeight: 42,
+      display: 'flex',
+      alignItems: 'center',
+      border: `1px solid ${tokens.surfaceBorder}`,
+      borderRadius: 12,
+      padding: 0,
+      backgroundColor: tokens.surfaceBg,
+      color: tokens.textPrimary,
+      cursor: 'pointer',
+      textAlign: 'left',
+      overflow: 'hidden',
+    },
+    dropdownTriggerOpenStyle: {
+      borderColor: tokens.accentBorder,
+      boxShadow: `0 0 0 3px ${tokens.accentSurface}`,
+    },
+    dropdownValueStyle: {
+      color: tokens.textPrimary,
+      fontSize: 14,
+      lineHeight: 1.3,
+      fontWeight: 600,
+    },
+    dropdownPlaceholderStyle: {
+      color: tokens.textSecondary,
+      fontSize: 14,
+      lineHeight: 1.3,
+      fontWeight: 500,
+    },
+    dropdownChevronStyle: {
+      color: tokens.textSecondary,
+      fontSize: 13,
+      lineHeight: 1,
+    },
+    dropdownPopoverStyle: {
+      border: `1px solid ${tokens.surfaceBorder}`,
+      backgroundColor: tokens.surfaceBg,
+      color: tokens.textPrimary,
+      borderRadius: 10,
+      boxShadow: '0 14px 28px rgba(15,23,42,0.14)',
+    },
+    dropdownPopoverHeaderLabelStyle: {
+      fontSize: 11,
+      fontWeight: 700,
+      color: tokens.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: '0.06em',
+    },
+    dropdownPopoverHeaderMetaStyle: {
+      fontSize: 11,
+      color: tokens.textSecondary,
+    },
+    dropdownCommandStyle: {
+      backgroundColor: 'transparent',
+      color: tokens.textPrimary,
+    },
+    dropdownItemStyle: {
+      color: tokens.textPrimary,
+      borderRadius: 8,
+    },
+    dropdownItemSelectedStyle: {
+      backgroundColor: tokens.accentSurface,
+      color: tokens.titleColor,
+    },
+    dropdownIndicatorCheckedStyle: {
+      border: `1px solid ${tokens.primary}`,
+      backgroundColor: tokens.primary,
+      color: '#ffffff',
+    },
+    dropdownIndicatorUncheckedStyle: {
+      border: `1px solid ${tokens.surfaceBorder}`,
+      backgroundColor: tokens.surfaceBg,
+      color: 'transparent',
     },
     checkColor: tokens.primary,
   }

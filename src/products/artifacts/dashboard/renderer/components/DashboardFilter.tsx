@@ -511,8 +511,8 @@ function SlicerContent({
                       value={searchMap[idx] || ''}
                       onChange={(e) => setSearchMap((prev) => ({ ...prev, [idx]: e.target.value }))}
                       placeholder="Buscar..."
-                      className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs"
-                      style={controlStyle}
+                      className="w-full"
+                      style={{ ...theme.searchInputStyle, ...controlStyle }}
                     />
                   )}
                   <div className="flex flex-wrap gap-2">
@@ -571,8 +571,8 @@ function SlicerContent({
                       value={searchMap[idx] || ''}
                       onChange={(e) => setSearchMap((prev) => ({ ...prev, [idx]: e.target.value }))}
                       placeholder="Buscar..."
-                      className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs"
-                      style={controlStyle}
+                      className="w-full"
+                      style={{ ...theme.searchInputStyle, ...controlStyle }}
                     />
                   )}
                   <div
@@ -586,7 +586,7 @@ function SlicerContent({
                       <label key={String(option.value)} className="inline-flex items-center gap-2 text-xs">
                         <input
                           type={isMulti ? 'checkbox' : 'radio'}
-                          className="rounded border-gray-300"
+                          className="rounded"
                           style={{ accentColor: typeof field?.checkColor === 'string' ? field.checkColor : theme.checkColor }}
                           name={isMulti ? undefined : `slicer-${idx}`}
                           checked={isMulti ? (Array.isArray(stored) && stored.includes(option.value)) : stored === option.value}
@@ -638,22 +638,9 @@ function SlicerContent({
                   <button
                     type="button"
                     style={{
+                      ...theme.dropdownTriggerStyle,
+                      ...(isDropdownOpen ? theme.dropdownTriggerOpenStyle : null),
                       ...(controlStyle || {}),
-                      width: '100%',
-                      minHeight: 42,
-                      display: 'flex',
-                      alignItems: 'center',
-                      border: `1px solid ${isDropdownOpen ? '#60a5fa' : '#d5dde7'}`,
-                      borderRadius: 12,
-                      padding: 0,
-                      background: '#ffffff',
-                      color: '#0f172a',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      overflow: 'hidden',
-                      boxShadow: isDropdownOpen
-                        ? '0 0 0 3px rgba(96, 165, 250, 0.14)'
-                        : '0 1px 2px rgba(15, 23, 42, 0.04)',
                     }}
                   >
                     <span
@@ -667,10 +654,7 @@ function SlicerContent({
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
-                        color: hasSelection ? '#0f172a' : '#475569',
-                        fontSize: 14,
-                        lineHeight: 1.3,
-                        fontWeight: hasSelection ? 600 : 500,
+                        ...(hasSelection ? theme.dropdownValueStyle : theme.dropdownPlaceholderStyle),
                         ...(optionTextStyle || {}),
                       }}
                     >
@@ -680,9 +664,7 @@ function SlicerContent({
                       aria-hidden="true"
                       style={{
                         paddingRight: 14,
-                        color: '#64748b',
-                        fontSize: 13,
-                        lineHeight: 1,
+                        ...theme.dropdownChevronStyle,
                         flexShrink: 0,
                       }}
                     >
@@ -694,7 +676,8 @@ function SlicerContent({
                 <PopoverContent
                   align="start"
                   sideOffset={6}
-                  className="w-[var(--radix-popover-trigger-width)] min-w-[220px] rounded-[10px] border border-slate-200 p-2 shadow-[0_14px_28px_rgba(15,23,42,0.14)]"
+                  className="w-[var(--radix-popover-trigger-width)] min-w-[220px] p-2"
+                  style={theme.dropdownPopoverStyle}
                 >
                   <div
                     style={{
@@ -705,15 +688,15 @@ function SlicerContent({
                       padding: '4px 4px 6px',
                     }}
                   >
-                    <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    <div style={theme.dropdownPopoverHeaderLabelStyle}>
                       Selecao
                     </div>
-                    <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                    <div style={theme.dropdownPopoverHeaderMetaStyle}>
                       {opts.length} opcoes
                     </div>
                   </div>
 
-                  <Command shouldFilter={false} className="rounded-[8px] bg-transparent text-slate-900">
+                  <Command shouldFilter={false} className="rounded-[8px]" style={theme.dropdownCommandStyle}>
                     {showSearch && (
                       <CommandInput
                         value={searchMap[idx] || ''}
@@ -753,7 +736,8 @@ function SlicerContent({
                                 )
                                 setOpenDropdownIndex(null)
                               }}
-                              className="gap-3 rounded-[8px] px-3 py-2 data-[selected=true]:bg-slate-100"
+                              className="gap-3 rounded-[8px] px-3 py-2"
+                              style={checked ? { ...theme.dropdownItemStyle, ...theme.dropdownItemSelectedStyle } : theme.dropdownItemStyle}
                             >
                               <span
                                 aria-hidden="true"
@@ -763,10 +747,8 @@ function SlicerContent({
                                   display: 'inline-flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
-                                  border: `1px solid ${checked ? '#2563eb' : '#cbd5e1'}`,
+                                  ...(checked ? theme.dropdownIndicatorCheckedStyle : theme.dropdownIndicatorUncheckedStyle),
                                   borderRadius: isMulti ? 4 : 999,
-                                  background: checked ? '#2563eb' : '#ffffff',
-                                  color: '#ffffff',
                                   fontSize: 10,
                                   fontWeight: 700,
                                   flexShrink: 0,
