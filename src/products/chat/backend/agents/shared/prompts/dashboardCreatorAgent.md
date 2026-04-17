@@ -157,12 +157,12 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
 - Never create `tree`, `buildTree`, `buildSource`, markers, or helper files per dashboard.
 - For new dashboards, do not use `DashboardTemplate` or `Theme` as authored root structure.
 - For new dashboards, never omit `Dashboard.id` or `Dashboard.title` on the root node.
-- For new dashboards in this profile, use `Grid` as the main authored structural layout.
+- For new dashboards in this profile, keep the main page `header` outside the `Grid`, and use `Grid` as the main authored structural layout for resizable content blocks.
 - Every direct structural child of `Grid` must declare `id`, `span`, and `rows`.
-- Apply the same rule to `header` when it is used as a direct child of `Grid`.
 - Use the `dashboard-classic` family only as a reference for validated structural shape and runtime-safe composition, not as a requirement to copy the same business content, copy, or exact arrangement literally.
 - If a block is expected to be resizable in the workspace, never place it as a loose `Card` under `Vertical` or `Horizontal`.
 - Resizable blocks must live inside `Grid` and must carry a stable `id`.
+- Do not default filters to a full-width row. Prefer compact filter cards that share the grid with KPIs, charts, or summary blocks unless the user explicitly asks for a dedicated full-width filter band.
 - If a requested change would break runtime validity, refuse that shape and propose a valid alternative.
 - For `Chart`, use `height="100%"` only when the parent chain has resolved height.
 - If that parent chain is not clearly guaranteed, prefer explicit numeric chart height such as `280`, `320`, or `360`.
@@ -517,23 +517,24 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
 <expected_output>
 ```tsx
 <Dashboard id="overview" title="Dashboard Comercial" theme="light" chartPalette="teal">
+  <header style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, padding: '20px 24px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <Text variant="eyebrow">Resumo comercial</Text>
+      <Text as="h1" variant="page-title">Receita e canais</Text>
+      <Text variant="lead">
+        Mantenha o `header` fora do `Grid` e use o `Grid` apenas para blocos redimensionaveis.
+      </Text>
+    </div>
+    <DatePicker
+      label="Periodo"
+      table="vendas.pedidos"
+      field="data_pedido"
+      mode="range"
+      presets={['7d', '30d', 'month']}
+    />
+  </header>
+
   <Grid columns={12} rowHeight={16} gap={18} padding={28} width="100%">
-    <header id="header" span={12} rows={6} style={{ display: 'flex', justifyContent: 'space-between', gap: 20, padding: '20px 24px' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <Text variant="eyebrow">Resumo comercial</Text>
-        <Text as="h1" variant="page-title">Receita e canais</Text>
-        <Text variant="lead">
-          Use `Grid` como layout principal quando o dashboard precisar de blocos redimensionaveis, inclusive no header.
-        </Text>
-      </div>
-      <DatePicker
-        label="Periodo"
-        table="vendas.pedidos"
-        field="data_pedido"
-        mode="range"
-        presets={['7d', '30d', 'month']}
-      />
-    </header>
 
     <Card id="kpi-receita" span={4} rows={5} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -695,25 +696,26 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
 <expected_output_2>
 ```tsx
 <Dashboard id="overview" title="Exploracao comercial" theme="light" chartPalette="teal">
-  <Grid columns={12} rowHeight={16} gap={18} padding={24}>
-    <header id="header" span={12} rows={6} style={{ display: 'flex', justifyContent: 'space-between', gap: 20, padding: '20px 24px' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <Text variant="eyebrow">Exploracao comercial</Text>
-        <Text as="h1" variant="page-title">Filtros, tabela e pivot</Text>
-        <Text variant="lead">
-          Mantenha o mesmo esqueleto estrutural: `Dashboard`, `header` e `Grid`, variando apenas o conteudo analitico.
-        </Text>
-      </div>
-      <DatePicker
-        label="Periodo"
-        table="vendas.pedidos"
-        field="data_pedido"
-        mode="range"
-        presets={['7d', '30d', 'month']}
-      />
-    </header>
+  <header style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, padding: '20px 24px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <Text variant="eyebrow">Exploracao comercial</Text>
+      <Text as="h1" variant="page-title">Filtros, tabela e pivot</Text>
+      <Text variant="lead">
+        Mantenha o mesmo esqueleto estrutural: `Dashboard`, `header` fora do `Grid` e `Grid` para os blocos analiticos.
+      </Text>
+    </div>
+    <DatePicker
+      label="Periodo"
+      table="vendas.pedidos"
+      field="data_pedido"
+      mode="range"
+      presets={['7d', '30d', 'month']}
+    />
+  </header>
 
-    <Card id="filters" span={12} rows={5} variant="filter">
+  <Grid columns={12} rowHeight={16} gap={18} padding={24}>
+
+    <Card id="filter-canal" span={6} rows={5} variant="filter">
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         <Filter
           label="Canal"
@@ -734,7 +736,11 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
             ORDER BY 2 ASC
           `}
         />
+      </div>
+    </Card>
 
+    <Card id="filter-status" span={6} rows={5} variant="filter">
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         <Filter
           label="Status"
           table="vendas.pedidos"
@@ -753,8 +759,8 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
             ORDER BY 2 ASC
           `}
         />
-        </div>
-      </Card>
+      </div>
+    </Card>
 
       <Card id="insight-operacao" span={12} rows={10}>
         <Insights
@@ -828,25 +834,26 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
 <expected_output_3>
 ```tsx
 <Dashboard id="overview" title="Operacao comercial" theme="light" chartPalette="teal">
-  <Grid columns={12} rowHeight={16} gap={18} padding={24}>
-    <header id="header" span={12} rows={6} style={{ display: 'flex', justifyContent: 'space-between', gap: 20, padding: '20px 24px' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <Text variant="eyebrow">Operacao comercial</Text>
-        <Text as="h1" variant="page-title">Receita, aprovacao e pedidos</Text>
-        <Text variant="lead">
-          Repita o mesmo esqueleto estrutural e varie os blocos analiticos de acordo com a pergunta do usuario.
-        </Text>
-      </div>
-      <DatePicker
-        label="Periodo"
-        table="vendas.pedidos"
-        field="data_pedido"
-        mode="range"
-        presets={['7d', '30d', 'month']}
-      />
-    </header>
+  <header style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, padding: '20px 24px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <Text variant="eyebrow">Operacao comercial</Text>
+      <Text as="h1" variant="page-title">Receita, aprovacao e pedidos</Text>
+      <Text variant="lead">
+        Repita o mesmo esqueleto estrutural: `header` fora do `Grid` e `Grid` apenas para cards e blocos analiticos.
+      </Text>
+    </div>
+    <DatePicker
+      label="Periodo"
+      table="vendas.pedidos"
+      field="data_pedido"
+      mode="range"
+      presets={['7d', '30d', 'month']}
+    />
+  </header>
 
-    <Card id="filter-status" span={12} rows={5} variant="filter">
+  <Grid columns={12} rowHeight={16} gap={18} padding={24}>
+
+    <Card id="filter-status" span={6} rows={5} variant="filter">
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         <Filter
           label="Status"
@@ -866,6 +873,11 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
             ORDER BY 2 ASC
           `}
         />
+      </div>
+    </Card>
+
+    <Card id="filter-cliente" span={6} rows={5} variant="filter">
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         <Filter
           label="Cliente"
           table="vendas.pedidos"
@@ -1019,6 +1031,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
 - The runtime provides the `theme` token object used by inline styles when an override is actually needed.
 - New dashboards should usually start from:
   - `Dashboard`
+  - `header`
   - `Grid`
   - `Panel`
   - `Card`
@@ -1027,22 +1040,22 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
 - Example:
 ```tsx
 <Dashboard id="overview" title="Dashboard Comercial" theme="light" chartPalette="teal">
-  <Grid columns={12} rowHeight={16} gap={16} padding={24}>
-    <header id="header" span={12} rows={6} style={{ display: 'flex', justifyContent: 'space-between', gap: 20, padding: '20px 24px' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <Text variant="eyebrow">Resumo comercial</Text>
-        <Text as="h1" variant="page-title">Dashboard Comercial</Text>
-      </div>
-      <DatePicker
-        label="Periodo"
-        table="vendas.pedidos"
-        field="data_pedido"
-        mode="range"
-        presets={['7d', '30d', 'month']}
-      />
-    </header>
+  <header style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, padding: '20px 24px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <Text variant="eyebrow">Resumo comercial</Text>
+      <Text as="h1" variant="page-title">Dashboard Comercial</Text>
+    </div>
+    <DatePicker
+      label="Periodo"
+      table="vendas.pedidos"
+      field="data_pedido"
+      mode="range"
+      presets={['7d', '30d', 'month']}
+    />
+  </header>
 
-    <Card id="filter-canal" span={12} rows={5} variant="filter">
+  <Grid columns={12} rowHeight={16} gap={16} padding={24}>
+    <Card id="filter-canal" span={6} rows={5} variant="filter">
       <Filter
         label="Canal"
         table="vendas.pedidos"
@@ -1062,6 +1075,18 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
         `}
       />
     </Card>
+
+    <Card id="filter-status" span={6} rows={5} variant="filter">
+      <Filter
+        label="Status"
+        table="vendas.pedidos"
+        field="status"
+        variant="dropdown"
+        mode="multiple"
+        search
+        clearable
+      />
+    </Card>
   </Grid>
 </Dashboard>
 ```
@@ -1072,7 +1097,7 @@ AND ({{cliente_id}}::int[] IS NULL OR p.cliente_id = ANY({{cliente_id}}::int[]))
 - Prefer `Grid` as the primary composition for new dashboards.
 - Use `Panel`, `Card`, `header`, `section`, or `div` as structural items inside the grid when appropriate.
 - Every direct structural item inside `Grid` must provide `id`, `span`, and `rows`.
-- This applies to `header` too when `header` is used as a grid item.
+- Keep the main dashboard `header` outside the `Grid`.
 - Do not place a main dashboard `Card` directly under `Vertical` or `Horizontal`.
 - Common layout responsibilities:
 - page-level structure
