@@ -263,13 +263,15 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
           </button>
         </div>
         <NavMainSimple items={dataWithActiveState.navMain} groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} iconSizePx={finalIconSizePx} />
-        <NavMainSimple
-          items={dataWithActiveState.artifacts}
-          groupLabel="Artifacts"
-          groupLabelStyle={finalSectionTitleStyle}
-          itemTextStyle={finalItemTextStyle}
-          iconSizePx={finalIconSizePx}
-        />
+        <div className="group-data-[collapsible=icon]:hidden">
+          <NavMainSimple
+            items={dataWithActiveState.artifacts}
+            groupLabel="Artifacts"
+            groupLabelStyle={finalSectionTitleStyle}
+            itemTextStyle={finalItemTextStyle}
+            iconSizePx={finalIconSizePx}
+          />
+        </div>
         <NavErp groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} />
         <NavAirtable groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} />
 
