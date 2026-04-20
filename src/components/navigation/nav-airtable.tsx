@@ -43,7 +43,7 @@ export function NavAirtable({
   }, [])
 
   return (
-    <SidebarGroup>
+    <SidebarGroup className="group-data-[collapsible=icon]:hidden">
       <SidebarGroupLabel style={groupLabelStyle}>Airtable</SidebarGroupLabel>
       <SidebarMenu className="gap-0.5">
         <SidebarMenuItem>
