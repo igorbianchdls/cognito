@@ -19,6 +19,7 @@ import { EditableComponentOverlay } from '@/products/artifacts/dashboard/editors
 import {
   DashboardHeaderScopeProvider,
   DashboardThemeSelectionProvider,
+  type DashboardAppearanceOverrides,
   resolveDashboardChartTheme,
   resolveDashboardHeaderCardOverride,
   resolveDashboardHeaderTheme,
@@ -304,6 +305,7 @@ function renderDashboardThemeLayer({
   borderPreset: _borderPreset,
   headerTheme: _headerTheme,
   managers: _managers,
+  appearanceOverrides: _appearanceOverrides,
   children,
 }: {
   themeName?: string
@@ -311,11 +313,13 @@ function renderDashboardThemeLayer({
   borderPreset?: string
   headerTheme?: string
   managers?: AnyRecord
+  appearanceOverrides?: DashboardAppearanceOverrides
   children?: React.ReactNode
 }) {
-  const pageTheme = resolveDashboardPageTheme(_themeName)
+  const pageTheme = resolveDashboardPageTheme(_themeName, _appearanceOverrides)
   return (
     <DashboardThemeSelectionProvider
+      appearanceOverrides={_appearanceOverrides}
       themeName={_themeName}
       chartPaletteName={_chartPaletteName}
       borderPreset={_borderPreset}
@@ -338,7 +342,9 @@ function renderDashboardThemeLayer({
 
 function DashboardTheme({ element, children }: { element: any; children?: React.ReactNode }) {
   const props = (element?.props || {}) as AnyRecord
+  const { appearanceOverrides } = useDashboardThemeSelection()
   return renderDashboardThemeLayer({
+    appearanceOverrides,
     themeName: typeof props.name === 'string' ? props.name : undefined,
     borderPreset: typeof props.borderPreset === 'string' ? props.borderPreset : undefined,
     headerTheme: typeof props.headerTheme === 'string' ? props.headerTheme : undefined,
@@ -349,6 +355,7 @@ function DashboardTheme({ element, children }: { element: any; children?: React.
 
 function DashboardSurface({ element, children }: { element: any; children?: React.ReactNode }) {
   const props = (element?.props || {}) as AnyRecord
+  const { appearanceOverrides } = useDashboardThemeSelection()
   const content = (
     <div
       style={{
@@ -366,6 +373,7 @@ function DashboardSurface({ element, children }: { element: any; children?: Reac
 
   if (typeof props.theme === 'string' && props.theme.trim()) {
     return renderDashboardThemeLayer({
+      appearanceOverrides,
       themeName: props.theme,
       chartPaletteName: typeof props.chartPalette === 'string' ? props.chartPalette : undefined,
       borderPreset: typeof props.borderPreset === 'string' ? props.borderPreset : undefined,

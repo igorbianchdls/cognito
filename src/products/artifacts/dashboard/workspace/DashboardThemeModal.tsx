@@ -674,6 +674,16 @@ export function DashboardThemeModal({
               <PanelSection title="Tema" description="Escolha o preset visual base do dashboard." defaultOpen>
                 {renderThemeOptions()}
               </PanelSection>
+              <PanelSection title="Fonte" description="Aplica uma familia tipografica global para todos os componentes." defaultOpen>
+                <FieldGrid>
+                  <Field label="Família tipográfica">
+                    <FontSelect
+                      value={toInputValue(appearanceOverrides?.theme?.fontFamily)}
+                      onChange={(value) => setOverride(['theme', 'fontFamily'], value || undefined)}
+                    />
+                  </Field>
+                </FieldGrid>
+              </PanelSection>
               <PanelSection title="Borda" description="Escolha o preset global de borda dos cards." defaultOpen>
                 {renderBorderOptions()}
               </PanelSection>

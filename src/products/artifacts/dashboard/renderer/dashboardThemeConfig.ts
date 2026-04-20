@@ -165,11 +165,16 @@ export type DashboardInsightsAppearanceOverrides = {
   title?: React.CSSProperties
 }
 
+export type DashboardThemeAppearanceOverrides = {
+  fontFamily?: string
+}
+
 export type DashboardAppearanceOverrides = {
   chart?: DashboardChartAppearanceOverrides
   header?: DashboardHeaderAppearanceOverrides
   insights?: DashboardInsightsAppearanceOverrides
   kpi?: DashboardKpiAppearanceOverrides
+  theme?: DashboardThemeAppearanceOverrides
 }
 
 type DashboardThemeSelection = {
@@ -1161,13 +1166,19 @@ export type DashboardPageTheme = {
 
 export function resolveDashboardPageTheme(
   themeName?: string,
+  appearanceOverrides?: DashboardAppearanceOverrides,
 ): DashboardPageTheme {
   const key = resolveThemeKey(themeName)
   const tokens = DASHBOARD_TEMPLATE_THEME_TOKENS[key] || DASHBOARD_TEMPLATE_THEME_TOKENS.light
+  const fontFamily =
+    typeof appearanceOverrides?.theme?.fontFamily === 'string' && appearanceOverrides.theme.fontFamily.trim()
+      ? appearanceOverrides.theme.fontFamily.trim()
+      : undefined
   return {
     shell: {
       backgroundColor: tokens.pageBg,
       color: tokens.textPrimary,
+      ...(fontFamily ? { fontFamily } : {}),
     },
   }
 }
