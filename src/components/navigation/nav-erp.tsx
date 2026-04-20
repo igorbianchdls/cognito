@@ -35,7 +35,7 @@ export function NavErp({ groupLabelStyle, itemTextStyle }: { groupLabelStyle?: R
 
   return (
     <>
-      <SidebarGroup>
+      <SidebarGroup className="group-data-[collapsible=icon]:hidden">
         <SidebarGroupLabel style={groupLabelStyle}>Gestão ERP</SidebarGroupLabel>
         <SidebarMenu className="gap-0.5">
           {/* Financeiro primeiro */}
