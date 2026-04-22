@@ -273,11 +273,6 @@ export function DashboardArtifactWorkspace({
           onChangeView={setActiveView}
           onZoomChange={setZoom}
           showChromeActions={false}
-          leadingActions={
-            <div className="rounded-md border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] px-2 py-1 text-[11px] font-medium uppercase tracking-[0.14em] text-[#5F5F5A]">
-              Artifacts
-            </div>
-          }
           extraActions={
             <>
               <div className="flex items-center gap-2 rounded-xl border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] px-3 py-[0.35rem] text-[12px] font-medium text-[#5F5F5A]">
@@ -361,7 +356,7 @@ export function DashboardArtifactWorkspace({
                   setIsThemeModalOpen(true)
                 }}
                 disabled={isHistoricalVersion}
-                className={`flex items-center justify-center rounded-md border-[0.5px] px-2 py-[0.35rem] text-[14px] font-medium transition ${
+                className={`flex items-center justify-center rounded-md border-[0.5px] px-2 py-[0.35rem] text-[12px] font-medium transition ${
                   isHistoricalVersion
                     ? 'cursor-not-allowed border-[#DDDDD8] bg-[#ECECEB] text-[#9A9A95]'
                     : 'border-[#DDDDD8] bg-[#ECECEB] text-[#5F5F5A] hover:bg-[#E2E2E0] hover:text-[#4F4F4B]'
@@ -388,7 +383,7 @@ export function DashboardArtifactWorkspace({
                 type="button"
                 onClick={handleSave}
                 disabled={!isDirty || isHistoricalVersion || saving}
-                className={`flex items-center justify-center rounded-md px-2 py-[0.35rem] text-[14px] font-medium transition ${
+                className={`flex items-center justify-center rounded-md px-2 py-[0.35rem] text-[12px] font-medium transition ${
                   !isDirty || isHistoricalVersion || saving
                     ? 'cursor-not-allowed bg-[#E2E2E0] text-[#9A9A95]'
                     : 'bg-[#039AFE] text-white hover:bg-[#028ae0]'
