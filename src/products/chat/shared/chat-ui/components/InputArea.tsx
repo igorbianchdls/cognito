@@ -1,6 +1,6 @@
 "use client";
 
-import React, { FormEvent, useMemo, useRef, useState } from 'react';
+import React, { FormEvent, useRef, useState } from 'react';
 import type { ChatStatus } from 'ai';
 import {
   PromptInputButton,
@@ -18,16 +18,11 @@ import {
   IconLoader2,
   IconMicrophone,
   IconPlus,
-  IconPlugConnected,
   IconSparkles,
   IconRobot,
   IconSquareRounded,
   IconLayoutSidebarRightExpand,
 } from '@tabler/icons-react';
-import BrandIcon from '@/components/icons/BrandIcon';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Input as UiInput } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
 
 type Props = {
   value: string;
@@ -35,8 +30,6 @@ type Props = {
   onSubmit: (e: FormEvent) => void;
   status?: ChatStatus | string;
   submitDisabled?: boolean;
-  composioEnabled?: boolean;
-  onToggleComposio?: () => void;
   model?: 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5' | 'openai-gpt5mini';
   onModelChange?: (m: 'claude-sonnet' | 'claude-haiku' | 'openai-gpt5' | 'openai-gpt5mini') => void;
   promptProfile?: 'general' | 'data_analyst' | 'dashboard_creator' | 'dashboard_analyst';
@@ -45,29 +38,7 @@ type Props = {
   onToggleWorkspace?: () => void;
 };
 
-export default function InputArea({ value, onChange, onSubmit, status = 'idle', submitDisabled = false, composioEnabled, onToggleComposio, model = 'openai-gpt5mini', onModelChange, promptProfile = 'dashboard_creator', onPromptProfileChange, workspaceOpen = false, onToggleWorkspace }: Props) {
-  const [toolkitsOpen, setToolkitsOpen] = useState(false)
-  const [tkSearch, setTkSearch] = useState('')
-  const [tkEnabled, setTkEnabled] = useState<Record<string, boolean>>({
-    gmail: true,
-    composio: true,
-    github: false,
-    gcal: false,
-    notion: false,
-    gsheets: false,
-  })
-  const tkList = useMemo(() => ([
-    { key: 'gmail', label: 'Gmail', icon: <BrandIcon brand="gmail" /> },
-    { key: 'composio', label: 'Composio', icon: <IconPlugConnected className="size-4" stroke={1.75} /> },
-    { key: 'github', label: 'GitHub', icon: <BrandIcon brand="github" /> },
-    { key: 'gcal', label: 'Google Calendar', icon: <BrandIcon brand="gcal" /> },
-    { key: 'notion', label: 'Notion', icon: <BrandIcon brand="notion" /> },
-    { key: 'gsheets', label: 'Google Sheets', icon: <BrandIcon brand="gsheets" /> },
-  ]), [])
-  const filteredTk = useMemo(() => (
-    tkList.filter(t => t.label.toLowerCase().includes(tkSearch.toLowerCase()))
-  ), [tkList, tkSearch])
-
+export default function InputArea({ value, onChange, onSubmit, status = 'idle', submitDisabled = false, model = 'openai-gpt5mini', onModelChange, promptProfile = 'dashboard_creator', onPromptProfileChange, workspaceOpen = false, onToggleWorkspace }: Props) {
   // Audio capture + STT (ElevenLabs) — record → stop → send once → write text to input
   type RecState = 'idle' | 'recording' | 'processing' | 'error'
   const [recState, setRecState] = useState<RecState>('idle')
@@ -177,46 +148,6 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
                 <span>Workspace</span>
               </PromptInputButton>
             ) : null}
-            {/* Tool picker now to the right of + */}
-            <Popover open={toolkitsOpen} onOpenChange={setToolkitsOpen}>
-              <PopoverTrigger asChild>
-                <PromptInputButton variant="ghost" className="text-gray-500 hover:text-gray-800">
-                  <IconPlugConnected size={16} stroke={1.75} />
-                  <span>Tool</span>
-                </PromptInputButton>
-              </PopoverTrigger>
-              <PopoverContent side="top" align="start" className="w-80 p-0">
-                <div className="p-2 border-b">
-                  <UiInput placeholder="Search toolkits…" value={tkSearch} onChange={(e)=>setTkSearch(e.target.value)} className="h-8" />
-                </div>
-                <div className="max-h-72 overflow-auto">
-                  <ul className="py-1">
-                    {filteredTk.map(t => (
-                      <li key={t.key} className="px-3 py-2 flex items-center justify-between hover:bg-gray-50">
-                        <div className="flex items-center gap-2 text-sm text-gray-800">
-                          <span className="inline-flex items-center justify-center size-6 rounded-md bg-gray-100 text-gray-700">
-                            {t.icon}
-                          </span>
-                          <span>{t.label}</span>
-                        </div>
-                        <Switch
-                          checked={t.key === 'composio' ? !!composioEnabled : !!tkEnabled[t.key]}
-                          disabled={t.key === 'composio' && typeof onToggleComposio !== 'function'}
-                          onCheckedChange={(v)=> {
-                            if (t.key === 'composio') {
-                              if (typeof onToggleComposio === 'function' && v !== !!composioEnabled) onToggleComposio()
-                              return
-                            }
-                            setTkEnabled(s=>({ ...s, [t.key]: v }))
-                          }}
-                        />
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="px-3 py-2 text-xs text-gray-500 border-t">Tools</div>
-              </PopoverContent>
-            </Popover>
             <PromptInputModelSelect
               value={promptProfile}
               onValueChange={(v: any) => {

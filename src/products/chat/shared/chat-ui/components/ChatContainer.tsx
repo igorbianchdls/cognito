@@ -108,7 +108,6 @@ export default function ChatContainer({ withSideMargins, redirectOnFirstMessage,
   const [chatId, setChatId] = useState<string | null>(null)
   const [status, setStatus] = useState<ChatStatus>('idle')
   const [sandboxStatus, setSandboxStatus] = useState<SandboxStatus>('off')
-  const [composioEnabled, setComposioEnabled] = useState<boolean>(false)
   const [model, setModel] = useState<EngineId>(initialEngine || 'openai-gpt5mini')
   const [promptProfile, setPromptProfile] = useState<PromptProfileId>('dashboard_creator')
   const [startLocked, setStartLocked] = useState(false)
@@ -827,29 +826,9 @@ export default function ChatContainer({ withSideMargins, redirectOnFirstMessage,
                   onSubmit={handleSubmit}
                   status={status}
                   submitDisabled={isSubmitBlocked}
-                  composioEnabled={composioEnabled}
                   promptProfile={promptProfile}
                   onPromptProfileChange={setPromptProfile}
                   model={model}
-                  onToggleComposio={async () => {
-                    // Avoid starting chat before first message when redirecting
-                    if (redirectOnFirstMessage && !chatId) {
-                      setComposioEnabled(!composioEnabled)
-                      return
-                    }
-                    try {
-                      const id = await ensureStart();
-                      const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'mcp-toggle', chatId: id, enabled: !composioEnabled }) });
-                      const data = await res.json().catch(() => ({})) as any;
-                      if (res.ok && data && data.ok) {
-                        setComposioEnabled(Boolean(data.enabled));
-                      } else {
-                        notifyError('api', data?.error, 'Falha ao atualizar integrações (MCP)', data)
-                      }
-                    } catch (err) {
-                      notifyError('api', err, 'Falha ao atualizar integrações (MCP)')
-                    }
-                  }}
                   onModelChange={async (m) => {
                     setModel(m)
                     if (redirectOnFirstMessage && !chatId) {
@@ -899,24 +878,7 @@ export default function ChatContainer({ withSideMargins, redirectOnFirstMessage,
           />
         </div>
         <div className="px-4 pb-3">
-          <InputArea value={input} onChange={setInput} onSubmit={handleSubmit} status={status} submitDisabled={isSubmitBlocked} composioEnabled={composioEnabled} promptProfile={promptProfile} onPromptProfileChange={setPromptProfile} workspaceOpen={workspaceOpen} onToggleWorkspace={onToggleWorkspace} onToggleComposio={async () => {
-            if (redirectOnFirstMessage && !chatId) {
-              setComposioEnabled(!composioEnabled)
-              return
-            }
-            try {
-              const id = await ensureStart();
-              const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'mcp-toggle', chatId: id, enabled: !composioEnabled }) });
-              const data = await res.json().catch(() => ({})) as any;
-              if (res.ok && data && data.ok) {
-                setComposioEnabled(Boolean(data.enabled));
-              } else {
-                notifyError('api', data?.error, 'Falha ao atualizar integrações (MCP)', data)
-              }
-            } catch (err) {
-              notifyError('api', err, 'Falha ao atualizar integrações (MCP)')
-            }
-          }} model={model} onModelChange={async (m) => {
+          <InputArea value={input} onChange={setInput} onSubmit={handleSubmit} status={status} submitDisabled={isSubmitBlocked} promptProfile={promptProfile} onPromptProfileChange={setPromptProfile} workspaceOpen={workspaceOpen} onToggleWorkspace={onToggleWorkspace} model={model} onModelChange={async (m) => {
             setModel(m)
             if (redirectOnFirstMessage && !chatId) {
               return
