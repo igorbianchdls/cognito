@@ -136,16 +136,16 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
           value={value}
           onChange={(e) => onChange(e.target.value)}
         />
-        <PromptInputToolbar className="flex-wrap items-start justify-start gap-1">
-          <PromptInputTools className="min-w-0 flex-1 flex-wrap">
+        <PromptInputToolbar className={workspaceOpen ? 'items-center justify-between gap-1' : 'flex-wrap items-start justify-start gap-1'}>
+          <PromptInputTools className={workspaceOpen ? 'min-w-0 flex-1 flex-nowrap items-center gap-1 overflow-x-auto whitespace-nowrap' : 'min-w-0 flex-1 flex-wrap'}>
             {/* Plus at extreme left */}
             <PromptInputButton>
               <IconPlus size={16} stroke={1.75} />
             </PromptInputButton>
             {typeof onToggleWorkspace === 'function' ? (
-              <PromptInputButton variant="ghost" className="text-gray-500 hover:text-gray-800" onClick={onToggleWorkspace}>
+              <PromptInputButton variant="ghost" className="text-gray-500 hover:text-gray-800" onClick={onToggleWorkspace} title="Workspace" aria-label="Workspace">
                 <IconLayoutSidebarRightExpand size={16} stroke={1.75} />
-                <span>Workspace</span>
+                {workspaceOpen ? null : <span>Workspace</span>}
               </PromptInputButton>
             ) : null}
             <PromptInputModelSelect
@@ -155,9 +155,9 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
                 onPromptProfileChange?.(next)
               }}
             >
-              <PromptInputModelSelectTrigger className="min-w-0 max-w-[108px] text-gray-500 hover:text-gray-800" title="Prompt" aria-label="Selecionar prompt">
+              <PromptInputModelSelectTrigger className={workspaceOpen ? 'w-9 min-w-9 px-0 text-gray-500 hover:text-gray-800' : 'min-w-0 max-w-[108px] text-gray-500 hover:text-gray-800'} title="Prompt" aria-label="Selecionar prompt">
                 <IconSparkles size={16} stroke={1.75} />
-                <span>Prompt</span>
+                {workspaceOpen ? null : <span>Prompt</span>}
               </PromptInputModelSelectTrigger>
               <PromptInputModelSelectContent>
                 <PromptInputModelSelectItem value="data_analyst">Analista de dados</PromptInputModelSelectItem>
@@ -172,9 +172,9 @@ export default function InputArea({ value, onChange, onSubmit, status = 'idle', 
               const next = (v === 'claude-sonnet' || v === 'claude-haiku' || v === 'openai-gpt5' || v === 'openai-gpt5mini') ? v : 'openai-gpt5mini'
               onModelChange?.(next)
             }}>
-              <PromptInputModelSelectTrigger className="min-w-0 max-w-[108px] text-gray-500 hover:text-gray-800" title="Modelo" aria-label="Selecionar modelo">
+              <PromptInputModelSelectTrigger className={workspaceOpen ? 'w-9 min-w-9 px-0 text-gray-500 hover:text-gray-800' : 'min-w-0 max-w-[108px] text-gray-500 hover:text-gray-800'} title="Modelo" aria-label="Selecionar modelo">
                 <IconRobot size={16} stroke={1.75} />
-                <span>Modelo</span>
+                {workspaceOpen ? null : <span>Modelo</span>}
               </PromptInputModelSelectTrigger>
               <PromptInputModelSelectContent>
                 <PromptInputModelSelectItem value="claude-sonnet">Claude Sonnet 4.5 (Agent SDK)</PromptInputModelSelectItem>
