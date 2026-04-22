@@ -367,7 +367,22 @@ export function DashboardArtifactWorkspace({
                     : 'border-[#DDDDD8] bg-[#ECECEB] text-[#5F5F5A] hover:bg-[#E2E2E0] hover:text-[#4F4F4B]'
                 }`}
               >
-                Tema
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 16 16"
+                  className="mr-1.5 h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M8 1.5a5.75 5.75 0 1 0 0 11.5h.95a1.8 1.8 0 0 0 1.79-2.03l-.06-.47a1.42 1.42 0 0 1 1.7-1.57l.35.08A1.8 1.8 0 0 0 15 7.27 5.77 5.77 0 0 0 8 1.5Z" />
+                  <circle cx="5.1" cy="6" r=".55" fill="currentColor" stroke="none" />
+                  <circle cx="7.6" cy="4.6" r=".55" fill="currentColor" stroke="none" />
+                  <circle cx="10.2" cy="5.4" r=".55" fill="currentColor" stroke="none" />
+                </svg>
+                <span>Tema</span>
               </button>
               <button
                 type="button"
@@ -379,7 +394,21 @@ export function DashboardArtifactWorkspace({
                     : 'bg-[#039AFE] text-white hover:bg-[#028ae0]'
                 }`}
               >
-                {saving ? 'Salvando...' : 'Salvar'}
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 16 16"
+                  className="mr-1.5 h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M3 2.5h7.6l2.4 2.4v8.6H3Z" />
+                  <path d="M5 2.5v3h4v-3" />
+                  <path d="M5.25 13v-3h5.5v3" />
+                </svg>
+                <span>{saving ? 'Salvando...' : 'Salvar'}</span>
               </button>
             </>
           }
