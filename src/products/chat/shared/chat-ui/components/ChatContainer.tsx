@@ -3,6 +3,7 @@
 import React, { useState, FormEvent, useRef, useEffect } from 'react';
 import type { UIMessage } from 'ai';
 import { useRouter } from 'next/navigation';
+import { ArrowRight, BarChart3, CalendarRange, Sparkles, TrendingUp, Users } from 'lucide-react';
 import Header from './Header';
 import PerguntaDoUsuario from './PerguntaDoUsuario';
 import RespostaDaIa from './RespostaDaIa';
@@ -19,6 +20,77 @@ type ChatMessagesListProps = {
   messages: UIMessage[]
   status: ChatStatus
   currentAssistantId: string | null
+}
+
+const EMPTY_CHAT_SUGGESTIONS = [
+  {
+    title: 'Criar dashboard de vendas',
+    subtitle: 'Visão geral de performance',
+    icon: BarChart3,
+    iconClassName: 'text-[#8A63F8]',
+    iconSurfaceClassName: 'border-[#ECE6FF] bg-[#F7F3FF]',
+  },
+  {
+    title: 'Analisar receita por canal',
+    subtitle: 'Comparar canais e tendências',
+    icon: TrendingUp,
+    iconClassName: 'text-[#F17383]',
+    iconSurfaceClassName: 'border-[#FFE5E9] bg-[#FFF4F6]',
+  },
+  {
+    title: 'Top clientes e produtos',
+    subtitle: 'Quem comprou mais e o que vendeu',
+    icon: Users,
+    iconClassName: 'text-[#6F87F6]',
+    iconSurfaceClassName: 'border-[#E4EBFF] bg-[#F3F7FF]',
+  },
+  {
+    title: 'Comparar períodos',
+    subtitle: 'Análise de MTD, QTD e YTD',
+    icon: CalendarRange,
+    iconClassName: 'text-[#7A88A8]',
+    iconSurfaceClassName: 'border-[#ECEFF5] bg-[#F8FAFC]',
+  },
+] as const
+
+function EmptyChatHero() {
+  return (
+    <div className="mx-auto mb-6 w-full max-w-[484px]">
+      <div className="mb-3 flex justify-center">
+        <Sparkles className="h-5 w-5 text-[#7C6BFF]" strokeWidth={2.2} />
+      </div>
+      <div className="mx-auto max-w-[320px] text-center">
+        <h1 className="text-[26px] font-semibold leading-[1.18] tracking-[-0.04em] text-[#111C3D] sm:text-[28px]">
+          <span className="block">No que você está</span>
+          <span className="block">pensando hoje?</span>
+        </h1>
+      </div>
+      <div className="mt-6 flex flex-col gap-3">
+        {EMPTY_CHAT_SUGGESTIONS.map((suggestion) => {
+          const Icon = suggestion.icon
+          return (
+            <div
+              key={suggestion.title}
+              className="flex items-center gap-3 rounded-[14px] border border-[#E9E8F0] bg-white px-3.5 py-3 shadow-[0_1px_2px_rgba(16,24,40,0.03)]"
+            >
+              <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] border ${suggestion.iconSurfaceClassName}`}>
+                <Icon className={`h-[15px] w-[15px] ${suggestion.iconClassName}`} strokeWidth={2} />
+              </div>
+              <div className="min-w-0 flex-1 text-left">
+                <div className="truncate text-[14px] font-semibold leading-[1.2] text-[#1F2947]">
+                  {suggestion.title}
+                </div>
+                <div className="mt-0.5 truncate text-[11.5px] leading-[1.2] text-[#8C93A8]">
+                  {suggestion.subtitle}
+                </div>
+              </div>
+              <ArrowRight className="h-4 w-4 shrink-0 text-[#A7ADBE]" strokeWidth={2} aria-hidden="true" />
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
 }
 
 const ChatMessagesList = React.memo(
@@ -819,7 +891,7 @@ export default function ChatContainer({ withSideMargins, redirectOnFirstMessage,
           <div className="h-full px-4">
             <div className="h-full flex items-center justify-center">
               <div className="w-full text-center">
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">No que você está pensando hoje?</h1>
+                <EmptyChatHero />
                 <InputArea
                   value={input}
                   onChange={setInput}
