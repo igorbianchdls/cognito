@@ -298,6 +298,7 @@ export default function DashboardDatePicker({
   const { appearanceOverrides, themeName } = useDashboardThemeSelection()
   const theme = resolveDashboardDatePickerTheme(themeName, isInHeader ? appearanceOverrides : undefined)
   const [customPickerOpen, setCustomPickerOpen] = React.useState(false)
+  const [customDatePickerOpen, setCustomDatePickerOpen] = React.useState(false)
   const customPickerRef = React.useRef<HTMLDivElement | null>(null)
   const props = (element?.props || {}) as AnyRecord
   const styles = (props.style || {}) as AnyRecord
@@ -496,6 +497,7 @@ export default function DashboardDatePicker({
       const target = event.target as Node | null
       if (customPickerRef.current && target && !customPickerRef.current.contains(target)) {
         setCustomPickerOpen(false)
+        setCustomDatePickerOpen(false)
       }
     }
     document.addEventListener('mousedown', onPointerDown)
@@ -528,6 +530,7 @@ export default function DashboardDatePicker({
   function applyPreset(preset: DatePickerPreset) {
     const nextRange = getPresetRange(preset)
     updateValue(mode === 'single' ? nextRange.to : nextRange)
+    setCustomDatePickerOpen(false)
     setCustomPickerOpen(false)
   }
 
@@ -564,14 +567,24 @@ export default function DashboardDatePicker({
         {mode === 'range' ? (
           <DateRangeSummaryField
             value={rangeValue}
-            onClick={() => setCustomPickerOpen((prev) => !prev)}
+            onClick={() => {
+              setCustomPickerOpen((prev) => {
+                if (prev) setCustomDatePickerOpen(false)
+                return !prev
+              })
+            }}
             fieldStyle={fieldStyle}
             iconStyle={iconStyle}
           />
         ) : (
           <button
             type="button"
-            onClick={() => setCustomPickerOpen((prev) => !prev)}
+            onClick={() => {
+              setCustomPickerOpen((prev) => {
+                if (prev) setCustomDatePickerOpen(false)
+                return !prev
+              })
+            }}
             style={{
               ...fieldStyle,
               width: '100%',
@@ -666,7 +679,7 @@ export default function DashboardDatePicker({
             }}
           >
             {presets.length > 0 ? (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {presets.map((preset) => {
                   const isActive =
                     preset === selectedPreset ||
@@ -676,7 +689,7 @@ export default function DashboardDatePicker({
                   return (
                     <div
                       key={preset}
-                      style={isActive ? activePresetFrameStyle : basePresetFrameStyle}
+                      style={{ ...(isActive ? activePresetFrameStyle : basePresetFrameStyle), width: '100%' }}
                     >
                       <button
                         type="button"
@@ -684,6 +697,10 @@ export default function DashboardDatePicker({
                         style={{
                           ...baseButtonStyle,
                           ...(isActive ? activePresetButtonStyle : null),
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          width: '100%',
+                          justifyContent: 'flex-start',
                           padding: '0 14px',
                           fontWeight: isActive ? 600 : (baseButtonStyle.fontWeight ?? 500),
                         }}
@@ -696,42 +713,84 @@ export default function DashboardDatePicker({
               </div>
             ) : null}
 
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: mode === 'single' ? 'column' : 'row',
-                alignItems: mode === 'single' ? 'stretch' : 'center',
-                gap: 8,
-              }}
-            >
-              <DateFieldWithIcon
-                value={mode === 'single' ? singleValue : (rangeValue.from || '')}
-                onChange={(nextValue) =>
-                  mode === 'single'
-                    ? updateValue(nextValue)
-                    : updateValue({
-                        from: nextValue,
-                        to: rangeValue.to || '',
-                      })
-                }
-                fieldStyle={fieldStyle}
-                iconStyle={iconStyle}
-              />
-              {mode === 'range' ? (
-                <>
-                  <span style={separatorStyle}>ate</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <button
+                type="button"
+                onClick={() => setCustomDatePickerOpen((prev) => !prev)}
+                style={{
+                  ...baseButtonStyle,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  width: '100%',
+                  justifyContent: 'space-between',
+                  padding: '0 14px',
+                  fontWeight: customDatePickerOpen ? 600 : (baseButtonStyle.fontWeight ?? 500),
+                }}
+              >
+                <span>Data personalizada</span>
+                <span
+                  aria-hidden="true"
+                  style={{
+                    display: 'inline-flex',
+                    transform: customDatePickerOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 160ms ease',
+                  }}
+                >
+                  <svg
+                    viewBox="0 0 16 16"
+                    width="14"
+                    height="14"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M4.5 6.5 8 10l3.5-3.5" />
+                  </svg>
+                </span>
+              </button>
+
+              {customDatePickerOpen ? (
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: mode === 'single' ? 'column' : 'row',
+                    alignItems: mode === 'single' ? 'stretch' : 'center',
+                    gap: 8,
+                    paddingTop: 2,
+                  }}
+                >
                   <DateFieldWithIcon
-                    value={rangeValue.to || ''}
+                    value={mode === 'single' ? singleValue : (rangeValue.from || '')}
                     onChange={(nextValue) =>
-                      updateValue({
-                        from: rangeValue.from || '',
-                        to: nextValue,
-                      })
+                      mode === 'single'
+                        ? updateValue(nextValue)
+                        : updateValue({
+                            from: nextValue,
+                            to: rangeValue.to || '',
+                          })
                     }
                     fieldStyle={fieldStyle}
                     iconStyle={iconStyle}
                   />
-                </>
+                  {mode === 'range' ? (
+                    <>
+                      <span style={separatorStyle}>ate</span>
+                      <DateFieldWithIcon
+                        value={rangeValue.to || ''}
+                        onChange={(nextValue) =>
+                          updateValue({
+                            from: rangeValue.from || '',
+                            to: nextValue,
+                          })
+                        }
+                        fieldStyle={fieldStyle}
+                        iconStyle={iconStyle}
+                      />
+                    </>
+                  ) : null}
+                </div>
               ) : null}
             </div>
           </div>
