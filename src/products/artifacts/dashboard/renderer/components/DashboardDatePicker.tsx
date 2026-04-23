@@ -536,6 +536,19 @@ export default function DashboardDatePicker({
       ? presets.find((preset) => isSameRange(currentValue as AnyRecord, getPresetRange(preset)))
       : undefined
 
+  const singleValue = typeof currentValue === 'string' ? currentValue : ''
+  const rangeValue = typeof currentValue === 'object' ? currentValue : {}
+  const triggerLabel =
+    mode === 'single'
+      ? singleValue || 'Selecionar data'
+      : rangeValue.from && rangeValue.to
+        ? `${rangeValue.from} ate ${rangeValue.to}`
+        : rangeValue.from
+          ? `${rangeValue.from} ate ...`
+          : rangeValue.to
+            ? `... ate ${rangeValue.to}`
+            : 'Selecionar periodo'
+
   return (
     <div
       style={{
@@ -547,101 +560,180 @@ export default function DashboardDatePicker({
       }}
     >
       {label ? <div style={labelStyle}>{label}</div> : null}
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 8,
-          alignItems: 'center',
-        }}
-      >
-        {mode === 'single' ? (
-          <DateFieldWithIcon
-            value={typeof currentValue === 'string' ? currentValue : ''}
-            onChange={(nextValue) => updateValue(nextValue)}
+      <div ref={customPickerRef} style={{ position: 'relative', minWidth: 220, width: '100%' }}>
+        {mode === 'range' ? (
+          <DateRangeSummaryField
+            value={rangeValue}
+            onClick={() => setCustomPickerOpen((prev) => !prev)}
             fieldStyle={fieldStyle}
             iconStyle={iconStyle}
           />
         ) : (
-          <div ref={customPickerRef} style={{ position: 'relative', minWidth: 220, flex: '1 1 220px' }}>
-            <DateRangeSummaryField
-              value={typeof currentValue === 'object' ? currentValue : {}}
-              onClick={() => setCustomPickerOpen((prev) => !prev)}
-              fieldStyle={fieldStyle}
-              iconStyle={iconStyle}
-            />
-            {customPickerOpen ? (
-              <div
+          <button
+            type="button"
+            onClick={() => setCustomPickerOpen((prev) => !prev)}
+            style={{
+              ...fieldStyle,
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 10,
+              cursor: 'pointer',
+              textAlign: 'left',
+            }}
+          >
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                minWidth: 0,
+                flex: 1,
+              }}
+            >
+              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', ...(iconStyle || {}) }}>
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 16 16"
+                  width="1em"
+                  height="1em"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="2.25" y="3.25" width="11.5" height="10.5" rx="2" />
+                  <path d="M5 1.75v3" />
+                  <path d="M11 1.75v3" />
+                  <path d="M2.5 6.25h11" />
+                </svg>
+              </span>
+              <span
                 style={{
-                  position: 'absolute',
-                  top: 'calc(100% + 8px)',
-                  left: 0,
-                  zIndex: 30,
-                  minWidth: 320,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: 12,
-                  ...theme.popoverStyle,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
                 }}
               >
-                <DateFieldWithIcon
-                  value={typeof currentValue === 'object' ? currentValue.from || '' : ''}
-                  onChange={(nextValue) =>
-                    updateValue({
-                      from: nextValue,
-                      to: typeof currentValue === 'object' ? currentValue.to || '' : '',
-                    })
-                  }
-                  fieldStyle={fieldStyle}
-                  iconStyle={iconStyle}
-                />
-                <span style={separatorStyle}>ate</span>
-                <DateFieldWithIcon
-                  value={typeof currentValue === 'object' ? currentValue.to || '' : ''}
-                  onChange={(nextValue) =>
-                    updateValue({
-                      from: typeof currentValue === 'object' ? currentValue.from || '' : '',
-                      to: nextValue,
-                    })
-                  }
-                  fieldStyle={fieldStyle}
-                  iconStyle={iconStyle}
-                />
-              </div>
-            ) : null}
-          </div>
+                {triggerLabel}
+              </span>
+            </span>
+            <span
+              aria-hidden="true"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                ...(iconStyle || {}),
+                transform: customPickerOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 160ms ease',
+              }}
+            >
+              <svg
+                viewBox="0 0 16 16"
+                width="1em"
+                height="1em"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M4.5 6.5 8 10l3.5-3.5" />
+              </svg>
+            </span>
+          </button>
         )}
 
-        {presets.length > 0 ? (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {presets.map((preset) => {
-              const isActive =
-                preset === selectedPreset ||
-                (mode === 'single' &&
-                  typeof currentValue === 'string' &&
-                  currentValue === getPresetRange(preset).to &&
-                  !isSemanticDatePicker)
-              return (
-                <div
-                  key={preset}
-                  style={isActive ? activePresetFrameStyle : basePresetFrameStyle}
-                >
-                  <button
-                    type="button"
-                    onClick={() => applyPreset(preset)}
-                    style={{
-                      ...baseButtonStyle,
-                      ...(isActive ? activePresetButtonStyle : null),
-                      padding: '0 14px',
-                      fontWeight: isActive ? 600 : (baseButtonStyle.fontWeight ?? 500),
-                    }}
-                  >
-                    {preset}
-                  </button>
-                </div>
-              )
-            })}
+        {customPickerOpen ? (
+          <div
+            style={{
+              position: 'absolute',
+              top: 'calc(100% + 8px)',
+              left: 0,
+              zIndex: 30,
+              minWidth: 320,
+              width: 'max-content',
+              maxWidth: 'min(92vw, 420px)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 12,
+              padding: 12,
+              ...theme.popoverStyle,
+            }}
+          >
+            {presets.length > 0 ? (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {presets.map((preset) => {
+                  const isActive =
+                    preset === selectedPreset ||
+                    (mode === 'single' &&
+                      singleValue === getPresetRange(preset).to &&
+                      !isSemanticDatePicker)
+                  return (
+                    <div
+                      key={preset}
+                      style={isActive ? activePresetFrameStyle : basePresetFrameStyle}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => applyPreset(preset)}
+                        style={{
+                          ...baseButtonStyle,
+                          ...(isActive ? activePresetButtonStyle : null),
+                          padding: '0 14px',
+                          fontWeight: isActive ? 600 : (baseButtonStyle.fontWeight ?? 500),
+                        }}
+                      >
+                        {preset}
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : null}
+
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: mode === 'single' ? 'column' : 'row',
+                alignItems: mode === 'single' ? 'stretch' : 'center',
+                gap: 8,
+              }}
+            >
+              <DateFieldWithIcon
+                value={mode === 'single' ? singleValue : (rangeValue.from || '')}
+                onChange={(nextValue) =>
+                  mode === 'single'
+                    ? updateValue(nextValue)
+                    : updateValue({
+                        from: nextValue,
+                        to: rangeValue.to || '',
+                      })
+                }
+                fieldStyle={fieldStyle}
+                iconStyle={iconStyle}
+              />
+              {mode === 'range' ? (
+                <>
+                  <span style={separatorStyle}>ate</span>
+                  <DateFieldWithIcon
+                    value={rangeValue.to || ''}
+                    onChange={(nextValue) =>
+                      updateValue({
+                        from: rangeValue.from || '',
+                        to: nextValue,
+                      })
+                    }
+                    fieldStyle={fieldStyle}
+                    iconStyle={iconStyle}
+                  />
+                </>
+              ) : null}
+            </div>
           </div>
         ) : null}
       </div>
