@@ -386,7 +386,7 @@ export function DashboardArtifactWorkspace({
                 className={`flex items-center justify-center rounded-md px-2 py-[0.35rem] text-[12px] font-medium transition ${
                   !isDirty || isHistoricalVersion || saving
                     ? 'cursor-not-allowed bg-[#E2E2E0] text-[#9A9A95]'
-                    : 'bg-[#039AFE] text-white hover:bg-[#028ae0]'
+                    : 'bg-[#4F46E5] text-[#FFFFFF] hover:bg-[#4338CA]'
                 }`}
               >
                 <svg
