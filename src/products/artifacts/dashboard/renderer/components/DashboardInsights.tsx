@@ -13,6 +13,12 @@ type InsightItem = {
   tone: InsightTone
   metric?: string
   icon?: 'trendDown' | 'bars' | 'alert' | 'people' | 'mobile'
+  fullTitle?: string
+  summary?: string
+  diagnosis?: string
+  impact?: string
+  evidence?: string[]
+  nextSteps?: string[]
 }
 
 const HEADER_ICON = '#6D5DF6'
@@ -24,6 +30,12 @@ const V1_INSIGHTS: InsightItem[] = [
     action: 'Entender motivo',
     tone: 'danger',
     icon: 'trendDown',
+    fullTitle: 'Queda de receita no Nordeste',
+    summary: 'A receita da regiao Nordeste caiu 18% nos ultimos 7 dias, puxada por menor volume de pedidos e ticket medio menor.',
+    diagnosis: 'A queda esta concentrada em clientes recorrentes e em canais com menor investimento recente. O padrao indica uma combinacao de reducao de demanda e menor eficiencia comercial.',
+    impact: 'Se o ritmo continuar, a projecao semanal pode ficar abaixo da meta em aproximadamente 12% a 15%.',
+    evidence: ['Receita 18% menor vs. periodo anterior.', 'Nordeste concentrou a maior variacao negativa.', 'Ticket medio e volume cairam ao mesmo tempo.'],
+    nextSteps: ['Comparar canais de aquisicao na regiao.', 'Revisar campanhas pausadas ou com baixa entrega.', 'Segmentar clientes recorrentes com queda de recompra.'],
   },
   {
     title: 'Melhor desempenho',
@@ -31,6 +43,12 @@ const V1_INSIGHTS: InsightItem[] = [
     action: 'Ver detalhe',
     tone: 'success',
     icon: 'bars',
+    fullTitle: 'Google Ads com melhor desempenho',
+    summary: 'Google Ads gerou R$ 490k no periodo e cresceu 32% em relacao ao periodo anterior.',
+    diagnosis: 'O desempenho positivo esta associado a melhor conversao em campanhas de fundo de funil e maior participacao de termos com alta intencao.',
+    impact: 'Existe oportunidade de realocar verba para as campanhas com maior ROAS e acelerar a captura de demanda.',
+    evidence: ['Receita de R$ 490k atribuida ao canal.', 'Crescimento de 32% vs. periodo anterior.', 'Campanhas principais mantiveram volume sem degradar conversao.'],
+    nextSteps: ['Abrir detalhe por campanha.', 'Comparar ROAS por conjunto.', 'Simular aumento gradual de orcamento nos melhores grupos.'],
   },
   {
     title: 'Atencao no ticket medio',
@@ -38,6 +56,12 @@ const V1_INSIGHTS: InsightItem[] = [
     action: 'Analisar causas',
     tone: 'warning',
     icon: 'alert',
+    fullTitle: 'Ticket medio caiu entre clientes recorrentes',
+    summary: 'O ticket medio caiu 9% entre clientes recorrentes, mesmo com manutencao parcial do volume de compras.',
+    diagnosis: 'A queda sugere mudanca no mix de produtos, maior uso de desconto ou menor compra de itens complementares.',
+    impact: 'A margem pode ser pressionada mesmo que o numero de pedidos permaneca estavel.',
+    evidence: ['Ticket medio 9% menor.', 'Variacao concentrada em clientes recorrentes.', 'Pedidos continuam ocorrendo, mas com carrinhos menores.'],
+    nextSteps: ['Analisar produtos com maior perda de participacao.', 'Revisar descontos aplicados no periodo.', 'Criar oferta de bundle para elevar ticket.'],
   },
   {
     title: 'Oportunidade',
@@ -45,6 +69,12 @@ const V1_INSIGHTS: InsightItem[] = [
     action: 'Ver clientes',
     tone: 'accent',
     icon: 'people',
+    fullTitle: 'Clientes com potencial de receita adicional',
+    summary: '15% dos clientes apresentam comportamento que pode gerar ate 35% mais receita com a abordagem correta.',
+    diagnosis: 'Esses clientes possuem historico de compra consistente, mas ainda nao compram categorias adjacentes ou planos de maior valor.',
+    impact: 'A oportunidade estimada e relevante para crescimento sem depender exclusivamente de novos clientes.',
+    evidence: ['15% da base concentra potencial de expansao.', 'Possibilidade de ate 35% mais receita.', 'Padroes indicam aderencia a ofertas complementares.'],
+    nextSteps: ['Listar clientes por potencial.', 'Criar campanha de cross-sell.', 'Priorizar contas com maior frequencia recente.'],
   },
 ]
 
@@ -54,24 +84,48 @@ const V5_INSIGHTS: InsightItem[] = [
     body: '',
     action: 'Sim, investigar',
     tone: 'danger',
+    fullTitle: 'Investigacao sugerida para queda no Nordeste',
+    summary: 'A IA identificou uma queda relevante de receita no Nordeste e sugere investigar canais, produtos e recompra.',
+    diagnosis: 'O comportamento aponta para um problema localizado, nao uma queda generalizada do negocio.',
+    impact: 'Agir rapidamente pode recuperar parte da receita ainda dentro do periodo atual.',
+    evidence: ['Queda de 18% em 7 dias.', 'Regiao Nordeste como principal outlier.', 'Possivel relacao com recompra e ticket medio.'],
+    nextSteps: ['Abrir analise por canal.', 'Comparar produtos mais vendidos por regiao.', 'Ver clientes com queda de recompra.'],
   },
   {
     title: 'Otimo! O Google Ads esta performando muito bem, gerando R$ 490k (+32%). Quer ver o detalhamento por campanha?',
     body: '',
     action: 'Ver campanhas',
     tone: 'success',
+    fullTitle: 'Campanhas do Google Ads em destaque',
+    summary: 'A IA encontrou um padrao positivo em Google Ads, com R$ 490k gerados e crescimento de 32%.',
+    diagnosis: 'O canal esta performando acima da media e pode estar capturando melhor a demanda de alta intencao.',
+    impact: 'Oportunidade de escalar campanhas vencedoras com menor risco operacional.',
+    evidence: ['R$ 490k de receita atribuida.', 'Crescimento de 32%.', 'Melhor desempenho frente aos demais canais.'],
+    nextSteps: ['Ver campanhas por ROAS.', 'Comparar criativos ativos.', 'Avaliar aumento controlado de budget.'],
   },
   {
     title: 'Notei que o ticket medio caiu 9% entre clientes recorrentes. Quer que eu analise os produtos que mais impactaram?',
     body: '',
     action: 'Analisar produtos',
     tone: 'warning',
+    fullTitle: 'Analise recomendada do ticket medio',
+    summary: 'A IA detectou queda de 9% no ticket medio entre clientes recorrentes e recomenda analisar o mix de produtos.',
+    diagnosis: 'Clientes continuam comprando, mas com menor valor por pedido. Isso pode indicar mix menos premium ou perda de itens complementares.',
+    impact: 'A receita pode cair mesmo sem perda forte de volume, reduzindo eficiencia comercial.',
+    evidence: ['Ticket medio 9% menor.', 'Clientes recorrentes afetados.', 'Possivel mudanca de mix.'],
+    nextSteps: ['Abrir ranking de produtos por variacao.', 'Analisar desconto medio.', 'Criar recomendacao de upsell.'],
   },
   {
     title: 'Identifiquei 15% dos clientes com potencial para gerar 35% mais receita. Quer ver quem sao eles?',
     body: '',
     action: 'Ver clientes',
     tone: 'accent',
+    fullTitle: 'Clientes com maior potencial de expansao',
+    summary: 'A IA identificou um grupo de clientes que pode gerar 35% mais receita com a oferta certa.',
+    diagnosis: 'Esse grupo demonstra engajamento e historico de compra suficiente para campanhas de expansao.',
+    impact: 'Pode ser uma alavanca rapida de crescimento com custo menor do que aquisicao.',
+    evidence: ['15% dos clientes com alto potencial.', 'Estimativa de 35% mais receita.', 'Base ja possui relacionamento ativo.'],
+    nextSteps: ['Ver lista priorizada.', 'Criar campanha de expansao.', 'Acionar clientes com maior propensao.'],
   },
 ]
 
@@ -349,6 +403,240 @@ function V5Card({ item, onAction }: { item: InsightItem; onAction?: (item: Insig
   )
 }
 
+function InsightDetailModal({
+  item,
+  variant,
+  onClose,
+  onContinue,
+}: {
+  item: InsightItem
+  variant: 'v1' | 'v5'
+  onClose: () => void
+  onContinue?: () => void
+}) {
+  const tokens = toneTokens(item.tone)
+  const title = item.fullTitle || item.title
+  const summary = item.summary || item.body || item.title
+  const diagnosis = item.diagnosis || 'Este insight foi identificado a partir dos dados recentes do dashboard.'
+  const impact = item.impact || 'Acompanhe este indicador para entender o impacto nos proximos periodos.'
+  const evidence = item.evidence?.length ? item.evidence : ['Mudanca detectada nos dados recentes.', 'Insight priorizado pela relevancia para o negocio.']
+  const nextSteps = item.nextSteps?.length ? item.nextSteps : ['Abrir analise detalhada.', 'Comparar com periodo anterior.', 'Definir proxima acao.']
+
+  React.useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [onClose])
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+      onMouseDown={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 1000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 24,
+        background: 'rgba(15, 23, 42, 0.34)',
+        backdropFilter: 'blur(5px)',
+      }}
+    >
+      <div
+        onMouseDown={(event) => event.stopPropagation()}
+        style={{
+          width: 'min(760px, 100%)',
+          maxHeight: 'min(82vh, 720px)',
+          overflow: 'auto',
+          borderRadius: 24,
+          border: '1px solid rgba(255,255,255,0.72)',
+          background: '#FFFFFF',
+          boxShadow: '0 24px 80px rgba(15, 23, 42, 0.24)',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            gap: 18,
+            padding: '24px 26px 18px',
+            borderBottom: '1px solid #EEF0F6',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+            <div
+              style={{
+                display: 'flex',
+                height: 42,
+                width: 42,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: 14,
+                background: tokens.iconBg,
+                color: tokens.text,
+              }}
+            >
+              <SparkHeaderIcon />
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <h2 style={{ margin: 0, color: '#111827', fontSize: 22, lineHeight: 1.2, fontWeight: 750 }}>
+                  {title}
+                </h2>
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    borderRadius: 999,
+                    background: tokens.chipBg,
+                    color: tokens.text,
+                    padding: '4px 9px',
+                    fontSize: 11,
+                    fontWeight: 800,
+                    letterSpacing: '0.04em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {variant === 'v5' ? 'IA' : 'Insight'}
+                </span>
+              </div>
+              <p style={{ margin: '8px 0 0', color: '#667085', fontSize: 14, lineHeight: 1.5 }}>
+                {summary}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fechar modal"
+            style={{
+              display: 'flex',
+              height: 34,
+              width: 34,
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              border: '1px solid #E5E7EB',
+              borderRadius: 999,
+              background: '#FFFFFF',
+              color: '#667085',
+              cursor: 'pointer',
+            }}
+          >
+            <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+              <path d="M4 4l8 8" />
+              <path d="M12 4l-8 8" />
+            </svg>
+          </button>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 18, padding: 26 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <section>
+              <h3 style={{ margin: 0, color: '#1F2937', fontSize: 14, fontWeight: 800 }}>Diagnostico</h3>
+              <p style={{ margin: '8px 0 0', color: '#475467', fontSize: 14, lineHeight: 1.7 }}>{diagnosis}</p>
+            </section>
+            <section>
+              <h3 style={{ margin: 0, color: '#1F2937', fontSize: 14, fontWeight: 800 }}>Impacto esperado</h3>
+              <p style={{ margin: '8px 0 0', color: '#475467', fontSize: 14, lineHeight: 1.7 }}>{impact}</p>
+            </section>
+            <section
+              style={{
+                borderRadius: 18,
+                border: `1px solid ${tokens.border}`,
+                background: tokens.cardBg,
+                padding: 16,
+              }}
+            >
+              <h3 style={{ margin: 0, color: tokens.text, fontSize: 14, fontWeight: 800 }}>Proximos passos</h3>
+              <ul style={{ margin: '10px 0 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 9 }}>
+                {nextSteps.map((step) => (
+                  <li key={step} style={{ display: 'flex', gap: 9, color: '#344054', fontSize: 14, lineHeight: 1.45 }}>
+                    <span style={{ marginTop: 7, height: 6, width: 6, flexShrink: 0, borderRadius: 999, background: tokens.text }} />
+                    <span>{step}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </div>
+
+          <aside
+            style={{
+              borderRadius: 18,
+              border: '1px solid #ECEFF5',
+              background: '#F8FAFC',
+              padding: 16,
+            }}
+          >
+            <h3 style={{ margin: 0, color: '#1F2937', fontSize: 14, fontWeight: 800 }}>Evidencias</h3>
+            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {evidence.map((entry) => (
+                <div
+                  key={entry}
+                  style={{
+                    borderRadius: 14,
+                    border: '1px solid #E5EAF3',
+                    background: '#FFFFFF',
+                    padding: '11px 12px',
+                    color: '#475467',
+                    fontSize: 13,
+                    lineHeight: 1.45,
+                  }}
+                >
+                  {entry}
+                </div>
+              ))}
+            </div>
+          </aside>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, padding: '0 26px 24px' }}>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              border: '1px solid #E5E7EB',
+              borderRadius: 999,
+              background: '#FFFFFF',
+              color: '#344054',
+              padding: '10px 16px',
+              fontSize: 14,
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            Fechar
+          </button>
+          <button
+            type="button"
+            onClick={onContinue}
+            style={{
+              border: 'none',
+              borderRadius: 999,
+              background: tokens.text,
+              color: '#FFFFFF',
+              padding: '10px 16px',
+              fontSize: 14,
+              fontWeight: 800,
+              cursor: onContinue ? 'pointer' : 'default',
+            }}
+          >
+            Continuar analise
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function DashboardInsights({
   element,
   onAction,
@@ -374,97 +662,117 @@ export default function DashboardInsights({
   const items = variant === 'v5' ? V5_INSIGHTS : V1_INSIGHTS
   const containerStyle = (props.style || {}) as React.CSSProperties
   const subtitleStyle = (props.textStyle || {}) as React.CSSProperties
+  const [selectedInsight, setSelectedInsight] = React.useState<InsightItem | null>(null)
+
+  function openInsightDetail(item: InsightItem) {
+    setSelectedInsight(item)
+    onAction?.({ type: 'insightDetailOpen', variant, action: item.action, title: item.title })
+  }
 
   return (
-    <section
-      style={{
-        gridColumn: '1 / -1',
-        width: '100%',
-        borderRadius: 20,
-        border: '1px solid #ECEAF6',
-        background: '#FFFFFF',
-        padding: '18px 20px 16px',
-        boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
-        ...containerStyle,
-      }}
-    >
-      <div
+    <>
+      <section
         style={{
-          display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'space-between',
-          gap: 16,
+          gridColumn: '1 / -1',
+          width: '100%',
+          borderRadius: 20,
+          border: '1px solid #ECEAF6',
+          background: '#FFFFFF',
+          padding: '18px 20px 16px',
+          boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
+          ...containerStyle,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-          <div style={{ marginTop: 1, display: 'flex', height: 22, width: 22, alignItems: 'center', justifyContent: 'center' }}>
-            <SparkHeaderIcon />
-          </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <h3 style={{ margin: 0, color: '#1F2947', fontSize: 16, fontWeight: 700, lineHeight: 1.2 }}>
-                {title}
-              </h3>
-              <span
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            gap: 16,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+            <div style={{ marginTop: 1, display: 'flex', height: 22, width: 22, alignItems: 'center', justifyContent: 'center' }}>
+              <SparkHeaderIcon />
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <h3 style={{ margin: 0, color: '#1F2947', fontSize: 16, fontWeight: 700, lineHeight: 1.2 }}>
+                  {title}
+                </h3>
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    borderRadius: 999,
+                    background: '#F2EEFF',
+                    color: '#6B5CFF',
+                    padding: '3px 8px',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    letterSpacing: '0.03em',
+                  }}
+                >
+                  BETA
+                </span>
+              </div>
+              <p
                 style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  borderRadius: 999,
-                  background: '#F2EEFF',
-                  color: '#6B5CFF',
-                  padding: '3px 8px',
-                  fontSize: 11,
-                  fontWeight: 700,
-                  letterSpacing: '0.03em',
+                  margin: '6px 0 0',
+                  color: '#737C93',
+                  fontSize: 14,
+                  lineHeight: 1.4,
+                  ...subtitleStyle,
                 }}
               >
-                BETA
-              </span>
+                {description}
+              </p>
             </div>
-            <p
-              style={{
-                margin: '6px 0 0',
-                color: '#737C93',
-                fontSize: 14,
-                lineHeight: 1.4,
-                ...subtitleStyle,
-              }}
-            >
-              {description}
-            </p>
           </div>
+
+          <HeaderAction
+            label={headerActionLabel}
+            onClick={() => onAction?.({ type: 'insightsHeaderAction', variant })}
+          />
         </div>
 
-        <HeaderAction
-          label={headerActionLabel}
-          onClick={() => onAction?.({ type: 'insightsHeaderAction', variant })}
-        />
-      </div>
+        <div
+          style={{
+            marginTop: 16,
+            display: 'grid',
+            gridTemplateColumns: variant === 'v5' ? 'repeat(4, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))',
+            gap: 14,
+          }}
+        >
+          {items.map((item) =>
+            variant === 'v5' ? (
+              <V5Card
+                key={item.title}
+                item={item}
+                onAction={openInsightDetail}
+              />
+            ) : (
+              <V1Card
+                key={item.title}
+                item={item}
+                onAction={openInsightDetail}
+              />
+            ),
+          )}
+        </div>
+      </section>
 
-      <div
-        style={{
-          marginTop: 16,
-          display: 'grid',
-          gridTemplateColumns: variant === 'v5' ? 'repeat(4, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))',
-          gap: 14,
-        }}
-      >
-        {items.map((item) =>
-          variant === 'v5' ? (
-            <V5Card
-              key={item.title}
-              item={item}
-              onAction={() => onAction?.({ type: 'insightAction', variant, action: item.action, title: item.title })}
-            />
-          ) : (
-            <V1Card
-              key={item.title}
-              item={item}
-              onAction={() => onAction?.({ type: 'insightAction', variant, action: item.action, title: item.title })}
-            />
-          ),
-        )}
-      </div>
-    </section>
+      {selectedInsight ? (
+        <InsightDetailModal
+          item={selectedInsight}
+          variant={variant}
+          onClose={() => setSelectedInsight(null)}
+          onContinue={() => {
+            onAction?.({ type: 'insightContinueAnalysis', variant, action: selectedInsight.action, title: selectedInsight.title })
+            setSelectedInsight(null)
+          }}
+        />
+      ) : null}
+    </>
   )
 }
