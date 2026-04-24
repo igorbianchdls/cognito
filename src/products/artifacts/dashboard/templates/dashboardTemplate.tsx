@@ -635,45 +635,6 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 </KPI>
           </Card>
 
-          <Card id="classic-insight-aceleracao" span={8} rows={8} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <Text as="h2" variant="section-title-sm">Aceleracao recente</Text>
-                <Text variant="small-muted">Leituras sobre os vetores que estao puxando o crescimento do periodo.</Text>
-              </div>
-              <Insights
-                textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, margin: 0, fontSize: 13, lineHeight: 1.65 }}
-                iconStyle={{ color: '#2563EB' }}
-                prompt="Gerar insights sobre aceleracao recente de receita, ganho nos canais proprios, regularidade do volume e melhora de retorno sem aumentar descontos."
-                schedule={{ frequency: 'weekly', date: '', time: '09:00' }}
-              />
-          </Card>
-
-          <Card id="classic-insight-concentracao" span={8} rows={8} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <Text as="h2" variant="section-title-sm">Concentracao de receita</Text>
-                <Text variant="small-muted">Pontos de atencao sobre dependencia de canais e distribuicao do faturamento.</Text>
-              </div>
-              <Insights
-                textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, margin: 0, fontSize: 13, lineHeight: 1.65 }}
-                iconStyle={{ color: '#F59E0B' }}
-                prompt="Gerar insights sobre concentracao de receita, dependencia de poucos canais e risco operacional da baixa pulverizacao do faturamento."
-                schedule={{ frequency: 'weekly', date: '', time: '09:00' }}
-              />
-          </Card>
-
-          <Card id="classic-insight-conversao" span={8} rows={8} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <Text as="h2" variant="section-title-sm">Conversao e qualidade</Text>
-                <Text variant="small-muted">Sinais de eficiencia comercial sem pressao adicional sobre o ticket medio.</Text>
-              </div>
-              <Insights
-                textStyle={{ ...{ margin: 0, fontSize: 14, lineHeight: 1.75, color: theme.textSecondary }, margin: 0, fontSize: 13, lineHeight: 1.65 }}
-                iconStyle={{ color: '#10B981' }}
-                prompt="Gerar insights sobre conversao, estabilidade da aprovacao, ganhos no topo do funil e preservacao do ticket medio."
-                schedule={{ frequency: 'weekly', date: '', time: '09:00' }}
-              />
-          </Card>
-
           <Card id="classic-chart-mix" span={12} rows={12} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <Text variant="eyebrow">Receita por canal</Text>
