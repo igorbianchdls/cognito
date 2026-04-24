@@ -2,6 +2,10 @@
 
 import * as React from 'react'
 import { createPortal } from 'react-dom'
+import {
+  resolveDashboardInsightsTheme,
+  useDashboardThemeSelection,
+} from '@/products/artifacts/dashboard/renderer/dashboardThemeConfig'
 
 type AnyRecord = Record<string, any>
 
@@ -566,6 +570,8 @@ export default function DashboardInsights({
   onAction?: (action: AnyRecord) => void
 }) {
   const props = (element?.props || {}) as AnyRecord
+  const { appearanceOverrides, themeName } = useDashboardThemeSelection()
+  const insightsTheme = resolveDashboardInsightsTheme(themeName, appearanceOverrides)
   const variant = String(props.variant || props.version || 'v1').toLowerCase() === 'v5' ? 'v5' : 'v1'
   const title = typeof props.title === 'string' && props.title.trim() ? props.title : variant === 'v5' ? 'Alfred encontrou alguns insights importantes' : 'Insights principais'
   const description =
@@ -582,7 +588,14 @@ export default function DashboardInsights({
         : 'Ver todos os insights'
   const items = variant === 'v5' ? V5_INSIGHTS : V1_INSIGHTS
   const contentStyle = (props.style || {}) as React.CSSProperties
-  const subtitleStyle = (props.textStyle || {}) as React.CSSProperties
+  const titleStyle = {
+    ...insightsTheme.titleStyle,
+    ...(props.titleStyle && typeof props.titleStyle === 'object' ? (props.titleStyle as React.CSSProperties) : {}),
+  } as React.CSSProperties
+  const subtitleStyle = {
+    ...insightsTheme.textStyle,
+    ...(props.textStyle && typeof props.textStyle === 'object' ? (props.textStyle as React.CSSProperties) : {}),
+  } as React.CSSProperties
   const [selectedInsight, setSelectedInsight] = React.useState<InsightItem | null>(null)
 
   function openInsightDetail(item: InsightItem) {
@@ -612,7 +625,12 @@ export default function DashboardInsights({
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <h3 style={{ margin: 0, color: '#1F2947', fontSize: 16, fontWeight: 700, lineHeight: 1.2 }}>
+                <h3
+                  style={{
+                    margin: 0,
+                    ...titleStyle,
+                  }}
+                >
                   {title}
                 </h3>
                 <span
@@ -634,9 +652,6 @@ export default function DashboardInsights({
               <p
                 style={{
                   margin: '6px 0 0',
-                  color: '#737C93',
-                  fontSize: 14,
-                  lineHeight: 1.4,
                   ...subtitleStyle,
                 }}
               >
