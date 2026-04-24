@@ -688,14 +688,23 @@ export default function DashboardDatePicker({
                   return (
                     <div
                       key={preset}
-                      style={{ ...(isActive ? activePresetFrameStyle : basePresetFrameStyle) }}
+                      style={{
+                        ...(isActive ? activePresetFrameStyle : basePresetFrameStyle),
+                        minWidth: 56,
+                      }}
                     >
                       <button
                         type="button"
                         onClick={() => applyPreset(preset)}
                         style={{
                           ...baseButtonStyle,
-                          ...(isActive ? activePresetButtonStyle : null),
+                          ...(isActive
+                            ? {
+                                backgroundColor: activePresetButtonStyle.backgroundColor,
+                                borderColor: activePresetButtonStyle.borderColor,
+                                color: activePresetButtonStyle.color,
+                              }
+                            : null),
                           display: 'inline-flex',
                           alignItems: 'center',
                           width: 'auto',
