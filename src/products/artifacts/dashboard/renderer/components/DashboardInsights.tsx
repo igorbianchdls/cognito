@@ -660,7 +660,7 @@ export default function DashboardInsights({
         ? 'Perguntar a IA'
         : 'Ver todos os insights'
   const items = variant === 'v5' ? V5_INSIGHTS : V1_INSIGHTS
-  const containerStyle = (props.style || {}) as React.CSSProperties
+  const contentStyle = (props.style || {}) as React.CSSProperties
   const subtitleStyle = (props.textStyle || {}) as React.CSSProperties
   const [selectedInsight, setSelectedInsight] = React.useState<InsightItem | null>(null)
 
@@ -671,16 +671,10 @@ export default function DashboardInsights({
 
   return (
     <>
-      <section
+      <div
         style={{
-          gridColumn: '1 / -1',
           width: '100%',
-          borderRadius: 20,
-          border: '1px solid #ECEAF6',
-          background: '#FFFFFF',
-          padding: '18px 20px 16px',
-          boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
-          ...containerStyle,
+          ...contentStyle,
         }}
       >
         <div
@@ -760,7 +754,7 @@ export default function DashboardInsights({
             ),
           )}
         </div>
-      </section>
+      </div>
 
       {selectedInsight ? (
         <InsightDetailModal

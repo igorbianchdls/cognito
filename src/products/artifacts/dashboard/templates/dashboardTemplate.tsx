@@ -468,25 +468,23 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
           </header>
           <Grid columns={24} gap={18} rowHeight={16} padding={28} width="100%">
 
-          <Insights
-            id="classic-insights-v1"
-            span={24}
-            rows={7}
-            variant="v1"
-            title="Insights principais"
-            description="Resumo inteligente do que mais importa no seu negocio."
-            headerActionLabel="Ver todos os insights"
-          />
+          <Card id="classic-insights-v1" span={24} rows={7}>
+            <Insights
+              variant="v1"
+              title="Insights principais"
+              description="Resumo inteligente do que mais importa no seu negocio."
+              headerActionLabel="Ver todos os insights"
+            />
+          </Card>
 
-          <Insights
-            id="classic-insights-v5"
-            span={24}
-            rows={7}
-            variant="v5"
-            title="Alfred encontrou alguns insights importantes"
-            description="Analise automatica dos seus dados mais recentes."
-            headerActionLabel="Perguntar a IA"
-          />
+          <Card id="classic-insights-v5" span={24} rows={7}>
+            <Insights
+              variant="v5"
+              title="Alfred encontrou alguns insights importantes"
+              description="Analise automatica dos seus dados mais recentes."
+              headerActionLabel="Perguntar a IA"
+            />
+          </Card>
 
           <Card id="classic-kpi-receita" span={5} rows={5} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
