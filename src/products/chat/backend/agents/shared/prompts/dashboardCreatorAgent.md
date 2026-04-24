@@ -961,6 +961,7 @@ AND ({{centro_lucro_id}}::int[] IS NULL OR cr.centro_lucro_id = ANY({{centro_luc
       - `presets`
     - Rule: prefer semantic mode using `table` + `field`.
     - Rule: by default, author `DatePicker` in the minimal form and rely on renderer/theme defaults for visual styling.
+    - Rule: in dashboard headers, prefer the minimal form without a visible `label` unless the user explicitly asks for one.
     - Rule: only add explicit style props like `labelStyle`, `fieldStyle`, `iconStyle`, `presetButtonStyle`, `activePresetButtonStyle`, or `separatorStyle` when there is a real local exception.
   - `Tabs`
     - Purpose: group conditional views.
@@ -1046,13 +1047,12 @@ AND ({{centro_lucro_id}}::int[] IS NULL OR cr.centro_lucro_id = ANY({{centro_luc
   <header style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, padding: '20px 24px' }}>
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <Text variant="eyebrow">Resumo comercial</Text>
-      <Text as="h1" variant="page-title">Receita e canais</Text>
+      <Text as="h1" variant="page-title-sm">Receita e canais</Text>
       <Text variant="lead">
         Mantenha o `header` fora do `Grid` e use o `Grid` apenas para blocos redimensionaveis.
       </Text>
     </div>
     <DatePicker
-      label="Periodo"
       table="vendas.pedidos"
       field="data_pedido"
       mode="range"
@@ -1225,13 +1225,12 @@ AND ({{centro_lucro_id}}::int[] IS NULL OR cr.centro_lucro_id = ANY({{centro_luc
   <header style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, padding: '20px 24px' }}>
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <Text variant="eyebrow">Exploracao comercial</Text>
-      <Text as="h1" variant="page-title">Filtros, tabela e pivot</Text>
+      <Text as="h1" variant="page-title-sm">Filtros, tabela e pivot</Text>
       <Text variant="lead">
         Mantenha o mesmo esqueleto estrutural: `Dashboard`, `header` fora do `Grid` e `Grid` para os blocos analiticos.
       </Text>
     </div>
     <DatePicker
-      label="Periodo"
       table="vendas.pedidos"
       field="data_pedido"
       mode="range"
@@ -1363,13 +1362,12 @@ AND ({{centro_lucro_id}}::int[] IS NULL OR cr.centro_lucro_id = ANY({{centro_luc
   <header style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, padding: '20px 24px' }}>
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <Text variant="eyebrow">Operacao comercial</Text>
-      <Text as="h1" variant="page-title">Receita, aprovacao e pedidos</Text>
+      <Text as="h1" variant="page-title-sm">Receita, aprovacao e pedidos</Text>
       <Text variant="lead">
         Repita o mesmo esqueleto estrutural: `header` fora do `Grid` e `Grid` apenas para cards e blocos analiticos.
       </Text>
     </div>
     <DatePicker
-      label="Periodo"
       table="vendas.pedidos"
       field="data_pedido"
       mode="range"
@@ -1569,10 +1567,9 @@ AND ({{centro_lucro_id}}::int[] IS NULL OR cr.centro_lucro_id = ANY({{centro_luc
   <header style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, padding: '20px 24px' }}>
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <Text variant="eyebrow">Resumo comercial</Text>
-      <Text as="h1" variant="page-title">Dashboard Comercial</Text>
+      <Text as="h1" variant="page-title-sm">Dashboard Comercial</Text>
     </div>
     <DatePicker
-      label="Periodo"
       table="vendas.pedidos"
       field="data_pedido"
       mode="range"
