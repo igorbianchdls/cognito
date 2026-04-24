@@ -629,10 +629,11 @@ export default function DashboardDatePicker({
     if (!customPickerOpen || mode !== 'range') return
     const fromDate = parseIsoDate(rangeValue.from)
     const toDate = parseIsoDate(rangeValue.to)
+    const draftFrom = fromDate || toDate
     setDraftRange(
-      fromDate || toDate
+      draftFrom
         ? {
-            ...(fromDate ? { from: fromDate } : {}),
+            from: draftFrom,
             ...(toDate ? { to: toDate } : {}),
           }
         : undefined,
