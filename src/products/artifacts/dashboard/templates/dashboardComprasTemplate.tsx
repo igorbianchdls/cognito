@@ -27,7 +27,6 @@ function buildComprasDashboardSource(themeName: string) {
                   </Vertical>
 
                   <DatePicker
-                    label="Periodo do pedido"
                     table="compras.compras"
                     field="data_pedido"
                     presets={['7d', '30d', '90d', 'month']}

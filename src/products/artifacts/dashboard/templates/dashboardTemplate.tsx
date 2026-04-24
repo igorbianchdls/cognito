@@ -459,7 +459,6 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
 
             <Vertical gap={10} style={{ alignItems: 'flex-end', minWidth: 240 }}>
               <DatePicker
-                label="Periodo do pedido"
                 table="vendas.pedidos"
                 field="data_pedido"
                 presets={['7d', '30d', 'month', 'quarter']}

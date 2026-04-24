@@ -983,6 +983,9 @@ AND ({{centro_lucro_id}}::int[] IS NULL OR cr.centro_lucro_id = ANY({{centro_luc
       - `gap`
       - `itemGap`
       - `showDividers`
+    - Rule: when `Insights` is used as a grid block, author it inside a `Card`, not as a loose structural item of `Grid`.
+    - Rule: `Insights` should fill the available width of its parent card.
+    - Rule: choose the parent card `span` according to the dashboard layout; the width behavior belongs to the card, while `Insights` should occupy the full card width.
     - Rule: for new dashboards, the source should store `prompt` and optional `schedule`, not authored insight `items`.
     - Rule: the runtime/editor may show placeholder items until real AI-generated insights exist.
     - Rule: legacy files may still contain `items`; preserve them only when editing an older file that already uses that shape.

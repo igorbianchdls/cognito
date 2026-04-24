@@ -27,7 +27,6 @@ function buildShopifyDashboardSource(themeName: string) {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '34%', minWidth: 320 }}>
               <DatePicker
-                label="Periodo do pedido"
                 table="ecommerce.pedidos"
                 field="data_pedido"
                 presets={['7d', '30d', '90d', 'month']}

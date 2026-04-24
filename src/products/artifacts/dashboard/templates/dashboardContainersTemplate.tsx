@@ -31,7 +31,6 @@ function buildContainersDashboardSource(themeName: string) {
 
                 <div style={{ width: 340 }}>
                   <DatePicker
-                    label="Periodo do pedido"
                     table="vendas.pedidos"
                     field="data_pedido"
                     presets={['7d', '30d', 'month']}
