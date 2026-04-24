@@ -21,7 +21,7 @@ function buildMetaAdsDashboardSource(themeName: string) {
                   <span style={{ display: 'inline-flex', width: 'fit-content', alignItems: 'center', borderRadius: 999, border: '1px solid ' + theme.accentBorder, backgroundColor: theme.accentSurface, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: theme.accentText }}>Paid Social</span>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <Text variant="eyebrow">Meta Ads performance por conta, campanha e criativo</Text>
-                    <Text as="h1" variant="page-title">Dashboard Meta Ads</Text>
+                    <Text as="h1" variant="page-title-sm">Dashboard Meta Ads</Text>
                   </div>
                   <Text variant="lead">Adaptacao do template legado de apps para JSX com tags, queries SQL explicitas e leitura de paid social no runtime novo do workspace.</Text>
                 </div>

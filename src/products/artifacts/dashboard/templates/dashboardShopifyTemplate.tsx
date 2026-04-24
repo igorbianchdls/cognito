@@ -21,7 +21,7 @@ function buildShopifyDashboardSource(themeName: string) {
               <span style={{ display: 'inline-flex', width: 'fit-content', alignItems: 'center', borderRadius: 999, border: '1px solid ' + theme.accentBorder, backgroundColor: theme.accentSurface, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: theme.accentText }}>E-commerce Core</span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <Text variant="eyebrow">Shopify para vendas, pagamento e fulfillment</Text>
-                <Text as="h1" variant="page-title">Dashboard Shopify</Text>
+                <Text as="h1" variant="page-title-sm">Dashboard Shopify</Text>
               </div>
               <Text variant="lead">Migracao do template legado para JSX com tags, preservando GMV, pedidos, ticket, operacao de pagamento e fulfillment no mesmo dashboard.</Text>
             </div>

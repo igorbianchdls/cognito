@@ -21,7 +21,7 @@ function buildContainersDashboardSource(themeName: string) {
                   <Text variant="eyebrow">
                     Layout semantico em containers
                   </Text>
-                  <Text as="h1" variant="page-title">
+                  <Text as="h1" variant="page-title-sm">
                     Dashboard com Vertical, Horizontal e Card
                   </Text>
                   <Text variant="lead">

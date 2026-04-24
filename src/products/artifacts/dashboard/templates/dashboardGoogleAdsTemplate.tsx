@@ -21,7 +21,7 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                   <span style={{ display: 'inline-flex', width: 'fit-content', alignItems: 'center', borderRadius: 999, border: '1px solid ' + theme.accentBorder, backgroundColor: theme.accentSurface, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: theme.accentText }}>Paid Search</span>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <Text variant="eyebrow">Google Ads para Search, Shopping e PMax</Text>
-                    <Text as="h1" variant="page-title">Dashboard Google Ads</Text>
+                    <Text as="h1" variant="page-title-sm">Dashboard Google Ads</Text>
                   </div>
                   <Text variant="lead">Versao JSX do template legado com foco em volume, eficiencia e aquisicao, agora no formato novo do workspace sem DSL.</Text>
                 </div>

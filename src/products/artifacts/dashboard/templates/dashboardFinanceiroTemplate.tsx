@@ -21,7 +21,7 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   <span style={{ display: 'inline-flex', width: 'fit-content', alignItems: 'center', borderRadius: 999, border: '1px solid ' + theme.accentBorder, backgroundColor: theme.accentSurface, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: theme.accentText }}>Cash Control</span>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <Text variant="eyebrow">AP, AR e pressao de caixa no periodo</Text>
-                    <Text as="h1" variant="page-title">Dashboard Financeiro</Text>
+                    <Text as="h1" variant="page-title-sm">Dashboard Financeiro</Text>
                   </div>
                   <Text variant="lead">Leitura em pagina unica com liquidez, recebimentos, passivo, detalhamento operacional e filtros dedicados no topo.</Text>
                 </div>
