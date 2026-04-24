@@ -2,8 +2,10 @@
 
 import React from 'react'
 import { createPortal } from 'react-dom'
-import { Calendar } from 'lucide-react'
+import { Calendar as CalendarIcon } from 'lucide-react'
+import type { DateRange } from 'react-day-picker'
 
+import { Calendar as UiCalendar } from '@/components/ui/calendar'
 import { useData } from '@/products/bi/json-render/context'
 import { DASHBOARD_SUPPORTED_DATE_PICKER_PRESETS } from '@/products/artifacts/dashboard/contract/dashboardContract'
 import {
@@ -140,6 +142,32 @@ function formatRangeLabel(value: { from?: string; to?: string }) {
   return 'Selecionar periodo'
 }
 
+function parseIsoDate(value?: string) {
+  const raw = fmtDate(value)
+  if (!raw) return undefined
+  const [year, month, day] = raw.split('-').map((part) => Number(part))
+  if (!year || !month || !day) return undefined
+  return new Date(year, month - 1, day)
+}
+
+function formatDateLong(value?: string) {
+  const date = parseIsoDate(value)
+  if (!date) return ''
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(date)
+}
+
+function toLocalIso(date?: Date) {
+  if (!date) return ''
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 function updateDateFilterMarkers(
   prev: AnyRecord,
   marker: AnyRecord | undefined,
@@ -221,7 +249,7 @@ function DateFieldWithIcon({
           ...resolvedIconStyle,
         }}
       >
-        <Calendar size={iconSize} />
+        <CalendarIcon size={iconSize} />
       </button>
     </div>
   )
@@ -281,7 +309,7 @@ function DateRangeSummaryField({
           ...resolvedIconStyle,
         }}
       >
-        <Calendar size={iconSize} />
+        <CalendarIcon size={iconSize} />
       </span>
     </button>
   )
@@ -307,6 +335,10 @@ export default function DashboardDatePicker({
     left: number
     width: number
   } | null>(null)
+  const [draftRange, setDraftRange] = React.useState<DateRange | undefined>(undefined)
+  const [draftMonth, setDraftMonth] = React.useState<Date>(new Date())
+  const [draftStartTime, setDraftStartTime] = React.useState('00:00')
+  const [draftEndTime, setDraftEndTime] = React.useState('23:59')
   const props = (element?.props || {}) as AnyRecord
   const styles = (props.style || {}) as AnyRecord
 
@@ -560,6 +592,17 @@ export default function DashboardDatePicker({
     setCustomPickerOpen(false)
   }
 
+  function applyDraftRange() {
+    const from = toLocalIso(draftRange?.from)
+    const to = toLocalIso(draftRange?.to || draftRange?.from)
+    if (!from && !to) return
+    updateValue({
+      from,
+      to,
+    })
+    setCustomPickerOpen(false)
+  }
+
   const selectedPreset =
     mode === 'range'
       ? presets.find((preset) => isSameRange(currentValue as AnyRecord, getPresetRange(preset)))
@@ -577,6 +620,27 @@ export default function DashboardDatePicker({
           : rangeValue.to
           ? `... ate ${rangeValue.to}`
             : 'Selecionar periodo'
+  const localTimeZone =
+    typeof Intl !== 'undefined' && typeof Intl.DateTimeFormat === 'function'
+      ? Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+      : 'UTC'
+
+  React.useEffect(() => {
+    if (!customPickerOpen || mode !== 'range') return
+    const fromDate = parseIsoDate(rangeValue.from)
+    const toDate = parseIsoDate(rangeValue.to)
+    setDraftRange(
+      fromDate || toDate
+        ? {
+            ...(fromDate ? { from: fromDate } : {}),
+            ...(toDate ? { to: toDate } : {}),
+          }
+        : undefined,
+    )
+    setDraftMonth(fromDate || toDate || new Date())
+    setDraftStartTime('00:00')
+    setDraftEndTime('23:59')
+  }, [customPickerOpen, mode, rangeValue.from, rangeValue.to])
 
   function updateCustomPickerPopoverPosition() {
     if (typeof window === 'undefined') return
@@ -613,7 +677,7 @@ export default function DashboardDatePicker({
             }}
           >
             {presets.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {presets.map((preset) => {
                   const isActive =
                     preset === selectedPreset ||
@@ -623,7 +687,7 @@ export default function DashboardDatePicker({
                   return (
                     <div
                       key={preset}
-                      style={{ ...(isActive ? activePresetFrameStyle : basePresetFrameStyle), width: '100%' }}
+                      style={{ ...(isActive ? activePresetFrameStyle : basePresetFrameStyle) }}
                     >
                       <button
                         type="button"
@@ -633,7 +697,7 @@ export default function DashboardDatePicker({
                           ...(isActive ? activePresetButtonStyle : null),
                           display: 'inline-flex',
                           alignItems: 'center',
-                          width: '100%',
+                          width: 'auto',
                           justifyContent: 'flex-start',
                           padding: '0 14px',
                           fontWeight: isActive ? 600 : (baseButtonStyle.fontWeight ?? 500),
@@ -647,86 +711,237 @@ export default function DashboardDatePicker({
               </div>
             ) : null}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <button
-                type="button"
-                onClick={() => setCustomDatePickerOpen((prev) => !prev)}
+            {mode === 'range' ? (
+              <div
                 style={{
-                  ...baseButtonStyle,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  width: '100%',
-                  justifyContent: 'space-between',
-                  padding: '0 14px',
-                  fontWeight: customDatePickerOpen ? 600 : (baseButtonStyle.fontWeight ?? 500),
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 14,
+                  borderTop: '1px solid rgba(148, 163, 184, 0.16)',
+                  paddingTop: 2,
                 }}
               >
-                <span>Data personalizada</span>
-                <span
-                  aria-hidden="true"
+                <div
                   style={{
-                    display: 'inline-flex',
-                    transform: customDatePickerOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 160ms ease',
+                    border: '1px solid rgba(148, 163, 184, 0.16)',
+                    borderRadius: 18,
+                    background: 'rgba(255,255,255,0.92)',
+                    padding: '10px 10px 4px',
                   }}
                 >
-                  <svg
-                    viewBox="0 0 16 16"
-                    width="14"
-                    height="14"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M4.5 6.5 8 10l3.5-3.5" />
-                  </svg>
-                </span>
-              </button>
-
-              {customDatePickerOpen ? (
                 <div
                   style={{
                     display: 'flex',
-                    flexDirection: mode === 'single' ? 'column' : 'row',
-                    alignItems: mode === 'single' ? 'stretch' : 'center',
-                    gap: 8,
-                    paddingTop: 2,
+                    flexDirection: 'column',
+                    gap: 12,
                   }}
                 >
-                  <DateFieldWithIcon
-                    value={mode === 'single' ? singleValue : (rangeValue.from || '')}
-                    onChange={(nextValue) =>
-                      mode === 'single'
-                        ? updateValue(nextValue)
-                        : updateValue({
-                            from: nextValue,
-                            to: rangeValue.to || '',
-                          })
-                    }
-                    fieldStyle={fieldStyle}
-                    iconStyle={iconStyle}
+                  <UiCalendar
+                    mode="range"
+                    month={draftMonth}
+                    onMonthChange={setDraftMonth}
+                    selected={draftRange}
+                    onSelect={(nextRange) => {
+                      setDraftRange(nextRange)
+                      if (nextRange?.from && (!nextRange.to || nextRange.from.getMonth() !== draftMonth.getMonth() || nextRange.from.getFullYear() !== draftMonth.getFullYear())) {
+                        setDraftMonth(nextRange.from)
+                      }
+                    }}
+                    showOutsideDays
+                    className="w-full bg-transparent p-0"
+                    classNames={{
+                      root: 'w-full',
+                      month: 'w-full gap-3',
+                      month_caption: 'flex items-center justify-center h-8 px-8 text-sm font-semibold text-slate-800',
+                      nav: 'absolute inset-x-0 top-0 flex items-center justify-between',
+                      button_previous: 'h-8 w-8 rounded-md border border-slate-200 bg-white text-slate-500 hover:bg-slate-50',
+                      button_next: 'h-8 w-8 rounded-md border border-slate-200 bg-white text-slate-500 hover:bg-slate-50',
+                      weekdays: 'mt-2 flex',
+                      weekday: 'flex-1 text-[11px] font-medium uppercase tracking-[0.04em] text-slate-400',
+                      week: 'mt-1 flex w-full',
+                      day: 'relative aspect-square w-full p-0 text-center',
+                      day_button:
+                        'h-9 w-9 rounded-md border-0 text-sm font-medium text-slate-700 hover:bg-slate-100 data-[selected-single=true]:bg-slate-900 data-[selected-single=true]:text-white',
+                      range_start: 'rounded-l-md bg-slate-100',
+                      range_middle: 'bg-slate-100',
+                      range_end: 'rounded-r-md bg-slate-100',
+                      today: 'bg-slate-900 text-white rounded-md',
+                      outside: 'text-slate-300',
+                    }}
                   />
-                  {mode === 'range' ? (
-                    <>
-                      <span style={separatorStyle}>ate</span>
-                      <DateFieldWithIcon
-                        value={rangeValue.to || ''}
-                        onChange={(nextValue) =>
-                          updateValue({
-                            from: rangeValue.from || '',
-                            to: nextValue,
-                          })
-                        }
-                        fieldStyle={fieldStyle}
-                        iconStyle={iconStyle}
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 96px', gap: 8, alignItems: 'end' }}>
+                    <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <span style={{ fontSize: 12, fontWeight: 500, color: '#475467' }}>Start</span>
+                      <div
+                        style={{
+                          minHeight: 40,
+                          border: '1px solid #E4E7EC',
+                          borderRadius: 10,
+                          padding: '0 12px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          background: '#FFFFFF',
+                          color: draftRange?.from ? '#101828' : '#98A2B3',
+                          fontSize: 14,
+                        }}
+                      >
+                        {draftRange?.from ? formatDateLong(toLocalIso(draftRange.from)) : 'Start date'}
+                      </div>
+                    </label>
+                    <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <span style={{ fontSize: 12, fontWeight: 500, color: '#475467' }}>&nbsp;</span>
+                      <input
+                        type="time"
+                        value={draftStartTime}
+                        onChange={(event) => setDraftStartTime(event.target.value)}
+                        style={{
+                          minHeight: 40,
+                          border: '1px solid #E4E7EC',
+                          borderRadius: 10,
+                          padding: '0 12px',
+                          background: '#FFFFFF',
+                          color: '#101828',
+                          fontSize: 14,
+                        }}
                       />
-                    </>
-                  ) : null}
+                    </label>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 96px', gap: 8, alignItems: 'end' }}>
+                    <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <span style={{ fontSize: 12, fontWeight: 500, color: '#475467' }}>End</span>
+                      <div
+                        style={{
+                          minHeight: 40,
+                          border: '1px solid #E4E7EC',
+                          borderRadius: 10,
+                          padding: '0 12px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          background: '#FFFFFF',
+                          color: draftRange?.to || draftRange?.from ? '#101828' : '#98A2B3',
+                          fontSize: 14,
+                        }}
+                      >
+                        {draftRange?.to
+                          ? formatDateLong(toLocalIso(draftRange.to))
+                          : draftRange?.from
+                            ? formatDateLong(toLocalIso(draftRange.from))
+                            : 'End date'}
+                      </div>
+                    </label>
+                    <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <span style={{ fontSize: 12, fontWeight: 500, color: '#475467' }}>&nbsp;</span>
+                      <input
+                        type="time"
+                        value={draftEndTime}
+                        onChange={(event) => setDraftEndTime(event.target.value)}
+                        style={{
+                          minHeight: 40,
+                          border: '1px solid #E4E7EC',
+                          borderRadius: 10,
+                          padding: '0 12px',
+                          background: '#FFFFFF',
+                          color: '#101828',
+                          fontSize: 14,
+                        }}
+                      />
+                    </label>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={applyDraftRange}
+                    disabled={!draftRange?.from}
+                    style={{
+                      minHeight: 42,
+                      border: '1px solid #D0D5DD',
+                      borderRadius: 10,
+                      background: draftRange?.from ? '#F8FAFC' : '#F2F4F7',
+                      color: draftRange?.from ? '#101828' : '#98A2B3',
+                      fontSize: 15,
+                      fontWeight: 600,
+                      cursor: draftRange?.from ? 'pointer' : 'not-allowed',
+                    }}
+                  >
+                    Apply
+                  </button>
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 6,
+                      color: '#667085',
+                      fontSize: 12,
+                    }}
+                  >
+                    <span>{`Local (${localTimeZone})`}</span>
+                    <span aria-hidden="true">⌄</span>
+                  </div>
                 </div>
-              ) : null}
-            </div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <button
+                  type="button"
+                  onClick={() => setCustomDatePickerOpen((prev) => !prev)}
+                  style={{
+                    ...baseButtonStyle,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    width: '100%',
+                    justifyContent: 'space-between',
+                    padding: '0 14px',
+                    fontWeight: customDatePickerOpen ? 600 : (baseButtonStyle.fontWeight ?? 500),
+                  }}
+                >
+                  <span>Data personalizada</span>
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      display: 'inline-flex',
+                      transform: customDatePickerOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 160ms ease',
+                    }}
+                  >
+                    <svg
+                      viewBox="0 0 16 16"
+                      width="14"
+                      height="14"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M4.5 6.5 8 10l3.5-3.5" />
+                    </svg>
+                  </span>
+                </button>
+
+                {customDatePickerOpen ? (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'stretch',
+                      gap: 8,
+                      paddingTop: 2,
+                    }}
+                  >
+                    <DateFieldWithIcon
+                      value={singleValue}
+                      onChange={(nextValue) => updateValue(nextValue)}
+                      fieldStyle={fieldStyle}
+                      iconStyle={iconStyle}
+                    />
+                  </div>
+                ) : null}
+              </div>
+            )}
           </div>,
           document.body,
         )
