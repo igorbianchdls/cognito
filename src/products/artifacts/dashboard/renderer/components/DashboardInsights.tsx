@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { createPortal } from 'react-dom'
 
 type AnyRecord = Record<string, any>
 
@@ -421,6 +422,11 @@ function InsightDetailModal({
   const impact = item.impact || 'Acompanhe este indicador para entender o impacto nos proximos periodos.'
   const evidence = item.evidence?.length ? item.evidence : ['Mudanca detectada nos dados recentes.', 'Insight priorizado pela relevancia para o negocio.']
   const nextSteps = item.nextSteps?.length ? item.nextSteps : ['Abrir analise detalhada.', 'Comparar com periodo anterior.', 'Definir proxima acao.']
+  const [isMounted, setIsMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   React.useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -430,7 +436,9 @@ function InsightDetailModal({
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [onClose])
 
-  return (
+  if (!isMounted) return null
+
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -633,7 +641,8 @@ function InsightDetailModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
