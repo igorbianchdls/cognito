@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { createPortal } from 'react-dom'
 import { Calendar } from 'lucide-react'
 
 import { useData } from '@/products/bi/json-render/context'
@@ -300,6 +301,12 @@ export default function DashboardDatePicker({
   const [customPickerOpen, setCustomPickerOpen] = React.useState(false)
   const [customDatePickerOpen, setCustomDatePickerOpen] = React.useState(false)
   const customPickerRef = React.useRef<HTMLDivElement | null>(null)
+  const customPickerLayerRef = React.useRef<HTMLDivElement | null>(null)
+  const [customPickerPopoverPosition, setCustomPickerPopoverPosition] = React.useState<{
+    top: number
+    left: number
+    width: number
+  } | null>(null)
   const props = (element?.props || {}) as AnyRecord
   const styles = (props.style || {}) as AnyRecord
 
@@ -495,13 +502,32 @@ export default function DashboardDatePicker({
     if (!customPickerOpen) return
     function onPointerDown(event: MouseEvent) {
       const target = event.target as Node | null
-      if (customPickerRef.current && target && !customPickerRef.current.contains(target)) {
+      const isInsideTrigger = Boolean(customPickerRef.current && target && customPickerRef.current.contains(target))
+      const isInsidePopover = Boolean(customPickerLayerRef.current && target && customPickerLayerRef.current.contains(target))
+      if (!isInsideTrigger && !isInsidePopover) {
         setCustomPickerOpen(false)
         setCustomDatePickerOpen(false)
       }
     }
     document.addEventListener('mousedown', onPointerDown)
     return () => document.removeEventListener('mousedown', onPointerDown)
+  }, [customPickerOpen])
+
+  React.useEffect(() => {
+    if (!customPickerOpen) {
+      setCustomPickerPopoverPosition(null)
+      return
+    }
+    updateCustomPickerPopoverPosition()
+    function handleViewportChange() {
+      updateCustomPickerPopoverPosition()
+    }
+    window.addEventListener('resize', handleViewportChange)
+    window.addEventListener('scroll', handleViewportChange, true)
+    return () => {
+      window.removeEventListener('resize', handleViewportChange)
+      window.removeEventListener('scroll', handleViewportChange, true)
+    }
   }, [customPickerOpen])
 
   function updateValue(nextValue: string | { from: string; to: string }) {
@@ -549,127 +575,35 @@ export default function DashboardDatePicker({
         : rangeValue.from
           ? `${rangeValue.from} ate ...`
           : rangeValue.to
-            ? `... ate ${rangeValue.to}`
+          ? `... ate ${rangeValue.to}`
             : 'Selecionar periodo'
 
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 10,
-        minWidth: 0,
-        ...containerStyle,
-      }}
-    >
-      {label ? <div style={labelStyle}>{label}</div> : null}
-      <div ref={customPickerRef} style={{ position: 'relative', minWidth: 220, width: '100%' }}>
-        {mode === 'range' ? (
-          <DateRangeSummaryField
-            value={rangeValue}
-            onClick={() => {
-              setCustomPickerOpen((prev) => {
-                if (prev) setCustomDatePickerOpen(false)
-                return !prev
-              })
-            }}
-            fieldStyle={fieldStyle}
-            iconStyle={iconStyle}
-          />
-        ) : (
-          <button
-            type="button"
-            onClick={() => {
-              setCustomPickerOpen((prev) => {
-                if (prev) setCustomDatePickerOpen(false)
-                return !prev
-              })
-            }}
-            style={{
-              ...fieldStyle,
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 10,
-              cursor: 'pointer',
-              textAlign: 'left',
-            }}
-          >
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 8,
-                minWidth: 0,
-                flex: 1,
-              }}
-            >
-              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', ...(iconStyle || {}) }}>
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 16 16"
-                  width="1em"
-                  height="1em"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="2.25" y="3.25" width="11.5" height="10.5" rx="2" />
-                  <path d="M5 1.75v3" />
-                  <path d="M11 1.75v3" />
-                  <path d="M2.5 6.25h11" />
-                </svg>
-              </span>
-              <span
-                style={{
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {triggerLabel}
-              </span>
-            </span>
-            <span
-              aria-hidden="true"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-                ...(iconStyle || {}),
-                transform: customPickerOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 160ms ease',
-              }}
-            >
-              <svg
-                viewBox="0 0 16 16"
-                width="1em"
-                height="1em"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M4.5 6.5 8 10l3.5-3.5" />
-              </svg>
-            </span>
-          </button>
-        )}
+  function updateCustomPickerPopoverPosition() {
+    if (typeof window === 'undefined') return
+    const anchor = customPickerRef.current
+    if (!anchor) return
+    const rect = anchor.getBoundingClientRect()
+    const viewportWidth = window.innerWidth
+    const width = Math.min(Math.max(320, rect.width), Math.max(220, viewportWidth - 16))
+    const left = Math.min(Math.max(8, rect.left), Math.max(8, viewportWidth - width - 8))
+    setCustomPickerPopoverPosition({
+      top: rect.bottom + 8,
+      left,
+      width,
+    })
+  }
 
-        {customPickerOpen ? (
+  const customPickerPopover =
+    customPickerOpen && customPickerPopoverPosition
+      ? createPortal(
           <div
+            ref={customPickerLayerRef}
             style={{
-              position: 'absolute',
-              top: 'calc(100% + 8px)',
-              left: 0,
-              zIndex: 30,
-              minWidth: 320,
-              width: 'max-content',
+              position: 'fixed',
+              top: customPickerPopoverPosition.top,
+              left: customPickerPopoverPosition.left,
+              zIndex: 1000,
+              width: customPickerPopoverPosition.width,
               maxWidth: 'min(92vw, 420px)',
               display: 'flex',
               flexDirection: 'column',
@@ -793,9 +727,123 @@ export default function DashboardDatePicker({
                 </div>
               ) : null}
             </div>
-          </div>
-        ) : null}
+          </div>,
+          document.body,
+        )
+      : null
+
+  return (
+    <>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 10,
+          minWidth: 0,
+          ...containerStyle,
+        }}
+      >
+        {label ? <div style={labelStyle}>{label}</div> : null}
+        <div ref={customPickerRef} style={{ position: 'relative', minWidth: 220, width: '100%' }}>
+          {mode === 'range' ? (
+            <DateRangeSummaryField
+              value={rangeValue}
+              onClick={() => {
+                setCustomPickerOpen((prev) => {
+                  if (prev) setCustomDatePickerOpen(false)
+                  return !prev
+                })
+              }}
+              fieldStyle={fieldStyle}
+              iconStyle={iconStyle}
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setCustomPickerOpen((prev) => {
+                  if (prev) setCustomDatePickerOpen(false)
+                  return !prev
+                })
+              }}
+              style={{
+                ...fieldStyle,
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 10,
+                cursor: 'pointer',
+                textAlign: 'left',
+              }}
+            >
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  minWidth: 0,
+                  flex: 1,
+                }}
+              >
+                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', ...(iconStyle || {}) }}>
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 16 16"
+                    width="1em"
+                    height="1em"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="2.25" y="3.25" width="11.5" height="10.5" rx="2" />
+                    <path d="M5 1.75v3" />
+                    <path d="M11 1.75v3" />
+                    <path d="M2.5 6.25h11" />
+                  </svg>
+                </span>
+                <span
+                  style={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {triggerLabel}
+                </span>
+              </span>
+              <span
+                aria-hidden="true"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  ...(iconStyle || {}),
+                  transform: customPickerOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 160ms ease',
+                }}
+              >
+                <svg
+                  viewBox="0 0 16 16"
+                  width="1em"
+                  height="1em"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M4.5 6.5 8 10l3.5-3.5" />
+                </svg>
+              </span>
+            </button>
+          )}
+        </div>
       </div>
-    </div>
+      {customPickerPopover}
+    </>
   )
 }
