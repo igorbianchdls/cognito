@@ -411,6 +411,48 @@ function renderTextStyleEditor({
   )
 }
 
+function TextStyleTypeSection({
+  title,
+  description,
+  children,
+}: {
+  title: string
+  description?: string
+  children?: React.ReactNode
+}) {
+  return (
+    <section className="space-y-3 rounded-[16px] border border-[#ecece8] bg-white px-4 py-4">
+      <div>
+        <div className="text-[14px] font-semibold tracking-[-0.02em] text-[#111111]">{title}</div>
+        {description ? <div className="mt-1 text-[12px] leading-5 text-[#6a6a67]">{description}</div> : null}
+      </div>
+      <div className="space-y-3">{children}</div>
+    </section>
+  )
+}
+
+function TextStyleRoleEditor({
+  title,
+  description,
+  style,
+  onSet,
+}: {
+  title: string
+  description?: string
+  style: Record<string, any>
+  onSet: (path: string[], value: unknown) => void
+}) {
+  return (
+    <div className="space-y-3 rounded-[14px] border border-[#f0f0ec] bg-[#fcfcfb] px-4 py-4">
+      <div>
+        <div className="text-[13px] font-semibold tracking-[-0.02em] text-[#111111]">{title}</div>
+        {description ? <div className="mt-1 text-[12px] leading-5 text-[#6a6a67]">{description}</div> : null}
+      </div>
+      {renderTextStyleEditor({ style, onSet })}
+    </div>
+  )
+}
+
 interface DashboardThemeModalProps {
   appearanceOverrides: DashboardAppearanceOverrides
   borderPresets: DashboardBorderPresetOption[]
@@ -675,14 +717,88 @@ export function DashboardThemeModal({
                 {renderThemeOptions()}
               </PanelSection>
               <PanelSection title="Fonte" description="Aplica uma familia tipografica global para todos os componentes." defaultOpen>
-                <FieldGrid>
-                  <Field label="Família tipográfica">
-                    <FontSelect
-                      value={toInputValue(appearanceOverrides?.theme?.fontFamily)}
-                      onChange={(value) => setOverride(['theme', 'fontFamily'], value || undefined)}
+                <div className="space-y-4">
+                  <FieldGrid>
+                    <Field label="Família tipográfica global">
+                      <FontSelect
+                        value={toInputValue(appearanceOverrides?.theme?.fontFamily)}
+                        onChange={(value) => setOverride(['theme', 'fontFamily'], value || undefined)}
+                      />
+                    </Field>
+                  </FieldGrid>
+
+                  <TextStyleTypeSection title="Title" description="Hierarquia principal de titulos do dashboard.">
+                    <TextStyleRoleEditor
+                      title="Header"
+                      description="Titulo principal exibido no topo do dashboard."
+                      style={headerTheme.title as Record<string, any>}
+                      onSet={(path, value) => setOverride(['header', 'title', ...path], value)}
                     />
-                  </Field>
-                </FieldGrid>
+                    <TextStyleRoleEditor
+                      title="Charts"
+                      description="Titulos dos cards de grafico."
+                      style={chartTheme.titleStyle as Record<string, any>}
+                      onSet={(path, value) => setOverride(['chart', 'title', ...path], value)}
+                    />
+                    <TextStyleRoleEditor
+                      title="Insights"
+                      description="Titulo do bloco de insights."
+                      style={insightsTheme.titleStyle as Record<string, any>}
+                      onSet={(path, value) => setOverride(['insights', 'title', ...path], value)}
+                    />
+                    <TextStyleRoleEditor
+                      title="KPI"
+                      description="Rotulo principal dos KPIs."
+                      style={kpiTheme.titleStyle as Record<string, any>}
+                      onSet={(path, value) => setOverride(['kpi', 'title', ...path], value)}
+                    />
+                  </TextStyleTypeSection>
+
+                  <TextStyleTypeSection title="Body" description="Texto de apoio e descricoes semanticas.">
+                    <TextStyleRoleEditor
+                      title="Header"
+                      description="Subtitulo e contexto complementar do header."
+                      style={headerTheme.subtitle as Record<string, any>}
+                      onSet={(path, value) => setOverride(['header', 'subtitle', ...path], value)}
+                    />
+                    <TextStyleRoleEditor
+                      title="Insights"
+                      description="Subtitulo e corpo curto do modulo de insights."
+                      style={insightsTheme.textStyle as Record<string, any>}
+                      onSet={(path, value) => setOverride(['insights', 'text', ...path], value)}
+                    />
+                    <TextStyleRoleEditor
+                      title="KPI"
+                      description="Descricao auxiliar abaixo do valor principal."
+                      style={kpiTheme.descriptionStyle as Record<string, any>}
+                      onSet={(path, value) => setOverride(['kpi', 'description', ...path], value)}
+                    />
+                  </TextStyleTypeSection>
+
+                  <TextStyleTypeSection title="Value" description="Valores numericos e metricas de destaque.">
+                    <TextStyleRoleEditor
+                      title="KPI"
+                      description="Numero principal exibido nos cards de KPI."
+                      style={kpiTheme.valueStyle as Record<string, any>}
+                      onSet={(path, value) => setOverride(['kpi', 'value', ...path], value)}
+                    />
+                  </TextStyleTypeSection>
+
+                  <TextStyleTypeSection title="Meta" description="Texto auxiliar, rotulos curtos e informacao secundaria.">
+                    <TextStyleRoleEditor
+                      title="Header eyebrow"
+                      description="Linha curta acima do titulo principal."
+                      style={headerTheme.eyebrow as Record<string, any>}
+                      onSet={(path, value) => setOverride(['header', 'eyebrow', ...path], value)}
+                    />
+                    <TextStyleRoleEditor
+                      title="KPI compare"
+                      description="Linha comparativa e delta dos KPIs."
+                      style={kpiTheme.compare.style as Record<string, any>}
+                      onSet={(path, value) => setOverride(['kpi', 'compare', ...path], value)}
+                    />
+                  </TextStyleTypeSection>
+                </div>
               </PanelSection>
               <PanelSection title="Borda" description="Escolha o preset global de borda dos cards." defaultOpen>
                 {renderBorderOptions()}
