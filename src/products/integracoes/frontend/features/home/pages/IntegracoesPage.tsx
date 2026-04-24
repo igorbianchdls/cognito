@@ -193,7 +193,7 @@ export default function IntegracoesPage() {
                   <div className="mb-10">
                     <h1 className="text-3xl font-bold text-gray-900 mb-3">Integrações</h1>
                     <p className="text-gray-600 text-lg mb-8">
-                      Separe integrações por uso: ações de agente (MCP) e conectores de dados para dashboards/BI.
+                      Separe integrações por uso: ações de agente (MCP) e conectores de dados para dashboards e BI.
                     </p>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-6">
