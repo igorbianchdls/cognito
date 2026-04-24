@@ -408,20 +408,17 @@ function InsightDetailModal({
   item,
   variant,
   onClose,
-  onContinue,
 }: {
   item: InsightItem
   variant: 'v1' | 'v5'
   onClose: () => void
-  onContinue?: () => void
 }) {
   const tokens = toneTokens(item.tone)
   const title = item.fullTitle || item.title
   const summary = item.summary || item.body || item.title
   const diagnosis = item.diagnosis || 'Este insight foi identificado a partir dos dados recentes do dashboard.'
   const impact = item.impact || 'Acompanhe este indicador para entender o impacto nos proximos periodos.'
-  const evidence = item.evidence?.length ? item.evidence : ['Mudanca detectada nos dados recentes.', 'Insight priorizado pela relevancia para o negocio.']
-  const nextSteps = item.nextSteps?.length ? item.nextSteps : ['Abrir analise detalhada.', 'Comparar com periodo anterior.', 'Definir proxima acao.']
+  const bodyParts = [summary, diagnosis, impact].filter((part, index, array) => Boolean(part) && array.indexOf(part) === index)
   const [isMounted, setIsMounted] = React.useState(false)
 
   React.useEffect(() => {
@@ -459,8 +456,8 @@ function InsightDetailModal({
       <div
         onMouseDown={(event) => event.stopPropagation()}
         style={{
-          width: 'min(760px, 100%)',
-          maxHeight: 'min(82vh, 720px)',
+          width: 'min(680px, 100%)',
+          maxHeight: 'min(80vh, 640px)',
           overflow: 'auto',
           borderRadius: 24,
           border: '1px solid rgba(255,255,255,0.72)',
@@ -546,99 +543,14 @@ function InsightDetailModal({
           </button>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 18, padding: 26 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <section>
-              <h3 style={{ margin: 0, color: '#1F2937', fontSize: 14, fontWeight: 800 }}>Diagnostico</h3>
-              <p style={{ margin: '8px 0 0', color: '#475467', fontSize: 14, lineHeight: 1.7 }}>{diagnosis}</p>
-            </section>
-            <section>
-              <h3 style={{ margin: 0, color: '#1F2937', fontSize: 14, fontWeight: 800 }}>Impacto esperado</h3>
-              <p style={{ margin: '8px 0 0', color: '#475467', fontSize: 14, lineHeight: 1.7 }}>{impact}</p>
-            </section>
-            <section
-              style={{
-                borderRadius: 18,
-                border: `1px solid ${tokens.border}`,
-                background: tokens.cardBg,
-                padding: 16,
-              }}
-            >
-              <h3 style={{ margin: 0, color: tokens.text, fontSize: 14, fontWeight: 800 }}>Proximos passos</h3>
-              <ul style={{ margin: '10px 0 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 9 }}>
-                {nextSteps.map((step) => (
-                  <li key={step} style={{ display: 'flex', gap: 9, color: '#344054', fontSize: 14, lineHeight: 1.45 }}>
-                    <span style={{ marginTop: 7, height: 6, width: 6, flexShrink: 0, borderRadius: 999, background: tokens.text }} />
-                    <span>{step}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
+        <div style={{ padding: '24px 26px 28px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {bodyParts.map((part) => (
+              <p key={part} style={{ margin: 0, color: '#475467', fontSize: 15, lineHeight: 1.75 }}>
+                {part}
+              </p>
+            ))}
           </div>
-
-          <aside
-            style={{
-              borderRadius: 18,
-              border: '1px solid #ECEFF5',
-              background: '#F8FAFC',
-              padding: 16,
-            }}
-          >
-            <h3 style={{ margin: 0, color: '#1F2937', fontSize: 14, fontWeight: 800 }}>Evidencias</h3>
-            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {evidence.map((entry) => (
-                <div
-                  key={entry}
-                  style={{
-                    borderRadius: 14,
-                    border: '1px solid #E5EAF3',
-                    background: '#FFFFFF',
-                    padding: '11px 12px',
-                    color: '#475467',
-                    fontSize: 13,
-                    lineHeight: 1.45,
-                  }}
-                >
-                  {entry}
-                </div>
-              ))}
-            </div>
-          </aside>
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, padding: '0 26px 24px' }}>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              border: '1px solid #E5E7EB',
-              borderRadius: 999,
-              background: '#FFFFFF',
-              color: '#344054',
-              padding: '10px 16px',
-              fontSize: 14,
-              fontWeight: 700,
-              cursor: 'pointer',
-            }}
-          >
-            Fechar
-          </button>
-          <button
-            type="button"
-            onClick={onContinue}
-            style={{
-              border: 'none',
-              borderRadius: 999,
-              background: tokens.text,
-              color: '#FFFFFF',
-              padding: '10px 16px',
-              fontSize: 14,
-              fontWeight: 800,
-              cursor: onContinue ? 'pointer' : 'default',
-            }}
-          >
-            Continuar analise
-          </button>
         </div>
       </div>
     </div>,
@@ -770,10 +682,6 @@ export default function DashboardInsights({
           item={selectedInsight}
           variant={variant}
           onClose={() => setSelectedInsight(null)}
-          onContinue={() => {
-            onAction?.({ type: 'insightContinueAnalysis', variant, action: selectedInsight.action, title: selectedInsight.title })
-            setSelectedInsight(null)
-          }}
         />
       ) : null}
     </>
