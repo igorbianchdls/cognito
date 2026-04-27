@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Database, Zap } from 'lucide-react'
+import { Database, Star, Zap } from 'lucide-react'
 
 import PageContainer from '@/components/layout/PageContainer'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
@@ -20,6 +20,40 @@ import { TOOLKITS } from '@/products/integracoes/shared/toolkits'
 import type { FilterTab, ToolkitDefinition, ToolkitStatusMap } from '@/products/integracoes/shared/types'
 
 type IntegrationKind = 'mcp' | 'data-connectors'
+
+function isToolkitConnected(slug: string, tkStatus: ToolkitStatusMap) {
+  const lowerSlug = slug.toLowerCase()
+  return Boolean(tkStatus[slug] ?? tkStatus[lowerSlug])
+}
+
+function sortByPriority(
+  items: ToolkitDefinition[],
+  priorityOrder: readonly string[],
+  tkStatus: ToolkitStatusMap,
+) {
+  const priorityIndex = new Map<string, number>(
+    priorityOrder.map((slug, index) => [String(slug).toUpperCase(), index]),
+  )
+
+  return [...items].sort((a, b) => {
+    const aPriority = priorityIndex.get(String(a.slug).toUpperCase())
+    const bPriority = priorityIndex.get(String(b.slug).toUpperCase())
+    const aPinned = aPriority !== undefined
+    const bPinned = bPriority !== undefined
+    if (aPinned && bPinned && aPriority !== bPriority) return aPriority - bPriority
+    if (aPinned !== bPinned) return aPinned ? -1 : 1
+
+    const aConnected = isToolkitConnected(a.slug, tkStatus)
+    const bConnected = isToolkitConnected(b.slug, tkStatus)
+    if (aConnected !== bConnected) return aConnected ? 1 : -1
+
+    const aHas = toolkitHasIcon(a.slug)
+    const bHas = toolkitHasIcon(b.slug)
+    if (aHas !== bHas) return aHas ? -1 : 1
+
+    return a.name.localeCompare(b.name)
+  })
+}
 
 const KIND_META: Record<
   IntegrationKind,
@@ -99,6 +133,40 @@ function SegmentButton({
         </div>
       </div>
     </button>
+  )
+}
+
+function RecommendationCard({
+  toolkit,
+  tkStatus,
+  busySlug,
+  onIntegrate,
+}: {
+  toolkit: ToolkitDefinition
+  tkStatus: ToolkitStatusMap
+  busySlug: string | null
+  onIntegrate: (slug: string) => void
+}) {
+  const connected = isToolkitConnected(toolkit.slug, tkStatus)
+
+  return (
+    <div className="flex min-w-0 items-center gap-4 px-5 py-5">
+      <div className="grid h-12 w-12 shrink-0 place-items-center rounded-[16px] bg-white ring-1 ring-[#ECEFFC]">
+        {renderIntegrationLogo(toolkit.slug, toolkit.name)}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="text-[16px] font-semibold tracking-[-0.02em] text-[#202A3D]">{toolkit.name}</div>
+        <div className="mt-1 text-[13px] leading-5 text-[#6B7790]">{toolkit.description}</div>
+      </div>
+      <button
+        type="button"
+        onClick={() => onIntegrate(toolkit.slug)}
+        disabled={busySlug === toolkit.slug}
+        className="shrink-0 rounded-[12px] border border-[#DCDDF5] bg-white px-4 py-2 text-[13px] font-semibold text-[#5C47D6] transition hover:border-[#CBCBF0] hover:bg-[#F8F7FF] disabled:opacity-60"
+      >
+        {busySlug === toolkit.slug ? 'Abrindo...' : connected ? 'Gerenciar' : 'Conectar'}
+      </button>
+    </div>
   )
 }
 
@@ -207,11 +275,16 @@ export default function IntegracoesPage() {
   const filteredMcpToolkits = useMemo(() => {
     if (activeTab === 'all') return mcpToolkits
     return mcpToolkits.filter((toolkit) => {
-      const lowerSlug = toolkit.slug.toLowerCase()
-      const isConnected = Boolean(tkStatus[toolkit.slug] ?? tkStatus[lowerSlug])
+      const isConnected = isToolkitConnected(toolkit.slug, tkStatus)
       return activeTab === 'connected' ? isConnected : !isConnected
     })
   }, [activeTab, mcpToolkits, tkStatus])
+
+  const recommendationToolkits = useMemo(() => {
+    const source = activeKind === 'mcp' ? mcpToolkits : dataConnectorSamples
+    const priority = activeKind === 'mcp' ? MCP_TOP_PRIORITY_ORDER : DATA_CONNECTOR_TOP_PRIORITY_ORDER
+    return sortByPriority(source, priority, tkStatus).slice(0, 3)
+  }, [activeKind, dataConnectorSamples, mcpToolkits, tkStatus])
 
   return (
     <SidebarProvider>
@@ -246,6 +319,39 @@ export default function IntegracoesPage() {
                         onClick={() => setActiveKind('data-connectors')}
                       />
                     </div>
+
+                    <section className="mb-6 overflow-hidden rounded-[24px] border border-[#E6EAF4] bg-white">
+                      <div className="grid gap-0 xl:grid-cols-[360px_repeat(3,minmax(0,1fr))]">
+                        <div className="border-b border-[#EDF1F6] px-6 py-6 xl:border-b-0 xl:border-r">
+                          <div className="flex items-center gap-3">
+                            <div className="grid h-9 w-9 place-items-center rounded-[12px] bg-[#F4F0FF] text-[#5B49E6]">
+                              <Star className="h-4 w-4" />
+                            </div>
+                            <div className="text-[28px] font-semibold tracking-[-0.03em] text-[#1B2440]">Recomendadas para você</div>
+                          </div>
+                          <p className="mt-3 max-w-[28ch] text-[15px] leading-6 text-[#66748D]">
+                            Integrações que podem gerar mais impacto no seu negócio.
+                          </p>
+                        </div>
+
+                        {recommendationToolkits.map((toolkit, index) => (
+                          <div
+                            key={toolkit.slug}
+                            className={[
+                              'border-[#EDF1F6]',
+                              index < recommendationToolkits.length - 1 ? 'border-b px-2 xl:border-b-0 xl:border-r' : 'px-2',
+                            ].join(' ')}
+                          >
+                            <RecommendationCard
+                              toolkit={toolkit}
+                              tkStatus={tkStatus}
+                              busySlug={busySlug}
+                              onIntegrate={handleIntegrate}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </section>
 
                     {activeKind === 'mcp' && (
                       <div className="mb-6 flex items-center gap-2">
