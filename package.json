@@ -124,7 +124,7 @@
     "handsontable": "^16.1.1",
     "harden-react-markdown": "^1.0.2",
     "html-to-image": "^1.11.13",
-    "inngest": "^3.44.5",
+    "inngest": "^3.54.0",
     "katex": "^0.16.22",
     "lodash": "^4.17.21",
     "lodash.throttle": "^4.1.1",
