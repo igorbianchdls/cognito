@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { ChevronDown, Database, MoreHorizontal, Search, Star, Zap } from 'lucide-react'
+import { ArrowRight, ChevronDown, Database, LockKeyhole, MoreHorizontal, Search, ShieldCheck, Star, Zap } from 'lucide-react'
 
 import PageContainer from '@/components/layout/PageContainer'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
@@ -633,6 +633,80 @@ export default function IntegracoesPage() {
                         </div>
                       </>
                     )}
+
+                    {catalogToolkits.length === 0 && (
+                      <section className="mb-6 rounded-[24px] border border-dashed border-[#D9DFEB] bg-white px-6 py-10 text-center">
+                        <div className="mx-auto max-w-[36rem]">
+                          <div className="text-[22px] font-semibold tracking-[-0.03em] text-[#1C2541]">Nenhuma integração encontrada</div>
+                          <p className="mt-3 text-[15px] leading-6 text-[#68758C]">
+                            Ajuste a busca ou troque a categoria para encontrar uma ferramenta compatível com o seu fluxo.
+                          </p>
+                        </div>
+                      </section>
+                    )}
+
+                    <section className="grid gap-5 xl:grid-cols-[1.35fr_0.95fr]">
+                      <div className="rounded-[28px] bg-[#17203A] px-7 py-7 text-white shadow-[0_18px_45px_rgba(23,32,58,0.18)]">
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <div className="text-[28px] font-semibold tracking-[-0.03em]">Não encontrou a integração que precisa?</div>
+                            <p className="mt-3 max-w-[36rem] text-[15px] leading-7 text-[#C7D1E5]">
+                              Podemos priorizar novos conectores conforme o seu stack. Envie a ferramenta, o caso de uso e o tipo de dado ou automação que você quer liberar.
+                            </p>
+                          </div>
+                          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-[16px] bg-white/10 text-white ring-1 ring-white/15">
+                            <ArrowRight className="h-5 w-5" />
+                          </div>
+                        </div>
+
+                        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                          <button
+                            type="button"
+                            className="inline-flex h-11 items-center justify-center rounded-[14px] bg-white px-5 text-[14px] font-semibold text-[#17203A] transition hover:bg-[#F3F5FA]"
+                          >
+                            Sugerir integração
+                          </button>
+                          <div className="text-[13px] text-[#AEB9CF]">
+                            Resposta prioritária para integrações com impacto em operação, dados ou atendimento.
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="rounded-[28px] border border-[#E6EAF4] bg-white px-7 py-7 shadow-[0_14px_36px_rgba(23,32,58,0.06)]">
+                        <div className="flex items-center gap-3">
+                          <div className="grid h-11 w-11 place-items-center rounded-[14px] bg-[#ECF8F1] text-[#178654]">
+                            <ShieldCheck className="h-5 w-5" />
+                          </div>
+                          <div className="text-[24px] font-semibold tracking-[-0.03em] text-[#1B2440]">Segurança e controle</div>
+                        </div>
+
+                        <div className="mt-5 space-y-4">
+                          <div className="flex items-start gap-3">
+                            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-[12px] bg-[#F5F7FC] text-[#66748D]">
+                              <LockKeyhole className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <div className="text-[15px] font-semibold text-[#202A3D]">Autorização por provedor</div>
+                              <div className="mt-1 text-[14px] leading-6 text-[#66748D]">
+                                Cada conexão respeita o fluxo de autenticação do provedor e pode ser revisada por usuário.
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-3">
+                            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-[12px] bg-[#F5F7FC] text-[#66748D]">
+                              <Database className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <div className="text-[15px] font-semibold text-[#202A3D]">Separação entre agir e analisar</div>
+                              <div className="mt-1 text-[14px] leading-6 text-[#66748D]">
+                                Ferramentas operacionais e conectores de dados seguem fluxos distintos para reduzir risco e manter governança.
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </section>
                   </div>
                 </div>
               </div>
