@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { Database, Zap } from 'lucide-react'
 
 import PageContainer from '@/components/layout/PageContainer'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
@@ -20,51 +21,82 @@ import type { FilterTab, ToolkitDefinition, ToolkitStatusMap } from '@/products/
 
 type IntegrationKind = 'mcp' | 'data-connectors'
 
-const KIND_META: Record<IntegrationKind, { title: string; subtitle: string; countLabel: string }> = {
+const KIND_META: Record<
+  IntegrationKind,
+  {
+    icon: typeof Zap
+    title: string
+    subtitle: string
+    countLabel: string
+    surfaceClassName: string
+    iconWrapClassName: string
+    iconClassName: string
+    badgeClassName: string
+  }
+> = {
   mcp: {
-    title: 'MCP (Ferramentas e Ações)',
-    subtitle: 'Ações sob demanda para agentes: email, docs, tarefas, mensagens, CRM e automações.',
-    countLabel: '200+ integrações',
+    icon: Zap,
+    title: 'Automação (agir)',
+    subtitle: 'Conecte ferramentas de comunicação e produtividade para automatizar tarefas e processos.',
+    countLabel: '12 integrações',
+    surfaceClassName: 'border-[#E9E2FF] bg-[#FBF9FF]',
+    iconWrapClassName: 'bg-[#EEE8FF] ring-1 ring-[#DDD2FF]',
+    iconClassName: 'text-[#6A50F0]',
+    badgeClassName: 'bg-[#EEE8FF] text-[#6A50F0]',
   },
   'data-connectors': {
-    title: 'Conectores de Dados (Dashboards)',
-    subtitle: 'Conectores para sincronização contínua/periódica de dados usados em dashboards e BI.',
-    countLabel: '600+ conectores',
+    icon: Database,
+    title: 'Dados (analisar)',
+    subtitle: 'Conecte fontes de dados para centralizar informações e gerar insights nos seus dashboards.',
+    countLabel: '18 integrações',
+    surfaceClassName: 'border-[#D9E9FF] bg-[#F7FBFF]',
+    iconWrapClassName: 'bg-[#EEF6FF] ring-1 ring-[#D8E8FF]',
+    iconClassName: 'text-[#2383E2]',
+    badgeClassName: 'bg-[#E6F1FF] text-[#2383E2]',
   },
 }
 
 function SegmentButton({
   active,
+  kind,
   title,
   subtitle,
   countLabel,
   onClick,
 }: {
   active: boolean
+  kind: IntegrationKind
   title: string
   subtitle: string
   countLabel: string
   onClick: () => void
 }) {
+  const meta = KIND_META[kind]
+  const Icon = meta.icon
+
   return (
     <button
       type="button"
       onClick={onClick}
       className={[
-        'w-full rounded-xl border p-4 text-left transition-colors',
+        'w-full rounded-[24px] border px-6 py-6 text-left transition-all',
+        meta.surfaceClassName,
         active
-          ? 'border-gray-200 bg-white shadow-sm ring-1 ring-gray-200'
-          : 'border-gray-200 bg-white hover:shadow-sm',
+          ? 'shadow-[0_18px_40px_rgba(42,58,92,0.10)]'
+          : 'opacity-90 hover:opacity-100 hover:shadow-[0_14px_30px_rgba(42,58,92,0.08)]',
       ].join(' ')}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="text-sm font-semibold text-gray-900">{title}</div>
-          <div className="mt-1 text-xs text-gray-600">{subtitle}</div>
+      <div className="flex items-start gap-5">
+        <div className={['grid h-16 w-16 shrink-0 place-items-center rounded-[18px]', meta.iconWrapClassName].join(' ')}>
+          <Icon className={['h-8 w-8', meta.iconClassName].join(' ')} />
         </div>
-        <span className="shrink-0 rounded-full bg-gray-100 px-2 py-1 text-[11px] font-medium text-gray-700">
-          {countLabel}
-        </span>
+        <div className="min-w-0">
+          <div className="text-[18px] font-semibold tracking-[-0.02em] text-[#172033]">{title}</div>
+          <div className="mt-2 max-w-[56ch] text-[14px] leading-6 text-[#536179]">{subtitle}</div>
+          <span className={['mt-4 inline-flex rounded-full px-3 py-1 text-[12px] font-semibold', meta.badgeClassName].join(' ')}>
+            {countLabel}
+          </span>
+        </div>
       </div>
     </button>
   )
@@ -187,18 +219,19 @@ export default function IntegracoesPage() {
       <SidebarInset className="h-screen overflow-hidden">
         <div className="flex h-full overflow-hidden">
           <div className="flex-1">
-            <PageContainer className="bg-white">
+            <PageContainer className="bg-[#F7F8FC]">
               <div className="h-full overflow-auto">
-                <div className="px-14 py-6">
+                <div className="px-8 py-8 lg:px-12">
                   <div className="mb-10">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-3">Integrações</h1>
-                    <p className="text-gray-600 text-lg mb-8">
-                      Separe integrações por uso: ações de agente (MCP) e conectores de dados para análises e BI.
+                    <h1 className="mb-2 text-[42px] font-semibold tracking-[-0.04em] text-[#16203A]">Integrações</h1>
+                    <p className="mb-8 text-[18px] leading-7 text-[#647089]">
+                      Conecte suas ferramentas e automatize seu negócio.
                     </p>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-6">
+                    <div className="mb-8 grid grid-cols-1 gap-4 xl:grid-cols-2">
                       <SegmentButton
                         active={activeKind === 'mcp'}
+                        kind="mcp"
                         title={KIND_META.mcp.title}
                         subtitle={KIND_META.mcp.subtitle}
                         countLabel={KIND_META.mcp.countLabel}
@@ -206,6 +239,7 @@ export default function IntegracoesPage() {
                       />
                       <SegmentButton
                         active={activeKind === 'data-connectors'}
+                        kind="data-connectors"
                         title={KIND_META['data-connectors'].title}
                         subtitle={KIND_META['data-connectors'].subtitle}
                         countLabel={KIND_META['data-connectors'].countLabel}
