@@ -14,6 +14,7 @@ type ToolkitIntegrationGridProps = {
   onIntegrate: (slug: string) => void
   onDisconnectUnsupported: () => void
   priorityOrder?: readonly string[]
+  preserveOrder?: boolean
 }
 
 export default function ToolkitIntegrationGrid({
@@ -23,11 +24,12 @@ export default function ToolkitIntegrationGrid({
   onIntegrate,
   onDisconnectUnsupported,
   priorityOrder = [],
+  preserveOrder = false,
 }: ToolkitIntegrationGridProps) {
   const priorityIndex = new Map<string, number>(
     priorityOrder.map((slug, index) => [String(slug).toUpperCase(), index]),
   )
-  const ordered = [...toolkits].sort((a, b) => {
+  const ordered = preserveOrder ? toolkits : [...toolkits].sort((a, b) => {
     const aPriority = priorityIndex.get(String(a.slug).toUpperCase())
     const bPriority = priorityIndex.get(String(b.slug).toUpperCase())
     const aPinned = aPriority !== undefined

@@ -1,11 +1,12 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Database, Star, Zap } from 'lucide-react'
+import { ChevronDown, Database, Search, Star, Zap } from 'lucide-react'
 
 import PageContainer from '@/components/layout/PageContainer'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import ToolkitIntegrationGrid from '@/products/integracoes/frontend/components/ToolkitIntegrationGrid'
 import useIntegracoesComposio from '@/products/integracoes/frontend/hooks/useIntegracoesComposio'
 import { renderIntegrationLogo, toolkitHasIcon } from '@/products/integracoes/shared/iconMaps'
@@ -17,9 +18,141 @@ import {
 } from '@/products/integracoes/shared/catalogPresentation'
 import { DATA_CONNECTOR_EXTRA_TOOLKITS } from '@/products/integracoes/shared/dataConnectorExtras'
 import { TOOLKITS } from '@/products/integracoes/shared/toolkits'
-import type { FilterTab, ToolkitDefinition, ToolkitStatusMap } from '@/products/integracoes/shared/types'
+import type { ToolkitDefinition, ToolkitStatusMap } from '@/products/integracoes/shared/types'
 
 type IntegrationKind = 'mcp' | 'data-connectors'
+type CatalogCategory = 'all' | 'communication' | 'data' | 'productivity' | 'marketing' | 'support' | 'other'
+type SortMode = 'popular' | 'name' | 'connected'
+
+const CATEGORY_TABS: Array<{ value: CatalogCategory; label: string }> = [
+  { value: 'all', label: 'Todas' },
+  { value: 'communication', label: 'Comunicação' },
+  { value: 'data', label: 'Dados & Relatórios' },
+  { value: 'productivity', label: 'Produtividade' },
+  { value: 'marketing', label: 'Marketing' },
+  { value: 'support', label: 'Suporte' },
+  { value: 'other', label: 'Outros' },
+]
+
+const SORT_LABELS: Record<SortMode, string> = {
+  popular: 'Mais usadas',
+  name: 'Nome (A-Z)',
+  connected: 'Conectadas primeiro',
+}
+
+const COMMUNICATION_SLUGS = new Set([
+  'GMAIL',
+  'WHATSAPP',
+  'SLACK',
+  'TELEGRAM',
+  'DISCORD',
+  'OUTLOOK',
+  'MICROSOFT_TEAMS',
+  'GOOGLECALENDAR',
+  'ZOOM',
+  'SENDGRID',
+  'SENDLANE',
+])
+
+const DATA_SLUGS = new Set([
+  'GOOGLESHEETS',
+  'GOOGLE_ANALYTICS',
+  'CLICKHOUSE',
+  'DATABRICKS',
+  'METABASE',
+  'MICROSOFT_CLARITY',
+  'MIXPANEL',
+  'POSTHOG',
+  'SNOWFLAKE',
+  'SUPABASE',
+  'POSTGRESQL',
+  'MYSQL',
+  'MARIADB',
+  'MONGODB',
+  'REDIS',
+  'ELASTICSEARCH',
+  'OPENSEARCH',
+  'APACHE_KAFKA',
+  'APACHE_AIRFLOW',
+  'APACHE_SPARK',
+  'APACHE_DRUID',
+  'BIGQUERY',
+  'AMAZON_REDSHIFT',
+  'AMAZON_RDS',
+  'AMAZON_S3',
+  'GOOGLE_CLOUD_STORAGE',
+  'MICROSOFT_SQL_SERVER',
+  'SQLITE',
+  'ORACLE',
+  'DUCKDB',
+  'TRINO',
+  'PRESTO',
+  'DBT',
+  'AIRBYTE',
+  'POWER_BI',
+  'TABLEAU',
+  'LOOKER',
+  'DATADOG',
+])
+
+const PRODUCTIVITY_SLUGS = new Set([
+  'GOOGLEDRIVE',
+  'GOOGLEDOCS',
+  'GOOGLESLIDES',
+  'NOTION',
+  'AIRTABLE',
+  'CALENDLY',
+  'CAL',
+  'CANVA',
+  'CLICKUP',
+  'CODA',
+  'DROPBOX',
+  'FIGMA',
+  'GITHUB',
+  'JIRA',
+  'JOTFORM',
+  'LINEAR',
+  'MONDAY',
+  'ONE_DRIVE',
+  'TALLY',
+  'TRELLO',
+  'TYPEFORM',
+  'VERCEL',
+])
+
+const MARKETING_SLUGS = new Set([
+  'ACTIVE_CAMPAIGN',
+  'FACEBOOK',
+  'GOOGLEADS',
+  'HUBSPOT',
+  'INSTAGRAM',
+  'LINKEDIN',
+  'MAILCHIMP',
+  'METAADS',
+  'REMOVE_BG',
+  'SHOPIFY',
+  'TIKTOK',
+  'TWITTER',
+  'YOUTUBE',
+  'AMAZON',
+])
+
+const SUPPORT_SLUGS = new Set([
+  'INTERCOM',
+  'SALESFORCE_SERVICE_CLOUD',
+  'SERVICENOW',
+  'ZENDESK',
+])
+
+function categorizeToolkit(slug: string): CatalogCategory {
+  const key = String(slug).toUpperCase()
+  if (COMMUNICATION_SLUGS.has(key)) return 'communication'
+  if (DATA_SLUGS.has(key)) return 'data'
+  if (PRODUCTIVITY_SLUGS.has(key)) return 'productivity'
+  if (MARKETING_SLUGS.has(key)) return 'marketing'
+  if (SUPPORT_SLUGS.has(key)) return 'support'
+  return 'other'
+}
 
 function isToolkitConnected(slug: string, tkStatus: ToolkitStatusMap) {
   const lowerSlug = slug.toLowerCase()
@@ -30,12 +163,21 @@ function sortByPriority(
   items: ToolkitDefinition[],
   priorityOrder: readonly string[],
   tkStatus: ToolkitStatusMap,
+  sortMode: SortMode = 'popular',
 ) {
   const priorityIndex = new Map<string, number>(
     priorityOrder.map((slug, index) => [String(slug).toUpperCase(), index]),
   )
 
   return [...items].sort((a, b) => {
+    if (sortMode === 'connected') {
+      const aConnected = isToolkitConnected(a.slug, tkStatus)
+      const bConnected = isToolkitConnected(b.slug, tkStatus)
+      if (aConnected !== bConnected) return aConnected ? -1 : 1
+    }
+
+    if (sortMode === 'name') return a.name.localeCompare(b.name)
+
     const aPriority = priorityIndex.get(String(a.slug).toUpperCase())
     const bPriority = priorityIndex.get(String(b.slug).toUpperCase())
     const aPinned = aPriority !== undefined
@@ -173,14 +315,16 @@ function RecommendationCard({
 function DataConnectorGrid({
   connectors,
   tkStatus,
+  preserveOrder = false,
 }: {
   connectors: ToolkitDefinition[]
   tkStatus: ToolkitStatusMap
+  preserveOrder?: boolean
 }) {
   const topPriorityIndex = new Map<string, number>(
     DATA_CONNECTOR_TOP_PRIORITY_ORDER.map((slug, index) => [slug, index]),
   )
-  const ordered = [...connectors].sort((a, b) => {
+  const ordered = preserveOrder ? connectors : [...connectors].sort((a, b) => {
     const aPriority = topPriorityIndex.get(String(a.slug).toUpperCase())
     const bPriority = topPriorityIndex.get(String(b.slug).toUpperCase())
     const aPinned = aPriority !== undefined
@@ -247,7 +391,9 @@ function DataConnectorGrid({
 
 export default function IntegracoesPage() {
   const [activeKind, setActiveKind] = useState<IntegrationKind>('mcp')
-  const [activeTab, setActiveTab] = useState<FilterTab>('all')
+  const [activeCategory, setActiveCategory] = useState<CatalogCategory>('all')
+  const [search, setSearch] = useState('')
+  const [sortMode, setSortMode] = useState<SortMode>('popular')
 
   const {
     busySlug,
@@ -272,19 +418,26 @@ export default function IntegracoesPage() {
     return Array.from(map.values())
   }, [])
 
-  const filteredMcpToolkits = useMemo(() => {
-    if (activeTab === 'all') return mcpToolkits
-    return mcpToolkits.filter((toolkit) => {
-      const isConnected = isToolkitConnected(toolkit.slug, tkStatus)
-      return activeTab === 'connected' ? isConnected : !isConnected
-    })
-  }, [activeTab, mcpToolkits, tkStatus])
-
   const recommendationToolkits = useMemo(() => {
     const source = activeKind === 'mcp' ? mcpToolkits : dataConnectorSamples
     const priority = activeKind === 'mcp' ? MCP_TOP_PRIORITY_ORDER : DATA_CONNECTOR_TOP_PRIORITY_ORDER
     return sortByPriority(source, priority, tkStatus).slice(0, 3)
   }, [activeKind, dataConnectorSamples, mcpToolkits, tkStatus])
+
+  const catalogToolkits = useMemo(() => {
+    const source = activeKind === 'mcp' ? mcpToolkits : dataConnectorSamples
+    const priority = activeKind === 'mcp' ? MCP_TOP_PRIORITY_ORDER : DATA_CONNECTOR_TOP_PRIORITY_ORDER
+    const query = search.trim().toLowerCase()
+
+    const filtered = source.filter((toolkit) => {
+      if (activeCategory !== 'all' && categorizeToolkit(toolkit.slug) !== activeCategory) return false
+      if (!query) return true
+      const haystack = `${toolkit.name} ${toolkit.description} ${toolkit.slug}`.toLowerCase()
+      return haystack.includes(query)
+    })
+
+    return sortByPriority(filtered, priority, tkStatus, sortMode)
+  }, [activeCategory, activeKind, dataConnectorSamples, mcpToolkits, search, sortMode, tkStatus])
 
   return (
     <SidebarProvider>
@@ -378,6 +531,53 @@ export default function IntegracoesPage() {
 
                     {error && <div className="text-sm text-red-600 mb-3">{error}</div>}
 
+                    <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                      <Tabs value={activeCategory} onValueChange={(value) => setActiveCategory(value as CatalogCategory)} className="min-w-0">
+                        <TabsList variant="underline" className="flex min-w-0 flex-wrap justify-start gap-2 bg-transparent p-0">
+                          {CATEGORY_TABS.map((tab) => (
+                            <TabsTrigger
+                              key={tab.value}
+                              value={tab.value}
+                              variant="underline"
+                              className="pb-3 pt-0 text-[14px] font-medium"
+                              activeColor="#5B49E6"
+                              inactiveColor="#647089"
+                              activeBorderColor="#5B49E6"
+                            >
+                              {tab.label}
+                            </TabsTrigger>
+                          ))}
+                        </TabsList>
+                      </Tabs>
+
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                        <label className="relative min-w-[280px]">
+                          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#97A2B8]" />
+                          <input
+                            value={search}
+                            onChange={(event) => setSearch(event.target.value)}
+                            placeholder="Buscar integração..."
+                            className="h-11 w-full rounded-[12px] border border-[#E1E6F0] bg-white pl-11 pr-4 text-[14px] text-[#1E2942] outline-none transition placeholder:text-[#9AA6BC] focus:border-[#B3BDED]"
+                          />
+                        </label>
+
+                        <label className="relative min-w-[168px]">
+                          <select
+                            value={sortMode}
+                            onChange={(event) => setSortMode(event.target.value as SortMode)}
+                            className="h-11 w-full appearance-none rounded-[12px] border border-[#E1E6F0] bg-white px-4 pr-10 text-[14px] font-medium text-[#2A3550] outline-none transition focus:border-[#B3BDED]"
+                          >
+                            {Object.entries(SORT_LABELS).map(([value, label]) => (
+                              <option key={value} value={value}>
+                                {label}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#95A1B8]" />
+                        </label>
+                      </div>
+                    </div>
+
                     {activeKind === 'mcp' ? (
                       <>
                         <div className="mb-4 flex items-center justify-between">
@@ -390,11 +590,11 @@ export default function IntegracoesPage() {
                         </div>
 
                         <ToolkitIntegrationGrid
-                          toolkits={filteredMcpToolkits}
+                          toolkits={catalogToolkits}
                           tkStatus={tkStatus}
                           busySlug={busySlug}
                           onIntegrate={handleIntegrate}
-                          priorityOrder={MCP_TOP_PRIORITY_ORDER}
+                          preserveOrder
                           onDisconnectUnsupported={() =>
                             setError('Desconectar ainda não implementado')
                           }
@@ -410,46 +610,11 @@ export default function IntegracoesPage() {
                             </p>
                           </div>
                           <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
-                            600+ conectores
+                            {catalogToolkits.length} conectores
                           </span>
                         </div>
-                        <DataConnectorGrid connectors={dataConnectorSamples} tkStatus={tkStatus} />
+                        <DataConnectorGrid connectors={catalogToolkits} tkStatus={tkStatus} preserveOrder />
                       </>
-                    )}
-
-                    {activeKind === 'mcp' && (
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => setActiveTab('all')}
-                          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                            activeTab === 'all'
-                              ? 'bg-primary text-primary-foreground'
-                              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                          }`}
-                        >
-                          Todas as Aplicações
-                        </button>
-                        <button
-                          onClick={() => setActiveTab('connected')}
-                          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                            activeTab === 'connected'
-                              ? 'bg-primary text-primary-foreground'
-                              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                          }`}
-                        >
-                          Conectadas
-                        </button>
-                        <button
-                          onClick={() => setActiveTab('disconnected')}
-                          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                            activeTab === 'disconnected'
-                              ? 'bg-primary text-primary-foreground'
-                              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                          }`}
-                        >
-                          Desconectadas
-                        </button>
-                      </div>
                     )}
                   </div>
                 </div>
