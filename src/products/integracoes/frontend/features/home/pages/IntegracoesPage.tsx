@@ -449,7 +449,7 @@ export default function IntegracoesPage() {
       <SidebarInset className="h-screen overflow-hidden">
         <div className="flex h-full overflow-hidden">
           <div className="flex-1">
-            <PageContainer className="bg-[#F7F8FC]">
+            <PageContainer className="bg-white">
               <div className="h-full overflow-auto">
                 <div className="px-8 py-8 lg:px-12">
                   <div className="mb-10">
@@ -484,11 +484,8 @@ export default function IntegracoesPage() {
                             <div className="grid h-9 w-9 place-items-center rounded-[12px] bg-[#F4F0FF] text-[#5B49E6]">
                               <Star className="h-4 w-4" />
                             </div>
-                            <div className="text-[28px] font-semibold tracking-[-0.03em] text-[#1B2440]">Recomendadas para você</div>
+                            <div className="text-[24px] font-semibold tracking-[-0.03em] text-[#1B2440]">Recomendadas para você</div>
                           </div>
-                          <p className="mt-3 max-w-[28ch] text-[15px] leading-6 text-[#66748D]">
-                            Integrações que podem gerar mais impacto no seu negócio.
-                          </p>
                         </div>
 
                         {recommendationToolkits.map((toolkit, index) => (
@@ -537,13 +534,13 @@ export default function IntegracoesPage() {
 
                     <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                       <Tabs value={activeCategory} onValueChange={(value) => setActiveCategory(value as CatalogCategory)} className="min-w-0">
-                        <TabsList variant="underline" className="flex min-w-0 flex-wrap justify-start gap-2 bg-transparent p-0">
+                        <TabsList variant="underline" className="flex min-w-0 flex-wrap justify-start gap-3 bg-transparent p-0">
                           {CATEGORY_TABS.map((tab) => (
                             <TabsTrigger
                               key={tab.value}
                               value={tab.value}
                               variant="underline"
-                              className="pb-3 pt-0 text-[14px] font-medium"
+                              className="px-1.5 pb-3 pt-0 text-[14px] font-medium"
                               activeColor="#5B49E6"
                               inactiveColor="#647089"
                               activeBorderColor="#5B49E6"
