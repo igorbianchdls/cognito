@@ -98,6 +98,7 @@ export function DashboardArtifactWorkspace({
     [],
   )
   const [activeView, setActiveView] = useState<'preview' | 'code'>('preview')
+  const [dashboardItems, setDashboardItems] = useState<DashboardListItem[]>(dashboards)
   const [zoom, setZoom] = useState(1)
   const [draftSource, setDraftSource] = useState(source)
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false)
@@ -141,6 +142,10 @@ export function DashboardArtifactWorkspace({
     ],
     [draftSource],
   )
+
+  useEffect(() => {
+    setDashboardItems(dashboards)
+  }, [dashboards])
 
   useEffect(() => {
     const sourceThemeName = getDashboardThemeNameFromSource(source, 'light')
@@ -254,11 +259,18 @@ export function DashboardArtifactWorkspace({
       setThemeModalBaseSource(draftSource)
 
       try {
-        await generateThumbnail({
+        const persistedThumbnailDataUrl = await generateThumbnail({
           artifactId,
           source: draftSource,
           appearanceOverrides: draftAppearanceOverrides,
         })
+        setDashboardItems((current) =>
+          current.map((dashboard) =>
+            dashboard.id === artifactId
+              ? { ...dashboard, thumbnail_data_url: persistedThumbnailDataUrl }
+              : dashboard,
+          ),
+        )
       } catch (error) {
         const thumbnailMessage = error instanceof Error ? error.message : 'Falha ao atualizar thumbnail do dashboard'
         nextSaveMessage = `${nextSaveMessage}. Thumbnail pendente: ${thumbnailMessage}`
@@ -302,7 +314,7 @@ export function DashboardArtifactWorkspace({
                   onChange={(event) => handleDashboardChange(event.target.value)}
                   className="max-w-[240px] bg-transparent text-[12px] font-medium text-[#1F1F1D] outline-none"
                 >
-                  {dashboards.map((dashboard) => (
+                  {dashboardItems.map((dashboard) => (
                     <option key={dashboard.id} value={dashboard.id}>
                       {dashboard.title}
                     </option>

@@ -652,7 +652,8 @@ export async function updateDashboardThumbnail(input: UpdateDashboardThumbnailIn
       `UPDATE artifacts.dashboards
        SET
          thumbnail_data_url = $2::text,
-         updated_by = COALESCE($3::uuid, updated_by)
+         updated_by = COALESCE($3::uuid, updated_by),
+         updated_at = now()
        WHERE id = $1::uuid
        RETURNING
          id::text,
