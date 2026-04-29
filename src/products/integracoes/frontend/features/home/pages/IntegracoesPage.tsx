@@ -213,7 +213,7 @@ const KIND_META: Record<
     icon: Zap,
     title: 'Automação (agir)',
     subtitle: 'Conecte ferramentas de comunicação e produtividade para automatizar tarefas e processos.',
-    countLabel: '12 integrações',
+    countLabel: '500+ integrações',
     surfaceClassName: 'border-[#E9E2FF] bg-[#FBF9FF]',
     iconWrapClassName: 'bg-[#EEE8FF] ring-1 ring-[#DDD2FF]',
     iconClassName: 'text-[#6A50F0]',
@@ -223,7 +223,7 @@ const KIND_META: Record<
     icon: Database,
     title: 'Dados (analisar)',
     subtitle: 'Conecte fontes de dados para centralizar informações e gerar insights nos seus dashboards.',
-    countLabel: '18 integrações',
+    countLabel: '700+ conectores',
     surfaceClassName: 'border-[#D9E9FF] bg-[#F7FBFF]',
     iconWrapClassName: 'bg-[#EEF6FF] ring-1 ring-[#D8E8FF]',
     iconClassName: 'text-[#2383E2]',
@@ -484,7 +484,7 @@ export default function IntegracoesPage() {
                             <div className="grid h-9 w-9 place-items-center rounded-[12px] bg-[#F4F0FF] text-[#5B49E6]">
                               <Star className="h-4 w-4" />
                             </div>
-                            <div className="text-[24px] font-semibold tracking-[-0.03em] text-[#1B2440]">Recomendadas para você</div>
+                            <div className="text-[24px] font-semibold leading-none tracking-[-0.03em] text-[#1B2440]">Recomendadas para você</div>
                           </div>
                         </div>
 
