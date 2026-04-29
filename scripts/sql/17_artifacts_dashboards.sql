@@ -9,12 +9,16 @@ CREATE TABLE IF NOT EXISTS artifacts.dashboards (
   status text NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
   current_draft_version integer NULL CHECK (current_draft_version IS NULL OR current_draft_version > 0),
   current_published_version integer NULL CHECK (current_published_version IS NULL OR current_published_version > 0),
+  thumbnail_data_url text NULL,
   metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
   created_by uuid NULL,
   updated_by uuid NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+
+ALTER TABLE artifacts.dashboards
+  ADD COLUMN IF NOT EXISTS thumbnail_data_url text NULL;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_artifacts_dashboards_workspace_slug
   ON artifacts.dashboards(workspace_id, slug);

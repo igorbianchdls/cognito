@@ -30,6 +30,7 @@ import {
   replaceDashboardThemeNameInSource,
 } from '@/products/artifacts/dashboard/parser/dashboardJsxParser'
 import { applyDashboardTreeLayoutToSource } from '@/products/artifacts/dashboard/source/dashboardLayoutPersistence'
+import { useDashboardThumbnailGeneration } from '@/products/artifacts/dashboard/thumbnail/useDashboardThumbnailGeneration'
 import { DashboardWorkspacePreview } from '@/products/artifacts/dashboard/workspace/DashboardWorkspacePreview'
 import type { DashboardAppearanceOverrides } from '@/products/artifacts/dashboard/renderer/dashboardThemeConfig'
 import type { DashboardListItem } from '@/products/artifacts/backend/dashboardArtifactsService'
@@ -115,6 +116,12 @@ export function DashboardArtifactWorkspace({
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
   const [previewRefreshKey, setPreviewRefreshKey] = useState(0)
+  const {
+    captureError,
+    captureStatus,
+    generateThumbnail,
+    thumbnailCaptureSurface,
+  } = useDashboardThumbnailGeneration()
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -242,9 +249,22 @@ export function DashboardArtifactWorkspace({
       }
 
       const nextVersion = Number(json?.artifact?.next_version ?? currentDraftVersion + 1)
-      setSaveMessage(`Alterações salvas como v${nextVersion}`)
+      let nextSaveMessage = `Alterações salvas como v${nextVersion}`
       setLoadedAppearanceOverrides(cloneAppearanceOverrides(draftAppearanceOverrides))
       setThemeModalBaseSource(draftSource)
+
+      try {
+        await generateThumbnail({
+          artifactId,
+          source: draftSource,
+          appearanceOverrides: draftAppearanceOverrides,
+        })
+      } catch (error) {
+        const thumbnailMessage = error instanceof Error ? error.message : 'Falha ao atualizar thumbnail do dashboard'
+        nextSaveMessage = `${nextSaveMessage}. Thumbnail pendente: ${thumbnailMessage}`
+      }
+
+      setSaveMessage(nextSaveMessage)
 
       if (onSaveSuccess) {
         await onSaveSuccess(nextVersion)
@@ -415,13 +435,16 @@ export function DashboardArtifactWorkspace({
           }`}
         >
           <div className={`flex ${activeView === 'code' ? 'h-full min-h-0' : ''} flex-col gap-4`}>
-            {isHistoricalVersion || saveError || saveMessage ? (
+            {isHistoricalVersion || saveError || saveMessage || captureStatus !== 'idle' || captureError ? (
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 pt-4 text-sm text-[#5F5F5A]">
                 {isHistoricalVersion ? (
                   <span className="text-[#8B5E00]">Você está vendo uma versão histórica. Para salvar mudanças, volte para a draft atual.</span>
                 ) : null}
                 {saveError ? <span className="text-red-700">{saveError}</span> : null}
                 {saveMessage ? <span className="text-emerald-700">{saveMessage}</span> : null}
+                {!saveError && captureStatus === 'persisting' ? <span className="text-[#5F5F5A]">Persistindo thumbnail...</span> : null}
+                {!saveError && captureStatus === 'capturing' ? <span className="text-[#5F5F5A]">Gerando thumbnail...</span> : null}
+                {!saveError && captureError && !saveMessage ? <span className="text-amber-700">{captureError}</span> : null}
               </div>
             ) : null}
 
@@ -514,6 +537,8 @@ export function DashboardArtifactWorkspace({
         }
         themes={dashboardThemeOptions}
       />
+
+      {thumbnailCaptureSurface}
     </ArtifactWorkspacePage>
   )
 }

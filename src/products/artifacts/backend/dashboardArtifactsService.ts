@@ -13,6 +13,7 @@ export type DashboardListItem = {
   created_from_chat_id: string | null
   current_draft_version: number | null
   current_published_version: number | null
+  thumbnail_data_url: string | null
   created_at: string
   updated_at: string
 }
@@ -33,6 +34,7 @@ type DashboardRow = {
   status: 'draft' | 'published' | 'archived'
   current_draft_version: number | null
   current_published_version: number | null
+  thumbnail_data_url: string | null
   metadata: JsonMap | null
   created_by: string | null
   updated_by: string | null
@@ -81,6 +83,12 @@ type PatchArtifactInput = {
     source?: string | null
     changeSummary?: string | null
   }
+  actorId?: string | null
+}
+
+type UpdateDashboardThumbnailInput = {
+  artifactId: string
+  thumbnailDataUrl?: string | null
   actorId?: string | null
 }
 
@@ -139,6 +147,7 @@ async function getDashboardById(client: Pick<SQLClient, 'query'>, artifactId: st
        status,
        current_draft_version,
        current_published_version,
+       thumbnail_data_url,
        metadata,
        created_by::text AS created_by,
        updated_by::text AS updated_by,
@@ -205,6 +214,7 @@ function buildArtifactResponse(dashboard: DashboardRow, source: DashboardSourceR
     created_from_chat_id: dashboard.created_from_chat_id,
     current_draft_version: dashboard.current_draft_version,
     current_published_version: dashboard.current_published_version,
+    thumbnail_data_url: dashboard.thumbnail_data_url,
     metadata: toObj(dashboard.metadata),
     source_kind: source.kind,
     version: source.version,
@@ -278,6 +288,7 @@ export async function listDashboards(limit = 100): Promise<DashboardListItem[]> 
          created_from_chat_id,
          current_draft_version,
          current_published_version,
+         thumbnail_data_url,
          created_at,
          updated_at
        FROM artifacts.dashboards
@@ -337,6 +348,7 @@ export async function readDashboardArtifact(input: ReadArtifactInput) {
          status,
          current_draft_version,
          current_published_version,
+         thumbnail_data_url,
          metadata,
          created_by::text AS created_by,
          updated_by::text AS updated_by,
@@ -433,6 +445,7 @@ export async function writeDashboardArtifact(input: WriteArtifactInput) {
              status,
              current_draft_version,
              current_published_version,
+             thumbnail_data_url,
              metadata,
              created_by::text AS created_by,
              updated_by::text AS updated_by,
@@ -491,6 +504,7 @@ export async function writeDashboardArtifact(input: WriteArtifactInput) {
            status,
            current_draft_version,
            current_published_version,
+           thumbnail_data_url,
            metadata,
            created_by::text AS created_by,
            updated_by::text AS updated_by,
@@ -601,6 +615,7 @@ export async function patchDashboardArtifact(input: PatchArtifactInput) {
            status,
            current_draft_version,
            current_published_version,
+           thumbnail_data_url,
            metadata,
            created_by::text AS created_by,
            updated_by::text AS updated_by,
@@ -620,6 +635,41 @@ export async function patchDashboardArtifact(input: PatchArtifactInput) {
         matches,
       }
     })
+  } catch (error) {
+    return mapDbError(error)
+  }
+}
+
+export async function updateDashboardThumbnail(input: UpdateDashboardThumbnailInput) {
+  const artifactId = toText(input.artifactId)
+  if (!artifactId) throw new ArtifactToolError(400, 'invalid_input', 'artifact_id é obrigatório')
+
+  const thumbnailDataUrl = input.thumbnailDataUrl == null ? null : toNullableText(input.thumbnailDataUrl)
+  const actorId = toNullableText(input.actorId)
+
+  try {
+    const rows = await runQuery<{ id: string; thumbnail_data_url: string | null }>(
+      `UPDATE artifacts.dashboards
+       SET
+         thumbnail_data_url = $2::text,
+         updated_by = COALESCE($3::uuid, updated_by)
+       WHERE id = $1::uuid
+       RETURNING
+         id::text,
+         thumbnail_data_url`,
+      [artifactId, thumbnailDataUrl, actorId],
+    )
+
+    const row = rows[0] || null
+    if (!row) {
+      throw new ArtifactToolError(404, 'artifact_not_found', 'artifact não encontrado', { artifact_id: artifactId })
+    }
+
+    return {
+      ok: true,
+      artifact_id: row.id,
+      thumbnail_data_url: row.thumbnail_data_url,
+    }
   } catch (error) {
     return mapDbError(error)
   }

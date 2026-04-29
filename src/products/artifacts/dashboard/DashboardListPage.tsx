@@ -84,6 +84,19 @@ function getInitials(title: string) {
 }
 
 function DashboardThumbnail({ dashboard }: { dashboard: DashboardListItem }) {
+  if (dashboard.thumbnail_data_url) {
+    return (
+      <div className="relative aspect-[1.75/1] overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white">
+        <img
+          src={dashboard.thumbnail_data_url}
+          alt={`Preview de ${dashboard.title}`}
+          className="h-full w-full object-cover object-top"
+          draggable={false}
+        />
+      </div>
+    )
+  }
+
   const palette = getThumbnailPalette(dashboard.title, dashboard.status)
   const initials = getInitials(dashboard.title)
 

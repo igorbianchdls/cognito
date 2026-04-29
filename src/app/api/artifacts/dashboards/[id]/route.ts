@@ -4,6 +4,7 @@ import {
   ArtifactToolError,
   listDashboardSourceVersions,
   readDashboardArtifact,
+  updateDashboardThumbnail,
   writeDashboardArtifact,
 } from '@/products/artifacts/backend/dashboardArtifactsService'
 
@@ -97,6 +98,55 @@ export async function PATCH(
       {
         ok: false,
         error: error instanceof Error ? error.message : 'Erro interno ao salvar dashboard',
+      },
+      { status: 500 },
+    )
+  }
+}
+
+export async function POST(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await context.params
+    const payload = (await req.json().catch(() => ({}))) as Record<string, unknown>
+    const action = String(payload.action ?? '').trim().toLowerCase()
+
+    if (action !== 'update-thumbnail') {
+      return Response.json(
+        {
+          ok: false,
+          error: 'Ação POST não suportada para este endpoint',
+        },
+        { status: 400 },
+      )
+    }
+
+    const result = await updateDashboardThumbnail({
+      artifactId: id,
+      thumbnailDataUrl: payload.thumbnail_data_url == null ? null : String(payload.thumbnail_data_url),
+      actorId: null,
+    })
+
+    return Response.json(result)
+  } catch (error) {
+    if (error instanceof ArtifactToolError) {
+      return Response.json(
+        {
+          ok: false,
+          code: error.code,
+          error: error.message,
+          ...(error.details ? { details: error.details } : {}),
+        },
+        { status: error.status },
+      )
+    }
+
+    return Response.json(
+      {
+        ok: false,
+        error: error instanceof Error ? error.message : 'Erro interno ao atualizar thumbnail do dashboard',
       },
       { status: 500 },
     )
