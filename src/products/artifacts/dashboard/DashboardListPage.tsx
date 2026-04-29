@@ -197,7 +197,7 @@ export function DashboardListPage({ dashboards }: { dashboards: DashboardListIte
   }, [dashboards, query])
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.08),transparent_24%),linear-gradient(180deg,#fbfcff_0%,#f7f9fd_100%)] px-8 py-9 text-[#171717]">
+    <main className="min-h-screen bg-white px-8 py-9 text-[#171717]">
       <div className="mx-auto max-w-[1360px]">
         <header className="mb-8 flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
           <div>
