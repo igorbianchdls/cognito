@@ -479,7 +479,7 @@ export default function IntegracoesPage() {
 
                     <section className="mb-6 overflow-hidden rounded-[24px] border border-[#E6EAF4] bg-white">
                       <div className="grid gap-0 xl:grid-cols-[360px_repeat(3,minmax(0,1fr))]">
-                        <div className="border-b border-[#EDF1F6] px-6 py-6 xl:border-b-0 xl:border-r">
+                        <div className="flex items-center border-b border-[#EDF1F6] px-6 py-6 xl:border-b-0 xl:border-r">
                           <div className="flex items-center gap-3">
                             <div className="grid h-9 w-9 place-items-center rounded-[12px] bg-[#F4F0FF] text-[#5B49E6]">
                               <Star className="h-4 w-4" />
