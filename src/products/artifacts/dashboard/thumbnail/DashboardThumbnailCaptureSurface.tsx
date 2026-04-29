@@ -53,21 +53,22 @@ export function DashboardThumbnailCaptureSurface({
       return
     }
 
+    const activeRequest = request
     let cancelled = false
 
     async function run() {
       try {
         setTree(null)
         setLoadedCaptureKey(null)
-        const nextTree = await parseDashboardJsxToTree(request.sourcePath, request.files)
+        const nextTree = await parseDashboardJsxToTree(activeRequest.sourcePath, activeRequest.files)
         if (cancelled) return
         setTree(nextTree)
-        setLoadedCaptureKey(request.captureKey)
+        setLoadedCaptureKey(activeRequest.captureKey)
       } catch (error) {
         if (cancelled) return
         onComplete({
-          artifactId: request.artifactId,
-          captureKey: request.captureKey,
+          artifactId: activeRequest.artifactId,
+          captureKey: activeRequest.captureKey,
           ok: false,
           error: error instanceof Error ? error.message : 'Falha ao compilar thumbnail do dashboard',
         })
@@ -83,6 +84,7 @@ export function DashboardThumbnailCaptureSurface({
   useEffect(() => {
     if (!request || !tree || loadedCaptureKey !== request.captureKey) return
 
+    const activeRequest = request
     const surfaceElement = surfaceRef.current
     if (!surfaceElement) return
 
@@ -93,16 +95,16 @@ export function DashboardThumbnailCaptureSurface({
         const thumbnailDataUrl = await captureArtifactPreview(surfaceElement)
         if (cancelled) return
         onComplete({
-          artifactId: request.artifactId,
-          captureKey: request.captureKey,
+          artifactId: activeRequest.artifactId,
+          captureKey: activeRequest.captureKey,
           ok: true,
           thumbnailDataUrl,
         })
       } catch (error) {
         if (cancelled) return
         onComplete({
-          artifactId: request.artifactId,
-          captureKey: request.captureKey,
+          artifactId: activeRequest.artifactId,
+          captureKey: activeRequest.captureKey,
           ok: false,
           error: error instanceof Error ? error.message : 'Falha ao capturar thumbnail do dashboard',
         })
@@ -116,6 +118,7 @@ export function DashboardThumbnailCaptureSurface({
   }, [request, tree, loadedCaptureKey, onComplete])
 
   if (!request || !tree) return null
+  const activeRequest = request
 
   return (
     <div
@@ -132,7 +135,7 @@ export function DashboardThumbnailCaptureSurface({
           height: DASHBOARD_THUMBNAIL_CAPTURE_HEIGHT,
         }}
       >
-        <DashboardRenderer tree={tree} appearanceOverrides={request.appearanceOverrides} />
+        <DashboardRenderer tree={tree} appearanceOverrides={activeRequest.appearanceOverrides} />
       </div>
     </div>
   )
