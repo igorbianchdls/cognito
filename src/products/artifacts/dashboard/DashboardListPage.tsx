@@ -197,33 +197,42 @@ export function DashboardListPage({ dashboards }: { dashboards: DashboardListIte
   }, [dashboards, query])
 
   return (
-    <main className="min-h-screen bg-white px-8 py-10 text-[#171717]">
-      <div className="mx-auto max-w-[1100px]">
-        <header className="mb-8">
-          <h1 className="text-[48px] font-semibold tracking-[-0.05em] text-[#111111]">Dashboards</h1>
-        </header>
-
-        <section className="mb-7 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <label className="relative block flex-1">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9a9a95]" />
-            <input
-              type="text"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search dashboards..."
-              className="h-12 w-full rounded-xl border border-[#ecece8] bg-white pl-11 pr-4 text-[15px] text-[#171717] outline-none transition focus:border-[#d7d7d2]"
-            />
-          </label>
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.08),transparent_24%),linear-gradient(180deg,#fbfcff_0%,#f7f9fd_100%)] px-8 py-9 text-[#171717]">
+      <div className="mx-auto max-w-[1360px]">
+        <header className="mb-8 flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div>
+            <h1 className="text-[52px] font-semibold tracking-[-0.05em] text-[#101828]">Dashboards</h1>
+            <p className="mt-2 text-[16px] text-[#6d7689]">Gerencie e acesse todos os dashboards do Creatto.</p>
+          </div>
 
           <button
             type="button"
             disabled
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-[#ecece8] bg-white px-4 text-[15px] font-medium text-[#171717] disabled:cursor-not-allowed disabled:text-[#7a7a75]"
+            className="inline-flex h-11 items-center justify-center gap-2 self-start rounded-[14px] bg-[linear-gradient(135deg,#5B5EF7,#6E43E8)] px-5 text-[14px] font-semibold text-white shadow-[0_14px_28px_rgba(91,94,247,0.26)] transition disabled:cursor-not-allowed disabled:opacity-55"
             title="Criação de dashboard ainda não foi ligada nesta tela"
           >
             <Plus className="h-4 w-4" />
-            Dashboard
+            Novo Dashboard
           </button>
+        </header>
+
+        <section className="mb-8 rounded-[28px] border border-[#e9edf5] bg-white/88 p-5 shadow-[0_12px_32px_rgba(15,23,42,0.05)] backdrop-blur">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <label className="relative block flex-1">
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#98a2b3]" />
+              <input
+                type="text"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Buscar dashboards..."
+                className="h-12 w-full rounded-[16px] border border-[#e6eaf2] bg-[#fbfcff] pl-11 pr-4 text-[15px] text-[#111827] outline-none transition placeholder:text-[#98a2b3] focus:border-[#cbd5e1]"
+              />
+            </label>
+
+            <div className="text-[14px] text-[#7b8496]">
+              {filteredDashboards.length} dashboards encontrados
+            </div>
+          </div>
         </section>
 
         {dashboards.length === 0 ? (
