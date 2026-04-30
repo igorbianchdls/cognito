@@ -5,6 +5,7 @@ import { ArrowRight, ChevronDown, Database, LockKeyhole, MoreHorizontal, Search,
 
 import PageContainer from '@/components/layout/PageContainer'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import useIntegracoesComposio from '@/products/integracoes/frontend/hooks/useIntegracoesComposio'
@@ -279,16 +280,19 @@ function SegmentButton({
 
 function RecommendationCard({
   toolkit,
+  kind,
   tkStatus,
   busySlug,
-  onIntegrate,
+  onAction,
 }: {
   toolkit: ToolkitDefinition
+  kind: IntegrationKind
   tkStatus: ToolkitStatusMap
   busySlug: string | null
-  onIntegrate: (slug: string) => void
+  onAction: (toolkit: ToolkitDefinition) => void
 }) {
   const connected = isToolkitConnected(toolkit.slug, tkStatus)
+  const isBusy = kind === 'mcp' && busySlug === toolkit.slug
 
   return (
     <div className="flex min-w-0 items-center gap-4 px-5 py-5">
@@ -301,11 +305,11 @@ function RecommendationCard({
       </div>
       <button
         type="button"
-        onClick={() => onIntegrate(toolkit.slug)}
-        disabled={busySlug === toolkit.slug}
+        onClick={() => onAction(toolkit)}
+        disabled={isBusy}
         className="shrink-0 rounded-[12px] border border-[#DCDDF5] bg-white px-4 py-2 text-[13px] font-semibold text-[#5C47D6] transition hover:border-[#CBCBF0] hover:bg-[#F8F7FF] disabled:opacity-60"
       >
-        {busySlug === toolkit.slug ? 'Abrindo...' : connected ? 'Gerenciar' : 'Conectar'}
+        {isBusy ? 'Abrindo...' : connected ? 'Gerenciar' : kind === 'mcp' ? 'Conectar' : 'Configurar'}
       </button>
     </div>
   )
@@ -316,13 +320,13 @@ function CatalogCard({
   kind,
   tkStatus,
   busySlug,
-  onIntegrate,
+  onAction,
 }: {
   toolkit: ToolkitDefinition
   kind: IntegrationKind
   tkStatus: ToolkitStatusMap
   busySlug: string | null
-  onIntegrate: (slug: string) => void
+  onAction: (toolkit: ToolkitDefinition) => void
 }) {
   const connected = isToolkitConnected(toolkit.slug, tkStatus)
   const category = CATEGORY_TABS.find((tab) => tab.value === categorizeToolkit(toolkit.slug))?.label ?? 'Outros'
@@ -334,7 +338,8 @@ function CatalogCard({
     : kind === 'mcp'
       ? 'Conecte para liberar ações do agente e fluxos operacionais.'
       : 'Conecte para alimentar relatórios e análises contínuas.'
-  const buttonLabel = busySlug === toolkit.slug ? 'Abrindo...' : connected ? 'Gerenciar' : 'Conectar'
+  const isBusy = kind === 'mcp' && busySlug === toolkit.slug
+  const buttonLabel = isBusy ? 'Abrindo...' : connected ? 'Gerenciar' : kind === 'mcp' ? 'Conectar' : 'Configurar'
 
   return (
     <article className="flex h-full min-h-[252px] flex-col rounded-[22px] border border-[#E6EAF4] bg-white p-5 shadow-[0_12px_30px_rgba(23,32,58,0.06)]">
@@ -378,8 +383,8 @@ function CatalogCard({
         </div>
         <button
           type="button"
-          onClick={() => onIntegrate(toolkit.slug)}
-          disabled={busySlug === toolkit.slug}
+          onClick={() => onAction(toolkit)}
+          disabled={isBusy}
           className={[
             'shrink-0 rounded-[14px] px-4 py-2.5 text-[14px] font-semibold transition disabled:opacity-60',
             connected
@@ -394,11 +399,95 @@ function CatalogCard({
   )
 }
 
+function DataConnectorSetupModal({
+  connector,
+  open,
+  onOpenChange,
+}: {
+  connector: ToolkitDefinition | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
+  if (!connector) return null
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-[640px] overflow-hidden rounded-[28px] border border-[#E7EAF2] bg-white p-0 shadow-[0_32px_80px_rgba(20,29,48,0.24)]">
+        <DialogHeader className="border-b border-[#EEF1F6] px-7 py-6 text-left">
+          <div className="flex items-start gap-4">
+            <div className="grid h-14 w-14 shrink-0 place-items-center rounded-[18px] bg-[#F7F8FC] ring-1 ring-[#E8ECF4]">
+              {renderIntegrationLogo(connector.slug, connector.name)}
+            </div>
+            <div className="min-w-0">
+              <div className="inline-flex rounded-full bg-[#EEF4FF] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#2F6FE4]">
+                Conector de dados
+              </div>
+              <DialogTitle className="mt-3 text-[28px] font-semibold tracking-[-0.04em] text-[#17203A]">
+                {connector.name}
+              </DialogTitle>
+              <DialogDescription className="mt-2 text-[15px] leading-7 text-[#66748D]">
+                A conexão será concluída em um fluxo externo seguro para autenticar a fonte, configurar a sincronização e
+                definir o destino dos dados.
+              </DialogDescription>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <div className="px-7 py-6">
+          <div className="rounded-[22px] border border-[#E7EAF2] bg-[#FAFBFD] p-5">
+            <div className="text-[14px] font-semibold text-[#24304A]">O que acontece em seguida</div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-[16px] border border-[#E4E8F0] bg-white p-4">
+                <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#9AA6BC]">Etapa 1</div>
+                <div className="mt-2 text-[14px] font-semibold text-[#1E2942]">Autenticar a fonte</div>
+                <div className="mt-2 text-[13px] leading-6 text-[#66748D]">Validar credenciais e permissões de acesso.</div>
+              </div>
+              <div className="rounded-[16px] border border-[#E4E8F0] bg-white p-4">
+                <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#9AA6BC]">Etapa 2</div>
+                <div className="mt-2 text-[14px] font-semibold text-[#1E2942]">Configurar a sincronização</div>
+                <div className="mt-2 text-[13px] leading-6 text-[#66748D]">Escolher frequência, escopo e tabelas iniciais.</div>
+              </div>
+              <div className="rounded-[16px] border border-[#E4E8F0] bg-white p-4">
+                <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#9AA6BC]">Etapa 3</div>
+                <div className="mt-2 text-[14px] font-semibold text-[#1E2942]">Definir o destino</div>
+                <div className="mt-2 text-[13px] leading-6 text-[#66748D]">Selecionar onde os dados ficarão disponíveis.</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-5 rounded-[18px] border border-dashed border-[#D8DEEB] bg-white px-4 py-3 text-[13px] leading-6 text-[#6B7790]">
+            Este fluxo foi preparado para abrir a configuração externa da conexão sem expor detalhes técnicos na interface do usuário.
+          </div>
+        </div>
+
+        <DialogFooter className="border-t border-[#EEF1F6] px-7 py-5 sm:justify-between sm:space-x-0">
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            className="inline-flex h-11 items-center justify-center rounded-[14px] border border-[#DCE3F0] bg-white px-5 text-[14px] font-semibold text-[#334155] transition hover:bg-[#F7F8FC]"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            className="inline-flex h-11 items-center justify-center rounded-[14px] bg-[#17203A] px-5 text-[14px] font-semibold text-white transition hover:bg-[#0F172C]"
+          >
+            Continuar conexão
+          </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 export default function IntegracoesPage() {
   const [activeKind, setActiveKind] = useState<IntegrationKind>('mcp')
   const [activeCategory, setActiveCategory] = useState<CatalogCategory>('all')
   const [search, setSearch] = useState('')
   const [sortMode, setSortMode] = useState<SortMode>('popular')
+  const [selectedDataConnector, setSelectedDataConnector] = useState<ToolkitDefinition | null>(null)
+  const [isDataConnectorModalOpen, setIsDataConnectorModalOpen] = useState(false)
 
   const {
     busySlug,
@@ -442,6 +531,15 @@ export default function IntegracoesPage() {
 
     return sortByPriority(filtered, priority, tkStatus, sortMode)
   }, [activeCategory, activeKind, dataConnectorSamples, mcpToolkits, search, sortMode, tkStatus])
+
+  const openDataConnectorModal = (toolkit: ToolkitDefinition) => {
+    setSelectedDataConnector(toolkit)
+    setIsDataConnectorModalOpen(true)
+  }
+
+  const handleMcpAction = (toolkit: ToolkitDefinition) => {
+    handleIntegrate(toolkit.slug)
+  }
 
   return (
     <SidebarProvider>
@@ -498,9 +596,10 @@ export default function IntegracoesPage() {
                           >
                             <RecommendationCard
                               toolkit={toolkit}
+                              kind={activeKind}
                               tkStatus={tkStatus}
                               busySlug={busySlug}
-                              onIntegrate={handleIntegrate}
+                              onAction={activeKind === 'mcp' ? handleMcpAction : openDataConnectorModal}
                             />
                           </div>
                         ))}
@@ -598,7 +697,7 @@ export default function IntegracoesPage() {
                               kind="mcp"
                               tkStatus={tkStatus}
                               busySlug={busySlug}
-                              onIntegrate={handleIntegrate}
+                              onAction={handleMcpAction}
                             />
                           ))}
                         </div>
@@ -623,8 +722,8 @@ export default function IntegracoesPage() {
                               toolkit={toolkit}
                               kind="data-connectors"
                               tkStatus={tkStatus}
-                              busySlug={busySlug}
-                              onIntegrate={handleIntegrate}
+                              busySlug={null}
+                              onAction={openDataConnectorModal}
                             />
                           ))}
                         </div>
@@ -710,6 +809,14 @@ export default function IntegracoesPage() {
             </PageContainer>
           </div>
         </div>
+        <DataConnectorSetupModal
+          connector={selectedDataConnector}
+          open={isDataConnectorModalOpen}
+          onOpenChange={(open) => {
+            setIsDataConnectorModalOpen(open)
+            if (!open) setSelectedDataConnector(null)
+          }}
+        />
       </SidebarInset>
     </SidebarProvider>
   )
