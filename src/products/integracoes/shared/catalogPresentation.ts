@@ -40,45 +40,45 @@ export const DATA_CONNECTOR_TOP_PRIORITY_ORDER = [
 
 export const MCP_DESCRIPTION_OVERRIDES: Record<string, string> = {
   GMAIL:
-    'Ler, buscar, responder e enviar emails; organizar caixas, acompanhar conversas e automatizar follow-ups.',
+    'Ler, enviar e organizar emails.',
   GOOGLECALENDAR:
-    'Criar, atualizar e consultar eventos/reuniões; gerenciar agendas, disponibilidade e convites.',
+    'Criar e gerenciar eventos e agendas.',
   GOOGLEDRIVE:
-    'Navegar pastas, criar/organizar arquivos, mover documentos e estruturar repositórios de trabalho.',
+    'Organizar arquivos e pastas.',
   GOOGLEDOCS:
-    'Criar e editar documentos colaborativos para propostas, contratos, atas e conteúdos.',
+    'Criar e editar documentos.',
   GOOGLESHEETS:
-    'Ler/escrever planilhas, atualizar células e alimentar controles operacionais ou relatórios.',
+    'Ler e atualizar planilhas.',
   GOOGLESLIDES:
-    'Gerar e atualizar apresentações para propostas comerciais, reuniões e reports executivos.',
+    'Criar e atualizar apresentações.',
   WHATSAPP:
-    'Enviar mensagens, notificações e updates operacionais em fluxos de atendimento, cobrança e vendas.',
+    'Enviar mensagens e notificações.',
   SLACK:
-    'Automatizar alertas, status e ações em canais/equipes, integrando operações com o chat do time.',
+    'Automatizar mensagens e alertas.',
   TELEGRAM:
-    'Disparar notificações e interações com bots/canais para automações e acompanhamento operacional.',
+    'Enviar alertas e interações com bots.',
   DISCORD:
-    'Enviar mensagens e integrações em comunidades/equipes para alertas e coordenação de operações.',
+    'Enviar mensagens e alertas.',
   METAADS:
-    'Consultar campanhas, conjuntos e anúncios; apoiar análises, ajustes operacionais e automações de marketing.',
+    'Consultar campanhas e anúncios.',
   GOOGLEADS:
-    'Consultar métricas/campanhas e apoiar otimização operacional de mídia paga e automações.',
+    'Consultar campanhas e métricas.',
   GOOGLE_ANALYTICS:
-    'Acessar métricas de tráfego e conversão para análises, auditorias e rotinas operacionais.',
+    'Ver métricas de tráfego e conversão.',
   SHOPIFY:
-    'Ler pedidos, clientes e catálogo; automatizar rotinas de e-commerce, atendimento e operação.',
+    'Gerenciar pedidos, clientes e catálogo.',
   AMAZON:
-    'Consultar pedidos/catálogo e apoiar automações de marketplace, operação comercial e atendimento.',
+    'Consultar pedidos e catálogo.',
   HUBSPOT:
-    'Trabalhar com contatos, negócios e atividades; automatizar CRM, follow-ups e rotinas comerciais.',
+    'Gerenciar contatos e negócios.',
   SALESFORCE:
-    'Acessar contas, leads e oportunidades; suportar automações complexas de CRM e processos de vendas.',
+    'Gerenciar contas, leads e oportunidades.',
   PIPEDRIVE:
-    'Gerenciar pipeline, negócios e atividades com automações de vendas e acompanhamento de etapas.',
+    'Gerenciar pipeline e negócios.',
   STRIPE:
-    'Consultar pagamentos, clientes e assinaturas; apoiar cobranças, conciliações e automações financeiras.',
+    'Consultar pagamentos e assinaturas.',
   ZENDESK:
-    'Ler e atualizar tickets; automatizar atendimento, priorização e fluxos de suporte.',
+    'Gerenciar tickets de suporte.',
 }
 
 export function applyToolkitDescriptionOverrides(
