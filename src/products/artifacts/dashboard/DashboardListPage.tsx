@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
-import { MoreHorizontal, Plus, Search } from 'lucide-react'
+import { LayoutGrid, MoreHorizontal, Plus, Search } from 'lucide-react'
 
 import type { DashboardListItem } from '@/products/artifacts/backend/dashboardArtifactsService'
 
@@ -150,8 +150,8 @@ function DashboardCard({ dashboard }: { dashboard: DashboardListItem }) {
 
       <div className="flex items-start justify-between gap-3 px-1 pt-3">
         <div className="min-w-0 flex items-start gap-3">
-          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black text-[11px] font-semibold text-white">
-            ▲
+          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black text-white">
+            <LayoutGrid className="h-3.5 w-3.5" />
           </div>
           <div className="min-w-0">
             <Link
@@ -208,7 +208,7 @@ export function DashboardListPage({ dashboards }: { dashboards: DashboardListIte
           <button
             type="button"
             disabled
-            className="inline-flex h-11 items-center justify-center gap-2 self-start rounded-[14px] bg-[linear-gradient(135deg,#5B5EF7,#6E43E8)] px-5 text-[14px] font-semibold text-white shadow-[0_14px_28px_rgba(91,94,247,0.26)] transition disabled:cursor-not-allowed disabled:opacity-55"
+            className="inline-flex h-11 items-center justify-center gap-2 self-start rounded-[14px] bg-black px-5 text-[14px] font-semibold text-white shadow-[0_14px_28px_rgba(15,23,42,0.18)] transition disabled:cursor-not-allowed disabled:opacity-55"
             title="Criação de dashboard ainda não foi ligada nesta tela"
           >
             <Plus className="h-4 w-4" />
