@@ -65,8 +65,8 @@ const LANDING_NODES: NodeDef[] = [
     top: '20%',
     color: 'rgba(234,67,53,0.4)',
     title: 'Comunicação',
-    subtitle: 'WhatsApp · Slack · SMS',
-    iconItems: [brandLogo('WHATSAPP', 'WhatsApp'), brandLogo('SLACK', 'Slack'), smsIcon()],
+    subtitle: 'Gmail · Slack · SMS',
+    iconItems: [brandLogo('GMAIL', 'Gmail'), brandLogo('SLACK', 'Slack'), smsIcon()],
   },
   {
     id: 'n-meta',
@@ -115,7 +115,7 @@ const LANDING_NODES: NodeDef[] = [
     color: 'rgba(99,102,241,0.4)',
     title: 'Execução',
     subtitle: 'Rotinas · Alertas · Ações',
-    iconItems: [brandLogo('WHATSAPP', 'WhatsApp', 'wpp-exec'), brandLogo('GMAIL', 'Gmail', 'gmail-exec')],
+    iconItems: [brandLogo('SLACK', 'Slack', 'slack-exec'), brandLogo('GMAIL', 'Gmail', 'gmail-exec')],
   },
   {
     id: 'n-analytics',
@@ -155,7 +155,7 @@ const LANDING_DATA_STACK_ITEMS = [
   { name: 'Gmail', icon: brandLogo('GMAIL', 'Gmail', 'stack-gmail') },
   { name: 'Google Drive', icon: brandLogo('GOOGLEDRIVE', 'Google Drive', 'stack-drive') },
   { name: 'Google Sheets', icon: brandLogo('GOOGLESHEETS', 'Google Sheets', 'stack-sheets') },
-  { name: 'WhatsApp', icon: brandLogo('WHATSAPP', 'WhatsApp', 'stack-whatsapp') },
+  { name: 'Notion', icon: brandLogo('NOTION', 'Notion', 'stack-notion') },
   { name: 'Slack', icon: brandLogo('SLACK', 'Slack', 'stack-slack') },
   { name: 'Stripe', icon: brandLogo('STRIPE', 'Stripe', 'stack-stripe') },
   { name: 'Mercado Pago', icon: customSimpleIcon('mercadopago', 'Mercado Pago') },

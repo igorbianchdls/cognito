@@ -31,7 +31,7 @@ export function getFieldTypeIcon(meta: { type: string; name?: string; slug?: str
   if (t === "text") {
     const semantic = `${normalizeText(meta.name || "")} ${normalizeText(meta.slug || "")}`
 
-    if (semantic.includes("telefone") || semantic.includes("celular") || semantic.includes("whatsapp") || semantic.includes("fone")) {
+    if (semantic.includes("telefone") || semantic.includes("celular") || semantic.includes("fone")) {
       return <Phone className={iconClass} />
     }
     if (semantic.includes("email") || semantic.includes("e-mail")) {

@@ -63,8 +63,8 @@ const LANDING_NODES: NodeDef[] = [
     top: '11%',
     color: 'rgba(234,67,53,0.4)',
     lineColor: '#ea4335',
-    label: 'WhatsApp',
-    iconItem: brandLogo('WHATSAPP', 'WhatsApp'),
+    label: 'Slack',
+    iconItem: brandLogo('SLACK', 'Slack'),
   },
   {
     id: 'n-meta',

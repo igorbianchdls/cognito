@@ -5,7 +5,6 @@ export const TOOLKITS: ToolkitDefinition[] = [
   { slug: 'GOOGLEDRIVE', name: 'Google Drive', description: 'Arquivos e pastas' },
   { slug: 'GOOGLECALENDAR', name: 'Google Calendar', description: 'Agenda e eventos' },
   { slug: 'GOOGLEDOCS', name: 'Google Docs', description: 'Documentos do Google' },
-  { slug: 'WHATSAPP', name: 'WhatsApp', description: 'Mensageria e notificações' },
   { slug: 'NOTION', name: 'Notion', description: 'Blocos e páginas de notas' },
   { slug: 'GOOGLESHEETS', name: 'Google Sheets', description: 'Planilhas do Google' },
   { slug: 'GOOGLESLIDES', name: 'Google Slides', description: 'Apresentações do Google' },

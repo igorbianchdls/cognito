@@ -7,7 +7,6 @@ export const MCP_TOP_PRIORITY_ORDER = [
   'GOOGLEDOCS',
   'GOOGLESHEETS',
   'GOOGLESLIDES',
-  'WHATSAPP',
   'SLACK',
   'TELEGRAM',
   'DISCORD',
@@ -51,8 +50,6 @@ export const MCP_DESCRIPTION_OVERRIDES: Record<string, string> = {
     'Ler e atualizar planilhas.',
   GOOGLESLIDES:
     'Criar e atualizar apresentações.',
-  WHATSAPP:
-    'Enviar mensagens e notificações.',
   SLACK:
     'Automatizar mensagens e alertas.',
   TELEGRAM:

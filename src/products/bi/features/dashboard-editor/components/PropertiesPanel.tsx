@@ -2,7 +2,6 @@
 
 import React from 'react'
 import { Mail } from 'lucide-react'
-import { SiWhatsapp } from '@icons-pack/react-simple-icons'
 import type { JsonTree } from '@/products/bi/shared/types'
 import { getNodeAtPath } from '@/products/bi/features/dashboard-editor/lib/jsonTreeOps'
 import type { JsonNodePath } from '@/products/bi/features/dashboard-editor/types/editor-types'
@@ -308,6 +307,12 @@ function getStringArrayProp(node: Record<string, any>, path: string): string[] {
   return Array.isArray(raw) ? raw.filter((item): item is string => typeof item === 'string') : []
 }
 
+function getNotificationChannels(node: Record<string, any>): Array<'email'> {
+  return getStringArrayProp(node, 'task.notifications.channels').filter(
+    (channel): channel is 'email' => channel === 'email'
+  )
+}
+
 function setPropInObject(base: Record<string, any> | undefined, path: string, value: unknown) {
   const parts = path.split('.').filter(Boolean)
   const root: Record<string, any> = base && typeof base === 'object' && !Array.isArray(base) ? { ...base } : {}
@@ -610,24 +615,12 @@ export default function PropertiesPanel({
                       <ToggleChip
                         label="Email"
                         icon={<Mail className="h-3.5 w-3.5" />}
-                        selected={getStringArrayProp(node, 'task.notifications.channels').includes('email')}
+                        selected={getNotificationChannels(node).includes('email')}
                         onClick={() => {
-                          const current = getStringArrayProp(node, 'task.notifications.channels')
+                          const current = getNotificationChannels(node)
                           const next = current.includes('email')
                             ? current.filter((c) => c !== 'email')
                             : [...current, 'email']
-                          onSetNodeProp(selectedPath, 'task.notifications.channels', next)
-                        }}
-                      />
-                      <ToggleChip
-                        label="WhatsApp"
-                        icon={<SiWhatsapp size={14} />}
-                        selected={getStringArrayProp(node, 'task.notifications.channels').includes('whatsapp')}
-                        onClick={() => {
-                          const current = getStringArrayProp(node, 'task.notifications.channels')
-                          const next = current.includes('whatsapp')
-                            ? current.filter((c) => c !== 'whatsapp')
-                            : [...current, 'whatsapp']
                           onSetNodeProp(selectedPath, 'task.notifications.channels', next)
                         }}
                       />

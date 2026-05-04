@@ -42,7 +42,6 @@ const SORT_LABELS: Record<SortMode, string> = {
 
 const COMMUNICATION_SLUGS = new Set([
   'GMAIL',
-  'WHATSAPP',
   'SLACK',
   'TELEGRAM',
   'DISCORD',
