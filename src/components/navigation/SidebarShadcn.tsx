@@ -6,7 +6,6 @@ import {
   IconChartBar,
   IconCirclePlus,
   IconFileText,
-  IconFolder,
   IconGridDots,
   IconInbox,
   IconMessageCircle,
@@ -43,7 +42,6 @@ const BrandIcon = (props: { className?: string; style?: React.CSSProperties }) =
 const ChatsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconMessageCircle stroke={1.75} {...props} />
 const AutomationIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconSettingsAutomation stroke={1.75} {...props} />
 const IntegrationsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconPlugConnected stroke={1.75} {...props} />
-const DriveIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconFolder stroke={1.75} {...props} />
 const EmailIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconInbox stroke={1.75} {...props} />
 const NewChatIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconCirclePlus stroke={1.75} {...props} />
 const DashboardsArtifactIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconChartBar stroke={1.75} {...props} />
@@ -116,12 +114,7 @@ const navigationData = {
       url: "/integracoes",
       icon: IntegrationsIcon,
     },
-    // Keep these two at the end, in order: Drive, Email
-    {
-      title: "Drive",
-      url: "/drive",
-      icon: DriveIcon,
-    },
+    // Keep Email at the end
     {
       title: "Email",
       url: "/email",
