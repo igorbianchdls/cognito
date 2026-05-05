@@ -506,7 +506,12 @@ export default function IntegracoesPage() {
               <div className="h-full overflow-auto">
                 <div className="px-8 py-8 lg:px-12">
                   <div className="mb-10">
-                    <h1 className="mb-2 text-[42px] font-semibold tracking-[-0.04em] text-[#16203A]">Integrações</h1>
+                    <h1
+                      className="mb-2 text-[42px] font-semibold tracking-[-0.04em] text-[#16203A]"
+                      style={{ fontFamily: 'var(--font-eb-garamond), "EB Garamond", serif' }}
+                    >
+                      Integrações
+                    </h1>
                     <p className="mb-8 text-[18px] leading-7 text-[#647089]">
                       Conecte suas ferramentas e automatize seu negócio.
                     </p>
