@@ -65,7 +65,7 @@ export default function DroppedWidget({ widget, onRemove, onEdit, isSelected = f
     })
   }
 
-  // Special full-screen rendering for NavigationWidget (Airtable style)
+  // Special full-screen rendering for NavigationWidget
   if (widget.type === 'navigation') {
     return <NavigationWidget widget={widget} />
   }

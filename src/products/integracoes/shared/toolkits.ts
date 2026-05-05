@@ -17,7 +17,6 @@ export const TOOLKITS: ToolkitDefinition[] = [
   { slug: 'FACEBOOK', name: 'Facebook', description: 'Páginas e posts' },
   { slug: 'INSTAGRAM', name: 'Instagram', description: 'Posts e mídia social' },
   { slug: 'ACTIVE_CAMPAIGN', name: 'ActiveCampaign', description: 'Email marketing e automação' },
-  { slug: 'AIRTABLE', name: 'Airtable', description: 'Bases e automações' },
   { slug: 'SALESFORCE', name: 'Salesforce', description: 'CRM' },
   { slug: 'SALESFORCE_SERVICE_CLOUD', name: 'Salesforce Service Cloud', description: 'Atendimento e serviços' },
   { slug: 'MAILCHIMP', name: 'Mailchimp', description: 'Email marketing e automação' },

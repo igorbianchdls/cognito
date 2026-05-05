@@ -99,7 +99,6 @@ const PRODUCTIVITY_SLUGS = new Set([
   'GOOGLEDOCS',
   'GOOGLESLIDES',
   'NOTION',
-  'AIRTABLE',
   'CALENDLY',
   'CAL',
   'CANVA',
