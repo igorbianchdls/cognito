@@ -22,7 +22,6 @@ import ShopeeIcon from "@/components/icons/ShopeeIcon"
 import ContaAzulIcon from "@/components/icons/ContaAzulIcon"
 
 import { NavMainSimple } from "@/components/navigation/nav-main-simple"
-import { NavErp } from "@/components/navigation/nav-erp"
 import { NavUser } from "@/components/nav-user"
 import {
   Sidebar,
@@ -249,7 +248,6 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
             iconSizePx={finalIconSizePx}
           />
         </div>
-        <NavErp groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} />
 
         <SidebarGroup>
           <SidebarGroupLabel style={finalSectionTitleStyle}>Integrações</SidebarGroupLabel>
