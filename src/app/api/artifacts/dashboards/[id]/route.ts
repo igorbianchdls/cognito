@@ -4,6 +4,7 @@ import {
   ArtifactToolError,
   listDashboardSourceVersions,
   readDashboardArtifact,
+  renameDashboardArtifact,
   updateDashboardThumbnail,
   writeDashboardArtifact,
 } from '@/products/artifacts/backend/dashboardArtifactsService'
@@ -65,6 +66,16 @@ export async function PATCH(
   try {
     const { id } = await context.params
     const payload = (await req.json().catch(() => ({}))) as Record<string, unknown>
+    const action = String(payload.action ?? '').trim().toLowerCase()
+
+    if (action === 'rename') {
+      const result = await renameDashboardArtifact({
+        artifactId: id,
+        title: payload.title == null ? '' : String(payload.title),
+        actorId: null,
+      })
+      return Response.json({ ok: true, ...result })
+    }
 
     const result = await writeDashboardArtifact({
       artifactId: id,

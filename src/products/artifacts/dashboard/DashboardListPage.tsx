@@ -1,10 +1,16 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
-import { LayoutGrid, MoreHorizontal, Plus, Search } from 'lucide-react'
+import { KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { Edit3, LayoutGrid, MoreHorizontal, Plus, Search } from 'lucide-react'
 
 import type { DashboardListItem } from '@/products/artifacts/backend/dashboardArtifactsService'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 function formatRelativeDate(value: string) {
   const date = new Date(value)
@@ -141,7 +147,48 @@ function DashboardThumbnail({ dashboard }: { dashboard: DashboardListItem }) {
   )
 }
 
-function DashboardCard({ dashboard }: { dashboard: DashboardListItem }) {
+function DashboardCard({
+  dashboard,
+  isEditing,
+  draftTitle,
+  isSaving,
+  onStartRename,
+  onDraftTitleChange,
+  onSaveRename,
+  onCancelRename,
+}: {
+  dashboard: DashboardListItem
+  isEditing: boolean
+  draftTitle: string
+  isSaving: boolean
+  onStartRename: (dashboard: DashboardListItem) => void
+  onDraftTitleChange: (value: string) => void
+  onSaveRename: () => void
+  onCancelRename: () => void
+}) {
+  const inputRef = useRef<HTMLInputElement | null>(null)
+
+  useEffect(() => {
+    if (!isEditing) return
+    const frame = window.requestAnimationFrame(() => {
+      inputRef.current?.focus()
+      inputRef.current?.select()
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [isEditing])
+
+  const handleTitleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      void onSaveRename()
+      return
+    }
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      onCancelRename()
+    }
+  }
+
   return (
     <article className="group">
       <Link href={`/artifacts/dashboards/${dashboard.id}`} className="block">
@@ -154,36 +201,163 @@ function DashboardCard({ dashboard }: { dashboard: DashboardListItem }) {
             <LayoutGrid className="h-3.5 w-3.5" />
           </div>
           <div className="min-w-0">
-            <Link
-              href={`/artifacts/dashboards/${dashboard.id}`}
-              className="block truncate text-[18px] font-semibold tracking-[-0.03em] text-[#171717]"
-            >
-              {dashboard.title}
-            </Link>
+            {isEditing ? (
+              <input
+                ref={inputRef}
+                value={draftTitle}
+                onChange={(event) => onDraftTitleChange(event.target.value)}
+                onKeyDown={handleTitleKeyDown}
+                onBlur={() => {
+                  if (isSaving) return
+                  void onSaveRename()
+                }}
+                disabled={isSaving}
+                className="block w-full rounded-md border border-[#d9deea] bg-white px-2 py-1 text-[18px] font-semibold tracking-[-0.03em] text-[#171717] outline-none transition focus:border-[#aab7cf] disabled:opacity-70"
+              />
+            ) : (
+              <Link
+                href={`/artifacts/dashboards/${dashboard.id}`}
+                className="block truncate text-[18px] font-semibold tracking-[-0.03em] text-[#171717]"
+                onDoubleClick={(event) => {
+                  event.preventDefault()
+                  onStartRename(dashboard)
+                }}
+              >
+                {dashboard.title}
+              </Link>
+            )}
             <div className="mt-0.5 text-[14px] text-[#7a7a75]">{formatRelativeDate(dashboard.updated_at)}</div>
           </div>
         </div>
 
-        <button
-          type="button"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#5f5f5a] transition hover:bg-[#f0f0ee]"
-          aria-label={`More actions for ${dashboard.title}`}
-        >
-          <MoreHorizontal className="h-4 w-4" />
-        </button>
+        {isEditing ? (
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={() => void onSaveRename()}
+              disabled={isSaving}
+              className="rounded-full border border-[#d9deea] px-3 py-1 text-[12px] font-semibold text-[#334155] transition hover:bg-[#f8fafc] disabled:opacity-60"
+            >
+              {isSaving ? 'Salvando...' : 'Salvar'}
+            </button>
+            <button
+              type="button"
+              onClick={onCancelRename}
+              disabled={isSaving}
+              className="rounded-full px-2 py-1 text-[12px] font-semibold text-[#64748b] transition hover:bg-[#f0f0ee] disabled:opacity-60"
+            >
+              Cancelar
+            </button>
+          </div>
+        ) : (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#5f5f5a] transition hover:bg-[#f0f0ee]"
+                aria-label={`More actions for ${dashboard.title}`}
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-[10rem]">
+              <DropdownMenuItem
+                className="gap-2"
+                onClick={(event) => {
+                  event.preventDefault()
+                  event.stopPropagation()
+                  onStartRename(dashboard)
+                }}
+              >
+                <Edit3 className="h-4 w-4" />
+                Renomear
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
     </article>
   )
 }
 
 export function DashboardListPage({ dashboards }: { dashboards: DashboardListItem[] }) {
+  const [items, setItems] = useState(dashboards)
   const [query, setQuery] = useState('')
+  const [editingDashboardId, setEditingDashboardId] = useState<string | null>(null)
+  const [draftTitle, setDraftTitle] = useState('')
+  const [savingDashboardId, setSavingDashboardId] = useState<string | null>(null)
+
+  useEffect(() => {
+    setItems(dashboards)
+  }, [dashboards])
+
+  const startRename = (dashboard: DashboardListItem) => {
+    setEditingDashboardId(dashboard.id)
+    setDraftTitle(dashboard.title)
+  }
+
+  const cancelRename = () => {
+    if (savingDashboardId) return
+    setEditingDashboardId(null)
+    setDraftTitle('')
+  }
+
+  const saveRename = async () => {
+    const dashboardId = editingDashboardId
+    const nextTitle = draftTitle.trim()
+    if (!dashboardId) return
+    if (!nextTitle) {
+      cancelRename()
+      return
+    }
+
+    const currentDashboard = items.find((item) => item.id === dashboardId) || null
+    if (currentDashboard && currentDashboard.title === nextTitle) {
+      cancelRename()
+      return
+    }
+
+    setSavingDashboardId(dashboardId)
+    try {
+      const response = await fetch(`/api/artifacts/dashboards/${dashboardId}`, {
+        method: 'PATCH',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'rename',
+          title: nextTitle,
+        }),
+      })
+      const json = await response.json().catch(() => ({}))
+      if (!response.ok || !json?.dashboard) {
+        throw new Error(json?.error || 'Falha ao renomear dashboard')
+      }
+
+      const updatedDashboard = json.dashboard as DashboardListItem
+      setItems((current) => {
+        const nextItems = current.map((item) => (item.id === updatedDashboard.id ? updatedDashboard : item))
+        return nextItems.sort((left, right) => {
+          const leftTime = new Date(left.updated_at).getTime()
+          const rightTime = new Date(right.updated_at).getTime()
+          if (rightTime !== leftTime) return rightTime - leftTime
+          return new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
+        })
+      })
+      setEditingDashboardId(null)
+      setDraftTitle('')
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setSavingDashboardId(null)
+    }
+  }
 
   const filteredDashboards = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
-    if (!normalizedQuery) return dashboards
+    if (!normalizedQuery) return items
 
-    return dashboards.filter((dashboard) => {
+    return items.filter((dashboard) => {
       const haystack = [
         dashboard.title,
         dashboard.slug || '',
@@ -194,7 +368,7 @@ export function DashboardListPage({ dashboards }: { dashboards: DashboardListIte
 
       return haystack.includes(normalizedQuery)
     })
-  }, [dashboards, query])
+  }, [items, query])
 
   return (
     <main className="min-h-screen bg-white px-8 py-9 text-[#171717]">
@@ -240,7 +414,7 @@ export function DashboardListPage({ dashboards }: { dashboards: DashboardListIte
           </div>
         </section>
 
-        {dashboards.length === 0 ? (
+        {items.length === 0 ? (
           <section className="rounded-[28px] border border-[#ecece8] bg-[#fafaf9] px-8 py-14">
             <h2 className="text-[22px] font-semibold tracking-[-0.03em] text-[#111111]">No dashboards yet</h2>
             <p className="mt-2 max-w-xl text-[15px] leading-7 text-[#6f6f6a]">
@@ -257,7 +431,17 @@ export function DashboardListPage({ dashboards }: { dashboards: DashboardListIte
         ) : (
           <section className="grid grid-cols-1 gap-x-5 gap-y-10 md:grid-cols-2 xl:grid-cols-3">
             {filteredDashboards.map((dashboard) => (
-              <DashboardCard key={dashboard.id} dashboard={dashboard} />
+              <DashboardCard
+                key={dashboard.id}
+                dashboard={dashboard}
+                isEditing={editingDashboardId === dashboard.id}
+                draftTitle={editingDashboardId === dashboard.id ? draftTitle : dashboard.title}
+                isSaving={savingDashboardId === dashboard.id}
+                onStartRename={startRename}
+                onDraftTitleChange={setDraftTitle}
+                onSaveRename={saveRename}
+                onCancelRename={cancelRename}
+              />
             ))}
           </section>
         )}

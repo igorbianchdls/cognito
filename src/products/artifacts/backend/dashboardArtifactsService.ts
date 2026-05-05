@@ -301,6 +301,57 @@ export async function listDashboards(limit = 100): Promise<DashboardListItem[]> 
   }
 }
 
+export async function renameDashboardArtifact(input: {
+  artifactId: string
+  title: string
+  actorId?: string | null
+}) {
+  const artifactId = toText(input.artifactId)
+  const title = toText(input.title)
+  const actorId = toNullableText(input.actorId)
+
+  if (!artifactId) {
+    throw new ArtifactToolError(400, 'invalid_input', 'artifact_id é obrigatório')
+  }
+  if (!title) {
+    throw new ArtifactToolError(400, 'invalid_input', 'title é obrigatório')
+  }
+
+  try {
+    const rows = await runQuery<DashboardListItem>(
+      `UPDATE artifacts.dashboards
+       SET
+         title = $2::text,
+         updated_by = COALESCE($3::uuid, updated_by),
+         updated_at = now()
+       WHERE id = $1::uuid
+       RETURNING
+         id::text,
+         title,
+         slug,
+         status,
+         workspace_id::text AS workspace_id,
+         created_from_chat_id,
+         current_draft_version,
+         current_published_version,
+         thumbnail_data_url,
+         created_at,
+         updated_at`,
+      [artifactId, title, actorId],
+    )
+    const row = rows[0] || null
+    if (!row) {
+      throw new ArtifactToolError(404, 'artifact_not_found', 'artifact não encontrado', { artifact_id: artifactId })
+    }
+    return {
+      success: true,
+      dashboard: row,
+    }
+  } catch (error) {
+    return mapDbError(error)
+  }
+}
+
 export async function listDashboardSourceVersions(
   artifactId: string,
   kind: ArtifactSourceKind = 'draft',
