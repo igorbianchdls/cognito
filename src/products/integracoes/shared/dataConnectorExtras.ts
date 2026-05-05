@@ -2,6 +2,12 @@ import type { ToolkitDefinition } from '@/products/integracoes/shared/types'
 
 // Catálogo extra de conectores de dados/BI (curado para logos disponíveis nas libs atuais).
 export const DATA_CONNECTOR_EXTRA_TOOLKITS: ToolkitDefinition[] = [
+  { slug: 'CONTA_AZUL', name: 'Conta Azul', description: 'ERP financeiro, faturamento e conciliação' },
+  { slug: 'OMIE', name: 'Omie', description: 'ERP, fiscal, pedidos e financeiro' },
+  { slug: 'BLING', name: 'Bling', description: 'ERP, estoque, pedidos e emissão fiscal' },
+  { slug: 'TINY', name: 'Tiny', description: 'ERP, catálogo, estoque e pedidos' },
+  { slug: 'TOTVS', name: 'TOTVS', description: 'ERP corporativo e dados operacionais' },
+  { slug: 'MERCADO_LIVRE', name: 'Mercado Livre', description: 'Marketplace, catálogo, pedidos e anúncios' },
   { slug: 'AMAZON', name: 'Amazon', description: 'Marketplace, catálogo e pedidos' },
   { slug: 'POSTGRESQL', name: 'PostgreSQL', description: 'Banco relacional para analytics e replicação' },
   { slug: 'MYSQL', name: 'MySQL', description: 'Banco relacional operacional e ETL' },

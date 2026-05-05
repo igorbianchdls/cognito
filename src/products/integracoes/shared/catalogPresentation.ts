@@ -23,6 +23,12 @@ export const MCP_TOP_PRIORITY_ORDER = [
 ] as const
 
 export const DATA_CONNECTOR_TOP_PRIORITY_ORDER = [
+  'CONTA_AZUL',
+  'OMIE',
+  'BLING',
+  'TINY',
+  'TOTVS',
+  'MERCADO_LIVRE',
   'METAADS',
   'GOOGLEADS',
   'GOOGLE_ANALYTICS',

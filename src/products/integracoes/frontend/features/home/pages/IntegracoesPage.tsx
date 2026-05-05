@@ -443,7 +443,7 @@ function DataConnectorSetupModal({
 }
 
 export default function IntegracoesPage() {
-  const [activeKind, setActiveKind] = useState<IntegrationKind>('mcp')
+  const [activeKind, setActiveKind] = useState<IntegrationKind>('data-connectors')
   const [activeCategory, setActiveCategory] = useState<CatalogCategory>('all')
   const [search, setSearch] = useState('')
   const [sortMode, setSortMode] = useState<SortMode>('popular')

@@ -2,6 +2,12 @@ import type { ComponentType, ReactNode } from 'react'
 
 import { Icon, addCollection } from '@iconify/react'
 import { icons as simpleIcons } from '@iconify-json/simple-icons'
+import BlingIcon from '@/components/icons/BlingIcon'
+import ContaAzulIcon from '@/components/icons/ContaAzulIcon'
+import MercadoLivreIcon from '@/components/icons/MercadoLivreIcon'
+import OmieIcon from '@/components/icons/OmieIcon'
+import TinyIcon from '@/components/icons/TinyIcon'
+import TotvsIcon from '@/components/icons/TotvsIcon'
 import {
   SiCalendly,
   SiCaldotcom,
@@ -54,6 +60,15 @@ import {
 } from '@icons-pack/react-simple-icons'
 
 let iconCollectionRegistered = false
+
+const CUSTOM_ICON_BY_SLUG: Record<string, ComponentType<any>> = {
+  BLING: BlingIcon,
+  CONTA_AZUL: ContaAzulIcon,
+  MERCADO_LIVRE: MercadoLivreIcon,
+  OMIE: OmieIcon,
+  TINY: TinyIcon,
+  TOTVS: TotvsIcon,
+}
 
 export function ensureSimpleIconsRegistered() {
   if (iconCollectionRegistered) return
@@ -220,6 +235,7 @@ function hasIconByKey(key: string | undefined): boolean {
 
 export function toolkitHasIcon(slug: string): boolean {
   const key = (slug || '').toUpperCase()
+  if (CUSTOM_ICON_BY_SLUG[key]) return true
   if (SIMPLE_ICON_BY_SLUG[key]) return true
   return hasIconByKey(ICON_KEY_BY_SLUG[key])
 }
@@ -228,7 +244,12 @@ export function renderIntegrationLogo(slug: string, name: string): ReactNode {
   ensureSimpleIconsRegistered()
 
   const key = (slug || '').toUpperCase()
+  const CustomComponent = CUSTOM_ICON_BY_SLUG[key]
   const SimpleComponent = SIMPLE_ICON_BY_SLUG[key]
+
+  if (CustomComponent) {
+    return <CustomComponent className="w-8 h-8 rounded-md" />
+  }
 
   if (SimpleComponent) {
     return <SimpleComponent size={32} color="default" title={`${name} logo`} />
