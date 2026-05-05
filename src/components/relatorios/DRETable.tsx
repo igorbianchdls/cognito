@@ -5,7 +5,6 @@ import { ChevronRight, ChevronDown } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useStore } from '@nanostores/react'
 import { $reportsCommands } from '@/stores/reportsUiStore'
-import { $tabs } from '@/products/erp/state/financeiroUiStore'
 
 export type DRENode = {
   id: string
@@ -137,7 +136,6 @@ export default function DRETable({ data = DEFAULT_DATA, periods = [
 ], namesOnly = false }: DRETableProps) {
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set<string>())
   const commands = useStore($reportsCommands)
-  const tabs = useStore($tabs)
 
   const rows = useMemo(() => flatten(data, expanded), [data, expanded])
 
@@ -184,17 +182,15 @@ export default function DRETable({ data = DEFAULT_DATA, periods = [
   }
 
   useEffect(() => {
-    if (tabs.selected !== 'dre') return
     // Expand all when command triggered
     const set = new Set<string>()
     collectExpandableIds(data, set)
     setExpanded(set)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [commands.expandAllCounter, tabs.selected, data])
+  }, [commands.expandAllCounter, data])
 
   // Export CSV when requested and DRE is active
   useEffect(() => {
-    if (tabs.selected !== 'dre') return
     if (namesOnly) return
     const header = ['Conta', ...periods.map(p => p.label), 'Total']
     const allRows = flattenAll(data)
@@ -219,7 +215,7 @@ export default function DRETable({ data = DEFAULT_DATA, periods = [
     a.click()
     URL.revokeObjectURL(url)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [commands.exportCounter, tabs.selected])
+  }, [commands.exportCounter, namesOnly, periods, data, totalRevenueByPeriod, profitByPeriod])
 
   function flattenAll(nodes: DRENode[]): Array<{ node: DRENode; depth: number }> {
     const out: Array<{ node: DRENode; depth: number }> = []

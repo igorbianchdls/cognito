@@ -4,7 +4,7 @@ import { useMemo } from 'react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Table as TableIcon } from 'lucide-react'
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable'
-import EntityDisplay from '@/products/erp/frontend/components/EntityDisplay'
+import EntityDisplay from '@/components/shared/EntityDisplay'
 import type { CrudRow, CrudToolViewModel } from '@/products/chat/shared/tools/crud/types'
 
 type EntityKind = 'cliente' | 'fornecedor'

@@ -5,7 +5,6 @@ import { ChevronRight, ChevronDown } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useStore } from '@nanostores/react'
 import { $reportsCommands } from '@/stores/reportsUiStore'
-import { $tabs } from '@/products/erp/state/financeiroUiStore'
 
 type Node = { id: string; name: string; valuesByPeriod?: Record<string, number>; children?: Node[] }
 
@@ -49,7 +48,6 @@ interface Props { periods?: { key: string; label: string }[] }
 export default function CashFlowTable({ periods = PERIODS_DEFAULT }: Props) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const commands = useStore($reportsCommands)
-  const tabs = useStore($tabs)
   const toggle = (id: string) => setExpanded(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
   const rows = useMemo(() => flatten(DATA, expanded), [expanded])
   function flatten(nodes: Node[], open: Set<string>, depth = 0): Array<{ node: Node; depth: number }> {
@@ -65,7 +63,6 @@ export default function CashFlowTable({ periods = PERIODS_DEFAULT }: Props) {
   const chave = periods.map(p => p.key)
 
   useEffect(() => {
-    if (tabs.selected !== 'dfc') return
     const collect = (nodes: Node[], set: Set<string>) => {
       for (const n of nodes) {
         if (n.children && n.children.length) {
@@ -77,7 +74,7 @@ export default function CashFlowTable({ periods = PERIODS_DEFAULT }: Props) {
     const s = new Set<string>()
     collect(DATA, s)
     setExpanded(s)
-  }, [commands.expandAllCounter, tabs.selected])
+  }, [commands.expandAllCounter])
 
   return (
     <div className="rounded-lg border bg-white">

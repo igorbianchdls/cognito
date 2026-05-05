@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { usePathname } from "next/navigation"
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -282,8 +281,6 @@ export function DataTable<TData extends TableData>({
   onTableReady,
   onPaginationChange: onExternalPaginationChange,
 }: DataTableProps<TData>) {
-  const pathname = usePathname()
-  const isErpRoute = pathname?.startsWith('/erp')
   const resolvedPadding = resolveDensityPadding(density, padding)
   const resolvedHeaderPadding = resolveDensityPadding(density, headerPadding ?? padding)
   const [sorting, setSorting] = React.useState<SortingState>(
@@ -304,8 +301,8 @@ export function DataTable<TData extends TableData>({
   const [newRows, setNewRows] = React.useState<Set<number>>(new Set())
   const [expandedRows, setExpandedRows] = React.useState<Set<string>>(new Set())
   const baseHeaderPadding = resolvedHeaderPadding
-  const effectiveHeaderBackground = isErpRoute ? 'rgb(252, 252, 252)' : headerBackground
-  const effectiveHeaderPaddingY = isErpRoute ? Math.min(baseHeaderPadding, 6) : baseHeaderPadding
+  const effectiveHeaderBackground = headerBackground
+  const effectiveHeaderPaddingY = baseHeaderPadding
   const effectiveHeaderPaddingX = baseHeaderPadding
   const resolvedHeaderBackground = (headerStyle?.backgroundColor as string | undefined) || effectiveHeaderBackground
   const resolvedFooterBackground = (footerStyle?.backgroundColor as string | undefined) || footerBackground

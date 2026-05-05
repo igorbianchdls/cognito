@@ -6,13 +6,13 @@ type EntityDisplayProps = {
   imageUrl?: string
   onClick?: () => void
   clickable?: boolean
-  size?: number // avatar size in px (default 24)
+  size?: number
 }
 
-const getColorFromName = (name: string) => {
+function getColorFromName(name: string) {
   let hash = 0
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash)
+  for (let index = 0; index < name.length; index += 1) {
+    hash = name.charCodeAt(index) + ((hash << 5) - hash)
   }
 
   const colors = [
@@ -24,13 +24,19 @@ const getColorFromName = (name: string) => {
     { bg: '#FED7AA', text: '#C2410C' },
     { bg: '#E9D5FF', text: '#7C3AED' },
     { bg: '#D1FAE5', text: '#047857' },
-  ]
+  ] as const
 
-  const index = Math.abs(hash) % colors.length
-  return colors[index]
+  return colors[Math.abs(hash) % colors.length]
 }
 
-export default function EntityDisplay({ name, subtitle, imageUrl, onClick, clickable, size = 24 }: EntityDisplayProps) {
+export default function EntityDisplay({
+  name,
+  subtitle,
+  imageUrl,
+  onClick,
+  clickable,
+  size = 24,
+}: EntityDisplayProps) {
   const displayName = name || 'Sem nome'
   const colors = getColorFromName(displayName)
   const avatarSize = Number.isFinite(size) && size > 8 ? size : 24
@@ -40,7 +46,7 @@ export default function EntityDisplay({ name, subtitle, imageUrl, onClick, click
   const content = (
     <div className="flex items-center">
       <div
-        className="flex items-center justify-center mr-3"
+        className="mr-3 flex items-center justify-center"
         style={{
           width: avatarSize,
           height: avatarSize,
@@ -51,7 +57,7 @@ export default function EntityDisplay({ name, subtitle, imageUrl, onClick, click
         }}
       >
         {imageUrl ? (
-          <img src={imageUrl} alt={displayName} className="w-full h-full object-cover" />
+          <img src={imageUrl} alt={displayName} className="h-full w-full object-cover" />
         ) : (
           <div style={{ fontSize: initialFont, fontWeight: 600, color: colors.text, lineHeight: 1 }}>
             {displayName.charAt(0).toUpperCase()}
@@ -60,9 +66,9 @@ export default function EntityDisplay({ name, subtitle, imageUrl, onClick, click
       </div>
       <div>
         <div style={{ fontSize: 14, fontWeight: 500, color: '#111827' }}>{displayName}</div>
-        {subtitle && (
+        {subtitle ? (
           <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{subtitle}</div>
-        )}
+        ) : null}
       </div>
     </div>
   )
@@ -72,7 +78,7 @@ export default function EntityDisplay({ name, subtitle, imageUrl, onClick, click
       <button
         type="button"
         onClick={onClick}
-        className="text-left w-full"
+        className="w-full text-left"
         style={{ background: 'none', border: 'none', padding: 0 }}
       >
         {content}
