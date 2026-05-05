@@ -1,14 +1,13 @@
-# Agent Tools (`crud`, `documento`, `email`)
+# Agent Tools (`crud`, `documento`)
 
 Documentacao operacional das tools usadas pelo agente para servir como `daily driver` de um SMB owner.
 
 ## Visao geral
 
-As 3 tools disponiveis sao:
+As 2 tools disponiveis sao:
 
 1. `crud`
 2. `documento`
-3. `email`
 
 Elas podem ser chamadas:
 
@@ -31,7 +30,6 @@ Fluxo tipico comercial/operacional:
 1. `crud` busca contexto (`crm`, `vendas`, `financeiro`)
 2. `documento` gera proposta/fatura/OS
 3. `documento` persiste o arquivo (`save_to_drive=true`)
-4. `email` envia usando `drive_file_id`
 
 Esse fluxo evita trafegar PDF base64 quando nao e necessario.
 
@@ -357,7 +355,7 @@ Gera e consulta documentos operacionais:
 
 ### Ponto chave para uso diario
 
-Use `save_to_drive=true` e envie por email com `drive_file_id`.
+Use `save_to_drive=true` quando precisar persistir o arquivo gerado.
 
 #### Payload enxuto (implementado)
 
@@ -375,39 +373,6 @@ Em reexecucoes:
 
 - reaproveita o documento
 - reaproveita o arquivo persistido quando possivel (sem duplicar)
-
-## Tool `email`
-
-### O que e
-
-Envio e consulta de email operacional:
-
-- `send`
-- `request` em `email/messages`, `email/inboxes`
-- `batch`
-
-### Anexos por arquivo persistido
-
-A tool aceita:
-
-- `drive_file_id`
-- `drive_file_ids`
-
-Ela resolve internamente o arquivo persistido e envia o anexo normalmente.
-
-### Filtros em `email/messages`
-
-Suporta filtros (tool-level):
-
-- `subject`
-- `from`
-- `q` / `search`
-- `date_from`
-- `date_to`
-- `has_attachments`
-- `unread`
-- `label`
-- `labels_any`
 
 ## Padrao de resposta (pratico)
 
@@ -434,5 +399,4 @@ Em erros de negocio, sao retornados:
 1. Prefira acao de negocio em transacoes (`cancelar`, `baixar`, `estornar`, `reabrir`)
 2. Evite `deletar` em `vendas`, `compras`, `contas-*`
 3. Para documentos, prefira `save_to_drive=true`
-4. Para envio de anexo, prefira `email` com `drive_file_id`
-5. Em retries, reutilize `idempotency_key` em `documento`
+4. Em retries, reutilize `idempotency_key` em `documento`

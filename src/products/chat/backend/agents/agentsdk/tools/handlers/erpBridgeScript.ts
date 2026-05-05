@@ -134,7 +134,6 @@ async function callScopedTool(path,args,label){
     return { content: [{ type: 'text', text: JSON.stringify({ success:false, error:String(e?.message || e) }) }] };
   }
 }
-async function callEmail(args){ return callScopedTool('/api/agent-tools/email', args, 'email'); }
 async function callArtifactRead(args){ return callScopedTool('/api/agent-tools/artifact-read', args, 'artifact_read'); }
 async function callArtifactWrite(args){ return callScopedTool('/api/agent-tools/artifact-write', args, 'artifact_write'); }
 async function callArtifactPatch(args){ return callScopedTool('/api/agent-tools/artifact-patch', args, 'artifact_patch'); }

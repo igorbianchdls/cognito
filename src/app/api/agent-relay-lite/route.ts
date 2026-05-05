@@ -542,47 +542,6 @@ function buildToolsSchema() {
     },
     {
       type: 'function',
-      name: 'email',
-      description: 'Acessa operações de Email e envio de mensagens.',
-      parameters: {
-        type: 'object',
-        additionalProperties: true,
-        properties: {
-          action: { type: 'string', description: 'request|send|send_email|batch' },
-          method: { type: 'string', description: 'GET|POST|DELETE' },
-          resource: { type: 'string' },
-          params: { type: 'object' },
-          data: { type: 'object' },
-          inbox_id: { type: 'string' },
-          to: { description: 'lista ou string de destinatários' },
-          subject: { type: 'string' },
-          text: { type: 'string' },
-          html: { type: 'string' },
-          attachments: {
-            type: 'array',
-            items: {
-              type: 'object',
-              additionalProperties: true,
-            },
-          },
-          drive_file_id: { type: 'string', description: 'file_id persistido para anexar automaticamente' },
-          drive_file_ids: { type: 'array', items: { type: 'string' }, description: 'lista de file_id persistido para anexar automaticamente' },
-          from: { type: 'string', description: 'Filtro em email/messages (request GET)' },
-          q: { type: 'string', description: 'Busca local em subject/from/preview/to para email/messages' },
-          date_from: { type: 'string', description: 'Filtro por data inicial (ISO) em email/messages' },
-          date_to: { type: 'string', description: 'Filtro por data final (ISO) em email/messages' },
-          has_attachments: { type: 'boolean', description: 'Filtro por presença de anexos em email/messages' },
-          unread: { type: 'boolean', description: 'Filtro por label unread em email/messages' },
-          label: { type: 'string', description: 'Filtro por label em email/messages' },
-          labels_any: { type: 'array', items: { type: 'string' }, description: 'Qualquer label entre as fornecidas' },
-          operations: { type: 'array', description: 'Batch de operações da tool email (itens com action e payload)' },
-          continue_on_error: { type: 'boolean', description: 'No batch, continua após erro (default true)' },
-        },
-        required: ['action'],
-      },
-    },
-    {
-      type: 'function',
       name: 'ecommerce',
       description:
         'Tool analítica canônica de ecommerce por actions fixas (sem SQL livre). Use para KPIs e cortes padrão de operação/comercial. Não use para SQL customizado; nesse caso use sql_execution. Entrada: action obrigatória + params opcionais (datas YYYY-MM-DD). Saída padronizada: rows, columns, count, chart, sql_query e sql_params.',
@@ -677,12 +636,7 @@ function buildRelayInstructions() {
     `Crud: use somente resources canônicos (${resources}). Não invente paths como "financeiro/caixa".`,
     'Crud: para listar use action="listar"; para criar/atualizar use action correspondente. Em recursos transacionais (ex.: vendas/pedidos, compras/pedidos), prefira action="cancelar" em vez de deletar.',
     'Documento: use action="gerar" para proposta/os/nfse/fatura/contrato com payload em dados; use action="status" com documento_id. status retorna payload enxuto por padrão (sem base64).',
-    'Documento + Email: prefira save_to_drive=true e depois email send com drive_file_id; use include_attachment_content=false para evitar payload grande.',
-    'Email: use action="send" com inbox_id, to, subject e text/html; anexos por attachments[] ou signed_url/attachment_url.',
-    'Email send também aceita drive_file_id ou drive_file_ids para anexar automaticamente arquivo(s) persistidos.',
-    'Email request em email/messages aceita filtros locais: subject, from, q/search, date_from/date_to, has_attachments, unread, label, labels_any.',
-    'Email aceita action="batch" com operations[] para executar múltiplas ações em sequência.',
-    'Fluxo preferido para anexos persistidos: use drive_file_id direto em email send.',
+    'Documento: quando save_to_drive=true, prefira include_attachment_content=false para evitar payload grande.',
     'Nunca use ações/resources inexistentes como save_document/save_file_to_drive.',
     'Se faltar campo obrigatório para executar a ação, faça uma pergunta curta.',
     'Se uma tool retornar erro de arquivo não encontrado, informe claramente e prossiga com alternativa segura (ex.: listar novamente).',
@@ -887,17 +841,6 @@ export async function POST(req: Request) {
               path: '/api/agent-tools/documento',
               args: parsedArgs,
               label: 'documento',
-            })
-          } else if (call.name === 'email') {
-            result = await callScopedTool({
-              origin,
-              token: toolToken,
-              internalKey: internalKey || undefined,
-              chatId,
-              tenantId,
-              path: '/api/agent-tools/email',
-              args: parsedArgs,
-              label: 'email',
             })
           } else if (call.name === 'ecommerce') {
             result = await callScopedTool({

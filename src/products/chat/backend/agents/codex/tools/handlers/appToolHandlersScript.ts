@@ -104,10 +104,6 @@ async function callScopedTool(path, args, label) {
   return outWithMeta;
 }
 
-async function callEmail(args) {
-  return callScopedTool('/api/agent-tools/email', args, 'email');
-}
-
 async function callArtifactRead(args) {
   return callScopedTool('/api/agent-tools/artifact-read', args, 'artifact_read');
 }
