@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { ArrowRight, ChevronDown, Database, LockKeyhole, MoreHorizontal, Search, ShieldCheck, Star, Zap } from 'lucide-react'
+import { ArrowRight, ChevronDown, Database, LockKeyhole, MoreHorizontal, Search, ShieldCheck, Zap } from 'lucide-react'
 
 import PageContainer from '@/components/layout/PageContainer'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
@@ -276,43 +276,6 @@ function SegmentButton({
   )
 }
 
-function RecommendationCard({
-  toolkit,
-  kind,
-  tkStatus,
-  busySlug,
-  onAction,
-}: {
-  toolkit: ToolkitDefinition
-  kind: IntegrationKind
-  tkStatus: ToolkitStatusMap
-  busySlug: string | null
-  onAction: (toolkit: ToolkitDefinition) => void
-}) {
-  const connected = isToolkitConnected(toolkit.slug, tkStatus)
-  const isBusy = kind === 'mcp' && busySlug === toolkit.slug
-
-  return (
-    <div className="flex min-w-0 items-center gap-4 px-5 py-5">
-      <div className="grid h-12 w-12 shrink-0 place-items-center rounded-[16px] bg-white ring-1 ring-[#ECEFFC]">
-        {renderIntegrationLogo(toolkit.slug, toolkit.name)}
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="text-[16px] font-semibold tracking-[-0.02em] text-[#202A3D]">{toolkit.name}</div>
-        <div className="mt-1 text-[13px] leading-5 text-[#6B7790]">{toolkit.description}</div>
-      </div>
-      <button
-        type="button"
-        onClick={() => onAction(toolkit)}
-        disabled={isBusy}
-        className="shrink-0 rounded-[12px] border border-[#DCDDF5] bg-white px-4 py-2 text-[13px] font-semibold text-[#5C47D6] transition hover:border-[#CBCBF0] hover:bg-[#F8F7FF] disabled:opacity-60"
-      >
-        {isBusy ? 'Abrindo...' : connected ? 'Gerenciar' : kind === 'mcp' ? 'Conectar' : 'Configurar'}
-      </button>
-    </div>
-  )
-}
-
 function CatalogCard({
   toolkit,
   kind,
@@ -509,12 +472,6 @@ export default function IntegracoesPage() {
     return Array.from(map.values())
   }, [])
 
-  const recommendationToolkits = useMemo(() => {
-    const source = activeKind === 'mcp' ? mcpToolkits : dataConnectorSamples
-    const priority = activeKind === 'mcp' ? MCP_TOP_PRIORITY_ORDER : DATA_CONNECTOR_TOP_PRIORITY_ORDER
-    return sortByPriority(source, priority, tkStatus).slice(0, 3)
-  }, [activeKind, dataConnectorSamples, mcpToolkits, tkStatus])
-
   const catalogToolkits = useMemo(() => {
     const source = activeKind === 'mcp' ? mcpToolkits : dataConnectorSamples
     const priority = activeKind === 'mcp' ? MCP_TOP_PRIORITY_ORDER : DATA_CONNECTOR_TOP_PRIORITY_ORDER
@@ -572,37 +529,6 @@ export default function IntegracoesPage() {
                         onClick={() => setActiveKind('data-connectors')}
                       />
                     </div>
-
-                    <section className="mb-6 overflow-hidden rounded-[24px] border border-[#E6EAF4] bg-white">
-                      <div className="grid gap-0 xl:grid-cols-[360px_repeat(3,minmax(0,1fr))]">
-                        <div className="flex items-center border-b border-[#EDF1F6] px-6 py-6 xl:border-b-0 xl:border-r">
-                          <div className="flex items-center gap-3">
-                            <div className="grid h-9 w-9 place-items-center rounded-[12px] bg-[#F4F0FF] text-[#5B49E6]">
-                              <Star className="h-4 w-4" />
-                            </div>
-                            <div className="text-[24px] font-semibold leading-none tracking-[-0.03em] text-[#1B2440]">Recomendadas para você</div>
-                          </div>
-                        </div>
-
-                        {recommendationToolkits.map((toolkit, index) => (
-                          <div
-                            key={toolkit.slug}
-                            className={[
-                              'border-[#EDF1F6]',
-                              index < recommendationToolkits.length - 1 ? 'border-b px-2 xl:border-b-0 xl:border-r' : 'px-2',
-                            ].join(' ')}
-                          >
-                            <RecommendationCard
-                              toolkit={toolkit}
-                              kind={activeKind}
-                              tkStatus={tkStatus}
-                              busySlug={busySlug}
-                              onAction={activeKind === 'mcp' ? handleMcpAction : openDataConnectorModal}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </section>
 
                     {activeKind === 'mcp' && (
                       <div className="mb-6 flex items-center gap-2">
