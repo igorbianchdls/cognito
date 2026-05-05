@@ -330,42 +330,43 @@ export function ArtifactCatalogPage({
   return (
     <main className="min-h-screen bg-white px-8 py-9 text-[#171717]">
       <div className="mx-auto max-w-[1360px]">
-        <header className="mb-8 flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-          <div>
+        <header className="mb-5">
+          <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
             <h1
               className="text-[52px] font-semibold tracking-[-0.05em] text-[#101828]"
               style={{ fontFamily: 'var(--font-eb-garamond), "EB Garamond", serif' }}
             >
               {title}
             </h1>
-            <p className="mt-2 text-[16px] text-[#6d7689]">{description}</p>
+
+            <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center xl:w-auto xl:justify-end">
+              <label className="relative block w-full sm:w-[280px] xl:w-[320px]">
+                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#97A2B8]" />
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder={`Buscar ${title.slice(0, -1).toLowerCase()}`}
+                  className="h-11 w-full rounded-[12px] border border-[#E1E6F0] bg-white pl-11 pr-4 text-[14px] text-[#1E2942] outline-none transition placeholder:text-[#9AA6BC] focus:border-[#B3BDED]"
+                />
+              </label>
+
+              <Link
+                href={primaryActionHref}
+                className="inline-flex h-11 items-center justify-center gap-2 self-start rounded-[14px] bg-black px-5 text-[14px] font-semibold text-white shadow-[0_14px_28px_rgba(15,23,42,0.18)] transition hover:bg-[#111827]"
+              >
+                <Plus className="h-4 w-4" />
+                {primaryActionLabel}
+              </Link>
+            </div>
           </div>
 
-          <Link
-            href={primaryActionHref}
-            className="inline-flex h-11 items-center justify-center gap-2 self-start rounded-[14px] bg-black px-5 text-[14px] font-semibold text-white shadow-[0_14px_28px_rgba(15,23,42,0.18)] transition hover:bg-[#111827]"
-          >
-            <Plus className="h-4 w-4" />
-            {primaryActionLabel}
-          </Link>
+          <p className="mt-2 text-[16px] text-[#6d7689]">{description}</p>
         </header>
 
-        <section className="mb-8 rounded-[28px] border border-[#e9edf5] bg-white/88 p-5 shadow-[0_12px_32px_rgba(15,23,42,0.05)] backdrop-blur">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-            <label className="relative block flex-1">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#98a2b3]" />
-              <input
-                type="text"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder={`Buscar ${title.toLowerCase()}...`}
-                className="h-12 w-full rounded-[16px] border border-[#e6eaf2] bg-[#fbfcff] pl-11 pr-4 text-[15px] text-[#111827] outline-none transition placeholder:text-[#98a2b3] focus:border-[#cbd5e1]"
-              />
-            </label>
-
-            <div className="text-[14px] text-[#7b8496]">
-              {filteredItems.length} {title.toLowerCase()} encontrados
-            </div>
+        <section className="mb-8 flex items-center justify-between">
+          <div className="text-[14px] text-[#7b8496]">
+            {filteredItems.length} {title.toLowerCase()} encontrados
           </div>
         </section>
 
