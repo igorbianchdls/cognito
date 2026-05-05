@@ -9,9 +9,13 @@ export function ArtifactDocumentTitle({ title }: { title: string }) {
         <Icon icon="solar:document-bold" className="h-4 w-4 text-[#5F5F5A]" />
       </div>
       <div className="min-w-0">
-        <div className="truncate text-[16px] font-semibold text-[#1F1F1D]">{title}</div>
+        <div
+          className="truncate text-[16px] font-semibold text-[#1F1F1D]"
+          style={{ fontFamily: 'var(--font-eb-garamond), "EB Garamond", serif' }}
+        >
+          {title}
+        </div>
       </div>
     </div>
   )
 }
-

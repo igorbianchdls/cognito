@@ -201,7 +201,12 @@ export function DashboardListPage({ dashboards }: { dashboards: DashboardListIte
       <div className="mx-auto max-w-[1360px]">
         <header className="mb-8 flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
           <div>
-            <h1 className="text-[52px] font-semibold tracking-[-0.05em] text-[#101828]">Dashboards</h1>
+            <h1
+              className="text-[52px] font-semibold tracking-[-0.05em] text-[#101828]"
+              style={{ fontFamily: 'var(--font-eb-garamond), "EB Garamond", serif' }}
+            >
+              Dashboards
+            </h1>
             <p className="mt-2 text-[16px] text-[#6d7689]">Gerencie e acesse todos os dashboards do Creatto.</p>
           </div>
 
