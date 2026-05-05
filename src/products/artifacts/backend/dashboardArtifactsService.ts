@@ -352,6 +352,44 @@ export async function renameDashboardArtifact(input: {
   }
 }
 
+export async function deleteDashboardArtifact(input: {
+  artifactId: string
+}) {
+  const artifactId = toText(input.artifactId)
+  if (!artifactId) {
+    throw new ArtifactToolError(400, 'invalid_input', 'artifact_id é obrigatório')
+  }
+
+  try {
+    return await withTransaction(async (client) => {
+      await client.query(
+        `DELETE FROM artifacts.dashboard_sources
+         WHERE dashboard_id = $1::uuid`,
+        [artifactId],
+      )
+
+      const rows = await client.query(
+        `DELETE FROM artifacts.dashboards
+         WHERE id = $1::uuid
+         RETURNING id::text AS id, title`,
+        [artifactId],
+      )
+      const row = rows.rows?.[0] as { id: string; title: string } | undefined
+      if (!row) {
+        throw new ArtifactToolError(404, 'artifact_not_found', 'artifact não encontrado', { artifact_id: artifactId })
+      }
+
+      return {
+        success: true,
+        deleted_dashboard_id: row.id,
+        deleted_dashboard_title: row.title,
+      }
+    })
+  } catch (error) {
+    return mapDbError(error)
+  }
+}
+
 export async function listDashboardSourceVersions(
   artifactId: string,
   kind: ArtifactSourceKind = 'draft',

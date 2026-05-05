@@ -2,13 +2,14 @@
 
 import Link from 'next/link'
 import { KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
-import { Edit3, LayoutGrid, MoreHorizontal, Plus, Search } from 'lucide-react'
+import { Edit3, LayoutGrid, MoreHorizontal, Plus, Search, Trash2 } from 'lucide-react'
 
 import type { DashboardListItem } from '@/products/artifacts/backend/dashboardArtifactsService'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
@@ -156,6 +157,7 @@ function DashboardCard({
   onDraftTitleChange,
   onSaveRename,
   onCancelRename,
+  onDelete,
 }: {
   dashboard: DashboardListItem
   isEditing: boolean
@@ -165,6 +167,7 @@ function DashboardCard({
   onDraftTitleChange: (value: string) => void
   onSaveRename: () => void
   onCancelRename: () => void
+  onDelete: (dashboard: DashboardListItem) => void
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null)
 
@@ -272,6 +275,18 @@ function DashboardCard({
                 <Edit3 className="h-4 w-4" />
                 Renomear
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="gap-2 text-red-600 focus:text-red-600"
+                onClick={(event) => {
+                  event.preventDefault()
+                  event.stopPropagation()
+                  onDelete(dashboard)
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+                Apagar
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         )}
@@ -286,6 +301,7 @@ export function DashboardListPage({ dashboards }: { dashboards: DashboardListIte
   const [editingDashboardId, setEditingDashboardId] = useState<string | null>(null)
   const [draftTitle, setDraftTitle] = useState('')
   const [savingDashboardId, setSavingDashboardId] = useState<string | null>(null)
+  const [deletingDashboardId, setDeletingDashboardId] = useState<string | null>(null)
 
   useEffect(() => {
     setItems(dashboards)
@@ -350,6 +366,32 @@ export function DashboardListPage({ dashboards }: { dashboards: DashboardListIte
       console.error(error)
     } finally {
       setSavingDashboardId(null)
+    }
+  }
+
+  const deleteDashboard = async (dashboard: DashboardListItem) => {
+    const confirmed = window.confirm(`Apagar o dashboard "${dashboard.title}"?`)
+    if (!confirmed) return
+
+    setDeletingDashboardId(dashboard.id)
+    try {
+      const response = await fetch(`/api/artifacts/dashboards/${dashboard.id}`, {
+        method: 'DELETE',
+      })
+      const json = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        throw new Error(json?.error || 'Falha ao apagar dashboard')
+      }
+
+      setItems((current) => current.filter((item) => item.id !== dashboard.id))
+      if (editingDashboardId === dashboard.id) {
+        setEditingDashboardId(null)
+        setDraftTitle('')
+      }
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setDeletingDashboardId(null)
     }
   }
 
@@ -436,11 +478,12 @@ export function DashboardListPage({ dashboards }: { dashboards: DashboardListIte
                 dashboard={dashboard}
                 isEditing={editingDashboardId === dashboard.id}
                 draftTitle={editingDashboardId === dashboard.id ? draftTitle : dashboard.title}
-                isSaving={savingDashboardId === dashboard.id}
+                isSaving={savingDashboardId === dashboard.id || deletingDashboardId === dashboard.id}
                 onStartRename={startRename}
                 onDraftTitleChange={setDraftTitle}
                 onSaveRename={saveRename}
                 onCancelRename={cancelRename}
+                onDelete={deleteDashboard}
               />
             ))}
           </section>

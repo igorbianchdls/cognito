@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 
 import {
   ArtifactToolError,
+  deleteDashboardArtifact,
   listDashboardSourceVersions,
   readDashboardArtifact,
   renameDashboardArtifact,
@@ -158,6 +159,37 @@ export async function POST(
       {
         ok: false,
         error: error instanceof Error ? error.message : 'Erro interno ao atualizar thumbnail do dashboard',
+      },
+      { status: 500 },
+    )
+  }
+}
+
+export async function DELETE(
+  _req: NextRequest,
+  context: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await context.params
+    const result = await deleteDashboardArtifact({ artifactId: id })
+    return Response.json({ ok: true, ...result })
+  } catch (error) {
+    if (error instanceof ArtifactToolError) {
+      return Response.json(
+        {
+          ok: false,
+          code: error.code,
+          error: error.message,
+          ...(error.details ? { details: error.details } : {}),
+        },
+        { status: error.status },
+      )
+    }
+
+    return Response.json(
+      {
+        ok: false,
+        error: error instanceof Error ? error.message : 'Erro interno ao apagar dashboard',
       },
       { status: 500 },
     )
