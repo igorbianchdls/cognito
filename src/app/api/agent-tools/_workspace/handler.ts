@@ -347,42 +347,6 @@ function normalizeWorkspaceRequestPayload(scope: WorkspaceToolScope, payload: Wo
     if ((payload as any).pageToken != null) setIfMissing(params, 'pageToken', (payload as any).pageToken)
   }
 
-  // Drive request ergonomics: prepare/complete upload often comes malformed at top-level.
-  if (
-    scope === 'drive'
-    && method === 'POST'
-    && (
-      resource === 'drive/files/prepare-upload'
-      || resource === 'drive/files/complete-upload'
-      || resource === 'drive/files/upload-base64'
-    )
-  ) {
-    const workspaceId = firstNonEmptyString((payload as any).workspace_id, (payload as any).workspaceId, data.workspace_id, data.workspaceId)
-    const folderId = firstNonEmptyString((payload as any).folder_id, (payload as any).folderId, data.folder_id, data.folderId)
-    const fileName = firstNonEmptyString((payload as any).file_name, (payload as any).fileName, data.file_name, data.fileName)
-    const fileId = firstNonEmptyString((payload as any).file_id, (payload as any).fileId, data.file_id, data.fileId)
-    const storagePath = firstNonEmptyString((payload as any).storage_path, (payload as any).storagePath, data.storage_path, data.storagePath)
-    const mime = firstNonEmptyString((payload as any).mime, data.mime)
-    const name = firstNonEmptyString((payload as any).name, data.name)
-    const contentBase64 = firstNonEmptyString(
-      (payload as any).content_base64,
-      (payload as any).contentBase64,
-      data.content_base64,
-      data.contentBase64,
-    )
-
-    if (workspaceId) data.workspace_id = workspaceId
-    if (folderId) data.folder_id = folderId
-    if (fileName) data.file_name = fileName
-    if (fileId) data.file_id = fileId
-    if (storagePath) data.storage_path = storagePath
-    if (mime) data.mime = mime
-    if (name) data.name = name
-    if (contentBase64) data.content_base64 = contentBase64
-    if ((payload as any).size_bytes != null && data.size_bytes == null) data.size_bytes = (payload as any).size_bytes
-    if ((payload as any).sizeBytes != null && data.size_bytes == null) data.size_bytes = (payload as any).sizeBytes
-  }
-
   out.params = params
   out.data = data
   return out

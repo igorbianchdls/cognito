@@ -1,15 +1,14 @@
-# Agent Tools (`crud`, `documento`, `drive`, `email`)
+# Agent Tools (`crud`, `documento`, `email`)
 
 Documentacao operacional das tools usadas pelo agente para servir como `daily driver` de um SMB owner.
 
 ## Visao geral
 
-As 4 tools disponiveis sao:
+As 3 tools disponiveis sao:
 
 1. `crud`
 2. `documento`
-3. `drive`
-4. `email`
+3. `email`
 
 Elas podem ser chamadas:
 
@@ -31,7 +30,7 @@ Fluxo tipico comercial/operacional:
 
 1. `crud` busca contexto (`crm`, `vendas`, `financeiro`)
 2. `documento` gera proposta/fatura/OS
-3. `documento` salva no Drive (`save_to_drive=true`)
+3. `documento` persiste o arquivo (`save_to_drive=true`)
 4. `email` envia usando `drive_file_id`
 
 Esse fluxo evita trafegar PDF base64 quando nao e necessario.
@@ -375,32 +374,7 @@ Para compatibilidade, pode forcar:
 Em reexecucoes:
 
 - reaproveita o documento
-- reaproveita arquivo do Drive quando possivel (sem duplicar)
-
-## Tool `drive`
-
-### O que e
-
-Operacoes de arquivos/pastas do Drive:
-
-- listar
-- upload
-- read file
-- signed URL
-- delete
-- batch
-
-### Acoes principais
-
-- `request`
-- `read_file`
-- `get_file_url` / `get_drive_file_url`
-- `batch`
-
-### Pontos importantes
-
-- `get_file_url` retorna URL assinada (`signed_url`)
-- `email` pode anexar usando `drive_file_id`
+- reaproveita o arquivo persistido quando possivel (sem duplicar)
 
 ## Tool `email`
 
@@ -412,14 +386,14 @@ Envio e consulta de email operacional:
 - `request` em `email/messages`, `email/inboxes`
 - `batch`
 
-### Anexos via Drive
+### Anexos por arquivo persistido
 
 A tool aceita:
 
 - `drive_file_id`
 - `drive_file_ids`
 
-Ela resolve internamente o arquivo no Drive e envia o anexo normalmente.
+Ela resolve internamente o arquivo persistido e envia o anexo normalmente.
 
 ### Filtros em `email/messages`
 

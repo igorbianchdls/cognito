@@ -52,88 +52,6 @@ export const codexAppFunctionTools = [
   },
   {
     type: 'function',
-    name: 'drive',
-    description:
-      'Tool de Drive para listar/gerenciar arquivos e pastas, obter URL assinada, ler conteúdo e fazer upload. Também suporta batch (múltiplas operações em sequência). Prefira resource="drive/files/upload-base64" quando já tiver conteúdo em base64 (ex.: saída de documento); use prepare-upload/complete-upload para fluxos binários/externos.',
-    parameters: {
-      type: 'object',
-      properties: {
-        action: {
-          type: 'string',
-          enum: ['request', 'read_file', 'get_file_url', 'get_drive_file_url', 'batch'],
-          description:
-            'request: operações por resource Drive. read_file: leitura textual/binária por file_id. get_file_url/get_drive_file_url: URL assinada por file_id. batch: executa operations[] em sequência.',
-        },
-        method: {
-          type: 'string',
-          enum: ['GET', 'POST', 'DELETE'],
-          description: 'Método HTTP para action=request.',
-        },
-        resource: {
-          type: 'string',
-          description:
-            'Resource permitido para action=request: drive, drive/folders, drive/folders/{id}, drive/files/{id}, drive/files/{id}/download, drive/files/prepare-upload, drive/files/complete-upload, drive/files/upload-base64.',
-        },
-        params: {
-          type: 'object',
-          additionalProperties: true,
-          description: 'Query params para action=request.',
-        },
-        data: {
-          type: 'object',
-          additionalProperties: true,
-          description:
-            'Body para action=request quando method for POST/DELETE. Em uploads, o backend também aceita campos top-level e normaliza para data.',
-        },
-        file_id: {
-          type: 'string',
-          description: 'UUID do arquivo no Drive para action=read_file e action=get_file_url.',
-        },
-        workspace_id: {
-          type: 'string',
-          description: 'Workspace do Drive. Pode ser enviado top-level (backend normaliza para data/params).',
-        },
-        folder_id: {
-          type: 'string',
-          description: 'Pasta destino no Drive (opcional). Pode ser enviado top-level.',
-        },
-        file_name: {
-          type: 'string',
-          description: 'Nome do arquivo (ex.: em drive/files/upload-base64). Pode ser enviado top-level.',
-        },
-        mime: {
-          type: 'string',
-          description: 'MIME type do arquivo (ex.: application/pdf) para uploads.',
-        },
-        content_base64: {
-          type: 'string',
-          description: 'Conteúdo base64 para upload direto via resource=drive/files/upload-base64.',
-        },
-        storage_path: {
-          type: 'string',
-          description: 'Caminho no storage em fluxos avançados de upload/complete-upload.',
-        },
-        mode: {
-          type: 'string',
-          enum: ['auto', 'text', 'binary'],
-          description: 'Modo de leitura em action=read_file.',
-        },
-        operations: {
-          type: 'array',
-          items: { type: 'object', additionalProperties: true },
-          description: 'Lista de operações para action=batch. Cada item usa o mesmo contrato de drive (ex.: { action:\"request\", method:\"GET\", resource:\"drive\" }).',
-        },
-        continue_on_error: {
-          type: 'boolean',
-          description: 'Para action=batch: se true (default), continua executando próximas operações mesmo após erro.',
-        },
-      },
-      required: ['action'],
-      additionalProperties: true,
-    },
-  },
-  {
-    type: 'function',
     name: 'email',
     description:
       'Tool de Email para consultar inbox/messages e enviar emails. Também suporta batch (múltiplos envios/requests em sequência). Prefira anexar por drive_file_id/drive_file_ids (backend resolve URL assinada); use URL/base64 (attachments/attachment_url) como fallback. Em email/messages, filtros como subject/q/has_attachments ajudam a localizar mensagens.',
@@ -222,12 +140,12 @@ export const codexAppFunctionTools = [
         },
         drive_file_id: {
           type: 'string',
-          description: 'ID de arquivo no Drive para anexo automático (backend resolve signed_url).',
+          description: 'ID de arquivo persistido para anexo automático (backend resolve signed_url).',
         },
         drive_file_ids: {
           type: 'array',
           items: { type: 'string' },
-          description: 'Lista de IDs de arquivos no Drive para anexos automáticos.',
+          description: 'Lista de IDs de arquivos persistidos para anexos automáticos.',
         },
         attachment_url: {
           type: 'string',

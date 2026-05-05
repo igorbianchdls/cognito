@@ -7,7 +7,6 @@ import {
   IconCirclePlus,
   IconFileText,
   IconGridDots,
-  IconInbox,
   IconMessageCircle,
   IconPlugConnected,
   IconPresentation,
@@ -42,7 +41,6 @@ const BrandIcon = (props: { className?: string; style?: React.CSSProperties }) =
 const ChatsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconMessageCircle stroke={1.75} {...props} />
 const AutomationIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconSettingsAutomation stroke={1.75} {...props} />
 const IntegrationsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconPlugConnected stroke={1.75} {...props} />
-const EmailIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconInbox stroke={1.75} {...props} />
 const NewChatIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconCirclePlus stroke={1.75} {...props} />
 const DashboardsArtifactIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconChartBar stroke={1.75} {...props} />
 const ReportsArtifactIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconFileText stroke={1.75} {...props} />
@@ -113,12 +111,6 @@ const navigationData = {
       title: "Integrações",
       url: "/integracoes",
       icon: IntegrationsIcon,
-    },
-    // Keep Email at the end
-    {
-      title: "Email",
-      url: "/email",
-      icon: EmailIcon,
     },
   ],
   integrations: [

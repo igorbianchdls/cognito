@@ -104,10 +104,6 @@ async function callScopedTool(path, args, label) {
   return outWithMeta;
 }
 
-async function callDrive(args) {
-  return callScopedTool('/api/agent-tools/drive', args, 'drive');
-}
-
 async function callEmail(args) {
   return callScopedTool('/api/agent-tools/email', args, 'email');
 }
