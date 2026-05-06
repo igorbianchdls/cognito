@@ -222,87 +222,8 @@ export default function DashboardKpi({
           }
         }
 
+        void filters
         throw new Error('Consultas legacy de modulos foram removidas.')
-
-        const rows = Array.isArray(json?.rows) ? json.rows : []
-        const firstRow = rows.length > 0 && rows[0] && typeof rows[0] === 'object'
-          ? ({ ...(rows[0] as AnyRecord) } as AnyRecord)
-          : undefined
-        const currentValue = pickFirstNumericValue(firstRow, [
-          valueKey,
-          'total',
-          'valor_total',
-          'faturamento_total',
-          'gasto_total',
-          'count',
-          'value',
-        ])
-        let previousValue: number | null = null
-        const comparisonRange = deriveComparisonRange(comparisonMode, filters.de, filters.ate)
-
-        if (comparisonMode && comparisonRange) {
-          const comparisonFilters: AnyRecord = { ...filters }
-          comparisonFilters.de = comparisonRange.from
-          comparisonFilters.ate = comparisonRange.to
-          delete comparisonFilters.compare_de
-          delete comparisonFilters.compare_ate
-          delete comparisonFilters.comparison_mode
-
-          const comparisonResponse = await fetch(url, {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify(
-              isSqlQueryMode
-                ? {
-                    dataQuery: {
-                      query: dataQuery.query,
-                      ...(typeof dataQuery.yField === 'string' && dataQuery.yField.trim() ? { yField: dataQuery.yField.trim() } : {}),
-                      ...(typeof dataQuery.xField === 'string' && dataQuery.xField.trim() ? { xField: dataQuery.xField.trim() } : {}),
-                      ...(typeof dataQuery.keyField === 'string' && dataQuery.keyField.trim() ? { keyField: dataQuery.keyField.trim() } : {}),
-                      filters: comparisonFilters,
-                      limit: dataQuery.limit ?? 1,
-                    },
-                  }
-                : {
-                    dataQuery: {
-                      model: dataQuery.model,
-                      dimension: undefined,
-                      measure: dataQuery.measure,
-                      filters: comparisonFilters,
-                      orderBy: dataQuery.orderBy,
-                      limit: dataQuery.limit,
-                    },
-                  },
-            ),
-          })
-          const comparisonJson = await comparisonResponse.json()
-          if (!comparisonResponse.ok || comparisonJson?.success === false) {
-            throw new Error(String(comparisonJson?.message || `Query failed (${comparisonResponse.status})`))
-          }
-          const comparisonRows = Array.isArray(comparisonJson?.rows) ? comparisonJson.rows : []
-          const comparisonRow = comparisonRows.length > 0 && comparisonRows[0] && typeof comparisonRows[0] === 'object'
-            ? ({ ...(comparisonRows[0] as AnyRecord) } as AnyRecord)
-            : undefined
-          previousValue = pickFirstNumericValue(comparisonRow, [
-            valueKey,
-            'total',
-            'valor_total',
-            'faturamento_total',
-            'gasto_total',
-            'count',
-            'value',
-          ])
-        }
-
-        if (!cancelled) {
-          setQueryState({
-            value: currentValue,
-            previousValue,
-            rawRow: firstRow,
-            error: null,
-            loading: false,
-          })
-        }
       } catch (error) {
         if (!cancelled) {
           setQueryState({
