@@ -1,6 +1,6 @@
 import { inngest } from '@/lib/inngest'
 import { withTransaction, runQuery } from '@/lib/postgres'
-import { emitCriticalEvent } from '@/products/erp/backend/shared/events/outbox'
+import { emitCriticalEvent } from '@/inngest/shared/emitCriticalEvent'
 
 type CompraHeader = {
   id: number
