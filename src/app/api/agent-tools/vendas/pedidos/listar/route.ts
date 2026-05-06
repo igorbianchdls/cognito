@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     const pageSize = typeof payload.pageSize === 'number' && payload.pageSize > 0 ? Math.min(1000, payload.pageSize) : 20
     const offset = (page - 1) * pageSize
 
-    // Query aligned with /api/modulos/vendas?view=pedidos
+    // Query aligned with the canonical vendas/pedidos resource.
     const selectSql = `SELECT
       p.id               AS pedido_id,
       p.data_pedido,

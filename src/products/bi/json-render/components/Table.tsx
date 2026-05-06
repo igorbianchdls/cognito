@@ -130,17 +130,9 @@ export default function JsonRenderTable({ element }: { element: any }) {
             ...(limit ? { limit } : {}),
           },
         };
-        const response = await fetch("/api/modulos/query/execute", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(body),
-        });
-        const json = await response.json();
-        if (!response.ok || json?.success === false) {
-          throw new Error(String(json?.message || `Query failed (${response.status})`));
-        }
+        throw new Error("Consultas legacy de modulos foram removidas.");
         if (!cancelled) {
-          setRows(normalizeRows(Array.isArray(json?.rows) ? json.rows : []));
+          setRows(normalizeRows([]));
           setQueryError(null);
           setIsLoading(false);
         }

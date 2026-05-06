@@ -495,84 +495,11 @@ async function fetchOptionsFromSource(
   }
 
   if (typeof src.query === 'string' && src.query.trim()) {
-    try {
-      const filters = applyPrimaryDateRange({ ...((args?.data as AnyRecord)?.filters || {}) } as AnyRecord, args?.data);
-      if (term && filters.q === undefined) filters.q = term;
-      delete filters.dateRange;
-
-      const limitRaw = Number(src.limit ?? 200);
-      const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(2000, limitRaw)) : 200;
-      const res = await fetch('/api/modulos/query/execute', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          dataQuery: {
-            query: src.query,
-            filters,
-            limit,
-          },
-        }),
-      });
-      const j = await res.json();
-      if (!res.ok || j?.success === false) {
-        throw new Error(String(j?.message || `Query failed (${res.status})`));
-      }
-      const rows = Array.isArray(j?.rows) ? j.rows : [];
-      return rows
-        .map((r: AnyRecord): SlicerOpt => ({
-          value: (r?.value ?? r?.id ?? r?.key ?? ''),
-          label: String(r?.label ?? r?.nome ?? r?.name ?? r?.value ?? r?.id ?? ''),
-        }))
-        .filter((o: SlicerOpt) => o.label.trim() !== '');
-    } catch (e) {
-      console.error('[BI/SlicerOptions] sql query failed', e);
-      return [];
-    }
+    return [];
   }
 
   if (src.type === 'options' && typeof src.model === 'string' && typeof src.field === 'string') {
-    try {
-      const pageSizeRaw = Number(src.pageSize ?? src.limit ?? 50);
-      const limit = Number.isFinite(pageSizeRaw) ? Math.max(1, Math.min(200, pageSizeRaw)) : 50;
-      const payload: AnyRecord = {
-        model: src.model,
-        field: src.field,
-        limit,
-      };
-      if (term) payload.q = term;
-
-      const dependsOn = Array.isArray(src.dependsOn) ? src.dependsOn.filter((p: any) => typeof p === 'string' && p.trim()) : [];
-      if (dependsOn.length) {
-        const contextFilters: AnyRecord = {};
-        for (const depPath of dependsOn) {
-          const depKey = String(depPath).split('.').pop() || String(depPath);
-          const depVal = args.readByPath
-            ? args.readByPath(String(depPath), undefined)
-            : getPathValue(args.data, String(depPath));
-          if (depVal !== undefined && depVal !== null && depVal !== '' && (!Array.isArray(depVal) || depVal.length > 0)) {
-            contextFilters[depKey] = depVal;
-          }
-        }
-        if (Object.keys(contextFilters).length > 0) {
-          payload.contextFilters = contextFilters;
-        }
-      }
-
-      const res = await fetch('/api/modulos/options/resolve', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const j = await res.json();
-      if (!res.ok || j?.success === false) {
-        throw new Error(String(j?.message || `Options resolve failed (${res.status})`));
-      }
-      const raw = Array.isArray(j?.options) ? j.options : [];
-      return mapRawToOptions(raw, src.valueField, src.labelField);
-    } catch (e) {
-      console.error('[BI/SlicerOptions] resolve failed', e);
-      return [];
-    }
+    return [];
   }
 
   if (src.type === 'api' && typeof src.url === 'string' && src.url) {
@@ -594,29 +521,7 @@ async function fetchOptionsFromSource(
   }
 
   if (src.type === 'query' && typeof src.model === 'string' && typeof src.dimension === 'string') {
-    try {
-      const mod = String(src.model).split('.')[0];
-      const body = {
-        dataQuery: {
-          model: src.model,
-          dimension: src.dimension,
-          measure: 'COUNT()',
-          filters: src.filters || {},
-          orderBy: { field: 'dimension', dir: 'asc' },
-          limit: src.limit || 100,
-        },
-      };
-      const res = await fetch(`/api/modulos/${mod}/query`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      const j = await res.json();
-      const rows = Array.isArray(j?.rows) ? j.rows : [];
-      return rows.map((r: any) => ({ value: r?.label ?? '', label: String(r?.label ?? '') }));
-    } catch {
-      return [];
-    }
+    return [];
   }
 
   return [];
@@ -2807,27 +2712,8 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
               if (filters[k as any] === undefined) (filters as any)[k] = v as any;
             }
           }
-          const url = isSqlQueryMode
-            ? '/api/modulos/query/execute'
-            : `/api/modulos/${String(dq.model).split('.')[0]}/query`;
-          const body = isSqlQueryMode
-            ? {
-                dataQuery: {
-                  query: dq.query,
-                  ...(typeof dq.yField === 'string' && dq.yField.trim() ? { yField: dq.yField.trim() } : {}),
-                  ...(typeof dq.xField === 'string' && dq.xField.trim() ? { xField: dq.xField.trim() } : {}),
-                  ...(typeof dq.keyField === 'string' && dq.keyField.trim() ? { keyField: dq.keyField.trim() } : {}),
-                  filters,
-                  limit: dq.limit ?? 1,
-                },
-              }
-            : { dataQuery: { model: dq.model, dimension: undefined, measure: dq.measure, filters, orderBy: dq.orderBy, limit: dq.limit } };
-          const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
-          const j = await res.json();
-          if (!res.ok || j?.success === false) {
-            throw new Error(String(j?.message || `Query failed (${res.status})`));
-          }
-          const rows = Array.isArray(j?.rows) ? j.rows : [];
+          throw new Error('Consultas legacy de modulos foram removidas.');
+          const rows: unknown[] = [];
           const firstRow = rows.length > 0 && rows[0] && typeof rows[0] === 'object'
             ? ({ ...(rows[0] as AnyRecord) } as AnyRecord)
             : undefined;

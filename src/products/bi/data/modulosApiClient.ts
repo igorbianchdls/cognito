@@ -45,14 +45,15 @@ export async function fetchModuleDashboard(
   moduleSlug: ModuleSlug,
   options: { de?: string; ate?: string; limit?: number } = {},
 ): Promise<DashboardPayload | null> {
-  const query = buildQuery({ de: options.de, ate: options.ate, limit: options.limit ?? 8 })
-  return fetchJson<DashboardPayload>(`/api/modulos/${moduleSlug}/dashboard?${query}`)
+  void moduleSlug
+  void options
+  return null
 }
 
 export async function fetchModuleRows(moduleSlug: ModuleSlug, view: string): Promise<unknown[]> {
-  const query = buildQuery({ view, page: 1, pageSize: 1000 })
-  const payload = await fetchJson<{ rows?: unknown[] }>(`/api/modulos/${moduleSlug}?${query}`)
-  return Array.isArray(payload?.rows) ? payload.rows : []
+  void moduleSlug
+  void view
+  return []
 }
 
 export function hasChartsData(charts: Record<string, unknown> | undefined): boolean {

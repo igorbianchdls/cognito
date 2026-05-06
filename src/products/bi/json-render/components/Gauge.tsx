@@ -94,25 +94,8 @@ export default function JsonRenderGauge({ element }: { element?: { props?: AnyRe
             if ((filters as any)[k] === undefined) (filters as any)[k] = v as any;
           }
         }
-        const res = await fetch("/api/modulos/query/execute", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            dataQuery: {
-              query: dq.query,
-              xField: dq.xField,
-              yField: dq.yField,
-              keyField: dq.keyField,
-              filters,
-              limit: dq.limit ?? 1,
-            },
-          }),
-        });
-        const j = await res.json();
-        if (!res.ok || j?.success === false) {
-          throw new Error(String(j?.message || `Query failed (${res.status})`));
-        }
-        const rows = Array.isArray(j?.rows) ? j.rows : [];
+        throw new Error("Consultas legacy de modulos foram removidas.");
+        const rows: unknown[] = [];
         const firstRow = rows.length > 0 && rows[0] && typeof rows[0] === "object"
           ? ({ ...(rows[0] as AnyRecord) } as AnyRecord)
           : null;

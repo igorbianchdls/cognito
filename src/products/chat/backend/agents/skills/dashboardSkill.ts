@@ -19,21 +19,21 @@ const VENDAS_SKILL_FALLBACK = `
 # Vendas Skill
 
 Skill de vendas indisponivel no momento.
-Use o template /apps/vendas e o catalogo em /api/modulos/query/catalog para mapear tabelas/campos e KPIs.
+Use o template /apps/vendas e os campos do dashboard atual para mapear tabelas, medidas e KPIs.
 `.trim()
 
 const COMPRAS_SKILL_FALLBACK = `
 # Compras Skill
 
 Skill de compras indisponivel no momento.
-Use o template /apps/compras e o catalogo em /api/modulos/query/catalog para mapear tabelas/campos e KPIs.
+Use o template /apps/compras e os campos do dashboard atual para mapear tabelas, medidas e KPIs.
 `.trim()
 
 const FINANCEIRO_SKILL_FALLBACK = `
 # Financeiro Skill
 
 Skill de financeiro indisponivel no momento.
-Use o template /apps/financeiro e o catalogo em /api/modulos/query/catalog para mapear tabelas/campos e KPIs.
+Use o template /apps/financeiro e os campos do dashboard atual para mapear tabelas, medidas e KPIs.
 `.trim()
 
 const MARKETING_SKILL_FALLBACK = `

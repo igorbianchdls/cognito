@@ -315,25 +315,10 @@ export default function JsonRenderPivotTable({ element }: { element: any }) {
           }
         }
 
-        const response = await fetch("/api/modulos/query/execute", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            dataQuery: {
-              query,
-              filters,
-              limit: dq.limit,
-            },
-          }),
-        });
-
-        const json = await response.json();
-        if (!response.ok || json?.success === false) {
-          throw new Error(String(json?.message || `Query failed (${response.status})`));
-        }
+        throw new Error("Consultas legacy de modulos foram removidas.");
 
         if (!cancelled) {
-          setRawRows(normalizeRows(json?.rows));
+          setRawRows(normalizeRows([]));
           setQueryError(null);
         }
       } catch (error) {

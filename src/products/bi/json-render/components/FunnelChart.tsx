@@ -136,22 +136,7 @@ export default function JsonRenderFunnelChart({ element }: { element: any }) {
             if ((filters as AnyRecord)[k] === undefined) (filters as AnyRecord)[k] = v as any;
           }
         }
-        const res = await fetch("/api/modulos/query/execute", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            dataQuery: {
-              query: dq.query,
-              xField: dq.xField,
-              yField: dq.yField,
-              keyField: dq.keyField,
-              filters,
-              limit: dq.limit,
-            },
-          }),
-        });
-        const j = await res.json();
-        if (!res.ok || j?.success === false) throw new Error(String(j?.message || `Query failed (${res.status})`));
+        throw new Error("Consultas legacy de modulos foram removidas.");
         if (!cancelled) {
           setServerRows(Array.isArray(j?.rows) ? j.rows : []);
           setQueryError(null);

@@ -222,41 +222,7 @@ export default function DashboardKpi({
           }
         }
 
-        const isSqlQueryMode = Boolean(typeof dataQuery.query === 'string' && dataQuery.query.trim())
-        const url = isSqlQueryMode
-          ? '/api/modulos/query/execute'
-          : `/api/modulos/${String(dataQuery.model).split('.')[0]}/query`
-        const body = isSqlQueryMode
-          ? {
-              dataQuery: {
-                query: dataQuery.query,
-                ...(typeof dataQuery.yField === 'string' && dataQuery.yField.trim() ? { yField: dataQuery.yField.trim() } : {}),
-                ...(typeof dataQuery.xField === 'string' && dataQuery.xField.trim() ? { xField: dataQuery.xField.trim() } : {}),
-                ...(typeof dataQuery.keyField === 'string' && dataQuery.keyField.trim() ? { keyField: dataQuery.keyField.trim() } : {}),
-                filters,
-                limit: dataQuery.limit ?? 1,
-              },
-            }
-          : {
-              dataQuery: {
-                model: dataQuery.model,
-                dimension: undefined,
-                measure: dataQuery.measure,
-                filters,
-                orderBy: dataQuery.orderBy,
-                limit: dataQuery.limit,
-              },
-            }
-
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(body),
-        })
-        const json = await response.json()
-        if (!response.ok || json?.success === false) {
-          throw new Error(String(json?.message || `Query failed (${response.status})`))
-        }
+        throw new Error('Consultas legacy de modulos foram removidas.')
 
         const rows = Array.isArray(json?.rows) ? json.rows : []
         const firstRow = rows.length > 0 && rows[0] && typeof rows[0] === 'object'

@@ -237,39 +237,7 @@ export function useChartServerRows(
             if (filters[k as any] === undefined) (filters as any)[k] = v as any;
           }
         }
-        const url = isSqlQueryMode
-          ? "/api/modulos/query/execute"
-          : `/api/modulos/${String(dq.model).split(".")[0]}/query`;
-        const body = isSqlQueryMode
-          ? {
-              dataQuery: {
-                query: dq.query,
-                xField: resolvedXField,
-                yField: resolvedYField,
-                keyField: resolvedKeyField,
-                seriesField: resolvedSeriesField,
-                filters,
-                limit: dq.limit,
-              },
-            }
-          : {
-              dataQuery: {
-                model: dq.model,
-                dimension: dq.dimension,
-                dimensionExpr: dq.dimensionExpr,
-                measure: dq.measure,
-                filters,
-                orderBy: dq.orderBy,
-                limit: dq.limit,
-              },
-            };
-        const res = await fetch(url, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(body),
-        });
-        const j = await res.json();
-        if (!res.ok || j?.success === false) throw new Error(String(j?.message || `Query failed (${res.status})`));
+        throw new Error("Consultas legacy de modulos foram removidas.");
         if (!cancelled) {
           setServerRows(Array.isArray(j?.rows) ? j.rows : []);
           setQueryError(null);

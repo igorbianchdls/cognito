@@ -203,24 +203,7 @@ export default function JsonRenderComposedChart({ element }: { element: any }) {
             if ((filters as AnyRecord)[k] === undefined) (filters as AnyRecord)[k] = v as any;
           }
         }
-        const res = await fetch("/api/modulos/query/execute", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            dataQuery: {
-              query: dq.query,
-              xField: xFieldName,
-              yField: seriesDefs[0]?.field,
-              keyField: dq.keyField,
-              filters,
-              limit: dq.limit,
-            },
-          }),
-        });
-        const j = await res.json();
-        if (!res.ok || j?.success === false) {
-          throw new Error(String(j?.message || `Query failed (${res.status})`));
-        }
+        throw new Error("Consultas legacy de modulos foram removidas.");
         if (!cancelled) {
           setServerRows(Array.isArray(j?.rows) ? j.rows : []);
           setQueryError(null);

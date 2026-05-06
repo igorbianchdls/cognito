@@ -324,44 +324,9 @@ export default function JsonRenderQuery({
     let cancelled = false
 
     async function executeQuery(queryFilters: AnyRecord) {
-      const isSqlQueryMode = typeof dq.query === 'string' && dq.query.trim()
-      const url = isSqlQueryMode
-        ? '/api/modulos/query/execute'
-        : `/api/modulos/${String(dq.model).split('.')[0]}/query`
-
-      const body = isSqlQueryMode
-        ? {
-            dataQuery: {
-              query: dq.query,
-              ...(typeof dq.yField === 'string' && dq.yField.trim() ? { yField: dq.yField.trim() } : {}),
-              ...(typeof dq.xField === 'string' && dq.xField.trim() ? { xField: dq.xField.trim() } : {}),
-              ...(typeof dq.keyField === 'string' && dq.keyField.trim() ? { keyField: dq.keyField.trim() } : {}),
-              filters: queryFilters,
-              limit: dq.limit ?? 1,
-            },
-          }
-        : {
-            dataQuery: {
-              model: dq.model,
-              dimension: undefined,
-              measure: dq.measure,
-              filters: queryFilters,
-              orderBy: dq.orderBy,
-              limit: dq.limit,
-            },
-          }
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(body),
-      })
-      const json = await response.json()
-      if (!response.ok || json?.success === false) {
-        throw new Error(String(json?.message || `Query failed (${response.status})`))
-      }
-
-      const rows = Array.isArray(json?.rows) ? json.rows : []
+      void queryFilters
+      throw new Error('Consultas legacy de modulos foram removidas.')
+      const rows: unknown[] = []
       return rows.length > 0 && rows[0] && typeof rows[0] === 'object'
         ? ({ ...(rows[0] as AnyRecord) } as AnyRecord)
         : undefined

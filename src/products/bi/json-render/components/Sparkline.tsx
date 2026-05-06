@@ -57,25 +57,8 @@ export default function JsonRenderSparkline({ element }: { element: any }) {
           }
         }
 
-        const res = await fetch("/api/modulos/query/execute", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            dataQuery: {
-              query: dq.query,
-              xField: dq.xField,
-              yField: dq.yField,
-              keyField: dq.keyField,
-              filters,
-              limit: dq.limit,
-            },
-          }),
-        });
-        const j = await res.json();
-        if (!res.ok || j?.success === false) {
-          throw new Error(String(j?.message || `Query failed (${res.status})`));
-        }
-        const rows = Array.isArray(j?.rows) ? j.rows : [];
+        throw new Error("Consultas legacy de modulos foram removidas.");
+        const rows: unknown[] = [];
         if (!cancelled) {
           setServerRows(rows as any);
           setQueryError(null);
