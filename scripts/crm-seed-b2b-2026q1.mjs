@@ -222,7 +222,7 @@ async function main() {
       "LinkedIn Ads",
       "Organico (SEO)",
       "Indicacao",
-      "WhatsApp",
+      "Ligacao",
       "Evento",
       "Outbound",
       "Parceiro",
@@ -723,7 +723,7 @@ async function main() {
     }
 
     // 6) Interactions
-    const canais = ["whatsapp", "email", "ligacao", "nota", "reuniao"];
+    const canais = ["email", "ligacao", "nota", "reuniao"];
     const interactionSnippets = [
       "Enviado resumo do escopo e proximos passos.",
       "Cliente confirmou reuniao para alinhamento.",

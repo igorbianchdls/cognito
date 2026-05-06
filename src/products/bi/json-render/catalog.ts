@@ -1435,8 +1435,7 @@ export const catalog = {
             minute: z.string().optional(),
           }).partial().optional(),
           notifications: z.object({
-            // Keep legacy 'whatsapp' values parseable; the editor only exposes 'email'.
-            channels: z.array(z.enum(['email', 'whatsapp'])).default([]).optional(),
+            channels: z.array(z.enum(['email'])).default([]).optional(),
           }).partial().optional(),
         }).partial().optional(),
       }).strict(),

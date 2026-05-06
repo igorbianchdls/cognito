@@ -1,5 +1,5 @@
 // Visual agents legacy mapping disabled.
-// O produto agora usa /chat com tools CRUD/drive/email.
+// O produto agora usa /chat com as tools disponiveis no runtime principal.
 
 export type ToolImportSpec = {
   // Visual ID used in the builder (what the user types/selects)

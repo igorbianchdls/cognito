@@ -29,7 +29,7 @@ Fluxo tipico comercial/operacional:
 
 1. `crud` busca contexto (`crm`, `vendas`, `financeiro`)
 2. `documento` gera proposta/fatura/OS
-3. `documento` persiste o arquivo (`save_to_drive=true`)
+3. `documento` persiste o arquivo quando necessario
 
 Esse fluxo evita trafegar PDF base64 quando nao e necessario.
 
@@ -355,11 +355,11 @@ Gera e consulta documentos operacionais:
 
 ### Ponto chave para uso diario
 
-Use `save_to_drive=true` quando precisar persistir o arquivo gerado.
+Use persistencia de arquivo quando precisar reaproveitar o documento gerado depois.
 
 #### Payload enxuto (implementado)
 
-Quando `save_to_drive=true`, por padrao a tool **nao retorna** `attachment.content` (base64 do PDF).
+Quando o arquivo e persistido, por padrao a tool **nao retorna** `attachment.content` (base64 do PDF).
 
 Para compatibilidade, pode forcar:
 
@@ -398,5 +398,5 @@ Em erros de negocio, sao retornados:
 
 1. Prefira acao de negocio em transacoes (`cancelar`, `baixar`, `estornar`, `reabrir`)
 2. Evite `deletar` em `vendas`, `compras`, `contas-*`
-3. Para documentos, prefira `save_to_drive=true`
+3. Para documentos, prefira persistir o arquivo quando houver reaproveitamento posterior
 4. Em retries, reutilize `idempotency_key` em `documento`

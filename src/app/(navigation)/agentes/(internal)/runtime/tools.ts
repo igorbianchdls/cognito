@@ -1,7 +1,7 @@
 import type { Tool } from 'ai'
 
 // Runtime legado de "agentes visuais" foi desativado.
-// O produto usa apenas /chat com tools CRUD + drive + email.
+// O produto usa apenas /chat com as tools disponiveis no runtime principal.
 
 export const TEST_TOOLS_MODE = false
 
@@ -18,5 +18,5 @@ export function getToolsForIds(_ids: string[]): Record<string, Tool> {
 }
 
 export function buildBuilderToolGuide(_ids: string[]): string {
-  return 'Visual Agents desativado. Use /chat com as tools crud, drive e email.'
+  return 'Visual Agents desativado. Use /chat com as tools disponiveis.'
 }
