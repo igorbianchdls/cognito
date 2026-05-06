@@ -37,7 +37,7 @@ Esse fluxo evita trafegar PDF base64 quando nao e necessario.
 
 ### O que e
 
-Tool canonica para operacoes ERP:
+Tool canonica para operacoes de negocio:
 
 - `listar`
 - `criar`

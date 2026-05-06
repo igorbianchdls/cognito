@@ -497,7 +497,7 @@ function buildToolsSchema() {
     {
       type: 'function',
       name: 'crud',
-      description: 'Executa operações no ERP para recursos permitidos (CRUD + ações de negócio como aprovar, concluir, cancelar, baixar, estornar e reabrir em recursos transacionais).',
+      description: 'Executa operações de negócio para recursos permitidos (CRUD + ações como aprovar, concluir, cancelar, baixar, estornar e reabrir em recursos transacionais).',
       parameters: {
         type: 'object',
         additionalProperties: true,

@@ -1,6 +1,6 @@
 export const APP_TOOLS_SKILL_MD = `---
 name: App MCP Tools
-description: Uso das tools internas ERP/database-first (artifact_read, artifact_write, artifact_patch, crud, sql_execution, ecommerce, marketing) via MCP.
+description: Uso das tools internas database-first (artifact_read, artifact_write, artifact_patch, crud, sql_execution, ecommerce, marketing) via MCP.
 ---
 
 As tools disponíveis (apenas via MCP):

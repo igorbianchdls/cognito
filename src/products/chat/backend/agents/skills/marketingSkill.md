@@ -9,9 +9,7 @@ Para layout e persistencia final de dashboard, usar `artifact_write` e `artifact
 
 Prioridade de referencia:
 1. este skill
-2. `src/products/erp/backend/features/modulos/controllers/trafegopago/query/controller.ts`
-3. `src/products/erp/backend/features/modulos/controllers/trafegopago/options/controller.ts`
-4. `src/products/bi/shared/queryCatalog.ts`
+2. `src/products/bi/shared/queryCatalog.ts`
 
 Se houver conflito entre memoria do agente e este skill, priorizar este skill.
 Nao procurar template externo adicional via shell apenas para completar esta referencia.
