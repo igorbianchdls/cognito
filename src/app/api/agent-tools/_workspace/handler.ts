@@ -1,7 +1,11 @@
 import { NextRequest } from 'next/server'
 import { verifyAgentToken } from '@/app/api/chat/tokenStore'
 import { runQuery } from '@/lib/postgres'
-import { getSupabaseAdmin } from '@/products/drive/backend/lib'
+import {
+  getDriveFileDownloadBuffer,
+  getSupabaseAdmin,
+  handleDriveRequest,
+} from '@/app/api/agent-tools/_workspace/driveRuntime'
 
 export type WorkspaceToolScope = 'workspace' | 'drive' | 'email'
 
@@ -624,6 +628,10 @@ async function forwardWorkspaceRequest(req: NextRequest, payload: WorkspaceReque
     }
   }
 
+  if (scope === 'drive') {
+    return handleDriveRequest(req, payload)
+  }
+
   const url = new URL(`/api/${resource}`, req.url)
   appendQuery(url, payload.params)
 
@@ -721,23 +729,21 @@ async function readDriveFile(req: NextRequest, payload: WorkspaceRequestAction) 
   }
 
   const mode = String(payload.mode || 'auto').trim().toLowerCase()
-  const downloadUrl = new URL(`/api/drive/files/${fileId}/download`, req.url)
-  const res = await fetch(downloadUrl.toString(), { method: 'GET', cache: 'no-store' })
-  if (!res.ok) {
-    const text = await res.text().catch(() => '')
-    const maybeJson = parseJsonMaybe(text)
-    const errorMessage =
-      maybeJson && typeof maybeJson === 'object' && !Array.isArray(maybeJson)
-        ? String((maybeJson as Record<string, unknown>).message || text || `Falha ao baixar arquivo (${res.status})`)
-        : (text || `Falha ao baixar arquivo (${res.status})`)
+  const download = await getDriveFileDownloadBuffer(fileId)
+  if (!download.ok) {
+    const result =
+      download.result && typeof download.result === 'object' && !Array.isArray(download.result)
+        ? download.result as Record<string, unknown>
+        : {}
+    const errorMessage = String(result.error || result.message || `Falha ao baixar arquivo (${download.status})`)
     return {
       ok: false,
-      status: res.status,
-      result: addErrorCodeIfMissing({ success: false, error: errorMessage }, { scope: 'drive', action: 'read_file', status: res.status }),
+      status: download.status,
+      result: addErrorCodeIfMissing({ success: false, error: errorMessage }, { scope: 'drive', action: 'read_file', status: download.status }),
     }
   }
 
-  const buffer = Buffer.from(await res.arrayBuffer())
+  const buffer = download.buffer
   const mime = String(file.mime || '').trim().toLowerCase() || 'application/octet-stream'
   const textLike = isTextLikeFile(file.name, mime)
   const pdfLike = isPdfFile(file.name, mime)
