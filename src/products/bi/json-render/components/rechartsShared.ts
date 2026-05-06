@@ -238,10 +238,6 @@ export function useChartServerRows(
           }
         }
         throw new Error("Consultas legacy de modulos foram removidas.");
-        if (!cancelled) {
-          setServerRows(Array.isArray(j?.rows) ? j.rows : []);
-          setQueryError(null);
-        }
       } catch (e) {
         if (!cancelled) {
           setServerRows([]);

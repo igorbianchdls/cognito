@@ -204,10 +204,6 @@ export default function JsonRenderComposedChart({ element }: { element: any }) {
           }
         }
         throw new Error("Consultas legacy de modulos foram removidas.");
-        if (!cancelled) {
-          setServerRows(Array.isArray(j?.rows) ? j.rows : []);
-          setQueryError(null);
-        }
       } catch (e) {
         console.error("[BI/ComposedChart] query failed", e);
         if (!cancelled) {

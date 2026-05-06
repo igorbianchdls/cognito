@@ -137,10 +137,6 @@ export default function JsonRenderFunnelChart({ element }: { element: any }) {
           }
         }
         throw new Error("Consultas legacy de modulos foram removidas.");
-        if (!cancelled) {
-          setServerRows(Array.isArray(j?.rows) ? j.rows : []);
-          setQueryError(null);
-        }
       } catch (e) {
         console.error("[BI/FunnelChart] query failed", e);
         if (!cancelled) {
