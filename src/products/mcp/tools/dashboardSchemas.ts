@@ -3,7 +3,7 @@ import { MCP_DASHBOARD_TOOL_NAMES } from '@/products/mcp/shared/toolNames'
 export type McpToolInputSchema = {
   type: 'object'
   properties: Record<string, unknown>
-  required?: string[]
+  required?: readonly string[]
   additionalProperties?: boolean
 }
 
@@ -199,4 +199,3 @@ export const DASHBOARD_MCP_TOOL_DEFINITIONS = [
     inputSchema: DASHBOARD_GET_CONTRACT_SCHEMA,
   },
 ] as const satisfies readonly McpToolDefinition[]
-

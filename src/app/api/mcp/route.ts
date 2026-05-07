@@ -1,23 +1,18 @@
 import { verifyMcpRequest } from '@/products/mcp/auth/mcpAuth'
+import { handleMcpHttpRequest } from '@/products/mcp/server/http'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 export const maxDuration = 60
 
-const NOT_IMPLEMENTED = {
-  ok: false,
-  product: 'mcp',
-  status: 'not_implemented',
-  message: 'Endpoint MCP reservado. A implementacao do servidor MCP entra nas proximas etapas.',
-}
-
 export async function GET() {
   return Response.json({
     ok: true,
     product: 'mcp',
-    status: 'reserved',
-    message: 'Endpoint MCP reservado para Claude externo.',
+    status: 'ready',
+    transport: 'http-json-rpc',
+    message: 'Endpoint MCP pronto para POST JSON-RPC autenticado.',
   })
 }
 
@@ -35,5 +30,5 @@ export async function POST(req: Request) {
     )
   }
 
-  return Response.json(NOT_IMPLEMENTED, { status: 501 })
+  return handleMcpHttpRequest(req, { tenantId: auth.tenantId })
 }

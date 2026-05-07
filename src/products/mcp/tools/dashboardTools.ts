@@ -75,9 +75,10 @@ function normalizePatchOperation(value: unknown) {
       field: 'operation.type',
     })
   }
+  const normalizedType = operationType as 'replace_text' | 'replace_full_source'
 
   return {
-    type: operationType,
+    type: normalizedType,
     oldString: optionalText(operation.old_string),
     newString: operation.new_string == null ? null : String(operation.new_string),
     replaceAll: Boolean(operation.replace_all),
@@ -234,4 +235,3 @@ export async function executeMcpDashboardTool(
       throw new McpDashboardToolInputError(`Tool MCP desconhecida: ${toolName}`, { toolName })
   }
 }
-
