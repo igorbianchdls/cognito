@@ -2713,23 +2713,6 @@ export const registry: Record<string, React.FC<{ element: any; children?: React.
             }
           }
           throw new Error('Consultas legacy de modulos foram removidas.');
-          const rows: unknown[] = [];
-          const firstRow = rows.length > 0 && rows[0] && typeof rows[0] === 'object'
-            ? ({ ...(rows[0] as AnyRecord) } as AnyRecord)
-            : undefined;
-          let val: number = 0;
-          if (firstRow) {
-            const r0 = firstRow;
-            const keys = [valueKey, 'total', 'valor_total', 'faturamento_total', 'gasto_total', 'count', 'value'];
-            for (const k of keys) { if (r0[k] != null) { const n = Number(r0[k]); if (Number.isFinite(n)) { val = n; break; } } }
-          }
-          if (!cancelled) {
-            setServerValue(val);
-            setQueryError(null);
-            if (resultPath) {
-              setData((prev) => setDataByPath((prev || {}) as AnyRecord, resultPath, firstRow));
-            }
-          }
         } catch (e) {
           console.error('[BI/KPI] query failed', e);
           if (!cancelled) {
