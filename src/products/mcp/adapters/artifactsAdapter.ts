@@ -88,8 +88,10 @@ function withDashboardUrl<T extends { artifact_id: string }>(artifact: T) {
 }
 
 function withListDashboardUrl(dashboard: DashboardListItem) {
+  const { thumbnail_data_url: thumbnailDataUrl, ...dashboardWithoutThumbnail } = dashboard
   return {
-    ...dashboard,
+    ...dashboardWithoutThumbnail,
+    has_thumbnail: Boolean(thumbnailDataUrl),
     url: buildDashboardArtifactUrl(dashboard.id),
   }
 }
@@ -155,4 +157,3 @@ export async function deleteMcpDashboard(input: McpDashboardDeleteInput) {
     artifactId: input.artifactId,
   })
 }
-
