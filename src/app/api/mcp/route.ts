@@ -1,3 +1,5 @@
+import { verifyMcpRequest } from '@/products/mcp/auth/mcpAuth'
+
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -19,7 +21,19 @@ export async function GET() {
   })
 }
 
-export async function POST() {
+export async function POST(req: Request) {
+  const auth = verifyMcpRequest(req)
+  if (!auth.ok) {
+    return Response.json(
+      {
+        ok: false,
+        product: 'mcp',
+        code: auth.code,
+        error: auth.error,
+      },
+      { status: auth.status },
+    )
+  }
+
   return Response.json(NOT_IMPLEMENTED, { status: 501 })
 }
-
