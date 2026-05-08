@@ -14,6 +14,8 @@ type ChatGptAppToolDefinition = {
   name: string
   description: string
   inputSchema: McpToolInputSchema
+  outputSchema?: McpToolInputSchema
+  annotations?: Record<string, unknown>
   _meta?: Record<string, unknown>
 }
 
@@ -54,11 +56,49 @@ const RENDER_PREVIEW_SCHEMA = {
   additionalProperties: true,
 } as const satisfies McpToolInputSchema
 
+const RENDER_LIST_OUTPUT_SCHEMA = {
+  type: 'object',
+  properties: {
+    ok: { type: 'boolean' },
+    tool: { type: 'string' },
+    view: { type: 'string', enum: ['dashboard_list'] },
+    title: { type: 'string' },
+    dashboards: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: true,
+      },
+    },
+  },
+  required: ['ok', 'tool', 'view'],
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
+
+const RENDER_PREVIEW_OUTPUT_SCHEMA = {
+  type: 'object',
+  properties: {
+    ok: { type: 'boolean' },
+    tool: { type: 'string' },
+    view: { type: 'string', enum: ['dashboard_preview'] },
+    title: { type: 'string' },
+    dashboard: {
+      type: 'object',
+      additionalProperties: true,
+    },
+  },
+  required: ['ok', 'tool', 'view'],
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
+
 const DASHBOARD_WIDGET_META = {
   'openai/outputTemplate': DASHBOARD_WIDGET_RESOURCE_URI,
+  'openai/widgetAccessible': true,
+  'openai/toolInvocation/invoking': 'Renderizando dashboard...',
+  'openai/toolInvocation/invoked': 'Dashboard renderizado.',
   ui: {
     resourceUri: DASHBOARD_WIDGET_RESOURCE_URI,
-    visibility: 'model-and-ui',
+    visibility: ['model', 'app'],
   },
 } as const
 
@@ -68,6 +108,13 @@ export const CHATGPT_DASHBOARD_RENDER_TOOL_DEFINITIONS = [
     description:
       'Renderiza no iframe do ChatGPT uma lista de dashboards. Use somente depois de dashboard_list.',
     inputSchema: RENDER_LIST_SCHEMA,
+    outputSchema: RENDER_LIST_OUTPUT_SCHEMA,
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: false,
+      idempotentHint: true,
+    },
     _meta: DASHBOARD_WIDGET_META,
   },
   {
@@ -75,6 +122,13 @@ export const CHATGPT_DASHBOARD_RENDER_TOOL_DEFINITIONS = [
     description:
       'Renderiza no iframe do ChatGPT o preview/metadados de um dashboard. Use somente depois de dashboard_read.',
     inputSchema: RENDER_PREVIEW_SCHEMA,
+    outputSchema: RENDER_PREVIEW_OUTPUT_SCHEMA,
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: false,
+      idempotentHint: true,
+    },
     _meta: DASHBOARD_WIDGET_META,
   },
 ] as const satisfies readonly ChatGptAppToolDefinition[]

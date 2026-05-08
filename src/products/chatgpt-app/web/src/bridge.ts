@@ -16,6 +16,16 @@ type ToolCallResult = {
   isError?: boolean
 }
 
+declare global {
+  interface Window {
+    openai?: {
+      toolInput?: unknown
+      toolOutput?: unknown
+      callTool?: (name: string, args?: Record<string, unknown>) => Promise<ToolCallResult>
+    }
+  }
+}
+
 let rpcId = 0
 
 function isJsonRpcMessage(value: unknown): value is JsonRpcMessage {
@@ -23,8 +33,11 @@ function isJsonRpcMessage(value: unknown): value is JsonRpcMessage {
 }
 
 export function useChatGptToolResult() {
-  const [toolInput, setToolInput] = useState<unknown>(null)
-  const [toolResult, setToolResult] = useState<ChatGptToolResult | null>(null)
+  const [toolInput, setToolInput] = useState<unknown>(() => window.openai?.toolInput ?? null)
+  const [toolResult, setToolResult] = useState<ChatGptToolResult | null>(() => {
+    const toolOutput = window.openai?.toolOutput
+    return toolOutput ? { structuredContent: toolOutput } : null
+  })
 
   useEffect(() => {
     function onMessage(event: MessageEvent) {
@@ -41,8 +54,21 @@ export function useChatGptToolResult() {
       }
     }
 
+    function onOpenAiGlobals(event: Event) {
+      const customEvent = event as CustomEvent<{ globals?: { toolInput?: unknown; toolOutput?: unknown } }>
+      const globals = customEvent.detail?.globals
+      if (globals?.toolInput !== undefined) setToolInput(globals.toolInput)
+      if (globals?.toolOutput !== undefined) {
+        setToolResult({ structuredContent: globals.toolOutput })
+      }
+    }
+
     window.addEventListener('message', onMessage, { passive: true })
-    return () => window.removeEventListener('message', onMessage)
+    window.addEventListener('openai:set_globals', onOpenAiGlobals, { passive: true })
+    return () => {
+      window.removeEventListener('message', onMessage)
+      window.removeEventListener('openai:set_globals', onOpenAiGlobals)
+    }
   }, [])
 
   return {
@@ -54,6 +80,10 @@ export function useChatGptToolResult() {
 }
 
 export function callChatGptTool(name: string, args: Record<string, unknown> = {}) {
+  if (window.openai?.callTool) {
+    return window.openai.callTool(name, args)
+  }
+
   const id = `cognito-widget-${++rpcId}`
 
   window.parent.postMessage(
@@ -68,6 +98,8 @@ export function callChatGptTool(name: string, args: Record<string, unknown> = {}
     },
     '*',
   )
+
+  return Promise.resolve(null)
 }
 
 export function sendChatGptMessage(text: string) {
@@ -101,4 +133,3 @@ export function updateModelContext(text: string) {
 }
 
 export type { ToolCallResult }
-

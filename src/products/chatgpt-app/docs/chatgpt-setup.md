@@ -4,7 +4,7 @@ This document tracks the setup for the Cognito dashboards ChatGPT App.
 
 ## Endpoint
 
-The planned ChatGPT App MCP endpoint is:
+The ChatGPT App MCP endpoint is:
 
 ```txt
 https://cognito-seven.vercel.app/api/chatgpt-app/mcp
@@ -56,7 +56,7 @@ Then create a connector:
 Settings > Connectors > Create
 ```
 
-Use the planned MCP URL:
+Use the MCP URL:
 
 ```txt
 https://cognito-seven.vercel.app/api/chatgpt-app/mcp
@@ -84,3 +84,53 @@ The first private test version can reuse the bearer token pattern already used b
 
 For broader distribution, replace the fixed bearer token with a proper OAuth flow.
 
+## Local Commands
+
+Build the iframe widget:
+
+```txt
+pnpm chatgpt-app:build
+```
+
+Run the remote smoke test after deploy:
+
+```txt
+COGNITO_MCP_TOKEN=... pnpm chatgpt-app:smoke
+```
+
+Override the endpoint when needed:
+
+```txt
+COGNITO_CHATGPT_APP_MCP_URL=https://example.com/api/chatgpt-app/mcp COGNITO_MCP_TOKEN=... pnpm chatgpt-app:smoke
+```
+
+## Smoke Coverage
+
+The smoke test verifies:
+
+```txt
+initialize
+tools/list
+resources/list
+resources/read ui://widget/dashboard.html
+tools/call dashboard_render_list
+tools/call dashboard_render_preview
+```
+
+It does not create or edit dashboards.
+
+## ChatGPT Prompts
+
+Use these prompts for first validation:
+
+```txt
+Liste meus dashboards e renderize como cards.
+```
+
+```txt
+Abra o preview do dashboard <id> e renderize a tela de detalhes.
+```
+
+```txt
+Crie um dashboard simples de vendas e retorne o link do Cognito.
+```

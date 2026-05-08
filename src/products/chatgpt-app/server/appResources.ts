@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
+
 export const DASHBOARD_WIDGET_RESOURCE_URI = 'ui://widget/dashboard.html'
 export const DASHBOARD_WIDGET_MIME_TYPE = 'text/html;profile=mcp-app'
 
@@ -5,6 +8,7 @@ export type ChatGptAppResourceContent = {
   uri: string
   mimeType: string
   text: string
+  _meta?: Record<string, unknown>
 }
 
 export type ChatGptAppResource = {
@@ -16,7 +20,21 @@ export type ChatGptAppResource = {
   contents: ChatGptAppResourceContent[]
 }
 
+function readBuiltWidgetHtml() {
+  try {
+    return readFileSync(
+      path.join(process.cwd(), 'src/products/chatgpt-app/web/dist/widget.html'),
+      'utf8',
+    )
+  } catch {
+    return null
+  }
+}
+
 export function getDashboardWidgetHtml() {
+  const builtWidgetHtml = readBuiltWidgetHtml()
+  if (builtWidgetHtml) return builtWidgetHtml
+
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -78,6 +96,24 @@ export function getDashboardWidgetHtml() {
 </html>`
 }
 
+const DASHBOARD_WIDGET_RESOURCE_CONTENT_META = {
+  'openai/widgetDescription':
+    'Interface visual para listar dashboards Cognito e mostrar previews de dashboards dentro do ChatGPT.',
+  'openai/widgetPrefersBorder': true,
+  'openai/widgetCSP': {
+    connect_domains: [],
+    resource_domains: [],
+    redirect_domains: ['https://cognito-seven.vercel.app'],
+  },
+  ui: {
+    prefersBorder: true,
+    csp: {
+      connectDomains: [],
+      resourceDomains: [],
+    },
+  },
+} as const
+
 export const DASHBOARD_WIDGET_RESOURCE: ChatGptAppResource = {
   name: 'dashboard-widget',
   title: 'Cognito Dashboard Widget',
@@ -89,6 +125,7 @@ export const DASHBOARD_WIDGET_RESOURCE: ChatGptAppResource = {
       uri: DASHBOARD_WIDGET_RESOURCE_URI,
       mimeType: DASHBOARD_WIDGET_MIME_TYPE,
       text: getDashboardWidgetHtml(),
+      _meta: DASHBOARD_WIDGET_RESOURCE_CONTENT_META,
     },
   ],
 }
@@ -113,7 +150,13 @@ export function readCognitoChatGptAppResource(uri: string) {
   }
 
   return {
-    contents: DASHBOARD_WIDGET_RESOURCE.contents,
+    contents: [
+      {
+        uri: DASHBOARD_WIDGET_RESOURCE_URI,
+        mimeType: DASHBOARD_WIDGET_MIME_TYPE,
+        text: getDashboardWidgetHtml(),
+        _meta: DASHBOARD_WIDGET_RESOURCE_CONTENT_META,
+      },
+    ],
   }
 }
-

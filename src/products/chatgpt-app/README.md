@@ -23,8 +23,20 @@ Implemented:
 - health route
 - render tools for list and preview
 - initial React UI source and iframe bridge
+- widget build script
+- smoke test script
 
 Not implemented yet:
 
-- React widget build
-- smoke test
+- production OAuth flow
+- public app submission
+
+## Commands
+
+```txt
+pnpm chatgpt-app:build
+```
+
+```txt
+COGNITO_MCP_TOKEN=... pnpm chatgpt-app:smoke
+```
