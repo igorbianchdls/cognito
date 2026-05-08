@@ -3,6 +3,7 @@
 const DEFAULT_CHATGPT_APP_MCP_URL = 'https://cognito-seven.vercel.app/api/chatgpt-app/mcp'
 
 const mcpUrl = (process.env.COGNITO_CHATGPT_APP_MCP_URL || DEFAULT_CHATGPT_APP_MCP_URL).trim()
+const baseUrl = new URL(mcpUrl).origin
 const token = (process.env.COGNITO_MCP_TOKEN || '').trim()
 
 if (!token) {
@@ -14,12 +15,16 @@ if (!token) {
 let nextId = 1
 
 async function callMcp(method, params = {}) {
+  return callMcpWithToken(token, method, params)
+}
+
+async function callMcpWithToken(bearerToken, method, params = {}) {
   const id = nextId++
   const response = await fetch(mcpUrl, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
-      authorization: `Bearer ${token}`,
+      authorization: `Bearer ${bearerToken}`,
     },
     body: JSON.stringify({
       jsonrpc: '2.0',
@@ -48,11 +53,119 @@ async function callMcp(method, params = {}) {
   return json?.result
 }
 
+async function fetchJson(url, init = {}) {
+  const response = await fetch(url, init)
+  const text = await response.text()
+  let json
+  try {
+    json = text ? JSON.parse(text) : null
+  } catch {
+    throw new Error(`Non-JSON response from ${url}: HTTP ${response.status} ${text.slice(0, 500)}`)
+  }
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} from ${url}: ${JSON.stringify(json)}`)
+  }
+
+  return json
+}
+
 function assert(condition, message) {
   if (!condition) throw new Error(message)
 }
 
 console.log(`Testing ChatGPT App MCP endpoint: ${mcpUrl}`)
+
+const unauthorized = await fetch(mcpUrl, {
+  method: 'POST',
+  headers: {
+    'content-type': 'application/json',
+  },
+  body: JSON.stringify({
+    jsonrpc: '2.0',
+    id: 0,
+    method: 'initialize',
+    params: {},
+  }),
+})
+assert(unauthorized.status === 401, 'unauthorized MCP call should return 401')
+assert(unauthorized.headers.get('www-authenticate')?.includes('oauth-protected-resource'), '401 missing OAuth WWW-Authenticate metadata')
+console.log('oauth challenge ok')
+
+const protectedResourceMetadata = await fetchJson(`${baseUrl}/.well-known/oauth-protected-resource`)
+assert(
+  protectedResourceMetadata?.authorization_servers?.[0]?.includes('/api/chatgpt-app/oauth'),
+  'protected resource metadata missing authorization server',
+)
+console.log('oauth protected resource metadata ok')
+
+const authorizationServerMetadata = await fetchJson(`${baseUrl}/.well-known/oauth-authorization-server`)
+assert(
+  authorizationServerMetadata?.authorization_endpoint?.includes('/api/chatgpt-app/oauth/authorize'),
+  'authorization server metadata missing authorize endpoint',
+)
+assert(
+  authorizationServerMetadata?.token_endpoint?.includes('/api/chatgpt-app/oauth/token'),
+  'authorization server metadata missing token endpoint',
+)
+console.log('oauth authorization server metadata ok')
+
+const registration = await fetchJson(`${baseUrl}/api/chatgpt-app/oauth/register`, {
+  method: 'POST',
+  headers: {
+    'content-type': 'application/json',
+  },
+  body: JSON.stringify({
+    redirect_uris: ['https://example.com/oauth/callback'],
+    token_endpoint_auth_method: 'client_secret_post',
+  }),
+})
+assert(registration?.client_id, 'oauth registration missing client_id')
+console.log('oauth registration ok')
+
+const authorizeUrl = new URL(`${baseUrl}/api/chatgpt-app/oauth/authorize`)
+authorizeUrl.searchParams.set('response_type', 'code')
+authorizeUrl.searchParams.set('client_id', registration.client_id)
+authorizeUrl.searchParams.set('redirect_uri', 'https://example.com/oauth/callback')
+authorizeUrl.searchParams.set('scope', 'dashboards:read dashboards:write')
+authorizeUrl.searchParams.set('state', 'smoke-state')
+
+const authorize = await fetch(authorizeUrl, { redirect: 'manual' })
+assert(authorize.status === 302 || authorize.status === 307, 'oauth authorize should redirect')
+const location = authorize.headers.get('location')
+assert(location, 'oauth authorize missing redirect location')
+const callbackUrl = new URL(location)
+const authorizationCode = callbackUrl.searchParams.get('code')
+assert(authorizationCode, 'oauth authorize missing code')
+assert(callbackUrl.searchParams.get('state') === 'smoke-state', 'oauth authorize did not preserve state')
+console.log('oauth authorize ok')
+
+const oauthToken = await fetchJson(`${baseUrl}/api/chatgpt-app/oauth/token`, {
+  method: 'POST',
+  headers: {
+    'content-type': 'application/x-www-form-urlencoded',
+  },
+  body: new URLSearchParams({
+    grant_type: 'authorization_code',
+    code: authorizationCode,
+    redirect_uri: 'https://example.com/oauth/callback',
+    client_id: registration.client_id,
+    client_secret: registration.client_secret || '',
+  }),
+})
+assert(oauthToken?.access_token, 'oauth token endpoint missing access_token')
+console.log('oauth token ok')
+
+const oauthInitialize = await callMcpWithToken(oauthToken.access_token, 'initialize', {
+  protocolVersion: '2025-11-25',
+  capabilities: {},
+  clientInfo: {
+    name: 'cognito-chatgpt-app-oauth-smoke',
+    version: '0.1.0',
+  },
+})
+assert(oauthInitialize?.serverInfo?.name === 'cognito-chatgpt-app', 'oauth initialize failed')
+console.log('oauth MCP initialize ok')
 
 const initialize = await callMcp('initialize', {
   protocolVersion: '2025-11-25',

@@ -1,8 +1,9 @@
-import { verifyMcpRequest } from '@/products/mcp/auth/mcpAuth'
+import { verifyChatGptAppRequest } from '@/products/chatgpt-app/server/auth'
 import {
   COGNITO_CHATGPT_APP_SERVER_INFO,
   handleChatGptAppMcpHttpRequest,
 } from '@/products/chatgpt-app/server/chatgptAppServer'
+import { getChatGptAppOAuthWwwAuthenticateHeader } from '@/products/chatgpt-app/server/oauth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -21,7 +22,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const auth = verifyMcpRequest(req)
+  const auth = verifyChatGptAppRequest(req)
   if (!auth.ok) {
     return Response.json(
       {
@@ -30,10 +31,14 @@ export async function POST(req: Request) {
         code: auth.code,
         error: auth.error,
       },
-      { status: auth.status },
+      {
+        status: auth.status,
+        headers: auth.status === 401
+          ? { 'WWW-Authenticate': getChatGptAppOAuthWwwAuthenticateHeader(req) }
+          : undefined,
+      },
     )
   }
 
   return handleChatGptAppMcpHttpRequest(req, { tenantId: auth.tenantId })
 }
-

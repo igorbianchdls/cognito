@@ -82,7 +82,19 @@ The iframe renders dashboard metadata and preview
 
 The first private test version can reuse the bearer token pattern already used by `products/mcp`.
 
-For broader distribution, replace the fixed bearer token with a proper OAuth flow.
+The ChatGPT connector uses OAuth discovery. The app exposes:
+
+```txt
+/.well-known/oauth-protected-resource
+/.well-known/oauth-authorization-server
+/api/chatgpt-app/oauth/authorize
+/api/chatgpt-app/oauth/token
+/api/chatgpt-app/oauth/register
+```
+
+For this MVP, `/authorize` auto-approves the connection and issues a signed authorization code. The MCP route accepts both the existing `COGNITO_MCP_TOKEN` bearer token and OAuth access tokens issued by the app.
+
+For broader distribution, replace auto-approval with a real user login and consent screen.
 
 ## Local Commands
 
