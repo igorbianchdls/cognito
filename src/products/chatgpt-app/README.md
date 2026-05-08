@@ -19,11 +19,12 @@ Implemented:
 - setup documentation
 - app metadata
 - base dashboard UI resource
+- ChatGPT App MCP route
+- health route
+- render tools for list and preview
+- initial React UI source and iframe bridge
 
 Not implemented yet:
 
-- ChatGPT App MCP route
-- render tools
 - React widget build
 - smoke test
-
