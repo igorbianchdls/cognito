@@ -118,5 +118,13 @@ const renderPreview = await callMcp('tools/call', {
 assert(renderPreview?.structuredContent?.view === 'dashboard_preview', 'dashboard_render_preview returned invalid view')
 console.log('dashboard_render_preview ok')
 
-console.log('ChatGPT App smoke test passed')
+const dashboardList = await callMcp('tools/call', {
+  name: 'dashboard_list',
+  arguments: {
+    limit: 1,
+  },
+})
+assert(Array.isArray(dashboardList?.structuredContent?.dashboards), 'dashboard_list structuredContent must wrap dashboards array')
+console.log('dashboard_list output shape ok')
 
+console.log('ChatGPT App smoke test passed')
