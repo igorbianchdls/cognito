@@ -181,6 +181,8 @@ console.log(`initialize ok: ${initialize.serverInfo.name}@${initialize.serverInf
 
 const toolsList = await callMcp('tools/list')
 const toolNames = (toolsList?.tools || []).map((tool) => tool.name)
+assert(toolNames.includes('search'), 'tools/list missing search')
+assert(toolNames.includes('fetch'), 'tools/list missing fetch')
 assert(toolNames.includes('dashboard_list'), 'tools/list missing dashboard_list')
 assert(toolNames.includes('dashboard_render_list'), 'tools/list missing dashboard_render_list')
 assert(toolNames.includes('dashboard_render_preview'), 'tools/list missing dashboard_render_preview')
@@ -239,5 +241,14 @@ const dashboardList = await callMcp('tools/call', {
 })
 assert(Array.isArray(dashboardList?.structuredContent?.dashboards), 'dashboard_list structuredContent must wrap dashboards array')
 console.log('dashboard_list output shape ok')
+
+const search = await callMcp('tools/call', {
+  name: 'search',
+  arguments: {
+    query: 'dashboard',
+  },
+})
+assert(Array.isArray(search?.structuredContent?.results), 'search structuredContent must include results array')
+console.log('search ok')
 
 console.log('ChatGPT App smoke test passed')
