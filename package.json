@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "mcp:smoke": "node scripts/mcp/smoke-test.mjs",
+    "mcp-apps:build": "node scripts/mcp-apps/build-widget.mjs",
     "chatgpt-app:build": "node scripts/chatgpt-app/build-widget.mjs",
     "chatgpt-app:chatgpt-test": "node scripts/chatgpt-app/chatgpt-test-plan.mjs",
     "chatgpt-app:smoke": "node scripts/chatgpt-app/smoke-test.mjs",
