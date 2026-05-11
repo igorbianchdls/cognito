@@ -59,6 +59,7 @@ export type DashboardArtifactWorkspaceProps = {
   onSelectDashboard?: (dashboardId: string) => void
   onSelectVersion?: (version: number | null) => void
   onSaveSuccess?: (nextVersion: number) => void | Promise<void>
+  embedMode?: boolean
 }
 
 function cloneAppearanceOverrides(overrides: DashboardAppearanceOverrides): DashboardAppearanceOverrides {
@@ -92,6 +93,7 @@ export function DashboardArtifactWorkspace({
   onSelectDashboard,
   onSelectVersion,
   onSaveSuccess,
+  embedMode = false,
 }: DashboardArtifactWorkspaceProps) {
   const dashboardThemeOptions = useMemo(
     () => APPS_THEME_OPTIONS.filter((option) => String(option.value).trim().toLowerCase() !== 'aero'),
@@ -142,6 +144,9 @@ export function DashboardArtifactWorkspace({
     ],
     [draftSource],
   )
+
+  const effectiveActiveView = embedMode ? 'preview' : activeView
+  const effectiveZoom = embedMode ? 1 : zoom
 
   useEffect(() => {
     setDashboardItems(dashboards)
@@ -296,12 +301,17 @@ export function DashboardArtifactWorkspace({
 
   return (
     <ArtifactWorkspacePage initialData={{ ui: {}, filters: {}, dashboard: {} }}>
-      <div className={`flex ${containerHeightClass} flex-col bg-[#F7F7F6] tracking-[-0.03em] text-[#3F3F3D]`}>
+      <div
+        className={`flex ${
+          embedMode ? 'min-h-screen h-auto' : containerHeightClass
+        } flex-col bg-[#F7F7F6] tracking-[-0.03em] text-[#3F3F3D]`}
+      >
+        {!embedMode ? (
         <ArtifactWorkspaceHeader
           title={title}
           titleIcon="solar:database-bold"
-          activeView={activeView}
-          zoom={zoom}
+          activeView={effectiveActiveView}
+          zoom={effectiveZoom}
           onChangeView={setActiveView}
           onZoomChange={setZoom}
           showChromeActions={false}
@@ -440,14 +450,17 @@ export function DashboardArtifactWorkspace({
             </>
           }
         />
+        ) : null}
 
         <main
-          className={`min-h-0 flex-1 border-r-[0.5px] border-[#DDDDD8] bg-[#EEEEEB] ${
-            activeView === 'preview' ? 'overflow-auto' : 'overflow-hidden'
+          className={`min-h-0 flex-1 ${
+            embedMode ? 'bg-[#EEEEEB]' : 'border-r-[0.5px] border-[#DDDDD8] bg-[#EEEEEB]'
+          } ${
+            effectiveActiveView === 'preview' ? 'overflow-auto' : 'overflow-hidden'
           }`}
         >
-          <div className={`flex ${activeView === 'code' ? 'h-full min-h-0' : ''} flex-col gap-4`}>
-            {isHistoricalVersion || saveError || saveMessage || captureStatus !== 'idle' || captureError ? (
+          <div className={`flex ${effectiveActiveView === 'code' ? 'h-full min-h-0' : ''} flex-col ${embedMode ? 'gap-0' : 'gap-4'}`}>
+            {!embedMode && (isHistoricalVersion || saveError || saveMessage || captureStatus !== 'idle' || captureError) ? (
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 pt-4 text-sm text-[#5F5F5A]">
                 {isHistoricalVersion ? (
                   <span className="text-[#8B5E00]">Você está vendo uma versão histórica. Para salvar mudanças, volte para a draft atual.</span>
@@ -460,14 +473,15 @@ export function DashboardArtifactWorkspace({
               </div>
             ) : null}
 
-            {activeView === 'preview' ? (
+            {effectiveActiveView === 'preview' ? (
               <DashboardWorkspacePreview
                 key={previewRefreshKey}
                 sourcePath="app/dashboard.tsx"
                 files={files}
-                zoom={zoom}
+                zoom={effectiveZoom}
                 appearanceOverrides={draftAppearanceOverrides}
-                onTreeChange={handleTreeChange}
+                onTreeChange={embedMode ? undefined : handleTreeChange}
+                editableLayout={!embedMode}
               />
             ) : (
               allowSourceEditing ? (
@@ -494,6 +508,7 @@ export function DashboardArtifactWorkspace({
         </main>
       </div>
 
+      {!embedMode ? (
       <DashboardThemeModal
         isOpen={isThemeModalOpen}
         onClose={() => {
@@ -549,8 +564,9 @@ export function DashboardArtifactWorkspace({
         }
         themes={dashboardThemeOptions}
       />
+      ) : null}
 
-      {thumbnailCaptureSurface}
+      {!embedMode ? thumbnailCaptureSurface : null}
     </ArtifactWorkspacePage>
   )
 }

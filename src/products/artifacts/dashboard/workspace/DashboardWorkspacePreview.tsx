@@ -16,12 +16,14 @@ export function DashboardWorkspacePreview({
   zoom,
   appearanceOverrides,
   onTreeChange,
+  editableLayout = true,
 }: {
   sourcePath: string
   files: ArtifactCodeFile[]
   zoom: number
   appearanceOverrides?: DashboardAppearanceOverrides
   onTreeChange?: (tree: any) => void
+  editableLayout?: boolean
 }) {
   const [tree, setTree] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
@@ -53,6 +55,7 @@ export function DashboardWorkspacePreview({
   }, [sourcePath, files, onTreeChange])
 
   function handlePanelLayoutChange(nextLayout: Layout[]) {
+    if (!editableLayout) return
     setTree((currentTree: any) => {
       if (!currentTree || typeof currentTree !== 'object') return currentTree
       const nextTree = applyPanelLayoutChanges(currentTree, nextLayout)
@@ -75,8 +78,8 @@ export function DashboardWorkspacePreview({
       ) : tree ? (
         <DashboardRenderer
           tree={tree}
-          editableLayout
-          onPanelLayoutChange={handlePanelLayoutChange}
+          editableLayout={editableLayout}
+          onPanelLayoutChange={editableLayout ? handlePanelLayoutChange : undefined}
           appearanceOverrides={appearanceOverrides}
         />
       ) : (

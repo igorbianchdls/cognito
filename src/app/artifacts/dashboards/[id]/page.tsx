@@ -16,13 +16,14 @@ export default async function ArtifactDashboardByIdPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ version?: string }>
+  searchParams: Promise<{ version?: string; embed?: string }>
 }) {
   const { id } = await params
-  const { version: rawVersion } = await searchParams
+  const { version: rawVersion, embed: rawEmbed } = await searchParams
   const version = rawVersion && Number.isInteger(Number(rawVersion)) && Number(rawVersion) > 0
     ? Number(rawVersion)
     : undefined
+  const embedMode = rawEmbed === '1' || rawEmbed === 'true'
 
   try {
     const [artifact, versions, dashboards] = await Promise.all([
@@ -43,7 +44,8 @@ export default async function ArtifactDashboardByIdPage({
         availableVersions={versions}
         source={artifact.source}
         updatedAt={artifact.updated_at}
-        allowSourceEditing
+        allowSourceEditing={!embedMode}
+        embedMode={embedMode}
       />
     )
   } catch (error) {
