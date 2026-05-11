@@ -123,19 +123,13 @@ function getDashboardWidgetResourceContentMeta() {
   const domains = getWidgetAllowedDomains()
 
   return {
-    'openai/widgetDescription':
-      'Interface visual MCP Apps para listar dashboards Cognito e mostrar previews dentro do host.',
-    'openai/widgetPrefersBorder': true,
-    'openai/widgetCSP': {
-      connect_domains: domains,
-      resource_domains: domains,
-      redirect_domains: domains,
-    },
     ui: {
+      description: 'Interface visual MCP Apps para listar dashboards Cognito e mostrar previews dentro do host.',
       prefersBorder: true,
       csp: {
         connectDomains: domains,
         resourceDomains: domains,
+        redirectDomains: domains,
       },
     },
   } as const

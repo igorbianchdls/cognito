@@ -250,10 +250,6 @@ const MODEL_AND_APP_VISIBILITY = {
 
 const DASHBOARD_WIDGET_META = {
   securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
-  'openai/outputTemplate': DASHBOARD_WIDGET_RESOURCE_URI,
-  'openai/widgetAccessible': true,
-  'openai/toolInvocation/invoking': 'Renderizando dashboard...',
-  'openai/toolInvocation/invoked': 'Dashboard renderizado.',
   ui: {
     resourceUri: DASHBOARD_WIDGET_RESOURCE_URI,
     ...MODEL_AND_APP_VISIBILITY,
@@ -388,25 +384,6 @@ function getDataToolSecuritySchemes(name: string) {
       return COGNITO_READ_SECURITY_SCHEMES
     default:
       return COGNITO_WRITE_SECURITY_SCHEMES
-  }
-}
-
-function getDataToolInvocationText(name: string) {
-  switch (name) {
-    case 'dashboard_list':
-      return ['Listando dashboards...', 'Dashboards listados.']
-    case 'dashboard_read':
-      return ['Abrindo dashboard...', 'Dashboard carregado.']
-    case 'dashboard_get_contract':
-      return ['Lendo contrato...', 'Contrato carregado.']
-    case 'dashboard_create':
-      return ['Criando dashboard...', 'Dashboard criado.']
-    case 'dashboard_patch':
-      return ['Editando dashboard...', 'Dashboard editado.']
-    case 'dashboard_update_full':
-      return ['Atualizando dashboard...', 'Dashboard atualizado.']
-    default:
-      return ['Executando tool...', 'Tool executada.']
   }
 }
 
@@ -623,8 +600,6 @@ export function listCognitoMcpAppTools() {
         _meta: {
           ...DATA_TOOL_META,
           securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
-          'openai/toolInvocation/invoking': 'Buscando dashboards...',
-          'openai/toolInvocation/invoked': 'Busca concluida.',
         },
       },
       {
@@ -639,8 +614,6 @@ export function listCognitoMcpAppTools() {
         _meta: {
           ...DATA_TOOL_META,
           securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
-          'openai/toolInvocation/invoking': 'Carregando dashboard...',
-          'openai/toolInvocation/invoked': 'Dashboard carregado.',
         },
       },
       ...MCP_APP_DOMAIN_TOOL_DEFINITIONS,
@@ -655,8 +628,6 @@ export function listCognitoMcpAppTools() {
         _meta: {
           ...DATA_TOOL_META,
           securitySchemes: getDataToolSecuritySchemes(tool.name),
-          'openai/toolInvocation/invoking': getDataToolInvocationText(tool.name)[0],
-          'openai/toolInvocation/invoked': getDataToolInvocationText(tool.name)[1],
         },
       })),
       ...MCP_APP_DASHBOARD_RENDER_TOOL_DEFINITIONS,

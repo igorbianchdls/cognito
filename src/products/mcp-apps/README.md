@@ -23,4 +23,4 @@ pnpm mcp-apps:build
 
 ## Current State
 
-This is the first extraction step. The code is copied from `chatgpt-app` and isolated under `mcp-apps`; the next step is to standardize metadata so OpenAI-only fields live in the ChatGPT wrapper.
+This is the first extraction step. The code is copied from `chatgpt-app`, isolated under `mcp-apps`, and standardized around MCP Apps `_meta.ui`. OpenAI-only fields are added by the ChatGPT wrapper.

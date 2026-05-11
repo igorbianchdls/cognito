@@ -66,8 +66,6 @@ const READ_ONLY_ANNOTATIONS = {
 
 const TOOL_META = {
   securitySchemes: READ_SECURITY_SCHEMES,
-  'openai/outputTemplate': DASHBOARD_WIDGET_RESOURCE_URI,
-  'openai/widgetAccessible': true,
   ui: {
     resourceUri: DASHBOARD_WIDGET_RESOURCE_URI,
     visibility: ['model', 'app'],
@@ -280,11 +278,7 @@ export const MCP_APP_DOMAIN_TOOL_DEFINITIONS = [
     outputSchema: CRUD_OUTPUT_SCHEMA,
     securitySchemes: READ_SECURITY_SCHEMES,
     annotations: READ_ONLY_ANNOTATIONS,
-    _meta: {
-      ...TOOL_META,
-      'openai/toolInvocation/invoking': 'Consultando registros...',
-      'openai/toolInvocation/invoked': 'Registros carregados.',
-    },
+    _meta: TOOL_META,
   },
   {
     name: MCP_APP_DOMAIN_TOOL_NAMES.ecommerce,
@@ -295,11 +289,7 @@ export const MCP_APP_DOMAIN_TOOL_DEFINITIONS = [
     outputSchema: METRICS_OUTPUT_SCHEMA,
     securitySchemes: READ_SECURITY_SCHEMES,
     annotations: READ_ONLY_ANNOTATIONS,
-    _meta: {
-      ...TOOL_META,
-      'openai/toolInvocation/invoking': 'Calculando ecommerce...',
-      'openai/toolInvocation/invoked': 'Metricas de ecommerce carregadas.',
-    },
+    _meta: TOOL_META,
   },
   {
     name: MCP_APP_DOMAIN_TOOL_NAMES.sqlExecution,
@@ -310,11 +300,7 @@ export const MCP_APP_DOMAIN_TOOL_DEFINITIONS = [
     outputSchema: METRICS_OUTPUT_SCHEMA,
     securitySchemes: READ_SECURITY_SCHEMES,
     annotations: READ_ONLY_ANNOTATIONS,
-    _meta: {
-      ...TOOL_META,
-      'openai/toolInvocation/invoking': 'Executando SQL...',
-      'openai/toolInvocation/invoked': 'SQL executado.',
-    },
+    _meta: TOOL_META,
   },
   {
     name: MCP_APP_DOMAIN_TOOL_NAMES.marketing,
@@ -325,11 +311,7 @@ export const MCP_APP_DOMAIN_TOOL_DEFINITIONS = [
     outputSchema: METRICS_OUTPUT_SCHEMA,
     securitySchemes: READ_SECURITY_SCHEMES,
     annotations: READ_ONLY_ANNOTATIONS,
-    _meta: {
-      ...TOOL_META,
-      'openai/toolInvocation/invoking': 'Calculando marketing...',
-      'openai/toolInvocation/invoked': 'Metricas de marketing carregadas.',
-    },
+    _meta: TOOL_META,
   },
 ] as const satisfies readonly DomainToolDefinition[]
 

@@ -26,6 +26,10 @@ function getEmbedSecret() {
   return String(
     process.env.COGNITO_MCP_APPS_EMBED_SECRET ||
       process.env.COGNITO_MCP_APPS_OAUTH_SECRET ||
+      process.env.COGNITO_CHATGPT_APP_EMBED_SECRET ||
+      process.env.COGNITO_CHATGPT_APP_OAUTH_SECRET ||
+      process.env.COGNITO_CLAUDE_APP_EMBED_SECRET ||
+      process.env.COGNITO_CLAUDE_APP_OAUTH_SECRET ||
       process.env.COGNITO_MCP_TOKEN ||
       '',
   ).trim()
@@ -93,4 +97,3 @@ export function verifyDashboardEmbedToken(token: string, artifactId: string) {
   const payload = verifySignedPayload(token)
   return Boolean(payload && payload.artifactId === artifactId)
 }
-

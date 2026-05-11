@@ -367,6 +367,8 @@
     },
   };
 
+  window.CognitoChatGptApp = window.CognitoMcpApp;
+
   if (window.openai && window.openai.toolOutput) {
     state.structuredContent = window.openai.toolOutput;
   }

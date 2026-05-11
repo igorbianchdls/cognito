@@ -28,13 +28,19 @@ Generic MCP tools and dashboard execution logic.
 src/products/chatgpt-app/server
 ```
 
-ChatGPT App metadata, UI resources, and render tools.
+ChatGPT App metadata, OAuth, endpoint wrapper, and OpenAI-specific MCP Apps metadata.
+
+```txt
+src/products/mcp-apps
+```
+
+Shared MCP Apps tools, UI resources, widget source, and built widget HTML.
 
 ```txt
 src/products/chatgpt-app/web
 ```
 
-Iframe UI rendered by ChatGPT.
+Legacy ChatGPT widget source retained for compatibility. The active shared widget lives in `src/products/mcp-apps/web`.
 
 ```txt
 src/app/api/chatgpt-app/mcp

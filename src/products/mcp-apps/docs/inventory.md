@@ -34,6 +34,14 @@ These should be added later in `src/products/claude-app`:
 - Claude smoke test.
 - MCP Apps validation in Claude after deploy.
 
-## Next Extraction Step
+## Extraction Status
 
-Standardize `mcp-apps` metadata around `_meta.ui` and move OpenAI-only metadata into the ChatGPT wrapper.
+Completed in this phase:
+
+- `mcp-apps` metadata is standardized around `_meta.ui`.
+- OpenAI-only metadata is injected by the ChatGPT wrapper.
+- `claude-app` has an initial MCP endpoint wrapper over `mcp-apps`.
+
+Next extraction step:
+
+- Add OAuth/discovery for the Claude wrapper.
