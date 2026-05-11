@@ -2,6 +2,7 @@
 
 const DEFAULT_CHATGPT_APP_MCP_URL = 'https://cognito-seven.vercel.app/api/chatgpt-app/mcp'
 
+// Keep this script usable without env vars for the default production connector.
 const mcpUrl = (process.env.COGNITO_CHATGPT_APP_MCP_URL || DEFAULT_CHATGPT_APP_MCP_URL).trim()
 
 const checks = [
