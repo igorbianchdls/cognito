@@ -7,6 +7,7 @@ import {
   ArtifactToolError,
 } from '@/products/artifacts/backend/dashboardArtifactsService'
 import { DashboardArtifactPage } from '@/products/artifacts/dashboard/DashboardArtifactPage'
+import { verifyDashboardEmbedToken } from '@/products/chatgpt-app/server/embedToken'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -16,14 +17,18 @@ export default async function ArtifactDashboardByIdPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ version?: string; embed?: string }>
+  searchParams: Promise<{ version?: string; embed?: string; token?: string }>
 }) {
   const { id } = await params
-  const { version: rawVersion, embed: rawEmbed } = await searchParams
+  const { version: rawVersion, embed: rawEmbed, token: rawToken } = await searchParams
   const version = rawVersion && Number.isInteger(Number(rawVersion)) && Number(rawVersion) > 0
     ? Number(rawVersion)
     : undefined
   const embedMode = rawEmbed === '1' || rawEmbed === 'true'
+
+  if (embedMode && !verifyDashboardEmbedToken(String(rawToken || ''), id)) {
+    notFound()
+  }
 
   try {
     const [artifact, versions, dashboards] = await Promise.all([

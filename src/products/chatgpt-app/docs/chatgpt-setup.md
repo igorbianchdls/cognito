@@ -96,6 +96,32 @@ For this MVP, `/authorize` auto-approves the connection and issues a signed auth
 
 For broader distribution, replace auto-approval with a real user login and consent screen.
 
+Recommended Vercel envs:
+
+```txt
+COGNITO_MCP_TOKEN=...
+COGNITO_CHATGPT_APP_OAUTH_SECRET=...
+COGNITO_CHATGPT_APP_EMBED_SECRET=...
+```
+
+## Dashboard Embed
+
+Dashboard embed URLs use a signed short-lived token:
+
+```txt
+/artifacts/dashboards/<id>?embed=1&token=<signed-token>
+```
+
+Generate a token for testing:
+
+```txt
+POST /api/chatgpt-app/embed-token
+Authorization: Bearer <token>
+{ "artifact_id": "<dashboard-id>" }
+```
+
+The embed route rejects unsigned or expired URLs. `COGNITO_CHATGPT_APP_EMBED_SECRET` signs these URLs; when it is not configured, the app falls back to `COGNITO_CHATGPT_APP_OAUTH_SECRET` and then `COGNITO_MCP_TOKEN`.
+
 ## Local Commands
 
 Build the iframe widget:
