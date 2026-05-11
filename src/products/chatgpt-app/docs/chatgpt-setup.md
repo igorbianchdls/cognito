@@ -146,6 +146,12 @@ Run the remote smoke test after deploy:
 COGNITO_MCP_TOKEN=... pnpm chatgpt-app:smoke
 ```
 
+Print the manual ChatGPT validation checklist:
+
+```txt
+pnpm chatgpt-app:chatgpt-test
+```
+
 Override the endpoint when needed:
 
 ```txt
@@ -174,16 +180,40 @@ It does not create or edit dashboards.
 
 ## ChatGPT Prompts
 
-Use these prompts for first validation:
+Use these prompts for first validation after the smoke test passes.
 
 ```txt
 Liste meus dashboards e renderize como cards.
 ```
 
+Expected:
+
 ```txt
-Abra o preview do dashboard <id> e renderize a tela de detalhes.
+dashboard_list
+dashboard_render_list
+Widget renders dashboard cards.
 ```
 
 ```txt
-Crie um dashboard simples de vendas e retorne o link do Cognito.
+Abra o preview do dashboard <id> e renderize o dashboard completo.
+```
+
+Expected:
+
+```txt
+dashboard_read
+dashboard_render_preview
+Widget renders the Cognito dashboard in an iframe.
+The iframe URL contains embed=1 and a signed token.
+```
+
+```txt
+Mostre um resumo de ecommerce e renderize a resposta.
+```
+
+Expected:
+
+```txt
+ecommerce
+Widget renders cards, chart, or table from structuredContent.
 ```
