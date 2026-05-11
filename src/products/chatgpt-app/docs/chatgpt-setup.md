@@ -130,6 +130,8 @@ Authorization: Bearer <token>
 
 The embed route rejects unsigned or expired URLs. `COGNITO_CHATGPT_APP_EMBED_SECRET` signs these URLs; when it is not configured, the app falls back to `COGNITO_CHATGPT_APP_OAUTH_SECRET` and then `COGNITO_MCP_TOKEN`.
 
+The widget CSP allows the configured app origin from `COGNITO_BASE_URL` or `NEXT_PUBLIC_APP_URL`. It also keeps `https://cognito-seven.vercel.app` as a fallback for the current deploy.
+
 ## Local Commands
 
 Build the iframe widget:
@@ -159,8 +161,13 @@ initialize
 tools/list
 resources/list
 resources/read ui://widget/dashboard.html
+widget CSP domains
+POST /api/chatgpt-app/embed-token
 tools/call dashboard_render_list
 tools/call dashboard_render_preview
+dashboard_render_preview dashboard.embed_url
+dashboard_list dashboards[].embed_url when dashboards exist
+search results[].embed_url when results exist
 ```
 
 It does not create or edit dashboards.

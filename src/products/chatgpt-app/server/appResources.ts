@@ -20,6 +20,29 @@ export type ChatGptAppResource = {
   contents: ChatGptAppResourceContent[]
 }
 
+function getConfiguredAppOrigin() {
+  const explicitBaseUrl = String(
+    process.env.COGNITO_BASE_URL ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      '',
+  ).trim()
+
+  if (explicitBaseUrl) {
+    try {
+      return new URL(explicitBaseUrl).origin
+    } catch {
+      return 'https://cognito-seven.vercel.app'
+    }
+  }
+
+  const vercelUrl = String(process.env.VERCEL_URL || '').trim()
+  return vercelUrl ? `https://${vercelUrl.replace(/\/+$/, '')}` : 'https://cognito-seven.vercel.app'
+}
+
+function getWidgetAllowedDomains() {
+  return Array.from(new Set([getConfiguredAppOrigin(), 'https://cognito-seven.vercel.app']))
+}
+
 function readBuiltWidgetHtml() {
   try {
     return readFileSync(
@@ -96,23 +119,27 @@ export function getDashboardWidgetHtml() {
 </html>`
 }
 
-const DASHBOARD_WIDGET_RESOURCE_CONTENT_META = {
-  'openai/widgetDescription':
-    'Interface visual para listar dashboards Cognito e mostrar previews de dashboards dentro do ChatGPT.',
-  'openai/widgetPrefersBorder': true,
-  'openai/widgetCSP': {
-    connect_domains: ['https://cognito-seven.vercel.app'],
-    resource_domains: ['https://cognito-seven.vercel.app'],
-    redirect_domains: ['https://cognito-seven.vercel.app'],
-  },
-  ui: {
-    prefersBorder: true,
-    csp: {
-      connectDomains: ['https://cognito-seven.vercel.app'],
-      resourceDomains: ['https://cognito-seven.vercel.app'],
+function getDashboardWidgetResourceContentMeta() {
+  const domains = getWidgetAllowedDomains()
+
+  return {
+    'openai/widgetDescription':
+      'Interface visual para listar dashboards Cognito e mostrar previews de dashboards dentro do ChatGPT.',
+    'openai/widgetPrefersBorder': true,
+    'openai/widgetCSP': {
+      connect_domains: domains,
+      resource_domains: domains,
+      redirect_domains: domains,
     },
-  },
-} as const
+    ui: {
+      prefersBorder: true,
+      csp: {
+        connectDomains: domains,
+        resourceDomains: domains,
+      },
+    },
+  } as const
+}
 
 export const DASHBOARD_WIDGET_RESOURCE: ChatGptAppResource = {
   name: 'dashboard-widget',
@@ -125,7 +152,7 @@ export const DASHBOARD_WIDGET_RESOURCE: ChatGptAppResource = {
       uri: DASHBOARD_WIDGET_RESOURCE_URI,
       mimeType: DASHBOARD_WIDGET_MIME_TYPE,
       text: getDashboardWidgetHtml(),
-      _meta: DASHBOARD_WIDGET_RESOURCE_CONTENT_META,
+      _meta: getDashboardWidgetResourceContentMeta(),
     },
   ],
 }
@@ -155,7 +182,7 @@ export function readCognitoChatGptAppResource(uri: string) {
         uri: DASHBOARD_WIDGET_RESOURCE_URI,
         mimeType: DASHBOARD_WIDGET_MIME_TYPE,
         text: getDashboardWidgetHtml(),
-        _meta: DASHBOARD_WIDGET_RESOURCE_CONTENT_META,
+        _meta: getDashboardWidgetResourceContentMeta(),
       },
     ],
   }

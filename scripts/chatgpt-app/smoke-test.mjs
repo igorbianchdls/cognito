@@ -74,6 +74,15 @@ function assert(condition, message) {
   if (!condition) throw new Error(message)
 }
 
+function assertEmbedUrl(value, message) {
+  assert(typeof value === 'string' && value.length > 0, `${message}: missing embed_url`)
+  const url = new URL(value)
+  assert(url.origin === baseUrl, `${message}: embed_url origin should be ${baseUrl}`)
+  assert(url.pathname.startsWith('/artifacts/dashboards/'), `${message}: embed_url should point to dashboard route`)
+  assert(url.searchParams.get('embed') === '1', `${message}: embed_url missing embed=1`)
+  assert(url.searchParams.get('token'), `${message}: embed_url missing signed token`)
+}
+
 console.log(`Testing ChatGPT App MCP endpoint: ${mcpUrl}`)
 
 const unauthorized = await fetch(mcpUrl, {
@@ -200,10 +209,32 @@ console.log(`resources/list ok: ${resourceUris.join(', ')}`)
 const widget = await callMcp('resources/read', {
   uri: 'ui://widget/dashboard.html',
 })
-const html = widget?.contents?.[0]?.text || ''
+const widgetContent = widget?.contents?.[0] || {}
+const html = widgetContent.text || ''
 assert(html.includes('Cognito Dashboards'), 'dashboard widget HTML missing title')
 assert(html.includes('CognitoChatGptApp'), 'dashboard widget HTML missing runtime')
+assert(html.includes('<iframe'), 'dashboard widget HTML missing iframe renderer')
+assert(html.includes('dashboard-embed-frame'), 'dashboard widget HTML missing embed frame styles')
+const widgetCsp = widgetContent?._meta?.['openai/widgetCSP']
+assert(widgetCsp?.resource_domains?.includes(baseUrl), 'widget CSP missing app resource domain')
+assert(widgetCsp?.connect_domains?.includes(baseUrl), 'widget CSP missing app connect domain')
 console.log('resources/read ok')
+
+const embedToken = await fetchJson(`${baseUrl}/api/chatgpt-app/embed-token`, {
+  method: 'POST',
+  headers: {
+    'content-type': 'application/json',
+    authorization: `Bearer ${token}`,
+  },
+  body: JSON.stringify({
+    artifact_id: 'smoke-dashboard',
+    ttl_seconds: 120,
+  }),
+})
+assert(embedToken?.ok === true, 'embed-token endpoint should return ok=true')
+assert(embedToken?.artifact_id === 'smoke-dashboard', 'embed-token endpoint should preserve artifact_id')
+assert(typeof embedToken?.token === 'string' && embedToken.token.includes('.'), 'embed-token endpoint missing signed token')
+console.log('embed-token ok')
 
 const renderList = await callMcp('tools/call', {
   name: 'dashboard_render_list',
@@ -235,6 +266,7 @@ const renderPreview = await callMcp('tools/call', {
   },
 })
 assert(renderPreview?.structuredContent?.view === 'dashboard_preview', 'dashboard_render_preview returned invalid view')
+assertEmbedUrl(renderPreview?.structuredContent?.dashboard?.embed_url, 'dashboard_render_preview')
 console.log('dashboard_render_preview ok')
 
 const dashboardList = await callMcp('tools/call', {
@@ -244,6 +276,9 @@ const dashboardList = await callMcp('tools/call', {
   },
 })
 assert(Array.isArray(dashboardList?.structuredContent?.dashboards), 'dashboard_list structuredContent must wrap dashboards array')
+if (dashboardList.structuredContent.dashboards.length) {
+  assertEmbedUrl(dashboardList.structuredContent.dashboards[0]?.embed_url, 'dashboard_list')
+}
 console.log('dashboard_list output shape ok')
 
 const search = await callMcp('tools/call', {
@@ -253,6 +288,9 @@ const search = await callMcp('tools/call', {
   },
 })
 assert(Array.isArray(search?.structuredContent?.results), 'search structuredContent must include results array')
+if (search.structuredContent.results.length) {
+  assertEmbedUrl(search.structuredContent.results[0]?.embed_url, 'search')
+}
 console.log('search ok')
 
 console.log('ChatGPT App smoke test passed')
