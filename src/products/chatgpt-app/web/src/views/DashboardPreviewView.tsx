@@ -25,11 +25,12 @@ export function DashboardPreviewView({ data }: DashboardPreviewViewProps) {
       <DashboardHeader
         eyebrow="Preview"
         title={data.title || dashboard.title || 'Dashboard'}
-        description="Metadados e source retornados pela tool de leitura."
+        description={dashboard.embed_url
+          ? 'Dashboard completo renderizado a partir do embed seguro.'
+          : 'Metadados e source retornados pela tool de leitura.'}
       />
       <DashboardMeta dashboard={dashboard} />
       <DashboardPreviewFrame dashboard={dashboard} />
     </>
   )
 }
-

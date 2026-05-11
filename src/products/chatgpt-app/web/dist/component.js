@@ -60,6 +60,18 @@
     '</section>';
   }
 
+  function safeUrl(value) {
+    const text = String(value || '').trim();
+    if (!text) return '';
+    try {
+      const url = new URL(text, window.location.origin);
+      if (url.protocol !== 'https:' && url.protocol !== 'http:') return '';
+      return url.toString();
+    } catch {
+      return '';
+    }
+  }
+
   function errorState(message) {
     return '<section class="state-card state-card--error">' +
       '<h2>Erro</h2>' +
@@ -242,6 +254,17 @@
   }
 
   function renderPreviewFrame(dashboard) {
+    const embedUrl = safeUrl(dashboard.embed_url);
+    if (embedUrl) {
+      return '<section class="dashboard-preview-frame dashboard-embed-frame">' +
+        '<div class="dashboard-preview-frame__bar">' +
+          '<span>Preview interativo</span>' +
+          '<a href="' + escapeHtml(embedUrl) + '" target="_blank" rel="noreferrer">Abrir em nova aba</a>' +
+        '</div>' +
+        '<iframe title="' + escapeHtml(dashboard.title || dashboard.id || dashboard.artifact_id || 'Dashboard') + '" src="' + escapeHtml(embedUrl) + '" sandbox="allow-same-origin allow-scripts allow-forms allow-popups"></iframe>' +
+      '</section>';
+    }
+
     const source = dashboard.source || '';
     return '<section class="dashboard-preview-frame">' +
       '<div class="dashboard-preview-frame__bar">' +
@@ -261,7 +284,9 @@
     return header(
       'Preview',
       data.title || dashboard.title || 'Dashboard',
-      'Metadados e source retornados pela tool de leitura.'
+      dashboard.embed_url
+        ? 'Dashboard completo renderizado a partir do embed seguro.'
+        : 'Metadados e source retornados pela tool de leitura.'
     ) + renderMeta(dashboard) + renderPreviewFrame(dashboard);
   }
 

@@ -2,9 +2,11 @@ import { DASHBOARD_MCP_TOOL_DEFINITIONS, type McpToolInputSchema } from '@/produ
 import { callCognitoMcpTool, type CognitoMcpServerContext } from '@/products/mcp/server/cognitoMcpServer'
 import { DASHBOARD_WIDGET_RESOURCE_URI } from '@/products/chatgpt-app/server/appResources'
 import {
+  buildDashboardArtifactUrl,
   listMcpDashboards,
   readMcpDashboard,
 } from '@/products/mcp/adapters/artifactsAdapter'
+import { createDashboardEmbedToken } from '@/products/chatgpt-app/server/embedToken'
 import {
   callChatGptDomainTool,
   CHATGPT_DOMAIN_TOOL_DEFINITIONS,
@@ -130,6 +132,7 @@ const SEARCH_OUTPUT_SCHEMA = {
           id: { type: 'string' },
           title: { type: 'string' },
           url: { type: 'string' },
+          embed_url: { type: 'string' },
           metadata: {
             type: 'object',
             additionalProperties: true,
@@ -163,6 +166,7 @@ const FETCH_OUTPUT_SCHEMA = {
     title: { type: 'string' },
     text: { type: 'string' },
     url: { type: 'string' },
+    embed_url: { type: 'string' },
     metadata: {
       type: 'object',
       additionalProperties: true,
@@ -416,6 +420,42 @@ function optionalText(value: unknown) {
   return text || null
 }
 
+function getDashboardArtifactId(dashboard: JsonRecord) {
+  return optionalText(dashboard.artifact_id || dashboard.id)
+}
+
+function buildDashboardEmbedUrl(artifactId: string, version?: unknown) {
+  const token = createDashboardEmbedToken(artifactId)
+  const baseUrl = buildDashboardArtifactUrl(artifactId)
+  const params = new URLSearchParams({
+    embed: '1',
+    token,
+  })
+  const versionNumber = Number(version)
+  if (Number.isInteger(versionNumber) && versionNumber > 0) {
+    params.set('version', String(versionNumber))
+  }
+  return `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}${params.toString()}`
+}
+
+function withDashboardEmbedUrl<T extends JsonRecord>(dashboard: T): T & { embed_url?: string } {
+  const artifactId = getDashboardArtifactId(dashboard)
+  if (!artifactId) return dashboard
+  return {
+    ...dashboard,
+    embed_url: buildDashboardEmbedUrl(artifactId, dashboard.version || dashboard.current_draft_version),
+  }
+}
+
+function withDashboardListEmbedUrl(dashboard: JsonRecord) {
+  const artifactId = getDashboardArtifactId(dashboard)
+  if (!artifactId) return dashboard
+  return {
+    ...dashboard,
+    embed_url: buildDashboardEmbedUrl(artifactId),
+  }
+}
+
 function getSearchQuery(args: JsonRecord) {
   return optionalText(args.query || args.q || args.text || args.input) || ''
 }
@@ -438,10 +478,12 @@ function dashboardMatchesQuery(dashboard: JsonRecord, query: string) {
 }
 
 function toSearchResult(dashboard: JsonRecord) {
+  const id = String(dashboard.id || '')
   return {
-    id: String(dashboard.id || ''),
+    id,
     title: String(dashboard.title || dashboard.slug || dashboard.id || 'Dashboard'),
     url: String(dashboard.url || ''),
+    embed_url: id ? buildDashboardEmbedUrl(id) : '',
     metadata: {
       slug: dashboard.slug || null,
       status: dashboard.status || null,
@@ -497,6 +539,7 @@ async function callConnectorFetch(args: unknown) {
   const record = dashboard as JsonRecord
   const title = String(record.title || record.slug || record.id || 'Dashboard')
   const url = String(record.url || '')
+  const embedUrl = buildDashboardEmbedUrl(id, record.version || record.current_draft_version)
   const source = String(record.source || '')
   const structuredContent = {
     id,
@@ -511,6 +554,7 @@ async function callConnectorFetch(args: unknown) {
       source ? `Source TSX:\n${source}` : 'Source TSX nao disponivel.',
     ].join('\n'),
     url,
+    embed_url: embedUrl,
     metadata: {
       slug: record.slug || null,
       status: record.status || null,
@@ -536,8 +580,12 @@ function makeRenderResult(toolName: ChatGptDashboardRenderToolName, args: unknow
   const view = toolName === CHATGPT_DASHBOARD_RENDER_TOOL_NAMES.dashboardRenderList
     ? 'dashboard_list'
     : 'dashboard_preview'
+  const dashboard = asRecord(input.dashboard)
   const result = {
     ...input,
+    ...(view === 'dashboard_preview' && Object.keys(dashboard).length
+      ? { dashboard: withDashboardEmbedUrl(dashboard) }
+      : {}),
     ok: true,
     tool: toolName,
     view,
@@ -620,11 +668,13 @@ function normalizeDataToolStructuredContent(name: string, structuredContent: unk
   switch (name) {
     case 'dashboard_list':
       return {
-        dashboards: Array.isArray(structuredContent) ? structuredContent : [],
+        dashboards: Array.isArray(structuredContent)
+          ? structuredContent.map((dashboard) => withDashboardListEmbedUrl(asRecord(dashboard)))
+          : [],
       }
     case 'dashboard_read':
       return {
-        dashboard: structuredContent,
+        dashboard: withDashboardEmbedUrl(asRecord(structuredContent)),
       }
     case 'dashboard_get_contract':
       return {
@@ -634,8 +684,8 @@ function normalizeDataToolStructuredContent(name: string, structuredContent: unk
     case 'dashboard_patch':
     case 'dashboard_update_full':
       return {
-        dashboard: structuredContent,
-        result: structuredContent,
+        dashboard: withDashboardEmbedUrl(asRecord(structuredContent)),
+        result: withDashboardEmbedUrl(asRecord(structuredContent)),
       }
     default:
       return {

@@ -10,6 +10,7 @@ export type DashboardListItem = {
   updated_at?: string | null
   has_thumbnail?: boolean
   url?: string | null
+  embed_url?: string | null
 }
 
 export type DashboardPreview = DashboardListItem & {
@@ -19,4 +20,3 @@ export type DashboardPreview = DashboardListItem & {
   source?: string | null
   metadata?: Record<string, unknown> | null
 }
-

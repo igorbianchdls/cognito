@@ -6,6 +6,25 @@ type DashboardPreviewFrameProps = {
 
 export function DashboardPreviewFrame({ dashboard }: DashboardPreviewFrameProps) {
   const source = dashboard.source || ''
+  const embedUrl = dashboard.embed_url || ''
+
+  if (embedUrl) {
+    return (
+      <section className="dashboard-preview-frame dashboard-embed-frame">
+        <div className="dashboard-preview-frame__bar">
+          <span>Preview interativo</span>
+          <a href={embedUrl} target="_blank" rel="noreferrer">
+            Abrir em nova aba
+          </a>
+        </div>
+        <iframe
+          title={dashboard.title || dashboard.id || dashboard.artifact_id || 'Dashboard'}
+          src={embedUrl}
+          sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+        />
+      </section>
+    )
+  }
 
   return (
     <section className="dashboard-preview-frame">
@@ -17,4 +36,3 @@ export function DashboardPreviewFrame({ dashboard }: DashboardPreviewFrameProps)
     </section>
   )
 }
-

@@ -166,6 +166,28 @@ a {
   white-space: pre-wrap;
 }
 
+.dashboard-embed-frame {
+  background: #fff8ed;
+}
+
+.dashboard-embed-frame .dashboard-preview-frame__bar a {
+  border-radius: 999px;
+  background: #233d30;
+  color: #fffaf0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.38rem 0.7rem;
+  text-decoration: none;
+}
+
+.dashboard-embed-frame iframe {
+  display: block;
+  width: 100%;
+  min-height: min(74vh, 52rem);
+  border: 0;
+  background: #fffaf0;
+}
+
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));

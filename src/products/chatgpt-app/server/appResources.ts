@@ -101,15 +101,15 @@ const DASHBOARD_WIDGET_RESOURCE_CONTENT_META = {
     'Interface visual para listar dashboards Cognito e mostrar previews de dashboards dentro do ChatGPT.',
   'openai/widgetPrefersBorder': true,
   'openai/widgetCSP': {
-    connect_domains: [],
-    resource_domains: [],
+    connect_domains: ['https://cognito-seven.vercel.app'],
+    resource_domains: ['https://cognito-seven.vercel.app'],
     redirect_domains: ['https://cognito-seven.vercel.app'],
   },
   ui: {
     prefersBorder: true,
     csp: {
-      connectDomains: [],
-      resourceDomains: [],
+      connectDomains: ['https://cognito-seven.vercel.app'],
+      resourceDomains: ['https://cognito-seven.vercel.app'],
     },
   },
 } as const

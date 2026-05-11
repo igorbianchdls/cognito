@@ -112,6 +112,14 @@ Dashboard embed URLs use a signed short-lived token:
 /artifacts/dashboards/<id>?embed=1&token=<signed-token>
 ```
 
+Dashboard tools include `embed_url` where a dashboard id is available:
+
+```txt
+dashboard_list -> dashboards[].embed_url
+dashboard_read -> dashboard.embed_url
+dashboard_render_preview -> dashboard.embed_url rendered in the widget iframe
+```
+
 Generate a token for testing:
 
 ```txt
