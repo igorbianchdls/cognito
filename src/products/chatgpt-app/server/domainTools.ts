@@ -1,4 +1,5 @@
 import { runQuery } from '@/lib/postgres'
+import { DASHBOARD_WIDGET_RESOURCE_URI } from '@/products/chatgpt-app/server/appResources'
 import type { CognitoMcpServerContext } from '@/products/mcp/server/cognitoMcpServer'
 import type { McpToolInputSchema } from '@/products/mcp/tools/dashboardSchemas'
 
@@ -65,7 +66,10 @@ const READ_ONLY_ANNOTATIONS = {
 
 const TOOL_META = {
   securitySchemes: READ_SECURITY_SCHEMES,
+  'openai/outputTemplate': DASHBOARD_WIDGET_RESOURCE_URI,
+  'openai/widgetAccessible': true,
   ui: {
+    resourceUri: DASHBOARD_WIDGET_RESOURCE_URI,
     visibility: ['model', 'app'],
   },
 } as const

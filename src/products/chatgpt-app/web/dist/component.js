@@ -67,6 +67,146 @@
     '</section>';
   }
 
+  function isRecord(value) {
+    return value && typeof value === 'object' && !Array.isArray(value);
+  }
+
+  function formatValue(value) {
+    if (value === null || value === undefined || value === '') return '-';
+    if (typeof value === 'number') {
+      return new Intl.NumberFormat('pt-BR', {
+        maximumFractionDigits: Number.isInteger(value) ? 0 : 2,
+      }).format(value);
+    }
+    if (typeof value === 'boolean') return value ? 'Sim' : 'Nao';
+    return String(value);
+  }
+
+  function getToolEyebrow(data) {
+    const tool = String(data.tool || 'resultado');
+    if (tool === 'crud') return 'CRUD';
+    if (tool === 'sql_execution') return 'SQL';
+    if (tool === 'ecommerce') return 'Ecommerce';
+    if (tool === 'marketing') return 'Marketing';
+    return tool;
+  }
+
+  function getRows(data) {
+    return Array.isArray(data.rows) ? data.rows.filter(isRecord) : [];
+  }
+
+  function getColumns(data, rows) {
+    if (Array.isArray(data.columns) && data.columns.length) return data.columns.map(String);
+    if (!rows.length) return [];
+    return Object.keys(rows[0] || {});
+  }
+
+  function pickMetricColumns(rows, columns) {
+    if (!rows.length) return [];
+    const first = rows[0] || {};
+    return columns
+      .filter((column) => typeof first[column] === 'number' || typeof first[column] === 'string')
+      .slice(0, 6);
+  }
+
+  function metricCards(rows, columns) {
+    if (!rows.length || rows.length > 1) return '';
+    const first = rows[0] || {};
+    const metricColumns = pickMetricColumns(rows, columns);
+    if (!metricColumns.length) return '';
+
+    return '<section class="metric-grid">' +
+      metricColumns.map((column) => (
+        '<article class="metric-card">' +
+          '<span>' + escapeHtml(column.replaceAll('_', ' ')) + '</span>' +
+          '<strong>' + escapeHtml(formatValue(first[column])) + '</strong>' +
+        '</article>'
+      )).join('') +
+    '</section>';
+  }
+
+  function simpleChart(data, rows) {
+    const chart = data.chart;
+    if (!chart || typeof chart !== 'object' || !rows.length) return '';
+    const xField = chart.xField;
+    const valueField = chart.valueField;
+    if (!xField || !valueField) return '';
+
+    const chartRows = rows
+      .map((row) => ({
+        label: formatValue(row[xField]),
+        value: Number(row[valueField] || 0),
+      }))
+      .filter((row) => Number.isFinite(row.value))
+      .slice(0, 10);
+
+    if (!chartRows.length) return '';
+    const max = Math.max(...chartRows.map((row) => Math.abs(row.value)), 1);
+
+    return '<section class="result-card result-chart">' +
+      '<div class="result-card__header">' +
+        '<h2>Grafico</h2>' +
+        '<span>' + escapeHtml(chart.yLabel || valueField) + '</span>' +
+      '</div>' +
+      '<div class="bar-list">' +
+        chartRows.map((row) => {
+          const width = Math.max(3, Math.round((Math.abs(row.value) / max) * 100));
+          return '<div class="bar-row">' +
+            '<span class="bar-label">' + escapeHtml(row.label) + '</span>' +
+            '<div class="bar-track"><div class="bar-fill" style="width:' + width + '%"></div></div>' +
+            '<span class="bar-value">' + escapeHtml(formatValue(row.value)) + '</span>' +
+          '</div>';
+        }).join('') +
+      '</div>' +
+    '</section>';
+  }
+
+  function dataTable(rows, columns) {
+    if (!rows.length) {
+      return emptyState('Sem linhas', 'A tool retornou uma tabela vazia.');
+    }
+    if (!columns.length) return '';
+
+    return '<section class="result-card table-card">' +
+      '<div class="result-card__header">' +
+        '<h2>Tabela</h2>' +
+        '<span>' + rows.length + ' linha' + (rows.length === 1 ? '' : 's') + '</span>' +
+      '</div>' +
+      '<div class="table-scroll">' +
+        '<table class="data-table">' +
+          '<thead><tr>' +
+            columns.map((column) => '<th>' + escapeHtml(column) + '</th>').join('') +
+          '</tr></thead>' +
+          '<tbody>' +
+            rows.slice(0, 100).map((row) => (
+              '<tr>' + columns.map((column) => '<td>' + escapeHtml(formatValue(row[column])) + '</td>').join('') + '</tr>'
+            )).join('') +
+          '</tbody>' +
+        '</table>' +
+      '</div>' +
+    '</section>';
+  }
+
+  function renderAnalyticalResult(data) {
+    const rows = getRows(data);
+    const columns = getColumns(data, rows);
+    const action = data.action ? 'Acao: ' + data.action : null;
+    const description = [
+      action,
+      data.resource ? 'Resource: ' + data.resource : null,
+      typeof data.count === 'number' ? data.count + ' registro' + (data.count === 1 ? '' : 's') : null,
+    ].filter(Boolean).join(' · ');
+
+    return header(
+      getToolEyebrow(data),
+      data.title || 'Resultado',
+      description || 'Resultado estruturado da tool.'
+    ) +
+    metricCards(rows, columns) +
+    simpleChart(data, rows) +
+    dataTable(rows, columns);
+  }
+
   function renderList(data) {
     const dashboards = Array.isArray(data.dashboards) ? data.dashboards : [];
     if (dashboards.length === 0) {
@@ -147,6 +287,11 @@
 
     if (data.view === 'dashboard_preview') {
       root.innerHTML = renderPreview(data);
+      return;
+    }
+
+    if (data.tool === 'crud' || data.tool === 'sql_execution' || data.tool === 'ecommerce' || data.tool === 'marketing') {
+      root.innerHTML = renderAnalyticalResult(data);
       return;
     }
 

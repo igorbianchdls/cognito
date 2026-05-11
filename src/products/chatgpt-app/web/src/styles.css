@@ -166,3 +166,140 @@ a {
   white-space: pre-wrap;
 }
 
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.75rem;
+}
+
+.metric-card,
+.result-card {
+  border: 1px solid rgba(33, 29, 24, 0.12);
+  border-radius: 1.25rem;
+  background: rgba(255, 252, 246, 0.88);
+  box-shadow: 0 18px 44px rgba(33, 29, 24, 0.09);
+}
+
+.metric-card {
+  display: grid;
+  gap: 0.45rem;
+  padding: 1rem;
+}
+
+.metric-card span {
+  color: rgba(33, 29, 24, 0.54);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.metric-card strong {
+  font-size: clamp(1.3rem, 6vw, 2rem);
+  letter-spacing: -0.055em;
+}
+
+.result-card {
+  overflow: hidden;
+}
+
+.result-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-bottom: 1px solid rgba(33, 29, 24, 0.1);
+  padding: 0.8rem 1rem;
+}
+
+.result-card__header h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  letter-spacing: -0.02em;
+}
+
+.result-card__header span {
+  color: rgba(33, 29, 24, 0.55);
+  font-size: 0.75rem;
+}
+
+.bar-list {
+  display: grid;
+  gap: 0.65rem;
+  padding: 1rem;
+}
+
+.bar-row {
+  display: grid;
+  grid-template-columns: minmax(5rem, 0.8fr) minmax(7rem, 1.4fr) minmax(3rem, 0.35fr);
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.78rem;
+}
+
+.bar-label,
+.bar-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar-label {
+  color: rgba(33, 29, 24, 0.68);
+}
+
+.bar-value {
+  text-align: right;
+  color: rgba(33, 29, 24, 0.6);
+  font-variant-numeric: tabular-nums;
+}
+
+.bar-track {
+  height: 0.55rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(33, 29, 24, 0.08);
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2f6b4f, #d28b4d);
+}
+
+.table-scroll {
+  max-height: 28rem;
+  overflow: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.data-table th,
+.data-table td {
+  border-bottom: 1px solid rgba(33, 29, 24, 0.08);
+  padding: 0.7rem 0.8rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.data-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #fff8ed;
+  color: rgba(33, 29, 24, 0.55);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.data-table td {
+  color: rgba(33, 29, 24, 0.78);
+  max-width: 18rem;
+  overflow-wrap: anywhere;
+}

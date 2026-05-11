@@ -173,6 +173,143 @@ a {
   white-space: pre-wrap;
 }
 
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.75rem;
+}
+
+.metric-card,
+.result-card {
+  border: 1px solid rgba(33, 29, 24, 0.12);
+  border-radius: 1.25rem;
+  background: rgba(255, 252, 246, 0.88);
+  box-shadow: 0 18px 44px rgba(33, 29, 24, 0.09);
+}
+
+.metric-card {
+  display: grid;
+  gap: 0.45rem;
+  padding: 1rem;
+}
+
+.metric-card span {
+  color: rgba(33, 29, 24, 0.54);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.metric-card strong {
+  font-size: clamp(1.3rem, 6vw, 2rem);
+  letter-spacing: -0.055em;
+}
+
+.result-card {
+  overflow: hidden;
+}
+
+.result-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-bottom: 1px solid rgba(33, 29, 24, 0.1);
+  padding: 0.8rem 1rem;
+}
+
+.result-card__header h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  letter-spacing: -0.02em;
+}
+
+.result-card__header span {
+  color: rgba(33, 29, 24, 0.55);
+  font-size: 0.75rem;
+}
+
+.bar-list {
+  display: grid;
+  gap: 0.65rem;
+  padding: 1rem;
+}
+
+.bar-row {
+  display: grid;
+  grid-template-columns: minmax(5rem, 0.8fr) minmax(7rem, 1.4fr) minmax(3rem, 0.35fr);
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.78rem;
+}
+
+.bar-label,
+.bar-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar-label {
+  color: rgba(33, 29, 24, 0.68);
+}
+
+.bar-value {
+  text-align: right;
+  color: rgba(33, 29, 24, 0.6);
+  font-variant-numeric: tabular-nums;
+}
+
+.bar-track {
+  height: 0.55rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(33, 29, 24, 0.08);
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2f6b4f, #d28b4d);
+}
+
+.table-scroll {
+  max-height: 28rem;
+  overflow: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.data-table th,
+.data-table td {
+  border-bottom: 1px solid rgba(33, 29, 24, 0.08);
+  padding: 0.7rem 0.8rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.data-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #fff8ed;
+  color: rgba(33, 29, 24, 0.55);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.data-table td {
+  color: rgba(33, 29, 24, 0.78);
+  max-width: 18rem;
+  overflow-wrap: anywhere;
+}
 
     </style>
   </head>
@@ -246,6 +383,146 @@ a {
       '<h2>Erro</h2>' +
       '<p>' + escapeHtml(message || 'Nao foi possivel renderizar esta resposta.') + '</p>' +
     '</section>';
+  }
+
+  function isRecord(value) {
+    return value && typeof value === 'object' && !Array.isArray(value);
+  }
+
+  function formatValue(value) {
+    if (value === null || value === undefined || value === '') return '-';
+    if (typeof value === 'number') {
+      return new Intl.NumberFormat('pt-BR', {
+        maximumFractionDigits: Number.isInteger(value) ? 0 : 2,
+      }).format(value);
+    }
+    if (typeof value === 'boolean') return value ? 'Sim' : 'Nao';
+    return String(value);
+  }
+
+  function getToolEyebrow(data) {
+    const tool = String(data.tool || 'resultado');
+    if (tool === 'crud') return 'CRUD';
+    if (tool === 'sql_execution') return 'SQL';
+    if (tool === 'ecommerce') return 'Ecommerce';
+    if (tool === 'marketing') return 'Marketing';
+    return tool;
+  }
+
+  function getRows(data) {
+    return Array.isArray(data.rows) ? data.rows.filter(isRecord) : [];
+  }
+
+  function getColumns(data, rows) {
+    if (Array.isArray(data.columns) && data.columns.length) return data.columns.map(String);
+    if (!rows.length) return [];
+    return Object.keys(rows[0] || {});
+  }
+
+  function pickMetricColumns(rows, columns) {
+    if (!rows.length) return [];
+    const first = rows[0] || {};
+    return columns
+      .filter((column) => typeof first[column] === 'number' || typeof first[column] === 'string')
+      .slice(0, 6);
+  }
+
+  function metricCards(rows, columns) {
+    if (!rows.length || rows.length > 1) return '';
+    const first = rows[0] || {};
+    const metricColumns = pickMetricColumns(rows, columns);
+    if (!metricColumns.length) return '';
+
+    return '<section class="metric-grid">' +
+      metricColumns.map((column) => (
+        '<article class="metric-card">' +
+          '<span>' + escapeHtml(column.replaceAll('_', ' ')) + '</span>' +
+          '<strong>' + escapeHtml(formatValue(first[column])) + '</strong>' +
+        '</article>'
+      )).join('') +
+    '</section>';
+  }
+
+  function simpleChart(data, rows) {
+    const chart = data.chart;
+    if (!chart || typeof chart !== 'object' || !rows.length) return '';
+    const xField = chart.xField;
+    const valueField = chart.valueField;
+    if (!xField || !valueField) return '';
+
+    const chartRows = rows
+      .map((row) => ({
+        label: formatValue(row[xField]),
+        value: Number(row[valueField] || 0),
+      }))
+      .filter((row) => Number.isFinite(row.value))
+      .slice(0, 10);
+
+    if (!chartRows.length) return '';
+    const max = Math.max(...chartRows.map((row) => Math.abs(row.value)), 1);
+
+    return '<section class="result-card result-chart">' +
+      '<div class="result-card__header">' +
+        '<h2>Grafico</h2>' +
+        '<span>' + escapeHtml(chart.yLabel || valueField) + '</span>' +
+      '</div>' +
+      '<div class="bar-list">' +
+        chartRows.map((row) => {
+          const width = Math.max(3, Math.round((Math.abs(row.value) / max) * 100));
+          return '<div class="bar-row">' +
+            '<span class="bar-label">' + escapeHtml(row.label) + '</span>' +
+            '<div class="bar-track"><div class="bar-fill" style="width:' + width + '%"></div></div>' +
+            '<span class="bar-value">' + escapeHtml(formatValue(row.value)) + '</span>' +
+          '</div>';
+        }).join('') +
+      '</div>' +
+    '</section>';
+  }
+
+  function dataTable(rows, columns) {
+    if (!rows.length) {
+      return emptyState('Sem linhas', 'A tool retornou uma tabela vazia.');
+    }
+    if (!columns.length) return '';
+
+    return '<section class="result-card table-card">' +
+      '<div class="result-card__header">' +
+        '<h2>Tabela</h2>' +
+        '<span>' + rows.length + ' linha' + (rows.length === 1 ? '' : 's') + '</span>' +
+      '</div>' +
+      '<div class="table-scroll">' +
+        '<table class="data-table">' +
+          '<thead><tr>' +
+            columns.map((column) => '<th>' + escapeHtml(column) + '</th>').join('') +
+          '</tr></thead>' +
+          '<tbody>' +
+            rows.slice(0, 100).map((row) => (
+              '<tr>' + columns.map((column) => '<td>' + escapeHtml(formatValue(row[column])) + '</td>').join('') + '</tr>'
+            )).join('') +
+          '</tbody>' +
+        '</table>' +
+      '</div>' +
+    '</section>';
+  }
+
+  function renderAnalyticalResult(data) {
+    const rows = getRows(data);
+    const columns = getColumns(data, rows);
+    const action = data.action ? 'Acao: ' + data.action : null;
+    const description = [
+      action,
+      data.resource ? 'Resource: ' + data.resource : null,
+      typeof data.count === 'number' ? data.count + ' registro' + (data.count === 1 ? '' : 's') : null,
+    ].filter(Boolean).join(' · ');
+
+    return header(
+      getToolEyebrow(data),
+      data.title || 'Resultado',
+      description || 'Resultado estruturado da tool.'
+    ) +
+    metricCards(rows, columns) +
+    simpleChart(data, rows) +
+    dataTable(rows, columns);
   }
 
   function renderList(data) {
@@ -328,6 +605,11 @@ a {
 
     if (data.view === 'dashboard_preview') {
       root.innerHTML = renderPreview(data);
+      return;
+    }
+
+    if (data.tool === 'crud' || data.tool === 'sql_execution' || data.tool === 'ecommerce' || data.tool === 'marketing') {
+      root.innerHTML = renderAnalyticalResult(data);
       return;
     }
 
