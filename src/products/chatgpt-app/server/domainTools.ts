@@ -47,6 +47,8 @@ type MarketingAction =
 
 type CrudAction = 'listar' | 'ler'
 
+type SqlExecutionAction = 'execute'
+
 const READ_SECURITY_SCHEMES = [
   {
     type: 'oauth2',
@@ -187,6 +189,34 @@ const CRUD_OUTPUT_SCHEMA = {
   additionalProperties: true,
 } as const satisfies McpToolInputSchema
 
+const SQL_EXECUTION_SCHEMA = {
+  type: 'object',
+  properties: {
+    sql: {
+      type: 'string',
+      description:
+        'SQL de leitura. Aceita somente SELECT/CTE, uma unica instrucao, sem placeholders $1/$2. Use {{tenant_id}} para tenant.',
+    },
+    title: {
+      type: 'string',
+      description: 'Titulo opcional do resultado.',
+    },
+    chart: {
+      type: 'object',
+      description: 'Config opcional de grafico: xField, valueField, xLabel, yLabel.',
+      properties: {
+        xField: { type: 'string' },
+        valueField: { type: 'string' },
+        xLabel: { type: 'string' },
+        yLabel: { type: 'string' },
+      },
+      additionalProperties: true,
+    },
+  },
+  required: ['sql'],
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
+
 const ECOMMERCE_SCHEMA = {
   type: 'object',
   properties: {
@@ -231,6 +261,7 @@ const MARKETING_SCHEMA = {
 
 export const CHATGPT_DOMAIN_TOOL_NAMES = {
   crud: 'crud',
+  sqlExecution: 'sql_execution',
   ecommerce: 'ecommerce',
   marketing: 'marketing',
 } as const
@@ -264,6 +295,21 @@ export const CHATGPT_DOMAIN_TOOL_DEFINITIONS = [
       ...TOOL_META,
       'openai/toolInvocation/invoking': 'Calculando ecommerce...',
       'openai/toolInvocation/invoked': 'Metricas de ecommerce carregadas.',
+    },
+  },
+  {
+    name: CHATGPT_DOMAIN_TOOL_NAMES.sqlExecution,
+    title: 'SQL execution',
+    description:
+      'Executa SQL analitico ad-hoc com seguranca. Aceita apenas SELECT/CTE, uma unica instrucao, sem placeholders posicionais; use somente {{tenant_id}} para bind automatico.',
+    inputSchema: SQL_EXECUTION_SCHEMA,
+    outputSchema: METRICS_OUTPUT_SCHEMA,
+    securitySchemes: READ_SECURITY_SCHEMES,
+    annotations: READ_ONLY_ANNOTATIONS,
+    _meta: {
+      ...TOOL_META,
+      'openai/toolInvocation/invoking': 'Executando SQL...',
+      'openai/toolInvocation/invoked': 'SQL executado.',
     },
   },
   {
@@ -358,6 +404,67 @@ function normalizeCrudAction(value: unknown): CrudAction {
   if (out === 'listar' || out === 'list') return 'listar'
   if (out === 'ler' || out === 'read' || out === 'get') return 'ler'
   throw new Error('action invalida para crud. Use listar ou ler.')
+}
+
+function normalizeAndAssertSafeSelectQuery(sql: string) {
+  const cleaned = sql.trim().replace(/;+\s*$/g, '')
+  if (!cleaned) throw new Error('sql vazio')
+  if (cleaned.includes(';')) throw new Error('apenas uma query e permitida')
+  if (/\$\d+/.test(cleaned)) {
+    throw new Error('placeholders posicionais ($1, $2, ...) nao sao permitidos; use SQL literal ou {{tenant_id}}')
+  }
+  if (!/^\s*(select|with)\b/i.test(cleaned)) throw new Error('somente SELECT/CTE (WITH) e permitido')
+
+  const blocked =
+    /\b(insert|update|delete|drop|alter|create|truncate|grant|revoke|vacuum|call|do|copy|merge|execute|prepare|deallocate)\b/i
+  if (blocked.test(cleaned)) throw new Error('sql contem comando nao permitido')
+
+  return cleaned
+}
+
+function bindTenantParam(sql: string, tenantId: number) {
+  const params: unknown[] = []
+  let tenantParamIndex = 0
+  const compiled = sql.replace(/\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}/g, (_, rawName: string) => {
+    const name = String(rawName || '').trim().toLowerCase()
+    if (name !== 'tenant_id') {
+      throw new Error(`placeholder nao suportado: {{${rawName}}}. Use apenas {{tenant_id}} nesta tool`)
+    }
+    if (tenantParamIndex > 0) return `$${tenantParamIndex}`
+    params.push(tenantId)
+    tenantParamIndex = params.length
+    return `$${tenantParamIndex}`
+  })
+  return { sql: compiled, params }
+}
+
+function parseChartConfig(rawChart: unknown): ChartConfig | null {
+  if (rawChart == null) return null
+  const raw = toObj(rawChart)
+  const xField = toText(raw.xField)
+  const valueField = toText(raw.valueField)
+  if (!xField || !valueField) {
+    throw new Error('chart invalido: informe chart.xField e chart.valueField')
+  }
+  return {
+    xField,
+    valueField,
+    xLabel: toText(raw.xLabel) || null,
+    yLabel: toText(raw.yLabel) || null,
+  }
+}
+
+function assertChartColumns(chart: ChartConfig | null, columns: string[]) {
+  if (!chart) return null
+  if (!columns.length) return chart
+
+  const missingFields: string[] = []
+  if (!columns.includes(chart.xField)) missingFields.push(`xField=${chart.xField}`)
+  if (!columns.includes(chart.valueField)) missingFields.push(`valueField=${chart.valueField}`)
+  if (missingFields.length) {
+    throw new Error(`chart invalido: colunas nao encontradas no resultado (${missingFields.join(', ')})`)
+  }
+  return chart
 }
 
 function buildCommonPedidosFilters(paramsIn: JsonRecord, tenantId: number, alias: string) {
@@ -707,6 +814,44 @@ async function callMarketing(args: unknown, context: CognitoMcpServerContext) {
   return executeBuiltQuery('marketing', action, buildMarketingQuery(action, paramsIn, getTenantId(context)))
 }
 
+async function callSqlExecution(args: unknown, context: CognitoMcpServerContext) {
+  const input = toObj(args)
+  const sqlRaw = toText(input.sql)
+  const title = toText(input.title) || 'Resultado da Consulta'
+  const chartRaw = parseChartConfig(input.chart)
+
+  if (!sqlRaw) throw new Error('sql e obrigatorio')
+
+  const safeSql = normalizeAndAssertSafeSelectQuery(sqlRaw)
+  const { sql: boundSql, params } = bindTenantParam(safeSql, getTenantId(context))
+  const maxRows = 1000
+  const finalSql = `SELECT * FROM (${boundSql}) AS q LIMIT $${params.length + 1}::int`
+  const finalParams = [...params, maxRows]
+
+  const rows = await runQuery<Record<string, unknown>>(finalSql, finalParams)
+  const columns = inferColumns(rows)
+  const chart = assertChartColumns(chartRaw, columns)
+  const structuredContent = {
+    success: true,
+    tool: 'sql_execution',
+    action: 'execute' satisfies SqlExecutionAction,
+    title,
+    rows,
+    columns,
+    count: rows.length,
+    chart,
+    sql_query: finalSql,
+    sql_params: finalParams,
+    max_rows: maxRows,
+  }
+
+  return {
+    content: [{ type: 'text', text: JSON.stringify(structuredContent, null, 2) }],
+    structuredContent,
+    isError: false,
+  }
+}
+
 export function isChatGptDomainTool(name: string) {
   return CHATGPT_DOMAIN_TOOL_NAME_SET.has(name)
 }
@@ -721,6 +866,8 @@ export async function callChatGptDomainTool(
       return callCrud(args, context)
     case CHATGPT_DOMAIN_TOOL_NAMES.ecommerce:
       return callEcommerce(args, context)
+    case CHATGPT_DOMAIN_TOOL_NAMES.sqlExecution:
+      return callSqlExecution(args, context)
     case CHATGPT_DOMAIN_TOOL_NAMES.marketing:
       return callMarketing(args, context)
     default:
