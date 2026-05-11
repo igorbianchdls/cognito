@@ -5,6 +5,11 @@ import {
   listMcpDashboards,
   readMcpDashboard,
 } from '@/products/mcp/adapters/artifactsAdapter'
+import {
+  callChatGptDomainTool,
+  CHATGPT_DOMAIN_TOOL_DEFINITIONS,
+  isChatGptDomainTool,
+} from '@/products/chatgpt-app/server/domainTools'
 
 export const CHATGPT_DASHBOARD_RENDER_TOOL_NAMES = {
   dashboardRenderList: 'dashboard_render_list',
@@ -590,6 +595,7 @@ export function listCognitoChatGptAppTools() {
           'openai/toolInvocation/invoked': 'Dashboard carregado.',
         },
       },
+      ...CHATGPT_DOMAIN_TOOL_DEFINITIONS,
       ...DASHBOARD_MCP_TOOL_DEFINITIONS.map((tool) => ({
         name: tool.name,
         title: getDataToolTitle(tool.name),
@@ -643,6 +649,10 @@ export async function callCognitoChatGptAppTool(
   args: unknown,
   context: CognitoMcpServerContext = {},
 ) {
+  if (isChatGptDomainTool(name)) {
+    return callChatGptDomainTool(name, args, context)
+  }
+
   if (CHATGPT_CONNECTOR_TOOL_NAME_SET.has(name)) {
     if (name === CHATGPT_CONNECTOR_TOOL_NAMES.search) return callConnectorSearch(args)
     return callConnectorFetch(args)
