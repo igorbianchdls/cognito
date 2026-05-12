@@ -22,6 +22,18 @@ Host-specific wrappers stay outside this product:
 pnpm mcp-apps:build
 ```
 
+```txt
+pnpm mcp-apps:smoke
+```
+
+The smoke test validates:
+
+- built widget HTML
+- MCP Apps resource metadata
+- absence of OpenAI-only metadata in the shared layer
+- `dashboard_embed_preview` registration source
+- widget runtime globals
+
 ## Current State
 
 This is the first extraction step. The code is copied from `chatgpt-app`, isolated under `mcp-apps`, and standardized around MCP Apps `_meta.ui`. OpenAI-only fields are added by the ChatGPT wrapper.

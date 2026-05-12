@@ -200,6 +200,13 @@ assert(toolNames.includes('dashboard_list'), 'tools/list missing dashboard_list'
 assert(toolNames.includes('dashboard_embed_preview'), 'tools/list missing dashboard_embed_preview')
 assert(toolNames.includes('dashboard_render_list'), 'tools/list missing dashboard_render_list')
 assert(toolNames.includes('dashboard_render_preview'), 'tools/list missing dashboard_render_preview')
+const renderPreviewTool = (toolsList?.tools || []).find((tool) => tool.name === 'dashboard_render_preview')
+assert(renderPreviewTool?._meta?.['openai/outputTemplate'] === 'ui://widget/dashboard.html', 'dashboard_render_preview missing OpenAI outputTemplate')
+assert(renderPreviewTool?._meta?.['openai/widgetAccessible'] === true, 'dashboard_render_preview missing OpenAI widgetAccessible')
+assert(renderPreviewTool?._meta?.ui?.resourceUri === 'ui://widget/dashboard.html', 'dashboard_render_preview missing MCP Apps ui.resourceUri')
+const embedPreviewTool = (toolsList?.tools || []).find((tool) => tool.name === 'dashboard_embed_preview')
+assert(embedPreviewTool?._meta?.['openai/outputTemplate'] === 'ui://widget/dashboard.html', 'dashboard_embed_preview missing OpenAI outputTemplate')
+assert(embedPreviewTool?._meta?.ui?.resourceUri === 'ui://widget/dashboard.html', 'dashboard_embed_preview missing MCP Apps ui.resourceUri')
 console.log(`tools/list ok: ${toolNames.join(', ')}`)
 
 const resourcesList = await callMcp('resources/list')
@@ -219,6 +226,8 @@ assert(html.includes('dashboard-embed-frame'), 'dashboard widget HTML missing em
 const widgetCsp = widgetContent?._meta?.['openai/widgetCSP']
 assert(widgetCsp?.resource_domains?.includes(baseUrl), 'widget CSP missing app resource domain')
 assert(widgetCsp?.connect_domains?.includes(baseUrl), 'widget CSP missing app connect domain')
+assert(widgetContent?._meta?.ui?.csp?.resourceDomains?.includes(baseUrl), 'widget MCP Apps CSP missing app resource domain')
+assert(widgetContent?._meta?.['openai/widgetDescription'], 'widget missing OpenAI widgetDescription')
 console.log('resources/read ok')
 
 const embedToken = await fetchJson(`${baseUrl}/api/chatgpt-app/embed-token`, {

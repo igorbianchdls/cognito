@@ -172,8 +172,11 @@ The smoke test verifies:
 ```txt
 initialize
 tools/list
+OpenAI tool metadata
 resources/list
 resources/read ui://widget/dashboard.html
+OpenAI widget metadata
+MCP Apps widget metadata
 widget CSP domains
 POST /api/chatgpt-app/embed-token
 tools/call dashboard_render_list
