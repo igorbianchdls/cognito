@@ -14,6 +14,7 @@ export const COGNITO_CLAUDE_APP_INSTRUCTIONS = [
   'Use the data tools to fetch or mutate dashboard data before rendering UI.',
   'Use dashboard_render_list only after dashboard_list has returned dashboard records.',
   'Use dashboard_render_preview only after dashboard_read has returned a dashboard record.',
+  'Use dashboard_embed_preview when the user asks to open a full dashboard preview by id in one step.',
   'Prefer concise dashboard summaries and include Cognito links when available.',
   'Do not expose internal implementation details or raw source unless the user asks for them.',
 ].join('\n')

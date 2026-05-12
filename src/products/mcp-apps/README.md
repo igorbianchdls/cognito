@@ -6,6 +6,7 @@ This product owns the host-agnostic pieces that can be reused by Claude, ChatGPT
 
 - `ui://widget/dashboard.html` resource
 - dashboard render tools
+- `dashboard_embed_preview` one-call render tool
 - dashboard embed URL helpers
 - dashboard/ecommerce/marketing/SQL result widget
 - widget source and built HTML

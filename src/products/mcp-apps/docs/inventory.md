@@ -41,7 +41,8 @@ Completed in this phase:
 - `mcp-apps` metadata is standardized around `_meta.ui`.
 - OpenAI-only metadata is injected by the ChatGPT wrapper.
 - `claude-app` has an initial MCP endpoint wrapper over `mcp-apps`.
+- `dashboard_embed_preview` renders a dashboard iframe from `artifact_id` in one tool call.
 
 Next extraction step:
 
-- Add OAuth/discovery for the Claude wrapper.
+- Add Claude smoke tests and manual connector validation.

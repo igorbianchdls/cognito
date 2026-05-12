@@ -29,6 +29,7 @@ function getToolInvocationText(name: string) {
       return ['Atualizando dashboard...', 'Dashboard atualizado.']
     case 'dashboard_render_list':
     case 'dashboard_render_preview':
+    case 'dashboard_embed_preview':
       return ['Renderizando dashboard...', 'Dashboard renderizado.']
     case 'search':
       return ['Buscando dashboards...', 'Busca concluida.']

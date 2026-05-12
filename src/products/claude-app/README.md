@@ -8,10 +8,20 @@ Current endpoint:
 /api/claude-app/mcp
 ```
 
-Current auth:
+Auth:
 
 ```txt
 Authorization: Bearer <COGNITO_CLAUDE_APP_TOKEN or COGNITO_MCP_TOKEN>
 ```
 
-OAuth discovery and connector-specific OAuth routes are intentionally left for the next implementation step.
+OAuth discovery and connector-specific OAuth routes are available at:
+
+```txt
+/api/claude-app/.well-known/oauth-protected-resource
+/api/claude-app/.well-known/oauth-authorization-server
+/api/claude-app/oauth/authorize
+/api/claude-app/oauth/token
+/api/claude-app/oauth/register
+```
+
+The wrapper also accepts OAuth access tokens issued by `/api/claude-app/oauth/token`.

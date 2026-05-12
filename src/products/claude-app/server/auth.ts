@@ -1,10 +1,11 @@
 import crypto from 'node:crypto'
+import { verifyClaudeAppOAuthAccessToken } from '@/products/claude-app/server/oauth'
 
 export type ClaudeAppAuthResult =
   | {
       ok: true
       tenantId: number
-      authType: 'token'
+      authType: 'token' | 'oauth'
     }
   | {
       ok: false
@@ -40,17 +41,8 @@ export function verifyClaudeAppRequest(req: Request): ClaudeAppAuthResult {
       '',
   ).trim()
 
-  if (!expectedToken) {
-    return {
-      ok: false,
-      status: 500,
-      code: 'claude_app_token_not_configured',
-      error: 'COGNITO_CLAUDE_APP_TOKEN ou COGNITO_MCP_TOKEN nao configurado',
-    }
-  }
-
   const token = getBearerToken(req)
-  if (!token || !timingSafeTextEqual(token, expectedToken)) {
+  if (!token) {
     return {
       ok: false,
       status: 401,
@@ -59,9 +51,36 @@ export function verifyClaudeAppRequest(req: Request): ClaudeAppAuthResult {
     }
   }
 
+  if (expectedToken && timingSafeTextEqual(token, expectedToken)) {
+    return {
+      ok: true,
+      tenantId: resolveTenantId(req),
+      authType: 'token',
+    }
+  }
+
+  const oauthToken = verifyClaudeAppOAuthAccessToken(token)
+  if (oauthToken) {
+    return {
+      ok: true,
+      tenantId: oauthToken.tenantId,
+      authType: 'oauth',
+    }
+  }
+
+  if (!expectedToken) {
+    return {
+      ok: false,
+      status: 500,
+      code: 'claude_app_token_not_configured',
+      error: 'COGNITO_CLAUDE_APP_TOKEN, COGNITO_MCP_TOKEN ou OAuth valido nao configurado',
+    }
+  }
+
   return {
-    ok: true,
-    tenantId: resolveTenantId(req),
-    authType: 'token',
+    ok: false,
+    status: 401,
+    code: 'claude_app_unauthorized',
+    error: 'Token Claude App invalido',
   }
 }

@@ -124,6 +124,7 @@ Dashboard tools include `embed_url` where a dashboard id is available:
 dashboard_list -> dashboards[].embed_url
 dashboard_read -> dashboard.embed_url
 dashboard_render_preview -> dashboard.embed_url rendered in the widget iframe
+dashboard_embed_preview -> reads and renders a dashboard from artifact_id in one tool call
 ```
 
 Generate a token for testing:

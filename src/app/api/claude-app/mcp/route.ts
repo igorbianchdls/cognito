@@ -3,6 +3,7 @@ import {
   COGNITO_CLAUDE_APP_SERVER_INFO,
   handleClaudeAppMcpHttpRequest,
 } from '@/products/claude-app/server/claudeAppServer'
+import { getClaudeAppOAuthWwwAuthenticateHeader } from '@/products/claude-app/server/oauth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -30,7 +31,12 @@ export async function POST(req: Request) {
         code: auth.code,
         error: auth.error,
       },
-      { status: auth.status },
+      {
+        status: auth.status,
+        headers: auth.status === 401
+          ? { 'WWW-Authenticate': getClaudeAppOAuthWwwAuthenticateHeader(req) }
+          : undefined,
+      },
     )
   }
 

@@ -16,6 +16,7 @@ import {
 export const MCP_APP_DASHBOARD_RENDER_TOOL_NAMES = {
   dashboardRenderList: 'dashboard_render_list',
   dashboardRenderPreview: 'dashboard_render_preview',
+  dashboardEmbedPreview: 'dashboard_embed_preview',
 } as const
 
 export const MCP_APP_CONNECTOR_TOOL_NAMES = {
@@ -71,6 +72,31 @@ const RENDER_PREVIEW_SCHEMA = {
       description: 'Titulo opcional para o preview renderizado.',
     },
   },
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
+
+const EMBED_PREVIEW_SCHEMA = {
+  type: 'object',
+  properties: {
+    artifact_id: {
+      type: 'string',
+      description: 'UUID do dashboard/artifact persistido.',
+    },
+    title: {
+      type: 'string',
+      description: 'Titulo opcional para o preview renderizado.',
+    },
+    kind: {
+      type: 'string',
+      enum: ['draft', 'published'],
+      description: 'Versao logica a ler. Default: draft.',
+    },
+    version: {
+      type: 'integer',
+      description: 'Versao numerica especifica. Se omitida, le a mais recente do kind.',
+    },
+  },
+  required: ['artifact_id'],
   additionalProperties: true,
 } as const satisfies McpToolInputSchema
 
@@ -283,6 +309,22 @@ export const MCP_APP_DASHBOARD_RENDER_TOOL_DEFINITIONS = [
     description:
       'Renderiza no iframe do MCP App o preview/metadados de um dashboard. Use somente depois de dashboard_read.',
     inputSchema: RENDER_PREVIEW_SCHEMA,
+    outputSchema: RENDER_PREVIEW_OUTPUT_SCHEMA,
+    securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: false,
+      idempotentHint: true,
+    },
+    _meta: DASHBOARD_WIDGET_META,
+  },
+  {
+    name: MCP_APP_DASHBOARD_RENDER_TOOL_NAMES.dashboardEmbedPreview,
+    title: 'Embed dashboard preview',
+    description:
+      'Le um dashboard por artifact_id e renderiza o dashboard completo no iframe do MCP App com embed_url assinado.',
+    inputSchema: EMBED_PREVIEW_SCHEMA,
     outputSchema: RENDER_PREVIEW_OUTPUT_SCHEMA,
     securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
     annotations: {
@@ -585,6 +627,51 @@ function makeRenderResult(toolName: McpAppDashboardRenderToolName, args: unknown
   }
 }
 
+async function callDashboardEmbedPreview(args: unknown) {
+  const input = asRecord(args)
+  const artifactId = optionalText(input.artifact_id || input.artifactId || input.id)
+  if (!artifactId) {
+    const structuredContent = {
+      ok: false,
+      tool: MCP_APP_DASHBOARD_RENDER_TOOL_NAMES.dashboardEmbedPreview,
+      view: 'dashboard_preview',
+      title: 'Dashboard nao informado',
+      dashboard: null,
+    }
+
+    return {
+      content: [{ type: 'text', text: 'artifact_id e obrigatorio para renderizar o dashboard.' }],
+      structuredContent,
+      isError: true,
+    }
+  }
+
+  const versionNumber = Number(input.version)
+  const dashboard = await readMcpDashboard({
+    artifactId,
+    kind: input.kind === 'published' ? 'published' : 'draft',
+    version: Number.isInteger(versionNumber) && versionNumber > 0 ? versionNumber : undefined,
+  })
+  const dashboardWithEmbed = withDashboardEmbedUrl(dashboard as JsonRecord)
+  const title = optionalText(input.title) || String(dashboardWithEmbed.title || dashboardWithEmbed.slug || artifactId)
+  const structuredContent = {
+    ok: true,
+    tool: MCP_APP_DASHBOARD_RENDER_TOOL_NAMES.dashboardEmbedPreview,
+    view: 'dashboard_preview',
+    title,
+    dashboard: dashboardWithEmbed,
+  }
+
+  return {
+    content: [{ type: 'text', text: `Renderizando dashboard ${title} no MCP App.` }],
+    structuredContent,
+    _meta: {
+      widget: DASHBOARD_WIDGET_RESOURCE_URI,
+    },
+    isError: false,
+  }
+}
+
 export function listCognitoMcpAppTools() {
   return {
     tools: [
@@ -680,6 +767,9 @@ export async function callCognitoMcpAppTool(
   }
 
   if (MCP_APP_RENDER_TOOL_NAME_SET.has(name)) {
+    if (name === MCP_APP_DASHBOARD_RENDER_TOOL_NAMES.dashboardEmbedPreview) {
+      return callDashboardEmbedPreview(args)
+    }
     return makeRenderResult(name as McpAppDashboardRenderToolName, args)
   }
 
