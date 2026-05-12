@@ -14,6 +14,7 @@
     "chatgpt-app:build": "node scripts/chatgpt-app/build-widget.mjs",
     "chatgpt-app:chatgpt-test": "node scripts/chatgpt-app/chatgpt-test-plan.mjs",
     "chatgpt-app:smoke": "node scripts/chatgpt-app/smoke-test.mjs",
+    "claude-app:claude-test": "node scripts/claude-app/claude-test-plan.mjs",
     "claude-app:smoke": "node scripts/claude-app/smoke-test.mjs",
     "service:hello": "node services/hello-service.mjs",
     "sandbox:agent-verify": "node scripts/sandbox-agent-verify.mjs",

@@ -31,3 +31,9 @@ Smoke test after deploy:
 ```txt
 COGNITO_MCP_TOKEN=... pnpm claude-app:smoke
 ```
+
+Manual Claude validation checklist:
+
+```txt
+pnpm claude-app:claude-test
+```

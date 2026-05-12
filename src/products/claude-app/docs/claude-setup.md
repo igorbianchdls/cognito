@@ -19,10 +19,6 @@ Implemented:
 - OAuth routes and protected resource discovery.
 - `dashboard_embed_preview` tool for one-call dashboard iframe rendering.
 
-Next:
-
-- Manual Claude connector validation.
-
 ## OAuth
 
 The Claude wrapper exposes:
@@ -97,6 +93,12 @@ absence of OpenAI-only metadata in Claude resources/tools
 ```
 
 ## Claude Connector Test
+
+Print the manual validation checklist:
+
+```txt
+pnpm claude-app:claude-test
+```
 
 Use this URL:
 
