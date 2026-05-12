@@ -7,6 +7,11 @@ import type { CognitoMcpServerContext } from '@/products/mcp/server/cognitoMcpSe
 
 type JsonRecord = Record<string, unknown>
 
+type ChatGptAppTool = JsonRecord & {
+  name: string
+  _meta: JsonRecord
+}
+
 function asRecord(value: unknown): JsonRecord {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
   return value as JsonRecord
@@ -51,8 +56,9 @@ function hasWidgetUi(meta: JsonRecord) {
   return ui.resourceUri === DASHBOARD_WIDGET_RESOURCE_URI
 }
 
-function withOpenAiToolMeta(tool: JsonRecord) {
+function withOpenAiToolMeta(tool: JsonRecord): ChatGptAppTool {
   const meta = asRecord(tool._meta)
+  const name = String(tool.name || '')
   const [invoking, invoked] = getToolInvocationText(String(tool.name || ''))
   const openAiWidgetMeta = hasWidgetUi(meta)
     ? {
@@ -63,6 +69,7 @@ function withOpenAiToolMeta(tool: JsonRecord) {
 
   return {
     ...tool,
+    name,
     _meta: {
       ...meta,
       ...openAiWidgetMeta,
@@ -72,7 +79,7 @@ function withOpenAiToolMeta(tool: JsonRecord) {
   }
 }
 
-export function listCognitoChatGptAppTools() {
+export function listCognitoChatGptAppTools(): { tools: ChatGptAppTool[] } {
   const result = listCognitoMcpAppTools()
   return {
     tools: result.tools.map((tool) => withOpenAiToolMeta(tool as JsonRecord)),
