@@ -34,6 +34,13 @@ The smoke test validates:
 - `dashboard_embed_preview` registration source
 - widget runtime globals
 
+See also:
+
+```txt
+src/products/mcp-apps/docs/overview.md
+src/products/mcp-apps/docs/inventory.md
+```
+
 ## Current State
 
 This is the first extraction step. The code is copied from `chatgpt-app`, isolated under `mcp-apps`, and standardized around MCP Apps `_meta.ui`. OpenAI-only fields are added by the ChatGPT wrapper.

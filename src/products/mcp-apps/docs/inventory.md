@@ -45,4 +45,4 @@ Completed in this phase:
 
 Next extraction step:
 
-- Add Claude smoke tests and manual connector validation.
+- Manual Claude connector validation after deploy.

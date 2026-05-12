@@ -25,3 +25,9 @@ OAuth discovery and connector-specific OAuth routes are available at:
 ```
 
 The wrapper also accepts OAuth access tokens issued by `/api/claude-app/oauth/token`.
+
+Smoke test after deploy:
+
+```txt
+COGNITO_MCP_TOKEN=... pnpm claude-app:smoke
+```

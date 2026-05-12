@@ -21,7 +21,6 @@ Implemented:
 
 Next:
 
-- Claude smoke test.
 - Manual Claude connector validation.
 
 ## OAuth
@@ -64,4 +63,57 @@ Input:
 
 ```json
 { "artifact_id": "<dashboard-id>" }
+```
+
+## Smoke Test
+
+After deploy:
+
+```txt
+COGNITO_MCP_TOKEN=... pnpm claude-app:smoke
+```
+
+Or with a dedicated Claude token:
+
+```txt
+COGNITO_CLAUDE_APP_TOKEN=... pnpm claude-app:smoke
+```
+
+The smoke test validates:
+
+```txt
+OAuth challenge
+OAuth protected resource metadata
+OAuth authorization server metadata
+OAuth register / authorize / token
+OAuth-authenticated initialize
+Bearer-authenticated initialize
+tools/list
+resources/list
+resources/read ui://widget/dashboard.html
+dashboard_render_preview
+dashboard_embed_preview when dashboards exist
+absence of OpenAI-only metadata in Claude resources/tools
+```
+
+## Claude Connector Test
+
+Use this URL:
+
+```txt
+https://cognito-seven.vercel.app/api/claude-app/mcp
+```
+
+Recommended prompt:
+
+```txt
+Abra o dashboard <id> como app interativo.
+```
+
+Expected behavior:
+
+```txt
+Claude calls dashboard_embed_preview.
+The MCP Apps widget opens.
+The widget renders the Cognito dashboard iframe.
 ```

@@ -153,6 +153,13 @@ Run the remote smoke test after deploy:
 COGNITO_MCP_TOKEN=... pnpm chatgpt-app:smoke
 ```
 
+Before host-specific smoke tests, validate the shared MCP Apps layer locally:
+
+```txt
+pnpm mcp-apps:build
+pnpm mcp-apps:smoke
+```
+
 Print the manual ChatGPT validation checklist:
 
 ```txt
