@@ -326,7 +326,7 @@ export function listMcpAppDomainToolDefinitions() {
   return [
     ERP_DOMAIN_TOOL_DEFINITION,
     ECOMMERCE_DOMAIN_TOOL_DEFINITION,
-    ...(isEnvEnabled('COGNITO_ENABLE_SQL_TOOL') ? [SQL_DOMAIN_TOOL_DEFINITION] : []),
+    SQL_DOMAIN_TOOL_DEFINITION,
     MARKETING_DOMAIN_TOOL_DEFINITION,
   ]
 }
@@ -873,23 +873,6 @@ export async function callMcpAppDomainTool(
   args: unknown,
   context: CognitoMcpServerContext = {},
 ) {
-  if (
-    (name === MCP_APP_DOMAIN_TOOL_NAMES.sql || name === MCP_APP_DOMAIN_TOOL_NAMES.sqlExecution) &&
-    !isEnvEnabled('COGNITO_ENABLE_SQL_TOOL')
-  ) {
-    const structuredContent = {
-      success: false,
-      tool: name,
-      error: 'SQL tool nao esta habilitada.',
-    }
-
-    return {
-      content: [{ type: 'text', text: 'COGNITO_ENABLE_SQL_TOOL nao esta ativo.' }],
-      structuredContent,
-      isError: true,
-    }
-  }
-
   switch (name) {
     case MCP_APP_DOMAIN_TOOL_NAMES.erp:
       return callCrud(args, context)
