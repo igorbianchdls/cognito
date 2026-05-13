@@ -149,7 +149,7 @@ const CRUD_SCHEMA = {
     action: {
       type: 'string',
       enum: ['listar', 'ler'],
-      description: 'Acao CRUD segura. Nesta versao do MCP App App, use listar ou ler.',
+      description: 'Acao ERP segura. Nesta versao do MCP App App, use listar ou ler.',
     },
     resource: {
       type: 'string',
@@ -262,7 +262,7 @@ const MARKETING_SCHEMA = {
 } as const satisfies McpToolInputSchema
 
 export const MCP_APP_DOMAIN_TOOL_NAMES = {
-  crud: 'crud',
+  erp: 'erp',
   sqlExecution: 'sql_execution',
   ecommerce: 'ecommerce',
   marketing: 'marketing',
@@ -270,8 +270,8 @@ export const MCP_APP_DOMAIN_TOOL_NAMES = {
 
 export const MCP_APP_DOMAIN_TOOL_DEFINITIONS = [
   {
-    name: MCP_APP_DOMAIN_TOOL_NAMES.crud,
-    title: 'CRUD',
+    name: MCP_APP_DOMAIN_TOOL_NAMES.erp,
+    title: 'ERP',
     description:
       'Consulta segura de recursos transacionais ERP. Nesta versao, use apenas action listar ou ler.',
     inputSchema: CRUD_SCHEMA,
@@ -752,7 +752,7 @@ LIMIT $${params.length - 1}::int
 OFFSET $${params.length}::int
     `.trim(),
     params,
-    title: `CRUD - ${resource}`,
+    title: `ERP - ${resource}`,
   }
 }
 
@@ -761,14 +761,14 @@ async function callCrud(args: unknown, context: CognitoMcpServerContext) {
   const paramsIn = toObj(input.params)
   const action = normalizeCrudAction(input.action || 'listar')
   const resource = toText(input.resource)
-  if (!resource) throw new Error('resource e obrigatorio para crud')
+  if (!resource) throw new Error('resource e obrigatorio para erp')
 
   const built = buildCrudQuery(action, resource, paramsIn, getTenantId(context))
   const rows = await runQuery<Record<string, unknown>>(built.sql, built.params)
   const columns = inferColumns(rows)
   const structuredContent = {
     success: true,
-    tool: 'crud',
+    tool: 'erp',
     action,
     resource,
     title: built.title,
@@ -848,7 +848,7 @@ export async function callMcpAppDomainTool(
   context: CognitoMcpServerContext = {},
 ) {
   switch (name) {
-    case MCP_APP_DOMAIN_TOOL_NAMES.crud:
+    case MCP_APP_DOMAIN_TOOL_NAMES.erp:
       return callCrud(args, context)
     case MCP_APP_DOMAIN_TOOL_NAMES.ecommerce:
       return callEcommerce(args, context)

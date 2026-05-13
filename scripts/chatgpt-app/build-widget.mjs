@@ -108,7 +108,7 @@ const componentJs = String.raw`(() => {
 
   function getToolEyebrow(data) {
     const tool = String(data.tool || 'resultado');
-    if (tool === 'crud') return 'CRUD';
+    if (tool === 'erp') return 'ERP';
     if (tool === 'sql_execution') return 'SQL';
     if (tool === 'ecommerce') return 'Ecommerce';
     if (tool === 'marketing') return 'Marketing';
@@ -327,7 +327,7 @@ const componentJs = String.raw`(() => {
       return;
     }
 
-    if (data.tool === 'crud' || data.tool === 'sql_execution' || data.tool === 'ecommerce' || data.tool === 'marketing') {
+    if (data.tool === 'erp' || data.tool === 'sql_execution' || data.tool === 'ecommerce' || data.tool === 'marketing') {
       root.innerHTML = renderAnalyticalResult(data);
       return;
     }

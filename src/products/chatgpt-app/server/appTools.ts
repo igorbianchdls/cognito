@@ -38,7 +38,7 @@ function getToolInvocationText(name: string) {
       return ['Renderizando dashboard...', 'Dashboard renderizado.']
     case 'search':
       return ['Buscando dashboards...', 'Busca concluida.']
-    case 'crud':
+    case 'erp':
       return ['Consultando registros...', 'Registros carregados.']
     case 'ecommerce':
       return ['Calculando ecommerce...', 'Metricas de ecommerce carregadas.']

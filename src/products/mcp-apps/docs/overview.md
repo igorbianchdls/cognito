@@ -11,7 +11,7 @@ It intentionally does not own host auth, OAuth discovery, or host-specific metad
 - Define render tools that point to the widget through `_meta.ui.resourceUri`.
 - Normalize dashboard tool responses into `structuredContent`.
 - Add signed dashboard `embed_url` values where possible.
-- Render CRUD, SQL, ecommerce, marketing, dashboard lists, and dashboard previews in the same widget.
+- Render ERP, SQL, ecommerce, marketing, dashboard lists, and dashboard previews in the same widget.
 
 ## Host Wrappers
 
