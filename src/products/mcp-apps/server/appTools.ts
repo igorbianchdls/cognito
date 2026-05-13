@@ -826,7 +826,7 @@ async function callDashboardAuthoring(args: unknown, context: CognitoMcpServerCo
   const input = asRecord(args)
   const action = String(input.action || '').trim()
   const artifactId = optionalText(input.id || input.artifact_id)
-  const commonArgs = {
+  const commonArgs: JsonRecord = {
     ...input,
     ...(artifactId ? { artifact_id: artifactId } : {}),
   }
