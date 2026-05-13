@@ -822,7 +822,11 @@ async function callMarketing(args: unknown, context: CognitoMcpServerContext) {
   return executeBuiltQuery('marketing', action, buildMarketingQuery(action, paramsIn, getTenantId(context)))
 }
 
-async function callSqlExecution(args: unknown, context: CognitoMcpServerContext, toolName = MCP_APP_DOMAIN_TOOL_NAMES.sql) {
+async function callSqlExecution(
+  args: unknown,
+  context: CognitoMcpServerContext,
+  toolName: string = MCP_APP_DOMAIN_TOOL_NAMES.sql,
+) {
   const input = toObj(args)
   const sqlRaw = toText(input.sql)
   const title = toText(input.title) || 'Resultado da Consulta'
