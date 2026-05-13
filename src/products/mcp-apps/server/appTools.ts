@@ -95,7 +95,7 @@ const DASHBOARD_AUTHORING_SCHEMA = {
     },
     expected_version: {
       type: 'integer',
-      description: 'Versao draft esperada para patch/update_full.',
+      description: 'Versao draft esperada para patch/update_full. Opcional; se omitida, a versao draft atual sera usada automaticamente.',
     },
     operation: {
       type: 'object',
@@ -857,6 +857,43 @@ async function callDashboardAuthoring(args: unknown, context: CognitoMcpServerCo
     }
   }
 
+  if ((action === 'patch' || action === 'update_full') && commonArgs.expected_version == null) {
+    if (!artifactId) {
+      const structuredContent = {
+        ok: false,
+        tool: MCP_APP_PUBLIC_TOOL_NAMES.dashboardAuthoring,
+        action,
+        error: 'id e obrigatorio para editar dashboard.',
+      }
+
+      return {
+        content: [{ type: 'text', text: structuredContent.error }],
+        structuredContent,
+        isError: true,
+      }
+    }
+
+    const currentDashboard = await readMcpDashboard({ artifactId, kind: 'draft' })
+    const currentRecord = asRecord(currentDashboard)
+    const currentVersion = Number(currentRecord.current_draft_version || currentRecord.version)
+    if (!Number.isInteger(currentVersion) || currentVersion <= 0) {
+      const structuredContent = {
+        ok: false,
+        tool: MCP_APP_PUBLIC_TOOL_NAMES.dashboardAuthoring,
+        action,
+        error: 'Nao foi possivel identificar a versao draft atual do dashboard. Abra o dashboard novamente e tente editar.',
+      }
+
+      return {
+        content: [{ type: 'text', text: structuredContent.error }],
+        structuredContent,
+        isError: true,
+      }
+    }
+
+    commonArgs.expected_version = currentVersion
+  }
+
   const result = await callCognitoMcpTool(toolName, commonArgs, context)
   const structuredContent = {
     ok: true,
@@ -908,7 +945,7 @@ export function listCognitoMcpAppTools() {
         name: MCP_APP_PUBLIC_TOOL_NAMES.dashboardAuthoring,
         title: 'Dashboard authoring',
         description:
-          'Cria, edita ou consulta o contrato de dashboards Cognito. Use para get_contract, create, patch ou update_full.',
+          'Cria, edita ou consulta o contrato de dashboards Cognito. Use para get_contract, create, patch ou update_full. expected_version e opcional; se omitido, a versao draft atual sera usada automaticamente.',
         inputSchema: DASHBOARD_AUTHORING_SCHEMA,
         outputSchema: DASHBOARD_WRITE_OUTPUT_SCHEMA,
         securitySchemes: COGNITO_WRITE_SECURITY_SCHEMES,
