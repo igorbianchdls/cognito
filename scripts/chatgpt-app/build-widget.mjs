@@ -109,7 +109,7 @@ const componentJs = String.raw`(() => {
   function getToolEyebrow(data) {
     const tool = String(data.tool || 'resultado');
     if (tool === 'erp') return 'ERP';
-    if (tool === 'sql_execution') return 'SQL';
+    if (tool === 'sql' || tool === 'sql_execution') return 'SQL';
     if (tool === 'ecommerce') return 'Ecommerce';
     if (tool === 'marketing') return 'Marketing';
     return tool;
@@ -290,7 +290,7 @@ const componentJs = String.raw`(() => {
   function renderPreview(data) {
     const dashboard = data.dashboard;
     if (!dashboard || typeof dashboard !== 'object') {
-      return emptyState('Dashboard nao informado', 'A render tool precisa receber o objeto retornado por dashboard_read.');
+      return emptyState('Dashboard nao informado', 'A tool open_dashboard precisa receber um id valido.');
     }
 
     return header(
@@ -327,7 +327,7 @@ const componentJs = String.raw`(() => {
       return;
     }
 
-    if (data.tool === 'erp' || data.tool === 'sql_execution' || data.tool === 'ecommerce' || data.tool === 'marketing') {
+    if (data.tool === 'erp' || data.tool === 'sql' || data.tool === 'sql_execution' || data.tool === 'ecommerce' || data.tool === 'marketing') {
       root.innerHTML = renderAnalyticalResult(data);
       return;
     }

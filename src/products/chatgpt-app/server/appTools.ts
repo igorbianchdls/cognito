@@ -19,11 +19,15 @@ function asRecord(value: unknown): JsonRecord {
 
 function getToolInvocationText(name: string) {
   switch (name) {
+    case 'dashboards':
     case 'dashboard_list':
       return ['Listando dashboards...', 'Dashboards listados.']
+    case 'open_dashboard':
     case 'dashboard_read':
     case 'fetch':
       return ['Abrindo dashboard...', 'Dashboard carregado.']
+    case 'dashboard_authoring':
+      return ['Atualizando dashboard...', 'Dashboard atualizado.']
     case 'dashboard_get_contract':
       return ['Lendo contrato...', 'Contrato carregado.']
     case 'dashboard_create':
@@ -42,6 +46,7 @@ function getToolInvocationText(name: string) {
       return ['Consultando registros...', 'Registros carregados.']
     case 'ecommerce':
       return ['Calculando ecommerce...', 'Metricas de ecommerce carregadas.']
+    case 'sql':
     case 'sql_execution':
       return ['Executando SQL...', 'SQL executado.']
     case 'marketing':

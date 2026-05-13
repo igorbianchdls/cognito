@@ -65,8 +65,10 @@ async function main() {
   console.log('resources metadata ok')
 
   const toolsSource = await readFile(path.join(root, 'src/products/mcp-apps/server/appTools.ts'), 'utf8')
-  assert(toolsSource.includes("dashboardEmbedPreview: 'dashboard_embed_preview'"), 'dashboard_embed_preview constant missing')
-  assert(toolsSource.includes('function callDashboardEmbedPreview'), 'dashboard_embed_preview implementation missing')
+  assert(toolsSource.includes("dashboards: 'dashboards'"), 'dashboards public tool constant missing')
+  assert(toolsSource.includes("openDashboard: 'open_dashboard'"), 'open_dashboard public tool constant missing')
+  assert(toolsSource.includes('function callDashboards'), 'dashboards implementation missing')
+  assert(toolsSource.includes('function callOpenDashboard'), 'open_dashboard implementation missing')
   assert(!toolsSource.includes('openai/outputTemplate'), 'mcp-apps tools should not include OpenAI outputTemplate')
   assert(!toolsSource.includes('openai/widgetAccessible'), 'mcp-apps tools should not include OpenAI widgetAccessible')
   console.log('tools source ok')

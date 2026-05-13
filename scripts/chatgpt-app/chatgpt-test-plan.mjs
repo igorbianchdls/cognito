@@ -18,8 +18,7 @@ const checks = [
     title: 'Dashboard list UI',
     prompt: 'Liste meus dashboards e renderize como cards.',
     expected: [
-      'ChatGPT calls dashboard_list.',
-      'ChatGPT calls dashboard_render_list.',
+      'ChatGPT calls dashboards.',
       'The widget renders cards, not raw JSON.',
     ],
   },
@@ -27,8 +26,7 @@ const checks = [
     title: 'Dashboard full preview UI',
     prompt: 'Abra o preview do dashboard <id> e renderize o dashboard completo.',
     expected: [
-      'ChatGPT calls dashboard_read.',
-      'ChatGPT calls dashboard_render_preview.',
+      'ChatGPT calls open_dashboard with only { id }.',
       'The widget renders an iframe with the full Cognito dashboard.',
       'The iframe URL contains embed=1 and a signed token.',
     ],

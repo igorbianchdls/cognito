@@ -190,23 +190,24 @@ console.log(`initialize ok: ${initialize.serverInfo.name}@${initialize.serverInf
 
 const toolsList = await callMcp('tools/list')
 const toolNames = (toolsList?.tools || []).map((tool) => tool.name)
-assert(toolNames.includes('search'), 'tools/list missing search')
-assert(toolNames.includes('fetch'), 'tools/list missing fetch')
+assert(toolNames.includes('dashboards'), 'tools/list missing dashboards')
+assert(toolNames.includes('open_dashboard'), 'tools/list missing open_dashboard')
 assert(toolNames.includes('erp'), 'tools/list missing erp')
-assert(toolNames.includes('sql_execution'), 'tools/list missing sql_execution')
 assert(toolNames.includes('ecommerce'), 'tools/list missing ecommerce')
 assert(toolNames.includes('marketing'), 'tools/list missing marketing')
-assert(toolNames.includes('dashboard_list'), 'tools/list missing dashboard_list')
-assert(toolNames.includes('dashboard_embed_preview'), 'tools/list missing dashboard_embed_preview')
-assert(toolNames.includes('dashboard_render_list'), 'tools/list missing dashboard_render_list')
-assert(toolNames.includes('dashboard_render_preview'), 'tools/list missing dashboard_render_preview')
-const renderPreviewTool = (toolsList?.tools || []).find((tool) => tool.name === 'dashboard_render_preview')
-assert(renderPreviewTool?._meta?.['openai/outputTemplate'] === 'ui://widget/dashboard.html', 'dashboard_render_preview missing OpenAI outputTemplate')
-assert(renderPreviewTool?._meta?.['openai/widgetAccessible'] === true, 'dashboard_render_preview missing OpenAI widgetAccessible')
-assert(renderPreviewTool?._meta?.ui?.resourceUri === 'ui://widget/dashboard.html', 'dashboard_render_preview missing MCP Apps ui.resourceUri')
-const embedPreviewTool = (toolsList?.tools || []).find((tool) => tool.name === 'dashboard_embed_preview')
-assert(embedPreviewTool?._meta?.['openai/outputTemplate'] === 'ui://widget/dashboard.html', 'dashboard_embed_preview missing OpenAI outputTemplate')
-assert(embedPreviewTool?._meta?.ui?.resourceUri === 'ui://widget/dashboard.html', 'dashboard_embed_preview missing MCP Apps ui.resourceUri')
+assert(!toolNames.includes('search'), 'tools/list should not expose deprecated search')
+assert(!toolNames.includes('fetch'), 'tools/list should not expose deprecated fetch')
+assert(!toolNames.includes('dashboard_render_list'), 'tools/list should not expose deprecated dashboard_render_list')
+assert(!toolNames.includes('dashboard_render_preview'), 'tools/list should not expose deprecated dashboard_render_preview')
+assert(!toolNames.includes('dashboard_embed_preview'), 'tools/list should not expose deprecated dashboard_embed_preview')
+assert(!toolNames.includes('sql_execution'), 'tools/list should not expose deprecated sql_execution')
+const dashboardsTool = (toolsList?.tools || []).find((tool) => tool.name === 'dashboards')
+assert(dashboardsTool?._meta?.['openai/outputTemplate'] === 'ui://widget/dashboard.html', 'dashboards missing OpenAI outputTemplate')
+assert(dashboardsTool?._meta?.['openai/widgetAccessible'] === true, 'dashboards missing OpenAI widgetAccessible')
+assert(dashboardsTool?._meta?.ui?.resourceUri === 'ui://widget/dashboard.html', 'dashboards missing MCP Apps ui.resourceUri')
+const openDashboardTool = (toolsList?.tools || []).find((tool) => tool.name === 'open_dashboard')
+assert(openDashboardTool?._meta?.['openai/outputTemplate'] === 'ui://widget/dashboard.html', 'open_dashboard missing OpenAI outputTemplate')
+assert(openDashboardTool?._meta?.ui?.resourceUri === 'ui://widget/dashboard.html', 'open_dashboard missing MCP Apps ui.resourceUri')
 console.log(`tools/list ok: ${toolNames.join(', ')}`)
 
 const resourcesList = await callMcp('resources/list')
@@ -246,61 +247,30 @@ assert(embedToken?.artifact_id === 'smoke-dashboard', 'embed-token endpoint shou
 assert(typeof embedToken?.token === 'string' && embedToken.token.includes('.'), 'embed-token endpoint missing signed token')
 console.log('embed-token ok')
 
-const renderList = await callMcp('tools/call', {
-  name: 'dashboard_render_list',
-  arguments: {
-    title: 'Smoke dashboards',
-    dashboards: [
-      {
-        id: 'smoke-dashboard',
-        title: 'Smoke Dashboard',
-        status: 'draft',
-        current_draft_version: 1,
-        updated_at: '2026-05-07T00:00:00.000Z',
-        url: 'https://cognito-seven.vercel.app',
-      },
-    ],
-  },
-})
-assert(renderList?.structuredContent?.view === 'dashboard_list', 'dashboard_render_list returned invalid view')
-console.log('dashboard_render_list ok')
-
-const renderPreview = await callMcp('tools/call', {
-  name: 'dashboard_render_preview',
-  arguments: {
-    dashboard: {
-      id: 'smoke-dashboard',
-      title: 'Smoke Dashboard',
-      source: '<Dashboard title="Smoke" />',
-    },
-  },
-})
-assert(renderPreview?.structuredContent?.view === 'dashboard_preview', 'dashboard_render_preview returned invalid view')
-assertEmbedUrl(renderPreview?.structuredContent?.dashboard?.embed_url, 'dashboard_render_preview')
-console.log('dashboard_render_preview ok')
-
-const dashboardList = await callMcp('tools/call', {
-  name: 'dashboard_list',
+const dashboards = await callMcp('tools/call', {
+  name: 'dashboards',
   arguments: {
     limit: 1,
   },
 })
-assert(Array.isArray(dashboardList?.structuredContent?.dashboards), 'dashboard_list structuredContent must wrap dashboards array')
-if (dashboardList.structuredContent.dashboards.length) {
-  assertEmbedUrl(dashboardList.structuredContent.dashboards[0]?.embed_url, 'dashboard_list')
-}
-console.log('dashboard_list output shape ok')
+assert(dashboards?.structuredContent?.view === 'dashboard_list', 'dashboards returned invalid view')
+assert(Array.isArray(dashboards?.structuredContent?.dashboards), 'dashboards structuredContent must include dashboards array')
+if (dashboards.structuredContent.dashboards.length) {
+  const dashboard = dashboards.structuredContent.dashboards[0]
+  assertEmbedUrl(dashboard?.embed_url, 'dashboards')
 
-const search = await callMcp('tools/call', {
-  name: 'search',
-  arguments: {
-    query: 'dashboard',
-  },
-})
-assert(Array.isArray(search?.structuredContent?.results), 'search structuredContent must include results array')
-if (search.structuredContent.results.length) {
-  assertEmbedUrl(search.structuredContent.results[0]?.embed_url, 'search')
+  const openDashboard = await callMcp('tools/call', {
+    name: 'open_dashboard',
+    arguments: {
+      id: dashboard.id || dashboard.artifact_id,
+    },
+  })
+  assert(openDashboard?.structuredContent?.view === 'dashboard_preview', 'open_dashboard returned invalid view')
+  assertEmbedUrl(openDashboard?.structuredContent?.dashboard?.embed_url, 'open_dashboard')
+  console.log('open_dashboard ok')
+} else {
+  console.log('open_dashboard skipped: no dashboards returned')
 }
-console.log('search ok')
+console.log('dashboards ok')
 
 console.log('ChatGPT App smoke test passed')

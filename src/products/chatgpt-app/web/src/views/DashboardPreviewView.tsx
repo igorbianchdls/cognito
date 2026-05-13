@@ -13,10 +13,10 @@ export function DashboardPreviewView({ data }: DashboardPreviewViewProps) {
 
   if (!dashboard) {
     return (
-      <EmptyState
-        title="Dashboard nao informado"
-        description="A render tool precisa receber o objeto retornado por dashboard_read."
-      />
+        <EmptyState
+          title="Dashboard nao informado"
+          description="A tool open_dashboard precisa receber um id valido."
+        />
     )
   }
 

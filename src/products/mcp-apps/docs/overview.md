@@ -8,7 +8,7 @@ It intentionally does not own host auth, OAuth discovery, or host-specific metad
 
 - Serve the `ui://widget/dashboard.html` resource.
 - Build and store the dashboard widget HTML in `web/dist`.
-- Define render tools that point to the widget through `_meta.ui.resourceUri`.
+- Define public tools that return `structuredContent` ready for the widget.
 - Normalize dashboard tool responses into `structuredContent`.
 - Add signed dashboard `embed_url` values where possible.
 - Render ERP, SQL, ecommerce, marketing, dashboard lists, and dashboard previews in the same widget.
@@ -39,7 +39,7 @@ Run `mcp-apps:smoke` before host-specific smoke tests to catch shared UI/resourc
 ## Key Tool
 
 ```txt
-dashboard_embed_preview
+open_dashboard
 ```
 
-This is the preferred one-call tool when a host should render the full dashboard iframe from an artifact id.
+This is the preferred one-call tool when a host should render the full dashboard iframe from `{ "id": "..." }`.

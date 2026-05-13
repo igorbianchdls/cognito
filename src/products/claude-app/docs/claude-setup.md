@@ -17,7 +17,7 @@ Implemented:
 - MCP Apps tools/resources from `mcp-apps`.
 - Bearer token auth using `COGNITO_CLAUDE_APP_TOKEN` or `COGNITO_MCP_TOKEN`.
 - OAuth routes and protected resource discovery.
-- `dashboard_embed_preview` tool for one-call dashboard iframe rendering.
+- `open_dashboard` tool for one-call dashboard iframe rendering.
 
 ## OAuth
 
@@ -52,13 +52,13 @@ COGNITO_MCP_TOKEN
 Use this tool when Claude should render a dashboard in the MCP Apps iframe with a single call:
 
 ```txt
-dashboard_embed_preview
+open_dashboard
 ```
 
 Input:
 
 ```json
-{ "artifact_id": "<dashboard-id>" }
+{ "id": "<dashboard-id>" }
 ```
 
 ## Smoke Test
@@ -87,8 +87,8 @@ Bearer-authenticated initialize
 tools/list
 resources/list
 resources/read ui://widget/dashboard.html
-dashboard_render_preview
-dashboard_embed_preview when dashboards exist
+dashboards
+open_dashboard when dashboards exist
 absence of OpenAI-only metadata in Claude resources/tools
 ```
 
@@ -115,7 +115,7 @@ Abra o dashboard <id> como app interativo.
 Expected behavior:
 
 ```txt
-Claude calls dashboard_embed_preview.
+Claude calls open_dashboard with only { id }.
 The MCP Apps widget opens.
 The widget renders the Cognito dashboard iframe.
 ```

@@ -72,16 +72,14 @@ https://cognito-seven.vercel.app/api/chatgpt-app/mcp
 
 ```txt
 User asks for dashboards
-ChatGPT calls dashboard_list
-ChatGPT calls dashboard_render_list
+ChatGPT calls dashboards
 The iframe renders dashboard cards
 ```
 
 ```txt
 User asks for a dashboard preview
-ChatGPT calls dashboard_read
-ChatGPT calls dashboard_render_preview
-The iframe renders dashboard metadata and preview
+ChatGPT calls open_dashboard with only { id }
+The iframe renders the full dashboard
 ```
 
 ## Auth
@@ -121,10 +119,8 @@ Dashboard embed URLs use a signed short-lived token:
 Dashboard tools include `embed_url` where a dashboard id is available:
 
 ```txt
-dashboard_list -> dashboards[].embed_url
-dashboard_read -> dashboard.embed_url
-dashboard_render_preview -> dashboard.embed_url rendered in the widget iframe
-dashboard_embed_preview -> reads and renders a dashboard from artifact_id in one tool call
+dashboards -> dashboards[].embed_url
+open_dashboard -> reads and renders a dashboard from { id } in one tool call
 ```
 
 Generate a token for testing:
@@ -186,11 +182,10 @@ OpenAI widget metadata
 MCP Apps widget metadata
 widget CSP domains
 POST /api/chatgpt-app/embed-token
-tools/call dashboard_render_list
-tools/call dashboard_render_preview
-dashboard_render_preview dashboard.embed_url
-dashboard_list dashboards[].embed_url when dashboards exist
-search results[].embed_url when results exist
+tools/call dashboards
+tools/call open_dashboard
+open_dashboard dashboard.embed_url
+dashboards dashboards[].embed_url when dashboards exist
 ```
 
 It does not create or edit dashboards.
@@ -206,8 +201,7 @@ Liste meus dashboards e renderize como cards.
 Expected:
 
 ```txt
-dashboard_list
-dashboard_render_list
+dashboards
 Widget renders dashboard cards.
 ```
 
@@ -218,8 +212,7 @@ Abra o preview do dashboard <id> e renderize o dashboard completo.
 Expected:
 
 ```txt
-dashboard_read
-dashboard_render_preview
+open_dashboard
 Widget renders the Cognito dashboard in an iframe.
 The iframe URL contains embed=1 and a signed token.
 ```

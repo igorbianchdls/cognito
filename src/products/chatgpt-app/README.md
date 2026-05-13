@@ -6,7 +6,7 @@ This product reuses the generic MCP dashboard tools from `src/products/mcp`, the
 
 - app metadata for discovery in ChatGPT
 - OpenAI-specific metadata for MCP Apps UI resources
-- OpenAI-specific metadata for render tools
+- OpenAI-specific metadata for public MCP Apps tools
 - signed dashboard embed tokens
 
 The generic MCP endpoint remains separate at `/api/mcp`. The ChatGPT App endpoint will live at `/api/chatgpt-app/mcp`.
@@ -21,7 +21,7 @@ Implemented:
 - base dashboard UI resource
 - ChatGPT App MCP route
 - health route
-- render tools for list and preview
+- public tools: `dashboards`, `open_dashboard`, `erp`, `ecommerce`, `marketing`
 - initial React UI source and iframe bridge
 - widget build script
 - smoke test script

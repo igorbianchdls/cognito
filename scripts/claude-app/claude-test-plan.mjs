@@ -25,15 +25,15 @@ const checks = [
     title: 'Dashboard list',
     prompt: 'Liste meus dashboards.',
     expected: [
-      'Claude calls dashboard_list.',
-      'Claude returns dashboard records with Cognito links.',
+      'Claude calls dashboards.',
+      'The MCP Apps widget renders dashboard cards.',
     ],
   },
   {
     title: 'Interactive dashboard',
     prompt: 'Abra o dashboard <id> como app interativo.',
     expected: [
-      'Claude calls dashboard_embed_preview.',
+      'Claude calls open_dashboard with only { id }.',
       'The MCP Apps widget opens.',
       'The widget renders the full Cognito dashboard iframe.',
       'The iframe URL contains embed=1 and a signed token.',

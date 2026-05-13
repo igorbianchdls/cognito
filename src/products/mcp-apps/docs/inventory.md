@@ -5,7 +5,7 @@
 These can live in `src/products/mcp-apps`:
 
 - `server/appResources.ts`: declares `ui://widget/dashboard.html`, widget HTML, MIME type, and MCP Apps `ui` metadata.
-- `server/appTools.ts`: render/data tool wrappers that add `structuredContent` and `embed_url`.
+- `server/appTools.ts`: public dashboard/data tools that add `structuredContent` and `embed_url`.
 - `server/embedToken.ts`: signed dashboard embed token helpers.
 - `server/domainTools.ts`: ERP, SQL, ecommerce, and marketing tools that render structured UI.
 - `web/src`: widget source for list, preview, analytics tables, metrics, charts, and dashboard iframe.
@@ -41,7 +41,7 @@ Completed in this phase:
 - `mcp-apps` metadata is standardized around `_meta.ui`.
 - OpenAI-only metadata is injected by the ChatGPT wrapper.
 - `claude-app` has an initial MCP endpoint wrapper over `mcp-apps`.
-- `dashboard_embed_preview` renders a dashboard iframe from `artifact_id` in one tool call.
+- `open_dashboard` renders a dashboard iframe from `{ "id": "..." }` in one tool call.
 
 Next extraction step:
 

@@ -13,10 +13,9 @@ export const COGNITO_CHATGPT_APP_METADATA = {
 } as const
 
 export const COGNITO_CHATGPT_APP_INSTRUCTIONS = [
-  'Use the data tools to fetch or mutate dashboard data before rendering UI.',
-  'Use dashboard_render_list only after dashboard_list has returned dashboard records.',
-  'Use dashboard_render_preview only after dashboard_read has returned a dashboard record.',
-  'Use dashboard_embed_preview when the user asks to open a full dashboard preview by id in one step.',
+  'Use dashboards to list or search Cognito dashboards.',
+  'Use open_dashboard with only { "id": "..." } when the user asks to open a full dashboard as an interactive app.',
+  'Use erp for read-only operational ERP records, ecommerce for ecommerce metrics, and marketing for paid media metrics.',
   'Prefer concise dashboard summaries and include Cognito links when available.',
   'Do not expose internal implementation details or raw source unless the user asks for them.',
 ].join('\n')

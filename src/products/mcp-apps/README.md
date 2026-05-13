@@ -5,8 +5,8 @@ Shared MCP Apps layer for interactive Cognito dashboard UI.
 This product owns the host-agnostic pieces that can be reused by Claude, ChatGPT, and any MCP Apps-compatible client:
 
 - `ui://widget/dashboard.html` resource
-- dashboard render tools
-- `dashboard_embed_preview` one-call render tool
+- `dashboards` list/search tool
+- `open_dashboard` one-call full dashboard tool
 - dashboard embed URL helpers
 - dashboard/ecommerce/marketing/SQL result widget
 - widget source and built HTML
@@ -31,7 +31,7 @@ The smoke test validates:
 - built widget HTML
 - MCP Apps resource metadata
 - absence of OpenAI-only metadata in the shared layer
-- `dashboard_embed_preview` registration source
+- `dashboards` and `open_dashboard` registration source
 - widget runtime globals
 
 See also:

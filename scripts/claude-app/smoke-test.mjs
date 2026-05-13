@@ -191,13 +191,17 @@ console.log(`initialize ok: ${initialize.serverInfo.name}@${initialize.serverInf
 
 const toolsList = await callMcp('tools/list')
 const toolNames = (toolsList?.tools || []).map((tool) => tool.name)
-assert(toolNames.includes('dashboard_list'), 'tools/list missing dashboard_list')
-assert(toolNames.includes('dashboard_embed_preview'), 'tools/list missing dashboard_embed_preview')
-assert(toolNames.includes('dashboard_render_list'), 'tools/list missing dashboard_render_list')
-assert(toolNames.includes('dashboard_render_preview'), 'tools/list missing dashboard_render_preview')
-const embedPreviewTool = (toolsList?.tools || []).find((tool) => tool.name === 'dashboard_embed_preview')
-assert(embedPreviewTool?._meta?.ui?.resourceUri === 'ui://widget/dashboard.html', 'dashboard_embed_preview missing MCP Apps ui.resourceUri')
-assert(!embedPreviewTool?._meta?.['openai/outputTemplate'], 'Claude App should not expose OpenAI outputTemplate')
+assert(toolNames.includes('dashboards'), 'tools/list missing dashboards')
+assert(toolNames.includes('open_dashboard'), 'tools/list missing open_dashboard')
+assert(toolNames.includes('erp'), 'tools/list missing erp')
+assert(toolNames.includes('ecommerce'), 'tools/list missing ecommerce')
+assert(toolNames.includes('marketing'), 'tools/list missing marketing')
+assert(!toolNames.includes('dashboard_embed_preview'), 'tools/list should not expose deprecated dashboard_embed_preview')
+assert(!toolNames.includes('dashboard_render_list'), 'tools/list should not expose deprecated dashboard_render_list')
+assert(!toolNames.includes('dashboard_render_preview'), 'tools/list should not expose deprecated dashboard_render_preview')
+const openDashboardTool = (toolsList?.tools || []).find((tool) => tool.name === 'open_dashboard')
+assert(openDashboardTool?._meta?.ui?.resourceUri === 'ui://widget/dashboard.html', 'open_dashboard missing MCP Apps ui.resourceUri')
+assert(!openDashboardTool?._meta?.['openai/outputTemplate'], 'Claude App should not expose OpenAI outputTemplate')
 console.log(`tools/list ok: ${toolNames.join(', ')}`)
 
 const resourcesList = await callMcp('resources/list')
@@ -218,42 +222,30 @@ assert(widgetContent?._meta?.ui?.csp?.resourceDomains?.includes(baseUrl), 'widge
 assert(!widgetContent?._meta?.['openai/widgetCSP'], 'Claude App resource should not expose OpenAI widgetCSP')
 console.log('resources/read ok')
 
-const renderPreview = await callMcp('tools/call', {
-  name: 'dashboard_render_preview',
-  arguments: {
-    dashboard: {
-      id: 'smoke-dashboard',
-      title: 'Smoke Dashboard',
-      source: '<Dashboard title="Smoke" />',
-    },
-  },
-})
-assert(renderPreview?.structuredContent?.view === 'dashboard_preview', 'dashboard_render_preview returned invalid view')
-assertEmbedUrl(renderPreview?.structuredContent?.dashboard?.embed_url, 'dashboard_render_preview')
-console.log('dashboard_render_preview ok')
-
-const dashboardList = await callMcp('tools/call', {
-  name: 'dashboard_list',
+const dashboards = await callMcp('tools/call', {
+  name: 'dashboards',
   arguments: {
     limit: 1,
   },
 })
-assert(Array.isArray(dashboardList?.structuredContent?.dashboards), 'dashboard_list structuredContent must wrap dashboards array')
-if (dashboardList.structuredContent.dashboards.length) {
-  const dashboard = dashboardList.structuredContent.dashboards[0]
-  assertEmbedUrl(dashboard?.embed_url, 'dashboard_list')
+assert(dashboards?.structuredContent?.view === 'dashboard_list', 'dashboards returned invalid view')
+assert(Array.isArray(dashboards?.structuredContent?.dashboards), 'dashboards structuredContent must include dashboards array')
+if (dashboards.structuredContent.dashboards.length) {
+  const dashboard = dashboards.structuredContent.dashboards[0]
+  assertEmbedUrl(dashboard?.embed_url, 'dashboards')
 
-  const embedPreview = await callMcp('tools/call', {
-    name: 'dashboard_embed_preview',
+  const openDashboard = await callMcp('tools/call', {
+    name: 'open_dashboard',
     arguments: {
-      artifact_id: dashboard.id || dashboard.artifact_id,
+      id: dashboard.id || dashboard.artifact_id,
     },
   })
-  assert(embedPreview?.structuredContent?.view === 'dashboard_preview', 'dashboard_embed_preview returned invalid view')
-  assertEmbedUrl(embedPreview?.structuredContent?.dashboard?.embed_url, 'dashboard_embed_preview')
-  console.log('dashboard_embed_preview ok')
+  assert(openDashboard?.structuredContent?.view === 'dashboard_preview', 'open_dashboard returned invalid view')
+  assertEmbedUrl(openDashboard?.structuredContent?.dashboard?.embed_url, 'open_dashboard')
+  console.log('open_dashboard ok')
 } else {
-  console.log('dashboard_embed_preview skipped: no dashboards returned')
+  console.log('open_dashboard skipped: no dashboards returned')
 }
+console.log('dashboards ok')
 
 console.log('Claude App smoke test passed')

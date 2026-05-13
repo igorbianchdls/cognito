@@ -1,4 +1,4 @@
-import { DASHBOARD_MCP_TOOL_DEFINITIONS, type McpToolInputSchema } from '@/products/mcp/tools/dashboardSchemas'
+import { type McpToolInputSchema } from '@/products/mcp/tools/dashboardSchemas'
 import { callCognitoMcpTool, type CognitoMcpServerContext } from '@/products/mcp/server/cognitoMcpServer'
 import { DASHBOARD_WIDGET_RESOURCE_URI } from '@/products/mcp-apps/server/appResources'
 import {
@@ -9,9 +9,15 @@ import {
 import { createDashboardEmbedToken } from '@/products/mcp-apps/server/embedToken'
 import {
   callMcpAppDomainTool,
-  MCP_APP_DOMAIN_TOOL_DEFINITIONS,
   isMcpAppDomainTool,
+  listMcpAppDomainToolDefinitions,
 } from '@/products/mcp-apps/server/domainTools'
+
+export const MCP_APP_PUBLIC_TOOL_NAMES = {
+  dashboards: 'dashboards',
+  openDashboard: 'open_dashboard',
+  dashboardAuthoring: 'dashboard_authoring',
+} as const
 
 export const MCP_APP_DASHBOARD_RENDER_TOOL_NAMES = {
   dashboardRenderList: 'dashboard_render_list',
@@ -39,6 +45,71 @@ type McpAppToolDefinition = {
 }
 
 type JsonRecord = Record<string, unknown>
+
+const DASHBOARDS_SCHEMA = {
+  type: 'object',
+  properties: {
+    query: {
+      type: 'string',
+      description: 'Texto opcional para buscar dashboards por titulo, slug, status ou id.',
+    },
+    limit: {
+      type: 'integer',
+      description: 'Quantidade maxima de dashboards retornados. Default 20, maximo 50.',
+    },
+  },
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
+
+const OPEN_DASHBOARD_SCHEMA = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'string',
+      description: 'ID do dashboard a abrir no app interativo.',
+    },
+  },
+  required: ['id'],
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
+
+const DASHBOARD_AUTHORING_SCHEMA = {
+  type: 'object',
+  properties: {
+    action: {
+      type: 'string',
+      enum: ['get_contract', 'create', 'patch', 'update_full'],
+      description: 'Acao administrativa de autoria de dashboard.',
+    },
+    id: {
+      type: 'string',
+      description: 'ID do dashboard para patch/update_full.',
+    },
+    title: {
+      type: 'string',
+      description: 'Titulo do dashboard para create.',
+    },
+    source: {
+      type: 'string',
+      description: 'Source TSX completo para create/update_full.',
+    },
+    expected_version: {
+      type: 'integer',
+      description: 'Versao draft esperada para patch/update_full.',
+    },
+    operation: {
+      type: 'object',
+      description: 'Operacao de patch quando action=patch.',
+      additionalProperties: true,
+    },
+    include_example: {
+      type: 'boolean',
+      description: 'Inclui exemplo minimo quando action=get_contract.',
+    },
+  },
+  required: ['action'],
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
 
 const RENDER_LIST_SCHEMA = {
   type: 'object',
@@ -439,6 +510,17 @@ function optionalText(value: unknown) {
   return text || null
 }
 
+function isEnvEnabled(name: string) {
+  const value = String(process.env[name] || '').trim().toLowerCase()
+  return value === '1' || value === 'true' || value === 'yes' || value === 'on'
+}
+
+function normalizeLimit(value: unknown, fallback: number, max: number) {
+  const parsed = Number.parseInt(String(value ?? '').trim(), 10)
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback
+  return Math.min(parsed, max)
+}
+
 function getDashboardArtifactId(dashboard: JsonRecord) {
   return optionalText(dashboard.artifact_id || dashboard.id)
 }
@@ -510,6 +592,34 @@ function toSearchResult(dashboard: JsonRecord) {
       current_published_version: dashboard.current_published_version || null,
       updated_at: dashboard.updated_at || null,
     },
+  }
+}
+
+async function callDashboards(args: unknown) {
+  const input = asRecord(args)
+  const query = getSearchQuery(input)
+  const limit = normalizeLimit(input.limit, 20, 50)
+  const dashboards = await listMcpDashboards({ limit: Math.max(limit, 20) })
+  const filteredDashboards = dashboards
+    .map((dashboard) => withDashboardListEmbedUrl(dashboard as JsonRecord))
+    .filter((dashboard) => dashboardMatchesQuery(dashboard, query))
+    .slice(0, limit)
+
+  const structuredContent = {
+    ok: true,
+    tool: MCP_APP_PUBLIC_TOOL_NAMES.dashboards,
+    view: 'dashboard_list',
+    title: query ? `Dashboards: ${query}` : 'Dashboards',
+    dashboards: filteredDashboards,
+  }
+
+  return {
+    content: [{ type: 'text', text: JSON.stringify(structuredContent, null, 2) }],
+    structuredContent,
+    _meta: {
+      widget: DASHBOARD_WIDGET_RESOURCE_URI,
+    },
+    isError: false,
   }
 }
 
@@ -672,52 +782,148 @@ async function callDashboardEmbedPreview(args: unknown) {
   }
 }
 
+async function callOpenDashboard(args: unknown) {
+  const input = asRecord(args)
+  const id = optionalText(input.id)
+  if (!id) {
+    const structuredContent = {
+      ok: false,
+      tool: MCP_APP_PUBLIC_TOOL_NAMES.openDashboard,
+      view: 'dashboard_preview',
+      title: 'Dashboard nao informado',
+      dashboard: null,
+    }
+
+    return {
+      content: [{ type: 'text', text: 'id e obrigatorio para abrir o dashboard.' }],
+      structuredContent,
+      isError: true,
+    }
+  }
+
+  const dashboard = await readMcpDashboard({ artifactId: id, kind: 'draft' })
+  const dashboardWithEmbed = withDashboardEmbedUrl(dashboard as JsonRecord)
+  const title = String(dashboardWithEmbed.title || dashboardWithEmbed.slug || id)
+  const structuredContent = {
+    ok: true,
+    tool: MCP_APP_PUBLIC_TOOL_NAMES.openDashboard,
+    view: 'dashboard_preview',
+    title,
+    dashboard: dashboardWithEmbed,
+  }
+
+  return {
+    content: [{ type: 'text', text: `Abrindo dashboard ${title}.` }],
+    structuredContent,
+    _meta: {
+      widget: DASHBOARD_WIDGET_RESOURCE_URI,
+    },
+    isError: false,
+  }
+}
+
+async function callDashboardAuthoring(args: unknown, context: CognitoMcpServerContext) {
+  const input = asRecord(args)
+  const action = String(input.action || '').trim()
+  const artifactId = optionalText(input.id || input.artifact_id)
+  const commonArgs = {
+    ...input,
+    ...(artifactId ? { artifact_id: artifactId } : {}),
+  }
+  delete commonArgs.action
+  delete commonArgs.id
+
+  const toolName = action === 'get_contract'
+    ? 'dashboard_get_contract'
+    : action === 'create'
+      ? 'dashboard_create'
+      : action === 'patch'
+        ? 'dashboard_patch'
+        : action === 'update_full'
+          ? 'dashboard_update_full'
+          : ''
+
+  if (!toolName) {
+    const structuredContent = {
+      ok: false,
+      tool: MCP_APP_PUBLIC_TOOL_NAMES.dashboardAuthoring,
+      error: 'action invalida. Use get_contract, create, patch ou update_full.',
+    }
+
+    return {
+      content: [{ type: 'text', text: structuredContent.error }],
+      structuredContent,
+      isError: true,
+    }
+  }
+
+  const result = await callCognitoMcpTool(toolName, commonArgs, context)
+  const structuredContent = {
+    ok: true,
+    tool: MCP_APP_PUBLIC_TOOL_NAMES.dashboardAuthoring,
+    action,
+    ...normalizeDataToolStructuredContent(toolName, result.structuredContent),
+  }
+
+  return {
+    ...result,
+    structuredContent,
+    content: [{ type: 'text', text: JSON.stringify(structuredContent, null, 2) }],
+  }
+}
+
 export function listCognitoMcpAppTools() {
+  const dashboardAuthoringTools = isEnvEnabled('COGNITO_ENABLE_DASHBOARD_AUTHORING')
+    ? [
+        {
+          name: MCP_APP_PUBLIC_TOOL_NAMES.dashboardAuthoring,
+          title: 'Dashboard authoring',
+          description:
+            'Tool administrativa para criar, editar ou consultar o contrato de dashboards. Use apenas quando autoria de dashboards estiver habilitada.',
+          inputSchema: DASHBOARD_AUTHORING_SCHEMA,
+          outputSchema: DASHBOARD_WRITE_OUTPUT_SCHEMA,
+          securitySchemes: COGNITO_WRITE_SECURITY_SCHEMES,
+          annotations: UPDATE_ANNOTATIONS,
+          _meta: {
+            ...DATA_TOOL_META,
+            securitySchemes: COGNITO_WRITE_SECURITY_SCHEMES,
+          },
+        },
+      ]
+    : []
+
   return {
     tools: [
       {
-        name: MCP_APP_CONNECTOR_TOOL_NAMES.search,
-        title: 'Search dashboards',
+        name: MCP_APP_PUBLIC_TOOL_NAMES.dashboards,
+        title: 'Dashboards',
         description:
-          'Search Cognito dashboards by title, slug, status, or id. Use this when MCP App needs to discover dashboard records.',
-        inputSchema: SEARCH_SCHEMA,
-        outputSchema: SEARCH_OUTPUT_SCHEMA,
+          'Lista e busca dashboards Cognito. Retorna structuredContent pronto para renderizar a lista no app.',
+        inputSchema: DASHBOARDS_SCHEMA,
+        outputSchema: RENDER_LIST_OUTPUT_SCHEMA,
         securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
         annotations: READ_ONLY_ANNOTATIONS,
         _meta: {
-          ...DATA_TOOL_META,
+          ...DASHBOARD_WIDGET_META,
           securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
         },
       },
       {
-        name: MCP_APP_CONNECTOR_TOOL_NAMES.fetch,
-        title: 'Fetch dashboard',
+        name: MCP_APP_PUBLIC_TOOL_NAMES.openDashboard,
+        title: 'Open dashboard',
         description:
-          'Fetch a Cognito dashboard by id returned from search. Use this when MCP App needs the full dashboard details for citation or context.',
-        inputSchema: FETCH_SCHEMA,
-        outputSchema: FETCH_OUTPUT_SCHEMA,
+          'Abre um dashboard completo no app interativo. Use somente com input { "id": "..." }.',
+        inputSchema: OPEN_DASHBOARD_SCHEMA,
+        outputSchema: RENDER_PREVIEW_OUTPUT_SCHEMA,
         securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
         annotations: READ_ONLY_ANNOTATIONS,
         _meta: {
-          ...DATA_TOOL_META,
+          ...DASHBOARD_WIDGET_META,
           securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
         },
       },
-      ...MCP_APP_DOMAIN_TOOL_DEFINITIONS,
-      ...DASHBOARD_MCP_TOOL_DEFINITIONS.map((tool) => ({
-        name: tool.name,
-        title: getDataToolTitle(tool.name),
-        description: tool.description,
-        inputSchema: tool.inputSchema,
-        outputSchema: getDataToolOutputSchema(tool.name),
-        securitySchemes: getDataToolSecuritySchemes(tool.name),
-        annotations: getDataToolAnnotations(tool.name),
-        _meta: {
-          ...DATA_TOOL_META,
-          securitySchemes: getDataToolSecuritySchemes(tool.name),
-        },
-      })),
-      ...MCP_APP_DASHBOARD_RENDER_TOOL_DEFINITIONS,
+      ...listMcpAppDomainToolDefinitions(),
+      ...dashboardAuthoringTools,
     ],
   }
 }
@@ -757,6 +963,29 @@ export async function callCognitoMcpAppTool(
   args: unknown,
   context: CognitoMcpServerContext = {},
 ) {
+  if (name === MCP_APP_PUBLIC_TOOL_NAMES.dashboards) {
+    return callDashboards(args)
+  }
+
+  if (name === MCP_APP_PUBLIC_TOOL_NAMES.openDashboard) {
+    return callOpenDashboard(args)
+  }
+
+  if (name === MCP_APP_PUBLIC_TOOL_NAMES.dashboardAuthoring) {
+    if (!isEnvEnabled('COGNITO_ENABLE_DASHBOARD_AUTHORING')) {
+      return {
+        content: [{ type: 'text', text: 'dashboard_authoring nao esta habilitada.' }],
+        structuredContent: {
+          ok: false,
+          tool: MCP_APP_PUBLIC_TOOL_NAMES.dashboardAuthoring,
+          error: 'COGNITO_ENABLE_DASHBOARD_AUTHORING nao esta ativo.',
+        },
+        isError: true,
+      }
+    }
+    return callDashboardAuthoring(args, context)
+  }
+
   if (isMcpAppDomainTool(name)) {
     return callMcpAppDomainTool(name, args, context)
   }

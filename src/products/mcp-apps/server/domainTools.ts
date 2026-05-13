@@ -263,56 +263,78 @@ const MARKETING_SCHEMA = {
 
 export const MCP_APP_DOMAIN_TOOL_NAMES = {
   erp: 'erp',
+  sql: 'sql',
   sqlExecution: 'sql_execution',
   ecommerce: 'ecommerce',
   marketing: 'marketing',
 } as const
 
+function isEnvEnabled(name: string) {
+  const value = String(process.env[name] || '').trim().toLowerCase()
+  return value === '1' || value === 'true' || value === 'yes' || value === 'on'
+}
+
+const ERP_DOMAIN_TOOL_DEFINITION = {
+  name: MCP_APP_DOMAIN_TOOL_NAMES.erp,
+  title: 'ERP',
+  description:
+    'Consulta segura de recursos transacionais ERP. Nesta versao, use apenas action listar ou ler.',
+  inputSchema: CRUD_SCHEMA,
+  outputSchema: CRUD_OUTPUT_SCHEMA,
+  securitySchemes: READ_SECURITY_SCHEMES,
+  annotations: READ_ONLY_ANNOTATIONS,
+  _meta: TOOL_META,
+} as const satisfies DomainToolDefinition
+
+const ECOMMERCE_DOMAIN_TOOL_DEFINITION = {
+  name: MCP_APP_DOMAIN_TOOL_NAMES.ecommerce,
+  title: 'Ecommerce metrics',
+  description:
+    'Executa metricas canonicas de ecommerce sem SQL livre. Use para pedidos, vendas, canais, status, faturamento, produtos e frete.',
+  inputSchema: ECOMMERCE_SCHEMA,
+  outputSchema: METRICS_OUTPUT_SCHEMA,
+  securitySchemes: READ_SECURITY_SCHEMES,
+  annotations: READ_ONLY_ANNOTATIONS,
+  _meta: TOOL_META,
+} as const satisfies DomainToolDefinition
+
+const SQL_DOMAIN_TOOL_DEFINITION = {
+  name: MCP_APP_DOMAIN_TOOL_NAMES.sql,
+  title: 'SQL',
+  description:
+    'Executa SQL analitico ad-hoc com seguranca. Aceita apenas SELECT/CTE, uma unica instrucao, sem placeholders posicionais; use somente {{tenant_id}} para bind automatico.',
+  inputSchema: SQL_EXECUTION_SCHEMA,
+  outputSchema: METRICS_OUTPUT_SCHEMA,
+  securitySchemes: READ_SECURITY_SCHEMES,
+  annotations: READ_ONLY_ANNOTATIONS,
+  _meta: TOOL_META,
+} as const satisfies DomainToolDefinition
+
+const MARKETING_DOMAIN_TOOL_DEFINITION = {
+  name: MCP_APP_DOMAIN_TOOL_NAMES.marketing,
+  title: 'Marketing metrics',
+  description:
+    'Executa metricas canonicas de trafego pago sem SQL livre. Use para gasto, ROAS, campanhas, contas, anuncios e desempenho diario.',
+  inputSchema: MARKETING_SCHEMA,
+  outputSchema: METRICS_OUTPUT_SCHEMA,
+  securitySchemes: READ_SECURITY_SCHEMES,
+  annotations: READ_ONLY_ANNOTATIONS,
+  _meta: TOOL_META,
+} as const satisfies DomainToolDefinition
+
+export function listMcpAppDomainToolDefinitions() {
+  return [
+    ERP_DOMAIN_TOOL_DEFINITION,
+    ECOMMERCE_DOMAIN_TOOL_DEFINITION,
+    ...(isEnvEnabled('COGNITO_ENABLE_SQL_TOOL') ? [SQL_DOMAIN_TOOL_DEFINITION] : []),
+    MARKETING_DOMAIN_TOOL_DEFINITION,
+  ]
+}
+
 export const MCP_APP_DOMAIN_TOOL_DEFINITIONS = [
-  {
-    name: MCP_APP_DOMAIN_TOOL_NAMES.erp,
-    title: 'ERP',
-    description:
-      'Consulta segura de recursos transacionais ERP. Nesta versao, use apenas action listar ou ler.',
-    inputSchema: CRUD_SCHEMA,
-    outputSchema: CRUD_OUTPUT_SCHEMA,
-    securitySchemes: READ_SECURITY_SCHEMES,
-    annotations: READ_ONLY_ANNOTATIONS,
-    _meta: TOOL_META,
-  },
-  {
-    name: MCP_APP_DOMAIN_TOOL_NAMES.ecommerce,
-    title: 'Ecommerce metrics',
-    description:
-      'Executa metricas canonicas de ecommerce sem SQL livre. Use para pedidos, vendas, canais, status, faturamento, produtos e frete.',
-    inputSchema: ECOMMERCE_SCHEMA,
-    outputSchema: METRICS_OUTPUT_SCHEMA,
-    securitySchemes: READ_SECURITY_SCHEMES,
-    annotations: READ_ONLY_ANNOTATIONS,
-    _meta: TOOL_META,
-  },
-  {
-    name: MCP_APP_DOMAIN_TOOL_NAMES.sqlExecution,
-    title: 'SQL execution',
-    description:
-      'Executa SQL analitico ad-hoc com seguranca. Aceita apenas SELECT/CTE, uma unica instrucao, sem placeholders posicionais; use somente {{tenant_id}} para bind automatico.',
-    inputSchema: SQL_EXECUTION_SCHEMA,
-    outputSchema: METRICS_OUTPUT_SCHEMA,
-    securitySchemes: READ_SECURITY_SCHEMES,
-    annotations: READ_ONLY_ANNOTATIONS,
-    _meta: TOOL_META,
-  },
-  {
-    name: MCP_APP_DOMAIN_TOOL_NAMES.marketing,
-    title: 'Marketing metrics',
-    description:
-      'Executa metricas canonicas de trafego pago sem SQL livre. Use para gasto, ROAS, campanhas, contas, anuncios e desempenho diario.',
-    inputSchema: MARKETING_SCHEMA,
-    outputSchema: METRICS_OUTPUT_SCHEMA,
-    securitySchemes: READ_SECURITY_SCHEMES,
-    annotations: READ_ONLY_ANNOTATIONS,
-    _meta: TOOL_META,
-  },
+  ERP_DOMAIN_TOOL_DEFINITION,
+  ECOMMERCE_DOMAIN_TOOL_DEFINITION,
+  MARKETING_DOMAIN_TOOL_DEFINITION,
 ] as const satisfies readonly DomainToolDefinition[]
 
 const MCP_APP_DOMAIN_TOOL_NAME_SET = new Set<string>(
@@ -800,7 +822,7 @@ async function callMarketing(args: unknown, context: CognitoMcpServerContext) {
   return executeBuiltQuery('marketing', action, buildMarketingQuery(action, paramsIn, getTenantId(context)))
 }
 
-async function callSqlExecution(args: unknown, context: CognitoMcpServerContext) {
+async function callSqlExecution(args: unknown, context: CognitoMcpServerContext, toolName = MCP_APP_DOMAIN_TOOL_NAMES.sql) {
   const input = toObj(args)
   const sqlRaw = toText(input.sql)
   const title = toText(input.title) || 'Resultado da Consulta'
@@ -819,7 +841,7 @@ async function callSqlExecution(args: unknown, context: CognitoMcpServerContext)
   const chart = assertChartColumns(chartRaw, columns)
   const structuredContent = {
     success: true,
-    tool: 'sql_execution',
+    tool: toolName,
     action: 'execute' satisfies SqlExecutionAction,
     title,
     rows,
@@ -847,13 +869,32 @@ export async function callMcpAppDomainTool(
   args: unknown,
   context: CognitoMcpServerContext = {},
 ) {
+  if (
+    (name === MCP_APP_DOMAIN_TOOL_NAMES.sql || name === MCP_APP_DOMAIN_TOOL_NAMES.sqlExecution) &&
+    !isEnvEnabled('COGNITO_ENABLE_SQL_TOOL')
+  ) {
+    const structuredContent = {
+      success: false,
+      tool: name,
+      error: 'SQL tool nao esta habilitada.',
+    }
+
+    return {
+      content: [{ type: 'text', text: 'COGNITO_ENABLE_SQL_TOOL nao esta ativo.' }],
+      structuredContent,
+      isError: true,
+    }
+  }
+
   switch (name) {
     case MCP_APP_DOMAIN_TOOL_NAMES.erp:
       return callCrud(args, context)
     case MCP_APP_DOMAIN_TOOL_NAMES.ecommerce:
       return callEcommerce(args, context)
+    case MCP_APP_DOMAIN_TOOL_NAMES.sql:
+      return callSqlExecution(args, context, MCP_APP_DOMAIN_TOOL_NAMES.sql)
     case MCP_APP_DOMAIN_TOOL_NAMES.sqlExecution:
-      return callSqlExecution(args, context)
+      return callSqlExecution(args, context, MCP_APP_DOMAIN_TOOL_NAMES.sqlExecution)
     case MCP_APP_DOMAIN_TOOL_NAMES.marketing:
       return callMarketing(args, context)
     default:
