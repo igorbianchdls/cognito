@@ -13,7 +13,8 @@ export const COGNITO_CLAUDE_APP_METADATA = {
 export const COGNITO_CLAUDE_APP_INSTRUCTIONS = [
   'Use dashboards to list or search Cognito dashboards.',
   'Use open_dashboard with only { "id": "..." } when the user asks to open a full dashboard as an interactive app.',
-  'Use erp for read-only operational ERP records, ecommerce for ecommerce metrics, and marketing for paid media metrics.',
+  'Use dashboard_authoring to create dashboards or edit dashboard TSX source.',
+  'Use erp for read-only operational ERP records, ecommerce for ecommerce metrics, marketing for paid media metrics, and sql only for read-only ad-hoc SELECT/WITH analysis.',
   'Prefer concise dashboard summaries and include Cognito links when available.',
   'Do not expose internal implementation details or raw source unless the user asks for them.',
 ].join('\n')

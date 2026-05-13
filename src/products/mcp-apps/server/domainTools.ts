@@ -149,12 +149,13 @@ const CRUD_SCHEMA = {
     action: {
       type: 'string',
       enum: ['listar', 'ler'],
-      description: 'Acao ERP segura. Nesta versao do MCP App App, use listar ou ler.',
+      description: 'Use listar para consultar registros e ler para buscar um registro especifico por params.id.',
     },
     resource: {
       type: 'string',
       enum: CRUD_ALLOWED_RESOURCES,
-      description: 'Resource canonico de negocio.',
+      description:
+        'Resource canonico de negocio. Exemplos comuns: contas-a-pagar, contas-a-receber, vendas/pedidos, compras/pedidos, crm/leads, estoque/estoque-atual.',
     },
     params: {
       type: 'object',
@@ -197,7 +198,7 @@ const SQL_EXECUTION_SCHEMA = {
     sql: {
       type: 'string',
       description:
-        'SQL de leitura. Aceita somente SELECT/CTE, uma unica instrucao, sem placeholders $1/$2. Use {{tenant_id}} para tenant.',
+        'SQL de leitura para analises ad-hoc. Aceita somente SELECT ou WITH, uma unica instrucao, sem comandos de escrita e sem placeholders $1/$2. Use {{tenant_id}} quando precisar filtrar por tenant.',
     },
     title: {
       type: 'string',
@@ -205,7 +206,7 @@ const SQL_EXECUTION_SCHEMA = {
     },
     chart: {
       type: 'object',
-      description: 'Config opcional de grafico: xField, valueField, xLabel, yLabel.',
+      description: 'Config opcional para renderizar grafico simples: xField, valueField, xLabel, yLabel.',
       properties: {
         xField: { type: 'string' },
         valueField: { type: 'string' },
@@ -232,7 +233,8 @@ const ECOMMERCE_SCHEMA = {
         'top_produtos_receita',
         'frete_por_transportadora',
       ],
-      description: 'Acao canonica de ecommerce.',
+      description:
+        'Metrica canonica de ecommerce. Use kpis_resumo para visao geral; vendas_por_canal, pedidos_por_status, faturamento_por_mes, top_produtos_receita ou frete_por_transportadora para cortes analiticos.',
     },
     params: ACTION_PARAMS_SCHEMA,
   },
@@ -253,7 +255,8 @@ const MARKETING_SCHEMA = {
         'gasto_por_conta',
         'top_anuncios',
       ],
-      description: 'Acao canonica de marketing/trafego pago.',
+      description:
+        'Metrica canonica de marketing/trafego pago. Use kpis_resumo para visao geral; desempenho_diario, gasto_por_campanha, roas_por_campanha, gasto_por_conta ou top_anuncios para cortes analiticos.',
     },
     params: ACTION_PARAMS_SCHEMA,
   },
@@ -278,7 +281,7 @@ const ERP_DOMAIN_TOOL_DEFINITION = {
   name: MCP_APP_DOMAIN_TOOL_NAMES.erp,
   title: 'ERP',
   description:
-    'Consulta segura de recursos transacionais ERP. Nesta versao, use apenas action listar ou ler.',
+    'Consulta registros operacionais do ERP em modo leitura. Use para financeiro, vendas, compras, CRM e estoque. Acoes suportadas: listar e ler. Exemplos de resource: contas-a-pagar, contas-a-receber, vendas/pedidos, crm/leads.',
   inputSchema: CRUD_SCHEMA,
   outputSchema: CRUD_OUTPUT_SCHEMA,
   securitySchemes: READ_SECURITY_SCHEMES,
@@ -290,7 +293,7 @@ const ECOMMERCE_DOMAIN_TOOL_DEFINITION = {
   name: MCP_APP_DOMAIN_TOOL_NAMES.ecommerce,
   title: 'Ecommerce metrics',
   description:
-    'Executa metricas canonicas de ecommerce sem SQL livre. Use para pedidos, vendas, canais, status, faturamento, produtos e frete.',
+    'Retorna metricas prontas de ecommerce sem SQL livre. Use para perguntas sobre pedidos, receita, ticket medio, canais, status, faturamento mensal, produtos e frete.',
   inputSchema: ECOMMERCE_SCHEMA,
   outputSchema: METRICS_OUTPUT_SCHEMA,
   securitySchemes: READ_SECURITY_SCHEMES,
@@ -302,7 +305,7 @@ const SQL_DOMAIN_TOOL_DEFINITION = {
   name: MCP_APP_DOMAIN_TOOL_NAMES.sql,
   title: 'SQL',
   description:
-    'Executa SQL analitico ad-hoc com seguranca. Aceita apenas SELECT/CTE, uma unica instrucao, sem placeholders posicionais; use somente {{tenant_id}} para bind automatico.',
+    'Executa SQL analitico ad-hoc em modo leitura. Use quando erp/ecommerce/marketing nao cobrirem a pergunta. Aceita apenas SELECT ou WITH, uma unica instrucao, sem escrita; use {{tenant_id}} para bind automatico de tenant.',
   inputSchema: SQL_EXECUTION_SCHEMA,
   outputSchema: METRICS_OUTPUT_SCHEMA,
   securitySchemes: READ_SECURITY_SCHEMES,
@@ -314,7 +317,7 @@ const MARKETING_DOMAIN_TOOL_DEFINITION = {
   name: MCP_APP_DOMAIN_TOOL_NAMES.marketing,
   title: 'Marketing metrics',
   description:
-    'Executa metricas canonicas de trafego pago sem SQL livre. Use para gasto, ROAS, campanhas, contas, anuncios e desempenho diario.',
+    'Retorna metricas prontas de marketing/trafego pago sem SQL livre. Use para perguntas sobre gasto, receita atribuida, ROAS, cliques, impressoes, conversoes, campanhas, contas, anuncios e desempenho diario.',
   inputSchema: MARKETING_SCHEMA,
   outputSchema: METRICS_OUTPUT_SCHEMA,
   securitySchemes: READ_SECURITY_SCHEMES,

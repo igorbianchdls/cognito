@@ -51,7 +51,7 @@ const DASHBOARDS_SCHEMA = {
   properties: {
     query: {
       type: 'string',
-      description: 'Texto opcional para buscar dashboards por titulo, slug, status ou id.',
+      description: 'Texto opcional para buscar dashboards por titulo, slug, status ou id. Omita para listar dashboards recentes.',
     },
     limit: {
       type: 'integer',
@@ -66,7 +66,7 @@ const OPEN_DASHBOARD_SCHEMA = {
   properties: {
     id: {
       type: 'string',
-      description: 'ID do dashboard a abrir no app interativo.',
+      description: 'ID do dashboard retornado por dashboards. Nao envie version, kind ou artifact_id.',
     },
   },
   required: ['id'],
@@ -79,19 +79,20 @@ const DASHBOARD_AUTHORING_SCHEMA = {
     action: {
       type: 'string',
       enum: ['get_contract', 'create', 'patch', 'update_full'],
-      description: 'Acao administrativa de autoria de dashboard.',
+      description:
+        'Acao de autoria. Use get_contract antes de criar TSX novo, create para criar dashboard, patch para trocar um trecho e update_full para substituir o TSX inteiro.',
     },
     id: {
       type: 'string',
-      description: 'ID do dashboard para patch/update_full.',
+      description: 'ID do dashboard para patch ou update_full. Nao e necessario para get_contract/create.',
     },
     title: {
       type: 'string',
-      description: 'Titulo do dashboard para create.',
+      description: 'Titulo do dashboard ao usar action=create.',
     },
     source: {
       type: 'string',
-      description: 'Source TSX completo para create/update_full.',
+      description: 'Source TSX completo ao usar create ou update_full.',
     },
     expected_version: {
       type: 'integer',
@@ -99,12 +100,12 @@ const DASHBOARD_AUTHORING_SCHEMA = {
     },
     operation: {
       type: 'object',
-      description: 'Operacao de patch quando action=patch.',
+      description: 'Operacao de patch quando action=patch. Use type=replace_text com old_string/new_string ou type=replace_full_source com source.',
       additionalProperties: true,
     },
     include_example: {
       type: 'boolean',
-      description: 'Inclui exemplo minimo quando action=get_contract.',
+      description: 'Quando action=get_contract, informe true para incluir exemplo minimo de source TSX.',
     },
   },
   required: ['action'],
@@ -916,7 +917,7 @@ export function listCognitoMcpAppTools() {
         name: MCP_APP_PUBLIC_TOOL_NAMES.dashboards,
         title: 'Dashboards',
         description:
-          'Lista e busca dashboards Cognito. Retorna structuredContent pronto para renderizar a lista no app.',
+          'Lista ou busca dashboards Cognito e renderiza cards no app. Use antes de open_dashboard quando o usuario nao souber o id.',
         inputSchema: DASHBOARDS_SCHEMA,
         outputSchema: RENDER_LIST_OUTPUT_SCHEMA,
         securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
@@ -930,7 +931,7 @@ export function listCognitoMcpAppTools() {
         name: MCP_APP_PUBLIC_TOOL_NAMES.openDashboard,
         title: 'Open dashboard',
         description:
-          'Abre um dashboard completo no app interativo. Use somente com input { "id": "..." }.',
+          'Abre um dashboard completo no app interativo. Use somente com input { "id": "..." }, usando id retornado por dashboards.',
         inputSchema: OPEN_DASHBOARD_SCHEMA,
         outputSchema: RENDER_PREVIEW_OUTPUT_SCHEMA,
         securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
@@ -945,7 +946,7 @@ export function listCognitoMcpAppTools() {
         name: MCP_APP_PUBLIC_TOOL_NAMES.dashboardAuthoring,
         title: 'Dashboard authoring',
         description:
-          'Cria, edita ou consulta o contrato de dashboards Cognito. Use para get_contract, create, patch ou update_full. expected_version e opcional; se omitido, a versao draft atual sera usada automaticamente.',
+          'Cria e edita dashboards Cognito. Use get_contract para obter regras TSX, create para criar, patch para alterar trecho e update_full para substituir o source inteiro. expected_version e opcional; se omitido, usa automaticamente a versao draft atual.',
         inputSchema: DASHBOARD_AUTHORING_SCHEMA,
         outputSchema: DASHBOARD_WRITE_OUTPUT_SCHEMA,
         securitySchemes: COGNITO_WRITE_SECURITY_SCHEMES,
