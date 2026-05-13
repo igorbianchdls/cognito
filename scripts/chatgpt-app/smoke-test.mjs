@@ -195,6 +195,7 @@ assert(toolNames.includes('open_dashboard'), 'tools/list missing open_dashboard'
 assert(toolNames.includes('erp'), 'tools/list missing erp')
 assert(toolNames.includes('ecommerce'), 'tools/list missing ecommerce')
 assert(toolNames.includes('marketing'), 'tools/list missing marketing')
+assert(toolNames.includes('dashboard_authoring'), 'tools/list missing dashboard_authoring')
 assert(!toolNames.includes('search'), 'tools/list should not expose deprecated search')
 assert(!toolNames.includes('fetch'), 'tools/list should not expose deprecated fetch')
 assert(!toolNames.includes('dashboard_render_list'), 'tools/list should not expose deprecated dashboard_render_list')

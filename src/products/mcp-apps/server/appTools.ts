@@ -873,25 +873,6 @@ async function callDashboardAuthoring(args: unknown, context: CognitoMcpServerCo
 }
 
 export function listCognitoMcpAppTools() {
-  const dashboardAuthoringTools = isEnvEnabled('COGNITO_ENABLE_DASHBOARD_AUTHORING')
-    ? [
-        {
-          name: MCP_APP_PUBLIC_TOOL_NAMES.dashboardAuthoring,
-          title: 'Dashboard authoring',
-          description:
-            'Tool administrativa para criar, editar ou consultar o contrato de dashboards. Use apenas quando autoria de dashboards estiver habilitada.',
-          inputSchema: DASHBOARD_AUTHORING_SCHEMA,
-          outputSchema: DASHBOARD_WRITE_OUTPUT_SCHEMA,
-          securitySchemes: COGNITO_WRITE_SECURITY_SCHEMES,
-          annotations: UPDATE_ANNOTATIONS,
-          _meta: {
-            ...DATA_TOOL_META,
-            securitySchemes: COGNITO_WRITE_SECURITY_SCHEMES,
-          },
-        },
-      ]
-    : []
-
   return {
     tools: [
       {
@@ -923,7 +904,20 @@ export function listCognitoMcpAppTools() {
         },
       },
       ...listMcpAppDomainToolDefinitions(),
-      ...dashboardAuthoringTools,
+      {
+        name: MCP_APP_PUBLIC_TOOL_NAMES.dashboardAuthoring,
+        title: 'Dashboard authoring',
+        description:
+          'Cria, edita ou consulta o contrato de dashboards Cognito. Use para get_contract, create, patch ou update_full.',
+        inputSchema: DASHBOARD_AUTHORING_SCHEMA,
+        outputSchema: DASHBOARD_WRITE_OUTPUT_SCHEMA,
+        securitySchemes: COGNITO_WRITE_SECURITY_SCHEMES,
+        annotations: UPDATE_ANNOTATIONS,
+        _meta: {
+          ...DATA_TOOL_META,
+          securitySchemes: COGNITO_WRITE_SECURITY_SCHEMES,
+        },
+      },
     ],
   }
 }
@@ -972,17 +966,6 @@ export async function callCognitoMcpAppTool(
   }
 
   if (name === MCP_APP_PUBLIC_TOOL_NAMES.dashboardAuthoring) {
-    if (!isEnvEnabled('COGNITO_ENABLE_DASHBOARD_AUTHORING')) {
-      return {
-        content: [{ type: 'text', text: 'dashboard_authoring nao esta habilitada.' }],
-        structuredContent: {
-          ok: false,
-          tool: MCP_APP_PUBLIC_TOOL_NAMES.dashboardAuthoring,
-          error: 'COGNITO_ENABLE_DASHBOARD_AUTHORING nao esta ativo.',
-        },
-        isError: true,
-      }
-    }
     return callDashboardAuthoring(args, context)
   }
 
