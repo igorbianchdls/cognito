@@ -1111,6 +1111,74 @@ OFFSET $${base.offsetParam}::int
   }
 }
 
+function buildCrmAccountsQuery(action: CrudAction, paramsIn: JsonRecord, tenantId: number): BuiltQuery {
+  const responsavelExpr = "COALESCE(NULLIF(f.nome, ''), '-')"
+  const base = buildSemanticWhere(action, paramsIn, tenantId, {
+    alias: 'c',
+    dateField: 'criado_em',
+    idFields: ['responsavel_id'],
+    searchExpressions: ['c.nome', 'c.setor', 'c.site', 'c.telefone', responsavelExpr],
+  })
+
+  return {
+    sql: `
+SELECT
+  c.nome AS conta,
+  COALESCE(NULLIF(c.setor, ''), '-') AS setor,
+  COALESCE(NULLIF(c.site, ''), '-') AS site,
+  COALESCE(NULLIF(c.telefone, ''), '-') AS telefone,
+  ${responsavelExpr} AS responsavel,
+  COALESCE(NULLIF(c.endereco_cobranca, ''), '-') AS endereco_cobranca,
+  c.criado_em::date AS criado_em
+FROM crm.contas c
+LEFT JOIN comercial.vendedores v ON v.id = c.responsavel_id
+LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
+${base.whereClause}
+ORDER BY c.criado_em DESC NULLS LAST, c.id DESC
+LIMIT $${base.limitParam}::int
+OFFSET $${base.offsetParam}::int
+    `.trim(),
+    params: base.params,
+    title: 'Contas CRM',
+    chart: null,
+  }
+}
+
+function buildCrmContactsQuery(action: CrudAction, paramsIn: JsonRecord, tenantId: number): BuiltQuery {
+  const contaExpr = "COALESCE(NULLIF(c.nome, ''), '-')"
+  const responsavelExpr = "COALESCE(NULLIF(f.nome, ''), '-')"
+  const base = buildSemanticWhere(action, paramsIn, tenantId, {
+    alias: 'ct',
+    dateField: 'criado_em',
+    idFields: ['conta_id', 'responsavel_id'],
+    searchExpressions: ['ct.nome', contaExpr, 'ct.cargo', 'ct.email', 'ct.telefone', responsavelExpr],
+  })
+
+  return {
+    sql: `
+SELECT
+  ct.nome AS contato,
+  ${contaExpr} AS conta,
+  COALESCE(NULLIF(ct.cargo, ''), '-') AS cargo,
+  COALESCE(NULLIF(ct.email, ''), '-') AS email,
+  COALESCE(NULLIF(ct.telefone, ''), '-') AS telefone,
+  ${responsavelExpr} AS responsavel,
+  ct.criado_em::date AS criado_em
+FROM crm.contatos ct
+LEFT JOIN crm.contas c ON c.id = ct.conta_id AND c.tenant_id = ct.tenant_id
+LEFT JOIN comercial.vendedores v ON v.id = ct.responsavel_id
+LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
+${base.whereClause}
+ORDER BY ct.criado_em DESC NULLS LAST, ct.id DESC
+LIMIT $${base.limitParam}::int
+OFFSET $${base.offsetParam}::int
+    `.trim(),
+    params: base.params,
+    title: 'Contatos CRM',
+    chart: null,
+  }
+}
+
 function buildCrmLeadsQuery(action: CrudAction, paramsIn: JsonRecord, tenantId: number): BuiltQuery {
   const origemExpr = "COALESCE(NULLIF(ol.nome, ''), '-')"
   const responsavelExpr = "COALESCE(NULLIF(f.nome, ''), '-')"
@@ -1185,6 +1253,64 @@ OFFSET $${base.offsetParam}::int
     `.trim(),
     params: base.params,
     title: 'Oportunidades',
+    chart: null,
+  }
+}
+
+function buildCrmActivitiesQuery(action: CrudAction, paramsIn: JsonRecord, tenantId: number): BuiltQuery {
+  const contaExpr = "COALESCE(NULLIF(c.nome, ''), '-')"
+  const contatoExpr = "COALESCE(NULLIF(ct.nome, ''), '-')"
+  const leadExpr = "COALESCE(NULLIF(l.nome, ''), '-')"
+  const oportunidadeExpr = "COALESCE(NULLIF(o.nome, ''), '-')"
+  const responsavelExpr = "COALESCE(NULLIF(f.nome, ''), '-')"
+  const assuntoExpr = "COALESCE(NULLIF(a.assunto, ''), NULLIF(a.descricao, ''), '-')"
+  const base = buildSemanticWhere(action, paramsIn, tenantId, {
+    alias: 'a',
+    dateField: 'data_prevista',
+    statusField: 'status',
+    idFields: ['conta_id', 'contato_id', 'lead_id', 'oportunidade_id', 'responsavel_id'],
+    searchExpressions: [
+      assuntoExpr,
+      'a.tipo',
+      'a.descricao',
+      'a.anotacoes',
+      contaExpr,
+      contatoExpr,
+      leadExpr,
+      oportunidadeExpr,
+      responsavelExpr,
+      'a.status',
+    ],
+  })
+
+  return {
+    sql: `
+SELECT
+  a.data_prevista::date AS data_prevista,
+  COALESCE(NULLIF(a.tipo, ''), '-') AS tipo,
+  ${assuntoExpr} AS assunto,
+  ${contaExpr} AS conta,
+  ${contatoExpr} AS contato,
+  ${leadExpr} AS lead,
+  ${oportunidadeExpr} AS oportunidade,
+  COALESCE(a.status, '-') AS status,
+  ${responsavelExpr} AS responsavel,
+  a.data_conclusao::date AS data_conclusao,
+  COALESCE(NULLIF(a.anotacoes, ''), '-') AS anotacoes
+FROM crm.atividades a
+LEFT JOIN crm.contas c ON c.id = a.conta_id AND c.tenant_id = a.tenant_id
+LEFT JOIN crm.contatos ct ON ct.id = a.contato_id AND ct.tenant_id = a.tenant_id
+LEFT JOIN crm.leads l ON l.id = a.lead_id AND l.tenant_id = a.tenant_id
+LEFT JOIN crm.oportunidades o ON o.id = a.oportunidade_id AND o.tenant_id = a.tenant_id
+LEFT JOIN comercial.vendedores v ON v.id = a.responsavel_id
+LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
+${base.whereClause}
+ORDER BY a.data_prevista ASC NULLS LAST, a.id DESC
+LIMIT $${base.limitParam}::int
+OFFSET $${base.offsetParam}::int
+    `.trim(),
+    params: base.params,
+    title: 'Atividades CRM',
     chart: null,
   }
 }
@@ -1428,12 +1554,24 @@ function buildCrudQuery(action: CrudAction, resource: string, paramsIn: JsonReco
     return buildPurchaseOrdersQuery(action, paramsIn, tenantId)
   }
 
+  if (resource === 'crm/contas') {
+    return buildCrmAccountsQuery(action, paramsIn, tenantId)
+  }
+
+  if (resource === 'crm/contatos') {
+    return buildCrmContactsQuery(action, paramsIn, tenantId)
+  }
+
   if (resource === 'crm/leads') {
     return buildCrmLeadsQuery(action, paramsIn, tenantId)
   }
 
   if (resource === 'crm/oportunidades') {
     return buildCrmOpportunitiesQuery(action, paramsIn, tenantId)
+  }
+
+  if (resource === 'crm/atividades') {
+    return buildCrmActivitiesQuery(action, paramsIn, tenantId)
   }
 
   if (resource === 'estoque/estoque-atual') {
