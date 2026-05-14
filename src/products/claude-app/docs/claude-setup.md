@@ -86,7 +86,7 @@ OAuth-authenticated initialize
 Bearer-authenticated initialize
 tools/list
 resources/list
-resources/read ui://widget/dashboard.html
+resources/read ui://widget/dashboard-v2.html
 dashboards
 open_dashboard when dashboards exist
 absence of OpenAI-only metadata in Claude resources/tools

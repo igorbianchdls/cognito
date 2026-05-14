@@ -4,7 +4,7 @@ Shared MCP Apps layer for interactive Cognito dashboard UI.
 
 This product owns the host-agnostic pieces that can be reused by Claude, ChatGPT, and any MCP Apps-compatible client:
 
-- `ui://widget/dashboard.html` resource
+- `ui://widget/dashboard-v2.html` resource
 - `dashboards` list/search tool
 - `open_dashboard` one-call full dashboard tool
 - dashboard embed URL helpers

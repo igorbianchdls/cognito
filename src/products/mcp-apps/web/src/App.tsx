@@ -3,11 +3,13 @@ import { ErrorState } from '@/products/mcp-apps/web/src/components/ErrorState'
 import { LoadingState } from '@/products/mcp-apps/web/src/components/LoadingState'
 import { useMcpAppToolResult } from '@/products/mcp-apps/web/src/bridge'
 import type {
+  DataResultStructuredContent,
   DashboardListStructuredContent,
   DashboardPreviewStructuredContent,
 } from '@/products/mcp-apps/web/src/types/toolResult'
 import { DashboardListView } from '@/products/mcp-apps/web/src/views/DashboardListView'
 import { DashboardPreviewView } from '@/products/mcp-apps/web/src/views/DashboardPreviewView'
+import { DataResultView } from '@/products/mcp-apps/web/src/views/DataResultView'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value && typeof value === 'object' && !Array.isArray(value))
@@ -38,6 +40,10 @@ export function App() {
   }
 
   const view = getView(structuredContent)
+  const tool = isRecord(structuredContent) && typeof structuredContent.tool === 'string'
+    ? structuredContent.tool
+    : null
+  const isDataTool = tool === 'erp' || tool === 'sql' || tool === 'sql_execution' || tool === 'ecommerce' || tool === 'marketing'
 
   return (
     <main className="app-shell">
@@ -47,7 +53,10 @@ export function App() {
       {view === 'dashboard_preview' ? (
         <DashboardPreviewView data={structuredContent as DashboardPreviewStructuredContent} />
       ) : null}
-      {!view ? (
+      {isDataTool ? (
+        <DataResultView data={structuredContent as DataResultStructuredContent} />
+      ) : null}
+      {!view && !isDataTool ? (
         <EmptyState
           title="Formato nao reconhecido"
           description="A resposta da tool nao informou uma view renderizavel."
@@ -58,4 +67,3 @@ export function App() {
 }
 
 export default App
-

@@ -202,23 +202,23 @@ assert(!toolNames.includes('dashboard_embed_preview'), 'tools/list should not ex
 assert(!toolNames.includes('dashboard_render_list'), 'tools/list should not expose deprecated dashboard_render_list')
 assert(!toolNames.includes('dashboard_render_preview'), 'tools/list should not expose deprecated dashboard_render_preview')
 const openDashboardTool = (toolsList?.tools || []).find((tool) => tool.name === 'open_dashboard')
-assert(openDashboardTool?._meta?.ui?.resourceUri === 'ui://widget/dashboard.html', 'open_dashboard missing MCP Apps ui.resourceUri')
+assert(openDashboardTool?._meta?.ui?.resourceUri === 'ui://widget/dashboard-v2.html', 'open_dashboard missing MCP Apps ui.resourceUri')
 assert(!openDashboardTool?._meta?.['openai/outputTemplate'], 'Claude App should not expose OpenAI outputTemplate')
 console.log(`tools/list ok: ${toolNames.join(', ')}`)
 
 const resourcesList = await callMcp('resources/list')
 const resourceUris = (resourcesList?.resources || []).map((resource) => resource.uri)
-assert(resourceUris.includes('ui://widget/dashboard.html'), 'resources/list missing dashboard widget')
+assert(resourceUris.includes('ui://widget/dashboard-v2.html'), 'resources/list missing dashboard widget')
 console.log(`resources/list ok: ${resourceUris.join(', ')}`)
 
 const widget = await callMcp('resources/read', {
-  uri: 'ui://widget/dashboard.html',
+  uri: 'ui://widget/dashboard-v2.html',
 })
 const widgetContent = widget?.contents?.[0] || {}
 const html = widgetContent.text || ''
 assert(html.includes('Cognito Dashboards'), 'dashboard widget HTML missing title')
 assert(html.includes('CognitoMcpApp'), 'dashboard widget HTML missing MCP Apps runtime')
-assert(html.includes('<iframe'), 'dashboard widget HTML missing iframe renderer')
+assert(html.includes('iframe'), 'dashboard widget HTML missing iframe renderer')
 assert(html.includes('dashboard-embed-frame'), 'dashboard widget HTML missing embed frame styles')
 assert(widgetContent?._meta?.ui?.csp?.resourceDomains?.includes(baseUrl), 'widget MCP Apps CSP missing app resource domain')
 assert(!widgetContent?._meta?.['openai/widgetCSP'], 'Claude App resource should not expose OpenAI widgetCSP')

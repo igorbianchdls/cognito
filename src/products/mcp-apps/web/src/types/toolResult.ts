@@ -22,7 +22,20 @@ export type DashboardPreviewStructuredContent = {
   dashboard?: DashboardPreview
 }
 
+export type DataResultStructuredContent = {
+  ok?: boolean
+  tool?: 'erp' | 'sql' | 'sql_execution' | 'ecommerce' | 'marketing' | string
+  view?: string
+  title?: string
+  action?: string
+  resource?: string
+  count?: number
+  columns?: string[]
+  rows?: unknown[]
+  chart?: unknown
+}
+
 export type DashboardStructuredContent =
   | DashboardListStructuredContent
   | DashboardPreviewStructuredContent
-
+  | DataResultStructuredContent

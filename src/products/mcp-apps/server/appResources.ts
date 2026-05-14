@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
-export const DASHBOARD_WIDGET_RESOURCE_URI = 'ui://widget/dashboard.html'
+export const DASHBOARD_WIDGET_RESOURCE_URI = 'ui://widget/dashboard-v2.html'
 export const DASHBOARD_WIDGET_MIME_TYPE = 'text/html;profile=mcp-app'
 
 export type McpAppResourceContent = {

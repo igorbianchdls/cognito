@@ -6,7 +6,7 @@ It intentionally does not own host auth, OAuth discovery, or host-specific metad
 
 ## Responsibilities
 
-- Serve the `ui://widget/dashboard.html` resource.
+- Serve the `ui://widget/dashboard-v2.html` resource.
 - Build and store the dashboard widget HTML in `web/dist`.
 - Define public tools that return `structuredContent` ready for the widget.
 - Normalize dashboard tool responses into `structuredContent`.

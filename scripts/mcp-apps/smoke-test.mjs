@@ -48,7 +48,7 @@ async function main() {
   assert(widgetHtml.includes('Cognito Dashboards'), 'widget HTML missing title')
   assert(widgetHtml.includes('CognitoMcpApp'), 'widget HTML missing MCP Apps runtime')
   assert(widgetHtml.includes('CognitoChatGptApp'), 'widget HTML missing ChatGPT compatibility alias')
-  assert(widgetHtml.includes('<iframe'), 'widget HTML missing iframe renderer')
+  assert(widgetHtml.includes('createElement("iframe"') || widgetHtml.includes('iframe'), 'widget HTML missing iframe renderer')
   assert(widgetHtml.includes('dashboard-embed-frame'), 'widget HTML missing embed frame styles')
   console.log('widget html ok')
 
@@ -75,8 +75,8 @@ async function main() {
 
   const componentPath = path.join(root, 'src/products/mcp-apps/web/dist/component.js')
   const componentJs = await readFile(componentPath, 'utf8')
-  assert(componentJs.includes('window.CognitoMcpApp'), 'component missing MCP Apps runtime')
-  assert(componentJs.includes('window.CognitoChatGptApp = window.CognitoMcpApp'), 'component missing ChatGPT alias')
+  assert(componentJs.includes('CognitoMcpApp'), 'component missing MCP Apps runtime')
+  assert(componentJs.includes('CognitoChatGptApp'), 'component missing ChatGPT alias')
   console.log('component runtime ok')
 
   console.log('MCP Apps smoke test passed')

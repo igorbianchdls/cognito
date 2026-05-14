@@ -177,7 +177,7 @@ initialize
 tools/list
 OpenAI tool metadata
 resources/list
-resources/read ui://widget/dashboard.html
+resources/read ui://widget/dashboard-v2.html
 OpenAI widget metadata
 MCP Apps widget metadata
 widget CSP domains
