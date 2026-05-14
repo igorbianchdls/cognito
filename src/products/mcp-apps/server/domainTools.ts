@@ -119,7 +119,7 @@ const METRICS_OUTPUT_SCHEMA = {
   additionalProperties: true,
 } as const satisfies McpToolInputSchema
 
-const CRUD_RESOURCE_TABLES = {
+const ERP_RESOURCE_TABLES = {
   'financeiro/contas-financeiras': 'financeiro.contas_financeiras',
   'financeiro/categorias-despesa': 'financeiro.categorias_despesa',
   'financeiro/categorias-receita': 'financeiro.categorias_receita',
@@ -130,43 +130,63 @@ const CRUD_RESOURCE_TABLES = {
   'compras/pedidos': 'compras.compras',
   'contas-a-pagar': 'financeiro.contas_pagar',
   'contas-a-receber': 'financeiro.contas_receber',
-  'crm/contas': 'crm.contas',
-  'crm/contatos': 'crm.contatos',
-  'crm/leads': 'crm.leads',
-  'crm/oportunidades': 'crm.oportunidades',
-  'crm/atividades': 'crm.atividades',
   'estoque/almoxarifados': 'estoque.almoxarifados',
   'estoque/movimentacoes': 'estoque.movimentacoes_estoque',
   'estoque/estoque-atual': 'estoque.estoques_atual',
   'estoque/tipos-movimentacao': 'estoque.tipos_movimentacao',
 } as const
 
-const CRUD_ALLOWED_RESOURCES = Object.keys(CRUD_RESOURCE_TABLES)
+const CRM_RESOURCE_TABLES = {
+  'crm/contas': 'crm.contas',
+  'crm/contatos': 'crm.contatos',
+  'crm/leads': 'crm.leads',
+  'crm/oportunidades': 'crm.oportunidades',
+  'crm/atividades': 'crm.atividades',
+} as const
 
-const CRUD_SCHEMA = {
-  type: 'object',
-  properties: {
-    action: {
-      type: 'string',
-      enum: ['listar', 'ler'],
-      description: 'Use listar para consultar registros e ler para buscar um registro especifico por params.id.',
+const CRUD_RESOURCE_TABLES = {
+  ...ERP_RESOURCE_TABLES,
+  ...CRM_RESOURCE_TABLES,
+} as const
+
+const ERP_ALLOWED_RESOURCES = Object.keys(ERP_RESOURCE_TABLES)
+const CRM_ALLOWED_RESOURCES = Object.keys(CRM_RESOURCE_TABLES)
+
+function createCrudSchema(allowedResources: string[], description: string) {
+  return {
+    type: 'object',
+    properties: {
+      action: {
+        type: 'string',
+        enum: ['listar', 'ler'],
+        description: 'Use listar para consultar registros e ler para buscar um registro especifico por params.id.',
+      },
+      resource: {
+        type: 'string',
+        enum: allowedResources,
+        description,
+      },
+      params: {
+        type: 'object',
+        description:
+          'Filtros de leitura. Suporta id, q, limit, offset, de, ate, status, valor_min, valor_max e filtros *_id quando forem necessarios internamente. A resposta prioriza nomes e descricoes de negocio, nao IDs: cliente, fornecedor, vendedor, canal, fase, produto, almoxarifado, categoria e centro.',
+        additionalProperties: true,
+      },
     },
-    resource: {
-      type: 'string',
-      enum: CRUD_ALLOWED_RESOURCES,
-      description:
-        'Resource canonico de negocio. Exemplos comuns: contas-a-pagar, contas-a-receber, vendas/pedidos, compras/pedidos, crm/leads, estoque/estoque-atual.',
-    },
-    params: {
-      type: 'object',
-      description:
-        'Filtros de leitura. Suporta id, q, limit, offset, de, ate, status, valor_min, valor_max e filtros *_id quando forem necessarios internamente. A resposta prioriza nomes e descricoes de negocio, nao IDs: cliente, fornecedor, vendedor, canal, fase, produto, almoxarifado, categoria e centro.',
-      additionalProperties: true,
-    },
-  },
-  required: ['action', 'resource'],
-  additionalProperties: true,
-} as const satisfies McpToolInputSchema
+    required: ['action', 'resource'],
+    additionalProperties: true,
+  } as const satisfies McpToolInputSchema
+}
+
+const ERP_CRUD_SCHEMA = createCrudSchema(
+  ERP_ALLOWED_RESOURCES,
+  'Resource canonico do ERP. Exemplos comuns: contas-a-pagar, contas-a-receber, vendas/pedidos, compras/pedidos, financeiro/clientes, estoque/estoque-atual.',
+)
+
+const CRM_SCHEMA = createCrudSchema(
+  CRM_ALLOWED_RESOURCES,
+  'Resource canonico do CRM. Use crm/contas, crm/contatos, crm/leads, crm/oportunidades ou crm/atividades.',
+)
 
 const CRUD_OUTPUT_SCHEMA = {
   type: 'object',
@@ -267,6 +287,7 @@ const MARKETING_SCHEMA = {
 
 export const MCP_APP_DOMAIN_TOOL_NAMES = {
   erp: 'erp',
+  crm: 'crm',
   sql: 'sql',
   sqlExecution: 'sql_execution',
   ecommerce: 'ecommerce',
@@ -282,8 +303,20 @@ const ERP_DOMAIN_TOOL_DEFINITION = {
   name: MCP_APP_DOMAIN_TOOL_NAMES.erp,
   title: 'ERP',
   description:
-    'Consulta registros operacionais do ERP em modo leitura. Use para financeiro, vendas, compras, CRM e estoque. Acoes suportadas: listar e ler. Recursos principais retornam colunas de negocio com nomes resolvidos por join, sem expor IDs internos na tabela: contas-a-pagar, contas-a-receber, vendas/pedidos, compras/pedidos, crm/leads, crm/oportunidades, estoque/estoque-atual e estoque/movimentacoes.',
-  inputSchema: CRUD_SCHEMA,
+    'Consulta registros operacionais do ERP em modo leitura. Use para financeiro, vendas, compras e estoque. Acoes suportadas: listar e ler. Recursos principais retornam colunas de negocio com nomes resolvidos por join, sem expor IDs internos na tabela: contas-a-pagar, contas-a-receber, vendas/pedidos, compras/pedidos, estoque/estoque-atual e estoque/movimentacoes.',
+  inputSchema: ERP_CRUD_SCHEMA,
+  outputSchema: CRUD_OUTPUT_SCHEMA,
+  securitySchemes: READ_SECURITY_SCHEMES,
+  annotations: READ_ONLY_ANNOTATIONS,
+  _meta: TOOL_META,
+} as const satisfies DomainToolDefinition
+
+const CRM_DOMAIN_TOOL_DEFINITION = {
+  name: MCP_APP_DOMAIN_TOOL_NAMES.crm,
+  title: 'CRM',
+  description:
+    'Consulta registros operacionais do CRM em modo leitura. Use para contas, contatos, leads, oportunidades e atividades. Acoes suportadas: listar e ler. Recursos principais retornam colunas de negocio com nomes resolvidos por join, sem expor IDs internos na tabela: crm/leads e crm/oportunidades.',
+  inputSchema: CRM_SCHEMA,
   outputSchema: CRUD_OUTPUT_SCHEMA,
   securitySchemes: READ_SECURITY_SCHEMES,
   annotations: READ_ONLY_ANNOTATIONS,
@@ -329,6 +362,7 @@ const MARKETING_DOMAIN_TOOL_DEFINITION = {
 export function listMcpAppDomainToolDefinitions() {
   return [
     ERP_DOMAIN_TOOL_DEFINITION,
+    CRM_DOMAIN_TOOL_DEFINITION,
     ECOMMERCE_DOMAIN_TOOL_DEFINITION,
     SQL_DOMAIN_TOOL_DEFINITION,
     MARKETING_DOMAIN_TOOL_DEFINITION,
@@ -337,6 +371,7 @@ export function listMcpAppDomainToolDefinitions() {
 
 export const MCP_APP_DOMAIN_TOOL_DEFINITIONS = [
   ERP_DOMAIN_TOOL_DEFINITION,
+  CRM_DOMAIN_TOOL_DEFINITION,
   ECOMMERCE_DOMAIN_TOOL_DEFINITION,
   MARKETING_DOMAIN_TOOL_DEFINITION,
 ] as const satisfies readonly DomainToolDefinition[]
@@ -745,6 +780,12 @@ function getCrudTable(resource: string) {
   const table = CRUD_RESOURCE_TABLES[resource as keyof typeof CRUD_RESOURCE_TABLES]
   if (!table) throw new Error(`resource invalido para crud: ${resource}`)
   return table
+}
+
+function assertCrudResourceForTool(resource: string, toolName: string, allowedResources: string[]) {
+  if (!allowedResources.includes(resource)) {
+    throw new Error(`resource invalido para ${toolName}: ${resource}`)
+  }
 }
 
 function buildFinancialAccountsWhere(
@@ -1470,19 +1511,25 @@ OFFSET $${params.length}::int
   }
 }
 
-async function callCrud(args: unknown, context: CognitoMcpServerContext) {
+async function callCrud(
+  args: unknown,
+  context: CognitoMcpServerContext,
+  toolName: string,
+  allowedResources: string[],
+) {
   const input = toObj(args)
   const paramsIn = toObj(input.params)
   const action = normalizeCrudAction(input.action || 'listar')
   const resource = toText(input.resource)
-  if (!resource) throw new Error('resource e obrigatorio para erp')
+  if (!resource) throw new Error(`resource e obrigatorio para ${toolName}`)
+  assertCrudResourceForTool(resource, toolName, allowedResources)
 
   const built = buildCrudQuery(action, resource, paramsIn, getTenantId(context))
   const rows = await runQuery<Record<string, unknown>>(built.sql, built.params)
   const columns = inferColumns(rows)
   const structuredContent = {
     success: true,
-    tool: 'erp',
+    tool: toolName,
     action,
     resource,
     title: built.title,
@@ -1567,7 +1614,9 @@ export async function callMcpAppDomainTool(
 ) {
   switch (name) {
     case MCP_APP_DOMAIN_TOOL_NAMES.erp:
-      return callCrud(args, context)
+      return callCrud(args, context, MCP_APP_DOMAIN_TOOL_NAMES.erp, ERP_ALLOWED_RESOURCES)
+    case MCP_APP_DOMAIN_TOOL_NAMES.crm:
+      return callCrud(args, context, MCP_APP_DOMAIN_TOOL_NAMES.crm, CRM_ALLOWED_RESOURCES)
     case MCP_APP_DOMAIN_TOOL_NAMES.ecommerce:
       return callEcommerce(args, context)
     case MCP_APP_DOMAIN_TOOL_NAMES.sql:

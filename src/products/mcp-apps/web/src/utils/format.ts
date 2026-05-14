@@ -69,6 +69,7 @@ export function formatCellValue(key: string, value: unknown) {
 
 export function getToolLabel(tool?: string) {
   if (tool === 'erp') return 'ERP'
+  if (tool === 'crm') return 'CRM'
   if (tool === 'sql' || tool === 'sql_execution') return 'SQL'
   if (tool === 'ecommerce') return 'Ecommerce'
   if (tool === 'marketing') return 'Marketing'
