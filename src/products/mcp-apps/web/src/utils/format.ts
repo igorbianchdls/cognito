@@ -1,3 +1,21 @@
+import {
+  BadgeDollarSign,
+  Database,
+  Landmark,
+  Megaphone,
+  ShoppingCart,
+  UsersRound,
+  type LucideIcon,
+} from 'lucide-react'
+
+export type ToolTone = 'erp' | 'crm' | 'ecommerce' | 'marketing' | 'sql' | 'neutral'
+
+type ToolVisual = {
+  label: string
+  Icon: LucideIcon
+  tone: ToolTone
+}
+
 const moneyWords = [
   'amount',
   'custo',
@@ -74,4 +92,13 @@ export function getToolLabel(tool?: string) {
   if (tool === 'ecommerce') return 'Ecommerce'
   if (tool === 'marketing') return 'Marketing'
   return humanizeKey(tool || 'Resultado')
+}
+
+export function getToolVisual(tool?: string): ToolVisual {
+  if (tool === 'erp') return { label: 'ERP', Icon: Landmark, tone: 'erp' }
+  if (tool === 'crm') return { label: 'CRM', Icon: UsersRound, tone: 'crm' }
+  if (tool === 'ecommerce') return { label: 'Ecommerce', Icon: ShoppingCart, tone: 'ecommerce' }
+  if (tool === 'marketing') return { label: 'Marketing', Icon: Megaphone, tone: 'marketing' }
+  if (tool === 'sql' || tool === 'sql_execution') return { label: 'SQL', Icon: Database, tone: 'sql' }
+  return { label: humanizeKey(tool || 'Resultado'), Icon: BadgeDollarSign, tone: 'neutral' }
 }

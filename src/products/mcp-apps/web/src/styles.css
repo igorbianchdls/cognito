@@ -36,6 +36,69 @@ a {
   gap: 4px;
 }
 
+.result-shell__heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.result-shell__copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.result-shell__icon {
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dfe4df;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #4f5a53;
+  box-shadow: 0 4px 12px rgba(20, 24, 22, 0.06);
+}
+
+.result-shell__icon--erp {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.result-shell__icon--crm {
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.result-shell__icon--ecommerce {
+  border-color: #ddd6fe;
+  background: #f5f3ff;
+  color: #6d28d9;
+}
+
+.result-shell__icon--marketing {
+  border-color: #fed7aa;
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.result-shell__icon--sql {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  color: #334155;
+}
+
+.result-shell__icon--neutral {
+  border-color: #d7ddd8;
+  background: #fafbf9;
+  color: #4f5a53;
+}
+
 .dashboard-header__eyebrow,
 .result-shell__eyebrow {
   margin: 0;

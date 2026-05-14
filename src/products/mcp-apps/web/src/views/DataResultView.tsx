@@ -3,7 +3,7 @@ import { EmptyState } from '@/products/mcp-apps/web/src/components/EmptyState'
 import { MetricSummary } from '@/products/mcp-apps/web/src/components/MetricSummary'
 import { ResultShell } from '@/products/mcp-apps/web/src/components/ResultShell'
 import type { DataResultStructuredContent } from '@/products/mcp-apps/web/src/types/toolResult'
-import { getToolLabel } from '@/products/mcp-apps/web/src/utils/format'
+import { getToolVisual } from '@/products/mcp-apps/web/src/utils/format'
 import { getColumns, getRows } from '@/products/mcp-apps/web/src/utils/table'
 
 type DataResultViewProps = {
@@ -13,6 +13,7 @@ type DataResultViewProps = {
 export function DataResultView({ data }: DataResultViewProps) {
   const rows = getRows(data)
   const columns = getColumns(data, rows)
+  const toolVisual = getToolVisual(data.tool)
   const description = [
     data.action ? `Acao: ${data.action}` : null,
     data.resource ? `Recurso: ${data.resource}` : null,
@@ -22,7 +23,9 @@ export function DataResultView({ data }: DataResultViewProps) {
   if (!rows.length) {
     return (
       <ResultShell
-        eyebrow={getToolLabel(data.tool)}
+        eyebrow={toolVisual.label}
+        icon={toolVisual.Icon}
+        tone={toolVisual.tone}
         title={data.title || 'Resultado'}
         description={description || 'A tool retornou uma resposta estruturada.'}
       >
@@ -33,7 +36,9 @@ export function DataResultView({ data }: DataResultViewProps) {
 
   return (
     <ResultShell
-      eyebrow={getToolLabel(data.tool)}
+      eyebrow={toolVisual.label}
+      icon={toolVisual.Icon}
+      tone={toolVisual.tone}
       title={data.title || 'Resultado'}
       description={description || 'Resultado estruturado da tool.'}
     >
