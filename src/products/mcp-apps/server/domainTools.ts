@@ -91,6 +91,40 @@ const ACTION_PARAMS_SCHEMA = {
   additionalProperties: true,
 } as const
 
+const ECOMMERCE_PARAMS_SCHEMA = {
+  type: 'object',
+  properties: {
+    ...ACTION_PARAMS_SCHEMA.properties,
+    plataforma: {
+      type: 'string',
+      enum: ['shopify', 'shopee', 'amazon', 'mercadolivre'],
+      description:
+        'Filtro por plataforma/canal de ecommerce. Use shopify, shopee, amazon ou mercadolivre quando a pergunta mencionar uma plataforma especifica.',
+    },
+    canal_conta_id: {
+      type: 'string',
+      description: 'ID interno da conta/canal conectado. Use somente quando o usuario informar ou quando ja tiver sido consultado antes.',
+    },
+    loja_id: {
+      type: 'string',
+      description: 'ID interno da loja. Use somente quando o usuario informar ou quando ja tiver sido consultado antes.',
+    },
+    status: {
+      type: 'string',
+      description: 'Filtro pelo status do pedido.',
+    },
+    status_pagamento: {
+      type: 'string',
+      description: 'Filtro pelo status de pagamento do pedido.',
+    },
+    status_fulfillment: {
+      type: 'string',
+      description: 'Filtro pelo status logistico/fulfillment do pedido.',
+    },
+  },
+  additionalProperties: true,
+} as const
+
 const METRICS_OUTPUT_SCHEMA = {
   type: 'object',
   properties: {
@@ -257,7 +291,7 @@ const ECOMMERCE_SCHEMA = {
       description:
         'Metrica canonica de ecommerce. Use kpis_resumo para visao geral; vendas_por_canal, pedidos_por_status, faturamento_por_mes, top_produtos_receita ou frete_por_transportadora para cortes analiticos.',
     },
-    params: ACTION_PARAMS_SCHEMA,
+    params: ECOMMERCE_PARAMS_SCHEMA,
   },
   required: ['action'],
   additionalProperties: true,
