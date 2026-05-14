@@ -56,9 +56,12 @@ async function main() {
   const resources = await import(`file://${resourcesPath}`)
   const list = resources.listCognitoMcpAppResources()
   assert(list.resources.some((resource) => resource.uri === resources.DASHBOARD_WIDGET_RESOURCE_URI), 'resources/list missing dashboard widget')
+  assert(list.resources.some((resource) => resource.uri === resources.DASHBOARD_WIDGET_LEGACY_RESOURCE_URI), 'resources/list missing legacy dashboard widget')
   const read = resources.readCognitoMcpAppResource(resources.DASHBOARD_WIDGET_RESOURCE_URI)
   const content = read?.contents?.[0]
   assert(content?.mimeType === 'text/html;profile=mcp-app', 'resource mime type should be MCP App HTML')
+  const legacyRead = resources.readCognitoMcpAppResource(resources.DASHBOARD_WIDGET_LEGACY_RESOURCE_URI)
+  assert(legacyRead?.contents?.[0]?.uri === resources.DASHBOARD_WIDGET_LEGACY_RESOURCE_URI, 'legacy resource read should preserve requested uri')
   assert(content?._meta?.ui?.resourceUri === undefined, 'resource content should not declare tool resourceUri')
   assert(content?._meta?.ui?.csp?.resourceDomains?.length > 0, 'resource UI CSP missing resourceDomains')
   assert(!content?._meta?.['openai/widgetCSP'], 'mcp-apps resource should not include OpenAI CSP metadata')

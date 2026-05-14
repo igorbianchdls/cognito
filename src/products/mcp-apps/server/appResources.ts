@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
 export const DASHBOARD_WIDGET_RESOURCE_URI = 'ui://widget/dashboard-v2.html'
+export const DASHBOARD_WIDGET_LEGACY_RESOURCE_URI = 'ui://widget/dashboard.html'
 export const DASHBOARD_WIDGET_MIME_TYPE = 'text/html;profile=mcp-app'
 
 export type McpAppResourceContent = {
@@ -151,29 +152,47 @@ export const DASHBOARD_WIDGET_RESOURCE: McpAppResource = {
   ],
 }
 
+export const DASHBOARD_WIDGET_LEGACY_RESOURCE: McpAppResource = {
+  ...DASHBOARD_WIDGET_RESOURCE,
+  uri: DASHBOARD_WIDGET_LEGACY_RESOURCE_URI,
+  contents: [
+    {
+      uri: DASHBOARD_WIDGET_LEGACY_RESOURCE_URI,
+      mimeType: DASHBOARD_WIDGET_MIME_TYPE,
+      text: getDashboardWidgetHtml(),
+      _meta: getDashboardWidgetResourceContentMeta(),
+    },
+  ],
+}
+
+function toResourceListItem(resource: McpAppResource) {
+  return {
+    name: resource.name,
+    title: resource.title,
+    description: resource.description,
+    uri: resource.uri,
+    mimeType: resource.mimeType,
+  }
+}
+
 export function listCognitoMcpAppResources() {
   return {
     resources: [
-      {
-        name: DASHBOARD_WIDGET_RESOURCE.name,
-        title: DASHBOARD_WIDGET_RESOURCE.title,
-        description: DASHBOARD_WIDGET_RESOURCE.description,
-        uri: DASHBOARD_WIDGET_RESOURCE.uri,
-        mimeType: DASHBOARD_WIDGET_RESOURCE.mimeType,
-      },
+      toResourceListItem(DASHBOARD_WIDGET_RESOURCE),
+      toResourceListItem(DASHBOARD_WIDGET_LEGACY_RESOURCE),
     ],
   }
 }
 
 export function readCognitoMcpAppResource(uri: string) {
-  if (uri !== DASHBOARD_WIDGET_RESOURCE_URI) {
+  if (uri !== DASHBOARD_WIDGET_RESOURCE_URI && uri !== DASHBOARD_WIDGET_LEGACY_RESOURCE_URI) {
     return null
   }
 
   return {
     contents: [
       {
-        uri: DASHBOARD_WIDGET_RESOURCE_URI,
+        uri,
         mimeType: DASHBOARD_WIDGET_MIME_TYPE,
         text: getDashboardWidgetHtml(),
         _meta: getDashboardWidgetResourceContentMeta(),
