@@ -115,6 +115,17 @@ async function main() {
   assert(domainToolsSource.includes("'estoque/estoque-atual': 'estoque.estoques_atual'"), 'estoque/estoque-atual should map to estoque.estoques_atual')
   console.log('domain tools source ok')
 
+  const dashboardToolsSource = await readFile(path.join(root, 'src/products/mcp/tools/dashboardTools.ts'), 'utf8')
+  assert(dashboardToolsSource.includes("const DASHBOARD_DSL_VERSION = 'dashboard.v1'"), 'dashboard DSL version missing')
+  assert(dashboardToolsSource.includes('component_props: DASHBOARD_COMPONENT_PROPS'), 'dashboard contract should expose component props')
+  assert(dashboardToolsSource.includes('data_query_contract: DASHBOARD_DATA_QUERY_CONTRACT'), 'dashboard contract should expose data query contract')
+  assert(dashboardToolsSource.includes('supported_html_tags'), 'dashboard contract should expose supported HTML tags')
+  assert(dashboardToolsSource.includes('id="dashboard-comercial"'), 'dashboard example should include root Dashboard id')
+  assert(dashboardToolsSource.includes('dataQuery={{'), 'dashboard example should use dataQuery')
+  assert(!dashboardToolsSource.includes('<KPI id="receita-total" label="Receita" value='), 'dashboard example should not use static KPI.value')
+  assert(!dashboardToolsSource.includes('data={[{ label:'), 'dashboard example should not use Chart.data')
+  console.log('dashboard authoring contract ok')
+
   const appSource = await readFile(path.join(root, 'src/products/mcp-apps/web/src/App.tsx'), 'utf8')
   const formatSource = await readFile(path.join(root, 'src/products/mcp-apps/web/src/utils/format.ts'), 'utf8')
   const resultShellSource = await readFile(path.join(root, 'src/products/mcp-apps/web/src/components/ResultShell.tsx'), 'utf8')
