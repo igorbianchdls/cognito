@@ -76,6 +76,15 @@ async function main() {
   assert(!toolsSource.includes('openai/widgetAccessible'), 'mcp-apps tools should not include OpenAI widgetAccessible')
   console.log('tools source ok')
 
+  const domainToolsSource = await readFile(path.join(root, 'src/products/mcp-apps/server/domainTools.ts'), 'utf8')
+  assert(domainToolsSource.includes('function buildFinancialAccountsPayableQuery'), 'contas-a-pagar semantic query missing')
+  assert(domainToolsSource.includes('function buildFinancialAccountsReceivableQuery'), 'contas-a-receber semantic query missing')
+  assert(domainToolsSource.includes('AS fornecedor'), 'contas-a-pagar should expose fornecedor name column')
+  assert(domainToolsSource.includes('AS cliente'), 'contas-a-receber should expose cliente name column')
+  assert(domainToolsSource.includes('LEFT JOIN entidades.fornecedores'), 'contas-a-pagar should join fornecedores')
+  assert(domainToolsSource.includes('LEFT JOIN entidades.clientes'), 'contas-a-receber should join clientes')
+  console.log('domain tools source ok')
+
   const componentPath = path.join(root, 'src/products/mcp-apps/web/dist/component.js')
   const componentJs = await readFile(componentPath, 'utf8')
   assert(componentJs.includes('CognitoMcpApp'), 'component missing MCP Apps runtime')

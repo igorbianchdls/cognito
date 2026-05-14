@@ -159,7 +159,8 @@ const CRUD_SCHEMA = {
     },
     params: {
       type: 'object',
-      description: 'Filtros de leitura. Suporta id, q, limit e offset.',
+      description:
+        'Filtros de leitura. Suporta id, q, limit, offset, de, ate, status, valor_min e valor_max. Para contas-a-receber aceita cliente_id como filtro interno; para contas-a-pagar aceita fornecedor_id. A resposta retorna nomes de cliente/fornecedor, nao IDs.',
       additionalProperties: true,
     },
   },
@@ -281,7 +282,7 @@ const ERP_DOMAIN_TOOL_DEFINITION = {
   name: MCP_APP_DOMAIN_TOOL_NAMES.erp,
   title: 'ERP',
   description:
-    'Consulta registros operacionais do ERP em modo leitura. Use para financeiro, vendas, compras, CRM e estoque. Acoes suportadas: listar e ler. Exemplos de resource: contas-a-pagar, contas-a-receber, vendas/pedidos, crm/leads.',
+    'Consulta registros operacionais do ERP em modo leitura. Use para financeiro, vendas, compras, CRM e estoque. Acoes suportadas: listar e ler. Para contas-a-pagar e contas-a-receber, retorna colunas de negocio com nomes de fornecedor/cliente resolvidos por join, sem expor IDs internos na tabela. Exemplos de resource: contas-a-pagar, contas-a-receber, vendas/pedidos, crm/leads.',
   inputSchema: CRUD_SCHEMA,
   outputSchema: CRUD_OUTPUT_SCHEMA,
   securitySchemes: READ_SECURITY_SCHEMES,
@@ -746,7 +747,146 @@ function getCrudTable(resource: string) {
   return table
 }
 
-function buildCrudQuery(action: CrudAction, resource: string, paramsIn: JsonRecord, tenantId: number) {
+function buildFinancialAccountsWhere(
+  action: CrudAction,
+  paramsIn: JsonRecord,
+  tenantId: number,
+  alias: string,
+  searchExpression: string,
+  entityIdField: 'cliente_id' | 'fornecedor_id',
+) {
+  const limit = normalizeLimit(paramsIn.limit, 50)
+  const offset = Math.max(0, Number.parseInt(toText(paramsIn.offset), 10) || 0)
+  const params: unknown[] = [tenantId]
+  const where = [`${alias}.tenant_id = $1::int`]
+
+  const id = toText(paramsIn.id)
+  if (action === 'ler' || id) {
+    if (!id) throw new Error('params.id e obrigatorio para crud action ler')
+    params.push(id)
+    where.push(`${alias}.id::text = $${params.length}::text`)
+  }
+
+  const de = normalizeDate(paramsIn.de)
+  if (de) {
+    params.push(de)
+    where.push(`${alias}.data_vencimento::date >= $${params.length}::date`)
+  }
+
+  const ate = normalizeDate(paramsIn.ate)
+  if (ate) {
+    params.push(ate)
+    where.push(`${alias}.data_vencimento::date <= $${params.length}::date`)
+  }
+
+  const status = toText(paramsIn.status)
+  if (status) {
+    params.push(status)
+    where.push(`${alias}.status = $${params.length}::text`)
+  }
+
+  const entityId = toText(paramsIn[entityIdField])
+  if (entityId) {
+    params.push(entityId)
+    where.push(`${alias}.${entityIdField}::text = $${params.length}::text`)
+  }
+
+  const valorMin = toText(paramsIn.valor_min)
+  if (valorMin) {
+    const parsed = Number(valorMin)
+    if (!Number.isFinite(parsed)) throw new Error('params.valor_min invalido')
+    params.push(parsed)
+    where.push(`${alias}.valor_liquido >= $${params.length}::numeric`)
+  }
+
+  const valorMax = toText(paramsIn.valor_max)
+  if (valorMax) {
+    const parsed = Number(valorMax)
+    if (!Number.isFinite(parsed)) throw new Error('params.valor_max invalido')
+    params.push(parsed)
+    where.push(`${alias}.valor_liquido <= $${params.length}::numeric`)
+  }
+
+  const q = toText(paramsIn.q)
+  if (q) {
+    params.push(`%${q}%`)
+    where.push(`(${alias}.numero_documento ILIKE $${params.length}::text OR ${searchExpression} ILIKE $${params.length}::text OR ${alias}.status ILIKE $${params.length}::text)`)
+  }
+
+  params.push(limit, offset)
+  return {
+    params,
+    whereClause: `WHERE ${where.join(' AND ')}`,
+    limitParam: params.length - 1,
+    offsetParam: params.length,
+  }
+}
+
+function buildFinancialAccountsPayableQuery(action: CrudAction, paramsIn: JsonRecord, tenantId: number): BuiltQuery {
+  const fornecedorExpr = "COALESCE(NULLIF(f.nome_fantasia, ''), NULLIF(cp.nome_fornecedor_snapshot, ''), CONCAT('Fornecedor #', cp.fornecedor_id::text), '-')"
+  const base = buildFinancialAccountsWhere(action, paramsIn, tenantId, 'cp', fornecedorExpr, 'fornecedor_id')
+
+  return {
+    sql: `
+SELECT
+  cp.numero_documento,
+  ${fornecedorExpr} AS fornecedor,
+  cp.data_documento::date AS data_documento,
+  cp.data_vencimento::date AS data_vencimento,
+  COALESCE(cp.valor_liquido, 0)::float AS valor_liquido,
+  cp.status,
+  COALESCE(NULLIF(cp.tipo_documento, ''), '-') AS tipo_documento,
+  COALESCE(NULLIF(cp.observacao, ''), '-') AS observacao
+FROM financeiro.contas_pagar cp
+LEFT JOIN entidades.fornecedores f ON f.id = cp.fornecedor_id
+${base.whereClause}
+ORDER BY cp.data_vencimento ASC, cp.id DESC
+LIMIT $${base.limitParam}::int
+OFFSET $${base.offsetParam}::int
+    `.trim(),
+    params: base.params,
+    title: 'Contas a pagar',
+    chart: null,
+  }
+}
+
+function buildFinancialAccountsReceivableQuery(action: CrudAction, paramsIn: JsonRecord, tenantId: number): BuiltQuery {
+  const clienteExpr = "COALESCE(NULLIF(c.nome_fantasia, ''), NULLIF(cr.nome_cliente_snapshot, ''), CONCAT('Cliente #', cr.cliente_id::text), '-')"
+  const base = buildFinancialAccountsWhere(action, paramsIn, tenantId, 'cr', clienteExpr, 'cliente_id')
+
+  return {
+    sql: `
+SELECT
+  cr.numero_documento,
+  ${clienteExpr} AS cliente,
+  cr.data_documento::date AS data_documento,
+  cr.data_vencimento::date AS data_vencimento,
+  COALESCE(cr.valor_liquido, 0)::float AS valor_liquido,
+  cr.status,
+  COALESCE(NULLIF(cr.tipo_documento, ''), '-') AS tipo_documento,
+  COALESCE(NULLIF(cr.observacao, ''), '-') AS observacao
+FROM financeiro.contas_receber cr
+LEFT JOIN entidades.clientes c ON c.id = cr.cliente_id AND c.tenant_id = cr.tenant_id
+${base.whereClause}
+ORDER BY cr.data_vencimento ASC, cr.id DESC
+LIMIT $${base.limitParam}::int
+OFFSET $${base.offsetParam}::int
+    `.trim(),
+    params: base.params,
+    title: 'Contas a receber',
+    chart: null,
+  }
+}
+
+function buildCrudQuery(action: CrudAction, resource: string, paramsIn: JsonRecord, tenantId: number): BuiltQuery {
+  if (resource === 'contas-a-pagar') {
+    return buildFinancialAccountsPayableQuery(action, paramsIn, tenantId)
+  }
+
+  if (resource === 'contas-a-receber') {
+    return buildFinancialAccountsReceivableQuery(action, paramsIn, tenantId)
+  }
+
   const table = getCrudTable(resource)
   const limit = normalizeLimit(paramsIn.limit, 50)
   const offset = Math.max(0, Number.parseInt(toText(paramsIn.offset), 10) || 0)
@@ -778,6 +918,7 @@ OFFSET $${params.length}::int
     `.trim(),
     params,
     title: `ERP - ${resource}`,
+    chart: null,
   }
 }
 
