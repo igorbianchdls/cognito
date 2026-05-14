@@ -123,11 +123,11 @@ const CRUD_RESOURCE_TABLES = {
   'financeiro/contas-financeiras': 'financeiro.contas_financeiras',
   'financeiro/categorias-despesa': 'financeiro.categorias_despesa',
   'financeiro/categorias-receita': 'financeiro.categorias_receita',
-  'financeiro/clientes': 'financeiro.clientes',
-  'financeiro/centros-custo': 'financeiro.centros_custo',
-  'financeiro/centros-lucro': 'financeiro.centros_lucro',
+  'financeiro/clientes': 'entidades.clientes',
+  'financeiro/centros-custo': 'empresa.centros_custo',
+  'financeiro/centros-lucro': 'empresa.centros_lucro',
   'vendas/pedidos': 'vendas.pedidos',
-  'compras/pedidos': 'compras.pedidos',
+  'compras/pedidos': 'compras.compras',
   'contas-a-pagar': 'financeiro.contas_pagar',
   'contas-a-receber': 'financeiro.contas_receber',
   'crm/contas': 'crm.contas',
@@ -136,8 +136,8 @@ const CRUD_RESOURCE_TABLES = {
   'crm/oportunidades': 'crm.oportunidades',
   'crm/atividades': 'crm.atividades',
   'estoque/almoxarifados': 'estoque.almoxarifados',
-  'estoque/movimentacoes': 'estoque.movimentacoes',
-  'estoque/estoque-atual': 'estoque.estoque_atual',
+  'estoque/movimentacoes': 'estoque.movimentacoes_estoque',
+  'estoque/estoque-atual': 'estoque.estoques_atual',
   'estoque/tipos-movimentacao': 'estoque.tipos_movimentacao',
 } as const
 
@@ -160,7 +160,7 @@ const CRUD_SCHEMA = {
     params: {
       type: 'object',
       description:
-        'Filtros de leitura. Suporta id, q, limit, offset, de, ate, status, valor_min e valor_max. Para contas-a-receber aceita cliente_id como filtro interno; para contas-a-pagar aceita fornecedor_id. A resposta retorna nomes de cliente/fornecedor, nao IDs.',
+        'Filtros de leitura. Suporta id, q, limit, offset, de, ate, status, valor_min, valor_max e filtros *_id quando forem necessarios internamente. A resposta prioriza nomes e descricoes de negocio, nao IDs: cliente, fornecedor, vendedor, canal, fase, produto, almoxarifado, categoria e centro.',
       additionalProperties: true,
     },
   },
@@ -282,7 +282,7 @@ const ERP_DOMAIN_TOOL_DEFINITION = {
   name: MCP_APP_DOMAIN_TOOL_NAMES.erp,
   title: 'ERP',
   description:
-    'Consulta registros operacionais do ERP em modo leitura. Use para financeiro, vendas, compras, CRM e estoque. Acoes suportadas: listar e ler. Para contas-a-pagar e contas-a-receber, retorna colunas de negocio com nomes de fornecedor/cliente resolvidos por join, sem expor IDs internos na tabela. Exemplos de resource: contas-a-pagar, contas-a-receber, vendas/pedidos, crm/leads.',
+    'Consulta registros operacionais do ERP em modo leitura. Use para financeiro, vendas, compras, CRM e estoque. Acoes suportadas: listar e ler. Recursos principais retornam colunas de negocio com nomes resolvidos por join, sem expor IDs internos na tabela: contas-a-pagar, contas-a-receber, vendas/pedidos, compras/pedidos, crm/leads, crm/oportunidades, estoque/estoque-atual e estoque/movimentacoes.',
   inputSchema: CRUD_SCHEMA,
   outputSchema: CRUD_OUTPUT_SCHEMA,
   securitySchemes: READ_SECURITY_SCHEMES,
@@ -878,6 +878,498 @@ OFFSET $${base.offsetParam}::int
   }
 }
 
+type SemanticWhereConfig = {
+  alias: string
+  tenantScoped?: boolean
+  dateField?: string
+  statusField?: string
+  idFields?: string[]
+  valueField?: string
+  searchExpressions?: string[]
+  activeField?: string
+  defaultActive?: boolean
+  defaultLimit?: number
+}
+
+function toOptionalBoolean(value: unknown): boolean | null {
+  if (typeof value === 'boolean') return value
+  const out = toText(value).toLowerCase()
+  if (!out) return null
+  if (out === 'true' || out === '1' || out === 'sim' || out === 'ativo') return true
+  if (out === 'false' || out === '0' || out === 'nao' || out === 'inativo') return false
+  throw new Error(`boolean invalido: ${out}`)
+}
+
+function buildSemanticWhere(
+  action: CrudAction,
+  paramsIn: JsonRecord,
+  tenantId: number,
+  config: SemanticWhereConfig,
+) {
+  const limit = normalizeLimit(paramsIn.limit, config.defaultLimit ?? 50)
+  const offset = Math.max(0, Number.parseInt(toText(paramsIn.offset), 10) || 0)
+  const params: unknown[] = []
+  const where: string[] = []
+
+  if (config.tenantScoped !== false) {
+    params.push(tenantId)
+    where.push(`${config.alias}.tenant_id = $${params.length}::int`)
+  }
+
+  const id = toText(paramsIn.id)
+  if (action === 'ler' || id) {
+    if (!id) throw new Error('params.id e obrigatorio para crud action ler')
+    params.push(id)
+    where.push(`${config.alias}.id::text = $${params.length}::text`)
+  }
+
+  const de = normalizeDate(paramsIn.de)
+  if (de && config.dateField) {
+    params.push(de)
+    where.push(`${config.alias}.${config.dateField}::date >= $${params.length}::date`)
+  }
+
+  const ate = normalizeDate(paramsIn.ate)
+  if (ate && config.dateField) {
+    params.push(ate)
+    where.push(`${config.alias}.${config.dateField}::date <= $${params.length}::date`)
+  }
+
+  const status = toText(paramsIn.status)
+  if (status && config.statusField) {
+    params.push(status)
+    where.push(`LOWER(COALESCE(${config.alias}.${config.statusField}, '')) = LOWER($${params.length}::text)`)
+  }
+
+  const ativo = toOptionalBoolean(paramsIn.ativo)
+  const activeFilter = ativo ?? config.defaultActive
+  if (typeof activeFilter === 'boolean' && config.activeField) {
+    params.push(activeFilter)
+    where.push(`COALESCE(${config.alias}.${config.activeField}, true) = $${params.length}::boolean`)
+  }
+
+  for (const field of config.idFields || []) {
+    const value = toText(paramsIn[field])
+    if (value) {
+      params.push(value)
+      where.push(`${config.alias}.${field}::text = $${params.length}::text`)
+    }
+  }
+
+  const valorMin = toText(paramsIn.valor_min)
+  if (valorMin && config.valueField) {
+    const parsed = Number(valorMin)
+    if (!Number.isFinite(parsed)) throw new Error('params.valor_min invalido')
+    params.push(parsed)
+    where.push(`${config.alias}.${config.valueField} >= $${params.length}::numeric`)
+  }
+
+  const valorMax = toText(paramsIn.valor_max)
+  if (valorMax && config.valueField) {
+    const parsed = Number(valorMax)
+    if (!Number.isFinite(parsed)) throw new Error('params.valor_max invalido')
+    params.push(parsed)
+    where.push(`${config.alias}.${config.valueField} <= $${params.length}::numeric`)
+  }
+
+  const q = toText(paramsIn.q)
+  if (q && config.searchExpressions?.length) {
+    params.push(`%${q}%`)
+    const qParam = `$${params.length}::text`
+    where.push(`(${config.searchExpressions.map((expression) => `${expression} ILIKE ${qParam}`).join(' OR ')})`)
+  }
+
+  params.push(limit, offset)
+  return {
+    params,
+    whereClause: where.length ? `WHERE ${where.join(' AND ')}` : '',
+    limitParam: params.length - 1,
+    offsetParam: params.length,
+  }
+}
+
+function buildSalesOrdersQuery(action: CrudAction, paramsIn: JsonRecord, tenantId: number): BuiltQuery {
+  const clienteExpr = "COALESCE(NULLIF(c.nome_fantasia, ''), CONCAT('Cliente #', p.cliente_id::text), '-')"
+  const vendedorExpr = "COALESCE(NULLIF(f.nome, ''), '-')"
+  const canalExpr = "COALESCE(NULLIF(cv.nome, ''), '-')"
+  const base = buildSemanticWhere(action, paramsIn, tenantId, {
+    alias: 'p',
+    dateField: 'data_pedido',
+    statusField: 'status',
+    idFields: ['cliente_id', 'vendedor_id', 'canal_venda_id', 'filial_id', 'centro_lucro_id'],
+    valueField: 'valor_total',
+    searchExpressions: ['p.id::text', clienteExpr, vendedorExpr, canalExpr, 'p.status'],
+  })
+
+  return {
+    sql: `
+SELECT
+  p.id::text AS pedido,
+  ${clienteExpr} AS cliente,
+  p.data_pedido::date AS data_pedido,
+  ${canalExpr} AS canal,
+  ${vendedorExpr} AS vendedor,
+  COALESCE(fil.nome, '-') AS filial,
+  COALESCE(cl.nome, '-') AS centro_lucro,
+  COALESCE(p.valor_total, 0)::float AS valor_total,
+  COALESCE(p.status, '-') AS status
+FROM vendas.pedidos p
+LEFT JOIN entidades.clientes c ON c.id = p.cliente_id AND c.tenant_id = p.tenant_id
+LEFT JOIN vendas.canais_venda cv ON cv.id = p.canal_venda_id
+LEFT JOIN comercial.vendedores v ON v.id = p.vendedor_id
+LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
+LEFT JOIN empresa.filiais fil ON fil.id = p.filial_id
+LEFT JOIN empresa.centros_lucro cl ON cl.id = p.centro_lucro_id
+${base.whereClause}
+ORDER BY p.data_pedido DESC NULLS LAST, p.id DESC
+LIMIT $${base.limitParam}::int
+OFFSET $${base.offsetParam}::int
+    `.trim(),
+    params: base.params,
+    title: 'Pedidos de venda',
+    chart: null,
+  }
+}
+
+function buildPurchaseOrdersQuery(action: CrudAction, paramsIn: JsonRecord, tenantId: number): BuiltQuery {
+  const fornecedorExpr = "COALESCE(NULLIF(f.nome_fantasia, ''), CONCAT('Fornecedor #', c.fornecedor_id::text), '-')"
+  const base = buildSemanticWhere(action, paramsIn, tenantId, {
+    alias: 'c',
+    dateField: 'data_pedido',
+    statusField: 'status',
+    idFields: ['fornecedor_id', 'filial_id', 'centro_custo_id', 'categoria_despesa_id'],
+    valueField: 'valor_total',
+    searchExpressions: ['c.numero_oc', fornecedorExpr, 'c.status', 'c.observacoes'],
+  })
+
+  return {
+    sql: `
+SELECT
+  COALESCE(NULLIF(c.numero_oc, ''), c.id::text) AS numero_pedido,
+  ${fornecedorExpr} AS fornecedor,
+  c.data_pedido::date AS data_pedido,
+  c.data_entrega_prevista::date AS data_entrega_prevista,
+  COALESCE(c.valor_total, 0)::float AS valor_total,
+  COALESCE(c.status, '-') AS status,
+  COALESCE(fil.nome, '-') AS filial,
+  COALESCE(cc.nome, '-') AS centro_custo,
+  COALESCE(cd.nome, '-') AS categoria_despesa
+FROM compras.compras c
+LEFT JOIN entidades.fornecedores f ON f.id = c.fornecedor_id
+LEFT JOIN empresa.filiais fil ON fil.id = c.filial_id
+LEFT JOIN empresa.centros_custo cc ON cc.id = c.centro_custo_id
+LEFT JOIN financeiro.categorias_despesa cd ON cd.id = c.categoria_despesa_id
+${base.whereClause}
+ORDER BY c.data_pedido DESC NULLS LAST, c.id DESC
+LIMIT $${base.limitParam}::int
+OFFSET $${base.offsetParam}::int
+    `.trim(),
+    params: base.params,
+    title: 'Pedidos de compra',
+    chart: null,
+  }
+}
+
+function buildCrmLeadsQuery(action: CrudAction, paramsIn: JsonRecord, tenantId: number): BuiltQuery {
+  const origemExpr = "COALESCE(NULLIF(ol.nome, ''), '-')"
+  const responsavelExpr = "COALESCE(NULLIF(f.nome, ''), '-')"
+  const base = buildSemanticWhere(action, paramsIn, tenantId, {
+    alias: 'l',
+    dateField: 'criado_em',
+    statusField: 'status',
+    idFields: ['origem_id', 'responsavel_id'],
+    searchExpressions: ['l.nome', 'l.empresa', 'l.email', 'l.telefone', origemExpr, responsavelExpr, 'l.status'],
+  })
+
+  return {
+    sql: `
+SELECT
+  l.nome,
+  COALESCE(NULLIF(l.empresa, ''), '-') AS empresa,
+  COALESCE(NULLIF(l.email, ''), '-') AS email,
+  COALESCE(NULLIF(l.telefone, ''), '-') AS telefone,
+  ${origemExpr} AS origem,
+  COALESCE(l.status, '-') AS status,
+  ${responsavelExpr} AS responsavel,
+  l.criado_em::date AS criado_em
+FROM crm.leads l
+LEFT JOIN crm.origens_lead ol ON ol.id = l.origem_id AND ol.tenant_id = l.tenant_id
+LEFT JOIN comercial.vendedores v ON v.id = l.responsavel_id
+LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
+${base.whereClause}
+ORDER BY l.criado_em DESC NULLS LAST, l.id DESC
+LIMIT $${base.limitParam}::int
+OFFSET $${base.offsetParam}::int
+    `.trim(),
+    params: base.params,
+    title: 'Leads',
+    chart: null,
+  }
+}
+
+function buildCrmOpportunitiesQuery(action: CrudAction, paramsIn: JsonRecord, tenantId: number): BuiltQuery {
+  const contaExpr = "COALESCE(NULLIF(c.nome, ''), NULLIF(l.empresa, ''), NULLIF(l.nome, ''), '-')"
+  const faseExpr = "COALESCE(NULLIF(fp.nome, ''), '-')"
+  const responsavelExpr = "COALESCE(NULLIF(f.nome, ''), '-')"
+  const base = buildSemanticWhere(action, paramsIn, tenantId, {
+    alias: 'o',
+    dateField: 'data_prevista',
+    statusField: 'status',
+    idFields: ['conta_id', 'lead_id', 'vendedor_id', 'fase_pipeline_id'],
+    valueField: 'valor_estimado',
+    searchExpressions: ['o.nome', contaExpr, faseExpr, responsavelExpr, 'o.status'],
+  })
+
+  return {
+    sql: `
+SELECT
+  o.nome AS oportunidade,
+  ${contaExpr} AS conta,
+  ${faseExpr} AS fase,
+  ${responsavelExpr} AS responsavel,
+  COALESCE(o.valor_estimado, 0)::float AS valor_estimado,
+  COALESCE(o.probabilidade, 0)::float AS probabilidade,
+  o.data_prevista::date AS previsao_fechamento,
+  COALESCE(o.status, '-') AS status
+FROM crm.oportunidades o
+LEFT JOIN crm.contas c ON c.id = o.conta_id AND c.tenant_id = o.tenant_id
+LEFT JOIN crm.leads l ON l.id = o.lead_id AND l.tenant_id = o.tenant_id
+LEFT JOIN crm.fases_pipeline fp ON fp.id = o.fase_pipeline_id AND fp.tenant_id = o.tenant_id
+LEFT JOIN comercial.vendedores v ON v.id = o.vendedor_id
+LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
+${base.whereClause}
+ORDER BY o.data_prevista ASC NULLS LAST, o.id DESC
+LIMIT $${base.limitParam}::int
+OFFSET $${base.offsetParam}::int
+    `.trim(),
+    params: base.params,
+    title: 'Oportunidades',
+    chart: null,
+  }
+}
+
+function buildStockCurrentQuery(action: CrudAction, paramsIn: JsonRecord, tenantId: number): BuiltQuery {
+  const produtoExpr = "COALESCE(NULLIF(p.nome, ''), CONCAT('Produto #', ea.produto_id::text), '-')"
+  const almoxarifadoExpr = "COALESCE(NULLIF(a.nome, ''), CONCAT('Almoxarifado #', ea.almoxarifado_id::text), '-')"
+  const base = buildSemanticWhere(action, paramsIn, tenantId, {
+    alias: 'ea',
+    tenantScoped: false,
+    idFields: ['produto_id', 'almoxarifado_id'],
+    searchExpressions: [produtoExpr, almoxarifadoExpr],
+  })
+
+  return {
+    sql: `
+SELECT
+  ${produtoExpr} AS produto,
+  ${almoxarifadoExpr} AS almoxarifado,
+  COALESCE(ea.quantidade, 0)::float AS quantidade,
+  COALESCE(ea.custo_medio, 0)::float AS custo_medio,
+  ROUND(COALESCE(ea.quantidade, 0)::numeric * COALESCE(ea.custo_medio, 0)::numeric, 2)::float AS valor_total,
+  ea.atualizado_em
+FROM estoque.estoques_atual ea
+LEFT JOIN produtos.produto p ON p.id = ea.produto_id
+LEFT JOIN estoque.almoxarifados a ON a.id = ea.almoxarifado_id
+${base.whereClause}
+ORDER BY a.nome ASC NULLS LAST, p.nome ASC NULLS LAST
+LIMIT $${base.limitParam}::int
+OFFSET $${base.offsetParam}::int
+    `.trim(),
+    params: base.params,
+    title: 'Estoque atual',
+    chart: null,
+  }
+}
+
+function buildStockMovementsQuery(action: CrudAction, paramsIn: JsonRecord, tenantId: number): BuiltQuery {
+  const produtoExpr = "COALESCE(NULLIF(p.nome, ''), CONCAT('Produto #', m.produto_id::text), '-')"
+  const almoxarifadoExpr = "COALESCE(NULLIF(a.nome, ''), CONCAT('Almoxarifado #', m.almoxarifado_id::text), '-')"
+  const tipoExpr = "COALESCE(NULLIF(tm.descricao, ''), NULLIF(m.tipo_movimento, ''), NULLIF(m.tipo_codigo, ''), '-')"
+  const base = buildSemanticWhere(action, paramsIn, tenantId, {
+    alias: 'm',
+    tenantScoped: false,
+    dateField: 'data_movimento',
+    statusField: 'tipo_movimento',
+    idFields: ['produto_id', 'almoxarifado_id'],
+    valueField: 'valor_total',
+    searchExpressions: [produtoExpr, almoxarifadoExpr, tipoExpr, 'm.origem', 'm.observacoes'],
+  })
+
+  return {
+    sql: `
+SELECT
+  m.data_movimento::date AS data,
+  ${produtoExpr} AS produto,
+  ${almoxarifadoExpr} AS almoxarifado,
+  ${tipoExpr} AS tipo,
+  COALESCE(m.quantidade, 0)::float AS quantidade,
+  COALESCE(m.valor_total, 0)::float AS valor_total,
+  COALESCE(NULLIF(m.origem, ''), '-') AS origem,
+  COALESCE(NULLIF(m.observacoes, ''), '-') AS observacoes
+FROM estoque.movimentacoes_estoque m
+LEFT JOIN estoque.tipos_movimentacao tm ON tm.codigo = m.tipo_codigo
+LEFT JOIN estoque.almoxarifados a ON a.id = m.almoxarifado_id
+LEFT JOIN produtos.produto p ON p.id = m.produto_id
+${base.whereClause}
+ORDER BY m.data_movimento DESC NULLS LAST, m.id DESC
+LIMIT $${base.limitParam}::int
+OFFSET $${base.offsetParam}::int
+    `.trim(),
+    params: base.params,
+    title: 'Movimentacoes de estoque',
+    chart: null,
+  }
+}
+
+function buildFinanceClientsQuery(action: CrudAction, paramsIn: JsonRecord, tenantId: number): BuiltQuery {
+  const base = buildSemanticWhere(action, paramsIn, tenantId, {
+    alias: 'c',
+    searchExpressions: ['c.nome_fantasia', 'c.cnpj_cpf'],
+    defaultLimit: 100,
+  })
+
+  return {
+    sql: `
+SELECT
+  COALESCE(NULLIF(c.nome_fantasia, ''), '-') AS cliente,
+  COALESCE(NULLIF(c.cnpj_cpf, ''), '-') AS documento
+FROM entidades.clientes c
+${base.whereClause}
+ORDER BY c.nome_fantasia ASC NULLS LAST, c.id ASC
+LIMIT $${base.limitParam}::int
+OFFSET $${base.offsetParam}::int
+    `.trim(),
+    params: base.params,
+    title: 'Clientes',
+    chart: null,
+  }
+}
+
+function buildFinancialBankAccountsQuery(action: CrudAction, paramsIn: JsonRecord, tenantId: number): BuiltQuery {
+  const base = buildSemanticWhere(action, paramsIn, tenantId, {
+    alias: 'cf',
+    dateField: 'data_abertura',
+    idFields: ['tipo_conta'],
+    searchExpressions: ['cf.nome_conta', 'cf.tipo_conta', 'cf.numero_conta', 'cf.agencia', 'cf.pix_chave'],
+    activeField: 'ativo',
+    defaultActive: true,
+  })
+
+  return {
+    sql: `
+SELECT
+  cf.nome_conta,
+  COALESCE(NULLIF(cf.tipo_conta, ''), '-') AS tipo_conta,
+  COALESCE(NULLIF(cf.agencia, ''), '-') AS agencia,
+  COALESCE(NULLIF(cf.numero_conta, ''), '-') AS numero_conta,
+  COALESCE(cf.saldo_atual, 0)::float AS saldo_atual,
+  CASE WHEN COALESCE(cf.ativo, true) THEN 'Ativo' ELSE 'Inativo' END AS status
+FROM financeiro.contas_financeiras cf
+${base.whereClause}
+ORDER BY cf.nome_conta ASC NULLS LAST, cf.id ASC
+LIMIT $${base.limitParam}::int
+OFFSET $${base.offsetParam}::int
+    `.trim(),
+    params: base.params,
+    title: 'Contas financeiras',
+    chart: null,
+  }
+}
+
+function buildNamedBusinessResourceQuery(
+  action: CrudAction,
+  paramsIn: JsonRecord,
+  tenantId: number,
+  table: string,
+  alias: string,
+  title: string,
+): BuiltQuery {
+  const base = buildSemanticWhere(action, paramsIn, tenantId, {
+    alias,
+    searchExpressions: [`${alias}.codigo`, `${alias}.nome`, `${alias}.descricao`],
+    activeField: 'ativo',
+    defaultActive: true,
+    defaultLimit: 100,
+  })
+
+  return {
+    sql: `
+SELECT
+  COALESCE(NULLIF(${alias}.codigo, ''), '-') AS codigo,
+  ${alias}.nome,
+  COALESCE(NULLIF(${alias}.descricao, ''), '-') AS descricao,
+  CASE WHEN COALESCE(${alias}.ativo, true) THEN 'Ativo' ELSE 'Inativo' END AS status
+FROM ${table} ${alias}
+${base.whereClause}
+ORDER BY ${alias}.nome ASC NULLS LAST, ${alias}.id ASC
+LIMIT $${base.limitParam}::int
+OFFSET $${base.offsetParam}::int
+    `.trim(),
+    params: base.params,
+    title,
+    chart: null,
+  }
+}
+
+function buildStockWarehousesQuery(action: CrudAction, paramsIn: JsonRecord, tenantId: number): BuiltQuery {
+  const base = buildSemanticWhere(action, paramsIn, tenantId, {
+    alias: 'a',
+    searchExpressions: ['a.nome', 'a.tipo', 'a.endereco', 'a.responsavel'],
+    activeField: 'ativo',
+    defaultActive: true,
+    defaultLimit: 100,
+  })
+
+  return {
+    sql: `
+SELECT
+  a.nome AS almoxarifado,
+  COALESCE(NULLIF(a.tipo, ''), '-') AS tipo,
+  COALESCE(NULLIF(a.endereco, ''), '-') AS endereco,
+  COALESCE(NULLIF(a.responsavel, ''), '-') AS responsavel,
+  CASE WHEN COALESCE(a.ativo, true) THEN 'Ativo' ELSE 'Inativo' END AS status
+FROM estoque.almoxarifados a
+${base.whereClause}
+ORDER BY a.nome ASC NULLS LAST, a.id ASC
+LIMIT $${base.limitParam}::int
+OFFSET $${base.offsetParam}::int
+    `.trim(),
+    params: base.params,
+    title: 'Almoxarifados',
+    chart: null,
+  }
+}
+
+function buildStockMovementTypesQuery(action: CrudAction, paramsIn: JsonRecord, tenantId: number): BuiltQuery {
+  const base = buildSemanticWhere(action, paramsIn, tenantId, {
+    alias: 'tm',
+    tenantScoped: false,
+    searchExpressions: ['tm.codigo', 'tm.descricao', 'tm.natureza'],
+    activeField: 'ativo',
+    defaultActive: true,
+    defaultLimit: 100,
+  })
+
+  return {
+    sql: `
+SELECT
+  tm.codigo,
+  tm.descricao,
+  COALESCE(NULLIF(tm.natureza, ''), '-') AS natureza,
+  CASE WHEN COALESCE(tm.gera_financeiro, false) THEN 'Sim' ELSE 'Nao' END AS gera_financeiro,
+  CASE WHEN COALESCE(tm.ativo, true) THEN 'Ativo' ELSE 'Inativo' END AS status
+FROM estoque.tipos_movimentacao tm
+${base.whereClause}
+ORDER BY tm.natureza ASC NULLS LAST, tm.descricao ASC NULLS LAST
+LIMIT $${base.limitParam}::int
+OFFSET $${base.offsetParam}::int
+    `.trim(),
+    params: base.params,
+    title: 'Tipos de movimentacao',
+    chart: null,
+  }
+}
+
 function buildCrudQuery(action: CrudAction, resource: string, paramsIn: JsonRecord, tenantId: number): BuiltQuery {
   if (resource === 'contas-a-pagar') {
     return buildFinancialAccountsPayableQuery(action, paramsIn, tenantId)
@@ -885,6 +1377,62 @@ function buildCrudQuery(action: CrudAction, resource: string, paramsIn: JsonReco
 
   if (resource === 'contas-a-receber') {
     return buildFinancialAccountsReceivableQuery(action, paramsIn, tenantId)
+  }
+
+  if (resource === 'vendas/pedidos') {
+    return buildSalesOrdersQuery(action, paramsIn, tenantId)
+  }
+
+  if (resource === 'compras/pedidos') {
+    return buildPurchaseOrdersQuery(action, paramsIn, tenantId)
+  }
+
+  if (resource === 'crm/leads') {
+    return buildCrmLeadsQuery(action, paramsIn, tenantId)
+  }
+
+  if (resource === 'crm/oportunidades') {
+    return buildCrmOpportunitiesQuery(action, paramsIn, tenantId)
+  }
+
+  if (resource === 'estoque/estoque-atual') {
+    return buildStockCurrentQuery(action, paramsIn, tenantId)
+  }
+
+  if (resource === 'estoque/movimentacoes') {
+    return buildStockMovementsQuery(action, paramsIn, tenantId)
+  }
+
+  if (resource === 'financeiro/clientes') {
+    return buildFinanceClientsQuery(action, paramsIn, tenantId)
+  }
+
+  if (resource === 'financeiro/contas-financeiras') {
+    return buildFinancialBankAccountsQuery(action, paramsIn, tenantId)
+  }
+
+  if (resource === 'financeiro/categorias-despesa') {
+    return buildNamedBusinessResourceQuery(action, paramsIn, tenantId, 'financeiro.categorias_despesa', 'cd', 'Categorias de despesa')
+  }
+
+  if (resource === 'financeiro/categorias-receita') {
+    return buildNamedBusinessResourceQuery(action, paramsIn, tenantId, 'financeiro.categorias_receita', 'cr', 'Categorias de receita')
+  }
+
+  if (resource === 'financeiro/centros-custo') {
+    return buildNamedBusinessResourceQuery(action, paramsIn, tenantId, 'empresa.centros_custo', 'cc', 'Centros de custo')
+  }
+
+  if (resource === 'financeiro/centros-lucro') {
+    return buildNamedBusinessResourceQuery(action, paramsIn, tenantId, 'empresa.centros_lucro', 'cl', 'Centros de lucro')
+  }
+
+  if (resource === 'estoque/almoxarifados') {
+    return buildStockWarehousesQuery(action, paramsIn, tenantId)
+  }
+
+  if (resource === 'estoque/tipos-movimentacao') {
+    return buildStockMovementTypesQuery(action, paramsIn, tenantId)
   }
 
   const table = getCrudTable(resource)
