@@ -125,6 +125,41 @@ const ECOMMERCE_PARAMS_SCHEMA = {
   additionalProperties: true,
 } as const
 
+const MARKETING_PARAMS_SCHEMA = {
+  type: 'object',
+  properties: {
+    ...ACTION_PARAMS_SCHEMA.properties,
+    plataforma: {
+      type: 'string',
+      enum: ['meta_ads', 'google_ads'],
+      description:
+        'Filtro por plataforma de trafego pago. Use meta_ads para Meta Ads e google_ads para Google Ads quando a pergunta mencionar uma plataforma especifica.',
+    },
+    nivel: {
+      type: 'string',
+      enum: ['conta', 'campanha', 'grupo', 'anuncio'],
+      description: 'Filtro pela granularidade do fato de marketing: conta, campanha, grupo ou anuncio.',
+    },
+    conta_id: {
+      type: 'string',
+      description: 'ID interno da conta de midia. Use somente quando o usuario informar ou quando ja tiver sido consultado antes.',
+    },
+    campanha_id: {
+      type: 'string',
+      description: 'ID interno da campanha. Use somente quando o usuario informar ou quando ja tiver sido consultado antes.',
+    },
+    grupo_id: {
+      type: 'string',
+      description: 'ID interno do grupo/conjunto de anuncios. Use somente quando o usuario informar ou quando ja tiver sido consultado antes.',
+    },
+    anuncio_id: {
+      type: 'string',
+      description: 'ID interno do anuncio. Use somente quando o usuario informar ou quando ja tiver sido consultado antes.',
+    },
+  },
+  additionalProperties: true,
+} as const
+
 const METRICS_OUTPUT_SCHEMA = {
   type: 'object',
   properties: {
@@ -313,7 +348,7 @@ const MARKETING_SCHEMA = {
       description:
         'Metrica canonica de marketing/trafego pago. Use kpis_resumo para visao geral; desempenho_diario, gasto_por_campanha, roas_por_campanha, gasto_por_conta ou top_anuncios para cortes analiticos.',
     },
-    params: ACTION_PARAMS_SCHEMA,
+    params: MARKETING_PARAMS_SCHEMA,
   },
   required: ['action'],
   additionalProperties: true,
