@@ -63,6 +63,19 @@ a {
   box-shadow: 0 4px 12px rgba(20, 24, 22, 0.06);
 }
 
+.result-shell__icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.result-shell__brand-icon {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
 .result-shell__icon--erp {
   border-color: #bfdbfe;
   background: #eff6ff;
@@ -70,9 +83,9 @@ a {
 }
 
 .result-shell__icon--crm {
-  border-color: #a7f3d0;
-  background: #ecfdf5;
-  color: #047857;
+  border-color: #fed7aa;
+  background: #fff7ed;
+  color: #ff5c35;
 }
 
 .result-shell__icon--ecommerce {

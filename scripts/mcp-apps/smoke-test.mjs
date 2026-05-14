@@ -113,6 +113,8 @@ async function main() {
   assert(appSource.includes("tool === 'crm'"), 'crm results should render in data view')
   assert(formatSource.includes("tool === 'crm'"), 'crm tool label missing')
   assert(formatSource.includes('getToolVisual'), 'tool visual helper missing')
+  assert(formatSource.includes('ContaAzulIcon'), 'erp Conta Azul icon missing')
+  assert(formatSource.includes('SiHubspot'), 'crm HubSpot icon missing')
   assert(formatSource.includes("tone: 'erp'"), 'erp visual tone missing')
   assert(formatSource.includes("tone: 'crm'"), 'crm visual tone missing')
   assert(formatSource.includes("tone: 'ecommerce'"), 'ecommerce visual tone missing')

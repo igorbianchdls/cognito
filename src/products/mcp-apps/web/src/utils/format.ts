@@ -1,18 +1,18 @@
+import { createElement, type ReactNode } from 'react'
+import { SiHubspot } from '@icons-pack/react-simple-icons'
 import {
   BadgeDollarSign,
   Database,
-  Landmark,
   Megaphone,
   ShoppingCart,
-  UsersRound,
-  type LucideIcon,
 } from 'lucide-react'
+import ContaAzulIcon from '@/components/icons/ContaAzulIcon'
 
 export type ToolTone = 'erp' | 'crm' | 'ecommerce' | 'marketing' | 'sql' | 'neutral'
 
 type ToolVisual = {
   label: string
-  Icon: LucideIcon
+  icon: ReactNode
   tone: ToolTone
 }
 
@@ -95,10 +95,14 @@ export function getToolLabel(tool?: string) {
 }
 
 export function getToolVisual(tool?: string): ToolVisual {
-  if (tool === 'erp') return { label: 'ERP', Icon: Landmark, tone: 'erp' }
-  if (tool === 'crm') return { label: 'CRM', Icon: UsersRound, tone: 'crm' }
-  if (tool === 'ecommerce') return { label: 'Ecommerce', Icon: ShoppingCart, tone: 'ecommerce' }
-  if (tool === 'marketing') return { label: 'Marketing', Icon: Megaphone, tone: 'marketing' }
-  if (tool === 'sql' || tool === 'sql_execution') return { label: 'SQL', Icon: Database, tone: 'sql' }
-  return { label: humanizeKey(tool || 'Resultado'), Icon: BadgeDollarSign, tone: 'neutral' }
+  if (tool === 'erp') {
+    return { label: 'ERP', icon: createElement(ContaAzulIcon, { className: 'result-shell__brand-icon' }), tone: 'erp' }
+  }
+  if (tool === 'crm') {
+    return { label: 'CRM', icon: createElement(SiHubspot, { size: 21, color: 'default', title: 'HubSpot logo' }), tone: 'crm' }
+  }
+  if (tool === 'ecommerce') return { label: 'Ecommerce', icon: createElement(ShoppingCart, { size: 19, strokeWidth: 2.4 }), tone: 'ecommerce' }
+  if (tool === 'marketing') return { label: 'Marketing', icon: createElement(Megaphone, { size: 19, strokeWidth: 2.4 }), tone: 'marketing' }
+  if (tool === 'sql' || tool === 'sql_execution') return { label: 'SQL', icon: createElement(Database, { size: 19, strokeWidth: 2.4 }), tone: 'sql' }
+  return { label: humanizeKey(tool || 'Resultado'), icon: createElement(BadgeDollarSign, { size: 19, strokeWidth: 2.4 }), tone: 'neutral' }
 }

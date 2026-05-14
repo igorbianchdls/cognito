@@ -24,7 +24,7 @@ export function DataResultView({ data }: DataResultViewProps) {
     return (
       <ResultShell
         eyebrow={toolVisual.label}
-        icon={toolVisual.Icon}
+        icon={toolVisual.icon}
         tone={toolVisual.tone}
         title={data.title || 'Resultado'}
         description={description || 'A tool retornou uma resposta estruturada.'}
@@ -37,7 +37,7 @@ export function DataResultView({ data }: DataResultViewProps) {
   return (
     <ResultShell
       eyebrow={toolVisual.label}
-      icon={toolVisual.Icon}
+      icon={toolVisual.icon}
       tone={toolVisual.tone}
       title={data.title || 'Resultado'}
       description={description || 'Resultado estruturado da tool.'}

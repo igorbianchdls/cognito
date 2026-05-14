@@ -1,24 +1,23 @@
 import type { ReactNode } from 'react'
-import type { LucideIcon } from 'lucide-react'
 import type { ToolTone } from '@/products/mcp-apps/web/src/utils/format'
 
 type ResultShellProps = {
   eyebrow?: string
-  icon?: LucideIcon
+  icon?: ReactNode
   tone?: ToolTone
   title: string
   description?: string
   children: ReactNode
 }
 
-export function ResultShell({ eyebrow, icon: Icon, tone = 'neutral', title, description, children }: ResultShellProps) {
+export function ResultShell({ eyebrow, icon, tone = 'neutral', title, description, children }: ResultShellProps) {
   return (
     <>
       <header className="result-shell__header">
         <div className="result-shell__heading">
-          {Icon ? (
+          {icon ? (
             <span className={`result-shell__icon result-shell__icon--${tone}`} aria-hidden="true">
-              <Icon size={19} strokeWidth={2.4} />
+              {icon}
             </span>
           ) : null}
           <div className="result-shell__copy">
