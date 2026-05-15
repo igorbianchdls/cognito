@@ -3,7 +3,7 @@
   background: #f6efe2;
   color: #211d18;
   font-family: Geist, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-stretch: 98%;
+  letter-spacing: -0.02em;
 }
 
 body {
@@ -35,14 +35,14 @@ a {
   color: #2c654c;
   font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: -0.02em;
   text-transform: uppercase;
 }
 
 .dashboard-header h1 {
   margin: 0;
   font-size: clamp(1.35rem, 5vw, 2.25rem);
-  letter-spacing: -0.055em;
+  letter-spacing: -0.02em;
 }
 
 .dashboard-header p,
@@ -89,7 +89,7 @@ a {
 .state-card h2 {
   margin: 0;
   font-size: 1rem;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.02em;
 }
 
 .dashboard-card p {
@@ -137,7 +137,7 @@ a {
   color: rgba(33, 29, 24, 0.48);
   font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: -0.02em;
   text-transform: uppercase;
 }
 
@@ -213,13 +213,13 @@ a {
   color: rgba(33, 29, 24, 0.54);
   font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: -0.02em;
   text-transform: uppercase;
 }
 
 .metric-card strong {
   font-size: clamp(1.3rem, 6vw, 2rem);
-  letter-spacing: -0.055em;
+  letter-spacing: -0.02em;
 }
 
 .result-card {
@@ -317,7 +317,7 @@ a {
   color: rgba(33, 29, 24, 0.55);
   font-size: 0.7rem;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: -0.02em;
   text-transform: uppercase;
 }
 
