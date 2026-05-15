@@ -1,4 +1,4 @@
-export const COGNITO_CHATGPT_APP_VERSION = '0.1.0'
+export const COGNITO_CHATGPT_APP_VERSION = '0.1.1'
 
 export const COGNITO_CHATGPT_APP_METADATA = {
   name: 'cognito-dashboards',
