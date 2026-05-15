@@ -1,3 +1,5 @@
+import { useEffect, useMemo, useState } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { formatCellValue, humanizeKey } from '@/products/mcp-apps/web/src/utils/format'
 import type { DataRow } from '@/products/mcp-apps/web/src/utils/table'
 import { getColumnKind } from '@/products/mcp-apps/web/src/utils/table'
@@ -8,16 +10,40 @@ type DataTableProps = {
   columns: string[]
 }
 
+const pageSizeOptions = [25, 50, 100]
+const defaultPageSize = 25
+
 export function DataTable({ rows, columns }: DataTableProps) {
-  const visibleRows = rows.slice(0, 100)
+  const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(defaultPageSize)
+
+  const pageCount = Math.max(1, Math.ceil(rows.length / pageSize))
+  const currentPage = Math.min(page, pageCount - 1)
+  const startIndex = rows.length ? currentPage * pageSize : 0
+  const endIndex = Math.min(startIndex + pageSize, rows.length)
+  const visibleRows = useMemo(() => rows.slice(startIndex, endIndex), [endIndex, rows, startIndex])
+  const columnKinds = useMemo(
+    () => Object.fromEntries(columns.map((column) => [column, getColumnKind(column, rows)])),
+    [columns, rows],
+  )
+  const showPagination = rows.length > defaultPageSize
+
+  useEffect(() => {
+    setPage((value) => Math.min(value, pageCount - 1))
+  }, [pageCount])
+
+  function handlePageSizeChange(value: string) {
+    setPageSize(Number(value))
+    setPage(0)
+  }
 
   return (
     <section className="result-card table-card">
       <div className="result-card__header">
         <h2>Tabela</h2>
         <span>
-          {visibleRows.length}
-          {rows.length > visibleRows.length ? ` de ${rows.length}` : ''} linhas
+          {rows.length ? `${startIndex + 1}-${endIndex} de ` : ''}
+          {rows.length} linhas
         </span>
       </div>
       <div className="table-scroll">
@@ -31,9 +57,9 @@ export function DataTable({ rows, columns }: DataTableProps) {
           </thead>
           <tbody>
             {visibleRows.map((row, rowIndex) => (
-              <tr key={rowIndex}>
+              <tr key={startIndex + rowIndex}>
                 {columns.map((column) => {
-                  const kind = getColumnKind(column, rows)
+                  const kind = columnKinds[column]
                   const value = row[column]
                   return (
                     <td className={`data-table__cell data-table__cell--${kind}`} key={column}>
@@ -46,6 +72,47 @@ export function DataTable({ rows, columns }: DataTableProps) {
           </tbody>
         </table>
       </div>
+      {showPagination ? (
+        <div className="table-pagination" aria-label="Paginacao da tabela">
+          <label className="table-pagination__size">
+            <span>Linhas</span>
+            <select
+              aria-label="Linhas por pagina"
+              value={pageSize}
+              onChange={(event) => handlePageSizeChange(event.target.value)}
+            >
+              {pageSizeOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="table-pagination__controls">
+            <button
+              type="button"
+              aria-label="Pagina anterior"
+              title="Pagina anterior"
+              disabled={currentPage === 0}
+              onClick={() => setPage((value) => Math.max(0, value - 1))}
+            >
+              <ChevronLeft size={15} strokeWidth={2.4} />
+            </button>
+            <span>
+              Pagina {currentPage + 1} de {pageCount}
+            </span>
+            <button
+              type="button"
+              aria-label="Proxima pagina"
+              title="Proxima pagina"
+              disabled={currentPage >= pageCount - 1}
+              onClick={() => setPage((value) => Math.min(pageCount - 1, value + 1))}
+            >
+              <ChevronRight size={15} strokeWidth={2.4} />
+            </button>
+          </div>
+        </div>
+      ) : null}
     </section>
   )
 }

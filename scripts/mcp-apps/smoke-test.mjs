@@ -143,6 +143,7 @@ async function main() {
   const appSource = await readFile(path.join(root, 'src/products/mcp-apps/web/src/App.tsx'), 'utf8')
   const formatSource = await readFile(path.join(root, 'src/products/mcp-apps/web/src/utils/format.ts'), 'utf8')
   const resultShellSource = await readFile(path.join(root, 'src/products/mcp-apps/web/src/components/ResultShell.tsx'), 'utf8')
+  const dataTableSource = await readFile(path.join(root, 'src/products/mcp-apps/web/src/components/DataTable.tsx'), 'utf8')
   const dashboardPreviewSource = await readFile(path.join(root, 'src/products/mcp-apps/web/src/views/DashboardPreviewView.tsx'), 'utf8')
   const stylesSource = await readFile(path.join(root, 'src/products/mcp-apps/web/src/styles.css'), 'utf8')
   assert(appSource.includes("tool === 'crm'"), 'crm results should render in data view')
@@ -171,6 +172,10 @@ async function main() {
   assert(stylesSource.includes('--cognito-green'), 'shared ui tokens missing')
   assert(stylesSource.includes('.dashboard-preview-layout'), 'dashboard preview layout style missing')
   assert(stylesSource.includes('.data-table tbody tr:hover'), 'data table hover style missing')
+  assert(dataTableSource.includes('const defaultPageSize = 25'), 'data table default page size should be 25')
+  assert(dataTableSource.includes('pageSizeOptions = [25, 50, 100]'), 'data table page size options missing')
+  assert(dataTableSource.includes('table-pagination'), 'data table pagination markup missing')
+  assert(stylesSource.includes('.table-pagination'), 'data table pagination style missing')
   console.log('web source ok')
 
   const chatGptToolsSource = await readFile(path.join(root, 'src/products/chatgpt-app/server/appTools.ts'), 'utf8')
