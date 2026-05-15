@@ -92,6 +92,7 @@ function withListDashboardUrl(dashboard: DashboardListItem) {
   return {
     ...dashboardWithoutThumbnail,
     has_thumbnail: Boolean(thumbnailDataUrl),
+    thumbnail_data_url: thumbnailDataUrl || null,
     url: buildDashboardArtifactUrl(dashboard.id),
   }
 }

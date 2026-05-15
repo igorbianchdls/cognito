@@ -9,6 +9,7 @@ export type DashboardListItem = {
   created_at?: string | null
   updated_at?: string | null
   has_thumbnail?: boolean
+  thumbnail_data_url?: string | null
   url?: string | null
   embed_url?: string | null
 }

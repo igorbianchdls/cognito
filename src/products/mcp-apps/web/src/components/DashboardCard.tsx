@@ -18,9 +18,19 @@ function formatDate(value?: string | null) {
 export function DashboardCard({ dashboard }: DashboardCardProps) {
   const title = dashboard.title || 'Dashboard sem titulo'
   const version = dashboard.current_draft_version ?? dashboard.current_published_version
+  const thumbnail = dashboard.thumbnail_data_url || ''
 
   return (
     <article className="dashboard-card">
+      {thumbnail ? (
+        <div className="dashboard-card__thumbnail">
+          <img src={thumbnail} alt={`Miniatura de ${title}`} draggable={false} />
+        </div>
+      ) : (
+        <div className="dashboard-card__thumbnail dashboard-card__thumbnail--empty">
+          <span>{title.trim().slice(0, 2).toUpperCase() || 'DB'}</span>
+        </div>
+      )}
       <div className="dashboard-card__topline">
         <span>{dashboard.status || 'draft'}</span>
         <span>{version ? `v${version}` : 'sem versao'}</span>
@@ -38,4 +48,3 @@ export function DashboardCard({ dashboard }: DashboardCardProps) {
     </article>
   )
 }
-

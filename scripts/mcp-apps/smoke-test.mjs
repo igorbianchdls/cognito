@@ -80,6 +80,10 @@ async function main() {
   assert(!toolsSource.includes('openai/widgetAccessible'), 'mcp-apps tools should not include OpenAI widgetAccessible')
   console.log('tools source ok')
 
+  const artifactsAdapterSource = await readFile(path.join(root, 'src/products/mcp/adapters/artifactsAdapter.ts'), 'utf8')
+  assert(artifactsAdapterSource.includes('thumbnail_data_url: thumbnailDataUrl || null'), 'dashboard list should expose thumbnail_data_url')
+  console.log('artifact adapter source ok')
+
   const domainToolsSource = await readFile(path.join(root, 'src/products/mcp-apps/server/domainTools.ts'), 'utf8')
   assert(domainToolsSource.includes('function buildFinancialAccountsPayableQuery'), 'contas-a-pagar semantic query missing')
   assert(domainToolsSource.includes('function buildFinancialAccountsReceivableQuery'), 'contas-a-receber semantic query missing')
@@ -140,6 +144,10 @@ async function main() {
   const stylesSource = await readFile(path.join(root, 'src/products/mcp-apps/web/src/styles.css'), 'utf8')
   assert(appSource.includes("tool === 'crm'"), 'crm results should render in data view')
   assert(formatSource.includes("tool === 'crm'"), 'crm tool label missing')
+  assert(resultShellSource.includes('result-shell__icon'), 'result shell icon markup missing')
+  const dashboardCardSource = await readFile(path.join(root, 'src/products/mcp-apps/web/src/components/DashboardCard.tsx'), 'utf8')
+  assert(dashboardCardSource.includes('dashboard-card__thumbnail'), 'dashboard card thumbnail markup missing')
+  assert(dashboardCardSource.includes('thumbnail_data_url'), 'dashboard card should read thumbnail_data_url')
   assert(formatSource.includes('getToolVisual'), 'tool visual helper missing')
   assert(formatSource.includes('ContaAzulIcon'), 'erp Conta Azul icon missing')
   assert(formatSource.includes('SiHubspot'), 'crm HubSpot icon missing')
@@ -148,9 +156,9 @@ async function main() {
   assert(formatSource.includes("tone: 'ecommerce'"), 'ecommerce visual tone missing')
   assert(formatSource.includes("tone: 'marketing'"), 'marketing visual tone missing')
   assert(formatSource.includes("tone: 'sql'"), 'sql visual tone missing')
-  assert(resultShellSource.includes('result-shell__icon'), 'result shell icon markup missing')
   assert(stylesSource.includes('.result-shell__icon--erp'), 'erp icon style missing')
   assert(stylesSource.includes('.result-shell__icon--crm'), 'crm icon style missing')
+  assert(stylesSource.includes('.dashboard-card__thumbnail'), 'dashboard thumbnail style missing')
   console.log('web source ok')
 
   const chatGptToolsSource = await readFile(path.join(root, 'src/products/chatgpt-app/server/appTools.ts'), 'utf8')
