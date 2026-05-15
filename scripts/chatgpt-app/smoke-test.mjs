@@ -204,21 +204,22 @@ assert(!toolNames.includes('dashboard_render_preview'), 'tools/list should not e
 assert(!toolNames.includes('dashboard_embed_preview'), 'tools/list should not expose deprecated dashboard_embed_preview')
 assert(!toolNames.includes('sql_execution'), 'tools/list should not expose deprecated sql_execution')
 const dashboardsTool = (toolsList?.tools || []).find((tool) => tool.name === 'dashboards')
-assert(dashboardsTool?._meta?.['openai/outputTemplate'] === 'ui://widget/dashboard-v2.html', 'dashboards missing OpenAI outputTemplate')
+assert(dashboardsTool?._meta?.['openai/outputTemplate'] === 'ui://widget/dashboard-v3.html', 'dashboards missing OpenAI outputTemplate')
 assert(dashboardsTool?._meta?.['openai/widgetAccessible'] === true, 'dashboards missing OpenAI widgetAccessible')
-assert(dashboardsTool?._meta?.ui?.resourceUri === 'ui://widget/dashboard-v2.html', 'dashboards missing MCP Apps ui.resourceUri')
+assert(dashboardsTool?._meta?.ui?.resourceUri === 'ui://widget/dashboard-v3.html', 'dashboards missing MCP Apps ui.resourceUri')
 const openDashboardTool = (toolsList?.tools || []).find((tool) => tool.name === 'open_dashboard')
-assert(openDashboardTool?._meta?.['openai/outputTemplate'] === 'ui://widget/dashboard-v2.html', 'open_dashboard missing OpenAI outputTemplate')
-assert(openDashboardTool?._meta?.ui?.resourceUri === 'ui://widget/dashboard-v2.html', 'open_dashboard missing MCP Apps ui.resourceUri')
+assert(openDashboardTool?._meta?.['openai/outputTemplate'] === 'ui://widget/dashboard-v3.html', 'open_dashboard missing OpenAI outputTemplate')
+assert(openDashboardTool?._meta?.ui?.resourceUri === 'ui://widget/dashboard-v3.html', 'open_dashboard missing MCP Apps ui.resourceUri')
 console.log(`tools/list ok: ${toolNames.join(', ')}`)
 
 const resourcesList = await callMcp('resources/list')
 const resourceUris = (resourcesList?.resources || []).map((resource) => resource.uri)
-assert(resourceUris.includes('ui://widget/dashboard-v2.html'), 'resources/list missing dashboard widget')
+assert(resourceUris.includes('ui://widget/dashboard-v3.html'), 'resources/list missing dashboard widget')
+assert(resourceUris.includes('ui://widget/dashboard-v2.html'), 'resources/list missing previous dashboard widget')
 console.log(`resources/list ok: ${resourceUris.join(', ')}`)
 
 const widget = await callMcp('resources/read', {
-  uri: 'ui://widget/dashboard-v2.html',
+  uri: 'ui://widget/dashboard-v3.html',
 })
 const widgetContent = widget?.contents?.[0] || {}
 const html = widgetContent.text || ''

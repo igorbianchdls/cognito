@@ -56,6 +56,7 @@ async function main() {
   const resources = await import(`file://${resourcesPath}`)
   const list = resources.listCognitoMcpAppResources()
   assert(list.resources.some((resource) => resource.uri === resources.DASHBOARD_WIDGET_RESOURCE_URI), 'resources/list missing dashboard widget')
+  assert(list.resources.some((resource) => resource.uri === resources.DASHBOARD_WIDGET_PREVIOUS_RESOURCE_URI), 'resources/list missing previous dashboard widget')
   assert(list.resources.some((resource) => resource.uri === resources.DASHBOARD_WIDGET_LEGACY_RESOURCE_URI), 'resources/list missing legacy dashboard widget')
   const read = resources.readCognitoMcpAppResource(resources.DASHBOARD_WIDGET_RESOURCE_URI)
   const content = read?.contents?.[0]

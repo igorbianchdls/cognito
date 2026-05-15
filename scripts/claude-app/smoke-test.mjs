@@ -202,17 +202,18 @@ assert(!toolNames.includes('dashboard_embed_preview'), 'tools/list should not ex
 assert(!toolNames.includes('dashboard_render_list'), 'tools/list should not expose deprecated dashboard_render_list')
 assert(!toolNames.includes('dashboard_render_preview'), 'tools/list should not expose deprecated dashboard_render_preview')
 const openDashboardTool = (toolsList?.tools || []).find((tool) => tool.name === 'open_dashboard')
-assert(openDashboardTool?._meta?.ui?.resourceUri === 'ui://widget/dashboard-v2.html', 'open_dashboard missing MCP Apps ui.resourceUri')
+assert(openDashboardTool?._meta?.ui?.resourceUri === 'ui://widget/dashboard-v3.html', 'open_dashboard missing MCP Apps ui.resourceUri')
 assert(!openDashboardTool?._meta?.['openai/outputTemplate'], 'Claude App should not expose OpenAI outputTemplate')
 console.log(`tools/list ok: ${toolNames.join(', ')}`)
 
 const resourcesList = await callMcp('resources/list')
 const resourceUris = (resourcesList?.resources || []).map((resource) => resource.uri)
-assert(resourceUris.includes('ui://widget/dashboard-v2.html'), 'resources/list missing dashboard widget')
+assert(resourceUris.includes('ui://widget/dashboard-v3.html'), 'resources/list missing dashboard widget')
+assert(resourceUris.includes('ui://widget/dashboard-v2.html'), 'resources/list missing previous dashboard widget')
 console.log(`resources/list ok: ${resourceUris.join(', ')}`)
 
 const widget = await callMcp('resources/read', {
-  uri: 'ui://widget/dashboard-v2.html',
+  uri: 'ui://widget/dashboard-v3.html',
 })
 const widgetContent = widget?.contents?.[0] || {}
 const html = widgetContent.text || ''
