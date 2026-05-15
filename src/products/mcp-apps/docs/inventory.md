@@ -4,7 +4,7 @@
 
 These can live in `src/products/mcp-apps`:
 
-- `server/appResources.ts`: declares `ui://widget/dashboard-v3.html`, widget HTML, MIME type, and MCP Apps `ui` metadata.
+- `server/appResources.ts`: declares `ui://widget/dashboard-v4.html`, widget HTML, MIME type, and MCP Apps `ui` metadata.
 - `server/appTools.ts`: public dashboard/data tools that add `structuredContent` and `embed_url`.
 - `server/embedToken.ts`: signed dashboard embed token helpers.
 - `server/domainTools.ts`: ERP, SQL, ecommerce, and marketing tools that render structured UI.

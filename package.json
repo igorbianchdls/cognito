@@ -5,7 +5,7 @@
   "packageManager": "pnpm@9.12.3",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "pnpm mcp-apps:build && next build",
     "start": "next start",
     "lint": "next lint",
     "mcp:smoke": "node scripts/mcp/smoke-test.mjs",
