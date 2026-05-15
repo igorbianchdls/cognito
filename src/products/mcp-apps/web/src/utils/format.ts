@@ -1,5 +1,5 @@
 import { createElement, type ReactNode } from 'react'
-import { SiHubspot } from '@icons-pack/react-simple-icons'
+import { SiHubspot, SiTotvs } from '@icons-pack/react-simple-icons'
 import {
   BadgeDollarSign,
   Database,
@@ -95,7 +95,7 @@ export function getToolLabel(tool?: string) {
 
 export function getToolVisual(tool?: string): ToolVisual {
   if (tool === 'erp') {
-    return { label: 'ERP', icon: createElement(SiHubspot, { size: 21, color: 'default', title: 'HubSpot logo' }), tone: 'erp' }
+    return { label: 'ERP', icon: createElement(SiTotvs, { size: 23, color: 'default', title: 'TOTVS logo' }), tone: 'erp' }
   }
   if (tool === 'crm') {
     return { label: 'CRM', icon: createElement(SiHubspot, { size: 21, color: 'default', title: 'HubSpot logo' }), tone: 'crm' }
