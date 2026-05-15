@@ -86,6 +86,7 @@ export function formatCellValue(key: string, value: unknown) {
 
 export function getToolLabel(tool?: string) {
   if (tool === 'erp') return 'ERP'
+  if (tool === 'erp_acoes') return 'ERP Acoes'
   if (tool === 'crm') return 'CRM'
   if (tool === 'sql' || tool === 'sql_execution') return 'SQL'
   if (tool === 'ecommerce') return 'Ecommerce'
@@ -94,7 +95,7 @@ export function getToolLabel(tool?: string) {
 }
 
 export function getToolVisual(tool?: string): ToolVisual {
-  if (tool === 'erp') {
+  if (tool === 'erp' || tool === 'erp_acoes') {
     return { label: 'ERP', icon: createElement(SiTotvs, { size: 23, color: 'default', title: 'TOTVS logo' }), tone: 'erp' }
   }
   if (tool === 'crm') {

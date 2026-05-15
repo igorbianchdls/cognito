@@ -24,7 +24,7 @@ export type DashboardPreviewStructuredContent = {
 
 export type DataResultStructuredContent = {
   ok?: boolean
-  tool?: 'erp' | 'sql' | 'sql_execution' | 'ecommerce' | 'marketing' | string
+  tool?: 'erp' | 'erp_acoes' | 'crm' | 'sql' | 'sql_execution' | 'ecommerce' | 'marketing' | string
   view?: string
   title?: string
   action?: string

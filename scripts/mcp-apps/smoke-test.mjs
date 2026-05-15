@@ -105,6 +105,10 @@ async function main() {
   assert(domainToolsSource.includes('campanha_id'), 'marketing campaign filter missing')
   assert(domainToolsSource.includes('anuncio_id'), 'marketing ad filter missing')
   assert(domainToolsSource.includes("crm: 'crm'"), 'crm domain tool constant missing')
+  assert(domainToolsSource.includes("erpAcoes: 'erp_acoes'"), 'erp_acoes domain tool constant missing')
+  assert(domainToolsSource.includes('const ERP_ACOES_DOMAIN_TOOL_DEFINITION'), 'erp_acoes domain tool definition missing')
+  assert(domainToolsSource.includes('dry_run e true por padrao'), 'erp_acoes description should mention safe dry-run default')
+  assert(domainToolsSource.includes('case MCP_APP_DOMAIN_TOOL_NAMES.erpAcoes'), 'erp_acoes dispatch missing')
   assert(domainToolsSource.includes('const CRM_DOMAIN_TOOL_DEFINITION'), 'crm domain tool definition missing')
   assert(domainToolsSource.includes('CRM_ALLOWED_RESOURCES'), 'crm allowed resources missing')
   assert(domainToolsSource.includes('case MCP_APP_DOMAIN_TOOL_NAMES.crm'), 'crm dispatch missing')
@@ -146,6 +150,7 @@ async function main() {
   const dataTableSource = await readFile(path.join(root, 'src/products/mcp-apps/web/src/components/DataTable.tsx'), 'utf8')
   const dashboardPreviewSource = await readFile(path.join(root, 'src/products/mcp-apps/web/src/views/DashboardPreviewView.tsx'), 'utf8')
   const stylesSource = await readFile(path.join(root, 'src/products/mcp-apps/web/src/styles.css'), 'utf8')
+  assert(appSource.includes("tool === 'erp_acoes'"), 'erp_acoes results should render in data view')
   assert(appSource.includes("tool === 'crm'"), 'crm results should render in data view')
   assert(formatSource.includes("tool === 'crm'"), 'crm tool label missing')
   assert(resultShellSource.includes('result-shell__icon'), 'result shell icon markup missing')
@@ -180,7 +185,9 @@ async function main() {
 
   const chatGptToolsSource = await readFile(path.join(root, 'src/products/chatgpt-app/server/appTools.ts'), 'utf8')
   assert(chatGptToolsSource.includes("case 'crm'"), 'ChatGPT tool invocation text should handle crm')
+  assert(chatGptToolsSource.includes("case 'erp_acoes'"), 'ChatGPT tool invocation text should handle erp_acoes')
   assert(chatGptToolsSource.includes('Consultando CRM...'), 'ChatGPT crm invoking text missing')
+  assert(chatGptToolsSource.includes('Preparando acao no ERP...'), 'ChatGPT erp_acoes invoking text missing')
   assert(chatGptToolsSource.includes('Dados de CRM carregados.'), 'ChatGPT crm invoked text missing')
   console.log('chatgpt tool metadata ok')
 

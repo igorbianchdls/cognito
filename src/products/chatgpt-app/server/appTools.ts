@@ -44,6 +44,8 @@ function getToolInvocationText(name: string) {
       return ['Buscando dashboards...', 'Busca concluida.']
     case 'erp':
       return ['Consultando registros...', 'Registros carregados.']
+    case 'erp_acoes':
+      return ['Preparando acao no ERP...', 'Acao do ERP processada.']
     case 'crm':
       return ['Consultando CRM...', 'Dados de CRM carregados.']
     case 'ecommerce':

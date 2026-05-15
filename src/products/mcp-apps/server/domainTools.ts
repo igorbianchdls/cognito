@@ -48,6 +48,8 @@ type MarketingAction =
 
 type CrudAction = 'listar' | 'ler'
 
+type ErpAcoesAction = 'criar' | 'atualizar' | 'baixar' | 'cancelar' | 'estornar' | 'reabrir'
+
 type SqlExecutionAction = 'execute'
 
 const READ_SECURITY_SCHEMES = [
@@ -62,6 +64,13 @@ const READ_ONLY_ANNOTATIONS = {
   destructiveHint: false,
   openWorldHint: false,
   idempotentHint: true,
+} as const
+
+const WRITE_ANNOTATIONS = {
+  readOnlyHint: false,
+  destructiveHint: true,
+  openWorldHint: false,
+  idempotentHint: false,
 } as const
 
 const TOOL_META = {
@@ -221,6 +230,45 @@ const CRUD_RESOURCE_TABLES = {
 const ERP_ALLOWED_RESOURCES = Object.keys(ERP_RESOURCE_TABLES)
 const CRM_ALLOWED_RESOURCES = Object.keys(CRM_RESOURCE_TABLES)
 
+const ERP_ACOES_ALLOWED_RESOURCES = ['contas-a-pagar', 'contas-a-receber'] as const
+
+const ERP_ACOES_SCHEMA = {
+  type: 'object',
+  properties: {
+    resource: {
+      type: 'string',
+      enum: ERP_ACOES_ALLOWED_RESOURCES,
+      description: 'Recurso transacional do ERP. Nesta versao, use contas-a-pagar ou contas-a-receber.',
+    },
+    action: {
+      type: 'string',
+      enum: ['criar', 'atualizar', 'baixar', 'cancelar', 'estornar', 'reabrir'],
+      description:
+        'Operacao com efeito colateral. Use criar/atualizar para editar dados; baixar, cancelar, estornar e reabrir para transicoes de status.',
+    },
+    id: {
+      type: 'integer',
+      description: 'ID do registro. Obrigatorio para atualizar, baixar, cancelar, estornar e reabrir.',
+    },
+    payload: {
+      type: 'object',
+      description:
+        'Campos da operacao. Para criar conta a pagar use fornecedor_id, valor e data_vencimento. Para criar conta a receber use cliente_id, valor e data_vencimento. Aceita descricao, observacao, numero_documento, tipo_documento, status, categoria_id, conta_financeira_id, centro_custo_id, centro_lucro_id e datas YYYY-MM-DD.',
+      additionalProperties: true,
+    },
+    dry_run: {
+      type: 'boolean',
+      description: 'Default true. Quando true, valida e retorna preview sem alterar dados. Use false somente apos confirmacao explicita.',
+    },
+    idempotency_key: {
+      type: 'string',
+      description: 'Chave opcional para rastrear operacoes sensiveis e evitar duplicidade no orquestrador.',
+    },
+  },
+  required: ['resource', 'action'],
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
+
 function createCrudSchema(allowedResources: string[], description: string) {
   return {
     type: 'object',
@@ -279,6 +327,36 @@ const CRUD_OUTPUT_SCHEMA = {
     count: { type: 'integer' },
   },
   required: ['success', 'tool', 'action', 'resource', 'title', 'rows', 'columns', 'count'],
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
+
+const ERP_ACOES_OUTPUT_SCHEMA = {
+  type: 'object',
+  properties: {
+    success: { type: 'boolean' },
+    tool: { type: 'string' },
+    action: { type: 'string' },
+    resource: { type: 'string' },
+    title: { type: 'string' },
+    dry_run: { type: 'boolean' },
+    rows: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: true,
+      },
+    },
+    columns: {
+      type: 'array',
+      items: { type: 'string' },
+    },
+    count: { type: 'integer' },
+    result: {
+      type: 'object',
+      additionalProperties: true,
+    },
+  },
+  required: ['success', 'tool', 'action', 'resource', 'title', 'dry_run', 'rows', 'columns', 'count'],
   additionalProperties: true,
 } as const satisfies McpToolInputSchema
 
@@ -356,6 +434,7 @@ const MARKETING_SCHEMA = {
 
 export const MCP_APP_DOMAIN_TOOL_NAMES = {
   erp: 'erp',
+  erpAcoes: 'erp_acoes',
   crm: 'crm',
   sql: 'sql',
   sqlExecution: 'sql_execution',
@@ -377,6 +456,18 @@ const ERP_DOMAIN_TOOL_DEFINITION = {
   outputSchema: CRUD_OUTPUT_SCHEMA,
   securitySchemes: READ_SECURITY_SCHEMES,
   annotations: READ_ONLY_ANNOTATIONS,
+  _meta: TOOL_META,
+} as const satisfies DomainToolDefinition
+
+const ERP_ACOES_DOMAIN_TOOL_DEFINITION = {
+  name: MCP_APP_DOMAIN_TOOL_NAMES.erpAcoes,
+  title: 'ERP acoes',
+  description:
+    'Executa acoes transacionais no ERP que podem alterar dados. Use para criar, atualizar, baixar, cancelar, estornar ou reabrir contas a pagar e contas a receber. Por seguranca, dry_run e true por padrao e retorna apenas preview; envie dry_run=false somente depois de confirmacao explicita do usuario.',
+  inputSchema: ERP_ACOES_SCHEMA,
+  outputSchema: ERP_ACOES_OUTPUT_SCHEMA,
+  securitySchemes: READ_SECURITY_SCHEMES,
+  annotations: WRITE_ANNOTATIONS,
   _meta: TOOL_META,
 } as const satisfies DomainToolDefinition
 
@@ -431,6 +522,7 @@ const MARKETING_DOMAIN_TOOL_DEFINITION = {
 export function listMcpAppDomainToolDefinitions() {
   return [
     ERP_DOMAIN_TOOL_DEFINITION,
+    ERP_ACOES_DOMAIN_TOOL_DEFINITION,
     CRM_DOMAIN_TOOL_DEFINITION,
     ECOMMERCE_DOMAIN_TOOL_DEFINITION,
     SQL_DOMAIN_TOOL_DEFINITION,
@@ -440,6 +532,7 @@ export function listMcpAppDomainToolDefinitions() {
 
 export const MCP_APP_DOMAIN_TOOL_DEFINITIONS = [
   ERP_DOMAIN_TOOL_DEFINITION,
+  ERP_ACOES_DOMAIN_TOOL_DEFINITION,
   CRM_DOMAIN_TOOL_DEFINITION,
   ECOMMERCE_DOMAIN_TOOL_DEFINITION,
   MARKETING_DOMAIN_TOOL_DEFINITION,
@@ -456,6 +549,17 @@ function toObj(input: unknown): JsonRecord {
 
 function toText(value: unknown): string {
   return String(value ?? '').trim()
+}
+
+function toOptionalText(value: unknown): string | null {
+  const text = toText(value)
+  return text || null
+}
+
+function toNumber(value: unknown): number | null {
+  if (value === null || value === undefined || value === '') return null
+  const number = Number(value)
+  return Number.isFinite(number) ? number : null
 }
 
 function toPositiveInt(value: unknown, fallback: number): number {
@@ -520,6 +624,146 @@ function normalizeCrudAction(value: unknown): CrudAction {
   if (out === 'listar' || out === 'list') return 'listar'
   if (out === 'ler' || out === 'read' || out === 'get') return 'ler'
   throw new Error('action invalida para crud. Use listar ou ler.')
+}
+
+function normalizeErpAcoesAction(value: unknown): ErpAcoesAction {
+  const out = toText(value).toLowerCase()
+  if (
+    out === 'criar' ||
+    out === 'atualizar' ||
+    out === 'baixar' ||
+    out === 'cancelar' ||
+    out === 'estornar' ||
+    out === 'reabrir'
+  ) {
+    return out
+  }
+  throw new Error('action invalida para erp_acoes')
+}
+
+type ErpAcoesResource = (typeof ERP_ACOES_ALLOWED_RESOURCES)[number]
+type ErpAcoesConfig = {
+  resource: ErpAcoesResource
+  table: 'financeiro.contas_pagar' | 'financeiro.contas_receber'
+  label: 'Conta a pagar' | 'Conta a receber'
+  entityIdColumn: 'fornecedor_id' | 'cliente_id'
+  entityPayloadKey: 'fornecedor_id' | 'cliente_id'
+  categoryColumn: 'categoria_despesa_id' | 'categoria_receita_id'
+  centerColumn: 'centro_custo_id' | 'centro_lucro_id'
+  paidStatus: 'pago' | 'recebido'
+  statuses: readonly string[]
+  statusAliases: Record<string, string>
+}
+
+const ERP_ACOES_CONFIG: Record<ErpAcoesResource, ErpAcoesConfig> = {
+  'contas-a-pagar': {
+    resource: 'contas-a-pagar',
+    table: 'financeiro.contas_pagar',
+    label: 'Conta a pagar',
+    entityIdColumn: 'fornecedor_id',
+    entityPayloadKey: 'fornecedor_id',
+    categoryColumn: 'categoria_despesa_id',
+    centerColumn: 'centro_custo_id',
+    paidStatus: 'pago',
+    statuses: ['pendente', 'vencido', 'parcial', 'pago', 'cancelado'],
+    statusAliases: {
+      aberto: 'pendente',
+      em_aberto: 'pendente',
+      'em aberto': 'pendente',
+      baixado: 'pago',
+      liquidado: 'pago',
+    },
+  },
+  'contas-a-receber': {
+    resource: 'contas-a-receber',
+    table: 'financeiro.contas_receber',
+    label: 'Conta a receber',
+    entityIdColumn: 'cliente_id',
+    entityPayloadKey: 'cliente_id',
+    categoryColumn: 'categoria_receita_id',
+    centerColumn: 'centro_lucro_id',
+    paidStatus: 'recebido',
+    statuses: ['pendente', 'vencido', 'parcial', 'recebido', 'cancelado'],
+    statusAliases: {
+      aberto: 'pendente',
+      em_aberto: 'pendente',
+      'em aberto': 'pendente',
+      pago: 'recebido',
+      baixado: 'recebido',
+      liquidado: 'recebido',
+    },
+  },
+}
+
+const ERP_ACOES_TRANSITIONS: Record<ErpAcoesResource, Record<string, string[]>> = {
+  'contas-a-pagar': {
+    pendente: ['vencido', 'parcial', 'pago', 'cancelado'],
+    vencido: ['parcial', 'pago', 'cancelado'],
+    parcial: ['pendente', 'vencido', 'pago', 'cancelado'],
+    pago: ['pendente'],
+    cancelado: ['pendente'],
+  },
+  'contas-a-receber': {
+    pendente: ['vencido', 'parcial', 'recebido', 'cancelado'],
+    vencido: ['parcial', 'recebido', 'cancelado'],
+    parcial: ['pendente', 'vencido', 'recebido', 'cancelado'],
+    recebido: ['pendente'],
+    cancelado: ['pendente'],
+  },
+}
+
+const ERP_ACOES_STATUS_ACTIONS: Record<
+  Exclude<ErpAcoesAction, 'criar' | 'atualizar'>,
+  { target: (config: ErpAcoesConfig) => string; allowedFrom: (config: ErpAcoesConfig) => string[]; notePrefix: string; successVerb: string }
+> = {
+  baixar: {
+    target: (config) => config.paidStatus,
+    allowedFrom: () => ['pendente', 'vencido', 'parcial'],
+    notePrefix: '[baixa]',
+    successVerb: 'baixada',
+  },
+  cancelar: {
+    target: () => 'cancelado',
+    allowedFrom: () => ['pendente', 'vencido', 'parcial'],
+    notePrefix: '[cancelamento]',
+    successVerb: 'cancelada',
+  },
+  estornar: {
+    target: () => 'pendente',
+    allowedFrom: (config) => [config.paidStatus],
+    notePrefix: '[estorno]',
+    successVerb: 'estornada',
+  },
+  reabrir: {
+    target: () => 'pendente',
+    allowedFrom: (config) => ['cancelado', config.paidStatus],
+    notePrefix: '[reabertura]',
+    successVerb: 'reaberta',
+  },
+}
+
+function normalizeErpAcoesResource(value: unknown): ErpAcoesResource {
+  const resource = toText(value)
+  if (resource === 'contas-a-pagar' || resource === 'contas-a-receber') return resource
+  throw new Error('resource invalido para erp_acoes. Use contas-a-pagar ou contas-a-receber.')
+}
+
+function normalizeErpAcoesStatus(config: ErpAcoesConfig, value: unknown) {
+  const status = toText(value || 'pendente').toLowerCase()
+  return config.statusAliases[status] || status
+}
+
+function assertErpAcoesStatus(config: ErpAcoesConfig, status: string) {
+  if (!config.statuses.includes(status)) {
+    throw new Error(`status invalido para ${config.resource}: ${status || '(vazio)'}`)
+  }
+}
+
+function makeErpAcoesDocumentNumber(resource: ErpAcoesResource) {
+  const prefix = resource === 'contas-a-pagar' ? 'CP' : 'CR'
+  const ymd = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+  const rand = Math.random().toString(36).slice(2, 8).toUpperCase()
+  return `${prefix}-${ymd}-${rand}`
 }
 
 function normalizeAndAssertSafeSelectQuery(sql: string) {
@@ -1754,6 +1998,341 @@ async function callCrud(
   }
 }
 
+function buildErpAcoesResponse(input: {
+  success: boolean
+  action: ErpAcoesAction
+  resource: ErpAcoesResource
+  dryRun: boolean
+  result: JsonRecord
+}) {
+  const { success, action, resource, dryRun, result } = input
+  const row = {
+    status_operacao: success ? (dryRun ? 'preview' : 'executado') : 'erro',
+    recurso: resource,
+    acao: action,
+    dry_run: dryRun,
+    mensagem: result.message || result.error || null,
+    id: result.id ?? null,
+    status: result.status ?? null,
+    status_anterior: result.previous_status ?? null,
+    status_novo: result.next_status ?? result.status ?? null,
+  }
+  const rows = [row]
+  const structuredContent = {
+    success,
+    tool: MCP_APP_DOMAIN_TOOL_NAMES.erpAcoes,
+    action,
+    resource,
+    title: dryRun ? `Preview - ERP acoes - ${resource}` : `ERP acoes - ${resource}`,
+    dry_run: dryRun,
+    rows,
+    columns: inferColumns(rows),
+    count: rows.length,
+    result,
+  }
+  return {
+    content: [{ type: 'text', text: JSON.stringify(structuredContent, null, 2) }],
+    structuredContent,
+    isError: !success,
+  }
+}
+
+async function getErpAcoesRow(config: ErpAcoesConfig, tenantId: number, id: number) {
+  const rows = await runQuery<{ id: number; status: string | null; observacao: string | null }>(
+    `SELECT id, status, observacao FROM ${config.table} WHERE tenant_id = $1 AND id = $2 LIMIT 1`,
+    [tenantId, id],
+  )
+  return rows[0] || null
+}
+
+async function updateErpAcoesRow(
+  config: ErpAcoesConfig,
+  tenantId: number,
+  id: number,
+  updates: Array<{ column: string; value: unknown }>,
+) {
+  if (!updates.length) throw new Error('Nenhum campo valido para atualizar')
+  const sets: string[] = []
+  const params: unknown[] = []
+  let index = 1
+  for (const update of updates) {
+    sets.push(`${update.column} = $${index++}`)
+    params.push(update.value)
+  }
+  sets.push('atualizado_em = now()')
+  params.push(tenantId, id)
+  const rows = await runQuery<{ id: number; status: string }>(
+    `UPDATE ${config.table} SET ${sets.join(', ')} WHERE tenant_id = $${index++} AND id = $${index} RETURNING id, status`,
+    params,
+  )
+  return rows[0] || null
+}
+
+function getRequiredErpAcoesId(input: JsonRecord) {
+  const id = toNumber(input.id)
+  if (!id || id <= 0) throw new Error('id e obrigatorio e deve ser numerico')
+  return id
+}
+
+function buildErpAcoesUpdateList(config: ErpAcoesConfig, payload: JsonRecord) {
+  const updates: Array<{ column: string; value: unknown }> = []
+  const pushText = (key: string, column: string) => {
+    if (payload[key] !== undefined) updates.push({ column, value: toOptionalText(payload[key]) })
+  }
+  const pushNumber = (key: string, column: string) => {
+    if (payload[key] !== undefined) updates.push({ column, value: toNumber(payload[key]) })
+  }
+  const pushDate = (key: string, column: string) => {
+    if (payload[key] !== undefined) updates.push({ column, value: normalizeDate(payload[key]) })
+  }
+
+  pushText('descricao', 'observacao')
+  pushText('observacao', 'observacao')
+  pushText('numero_documento', 'numero_documento')
+  pushText('tipo_documento', 'tipo_documento')
+  pushDate('data_lancamento', 'data_lancamento')
+  pushDate('data_emissao', 'data_lancamento')
+  pushDate('data_documento', 'data_documento')
+  pushDate('data_vencimento', 'data_vencimento')
+  pushNumber(config.entityPayloadKey, config.entityIdColumn)
+  pushNumber('categoria_id', config.categoryColumn)
+  pushNumber(config.categoryColumn, config.categoryColumn)
+  pushNumber('conta_financeira_id', 'conta_financeira_id')
+  pushNumber(config.centerColumn, config.centerColumn)
+  pushNumber('centro_custo_id', config.centerColumn)
+  pushNumber('centro_lucro_id', config.centerColumn)
+  pushNumber('departamento_id', 'departamento_id')
+  pushNumber('filial_id', 'filial_id')
+  pushNumber('unidade_negocio_id', 'unidade_negocio_id')
+  pushNumber('projeto_id', 'projeto_id')
+
+  if (payload.valor !== undefined) {
+    const value = toNumber(payload.valor)
+    if (value == null || value <= 0) throw new Error('valor deve ser maior que zero')
+    const amount = Math.abs(value)
+    updates.push({ column: 'valor_bruto', value: amount })
+    updates.push({ column: 'valor_liquido', value: amount })
+  }
+
+  if (payload.status !== undefined) {
+    const status = normalizeErpAcoesStatus(config, payload.status)
+    assertErpAcoesStatus(config, status)
+    updates.push({ column: 'status', value: status })
+  }
+
+  return updates.filter((update) => update.value !== undefined)
+}
+
+async function callErpAcoesCreate(config: ErpAcoesConfig, payload: JsonRecord, dryRun: boolean, tenantId: number) {
+  const entityId = toNumber(payload[config.entityPayloadKey])
+  const value = toNumber(payload.valor)
+  const amount = value == null ? null : Math.abs(value)
+  const dueDate = normalizeDate(payload.data_vencimento)
+  const issueDate = normalizeDate(payload.data_lancamento || payload.data_emissao) || new Date().toISOString().slice(0, 10)
+  const documentDate = normalizeDate(payload.data_documento || payload.data_emissao || payload.data_lancamento) || issueDate
+  const status = normalizeErpAcoesStatus(config, payload.status || 'pendente')
+  const documentNumber = toText(payload.numero_documento) || makeErpAcoesDocumentNumber(config.resource)
+  const documentType = toText(payload.tipo_documento).toLowerCase() || 'fatura'
+  const description = toOptionalText(payload.descricao || payload.observacao)
+
+  if (!entityId || entityId <= 0) throw new Error(`${config.entityPayloadKey} e obrigatorio`)
+  if (amount == null || amount <= 0) throw new Error('valor e obrigatorio e deve ser maior que zero')
+  if (!dueDate) throw new Error('data_vencimento e obrigatorio')
+  assertErpAcoesStatus(config, status)
+
+  const result: JsonRecord = {
+    message: dryRun ? `${config.label} pronta para criar` : `${config.label} criada`,
+    resource: config.resource,
+    operation: 'criar',
+    status,
+    numero_documento: documentNumber,
+    valor: amount,
+    data_vencimento: dueDate,
+  }
+
+  if (dryRun) return result
+
+  const columns = [
+    'tenant_id',
+    config.entityIdColumn,
+    'numero_documento',
+    'tipo_documento',
+    'status',
+    'data_documento',
+    'data_lancamento',
+    'data_vencimento',
+    'valor_bruto',
+    'valor_desconto',
+    'valor_impostos',
+    'valor_liquido',
+    'observacao',
+  ]
+  const values: unknown[] = [
+    tenantId,
+    entityId,
+    documentNumber,
+    documentType,
+    status,
+    documentDate,
+    issueDate,
+    dueDate,
+    amount,
+    0,
+    0,
+    amount,
+    description,
+  ]
+
+  const optionalNumbers: Array<[string, string]> = [
+    ['categoria_id', config.categoryColumn],
+    [config.categoryColumn, config.categoryColumn],
+    ['conta_financeira_id', 'conta_financeira_id'],
+    [config.centerColumn, config.centerColumn],
+    ['centro_custo_id', config.centerColumn],
+    ['centro_lucro_id', config.centerColumn],
+    ['departamento_id', 'departamento_id'],
+    ['filial_id', 'filial_id'],
+    ['unidade_negocio_id', 'unidade_negocio_id'],
+    ['projeto_id', 'projeto_id'],
+  ]
+  for (const [key, column] of optionalNumbers) {
+    const number = toNumber(payload[key])
+    if (number != null && !columns.includes(column)) {
+      columns.push(column)
+      values.push(number)
+    }
+  }
+
+  const placeholders = values.map((_, index) => `$${index + 1}`).join(', ')
+  const rows = await runQuery<{ id: number }>(
+    `INSERT INTO ${config.table} (${columns.join(', ')}) VALUES (${placeholders}) RETURNING id`,
+    values,
+  )
+  const created = rows[0]
+  if (!created) throw new Error(`Falha ao criar ${config.label.toLowerCase()}`)
+  return { ...result, id: created.id }
+}
+
+async function callErpAcoesUpdate(config: ErpAcoesConfig, input: JsonRecord, dryRun: boolean, tenantId: number) {
+  const id = getRequiredErpAcoesId(input)
+  const payload = toObj(input.payload)
+  const current = await getErpAcoesRow(config, tenantId, id)
+  if (!current) throw new Error('Registro nao encontrado')
+  const updates = buildErpAcoesUpdateList(config, payload)
+  if (!updates.length) throw new Error('Nenhum campo valido para atualizar')
+
+  const statusUpdate = updates.find((update) => update.column === 'status')
+  if (statusUpdate) {
+    const currentStatus = normalizeErpAcoesStatus(config, current.status || 'pendente')
+    const nextStatus = String(statusUpdate.value)
+    const allowed = ERP_ACOES_TRANSITIONS[config.resource][currentStatus] || []
+    if (currentStatus !== nextStatus && !allowed.includes(nextStatus)) {
+      throw new Error(`Transicao de status invalida: ${currentStatus} -> ${nextStatus}`)
+    }
+  }
+
+  if (!dryRun) {
+    const updated = await updateErpAcoesRow(config, tenantId, id, updates)
+    if (!updated) throw new Error('Registro nao encontrado')
+  }
+
+  return {
+    id,
+    message: dryRun ? `${config.label} pronta para atualizar` : `${config.label} atualizada`,
+    updated_fields: updates.map((update) => update.column),
+    previous_status: current.status,
+    status: statusUpdate ? statusUpdate.value : current.status,
+  }
+}
+
+async function callErpAcoesStatusAction(
+  config: ErpAcoesConfig,
+  input: JsonRecord,
+  action: Exclude<ErpAcoesAction, 'criar' | 'atualizar'>,
+  dryRun: boolean,
+  tenantId: number,
+) {
+  const id = getRequiredErpAcoesId(input)
+  const payload = toObj(input.payload)
+  const current = await getErpAcoesRow(config, tenantId, id)
+  if (!current) throw new Error('Registro nao encontrado')
+
+  const rule = ERP_ACOES_STATUS_ACTIONS[action]
+  const currentStatus = normalizeErpAcoesStatus(config, current.status || 'pendente')
+  assertErpAcoesStatus(config, currentStatus)
+  const targetStatus = rule.target(config)
+  const allowedFrom = rule.allowedFrom(config)
+  if (currentStatus !== targetStatus && !allowedFrom.includes(currentStatus)) {
+    throw new Error(`${action} nao permitido para status ${currentStatus}`)
+  }
+
+  const noteRaw = toText(payload.motivo || payload.motivo_cancelamento || payload.motivo_estorno || payload.observacao || payload.descricao)
+  const note = noteRaw ? `${rule.notePrefix} ${noteRaw}` : rule.notePrefix
+  const observation = [toOptionalText(current.observacao), note].filter(Boolean).join('\n') || null
+
+  if (!dryRun && currentStatus !== targetStatus) {
+    const updated = await updateErpAcoesRow(config, tenantId, id, [
+      { column: 'status', value: targetStatus },
+      { column: 'observacao', value: observation },
+    ])
+    if (!updated) throw new Error('Registro nao encontrado')
+  }
+
+  return {
+    id,
+    message:
+      currentStatus === targetStatus
+        ? `${config.label} ja estava ${targetStatus}`
+        : dryRun
+          ? `${config.label} pronta para ${action}`
+          : `${config.label} ${rule.successVerb}`,
+    previous_status: currentStatus,
+    next_status: targetStatus,
+    status: targetStatus,
+    unchanged: currentStatus === targetStatus,
+  }
+}
+
+async function callErpAcoes(args: unknown, context: CognitoMcpServerContext) {
+  const input = toObj(args)
+  const resource = normalizeErpAcoesResource(input.resource)
+  const action = normalizeErpAcoesAction(input.action)
+  const dryRun = input.dry_run !== false
+  const config = ERP_ACOES_CONFIG[resource]
+  const tenantId = getTenantId(context)
+
+  try {
+    const result =
+      action === 'criar'
+        ? await callErpAcoesCreate(config, toObj(input.payload), dryRun, tenantId)
+        : action === 'atualizar'
+          ? await callErpAcoesUpdate(config, input, dryRun, tenantId)
+          : await callErpAcoesStatusAction(config, input, action, dryRun, tenantId)
+
+    return buildErpAcoesResponse({
+      success: true,
+      action,
+      resource,
+      dryRun,
+      result: {
+        ...result,
+        idempotency_key: toOptionalText(input.idempotency_key),
+      },
+    })
+  } catch (error) {
+    return buildErpAcoesResponse({
+      success: false,
+      action,
+      resource,
+      dryRun,
+      result: {
+        error: (error as Error)?.message || String(error),
+        idempotency_key: toOptionalText(input.idempotency_key),
+      },
+    })
+  }
+}
+
 async function callEcommerce(args: unknown, context: CognitoMcpServerContext) {
   const input = toObj(args)
   const paramsIn = toObj(input.params)
@@ -1822,6 +2401,8 @@ export async function callMcpAppDomainTool(
   switch (name) {
     case MCP_APP_DOMAIN_TOOL_NAMES.erp:
       return callCrud(args, context, MCP_APP_DOMAIN_TOOL_NAMES.erp, ERP_ALLOWED_RESOURCES)
+    case MCP_APP_DOMAIN_TOOL_NAMES.erpAcoes:
+      return callErpAcoes(args, context)
     case MCP_APP_DOMAIN_TOOL_NAMES.crm:
       return callCrud(args, context, MCP_APP_DOMAIN_TOOL_NAMES.crm, CRM_ALLOWED_RESOURCES)
     case MCP_APP_DOMAIN_TOOL_NAMES.ecommerce:

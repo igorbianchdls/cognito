@@ -43,7 +43,7 @@ export function App() {
   const tool = isRecord(structuredContent) && typeof structuredContent.tool === 'string'
     ? structuredContent.tool
     : null
-  const isDataTool = tool === 'erp' || tool === 'crm' || tool === 'sql' || tool === 'sql_execution' || tool === 'ecommerce' || tool === 'marketing'
+  const isDataTool = tool === 'erp' || tool === 'erp_acoes' || tool === 'crm' || tool === 'sql' || tool === 'sql_execution' || tool === 'ecommerce' || tool === 'marketing'
 
   return (
     <main className="app-shell">
