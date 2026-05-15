@@ -946,7 +946,7 @@ export function listCognitoMcpAppTools() {
         name: MCP_APP_PUBLIC_TOOL_NAMES.dashboardAuthoring,
         title: 'Dashboard authoring',
         description:
-          'Cria e edita dashboards Cognito. Use get_contract para obter regras TSX, create para criar, patch para alterar trecho e update_full para substituir o source inteiro. expected_version e opcional; se omitido, usa automaticamente a versao draft atual.',
+          'Cria e edita dashboards Cognito usando o DSL dashboard.v1 em TSX declarativo. Use get_contract para obter componentes suportados, component_props, data_query_contract e exemplo valido; create para criar; patch para alterar trecho; update_full para substituir o source inteiro. expected_version e opcional; se omitido, usa automaticamente a versao draft atual.',
         inputSchema: DASHBOARD_AUTHORING_SCHEMA,
         outputSchema: DASHBOARD_WRITE_OUTPUT_SCHEMA,
         securitySchemes: COGNITO_WRITE_SECURITY_SCHEMES,

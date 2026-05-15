@@ -384,7 +384,7 @@ const CRM_DOMAIN_TOOL_DEFINITION = {
   name: MCP_APP_DOMAIN_TOOL_NAMES.crm,
   title: 'CRM',
   description:
-    'Consulta registros operacionais do CRM em modo leitura. Use para contas, contatos, leads, oportunidades e atividades. Acoes suportadas: listar e ler. Recursos principais retornam colunas de negocio com nomes resolvidos por join, sem expor IDs internos na tabela: crm/leads e crm/oportunidades.',
+    'Consulta registros operacionais do CRM em modo leitura. Use para contas, contatos, leads, oportunidades e atividades. Acoes suportadas: listar e ler. Recursos retornam colunas de negocio com nomes resolvidos por join quando disponivel: crm/contas, crm/contatos, crm/leads, crm/oportunidades e crm/atividades.',
   inputSchema: CRM_SCHEMA,
   outputSchema: CRUD_OUTPUT_SCHEMA,
   securitySchemes: READ_SECURITY_SCHEMES,
@@ -396,7 +396,7 @@ const ECOMMERCE_DOMAIN_TOOL_DEFINITION = {
   name: MCP_APP_DOMAIN_TOOL_NAMES.ecommerce,
   title: 'Ecommerce metrics',
   description:
-    'Retorna metricas prontas de ecommerce sem SQL livre. Use para perguntas sobre pedidos, receita, ticket medio, canais, status, faturamento mensal, produtos e frete.',
+    'Retorna metricas prontas de ecommerce sem SQL livre. Use para perguntas sobre pedidos, receita, ticket medio, canais, status, faturamento mensal, produtos e frete em Shopify, Shopee, Amazon e Mercado Livre.',
   inputSchema: ECOMMERCE_SCHEMA,
   outputSchema: METRICS_OUTPUT_SCHEMA,
   securitySchemes: READ_SECURITY_SCHEMES,
@@ -408,7 +408,7 @@ const SQL_DOMAIN_TOOL_DEFINITION = {
   name: MCP_APP_DOMAIN_TOOL_NAMES.sql,
   title: 'SQL',
   description:
-    'Executa SQL analitico ad-hoc em modo leitura. Use quando erp/ecommerce/marketing nao cobrirem a pergunta. Aceita apenas SELECT ou WITH, uma unica instrucao, sem escrita; use {{tenant_id}} para bind automatico de tenant.',
+    'Executa SQL analitico ad-hoc em modo leitura. Use como fallback quando erp, crm, ecommerce ou marketing nao cobrirem a pergunta. Aceita apenas SELECT ou WITH, uma unica instrucao, sem escrita; use {{tenant_id}} para bind automatico de tenant.',
   inputSchema: SQL_EXECUTION_SCHEMA,
   outputSchema: METRICS_OUTPUT_SCHEMA,
   securitySchemes: READ_SECURITY_SCHEMES,
@@ -420,7 +420,7 @@ const MARKETING_DOMAIN_TOOL_DEFINITION = {
   name: MCP_APP_DOMAIN_TOOL_NAMES.marketing,
   title: 'Marketing metrics',
   description:
-    'Retorna metricas prontas de marketing/trafego pago sem SQL livre. Use para perguntas sobre gasto, receita atribuida, ROAS, cliques, impressoes, conversoes, campanhas, contas, anuncios e desempenho diario.',
+    'Retorna metricas prontas de marketing/trafego pago sem SQL livre. Use para perguntas sobre gasto, receita atribuida, ROAS, cliques, impressoes, conversoes, campanhas, contas, anuncios e desempenho diario em Meta Ads e Google Ads.',
   inputSchema: MARKETING_SCHEMA,
   outputSchema: METRICS_OUTPUT_SCHEMA,
   securitySchemes: READ_SECURITY_SCHEMES,
