@@ -16,11 +16,13 @@ function toOpenAiWidgetCsp(meta: Record<string, unknown> | undefined) {
   const csp = ui.csp && typeof ui.csp === 'object' ? ui.csp as Record<string, unknown> : {}
   const connectDomains = Array.isArray(csp.connectDomains) ? csp.connectDomains : []
   const resourceDomains = Array.isArray(csp.resourceDomains) ? csp.resourceDomains : []
+  const frameDomains = Array.isArray(csp.frameDomains) ? csp.frameDomains : []
   const redirectDomains = Array.isArray(csp.redirectDomains) ? csp.redirectDomains : resourceDomains
 
   return {
     connect_domains: connectDomains,
     resource_domains: resourceDomains,
+    frame_domains: frameDomains,
     redirect_domains: redirectDomains,
   }
 }

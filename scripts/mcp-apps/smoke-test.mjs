@@ -64,6 +64,7 @@ async function main() {
   assert(legacyRead?.contents?.[0]?.uri === resources.DASHBOARD_WIDGET_LEGACY_RESOURCE_URI, 'legacy resource read should preserve requested uri')
   assert(content?._meta?.ui?.resourceUri === undefined, 'resource content should not declare tool resourceUri')
   assert(content?._meta?.ui?.csp?.resourceDomains?.length > 0, 'resource UI CSP missing resourceDomains')
+  assert(content?._meta?.ui?.csp?.frameDomains?.length > 0, 'resource UI CSP missing frameDomains')
   assert(!content?._meta?.['openai/widgetCSP'], 'mcp-apps resource should not include OpenAI CSP metadata')
   console.log('resources metadata ok')
 
@@ -156,6 +157,11 @@ async function main() {
   assert(chatGptToolsSource.includes('Consultando CRM...'), 'ChatGPT crm invoking text missing')
   assert(chatGptToolsSource.includes('Dados de CRM carregados.'), 'ChatGPT crm invoked text missing')
   console.log('chatgpt tool metadata ok')
+
+  const chatGptResourcesSource = await readFile(path.join(root, 'src/products/chatgpt-app/server/appResources.ts'), 'utf8')
+  assert(chatGptResourcesSource.includes('frameDomains'), 'ChatGPT resource mapper should read frameDomains')
+  assert(chatGptResourcesSource.includes('frame_domains'), 'ChatGPT widget CSP should expose frame_domains')
+  console.log('chatgpt resource metadata ok')
 
   const componentPath = path.join(root, 'src/products/mcp-apps/web/dist/component.js')
   const componentJs = await readFile(componentPath, 'utf8')

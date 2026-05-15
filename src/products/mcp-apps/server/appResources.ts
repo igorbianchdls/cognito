@@ -130,6 +130,7 @@ function getDashboardWidgetResourceContentMeta() {
       csp: {
         connectDomains: domains,
         resourceDomains: domains,
+        frameDomains: domains,
         redirectDomains: domains,
       },
     },
