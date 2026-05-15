@@ -15,10 +15,23 @@ function formatDate(value?: string | null) {
   }).format(date)
 }
 
+function formatStatus(value?: string | null) {
+  return String(value || 'draft').trim().toLowerCase()
+}
+
+function getInitials(title: string) {
+  const words = title.trim().split(/\s+/).filter(Boolean)
+  if (words.length === 0) return 'DB'
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase()
+  return `${words[0][0] || ''}${words[1][0] || ''}`.toUpperCase()
+}
+
 export function DashboardCard({ dashboard }: DashboardCardProps) {
   const title = dashboard.title || 'Dashboard sem titulo'
   const version = dashboard.current_draft_version ?? dashboard.current_published_version
   const thumbnail = dashboard.thumbnail_data_url || ''
+  const identifier = dashboard.slug || dashboard.id || 'Sem identificador'
+  const status = formatStatus(dashboard.status)
 
   return (
     <article className="dashboard-card">
@@ -28,22 +41,30 @@ export function DashboardCard({ dashboard }: DashboardCardProps) {
         </div>
       ) : (
         <div className="dashboard-card__thumbnail dashboard-card__thumbnail--empty">
-          <span>{title.trim().slice(0, 2).toUpperCase() || 'DB'}</span>
+          <span>{getInitials(title)}</span>
         </div>
       )}
-      <div className="dashboard-card__topline">
-        <span>{dashboard.status || 'draft'}</span>
-        <span>{version ? `v${version}` : 'sem versao'}</span>
-      </div>
-      <h2>{title}</h2>
-      <p>{dashboard.slug || dashboard.id || 'Sem identificador'}</p>
-      <div className="dashboard-card__footer">
-        <span>Atualizado {formatDate(dashboard.updated_at)}</span>
-        {dashboard.url ? (
-          <a href={dashboard.url} target="_blank" rel="noreferrer">
-            Abrir
-          </a>
-        ) : null}
+      <div className="dashboard-card__body">
+        <div className="dashboard-card__content">
+          <div className="dashboard-card__topline">
+            <span className="dashboard-card__status">{status}</span>
+            <span className="dashboard-card__version">{version ? `v${version}` : 'sem versao'}</span>
+          </div>
+          <h2>{title}</h2>
+          <p className="dashboard-card__identifier">
+            <span>{identifier}</span>
+          </p>
+        </div>
+        <div className="dashboard-card__footer">
+          <p className="dashboard-card__updated">
+            <span>Atualizado {formatDate(dashboard.updated_at)}</span>
+          </p>
+          {dashboard.url ? (
+            <a className="dashboard-card__open" href={dashboard.url} target="_blank" rel="noreferrer">
+              Abrir
+            </a>
+          ) : null}
+        </div>
       </div>
     </article>
   )

@@ -13,24 +13,24 @@ export function DashboardPreviewView({ data }: DashboardPreviewViewProps) {
 
   if (!dashboard) {
     return (
-        <EmptyState
-          title="Dashboard nao informado"
-          description="A tool open_dashboard precisa receber um id valido."
-        />
+      <EmptyState
+        title="Dashboard nao informado"
+        description="A tool open_dashboard precisa receber um id valido."
+      />
     )
   }
 
   return (
-    <>
+    <section className="dashboard-preview-layout">
       <DashboardHeader
         eyebrow="Preview"
         title={data.title || dashboard.title || 'Dashboard'}
         description={dashboard.embed_url
-          ? 'Dashboard completo renderizado a partir do embed seguro.'
+          ? 'Visualizacao interativa do dashboard.'
           : 'Metadados e source retornados pela tool de leitura.'}
       />
       <DashboardMeta dashboard={dashboard} />
       <DashboardPreviewFrame dashboard={dashboard} />
-    </>
+    </section>
   )
 }

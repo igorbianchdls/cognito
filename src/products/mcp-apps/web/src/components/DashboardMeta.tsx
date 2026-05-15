@@ -9,8 +9,8 @@ export function DashboardMeta({ dashboard }: DashboardMetaProps) {
     ['ID', dashboard.id || dashboard.artifact_id],
     ['Slug', dashboard.slug],
     ['Status', dashboard.status || dashboard.kind],
-    ['Draft', dashboard.current_draft_version],
-    ['Published', dashboard.current_published_version],
+    ['Rascunho', dashboard.current_draft_version],
+    ['Publicado', dashboard.current_published_version],
     ['Workspace', dashboard.workspace_id],
   ].filter(([, value]) => value != null && value !== '')
 
@@ -25,4 +25,3 @@ export function DashboardMeta({ dashboard }: DashboardMetaProps) {
     </dl>
   )
 }
-
