@@ -6,7 +6,6 @@ import {
   Megaphone,
   ShoppingCart,
 } from 'lucide-react'
-import TotvsIcon from '@/components/icons/TotvsIcon'
 
 export type ToolTone = 'erp' | 'crm' | 'ecommerce' | 'marketing' | 'sql' | 'neutral'
 
@@ -96,7 +95,7 @@ export function getToolLabel(tool?: string) {
 
 export function getToolVisual(tool?: string): ToolVisual {
   if (tool === 'erp') {
-    return { label: 'ERP', icon: createElement(TotvsIcon, { className: 'result-shell__brand-icon' }), tone: 'erp' }
+    return { label: 'ERP', icon: createElement(SiHubspot, { size: 21, color: 'default', title: 'HubSpot logo' }), tone: 'erp' }
   }
   if (tool === 'crm') {
     return { label: 'CRM', icon: createElement(SiHubspot, { size: 21, color: 'default', title: 'HubSpot logo' }), tone: 'crm' }

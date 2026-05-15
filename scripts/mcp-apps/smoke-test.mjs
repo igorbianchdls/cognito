@@ -156,7 +156,7 @@ async function main() {
   assert(dashboardCardSource.includes('thumbnail_data_url'), 'dashboard card should read thumbnail_data_url')
   assert(dashboardPreviewSource.includes('dashboard-preview-layout'), 'dashboard preview layout wrapper missing')
   assert(formatSource.includes('getToolVisual'), 'tool visual helper missing')
-  assert(formatSource.includes('TotvsIcon'), 'erp TOTVS icon missing')
+  assert(formatSource.includes("label: 'ERP', icon: createElement(SiHubspot"), 'erp HubSpot icon missing')
   assert(formatSource.includes('SiHubspot'), 'crm HubSpot icon missing')
   assert(formatSource.includes("tone: 'erp'"), 'erp visual tone missing')
   assert(formatSource.includes("tone: 'crm'"), 'crm visual tone missing')
