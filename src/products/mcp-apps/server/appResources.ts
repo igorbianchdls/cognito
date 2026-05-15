@@ -208,9 +208,6 @@ export function listCognitoMcpAppResources() {
   return {
     resources: [
       toResourceListItem(DASHBOARD_WIDGET_RESOURCE),
-      toResourceListItem(DASHBOARD_WIDGET_PREVIOUS_RESOURCE),
-      toResourceListItem(DASHBOARD_WIDGET_OLDER_RESOURCE),
-      toResourceListItem(DASHBOARD_WIDGET_LEGACY_RESOURCE),
     ],
   }
 }

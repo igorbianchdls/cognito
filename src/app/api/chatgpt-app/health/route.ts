@@ -45,6 +45,8 @@ export async function GET(req: Request) {
   }
 
   const baseUrl = getConfiguredBaseUrl()
+  const tools = listCognitoChatGptAppTools().tools
+  const resources = listCognitoChatGptAppResources().resources
 
   return Response.json({
     ok: true,
@@ -56,7 +58,16 @@ export async function GET(req: Request) {
     mcp_url: baseUrl ? `${baseUrl}/api/chatgpt-app/mcp` : null,
     tenant_id: auth.tenantId,
     auth_type: auth.authType,
-    tools: listCognitoChatGptAppTools().tools.map((tool) => tool.name),
-    resources: listCognitoChatGptAppResources().resources.map((resource) => resource.uri),
+    tools: tools.map((tool) => tool.name),
+    resources: resources.map((resource) => resource.uri),
+    widget_templates: tools
+      .map((tool) => ({
+        name: tool.name,
+        output_template: tool._meta?.['openai/outputTemplate'],
+        resource_uri: tool._meta?.ui && typeof tool._meta.ui === 'object'
+          ? (tool._meta.ui as Record<string, unknown>).resourceUri
+          : undefined,
+      }))
+      .filter((tool) => tool.output_template || tool.resource_uri),
   })
 }

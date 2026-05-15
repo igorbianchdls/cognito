@@ -215,8 +215,8 @@ console.log(`tools/list ok: ${toolNames.join(', ')}`)
 const resourcesList = await callMcp('resources/list')
 const resourceUris = (resourcesList?.resources || []).map((resource) => resource.uri)
 assert(resourceUris.includes('ui://widget/dashboard-v4.html'), 'resources/list missing dashboard widget')
-assert(resourceUris.includes('ui://widget/dashboard-v3.html'), 'resources/list missing previous dashboard widget')
-assert(resourceUris.includes('ui://widget/dashboard-v2.html'), 'resources/list missing older dashboard widget')
+assert(!resourceUris.includes('ui://widget/dashboard-v3.html'), 'resources/list should not advertise previous dashboard widget')
+assert(!resourceUris.includes('ui://widget/dashboard-v2.html'), 'resources/list should not advertise older dashboard widget')
 console.log(`resources/list ok: ${resourceUris.join(', ')}`)
 
 const widget = await callMcp('resources/read', {
