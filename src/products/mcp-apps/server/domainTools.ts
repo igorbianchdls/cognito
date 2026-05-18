@@ -212,6 +212,7 @@ const ERP_RESOURCE_TABLES = {
   'estoque/almoxarifados': 'estoque.almoxarifados',
   'estoque/movimentacoes': 'estoque.movimentacoes_estoque',
   'estoque/estoque-atual': 'estoque.estoques_atual',
+  'estoque/produtos': 'produtos.produto',
   'estoque/tipos-movimentacao': 'estoque.tipos_movimentacao',
 } as const
 
@@ -298,7 +299,7 @@ function createCrudSchema(allowedResources: string[], description: string) {
 
 const ERP_CRUD_SCHEMA = createCrudSchema(
   ERP_ALLOWED_RESOURCES,
-  'Resource canonico do ERP. Exemplos comuns: contas-a-pagar, contas-a-receber, vendas/pedidos, compras/pedidos, financeiro/clientes, financeiro/fornecedores, financeiro/contas-financeiras, estoque/estoque-atual.',
+  'Resource canonico do ERP. Exemplos comuns: contas-a-pagar, contas-a-receber, vendas/pedidos, compras/pedidos, financeiro/clientes, financeiro/fornecedores, financeiro/contas-financeiras, estoque/produtos, estoque/estoque-atual.',
 )
 
 const CRM_SCHEMA = createCrudSchema(
@@ -1038,18 +1039,34 @@ LIMIT $${params.length}::int
   }
 
   const grouping = action === 'gasto_por_conta'
-    ? 'conta_id'
+    ? {
+      column: 'conta_id',
+      label: "COALESCE(NULLIF(cm.nome_conta, ''), CONCAT('Conta #', dd.conta_id::text), '-')",
+      join: 'LEFT JOIN trafegopago.contas_midia cm ON cm.id = dd.conta_id AND cm.tenant_id = dd.tenant_id',
+      xLabel: 'Conta',
+    }
     : action === 'top_anuncios'
-      ? 'anuncio_id'
-      : 'campanha_id'
+      ? {
+        column: 'anuncio_id',
+        label: "COALESCE(NULLIF(a.nome, ''), CONCAT('Anuncio #', dd.anuncio_id::text), '-')",
+        join: 'LEFT JOIN trafegopago.anuncios a ON a.id = dd.anuncio_id AND a.tenant_id = dd.tenant_id',
+        xLabel: 'Anuncio',
+      }
+      : {
+        column: 'campanha_id',
+        label: "COALESCE(NULLIF(c.nome, ''), CONCAT('Campanha #', dd.campanha_id::text), '-')",
+        join: 'LEFT JOIN trafegopago.campanhas c ON c.id = dd.campanha_id AND c.tenant_id = dd.tenant_id',
+        xLabel: 'Campanha',
+      }
   const metric = action === 'roas_por_campanha'
     ? "CASE WHEN COALESCE(SUM(dd.gasto), 0) = 0 THEN 0::float ELSE (COALESCE(SUM(dd.receita_atribuida), 0)::float / COALESCE(SUM(dd.gasto), 0)::float) END"
     : 'COALESCE(SUM(dd.gasto), 0)::float'
   const params = [...base.params, limit]
   return {
     sql: `
-SELECT COALESCE(dd.${grouping}::text, '-') AS key, COALESCE(dd.${grouping}::text, '-') AS label, ${metric} AS value
+SELECT COALESCE(dd.${grouping.column}::text, '-') AS key, ${grouping.label} AS label, ${metric} AS value
 FROM trafegopago.desempenho_diario dd
+${grouping.join}
 ${base.whereClause}
 GROUP BY 1, 2
 ORDER BY 3 DESC
@@ -1063,7 +1080,7 @@ LIMIT $${params.length}::int
         : action === 'top_anuncios'
           ? 'Marketing - Top Anuncios por Gasto'
           : 'Marketing - Gasto por Campanha',
-    chart: { xField: 'label', valueField: 'value', xLabel: grouping, yLabel: action === 'roas_por_campanha' ? 'ROAS' : 'Gasto' },
+    chart: { xField: 'label', valueField: 'value', xLabel: grouping.xLabel, yLabel: action === 'roas_por_campanha' ? 'ROAS' : 'Gasto' },
   }
 }
 
@@ -1328,6 +1345,7 @@ function buildFinancialAccountsPayableQuery(action: CrudAction, paramsIn: JsonRe
   return {
     sql: `
 SELECT
+  cp.id,
   cp.numero_documento,
   ${fornecedorExpr} AS fornecedor,
   cp.data_documento::date AS data_documento,
@@ -1356,6 +1374,7 @@ function buildFinancialAccountsReceivableQuery(action: CrudAction, paramsIn: Jso
   return {
     sql: `
 SELECT
+  cr.id,
   cr.numero_documento,
   ${clienteExpr} AS cliente,
   cr.data_documento::date AS data_documento,
@@ -1503,6 +1522,7 @@ function buildSalesOrdersQuery(action: CrudAction, paramsIn: JsonRecord, tenantI
   return {
     sql: `
 SELECT
+  p.id,
   p.id::text AS pedido,
   ${clienteExpr} AS cliente,
   p.data_pedido::date AS data_pedido,
@@ -1544,6 +1564,7 @@ function buildPurchaseOrdersQuery(action: CrudAction, paramsIn: JsonRecord, tena
   return {
     sql: `
 SELECT
+  c.id,
   COALESCE(NULLIF(c.numero_oc, ''), c.id::text) AS numero_pedido,
   ${fornecedorExpr} AS fornecedor,
   c.data_pedido::date AS data_pedido,
@@ -1581,6 +1602,7 @@ function buildCrmAccountsQuery(action: CrudAction, paramsIn: JsonRecord, tenantI
   return {
     sql: `
 SELECT
+  c.id,
   c.nome AS conta,
   COALESCE(NULLIF(c.setor, ''), '-') AS setor,
   COALESCE(NULLIF(c.site, ''), '-') AS site,
@@ -1615,6 +1637,7 @@ function buildCrmContactsQuery(action: CrudAction, paramsIn: JsonRecord, tenantI
   return {
     sql: `
 SELECT
+  ct.id,
   ct.nome AS contato,
   ${contaExpr} AS conta,
   COALESCE(NULLIF(ct.cargo, ''), '-') AS cargo,
@@ -1651,6 +1674,7 @@ function buildCrmLeadsQuery(action: CrudAction, paramsIn: JsonRecord, tenantId: 
   return {
     sql: `
 SELECT
+  l.id,
   l.nome,
   COALESCE(NULLIF(l.empresa, ''), '-') AS empresa,
   COALESCE(NULLIF(l.email, ''), '-') AS email,
@@ -1690,6 +1714,7 @@ function buildCrmOpportunitiesQuery(action: CrudAction, paramsIn: JsonRecord, te
   return {
     sql: `
 SELECT
+  o.id,
   o.nome AS oportunidade,
   ${contaExpr} AS conta,
   ${faseExpr} AS fase,
@@ -1744,6 +1769,7 @@ function buildCrmActivitiesQuery(action: CrudAction, paramsIn: JsonRecord, tenan
   return {
     sql: `
 SELECT
+  a.id,
   a.data_prevista::date AS data_prevista,
   COALESCE(NULLIF(a.tipo, ''), '-') AS tipo,
   ${assuntoExpr} AS assunto,
@@ -1786,7 +1812,10 @@ function buildStockCurrentQuery(action: CrudAction, paramsIn: JsonRecord, tenant
   return {
     sql: `
 SELECT
+  ea.id,
+  ea.produto_id,
   ${produtoExpr} AS produto,
+  ea.almoxarifado_id,
   ${almoxarifadoExpr} AS almoxarifado,
   COALESCE(ea.quantidade, 0)::float AS quantidade,
   COALESCE(ea.custo_medio, 0)::float AS custo_medio,
@@ -1823,8 +1852,11 @@ function buildStockMovementsQuery(action: CrudAction, paramsIn: JsonRecord, tena
   return {
     sql: `
 SELECT
+  m.id,
   m.data_movimento::date AS data,
+  m.produto_id,
   ${produtoExpr} AS produto,
+  m.almoxarifado_id,
   ${almoxarifadoExpr} AS almoxarifado,
   ${tipoExpr} AS tipo,
   COALESCE(m.quantidade, 0)::float AS quantidade,
@@ -1842,6 +1874,53 @@ OFFSET $${base.offsetParam}::int
     `.trim(),
     params: base.params,
     title: 'Movimentacoes de estoque',
+    chart: null,
+  }
+}
+
+function buildStockProductsQuery(action: CrudAction, paramsIn: JsonRecord, tenantId: number): BuiltQuery {
+  const limit = normalizeLimit(paramsIn.limit, 100)
+  const offset = Math.max(0, Number.parseInt(toText(paramsIn.offset), 10) || 0)
+  const params: unknown[] = [tenantId]
+  const where = ['p.tenantid = $1::int']
+
+  const id = toText(paramsIn.id)
+  if (action === 'ler' || id) {
+    if (!id) throw new Error('params.id e obrigatorio para crud action ler')
+    params.push(id)
+    where.push(`p.id::text = $${params.length}::text`)
+  }
+
+  const ativo = toOptionalBoolean(paramsIn.ativo)
+  if (typeof ativo === 'boolean') {
+    params.push(ativo)
+    where.push(`COALESCE(p.ativo, true) = $${params.length}::boolean`)
+  }
+
+  const q = toText(paramsIn.q)
+  if (q) {
+    params.push(`%${q}%`)
+    where.push(`(p.nome ILIKE $${params.length}::text OR COALESCE(p.descricao, '') ILIKE $${params.length}::text OR COALESCE(c.nome, '') ILIKE $${params.length}::text)`)
+  }
+
+  params.push(limit, offset)
+  return {
+    sql: `
+SELECT
+  p.id,
+  p.nome,
+  COALESCE(NULLIF(p.descricao, ''), '-') AS descricao,
+  COALESCE(c.nome, '-') AS categoria,
+  CASE WHEN COALESCE(p.ativo, true) THEN 'Ativo' ELSE 'Inativo' END AS status
+FROM produtos.produto p
+LEFT JOIN produtos.categorias c ON c.id = p.categoria_id
+WHERE ${where.join(' AND ')}
+ORDER BY p.nome ASC NULLS LAST, p.id ASC
+LIMIT $${params.length - 1}::int
+OFFSET $${params.length}::int
+    `.trim(),
+    params,
+    title: 'Produtos',
     chart: null,
   }
 }
@@ -1979,6 +2058,7 @@ function buildStockWarehousesQuery(action: CrudAction, paramsIn: JsonRecord, ten
   return {
     sql: `
 SELECT
+  a.id,
   a.nome AS almoxarifado,
   COALESCE(NULLIF(a.tipo, ''), '-') AS tipo,
   COALESCE(NULLIF(a.endereco, ''), '-') AS endereco,
@@ -2009,6 +2089,7 @@ function buildStockMovementTypesQuery(action: CrudAction, paramsIn: JsonRecord, 
   return {
     sql: `
 SELECT
+  tm.id,
   tm.codigo,
   tm.descricao,
   COALESCE(NULLIF(tm.natureza, ''), '-') AS natureza,
@@ -2069,6 +2150,10 @@ function buildCrudQuery(action: CrudAction, resource: string, paramsIn: JsonReco
 
   if (resource === 'estoque/movimentacoes') {
     return buildStockMovementsQuery(action, paramsIn, tenantId)
+  }
+
+  if (resource === 'estoque/produtos') {
+    return buildStockProductsQuery(action, paramsIn, tenantId)
   }
 
   if (resource === 'financeiro/clientes') {
