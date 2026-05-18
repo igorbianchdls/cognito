@@ -22,30 +22,19 @@ function getToolInvocationText(name: string) {
     case 'dashboards':
     case 'dashboard_list':
       return ['Listando dashboards...', 'Dashboards listados.']
-    case 'open_dashboard':
-    case 'dashboard_read':
-    case 'fetch':
-      return ['Abrindo dashboard...', 'Dashboard carregado.']
     case 'open_artifact':
       return ['Abrindo artifact...', 'Artifact carregado.']
     case 'artifact_authoring':
       return ['Atualizando artifact...', 'Artifact atualizado.']
     case 'chart':
       return ['Renderizando grafico...', 'Grafico renderizado.']
-    case 'dashboard_authoring':
-      return ['Atualizando dashboard...', 'Dashboard atualizado.']
-    case 'dashboard_get_contract':
-      return ['Lendo contrato...', 'Contrato carregado.']
-    case 'dashboard_create':
-      return ['Criando dashboard...', 'Dashboard criado.']
-    case 'dashboard_patch':
-      return ['Editando dashboard...', 'Dashboard editado.']
-    case 'dashboard_update_full':
-      return ['Atualizando dashboard...', 'Dashboard atualizado.']
     case 'dashboard_render_list':
     case 'dashboard_render_preview':
     case 'dashboard_embed_preview':
       return ['Renderizando dashboard...', 'Dashboard renderizado.']
+    case 'dashboard_read':
+    case 'fetch':
+      return ['Abrindo dashboard...', 'Dashboard carregado.']
     case 'search':
       return ['Buscando dashboards...', 'Busca concluida.']
     case 'erp':

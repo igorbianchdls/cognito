@@ -21,7 +21,7 @@ Implemented:
 - base dashboard UI resource
 - ChatGPT App MCP route
 - health route
-- public tools: `dashboards`, `open_dashboard`, `erp`, `ecommerce`, `marketing`
+- public tools: `dashboards`, `open_artifact`, `artifact_authoring`, `erp`, `ecommerce`, `marketing`
 - initial React UI source and iframe bridge
 - widget build script
 - smoke test script

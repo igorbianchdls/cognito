@@ -286,7 +286,7 @@ function createCrudSchema(allowedResources: string[], description: string) {
       params: {
         type: 'object',
         description:
-          'Filtros de leitura. Suporta id, q, limit, offset, de, ate, status, valor_min, valor_max e filtros *_id quando forem necessarios internamente. A resposta prioriza nomes e descricoes de negocio, nao IDs: cliente, fornecedor, vendedor, canal, fase, produto, almoxarifado, categoria e centro.',
+          'Filtros de leitura. Suporta id, q, limit, offset, de, ate, data_campo, status, status_in, valor_min, valor_max, vencidas, a_vencer_dias, numero_documento, tipo_documento, ativo e filtros *_id quando forem necessarios internamente. A resposta prioriza nomes e descricoes de negocio, nao IDs: cliente, fornecedor, vendedor, canal, fase, produto, almoxarifado, categoria e centro.',
         additionalProperties: true,
       },
     },
@@ -1101,18 +1101,118 @@ function assertCrudResourceForTool(resource: string, toolName: string, allowedRe
   }
 }
 
+type FinancialDateFilter =
+  | { kind: 'column'; column: 'data_vencimento' | 'data_documento' | 'data_lancamento' }
+  | { kind: 'payment' }
+
+function normalizeFinancialDateFilter(config: ErpAcoesConfig, value: unknown): FinancialDateFilter {
+  const raw = toText(value).toLowerCase()
+  const normalized = raw
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[\s-]+/g, '_')
+
+  if (!normalized || normalized === 'vencimento' || normalized === 'data_vencimento') {
+    return { kind: 'column', column: 'data_vencimento' }
+  }
+  if (
+    normalized === 'documento' ||
+    normalized === 'emissao' ||
+    normalized === 'data_documento' ||
+    normalized === 'data_emissao'
+  ) {
+    return { kind: 'column', column: 'data_documento' }
+  }
+  if (normalized === 'lancamento' || normalized === 'data_lancamento') {
+    return { kind: 'column', column: 'data_lancamento' }
+  }
+
+  const paymentTerms =
+    config.resource === 'contas-a-pagar'
+      ? ['pagamento', 'data_pagamento', 'baixa', 'liquidacao']
+      : ['recebimento', 'data_recebimento', 'pagamento', 'baixa', 'liquidacao']
+  if (paymentTerms.includes(normalized)) return { kind: 'payment' }
+
+  throw new Error(
+    `params.data_campo invalido para ${config.resource}. Use vencimento, documento, lancamento${
+      config.resource === 'contas-a-pagar' ? ' ou pagamento' : ' ou recebimento'
+    }.`,
+  )
+}
+
+function toTextList(value: unknown) {
+  if (Array.isArray(value)) {
+    return value.map((item) => toText(item)).filter(Boolean)
+  }
+  return toText(value)
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+function pushTextEqualsFilter(where: string[], params: unknown[], alias: string, column: string, value: unknown) {
+  const text = toText(value)
+  if (!text) return
+  params.push(text)
+  where.push(`LOWER(COALESCE(${alias}.${column}, '')) = LOWER($${params.length}::text)`)
+}
+
+function pushIdFilter(where: string[], params: unknown[], alias: string, input: JsonRecord, inputKey: string, column: string) {
+  const value = toText(input[inputKey])
+  if (!value) return
+  params.push(value)
+  where.push(`${alias}.${column}::text = $${params.length}::text`)
+}
+
+function pushPaymentDateRangeFilter(
+  where: string[],
+  params: unknown[],
+  alias: string,
+  config: ErpAcoesConfig,
+  de: string | null,
+  ate: string | null,
+) {
+  const dateColumn = config.resource === 'contas-a-pagar' ? 'pe.data_pagamento' : 'pr.data_recebimento'
+  const paymentTable = config.resource === 'contas-a-pagar' ? 'financeiro.pagamentos_efetuados' : 'financeiro.pagamentos_recebidos'
+  const lineTable =
+    config.resource === 'contas-a-pagar' ? 'financeiro.pagamentos_efetuados_linhas' : 'financeiro.pagamentos_recebidos_linhas'
+  const lineAlias = config.resource === 'contas-a-pagar' ? 'pel' : 'prl'
+  const paymentAlias = config.resource === 'contas-a-pagar' ? 'pe' : 'pr'
+  const accountColumn = config.resource === 'contas-a-pagar' ? 'conta_pagar_id' : 'conta_receber_id'
+  const dateFilters: string[] = []
+
+  if (de) {
+    params.push(de)
+    dateFilters.push(`${dateColumn}::date >= $${params.length}::date`)
+  }
+  if (ate) {
+    params.push(ate)
+    dateFilters.push(`${dateColumn}::date <= $${params.length}::date`)
+  }
+
+  where.push(`EXISTS (
+    SELECT 1
+    FROM ${lineTable} ${lineAlias}
+    JOIN ${paymentTable} ${paymentAlias} ON ${paymentAlias}.id = ${lineAlias}.pagamento_id
+    WHERE ${lineAlias}.${accountColumn} = ${alias}.id
+      AND ${paymentAlias}.tenant_id = ${alias}.tenant_id
+      ${dateFilters.map((filter) => `AND ${filter}`).join('\n      ')}
+  )`)
+}
+
 function buildFinancialAccountsWhere(
   action: CrudAction,
   paramsIn: JsonRecord,
   tenantId: number,
   alias: string,
   searchExpression: string,
-  entityIdField: 'cliente_id' | 'fornecedor_id',
+  config: ErpAcoesConfig,
 ) {
   const limit = normalizeLimit(paramsIn.limit, 50)
   const offset = Math.max(0, Number.parseInt(toText(paramsIn.offset), 10) || 0)
   const params: unknown[] = [tenantId]
   const where = [`${alias}.tenant_id = $1::int`]
+  const dateFilter = normalizeFinancialDateFilter(config, paramsIn.data_campo)
 
   const id = toText(paramsIn.id)
   if (action === 'ler' || id) {
@@ -1122,28 +1222,72 @@ function buildFinancialAccountsWhere(
   }
 
   const de = normalizeDate(paramsIn.de)
-  if (de) {
-    params.push(de)
-    where.push(`${alias}.data_vencimento::date >= $${params.length}::date`)
-  }
-
   const ate = normalizeDate(paramsIn.ate)
-  if (ate) {
-    params.push(ate)
-    where.push(`${alias}.data_vencimento::date <= $${params.length}::date`)
+  if (dateFilter.kind === 'payment') {
+    if (de || ate) pushPaymentDateRangeFilter(where, params, alias, config, de, ate)
+  } else {
+    if (de) {
+      params.push(de)
+      where.push(`${alias}.${dateFilter.column}::date >= $${params.length}::date`)
+    }
+    if (ate) {
+      params.push(ate)
+      where.push(`${alias}.${dateFilter.column}::date <= $${params.length}::date`)
+    }
   }
 
   const status = toText(paramsIn.status)
   if (status) {
-    params.push(status)
-    where.push(`${alias}.status = $${params.length}::text`)
+    params.push(normalizeErpAcoesStatus(config, status))
+    where.push(`LOWER(COALESCE(${alias}.status, '')) = LOWER($${params.length}::text)`)
   }
 
-  const entityId = toText(paramsIn[entityIdField])
-  if (entityId) {
-    params.push(entityId)
-    where.push(`${alias}.${entityIdField}::text = $${params.length}::text`)
+  const statusIn = toTextList(paramsIn.status_in)
+  if (statusIn.length) {
+    const statuses = statusIn.map((item) => normalizeErpAcoesStatus(config, item))
+    statuses.forEach((item) => params.push(item))
+    const start = params.length - statuses.length + 1
+    const placeholders = statuses.map((_, index) => `$${start + index}::text`).join(', ')
+    where.push(`LOWER(COALESCE(${alias}.status, '')) IN (${placeholders})`)
   }
+
+  const vencidas = toOptionalBoolean(paramsIn.vencidas)
+  if (vencidas === true) {
+    params.push(config.paidStatus, 'cancelado')
+    where.push(
+      `${alias}.data_vencimento::date < CURRENT_DATE AND LOWER(COALESCE(${alias}.status, '')) NOT IN (LOWER($${params.length - 1}::text), LOWER($${params.length}::text))`,
+    )
+  } else if (vencidas === false) {
+    where.push(`${alias}.data_vencimento::date >= CURRENT_DATE`)
+  }
+
+  const aVencerDias = toText(paramsIn.a_vencer_dias)
+  if (aVencerDias) {
+    const parsed = Number.parseInt(aVencerDias, 10)
+    if (!Number.isFinite(parsed) || parsed < 0) throw new Error('params.a_vencer_dias invalido')
+    params.push(parsed, config.paidStatus, 'cancelado')
+    where.push(
+      `${alias}.data_vencimento::date BETWEEN CURRENT_DATE AND (CURRENT_DATE + ($${params.length - 2}::int * INTERVAL '1 day'))::date AND LOWER(COALESCE(${alias}.status, '')) NOT IN (LOWER($${params.length - 1}::text), LOWER($${params.length}::text))`,
+    )
+  }
+
+  pushIdFilter(where, params, alias, paramsIn, config.entityPayloadKey, config.entityIdColumn)
+  pushIdFilter(where, params, alias, paramsIn, 'categoria_id', config.categoryColumn)
+  pushIdFilter(where, params, alias, paramsIn, config.categoryColumn, config.categoryColumn)
+  pushIdFilter(where, params, alias, paramsIn, 'conta_financeira_id', 'conta_financeira_id')
+  pushIdFilter(where, params, alias, paramsIn, config.centerColumn, config.centerColumn)
+  if (config.resource === 'contas-a-pagar') {
+    pushIdFilter(where, params, alias, paramsIn, 'departamento_id', 'departamento_id')
+    pushIdFilter(where, params, alias, paramsIn, 'filial_id', 'filial_id')
+    pushIdFilter(where, params, alias, paramsIn, 'unidade_negocio_id', 'unidade_negocio_id')
+    pushIdFilter(where, params, alias, paramsIn, 'projeto_id', 'projeto_id')
+  } else {
+    pushIdFilter(where, params, alias, paramsIn, 'filial_id', 'filial_id')
+    pushIdFilter(where, params, alias, paramsIn, 'unidade_negocio_id', 'unidade_negocio_id')
+  }
+
+  pushTextEqualsFilter(where, params, alias, 'tipo_documento', paramsIn.tipo_documento)
+  pushTextEqualsFilter(where, params, alias, 'numero_documento', paramsIn.numero_documento)
 
   const valorMin = toText(paramsIn.valor_min)
   if (valorMin) {
@@ -1178,7 +1322,7 @@ function buildFinancialAccountsWhere(
 
 function buildFinancialAccountsPayableQuery(action: CrudAction, paramsIn: JsonRecord, tenantId: number): BuiltQuery {
   const fornecedorExpr = "COALESCE(NULLIF(f.nome_fantasia, ''), NULLIF(cp.nome_fornecedor_snapshot, ''), CONCAT('Fornecedor #', cp.fornecedor_id::text), '-')"
-  const base = buildFinancialAccountsWhere(action, paramsIn, tenantId, 'cp', fornecedorExpr, 'fornecedor_id')
+  const base = buildFinancialAccountsWhere(action, paramsIn, tenantId, 'cp', fornecedorExpr, ERP_ACOES_CONFIG['contas-a-pagar'])
 
   return {
     sql: `
@@ -1206,7 +1350,7 @@ OFFSET $${base.offsetParam}::int
 
 function buildFinancialAccountsReceivableQuery(action: CrudAction, paramsIn: JsonRecord, tenantId: number): BuiltQuery {
   const clienteExpr = "COALESCE(NULLIF(c.nome_fantasia, ''), NULLIF(cr.nome_cliente_snapshot, ''), CONCAT('Cliente #', cr.cliente_id::text), '-')"
-  const base = buildFinancialAccountsWhere(action, paramsIn, tenantId, 'cr', clienteExpr, 'cliente_id')
+  const base = buildFinancialAccountsWhere(action, paramsIn, tenantId, 'cr', clienteExpr, ERP_ACOES_CONFIG['contas-a-receber'])
 
   return {
     sql: `

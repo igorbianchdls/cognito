@@ -18,11 +18,9 @@ import {
 
 export const MCP_APP_PUBLIC_TOOL_NAMES = {
   dashboards: 'dashboards',
-  openDashboard: 'open_dashboard',
   openArtifact: 'open_artifact',
   chart: 'chart',
   artifactAuthoring: 'artifact_authoring',
-  dashboardAuthoring: 'dashboard_authoring',
 } as const
 
 export const MCP_APP_DASHBOARD_RENDER_TOOL_NAMES = {
@@ -64,18 +62,6 @@ const DASHBOARDS_SCHEMA = {
       description: 'Quantidade maxima de dashboards retornados. Default 20, maximo 50.',
     },
   },
-  additionalProperties: true,
-} as const satisfies McpToolInputSchema
-
-const OPEN_DASHBOARD_SCHEMA = {
-  type: 'object',
-  properties: {
-    id: {
-      type: 'string',
-      description: 'ID do dashboard retornado por dashboards. Nao envie version, kind ou artifact_id.',
-    },
-  },
-  required: ['id'],
   additionalProperties: true,
 } as const satisfies McpToolInputSchema
 
@@ -215,45 +201,6 @@ const CHART_SCHEMA = {
     },
   },
   required: ['chart', 'rows'],
-  additionalProperties: true,
-} as const satisfies McpToolInputSchema
-
-const DASHBOARD_AUTHORING_SCHEMA = {
-  type: 'object',
-  properties: {
-    action: {
-      type: 'string',
-      enum: ['get_contract', 'create', 'patch', 'update_full'],
-      description:
-        'Acao de autoria. Use get_contract antes de criar TSX novo, create para criar dashboard, patch para trocar um trecho e update_full para substituir o TSX inteiro.',
-    },
-    id: {
-      type: 'string',
-      description: 'ID do dashboard para patch ou update_full. Nao e necessario para get_contract/create.',
-    },
-    title: {
-      type: 'string',
-      description: 'Titulo do dashboard ao usar action=create.',
-    },
-    source: {
-      type: 'string',
-      description: 'Source TSX completo ao usar create ou update_full.',
-    },
-    expected_version: {
-      type: 'integer',
-      description: 'Versao draft esperada para patch/update_full. Opcional; se omitida, a versao draft atual sera usada automaticamente.',
-    },
-    operation: {
-      type: 'object',
-      description: 'Operacao de patch quando action=patch. Use type=replace_text com old_string/new_string ou type=replace_full_source com source.',
-      additionalProperties: true,
-    },
-    include_example: {
-      type: 'boolean',
-      description: 'Quando action=get_contract, informe true para incluir exemplo minimo de source TSX.',
-    },
-  },
-  required: ['action'],
   additionalProperties: true,
 } as const satisfies McpToolInputSchema
 
@@ -1008,46 +955,6 @@ async function callDashboardEmbedPreview(args: unknown) {
   }
 }
 
-async function callOpenDashboard(args: unknown) {
-  const input = asRecord(args)
-  const id = optionalText(input.id)
-  if (!id) {
-    const structuredContent = {
-      ok: false,
-      tool: MCP_APP_PUBLIC_TOOL_NAMES.openDashboard,
-      view: 'dashboard_preview',
-      title: 'Dashboard nao informado',
-      dashboard: null,
-    }
-
-    return {
-      content: [{ type: 'text', text: 'id e obrigatorio para abrir o dashboard.' }],
-      structuredContent,
-      isError: true,
-    }
-  }
-
-  const dashboard = await readMcpDashboard({ artifactId: id, kind: 'draft' })
-  const dashboardWithEmbed = withDashboardEmbedUrl(dashboard as JsonRecord)
-  const title = String(dashboardWithEmbed.title || dashboardWithEmbed.slug || id)
-  const structuredContent = {
-    ok: true,
-    tool: MCP_APP_PUBLIC_TOOL_NAMES.openDashboard,
-    view: 'dashboard_preview',
-    title,
-    dashboard: dashboardWithEmbed,
-  }
-
-  return {
-    content: [{ type: 'text', text: `Abrindo dashboard ${title}.` }],
-    structuredContent,
-    _meta: {
-      widget: DASHBOARD_WIDGET_RESOURCE_URI,
-    },
-    isError: false,
-  }
-}
-
 async function callOpenArtifact(args: unknown) {
   const input = asRecord(args)
   const kind = getArtifactKind(input.kind)
@@ -1095,7 +1002,7 @@ async function callArtifactAuthoring(args: unknown, context: CognitoMcpServerCon
   if (!kind) {
     const structuredContent = {
       ok: false,
-      tool: forcedKind ? MCP_APP_PUBLIC_TOOL_NAMES.dashboardAuthoring : MCP_APP_PUBLIC_TOOL_NAMES.artifactAuthoring,
+      tool: MCP_APP_PUBLIC_TOOL_NAMES.artifactAuthoring,
       error: 'kind invalido. Use dashboard, slide ou report.',
     }
 
@@ -1117,7 +1024,7 @@ async function callArtifactAuthoring(args: unknown, context: CognitoMcpServerCon
   const structuredContent = {
     ...resultContent,
     ok: true,
-    tool: forcedKind ? MCP_APP_PUBLIC_TOOL_NAMES.dashboardAuthoring : MCP_APP_PUBLIC_TOOL_NAMES.artifactAuthoring,
+    tool: MCP_APP_PUBLIC_TOOL_NAMES.artifactAuthoring,
     ...(Object.keys(artifact).length ? { artifact: withArtifactEmbedUrl(artifact, kind) } : {}),
   }
 
@@ -1161,10 +1068,6 @@ function callChart(args: unknown) {
   }
 }
 
-async function callDashboardAuthoring(args: unknown, context: CognitoMcpServerContext) {
-  return callArtifactAuthoring(args, context, 'dashboard')
-}
-
 export function listCognitoMcpAppTools() {
   return {
     tools: [
@@ -1172,23 +1075,9 @@ export function listCognitoMcpAppTools() {
         name: MCP_APP_PUBLIC_TOOL_NAMES.dashboards,
         title: 'Dashboards',
         description:
-          'Lista ou busca dashboards Cognito e renderiza cards no app. Use antes de open_dashboard quando o usuario nao souber o id.',
+          'Lista ou busca dashboards Cognito e renderiza cards no app. Use antes de open_artifact quando o usuario nao souber o id.',
         inputSchema: DASHBOARDS_SCHEMA,
         outputSchema: RENDER_LIST_OUTPUT_SCHEMA,
-        securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
-        annotations: READ_ONLY_ANNOTATIONS,
-        _meta: {
-          ...DASHBOARD_WIDGET_META,
-          securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
-        },
-      },
-      {
-        name: MCP_APP_PUBLIC_TOOL_NAMES.openDashboard,
-        title: 'Open dashboard',
-        description:
-          'Abre um dashboard completo no app interativo. Use somente com input { "id": "..." }, usando id retornado por dashboards.',
-        inputSchema: OPEN_DASHBOARD_SCHEMA,
-        outputSchema: RENDER_PREVIEW_OUTPUT_SCHEMA,
         securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
         annotations: READ_ONLY_ANNOTATIONS,
         _meta: {
@@ -1239,20 +1128,6 @@ export function listCognitoMcpAppTools() {
         },
       },
       ...listMcpAppDomainToolDefinitions(),
-      {
-        name: MCP_APP_PUBLIC_TOOL_NAMES.dashboardAuthoring,
-        title: 'Dashboard authoring',
-        description:
-          'Alias de compatibilidade para artifact_authoring com kind=dashboard. Cria e edita dashboards Cognito usando o DSL dashboard.v1 em TSX declarativo. Use get_contract para obter componentes suportados, component_props, data_query_contract e exemplo valido.',
-        inputSchema: DASHBOARD_AUTHORING_SCHEMA,
-        outputSchema: DASHBOARD_WRITE_OUTPUT_SCHEMA,
-        securitySchemes: COGNITO_WRITE_SECURITY_SCHEMES,
-        annotations: UPDATE_ANNOTATIONS,
-        _meta: {
-          ...DATA_TOOL_META,
-          securitySchemes: COGNITO_WRITE_SECURITY_SCHEMES,
-        },
-      },
     ],
   }
 }
@@ -1296,10 +1171,6 @@ export async function callCognitoMcpAppTool(
     return callDashboards(args)
   }
 
-  if (name === MCP_APP_PUBLIC_TOOL_NAMES.openDashboard) {
-    return callOpenDashboard(args)
-  }
-
   if (name === MCP_APP_PUBLIC_TOOL_NAMES.openArtifact) {
     return callOpenArtifact(args)
   }
@@ -1310,10 +1181,6 @@ export async function callCognitoMcpAppTool(
 
   if (name === MCP_APP_PUBLIC_TOOL_NAMES.artifactAuthoring) {
     return callArtifactAuthoring(args, context)
-  }
-
-  if (name === MCP_APP_PUBLIC_TOOL_NAMES.dashboardAuthoring) {
-    return callDashboardAuthoring(args, context)
   }
 
   if (isMcpAppDomainTool(name)) {

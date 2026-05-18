@@ -26,7 +26,7 @@ const checks = [
     title: 'Dashboard full preview UI',
     prompt: 'Abra o preview do dashboard <id> e renderize o dashboard completo.',
     expected: [
-      'ChatGPT calls open_dashboard with only { id }.',
+      'ChatGPT calls open_artifact with { kind: "dashboard", id }.',
       'The widget renders an iframe with the full Cognito dashboard.',
       'The iframe URL contains embed=1 and a signed token.',
     ],

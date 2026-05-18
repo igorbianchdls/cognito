@@ -41,7 +41,7 @@ Completed in this phase:
 - `mcp-apps` metadata is standardized around `_meta.ui`.
 - OpenAI-only metadata is injected by the ChatGPT wrapper.
 - `claude-app` has an initial MCP endpoint wrapper over `mcp-apps`.
-- `open_dashboard` renders a dashboard iframe from `{ "id": "..." }` in one tool call.
+- `open_artifact` renders an artifact iframe from `{ "kind": "dashboard", "id": "..." }` in one tool call.
 
 Next extraction step:
 

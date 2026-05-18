@@ -39,7 +39,7 @@ Run `mcp-apps:smoke` before host-specific smoke tests to catch shared UI/resourc
 ## Key Tool
 
 ```txt
-open_dashboard
+open_artifact
 ```
 
-This is the preferred one-call tool when a host should render the full dashboard iframe from `{ "id": "..." }`.
+This is the preferred one-call tool when a host should render a full artifact iframe from `{ "kind": "dashboard", "id": "..." }`.

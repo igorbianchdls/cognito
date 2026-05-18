@@ -6,7 +6,8 @@ This product owns the host-agnostic pieces that can be reused by Claude, ChatGPT
 
 - `ui://widget/dashboard-v4.html` resource
 - `dashboards` list/search tool
-- `open_dashboard` one-call full dashboard tool
+- `open_artifact` one-call full artifact tool
+- `artifact_authoring` artifact create/edit tool
 - dashboard embed URL helpers
 - dashboard/ecommerce/marketing/SQL result widget
 - widget source and built HTML
@@ -31,7 +32,7 @@ The smoke test validates:
 - built widget HTML
 - MCP Apps resource metadata
 - absence of OpenAI-only metadata in the shared layer
-- `dashboards` and `open_dashboard` registration source
+- `dashboards`, `open_artifact`, and `artifact_authoring` registration source
 - widget runtime globals
 
 See also:

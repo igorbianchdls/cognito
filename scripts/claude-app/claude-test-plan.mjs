@@ -33,7 +33,7 @@ const checks = [
     title: 'Interactive dashboard',
     prompt: 'Abra o dashboard <id> como app interativo.',
     expected: [
-      'Claude calls open_dashboard with only { id }.',
+      'Claude calls open_artifact with { kind: "dashboard", id }.',
       'The MCP Apps widget opens.',
       'The widget renders the full Cognito dashboard iframe.',
       'The iframe URL contains embed=1 and a signed token.',

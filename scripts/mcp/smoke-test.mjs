@@ -67,21 +67,25 @@ console.log(`initialize ok: ${initialize.serverInfo.name}@${initialize.serverInf
 
 const toolsList = await callMcp('tools/list')
 const toolNames = (toolsList?.tools || []).map((tool) => tool.name)
-assert(toolNames.includes('dashboard_get_contract'), 'tools/list missing dashboard_get_contract')
-assert(toolNames.includes('dashboard_create'), 'tools/list missing dashboard_create')
 assert(toolNames.includes('artifact_authoring'), 'tools/list missing artifact_authoring')
+assert(!toolNames.includes('dashboard_get_contract'), 'tools/list should not expose dashboard_get_contract')
+assert(!toolNames.includes('dashboard_create'), 'tools/list should not expose dashboard_create')
+assert(!toolNames.includes('dashboard_patch'), 'tools/list should not expose dashboard_patch')
 console.log(`tools/list ok: ${toolNames.join(', ')}`)
 
 const contract = await callMcp('tools/call', {
-  name: 'dashboard_get_contract',
+  name: 'artifact_authoring',
   arguments: {
+    kind: 'dashboard',
+    action: 'get_contract',
     include_example: true,
   },
 })
 const structuredContract = contract?.structuredContent
-assert(structuredContract?.artifact_type === 'dashboard', 'dashboard_get_contract returned invalid contract')
-assert(typeof structuredContract?.example_source === 'string', 'dashboard_get_contract missing example_source')
-console.log('dashboard_get_contract ok')
+assert(structuredContract?.kind === 'dashboard', 'artifact_authoring dashboard contract returned invalid kind')
+assert(structuredContract?.contract?.artifact_type === 'dashboard', 'artifact_authoring returned invalid dashboard contract')
+assert(typeof structuredContract?.contract?.example_source === 'string', 'artifact_authoring missing dashboard example_source')
+console.log('artifact_authoring dashboard contract ok')
 
 const reportContract = await callMcp('tools/call', {
   name: 'artifact_authoring',

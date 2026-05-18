@@ -78,7 +78,7 @@ The iframe renders dashboard cards
 
 ```txt
 User asks for a dashboard preview
-ChatGPT calls open_dashboard with only { id }
+ChatGPT calls open_artifact with { kind: "dashboard", id }
 The iframe renders the full dashboard
 ```
 
@@ -120,7 +120,7 @@ Dashboard tools include `embed_url` where a dashboard id is available:
 
 ```txt
 dashboards -> dashboards[].embed_url
-open_dashboard -> reads and renders a dashboard from { id } in one tool call
+open_artifact -> reads and renders a dashboard from { kind: "dashboard", id } in one tool call
 ```
 
 Generate a token for testing:
@@ -183,8 +183,8 @@ MCP Apps widget metadata
 widget CSP domains
 POST /api/chatgpt-app/embed-token
 tools/call dashboards
-tools/call open_dashboard
-open_dashboard dashboard.embed_url
+tools/call open_artifact
+open_artifact dashboard.embed_url
 dashboards dashboards[].embed_url when dashboards exist
 ```
 
@@ -212,7 +212,7 @@ Abra o preview do dashboard <id> e renderize o dashboard completo.
 Expected:
 
 ```txt
-open_dashboard
+open_artifact
 Widget renders the Cognito dashboard in an iframe.
 The iframe URL contains embed=1 and a signed token.
 ```
