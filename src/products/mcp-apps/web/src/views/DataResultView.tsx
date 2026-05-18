@@ -32,7 +32,7 @@ function getLiquidValueColumn(columns: string[], rows: DataRow[]) {
   return explicitLiquidColumn || getPrimaryMoneyColumn(columns, rows)
 }
 
-function buildTableSubtitle(data: DataResultStructuredContent, rows: DataRow[], columns: string[]) {
+function buildResultDescription(data: DataResultStructuredContent, rows: DataRow[], columns: string[]) {
   const count = typeof data.count === 'number' ? data.count : rows.length
   const liquidValueColumn = getLiquidValueColumn(columns, rows)
   const parts = [`${formatNumber(count)} registros`]
@@ -49,21 +49,15 @@ export function DataResultView({ data }: DataResultViewProps) {
   const columns = getColumns(data, rows)
   const toolVisual = getToolVisual(data.tool)
   const tableTitle = data.title || 'Resultado'
-  const tableSubtitle = buildTableSubtitle(data, rows, columns)
-  const description = [
-    data.action ? `Acao: ${data.action}` : null,
-    data.resource ? `Recurso: ${data.resource}` : null,
-    typeof data.count === 'number' ? `${data.count} registros` : null,
-  ].filter(Boolean).join(' · ')
+  const description = buildResultDescription(data, rows, columns)
 
   if (!rows.length) {
     return (
       <ResultShell
-        eyebrow={toolVisual.label}
         icon={toolVisual.icon}
         tone={toolVisual.tone}
         title={tableTitle}
-        description={description || 'A tool retornou uma resposta estruturada.'}
+        description={description}
       >
         <EmptyState title="Sem linhas" description="A tool retornou uma tabela vazia." />
       </ResultShell>
@@ -72,13 +66,12 @@ export function DataResultView({ data }: DataResultViewProps) {
 
   return (
     <ResultShell
-      eyebrow={toolVisual.label}
       icon={toolVisual.icon}
       tone={toolVisual.tone}
       title={tableTitle}
-      description={description || 'Resultado estruturado da tool.'}
+      description={description}
     >
-      <DataTable rows={rows} columns={columns} title={tableTitle} subtitle={tableSubtitle} />
+      <DataTable rows={rows} columns={columns} title={tableTitle} />
     </ResultShell>
   )
 }

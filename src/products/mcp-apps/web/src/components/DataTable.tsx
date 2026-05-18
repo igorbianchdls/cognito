@@ -9,13 +9,12 @@ type DataTableProps = {
   rows: DataRow[]
   columns: string[]
   title: string
-  subtitle?: string
 }
 
 const pageSizeOptions = [25, 50, 100]
 const defaultPageSize = 25
 
-export function DataTable({ rows, columns, title, subtitle }: DataTableProps) {
+export function DataTable({ rows, columns, title }: DataTableProps) {
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(defaultPageSize)
 
@@ -44,7 +43,6 @@ export function DataTable({ rows, columns, title, subtitle }: DataTableProps) {
       <div className="result-card__header">
         <div className="result-card__title">
           <h2>{title}</h2>
-          {subtitle ? <p>{subtitle}</p> : null}
         </div>
       </div>
       <div className="table-scroll">
