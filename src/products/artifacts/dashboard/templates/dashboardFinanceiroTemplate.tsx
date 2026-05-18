@@ -14,8 +14,8 @@ const FINANCEIRO_VARIANT = {
 function buildFinanceiroDashboardSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('financeiro')
   return `<Dashboard id="overview" title="${FINANCEIRO_VARIANT.title}" theme="${resolvedThemeName}" chartPalette="teal">
-        <Vertical gap={18} style={{ width: '100%', minHeight: '100%', padding: 32, backgroundColor: theme.pageBg }}>
-          <Horizontal gap={18}>
+        <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 18, width: '100%', minHeight: '100%', padding: 32, backgroundColor: theme.pageBg }}>
+          <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'row', gap: 18 }}>
               <header style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24, padding: 24, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: '58%' }}>
                   <span style={{ display: 'inline-flex', width: 'fit-content', alignItems: 'center', borderRadius: 999, border: '1px solid ' + theme.accentBorder, backgroundColor: theme.accentSurface, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: theme.accentText }}>Cash Control</span>
@@ -41,10 +41,10 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   />
                 </div>
               </header>
-          </Horizontal>
+          </section>
 
-          <Horizontal columns={12} rowHeight={18} gap={16}>
-            <Card id="financeiro-filter-status" span={4} rows={6} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 16, alignItems: 'stretch' }}>
+            <article id="financeiro-filter-status" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 108, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <Text variant="eyebrow">Filtro</Text>
                 <Text as="h2" variant="section-title-sm">Status</Text>
                 <Filter
@@ -66,9 +66,9 @@ function buildFinanceiroDashboardSource(themeName: string) {
                 >
                   <Select />
                 </Filter>
-              </Card>
+              </article>
 
-            <Card id="financeiro-filter-categoria" span={4} rows={6} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <article id="financeiro-filter-categoria" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 108, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <Text variant="eyebrow">Filtro</Text>
                 <Text as="h2" variant="section-title-sm">Categoria despesa</Text>
                 <Filter
@@ -91,9 +91,9 @@ function buildFinanceiroDashboardSource(themeName: string) {
                 >
                   <Select />
                 </Filter>
-              </Card>
+              </article>
 
-            <Card id="financeiro-filter-fornecedor" span={4} rows={6} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <article id="financeiro-filter-fornecedor" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 108, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <Text variant="eyebrow">Filtro</Text>
                 <Text as="h2" variant="section-title-sm">Fornecedor</Text>
                 <Filter
@@ -116,11 +116,11 @@ function buildFinanceiroDashboardSource(themeName: string) {
                 >
                   <Select />
                 </Filter>
-              </Card>
-          </Horizontal>
+              </article>
+          </section>
 
-          <Horizontal columns={12} rowHeight={18} gap={16}>
-            <Card id="financeiro-kpi-ar" span={3} rows={4} variant="kpi" style={{ height: '100%' }}>
+          <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 16, alignItems: 'stretch' }}>
+            <article id="financeiro-kpi-ar" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}>
                 <KPI
                   title="Contas a receber"
                   dataQuery={{ query: \`SELECT COALESCE(SUM(cr.valor_liquido), 0)::float AS value FROM financeiro.contas_receber cr WHERE 1=1 {{filters}}\`, limit: 1 }}
@@ -129,8 +129,8 @@ function buildFinanceiroDashboardSource(themeName: string) {
                 >
                   <KPICompare />
                 </KPI>
-              </Card>
-            <Card id="financeiro-kpi-ap" span={3} rows={4} variant="kpi" style={{ height: '100%' }}>
+              </article>
+            <article id="financeiro-kpi-ap" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}>
                 <KPI
                   title="Contas a pagar"
                   dataQuery={{ query: \`SELECT COALESCE(SUM(cp.valor_liquido), 0)::float AS value FROM financeiro.contas_pagar cp WHERE 1=1 {{filters}}\`, limit: 1 }}
@@ -139,8 +139,8 @@ function buildFinanceiroDashboardSource(themeName: string) {
                 >
                   <KPICompare />
                 </KPI>
-              </Card>
-            <Card id="financeiro-kpi-geracao" span={3} rows={4} variant="kpi" style={{ height: '100%' }}>
+              </article>
+            <article id="financeiro-kpi-geracao" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}>
                 <KPI
                   title="Geracao liquida"
                   dataQuery={{
@@ -157,8 +157,8 @@ function buildFinanceiroDashboardSource(themeName: string) {
                 >
                   <KPICompare />
                 </KPI>
-              </Card>
-            <Card id="financeiro-kpi-titulos" span={3} rows={4} variant="kpi" style={{ height: '100%' }}>
+              </article>
+            <article id="financeiro-kpi-titulos" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}>
                 <KPI
                   title="Titulos em AP"
                   dataQuery={{ query: \`SELECT COUNT(*)::float AS value FROM financeiro.contas_pagar cp WHERE 1=1 {{filters}}\`, limit: 1 }}
@@ -167,11 +167,11 @@ function buildFinanceiroDashboardSource(themeName: string) {
                 >
                   <KPICompare />
                 </KPI>
-              </Card>
-          </Horizontal>
+              </article>
+          </section>
 
-          <Horizontal columns={12} rowHeight={18} gap={18}>
-            <Card id="financeiro-chart-ap" span={7} rows={12} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
+            <article id="financeiro-chart-ap" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 7', minHeight: 216, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <Text variant="eyebrow">AP exposure</Text>
                   <Text as="h2" variant="section-title">Contas a pagar por fornecedor</Text>
@@ -202,9 +202,9 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   ]}
                   yAxis={{ width: 86 }}
                 />
-              </Card>
+              </article>
 
-            <Card id="financeiro-chart-status" span={5} rows={12} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <article id="financeiro-chart-status" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 5', minHeight: 216, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <Text variant="eyebrow">Status mix</Text>
                   <Text as="h2" variant="section-title">Titulos por status</Text>
@@ -234,11 +234,11 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   ]}
                   recharts={{ innerRadius: 54, outerRadius: 92, paddingAngle: 2, showLabels: false }}
                 />
-              </Card>
-          </Horizontal>
+              </article>
+          </section>
 
-          <Horizontal columns={12} rowHeight={18} gap={18}>
-            <Card id="financeiro-chart-ar" span={7} rows={12} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
+            <article id="financeiro-chart-ar" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 7', minHeight: 216, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <Text variant="eyebrow">AR trend</Text>
                   <Text as="h2" variant="section-title">Recebimentos por mes</Text>
@@ -269,9 +269,9 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   yAxis={{ width: 86 }}
                   recharts={{ showDots: false, singleSeriesGradient: true }}
                 />
-              </Card>
+              </article>
 
-            <Card id="financeiro-chart-clientes" span={5} rows={12} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <article id="financeiro-chart-clientes" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 5', minHeight: 216, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <Text variant="eyebrow">AR coverage</Text>
                   <Text as="h2" variant="section-title">Recebimentos por cliente</Text>
@@ -301,11 +301,11 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   ]}
                   yAxis={{ width: 86 }}
                 />
-              </Card>
-          </Horizontal>
+              </article>
+          </section>
 
-          <Horizontal columns={12} rowHeight={18} gap={18}>
-            <Card id="financeiro-table-ap" span={8} rows={16} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
+            <article id="financeiro-table-ap" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 8', minHeight: 288, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <Text variant="eyebrow">Table</Text>
                   <Text as="h2" variant="section-title">Titulos de contas a pagar</Text>
@@ -348,9 +348,9 @@ function buildFinanceiroDashboardSource(themeName: string) {
                     { accessorKey: 'valor_liquido', header: 'Valor', format: 'currency', align: 'right', headerAlign: 'right' },
                   ]}
                 />
-              </Card>
+              </article>
 
-            <Card id="financeiro-pivot-status" span={4} rows={16} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <article id="financeiro-pivot-status" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 288, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <Text variant="eyebrow">Pivot</Text>
                   <Text as="h2" variant="section-title">Fornecedor por status</Text>
@@ -388,11 +388,11 @@ function buildFinanceiroDashboardSource(themeName: string) {
                   columns={[{ field: 'status', label: 'Status' }]}
                   values={[{ field: 'valor_liquido', label: 'Valor', aggregate: 'sum', format: 'currency' }]}
                 />
-              </Card>
-          </Horizontal>
+              </article>
+          </section>
 
-          <Horizontal columns={12} rowHeight={18} gap={18}>
-            <Card id="financeiro-insight-liquidez" span={4} rows={7} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
+            <article id="financeiro-insight-liquidez" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 126, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <Text as="h2" variant="section-title-sm">Liquidez</Text>
                 </div>
@@ -403,9 +403,9 @@ function buildFinanceiroDashboardSource(themeName: string) {
                     { text: 'A distancia entre AP e AR precisa ser lida junto com vencimento para separar risco de liquidez de simples concentracao pontual.' },
                   ]}
                 />
-              </Card>
+              </article>
 
-            <Card id="financeiro-insight-concentracao" span={4} rows={7} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <article id="financeiro-insight-concentracao" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 126, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <Text as="h2" variant="section-title-sm">Concentracao</Text>
                 </div>
@@ -416,9 +416,9 @@ function buildFinanceiroDashboardSource(themeName: string) {
                     { text: 'Fornecedores muito concentrados aumentam a sensibilidade do caixa a renegociacao, atraso e risco de vencimento relevante.' },
                   ]}
                 />
-              </Card>
+              </article>
 
-            <Card id="financeiro-insight-status" span={4} rows={7} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <article id="financeiro-insight-status" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 126, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <Text as="h2" variant="section-title-sm">Status operacional</Text>
                 </div>
@@ -429,18 +429,18 @@ function buildFinanceiroDashboardSource(themeName: string) {
                     { text: 'Titulos vencidos, parciais ou concentrados em poucas categorias tendem a esconder pressao operacional que nao aparece apenas no agregado monetario.' },
                   ]}
                 />
-              </Card>
-          </Horizontal>
+              </article>
+          </section>
 
-          <Horizontal columns={12} rowHeight={18} gap={18}>
-            <Card id="financeiro-footer" span={12} rows={3}>
+          <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
+            <article id="financeiro-footer" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 12', minHeight: 54 }}>
               <footer style={{ height: '100%', display: 'flex', justifyContent: 'space-between', gap: 18, padding: '18px 22px', borderRadius: 22, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder }}>
                 <Text variant="small-muted">Template JSX financeiro com AP, AR e geracao de caixa em uma unica pagina, com filtros dedicados e blocos operacionais sequenciais.</Text>
                 <Text variant="small-muted">Theme ativo: ${resolvedThemeName}</Text>
               </footer>
-            </Card>
-          </Horizontal>
-        </Vertical>
+            </article>
+          </section>
+        </div>
     </Dashboard>`
 }
 

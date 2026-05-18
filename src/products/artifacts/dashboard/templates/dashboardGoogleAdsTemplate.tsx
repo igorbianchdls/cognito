@@ -14,8 +14,8 @@ const GOOGLEADS_VARIANT = {
 function buildGoogleAdsDashboardSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('googleads')
   return `<Dashboard id="overview" title="${GOOGLEADS_VARIANT.title}" theme="${resolvedThemeName}" chartPalette="orange">
-        <Vertical gap={18} style={{ width: '100%', minHeight: '100%', padding: 32, backgroundColor: theme.pageBg }}>
-          <Horizontal gap={18}>
+        <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 18, width: '100%', minHeight: '100%', padding: 32, backgroundColor: theme.pageBg }}>
+          <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'row', gap: 18 }}>
               <header style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24, padding: 24, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: '64%' }}>
                   <span style={{ display: 'inline-flex', width: 'fit-content', alignItems: 'center', borderRadius: 999, border: '1px solid ' + theme.accentBorder, backgroundColor: theme.accentSurface, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: theme.accentText }}>Paid Search</span>
@@ -40,10 +40,10 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                   />
                 </div>
               </header>
-          </Horizontal>
+          </section>
 
-          <Horizontal columns={12} rowHeight={18} gap={18}>
-            <Card id="googleads-filters" span={8} rows={6} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
+            <article id="googleads-filters" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 8', minHeight: 108, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <Text variant="eyebrow">Filters</Text>
                   <Text as="h2" variant="section-title">Conta e grupo</Text>
@@ -92,16 +92,16 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                     <Select />
                   </Filter>
                 </div>
-              </Card>
+              </article>
 
-            <Card id="googleads-reading" span={4} rows={6} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <article id="googleads-reading" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 108, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <Text variant="eyebrow">Leitura esperada</Text>
                 <Text variant="body-muted">Comece por volume e retorno, depois confronte CTR, CVR e CPA para separar problema de demanda, criativo ou pagina.</Text>
-              </Card>
-          </Horizontal>
+              </article>
+          </section>
 
-          <Horizontal columns={12} rowHeight={18} gap={16}>
-            <Card id="googleads-kpi-gasto" span={3} rows={4} variant="kpi" style={{ height: '100%' }}>
+          <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 16, alignItems: 'stretch' }}>
+            <article id="googleads-kpi-gasto" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}>
                 <KPI
                   title="Gasto"
                   dataQuery={{
@@ -119,8 +119,8 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                 >
                   <KPICompare />
                 </KPI>
-              </Card>
-            <Card id="googleads-kpi-receita" span={3} rows={4} variant="kpi" style={{ height: '100%' }}>
+              </article>
+            <article id="googleads-kpi-receita" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}>
                 <KPI
                   title="Receita atribuida"
                   dataQuery={{
@@ -138,8 +138,8 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                 >
                   <KPICompare />
                 </KPI>
-              </Card>
-            <Card id="googleads-kpi-roas" span={3} rows={4} variant="kpi" style={{ height: '100%' }}>
+              </article>
+            <article id="googleads-kpi-roas" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}>
                 <KPI
                   title="ROAS"
                   dataQuery={{
@@ -158,8 +158,8 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                 >
                   <KPICompare />
                 </KPI>
-              </Card>
-            <Card id="googleads-kpi-cpa" span={3} rows={4} variant="kpi" style={{ height: '100%' }}>
+              </article>
+            <article id="googleads-kpi-cpa" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}>
                 <KPI
                   title="CPA"
                   dataQuery={{
@@ -178,25 +178,25 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                 >
                   <KPICompare />
                 </KPI>
-              </Card>
-          </Horizontal>
+              </article>
+          </section>
 
           <Tabs defaultValue="performance">
-            <Vertical gap={18}>
-              <Horizontal columns={12} rowHeight={18} gap={10}>
-                <Card id="googleads-tabs" span={12} rows={2}>
+            <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 18 }}>
+              <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 10, alignItems: 'stretch' }}>
+                <article id="googleads-tabs" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 12', minHeight: 36 }}>
                   <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                     <Tab value="performance">Performance</Tab>
                     <Tab value="acquisition">Aquisicao</Tab>
                     <Tab value="details">Detalhamento</Tab>
                   </div>
-                </Card>
-              </Horizontal>
+                </article>
+              </section>
 
               <TabPanel value="performance">
-                <Vertical gap={18}>
-                  <Horizontal columns={12} rowHeight={18} gap={18}>
-                    <Card id="googleads-performance-spend" span={7} rows={12} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 18 }}>
+                  <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
+                    <article id="googleads-performance-spend" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 7', minHeight: 216, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <Text variant="eyebrow">Top spend</Text>
                           <Text as="h2" variant="section-title">Gasto por campanha</Text>
@@ -227,9 +227,9 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                           ]}
                           yAxis={{ width: 86 }}
                         />
-                      </Card>
+                      </article>
 
-                    <Card id="googleads-performance-ctr" span={5} rows={12} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <article id="googleads-performance-ctr" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 5', minHeight: 216, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <Text variant="eyebrow">Rate quality</Text>
                           <Text as="h2" variant="section-title">CTR por conta</Text>
@@ -260,15 +260,15 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                           ]}
                           yAxis={{ width: 86 }}
                         />
-                      </Card>
-                  </Horizontal>
-                </Vertical>
+                      </article>
+                  </section>
+                </div>
               </TabPanel>
 
               <TabPanel value="acquisition">
-                <Vertical gap={18}>
-                  <Horizontal columns={12} rowHeight={18} gap={18}>
-                    <Card id="googleads-acquisition-trend" span={7} rows={12} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 18 }}>
+                  <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
+                    <article id="googleads-acquisition-trend" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 7', minHeight: 216, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <Text variant="eyebrow">Trend</Text>
                           <Text as="h2" variant="section-title">Gasto por mes</Text>
@@ -300,11 +300,11 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                           yAxis={{ width: 86 }}
                           recharts={{ showDots: false, singleSeriesGradient: true }}
                         />
-                      </Card>
+                      </article>
 
-                    <Card id="googleads-acquisition-side" span={5} rows={12}>
-                      <Vertical gap={18} style={{ height: '100%' }}>
-                        <Card id="googleads-acquisition-cvr" grow={1} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <article id="googleads-acquisition-side" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 5', minHeight: 216 }}>
+                      <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 18, height: '100%' }}>
+                        <article id="googleads-acquisition-cvr" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', flex: 1, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                               <Text variant="eyebrow">Conversion quality</Text>
                               <Text as="h2" variant="section-title">CVR por mes</Text>
@@ -333,9 +333,9 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                                 { dataKey: 'value', label: 'CVR' },
                               ]}
                             />
-                          </Card>
+                          </article>
 
-                        <Card id="googleads-acquisition-insights" grow={1} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                        <article id="googleads-acquisition-insights" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', flex: 1, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                               <Text as="h2" variant="section-title-sm">Leituras operacionais</Text>
                               <Text variant="small-muted">Perguntas para separar problema de volume, relevancia ou eficiencia de pagina.</Text>
@@ -349,17 +349,17 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                                 { text: 'Contas com muito clique e pouca receita atribuida precisam ser lidas junto com conversao e valor medio do pedido.' },
                               ]}
                             />
-                          </Card>
-                      </Vertical>
-                    </Card>
-                  </Horizontal>
-                </Vertical>
+                          </article>
+                      </div>
+                    </article>
+                  </section>
+                </div>
               </TabPanel>
 
               <TabPanel value="details">
-                <Vertical gap={18}>
-                  <Horizontal columns={12} rowHeight={18} gap={18}>
-                    <Card id="googleads-details-table" span={8} rows={16} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 18 }}>
+                  <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
+                    <article id="googleads-details-table" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 8', minHeight: 288, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <Text variant="eyebrow">Table</Text>
                           <Text as="h2" variant="section-title">Campanhas no detalhe</Text>
@@ -402,9 +402,9 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                             { accessorKey: 'roas', header: 'ROAS', format: 'number', align: 'right', headerAlign: 'right' },
                           ]}
                         />
-                      </Card>
+                      </article>
 
-                    <Card id="googleads-details-pivot" span={4} rows={16} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <article id="googleads-details-pivot" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 288, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <Text variant="eyebrow">Pivot</Text>
                           <Text as="h2" variant="section-title">Conta por campanha</Text>
@@ -442,22 +442,22 @@ function buildGoogleAdsDashboardSource(themeName: string) {
                           columns={[{ field: 'campanha', label: 'Campanha' }]}
                           values={[{ field: 'gasto', label: 'Gasto', aggregate: 'sum', format: 'currency' }]}
                         />
-                      </Card>
-                  </Horizontal>
-                </Vertical>
+                      </article>
+                  </section>
+                </div>
               </TabPanel>
-            </Vertical>
+            </div>
           </Tabs>
 
-          <Horizontal columns={12} rowHeight={18} gap={18}>
-            <Card id="googleads-footer" span={12} rows={3}>
+          <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
+            <article id="googleads-footer" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 12', minHeight: 54 }}>
               <footer style={{ height: '100%', display: 'flex', justifyContent: 'space-between', gap: 18, padding: '18px 22px', borderRadius: 22, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder }}>
                 <Text variant="small-muted">Template JSX para Google Ads com volume, retorno e eficiencia em um unico arquivo TSX no formato novo do dashboard.</Text>
                 <Text variant="small-muted">Theme ativo: ${resolvedThemeName}</Text>
               </footer>
-            </Card>
-          </Horizontal>
-        </Vertical>
+            </article>
+          </section>
+        </div>
     </Dashboard>`
 }
 

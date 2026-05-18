@@ -14,8 +14,8 @@ const SHOPIFY_VARIANT = {
 function buildShopifyDashboardSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('shopify')
   return `<Dashboard id="overview" title="${SHOPIFY_VARIANT.title}" theme="${resolvedThemeName}" chartPalette="red">
-        <Vertical gap={18} style={{ width: '100%', minHeight: '100%', padding: 32, backgroundColor: theme.pageBg }}>
-          <Horizontal gap={18}>
+        <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 18, width: '100%', minHeight: '100%', padding: 32, backgroundColor: theme.pageBg }}>
+          <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'row', gap: 18 }}>
           <header style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24, padding: 24, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: '64%' }}>
               <span style={{ display: 'inline-flex', width: 'fit-content', alignItems: 'center', borderRadius: 999, border: '1px solid ' + theme.accentBorder, backgroundColor: theme.accentSurface, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: theme.accentText }}>E-commerce Core</span>
@@ -39,10 +39,10 @@ function buildShopifyDashboardSource(themeName: string) {
               />
             </div>
           </header>
-          </Horizontal>
+          </section>
 
-          <Horizontal columns={12} rowHeight={18} gap={18}>
-            <Card id="shopify-filters" span={8} rows={6} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
+            <article id="shopify-filters" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 8', minHeight: 108, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <Text variant="eyebrow">Filters</Text>
                 <Text as="h2" variant="section-title">Loja e status</Text>
@@ -89,37 +89,37 @@ function buildShopifyDashboardSource(themeName: string) {
                   <Select />
                 </Filter>
               </div>
-            </Card>
+            </article>
 
-            <Card id="shopify-reading" span={4} rows={6} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <article id="shopify-reading" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 108, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <Text variant="eyebrow">Leitura esperada</Text>
               <Text variant="body-muted">Primeiro confira GMV e pedidos, depois veja se o mix de pagamento e fulfillment esta sustentando a operacao sem vazamento em reembolso.</Text>
-            </Card>
-          </Horizontal>
+            </article>
+          </section>
 
-          <Horizontal columns={12} rowHeight={18} gap={16}>
-            <Card id="shopify-kpi-gmv" span={3} rows={4} variant="kpi" style={{ height: '100%' }}><KPI title="GMV" dataQuery={{ query: \`SELECT COALESCE(SUM(src.valor_total), 0)::float AS value FROM ecommerce.pedidos src WHERE src.plataforma = 'shopify' {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period"><KPICompare /></KPI></Card>
-            <Card id="shopify-kpi-pedidos" span={3} rows={4} variant="kpi" style={{ height: '100%' }}><KPI title="Pedidos" dataQuery={{ query: \`SELECT COUNT(*)::float AS value FROM ecommerce.pedidos src WHERE src.plataforma = 'shopify' {{filters}}\`, limit: 1 }} format="number" comparisonMode="previous_period"><KPICompare /></KPI></Card>
-            <Card id="shopify-kpi-ticket" span={3} rows={4} variant="kpi" style={{ height: '100%' }}><KPI title="Ticket medio" dataQuery={{ query: \`SELECT COALESCE(AVG(src.valor_total), 0)::float AS value FROM ecommerce.pedidos src WHERE src.plataforma = 'shopify' {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period"><KPICompare /></KPI></Card>
-            <Card id="shopify-kpi-reembolsos" span={3} rows={4} variant="kpi" style={{ height: '100%' }}><KPI title="Reembolsos" dataQuery={{ query: \`SELECT COALESCE(SUM(src.valor_reembolsado), 0)::float AS value FROM ecommerce.pedidos src WHERE src.plataforma = 'shopify' {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period"><KPICompare /></KPI></Card>
-          </Horizontal>
+          <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 16, alignItems: 'stretch' }}>
+            <article id="shopify-kpi-gmv" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}><KPI title="GMV" dataQuery={{ query: \`SELECT COALESCE(SUM(src.valor_total), 0)::float AS value FROM ecommerce.pedidos src WHERE src.plataforma = 'shopify' {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period"><KPICompare /></KPI></article>
+            <article id="shopify-kpi-pedidos" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}><KPI title="Pedidos" dataQuery={{ query: \`SELECT COUNT(*)::float AS value FROM ecommerce.pedidos src WHERE src.plataforma = 'shopify' {{filters}}\`, limit: 1 }} format="number" comparisonMode="previous_period"><KPICompare /></KPI></article>
+            <article id="shopify-kpi-ticket" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}><KPI title="Ticket medio" dataQuery={{ query: \`SELECT COALESCE(AVG(src.valor_total), 0)::float AS value FROM ecommerce.pedidos src WHERE src.plataforma = 'shopify' {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period"><KPICompare /></KPI></article>
+            <article id="shopify-kpi-reembolsos" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 3', minHeight: 72, height: '100%' }}><KPI title="Reembolsos" dataQuery={{ query: \`SELECT COALESCE(SUM(src.valor_reembolsado), 0)::float AS value FROM ecommerce.pedidos src WHERE src.plataforma = 'shopify' {{filters}}\`, limit: 1 }} format="currency" comparisonMode="previous_period"><KPICompare /></KPI></article>
+          </section>
 
           <Tabs defaultValue="sales">
-            <Vertical gap={18}>
-              <Horizontal columns={12} rowHeight={18} gap={10}>
-                <Card id="shopify-tabs" span={12} rows={2}>
+            <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 18 }}>
+              <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 10, alignItems: 'stretch' }}>
+                <article id="shopify-tabs" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 12', minHeight: 36 }}>
                   <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                     <Tab value="sales">Sales</Tab>
                     <Tab value="operations">Operations</Tab>
                     <Tab value="details">Detalhamento</Tab>
                   </div>
-                </Card>
-              </Horizontal>
+                </article>
+              </section>
 
             <TabPanel value="sales">
-              <Vertical gap={18}>
-              <Horizontal columns={12} rowHeight={18} gap={18}>
-                <Card id="shopify-sales-gmv" span={7} rows={12} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 18 }}>
+              <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
+                <article id="shopify-sales-gmv" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 7', minHeight: 216, display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <Text variant="eyebrow">Store mix</Text>
                     <Text as="h2" variant="section-title">GMV por loja</Text>
@@ -149,9 +149,9 @@ function buildShopifyDashboardSource(themeName: string) {
                     ]}
                     yAxis={{ width: 86 }}
                   />
-                </Card>
+                </article>
 
-                <Card id="shopify-sales-payment" span={5} rows={12} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <article id="shopify-sales-payment" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 5', minHeight: 216, display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <Text variant="eyebrow">Payment mix</Text>
                     <Text as="h2" variant="section-title">Pedidos por status de pagamento</Text>
@@ -182,15 +182,15 @@ function buildShopifyDashboardSource(themeName: string) {
                     ]}
                     recharts={{ innerRadius: 54, outerRadius: 92, paddingAngle: 2, showLabels: false }}
                   />
-                </Card>
-              </Horizontal>
-              </Vertical>
+                </article>
+              </section>
+              </div>
             </TabPanel>
 
             <TabPanel value="operations">
-              <Vertical gap={18}>
-              <Horizontal columns={12} rowHeight={18} gap={18}>
-                <Card id="shopify-ops-trend" span={7} rows={12} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 18 }}>
+              <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
+                <article id="shopify-ops-trend" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 7', minHeight: 216, display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <Text variant="eyebrow">Trend</Text>
                     <Text as="h2" variant="section-title">GMV por mes</Text>
@@ -221,11 +221,11 @@ function buildShopifyDashboardSource(themeName: string) {
                     yAxis={{ width: 86 }}
                     recharts={{ showDots: false, singleSeriesGradient: true }}
                   />
-                </Card>
+                </article>
 
-                <Card id="shopify-ops-side" span={5} rows={12}>
-                <Vertical gap={18} style={{ height: '100%' }}>
-                  <Card id="shopify-ops-fulfillment" grow={1} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <article id="shopify-ops-side" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 5', minHeight: 216 }}>
+                <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 18, height: '100%' }}>
+                  <article id="shopify-ops-fulfillment" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       <Text variant="eyebrow">Fulfillment</Text>
                       <Text as="h2" variant="section-title">Pedidos por fulfillment</Text>
@@ -253,8 +253,8 @@ function buildShopifyDashboardSource(themeName: string) {
                         { dataKey: 'value', label: 'Pedidos' },
                       ]}
                     />
-                  </Card>
-                  <Card id="shopify-ops-insights" grow={1} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  </article>
+                  <article id="shopify-ops-insights" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                       <Text as="h2" variant="section-title-sm">Leituras operacionais</Text>
                       <Text variant="small-muted">Perguntas para o time alinhar comercial, pagamento e fulfillment.</Text>
@@ -268,17 +268,17 @@ function buildShopifyDashboardSource(themeName: string) {
                         { text: 'Lojas com ticket maior e reembolso alto pedem leitura de sortimento, frete, promessa comercial e operacao de entrega.' },
                       ]}
                     />
-                  </Card>
-                </Vertical>
-                </Card>
-              </Horizontal>
-              </Vertical>
+                  </article>
+                </div>
+                </article>
+              </section>
+              </div>
             </TabPanel>
 
             <TabPanel value="details">
-              <Vertical gap={18}>
-              <Horizontal columns={12} rowHeight={18} gap={18}>
-                <Card id="shopify-details-table" span={8} rows={16} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 18 }}>
+              <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
+                <article id="shopify-details-table" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 8', minHeight: 288, display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <Text variant="eyebrow">Table</Text>
                     <Text as="h2" variant="section-title">Pedidos no detalhe</Text>
@@ -319,9 +319,9 @@ function buildShopifyDashboardSource(themeName: string) {
                       { accessorKey: 'valor_total', header: 'Valor', format: 'currency', align: 'right', headerAlign: 'right' },
                     ]}
                   />
-                </Card>
+                </article>
 
-                <Card id="shopify-details-pivot" span={4} rows={16} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <article id="shopify-details-pivot" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 288, display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <Text variant="eyebrow">Pivot</Text>
                     <Text as="h2" variant="section-title">Loja por pagamento</Text>
@@ -358,22 +358,22 @@ function buildShopifyDashboardSource(themeName: string) {
                     columns={[{ field: 'status_pagamento', label: 'Pagamento' }]}
                     values={[{ field: 'valor_total', label: 'GMV', aggregate: 'sum', format: 'currency' }]}
                   />
-                </Card>
-              </Horizontal>
-              </Vertical>
+                </article>
+              </section>
+              </div>
             </TabPanel>
-            </Vertical>
+            </div>
           </Tabs>
 
-          <Horizontal columns={12} rowHeight={18} gap={18}>
-            <Card id="shopify-footer" span={12} rows={3}>
+          <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
+            <article id="shopify-footer" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 12', minHeight: 54 }}>
           <footer style={{ height: '100%', display: 'flex', justifyContent: 'space-between', gap: 18, padding: '18px 22px', borderRadius: 22, backgroundColor: theme.surfaceBg, border: '1px solid ' + theme.surfaceBorder }}>
             <Text variant="small-muted">Template JSX para Shopify com leitura comercial e operacional, adaptado do app legado para o formato novo do dashboard.</Text>
             <Text variant="small-muted">Theme ativo: ${resolvedThemeName}</Text>
           </footer>
-            </Card>
-          </Horizontal>
-        </Vertical>
+            </article>
+          </section>
+        </div>
     </Dashboard>`
 }
 

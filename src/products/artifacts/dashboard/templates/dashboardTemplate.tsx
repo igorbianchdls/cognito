@@ -451,41 +451,41 @@ const CLASSIC_GRID_DASHBOARD_VARIANT: StandaloneDashboardVariant = {
 
 function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
   return `<Dashboard id="overview" title="${title}" theme="${themeName}" chartPalette="teal">
-        <Vertical gap={0} width="100%" style={{ minHeight: '100%', backgroundColor: theme.pageBg }}>
+        <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 0, width: '100%', minHeight: '100%', backgroundColor: theme.pageBg }}>
           <header id="classic-header" style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, padding: '20px 24px', borderRadius: theme.cardFrame ? 0 : 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
-            <Vertical gap={8}>
+            <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
               <Text as="h1" variant="page-title-sm">Performance overview with the classic BI layout</Text>
-            </Vertical>
+            </div>
 
-            <Vertical gap={10} style={{ alignItems: 'flex-end', minWidth: 240 }}>
+            <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-end', minWidth: 240 }}>
               <DatePicker
                 table="vendas.pedidos"
                 field="data_pedido"
                 presets={['7d', '30d', 'month', 'quarter']}
               />
-            </Vertical>
+            </div>
           </header>
-          <Grid columns={24} gap={18} rowHeight={16} padding={28} width="100%">
+          <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(24, minmax(0, 1fr))', gap: 18, padding: 28, width: '100%' }}>
 
-          <Card id="classic-insights-v1" span={24} rows={7}>
+          <article id="classic-insights-v1" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 24', minHeight: 112 }}>
             <Insights
               variant="v1"
               title="Insights principais"
               description="Resumo inteligente do que mais importa no seu negocio."
               headerActionLabel="Ver todos os insights"
             />
-          </Card>
+          </article>
 
-          <Card id="classic-insights-v5" span={24} rows={7}>
+          <article id="classic-insights-v5" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 24', minHeight: 112 }}>
             <Insights
               variant="v5"
               title="Alfred encontrou alguns insights importantes"
               description="Analise automatica dos seus dados mais recentes."
               headerActionLabel="Perguntar a IA"
             />
-          </Card>
+          </article>
 
-          <Card id="classic-kpi-receita" span={5} rows={5} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <article id="classic-kpi-receita" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 5', minHeight: 80, height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <Icon
                     name="DollarSign"
@@ -513,9 +513,9 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 >
                   <KPICompare />
                 </KPI>
-          </Card>
+          </article>
 
-          <Card id="classic-kpi-pedidos" span={5} rows={5} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <article id="classic-kpi-pedidos" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 5', minHeight: 80, height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <Icon
                     name="ShoppingCart"
@@ -543,9 +543,9 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 >
                   <KPICompare />
                 </KPI>
-          </Card>
+          </article>
 
-          <Card id="classic-kpi-ticket" span={5} rows={5} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <article id="classic-kpi-ticket" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 5', minHeight: 80, height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <Icon
                     name="Ticket"
@@ -573,9 +573,9 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 >
                   <KPICompare />
                 </KPI>
-          </Card>
+          </article>
 
-          <Card id="classic-kpi-canais" span={5} rows={5} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <article id="classic-kpi-canais" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 5', minHeight: 80, height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <Icon
                     name="Network"
@@ -603,9 +603,9 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 >
                   <KPICompare />
                 </KPI>
-          </Card>
+          </article>
 
-          <Card id="classic-kpi-aprovacao" span={4} rows={5} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <article id="classic-kpi-aprovacao" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 80, height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <Icon
                     name="ShieldCheck"
@@ -633,9 +633,9 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 >
                   <KPICompare />
                 </KPI>
-          </Card>
+          </article>
 
-          <Card id="classic-chart-mix" span={12} rows={12} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <article id="classic-chart-mix" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 12', minHeight: 192, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <Text variant="eyebrow">Receita por canal</Text>
                 <Text as="h2" variant="section-title-md">Mix comercial</Text>
@@ -668,9 +668,9 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 ]}
                 yAxis={{ width: 72 }}
               />
-          </Card>
+          </article>
 
-          <Card id="classic-chart-share" span={12} rows={12} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <article id="classic-chart-share" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 12', minHeight: 192, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <Text variant="eyebrow">Participacao</Text>
                 <Text as="h2" variant="section-title-md">Share por canal</Text>
@@ -704,23 +704,16 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 ]}
                 recharts={{ innerRadius: 56, outerRadius: 96, showLabels: false }}
               />
-          </Card>
+          </article>
 
-          <Card
-            id="classic-chart-tendencia"
-            span={12}
-            rows={12}
-            style={{
-              padding: 22,
+          <article id="classic-chart-tendencia" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 12', minHeight: 192, padding: 22,
               borderRadius: theme.cardFrame ? 0 : 24,
               backgroundColor: theme.surfaceBg,
               border: '1px solid ' + theme.surfaceBorder,
               display: 'flex',
               flexDirection: 'column',
               gap: 14,
-              minHeight: '100%',
-            }}
-          >
+              minHeight: '100%', }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <Text variant="eyebrow">Tendencia diaria</Text>
                 <Text as="h2" variant="section-title-md">Receita ao longo do periodo</Text>
@@ -751,9 +744,9 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 yAxis={{ width: 72 }}
                 recharts={{ showDots: false, singleSeriesGradient: true }}
               />
-          </Card>
+          </article>
 
-          <Card id="classic-table-pedidos" span={12} rows={28} variant="table" style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0, height: '100%' }}>
+          <article id="classic-table-pedidos" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 12', minHeight: 448, display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0, height: '100%' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <Text variant="eyebrow">Detalhamento</Text>
                 <Text as="h2" variant="section-title-md">Pedidos filtrados</Text>
@@ -795,9 +788,9 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 ]}
                 enableExportCsv
               />
-          </Card>
+          </article>
 
-          <Card id="classic-chart-status" span={12} rows={12} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <article id="classic-chart-status" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 12', minHeight: 192, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <Text variant="eyebrow">Status mix</Text>
                 <Text as="h2" variant="section-title-md">Volume por status</Text>
@@ -825,9 +818,9 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                   { dataKey: 'value', label: 'Pedidos' },
                 ]}
               />
-          </Card>
+          </article>
 
-          <Card id="classic-pivot-canal-status" span={12} rows={12} variant="pivot" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <article id="classic-pivot-canal-status" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 12', minHeight: 192, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <Text variant="eyebrow">Cruzamento</Text>
                 <Text as="h2" variant="section-title-md">Receita por canal e status</Text>
@@ -865,9 +858,9 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                 columns={[{ field: 'status', label: 'Status' }]}
                 values={[{ field: 'valor_total', label: 'Receita', aggregate: 'sum', format: 'currency' }]}
               />
-          </Card>
+          </article>
 
-          <Card id="classic-filter-canal" span={8} rows={12} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <article id="classic-filter-canal" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 8', minHeight: 192, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <Text variant="eyebrow">Filtro</Text>
               <Text as="h2" variant="section-title-sm">Canal</Text>
               <Filter
@@ -888,9 +881,9 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                   ORDER BY 2 ASC
                 \`}
               />
-          </Card>
+          </article>
 
-          <Card id="classic-filter-cliente" span={8} rows={12} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <article id="classic-filter-cliente" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 8', minHeight: 192, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <Text variant="eyebrow">Filtro</Text>
               <Text as="h2" variant="section-title-sm">Cliente</Text>
               <Filter
@@ -911,12 +904,12 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                   ORDER BY 2 ASC
                 \`}
               />
-          </Card>
+          </article>
 
-          <Card id="classic-filter-status" span={8} rows={12} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <article id="classic-filter-status" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 8', minHeight: 192, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
               <Text variant="eyebrow">Filtro</Text>
               <Text as="h2" variant="section-title-sm">Seletores</Text>
-              <Vertical gap={10}>
+              <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <Filter
                   label="Status"
                   table="vendas.pedidos"
@@ -966,10 +959,10 @@ function buildClassicDashboardTemplateMarkup(title: string, themeName: string) {
                     ORDER BY 2 ASC
                   \`}
                 />
-              </Vertical>
-          </Card>
-          </Grid>
-        </Vertical>
+              </div>
+          </article>
+          </section>
+        </div>
 </Dashboard>`
 }
 

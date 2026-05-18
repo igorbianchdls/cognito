@@ -680,16 +680,16 @@ AND ({{centro_lucro_id}}::int[] IS NULL OR cr.centro_lucro_id = ANY({{centro_luc
 - Never create `tree`, `buildTree`, `buildSource`, markers, or helper files per dashboard.
 - For new dashboards, do not use `DashboardTemplate` or `Theme` as authored root structure.
 - For new dashboards, never omit `Dashboard.id` or `Dashboard.title` on the root node.
-- For new dashboards in this profile, keep the main page `header` outside the `Grid`, and use `Grid` as the main authored structural layout for resizable content blocks.
-- Every direct structural child of `Grid` must declare `id`, `span`, and `rows`.
+- For new dashboards in this profile, use standard HTML/JSX containers for layout: `main`, `header`, `section`, `article`, `aside`, and `div`.
+- For new dashboards, do not use layout-only runtime containers such as `Grid`, `Vertical`, `Horizontal`, `Panel`, or `Card`.
+- Build dashboard layout with normal CSS in `style`, especially `display`, `gridTemplateColumns`, `gridColumn`, `gap`, `padding`, `minHeight`, `height`, `width`, and flex properties.
 - Use the `dashboard-classic` family only as a reference for validated structural shape and runtime-safe composition, not as a requirement to copy the same business content, copy, or exact arrangement literally.
-- If a block is expected to be resizable in the workspace, never place it as a loose `Card` under `Vertical` or `Horizontal`.
-- Resizable blocks must live inside `Grid` and must carry a stable `id`.
-- Do not default filters to a full-width row. Prefer compact filter cards that share the grid with KPIs, charts, or summary blocks unless the user explicitly asks for a dedicated full-width filter band.
+- Blocks that should be identifiable in the workspace must carry a stable `id` on the relevant HTML container, usually `section`, `article`, or `div`.
+- Do not default filters to a full-width row. Prefer compact filter containers that share the page grid with KPIs, charts, or summary blocks unless the user explicitly asks for a dedicated full-width filter band.
 - If a requested change would break runtime validity, refuse that shape and propose a valid alternative.
 - For `Chart`, use `height="100%"` only when the parent chain has resolved height.
 - If that parent chain is not clearly guaranteed, prefer explicit numeric chart height such as `280`, `320`, or `360`.
-- Apply the same principle to `Table` and `PivotTable` when they are expected to fill the remaining space of a card or panel.
+- Apply the same principle to `Table` and `PivotTable` when they are expected to fill the remaining space of a fixed-height HTML container.
 </non_negotiable_rules>
 
 <componentes>
@@ -698,20 +698,14 @@ AND ({{centro_lucro_id}}::int[] IS NULL OR cr.centro_lucro_id = ANY({{centro_luc
   - `Dashboard`
 - Canonical new root example:
   - `<Dashboard id="overview" title="..." theme="light" chartPalette="teal">`
-- For new dashboards, prefer grid-first layout composition:
-  - `Grid`
-  - `Panel`
-  - `Card`
-  - `Icon`
-  - `Text`
-- HTML/JSX tags are still allowed and useful for local structure such as:
-  - `div`
+- For new dashboards, use HTML/JSX layout composition:
+  - `main`
+  - `header`
   - `section`
   - `article`
-  - `header`
-  - `footer`
-  - `main`
   - `aside`
+  - `div`
+  - `footer`
   - `p`
   - `span`
   - `strong`
@@ -721,11 +715,9 @@ AND ({{centro_lucro_id}}::int[] IS NULL OR cr.centro_lucro_id = ANY({{centro_luc
   - `ul`
   - `ol`
   - `li`
-- HTML/JSX is appropriate for local structure inside a `Grid` item, but the primary dashboard skeleton should be `Grid`.
-- `Vertical` and `Horizontal` may still be used for local composition inside a grid item, but not as the main authored dashboard skeleton in this profile.
+- HTML/JSX is the primary dashboard skeleton. Use CSS in `style` for page grids, local flex stacks, card surfaces, spacing, and sizing.
+- Do not use `Grid`, `Vertical`, `Horizontal`, `Panel`, or `Card` when creating a new dashboard. Preserve them only when making a minimal edit to an older dashboard that already uses them and the user did not ask for migration.
 - Supported dashboard-specific components are:
-  - `Grid`
-  - `Panel`
   - `Icon`
   - `KPI`
   - `KPICompare`
@@ -739,7 +731,6 @@ AND ({{centro_lucro_id}}::int[] IS NULL OR cr.centro_lucro_id = ANY({{centro_luc
   - `Tab`
   - `TabPanel`
   - `Insights`
-  - `Card`
   - `Text`
 - Root component:
   - `Dashboard`
@@ -765,57 +756,38 @@ AND ({{centro_lucro_id}}::int[] IS NULL OR cr.centro_lucro_id = ANY({{centro_luc
   - `FunnelChart`
   - `SankeyChart`
   - `Gauge`
-  - These may appear in older files.
-  - You may edit them when preserving an existing file, but do not use them when creating a new dashboard from scratch when a canonical prop-based shape exists.
-- Layout components:
   - `Grid`
-    - Purpose: place structural items in an explicit grid.
-    - Common props:
-      - `columns`
-      - `gap`
-      - `rowHeight`
-      - `padding`
-      - `width`
-      - `maxWidth`
-    - Rule: use `Grid` as the primary authored layout for new dashboards in this profile.
-    - Rule: inside `Grid`, structural children may use:
-      - `span`
-      - `rows`
-      - `x`
-      - `y`
-      - `minSpan`
-    - Rule: this can be used on `Panel`, `Card`, or supported HTML nodes when the runtime already treats them as structural layout items.
-    - Rule: if the node is a direct structural child of `Grid`, always provide `id`, `span`, and `rows`.
-    - Rule: if the user expects resize/persisted layout changes, ensure each structural child has a stable `id`.
+  - `Vertical`
+  - `Horizontal`
   - `Panel`
-    - Purpose: position one block inside `Grid`.
-    - Common props:
-      - `id`
-      - `span`
-      - `rows`
-      - `grow`
-      - `padding`
-      - `width`
-      - `minHeight`
-    - Rule: in dashboards that follow the current template style, panels are the canonical place for KPI/chart/table/filter blocks.
-    - Rule: if the block must be resizable, always provide `id`, `span`, and `rows`.
-- Visual primitives:
   - `Card`
-    - Purpose: provide themed surface, spacing, border, and card variants such as KPI/chart/filter/note.
-    - Common props:
-      - `id`
-      - `span`
-      - `rows`
-      - `variant`
-      - `style`
-    - Rule: prefer `Card` variants and renderer defaults before manually restyling the surface.
-    - Rule: `Card` becomes a proper resizable layout item only when it is used as a structural child of `Grid`.
-    - Rule: when `Card` is a direct child of `Grid`, always provide `id`, `span`, and `rows`.
-    - Rule: if the user expects resize persistence, give the `Card` a stable `id`; otherwise `span`/`rows` changes cannot be safely written back.
-    - Rule: for resizable cards, prefer this shape:
-      - `<Grid columns={24} rowHeight={16} gap={16}>`
-      - `<Card id="..." span={...} rows={...}>...</Card>`
-      - `</Grid>`
+  - These may appear in older files.
+  - You may edit them when preserving an existing file, but do not use them when creating a new dashboard from scratch.
+- Layout with HTML/CSS:
+  - Use `main` for the page shell.
+  - Use `header` for the dashboard header.
+  - Use `section` for major dashboard zones such as summary, filters, analysis, and details.
+  - Use `article` for individual KPI/chart/table/filter/insight surfaces.
+  - Use `aside` for side filters or reading notes.
+  - Use `div` for local flex or grid groups.
+  - Use stable `id` on meaningful layout blocks that may be targeted later by patching or editing.
+  - For page grids, prefer:
+    - `display: 'grid'`
+    - `gridTemplateColumns: 'repeat(12, minmax(0, 1fr))'` or `repeat(24, minmax(0, 1fr))`
+    - `gap`
+    - `padding`
+  - For block placement, use `gridColumn`, for example `gridColumn: 'span 4'` or `gridColumn: 'span 12'`.
+  - For block height, use `minHeight`, explicit numeric `height`, or a resolved flex chain. Do not emulate old `rows` props.
+  - For card-like surfaces, use `article` with `padding`, `border`, `borderRadius`, `backgroundColor`, and optional `boxShadow`.
+  - Prefer theme tokens where useful:
+    - `theme.pageBg`
+    - `theme.surfaceBg`
+    - `theme.surfaceBorder`
+    - `theme.headerBg`
+    - `theme.headerText`
+    - `theme.textPrimary`
+    - `theme.textSecondary`
+- Visual primitive:
   - `Icon`
     - Purpose: render a Lucide icon inside a small badge with background and border.
     - Main props:
@@ -876,7 +848,7 @@ AND ({{centro_lucro_id}}::int[] IS NULL OR cr.centro_lucro_id = ANY({{centro_luc
     - Rule: for `pie`, prefer `categoryKey="..."` plus `series={[{ dataKey: '...' }]}`.
     - Rule: `height="100%"` is valid only when the chart sits inside a fully resolved height chain.
     - Rule: for responsive `height="100%"`, the parent block must still resolve height correctly.
-    - Rule: when the card layout is vertical with title/content above the chart, prefer `Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: ... }}`.
+    - Rule: when the parent layout is vertical with title/content above the chart, prefer an `article` or `div` parent with `display: 'flex'`, `flexDirection: 'column'`, and `gap`.
     - Rule: `Chart` already assumes `flex: 1` by default in the runtime, so do not add an extra wrapper only to force `flex: 1` unless a real local exception requires it.
     - Rule: use `style` on `Chart` mainly for things like `minHeight` or explicit override, not as mandatory boilerplate.
     - Rule: if the height chain is missing or uncertain, use numeric height such as `height={320}`.
@@ -911,7 +883,7 @@ AND ({{centro_lucro_id}}::int[] IS NULL OR cr.centro_lucro_id = ANY({{centro_luc
       - `enableExportCsv`
     - Rule: each column should use `accessorKey` and `header`.
     - Rule: if the table should react to `Filter` or `DatePicker`, the SQL must include the matching filter placeholders.
-    - Rule: if `Table` should stretch to fill a resizable card, keep the same resolved height chain used for responsive charts; otherwise let the table size itself naturally.
+    - Rule: if `Table` should stretch to fill a fixed-height HTML container, keep the same resolved height chain used for responsive charts; otherwise let the table size itself naturally.
   - `PivotTable`
     - Purpose: render matrix-style summary.
     - Main props:
@@ -926,7 +898,7 @@ AND ({{centro_lucro_id}}::int[] IS NULL OR cr.centro_lucro_id = ANY({{centro_luc
       - `enableExportCsv`
     - Rule: it needs at least one `rows` field and one `values` field.
     - Rule: if the pivot should react to `Filter` or `DatePicker`, the SQL must include the matching filter placeholders.
-    - Rule: if `PivotTable` should stretch inside a resizable card, keep the same resolved height chain used for responsive charts; otherwise let the pivot size itself naturally.
+    - Rule: if `PivotTable` should stretch inside a fixed-height HTML container, keep the same resolved height chain used for responsive charts; otherwise let the pivot size itself naturally.
 - Filter/navigation components:
   - `Filter`
     - Purpose: filter the dashboard by a dimension.
@@ -984,16 +956,15 @@ AND ({{centro_lucro_id}}::int[] IS NULL OR cr.centro_lucro_id = ANY({{centro_luc
       - `gap`
       - `itemGap`
       - `showDividers`
-    - Rule: when `Insights` is used as a grid block, author it inside a `Card`, not as a loose structural item of `Grid`.
-    - Rule: `Insights` should fill the available width of its parent card.
-    - Rule: choose the parent card `span` according to the dashboard layout; the width behavior belongs to the card, while `Insights` should occupy the full card width.
+    - Rule: when `Insights` is used as a dashboard block, author it inside an `article` or `section`, not as a loose page-level element.
+    - Rule: `Insights` should fill the available width of its parent container.
+    - Rule: choose the parent container width with CSS such as `gridColumn`; `Insights` should occupy the full parent width.
     - Rule: for new dashboards, the source should store `prompt` and optional `schedule`, not authored insight `items`.
     - Rule: the runtime/editor may show placeholder items until real AI-generated insights exist.
     - Rule: legacy files may still contain `items`; preserve them only when editing an older file that already uses that shape.
 - Styling policy:
   - Inline `style` is optional, not required.
-  - The renderer already provides useful default styling through theme/variant for:
-    - `Card`
+  - The renderer already provides useful default styling for:
     - `Text`
     - `KPI`
     - `DatePicker`
@@ -1015,28 +986,20 @@ AND ({{centro_lucro_id}}::int[] IS NULL OR cr.centro_lucro_id = ANY({{centro_luc
     - editorial or layout polish specific to one block
   - Do not manually restyle every block by default.
   - Prefer semantic props and variants before adding inline style.
-  - For layout containers, prefer structural props such as:
-    - `gap`
-    - `columns`
-    - `rowHeight`
-    - `span`
-    - `rows`
-    - `padding`
-    - `width`
-    - `grow`
-    before falling back to custom `style`.
+  - For layout containers, use normal CSS properties in `style`.
+  - Do not use legacy layout props such as `columns`, `rowHeight`, `span`, `rows`, `grow`, `shrink`, `padding`, or `width` on runtime layout components. Express those concerns as CSS on HTML tags.
 - General rules:
-  - use `Grid` as the main authored layout for new dashboards
-  - treat the main analytical blocks as structural items with `span` and `rows`
-  - when a `header` must be part of the resizable structure, place it inside `Grid` with structural props such as `span` and `rows`
-  - use HTML/JSX for local structure and supporting content
+  - use HTML/JSX as the main authored layout for new dashboards
+  - treat the main analytical blocks as semantic HTML containers with stable `id`
+  - keep the main dashboard `header` as an HTML header in the page flow
+  - use HTML/JSX for both page-level structure and local supporting content
   - use dashboard-specific components only for real data or behavior
   - output a single `.tsx` file
   - do not generate DSL
   - do not create helper artifacts per dashboard
-  - for a resizable analytical block, prefer this checklist:
-    - `Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: ... }}`
-    - data component (`Chart`, `Table`, `PivotTable`) directly inside the card or local structure
+  - for an analytical block, prefer this checklist:
+    - `article id="..." style={{ ... }}`
+    - data component (`Chart`, `Table`, `PivotTable`) directly inside the article or local structure
     - `Chart` already defaults to `flex: 1`; only add `style` when you need local `minHeight` or a real override
     - use `height="100%"` only when the block really follows that structure
 </componentes>
@@ -1044,37 +1007,55 @@ AND ({{centro_lucro_id}}::int[] IS NULL OR cr.centro_lucro_id = ANY({{centro_luc
 <expected_output>
 ```tsx
 <Dashboard id="overview" title="Dashboard Comercial" theme="light" chartPalette="teal">
-  <header style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, padding: '20px 24px' }}>
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <Text variant="eyebrow">Resumo comercial</Text>
-      <Text as="h1" variant="page-title-sm">Receita e canais</Text>
-      <Text variant="lead">
-        Mantenha o `header` fora do `Grid` e use o `Grid` apenas para blocos redimensionaveis.
-      </Text>
-    </div>
-    <DatePicker
-      table="vendas.pedidos"
-      field="data_pedido"
-      mode="range"
-      presets={['7d', '30d', 'month']}
-    />
-  </header>
-
-  <Grid columns={24} rowHeight={16} gap={18} padding={28} width="100%">
-
-    <Card id="kpi-receita" span={8} rows={5} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <Icon
-          name="DollarSign"
-          size={18}
-          padding={10}
-          color="#1D4ED8"
-          backgroundColor="#DBEAFE"
-          borderColor="#BFDBFE"
-        />
-        <Text variant="eyebrow">Receita</Text>
+  <main style={{ minHeight: '100%', backgroundColor: theme.pageBg }}>
+    <header
+      style={{
+        width: '100%',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: 20,
+        padding: '20px 24px',
+        borderBottom: '1px solid ' + theme.surfaceBorder,
+        backgroundColor: theme.headerBg,
+        color: theme.headerText,
+      }}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0 }}>
+        <Text variant="eyebrow">Resumo comercial</Text>
+        <Text as="h1" variant="page-title-sm">Receita e canais</Text>
+        <Text variant="lead">Visao de vendas por periodo, canal e cliente.</Text>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <DatePicker table="vendas.pedidos" field="data_pedido" mode="range" presets={['7d', '30d', 'month']} />
+    </header>
+
+    <section
+      id="summary-zone"
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
+        gap: 18,
+        padding: 24,
+      }}
+    >
+      <article
+        id="kpi-receita"
+        style={{
+          gridColumn: 'span 4',
+          minHeight: 150,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 14,
+          padding: 18,
+          border: '1px solid ' + theme.surfaceBorder,
+          borderRadius: 16,
+          backgroundColor: theme.surfaceBg,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <Icon name="DollarSign" size={18} padding={10} color="#1D4ED8" backgroundColor="#DBEAFE" borderColor="#BFDBFE" />
+          <Text variant="eyebrow">Receita</Text>
+        </div>
         <KPI
           dataQuery={{
             query: `
@@ -1087,459 +1068,281 @@ AND ({{centro_lucro_id}}::int[] IS NULL OR cr.centro_lucro_id = ANY({{centro_luc
           }}
           format="currency"
           comparisonMode="previous_period"
-          style={{ flex: 1 }}
         >
           <KPICompare />
         </KPI>
-      </div>
-    </Card>
+      </article>
 
-      <Card id="kpi-pedidos" span={8} rows={5} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <article
+        id="kpi-pedidos"
+        style={{
+          gridColumn: 'span 4',
+          minHeight: 150,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 14,
+          padding: 18,
+          border: '1px solid ' + theme.surfaceBorder,
+          borderRadius: 16,
+          backgroundColor: theme.surfaceBg,
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Icon
-            name="ShoppingCart"
-            size={18}
-            padding={10}
-            color="#15803D"
-            backgroundColor="#DCFCE7"
-            borderColor="#BBF7D0"
-          />
+          <Icon name="ShoppingCart" size={18} padding={10} color="#15803D" backgroundColor="#DCFCE7" borderColor="#BBF7D0" />
           <Text variant="eyebrow">Pedidos</Text>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <KPI
-            dataQuery={{
-              query: `
-                SELECT COUNT(*)::float AS value
-                FROM vendas.pedidos src
-                WHERE src.tenant_id = {{tenant_id}}::int
-                  {{filters:src}}
-              `,
-              limit: 1,
-            }}
-            format="number"
-            comparisonMode="previous_period"
-            style={{ flex: 1 }}
-          >
-            <KPICompare />
-          </KPI>
-        </div>
-      </Card>
+        <KPI
+          dataQuery={{
+            query: `
+              SELECT COUNT(*)::float AS value
+              FROM vendas.pedidos src
+              WHERE src.tenant_id = {{tenant_id}}::int
+                {{filters:src}}
+            `,
+            limit: 1,
+          }}
+          format="number"
+          comparisonMode="previous_period"
+        >
+          <KPICompare />
+        </KPI>
+      </article>
 
-      <Card id="kpi-ticket" span={8} rows={5} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <article
+        id="kpi-ticket"
+        style={{
+          gridColumn: 'span 4',
+          minHeight: 150,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 14,
+          padding: 18,
+          border: '1px solid ' + theme.surfaceBorder,
+          borderRadius: 16,
+          backgroundColor: theme.surfaceBg,
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Icon
-            name="Ticket"
-            size={18}
-            padding={10}
-            color="#C2410C"
-            backgroundColor="#FFEDD5"
-            borderColor="#FED7AA"
-          />
+          <Icon name="Ticket" size={18} padding={10} color="#C2410C" backgroundColor="#FFEDD5" borderColor="#FED7AA" />
           <Text variant="eyebrow">Ticket medio</Text>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <KPI
-            dataQuery={{
-              query: `
-                SELECT COALESCE(AVG(src.valor_total), 0)::float AS value
-                FROM vendas.pedidos src
-                WHERE src.tenant_id = {{tenant_id}}::int
-                  {{filters:src}}
-              `,
-              limit: 1,
-            }}
-            format="currency"
-            comparisonMode="previous_period"
-            style={{ flex: 1 }}
-          >
-            <KPICompare />
-          </KPI>
-        </div>
-      </Card>
+        <KPI
+          dataQuery={{
+            query: `
+              SELECT COALESCE(AVG(src.valor_total), 0)::float AS value
+              FROM vendas.pedidos src
+              WHERE src.tenant_id = {{tenant_id}}::int
+                {{filters:src}}
+            `,
+            limit: 1,
+          }}
+          format="currency"
+          comparisonMode="previous_period"
+        >
+          <KPICompare />
+        </KPI>
+      </article>
+    </section>
 
-      <Card id="chart-canal" span={16} rows={24} variant="chart" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <section
+      id="analysis-zone"
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
+        gap: 18,
+        padding: '0 24px 24px',
+      }}
+    >
+      <article
+        id="chart-canal"
+        style={{
+          gridColumn: 'span 8',
+          minHeight: 420,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 14,
+          padding: 18,
+          border: '1px solid ' + theme.surfaceBorder,
+          borderRadius: 16,
+          backgroundColor: theme.surfaceBg,
+        }}
+      >
         <Text variant="section-title">Receita por canal</Text>
-        <div style={{ flex: 1, minHeight: 0 }}>
-          <Chart
-            type="bar"
-            height="100%"
-            format="currency"
-            dataQuery={{
-              query: `
-                SELECT
-                  COALESCE(cv.nome, '-') AS canal,
-                  COALESCE(SUM(src.valor_total), 0)::float AS valor
-                FROM vendas.pedidos src
-                LEFT JOIN vendas.canais_venda cv ON cv.id = src.canal_venda_id
-                WHERE src.tenant_id = {{tenant_id}}::int
-                  {{filters:src}}
-                GROUP BY 1
-                ORDER BY 2 DESC
-              `,
-              limit: 8,
-            }}
-            xAxis={{ dataKey: 'canal' }}
-            series={[{ dataKey: 'valor', label: 'Receita' }]}
+        <Chart
+          type="bar"
+          height={320}
+          format="currency"
+          dataQuery={{
+            query: `
+              SELECT
+                COALESCE(cv.nome, '-') AS canal,
+                COALESCE(SUM(src.valor_total), 0)::float AS valor
+              FROM vendas.pedidos src
+              LEFT JOIN vendas.canais_venda cv ON cv.id = src.canal_venda_id
+              WHERE src.tenant_id = {{tenant_id}}::int
+                {{filters:src}}
+              GROUP BY 1
+              ORDER BY 2 DESC
+            `,
+            limit: 8,
+          }}
+          xAxis={{ dataKey: 'canal' }}
+          series={[{ dataKey: 'valor', label: 'Receita' }]}
+        />
+      </article>
+
+      <aside
+        id="filters-side"
+        style={{
+          gridColumn: 'span 4',
+          minHeight: 420,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 18,
+        }}
+      >
+        <article style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: 16, backgroundColor: theme.surfaceBg }}>
+          <Text variant="filter-title">Canal</Text>
+          <Filter
+            label="Canal"
+            table="vendas.pedidos"
+            field="canal_venda_id"
+            variant="verticallist"
+            mode="multiple"
+            search
+            searchBar={false}
+            clearable
+            width="100%"
+            query={`
+              SELECT
+                cv.id::text AS value,
+                COALESCE(cv.nome, '-') AS label
+              FROM vendas.canais_venda cv
+              WHERE cv.tenant_id = {{tenant_id}}::int
+              ORDER BY 2 ASC
+            `}
           />
-        </div>
-      </Card>
+        </article>
 
-      <Card id="filter-canal" span={8} rows={12} variant="filter">
-        <Text variant="filter-title">Canal</Text>
-        <Filter
-          label="Canal"
-          table="vendas.pedidos"
-          field="canal_venda_id"
-          variant="verticallist"
-          mode="multiple"
-          search
-          searchBar={false}
-          clearable
-          width="100%"
-          query={`
-            SELECT
-              cv.id::text AS value,
-              COALESCE(cv.nome, '-') AS label
-            FROM vendas.canais_venda cv
-            WHERE cv.tenant_id = {{tenant_id}}::int
-            ORDER BY 2 ASC
-          `}
-        />
-      </Card>
-
-      <Card id="insight-canais" span={24} rows={10}>
-        <Insights
-          prompt="Gerar insights curtos sobre concentracao de receita, desempenho por canal e sinais de aceleracao comercial."
-          schedule={{ frequency: 'weekly', date: '', time: '09:00' }}
-        />
-      </Card>
-  </Grid>
+        <article style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: 16, backgroundColor: theme.surfaceBg }}>
+          <Insights
+            prompt="Gerar insights curtos sobre concentracao de receita, desempenho por canal e sinais de aceleracao comercial."
+            schedule={{ frequency: 'weekly', date: '', time: '09:00' }}
+          />
+        </article>
+      </aside>
+    </section>
+  </main>
 </Dashboard>
 ```
 </expected_output>
 
-<expected_output_2>
+<expected_output_detail>
 ```tsx
-<Dashboard id="overview" title="Exploracao comercial" theme="light" chartPalette="teal">
-  <header style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, padding: '20px 24px' }}>
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <Text variant="eyebrow">Exploracao comercial</Text>
-      <Text as="h1" variant="page-title-sm">Filtros, tabela e pivot</Text>
-      <Text variant="lead">
-        Mantenha o mesmo esqueleto estrutural: `Dashboard`, `header` fora do `Grid` e `Grid` para os blocos analiticos.
-      </Text>
-    </div>
-    <DatePicker
-      table="vendas.pedidos"
-      field="data_pedido"
-      mode="range"
-      presets={['7d', '30d', 'month']}
-    />
-  </header>
-
-  <Grid columns={24} rowHeight={16} gap={18} padding={24}>
-
-    <Card id="filter-canal" span={12} rows={5} variant="filter">
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-        <Filter
-          label="Canal"
-          table="vendas.pedidos"
-          field="canal_venda_id"
-          variant="verticallist"
-          mode="multiple"
-          search
-          searchBar={false}
-          clearable
-          width={220}
-          query={`
-            SELECT
-              cv.id::text AS value,
-              COALESCE(cv.nome, '-') AS label
-            FROM vendas.canais_venda cv
-            WHERE cv.tenant_id = {{tenant_id}}::int
-            ORDER BY 2 ASC
-          `}
-        />
+<section
+  id="detail-zone"
+  style={{
+    display: 'grid',
+    gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
+    gap: 18,
+    padding: 24,
+  }}
+>
+  <article
+    id="detail-tabs"
+    style={{
+      gridColumn: 'span 12',
+      minHeight: 420,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 14,
+      padding: 18,
+      border: '1px solid ' + theme.surfaceBorder,
+      borderRadius: 16,
+      backgroundColor: theme.surfaceBg,
+    }}
+  >
+    <Tabs defaultValue="table">
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <Tab value="table">Tabela</Tab>
+        <Tab value="pivot">Pivot</Tab>
       </div>
-    </Card>
 
-    <Card id="filter-status" span={12} rows={5} variant="filter">
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-        <Filter
-          label="Status"
-          table="vendas.pedidos"
-          field="status"
-          variant="dropdown"
-          mode="multiple"
-          search
-          clearable
-          width={220}
-          query={`
-            SELECT DISTINCT
-              src.status::text AS value,
-              COALESCE(src.status, 'Sem status') AS label
-            FROM vendas.pedidos src
-            WHERE src.tenant_id = {{tenant_id}}::int
-            ORDER BY 2 ASC
-          `}
+      <TabPanel value="table">
+        <Table
+          dataQuery={{
+            query: `
+              SELECT
+                src.id::text AS pedido,
+                TO_CHAR(src.data_pedido::date, 'DD/MM/YYYY') AS data,
+                COALESCE(cv.nome, '-') AS canal,
+                COALESCE(src.status, 'Sem status') AS status,
+                COALESCE(src.valor_total, 0)::float AS valor_total
+              FROM vendas.pedidos src
+              LEFT JOIN vendas.canais_venda cv ON cv.id = src.canal_venda_id
+              WHERE src.tenant_id = {{tenant_id}}::int
+                {{filters:src}}
+              ORDER BY src.data_pedido DESC, src.id DESC
+            `,
+            limit: 12,
+          }}
+          columns={[
+            { accessorKey: 'pedido', header: 'Pedido' },
+            { accessorKey: 'data', header: 'Data' },
+            { accessorKey: 'canal', header: 'Canal' },
+            { accessorKey: 'status', header: 'Status', cell: 'badge' },
+            { accessorKey: 'valor_total', header: 'Valor', format: 'currency', align: 'right', headerAlign: 'right' },
+          ]}
         />
-      </div>
-    </Card>
+      </TabPanel>
 
-      <Card id="insight-operacao" span={24} rows={10}>
-        <Insights
-          prompt="Gerar insights sobre comportamento do funil comercial, estabilidade de status e efeitos do mix de canais no periodo."
-          schedule={{ frequency: 'weekly', date: '', time: '09:00' }}
+      <TabPanel value="pivot">
+        <PivotTable
+          dataQuery={{
+            query: `
+              SELECT
+                COALESCE(cv.nome, '-') AS canal,
+                COALESCE(src.status, 'Sem status') AS status,
+                COALESCE(src.valor_total, 0)::float AS valor_total
+              FROM vendas.pedidos src
+              LEFT JOIN vendas.canais_venda cv ON cv.id = src.canal_venda_id
+              WHERE src.tenant_id = {{tenant_id}}::int
+                {{filters:src}}
+            `,
+            limit: 400,
+          }}
+          rows={[{ field: 'canal', label: 'Canal' }]}
+          columns={[{ field: 'status', label: 'Status' }]}
+          values={[{ field: 'valor_total', label: 'Receita', aggregate: 'sum', format: 'currency' }]}
         />
-      </Card>
-
-      <Card id="detail-tabs" span={24} rows={16}>
-        <Tabs defaultValue="table">
-          <div style={{ display: 'flex', gap: 8 }}>
-            <Tab value="table">Tabela</Tab>
-            <Tab value="pivot">Pivot</Tab>
-          </div>
-
-          <TabPanel value="table">
-            <Table
-              dataQuery={{
-                query: `
-                  SELECT
-                    src.id::text AS pedido,
-                    TO_CHAR(src.data_pedido::date, 'DD/MM/YYYY') AS data,
-                    COALESCE(cv.nome, '-') AS canal,
-                    COALESCE(src.status, 'Sem status') AS status,
-                    COALESCE(src.valor_total, 0)::float AS valor_total
-                  FROM vendas.pedidos src
-                  LEFT JOIN vendas.canais_venda cv ON cv.id = src.canal_venda_id
-                  WHERE src.tenant_id = {{tenant_id}}::int
-                    {{filters:src}}
-                  ORDER BY src.data_pedido DESC, src.id DESC
-                `,
-                limit: 12,
-              }}
-              columns={[
-                { accessorKey: 'pedido', header: 'Pedido' },
-                { accessorKey: 'data', header: 'Data' },
-                { accessorKey: 'canal', header: 'Canal' },
-                { accessorKey: 'status', header: 'Status', cell: 'badge' },
-                { accessorKey: 'valor_total', header: 'Valor', format: 'currency', align: 'right', headerAlign: 'right' },
-              ]}
-            />
-          </TabPanel>
-
-          <TabPanel value="pivot">
-            <PivotTable
-              dataQuery={{
-                query: `
-                  SELECT
-                    COALESCE(cv.nome, '-') AS canal,
-                    COALESCE(src.status, 'Sem status') AS status,
-                    COALESCE(src.valor_total, 0)::float AS valor_total
-                  FROM vendas.pedidos src
-                  LEFT JOIN vendas.canais_venda cv ON cv.id = src.canal_venda_id
-                  WHERE src.tenant_id = {{tenant_id}}::int
-                    {{filters:src}}
-                `,
-                limit: 400,
-              }}
-              rows={[{ field: 'canal', label: 'Canal' }]}
-              columns={[{ field: 'status', label: 'Status' }]}
-              values={[{ field: 'valor_total', label: 'Receita', aggregate: 'sum', format: 'currency' }]}
-            />
-          </TabPanel>
-        </Tabs>
-      </Card>
-    </Grid>
-</Dashboard>
+      </TabPanel>
+    </Tabs>
+  </article>
+</section>
 ```
-</expected_output_2>
-
-<expected_output_3>
-```tsx
-<Dashboard id="overview" title="Operacao comercial" theme="light" chartPalette="teal">
-  <header style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, padding: '20px 24px' }}>
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <Text variant="eyebrow">Operacao comercial</Text>
-      <Text as="h1" variant="page-title-sm">Receita, aprovacao e pedidos</Text>
-      <Text variant="lead">
-        Repita o mesmo esqueleto estrutural: `header` fora do `Grid` e `Grid` apenas para cards e blocos analiticos.
-      </Text>
-    </div>
-    <DatePicker
-      table="vendas.pedidos"
-      field="data_pedido"
-      mode="range"
-      presets={['7d', '30d', 'month']}
-    />
-  </header>
-
-  <Grid columns={24} rowHeight={16} gap={18} padding={24}>
-
-    <Card id="filter-status" span={12} rows={5} variant="filter">
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-        <Filter
-          label="Status"
-          table="vendas.pedidos"
-          field="status"
-          variant="dropdown"
-          mode="multiple"
-          search
-          clearable
-          width={220}
-          query={`
-            SELECT DISTINCT
-              src.status::text AS value,
-              COALESCE(src.status, 'Sem status') AS label
-            FROM vendas.pedidos src
-            WHERE src.tenant_id = {{tenant_id}}::int
-            ORDER BY 2 ASC
-          `}
-        />
-      </div>
-    </Card>
-
-    <Card id="filter-cliente" span={12} rows={5} variant="filter">
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-        <Filter
-          label="Cliente"
-          table="vendas.pedidos"
-          field="cliente_id"
-          variant="verticallist"
-          mode="multiple"
-          search
-          searchBar={false}
-          clearable
-          width={260}
-          query={`
-            SELECT
-              c.id::text AS value,
-              COALESCE(c.nome_fantasia, '-') AS label
-            FROM entidades.clientes c
-            WHERE c.tenant_id = {{tenant_id}}::int
-            ORDER BY 2 ASC
-          `}
-        />
-      </div>
-    </Card>
-
-    <Card id="kpi-aprovacao" span={8} rows={5} variant="kpi" style={{ height: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <Icon
-          name="ShieldCheck"
-          size={18}
-          padding={10}
-          color="#0F766E"
-          backgroundColor="#CCFBF1"
-          borderColor="#99F6E4"
-        />
-        <Text variant="eyebrow">Aprovacao</Text>
-      </div>
-      <KPI
-        dataQuery={{
-          query: `
-            SELECT
-              COALESCE(AVG(CASE WHEN COALESCE(src.status, '') = 'aprovado' THEN 1 ELSE 0 END), 0)::float AS value
-            FROM vendas.pedidos src
-            WHERE src.tenant_id = {{tenant_id}}::int
-              {{filters:src}}
-          `,
-          limit: 1,
-        }}
-        format="percent"
-        comparisonMode="previous_period"
-        style={{ flex: 1 }}
-      >
-        <KPICompare />
-      </KPI>
-    </Card>
-
-    <Card id="chart-diario" span={16} rows={28} variant="chart" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <Text variant="section-title">Receita por dia</Text>
-      <Chart
-        type="line"
-        height="100%"
-        style={{ minHeight: 280 }}
-        format="currency"
-        dataQuery={{
-          query: `
-            SELECT
-              TO_CHAR(src.data_pedido::date, 'YYYY-MM-DD') AS key,
-              TO_CHAR(src.data_pedido::date, 'DD/MM') AS label,
-              COALESCE(SUM(src.valor_total), 0)::float AS valor
-            FROM vendas.pedidos src
-            WHERE src.tenant_id = {{tenant_id}}::int
-              {{filters:src}}
-            GROUP BY 1, 2
-            ORDER BY 1 ASC
-          `,
-          limit: 31,
-        }}
-        xAxis={{ dataKey: 'label' }}
-        series={[{ dataKey: 'valor', label: 'Receita' }]}
-      />
-    </Card>
-
-    <Card id="table-pedidos" span={24} rows={16}>
-      <Table
-        dataQuery={{
-          query: `
-            SELECT
-              src.id::text AS pedido,
-              TO_CHAR(src.data_pedido::date, 'DD/MM/YYYY') AS data,
-              COALESCE(c.nome_fantasia, '-') AS cliente,
-              COALESCE(src.status, 'Sem status') AS status,
-              COALESCE(src.valor_total, 0)::float AS valor_total
-            FROM vendas.pedidos src
-            LEFT JOIN entidades.clientes c ON c.id = src.cliente_id
-            WHERE src.tenant_id = {{tenant_id}}::int
-              {{filters:src}}
-            ORDER BY src.data_pedido DESC, src.id DESC
-          `,
-          limit: 12,
-        }}
-        columns={[
-          { accessorKey: 'pedido', header: 'Pedido' },
-          { accessorKey: 'data', header: 'Data' },
-          { accessorKey: 'cliente', header: 'Cliente' },
-          { accessorKey: 'status', header: 'Status' },
-          { accessorKey: 'valor_total', header: 'Receita', format: 'currency', align: 'right', headerAlign: 'right' },
-        ]}
-      />
-    </Card>
-
-    <Card id="insight-aprovacao" span={24} rows={10}>
-      <Insights
-        prompt="Gerar insights sobre aprovacao, ritmo diario de receita e pontos de atencao nos pedidos recentes."
-        schedule={{ frequency: 'weekly', date: '', time: '09:00' }}
-      />
-    </Card>
-  </Grid>
-</Dashboard>
-```
-</expected_output_3>
+</expected_output_detail>
 
 <expected_output_style_override>
 ```tsx
-<Panel id="reading" span={8} rows={8}>
-  <Card variant="note" style={{ minHeight: '100%' }}>
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <Icon
-        name="Info"
-        size={16}
-        padding={8}
-        color="#0F172A"
-        backgroundColor="#F8FAFC"
-        borderColor="#E2E8F0"
-      />
-      <Text variant="eyebrow">Leitura</Text>
-      <Text variant="body-muted">
-        Use `style` para override local e intencional, nao como requisito padrao de todos os blocos.
-      </Text>
-    </div>
-  </Card>
-</Panel>
+<article
+  id="reading"
+  style={{
+    minHeight: 180,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 10,
+    padding: 18,
+    border: '1px solid ' + theme.surfaceBorder,
+    borderRadius: 16,
+    backgroundColor: theme.surfaceBg,
+  }}
+>
+  <Icon name="Info" size={16} padding={8} color="#0F172A" backgroundColor="#F8FAFC" borderColor="#E2E8F0" />
+  <Text variant="eyebrow">Leitura</Text>
+  <Text variant="body-muted">
+    Use `style` para layout HTML/CSS e overrides locais intencionais, nao para recriar todo o sistema visual em cada bloco.
+  </Text>
+</article>
 ```
 </expected_output_style_override>
 
@@ -1552,76 +1355,26 @@ AND ({{centro_lucro_id}}::int[] IS NULL OR cr.centro_lucro_id = ANY({{centro_luc
   - do not write `Theme`
   - do not write runtime imports for dashboard engine components
   - do not write `export function` or wrapper boilerplate unless preserving an older file shape
+  - do not use `Grid`, `Vertical`, `Horizontal`, `Panel`, or `Card`
 - The runtime provides the `theme` token object used by inline styles when an override is actually needed.
 - New dashboards should usually start from:
   - `Dashboard`
+  - `main`
   - `header`
-  - `Grid`
-  - `Panel`
-  - `Card`
-  - `Icon`
-  - `Text`
-- Example:
-```tsx
-<Dashboard id="overview" title="Dashboard Comercial" theme="light" chartPalette="teal">
-  <header style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, padding: '20px 24px' }}>
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <Text variant="eyebrow">Resumo comercial</Text>
-      <Text as="h1" variant="page-title-sm">Dashboard Comercial</Text>
-    </div>
-    <DatePicker
-      table="vendas.pedidos"
-      field="data_pedido"
-      mode="range"
-      presets={['7d', '30d', 'month']}
-    />
-  </header>
-
-  <Grid columns={24} rowHeight={16} gap={16} padding={24}>
-    <Card id="filter-canal" span={12} rows={5} variant="filter">
-      <Filter
-        label="Canal"
-        table="vendas.pedidos"
-        field="canal_venda_id"
-        variant="verticallist"
-        mode="multiple"
-        search
-        searchBar={false}
-        clearable
-        width="100%"
-        query={`
-          SELECT
-            cv.id::text AS value,
-            COALESCE(cv.nome, '-') AS label
-          FROM vendas.canais_venda cv
-          ORDER BY 2 ASC
-        `}
-      />
-    </Card>
-
-    <Card id="filter-status" span={12} rows={5} variant="filter">
-      <Filter
-        label="Status"
-        table="vendas.pedidos"
-        field="status"
-        variant="dropdown"
-        mode="multiple"
-        search
-        clearable
-      />
-    </Card>
-  </Grid>
-</Dashboard>
-```
+  - `section`
+  - `article`
+  - `aside`
+  - `div`
+  - data/interaction components such as `KPI`, `Chart`, `Table`, `Filter`, `DatePicker`, `Tabs`, `Insights`, `Text`, and `Icon`
 </canonical_authored_format>
 
 <layout_rules>
 - Favor clear grouping of content by section.
-- Prefer `Grid` as the primary composition for new dashboards.
-- Use `Panel`, `Card`, `header`, `section`, or `div` as structural items inside the grid when appropriate.
-- Every direct structural item inside `Grid` must provide `id`, `span`, and `rows`.
-- Keep the main dashboard `header` outside the `Grid`.
-- Do not place a main dashboard `Card` directly under `Vertical` or `Horizontal`.
+- Prefer semantic HTML/CSS as the primary composition for new dashboards.
+- Use `main`, `header`, `section`, `article`, `aside`, and `div` as structural items.
+- Meaningful structural items should provide a stable `id` when they may be patched, edited, or referenced later.
+- Keep the main dashboard `header` as a normal HTML header in the page flow.
+- Do not use `Grid`, `Vertical`, `Horizontal`, `Panel`, or `Card` for new dashboard layout.
 - Common layout responsibilities:
 - page-level structure
 - summary zone
@@ -1635,7 +1388,7 @@ AND ({{centro_lucro_id}}::int[] IS NULL OR cr.centro_lucro_id = ANY({{centro_luc
 - lower detail zone for tables/pivot tables
 - filters close to the widgets they affect
 - tabs only when multiple views would otherwise overload one page
-- Use HTML tags such as `header`, `section`, or `div` for local structure inside grid items.
+- Use CSS grid or flexbox directly in HTML `style` props.
 - Default dashboard reading flow:
   - summary first
   - analysis second
@@ -1646,7 +1399,6 @@ AND ({{centro_lucro_id}}::int[] IS NULL OR cr.centro_lucro_id = ANY({{centro_luc
 <style_rules>
 - Inline `style` is optional, not required.
 - Renderer/theme defaults already cover a large part of the visual system for:
-  - `Card`
   - `Text`
   - `KPI`
   - `DatePicker`
@@ -1656,15 +1408,19 @@ AND ({{centro_lucro_id}}::int[] IS NULL OR cr.centro_lucro_id = ANY({{centro_luc
   - `PivotTable`
 - `Icon` is different: its main customization usually comes from component props like `color`, `backgroundColor`, `borderColor`, `padding`, `size`, and `radius`, not from generic `style`.
 - Prefer semantic props and variants before adding `style`.
-- Prefer structural props on layout containers before adding `style`:
+- Layout containers are plain HTML, so use CSS properties directly:
+  - `display`
+  - `gridTemplateColumns`
+  - `gridColumn`
   - `gap`
-  - `columns`
-  - `rowHeight`
-  - `span`
-  - `rows`
   - `padding`
   - `width`
-  - `grow`
+  - `minHeight`
+  - `height`
+  - `flex`
+  - `flexDirection`
+  - `alignItems`
+  - `justifyContent`
 - Good reasons to use `style`:
   - local exception
   - one-off spacing or sizing adjustment
@@ -1680,7 +1436,8 @@ AND ({{centro_lucro_id}}::int[] IS NULL OR cr.centro_lucro_id = ANY({{centro_luc
   before using generic `style`.
 - Bad default behavior:
   - manually rewriting border, radius, background, color, and typography on every block
-  - treating `style` as mandatory on every `Card`, `Text`, `DatePicker`, or `Filter`
+  - treating visual overrides as mandatory on every `Text`, `DatePicker`, or `Filter`
+  - using old layout props like `span`, `rows`, `columns`, or `rowHeight` instead of CSS
   - rebuilding the whole visual system inline instead of using the renderer defaults
 </style_rules>
 
@@ -1780,7 +1537,7 @@ AND ({{centro_lucro_id}}::int[] IS NULL OR cr.centro_lucro_id = ANY({{centro_luc
 - Do not invent SQL schema/table/column names.
 - Do not regress to legacy dashboard DSL.
 - Do not treat HTML/JSX as forbidden; it is the correct default layout layer.
-- Do not regress from the `Grid`-first authored layout for new dashboards in this profile.
+- Do not regress to `Grid`/`Card`/`Panel` authored layout for new dashboards in this profile.
 - Do not manually style every block by default.
 - Do not silently change working semantics of a chart/table just to satisfy a visual request.
 - Do not collapse a user's dashboard into an invalid or partial file.

@@ -14,20 +14,20 @@ const CONTAINERS_VARIANT = {
 function buildContainersDashboardSource(themeName: string) {
   const resolvedThemeName = themeName || getDashboardTemplateThemeName('containers')
   return `<Dashboard id="overview" title="${CONTAINERS_VARIANT.title}" theme="${resolvedThemeName}" chartPalette="teal">
-        <Vertical gap={24} style={{ width: '100%', minHeight: '100%', backgroundColor: theme.pageBg }}>
-          <Horizontal gap={18}>
+        <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 24, width: '100%', minHeight: '100%', backgroundColor: theme.pageBg }}>
+          <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'row', gap: 18 }}>
               <header style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24, padding: 24, borderRadius: 24, border: '1px solid ' + theme.surfaceBorder, borderTop: 'none', backgroundColor: theme.headerBg, color: theme.headerText }}>
-                <Vertical gap={8} style={{ maxWidth: 720 }}>
+                <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 720 }}>
                   <Text variant="eyebrow">
                     Layout semantico em containers
                   </Text>
                   <Text as="h1" variant="page-title-sm">
-                    Dashboard com Vertical, Horizontal e Card
+                    Dashboard com containers HTML e CSS
                   </Text>
                   <Text variant="lead">
-                    Exemplo de autoria mais proxima de containers de BI, mantendo KPI, Chart e Cards normais.
+                    Exemplo de autoria com tags semanticas e CSS inline, mantendo KPI, Chart e filtros como componentes funcionais.
                   </Text>
-                </Vertical>
+                </div>
 
                 <div style={{ width: 340 }}>
                   <DatePicker
@@ -42,11 +42,11 @@ function buildContainersDashboardSource(themeName: string) {
                   />
                 </div>
               </header>
-          </Horizontal>
+          </section>
 
-          <Vertical gap={24} padding="0 28px 28px">
-            <Horizontal gap={16} columns={12} rowHeight={170}>
-              <Card id="kpi-receita" span={4} rows={1} variant="kpi" style={{ height: '100%' }}>
+          <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 24, padding: '0 28px 28px' }}>
+            <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 16, alignItems: 'stretch' }}>
+              <article id="kpi-receita" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 170, height: '100%' }}>
                   <KPI
                     title="Receita"
                     dataQuery={{
@@ -63,9 +63,9 @@ function buildContainersDashboardSource(themeName: string) {
                   >
                     <KPICompare />
                   </KPI>
-                </Card>
+                </article>
 
-              <Card id="kpi-pedidos" span={4} rows={1} variant="kpi" style={{ height: '100%' }}>
+              <article id="kpi-pedidos" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 170, height: '100%' }}>
                   <KPI
                     title="Pedidos"
                     dataQuery={{
@@ -82,9 +82,9 @@ function buildContainersDashboardSource(themeName: string) {
                   >
                     <KPICompare />
                   </KPI>
-                </Card>
+                </article>
 
-              <Card id="kpi-ticket" span={4} rows={1} variant="kpi" style={{ height: '100%' }}>
+              <article id="kpi-ticket" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 170, height: '100%' }}>
                   <KPI
                     title="Ticket medio"
                     dataQuery={{
@@ -101,11 +101,11 @@ function buildContainersDashboardSource(themeName: string) {
                   >
                     <KPICompare />
                   </KPI>
-                </Card>
-            </Horizontal>
+                </article>
+            </section>
 
-            <Horizontal gap={18} align="stretch" columns={12} rowHeight={420}>
-              <Card id="chart-receita-canal" span={8} rows={1} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <section style={{ boxSizing: 'border-box', minWidth: 0, display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 18, alignItems: 'stretch' }}>
+              <article id="chart-receita-canal" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 8', minHeight: 420, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <Text as="h2" variant="section-title-sm">Receita por canal</Text>
                   <Chart
                     type="bar"
@@ -128,11 +128,11 @@ function buildContainersDashboardSource(themeName: string) {
                     xAxis={{ dataKey: 'canal' }}
                     series={[{ dataKey: 'valor', label: 'Receita' }]}
                   />
-                </Card>
+                </article>
 
-              <Card id="filters-side" span={4} rows={1}>
-                <Vertical gap={18} style={{ height: '100%' }}>
-                  <Card style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <article id="filters-side" style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', gridColumn: 'span 4', minHeight: 420 }}>
+                <div style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 18, height: '100%' }}>
+                  <article style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
                     <Text as="h2" variant="section-title-sm">Canal</Text>
                     <Filter
                       label="Canal"
@@ -153,19 +153,19 @@ function buildContainersDashboardSource(themeName: string) {
                     >
                       <Select />
                     </Filter>
-                  </Card>
+                  </article>
 
-                  <Card style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <article style={{ boxSizing: 'border-box', minWidth: 0, display: 'flex', flexDirection: 'column', padding: 18, border: '1px solid ' + theme.surfaceBorder, borderRadius: theme.cardFrame ? 0 : 16, backgroundColor: theme.surfaceBg, boxShadow: theme.cardFrame ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <Text variant="eyebrow">Leitura esperada</Text>
                     <Text variant="lead">
-                      Este exemplo usa containers semanticos para organizar cabecalho, KPIs e linha analitica sem depender de HTML livre em toda parte.
+                      Este exemplo usa containers HTML para organizar cabecalho, KPIs e linha analitica sem depender dos componentes de layout antigos.
                     </Text>
-                  </Card>
-                </Vertical>
-              </Card>
-            </Horizontal>
-          </Vertical>
-        </Vertical>
+                  </article>
+                </div>
+              </article>
+            </section>
+          </div>
+        </div>
 </Dashboard>`
 }
 
