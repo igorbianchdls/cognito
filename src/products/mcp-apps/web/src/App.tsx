@@ -3,10 +3,12 @@ import { ErrorState } from '@/products/mcp-apps/web/src/components/ErrorState'
 import { LoadingState } from '@/products/mcp-apps/web/src/components/LoadingState'
 import { useMcpAppToolResult } from '@/products/mcp-apps/web/src/bridge'
 import type {
+  ChartResultStructuredContent,
   DataResultStructuredContent,
   DashboardListStructuredContent,
   DashboardPreviewStructuredContent,
 } from '@/products/mcp-apps/web/src/types/toolResult'
+import { ChartResultView } from '@/products/mcp-apps/web/src/views/ChartResultView'
 import { DashboardListView } from '@/products/mcp-apps/web/src/views/DashboardListView'
 import { DashboardPreviewView } from '@/products/mcp-apps/web/src/views/DashboardPreviewView'
 import { DataResultView } from '@/products/mcp-apps/web/src/views/DataResultView'
@@ -52,6 +54,9 @@ export function App() {
       ) : null}
       {view === 'dashboard_preview' ? (
         <DashboardPreviewView data={structuredContent as DashboardPreviewStructuredContent} />
+      ) : null}
+      {view === 'chart' ? (
+        <ChartResultView data={structuredContent as ChartResultStructuredContent} />
       ) : null}
       {isDataTool ? (
         <DataResultView data={structuredContent as DataResultStructuredContent} />

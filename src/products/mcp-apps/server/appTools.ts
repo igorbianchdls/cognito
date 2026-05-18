@@ -16,6 +16,7 @@ import {
 export const MCP_APP_PUBLIC_TOOL_NAMES = {
   dashboards: 'dashboards',
   openDashboard: 'open_dashboard',
+  chart: 'chart',
   dashboardAuthoring: 'dashboard_authoring',
 } as const
 
@@ -70,6 +71,76 @@ const OPEN_DASHBOARD_SCHEMA = {
     },
   },
   required: ['id'],
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
+
+const CHART_SCHEMA = {
+  type: 'object',
+  properties: {
+    title: {
+      type: 'string',
+      description: 'Titulo principal do grafico.',
+    },
+    subtitle: {
+      type: 'string',
+      description: 'Subtitulo opcional, normalmente com periodo, quantidade de registros ou contexto da consulta.',
+    },
+    total: {
+      type: 'object',
+      description: 'Valor destacado no topo do card. Se omitido, a UI soma os valores das linhas.',
+      properties: {
+        label: { type: 'string' },
+        value: {
+          description: 'Valor total numerico ou texto ja formatado.',
+        },
+        format: {
+          type: 'string',
+          enum: ['currency', 'number', 'percent'],
+          description: 'Formato preferencial para exibir o total.',
+        },
+      },
+      additionalProperties: true,
+    },
+    chart: {
+      type: 'object',
+      description:
+        'Configuracao visual. A tool nao executa SQL; envie os dados ja consultados em rows e indique quais campos sao label e valor.',
+      properties: {
+        type: {
+          type: 'string',
+          enum: ['donut', 'horizontal_bar', 'bar'],
+          description: 'Tipo visual. donut renderiza rosca com barras de composicao ao lado.',
+        },
+        labelField: {
+          type: 'string',
+          description: 'Nome do campo de rows usado como rotulo.',
+        },
+        xField: {
+          type: 'string',
+          description: 'Alias aceito para labelField.',
+        },
+        valueField: {
+          type: 'string',
+          description: 'Nome do campo numerico de rows usado como valor.',
+        },
+        format: {
+          type: 'string',
+          enum: ['currency', 'number', 'percent'],
+          description: 'Formato dos valores das series.',
+        },
+      },
+      additionalProperties: true,
+    },
+    rows: {
+      type: 'array',
+      description: 'Linhas ja calculadas pela consulta ou tool anterior. Cada linha deve conter campo de label e valor.',
+      items: {
+        type: 'object',
+        additionalProperties: true,
+      },
+    },
+  },
+  required: ['chart', 'rows'],
   additionalProperties: true,
 } as const satisfies McpToolInputSchema
 
@@ -201,6 +272,34 @@ const RENDER_PREVIEW_OUTPUT_SCHEMA = {
     dashboard: {
       type: 'object',
       additionalProperties: true,
+    },
+  },
+  required: ['ok', 'tool', 'view'],
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
+
+const CHART_OUTPUT_SCHEMA = {
+  type: 'object',
+  properties: {
+    ok: { type: 'boolean' },
+    tool: { type: 'string' },
+    view: { type: 'string', enum: ['chart'] },
+    title: { type: 'string' },
+    subtitle: { type: 'string' },
+    total: {
+      type: 'object',
+      additionalProperties: true,
+    },
+    chart: {
+      type: 'object',
+      additionalProperties: true,
+    },
+    rows: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: true,
+      },
     },
   },
   required: ['ok', 'tool', 'view'],
@@ -823,6 +922,39 @@ async function callOpenDashboard(args: unknown) {
   }
 }
 
+function normalizeChartRows(value: unknown) {
+  if (!Array.isArray(value)) return []
+  return value.filter((item): item is JsonRecord => Boolean(item && typeof item === 'object' && !Array.isArray(item)))
+}
+
+function callChart(args: unknown) {
+  const input = asRecord(args)
+  const rows = normalizeChartRows(input.rows)
+  const chart = asRecord(input.chart)
+  const total = asRecord(input.total)
+  const title = optionalText(input.title) || 'Grafico'
+  const subtitle = optionalText(input.subtitle) || `${rows.length} registro${rows.length === 1 ? '' : 's'}`
+  const structuredContent = {
+    ok: true,
+    tool: MCP_APP_PUBLIC_TOOL_NAMES.chart,
+    view: 'chart',
+    title,
+    subtitle,
+    ...(Object.keys(total).length ? { total } : {}),
+    chart,
+    rows,
+  }
+
+  return {
+    content: [{ type: 'text', text: `Renderizando grafico ${title}.` }],
+    structuredContent,
+    _meta: {
+      widget: DASHBOARD_WIDGET_RESOURCE_URI,
+    },
+    isError: false,
+  }
+}
+
 async function callDashboardAuthoring(args: unknown, context: CognitoMcpServerContext) {
   const input = asRecord(args)
   const action = String(input.action || '').trim()
@@ -941,6 +1073,20 @@ export function listCognitoMcpAppTools() {
           securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
         },
       },
+      {
+        name: MCP_APP_PUBLIC_TOOL_NAMES.chart,
+        title: 'Chart',
+        description:
+          'Renderiza um grafico no app interativo usando dados estruturados ja calculados. Nao executa SQL; use depois de uma tool de dados como erp, crm, marketing, ecommerce ou sql.',
+        inputSchema: CHART_SCHEMA,
+        outputSchema: CHART_OUTPUT_SCHEMA,
+        securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
+        annotations: READ_ONLY_ANNOTATIONS,
+        _meta: {
+          ...DASHBOARD_WIDGET_META,
+          securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
+        },
+      },
       ...listMcpAppDomainToolDefinitions(),
       {
         name: MCP_APP_PUBLIC_TOOL_NAMES.dashboardAuthoring,
@@ -1001,6 +1147,10 @@ export async function callCognitoMcpAppTool(
 
   if (name === MCP_APP_PUBLIC_TOOL_NAMES.openDashboard) {
     return callOpenDashboard(args)
+  }
+
+  if (name === MCP_APP_PUBLIC_TOOL_NAMES.chart) {
+    return callChart(args)
   }
 
   if (name === MCP_APP_PUBLIC_TOOL_NAMES.dashboardAuthoring) {

@@ -30,7 +30,6 @@ export function DashboardCard({ dashboard }: DashboardCardProps) {
   const title = dashboard.title || 'Dashboard sem titulo'
   const version = dashboard.current_draft_version ?? dashboard.current_published_version
   const thumbnail = dashboard.thumbnail_data_url || ''
-  const identifier = dashboard.slug || dashboard.id || 'Sem identificador'
   const status = formatStatus(dashboard.status)
 
   return (
@@ -51,9 +50,6 @@ export function DashboardCard({ dashboard }: DashboardCardProps) {
             <span className="dashboard-card__version">{version ? `v${version}` : 'sem versao'}</span>
           </div>
           <h2>{title}</h2>
-          <p className="dashboard-card__identifier">
-            <span>{identifier}</span>
-          </p>
         </div>
         <div className="dashboard-card__footer">
           <p className="dashboard-card__updated">

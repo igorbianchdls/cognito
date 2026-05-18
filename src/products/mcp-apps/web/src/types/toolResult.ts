@@ -35,7 +35,35 @@ export type DataResultStructuredContent = {
   chart?: unknown
 }
 
+export type ChartFormat = 'currency' | 'number' | 'percent' | string
+
+export type ChartTotal = {
+  label?: string
+  value?: number | string | null
+  format?: ChartFormat
+}
+
+export type ChartConfig = {
+  type?: 'donut' | 'horizontal_bar' | 'bar' | string
+  labelField?: string
+  xField?: string
+  valueField?: string
+  format?: ChartFormat
+}
+
+export type ChartResultStructuredContent = {
+  ok?: boolean
+  tool?: 'chart' | string
+  view?: 'chart'
+  title?: string
+  subtitle?: string
+  total?: ChartTotal
+  chart?: ChartConfig
+  rows?: unknown[]
+}
+
 export type DashboardStructuredContent =
   | DashboardListStructuredContent
   | DashboardPreviewStructuredContent
+  | ChartResultStructuredContent
   | DataResultStructuredContent
