@@ -36,8 +36,8 @@ export function getRows(data: { rows?: unknown }) {
 
 export function getColumns(data: { columns?: unknown }, rows: DataRow[]) {
   const explicitColumns = Array.isArray(data.columns) ? data.columns.map(String) : []
-  const columns = explicitColumns.length ? explicitColumns : Array.from(new Set(rows.flatMap((row) => Object.keys(row))))
-  return columns.sort((a, b) => scoreColumn(a) - scoreColumn(b))
+  if (explicitColumns.length) return explicitColumns
+  return Array.from(new Set(rows.flatMap((row) => Object.keys(row)))).sort((a, b) => scoreColumn(a) - scoreColumn(b))
 }
 
 export function getColumnKind(column: string, rows: DataRow[]) {

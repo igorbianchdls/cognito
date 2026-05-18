@@ -202,6 +202,7 @@ const ERP_RESOURCE_TABLES = {
   'financeiro/categorias-despesa': 'financeiro.categorias_despesa',
   'financeiro/categorias-receita': 'financeiro.categorias_receita',
   'financeiro/clientes': 'entidades.clientes',
+  'financeiro/fornecedores': 'entidades.fornecedores',
   'financeiro/centros-custo': 'empresa.centros_custo',
   'financeiro/centros-lucro': 'empresa.centros_lucro',
   'vendas/pedidos': 'vendas.pedidos',
@@ -297,7 +298,7 @@ function createCrudSchema(allowedResources: string[], description: string) {
 
 const ERP_CRUD_SCHEMA = createCrudSchema(
   ERP_ALLOWED_RESOURCES,
-  'Resource canonico do ERP. Exemplos comuns: contas-a-pagar, contas-a-receber, vendas/pedidos, compras/pedidos, financeiro/clientes, estoque/estoque-atual.',
+  'Resource canonico do ERP. Exemplos comuns: contas-a-pagar, contas-a-receber, vendas/pedidos, compras/pedidos, financeiro/clientes, financeiro/fornecedores, financeiro/contas-financeiras, estoque/estoque-atual.',
 )
 
 const CRM_SCHEMA = createCrudSchema(
@@ -1855,7 +1856,8 @@ function buildFinanceClientsQuery(action: CrudAction, paramsIn: JsonRecord, tena
   return {
     sql: `
 SELECT
-  COALESCE(NULLIF(c.nome_fantasia, ''), '-') AS cliente,
+  c.id,
+  COALESCE(NULLIF(c.nome_fantasia, ''), '-') AS nome,
   COALESCE(NULLIF(c.cnpj_cpf, ''), '-') AS documento
 FROM entidades.clientes c
 ${base.whereClause}
@@ -1865,6 +1867,34 @@ OFFSET $${base.offsetParam}::int
     `.trim(),
     params: base.params,
     title: 'Clientes',
+    chart: null,
+  }
+}
+
+function buildFinanceSuppliersQuery(action: CrudAction, paramsIn: JsonRecord, tenantId: number): BuiltQuery {
+  const base = buildSemanticWhere(action, paramsIn, tenantId, {
+    alias: 'f',
+    tenantScoped: false,
+    searchExpressions: ['f.nome_fantasia', 'f.cnpj', 'f.email', 'f.telefone'],
+    defaultLimit: 100,
+  })
+
+  return {
+    sql: `
+SELECT
+  f.id,
+  COALESCE(NULLIF(f.nome_fantasia, ''), '-') AS nome,
+  COALESCE(NULLIF(f.cnpj, ''), '-') AS documento,
+  COALESCE(NULLIF(f.email, ''), '-') AS email,
+  COALESCE(NULLIF(f.telefone, ''), '-') AS telefone
+FROM entidades.fornecedores f
+${base.whereClause}
+ORDER BY f.nome_fantasia ASC NULLS LAST, f.id ASC
+LIMIT $${base.limitParam}::int
+OFFSET $${base.offsetParam}::int
+    `.trim(),
+    params: base.params,
+    title: 'Fornecedores',
     chart: null,
   }
 }
@@ -1882,7 +1912,8 @@ function buildFinancialBankAccountsQuery(action: CrudAction, paramsIn: JsonRecor
   return {
     sql: `
 SELECT
-  cf.nome_conta,
+  cf.id,
+  cf.nome_conta AS nome,
   COALESCE(NULLIF(cf.tipo_conta, ''), '-') AS tipo_conta,
   COALESCE(NULLIF(cf.agencia, ''), '-') AS agencia,
   COALESCE(NULLIF(cf.numero_conta, ''), '-') AS numero_conta,
@@ -1919,6 +1950,7 @@ function buildNamedBusinessResourceQuery(
   return {
     sql: `
 SELECT
+  ${alias}.id,
   COALESCE(NULLIF(${alias}.codigo, ''), '-') AS codigo,
   ${alias}.nome,
   COALESCE(NULLIF(${alias}.descricao, ''), '-') AS descricao,
@@ -2041,6 +2073,10 @@ function buildCrudQuery(action: CrudAction, resource: string, paramsIn: JsonReco
 
   if (resource === 'financeiro/clientes') {
     return buildFinanceClientsQuery(action, paramsIn, tenantId)
+  }
+
+  if (resource === 'financeiro/fornecedores') {
+    return buildFinanceSuppliersQuery(action, paramsIn, tenantId)
   }
 
   if (resource === 'financeiro/contas-financeiras') {
