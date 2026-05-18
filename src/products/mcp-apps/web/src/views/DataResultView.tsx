@@ -1,19 +1,55 @@
 import { DataTable } from '@/products/mcp-apps/web/src/components/DataTable'
 import { EmptyState } from '@/products/mcp-apps/web/src/components/EmptyState'
-import { MetricSummary } from '@/products/mcp-apps/web/src/components/MetricSummary'
 import { ResultShell } from '@/products/mcp-apps/web/src/components/ResultShell'
 import type { DataResultStructuredContent } from '@/products/mcp-apps/web/src/types/toolResult'
-import { getToolVisual } from '@/products/mcp-apps/web/src/utils/format'
-import { getColumns, getRows } from '@/products/mcp-apps/web/src/utils/table'
+import { formatCurrency, formatNumber, getToolVisual } from '@/products/mcp-apps/web/src/utils/format'
+import {
+  getColumns,
+  getPrimaryMoneyColumn,
+  getRows,
+  sumNumericColumn,
+  type DataRow,
+} from '@/products/mcp-apps/web/src/utils/table'
 
 type DataResultViewProps = {
   data: DataResultStructuredContent
+}
+
+function normalizeColumnName(column: string) {
+  return column
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '')
+}
+
+function getLiquidValueColumn(columns: string[], rows: DataRow[]) {
+  const explicitLiquidColumn = columns.find((column) => {
+    const normalized = normalizeColumnName(column)
+    return normalized.includes('valorliquido') && rows.some((row) => typeof row[column] === 'number')
+  })
+
+  return explicitLiquidColumn || getPrimaryMoneyColumn(columns, rows)
+}
+
+function buildTableSubtitle(data: DataResultStructuredContent, rows: DataRow[], columns: string[]) {
+  const count = typeof data.count === 'number' ? data.count : rows.length
+  const liquidValueColumn = getLiquidValueColumn(columns, rows)
+  const parts = [`${formatNumber(count)} registros`]
+
+  if (liquidValueColumn) {
+    parts.push(`Valor liquido: ${formatCurrency(sumNumericColumn(rows, liquidValueColumn))}`)
+  }
+
+  return parts.join(' · ')
 }
 
 export function DataResultView({ data }: DataResultViewProps) {
   const rows = getRows(data)
   const columns = getColumns(data, rows)
   const toolVisual = getToolVisual(data.tool)
+  const tableTitle = data.title || 'Resultado'
+  const tableSubtitle = buildTableSubtitle(data, rows, columns)
   const description = [
     data.action ? `Acao: ${data.action}` : null,
     data.resource ? `Recurso: ${data.resource}` : null,
@@ -26,7 +62,7 @@ export function DataResultView({ data }: DataResultViewProps) {
         eyebrow={toolVisual.label}
         icon={toolVisual.icon}
         tone={toolVisual.tone}
-        title={data.title || 'Resultado'}
+        title={tableTitle}
         description={description || 'A tool retornou uma resposta estruturada.'}
       >
         <EmptyState title="Sem linhas" description="A tool retornou uma tabela vazia." />
@@ -39,11 +75,10 @@ export function DataResultView({ data }: DataResultViewProps) {
       eyebrow={toolVisual.label}
       icon={toolVisual.icon}
       tone={toolVisual.tone}
-      title={data.title || 'Resultado'}
+      title={tableTitle}
       description={description || 'Resultado estruturado da tool.'}
     >
-      <MetricSummary rows={rows} columns={columns} count={data.count} />
-      <DataTable rows={rows} columns={columns} />
+      <DataTable rows={rows} columns={columns} title={tableTitle} subtitle={tableSubtitle} />
     </ResultShell>
   )
 }

@@ -8,12 +8,14 @@ import { StatusBadge } from '@/products/mcp-apps/web/src/components/StatusBadge'
 type DataTableProps = {
   rows: DataRow[]
   columns: string[]
+  title: string
+  subtitle?: string
 }
 
 const pageSizeOptions = [25, 50, 100]
 const defaultPageSize = 25
 
-export function DataTable({ rows, columns }: DataTableProps) {
+export function DataTable({ rows, columns, title, subtitle }: DataTableProps) {
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(defaultPageSize)
 
@@ -40,11 +42,10 @@ export function DataTable({ rows, columns }: DataTableProps) {
   return (
     <section className="result-card table-card">
       <div className="result-card__header">
-        <h2>Tabela</h2>
-        <span>
-          {rows.length ? `${startIndex + 1}-${endIndex} de ` : ''}
-          {rows.length} linhas
-        </span>
+        <div className="result-card__title">
+          <h2>{title}</h2>
+          {subtitle ? <p>{subtitle}</p> : null}
+        </div>
       </div>
       <div className="table-scroll">
         <table className="data-table">
