@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { verifyAgentToken } from '@/app/api/chat/tokenStore'
-import { ArtifactToolError, patchDashboardArtifact } from '@/products/artifacts/backend/dashboardArtifactsService'
+import { patchArtifact, type ArtifactKind } from '@/products/artifacts/backend/artifactService'
+import { ArtifactToolError } from '@/products/artifacts/backend/dashboardArtifactsService'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300
@@ -30,6 +31,11 @@ function toolErrorJson(status: number, code: string, error: string, details?: Re
   )
 }
 
+function getArtifactType(payload: Record<string, unknown>): ArtifactKind {
+  const value = String(payload.artifact_type || payload.type || payload.kind || 'dashboard')
+  return value === 'slide' || value === 'report' ? value : 'dashboard'
+}
+
 export async function POST(req: NextRequest) {
   try {
     if (unauthorized(req)) {
@@ -40,7 +46,9 @@ export async function POST(req: NextRequest) {
       ? (payload.operation as Record<string, unknown>)
       : {}
 
-    const result = await patchDashboardArtifact({
+    const artifactType = getArtifactType(payload)
+    const result = await patchArtifact({
+      artifactType,
       artifactId: String(payload.artifact_id ?? ''),
       expectedVersion: Number(payload.expected_version),
       operation: {

@@ -69,6 +69,7 @@ const toolsList = await callMcp('tools/list')
 const toolNames = (toolsList?.tools || []).map((tool) => tool.name)
 assert(toolNames.includes('dashboard_get_contract'), 'tools/list missing dashboard_get_contract')
 assert(toolNames.includes('dashboard_create'), 'tools/list missing dashboard_create')
+assert(toolNames.includes('artifact_authoring'), 'tools/list missing artifact_authoring')
 console.log(`tools/list ok: ${toolNames.join(', ')}`)
 
 const contract = await callMcp('tools/call', {
@@ -82,5 +83,18 @@ assert(structuredContract?.artifact_type === 'dashboard', 'dashboard_get_contrac
 assert(typeof structuredContract?.example_source === 'string', 'dashboard_get_contract missing example_source')
 console.log('dashboard_get_contract ok')
 
-console.log('MCP smoke test passed')
+const reportContract = await callMcp('tools/call', {
+  name: 'artifact_authoring',
+  arguments: {
+    kind: 'report',
+    action: 'get_contract',
+    include_example: true,
+  },
+})
+const structuredReportContract = reportContract?.structuredContent
+assert(structuredReportContract?.kind === 'report', 'artifact_authoring report contract returned invalid kind')
+assert(structuredReportContract?.contract?.dsl_version === 'report.v1', 'artifact_authoring missing report.v1 contract')
+assert(typeof structuredReportContract?.contract?.example_source === 'string', 'artifact_authoring missing report example_source')
+console.log('artifact_authoring report contract ok')
 
+console.log('MCP smoke test passed')

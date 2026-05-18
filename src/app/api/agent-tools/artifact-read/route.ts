@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { verifyAgentToken } from '@/app/api/chat/tokenStore'
-import { ArtifactToolError, readDashboardArtifact } from '@/products/artifacts/backend/dashboardArtifactsService'
+import { readArtifact, type ArtifactKind } from '@/products/artifacts/backend/artifactService'
+import { ArtifactToolError } from '@/products/artifacts/backend/dashboardArtifactsService'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300
@@ -30,15 +31,27 @@ function toolErrorJson(status: number, code: string, error: string, details?: Re
   )
 }
 
+function getArtifactType(payload: Record<string, unknown>): ArtifactKind {
+  const value = String(payload.artifact_type || payload.type || payload.kind || 'dashboard')
+  return value === 'slide' || value === 'report' ? value : 'dashboard'
+}
+
+function getSourceKind(payload: Record<string, unknown>) {
+  const value = String(payload.source_kind || payload.kind || 'draft')
+  return value === 'published' ? 'published' : 'draft'
+}
+
 export async function POST(req: NextRequest) {
   try {
     if (unauthorized(req)) {
       return toolErrorJson(401, 'unauthorized', 'Token inválido para artifact_read')
     }
     const payload = (await req.json().catch(() => ({}))) as Record<string, unknown>
-    const result = await readDashboardArtifact({
+    const artifactType = getArtifactType(payload)
+    const result = await readArtifact({
+      artifactType,
       artifactId: String(payload.artifact_id ?? ''),
-      kind: payload.kind === 'published' ? 'published' : 'draft',
+      kind: getSourceKind(payload),
       version: payload.version == null ? null : Number(payload.version),
     })
 

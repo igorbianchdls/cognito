@@ -26,6 +26,12 @@ function getToolInvocationText(name: string) {
     case 'dashboard_read':
     case 'fetch':
       return ['Abrindo dashboard...', 'Dashboard carregado.']
+    case 'open_artifact':
+      return ['Abrindo artifact...', 'Artifact carregado.']
+    case 'artifact_authoring':
+      return ['Atualizando artifact...', 'Artifact atualizado.']
+    case 'chart':
+      return ['Renderizando grafico...', 'Grafico renderizado.']
     case 'dashboard_authoring':
       return ['Atualizando dashboard...', 'Dashboard atualizado.']
     case 'dashboard_get_contract':

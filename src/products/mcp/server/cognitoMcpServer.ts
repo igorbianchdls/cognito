@@ -1,6 +1,9 @@
 import { DASHBOARD_AUTHORING_PROMPT } from '@/products/mcp/prompts/dashboardAuthoringPrompt'
+import { ARTIFACT_MCP_TOOL_DEFINITIONS } from '@/products/mcp/tools/artifactSchemas'
+import { executeMcpArtifactTool } from '@/products/mcp/tools/artifactTools'
 import { DASHBOARD_MCP_TOOL_DEFINITIONS } from '@/products/mcp/tools/dashboardSchemas'
 import { executeMcpDashboardTool } from '@/products/mcp/tools/dashboardTools'
+import { MCP_ARTIFACT_TOOL_NAME_SET } from '@/products/mcp/shared/toolNames'
 
 export const COGNITO_MCP_SERVER_INFO = {
   name: 'cognito',
@@ -28,7 +31,7 @@ export function getCognitoMcpInitializeResult(requestedProtocolVersion?: string)
 
 export function listCognitoMcpTools() {
   return {
-    tools: DASHBOARD_MCP_TOOL_DEFINITIONS.map((tool) => ({
+    tools: [...DASHBOARD_MCP_TOOL_DEFINITIONS, ...ARTIFACT_MCP_TOOL_DEFINITIONS].map((tool) => ({
       name: tool.name,
       description: tool.description,
       inputSchema: tool.inputSchema,
@@ -41,7 +44,9 @@ export async function callCognitoMcpTool(
   args: unknown,
   context: CognitoMcpServerContext = {},
 ) {
-  const result = await executeMcpDashboardTool(name, args, context)
+  const result = MCP_ARTIFACT_TOOL_NAME_SET.has(name)
+    ? await executeMcpArtifactTool(name, args, context)
+    : await executeMcpDashboardTool(name, args, context)
   return {
     content: [
       {
@@ -53,4 +58,3 @@ export async function callCognitoMcpTool(
     isError: false,
   }
 }
-

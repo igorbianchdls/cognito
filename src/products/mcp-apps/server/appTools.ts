@@ -2,10 +2,13 @@ import { type McpToolInputSchema } from '@/products/mcp/tools/dashboardSchemas'
 import { callCognitoMcpTool, type CognitoMcpServerContext } from '@/products/mcp/server/cognitoMcpServer'
 import { DASHBOARD_WIDGET_RESOURCE_URI } from '@/products/mcp-apps/server/appResources'
 import {
+  buildArtifactUrl,
   buildDashboardArtifactUrl,
   listMcpDashboards,
+  readMcpArtifact,
   readMcpDashboard,
 } from '@/products/mcp/adapters/artifactsAdapter'
+import { MCP_ARTIFACT_TOOL_NAMES } from '@/products/mcp/shared/toolNames'
 import { createDashboardEmbedToken } from '@/products/mcp-apps/server/embedToken'
 import {
   callMcpAppDomainTool,
@@ -16,7 +19,9 @@ import {
 export const MCP_APP_PUBLIC_TOOL_NAMES = {
   dashboards: 'dashboards',
   openDashboard: 'open_dashboard',
+  openArtifact: 'open_artifact',
   chart: 'chart',
+  artifactAuthoring: 'artifact_authoring',
   dashboardAuthoring: 'dashboard_authoring',
 } as const
 
@@ -71,6 +76,75 @@ const OPEN_DASHBOARD_SCHEMA = {
     },
   },
   required: ['id'],
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
+
+const OPEN_ARTIFACT_SCHEMA = {
+  type: 'object',
+  properties: {
+    kind: {
+      type: 'string',
+      enum: ['dashboard', 'slide', 'report'],
+      description: 'Tipo do artifact a abrir.',
+    },
+    id: {
+      type: 'string',
+      description: 'ID do artifact retornado por artifact_authoring.',
+    },
+  },
+  required: ['kind', 'id'],
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
+
+const ARTIFACT_AUTHORING_SCHEMA = {
+  type: 'object',
+  properties: {
+    kind: {
+      type: 'string',
+      enum: ['dashboard', 'slide', 'report'],
+      description: 'Tipo de artifact: dashboard, slide ou report.',
+    },
+    action: {
+      type: 'string',
+      enum: ['get_contract', 'create', 'patch', 'update_full'],
+      description: 'Acao de autoria.',
+    },
+    id: {
+      type: 'string',
+      description: 'ID do artifact para patch ou update_full.',
+    },
+    title: {
+      type: 'string',
+      description: 'Titulo do artifact ao usar action=create.',
+    },
+    source: {
+      type: 'string',
+      description: 'Source TSX completo ao usar create ou update_full.',
+    },
+    expected_version: {
+      type: 'integer',
+      description: 'Versao draft esperada para patch/update_full. Opcional; se omitida, usa a versao draft atual.',
+    },
+    operation: {
+      type: 'object',
+      description: 'Operacao de patch quando action=patch. Use type=replace_text com old_string/new_string ou type=replace_full_source com source.',
+      additionalProperties: true,
+    },
+    include_example: {
+      type: 'boolean',
+      description: 'Quando action=get_contract, informe true para incluir exemplo de source TSX.',
+    },
+    metadata: {
+      type: 'object',
+      description: 'Metadados opcionais persistidos no artifact.',
+      additionalProperties: true,
+    },
+    change_summary: {
+      type: 'string',
+      description: 'Resumo curto opcional da mudanca.',
+    },
+  },
+  required: ['kind', 'action'],
   additionalProperties: true,
 } as const satisfies McpToolInputSchema
 
@@ -415,6 +489,26 @@ const DASHBOARD_WRITE_OUTPUT_SCHEMA = {
   additionalProperties: true,
 } as const satisfies McpToolInputSchema
 
+const ARTIFACT_AUTHORING_OUTPUT_SCHEMA = {
+  type: 'object',
+  properties: {
+    ok: { type: 'boolean' },
+    tool: { type: 'string' },
+    kind: { type: 'string', enum: ['dashboard', 'slide', 'report'] },
+    action: { type: 'string' },
+    contract: {
+      type: 'object',
+      additionalProperties: true,
+    },
+    artifact: {
+      type: 'object',
+      additionalProperties: true,
+    },
+  },
+  required: ['ok', 'tool', 'kind', 'action'],
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
+
 const DASHBOARD_CONTRACT_OUTPUT_SCHEMA = {
   type: 'object',
   properties: {
@@ -639,12 +733,44 @@ function buildDashboardEmbedUrl(artifactId: string, version?: unknown) {
   return `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}${params.toString()}`
 }
 
+function getArtifactKind(value: unknown) {
+  const kind = String(value || '').trim()
+  if (kind === 'dashboard' || kind === 'slide' || kind === 'report') return kind
+  return null
+}
+
+function buildArtifactEmbedUrl(kind: 'dashboard' | 'slide' | 'report', artifactId: string, version?: unknown) {
+  const token = createDashboardEmbedToken(artifactId)
+  const baseUrl = kind === 'dashboard'
+    ? buildDashboardArtifactUrl(artifactId)
+    : buildArtifactUrl(kind, artifactId)
+  const params = new URLSearchParams({
+    embed: '1',
+    token,
+  })
+  const versionNumber = Number(version)
+  if (Number.isInteger(versionNumber) && versionNumber > 0) {
+    params.set('version', String(versionNumber))
+  }
+  return `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}${params.toString()}`
+}
+
 function withDashboardEmbedUrl<T extends JsonRecord>(dashboard: T): T & { embed_url?: string } {
   const artifactId = getDashboardArtifactId(dashboard)
   if (!artifactId) return dashboard
   return {
     ...dashboard,
     embed_url: buildDashboardEmbedUrl(artifactId, dashboard.version || dashboard.current_draft_version),
+  }
+}
+
+function withArtifactEmbedUrl<T extends JsonRecord>(artifact: T, fallbackKind?: 'dashboard' | 'slide' | 'report'): T & { embed_url?: string } {
+  const artifactId = getDashboardArtifactId(artifact)
+  const kind = getArtifactKind(artifact.artifact_type || artifact.kind || fallbackKind) || 'dashboard'
+  if (!artifactId) return artifact
+  return {
+    ...artifact,
+    embed_url: buildArtifactEmbedUrl(kind, artifactId, artifact.version || artifact.current_draft_version),
   }
 }
 
@@ -922,6 +1048,86 @@ async function callOpenDashboard(args: unknown) {
   }
 }
 
+async function callOpenArtifact(args: unknown) {
+  const input = asRecord(args)
+  const kind = getArtifactKind(input.kind)
+  const id = optionalText(input.id || input.artifact_id)
+  if (!kind || !id) {
+    const structuredContent = {
+      ok: false,
+      tool: MCP_APP_PUBLIC_TOOL_NAMES.openArtifact,
+      view: 'dashboard_preview',
+      title: 'Artifact nao informado',
+      dashboard: null,
+    }
+
+    return {
+      content: [{ type: 'text', text: 'kind e id sao obrigatorios para abrir o artifact.' }],
+      structuredContent,
+      isError: true,
+    }
+  }
+
+  const artifact = await readMcpArtifact({ artifactType: kind, artifactId: id, kind: 'draft' })
+  const artifactWithEmbed = withArtifactEmbedUrl(artifact as JsonRecord, kind)
+  const title = String(artifactWithEmbed.title || artifactWithEmbed.slug || id)
+  const structuredContent = {
+    ok: true,
+    tool: MCP_APP_PUBLIC_TOOL_NAMES.openArtifact,
+    view: 'dashboard_preview',
+    title,
+    dashboard: artifactWithEmbed,
+  }
+
+  return {
+    content: [{ type: 'text', text: `Abrindo ${kind} ${title}.` }],
+    structuredContent,
+    _meta: {
+      widget: DASHBOARD_WIDGET_RESOURCE_URI,
+    },
+    isError: false,
+  }
+}
+
+async function callArtifactAuthoring(args: unknown, context: CognitoMcpServerContext, forcedKind?: 'dashboard' | 'slide' | 'report') {
+  const input = asRecord(args)
+  const kind = forcedKind || getArtifactKind(input.kind)
+  if (!kind) {
+    const structuredContent = {
+      ok: false,
+      tool: forcedKind ? MCP_APP_PUBLIC_TOOL_NAMES.dashboardAuthoring : MCP_APP_PUBLIC_TOOL_NAMES.artifactAuthoring,
+      error: 'kind invalido. Use dashboard, slide ou report.',
+    }
+
+    return {
+      content: [{ type: 'text', text: structuredContent.error }],
+      structuredContent,
+      isError: true,
+    }
+  }
+
+  const commonArgs = {
+    ...input,
+    kind,
+    ...(input.id && !input.artifact_id ? { artifact_id: input.id } : {}),
+  }
+  const result = await callCognitoMcpTool(MCP_ARTIFACT_TOOL_NAMES.artifactAuthoring, commonArgs, context)
+  const resultContent = asRecord(result.structuredContent)
+  const artifact = asRecord(resultContent.artifact)
+  const structuredContent = {
+    ...resultContent,
+    ok: true,
+    tool: forcedKind ? MCP_APP_PUBLIC_TOOL_NAMES.dashboardAuthoring : MCP_APP_PUBLIC_TOOL_NAMES.artifactAuthoring,
+    ...(Object.keys(artifact).length ? { artifact: withArtifactEmbedUrl(artifact, kind) } : {}),
+  }
+
+  return {
+    ...result,
+    structuredContent,
+    content: [{ type: 'text', text: JSON.stringify(structuredContent, null, 2) }],
+  }
+}
+
 function normalizeChartRows(value: unknown) {
   if (!Array.isArray(value)) return []
   return value.filter((item): item is JsonRecord => Boolean(item && typeof item === 'object' && !Array.isArray(item)))
@@ -956,90 +1162,7 @@ function callChart(args: unknown) {
 }
 
 async function callDashboardAuthoring(args: unknown, context: CognitoMcpServerContext) {
-  const input = asRecord(args)
-  const action = String(input.action || '').trim()
-  const artifactId = optionalText(input.id || input.artifact_id)
-  const commonArgs: JsonRecord = {
-    ...input,
-    ...(artifactId ? { artifact_id: artifactId } : {}),
-  }
-  delete commonArgs.action
-  delete commonArgs.id
-
-  const toolName = action === 'get_contract'
-    ? 'dashboard_get_contract'
-    : action === 'create'
-      ? 'dashboard_create'
-      : action === 'patch'
-        ? 'dashboard_patch'
-        : action === 'update_full'
-          ? 'dashboard_update_full'
-          : ''
-
-  if (!toolName) {
-    const structuredContent = {
-      ok: false,
-      tool: MCP_APP_PUBLIC_TOOL_NAMES.dashboardAuthoring,
-      error: 'action invalida. Use get_contract, create, patch ou update_full.',
-    }
-
-    return {
-      content: [{ type: 'text', text: structuredContent.error }],
-      structuredContent,
-      isError: true,
-    }
-  }
-
-  if ((action === 'patch' || action === 'update_full') && commonArgs.expected_version == null) {
-    if (!artifactId) {
-      const structuredContent = {
-        ok: false,
-        tool: MCP_APP_PUBLIC_TOOL_NAMES.dashboardAuthoring,
-        action,
-        error: 'id e obrigatorio para editar dashboard.',
-      }
-
-      return {
-        content: [{ type: 'text', text: structuredContent.error }],
-        structuredContent,
-        isError: true,
-      }
-    }
-
-    const currentDashboard = await readMcpDashboard({ artifactId, kind: 'draft' })
-    const currentRecord = asRecord(currentDashboard)
-    const currentVersion = Number(currentRecord.current_draft_version || currentRecord.version)
-    if (!Number.isInteger(currentVersion) || currentVersion <= 0) {
-      const structuredContent = {
-        ok: false,
-        tool: MCP_APP_PUBLIC_TOOL_NAMES.dashboardAuthoring,
-        action,
-        error: 'Nao foi possivel identificar a versao draft atual do dashboard. Abra o dashboard novamente e tente editar.',
-      }
-
-      return {
-        content: [{ type: 'text', text: structuredContent.error }],
-        structuredContent,
-        isError: true,
-      }
-    }
-
-    commonArgs.expected_version = currentVersion
-  }
-
-  const result = await callCognitoMcpTool(toolName, commonArgs, context)
-  const structuredContent = {
-    ok: true,
-    tool: MCP_APP_PUBLIC_TOOL_NAMES.dashboardAuthoring,
-    action,
-    ...normalizeDataToolStructuredContent(toolName, result.structuredContent),
-  }
-
-  return {
-    ...result,
-    structuredContent,
-    content: [{ type: 'text', text: JSON.stringify(structuredContent, null, 2) }],
-  }
+  return callArtifactAuthoring(args, context, 'dashboard')
 }
 
 export function listCognitoMcpAppTools() {
@@ -1074,6 +1197,20 @@ export function listCognitoMcpAppTools() {
         },
       },
       {
+        name: MCP_APP_PUBLIC_TOOL_NAMES.openArtifact,
+        title: 'Open artifact',
+        description:
+          'Abre um artifact completo no app interativo. Use com kind=dashboard, slide ou report e id retornado por artifact_authoring.',
+        inputSchema: OPEN_ARTIFACT_SCHEMA,
+        outputSchema: RENDER_PREVIEW_OUTPUT_SCHEMA,
+        securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
+        annotations: READ_ONLY_ANNOTATIONS,
+        _meta: {
+          ...DASHBOARD_WIDGET_META,
+          securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
+        },
+      },
+      {
         name: MCP_APP_PUBLIC_TOOL_NAMES.chart,
         title: 'Chart',
         description:
@@ -1087,12 +1224,26 @@ export function listCognitoMcpAppTools() {
           securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
         },
       },
+      {
+        name: MCP_APP_PUBLIC_TOOL_NAMES.artifactAuthoring,
+        title: 'Artifact authoring',
+        description:
+          'Cria e edita artifacts Cognito usando TSX declarativo versionado. Use kind=dashboard, slide ou report; action=get_contract, create, patch ou update_full.',
+        inputSchema: ARTIFACT_AUTHORING_SCHEMA,
+        outputSchema: ARTIFACT_AUTHORING_OUTPUT_SCHEMA,
+        securitySchemes: COGNITO_WRITE_SECURITY_SCHEMES,
+        annotations: UPDATE_ANNOTATIONS,
+        _meta: {
+          ...DATA_TOOL_META,
+          securitySchemes: COGNITO_WRITE_SECURITY_SCHEMES,
+        },
+      },
       ...listMcpAppDomainToolDefinitions(),
       {
         name: MCP_APP_PUBLIC_TOOL_NAMES.dashboardAuthoring,
         title: 'Dashboard authoring',
         description:
-          'Cria e edita dashboards Cognito usando o DSL dashboard.v1 em TSX declarativo. Use get_contract para obter componentes suportados, component_props, data_query_contract e exemplo valido; create para criar; patch para alterar trecho; update_full para substituir o source inteiro. expected_version e opcional; se omitido, usa automaticamente a versao draft atual.',
+          'Alias de compatibilidade para artifact_authoring com kind=dashboard. Cria e edita dashboards Cognito usando o DSL dashboard.v1 em TSX declarativo. Use get_contract para obter componentes suportados, component_props, data_query_contract e exemplo valido.',
         inputSchema: DASHBOARD_AUTHORING_SCHEMA,
         outputSchema: DASHBOARD_WRITE_OUTPUT_SCHEMA,
         securitySchemes: COGNITO_WRITE_SECURITY_SCHEMES,
@@ -1149,8 +1300,16 @@ export async function callCognitoMcpAppTool(
     return callOpenDashboard(args)
   }
 
+  if (name === MCP_APP_PUBLIC_TOOL_NAMES.openArtifact) {
+    return callOpenArtifact(args)
+  }
+
   if (name === MCP_APP_PUBLIC_TOOL_NAMES.chart) {
     return callChart(args)
+  }
+
+  if (name === MCP_APP_PUBLIC_TOOL_NAMES.artifactAuthoring) {
+    return callArtifactAuthoring(args, context)
   }
 
   if (name === MCP_APP_PUBLIC_TOOL_NAMES.dashboardAuthoring) {

@@ -419,7 +419,7 @@ function normalizePatchOperation(value: unknown) {
   }
 }
 
-function getDashboardContract(includeExample: boolean) {
+export function getDashboardContract(includeExample: boolean) {
   return {
     artifact_type: 'dashboard',
     dsl_version: DASHBOARD_DSL_VERSION,

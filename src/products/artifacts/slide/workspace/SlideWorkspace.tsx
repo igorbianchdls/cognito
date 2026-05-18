@@ -135,9 +135,10 @@ const SlideCanvas = memo(function SlideCanvas({
   )
 })
 
-export function SlideWorkspace() {
+export function SlideWorkspace({ initialSource }: { initialSource?: string }) {
   const [templateTree, setTemplateTree] = useState<SlideTreeNode | null>(null)
   const [templateError, setTemplateError] = useState<string | null>(null)
+  const source = initialSource?.trim() || SLIDE_TEMPLATE_SOURCE
 
   useEffect(() => {
     let cancelled = false
@@ -146,7 +147,7 @@ export function SlideWorkspace() {
       try {
         setTemplateError(null)
         const parsed = await parseArtifactJsxToTree('slide-template.tsx', [
-          { path: 'slide-template.tsx', content: SLIDE_TEMPLATE_SOURCE },
+          { path: 'slide-template.tsx', content: source },
         ])
         if (parsed.kind !== 'slide') {
           throw new Error(`Template de slide retornou root inesperado: ${parsed.kind}`)
@@ -165,7 +166,7 @@ export function SlideWorkspace() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [source])
 
   const { rootName, themeNode, pages } = useMemo(
     () => getPagedArtifactStructure(templateTree, { rootType: 'SlideTemplate', pageType: 'Slide', fallbackRootName: 'Apresentação' }),
@@ -307,7 +308,7 @@ export function SlideWorkspace() {
               ) : null}
             </div>
           ) : (
-            <ArtifactSourceCodePanel source={SLIDE_TEMPLATE_SOURCE} />
+            <ArtifactSourceCodePanel source={source} />
           )}
         </main>
       </div>

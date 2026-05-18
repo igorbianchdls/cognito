@@ -7,10 +7,20 @@ export const MCP_DASHBOARD_TOOL_NAMES = {
   dashboardGetContract: 'dashboard_get_contract',
 } as const
 
+export const MCP_ARTIFACT_TOOL_NAMES = {
+  artifactAuthoring: 'artifact_authoring',
+} as const
+
 export type McpDashboardToolName =
   (typeof MCP_DASHBOARD_TOOL_NAMES)[keyof typeof MCP_DASHBOARD_TOOL_NAMES]
+
+export type McpArtifactToolName =
+  (typeof MCP_ARTIFACT_TOOL_NAMES)[keyof typeof MCP_ARTIFACT_TOOL_NAMES]
 
 export const MCP_DASHBOARD_TOOL_NAME_SET = new Set<string>(
   Object.values(MCP_DASHBOARD_TOOL_NAMES),
 )
 
+export const MCP_ARTIFACT_TOOL_NAME_SET = new Set<string>(
+  Object.values(MCP_ARTIFACT_TOOL_NAMES),
+)

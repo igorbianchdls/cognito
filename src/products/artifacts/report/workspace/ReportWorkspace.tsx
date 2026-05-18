@@ -91,9 +91,10 @@ function ReportCanvas({
   )
 }
 
-export function ReportWorkspace() {
+export function ReportWorkspace({ initialSource }: { initialSource?: string }) {
   const [templateTree, setTemplateTree] = useState<ReportTreeNode | null>(null)
   const [templateError, setTemplateError] = useState<string | null>(null)
+  const source = initialSource?.trim() || REPORT_TEMPLATE_SOURCE
 
   useEffect(() => {
     let cancelled = false
@@ -102,7 +103,7 @@ export function ReportWorkspace() {
       try {
         setTemplateError(null)
         const parsed = await parseArtifactJsxToTree('report-template.tsx', [
-          { path: 'report-template.tsx', content: REPORT_TEMPLATE_SOURCE },
+          { path: 'report-template.tsx', content: source },
         ])
         if (parsed.kind !== 'report') {
           throw new Error(`Template de report retornou root inesperado: ${parsed.kind}`)
@@ -121,7 +122,7 @@ export function ReportWorkspace() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [source])
 
   const { rootName, themeNode, pages } = useMemo(
     () => getPagedArtifactStructure(templateTree, { rootType: 'ReportTemplate', pageType: 'Report', fallbackRootName: 'Relatório' }),
@@ -290,7 +291,7 @@ export function ReportWorkspace() {
               ) : null}
             </div>
           ) : (
-            <ArtifactSourceCodePanel source={REPORT_TEMPLATE_SOURCE} />
+            <ArtifactSourceCodePanel source={source} />
           )}
         </main>
       </div>

@@ -1,11 +1,11 @@
 export const ARTIFACT_READ_TOOL_DESCRIPTION =
-  'Lê um dashboard persistido no banco de dados a partir do artifact_id. Use para inspecionar a versão draft ou published atual antes de editar. Retorna source TSX, versão, título, status e metadados do dashboard.'
+  'Lê um artifact persistido no banco de dados a partir do artifact_id. Use kind/artifact_type=dashboard, slide ou report para inspecionar a versão draft ou published atual antes de editar. Retorna source TSX, versão, título, status e metadados.'
 
 export const ARTIFACT_WRITE_TOOL_DESCRIPTION =
-  'Cria um dashboard novo no banco de dados ou sobrescreve completamente o draft de um dashboard existente. Para criar, envie source e title sem artifact_id. Para sobrescrever dashboard existente, envie artifact_id + expected_version + source completo. O conteúdo persistido é versionado em artifacts.dashboard_sources.'
+  'Cria um artifact novo no banco de dados ou sobrescreve completamente o draft de um artifact existente. Use kind/artifact_type=dashboard, slide ou report. Para criar, envie source e title sem artifact_id. Para sobrescrever, envie artifact_id + expected_version + source completo.'
 
 export const ARTIFACT_PATCH_TOOL_DESCRIPTION =
-  'Edita incrementalmente um dashboard persistido no banco de dados. Requer artifact_id e expected_version. Operações suportadas: replace_text (troca textual precisa) e replace_full_source (substitui o source inteiro). Sempre cria uma nova versão draft.'
+  'Edita incrementalmente um artifact persistido no banco de dados. Use kind/artifact_type=dashboard, slide ou report. Requer artifact_id e expected_version. Operações suportadas: replace_text e replace_full_source. Sempre cria uma nova versão draft.'
 
 export const ARTIFACT_READ_TOOL_PARAMETERS = {
   type: 'object',
@@ -14,10 +14,20 @@ export const ARTIFACT_READ_TOOL_PARAMETERS = {
       type: 'string',
       description: 'UUID do dashboard/artifact persistido.',
     },
+    artifact_type: {
+      type: 'string',
+      enum: ['dashboard', 'slide', 'report'],
+      description: 'Tipo do artifact. Default: dashboard.',
+    },
     kind: {
       type: 'string',
       enum: ['draft', 'published'],
       description: 'Qual versão lógica ler. Default: draft.',
+    },
+    source_kind: {
+      type: 'string',
+      enum: ['draft', 'published'],
+      description: 'Alias explícito para a versão lógica quando kind for usado como tipo do artifact.',
     },
     version: {
       type: 'integer',
@@ -33,7 +43,12 @@ export const ARTIFACT_WRITE_TOOL_PARAMETERS = {
   properties: {
     artifact_id: {
       type: 'string',
-      description: 'UUID do dashboard existente. Omitir para criar um dashboard novo.',
+      description: 'UUID do artifact existente. Omitir para criar um artifact novo.',
+    },
+    artifact_type: {
+      type: 'string',
+      enum: ['dashboard', 'slide', 'report'],
+      description: 'Tipo do artifact. Default: dashboard.',
     },
     expected_version: {
       type: 'integer',
@@ -41,11 +56,11 @@ export const ARTIFACT_WRITE_TOOL_PARAMETERS = {
     },
     title: {
       type: 'string',
-      description: 'Título do dashboard. Obrigatório na criação; opcional em update completo.',
+      description: 'Título do artifact. Obrigatório na criação; opcional em update completo.',
     },
     source: {
       type: 'string',
-      description: 'Source TSX completo do dashboard. Sempre obrigatório.',
+      description: 'Source TSX completo do artifact. Sempre obrigatório.',
     },
     workspace_id: {
       type: 'string',
@@ -58,7 +73,7 @@ export const ARTIFACT_WRITE_TOOL_PARAMETERS = {
     metadata: {
       type: 'object',
       additionalProperties: true,
-      description: 'Metadados opcionais persistidos no registro principal do dashboard.',
+      description: 'Metadados opcionais persistidos no registro principal do artifact.',
     },
     change_summary: {
       type: 'string',
@@ -74,7 +89,12 @@ export const ARTIFACT_PATCH_TOOL_PARAMETERS = {
   properties: {
     artifact_id: {
       type: 'string',
-      description: 'UUID do dashboard persistido.',
+      description: 'UUID do artifact persistido.',
+    },
+    artifact_type: {
+      type: 'string',
+      enum: ['dashboard', 'slide', 'report'],
+      description: 'Tipo do artifact. Default: dashboard.',
     },
     expected_version: {
       type: 'integer',
