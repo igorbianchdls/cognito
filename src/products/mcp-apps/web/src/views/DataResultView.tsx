@@ -71,7 +71,7 @@ export function DataResultView({ data }: DataResultViewProps) {
       title={tableTitle}
       description={description}
     >
-      <DataTable rows={rows} columns={columns} title={tableTitle} />
+      <DataTable rows={rows} columns={columns} />
     </ResultShell>
   )
 }
