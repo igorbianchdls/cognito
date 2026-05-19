@@ -909,6 +909,8 @@ a {
 .analysis-metric,
 .analysis-card,
 .analysis-next,
+.automation-list-summary > div,
+.automation-list-card,
 .automation-summary section {
   border: 1px solid var(--cognito-border);
   border-radius: 8px;
@@ -924,6 +926,8 @@ a {
 
 .analysis-metric span,
 .analysis-card header p,
+.automation-list-summary span,
+.automation-list-card dt,
 .automation-summary dt {
   color: #68726c;
   font-size: 11px;
@@ -1081,6 +1085,87 @@ a {
   overflow-wrap: anywhere;
 }
 
+.automation-list-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 8px;
+}
+
+.automation-list-summary > div {
+  display: grid;
+  gap: 5px;
+  padding: 11px 12px;
+}
+
+.automation-list-summary strong {
+  color: #111513;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 780;
+  letter-spacing: 0;
+  line-height: 1.15;
+}
+
+.automation-list-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.automation-list-card {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.automation-list-card header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.automation-list-card h2 {
+  margin: 0;
+  color: #111513;
+  font-size: 14px;
+  font-weight: 780;
+  letter-spacing: 0;
+  line-height: 1.25;
+}
+
+.automation-list-card header p,
+.automation-list-card__description {
+  margin: 0;
+  color: #4f5a53;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.automation-list-card__description {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.automation-list-card dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.automation-list-card div {
+  min-width: 0;
+}
+
+.automation-list-card dd {
+  margin: 2px 0 0;
+  color: #29302b;
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 640px) {
   .app-shell {
     padding: 10px;
@@ -1146,7 +1231,12 @@ a {
   .catalog-source-strip,
   .catalog-notes,
   .analysis-metrics,
+  .automation-list-summary,
   .automation-summary {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .automation-list-card__description {
+    white-space: normal;
   }
 }

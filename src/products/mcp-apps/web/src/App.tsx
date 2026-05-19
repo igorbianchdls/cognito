@@ -72,7 +72,7 @@ export function App() {
       {view === 'table' || tool === 'table' ? (
         <TableResultView data={structuredContent as TableStructuredContent} />
       ) : null}
-      {view === 'automation' || view === 'action_result' || tool === 'actions' || tool === 'alerts' || tool === 'schedules' ? (
+      {view === 'automation' || view === 'automation_list' || view === 'action_result' || tool === 'actions' || tool === 'alerts' || tool === 'schedules' ? (
         <AutomationView data={structuredContent as AutomationStructuredContent} />
       ) : null}
       {view === 'data_catalog' || tool === 'data_catalog' ? (

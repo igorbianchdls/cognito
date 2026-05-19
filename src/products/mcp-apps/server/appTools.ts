@@ -1423,6 +1423,7 @@ async function callActions(args: unknown, context: CognitoMcpServerContext) {
 
 function normalizeAutomationAction(value: unknown) {
   const action = String(value || 'list').trim().toLowerCase()
+  if (action === 'listar' || action === 'mostrar' || action === 'quais') return 'list'
   if (
     action === 'list' ||
     action === 'create' ||
@@ -1452,6 +1453,48 @@ function normalizeAutomationStatus(value: unknown, fallback = 'active') {
 
 function getAutomationTitle(input: JsonRecord, fallback: string) {
   return optionalText(input.title) || fallback
+}
+
+function buildAutomationSummary(rows: JsonRecord[]) {
+  const active = rows.filter((row) => row.status === 'active').length
+  const paused = rows.filter((row) => row.status === 'paused').length
+  const nextRunAt = rows
+    .map((row) => optionalText(row.next_run_at))
+    .filter((value): value is string => Boolean(value))
+    .sort()[0] || null
+
+  return {
+    total: rows.length,
+    active,
+    paused,
+    next_run_at: nextRunAt,
+  }
+}
+
+function buildAutomationListResult(input: {
+  tool: string
+  kind: 'alerts' | 'schedules'
+  action: string
+  title: string
+  emptyTitle: string
+  rows: JsonRecord[]
+}) {
+  const summary = buildAutomationSummary(input.rows)
+  return {
+    ok: true,
+    tool: input.tool,
+    view: 'automation_list',
+    kind: input.kind,
+    action: input.action,
+    title: input.title,
+    subtitle: input.rows.length
+      ? `${summary.total} registro${summary.total === 1 ? '' : 's'} · ${summary.active} ativo${summary.active === 1 ? '' : 's'} · ${summary.paused} pausado${summary.paused === 1 ? '' : 's'}`
+      : input.emptyTitle,
+    summary,
+    rows: input.rows,
+    columns: inferRowsColumns(input.rows),
+    count: input.rows.length,
+  }
 }
 
 async function listAutomationRows(table: 'alerts' | 'schedules', tenantId: number, input: JsonRecord) {
@@ -1566,6 +1609,18 @@ WHERE tenant_id = $1::int AND id = $2::bigint
     rows = await listAutomationRows('alerts', tenantId, input)
   }
 
+  if (action === 'list') {
+    const structuredContent = buildAutomationListResult({
+      tool: MCP_APP_PUBLIC_TOOL_NAMES.alerts,
+      kind: 'alerts',
+      action,
+      title: 'Alertas',
+      emptyTitle: 'Nenhum alerta criado.',
+      rows,
+    })
+    return makeWidgetResult(structuredContent, JSON.stringify(structuredContent, null, 2))
+  }
+
   const structuredContent = {
     ok: true,
     tool: MCP_APP_PUBLIC_TOOL_NAMES.alerts,
@@ -1675,6 +1730,18 @@ RETURNING id::int, title, status, artifact_kind, prompt, frequency, day_of_week,
     title = 'Agendamento executado'
   } else {
     rows = await listAutomationRows('schedules', tenantId, input)
+  }
+
+  if (action === 'list') {
+    const structuredContent = buildAutomationListResult({
+      tool: MCP_APP_PUBLIC_TOOL_NAMES.schedules,
+      kind: 'schedules',
+      action,
+      title: 'Agendamentos',
+      emptyTitle: 'Nenhum agendamento criado.',
+      rows,
+    })
+    return makeWidgetResult(structuredContent, JSON.stringify(structuredContent, null, 2))
   }
 
   const structuredContent = {

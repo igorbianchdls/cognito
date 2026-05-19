@@ -112,11 +112,12 @@ export type TableStructuredContent = {
 export type AutomationStructuredContent = {
   ok?: boolean
   tool?: 'actions' | 'alerts' | 'schedules' | string
-  view?: 'automation' | 'action_result'
+  view?: 'automation' | 'automation_list' | 'action_result'
   kind?: string
   action?: string
   title?: string
   subtitle?: string | null
+  summary?: unknown
   domain?: string
   dry_run?: boolean
   preview?: unknown
