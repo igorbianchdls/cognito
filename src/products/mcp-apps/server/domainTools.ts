@@ -233,6 +233,7 @@ const CRM_RESOURCE_TABLES = {
   'crm/leads': 'crm.leads',
   'crm/oportunidades': 'crm.oportunidades',
   'crm/atividades': 'crm.atividades',
+  'crm/interacoes': 'crm.interacoes',
 } as const
 
 const CRUD_RESOURCE_TABLES = {
@@ -304,11 +305,89 @@ const DATA_CATALOG_RESOURCES = [
   { domain: 'erp', resource: 'financeiro/categorias-receita', label: 'Categorias de Receita', table: 'financeiro.categorias_receita', dateColumn: null, requiredFields: ['nome'] },
   { domain: 'erp', resource: 'financeiro/centros-custo', label: 'Centros de Custo', table: 'empresa.centros_custo', dateColumn: null, requiredFields: ['nome'] },
   { domain: 'erp', resource: 'financeiro/centros-lucro', label: 'Centros de Lucro', table: 'empresa.centros_lucro', dateColumn: null, requiredFields: ['nome'] },
-  { domain: 'crm', resource: 'crm/contas', label: 'Contas CRM', table: 'crm.contas', dateColumn: 'criado_em', requiredFields: ['nome'] },
-  { domain: 'crm', resource: 'crm/contatos', label: 'Contatos CRM', table: 'crm.contatos', dateColumn: 'criado_em', requiredFields: ['nome'] },
-  { domain: 'crm', resource: 'crm/leads', label: 'Leads', table: 'crm.leads', dateColumn: 'criado_em', valueColumn: 'valor_estimado', requiredFields: ['nome', 'status'] },
-  { domain: 'crm', resource: 'crm/oportunidades', label: 'Oportunidades', table: 'crm.oportunidades', dateColumn: 'data_abertura', valueColumn: 'valor', requiredFields: ['nome', 'status'] },
-  { domain: 'crm', resource: 'crm/atividades', label: 'Atividades CRM', table: 'crm.atividades', dateColumn: 'data_inicio', requiredFields: ['tipo', 'status'] },
+  {
+    domain: 'crm',
+    resource: 'crm/contas',
+    label: 'Contas CRM',
+    table: 'crm.contas',
+    dateColumn: 'criado_em',
+    requiredFields: ['nome'],
+    relationships: [
+      { label: 'Responsavel', sourceColumn: 'responsavel_id', targetTable: 'comercial.vendedores', targetColumn: 'id' },
+    ],
+  },
+  {
+    domain: 'crm',
+    resource: 'crm/contatos',
+    label: 'Contatos CRM',
+    table: 'crm.contatos',
+    dateColumn: 'criado_em',
+    requiredFields: ['nome', 'conta_id'],
+    relationships: [
+      { label: 'Conta', sourceColumn: 'conta_id', targetTable: 'crm.contas', targetColumn: 'id' },
+      { label: 'Responsavel', sourceColumn: 'responsavel_id', targetTable: 'comercial.vendedores', targetColumn: 'id' },
+    ],
+  },
+  {
+    domain: 'crm',
+    resource: 'crm/leads',
+    label: 'Leads',
+    table: 'crm.leads',
+    dateColumn: 'criado_em',
+    requiredFields: ['nome', 'status'],
+    relationships: [
+      { label: 'Origem', sourceColumn: 'origem_id', targetTable: 'crm.origens_lead', targetColumn: 'id' },
+      { label: 'Responsavel', sourceColumn: 'responsavel_id', targetTable: 'comercial.vendedores', targetColumn: 'id' },
+      { label: 'Conta convertida', sourceColumn: 'conta_id', targetTable: 'crm.contas', targetColumn: 'id' },
+      { label: 'Oportunidade convertida', sourceColumn: 'oportunidade_id', targetTable: 'crm.oportunidades', targetColumn: 'id' },
+    ],
+  },
+  {
+    domain: 'crm',
+    resource: 'crm/oportunidades',
+    label: 'Oportunidades',
+    table: 'crm.oportunidades',
+    dateColumn: 'criado_em',
+    valueColumn: 'valor_estimado',
+    requiredFields: ['nome', 'status', 'valor_estimado', 'fase_pipeline_id', 'vendedor_id'],
+    relationships: [
+      { label: 'Conta', sourceColumn: 'conta_id', targetTable: 'crm.contas', targetColumn: 'id' },
+      { label: 'Lead', sourceColumn: 'lead_id', targetTable: 'crm.leads', targetColumn: 'id' },
+      { label: 'Fase', sourceColumn: 'fase_pipeline_id', targetTable: 'crm.fases_pipeline', targetColumn: 'id' },
+      { label: 'Vendedor', sourceColumn: 'vendedor_id', targetTable: 'comercial.vendedores', targetColumn: 'id' },
+      { label: 'Motivo de perda', sourceColumn: 'motivo_perda_id', targetTable: 'crm.motivos_perda', targetColumn: 'id' },
+    ],
+  },
+  {
+    domain: 'crm',
+    resource: 'crm/atividades',
+    label: 'Atividades CRM',
+    table: 'crm.atividades',
+    dateColumn: 'data_prevista',
+    requiredFields: ['tipo', 'status', 'responsavel_id'],
+    relationships: [
+      { label: 'Conta', sourceColumn: 'conta_id', targetTable: 'crm.contas', targetColumn: 'id' },
+      { label: 'Contato', sourceColumn: 'contato_id', targetTable: 'crm.contatos', targetColumn: 'id' },
+      { label: 'Lead', sourceColumn: 'lead_id', targetTable: 'crm.leads', targetColumn: 'id' },
+      { label: 'Oportunidade', sourceColumn: 'oportunidade_id', targetTable: 'crm.oportunidades', targetColumn: 'id' },
+      { label: 'Responsavel', sourceColumn: 'responsavel_id', targetTable: 'comercial.vendedores', targetColumn: 'id' },
+    ],
+  },
+  {
+    domain: 'crm',
+    resource: 'crm/interacoes',
+    label: 'Interacoes CRM',
+    table: 'crm.interacoes',
+    dateColumn: 'data_interacao',
+    requiredFields: ['canal', 'conteudo', 'responsavel_id'],
+    relationships: [
+      { label: 'Conta', sourceColumn: 'conta_id', targetTable: 'crm.contas', targetColumn: 'id' },
+      { label: 'Contato', sourceColumn: 'contato_id', targetTable: 'crm.contatos', targetColumn: 'id' },
+      { label: 'Lead', sourceColumn: 'lead_id', targetTable: 'crm.leads', targetColumn: 'id' },
+      { label: 'Oportunidade', sourceColumn: 'oportunidade_id', targetTable: 'crm.oportunidades', targetColumn: 'id' },
+      { label: 'Responsavel', sourceColumn: 'responsavel_id', targetTable: 'comercial.vendedores', targetColumn: 'id' },
+    ],
+  },
   { domain: 'ecommerce', resource: 'ecommerce/pedidos', label: 'Pedidos Ecommerce', table: 'ecommerce.pedidos', dateColumn: 'data_pedido', valueColumn: 'valor_total', requiredFields: ['data_pedido', 'valor_total', 'status', 'plataforma'] },
   { domain: 'ecommerce', resource: 'ecommerce/itens', label: 'Itens Ecommerce', table: 'ecommerce.pedido_itens', dateColumn: null, valueColumn: 'valor_total', requiredFields: ['pedido_id'] },
   { domain: 'ecommerce', resource: 'ecommerce/envios', label: 'Envios Ecommerce', table: 'ecommerce.envios', dateColumn: null, valueColumn: 'frete_custo', requiredFields: ['pedido_id'] },
@@ -625,7 +704,7 @@ const CRM_DOMAIN_TOOL_DEFINITION = {
   name: MCP_APP_DOMAIN_TOOL_NAMES.crm,
   title: 'CRM',
   description:
-    'Consulta registros operacionais do CRM em modo leitura. Use para contas, contatos, leads, oportunidades e atividades. Acoes suportadas: listar e ler. Recursos retornam colunas de negocio com nomes resolvidos por join quando disponivel: crm/contas, crm/contatos, crm/leads, crm/oportunidades e crm/atividades.',
+    'Consulta registros operacionais do CRM em modo leitura. Use para contas, contatos, leads, oportunidades, atividades e interacoes. Acoes suportadas: listar e ler. Recursos retornam colunas de negocio com nomes resolvidos por join quando disponivel: crm/contas, crm/contatos, crm/leads, crm/oportunidades, crm/atividades e crm/interacoes.',
   inputSchema: CRM_SCHEMA,
   outputSchema: CRUD_OUTPUT_SCHEMA,
   securitySchemes: READ_SECURITY_SCHEMES,
@@ -1161,7 +1240,16 @@ LIMIT $${params.length}::int
   }
 }
 
-function buildMarketingFilters(paramsIn: JsonRecord, tenantId: number, alias: string) {
+function normalizeMarketingLevel(value: unknown) {
+  const level = toText(value).toLowerCase()
+  if (level === 'conta' || level === 'account') return 'conta'
+  if (level === 'campanha' || level === 'campaign') return 'campanha'
+  if (level === 'grupo' || level === 'ad_group' || level === 'adset' || level === 'conjunto') return 'grupo'
+  if (level === 'anuncio' || level === 'anúncio' || level === 'ad') return 'anuncio'
+  return ''
+}
+
+function buildMarketingFilters(paramsIn: JsonRecord, tenantId: number, alias: string, defaultLevel?: string) {
   const params: unknown[] = [tenantId]
   const where: string[] = [`${alias}.tenant_id = $1::int`]
 
@@ -1177,7 +1265,14 @@ function buildMarketingFilters(paramsIn: JsonRecord, tenantId: number, alias: st
     where.push(`${alias}.data_ref::date <= $${params.length}::date`)
   }
 
-  for (const field of ['plataforma', 'nivel', 'conta_id', 'campanha_id', 'grupo_id', 'anuncio_id']) {
+  const requestedLevel = normalizeMarketingLevel(paramsIn.nivel)
+  const level = requestedLevel || defaultLevel || ''
+  if (level) {
+    params.push(level)
+    where.push(`${alias}.nivel = $${params.length}::text`)
+  }
+
+  for (const field of ['plataforma', 'conta_id', 'campanha_id', 'grupo_id', 'anuncio_id']) {
     const value = toText(paramsIn[field])
     if (value) {
       params.push(value)
@@ -1191,7 +1286,8 @@ function buildMarketingFilters(paramsIn: JsonRecord, tenantId: number, alias: st
 
 function buildMarketingQuery(action: MarketingAction, paramsIn: JsonRecord, tenantId: number): BuiltQuery {
   const limit = normalizeLimit(paramsIn.limit, 12)
-  const base = buildMarketingFilters(paramsIn, tenantId, 'dd')
+  const defaultLevel = action === 'top_anuncios' ? 'anuncio' : 'campanha'
+  const base = buildMarketingFilters(paramsIn, tenantId, 'dd', defaultLevel)
 
   if (action === 'kpis_resumo') {
     return {
@@ -2488,6 +2584,58 @@ OFFSET $${base.offsetParam}::int
   }
 }
 
+function buildCrmInteractionsQuery(action: CrudAction, paramsIn: JsonRecord, tenantId: number): BuiltQuery {
+  const contaExpr = "COALESCE(NULLIF(c.nome, ''), '-')"
+  const contatoExpr = "COALESCE(NULLIF(ct.nome, ''), '-')"
+  const leadExpr = "COALESCE(NULLIF(l.nome, ''), '-')"
+  const oportunidadeExpr = "COALESCE(NULLIF(o.nome, ''), '-')"
+  const responsavelExpr = "COALESCE(NULLIF(f.nome, ''), '-')"
+  const base = buildSemanticWhere(action, paramsIn, tenantId, {
+    alias: 'i',
+    dateField: 'data_interacao',
+    statusField: 'canal',
+    idFields: ['conta_id', 'contato_id', 'lead_id', 'oportunidade_id', 'responsavel_id'],
+    searchExpressions: [
+      'i.canal',
+      'i.conteudo',
+      contaExpr,
+      contatoExpr,
+      leadExpr,
+      oportunidadeExpr,
+      responsavelExpr,
+    ],
+  })
+
+  return {
+    sql: `
+SELECT
+  i.id,
+  i.data_interacao::date AS data_interacao,
+  COALESCE(NULLIF(i.canal, ''), '-') AS canal,
+  COALESCE(NULLIF(i.conteudo, ''), '-') AS conteudo,
+  ${contaExpr} AS conta,
+  ${contatoExpr} AS contato,
+  ${leadExpr} AS lead,
+  ${oportunidadeExpr} AS oportunidade,
+  ${responsavelExpr} AS responsavel
+FROM crm.interacoes i
+LEFT JOIN crm.contas c ON c.id = i.conta_id AND c.tenant_id = i.tenant_id
+LEFT JOIN crm.contatos ct ON ct.id = i.contato_id AND ct.tenant_id = i.tenant_id
+LEFT JOIN crm.leads l ON l.id = i.lead_id AND l.tenant_id = i.tenant_id
+LEFT JOIN crm.oportunidades o ON o.id = i.oportunidade_id AND o.tenant_id = i.tenant_id
+LEFT JOIN comercial.vendedores v ON v.id = i.responsavel_id
+LEFT JOIN entidades.funcionarios f ON f.id = v.funcionario_id
+${base.whereClause}
+ORDER BY i.data_interacao DESC NULLS LAST, i.id DESC
+LIMIT $${base.limitParam}::int
+OFFSET $${base.offsetParam}::int
+    `.trim(),
+    params: base.params,
+    title: 'Interacoes CRM',
+    chart: null,
+  }
+}
+
 function buildStockCurrentQuery(action: CrudAction, paramsIn: JsonRecord, tenantId: number): BuiltQuery {
   const produtoExpr = "COALESCE(NULLIF(p.nome, ''), CONCAT('Produto #', ea.produto_id::text), '-')"
   const almoxarifadoExpr = "COALESCE(NULLIF(a.nome, ''), CONCAT('Almoxarifado #', ea.almoxarifado_id::text), '-')"
@@ -2831,6 +2979,10 @@ function buildCrudQuery(action: CrudAction, resource: string, paramsIn: JsonReco
 
   if (resource === 'crm/atividades') {
     return buildCrmActivitiesQuery(action, paramsIn, tenantId)
+  }
+
+  if (resource === 'crm/interacoes') {
+    return buildCrmInteractionsQuery(action, paramsIn, tenantId)
   }
 
   if (resource === 'estoque/estoque-atual') {

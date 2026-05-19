@@ -197,6 +197,7 @@ WITH tenants AS (
   UNION SELECT tenant_id FROM crm.leads
   UNION SELECT tenant_id FROM crm.oportunidades
   UNION SELECT tenant_id FROM crm.atividades
+  UNION SELECT tenant_id FROM crm.interacoes
 ),
 crm_source AS (
   SELECT
@@ -206,14 +207,16 @@ crm_source AS (
       (SELECT COUNT(*) FROM crm.contatos ct WHERE ct.tenant_id = t.tenant_id) +
       (SELECT COUNT(*) FROM crm.leads l WHERE l.tenant_id = t.tenant_id) +
       (SELECT COUNT(*) FROM crm.oportunidades o WHERE o.tenant_id = t.tenant_id) +
-      (SELECT COUNT(*) FROM crm.atividades a WHERE a.tenant_id = t.tenant_id)
+      (SELECT COUNT(*) FROM crm.atividades a WHERE a.tenant_id = t.tenant_id) +
+      (SELECT COUNT(*) FROM crm.interacoes i WHERE i.tenant_id = t.tenant_id)
     )::int AS records_synced,
     GREATEST(
       COALESCE((SELECT MAX(atualizado_em) FROM crm.contas c WHERE c.tenant_id = t.tenant_id), 'epoch'::timestamp),
       COALESCE((SELECT MAX(atualizado_em) FROM crm.contatos ct WHERE ct.tenant_id = t.tenant_id), 'epoch'::timestamp),
       COALESCE((SELECT MAX(atualizado_em) FROM crm.leads l WHERE l.tenant_id = t.tenant_id), 'epoch'::timestamp),
       COALESCE((SELECT MAX(atualizado_em) FROM crm.oportunidades o WHERE o.tenant_id = t.tenant_id), 'epoch'::timestamp),
-      COALESCE((SELECT MAX(atualizado_em) FROM crm.atividades a WHERE a.tenant_id = t.tenant_id), 'epoch'::timestamp)
+      COALESCE((SELECT MAX(atualizado_em) FROM crm.atividades a WHERE a.tenant_id = t.tenant_id), 'epoch'::timestamp),
+      COALESCE((SELECT MAX(atualizado_em) FROM crm.interacoes i WHERE i.tenant_id = t.tenant_id), 'epoch'::timestamp)
     )::timestamptz AS last_sync_at
   FROM tenants t
 )
@@ -231,7 +234,7 @@ SELECT
   records_synced,
   'operacional',
   'operacional',
-  jsonb_build_object('source', 'operational_data'),
+  jsonb_build_object('source', 'operational_data', 'includes_interacoes', true),
   now()
 FROM crm_source
 ON CONFLICT (tenant_id, domain, provider, external_account_id)

@@ -170,14 +170,14 @@ const PLATFORM_CONFIGS = [
       metadata: { business_unit: "DTC", country: "BR" },
     },
     campaigns: [
-      { key: "meta-prospect-broad", name: "META | BR | CONV | Prospecting Broad | 2026Q1", monthlyBudget: 28000, objective: "conversao", type: "prospecting", status: "active" },
-      { key: "meta-interests-skin", name: "META | BR | CONV | Interests Skincare | 2026Q1", monthlyBudget: 18000, objective: "conversao", type: "interests", status: "active" },
-      { key: "meta-lal-purchasers", name: "META | BR | CONV | LAL Purchasers 1-3% | 2026Q1", monthlyBudget: 16000, objective: "conversao", type: "lookalike", status: "active" },
-      { key: "meta-ugc-testing", name: "META | BR | CONV | UGC Creative Testing | 2026Q1", monthlyBudget: 12000, objective: "conversao", type: "creative_test", status: "active" },
-      { key: "meta-rmkt-atc", name: "META | BR | RMKT | VC+ATC 7D | 2026Q1", monthlyBudget: 14000, objective: "remarketing", type: "remarketing", status: "active" },
-      { key: "meta-rmkt-engagers", name: "META | BR | RMKT | Engagers 30D | 2026Q1", monthlyBudget: 8000, objective: "remarketing", type: "remarketing", status: "active" },
-      { key: "meta-kits-promo", name: "META | BR | CONV | Kits Rotina Promo | 2026Q1", monthlyBudget: 7000, objective: "promo", type: "promo", status: "active" },
-      { key: "meta-lead-quiz", name: "META | BR | LEAD | Quiz de Pele | 2026Q1", monthlyBudget: 5000, objective: "lead", type: "lead_gen", status: "active" },
+      { key: "meta-prospect-broad", name: "META | BR | CONV | Prospecting Broad | 2026H1", monthlyBudget: 28000, objective: "conversao", type: "prospecting", status: "active" },
+      { key: "meta-interests-skin", name: "META | BR | CONV | Interests Skincare | 2026H1", monthlyBudget: 18000, objective: "conversao", type: "interests", status: "active" },
+      { key: "meta-lal-purchasers", name: "META | BR | CONV | LAL Purchasers 1-3% | 2026H1", monthlyBudget: 16000, objective: "conversao", type: "lookalike", status: "active" },
+      { key: "meta-ugc-testing", name: "META | BR | CONV | UGC Creative Testing | 2026H1", monthlyBudget: 12000, objective: "conversao", type: "creative_test", status: "active" },
+      { key: "meta-rmkt-atc", name: "META | BR | RMKT | VC+ATC 7D | 2026H1", monthlyBudget: 14000, objective: "remarketing", type: "remarketing", status: "active" },
+      { key: "meta-rmkt-engagers", name: "META | BR | RMKT | Engagers 30D | 2026H1", monthlyBudget: 8000, objective: "remarketing", type: "remarketing", status: "active" },
+      { key: "meta-kits-promo", name: "META | BR | CONV | Kits Rotina Promo | 2026H1", monthlyBudget: 7000, objective: "promo", type: "promo", status: "active" },
+      { key: "meta-lead-quiz", name: "META | BR | LEAD | Quiz de Pele | 2026H1", monthlyBudget: 5000, objective: "lead", type: "lead_gen", status: "active" },
     ],
   },
   {
@@ -189,14 +189,14 @@ const PLATFORM_CONFIGS = [
       metadata: { business_unit: "DTC", country: "BR" },
     },
     campaigns: [
-      { key: "gads-search-brand", name: "GADS | BR | Search | Brand | 2026Q1", monthlyBudget: 9000, objective: "brand_search", type: "search_brand", status: "active" },
-      { key: "gads-search-generic", name: "GADS | BR | Search | Generic Skincare | 2026Q1", monthlyBudget: 16000, objective: "conversao", type: "search_generic", status: "active" },
-      { key: "gads-search-acne", name: "GADS | BR | Search | Acne/Oleosidade | 2026Q1", monthlyBudget: 10000, objective: "conversao", type: "search_problem", status: "active" },
-      { key: "gads-shopping-core", name: "GADS | BR | Shopping | Core Feed | 2026Q1", monthlyBudget: 14000, objective: "shopping", type: "shopping", status: "active" },
-      { key: "gads-pmax-all", name: "GADS | BR | PMax | All Products | 2026Q1", monthlyBudget: 15000, objective: "pmax", type: "pmax", status: "active" },
-      { key: "gads-search-competitors", name: "GADS | BR | Search | Competitors | 2026Q1", monthlyBudget: 3000, objective: "traffic", type: "search_competitor", status: "active" },
-      { key: "gads-demandgen-rmkt", name: "GADS | BR | DemandGen | Remarketing | 2026Q1", monthlyBudget: 3000, objective: "remarketing", type: "demandgen_rmkt", status: "active" },
-      { key: "gads-shopping-promo", name: "GADS | BR | Shopping | Promo Kits | 2026Q1", monthlyBudget: 2000, objective: "promo", type: "shopping_promo", status: "active" },
+      { key: "gads-search-brand", name: "GADS | BR | Search | Brand | 2026H1", monthlyBudget: 9000, objective: "brand_search", type: "search_brand", status: "active" },
+      { key: "gads-search-generic", name: "GADS | BR | Search | Generic Skincare | 2026H1", monthlyBudget: 16000, objective: "conversao", type: "search_generic", status: "active" },
+      { key: "gads-search-acne", name: "GADS | BR | Search | Acne/Oleosidade | 2026H1", monthlyBudget: 10000, objective: "conversao", type: "search_problem", status: "active" },
+      { key: "gads-shopping-core", name: "GADS | BR | Shopping | Core Feed | 2026H1", monthlyBudget: 14000, objective: "shopping", type: "shopping", status: "active" },
+      { key: "gads-pmax-all", name: "GADS | BR | PMax | All Products | 2026H1", monthlyBudget: 15000, objective: "pmax", type: "pmax", status: "active" },
+      { key: "gads-search-competitors", name: "GADS | BR | Search | Competitors | 2026H1", monthlyBudget: 3000, objective: "traffic", type: "search_competitor", status: "active" },
+      { key: "gads-demandgen-rmkt", name: "GADS | BR | DemandGen | Remarketing | 2026H1", monthlyBudget: 3000, objective: "remarketing", type: "demandgen_rmkt", status: "active" },
+      { key: "gads-shopping-promo", name: "GADS | BR | Shopping | Promo Kits | 2026H1", monthlyBudget: 2000, objective: "promo", type: "shopping_promo", status: "active" },
     ],
   },
 ];
@@ -586,7 +586,7 @@ function buildFactRows({ tenantId, dates, scenario, entityMaps, cargaByPlatform,
               carga_id: cargaId,
               data_ref: iso,
               plataforma: platform,
-              nivel: "ad",
+              nivel: "anuncio",
               moeda: DTC.currency,
               conta_id: accountDb.id,
               campanha_id: campDb.id,
@@ -621,7 +621,7 @@ function buildFactRows({ tenantId, dates, scenario, entityMaps, cargaByPlatform,
             carga_id: cargaId,
             data_ref: iso,
             plataforma: platform,
-            nivel: "ad_group",
+            nivel: "grupo",
             moeda: DTC.currency,
             conta_id: accountDb.id,
             campanha_id: campDb.id,
@@ -637,7 +637,7 @@ function buildFactRows({ tenantId, dates, scenario, entityMaps, cargaByPlatform,
               platform,
               campaign_key: campaign.key,
               group_key: group.key,
-              aggregated_from: "ad",
+              aggregated_from: "anuncio",
             },
             metadata_json: {
               objective: campaign.objective,
@@ -653,7 +653,7 @@ function buildFactRows({ tenantId, dates, scenario, entityMaps, cargaByPlatform,
           carga_id: cargaId,
           data_ref: iso,
           plataforma: platform,
-          nivel: "campaign",
+          nivel: "campanha",
           moeda: DTC.currency,
           conta_id: accountDb.id,
           campanha_id: campDb.id,
@@ -668,7 +668,7 @@ function buildFactRows({ tenantId, dates, scenario, entityMaps, cargaByPlatform,
             source: "simulated_fivetran",
             platform,
             campaign_key: campaign.key,
-            aggregated_from: "ad_group",
+            aggregated_from: "grupo",
           },
           metadata_json: {
             objective: campaign.objective,
@@ -693,6 +693,7 @@ async function main() {
 
   const tenantId = Number(getArg("--tenant") || 1);
   const seed = Number(getArg("--seed") || 20260226);
+  const reset = getArg("--reset") === "true" || process.argv.includes("--reset");
   const { start, end, dates } = buildDateWindow();
 
   const client = new Client({
@@ -716,6 +717,15 @@ async function main() {
   await client.connect();
   try {
     await client.query("BEGIN");
+
+    if (reset) {
+      await client.query(
+        `DELETE FROM trafegopago.desempenho_diario
+         WHERE tenant_id = $1
+           AND plataforma = ANY($2::text[])`,
+        [tenantId, scenario.map((s) => s.platform)],
+      );
+    }
 
     for (const platformCfg of scenario) {
       const platform = platformCfg.platform;
@@ -838,7 +848,7 @@ async function main() {
       const p = r.plataforma;
       if (!acc[p]) acc[p] = { rows: 0, spend: 0, revenue: 0, clicks: 0, impressions: 0, conversions: 0, leads: 0 };
       acc[p].rows += 1;
-      if (r.nivel === "campaign") {
+      if (r.nivel === "campanha") {
         acc[p].spend += Number(r.gasto || 0);
         acc[p].revenue += Number(r.receita_atribuida || 0);
         acc[p].clicks += Number(r.cliques || 0);
