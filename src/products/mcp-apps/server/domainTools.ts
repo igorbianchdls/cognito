@@ -46,6 +46,17 @@ type MarketingAction =
   | 'gasto_por_conta'
   | 'top_anuncios'
 
+type DataCatalogAction =
+  | 'fontes'
+  | 'recursos'
+  | 'campos'
+  | 'relacionamentos'
+  | 'qualidade'
+  | 'cobertura'
+  | 'pronto_para_dashboard'
+
+type DataCatalogDomain = 'erp' | 'crm' | 'marketing' | 'ecommerce'
+
 type CrudAction = 'listar' | 'ler'
 
 type ErpAcoesAction = 'criar' | 'atualizar' | 'baixar' | 'cancelar' | 'estornar' | 'reabrir'
@@ -228,6 +239,83 @@ const CRUD_RESOURCE_TABLES = {
   ...ERP_RESOURCE_TABLES,
   ...CRM_RESOURCE_TABLES,
 } as const
+
+type DataCatalogResourceConfig = {
+  domain: DataCatalogDomain
+  resource: string
+  label: string
+  table: string
+  dateColumn: string | null
+  valueColumn?: string
+  requiredFields?: readonly string[]
+  relationships?: readonly {
+    label: string
+    sourceColumn: string
+    targetTable: string
+    targetColumn: string
+  }[]
+}
+
+const DATA_CATALOG_RESOURCES = [
+  {
+    domain: 'erp',
+    resource: 'contas-a-pagar',
+    label: 'Contas a Pagar',
+    table: 'financeiro.contas_pagar',
+    dateColumn: 'data_lancamento',
+    valueColumn: 'valor_liquido',
+    requiredFields: ['fornecedor_id', 'data_vencimento', 'valor_liquido', 'status', 'categoria_despesa_id', 'centro_custo_id'],
+    relationships: [
+      { label: 'Fornecedor', sourceColumn: 'fornecedor_id', targetTable: 'entidades.fornecedores', targetColumn: 'id' },
+      { label: 'Compra', sourceColumn: 'compra_id', targetTable: 'compras.compras', targetColumn: 'id' },
+      { label: 'Categoria', sourceColumn: 'categoria_despesa_id', targetTable: 'financeiro.categorias_despesa', targetColumn: 'id' },
+      { label: 'Centro de custo', sourceColumn: 'centro_custo_id', targetTable: 'empresa.centros_custo', targetColumn: 'id' },
+      { label: 'Conta financeira', sourceColumn: 'conta_financeira_id', targetTable: 'financeiro.contas_financeiras', targetColumn: 'id' },
+      { label: 'Departamento', sourceColumn: 'departamento_id', targetTable: 'empresa.departamentos', targetColumn: 'id' },
+      { label: 'Filial', sourceColumn: 'filial_id', targetTable: 'empresa.filiais', targetColumn: 'id' },
+      { label: 'Unidade de negocio', sourceColumn: 'unidade_negocio_id', targetTable: 'empresa.unidades_negocio', targetColumn: 'id' },
+    ],
+  },
+  {
+    domain: 'erp',
+    resource: 'contas-a-receber',
+    label: 'Contas a Receber',
+    table: 'financeiro.contas_receber',
+    dateColumn: 'data_lancamento',
+    valueColumn: 'valor_liquido',
+    requiredFields: ['cliente_id', 'data_vencimento', 'valor_liquido', 'status', 'categoria_receita_id', 'centro_lucro_id'],
+    relationships: [
+      { label: 'Cliente', sourceColumn: 'cliente_id', targetTable: 'entidades.clientes', targetColumn: 'id' },
+      { label: 'Pedido de venda', sourceColumn: 'pedido_id', targetTable: 'vendas.pedidos', targetColumn: 'id' },
+      { label: 'Categoria', sourceColumn: 'categoria_receita_id', targetTable: 'financeiro.categorias_receita', targetColumn: 'id' },
+      { label: 'Centro de lucro', sourceColumn: 'centro_lucro_id', targetTable: 'empresa.centros_lucro', targetColumn: 'id' },
+      { label: 'Conta financeira', sourceColumn: 'conta_financeira_id', targetTable: 'financeiro.contas_financeiras', targetColumn: 'id' },
+      { label: 'Departamento', sourceColumn: 'departamento_id', targetTable: 'empresa.departamentos', targetColumn: 'id' },
+      { label: 'Filial', sourceColumn: 'filial_id', targetTable: 'empresa.filiais', targetColumn: 'id' },
+      { label: 'Unidade de negocio', sourceColumn: 'unidade_negocio_id', targetTable: 'empresa.unidades_negocio', targetColumn: 'id' },
+    ],
+  },
+  { domain: 'erp', resource: 'vendas/pedidos', label: 'Pedidos de Venda', table: 'vendas.pedidos', dateColumn: 'data_pedido', valueColumn: 'valor_total', requiredFields: ['cliente_id', 'data_pedido', 'valor_total', 'status'] },
+  { domain: 'erp', resource: 'compras/pedidos', label: 'Pedidos de Compra', table: 'compras.compras', dateColumn: 'data_pedido', valueColumn: 'valor_total', requiredFields: ['fornecedor_id', 'data_pedido', 'valor_total', 'status'] },
+  { domain: 'erp', resource: 'financeiro/clientes', label: 'Clientes', table: 'entidades.clientes', dateColumn: null, requiredFields: ['nome'] },
+  { domain: 'erp', resource: 'financeiro/fornecedores', label: 'Fornecedores', table: 'entidades.fornecedores', dateColumn: null, requiredFields: ['nome'] },
+  { domain: 'erp', resource: 'financeiro/contas-financeiras', label: 'Contas Financeiras', table: 'financeiro.contas_financeiras', dateColumn: null, requiredFields: ['nome'] },
+  { domain: 'erp', resource: 'financeiro/categorias-despesa', label: 'Categorias de Despesa', table: 'financeiro.categorias_despesa', dateColumn: null, requiredFields: ['nome'] },
+  { domain: 'erp', resource: 'financeiro/categorias-receita', label: 'Categorias de Receita', table: 'financeiro.categorias_receita', dateColumn: null, requiredFields: ['nome'] },
+  { domain: 'erp', resource: 'financeiro/centros-custo', label: 'Centros de Custo', table: 'empresa.centros_custo', dateColumn: null, requiredFields: ['nome'] },
+  { domain: 'erp', resource: 'financeiro/centros-lucro', label: 'Centros de Lucro', table: 'empresa.centros_lucro', dateColumn: null, requiredFields: ['nome'] },
+  { domain: 'crm', resource: 'crm/contas', label: 'Contas CRM', table: 'crm.contas', dateColumn: 'criado_em', requiredFields: ['nome'] },
+  { domain: 'crm', resource: 'crm/contatos', label: 'Contatos CRM', table: 'crm.contatos', dateColumn: 'criado_em', requiredFields: ['nome'] },
+  { domain: 'crm', resource: 'crm/leads', label: 'Leads', table: 'crm.leads', dateColumn: 'criado_em', valueColumn: 'valor_estimado', requiredFields: ['nome', 'status'] },
+  { domain: 'crm', resource: 'crm/oportunidades', label: 'Oportunidades', table: 'crm.oportunidades', dateColumn: 'data_abertura', valueColumn: 'valor', requiredFields: ['nome', 'status'] },
+  { domain: 'crm', resource: 'crm/atividades', label: 'Atividades CRM', table: 'crm.atividades', dateColumn: 'data_inicio', requiredFields: ['tipo', 'status'] },
+  { domain: 'ecommerce', resource: 'ecommerce/pedidos', label: 'Pedidos Ecommerce', table: 'ecommerce.pedidos', dateColumn: 'data_pedido', valueColumn: 'valor_total', requiredFields: ['data_pedido', 'valor_total', 'status', 'plataforma'] },
+  { domain: 'ecommerce', resource: 'ecommerce/itens', label: 'Itens Ecommerce', table: 'ecommerce.pedido_itens', dateColumn: null, valueColumn: 'valor_total', requiredFields: ['pedido_id'] },
+  { domain: 'ecommerce', resource: 'ecommerce/envios', label: 'Envios Ecommerce', table: 'ecommerce.envios', dateColumn: null, valueColumn: 'frete_custo', requiredFields: ['pedido_id'] },
+  { domain: 'marketing', resource: 'marketing/desempenho-diario', label: 'Desempenho Diario', table: 'trafegopago.desempenho_diario', dateColumn: 'data_ref', valueColumn: 'gasto', requiredFields: ['data_ref', 'plataforma', 'nivel'] },
+  { domain: 'marketing', resource: 'marketing/contas', label: 'Contas de Midia', table: 'trafegopago.contas_midia', dateColumn: null, requiredFields: ['nome_conta', 'plataforma'] },
+  { domain: 'marketing', resource: 'marketing/campanhas', label: 'Campanhas', table: 'trafegopago.campanhas', dateColumn: null, requiredFields: ['nome', 'plataforma'] },
+] as const satisfies readonly DataCatalogResourceConfig[]
 
 const ERP_ALLOWED_RESOURCES = Object.keys(ERP_RESOURCE_TABLES)
 const CRM_ALLOWED_RESOURCES = Object.keys(CRM_RESOURCE_TABLES)
@@ -434,6 +522,65 @@ const MARKETING_SCHEMA = {
   additionalProperties: true,
 } as const satisfies McpToolInputSchema
 
+const DATA_CATALOG_SCHEMA = {
+  type: 'object',
+  properties: {
+    action: {
+      type: 'string',
+      enum: ['fontes', 'recursos', 'campos', 'relacionamentos', 'qualidade', 'cobertura', 'pronto_para_dashboard'],
+      description:
+        'Tipo de consulta ao catalogo. Use fontes para ver dominios conectados; recursos para listar tabelas canonicas; campos para schema; relacionamentos, qualidade, cobertura ou pronto_para_dashboard para avaliar um recurso.',
+    },
+    domain: {
+      type: 'string',
+      enum: ['erp', 'crm', 'marketing', 'ecommerce'],
+      description: 'Dominio opcional para filtrar o catalogo.',
+    },
+    resource: {
+      type: 'string',
+      description:
+        'Recurso canonico opcional, como contas-a-pagar, contas-a-receber, crm/oportunidades, ecommerce/pedidos ou marketing/desempenho-diario.',
+    },
+    de: {
+      type: 'string',
+      description: 'Data inicial no formato YYYY-MM-DD, aplicada quando o recurso tem coluna de data.',
+    },
+    ate: {
+      type: 'string',
+      description: 'Data final no formato YYYY-MM-DD, aplicada quando o recurso tem coluna de data.',
+    },
+  },
+  required: ['action'],
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
+
+const DATA_CATALOG_OUTPUT_SCHEMA = {
+  type: 'object',
+  properties: {
+    success: { type: 'boolean' },
+    tool: { type: 'string' },
+    view: { type: 'string' },
+    action: { type: 'string' },
+    domain: { type: 'string' },
+    resource: { type: 'string' },
+    title: { type: 'string' },
+    subtitle: { type: 'string' },
+    sources: { type: 'array', items: { type: 'object', additionalProperties: true } },
+    resources: { type: 'array', items: { type: 'object', additionalProperties: true } },
+    fields: { type: 'array', items: { type: 'object', additionalProperties: true } },
+    relationships: { type: 'array', items: { type: 'object', additionalProperties: true } },
+    quality: { type: 'object', additionalProperties: true },
+    coverage: { type: 'array', items: { type: 'object', additionalProperties: true } },
+    issues: { type: 'array', items: { type: 'string' } },
+    recommendations: { type: 'array', items: { type: 'string' } },
+    rows: { type: 'array', items: { type: 'object', additionalProperties: true } },
+    columns: { type: 'array', items: { type: 'string' } },
+    count: { type: 'integer' },
+  },
+  required: ['success', 'tool', 'view', 'action', 'title'],
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
+
 export const MCP_APP_DOMAIN_TOOL_NAMES = {
   erp: 'erp',
   erpAcoes: 'erp_acoes',
@@ -442,6 +589,7 @@ export const MCP_APP_DOMAIN_TOOL_NAMES = {
   sqlExecution: 'sql_execution',
   ecommerce: 'ecommerce',
   marketing: 'marketing',
+  dataCatalog: 'data_catalog',
 } as const
 
 function isEnvEnabled(name: string) {
@@ -521,6 +669,18 @@ const MARKETING_DOMAIN_TOOL_DEFINITION = {
   _meta: TOOL_META,
 } as const satisfies DomainToolDefinition
 
+const DATA_CATALOG_DOMAIN_TOOL_DEFINITION = {
+  name: MCP_APP_DOMAIN_TOOL_NAMES.dataCatalog,
+  title: 'Data catalog',
+  description:
+    'Mostra o catalogo de dados conectados do tenant: fontes, recursos, campos, relacionamentos, qualidade, cobertura por periodo e prontidao para dashboard/relatorio. Use antes de analises quando precisar saber quais dados existem e se estao completos.',
+  inputSchema: DATA_CATALOG_SCHEMA,
+  outputSchema: DATA_CATALOG_OUTPUT_SCHEMA,
+  securitySchemes: READ_SECURITY_SCHEMES,
+  annotations: READ_ONLY_ANNOTATIONS,
+  _meta: TOOL_META,
+} as const satisfies DomainToolDefinition
+
 export function listMcpAppDomainToolDefinitions() {
   return [
     ERP_DOMAIN_TOOL_DEFINITION,
@@ -529,6 +689,7 @@ export function listMcpAppDomainToolDefinitions() {
     ECOMMERCE_DOMAIN_TOOL_DEFINITION,
     SQL_DOMAIN_TOOL_DEFINITION,
     MARKETING_DOMAIN_TOOL_DEFINITION,
+    DATA_CATALOG_DOMAIN_TOOL_DEFINITION,
   ]
 }
 
@@ -538,6 +699,7 @@ export const MCP_APP_DOMAIN_TOOL_DEFINITIONS = [
   CRM_DOMAIN_TOOL_DEFINITION,
   ECOMMERCE_DOMAIN_TOOL_DEFINITION,
   MARKETING_DOMAIN_TOOL_DEFINITION,
+  DATA_CATALOG_DOMAIN_TOOL_DEFINITION,
 ] as const satisfies readonly DomainToolDefinition[]
 
 const MCP_APP_DOMAIN_TOOL_NAME_SET = new Set<string>(
@@ -587,6 +749,12 @@ function inferColumns(rows: Array<Record<string, unknown>>) {
   return Object.keys(rows[0] || {})
 }
 
+function splitTableName(table: string) {
+  const [schema, name] = table.split('.')
+  if (!schema || !name) throw new Error(`Tabela invalida no catalogo: ${table}`)
+  return { schema, name }
+}
+
 function getTenantId(context: CognitoMcpServerContext) {
   return context.tenantId && context.tenantId > 0 ? context.tenantId : 1
 }
@@ -619,6 +787,29 @@ function normalizeMarketingAction(value: unknown): MarketingAction {
     return out
   }
   throw new Error('action invalida para marketing')
+}
+
+function normalizeDataCatalogAction(value: unknown): DataCatalogAction {
+  const out = toText(value || 'fontes').toLowerCase()
+  if (
+    out === 'fontes' ||
+    out === 'recursos' ||
+    out === 'campos' ||
+    out === 'relacionamentos' ||
+    out === 'qualidade' ||
+    out === 'cobertura' ||
+    out === 'pronto_para_dashboard'
+  ) {
+    return out
+  }
+  throw new Error('action invalida para data_catalog')
+}
+
+function normalizeDataCatalogDomain(value: unknown): DataCatalogDomain | null {
+  const out = toText(value).toLowerCase()
+  if (!out) return null
+  if (out === 'erp' || out === 'crm' || out === 'marketing' || out === 'ecommerce') return out
+  throw new Error('domain invalido para data_catalog')
 }
 
 function normalizeCrudAction(value: unknown): CrudAction {
@@ -1105,6 +1296,473 @@ async function executeBuiltQuery(tool: 'ecommerce' | 'marketing', action: string
     structuredContent,
     isError: false,
   }
+}
+
+function getCatalogResources(domain: DataCatalogDomain | null) {
+  return DATA_CATALOG_RESOURCES.filter((resource) => !domain || resource.domain === domain)
+}
+
+function getCatalogResource(resourceName: string, domain: DataCatalogDomain | null) {
+  const normalized = toText(resourceName)
+  const resource = DATA_CATALOG_RESOURCES.find((item) => {
+    return item.resource === normalized && (!domain || item.domain === domain)
+  })
+  if (!resource) {
+    throw new Error(
+      `resource invalido para data_catalog: ${normalized || '(vazio)'}. Use action=recursos para listar recursos disponiveis.`,
+    )
+  }
+  return resource
+}
+
+function buildCatalogWhere(config: DataCatalogResourceConfig, tenantId: number, input: JsonRecord) {
+  const params: unknown[] = [tenantId]
+  const where: string[] = ['r.tenant_id = $1::int']
+  const de = normalizeDate(input.de)
+  const ate = normalizeDate(input.ate)
+
+  if (config.dateColumn && de) {
+    params.push(de)
+    where.push(`r.${config.dateColumn}::date >= $${params.length}::date`)
+  }
+  if (config.dateColumn && ate) {
+    params.push(ate)
+    where.push(`r.${config.dateColumn}::date <= $${params.length}::date`)
+  }
+
+  return { params, whereClause: `WHERE ${where.join(' AND ')}` }
+}
+
+async function getCatalogResourceSummary(config: DataCatalogResourceConfig, tenantId: number, input: JsonRecord) {
+  try {
+    const base = buildCatalogWhere(config, tenantId, input)
+    const minDate = config.dateColumn ? `MIN(r.${config.dateColumn}::date)::text` : 'NULL::text'
+    const maxDate = config.dateColumn ? `MAX(r.${config.dateColumn}::date)::text` : 'NULL::text'
+    const value = config.valueColumn ? `COALESCE(SUM(r.${config.valueColumn}), 0)::float` : 'NULL::float'
+    const rows = await runQuery<{ total: number; min_date: string | null; max_date: string | null; valor_total: number | null }>(
+      `
+SELECT COUNT(*)::int AS total, ${minDate} AS min_date, ${maxDate} AS max_date, ${value} AS valor_total
+FROM ${config.table} r
+${base.whereClause}
+      `.trim(),
+      base.params,
+    )
+    const row = rows[0] || { total: 0, min_date: null, max_date: null, valor_total: null }
+    return {
+      domain: config.domain,
+      resource: config.resource,
+      label: config.label,
+      table: config.table,
+      status: row.total > 0 ? 'connected' : 'empty',
+      total_records: row.total,
+      min_date: row.min_date,
+      max_date: row.max_date,
+      value_total: row.valor_total,
+    }
+  } catch (error) {
+    return {
+      domain: config.domain,
+      resource: config.resource,
+      label: config.label,
+      table: config.table,
+      status: 'unavailable',
+      total_records: 0,
+      min_date: null,
+      max_date: null,
+      value_total: null,
+      error: (error as Error)?.message || String(error),
+    }
+  }
+}
+
+async function listCatalogFields(config: DataCatalogResourceConfig) {
+  const table = splitTableName(config.table)
+  return runQuery<Record<string, unknown>>(
+    `
+SELECT
+  column_name AS campo,
+  data_type AS tipo,
+  is_nullable AS permite_nulo,
+  ordinal_position::int AS ordem
+FROM information_schema.columns
+WHERE table_schema = $1 AND table_name = $2
+ORDER BY ordinal_position ASC
+    `.trim(),
+    [table.schema, table.name],
+  )
+}
+
+async function listCatalogRelationships(config: DataCatalogResourceConfig, tenantId: number, input: JsonRecord) {
+  const relationships = config.relationships || []
+  const rows: Record<string, unknown>[] = []
+
+  for (const relationship of relationships) {
+    try {
+      const base = buildCatalogWhere(config, tenantId, input)
+      const result = await runQuery<{ total: number; preenchidos: number; validos: number }>(
+        `
+SELECT
+  COUNT(*)::int AS total,
+  COUNT(r.${relationship.sourceColumn})::int AS preenchidos,
+  COUNT(t.${relationship.targetColumn})::int AS validos
+FROM ${config.table} r
+LEFT JOIN ${relationship.targetTable} t
+  ON t.${relationship.targetColumn} = r.${relationship.sourceColumn}
+ AND t.tenant_id = r.tenant_id
+${base.whereClause}
+        `.trim(),
+        base.params,
+      )
+      const row = result[0] || { total: 0, preenchidos: 0, validos: 0 }
+      rows.push({
+        relacionamento: relationship.label,
+        campo_origem: relationship.sourceColumn,
+        tabela_destino: relationship.targetTable,
+        registros: row.total,
+        preenchidos: row.preenchidos,
+        validos: row.validos,
+        pendentes: Math.max(row.preenchidos - row.validos, 0),
+      })
+    } catch (error) {
+      rows.push({
+        relacionamento: relationship.label,
+        campo_origem: relationship.sourceColumn,
+        tabela_destino: relationship.targetTable,
+        registros: 0,
+        preenchidos: 0,
+        validos: 0,
+        pendentes: 0,
+        erro: (error as Error)?.message || String(error),
+      })
+    }
+  }
+
+  return rows
+}
+
+async function getCatalogStatusDistribution(config: DataCatalogResourceConfig, tenantId: number, input: JsonRecord) {
+  try {
+    const base = buildCatalogWhere(config, tenantId, input)
+    return runQuery<Record<string, unknown>>(
+      `
+SELECT COALESCE(r.status::text, '-') AS status, COUNT(*)::int AS registros
+FROM ${config.table} r
+${base.whereClause}
+GROUP BY 1
+ORDER BY 2 DESC
+      `.trim(),
+      base.params,
+    )
+  } catch {
+    return []
+  }
+}
+
+async function getCatalogQuality(config: DataCatalogResourceConfig, tenantId: number, input: JsonRecord) {
+  const requiredFields = config.requiredFields || []
+  const relationships = await listCatalogRelationships(config, tenantId, input)
+  const statusDistribution = await getCatalogStatusDistribution(config, tenantId, input)
+  const base = buildCatalogWhere(config, tenantId, input)
+  const missingSelect = requiredFields.map((field) => {
+    return `SUM(CASE WHEN r.${field} IS NULL OR r.${field}::text = '' THEN 1 ELSE 0 END)::int AS missing_${field}`
+  })
+  const rows = await runQuery<Record<string, unknown>>(
+    `
+SELECT COUNT(*)::int AS total${missingSelect.length ? `,\n  ${missingSelect.join(',\n  ')}` : ''}
+FROM ${config.table} r
+${base.whereClause}
+    `.trim(),
+    base.params,
+  )
+  const summary = rows[0] || { total: 0 }
+  const total = Number(summary.total || 0)
+  const missingFields = requiredFields.map((field) => {
+    const missing = Number(summary[`missing_${field}`] || 0)
+    return {
+      campo: field,
+      ausentes: missing,
+      preenchimento: total > 0 ? Math.round(((total - missing) / total) * 100) : 100,
+    }
+  })
+  const fieldCompleteness = missingFields.length && total > 0
+    ? missingFields.reduce((acc, field) => acc + Number(field.preenchimento || 0), 0) / missingFields.length
+    : 100
+  const relationshipCompletenessValues = relationships
+    .filter((relationship) => Number(relationship.preenchidos || 0) > 0)
+    .map((relationship) => (Number(relationship.validos || 0) / Number(relationship.preenchidos || 1)) * 100)
+  const relationshipCompleteness = relationshipCompletenessValues.length
+    ? relationshipCompletenessValues.reduce((acc, value) => acc + value, 0) / relationshipCompletenessValues.length
+    : 100
+  const score = Math.round((fieldCompleteness * 0.7) + (relationshipCompleteness * 0.3))
+
+  return {
+    resource: config.resource,
+    label: config.label,
+    table: config.table,
+    total_records: total,
+    score,
+    missing_fields: missingFields,
+    relationships,
+    status_distribution: statusDistribution,
+  }
+}
+
+async function getCatalogCoverage(config: DataCatalogResourceConfig, tenantId: number, input: JsonRecord) {
+  if (!config.dateColumn) return []
+  const base = buildCatalogWhere(config, tenantId, input)
+  const value = config.valueColumn ? `COALESCE(SUM(r.${config.valueColumn}), 0)::float` : 'NULL::float'
+  return runQuery<Record<string, unknown>>(
+    `
+SELECT
+  TO_CHAR(DATE_TRUNC('month', r.${config.dateColumn}::date), 'YYYY-MM') AS mes,
+  COUNT(*)::int AS registros,
+  ${value} AS valor_total
+FROM ${config.table} r
+${base.whereClause}
+GROUP BY 1
+ORDER BY 1 ASC
+    `.trim(),
+    base.params,
+  )
+}
+
+function buildCatalogIssuesAndRecommendations(input: {
+  quality?: Record<string, unknown> | null
+  coverage?: Record<string, unknown>[]
+  resources?: Record<string, unknown>[]
+}) {
+  const issues: string[] = []
+  const recommendations: string[] = []
+  const quality = input.quality || {}
+  const score = Number(quality.score || 0)
+
+  if (quality.score !== undefined && score < 90) {
+    issues.push(`Qualidade abaixo do ideal (${score}/100).`)
+    recommendations.push('Priorize campos obrigatorios ausentes e relacionamentos sem correspondencia antes de criar dashboards executivos.')
+  }
+
+  const missingFields = Array.isArray(quality.missing_fields) ? quality.missing_fields as Record<string, unknown>[] : []
+  for (const field of missingFields.filter((item) => Number(item.ausentes || 0) > 0).slice(0, 4)) {
+    issues.push(`${field.campo}: ${field.ausentes} registros sem preenchimento.`)
+  }
+
+  const relationships = Array.isArray(quality.relationships) ? quality.relationships as Record<string, unknown>[] : []
+  for (const relationship of relationships.filter((item) => Number(item.pendentes || 0) > 0).slice(0, 4)) {
+    issues.push(`${relationship.relacionamento}: ${relationship.pendentes} referencias sem join valido.`)
+  }
+
+  const coverage = input.coverage || []
+  if (coverage.length === 0 && quality.resource) {
+    issues.push('Sem cobertura temporal para o recurso no periodo informado.')
+  } else if (coverage.length > 0 && coverage.length < 3) {
+    recommendations.push('Aumente a janela de dados para pelo menos 3 meses quando o objetivo for detectar tendencia.')
+  }
+
+  const emptyResources = (input.resources || []).filter((resource) => resource.status === 'empty')
+  if (emptyResources.length > 0) {
+    recommendations.push(`Revise conectores sem dados: ${emptyResources.slice(0, 4).map((resource) => resource.label).join(', ')}.`)
+  }
+
+  if (!issues.length) issues.push('Nenhum problema critico detectado no recorte consultado.')
+  if (!recommendations.length) recommendations.push('O recurso esta pronto para analises, dashboards e relatorios no recorte consultado.')
+
+  return { issues, recommendations }
+}
+
+function makeDataCatalogResult(input: {
+  action: DataCatalogAction
+  domain: DataCatalogDomain | null
+  resource: string | null
+  title: string
+  subtitle: string
+  sources?: Record<string, unknown>[]
+  resources?: Record<string, unknown>[]
+  fields?: Record<string, unknown>[]
+  relationships?: Record<string, unknown>[]
+  quality?: Record<string, unknown> | null
+  coverage?: Record<string, unknown>[]
+  issues?: string[]
+  recommendations?: string[]
+  rows?: Record<string, unknown>[]
+}) {
+  const rows = input.rows || input.resources || input.sources || input.fields || input.relationships || input.coverage || []
+  const structuredContent = {
+    success: true,
+    tool: MCP_APP_DOMAIN_TOOL_NAMES.dataCatalog,
+    view: 'data_catalog',
+    action: input.action,
+    domain: input.domain || undefined,
+    resource: input.resource || undefined,
+    title: input.title,
+    subtitle: input.subtitle,
+    sources: input.sources || [],
+    resources: input.resources || [],
+    fields: input.fields || [],
+    relationships: input.relationships || [],
+    quality: input.quality || null,
+    coverage: input.coverage || [],
+    issues: input.issues || [],
+    recommendations: input.recommendations || [],
+    rows,
+    columns: inferColumns(rows),
+    count: rows.length,
+  }
+
+  return {
+    content: [{ type: 'text', text: JSON.stringify(structuredContent, null, 2) }],
+    structuredContent,
+    isError: false,
+  }
+}
+
+async function callDataCatalog(args: unknown, context: CognitoMcpServerContext) {
+  const input = toObj(args)
+  const action = normalizeDataCatalogAction(input.action)
+  const domain = normalizeDataCatalogDomain(input.domain)
+  const tenantId = getTenantId(context)
+  const configs = getCatalogResources(domain)
+
+  if (action === 'fontes') {
+    const summaries = await Promise.all(configs.map((config) => getCatalogResourceSummary(config, tenantId, input)))
+    const domains = ['erp', 'crm', 'marketing', 'ecommerce'] as const
+    const sources = domains
+      .filter((sourceDomain) => !domain || sourceDomain === domain)
+      .map((sourceDomain) => {
+        const sourceResources = summaries.filter((summary) => summary.domain === sourceDomain)
+        const totalRecords = sourceResources.reduce((acc, resource) => acc + Number(resource.total_records || 0), 0)
+        const maxDate = sourceResources
+          .map((resource) => toText(resource.max_date))
+          .filter(Boolean)
+          .sort()
+          .pop() || null
+        return {
+          domain: sourceDomain,
+          label: sourceDomain === 'erp' ? 'ERP' : sourceDomain === 'crm' ? 'CRM' : sourceDomain === 'marketing' ? 'Marketing' : 'Ecommerce',
+          status: totalRecords > 0 ? 'connected' : 'empty',
+          resources: sourceResources.length,
+          total_records: totalRecords,
+          last_record_at: maxDate,
+        }
+      })
+    const helper = buildCatalogIssuesAndRecommendations({ resources: summaries })
+    return makeDataCatalogResult({
+      action,
+      domain,
+      resource: null,
+      title: 'Catalogo de Dados',
+      subtitle: `${sources.length} fontes avaliadas`,
+      sources,
+      resources: summaries,
+      issues: helper.issues,
+      recommendations: helper.recommendations,
+      rows: sources,
+    })
+  }
+
+  if (action === 'recursos') {
+    const summaries = await Promise.all(configs.map((config) => getCatalogResourceSummary(config, tenantId, input)))
+    const helper = buildCatalogIssuesAndRecommendations({ resources: summaries })
+    return makeDataCatalogResult({
+      action,
+      domain,
+      resource: null,
+      title: domain ? `Recursos - ${domain.toUpperCase()}` : 'Recursos do Catalogo',
+      subtitle: `${summaries.length} recursos mapeados`,
+      resources: summaries,
+      issues: helper.issues,
+      recommendations: helper.recommendations,
+      rows: summaries,
+    })
+  }
+
+  const resource = getCatalogResource(toText(input.resource), domain)
+
+  if (action === 'campos') {
+    const fields = await listCatalogFields(resource)
+    return makeDataCatalogResult({
+      action,
+      domain: resource.domain,
+      resource: resource.resource,
+      title: `Campos - ${resource.label}`,
+      subtitle: `${fields.length} campos em ${resource.table}`,
+      fields,
+      rows: fields,
+      issues: fields.length ? [] : ['Nenhum campo encontrado no information_schema.'],
+      recommendations: ['Use estes nomes de campo para pedir filtros, joins e metricas sem depender de SQL livre.'],
+    })
+  }
+
+  if (action === 'relacionamentos') {
+    const relationships = await listCatalogRelationships(resource, tenantId, input)
+    const helper = buildCatalogIssuesAndRecommendations({
+      quality: { resource: resource.resource, relationships },
+      coverage: [{}],
+    })
+    return makeDataCatalogResult({
+      action,
+      domain: resource.domain,
+      resource: resource.resource,
+      title: `Relacionamentos - ${resource.label}`,
+      subtitle: `${relationships.length} joins avaliados`,
+      relationships,
+      rows: relationships,
+      issues: helper.issues,
+      recommendations: helper.recommendations,
+    })
+  }
+
+  if (action === 'cobertura') {
+    const coverage = await getCatalogCoverage(resource, tenantId, input)
+    const helper = buildCatalogIssuesAndRecommendations({
+      quality: { resource: resource.resource },
+      coverage,
+    })
+    return makeDataCatalogResult({
+      action,
+      domain: resource.domain,
+      resource: resource.resource,
+      title: `Cobertura - ${resource.label}`,
+      subtitle: coverage.length ? `${coverage.length} meses com dados` : 'Sem coluna temporal ou sem dados no periodo',
+      coverage,
+      rows: coverage,
+      issues: helper.issues,
+      recommendations: helper.recommendations,
+    })
+  }
+
+  const quality = await getCatalogQuality(resource, tenantId, input)
+  const coverage = await getCatalogCoverage(resource, tenantId, input)
+  const helper = buildCatalogIssuesAndRecommendations({ quality, coverage })
+  const ready = Number(quality.score || 0) >= 90 && coverage.length >= 3
+
+  return makeDataCatalogResult({
+    action,
+    domain: resource.domain,
+    resource: resource.resource,
+    title: action === 'pronto_para_dashboard' ? `Prontidao - ${resource.label}` : `Qualidade - ${resource.label}`,
+    subtitle: action === 'pronto_para_dashboard'
+      ? ready
+        ? `Pronto para dashboard e relatorio (${quality.score}/100)`
+        : `Requer revisao antes de dashboard executivo (${quality.score}/100)`
+      : `Score de qualidade: ${quality.score}/100`,
+    quality: {
+      ...quality,
+      ready_for_dashboard: ready,
+    },
+    coverage,
+    relationships: Array.isArray(quality.relationships) ? quality.relationships as Record<string, unknown>[] : [],
+    issues: helper.issues,
+    recommendations: helper.recommendations,
+    rows: [
+      {
+        recurso: resource.resource,
+        score: quality.score,
+        pronto_para_dashboard: ready,
+        registros: quality.total_records,
+        meses_com_dados: coverage.length,
+      },
+    ],
+  })
 }
 
 function getCrudTable(resource: string) {
@@ -2709,6 +3367,8 @@ export async function callMcpAppDomainTool(
       return callSqlExecution(args, context, MCP_APP_DOMAIN_TOOL_NAMES.sqlExecution)
     case MCP_APP_DOMAIN_TOOL_NAMES.marketing:
       return callMarketing(args, context)
+    case MCP_APP_DOMAIN_TOOL_NAMES.dataCatalog:
+      return callDataCatalog(args, context)
     default:
       throw new Error(`Tool de dominio desconhecida: ${name}`)
   }

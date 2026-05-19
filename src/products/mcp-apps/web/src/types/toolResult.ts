@@ -62,8 +62,32 @@ export type ChartResultStructuredContent = {
   rows?: unknown[]
 }
 
+export type DataCatalogStructuredContent = {
+  ok?: boolean
+  success?: boolean
+  tool?: 'data_catalog' | string
+  view?: 'data_catalog'
+  action?: string
+  domain?: string
+  resource?: string
+  title?: string
+  subtitle?: string
+  sources?: unknown[]
+  resources?: unknown[]
+  fields?: unknown[]
+  relationships?: unknown[]
+  quality?: unknown
+  coverage?: unknown[]
+  issues?: string[]
+  recommendations?: string[]
+  rows?: unknown[]
+  columns?: string[]
+  count?: number
+}
+
 export type DashboardStructuredContent =
   | DashboardListStructuredContent
   | DashboardPreviewStructuredContent
   | ChartResultStructuredContent
+  | DataCatalogStructuredContent
   | DataResultStructuredContent

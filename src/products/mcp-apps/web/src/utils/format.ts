@@ -88,6 +88,7 @@ export function getToolLabel(tool?: string) {
   if (tool === 'erp') return 'ERP'
   if (tool === 'erp_acoes') return 'ERP Acoes'
   if (tool === 'crm') return 'CRM'
+  if (tool === 'data_catalog') return 'Catalogo de Dados'
   if (tool === 'sql' || tool === 'sql_execution') return 'SQL'
   if (tool === 'ecommerce') return 'Ecommerce'
   if (tool === 'marketing') return 'Marketing'
@@ -103,6 +104,7 @@ export function getToolVisual(tool?: string): ToolVisual {
   }
   if (tool === 'ecommerce') return { label: 'Ecommerce', icon: createElement(ShoppingCart, { size: 19, strokeWidth: 2.4 }), tone: 'ecommerce' }
   if (tool === 'marketing') return { label: 'Marketing', icon: createElement(Megaphone, { size: 19, strokeWidth: 2.4 }), tone: 'marketing' }
+  if (tool === 'data_catalog') return { label: 'Catalogo de Dados', icon: createElement(Database, { size: 19, strokeWidth: 2.4 }), tone: 'sql' }
   if (tool === 'sql' || tool === 'sql_execution') return { label: 'SQL', icon: createElement(Database, { size: 19, strokeWidth: 2.4 }), tone: 'sql' }
   return { label: humanizeKey(tool || 'Resultado'), icon: createElement(BadgeDollarSign, { size: 19, strokeWidth: 2.4 }), tone: 'neutral' }
 }

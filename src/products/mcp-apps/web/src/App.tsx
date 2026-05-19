@@ -4,6 +4,7 @@ import { LoadingState } from '@/products/mcp-apps/web/src/components/LoadingStat
 import { useMcpAppToolResult } from '@/products/mcp-apps/web/src/bridge'
 import type {
   ChartResultStructuredContent,
+  DataCatalogStructuredContent,
   DataResultStructuredContent,
   DashboardListStructuredContent,
   DashboardPreviewStructuredContent,
@@ -11,6 +12,7 @@ import type {
 import { ChartResultView } from '@/products/mcp-apps/web/src/views/ChartResultView'
 import { DashboardListView } from '@/products/mcp-apps/web/src/views/DashboardListView'
 import { DashboardPreviewView } from '@/products/mcp-apps/web/src/views/DashboardPreviewView'
+import { DataCatalogView } from '@/products/mcp-apps/web/src/views/DataCatalogView'
 import { DataResultView } from '@/products/mcp-apps/web/src/views/DataResultView'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -57,6 +59,9 @@ export function App() {
       ) : null}
       {view === 'chart' ? (
         <ChartResultView data={structuredContent as ChartResultStructuredContent} />
+      ) : null}
+      {view === 'data_catalog' || tool === 'data_catalog' ? (
+        <DataCatalogView data={structuredContent as DataCatalogStructuredContent} />
       ) : null}
       {isDataTool ? (
         <DataResultView data={structuredContent as DataResultStructuredContent} />
