@@ -6,6 +6,7 @@ import type {
   AnalysisStructuredContent,
   AutomationStructuredContent,
   ChartResultStructuredContent,
+  ConnectorsStructuredContent,
   DataCatalogStructuredContent,
   DataResultStructuredContent,
   DashboardListStructuredContent,
@@ -15,6 +16,7 @@ import type {
 import { AnalysisView } from '@/products/mcp-apps/web/src/views/AnalysisView'
 import { AutomationView } from '@/products/mcp-apps/web/src/views/AutomationView'
 import { ChartResultView } from '@/products/mcp-apps/web/src/views/ChartResultView'
+import { ConnectorsView } from '@/products/mcp-apps/web/src/views/ConnectorsView'
 import { DashboardListView } from '@/products/mcp-apps/web/src/views/DashboardListView'
 import { DashboardPreviewView } from '@/products/mcp-apps/web/src/views/DashboardPreviewView'
 import { DataCatalogView } from '@/products/mcp-apps/web/src/views/DataCatalogView'
@@ -74,6 +76,9 @@ export function App() {
       ) : null}
       {view === 'automation' || view === 'automation_list' || view === 'action_result' || tool === 'actions' || tool === 'alerts' || tool === 'schedules' ? (
         <AutomationView data={structuredContent as AutomationStructuredContent} />
+      ) : null}
+      {view === 'connectors' || tool === 'connectors' ? (
+        <ConnectorsView data={structuredContent as ConnectorsStructuredContent} />
       ) : null}
       {view === 'data_catalog' || tool === 'data_catalog' ? (
         <DataCatalogView data={structuredContent as DataCatalogStructuredContent} />

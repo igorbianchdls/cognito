@@ -38,6 +38,8 @@ function getToolInvocationText(name: string) {
       return ['Atualizando alertas...', 'Alertas atualizados.']
     case 'schedules':
       return ['Atualizando agendamentos...', 'Agendamentos atualizados.']
+    case 'connectors':
+      return ['Verificando conectores...', 'Conectores carregados.']
     case 'dashboard_render_list':
     case 'dashboard_render_preview':
     case 'dashboard_embed_preview':

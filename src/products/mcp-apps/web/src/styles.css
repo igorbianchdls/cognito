@@ -1166,6 +1166,114 @@ a {
   overflow-wrap: anywhere;
 }
 
+.connectors-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.connectors-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 8px;
+}
+
+.connectors-summary > div,
+.connector-result,
+.connector-card {
+  border: 1px solid var(--cognito-border);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: var(--cognito-shadow);
+}
+
+.connectors-summary > div {
+  display: grid;
+  gap: 5px;
+  padding: 11px 12px;
+}
+
+.connectors-summary span,
+.connector-result dt,
+.connector-card dt {
+  color: #68726c;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.connectors-summary strong {
+  color: #111513;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 780;
+  letter-spacing: 0;
+  line-height: 1.15;
+}
+
+.connectors-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.connector-card {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.connector-card header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.connector-card h2,
+.connector-result h2 {
+  margin: 0;
+  color: #111513;
+  font-size: 14px;
+  font-weight: 780;
+  letter-spacing: 0;
+  line-height: 1.25;
+}
+
+.connector-card header p,
+.connector-card__error {
+  margin: 0;
+  color: #4f5a53;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.connector-card dl,
+.connector-result dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.connector-card dd,
+.connector-result dd {
+  margin: 2px 0 0;
+  color: #29302b;
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.connector-card__error {
+  color: #9b2b23;
+}
+
+.connector-result {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
 @media (max-width: 640px) {
   .app-shell {
     padding: 10px;
@@ -1232,7 +1340,8 @@ a {
   .catalog-notes,
   .analysis-metrics,
   .automation-list-summary,
-  .automation-summary {
+  .automation-summary,
+  .connectors-summary {
     grid-template-columns: minmax(0, 1fr);
   }
 
