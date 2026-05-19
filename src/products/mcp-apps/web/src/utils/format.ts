@@ -2,9 +2,14 @@ import { createElement, type ReactNode } from 'react'
 import { SiHubspot, SiTotvs } from '@icons-pack/react-simple-icons'
 import {
   BadgeDollarSign,
+  Bell,
+  CalendarClock,
   Database,
+  FileText,
   Megaphone,
   ShoppingCart,
+  Table2,
+  Zap,
 } from 'lucide-react'
 
 export type ToolTone = 'erp' | 'crm' | 'ecommerce' | 'marketing' | 'sql' | 'neutral'
@@ -89,6 +94,11 @@ export function getToolLabel(tool?: string) {
   if (tool === 'erp_acoes') return 'ERP Acoes'
   if (tool === 'crm') return 'CRM'
   if (tool === 'data_catalog') return 'Catalogo de Dados'
+  if (tool === 'analysis') return 'Analise'
+  if (tool === 'table') return 'Tabela'
+  if (tool === 'actions') return 'Acoes'
+  if (tool === 'alerts') return 'Alertas'
+  if (tool === 'schedules') return 'Agendamentos'
   if (tool === 'sql' || tool === 'sql_execution') return 'SQL'
   if (tool === 'ecommerce') return 'Ecommerce'
   if (tool === 'marketing') return 'Marketing'
@@ -105,6 +115,11 @@ export function getToolVisual(tool?: string): ToolVisual {
   if (tool === 'ecommerce') return { label: 'Ecommerce', icon: createElement(ShoppingCart, { size: 19, strokeWidth: 2.4 }), tone: 'ecommerce' }
   if (tool === 'marketing') return { label: 'Marketing', icon: createElement(Megaphone, { size: 19, strokeWidth: 2.4 }), tone: 'marketing' }
   if (tool === 'data_catalog') return { label: 'Catalogo de Dados', icon: createElement(Database, { size: 19, strokeWidth: 2.4 }), tone: 'sql' }
+  if (tool === 'analysis') return { label: 'Analise', icon: createElement(FileText, { size: 19, strokeWidth: 2.4 }), tone: 'neutral' }
+  if (tool === 'table') return { label: 'Tabela', icon: createElement(Table2, { size: 19, strokeWidth: 2.4 }), tone: 'sql' }
+  if (tool === 'actions') return { label: 'Acoes', icon: createElement(Zap, { size: 19, strokeWidth: 2.4 }), tone: 'marketing' }
+  if (tool === 'alerts') return { label: 'Alertas', icon: createElement(Bell, { size: 19, strokeWidth: 2.4 }), tone: 'marketing' }
+  if (tool === 'schedules') return { label: 'Agendamentos', icon: createElement(CalendarClock, { size: 19, strokeWidth: 2.4 }), tone: 'crm' }
   if (tool === 'sql' || tool === 'sql_execution') return { label: 'SQL', icon: createElement(Database, { size: 19, strokeWidth: 2.4 }), tone: 'sql' }
   return { label: humanizeKey(tool || 'Resultado'), icon: createElement(BadgeDollarSign, { size: 19, strokeWidth: 2.4 }), tone: 'neutral' }
 }

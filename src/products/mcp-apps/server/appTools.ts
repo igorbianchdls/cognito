@@ -1,4 +1,5 @@
 import { type McpToolInputSchema } from '@/products/mcp/tools/dashboardSchemas'
+import { runQuery } from '@/lib/postgres'
 import { callCognitoMcpTool, type CognitoMcpServerContext } from '@/products/mcp/server/cognitoMcpServer'
 import { DASHBOARD_WIDGET_RESOURCE_URI } from '@/products/mcp-apps/server/appResources'
 import {
@@ -20,6 +21,11 @@ export const MCP_APP_PUBLIC_TOOL_NAMES = {
   dashboards: 'dashboards',
   openArtifact: 'open_artifact',
   chart: 'chart',
+  analysis: 'analysis',
+  table: 'table',
+  actions: 'actions',
+  alerts: 'alerts',
+  schedules: 'schedules',
   artifactAuthoring: 'artifact_authoring',
 } as const
 
@@ -321,6 +327,168 @@ const CHART_OUTPUT_SCHEMA = {
         type: 'object',
         additionalProperties: true,
       },
+    },
+  },
+  required: ['ok', 'tool', 'view'],
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
+
+const ANALYSIS_SCHEMA = {
+  type: 'object',
+  properties: {
+    type: {
+      type: 'string',
+      enum: ['insights', 'comparison', 'anomalies', 'forecast', 'funnel', 'executive_summary'],
+      description: 'Tipo de analise visual a renderizar.',
+    },
+    title: { type: 'string', description: 'Titulo principal da analise.' },
+    subtitle: { type: 'string', description: 'Contexto curto, como periodo ou fonte dos dados.' },
+    summary: { type: 'string', description: 'Resumo executivo em uma ou duas frases.' },
+    metrics: {
+      type: 'array',
+      description: 'Metricas destacadas no topo.',
+      items: { type: 'object', additionalProperties: true },
+    },
+    sections: {
+      type: 'array',
+      description: 'Achados, riscos, oportunidades, comparacoes ou recomendacoes estruturadas.',
+      items: {
+        type: 'object',
+        properties: {
+          kind: { type: 'string' },
+          severity: { type: 'string', enum: ['critical', 'high', 'medium', 'low', 'info'] },
+          title: { type: 'string' },
+          evidence: { type: 'string' },
+          recommendation: { type: 'string' },
+          impact_value: {},
+        },
+        additionalProperties: true,
+      },
+    },
+    next_steps: {
+      type: 'array',
+      description: 'Proximos passos objetivos.',
+      items: { type: 'string' },
+    },
+  },
+  required: ['title'],
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
+
+const TABLE_SCHEMA = {
+  type: 'object',
+  properties: {
+    title: { type: 'string', description: 'Titulo da tabela.' },
+    subtitle: { type: 'string', description: 'Subtitulo opcional.' },
+    columns: {
+      type: 'array',
+      description: 'Colunas customizadas. Aceita strings ou objetos { key, label, format }.',
+      items: { additionalProperties: true },
+    },
+    rows: {
+      type: 'array',
+      description: 'Linhas ja calculadas pelo agente/tool anterior.',
+      items: { type: 'object', additionalProperties: true },
+    },
+  },
+  required: ['rows'],
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
+
+const ACTIONS_SCHEMA = {
+  type: 'object',
+  properties: {
+    domain: {
+      type: 'string',
+      enum: ['erp', 'crm', 'marketing', 'ecommerce'],
+      description: 'Dominio da acao.',
+    },
+    action: {
+      type: 'string',
+      description: 'Acao permitida no dominio. ERP aceita criar, atualizar, baixar, cancelar, estornar e reabrir.',
+    },
+    target: {
+      type: 'object',
+      description: 'Alvo da acao, como { resource, id }.',
+      additionalProperties: true,
+    },
+    payload: {
+      type: 'object',
+      description: 'Dados da acao.',
+      additionalProperties: true,
+    },
+    dry_run: {
+      type: 'boolean',
+      description: 'Default true. Quando true, retorna preview sem executar.',
+    },
+    idempotency_key: { type: 'string' },
+  },
+  required: ['domain', 'action'],
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
+
+const AUTOMATION_ACTION_SCHEMA = {
+  type: 'object',
+  properties: {
+    action: {
+      type: 'string',
+      enum: ['list', 'create', 'update', 'pause', 'resume', 'delete', 'test', 'run_now'],
+      description: 'Acao sobre alerta ou agendamento.',
+    },
+    id: { type: 'integer', description: 'ID para update, pause, resume, delete, test ou run_now.' },
+    title: { type: 'string' },
+    status: { type: 'string' },
+    frequency: { type: 'string', enum: ['hourly', 'daily', 'weekly', 'monthly'] },
+    channels: { type: 'array', items: { type: 'string' } },
+    metadata: { type: 'object', additionalProperties: true },
+    limit: { type: 'integer' },
+  },
+  required: ['action'],
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
+
+const ALERTS_SCHEMA = {
+  ...AUTOMATION_ACTION_SCHEMA,
+  properties: {
+    ...AUTOMATION_ACTION_SCHEMA.properties,
+    condition: {
+      type: 'object',
+      description: 'Condicao estruturada do alerta.',
+      additionalProperties: true,
+    },
+  },
+} as const satisfies McpToolInputSchema
+
+const SCHEDULES_SCHEMA = {
+  ...AUTOMATION_ACTION_SCHEMA,
+  properties: {
+    ...AUTOMATION_ACTION_SCHEMA.properties,
+    artifact_kind: {
+      type: 'string',
+      enum: ['dashboard', 'slide', 'report'],
+      description: 'Tipo de artifact a gerar quando aplicavel.',
+    },
+    prompt: { type: 'string', description: 'Prompt recorrente que sera executado pelo orquestrador.' },
+    day_of_week: { type: 'string' },
+    time: { type: 'string', description: 'Horario HH:mm.' },
+  },
+} as const satisfies McpToolInputSchema
+
+const GENERIC_APP_OUTPUT_SCHEMA = {
+  type: 'object',
+  properties: {
+    ok: { type: 'boolean' },
+    tool: { type: 'string' },
+    view: { type: 'string' },
+    title: { type: 'string' },
+    subtitle: { type: 'string' },
+    rows: {
+      type: 'array',
+      items: { type: 'object', additionalProperties: true },
+    },
+    columns: {
+      type: 'array',
+      items: { type: 'string' },
     },
   },
   required: ['ok', 'tool', 'view'],
@@ -1068,6 +1236,462 @@ function callChart(args: unknown) {
   }
 }
 
+function getTenantId(context: CognitoMcpServerContext) {
+  return context.tenantId && context.tenantId > 0 ? context.tenantId : 1
+}
+
+function getPositiveId(value: unknown) {
+  const parsed = Number(value)
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null
+}
+
+function normalizeStringArray(value: unknown) {
+  if (!Array.isArray(value)) return []
+  return value.map((item) => String(item || '').trim()).filter(Boolean)
+}
+
+function inferRowsColumns(rows: JsonRecord[]) {
+  if (!rows.length) return []
+  return Object.keys(rows[0] || {})
+}
+
+function normalizeTableColumns(columns: unknown, rows: JsonRecord[]) {
+  if (Array.isArray(columns) && columns.length) {
+    return columns
+      .map((column) => {
+        if (typeof column === 'string') return { key: column, label: column }
+        const record = asRecord(column)
+        const key = optionalText(record.key || record.field || record.name)
+        if (!key) return null
+        return {
+          ...record,
+          key,
+          label: optionalText(record.label) || key,
+        }
+      })
+      .filter(Boolean) as JsonRecord[]
+  }
+  return inferRowsColumns(rows).map((key) => ({ key, label: key }))
+}
+
+function makeWidgetResult(structuredContent: JsonRecord, text: string, isError = false) {
+  return {
+    content: [{ type: 'text', text }],
+    structuredContent,
+    _meta: {
+      widget: DASHBOARD_WIDGET_RESOURCE_URI,
+    },
+    isError,
+  }
+}
+
+function callAnalysis(args: unknown) {
+  const input = asRecord(args)
+  const type = optionalText(input.type) || 'insights'
+  const title = optionalText(input.title) || 'Analise'
+  const sections = normalizeChartRows(input.sections)
+  const metrics = normalizeChartRows(input.metrics)
+  const nextSteps = normalizeStringArray(input.next_steps || input.nextSteps)
+  const structuredContent = {
+    ok: true,
+    tool: MCP_APP_PUBLIC_TOOL_NAMES.analysis,
+    view: 'analysis',
+    type,
+    title,
+    subtitle: optionalText(input.subtitle),
+    summary: optionalText(input.summary),
+    metrics,
+    sections,
+    next_steps: nextSteps,
+  }
+
+  return makeWidgetResult(structuredContent, `Renderizando analise ${title}.`)
+}
+
+function callTable(args: unknown) {
+  const input = asRecord(args)
+  const rows = normalizeChartRows(input.rows)
+  const columns = normalizeTableColumns(input.columns, rows)
+  const title = optionalText(input.title) || 'Tabela'
+  const structuredContent = {
+    ok: true,
+    tool: MCP_APP_PUBLIC_TOOL_NAMES.table,
+    view: 'table',
+    title,
+    subtitle: optionalText(input.subtitle) || `${rows.length} registro${rows.length === 1 ? '' : 's'}`,
+    columns,
+    rows,
+    count: rows.length,
+  }
+
+  return makeWidgetResult(structuredContent, `Renderizando tabela ${title}.`)
+}
+
+function normalizeActionDomain(value: unknown) {
+  const domain = String(value || '').trim().toLowerCase()
+  if (domain === 'erp' || domain === 'crm' || domain === 'marketing' || domain === 'ecommerce') return domain
+  throw new Error('domain invalido para actions. Use erp, crm, marketing ou ecommerce.')
+}
+
+async function callActions(args: unknown, context: CognitoMcpServerContext) {
+  const input = asRecord(args)
+  const domain = normalizeActionDomain(input.domain)
+  const action = optionalText(input.action)
+  if (!action) throw new Error('action e obrigatoria para actions')
+
+  const target = asRecord(input.target)
+  const payload = asRecord(input.payload)
+  const dryRun = input.dry_run !== false
+  const resource = optionalText(target.resource || payload.resource)
+  const id = getPositiveId(target.id || input.id)
+  const title = `${domain.toUpperCase()} - ${action}`
+  const preview = {
+    domain,
+    action,
+    target,
+    payload,
+    dry_run: dryRun,
+    risk_level: domain === 'marketing' || action.includes('cancel') || action.includes('pause') ? 'high' : 'medium',
+    affected_records: id ? 1 : 0,
+    confirmation_required: true,
+    idempotency_key: optionalText(input.idempotency_key),
+  }
+
+  if (!dryRun && domain === 'erp') {
+    if (!resource) throw new Error('target.resource e obrigatorio para executar action ERP')
+    const erpResult = await callMcpAppDomainTool('erp_acoes', {
+      resource,
+      action,
+      id: id || undefined,
+      payload,
+      dry_run: false,
+      idempotency_key: input.idempotency_key,
+    }, context)
+    const structuredContent = {
+      ok: !erpResult.isError,
+      tool: MCP_APP_PUBLIC_TOOL_NAMES.actions,
+      view: 'action_result',
+      title,
+      subtitle: erpResult.isError ? 'Acao nao executada' : 'Acao executada',
+      domain,
+      action,
+      dry_run: false,
+      preview,
+      result: erpResult.structuredContent,
+      rows: [{
+        dominio: domain,
+        acao: action,
+        status: erpResult.isError ? 'erro' : 'executado',
+        recurso: resource,
+        id: id || null,
+      }],
+    }
+    return makeWidgetResult(structuredContent, JSON.stringify(structuredContent, null, 2), Boolean(erpResult.isError))
+  }
+
+  const executable = dryRun
+    ? 'preview'
+    : 'execucao_real_nao_suportada_no_v1'
+  const structuredContent = {
+    ok: dryRun,
+    tool: MCP_APP_PUBLIC_TOOL_NAMES.actions,
+    view: 'action_result',
+    title,
+    subtitle: dryRun
+      ? 'Preview gerado. Nenhuma alteracao foi executada.'
+      : 'Execucao real disponivel apenas para ERP no v1.',
+    domain,
+    action,
+    dry_run: dryRun,
+    preview,
+    result: {
+      status: executable,
+      message: dryRun
+        ? 'Revise o preview e confirme explicitamente antes de executar.'
+        : 'Use dry_run=true para preview ou implemente o handler real deste dominio.',
+    },
+    rows: [{
+      dominio: domain,
+      acao: action,
+      status: executable,
+      recurso: resource || null,
+      id: id || null,
+    }],
+  }
+  return makeWidgetResult(structuredContent, JSON.stringify(structuredContent, null, 2), !dryRun)
+}
+
+function normalizeAutomationAction(value: unknown) {
+  const action = String(value || 'list').trim().toLowerCase()
+  if (
+    action === 'list' ||
+    action === 'create' ||
+    action === 'update' ||
+    action === 'pause' ||
+    action === 'resume' ||
+    action === 'delete' ||
+    action === 'test' ||
+    action === 'run_now'
+  ) {
+    return action
+  }
+  throw new Error('action invalida. Use list, create, update, pause, resume, delete, test ou run_now.')
+}
+
+function normalizeAutomationFrequency(value: unknown, fallback = 'daily') {
+  const frequency = String(value || fallback).trim().toLowerCase()
+  if (frequency === 'hourly' || frequency === 'daily' || frequency === 'weekly' || frequency === 'monthly') return frequency
+  return fallback
+}
+
+function normalizeAutomationStatus(value: unknown, fallback = 'active') {
+  const status = String(value || fallback).trim().toLowerCase()
+  if (status === 'active' || status === 'paused' || status === 'deleted') return status
+  return fallback
+}
+
+function getAutomationTitle(input: JsonRecord, fallback: string) {
+  return optionalText(input.title) || fallback
+}
+
+async function listAutomationRows(table: 'alerts' | 'schedules', tenantId: number, input: JsonRecord) {
+  const limit = normalizeLimit(input.limit, 20, 100)
+  const rows = await runQuery<JsonRecord>(
+    `
+SELECT
+  id::int,
+  title,
+  status,
+  ${table === 'alerts' ? 'condition_json AS condition,' : "artifact_kind, prompt, day_of_week, time_of_day AS time,"}
+  frequency,
+  channels_json AS channels,
+  last_run_at,
+  next_run_at,
+  metadata_json AS metadata,
+  created_at,
+  updated_at
+FROM mcp_app.${table}
+WHERE tenant_id = $1::int AND status <> 'deleted'
+ORDER BY updated_at DESC
+LIMIT $2::int
+    `.trim(),
+    [tenantId, limit],
+  )
+  return rows
+}
+
+async function callAlerts(args: unknown, context: CognitoMcpServerContext) {
+  const input = asRecord(args)
+  const action = normalizeAutomationAction(input.action)
+  const tenantId = getTenantId(context)
+  let rows: JsonRecord[] = []
+  let title = 'Alertas'
+
+  if (action === 'create') {
+    const created = await runQuery<JsonRecord>(
+      `
+INSERT INTO mcp_app.alerts
+  (tenant_id, title, status, condition_json, frequency, channels_json, metadata_json, updated_at)
+VALUES ($1::int, $2::text, 'active', $3::jsonb, $4::text, $5::jsonb, $6::jsonb, now())
+RETURNING id::int, title, status, condition_json AS condition, frequency, channels_json AS channels, last_run_at, next_run_at, metadata_json AS metadata, created_at, updated_at
+      `.trim(),
+      [
+        tenantId,
+        getAutomationTitle(input, 'Novo alerta'),
+        JSON.stringify(asRecord(input.condition)),
+        normalizeAutomationFrequency(input.frequency),
+        JSON.stringify(normalizeStringArray(input.channels)),
+        JSON.stringify(asRecord(input.metadata)),
+      ],
+    )
+    rows = created
+    title = 'Alerta criado'
+  } else if (action === 'update') {
+    const id = getPositiveId(input.id)
+    if (!id) throw new Error('id e obrigatorio para atualizar alerta')
+    const updated = await runQuery<JsonRecord>(
+      `
+UPDATE mcp_app.alerts
+SET
+  title = COALESCE($3::text, title),
+  status = COALESCE($4::text, status),
+  condition_json = COALESCE($5::jsonb, condition_json),
+  frequency = COALESCE($6::text, frequency),
+  channels_json = COALESCE($7::jsonb, channels_json),
+  metadata_json = COALESCE($8::jsonb, metadata_json),
+  updated_at = now()
+WHERE tenant_id = $1::int AND id = $2::bigint
+RETURNING id::int, title, status, condition_json AS condition, frequency, channels_json AS channels, last_run_at, next_run_at, metadata_json AS metadata, created_at, updated_at
+      `.trim(),
+      [
+        tenantId,
+        id,
+        optionalText(input.title),
+        input.status ? normalizeAutomationStatus(input.status) : null,
+        input.condition ? JSON.stringify(asRecord(input.condition)) : null,
+        input.frequency ? normalizeAutomationFrequency(input.frequency) : null,
+        input.channels ? JSON.stringify(normalizeStringArray(input.channels)) : null,
+        input.metadata ? JSON.stringify(asRecord(input.metadata)) : null,
+      ],
+    )
+    rows = updated
+    title = 'Alerta atualizado'
+  } else if (action === 'pause' || action === 'resume' || action === 'delete') {
+    const id = getPositiveId(input.id)
+    if (!id) throw new Error('id e obrigatorio para alterar alerta')
+    const status = action === 'resume' ? 'active' : action === 'pause' ? 'paused' : 'deleted'
+    rows = await runQuery<JsonRecord>(
+      `
+UPDATE mcp_app.alerts
+SET status = $3::text, updated_at = now()
+WHERE tenant_id = $1::int AND id = $2::bigint
+RETURNING id::int, title, status, condition_json AS condition, frequency, channels_json AS channels, last_run_at, next_run_at, metadata_json AS metadata, created_at, updated_at
+      `.trim(),
+      [tenantId, id, status],
+    )
+    title = action === 'delete' ? 'Alerta removido' : action === 'pause' ? 'Alerta pausado' : 'Alerta ativado'
+  } else if (action === 'test') {
+    const id = getPositiveId(input.id)
+    if (!id) throw new Error('id e obrigatorio para testar alerta')
+    rows = await runQuery<JsonRecord>(
+      `
+SELECT id::int, title, status, condition_json AS condition, frequency, channels_json AS channels, true AS test_ok, 'Teste estrutural executado; avaliador recorrente sera responsavel pela condicao real.' AS test_result
+FROM mcp_app.alerts
+WHERE tenant_id = $1::int AND id = $2::bigint
+      `.trim(),
+      [tenantId, id],
+    )
+    title = 'Teste de alerta'
+  } else {
+    rows = await listAutomationRows('alerts', tenantId, input)
+  }
+
+  const structuredContent = {
+    ok: true,
+    tool: MCP_APP_PUBLIC_TOOL_NAMES.alerts,
+    view: 'automation',
+    kind: 'alerts',
+    action,
+    title,
+    subtitle: `${rows.length} registro${rows.length === 1 ? '' : 's'}`,
+    rows,
+    columns: inferRowsColumns(rows),
+    count: rows.length,
+  }
+  return makeWidgetResult(structuredContent, JSON.stringify(structuredContent, null, 2))
+}
+
+async function callSchedules(args: unknown, context: CognitoMcpServerContext) {
+  const input = asRecord(args)
+  const action = normalizeAutomationAction(input.action)
+  const tenantId = getTenantId(context)
+  let rows: JsonRecord[] = []
+  let title = 'Agendamentos'
+
+  if (action === 'create') {
+    const prompt = optionalText(input.prompt)
+    if (!prompt) throw new Error('prompt e obrigatorio para criar agendamento')
+    rows = await runQuery<JsonRecord>(
+      `
+INSERT INTO mcp_app.schedules
+  (tenant_id, title, status, artifact_kind, prompt, frequency, day_of_week, time_of_day, channels_json, metadata_json, updated_at)
+VALUES ($1::int, $2::text, 'active', $3::text, $4::text, $5::text, $6::text, $7::text, $8::jsonb, $9::jsonb, now())
+RETURNING id::int, title, status, artifact_kind, prompt, frequency, day_of_week, time_of_day AS time, channels_json AS channels, last_run_at, next_run_at, metadata_json AS metadata, created_at, updated_at
+      `.trim(),
+      [
+        tenantId,
+        getAutomationTitle(input, 'Novo agendamento'),
+        optionalText(input.artifact_kind),
+        prompt,
+        normalizeAutomationFrequency(input.frequency, 'weekly'),
+        optionalText(input.day_of_week),
+        optionalText(input.time || input.time_of_day),
+        JSON.stringify(normalizeStringArray(input.channels)),
+        JSON.stringify(asRecord(input.metadata)),
+      ],
+    )
+    title = 'Agendamento criado'
+  } else if (action === 'update') {
+    const id = getPositiveId(input.id)
+    if (!id) throw new Error('id e obrigatorio para atualizar agendamento')
+    rows = await runQuery<JsonRecord>(
+      `
+UPDATE mcp_app.schedules
+SET
+  title = COALESCE($3::text, title),
+  status = COALESCE($4::text, status),
+  artifact_kind = COALESCE($5::text, artifact_kind),
+  prompt = COALESCE($6::text, prompt),
+  frequency = COALESCE($7::text, frequency),
+  day_of_week = COALESCE($8::text, day_of_week),
+  time_of_day = COALESCE($9::text, time_of_day),
+  channels_json = COALESCE($10::jsonb, channels_json),
+  metadata_json = COALESCE($11::jsonb, metadata_json),
+  updated_at = now()
+WHERE tenant_id = $1::int AND id = $2::bigint
+RETURNING id::int, title, status, artifact_kind, prompt, frequency, day_of_week, time_of_day AS time, channels_json AS channels, last_run_at, next_run_at, metadata_json AS metadata, created_at, updated_at
+      `.trim(),
+      [
+        tenantId,
+        id,
+        optionalText(input.title),
+        input.status ? normalizeAutomationStatus(input.status) : null,
+        optionalText(input.artifact_kind),
+        optionalText(input.prompt),
+        input.frequency ? normalizeAutomationFrequency(input.frequency, 'weekly') : null,
+        optionalText(input.day_of_week),
+        optionalText(input.time || input.time_of_day),
+        input.channels ? JSON.stringify(normalizeStringArray(input.channels)) : null,
+        input.metadata ? JSON.stringify(asRecord(input.metadata)) : null,
+      ],
+    )
+    title = 'Agendamento atualizado'
+  } else if (action === 'pause' || action === 'resume' || action === 'delete') {
+    const id = getPositiveId(input.id)
+    if (!id) throw new Error('id e obrigatorio para alterar agendamento')
+    const status = action === 'resume' ? 'active' : action === 'pause' ? 'paused' : 'deleted'
+    rows = await runQuery<JsonRecord>(
+      `
+UPDATE mcp_app.schedules
+SET status = $3::text, updated_at = now()
+WHERE tenant_id = $1::int AND id = $2::bigint
+RETURNING id::int, title, status, artifact_kind, prompt, frequency, day_of_week, time_of_day AS time, channels_json AS channels, last_run_at, next_run_at, metadata_json AS metadata, created_at, updated_at
+      `.trim(),
+      [tenantId, id, status],
+    )
+    title = action === 'delete' ? 'Agendamento removido' : action === 'pause' ? 'Agendamento pausado' : 'Agendamento ativado'
+  } else if (action === 'run_now') {
+    const id = getPositiveId(input.id)
+    if (!id) throw new Error('id e obrigatorio para executar agendamento')
+    rows = await runQuery<JsonRecord>(
+      `
+UPDATE mcp_app.schedules
+SET last_run_at = now(), updated_at = now()
+WHERE tenant_id = $1::int AND id = $2::bigint
+RETURNING id::int, title, status, artifact_kind, prompt, frequency, day_of_week, time_of_day AS time, channels_json AS channels, last_run_at, next_run_at, metadata_json AS metadata, created_at, updated_at
+      `.trim(),
+      [tenantId, id],
+    )
+    title = 'Agendamento executado'
+  } else {
+    rows = await listAutomationRows('schedules', tenantId, input)
+  }
+
+  const structuredContent = {
+    ok: true,
+    tool: MCP_APP_PUBLIC_TOOL_NAMES.schedules,
+    view: 'automation',
+    kind: 'schedules',
+    action,
+    title,
+    subtitle: `${rows.length} registro${rows.length === 1 ? '' : 's'}`,
+    rows,
+    columns: inferRowsColumns(rows),
+    count: rows.length,
+  }
+  return makeWidgetResult(structuredContent, JSON.stringify(structuredContent, null, 2))
+}
+
 export function listCognitoMcpAppTools() {
   return {
     tools: [
@@ -1111,6 +1735,76 @@ export function listCognitoMcpAppTools() {
         _meta: {
           ...DASHBOARD_WIDGET_META,
           securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
+        },
+      },
+      {
+        name: MCP_APP_PUBLIC_TOOL_NAMES.analysis,
+        title: 'Analysis',
+        description:
+          'Renderiza uma analise executiva no app interativo. Nao consulta dados; use depois de erp, crm, marketing, ecommerce, sql ou data_catalog para mostrar insights, anomalias, comparacoes, forecast, funil ou resumo executivo em UI propria.',
+        inputSchema: ANALYSIS_SCHEMA,
+        outputSchema: GENERIC_APP_OUTPUT_SCHEMA,
+        securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
+        annotations: READ_ONLY_ANNOTATIONS,
+        _meta: {
+          ...DASHBOARD_WIDGET_META,
+          securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
+        },
+      },
+      {
+        name: MCP_APP_PUBLIC_TOOL_NAMES.table,
+        title: 'Table',
+        description:
+          'Renderiza uma tabela customizada no app interativo usando linhas ja calculadas pelo agente ou por tools anteriores. Nao executa SQL.',
+        inputSchema: TABLE_SCHEMA,
+        outputSchema: GENERIC_APP_OUTPUT_SCHEMA,
+        securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
+        annotations: READ_ONLY_ANNOTATIONS,
+        _meta: {
+          ...DASHBOARD_WIDGET_META,
+          securitySchemes: COGNITO_READ_SECURITY_SCHEMES,
+        },
+      },
+      {
+        name: MCP_APP_PUBLIC_TOOL_NAMES.actions,
+        title: 'Actions',
+        description:
+          'Prepara ou executa acoes assistidas em ERP, CRM, marketing e ecommerce. Por padrao dry_run=true e retorna apenas preview/aprovacao; execucao real v1 fica limitada ao ERP via erp_acoes.',
+        inputSchema: ACTIONS_SCHEMA,
+        outputSchema: GENERIC_APP_OUTPUT_SCHEMA,
+        securitySchemes: COGNITO_WRITE_SECURITY_SCHEMES,
+        annotations: UPDATE_ANNOTATIONS,
+        _meta: {
+          ...DASHBOARD_WIDGET_META,
+          securitySchemes: COGNITO_WRITE_SECURITY_SCHEMES,
+        },
+      },
+      {
+        name: MCP_APP_PUBLIC_TOOL_NAMES.alerts,
+        title: 'Alerts',
+        description:
+          'Cria, lista, atualiza, pausa, remove e testa regras persistentes de alerta para dados conectados.',
+        inputSchema: ALERTS_SCHEMA,
+        outputSchema: GENERIC_APP_OUTPUT_SCHEMA,
+        securitySchemes: COGNITO_WRITE_SECURITY_SCHEMES,
+        annotations: UPDATE_ANNOTATIONS,
+        _meta: {
+          ...DASHBOARD_WIDGET_META,
+          securitySchemes: COGNITO_WRITE_SECURITY_SCHEMES,
+        },
+      },
+      {
+        name: MCP_APP_PUBLIC_TOOL_NAMES.schedules,
+        title: 'Schedules',
+        description:
+          'Cria, lista, atualiza, pausa, remove e executa agendamentos recorrentes de analises, relatorios, slides ou dashboards.',
+        inputSchema: SCHEDULES_SCHEMA,
+        outputSchema: GENERIC_APP_OUTPUT_SCHEMA,
+        securitySchemes: COGNITO_WRITE_SECURITY_SCHEMES,
+        annotations: UPDATE_ANNOTATIONS,
+        _meta: {
+          ...DASHBOARD_WIDGET_META,
+          securitySchemes: COGNITO_WRITE_SECURITY_SCHEMES,
         },
       },
       {
@@ -1177,6 +1871,26 @@ export async function callCognitoMcpAppTool(
 
   if (name === MCP_APP_PUBLIC_TOOL_NAMES.chart) {
     return callChart(args)
+  }
+
+  if (name === MCP_APP_PUBLIC_TOOL_NAMES.analysis) {
+    return callAnalysis(args)
+  }
+
+  if (name === MCP_APP_PUBLIC_TOOL_NAMES.table) {
+    return callTable(args)
+  }
+
+  if (name === MCP_APP_PUBLIC_TOOL_NAMES.actions) {
+    return callActions(args, context)
+  }
+
+  if (name === MCP_APP_PUBLIC_TOOL_NAMES.alerts) {
+    return callAlerts(args, context)
+  }
+
+  if (name === MCP_APP_PUBLIC_TOOL_NAMES.schedules) {
+    return callSchedules(args, context)
   }
 
   if (name === MCP_APP_PUBLIC_TOOL_NAMES.artifactAuthoring) {

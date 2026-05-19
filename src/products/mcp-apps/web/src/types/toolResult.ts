@@ -85,9 +85,53 @@ export type DataCatalogStructuredContent = {
   count?: number
 }
 
+export type AnalysisStructuredContent = {
+  ok?: boolean
+  tool?: 'analysis' | string
+  view?: 'analysis'
+  type?: string
+  title?: string
+  subtitle?: string | null
+  summary?: string | null
+  metrics?: unknown[]
+  sections?: unknown[]
+  next_steps?: string[]
+}
+
+export type TableStructuredContent = {
+  ok?: boolean
+  tool?: 'table' | string
+  view?: 'table'
+  title?: string
+  subtitle?: string | null
+  columns?: unknown[]
+  rows?: unknown[]
+  count?: number
+}
+
+export type AutomationStructuredContent = {
+  ok?: boolean
+  tool?: 'actions' | 'alerts' | 'schedules' | string
+  view?: 'automation' | 'action_result'
+  kind?: string
+  action?: string
+  title?: string
+  subtitle?: string | null
+  domain?: string
+  dry_run?: boolean
+  preview?: unknown
+  result?: unknown
+  rows?: unknown[]
+  columns?: string[]
+  count?: number
+}
+
 export type DashboardStructuredContent =
   | DashboardListStructuredContent
   | DashboardPreviewStructuredContent
   | ChartResultStructuredContent
   | DataCatalogStructuredContent
+  | AnalysisStructuredContent
+  | TableStructuredContent
+  | AutomationStructuredContent
   | DataResultStructuredContent

@@ -28,6 +28,16 @@ function getToolInvocationText(name: string) {
       return ['Atualizando artifact...', 'Artifact atualizado.']
     case 'chart':
       return ['Renderizando grafico...', 'Grafico renderizado.']
+    case 'analysis':
+      return ['Montando analise...', 'Analise carregada.']
+    case 'table':
+      return ['Montando tabela...', 'Tabela carregada.']
+    case 'actions':
+      return ['Preparando acao...', 'Acao preparada.']
+    case 'alerts':
+      return ['Atualizando alertas...', 'Alertas atualizados.']
+    case 'schedules':
+      return ['Atualizando agendamentos...', 'Agendamentos atualizados.']
     case 'dashboard_render_list':
     case 'dashboard_render_preview':
     case 'dashboard_embed_preview':
