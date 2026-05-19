@@ -1,9 +1,6 @@
 import { runQuery, withTransaction, type SQLClient } from '@/lib/postgres'
 import {
   ArtifactToolError,
-  patchDashboardArtifact,
-  readDashboardArtifact,
-  writeDashboardArtifact,
   type ArtifactSourceKind,
 } from '@/products/artifacts/backend/dashboardArtifactsService'
 
@@ -253,14 +250,6 @@ export async function readArtifact(input: {
   kind?: ArtifactSourceKind
   version?: number | null
 }) {
-  if (input.artifactType === 'dashboard') {
-    return readDashboardArtifact({
-      artifactId: input.artifactId,
-      kind: input.kind,
-      version: input.version,
-    })
-  }
-
   try {
     const artifactId = toText(input.artifactId)
     if (!artifactId) throw new ArtifactToolError(400, 'invalid_input', 'artifact_id é obrigatório')
@@ -326,10 +315,6 @@ export async function readArtifact(input: {
 }
 
 export async function writeArtifact(input: WriteArtifactInput) {
-  if (input.artifactType === 'dashboard') {
-    return writeDashboardArtifact(input)
-  }
-
   const artifactId = toNullableText(input.artifactId)
   const expectedVersion = normalizePositiveInt(input.expectedVersion, 'expected_version')
   const title = toNullableText(input.title)
@@ -434,6 +419,7 @@ export async function writeArtifact(input: WriteArtifactInput) {
            updated_by = COALESCE($6::uuid, updated_by),
            updated_at = now()
          WHERE id = $1::uuid
+           AND artifact_type = $7::text
          RETURNING
            id::text,
            artifact_type,
@@ -450,7 +436,7 @@ export async function writeArtifact(input: WriteArtifactInput) {
            updated_by::text AS updated_by,
            created_at,
            updated_at`,
-        [artifactId, title, slug, metadata, nextVersion, actorId],
+        [artifactId, title, slug, metadata, nextVersion, actorId, input.artifactType],
       )
       await client.query(
         `INSERT INTO artifacts.artifact_sources (
@@ -486,10 +472,6 @@ export async function writeArtifact(input: WriteArtifactInput) {
 }
 
 export async function patchArtifact(input: PatchArtifactInput) {
-  if (input.artifactType === 'dashboard') {
-    return patchDashboardArtifact(input)
-  }
-
   const artifactId = toText(input.artifactId)
   if (!artifactId) throw new ArtifactToolError(400, 'invalid_input', 'artifact_id é obrigatório')
   const expectedVersion = normalizePositiveInt(input.expectedVersion, 'expected_version')
@@ -549,6 +531,7 @@ export async function patchArtifact(input: PatchArtifactInput) {
            updated_by = COALESCE($3::uuid, updated_by),
            updated_at = now()
          WHERE id = $1::uuid
+           AND artifact_type = $4::text
          RETURNING
            id::text,
            artifact_type,
@@ -565,7 +548,7 @@ export async function patchArtifact(input: PatchArtifactInput) {
            updated_by::text AS updated_by,
            created_at,
            updated_at`,
-        [artifactId, nextVersion, actorId],
+        [artifactId, nextVersion, actorId, input.artifactType],
       )
 
       const updated = updatedRows.rows[0] as ArtifactRow

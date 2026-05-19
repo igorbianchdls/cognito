@@ -81,7 +81,21 @@ BEGIN
       created_at,
       updated_at
     FROM artifacts.dashboards
-    ON CONFLICT (id) DO NOTHING;
+    ON CONFLICT (id) DO UPDATE SET
+      artifact_type = 'dashboard',
+      workspace_id = EXCLUDED.workspace_id,
+      created_from_chat_id = EXCLUDED.created_from_chat_id,
+      title = EXCLUDED.title,
+      slug = EXCLUDED.slug,
+      status = EXCLUDED.status,
+      current_draft_version = EXCLUDED.current_draft_version,
+      current_published_version = EXCLUDED.current_published_version,
+      thumbnail_data_url = EXCLUDED.thumbnail_data_url,
+      metadata = EXCLUDED.metadata,
+      created_by = EXCLUDED.created_by,
+      updated_by = EXCLUDED.updated_by,
+      created_at = EXCLUDED.created_at,
+      updated_at = EXCLUDED.updated_at;
   END IF;
 
   IF to_regclass('artifacts.dashboard_sources') IS NOT NULL THEN
@@ -105,6 +119,40 @@ BEGIN
       created_by,
       created_at
     FROM artifacts.dashboard_sources
-    ON CONFLICT (artifact_id, kind, version) DO NOTHING;
+    ON CONFLICT (artifact_id, kind, version) DO UPDATE SET
+      source = EXCLUDED.source,
+      change_summary = EXCLUDED.change_summary,
+      created_by = EXCLUDED.created_by,
+      created_at = EXCLUDED.created_at;
+  END IF;
+
+  IF to_regclass('artifacts.dashboards') IS NOT NULL AND EXISTS (
+    SELECT 1
+    FROM artifacts.dashboards legacy
+    WHERE NOT EXISTS (
+      SELECT 1
+      FROM artifacts.artifacts generic
+      WHERE generic.id = legacy.id
+        AND generic.artifact_type = 'dashboard'
+    )
+  ) THEN
+    RAISE EXCEPTION 'dashboard migration incomplete: missing artifacts rows';
+  END IF;
+
+  IF to_regclass('artifacts.dashboard_sources') IS NOT NULL AND EXISTS (
+    SELECT 1
+    FROM artifacts.dashboard_sources legacy
+    WHERE NOT EXISTS (
+      SELECT 1
+      FROM artifacts.artifact_sources generic
+      WHERE generic.artifact_id = legacy.dashboard_id
+        AND generic.kind = legacy.kind
+        AND generic.version = legacy.version
+    )
+  ) THEN
+    RAISE EXCEPTION 'dashboard source migration incomplete: missing artifact_sources rows';
   END IF;
 END $$;
+
+DROP TABLE IF EXISTS artifacts.dashboard_sources;
+DROP TABLE IF EXISTS artifacts.dashboards;

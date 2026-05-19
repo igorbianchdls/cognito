@@ -44,7 +44,7 @@ type DashboardRow = {
 
 type DashboardSourceRow = {
   id: string
-  dashboard_id: string
+  artifact_id: string
   version: number
   kind: ArtifactSourceKind
   source: string
@@ -153,8 +153,9 @@ async function getDashboardById(client: Pick<SQLClient, 'query'>, artifactId: st
        updated_by::text AS updated_by,
        created_at,
        updated_at
-     FROM artifacts.dashboards
+     FROM artifacts.artifacts
      WHERE id = $1::uuid
+       AND artifact_type = 'dashboard'
      ${forUpdate ? 'FOR UPDATE' : ''}`,
     [artifactId],
   )
@@ -176,15 +177,15 @@ async function getDashboardSource(
   const rows = await client.query(
     `SELECT
        id::text,
-       dashboard_id::text AS dashboard_id,
+       artifact_id::text AS artifact_id,
        version,
        kind,
        source,
        change_summary,
        created_by::text AS created_by,
        created_at
-     FROM artifacts.dashboard_sources
-     WHERE dashboard_id = $1::uuid
+     FROM artifacts.artifact_sources
+     WHERE artifact_id = $1::uuid
        AND kind = $2::text
        ${versionClause}
      ORDER BY version DESC
@@ -291,7 +292,8 @@ export async function listDashboards(limit = 100): Promise<DashboardListItem[]> 
          thumbnail_data_url,
          created_at,
          updated_at
-       FROM artifacts.dashboards
+       FROM artifacts.artifacts
+       WHERE artifact_type = 'dashboard'
        ORDER BY updated_at DESC, created_at DESC
        LIMIT $1::int`,
       [safeLimit],
@@ -319,12 +321,13 @@ export async function renameDashboardArtifact(input: {
 
   try {
     const rows = await runQuery<DashboardListItem>(
-      `UPDATE artifacts.dashboards
+      `UPDATE artifacts.artifacts
        SET
          title = $2::text,
          updated_by = COALESCE($3::uuid, updated_by),
          updated_at = now()
        WHERE id = $1::uuid
+         AND artifact_type = 'dashboard'
        RETURNING
          id::text,
          title,
@@ -362,15 +365,10 @@ export async function deleteDashboardArtifact(input: {
 
   try {
     return await withTransaction(async (client) => {
-      await client.query(
-        `DELETE FROM artifacts.dashboard_sources
-         WHERE dashboard_id = $1::uuid`,
-        [artifactId],
-      )
-
       const rows = await client.query(
-        `DELETE FROM artifacts.dashboards
+        `DELETE FROM artifacts.artifacts
          WHERE id = $1::uuid
+           AND artifact_type = 'dashboard'
          RETURNING id::text AS id, title`,
         [artifactId],
       )
@@ -409,8 +407,8 @@ export async function listDashboardSourceVersions(
          kind,
          change_summary,
          created_at
-       FROM artifacts.dashboard_sources
-       WHERE dashboard_id = $1::uuid
+       FROM artifacts.artifact_sources
+       WHERE artifact_id = $1::uuid
          AND kind = $2::text
        ORDER BY version DESC
        LIMIT $3::int`,
@@ -443,8 +441,9 @@ export async function readDashboardArtifact(input: ReadArtifactInput) {
          updated_by::text AS updated_by,
          created_at,
          updated_at
-       FROM artifacts.dashboards
-       WHERE id = $1::uuid`,
+       FROM artifacts.artifacts
+       WHERE id = $1::uuid
+         AND artifact_type = 'dashboard'`,
       [artifactId],
     ))[0]
     if (!dashboard) {
@@ -453,15 +452,15 @@ export async function readDashboardArtifact(input: ReadArtifactInput) {
     const source = (await runQuery<DashboardSourceRow>(
       `SELECT
          id::text,
-         dashboard_id::text AS dashboard_id,
+         artifact_id::text AS artifact_id,
          version,
          kind,
          source,
          change_summary,
          created_by::text AS created_by,
          created_at
-       FROM artifacts.dashboard_sources
-       WHERE dashboard_id = $1::uuid
+       FROM artifacts.artifact_sources
+       WHERE artifact_id = $1::uuid
          AND kind = $2::text
          ${version ? 'AND version = $3::int' : ''}
        ORDER BY version DESC
@@ -504,7 +503,8 @@ export async function writeDashboardArtifact(input: WriteArtifactInput) {
     return await withTransaction(async (client) => {
       if (!artifactId) {
         const createdRows = await client.query(
-          `INSERT INTO artifacts.dashboards (
+          `INSERT INTO artifacts.artifacts (
+             artifact_type,
              workspace_id,
              created_from_chat_id,
              title,
@@ -515,6 +515,7 @@ export async function writeDashboardArtifact(input: WriteArtifactInput) {
              created_by,
              updated_by
            ) VALUES (
+             'dashboard',
              $1::uuid,
              $2::text,
              $3::text,
@@ -544,8 +545,8 @@ export async function writeDashboardArtifact(input: WriteArtifactInput) {
         )
         const dashboard = createdRows.rows[0] as DashboardRow
         await client.query(
-          `INSERT INTO artifacts.dashboard_sources (
-             dashboard_id,
+          `INSERT INTO artifacts.artifact_sources (
+             artifact_id,
              version,
              kind,
              source,
@@ -575,7 +576,7 @@ export async function writeDashboardArtifact(input: WriteArtifactInput) {
       const nextVersion = (dashboard.current_draft_version || 0) + 1
 
       const updatedRows = await client.query(
-        `UPDATE artifacts.dashboards
+        `UPDATE artifacts.artifacts
          SET
            title = COALESCE($2::text, title),
            slug = COALESCE($3::text, slug),
@@ -584,6 +585,7 @@ export async function writeDashboardArtifact(input: WriteArtifactInput) {
            updated_by = COALESCE($6::uuid, updated_by),
            updated_at = now()
          WHERE id = $1::uuid
+           AND artifact_type = 'dashboard'
          RETURNING
            id::text,
            workspace_id::text AS workspace_id,
@@ -602,8 +604,8 @@ export async function writeDashboardArtifact(input: WriteArtifactInput) {
         [artifactId, title, slug, metadata, nextVersion, actorId],
       )
       await client.query(
-        `INSERT INTO artifacts.dashboard_sources (
-           dashboard_id,
+        `INSERT INTO artifacts.artifact_sources (
+           artifact_id,
            version,
            kind,
            source,
@@ -670,8 +672,8 @@ export async function patchDashboardArtifact(input: PatchArtifactInput) {
       const changeSummary = toNullableText(operation.changeSummary)
 
       await client.query(
-        `INSERT INTO artifacts.dashboard_sources (
-           dashboard_id,
+        `INSERT INTO artifacts.artifact_sources (
+           artifact_id,
            version,
            kind,
            source,
@@ -689,12 +691,13 @@ export async function patchDashboardArtifact(input: PatchArtifactInput) {
       )
 
       const updatedRows = await client.query(
-        `UPDATE artifacts.dashboards
+        `UPDATE artifacts.artifacts
          SET
            current_draft_version = $2::int,
            updated_by = COALESCE($3::uuid, updated_by),
            updated_at = now()
          WHERE id = $1::uuid
+           AND artifact_type = 'dashboard'
          RETURNING
            id::text,
            workspace_id::text AS workspace_id,
@@ -738,12 +741,13 @@ export async function updateDashboardThumbnail(input: UpdateDashboardThumbnailIn
 
   try {
     const rows = await runQuery<{ id: string; thumbnail_data_url: string | null }>(
-      `UPDATE artifacts.dashboards
+      `UPDATE artifacts.artifacts
        SET
          thumbnail_data_url = $2::text,
          updated_by = COALESCE($3::uuid, updated_by),
          updated_at = now()
        WHERE id = $1::uuid
+         AND artifact_type = 'dashboard'
        RETURNING
          id::text,
          thumbnail_data_url`,
