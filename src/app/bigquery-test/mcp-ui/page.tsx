@@ -434,7 +434,9 @@ export default function McpUiGalleryPage() {
                       <h3 className="text-sm font-semibold tracking-normal text-slate-950">{preview.title}</h3>
                       <p className="text-sm text-slate-500">{preview.description}</p>
                     </header>
-                    <div className="mx-auto w-full max-w-[820px]">{preview.node}</div>
+                    <div className="mx-auto w-full max-w-[860px] rounded-[22px] border border-[#e5e7eb] bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.03)] sm:p-4">
+                      <div className="mx-auto w-full max-w-[820px]">{preview.node}</div>
+                    </div>
                   </article>
                 ))}
             </div>
