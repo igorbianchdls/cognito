@@ -1828,133 +1828,55 @@ function buildConnectorSummary(rows: JsonRecord[]) {
 async function listConnectorRows(tenantId: number, input: JsonRecord) {
   const rows = await runQuery<JsonRecord>(
     `
-WITH ecommerce_connectors AS (
+WITH latest_runs AS (
   SELECT
-    CONCAT('ecommerce:', cc.id::text) AS connector_id,
-    'ecommerce' AS domain,
-    cc.plataforma::text AS plataforma,
-    cc.nome_conta::text AS name,
-    cc.external_id::text AS external_id,
-    COALESCE(cc.status::text, 'unknown') AS connection_status,
-    CASE
-      WHEN cred.ultimo_erro IS NOT NULL AND cred.ultimo_erro::text <> '' THEN 'error'
-      WHEN LOWER(COALESCE(cc.status::text, '')) IN ('ativo', 'active', 'connected') THEN 'connected'
-      ELSE 'warning'
-    END AS health,
-    cc.synced_at AS last_sync_at,
-    cc.source_updated_at AS source_updated_at,
-    COALESCE(cred.escopos_jsonb, '[]'::jsonb) AS scopes,
-    cred.expira_em AS expires_at,
-    cred.ultimo_erro::text AS last_error,
-    COUNT(p.id)::int AS records_synced
-  FROM ecommerce.canais_contas cc
-  LEFT JOIN LATERAL (
-    SELECT c.*
-    FROM ecommerce.canais_credenciais c
-    WHERE c.tenant_id = cc.tenant_id AND c.canal_conta_id = cc.id
-    ORDER BY c.rotacionado_em DESC NULLS LAST
-    LIMIT 1
-  ) cred ON true
-  LEFT JOIN ecommerce.pedidos p ON p.tenant_id = cc.tenant_id AND p.canal_conta_id = cc.id
-  WHERE cc.tenant_id = $1::int
-  GROUP BY cc.id, cred.escopos_jsonb, cred.expira_em, cred.ultimo_erro
-),
-marketing_connectors AS (
-  SELECT
-    CONCAT('marketing:', cm.id::text) AS connector_id,
-    'marketing' AS domain,
-    cm.plataforma::text AS plataforma,
-    cm.nome_conta::text AS name,
-    cm.conta_externa_id::text AS external_id,
-    COALESCE(cm.status::text, 'unknown') AS connection_status,
-    CASE
-      WHEN cm.ativo IS TRUE AND LOWER(COALESCE(cm.status::text, '')) IN ('ativo', 'active', 'connected') THEN 'connected'
-      WHEN cm.ativo IS TRUE THEN 'warning'
-      ELSE 'error'
-    END AS health,
-    cm.ultimo_sync_em AS last_sync_at,
-    cm.atualizado_em AS source_updated_at,
-    '[]'::jsonb AS scopes,
-    NULL::timestamp AS expires_at,
-    NULL::text AS last_error,
-    COUNT(dd.id)::int AS records_synced
-  FROM trafegopago.contas_midia cm
-  LEFT JOIN trafegopago.desempenho_diario dd ON dd.tenant_id = cm.tenant_id AND dd.conta_id = cm.id
-  WHERE cm.tenant_id = $1::int
-  GROUP BY cm.id
-),
-erp_connector AS (
-  SELECT
-    'erp:operacional' AS connector_id,
-    'erp' AS domain,
-    'erp' AS plataforma,
-    'ERP Operacional' AS name,
-    NULL::text AS external_id,
-    CASE WHEN stats.total_records > 0 THEN 'connected' ELSE 'empty' END AS connection_status,
-    CASE WHEN stats.total_records > 0 THEN 'connected' ELSE 'warning' END AS health,
-    stats.last_sync_at,
-    stats.last_sync_at AS source_updated_at,
-    '[]'::jsonb AS scopes,
-    NULL::timestamp AS expires_at,
-    NULL::text AS last_error,
-    stats.total_records::int AS records_synced
-  FROM (
-    SELECT
-      (
-        (SELECT COUNT(*) FROM financeiro.contas_pagar WHERE tenant_id = $1::int) +
-        (SELECT COUNT(*) FROM financeiro.contas_receber WHERE tenant_id = $1::int) +
-        (SELECT COUNT(*) FROM vendas.pedidos WHERE tenant_id = $1::int) +
-        (SELECT COUNT(*) FROM compras.compras WHERE tenant_id = $1::int)
-      )::int AS total_records,
-      GREATEST(
-        COALESCE((SELECT MAX(atualizado_em) FROM financeiro.contas_pagar WHERE tenant_id = $1::int), 'epoch'::timestamp),
-        COALESCE((SELECT MAX(atualizado_em) FROM financeiro.contas_receber WHERE tenant_id = $1::int), 'epoch'::timestamp),
-        COALESCE((SELECT MAX(atualizado_em) FROM vendas.pedidos WHERE tenant_id = $1::int), 'epoch'::timestamp),
-        COALESCE((SELECT MAX(atualizado_em) FROM compras.compras WHERE tenant_id = $1::int), 'epoch'::timestamp)
-      ) AS last_sync_at
-  ) stats
-),
-crm_connector AS (
-  SELECT
-    'crm:operacional' AS connector_id,
-    'crm' AS domain,
-    'crm' AS plataforma,
-    'CRM Operacional' AS name,
-    NULL::text AS external_id,
-    CASE WHEN stats.total_records > 0 THEN 'connected' ELSE 'empty' END AS connection_status,
-    CASE WHEN stats.total_records > 0 THEN 'connected' ELSE 'warning' END AS health,
-    stats.last_sync_at,
-    stats.last_sync_at AS source_updated_at,
-    '[]'::jsonb AS scopes,
-    NULL::timestamp AS expires_at,
-    NULL::text AS last_error,
-    stats.total_records::int AS records_synced
-  FROM (
-    SELECT
-      (
-        (SELECT COUNT(*) FROM crm.contas WHERE tenant_id = $1::int) +
-        (SELECT COUNT(*) FROM crm.contatos WHERE tenant_id = $1::int) +
-        (SELECT COUNT(*) FROM crm.leads WHERE tenant_id = $1::int) +
-        (SELECT COUNT(*) FROM crm.oportunidades WHERE tenant_id = $1::int) +
-        (SELECT COUNT(*) FROM crm.atividades WHERE tenant_id = $1::int)
-      )::int AS total_records,
-      GREATEST(
-        COALESCE((SELECT MAX(atualizado_em) FROM crm.contas WHERE tenant_id = $1::int), 'epoch'::timestamp),
-        COALESCE((SELECT MAX(atualizado_em) FROM crm.contatos WHERE tenant_id = $1::int), 'epoch'::timestamp),
-        COALESCE((SELECT MAX(atualizado_em) FROM crm.leads WHERE tenant_id = $1::int), 'epoch'::timestamp),
-        COALESCE((SELECT MAX(atualizado_em) FROM crm.oportunidades WHERE tenant_id = $1::int), 'epoch'::timestamp),
-        COALESCE((SELECT MAX(atualizado_em) FROM crm.atividades WHERE tenant_id = $1::int), 'epoch'::timestamp)
-      ) AS last_sync_at
-  ) stats
+    DISTINCT ON (connector_id)
+    connector_id,
+    status AS last_run_status,
+    started_at AS last_run_started_at,
+    finished_at AS last_run_finished_at,
+    records_in AS last_run_records_in,
+    records_updated AS last_run_records_updated,
+    records_failed AS last_run_records_failed,
+    error_message AS last_run_error
+  FROM mcp_app.connector_sync_runs
+  WHERE tenant_id = $1::int
+  ORDER BY connector_id, started_at DESC
 )
-SELECT *
-FROM (
-  SELECT * FROM ecommerce_connectors
-  UNION ALL SELECT * FROM marketing_connectors
-  UNION ALL SELECT * FROM erp_connector
-  UNION ALL SELECT * FROM crm_connector
-) connectors
-ORDER BY domain, plataforma, name
+SELECT
+  c.id::text AS id,
+  CONCAT(c.domain, ':', c.id::text) AS connector_id,
+  c.domain,
+  c.provider AS plataforma,
+  c.provider,
+  c.name,
+  c.external_account_id AS external_id,
+  c.status AS connection_status,
+  CASE
+    WHEN c.status = 'connected' THEN 'connected'
+    WHEN c.status = 'error' THEN 'error'
+    ELSE 'warning'
+  END AS health,
+  c.last_sync_at,
+  c.updated_at AS source_updated_at,
+  c.scopes_json AS scopes,
+  NULL::timestamptz AS expires_at,
+  c.last_error,
+  c.records_synced,
+  c.source_table,
+  c.source_id,
+  c.metadata_json,
+  r.last_run_status,
+  r.last_run_started_at,
+  r.last_run_finished_at,
+  r.last_run_records_in,
+  r.last_run_records_updated,
+  r.last_run_records_failed,
+  r.last_run_error
+FROM mcp_app.connectors c
+LEFT JOIN latest_runs r ON r.connector_id = c.id
+WHERE c.tenant_id = $1::int
+ORDER BY c.domain, c.provider, c.name
     `.trim(),
     [tenantId],
   )
@@ -1965,7 +1887,7 @@ ORDER BY domain, plataforma, name
   return rows
     .filter((row) => !domain || row.domain === domain)
     .filter((row) => !platform || row.plataforma === platform)
-    .filter((row) => !connectorId || row.connector_id === connectorId)
+    .filter((row) => !connectorId || row.connector_id === connectorId || row.id === connectorId)
     .slice(0, normalizeLimit(input.limit, 50, 200))
 }
 
