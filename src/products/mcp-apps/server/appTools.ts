@@ -1365,12 +1365,132 @@ function normalizeActionDomain(value: unknown) {
   throw new Error('domain invalido para actions. Use erp, crm, marketing ou ecommerce.')
 }
 
+async function recordActionRun(input: {
+  tenantId: number
+  domain: string
+  action: string
+  resource: string | null
+  targetId: string | null
+  status: string
+  dryRun: boolean
+  riskLevel: string | null
+  confirmationRequired: boolean
+  idempotencyKey: string | null
+  target: JsonRecord
+  payload: JsonRecord
+  result: JsonRecord
+  errorMessage?: string | null
+}) {
+  const rows = await runQuery<{ id: number }>(
+    `
+INSERT INTO mcp_app.action_runs
+  (tenant_id, domain, action, resource, target_id, status, dry_run, risk_level, confirmation_required, idempotency_key, target_json, payload_json, result_json, error_message, finished_at)
+VALUES
+  ($1::int, $2::text, $3::text, $4::text, $5::text, $6::text, $7::boolean, $8::text, $9::boolean, $10::text, $11::jsonb, $12::jsonb, $13::jsonb, $14::text, now())
+ON CONFLICT (tenant_id, idempotency_key) WHERE idempotency_key IS NOT NULL
+DO UPDATE SET
+  status = EXCLUDED.status,
+  dry_run = EXCLUDED.dry_run,
+  target_json = EXCLUDED.target_json,
+  payload_json = EXCLUDED.payload_json,
+  result_json = EXCLUDED.result_json,
+  error_message = EXCLUDED.error_message,
+  finished_at = now()
+RETURNING id::int
+    `.trim(),
+    [
+      input.tenantId,
+      input.domain,
+      input.action,
+      input.resource,
+      input.targetId,
+      input.status,
+      input.dryRun,
+      input.riskLevel,
+      input.confirmationRequired,
+      input.idempotencyKey,
+      JSON.stringify(input.target),
+      JSON.stringify(input.payload),
+      JSON.stringify(input.result),
+      input.errorMessage || null,
+    ],
+  )
+  return rows[0]?.id || null
+}
+
+async function recordAlertRun(input: {
+  tenantId: number
+  alertId: number
+  status: string
+  triggeredBy: string
+  condition: JsonRecord
+  result: JsonRecord
+  matchedRecords: number
+  message: string | null
+}) {
+  const rows = await runQuery<{ id: number }>(
+    `
+INSERT INTO mcp_app.alert_runs
+  (tenant_id, alert_id, status, triggered_by, condition_json, result_json, matched_records, message, finished_at)
+VALUES
+  ($1::int, $2::bigint, $3::text, $4::text, $5::jsonb, $6::jsonb, $7::int, $8::text, now())
+RETURNING id::int
+    `.trim(),
+    [
+      input.tenantId,
+      input.alertId,
+      input.status,
+      input.triggeredBy,
+      JSON.stringify(input.condition),
+      JSON.stringify(input.result),
+      input.matchedRecords,
+      input.message,
+    ],
+  )
+  return rows[0]?.id || null
+}
+
+async function recordScheduleRun(input: {
+  tenantId: number
+  scheduleId: number
+  status: string
+  triggeredBy: string
+  artifactKind: string | null
+  artifactId: string | null
+  prompt: string | null
+  result: JsonRecord
+  errorMessage: string | null
+}) {
+  const rows = await runQuery<{ id: number }>(
+    `
+INSERT INTO mcp_app.schedule_runs
+  (tenant_id, schedule_id, status, triggered_by, artifact_kind, artifact_id, prompt, result_json, error_message, finished_at)
+VALUES
+  ($1::int, $2::bigint, $3::text, $4::text, $5::text, $6::uuid, $7::text, $8::jsonb, $9::text, now())
+RETURNING id::int
+    `.trim(),
+    [
+      input.tenantId,
+      input.scheduleId,
+      input.status,
+      input.triggeredBy,
+      input.artifactKind,
+      input.artifactId,
+      input.prompt,
+      JSON.stringify(input.result),
+      input.errorMessage,
+    ],
+  )
+  return rows[0]?.id || null
+}
+
 async function callActions(args: unknown, context: CognitoMcpServerContext) {
   const input = asRecord(args)
   const domain = normalizeActionDomain(input.domain)
   const action = optionalText(input.action)
   if (!action) throw new Error('action e obrigatoria para actions')
 
+  const tenantId = getTenantId(context)
   const target = asRecord(input.target)
   const payload = asRecord(input.payload)
   const dryRun = input.dry_run !== false
@@ -1399,6 +1519,22 @@ async function callActions(args: unknown, context: CognitoMcpServerContext) {
       dry_run: false,
       idempotency_key: input.idempotency_key,
     }, context)
+    const actionRunId = await recordActionRun({
+      tenantId,
+      domain,
+      action,
+      resource: resource || null,
+      targetId: id ? String(id) : null,
+      status: erpResult.isError ? 'error' : 'executed',
+      dryRun: false,
+      riskLevel: preview.risk_level,
+      confirmationRequired: preview.confirmation_required,
+      idempotencyKey: preview.idempotency_key,
+      target,
+      payload,
+      result: asRecord(erpResult.structuredContent),
+      errorMessage: erpResult.isError ? 'Acao ERP retornou erro.' : null,
+    })
     const structuredContent = {
       ok: !erpResult.isError,
       tool: MCP_APP_PUBLIC_TOOL_NAMES.actions,
@@ -1408,9 +1544,11 @@ async function callActions(args: unknown, context: CognitoMcpServerContext) {
       domain,
       action,
       dry_run: false,
+      action_run_id: actionRunId,
       preview,
       result: erpResult.structuredContent,
       rows: [{
+        action_run_id: actionRunId,
         dominio: domain,
         acao: action,
         status: erpResult.isError ? 'erro' : 'executado',
@@ -1424,6 +1562,27 @@ async function callActions(args: unknown, context: CognitoMcpServerContext) {
   const executable = dryRun
     ? 'preview'
     : 'execucao_real_nao_suportada_no_v1'
+  const actionRunId = await recordActionRun({
+    tenantId,
+    domain,
+    action,
+    resource: resource || null,
+    targetId: id ? String(id) : null,
+    status: executable,
+    dryRun,
+    riskLevel: preview.risk_level,
+    confirmationRequired: preview.confirmation_required,
+    idempotencyKey: preview.idempotency_key,
+    target,
+    payload,
+    result: {
+      status: executable,
+      message: dryRun
+        ? 'Revise o preview e confirme explicitamente antes de executar.'
+        : 'Use dry_run=true para preview ou implemente o handler real deste dominio.',
+    },
+    errorMessage: dryRun ? null : 'Execucao real disponivel apenas para ERP no v1.',
+  })
   const structuredContent = {
     ok: dryRun,
     tool: MCP_APP_PUBLIC_TOOL_NAMES.actions,
@@ -1435,6 +1594,7 @@ async function callActions(args: unknown, context: CognitoMcpServerContext) {
     domain,
     action,
     dry_run: dryRun,
+    action_run_id: actionRunId,
     preview,
     result: {
       status: executable,
@@ -1443,6 +1603,7 @@ async function callActions(args: unknown, context: CognitoMcpServerContext) {
         : 'Use dry_run=true para preview ou implemente o handler real deste dominio.',
     },
     rows: [{
+      action_run_id: actionRunId,
       dominio: domain,
       acao: action,
       status: executable,
@@ -1636,6 +1797,23 @@ WHERE tenant_id = $1::int AND id = $2::bigint
       `.trim(),
       [tenantId, id],
     )
+    if (rows[0]) {
+      const result = {
+        test_ok: true,
+        message: 'Teste estrutural executado; avaliador recorrente sera responsavel pela condicao real.',
+      }
+      const alertRunId = await recordAlertRun({
+        tenantId,
+        alertId: id,
+        status: 'success',
+        triggeredBy: 'test',
+        condition: asRecord(rows[0].condition),
+        result,
+        matchedRecords: 0,
+        message: result.message,
+      })
+      rows = rows.map((row) => ({ alert_run_id: alertRunId, ...row }))
+    }
     title = 'Teste de alerta'
   } else {
     rows = await listAutomationRows('alerts', tenantId, input)
@@ -1759,6 +1937,25 @@ RETURNING id::int, title, status, artifact_kind, prompt, frequency, day_of_week,
       `.trim(),
       [tenantId, id],
     )
+    if (rows[0]) {
+      const row = rows[0]
+      const result = {
+        status: 'queued',
+        message: 'Execucao manual registrada; orquestrador sera responsavel por gerar o artifact quando aplicavel.',
+      }
+      const scheduleRunId = await recordScheduleRun({
+        tenantId,
+        scheduleId: id,
+        status: 'queued',
+        triggeredBy: 'manual',
+        artifactKind: optionalText(row.artifact_kind),
+        artifactId: optionalText(row.artifact_id),
+        prompt: optionalText(row.prompt),
+        result,
+        errorMessage: null,
+      })
+      rows = rows.map((scheduleRow) => ({ schedule_run_id: scheduleRunId, ...scheduleRow }))
+    }
     title = 'Agendamento executado'
   } else {
     rows = await listAutomationRows('schedules', tenantId, input)
