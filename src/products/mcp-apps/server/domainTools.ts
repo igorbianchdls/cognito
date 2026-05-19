@@ -1347,15 +1347,31 @@ function buildFinancialAccountsPayableQuery(action: CrudAction, paramsIn: JsonRe
 SELECT
   cp.id,
   cp.numero_documento,
+  COALESCE(NULLIF(c.numero_oc, ''), cp.compra_id::text, '-') AS compra,
   ${fornecedorExpr} AS fornecedor,
   cp.data_documento::date AS data_documento,
   cp.data_vencimento::date AS data_vencimento,
   COALESCE(cp.valor_liquido, 0)::float AS valor_liquido,
   cp.status,
+  COALESCE(cd.nome, '-') AS categoria,
+  COALESCE(cc.nome, '-') AS centro_custo,
+  COALESCE(d.nome, '-') AS departamento,
+  COALESCE(fil.nome, '-') AS filial,
+  COALESCE(un.nome, '-') AS unidade_negocio,
+  COALESCE(pr.nome, '-') AS projeto,
+  COALESCE(cf.nome_conta, '-') AS conta_financeira,
   COALESCE(NULLIF(cp.tipo_documento, ''), '-') AS tipo_documento,
   COALESCE(NULLIF(cp.observacao, ''), '-') AS observacao
 FROM financeiro.contas_pagar cp
+LEFT JOIN compras.compras c ON c.id = cp.compra_id AND c.tenant_id = cp.tenant_id
 LEFT JOIN entidades.fornecedores f ON f.id = cp.fornecedor_id
+LEFT JOIN financeiro.categorias_despesa cd ON cd.id = cp.categoria_despesa_id
+LEFT JOIN empresa.centros_custo cc ON cc.id = cp.centro_custo_id
+LEFT JOIN empresa.departamentos d ON d.id = cp.departamento_id
+LEFT JOIN empresa.filiais fil ON fil.id = cp.filial_id
+LEFT JOIN empresa.unidades_negocio un ON un.id = cp.unidade_negocio_id
+LEFT JOIN financeiro.projetos pr ON pr.id = cp.projeto_id
+LEFT JOIN financeiro.contas_financeiras cf ON cf.id = cp.conta_financeira_id
 ${base.whereClause}
 ORDER BY cp.data_vencimento ASC, cp.id DESC
 LIMIT $${base.limitParam}::int
@@ -1376,15 +1392,30 @@ function buildFinancialAccountsReceivableQuery(action: CrudAction, paramsIn: Jso
 SELECT
   cr.id,
   cr.numero_documento,
+  COALESCE(cr.pedido_id::text, '-') AS pedido,
   ${clienteExpr} AS cliente,
   cr.data_documento::date AS data_documento,
   cr.data_vencimento::date AS data_vencimento,
   COALESCE(cr.valor_liquido, 0)::float AS valor_liquido,
   cr.status,
+  COALESCE(p.status, '-') AS status_pedido,
+  COALESCE(cre.nome, '-') AS categoria,
+  COALESCE(cl.nome, '-') AS centro_lucro,
+  COALESCE(d.nome, '-') AS departamento,
+  COALESCE(fil.nome, '-') AS filial,
+  COALESCE(un.nome, '-') AS unidade_negocio,
+  COALESCE(pr.nome, '-') AS projeto,
   COALESCE(NULLIF(cr.tipo_documento, ''), '-') AS tipo_documento,
   COALESCE(NULLIF(cr.observacao, ''), '-') AS observacao
 FROM financeiro.contas_receber cr
+LEFT JOIN vendas.pedidos p ON p.id = cr.pedido_id AND p.tenant_id = cr.tenant_id
 LEFT JOIN entidades.clientes c ON c.id = cr.cliente_id AND c.tenant_id = cr.tenant_id
+LEFT JOIN financeiro.categorias_receita cre ON cre.id = cr.categoria_receita_id
+LEFT JOIN empresa.centros_lucro cl ON cl.id = cr.centro_lucro_id
+LEFT JOIN empresa.departamentos d ON d.id = cr.departamento_id
+LEFT JOIN empresa.filiais fil ON fil.id = cr.filial_id
+LEFT JOIN empresa.unidades_negocio un ON un.id = cr.unidade_negocio_id
+LEFT JOIN financeiro.projetos pr ON pr.id = cr.projeto_id
 ${base.whereClause}
 ORDER BY cr.data_vencimento ASC, cr.id DESC
 LIMIT $${base.limitParam}::int
