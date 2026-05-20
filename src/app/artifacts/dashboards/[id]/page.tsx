@@ -2,8 +2,6 @@ import { notFound } from 'next/navigation'
 
 import {
   readDashboardArtifact,
-  listDashboards,
-  listDashboardSourceVersions,
   ArtifactToolError,
 } from '@/products/artifacts/backend/dashboardArtifactsService'
 import { DashboardArtifactPage } from '@/products/artifacts/dashboard/DashboardArtifactPage'
@@ -30,25 +28,12 @@ export default async function ArtifactDashboardByIdPage({
   void rawToken
 
   try {
-    const [artifact, versions, dashboards] = await Promise.all([
-      readDashboardArtifact({ artifactId: id, kind: 'draft', ...(version ? { version } : {}) }),
-      listDashboardSourceVersions(id, 'draft'),
-      listDashboards(),
-    ])
+    const artifact = await readDashboardArtifact({ artifactId: id, kind: 'draft', ...(version ? { version } : {}) })
 
     return (
       <DashboardArtifactPage
-        artifactId={artifact.artifact_id}
-        dashboards={dashboards}
         title={artifact.title}
-        status={artifact.status}
-        version={artifact.version}
-        currentDraftVersion={artifact.current_draft_version ?? artifact.version}
-        metadata={artifact.metadata}
-        availableVersions={versions}
         source={artifact.source}
-        updatedAt={artifact.updated_at}
-        allowSourceEditing={!embedMode}
         embedMode={embedMode}
       />
     )

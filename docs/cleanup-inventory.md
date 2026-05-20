@@ -21,16 +21,17 @@ ChatGPT App, Claude MCP App, tools MCP, artifacts e integracoes.
 - Fase 2: galeria MCP UI migrada de `/bigquery-test/mcp-ui` para `/internal/mcp-ui`.
 - Fase 3: playgrounds e testes antigos removidos de `bigquery-test`, APIs experimentais relacionadas e scripts de streaming/sandbox.
 - Fase 4: chat proprio, agentes/sandbox, builders antigos, Nexus, apps demo e stores/tipos associados removidos.
+- Fase 5: artifacts consolidados como viewer/renderer; workspaces antigos diretos e módulos BI sem uso removidos.
+- Fase 6: REST tools antigas e APIs diretas substituidas por MCP removidas.
 
-## Rotas candidatas a remocao
+## Rotas candidatas a remocao restante
 
-- `src/app/dashboard`, `src/app/report`, `src/app/slide`: workspaces antigos, revisar apos confirmar que embeds publicos de artifacts nao dependem deles.
-- `src/app/api/agent-tools`: REST tools antigas substituidas por MCP tools, revisar na fase 6.
-- `src/app/api/bigquery`, `src/app/api/execute-sql`, `src/app/api/sql`: revisar na fase 6 conforme uso real por MCP/integracoes.
+- Nenhuma rota antiga das fases 3 a 6 deve permanecer ativa.
+- Revisar apenas rotas auxiliares fora do foco MCP Apps se voltarem a aparecer no inventario.
 
-## Modulos candidatos a remocao
+## Modulos candidatos a remocao restante
 
-- `src/products/bi`: manter temporariamente apenas o que ainda for usado pelos renderers de artifacts; depois mover o minimo necessario para `src/products/artifacts`.
+- `src/products/bi/json-render`: ainda e usado pelos renderers de dashboard, report e slide; mover para `src/products/artifacts` em uma refatoracao dedicada se quiser eliminar o namespace `bi`.
 
 ## Dependencias candidatas a remocao futura
 

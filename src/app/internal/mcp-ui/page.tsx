@@ -397,7 +397,7 @@ export default function McpUiGalleryPage() {
       <div className="mx-auto flex max-w-6xl flex-col gap-7">
         <header className="flex flex-col gap-4 border-b border-slate-200 pb-5">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">bigquery-test</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">internal</p>
             <h1 className="mt-1 text-2xl font-semibold tracking-normal text-slate-950">MCP UI Gallery</h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
               Galeria interna com payloads mockados para revisar as UIs reais das tools renderizadas no ChatGPT App.
