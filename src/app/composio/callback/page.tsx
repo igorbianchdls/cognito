@@ -45,11 +45,10 @@ export default function ComposioCallbackPage() {
             )}
           </ul>
           <div className="pt-4">
-            <Link href="/chat" className="px-4 py-2 rounded bg-black text-white inline-block">Ir para o Chat</Link>
+            <Link href="/integracoes" className="px-4 py-2 rounded bg-black text-white inline-block">Ver integrações</Link>
           </div>
         </div>
       )}
     </div>
   )
 }
-

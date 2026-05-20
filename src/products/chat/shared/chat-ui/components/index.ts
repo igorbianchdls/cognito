@@ -1,8 +1,0 @@
-export { default as RespostaDaIa } from '@/products/chat/shared/chat-ui/components/RespostaDaIa'
-export { default as PerguntaDoUsuario } from '@/products/chat/shared/chat-ui/components/PerguntaDoUsuario'
-export { default as InputArea } from '@/products/chat/shared/chat-ui/components/InputArea'
-export { default as Header } from '@/products/chat/shared/chat-ui/components/Header'
-export { default as ChatPanel } from '@/products/chat/shared/chat-ui/components/ChatPanel'
-export { default as ChatContainer } from '@/products/chat/shared/chat-ui/components/ChatContainer'
-export { default as ChatListItem } from '@/products/chat/shared/chat-ui/components/ChatListItem'
-export { default as ChatListHeader } from '@/products/chat/shared/chat-ui/components/ChatListHeader'

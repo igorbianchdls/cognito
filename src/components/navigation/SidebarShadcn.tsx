@@ -1,16 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
 import {
   IconChartBar,
-  IconCirclePlus,
   IconFileText,
   IconGridDots,
-  IconMessageCircle,
   IconPlugConnected,
   IconPresentation,
-  IconSettingsAutomation,
 } from "@tabler/icons-react"
 
 import MetaIcon from "@/components/icons/MetaIcon"
@@ -36,10 +33,7 @@ import {
 } from "@/components/ui/sidebar"
 
 const BrandIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconGridDots stroke={1.75} {...props} />
-const ChatsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconMessageCircle stroke={1.75} {...props} />
-const AutomationIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconSettingsAutomation stroke={1.75} {...props} />
 const IntegrationsIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconPlugConnected stroke={1.75} {...props} />
-const NewChatIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconCirclePlus stroke={1.75} {...props} />
 const DashboardsArtifactIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconChartBar stroke={1.75} {...props} />
 const ReportsArtifactIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconFileText stroke={1.75} {...props} />
 const SlidesArtifactIcon = (props: { className?: string; style?: React.CSSProperties }) => <IconPresentation stroke={1.75} {...props} />
@@ -95,16 +89,6 @@ const navigationData = {
     },
   ],
   navMain: [
-    {
-      title: "Chats",
-      url: "/chat/lista",
-      icon: ChatsIcon,
-    },
-    {
-      title: "Automacoes",
-      url: "/automacoes",
-      icon: AutomationIcon,
-    },
     {
       title: "Integrações",
       url: "/integracoes",
@@ -164,21 +148,10 @@ import { cn } from "@/lib/utils"
 
 export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle, sectionTitleStyle, style, borderless, headerBorderless, className, headerVariant: _headerVariant = 'compact', showHeaderTrigger: _showHeaderTrigger = true, iconSizePx = 14, ...props }: React.ComponentProps<typeof Sidebar> & { bgColor?: string; textColor?: string; itemTextColor?: string; itemTextStyle?: React.CSSProperties; sectionTitleStyle?: React.CSSProperties; borderless?: boolean; headerBorderless?: boolean; className?: string; headerVariant?: 'default' | 'compact'; showHeaderTrigger?: boolean; iconSizePx?: number }) {
   const pathname = usePathname()
-  const router = useRouter()
   void _headerVariant
   void _showHeaderTrigger
 
   // Static defaults only (avoid visual flash on hydration)
-
-  const handleNewChat = () => {
-    try {
-      const id = (globalThis as any)?.crypto?.randomUUID?.() || (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2))
-      router.replace(`/chat/codex/${id}`)
-    } catch {
-      const id = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
-      router.replace(`/chat/codex/${id}`)
-    }
-  }
 
   // Update active state based on current path
   const navMainWithActiveState = navigationData.navMain.map(item => ({
@@ -227,17 +200,6 @@ export function SidebarShadcn({ bgColor, textColor, itemTextColor, itemTextStyle
         </div>
       </SidebarHeader>
       <SidebarContent className="ui-text">
-        <div className="px-2 pt-1">
-          <button
-            type="button"
-            onClick={handleNewChat}
-            className="w-full h-8 inline-flex items-center justify-center gap-2 rounded-md bg-white border border-gray-200 text-black text-sm hover:bg-gray-50 group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:gap-0"
-            title="Novo Chat"
-          >
-            <NewChatIcon className="w-3.5 h-3.5" />
-            <span className="group-data-[collapsible=icon]:hidden">Novo Chat</span>
-          </button>
-        </div>
         <NavMainSimple items={dataWithActiveState.navMain} groupLabelStyle={finalSectionTitleStyle} itemTextStyle={finalItemTextStyle} iconSizePx={finalIconSizePx} />
         <div className="group-data-[collapsible=icon]:hidden">
           <NavMainSimple

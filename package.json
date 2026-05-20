@@ -17,13 +17,10 @@
     "claude-app:claude-test": "node scripts/claude-app/claude-test-plan.mjs",
     "claude-app:smoke": "node scripts/claude-app/smoke-test.mjs",
     "service:hello": "node services/hello-service.mjs",
-    "sandbox:agent-verify": "node scripts/sandbox-agent-verify.mjs",
     "safe:npm": "node scripts/safe-npm-install.mjs",
     "safe:install": "node scripts/safe-npm-install.mjs install",
     "safe:add:assemblyai": "node scripts/safe-npm-install.mjs install assemblyai",
-    "safe:add:elevenlabs": "node scripts/safe-npm-install.mjs install @elevenlabs/elevenlabs-js",
-    "stream:assembly": "node scripts/node/assemblyai-streaming.mjs",
-    "stream:eleven": "node scripts/node/elevenlabs-realtime.mjs"
+    "safe:add:elevenlabs": "node scripts/safe-npm-install.mjs install @elevenlabs/elevenlabs-js"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.0",

@@ -1,12 +1,24 @@
 "use client";
 
-import { ThemeManager, type ThemeName } from "@/components/visual-builder/ThemeManager";
-import type { DesignTokens } from "@/components/visual-builder/DesignTokens";
 import type { Managers } from "@/products/bi/json-render/theme/thememanagers";
 import { mapManagersToCssVars } from "@/products/bi/json-render/theme/thememanagers";
 
 type AnyRecord = Record<string, any>;
 type Rgb = { r: number; g: number; b: number };
+type ThemeName = "branco" | "cinza-claro" | "cinza-escuro" | "preto";
+type DesignTokens = {
+  colors?: AnyRecord & {
+    text?: { primary?: string; secondary?: string };
+    chart?: AnyRecord;
+    pieSliceColors?: string[];
+  };
+  typography?: {
+    fontFamily?: { primary?: string };
+    fontWeight?: { medium?: number; semibold?: number; bold?: number };
+    fontSize?: { sm?: number; md?: number };
+  };
+  borders?: { radius?: { md?: number } };
+};
 export type HeaderThemePreset =
   | "auto"
   | "white"
@@ -19,6 +31,75 @@ export type HeaderThemePreset =
   | "amber"
   | "rose"
   | "slate";
+
+const THEME_TOKENS: Record<ThemeName, DesignTokens> = {
+  branco: {
+    colors: {
+      background: "#ffffff",
+      surface: "#ffffff",
+      border: "#e5e7eb",
+      borderFocus: "#111827",
+      text: { primary: "#111827", secondary: "#475569" },
+      chart: { primary: "#111827", secondary: "#2563eb", tertiary: "#16a34a", quaternary: "#f59e0b" },
+      pieSliceColors: ["#111827", "#2563eb", "#16a34a", "#f59e0b", "#ef4444"],
+    },
+  },
+  "cinza-claro": {
+    colors: {
+      background: "#f8fafc",
+      surface: "#ffffff",
+      border: "#d1d5db",
+      borderFocus: "#2563eb",
+      text: { primary: "#111827", secondary: "#64748b" },
+      chart: { primary: "#2563eb", secondary: "#0891b2", tertiary: "#16a34a", quaternary: "#f59e0b" },
+      pieSliceColors: ["#2563eb", "#0891b2", "#16a34a", "#f59e0b", "#64748b"],
+    },
+  },
+  "cinza-escuro": {
+    colors: {
+      background: "#111827",
+      surface: "#1f2937",
+      border: "#374151",
+      borderFocus: "#60a5fa",
+      text: { primary: "#f9fafb", secondary: "#cbd5e1" },
+      chart: { primary: "#60a5fa", secondary: "#22d3ee", tertiary: "#34d399", quaternary: "#fbbf24" },
+      pieSliceColors: ["#60a5fa", "#22d3ee", "#34d399", "#fbbf24", "#f87171"],
+    },
+  },
+  preto: {
+    colors: {
+      background: "#050505",
+      surface: "#111111",
+      border: "#2a2a2a",
+      borderFocus: "#f9fafb",
+      text: { primary: "#f9fafb", secondary: "#a3a3a3" },
+      chart: { primary: "#f9fafb", secondary: "#60a5fa", tertiary: "#34d399", quaternary: "#fbbf24" },
+      pieSliceColors: ["#f9fafb", "#60a5fa", "#34d399", "#fbbf24", "#f87171"],
+    },
+  },
+};
+
+const DEFAULT_TYPOGRAPHY: NonNullable<DesignTokens["typography"]> = {
+  fontFamily: { primary: "Inter, ui-sans-serif, system-ui" },
+  fontWeight: { medium: 500, semibold: 600, bold: 700 },
+  fontSize: { sm: 14, md: 16 },
+};
+
+const DEFAULT_BORDERS: NonNullable<DesignTokens["borders"]> = {
+  radius: { md: 8 },
+};
+
+function isValidThemeName(name: unknown): name is ThemeName {
+  return typeof name === "string" && name in THEME_TOKENS;
+}
+
+function getThemeTokens(name: ThemeName): DesignTokens {
+  return {
+    ...THEME_TOKENS[name],
+    typography: DEFAULT_TYPOGRAPHY,
+    borders: DEFAULT_BORDERS,
+  };
+}
 
 // Map JSON Render theme names/aliases to DesignTokens theme keys
 const THEME_ALIASES: Record<string, ThemeName> = {
@@ -51,9 +132,9 @@ const THEME_ALIASES: Record<string, ThemeName> = {
 function resolveThemeName(name?: string): ThemeName {
   const key = String(name || "").toLowerCase();
   const mapped = (THEME_ALIASES as AnyRecord)[key] as ThemeName | undefined;
-  if (mapped && ThemeManager.isValidTheme(mapped)) return mapped;
+  if (mapped && isValidThemeName(mapped)) return mapped;
   // If user already passed a valid ThemeName from DesignTokens, keep it
-  if (name && ThemeManager.isValidTheme(name as any)) return name as ThemeName;
+  if (isValidThemeName(name)) return name;
   return "branco"; // default
 }
 
@@ -464,7 +545,7 @@ export function buildThemeVars(
   options?: { headerTheme?: string }
 ) {
   const resolved = resolveThemeName(name);
-  const tokens = ThemeManager.getThemeTokens(resolved);
+  const tokens = getThemeTokens(resolved);
   const autoManagers = buildManagersFromTokens(tokens, resolved);
   const n = String(name || '').toLowerCase();
   let managers: Managers = autoManagers;

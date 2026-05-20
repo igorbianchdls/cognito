@@ -54,8 +54,8 @@ export default function IntegracoesCallbackPage() {
             <Link href="/integracoes" className="px-3 py-1.5 rounded border">
               Voltar
             </Link>
-            <Link href="/chat" className="px-3 py-1.5 rounded bg-black text-white">
-              Ir para o Chat
+            <Link href="/integracoes" className="px-3 py-1.5 rounded bg-black text-white">
+              Ver integrações
             </Link>
           </div>
         </div>

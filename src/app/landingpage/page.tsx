@@ -376,11 +376,11 @@ export default function LandingPage() {
             </p>
           </div>
           <div className="lp-final-cta__actions">
-            <a className="lp-cta-btn lp-cta-btn--primary" href="/apps">
-              Ver demos
+            <a className="lp-cta-btn lp-cta-btn--primary" href="/integracoes">
+              Ver integrações
             </a>
-            <a className="lp-cta-btn lp-cta-btn--secondary" href="/apps/vendas">
-              Abrir dashboard de exemplo
+            <a className="lp-cta-btn lp-cta-btn--secondary" href="/artifacts/dashboards">
+              Abrir dashboards
             </a>
           </div>
         </section>
