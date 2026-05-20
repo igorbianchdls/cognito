@@ -5,6 +5,11 @@
 /.node_modules*
 /.pnpm-store/
 /tmp/cognito-node-modules*/
+/.cache/
+/C:\\Users\\Administrador\\AppData\\Local\\pnpm\\store\\v3/
+/cognito@0.1.0
+/nul
+/npm
 /.pnp
 .pnp.*
 .yarn/*
