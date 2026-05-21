@@ -71,6 +71,13 @@ export function formatCurrency(value: number) {
   }).format(value)
 }
 
+export function formatCurrencyPlain(value: number) {
+  return new Intl.NumberFormat('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value)
+}
+
 export function formatPercent(value: number) {
   return `${new Intl.NumberFormat('pt-BR', {
     maximumFractionDigits: 2,
@@ -93,6 +100,7 @@ export function formatCellValue(key: string, value: unknown) {
   if (typeof value === 'boolean') return value ? 'Sim' : 'Nao'
   if (typeof value === 'number') {
     if (key === 'currency') return formatCurrency(value)
+    if (key === 'currency_plain') return formatCurrencyPlain(value)
     if (key === 'percent') return formatPercent(value)
     if (key === 'number') return formatNumber(value)
     return isMoneyKey(key) ? formatCurrency(value) : formatNumber(value)

@@ -37,12 +37,13 @@ export async function GET(req: NextRequest) {
     const built = buildFinancialStatementQuery(kind, paramsIn, tenantId)
     const period = resolveFinancialPeriod(kind, paramsIn)
     const rows = await runQuery<Record<string, unknown>>(built.sql, built.params)
-    const columns = rows.length ? Object.keys(rows[0] || {}) : []
+    const columns = built.columns ?? (rows.length ? Object.keys(rows[0] || {}).filter((column) => !column.startsWith('_')) : [])
     const table: TableStructuredContent & { kind: FinancialStatementKind; sql_query: string; sql_params: unknown[] } = {
       ok: true,
       tool: 'financial_statement',
       view: 'table',
       kind,
+      variant: built.variant,
       title: built.title,
       subtitle: buildSubtitle(kind, period),
       columns,

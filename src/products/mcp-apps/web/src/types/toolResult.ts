@@ -102,6 +102,8 @@ export type TableStructuredContent = {
   ok?: boolean
   tool?: 'table' | 'financial_statement' | string
   view?: 'table'
+  variant?: 'financial_statement' | string
+  kind?: 'dre' | 'cash_flow' | string
   title?: string
   subtitle?: string | null
   columns?: unknown[]

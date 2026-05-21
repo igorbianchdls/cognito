@@ -23,11 +23,19 @@ type ChartConfig = {
   yLabel: string | null
 }
 
+type TableColumnConfig = {
+  key: string
+  label: string
+  format?: string
+}
+
 type BuiltQuery = {
   sql: string
   params: unknown[]
   title: string
   chart: ChartConfig | null
+  columns?: TableColumnConfig[]
+  variant?: string
 }
 
 type EcommerceAction =
@@ -701,9 +709,15 @@ const FINANCIAL_STATEMENT_OUTPUT_SCHEMA = {
     },
     columns: {
       type: 'array',
-      items: { type: 'string' },
+      items: {
+        oneOf: [
+          { type: 'string' },
+          { type: 'object', additionalProperties: true },
+        ],
+      },
     },
     count: { type: 'integer' },
+    variant: { type: 'string' },
   },
   required: ['success', 'tool', 'view', 'kind', 'title', 'rows', 'columns', 'count'],
   additionalProperties: true,
@@ -1210,20 +1224,20 @@ export function resolveFinancialPeriod(kind: FinancialStatementKind, paramsIn: J
   return { de, ate }
 }
 
+function formatFinancialStatementPeriodLabel(period: { de: string; ate: string }) {
+  const match = /^(\d{4})-(\d{2})-\d{2}$/.exec(period.ate)
+  if (!match) return 'Valor'
+  return `${match[1]}/${match[2]}`
+}
+
 function buildFinancialStatementDreQuery(paramsIn: JsonRecord, tenantId: number): BuiltQuery {
   const period = resolveFinancialPeriod('dre', paramsIn)
+  const periodLabel = formatFinancialStatementPeriodLabel(period)
   const sql = `
 WITH base AS (
   SELECT
-    CASE
-      WHEN pc.codigo LIKE '4.%' THEN 'receita'
-      WHEN pc.codigo LIKE '5.%' THEN 'custo'
-      WHEN pc.codigo LIKE '6.1.%' THEN 'despesa_administrativa'
-      WHEN pc.codigo LIKE '6.2.%' THEN 'despesa_comercial'
-      WHEN pc.codigo LIKE '6.3.%' THEN 'despesa_financeira'
-      WHEN pc.codigo LIKE '6.%' THEN 'outras_despesas'
-      ELSE 'outras_despesas'
-    END AS grupo,
+    COALESCE(pc.codigo, '') AS codigo,
+    LOWER(COALESCE(pc.nome, '')) AS nome,
     COALESCE(ll.credito, 0)::float AS credito,
     COALESCE(ll.debito, 0)::float AS debito
   FROM contabilidade.lancamentos_contabeis lc
@@ -1237,38 +1251,87 @@ WITH base AS (
       OR pc.codigo LIKE '6.%'
     )
 ),
+classified AS (
+  SELECT
+    CASE
+      WHEN codigo LIKE '4.%' AND (
+        nome LIKE '%desconto%'
+        OR nome LIKE '%abatimento%'
+        OR nome LIKE '%dedu%'
+      ) THEN 'descontos'
+      WHEN codigo LIKE '4.%' THEN 'receita_bruta'
+      WHEN codigo LIKE '5.%' THEN 'custos'
+      WHEN nome LIKE '%imposto%'
+        OR nome LIKE '%tribut%'
+        OR nome LIKE '%fiscal%'
+        OR nome LIKE '%icms%'
+        OR nome LIKE '%iss%'
+        OR nome LIKE '%pis%'
+        OR nome LIKE '%cofins%' THEN 'impostos'
+      WHEN codigo LIKE '6.1.5%'
+        OR nome LIKE '%salario%'
+        OR nome LIKE '%salário%'
+        OR nome LIKE '%folha%'
+        OR nome LIKE '%funcion%'
+        OR nome LIKE '%encargo%' THEN 'despesas_funcionarios'
+      WHEN codigo LIKE '6.3.%'
+        OR nome LIKE '%banc%'
+        OR nome LIKE '%tarifa%'
+        OR nome LIKE '%juros%' THEN 'despesas_bancarias'
+      WHEN codigo LIKE '6.2.%' THEN 'despesas_comerciais'
+      WHEN codigo LIKE '6.1.%' THEN 'despesas_administrativas'
+      WHEN codigo LIKE '6.%' THEN 'despesas_administrativas'
+      ELSE 'despesas_administrativas'
+    END AS grupo,
+    CASE
+      WHEN codigo LIKE '4.%' AND (
+        nome LIKE '%desconto%'
+        OR nome LIKE '%abatimento%'
+        OR nome LIKE '%dedu%'
+      ) THEN debito - credito
+      WHEN codigo LIKE '4.%' THEN credito - debito
+      ELSE debito - credito
+    END AS valor
+  FROM base
+),
 totals AS (
   SELECT
-    COALESCE(SUM(CASE WHEN grupo = 'receita' THEN credito - debito ELSE 0 END), 0)::float AS receita,
-    COALESCE(SUM(CASE WHEN grupo = 'custo' THEN debito - credito ELSE 0 END), 0)::float AS custo,
-    COALESCE(SUM(CASE WHEN grupo = 'despesa_administrativa' THEN debito - credito ELSE 0 END), 0)::float AS despesa_administrativa,
-    COALESCE(SUM(CASE WHEN grupo = 'despesa_comercial' THEN debito - credito ELSE 0 END), 0)::float AS despesa_comercial,
-    COALESCE(SUM(CASE WHEN grupo = 'despesa_financeira' THEN debito - credito ELSE 0 END), 0)::float AS despesa_financeira,
-    COALESCE(SUM(CASE WHEN grupo = 'outras_despesas' THEN debito - credito ELSE 0 END), 0)::float AS outras_despesas
-  FROM base
+    COALESCE(SUM(CASE WHEN grupo = 'receita_bruta' THEN valor ELSE 0 END), 0)::float AS receita_bruta,
+    ABS(COALESCE(SUM(CASE WHEN grupo = 'descontos' THEN valor ELSE 0 END), 0))::float AS descontos,
+    COALESCE(SUM(CASE WHEN grupo = 'custos' THEN valor ELSE 0 END), 0)::float AS custos,
+    COALESCE(SUM(CASE WHEN grupo = 'despesas_administrativas' THEN valor ELSE 0 END), 0)::float AS despesas_administrativas,
+    COALESCE(SUM(CASE WHEN grupo = 'despesas_bancarias' THEN valor ELSE 0 END), 0)::float AS despesas_bancarias,
+    COALESCE(SUM(CASE WHEN grupo = 'despesas_comerciais' THEN valor ELSE 0 END), 0)::float AS despesas_comerciais,
+    COALESCE(SUM(CASE WHEN grupo = 'despesas_funcionarios' THEN valor ELSE 0 END), 0)::float AS despesas_funcionarios,
+    COALESCE(SUM(CASE WHEN grupo = 'impostos' THEN valor ELSE 0 END), 0)::float AS impostos
+  FROM classified
 )
 SELECT
-  secao,
-  linha,
-  valor
+  descricao,
+  valor,
+  row_type AS "_rowType"
 FROM (
-  SELECT 1 AS ordem, 'Resultado' AS secao, 'Receita bruta' AS linha, receita AS valor FROM totals
+  SELECT 1 AS ordem, '(+) Receita Bruta de Vendas e Serviços' AS descricao, receita_bruta AS valor, 'normal' AS row_type FROM totals
   UNION ALL
-  SELECT 2, 'Resultado', '(-) Custos e CMV', -ABS(custo) FROM totals
+  SELECT 2, '(-) Descontos e Abatimentos', -ABS(descontos), 'normal' FROM totals
   UNION ALL
-  SELECT 3, 'Resultado', 'Lucro bruto', receita - ABS(custo) FROM totals
+  SELECT 3, '(=) Receita Bruta de Vendas', receita_bruta - ABS(descontos), 'subtotal' FROM totals
   UNION ALL
-  SELECT 4, 'Despesas operacionais', '(-) Despesas administrativas', -ABS(despesa_administrativa) FROM totals
+  SELECT 4, '(-) Custos Mercadorias Vendidas', -ABS(custos), 'normal' FROM totals
   UNION ALL
-  SELECT 5, 'Despesas operacionais', '(-) Despesas comerciais', -ABS(despesa_comercial) FROM totals
+  SELECT 5, '(=) Lucro Bruto', receita_bruta - ABS(descontos) - ABS(custos), 'subtotal' FROM totals
   UNION ALL
-  SELECT 6, 'Despesas operacionais', '(-) Outras despesas operacionais', -ABS(outras_despesas) FROM totals
+  SELECT 6, '(-) DESPESAS ADMINISTRATIVAS', -ABS(despesas_administrativas), 'normal' FROM totals
   UNION ALL
-  SELECT 7, 'Resultado', 'Resultado operacional', receita - ABS(custo) - ABS(despesa_administrativa) - ABS(despesa_comercial) - ABS(outras_despesas) FROM totals
+  SELECT 7, '(-) DESPESAS BANCÁRIAS', -ABS(despesas_bancarias), 'normal' FROM totals
   UNION ALL
-  SELECT 8, 'Despesas financeiras', '(-) Despesas financeiras', -ABS(despesa_financeira) FROM totals
+  SELECT 8, '(-) DESPESAS COMERCIAIS', -ABS(despesas_comerciais), 'normal' FROM totals
   UNION ALL
-  SELECT 9, 'Resultado', 'Lucro líquido', receita - ABS(custo) - ABS(despesa_administrativa) - ABS(despesa_comercial) - ABS(outras_despesas) - ABS(despesa_financeira) FROM totals
+  SELECT 9, '(-) DESPESAS FUNCIONÁRIOS', -ABS(despesas_funcionarios), 'normal' FROM totals
+  UNION ALL
+  SELECT 10, '(-) IMPOSTOS', -ABS(impostos), 'normal' FROM totals
+  UNION ALL
+  SELECT 11, '(=) Resultado Operacional', receita_bruta - ABS(descontos) - ABS(custos) - ABS(despesas_administrativas) - ABS(despesas_bancarias) - ABS(despesas_comerciais) - ABS(despesas_funcionarios) - ABS(impostos), 'subtotal' FROM totals
 ) statement_rows
 ORDER BY ordem
   `.trim()
@@ -1278,6 +1341,11 @@ ORDER BY ordem
     params: [tenantId, period.de, period.ate],
     title: 'DRE',
     chart: null,
+    columns: [
+      { key: 'descricao', label: 'DRE' },
+      { key: 'valor', label: periodLabel, format: 'currency_plain' },
+    ],
+    variant: 'financial_statement',
   }
 }
 
@@ -1324,6 +1392,14 @@ ORDER BY m.mes ASC
     params: [tenantId, period.de, period.ate],
     title: 'Fluxo de Caixa',
     chart: null,
+    columns: [
+      { key: 'periodo', label: 'Período' },
+      { key: 'entradas_previstas', label: 'Entradas Previstas', format: 'currency_plain' },
+      { key: 'saidas_previstas', label: 'Saídas Previstas', format: 'currency_plain' },
+      { key: 'fluxo_liquido', label: 'Fluxo Líquido', format: 'currency_plain' },
+      { key: 'saldo_acumulado', label: 'Saldo Acumulado', format: 'currency_plain' },
+    ],
+    variant: 'financial_statement',
   }
 }
 
@@ -3694,12 +3770,13 @@ async function callFinancialStatement(args: unknown, context: CognitoMcpServerCo
   const period = resolveFinancialPeriod(kind, paramsIn)
   const built = buildFinancialStatementQuery(kind, paramsIn, getTenantId(context))
   const rows = await runQuery<Record<string, unknown>>(built.sql, built.params)
-  const columns = inferColumns(rows)
+  const columns = built.columns ?? inferColumns(rows).filter((column) => !column.startsWith('_'))
   const structuredContent = {
     success: true,
     tool: MCP_APP_DOMAIN_TOOL_NAMES.financialStatement,
     view: 'table',
     kind,
+    variant: built.variant,
     title: built.title,
     subtitle:
       kind === 'dre'

@@ -554,6 +554,73 @@ a {
   white-space: nowrap;
 }
 
+.financial-statement-card {
+  border-color: #b7b7b7;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.financial-statement-card .table-scroll {
+  max-height: none;
+}
+
+.data-table--financial {
+  min-width: 520px;
+  border: 1px solid #b7b7b7;
+  font-size: 16px;
+  letter-spacing: 0;
+}
+
+.data-table--financial th,
+.data-table--financial td {
+  border-right: 1px solid #b7b7b7;
+  border-bottom: 1px solid #b7b7b7;
+  padding: 4px 6px;
+}
+
+.data-table--financial th:last-child,
+.data-table--financial td:last-child {
+  border-right: 0;
+}
+
+.data-table--financial th {
+  position: static;
+  background: #c9c9c9;
+  color: #000000;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-transform: none;
+}
+
+.data-table--financial th:last-child,
+.data-table--financial td:last-child {
+  text-align: right;
+}
+
+.data-table--financial td {
+  max-width: none;
+  color: #000000;
+  line-height: 1.2;
+}
+
+.data-table--financial td:first-child {
+  font-weight: 400;
+}
+
+.data-table--financial tbody tr:hover {
+  background: inherit;
+}
+
+.data-table--financial .data-table__row--subtotal {
+  background: #c9c9c9;
+}
+
+.data-table--financial .data-table__row--subtotal td {
+  font-weight: 500;
+}
+
 .status-badge {
   display: inline-flex;
   max-width: 160px;

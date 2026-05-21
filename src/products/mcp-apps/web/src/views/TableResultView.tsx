@@ -21,11 +21,14 @@ function asColumns(value: unknown, rows: TableRow[]): TableColumn[] {
   if (Array.isArray(value) && value.length) {
     return value
       .map((column) => {
-        if (typeof column === 'string') return { key: column, label: humanizeKey(column) }
+        if (typeof column === 'string') {
+          if (column.startsWith('_')) return null
+          return { key: column, label: humanizeKey(column) }
+        }
         if (!column || typeof column !== 'object' || Array.isArray(column)) return null
         const record = column as Record<string, unknown>
         const key = String(record.key || record.field || record.name || '').trim()
-        if (!key) return null
+        if (!key || key.startsWith('_')) return null
         return {
           key,
           label: String(record.label || humanizeKey(key)),
@@ -35,8 +38,20 @@ function asColumns(value: unknown, rows: TableRow[]): TableColumn[] {
       .filter((column): column is TableColumn => Boolean(column))
   }
 
-  const keys = rows.length ? Object.keys(rows[0] || {}) : []
+  const keys = rows.length ? Object.keys(rows[0] || {}).filter((key) => !key.startsWith('_')) : []
   return keys.map((key) => ({ key, label: humanizeKey(key) }))
+}
+
+function getRowType(row: TableRow) {
+  return String(row._rowType || row.row_type || '').trim().toLowerCase()
+}
+
+function getCellKind(column: TableColumn) {
+  const displayKey = column.format || column.key
+  const normalized = displayKey.toLowerCase()
+  if (normalized === 'currency' || normalized === 'currency_plain') return 'money'
+  if (normalized === 'number' || normalized === 'percent') return 'number'
+  return 'text'
 }
 
 export function TableResultView({ data }: { data: TableStructuredContent }) {
@@ -44,6 +59,7 @@ export function TableResultView({ data }: { data: TableStructuredContent }) {
   const columns = asColumns(data.columns, rows)
   const visual = getToolVisual(data.tool)
   const title = data.title || 'Tabela'
+  const isFinancialStatement = data.tool === 'financial_statement' || data.variant === 'financial_statement'
 
   if (!rows.length) {
     return (
@@ -55,9 +71,9 @@ export function TableResultView({ data }: { data: TableStructuredContent }) {
 
   return (
     <ResultShell eyebrow={visual.label} icon={visual.icon} tone={visual.tone} title={title} description={data.subtitle || undefined}>
-      <section className="result-card table-card">
+      <section className={`result-card table-card${isFinancialStatement ? ' financial-statement-card' : ''}`}>
         <div className="table-scroll">
-          <table className="data-table">
+          <table className={`data-table${isFinancialStatement ? ' data-table--financial' : ''}`}>
             <thead>
               <tr>
                 {columns.map((column) => (
@@ -66,20 +82,24 @@ export function TableResultView({ data }: { data: TableStructuredContent }) {
               </tr>
             </thead>
             <tbody>
-              {rows.map((row, rowIndex) => (
-                <tr key={rowIndex}>
-                  {columns.map((column) => {
-                    const value = row[column.key]
-                    const displayKey = column.format || column.key
-                    const isStatus = column.format === 'status' || column.key.toLowerCase().includes('status')
-                    return (
-                      <td key={column.key}>
-                        {isStatus ? <StatusBadge value={value} /> : formatCellValue(displayKey, value)}
-                      </td>
-                    )
-                  })}
-                </tr>
-              ))}
+              {rows.map((row, rowIndex) => {
+                const rowType = getRowType(row)
+                return (
+                  <tr key={rowIndex} className={rowType ? `data-table__row--${rowType}` : undefined}>
+                    {columns.map((column) => {
+                      const value = row[column.key]
+                      const displayKey = column.format || column.key
+                      const isStatus = column.format === 'status' || column.key.toLowerCase().includes('status')
+                      const cellKind = getCellKind(column)
+                      return (
+                        <td key={column.key} className={`data-table__cell data-table__cell--${cellKind}`}>
+                          {isStatus ? <StatusBadge value={value} /> : formatCellValue(displayKey, value)}
+                        </td>
+                      )
+                    })}
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
