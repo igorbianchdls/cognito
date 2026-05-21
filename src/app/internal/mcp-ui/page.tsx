@@ -37,6 +37,17 @@ type FinancialStatementKind = 'dre' | 'cash_flow'
 type FinancialStatementResponse = {
   ok: true
   table: TableStructuredContent
+  filter_options?: FinancialStatementFilterOptions
+}
+
+type FinancialStatementFilterOption = {
+  value: string
+  label: string
+}
+
+type FinancialStatementFilterOptions = {
+  categorias: FinancialStatementFilterOption[]
+  centros: FinancialStatementFilterOption[]
 }
 
 type FinancialStatementFilters = {
@@ -57,10 +68,16 @@ const emptyFinancialStatementFilters: FinancialStatementFilters = {
   linha_dre: '',
 }
 
+const emptyFinancialStatementFilterOptions: FinancialStatementFilterOptions = {
+  categorias: [],
+  centros: [],
+}
+
 function FinancialStatementPreview({ kind }: { kind: FinancialStatementKind }) {
   const [table, setTable] = useState<TableStructuredContent | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [filterOptions, setFilterOptions] = useState<FinancialStatementFilterOptions>(emptyFinancialStatementFilterOptions)
   const [filters, setFilters] = useState<FinancialStatementFilters>({ ...emptyFinancialStatementFilters })
   const [appliedFilters, setAppliedFilters] = useState<FinancialStatementFilters>({ ...emptyFinancialStatementFilters })
 
@@ -88,6 +105,7 @@ function FinancialStatementPreview({ kind }: { kind: FinancialStatementKind }) {
         }
 
         setTable(payload.table)
+        setFilterOptions(payload.filter_options || emptyFinancialStatementFilterOptions)
       } catch (caughtError) {
         if ((caughtError as Error).name === 'AbortError') return
         setError((caughtError as Error)?.message || 'Nao foi possivel carregar a consulta financeira.')
@@ -141,21 +159,33 @@ function FinancialStatementPreview({ kind }: { kind: FinancialStatementKind }) {
           <>
             <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
               Categoria
-              <input
+              <select
                 className="rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm font-normal text-slate-950 outline-none focus:border-slate-400"
                 onChange={(event) => updateFilter('categoria', event.target.value)}
-                placeholder="Marketing"
                 value={filters.categoria}
-              />
+              >
+                <option value="">Todas</option>
+                {filterOptions.categorias.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </label>
             <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
               Centro
-              <input
+              <select
                 className="rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm font-normal text-slate-950 outline-none focus:border-slate-400"
                 onChange={(event) => updateFilter('centro', event.target.value)}
-                placeholder="Operacoes"
                 value={filters.centro}
-              />
+              >
+                <option value="">Todos</option>
+                {filterOptions.centros.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </label>
             <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
               Conta contabil

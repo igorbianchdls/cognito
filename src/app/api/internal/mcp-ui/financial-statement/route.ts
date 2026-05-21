@@ -14,6 +14,16 @@ export const maxDuration = 60
 
 type FinancialStatementKind = 'dre' | 'cash_flow'
 
+type FilterOption = {
+  value: string
+  label: string
+}
+
+type FinancialStatementFilterOptions = {
+  categorias: FilterOption[]
+  centros: FilterOption[]
+}
+
 function normalizeKind(value: string | null): FinancialStatementKind {
   const kind = String(value || '').trim().toLowerCase()
   if (kind === 'dre') return 'dre'
@@ -29,6 +39,51 @@ function buildSubtitle(kind: FinancialStatementKind, period: { de: string; ate: 
 
 function optionalSearchParam(req: NextRequest, key: string) {
   return String(req.nextUrl.searchParams.get(key) || '').trim() || undefined
+}
+
+async function loadDreFilterOptions(tenantId: number): Promise<FinancialStatementFilterOptions> {
+  const [categorias, centros] = await Promise.all([
+    runQuery<FilterOption>(
+      `
+SELECT DISTINCT nome AS value, nome AS label
+FROM (
+  SELECT NULLIF(TRIM(nome), '') AS nome
+  FROM financeiro.categorias_despesa
+  WHERE tenant_id = $1::int
+    AND COALESCE(ativo, true) = true
+  UNION
+  SELECT NULLIF(TRIM(nome), '') AS nome
+  FROM financeiro.categorias_receita
+  WHERE tenant_id = $1::int
+    AND COALESCE(ativo, true) = true
+) options
+WHERE nome IS NOT NULL
+ORDER BY label ASC
+      `.trim(),
+      [tenantId],
+    ),
+    runQuery<FilterOption>(
+      `
+SELECT DISTINCT nome AS value, nome AS label
+FROM (
+  SELECT NULLIF(TRIM(nome), '') AS nome
+  FROM empresa.centros_custo
+  WHERE tenant_id = $1::int
+    AND COALESCE(ativo, true) = true
+  UNION
+  SELECT NULLIF(TRIM(nome), '') AS nome
+  FROM empresa.centros_lucro
+  WHERE tenant_id = $1::int
+    AND COALESCE(ativo, true) = true
+) options
+WHERE nome IS NOT NULL
+ORDER BY label ASC
+      `.trim(),
+      [tenantId],
+    ),
+  ])
+
+  return { categorias, centros }
 }
 
 export async function GET(req: NextRequest) {
@@ -53,6 +108,9 @@ export async function GET(req: NextRequest) {
     const built = buildFinancialStatementQuery(kind, paramsIn, tenantId)
     const period = resolveFinancialPeriod(kind, paramsIn)
     const rows = await runQuery<Record<string, unknown>>(built.sql, built.params)
+    const filterOptions = kind === 'dre'
+      ? await loadDreFilterOptions(tenantId)
+      : { categorias: [], centros: [] }
     const columns = built.columns ?? (rows.length ? Object.keys(rows[0] || {}).filter((column) => !column.startsWith('_')) : [])
     const table: TableStructuredContent & { kind: FinancialStatementKind; sql_query: string; sql_params: unknown[] } = {
       ok: true,
@@ -69,7 +127,7 @@ export async function GET(req: NextRequest) {
       sql_params: built.params,
     }
 
-    return Response.json({ ok: true, table })
+    return Response.json({ ok: true, table, filter_options: filterOptions })
   } catch (error) {
     return Response.json(
       {
