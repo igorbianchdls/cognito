@@ -610,14 +610,15 @@ a {
 }
 
 .data-table--financial tbody tr:hover {
-  background: inherit;
+  background: transparent;
 }
 
-.data-table--financial .data-table__row--subtotal {
+.data-table--financial .financial-row--normal td {
+  background: #ffffff;
+}
+
+.data-table--financial .financial-row--subtotal td {
   background: #c9c9c9;
-}
-
-.data-table--financial .data-table__row--subtotal td {
   font-weight: 500;
 }
 

@@ -46,6 +46,12 @@ function getRowType(row: TableRow) {
   return String(row._rowType || row.row_type || '').trim().toLowerCase()
 }
 
+function getRowClassName(row: TableRow, isFinancialStatement: boolean) {
+  const rowType = getRowType(row)
+  if (!isFinancialStatement) return rowType ? `data-table__row--${rowType}` : undefined
+  return rowType === 'subtotal' ? 'financial-row--subtotal' : 'financial-row--normal'
+}
+
 function getCellKind(column: TableColumn) {
   const displayKey = column.format || column.key
   const normalized = displayKey.toLowerCase()
@@ -83,9 +89,8 @@ export function TableResultView({ data }: { data: TableStructuredContent }) {
             </thead>
             <tbody>
               {rows.map((row, rowIndex) => {
-                const rowType = getRowType(row)
                 return (
-                  <tr key={rowIndex} className={rowType ? `data-table__row--${rowType}` : undefined}>
+                  <tr key={rowIndex} className={getRowClassName(row, isFinancialStatement)}>
                     {columns.map((column) => {
                       const value = row[column.key]
                       const displayKey = column.format || column.key
