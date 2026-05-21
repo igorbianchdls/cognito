@@ -555,9 +555,7 @@ a {
 }
 
 .financial-statement-card {
-  border-color: #b7b7b7;
-  border-radius: 0;
-  box-shadow: none;
+  border-color: var(--cognito-border);
 }
 
 .financial-statement-card .table-scroll {
@@ -565,33 +563,7 @@ a {
 }
 
 .data-table--financial {
-  min-width: 520px;
-  border: 1px solid #b7b7b7;
-  font-size: 16px;
-  letter-spacing: 0;
-}
-
-.data-table--financial th,
-.data-table--financial td {
-  border-right: 1px solid #b7b7b7;
-  border-bottom: 1px solid #b7b7b7;
-  padding: 4px 6px;
-}
-
-.data-table--financial th:last-child,
-.data-table--financial td:last-child {
-  border-right: 0;
-}
-
-.data-table--financial th {
-  position: static;
-  background: #c9c9c9;
-  color: #000000;
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: 0;
-  line-height: 1.2;
-  text-transform: none;
+  min-width: 620px;
 }
 
 .data-table--financial th:last-child,
@@ -601,16 +573,14 @@ a {
 
 .data-table--financial td {
   max-width: none;
-  color: #000000;
-  line-height: 1.2;
 }
 
 .data-table--financial td:first-child {
-  font-weight: 400;
+  font-weight: 650;
 }
 
 .data-table--financial tbody tr:hover {
-  background: transparent;
+  background: #fafcfb;
 }
 
 .data-table--financial .financial-row--normal td {
@@ -618,8 +588,9 @@ a {
 }
 
 .data-table--financial .financial-row--subtotal td {
-  background: #c9c9c9;
-  font-weight: 500;
+  background: #eef1ee;
+  color: #141816;
+  font-weight: 750;
 }
 
 .status-badge {
