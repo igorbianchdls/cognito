@@ -123,18 +123,49 @@ const chartResult: ChartResultStructuredContent = {
   ],
 }
 
-const horizontalChartResult: ChartResultStructuredContent = {
+const barChartResult: ChartResultStructuredContent = {
   ok: true,
   tool: 'chart',
   view: 'chart',
   title: 'Gasto por campanha',
   subtitle: 'Meta Ads e Google Ads · Maio 2026',
-  chart: { type: 'horizontal_bar', labelField: 'campanha', valueField: 'gasto', format: 'currency' },
+  chart: { type: 'bar', labelField: 'campanha', valueField: 'gasto', format: 'currency' },
   rows: [
     { campanha: 'PMax All Products', gasto: 74120 },
     { campanha: 'Prospecting Broad', gasto: 68200 },
     { campanha: 'Search Generic', gasto: 54480 },
     { campanha: 'UGC Creative Testing', gasto: 48990 },
+  ],
+}
+
+const lineChartResult: ChartResultStructuredContent = {
+  ok: true,
+  tool: 'chart',
+  view: 'chart',
+  title: 'Receita mensal',
+  subtitle: 'Mar a Mai 2026',
+  chart: { type: 'line', labelField: 'mes', valueField: 'receita', format: 'currency' },
+  rows: [
+    { mes: '2026-03', receita: 812300 },
+    { mes: '2026-04', receita: 904100 },
+    { mes: '2026-05', receita: 681200 },
+    { mes: '2026-06', receita: 742900 },
+  ],
+}
+
+const areaChartResult: ChartResultStructuredContent = {
+  ok: true,
+  tool: 'chart',
+  view: 'chart',
+  title: 'Pedidos acumulados',
+  subtitle: 'Ecommerce · 5 semanas',
+  chart: { type: 'area', labelField: 'semana', valueField: 'pedidos', format: 'number' },
+  rows: [
+    { semana: 'S1', pedidos: 420 },
+    { semana: 'S2', pedidos: 510 },
+    { semana: 'S3', pedidos: 489 },
+    { semana: 'S4', pedidos: 544 },
+    { semana: 'S5', pedidos: 602 },
   ],
 }
 
@@ -375,7 +406,9 @@ const previews: PreviewItem[] = [
   { id: 'ecommerce', category: 'Dados operacionais', title: 'Ecommerce', description: 'Resumo por canal conectado.', node: <DataResultView data={ecommerceResult} /> },
   { id: 'sql', category: 'Dados operacionais', title: 'SQL', description: 'Resultado ad-hoc de consulta analitica.', node: <DataResultView data={sqlResult} /> },
   { id: 'chart-donut', category: 'Visualizacoes', title: 'Chart · Donut', description: 'Card de grafico no estilo ChatGPT Finance.', node: <ChartResultView data={chartResult} /> },
-  { id: 'chart-bars', category: 'Visualizacoes', title: 'Chart · Barras', description: 'Mesmo componente em modo barras horizontais.', node: <ChartResultView data={horizontalChartResult} /> },
+  { id: 'chart-bars', category: 'Visualizacoes', title: 'Chart · Barras', description: 'Barra vertical tradicional com eixo X categórico.', node: <ChartResultView data={barChartResult} /> },
+  { id: 'chart-line', category: 'Visualizacoes', title: 'Chart · Line', description: 'Linha simples com serie unica e tooltip.', node: <ChartResultView data={lineChartResult} /> },
+  { id: 'chart-area', category: 'Visualizacoes', title: 'Chart · Area', description: 'Area chart com preenchimento suave.', node: <ChartResultView data={areaChartResult} /> },
   { id: 'analysis', category: 'Visualizacoes', title: 'Analysis', description: 'Metricas, achados, severidade e proximos passos.', node: <AnalysisView data={analysisResult} /> },
   { id: 'table', category: 'Visualizacoes', title: 'Table', description: 'Tool generica para tabela customizada.', node: <TableResultView data={tableResult} /> },
   { id: 'connectors', category: 'Operacao', title: 'Connectors', description: 'Cards de conectores, resumo e tabela tecnica.', node: <ConnectorsView data={connectorsResult} /> },

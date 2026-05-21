@@ -644,6 +644,10 @@ a {
   align-items: center;
 }
 
+.chart-card__body--chart-only {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .chart-card__body--bars-only {
   grid-template-columns: minmax(0, 1fr);
 }
@@ -652,6 +656,12 @@ a {
   width: 100%;
   min-width: 0;
   height: 168px;
+}
+
+.chart-card__plot {
+  width: 100%;
+  min-width: 0;
+  height: 240px;
 }
 
 .chart-breakdown {
@@ -1324,6 +1334,10 @@ a {
   .chart-card__body {
     grid-template-columns: minmax(0, 1fr);
     gap: 12px;
+  }
+
+  .chart-card__plot {
+    height: 220px;
   }
 
   .chart-card__donut {

@@ -44,7 +44,7 @@ export type ChartTotal = {
 }
 
 export type ChartConfig = {
-  type?: 'donut' | 'horizontal_bar' | 'bar' | string
+  type?: 'donut' | 'horizontal_bar' | 'bar' | 'line' | 'area' | string
   labelField?: string
   xField?: string
   valueField?: string

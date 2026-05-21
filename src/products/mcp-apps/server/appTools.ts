@@ -175,8 +175,8 @@ const CHART_SCHEMA = {
       properties: {
         type: {
           type: 'string',
-          enum: ['donut', 'horizontal_bar', 'bar'],
-          description: 'Tipo visual. donut renderiza rosca com barras de composicao ao lado.',
+          enum: ['donut', 'horizontal_bar', 'bar', 'line', 'area'],
+          description: 'Tipo visual. donut renderiza rosca com barras de composicao ao lado; bar, line e area usam grafico cartesiano.',
         },
         labelField: {
           type: 'string',
