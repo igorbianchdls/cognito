@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { ChevronDown, ChevronRight } from 'lucide-react'
 import { EmptyState } from '@/products/mcp-apps/web/src/components/EmptyState'
 import { ResultShell } from '@/products/mcp-apps/web/src/components/ResultShell'
 import { StatusBadge } from '@/products/mcp-apps/web/src/components/StatusBadge'
@@ -49,7 +51,17 @@ function getRowType(row: TableRow) {
 function getRowClassName(row: TableRow, isFinancialStatement: boolean) {
   const rowType = getRowType(row)
   if (!isFinancialStatement) return rowType ? `data-table__row--${rowType}` : undefined
-  return rowType === 'subtotal' ? 'financial-row--subtotal' : 'financial-row--normal'
+  if (rowType === 'group' || rowType === 'subtotal') return 'financial-row--subtotal'
+  if (rowType === 'child') return 'financial-row--child'
+  return 'financial-row--normal'
+}
+
+function getGroupId(row: TableRow) {
+  return String(row._groupId || row.group_id || '').trim()
+}
+
+function getParentGroupId(row: TableRow) {
+  return String(row._parentGroupId || row.parent_group_id || '').trim()
 }
 
 function getCellKind(column: TableColumn) {
@@ -61,11 +73,26 @@ function getCellKind(column: TableColumn) {
 }
 
 export function TableResultView({ data }: { data: TableStructuredContent }) {
+  const [closedGroups, setClosedGroups] = useState<Record<string, boolean>>({})
   const rows = asRows(data.rows)
   const columns = asColumns(data.columns, rows)
   const visual = getToolVisual(data.tool)
   const title = data.title || 'Tabela'
   const isFinancialStatement = data.tool === 'financial_statement' || data.variant === 'financial_statement'
+  const visibleRows = isFinancialStatement
+    ? rows.filter((row) => {
+        const parentGroupId = getParentGroupId(row)
+        return !parentGroupId || !closedGroups[parentGroupId]
+      })
+    : rows
+
+  function toggleGroup(groupId: string) {
+    if (!groupId) return
+    setClosedGroups((current) => ({
+      ...current,
+      [groupId]: !current[groupId],
+    }))
+  }
 
   if (!rows.length) {
     return (
@@ -88,17 +115,38 @@ export function TableResultView({ data }: { data: TableStructuredContent }) {
               </tr>
             </thead>
             <tbody>
-              {rows.map((row, rowIndex) => {
+              {visibleRows.map((row, rowIndex) => {
+                const rowType = getRowType(row)
+                const groupId = getGroupId(row)
+                const isExpandableGroup = Boolean(isFinancialStatement && rowType === 'group' && groupId)
+                const isClosed = Boolean(groupId && closedGroups[groupId])
                 return (
-                  <tr key={rowIndex} className={getRowClassName(row, isFinancialStatement)}>
-                    {columns.map((column) => {
+                  <tr
+                    key={`${groupId || getParentGroupId(row) || rowIndex}-${rowIndex}`}
+                    className={getRowClassName(row, isFinancialStatement)}
+                    onClick={isExpandableGroup ? () => toggleGroup(groupId) : undefined}
+                  >
+                    {columns.map((column, columnIndex) => {
                       const value = row[column.key]
                       const displayKey = column.format || column.key
                       const isStatus = column.format === 'status' || column.key.toLowerCase().includes('status')
                       const cellKind = getCellKind(column)
                       return (
                         <td key={column.key} className={`data-table__cell data-table__cell--${cellKind}`}>
-                          {isStatus ? <StatusBadge value={value} /> : formatCellValue(displayKey, value)}
+                          {isExpandableGroup && columnIndex === 0 ? (
+                            <button
+                              type="button"
+                              className="financial-row__toggle"
+                              aria-expanded={!isClosed}
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                toggleGroup(groupId)
+                              }}
+                            >
+                              {isClosed ? <ChevronRight size={15} strokeWidth={2.4} /> : <ChevronDown size={15} strokeWidth={2.4} />}
+                              <span>{formatCellValue(displayKey, value)}</span>
+                            </button>
+                          ) : isStatus ? <StatusBadge value={value} /> : formatCellValue(displayKey, value)}
                         </td>
                       )
                     })}

@@ -587,10 +587,49 @@ a {
   background: #ffffff;
 }
 
+.data-table--financial .financial-row--child td {
+  background: #ffffff;
+}
+
+.data-table--financial .financial-row--child td:first-child {
+  padding-left: 34px;
+}
+
 .data-table--financial .financial-row--subtotal td {
   background: #eef1ee;
   color: #141816;
   font-weight: 750;
+}
+
+.data-table--financial .financial-row--subtotal {
+  cursor: pointer;
+}
+
+.financial-row__toggle {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  padding: 0;
+  text-align: left;
+}
+
+.financial-row__toggle svg {
+  flex: 0 0 auto;
+  color: #4f5a53;
+}
+
+.financial-row__toggle span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .status-badge {

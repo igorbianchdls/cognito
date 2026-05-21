@@ -1309,29 +1309,31 @@ totals AS (
 SELECT
   descricao,
   valor,
-  row_type AS "_rowType"
+  row_type AS "_rowType",
+  group_id AS "_groupId",
+  parent_group_id AS "_parentGroupId"
 FROM (
-  SELECT 1 AS ordem, '(+) Receita Bruta de Vendas e Serviços' AS descricao, receita_bruta AS valor, 'normal' AS row_type FROM totals
+  SELECT 1 AS ordem, '(=) Receita Bruta de Vendas' AS descricao, receita_bruta - ABS(descontos) AS valor, 'group' AS row_type, 'receita_vendas' AS group_id, NULL::text AS parent_group_id FROM totals
   UNION ALL
-  SELECT 2, '(-) Descontos e Abatimentos', -ABS(descontos), 'normal' FROM totals
+  SELECT 2, '(+) Receita Bruta de Vendas e Serviços', receita_bruta, 'child', NULL::text, 'receita_vendas' FROM totals
   UNION ALL
-  SELECT 3, '(=) Receita Bruta de Vendas', receita_bruta - ABS(descontos), 'subtotal' FROM totals
+  SELECT 3, '(-) Descontos e Abatimentos', -ABS(descontos), 'child', NULL::text, 'receita_vendas' FROM totals
   UNION ALL
-  SELECT 4, '(-) Custos Mercadorias Vendidas', -ABS(custos), 'normal' FROM totals
+  SELECT 4, '(=) Lucro Bruto', receita_bruta - ABS(descontos) - ABS(custos), 'group', 'lucro_bruto', NULL::text FROM totals
   UNION ALL
-  SELECT 5, '(=) Lucro Bruto', receita_bruta - ABS(descontos) - ABS(custos), 'subtotal' FROM totals
+  SELECT 5, '(-) Custos Mercadorias Vendidas', -ABS(custos), 'child', NULL::text, 'lucro_bruto' FROM totals
   UNION ALL
-  SELECT 6, '(-) DESPESAS ADMINISTRATIVAS', -ABS(despesas_administrativas), 'normal' FROM totals
+  SELECT 6, '(=) Resultado Operacional', receita_bruta - ABS(descontos) - ABS(custos) - ABS(despesas_administrativas) - ABS(despesas_bancarias) - ABS(despesas_comerciais) - ABS(despesas_funcionarios) - ABS(impostos), 'group', 'resultado_operacional', NULL::text FROM totals
   UNION ALL
-  SELECT 7, '(-) DESPESAS BANCÁRIAS', -ABS(despesas_bancarias), 'normal' FROM totals
+  SELECT 7, '(-) DESPESAS ADMINISTRATIVAS', -ABS(despesas_administrativas), 'child', NULL::text, 'resultado_operacional' FROM totals
   UNION ALL
-  SELECT 8, '(-) DESPESAS COMERCIAIS', -ABS(despesas_comerciais), 'normal' FROM totals
+  SELECT 8, '(-) DESPESAS BANCÁRIAS', -ABS(despesas_bancarias), 'child', NULL::text, 'resultado_operacional' FROM totals
   UNION ALL
-  SELECT 9, '(-) DESPESAS FUNCIONÁRIOS', -ABS(despesas_funcionarios), 'normal' FROM totals
+  SELECT 9, '(-) DESPESAS COMERCIAIS', -ABS(despesas_comerciais), 'child', NULL::text, 'resultado_operacional' FROM totals
   UNION ALL
-  SELECT 10, '(-) IMPOSTOS', -ABS(impostos), 'normal' FROM totals
+  SELECT 10, '(-) DESPESAS FUNCIONÁRIOS', -ABS(despesas_funcionarios), 'child', NULL::text, 'resultado_operacional' FROM totals
   UNION ALL
-  SELECT 11, '(=) Resultado Operacional', receita_bruta - ABS(descontos) - ABS(custos) - ABS(despesas_administrativas) - ABS(despesas_bancarias) - ABS(despesas_comerciais) - ABS(despesas_funcionarios) - ABS(impostos), 'subtotal' FROM totals
+  SELECT 11, '(-) IMPOSTOS', -ABS(impostos), 'child', NULL::text, 'resultado_operacional' FROM totals
 ) statement_rows
 ORDER BY ordem
   `.trim()
