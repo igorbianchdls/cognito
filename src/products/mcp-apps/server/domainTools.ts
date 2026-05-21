@@ -583,6 +583,42 @@ const FINANCIAL_STATEMENT_SCHEMA = {
       type: 'string',
       description: 'Data final no formato YYYY-MM-DD.',
     },
+    categoria_id: {
+      type: 'integer',
+      description: 'Filtro opcional por categoria financeira vinculada ao lancamento contabil.',
+    },
+    categoria: {
+      type: 'string',
+      description: 'Filtro opcional por nome de categoria financeira vinculada ao lancamento contabil.',
+    },
+    centro_custo_id: {
+      type: 'integer',
+      description: 'Filtro opcional por centro de custo em contas a pagar vinculadas.',
+    },
+    centro_lucro_id: {
+      type: 'integer',
+      description: 'Filtro opcional por centro de lucro em contas a receber vinculadas.',
+    },
+    centro: {
+      type: 'string',
+      description: 'Filtro opcional por nome de centro de custo ou centro de lucro vinculado.',
+    },
+    fornecedor_id: {
+      type: 'integer',
+      description: 'Filtro opcional por fornecedor vinculado ao lancamento contabil.',
+    },
+    cliente_id: {
+      type: 'integer',
+      description: 'Filtro opcional por cliente vinculado ao lancamento contabil.',
+    },
+    conta_contabil_codigo: {
+      type: 'string',
+      description: 'Filtro opcional por codigo/prefixo da conta contabil.',
+    },
+    linha_dre: {
+      type: 'string',
+      description: 'Filtro opcional pela linha canonica da DRE, como receita_bruta, custos ou despesas_administrativas.',
+    },
   },
   required: ['kind'],
   additionalProperties: true,
@@ -804,7 +840,7 @@ const FINANCIAL_STATEMENT_TOOL_DEFINITION = {
   name: MCP_APP_DOMAIN_TOOL_NAMES.financialStatement,
   title: 'Financial statement',
   description:
-    'Mostra DRE ou fluxo de caixa em tabela, usando query read-only no tenant atual. Use kind=dre para demonstracao de resultados e kind=cash_flow para fluxo de caixa previsto por vencimento.',
+    'Mostra DRE ou fluxo de caixa em tabela, usando query read-only no tenant atual. Use kind=dre para demonstracao de resultados com filtros por periodo, categoria, centro, conta contabil e linha da DRE; use kind=cash_flow para fluxo de caixa previsto por vencimento.',
   inputSchema: FINANCIAL_STATEMENT_SCHEMA,
   outputSchema: FINANCIAL_STATEMENT_OUTPUT_SCHEMA,
   securitySchemes: READ_SECURITY_SCHEMES,
@@ -1230,9 +1266,104 @@ function formatFinancialStatementPeriodLabel(period: { de: string; ate: string }
   return `${match[1]}/${match[2]}`
 }
 
+function normalizeDreLineFilter(value: unknown) {
+  const raw = toText(value)
+  if (!raw) return null
+  const line = raw
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+
+  const canonical = new Set([
+    'receita_bruta',
+    'descontos',
+    'custos',
+    'despesas_administrativas',
+    'despesas_bancarias',
+    'despesas_comerciais',
+    'despesas_funcionarios',
+    'impostos',
+  ])
+  if (canonical.has(line)) return line
+  if (line.includes('receita')) return 'receita_bruta'
+  if (line.includes('desconto') || line.includes('abatimento') || line.includes('dedu')) return 'descontos'
+  if (line.includes('custo') || line.includes('mercadoria')) return 'custos'
+  if (line.includes('banc') || line.includes('tarifa') || line.includes('juros')) return 'despesas_bancarias'
+  if (line.includes('comerc')) return 'despesas_comerciais'
+  if (line.includes('funcion') || line.includes('salario') || line.includes('folha') || line.includes('encargo')) return 'despesas_funcionarios'
+  if (line.includes('imposto') || line.includes('tribut') || line.includes('fiscal')) return 'impostos'
+  if (line.includes('admin') || line.includes('despesa')) return 'despesas_administrativas'
+  return line
+}
+
+function appendOptionalNumericFilter(
+  paramsIn: JsonRecord,
+  key: string,
+  params: unknown[],
+  where: string[],
+  buildExpression: (placeholder: string) => string,
+) {
+  const raw = toText(paramsIn[key])
+  if (!raw) return
+  const value = toNumber(raw)
+  if (value == null) throw new Error(`Filtro invalido: ${key}`)
+  params.push(value)
+  where.push(buildExpression(`$${params.length}`))
+}
+
 function buildFinancialStatementDreQuery(paramsIn: JsonRecord, tenantId: number): BuiltQuery {
   const period = resolveFinancialPeriod('dre', paramsIn)
   const periodLabel = formatFinancialStatementPeriodLabel(period)
+  const params: unknown[] = [tenantId, period.de, period.ate]
+  const baseWhere = [
+    'lc.tenant_id = $1::int',
+    'lc.data_lancamento::date BETWEEN $2::date AND $3::date',
+    "(pc.codigo LIKE '4.%' OR pc.codigo LIKE '5.%' OR pc.codigo LIKE '6.%')",
+  ]
+  const classifiedWhere: string[] = []
+
+  appendOptionalNumericFilter(paramsIn, 'categoria_id', params, baseWhere, (placeholder) =>
+    `(cp.categoria_despesa_id = ${placeholder}::int OR cr.categoria_receita_id = ${placeholder}::int)`
+  )
+  appendOptionalNumericFilter(paramsIn, 'centro_custo_id', params, baseWhere, (placeholder) =>
+    `cp.centro_custo_id = ${placeholder}::int`
+  )
+  appendOptionalNumericFilter(paramsIn, 'centro_lucro_id', params, baseWhere, (placeholder) =>
+    `cr.centro_lucro_id = ${placeholder}::int`
+  )
+  appendOptionalNumericFilter(paramsIn, 'fornecedor_id', params, baseWhere, (placeholder) =>
+    `(cp.fornecedor_id = ${placeholder}::int OR lc.fornecedor_id = ${placeholder}::int)`
+  )
+  appendOptionalNumericFilter(paramsIn, 'cliente_id', params, baseWhere, (placeholder) =>
+    `(cr.cliente_id = ${placeholder}::int OR lc.cliente_id = ${placeholder}::int)`
+  )
+
+  const categoria = toText(paramsIn.categoria)
+  if (categoria) {
+    params.push(`%${categoria}%`)
+    baseWhere.push(`(COALESCE(cd.nome, '') ILIKE $${params.length}::text OR COALESCE(cre.nome, '') ILIKE $${params.length}::text)`)
+  }
+
+  const centro = toText(paramsIn.centro)
+  if (centro) {
+    params.push(`%${centro}%`)
+    baseWhere.push(`(COALESCE(cc.nome, '') ILIKE $${params.length}::text OR COALESCE(cl.nome, '') ILIKE $${params.length}::text)`)
+  }
+
+  const contaContabilCodigo = toText(paramsIn.conta_contabil_codigo)
+  if (contaContabilCodigo) {
+    params.push(`${contaContabilCodigo}%`)
+    baseWhere.push(`COALESCE(pc.codigo, '') ILIKE $${params.length}::text`)
+  }
+
+  const linhaDre = normalizeDreLineFilter(paramsIn.linha_dre)
+  if (linhaDre) {
+    params.push(linhaDre)
+    classifiedWhere.push(`grupo = $${params.length}::text`)
+  }
+
   const sql = `
 WITH base AS (
   SELECT
@@ -1243,13 +1374,23 @@ WITH base AS (
   FROM contabilidade.lancamentos_contabeis lc
   JOIN contabilidade.lancamentos_contabeis_linhas ll ON ll.lancamento_id = lc.id
   LEFT JOIN contabilidade.plano_contas pc ON pc.id = ll.conta_id
-  WHERE lc.tenant_id = $1::int
-    AND lc.data_lancamento::date BETWEEN $2::date AND $3::date
-    AND (
-      pc.codigo LIKE '4.%'
-      OR pc.codigo LIKE '5.%'
-      OR pc.codigo LIKE '6.%'
-    )
+  LEFT JOIN financeiro.contas_pagar cp
+    ON cp.tenant_id = lc.tenant_id
+   AND (
+     (lc.origem_tabela = 'financeiro.contas_pagar' AND lc.origem_id = cp.id)
+     OR cp.lancamento_contabil_id = lc.id
+   )
+  LEFT JOIN financeiro.contas_receber cr
+    ON cr.tenant_id = lc.tenant_id
+   AND (
+     (lc.origem_tabela = 'financeiro.contas_receber' AND lc.origem_id = cr.id)
+     OR cr.lancamento_contabil_id = lc.id
+   )
+  LEFT JOIN financeiro.categorias_despesa cd ON cd.id = cp.categoria_despesa_id
+  LEFT JOIN financeiro.categorias_receita cre ON cre.id = cr.categoria_receita_id
+  LEFT JOIN empresa.centros_custo cc ON cc.id = cp.centro_custo_id
+  LEFT JOIN empresa.centros_lucro cl ON cl.id = cr.centro_lucro_id
+  WHERE ${baseWhere.join('\n    AND ')}
 ),
 classified AS (
   SELECT
@@ -1294,6 +1435,11 @@ classified AS (
     END AS valor
   FROM base
 ),
+classified_filtered AS (
+  SELECT *
+  FROM classified
+  ${classifiedWhere.length ? `WHERE ${classifiedWhere.join(' AND ')}` : ''}
+),
 totals AS (
   SELECT
     COALESCE(SUM(CASE WHEN grupo = 'receita_bruta' THEN valor ELSE 0 END), 0)::float AS receita_bruta,
@@ -1304,7 +1450,7 @@ totals AS (
     COALESCE(SUM(CASE WHEN grupo = 'despesas_comerciais' THEN valor ELSE 0 END), 0)::float AS despesas_comerciais,
     COALESCE(SUM(CASE WHEN grupo = 'despesas_funcionarios' THEN valor ELSE 0 END), 0)::float AS despesas_funcionarios,
     COALESCE(SUM(CASE WHEN grupo = 'impostos' THEN valor ELSE 0 END), 0)::float AS impostos
-  FROM classified
+  FROM classified_filtered
 )
 SELECT
   descricao,
@@ -1340,7 +1486,7 @@ ORDER BY ordem
 
   return {
     sql,
-    params: [tenantId, period.de, period.ate],
+    params,
     title: 'DRE',
     chart: null,
     columns: [

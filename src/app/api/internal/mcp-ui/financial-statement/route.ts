@@ -27,13 +27,29 @@ function buildSubtitle(kind: FinancialStatementKind, period: { de: string; ate: 
     : `Fluxo de caixa consolidado no periodo ${period.de} a ${period.ate}`
 }
 
+function optionalSearchParam(req: NextRequest, key: string) {
+  return String(req.nextUrl.searchParams.get(key) || '').trim() || undefined
+}
+
 export async function GET(req: NextRequest) {
   try {
     const kind = normalizeKind(req.nextUrl.searchParams.get('kind'))
-    const de = String(req.nextUrl.searchParams.get('de') || '').trim() || undefined
-    const ate = String(req.nextUrl.searchParams.get('ate') || '').trim() || undefined
+    const de = optionalSearchParam(req, 'de')
+    const ate = optionalSearchParam(req, 'ate')
     const tenantId = resolveTenantId(req.headers, 1)
-    const paramsIn = { de, ate }
+    const paramsIn = {
+      de,
+      ate,
+      categoria_id: optionalSearchParam(req, 'categoria_id'),
+      categoria: optionalSearchParam(req, 'categoria'),
+      centro_custo_id: optionalSearchParam(req, 'centro_custo_id'),
+      centro_lucro_id: optionalSearchParam(req, 'centro_lucro_id'),
+      centro: optionalSearchParam(req, 'centro'),
+      fornecedor_id: optionalSearchParam(req, 'fornecedor_id'),
+      cliente_id: optionalSearchParam(req, 'cliente_id'),
+      conta_contabil_codigo: optionalSearchParam(req, 'conta_contabil_codigo'),
+      linha_dre: optionalSearchParam(req, 'linha_dre'),
+    }
     const built = buildFinancialStatementQuery(kind, paramsIn, tenantId)
     const period = resolveFinancialPeriod(kind, paramsIn)
     const rows = await runQuery<Record<string, unknown>>(built.sql, built.params)
