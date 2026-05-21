@@ -114,6 +114,12 @@ a {
   color: #c2410c;
 }
 
+.result-shell__icon--finance {
+  border-color: #bbf7d0;
+  background: #ecfdf5;
+  color: #047857;
+}
+
 .result-shell__icon--sql {
   border-color: #cbd5e1;
   background: #f8fafc;

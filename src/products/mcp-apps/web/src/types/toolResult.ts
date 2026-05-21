@@ -100,7 +100,7 @@ export type AnalysisStructuredContent = {
 
 export type TableStructuredContent = {
   ok?: boolean
-  tool?: 'table' | string
+  tool?: 'table' | 'financial_statement' | string
   view?: 'table'
   title?: string
   subtitle?: string | null

@@ -42,19 +42,19 @@ function asColumns(value: unknown, rows: TableRow[]): TableColumn[] {
 export function TableResultView({ data }: { data: TableStructuredContent }) {
   const rows = asRows(data.rows)
   const columns = asColumns(data.columns, rows)
-  const visual = getToolVisual('table')
+  const visual = getToolVisual(data.tool)
   const title = data.title || 'Tabela'
 
   if (!rows.length) {
     return (
-      <ResultShell icon={visual.icon} tone={visual.tone} title={title} description={data.subtitle || undefined}>
-        <EmptyState title="Sem linhas" description="A tool table nao recebeu linhas para renderizar." />
+      <ResultShell eyebrow={visual.label} icon={visual.icon} tone={visual.tone} title={title} description={data.subtitle || undefined}>
+        <EmptyState title="Sem linhas" description="A consulta nao recebeu linhas para renderizar." />
       </ResultShell>
     )
   }
 
   return (
-    <ResultShell icon={visual.icon} tone={visual.tone} title={title} description={data.subtitle || undefined}>
+    <ResultShell eyebrow={visual.label} icon={visual.icon} tone={visual.tone} title={title} description={data.subtitle || undefined}>
       <section className="result-card table-card">
         <div className="table-scroll">
           <table className="data-table">

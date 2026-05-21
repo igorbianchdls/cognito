@@ -13,7 +13,7 @@ import {
   Zap,
 } from 'lucide-react'
 
-export type ToolTone = 'erp' | 'crm' | 'ecommerce' | 'marketing' | 'sql' | 'neutral'
+export type ToolTone = 'erp' | 'crm' | 'ecommerce' | 'marketing' | 'sql' | 'finance' | 'neutral'
 
 type ToolVisual = {
   label: string
@@ -71,6 +71,12 @@ export function formatCurrency(value: number) {
   }).format(value)
 }
 
+export function formatPercent(value: number) {
+  return `${new Intl.NumberFormat('pt-BR', {
+    maximumFractionDigits: 2,
+  }).format(value)}%`
+}
+
 export function formatDate(value: unknown) {
   if (!value) return '-'
   const date = new Date(String(value))
@@ -85,7 +91,12 @@ export function formatDate(value: unknown) {
 export function formatCellValue(key: string, value: unknown) {
   if (value === null || value === undefined || value === '') return '-'
   if (typeof value === 'boolean') return value ? 'Sim' : 'Nao'
-  if (typeof value === 'number') return isMoneyKey(key) ? formatCurrency(value) : formatNumber(value)
+  if (typeof value === 'number') {
+    if (key === 'currency') return formatCurrency(value)
+    if (key === 'percent') return formatPercent(value)
+    if (key === 'number') return formatNumber(value)
+    return isMoneyKey(key) ? formatCurrency(value) : formatNumber(value)
+  }
   if (isDateKey(key)) return formatDate(value)
   return String(value)
 }
@@ -96,6 +107,7 @@ export function getToolLabel(tool?: string) {
   if (tool === 'crm') return 'CRM'
   if (tool === 'data_catalog') return 'Catalogo de Dados'
   if (tool === 'analysis') return 'Analise'
+  if (tool === 'financial_statement') return 'Financeiro'
   if (tool === 'table') return 'Tabela'
   if (tool === 'actions') return 'Acoes'
   if (tool === 'alerts') return 'Alertas'
@@ -118,6 +130,7 @@ export function getToolVisual(tool?: string): ToolVisual {
   if (tool === 'marketing') return { label: 'Marketing', icon: createElement(Megaphone, { size: 19, strokeWidth: 2.4 }), tone: 'marketing' }
   if (tool === 'data_catalog') return { label: 'Catalogo de Dados', icon: createElement(Database, { size: 19, strokeWidth: 2.4 }), tone: 'sql' }
   if (tool === 'analysis') return { label: 'Analise', icon: createElement(FileText, { size: 19, strokeWidth: 2.4 }), tone: 'neutral' }
+  if (tool === 'financial_statement') return { label: 'Financeiro', icon: createElement(BadgeDollarSign, { size: 19, strokeWidth: 2.4 }), tone: 'finance' }
   if (tool === 'table') return { label: 'Tabela', icon: createElement(Table2, { size: 19, strokeWidth: 2.4 }), tone: 'sql' }
   if (tool === 'actions') return { label: 'Acoes', icon: createElement(Zap, { size: 19, strokeWidth: 2.4 }), tone: 'marketing' }
   if (tool === 'alerts') return { label: 'Alertas', icon: createElement(Bell, { size: 19, strokeWidth: 2.4 }), tone: 'marketing' }

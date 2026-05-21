@@ -62,6 +62,7 @@ type CrudAction = 'listar' | 'ler'
 type ErpAcoesAction = 'criar' | 'atualizar' | 'baixar' | 'cancelar' | 'estornar' | 'reabrir'
 
 type SqlExecutionAction = 'execute'
+type FinancialStatementKind = 'dre' | 'cash_flow'
 
 const READ_SECURITY_SCHEMES = [
   {
@@ -557,6 +558,28 @@ const SQL_EXECUTION_SCHEMA = {
   additionalProperties: true,
 } as const satisfies McpToolInputSchema
 
+const FINANCIAL_STATEMENT_SCHEMA = {
+  type: 'object',
+  properties: {
+    kind: {
+      type: 'string',
+      enum: ['dre', 'cash_flow'],
+      description:
+        'Tipo do demonstrativo. Use dre para demonstracao de resultados e cash_flow para fluxo de caixa previsto por vencimento.',
+    },
+    de: {
+      type: 'string',
+      description: 'Data inicial no formato YYYY-MM-DD.',
+    },
+    ate: {
+      type: 'string',
+      description: 'Data final no formato YYYY-MM-DD.',
+    },
+  },
+  required: ['kind'],
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
+
 const ECOMMERCE_SCHEMA = {
   type: 'object',
   properties: {
@@ -660,12 +683,39 @@ const DATA_CATALOG_OUTPUT_SCHEMA = {
   additionalProperties: true,
 } as const satisfies McpToolInputSchema
 
+const FINANCIAL_STATEMENT_OUTPUT_SCHEMA = {
+  type: 'object',
+  properties: {
+    success: { type: 'boolean' },
+    tool: { type: 'string' },
+    view: { type: 'string', enum: ['table'] },
+    kind: { type: 'string', enum: ['dre', 'cash_flow'] },
+    title: { type: 'string' },
+    subtitle: { type: 'string' },
+    rows: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: true,
+      },
+    },
+    columns: {
+      type: 'array',
+      items: { type: 'string' },
+    },
+    count: { type: 'integer' },
+  },
+  required: ['success', 'tool', 'view', 'kind', 'title', 'rows', 'columns', 'count'],
+  additionalProperties: true,
+} as const satisfies McpToolInputSchema
+
 export const MCP_APP_DOMAIN_TOOL_NAMES = {
   erp: 'erp',
   erpAcoes: 'erp_acoes',
   crm: 'crm',
   sql: 'sql',
   sqlExecution: 'sql_execution',
+  financialStatement: 'financial_statement',
   ecommerce: 'ecommerce',
   marketing: 'marketing',
   dataCatalog: 'data_catalog',
@@ -736,6 +786,18 @@ const SQL_DOMAIN_TOOL_DEFINITION = {
   _meta: TOOL_META,
 } as const satisfies DomainToolDefinition
 
+const FINANCIAL_STATEMENT_TOOL_DEFINITION = {
+  name: MCP_APP_DOMAIN_TOOL_NAMES.financialStatement,
+  title: 'Financial statement',
+  description:
+    'Mostra DRE ou fluxo de caixa em tabela, usando query read-only no tenant atual. Use kind=dre para demonstracao de resultados e kind=cash_flow para fluxo de caixa previsto por vencimento.',
+  inputSchema: FINANCIAL_STATEMENT_SCHEMA,
+  outputSchema: FINANCIAL_STATEMENT_OUTPUT_SCHEMA,
+  securitySchemes: READ_SECURITY_SCHEMES,
+  annotations: READ_ONLY_ANNOTATIONS,
+  _meta: TOOL_META,
+} as const satisfies DomainToolDefinition
+
 const MARKETING_DOMAIN_TOOL_DEFINITION = {
   name: MCP_APP_DOMAIN_TOOL_NAMES.marketing,
   title: 'Marketing metrics',
@@ -767,6 +829,7 @@ export function listMcpAppDomainToolDefinitions() {
     CRM_DOMAIN_TOOL_DEFINITION,
     ECOMMERCE_DOMAIN_TOOL_DEFINITION,
     SQL_DOMAIN_TOOL_DEFINITION,
+    FINANCIAL_STATEMENT_TOOL_DEFINITION,
     MARKETING_DOMAIN_TOOL_DEFINITION,
     DATA_CATALOG_DOMAIN_TOOL_DEFINITION,
   ]
@@ -777,6 +840,8 @@ export const MCP_APP_DOMAIN_TOOL_DEFINITIONS = [
   ERP_ACOES_DOMAIN_TOOL_DEFINITION,
   CRM_DOMAIN_TOOL_DEFINITION,
   ECOMMERCE_DOMAIN_TOOL_DEFINITION,
+  SQL_DOMAIN_TOOL_DEFINITION,
+  FINANCIAL_STATEMENT_TOOL_DEFINITION,
   MARKETING_DOMAIN_TOOL_DEFINITION,
   DATA_CATALOG_DOMAIN_TOOL_DEFINITION,
 ] as const satisfies readonly DomainToolDefinition[]
@@ -1097,6 +1162,175 @@ function assertChartColumns(chart: ChartConfig | null, columns: string[]) {
     throw new Error(`chart invalido: colunas nao encontradas no resultado (${missingFields.join(', ')})`)
   }
   return chart
+}
+
+function normalizeFinancialStatementKind(value: unknown): FinancialStatementKind {
+  const kind = toText(value).toLowerCase()
+  if (kind === 'dre') return 'dre'
+  if (kind === 'cash_flow' || kind === 'cashflow' || kind === 'fluxo_de_caixa' || kind === 'fluxo-caixa') return 'cash_flow'
+  throw new Error('kind invalido para financial_statement. Use dre ou cash_flow.')
+}
+
+function toUtcDateOnly(value: Date) {
+  return new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate()))
+}
+
+function startOfMonthUtc(value: Date) {
+  return new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), 1))
+}
+
+function endOfMonthUtc(value: Date) {
+  return new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth() + 1, 0))
+}
+
+function addMonthsUtc(value: Date, months: number) {
+  return new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth() + months, value.getUTCDate()))
+}
+
+function formatDateIso(value: Date) {
+  return toUtcDateOnly(value).toISOString().slice(0, 10)
+}
+
+function resolveFinancialPeriod(kind: FinancialStatementKind, paramsIn: JsonRecord) {
+  const today = new Date()
+  const defaultDe = kind === 'cash_flow'
+    ? formatDateIso(startOfMonthUtc(addMonthsUtc(today, -2)))
+    : formatDateIso(new Date(Date.UTC(today.getUTCFullYear(), 0, 1)))
+  const defaultAte = kind === 'cash_flow'
+    ? formatDateIso(endOfMonthUtc(addMonthsUtc(today, 3)))
+    : formatDateIso(today)
+
+  const de = normalizeDate(paramsIn.de) || defaultDe
+  const ate = normalizeDate(paramsIn.ate) || defaultAte
+
+  if (de > ate) {
+    throw new Error('Data inicial nao pode ser maior que a data final')
+  }
+
+  return { de, ate }
+}
+
+function buildFinancialStatementDreQuery(paramsIn: JsonRecord, tenantId: number): BuiltQuery {
+  const period = resolveFinancialPeriod('dre', paramsIn)
+  const sql = `
+WITH base AS (
+  SELECT
+    CASE
+      WHEN pc.codigo LIKE '4.%' THEN 'receita'
+      WHEN pc.codigo LIKE '5.%' THEN 'custo'
+      WHEN pc.codigo LIKE '6.1.%' THEN 'despesa_administrativa'
+      WHEN pc.codigo LIKE '6.2.%' THEN 'despesa_comercial'
+      WHEN pc.codigo LIKE '6.3.%' THEN 'despesa_financeira'
+      WHEN pc.codigo LIKE '6.%' THEN 'outras_despesas'
+      ELSE 'outras_despesas'
+    END AS grupo,
+    COALESCE(ll.credito, 0)::float AS credito,
+    COALESCE(ll.debito, 0)::float AS debito
+  FROM contabilidade.lancamentos_contabeis lc
+  JOIN contabilidade.lancamentos_contabeis_linhas ll ON ll.lancamento_id = lc.id
+  LEFT JOIN contabilidade.plano_contas pc ON pc.id = ll.conta_id
+  WHERE lc.tenant_id = $1::int
+    AND lc.data_lancamento::date BETWEEN $2::date AND $3::date
+    AND (
+      pc.codigo LIKE '4.%'
+      OR pc.codigo LIKE '5.%'
+      OR pc.codigo LIKE '6.%'
+    )
+),
+totals AS (
+  SELECT
+    COALESCE(SUM(CASE WHEN grupo = 'receita' THEN credito - debito ELSE 0 END), 0)::float AS receita,
+    COALESCE(SUM(CASE WHEN grupo = 'custo' THEN debito - credito ELSE 0 END), 0)::float AS custo,
+    COALESCE(SUM(CASE WHEN grupo = 'despesa_administrativa' THEN debito - credito ELSE 0 END), 0)::float AS despesa_administrativa,
+    COALESCE(SUM(CASE WHEN grupo = 'despesa_comercial' THEN debito - credito ELSE 0 END), 0)::float AS despesa_comercial,
+    COALESCE(SUM(CASE WHEN grupo = 'despesa_financeira' THEN debito - credito ELSE 0 END), 0)::float AS despesa_financeira,
+    COALESCE(SUM(CASE WHEN grupo = 'outras_despesas' THEN debito - credito ELSE 0 END), 0)::float AS outras_despesas
+  FROM base
+)
+SELECT
+  secao,
+  linha,
+  valor
+FROM (
+  SELECT 1 AS ordem, 'Resultado' AS secao, 'Receita bruta' AS linha, receita AS valor FROM totals
+  UNION ALL
+  SELECT 2, 'Resultado', '(-) Custos e CMV', -ABS(custo) FROM totals
+  UNION ALL
+  SELECT 3, 'Resultado', 'Lucro bruto', receita - ABS(custo) FROM totals
+  UNION ALL
+  SELECT 4, 'Despesas operacionais', '(-) Despesas administrativas', -ABS(despesa_administrativa) FROM totals
+  UNION ALL
+  SELECT 5, 'Despesas operacionais', '(-) Despesas comerciais', -ABS(despesa_comercial) FROM totals
+  UNION ALL
+  SELECT 6, 'Despesas operacionais', '(-) Outras despesas operacionais', -ABS(outras_despesas) FROM totals
+  UNION ALL
+  SELECT 7, 'Resultado', 'Resultado operacional', receita - ABS(custo) - ABS(despesa_administrativa) - ABS(despesa_comercial) - ABS(outras_despesas) FROM totals
+  UNION ALL
+  SELECT 8, 'Despesas financeiras', '(-) Despesas financeiras', -ABS(despesa_financeira) FROM totals
+  UNION ALL
+  SELECT 9, 'Resultado', 'Lucro líquido', receita - ABS(custo) - ABS(despesa_administrativa) - ABS(despesa_comercial) - ABS(outras_despesas) - ABS(despesa_financeira) FROM totals
+) statement_rows
+ORDER BY ordem
+  `.trim()
+
+  return {
+    sql,
+    params: [tenantId, period.de, period.ate],
+    title: 'DRE',
+    chart: null,
+  }
+}
+
+function buildFinancialStatementCashFlowQuery(paramsIn: JsonRecord, tenantId: number): BuiltQuery {
+  const period = resolveFinancialPeriod('cash_flow', paramsIn)
+  const sql = `
+WITH months AS (
+  SELECT generate_series(date_trunc('month', $2::date), date_trunc('month', $3::date), interval '1 month')::date AS mes
+),
+receitas AS (
+  SELECT
+    date_trunc('month', cr.data_vencimento::date)::date AS mes,
+    COALESCE(SUM(cr.valor_liquido), 0)::float AS entradas
+  FROM financeiro.contas_receber cr
+  WHERE cr.tenant_id = $1::int
+    AND cr.data_vencimento::date BETWEEN $2::date AND $3::date
+    AND LOWER(COALESCE(cr.status, '')) <> 'cancelado'
+  GROUP BY 1
+),
+saidas AS (
+  SELECT
+    date_trunc('month', cp.data_vencimento::date)::date AS mes,
+    COALESCE(SUM(cp.valor_liquido), 0)::float AS saidas
+  FROM financeiro.contas_pagar cp
+  WHERE cp.tenant_id = $1::int
+    AND cp.data_vencimento::date BETWEEN $2::date AND $3::date
+    AND LOWER(COALESCE(cp.status, '')) <> 'cancelado'
+  GROUP BY 1
+)
+SELECT
+  TO_CHAR(m.mes, 'YYYY-MM') AS periodo,
+  COALESCE(r.entradas, 0)::float AS entradas_previstas,
+  COALESCE(s.saidas, 0)::float AS saidas_previstas,
+  (COALESCE(r.entradas, 0) - COALESCE(s.saidas, 0))::float AS fluxo_liquido,
+  SUM(COALESCE(r.entradas, 0) - COALESCE(s.saidas, 0)) OVER (ORDER BY m.mes)::float AS saldo_acumulado
+FROM months m
+LEFT JOIN receitas r ON r.mes = m.mes
+LEFT JOIN saidas s ON s.mes = m.mes
+ORDER BY m.mes ASC
+  `.trim()
+
+  return {
+    sql,
+    params: [tenantId, period.de, period.ate],
+    title: 'Fluxo de Caixa',
+    chart: null,
+  }
+}
+
+function buildFinancialStatementQuery(kind: FinancialStatementKind, paramsIn: JsonRecord, tenantId: number): BuiltQuery {
+  return kind === 'dre'
+    ? buildFinancialStatementDreQuery(paramsIn, tenantId)
+    : buildFinancialStatementCashFlowQuery(paramsIn, tenantId)
 }
 
 function buildCommonPedidosFilters(paramsIn: JsonRecord, tenantId: number, alias: string) {
@@ -3453,6 +3687,38 @@ async function callMarketing(args: unknown, context: CognitoMcpServerContext) {
   return executeBuiltQuery('marketing', action, buildMarketingQuery(action, paramsIn, getTenantId(context)))
 }
 
+async function callFinancialStatement(args: unknown, context: CognitoMcpServerContext) {
+  const input = toObj(args)
+  const paramsIn = toObj(input)
+  const kind = normalizeFinancialStatementKind(input.kind)
+  const period = resolveFinancialPeriod(kind, paramsIn)
+  const built = buildFinancialStatementQuery(kind, paramsIn, getTenantId(context))
+  const rows = await runQuery<Record<string, unknown>>(built.sql, built.params)
+  const columns = inferColumns(rows)
+  const structuredContent = {
+    success: true,
+    tool: MCP_APP_DOMAIN_TOOL_NAMES.financialStatement,
+    view: 'table',
+    kind,
+    title: built.title,
+    subtitle:
+      kind === 'dre'
+        ? `DRE consolidada no periodo ${period.de} a ${period.ate}`
+        : `Fluxo de caixa previsto por vencimento no periodo ${period.de} a ${period.ate}`,
+    rows,
+    columns,
+    count: rows.length,
+    sql_query: built.sql,
+    sql_params: built.params,
+  }
+
+  return {
+    content: [{ type: 'text', text: JSON.stringify(structuredContent, null, 2) }],
+    structuredContent,
+    isError: false,
+  }
+}
+
 async function callSqlExecution(
   args: unknown,
   context: CognitoMcpServerContext,
@@ -3517,6 +3783,8 @@ export async function callMcpAppDomainTool(
       return callSqlExecution(args, context, MCP_APP_DOMAIN_TOOL_NAMES.sql)
     case MCP_APP_DOMAIN_TOOL_NAMES.sqlExecution:
       return callSqlExecution(args, context, MCP_APP_DOMAIN_TOOL_NAMES.sqlExecution)
+    case MCP_APP_DOMAIN_TOOL_NAMES.financialStatement:
+      return callFinancialStatement(args, context)
     case MCP_APP_DOMAIN_TOOL_NAMES.marketing:
       return callMarketing(args, context)
     case MCP_APP_DOMAIN_TOOL_NAMES.dataCatalog:
