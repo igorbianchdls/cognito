@@ -1,6 +1,6 @@
 "use client"
 
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import type {
   AnalysisStructuredContent,
   AutomationStructuredContent,
@@ -20,6 +20,8 @@ import { DashboardListView } from '@/products/mcp-apps/web/src/views/DashboardLi
 import { DashboardPreviewView } from '@/products/mcp-apps/web/src/views/DashboardPreviewView'
 import { DataCatalogView } from '@/products/mcp-apps/web/src/views/DataCatalogView'
 import { DataResultView } from '@/products/mcp-apps/web/src/views/DataResultView'
+import { EmptyState } from '@/products/mcp-apps/web/src/components/EmptyState'
+import { LoadingState } from '@/products/mcp-apps/web/src/components/LoadingState'
 import { TableResultView } from '@/products/mcp-apps/web/src/views/TableResultView'
 
 type PreviewItem = {
@@ -28,6 +30,59 @@ type PreviewItem = {
   description: string
   category: string
   node: ReactNode
+}
+
+type FinancialStatementKind = 'dre' | 'cash_flow'
+
+type FinancialStatementResponse = {
+  ok: true
+  table: TableStructuredContent
+}
+
+function FinancialStatementPreview({ kind }: { kind: FinancialStatementKind }) {
+  const [table, setTable] = useState<TableStructuredContent | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    async function loadTable() {
+      setLoading(true)
+      setError(null)
+
+      try {
+        const response = await fetch(`/api/internal/mcp-ui/financial-statement?kind=${encodeURIComponent(kind)}`, {
+          cache: 'no-store',
+          signal: controller.signal,
+        })
+        const payload = (await response.json()) as FinancialStatementResponse | { ok: false; error?: string }
+
+        if (!response.ok || !payload.ok) {
+          throw new Error('Nao foi possivel carregar a consulta financeira.')
+        }
+
+        setTable(payload.table)
+      } catch (caughtError) {
+        if ((caughtError as Error).name === 'AbortError') return
+        setError((caughtError as Error)?.message || 'Nao foi possivel carregar a consulta financeira.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    void loadTable()
+
+    return () => controller.abort()
+  }, [kind])
+
+  if (loading) return <LoadingState />
+
+  if (error || !table) {
+    return <EmptyState title="Falha ao carregar" description={error || 'A consulta financeira nao retornou dados.'} />
+  }
+
+  return <TableResultView data={table} />
 }
 
 const erpResult: DataResultStructuredContent = {
@@ -103,53 +158,6 @@ const sqlResult: DataResultStructuredContent = {
     { mes: '2026-03', receita: 812300, despesa: 566400, margem: 0.3027 },
     { mes: '2026-04', receita: 904100, despesa: 639800, margem: 0.2923 },
     { mes: '2026-05', receita: 681200, despesa: 492700, margem: 0.2767 },
-  ],
-}
-
-const dreResult: TableStructuredContent = {
-  ok: true,
-  tool: 'financial_statement',
-  view: 'table',
-  title: 'DRE',
-  subtitle: 'Jan a Mai 2026 · classificado por plano de contas',
-  columns: [
-    { key: 'secao', label: 'Seção' },
-    { key: 'linha', label: 'Linha' },
-    { key: 'valor', label: 'Valor', format: 'currency' },
-  ],
-  rows: [
-    { secao: 'Resultado', linha: 'Receita bruta', valor: 984300.5 },
-    { secao: 'Resultado', linha: '(-) Custos e CMV', valor: -312480.2 },
-    { secao: 'Resultado', linha: 'Lucro bruto', valor: 671820.3 },
-    { secao: 'Despesas operacionais', linha: '(-) Despesas administrativas', valor: -154220.1 },
-    { secao: 'Despesas operacionais', linha: '(-) Despesas comerciais', valor: -118560.4 },
-    { secao: 'Despesas operacionais', linha: '(-) Outras despesas operacionais', valor: -24680.75 },
-    { secao: 'Resultado', linha: 'Resultado operacional', valor: 374359.05 },
-    { secao: 'Despesas financeiras', linha: '(-) Despesas financeiras', valor: -14120.3 },
-    { secao: 'Resultado', linha: 'Lucro líquido', valor: 360238.75 },
-  ],
-}
-
-const cashFlowResult: TableStructuredContent = {
-  ok: true,
-  tool: 'financial_statement',
-  view: 'table',
-  title: 'Fluxo de Caixa',
-  subtitle: 'Vencimento previsto · Mar a Ago 2026',
-  columns: [
-    { key: 'periodo', label: 'Período' },
-    { key: 'entradas_previstas', label: 'Entradas', format: 'currency' },
-    { key: 'saidas_previstas', label: 'Saídas', format: 'currency' },
-    { key: 'fluxo_liquido', label: 'Fluxo líquido', format: 'currency' },
-    { key: 'saldo_acumulado', label: 'Saldo acumulado', format: 'currency' },
-  ],
-  rows: [
-    { periodo: '2026-03', entradas_previstas: 278300.8, saidas_previstas: 182400.45, fluxo_liquido: 95900.35, saldo_acumulado: 95900.35 },
-    { periodo: '2026-04', entradas_previstas: 302100.25, saidas_previstas: 214980.9, fluxo_liquido: 87119.35, saldo_acumulado: 183019.7 },
-    { periodo: '2026-05', entradas_previstas: 318450.4, saidas_previstas: 237520.8, fluxo_liquido: 80929.6, saldo_acumulado: 263949.3 },
-    { periodo: '2026-06', entradas_previstas: 335700.15, saidas_previstas: 246100.45, fluxo_liquido: 89600.0, saldo_acumulado: 353549.3 },
-    { periodo: '2026-07', entradas_previstas: 348820.9, saidas_previstas: 258420.7, fluxo_liquido: 90400.2, saldo_acumulado: 443949.5 },
-    { periodo: '2026-08', entradas_previstas: 361200.75, saidas_previstas: 269780.25, fluxo_liquido: 91420.5, saldo_acumulado: 535370.0 },
   ],
 }
 
@@ -452,8 +460,8 @@ const previews: PreviewItem[] = [
   { id: 'marketing', category: 'Dados operacionais', title: 'Marketing', description: 'Tabela analitica com ROAS, gasto e conversoes.', node: <DataResultView data={marketingResult} /> },
   { id: 'ecommerce', category: 'Dados operacionais', title: 'Ecommerce', description: 'Resumo por canal conectado.', node: <DataResultView data={ecommerceResult} /> },
   { id: 'sql', category: 'Dados operacionais', title: 'SQL', description: 'Resultado ad-hoc de consulta analitica.', node: <DataResultView data={sqlResult} /> },
-  { id: 'dre', category: 'Visualizacoes', title: 'DRE', description: 'Demonstrativo em tabela com linhas de resultado financeiro.', node: <TableResultView data={dreResult} /> },
-  { id: 'cash-flow', category: 'Visualizacoes', title: 'Cash Flow', description: 'Fluxo de caixa mensal previsto por vencimento.', node: <TableResultView data={cashFlowResult} /> },
+  { id: 'dre', category: 'Visualizacoes', title: 'DRE', description: 'Demonstrativo em tabela com dados reais da query.', node: <FinancialStatementPreview kind="dre" /> },
+  { id: 'cash-flow', category: 'Visualizacoes', title: 'Cash Flow', description: 'Fluxo de caixa com dados reais da query.', node: <FinancialStatementPreview kind="cash_flow" /> },
   { id: 'chart-donut', category: 'Visualizacoes', title: 'Chart · Donut', description: 'Card de grafico no estilo ChatGPT Finance.', node: <ChartResultView data={chartResult} /> },
   { id: 'chart-bars', category: 'Visualizacoes', title: 'Chart · Barras', description: 'Barra vertical tradicional com eixo X categórico.', node: <ChartResultView data={barChartResult} /> },
   { id: 'chart-line', category: 'Visualizacoes', title: 'Chart · Line', description: 'Linha simples com serie unica e tooltip.', node: <ChartResultView data={lineChartResult} /> },

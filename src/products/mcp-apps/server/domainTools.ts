@@ -1191,7 +1191,7 @@ function formatDateIso(value: Date) {
   return toUtcDateOnly(value).toISOString().slice(0, 10)
 }
 
-function resolveFinancialPeriod(kind: FinancialStatementKind, paramsIn: JsonRecord) {
+export function resolveFinancialPeriod(kind: FinancialStatementKind, paramsIn: JsonRecord) {
   const today = new Date()
   const defaultDe = kind === 'cash_flow'
     ? formatDateIso(startOfMonthUtc(addMonthsUtc(today, -2)))
@@ -1327,7 +1327,7 @@ ORDER BY m.mes ASC
   }
 }
 
-function buildFinancialStatementQuery(kind: FinancialStatementKind, paramsIn: JsonRecord, tenantId: number): BuiltQuery {
+export function buildFinancialStatementQuery(kind: FinancialStatementKind, paramsIn: JsonRecord, tenantId: number): BuiltQuery {
   return kind === 'dre'
     ? buildFinancialStatementDreQuery(paramsIn, tenantId)
     : buildFinancialStatementCashFlowQuery(paramsIn, tenantId)
