@@ -1260,10 +1260,26 @@ export function resolveFinancialPeriod(kind: FinancialStatementKind, paramsIn: J
   return { de, ate }
 }
 
-function formatFinancialStatementPeriodLabel(period: { de: string; ate: string }) {
-  const match = /^(\d{4})-(\d{2})-\d{2}$/.exec(period.ate)
-  if (!match) return 'Valor'
-  return `${match[1]}/${match[2]}`
+function buildFinancialStatementMonthColumns(period: { de: string; ate: string }) {
+  const start = startOfMonthUtc(new Date(`${period.de}T00:00:00Z`))
+  const end = startOfMonthUtc(new Date(`${period.ate}T00:00:00Z`))
+  const columns: Array<{ key: string; label: string; dateIso: string }> = []
+
+  for (let current = start; current <= end; current = addMonthsUtc(current, 1)) {
+    const year = current.getUTCFullYear()
+    const month = padMonth(current.getUTCMonth() + 1)
+    columns.push({
+      key: `mes_${year}_${month}`,
+      label: `${year}/${month}`,
+      dateIso: `${year}-${month}-01`,
+    })
+  }
+
+  return columns
+}
+
+function padMonth(value: number) {
+  return String(value).padStart(2, '0')
 }
 
 function normalizeDreLineFilter(value: unknown) {
@@ -1315,7 +1331,10 @@ function appendOptionalNumericFilter(
 
 function buildFinancialStatementDreQuery(paramsIn: JsonRecord, tenantId: number): BuiltQuery {
   const period = resolveFinancialPeriod('dre', paramsIn)
-  const periodLabel = formatFinancialStatementPeriodLabel(period)
+  const monthColumns = buildFinancialStatementMonthColumns(period)
+  const monthValueColumns = monthColumns
+    .map((column) => `COALESCE(SUM(CASE WHEN mes = DATE '${column.dateIso}' THEN valor ELSE 0 END), 0)::float AS "${column.key}"`)
+    .join(',\n  ')
   const params: unknown[] = [tenantId, period.de, period.ate]
   const baseWhere = [
     'lc.tenant_id = $1::int',
@@ -1365,8 +1384,12 @@ function buildFinancialStatementDreQuery(paramsIn: JsonRecord, tenantId: number)
   }
 
   const sql = `
-WITH base AS (
+WITH months AS (
+  SELECT generate_series(date_trunc('month', $2::date), date_trunc('month', $3::date), interval '1 month')::date AS mes
+),
+base AS (
   SELECT
+    date_trunc('month', lc.data_lancamento::date)::date AS mes,
     COALESCE(pc.codigo, '') AS codigo,
     LOWER(COALESCE(pc.nome, '')) AS nome,
     LOWER(COALESCE(cd.nome, cre.nome, '')) AS categoria_nome,
@@ -1395,6 +1418,7 @@ WITH base AS (
 ),
 classified AS (
   SELECT
+    mes,
     CASE
       WHEN codigo LIKE '4.%' AND (
         nome LIKE '%desconto%'
@@ -1450,45 +1474,50 @@ classified_filtered AS (
 ),
 totals AS (
   SELECT
-    COALESCE(SUM(CASE WHEN grupo = 'receita_bruta' THEN valor ELSE 0 END), 0)::float AS receita_bruta,
-    ABS(COALESCE(SUM(CASE WHEN grupo = 'descontos' THEN valor ELSE 0 END), 0))::float AS descontos,
-    COALESCE(SUM(CASE WHEN grupo = 'custos' THEN valor ELSE 0 END), 0)::float AS custos,
-    COALESCE(SUM(CASE WHEN grupo = 'despesas_administrativas' THEN valor ELSE 0 END), 0)::float AS despesas_administrativas,
-    COALESCE(SUM(CASE WHEN grupo = 'despesas_bancarias' THEN valor ELSE 0 END), 0)::float AS despesas_bancarias,
-    COALESCE(SUM(CASE WHEN grupo = 'despesas_comerciais' THEN valor ELSE 0 END), 0)::float AS despesas_comerciais,
-    COALESCE(SUM(CASE WHEN grupo = 'despesas_funcionarios' THEN valor ELSE 0 END), 0)::float AS despesas_funcionarios,
-    COALESCE(SUM(CASE WHEN grupo = 'impostos' THEN valor ELSE 0 END), 0)::float AS impostos
-  FROM classified_filtered
+    months.mes,
+    COALESCE(SUM(CASE WHEN classified_filtered.grupo = 'receita_bruta' THEN classified_filtered.valor ELSE 0 END), 0)::float AS receita_bruta,
+    ABS(COALESCE(SUM(CASE WHEN classified_filtered.grupo = 'descontos' THEN classified_filtered.valor ELSE 0 END), 0))::float AS descontos,
+    COALESCE(SUM(CASE WHEN classified_filtered.grupo = 'custos' THEN classified_filtered.valor ELSE 0 END), 0)::float AS custos,
+    COALESCE(SUM(CASE WHEN classified_filtered.grupo = 'despesas_administrativas' THEN classified_filtered.valor ELSE 0 END), 0)::float AS despesas_administrativas,
+    COALESCE(SUM(CASE WHEN classified_filtered.grupo = 'despesas_bancarias' THEN classified_filtered.valor ELSE 0 END), 0)::float AS despesas_bancarias,
+    COALESCE(SUM(CASE WHEN classified_filtered.grupo = 'despesas_comerciais' THEN classified_filtered.valor ELSE 0 END), 0)::float AS despesas_comerciais,
+    COALESCE(SUM(CASE WHEN classified_filtered.grupo = 'despesas_funcionarios' THEN classified_filtered.valor ELSE 0 END), 0)::float AS despesas_funcionarios,
+    COALESCE(SUM(CASE WHEN classified_filtered.grupo = 'impostos' THEN classified_filtered.valor ELSE 0 END), 0)::float AS impostos
+  FROM months
+  LEFT JOIN classified_filtered ON classified_filtered.mes = months.mes
+  GROUP BY months.mes
+),
+statement_rows AS (
+  SELECT 1 AS ordem, '(=) Receita Bruta de Vendas' AS descricao, mes, receita_bruta - ABS(descontos) AS valor, 'group' AS row_type, 'receita_vendas' AS group_id, NULL::text AS parent_group_id FROM totals
+  UNION ALL
+  SELECT 2, '(+) Receita Bruta de Vendas e Serviços', mes, receita_bruta, 'child', NULL::text, 'receita_vendas' FROM totals
+  UNION ALL
+  SELECT 3, '(-) Descontos e Abatimentos', mes, -ABS(descontos), 'child', NULL::text, 'receita_vendas' FROM totals
+  UNION ALL
+  SELECT 4, '(=) Lucro Bruto', mes, receita_bruta - ABS(descontos) - ABS(custos), 'group', 'lucro_bruto', NULL::text FROM totals
+  UNION ALL
+  SELECT 5, '(-) Custos Mercadorias Vendidas', mes, -ABS(custos), 'child', NULL::text, 'lucro_bruto' FROM totals
+  UNION ALL
+  SELECT 6, '(=) Resultado Operacional', mes, receita_bruta - ABS(descontos) - ABS(custos) - ABS(despesas_administrativas) - ABS(despesas_bancarias) - ABS(despesas_comerciais) - ABS(despesas_funcionarios) - ABS(impostos), 'group', 'resultado_operacional', NULL::text FROM totals
+  UNION ALL
+  SELECT 7, '(-) DESPESAS ADMINISTRATIVAS', mes, -ABS(despesas_administrativas), 'child', NULL::text, 'resultado_operacional' FROM totals
+  UNION ALL
+  SELECT 8, '(-) DESPESAS BANCÁRIAS', mes, -ABS(despesas_bancarias), 'child', NULL::text, 'resultado_operacional' FROM totals
+  UNION ALL
+  SELECT 9, '(-) DESPESAS COMERCIAIS', mes, -ABS(despesas_comerciais), 'child', NULL::text, 'resultado_operacional' FROM totals
+  UNION ALL
+  SELECT 10, '(-) DESPESAS FUNCIONÁRIOS', mes, -ABS(despesas_funcionarios), 'child', NULL::text, 'resultado_operacional' FROM totals
+  UNION ALL
+  SELECT 11, '(-) IMPOSTOS', mes, -ABS(impostos), 'child', NULL::text, 'resultado_operacional' FROM totals
 )
 SELECT
   descricao,
-  valor,
+  ${monthValueColumns},
   row_type AS "_rowType",
   group_id AS "_groupId",
   parent_group_id AS "_parentGroupId"
-FROM (
-  SELECT 1 AS ordem, '(=) Receita Bruta de Vendas' AS descricao, receita_bruta - ABS(descontos) AS valor, 'group' AS row_type, 'receita_vendas' AS group_id, NULL::text AS parent_group_id FROM totals
-  UNION ALL
-  SELECT 2, '(+) Receita Bruta de Vendas e Serviços', receita_bruta, 'child', NULL::text, 'receita_vendas' FROM totals
-  UNION ALL
-  SELECT 3, '(-) Descontos e Abatimentos', -ABS(descontos), 'child', NULL::text, 'receita_vendas' FROM totals
-  UNION ALL
-  SELECT 4, '(=) Lucro Bruto', receita_bruta - ABS(descontos) - ABS(custos), 'group', 'lucro_bruto', NULL::text FROM totals
-  UNION ALL
-  SELECT 5, '(-) Custos Mercadorias Vendidas', -ABS(custos), 'child', NULL::text, 'lucro_bruto' FROM totals
-  UNION ALL
-  SELECT 6, '(=) Resultado Operacional', receita_bruta - ABS(descontos) - ABS(custos) - ABS(despesas_administrativas) - ABS(despesas_bancarias) - ABS(despesas_comerciais) - ABS(despesas_funcionarios) - ABS(impostos), 'group', 'resultado_operacional', NULL::text FROM totals
-  UNION ALL
-  SELECT 7, '(-) DESPESAS ADMINISTRATIVAS', -ABS(despesas_administrativas), 'child', NULL::text, 'resultado_operacional' FROM totals
-  UNION ALL
-  SELECT 8, '(-) DESPESAS BANCÁRIAS', -ABS(despesas_bancarias), 'child', NULL::text, 'resultado_operacional' FROM totals
-  UNION ALL
-  SELECT 9, '(-) DESPESAS COMERCIAIS', -ABS(despesas_comerciais), 'child', NULL::text, 'resultado_operacional' FROM totals
-  UNION ALL
-  SELECT 10, '(-) DESPESAS FUNCIONÁRIOS', -ABS(despesas_funcionarios), 'child', NULL::text, 'resultado_operacional' FROM totals
-  UNION ALL
-  SELECT 11, '(-) IMPOSTOS', -ABS(impostos), 'child', NULL::text, 'resultado_operacional' FROM totals
-) statement_rows
+FROM statement_rows
+GROUP BY ordem, descricao, row_type, group_id, parent_group_id
 ORDER BY ordem
   `.trim()
 
@@ -1499,7 +1528,7 @@ ORDER BY ordem
     chart: null,
     columns: [
       { key: 'descricao', label: 'DRE' },
-      { key: 'valor', label: periodLabel, format: 'currency_plain' },
+      ...monthColumns.map((column) => ({ key: column.key, label: column.label, format: 'currency_plain' })),
     ],
     variant: 'financial_statement',
   }
