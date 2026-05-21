@@ -1369,6 +1369,7 @@ WITH base AS (
   SELECT
     COALESCE(pc.codigo, '') AS codigo,
     LOWER(COALESCE(pc.nome, '')) AS nome,
+    LOWER(COALESCE(cd.nome, cre.nome, '')) AS categoria_nome,
     COALESCE(ll.credito, 0)::float AS credito,
     COALESCE(ll.debito, 0)::float AS debito
   FROM contabilidade.lancamentos_contabeis lc
@@ -1402,7 +1403,10 @@ classified AS (
       ) THEN 'descontos'
       WHEN codigo LIKE '4.%' THEN 'receita_bruta'
       WHEN codigo LIKE '5.%' THEN 'custos'
-      WHEN nome LIKE '%imposto%'
+      WHEN categoria_nome LIKE '%imposto%'
+        OR categoria_nome LIKE '%tribut%'
+        OR categoria_nome LIKE '%fiscal%'
+        OR nome LIKE '%imposto%'
         OR nome LIKE '%tribut%'
         OR nome LIKE '%fiscal%'
         OR nome LIKE '%icms%'
@@ -1410,11 +1414,15 @@ classified AS (
         OR nome LIKE '%pis%'
         OR nome LIKE '%cofins%' THEN 'impostos'
       WHEN codigo LIKE '6.1.5%'
+        OR categoria_nome LIKE '%folha%'
+        OR categoria_nome LIKE '%funcion%'
+        OR categoria_nome LIKE '%salario%'
+        OR categoria_nome LIKE '%salário%'
+        OR categoria_nome LIKE '%encargo%'
         OR nome LIKE '%salario%'
         OR nome LIKE '%salário%'
         OR nome LIKE '%folha%'
-        OR nome LIKE '%funcion%'
-        OR nome LIKE '%encargo%' THEN 'despesas_funcionarios'
+        OR nome LIKE '%funcion%' THEN 'despesas_funcionarios'
       WHEN codigo LIKE '6.3.%'
         OR nome LIKE '%banc%'
         OR nome LIKE '%tarifa%'

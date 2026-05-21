@@ -73,13 +73,18 @@ const emptyFinancialStatementFilterOptions: FinancialStatementFilterOptions = {
   centros: [],
 }
 
+function defaultFinancialStatementFilters(kind: FinancialStatementKind): FinancialStatementFilters {
+  if (kind === 'dre') return { ...emptyFinancialStatementFilters, de: '2026-01-01', ate: '2026-06-30' }
+  return { ...emptyFinancialStatementFilters }
+}
+
 function FinancialStatementPreview({ kind }: { kind: FinancialStatementKind }) {
   const [table, setTable] = useState<TableStructuredContent | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filterOptions, setFilterOptions] = useState<FinancialStatementFilterOptions>(emptyFinancialStatementFilterOptions)
-  const [filters, setFilters] = useState<FinancialStatementFilters>({ ...emptyFinancialStatementFilters })
-  const [appliedFilters, setAppliedFilters] = useState<FinancialStatementFilters>({ ...emptyFinancialStatementFilters })
+  const [filters, setFilters] = useState<FinancialStatementFilters>(() => defaultFinancialStatementFilters(kind))
+  const [appliedFilters, setAppliedFilters] = useState<FinancialStatementFilters>(() => defaultFinancialStatementFilters(kind))
 
   useEffect(() => {
     const controller = new AbortController()
@@ -129,7 +134,7 @@ function FinancialStatementPreview({ kind }: { kind: FinancialStatementKind }) {
   }
 
   function clearFilters() {
-    const next = { ...emptyFinancialStatementFilters }
+    const next = defaultFinancialStatementFilters(kind)
     setFilters(next)
     setAppliedFilters(next)
   }
