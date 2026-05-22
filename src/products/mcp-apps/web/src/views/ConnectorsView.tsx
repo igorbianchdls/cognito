@@ -139,11 +139,8 @@ function ConnectorRow({ row }: { row: DataRow }) {
 export function ConnectorsView({ data }: { data: ConnectorsStructuredContent }) {
   const visual = getToolVisual('connectors')
   const rows = asRows(data.rows)
-  const summary = asRecord(data.summary)
   const result = asRecord(data.result)
   const title = data.title || 'Conectores'
-  const connected = summary.connected ?? rows.filter((row) => getStatusTone(row) === 'success').length
-  const attention = summary.warning ?? rows.filter((row) => getStatusTone(row) !== 'success').length
 
   return (
     <ResultShell icon={visual.icon} tone={visual.tone} title={title} description={data.subtitle || undefined}>
@@ -163,15 +160,6 @@ export function ConnectorsView({ data }: { data: ConnectorsStructuredContent }) 
         ) : null}
 
         <section className="connectors-directory" aria-label="Lista de conectores">
-          <div className="connectors-directory__topline">
-            <span>{String(summary.total ?? rows.length)} conectores</span>
-            <span>{String(connected)} sincronizados</span>
-            <span>{String(attention)} em atencao</span>
-          </div>
-          <div className="connectors-directory__header">
-            <span>Conector</span>
-            <span>Status</span>
-          </div>
           {rows.length ? (
             <div className="connectors-directory__rows">
               {rows.map((row) => (
@@ -182,7 +170,6 @@ export function ConnectorsView({ data }: { data: ConnectorsStructuredContent }) 
             <EmptyState title="Nenhum conector encontrado" description="Quando houver integracoes, elas aparecem aqui com status e ultimo sync." />
           )}
           <div className="connectors-directory__footer">
-            <p>Sincronizacoes grandes podem levar alguns minutos.</p>
             <button type="button">Adicionar conector</button>
           </div>
         </section>
