@@ -1354,6 +1354,17 @@ a {
   border-radius: 6px;
   background: #f7faf8;
   color: #225f42;
+  overflow: hidden;
+}
+
+.connector-row__logo {
+  width: 17px;
+  height: 17px;
+  display: block;
+  object-fit: contain;
+}
+
+.connector-row__fallback {
   font-size: 11px;
   font-weight: 820;
 }

@@ -1,3 +1,15 @@
+import AmazonIcon from '@/components/icons/AmazonIcon'
+import BlingIcon from '@/components/icons/BlingIcon'
+import ContaAzulIcon from '@/components/icons/ContaAzulIcon'
+import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon'
+import HubspotIcon from '@/components/icons/HubspotIcon'
+import MercadoLivreIcon from '@/components/icons/MercadoLivreIcon'
+import MetaIcon from '@/components/icons/MetaIcon'
+import OmieIcon from '@/components/icons/OmieIcon'
+import ShopifyIcon from '@/components/icons/ShopifyIcon'
+import ShopeeIcon from '@/components/icons/ShopeeIcon'
+import TinyIcon from '@/components/icons/TinyIcon'
+import TotvsIcon from '@/components/icons/TotvsIcon'
 import { EmptyState } from '@/products/mcp-apps/web/src/components/EmptyState'
 import { ResultShell } from '@/products/mcp-apps/web/src/components/ResultShell'
 import type { ConnectorsStructuredContent } from '@/products/mcp-apps/web/src/types/toolResult'
@@ -24,6 +36,15 @@ function stringifyShort(value: unknown) {
 
 function getConnectorName(row: DataRow) {
   return String(row.name || row.connector_name || row.connector_id || 'Conector')
+}
+
+function normalizeConnectorKey(value: unknown) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
 }
 
 function asNumber(value: unknown) {
@@ -68,6 +89,29 @@ function getStatusLabel(row: DataRow) {
   return stringifyShort(row.connection_status || row.health || row.status || 'Indefinido')
 }
 
+function ConnectorLogo({ row }: { row: DataRow }) {
+  const platform = normalizeConnectorKey(row.plataforma || row.provider || row.platform)
+  const domain = normalizeConnectorKey(row.domain)
+  const name = normalizeConnectorKey(getConnectorName(row))
+  const key = [platform, domain, name].join(' ')
+  const className = 'connector-row__logo'
+
+  if (key.includes('shopify')) return <ShopifyIcon className={className} />
+  if (key.includes('shopee')) return <ShopeeIcon className={className} />
+  if (key.includes('amazon')) return <AmazonIcon className={className} />
+  if (key.includes('mercadolivre') || key.includes('mercado_livre')) return <MercadoLivreIcon className={className} />
+  if (key.includes('google_ads') || key.includes('googleads')) return <GoogleAdsIcon className={className} />
+  if (key.includes('meta_ads') || key.includes('metaads') || key.includes('facebook')) return <MetaIcon className={className} />
+  if (key.includes('hubspot')) return <HubspotIcon className={className} />
+  if (key.includes('totvs')) return <TotvsIcon className={className} />
+  if (key.includes('omie')) return <OmieIcon className={className} />
+  if (key.includes('tiny')) return <TinyIcon className={className} />
+  if (key.includes('bling')) return <BlingIcon className={className} />
+  if (key.includes('conta_azul') || key.includes('contaazul')) return <ContaAzulIcon className={className} />
+
+  return <span className="connector-row__fallback">{getConnectorName(row).slice(0, 1).toUpperCase()}</span>
+}
+
 function ConnectorRow({ row }: { row: DataRow }) {
   const tone = getStatusTone(row)
   const lastSync = row.last_sync_at ? `Ultimo sync ${formatDate(row.last_sync_at)}` : null
@@ -76,7 +120,7 @@ function ConnectorRow({ row }: { row: DataRow }) {
     <article className="connector-row">
       <div className="connector-row__identity">
         <span className="connector-row__mark" aria-hidden="true">
-          {getConnectorName(row).slice(0, 1).toUpperCase()}
+          <ConnectorLogo row={row} />
         </span>
         <div className="connector-row__copy">
           <h2>{getConnectorName(row)}</h2>
