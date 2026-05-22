@@ -746,13 +746,13 @@ a {
 .chart-card__donut {
   width: 100%;
   min-width: 0;
-  height: 168px;
+  height: 320px;
 }
 
 .chart-card__plot {
   width: 100%;
   min-width: 0;
-  height: 240px;
+  height: 320px;
 }
 
 .chart-breakdown {

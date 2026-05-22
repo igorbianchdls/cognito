@@ -63,11 +63,6 @@ function toNumber(value: unknown) {
   return 0
 }
 
-function toNumberOrNull(value: unknown) {
-  const parsed = toNumber(value)
-  return parsed === 0 && value !== 0 && value !== '0' ? null : parsed
-}
-
 function getLabel(row: Record<string, unknown>, field: string | undefined, index: number) {
   const value = field ? row[field] : undefined
   if (value !== null && value !== undefined && value !== '') return String(value)
@@ -115,19 +110,6 @@ function getChartRows(data: ChartResultStructuredContent) {
       }
     })
     .filter((row) => row.chartValue > 0)
-}
-
-function getTotalDisplay(data: ChartResultStructuredContent, rows: ChartRow[]) {
-  const format = data.total?.format || data.chart?.format || 'currency'
-  const rawValue = data.total?.value
-  const parsedValue = toNumberOrNull(rawValue)
-  const total = parsedValue ?? rows.reduce((sum, row) => sum + row.value, 0)
-
-  if (typeof rawValue === 'string' && parsedValue === null && rawValue.trim()) {
-    return rawValue
-  }
-
-  return formatChartValue(total, format)
 }
 
 function getChartVariant(chartType: string) {
@@ -356,7 +338,6 @@ export function ChartResultView({ data }: { data: ChartResultStructuredContent }
   const format = data.chart?.format || data.total?.format || 'currency'
   const title = data.title || 'Grafico'
   const subtitle = data.subtitle || `${formatNumber(rows.length)} registros`
-  const totalDisplay = getTotalDisplay(data, rows)
   const totalMagnitude = rows.reduce((sum, row) => sum + row.chartValue, 0)
 
   if (!rows.length) {
@@ -375,7 +356,6 @@ export function ChartResultView({ data }: { data: ChartResultStructuredContent }
           <h1>{title}</h1>
           {subtitle ? <p>{subtitle}</p> : null}
         </div>
-        <strong className="chart-card__total">{totalDisplay}</strong>
       </header>
 
       <div className={`chart-card__body${chartType === 'donut' ? '' : ' chart-card__body--chart-only'}`}>
