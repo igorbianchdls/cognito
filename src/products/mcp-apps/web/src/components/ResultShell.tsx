@@ -10,21 +10,13 @@ type ResultShellProps = {
   children: ReactNode
 }
 
-export function ResultShell({ eyebrow, icon, tone = 'neutral', title, description, children }: ResultShellProps) {
+export function ResultShell({ title, description, children }: ResultShellProps) {
   return (
     <>
-      <header className="result-shell__header">
-        <div className="result-shell__heading">
-          {icon ? (
-            <span className={`result-shell__icon result-shell__icon--${tone}`} aria-hidden="true">
-              {icon}
-            </span>
-          ) : null}
-          <div className="result-shell__copy">
-            {eyebrow ? <p className="result-shell__eyebrow">{eyebrow}</p> : null}
-            <h1>{title}</h1>
-            {description ? <p>{description}</p> : null}
-          </div>
+      <header className="chart-card__header">
+        <div className="chart-card__copy">
+          <h1>{title}</h1>
+          {description ? <p>{description}</p> : null}
         </div>
       </header>
       {children}
