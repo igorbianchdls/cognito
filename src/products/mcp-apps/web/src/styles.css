@@ -1224,6 +1224,9 @@ a {
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
+  border-bottom: 1px solid var(--cognito-border-soft);
+  margin-bottom: 10px;
+  padding-bottom: 10px;
 }
 
 .automation-list-card h2 {
