@@ -695,9 +695,9 @@ a {
 .chart-card__copy h1 {
   margin: 0;
   color: #111513;
-  font-size: 15px;
-  font-weight: 760;
-  letter-spacing: 0;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
   line-height: 1.22;
 }
 
