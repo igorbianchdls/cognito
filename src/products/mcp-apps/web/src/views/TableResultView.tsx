@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import { EmptyState } from '@/products/mcp-apps/web/src/components/EmptyState'
-import { ResultShell } from '@/products/mcp-apps/web/src/components/ResultShell'
 import { StatusBadge } from '@/products/mcp-apps/web/src/components/StatusBadge'
 import type { TableStructuredContent } from '@/products/mcp-apps/web/src/types/toolResult'
-import { formatCellValue, getToolVisual, humanizeKey } from '@/products/mcp-apps/web/src/utils/format'
+import { formatCellValue, humanizeKey } from '@/products/mcp-apps/web/src/utils/format'
 
 type TableRow = Record<string, unknown>
 type TableColumn = {
@@ -72,12 +71,23 @@ function getCellKind(column: TableColumn) {
   return 'text'
 }
 
+function TableHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+  return (
+    <header className="chart-card__header">
+      <div className="chart-card__copy">
+        <h1>{title}</h1>
+        {subtitle ? <p>{subtitle}</p> : null}
+      </div>
+    </header>
+  )
+}
+
 export function TableResultView({ data }: { data: TableStructuredContent }) {
   const [closedGroups, setClosedGroups] = useState<Record<string, boolean>>({})
   const rows = asRows(data.rows)
   const columns = asColumns(data.columns, rows)
-  const visual = getToolVisual(data.tool)
   const title = data.title || 'Tabela'
+  const subtitle = data.subtitle || undefined
   const isFinancialStatement = data.tool === 'financial_statement' || data.variant === 'financial_statement'
   const visibleRows = isFinancialStatement
     ? rows.filter((row) => {
@@ -96,67 +106,67 @@ export function TableResultView({ data }: { data: TableStructuredContent }) {
 
   if (!rows.length) {
     return (
-      <ResultShell eyebrow={visual.label} icon={visual.icon} tone={visual.tone} title={title} description={data.subtitle || undefined}>
+      <section className={`result-card table-card${isFinancialStatement ? ' financial-statement-card' : ''}`}>
+        <TableHeader title={title} subtitle={subtitle} />
         <EmptyState title="Sem linhas" description="A consulta nao recebeu linhas para renderizar." />
-      </ResultShell>
+      </section>
     )
   }
 
   return (
-    <ResultShell eyebrow={visual.label} icon={visual.icon} tone={visual.tone} title={title} description={data.subtitle || undefined}>
-      <section className={`result-card table-card${isFinancialStatement ? ' financial-statement-card' : ''}`}>
-        <div className="table-scroll">
-          <table className={`data-table${isFinancialStatement ? ' data-table--financial' : ''}`}>
-            <thead>
-              <tr>
-                {columns.map((column) => (
-                  <th key={column.key}>{column.label}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {visibleRows.map((row, rowIndex) => {
-                const rowType = getRowType(row)
-                const groupId = getGroupId(row)
-                const isExpandableGroup = Boolean(isFinancialStatement && rowType === 'group' && groupId)
-                const isClosed = Boolean(groupId && closedGroups[groupId])
-                return (
-                  <tr
-                    key={`${groupId || getParentGroupId(row) || rowIndex}-${rowIndex}`}
-                    className={getRowClassName(row, isFinancialStatement)}
-                    onClick={isExpandableGroup ? () => toggleGroup(groupId) : undefined}
-                  >
-                    {columns.map((column, columnIndex) => {
-                      const value = row[column.key]
-                      const displayKey = column.format || column.key
-                      const isStatus = column.format === 'status' || column.key.toLowerCase().includes('status')
-                      const cellKind = getCellKind(column)
-                      return (
-                        <td key={column.key} className={`data-table__cell data-table__cell--${cellKind}`}>
-                          {isExpandableGroup && columnIndex === 0 ? (
-                            <button
-                              type="button"
-                              className="financial-row__toggle"
-                              aria-expanded={!isClosed}
-                              onClick={(event) => {
-                                event.stopPropagation()
-                                toggleGroup(groupId)
-                              }}
-                            >
-                              {isClosed ? <ChevronRight size={15} strokeWidth={2.4} /> : <ChevronDown size={15} strokeWidth={2.4} />}
-                              <span>{formatCellValue(displayKey, value)}</span>
-                            </button>
-                          ) : isStatus ? <StatusBadge value={value} /> : formatCellValue(displayKey, value)}
-                        </td>
-                      )
-                    })}
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </ResultShell>
+    <section className={`result-card table-card${isFinancialStatement ? ' financial-statement-card' : ''}`}>
+      <TableHeader title={title} subtitle={subtitle} />
+      <div className="table-scroll">
+        <table className={`data-table${isFinancialStatement ? ' data-table--financial' : ''}`}>
+          <thead>
+            <tr>
+              {columns.map((column) => (
+                <th key={column.key}>{column.label}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {visibleRows.map((row, rowIndex) => {
+              const rowType = getRowType(row)
+              const groupId = getGroupId(row)
+              const isExpandableGroup = Boolean(isFinancialStatement && rowType === 'group' && groupId)
+              const isClosed = Boolean(groupId && closedGroups[groupId])
+              return (
+                <tr
+                  key={`${groupId || getParentGroupId(row) || rowIndex}-${rowIndex}`}
+                  className={getRowClassName(row, isFinancialStatement)}
+                  onClick={isExpandableGroup ? () => toggleGroup(groupId) : undefined}
+                >
+                  {columns.map((column, columnIndex) => {
+                    const value = row[column.key]
+                    const displayKey = column.format || column.key
+                    const isStatus = column.format === 'status' || column.key.toLowerCase().includes('status')
+                    const cellKind = getCellKind(column)
+                    return (
+                      <td key={column.key} className={`data-table__cell data-table__cell--${cellKind}`}>
+                        {isExpandableGroup && columnIndex === 0 ? (
+                          <button
+                            type="button"
+                            className="financial-row__toggle"
+                            aria-expanded={!isClosed}
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              toggleGroup(groupId)
+                            }}
+                          >
+                            {isClosed ? <ChevronRight size={15} strokeWidth={2.4} /> : <ChevronDown size={15} strokeWidth={2.4} />}
+                            <span>{formatCellValue(displayKey, value)}</span>
+                          </button>
+                        ) : isStatus ? <StatusBadge value={value} /> : formatCellValue(displayKey, value)}
+                      </td>
+                    )
+                  })}
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </section>
   )
 }

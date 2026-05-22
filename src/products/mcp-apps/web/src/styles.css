@@ -430,6 +430,13 @@ a {
   overflow: hidden;
 }
 
+.table-card {
+  display: grid;
+  gap: 14px;
+  background: #ffffff;
+  padding: 14px;
+}
+
 .table-scroll {
   max-height: 500px;
   overflow: auto;
@@ -1402,6 +1409,10 @@ a {
   }
 
   .chart-card {
+    padding: 12px;
+  }
+
+  .table-card {
     padding: 12px;
   }
 
