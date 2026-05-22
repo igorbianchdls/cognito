@@ -685,9 +685,11 @@ export default function McpUiGalleryPage() {
                 .filter((preview) => preview.category === category)
                 .map((preview) => (
                   <article className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm" key={preview.id}>
-                    <header className="mb-4 flex flex-col gap-1 border-b border-slate-100 pb-3">
-                      <h3 className="text-sm font-semibold tracking-normal text-slate-950">{preview.title}</h3>
-                      <p className="text-sm text-slate-500">{preview.description}</p>
+                    <header className="chart-card__header mb-4">
+                      <div className="chart-card__copy">
+                        <h1>{preview.title}</h1>
+                        <p>{preview.description}</p>
+                      </div>
                     </header>
                     <div className="mx-auto w-full max-w-[860px] rounded-[22px] border border-[#e5e7eb] bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.03)] sm:p-4">
                       <div className="mx-auto w-full max-w-[820px]">{preview.node}</div>
