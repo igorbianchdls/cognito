@@ -688,7 +688,7 @@ a {
 
 .chart-card__copy {
   display: grid;
-  gap: 3px;
+  gap: 5px;
   min-width: 0;
 }
 
@@ -705,7 +705,7 @@ a {
   margin: 0;
   color: #68726c;
   font-size: 12px;
-  letter-spacing: 0;
+  letter-spacing: -0.02em;
   line-height: 1.35;
 }
 
