@@ -1295,6 +1295,7 @@ a {
 }
 
 .connectors-directory {
+  border: 0;
   display: grid;
   overflow: hidden;
 }
@@ -1329,7 +1330,7 @@ a {
   grid-template-columns: minmax(0, 1fr) 104px;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
+  padding: 10px 0;
 }
 
 .connector-row + .connector-row {
@@ -1378,7 +1379,7 @@ a {
 .connector-row__copy h2,
 .connector-result h2 {
   margin: 0;
-  color: #111513;
+  color: #2a312d;
   font-size: 15px;
   font-weight: 760;
   letter-spacing: -0.02em;
