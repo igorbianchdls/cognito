@@ -1,9 +1,7 @@
-import { DataTable } from '@/products/mcp-apps/web/src/components/DataTable'
 import { EmptyState } from '@/products/mcp-apps/web/src/components/EmptyState'
 import { ResultShell } from '@/products/mcp-apps/web/src/components/ResultShell'
-import { StatusBadge } from '@/products/mcp-apps/web/src/components/StatusBadge'
 import type { ConnectorsStructuredContent } from '@/products/mcp-apps/web/src/types/toolResult'
-import { formatDate, formatNumber, getToolVisual, humanizeKey } from '@/products/mcp-apps/web/src/utils/format'
+import { formatDate, getToolVisual, humanizeKey } from '@/products/mcp-apps/web/src/utils/format'
 import type { DataRow } from '@/products/mcp-apps/web/src/utils/table'
 
 function asRows(value: unknown): DataRow[] {
@@ -24,40 +22,72 @@ function stringifyShort(value: unknown) {
   return String(value)
 }
 
-function getColumns(rows: DataRow[], columns?: string[]) {
-  if (Array.isArray(columns) && columns.length) return columns
-  return rows.length ? Object.keys(rows[0] || {}) : []
+function getConnectorName(row: DataRow) {
+  return String(row.name || row.connector_name || row.connector_id || 'Conector')
 }
 
-function ConnectorCard({ row }: { row: DataRow }) {
+function asNumber(value: unknown) {
+  const numberValue = Number(value)
+  return Number.isFinite(numberValue) ? numberValue : null
+}
+
+function getConnectorMeta(row: DataRow) {
+  const accountCount = asNumber(row.accounts_count ?? row.account_count ?? row.contas ?? row.connected_accounts)
+
+  if (accountCount !== null && accountCount > 0) {
+    return `${accountCount} conta${accountCount === 1 ? '' : 's'}`
+  }
+
+  const parts = [
+    row.domain ? humanizeKey(String(row.domain)) : null,
+    row.plataforma ? humanizeKey(String(row.plataforma)) : null,
+  ].filter(Boolean)
+
+  return parts.length ? parts.join(' · ') : 'Conta conectada'
+}
+
+function getStatusValue(row: DataRow) {
+  return String(row.health || row.connection_status || row.status || '').trim().toLowerCase()
+}
+
+function getStatusTone(row: DataRow) {
+  if (row.last_error) return 'danger'
+  const status = getStatusValue(row)
+  if (['synced', 'sync', 'connected', 'active', 'ok', 'healthy', 'success'].includes(status)) return 'success'
+  if (['pending', 'processing', 'syncing', 'warning', 'attention'].includes(status)) return 'warning'
+  if (['error', 'failed', 'failure', 'disconnected', 'inactive', 'unhealthy'].includes(status)) return 'danger'
+  return 'neutral'
+}
+
+function getStatusLabel(row: DataRow) {
+  if (row.last_error) return 'Atencao'
+  const tone = getStatusTone(row)
+  if (tone === 'success') return 'Sincronizado'
+  if (tone === 'warning') return 'Pendente'
+  if (tone === 'danger') return 'Falha'
+  return stringifyShort(row.connection_status || row.health || row.status || 'Indefinido')
+}
+
+function ConnectorRow({ row }: { row: DataRow }) {
+  const tone = getStatusTone(row)
+  const lastSync = row.last_sync_at ? `Ultimo sync ${formatDate(row.last_sync_at)}` : null
+
   return (
-    <article className="connector-card">
-      <header>
-        <div>
-          <h2>{String(row.name || row.connector_id || 'Conector')}</h2>
-          <p>{humanizeKey(String(row.domain || '-'))} · {humanizeKey(String(row.plataforma || '-'))}</p>
+    <article className="connector-row">
+      <div className="connector-row__identity">
+        <span className="connector-row__mark" aria-hidden="true">
+          {getConnectorName(row).slice(0, 1).toUpperCase()}
+        </span>
+        <div className="connector-row__copy">
+          <h2>{getConnectorName(row)}</h2>
+          <p>{lastSync || getConnectorMeta(row)}</p>
+          {row.last_error ? <p className="connector-row__error">{String(row.last_error)}</p> : null}
         </div>
-        <StatusBadge value={row.health || row.connection_status} />
-      </header>
-      <dl>
-        <div>
-          <dt>Ultimo sync</dt>
-          <dd>{formatDate(row.last_sync_at)}</dd>
-        </div>
-        <div>
-          <dt>Registros</dt>
-          <dd>{formatNumber(Number(row.records_synced || 0))}</dd>
-        </div>
-        <div>
-          <dt>Status</dt>
-          <dd>{stringifyShort(row.connection_status)}</dd>
-        </div>
-        <div>
-          <dt>Escopos</dt>
-          <dd>{stringifyShort(row.scopes)}</dd>
-        </div>
-      </dl>
-      {row.last_error ? <p className="connector-card__error">{String(row.last_error)}</p> : null}
+      </div>
+      <div className={`connector-row__status connector-row__status--${tone}`}>
+        <span>{getStatusLabel(row)}</span>
+        <i aria-hidden="true" />
+      </div>
     </article>
   )
 }
@@ -65,33 +95,15 @@ function ConnectorCard({ row }: { row: DataRow }) {
 export function ConnectorsView({ data }: { data: ConnectorsStructuredContent }) {
   const visual = getToolVisual('connectors')
   const rows = asRows(data.rows)
-  const columns = getColumns(rows, data.columns)
   const summary = asRecord(data.summary)
   const result = asRecord(data.result)
   const title = data.title || 'Conectores'
+  const connected = summary.connected ?? rows.filter((row) => getStatusTone(row) === 'success').length
+  const attention = summary.warning ?? rows.filter((row) => getStatusTone(row) !== 'success').length
 
   return (
     <ResultShell icon={visual.icon} tone={visual.tone} title={title} description={data.subtitle || undefined}>
       <section className="connectors-panel">
-        <div className="connectors-summary" aria-label="Resumo dos conectores">
-          <div>
-            <span>Total</span>
-            <strong>{String(summary.total ?? rows.length)}</strong>
-          </div>
-          <div>
-            <span>Conectados</span>
-            <strong>{String(summary.connected ?? '-')}</strong>
-          </div>
-          <div>
-            <span>Atencao</span>
-            <strong>{String(summary.warning ?? '-')}</strong>
-          </div>
-          <div>
-            <span>Ultimo sync</span>
-            <strong>{formatDate(summary.last_sync_at)}</strong>
-          </div>
-        </div>
-
         {Object.keys(result).length ? (
           <section className="connector-result">
             <h2>Resultado</h2>
@@ -106,18 +118,30 @@ export function ConnectorsView({ data }: { data: ConnectorsStructuredContent }) 
           </section>
         ) : null}
 
-        {rows.length ? (
-          <>
-            <div className="connectors-grid">
+        <section className="connectors-directory" aria-label="Lista de conectores">
+          <div className="connectors-directory__topline">
+            <span>{String(summary.total ?? rows.length)} conectores</span>
+            <span>{String(connected)} sincronizados</span>
+            <span>{String(attention)} em atencao</span>
+          </div>
+          <div className="connectors-directory__header">
+            <span>Conector</span>
+            <span>Status</span>
+          </div>
+          {rows.length ? (
+            <div className="connectors-directory__rows">
               {rows.map((row) => (
-                <ConnectorCard key={String(row.connector_id || row.name)} row={row} />
+                <ConnectorRow key={String(row.connector_id || row.name)} row={row} />
               ))}
             </div>
-            {columns.length ? <DataTable rows={rows} columns={columns} /> : null}
-          </>
-        ) : (
-          <EmptyState title="Nenhum conector encontrado" description="Quando houver integracoes, elas aparecem aqui com status e ultimo sync." />
-        )}
+          ) : (
+            <EmptyState title="Nenhum conector encontrado" description="Quando houver integracoes, elas aparecem aqui com status e ultimo sync." />
+          )}
+          <div className="connectors-directory__footer">
+            <p>Sincronizacoes grandes podem levar alguns minutos.</p>
+            <button type="button">Adicionar conector</button>
+          </div>
+        </section>
       </section>
     </ResultShell>
   )
