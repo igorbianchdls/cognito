@@ -1,8 +1,7 @@
 import { DataTable } from '@/products/mcp-apps/web/src/components/DataTable'
 import { EmptyState } from '@/products/mcp-apps/web/src/components/EmptyState'
-import { ResultShell } from '@/products/mcp-apps/web/src/components/ResultShell'
 import type { DataResultStructuredContent } from '@/products/mcp-apps/web/src/types/toolResult'
-import { formatCurrency, formatNumber, getToolVisual } from '@/products/mcp-apps/web/src/utils/format'
+import { formatCurrency, formatNumber } from '@/products/mcp-apps/web/src/utils/format'
 import {
   getColumns,
   getPrimaryMoneyColumn,
@@ -44,34 +43,31 @@ function buildResultDescription(data: DataResultStructuredContent, rows: DataRow
   return parts.join(' · ')
 }
 
+function TableHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+  return (
+    <header className="chart-card__header">
+      <div className="chart-card__copy">
+        <h1>{title}</h1>
+        {subtitle ? <p>{subtitle}</p> : null}
+      </div>
+    </header>
+  )
+}
+
 export function DataResultView({ data }: DataResultViewProps) {
   const rows = getRows(data)
   const columns = getColumns(data, rows)
-  const toolVisual = getToolVisual(data.tool)
   const tableTitle = data.title || 'Resultado'
   const description = buildResultDescription(data, rows, columns)
 
   if (!rows.length) {
     return (
-      <ResultShell
-        icon={toolVisual.icon}
-        tone={toolVisual.tone}
-        title={tableTitle}
-        description={description}
-      >
+      <section className="result-card table-card">
+        <TableHeader title={tableTitle} subtitle={description} />
         <EmptyState title="Sem linhas" description="A tool retornou uma tabela vazia." />
-      </ResultShell>
+      </section>
     )
   }
 
-  return (
-    <ResultShell
-      icon={toolVisual.icon}
-      tone={toolVisual.tone}
-      title={tableTitle}
-      description={description}
-    >
-      <DataTable rows={rows} columns={columns} />
-    </ResultShell>
-  )
+  return <DataTable rows={rows} columns={columns} title={tableTitle} subtitle={description} />
 }
