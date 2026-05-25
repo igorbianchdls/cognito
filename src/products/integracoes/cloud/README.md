@@ -44,6 +44,18 @@ src/control-api/index.ts
 src/worker/index.ts
 ```
 
+Artefatos de deploy preparados:
+
+```txt
+Dockerfile.control-api
+Dockerfile.worker
+deploy/cloud-run-control-api.yaml
+deploy/cloud-run-worker.yaml
+deploy/cloudbuild-control-api.yaml
+deploy/cloudbuild-worker.yaml
+deploy/README.md
+```
+
 Quando Google Cloud entrar:
 
 1. Implementar autenticação interna no `control-api`.

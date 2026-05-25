@@ -1,0 +1,31 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: integrations-control-api
+  annotations:
+    run.googleapis.com/ingress: internal-and-cloud-load-balancing
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "2"
+    spec:
+      serviceAccountName: integrations-control-api@creatto-463117.iam.gserviceaccount.com
+      containers:
+        - image: southamerica-east1-docker.pkg.dev/creatto-463117/integrations/control-api:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: GCP_PROJECT_ID
+              value: creatto-463117
+            - name: GCP_REGION
+              value: southamerica-east1
+            - name: PUBSUB_SYNC_TOPIC
+              value: integrations-sync-requests
+            - name: PUBSUB_DEAD_LETTER_TOPIC
+              value: integrations-sync-dead-letter
+            - name: SECRET_INTERNAL_API_KEY
+              value: integrations-internal-api-key
+            - name: SECRET_PREFIX
+              value: integrations

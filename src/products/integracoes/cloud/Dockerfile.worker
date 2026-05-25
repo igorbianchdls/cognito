@@ -1,0 +1,21 @@
+FROM node:22-slim AS builder
+
+WORKDIR /app
+
+RUN corepack enable
+
+COPY package.json pnpm-lock.yaml ./
+COPY tsconfig.json next-env.d.ts ./
+COPY src ./src
+
+RUN pnpm install --frozen-lockfile --ignore-scripts
+RUN pnpm --dir src/products/integracoes/cloud build:worker
+
+FROM node:22-slim AS runner
+
+WORKDIR /app
+ENV NODE_ENV=production
+
+COPY --from=builder /app/src/products/integracoes/cloud/dist/worker ./dist/worker
+
+CMD ["node", "dist/worker/index.js"]

@@ -1,0 +1,33 @@
+apiVersion: run.googleapis.com/v1
+kind: Job
+metadata:
+  name: integrations-worker
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/launch-stage: BETA
+    spec:
+      template:
+        spec:
+          serviceAccountName: integrations-worker@creatto-463117.iam.gserviceaccount.com
+          maxRetries: 3
+          containers:
+            - image: southamerica-east1-docker.pkg.dev/creatto-463117/integrations/worker:latest
+              env:
+                - name: GCP_PROJECT_ID
+                  value: creatto-463117
+                - name: GCP_REGION
+                  value: southamerica-east1
+                - name: BIGQUERY_CUSTOM_RAW_DATASET
+                  value: integrations_custom_raw
+                - name: BIGQUERY_FIVETRAN_RAW_DATASET
+                  value: integrations_fivetran_raw
+                - name: BIGQUERY_NORMALIZED_DATASET
+                  value: integrations_normalized
+                - name: PUBSUB_SYNC_TOPIC
+                  value: integrations-sync-requests
+                - name: PUBSUB_WORKER_SUBSCRIPTION
+                  value: integrations-sync-worker-sub
+                - name: SECRET_PREFIX
+                  value: integrations

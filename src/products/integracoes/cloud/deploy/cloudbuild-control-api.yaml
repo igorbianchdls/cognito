@@ -1,0 +1,11 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - src/products/integracoes/cloud/Dockerfile.control-api
+      - -t
+      - southamerica-east1-docker.pkg.dev/creatto-463117/integrations/control-api:latest
+      - .
+images:
+  - southamerica-east1-docker.pkg.dev/creatto-463117/integrations/control-api:latest
