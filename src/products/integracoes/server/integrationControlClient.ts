@@ -10,12 +10,63 @@ import type {
 } from '@/products/integracoes/shared/contracts/syncContracts'
 
 export type LocalSetupResult = {
-  mode: 'local_stub'
+  mode: 'cloud_stub' | 'local_stub'
   connection: IntegrationConnection
   message: string
 }
 
+type CloudControlApiResponse = {
+  ok?: boolean
+  error?: string
+  message?: string
+  mode?: string
+}
+
+function getCloudControlApiUrl(): string | null {
+  const value = process.env.INTEGRATIONS_CONTROL_API_URL?.trim()
+  if (!value) return null
+  return value.replace(/\/+$/, '')
+}
+
+async function requestCloudControlApi(path: string, body: Record<string, unknown>): Promise<CloudControlApiResponse | null> {
+  const baseUrl = getCloudControlApiUrl()
+  if (!baseUrl) return null
+
+  const response = await fetch(`${baseUrl}${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(process.env.INTEGRATIONS_INTERNAL_API_KEY
+        ? { Authorization: `Bearer ${process.env.INTEGRATIONS_INTERNAL_API_KEY}` }
+        : {}),
+    },
+    body: JSON.stringify(body),
+  })
+  const payload = await response.json().catch(() => ({})) as CloudControlApiResponse
+
+  if (!response.ok || payload.ok === false) {
+    throw new Error(payload.error || `Falha na chamada Cloud Run ${path}`)
+  }
+
+  return payload
+}
+
 export async function prepareLocalConnectionSetup(connection: IntegrationConnection): Promise<LocalSetupResult> {
+  const cloud = await requestCloudControlApi('/connections/setup', {
+    tenantId: connection.tenantId,
+    connectionId: connection.id,
+    provider: connection.provider,
+    resources: connection.selectedResources,
+  })
+
+  if (cloud) {
+    return {
+      mode: 'cloud_stub',
+      connection,
+      message: cloud.message || 'Setup enviado ao Cloud Run.',
+    }
+  }
+
   return {
     mode: 'local_stub',
     connection,
@@ -27,11 +78,18 @@ export async function requestLocalReconnect(params: {
   tenantId: number
   connection: IntegrationConnection
 }): Promise<LocalSetupResult> {
+  const cloud = await requestCloudControlApi('/connections/setup', {
+    tenantId: params.tenantId,
+    connectionId: params.connection.id,
+    provider: params.connection.provider,
+    reconnect: true,
+    resources: params.connection.selectedResources,
+  })
   const updated = await updateIntegrationConnection(params.connection.id, params.tenantId, {
     status: 'pending_auth',
     metadata: {
       reconnectRequestedAt: new Date().toISOString(),
-      setupMode: 'local_stub',
+      setupMode: cloud ? 'cloud_stub' : 'local_stub',
     },
   })
   await createIntegrationEvent({
@@ -41,15 +99,15 @@ export async function requestLocalReconnect(params: {
     actor: 'integracoes-api',
     message: 'Reconexao registrada localmente aguardando fluxo real de autenticacao.',
     metadata: {
-      setupMode: 'local_stub',
+      setupMode: cloud ? 'cloud_stub' : 'local_stub',
       provider: params.connection.provider,
     },
   })
 
   return {
-    mode: 'local_stub',
+    mode: cloud ? 'cloud_stub' : 'local_stub',
     connection: updated || params.connection,
-    message: 'Reconexao registrada localmente. O fluxo real de autenticacao sera adicionado depois.',
+    message: cloud?.message || 'Reconexao registrada localmente. O fluxo real de autenticacao sera adicionado depois.',
   }
 }
 
@@ -60,6 +118,13 @@ export async function requestLocalSync(params: {
   resources?: string[]
   requestedBy?: string
 }): Promise<IntegrationSyncResult | null> {
+  const cloud = await requestCloudControlApi('/sync', {
+    tenantId: params.tenantId,
+    connectionId: params.connectionId,
+    trigger: params.trigger || 'manual',
+    resources: params.resources,
+    requestedBy: params.requestedBy || 'api',
+  })
   const run = await createIntegrationSyncRun({
     tenantId: params.tenantId,
     connectionId: params.connectionId,
@@ -68,7 +133,13 @@ export async function requestLocalSync(params: {
     resources: params.resources,
     metadata: {
       requestedBy: params.requestedBy || 'api',
-      setupMode: 'local_stub',
+      setupMode: cloud ? 'cloud_stub' : 'local_stub',
+      cloudDispatch: cloud
+        ? {
+            mode: cloud.mode,
+            message: cloud.message,
+          }
+        : undefined,
     },
   })
 
