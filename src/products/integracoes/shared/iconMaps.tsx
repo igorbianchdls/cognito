@@ -6,6 +6,7 @@ import BlingIcon from '@/components/icons/BlingIcon'
 import ContaAzulIcon from '@/components/icons/ContaAzulIcon'
 import MercadoLivreIcon from '@/components/icons/MercadoLivreIcon'
 import OmieIcon from '@/components/icons/OmieIcon'
+import RdStationIcon from '@/components/icons/RdStationIcon'
 import TinyIcon from '@/components/icons/TinyIcon'
 import TotvsIcon from '@/components/icons/TotvsIcon'
 import {
@@ -66,6 +67,7 @@ const CUSTOM_ICON_BY_SLUG: Record<string, ComponentType<any>> = {
   CONTA_AZUL: ContaAzulIcon,
   MERCADO_LIVRE: MercadoLivreIcon,
   OMIE: OmieIcon,
+  RD_STATION_CRM: RdStationIcon,
   TINY: TinyIcon,
   TOTVS: TotvsIcon,
 }

@@ -432,9 +432,9 @@ a {
 
 .table-card {
   display: grid;
-  gap: 14px;
+  gap: 12px;
   background: #ffffff;
-  padding: 14px;
+  padding: 0;
 }
 
 .table-scroll {
@@ -561,10 +561,6 @@ a {
   white-space: nowrap;
 }
 
-.financial-statement-card {
-  border-color: var(--cognito-border);
-}
-
 .financial-statement-card .table-scroll {
   max-height: none;
 }
@@ -674,13 +670,10 @@ a {
 
 .chart-card {
   display: grid;
-  gap: 14px;
+  gap: 12px;
   overflow: hidden;
-  border: 1px solid var(--cognito-border);
-  border-radius: 8px;
   background: #ffffff;
-  box-shadow: var(--cognito-shadow);
-  padding: 14px;
+  padding: 0;
 }
 
 .chart-card__header {
@@ -1520,11 +1513,11 @@ a {
   }
 
   .chart-card {
-    padding: 12px;
+    padding: 0;
   }
 
   .table-card {
-    padding: 12px;
+    padding: 0;
   }
 
   .chart-card__header {

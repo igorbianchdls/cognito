@@ -106,7 +106,7 @@ export function TableResultView({ data }: { data: TableStructuredContent }) {
 
   if (!rows.length) {
     return (
-      <section className={`result-card table-card${isFinancialStatement ? ' financial-statement-card' : ''}`}>
+      <section className={`table-card${isFinancialStatement ? ' financial-statement-card' : ''}`}>
         <TableHeader title={title} subtitle={subtitle} />
         <EmptyState title="Sem linhas" description="A consulta nao recebeu linhas para renderizar." />
       </section>
@@ -114,7 +114,7 @@ export function TableResultView({ data }: { data: TableStructuredContent }) {
   }
 
   return (
-    <section className={`result-card table-card${isFinancialStatement ? ' financial-statement-card' : ''}`}>
+    <section className={`table-card${isFinancialStatement ? ' financial-statement-card' : ''}`}>
       <TableHeader title={title} subtitle={subtitle} />
       <div className="table-scroll">
         <table className={`data-table${isFinancialStatement ? ' data-table--financial' : ''}`}>

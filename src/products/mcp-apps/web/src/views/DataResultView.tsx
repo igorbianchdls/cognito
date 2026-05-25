@@ -62,7 +62,7 @@ export function DataResultView({ data }: DataResultViewProps) {
 
   if (!rows.length) {
     return (
-      <section className="result-card table-card">
+      <section className="table-card">
         <TableHeader title={tableTitle} subtitle={description} />
         <EmptyState title="Sem linhas" description="A tool retornou uma tabela vazia." />
       </section>

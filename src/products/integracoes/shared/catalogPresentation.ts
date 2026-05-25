@@ -28,6 +28,10 @@ export const DATA_CONNECTOR_TOP_PRIORITY_ORDER = [
   'BLING',
   'TINY',
   'TOTVS',
+  'HUBSPOT',
+  'PIPEDRIVE',
+  'SALESFORCE',
+  'RD_STATION_CRM',
   'MERCADO_LIVRE',
   'METAADS',
   'GOOGLEADS',
@@ -78,6 +82,8 @@ export const MCP_DESCRIPTION_OVERRIDES: Record<string, string> = {
     'Gerenciar contas, leads e oportunidades.',
   PIPEDRIVE:
     'Gerenciar pipeline e negócios.',
+  RD_STATION_CRM:
+    'Gerenciar leads, contatos e oportunidades.',
   STRIPE:
     'Consultar pagamentos e assinaturas.',
   ZENDESK:
