@@ -2,12 +2,15 @@ import { NextRequest } from 'next/server'
 
 import {
   getIntegrationConnection,
+  listIntegrationEvents,
   listIntegrationSyncRuns,
   updateIntegrationConnection,
 } from '@/products/integracoes/server/integrationConnectionRepository'
 import { IntegrationProviderError } from '@/products/integracoes/server/integrationProviderRegistry'
 import {
   mapConnectionStatusToUi,
+  mapIntegrationEventSeverityToUi,
+  mapIntegrationEventTypeToUi,
   mapSyncRunStatusToUi,
 } from '@/products/integracoes/server/integrationStatusMapper'
 import type { IntegrationConnectionStatus } from '@/products/integracoes/shared/contracts/connectionContracts'
@@ -42,6 +45,11 @@ export async function GET(
       connectionId: id,
       limit: Number(req.nextUrl.searchParams.get('runs_limit') || 20),
     })
+    const events = await listIntegrationEvents({
+      tenantId,
+      connectionId: id,
+      limit: Number(req.nextUrl.searchParams.get('events_limit') || 30),
+    })
 
     return Response.json({
       ok: true,
@@ -52,6 +60,11 @@ export async function GET(
       syncRuns: runs.map((run) => ({
         ...run,
         uiStatus: mapSyncRunStatusToUi(run.status),
+      })),
+      events: events.map((event) => ({
+        ...event,
+        uiEventType: mapIntegrationEventTypeToUi(event.eventType),
+        uiSeverity: mapIntegrationEventSeverityToUi(event.severity),
       })),
     })
   } catch (error) {

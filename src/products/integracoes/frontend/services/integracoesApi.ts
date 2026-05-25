@@ -4,6 +4,7 @@ import type {
   IntegrationConnection,
   UpdateIntegrationConnectionInput,
 } from '@/products/integracoes/shared/contracts/connectionContracts'
+import type { IntegrationEvent } from '@/products/integracoes/shared/contracts/eventContracts'
 import type {
   IntegrationSyncResult,
   IntegrationSyncRun,
@@ -54,6 +55,19 @@ export type IntegrationSyncRunWithUi = IntegrationSyncRun & {
   }
 }
 
+export type IntegrationEventWithUi = IntegrationEvent & {
+  uiEventType?: {
+    label: string
+    tone: string
+    description: string
+  }
+  uiSeverity?: {
+    label: string
+    tone: string
+    description: string
+  }
+}
+
 type ProvidersResponse = {
   ok?: boolean
   error?: string
@@ -71,6 +85,7 @@ type ConnectionResponse = {
   error?: string
   connection?: IntegrationConnectionWithUi
   syncRuns?: IntegrationSyncRunWithUi[]
+  events?: IntegrationEventWithUi[]
 }
 
 type CreateConnectionResponse = {
@@ -197,7 +212,11 @@ export async function fetchIntegrationConnections(params?: {
 export async function fetchIntegrationConnectionDetail(
   id: string,
   tenantId = 1,
-): Promise<{ connection: IntegrationConnectionWithUi; syncRuns: IntegrationSyncRunWithUi[] }> {
+): Promise<{
+  connection: IntegrationConnectionWithUi
+  syncRuns: IntegrationSyncRunWithUi[]
+  events: IntegrationEventWithUi[]
+}> {
   const query = buildQuery({ tenantId: String(tenantId) })
   const payload = await requestJson<ConnectionResponse>(`/api/integracoes/connections/${encodeURIComponent(id)}?${query}`)
 
@@ -206,6 +225,7 @@ export async function fetchIntegrationConnectionDetail(
   return {
     connection: payload.connection,
     syncRuns: Array.isArray(payload.syncRuns) ? payload.syncRuns : [],
+    events: Array.isArray(payload.events) ? payload.events : [],
   }
 }
 

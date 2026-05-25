@@ -13,12 +13,15 @@ import {
 import { renderIntegrationLogo } from '@/products/integracoes/shared/iconMaps'
 import type {
   IntegrationConnectionWithUi,
+  IntegrationEventWithUi,
   IntegrationSyncRunWithUi,
 } from '@/products/integracoes/frontend/services/integracoesApi'
+import IntegrationEventTimeline from '@/products/integracoes/frontend/features/connections/components/IntegrationEventTimeline'
 import SyncRunsTable from '@/products/integracoes/frontend/features/connections/components/SyncRunsTable'
 
 type ConnectionDetailDrawerProps = {
   connection: IntegrationConnectionWithUi | null
+  events: IntegrationEventWithUi[]
   syncRuns: IntegrationSyncRunWithUi[]
   open: boolean
   busy?: boolean
@@ -42,6 +45,7 @@ function formatDate(value?: string | null) {
 
 export default function ConnectionDetailDrawer({
   connection,
+  events,
   syncRuns,
   open,
   busy = false,
@@ -102,6 +106,11 @@ export default function ConnectionDetailDrawer({
               <section>
                 <div className="mb-3 text-[14px] font-semibold text-[#24304A]">Últimas sincronizações</div>
                 <SyncRunsTable runs={syncRuns} />
+              </section>
+
+              <section>
+                <div className="mb-3 text-[14px] font-semibold text-[#24304A]">Eventos operacionais</div>
+                <IntegrationEventTimeline events={events} />
               </section>
             </div>
 

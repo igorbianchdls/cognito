@@ -5,6 +5,12 @@ import type {
   UpdateIntegrationConnectionInput,
 } from '@/products/integracoes/shared/contracts/connectionContracts'
 import type {
+  CreateIntegrationEventInput,
+  IntegrationEvent,
+  IntegrationEventSeverity,
+  IntegrationEventType,
+} from '@/products/integracoes/shared/contracts/eventContracts'
+import type {
   IntegrationSyncRun,
   IntegrationSyncRunStatus,
   IntegrationSyncTrigger,
@@ -56,6 +62,18 @@ type DbSyncRunRow = {
   records_updated: number
   records_failed: number
   error_message: string | null
+  metadata_json: unknown
+  created_at: string | Date
+}
+
+type DbEventRow = {
+  id: string | number
+  tenant_id: number
+  connection_id: string | number | null
+  event_type: string
+  severity: string
+  actor: string | null
+  message: string
   metadata_json: unknown
   created_at: string | Date
 }
@@ -134,6 +152,44 @@ function toSyncRun(row: DbSyncRunRow): IntegrationSyncRun {
   }
 }
 
+function normalizeEventSeverity(severity: unknown): IntegrationEventSeverity {
+  const value = String(severity || '').trim().toLowerCase()
+  if (value === 'warning' || value === 'error') return value
+  return 'info'
+}
+
+function normalizeEventType(eventType: unknown): IntegrationEventType {
+  const value = String(eventType || '').trim().toLowerCase()
+  if (
+    value === 'connection.created' ||
+    value === 'connection.updated' ||
+    value === 'connection.reconnect_requested' ||
+    value === 'sync.requested' ||
+    value === 'sync.completed' ||
+    value === 'sync.failed' ||
+    value === 'auth.callback_received' ||
+    value === 'system.note'
+  ) {
+    return value
+  }
+
+  return 'system.note'
+}
+
+function toEvent(row: DbEventRow): IntegrationEvent {
+  return {
+    id: String(row.id),
+    tenantId: Number(row.tenant_id),
+    connectionId: row.connection_id == null ? null : String(row.connection_id),
+    eventType: normalizeEventType(row.event_type),
+    severity: normalizeEventSeverity(row.severity),
+    actor: row.actor,
+    message: row.message,
+    metadata: asJsonObject(row.metadata_json),
+    createdAt: toIsoString(row.created_at) || '',
+  }
+}
+
 function compactMetadata(metadata: unknown): JsonObject {
   return metadata && typeof metadata === 'object' && !Array.isArray(metadata)
     ? metadata as JsonObject
@@ -154,6 +210,34 @@ async function queryConnectionById(
   )
   const row = result.rows[0] as DbConnectionRow | undefined
   return row ? toConnection(row) : null
+}
+
+async function insertIntegrationEvent(
+  client: Pick<SQLClient, 'query'>,
+  input: CreateIntegrationEventInput,
+): Promise<IntegrationEvent> {
+  const result = await client.query(
+    `INSERT INTO mcp_app.integration_events
+      (tenant_id, connection_id, event_type, severity, actor, message, metadata_json)
+     VALUES
+      ($1, $2, $3, $4, $5, $6, $7::jsonb)
+     RETURNING *`,
+    [
+      Number(input.tenantId || 1),
+      input.connectionId || null,
+      normalizeEventType(input.eventType),
+      normalizeEventSeverity(input.severity || 'info'),
+      input.actor || null,
+      input.message,
+      JSON.stringify(compactMetadata(input.metadata)),
+    ],
+  )
+
+  return toEvent(result.rows[0] as DbEventRow)
+}
+
+export async function createIntegrationEvent(input: CreateIntegrationEventInput): Promise<IntegrationEvent> {
+  return withTransaction((client) => insertIntegrationEvent(client, input))
 }
 
 export async function listIntegrationConnections(params?: {
@@ -215,30 +299,47 @@ export async function createIntegrationConnection(
   const syncModes = input.syncModes?.length ? input.syncModes : provider.syncModes
   const displayName = String(input.displayName || provider.name).trim() || provider.name
 
-  const rows = await runQuery<DbConnectionRow>(
-    `INSERT INTO mcp_app.integration_connections
-      (tenant_id, domain, provider, display_name, status, auth_type, selected_resources, sync_frequency, sync_modes_json, metadata_json, updated_at)
-     VALUES
-      ($1, $2, $3, $4, 'pending_auth', $5, $6::jsonb, $7, $8::jsonb, $9::jsonb, now())
-     RETURNING *`,
-    [
-      tenantId,
-      provider.domain,
-      provider.slug,
-      displayName,
-      provider.authType,
-      JSON.stringify(selectedResources),
-      input.syncFrequency || 'manual',
-      JSON.stringify(syncModes),
-      JSON.stringify({
-        ...(input.metadata || {}),
-        toolkitSlug: provider.toolkitSlug,
-        setupMode: 'local_stub',
-      }),
-    ],
-  )
+  return withTransaction(async (client) => {
+    const result = await client.query(
+      `INSERT INTO mcp_app.integration_connections
+        (tenant_id, domain, provider, display_name, status, auth_type, selected_resources, sync_frequency, sync_modes_json, metadata_json, updated_at)
+       VALUES
+        ($1, $2, $3, $4, 'pending_auth', $5, $6::jsonb, $7, $8::jsonb, $9::jsonb, now())
+       RETURNING *`,
+      [
+        tenantId,
+        provider.domain,
+        provider.slug,
+        displayName,
+        provider.authType,
+        JSON.stringify(selectedResources),
+        input.syncFrequency || 'manual',
+        JSON.stringify(syncModes),
+        JSON.stringify({
+          ...(input.metadata || {}),
+          toolkitSlug: provider.toolkitSlug,
+          setupMode: 'local_stub',
+        }),
+      ],
+    )
 
-  return toConnection(rows[0])
+    const connection = toConnection(result.rows[0] as DbConnectionRow)
+    await insertIntegrationEvent(client, {
+      tenantId,
+      connectionId: connection.id,
+      eventType: 'connection.created',
+      actor: 'integracoes-api',
+      message: `${provider.name} foi criada em modo local aguardando autenticacao.`,
+      metadata: {
+        provider: provider.slug,
+        domain: provider.domain,
+        selectedResources,
+        syncFrequency: input.syncFrequency || 'manual',
+      },
+    })
+
+    return connection
+  })
 }
 
 export async function updateIntegrationConnection(
@@ -284,8 +385,53 @@ export async function updateIntegrationConnection(
     )
 
     const row = result.rows[0] as DbConnectionRow | undefined
-    return row ? toConnection(row) : null
+    if (!row) return null
+
+    const connection = toConnection(row)
+    await insertIntegrationEvent(client, {
+      tenantId,
+      connectionId: connection.id,
+      eventType: 'connection.updated',
+      actor: 'integracoes-api',
+      message: 'Configuracao da conexao atualizada.',
+      metadata: {
+        changedFields: Object.keys(input).filter((key) => input[key as keyof UpdateIntegrationConnectionInput] !== undefined),
+        status,
+        syncFrequency: input.syncFrequency || current.syncFrequency,
+      },
+    })
+
+    return connection
   })
+}
+
+export async function listIntegrationEvents(params: {
+  tenantId?: number
+  connectionId?: string
+  limit?: number
+}): Promise<IntegrationEvent[]> {
+  const tenantId = Number(params.tenantId || 1)
+  const limit = Math.min(Math.max(Number(params.limit || 30), 1), 100)
+  const conditions = ['tenant_id = $1']
+  const values: unknown[] = [tenantId]
+
+  if (params.connectionId) {
+    values.push(params.connectionId)
+    conditions.push(`connection_id = $${values.length}`)
+  }
+
+  values.push(limit)
+
+  const rows = await runQuery<DbEventRow>(
+    `SELECT *
+     FROM mcp_app.integration_events
+     WHERE ${conditions.join(' AND ')}
+     ORDER BY created_at DESC, id DESC
+     LIMIT $${values.length}`,
+    values,
+  )
+
+  return rows.map(toEvent)
 }
 
 export async function listIntegrationSyncRuns(params: {
@@ -321,6 +467,19 @@ export async function createIntegrationSyncRun(params: {
   return withTransaction(async (client) => {
     const connection = await queryConnectionById(client, params.connectionId, tenantId)
     if (!connection) return null
+
+    await insertIntegrationEvent(client, {
+      tenantId,
+      connectionId: params.connectionId,
+      eventType: 'sync.requested',
+      actor: String(params.metadata?.requestedBy || 'api'),
+      message: 'Sincronizacao local solicitada.',
+      metadata: {
+        trigger: params.trigger,
+        resources: params.resources || connection.selectedResources,
+        setupMode: params.metadata?.setupMode,
+      },
+    })
 
     const result = await client.query(
       `INSERT INTO mcp_app.integration_sync_runs
@@ -359,6 +518,25 @@ export async function createIntegrationSyncRun(params: {
     )
 
     const row = result.rows[0] as DbSyncRunRow | undefined
-    return row ? toSyncRun(row) : null
+    if (!row) return null
+
+    const run = toSyncRun(row)
+    await insertIntegrationEvent(client, {
+      tenantId,
+      connectionId: params.connectionId,
+      eventType: status === 'error' ? 'sync.failed' : 'sync.completed',
+      severity: status === 'error' ? 'error' : status === 'warning' ? 'warning' : 'info',
+      actor: String(params.metadata?.requestedBy || 'api'),
+      message: status === 'error' ? 'Sincronizacao local terminou com erro.' : 'Sincronizacao local concluida.',
+      metadata: {
+        runId: run.id,
+        status: run.status,
+        recordsIn: run.recordsIn,
+        recordsUpdated: run.recordsUpdated,
+        recordsFailed: run.recordsFailed,
+      },
+    })
+
+    return run
   })
 }

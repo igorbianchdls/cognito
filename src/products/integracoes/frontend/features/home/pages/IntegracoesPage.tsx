@@ -404,6 +404,7 @@ export default function IntegracoesPage() {
     error: integrationError,
     loading: integrationLoading,
     selectedConnection,
+    selectedEvents,
     selectedSyncRuns,
     createConnection,
     loadConnectionDetail,
@@ -718,6 +719,7 @@ export default function IntegracoesPage() {
         />
         <ConnectionDetailDrawer
           connection={selectedConnection}
+          events={selectedEvents}
           syncRuns={selectedSyncRuns}
           open={isConnectionDrawerOpen}
           busy={Boolean(integrationBusyId)}

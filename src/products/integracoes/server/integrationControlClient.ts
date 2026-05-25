@@ -1,4 +1,5 @@
 import {
+  createIntegrationEvent,
   createIntegrationSyncRun,
   updateIntegrationConnection,
 } from '@/products/integracoes/server/integrationConnectionRepository'
@@ -31,6 +32,17 @@ export async function requestLocalReconnect(params: {
     metadata: {
       reconnectRequestedAt: new Date().toISOString(),
       setupMode: 'local_stub',
+    },
+  })
+  await createIntegrationEvent({
+    tenantId: params.tenantId,
+    connectionId: params.connection.id,
+    eventType: 'connection.reconnect_requested',
+    actor: 'integracoes-api',
+    message: 'Reconexao registrada localmente aguardando fluxo real de autenticacao.',
+    metadata: {
+      setupMode: 'local_stub',
+      provider: params.connection.provider,
     },
   })
 

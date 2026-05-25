@@ -9,6 +9,7 @@ import {
   requestIntegrationReconnect,
   requestIntegrationSync,
   type IntegrationConnectionWithUi,
+  type IntegrationEventWithUi,
   type IntegrationSyncRunWithUi,
 } from '@/products/integracoes/frontend/services/integracoesApi'
 
@@ -21,6 +22,7 @@ function toolkitKeyFromConnection(connection: IntegrationConnectionWithUi): stri
 export default function useIntegrationConnections(tenantId = 1) {
   const [connections, setConnections] = useState<IntegrationConnectionWithUi[]>([])
   const [selectedConnection, setSelectedConnection] = useState<IntegrationConnectionWithUi | null>(null)
+  const [selectedEvents, setSelectedEvents] = useState<IntegrationEventWithUi[]>([])
   const [selectedSyncRuns, setSelectedSyncRuns] = useState<IntegrationSyncRunWithUi[]>([])
   const [loading, setLoading] = useState(false)
   const [busyId, setBusyId] = useState<string | null>(null)
@@ -84,6 +86,7 @@ export default function useIntegrationConnections(tenantId = 1) {
       const detail = await fetchIntegrationConnectionDetail(id, tenantId)
       setSelectedConnection(detail.connection)
       setSelectedSyncRuns(detail.syncRuns)
+      setSelectedEvents(detail.events)
       return detail
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : String(nextError))
@@ -137,6 +140,7 @@ export default function useIntegrationConnections(tenantId = 1) {
     error,
     loading,
     selectedConnection,
+    selectedEvents,
     selectedSyncRuns,
     setError,
     setSelectedConnection,
