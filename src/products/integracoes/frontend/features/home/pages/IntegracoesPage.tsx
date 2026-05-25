@@ -5,10 +5,14 @@ import { ArrowRight, ChevronDown, Database, LockKeyhole, MoreHorizontal, Search,
 
 import PageContainer from '@/components/layout/PageContainer'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import ConnectionDetailDrawer from '@/products/integracoes/frontend/features/connections/components/ConnectionDetailDrawer'
+import ConnectionStatusPanel from '@/products/integracoes/frontend/features/connections/components/ConnectionStatusPanel'
+import useIntegrationConnections from '@/products/integracoes/frontend/features/connections/hooks/useIntegrationConnections'
+import ProviderSetupModal from '@/products/integracoes/frontend/features/home/components/ProviderSetupModal'
 import useIntegracoesComposio from '@/products/integracoes/frontend/hooks/useIntegracoesComposio'
+import type { IntegrationConnectionWithUi } from '@/products/integracoes/frontend/services/integracoesApi'
 import { renderIntegrationLogo, toolkitHasIcon } from '@/products/integracoes/shared/iconMaps'
 import {
   applyToolkitDescriptionOverrides,
@@ -18,14 +22,17 @@ import {
 } from '@/products/integracoes/shared/catalogPresentation'
 import { DATA_CONNECTOR_EXTRA_TOOLKITS } from '@/products/integracoes/shared/dataConnectorExtras'
 import { TOOLKITS } from '@/products/integracoes/shared/toolkits'
+import { getIntegrationProvider } from '@/products/integracoes/shared/providers/providerCatalog'
 import type { ToolkitDefinition, ToolkitStatusMap } from '@/products/integracoes/shared/types'
 
 type IntegrationKind = 'mcp' | 'data-connectors'
-type CatalogCategory = 'all' | 'communication' | 'data' | 'productivity' | 'marketing' | 'support' | 'other'
+type CatalogCategory = 'all' | 'erp' | 'crm' | 'communication' | 'data' | 'productivity' | 'marketing' | 'support' | 'other'
 type SortMode = 'popular' | 'name' | 'connected'
 
 const CATEGORY_TABS: Array<{ value: CatalogCategory; label: string }> = [
   { value: 'all', label: 'Todas' },
+  { value: 'erp', label: 'ERP' },
+  { value: 'crm', label: 'CRM' },
   { value: 'communication', label: 'Comunicação' },
   { value: 'data', label: 'Dados & Relatórios' },
   { value: 'productivity', label: 'Produtividade' },
@@ -92,6 +99,12 @@ const DATA_SLUGS = new Set([
   'TABLEAU',
   'LOOKER',
   'DATADOG',
+  'CONTA_AZUL',
+  'OMIE',
+  'BLING',
+  'TINY',
+  'TOTVS',
+  'RD_STATION_CRM',
 ])
 
 const PRODUCTIVITY_SLUGS = new Set([
@@ -144,6 +157,9 @@ const SUPPORT_SLUGS = new Set([
 
 function categorizeToolkit(slug: string): CatalogCategory {
   const key = String(slug).toUpperCase()
+  const provider = getIntegrationProvider(key)
+  if (provider?.domain === 'erp') return 'erp'
+  if (provider?.domain === 'crm') return 'crm'
   if (COMMUNICATION_SLUGS.has(key)) return 'communication'
   if (DATA_SLUGS.has(key)) return 'data'
   if (PRODUCTIVITY_SLUGS.has(key)) return 'productivity'
@@ -281,25 +297,27 @@ function CatalogCard({
   kind,
   tkStatus,
   busySlug,
+  dataConnection,
   onAction,
 }: {
   toolkit: ToolkitDefinition
   kind: IntegrationKind
   tkStatus: ToolkitStatusMap
   busySlug: string | null
+  dataConnection?: IntegrationConnectionWithUi | null
   onAction: (toolkit: ToolkitDefinition) => void
 }) {
-  const connected = isToolkitConnected(toolkit.slug, tkStatus)
+  const connected = kind === 'data-connectors' ? Boolean(dataConnection) : isToolkitConnected(toolkit.slug, tkStatus)
   const category = CATEGORY_TABS.find((tab) => tab.value === categorizeToolkit(toolkit.slug))?.label ?? 'Outros'
-  const statusLabel = connected ? 'Conectado' : kind === 'mcp' ? 'Pronto para automação' : 'Pronto para sincronizar'
+  const statusLabel = dataConnection?.uiStatus?.label || (connected ? 'Conectado' : kind === 'mcp' ? 'Pronto para automação' : 'Pronto para sincronizar')
   const helperText = connected
     ? kind === 'mcp'
       ? 'Disponível para ações do agente neste workspace.'
-      : 'Sincronização de dados pronta para uso em dashboards.'
+      : dataConnection?.uiStatus?.description || 'Sincronização de dados pronta para uso em dashboards.'
     : kind === 'mcp'
       ? 'Conecte para liberar ações do agente e fluxos operacionais.'
       : 'Conecte para alimentar relatórios e análises contínuas.'
-  const isBusy = kind === 'mcp' && busySlug === toolkit.slug
+  const isBusy = busySlug === toolkit.slug || busySlug === dataConnection?.id
   const buttonLabel = isBusy ? 'Abrindo...' : connected ? 'Gerenciar' : kind === 'mcp' ? 'Conectar' : 'Configurar'
 
   return (
@@ -360,88 +378,6 @@ function CatalogCard({
   )
 }
 
-function DataConnectorSetupModal({
-  connector,
-  open,
-  onOpenChange,
-}: {
-  connector: ToolkitDefinition | null
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}) {
-  if (!connector) return null
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[640px] overflow-hidden rounded-[28px] border border-[#E7EAF2] bg-white p-0 shadow-[0_32px_80px_rgba(20,29,48,0.24)]">
-        <DialogHeader className="border-b border-[#EEF1F6] px-7 py-6 text-left">
-          <div className="flex items-start gap-4">
-            <div className="grid h-14 w-14 shrink-0 place-items-center rounded-[18px] bg-[#F7F8FC] ring-1 ring-[#E8ECF4]">
-              {renderIntegrationLogo(connector.slug, connector.name)}
-            </div>
-            <div className="min-w-0">
-              <div className="inline-flex rounded-full bg-[#EEF4FF] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#2F6FE4]">
-                Conector de dados
-              </div>
-              <DialogTitle className="mt-3 text-[28px] font-semibold tracking-[-0.04em] text-[#17203A]">
-                {connector.name}
-              </DialogTitle>
-              <DialogDescription className="mt-2 text-[15px] leading-7 text-[#66748D]">
-                A conexão será concluída em um fluxo externo seguro para autenticar a fonte, configurar a sincronização e
-                definir o destino dos dados.
-              </DialogDescription>
-            </div>
-          </div>
-        </DialogHeader>
-
-        <div className="px-7 py-6">
-          <div className="rounded-[22px] border border-[#E7EAF2] bg-[#FAFBFD] p-5">
-            <div className="text-[14px] font-semibold text-[#24304A]">O que acontece em seguida</div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-[16px] border border-[#E4E8F0] bg-white p-4">
-                <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#9AA6BC]">Etapa 1</div>
-                <div className="mt-2 text-[14px] font-semibold text-[#1E2942]">Autenticar a fonte</div>
-                <div className="mt-2 text-[13px] leading-6 text-[#66748D]">Validar credenciais e permissões de acesso.</div>
-              </div>
-              <div className="rounded-[16px] border border-[#E4E8F0] bg-white p-4">
-                <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#9AA6BC]">Etapa 2</div>
-                <div className="mt-2 text-[14px] font-semibold text-[#1E2942]">Configurar a sincronização</div>
-                <div className="mt-2 text-[13px] leading-6 text-[#66748D]">Escolher frequência, escopo e tabelas iniciais.</div>
-              </div>
-              <div className="rounded-[16px] border border-[#E4E8F0] bg-white p-4">
-                <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#9AA6BC]">Etapa 3</div>
-                <div className="mt-2 text-[14px] font-semibold text-[#1E2942]">Definir o destino</div>
-                <div className="mt-2 text-[13px] leading-6 text-[#66748D]">Selecionar onde os dados ficarão disponíveis.</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-5 rounded-[18px] border border-dashed border-[#D8DEEB] bg-white px-4 py-3 text-[13px] leading-6 text-[#6B7790]">
-            Este fluxo foi preparado para abrir a configuração externa da conexão sem expor detalhes técnicos na interface do usuário.
-          </div>
-        </div>
-
-        <DialogFooter className="border-t border-[#EEF1F6] px-7 py-5 sm:justify-between sm:space-x-0">
-          <button
-            type="button"
-            onClick={() => onOpenChange(false)}
-            className="inline-flex h-11 items-center justify-center rounded-[14px] border border-[#DCE3F0] bg-white px-5 text-[14px] font-semibold text-[#334155] transition hover:bg-[#F7F8FC]"
-          >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={() => onOpenChange(false)}
-            className="inline-flex h-11 items-center justify-center rounded-[14px] bg-[#17203A] px-5 text-[14px] font-semibold text-white transition hover:bg-[#0F172C]"
-          >
-            Continuar conexão
-          </button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
 export default function IntegracoesPage() {
   const [activeKind, setActiveKind] = useState<IntegrationKind>('data-connectors')
   const [activeCategory, setActiveCategory] = useState<CatalogCategory>('all')
@@ -449,6 +385,7 @@ export default function IntegracoesPage() {
   const [sortMode, setSortMode] = useState<SortMode>('popular')
   const [selectedDataConnector, setSelectedDataConnector] = useState<ToolkitDefinition | null>(null)
   const [isDataConnectorModalOpen, setIsDataConnectorModalOpen] = useState(false)
+  const [isConnectionDrawerOpen, setIsConnectionDrawerOpen] = useState(false)
 
   const {
     busySlug,
@@ -460,6 +397,19 @@ export default function IntegracoesPage() {
     loadUsers,
     handleIntegrate,
   } = useIntegracoesComposio()
+  const {
+    busyId: integrationBusyId,
+    connections,
+    connectionsByToolkit,
+    error: integrationError,
+    loading: integrationLoading,
+    selectedConnection,
+    selectedSyncRuns,
+    createConnection,
+    loadConnectionDetail,
+    reconnectConnection,
+    syncConnection,
+  } = useIntegrationConnections(1)
   const mcpToolkits = useMemo(
     () => applyToolkitDescriptionOverrides(TOOLKITS, MCP_DESCRIPTION_OVERRIDES),
     [],
@@ -475,6 +425,9 @@ export default function IntegracoesPage() {
   const catalogToolkits = useMemo(() => {
     const source = activeKind === 'mcp' ? mcpToolkits : dataConnectorSamples
     const priority = activeKind === 'mcp' ? MCP_TOP_PRIORITY_ORDER : DATA_CONNECTOR_TOP_PRIORITY_ORDER
+    const statusMap = activeKind === 'mcp'
+      ? tkStatus
+      : Object.fromEntries(Array.from(connectionsByToolkit.keys()).map((slug) => [slug, true]))
     const query = search.trim().toLowerCase()
 
     const filtered = source.filter((toolkit) => {
@@ -484,10 +437,16 @@ export default function IntegracoesPage() {
       return haystack.includes(query)
     })
 
-    return sortByPriority(filtered, priority, tkStatus, sortMode)
-  }, [activeCategory, activeKind, dataConnectorSamples, mcpToolkits, search, sortMode, tkStatus])
+    return sortByPriority(filtered, priority, statusMap, sortMode)
+  }, [activeCategory, activeKind, connectionsByToolkit, dataConnectorSamples, mcpToolkits, search, sortMode, tkStatus])
 
   const openDataConnectorModal = (toolkit: ToolkitDefinition) => {
+    const existingConnection = connectionsByToolkit.get(String(toolkit.slug).toUpperCase())
+    if (existingConnection) {
+      void loadConnectionDetail(existingConnection.id).then(() => setIsConnectionDrawerOpen(true))
+      return
+    }
+
     setSelectedDataConnector(toolkit)
     setIsDataConnectorModalOpen(true)
   }
@@ -558,7 +517,7 @@ export default function IntegracoesPage() {
                       </div>
                     )}
 
-                    {error && <div className="text-sm text-red-600 mb-3">{error}</div>}
+                    {(error || integrationError) && <div className="text-sm text-red-600 mb-3">{error || integrationError}</div>}
 
                     <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                       <Tabs value={activeCategory} onValueChange={(value) => setActiveCategory(value as CatalogCategory)} className="min-w-0">
@@ -633,6 +592,7 @@ export default function IntegracoesPage() {
                       </>
                     ) : (
                       <>
+                        <ConnectionStatusPanel connections={connections} loading={integrationLoading} />
                         <div className="mb-4 flex items-center justify-between">
                           <div>
                             <h2 className="text-xl font-semibold text-gray-900">Conectores de Dados (Dashboards)</h2>
@@ -650,8 +610,9 @@ export default function IntegracoesPage() {
                               key={toolkit.slug}
                               toolkit={toolkit}
                               kind="data-connectors"
-                              tkStatus={tkStatus}
-                              busySlug={null}
+                              tkStatus={Object.fromEntries(Array.from(connectionsByToolkit.keys()).map((slug) => [slug, true]))}
+                              busySlug={integrationBusyId}
+                              dataConnection={connectionsByToolkit.get(String(toolkit.slug).toUpperCase())}
                               onAction={openDataConnectorModal}
                             />
                           ))}
@@ -738,12 +699,34 @@ export default function IntegracoesPage() {
             </PageContainer>
           </div>
         </div>
-        <DataConnectorSetupModal
+        <ProviderSetupModal
           connector={selectedDataConnector}
           open={isDataConnectorModalOpen}
+          busy={Boolean(integrationBusyId)}
+          error={integrationError}
           onOpenChange={(open) => {
             setIsDataConnectorModalOpen(open)
             if (!open) setSelectedDataConnector(null)
+          }}
+          onCreate={async (params) => {
+            const connection = await createConnection(params)
+            setIsDataConnectorModalOpen(false)
+            setSelectedDataConnector(null)
+            await loadConnectionDetail(connection.id)
+            setIsConnectionDrawerOpen(true)
+          }}
+        />
+        <ConnectionDetailDrawer
+          connection={selectedConnection}
+          syncRuns={selectedSyncRuns}
+          open={isConnectionDrawerOpen}
+          busy={Boolean(integrationBusyId)}
+          onOpenChange={setIsConnectionDrawerOpen}
+          onSync={(connection) => {
+            void syncConnection(connection.id, connection.selectedResources)
+          }}
+          onReconnect={(connection) => {
+            void reconnectConnection(connection.id)
           }}
         />
       </SidebarInset>

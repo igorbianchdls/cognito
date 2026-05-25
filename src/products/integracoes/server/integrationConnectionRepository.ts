@@ -2,7 +2,6 @@ import { runQuery, withTransaction, type SQLClient } from '@/lib/postgres'
 import type {
   CreateIntegrationConnectionInput,
   IntegrationConnection,
-  IntegrationConnectionStatus,
   UpdateIntegrationConnectionInput,
 } from '@/products/integracoes/shared/contracts/connectionContracts'
 import type {
