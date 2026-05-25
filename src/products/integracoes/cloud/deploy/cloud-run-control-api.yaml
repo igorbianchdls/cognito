@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: integrations-control-api
   annotations:
-    run.googleapis.com/ingress: internal-and-cloud-load-balancing
+    run.googleapis.com/ingress: all
 spec:
   template:
     metadata:

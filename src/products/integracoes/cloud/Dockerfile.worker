@@ -5,7 +5,7 @@ WORKDIR /app
 RUN corepack enable
 
 COPY package.json pnpm-lock.yaml ./
-COPY tsconfig.json next-env.d.ts ./
+COPY tsconfig.json ./
 COPY src ./src
 
 RUN pnpm install --frozen-lockfile --ignore-scripts

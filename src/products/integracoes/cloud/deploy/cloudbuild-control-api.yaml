@@ -9,3 +9,5 @@ steps:
       - .
 images:
   - southamerica-east1-docker.pkg.dev/creatto-463117/integrations/control-api:latest
+options:
+  logging: GCS_ONLY

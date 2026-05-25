@@ -9,3 +9,5 @@ steps:
       - .
 images:
   - southamerica-east1-docker.pkg.dev/creatto-463117/integrations/worker:latest
+options:
+  logging: CLOUD_LOGGING_ONLY
