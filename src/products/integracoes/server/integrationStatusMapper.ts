@@ -20,49 +20,49 @@ export function mapIntegrationEventTypeToUi(eventType: IntegrationEventType): In
     case 'connection.created':
       return {
         label: 'Conexão criada',
-        tone: 'blue',
+        tone: 'progress',
         description: 'Configuração local inicial registrada.',
       }
     case 'connection.updated':
       return {
         label: 'Conexão atualizada',
-        tone: 'slate',
+        tone: 'neutral',
         description: 'Campos operacionais da conexão foram alterados.',
       }
     case 'connection.reconnect_requested':
       return {
         label: 'Reconexão solicitada',
-        tone: 'amber',
+        tone: 'warning',
         description: 'A autenticação precisa ser refeita.',
       }
     case 'sync.requested':
       return {
         label: 'Sync solicitado',
-        tone: 'blue',
+        tone: 'progress',
         description: 'Uma execução de sincronização foi pedida.',
       }
     case 'sync.completed':
       return {
         label: 'Sync concluído',
-        tone: 'green',
+        tone: 'success',
         description: 'A execução terminou sem erro.',
       }
     case 'sync.failed':
       return {
         label: 'Sync com erro',
-        tone: 'red',
+        tone: 'danger',
         description: 'A execução terminou com falha.',
       }
     case 'auth.callback_received':
       return {
         label: 'Callback recebido',
-        tone: 'blue',
+        tone: 'progress',
         description: 'Retorno de autenticação recebido.',
       }
     default:
       return {
         label: 'Evento',
-        tone: 'slate',
+        tone: 'neutral',
         description: 'Registro operacional da integração.',
       }
   }
@@ -73,19 +73,19 @@ export function mapIntegrationEventSeverityToUi(severity: IntegrationEventSeveri
     case 'error':
       return {
         label: 'Erro',
-        tone: 'red',
+        tone: 'danger',
         description: 'Evento que exige investigação.',
       }
     case 'warning':
       return {
         label: 'Atenção',
-        tone: 'amber',
+        tone: 'warning',
         description: 'Evento que pode exigir ação.',
       }
     default:
       return {
         label: 'Informação',
-        tone: 'blue',
+        tone: 'progress',
         description: 'Evento informativo.',
       }
   }
