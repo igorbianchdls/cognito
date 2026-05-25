@@ -1,0 +1,16 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "target": "ES2022",
+    "types": [
+      "../../../../src/types"
+    ]
+  },
+  "include": [
+    "src/**/*.ts"
+  ]
+}
