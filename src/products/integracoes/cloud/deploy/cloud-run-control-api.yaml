@@ -29,3 +29,8 @@ spec:
               value: integrations-internal-api-key
             - name: SECRET_PREFIX
               value: integrations
+            - name: INTEGRATIONS_INTERNAL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: integrations-internal-api-key
+                  key: latest

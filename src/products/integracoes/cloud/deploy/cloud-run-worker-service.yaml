@@ -1,0 +1,37 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: integrations-worker-service
+  annotations:
+    run.googleapis.com/ingress: all
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "2"
+    spec:
+      serviceAccountName: integrations-worker@creatto-463117.iam.gserviceaccount.com
+      containers:
+        - image: southamerica-east1-docker.pkg.dev/creatto-463117/integrations/worker:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: WORKER_HTTP_SERVER
+              value: "true"
+            - name: GCP_PROJECT_ID
+              value: creatto-463117
+            - name: GCP_REGION
+              value: southamerica-east1
+            - name: BIGQUERY_CUSTOM_RAW_DATASET
+              value: integrations_custom_raw
+            - name: BIGQUERY_FIVETRAN_RAW_DATASET
+              value: integrations_fivetran_raw
+            - name: BIGQUERY_NORMALIZED_DATASET
+              value: integrations_normalized
+            - name: PUBSUB_SYNC_TOPIC
+              value: integrations-sync-requests
+            - name: PUBSUB_WORKER_SUBSCRIPTION
+              value: integrations-sync-worker-sub
+            - name: SECRET_PREFIX
+              value: integrations

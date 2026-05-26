@@ -10,6 +10,7 @@ REGION=southamerica-east1
 ARTIFACT_REGISTRY_REPO=integrations
 CONTROL_API_SERVICE=integrations-control-api
 WORKER_JOB=integrations-worker
+WORKER_SERVICE=integrations-worker-service
 ```
 
 Build local com `gcloud` instalado:
@@ -40,6 +41,12 @@ gcloud run services replace src/products/integracoes/cloud/deploy/cloud-run-cont
 
 ```bash
 gcloud run jobs replace src/products/integracoes/cloud/deploy/cloud-run-worker.yaml \
+  --project creatto-463117 \
+  --region southamerica-east1
+```
+
+```bash
+gcloud run services replace src/products/integracoes/cloud/deploy/cloud-run-worker-service.yaml \
   --project creatto-463117 \
   --region southamerica-east1
 ```
