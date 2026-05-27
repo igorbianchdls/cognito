@@ -2,7 +2,7 @@
 
 import { Player } from '@remotion/player'
 
-import { SimpleExample } from '@/remotion/compositions/SimpleExample'
+import { McpChartIntro } from '@/remotion/compositions/McpChartIntro'
 
 export default function RemotionPreviewPage() {
   return (
@@ -44,7 +44,7 @@ export default function RemotionPreviewPage() {
               margin: '6px 0 0',
             }}
           >
-            Exemplo simples usando Remotion Player dentro do Next.
+            Exemplo usando componentes MCP Apps reais dentro do Remotion Player.
           </p>
         </div>
 
@@ -58,11 +58,11 @@ export default function RemotionPreviewPage() {
           }}
         >
           <Player
-            component={SimpleExample}
+            component={McpChartIntro}
             compositionHeight={1080}
             compositionWidth={1920}
             controls
-            durationInFrames={150}
+            durationInFrames={180}
             fps={30}
             style={{
               aspectRatio: '16 / 9',
