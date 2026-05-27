@@ -59,13 +59,14 @@ export default function RemotionPreviewPage() {
         >
           <Player
             component={McpChartIntro}
-            compositionHeight={1080}
-            compositionWidth={1920}
+            compositionHeight={1920}
+            compositionWidth={1080}
             controls
             durationInFrames={180}
             fps={30}
             style={{
-              aspectRatio: '16 / 9',
+              aspectRatio: '9 / 16',
+              maxHeight: '82vh',
               width: '100%',
             }}
           />

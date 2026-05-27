@@ -79,22 +79,22 @@ export function McpChartIntro() {
         background: '#eef2f7',
         color: '#0f172a',
         fontFamily: 'Inter, Arial, sans-serif',
-        padding: 72,
+        padding: 56,
       }}
     >
       <div
         style={{
           display: 'grid',
-          gap: 42,
+          gap: 34,
           height: '100%',
-          gridTemplateRows: 'auto 1fr auto',
+          gridTemplateRows: 'auto auto 1fr auto',
         }}
       >
         <header style={titleStyle}>
           <p
             style={{
               color: '#225f42',
-              fontSize: 28,
+              fontSize: 24,
               fontWeight: 800,
               letterSpacing: 0,
               margin: 0,
@@ -106,14 +106,14 @@ export function McpChartIntro() {
           <h1
             style={{
               color: '#0f172a',
-              fontSize: 74,
+              fontSize: 58,
               fontWeight: 850,
               letterSpacing: 0,
               lineHeight: 1.02,
               margin: '12px 0 0',
             }}
           >
-            Componentes MCP em video
+            Componentes MCP em video vertical
           </h1>
         </header>
 
@@ -121,8 +121,8 @@ export function McpChartIntro() {
           style={{
             alignItems: 'stretch',
             display: 'grid',
-            gap: 34,
-            gridTemplateColumns: '0.92fr 1.08fr',
+            gap: 26,
+            gridTemplateRows: 'auto 1fr',
             minHeight: 0,
           }}
         >
@@ -148,7 +148,7 @@ export function McpChartIntro() {
               borderRadius: 8,
               boxShadow: '0 18px 45px rgba(15, 23, 42, 0.10)',
               minHeight: 0,
-              padding: 26,
+              padding: 28,
             }}
           >
             <AnimatedMcpChartView data={chartData} startFrame={58} />
@@ -161,14 +161,17 @@ export function McpChartIntro() {
             alignItems: 'center',
             color: '#475569',
             display: 'flex',
-            fontSize: 28,
+            flexDirection: 'column',
+            fontSize: 24,
             fontWeight: 650,
-            justifyContent: 'space-between',
+            gap: 8,
+            justifyContent: 'center',
             letterSpacing: 0,
+            textAlign: 'center',
           }}
         >
           <span>Mesma UI das tools. Agora animada com Remotion.</span>
-          <span>6s · 30fps · 1920x1080</span>
+          <span>6s · 30fps · 1080x1920</span>
         </footer>
       </div>
     </AbsoluteFill>
