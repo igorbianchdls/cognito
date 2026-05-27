@@ -5,10 +5,19 @@ Este pacote reserva o codigo que sera executado fora do app Next.js quando a orq
 Status atual:
 
 - Estrutura criada para a Etapa 5.
-- Recursos base GCP definidos manualmente no projeto `creatto-463117`.
-- Sem deploy ativo.
-- Sem chamadas reais a Cloud Run, BigQuery, Secret Manager ou Pub/Sub.
+- Recursos base GCP ativos no projeto `creatto-463117`.
+- Deploy ativo em Cloud Run para `integrations-control-api` e `integrations-worker-service`.
+- Pub/Sub, BigQuery, Secret Manager, Artifact Registry e Cloud Build trigger configurados.
 - Sem credenciais ou secrets neste repositorio.
+
+Runbook operacional:
+
+```txt
+GCP_RUNBOOK.md
+```
+
+Use o runbook para recuperar contexto rapido, conectar com `gcloud`, validar recursos e
+executar smoke tests do pipeline.
 
 Recursos GCP criados/esperados:
 
@@ -23,19 +32,22 @@ BIGQUERY_NORMALIZED_DATASET=integrations_normalized
 PUBSUB_SYNC_TOPIC=integrations-sync-requests
 PUBSUB_DEAD_LETTER_TOPIC=integrations-sync-dead-letter
 PUBSUB_WORKER_SUBSCRIPTION=integrations-sync-worker-sub
+PUBSUB_WORKER_PUSH_SUBSCRIPTION=integrations-sync-worker-push-sub
 
 SECRET_INTERNAL_API_KEY=integrations-internal-api-key
 ARTIFACT_REGISTRY_REPO=integrations
 CONTROL_API_SERVICE_ACCOUNT=integrations-control-api
 WORKER_SERVICE_ACCOUNT=integrations-worker
+DEPLOYER_SERVICE_ACCOUNT=integrations-deployer
+PUBSUB_INVOKER_SERVICE_ACCOUNT=integrations-pubsub-invoker
 ```
 
 Arquitetura prevista:
 
-- `control-api`: servico HTTP interno para setup, callbacks, reconexao e despacho de sync.
-- `worker`: entrypoint de jobs para executar conectores e atualizar status operacional.
+- `control-api`: servico HTTP para setup, callbacks, reconexao e despacho de sync.
+- `worker`: servico HTTP invocado por Pub/Sub push e job legado para execucoes pontuais.
 - `connectors`: implementacoes por provedor, iniciando com ERPs e depois CRMs.
-- `lib`: wrappers de infraestrutura futura, hoje como stubs explicitos.
+- `lib`: wrappers de infraestrutura GCP; parte ainda esta em stub ate a fase de ETL real.
 
 Entrypoints planejados:
 
@@ -53,13 +65,14 @@ deploy/cloud-run-control-api.yaml
 deploy/cloud-run-worker.yaml
 deploy/cloudbuild-control-api.yaml
 deploy/cloudbuild-worker.yaml
+deploy/cloudbuild-integrations.yaml
 deploy/README.md
 ```
 
-Quando Google Cloud entrar:
+Proximas etapas de produto/ETL:
 
-1. Implementar autenticação interna no `control-api`.
-2. Trocar stubs em `lib/` por SDKs reais.
-3. Adicionar Dockerfiles ou build target do deploy.
-4. Ligar `src/products/integracoes/server/integrationControlClient.ts` ao endpoint Cloud Run.
-5. Gravar credenciais no Secret Manager e dados no BigQuery.
+1. Implementar conectores reais, comecando por Conta Azul/Fivetran.
+2. Gravar credenciais por tenant no Secret Manager.
+3. Trocar o worker stub por sync real e escrita no BigQuery.
+4. Criar tabelas e transforms quando os primeiros ERPs enviarem dados.
+5. Habilitar Cloud Scheduler apenas quando houver sync recorrente.
