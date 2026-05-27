@@ -116,14 +116,14 @@ export function AnimatedMcpChartView({ data, startFrame = 0 }: { data: ChartResu
     >
       <header className="chart-card__header" style={{ marginBottom: 0, paddingBottom: 4 }}>
         <div className="chart-card__copy" style={{ gap: 1 }}>
-          <h1 style={{ ...titleStyle, fontSize: 16, lineHeight: 1.15 }}>{data.title || 'Grafico'}</h1>
-          {data.subtitle ? <p style={{ ...subtitleStyle, fontSize: 11, lineHeight: 1.2 }}>{data.subtitle}</p> : null}
+          <h1 style={{ ...titleStyle, fontSize: 18, lineHeight: 1.15 }}>{data.title || 'Grafico'}</h1>
+          {data.subtitle ? <p style={{ ...subtitleStyle, fontSize: 12, lineHeight: 1.25 }}>{data.subtitle}</p> : null}
         </div>
       </header>
 
       <div
         style={{
-          marginTop: -10,
+          marginTop: -4,
         }}
       >
         <svg
