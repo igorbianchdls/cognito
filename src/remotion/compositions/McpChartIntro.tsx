@@ -1,9 +1,10 @@
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
 
-import type { ChartResultStructuredContent } from '@/products/mcp-apps/web/src/types/toolResult'
+import type { ChartResultStructuredContent, DataResultStructuredContent } from '@/products/mcp-apps/web/src/types/toolResult'
 import { AnimatedMcpChartView } from '@/remotion/components/AnimatedMcpChartView'
 import { AnimatedMcpLineChartView } from '@/remotion/components/AnimatedMcpLineChartView'
 import { AnimatedMcpPieChartView } from '@/remotion/components/AnimatedMcpPieChartView'
+import { AnimatedMcpTableView } from '@/remotion/components/AnimatedMcpTableView'
 
 const chartData = {
   ok: true,
@@ -63,6 +64,22 @@ const lineData = {
   ],
 } satisfies ChartResultStructuredContent
 
+const tableData = {
+  ok: true,
+  tool: 'erp',
+  view: 'table',
+  title: 'Contas a receber',
+  count: 5,
+  columns: ['cliente', 'numero_documento', 'data_vencimento', 'status', 'valor_liquido'],
+  rows: [
+    { cliente: 'Loja Aurora', numero_documento: 'NF-1042', data_vencimento: '2026-05-28', status: 'Aberto', valor_liquido: 18400 },
+    { cliente: 'Grupo Nexo', numero_documento: 'NF-1043', data_vencimento: '2026-05-29', status: 'Recebido', valor_liquido: 27500 },
+    { cliente: 'Mercado Sul', numero_documento: 'NF-1044', data_vencimento: '2026-05-31', status: 'Aberto', valor_liquido: 16320 },
+    { cliente: 'Casa Prado', numero_documento: 'NF-1045', data_vencimento: '2026-06-02', status: 'Vencido', valor_liquido: 9800 },
+    { cliente: 'Distribuidora Vila', numero_documento: 'NF-1046', data_vencimento: '2026-06-05', status: 'Aberto', valor_liquido: 36740 },
+  ],
+} satisfies DataResultStructuredContent
+
 function fadeSlide(frame: number, start: number, fromX = 0, fromY = 24) {
   const opacity = interpolate(frame, [start, start + 22], [0, 1], {
     extrapolateLeft: 'clamp',
@@ -95,8 +112,11 @@ export function McpChartIntro() {
   const thirdUserBubbleStyle = fadeSlide(frame, 304, 48, 0)
   const thirdAssistantBubbleStyle = fadeSlide(frame, 334, -48, 0)
   const lineStyle = fadeSlide(frame, 364, -34, 18)
-  const footerStyle = fadeSlide(frame, 486, 0, 18)
-  const conversationY = interpolate(frame, [132, 220, 304, 392], [0, -116, -560, -760], {
+  const fourthUserBubbleStyle = fadeSlide(frame, 510, 48, 0)
+  const fourthAssistantBubbleStyle = fadeSlide(frame, 540, -48, 0)
+  const tableStyle = fadeSlide(frame, 570, -34, 18)
+  const footerStyle = fadeSlide(frame, 690, 0, 18)
+  const conversationY = interpolate(frame, [132, 220, 304, 392, 510, 600], [0, -116, -560, -760, -1120, -1360], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   })
@@ -412,6 +432,88 @@ export function McpChartIntro() {
               }}
             >
               <AnimatedMcpLineChartView data={lineData} startFrame={364} />
+            </div>
+
+            <div
+              style={{
+                ...fourthUserBubbleStyle,
+                display: 'flex',
+                justifyContent: 'flex-end',
+              }}
+            >
+              <div
+                style={{
+                  background: '#0f172a',
+                  borderRadius: 26,
+                  color: '#ffffff',
+                  fontSize: 27,
+                  fontWeight: 650,
+                  letterSpacing: 0,
+                  lineHeight: 1.25,
+                  maxWidth: 560,
+                  padding: '21px 25px',
+                }}
+              >
+                Mostre isso em tabela tambem.
+              </div>
+            </div>
+
+            <div
+              style={{
+                ...fourthAssistantBubbleStyle,
+                alignItems: 'flex-start',
+                display: 'flex',
+                gap: 16,
+              }}
+            >
+              <div
+                style={{
+                  alignItems: 'center',
+                  background: '#225f42',
+                  borderRadius: 18,
+                  color: '#ffffff',
+                  display: 'flex',
+                  flex: '0 0 54px',
+                  fontSize: 19,
+                  fontWeight: 800,
+                  height: 46,
+                  justifyContent: 'center',
+                  width: 46,
+                }}
+              >
+                C
+              </div>
+              <div
+                style={{
+                  background: '#ffffff',
+                  border: '1px solid #dfe4df',
+                  borderRadius: 22,
+                  boxShadow: '0 14px 34px rgba(15, 23, 42, 0.08)',
+                  color: '#202622',
+                  fontSize: 23,
+                  fontWeight: 560,
+                  letterSpacing: 0,
+                  lineHeight: 1.34,
+                  maxWidth: 620,
+                  padding: '21px 24px',
+                }}
+              >
+                Abaixo esta a mesma resposta no formato de tabela operacional do ERP.
+              </div>
+            </div>
+
+            <div
+              style={{
+                ...tableStyle,
+                alignSelf: 'start',
+                background: '#ffffff',
+                border: '1px solid #dfe4df',
+                borderRadius: 18,
+                boxShadow: '0 18px 45px rgba(15, 23, 42, 0.10)',
+                padding: 18,
+              }}
+            >
+              <AnimatedMcpTableView data={tableData} startFrame={570} />
             </div>
 
             <footer
