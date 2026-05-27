@@ -1,4 +1,18 @@
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
+import type { CSSProperties, ReactNode } from 'react'
+import {
+  ChevronRight,
+  Copy,
+  Menu,
+  Mic,
+  MoreHorizontal,
+  Plus,
+  SquarePen,
+  ThumbsDown,
+  ThumbsUp,
+  Upload,
+  Volume2,
+} from 'lucide-react'
 
 import type { ChartResultStructuredContent, DataResultStructuredContent } from '@/products/mcp-apps/web/src/types/toolResult'
 import { AnimatedMcpChartView } from '@/remotion/components/AnimatedMcpChartView'
@@ -30,8 +44,8 @@ const pieData = {
   ok: true,
   tool: 'chart',
   view: 'chart',
-  title: 'Participacao por canal',
-  subtitle: 'Distribuicao da receita conectada',
+  title: 'Participação por canal',
+  subtitle: 'Distribuição da receita conectada',
   chart: {
     type: 'pie',
     labelField: 'canal',
@@ -45,8 +59,8 @@ const lineData = {
   ok: true,
   tool: 'chart',
   view: 'chart',
-  title: 'Evolucao da receita',
-  subtitle: 'Ultimos 7 dias conectados',
+  title: 'Evolução da receita',
+  subtitle: 'Últimos 7 dias conectados',
   chart: {
     type: 'line',
     labelField: 'dia',
@@ -68,15 +82,15 @@ const tableData = {
   ok: true,
   tool: 'erp',
   view: 'table',
-  title: 'Contas a receber',
+  title: 'Contas a pagar',
   count: 5,
-  columns: ['cliente', 'numero_documento', 'data_vencimento', 'status', 'valor_liquido'],
+  columns: ['fornecedor', 'numero_documento', 'data_vencimento', 'status', 'valor_liquido'],
   rows: [
-    { cliente: 'Loja Aurora', numero_documento: 'NF-1042', data_vencimento: '2026-05-28', status: 'Aberto', valor_liquido: 18400 },
-    { cliente: 'Grupo Nexo', numero_documento: 'NF-1043', data_vencimento: '2026-05-29', status: 'Recebido', valor_liquido: 27500 },
-    { cliente: 'Mercado Sul', numero_documento: 'NF-1044', data_vencimento: '2026-05-31', status: 'Aberto', valor_liquido: 16320 },
-    { cliente: 'Casa Prado', numero_documento: 'NF-1045', data_vencimento: '2026-06-02', status: 'Vencido', valor_liquido: 9800 },
-    { cliente: 'Distribuidora Vila', numero_documento: 'NF-1046', data_vencimento: '2026-06-05', status: 'Aberto', valor_liquido: 36740 },
+    { fornecedor: 'Conta Azul', numero_documento: 'BOL-1042', data_vencimento: '2026-05-28', status: 'Aberto', valor_liquido: 18400 },
+    { fornecedor: 'Omie ERP', numero_documento: 'BOL-1043', data_vencimento: '2026-05-29', status: 'Pago', valor_liquido: 27500 },
+    { fornecedor: 'Bling', numero_documento: 'BOL-1044', data_vencimento: '2026-05-31', status: 'Aberto', valor_liquido: 16320 },
+    { fornecedor: 'Supabase', numero_documento: 'BOL-1045', data_vencimento: '2026-06-02', status: 'Vencido', valor_liquido: 9800 },
+    { fornecedor: 'Google Cloud', numero_documento: 'BOL-1046', data_vencimento: '2026-06-05', status: 'Aberto', valor_liquido: 36740 },
   ],
 } satisfies DataResultStructuredContent
 
@@ -100,23 +114,319 @@ function fadeSlide(frame: number, start: number, fromX = 0, fromY = 24) {
   }
 }
 
+function StatusBar() {
+  return (
+    <div
+      style={{
+        alignItems: 'center',
+        display: 'flex',
+        height: 78,
+        justifyContent: 'space-between',
+        padding: '24px 77px 0',
+      }}
+    >
+      <div style={{ color: '#000000', fontSize: 40, fontWeight: 700, letterSpacing: 0 }}>18:07</div>
+      <div style={{ alignItems: 'center', display: 'flex', gap: 17 }}>
+        <div style={{ alignItems: 'flex-end', display: 'flex', gap: 4, height: 23 }}>
+          {[11, 15, 20, 26].map((height, index) => (
+            <span
+              key={height}
+              style={{
+                background: index === 3 ? '#c7c7c7' : '#000000',
+                borderRadius: 3,
+                display: 'block',
+                height,
+                width: 7,
+              }}
+            />
+          ))}
+        </div>
+        <div style={{ height: 29, position: 'relative', width: 40 }}>
+          <div
+            style={{
+              border: '5px solid #000000',
+              borderBottomColor: 'transparent',
+              borderLeftColor: 'transparent',
+              borderRadius: '50%',
+              height: 34,
+              left: 0,
+              position: 'absolute',
+              top: 2,
+              transform: 'rotate(-45deg)',
+              width: 40,
+            }}
+          />
+          <div
+            style={{
+              background: '#000000',
+              borderRadius: 999,
+              bottom: 0,
+              height: 7,
+              left: 16,
+              position: 'absolute',
+              width: 7,
+            }}
+          />
+        </div>
+        <div
+          style={{
+            alignItems: 'center',
+            background: '#ededed',
+            borderRadius: 8,
+            color: '#000000',
+            display: 'flex',
+            fontSize: 25,
+            fontWeight: 800,
+            height: 33,
+            justifyContent: 'center',
+            lineHeight: 1,
+            position: 'relative',
+            width: 61,
+          }}
+        >
+          <span
+            style={{
+              background: '#f5c400',
+              borderBottomLeftRadius: 8,
+              borderTopLeftRadius: 8,
+              height: '100%',
+              left: 0,
+              position: 'absolute',
+              top: 0,
+              width: 24,
+            }}
+          />
+          <span style={{ position: 'relative' }}>24</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function TopBar() {
+  return (
+    <div
+      style={{
+        alignItems: 'center',
+        display: 'grid',
+        gridTemplateColumns: '120px 1fr 138px',
+        height: 118,
+        padding: '0 41px',
+      }}
+    >
+      <Menu color="#000000" size={50} strokeWidth={2.6} />
+      <div style={{ alignItems: 'center', display: 'flex', gap: 6 }}>
+        <span style={{ color: '#111111', fontSize: 45, fontWeight: 560, letterSpacing: 0 }}>ChatGPT</span>
+        <ChevronRight color="#9b9b9b" size={33} strokeWidth={2.5} />
+      </div>
+      <div style={{ alignItems: 'center', display: 'flex', gap: 43, justifyContent: 'flex-end' }}>
+        <SquarePen color="#000000" size={47} strokeWidth={2.7} />
+        <MoreHorizontal color="#000000" size={49} strokeWidth={3} />
+      </div>
+    </div>
+  )
+}
+
+function AssistantActions() {
+  const iconStyle = { color: '#666666', size: 37, strokeWidth: 2.4 }
+
+  return (
+    <div style={{ alignItems: 'center', display: 'flex', gap: 28, paddingTop: 24 }}>
+      <Copy {...iconStyle} />
+      <Volume2 {...iconStyle} />
+      <ThumbsUp {...iconStyle} />
+      <ThumbsDown {...iconStyle} />
+      <Upload {...iconStyle} />
+      <MoreHorizontal color="#666666" size={39} strokeWidth={2.9} />
+    </div>
+  )
+}
+
+function VoiceButton() {
+  return (
+    <div
+      style={{
+        alignItems: 'center',
+        background: '#000000',
+        borderRadius: 999,
+        display: 'flex',
+        height: 82,
+        justifyContent: 'center',
+        width: 82,
+      }}
+    >
+      <div style={{ alignItems: 'center', display: 'flex', gap: 7, height: 42 }}>
+        {[14, 31, 44, 30, 15].map((height, index) => (
+          <span key={`${height}-${index}`} style={{ background: '#ffffff', borderRadius: 999, height, width: 7 }} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function BottomComposer() {
+  return (
+    <div
+      style={{
+        background: '#ffffff',
+        bottom: 0,
+        height: 178,
+        left: 0,
+        padding: '0 30px',
+        position: 'absolute',
+        right: 0,
+      }}
+    >
+      <div style={{ alignItems: 'center', display: 'flex', gap: 20 }}>
+        <div
+          style={{
+            alignItems: 'center',
+            background: '#f1f1f1',
+            borderRadius: 999,
+            display: 'flex',
+            flex: '0 0 112px',
+            height: 112,
+            justifyContent: 'center',
+          }}
+        >
+          <Plus color="#646464" size={52} strokeWidth={2.2} />
+        </div>
+        <div
+          style={{
+            alignItems: 'center',
+            background: '#f1f1f1',
+            borderRadius: 999,
+            display: 'flex',
+            flex: 1,
+            height: 112,
+            minWidth: 0,
+            padding: '0 13px 0 42px',
+          }}
+        >
+          <span style={{ color: '#8a8a8a', flex: 1, fontSize: 43, fontWeight: 400, letterSpacing: 0 }}>
+            Pergunte ao ChatGPT
+          </span>
+          <Mic color="#8a8a8a" size={48} strokeWidth={2.6} />
+          <div style={{ marginLeft: 28 }}>
+            <VoiceButton />
+          </div>
+        </div>
+      </div>
+      <div
+        style={{
+          background: '#000000',
+          borderRadius: 999,
+          bottom: 12,
+          height: 12,
+          left: '50%',
+          position: 'absolute',
+          transform: 'translateX(-50%)',
+          width: 380,
+        }}
+      />
+    </div>
+  )
+}
+
+function UserBubble({ children, style }: { children: string; style: CSSProperties }) {
+  return (
+    <div style={{ ...style, display: 'flex', justifyContent: 'flex-end', paddingRight: 36 }}>
+      <div
+        style={{
+          background: '#f1f1f1',
+          borderRadius: 56,
+          color: '#171717',
+          fontSize: 42,
+          fontWeight: 400,
+          letterSpacing: 0,
+          lineHeight: 1.2,
+          maxWidth: 615,
+          padding: '30px 42px',
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function AssistantText({ style }: { style: CSSProperties }) {
+  return (
+    <div
+      style={{
+        ...style,
+        color: '#111111',
+        fontSize: 43,
+        fontWeight: 400,
+        letterSpacing: 0,
+        lineHeight: 1.49,
+        padding: '0 42px',
+      }}
+    >
+      <p style={{ margin: '0 0 68px' }}>Você quer ver as contas a pagar de onde?</p>
+      <p style={{ margin: '0 0 36px' }}>Por exemplo:</p>
+      <ul style={{ display: 'grid', gap: 17, margin: 0, paddingLeft: 75 }}>
+        <li style={{ paddingLeft: 8 }}>do seu ERP (Conta Azul, Omiê, Bling etc.)</li>
+        <li style={{ paddingLeft: 8 }}>de uma planilha</li>
+        <li style={{ paddingLeft: 8 }}>de um banco de dados/Supabase</li>
+        <li style={{ paddingLeft: 8 }}>
+          ou você quer saber conceitualmente o que entra em “contas a pagar” no financeiro?
+        </li>
+      </ul>
+      <AssistantActions />
+    </div>
+  )
+}
+
+function AssistantBubble({ children, style }: { children: string; style: CSSProperties }) {
+  return (
+    <div
+      style={{
+        ...style,
+        color: '#111111',
+        fontSize: 40,
+        fontWeight: 400,
+        letterSpacing: 0,
+        lineHeight: 1.38,
+        padding: '0 42px',
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
+function RichCard({ children, style }: { children: ReactNode; style: CSSProperties }) {
+  return (
+    <div
+      style={{
+        ...style,
+        background: '#ffffff',
+        border: '1px solid #e5e5e5',
+        borderRadius: 28,
+        boxShadow: '0 18px 42px rgba(0, 0, 0, 0.08)',
+        margin: '0 42px',
+        overflow: 'hidden',
+        padding: 18,
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
 export function McpChartIntro() {
   const frame = useCurrentFrame()
-  const headerStyle = fadeSlide(frame, 0, 0, 18)
-  const userBubbleStyle = fadeSlide(frame, 22, 48, 0)
-  const assistantBubbleStyle = fadeSlide(frame, 52, -48, 0)
-  const chartStyle = fadeSlide(frame, 82, -34, 18)
-  const secondUserBubbleStyle = fadeSlide(frame, 154, 48, 0)
-  const secondAssistantBubbleStyle = fadeSlide(frame, 184, -48, 0)
-  const pieStyle = fadeSlide(frame, 214, -34, 18)
-  const thirdUserBubbleStyle = fadeSlide(frame, 304, 48, 0)
-  const thirdAssistantBubbleStyle = fadeSlide(frame, 334, -48, 0)
-  const lineStyle = fadeSlide(frame, 364, -34, 18)
-  const fourthUserBubbleStyle = fadeSlide(frame, 510, 48, 0)
-  const fourthAssistantBubbleStyle = fadeSlide(frame, 540, -48, 0)
-  const tableStyle = fadeSlide(frame, 570, -34, 18)
-  const footerStyle = fadeSlide(frame, 690, 0, 18)
-  const conversationY = interpolate(frame, [132, 220, 304, 392, 510, 600], [0, -116, -560, -760, -1120, -1360], {
+  const firstUserStyle = fadeSlide(frame, 16, 40, 0)
+  const firstAssistantStyle = fadeSlide(frame, 50, 0, 20)
+  const secondUserStyle = fadeSlide(frame, 176, 40, 0)
+  const tableTextStyle = fadeSlide(frame, 212, 0, 20)
+  const tableStyle = fadeSlide(frame, 246, 0, 24)
+  const chartTextStyle = fadeSlide(frame, 354, 0, 20)
+  const chartStyle = fadeSlide(frame, 388, 0, 24)
+  const pieStyle = fadeSlide(frame, 494, 0, 24)
+  const lineStyle = fadeSlide(frame, 600, 0, 24)
+  const conversationY = interpolate(frame, [0, 170, 285, 420, 540, 650], [0, 0, -360, -760, -1110, -1450], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   })
@@ -124,414 +434,52 @@ export function McpChartIntro() {
   return (
     <AbsoluteFill
       style={{
-        background: '#eef2f7',
-        color: '#0f172a',
-        fontFamily: 'Inter, Arial, sans-serif',
-        padding: 42,
+        background: '#ffffff',
+        color: '#111111',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, Arial, sans-serif',
       }}
     >
+      <StatusBar />
+      <TopBar />
+
       <div
         style={{
-          display: 'grid',
-          gap: 22,
-          gridTemplateRows: 'auto 1fr',
-          height: '100%',
-          margin: '0 auto',
-          maxWidth: 760,
-          width: '100%',
+          bottom: 178,
+          left: 0,
+          overflow: 'hidden',
+          position: 'absolute',
+          right: 0,
+          top: 196,
         }}
       >
-        <header
-          style={{
-            ...headerStyle,
-            alignItems: 'center',
-            display: 'flex',
-            justifyContent: 'space-between',
-          }}
-        >
-          <p
-            style={{
-              color: '#225f42',
-              fontSize: 22,
-              fontWeight: 800,
-              letterSpacing: 0,
-              margin: 0,
-              textTransform: 'uppercase',
-            }}
-          >
-            Creatto
-          </p>
-          <span
-            style={{
-              color: '#64748b',
-              fontSize: 18,
-              fontWeight: 700,
-              letterSpacing: 0,
-            }}
-          >
-            Assistente de dados
-          </span>
-        </header>
+        <div style={{ display: 'grid', gap: 57, paddingTop: 28, transform: `translateY(${conversationY}px)` }}>
+          <UserBubble style={firstUserStyle}>Me diga as contas a pagar</UserBubble>
+          <AssistantText style={firstAssistantStyle} />
 
-        <div
-          style={{
-            minHeight: 0,
-            overflow: 'hidden',
-            position: 'relative',
-          }}
-        >
-          <div
-            style={{
-              display: 'grid',
-              gap: 18,
-              transform: `translateY(${conversationY}px)`,
-            }}
-          >
-            <div
-              style={{
-                ...userBubbleStyle,
-                display: 'flex',
-                justifyContent: 'flex-end',
-              }}
-            >
-              <div
-                style={{
-                  background: '#0f172a',
-                  borderRadius: 26,
-                  color: '#ffffff',
-                  fontSize: 28,
-                  fontWeight: 650,
-                  letterSpacing: 0,
-                  lineHeight: 1.25,
-                  maxWidth: 560,
-                  padding: '22px 26px',
-                }}
-              >
-                Quais canais mais venderam este mes?
-              </div>
-            </div>
+          <UserBubble style={secondUserStyle}>Do meu ERP</UserBubble>
+          <AssistantBubble style={tableTextStyle}>
+            Encontrei estas contas a pagar conectadas ao ERP.
+          </AssistantBubble>
+          <RichCard style={tableStyle}>
+            <AnimatedMcpTableView data={tableData} startFrame={246} />
+          </RichCard>
 
-            <div
-              style={{
-                ...assistantBubbleStyle,
-                alignItems: 'flex-start',
-                display: 'flex',
-                gap: 16,
-              }}
-            >
-              <div
-                style={{
-                  alignItems: 'center',
-                  background: '#225f42',
-                  borderRadius: 18,
-                  color: '#ffffff',
-                  display: 'flex',
-                  flex: '0 0 54px',
-                  fontSize: 19,
-                  fontWeight: 800,
-                  height: 46,
-                  justifyContent: 'center',
-                  width: 46,
-                }}
-              >
-                C
-              </div>
-              <div
-                style={{
-                  background: '#ffffff',
-                  border: '1px solid #dfe4df',
-                  borderRadius: 22,
-                  boxShadow: '0 14px 34px rgba(15, 23, 42, 0.08)',
-                  color: '#202622',
-                  fontSize: 24,
-                  fontWeight: 560,
-                  letterSpacing: 0,
-                  lineHeight: 1.34,
-                  maxWidth: 620,
-                  padding: '22px 24px',
-                }}
-              >
-                Consolidei os pedidos conectados. Shopify lidera a receita, seguido por Mercado Livre.
-              </div>
-            </div>
-
-            <div
-              style={{
-                ...chartStyle,
-                alignSelf: 'start',
-                background: '#ffffff',
-                border: '1px solid #dfe4df',
-                borderRadius: 18,
-                boxShadow: '0 18px 45px rgba(15, 23, 42, 0.10)',
-                padding: 18,
-              }}
-            >
-              <AnimatedMcpChartView data={chartData} startFrame={82} />
-            </div>
-
-            <div
-              style={{
-                ...secondUserBubbleStyle,
-                display: 'flex',
-                justifyContent: 'flex-end',
-              }}
-            >
-              <div
-                style={{
-                  background: '#0f172a',
-                  borderRadius: 26,
-                  color: '#ffffff',
-                  fontSize: 27,
-                  fontWeight: 650,
-                  letterSpacing: 0,
-                  lineHeight: 1.25,
-                  maxWidth: 560,
-                  padding: '21px 25px',
-                }}
-              >
-                E como fica a participacao de cada canal?
-              </div>
-            </div>
-
-            <div
-              style={{
-                ...secondAssistantBubbleStyle,
-                alignItems: 'flex-start',
-                display: 'flex',
-                gap: 16,
-              }}
-            >
-              <div
-                style={{
-                  alignItems: 'center',
-                  background: '#225f42',
-                  borderRadius: 18,
-                  color: '#ffffff',
-                  display: 'flex',
-                  flex: '0 0 54px',
-                  fontSize: 19,
-                  fontWeight: 800,
-                  height: 46,
-                  justifyContent: 'center',
-                  width: 46,
-                }}
-              >
-                C
-              </div>
-              <div
-                style={{
-                  background: '#ffffff',
-                  border: '1px solid #dfe4df',
-                  borderRadius: 22,
-                  boxShadow: '0 14px 34px rgba(15, 23, 42, 0.08)',
-                  color: '#202622',
-                  fontSize: 23,
-                  fontWeight: 560,
-                  letterSpacing: 0,
-                  lineHeight: 1.34,
-                  maxWidth: 620,
-                  padding: '21px 24px',
-                }}
-              >
-                Montei tambem a distribuicao. A maior fatia segue em Shopify, mas marketplaces somados
-                ja representam quase metade.
-              </div>
-            </div>
-
-            <div
-              style={{
-                ...pieStyle,
-                alignSelf: 'start',
-                background: '#ffffff',
-                border: '1px solid #dfe4df',
-                borderRadius: 18,
-                boxShadow: '0 18px 45px rgba(15, 23, 42, 0.10)',
-                padding: 18,
-              }}
-            >
-              <AnimatedMcpPieChartView data={pieData} startFrame={214} />
-            </div>
-
-            <div
-              style={{
-                ...thirdUserBubbleStyle,
-                display: 'flex',
-                justifyContent: 'flex-end',
-              }}
-            >
-              <div
-                style={{
-                  background: '#0f172a',
-                  borderRadius: 26,
-                  color: '#ffffff',
-                  fontSize: 27,
-                  fontWeight: 650,
-                  letterSpacing: 0,
-                  lineHeight: 1.25,
-                  maxWidth: 560,
-                  padding: '21px 25px',
-                }}
-              >
-                E a evolucao nos ultimos dias?
-              </div>
-            </div>
-
-            <div
-              style={{
-                ...thirdAssistantBubbleStyle,
-                alignItems: 'flex-start',
-                display: 'flex',
-                gap: 16,
-              }}
-            >
-              <div
-                style={{
-                  alignItems: 'center',
-                  background: '#225f42',
-                  borderRadius: 18,
-                  color: '#ffffff',
-                  display: 'flex',
-                  flex: '0 0 54px',
-                  fontSize: 19,
-                  fontWeight: 800,
-                  height: 46,
-                  justifyContent: 'center',
-                  width: 46,
-                }}
-              >
-                C
-              </div>
-              <div
-                style={{
-                  background: '#ffffff',
-                  border: '1px solid #dfe4df',
-                  borderRadius: 22,
-                  boxShadow: '0 14px 34px rgba(15, 23, 42, 0.08)',
-                  color: '#202622',
-                  fontSize: 23,
-                  fontWeight: 560,
-                  letterSpacing: 0,
-                  lineHeight: 1.34,
-                  maxWidth: 620,
-                  padding: '21px 24px',
-                }}
-              >
-                A serie mostra aceleracao consistente no fim do periodo, com pico no D7.
-              </div>
-            </div>
-
-            <div
-              style={{
-                ...lineStyle,
-                alignSelf: 'start',
-                background: '#ffffff',
-                border: '1px solid #dfe4df',
-                borderRadius: 18,
-                boxShadow: '0 18px 45px rgba(15, 23, 42, 0.10)',
-                padding: 18,
-              }}
-            >
-              <AnimatedMcpLineChartView data={lineData} startFrame={364} />
-            </div>
-
-            <div
-              style={{
-                ...fourthUserBubbleStyle,
-                display: 'flex',
-                justifyContent: 'flex-end',
-              }}
-            >
-              <div
-                style={{
-                  background: '#0f172a',
-                  borderRadius: 26,
-                  color: '#ffffff',
-                  fontSize: 27,
-                  fontWeight: 650,
-                  letterSpacing: 0,
-                  lineHeight: 1.25,
-                  maxWidth: 560,
-                  padding: '21px 25px',
-                }}
-              >
-                Mostre isso em tabela tambem.
-              </div>
-            </div>
-
-            <div
-              style={{
-                ...fourthAssistantBubbleStyle,
-                alignItems: 'flex-start',
-                display: 'flex',
-                gap: 16,
-              }}
-            >
-              <div
-                style={{
-                  alignItems: 'center',
-                  background: '#225f42',
-                  borderRadius: 18,
-                  color: '#ffffff',
-                  display: 'flex',
-                  flex: '0 0 54px',
-                  fontSize: 19,
-                  fontWeight: 800,
-                  height: 46,
-                  justifyContent: 'center',
-                  width: 46,
-                }}
-              >
-                C
-              </div>
-              <div
-                style={{
-                  background: '#ffffff',
-                  border: '1px solid #dfe4df',
-                  borderRadius: 22,
-                  boxShadow: '0 14px 34px rgba(15, 23, 42, 0.08)',
-                  color: '#202622',
-                  fontSize: 23,
-                  fontWeight: 560,
-                  letterSpacing: 0,
-                  lineHeight: 1.34,
-                  maxWidth: 620,
-                  padding: '21px 24px',
-                }}
-              >
-                Abaixo esta a mesma resposta no formato de tabela operacional do ERP.
-              </div>
-            </div>
-
-            <div
-              style={{
-                ...tableStyle,
-                alignSelf: 'start',
-                background: '#ffffff',
-                border: '1px solid #dfe4df',
-                borderRadius: 18,
-                boxShadow: '0 18px 45px rgba(15, 23, 42, 0.10)',
-                padding: 18,
-              }}
-            >
-              <AnimatedMcpTableView data={tableData} startFrame={570} />
-            </div>
-
-            <footer
-              style={{
-                ...footerStyle,
-                color: '#64748b',
-                fontSize: 17,
-                fontWeight: 650,
-                letterSpacing: 0,
-                paddingBottom: 24,
-                textAlign: 'center',
-              }}
-            >
-              Resposta rica de tool MCP simulada no chat.
-            </footer>
-          </div>
+          <AssistantBubble style={chartTextStyle}>
+            Também posso transformar a mesma consulta em visualizações.
+          </AssistantBubble>
+          <RichCard style={chartStyle}>
+            <AnimatedMcpChartView data={chartData} startFrame={388} />
+          </RichCard>
+          <RichCard style={pieStyle}>
+            <AnimatedMcpPieChartView data={pieData} startFrame={494} />
+          </RichCard>
+          <RichCard style={lineStyle}>
+            <AnimatedMcpLineChartView data={lineData} startFrame={600} />
+          </RichCard>
         </div>
       </div>
+
+      <BottomComposer />
     </AbsoluteFill>
   )
 }
