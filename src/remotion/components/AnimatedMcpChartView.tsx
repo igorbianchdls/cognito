@@ -98,8 +98,8 @@ export function AnimatedMcpChartView({ data, startFrame = 0 }: { data: ChartResu
   const chartProgress = clampProgress(localFrame, 26, 82)
   const valueProgress = clampProgress(localFrame, 66, 104)
   const chartWidth = 650
-  const chartHeight = 390
-  const margin = { top: 26, right: 24, bottom: 48, left: 78 }
+  const chartHeight = 345
+  const margin = { top: 18, right: 24, bottom: 42, left: 78 }
   const plotWidth = chartWidth - margin.left - margin.right
   const plotHeight = chartHeight - margin.top - margin.bottom
   const slotWidth = plotWidth / Math.max(rows.length, 1)
@@ -110,20 +110,20 @@ export function AnimatedMcpChartView({ data, startFrame = 0 }: { data: ChartResu
     <section
       className="chart-card"
       style={{
-        height: '100%',
+        gap: 0,
         overflow: 'hidden',
       }}
     >
-      <header className="chart-card__header" style={{ marginBottom: 2, paddingBottom: 8 }}>
-        <div className="chart-card__copy">
-          <h1 style={titleStyle}>{data.title || 'Grafico'}</h1>
-          {data.subtitle ? <p style={subtitleStyle}>{data.subtitle}</p> : null}
+      <header className="chart-card__header" style={{ marginBottom: 0, paddingBottom: 4 }}>
+        <div className="chart-card__copy" style={{ gap: 1 }}>
+          <h1 style={{ ...titleStyle, fontSize: 16, lineHeight: 1.15 }}>{data.title || 'Grafico'}</h1>
+          {data.subtitle ? <p style={{ ...subtitleStyle, fontSize: 11, lineHeight: 1.2 }}>{data.subtitle}</p> : null}
         </div>
       </header>
 
       <div
         style={{
-          marginTop: -4,
+          marginTop: -10,
         }}
       >
         <svg

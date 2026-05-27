@@ -63,8 +63,8 @@ export function McpChartIntro() {
       <div
         style={{
           display: 'grid',
-          gap: 22,
-          gridTemplateRows: 'auto auto auto 1fr auto',
+          gap: 20,
+          gridTemplateRows: 'auto auto auto auto 1fr',
           height: '100%',
           margin: '0 auto',
           maxWidth: 760,
@@ -178,7 +178,7 @@ export function McpChartIntro() {
             border: '1px solid #dfe4df',
             borderRadius: 18,
             boxShadow: '0 18px 45px rgba(15, 23, 42, 0.10)',
-            minHeight: 0,
+            alignSelf: 'start',
             padding: 18,
           }}
         >
