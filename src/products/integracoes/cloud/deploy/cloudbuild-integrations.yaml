@@ -1,0 +1,53 @@
+steps:
+  - id: build-control-api
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - src/products/integracoes/cloud/Dockerfile.control-api
+      - -t
+      - southamerica-east1-docker.pkg.dev/creatto-463117/integrations/control-api:latest
+      - .
+
+  - id: build-worker
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - src/products/integracoes/cloud/Dockerfile.worker
+      - -t
+      - southamerica-east1-docker.pkg.dev/creatto-463117/integrations/worker:latest
+      - .
+
+  - id: deploy-control-api
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    args:
+      - gcloud
+      - run
+      - services
+      - replace
+      - src/products/integracoes/cloud/deploy/cloud-run-control-api.yaml
+      - --project=creatto-463117
+      - --region=southamerica-east1
+    waitFor:
+      - build-control-api
+
+  - id: deploy-worker-service
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    args:
+      - gcloud
+      - run
+      - services
+      - replace
+      - src/products/integracoes/cloud/deploy/cloud-run-worker-service.yaml
+      - --project=creatto-463117
+      - --region=southamerica-east1
+    waitFor:
+      - build-worker
+
+images:
+  - southamerica-east1-docker.pkg.dev/creatto-463117/integrations/control-api:latest
+  - southamerica-east1-docker.pkg.dev/creatto-463117/integrations/worker:latest
+
+options:
+  logging: CLOUD_LOGGING_ONLY
