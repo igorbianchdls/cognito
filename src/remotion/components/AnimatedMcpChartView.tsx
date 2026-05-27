@@ -39,6 +39,16 @@ function formatValue(value: number, format: ChartFormat | undefined) {
   return new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 }).format(value)
 }
 
+function formatAxisValue(value: number, format: ChartFormat | undefined) {
+  if (format === 'currency') {
+    if (value >= 1000) return `R$ ${Math.round(value / 1000)}k`
+    return `R$ ${Math.round(value)}`
+  }
+
+  if (value >= 1000) return `${Math.round(value / 1000)}k`
+  return new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 }).format(value)
+}
+
 function getRows(data: ChartResultStructuredContent): ChartRow[] {
   const chart = data.chart || {}
   const labelField = chart.labelField || chart.xField || 'label'
@@ -87,6 +97,14 @@ export function AnimatedMcpChartView({ data, startFrame = 0 }: { data: ChartResu
   const subtitleStyle = fadeSlide(localFrame, 10)
   const chartProgress = clampProgress(localFrame, 26, 82)
   const valueProgress = clampProgress(localFrame, 66, 104)
+  const chartWidth = 650
+  const chartHeight = 470
+  const margin = { top: 44, right: 28, bottom: 72, left: 86 }
+  const plotWidth = chartWidth - margin.left - margin.right
+  const plotHeight = chartHeight - margin.top - margin.bottom
+  const slotWidth = plotWidth / Math.max(rows.length, 1)
+  const barWidth = Math.min(74, slotWidth * 0.52)
+  const ticks = [1, 0.75, 0.5, 0.25, 0]
 
   return (
     <section
@@ -105,77 +123,100 @@ export function AnimatedMcpChartView({ data, startFrame = 0 }: { data: ChartResu
 
       <div
         style={{
-          display: 'grid',
-          gap: 16,
-          paddingTop: 6,
+          paddingTop: 2,
         }}
       >
-        {rows.map((row, index) => {
-          const width = `${Math.max(2, (row.value / maxValue) * chartProgress * 100)}%`
-          const valueOpacity = interpolate(valueProgress, [0, 1], [0, 1], {
-            extrapolateLeft: 'clamp',
-            extrapolateRight: 'clamp',
-          })
+        <svg
+          role="img"
+          viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+          style={{
+            display: 'block',
+            overflow: 'visible',
+            width: '100%',
+          }}
+        >
+          {ticks.map((tick) => {
+            const y = margin.top + plotHeight * (1 - tick)
+            const tickValue = maxValue * tick
 
-          return (
-            <div
-              key={row.label}
-              style={{
-                display: 'grid',
-                gap: 8,
-                opacity: clampProgress(localFrame, 22 + index * 6, 42 + index * 6),
-              }}
-            >
-              <div
-                style={{
-                  alignItems: 'center',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <span
-                  style={{
-                    color: '#202622',
-                    fontSize: 15,
-                    fontWeight: 720,
-                    letterSpacing: 0,
-                  }}
+            return (
+              <g key={tick}>
+                <line
+                  x1={margin.left}
+                  x2={margin.left + plotWidth}
+                  y1={y}
+                  y2={y}
+                  stroke="#e5ebe7"
+                  strokeDasharray={tick === 0 ? undefined : '3 3'}
+                  strokeWidth={1.4}
+                />
+                <text
+                  x={margin.left - 14}
+                  y={y + 4}
+                  fill="#6b7280"
+                  fontSize={14}
+                  fontWeight={600}
+                  letterSpacing={0}
+                  textAnchor="end"
                 >
-                  {row.label}
-                </span>
-                <span
-                  style={{
-                    color: '#4f5a53',
-                    fontSize: 14,
-                    fontVariantNumeric: 'tabular-nums',
-                    fontWeight: 760,
-                    letterSpacing: 0,
-                    opacity: valueOpacity,
-                  }}
+                  {formatAxisValue(tickValue, format)}
+                </text>
+              </g>
+            )
+          })}
+
+          {rows.map((row, index) => {
+            const rowProgress = clampProgress(localFrame, 24 + index * 6, 54 + index * 6)
+            const valueOpacity = interpolate(valueProgress, [0, 1], [0, 1], {
+              extrapolateLeft: 'clamp',
+              extrapolateRight: 'clamp',
+            })
+            const barHeight = (row.value / maxValue) * plotHeight * chartProgress * rowProgress
+            const x = margin.left + slotWidth * index + slotWidth / 2 - barWidth / 2
+            const y = margin.top + plotHeight - barHeight
+            const color = index === 0 ? '#005c2f' : index === 1 ? '#008a3d' : index === 2 ? '#35bf6b' : '#7dd99d'
+
+            return (
+              <g key={row.label} opacity={rowProgress}>
+                <text
+                  x={x + barWidth / 2}
+                  y={Math.max(margin.top + 18, y - 14)}
+                  fill="#202622"
+                  fontSize={15}
+                  fontWeight={760}
+                  letterSpacing={0}
+                  opacity={valueOpacity}
+                  textAnchor="middle"
                 >
                   {formatValue(row.value * valueProgress, format)}
-                </span>
-              </div>
-              <div
-                style={{
-                  background: '#edf0ed',
-                  borderRadius: 999,
-                  height: 18,
-                  overflow: 'hidden',
-                }}
-              >
-                <div
-                  style={{
-                    background: index === 0 ? '#005c2f' : index === 1 ? '#008a3d' : index === 2 ? '#35bf6b' : '#7dd99d',
-                    borderRadius: 999,
-                    height: '100%',
-                    width,
-                  }}
+                </text>
+                <path
+                  d={[
+                    `M ${x} ${margin.top + plotHeight}`,
+                    `L ${x} ${y + 10}`,
+                    `Q ${x} ${y} ${x + 10} ${y}`,
+                    `L ${x + barWidth - 10} ${y}`,
+                    `Q ${x + barWidth} ${y} ${x + barWidth} ${y + 10}`,
+                    `L ${x + barWidth} ${margin.top + plotHeight}`,
+                    'Z',
+                  ].join(' ')}
+                  fill={color}
                 />
-              </div>
-            </div>
-          )
-        })}
+                <text
+                  x={x + barWidth / 2}
+                  y={margin.top + plotHeight + 34}
+                  fill="#4f5a53"
+                  fontSize={15}
+                  fontWeight={700}
+                  letterSpacing={0}
+                  textAnchor="middle"
+                >
+                  {row.label === 'Mercado Livre' ? 'ML' : row.label}
+                </text>
+              </g>
+            )
+          })}
+        </svg>
       </div>
     </section>
   )
