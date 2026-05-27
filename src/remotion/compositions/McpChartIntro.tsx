@@ -57,15 +57,18 @@ export function McpChartIntro() {
         background: '#eef2f7',
         color: '#0f172a',
         fontFamily: 'Inter, Arial, sans-serif',
-        padding: 56,
+        padding: 42,
       }}
     >
       <div
         style={{
           display: 'grid',
-          gap: 28,
+          gap: 22,
           gridTemplateRows: 'auto auto auto 1fr auto',
           height: '100%',
+          margin: '0 auto',
+          maxWidth: 760,
+          width: '100%',
         }}
       >
         <header
@@ -79,7 +82,7 @@ export function McpChartIntro() {
           <p
             style={{
               color: '#225f42',
-              fontSize: 24,
+              fontSize: 22,
               fontWeight: 800,
               letterSpacing: 0,
               margin: 0,
@@ -91,7 +94,7 @@ export function McpChartIntro() {
           <span
             style={{
               color: '#64748b',
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: 700,
               letterSpacing: 0,
             }}
@@ -112,12 +115,12 @@ export function McpChartIntro() {
               background: '#0f172a',
               borderRadius: 26,
               color: '#ffffff',
-              fontSize: 34,
+              fontSize: 28,
               fontWeight: 650,
               letterSpacing: 0,
               lineHeight: 1.25,
-              maxWidth: 720,
-              padding: '28px 32px',
+              maxWidth: 560,
+              padding: '22px 26px',
             }}
           >
             Quais canais mais venderam este mes?
@@ -140,11 +143,11 @@ export function McpChartIntro() {
               color: '#ffffff',
               display: 'flex',
               flex: '0 0 54px',
-              fontSize: 22,
+              fontSize: 19,
               fontWeight: 800,
-              height: 54,
+              height: 46,
               justifyContent: 'center',
-              width: 54,
+              width: 46,
             }}
           >
             C
@@ -156,12 +159,12 @@ export function McpChartIntro() {
               borderRadius: 22,
               boxShadow: '0 14px 34px rgba(15, 23, 42, 0.08)',
               color: '#202622',
-              fontSize: 30,
+              fontSize: 24,
               fontWeight: 560,
               letterSpacing: 0,
               lineHeight: 1.34,
-              maxWidth: 760,
-              padding: '26px 30px',
+              maxWidth: 620,
+              padding: '22px 24px',
             }}
           >
             Consolidei os pedidos conectados. Shopify lidera a receita, seguido por Mercado Livre.
@@ -176,7 +179,7 @@ export function McpChartIntro() {
             borderRadius: 18,
             boxShadow: '0 18px 45px rgba(15, 23, 42, 0.10)',
             minHeight: 0,
-            padding: 30,
+            padding: 22,
           }}
         >
           <AnimatedMcpChartView data={chartData} startFrame={82} />
@@ -186,7 +189,7 @@ export function McpChartIntro() {
           style={{
             ...footerStyle,
             color: '#64748b',
-            fontSize: 22,
+            fontSize: 17,
             fontWeight: 650,
             letterSpacing: 0,
             textAlign: 'center',

@@ -18,7 +18,7 @@ export default function RemotionPreviewPage() {
       <section
         style={{
           margin: '0 auto',
-          maxWidth: 1040,
+          maxWidth: 430,
           width: '100%',
         }}
       >
@@ -30,7 +30,7 @@ export default function RemotionPreviewPage() {
           <h1
             style={{
               color: '#0f172a',
-              fontSize: 28,
+              fontSize: 22,
               fontWeight: 700,
               margin: 0,
             }}
@@ -40,7 +40,7 @@ export default function RemotionPreviewPage() {
           <p
             style={{
               color: '#475569',
-              fontSize: 15,
+              fontSize: 13,
               margin: '6px 0 0',
             }}
           >

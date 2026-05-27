@@ -93,6 +93,7 @@ export function AnimatedMcpChartView({ data, startFrame = 0 }: { data: ChartResu
       className="chart-card"
       style={{
         height: '100%',
+        overflow: 'hidden',
       }}
     >
       <header className="chart-card__header">
@@ -105,8 +106,8 @@ export function AnimatedMcpChartView({ data, startFrame = 0 }: { data: ChartResu
       <div
         style={{
           display: 'grid',
-          gap: 22,
-          paddingTop: 10,
+          gap: 16,
+          paddingTop: 6,
         }}
       >
         {rows.map((row, index) => {
@@ -135,7 +136,7 @@ export function AnimatedMcpChartView({ data, startFrame = 0 }: { data: ChartResu
                 <span
                   style={{
                     color: '#202622',
-                    fontSize: 18,
+                    fontSize: 15,
                     fontWeight: 720,
                     letterSpacing: 0,
                   }}
@@ -145,7 +146,7 @@ export function AnimatedMcpChartView({ data, startFrame = 0 }: { data: ChartResu
                 <span
                   style={{
                     color: '#4f5a53',
-                    fontSize: 17,
+                    fontSize: 14,
                     fontVariantNumeric: 'tabular-nums',
                     fontWeight: 760,
                     letterSpacing: 0,
@@ -159,7 +160,7 @@ export function AnimatedMcpChartView({ data, startFrame = 0 }: { data: ChartResu
                 style={{
                   background: '#edf0ed',
                   borderRadius: 999,
-                  height: 24,
+                  height: 18,
                   overflow: 'hidden',
                 }}
               >
