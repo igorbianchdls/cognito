@@ -1,11 +1,11 @@
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
 
 import { AnalysisView } from '@/products/mcp-apps/web/src/views/AnalysisView'
-import { ChartResultView } from '@/products/mcp-apps/web/src/views/ChartResultView'
 import type {
   AnalysisStructuredContent,
   ChartResultStructuredContent,
 } from '@/products/mcp-apps/web/src/types/toolResult'
+import { AnimatedMcpChartView } from '@/remotion/components/AnimatedMcpChartView'
 
 const analysisData = {
   ok: true,
@@ -151,7 +151,7 @@ export function McpChartIntro() {
               padding: 26,
             }}
           >
-            <ChartResultView data={chartData} />
+            <AnimatedMcpChartView data={chartData} startFrame={58} />
           </div>
         </div>
 
