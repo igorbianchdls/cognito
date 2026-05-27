@@ -66,11 +66,38 @@ function statusStyle(value: unknown) {
   return { background: '#eef2f7', color: '#314039' }
 }
 
+function pickColumn(columns: string[], candidates: string[]) {
+  return candidates
+    .map((candidate) => columns.find((column) => column.toLowerCase().includes(candidate)))
+    .find(Boolean)
+}
+
+function buildMobileColumns(columns: string[]) {
+  const nameColumn = pickColumn(columns, ['fornecedor', 'cliente', 'nome', 'produto']) || columns[0]
+  const dateColumn = pickColumn(columns, ['vencimento', 'data']) || columns.find((column) => column !== nameColumn)
+  const statusColumn = pickColumn(columns, ['status', 'situacao'])
+  const moneyColumn = pickColumn(columns, ['valor_liquido', 'valor', 'total', 'receita'])
+
+  return [nameColumn, dateColumn, statusColumn, moneyColumn].filter((column): column is string => Boolean(column))
+}
+
+function shortHeader(column: string) {
+  const normalized = column.toLowerCase()
+  if (normalized.includes('fornecedor')) return 'Fornecedor'
+  if (normalized.includes('cliente')) return 'Cliente'
+  if (normalized.includes('vencimento')) return 'Venc.'
+  if (normalized.includes('data')) return 'Data'
+  if (normalized.includes('status') || normalized.includes('situacao')) return 'Status'
+  if (normalized.includes('valor') || normalized.includes('total') || normalized.includes('receita')) return 'Valor'
+  return humanizeKey(column)
+}
+
 export function AnimatedMcpTableView({ data, startFrame = 0 }: { data: DataResultStructuredContent; startFrame?: number }) {
   const frame = useCurrentFrame()
   const localFrame = Math.max(0, frame - startFrame)
   const rows = getRows(data).slice(0, 5)
-  const columns = getColumns(data, rows).slice(0, 5)
+  const sourceColumns = getColumns(data, rows)
+  const columns = buildMobileColumns(sourceColumns)
   const columnKinds = Object.fromEntries(columns.map((column) => [column, getColumnKind(column, rows)]))
   const titleStyle = fadeSlide(localFrame, 0)
   const subtitleStyle = fadeSlide(localFrame, 10)
@@ -98,26 +125,32 @@ export function AnimatedMcpTableView({ data, startFrame = 0 }: { data: DataResul
         }}
       >
         <table
-          className="data-table"
           style={{
-            fontSize: 17,
-            minWidth: 0,
+            borderCollapse: 'collapse',
+            fontSize: 22,
             tableLayout: 'fixed',
             width: '100%',
           }}
         >
           <thead style={headerRowStyle}>
             <tr>
-              {columns.map((column) => (
+              {columns.map((column, columnIndex) => (
                 <th
                   key={column}
                   style={{
-                    fontSize: 14,
+                    background: '#f6f7f5',
+                    borderBottom: '1px solid #e6e8e4',
+                    color: '#606a64',
+                    fontSize: 17,
+                    fontWeight: 850,
                     letterSpacing: 0,
-                    padding: '12px 13px',
+                    padding: '14px 14px',
+                    textAlign: columnKinds[column] === 'money' ? 'right' : 'left',
+                    textTransform: 'uppercase',
+                    width: columnIndex === 0 ? '35%' : columnKinds[column] === 'money' ? '25%' : '20%',
                   }}
                 >
-                  {humanizeKey(column)}
+                  {shortHeader(column)}
                 </th>
               ))}
             </tr>
@@ -127,20 +160,28 @@ export function AnimatedMcpTableView({ data, startFrame = 0 }: { data: DataResul
               const rowStyle = fadeSlide(localFrame, 42 + rowIndex * 9, 18)
               return (
                 <tr key={rowIndex} style={rowStyle}>
-                  {columns.map((column) => {
+                  {columns.map((column, columnIndex) => {
                     const kind = columnKinds[column]
                     const value = row[column]
                     const isStatus = kind === 'status'
+                    const isFirstColumn = columnIndex === 0
 
                     return (
                       <td
-                        className={`data-table__cell data-table__cell--${kind}`}
                         key={column}
                         style={{
-                          fontSize: 17,
+                          borderBottom: '1px solid #edf0ec',
+                          color: isFirstColumn ? '#151816' : '#29302b',
+                          fontSize: 22,
+                          fontVariantNumeric: kind === 'money' || kind === 'number' ? 'tabular-nums' : undefined,
+                          fontWeight: isFirstColumn ? 740 : 560,
                           letterSpacing: 0,
-                          maxWidth: 0,
-                          padding: '13px',
+                          lineHeight: 1.22,
+                          overflow: 'hidden',
+                          padding: '17px 14px',
+                          textAlign: kind === 'money' || kind === 'number' ? 'right' : 'left',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
                         }}
                       >
                         {isStatus ? (
@@ -149,11 +190,11 @@ export function AnimatedMcpTableView({ data, startFrame = 0 }: { data: DataResul
                               ...statusStyle(value),
                               borderRadius: 999,
                               display: 'inline-flex',
-                              fontSize: 14,
+                              fontSize: 17,
                               fontWeight: 800,
                               letterSpacing: 0,
                               lineHeight: 1,
-                              padding: '7px 10px',
+                              padding: '8px 12px',
                               whiteSpace: 'nowrap',
                             }}
                           >
