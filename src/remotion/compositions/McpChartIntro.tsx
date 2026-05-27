@@ -2,6 +2,7 @@ import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
 
 import type { ChartResultStructuredContent } from '@/products/mcp-apps/web/src/types/toolResult'
 import { AnimatedMcpChartView } from '@/remotion/components/AnimatedMcpChartView'
+import { AnimatedMcpLineChartView } from '@/remotion/components/AnimatedMcpLineChartView'
 import { AnimatedMcpPieChartView } from '@/remotion/components/AnimatedMcpPieChartView'
 
 const chartData = {
@@ -39,6 +40,29 @@ const pieData = {
   rows: chartData.rows,
 } satisfies ChartResultStructuredContent
 
+const lineData = {
+  ok: true,
+  tool: 'chart',
+  view: 'chart',
+  title: 'Evolucao da receita',
+  subtitle: 'Ultimos 7 dias conectados',
+  chart: {
+    type: 'line',
+    labelField: 'dia',
+    valueField: 'receita',
+    format: 'currency',
+  },
+  rows: [
+    { dia: 'D1', receita: 42000 },
+    { dia: 'D2', receita: 51500 },
+    { dia: 'D3', receita: 48200 },
+    { dia: 'D4', receita: 69000 },
+    { dia: 'D5', receita: 74400 },
+    { dia: 'D6', receita: 91600 },
+    { dia: 'D7', receita: 103500 },
+  ],
+} satisfies ChartResultStructuredContent
+
 function fadeSlide(frame: number, start: number, fromX = 0, fromY = 24) {
   const opacity = interpolate(frame, [start, start + 22], [0, 1], {
     extrapolateLeft: 'clamp',
@@ -68,8 +92,11 @@ export function McpChartIntro() {
   const secondUserBubbleStyle = fadeSlide(frame, 154, 48, 0)
   const secondAssistantBubbleStyle = fadeSlide(frame, 184, -48, 0)
   const pieStyle = fadeSlide(frame, 214, -34, 18)
-  const footerStyle = fadeSlide(frame, 270, 0, 18)
-  const conversationY = interpolate(frame, [132, 220], [0, -116], {
+  const thirdUserBubbleStyle = fadeSlide(frame, 304, 48, 0)
+  const thirdAssistantBubbleStyle = fadeSlide(frame, 334, -48, 0)
+  const lineStyle = fadeSlide(frame, 364, -34, 18)
+  const footerStyle = fadeSlide(frame, 486, 0, 18)
+  const conversationY = interpolate(frame, [132, 220, 304, 392], [0, -116, -560, -760], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   })
@@ -303,6 +330,88 @@ export function McpChartIntro() {
               }}
             >
               <AnimatedMcpPieChartView data={pieData} startFrame={214} />
+            </div>
+
+            <div
+              style={{
+                ...thirdUserBubbleStyle,
+                display: 'flex',
+                justifyContent: 'flex-end',
+              }}
+            >
+              <div
+                style={{
+                  background: '#0f172a',
+                  borderRadius: 26,
+                  color: '#ffffff',
+                  fontSize: 27,
+                  fontWeight: 650,
+                  letterSpacing: 0,
+                  lineHeight: 1.25,
+                  maxWidth: 560,
+                  padding: '21px 25px',
+                }}
+              >
+                E a evolucao nos ultimos dias?
+              </div>
+            </div>
+
+            <div
+              style={{
+                ...thirdAssistantBubbleStyle,
+                alignItems: 'flex-start',
+                display: 'flex',
+                gap: 16,
+              }}
+            >
+              <div
+                style={{
+                  alignItems: 'center',
+                  background: '#225f42',
+                  borderRadius: 18,
+                  color: '#ffffff',
+                  display: 'flex',
+                  flex: '0 0 54px',
+                  fontSize: 19,
+                  fontWeight: 800,
+                  height: 46,
+                  justifyContent: 'center',
+                  width: 46,
+                }}
+              >
+                C
+              </div>
+              <div
+                style={{
+                  background: '#ffffff',
+                  border: '1px solid #dfe4df',
+                  borderRadius: 22,
+                  boxShadow: '0 14px 34px rgba(15, 23, 42, 0.08)',
+                  color: '#202622',
+                  fontSize: 23,
+                  fontWeight: 560,
+                  letterSpacing: 0,
+                  lineHeight: 1.34,
+                  maxWidth: 620,
+                  padding: '21px 24px',
+                }}
+              >
+                A serie mostra aceleracao consistente no fim do periodo, com pico no D7.
+              </div>
+            </div>
+
+            <div
+              style={{
+                ...lineStyle,
+                alignSelf: 'start',
+                background: '#ffffff',
+                border: '1px solid #dfe4df',
+                borderRadius: 18,
+                boxShadow: '0 18px 45px rgba(15, 23, 42, 0.10)',
+                padding: 18,
+              }}
+            >
+              <AnimatedMcpLineChartView data={lineData} startFrame={364} />
             </div>
 
             <footer

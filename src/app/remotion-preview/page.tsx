@@ -62,7 +62,7 @@ export default function RemotionPreviewPage() {
             compositionHeight={1920}
             compositionWidth={1080}
             controls
-            durationInFrames={300}
+            durationInFrames={510}
             fps={30}
             style={{
               aspectRatio: '9 / 16',

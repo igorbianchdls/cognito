@@ -104,10 +104,10 @@ export function AnimatedMcpPieChartView({ data, startFrame = 0 }: { data: ChartR
         </div>
       </header>
 
-      <div style={{ alignItems: 'center', display: 'grid', gap: 18, gridTemplateColumns: '230px 1fr', marginTop: 4 }}>
-        <svg viewBox="0 0 240 240" style={{ display: 'block', width: '100%' }}>
-          <circle cx="120" cy="120" fill="#edf0ed" r="92" />
-          <circle cx="120" cy="120" fill="#ffffff" r="54" />
+      <div style={{ display: 'grid', gap: 14, justifyItems: 'center', marginTop: 8 }}>
+        <svg viewBox="0 0 320 320" style={{ display: 'block', maxWidth: 430, width: '100%' }}>
+          <circle cx="160" cy="160" fill="#edf0ed" r="124" />
+          <circle cx="160" cy="160" fill="#ffffff" r="70" />
           {rows.map((row) => {
             const angle = row.value / total * 360 * pieProgress
             const startAngle = currentAngle
@@ -117,17 +117,17 @@ export function AnimatedMcpPieChartView({ data, startFrame = 0 }: { data: ChartR
 
             return (
               <path
-                d={arcPath(120, 120, 92, 54, startAngle, endAngle)}
+                d={arcPath(160, 160, 124, 70, startAngle, endAngle)}
                 fill={row.color}
                 key={row.label}
                 stroke="#ffffff"
-                strokeWidth={3}
+                strokeWidth={4}
               />
             )
           })}
         </svg>
 
-        <div style={{ display: 'grid', gap: 10 }}>
+        <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1fr 1fr', width: '100%' }}>
           {rows.map((row, index) => {
             const rowOpacity = progress(localFrame, 48 + index * 8, 68 + index * 8)
             const percent = row.value / total * 100
