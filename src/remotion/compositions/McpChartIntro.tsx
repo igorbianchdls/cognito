@@ -179,7 +179,7 @@ export function McpChartIntro() {
             borderRadius: 18,
             boxShadow: '0 18px 45px rgba(15, 23, 42, 0.10)',
             minHeight: 0,
-            padding: 22,
+            padding: 18,
           }}
         >
           <AnimatedMcpChartView data={chartData} startFrame={82} />

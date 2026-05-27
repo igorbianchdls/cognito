@@ -98,8 +98,8 @@ export function AnimatedMcpChartView({ data, startFrame = 0 }: { data: ChartResu
   const chartProgress = clampProgress(localFrame, 26, 82)
   const valueProgress = clampProgress(localFrame, 66, 104)
   const chartWidth = 650
-  const chartHeight = 470
-  const margin = { top: 44, right: 28, bottom: 72, left: 86 }
+  const chartHeight = 390
+  const margin = { top: 26, right: 24, bottom: 48, left: 78 }
   const plotWidth = chartWidth - margin.left - margin.right
   const plotHeight = chartHeight - margin.top - margin.bottom
   const slotWidth = plotWidth / Math.max(rows.length, 1)
@@ -114,7 +114,7 @@ export function AnimatedMcpChartView({ data, startFrame = 0 }: { data: ChartResu
         overflow: 'hidden',
       }}
     >
-      <header className="chart-card__header">
+      <header className="chart-card__header" style={{ marginBottom: 2, paddingBottom: 8 }}>
         <div className="chart-card__copy">
           <h1 style={titleStyle}>{data.title || 'Grafico'}</h1>
           {data.subtitle ? <p style={subtitleStyle}>{data.subtitle}</p> : null}
@@ -123,7 +123,7 @@ export function AnimatedMcpChartView({ data, startFrame = 0 }: { data: ChartResu
 
       <div
         style={{
-          paddingTop: 2,
+          marginTop: -4,
         }}
       >
         <svg
