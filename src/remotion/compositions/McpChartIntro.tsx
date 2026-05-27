@@ -2,6 +2,7 @@ import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
 
 import type { ChartResultStructuredContent } from '@/products/mcp-apps/web/src/types/toolResult'
 import { AnimatedMcpChartView } from '@/remotion/components/AnimatedMcpChartView'
+import { AnimatedMcpPieChartView } from '@/remotion/components/AnimatedMcpPieChartView'
 
 const chartData = {
   ok: true,
@@ -21,6 +22,21 @@ const chartData = {
     { canal: 'Shopee', receita: 96700 },
     { canal: 'Amazon', receita: 75700 },
   ],
+} satisfies ChartResultStructuredContent
+
+const pieData = {
+  ok: true,
+  tool: 'chart',
+  view: 'chart',
+  title: 'Participacao por canal',
+  subtitle: 'Distribuicao da receita conectada',
+  chart: {
+    type: 'pie',
+    labelField: 'canal',
+    valueField: 'receita',
+    format: 'currency',
+  },
+  rows: chartData.rows,
 } satisfies ChartResultStructuredContent
 
 function fadeSlide(frame: number, start: number, fromX = 0, fromY = 24) {
@@ -49,7 +65,14 @@ export function McpChartIntro() {
   const userBubbleStyle = fadeSlide(frame, 22, 48, 0)
   const assistantBubbleStyle = fadeSlide(frame, 52, -48, 0)
   const chartStyle = fadeSlide(frame, 82, -34, 18)
-  const footerStyle = fadeSlide(frame, 132, 0, 18)
+  const secondUserBubbleStyle = fadeSlide(frame, 154, 48, 0)
+  const secondAssistantBubbleStyle = fadeSlide(frame, 184, -48, 0)
+  const pieStyle = fadeSlide(frame, 214, -34, 18)
+  const footerStyle = fadeSlide(frame, 270, 0, 18)
+  const conversationY = interpolate(frame, [132, 220], [0, -116], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
 
   return (
     <AbsoluteFill
@@ -63,8 +86,8 @@ export function McpChartIntro() {
       <div
         style={{
           display: 'grid',
-          gap: 20,
-          gridTemplateRows: 'auto auto auto auto 1fr',
+          gap: 22,
+          gridTemplateRows: 'auto 1fr',
           height: '100%',
           margin: '0 auto',
           maxWidth: 760,
@@ -105,98 +128,198 @@ export function McpChartIntro() {
 
         <div
           style={{
-            ...userBubbleStyle,
-            display: 'flex',
-            justifyContent: 'flex-end',
+            minHeight: 0,
+            overflow: 'hidden',
+            position: 'relative',
           }}
         >
           <div
             style={{
-              background: '#0f172a',
-              borderRadius: 26,
-              color: '#ffffff',
-              fontSize: 28,
-              fontWeight: 650,
-              letterSpacing: 0,
-              lineHeight: 1.25,
-              maxWidth: 560,
-              padding: '22px 26px',
+              display: 'grid',
+              gap: 18,
+              transform: `translateY(${conversationY}px)`,
             }}
           >
-            Quais canais mais venderam este mes?
+            <div
+              style={{
+                ...userBubbleStyle,
+                display: 'flex',
+                justifyContent: 'flex-end',
+              }}
+            >
+              <div
+                style={{
+                  background: '#0f172a',
+                  borderRadius: 26,
+                  color: '#ffffff',
+                  fontSize: 28,
+                  fontWeight: 650,
+                  letterSpacing: 0,
+                  lineHeight: 1.25,
+                  maxWidth: 560,
+                  padding: '22px 26px',
+                }}
+              >
+                Quais canais mais venderam este mes?
+              </div>
+            </div>
+
+            <div
+              style={{
+                ...assistantBubbleStyle,
+                alignItems: 'flex-start',
+                display: 'flex',
+                gap: 16,
+              }}
+            >
+              <div
+                style={{
+                  alignItems: 'center',
+                  background: '#225f42',
+                  borderRadius: 18,
+                  color: '#ffffff',
+                  display: 'flex',
+                  flex: '0 0 54px',
+                  fontSize: 19,
+                  fontWeight: 800,
+                  height: 46,
+                  justifyContent: 'center',
+                  width: 46,
+                }}
+              >
+                C
+              </div>
+              <div
+                style={{
+                  background: '#ffffff',
+                  border: '1px solid #dfe4df',
+                  borderRadius: 22,
+                  boxShadow: '0 14px 34px rgba(15, 23, 42, 0.08)',
+                  color: '#202622',
+                  fontSize: 24,
+                  fontWeight: 560,
+                  letterSpacing: 0,
+                  lineHeight: 1.34,
+                  maxWidth: 620,
+                  padding: '22px 24px',
+                }}
+              >
+                Consolidei os pedidos conectados. Shopify lidera a receita, seguido por Mercado Livre.
+              </div>
+            </div>
+
+            <div
+              style={{
+                ...chartStyle,
+                alignSelf: 'start',
+                background: '#ffffff',
+                border: '1px solid #dfe4df',
+                borderRadius: 18,
+                boxShadow: '0 18px 45px rgba(15, 23, 42, 0.10)',
+                padding: 18,
+              }}
+            >
+              <AnimatedMcpChartView data={chartData} startFrame={82} />
+            </div>
+
+            <div
+              style={{
+                ...secondUserBubbleStyle,
+                display: 'flex',
+                justifyContent: 'flex-end',
+              }}
+            >
+              <div
+                style={{
+                  background: '#0f172a',
+                  borderRadius: 26,
+                  color: '#ffffff',
+                  fontSize: 27,
+                  fontWeight: 650,
+                  letterSpacing: 0,
+                  lineHeight: 1.25,
+                  maxWidth: 560,
+                  padding: '21px 25px',
+                }}
+              >
+                E como fica a participacao de cada canal?
+              </div>
+            </div>
+
+            <div
+              style={{
+                ...secondAssistantBubbleStyle,
+                alignItems: 'flex-start',
+                display: 'flex',
+                gap: 16,
+              }}
+            >
+              <div
+                style={{
+                  alignItems: 'center',
+                  background: '#225f42',
+                  borderRadius: 18,
+                  color: '#ffffff',
+                  display: 'flex',
+                  flex: '0 0 54px',
+                  fontSize: 19,
+                  fontWeight: 800,
+                  height: 46,
+                  justifyContent: 'center',
+                  width: 46,
+                }}
+              >
+                C
+              </div>
+              <div
+                style={{
+                  background: '#ffffff',
+                  border: '1px solid #dfe4df',
+                  borderRadius: 22,
+                  boxShadow: '0 14px 34px rgba(15, 23, 42, 0.08)',
+                  color: '#202622',
+                  fontSize: 23,
+                  fontWeight: 560,
+                  letterSpacing: 0,
+                  lineHeight: 1.34,
+                  maxWidth: 620,
+                  padding: '21px 24px',
+                }}
+              >
+                Montei tambem a distribuicao. A maior fatia segue em Shopify, mas marketplaces somados
+                ja representam quase metade.
+              </div>
+            </div>
+
+            <div
+              style={{
+                ...pieStyle,
+                alignSelf: 'start',
+                background: '#ffffff',
+                border: '1px solid #dfe4df',
+                borderRadius: 18,
+                boxShadow: '0 18px 45px rgba(15, 23, 42, 0.10)',
+                padding: 18,
+              }}
+            >
+              <AnimatedMcpPieChartView data={pieData} startFrame={214} />
+            </div>
+
+            <footer
+              style={{
+                ...footerStyle,
+                color: '#64748b',
+                fontSize: 17,
+                fontWeight: 650,
+                letterSpacing: 0,
+                paddingBottom: 24,
+                textAlign: 'center',
+              }}
+            >
+              Resposta rica de tool MCP simulada no chat.
+            </footer>
           </div>
         </div>
-
-        <div
-          style={{
-            ...assistantBubbleStyle,
-            alignItems: 'flex-start',
-            display: 'flex',
-            gap: 16,
-          }}
-        >
-          <div
-            style={{
-              alignItems: 'center',
-              background: '#225f42',
-              borderRadius: 18,
-              color: '#ffffff',
-              display: 'flex',
-              flex: '0 0 54px',
-              fontSize: 19,
-              fontWeight: 800,
-              height: 46,
-              justifyContent: 'center',
-              width: 46,
-            }}
-          >
-            C
-          </div>
-          <div
-            style={{
-              background: '#ffffff',
-              border: '1px solid #dfe4df',
-              borderRadius: 22,
-              boxShadow: '0 14px 34px rgba(15, 23, 42, 0.08)',
-              color: '#202622',
-              fontSize: 24,
-              fontWeight: 560,
-              letterSpacing: 0,
-              lineHeight: 1.34,
-              maxWidth: 620,
-              padding: '22px 24px',
-            }}
-          >
-            Consolidei os pedidos conectados. Shopify lidera a receita, seguido por Mercado Livre.
-          </div>
-        </div>
-
-        <div
-          style={{
-            ...chartStyle,
-            background: '#ffffff',
-            border: '1px solid #dfe4df',
-            borderRadius: 18,
-            boxShadow: '0 18px 45px rgba(15, 23, 42, 0.10)',
-            alignSelf: 'start',
-            padding: 18,
-          }}
-        >
-          <AnimatedMcpChartView data={chartData} startFrame={82} />
-        </div>
-
-        <footer
-          style={{
-            ...footerStyle,
-            color: '#64748b',
-            fontSize: 17,
-            fontWeight: 650,
-            letterSpacing: 0,
-            textAlign: 'center',
-          }}
-        >
-          Resposta rica de tool MCP simulada no chat.
-        </footer>
       </div>
     </AbsoluteFill>
   )
