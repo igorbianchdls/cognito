@@ -6,7 +6,9 @@ import {
   Menu,
   Mic,
   MoreHorizontal,
+  Play,
   Plus,
+  RotateCcw,
   SquarePen,
   ThumbsDown,
   ThumbsUp,
@@ -415,7 +417,9 @@ function RichCard({ children, style }: { children: ReactNode; style: CSSProperti
   )
 }
 
-export function McpChartIntro() {
+export type McpTemplate = 'chatgpt' | 'claude'
+
+function ChatGptMobileTemplate() {
   const frame = useCurrentFrame()
   const firstUserStyle = fadeSlide(frame, 16, 40, 0)
   const firstAssistantStyle = fadeSlide(frame, 50, 0, 20)
@@ -482,4 +486,428 @@ export function McpChartIntro() {
       <BottomComposer />
     </AbsoluteFill>
   )
+}
+
+function ClaudeStatusBar() {
+  return (
+    <div
+      style={{
+        alignItems: 'center',
+        display: 'flex',
+        height: 78,
+        justifyContent: 'space-between',
+        padding: '24px 77px 0',
+      }}
+    >
+      <div style={{ color: '#000000', fontSize: 40, fontWeight: 700, letterSpacing: 0 }}>19:04</div>
+      <div style={{ alignItems: 'center', display: 'flex', gap: 17 }}>
+        <div style={{ alignItems: 'flex-end', display: 'flex', gap: 4, height: 23 }}>
+          {[11, 15, 20, 26].map((height, index) => (
+            <span
+              key={height}
+              style={{
+                background: index === 3 ? '#c7c7c7' : '#000000',
+                borderRadius: 3,
+                display: 'block',
+                height,
+                width: 7,
+              }}
+            />
+          ))}
+        </div>
+        <div style={{ height: 29, position: 'relative', width: 40 }}>
+          <div
+            style={{
+              border: '5px solid #000000',
+              borderBottomColor: 'transparent',
+              borderLeftColor: 'transparent',
+              borderRadius: '50%',
+              height: 34,
+              left: 0,
+              position: 'absolute',
+              top: 2,
+              transform: 'rotate(-45deg)',
+              width: 40,
+            }}
+          />
+          <div
+            style={{
+              background: '#000000',
+              borderRadius: 999,
+              bottom: 0,
+              height: 7,
+              left: 16,
+              position: 'absolute',
+              width: 7,
+            }}
+          />
+        </div>
+        <div
+          style={{
+            alignItems: 'center',
+            border: '1px solid #cfcfcf',
+            borderRadius: 8,
+            color: '#000000',
+            display: 'flex',
+            fontSize: 25,
+            fontWeight: 800,
+            height: 33,
+            justifyContent: 'center',
+            lineHeight: 1,
+            position: 'relative',
+            width: 61,
+          }}
+        >
+          5
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ClaudeTopBar() {
+  return (
+    <div
+      style={{
+        alignItems: 'center',
+        display: 'flex',
+        height: 119,
+        justifyContent: 'space-between',
+        padding: '0 55px',
+      }}
+    >
+      <Menu color="#3f3f3a" size={44} strokeWidth={2.2} />
+      <div style={{ alignItems: 'center', display: 'flex', gap: 66 }}>
+        <div
+          style={{
+            alignItems: 'center',
+            background: '#3a3a36',
+            borderRadius: 999,
+            display: 'flex',
+            height: 52,
+            justifyContent: 'center',
+            width: 52,
+          }}
+        >
+          <Plus color="#ffffff" size={39} strokeWidth={3.1} />
+        </div>
+        <MoreHorizontal color="#3f3f3a" size={49} strokeWidth={3} />
+      </div>
+    </div>
+  )
+}
+
+function ClaudeUserBubble({ children, style }: { children: string; style: CSSProperties }) {
+  return (
+    <div style={{ ...style, display: 'flex', justifyContent: 'flex-end', paddingRight: 34 }}>
+      <div
+        style={{
+          background: '#f4f3f1',
+          border: '1px solid #e4e2df',
+          borderRadius: 58,
+          color: '#111111',
+          fontFamily: 'Arial, "Segoe UI", sans-serif',
+          fontSize: 42,
+          fontWeight: 400,
+          letterSpacing: 0,
+          lineHeight: 1.16,
+          maxWidth: 640,
+          padding: '31px 37px',
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function ClaudeActions({ includeShare = false }: { includeShare?: boolean }) {
+  const iconStyle = { color: '#7b7a74', size: 39, strokeWidth: 2.4 }
+
+  return (
+    <div style={{ alignItems: 'center', display: 'flex', gap: 36, paddingTop: 46 }}>
+      <Copy {...iconStyle} />
+      {includeShare ? <Upload {...iconStyle} /> : null}
+      <Play {...iconStyle} />
+      <ThumbsUp {...iconStyle} />
+      <ThumbsDown {...iconStyle} />
+      <RotateCcw {...iconStyle} />
+    </div>
+  )
+}
+
+function ClaudeAssistantText({ children, style, includeShare = false }: { children: ReactNode; style: CSSProperties; includeShare?: boolean }) {
+  return (
+    <div
+      style={{
+        ...style,
+        color: '#111111',
+        fontFamily: 'Georgia, "Times New Roman", serif',
+        fontSize: 47,
+        fontWeight: 500,
+        letterSpacing: -0.7,
+        lineHeight: 1.52,
+        padding: '0 42px',
+      }}
+    >
+      <div>{children}</div>
+      <ClaudeActions includeShare={includeShare} />
+    </div>
+  )
+}
+
+function ClaudeMark() {
+  return (
+    <div style={{ height: 78, position: 'relative', width: 78 }}>
+      {Array.from({ length: 12 }).map((_, index) => (
+        <span
+          key={index}
+          style={{
+            background: '#e17b5c',
+            borderRadius: 999,
+            height: 9,
+            left: 9,
+            position: 'absolute',
+            top: 34,
+            transform: `rotate(${index * 30}deg) translateX(26px)`,
+            transformOrigin: '30px 5px',
+            width: 43,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
+function ClaudeNotice({ style }: { style: CSSProperties }) {
+  return (
+    <div
+      style={{
+        ...style,
+        alignItems: 'center',
+        display: 'grid',
+        gap: 25,
+        gridTemplateColumns: '95px 1fr',
+        padding: '0 42px',
+      }}
+    >
+      <ClaudeMark />
+      <div
+        style={{
+          color: '#3e3d39',
+          fontFamily: 'Arial, "Segoe UI", sans-serif',
+          fontSize: 35,
+          fontWeight: 400,
+          letterSpacing: 0,
+          lineHeight: 1.35,
+          textAlign: 'center',
+        }}
+      >
+        Claude é uma IA e pode cometer erros.
+        <br />
+        Por favor, verifique as respostas.
+      </div>
+    </div>
+  )
+}
+
+function ClaudeComposer() {
+  return (
+    <div
+      style={{
+        background: '#ffffff',
+        bottom: 0,
+        height: 247,
+        left: 0,
+        padding: '0 40px',
+        position: 'absolute',
+        right: 0,
+      }}
+    >
+      <div
+        style={{
+          background: '#ffffff',
+          border: '1.5px solid #c8c6c1',
+          borderRadius: 63,
+          boxShadow: '0 16px 30px rgba(0, 0, 0, 0.12)',
+          height: 205,
+          padding: '32px 20px 18px 31px',
+        }}
+      >
+        <div
+          style={{
+            color: '#7f7e78',
+            fontFamily: 'Arial, "Segoe UI", sans-serif',
+            fontSize: 42,
+            fontWeight: 400,
+            letterSpacing: 0,
+            lineHeight: 1,
+            marginBottom: 50,
+          }}
+        >
+          Responder a Claude
+        </div>
+        <div style={{ alignItems: 'center', display: 'flex', gap: 20 }}>
+          <div
+            style={{
+              alignItems: 'center',
+              background: '#f0efec',
+              borderRadius: 999,
+              display: 'flex',
+              height: 92,
+              justifyContent: 'center',
+              width: 92,
+            }}
+          >
+            <Plus color="#000000" size={42} strokeWidth={2.3} />
+          </div>
+          <div
+            style={{
+              alignItems: 'center',
+              background: '#f0efec',
+              borderRadius: 999,
+              color: '#111111',
+              display: 'flex',
+              fontFamily: 'Arial, "Segoe UI", sans-serif',
+              fontSize: 31,
+              fontWeight: 400,
+              height: 92,
+              justifyContent: 'center',
+              letterSpacing: 0,
+              padding: '0 42px',
+            }}
+          >
+            Sonnet 4.6
+          </div>
+          <div style={{ flex: 1 }} />
+          <div
+            style={{
+              alignItems: 'center',
+              background: '#f0efec',
+              borderRadius: 999,
+              display: 'flex',
+              height: 92,
+              justifyContent: 'center',
+              width: 92,
+            }}
+          >
+            <Mic color="#3f3f3a" size={47} strokeWidth={2.6} />
+          </div>
+          <VoiceButton />
+        </div>
+      </div>
+      <div
+        style={{
+          background: '#000000',
+          borderRadius: 999,
+          bottom: 12,
+          height: 12,
+          left: '50%',
+          position: 'absolute',
+          transform: 'translateX(-50%)',
+          width: 380,
+        }}
+      />
+    </div>
+  )
+}
+
+function ClaudeRichCard({ children, style }: { children: ReactNode; style: CSSProperties }) {
+  return (
+    <div
+      style={{
+        ...style,
+        background: '#ffffff',
+        border: '1px solid #e8e5df',
+        borderRadius: 34,
+        boxShadow: '0 18px 42px rgba(0, 0, 0, 0.07)',
+        margin: '0 42px',
+        overflow: 'hidden',
+        padding: 18,
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
+function ClaudeMobileTemplate() {
+  const frame = useCurrentFrame()
+  const firstUserStyle = fadeSlide(frame, 12, 38, 0)
+  const firstAssistantStyle = fadeSlide(frame, 42, 0, 18)
+  const secondUserStyle = fadeSlide(frame, 128, 38, 0)
+  const secondAssistantStyle = fadeSlide(frame, 164, 0, 18)
+  const noticeStyle = fadeSlide(frame, 224, 0, 16)
+  const erpUserStyle = fadeSlide(frame, 298, 38, 0)
+  const tableTextStyle = fadeSlide(frame, 334, 0, 18)
+  const tableStyle = fadeSlide(frame, 368, 0, 24)
+  const chartTextStyle = fadeSlide(frame, 476, 0, 18)
+  const chartStyle = fadeSlide(frame, 510, 0, 24)
+  const pieStyle = fadeSlide(frame, 600, 0, 24)
+  const lineStyle = fadeSlide(frame, 672, 0, 24)
+  const conversationY = interpolate(frame, [0, 250, 370, 500, 620, 700], [0, 0, -390, -770, -1130, -1470], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
+
+  return (
+    <AbsoluteFill
+      style={{
+        background: '#ffffff',
+        color: '#111111',
+        fontFamily: 'Arial, "Segoe UI", sans-serif',
+      }}
+    >
+      <ClaudeStatusBar />
+      <ClaudeTopBar />
+
+      <div
+        style={{
+          bottom: 247,
+          left: 0,
+          overflow: 'hidden',
+          position: 'absolute',
+          right: 0,
+          top: 188,
+        }}
+      >
+        <div style={{ display: 'grid', gap: 58, paddingTop: 28, transform: `translateY(${conversationY}px)` }}>
+          <ClaudeUserBubble style={firstUserStyle}>Olá</ClaudeUserBubble>
+          <ClaudeAssistantText style={firstAssistantStyle}>Olá, Igor! Como posso ajudar?</ClaudeAssistantText>
+          <ClaudeUserBubble style={secondUserStyle}>Tudo bem com você?</ClaudeUserBubble>
+          <ClaudeAssistantText includeShare style={secondAssistantStyle}>
+            Tudo bem, obrigado! E com você? Alguma coisa no radar hoje — produto, tech, ou só curiosidade do dia?
+          </ClaudeAssistantText>
+          <ClaudeNotice style={noticeStyle} />
+
+          <ClaudeUserBubble style={erpUserStyle}>Me diga as contas a pagar</ClaudeUserBubble>
+          <ClaudeAssistantText style={tableTextStyle}>
+            Encontrei estas contas a pagar conectadas ao ERP.
+          </ClaudeAssistantText>
+          <ClaudeRichCard style={tableStyle}>
+            <AnimatedMcpTableView data={tableData} startFrame={368} />
+          </ClaudeRichCard>
+
+          <ClaudeAssistantText style={chartTextStyle}>
+            Também posso transformar a mesma consulta em visualizações.
+          </ClaudeAssistantText>
+          <ClaudeRichCard style={chartStyle}>
+            <AnimatedMcpChartView data={chartData} startFrame={510} />
+          </ClaudeRichCard>
+          <ClaudeRichCard style={pieStyle}>
+            <AnimatedMcpPieChartView data={pieData} startFrame={600} />
+          </ClaudeRichCard>
+          <ClaudeRichCard style={lineStyle}>
+            <AnimatedMcpLineChartView data={lineData} startFrame={672} />
+          </ClaudeRichCard>
+        </div>
+      </div>
+
+      <ClaudeComposer />
+    </AbsoluteFill>
+  )
+}
+
+export function McpChartIntro({ template = 'chatgpt' }: { template?: McpTemplate }) {
+  return template === 'claude' ? <ClaudeMobileTemplate /> : <ChatGptMobileTemplate />
 }

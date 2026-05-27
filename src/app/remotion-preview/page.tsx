@@ -1,10 +1,13 @@
 'use client'
 
 import { Player } from '@remotion/player'
+import { useState } from 'react'
 
-import { McpChartIntro } from '@/remotion/compositions/McpChartIntro'
+import { McpChartIntro, type McpTemplate } from '@/remotion/compositions/McpChartIntro'
 
 export default function RemotionPreviewPage() {
+  const [template, setTemplate] = useState<McpTemplate>('chatgpt')
+
   return (
     <main
       style={{
@@ -24,28 +27,64 @@ export default function RemotionPreviewPage() {
       >
         <div
           style={{
+            alignItems: 'flex-start',
+            display: 'flex',
+            gap: 14,
+            justifyContent: 'space-between',
             marginBottom: 18,
           }}
         >
-          <h1
+          <div>
+            <h1
+              style={{
+                color: '#0f172a',
+                fontSize: 22,
+                fontWeight: 700,
+                margin: 0,
+              }}
+            >
+              Remotion preview
+            </h1>
+            <p
+              style={{
+                color: '#475569',
+                fontSize: 13,
+                margin: '6px 0 0',
+              }}
+            >
+              Templates mobile com componentes MCP Apps reais.
+            </p>
+          </div>
+          <div
             style={{
-              color: '#0f172a',
-              fontSize: 22,
-              fontWeight: 700,
-              margin: 0,
+              background: '#e2e8f0',
+              borderRadius: 8,
+              display: 'inline-flex',
+              gap: 2,
+              padding: 3,
             }}
           >
-            Remotion preview
-          </h1>
-          <p
-            style={{
-              color: '#475569',
-              fontSize: 13,
-              margin: '6px 0 0',
-            }}
-          >
-            Exemplo usando componentes MCP Apps reais dentro do Remotion Player.
-          </p>
+            {(['chatgpt', 'claude'] as const).map((value) => (
+              <button
+                key={value}
+                onClick={() => setTemplate(value)}
+                style={{
+                  background: template === value ? '#ffffff' : 'transparent',
+                  border: 0,
+                  borderRadius: 6,
+                  color: template === value ? '#0f172a' : '#64748b',
+                  cursor: 'pointer',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  padding: '7px 9px',
+                  textTransform: 'capitalize',
+                }}
+                type="button"
+              >
+                {value}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div
@@ -62,8 +101,9 @@ export default function RemotionPreviewPage() {
             compositionHeight={1920}
             compositionWidth={1080}
             controls
-            durationInFrames={720}
+            durationInFrames={810}
             fps={30}
+            inputProps={{ template }}
             style={{
               aspectRatio: '9 / 16',
               maxHeight: '82vh',
