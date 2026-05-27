@@ -216,7 +216,7 @@ function TopBar() {
     >
       <Menu color="#000000" size={50} strokeWidth={2.6} />
       <div style={{ alignItems: 'center', display: 'flex', gap: 6 }}>
-        <span style={{ color: '#111111', fontSize: 45, fontWeight: 560, letterSpacing: 0 }}>ChatGPT</span>
+        <span style={{ color: '#111111', fontSize: 45, fontWeight: 500, letterSpacing: 0 }}>ChatGPT</span>
         <ChevronRight color="#9b9b9b" size={33} strokeWidth={2.5} />
       </div>
       <div style={{ alignItems: 'center', display: 'flex', gap: 43, justifyContent: 'flex-end' }}>
@@ -436,7 +436,7 @@ export function McpChartIntro() {
       style={{
         background: '#ffffff',
         color: '#111111',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, Arial, sans-serif',
+        fontFamily: 'Arial, "Segoe UI", -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif',
       }}
     >
       <StatusBar />
