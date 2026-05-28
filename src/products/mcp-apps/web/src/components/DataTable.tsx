@@ -17,7 +17,7 @@ const defaultPageSize = 25
 
 function TableHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
-    <header className="chart-card__header">
+    <header className="chart-card__header table-card__header">
       <div className="chart-card__copy">
         <h1>{title}</h1>
         {subtitle ? <p>{subtitle}</p> : null}
