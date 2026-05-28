@@ -1274,7 +1274,6 @@ a {
   border: 1px solid var(--cognito-border);
   border-radius: 8px;
   background: #ffffff;
-  box-shadow: var(--cognito-shadow);
 }
 
 .connector-result dt,

@@ -16,8 +16,13 @@ import {
   Volume2,
 } from 'lucide-react'
 
-import type { ChartResultStructuredContent, DataResultStructuredContent } from '@/products/mcp-apps/web/src/types/toolResult'
+import type {
+  ChartResultStructuredContent,
+  ConnectorsStructuredContent,
+  DataResultStructuredContent,
+} from '@/products/mcp-apps/web/src/types/toolResult'
 import { AnimatedMcpChartView } from '@/remotion/components/AnimatedMcpChartView'
+import { AnimatedMcpConnectorsView } from '@/remotion/components/AnimatedMcpConnectorsView'
 import { AnimatedMcpLineChartView } from '@/remotion/components/AnimatedMcpLineChartView'
 import { AnimatedMcpPieChartView } from '@/remotion/components/AnimatedMcpPieChartView'
 import { AnimatedMcpTableView } from '@/remotion/components/AnimatedMcpTableView'
@@ -95,6 +100,20 @@ const tableData = {
     { fornecedor: 'Google Cloud', numero_documento: 'BOL-1046', data_vencimento: '2026-06-05', status: 'Aberto', valor_liquido: 36740 },
   ],
 } satisfies DataResultStructuredContent
+
+const connectorsData = {
+  ok: true,
+  tool: 'connectors',
+  view: 'connectors',
+  title: 'Conectores sincronizados',
+  subtitle: 'Fontes disponíveis para consulta',
+  rows: [
+    { connector_id: 'erp-conta-azul', domain: 'erp', plataforma: 'conta_azul', name: 'Conta Azul', health: 'connected', last_sync_at: '2026-05-28T17:10:00.000Z', accounts_count: 1 },
+    { connector_id: 'erp-omie', domain: 'erp', plataforma: 'omie', name: 'Omie ERP', health: 'connected', last_sync_at: '2026-05-28T16:40:00.000Z', accounts_count: 2 },
+    { connector_id: 'erp-bling', domain: 'erp', plataforma: 'bling', name: 'Bling', health: 'connected', last_sync_at: '2026-05-28T15:55:00.000Z', accounts_count: 1 },
+    { connector_id: 'infra-gcp', domain: 'infra', plataforma: 'google_ads', name: 'Google Cloud', health: 'connected', last_sync_at: '2026-05-28T15:20:00.000Z', accounts_count: 1 },
+  ],
+} satisfies ConnectorsStructuredContent
 
 function fadeSlide(frame: number, start: number, fromX = 0, fromY = 24) {
   const opacity = interpolate(frame, [start, start + 22], [0, 1], {
@@ -423,13 +442,15 @@ function ChatGptMobileTemplate() {
   const firstUserStyle = fadeSlide(frame, 16, 40, 0)
   const firstAssistantStyle = fadeSlide(frame, 50, 0, 20)
   const secondUserStyle = fadeSlide(frame, 176, 40, 0)
-  const tableTextStyle = fadeSlide(frame, 212, 0, 20)
-  const tableStyle = fadeSlide(frame, 246, 0, 24)
-  const chartTextStyle = fadeSlide(frame, 354, 0, 20)
-  const chartStyle = fadeSlide(frame, 388, 0, 24)
-  const pieStyle = fadeSlide(frame, 494, 0, 24)
-  const lineStyle = fadeSlide(frame, 600, 0, 24)
-  const conversationY = interpolate(frame, [0, 170, 285, 420, 540, 650], [0, 0, -360, -760, -1110, -1450], {
+  const connectorsTextStyle = fadeSlide(frame, 212, 0, 20)
+  const connectorsStyle = fadeSlide(frame, 246, 0, 24)
+  const tableTextStyle = fadeSlide(frame, 354, 0, 20)
+  const tableStyle = fadeSlide(frame, 388, 0, 24)
+  const chartTextStyle = fadeSlide(frame, 496, 0, 20)
+  const chartStyle = fadeSlide(frame, 530, 0, 24)
+  const pieStyle = fadeSlide(frame, 636, 0, 24)
+  const lineStyle = fadeSlide(frame, 742, 0, 24)
+  const conversationY = interpolate(frame, [0, 170, 285, 420, 540, 650, 760], [0, 0, -360, -760, -1110, -1450, -1800], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   })
@@ -460,24 +481,31 @@ function ChatGptMobileTemplate() {
           <AssistantText style={firstAssistantStyle} />
 
           <UserBubble style={secondUserStyle}>Do meu ERP</UserBubble>
+          <AssistantBubble style={connectorsTextStyle}>
+            Primeiro, estes conectores estão sincronizados.
+          </AssistantBubble>
+          <RichCard style={connectorsStyle}>
+            <AnimatedMcpConnectorsView data={connectorsData} startFrame={246} />
+          </RichCard>
+
           <AssistantBubble style={tableTextStyle}>
             Encontrei estas contas a pagar conectadas ao ERP.
           </AssistantBubble>
           <RichCard style={tableStyle}>
-            <AnimatedMcpTableView data={tableData} startFrame={246} />
+            <AnimatedMcpTableView data={tableData} startFrame={388} />
           </RichCard>
 
           <AssistantBubble style={chartTextStyle}>
             Também posso transformar a mesma consulta em visualizações.
           </AssistantBubble>
           <RichCard style={chartStyle}>
-            <AnimatedMcpChartView data={chartData} startFrame={388} />
+            <AnimatedMcpChartView data={chartData} startFrame={530} />
           </RichCard>
           <RichCard style={pieStyle}>
-            <AnimatedMcpPieChartView data={pieData} startFrame={494} />
+            <AnimatedMcpPieChartView data={pieData} startFrame={636} />
           </RichCard>
           <RichCard style={lineStyle}>
-            <AnimatedMcpLineChartView data={lineData} startFrame={600} />
+            <AnimatedMcpLineChartView data={lineData} startFrame={742} />
           </RichCard>
         </div>
       </div>
@@ -837,13 +865,15 @@ function ClaudeMobileTemplate() {
   const secondAssistantStyle = fadeSlide(frame, 164, 0, 18)
   const noticeStyle = fadeSlide(frame, 224, 0, 16)
   const erpUserStyle = fadeSlide(frame, 298, 38, 0)
-  const tableTextStyle = fadeSlide(frame, 334, 0, 18)
-  const tableStyle = fadeSlide(frame, 368, 0, 24)
-  const chartTextStyle = fadeSlide(frame, 476, 0, 18)
-  const chartStyle = fadeSlide(frame, 510, 0, 24)
-  const pieStyle = fadeSlide(frame, 600, 0, 24)
-  const lineStyle = fadeSlide(frame, 672, 0, 24)
-  const conversationY = interpolate(frame, [0, 250, 370, 500, 620, 700], [0, 0, -390, -770, -1130, -1470], {
+  const connectorsTextStyle = fadeSlide(frame, 334, 0, 18)
+  const connectorsStyle = fadeSlide(frame, 368, 0, 24)
+  const tableTextStyle = fadeSlide(frame, 476, 0, 18)
+  const tableStyle = fadeSlide(frame, 510, 0, 24)
+  const chartTextStyle = fadeSlide(frame, 618, 0, 18)
+  const chartStyle = fadeSlide(frame, 652, 0, 24)
+  const pieStyle = fadeSlide(frame, 742, 0, 24)
+  const lineStyle = fadeSlide(frame, 812, 0, 24)
+  const conversationY = interpolate(frame, [0, 250, 370, 500, 620, 740, 830], [0, 0, -390, -770, -1130, -1470, -1810], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   })
@@ -879,24 +909,31 @@ function ClaudeMobileTemplate() {
           <ClaudeNotice style={noticeStyle} />
 
           <ClaudeUserBubble style={erpUserStyle}>Me diga as contas a pagar</ClaudeUserBubble>
+          <ClaudeAssistantText style={connectorsTextStyle}>
+            Primeiro, estes conectores estão sincronizados.
+          </ClaudeAssistantText>
+          <ClaudeRichCard style={connectorsStyle}>
+            <AnimatedMcpConnectorsView data={connectorsData} startFrame={368} />
+          </ClaudeRichCard>
+
           <ClaudeAssistantText style={tableTextStyle}>
             Encontrei estas contas a pagar conectadas ao ERP.
           </ClaudeAssistantText>
           <ClaudeRichCard style={tableStyle}>
-            <AnimatedMcpTableView data={tableData} startFrame={368} />
+            <AnimatedMcpTableView data={tableData} startFrame={510} />
           </ClaudeRichCard>
 
           <ClaudeAssistantText style={chartTextStyle}>
             Também posso transformar a mesma consulta em visualizações.
           </ClaudeAssistantText>
           <ClaudeRichCard style={chartStyle}>
-            <AnimatedMcpChartView data={chartData} startFrame={510} />
+            <AnimatedMcpChartView data={chartData} startFrame={652} />
           </ClaudeRichCard>
           <ClaudeRichCard style={pieStyle}>
-            <AnimatedMcpPieChartView data={pieData} startFrame={600} />
+            <AnimatedMcpPieChartView data={pieData} startFrame={742} />
           </ClaudeRichCard>
           <ClaudeRichCard style={lineStyle}>
-            <AnimatedMcpLineChartView data={lineData} startFrame={672} />
+            <AnimatedMcpLineChartView data={lineData} startFrame={812} />
           </ClaudeRichCard>
         </div>
       </div>
