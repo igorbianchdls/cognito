@@ -23,12 +23,15 @@ import type {
   DashboardListStructuredContent,
   DataCatalogStructuredContent,
   DataResultStructuredContent,
+  TableStructuredContent,
 } from '@/products/mcp-apps/web/src/types/toolResult'
 import { AnimatedMcpAnalysisView } from '@/remotion/components/AnimatedMcpAnalysisView'
+import { AnimatedMcpCashFlowView } from '@/remotion/components/AnimatedMcpCashFlowView'
 import { AnimatedMcpChartView } from '@/remotion/components/AnimatedMcpChartView'
 import { AnimatedMcpConnectorsView } from '@/remotion/components/AnimatedMcpConnectorsView'
 import { AnimatedMcpDashboardListView } from '@/remotion/components/AnimatedMcpDashboardListView'
 import { AnimatedMcpDataCatalogView } from '@/remotion/components/AnimatedMcpDataCatalogView'
+import { AnimatedMcpDreView } from '@/remotion/components/AnimatedMcpDreView'
 import { AnimatedMcpLineChartView } from '@/remotion/components/AnimatedMcpLineChartView'
 import { AnimatedMcpPieChartView } from '@/remotion/components/AnimatedMcpPieChartView'
 import { AnimatedMcpTableView } from '@/remotion/components/AnimatedMcpTableView'
@@ -120,6 +123,59 @@ const connectorsData = {
     { connector_id: 'infra-gcp', domain: 'infra', plataforma: 'google_ads', name: 'Google Cloud', health: 'connected', last_sync_at: '2026-05-28T15:20:00.000Z', accounts_count: 1 },
   ],
 } satisfies ConnectorsStructuredContent
+
+const dreData = {
+  ok: true,
+  tool: 'financial_statement',
+  view: 'table',
+  kind: 'dre',
+  variant: 'financial_statement',
+  title: 'DRE',
+  subtitle: 'DRE consolidada no período 2026-01-01 a 2026-06-30',
+  columns: [
+    { key: 'descricao', label: 'DRE' },
+    { key: 'jan_2026', label: 'Jan/26', format: 'currency_plain' },
+    { key: 'fev_2026', label: 'Fev/26', format: 'currency_plain' },
+    { key: 'mar_2026', label: 'Mar/26', format: 'currency_plain' },
+    { key: 'abr_2026', label: 'Abr/26', format: 'currency_plain' },
+  ],
+  rows: [
+    { descricao: '(+) RECEITA BRUTA', jan_2026: 812300, fev_2026: 844200, mar_2026: 904100, abr_2026: 681200, _rowType: 'group', _groupId: 'receita_bruta' },
+    { descricao: '(-) DESCONTOS', jan_2026: -22100, fev_2026: -19800, mar_2026: -24700, abr_2026: -18300, _rowType: 'child', _parentGroupId: 'receita_bruta' },
+    { descricao: '(=) RECEITA LÍQUIDA', jan_2026: 790200, fev_2026: 824400, mar_2026: 879400, abr_2026: 662900, _rowType: 'subtotal' },
+    { descricao: '(-) CUSTOS', jan_2026: -318000, fev_2026: -334800, mar_2026: -351200, abr_2026: -267600, _rowType: 'child' },
+    { descricao: '(=) RESULTADO OPERACIONAL', jan_2026: 472200, fev_2026: 489600, mar_2026: 528200, abr_2026: 395300, _rowType: 'subtotal' },
+    { descricao: '(-) DESPESAS ADMINISTRATIVAS', jan_2026: -124200, fev_2026: -128700, mar_2026: -132500, abr_2026: -119900, _rowType: 'child' },
+    { descricao: '(-) DESPESAS COMERCIAIS', jan_2026: -68200, fev_2026: -71300, mar_2026: -74600, abr_2026: -62100, _rowType: 'child' },
+    { descricao: '(=) EBITDA', jan_2026: 279800, fev_2026: 289600, mar_2026: 321100, abr_2026: 213300, _rowType: 'group' },
+  ],
+  count: 8,
+} satisfies TableStructuredContent
+
+const cashFlowData = {
+  ok: true,
+  tool: 'financial_statement',
+  view: 'table',
+  kind: 'cash_flow',
+  variant: 'financial_statement',
+  title: 'Fluxo de Caixa',
+  subtitle: 'Fluxo de caixa previsto por vencimento',
+  columns: [
+    { key: 'periodo', label: 'Período' },
+    { key: 'entradas_previstas', label: 'Entradas Previstas', format: 'currency_plain' },
+    { key: 'saidas_previstas', label: 'Saídas Previstas', format: 'currency_plain' },
+    { key: 'fluxo_liquido', label: 'Fluxo Líquido', format: 'currency_plain' },
+    { key: 'saldo_acumulado', label: 'Saldo Acumulado', format: 'currency_plain' },
+  ],
+  rows: [
+    { periodo: '2026-01', entradas_previstas: 420000, saidas_previstas: 318000, fluxo_liquido: 102000, saldo_acumulado: 102000 },
+    { periodo: '2026-02', entradas_previstas: 456500, saidas_previstas: 334800, fluxo_liquido: 121700, saldo_acumulado: 223700 },
+    { periodo: '2026-03', entradas_previstas: 482200, saidas_previstas: 351200, fluxo_liquido: 131000, saldo_acumulado: 354700 },
+    { periodo: '2026-04', entradas_previstas: 396400, saidas_previstas: 267600, fluxo_liquido: 128800, saldo_acumulado: 483500 },
+    { periodo: '2026-05', entradas_previstas: 512700, saidas_previstas: 386100, fluxo_liquido: 126600, saldo_acumulado: 610100 },
+  ],
+  count: 5,
+} satisfies TableStructuredContent
 
 const dataCatalogData = {
   ok: true,
@@ -510,17 +566,21 @@ function ChatGptMobileTemplate() {
   const connectorsStyle = fadeSlide(frame, 246, 0, 24)
   const tableTextStyle = fadeSlide(frame, 354, 0, 20)
   const tableStyle = fadeSlide(frame, 388, 0, 24)
-  const chartTextStyle = fadeSlide(frame, 496, 0, 20)
-  const chartStyle = fadeSlide(frame, 530, 0, 24)
-  const pieStyle = fadeSlide(frame, 636, 0, 24)
-  const lineStyle = fadeSlide(frame, 742, 0, 24)
-  const dataCatalogTextStyle = fadeSlide(frame, 850, 0, 20)
-  const dataCatalogStyle = fadeSlide(frame, 884, 0, 24)
-  const analysisTextStyle = fadeSlide(frame, 996, 0, 20)
-  const analysisStyle = fadeSlide(frame, 1030, 0, 24)
-  const dashboardListTextStyle = fadeSlide(frame, 1142, 0, 20)
-  const dashboardListStyle = fadeSlide(frame, 1176, 0, 24)
-  const conversationY = interpolate(frame, [0, 170, 285, 420, 540, 650, 760, 900, 1080, 1260, 1480, 1700, 1960, 2240], [0, 0, -430, -980, -1520, -2140, -2820, -3540, -4300, -5100, -5940, -6740, -7560, -8260], {
+  const dreTextStyle = fadeSlide(frame, 496, 0, 20)
+  const dreStyle = fadeSlide(frame, 530, 0, 24)
+  const cashFlowTextStyle = fadeSlide(frame, 666, 0, 20)
+  const cashFlowStyle = fadeSlide(frame, 700, 0, 24)
+  const chartTextStyle = fadeSlide(frame, 836, 0, 20)
+  const chartStyle = fadeSlide(frame, 870, 0, 24)
+  const pieStyle = fadeSlide(frame, 976, 0, 24)
+  const lineStyle = fadeSlide(frame, 1082, 0, 24)
+  const dataCatalogTextStyle = fadeSlide(frame, 1190, 0, 20)
+  const dataCatalogStyle = fadeSlide(frame, 1224, 0, 24)
+  const analysisTextStyle = fadeSlide(frame, 1336, 0, 20)
+  const analysisStyle = fadeSlide(frame, 1370, 0, 24)
+  const dashboardListTextStyle = fadeSlide(frame, 1482, 0, 20)
+  const dashboardListStyle = fadeSlide(frame, 1516, 0, 24)
+  const conversationY = interpolate(frame, [0, 170, 285, 420, 540, 700, 880, 1080, 1300, 1520, 1760, 2020, 2300, 2580, 2840], [0, 0, -430, -980, -1520, -2300, -3060, -3820, -4620, -5480, -6360, -7240, -8120, -9000, -9700], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   })
@@ -565,38 +625,52 @@ function ChatGptMobileTemplate() {
             <AnimatedMcpTableView data={tableData} startFrame={388} />
           </RichCard>
 
+          <AssistantBubble style={dreTextStyle}>
+            Também posso abrir o demonstrativo de resultado no mesmo padrão.
+          </AssistantBubble>
+          <RichCard style={dreStyle}>
+            <AnimatedMcpDreView data={dreData} startFrame={530} />
+          </RichCard>
+
+          <AssistantBubble style={cashFlowTextStyle}>
+            E cruzar com o fluxo de caixa previsto por vencimento.
+          </AssistantBubble>
+          <RichCard style={cashFlowStyle}>
+            <AnimatedMcpCashFlowView data={cashFlowData} startFrame={700} />
+          </RichCard>
+
           <AssistantBubble style={chartTextStyle}>
             Também posso transformar a mesma consulta em visualizações.
           </AssistantBubble>
           <RichCard style={chartStyle}>
-            <AnimatedMcpChartView data={chartData} startFrame={530} />
+            <AnimatedMcpChartView data={chartData} startFrame={870} />
           </RichCard>
           <RichCard style={pieStyle}>
-            <AnimatedMcpPieChartView data={pieData} startFrame={636} />
+            <AnimatedMcpPieChartView data={pieData} startFrame={976} />
           </RichCard>
           <RichCard style={lineStyle}>
-            <AnimatedMcpLineChartView data={lineData} startFrame={742} />
+            <AnimatedMcpLineChartView data={lineData} startFrame={1082} />
           </RichCard>
 
           <AssistantBubble style={dataCatalogTextStyle}>
             Antes de criar o dashboard, valido o catálogo de dados conectado.
           </AssistantBubble>
           <RichCard style={dataCatalogStyle}>
-            <AnimatedMcpDataCatalogView data={dataCatalogData} startFrame={884} />
+            <AnimatedMcpDataCatalogView data={dataCatalogData} startFrame={1224} />
           </RichCard>
 
           <AssistantBubble style={analysisTextStyle}>
             Depois faço a análise com métricas, riscos e próximos passos.
           </AssistantBubble>
           <RichCard style={analysisStyle}>
-            <AnimatedMcpAnalysisView data={analysisData} startFrame={1030} />
+            <AnimatedMcpAnalysisView data={analysisData} startFrame={1370} />
           </RichCard>
 
           <AssistantBubble style={dashboardListTextStyle}>
             E deixo os dashboards prontos para abrir ou continuar editando.
           </AssistantBubble>
           <RichCard style={dashboardListStyle}>
-            <AnimatedMcpDashboardListView data={dashboardListData} startFrame={1176} />
+            <AnimatedMcpDashboardListView data={dashboardListData} startFrame={1516} />
           </RichCard>
         </div>
       </div>
@@ -960,17 +1034,21 @@ function ClaudeMobileTemplate() {
   const connectorsStyle = fadeSlide(frame, 368, 0, 24)
   const tableTextStyle = fadeSlide(frame, 476, 0, 18)
   const tableStyle = fadeSlide(frame, 510, 0, 24)
-  const chartTextStyle = fadeSlide(frame, 618, 0, 18)
-  const chartStyle = fadeSlide(frame, 652, 0, 24)
-  const pieStyle = fadeSlide(frame, 742, 0, 24)
-  const lineStyle = fadeSlide(frame, 812, 0, 24)
-  const dataCatalogTextStyle = fadeSlide(frame, 910, 0, 18)
-  const dataCatalogStyle = fadeSlide(frame, 944, 0, 24)
-  const analysisTextStyle = fadeSlide(frame, 1056, 0, 18)
-  const analysisStyle = fadeSlide(frame, 1090, 0, 24)
-  const dashboardListTextStyle = fadeSlide(frame, 1202, 0, 18)
-  const dashboardListStyle = fadeSlide(frame, 1236, 0, 24)
-  const conversationY = interpolate(frame, [0, 250, 370, 500, 620, 740, 830, 970, 1150, 1330, 1550, 1770, 2030, 2240], [0, 0, -450, -1000, -1540, -2160, -2840, -3560, -4320, -5120, -5960, -6760, -7580, -8280], {
+  const dreTextStyle = fadeSlide(frame, 618, 0, 18)
+  const dreStyle = fadeSlide(frame, 652, 0, 24)
+  const cashFlowTextStyle = fadeSlide(frame, 788, 0, 18)
+  const cashFlowStyle = fadeSlide(frame, 822, 0, 24)
+  const chartTextStyle = fadeSlide(frame, 958, 0, 18)
+  const chartStyle = fadeSlide(frame, 992, 0, 24)
+  const pieStyle = fadeSlide(frame, 1082, 0, 24)
+  const lineStyle = fadeSlide(frame, 1152, 0, 24)
+  const dataCatalogTextStyle = fadeSlide(frame, 1250, 0, 18)
+  const dataCatalogStyle = fadeSlide(frame, 1284, 0, 24)
+  const analysisTextStyle = fadeSlide(frame, 1396, 0, 18)
+  const analysisStyle = fadeSlide(frame, 1430, 0, 24)
+  const dashboardListTextStyle = fadeSlide(frame, 1542, 0, 18)
+  const dashboardListStyle = fadeSlide(frame, 1576, 0, 24)
+  const conversationY = interpolate(frame, [0, 250, 370, 500, 620, 800, 980, 1180, 1400, 1620, 1860, 2120, 2400, 2680, 2900], [0, 0, -450, -1000, -1540, -2320, -3080, -3840, -4640, -5500, -6380, -7260, -8140, -9020, -9700], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   })
@@ -1020,38 +1098,52 @@ function ClaudeMobileTemplate() {
             <AnimatedMcpTableView data={tableData} startFrame={510} />
           </ClaudeRichCard>
 
+          <ClaudeAssistantText style={dreTextStyle}>
+            Também posso abrir o demonstrativo de resultado no mesmo padrão.
+          </ClaudeAssistantText>
+          <ClaudeRichCard style={dreStyle}>
+            <AnimatedMcpDreView data={dreData} startFrame={652} />
+          </ClaudeRichCard>
+
+          <ClaudeAssistantText style={cashFlowTextStyle}>
+            E cruzar com o fluxo de caixa previsto por vencimento.
+          </ClaudeAssistantText>
+          <ClaudeRichCard style={cashFlowStyle}>
+            <AnimatedMcpCashFlowView data={cashFlowData} startFrame={822} />
+          </ClaudeRichCard>
+
           <ClaudeAssistantText style={chartTextStyle}>
             Também posso transformar a mesma consulta em visualizações.
           </ClaudeAssistantText>
           <ClaudeRichCard style={chartStyle}>
-            <AnimatedMcpChartView data={chartData} startFrame={652} />
+            <AnimatedMcpChartView data={chartData} startFrame={992} />
           </ClaudeRichCard>
           <ClaudeRichCard style={pieStyle}>
-            <AnimatedMcpPieChartView data={pieData} startFrame={742} />
+            <AnimatedMcpPieChartView data={pieData} startFrame={1082} />
           </ClaudeRichCard>
           <ClaudeRichCard style={lineStyle}>
-            <AnimatedMcpLineChartView data={lineData} startFrame={812} />
+            <AnimatedMcpLineChartView data={lineData} startFrame={1152} />
           </ClaudeRichCard>
 
           <ClaudeAssistantText style={dataCatalogTextStyle}>
             Antes de criar o dashboard, valido o catálogo de dados conectado.
           </ClaudeAssistantText>
           <ClaudeRichCard style={dataCatalogStyle}>
-            <AnimatedMcpDataCatalogView data={dataCatalogData} startFrame={944} />
+            <AnimatedMcpDataCatalogView data={dataCatalogData} startFrame={1284} />
           </ClaudeRichCard>
 
           <ClaudeAssistantText style={analysisTextStyle}>
             Depois faço a análise com métricas, riscos e próximos passos.
           </ClaudeAssistantText>
           <ClaudeRichCard style={analysisStyle}>
-            <AnimatedMcpAnalysisView data={analysisData} startFrame={1090} />
+            <AnimatedMcpAnalysisView data={analysisData} startFrame={1430} />
           </ClaudeRichCard>
 
           <ClaudeAssistantText style={dashboardListTextStyle}>
             E deixo os dashboards prontos para abrir ou continuar editando.
           </ClaudeAssistantText>
           <ClaudeRichCard style={dashboardListStyle}>
-            <AnimatedMcpDashboardListView data={dashboardListData} startFrame={1236} />
+            <AnimatedMcpDashboardListView data={dashboardListData} startFrame={1576} />
           </ClaudeRichCard>
         </div>
       </div>
