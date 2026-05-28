@@ -520,7 +520,7 @@ function ChatGptMobileTemplate() {
   const analysisStyle = fadeSlide(frame, 1030, 0, 24)
   const dashboardListTextStyle = fadeSlide(frame, 1142, 0, 20)
   const dashboardListStyle = fadeSlide(frame, 1176, 0, 24)
-  const conversationY = interpolate(frame, [0, 170, 285, 420, 540, 650, 760, 880, 1000, 1120, 1240, 1360, 1520], [0, 0, -360, -760, -1110, -1450, -1800, -2190, -2630, -3120, -3630, -4120, -4560], {
+  const conversationY = interpolate(frame, [0, 170, 285, 420, 540, 650, 760, 900, 1080, 1260, 1480, 1700, 1960, 2240], [0, 0, -430, -980, -1520, -2140, -2820, -3540, -4300, -5100, -5940, -6740, -7560, -8260], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   })
@@ -970,7 +970,7 @@ function ClaudeMobileTemplate() {
   const analysisStyle = fadeSlide(frame, 1090, 0, 24)
   const dashboardListTextStyle = fadeSlide(frame, 1202, 0, 18)
   const dashboardListStyle = fadeSlide(frame, 1236, 0, 24)
-  const conversationY = interpolate(frame, [0, 250, 370, 500, 620, 740, 830, 950, 1070, 1190, 1310, 1430, 1590], [0, 0, -390, -770, -1130, -1470, -1810, -2210, -2660, -3160, -3680, -4180, -4620], {
+  const conversationY = interpolate(frame, [0, 250, 370, 500, 620, 740, 830, 970, 1150, 1330, 1550, 1770, 2030, 2240], [0, 0, -450, -1000, -1540, -2160, -2840, -3560, -4320, -5120, -5960, -6760, -7580, -8280], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   })
