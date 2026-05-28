@@ -51,7 +51,7 @@ export function DataTable({ rows, columns, title, subtitle }: DataTableProps) {
   }
 
   return (
-    <section className="table-card">
+    <section className="table-card table-card--data-result">
       {title ? <TableHeader title={title} subtitle={subtitle} /> : null}
       <div className="table-scroll">
         <table className="data-table">
