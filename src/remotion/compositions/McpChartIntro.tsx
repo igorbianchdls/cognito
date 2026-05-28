@@ -580,7 +580,7 @@ function ChatGptMobileTemplate() {
   const analysisStyle = fadeSlide(frame, 1370, 0, 24)
   const dashboardListTextStyle = fadeSlide(frame, 1482, 0, 20)
   const dashboardListStyle = fadeSlide(frame, 1516, 0, 24)
-  const conversationY = interpolate(frame, [0, 170, 285, 420, 540, 700, 880, 1080, 1300, 1520, 1760, 2020, 2300, 2580, 2840], [0, 0, -430, -980, -1520, -2300, -3060, -3820, -4620, -5480, -6360, -7240, -8120, -9000, -9700], {
+  const conversationY = interpolate(frame, [0, 170, 285, 420, 540, 700, 880, 1080, 1300, 1520, 1760, 2020, 2300, 2580, 2840, 3140, 3500, 3920], [0, 0, -430, -980, -1520, -2300, -3060, -3820, -4620, -5480, -6360, -7240, -8120, -9000, -9700, -10850, -12150, -13500], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   })
@@ -606,7 +606,7 @@ function ChatGptMobileTemplate() {
           top: 196,
         }}
       >
-        <div style={{ display: 'grid', gap: 57, paddingTop: 28, transform: `translateY(${conversationY}px)` }}>
+        <div style={{ display: 'grid', gap: 57, padding: '28px 0 520px', transform: `translateY(${conversationY}px)` }}>
           <UserBubble style={firstUserStyle}>Me diga as contas a pagar</UserBubble>
           <AssistantText style={firstAssistantStyle} />
 
@@ -690,6 +690,7 @@ const CLAUDE_MUTED = '#77746f'
 const CLAUDE_ICON = '#3f3f3a'
 const CLAUDE_ACTION = '#7b7a74'
 const CLAUDE_ACCENT = '#e17b5c'
+const CLAUDE_FONT = 'Geist, "Segoe UI", -apple-system, BlinkMacSystemFont, "SF Pro Text", Arial, sans-serif'
 
 function ClaudeStatusBar() {
   return (
@@ -809,7 +810,7 @@ function ClaudeUserBubble({ children, style }: { children: string; style: CSSPro
           border: `1px solid ${CLAUDE_BORDER}`,
           borderRadius: 58,
           color: CLAUDE_TEXT,
-          fontFamily: 'Arial, "Segoe UI", sans-serif',
+          fontFamily: CLAUDE_FONT,
           fontSize: 42,
           fontWeight: 400,
           letterSpacing: 0,
@@ -898,7 +899,7 @@ function ClaudeNotice({ style }: { style: CSSProperties }) {
       <div
         style={{
           color: CLAUDE_ICON,
-          fontFamily: 'Arial, "Segoe UI", sans-serif',
+          fontFamily: CLAUDE_FONT,
           fontSize: 35,
           fontWeight: 400,
           letterSpacing: 0,
@@ -940,7 +941,7 @@ function ClaudeComposer() {
         <div
           style={{
             color: CLAUDE_MUTED,
-            fontFamily: 'Arial, "Segoe UI", sans-serif',
+            fontFamily: CLAUDE_FONT,
             fontSize: 40,
             fontWeight: 400,
             letterSpacing: 0,
@@ -971,7 +972,7 @@ function ClaudeComposer() {
               borderRadius: 999,
               color: CLAUDE_TEXT,
               display: 'flex',
-              fontFamily: 'Arial, "Segoe UI", sans-serif',
+              fontFamily: CLAUDE_FONT,
               fontSize: 31,
               fontWeight: 400,
               height: 82,
@@ -1059,7 +1060,7 @@ function ClaudeMobileTemplate() {
   const analysisStyle = fadeSlide(frame, 1430, 0, 24)
   const dashboardListTextStyle = fadeSlide(frame, 1542, 0, 18)
   const dashboardListStyle = fadeSlide(frame, 1576, 0, 24)
-  const conversationY = interpolate(frame, [0, 250, 370, 500, 620, 800, 980, 1180, 1400, 1620, 1860, 2120, 2400, 2680, 2900], [0, 0, -450, -1000, -1540, -2320, -3080, -3840, -4640, -5500, -6380, -7260, -8140, -9020, -9700], {
+  const conversationY = interpolate(frame, [0, 250, 370, 500, 620, 800, 980, 1180, 1400, 1620, 1860, 2120, 2400, 2680, 2900, 3200, 3560, 3980], [0, 0, -450, -1000, -1540, -2320, -3080, -3840, -4640, -5500, -6380, -7260, -8140, -9020, -9700, -10850, -12150, -13500], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   })
@@ -1069,7 +1070,7 @@ function ClaudeMobileTemplate() {
       style={{
         background: CLAUDE_BG,
         color: CLAUDE_TEXT,
-        fontFamily: 'Arial, "Segoe UI", sans-serif',
+        fontFamily: CLAUDE_FONT,
       }}
     >
       <ClaudeStatusBar />
@@ -1085,7 +1086,7 @@ function ClaudeMobileTemplate() {
           top: 188,
         }}
       >
-        <div style={{ display: 'grid', gap: 58, paddingTop: 28, transform: `translateY(${conversationY}px)` }}>
+        <div style={{ display: 'grid', gap: 58, padding: '28px 0 520px', transform: `translateY(${conversationY}px)` }}>
           <ClaudeUserBubble style={firstUserStyle}>Olá</ClaudeUserBubble>
           <ClaudeAssistantText style={firstAssistantStyle}>Olá, Igor! Como posso ajudar?</ClaudeAssistantText>
           <ClaudeUserBubble style={secondUserStyle}>Tudo bem com você?</ClaudeUserBubble>
