@@ -923,18 +923,18 @@ function ClaudeComposer() {
           borderRadius: 63,
           boxShadow: '0 16px 30px rgba(0, 0, 0, 0.12)',
           height: 205,
-          padding: '32px 20px 18px 31px',
+          padding: '30px 20px 18px 31px',
         }}
       >
         <div
           style={{
             color: '#7f7e78',
             fontFamily: 'Arial, "Segoe UI", sans-serif',
-            fontSize: 42,
+            fontSize: 40,
             fontWeight: 400,
             letterSpacing: 0,
             lineHeight: 1,
-            marginBottom: 50,
+            marginBottom: 31,
           }}
         >
           Responder a Claude
@@ -946,9 +946,9 @@ function ClaudeComposer() {
               background: '#f0efec',
               borderRadius: 999,
               display: 'flex',
-              height: 92,
+              height: 82,
               justifyContent: 'center',
-              width: 92,
+              width: 82,
             }}
           >
             <Plus color="#000000" size={42} strokeWidth={2.3} />
@@ -963,7 +963,7 @@ function ClaudeComposer() {
               fontFamily: 'Arial, "Segoe UI", sans-serif',
               fontSize: 31,
               fontWeight: 400,
-              height: 92,
+              height: 82,
               justifyContent: 'center',
               letterSpacing: 0,
               padding: '0 42px',
@@ -978,9 +978,9 @@ function ClaudeComposer() {
               background: '#f0efec',
               borderRadius: 999,
               display: 'flex',
-              height: 92,
+              height: 82,
               justifyContent: 'center',
-              width: 92,
+              width: 82,
             }}
           >
             <Mic color="#3f3f3a" size={47} strokeWidth={2.6} />
