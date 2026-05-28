@@ -101,7 +101,7 @@ export default function RemotionPreviewPage() {
             compositionHeight={1920}
             compositionWidth={1080}
             controls
-            durationInFrames={960}
+            durationInFrames={1440}
             fps={30}
             inputProps={{ template }}
             style={{

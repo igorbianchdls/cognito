@@ -17,12 +17,18 @@ import {
 } from 'lucide-react'
 
 import type {
+  AnalysisStructuredContent,
   ChartResultStructuredContent,
   ConnectorsStructuredContent,
+  DashboardListStructuredContent,
+  DataCatalogStructuredContent,
   DataResultStructuredContent,
 } from '@/products/mcp-apps/web/src/types/toolResult'
+import { AnimatedMcpAnalysisView } from '@/remotion/components/AnimatedMcpAnalysisView'
 import { AnimatedMcpChartView } from '@/remotion/components/AnimatedMcpChartView'
 import { AnimatedMcpConnectorsView } from '@/remotion/components/AnimatedMcpConnectorsView'
+import { AnimatedMcpDashboardListView } from '@/remotion/components/AnimatedMcpDashboardListView'
+import { AnimatedMcpDataCatalogView } from '@/remotion/components/AnimatedMcpDataCatalogView'
 import { AnimatedMcpLineChartView } from '@/remotion/components/AnimatedMcpLineChartView'
 import { AnimatedMcpPieChartView } from '@/remotion/components/AnimatedMcpPieChartView'
 import { AnimatedMcpTableView } from '@/remotion/components/AnimatedMcpTableView'
@@ -114,6 +120,64 @@ const connectorsData = {
     { connector_id: 'infra-gcp', domain: 'infra', plataforma: 'google_ads', name: 'Google Cloud', health: 'connected', last_sync_at: '2026-05-28T15:20:00.000Z', accounts_count: 1 },
   ],
 } satisfies ConnectorsStructuredContent
+
+const dataCatalogData = {
+  ok: true,
+  success: true,
+  tool: 'data_catalog',
+  view: 'data_catalog',
+  action: 'pronto_para_dashboard',
+  domain: 'erp',
+  resource: 'contas-a-pagar',
+  title: 'Catálogo de Dados',
+  subtitle: 'ERP · Contas a Pagar · pronto para dashboard',
+  sources: [
+    { domain: 'erp', label: 'ERP', status: 'connected', total_records: 28410 },
+    { domain: 'crm', label: 'CRM', status: 'connected', total_records: 9120 },
+    { domain: 'marketing', label: 'Marketing', status: 'connected', total_records: 28912 },
+    { domain: 'ecommerce', label: 'Ecommerce', status: 'empty', total_records: 0 },
+  ],
+  resources: [
+    { resource: 'contas-a-pagar', label: 'Contas a Pagar', status: 'ok', total_records: 420, value_sum: 1842090.4 },
+    { resource: 'contas-a-receber', label: 'Contas a Receber', status: 'ok', total_records: 388, value_sum: 2366000.1 },
+    { resource: 'compras/pedidos', label: 'Pedidos de Compra', status: 'ok', total_records: 96, value_sum: 920120.2 },
+  ],
+  quality: { score: 91, resource: 'contas-a-pagar', missing_fields: 2, orphan_relationships: 3 },
+  recommendations: ['Revisar contas sem compra vinculada.', 'Usar janela mínima de 5 meses para tendência.'],
+} satisfies DataCatalogStructuredContent
+
+const analysisData = {
+  ok: true,
+  tool: 'analysis',
+  view: 'analysis',
+  type: 'insights',
+  title: 'Análise financeira',
+  subtitle: 'Maio 2026 · Contas a pagar e receber',
+  summary: 'A empresa tem boa previsibilidade de receita, mas concentra risco em fretes atrasados e campanhas com ROAS abaixo da meta.',
+  metrics: [
+    { label: 'Valor em aberto', value: 382400, format: 'currency' },
+    { label: 'Atrasados', value: 9, format: 'number' },
+    { label: 'Margem projetada', value: 0.287, format: 'percent' },
+  ],
+  sections: [
+    { severity: 'high', kind: 'risco', title: 'Frete atrasado recorrente', evidence: 'Frete Sul aparece em 4 vencimentos atrasados nos últimos 30 dias.', recommendation: 'Renegociar SLA e criar alerta.' },
+    { severity: 'medium', kind: 'oportunidade', title: 'Search Brand acima da média', evidence: 'ROAS de 8,59 contra média de 4,39.', recommendation: 'Aumentar orçamento com teto diário.' },
+    { severity: 'low', kind: 'qualidade', title: 'Dados prontos para dashboard', evidence: 'Centros de custo e categorias estão preenchidos.', recommendation: 'Usar este recorte no relatório semanal.' },
+  ],
+  next_steps: ['Criar alerta para contas vencendo em até 5 dias.', 'Gerar relatório executivo com riscos por fornecedor.'],
+} satisfies AnalysisStructuredContent
+
+const dashboardListData = {
+  ok: true,
+  tool: 'dashboards',
+  view: 'dashboard_list',
+  title: 'Dashboards',
+  dashboards: [
+    { id: 'dash-financeiro', title: 'Financeiro Executivo', slug: 'financeiro-executivo', status: 'published', current_draft_version: 4, current_published_version: 3, updated_at: '2026-05-28T09:10:00.000Z' },
+    { id: 'dash-marketing', title: 'Marketing H1', slug: 'marketing-h1', status: 'draft', current_draft_version: 2, current_published_version: null, updated_at: '2026-05-27T18:30:00.000Z' },
+    { id: 'dash-operacoes', title: 'Operações e Estoque', slug: 'operacoes-estoque', status: 'published', current_draft_version: 7, current_published_version: 7, updated_at: '2026-05-26T15:20:00.000Z' },
+  ],
+} satisfies DashboardListStructuredContent
 
 function fadeSlide(frame: number, start: number, fromX = 0, fromY = 24) {
   const opacity = interpolate(frame, [start, start + 22], [0, 1], {
@@ -450,7 +514,13 @@ function ChatGptMobileTemplate() {
   const chartStyle = fadeSlide(frame, 530, 0, 24)
   const pieStyle = fadeSlide(frame, 636, 0, 24)
   const lineStyle = fadeSlide(frame, 742, 0, 24)
-  const conversationY = interpolate(frame, [0, 170, 285, 420, 540, 650, 760], [0, 0, -360, -760, -1110, -1450, -1800], {
+  const dataCatalogTextStyle = fadeSlide(frame, 850, 0, 20)
+  const dataCatalogStyle = fadeSlide(frame, 884, 0, 24)
+  const analysisTextStyle = fadeSlide(frame, 996, 0, 20)
+  const analysisStyle = fadeSlide(frame, 1030, 0, 24)
+  const dashboardListTextStyle = fadeSlide(frame, 1142, 0, 20)
+  const dashboardListStyle = fadeSlide(frame, 1176, 0, 24)
+  const conversationY = interpolate(frame, [0, 170, 285, 420, 540, 650, 760, 880, 1000, 1120, 1240], [0, 0, -360, -760, -1110, -1450, -1800, -2190, -2590, -3010, -3430], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   })
@@ -506,6 +576,27 @@ function ChatGptMobileTemplate() {
           </RichCard>
           <RichCard style={lineStyle}>
             <AnimatedMcpLineChartView data={lineData} startFrame={742} />
+          </RichCard>
+
+          <AssistantBubble style={dataCatalogTextStyle}>
+            Antes de criar o dashboard, valido o catálogo de dados conectado.
+          </AssistantBubble>
+          <RichCard style={dataCatalogStyle}>
+            <AnimatedMcpDataCatalogView data={dataCatalogData} startFrame={884} />
+          </RichCard>
+
+          <AssistantBubble style={analysisTextStyle}>
+            Depois faço a análise com métricas, riscos e próximos passos.
+          </AssistantBubble>
+          <RichCard style={analysisStyle}>
+            <AnimatedMcpAnalysisView data={analysisData} startFrame={1030} />
+          </RichCard>
+
+          <AssistantBubble style={dashboardListTextStyle}>
+            E deixo os dashboards prontos para abrir ou continuar editando.
+          </AssistantBubble>
+          <RichCard style={dashboardListStyle}>
+            <AnimatedMcpDashboardListView data={dashboardListData} startFrame={1176} />
           </RichCard>
         </div>
       </div>
@@ -873,7 +964,13 @@ function ClaudeMobileTemplate() {
   const chartStyle = fadeSlide(frame, 652, 0, 24)
   const pieStyle = fadeSlide(frame, 742, 0, 24)
   const lineStyle = fadeSlide(frame, 812, 0, 24)
-  const conversationY = interpolate(frame, [0, 250, 370, 500, 620, 740, 830], [0, 0, -390, -770, -1130, -1470, -1810], {
+  const dataCatalogTextStyle = fadeSlide(frame, 910, 0, 18)
+  const dataCatalogStyle = fadeSlide(frame, 944, 0, 24)
+  const analysisTextStyle = fadeSlide(frame, 1056, 0, 18)
+  const analysisStyle = fadeSlide(frame, 1090, 0, 24)
+  const dashboardListTextStyle = fadeSlide(frame, 1202, 0, 18)
+  const dashboardListStyle = fadeSlide(frame, 1236, 0, 24)
+  const conversationY = interpolate(frame, [0, 250, 370, 500, 620, 740, 830, 950, 1070, 1190, 1310], [0, 0, -390, -770, -1130, -1470, -1810, -2210, -2630, -3050, -3470], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   })
@@ -934,6 +1031,27 @@ function ClaudeMobileTemplate() {
           </ClaudeRichCard>
           <ClaudeRichCard style={lineStyle}>
             <AnimatedMcpLineChartView data={lineData} startFrame={812} />
+          </ClaudeRichCard>
+
+          <ClaudeAssistantText style={dataCatalogTextStyle}>
+            Antes de criar o dashboard, valido o catálogo de dados conectado.
+          </ClaudeAssistantText>
+          <ClaudeRichCard style={dataCatalogStyle}>
+            <AnimatedMcpDataCatalogView data={dataCatalogData} startFrame={944} />
+          </ClaudeRichCard>
+
+          <ClaudeAssistantText style={analysisTextStyle}>
+            Depois faço a análise com métricas, riscos e próximos passos.
+          </ClaudeAssistantText>
+          <ClaudeRichCard style={analysisStyle}>
+            <AnimatedMcpAnalysisView data={analysisData} startFrame={1090} />
+          </ClaudeRichCard>
+
+          <ClaudeAssistantText style={dashboardListTextStyle}>
+            E deixo os dashboards prontos para abrir ou continuar editando.
+          </ClaudeAssistantText>
+          <ClaudeRichCard style={dashboardListStyle}>
+            <AnimatedMcpDashboardListView data={dashboardListData} startFrame={1236} />
           </ClaudeRichCard>
         </div>
       </div>
