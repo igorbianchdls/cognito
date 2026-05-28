@@ -590,7 +590,7 @@ function ChatGptMobileTemplate() {
       style={{
         background: '#ffffff',
         color: '#111111',
-        fontFamily: 'Arial, "Segoe UI", -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif',
+        fontFamily: 'Geist, "Segoe UI", -apple-system, BlinkMacSystemFont, "SF Pro Text", Arial, sans-serif',
       }}
     >
       <StatusBar />
