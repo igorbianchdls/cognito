@@ -41,11 +41,13 @@ export function McpMobileResultFrame({
       <div
         className="app-shell"
         style={{
+          color: 'var(--cognito-text)',
           fontFamily: 'Geist, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
           gap: 12,
+          letterSpacing: '-0.02em',
           margin: 0,
           maxWidth: MOBILE_RESULT_WIDTH,
-          padding: 0,
+          padding: '18px 14px',
           width: MOBILE_RESULT_WIDTH,
           zoom: MOBILE_RESULT_ZOOM,
         } as CSSProperties & { zoom: number }}

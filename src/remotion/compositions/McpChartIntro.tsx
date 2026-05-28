@@ -491,7 +491,7 @@ function RichCard({ children, style }: { children: ReactNode; style: CSSProperti
         borderRadius: 28,
         margin: '0 42px',
         overflow: 'hidden',
-        padding: 18,
+        padding: 0,
       }}
     >
       {children}
@@ -940,7 +940,7 @@ function ClaudeRichCard({ children, style }: { children: ReactNode; style: CSSPr
         borderRadius: 34,
         margin: '0 42px',
         overflow: 'hidden',
-        padding: 18,
+        padding: 0,
       }}
     >
       {children}
