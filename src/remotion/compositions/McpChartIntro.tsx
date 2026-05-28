@@ -680,6 +680,17 @@ function ChatGptMobileTemplate() {
   )
 }
 
+const CLAUDE_BG = '#fbfaf7'
+const CLAUDE_SURFACE = '#fffefa'
+const CLAUDE_BUBBLE = '#f3f2ee'
+const CLAUDE_CONTROL = '#f0efeb'
+const CLAUDE_BORDER = '#e1ded8'
+const CLAUDE_TEXT = '#171714'
+const CLAUDE_MUTED = '#77746f'
+const CLAUDE_ICON = '#3f3f3a'
+const CLAUDE_ACTION = '#7b7a74'
+const CLAUDE_ACCENT = '#e17b5c'
+
 function ClaudeStatusBar() {
   return (
     <div
@@ -768,12 +779,12 @@ function ClaudeTopBar() {
         padding: '0 55px',
       }}
     >
-      <Menu color="#3f3f3a" size={44} strokeWidth={2.2} />
+      <Menu color={CLAUDE_ICON} size={44} strokeWidth={2.2} />
       <div style={{ alignItems: 'center', display: 'flex', gap: 66 }}>
         <div
           style={{
             alignItems: 'center',
-            background: '#3a3a36',
+            background: CLAUDE_ICON,
             borderRadius: 999,
             display: 'flex',
             height: 52,
@@ -783,7 +794,7 @@ function ClaudeTopBar() {
         >
           <Plus color="#ffffff" size={39} strokeWidth={3.1} />
         </div>
-        <MoreHorizontal color="#3f3f3a" size={49} strokeWidth={3} />
+        <MoreHorizontal color={CLAUDE_ICON} size={49} strokeWidth={3} />
       </div>
     </div>
   )
@@ -794,10 +805,10 @@ function ClaudeUserBubble({ children, style }: { children: string; style: CSSPro
     <div style={{ ...style, display: 'flex', justifyContent: 'flex-end', paddingRight: 34 }}>
       <div
         style={{
-          background: '#f4f3f1',
-          border: '1px solid #e4e2df',
+          background: CLAUDE_BUBBLE,
+          border: `1px solid ${CLAUDE_BORDER}`,
           borderRadius: 58,
-          color: '#111111',
+          color: CLAUDE_TEXT,
           fontFamily: 'Arial, "Segoe UI", sans-serif',
           fontSize: 42,
           fontWeight: 400,
@@ -814,7 +825,7 @@ function ClaudeUserBubble({ children, style }: { children: string; style: CSSPro
 }
 
 function ClaudeActions({ includeShare = false }: { includeShare?: boolean }) {
-  const iconStyle = { color: '#7b7a74', size: 39, strokeWidth: 2.4 }
+  const iconStyle = { color: CLAUDE_ACTION, size: 39, strokeWidth: 2.4 }
 
   return (
     <div style={{ alignItems: 'center', display: 'flex', gap: 36, paddingTop: 46 }}>
@@ -833,7 +844,7 @@ function ClaudeAssistantText({ children, style, includeShare = false }: { childr
     <div
       style={{
         ...style,
-        color: '#111111',
+        color: CLAUDE_TEXT,
         fontFamily: 'Georgia, "Times New Roman", serif',
         fontSize: 47,
         fontWeight: 500,
@@ -855,7 +866,7 @@ function ClaudeMark() {
         <span
           key={index}
           style={{
-            background: '#e17b5c',
+            background: CLAUDE_ACCENT,
             borderRadius: 999,
             height: 9,
             left: 9,
@@ -886,7 +897,7 @@ function ClaudeNotice({ style }: { style: CSSProperties }) {
       <ClaudeMark />
       <div
         style={{
-          color: '#3e3d39',
+          color: CLAUDE_ICON,
           fontFamily: 'Arial, "Segoe UI", sans-serif',
           fontSize: 35,
           fontWeight: 400,
@@ -907,7 +918,7 @@ function ClaudeComposer() {
   return (
     <div
       style={{
-        background: '#ffffff',
+        background: CLAUDE_BG,
         bottom: 0,
         height: 247,
         left: 0,
@@ -918,7 +929,7 @@ function ClaudeComposer() {
     >
       <div
         style={{
-          background: '#ffffff',
+          background: CLAUDE_SURFACE,
           border: '1.5px solid #c8c6c1',
           borderRadius: 63,
           boxShadow: '0 16px 30px rgba(0, 0, 0, 0.12)',
@@ -928,7 +939,7 @@ function ClaudeComposer() {
       >
         <div
           style={{
-            color: '#7f7e78',
+            color: CLAUDE_MUTED,
             fontFamily: 'Arial, "Segoe UI", sans-serif',
             fontSize: 40,
             fontWeight: 400,
@@ -943,7 +954,7 @@ function ClaudeComposer() {
           <div
             style={{
               alignItems: 'center',
-              background: '#f0efec',
+              background: CLAUDE_CONTROL,
               borderRadius: 999,
               display: 'flex',
               height: 82,
@@ -956,9 +967,9 @@ function ClaudeComposer() {
           <div
             style={{
               alignItems: 'center',
-              background: '#f0efec',
+              background: CLAUDE_CONTROL,
               borderRadius: 999,
-              color: '#111111',
+              color: CLAUDE_TEXT,
               display: 'flex',
               fontFamily: 'Arial, "Segoe UI", sans-serif',
               fontSize: 31,
@@ -975,7 +986,7 @@ function ClaudeComposer() {
           <div
             style={{
               alignItems: 'center',
-              background: '#f0efec',
+              background: CLAUDE_CONTROL,
               borderRadius: 999,
               display: 'flex',
               height: 82,
@@ -983,7 +994,7 @@ function ClaudeComposer() {
               width: 82,
             }}
           >
-            <Mic color="#3f3f3a" size={47} strokeWidth={2.6} />
+            <Mic color={CLAUDE_ICON} size={47} strokeWidth={2.6} />
           </div>
           <VoiceButton />
         </div>
@@ -1009,8 +1020,8 @@ function ClaudeRichCard({ children, style }: { children: ReactNode; style: CSSPr
     <div
       style={{
         ...style,
-        background: '#ffffff',
-        border: '1px solid #e8e5df',
+        background: CLAUDE_SURFACE,
+        border: `1px solid ${CLAUDE_BORDER}`,
         borderRadius: 34,
         margin: '0 42px',
         overflow: 'hidden',
@@ -1056,8 +1067,8 @@ function ClaudeMobileTemplate() {
   return (
     <AbsoluteFill
       style={{
-        background: '#ffffff',
-        color: '#111111',
+        background: CLAUDE_BG,
+        color: CLAUDE_TEXT,
         fontFamily: 'Arial, "Segoe UI", sans-serif',
       }}
     >
