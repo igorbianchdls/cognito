@@ -73,7 +73,7 @@ function getCellKind(column: TableColumn) {
 
 function TableHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
-    <header className="chart-card__header">
+    <header className="chart-card__header table-card__header">
       <div className="chart-card__copy">
         <h1>{title}</h1>
         {subtitle ? <p>{subtitle}</p> : null}
@@ -106,7 +106,7 @@ export function TableResultView({ data }: { data: TableStructuredContent }) {
 
   if (!rows.length) {
     return (
-      <section className={`table-card${isFinancialStatement ? ' financial-statement-card' : ''}`}>
+      <section className={`table-card${isFinancialStatement ? ' financial-statement-card table-card--data-result' : ''}`}>
         <TableHeader title={title} subtitle={subtitle} />
         <EmptyState title="Sem linhas" description="A consulta nao recebeu linhas para renderizar." />
       </section>
@@ -114,7 +114,7 @@ export function TableResultView({ data }: { data: TableStructuredContent }) {
   }
 
   return (
-    <section className={`table-card${isFinancialStatement ? ' financial-statement-card' : ''}`}>
+    <section className={`table-card${isFinancialStatement ? ' financial-statement-card table-card--data-result' : ''}`}>
       <TableHeader title={title} subtitle={subtitle} />
       <div className="table-scroll">
         <table className={`data-table${isFinancialStatement ? ' data-table--financial' : ''}`}>

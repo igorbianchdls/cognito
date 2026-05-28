@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import type {
   AnalysisStructuredContent,
   AutomationStructuredContent,
@@ -37,54 +37,12 @@ type FinancialStatementKind = 'dre' | 'cash_flow'
 type FinancialStatementResponse = {
   ok: true
   table: TableStructuredContent
-  filter_options?: FinancialStatementFilterOptions
-}
-
-type FinancialStatementFilterOption = {
-  value: string
-  label: string
-}
-
-type FinancialStatementFilterOptions = {
-  categorias: FinancialStatementFilterOption[]
-  centros: FinancialStatementFilterOption[]
-}
-
-type FinancialStatementFilters = {
-  de: string
-  ate: string
-  categoria: string
-  centro: string
-  conta_contabil_codigo: string
-  linha_dre: string
-}
-
-const emptyFinancialStatementFilters: FinancialStatementFilters = {
-  de: '',
-  ate: '',
-  categoria: '',
-  centro: '',
-  conta_contabil_codigo: '',
-  linha_dre: '',
-}
-
-const emptyFinancialStatementFilterOptions: FinancialStatementFilterOptions = {
-  categorias: [],
-  centros: [],
-}
-
-function defaultFinancialStatementFilters(kind: FinancialStatementKind): FinancialStatementFilters {
-  if (kind === 'dre') return { ...emptyFinancialStatementFilters, de: '2026-01-01', ate: '2026-06-30' }
-  return { ...emptyFinancialStatementFilters }
 }
 
 function FinancialStatementPreview({ kind }: { kind: FinancialStatementKind }) {
   const [table, setTable] = useState<TableStructuredContent | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [filterOptions, setFilterOptions] = useState<FinancialStatementFilterOptions>(emptyFinancialStatementFilterOptions)
-  const [filters, setFilters] = useState<FinancialStatementFilters>(() => defaultFinancialStatementFilters(kind))
-  const [appliedFilters, setAppliedFilters] = useState<FinancialStatementFilters>(() => defaultFinancialStatementFilters(kind))
 
   useEffect(() => {
     const controller = new AbortController()
@@ -95,10 +53,6 @@ function FinancialStatementPreview({ kind }: { kind: FinancialStatementKind }) {
 
       try {
         const searchParams = new URLSearchParams({ kind })
-        for (const [key, value] of Object.entries(appliedFilters)) {
-          const normalized = String(value || '').trim()
-          if (normalized) searchParams.set(key, normalized)
-        }
         const response = await fetch(`/api/internal/mcp-ui/financial-statement?${searchParams.toString()}`, {
           cache: 'no-store',
           signal: controller.signal,
@@ -110,7 +64,6 @@ function FinancialStatementPreview({ kind }: { kind: FinancialStatementKind }) {
         }
 
         setTable(payload.table)
-        setFilterOptions(payload.filter_options || emptyFinancialStatementFilterOptions)
       } catch (caughtError) {
         if ((caughtError as Error).name === 'AbortError') return
         setError((caughtError as Error)?.message || 'Nao foi possivel carregar a consulta financeira.')
@@ -122,132 +75,17 @@ function FinancialStatementPreview({ kind }: { kind: FinancialStatementKind }) {
     void loadTable()
 
     return () => controller.abort()
-  }, [kind, appliedFilters])
-
-  function updateFilter(key: keyof FinancialStatementFilters, value: string) {
-    setFilters((current) => ({ ...current, [key]: value }))
-  }
-
-  function submitFilters(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setAppliedFilters({ ...filters })
-  }
-
-  function clearFilters() {
-    const next = defaultFinancialStatementFilters(kind)
-    setFilters(next)
-    setAppliedFilters(next)
-  }
-
-  const controls = (
-    <form className="mb-3 grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-3" onSubmit={submitFilters}>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
-          De
-          <input
-            className="rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm font-normal text-slate-950 outline-none focus:border-slate-400"
-            onChange={(event) => updateFilter('de', event.target.value)}
-            type="date"
-            value={filters.de}
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
-          Ate
-          <input
-            className="rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm font-normal text-slate-950 outline-none focus:border-slate-400"
-            onChange={(event) => updateFilter('ate', event.target.value)}
-            type="date"
-            value={filters.ate}
-          />
-        </label>
-        {kind === 'dre' ? (
-          <>
-            <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
-              Categoria
-              <select
-                className="rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm font-normal text-slate-950 outline-none focus:border-slate-400"
-                onChange={(event) => updateFilter('categoria', event.target.value)}
-                value={filters.categoria}
-              >
-                <option value="">Todas</option>
-                {filterOptions.categorias.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
-              Centro
-              <select
-                className="rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm font-normal text-slate-950 outline-none focus:border-slate-400"
-                onChange={(event) => updateFilter('centro', event.target.value)}
-                value={filters.centro}
-              >
-                <option value="">Todos</option>
-                {filterOptions.centros.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
-              Conta contabil
-              <input
-                className="rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm font-normal text-slate-950 outline-none focus:border-slate-400"
-                onChange={(event) => updateFilter('conta_contabil_codigo', event.target.value)}
-                placeholder="6.1"
-                value={filters.conta_contabil_codigo}
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
-              Linha DRE
-              <input
-                className="rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm font-normal text-slate-950 outline-none focus:border-slate-400"
-                onChange={(event) => updateFilter('linha_dre', event.target.value)}
-                placeholder="despesas administrativas"
-                value={filters.linha_dre}
-              />
-            </label>
-          </>
-        ) : null}
-      </div>
-      <div className="flex flex-wrap justify-end gap-2">
-        <button className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100" onClick={clearFilters} type="button">
-          Limpar
-        </button>
-        <button className="rounded-md bg-slate-950 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800" type="submit">
-          Filtrar
-        </button>
-      </div>
-    </form>
-  )
+  }, [kind])
 
   if (loading) {
-    return (
-      <>
-        {controls}
-        <LoadingState />
-      </>
-    )
+    return <LoadingState />
   }
 
   if (error || !table) {
-    return (
-      <>
-        {controls}
-        <EmptyState title="Falha ao carregar" description={error || 'A consulta financeira nao retornou dados.'} />
-      </>
-    )
+    return <EmptyState title="Falha ao carregar" description={error || 'A consulta financeira nao retornou dados.'} />
   }
 
-  return (
-    <>
-      {controls}
-      <TableResultView data={table} />
-    </>
-  )
+  return <TableResultView data={table} />
 }
 
 const erpResult: DataResultStructuredContent = {
