@@ -12,12 +12,22 @@ type Metric = {
   value: string
 }
 
-type ArtifactKind = 'classification' | 'reconciliation' | 'dashboard' | 'report' | 'slide' | 'contract' | 'entry'
+type ArtifactKind = 'reconciliation' | 'dashboard' | 'report' | 'slide' | 'contract' | 'entry'
 
 type ArtifactItem = {
   title: string
   eyebrow: string
   metric: string
+}
+
+type ClassificationDocumentItem = {
+  vendor: string
+  amount: string
+  category: string
+  confidence: string
+  accent: string
+  center: string
+  date: string
 }
 
 type ProductAnimationShellProps = {
@@ -29,6 +39,54 @@ type ProductAnimationShellProps = {
   children: ReactNode
   footer: string
 }
+
+const classificationPipelineDocs: ClassificationDocumentItem[] = [
+  {
+    vendor: 'Google Ads BR',
+    amount: 'R$ 18.400',
+    category: 'Marketing',
+    confidence: '96%',
+    accent: '#225f42',
+    center: 'Growth',
+    date: '24 mai',
+  },
+  {
+    vendor: 'Prime Fornecedores',
+    amount: 'R$ 31.280',
+    category: 'Fornecedores',
+    confidence: '94%',
+    accent: '#3f6d91',
+    center: 'Operacoes',
+    date: '25 mai',
+  },
+  {
+    vendor: 'AWS Brasil',
+    amount: 'R$ 12.790',
+    category: 'Infraestrutura',
+    confidence: '97%',
+    accent: '#6f8f7b',
+    center: 'Tecnologia',
+    date: '26 mai',
+  },
+  {
+    vendor: 'Frete Sul',
+    amount: 'R$ 8.420',
+    category: 'Logistica',
+    confidence: '91%',
+    accent: '#c28f2c',
+    center: 'Fulfillment',
+    date: '27 mai',
+  },
+  {
+    vendor: 'Hotel Evento SP',
+    amount: 'R$ 6.900',
+    category: 'Viagens',
+    confidence: '88%',
+    accent: '#8b6f9d',
+    center: 'Comercial',
+    date: '28 mai',
+  },
+]
 
 function progress(frame: number, start: number, end: number) {
   return interpolate(frame, [start, end], [0, 1], {
@@ -176,56 +234,241 @@ function ProductAnimationShell({ eyebrow, title, subtitle, icon, metrics, childr
   )
 }
 
-function ClassificationVisual({ index }: { index: number }) {
-  const colors = ['#225f42', '#6f8f7b', '#c28f2c', '#3f6d91']
-  const activeColor = colors[index % colors.length]
+function PipelineDocument({ doc, index, muted = false }: { doc: ClassificationDocumentItem; index: number; muted?: boolean }) {
+  return (
+    <div
+      style={{
+        background: '#ffffff',
+        border: '1px solid rgba(211, 224, 216, 0.96)',
+        borderRadius: 24,
+        boxShadow: muted ? '0 18px 45px rgba(20, 24, 22, 0.10)' : '0 34px 80px rgba(20, 24, 22, 0.20)',
+        display: 'grid',
+        gap: 20,
+        height: 560,
+        overflow: 'hidden',
+        padding: 28,
+        position: 'relative',
+        width: 420,
+      }}
+    >
+      <span style={{ background: doc.accent, borderRadius: 999, display: 'block', height: 8, left: 0, position: 'absolute', right: 0, top: 0 }} />
+      <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+        <div style={{ display: 'grid', gap: 7 }}>
+          <span style={{ color: '#77837b', fontSize: 19, fontWeight: 760, letterSpacing: 0, textTransform: 'uppercase' }}>Documento financeiro</span>
+          <strong style={{ color: '#101713', fontSize: 33, letterSpacing: 0, lineHeight: 1 }}>{doc.vendor}</strong>
+        </div>
+        <span style={{ alignItems: 'center', background: '#f3f7f4', border: '1px solid #dfe7e1', borderRadius: 16, color: '#45524a', display: 'flex', fontSize: 20, fontWeight: 800, height: 56, justifyContent: 'center', width: 84 }}>
+          {doc.date}
+        </span>
+      </div>
+
+      <div style={{ background: '#f7faf7', border: '1px solid #dfe7e1', borderRadius: 18, display: 'grid', gap: 12, padding: 18 }}>
+        <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+          <span style={{ color: '#65716a', fontSize: 21, fontWeight: 760 }}>Valor</span>
+          <strong style={{ color: '#0f1512', fontSize: 34, letterSpacing: 0 }}>{doc.amount}</strong>
+        </div>
+        <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+          <span style={{ color: '#65716a', fontSize: 21, fontWeight: 760 }}>Centro</span>
+          <strong style={{ color: '#314139', fontSize: 24, letterSpacing: 0 }}>{doc.center}</strong>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gap: 12 }}>
+        {[88, 76, 94, 62, 82].map((width, lineIndex) => (
+          <span
+            key={`${width}-${lineIndex}`}
+            style={{
+              background: lineIndex === index % 5 ? doc.accent : '#dce6df',
+              borderRadius: 999,
+              display: 'block',
+              height: lineIndex === index % 5 ? 13 : 10,
+              opacity: lineIndex === index % 5 ? 0.95 : 0.78,
+              width: `${width}%`,
+            }}
+          />
+        ))}
+      </div>
+
+      <div style={{ alignItems: 'center', display: 'flex', gap: 10, marginTop: 'auto' }}>
+        {[0, 1, 2].map((item) => (
+          <span
+            key={item}
+            style={{
+              background: item === index % 3 ? doc.accent : '#eef4ef',
+              border: '1px solid #dfe7e1',
+              borderRadius: 999,
+              display: 'block',
+              height: 38,
+              width: item === index % 3 ? 112 : 50,
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function FloatingFinancialSheet({ index }: { index: number }) {
+  const frame = useCurrentFrame()
+  const doc = classificationPipelineDocs[index % classificationPipelineDocs.length]
+  const driftY = Math.sin((frame + index * 37) / 64) * 18
+  const driftX = Math.cos((frame + index * 29) / 72) * 14
+  const top = [130, 220, 360, 540, 690, 830, 1010, 1180][index % 8]
+  const left = [64, 790, 142, 730, 34, 850, 210, 690][index % 8]
+  const rotation = [-14, 9, -7, 15, 6, -11, 12, -5][index % 8]
 
   return (
     <div
       style={{
-        background: '#f8faf8',
-        border: '1px solid #dfe7e1',
-        borderRadius: 14,
-        display: 'grid',
-        gap: 11,
-        minHeight: 184,
-        padding: 17,
+        filter: 'blur(3.4px)',
+        left,
+        opacity: 0.22,
+        position: 'absolute',
+        top,
+        transform: `translate(${driftX}px, ${driftY}px) rotate(${rotation}deg) scale(0.72)`,
       }}
     >
-      <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ background: '#0f1512', borderRadius: 999, display: 'block', height: 13, width: 104 }} />
-        <span style={{ background: activeColor, borderRadius: 999, display: 'block', height: 30, width: 72 }} />
-      </div>
-      <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 10, display: 'grid', gap: 8, padding: 11 }}>
-        {[0, 1, 2].map((row) => (
-          <div key={row} style={{ alignItems: 'center', display: 'grid', gap: 9, gridTemplateColumns: '1fr 70px' }}>
-            <span style={{ background: row === index % 3 ? activeColor : '#d8e3dc', borderRadius: 999, display: 'block', height: 9 }} />
-            <span style={{ background: row === index % 3 ? '#e9f3ec' : '#f1f5f2', border: '1px solid #dfe7e1', borderRadius: 999, display: 'block', height: 22 }} />
-          </div>
-        ))}
-      </div>
-      <div style={{ display: 'grid', gap: 8, gridTemplateColumns: '1fr 1fr 1fr' }}>
-        {['96%', '94%', '88%'].map((label, badgeIndex) => (
-          <span
+      <PipelineDocument doc={doc} index={index} muted />
+    </div>
+  )
+}
+
+function CategoryTag({ doc, opacity }: { doc: ClassificationDocumentItem; opacity: number }) {
+  return (
+    <div
+      style={{
+        alignItems: 'center',
+        background: '#ffffff',
+        border: `1px solid ${doc.accent}`,
+        borderRadius: 999,
+        boxShadow: '0 20px 48px rgba(20, 24, 22, 0.14)',
+        color: '#0f1512',
+        display: 'flex',
+        gap: 12,
+        left: '50%',
+        opacity,
+        padding: '16px 21px 16px 17px',
+        position: 'absolute',
+        top: '50%',
+        transform: `translate(190px, -74px) scale(${0.94 + opacity * 0.06})`,
+        zIndex: 30,
+      }}
+    >
+      <span style={{ background: doc.accent, borderRadius: 999, display: 'block', height: 18, width: 18 }} />
+      <span style={{ color: '#65716a', fontSize: 20, fontWeight: 780 }}>Categoria</span>
+      <strong style={{ color: doc.accent, fontSize: 28, letterSpacing: 0 }}>{doc.category}</strong>
+      <span style={{ background: '#f2f6f3', borderRadius: 999, color: '#516057', fontSize: 20, fontWeight: 800, padding: '7px 10px' }}>
+        {doc.confidence}
+      </span>
+    </div>
+  )
+}
+
+function ExpenseClassificationPipeline() {
+  const frame = useCurrentFrame()
+  const cycle = 138
+  const activeIndex = Math.floor(frame / cycle) % classificationPipelineDocs.length
+  const local = (frame % cycle) / cycle
+  const scan = progress(frame % cycle, 34, 78)
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at center, rgba(34, 95, 66, 0.18), rgba(246, 248, 245, 0) 54%)', bottom: -160, left: -120, position: 'absolute', right: -120, top: -160 }} />
+      {[0, 1, 2, 3, 4, 5, 6, 7].map((sheet) => (
+        <FloatingFinancialSheet index={sheet} key={sheet} />
+      ))}
+
+      <header style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', padding: '38px 52px', position: 'relative', zIndex: 40 }}>
+        <CognitoBrand />
+        <div style={{ alignItems: 'center', background: 'rgba(255,255,255,0.84)', border: '1px solid #dce6df', borderRadius: 999, boxShadow: '0 16px 36px rgba(20, 24, 22, 0.08)', color: '#314139', display: 'flex', fontSize: 22, fontWeight: 820, gap: 10, padding: '14px 18px' }}>
+          <span style={{ background: '#22a06b', borderRadius: 999, display: 'block', height: 12, width: 12 }} />
+          IA financeira processando
+        </div>
+      </header>
+
+      <section style={{ left: 62, position: 'absolute', top: 188, width: 360, zIndex: 25 }}>
+        <div style={{ alignItems: 'center', background: 'rgba(255,255,255,0.90)', border: '1px solid #dfe7e1', borderRadius: 24, boxShadow: '0 24px 54px rgba(20, 24, 22, 0.10)', display: 'grid', gap: 14, padding: 24 }}>
+          <span style={{ color: '#65716a', fontSize: 21, fontWeight: 820, textTransform: 'uppercase' }}>Classificacao de despesas</span>
+          <strong style={{ color: '#0f1512', fontSize: 44, letterSpacing: 0, lineHeight: 1.03 }}>Documentos em alto volume</strong>
+          <p style={{ color: '#46534b', fontSize: 24, lineHeight: 1.28, margin: 0 }}>
+            Cada comprovante entra na esteira, recebe uma categoria e segue para o proximo processamento.
+          </p>
+        </div>
+      </section>
+
+      <section style={{ display: 'grid', gap: 12, position: 'absolute', right: 58, top: 226, width: 246, zIndex: 25 }}>
+        {[
+          ['Docs/min', '184'],
+          ['Automacao', '98%'],
+          ['Revisao', '12 itens'],
+        ].map(([label, value], index) => (
+          <div
             key={label}
             style={{
-              alignItems: 'center',
-              background: badgeIndex === index % 3 ? '#225f42' : '#ffffff',
-              border: '1px solid #dfe7e1',
-              borderRadius: 8,
-              color: badgeIndex === index % 3 ? '#ffffff' : '#65716a',
-              display: 'flex',
-              fontSize: 17,
-              fontWeight: 800,
-              height: 38,
-              justifyContent: 'center',
+              background: index === 0 ? '#225f42' : 'rgba(255,255,255,0.90)',
+              border: `1px solid ${index === 0 ? '#225f42' : '#dfe7e1'}`,
+              borderRadius: 20,
+              boxShadow: '0 18px 42px rgba(20, 24, 22, 0.09)',
+              color: index === 0 ? '#ffffff' : '#0f1512',
+              display: 'grid',
+              gap: 7,
+              padding: '18px 20px',
             }}
           >
-            {label}
-          </span>
+            <span style={{ color: index === 0 ? 'rgba(255,255,255,0.76)' : '#65716a', fontSize: 19, fontWeight: 780 }}>{label}</span>
+            <strong style={{ fontSize: 31, letterSpacing: 0, lineHeight: 1 }}>{value}</strong>
+          </div>
         ))}
+      </section>
+
+      <div style={{ height: 980, left: '50%', position: 'absolute', top: '50%', transform: 'translate(-50%, -50%)', width: 560, zIndex: 20 }}>
+        <div style={{ background: 'linear-gradient(180deg, rgba(34,95,66,0), rgba(34,95,66,0.18), rgba(34,95,66,0))', bottom: 0, left: '50%', position: 'absolute', top: 0, transform: 'translateX(-50%)', width: 2 }} />
+        <div style={{ background: '#225f42', borderRadius: 999, boxShadow: '0 0 34px rgba(34, 95, 66, 0.36)', height: 5, left: 66, opacity: 0.78, position: 'absolute', right: 66, top: 486, transform: `translateY(${scan * 86}px)` }} />
+
+        {[-2, -1, 0, 1, 2].map((slot) => {
+          const unit = local + slot * 0.39
+          if (unit < -0.06 || unit > 1.08) return null
+
+          const docIndex = (activeIndex + slot + classificationPipelineDocs.length) % classificationPipelineDocs.length
+          const doc = classificationPipelineDocs[docIndex]
+          const centerScore = 1 - Math.min(Math.abs(unit - 0.5) / 0.5, 1)
+          const y = interpolate(unit, [0, 0.28, 0.5, 0.74, 1], [-560, -245, 0, 258, 570], {
+            extrapolateLeft: 'clamp',
+            extrapolateRight: 'clamp',
+          })
+          const scale = 0.78 + centerScore * 0.26
+          const opacity = 0.28 + centerScore * 0.72
+          const rotation = (docIndex % 2 === 0 ? -1 : 1) * (1.8 - centerScore * 1.2)
+          const tagOpacity = interpolate(unit, [0.36, 0.45, 0.64, 0.73], [0, 1, 1, 0], {
+            extrapolateLeft: 'clamp',
+            extrapolateRight: 'clamp',
+          })
+
+          return (
+            <div
+              key={`${slot}-${doc.vendor}`}
+              style={{
+                filter: centerScore > 0.72 ? 'blur(0)' : 'blur(0.7px)',
+                left: '50%',
+                opacity,
+                position: 'absolute',
+                top: '50%',
+                transform: `translate(-50%, -50%) translateY(${y}px) rotate(${rotation}deg) scale(${scale})`,
+                zIndex: Math.round(centerScore * 20) + 10,
+              }}
+            >
+              <PipelineDocument doc={doc} index={docIndex} />
+              <CategoryTag doc={doc} opacity={tagOpacity} />
+            </div>
+          )
+        })}
       </div>
-    </div>
+
+      <div style={{ alignItems: 'center', bottom: 58, color: '#65716a', display: 'flex', fontSize: 24, fontWeight: 780, gap: 12, left: 58, position: 'absolute', zIndex: 35 }}>
+        <ReceiptText size={28} strokeWidth={2.4} />
+        Entrada continua de comprovantes, notas e faturas
+      </div>
+    </AbsoluteFill>
   )
 }
 
@@ -463,7 +706,6 @@ function EntryVisual({ index }: { index: number }) {
 }
 
 function ArtifactVisual({ kind, index }: { kind: ArtifactKind; index: number }) {
-  if (kind === 'classification') return <ClassificationVisual index={index} />
   if (kind === 'reconciliation') return <ReconciliationVisual index={index} />
   if (kind === 'report') return <ReportVisual index={index} />
   if (kind === 'slide') return <SlideVisual index={index} />
@@ -513,30 +755,7 @@ function ArtifactGallery({ items, kind }: { items: ArtifactItem[]; kind: Artifac
 }
 
 export function ExpenseClassificationAnimation() {
-  return (
-    <ProductAnimationShell
-      eyebrow="Expense control"
-      footer="Classificação de despesas"
-      icon={<ReceiptText size={42} strokeWidth={2.4} />}
-      metrics={[
-        { label: 'Despesas', value: '5 itens' },
-        { label: 'Status', value: 'Analisado' },
-        { label: 'Revisão', value: '2 itens' },
-      ]}
-      subtitle="Pacote visual de classificação: despesas agrupadas, categorias sugeridas, confiança do motor e fila de revisão."
-      title="Classificação de despesas"
-    >
-      <ArtifactGallery
-        kind="classification"
-        items={[
-          { eyebrow: 'Lote 01', title: 'Marketing e mídia', metric: '96% de confiança' },
-          { eyebrow: 'Lote 02', title: 'Infraestrutura', metric: '94% de confiança' },
-          { eyebrow: 'Lote 03', title: 'Logística', metric: 'Revisão sugerida' },
-          { eyebrow: 'Lote 04', title: 'Software e viagens', metric: '2 centros de custo' },
-        ]}
-      />
-    </ProductAnimationShell>
-  )
+  return <ExpenseClassificationPipeline />
 }
 
 export function BankReconciliationAnimation() {
