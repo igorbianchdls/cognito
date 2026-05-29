@@ -1,24 +1,11 @@
 import type { ReactNode } from 'react'
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
-import { CheckCircle2, FileText, LayoutDashboard, PenLine, Presentation, ReceiptText, RefreshCcw, ShieldCheck } from 'lucide-react'
+import { ReceiptText } from 'lucide-react'
 
 export const MCP_SINGLE_ANIMATION_DURATION = 1080
 export const MCP_OPERATIONS_DEMO_DURATION = MCP_SINGLE_ANIMATION_DURATION
 
 const FONT_STACK = 'Geist, "Segoe UI", -apple-system, BlinkMacSystemFont, "SF Pro Text", Arial, sans-serif'
-
-type Metric = {
-  label: string
-  value: string
-}
-
-type ArtifactKind = 'reconciliation' | 'dashboard' | 'report' | 'slide' | 'contract' | 'entry'
-
-type ArtifactItem = {
-  title: string
-  eyebrow: string
-  metric: string
-}
 
 type ClassificationDocumentItem = {
   vendor: string
@@ -28,16 +15,6 @@ type ClassificationDocumentItem = {
   accent: string
   center: string
   date: string
-}
-
-type ProductAnimationShellProps = {
-  eyebrow: string
-  title: string
-  subtitle: string
-  icon: ReactNode
-  metrics: Metric[]
-  children: ReactNode
-  footer: string
 }
 
 const classificationPipelineDocs: ClassificationDocumentItem[] = [
@@ -95,14 +72,6 @@ function progress(frame: number, start: number, end: number) {
   })
 }
 
-function appear(frame: number, start: number, distance = 28) {
-  const p = progress(frame, start, start + 28)
-  return {
-    opacity: p,
-    transform: `translateY(${(1 - p) * distance}px)`,
-  }
-}
-
 function CognitoBrand() {
   return (
     <div style={{ alignItems: 'center', display: 'flex', gap: 15 }}>
@@ -117,120 +86,6 @@ function CognitoBrand() {
         <span style={{ color: '#65716a', fontSize: 19, fontWeight: 700, letterSpacing: 0 }}>Operations OS</span>
       </div>
     </div>
-  )
-}
-
-function MetricTile({ metric, active = false }: { metric: Metric; active?: boolean }) {
-  return (
-    <div
-      style={{
-        background: active ? '#225f42' : '#f7faf7',
-        border: `1px solid ${active ? '#225f42' : '#dfe7e1'}`,
-        borderRadius: 16,
-        color: active ? '#ffffff' : '#17201b',
-        display: 'grid',
-        gap: 6,
-        minHeight: 92,
-        padding: '15px 17px',
-      }}
-    >
-      <span style={{ color: active ? 'rgba(255,255,255,0.72)' : '#65716a', fontSize: 20, fontWeight: 700, lineHeight: 1 }}>
-        {metric.label}
-      </span>
-      <strong style={{ fontSize: 30, letterSpacing: 0, lineHeight: 1 }}>{metric.value}</strong>
-    </div>
-  )
-}
-
-function FinalBadge({ text }: { text: string }) {
-  const frame = useCurrentFrame()
-  const p = progress(frame, 850, 910)
-
-  return (
-    <div
-      style={{
-        alignItems: 'center',
-        background: '#ffffff',
-        border: '1px solid #dbe5dd',
-        borderRadius: 999,
-        bottom: 48,
-        boxShadow: '0 16px 34px rgba(20, 24, 22, 0.10)',
-        color: '#225f42',
-        display: 'flex',
-        fontSize: 25,
-        fontWeight: 800,
-        gap: 10,
-        left: 52,
-        opacity: p,
-        padding: '16px 22px',
-        position: 'absolute',
-        transform: `translateY(${(1 - p) * 16}px)`,
-      }}
-    >
-      <CheckCircle2 size={28} strokeWidth={2.5} />
-      {text}
-    </div>
-  )
-}
-
-function ProductAnimationShell({ eyebrow, title, subtitle, icon, metrics, children, footer }: ProductAnimationShellProps) {
-  const frame = useCurrentFrame()
-  const headerStyle = appear(frame, 8)
-  const heroStyle = appear(frame, 44)
-  const resultStyle = appear(frame, 210, 34)
-
-  return (
-    <AbsoluteFill
-      style={{
-        background: '#f6f8f5',
-        color: '#0f1512',
-        fontFamily: FONT_STACK,
-        overflow: 'hidden',
-      }}
-    >
-      <header style={{ alignItems: 'center', display: 'flex', height: 128, justifyContent: 'space-between', padding: '36px 52px 0', ...headerStyle }}>
-        <CognitoBrand />
-        <div style={{ alignItems: 'center', background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 18, color: '#314139', display: 'flex', fontSize: 22, fontWeight: 800, gap: 10, height: 58, justifyContent: 'center', padding: '0 18px' }}>
-          <span style={{ background: '#22a06b', borderRadius: 999, display: 'block', height: 12, width: 12 }} />
-          Live
-        </div>
-      </header>
-
-      <main style={{ display: 'grid', gap: 24, padding: '88px 52px 0' }}>
-        <section style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 30, boxShadow: '0 22px 52px rgba(20, 24, 22, 0.10)', display: 'grid', gap: 22, padding: '30px 32px', ...heroStyle }}>
-          <div style={{ alignItems: 'center', display: 'flex', gap: 18 }}>
-            <span style={{ alignItems: 'center', background: '#225f42', borderRadius: 24, color: '#ffffff', display: 'flex', flex: '0 0 auto', height: 80, justifyContent: 'center', width: 80 }}>
-              {icon}
-            </span>
-            <div style={{ display: 'grid', gap: 6, minWidth: 0 }}>
-              <span style={{ color: '#65716a', fontSize: 22, fontWeight: 800, letterSpacing: 0, textTransform: 'uppercase' }}>
-                {eyebrow}
-              </span>
-              <h1 style={{ color: '#0f1512', fontSize: 55, fontWeight: 780, letterSpacing: 0, lineHeight: 1.02, margin: 0 }}>
-                {title}
-              </h1>
-            </div>
-          </div>
-
-          <p style={{ color: '#3d4a43', fontSize: 30, lineHeight: 1.3, margin: 0 }}>{subtitle}</p>
-
-          <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1fr 1fr 1fr' }}>
-            {metrics.map((metric, index) => (
-              <MetricTile active={index === 0} key={metric.label} metric={metric} />
-            ))}
-          </div>
-        </section>
-
-        <section style={{ background: '#ffffff', border: '1px solid #dde6df', borderRadius: 24, boxShadow: '0 24px 55px rgba(20, 24, 22, 0.12)', overflow: 'hidden', ...resultStyle }}>
-          {children}
-        </section>
-      </main>
-
-      <div style={{ bottom: 62, color: '#65716a', fontSize: 24, fontWeight: 700, position: 'absolute', right: 52 }}>
-        {footer}
-      </div>
-      <FinalBadge text="Entrega pronta" />
-    </AbsoluteFill>
   )
 }
 
@@ -466,285 +321,312 @@ function ExpenseClassificationPipeline() {
   )
 }
 
-function ReconciliationVisual({ index }: { index: number }) {
-  const highlight = index === 2 ? '#c28f2c' : '#225f42'
+function PremiumSceneShell({ children, status, footer }: { children: ReactNode; status: string; footer: string }) {
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 46%, rgba(34, 95, 66, 0.16), rgba(244, 247, 244, 0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <header style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', padding: '38px 52px', position: 'relative', zIndex: 60 }}>
+        <CognitoBrand />
+        <div style={{ alignItems: 'center', background: 'rgba(255,255,255,0.84)', border: '1px solid #dce6df', borderRadius: 999, boxShadow: '0 16px 36px rgba(20, 24, 22, 0.08)', color: '#314139', display: 'flex', fontSize: 22, fontWeight: 820, gap: 10, padding: '14px 18px' }}>
+          <span style={{ background: '#22a06b', borderRadius: 999, display: 'block', height: 12, width: 12 }} />
+          {status}
+        </div>
+      </header>
+      {children}
+      <div style={{ alignItems: 'center', bottom: 58, color: '#65716a', display: 'flex', fontSize: 24, fontWeight: 780, gap: 12, left: 58, position: 'absolute', zIndex: 55 }}>
+        {footer}
+      </div>
+    </AbsoluteFill>
+  )
+}
+
+function FloatingMiniCard({ index, kind = 'page' }: { index: number; kind?: 'page' | 'dashboard' | 'slide' }) {
+  const frame = useCurrentFrame()
+  const driftY = Math.sin((frame + index * 41) / 70) * 16
+  const driftX = Math.cos((frame + index * 31) / 84) * 18
+  const top = [150, 270, 420, 620, 770, 930, 1060, 1160][index % 8]
+  const left = [80, 820, 160, 760, 38, 900, 250, 690][index % 8]
+  const rotation = [-13, 10, -8, 15, 7, -12, 11, -6][index % 8]
 
   return (
     <div
       style={{
-        background: '#f7faf7',
-        border: '1px solid #dfe7e1',
-        borderRadius: 14,
+        background: kind === 'slide' ? (index % 2 === 0 ? 'rgba(34, 95, 66, 0.22)' : 'rgba(255, 255, 255, 0.48)') : 'rgba(255, 255, 255, 0.46)',
+        border: '1px solid rgba(211, 224, 216, 0.72)',
+        borderRadius: kind === 'dashboard' ? 18 : 16,
+        boxShadow: '0 20px 48px rgba(20, 24, 22, 0.06)',
         display: 'grid',
-        gap: 11,
-        minHeight: 184,
-        padding: 17,
+        gap: 9,
+        height: kind === 'slide' ? 150 : 190,
+        left,
+        opacity: 0.22,
+        padding: 15,
+        position: 'absolute',
+        top,
+        transform: `translate(${driftX}px, ${driftY}px) perspective(700px) rotate(${rotation}deg) rotateY(${rotation * 1.8}deg) scale(0.62)`,
+        width: kind === 'dashboard' ? 270 : kind === 'slide' ? 260 : 150,
       }}
     >
-      <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1fr 42px 1fr' }}>
-        <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 10, display: 'grid', gap: 7, padding: 10 }}>
-          {[76, 58, 86].map((width, row) => (
-            <span key={`${width}-${row}`} style={{ background: row === index % 3 ? highlight : '#d8e3dc', borderRadius: 999, display: 'block', height: 9, width: `${width}%` }} />
+      <span style={{ background: '#225f42', borderRadius: 999, display: 'block', height: 9, width: '48%' }} />
+      <span style={{ background: '#d8e3dc', borderRadius: 999, display: 'block', height: 8, width: '82%' }} />
+      <span style={{ background: '#d8e3dc', borderRadius: 999, display: 'block', height: 8, width: '66%' }} />
+      {kind === 'dashboard' ? (
+        <div style={{ alignItems: 'end', display: 'flex', gap: 5, height: 80, marginTop: 8 }}>
+          {[36, 58, 44, 72, 52].map((height, bar) => (
+            <span key={`${height}-${bar}`} style={{ background: bar === index % 5 ? '#225f42' : '#b8cbbf', borderRadius: 4, flex: 1, height }} />
           ))}
         </div>
-        <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'center' }}>
-          <span style={{ background: highlight, borderRadius: 999, display: 'block', height: 7, width: 42 }} />
-        </div>
-        <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 10, display: 'grid', gap: 7, padding: 10 }}>
-          {[62, 84, 70].map((width, row) => (
-            <span key={`${width}-${row}`} style={{ background: row === index % 3 ? highlight : '#d8e3dc', borderRadius: 999, display: 'block', height: 9, width: `${width}%` }} />
-          ))}
-        </div>
-      </div>
-      <div style={{ alignItems: 'center', display: 'flex', gap: 8 }}>
-        {[0, 1, 2, 3].map((dot) => (
-          <span
-            key={dot}
-            style={{
-              background: dot <= index ? highlight : '#d8e3dc',
-              borderRadius: 999,
-              display: 'block',
-              height: 13,
-              width: dot <= index ? 44 : 13,
-            }}
-          />
-        ))}
-      </div>
-      <div style={{ background: index === 2 ? '#fff7e5' : '#edf6f0', border: `1px solid ${index === 2 ? '#ecd8a7' : '#cfe0d4'}`, borderRadius: 10, height: 48 }} />
+      ) : null}
     </div>
   )
 }
 
-function DashboardVisual({ index }: { index: number }) {
-  return (
-    <div
-      style={{
-        background: 'linear-gradient(135deg, #f8faf8 0%, #edf4ef 100%)',
-        border: '1px solid #dfe7e1',
-        borderRadius: 14,
-        display: 'grid',
-        gap: 10,
-        minHeight: 184,
-        padding: 13,
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ background: '#225f42', borderRadius: 999, display: 'block', height: 16, width: 92 }} />
-        <span style={{ background: '#c9d8ce', borderRadius: 999, display: 'block', height: 16, width: 42 }} />
-      </div>
-      <div style={{ display: 'grid', gap: 8, gridTemplateColumns: '1fr 1fr' }}>
-        <span style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 10, height: 42 }} />
-        <span style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 10, height: 42 }} />
-      </div>
-      <div style={{ alignItems: 'end', display: 'flex', gap: 6, height: 70 }}>
-        {[44, 62, 38, 72, 54, 84].map((height, barIndex) => (
-          <span
-            key={`${height}-${barIndex}`}
-            style={{
-              background: barIndex === index % 6 ? '#225f42' : '#9bb5a4',
-              borderRadius: 5,
-              display: 'block',
-              flex: 1,
-              height,
-            }}
-          />
-        ))}
-      </div>
-      <div style={{ display: 'grid', gap: 7 }}>
-        <span style={{ background: '#d7e2da', borderRadius: 999, display: 'block', height: 9, width: '86%' }} />
-        <span style={{ background: '#e3ebe5', borderRadius: 999, display: 'block', height: 9, width: '64%' }} />
-      </div>
-    </div>
-  )
-}
+function PremiumDashboardCard({ index, title }: { index: number; title: string }) {
+  const frame = useCurrentFrame()
+  const p = progress(frame, 120 + index * 44, 190 + index * 44)
+  const active = (Math.floor(frame / 160) + index) % 4 === 0
+  const x = [-330, -110, 110, 330][index]
+  const y = [56, -46, 40, -28][index]
 
-function ReportVisual({ index }: { index: number }) {
   return (
     <div
       style={{
         background: '#ffffff',
-        border: '1px solid #dfe7e1',
-        borderRadius: 14,
+        border: `1px solid ${active ? '#225f42' : '#dfe7e1'}`,
+        borderRadius: 26,
+        boxShadow: active ? '0 42px 95px rgba(34, 95, 66, 0.20)' : '0 26px 72px rgba(20, 24, 22, 0.12)',
         display: 'grid',
-        gap: 11,
-        minHeight: 184,
-        padding: 17,
+        gap: 15,
+        height: 370,
+        left: '50%',
+        opacity: p,
+        padding: 20,
+        position: 'absolute',
+        top: '50%',
+        transform: `translate(-50%, -50%) translate(${x}px, ${y}px) rotate(${[-4, 3, -2, 4][index]}deg) scale(${active ? 1.08 : 0.9})`,
+        width: 430,
+        zIndex: active ? 35 : 22 - index,
       }}
     >
-      <span style={{ background: '#225f42', borderRadius: 999, display: 'block', height: 12, width: index === 0 ? 118 : 88 }} />
-      <span style={{ background: '#0f1512', borderRadius: 999, display: 'block', height: 15, width: '72%' }} />
-      <div style={{ display: 'grid', gap: 8, gridTemplateColumns: '1fr 1fr 1fr' }}>
+      <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+        <strong style={{ color: '#0f1512', fontSize: 27, letterSpacing: 0 }}>{title}</strong>
+        <span style={{ background: active ? '#225f42' : '#d8e3dc', borderRadius: 999, display: 'block', height: 28, width: 62 }} />
+      </div>
+      <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1fr 1fr 1fr' }}>
         {[0, 1, 2].map((item) => (
-          <span key={item} style={{ background: '#f0f5f1', border: '1px solid #dfe7e1', borderRadius: 8, height: 36 }} />
+          <span key={item} style={{ background: '#f3f7f4', border: '1px solid #dfe7e1', borderRadius: 12, height: 58 }} />
+        ))}
+      </div>
+      <div style={{ alignItems: 'end', display: 'flex', gap: 8, height: 148 }}>
+        {[54, 88, 63, 118, 94, 136, 76].map((height, bar) => (
+          <span key={`${height}-${bar}`} style={{ background: bar === index + 2 ? '#225f42' : '#9bb5a4', borderRadius: 6, flex: 1, height }} />
         ))}
       </div>
       <div style={{ display: 'grid', gap: 8 }}>
-        {[88, 72, 94, 64].map((width, lineIndex) => (
-          <span key={`${width}-${lineIndex}`} style={{ background: '#d9e4dc', borderRadius: 999, display: 'block', height: 8, width: `${width}%` }} />
-        ))}
-      </div>
-      <div style={{ alignItems: 'end', display: 'flex', gap: 7, height: 42 }}>
-        {[18, 29, 24, 38, 31].map((height, barIndex) => (
-          <span key={`${height}-${barIndex}`} style={{ background: barIndex === index ? '#225f42' : '#b9cbbf', borderRadius: 4, flex: 1, height }} />
-        ))}
+        <span style={{ background: '#d8e3dc', borderRadius: 999, display: 'block', height: 9, width: '86%' }} />
+        <span style={{ background: '#e3ebe5', borderRadius: 999, display: 'block', height: 9, width: '62%' }} />
       </div>
     </div>
   )
 }
 
-function SlideVisual({ index }: { index: number }) {
+function DashboardStudioScene() {
+  return (
+    <PremiumSceneShell footer="Dashboards financeiros prontos para publicacao" status="BI workspace renderizando">
+      {[0, 1, 2, 3, 4, 5].map((item) => (
+        <FloatingMiniCard index={item} key={item} kind="dashboard" />
+      ))}
+      <div style={{ height: 720, left: '50%', position: 'absolute', top: '54%', transform: 'translate(-50%, -50%)', width: 980, zIndex: 20 }}>
+        {['Financeiro Executivo', 'Caixa e Conciliação', 'Despesas por Centro', 'Fechamento Mensal'].map((title, index) => (
+          <PremiumDashboardCard index={index} key={title} title={title} />
+        ))}
+      </div>
+    </PremiumSceneShell>
+  )
+}
+
+function ReconciliationRow({ index, side }: { index: number; side: 'bank' | 'erp' }) {
+  const frame = useCurrentFrame()
+  const active = (Math.floor(frame / 120) % 4) === index
+  const y = 208 + index * 136
+  const x = side === 'bank' ? 170 : 764
+  const labels = side === 'bank' ? ['PIX Cliente Norte', 'Cartao Stone', 'Frete Sul', 'Tarifa pacote'] : ['NF-9031', 'Lote-552', 'CTR-210', 'Regra pendente']
+  const values = side === 'bank' ? ['R$ 42.100', 'R$ 68.900', 'R$ 8.420', 'R$ 189'] : ['R$ 42.100', 'R$ 68.900', 'R$ 8.180', 'Sem titulo']
+
+  return (
+    <div
+      style={{
+        background: active ? '#ffffff' : 'rgba(255,255,255,0.70)',
+        border: `1px solid ${active ? (index === 2 ? '#c28f2c' : '#225f42') : '#dfe7e1'}`,
+        borderRadius: 22,
+        boxShadow: active ? '0 26px 70px rgba(20, 24, 22, 0.16)' : '0 18px 44px rgba(20, 24, 22, 0.07)',
+        display: 'grid',
+        gap: 10,
+        left: x,
+        padding: 22,
+        position: 'absolute',
+        top: y,
+        transform: `scale(${active ? 1.04 : 0.94})`,
+        width: 360,
+        zIndex: active ? 30 : 18,
+      }}
+    >
+      <span style={{ color: '#65716a', fontSize: 19, fontWeight: 820, textTransform: 'uppercase' }}>{side === 'bank' ? 'Banco' : 'ERP'}</span>
+      <strong style={{ color: '#0f1512', fontSize: 31, letterSpacing: 0, lineHeight: 1 }}>{labels[index]}</strong>
+      <span style={{ color: index === 2 && side === 'erp' ? '#c28f2c' : '#225f42', fontSize: 25, fontWeight: 850 }}>{values[index]}</span>
+    </div>
+  )
+}
+
+function BankReconciliationScene() {
+  const frame = useCurrentFrame()
+  const active = Math.floor(frame / 120) % 4
+
+  return (
+    <PremiumSceneShell footer="Extrato e ERP pareados em tempo real" status="Conciliação automática">
+      {[0, 1, 2, 3, 4, 5].map((item) => (
+        <FloatingMiniCard index={item} key={item} />
+      ))}
+      <div style={{ background: 'linear-gradient(180deg, rgba(34,95,66,0), rgba(34,95,66,0.20), rgba(34,95,66,0))', bottom: 155, left: '50%', position: 'absolute', top: 160, transform: 'translateX(-50%)', width: 3, zIndex: 12 }} />
+      {[0, 1, 2, 3].map((item) => (
+        <div key={item}>
+          <ReconciliationRow index={item} side="bank" />
+          <ReconciliationRow index={item} side="erp" />
+          <div
+            style={{
+              background: active === item ? (item === 2 ? '#c28f2c' : '#225f42') : '#cbd9cf',
+              borderRadius: 999,
+              boxShadow: active === item ? '0 0 34px rgba(34, 95, 66, 0.32)' : 'none',
+              height: active === item ? 8 : 4,
+              left: 535,
+              opacity: active === item ? 1 : 0.42,
+              position: 'absolute',
+              top: 275 + item * 136,
+              width: 230,
+              zIndex: 24,
+            }}
+          />
+        </div>
+      ))}
+      <div style={{ background: active === 2 ? '#fff8e6' : '#ffffff', border: `1px solid ${active === 2 ? '#e6c36f' : '#dfe7e1'}`, borderRadius: 999, bottom: 142, boxShadow: '0 24px 62px rgba(20, 24, 22, 0.12)', color: active === 2 ? '#8a6500' : '#225f42', fontSize: 27, fontWeight: 850, left: '50%', padding: '18px 26px', position: 'absolute', transform: 'translateX(-50%)', zIndex: 40 }}>
+        {active === 2 ? 'Divergência detectada' : 'Match confirmado'}
+      </div>
+    </PremiumSceneShell>
+  )
+}
+
+function DocumentArtifact({ index, kind, title }: { index: number; kind: 'report' | 'contract' | 'entry'; title: string }) {
+  const frame = useCurrentFrame()
+  const active = (Math.floor(frame / 150) + index) % 4 === 0
+  const x = [-270, -88, 92, 270][index]
+  const y = [40, -64, 34, -42][index]
+  const accent = kind === 'contract' ? '#8b6f3f' : kind === 'entry' ? '#3f6d91' : '#225f42'
+
+  return (
+    <div
+      style={{
+        background: '#ffffff',
+        border: `1px solid ${active ? accent : '#dfe7e1'}`,
+        borderRadius: kind === 'contract' ? '34px 24px 38px 26px' : 26,
+        boxShadow: active ? '0 42px 98px rgba(20, 24, 22, 0.20)' : '0 22px 62px rgba(20, 24, 22, 0.10)',
+        clipPath: kind === 'contract' ? 'polygon(4% 0, 100% 2%, 96% 100%, 0 97%)' : undefined,
+        display: 'grid',
+        gap: 17,
+        height: 560,
+        left: '50%',
+        padding: 28,
+        position: 'absolute',
+        top: '50%',
+        transform: `translate(-50%, -50%) translate(${x}px, ${y}px) perspective(900px) rotate(${[-6, 3, -2, 6][index]}deg) rotateY(${active ? 0 : [-16, 10, -9, 14][index]}deg) scale(${active ? 1.05 : 0.82})`,
+        width: 410,
+        zIndex: active ? 34 : 18 - index,
+      }}
+    >
+      <span style={{ background: accent, borderRadius: 999, display: 'block', height: 8, left: 0, position: 'absolute', right: 0, top: 0 }} />
+      <span style={{ color: '#65716a', fontSize: 20, fontWeight: 820, textTransform: 'uppercase' }}>{kind === 'entry' ? 'Lançamento' : kind === 'contract' ? 'Contrato' : 'Relatório'}</span>
+      <strong style={{ color: '#0f1512', fontSize: 34, letterSpacing: 0, lineHeight: 1.05 }}>{title}</strong>
+      <div style={{ display: 'grid', gap: 9 }}>
+        {[88, 76, 94, 63, 82, 70].map((width, line) => (
+          <span key={`${width}-${line}`} style={{ background: line === index ? accent : '#dce6df', borderRadius: 999, display: 'block', height: line === index ? 13 : 9, width: `${width}%` }} />
+        ))}
+      </div>
+      <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1fr 1fr', marginTop: 'auto' }}>
+        <span style={{ background: '#f3f7f4', border: '1px solid #dfe7e1', borderRadius: 14, height: 70 }} />
+        <span style={{ background: active ? accent : '#f3f7f4', border: '1px solid #dfe7e1', borderRadius: 14, height: 70 }} />
+      </div>
+    </div>
+  )
+}
+
+function ArtifactDocumentScene({ kind, status, footer, titles }: { kind: 'report' | 'contract' | 'entry'; status: string; footer: string; titles: string[] }) {
+  return (
+    <PremiumSceneShell footer={footer} status={status}>
+      {[0, 1, 2, 3, 4, 5, 6].map((item) => (
+        <FloatingMiniCard index={item} key={item} />
+      ))}
+      <div style={{ height: 780, left: '50%', position: 'absolute', top: '54%', transform: 'translate(-50%, -50%)', width: 920, zIndex: 20 }}>
+        {titles.map((title, index) => (
+          <DocumentArtifact index={index} key={title} kind={kind} title={title} />
+        ))}
+      </div>
+    </PremiumSceneShell>
+  )
+}
+
+function SlideArtifact({ index, title }: { index: number; title: string }) {
+  const frame = useCurrentFrame()
+  const active = (Math.floor(frame / 140) + index) % 4 === 0
+  const x = [-300, -100, 110, 310][index]
+  const y = [42, -72, 36, -34][index]
   const dark = index % 2 === 0
 
   return (
     <div
       style={{
-        background: dark ? '#225f42' : '#f7faf7',
+        background: dark ? '#225f42' : '#ffffff',
         border: `1px solid ${dark ? '#225f42' : '#dfe7e1'}`,
-        borderRadius: 14,
+        borderRadius: 28,
+        boxShadow: active ? '0 42px 98px rgba(20, 24, 22, 0.22)' : '0 22px 62px rgba(20, 24, 22, 0.10)',
         color: dark ? '#ffffff' : '#0f1512',
         display: 'grid',
-        gap: 13,
-        minHeight: 184,
-        padding: 17,
+        gap: 18,
+        height: 385,
+        left: '50%',
+        padding: 30,
+        position: 'absolute',
+        top: '50%',
+        transform: `translate(-50%, -50%) translate(${x}px, ${y}px) perspective(900px) rotate(${[-5, 3, -2, 5][index]}deg) rotateY(${active ? 0 : [-18, 12, -10, 16][index]}deg) scale(${active ? 1.13 : 0.86})`,
+        width: 600,
+        zIndex: active ? 36 : 18 - index,
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ background: dark ? 'rgba(255,255,255,0.75)' : '#225f42', borderRadius: 999, display: 'block', height: 12, width: 82 }} />
-        <span style={{ background: dark ? 'rgba(255,255,255,0.28)' : '#c9d8ce', borderRadius: 999, display: 'block', height: 12, width: 38 }} />
-      </div>
-      <strong style={{ fontSize: 25, lineHeight: 1.06 }}>{index === 0 ? 'Fechamento' : index === 1 ? 'Indicadores' : index === 2 ? 'Riscos' : 'Plano'}</strong>
-      <div style={{ display: 'grid', gap: 7 }}>
-        {[82, 66, 74].map((width, lineIndex) => (
-          <span
-            key={`${width}-${lineIndex}`}
-            style={{
-              background: dark ? 'rgba(255,255,255,0.28)' : '#d8e3dc',
-              borderRadius: 999,
-              display: 'block',
-              height: 8,
-              width: `${width}%`,
-            }}
-          />
+      <span style={{ background: dark ? 'rgba(255,255,255,0.62)' : '#225f42', borderRadius: 999, display: 'block', height: 12, width: 104 }} />
+      <strong style={{ fontSize: 46, letterSpacing: 0, lineHeight: 1.04 }}>{title}</strong>
+      <div style={{ display: 'grid', gap: 11 }}>
+        {[78, 62, 86].map((width, line) => (
+          <span key={`${width}-${line}`} style={{ background: dark ? 'rgba(255,255,255,0.27)' : '#dce6df', borderRadius: 999, display: 'block', height: 10, width: `${width}%` }} />
         ))}
       </div>
-      <div style={{ alignItems: 'center', display: 'grid', gap: 10, gridTemplateColumns: '1fr 1fr' }}>
-        <span style={{ background: dark ? 'rgba(255,255,255,0.18)' : '#ffffff', border: `1px solid ${dark ? 'rgba(255,255,255,0.18)' : '#dfe7e1'}`, borderRadius: 10, height: 48 }} />
-        <span style={{ background: dark ? 'rgba(255,255,255,0.18)' : '#ffffff', border: `1px solid ${dark ? 'rgba(255,255,255,0.18)' : '#dfe7e1'}`, borderRadius: 10, height: 48 }} />
+      <div style={{ display: 'grid', gap: 12, gridTemplateColumns: '1fr 1fr', marginTop: 'auto' }}>
+        <span style={{ background: dark ? 'rgba(255,255,255,0.16)' : '#f3f7f4', border: `1px solid ${dark ? 'rgba(255,255,255,0.18)' : '#dfe7e1'}`, borderRadius: 16, height: 80 }} />
+        <span style={{ background: dark ? 'rgba(255,255,255,0.16)' : '#f3f7f4', border: `1px solid ${dark ? 'rgba(255,255,255,0.18)' : '#dfe7e1'}`, borderRadius: 16, height: 80 }} />
       </div>
     </div>
   )
 }
 
-function ContractVisual({ index }: { index: number }) {
+function SlideDeckScene() {
   return (
-    <div
-      style={{
-        background: '#fffefa',
-        border: '1px solid #dedbd4',
-        borderRadius: 14,
-        display: 'grid',
-        gap: 11,
-        minHeight: 184,
-        padding: 17,
-      }}
-    >
-      <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ background: '#225f42', borderRadius: 999, display: 'block', height: 13, width: 76 }} />
-        <span style={{ border: '2px solid #c6d4ca', borderRadius: 999, display: 'block', height: 30, width: 30 }} />
-      </div>
-      <span style={{ background: '#141816', borderRadius: 999, display: 'block', height: 14, width: '70%' }} />
-      <div style={{ display: 'grid', gap: 7 }}>
-        {[86, 91, 62, 78].map((width, lineIndex) => (
-          <span key={`${width}-${lineIndex}`} style={{ background: '#d9d6cf', borderRadius: 999, display: 'block', height: 8, width: `${width}%` }} />
-        ))}
-      </div>
-      <div style={{ display: 'grid', gap: 8, gridTemplateColumns: '1fr 1fr' }}>
-        <span style={{ background: index === 1 ? '#fff4d8' : '#eef4ef', border: '1px solid #dfe7e1', borderRadius: 8, height: 34 }} />
-        <span style={{ background: '#eef4ef', border: '1px solid #dfe7e1', borderRadius: 8, height: 34 }} />
-      </div>
-    </div>
-  )
-}
-
-function EntryVisual({ index }: { index: number }) {
-  return (
-    <div
-      style={{
-        background: '#f8faf8',
-        border: '1px solid #dfe7e1',
-        borderRadius: 14,
-        display: 'grid',
-        gap: 11,
-        minHeight: 184,
-        padding: 17,
-      }}
-    >
-      <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ background: '#225f42', borderRadius: 999, display: 'block', height: 14, width: 92 }} />
-        <span style={{ background: index === 3 ? '#225f42' : '#d8e3dc', borderRadius: 999, display: 'block', height: 28, width: 58 }} />
-      </div>
-      <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 10, display: 'grid', gap: 8, padding: 11 }}>
-        {[0, 1, 2].map((item) => (
-          <div key={item} style={{ alignItems: 'center', display: 'grid', gap: 9, gridTemplateColumns: '58px 1fr' }}>
-            <span style={{ background: '#e3ebe5', borderRadius: 999, display: 'block', height: 8 }} />
-            <span style={{ background: item === index % 3 ? '#225f42' : '#b8cbbf', borderRadius: 999, display: 'block', height: 9 }} />
-          </div>
-        ))}
-      </div>
-      <div style={{ display: 'grid', gap: 8, gridTemplateColumns: '1fr 1fr' }}>
-        <span style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 8, height: 36 }} />
-        <span style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 8, height: 36 }} />
-      </div>
-    </div>
-  )
-}
-
-function ArtifactVisual({ kind, index }: { kind: ArtifactKind; index: number }) {
-  if (kind === 'reconciliation') return <ReconciliationVisual index={index} />
-  if (kind === 'report') return <ReportVisual index={index} />
-  if (kind === 'slide') return <SlideVisual index={index} />
-  if (kind === 'contract') return <ContractVisual index={index} />
-  if (kind === 'entry') return <EntryVisual index={index} />
-  return <DashboardVisual index={index} />
-}
-
-function ArtifactCard({ item, index, kind }: { item: ArtifactItem; index: number; kind: ArtifactKind }) {
-  const frame = useCurrentFrame()
-  const p = progress(frame, 230 + index * 28, 290 + index * 28)
-  const active = frame > 430 + index * 25
-
-  return (
-    <article
-      style={{
-        background: '#ffffff',
-        border: `1px solid ${active ? '#225f42' : '#dfe7e1'}`,
-        borderRadius: 18,
-        boxShadow: active ? '0 22px 38px rgba(34, 95, 66, 0.18)' : '0 16px 34px rgba(20, 24, 22, 0.10)',
-        display: 'grid',
-        gap: 12,
-        opacity: p,
-        overflow: 'hidden',
-        padding: 14,
-        transform: `translateY(${(1 - p) * 28}px) scale(${active ? 1.02 : 1})`,
-      }}
-    >
-      <ArtifactVisual index={index} kind={kind} />
-      <div style={{ display: 'grid', gap: 4 }}>
-        <span style={{ color: '#65716a', fontSize: 15, fontWeight: 800, textTransform: 'uppercase' }}>{item.eyebrow}</span>
-        <strong style={{ color: '#0f1512', fontSize: 22, lineHeight: 1.1 }}>{item.title}</strong>
-        <span style={{ color: '#65716a', fontSize: 18, fontWeight: 700 }}>{item.metric}</span>
-      </div>
-    </article>
-  )
-}
-
-function ArtifactGallery({ items, kind }: { items: ArtifactItem[]; kind: ArtifactKind }) {
-  return (
-    <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '1fr 1fr', padding: 24 }}>
-      {items.map((item, index) => (
-        <ArtifactCard item={item} key={item.title} kind={kind} index={index} />
+    <PremiumSceneShell footer="Deck executivo montado com narrativa de fechamento" status="Slides gerando">
+      {[0, 1, 2, 3, 4, 5].map((item) => (
+        <FloatingMiniCard index={item} key={item} kind="slide" />
       ))}
-    </div>
+      <div style={{ height: 650, left: '50%', position: 'absolute', top: '54%', transform: 'translate(-50%, -50%)', width: 1080, zIndex: 20 }}>
+        {['Fechamento Maio', 'Indicadores', 'Riscos', 'Plano de ação'].map((title, index) => (
+          <SlideArtifact index={index} key={title} title={title} />
+        ))}
+      </div>
+    </PremiumSceneShell>
   )
 }
 
@@ -753,164 +635,47 @@ export function ExpenseClassificationAnimation() {
 }
 
 export function BankReconciliationAnimation() {
-  return (
-    <ProductAnimationShell
-      eyebrow="Bank matching"
-      footer="Conciliação bancária"
-      icon={<RefreshCcw size={42} strokeWidth={2.4} />}
-      metrics={[
-        { label: 'Matches', value: '4' },
-        { label: 'Status', value: 'Conciliado' },
-        { label: 'Diverg.', value: '1' },
-      ]}
-      subtitle="Pacote visual de conciliação: extratos, títulos, matches automáticos, pendências e divergências para revisão."
-      title="Conciliação bancária"
-    >
-      <ArtifactGallery
-        kind="reconciliation"
-        items={[
-          { eyebrow: 'Match 01', title: 'PIX Cliente Norte', metric: 'NF-9031 conciliada' },
-          { eyebrow: 'Match 02', title: 'Cartão Stone', metric: 'Lote-552 conciliado' },
-          { eyebrow: 'Alerta 01', title: 'Pagamento Frete Sul', metric: 'Divergência aberta' },
-          { eyebrow: 'Pendente 01', title: 'Tarifa bancária', metric: 'Aguardando regra' },
-        ]}
-      />
-    </ProductAnimationShell>
-  )
+  return <BankReconciliationScene />
 }
 
 export function DashboardsAnimation() {
-  return (
-    <ProductAnimationShell
-      eyebrow="BI workspace"
-      footer="Dashboards"
-      icon={<LayoutDashboard size={42} strokeWidth={2.4} />}
-      metrics={[
-        { label: 'Dashboards', value: '4' },
-        { label: 'Status', value: 'Pronto' },
-        { label: 'Publicados', value: '2' },
-      ]}
-      subtitle="Galeria de dashboards operacionais renderizados como imagens. Nesta versão, o mesmo mock visual simula múltiplos dashboards."
-      title="Dashboards"
-    >
-      <ArtifactGallery
-        kind="dashboard"
-        items={[
-          { eyebrow: 'Dashboard 01', title: 'Financeiro Executivo', metric: 'Receita, margem e caixa' },
-          { eyebrow: 'Dashboard 02', title: 'Caixa e Conciliação', metric: 'Extrato, ERP e pendências' },
-          { eyebrow: 'Dashboard 03', title: 'Despesas por Centro', metric: 'Categorias e responsáveis' },
-          { eyebrow: 'Dashboard 04', title: 'Fechamento Mensal', metric: 'DRE, fluxo e variações' },
-        ]}
-      />
-    </ProductAnimationShell>
-  )
+  return <DashboardStudioScene />
 }
 
 export function ManagementReportAnimation() {
   return (
-    <ProductAnimationShell
-      eyebrow="Management report"
-      footer="Relatório gerencial Word"
-      icon={<FileText size={42} strokeWidth={2.4} />}
-      metrics={[
-        { label: 'Formato', value: 'Word' },
-        { label: 'Status', value: 'Gerado' },
-        { label: 'Revisão', value: '97%' },
-      ]}
-      subtitle="Pacote de relatórios gerenciais em páginas visuais: capa, KPIs, variações e recomendações para diretoria."
-      title="Relatório gerencial"
-    >
-      <ArtifactGallery
-        kind="report"
-        items={[
-          { eyebrow: 'Página 01', title: 'Resumo executivo', metric: 'Receita e EBITDA' },
-          { eyebrow: 'Página 02', title: 'Variações do mês', metric: 'Custos e despesas' },
-          { eyebrow: 'Página 03', title: 'Plano de ação', metric: '8 recomendações' },
-          { eyebrow: 'Página 04', title: 'Anexo financeiro', metric: 'DRE e caixa' },
-        ]}
-      />
-    </ProductAnimationShell>
+    <ArtifactDocumentScene
+      footer="Relatorio Word gerado em paginas executivas"
+      kind="report"
+      status="Relatorio gerencial escrevendo"
+      titles={['Resumo executivo', 'Variacoes do mes', 'Plano de acao', 'Anexo financeiro']}
+    />
   )
 }
 
 export function ClosingSlidesAnimation() {
-  return (
-    <ProductAnimationShell
-      eyebrow="Closing deck"
-      footer="Apresentação de fechamento"
-      icon={<Presentation size={42} strokeWidth={2.4} />}
-      metrics={[
-        { label: 'Slides', value: '3' },
-        { label: 'Status', value: 'Criado' },
-        { label: 'Ações', value: '8' },
-      ]}
-      subtitle="Deck de fechamento com vários slides prontos: capa, KPIs, riscos e plano de ação para diretoria."
-      title="Apresentação de fechamento"
-    >
-      <ArtifactGallery
-        kind="slide"
-        items={[
-          { eyebrow: 'Slide 01', title: 'Capa executiva', metric: 'Maio 2026' },
-          { eyebrow: 'Slide 02', title: 'Indicadores', metric: '4 KPIs' },
-          { eyebrow: 'Slide 03', title: 'Riscos', metric: '3 alertas' },
-          { eyebrow: 'Slide 04', title: 'Próximos passos', metric: '8 ações' },
-        ]}
-      />
-    </ProductAnimationShell>
-  )
+  return <SlideDeckScene />
 }
 
 export function ContractManagementAnimation() {
   return (
-    <ProductAnimationShell
-      eyebrow="Contract ops"
-      footer="Gestão de contrato"
-      icon={<ShieldCheck size={42} strokeWidth={2.4} />}
-      metrics={[
-        { label: 'Contratos', value: '4' },
-        { label: 'Status', value: 'Ativo' },
-        { label: 'Pausados', value: '1' },
-      ]}
-      subtitle="Coleção de contratos monitorados como documentos: vencimentos, reajustes, responsáveis e alertas de risco."
-      title="Gestão de contrato"
-    >
-      <ArtifactGallery
-        kind="contract"
-        items={[
-          { eyebrow: 'Contrato 01', title: 'Frete Sul', metric: 'Vence em 18 dias' },
-          { eyebrow: 'Contrato 02', title: 'ERP Omie', metric: 'Reajuste anual' },
-          { eyebrow: 'Contrato 03', title: 'Cloud AWS', metric: 'Crédito contratado' },
-          { eyebrow: 'Contrato 04', title: 'Software BI', metric: 'Renovação pendente' },
-        ]}
-      />
-    </ProductAnimationShell>
+    <ArtifactDocumentScene
+      footer="Contratos monitorados por risco, vencimento e reajuste"
+      kind="contract"
+      status="Gestao contratual ativa"
+      titles={['Frete Sul', 'ERP Omie', 'Cloud AWS', 'Software BI']}
+    />
   )
 }
 
 export function AccountingEntryAnimation() {
   return (
-    <ProductAnimationShell
-      eyebrow="ERP actions"
-      footer="Fazer lançamento"
-      icon={<PenLine size={42} strokeWidth={2.4} />}
-      metrics={[
-        { label: 'Lançamento', value: 'Criado' },
-        { label: 'Status', value: 'Pendente' },
-        { label: 'Origem', value: 'Banco' },
-      ]}
-      subtitle="Vários artefatos de lançamento gerados: preview contábil, validação fiscal, registro no ERP e comprovante."
-      title="Fazer lançamento"
-    >
-      <ArtifactGallery
-        kind="entry"
-        items={[
-          { eyebrow: 'Etapa 01', title: 'Preview contábil', metric: 'Débito e crédito' },
-          { eyebrow: 'Etapa 02', title: 'Validação fiscal', metric: 'Centro de custo' },
-          { eyebrow: 'Etapa 03', title: 'Registro no ERP', metric: 'LAN-0184' },
-          { eyebrow: 'Etapa 04', title: 'Comprovante', metric: 'Pendente aprovação' },
-        ]}
-      />
-    </ProductAnimationShell>
+    <ArtifactDocumentScene
+      footer="Lancamento preparado, validado e enviado ao ERP"
+      kind="entry"
+      status="ERP actions executando"
+      titles={['Preview contabil', 'Validacao fiscal', 'Registro no ERP', 'Comprovante']}
+    />
   )
 }
 
