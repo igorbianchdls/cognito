@@ -28,34 +28,63 @@ type AnimationOption = {
 
 const powerpointSlides: PowerPointMockSlide[] = [
   {
-    accent: '#5b7cfa',
+    accent: '#c8a856',
     layout: 'title',
-    subtitle: 'Driving traffic growth and maximizing revenue conversion',
-    title: 'Landing Page Refresh Proposal',
+    metrics: [
+      { label: 'EBITDA uplift by FY29 (base case)', value: '+$159M' },
+      { label: 'p.a. TSR uplift over plan', value: '+9-14%' },
+      { label: 'Board review - final POV due', value: 'May 7' },
+    ],
+    subtitle: 'A value-creation point of view for the Board',
+    title: 'Project Lighthouse',
   },
   {
-    accent: '#36a3ff',
-    eyebrow: 'Current Performance',
+    accent: '#c8a856',
+    eyebrow: 'This portfolio showed water',
     layout: 'metrics',
     metrics: [
-      { label: 'Traffic', value: '+18%' },
-      { label: 'CVR', value: '3.4%' },
-      { label: 'Revenue', value: 'R$ 1.2M' },
+      { label: 'EBITDA base', value: '+$159M' },
+      { label: 'Cash impact', value: '+$94M' },
+      { label: 'Risk adjusted', value: '+$78M' },
     ],
-    title: 'Marketing funnel overview',
+    title: 'The portfolio showed strong execution',
   },
   {
-    accent: '#36a3ff',
-    eyebrow: 'Growth Forecast',
+    accent: '#0b5878',
+    eyebrow: 'Acme has under-grown',
     layout: 'chart',
-    title: 'Projected conversion lift',
+    title: 'Core assets show margin expansion',
   },
   {
-    accent: '#2f7de1',
-    eyebrow: 'Action Plan',
+    accent: '#c8a856',
+    eyebrow: 'Options and open questions',
     layout: 'bullets',
-    bullets: ['Rewrite hero offer', 'Simplify lead form', 'Add proof modules', 'Launch A/B testing'],
-    title: 'Refresh priorities',
+    bullets: ['Prioritize pricing reset', 'Reduce indirect procurement', 'Accelerate service attach', 'Prepare May board decision'],
+    title: 'Four directions on the table',
+  },
+  {
+    accent: '#c8a856',
+    eyebrow: 'Reposition the portfolio',
+    layout: 'metrics',
+    metrics: [
+      { label: 'Revenue pool', value: '$430M' },
+      { label: 'EBITDA bridge', value: '$92M' },
+      { label: 'Downside case', value: '$73M' },
+    ],
+    title: 'Reposition toward service-led growth',
+  },
+  {
+    accent: '#0b5878',
+    eyebrow: 'M&A EBITDA',
+    layout: 'chart',
+    title: 'Base case bridge from FY26 to FY29',
+  },
+  {
+    accent: '#c8a856',
+    eyebrow: 'Commercial plan',
+    layout: 'bullets',
+    bullets: ['Scale top accounts', 'Shift mix to recurring', 'Retire low-margin SKUs', 'Lock SteerCo milestones'],
+    title: 'Three moves for the bridge',
   },
 ]
 
@@ -88,7 +117,7 @@ function PowerPointPreviewAnimation() {
   return (
     <PowerPointEditorMock
       slides={powerpointSlides}
-      title="Landing Page Reference 2026"
+      title="Acme_SteerCo"
     />
   )
 }
