@@ -2,13 +2,7 @@ import type { ReactNode } from 'react'
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
 import { CheckCircle2, FileText, LayoutDashboard, PenLine, Presentation, ReceiptText, RefreshCcw, ShieldCheck } from 'lucide-react'
 
-import type {
-  AutomationStructuredContent,
-  DataResultStructuredContent,
-} from '@/products/mcp-apps/web/src/types/toolResult'
-import { AnimatedMcpAutomationView } from '@/remotion/components/AnimatedMcpAutomationView'
-import { AnimatedMcpDocumentView, type DocumentPreviewData } from '@/remotion/components/AnimatedMcpDocumentView'
-import { AnimatedMcpSlideDeckView, type SlideDeckPreviewData } from '@/remotion/components/AnimatedMcpSlideDeckView'
+import type { DataResultStructuredContent } from '@/products/mcp-apps/web/src/types/toolResult'
 import { AnimatedMcpTableView } from '@/remotion/components/AnimatedMcpTableView'
 
 export const MCP_SINGLE_ANIMATION_DURATION = 1080
@@ -49,80 +43,17 @@ const bankReconciliationData = {
   ],
 } satisfies DataResultStructuredContent
 
-const managementReportData = {
-  title: 'Relatório gerencial',
-  subtitle: 'Word gerado para diretoria · Maio 2026',
-  metrics: [
-    { label: 'Receita líquida', value: 'R$ 2,41 mi' },
-    { label: 'EBITDA', value: 'R$ 681 mil' },
-    { label: 'Despesas revisadas', value: '97%' },
-    { label: 'Pendências', value: '8 itens' },
-  ],
-  sections: [
-    { title: 'Contexto', body: 'Fechamento consolidado a partir do ERP, bancos e planilhas de apoio.' },
-    { title: 'Principais variações', body: 'Marketing ficou 12% acima do plano e logística concentrou os maiores desvios.' },
-    { title: 'Recomendações', body: 'Aprovar reclassificações, revisar contratos de frete e acompanhar caixa diário.' },
-  ],
-} satisfies DocumentPreviewData
-
-const closingDeckData = {
-  title: 'Apresentação de fechamento',
-  subtitle: 'Slides prontos para reunião mensal',
-  slides: [
-    { eyebrow: 'Slide 01', title: 'Fechamento Maio 2026', value: 'Capa', bullets: ['Receita, margem e caixa', 'Resumo executivo para diretoria'] },
-    { eyebrow: 'Slide 02', title: 'Indicadores principais', value: '4 KPIs', bullets: ['Receita líquida de R$ 2,41 mi', 'Margem projetada de 28,7%'] },
-    { eyebrow: 'Slide 03', title: 'Riscos e próximos passos', value: '8 ações', bullets: ['Fretes atrasados em revisão', 'Plano de caixa por vencimento'] },
-  ],
-} satisfies SlideDeckPreviewData
-
-const contractManagementData = {
-  ok: true,
-  tool: 'alerts',
-  view: 'automation_list',
-  kind: 'contracts',
-  title: 'Gestão de contratos',
-  subtitle: 'Renovações e obrigações monitoradas',
-  summary: { total: 4, active: 3, paused: 1, next_run_at: '2026-05-29T12:00:00.000Z' },
-  rows: [
-    { id: 'ctr-210', title: 'Frete Sul · SLA logística', status: 'active', condition: 'Vence em 18 dias e tem divergência de cobrança', channels: ['Slack', 'Email'], last_run_at: '2026-05-28T08:00:00.000Z', next_run_at: '2026-05-29T12:00:00.000Z' },
-    { id: 'ctr-318', title: 'ERP Omie · Renovação anual', status: 'active', condition: 'Reajuste previsto acima de 9%', channels: ['Email'], last_run_at: '2026-05-27T08:00:00.000Z', next_run_at: '2026-05-30T12:00:00.000Z' },
-    { id: 'ctr-422', title: 'Cloud AWS · Crédito contratado', status: 'paused', condition: 'Aguardando validação de consumo', channels: ['Slack'], last_run_at: '2026-05-25T08:00:00.000Z', next_run_at: null },
-  ],
-} satisfies AutomationStructuredContent
-
-const accountingEntryData = {
-  ok: true,
-  tool: 'actions',
-  view: 'action_result',
-  kind: 'journal_entry',
-  action: 'create_entry',
-  title: 'Lançamento criado',
-  subtitle: 'Despesa classificada e enviada para o ERP',
-  preview: {
-    conta_debito: 'Despesa com Logística',
-    conta_credito: 'Bancos',
-    centro_custo: 'Operações',
-    valor: 'R$ 8.420,00',
-  },
-  result: {
-    status: 'Criado',
-    id_lancamento: 'LAN-2026-0528-0184',
-    data_competencia: '2026-05-28',
-    origem: 'Conciliação bancária',
-  },
-  columns: ['campo', 'valor'],
-  rows: [
-    { campo: 'Fornecedor', valor: 'Frete Sul' },
-    { campo: 'Documento', valor: 'CTR-210' },
-    { campo: 'Categoria', valor: 'Logística' },
-    { campo: 'Aprovação', valor: 'Pendente do financeiro' },
-  ],
-  count: 4,
-} satisfies AutomationStructuredContent
-
 type Metric = {
   label: string
   value: string
+}
+
+type ArtifactKind = 'dashboard' | 'report' | 'slide' | 'contract' | 'entry'
+
+type ArtifactItem = {
+  title: string
+  eyebrow: string
+  metric: string
 }
 
 type ProductAnimationShellProps = {
@@ -281,7 +212,199 @@ function ProductAnimationShell({ eyebrow, title, subtitle, icon, metrics, childr
   )
 }
 
-function DashboardThumbnail({ title, metric, index }: { title: string; metric: string; index: number }) {
+function DashboardVisual({ index }: { index: number }) {
+  return (
+    <div
+      style={{
+        background: 'linear-gradient(135deg, #f8faf8 0%, #edf4ef 100%)',
+        border: '1px solid #dfe7e1',
+        borderRadius: 14,
+        display: 'grid',
+        gap: 10,
+        minHeight: 184,
+        padding: 13,
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <span style={{ background: '#225f42', borderRadius: 999, display: 'block', height: 16, width: 92 }} />
+        <span style={{ background: '#c9d8ce', borderRadius: 999, display: 'block', height: 16, width: 42 }} />
+      </div>
+      <div style={{ display: 'grid', gap: 8, gridTemplateColumns: '1fr 1fr' }}>
+        <span style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 10, height: 42 }} />
+        <span style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 10, height: 42 }} />
+      </div>
+      <div style={{ alignItems: 'end', display: 'flex', gap: 6, height: 70 }}>
+        {[44, 62, 38, 72, 54, 84].map((height, barIndex) => (
+          <span
+            key={`${height}-${barIndex}`}
+            style={{
+              background: barIndex === index % 6 ? '#225f42' : '#9bb5a4',
+              borderRadius: 5,
+              display: 'block',
+              flex: 1,
+              height,
+            }}
+          />
+        ))}
+      </div>
+      <div style={{ display: 'grid', gap: 7 }}>
+        <span style={{ background: '#d7e2da', borderRadius: 999, display: 'block', height: 9, width: '86%' }} />
+        <span style={{ background: '#e3ebe5', borderRadius: 999, display: 'block', height: 9, width: '64%' }} />
+      </div>
+    </div>
+  )
+}
+
+function ReportVisual({ index }: { index: number }) {
+  return (
+    <div
+      style={{
+        background: '#ffffff',
+        border: '1px solid #dfe7e1',
+        borderRadius: 14,
+        display: 'grid',
+        gap: 11,
+        minHeight: 184,
+        padding: 17,
+      }}
+    >
+      <span style={{ background: '#225f42', borderRadius: 999, display: 'block', height: 12, width: index === 0 ? 118 : 88 }} />
+      <span style={{ background: '#0f1512', borderRadius: 999, display: 'block', height: 15, width: '72%' }} />
+      <div style={{ display: 'grid', gap: 8, gridTemplateColumns: '1fr 1fr 1fr' }}>
+        {[0, 1, 2].map((item) => (
+          <span key={item} style={{ background: '#f0f5f1', border: '1px solid #dfe7e1', borderRadius: 8, height: 36 }} />
+        ))}
+      </div>
+      <div style={{ display: 'grid', gap: 8 }}>
+        {[88, 72, 94, 64].map((width, lineIndex) => (
+          <span key={`${width}-${lineIndex}`} style={{ background: '#d9e4dc', borderRadius: 999, display: 'block', height: 8, width: `${width}%` }} />
+        ))}
+      </div>
+      <div style={{ alignItems: 'end', display: 'flex', gap: 7, height: 42 }}>
+        {[18, 29, 24, 38, 31].map((height, barIndex) => (
+          <span key={`${height}-${barIndex}`} style={{ background: barIndex === index ? '#225f42' : '#b9cbbf', borderRadius: 4, flex: 1, height }} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function SlideVisual({ index }: { index: number }) {
+  const dark = index % 2 === 0
+
+  return (
+    <div
+      style={{
+        background: dark ? '#225f42' : '#f7faf7',
+        border: `1px solid ${dark ? '#225f42' : '#dfe7e1'}`,
+        borderRadius: 14,
+        color: dark ? '#ffffff' : '#0f1512',
+        display: 'grid',
+        gap: 13,
+        minHeight: 184,
+        padding: 17,
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <span style={{ background: dark ? 'rgba(255,255,255,0.75)' : '#225f42', borderRadius: 999, display: 'block', height: 12, width: 82 }} />
+        <span style={{ background: dark ? 'rgba(255,255,255,0.28)' : '#c9d8ce', borderRadius: 999, display: 'block', height: 12, width: 38 }} />
+      </div>
+      <strong style={{ fontSize: 25, lineHeight: 1.06 }}>{index === 0 ? 'Fechamento' : index === 1 ? 'Indicadores' : index === 2 ? 'Riscos' : 'Plano'}</strong>
+      <div style={{ display: 'grid', gap: 7 }}>
+        {[82, 66, 74].map((width, lineIndex) => (
+          <span
+            key={`${width}-${lineIndex}`}
+            style={{
+              background: dark ? 'rgba(255,255,255,0.28)' : '#d8e3dc',
+              borderRadius: 999,
+              display: 'block',
+              height: 8,
+              width: `${width}%`,
+            }}
+          />
+        ))}
+      </div>
+      <div style={{ alignItems: 'center', display: 'grid', gap: 10, gridTemplateColumns: '1fr 1fr' }}>
+        <span style={{ background: dark ? 'rgba(255,255,255,0.18)' : '#ffffff', border: `1px solid ${dark ? 'rgba(255,255,255,0.18)' : '#dfe7e1'}`, borderRadius: 10, height: 48 }} />
+        <span style={{ background: dark ? 'rgba(255,255,255,0.18)' : '#ffffff', border: `1px solid ${dark ? 'rgba(255,255,255,0.18)' : '#dfe7e1'}`, borderRadius: 10, height: 48 }} />
+      </div>
+    </div>
+  )
+}
+
+function ContractVisual({ index }: { index: number }) {
+  return (
+    <div
+      style={{
+        background: '#fffefa',
+        border: '1px solid #dedbd4',
+        borderRadius: 14,
+        display: 'grid',
+        gap: 11,
+        minHeight: 184,
+        padding: 17,
+      }}
+    >
+      <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+        <span style={{ background: '#225f42', borderRadius: 999, display: 'block', height: 13, width: 76 }} />
+        <span style={{ border: '2px solid #c6d4ca', borderRadius: 999, display: 'block', height: 30, width: 30 }} />
+      </div>
+      <span style={{ background: '#141816', borderRadius: 999, display: 'block', height: 14, width: '70%' }} />
+      <div style={{ display: 'grid', gap: 7 }}>
+        {[86, 91, 62, 78].map((width, lineIndex) => (
+          <span key={`${width}-${lineIndex}`} style={{ background: '#d9d6cf', borderRadius: 999, display: 'block', height: 8, width: `${width}%` }} />
+        ))}
+      </div>
+      <div style={{ display: 'grid', gap: 8, gridTemplateColumns: '1fr 1fr' }}>
+        <span style={{ background: index === 1 ? '#fff4d8' : '#eef4ef', border: '1px solid #dfe7e1', borderRadius: 8, height: 34 }} />
+        <span style={{ background: '#eef4ef', border: '1px solid #dfe7e1', borderRadius: 8, height: 34 }} />
+      </div>
+    </div>
+  )
+}
+
+function EntryVisual({ index }: { index: number }) {
+  return (
+    <div
+      style={{
+        background: '#f8faf8',
+        border: '1px solid #dfe7e1',
+        borderRadius: 14,
+        display: 'grid',
+        gap: 11,
+        minHeight: 184,
+        padding: 17,
+      }}
+    >
+      <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+        <span style={{ background: '#225f42', borderRadius: 999, display: 'block', height: 14, width: 92 }} />
+        <span style={{ background: index === 3 ? '#225f42' : '#d8e3dc', borderRadius: 999, display: 'block', height: 28, width: 58 }} />
+      </div>
+      <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 10, display: 'grid', gap: 8, padding: 11 }}>
+        {[0, 1, 2].map((item) => (
+          <div key={item} style={{ alignItems: 'center', display: 'grid', gap: 9, gridTemplateColumns: '58px 1fr' }}>
+            <span style={{ background: '#e3ebe5', borderRadius: 999, display: 'block', height: 8 }} />
+            <span style={{ background: item === index % 3 ? '#225f42' : '#b8cbbf', borderRadius: 999, display: 'block', height: 9 }} />
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'grid', gap: 8, gridTemplateColumns: '1fr 1fr' }}>
+        <span style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 8, height: 36 }} />
+        <span style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 8, height: 36 }} />
+      </div>
+    </div>
+  )
+}
+
+function ArtifactVisual({ kind, index }: { kind: ArtifactKind; index: number }) {
+  if (kind === 'report') return <ReportVisual index={index} />
+  if (kind === 'slide') return <SlideVisual index={index} />
+  if (kind === 'contract') return <ContractVisual index={index} />
+  if (kind === 'entry') return <EntryVisual index={index} />
+  return <DashboardVisual index={index} />
+}
+
+function ArtifactCard({ item, index, kind }: { item: ArtifactItem; index: number; kind: ArtifactKind }) {
   const frame = useCurrentFrame()
   const p = progress(frame, 230 + index * 28, 290 + index * 28)
   const active = frame > 430 + index * 25
@@ -301,64 +424,21 @@ function DashboardThumbnail({ title, metric, index }: { title: string; metric: s
         transform: `translateY(${(1 - p) * 28}px) scale(${active ? 1.02 : 1})`,
       }}
     >
-      <div
-        style={{
-          background: 'linear-gradient(135deg, #f8faf8 0%, #edf4ef 100%)',
-          border: '1px solid #dfe7e1',
-          borderRadius: 14,
-          display: 'grid',
-          gap: 10,
-          minHeight: 210,
-          padding: 13,
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ background: '#225f42', borderRadius: 999, display: 'block', height: 16, width: 92 }} />
-          <span style={{ background: '#c9d8ce', borderRadius: 999, display: 'block', height: 16, width: 42 }} />
-        </div>
-        <div style={{ display: 'grid', gap: 8, gridTemplateColumns: '1fr 1fr' }}>
-          <span style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 10, height: 46 }} />
-          <span style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 10, height: 46 }} />
-        </div>
-        <div style={{ alignItems: 'end', display: 'flex', gap: 6, height: 78 }}>
-          {[44, 62, 38, 72, 54, 84].map((height, barIndex) => (
-            <span
-              key={`${height}-${barIndex}`}
-              style={{
-                background: barIndex === index % 6 ? '#225f42' : '#9bb5a4',
-                borderRadius: 5,
-                display: 'block',
-                flex: 1,
-                height,
-              }}
-            />
-          ))}
-        </div>
-        <div style={{ display: 'grid', gap: 7 }}>
-          <span style={{ background: '#d7e2da', borderRadius: 999, display: 'block', height: 9, width: '86%' }} />
-          <span style={{ background: '#e3ebe5', borderRadius: 999, display: 'block', height: 9, width: '64%' }} />
-        </div>
-      </div>
+      <ArtifactVisual index={index} kind={kind} />
       <div style={{ display: 'grid', gap: 4 }}>
-        <strong style={{ color: '#0f1512', fontSize: 22, lineHeight: 1.1 }}>{title}</strong>
-        <span style={{ color: '#65716a', fontSize: 18, fontWeight: 700 }}>{metric}</span>
+        <span style={{ color: '#65716a', fontSize: 15, fontWeight: 800, textTransform: 'uppercase' }}>{item.eyebrow}</span>
+        <strong style={{ color: '#0f1512', fontSize: 22, lineHeight: 1.1 }}>{item.title}</strong>
+        <span style={{ color: '#65716a', fontSize: 18, fontWeight: 700 }}>{item.metric}</span>
       </div>
     </article>
   )
 }
 
-function DashboardImageGallery() {
-  const dashboards = [
-    { title: 'Financeiro Executivo', metric: 'Receita, margem e caixa' },
-    { title: 'Caixa e Conciliação', metric: 'Extrato, ERP e pendências' },
-    { title: 'Despesas por Centro', metric: 'Categorias e responsáveis' },
-    { title: 'Fechamento Mensal', metric: 'DRE, fluxo e variações' },
-  ]
-
+function ArtifactGallery({ items, kind }: { items: ArtifactItem[]; kind: ArtifactKind }) {
   return (
     <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '1fr 1fr', padding: 24 }}>
-      {dashboards.map((dashboard, index) => (
-        <DashboardThumbnail key={dashboard.title} index={index} metric={dashboard.metric} title={dashboard.title} />
+      {items.map((item, index) => (
+        <ArtifactCard item={item} key={item.title} kind={kind} index={index} />
       ))}
     </div>
   )
@@ -416,7 +496,15 @@ export function DashboardsAnimation() {
       subtitle="Galeria de dashboards operacionais renderizados como imagens. Nesta versão, o mesmo mock visual simula múltiplos dashboards."
       title="Dashboards"
     >
-      <DashboardImageGallery />
+      <ArtifactGallery
+        kind="dashboard"
+        items={[
+          { eyebrow: 'Dashboard 01', title: 'Financeiro Executivo', metric: 'Receita, margem e caixa' },
+          { eyebrow: 'Dashboard 02', title: 'Caixa e Conciliação', metric: 'Extrato, ERP e pendências' },
+          { eyebrow: 'Dashboard 03', title: 'Despesas por Centro', metric: 'Categorias e responsáveis' },
+          { eyebrow: 'Dashboard 04', title: 'Fechamento Mensal', metric: 'DRE, fluxo e variações' },
+        ]}
+      />
     </ProductAnimationShell>
   )
 }
@@ -432,10 +520,18 @@ export function ManagementReportAnimation() {
         { label: 'Status', value: 'Gerado' },
         { label: 'Revisão', value: '97%' },
       ]}
-      subtitle="Documento executivo estruturado com KPIs, variações do período, recomendações e próximos passos."
+      subtitle="Pacote de relatórios gerenciais em páginas visuais: capa, KPIs, variações e recomendações para diretoria."
       title="Relatório gerencial"
     >
-      <AnimatedMcpDocumentView data={managementReportData} startFrame={260} />
+      <ArtifactGallery
+        kind="report"
+        items={[
+          { eyebrow: 'Página 01', title: 'Resumo executivo', metric: 'Receita e EBITDA' },
+          { eyebrow: 'Página 02', title: 'Variações do mês', metric: 'Custos e despesas' },
+          { eyebrow: 'Página 03', title: 'Plano de ação', metric: '8 recomendações' },
+          { eyebrow: 'Página 04', title: 'Anexo financeiro', metric: 'DRE e caixa' },
+        ]}
+      />
     </ProductAnimationShell>
   )
 }
@@ -451,10 +547,18 @@ export function ClosingSlidesAnimation() {
         { label: 'Status', value: 'Criado' },
         { label: 'Ações', value: '8' },
       ]}
-      subtitle="Deck de fechamento com capa, indicadores principais e plano de ação para reunião de diretoria."
+      subtitle="Deck de fechamento com vários slides prontos: capa, KPIs, riscos e plano de ação para diretoria."
       title="Apresentação de fechamento"
     >
-      <AnimatedMcpSlideDeckView data={closingDeckData} startFrame={260} />
+      <ArtifactGallery
+        kind="slide"
+        items={[
+          { eyebrow: 'Slide 01', title: 'Capa executiva', metric: 'Maio 2026' },
+          { eyebrow: 'Slide 02', title: 'Indicadores', metric: '4 KPIs' },
+          { eyebrow: 'Slide 03', title: 'Riscos', metric: '3 alertas' },
+          { eyebrow: 'Slide 04', title: 'Próximos passos', metric: '8 ações' },
+        ]}
+      />
     </ProductAnimationShell>
   )
 }
@@ -470,10 +574,18 @@ export function ContractManagementAnimation() {
         { label: 'Status', value: 'Ativo' },
         { label: 'Pausados', value: '1' },
       ]}
-      subtitle="Painel de contratos com renovações, reajustes, obrigações e alertas de risco em uma esteira única."
+      subtitle="Coleção de contratos monitorados como documentos: vencimentos, reajustes, responsáveis e alertas de risco."
       title="Gestão de contrato"
     >
-      <AnimatedMcpAutomationView data={contractManagementData} startFrame={260} />
+      <ArtifactGallery
+        kind="contract"
+        items={[
+          { eyebrow: 'Contrato 01', title: 'Frete Sul', metric: 'Vence em 18 dias' },
+          { eyebrow: 'Contrato 02', title: 'ERP Omie', metric: 'Reajuste anual' },
+          { eyebrow: 'Contrato 03', title: 'Cloud AWS', metric: 'Crédito contratado' },
+          { eyebrow: 'Contrato 04', title: 'Software BI', metric: 'Renovação pendente' },
+        ]}
+      />
     </ProductAnimationShell>
   )
 }
@@ -489,10 +601,18 @@ export function AccountingEntryAnimation() {
         { label: 'Status', value: 'Pendente' },
         { label: 'Origem', value: 'Banco' },
       ]}
-      subtitle="Lançamento criado a partir da conciliação, com contas, centro de custo, origem e trilha de aprovação."
+      subtitle="Vários artefatos de lançamento gerados: preview contábil, validação fiscal, registro no ERP e comprovante."
       title="Fazer lançamento"
     >
-      <AnimatedMcpAutomationView data={accountingEntryData} startFrame={260} />
+      <ArtifactGallery
+        kind="entry"
+        items={[
+          { eyebrow: 'Etapa 01', title: 'Preview contábil', metric: 'Débito e crédito' },
+          { eyebrow: 'Etapa 02', title: 'Validação fiscal', metric: 'Centro de custo' },
+          { eyebrow: 'Etapa 03', title: 'Registro no ERP', metric: 'LAN-0184' },
+          { eyebrow: 'Etapa 04', title: 'Comprovante', metric: 'Pendente aprovação' },
+        ]}
+      />
     </ProductAnimationShell>
   )
 }
