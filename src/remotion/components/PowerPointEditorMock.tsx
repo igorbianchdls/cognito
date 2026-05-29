@@ -43,22 +43,99 @@ function MacDot({ color }: { color: string }) {
   return <span style={{ background: color, borderRadius: 999, display: 'block', height: 10, width: 10 }} />
 }
 
-function RibbonTool({ label, tall = false }: { label: string; tall?: boolean }) {
+function QuickAccessIcon({ kind }: { kind: 'home' | 'save' | 'undo' | 'redo' | 'more' }) {
+  const isArrow = kind === 'undo' || kind === 'redo'
   return (
-    <div style={{ alignItems: 'center', color: '#32363d', display: 'grid', fontSize: 9, fontWeight: 600, gap: 3, justifyItems: 'center', minWidth: tall ? 42 : 32 }}>
-      <span
-        style={{
-          background: '#ffffff',
-          border: '1px solid #cfd4dc',
-          borderRadius: 2,
-          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8)',
-          display: 'block',
-          height: tall ? 31 : 20,
-          width: tall ? 31 : 24,
-        }}
-      />
+    <span style={{ alignItems: 'center', display: 'flex', height: 17, justifyContent: 'center', position: 'relative', width: kind === 'more' ? 20 : 17 }}>
+      {kind === 'home' ? (
+        <>
+          <span style={{ borderBottom: '6px solid #777c83', borderLeft: '6px solid transparent', borderRight: '6px solid transparent', height: 0, position: 'absolute', top: 2, width: 0 }} />
+          <span style={{ border: '1.7px solid #777c83', borderTop: 0, height: 8, position: 'absolute', top: 8, width: 10 }} />
+        </>
+      ) : null}
+      {kind === 'save' ? (
+        <span style={{ border: '1.6px solid #777c83', borderRadius: 2, display: 'block', height: 13, position: 'relative', width: 13 }}>
+          <span style={{ background: '#777c83', display: 'block', height: 3, left: 2, position: 'absolute', right: 2, top: 2 }} />
+          <span style={{ border: '1px solid #777c83', bottom: 1, height: 4, left: 3, position: 'absolute', right: 3 }} />
+        </span>
+      ) : null}
+      {isArrow ? (
+        <>
+          <span style={{ border: '1.7px solid #777c83', borderRight: 0, borderTop: 0, height: 8, transform: kind === 'undo' ? 'rotate(45deg)' : 'rotate(-135deg)', width: 8 }} />
+          <span style={{ background: '#777c83', height: 1.7, marginLeft: kind === 'undo' ? -1 : 0, transform: kind === 'undo' ? 'rotate(0deg)' : 'rotate(180deg)', width: 8 }} />
+        </>
+      ) : null}
+      {kind === 'more' ? <span style={{ color: '#777c83', fontSize: 14, fontWeight: 800, lineHeight: 1 }}>...</span> : null}
+    </span>
+  )
+}
+
+function OfficeIcon({ accent = '#d93417', tall = false, type = 'tile' }: { accent?: string; tall?: boolean; type?: 'tile' | 'lines' | 'chart' | 'shape' }) {
+  const size = tall ? 28 : 20
+  return (
+    <span
+      style={{
+        background: '#ffffff',
+        border: '1px solid #cfd4dc',
+        borderRadius: 3,
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.88)',
+        display: 'block',
+        height: size,
+        overflow: 'hidden',
+        position: 'relative',
+        width: tall ? 30 : 22,
+      }}
+    >
+      {type === 'tile' ? (
+        <>
+          <span style={{ background: accent, display: 'block', height: tall ? 8 : 5, left: 4, position: 'absolute', right: 4, top: 4 }} />
+          <span style={{ background: '#dfe3e9', display: 'block', height: 2, left: 4, position: 'absolute', right: 6, top: tall ? 15 : 11 }} />
+          <span style={{ background: '#dfe3e9', display: 'block', height: 2, left: 4, position: 'absolute', right: 10, top: tall ? 20 : 15 }} />
+        </>
+      ) : null}
+      {type === 'lines' ? (
+        [5, 10, 15].map((top, index) => <span key={top} style={{ background: index === 1 ? accent : '#b8c0ca', display: 'block', height: 2, left: 4, position: 'absolute', right: index === 2 ? 8 : 4, top }} />)
+      ) : null}
+      {type === 'chart' ? (
+        [8, 13, 18].map((height, index) => <span key={height} style={{ background: index === 1 ? accent : '#4b9bd8', bottom: 4, display: 'block', height, left: 5 + index * 7, position: 'absolute', width: 4 }} />)
+      ) : null}
+      {type === 'shape' ? (
+        <>
+          <span style={{ background: '#3f8fd2', borderRadius: 999, display: 'block', height: 11, left: 4, position: 'absolute', top: 4, width: 11 }} />
+          <span style={{ background: accent, display: 'block', height: 11, position: 'absolute', right: 4, top: tall ? 13 : 8, width: 11 }} />
+        </>
+      ) : null}
+    </span>
+  )
+}
+
+function RibbonTool({ accent, label, tall = false, type = 'tile' }: { accent?: string; label: string; tall?: boolean; type?: 'tile' | 'lines' | 'chart' | 'shape' }) {
+  return (
+    <div style={{ alignItems: 'center', color: '#32363d', display: 'grid', fontSize: 8.5, fontWeight: 650, gap: 2, justifyItems: 'center', lineHeight: 1, minWidth: tall ? 38 : 29, whiteSpace: 'nowrap' }}>
+      <OfficeIcon accent={accent} tall={tall} type={type} />
       <span>{label}</span>
     </div>
+  )
+}
+
+function RibbonField({ label, width }: { label: string; width: number }) {
+  return (
+    <span style={{ alignItems: 'center', background: '#ffffff', border: '1px solid #cfd4dc', borderRadius: 3, color: '#30343a', display: 'flex', fontSize: 10.5, fontWeight: 650, height: 21, justifyContent: 'space-between', padding: '0 7px', width }}>
+      <span>{label}</span>
+      <span style={{ color: '#747a82', fontSize: 9 }}>v</span>
+    </span>
+  )
+}
+
+function TextButton({ children, muted = false }: { children: string; muted?: boolean }) {
+  return <span style={{ color: muted ? '#b7bbc2' : '#333840', fontSize: 11, fontWeight: 800, minWidth: 12, textAlign: 'center' }}>{children}</span>
+}
+
+function LineButton({ active = false }: { active?: boolean }) {
+  return (
+    <span style={{ background: active ? '#e8eef8' : 'transparent', border: active ? '1px solid #c9d7ee' : '1px solid transparent', borderRadius: 3, display: 'grid', gap: 2, height: 18, padding: '4px 3px', width: 20 }}>
+      {[0, 1, 2].map((line) => <span key={line} style={{ background: '#9ba3ad', borderRadius: 999, display: 'block', height: 2, width: line === 1 ? 16 : 12 }} />)}
+    </span>
   )
 }
 
@@ -66,39 +143,45 @@ function Ribbon({ show }: { show: boolean }) {
   if (!show) return null
 
   return (
-    <div style={{ background: '#f6f6f7', borderBottom: '1px solid #d7d8dc', display: 'flex', height: 76, padding: '6px 10px' }}>
-      <div style={{ borderRight: '1px solid #dedfe3', display: 'flex', gap: 8, paddingRight: 12 }}>
-        <RibbonTool label="Paste" tall />
+    <div style={{ background: '#f6f6f7', borderBottom: '1px solid #d7d8dc', display: 'flex', height: 76, overflow: 'hidden', padding: '6px 9px' }}>
+      <div style={{ borderRight: '1px solid #dedfe3', display: 'flex', gap: 7, paddingRight: 10 }}>
+        <RibbonTool accent="#f0b23e" label="Paste" tall />
         <div style={{ display: 'grid', gap: 2 }}>
-          {['Cut', 'Copy', 'Format'].map((label) => <RibbonTool key={label} label={label} />)}
+          {['Cut', 'Copy', 'Format'].map((label) => <RibbonTool accent="#9ba3ad" key={label} label={label} />)}
         </div>
       </div>
-      <div style={{ borderRight: '1px solid #dedfe3', display: 'flex', gap: 10, padding: '0 12px' }}>
-        {['New Slide', 'Layout', 'Reset', 'Section'].map((label) => <RibbonTool key={label} label={label} />)}
+      <div style={{ borderRight: '1px solid #dedfe3', display: 'flex', gap: 6, padding: '0 9px' }}>
+        <RibbonTool accent="#7cb56f" label="New Slide" tall type="tile" />
+        {['Layout', 'Reset', 'Section'].map((label) => <RibbonTool accent="#7d8792" key={label} label={label} type="lines" />)}
       </div>
-      <div style={{ borderRight: '1px solid #dedfe3', display: 'grid', gap: 5, minWidth: 270, padding: '0 12px' }}>
+      <div style={{ borderRight: '1px solid #dedfe3', display: 'grid', gap: 4, minWidth: 245, padding: '0 9px' }}>
         <div style={{ display: 'flex', gap: 5 }}>
-          <span style={{ background: '#ffffff', border: '1px solid #d5d8de', borderRadius: 3, height: 22, width: 150 }} />
-          <span style={{ background: '#ffffff', border: '1px solid #d5d8de', borderRadius: 3, height: 22, width: 55 }} />
-          {['A', 'A'].map((label, index) => <span key={`${label}-${index}`} style={{ color: '#c4c6cc', fontSize: 14, fontWeight: 700 }}>{label}</span>)}
+          <RibbonField label="Aptos" width={120} />
+          <RibbonField label="18" width={45} />
+          <TextButton>A</TextButton>
+          <TextButton>A</TextButton>
+          <TextButton muted>A</TextButton>
         </div>
-        <div style={{ display: 'flex', gap: 12 }}>
-          {['B', 'I', 'U', 'x', 'AV', 'Aa'].map((label) => (
-            <span key={label} style={{ color: '#c1c4ca', fontSize: 12, fontWeight: 700 }}>{label}</span>
-          ))}
+        <div style={{ alignItems: 'center', display: 'flex', gap: 10 }}>
+          {['B', 'I', 'U', 'S', 'x2'].map((label) => <TextButton key={label}>{label}</TextButton>)}
+          <span style={{ background: '#d93417', display: 'block', height: 3, width: 18 }} />
+          <RibbonField label="Aa" width={42} />
         </div>
       </div>
-      <div style={{ borderRight: '1px solid #dedfe3', display: 'grid', gap: 5, minWidth: 210, padding: '0 12px' }}>
+      <div style={{ borderRight: '1px solid #dedfe3', display: 'grid', gap: 4, minWidth: 170, padding: '0 9px' }}>
         {[0, 1].map((row) => (
-          <div key={row} style={{ display: 'flex', gap: 7 }}>
-            {[0, 1, 2, 3, 4, 5].map((item) => (
-              <span key={item} style={{ background: '#cfd3da', borderRadius: 999, display: 'block', height: 4, marginTop: 7, width: item % 2 === 0 ? 26 : 18 }} />
-            ))}
+          <div key={row} style={{ display: 'flex', gap: 3 }}>
+            {[0, 1, 2, 3, 4, 5].map((item) => <LineButton active={row === 1 && item === 1} key={item} />)}
           </div>
         ))}
       </div>
-      <div style={{ display: 'flex', gap: 12, paddingLeft: 12 }}>
-        {['Picture', 'Shapes', 'Text Box', 'Arrange', 'Add-ins', 'Claude'].map((label) => <RibbonTool key={label} label={label} tall />)}
+      <div style={{ display: 'flex', gap: 6, paddingLeft: 9 }}>
+        <RibbonTool accent="#2878bd" label="Picture" tall type="chart" />
+        <RibbonTool accent="#5f9fd8" label="Shapes" tall type="shape" />
+        <RibbonTool accent="#2b7ea5" label="Text Box" tall type="tile" />
+        <RibbonTool accent="#d7a93e" label="Arrange" tall type="shape" />
+        <RibbonTool accent="#d86f4a" label="Add-ins" tall type="tile" />
+        <RibbonTool accent="#d86f4a" label="Claude" tall type="shape" />
       </div>
     </div>
   )
@@ -298,7 +381,9 @@ export function PowerPointEditorMock({
             <span style={{ background: '#8a8d92', borderRadius: 999, display: 'block', height: 14, position: 'relative', width: 28 }}>
               <span style={{ background: '#ffffff', borderRadius: 999, display: 'block', height: 12, left: 1, position: 'absolute', top: 1, width: 12 }} />
             </span>
-            <span style={{ color: '#8b8f95', fontSize: 13 }}>Home  Save  Undo  Redo  ...</span>
+            <div style={{ alignItems: 'center', display: 'flex', gap: 7 }}>
+              {(['home', 'save', 'undo', 'redo', 'more'] as const).map((kind) => <QuickAccessIcon key={kind} kind={kind} />)}
+            </div>
           </div>
           <div style={{ alignItems: 'center', color: '#60646b', display: 'flex', fontSize: 13, fontWeight: 650, gap: 7, justifyContent: 'center' }}>
             <span style={{ background: '#c9301c', borderRadius: 3, display: 'block', height: 11, width: 11 }} />

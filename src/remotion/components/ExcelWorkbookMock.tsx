@@ -69,48 +69,165 @@ function MacDot({ color }: { color: string }) {
   return <span style={{ background: color, borderRadius: 999, display: 'block', height: 10, width: 10 }} />
 }
 
-function RibbonButton({ label, tall = false }: { label: string; tall?: boolean }) {
+function QuickAccessIcon({ kind }: { kind: 'home' | 'save' | 'undo' | 'redo' | 'more' }) {
+  const isArrow = kind === 'undo' || kind === 'redo'
   return (
-    <div style={{ alignItems: 'center', color: '#273029', display: 'grid', fontSize: 9, fontWeight: 650, gap: 3, justifyItems: 'center', minWidth: tall ? 40 : 30 }}>
-      <span style={{ background: '#ffffff', border: '1px solid #cfd6d1', borderRadius: 2, display: 'block', height: tall ? 30 : 19, width: tall ? 30 : 24 }} />
+    <span style={{ alignItems: 'center', display: 'flex', height: 17, justifyContent: 'center', position: 'relative', width: kind === 'more' ? 20 : 17 }}>
+      {kind === 'home' ? (
+        <>
+          <span style={{ borderBottom: '6px solid #777c83', borderLeft: '6px solid transparent', borderRight: '6px solid transparent', height: 0, position: 'absolute', top: 2, width: 0 }} />
+          <span style={{ border: '1.7px solid #777c83', borderTop: 0, height: 8, position: 'absolute', top: 8, width: 10 }} />
+        </>
+      ) : null}
+      {kind === 'save' ? (
+        <span style={{ border: '1.6px solid #777c83', borderRadius: 2, display: 'block', height: 13, position: 'relative', width: 13 }}>
+          <span style={{ background: '#777c83', display: 'block', height: 3, left: 2, position: 'absolute', right: 2, top: 2 }} />
+          <span style={{ border: '1px solid #777c83', bottom: 1, height: 4, left: 3, position: 'absolute', right: 3 }} />
+        </span>
+      ) : null}
+      {isArrow ? (
+        <>
+          <span style={{ border: '1.7px solid #777c83', borderRight: 0, borderTop: 0, height: 8, transform: kind === 'undo' ? 'rotate(45deg)' : 'rotate(-135deg)', width: 8 }} />
+          <span style={{ background: '#777c83', height: 1.7, marginLeft: kind === 'undo' ? -1 : 0, width: 8 }} />
+        </>
+      ) : null}
+      {kind === 'more' ? <span style={{ color: '#777c83', fontSize: 14, fontWeight: 800, lineHeight: 1 }}>...</span> : null}
+    </span>
+  )
+}
+
+function ExcelIcon({ accent = '#1f9d55', tall = false, type = 'table' }: { accent?: string; tall?: boolean; type?: 'table' | 'lines' | 'grid' | 'sigma' | 'format' }) {
+  const size = tall ? 28 : 20
+  return (
+    <span
+      style={{
+        background: '#ffffff',
+        border: '1px solid #cfd6d1',
+        borderRadius: 3,
+        display: 'block',
+        height: size,
+        overflow: 'hidden',
+        position: 'relative',
+        width: tall ? 30 : 22,
+      }}
+    >
+      {type === 'table' ? (
+        <>
+          <span style={{ background: accent, display: 'block', height: tall ? 7 : 5, left: 3, position: 'absolute', right: 3, top: 3 }} />
+          {[0, 1].map((column) => <span key={column} style={{ background: '#d7ded9', bottom: 4, display: 'block', left: 5 + column * 9, position: 'absolute', top: tall ? 13 : 10, width: 5 }} />)}
+        </>
+      ) : null}
+      {type === 'lines' ? (
+        [5, 10, 15].map((top, index) => <span key={top} style={{ background: index === 1 ? accent : '#aeb8b1', display: 'block', height: 2, left: 4, position: 'absolute', right: index === 2 ? 8 : 4, top }} />)
+      ) : null}
+      {type === 'grid' ? (
+        <>
+          {[0, 1, 2].map((row) => <span key={`row-${row}`} style={{ background: row === 0 ? accent : '#d7ded9', display: 'block', height: 4, left: 4, position: 'absolute', right: 4, top: 4 + row * 6 }} />)}
+          <span style={{ background: '#ffffff', bottom: 3, display: 'block', left: 11, position: 'absolute', top: 3, width: 1 }} />
+        </>
+      ) : null}
+      {type === 'sigma' ? <span style={{ color: accent, display: 'block', fontSize: tall ? 22 : 16, fontWeight: 900, lineHeight: `${size}px`, textAlign: 'center' }}>S</span> : null}
+      {type === 'format' ? (
+        <>
+          <span style={{ background: '#f7c948', display: 'block', height: 9, left: 4, position: 'absolute', top: 4, width: 9 }} />
+          <span style={{ background: accent, display: 'block', height: 9, position: 'absolute', right: 4, top: tall ? 13 : 8, width: 9 }} />
+        </>
+      ) : null}
+    </span>
+  )
+}
+
+function RibbonButton({ accent, label, tall = false, type = 'table' }: { accent?: string; label: string; tall?: boolean; type?: 'table' | 'lines' | 'grid' | 'sigma' | 'format' }) {
+  return (
+    <div style={{ alignItems: 'center', color: '#273029', display: 'grid', fontSize: 8.5, fontWeight: 650, gap: 2, justifyItems: 'center', lineHeight: 1, minWidth: tall ? 36 : 28, whiteSpace: 'nowrap' }}>
+      <ExcelIcon accent={accent} tall={tall} type={type} />
       <span>{label}</span>
     </div>
   )
 }
 
+function ExcelField({ label, width }: { label: string; width: number }) {
+  return (
+    <span style={{ alignItems: 'center', background: '#ffffff', border: '1px solid #cfd6d1', borderRadius: 3, color: '#202820', display: 'flex', fontSize: 10.5, fontWeight: 650, height: 21, justifyContent: 'space-between', padding: '0 7px', width }}>
+      <span>{label}</span>
+      <span style={{ color: '#717972', fontSize: 9 }}>v</span>
+    </span>
+  )
+}
+
+function ExcelTextButton({ children, color = '#202820' }: { children: string; color?: string }) {
+  return <span style={{ color, fontSize: 11, fontWeight: 800, minWidth: 12, textAlign: 'center' }}>{children}</span>
+}
+
+function AlignButton({ active = false, width = 23 }: { active?: boolean; width?: number }) {
+  return (
+    <span style={{ background: active ? '#dde8e2' : 'transparent', border: active ? '1px solid #b9d1c3' : '1px solid transparent', borderRadius: 3, display: 'grid', gap: 2, height: 18, padding: '4px 3px', width }}>
+      {[0, 1, 2].map((line) => <span key={line} style={{ background: '#7f8982', borderRadius: 999, display: 'block', height: 2, width: line === 1 ? 15 : 11 }} />)}
+    </span>
+  )
+}
+
+function StyleSwatch({ color, label }: { color: string; label: string }) {
+  return (
+    <span style={{ alignItems: 'center', background: color, border: '1px solid rgba(0,0,0,0.1)', borderRadius: 2, color: label === 'Bad' ? '#9d1f2b' : '#203126', display: 'flex', fontSize: 8.5, fontWeight: 750, height: 18, justifyContent: 'center', width: 52 }}>
+      {label}
+    </span>
+  )
+}
+
 function ExcelRibbon() {
   return (
-    <div style={{ background: '#f7f8f7', borderBottom: '1px solid #d9ddd9', display: 'flex', height: 76, padding: '6px 10px' }}>
-      <div style={{ borderRight: '1px solid #e0e2e0', display: 'flex', gap: 8, paddingRight: 12 }}>
-        <RibbonButton label="Paste" tall />
+    <div style={{ background: '#f7f8f7', borderBottom: '1px solid #d9ddd9', display: 'flex', height: 76, overflow: 'hidden', padding: '6px 9px' }}>
+      <div style={{ borderRight: '1px solid #e0e2e0', display: 'flex', gap: 7, paddingRight: 10 }}>
+        <RibbonButton accent="#f0b23e" label="Paste" tall type="table" />
         <div style={{ display: 'grid', gap: 2 }}>
-          {['Cut', 'Copy', 'Format'].map((label) => <RibbonButton key={label} label={label} />)}
+          {['Cut', 'Copy', 'Format'].map((label) => <RibbonButton accent="#9ba3ad" key={label} label={label} type="lines" />)}
         </div>
       </div>
-      <div style={{ borderRight: '1px solid #e0e2e0', display: 'grid', gap: 5, minWidth: 250, padding: '0 12px' }}>
+      <div style={{ borderRight: '1px solid #e0e2e0', display: 'grid', gap: 4, minWidth: 220, padding: '0 9px' }}>
         <div style={{ display: 'flex', gap: 7 }}>
-          <span style={{ background: '#ffffff', border: '1px solid #cfd6d1', borderRadius: 3, height: 22, width: 98 }} />
-          <span style={{ background: '#ffffff', border: '1px solid #cfd6d1', borderRadius: 3, height: 22, width: 44 }} />
-          {['A', 'A'].map((item, index) => <span key={`${item}-${index}`} style={{ color: '#243129', fontSize: 14, fontWeight: 700 }}>{item}</span>)}
+          <ExcelField label="Arial" width={82} />
+          <ExcelField label="12" width={38} />
+          <ExcelTextButton>A</ExcelTextButton>
+          <ExcelTextButton>A</ExcelTextButton>
         </div>
-        <div style={{ display: 'flex', gap: 12 }}>
-          {['B', 'I', 'U', '#', 'Fill', 'A'].map((label) => <span key={label} style={{ color: '#202820', fontSize: 12, fontWeight: 700 }}>{label}</span>)}
+        <div style={{ alignItems: 'center', display: 'flex', gap: 10 }}>
+          {['B', 'I', 'U'].map((label) => <ExcelTextButton key={label}>{label}</ExcelTextButton>)}
+          <ExcelIcon type="grid" />
+          <span style={{ background: '#ffdf5d', borderBottom: '3px solid #d2a600', display: 'block', height: 12, width: 18 }} />
+          <span style={{ background: '#ffffff', borderBottom: '3px solid #c8222f', color: '#202820', fontSize: 11, fontWeight: 900, textAlign: 'center', width: 18 }}>A</span>
         </div>
       </div>
-      <div style={{ borderRight: '1px solid #e0e2e0', display: 'grid', gap: 5, minWidth: 210, padding: '0 12px' }}>
+      <div style={{ borderRight: '1px solid #e0e2e0', display: 'grid', gap: 4, minWidth: 168, padding: '0 9px' }}>
         {[0, 1].map((row) => (
-          <div key={row} style={{ display: 'flex', gap: 7 }}>
-            {[0, 1, 2, 3, 4, 5].map((item) => (
-              <span key={item} style={{ background: '#aeb8b1', borderRadius: 999, display: 'block', height: 4, marginTop: 7, width: item % 2 === 0 ? 24 : 17 }} />
-            ))}
+          <div key={row} style={{ alignItems: 'center', display: 'flex', gap: 3 }}>
+            {(row === 0 ? [0, 1, 2, 3, 4] : [0, 1, 2]).map((item) => <AlignButton active={row === 0 && item === 2} key={item} width={19} />)}
+            {row === 1 ? <ExcelField label="Merge" width={62} /> : null}
           </div>
         ))}
       </div>
-      <div style={{ borderRight: '1px solid #e0e2e0', display: 'flex', gap: 8, padding: '0 12px' }}>
-        {['General', '$', '%', ',', '.00'].map((label) => <span key={label} style={{ background: label === 'General' ? '#ffffff' : 'transparent', border: label === 'General' ? '1px solid #cfd6d1' : 0, borderRadius: 3, color: '#202820', fontSize: 12, fontWeight: 650, height: 22, padding: '3px 9px' }}>{label}</span>)}
+      <div style={{ borderRight: '1px solid #e0e2e0', display: 'grid', gap: 4, minWidth: 122, padding: '0 9px' }}>
+        <ExcelField label="General" width={92} />
+        <div style={{ alignItems: 'center', display: 'flex', gap: 10 }}>
+          {['$', '%', ',', '.00', '.0'].map((label) => <ExcelTextButton key={label}>{label}</ExcelTextButton>)}
+        </div>
       </div>
-      <div style={{ display: 'flex', gap: 10, paddingLeft: 12 }}>
-        {['Conditional', 'Format', 'Insert', 'Delete', 'Format', 'Claude'].map((label) => <RibbonButton key={label} label={label} tall />)}
+      <div style={{ borderRight: '1px solid #e0e2e0', display: 'grid', gap: 3, minWidth: 116, padding: '0 9px' }}>
+        <div style={{ display: 'flex', gap: 4 }}>
+          <StyleSwatch color="#ffffff" label="Normal" />
+          <StyleSwatch color="#ffc7ce" label="Bad" />
+        </div>
+        <div style={{ display: 'flex', gap: 4 }}>
+          <StyleSwatch color="#c6efce" label="Good" />
+          <StyleSwatch color="#ffeb9c" label="Neutral" />
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 6, paddingLeft: 9 }}>
+        <RibbonButton accent="#2c8b57" label="Insert" tall type="grid" />
+        <RibbonButton accent="#c94747" label="Delete" tall type="grid" />
+        <RibbonButton accent="#227a47" label="Format" tall type="format" />
+        <RibbonButton accent="#1f9d55" label="Sum" tall type="sigma" />
+        <RibbonButton accent="#d86f4a" label="Claude" tall type="format" />
       </div>
     </div>
   )
@@ -260,7 +377,9 @@ export function ExcelWorkbookMock({ activeSheetIndex, fileName, sheets, startFra
             <span style={{ background: '#8a8d92', borderRadius: 999, display: 'block', height: 14, position: 'relative', width: 28 }}>
               <span style={{ background: '#ffffff', borderRadius: 999, display: 'block', height: 12, left: 1, position: 'absolute', top: 1, width: 12 }} />
             </span>
-            <span style={{ color: '#8b8f95', fontSize: 13 }}>Home  Save  Undo  Redo  ...</span>
+            <div style={{ alignItems: 'center', display: 'flex', gap: 7 }}>
+              {(['home', 'save', 'undo', 'redo', 'more'] as const).map((kind) => <QuickAccessIcon key={kind} kind={kind} />)}
+            </div>
           </div>
           <div style={{ alignItems: 'center', color: '#60646b', display: 'flex', fontSize: 13, fontWeight: 650, gap: 7, justifyContent: 'center' }}>
             <span style={{ background: '#1f9d55', borderRadius: 2, display: 'block', height: 11, width: 11 }} />
