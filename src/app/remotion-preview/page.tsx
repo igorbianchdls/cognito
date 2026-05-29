@@ -15,9 +15,10 @@ import {
   ManagementReportAnimation,
   MCP_SINGLE_ANIMATION_DURATION,
 } from '@/remotion/compositions/McpOperationsDemo'
+import { PdfViewerMock, type PdfMockPage } from '@/remotion/components/PdfViewerMock'
 import { PowerPointEditorMock, type PowerPointMockSlide } from '@/remotion/components/PowerPointEditorMock'
 
-type PreviewComposition = 'intro' | 'classification' | 'reconciliation' | 'dashboards' | 'report' | 'slides' | 'contracts' | 'entry' | 'powerpoint'
+type PreviewComposition = 'intro' | 'classification' | 'reconciliation' | 'dashboards' | 'report' | 'slides' | 'contracts' | 'entry' | 'powerpoint' | 'pdf'
 
 type AnimationOption = {
   component: ComponentType
@@ -58,11 +59,46 @@ const powerpointSlides: PowerPointMockSlide[] = [
   },
 ]
 
+const pdfPages: PdfMockPage[] = [
+  {
+    accent: '#1298e8',
+    sections: [
+      { kind: 'table', title: 'Canvas element' },
+      { kind: 'icons', title: 'Compositing' },
+      { kind: 'text', title: '2D Context' },
+      { kind: 'chart', title: 'Line styles' },
+    ],
+    subtitle: 'v1.1',
+    title: 'HTML5 Canvas Cheat Sheet',
+  },
+  {
+    accent: '#ff4a1f',
+    sections: [
+      { kind: 'text', title: 'Transformations' },
+      { kind: 'table', title: 'Methods' },
+      { kind: 'chart', title: 'Coordinates' },
+      { kind: 'icons', title: 'Examples' },
+    ],
+    subtitle: 'Page 2',
+    title: 'Canvas API Reference',
+  },
+]
+
 function PowerPointPreviewAnimation() {
   return (
     <PowerPointEditorMock
       slides={powerpointSlides}
       title="Landing Page Reference 2026"
+    />
+  )
+}
+
+function PdfPreviewAnimation() {
+  return (
+    <PdfViewerMock
+      fileName="HTML5 Canvas Cheat Sheet"
+      pages={pdfPages}
+      url="https://raw.github.com/mozilla/pdf.js/master/test/pdfs/canvas.pdf"
     />
   )
 }
@@ -76,6 +112,7 @@ const animationOptions: AnimationOption[] = [
   { component: ContractManagementAnimation, label: 'Contratos', value: 'contracts' },
   { component: AccountingEntryAnimation, label: 'Lançamento', value: 'entry' },
   { component: PowerPointPreviewAnimation, label: 'PowerPoint', value: 'powerpoint' },
+  { component: PdfPreviewAnimation, label: 'PDF', value: 'pdf' },
 ]
 
 export default function RemotionPreviewPage() {
