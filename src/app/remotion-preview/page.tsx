@@ -15,10 +15,11 @@ import {
   ManagementReportAnimation,
   MCP_SINGLE_ANIMATION_DURATION,
 } from '@/remotion/compositions/McpOperationsDemo'
+import { ExcelWorkbookMock, type ExcelMockSheet } from '@/remotion/components/ExcelWorkbookMock'
 import { PdfViewerMock, type PdfMockPage } from '@/remotion/components/PdfViewerMock'
 import { PowerPointEditorMock, type PowerPointMockSlide } from '@/remotion/components/PowerPointEditorMock'
 
-type PreviewComposition = 'intro' | 'classification' | 'reconciliation' | 'dashboards' | 'report' | 'slides' | 'contracts' | 'entry' | 'powerpoint' | 'pdf'
+type PreviewComposition = 'intro' | 'classification' | 'reconciliation' | 'dashboards' | 'report' | 'slides' | 'contracts' | 'entry' | 'powerpoint' | 'pdf' | 'excel'
 
 type AnimationOption = {
   component: ComponentType
@@ -113,6 +114,15 @@ const pdfPages: PdfMockPage[] = [
   },
 ]
 
+const excelSheets: ExcelMockSheet[] = [
+  {
+    activeCell: 'I1',
+    name: 'Assumptions',
+    tabs: ['Assumptions', 'Benchmarks', 'Scenarios'],
+    title: 'ACME INDUSTRIAL - VALUE-CREATION MODEL',
+  },
+]
+
 function PowerPointPreviewAnimation() {
   return (
     <PowerPointEditorMock
@@ -132,6 +142,15 @@ function PdfPreviewAnimation() {
   )
 }
 
+function ExcelPreviewAnimation() {
+  return (
+    <ExcelWorkbookMock
+      fileName="ValueCreation_Model"
+      sheets={excelSheets}
+    />
+  )
+}
+
 const animationOptions: AnimationOption[] = [
   { component: ExpenseClassificationAnimation, label: 'Classificação', value: 'classification' },
   { component: BankReconciliationAnimation, label: 'Conciliação', value: 'reconciliation' },
@@ -142,6 +161,7 @@ const animationOptions: AnimationOption[] = [
   { component: AccountingEntryAnimation, label: 'Lançamento', value: 'entry' },
   { component: PowerPointPreviewAnimation, label: 'PowerPoint', value: 'powerpoint' },
   { component: PdfPreviewAnimation, label: 'PDF', value: 'pdf' },
+  { component: ExcelPreviewAnimation, label: 'Excel', value: 'excel' },
 ]
 
 export default function RemotionPreviewPage() {

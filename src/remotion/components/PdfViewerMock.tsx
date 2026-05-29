@@ -41,28 +41,6 @@ function progress(frame: number, start: number, end: number) {
   })
 }
 
-function BrowserButton({ children }: { children: string }) {
-  return (
-    <span
-      style={{
-        alignItems: 'center',
-        background: '#f3f5f8',
-        border: '1px solid #cbd2dc',
-        borderRadius: 4,
-        color: '#4b5563',
-        display: 'flex',
-        fontSize: 16,
-        fontWeight: 800,
-        height: 26,
-        justifyContent: 'center',
-        width: 30,
-      }}
-    >
-      {children}
-    </span>
-  )
-}
-
 function ToolbarIcon({ wide = false }: { wide?: boolean }) {
   return (
     <span
@@ -192,43 +170,47 @@ export function PdfViewerMock({
   const pageIn = progress(localFrame, 20, 54)
 
   return (
-    <AbsoluteFill style={{ background: '#2b2d30', fontFamily: FONT_STACK, overflow: 'hidden', ...style }}>
+    <AbsoluteFill style={{ background: '#efeee8', fontFamily: FONT_STACK, overflow: 'hidden', ...style }}>
       <div
         style={{
-          background: '#e7eaef',
-          border: '1px solid #255aa5',
-          boxShadow: '0 44px 110px rgba(0, 0, 0, 0.38)',
-          height: 760,
+          background: '#f7f7f8',
+          border: '1px solid #e5e5e5',
+          borderRadius: 16,
+          boxShadow: '0 28px 90px rgba(20, 24, 22, 0.16)',
+          height: 615,
           left: '50%',
           overflow: 'hidden',
           position: 'absolute',
-          top: 96,
-          transform: `translateX(-50%) translateY(${(1 - windowIn) * 34}px) scale(${0.96 + windowIn * 0.04})`,
-          width: 1018,
+          top: 110,
+          transform: `translateX(-50%) translateY(${(1 - windowIn) * 28}px) scale(${0.96 + windowIn * 0.04})`,
+          width: 1030,
         }}
       >
-        <div style={{ alignItems: 'center', background: 'linear-gradient(#5c91dd, #2f67bd)', color: '#ffffff', display: 'grid', gridTemplateColumns: '1fr auto', height: 34, padding: '0 10px 0 16px' }}>
-          <div style={{ alignItems: 'center', display: 'flex', gap: 10 }}>
-            <span style={{ background: '#ffffff', borderRadius: 999, height: 18, width: 18 }} />
-            <span style={{ fontSize: 13, fontWeight: 700 }}>{fileName}</span>
+        <div style={{ alignItems: 'center', background: '#fafafa', display: 'grid', gridTemplateColumns: '340px 1fr 310px', height: 31, padding: '0 8px' }}>
+          <div style={{ alignItems: 'center', display: 'flex', gap: 12 }}>
+            <div style={{ display: 'flex', gap: 7, paddingLeft: 2 }}>
+              <span style={{ background: '#ff5f57', borderRadius: 999, display: 'block', height: 10, width: 10 }} />
+              <span style={{ background: '#febc2e', borderRadius: 999, display: 'block', height: 10, width: 10 }} />
+              <span style={{ background: '#28c840', borderRadius: 999, display: 'block', height: 10, width: 10 }} />
+            </div>
+            <span style={{ color: '#8b8f95', fontSize: 13 }}>Back  Forward  Reload</span>
           </div>
-          <div style={{ display: 'flex', gap: 6 }}>
-            {['-', '□', '×'].map((item) => (
-              <span key={item} style={{ alignItems: 'center', border: '1px solid rgba(255,255,255,0.55)', borderRadius: 2, display: 'flex', fontSize: 13, height: 18, justifyContent: 'center', width: 25 }}>{item}</span>
-            ))}
+          <div style={{ alignItems: 'center', color: '#60646b', display: 'flex', fontSize: 13, fontWeight: 650, gap: 7, justifyContent: 'center' }}>
+            <span style={{ background: '#d83417', borderRadius: 3, display: 'block', height: 11, width: 11 }} />
+            <span>{fileName}</span>
+          </div>
+          <div style={{ alignItems: 'center', display: 'flex', gap: 8, justifyContent: 'end' }}>
+            <span style={{ color: '#6b7077', fontSize: 12, fontWeight: 700 }}>Search</span>
+            <span style={{ background: '#ffffff', border: '1px solid #e0e1e5', borderRadius: 6, color: '#1f2328', fontSize: 12, fontWeight: 700, padding: '4px 8px' }}>Comments</span>
+            <span style={{ background: '#d83417', borderRadius: 6, color: '#ffffff', fontSize: 12, fontWeight: 800, padding: '5px 9px' }}>Share v</span>
           </div>
         </div>
 
-        <div style={{ alignItems: 'center', background: '#f7f8fb', borderBottom: '1px solid #cdd2db', display: 'grid', gridTemplateColumns: '118px 1fr 70px', height: 42, padding: '0 10px' }}>
-          <div style={{ display: 'flex', gap: 7 }}>
-            <BrowserButton>←</BrowserButton>
-            <BrowserButton>→</BrowserButton>
-            <BrowserButton>↻</BrowserButton>
-          </div>
-          <div style={{ alignItems: 'center', background: '#ffffff', border: '1px solid #cdd2db', borderRadius: 4, color: '#4b5563', display: 'flex', fontSize: 14, height: 28, padding: '0 10px' }}>
+        <div style={{ alignItems: 'center', background: '#ffffff', borderBottom: '1px solid #d7dadd', display: 'grid', gridTemplateColumns: '1fr 90px', height: 32, padding: '0 10px' }}>
+          <div style={{ alignItems: 'center', background: '#f6f7f8', border: '1px solid #d7dadd', borderRadius: 6, color: '#4b5563', display: 'flex', fontSize: 13, height: 22, padding: '0 10px' }}>
             {url}
           </div>
-          <div style={{ color: '#515966', fontSize: 20, fontWeight: 800, textAlign: 'right' }}>☰</div>
+          <div style={{ color: '#515966', fontSize: 12, fontWeight: 800, textAlign: 'right' }}>PDF Tools</div>
         </div>
 
         <div style={{ alignItems: 'center', background: 'linear-gradient(#3a3a3a, #232323)', borderBottom: '1px solid #111111', display: 'grid', gridTemplateColumns: '160px 1fr 160px', height: 44, padding: '0 10px' }}>
@@ -252,7 +234,7 @@ export function PdfViewerMock({
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '162px 1fr 15px', height: 640 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '162px 1fr 15px', height: 508 }}>
           <aside style={{ background: '#2f3032', borderRight: '1px solid #171717', overflow: 'hidden', padding: '18px 14px' }}>
             <div style={{ display: 'grid', gap: 18 }}>
               {safePages.map((page, index) => (
