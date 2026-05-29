@@ -2,53 +2,17 @@ import type { ReactNode } from 'react'
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
 import { CheckCircle2, FileText, LayoutDashboard, PenLine, Presentation, ReceiptText, RefreshCcw, ShieldCheck } from 'lucide-react'
 
-import type { DataResultStructuredContent } from '@/products/mcp-apps/web/src/types/toolResult'
-import { AnimatedMcpTableView } from '@/remotion/components/AnimatedMcpTableView'
-
 export const MCP_SINGLE_ANIMATION_DURATION = 1080
 export const MCP_OPERATIONS_DEMO_DURATION = MCP_SINGLE_ANIMATION_DURATION
 
 const FONT_STACK = 'Geist, "Segoe UI", -apple-system, BlinkMacSystemFont, "SF Pro Text", Arial, sans-serif'
-
-const expenseClassificationData = {
-  ok: true,
-  tool: 'erp_acoes',
-  view: 'table',
-  title: 'Classificação de despesas',
-  count: 5,
-  columns: ['data', 'descricao', 'valor', 'categoria_sugerida', 'confianca', 'status'],
-  rows: [
-    { data: '2026-05-24', descricao: 'Google Ads BR', valor: 18400, categoria_sugerida: 'Marketing', confianca: '96%', status: 'Classificado' },
-    { data: '2026-05-24', descricao: 'AWS Brasil', valor: 12790, categoria_sugerida: 'Infraestrutura', confianca: '94%', status: 'Classificado' },
-    { data: '2026-05-25', descricao: 'Frete Sul', valor: 8420, categoria_sugerida: 'Logística', confianca: '91%', status: 'Revisar' },
-    { data: '2026-05-26', descricao: 'Notion Labs', valor: 2140, categoria_sugerida: 'Software', confianca: '98%', status: 'Classificado' },
-    { data: '2026-05-27', descricao: 'Hotel Evento SP', valor: 6900, categoria_sugerida: 'Viagens', confianca: '88%', status: 'Revisar' },
-  ],
-} satisfies DataResultStructuredContent
-
-const bankReconciliationData = {
-  ok: true,
-  tool: 'erp',
-  view: 'table',
-  title: 'Conciliação bancária',
-  count: 6,
-  columns: ['data', 'banco', 'historico', 'valor', 'match', 'status'],
-  rows: [
-    { data: '2026-05-27', banco: 'Itaú', historico: 'PIX Cliente Norte', valor: 42100, match: 'NF-9031', status: 'Conciliado' },
-    { data: '2026-05-27', banco: 'Itaú', historico: 'TED Fornecedor Prime', valor: -18400, match: 'BOL-1042', status: 'Conciliado' },
-    { data: '2026-05-28', banco: 'Bradesco', historico: 'Cartão Stone', valor: 68900, match: 'Lote-552', status: 'Conciliado' },
-    { data: '2026-05-28', banco: 'Bradesco', historico: 'Tarifa pacote', valor: -189, match: '-', status: 'Pendente' },
-    { data: '2026-05-28', banco: 'Itaú', historico: 'Pagamento Frete Sul', valor: -8420, match: 'CTR-210', status: 'Divergência' },
-    { data: '2026-05-28', banco: 'Itaú', historico: 'PIX Cliente Oeste', valor: 17300, match: 'NF-9044', status: 'Conciliado' },
-  ],
-} satisfies DataResultStructuredContent
 
 type Metric = {
   label: string
   value: string
 }
 
-type ArtifactKind = 'dashboard' | 'report' | 'slide' | 'contract' | 'entry'
+type ArtifactKind = 'classification' | 'reconciliation' | 'dashboard' | 'report' | 'slide' | 'contract' | 'entry'
 
 type ArtifactItem = {
   title: string
@@ -209,6 +173,108 @@ function ProductAnimationShell({ eyebrow, title, subtitle, icon, metrics, childr
       </div>
       <FinalBadge text="Entrega pronta" />
     </AbsoluteFill>
+  )
+}
+
+function ClassificationVisual({ index }: { index: number }) {
+  const colors = ['#225f42', '#6f8f7b', '#c28f2c', '#3f6d91']
+  const activeColor = colors[index % colors.length]
+
+  return (
+    <div
+      style={{
+        background: '#f8faf8',
+        border: '1px solid #dfe7e1',
+        borderRadius: 14,
+        display: 'grid',
+        gap: 11,
+        minHeight: 184,
+        padding: 17,
+      }}
+    >
+      <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+        <span style={{ background: '#0f1512', borderRadius: 999, display: 'block', height: 13, width: 104 }} />
+        <span style={{ background: activeColor, borderRadius: 999, display: 'block', height: 30, width: 72 }} />
+      </div>
+      <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 10, display: 'grid', gap: 8, padding: 11 }}>
+        {[0, 1, 2].map((row) => (
+          <div key={row} style={{ alignItems: 'center', display: 'grid', gap: 9, gridTemplateColumns: '1fr 70px' }}>
+            <span style={{ background: row === index % 3 ? activeColor : '#d8e3dc', borderRadius: 999, display: 'block', height: 9 }} />
+            <span style={{ background: row === index % 3 ? '#e9f3ec' : '#f1f5f2', border: '1px solid #dfe7e1', borderRadius: 999, display: 'block', height: 22 }} />
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'grid', gap: 8, gridTemplateColumns: '1fr 1fr 1fr' }}>
+        {['96%', '94%', '88%'].map((label, badgeIndex) => (
+          <span
+            key={label}
+            style={{
+              alignItems: 'center',
+              background: badgeIndex === index % 3 ? '#225f42' : '#ffffff',
+              border: '1px solid #dfe7e1',
+              borderRadius: 8,
+              color: badgeIndex === index % 3 ? '#ffffff' : '#65716a',
+              display: 'flex',
+              fontSize: 17,
+              fontWeight: 800,
+              height: 38,
+              justifyContent: 'center',
+            }}
+          >
+            {label}
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function ReconciliationVisual({ index }: { index: number }) {
+  const highlight = index === 2 ? '#c28f2c' : '#225f42'
+
+  return (
+    <div
+      style={{
+        background: '#f7faf7',
+        border: '1px solid #dfe7e1',
+        borderRadius: 14,
+        display: 'grid',
+        gap: 11,
+        minHeight: 184,
+        padding: 17,
+      }}
+    >
+      <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1fr 42px 1fr' }}>
+        <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 10, display: 'grid', gap: 7, padding: 10 }}>
+          {[76, 58, 86].map((width, row) => (
+            <span key={`${width}-${row}`} style={{ background: row === index % 3 ? highlight : '#d8e3dc', borderRadius: 999, display: 'block', height: 9, width: `${width}%` }} />
+          ))}
+        </div>
+        <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'center' }}>
+          <span style={{ background: highlight, borderRadius: 999, display: 'block', height: 7, width: 42 }} />
+        </div>
+        <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 10, display: 'grid', gap: 7, padding: 10 }}>
+          {[62, 84, 70].map((width, row) => (
+            <span key={`${width}-${row}`} style={{ background: row === index % 3 ? highlight : '#d8e3dc', borderRadius: 999, display: 'block', height: 9, width: `${width}%` }} />
+          ))}
+        </div>
+      </div>
+      <div style={{ alignItems: 'center', display: 'flex', gap: 8 }}>
+        {[0, 1, 2, 3].map((dot) => (
+          <span
+            key={dot}
+            style={{
+              background: dot <= index ? highlight : '#d8e3dc',
+              borderRadius: 999,
+              display: 'block',
+              height: 13,
+              width: dot <= index ? 44 : 13,
+            }}
+          />
+        ))}
+      </div>
+      <div style={{ background: index === 2 ? '#fff7e5' : '#edf6f0', border: `1px solid ${index === 2 ? '#ecd8a7' : '#cfe0d4'}`, borderRadius: 10, height: 48 }} />
+    </div>
   )
 }
 
@@ -397,6 +463,8 @@ function EntryVisual({ index }: { index: number }) {
 }
 
 function ArtifactVisual({ kind, index }: { kind: ArtifactKind; index: number }) {
+  if (kind === 'classification') return <ClassificationVisual index={index} />
+  if (kind === 'reconciliation') return <ReconciliationVisual index={index} />
   if (kind === 'report') return <ReportVisual index={index} />
   if (kind === 'slide') return <SlideVisual index={index} />
   if (kind === 'contract') return <ContractVisual index={index} />
@@ -455,10 +523,18 @@ export function ExpenseClassificationAnimation() {
         { label: 'Status', value: 'Analisado' },
         { label: 'Revisão', value: '2 itens' },
       ]}
-      subtitle="Motor de classificação aplicado sobre novas despesas do ERP, com categoria sugerida, confiança e fila de revisão."
+      subtitle="Pacote visual de classificação: despesas agrupadas, categorias sugeridas, confiança do motor e fila de revisão."
       title="Classificação de despesas"
     >
-      <AnimatedMcpTableView data={expenseClassificationData} startFrame={260} />
+      <ArtifactGallery
+        kind="classification"
+        items={[
+          { eyebrow: 'Lote 01', title: 'Marketing e mídia', metric: '96% de confiança' },
+          { eyebrow: 'Lote 02', title: 'Infraestrutura', metric: '94% de confiança' },
+          { eyebrow: 'Lote 03', title: 'Logística', metric: 'Revisão sugerida' },
+          { eyebrow: 'Lote 04', title: 'Software e viagens', metric: '2 centros de custo' },
+        ]}
+      />
     </ProductAnimationShell>
   )
 }
@@ -474,10 +550,18 @@ export function BankReconciliationAnimation() {
         { label: 'Status', value: 'Conciliado' },
         { label: 'Diverg.', value: '1' },
       ]}
-      subtitle="Extratos e títulos são cruzados por data, valor e histórico para separar matches, pendências e divergências."
+      subtitle="Pacote visual de conciliação: extratos, títulos, matches automáticos, pendências e divergências para revisão."
       title="Conciliação bancária"
     >
-      <AnimatedMcpTableView data={bankReconciliationData} startFrame={260} />
+      <ArtifactGallery
+        kind="reconciliation"
+        items={[
+          { eyebrow: 'Match 01', title: 'PIX Cliente Norte', metric: 'NF-9031 conciliada' },
+          { eyebrow: 'Match 02', title: 'Cartão Stone', metric: 'Lote-552 conciliado' },
+          { eyebrow: 'Alerta 01', title: 'Pagamento Frete Sul', metric: 'Divergência aberta' },
+          { eyebrow: 'Pendente 01', title: 'Tarifa bancária', metric: 'Aguardando regra' },
+        ]}
+      />
     </ProductAnimationShell>
   )
 }
