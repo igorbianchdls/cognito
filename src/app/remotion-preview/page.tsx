@@ -15,13 +15,56 @@ import {
   ManagementReportAnimation,
   MCP_SINGLE_ANIMATION_DURATION,
 } from '@/remotion/compositions/McpOperationsDemo'
+import { PowerPointEditorMock, type PowerPointMockSlide } from '@/remotion/components/PowerPointEditorMock'
 
-type PreviewComposition = 'intro' | 'classification' | 'reconciliation' | 'dashboards' | 'report' | 'slides' | 'contracts' | 'entry'
+type PreviewComposition = 'intro' | 'classification' | 'reconciliation' | 'dashboards' | 'report' | 'slides' | 'contracts' | 'entry' | 'powerpoint'
 
 type AnimationOption = {
   component: ComponentType
   label: string
   value: Exclude<PreviewComposition, 'intro'>
+}
+
+const powerpointSlides: PowerPointMockSlide[] = [
+  {
+    accent: '#5b7cfa',
+    layout: 'title',
+    subtitle: 'Driving traffic growth and maximizing revenue conversion',
+    title: 'Landing Page Refresh Proposal',
+  },
+  {
+    accent: '#36a3ff',
+    eyebrow: 'Current Performance',
+    layout: 'metrics',
+    metrics: [
+      { label: 'Traffic', value: '+18%' },
+      { label: 'CVR', value: '3.4%' },
+      { label: 'Revenue', value: 'R$ 1.2M' },
+    ],
+    title: 'Marketing funnel overview',
+  },
+  {
+    accent: '#36a3ff',
+    eyebrow: 'Growth Forecast',
+    layout: 'chart',
+    title: 'Projected conversion lift',
+  },
+  {
+    accent: '#2f7de1',
+    eyebrow: 'Action Plan',
+    layout: 'bullets',
+    bullets: ['Rewrite hero offer', 'Simplify lead form', 'Add proof modules', 'Launch A/B testing'],
+    title: 'Refresh priorities',
+  },
+]
+
+function PowerPointPreviewAnimation() {
+  return (
+    <PowerPointEditorMock
+      slides={powerpointSlides}
+      title="Landing Page Reference 2026"
+    />
+  )
 }
 
 const animationOptions: AnimationOption[] = [
@@ -32,6 +75,7 @@ const animationOptions: AnimationOption[] = [
   { component: ClosingSlidesAnimation, label: 'Slides', value: 'slides' },
   { component: ContractManagementAnimation, label: 'Contratos', value: 'contracts' },
   { component: AccountingEntryAnimation, label: 'Lançamento', value: 'entry' },
+  { component: PowerPointPreviewAnimation, label: 'PowerPoint', value: 'powerpoint' },
 ]
 
 export default function RemotionPreviewPage() {

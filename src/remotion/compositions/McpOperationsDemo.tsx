@@ -17,6 +17,18 @@ type ClassificationDocumentItem = {
   date: string
 }
 
+type VerticalPipelineKind = 'reconciliation' | 'dashboard' | 'report' | 'slide' | 'contract' | 'entry'
+
+type VerticalPipelineItem = {
+  kind: VerticalPipelineKind
+  eyebrow: string
+  title: string
+  metric: string
+  status: string
+  accent: string
+  secondary: string
+}
+
 const classificationPipelineDocs: ClassificationDocumentItem[] = [
   {
     vendor: 'Google Ads BR',
@@ -63,6 +75,48 @@ const classificationPipelineDocs: ClassificationDocumentItem[] = [
     center: 'Comercial',
     date: '28 mai',
   },
+]
+
+const reconciliationPipelineItems: VerticalPipelineItem[] = [
+  { kind: 'reconciliation', eyebrow: 'Match 01', title: 'PIX Cliente Norte', metric: 'NF-9031', status: 'Match confirmado', accent: '#225f42', secondary: 'R$ 42.100' },
+  { kind: 'reconciliation', eyebrow: 'Match 02', title: 'Cartao Stone', metric: 'Lote-552', status: 'Conciliado', accent: '#225f42', secondary: 'R$ 68.900' },
+  { kind: 'reconciliation', eyebrow: 'Alerta 01', title: 'Pagamento Frete Sul', metric: 'CTR-210', status: 'Divergencia', accent: '#c28f2c', secondary: 'R$ 8.420' },
+  { kind: 'reconciliation', eyebrow: 'Pendente 01', title: 'Tarifa bancaria', metric: 'Regra pendente', status: 'Aguardando regra', accent: '#3f6d91', secondary: 'R$ 189' },
+]
+
+const dashboardPipelineItems: VerticalPipelineItem[] = [
+  { kind: 'dashboard', eyebrow: 'Dashboard 01', title: 'Financeiro Executivo', metric: 'Receita, margem e caixa', status: 'Publicado', accent: '#225f42', secondary: '+18.4%' },
+  { kind: 'dashboard', eyebrow: 'Dashboard 02', title: 'Caixa e Conciliacao', metric: 'Extrato, ERP e pendencias', status: 'Atualizado', accent: '#3f6d91', secondary: '98%' },
+  { kind: 'dashboard', eyebrow: 'Dashboard 03', title: 'Despesas por Centro', metric: 'Categorias e responsaveis', status: 'Gerado', accent: '#6f8f7b', secondary: '12 areas' },
+  { kind: 'dashboard', eyebrow: 'Dashboard 04', title: 'Fechamento Mensal', metric: 'DRE, fluxo e variacoes', status: 'Pronto', accent: '#c28f2c', secondary: 'Maio' },
+]
+
+const reportPipelineItems: VerticalPipelineItem[] = [
+  { kind: 'report', eyebrow: 'Pagina 01', title: 'Resumo executivo', metric: 'Receita e EBITDA', status: 'Escrito', accent: '#225f42', secondary: 'Word' },
+  { kind: 'report', eyebrow: 'Pagina 02', title: 'Variacoes do mes', metric: 'Custos e despesas', status: 'Revisado', accent: '#3f6d91', secondary: '97%' },
+  { kind: 'report', eyebrow: 'Pagina 03', title: 'Plano de acao', metric: '8 recomendacoes', status: 'Aprovado', accent: '#6f8f7b', secondary: '8 acoes' },
+  { kind: 'report', eyebrow: 'Pagina 04', title: 'Anexo financeiro', metric: 'DRE e caixa', status: 'Gerado', accent: '#c28f2c', secondary: 'PDF' },
+]
+
+const slidePipelineItems: VerticalPipelineItem[] = [
+  { kind: 'slide', eyebrow: 'Slide 01', title: 'Fechamento Maio', metric: 'Capa executiva', status: 'Montado', accent: '#225f42', secondary: '16:9' },
+  { kind: 'slide', eyebrow: 'Slide 02', title: 'Indicadores', metric: '4 KPIs principais', status: 'Renderizado', accent: '#3f6d91', secondary: '4 KPIs' },
+  { kind: 'slide', eyebrow: 'Slide 03', title: 'Riscos', metric: '3 alertas criticos', status: 'Destacado', accent: '#c28f2c', secondary: '3 riscos' },
+  { kind: 'slide', eyebrow: 'Slide 04', title: 'Plano de acao', metric: 'Proximos passos', status: 'Pronto', accent: '#6f8f7b', secondary: '8 acoes' },
+]
+
+const contractPipelineItems: VerticalPipelineItem[] = [
+  { kind: 'contract', eyebrow: 'Contrato 01', title: 'Frete Sul', metric: 'Vence em 18 dias', status: 'Monitorado', accent: '#8b6f3f', secondary: 'Risco medio' },
+  { kind: 'contract', eyebrow: 'Contrato 02', title: 'ERP Omie', metric: 'Reajuste anual', status: 'Renovacao', accent: '#225f42', secondary: '+7.8%' },
+  { kind: 'contract', eyebrow: 'Contrato 03', title: 'Cloud AWS', metric: 'Credito contratado', status: 'Ativo', accent: '#3f6d91', secondary: 'Cloud' },
+  { kind: 'contract', eyebrow: 'Contrato 04', title: 'Software BI', metric: 'Renovacao pendente', status: 'Pendente', accent: '#c28f2c', secondary: '14 dias' },
+]
+
+const entryPipelineItems: VerticalPipelineItem[] = [
+  { kind: 'entry', eyebrow: 'Etapa 01', title: 'Preview contabil', metric: 'Debito e credito', status: 'Preparado', accent: '#3f6d91', secondary: 'D/C' },
+  { kind: 'entry', eyebrow: 'Etapa 02', title: 'Validacao fiscal', metric: 'Centro de custo', status: 'Validado', accent: '#225f42', secondary: 'OK' },
+  { kind: 'entry', eyebrow: 'Etapa 03', title: 'Registro no ERP', metric: 'LAN-0184', status: 'Enviado', accent: '#6f8f7b', secondary: 'ERP' },
+  { kind: 'entry', eyebrow: 'Etapa 04', title: 'Comprovante', metric: 'Pendente aprovacao', status: 'Gerado', accent: '#c28f2c', secondary: 'PDF' },
 ]
 
 function progress(frame: number, start: number, end: number) {
@@ -340,291 +394,242 @@ function PremiumSceneShell({ children, status, footer }: { children: ReactNode; 
   )
 }
 
-function FloatingMiniCard({ index, kind = 'page' }: { index: number; kind?: 'page' | 'dashboard' | 'slide' }) {
-  const frame = useCurrentFrame()
-  const driftY = Math.sin((frame + index * 41) / 70) * 16
-  const driftX = Math.cos((frame + index * 31) / 84) * 18
-  const top = [150, 270, 420, 620, 770, 930, 1060, 1160][index % 8]
-  const left = [80, 820, 160, 760, 38, 900, 250, 690][index % 8]
-  const rotation = [-13, 10, -8, 15, 7, -12, 11, -6][index % 8]
+function VerticalPipelineVisual({ item, index }: { item: VerticalPipelineItem; index: number }) {
+  const darkSlide = item.kind === 'slide' && index % 2 === 0
+  const lineColor = darkSlide ? 'rgba(255,255,255,0.28)' : '#dce6df'
+  const panelColor = darkSlide ? 'rgba(255,255,255,0.16)' : '#f3f7f4'
 
-  return (
-    <div
-      style={{
-        background: kind === 'slide' ? (index % 2 === 0 ? 'rgba(34, 95, 66, 0.22)' : 'rgba(255, 255, 255, 0.48)') : 'rgba(255, 255, 255, 0.46)',
-        border: '1px solid rgba(211, 224, 216, 0.72)',
-        borderRadius: kind === 'dashboard' ? 18 : 16,
-        boxShadow: '0 20px 48px rgba(20, 24, 22, 0.06)',
-        display: 'grid',
-        gap: 9,
-        height: kind === 'slide' ? 150 : 190,
-        left,
-        opacity: 0.22,
-        padding: 15,
-        position: 'absolute',
-        top,
-        transform: `translate(${driftX}px, ${driftY}px) perspective(700px) rotate(${rotation}deg) rotateY(${rotation * 1.8}deg) scale(0.62)`,
-        width: kind === 'dashboard' ? 270 : kind === 'slide' ? 260 : 150,
-      }}
-    >
-      <span style={{ background: '#225f42', borderRadius: 999, display: 'block', height: 9, width: '48%' }} />
-      <span style={{ background: '#d8e3dc', borderRadius: 999, display: 'block', height: 8, width: '82%' }} />
-      <span style={{ background: '#d8e3dc', borderRadius: 999, display: 'block', height: 8, width: '66%' }} />
-      {kind === 'dashboard' ? (
-        <div style={{ alignItems: 'end', display: 'flex', gap: 5, height: 80, marginTop: 8 }}>
-          {[36, 58, 44, 72, 52].map((height, bar) => (
-            <span key={`${height}-${bar}`} style={{ background: bar === index % 5 ? '#225f42' : '#b8cbbf', borderRadius: 4, flex: 1, height }} />
+  if (item.kind === 'dashboard') {
+    return (
+      <div style={{ display: 'grid', gap: 18 }}>
+        <div style={{ display: 'grid', gap: 12, gridTemplateColumns: '1fr 1fr 1fr' }}>
+          {[0, 1, 2].map((tile) => (
+            <span key={tile} style={{ background: panelColor, border: '1px solid #dfe7e1', borderRadius: 16, height: 82 }} />
           ))}
         </div>
-      ) : null}
-    </div>
-  )
-}
-
-function PremiumDashboardCard({ index, title }: { index: number; title: string }) {
-  const frame = useCurrentFrame()
-  const p = progress(frame, 120 + index * 44, 190 + index * 44)
-  const active = (Math.floor(frame / 160) + index) % 4 === 0
-  const x = [-330, -110, 110, 330][index]
-  const y = [56, -46, 40, -28][index]
-
-  return (
-    <div
-      style={{
-        background: '#ffffff',
-        border: `1px solid ${active ? '#225f42' : '#dfe7e1'}`,
-        borderRadius: 26,
-        boxShadow: active ? '0 42px 95px rgba(34, 95, 66, 0.20)' : '0 26px 72px rgba(20, 24, 22, 0.12)',
-        display: 'grid',
-        gap: 15,
-        height: 370,
-        left: '50%',
-        opacity: p,
-        padding: 20,
-        position: 'absolute',
-        top: '50%',
-        transform: `translate(-50%, -50%) translate(${x}px, ${y}px) rotate(${[-4, 3, -2, 4][index]}deg) scale(${active ? 1.08 : 0.9})`,
-        width: 430,
-        zIndex: active ? 35 : 22 - index,
-      }}
-    >
-      <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
-        <strong style={{ color: '#0f1512', fontSize: 27, letterSpacing: 0 }}>{title}</strong>
-        <span style={{ background: active ? '#225f42' : '#d8e3dc', borderRadius: 999, display: 'block', height: 28, width: 62 }} />
-      </div>
-      <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1fr 1fr 1fr' }}>
-        {[0, 1, 2].map((item) => (
-          <span key={item} style={{ background: '#f3f7f4', border: '1px solid #dfe7e1', borderRadius: 12, height: 58 }} />
-        ))}
-      </div>
-      <div style={{ alignItems: 'end', display: 'flex', gap: 8, height: 148 }}>
-        {[54, 88, 63, 118, 94, 136, 76].map((height, bar) => (
-          <span key={`${height}-${bar}`} style={{ background: bar === index + 2 ? '#225f42' : '#9bb5a4', borderRadius: 6, flex: 1, height }} />
-        ))}
-      </div>
-      <div style={{ display: 'grid', gap: 8 }}>
-        <span style={{ background: '#d8e3dc', borderRadius: 999, display: 'block', height: 9, width: '86%' }} />
-        <span style={{ background: '#e3ebe5', borderRadius: 999, display: 'block', height: 9, width: '62%' }} />
-      </div>
-    </div>
-  )
-}
-
-function DashboardStudioScene() {
-  return (
-    <PremiumSceneShell footer="Dashboards financeiros prontos para publicacao" status="BI workspace renderizando">
-      {[0, 1, 2, 3, 4, 5].map((item) => (
-        <FloatingMiniCard index={item} key={item} kind="dashboard" />
-      ))}
-      <div style={{ height: 720, left: '50%', position: 'absolute', top: '54%', transform: 'translate(-50%, -50%)', width: 980, zIndex: 20 }}>
-        {['Financeiro Executivo', 'Caixa e Conciliação', 'Despesas por Centro', 'Fechamento Mensal'].map((title, index) => (
-          <PremiumDashboardCard index={index} key={title} title={title} />
-        ))}
-      </div>
-    </PremiumSceneShell>
-  )
-}
-
-function ReconciliationRow({ index, side }: { index: number; side: 'bank' | 'erp' }) {
-  const frame = useCurrentFrame()
-  const active = (Math.floor(frame / 120) % 4) === index
-  const y = 208 + index * 136
-  const x = side === 'bank' ? 170 : 764
-  const labels = side === 'bank' ? ['PIX Cliente Norte', 'Cartao Stone', 'Frete Sul', 'Tarifa pacote'] : ['NF-9031', 'Lote-552', 'CTR-210', 'Regra pendente']
-  const values = side === 'bank' ? ['R$ 42.100', 'R$ 68.900', 'R$ 8.420', 'R$ 189'] : ['R$ 42.100', 'R$ 68.900', 'R$ 8.180', 'Sem titulo']
-
-  return (
-    <div
-      style={{
-        background: active ? '#ffffff' : 'rgba(255,255,255,0.70)',
-        border: `1px solid ${active ? (index === 2 ? '#c28f2c' : '#225f42') : '#dfe7e1'}`,
-        borderRadius: 22,
-        boxShadow: active ? '0 26px 70px rgba(20, 24, 22, 0.16)' : '0 18px 44px rgba(20, 24, 22, 0.07)',
-        display: 'grid',
-        gap: 10,
-        left: x,
-        padding: 22,
-        position: 'absolute',
-        top: y,
-        transform: `scale(${active ? 1.04 : 0.94})`,
-        width: 360,
-        zIndex: active ? 30 : 18,
-      }}
-    >
-      <span style={{ color: '#65716a', fontSize: 19, fontWeight: 820, textTransform: 'uppercase' }}>{side === 'bank' ? 'Banco' : 'ERP'}</span>
-      <strong style={{ color: '#0f1512', fontSize: 31, letterSpacing: 0, lineHeight: 1 }}>{labels[index]}</strong>
-      <span style={{ color: index === 2 && side === 'erp' ? '#c28f2c' : '#225f42', fontSize: 25, fontWeight: 850 }}>{values[index]}</span>
-    </div>
-  )
-}
-
-function BankReconciliationScene() {
-  const frame = useCurrentFrame()
-  const active = Math.floor(frame / 120) % 4
-
-  return (
-    <PremiumSceneShell footer="Extrato e ERP pareados em tempo real" status="Conciliação automática">
-      {[0, 1, 2, 3, 4, 5].map((item) => (
-        <FloatingMiniCard index={item} key={item} />
-      ))}
-      <div style={{ background: 'linear-gradient(180deg, rgba(34,95,66,0), rgba(34,95,66,0.20), rgba(34,95,66,0))', bottom: 155, left: '50%', position: 'absolute', top: 160, transform: 'translateX(-50%)', width: 3, zIndex: 12 }} />
-      {[0, 1, 2, 3].map((item) => (
-        <div key={item}>
-          <ReconciliationRow index={item} side="bank" />
-          <ReconciliationRow index={item} side="erp" />
-          <div
-            style={{
-              background: active === item ? (item === 2 ? '#c28f2c' : '#225f42') : '#cbd9cf',
-              borderRadius: 999,
-              boxShadow: active === item ? '0 0 34px rgba(34, 95, 66, 0.32)' : 'none',
-              height: active === item ? 8 : 4,
-              left: 535,
-              opacity: active === item ? 1 : 0.42,
-              position: 'absolute',
-              top: 275 + item * 136,
-              width: 230,
-              zIndex: 24,
-            }}
-          />
+        <div style={{ alignItems: 'end', display: 'flex', gap: 10, height: 210 }}>
+          {[76, 126, 92, 168, 134, 198, 110].map((height, bar) => (
+            <span key={`${height}-${bar}`} style={{ background: bar === index + 2 ? item.accent : '#9bb5a4', borderRadius: 8, flex: 1, height }} />
+          ))}
         </div>
-      ))}
-      <div style={{ background: active === 2 ? '#fff8e6' : '#ffffff', border: `1px solid ${active === 2 ? '#e6c36f' : '#dfe7e1'}`, borderRadius: 999, bottom: 142, boxShadow: '0 24px 62px rgba(20, 24, 22, 0.12)', color: active === 2 ? '#8a6500' : '#225f42', fontSize: 27, fontWeight: 850, left: '50%', padding: '18px 26px', position: 'absolute', transform: 'translateX(-50%)', zIndex: 40 }}>
-        {active === 2 ? 'Divergência detectada' : 'Match confirmado'}
+        <div style={{ display: 'grid', gap: 10 }}>
+          <span style={{ background: '#d8e3dc', borderRadius: 999, display: 'block', height: 11, width: '86%' }} />
+          <span style={{ background: '#e3ebe5', borderRadius: 999, display: 'block', height: 11, width: '62%' }} />
+        </div>
       </div>
-    </PremiumSceneShell>
-  )
-}
+    )
+  }
 
-function DocumentArtifact({ index, kind, title }: { index: number; kind: 'report' | 'contract' | 'entry'; title: string }) {
-  const frame = useCurrentFrame()
-  const active = (Math.floor(frame / 150) + index) % 4 === 0
-  const x = [-270, -88, 92, 270][index]
-  const y = [40, -64, 34, -42][index]
-  const accent = kind === 'contract' ? '#8b6f3f' : kind === 'entry' ? '#3f6d91' : '#225f42'
+  if (item.kind === 'reconciliation') {
+    return (
+      <div style={{ display: 'grid', gap: 18 }}>
+        <div style={{ display: 'grid', gap: 14, gridTemplateColumns: '1fr 58px 1fr' }}>
+          <div style={{ background: '#f7faf7', border: '1px solid #dfe7e1', borderRadius: 18, display: 'grid', gap: 12, padding: 18 }}>
+            <span style={{ color: '#65716a', fontSize: 20, fontWeight: 820, textTransform: 'uppercase' }}>Banco</span>
+            <strong style={{ color: '#0f1512', fontSize: 31, letterSpacing: 0, lineHeight: 1 }}>{item.title}</strong>
+            <span style={{ color: item.accent, fontSize: 27, fontWeight: 850 }}>{item.secondary}</span>
+          </div>
+          <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'center' }}>
+            <span style={{ background: item.accent, borderRadius: 999, boxShadow: `0 0 34px ${item.accent}55`, display: 'block', height: 8, width: 58 }} />
+          </div>
+          <div style={{ background: '#f7faf7', border: '1px solid #dfe7e1', borderRadius: 18, display: 'grid', gap: 12, padding: 18 }}>
+            <span style={{ color: '#65716a', fontSize: 20, fontWeight: 820, textTransform: 'uppercase' }}>ERP</span>
+            <strong style={{ color: '#0f1512', fontSize: 31, letterSpacing: 0, lineHeight: 1 }}>{item.metric}</strong>
+            <span style={{ color: item.accent, fontSize: 27, fontWeight: 850 }}>{item.secondary}</span>
+          </div>
+        </div>
+        <div style={{ background: item.status === 'Divergencia' ? '#fff8e6' : '#edf6f0', border: `1px solid ${item.status === 'Divergencia' ? '#e6c36f' : '#cfe0d4'}`, borderRadius: 18, height: 82 }} />
+      </div>
+    )
+  }
+
+  if (item.kind === 'slide') {
+    return (
+      <div style={{ display: 'grid', gap: 18 }}>
+        <strong style={{ color: darkSlide ? '#ffffff' : '#0f1512', fontSize: 64, letterSpacing: 0, lineHeight: 1.02 }}>{item.title}</strong>
+        <div style={{ display: 'grid', gap: 12 }}>
+          {[78, 62, 86].map((width, line) => (
+            <span key={`${width}-${line}`} style={{ background: lineColor, borderRadius: 999, display: 'block', height: 12, width: `${width}%` }} />
+          ))}
+        </div>
+        <div style={{ display: 'grid', gap: 14, gridTemplateColumns: '1fr 1fr', marginTop: 12 }}>
+          <span style={{ background: panelColor, border: `1px solid ${darkSlide ? 'rgba(255,255,255,0.18)' : '#dfe7e1'}`, borderRadius: 18, height: 118 }} />
+          <span style={{ background: panelColor, border: `1px solid ${darkSlide ? 'rgba(255,255,255,0.18)' : '#dfe7e1'}`, borderRadius: 18, height: 118 }} />
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div
-      style={{
-        background: '#ffffff',
-        border: `1px solid ${active ? accent : '#dfe7e1'}`,
-        borderRadius: kind === 'contract' ? '34px 24px 38px 26px' : 26,
-        boxShadow: active ? '0 42px 98px rgba(20, 24, 22, 0.20)' : '0 22px 62px rgba(20, 24, 22, 0.10)',
-        clipPath: kind === 'contract' ? 'polygon(4% 0, 100% 2%, 96% 100%, 0 97%)' : undefined,
-        display: 'grid',
-        gap: 17,
-        height: 560,
-        left: '50%',
-        padding: 28,
-        position: 'absolute',
-        top: '50%',
-        transform: `translate(-50%, -50%) translate(${x}px, ${y}px) perspective(900px) rotate(${[-6, 3, -2, 6][index]}deg) rotateY(${active ? 0 : [-16, 10, -9, 14][index]}deg) scale(${active ? 1.05 : 0.82})`,
-        width: 410,
-        zIndex: active ? 34 : 18 - index,
-      }}
-    >
-      <span style={{ background: accent, borderRadius: 999, display: 'block', height: 8, left: 0, position: 'absolute', right: 0, top: 0 }} />
-      <span style={{ color: '#65716a', fontSize: 20, fontWeight: 820, textTransform: 'uppercase' }}>{kind === 'entry' ? 'Lançamento' : kind === 'contract' ? 'Contrato' : 'Relatório'}</span>
-      <strong style={{ color: '#0f1512', fontSize: 34, letterSpacing: 0, lineHeight: 1.05 }}>{title}</strong>
-      <div style={{ display: 'grid', gap: 9 }}>
+    <div style={{ display: 'grid', gap: 18 }}>
+      <div style={{ background: panelColor, border: '1px solid #dfe7e1', borderRadius: 18, display: 'grid', gap: 13, padding: 20 }}>
+        <span style={{ color: '#65716a', fontSize: 21, fontWeight: 780 }}>{item.metric}</span>
+        <strong style={{ color: item.accent, fontSize: 32, letterSpacing: 0 }}>{item.secondary}</strong>
+      </div>
+      <div style={{ display: 'grid', gap: 12 }}>
         {[88, 76, 94, 63, 82, 70].map((width, line) => (
-          <span key={`${width}-${line}`} style={{ background: line === index ? accent : '#dce6df', borderRadius: 999, display: 'block', height: line === index ? 13 : 9, width: `${width}%` }} />
-        ))}
-      </div>
-      <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1fr 1fr', marginTop: 'auto' }}>
-        <span style={{ background: '#f3f7f4', border: '1px solid #dfe7e1', borderRadius: 14, height: 70 }} />
-        <span style={{ background: active ? accent : '#f3f7f4', border: '1px solid #dfe7e1', borderRadius: 14, height: 70 }} />
-      </div>
-    </div>
-  )
-}
-
-function ArtifactDocumentScene({ kind, status, footer, titles }: { kind: 'report' | 'contract' | 'entry'; status: string; footer: string; titles: string[] }) {
-  return (
-    <PremiumSceneShell footer={footer} status={status}>
-      {[0, 1, 2, 3, 4, 5, 6].map((item) => (
-        <FloatingMiniCard index={item} key={item} />
-      ))}
-      <div style={{ height: 780, left: '50%', position: 'absolute', top: '54%', transform: 'translate(-50%, -50%)', width: 920, zIndex: 20 }}>
-        {titles.map((title, index) => (
-          <DocumentArtifact index={index} key={title} kind={kind} title={title} />
-        ))}
-      </div>
-    </PremiumSceneShell>
-  )
-}
-
-function SlideArtifact({ index, title }: { index: number; title: string }) {
-  const frame = useCurrentFrame()
-  const active = (Math.floor(frame / 140) + index) % 4 === 0
-  const x = [-300, -100, 110, 310][index]
-  const y = [42, -72, 36, -34][index]
-  const dark = index % 2 === 0
-
-  return (
-    <div
-      style={{
-        background: dark ? '#225f42' : '#ffffff',
-        border: `1px solid ${dark ? '#225f42' : '#dfe7e1'}`,
-        borderRadius: 28,
-        boxShadow: active ? '0 42px 98px rgba(20, 24, 22, 0.22)' : '0 22px 62px rgba(20, 24, 22, 0.10)',
-        color: dark ? '#ffffff' : '#0f1512',
-        display: 'grid',
-        gap: 18,
-        height: 385,
-        left: '50%',
-        padding: 30,
-        position: 'absolute',
-        top: '50%',
-        transform: `translate(-50%, -50%) translate(${x}px, ${y}px) perspective(900px) rotate(${[-5, 3, -2, 5][index]}deg) rotateY(${active ? 0 : [-18, 12, -10, 16][index]}deg) scale(${active ? 1.13 : 0.86})`,
-        width: 600,
-        zIndex: active ? 36 : 18 - index,
-      }}
-    >
-      <span style={{ background: dark ? 'rgba(255,255,255,0.62)' : '#225f42', borderRadius: 999, display: 'block', height: 12, width: 104 }} />
-      <strong style={{ fontSize: 46, letterSpacing: 0, lineHeight: 1.04 }}>{title}</strong>
-      <div style={{ display: 'grid', gap: 11 }}>
-        {[78, 62, 86].map((width, line) => (
-          <span key={`${width}-${line}`} style={{ background: dark ? 'rgba(255,255,255,0.27)' : '#dce6df', borderRadius: 999, display: 'block', height: 10, width: `${width}%` }} />
+          <span key={`${width}-${line}`} style={{ background: line === index ? item.accent : lineColor, borderRadius: 999, display: 'block', height: line === index ? 14 : 10, width: `${width}%` }} />
         ))}
       </div>
       <div style={{ display: 'grid', gap: 12, gridTemplateColumns: '1fr 1fr', marginTop: 'auto' }}>
-        <span style={{ background: dark ? 'rgba(255,255,255,0.16)' : '#f3f7f4', border: `1px solid ${dark ? 'rgba(255,255,255,0.18)' : '#dfe7e1'}`, borderRadius: 16, height: 80 }} />
-        <span style={{ background: dark ? 'rgba(255,255,255,0.16)' : '#f3f7f4', border: `1px solid ${dark ? 'rgba(255,255,255,0.18)' : '#dfe7e1'}`, borderRadius: 16, height: 80 }} />
+        <span style={{ background: panelColor, border: '1px solid #dfe7e1', borderRadius: 16, height: 84 }} />
+        <span style={{ background: item.accent, border: '1px solid #dfe7e1', borderRadius: 16, height: 84 }} />
       </div>
     </div>
   )
 }
 
-function SlideDeckScene() {
+function VerticalPipelineArtifact({ item, index, muted = false }: { item: VerticalPipelineItem; index: number; muted?: boolean }) {
+  const isSlide = item.kind === 'slide'
+  const isDashboard = item.kind === 'dashboard'
+  const isReconciliation = item.kind === 'reconciliation'
+  const isContract = item.kind === 'contract'
+  const height = muted ? 520 : isSlide ? 560 : isDashboard ? 680 : isReconciliation ? 620 : 760
+  const width = muted ? 390 : isSlide ? 760 : isDashboard ? 650 : isReconciliation ? 680 : 590
+  const darkSlide = isSlide && index % 2 === 0
+
   return (
-    <PremiumSceneShell footer="Deck executivo montado com narrativa de fechamento" status="Slides gerando">
-      {[0, 1, 2, 3, 4, 5].map((item) => (
-        <FloatingMiniCard index={item} key={item} kind="slide" />
+    <div
+      style={{
+        background: muted ? 'rgba(255,255,255,0.54)' : darkSlide ? item.accent : '#ffffff',
+        border: `1px solid ${muted ? 'rgba(211, 224, 216, 0.70)' : darkSlide ? item.accent : '#dfe7e1'}`,
+        borderRadius: muted ? '38px 28px 44px 30px' : isContract ? '34px 24px 38px 26px' : 28,
+        boxShadow: muted ? '0 16px 42px rgba(20, 24, 22, 0.07)' : '0 38px 92px rgba(20, 24, 22, 0.22)',
+        clipPath: muted || isContract ? 'polygon(5% 0, 100% 3%, 95% 100%, 0 97%)' : undefined,
+        color: darkSlide ? '#ffffff' : '#0f1512',
+        display: 'grid',
+        gap: 22,
+        height,
+        overflow: 'hidden',
+        padding: isSlide ? 38 : 34,
+        position: 'relative',
+        width,
+      }}
+    >
+      <span style={{ background: darkSlide ? 'rgba(255,255,255,0.65)' : item.accent, borderRadius: 999, display: 'block', height: 8, left: 0, position: 'absolute', right: 0, top: 0 }} />
+      <div style={{ alignItems: 'start', display: 'flex', justifyContent: 'space-between', gap: 18 }}>
+        <div style={{ display: 'grid', gap: 8, minWidth: 0 }}>
+          <span style={{ color: darkSlide ? 'rgba(255,255,255,0.72)' : '#65716a', fontSize: 21, fontWeight: 820, letterSpacing: 0, textTransform: 'uppercase' }}>{item.eyebrow}</span>
+          <strong style={{ color: darkSlide ? '#ffffff' : '#0f1512', fontSize: isSlide ? 38 : 42, letterSpacing: 0, lineHeight: 1.02 }}>{item.title}</strong>
+        </div>
+        <span style={{ alignItems: 'center', background: darkSlide ? 'rgba(255,255,255,0.16)' : '#f3f7f4', border: `1px solid ${darkSlide ? 'rgba(255,255,255,0.20)' : '#dfe7e1'}`, borderRadius: 18, color: darkSlide ? '#ffffff' : item.accent, display: 'flex', flex: '0 0 auto', fontSize: 23, fontWeight: 850, height: 64, justifyContent: 'center', padding: '0 18px' }}>
+          {item.secondary}
+        </span>
+      </div>
+      <VerticalPipelineVisual index={index} item={item} />
+    </div>
+  )
+}
+
+function VerticalPipelineTag({ item, opacity }: { item: VerticalPipelineItem; opacity: number }) {
+  return (
+    <div
+      style={{
+        alignItems: 'center',
+        background: '#ffffff',
+        border: `1px solid ${item.accent}`,
+        borderRadius: 999,
+        boxShadow: '0 20px 48px rgba(20, 24, 22, 0.14)',
+        color: '#0f1512',
+        display: 'flex',
+        gap: 12,
+        left: '50%',
+        opacity,
+        padding: '16px 22px 16px 17px',
+        position: 'absolute',
+        top: '50%',
+        transform: `translate(210px, -94px) scale(${0.94 + opacity * 0.06})`,
+        zIndex: 32,
+      }}
+    >
+      <span style={{ background: item.accent, borderRadius: 999, display: 'block', height: 18, width: 18 }} />
+      <span style={{ color: '#65716a', fontSize: 20, fontWeight: 780 }}>Status</span>
+      <strong style={{ color: item.accent, fontSize: 28, letterSpacing: 0 }}>{item.status}</strong>
+    </div>
+  )
+}
+
+function FloatingPipelineArtifact({ index, items }: { index: number; items: VerticalPipelineItem[] }) {
+  const frame = useCurrentFrame()
+  const item = items[index % items.length]
+  const driftY = Math.sin((frame + index * 37) / 64) * 18
+  const driftX = Math.cos((frame + index * 29) / 72) * 14
+  const top = [130, 220, 360, 540, 690, 830, 1010, 1180][index % 8]
+  const left = [64, 790, 142, 730, 34, 850, 210, 690][index % 8]
+  const rotation = [-14, 9, -7, 15, 6, -11, 12, -5][index % 8]
+  const bend = [-32, 28, -24, 34, 22, -30, 32, -20][index % 8]
+  const tilt = [13, -16, 18, -12, 15, -14, 17, -11][index % 8]
+
+  return (
+    <div
+      style={{
+        filter: 'blur(2.1px)',
+        left,
+        opacity: 0.18,
+        position: 'absolute',
+        top,
+        transform: `translate(${driftX}px, ${driftY}px) perspective(620px) rotate(${rotation}deg) rotateY(${bend}deg) rotateX(${tilt}deg) skewY(${bend / 6}deg) scale(0.20)`,
+        transformStyle: 'preserve-3d',
+      }}
+    >
+      <VerticalPipelineArtifact index={index} item={item} muted />
+    </div>
+  )
+}
+
+function VerticalArtifactPipelineScene({ footer, items, status }: { footer: string; items: VerticalPipelineItem[]; status: string }) {
+  const frame = useCurrentFrame()
+  const cycle = 138
+  const activeIndex = Math.floor(frame / cycle) % items.length
+  const local = (frame % cycle) / cycle
+  const scan = progress(frame % cycle, 34, 78)
+
+  return (
+    <PremiumSceneShell footer={footer} status={status}>
+      {[0, 1, 2, 3, 4, 5, 6, 7].map((item) => (
+        <FloatingPipelineArtifact index={item} items={items} key={item} />
       ))}
-      <div style={{ height: 650, left: '50%', position: 'absolute', top: '54%', transform: 'translate(-50%, -50%)', width: 1080, zIndex: 20 }}>
-        {['Fechamento Maio', 'Indicadores', 'Riscos', 'Plano de ação'].map((title, index) => (
-          <SlideArtifact index={index} key={title} title={title} />
-        ))}
+      <div style={{ height: 1320, left: '50%', position: 'absolute', top: '50%', transform: 'translate(-50%, -50%)', width: 860, zIndex: 20 }}>
+        <div style={{ background: 'linear-gradient(180deg, rgba(34,95,66,0), rgba(34,95,66,0.18), rgba(34,95,66,0))', bottom: 0, left: '50%', position: 'absolute', top: 0, transform: 'translateX(-50%)', width: 2 }} />
+        <div style={{ background: '#225f42', borderRadius: 999, boxShadow: '0 0 34px rgba(34, 95, 66, 0.36)', height: 5, left: 66, opacity: 0.78, position: 'absolute', right: 66, top: 486, transform: `translateY(${scan * 86}px)` }} />
+
+        {[-2, -1, 0, 1, 2].map((slot) => {
+          const unit = local + slot * 0.39
+          if (unit < -0.06 || unit > 1.08) return null
+
+          const itemIndex = (activeIndex + slot + items.length) % items.length
+          const item = items[itemIndex]
+          const centerScore = 1 - Math.min(Math.abs(unit - 0.5) / 0.5, 1)
+          const y = interpolate(unit, [0, 0.28, 0.5, 0.74, 1], [-840, -405, 0, 430, 850], {
+            extrapolateLeft: 'clamp',
+            extrapolateRight: 'clamp',
+          })
+          const scale = 0.68 + centerScore * 0.34
+          const opacity = 0.26 + centerScore * 0.74
+          const rotation = (itemIndex % 2 === 0 ? -1 : 1) * (1.8 - centerScore * 1.2)
+          const tagOpacity = interpolate(unit, [0.36, 0.45, 0.64, 0.73], [0, 1, 1, 0], {
+            extrapolateLeft: 'clamp',
+            extrapolateRight: 'clamp',
+          })
+
+          return (
+            <div
+              key={`${slot}-${item.title}`}
+              style={{
+                filter: centerScore > 0.72 ? 'blur(0)' : 'blur(0.7px)',
+                left: '50%',
+                opacity,
+                position: 'absolute',
+                top: '50%',
+                transform: `translate(-50%, -50%) translateY(${y}px) rotate(${rotation}deg) scale(${scale})`,
+                zIndex: Math.round(centerScore * 20) + 10,
+              }}
+            >
+              <VerticalPipelineArtifact index={itemIndex} item={item} />
+              <VerticalPipelineTag item={item} opacity={tagOpacity} />
+            </div>
+          )
+        })}
       </div>
     </PremiumSceneShell>
   )
@@ -635,46 +640,61 @@ export function ExpenseClassificationAnimation() {
 }
 
 export function BankReconciliationAnimation() {
-  return <BankReconciliationScene />
+  return (
+    <VerticalArtifactPipelineScene
+      footer="Extrato e ERP pareados em esteira continua"
+      items={reconciliationPipelineItems}
+      status="Conciliação automática"
+    />
+  )
 }
 
 export function DashboardsAnimation() {
-  return <DashboardStudioScene />
+  return (
+    <VerticalArtifactPipelineScene
+      footer="Dashboards financeiros renderizados em sequencia"
+      items={dashboardPipelineItems}
+      status="BI workspace renderizando"
+    />
+  )
 }
 
 export function ManagementReportAnimation() {
   return (
-    <ArtifactDocumentScene
+    <VerticalArtifactPipelineScene
       footer="Relatorio Word gerado em paginas executivas"
-      kind="report"
+      items={reportPipelineItems}
       status="Relatorio gerencial escrevendo"
-      titles={['Resumo executivo', 'Variacoes do mes', 'Plano de acao', 'Anexo financeiro']}
     />
   )
 }
 
 export function ClosingSlidesAnimation() {
-  return <SlideDeckScene />
+  return (
+    <VerticalArtifactPipelineScene
+      footer="Deck executivo montado em esteira vertical"
+      items={slidePipelineItems}
+      status="Slides gerando"
+    />
+  )
 }
 
 export function ContractManagementAnimation() {
   return (
-    <ArtifactDocumentScene
+    <VerticalArtifactPipelineScene
       footer="Contratos monitorados por risco, vencimento e reajuste"
-      kind="contract"
+      items={contractPipelineItems}
       status="Gestao contratual ativa"
-      titles={['Frete Sul', 'ERP Omie', 'Cloud AWS', 'Software BI']}
     />
   )
 }
 
 export function AccountingEntryAnimation() {
   return (
-    <ArtifactDocumentScene
+    <VerticalArtifactPipelineScene
       footer="Lancamento preparado, validado e enviado ao ERP"
-      kind="entry"
+      items={entryPipelineItems}
       status="ERP actions executando"
-      titles={['Preview contabil', 'Validacao fiscal', 'Registro no ERP', 'Comprovante']}
     />
   )
 }
