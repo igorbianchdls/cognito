@@ -7,6 +7,14 @@ export const MCP_OPERATIONS_DEMO_DURATION = MCP_SINGLE_ANIMATION_DURATION
 
 const FONT_STACK = 'Geist, "Segoe UI", -apple-system, BlinkMacSystemFont, "SF Pro Text", Arial, sans-serif'
 
+type IntegrationNode = {
+  color: string
+  label: string
+  side: 'left' | 'right'
+  x: number
+  y: number
+}
+
 type ClassificationDocumentItem = {
   vendor: string
   amount: string
@@ -119,6 +127,15 @@ const entryPipelineItems: VerticalPipelineItem[] = [
   { kind: 'entry', eyebrow: 'Etapa 04', title: 'Comprovante', metric: 'Pendente aprovacao', status: 'Gerado', accent: '#c28f2c', secondary: 'PDF' },
 ]
 
+const integrationNodes: IntegrationNode[] = [
+  { color: '#ffe01b', label: 'chimp', side: 'left', x: 175, y: 720 },
+  { color: '#ffffff', label: 'G', side: 'left', x: 172, y: 960 },
+  { color: '#635bff', label: 'S', side: 'left', x: 176, y: 1188 },
+  { color: '#ffffff', label: '31', side: 'right', x: 904, y: 720 },
+  { color: '#ffffff', label: 'cloud', side: 'right', x: 906, y: 960 },
+  { color: '#ffffff', label: 'slack', side: 'right', x: 904, y: 1188 },
+]
+
 function progress(frame: number, start: number, end: number) {
   return interpolate(frame, [start, end], [0, 1], {
     extrapolateLeft: 'clamp',
@@ -140,6 +157,139 @@ function CognitoBrand() {
         <span style={{ color: '#65716a', fontSize: 19, fontWeight: 700, letterSpacing: 0 }}>Operations OS</span>
       </div>
     </div>
+  )
+}
+
+function IntegrationLogo({ node }: { node: IntegrationNode }) {
+  return (
+    <div
+      style={{
+        alignItems: 'center',
+        background: node.color,
+        borderRadius: 999,
+        boxShadow: '0 18px 42px rgba(15, 23, 42, 0.12)',
+        color: node.label === 'G' ? '#4285f4' : node.label === 'slack' ? '#36c5f0' : node.label === 'cloud' ? '#1683d8' : node.label === '31' ? '#1a73e8' : '#ffffff',
+        display: 'flex',
+        fontSize: node.label === 'chimp' ? 30 : 32,
+        fontWeight: 900,
+        height: 72,
+        justifyContent: 'center',
+        left: node.x - 36,
+        position: 'absolute',
+        top: node.y - 36,
+        width: 72,
+        zIndex: 8,
+      }}
+    >
+      {node.label === 'chimp' ? (
+        <span style={{ color: '#111111', fontSize: 28 }}>@</span>
+      ) : node.label === 'cloud' ? (
+        <span style={{ color: '#1683d8', fontSize: 34 }}>~</span>
+      ) : node.label === 'slack' ? (
+        <span style={{ color: '#e01e5a', fontSize: 34 }}>*</span>
+      ) : (
+        node.label
+      )}
+    </div>
+  )
+}
+
+function AnimatedIntegrationPath({ node, index }: { node: IntegrationNode; index: number }) {
+  const frame = useCurrentFrame()
+  const centerX = 540
+  const centerY = 960
+  const joinX = node.side === 'left' ? 358 : 722
+  const p = progress(frame, 40 + index * 14, 120 + index * 14)
+  const dashOffset = -((frame * 4 + index * 18) % 60)
+  const d = `M ${node.x + (node.side === 'left' ? 46 : -46)} ${node.y} C ${node.side === 'left' ? node.x + 110 : node.x - 110} ${node.y}, ${joinX} ${centerY}, ${joinX} ${centerY} L ${centerX} ${centerY}`
+
+  return (
+    <path
+      d={d}
+      fill="none"
+      stroke="#1f74e8"
+      strokeDasharray="18 22"
+      strokeDashoffset={dashOffset}
+      strokeLinecap="round"
+      strokeWidth={8}
+      style={{ opacity: p }}
+    />
+  )
+}
+
+function IntegrationHub() {
+  const frame = useCurrentFrame()
+  const pulse = 1 + Math.sin(frame / 18) * 0.035
+
+  return (
+    <div
+      style={{
+        alignItems: 'center',
+        background: '#eef0ff',
+        border: '1px solid #d3d8ee',
+        borderRadius: 18,
+        boxShadow: '0 22px 58px rgba(31, 116, 232, 0.24)',
+        display: 'flex',
+        height: 96,
+        justifyContent: 'center',
+        left: 492,
+        position: 'absolute',
+        top: 912,
+        transform: `scale(${pulse})`,
+        width: 96,
+        zIndex: 12,
+      }}
+    >
+      <span
+        style={{
+          alignItems: 'center',
+          background: '#1769ff',
+          borderRadius: 16,
+          color: '#ffffff',
+          display: 'flex',
+          fontSize: 48,
+          fontWeight: 900,
+          height: 70,
+          justifyContent: 'center',
+          width: 70,
+        }}
+      >
+        z
+      </span>
+    </div>
+  )
+}
+
+export function IntegrationFlowAnimation() {
+  const frame = useCurrentFrame()
+  const cardIn = progress(frame, 0, 34)
+
+  return (
+    <AbsoluteFill style={{ background: '#ffffff', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <section
+        style={{
+          background: '#f8f8f8',
+          borderRadius: 26,
+          bottom: 80,
+          left: 42,
+          opacity: cardIn,
+          position: 'absolute',
+          right: 42,
+          top: 80,
+          transform: `translateY(${(1 - cardIn) * 22}px)`,
+        }}
+      >
+        <svg height="100%" style={{ left: 0, overflow: 'visible', position: 'absolute', top: 0 }} viewBox="0 0 1080 1920" width="100%">
+          {integrationNodes.map((node, index) => (
+            <AnimatedIntegrationPath index={index} key={`${node.label}-${index}`} node={node} />
+          ))}
+        </svg>
+        {integrationNodes.map((node) => (
+          <IntegrationLogo key={`${node.label}-${node.x}`} node={node} />
+        ))}
+        <IntegrationHub />
+      </section>
+    </AbsoluteFill>
   )
 }
 

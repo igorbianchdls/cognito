@@ -12,6 +12,7 @@ import {
   ContractManagementAnimation,
   DashboardsAnimation,
   ExpenseClassificationAnimation,
+  IntegrationFlowAnimation,
   ManagementReportAnimation,
   MCP_SINGLE_ANIMATION_DURATION,
 } from '@/remotion/compositions/McpOperationsDemo'
@@ -19,7 +20,7 @@ import { ExcelWorkbookMock, type ExcelMockSheet } from '@/remotion/components/Ex
 import { PdfViewerMock, type PdfMockPage } from '@/remotion/components/PdfViewerMock'
 import { PowerPointEditorMock, type PowerPointMockSlide } from '@/remotion/components/PowerPointEditorMock'
 
-type PreviewComposition = 'intro' | 'classification' | 'reconciliation' | 'dashboards' | 'report' | 'slides' | 'contracts' | 'entry' | 'powerpoint' | 'pdf' | 'excel'
+type PreviewComposition = 'intro' | 'classification' | 'reconciliation' | 'dashboards' | 'report' | 'slides' | 'contracts' | 'entry' | 'powerpoint' | 'pdf' | 'excel' | 'integration'
 
 type AnimationOption = {
   component: ComponentType
@@ -162,6 +163,7 @@ const animationOptions: AnimationOption[] = [
   { component: PowerPointPreviewAnimation, label: 'PowerPoint', value: 'powerpoint' },
   { component: PdfPreviewAnimation, label: 'PDF', value: 'pdf' },
   { component: ExcelPreviewAnimation, label: 'Excel', value: 'excel' },
+  { component: IntegrationFlowAnimation, label: 'Integração', value: 'integration' },
 ]
 
 export default function RemotionPreviewPage() {
