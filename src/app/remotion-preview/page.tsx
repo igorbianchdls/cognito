@@ -1,17 +1,44 @@
 'use client'
 
 import { Player } from '@remotion/player'
+import type { ComponentType } from 'react'
 import { useState } from 'react'
 
 import { McpChartIntro, type McpTemplate } from '@/remotion/compositions/McpChartIntro'
-import { McpOperationsDemo, MCP_OPERATIONS_DEMO_DURATION } from '@/remotion/compositions/McpOperationsDemo'
+import {
+  AccountingEntryAnimation,
+  BankReconciliationAnimation,
+  ClosingSlidesAnimation,
+  ContractManagementAnimation,
+  DashboardsAnimation,
+  ExpenseClassificationAnimation,
+  ManagementReportAnimation,
+  MCP_SINGLE_ANIMATION_DURATION,
+} from '@/remotion/compositions/McpOperationsDemo'
 
-type PreviewComposition = 'intro' | 'operations'
+type PreviewComposition = 'intro' | 'classification' | 'reconciliation' | 'dashboards' | 'report' | 'slides' | 'contracts' | 'entry'
+
+type AnimationOption = {
+  component: ComponentType
+  label: string
+  value: Exclude<PreviewComposition, 'intro'>
+}
+
+const animationOptions: AnimationOption[] = [
+  { component: ExpenseClassificationAnimation, label: 'Classificação', value: 'classification' },
+  { component: BankReconciliationAnimation, label: 'Conciliação', value: 'reconciliation' },
+  { component: DashboardsAnimation, label: 'Dashboards', value: 'dashboards' },
+  { component: ManagementReportAnimation, label: 'Relatório', value: 'report' },
+  { component: ClosingSlidesAnimation, label: 'Slides', value: 'slides' },
+  { component: ContractManagementAnimation, label: 'Contratos', value: 'contracts' },
+  { component: AccountingEntryAnimation, label: 'Lançamento', value: 'entry' },
+]
 
 export default function RemotionPreviewPage() {
-  const [composition, setComposition] = useState<PreviewComposition>('operations')
+  const [composition, setComposition] = useState<PreviewComposition>('classification')
   const [template, setTemplate] = useState<McpTemplate>('chatgpt')
-  const isOperationsDemo = composition === 'operations'
+  const isIntro = composition === 'intro'
+  const selectedAnimation = animationOptions.find((option) => option.value === composition) || animationOptions[0]
 
   return (
     <main
@@ -66,22 +93,22 @@ export default function RemotionPreviewPage() {
                 background: '#e2e8f0',
                 borderRadius: 8,
                 display: 'inline-flex',
+                flexWrap: 'wrap',
                 gap: 2,
+                justifyContent: 'flex-end',
+                maxWidth: 310,
                 padding: 3,
               }}
             >
-              {([
-                ['operations', 'Operations'],
-                ['intro', 'Intro'],
-              ] as const).map(([value, label]) => (
+              {[{ label: 'Intro', value: 'intro' as const }, ...animationOptions].map((option) => (
                 <button
-                  key={value}
-                  onClick={() => setComposition(value)}
+                  key={option.value}
+                  onClick={() => setComposition(option.value)}
                   style={{
-                    background: composition === value ? '#ffffff' : 'transparent',
+                    background: composition === option.value ? '#ffffff' : 'transparent',
                     border: 0,
                     borderRadius: 6,
-                    color: composition === value ? '#0f172a' : '#64748b',
+                    color: composition === option.value ? '#0f172a' : '#64748b',
                     cursor: 'pointer',
                     fontSize: 12,
                     fontWeight: 700,
@@ -89,11 +116,11 @@ export default function RemotionPreviewPage() {
                   }}
                   type="button"
                 >
-                  {label}
+                  {option.label}
                 </button>
               ))}
             </div>
-            {!isOperationsDemo ? (
+            {isIntro ? (
               <div
                 style={{
                   background: '#e2e8f0',
@@ -137,21 +164,7 @@ export default function RemotionPreviewPage() {
             overflow: 'hidden',
           }}
         >
-          {isOperationsDemo ? (
-            <Player
-              component={McpOperationsDemo}
-              compositionHeight={1920}
-              compositionWidth={1080}
-              controls
-              durationInFrames={MCP_OPERATIONS_DEMO_DURATION}
-              fps={30}
-              style={{
-                aspectRatio: '9 / 16',
-                maxHeight: '82vh',
-                width: '100%',
-              }}
-            />
-          ) : (
+          {isIntro ? (
             <Player
               component={McpChartIntro}
               compositionHeight={1920}
@@ -160,6 +173,20 @@ export default function RemotionPreviewPage() {
               durationInFrames={4200}
               fps={30}
               inputProps={{ template }}
+              style={{
+                aspectRatio: '9 / 16',
+                maxHeight: '82vh',
+                width: '100%',
+              }}
+            />
+          ) : (
+            <Player
+              component={selectedAnimation.component}
+              compositionHeight={1920}
+              compositionWidth={1080}
+              controls
+              durationInFrames={MCP_SINGLE_ANIMATION_DURATION}
+              fps={30}
               style={{
                 aspectRatio: '9 / 16',
                 maxHeight: '82vh',

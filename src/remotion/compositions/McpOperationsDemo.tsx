@@ -1,21 +1,19 @@
-import type { CSSProperties, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
-import { BarChart3, CheckCircle2, FileText, LayoutDashboard, Menu, PenLine, Presentation, ReceiptText, RefreshCcw, ShieldCheck } from 'lucide-react'
+import { CheckCircle2, FileText, LayoutDashboard, PenLine, Presentation, ReceiptText, RefreshCcw, ShieldCheck } from 'lucide-react'
 
 import type {
   AutomationStructuredContent,
-  DashboardListStructuredContent,
   DataResultStructuredContent,
 } from '@/products/mcp-apps/web/src/types/toolResult'
 import { AnimatedMcpAutomationView } from '@/remotion/components/AnimatedMcpAutomationView'
-import { AnimatedMcpDashboardListView } from '@/remotion/components/AnimatedMcpDashboardListView'
 import { AnimatedMcpDocumentView, type DocumentPreviewData } from '@/remotion/components/AnimatedMcpDocumentView'
 import { AnimatedMcpSlideDeckView, type SlideDeckPreviewData } from '@/remotion/components/AnimatedMcpSlideDeckView'
 import { AnimatedMcpTableView } from '@/remotion/components/AnimatedMcpTableView'
 
-export const MCP_OPERATIONS_DEMO_DURATION = 4200
+export const MCP_SINGLE_ANIMATION_DURATION = 1080
+export const MCP_OPERATIONS_DEMO_DURATION = MCP_SINGLE_ANIMATION_DURATION
 
-const SCENE_DURATION = 600
 const FONT_STACK = 'Geist, "Segoe UI", -apple-system, BlinkMacSystemFont, "SF Pro Text", Arial, sans-serif'
 
 const expenseClassificationData = {
@@ -50,18 +48,6 @@ const bankReconciliationData = {
     { data: '2026-05-28', banco: 'Itaú', historico: 'PIX Cliente Oeste', valor: 17300, match: 'NF-9044', status: 'Conciliado' },
   ],
 } satisfies DataResultStructuredContent
-
-const dashboardListData = {
-  ok: true,
-  tool: 'dashboards',
-  view: 'dashboard_list',
-  title: 'Dashboards operacionais',
-  dashboards: [
-    { id: 'dash-fechamento', title: 'Fechamento Financeiro', slug: 'fechamento-financeiro', status: 'published', current_draft_version: 6, current_published_version: 5, updated_at: '2026-05-28T18:45:00.000Z' },
-    { id: 'dash-despesas', title: 'Despesas por Centro', slug: 'despesas-centro', status: 'draft', current_draft_version: 3, current_published_version: 2, updated_at: '2026-05-28T16:10:00.000Z' },
-    { id: 'dash-caixa', title: 'Caixa e Conciliação', slug: 'caixa-conciliacao', status: 'published', current_draft_version: 8, current_published_version: 8, updated_at: '2026-05-27T20:20:00.000Z' },
-  ],
-} satisfies DashboardListStructuredContent
 
 const managementReportData = {
   title: 'Relatório gerencial',
@@ -134,205 +120,112 @@ const accountingEntryData = {
   count: 4,
 } satisfies AutomationStructuredContent
 
-type DemoScene = {
+type Metric = {
+  label: string
+  value: string
+}
+
+type ProductAnimationShellProps = {
+  eyebrow: string
   title: string
-  request: string
-  status: string
+  subtitle: string
   icon: ReactNode
-  startFrame: number
-  result: (startFrame: number) => ReactNode
+  metrics: Metric[]
+  children: ReactNode
+  footer: string
 }
 
-function sceneOpacity(frame: number, start: number) {
-  return interpolate(frame, [start, start + 26, start + SCENE_DURATION - 46, start + SCENE_DURATION], [0, 1, 1, 0], {
+function progress(frame: number, start: number, end: number) {
+  return interpolate(frame, [start, end], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   })
 }
 
-function sceneY(frame: number, start: number) {
-  return interpolate(frame, [start, start + 36], [40, 0], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  })
+function appear(frame: number, start: number, distance = 28) {
+  const p = progress(frame, start, start + 28)
+  return {
+    opacity: p,
+    transform: `translateY(${(1 - p) * distance}px)`,
+  }
 }
 
-function CognitoStatusBar() {
+function CognitoBrand() {
   return (
-    <div style={{ alignItems: 'center', display: 'flex', height: 78, justifyContent: 'space-between', padding: '24px 64px 0' }}>
-      <div style={{ color: '#0f1512', fontSize: 39, fontWeight: 760, letterSpacing: 0 }}>19:12</div>
-      <div style={{ alignItems: 'center', display: 'flex', gap: 14 }}>
-        <div style={{ alignItems: 'flex-end', display: 'flex', gap: 4, height: 23 }}>
-          {[11, 15, 20, 26].map((height) => (
-            <span key={height} style={{ background: '#0f1512', borderRadius: 3, display: 'block', height, width: 7 }} />
-          ))}
-        </div>
-        <span style={{ background: '#0f1512', borderRadius: 999, display: 'block', height: 22, width: 34 }} />
-        <div style={{ border: '2px solid #0f1512', borderRadius: 8, height: 30, position: 'relative', width: 58 }}>
-          <span style={{ background: '#0f1512', borderRadius: 5, display: 'block', height: 20, left: 5, position: 'absolute', top: 3, width: 39 }} />
-        </div>
+    <div style={{ alignItems: 'center', display: 'flex', gap: 15 }}>
+      <span style={{ display: 'grid', gap: 5, gridTemplateColumns: 'repeat(2, 18px)' }}>
+        <span style={{ background: '#225f42', borderRadius: 6, display: 'block', height: 18, width: 18 }} />
+        <span style={{ background: '#8aa895', borderRadius: 6, display: 'block', height: 18, width: 18 }} />
+        <span style={{ background: '#c9d8ce', borderRadius: 6, display: 'block', height: 18, width: 18 }} />
+        <span style={{ background: '#225f42', borderRadius: 6, display: 'block', height: 18, width: 18 }} />
+      </span>
+      <div style={{ display: 'grid', gap: 2 }}>
+        <strong style={{ color: '#0f1512', fontSize: 39, letterSpacing: 0, lineHeight: 1 }}>Cognito</strong>
+        <span style={{ color: '#65716a', fontSize: 19, fontWeight: 700, letterSpacing: 0 }}>Operations OS</span>
       </div>
     </div>
   )
 }
 
-function CognitoHeader() {
+function MetricTile({ metric, active = false }: { metric: Metric; active?: boolean }) {
   return (
-    <header style={{ alignItems: 'center', display: 'flex', height: 126, justifyContent: 'space-between', padding: '0 48px' }}>
-      <Menu color="#314139" size={46} strokeWidth={2.4} />
-      <div style={{ alignItems: 'center', display: 'flex', gap: 14 }}>
-        <span style={{ background: '#225f42', borderRadius: 13, display: 'block', height: 42, width: 42 }} />
-        <strong style={{ color: '#0f1512', fontSize: 43, letterSpacing: 0 }}>Cognito</strong>
-      </div>
-      <div style={{ alignItems: 'center', background: '#e8eee9', borderRadius: 999, color: '#225f42', display: 'flex', fontSize: 26, fontWeight: 800, height: 58, justifyContent: 'center', width: 58 }}>
-        IA
-      </div>
-    </header>
-  )
-}
-
-function TaskPill({ children }: { children: ReactNode }) {
-  return (
-    <span style={{ alignItems: 'center', background: '#eef4ef', border: '1px solid #dbe5dd', borderRadius: 999, color: '#3d4a43', display: 'inline-flex', fontSize: 24, fontWeight: 700, gap: 8, padding: '12px 18px' }}>
-      <CheckCircle2 color="#225f42" size={25} strokeWidth={2.6} />
-      {children}
-    </span>
-  )
-}
-
-function DemoSceneCard({ scene, index }: { scene: DemoScene; index: number }) {
-  const frame = useCurrentFrame()
-  const localFrame = Math.max(0, frame - scene.startFrame)
-  const opacity = sceneOpacity(frame, scene.startFrame)
-  const y = sceneY(frame, scene.startFrame)
-  const iconScale = interpolate(localFrame, [0, 28, 52], [0.86, 1.08, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  })
-
-  return (
-    <AbsoluteFill
+    <div
       style={{
-        opacity,
-        padding: '220px 52px 54px',
-        transform: `translateY(${y}px)`,
+        background: active ? '#225f42' : '#f7faf7',
+        border: `1px solid ${active ? '#225f42' : '#dfe7e1'}`,
+        borderRadius: 16,
+        color: active ? '#ffffff' : '#17201b',
+        display: 'grid',
+        gap: 6,
+        minHeight: 92,
+        padding: '15px 17px',
       }}
     >
-      <section style={{ display: 'grid', gap: 28 }}>
-        <div style={{ alignItems: 'flex-start', display: 'grid', gap: 22 }}>
-          <div style={{ alignItems: 'center', display: 'flex', gap: 18 }}>
-            <span style={{ alignItems: 'center', background: '#225f42', borderRadius: 24, color: '#ffffff', display: 'flex', height: 78, justifyContent: 'center', transform: `scale(${iconScale})`, width: 78 }}>
-              {scene.icon}
-            </span>
-            <div style={{ display: 'grid', gap: 3 }}>
-              <span style={{ color: '#65716a', fontSize: 24, fontWeight: 700 }}>Cena {String(index + 1).padStart(2, '0')}</span>
-              <h1 style={{ color: '#0f1512', fontSize: 58, fontWeight: 780, letterSpacing: 0, lineHeight: 1.02, margin: 0 }}>
-                {scene.title}
-              </h1>
-            </div>
-          </div>
-
-          <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 28, boxShadow: '0 18px 38px rgba(20, 24, 22, 0.09)', display: 'grid', gap: 16, padding: '25px 28px' }}>
-            <p style={{ color: '#17201b', fontSize: 36, lineHeight: 1.26, margin: 0 }}>{scene.request}</p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-              <TaskPill>{scene.status}</TaskPill>
-              <TaskPill>Dados sincronizados</TaskPill>
-            </div>
-          </div>
-        </div>
-
-        <div style={{ background: '#ffffff', border: '1px solid #dde6df', borderRadius: 24, boxShadow: '0 24px 55px rgba(20, 24, 22, 0.12)', overflow: 'hidden' }}>
-          {scene.result(scene.startFrame + 86)}
-        </div>
-      </section>
-    </AbsoluteFill>
-  )
-}
-
-const scenes: DemoScene[] = [
-  {
-    title: 'Classificação de despesas',
-    request: 'Classifique automaticamente as despesas novas por categoria, centro de custo e confiança.',
-    status: '5 despesas analisadas',
-    icon: <ReceiptText size={42} strokeWidth={2.4} />,
-    startFrame: 0,
-    result: (startFrame) => <AnimatedMcpTableView data={expenseClassificationData} startFrame={startFrame} />,
-  },
-  {
-    title: 'Conciliação bancária',
-    request: 'Concilie os extratos com os títulos do ERP e destaque divergências para revisão.',
-    status: '4 matches encontrados',
-    icon: <RefreshCcw size={42} strokeWidth={2.4} />,
-    startFrame: SCENE_DURATION,
-    result: (startFrame) => <AnimatedMcpTableView data={bankReconciliationData} startFrame={startFrame} />,
-  },
-  {
-    title: 'Dashboards',
-    request: 'Liste os dashboards disponíveis e abra a prévia do fechamento financeiro.',
-    status: '3 dashboards prontos',
-    icon: <LayoutDashboard size={42} strokeWidth={2.4} />,
-    startFrame: SCENE_DURATION * 2,
-    result: (startFrame) => <AnimatedMcpDashboardListView data={dashboardListData} startFrame={startFrame} />,
-  },
-  {
-    title: 'Relatório gerencial',
-    request: 'Gere um relatório em Word com resumo executivo, variações e recomendações.',
-    status: 'Documento montado',
-    icon: <FileText size={42} strokeWidth={2.4} />,
-    startFrame: SCENE_DURATION * 3,
-    result: (startFrame) => <AnimatedMcpDocumentView data={managementReportData} startFrame={startFrame} />,
-  },
-  {
-    title: 'Apresentação de fechamento',
-    request: 'Transforme o fechamento mensal em uma apresentação curta para diretoria.',
-    status: '3 slides criados',
-    icon: <Presentation size={42} strokeWidth={2.4} />,
-    startFrame: SCENE_DURATION * 4,
-    result: (startFrame) => <AnimatedMcpSlideDeckView data={closingDeckData} startFrame={startFrame} />,
-  },
-  {
-    title: 'Gestão de contrato',
-    request: 'Monitore contratos críticos e avise quando houver renovação, reajuste ou risco.',
-    status: '4 contratos monitorados',
-    icon: <ShieldCheck size={42} strokeWidth={2.4} />,
-    startFrame: SCENE_DURATION * 5,
-    result: (startFrame) => <AnimatedMcpAutomationView data={contractManagementData} startFrame={startFrame} />,
-  },
-  {
-    title: 'Fazer lançamento',
-    request: 'Crie o lançamento contábil da despesa conciliada e deixe pendente para aprovação.',
-    status: 'Lançamento criado',
-    icon: <PenLine size={42} strokeWidth={2.4} />,
-    startFrame: SCENE_DURATION * 6,
-    result: (startFrame) => <AnimatedMcpAutomationView data={accountingEntryData} startFrame={startFrame} />,
-  },
-]
-
-function ProgressRail() {
-  const frame = useCurrentFrame()
-
-  return (
-    <div style={{ bottom: 34, display: 'flex', gap: 8, left: 52, position: 'absolute', right: 52 }}>
-      {scenes.map((scene) => {
-        const active = frame >= scene.startFrame && frame < scene.startFrame + SCENE_DURATION
-        return (
-          <span
-            key={scene.title}
-            style={{
-              background: active ? '#225f42' : '#d9e3dc',
-              borderRadius: 999,
-              display: 'block',
-              flex: active ? 1.7 : 1,
-              height: 8,
-            }}
-          />
-        )
-      })}
+      <span style={{ color: active ? 'rgba(255,255,255,0.72)' : '#65716a', fontSize: 20, fontWeight: 700, lineHeight: 1 }}>
+        {metric.label}
+      </span>
+      <strong style={{ fontSize: 30, letterSpacing: 0, lineHeight: 1 }}>{metric.value}</strong>
     </div>
   )
 }
 
-export function McpOperationsDemo() {
+function FinalBadge({ text }: { text: string }) {
+  const frame = useCurrentFrame()
+  const p = progress(frame, 850, 910)
+
+  return (
+    <div
+      style={{
+        alignItems: 'center',
+        background: '#ffffff',
+        border: '1px solid #dbe5dd',
+        borderRadius: 999,
+        bottom: 48,
+        boxShadow: '0 16px 34px rgba(20, 24, 22, 0.10)',
+        color: '#225f42',
+        display: 'flex',
+        fontSize: 25,
+        fontWeight: 800,
+        gap: 10,
+        left: 52,
+        opacity: p,
+        padding: '16px 22px',
+        position: 'absolute',
+        transform: `translateY(${(1 - p) * 16}px)`,
+      }}
+    >
+      <CheckCircle2 size={28} strokeWidth={2.5} />
+      {text}
+    </div>
+  )
+}
+
+function ProductAnimationShell({ eyebrow, title, subtitle, icon, metrics, children, footer }: ProductAnimationShellProps) {
+  const frame = useCurrentFrame()
+  const headerStyle = appear(frame, 8)
+  const heroStyle = appear(frame, 44)
+  const resultStyle = appear(frame, 210, 34)
+
   return (
     <AbsoluteFill
       style={{
@@ -342,18 +235,268 @@ export function McpOperationsDemo() {
         overflow: 'hidden',
       }}
     >
-      <CognitoStatusBar />
-      <CognitoHeader />
-      <div style={{ bottom: 0, left: 0, position: 'absolute', right: 0, top: 0 }}>
-        {scenes.map((scene, index) => (
-          <DemoSceneCard key={scene.title} index={index} scene={scene} />
-        ))}
+      <header style={{ alignItems: 'center', display: 'flex', height: 128, justifyContent: 'space-between', padding: '36px 52px 0', ...headerStyle }}>
+        <CognitoBrand />
+        <div style={{ alignItems: 'center', background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 18, color: '#314139', display: 'flex', fontSize: 22, fontWeight: 800, gap: 10, height: 58, justifyContent: 'center', padding: '0 18px' }}>
+          <span style={{ background: '#22a06b', borderRadius: 999, display: 'block', height: 12, width: 12 }} />
+          Live
+        </div>
+      </header>
+
+      <main style={{ display: 'grid', gap: 24, padding: '88px 52px 0' }}>
+        <section style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 30, boxShadow: '0 22px 52px rgba(20, 24, 22, 0.10)', display: 'grid', gap: 22, padding: '30px 32px', ...heroStyle }}>
+          <div style={{ alignItems: 'center', display: 'flex', gap: 18 }}>
+            <span style={{ alignItems: 'center', background: '#225f42', borderRadius: 24, color: '#ffffff', display: 'flex', flex: '0 0 auto', height: 80, justifyContent: 'center', width: 80 }}>
+              {icon}
+            </span>
+            <div style={{ display: 'grid', gap: 6, minWidth: 0 }}>
+              <span style={{ color: '#65716a', fontSize: 22, fontWeight: 800, letterSpacing: 0, textTransform: 'uppercase' }}>
+                {eyebrow}
+              </span>
+              <h1 style={{ color: '#0f1512', fontSize: 55, fontWeight: 780, letterSpacing: 0, lineHeight: 1.02, margin: 0 }}>
+                {title}
+              </h1>
+            </div>
+          </div>
+
+          <p style={{ color: '#3d4a43', fontSize: 30, lineHeight: 1.3, margin: 0 }}>{subtitle}</p>
+
+          <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1fr 1fr 1fr' }}>
+            {metrics.map((metric, index) => (
+              <MetricTile active={index === 0} key={metric.label} metric={metric} />
+            ))}
+          </div>
+        </section>
+
+        <section style={{ background: '#ffffff', border: '1px solid #dde6df', borderRadius: 24, boxShadow: '0 24px 55px rgba(20, 24, 22, 0.12)', overflow: 'hidden', ...resultStyle }}>
+          {children}
+        </section>
+      </main>
+
+      <div style={{ bottom: 62, color: '#65716a', fontSize: 24, fontWeight: 700, position: 'absolute', right: 52 }}>
+        {footer}
       </div>
-      <div style={{ bottom: 70, color: '#65716a', fontSize: 24, fontWeight: 700, left: 52, position: 'absolute' }}>
-        MCP Apps · Operações financeiras
-      </div>
-      <BarChart3 color="#9eaba3" size={38} strokeWidth={2.4} style={{ bottom: 62, position: 'absolute', right: 52 }} />
-      <ProgressRail />
+      <FinalBadge text="Entrega pronta" />
     </AbsoluteFill>
   )
+}
+
+function DashboardThumbnail({ title, metric, index }: { title: string; metric: string; index: number }) {
+  const frame = useCurrentFrame()
+  const p = progress(frame, 230 + index * 28, 290 + index * 28)
+  const active = frame > 430 + index * 25
+
+  return (
+    <article
+      style={{
+        background: '#ffffff',
+        border: `1px solid ${active ? '#225f42' : '#dfe7e1'}`,
+        borderRadius: 18,
+        boxShadow: active ? '0 22px 38px rgba(34, 95, 66, 0.18)' : '0 16px 34px rgba(20, 24, 22, 0.10)',
+        display: 'grid',
+        gap: 12,
+        opacity: p,
+        overflow: 'hidden',
+        padding: 14,
+        transform: `translateY(${(1 - p) * 28}px) scale(${active ? 1.02 : 1})`,
+      }}
+    >
+      <div
+        style={{
+          background: 'linear-gradient(135deg, #f8faf8 0%, #edf4ef 100%)',
+          border: '1px solid #dfe7e1',
+          borderRadius: 14,
+          display: 'grid',
+          gap: 10,
+          minHeight: 210,
+          padding: 13,
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <span style={{ background: '#225f42', borderRadius: 999, display: 'block', height: 16, width: 92 }} />
+          <span style={{ background: '#c9d8ce', borderRadius: 999, display: 'block', height: 16, width: 42 }} />
+        </div>
+        <div style={{ display: 'grid', gap: 8, gridTemplateColumns: '1fr 1fr' }}>
+          <span style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 10, height: 46 }} />
+          <span style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 10, height: 46 }} />
+        </div>
+        <div style={{ alignItems: 'end', display: 'flex', gap: 6, height: 78 }}>
+          {[44, 62, 38, 72, 54, 84].map((height, barIndex) => (
+            <span
+              key={`${height}-${barIndex}`}
+              style={{
+                background: barIndex === index % 6 ? '#225f42' : '#9bb5a4',
+                borderRadius: 5,
+                display: 'block',
+                flex: 1,
+                height,
+              }}
+            />
+          ))}
+        </div>
+        <div style={{ display: 'grid', gap: 7 }}>
+          <span style={{ background: '#d7e2da', borderRadius: 999, display: 'block', height: 9, width: '86%' }} />
+          <span style={{ background: '#e3ebe5', borderRadius: 999, display: 'block', height: 9, width: '64%' }} />
+        </div>
+      </div>
+      <div style={{ display: 'grid', gap: 4 }}>
+        <strong style={{ color: '#0f1512', fontSize: 22, lineHeight: 1.1 }}>{title}</strong>
+        <span style={{ color: '#65716a', fontSize: 18, fontWeight: 700 }}>{metric}</span>
+      </div>
+    </article>
+  )
+}
+
+function DashboardImageGallery() {
+  const dashboards = [
+    { title: 'Financeiro Executivo', metric: 'Receita, margem e caixa' },
+    { title: 'Caixa e Conciliação', metric: 'Extrato, ERP e pendências' },
+    { title: 'Despesas por Centro', metric: 'Categorias e responsáveis' },
+    { title: 'Fechamento Mensal', metric: 'DRE, fluxo e variações' },
+  ]
+
+  return (
+    <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '1fr 1fr', padding: 24 }}>
+      {dashboards.map((dashboard, index) => (
+        <DashboardThumbnail key={dashboard.title} index={index} metric={dashboard.metric} title={dashboard.title} />
+      ))}
+    </div>
+  )
+}
+
+export function ExpenseClassificationAnimation() {
+  return (
+    <ProductAnimationShell
+      eyebrow="Expense control"
+      footer="Classificação de despesas"
+      icon={<ReceiptText size={42} strokeWidth={2.4} />}
+      metrics={[
+        { label: 'Despesas', value: '5 itens' },
+        { label: 'Status', value: 'Analisado' },
+        { label: 'Revisão', value: '2 itens' },
+      ]}
+      subtitle="Motor de classificação aplicado sobre novas despesas do ERP, com categoria sugerida, confiança e fila de revisão."
+      title="Classificação de despesas"
+    >
+      <AnimatedMcpTableView data={expenseClassificationData} startFrame={260} />
+    </ProductAnimationShell>
+  )
+}
+
+export function BankReconciliationAnimation() {
+  return (
+    <ProductAnimationShell
+      eyebrow="Bank matching"
+      footer="Conciliação bancária"
+      icon={<RefreshCcw size={42} strokeWidth={2.4} />}
+      metrics={[
+        { label: 'Matches', value: '4' },
+        { label: 'Status', value: 'Conciliado' },
+        { label: 'Diverg.', value: '1' },
+      ]}
+      subtitle="Extratos e títulos são cruzados por data, valor e histórico para separar matches, pendências e divergências."
+      title="Conciliação bancária"
+    >
+      <AnimatedMcpTableView data={bankReconciliationData} startFrame={260} />
+    </ProductAnimationShell>
+  )
+}
+
+export function DashboardsAnimation() {
+  return (
+    <ProductAnimationShell
+      eyebrow="BI workspace"
+      footer="Dashboards"
+      icon={<LayoutDashboard size={42} strokeWidth={2.4} />}
+      metrics={[
+        { label: 'Dashboards', value: '4' },
+        { label: 'Status', value: 'Pronto' },
+        { label: 'Publicados', value: '2' },
+      ]}
+      subtitle="Galeria de dashboards operacionais renderizados como imagens. Nesta versão, o mesmo mock visual simula múltiplos dashboards."
+      title="Dashboards"
+    >
+      <DashboardImageGallery />
+    </ProductAnimationShell>
+  )
+}
+
+export function ManagementReportAnimation() {
+  return (
+    <ProductAnimationShell
+      eyebrow="Management report"
+      footer="Relatório gerencial Word"
+      icon={<FileText size={42} strokeWidth={2.4} />}
+      metrics={[
+        { label: 'Formato', value: 'Word' },
+        { label: 'Status', value: 'Gerado' },
+        { label: 'Revisão', value: '97%' },
+      ]}
+      subtitle="Documento executivo estruturado com KPIs, variações do período, recomendações e próximos passos."
+      title="Relatório gerencial"
+    >
+      <AnimatedMcpDocumentView data={managementReportData} startFrame={260} />
+    </ProductAnimationShell>
+  )
+}
+
+export function ClosingSlidesAnimation() {
+  return (
+    <ProductAnimationShell
+      eyebrow="Closing deck"
+      footer="Apresentação de fechamento"
+      icon={<Presentation size={42} strokeWidth={2.4} />}
+      metrics={[
+        { label: 'Slides', value: '3' },
+        { label: 'Status', value: 'Criado' },
+        { label: 'Ações', value: '8' },
+      ]}
+      subtitle="Deck de fechamento com capa, indicadores principais e plano de ação para reunião de diretoria."
+      title="Apresentação de fechamento"
+    >
+      <AnimatedMcpSlideDeckView data={closingDeckData} startFrame={260} />
+    </ProductAnimationShell>
+  )
+}
+
+export function ContractManagementAnimation() {
+  return (
+    <ProductAnimationShell
+      eyebrow="Contract ops"
+      footer="Gestão de contrato"
+      icon={<ShieldCheck size={42} strokeWidth={2.4} />}
+      metrics={[
+        { label: 'Contratos', value: '4' },
+        { label: 'Status', value: 'Ativo' },
+        { label: 'Pausados', value: '1' },
+      ]}
+      subtitle="Painel de contratos com renovações, reajustes, obrigações e alertas de risco em uma esteira única."
+      title="Gestão de contrato"
+    >
+      <AnimatedMcpAutomationView data={contractManagementData} startFrame={260} />
+    </ProductAnimationShell>
+  )
+}
+
+export function AccountingEntryAnimation() {
+  return (
+    <ProductAnimationShell
+      eyebrow="ERP actions"
+      footer="Fazer lançamento"
+      icon={<PenLine size={42} strokeWidth={2.4} />}
+      metrics={[
+        { label: 'Lançamento', value: 'Criado' },
+        { label: 'Status', value: 'Pendente' },
+        { label: 'Origem', value: 'Banco' },
+      ]}
+      subtitle="Lançamento criado a partir da conciliação, com contas, centro de custo, origem e trilha de aprovação."
+      title="Fazer lançamento"
+    >
+      <AnimatedMcpAutomationView data={accountingEntryData} startFrame={260} />
+    </ProductAnimationShell>
+  )
+}
+
+export function McpOperationsDemo() {
+  return <ExpenseClassificationAnimation />
 }
