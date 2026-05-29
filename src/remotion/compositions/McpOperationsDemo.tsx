@@ -245,11 +245,11 @@ function PipelineDocument({ doc, index, muted = false }: { doc: ClassificationDo
         clipPath: muted ? 'polygon(7% 0, 100% 4%, 93% 100%, 0 96%)' : undefined,
         display: 'grid',
         gap: muted ? 16 : 22,
-        height: muted ? 520 : 660,
+        height: muted ? 520 : 780,
         overflow: 'hidden',
         padding: muted ? 24 : 34,
         position: 'relative',
-        width: muted ? 390 : 500,
+        width: muted ? 390 : 610,
       }}
     >
       <span style={{ background: doc.accent, borderRadius: 999, display: 'block', height: 8, left: 0, position: 'absolute', right: 0, top: 0 }} />
@@ -317,18 +317,18 @@ function FloatingFinancialSheet({ index }: { index: number }) {
   const top = [130, 220, 360, 540, 690, 830, 1010, 1180][index % 8]
   const left = [64, 790, 142, 730, 34, 850, 210, 690][index % 8]
   const rotation = [-14, 9, -7, 15, 6, -11, 12, -5][index % 8]
-  const bend = [-18, 16, -12, 20, 10, -15, 18, -9][index % 8]
-  const tilt = [9, -12, 14, -8, 11, -10, 13, -7][index % 8]
+  const bend = [-32, 28, -24, 34, 22, -30, 32, -20][index % 8]
+  const tilt = [13, -16, 18, -12, 15, -14, 17, -11][index % 8]
 
   return (
     <div
       style={{
-        filter: 'blur(5.2px)',
+        filter: 'blur(2.1px)',
         left,
-        opacity: 0.14,
+        opacity: 0.2,
         position: 'absolute',
         top,
-        transform: `translate(${driftX}px, ${driftY}px) perspective(760px) rotate(${rotation}deg) rotateY(${bend}deg) rotateX(${tilt}deg) skewY(${bend / 8}deg) scale(0.46)`,
+        transform: `translate(${driftX}px, ${driftY}px) perspective(620px) rotate(${rotation}deg) rotateY(${bend}deg) rotateX(${tilt}deg) skewY(${bend / 6}deg) scale(0.20)`,
         transformStyle: 'preserve-3d',
       }}
     >
@@ -354,7 +354,7 @@ function CategoryTag({ doc, opacity }: { doc: ClassificationDocumentItem; opacit
         padding: '16px 21px 16px 17px',
         position: 'absolute',
         top: '50%',
-        transform: `translate(150px, -86px) scale(${0.94 + opacity * 0.06})`,
+        transform: `translate(190px, -94px) scale(${0.94 + opacity * 0.06})`,
         zIndex: 30,
       }}
     >
@@ -390,16 +390,6 @@ function ExpenseClassificationPipeline() {
         </div>
       </header>
 
-      <section style={{ left: 62, position: 'absolute', top: 188, width: 360, zIndex: 25 }}>
-        <div style={{ alignItems: 'center', background: 'rgba(255,255,255,0.90)', border: '1px solid #dfe7e1', borderRadius: 24, boxShadow: '0 24px 54px rgba(20, 24, 22, 0.10)', display: 'grid', gap: 14, padding: 24 }}>
-          <span style={{ color: '#65716a', fontSize: 21, fontWeight: 820, textTransform: 'uppercase' }}>Classificacao de despesas</span>
-          <strong style={{ color: '#0f1512', fontSize: 44, letterSpacing: 0, lineHeight: 1.03 }}>Documentos em alto volume</strong>
-          <p style={{ color: '#46534b', fontSize: 24, lineHeight: 1.28, margin: 0 }}>
-            Cada comprovante entra na esteira, recebe uma categoria e segue para o proximo processamento.
-          </p>
-        </div>
-      </section>
-
       <section style={{ display: 'grid', gap: 12, position: 'absolute', right: 58, top: 226, width: 246, zIndex: 25 }}>
         {[
           ['Docs/min', '184'],
@@ -425,7 +415,7 @@ function ExpenseClassificationPipeline() {
         ))}
       </section>
 
-      <div style={{ height: 1120, left: '50%', position: 'absolute', top: '50%', transform: 'translate(-50%, -50%)', width: 640, zIndex: 20 }}>
+      <div style={{ height: 1320, left: '50%', position: 'absolute', top: '50%', transform: 'translate(-50%, -50%)', width: 780, zIndex: 20 }}>
         <div style={{ background: 'linear-gradient(180deg, rgba(34,95,66,0), rgba(34,95,66,0.18), rgba(34,95,66,0))', bottom: 0, left: '50%', position: 'absolute', top: 0, transform: 'translateX(-50%)', width: 2 }} />
         <div style={{ background: '#225f42', borderRadius: 999, boxShadow: '0 0 34px rgba(34, 95, 66, 0.36)', height: 5, left: 66, opacity: 0.78, position: 'absolute', right: 66, top: 486, transform: `translateY(${scan * 86}px)` }} />
 
@@ -436,11 +426,11 @@ function ExpenseClassificationPipeline() {
           const docIndex = (activeIndex + slot + classificationPipelineDocs.length) % classificationPipelineDocs.length
           const doc = classificationPipelineDocs[docIndex]
           const centerScore = 1 - Math.min(Math.abs(unit - 0.5) / 0.5, 1)
-          const y = interpolate(unit, [0, 0.28, 0.5, 0.74, 1], [-690, -315, 0, 335, 700], {
+          const y = interpolate(unit, [0, 0.28, 0.5, 0.74, 1], [-840, -405, 0, 430, 850], {
             extrapolateLeft: 'clamp',
             extrapolateRight: 'clamp',
           })
-          const scale = 0.72 + centerScore * 0.32
+          const scale = 0.7 + centerScore * 0.34
           const opacity = 0.28 + centerScore * 0.72
           const rotation = (docIndex % 2 === 0 ? -1 : 1) * (1.8 - centerScore * 1.2)
           const tagOpacity = interpolate(unit, [0.36, 0.45, 0.64, 0.73], [0, 1, 1, 0], {
