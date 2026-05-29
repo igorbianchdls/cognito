@@ -238,17 +238,18 @@ function PipelineDocument({ doc, index, muted = false }: { doc: ClassificationDo
   return (
     <div
       style={{
-        background: '#ffffff',
+        background: muted ? 'rgba(255, 255, 255, 0.62)' : '#ffffff',
         border: '1px solid rgba(211, 224, 216, 0.96)',
-        borderRadius: 24,
-        boxShadow: muted ? '0 18px 45px rgba(20, 24, 22, 0.10)' : '0 34px 80px rgba(20, 24, 22, 0.20)',
+        borderRadius: muted ? '38px 28px 44px 30px' : 26,
+        boxShadow: muted ? '0 16px 42px rgba(20, 24, 22, 0.07)' : '0 38px 92px rgba(20, 24, 22, 0.22)',
+        clipPath: muted ? 'polygon(7% 0, 100% 4%, 93% 100%, 0 96%)' : undefined,
         display: 'grid',
-        gap: 20,
-        height: 560,
+        gap: muted ? 16 : 22,
+        height: muted ? 520 : 660,
         overflow: 'hidden',
-        padding: 28,
+        padding: muted ? 24 : 34,
         position: 'relative',
-        width: 420,
+        width: muted ? 390 : 500,
       }}
     >
       <span style={{ background: doc.accent, borderRadius: 999, display: 'block', height: 8, left: 0, position: 'absolute', right: 0, top: 0 }} />
@@ -316,16 +317,19 @@ function FloatingFinancialSheet({ index }: { index: number }) {
   const top = [130, 220, 360, 540, 690, 830, 1010, 1180][index % 8]
   const left = [64, 790, 142, 730, 34, 850, 210, 690][index % 8]
   const rotation = [-14, 9, -7, 15, 6, -11, 12, -5][index % 8]
+  const bend = [-18, 16, -12, 20, 10, -15, 18, -9][index % 8]
+  const tilt = [9, -12, 14, -8, 11, -10, 13, -7][index % 8]
 
   return (
     <div
       style={{
-        filter: 'blur(3.4px)',
+        filter: 'blur(5.2px)',
         left,
-        opacity: 0.22,
+        opacity: 0.14,
         position: 'absolute',
         top,
-        transform: `translate(${driftX}px, ${driftY}px) rotate(${rotation}deg) scale(0.72)`,
+        transform: `translate(${driftX}px, ${driftY}px) perspective(760px) rotate(${rotation}deg) rotateY(${bend}deg) rotateX(${tilt}deg) skewY(${bend / 8}deg) scale(0.46)`,
+        transformStyle: 'preserve-3d',
       }}
     >
       <PipelineDocument doc={doc} index={index} muted />
@@ -350,7 +354,7 @@ function CategoryTag({ doc, opacity }: { doc: ClassificationDocumentItem; opacit
         padding: '16px 21px 16px 17px',
         position: 'absolute',
         top: '50%',
-        transform: `translate(190px, -74px) scale(${0.94 + opacity * 0.06})`,
+        transform: `translate(150px, -86px) scale(${0.94 + opacity * 0.06})`,
         zIndex: 30,
       }}
     >
@@ -421,7 +425,7 @@ function ExpenseClassificationPipeline() {
         ))}
       </section>
 
-      <div style={{ height: 980, left: '50%', position: 'absolute', top: '50%', transform: 'translate(-50%, -50%)', width: 560, zIndex: 20 }}>
+      <div style={{ height: 1120, left: '50%', position: 'absolute', top: '50%', transform: 'translate(-50%, -50%)', width: 640, zIndex: 20 }}>
         <div style={{ background: 'linear-gradient(180deg, rgba(34,95,66,0), rgba(34,95,66,0.18), rgba(34,95,66,0))', bottom: 0, left: '50%', position: 'absolute', top: 0, transform: 'translateX(-50%)', width: 2 }} />
         <div style={{ background: '#225f42', borderRadius: 999, boxShadow: '0 0 34px rgba(34, 95, 66, 0.36)', height: 5, left: 66, opacity: 0.78, position: 'absolute', right: 66, top: 486, transform: `translateY(${scan * 86}px)` }} />
 
@@ -432,11 +436,11 @@ function ExpenseClassificationPipeline() {
           const docIndex = (activeIndex + slot + classificationPipelineDocs.length) % classificationPipelineDocs.length
           const doc = classificationPipelineDocs[docIndex]
           const centerScore = 1 - Math.min(Math.abs(unit - 0.5) / 0.5, 1)
-          const y = interpolate(unit, [0, 0.28, 0.5, 0.74, 1], [-560, -245, 0, 258, 570], {
+          const y = interpolate(unit, [0, 0.28, 0.5, 0.74, 1], [-690, -315, 0, 335, 700], {
             extrapolateLeft: 'clamp',
             extrapolateRight: 'clamp',
           })
-          const scale = 0.78 + centerScore * 0.26
+          const scale = 0.72 + centerScore * 0.32
           const opacity = 0.28 + centerScore * 0.72
           const rotation = (docIndex % 2 === 0 ? -1 : 1) * (1.8 - centerScore * 1.2)
           const tagOpacity = interpolate(unit, [0.36, 0.45, 0.64, 0.73], [0, 1, 1, 0], {
