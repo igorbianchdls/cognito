@@ -250,6 +250,201 @@ const animationCatalog: AnimationOption[] = [
 const categories: Array<'Todos' | AnimationCategory> = ['Todos', 'Chat / Assistants', 'Operações Financeiras', 'Apps / Mockups', 'SaaS Patterns', 'Workflows', 'Galerias']
 const kinds: Array<'Todos' | AnimationKind> = ['Todos', 'chat', 'operation', 'mockup', 'pattern', 'workflow', 'gallery']
 
+function ThumbBars({ color, count = 5 }: { color: string; count?: number }) {
+  return (
+    <div style={{ alignItems: 'end', display: 'flex', gap: 5, height: 42 }}>
+      {Array.from({ length: count }).map((_, index) => (
+        <span key={index} style={{ background: index === Math.min(3, count - 1) ? color : '#334155', borderRadius: 5, flex: 1, height: [34, 52, 42, 64, 48, 28][index] || 36 }} />
+      ))}
+    </div>
+  )
+}
+
+function ComponentThumb({ color, option }: { color: string; option: AnimationOption }) {
+  const baseStyle = {
+    background: '#111827',
+    border: '1px solid #293848',
+    borderRadius: 11,
+    height: 86,
+    overflow: 'hidden',
+    padding: 10,
+    position: 'relative' as const,
+  }
+
+  if (option.kind === 'chat') {
+    return (
+      <div style={{ ...baseStyle, display: 'grid', gap: 7, gridTemplateColumns: '34px 1fr' }}>
+        <div style={{ background: '#0b1118', borderRadius: 8, display: 'grid', gap: 5, padding: 5 }}>
+          {[0, 1, 2].map((item) => <span key={item} style={{ background: item === 0 ? color : '#334155', borderRadius: 999, display: 'block', height: 6 }} />)}
+        </div>
+        <div style={{ display: 'grid', gap: 6 }}>
+          <span style={{ background: '#334155', borderRadius: 999, display: 'block', height: 9, justifySelf: 'end', width: '58%' }} />
+          <span style={{ background: color, borderRadius: 999, display: 'block', height: 9, width: '72%' }} />
+          <span style={{ background: '#334155', borderRadius: 999, display: 'block', height: 9, width: '46%' }} />
+        </div>
+      </div>
+    )
+  }
+
+  if (option.kind === 'mockup') {
+    return (
+      <div style={{ ...baseStyle, display: 'grid', gap: 6, gridTemplateRows: '12px 1fr' }}>
+        <div style={{ alignItems: 'center', display: 'flex', gap: 4 }}>
+          {[color, '#fbbf24', '#34d399'].map((dot) => <span key={dot} style={{ background: dot, borderRadius: 999, display: 'block', height: 6, width: 6 }} />)}
+          <span style={{ background: '#334155', borderRadius: 999, display: 'block', height: 6, marginLeft: 8, width: '42%' }} />
+        </div>
+        <div style={{ display: 'grid', gap: 6, gridTemplateColumns: option.value === 'pdf' ? '26px 1fr' : '42px 1fr' }}>
+          <span style={{ background: '#1f2937', borderRadius: 5, display: 'block' }} />
+          <div style={{ background: option.value === 'powerpoint' ? '#172554' : option.value === 'excel' ? '#0f2f22' : '#f8fafc', borderRadius: 5, display: 'grid', gap: 5, padding: 6 }}>
+            <span style={{ background: color, borderRadius: 999, display: 'block', height: 5, width: '46%' }} />
+            <span style={{ background: option.value === 'pdf' ? '#475569' : '#64748b', borderRadius: 999, display: 'block', height: 5, width: '72%' }} />
+            <span style={{ background: option.value === 'pdf' ? '#475569' : '#64748b', borderRadius: 999, display: 'block', height: 5, width: '58%' }} />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (option.value.includes('pipeline') || option.value === 'integration' || option.value === 'network-map') {
+    return (
+      <div style={baseStyle}>
+        <span style={{ background: '#334155', borderRadius: 999, display: 'block', height: 3, left: 23, position: 'absolute', right: 23, top: 42 }} />
+        {[12, 48, 84, 120, 156].map((left, index) => (
+          <span key={left} style={{ alignItems: 'center', background: index === 2 ? color : '#1f2937', border: '1px solid #334155', borderRadius: 999, display: 'flex', height: index === 2 ? 28 : 21, justifyContent: 'center', left, position: 'absolute', top: index === 2 ? 29 : 33, width: index === 2 ? 28 : 21 }} />
+        ))}
+      </div>
+    )
+  }
+
+  if (option.value === 'email' || option.value === 'inbox' || option.value === 'notification-center') {
+    return (
+      <div style={{ ...baseStyle, display: 'grid', gap: 6 }}>
+        {[0, 1, 2].map((row) => (
+          <div key={row} style={{ alignItems: 'center', background: row === 0 ? '#1f2937' : '#0b1118', borderRadius: 7, display: 'grid', gap: 7, gridTemplateColumns: '15px 1fr 24px', padding: 6 }}>
+            <span style={{ background: row === 1 ? color : '#334155', borderRadius: 999, height: 12, width: 12 }} />
+            <span style={{ background: '#334155', borderRadius: 999, height: 6, width: `${80 - row * 16}%` }} />
+            <span style={{ background: row === 0 ? color : '#334155', borderRadius: 999, height: 6 }} />
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (option.value === 'approval-flow' || option.value === 'kanban-flow') {
+    return (
+      <div style={{ ...baseStyle, display: 'grid', gap: 7, gridTemplateColumns: '1fr 1fr 1fr' }}>
+        {[0, 1, 2].map((column) => (
+          <div key={column} style={{ background: '#0b1118', borderRadius: 7, display: 'grid', gap: 5, padding: 5 }}>
+            {[0, 1].map((card) => <span key={card} style={{ background: column === 2 && card === 1 ? color : '#334155', borderRadius: 5, display: 'block', height: 18 }} />)}
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (option.value === 'gallery-bento') {
+    return (
+      <div style={{ ...baseStyle, display: 'grid', gap: 6, gridTemplateColumns: '1.2fr 0.8fr', gridTemplateRows: '1fr 1fr' }}>
+        <span style={{ background: color, borderRadius: 8, gridRow: '1 / 3' }} />
+        <span style={{ background: '#334155', borderRadius: 8 }} />
+        <span style={{ background: '#1f2937', borderRadius: 8 }} />
+      </div>
+    )
+  }
+
+  if (option.value === 'gallery-wall' || option.value === 'gallery-grid-zoom' || option.value === 'gallery-storyboard') {
+    return (
+      <div style={{ ...baseStyle, display: 'grid', gap: 5, gridTemplateColumns: 'repeat(3, 1fr)' }}>
+        {Array.from({ length: 9 }).map((_, index) => <span key={index} style={{ background: index === 4 ? color : '#334155', borderRadius: 5 }} />)}
+      </div>
+    )
+  }
+
+  if (option.value === 'gallery-coverflow' || option.value === 'gallery-room-3d' || option.value === 'gallery-carousel') {
+    return (
+      <div style={baseStyle}>
+        {[-2, -1, 0, 1, 2].map((slot) => (
+          <span
+            key={slot}
+            style={{
+              background: slot === 0 ? color : '#334155',
+              borderRadius: 7,
+              display: 'block',
+              height: slot === 0 ? 54 : 44,
+              left: 82 + slot * 32,
+              opacity: slot === 0 ? 1 : 0.72,
+              position: 'absolute',
+              top: slot === 0 ? 15 : 20,
+              transform: `rotate(${slot * -10}deg)`,
+              width: slot === 0 ? 44 : 34,
+              zIndex: 10 - Math.abs(slot),
+            }}
+          />
+        ))}
+      </div>
+    )
+  }
+
+  if (option.value === 'gallery-stack' || option.value === 'gallery-swipe-cards' || option.value === 'gallery-document-fan') {
+    return (
+      <div style={baseStyle}>
+        {[0, 1, 2, 3].map((card) => <span key={card} style={{ background: card === 0 ? color : '#334155', borderRadius: 8, display: 'block', height: 52, left: 70 + card * 12, position: 'absolute', top: 16 + card * 5, transform: `rotate(${-8 + card * 5}deg)`, width: 78, zIndex: 10 - card }} />)}
+      </div>
+    )
+  }
+
+  if (option.value === 'gallery-marquee') {
+    return (
+      <div style={{ ...baseStyle, display: 'grid', gap: 7 }}>
+        {[0, 1, 2].map((row) => (
+          <div key={row} style={{ display: 'flex', gap: 6, transform: `translateX(${row % 2 === 0 ? -10 : 10}px)` }}>
+            {[0, 1, 2, 3].map((card) => <span key={card} style={{ background: card === row ? color : '#334155', borderRadius: 6, display: 'block', flex: '0 0 46px', height: 18 }} />)}
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (option.value === 'gallery-magnifier') {
+    return (
+      <div style={baseStyle}>
+        <div style={{ display: 'grid', gap: 4, gridTemplateColumns: 'repeat(4, 1fr)' }}>
+          {Array.from({ length: 12 }).map((_, index) => <span key={index} style={{ background: '#334155', borderRadius: 4, height: 15 }} />)}
+        </div>
+        <span style={{ border: `4px solid ${color}`, borderRadius: 999, display: 'block', height: 34, left: 82, position: 'absolute', top: 30, width: 34 }} />
+        <span style={{ background: color, borderRadius: 999, display: 'block', height: 30, left: 112, position: 'absolute', top: 58, transform: 'rotate(45deg)', width: 5 }} />
+      </div>
+    )
+  }
+
+  if (option.value === 'gallery-accordion') {
+    return (
+      <div style={{ ...baseStyle, display: 'grid', gap: 5 }}>
+        {[0, 1, 2, 3].map((row) => <span key={row} style={{ background: row === 1 ? color : '#334155', borderRadius: 6, display: 'block', height: row === 1 ? 27 : 11 }} />)}
+      </div>
+    )
+  }
+
+  if (option.kind === 'operation') {
+    return (
+      <div style={baseStyle}>
+        <span style={{ background: '#334155', borderRadius: 999, bottom: 8, display: 'block', left: '50%', position: 'absolute', top: 8, transform: 'translateX(-50%)', width: 3 }} />
+        {[-1, 0, 1].map((slot) => <span key={slot} style={{ background: slot === 0 ? color : '#334155', borderRadius: 8, display: 'block', height: slot === 0 ? 42 : 28, left: '50%', opacity: slot === 0 ? 1 : 0.55, position: 'absolute', top: 21 + slot * 28, transform: 'translateX(-50%)', width: slot === 0 ? 70 : 50 }} />)}
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ ...baseStyle, display: 'grid', gap: 8 }}>
+      <div style={{ alignItems: 'center', display: 'flex', gap: 6 }}>
+        <span style={{ background: color, borderRadius: 999, display: 'block', height: 9, width: 9 }} />
+        <span style={{ background: '#334155', borderRadius: 999, display: 'block', height: 7, width: '48%' }} />
+      </div>
+      <ThumbBars color={color} />
+    </div>
+  )
+}
+
 export default function RemotionPreviewPage() {
   const [composition, setComposition] = useState<PreviewComposition>('classification')
   const [query, setQuery] = useState('')
@@ -434,15 +629,7 @@ export default function RemotionPreviewPage() {
                   }}
                   type="button"
                 >
-                  <div style={{ background: '#111827', border: '1px solid #293848', borderRadius: 11, display: 'grid', gap: 8, height: 86, overflow: 'hidden', padding: 10 }}>
-                    <div style={{ alignItems: 'center', display: 'flex', gap: 6 }}>
-                      <span style={{ background: color, borderRadius: 999, display: 'block', height: 9, width: 9 }} />
-                      <span style={{ background: '#334155', borderRadius: 999, display: 'block', height: 7, width: '48%' }} />
-                    </div>
-                    <div style={{ alignItems: 'end', display: 'flex', gap: 5, height: 42 }}>
-                      {[34, 52, 42, 64, 48].map((height, index) => <span key={height} style={{ background: index === 3 ? color : '#334155', borderRadius: 5, flex: 1, height }} />)}
-                    </div>
-                  </div>
+                  <ComponentThumb color={color} option={option} />
                   <div style={{ display: 'grid', gap: 6 }}>
                     <div style={{ alignItems: 'start', display: 'flex', gap: 8, justifyContent: 'space-between' }}>
                       <strong style={{ color: '#f8fafc', fontSize: 16, fontWeight: 850, letterSpacing: 0, lineHeight: 1.08 }}>{option.label}</strong>
