@@ -24,6 +24,7 @@ import {
   NewsAnimation,
   NotificationCenterAnimation,
   ReportExportAnimation,
+  SaaSAccordionGalleryAnimation,
   SaaSBeforeAfterAnimation,
   SaaSBentoGalleryAnimation,
   SaaSCarouselGalleryAnimation,
@@ -34,13 +35,16 @@ import {
   SaaSGridZoomGalleryAnimation,
   SaaSKanbanFlowAnimation,
   SaaSLogoCloudAnimation,
+  SaaSMagnifierGalleryAnimation,
   SaaSMarqueeGalleryAnimation,
   SaaSMetricCounterAnimation,
   SaaSNetworkMapAnimation,
   SaaSOrbitAnimation,
   SaaSProductTourAnimation,
+  SaaSRoom3DGalleryAnimation,
   SaaSSpotlightGalleryAnimation,
   SaaSStackGalleryAnimation,
+  SaaSStoryboardGalleryAnimation,
   SaaSSwipeCardsGalleryAnimation,
   SaaSTimelineAnimation,
   SaaSWallGalleryAnimation,
@@ -50,7 +54,7 @@ import { ExcelWorkbookMock, type ExcelMockSheet } from '@/remotion/components/Ex
 import { PdfViewerMock, type PdfMockPage } from '@/remotion/components/PdfViewerMock'
 import { PowerPointEditorMock, type PowerPointMockSlide } from '@/remotion/components/PowerPointEditorMock'
 
-type PreviewComposition = 'intro' | 'classification' | 'reconciliation' | 'dashboards' | 'report' | 'slides' | 'contracts' | 'entry' | 'powerpoint' | 'pdf' | 'excel' | 'integration' | 'news' | 'tweet' | 'chatgpt-web' | 'claude-web' | 'email' | 'inbox' | 'notification-center' | 'data-pipeline' | 'report-export' | 'approval-flow' | 'gallery-carousel' | 'gallery-bento' | 'gallery-wall' | 'gallery-stack' | 'gallery-marquee' | 'gallery-spotlight' | 'gallery-document-fan' | 'gallery-device' | 'gallery-grid-zoom' | 'gallery-swipe-cards' | 'gallery-coverflow' | 'before-after' | 'timeline' | 'orbit' | 'command-center' | 'logo-cloud' | 'metric-counter' | 'kanban-flow' | 'network-map' | 'product-tour'
+type PreviewComposition = 'intro' | 'classification' | 'reconciliation' | 'dashboards' | 'report' | 'slides' | 'contracts' | 'entry' | 'powerpoint' | 'pdf' | 'excel' | 'integration' | 'news' | 'tweet' | 'chatgpt-web' | 'claude-web' | 'email' | 'inbox' | 'notification-center' | 'data-pipeline' | 'report-export' | 'approval-flow' | 'gallery-carousel' | 'gallery-bento' | 'gallery-wall' | 'gallery-stack' | 'gallery-marquee' | 'gallery-spotlight' | 'gallery-document-fan' | 'gallery-device' | 'gallery-grid-zoom' | 'gallery-swipe-cards' | 'gallery-coverflow' | 'gallery-room-3d' | 'gallery-magnifier' | 'gallery-accordion' | 'gallery-storyboard' | 'before-after' | 'timeline' | 'orbit' | 'command-center' | 'logo-cloud' | 'metric-counter' | 'kanban-flow' | 'network-map' | 'product-tour'
 
 type AnimationOption = {
   component: ComponentType
@@ -227,6 +231,10 @@ const galleryOptions: AnimationOption[] = [
   { component: SaaSGridZoomGalleryAnimation, label: 'Galeria Grid Zoom', value: 'gallery-grid-zoom' },
   { component: SaaSSwipeCardsGalleryAnimation, label: 'Galeria Swipe Cards', value: 'gallery-swipe-cards' },
   { component: SaaSCoverflowGalleryAnimation, label: 'Galeria Coverflow', value: 'gallery-coverflow' },
+  { component: SaaSRoom3DGalleryAnimation, label: 'Galeria 3D Room', value: 'gallery-room-3d' },
+  { component: SaaSMagnifierGalleryAnimation, label: 'Galeria Magnifier', value: 'gallery-magnifier' },
+  { component: SaaSAccordionGalleryAnimation, label: 'Galeria Accordion', value: 'gallery-accordion' },
+  { component: SaaSStoryboardGalleryAnimation, label: 'Galeria Storyboard', value: 'gallery-storyboard' },
 ]
 
 export default function RemotionPreviewPage() {
