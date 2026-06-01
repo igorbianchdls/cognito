@@ -3,6 +3,10 @@ import {
   SLIDE_SUPPORTED_COMPONENTS,
   SLIDE_SUPPORTED_HTML_TAGS,
 } from '@/products/artifacts/slide/contract/slideContract'
+import {
+  getSlideComponentDefinition,
+  getSlideComponentElementKind,
+} from '@/products/artifacts/slide/components/slideComponentRegistry'
 import type {
   SlideDeckModel,
   SlideElementKind,
@@ -66,13 +70,8 @@ function createFrame(props: Record<string, unknown>, style: Record<string, unkno
 }
 
 function getElementKind(type: string): SlideElementKind {
-  if (type === 'Card') return 'card'
-  if (type === 'Chart') return 'chart'
-  if (type === 'Query') return 'query'
-  if (type === 'Table') return 'table'
-  if (type === 'PivotTable') return 'pivotTable'
-  if (type === 'TextNode') return 'text'
-  if (type === 'Br') return 'lineBreak'
+  const registryKind = getSlideComponentElementKind(type)
+  if (registryKind) return registryKind
   if (SLIDE_SUPPORTED_HTML_TAGS.has(type.toLowerCase())) return 'html'
   if (SLIDE_SUPPORTED_COMPONENTS.has(type)) return 'container'
   return 'unknown'
@@ -101,7 +100,11 @@ function normalizeElement(child: SlideTreeChild, path: number[]): SlideElementMo
   if (!isTreeNode(child)) return null
 
   const type = String(child.type || '').trim()
-  const props = getNodeProps(child)
+  const definition = getSlideComponentDefinition(type)
+  const props = {
+    ...(definition?.defaultProps || {}),
+    ...getNodeProps(child),
+  }
   const style = getStyle(props)
   const children = getChildren(child)
     .map((nestedChild, index) => normalizeElement(nestedChild, [...path, index]))

@@ -1,16 +1,9 @@
+import { SLIDE_CHART_TYPES } from '@/products/artifacts/slide/components/chartComponents'
+import { SLIDE_COMPONENT_NAMES } from '@/products/artifacts/slide/components/slideComponentRegistry'
+
 export const SLIDE_ROOT_TYPES = new Set(['SlideTemplate', 'Slide'])
 
-export const SLIDE_SUPPORTED_COMPONENTS = new Set([
-  'Theme',
-  'Slide',
-  'Card',
-  'Chart',
-  'Query',
-  'Table',
-  'PivotTable',
-  'TextNode',
-  'Br',
-])
+export const SLIDE_SUPPORTED_COMPONENTS = new Set(SLIDE_COMPONENT_NAMES)
 
 export const SLIDE_SUPPORTED_HTML_TAGS = new Set([
   'div',
@@ -23,6 +16,8 @@ export const SLIDE_SUPPORTED_HTML_TAGS = new Set([
   'p',
   'span',
   'strong',
+  'em',
+  'small',
   'h1',
   'h2',
   'h3',
@@ -31,4 +26,4 @@ export const SLIDE_SUPPORTED_HTML_TAGS = new Set([
   'li',
 ])
 
-export const SLIDE_SUPPORTED_CHART_TYPES = new Set(['bar', 'line', 'pie'])
+export const SLIDE_SUPPORTED_CHART_TYPES = new Set(SLIDE_CHART_TYPES)

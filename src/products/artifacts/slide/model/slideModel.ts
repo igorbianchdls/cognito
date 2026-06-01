@@ -27,15 +27,24 @@ export type SlideThemeModel = {
 }
 
 export type SlideElementKind =
+  | 'bullets'
   | 'card'
   | 'chart'
   | 'container'
+  | 'footer'
   | 'html'
+  | 'image'
   | 'lineBreak'
+  | 'logo'
   | 'pivotTable'
   | 'query'
+  | 'shape'
+  | 'stat'
+  | 'subtitle'
   | 'table'
   | 'text'
+  | 'textBox'
+  | 'title'
   | 'unknown'
 
 export type SlideElementModel = {

@@ -3,6 +3,7 @@
 import React, { isValidElement, ReactNode } from 'react'
 
 import { resolveDashboardTemplateThemeTokens as resolveDashboardThemeTokens } from '@/products/artifacts/dashboard/templates/dashboardTemplateThemes'
+import { SLIDE_RUNTIME_COMPONENT_NAMES } from '@/products/artifacts/slide/components/slideComponentRegistry'
 import type {
   ArtifactKind,
   ArtifactTreeNode,
@@ -22,6 +23,12 @@ function leafComponent(name: string): RuntimeComponent {
   const Comp: RuntimeComponent = () => null
   Comp.displayName = name
   return Comp
+}
+
+function createSlideRuntimeScope(): Record<string, RuntimeComponent> {
+  return Object.fromEntries(
+    SLIDE_RUNTIME_COMPONENT_NAMES.map((name) => [name, passthroughComponent(name)]),
+  )
 }
 
 const runtimeScope = {
@@ -56,6 +63,7 @@ const runtimeScope = {
   DatePicker: leafComponent('DatePicker'),
   Insights: leafComponent('Insights'),
   Text: passthroughComponent('Text'),
+  ...createSlideRuntimeScope(),
 } satisfies Record<string, RuntimeComponent>
 
 function getElementTypeName(type: unknown): string {

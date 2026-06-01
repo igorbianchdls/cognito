@@ -1,7 +1,10 @@
 import type { ArtifactTreeNode } from '@/products/artifacts/core/types/artifactTypes'
 import {
+  getSlideComponentDefinition,
+  validateSlideComponentProps,
+} from '@/products/artifacts/slide/components/slideComponentRegistry'
+import {
   SLIDE_ROOT_TYPES,
-  SLIDE_SUPPORTED_CHART_TYPES,
   SLIDE_SUPPORTED_COMPONENTS,
   SLIDE_SUPPORTED_HTML_TAGS,
 } from '@/products/artifacts/slide/contract/slideContract'
@@ -31,13 +34,6 @@ function assertStringProp(
   }
   if (typeof value !== 'string' || !value.trim()) {
     throw new Error(`${path}.${propName} deve ser uma string não vazia`)
-  }
-}
-
-function validateQueryLikeNode(node: ArtifactTreeNode, path: string) {
-  const dataQuery = node.props?.dataQuery
-  if (!isRecord(dataQuery) || typeof dataQuery.query !== 'string' || !dataQuery.query.trim()) {
-    throw new Error(`${path}.dataQuery.query é obrigatório`)
   }
 }
 
@@ -76,18 +72,17 @@ function validateNode(node: ArtifactTreeNode, path: string, isRoot = false) {
     assertStringProp(node, 'name', path, { required: false })
   }
 
-  if (type === 'Chart') {
-    const chartType = node.props?.type
-    if (chartType != null) {
-      if (typeof chartType !== 'string' || !SLIDE_SUPPORTED_CHART_TYPES.has(chartType)) {
-        throw new Error(`${path}.type usa chart não suportado: ${String(chartType)}`)
-      }
+  if (SLIDE_SUPPORTED_COMPONENTS.has(type)) {
+    const definition = getSlideComponentDefinition(type)
+    if (definition && !definition.acceptsChildren && node.children.length > 0) {
+      throw new Error(`${path} não aceita children`)
     }
-    validateQueryLikeNode(node, path)
-  }
 
-  if (type === 'Query' || type === 'Table' || type === 'PivotTable') {
-    validateQueryLikeNode(node, path)
+    const props = isRecord(node.props) ? node.props : {}
+    const componentErrors = validateSlideComponentProps(type, props, path)
+    if (componentErrors.length) {
+      throw new Error(componentErrors.join('\n'))
+    }
   }
 
   node.children.forEach((child, index) => {
