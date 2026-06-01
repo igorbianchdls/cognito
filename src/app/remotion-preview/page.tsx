@@ -18,6 +18,9 @@ import {
   NewsAnimation,
   SaaSBentoGalleryAnimation,
   SaaSCarouselGalleryAnimation,
+  SaaSMarqueeGalleryAnimation,
+  SaaSSpotlightGalleryAnimation,
+  SaaSStackGalleryAnimation,
   SaaSWallGalleryAnimation,
   TweetAnimation,
 } from '@/remotion/compositions/McpOperationsDemo'
@@ -25,7 +28,7 @@ import { ExcelWorkbookMock, type ExcelMockSheet } from '@/remotion/components/Ex
 import { PdfViewerMock, type PdfMockPage } from '@/remotion/components/PdfViewerMock'
 import { PowerPointEditorMock, type PowerPointMockSlide } from '@/remotion/components/PowerPointEditorMock'
 
-type PreviewComposition = 'intro' | 'classification' | 'reconciliation' | 'dashboards' | 'report' | 'slides' | 'contracts' | 'entry' | 'powerpoint' | 'pdf' | 'excel' | 'integration' | 'news' | 'tweet' | 'gallery-carousel' | 'gallery-bento' | 'gallery-wall'
+type PreviewComposition = 'intro' | 'classification' | 'reconciliation' | 'dashboards' | 'report' | 'slides' | 'contracts' | 'entry' | 'powerpoint' | 'pdf' | 'excel' | 'integration' | 'news' | 'tweet' | 'gallery-carousel' | 'gallery-bento' | 'gallery-wall' | 'gallery-stack' | 'gallery-marquee' | 'gallery-spotlight'
 
 type AnimationOption = {
   component: ComponentType
@@ -174,6 +177,9 @@ const animationOptions: AnimationOption[] = [
   { component: SaaSCarouselGalleryAnimation, label: 'Galeria Carousel', value: 'gallery-carousel' },
   { component: SaaSBentoGalleryAnimation, label: 'Galeria Bento', value: 'gallery-bento' },
   { component: SaaSWallGalleryAnimation, label: 'Galeria Wall', value: 'gallery-wall' },
+  { component: SaaSStackGalleryAnimation, label: 'Galeria Stack', value: 'gallery-stack' },
+  { component: SaaSMarqueeGalleryAnimation, label: 'Galeria Marquee', value: 'gallery-marquee' },
+  { component: SaaSSpotlightGalleryAnimation, label: 'Galeria Spotlight', value: 'gallery-spotlight' },
 ]
 
 export default function RemotionPreviewPage() {

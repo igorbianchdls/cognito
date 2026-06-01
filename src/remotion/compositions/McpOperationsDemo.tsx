@@ -1037,6 +1037,181 @@ function SaaSWallGalleryAnimationCard() {
   )
 }
 
+function SaaSStackGalleryAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const activeIndex = Math.floor(frame / 110) % galleryItems.length
+  const local = (frame % 110) / 110
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 47%, rgba(139, 111, 157, 0.14), rgba(244, 247, 244, 0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Stack gallery" />
+      <div style={{ height: 1040, left: '50%', opacity: sceneIn, position: 'absolute', top: 310, transform: `translateX(-50%) translateY(${(1 - sceneIn) * 32}px)`, width: 880, zIndex: 20 }}>
+        {galleryItems.map((_, stackIndex) => {
+          const itemIndex = (activeIndex + stackIndex) % galleryItems.length
+          const item = galleryItems[itemIndex]
+          const outgoing = stackIndex === 0 ? progress(local, 0.72, 1) : 0
+          const depth = stackIndex
+          const y = depth * 44 - outgoing * 520
+          const x = depth * 20 - outgoing * 180
+          const scale = 1 - depth * 0.045 + outgoing * 0.04
+          const rotation = depth * -2.5 - outgoing * 12
+          const opacity = depth > 4 ? 0 : 1 - depth * 0.12 - outgoing * 0.35
+
+          return (
+            <div
+              key={`${item.title}-${stackIndex}`}
+              style={{
+                left: '50%',
+                opacity,
+                position: 'absolute',
+                top: 115,
+                transform: `translateX(-50%) translate(${x}px, ${y}px) rotate(${rotation}deg) scale(${scale})`,
+                zIndex: 30 - depth,
+              }}
+            >
+              <SaaSScreenshotCard active={stackIndex === 0} item={item} scale={1.18} />
+            </div>
+          )
+        })}
+      </div>
+      <div style={{ bottom: 190, display: 'grid', gap: 12, left: 84, position: 'absolute', right: 84, zIndex: 40 }}>
+        <span style={{ color: '#65716a', fontSize: 22, fontWeight: 850, textTransform: 'uppercase' }}>Layered product story</span>
+        <strong style={{ color: '#0f1512', fontSize: 58, letterSpacing: 0, lineHeight: 1 }}>Cards empilhados revelando telas uma a uma</strong>
+      </div>
+      <GalleryFooter>Galeria stack com troca de camadas, comum em videos de produto</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+function SaaSMarqueeGalleryAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const offsetA = (frame * 3.2) % 450
+  const offsetB = (frame * 2.6) % 450
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 47%, rgba(43, 126, 165, 0.14), rgba(244, 247, 244, 0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Marquee gallery" />
+      <div style={{ left: -260, opacity: sceneIn, position: 'absolute', right: -260, top: 310, transform: `rotate(-5deg) translateY(${(1 - sceneIn) * 32}px)`, zIndex: 10 }}>
+        {[0, 1, 2].map((row) => {
+          const reverse = row % 2 === 1
+          const offset = reverse ? offsetB : offsetA
+
+          return (
+            <div
+              key={row}
+              style={{
+                display: 'flex',
+                gap: 28,
+                marginBottom: 32,
+                transform: `translateX(${reverse ? -160 + offset : -offset}px)`,
+              }}
+            >
+              {Array.from({ length: 8 }).map((_, index) => {
+                const item = galleryItems[(index + row * 2) % galleryItems.length]
+                return (
+                  <div key={`${row}-${index}-${item.title}`} style={{ flex: '0 0 auto' }}>
+                    <SaaSScreenshotCard item={item} scale={0.72} />
+                  </div>
+                )
+              })}
+            </div>
+          )
+        })}
+      </div>
+      <div style={{ background: 'linear-gradient(180deg, #f4f7f4 0%, rgba(244,247,244,0) 20%, rgba(244,247,244,0) 72%, #f4f7f4 100%)', inset: 0, position: 'absolute', zIndex: 30 }} />
+      <div style={{ background: 'rgba(255,255,255,0.90)', border: '1px solid #dfe7e1', borderRadius: 32, boxShadow: '0 32px 90px rgba(20, 24, 22, 0.18)', left: 94, padding: 36, position: 'absolute', right: 94, top: 690, zIndex: 40 }}>
+        <span style={{ color: '#65716a', fontSize: 22, fontWeight: 850, textTransform: 'uppercase' }}>Infinite interface reel</span>
+        <h2 style={{ color: '#0f1512', fontSize: 66, fontWeight: 850, letterSpacing: 0, lineHeight: 0.98, margin: '14px 0 0' }}>Uma biblioteca inteira passando em loop</h2>
+      </div>
+      <GalleryFooter>Galeria marquee com fileiras paralelas e movimento infinito</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+function SaaSSpotlightGalleryAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const activeIndex = Math.floor(frame / 132) % galleryItems.length
+  const active = galleryItems[activeIndex]
+  const local = frame % 132
+  const calloutIn = progress(local, 30, 72)
+  const pulse = 1 + Math.sin(frame / 16) * 0.035
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: `radial-gradient(circle at 50% 47%, ${active.accent}26, rgba(244, 247, 244, 0) 58%)`, bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Spotlight gallery" />
+      <div
+        style={{
+          left: '50%',
+          opacity: sceneIn,
+          position: 'absolute',
+          top: 350,
+          transform: `translateX(-50%) translateY(${(1 - sceneIn) * 34}px)`,
+          width: 820,
+          zIndex: 20,
+        }}
+      >
+        <div style={{ background: '#102019', border: '1px solid #102019', borderRadius: 36, boxShadow: '0 44px 110px rgba(20, 24, 22, 0.22)', color: '#ffffff', overflow: 'hidden', padding: 36, position: 'relative' }}>
+          <span style={{ background: active.accent, borderRadius: 999, display: 'block', height: 8, left: 0, position: 'absolute', right: 0, top: 0 }} />
+          <div style={{ alignItems: 'start', display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ display: 'grid', gap: 10 }}>
+              <span style={{ color: 'rgba(255,255,255,0.66)', fontSize: 22, fontWeight: 850, textTransform: 'uppercase' }}>{active.label}</span>
+              <strong style={{ color: '#ffffff', fontSize: 64, letterSpacing: 0, lineHeight: 0.98 }}>{active.title}</strong>
+            </div>
+            <span style={{ background: 'rgba(255,255,255,0.14)', borderRadius: 18, color: '#ffffff', fontSize: 26, fontWeight: 900, padding: '13px 17px' }}>{active.value}</span>
+          </div>
+          <div style={{ background: '#ffffff', borderRadius: 28, display: 'grid', gap: 18, marginTop: 36, padding: 24 }}>
+            <div style={{ display: 'grid', gap: 14, gridTemplateColumns: '1fr 1fr 1fr' }}>
+              {[0, 1, 2].map((item) => <span key={item} style={{ background: item === 1 ? active.accent : '#f3f7f4', border: '1px solid #dfe7e1', borderRadius: 18, height: 108 }} />)}
+            </div>
+            <div style={{ alignItems: 'end', display: 'flex', gap: 12, height: 260 }}>
+              {[96, 146, 118, 210, 164, 286, 230].map((height, index) => <span key={height} style={{ background: index === activeIndex % 7 ? active.accent : '#dce6df', borderRadius: 10, flex: 1, height }} />)}
+            </div>
+            <div style={{ display: 'grid', gap: 12 }}>
+              {[86, 72, 92, 58].map((width, index) => <span key={width} style={{ background: index === 2 ? active.accent : '#e5ece7', borderRadius: 999, display: 'block', height: 12, width: `${width}%` }} />)}
+            </div>
+          </div>
+        </div>
+        {[
+          { label: 'Insight', left: -32, top: 330, value: active.value },
+          { label: 'Sync', left: 584, top: 520, value: 'Live' },
+          { label: 'Quality', left: 516, top: 156, value: '99%' },
+        ].map((callout, index) => (
+          <div
+            key={callout.label}
+            style={{
+              background: '#ffffff',
+              border: `1px solid ${active.accent}`,
+              borderRadius: 22,
+              boxShadow: '0 24px 60px rgba(20, 24, 22, 0.16)',
+              display: 'grid',
+              gap: 8,
+              left: callout.left,
+              opacity: calloutIn,
+              padding: '18px 22px',
+              position: 'absolute',
+              top: callout.top,
+              transform: `scale(${0.9 + calloutIn * 0.1}) translateY(${Math.sin((frame + index * 18) / 24) * 7}px)`,
+              width: 220,
+              zIndex: 30,
+            }}
+          >
+            <span style={{ color: '#65716a', fontSize: 18, fontWeight: 850 }}>{callout.label}</span>
+            <strong style={{ color: active.accent, fontSize: 34, letterSpacing: 0 }}>{callout.value}</strong>
+          </div>
+        ))}
+        <span style={{ border: `4px solid ${active.accent}`, borderRadius: 28, display: 'block', height: 164, left: 272, opacity: 0.84, position: 'absolute', top: 380, transform: `scale(${pulse})`, width: 248, zIndex: 28 }} />
+      </div>
+      <GalleryFooter>Galeria spotlight com zoom em uma tela e detalhes flutuantes</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
 function VerticalPipelineVisual({ item, index }: { item: VerticalPipelineItem; index: number }) {
   const darkSlide = item.kind === 'slide' && index % 2 === 0
   const lineColor = darkSlide ? 'rgba(255,255,255,0.28)' : '#dce6df'
@@ -1360,6 +1535,18 @@ export function SaaSBentoGalleryAnimation() {
 
 export function SaaSWallGalleryAnimation() {
   return <SaaSWallGalleryAnimationCard />
+}
+
+export function SaaSStackGalleryAnimation() {
+  return <SaaSStackGalleryAnimationCard />
+}
+
+export function SaaSMarqueeGalleryAnimation() {
+  return <SaaSMarqueeGalleryAnimationCard />
+}
+
+export function SaaSSpotlightGalleryAnimation() {
+  return <SaaSSpotlightGalleryAnimationCard />
 }
 
 export function McpOperationsDemo() {
