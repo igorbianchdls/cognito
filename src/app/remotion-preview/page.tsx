@@ -8,6 +8,8 @@ import { McpChartIntro, type McpTemplate } from '@/remotion/compositions/McpChar
 import {
   AccountingEntryAnimation,
   BankReconciliationAnimation,
+  ChatGptWebAnimation,
+  ClaudeWebAnimation,
   ClosingSlidesAnimation,
   ContractManagementAnimation,
   DashboardsAnimation,
@@ -42,7 +44,7 @@ import { ExcelWorkbookMock, type ExcelMockSheet } from '@/remotion/components/Ex
 import { PdfViewerMock, type PdfMockPage } from '@/remotion/components/PdfViewerMock'
 import { PowerPointEditorMock, type PowerPointMockSlide } from '@/remotion/components/PowerPointEditorMock'
 
-type PreviewComposition = 'intro' | 'classification' | 'reconciliation' | 'dashboards' | 'report' | 'slides' | 'contracts' | 'entry' | 'powerpoint' | 'pdf' | 'excel' | 'integration' | 'news' | 'tweet' | 'gallery-carousel' | 'gallery-bento' | 'gallery-wall' | 'gallery-stack' | 'gallery-marquee' | 'gallery-spotlight' | 'gallery-document-fan' | 'gallery-device' | 'gallery-grid-zoom' | 'gallery-swipe-cards' | 'gallery-coverflow' | 'before-after' | 'timeline' | 'orbit' | 'command-center' | 'logo-cloud' | 'metric-counter' | 'kanban-flow' | 'network-map' | 'product-tour'
+type PreviewComposition = 'intro' | 'classification' | 'reconciliation' | 'dashboards' | 'report' | 'slides' | 'contracts' | 'entry' | 'powerpoint' | 'pdf' | 'excel' | 'integration' | 'news' | 'tweet' | 'chatgpt-web' | 'claude-web' | 'gallery-carousel' | 'gallery-bento' | 'gallery-wall' | 'gallery-stack' | 'gallery-marquee' | 'gallery-spotlight' | 'gallery-document-fan' | 'gallery-device' | 'gallery-grid-zoom' | 'gallery-swipe-cards' | 'gallery-coverflow' | 'before-after' | 'timeline' | 'orbit' | 'command-center' | 'logo-cloud' | 'metric-counter' | 'kanban-flow' | 'network-map' | 'product-tour'
 
 type AnimationOption = {
   component: ComponentType
@@ -188,6 +190,8 @@ const animationOptions: AnimationOption[] = [
   { component: IntegrationFlowAnimation, label: 'Integração', value: 'integration' },
   { component: NewsAnimation, label: 'Notícia', value: 'news' },
   { component: TweetAnimation, label: 'Tweet', value: 'tweet' },
+  { component: ChatGptWebAnimation, label: 'ChatGPT Web', value: 'chatgpt-web' },
+  { component: ClaudeWebAnimation, label: 'Claude Web', value: 'claude-web' },
   { component: SaaSBeforeAfterAnimation, label: 'Before After', value: 'before-after' },
   { component: SaaSTimelineAnimation, label: 'Timeline', value: 'timeline' },
   { component: SaaSOrbitAnimation, label: 'Orbit', value: 'orbit' },

@@ -139,6 +139,13 @@ const tweetText = [
   'o time deixa de procurar dados e passa a decidir.',
 ]
 
+const webChatMessages = [
+  { role: 'user', text: 'Analise o fechamento de maio e mostre riscos financeiros.' },
+  { role: 'assistant', text: 'Encontrei 3 pontos críticos: fretes recorrentes, campanhas acima do teto e contratos perto do reajuste.' },
+  { role: 'user', text: 'Transforme isso em plano de ação executivo.' },
+  { role: 'assistant', text: 'Plano gerado com responsáveis, prazo e impacto estimado para o board pack.' },
+]
+
 const galleryItems = [
   { accent: '#225f42', label: 'Dashboard', title: 'Executive finance', value: '+18.4%' },
   { accent: '#3f6d91', label: 'Workflow', title: 'Bank reconciliation', value: '98%' },
@@ -1773,6 +1780,145 @@ function SaaSProductTourAnimationCard() {
   )
 }
 
+function WebChatWindow({ brand, kind }: { brand: 'ChatGPT' | 'Claude'; kind: 'chatgpt' | 'claude' }) {
+  const frame = useCurrentFrame()
+  const isClaude = kind === 'claude'
+  const bg = isClaude ? '#f7f4ed' : '#ffffff'
+  const sidebarBg = isClaude ? '#f2eee6' : '#f7f7f8'
+  const border = isClaude ? '#e6dfd2' : '#e5e5e7'
+  const accent = isClaude ? '#d86f4a' : '#111111'
+  const muted = isClaude ? '#7b7265' : '#6b7280'
+  const windowIn = progress(frame, 0, 38)
+  const activeMessage = Math.min(webChatMessages.length - 1, Math.floor(frame / 92))
+  const scan = (frame * 2.2) % 360
+
+  return (
+    <AbsoluteFill style={{ background: isClaude ? '#ede8de' : '#f4f4f5', color: '#111827', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: isClaude ? 'radial-gradient(circle at 50% 42%, rgba(216,111,74,0.18), rgba(237,232,222,0) 58%)' : 'radial-gradient(circle at 50% 42%, rgba(17,17,17,0.10), rgba(244,244,245,0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <section
+        style={{
+          background: bg,
+          border: `1px solid ${border}`,
+          borderRadius: 28,
+          boxShadow: '0 44px 120px rgba(20,24,22,0.20)',
+          display: 'grid',
+          gridTemplateColumns: '250px 1fr',
+          height: 1280,
+          left: 42,
+          opacity: windowIn,
+          overflow: 'hidden',
+          position: 'absolute',
+          right: 42,
+          top: 210,
+          transform: `translateY(${(1 - windowIn) * 34}px) scale(${0.96 + windowIn * 0.04})`,
+          zIndex: 10,
+        }}
+      >
+        <aside style={{ background: sidebarBg, borderRight: `1px solid ${border}`, display: 'grid', gridTemplateRows: '72px 1fr 96px', minWidth: 0 }}>
+          <div style={{ alignItems: 'center', borderBottom: `1px solid ${border}`, display: 'flex', gap: 12, padding: '0 18px' }}>
+            <span style={{ alignItems: 'center', background: accent, borderRadius: isClaude ? 12 : 999, color: '#ffffff', display: 'flex', fontSize: 24, fontWeight: 900, height: 42, justifyContent: 'center', width: 42 }}>{isClaude ? '*' : 'G'}</span>
+            <strong style={{ color: '#111827', fontSize: 24, letterSpacing: 0 }}>{brand}</strong>
+          </div>
+          <div style={{ display: 'grid', gap: 12, padding: 16, alignContent: 'start' }}>
+            <button style={{ background: isClaude ? '#ffffff' : '#111111', border: `1px solid ${isClaude ? border : '#111111'}`, borderRadius: 14, color: isClaude ? '#111827' : '#ffffff', fontSize: 17, fontWeight: 820, padding: '14px 16px', textAlign: 'left' }} type="button">
+              + Novo chat
+            </button>
+            {['Fechamento mensal', 'DRE e fluxo de caixa', 'Contratos críticos', 'Dashboard executivo', 'Classificação de despesas'].map((item, index) => (
+              <div key={item} style={{ background: index === 0 ? (isClaude ? '#e9dfd2' : '#ececee') : 'transparent', borderRadius: 12, color: index === 0 ? '#111827' : muted, fontSize: 16, fontWeight: 720, overflow: 'hidden', padding: '12px 13px', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {item}
+              </div>
+            ))}
+          </div>
+          <div style={{ alignItems: 'center', borderTop: `1px solid ${border}`, display: 'flex', gap: 12, padding: 16 }}>
+            <span style={{ background: isClaude ? '#d86f4a' : '#10a37f', borderRadius: 999, display: 'block', height: 34, width: 34 }} />
+            <div style={{ display: 'grid', gap: 2 }}>
+              <strong style={{ color: '#111827', fontSize: 15 }}>Igor</strong>
+              <span style={{ color: muted, fontSize: 13, fontWeight: 700 }}>Workspace Pro</span>
+            </div>
+          </div>
+        </aside>
+
+        <main style={{ display: 'grid', gridTemplateRows: '72px 1fr 154px', minWidth: 0 }}>
+          <header style={{ alignItems: 'center', borderBottom: `1px solid ${border}`, display: 'flex', justifyContent: 'space-between', padding: '0 28px' }}>
+            <div style={{ display: 'grid', gap: 2 }}>
+              <strong style={{ color: '#111827', fontSize: 21, letterSpacing: 0 }}>{isClaude ? 'Claude Opus 4.7' : 'ChatGPT 5'}</strong>
+              <span style={{ color: muted, fontSize: 14, fontWeight: 720 }}>{isClaude ? 'Projeto financeiro conectado' : 'Análise com ferramentas conectadas'}</span>
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              {['Share', 'Export', '...'].map((item) => <span key={item} style={{ background: isClaude ? '#fbfaf7' : '#f7f7f8', border: `1px solid ${border}`, borderRadius: 999, color: '#333333', fontSize: 14, fontWeight: 760, padding: '9px 13px' }}>{item}</span>)}
+            </div>
+          </header>
+
+          <div style={{ overflow: 'hidden', padding: '34px 52px 20px', position: 'relative' }}>
+            <div style={{ display: 'grid', gap: 26 }}>
+              {webChatMessages.map((message, index) => {
+                const visible = progress(frame, 22 + index * 68, 56 + index * 68)
+                const user = message.role === 'user'
+                return (
+                  <div key={`${message.role}-${index}`} style={{ display: 'flex', justifyContent: user ? 'flex-end' : 'flex-start', opacity: visible, transform: `translateY(${(1 - visible) * 18}px)` }}>
+                    <div
+                      style={{
+                        background: user ? (isClaude ? '#ebe6dd' : '#f4f4f4') : 'transparent',
+                        border: user ? `1px solid ${border}` : 0,
+                        borderRadius: user ? 24 : 0,
+                        color: '#111827',
+                        display: 'grid',
+                        gap: 14,
+                        maxWidth: user ? 520 : 720,
+                        padding: user ? '18px 22px' : '2px 0',
+                      }}
+                    >
+                      {!user ? (
+                        <div style={{ alignItems: 'center', display: 'flex', gap: 12 }}>
+                          <span style={{ alignItems: 'center', background: accent, borderRadius: isClaude ? 10 : 999, color: '#ffffff', display: 'flex', fontSize: 18, fontWeight: 900, height: 34, justifyContent: 'center', width: 34 }}>{isClaude ? '*' : 'G'}</span>
+                          <strong style={{ color: '#111827', fontSize: 18 }}>{brand}</strong>
+                        </div>
+                      ) : null}
+                      <p style={{ color: '#111827', fontSize: 24, fontWeight: 560, letterSpacing: 0, lineHeight: 1.35, margin: 0 }}>{message.text}</p>
+                      {!user && index === activeMessage ? (
+                        <div style={{ background: isClaude ? '#fffaf3' : '#ffffff', border: `1px solid ${border}`, borderRadius: 18, boxShadow: '0 18px 44px rgba(20,24,22,0.08)', display: 'grid', gap: 14, marginTop: 4, overflow: 'hidden', padding: 18 }}>
+                          <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+                            <span style={{ color: muted, fontSize: 15, fontWeight: 850, textTransform: 'uppercase' }}>Financial workspace</span>
+                            <strong style={{ color: isClaude ? '#d86f4a' : '#10a37f', fontSize: 22, letterSpacing: 0 }}>+64%</strong>
+                          </div>
+                          <div style={{ alignItems: 'end', display: 'flex', gap: 9, height: 108, position: 'relative' }}>
+                            <span style={{ background: `linear-gradient(90deg, transparent, ${isClaude ? '#d86f4a' : '#10a37f'}, transparent)`, height: 3, left: -360 + scan, opacity: 0.72, position: 'absolute', top: 0, width: 360 }} />
+                            {[48, 82, 64, 112, 90, 136].map((height, bar) => <span key={height} style={{ background: bar > 3 ? (isClaude ? '#d86f4a' : '#10a37f') : '#dce3df', borderRadius: 8, flex: 1, height }} />)}
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          <div style={{ alignItems: 'center', borderTop: `1px solid ${border}`, display: 'grid', padding: '22px 52px 30px' }}>
+            <div style={{ background: isClaude ? '#fbfaf7' : '#ffffff', border: `1px solid ${border}`, borderRadius: 24, boxShadow: '0 18px 44px rgba(20,24,22,0.08)', display: 'grid', gap: 18, padding: 20 }}>
+              <span style={{ color: muted, fontSize: 22, fontWeight: 620 }}>{isClaude ? 'Responder a Claude' : 'Mensagem para ChatGPT'}</span>
+              <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  {['+', 'Tools', isClaude ? 'Opus 4.7' : 'GPT-5'].map((item) => <span key={item} style={{ background: isClaude ? '#f0ebe2' : '#f4f4f5', borderRadius: 999, color: '#111827', fontSize: 16, fontWeight: 780, padding: '10px 14px' }}>{item}</span>)}
+                </div>
+                <span style={{ alignItems: 'center', background: accent, borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 22, fontWeight: 900, height: 46, justifyContent: 'center', width: 46 }}>↑</span>
+              </div>
+            </div>
+          </div>
+        </main>
+      </section>
+    </AbsoluteFill>
+  )
+}
+
+function ChatGptWebAnimationCard() {
+  return <WebChatWindow brand="ChatGPT" kind="chatgpt" />
+}
+
+function ClaudeWebAnimationCard() {
+  return <WebChatWindow brand="Claude" kind="claude" />
+}
+
 function VerticalPipelineVisual({ item, index }: { item: VerticalPipelineItem; index: number }) {
   const darkSlide = item.kind === 'slide' && index % 2 === 0
   const lineColor = darkSlide ? 'rgba(255,255,255,0.28)' : '#dce6df'
@@ -2164,6 +2310,14 @@ export function SaaSNetworkMapAnimation() {
 
 export function SaaSProductTourAnimation() {
   return <SaaSProductTourAnimationCard />
+}
+
+export function ChatGptWebAnimation() {
+  return <ChatGptWebAnimationCard />
+}
+
+export function ClaudeWebAnimation() {
+  return <ClaudeWebAnimationCard />
 }
 
 export function McpOperationsDemo() {
