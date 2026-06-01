@@ -2309,6 +2309,291 @@ function ApprovalFlowAnimationCard() {
   )
 }
 
+function AIAgentStepsAnimationCard() {
+  const frame = useCurrentFrame()
+  const steps = ['Ler bases', 'Classificar eventos', 'Conciliar saldos', 'Gerar insights', 'Publicar resumo']
+  const logs = ['Conectando ERP e banco', '12.840 registros lidos', '3 anomalias priorizadas', 'Resumo executivo pronto']
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 42%, rgba(34,95,66,0.18), rgba(244,247,244,0) 62%)', inset: -180, position: 'absolute' }} />
+      <GallerySceneHeader status="AI agent" />
+      <section style={{ display: 'grid', gap: 26, gridTemplateColumns: '1.15fr 0.85fr', left: 70, position: 'absolute', right: 70, top: 324, zIndex: 20 }}>
+        <div style={{ background: '#102019', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 34, boxShadow: '0 44px 110px rgba(20,24,22,0.26)', color: '#ffffff', display: 'grid', gap: 26, padding: 34 }}>
+          <div style={{ display: 'grid', gap: 9 }}>
+            <span style={{ color: '#8aa895', fontSize: 21, fontWeight: 900, textTransform: 'uppercase' }}>Agente financeiro</span>
+            <strong style={{ color: '#ffffff', fontSize: 58, letterSpacing: 0, lineHeight: 0.98 }}>Executando fechamento</strong>
+          </div>
+          <div style={{ display: 'grid', gap: 16 }}>
+            {steps.map((step, index) => {
+              const p = progress(frame, 24 + index * 30, 82 + index * 30)
+              const done = p > 0.88
+              return (
+                <div key={step} style={{ alignItems: 'center', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 22, display: 'grid', gap: 17, gridTemplateColumns: '56px 1fr 88px', opacity: 0.32 + p * 0.68, padding: 18, transform: `translateX(${(1 - p) * 20}px)` }}>
+                  <span style={{ alignItems: 'center', background: done ? '#67e08f' : '#25382e', borderRadius: 999, color: done ? '#0f1512' : '#8aa895', display: 'flex', fontSize: 22, fontWeight: 950, height: 50, justifyContent: 'center', width: 50 }}>{done ? '✓' : index + 1}</span>
+                  <span style={{ color: '#ffffff', fontSize: 26, fontWeight: 850 }}>{step}</span>
+                  <span style={{ color: done ? '#67e08f' : '#8aa895', fontSize: 20, fontWeight: 900, textAlign: 'right' }}>{done ? 'OK' : `${Math.round(p * 100)}%`}</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+        <div style={{ display: 'grid', gap: 20 }}>
+          <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 30, boxShadow: '0 34px 84px rgba(20,24,22,0.16)', display: 'grid', gap: 18, padding: 28 }}>
+            <span style={{ color: '#65716a', fontSize: 21, fontWeight: 900, textTransform: 'uppercase' }}>Logs do agente</span>
+            {logs.map((log, index) => {
+              const p = progress(frame, 48 + index * 42, 88 + index * 42)
+              return (
+                <div key={log} style={{ background: '#f7faf7', border: '1px solid #dfe7e1', borderRadius: 18, opacity: p, padding: 16, transform: `translateY(${(1 - p) * 18}px)` }}>
+                  <span style={{ color: '#0f1512', fontSize: 23, fontWeight: 820 }}>{log}</span>
+                </div>
+              )
+            })}
+          </div>
+          <div style={{ background: '#225f42', borderRadius: 28, boxShadow: '0 28px 70px rgba(34,95,66,0.24)', color: '#ffffff', opacity: progress(frame, 186, 245), padding: 26 }}>
+            <strong style={{ fontSize: 36, letterSpacing: 0 }}>Plano de ação criado</strong>
+          </div>
+        </div>
+      </section>
+      <GalleryFooter>AI agent com etapas, logs e saída operacional</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+function FileUploadProcessingAnimationCard() {
+  const frame = useCurrentFrame()
+  const stages = ['Upload', 'OCR', 'Classificação', 'Aprovado']
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 48%, rgba(63,109,145,0.18), rgba(244,247,244,0) 60%)', inset: -180, position: 'absolute' }} />
+      <GallerySceneHeader status="File upload" />
+      {[0, 1, 2, 3, 4, 5].map((item) => (
+        <div key={item} style={{ background: 'rgba(255,255,255,0.42)', border: '1px solid rgba(211,224,216,0.72)', borderRadius: 22, height: 190, left: [60, 820, 116, 760, 20, 874][item], opacity: 0.32, position: 'absolute', top: [280, 360, 610, 760, 1010, 1140][item], transform: `rotate(${[-14, 10, -8, 13, 7, -11][item]}deg) scale(0.8)`, width: 150 }} />
+      ))}
+      <section style={{ left: 92, position: 'absolute', right: 92, top: 332, zIndex: 20 }}>
+        <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 36, boxShadow: '0 44px 110px rgba(20,24,22,0.20)', display: 'grid', gap: 28, padding: 34 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ display: 'grid', gap: 8 }}>
+              <span style={{ color: '#65716a', fontSize: 21, fontWeight: 900, textTransform: 'uppercase' }}>Entrada de arquivos</span>
+              <strong style={{ color: '#0f1512', fontSize: 56, letterSpacing: 0, lineHeight: 0.98 }}>Processamento automático</strong>
+            </div>
+            <strong style={{ color: '#3f6d91', fontSize: 40, letterSpacing: 0 }}>42 docs</strong>
+          </div>
+          <div style={{ alignItems: 'center', display: 'grid', gap: 22, gridTemplateColumns: '1fr 1fr 1fr' }}>
+            {[0, 1, 2].map((card) => {
+              const p = progress((frame + card * 44) % 160, 0, 120)
+              return (
+                <div key={card} style={{ background: card === 1 ? '#eef5f8' : '#f7faf7', border: '1px solid #dfe7e1', borderRadius: 26, boxShadow: card === 1 ? '0 24px 58px rgba(63,109,145,0.18)' : 'none', display: 'grid', gap: 18, height: 410, padding: 24, transform: `translateY(${interpolate(p, [0, 0.52, 1], [-64, 0, 52])}px) scale(${card === 1 ? 1.08 : 0.92})` }}>
+                  <span style={{ background: card === 1 ? '#3f6d91' : '#d7e2dc', borderRadius: 999, display: 'block', height: 8, width: '48%' }} />
+                  <div style={{ display: 'grid', gap: 11 }}>
+                    {[82, 64, 91, 58, 74].map((width, line) => (
+                      <span key={`${card}-${line}`} style={{ background: line === 2 && card === 1 ? '#3f6d91' : '#d7e2dc', borderRadius: 999, display: 'block', height: 13, width: `${width}%` }} />
+                    ))}
+                  </div>
+                  <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 18, marginTop: 'auto', padding: 18 }}>
+                    <strong style={{ color: '#0f1512', fontSize: 25, letterSpacing: 0 }}>NF_{1280 + card}.pdf</strong>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          <div style={{ display: 'grid', gap: 13, gridTemplateColumns: 'repeat(4, 1fr)' }}>
+            {stages.map((stage, index) => {
+              const p = progress(frame, 28 + index * 42, 86 + index * 42)
+              return (
+                <div key={stage} style={{ background: p > 0.86 ? '#225f42' : '#f7faf7', border: '1px solid #dfe7e1', borderRadius: 18, color: p > 0.86 ? '#ffffff' : '#65716a', fontSize: 22, fontWeight: 900, padding: '17px 18px', textAlign: 'center' }}>{stage}</div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+      <GalleryFooter>File upload com OCR, leitura e classificação automática</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+function TableDrilldownAnimationCard() {
+  const frame = useCurrentFrame()
+  const active = Math.floor(frame / 58) % 4
+  const rows = [
+    ['Fornecedor', 'R$ 31.280', 'Margem'],
+    ['Marketing', 'R$ 18.400', 'CAC'],
+    ['Logística', 'R$ 8.420', 'Frete'],
+    ['Cloud', 'R$ 12.790', 'Infra'],
+  ]
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 46% 48%, rgba(34,95,66,0.16), rgba(244,247,244,0) 62%)', inset: -180, position: 'absolute' }} />
+      <GallerySceneHeader status="Table drilldown" />
+      <section style={{ display: 'grid', gap: 24, gridTemplateColumns: '1.1fr 0.9fr', left: 70, position: 'absolute', right: 70, top: 342, zIndex: 20 }}>
+        <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 34, boxShadow: '0 44px 110px rgba(20,24,22,0.18)', overflow: 'hidden' }}>
+          <div style={{ background: '#102019', color: '#ffffff', display: 'grid', fontSize: 20, fontWeight: 900, gridTemplateColumns: '1.2fr 0.8fr 0.8fr', padding: '22px 26px', textTransform: 'uppercase' }}>
+            <span>Categoria</span>
+            <span>Valor</span>
+            <span>Driver</span>
+          </div>
+          {rows.map((row, index) => {
+            const selected = index === active
+            return (
+              <div key={row[0]} style={{ alignItems: 'center', background: selected ? '#edf6f0' : '#ffffff', borderBottom: '1px solid #dfe7e1', display: 'grid', fontSize: 25, fontWeight: 800, gridTemplateColumns: '1.2fr 0.8fr 0.8fr', padding: '29px 26px', transform: selected ? 'scale(1.02)' : 'scale(1)', transformOrigin: 'center' }}>
+                <span style={{ color: '#0f1512' }}>{row[0]}</span>
+                <span style={{ color: selected ? '#225f42' : '#0f1512' }}>{row[1]}</span>
+                <span style={{ color: '#65716a' }}>{row[2]}</span>
+              </div>
+            )
+          })}
+        </div>
+        <div style={{ background: '#102019', borderRadius: 34, boxShadow: '0 38px 92px rgba(20,24,22,0.24)', color: '#ffffff', display: 'grid', gap: 24, padding: 32 }}>
+          <span style={{ color: '#8aa895', fontSize: 21, fontWeight: 900, textTransform: 'uppercase' }}>Detalhe selecionado</span>
+          <strong style={{ color: '#ffffff', fontSize: 52, letterSpacing: 0, lineHeight: 1 }}>{rows[active][0]}</strong>
+          <div style={{ display: 'grid', gap: 14 }}>
+            {['Variação mensal', 'Notas vinculadas', 'Recomendação IA'].map((label, index) => (
+              <div key={label} style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 20, padding: 20 }}>
+                <span style={{ color: '#8aa895', display: 'block', fontSize: 20, fontWeight: 800, marginBottom: 8 }}>{label}</span>
+                <strong style={{ color: index === 0 ? '#67e08f' : '#ffffff', fontSize: 28, letterSpacing: 0 }}>{index === 0 ? '+12.4%' : index === 1 ? `${active + 4} documentos` : 'Revisar centro de custo'}</strong>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      <GalleryFooter>Table drilldown com linha ativa e painel de detalhe</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+function CompareScenariosAnimationCard() {
+  const frame = useCurrentFrame()
+  const scenarios = [
+    { label: 'Conservador', value: 'R$ 1,8M', accent: '#3f6d91', bars: [38, 46, 52, 58] },
+    { label: 'Base', value: 'R$ 2,4M', accent: '#225f42', bars: [44, 58, 68, 76] },
+    { label: 'Stretch', value: 'R$ 3,1M', accent: '#c28f2c', bars: [52, 68, 82, 94] },
+  ]
+  const active = Math.floor(frame / 72) % scenarios.length
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 50%, rgba(194,143,44,0.14), rgba(244,247,244,0) 60%)', inset: -180, position: 'absolute' }} />
+      <GallerySceneHeader status="Compare scenarios" />
+      <section style={{ left: 70, position: 'absolute', right: 70, top: 326, zIndex: 20 }}>
+        <div style={{ display: 'grid', gap: 22, gridTemplateColumns: 'repeat(3, 1fr)' }}>
+          {scenarios.map((scenario, index) => {
+            const selected = index === active
+            return (
+              <div key={scenario.label} style={{ background: selected ? '#102019' : '#ffffff', border: `1px solid ${selected ? scenario.accent : '#dfe7e1'}`, borderRadius: 34, boxShadow: selected ? '0 44px 110px rgba(20,24,22,0.25)' : '0 26px 70px rgba(20,24,22,0.11)', color: selected ? '#ffffff' : '#0f1512', display: 'grid', gap: 28, minHeight: 720, padding: 30, transform: selected ? 'translateY(-18px)' : 'translateY(22px)' }}>
+                <span style={{ color: selected ? '#8aa895' : '#65716a', fontSize: 21, fontWeight: 900, textTransform: 'uppercase' }}>{scenario.label}</span>
+                <strong style={{ color: selected ? '#ffffff' : '#0f1512', fontSize: 54, letterSpacing: 0, lineHeight: 1 }}>{scenario.value}</strong>
+                <div style={{ alignItems: 'end', display: 'flex', gap: 14, height: 300, marginTop: 10 }}>
+                  {scenario.bars.map((height, bar) => (
+                    <span key={`${scenario.label}-${bar}`} style={{ background: bar === 3 ? scenario.accent : selected ? 'rgba(255,255,255,0.20)' : '#dce6df', borderRadius: 10, flex: 1, height: `${height * (0.78 + progress(frame, 12 + bar * 16, 86 + bar * 16) * 0.22)}%` }} />
+                  ))}
+                </div>
+                <div style={{ display: 'grid', gap: 14, marginTop: 'auto' }}>
+                  {['Receita', 'Margem', 'Caixa'].map((metric, metricIndex) => (
+                    <div key={metric} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: selected ? '#8aa895' : '#65716a', fontSize: 22, fontWeight: 780 }}>{metric}</span>
+                      <strong style={{ color: metricIndex === 1 ? scenario.accent : selected ? '#ffffff' : '#0f1512', fontSize: 22 }}>{metricIndex === 0 ? '+18%' : metricIndex === 1 ? '+4.2pp' : '96 dias'}</strong>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </section>
+      <GalleryFooter>Compare scenarios com três casos financeiros lado a lado</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+function ForecastAnimationCard() {
+  const frame = useCurrentFrame()
+  const draw = progress(frame, 18, 150)
+  const points = ['70,390', '190,340', '310,360', '430,270', '550,235', '670,180', '790,130']
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 48%, rgba(34,95,66,0.16), rgba(244,247,244,0) 62%)', inset: -180, position: 'absolute' }} />
+      <GallerySceneHeader status="Forecast" />
+      <section style={{ left: 72, position: 'absolute', right: 72, top: 330, zIndex: 20 }}>
+        <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 36, boxShadow: '0 44px 110px rgba(20,24,22,0.20)', display: 'grid', gap: 30, padding: 34 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ display: 'grid', gap: 8 }}>
+              <span style={{ color: '#65716a', fontSize: 21, fontWeight: 900, textTransform: 'uppercase' }}>Previsão financeira</span>
+              <strong style={{ color: '#0f1512', fontSize: 58, letterSpacing: 0, lineHeight: 0.98 }}>Forecast de caixa</strong>
+            </div>
+            <div style={{ background: '#edf6f0', border: '1px solid #cfe0d4', borderRadius: 24, padding: '18px 22px', textAlign: 'right' }}>
+              <span style={{ color: '#65716a', display: 'block', fontSize: 19, fontWeight: 820 }}>Confiança</span>
+              <strong style={{ color: '#225f42', fontSize: 38, letterSpacing: 0 }}>92%</strong>
+            </div>
+          </div>
+          <div style={{ background: '#f7faf7', border: '1px solid #dfe7e1', borderRadius: 28, height: 520, overflow: 'hidden', position: 'relative' }}>
+            <svg height="520" viewBox="0 0 860 520" width="100%" style={{ display: 'block' }}>
+              {[120, 220, 320, 420].map((y) => <line key={y} stroke="#dfe7e1" strokeWidth="2" x1="46" x2="818" y1={y} y2={y} />)}
+              <path d={`M ${points.join(' L ')}`} fill="none" pathLength="1" stroke="#225f42" strokeDasharray="1" strokeDashoffset={1 - draw} strokeLinecap="round" strokeLinejoin="round" strokeWidth="8" />
+              <path d="M 430 270 L 550 235 L 670 180 L 790 130" fill="none" pathLength="1" stroke="#c28f2c" strokeDasharray="0.04 0.04" strokeDashoffset={1 - draw} strokeLinecap="round" strokeLinejoin="round" strokeWidth="8" />
+              <path d="M 430 270 L 550 235 L 670 180 L 790 130 L 790 430 L 430 430 Z" fill="#225f42" opacity="0.10" />
+              {points.map((point, index) => {
+                const [cx, cy] = point.split(',').map(Number)
+                return <circle key={point} cx={cx} cy={cy} fill={index > 3 ? '#c28f2c' : '#225f42'} opacity={progress(frame, 34 + index * 18, 80 + index * 18)} r="10" />
+              })}
+            </svg>
+            <span style={{ background: '#102019', borderRadius: 999, color: '#ffffff', fontSize: 22, fontWeight: 900, left: 560, opacity: progress(frame, 154, 210), padding: '13px 18px', position: 'absolute', top: 98 }}>Projeção +18%</span>
+          </div>
+        </div>
+      </section>
+      <GalleryFooter>Forecast com histórico, projeção e intervalo visual</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+function MobileAppDemoAnimationCard() {
+  const frame = useCurrentFrame()
+  const pulse = progress(frame % 120, 0, 70)
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 45%, rgba(34,95,66,0.20), rgba(244,247,244,0) 62%)', inset: -180, position: 'absolute' }} />
+      <GallerySceneHeader status="Mobile app" />
+      <div style={{ background: '#0b1118', border: '12px solid #111827', borderRadius: 64, boxShadow: '0 48px 120px rgba(20,24,22,0.30)', height: 1040, left: '50%', overflow: 'hidden', position: 'absolute', top: 310, transform: 'translateX(-50%)', width: 520, zIndex: 20 }}>
+        <div style={{ background: '#f8faf8', inset: 0, position: 'absolute' }}>
+          <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', padding: '34px 34px 20px' }}>
+            <strong style={{ color: '#0f1512', fontSize: 27, letterSpacing: 0 }}>09:41</strong>
+            <span style={{ background: '#0f1512', borderRadius: 999, display: 'block', height: 7, width: 72 }} />
+          </div>
+          <div style={{ display: 'grid', gap: 8, padding: '26px 34px' }}>
+            <span style={{ color: '#65716a', fontSize: 20, fontWeight: 900, textTransform: 'uppercase' }}>Cognito Finance</span>
+            <strong style={{ color: '#0f1512', fontSize: 46, letterSpacing: 0, lineHeight: 1 }}>Bom dia, Igor</strong>
+          </div>
+          <div style={{ background: '#102019', borderRadius: 32, boxShadow: '0 28px 70px rgba(20,24,22,0.22)', color: '#ffffff', display: 'grid', gap: 18, margin: '10px 28px', padding: 28 }}>
+            <span style={{ color: '#8aa895', fontSize: 20, fontWeight: 850 }}>Saldo previsto</span>
+            <strong style={{ color: '#ffffff', fontSize: 50, letterSpacing: 0 }}>R$ 842.900</strong>
+            <span style={{ background: '#67e08f', borderRadius: 999, display: 'block', height: 9, width: `${48 + pulse * 34}%` }} />
+          </div>
+          <div style={{ display: 'grid', gap: 14, padding: '28px' }}>
+            {['Aprovar Frete Sul', 'Conciliação completa', 'Forecast atualizado'].map((item, index) => (
+              <div key={item} style={{ alignItems: 'center', background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 24, boxShadow: '0 14px 34px rgba(20,24,22,0.07)', display: 'grid', gap: 14, gridTemplateColumns: '48px 1fr', padding: 18, transform: `translateX(${Math.sin((frame + index * 18) / 64) * 5}px)` }}>
+                <span style={{ background: index === 0 ? '#c28f2c' : '#225f42', borderRadius: 999, height: 48, width: 48 }} />
+                <div style={{ display: 'grid', gap: 6 }}>
+                  <strong style={{ color: '#0f1512', fontSize: 24, letterSpacing: 0 }}>{item}</strong>
+                  <span style={{ color: '#65716a', fontSize: 18, fontWeight: 750 }}>{index === 0 ? 'pendente agora' : 'há 2 min'}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ background: '#ffffff', borderTop: '1px solid #dfe7e1', bottom: 0, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', left: 0, padding: '18px 24px 26px', position: 'absolute', right: 0 }}>
+            {['Home', 'Caixa', 'Docs', 'Perfil'].map((item, index) => (
+              <span key={item} style={{ color: index === 0 ? '#225f42' : '#65716a', fontSize: 16, fontWeight: 900, textAlign: 'center' }}>{item}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+      <GalleryFooter>Mobile app financeiro com cards, alerta e navegação</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
 function VerticalPipelineVisual({ item, index }: { item: VerticalPipelineItem; index: number }) {
   const darkSlide = item.kind === 'slide' && index % 2 === 0
   const lineColor = darkSlide ? 'rgba(255,255,255,0.28)' : '#dce6df'
@@ -2748,6 +3033,30 @@ export function ReportExportAnimation() {
 
 export function ApprovalFlowAnimation() {
   return <ApprovalFlowAnimationCard />
+}
+
+export function AIAgentStepsAnimation() {
+  return <AIAgentStepsAnimationCard />
+}
+
+export function FileUploadProcessingAnimation() {
+  return <FileUploadProcessingAnimationCard />
+}
+
+export function TableDrilldownAnimation() {
+  return <TableDrilldownAnimationCard />
+}
+
+export function CompareScenariosAnimation() {
+  return <CompareScenariosAnimationCard />
+}
+
+export function ForecastAnimation() {
+  return <ForecastAnimationCard />
+}
+
+export function MobileAppDemoAnimation() {
+  return <MobileAppDemoAnimationCard />
 }
 
 export function McpOperationsDemo() {

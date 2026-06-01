@@ -7,20 +7,25 @@ import { useMemo, useState } from 'react'
 import { McpChartIntro, type McpTemplate } from '@/remotion/compositions/McpChartIntro'
 import {
   AccountingEntryAnimation,
+  AIAgentStepsAnimation,
   ApprovalFlowAnimation,
   BankReconciliationAnimation,
   ChatGptWebAnimation,
   ClaudeWebAnimation,
   ClosingSlidesAnimation,
+  CompareScenariosAnimation,
   ContractManagementAnimation,
   DataPipelineAnimation,
   DashboardsAnimation,
   EmailAnimation,
   ExpenseClassificationAnimation,
+  FileUploadProcessingAnimation,
+  ForecastAnimation,
   InboxAnimation,
   IntegrationFlowAnimation,
   ManagementReportAnimation,
   MCP_SINGLE_ANIMATION_DURATION,
+  MobileAppDemoAnimation,
   NewsAnimation,
   NotificationCenterAnimation,
   ReportExportAnimation,
@@ -48,6 +53,7 @@ import {
   SaaSSwipeCardsGalleryAnimation,
   SaaSTimelineAnimation,
   SaaSWallGalleryAnimation,
+  TableDrilldownAnimation,
   TweetAnimation,
 } from '@/remotion/compositions/McpOperationsDemo'
 import { ExcelWorkbookMock, type ExcelMockSheet } from '@/remotion/components/ExcelWorkbookMock'
@@ -209,8 +215,13 @@ const animationCatalog: AnimationOption[] = [
   { category: 'Apps / Mockups', component: PowerPointPreviewAnimation, description: 'Mock desktop de PowerPoint com slides e painel Claude.', kind: 'mockup', label: 'PowerPoint', tags: ['Office', 'Slides', 'Mockup'], value: 'powerpoint' },
   { category: 'Apps / Mockups', component: PdfPreviewAnimation, description: 'Viewer de PDF no padrão desktop/macOS.', kind: 'mockup', label: 'PDF', tags: ['Documentos', 'Viewer', 'Mockup'], value: 'pdf' },
   { category: 'Apps / Mockups', component: ExcelPreviewAnimation, description: 'Mock desktop de Excel com ribbon e workbook financeiro.', kind: 'mockup', label: 'Excel', tags: ['Office', 'Planilha', 'Mockup'], value: 'excel' },
+  { category: 'Apps / Mockups', component: MobileAppDemoAnimation, description: 'Mock mobile financeiro com cards, alertas e navegação.', kind: 'mockup', label: 'Mobile App', tags: ['Mobile', 'App', 'Financeiro'], value: 'mobile-app-demo' },
 
   { category: 'SaaS Patterns', component: IntegrationFlowAnimation, description: 'Integrações conectando apps a um hub central.', kind: 'pattern', label: 'Integração', tags: ['SaaS', 'Integração', 'Hub'], value: 'integration' },
+  { category: 'SaaS Patterns', component: AIAgentStepsAnimation, description: 'Agente de IA executando etapas, logs e saída operacional.', kind: 'pattern', label: 'AI Agent', tags: ['Agent', 'IA', 'Steps'], value: 'ai-agent-steps' },
+  { category: 'SaaS Patterns', component: TableDrilldownAnimation, description: 'Tabela analítica com linha ativa e painel de detalhe.', kind: 'pattern', label: 'Table Drilldown', tags: ['Table', 'Drilldown', 'Data'], value: 'table-drilldown' },
+  { category: 'SaaS Patterns', component: CompareScenariosAnimation, description: 'Comparação de cenários financeiros lado a lado.', kind: 'pattern', label: 'Compare Scenarios', tags: ['Scenarios', 'Financeiro', 'Compare'], value: 'compare-scenarios' },
+  { category: 'SaaS Patterns', component: ForecastAnimation, description: 'Forecast financeiro com histórico, projeção e confiança.', kind: 'pattern', label: 'Forecast', tags: ['Forecast', 'Financeiro', 'Chart'], value: 'forecast' },
   { category: 'SaaS Patterns', component: NewsAnimation, description: 'Notícia editorial animada com headline e cards de apoio.', kind: 'pattern', label: 'Notícia', tags: ['Editorial', 'Social', 'News'], value: 'news' },
   { category: 'SaaS Patterns', component: TweetAnimation, description: 'Tweet animado com mídia e métricas de engajamento.', kind: 'pattern', label: 'Tweet', tags: ['Social', 'Post', 'Métricas'], value: 'tweet' },
   { category: 'SaaS Patterns', component: SaaSBeforeAfterAnimation, description: 'Comparação antes/depois com slider animado.', kind: 'pattern', label: 'Before After', tags: ['SaaS', 'Comparação', 'Impacto'], value: 'before-after' },
@@ -224,6 +235,7 @@ const animationCatalog: AnimationOption[] = [
   { category: 'SaaS Patterns', component: SaaSProductTourAnimation, description: 'Tour de produto com hotspots sobre uma interface.', kind: 'pattern', label: 'Product Tour', tags: ['Tour', 'Hotspots', 'Product'], value: 'product-tour' },
 
   { category: 'Workflows', component: EmailAnimation, description: 'Email sendo redigido com resumo e plano de ação.', kind: 'workflow', label: 'Email', tags: ['Email', 'AI Compose', 'Workflow'], value: 'email' },
+  { category: 'Workflows', component: FileUploadProcessingAnimation, description: 'Arquivos entrando, passando por OCR e classificação.', kind: 'workflow', label: 'File Upload', tags: ['Upload', 'OCR', 'Workflow'], value: 'file-upload-processing' },
   { category: 'Workflows', component: InboxAnimation, description: 'Inbox financeiro com triagem, prioridade e resumo por IA.', kind: 'workflow', label: 'Inbox', tags: ['Inbox', 'Triage', 'Workflow'], value: 'inbox' },
   { category: 'Workflows', component: NotificationCenterAnimation, description: 'Central de notificações com severidade e ações rápidas.', kind: 'workflow', label: 'Notification', tags: ['Alertas', 'Operações', 'Workflow'], value: 'notification-center' },
   { category: 'Workflows', component: DataPipelineAnimation, description: 'Pipeline de dados fluindo por etapas técnicas.', kind: 'workflow', label: 'Data Pipeline', tags: ['Dados', 'Pipeline', 'ETL'], value: 'data-pipeline' },
@@ -281,6 +293,83 @@ function ComponentThumb({ color, option }: { color: string; option: AnimationOpt
           <span style={{ background: '#334155', borderRadius: 999, display: 'block', height: 9, justifySelf: 'end', width: '58%' }} />
           <span style={{ background: color, borderRadius: 999, display: 'block', height: 9, width: '72%' }} />
           <span style={{ background: '#334155', borderRadius: 999, display: 'block', height: 9, width: '46%' }} />
+        </div>
+      </div>
+    )
+  }
+
+  if (option.value === 'ai-agent-steps') {
+    return (
+      <div style={{ ...baseStyle, display: 'grid', gap: 5 }}>
+        {[0, 1, 2, 3].map((row) => (
+          <div key={row} style={{ alignItems: 'center', display: 'grid', gap: 7, gridTemplateColumns: '18px 1fr 24px' }}>
+            <span style={{ alignItems: 'center', background: row < 3 ? color : '#1f2937', borderRadius: 999, display: 'flex', height: 16, justifyContent: 'center', width: 16 }} />
+            <span style={{ background: '#334155', borderRadius: 999, display: 'block', height: 7, width: `${78 - row * 10}%` }} />
+            <span style={{ background: row < 2 ? color : '#334155', borderRadius: 999, display: 'block', height: 6 }} />
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (option.value === 'file-upload-processing') {
+    return (
+      <div style={baseStyle}>
+        {[0, 1, 2].map((card) => (
+          <span key={card} style={{ background: card === 1 ? color : '#334155', borderRadius: 7, display: 'block', height: card === 1 ? 54 : 42, left: 34 + card * 44, opacity: card === 1 ? 1 : 0.7, position: 'absolute', top: card === 1 ? 15 : 21, width: card === 1 ? 42 : 34 }} />
+        ))}
+        <span style={{ background: '#1f2937', borderRadius: 999, bottom: 10, display: 'block', height: 8, left: 30, position: 'absolute', right: 30 }} />
+      </div>
+    )
+  }
+
+  if (option.value === 'table-drilldown') {
+    return (
+      <div style={{ ...baseStyle, display: 'grid', gap: 7, gridTemplateColumns: '1.25fr 0.75fr' }}>
+        <div style={{ display: 'grid', gap: 5 }}>
+          {[0, 1, 2, 3].map((row) => <span key={row} style={{ background: row === 1 ? color : '#334155', borderRadius: 5, display: 'block' }} />)}
+        </div>
+        <div style={{ background: '#0b1118', borderRadius: 8, display: 'grid', gap: 6, padding: 7 }}>
+          <span style={{ background: color, borderRadius: 999, display: 'block', height: 7, width: '70%' }} />
+          <span style={{ background: '#334155', borderRadius: 999, display: 'block', height: 6 }} />
+          <span style={{ background: '#334155', borderRadius: 999, display: 'block', height: 6, width: '78%' }} />
+        </div>
+      </div>
+    )
+  }
+
+  if (option.value === 'compare-scenarios') {
+    return (
+      <div style={{ ...baseStyle, display: 'grid', gap: 6, gridTemplateColumns: 'repeat(3, 1fr)' }}>
+        {[0, 1, 2].map((column) => (
+          <div key={column} style={{ background: column === 1 ? '#0b1118' : '#1f2937', borderRadius: 8, display: 'grid', gap: 5, padding: 6 }}>
+            <span style={{ background: column === 1 ? color : '#334155', borderRadius: 999, display: 'block', height: 6 }} />
+            <span style={{ background: '#334155', borderRadius: 5, display: 'block', height: 19 + column * 8, marginTop: 'auto' }} />
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (option.value === 'forecast') {
+    return (
+      <div style={baseStyle}>
+        {[20, 38, 56, 74].map((top) => <span key={top} style={{ background: '#1f2937', borderRadius: 999, display: 'block', height: 2, left: 16, position: 'absolute', right: 16, top }} />)}
+        <svg height="86" viewBox="0 0 190 86" width="100%" style={{ display: 'block', left: 0, position: 'absolute', top: 0 }}>
+          <path d="M 20 62 L 54 49 L 86 54 L 118 34 L 152 22 L 176 16" fill="none" stroke={color} strokeLinecap="round" strokeLinejoin="round" strokeWidth="5" />
+          <path d="M 118 34 L 152 22 L 176 16" fill="none" stroke="#fbbf24" strokeDasharray="5 5" strokeLinecap="round" strokeLinejoin="round" strokeWidth="5" />
+        </svg>
+      </div>
+    )
+  }
+
+  if (option.value === 'mobile-app-demo') {
+    return (
+      <div style={{ ...baseStyle, display: 'flex', justifyContent: 'center', padding: 8 }}>
+        <div style={{ background: '#0b1118', border: '3px solid #334155', borderRadius: 16, display: 'grid', gap: 5, height: 70, padding: 8, width: 40 }}>
+          <span style={{ background: color, borderRadius: 6, display: 'block', height: 19 }} />
+          <span style={{ background: '#334155', borderRadius: 5, display: 'block', height: 10 }} />
+          <span style={{ background: '#334155', borderRadius: 5, display: 'block', height: 10 }} />
         </div>
       </div>
     )
