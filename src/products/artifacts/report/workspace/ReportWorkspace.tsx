@@ -21,10 +21,12 @@ import {
   parseArtifactDimensionDraft,
   updatePagedArtifactSizeInTree,
 } from '@/products/artifacts/core/workspace/pagedArtifactTree'
+import { exportReportDeckToCanvaPptx } from '@/products/artifacts/report/export/pptx/exportReportDeckToCanvaPptx'
 import { ReportPdfExportStage } from '@/products/artifacts/report/export/ReportPdfExportStage'
 import { ReportRenderer } from '@/products/artifacts/report/renderer/reportRenderer'
 import { validateReportTree } from '@/products/artifacts/report/validator/validateReportTree'
 import { useReportPdfExport } from '@/products/artifacts/report/export/useReportPdfExport'
+import { normalizeReportTree } from '@/products/artifacts/report/model/normalizeReportTree'
 import { REPORT_TEMPLATE_SOURCE } from '@/products/artifacts/report/templates/reportTemplate'
 
 type ReportTreeNode = ArtifactTreeNode
@@ -128,8 +130,10 @@ export function ReportWorkspace({ initialSource }: { initialSource?: string }) {
     () => getPagedArtifactStructure(templateTree, { rootType: 'ReportTemplate', pageType: 'Report', fallbackRootName: 'Relatório' }),
     [templateTree],
   )
+  const reportDeck = useMemo(() => (templateTree ? normalizeReportTree(templateTree) : null), [templateTree])
   const [activePageId, setActivePageId] = useState('')
   const [activeView, setActiveView] = useState<'preview' | 'code'>('preview')
+  const [isExportingCanvaPptx, setIsExportingCanvaPptx] = useState(false)
   const [zoom, setZoom] = useState(0.9)
   const [widthDraft, setWidthDraft] = useState(String(DEFAULT_REPORT_WIDTH))
   const [heightDraft, setHeightDraft] = useState(String(DEFAULT_REPORT_HEIGHT))
@@ -203,6 +207,16 @@ export function ReportWorkspace({ initialSource }: { initialSource?: string }) {
       : current)
   }
 
+  const exportCanvaPptx = async () => {
+    if (!reportDeck || isExportingCanvaPptx) return
+    try {
+      setIsExportingCanvaPptx(true)
+      await exportReportDeckToCanvaPptx(reportDeck)
+    } finally {
+      setIsExportingCanvaPptx(false)
+    }
+  }
+
   if (templateError) {
     return <ArtifactWorkspaceStatusScreen message={templateError} tone="error" />
   }
@@ -237,7 +251,13 @@ export function ReportWorkspace({ initialSource }: { initialSource?: string }) {
             onDecrease={() => setZoom((current) => Math.max(0.5, Number((current - 0.1).toFixed(2))))}
             onIncrease={() => setZoom((current) => Math.min(1.6, Number((current + 0.1).toFixed(2))))}
           />
-          <button type="button" className="flex items-center justify-center rounded-md border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]">
+          <button
+            type="button"
+            aria-label="Exportar para Canva em PPTX"
+            disabled={!reportDeck || isExportingCanvaPptx}
+            onClick={exportCanvaPptx}
+            className="flex items-center justify-center rounded-md border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B] disabled:cursor-not-allowed disabled:opacity-50"
+          >
             <Icon icon="solar:download-square-bold" className="h-4 w-4" />
           </button>
           <button type="button" className="flex items-center justify-center rounded-md border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]">
