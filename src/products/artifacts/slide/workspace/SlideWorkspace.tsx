@@ -14,15 +14,15 @@ import { ArtifactWorkspaceStatusScreen } from '@/products/artifacts/core/workspa
 import { ArtifactZoomControls } from '@/products/artifacts/core/workspace/components/ArtifactZoomControls'
 import { PagedArtifactThumbnailButton } from '@/products/artifacts/core/workspace/components/PagedArtifactThumbnailButton'
 import {
-  buildPagedArtifactRenderTree,
-  cloneArtifactTree,
   getArtifactPageId,
   getPagedArtifactDimension,
   getPagedArtifactStructure,
   parseArtifactDimensionDraft,
   updatePagedArtifactSizeInTree,
 } from '@/products/artifacts/core/workspace/pagedArtifactTree'
-import { SlideRenderer } from '@/products/artifacts/slide/renderer/slideRenderer'
+import { normalizeSlideTree } from '@/products/artifacts/slide/model/normalizeSlideTree'
+import type { SlideModel, SlideThemeModel } from '@/products/artifacts/slide/model/slideModel'
+import { SlideHtmlRenderer } from '@/products/artifacts/slide/renderer/html/SlideHtmlRenderer'
 import { SLIDE_TEMPLATE_SOURCE } from '@/products/artifacts/slide/templates/slideTemplate'
 import { validateSlideTree } from '@/products/artifacts/slide/validator/validateSlideTree'
 
@@ -65,14 +65,16 @@ function SlideThumbnail({
 }
 
 const SlideCanvas = memo(function SlideCanvas({
-  tree,
+  slide,
+  theme,
   zoom,
   slideElementRef,
   renderKey,
   slideHeight,
   slideWidth,
 }: {
-  tree: any
+  slide: SlideModel
+  theme: SlideThemeModel
   zoom: number
   slideElementRef: RefObject<HTMLDivElement | null>
   renderKey: string
@@ -128,7 +130,7 @@ const SlideCanvas = memo(function SlideCanvas({
         }}
       >
         <div style={{ width: '100%', height: '100%', display: 'flex', flex: 1, minWidth: 0, minHeight: 0 }}>
-          <SlideRenderer tree={tree} />
+          <SlideHtmlRenderer slide={slide} theme={theme} />
         </div>
       </div>
     </div>
@@ -172,6 +174,7 @@ export function SlideWorkspace({ initialSource }: { initialSource?: string }) {
     () => getPagedArtifactStructure(templateTree, { rootType: 'SlideTemplate', pageType: 'Slide', fallbackRootName: 'Apresentação' }),
     [templateTree],
   )
+  const deckModel = useMemo(() => (templateTree ? normalizeSlideTree(templateTree) : null), [templateTree])
   const initialPageId = useMemo(() => (pages.length ? getArtifactPageId(pages[0], 0, 'slide') : ''), [pages])
   const [activePageId, setActivePageId] = useState(initialPageId)
   const [activeView, setActiveView] = useState<'preview' | 'code'>('preview')
@@ -199,13 +202,13 @@ export function SlideWorkspace({ initialSource }: { initialSource?: string }) {
     setHeightDraft(String(activeSlideHeight))
   }, [currentPageId, activeSlideWidth, activeSlideHeight])
 
-  const activeTree = useMemo(
-    () => (activePage ? cloneArtifactTree(buildPagedArtifactRenderTree(activePage, themeNode)) : []),
-    [activePage, themeNode],
+  const activeSlide = useMemo(
+    () => deckModel?.slides.find((slide) => slide.id === currentPageId) || deckModel?.slides[0] || null,
+    [deckModel, currentPageId],
   )
   const captureKey = useMemo(
-    () => `${currentPageId}:${pages.length}:${Boolean(activePage)}:${Boolean(themeNode)}:${activeSlideWidth}:${activeSlideHeight}`,
-    [currentPageId, pages.length, activePage, themeNode, activeSlideWidth, activeSlideHeight],
+    () => `${currentPageId}:${pages.length}:${Boolean(activePage)}:${Boolean(themeNode)}:${Boolean(activeSlide)}:${activeSlideWidth}:${activeSlideHeight}`,
+    [currentPageId, pages.length, activePage, themeNode, activeSlide, activeSlideWidth, activeSlideHeight],
   )
   const { previewsByPageId } = usePagedArtifactPreviewSnapshots({
     activePageId: currentPageId,
@@ -295,10 +298,11 @@ export function SlideWorkspace({ initialSource }: { initialSource?: string }) {
         <main className="min-h-0 flex-1 overflow-auto border-r-[0.5px] border-[#DDDDD8] bg-[#EEEEEB]">
           {activeView === 'preview' ? (
             <div className="mx-auto flex min-h-full items-start justify-center p-8">
-              {activePage ? (
+              {activeSlide && deckModel ? (
                 <SlideCanvas
                   key={activePageId || initialPageId}
-                  tree={activeTree}
+                  slide={activeSlide}
+                  theme={deckModel.theme}
                   zoom={zoom}
                   slideElementRef={slideElementRef}
                   renderKey={`${currentPageId}:${activeSlideWidth}:${activeSlideHeight}`}
