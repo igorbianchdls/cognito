@@ -1212,6 +1212,234 @@ function SaaSSpotlightGalleryAnimationCard() {
   )
 }
 
+function SaaSBeforeAfterAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const slider = interpolate(Math.sin(frame / 34), [-1, 1], [0.22, 0.78])
+  const reveal = progress(frame, 42, 92)
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 48%, rgba(34, 95, 66, 0.16), rgba(244, 247, 244, 0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Before / after" />
+      <section
+        style={{
+          background: '#ffffff',
+          border: '1px solid #dfe7e1',
+          borderRadius: 36,
+          boxShadow: '0 44px 110px rgba(20, 24, 22, 0.20)',
+          height: 940,
+          left: 74,
+          opacity: sceneIn,
+          overflow: 'hidden',
+          position: 'absolute',
+          right: 74,
+          top: 330,
+          transform: `translateY(${(1 - sceneIn) * 34}px)`,
+          zIndex: 20,
+        }}
+      >
+        <div style={{ background: '#f7faf7', bottom: 0, left: 0, padding: 36, position: 'absolute', top: 0, width: '100%' }}>
+          <span style={{ color: '#8a6f2f', fontSize: 22, fontWeight: 900, textTransform: 'uppercase' }}>Antes</span>
+          <h2 style={{ color: '#0f1512', fontSize: 58, letterSpacing: 0, lineHeight: 0.98, margin: '16px 0 28px' }}>Fechamento manual e fragmentado</h2>
+          <div style={{ display: 'grid', gap: 18 }}>
+            {['Planilhas duplicadas', 'Conciliação por amostra', 'Contratos sem alerta', 'Dashboards atrasados'].map((label, index) => (
+              <div key={label} style={{ background: '#ffffff', border: '1px solid #eadfcb', borderRadius: 18, display: 'flex', gap: 14, padding: 18 }}>
+                <span style={{ background: '#c28f2c', borderRadius: 999, display: 'block', flex: '0 0 auto', height: 18, marginTop: 4, width: 18 }} />
+                <span style={{ color: '#4a3f2b', fontSize: 28, fontWeight: 800 }}>{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div
+          style={{
+            background: '#102019',
+            bottom: 0,
+            clipPath: `inset(0 0 0 ${slider * 100}%)`,
+            color: '#ffffff',
+            left: 0,
+            padding: 36,
+            position: 'absolute',
+            top: 0,
+            width: '100%',
+          }}
+        >
+          <span style={{ color: '#8aa895', fontSize: 22, fontWeight: 900, textTransform: 'uppercase' }}>Depois</span>
+          <h2 style={{ color: '#ffffff', fontSize: 58, letterSpacing: 0, lineHeight: 0.98, margin: '16px 0 28px' }}>Operação financeira em esteira</h2>
+          <div style={{ display: 'grid', gap: 18 }}>
+            {[
+              ['Classificacao IA', '96%'],
+              ['Conciliação automática', '98%'],
+              ['Alertas contratuais', 'Live'],
+              ['Dashboards publicados', '+18.4%'],
+            ].map(([label, value], index) => (
+              <div key={label} style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 18, display: 'flex', justifyContent: 'space-between', padding: 18, opacity: reveal }}>
+                <span style={{ color: '#ffffff', fontSize: 28, fontWeight: 800 }}>{label}</span>
+                <strong style={{ color: '#8aa895', fontSize: 30, letterSpacing: 0 }}>{value}</strong>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{ background: '#ffffff', bottom: 0, boxShadow: '0 0 34px rgba(20,24,22,0.18)', left: `${slider * 100}%`, position: 'absolute', top: 0, transform: 'translateX(-50%)', width: 5 }} />
+        <span style={{ alignItems: 'center', background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 999, boxShadow: '0 18px 48px rgba(20,24,22,0.16)', color: '#225f42', display: 'flex', fontSize: 24, fontWeight: 900, height: 82, justifyContent: 'center', left: `${slider * 100}%`, position: 'absolute', top: 430, transform: 'translateX(-50%)', width: 82 }}>AI</span>
+      </section>
+      <GalleryFooter>Comparacao before/after mostrando ganho visualmente</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+function SaaSTimelineAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const steps = [
+    ['Ingestao', 'Dados chegam de ERP, banco e contratos', '#3f6d91'],
+    ['Classificacao', 'IA organiza despesas e centros', '#225f42'],
+    ['Conciliacao', 'Transacoes sao pareadas', '#6f8f7b'],
+    ['Publicacao', 'Dashboards e relatorios ficam prontos', '#c28f2c'],
+  ]
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 48%, rgba(63, 109, 145, 0.15), rgba(244, 247, 244, 0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Timeline animada" />
+      <div style={{ left: 88, opacity: sceneIn, position: 'absolute', right: 88, top: 300, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 20 }}>
+        <h2 style={{ color: '#0f1512', fontSize: 72, letterSpacing: 0, lineHeight: 0.98, margin: '0 0 54px' }}>Do dado bruto ao board pack</h2>
+        <div style={{ background: '#dce6df', borderRadius: 999, height: 8, left: 48, position: 'absolute', right: 48, top: 240 }} />
+        <div style={{ background: '#225f42', borderRadius: 999, height: 8, left: 48, position: 'absolute', top: 240, width: `${progress(frame, 44, 260) * 82}%` }} />
+        <div style={{ display: 'grid', gap: 22 }}>
+          {steps.map(([title, description, color], index) => {
+            const p = progress(frame, 42 + index * 42, 92 + index * 42)
+            return (
+              <div
+                key={title}
+                style={{
+                  alignItems: 'center',
+                  display: 'grid',
+                  gap: 26,
+                  gridTemplateColumns: '94px 1fr',
+                  opacity: p,
+                  transform: `translateX(${(1 - p) * -34}px)`,
+                }}
+              >
+                <span style={{ alignItems: 'center', background: color, border: '8px solid #f4f7f4', borderRadius: 999, boxShadow: `0 18px 48px ${color}40`, color: '#ffffff', display: 'flex', fontSize: 28, fontWeight: 900, height: 82, justifyContent: 'center', width: 82 }}>{index + 1}</span>
+                <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 28, boxShadow: '0 24px 64px rgba(20,24,22,0.12)', display: 'grid', gap: 14, padding: 28 }}>
+                  <strong style={{ color: '#0f1512', fontSize: 40, letterSpacing: 0 }}>{title}</strong>
+                  <span style={{ color: '#65716a', fontSize: 27, fontWeight: 760 }}>{description}</span>
+                  <span style={{ background: color, borderRadius: 999, display: 'block', height: 10, width: `${56 + index * 10}%` }} />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+      <GalleryFooter>Timeline SaaS para explicar processo e automacao ponta a ponta</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+function SaaSOrbitAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const centerX = 540
+  const centerY = 930
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 48%, rgba(34, 95, 66, 0.18), rgba(244, 247, 244, 0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Orbit gallery" />
+      <svg height="100%" style={{ left: 0, opacity: sceneIn, position: 'absolute', top: 0, zIndex: 5 }} viewBox="0 0 1080 1920" width="100%">
+        {[210, 330, 450].map((radius) => (
+          <circle cx={centerX} cy={centerY} fill="none" key={radius} r={radius} stroke="rgba(34,95,66,0.14)" strokeWidth="3" />
+        ))}
+      </svg>
+      <div style={{ opacity: sceneIn, position: 'absolute', zIndex: 20 }}>
+        {galleryItems.map((item, index) => {
+          const angle = frame / 58 + index * ((Math.PI * 2) / galleryItems.length)
+          const radius = index % 2 === 0 ? 360 : 285
+          const x = centerX + Math.cos(angle) * radius
+          const y = centerY + Math.sin(angle) * radius
+          const scale = 0.58 + ((Math.sin(angle) + 1) / 2) * 0.18
+
+          return (
+            <div
+              key={item.title}
+              style={{
+                left: x,
+                position: 'absolute',
+                top: y,
+                transform: `translate(-50%, -50%) scale(${scale})`,
+                zIndex: Math.round(scale * 100),
+              }}
+            >
+              <SaaSScreenshotCard item={item} scale={0.64} />
+            </div>
+          )
+        })}
+      </div>
+      <div style={{ alignItems: 'center', background: '#102019', border: '1px solid #102019', borderRadius: 42, boxShadow: '0 44px 110px rgba(20,24,22,0.22)', color: '#ffffff', display: 'grid', gap: 14, height: 290, justifyItems: 'center', left: '50%', padding: 32, position: 'absolute', top: centerY, transform: `translate(-50%, -50%) scale(${0.94 + sceneIn * 0.06})`, width: 360, zIndex: 40 }}>
+        <span style={{ background: '#225f42', borderRadius: 999, display: 'block', height: 18, width: 18 }} />
+        <strong style={{ color: '#ffffff', fontSize: 48, letterSpacing: 0, lineHeight: 0.98, textAlign: 'center' }}>Cognito hub</strong>
+        <span style={{ color: 'rgba(255,255,255,0.68)', fontSize: 23, fontWeight: 760, textAlign: 'center' }}>Todos os artefatos orbitando a operacao</span>
+      </div>
+      <GalleryFooter>Orbit gallery com telas circulando um hub central</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+function SaaSCommandCenterAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const active = galleryItems[Math.floor(frame / 120) % galleryItems.length]
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 48%, rgba(34, 95, 66, 0.16), rgba(244, 247, 244, 0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Command center" />
+      <section style={{ left: 70, opacity: sceneIn, position: 'absolute', right: 70, top: 292, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 20 }}>
+        <div style={{ background: '#102019', border: '1px solid #102019', borderRadius: 36, boxShadow: '0 44px 110px rgba(20,24,22,0.22)', color: '#ffffff', display: 'grid', gap: 26, minHeight: 880, padding: 34 }}>
+          <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ display: 'grid', gap: 8 }}>
+              <span style={{ color: '#8aa895', fontSize: 22, fontWeight: 900, textTransform: 'uppercase' }}>Live operations</span>
+              <strong style={{ color: '#ffffff', fontSize: 58, letterSpacing: 0, lineHeight: 0.98 }}>Finance command center</strong>
+            </div>
+            <span style={{ background: '#225f42', borderRadius: 999, color: '#ffffff', fontSize: 24, fontWeight: 900, padding: '14px 18px' }}>{active.value}</span>
+          </div>
+          <div style={{ display: 'grid', gap: 18, gridTemplateColumns: '1fr 1fr 1fr' }}>
+            {galleryItems.slice(0, 3).map((item, index) => (
+              <div key={item.title} style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 24, display: 'grid', gap: 14, padding: 22 }}>
+                <span style={{ color: 'rgba(255,255,255,0.62)', fontSize: 18, fontWeight: 850, textTransform: 'uppercase' }}>{item.label}</span>
+                <strong style={{ color: '#ffffff', fontSize: 30, letterSpacing: 0, lineHeight: 1 }}>{item.value}</strong>
+                <span style={{ background: item.accent, borderRadius: 999, display: 'block', height: 10, width: `${58 + index * 14}%` }} />
+              </div>
+            ))}
+          </div>
+          <div style={{ display: 'grid', gap: 18, gridTemplateColumns: '1.2fr 0.8fr' }}>
+            <div style={{ background: '#ffffff', borderRadius: 28, color: '#0f1512', display: 'grid', gap: 22, padding: 26 }}>
+              <strong style={{ color: '#0f1512', fontSize: 36, letterSpacing: 0 }}>{active.title}</strong>
+              <div style={{ alignItems: 'end', display: 'flex', gap: 12, height: 250 }}>
+                {[96, 146, 118, 210, 164, 286, 230].map((height, index) => <span key={height} style={{ background: index === 5 ? active.accent : '#dce6df', borderRadius: 10, flex: 1, height }} />)}
+              </div>
+            </div>
+            <div style={{ display: 'grid', gap: 16 }}>
+              {galleryItems.slice(3, 6).map((item, index) => {
+                const p = progress(frame, 48 + index * 22, 96 + index * 22)
+                return (
+                  <div key={item.title} style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 24, display: 'grid', gap: 10, opacity: p, padding: 22, transform: `translateX(${(1 - p) * 24}px)` }}>
+                    <span style={{ color: 'rgba(255,255,255,0.62)', fontSize: 17, fontWeight: 850, textTransform: 'uppercase' }}>{item.label}</span>
+                    <strong style={{ color: '#ffffff', fontSize: 28, letterSpacing: 0 }}>{item.title}</strong>
+                    <span style={{ color: item.accent, fontSize: 24, fontWeight: 900 }}>{item.value}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
+      <GalleryFooter>Command center agregando multiplas telas em uma visao executiva</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
 function VerticalPipelineVisual({ item, index }: { item: VerticalPipelineItem; index: number }) {
   const darkSlide = item.kind === 'slide' && index % 2 === 0
   const lineColor = darkSlide ? 'rgba(255,255,255,0.28)' : '#dce6df'
@@ -1547,6 +1775,22 @@ export function SaaSMarqueeGalleryAnimation() {
 
 export function SaaSSpotlightGalleryAnimation() {
   return <SaaSSpotlightGalleryAnimationCard />
+}
+
+export function SaaSBeforeAfterAnimation() {
+  return <SaaSBeforeAfterAnimationCard />
+}
+
+export function SaaSTimelineAnimation() {
+  return <SaaSTimelineAnimationCard />
+}
+
+export function SaaSOrbitAnimation() {
+  return <SaaSOrbitAnimationCard />
+}
+
+export function SaaSCommandCenterAnimation() {
+  return <SaaSCommandCenterAnimationCard />
 }
 
 export function McpOperationsDemo() {

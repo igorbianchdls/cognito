@@ -16,11 +16,15 @@ import {
   ManagementReportAnimation,
   MCP_SINGLE_ANIMATION_DURATION,
   NewsAnimation,
+  SaaSBeforeAfterAnimation,
   SaaSBentoGalleryAnimation,
   SaaSCarouselGalleryAnimation,
+  SaaSCommandCenterAnimation,
   SaaSMarqueeGalleryAnimation,
+  SaaSOrbitAnimation,
   SaaSSpotlightGalleryAnimation,
   SaaSStackGalleryAnimation,
+  SaaSTimelineAnimation,
   SaaSWallGalleryAnimation,
   TweetAnimation,
 } from '@/remotion/compositions/McpOperationsDemo'
@@ -28,7 +32,7 @@ import { ExcelWorkbookMock, type ExcelMockSheet } from '@/remotion/components/Ex
 import { PdfViewerMock, type PdfMockPage } from '@/remotion/components/PdfViewerMock'
 import { PowerPointEditorMock, type PowerPointMockSlide } from '@/remotion/components/PowerPointEditorMock'
 
-type PreviewComposition = 'intro' | 'classification' | 'reconciliation' | 'dashboards' | 'report' | 'slides' | 'contracts' | 'entry' | 'powerpoint' | 'pdf' | 'excel' | 'integration' | 'news' | 'tweet' | 'gallery-carousel' | 'gallery-bento' | 'gallery-wall' | 'gallery-stack' | 'gallery-marquee' | 'gallery-spotlight'
+type PreviewComposition = 'intro' | 'classification' | 'reconciliation' | 'dashboards' | 'report' | 'slides' | 'contracts' | 'entry' | 'powerpoint' | 'pdf' | 'excel' | 'integration' | 'news' | 'tweet' | 'gallery-carousel' | 'gallery-bento' | 'gallery-wall' | 'gallery-stack' | 'gallery-marquee' | 'gallery-spotlight' | 'before-after' | 'timeline' | 'orbit' | 'command-center'
 
 type AnimationOption = {
   component: ComponentType
@@ -180,6 +184,10 @@ const animationOptions: AnimationOption[] = [
   { component: SaaSStackGalleryAnimation, label: 'Galeria Stack', value: 'gallery-stack' },
   { component: SaaSMarqueeGalleryAnimation, label: 'Galeria Marquee', value: 'gallery-marquee' },
   { component: SaaSSpotlightGalleryAnimation, label: 'Galeria Spotlight', value: 'gallery-spotlight' },
+  { component: SaaSBeforeAfterAnimation, label: 'Before After', value: 'before-after' },
+  { component: SaaSTimelineAnimation, label: 'Timeline', value: 'timeline' },
+  { component: SaaSOrbitAnimation, label: 'Orbit', value: 'orbit' },
+  { component: SaaSCommandCenterAnimation, label: 'Command Center', value: 'command-center' },
 ]
 
 export default function RemotionPreviewPage() {
