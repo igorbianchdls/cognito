@@ -328,11 +328,10 @@ export function SlideHtmlRenderer({
     <ThemeProvider name={theme.name} cssVars={cssVars}>
       <div
         style={{
-          width: '100%',
-          height: '100%',
+          width: slide.size.widthPx,
+          height: slide.size.heightPx,
           position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
+          display: 'block',
           minWidth: 0,
           minHeight: 0,
           overflow: 'hidden',
