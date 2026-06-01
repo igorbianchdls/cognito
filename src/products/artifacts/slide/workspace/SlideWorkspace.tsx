@@ -20,6 +20,7 @@ import {
   parseArtifactDimensionDraft,
   updatePagedArtifactSizeInTree,
 } from '@/products/artifacts/core/workspace/pagedArtifactTree'
+import { exportSlideDeckToPptx } from '@/products/artifacts/slide/export/pptx/exportSlideDeckToPptx'
 import { normalizeSlideTree } from '@/products/artifacts/slide/model/normalizeSlideTree'
 import type { SlideModel, SlideThemeModel } from '@/products/artifacts/slide/model/slideModel'
 import { SlideHtmlRenderer } from '@/products/artifacts/slide/renderer/html/SlideHtmlRenderer'
@@ -178,6 +179,7 @@ export function SlideWorkspace({ initialSource }: { initialSource?: string }) {
   const initialPageId = useMemo(() => (pages.length ? getArtifactPageId(pages[0], 0, 'slide') : ''), [pages])
   const [activePageId, setActivePageId] = useState(initialPageId)
   const [activeView, setActiveView] = useState<'preview' | 'code'>('preview')
+  const [isExportingPptx, setIsExportingPptx] = useState(false)
   const [zoom, setZoom] = useState(0.82)
   const [widthDraft, setWidthDraft] = useState(String(DEFAULT_SLIDE_WIDTH))
   const [heightDraft, setHeightDraft] = useState(String(DEFAULT_SLIDE_HEIGHT))
@@ -226,6 +228,16 @@ export function SlideWorkspace({ initialSource }: { initialSource?: string }) {
       : current)
   }
 
+  const exportPowerPoint = async () => {
+    if (!deckModel || isExportingPptx) return
+    try {
+      setIsExportingPptx(true)
+      await exportSlideDeckToPptx(deckModel)
+    } finally {
+      setIsExportingPptx(false)
+    }
+  }
+
   if (templateError) {
     return <ArtifactWorkspaceStatusScreen message={templateError} tone="error" />
   }
@@ -260,7 +272,13 @@ export function SlideWorkspace({ initialSource }: { initialSource?: string }) {
             onDecrease={() => setZoom((current) => Math.max(0.4, Number((current - 0.1).toFixed(2))))}
             onIncrease={() => setZoom((current) => Math.min(1.4, Number((current + 0.1).toFixed(2))))}
           />
-          <button type="button" className="flex items-center justify-center rounded-md border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]">
+          <button
+            type="button"
+            aria-label="Exportar PowerPoint"
+            disabled={!deckModel || isExportingPptx}
+            onClick={exportPowerPoint}
+            className="flex items-center justify-center rounded-md border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B] disabled:cursor-not-allowed disabled:opacity-50"
+          >
             <Icon icon="solar:download-square-bold" className="h-4 w-4" />
           </button>
           <button type="button" className="flex items-center justify-center rounded-md border-[0.5px] border-[#DDDDD8] bg-[#ECECEB] p-2 text-[#5F5F5A] transition hover:bg-[#E2E2E0] hover:text-[#4F4F4B]">
