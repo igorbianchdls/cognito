@@ -6,8 +6,20 @@ import type { SlideDeckModel } from '@/products/artifacts/slide/model/slideModel
 import { createSlideUnitConverter, getSlideHeightIn, getSlideWidthIn } from '@/products/artifacts/slide/model/slideUnits'
 import { renderPptxSlide } from '@/products/artifacts/slide/export/pptx/renderPptxSlide'
 import { sanitizeFileName } from '@/products/artifacts/slide/export/pptx/pptxUtils'
+import {
+  hasBlockingPptxDiagnostics,
+  validatePptxExportReadiness,
+} from '@/products/artifacts/slide/export/pptx/validatePptxExportReadiness'
 
 export async function exportSlideDeckToPptx(deck: SlideDeckModel, fileName?: string) {
+  const diagnostics = validatePptxExportReadiness(deck)
+  if (diagnostics.length) {
+    console.warn('[slide-pptx-export]', diagnostics)
+  }
+  if (hasBlockingPptxDiagnostics(diagnostics)) {
+    throw new Error('A apresentação possui erros que impedem a exportação PPTX.')
+  }
+
   const pptx = new PptxGenJS()
   const firstSlideSize = deck.slides[0]?.size
   const width = firstSlideSize ? getSlideWidthIn(firstSlideSize) : 13.333333

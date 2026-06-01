@@ -2,6 +2,7 @@
 
 import type { SlideElementModel } from '@/products/artifacts/slide/model/slideModel'
 import { PPTX_COMPONENT_RENDERERS } from '@/products/artifacts/slide/export/pptx/pptxComponentRegistry'
+import { renderPptxFallbackBox } from '@/products/artifacts/slide/export/pptx/pptxFallbacks'
 import { resolvePptxTheme } from '@/products/artifacts/slide/export/pptx/pptxTheme'
 import type { PptxRenderContext, PptxSlide } from '@/products/artifacts/slide/export/pptx/pptxTypes'
 
@@ -16,6 +17,11 @@ function renderElement(
     return
   }
 
+  if (element.kind === 'html' && element.children.length > 0 && !element.frame) {
+    element.children.forEach((child, childIndex) => renderElement(pptxSlide, child, context, fallbackIndex + childIndex))
+    return
+  }
+
   const renderer = PPTX_COMPONENT_RENDERERS[element.kind]
   if (renderer) {
     renderer(pptxSlide, element, context, fallbackIndex)
@@ -25,7 +31,12 @@ function renderElement(
     return
   }
 
-  element.children.forEach((child, childIndex) => renderElement(pptxSlide, child, context, fallbackIndex + childIndex))
+  if (element.children.length) {
+    element.children.forEach((child, childIndex) => renderElement(pptxSlide, child, context, fallbackIndex + childIndex))
+    return
+  }
+
+  renderPptxFallbackBox(pptxSlide, element, context, fallbackIndex)
 }
 
 export function renderPptxSlide(pptxSlide: PptxSlide, context: PptxRenderContext) {

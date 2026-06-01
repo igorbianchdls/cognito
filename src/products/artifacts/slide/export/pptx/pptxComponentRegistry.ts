@@ -15,6 +15,7 @@ export const PPTX_COMPONENT_RENDERERS: Partial<Record<string, PptxElementRendere
   html: renderPptxHtmlText,
   image: renderPptxImage,
   logo: renderPptxImage,
+  pivotTable: renderPptxTable,
   shape: renderPptxShape,
   stat: renderPptxStat,
   subtitle: renderPptxText,

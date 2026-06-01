@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "mcp:smoke": "node scripts/mcp/smoke-test.mjs",
+    "slides:pptx:smoke": "node scripts/artifacts/slides/export-pptx-smoke.mjs",
     "mcp-apps:build": "node scripts/mcp-apps/build-widget.mjs",
     "mcp-apps:smoke": "node scripts/mcp-apps/smoke-test.mjs",
     "chatgpt-app:build": "node scripts/chatgpt-app/build-widget.mjs",
