@@ -1919,6 +1919,269 @@ function ClaudeWebAnimationCard() {
   return <WebChatWindow brand="Claude" kind="claude" />
 }
 
+function EmailAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const typeIn = progress(frame, 70, 170)
+  const sendIn = progress(frame, 188, 240)
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 48%, rgba(43,126,165,0.15), rgba(244,247,244,0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Email drafting" />
+      <section style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 34, boxShadow: '0 44px 110px rgba(20,24,22,0.20)', display: 'grid', gridTemplateRows: '72px 1fr', left: 74, opacity: sceneIn, overflow: 'hidden', position: 'absolute', right: 74, top: 330, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 20 }}>
+        <header style={{ alignItems: 'center', borderBottom: '1px solid #e5ece7', display: 'flex', justifyContent: 'space-between', padding: '0 28px' }}>
+          <strong style={{ color: '#0f1512', fontSize: 24, letterSpacing: 0 }}>cfo@acme.com</strong>
+          <span style={{ background: '#e8f1ec', borderRadius: 999, color: '#225f42', fontSize: 17, fontWeight: 850, padding: '9px 13px' }}>AI compose</span>
+        </header>
+        <div style={{ display: 'grid', gap: 24, padding: 32 }}>
+          {[
+            ['To', 'finance-team@acme.com'],
+            ['Subject', 'Plano de ação do fechamento de maio'],
+          ].map(([label, value]) => (
+            <div key={label} style={{ alignItems: 'center', borderBottom: '1px solid #e5ece7', display: 'grid', gridTemplateColumns: '110px 1fr', paddingBottom: 16 }}>
+              <span style={{ color: '#65716a', fontSize: 22, fontWeight: 780 }}>{label}</span>
+              <strong style={{ color: '#0f1512', fontSize: 25, letterSpacing: 0 }}>{value}</strong>
+            </div>
+          ))}
+          <div style={{ display: 'grid', gap: 18, minHeight: 570 }}>
+            {[
+              'Pessoal, segue resumo executivo do fechamento de maio.',
+              'A IA identificou três frentes prioritárias: fretes recorrentes, campanhas acima do teto e contratos com reajuste próximo.',
+              'Recomendo aprovar o plano de ação abaixo e revisar os responsáveis até sexta.',
+            ].map((line, index) => {
+              const p = progress(typeIn, index * 0.26, index * 0.26 + 0.34)
+              return (
+                <p key={line} style={{ color: '#1f2a24', fontSize: 30, fontWeight: 560, letterSpacing: 0, lineHeight: 1.35, margin: 0, opacity: p, transform: `translateY(${(1 - p) * 16}px)` }}>
+                  {line}
+                </p>
+              )
+            })}
+            <div style={{ background: '#f7faf7', border: '1px solid #dfe7e1', borderRadius: 24, display: 'grid', gap: 14, marginTop: 10, opacity: progress(typeIn, 0.62, 1), padding: 22 }}>
+              {['Renegociar SLA com Frete Sul', 'Reduzir budget de campanhas sem ROAS', 'Preparar contratos para revisão'].map((item, index) => (
+                <div key={item} style={{ alignItems: 'center', display: 'flex', gap: 14 }}>
+                  <span style={{ background: galleryItems[index].accent, borderRadius: 999, display: 'block', height: 16, width: 16 }} />
+                  <span style={{ color: '#0f1512', fontSize: 24, fontWeight: 780 }}>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', gap: 10 }}>
+              {['Anexar', 'Assinatura', 'Agendar'].map((item) => <span key={item} style={{ background: '#f3f7f4', borderRadius: 999, color: '#516057', fontSize: 18, fontWeight: 800, padding: '11px 15px' }}>{item}</span>)}
+            </div>
+            <span style={{ background: '#225f42', borderRadius: 999, boxShadow: '0 18px 46px rgba(34,95,66,0.28)', color: '#ffffff', fontSize: 22, fontWeight: 900, opacity: sendIn, padding: '15px 24px', transform: `translateX(${(1 - sendIn) * 20}px)` }}>Enviar</span>
+          </div>
+        </div>
+      </section>
+      <GalleryFooter>Email animado com redação automática e envio</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+function InboxAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const activeIndex = Math.floor(frame / 96) % 5
+  const emails = [
+    ['Banco', 'Divergência no extrato', 'Alta', '#c28f2c'],
+    ['Fornecedor', 'Contrato vence em 14 dias', 'Média', '#8b6f9d'],
+    ['Financeiro', 'DRE pronta para revisão', 'OK', '#225f42'],
+    ['Marketing', 'Campanha acima do teto', 'Alta', '#c28f2c'],
+    ['Diretoria', 'Board pack de maio', 'Novo', '#3f6d91'],
+  ]
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 48%, rgba(34,95,66,0.15), rgba(244,247,244,0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Inbox triage" />
+      <section style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 34, boxShadow: '0 44px 110px rgba(20,24,22,0.20)', display: 'grid', gridTemplateColumns: '1fr 330px', left: 62, opacity: sceneIn, overflow: 'hidden', position: 'absolute', right: 62, top: 330, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 20 }}>
+        <div style={{ display: 'grid', gap: 12, padding: 28 }}>
+          <strong style={{ color: '#0f1512', fontSize: 42, letterSpacing: 0, marginBottom: 12 }}>Inbox financeiro</strong>
+          {emails.map(([from, subject, status, color], index) => {
+            const p = progress(frame, 28 + index * 14, 68 + index * 14)
+            const active = index === activeIndex
+            return (
+              <div key={subject} style={{ alignItems: 'center', background: active ? '#f7faf7' : '#ffffff', border: `1px solid ${active ? color : '#e5ece7'}`, borderRadius: 22, display: 'grid', gap: 16, gridTemplateColumns: '58px 1fr auto', opacity: p, padding: 18, transform: `translateX(${(1 - p) * -24}px)` }}>
+                <span style={{ alignItems: 'center', background: color, borderRadius: 18, color: '#ffffff', display: 'flex', fontSize: 22, fontWeight: 900, height: 58, justifyContent: 'center', width: 58 }}>{from.slice(0, 1)}</span>
+                <div style={{ display: 'grid', gap: 5 }}>
+                  <strong style={{ color: '#0f1512', fontSize: 24, letterSpacing: 0 }}>{subject}</strong>
+                  <span style={{ color: '#65716a', fontSize: 18, fontWeight: 760 }}>{from} · classificado automaticamente</span>
+                </div>
+                <span style={{ background: `${color}18`, borderRadius: 999, color, fontSize: 17, fontWeight: 900, padding: '9px 13px' }}>{status}</span>
+              </div>
+            )
+          })}
+        </div>
+        <aside style={{ background: '#f7faf7', borderLeft: '1px solid #dfe7e1', display: 'grid', gap: 18, padding: 26, alignContent: 'start' }}>
+          <strong style={{ color: '#0f1512', fontSize: 30, letterSpacing: 0 }}>Resumo IA</strong>
+          {['2 alertas críticos', '1 aprovação pendente', '3 respostas sugeridas'].map((item, index) => (
+            <div key={item} style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 20, display: 'grid', gap: 10, padding: 18 }}>
+              <span style={{ color: galleryItems[index].accent, fontSize: 28, fontWeight: 900 }}>{index + 1}</span>
+              <span style={{ color: '#0f1512', fontSize: 21, fontWeight: 820 }}>{item}</span>
+            </div>
+          ))}
+        </aside>
+      </section>
+      <GalleryFooter>Inbox animado com triagem, prioridade e resumo por IA</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+function NotificationCenterAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const alerts = [
+    ['Crítico', 'Contrato AWS reajusta amanhã', '#c28f2c'],
+    ['Atenção', 'Frete Sul atrasou 4 vezes', '#8b6f9d'],
+    ['OK', 'DRE publicada no dashboard', '#225f42'],
+    ['Novo', 'Conciliação fechou 98%', '#3f6d91'],
+  ]
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 48%, rgba(194,143,44,0.14), rgba(244,247,244,0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Notification center" />
+      <div style={{ left: 92, opacity: sceneIn, position: 'absolute', right: 92, top: 330, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 20 }}>
+        <h2 style={{ color: '#0f1512', fontSize: 72, letterSpacing: 0, lineHeight: 0.98, margin: '0 0 38px' }}>Alertas operacionais em tempo real</h2>
+        <div style={{ display: 'grid', gap: 18 }}>
+          {alerts.map(([severity, text, color], index) => {
+            const p = progress(frame, 36 + index * 34, 76 + index * 34)
+            return (
+              <div key={text} style={{ alignItems: 'center', background: '#ffffff', border: `1px solid ${color}`, borderRadius: 28, boxShadow: `0 24px 64px ${color}24`, display: 'grid', gap: 18, gridTemplateColumns: '84px 1fr auto', opacity: p, padding: 22, transform: `translateX(${(1 - p) * 42}px)` }}>
+                <span style={{ alignItems: 'center', background: color, borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 28, fontWeight: 900, height: 72, justifyContent: 'center', width: 72 }}>{index + 1}</span>
+                <div style={{ display: 'grid', gap: 7 }}>
+                  <strong style={{ color: '#0f1512', fontSize: 30, letterSpacing: 0 }}>{text}</strong>
+                  <span style={{ color: '#65716a', fontSize: 20, fontWeight: 760 }}>{severity} · roteado para o responsável</span>
+                </div>
+                <span style={{ background: `${color}18`, borderRadius: 999, color, fontSize: 18, fontWeight: 900, padding: '10px 14px' }}>Resolver</span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+      <GalleryFooter>Notification center com severidade, routing e ações rápidas</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+function DataPipelineAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const stages = [
+    ['ERP', '#3f6d91'],
+    ['Banco', '#225f42'],
+    ['Normalize', '#6f8f7b'],
+    ['Model', '#c28f2c'],
+    ['Dashboard', '#8b6f9d'],
+  ]
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 48%, rgba(34,95,66,0.16), rgba(244,247,244,0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Data pipeline" />
+      <svg height="100%" style={{ left: 0, opacity: sceneIn, position: 'absolute', top: 0, zIndex: 8 }} viewBox="0 0 1080 1920" width="100%">
+        <path d="M 150 860 C 310 720, 430 720, 540 860 S 770 1000, 930 860" fill="none" stroke="#225f42" strokeDasharray="22 22" strokeDashoffset={-(frame * 5)} strokeLinecap="round" strokeWidth="8" />
+      </svg>
+      <div style={{ display: 'flex', justifyContent: 'space-between', left: 72, opacity: sceneIn, position: 'absolute', right: 72, top: 705, zIndex: 20 }}>
+        {stages.map(([label, color], index) => {
+          const p = progress(frame, 40 + index * 24, 84 + index * 24)
+          return (
+            <div key={label} style={{ alignItems: 'center', display: 'grid', gap: 16, justifyItems: 'center', opacity: p, transform: `translateY(${(1 - p) * 28}px)` }}>
+              <span style={{ alignItems: 'center', background: color, borderRadius: 34, boxShadow: `0 26px 70px ${color}38`, color: '#ffffff', display: 'flex', fontSize: 26, fontWeight: 900, height: 132, justifyContent: 'center', width: 132 }}>{label.slice(0, 2)}</span>
+              <strong style={{ color: '#0f1512', fontSize: 25, letterSpacing: 0 }}>{label}</strong>
+            </div>
+          )
+        })}
+      </div>
+      <div style={{ background: '#102019', borderRadius: 34, boxShadow: '0 40px 100px rgba(20,24,22,0.22)', color: '#ffffff', left: 120, padding: 34, position: 'absolute', right: 120, top: 1120, zIndex: 30 }}>
+        <span style={{ color: '#8aa895', fontSize: 22, fontWeight: 900, textTransform: 'uppercase' }}>Pipeline financeiro</span>
+        <h2 style={{ color: '#ffffff', fontSize: 60, letterSpacing: 0, lineHeight: 0.98, margin: '14px 0 0' }}>Dados confiáveis fluindo até a decisão</h2>
+      </div>
+      <GalleryFooter>Data pipeline com fluxo técnico e transformação de dados</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+function ReportExportAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const exportP = progress(frame, 78, 190)
+  const formats = ['PDF', 'PPT', 'XLS']
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 48%, rgba(63,109,145,0.15), rgba(244,247,244,0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Report export" />
+      <section style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 34, boxShadow: '0 44px 110px rgba(20,24,22,0.20)', left: 90, opacity: sceneIn, padding: 36, position: 'absolute', right: 90, top: 330, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 20 }}>
+        <span style={{ color: '#65716a', fontSize: 22, fontWeight: 900, textTransform: 'uppercase' }}>Relatório gerencial</span>
+        <h2 style={{ color: '#0f1512', fontSize: 64, letterSpacing: 0, lineHeight: 0.98, margin: '14px 0 34px' }}>Exportando artefatos executivos</h2>
+        <div style={{ background: '#f7faf7', border: '1px solid #dfe7e1', borderRadius: 26, display: 'grid', gap: 18, padding: 26 }}>
+          {[88, 72, 94, 64, 82].map((width, index) => <span key={width} style={{ background: index === 2 ? '#225f42' : '#dce6df', borderRadius: 999, display: 'block', height: 14, width: `${width}%` }} />)}
+          <div style={{ alignItems: 'end', display: 'flex', gap: 12, height: 220, marginTop: 16 }}>
+            {[96, 146, 118, 210, 164, 286].map((height, index) => <span key={height} style={{ background: index > 3 ? '#225f42' : '#dce6df', borderRadius: 10, flex: 1, height }} />)}
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 18, justifyContent: 'center', marginTop: 34 }}>
+          {formats.map((format, index) => {
+            const p = progress(exportP, index * 0.18, index * 0.18 + 0.46)
+            return (
+              <div key={format} style={{ alignItems: 'center', background: galleryItems[index].accent, borderRadius: 24, boxShadow: `0 24px 64px ${galleryItems[index].accent}35`, color: '#ffffff', display: 'flex', fontSize: 34, fontWeight: 900, height: 128, justifyContent: 'center', opacity: p, transform: `translateY(${(1 - p) * -42}px) scale(${0.86 + p * 0.14})`, width: 128 }}>
+                {format}
+              </div>
+            )
+          })}
+        </div>
+      </section>
+      <GalleryFooter>Report export transformando dados em PDF, slides e planilha</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+function ApprovalFlowAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const approved = progress(frame, 150, 230)
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 48%, rgba(34,95,66,0.16), rgba(244,247,244,0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Approval flow" />
+      <section style={{ left: 70, opacity: sceneIn, position: 'absolute', right: 70, top: 330, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 20 }}>
+        <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 34, boxShadow: '0 44px 110px rgba(20,24,22,0.20)', display: 'grid', gap: 24, padding: 34 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ display: 'grid', gap: 8 }}>
+              <span style={{ color: '#65716a', fontSize: 22, fontWeight: 900, textTransform: 'uppercase' }}>Aprovação pendente</span>
+              <strong style={{ color: '#0f1512', fontSize: 58, letterSpacing: 0, lineHeight: 0.98 }}>Pagamento Frete Sul</strong>
+            </div>
+            <strong style={{ color: '#c28f2c', fontSize: 42, letterSpacing: 0 }}>R$ 8.420</strong>
+          </div>
+          <div style={{ display: 'grid', gap: 16 }}>
+            {['Solicitado por Operações', 'Validado contra contrato', 'Centro de custo confirmado', 'Aguardando aprovação CFO'].map((step, index) => {
+              const p = progress(frame, 42 + index * 28, 82 + index * 28)
+              const done = index < 3 || approved > 0.5
+              return (
+                <div key={step} style={{ alignItems: 'center', background: '#f7faf7', border: '1px solid #dfe7e1', borderRadius: 22, display: 'grid', gap: 16, gridTemplateColumns: '54px 1fr', opacity: p, padding: 18 }}>
+                  <span style={{ alignItems: 'center', background: done ? '#225f42' : '#c28f2c', borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 22, fontWeight: 900, height: 48, justifyContent: 'center', width: 48 }}>{done ? '✓' : '!'}</span>
+                  <span style={{ color: '#0f1512', fontSize: 25, fontWeight: 800 }}>{step}</span>
+                </div>
+              )
+            })}
+          </div>
+          <div style={{ display: 'flex', gap: 16, justifyContent: 'flex-end' }}>
+            <span style={{ background: '#fff7ed', borderRadius: 999, color: '#c28f2c', fontSize: 22, fontWeight: 900, padding: '15px 22px' }}>Revisar</span>
+            <span style={{ background: '#225f42', borderRadius: 999, boxShadow: '0 20px 54px rgba(34,95,66,0.25)', color: '#ffffff', fontSize: 22, fontWeight: 900, opacity: progress(frame, 122, 170), padding: '15px 22px' }}>Aprovar</span>
+          </div>
+        </div>
+        <div style={{ background: '#102019', borderRadius: 28, boxShadow: '0 28px 80px rgba(20,24,22,0.22)', color: '#ffffff', marginTop: 22, opacity: approved, padding: 26, transform: `translateY(${(1 - approved) * 24}px)` }}>
+          <strong style={{ color: '#8aa895', fontSize: 34, letterSpacing: 0 }}>Aprovado e enviado ao ERP</strong>
+        </div>
+      </section>
+      <GalleryFooter>Approval flow com validações, responsável e ação final</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
 function VerticalPipelineVisual({ item, index }: { item: VerticalPipelineItem; index: number }) {
   const darkSlide = item.kind === 'slide' && index % 2 === 0
   const lineColor = darkSlide ? 'rgba(255,255,255,0.28)' : '#dce6df'
@@ -2318,6 +2581,30 @@ export function ChatGptWebAnimation() {
 
 export function ClaudeWebAnimation() {
   return <ClaudeWebAnimationCard />
+}
+
+export function EmailAnimation() {
+  return <EmailAnimationCard />
+}
+
+export function InboxAnimation() {
+  return <InboxAnimationCard />
+}
+
+export function NotificationCenterAnimation() {
+  return <NotificationCenterAnimationCard />
+}
+
+export function DataPipelineAnimation() {
+  return <DataPipelineAnimationCard />
+}
+
+export function ReportExportAnimation() {
+  return <ReportExportAnimationCard />
+}
+
+export function ApprovalFlowAnimation() {
+  return <ApprovalFlowAnimationCard />
 }
 
 export function McpOperationsDemo() {
