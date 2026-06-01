@@ -2,7 +2,7 @@
 
 import { Player } from '@remotion/player'
 import type { ComponentType } from 'react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { McpChartIntro, type McpTemplate } from '@/remotion/compositions/McpChartIntro'
 import {
@@ -54,12 +54,19 @@ import { ExcelWorkbookMock, type ExcelMockSheet } from '@/remotion/components/Ex
 import { PdfViewerMock, type PdfMockPage } from '@/remotion/components/PdfViewerMock'
 import { PowerPointEditorMock, type PowerPointMockSlide } from '@/remotion/components/PowerPointEditorMock'
 
-type PreviewComposition = 'intro' | 'classification' | 'reconciliation' | 'dashboards' | 'report' | 'slides' | 'contracts' | 'entry' | 'powerpoint' | 'pdf' | 'excel' | 'integration' | 'news' | 'tweet' | 'chatgpt-web' | 'claude-web' | 'email' | 'inbox' | 'notification-center' | 'data-pipeline' | 'report-export' | 'approval-flow' | 'gallery-carousel' | 'gallery-bento' | 'gallery-wall' | 'gallery-stack' | 'gallery-marquee' | 'gallery-spotlight' | 'gallery-document-fan' | 'gallery-device' | 'gallery-grid-zoom' | 'gallery-swipe-cards' | 'gallery-coverflow' | 'gallery-room-3d' | 'gallery-magnifier' | 'gallery-accordion' | 'gallery-storyboard' | 'before-after' | 'timeline' | 'orbit' | 'command-center' | 'logo-cloud' | 'metric-counter' | 'kanban-flow' | 'network-map' | 'product-tour'
+type PreviewComposition = string
+type AnimationCategory = 'Chat / Assistants' | 'Galerias' | 'Operações Financeiras' | 'Apps / Mockups' | 'SaaS Patterns' | 'Workflows'
+type AnimationKind = 'chat' | 'gallery' | 'operation' | 'mockup' | 'pattern' | 'workflow'
 
 type AnimationOption = {
-  component: ComponentType
+  category: AnimationCategory
+  component?: ComponentType
+  description: string
+  duration?: number
+  kind: AnimationKind
   label: string
-  value: Exclude<PreviewComposition, 'intro'>
+  tags: string[]
+  value: PreviewComposition
 }
 
 const powerpointSlides: PowerPointMockSlide[] = [
@@ -186,203 +193,156 @@ function ExcelPreviewAnimation() {
   )
 }
 
-const animationOptions: AnimationOption[] = [
-  { component: ExpenseClassificationAnimation, label: 'Classificação', value: 'classification' },
-  { component: BankReconciliationAnimation, label: 'Conciliação', value: 'reconciliation' },
-  { component: DashboardsAnimation, label: 'Dashboards', value: 'dashboards' },
-  { component: ManagementReportAnimation, label: 'Relatório', value: 'report' },
-  { component: ClosingSlidesAnimation, label: 'Slides', value: 'slides' },
-  { component: ContractManagementAnimation, label: 'Contratos', value: 'contracts' },
-  { component: AccountingEntryAnimation, label: 'Lançamento', value: 'entry' },
-  { component: PowerPointPreviewAnimation, label: 'PowerPoint', value: 'powerpoint' },
-  { component: PdfPreviewAnimation, label: 'PDF', value: 'pdf' },
-  { component: ExcelPreviewAnimation, label: 'Excel', value: 'excel' },
-  { component: IntegrationFlowAnimation, label: 'Integração', value: 'integration' },
-  { component: NewsAnimation, label: 'Notícia', value: 'news' },
-  { component: TweetAnimation, label: 'Tweet', value: 'tweet' },
-  { component: ChatGptWebAnimation, label: 'ChatGPT Web', value: 'chatgpt-web' },
-  { component: ClaudeWebAnimation, label: 'Claude Web', value: 'claude-web' },
-  { component: EmailAnimation, label: 'Email', value: 'email' },
-  { component: InboxAnimation, label: 'Inbox', value: 'inbox' },
-  { component: NotificationCenterAnimation, label: 'Notification', value: 'notification-center' },
-  { component: DataPipelineAnimation, label: 'Data Pipeline', value: 'data-pipeline' },
-  { component: ReportExportAnimation, label: 'Report Export', value: 'report-export' },
-  { component: ApprovalFlowAnimation, label: 'Approval Flow', value: 'approval-flow' },
-  { component: SaaSBeforeAfterAnimation, label: 'Before After', value: 'before-after' },
-  { component: SaaSTimelineAnimation, label: 'Timeline', value: 'timeline' },
-  { component: SaaSOrbitAnimation, label: 'Orbit', value: 'orbit' },
-  { component: SaaSCommandCenterAnimation, label: 'Command Center', value: 'command-center' },
-  { component: SaaSLogoCloudAnimation, label: 'Logo Cloud', value: 'logo-cloud' },
-  { component: SaaSMetricCounterAnimation, label: 'Metric Counter', value: 'metric-counter' },
-  { component: SaaSKanbanFlowAnimation, label: 'Kanban Flow', value: 'kanban-flow' },
-  { component: SaaSNetworkMapAnimation, label: 'Network Map', value: 'network-map' },
-  { component: SaaSProductTourAnimation, label: 'Product Tour', value: 'product-tour' },
+const animationCatalog: AnimationOption[] = [
+  { category: 'Chat / Assistants', description: 'Intro mobile com templates ChatGPT e Claude.', duration: 4200, kind: 'chat', label: 'Intro Mobile', tags: ['Mobile', 'Chat', 'MCP'], value: 'intro' },
+  { category: 'Chat / Assistants', component: ChatGptWebAnimation, description: 'Janela web do ChatGPT com sidebar, conversa e card analítico.', kind: 'chat', label: 'ChatGPT Web', tags: ['Web', 'Chat', 'Assistant'], value: 'chatgpt-web' },
+  { category: 'Chat / Assistants', component: ClaudeWebAnimation, description: 'Janela web do Claude com conversa e composer desktop.', kind: 'chat', label: 'Claude Web', tags: ['Web', 'Chat', 'Assistant'], value: 'claude-web' },
+
+  { category: 'Operações Financeiras', component: ExpenseClassificationAnimation, description: 'Esteira vertical de documentos financeiros classificados por IA.', kind: 'operation', label: 'Classificação', tags: ['Financeiro', 'IA', 'Esteira'], value: 'classification' },
+  { category: 'Operações Financeiras', component: BankReconciliationAnimation, description: 'Pareamento entre banco e ERP em fluxo vertical.', kind: 'operation', label: 'Conciliação', tags: ['Banco', 'ERP', 'Financeiro'], value: 'reconciliation' },
+  { category: 'Operações Financeiras', component: DashboardsAnimation, description: 'Dashboards financeiros renderizados em sequência.', kind: 'operation', label: 'Dashboards', tags: ['BI', 'Financeiro', 'Reports'], value: 'dashboards' },
+  { category: 'Operações Financeiras', component: ManagementReportAnimation, description: 'Relatório gerencial em páginas executivas.', kind: 'operation', label: 'Relatório', tags: ['Word', 'Financeiro', 'Executivo'], value: 'report' },
+  { category: 'Operações Financeiras', component: ClosingSlidesAnimation, description: 'Deck executivo de fechamento mensal em esteira.', kind: 'operation', label: 'Slides', tags: ['PPT', 'Fechamento', 'Board'], value: 'slides' },
+  { category: 'Operações Financeiras', component: ContractManagementAnimation, description: 'Contratos monitorados por risco, vencimento e reajuste.', kind: 'operation', label: 'Contratos', tags: ['Jurídico', 'Risco', 'Financeiro'], value: 'contracts' },
+  { category: 'Operações Financeiras', component: AccountingEntryAnimation, description: 'Lançamento contábil preparado, validado e enviado ao ERP.', kind: 'operation', label: 'Lançamento', tags: ['ERP', 'Contábil', 'Workflow'], value: 'entry' },
+
+  { category: 'Apps / Mockups', component: PowerPointPreviewAnimation, description: 'Mock desktop de PowerPoint com slides e painel Claude.', kind: 'mockup', label: 'PowerPoint', tags: ['Office', 'Slides', 'Mockup'], value: 'powerpoint' },
+  { category: 'Apps / Mockups', component: PdfPreviewAnimation, description: 'Viewer de PDF no padrão desktop/macOS.', kind: 'mockup', label: 'PDF', tags: ['Documentos', 'Viewer', 'Mockup'], value: 'pdf' },
+  { category: 'Apps / Mockups', component: ExcelPreviewAnimation, description: 'Mock desktop de Excel com ribbon e workbook financeiro.', kind: 'mockup', label: 'Excel', tags: ['Office', 'Planilha', 'Mockup'], value: 'excel' },
+
+  { category: 'SaaS Patterns', component: IntegrationFlowAnimation, description: 'Integrações conectando apps a um hub central.', kind: 'pattern', label: 'Integração', tags: ['SaaS', 'Integração', 'Hub'], value: 'integration' },
+  { category: 'SaaS Patterns', component: NewsAnimation, description: 'Notícia editorial animada com headline e cards de apoio.', kind: 'pattern', label: 'Notícia', tags: ['Editorial', 'Social', 'News'], value: 'news' },
+  { category: 'SaaS Patterns', component: TweetAnimation, description: 'Tweet animado com mídia e métricas de engajamento.', kind: 'pattern', label: 'Tweet', tags: ['Social', 'Post', 'Métricas'], value: 'tweet' },
+  { category: 'SaaS Patterns', component: SaaSBeforeAfterAnimation, description: 'Comparação antes/depois com slider animado.', kind: 'pattern', label: 'Before After', tags: ['SaaS', 'Comparação', 'Impacto'], value: 'before-after' },
+  { category: 'SaaS Patterns', component: SaaSTimelineAnimation, description: 'Timeline de processo, do dado bruto ao board pack.', kind: 'pattern', label: 'Timeline', tags: ['Processo', 'SaaS', 'Workflow'], value: 'timeline' },
+  { category: 'SaaS Patterns', component: SaaSOrbitAnimation, description: 'Telas orbitando um hub central.', kind: 'pattern', label: 'Orbit', tags: ['Hub', 'Motion', 'SaaS'], value: 'orbit' },
+  { category: 'SaaS Patterns', component: SaaSCommandCenterAnimation, description: 'Command center executivo agregando múltiplas telas.', kind: 'pattern', label: 'Command Center', tags: ['Dashboard', 'Executive', 'SaaS'], value: 'command-center' },
+  { category: 'SaaS Patterns', component: SaaSLogoCloudAnimation, description: 'Cloud de logos para integrações e social proof.', kind: 'pattern', label: 'Logo Cloud', tags: ['Logos', 'Integrações', 'Social Proof'], value: 'logo-cloud' },
+  { category: 'SaaS Patterns', component: SaaSMetricCounterAnimation, description: 'Números grandes crescendo com cards de impacto.', kind: 'pattern', label: 'Metric Counter', tags: ['Métricas', 'Impacto', 'SaaS'], value: 'metric-counter' },
+  { category: 'SaaS Patterns', component: SaaSKanbanFlowAnimation, description: 'Cards atravessando colunas de processo.', kind: 'pattern', label: 'Kanban Flow', tags: ['Kanban', 'Workflow', 'Processo'], value: 'kanban-flow' },
+  { category: 'SaaS Patterns', component: SaaSNetworkMapAnimation, description: 'Mapa de nós conectados para dados e entidades.', kind: 'pattern', label: 'Network Map', tags: ['Network', 'Dados', 'Integrações'], value: 'network-map' },
+  { category: 'SaaS Patterns', component: SaaSProductTourAnimation, description: 'Tour de produto com hotspots sobre uma interface.', kind: 'pattern', label: 'Product Tour', tags: ['Tour', 'Hotspots', 'Product'], value: 'product-tour' },
+
+  { category: 'Workflows', component: EmailAnimation, description: 'Email sendo redigido com resumo e plano de ação.', kind: 'workflow', label: 'Email', tags: ['Email', 'AI Compose', 'Workflow'], value: 'email' },
+  { category: 'Workflows', component: InboxAnimation, description: 'Inbox financeiro com triagem, prioridade e resumo por IA.', kind: 'workflow', label: 'Inbox', tags: ['Inbox', 'Triage', 'Workflow'], value: 'inbox' },
+  { category: 'Workflows', component: NotificationCenterAnimation, description: 'Central de notificações com severidade e ações rápidas.', kind: 'workflow', label: 'Notification', tags: ['Alertas', 'Operações', 'Workflow'], value: 'notification-center' },
+  { category: 'Workflows', component: DataPipelineAnimation, description: 'Pipeline de dados fluindo por etapas técnicas.', kind: 'workflow', label: 'Data Pipeline', tags: ['Dados', 'Pipeline', 'ETL'], value: 'data-pipeline' },
+  { category: 'Workflows', component: ReportExportAnimation, description: 'Exportação de relatório para PDF, PPT e XLS.', kind: 'workflow', label: 'Report Export', tags: ['Export', 'Reports', 'Office'], value: 'report-export' },
+  { category: 'Workflows', component: ApprovalFlowAnimation, description: 'Fluxo de aprovação com validações e envio ao ERP.', kind: 'workflow', label: 'Approval Flow', tags: ['Aprovação', 'ERP', 'Workflow'], value: 'approval-flow' },
+
+  { category: 'Galerias', component: SaaSCarouselGalleryAnimation, description: 'Carousel com foco central e profundidade.', kind: 'gallery', label: 'Carousel', tags: ['Gallery', 'Hero', 'Product'], value: 'gallery-carousel' },
+  { category: 'Galerias', component: SaaSBentoGalleryAnimation, description: 'Bento grid com cards entrando em sequência.', kind: 'gallery', label: 'Bento', tags: ['Gallery', 'Grid', 'SaaS'], value: 'gallery-bento' },
+  { category: 'Galerias', component: SaaSWallGalleryAnimation, description: 'Wall de screenshots em movimento contínuo.', kind: 'gallery', label: 'Wall', tags: ['Gallery', 'Wall', 'Hero'], value: 'gallery-wall' },
+  { category: 'Galerias', component: SaaSStackGalleryAnimation, description: 'Cards empilhados trocando em camadas.', kind: 'gallery', label: 'Stack', tags: ['Gallery', 'Stack', 'Cards'], value: 'gallery-stack' },
+  { category: 'Galerias', component: SaaSMarqueeGalleryAnimation, description: 'Fileiras horizontais infinitas.', kind: 'gallery', label: 'Marquee', tags: ['Gallery', 'Marquee', 'Loop'], value: 'gallery-marquee' },
+  { category: 'Galerias', component: SaaSSpotlightGalleryAnimation, description: 'Tela principal em destaque com callouts.', kind: 'gallery', label: 'Spotlight', tags: ['Gallery', 'Zoom', 'Callouts'], value: 'gallery-spotlight' },
+  { category: 'Galerias', component: SaaSDocumentFanGalleryAnimation, description: 'Documentos/telas abrindo em leque.', kind: 'gallery', label: 'Document Fan', tags: ['Gallery', 'Documents', 'Fan'], value: 'gallery-document-fan' },
+  { category: 'Galerias', component: SaaSDeviceGalleryAnimation, description: 'Desktop, tablet e mobile em camadas.', kind: 'gallery', label: 'Device', tags: ['Gallery', 'Devices', 'Responsive'], value: 'gallery-device' },
+  { category: 'Galerias', component: SaaSGridZoomGalleryAnimation, description: 'Grade de screenshots com foco rotativo.', kind: 'gallery', label: 'Grid Zoom', tags: ['Gallery', 'Grid', 'Zoom'], value: 'gallery-grid-zoom' },
+  { category: 'Galerias', component: SaaSSwipeCardsGalleryAnimation, description: 'Cards em gesto visual de stories.', kind: 'gallery', label: 'Swipe Cards', tags: ['Gallery', 'Cards', 'Swipe'], value: 'gallery-swipe-cards' },
+  { category: 'Galerias', component: SaaSCoverflowGalleryAnimation, description: 'Coverflow em perspectiva para telas de produto.', kind: 'gallery', label: 'Coverflow', tags: ['Gallery', '3D', 'Product'], value: 'gallery-coverflow' },
+  { category: 'Galerias', component: SaaSRoom3DGalleryAnimation, description: 'Telas posicionadas como uma sala 3D.', kind: 'gallery', label: '3D Room', tags: ['Gallery', '3D', 'Room'], value: 'gallery-room-3d' },
+  { category: 'Galerias', component: SaaSMagnifierGalleryAnimation, description: 'Lupa percorrendo uma grade de telas.', kind: 'gallery', label: 'Magnifier', tags: ['Gallery', 'Zoom', 'Detail'], value: 'gallery-magnifier' },
+  { category: 'Galerias', component: SaaSAccordionGalleryAnimation, description: 'Cards expandindo e recolhendo verticalmente.', kind: 'gallery', label: 'Accordion', tags: ['Gallery', 'Cards', 'Accordion'], value: 'gallery-accordion' },
+  { category: 'Galerias', component: SaaSStoryboardGalleryAnimation, description: 'Frames em sequência como storyboard.', kind: 'gallery', label: 'Storyboard', tags: ['Gallery', 'Storyboard', 'Frames'], value: 'gallery-storyboard' },
 ]
 
-const galleryOptions: AnimationOption[] = [
-  { component: SaaSCarouselGalleryAnimation, label: 'Galeria Carousel', value: 'gallery-carousel' },
-  { component: SaaSBentoGalleryAnimation, label: 'Galeria Bento', value: 'gallery-bento' },
-  { component: SaaSWallGalleryAnimation, label: 'Galeria Wall', value: 'gallery-wall' },
-  { component: SaaSStackGalleryAnimation, label: 'Galeria Stack', value: 'gallery-stack' },
-  { component: SaaSMarqueeGalleryAnimation, label: 'Galeria Marquee', value: 'gallery-marquee' },
-  { component: SaaSSpotlightGalleryAnimation, label: 'Galeria Spotlight', value: 'gallery-spotlight' },
-  { component: SaaSDocumentFanGalleryAnimation, label: 'Galeria Document Fan', value: 'gallery-document-fan' },
-  { component: SaaSDeviceGalleryAnimation, label: 'Galeria Device', value: 'gallery-device' },
-  { component: SaaSGridZoomGalleryAnimation, label: 'Galeria Grid Zoom', value: 'gallery-grid-zoom' },
-  { component: SaaSSwipeCardsGalleryAnimation, label: 'Galeria Swipe Cards', value: 'gallery-swipe-cards' },
-  { component: SaaSCoverflowGalleryAnimation, label: 'Galeria Coverflow', value: 'gallery-coverflow' },
-  { component: SaaSRoom3DGalleryAnimation, label: 'Galeria 3D Room', value: 'gallery-room-3d' },
-  { component: SaaSMagnifierGalleryAnimation, label: 'Galeria Magnifier', value: 'gallery-magnifier' },
-  { component: SaaSAccordionGalleryAnimation, label: 'Galeria Accordion', value: 'gallery-accordion' },
-  { component: SaaSStoryboardGalleryAnimation, label: 'Galeria Storyboard', value: 'gallery-storyboard' },
-]
+const categories: Array<'Todos' | AnimationCategory> = ['Todos', 'Chat / Assistants', 'Operações Financeiras', 'Apps / Mockups', 'SaaS Patterns', 'Workflows', 'Galerias']
+const kinds: Array<'Todos' | AnimationKind> = ['Todos', 'chat', 'operation', 'mockup', 'pattern', 'workflow', 'gallery']
 
 export default function RemotionPreviewPage() {
   const [composition, setComposition] = useState<PreviewComposition>('classification')
+  const [query, setQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState<'Todos' | AnimationCategory>('Todos')
+  const [selectedKind, setSelectedKind] = useState<'Todos' | AnimationKind>('Todos')
   const [template, setTemplate] = useState<McpTemplate>('chatgpt')
   const isIntro = composition === 'intro'
-  const selectedAnimation = [...animationOptions, ...galleryOptions].find((option) => option.value === composition) || animationOptions[0]
+  const selectedAnimation = animationCatalog.find((option) => option.value === composition) || animationCatalog[0]
+  const SelectedComponent = selectedAnimation.component || ExpenseClassificationAnimation
+  const selectedDuration = selectedAnimation.duration || MCP_SINGLE_ANIMATION_DURATION
+  const visibleAnimations = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase()
+
+    return animationCatalog.filter((option) => {
+      const matchesCategory = selectedCategory === 'Todos' || option.category === selectedCategory
+      const matchesKind = selectedKind === 'Todos' || option.kind === selectedKind
+      const searchable = `${option.label} ${option.description} ${option.category} ${option.kind} ${option.tags.join(' ')}`.toLowerCase()
+      const matchesQuery = normalizedQuery === '' || searchable.includes(normalizedQuery)
+
+      return matchesCategory && matchesKind && matchesQuery
+    })
+  }, [query, selectedCategory, selectedKind])
 
   return (
     <main
       style={{
-        alignItems: 'center',
-        background: '#f8fafc',
-        display: 'flex',
+        background: '#f6f8f7',
+        color: '#0f172a',
+        display: 'grid',
+        gridTemplateColumns: '248px minmax(0, 1fr)',
         minHeight: '100vh',
-        padding: 32,
+        padding: 0,
       }}
     >
-      <section
-        style={{
-          margin: '0 auto',
-          maxWidth: 430,
-          width: '100%',
-        }}
-      >
-        <div
-          style={{
-            alignItems: 'flex-start',
-            display: 'flex',
-            gap: 14,
-            justifyContent: 'space-between',
-            marginBottom: 18,
-          }}
-        >
-          <div>
-            <h1
-              style={{
-                color: '#0f172a',
-                fontSize: 22,
-                fontWeight: 700,
-                margin: 0,
-              }}
-            >
-              Remotion preview
-            </h1>
-            <p
-              style={{
-                color: '#475569',
-                fontSize: 13,
-                margin: '6px 0 0',
-              }}
-            >
-              Templates mobile com componentes MCP Apps reais.
-            </p>
+      <aside style={{ background: '#ffffff', borderRight: '1px solid #dde5df', display: 'grid', gridTemplateRows: 'auto 1fr auto', minHeight: '100vh', padding: 20, position: 'sticky', top: 0 }}>
+        <div style={{ display: 'grid', gap: 18 }}>
+          <div style={{ display: 'grid', gap: 7 }}>
+            <span style={{ color: '#225f42', fontSize: 12, fontWeight: 900, letterSpacing: 1.5, textTransform: 'uppercase' }}>Remotion</span>
+            <h1 style={{ color: '#0f172a', fontSize: 25, fontWeight: 850, letterSpacing: 0, lineHeight: 1.04, margin: 0 }}>Component Portal</h1>
+            <p style={{ color: '#64748b', fontSize: 13, fontWeight: 600, lineHeight: 1.42, margin: 0 }}>Biblioteca de animações, galerias e mocks para vídeos SaaS.</p>
           </div>
-          <div style={{ display: 'grid', gap: 8, justifyItems: 'end' }}>
-            <div
-              style={{
-                display: 'grid',
-                gap: 4,
-                justifyItems: 'end',
-                maxWidth: 310,
-              }}
-            >
-              <span style={{ color: '#64748b', fontSize: 11, fontWeight: 800, textTransform: 'uppercase' }}>Outras animações</span>
-              <div
-                style={{
-                  background: '#e2e8f0',
-                  borderRadius: 8,
-                  display: 'inline-flex',
-                  flexWrap: 'wrap',
-                  gap: 2,
-                  justifyContent: 'flex-end',
-                  padding: 3,
-                }}
-              >
-                {[{ label: 'Intro', value: 'intro' as const }, ...animationOptions].map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => setComposition(option.value)}
-                    style={{
-                      background: composition === option.value ? '#ffffff' : 'transparent',
-                      border: 0,
-                      borderRadius: 6,
-                      color: composition === option.value ? '#0f172a' : '#64748b',
-                      cursor: 'pointer',
-                      fontSize: 12,
-                      fontWeight: 700,
-                      padding: '7px 9px',
-                    }}
-                    type="button"
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div
-              style={{
-                display: 'grid',
-                gap: 4,
-                justifyItems: 'end',
-                maxWidth: 310,
-              }}
-            >
-              <span style={{ color: '#64748b', fontSize: 11, fontWeight: 800, textTransform: 'uppercase' }}>Galerias</span>
-              <div
-                style={{
-                  background: '#dcfce7',
-                  borderRadius: 8,
-                  display: 'inline-flex',
-                  flexWrap: 'wrap',
-                  gap: 2,
-                  justifyContent: 'flex-end',
-                  padding: 3,
-                }}
-              >
-                {galleryOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => setComposition(option.value)}
-                    style={{
-                      background: composition === option.value ? '#ffffff' : 'transparent',
-                      border: 0,
-                      borderRadius: 6,
-                      color: composition === option.value ? '#0f172a' : '#15803d',
-                      cursor: 'pointer',
-                      fontSize: 12,
-                      fontWeight: 700,
-                      padding: '7px 9px',
-                    }}
-                    type="button"
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
+
+          <div style={{ display: 'grid', gap: 8 }}>
+            <span style={{ color: '#64748b', fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>Categorias</span>
+            {categories.map((category) => {
+              const count = category === 'Todos' ? animationCatalog.length : animationCatalog.filter((item) => item.category === category).length
+              const active = selectedCategory === category
+
+              return (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  style={{
+                    alignItems: 'center',
+                    background: active ? '#e8f1ec' : 'transparent',
+                    border: active ? '1px solid #cfe0d4' : '1px solid transparent',
+                    borderRadius: 10,
+                    color: active ? '#17442f' : '#475569',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    fontSize: 13,
+                    fontWeight: 780,
+                    justifyContent: 'space-between',
+                    padding: '10px 11px',
+                    textAlign: 'left',
+                  }}
+                  type="button"
+                >
+                  <span>{category}</span>
+                  <span style={{ color: active ? '#225f42' : '#94a3b8', fontSize: 12 }}>{count}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        <div />
+
+        <div style={{ background: '#f7faf7', border: '1px solid #dfe7e1', borderRadius: 12, display: 'grid', gap: 7, padding: 12 }}>
+          <strong style={{ color: '#0f172a', fontSize: 13 }}>Preview</strong>
+          <span style={{ color: '#64748b', fontSize: 12, lineHeight: 1.35 }}>1080x1920 · 30 FPS · players locais.</span>
+        </div>
+      </aside>
+
+      <section style={{ display: 'grid', gap: 22, gridTemplateColumns: 'minmax(420px, 1fr) 430px', padding: 28 }}>
+        <div style={{ display: 'grid', gap: 18, minWidth: 0 }}>
+          <header style={{ alignItems: 'start', display: 'flex', gap: 18, justifyContent: 'space-between' }}>
+            <div style={{ display: 'grid', gap: 6 }}>
+              <h2 style={{ color: '#0f172a', fontSize: 30, fontWeight: 850, letterSpacing: 0, margin: 0 }}>Catálogo de componentes</h2>
+              <span style={{ color: '#64748b', fontSize: 14, fontWeight: 650 }}>{visibleAnimations.length} itens encontrados · {selectedAnimation.label} selecionado</span>
             </div>
             {isIntro ? (
-              <div
-                style={{
-                  background: '#e2e8f0',
-                  borderRadius: 8,
-                  display: 'inline-flex',
-                  gap: 2,
-                  padding: 3,
-                }}
-              >
+              <div style={{ background: '#e2e8f0', borderRadius: 10, display: 'inline-flex', gap: 3, padding: 3 }}>
                 {(['chatgpt', 'claude'] as const).map((value) => (
                   <button
                     key={value}
@@ -390,12 +350,12 @@ export default function RemotionPreviewPage() {
                     style={{
                       background: template === value ? '#ffffff' : 'transparent',
                       border: 0,
-                      borderRadius: 6,
+                      borderRadius: 8,
                       color: template === value ? '#0f172a' : '#64748b',
                       cursor: 'pointer',
-                      fontSize: 12,
-                      fontWeight: 700,
-                      padding: '7px 9px',
+                      fontSize: 13,
+                      fontWeight: 800,
+                      padding: '9px 12px',
                       textTransform: 'capitalize',
                     }}
                     type="button"
@@ -405,49 +365,170 @@ export default function RemotionPreviewPage() {
                 ))}
               </div>
             ) : null}
+          </header>
+
+          <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 14, boxShadow: '0 18px 50px rgba(15, 23, 42, 0.06)', display: 'grid', gap: 14, padding: 14 }}>
+            <input
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Buscar por nome, tag, categoria ou descrição"
+              style={{
+                background: '#f8fafc',
+                border: '1px solid #dbe4de',
+                borderRadius: 10,
+                color: '#0f172a',
+                fontSize: 14,
+                fontWeight: 650,
+                outline: 'none',
+                padding: '12px 13px',
+                width: '100%',
+              }}
+              value={query}
+            />
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+              {kinds.map((kind) => {
+                const active = selectedKind === kind
+                return (
+                  <button
+                    key={kind}
+                    onClick={() => setSelectedKind(kind)}
+                    style={{
+                      background: active ? '#225f42' : '#eef4ef',
+                      border: 0,
+                      borderRadius: 999,
+                      color: active ? '#ffffff' : '#516057',
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      fontWeight: 850,
+                      padding: '8px 11px',
+                      textTransform: kind === 'Todos' ? 'none' : 'capitalize',
+                    }}
+                    type="button"
+                  >
+                    {kind}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+            {visibleAnimations.map((option) => {
+              const active = option.value === selectedAnimation.value
+              const color = option.kind === 'gallery' ? '#225f42' : option.kind === 'workflow' ? '#3f6d91' : option.kind === 'mockup' ? '#c28f2c' : option.kind === 'chat' ? '#111827' : '#6f8f7b'
+
+              return (
+                <button
+                  key={option.value}
+                  onClick={() => setComposition(option.value)}
+                  style={{
+                    background: '#ffffff',
+                    border: `1px solid ${active ? color : '#dfe7e1'}`,
+                    borderRadius: 14,
+                    boxShadow: active ? `0 22px 60px ${color}22` : '0 12px 34px rgba(15, 23, 42, 0.05)',
+                    cursor: 'pointer',
+                    display: 'grid',
+                    gap: 12,
+                    minHeight: 204,
+                    padding: 14,
+                    textAlign: 'left',
+                  }}
+                  type="button"
+                >
+                  <div style={{ background: '#f7faf7', border: '1px solid #e4ece6', borderRadius: 11, display: 'grid', gap: 8, height: 86, overflow: 'hidden', padding: 10 }}>
+                    <div style={{ alignItems: 'center', display: 'flex', gap: 6 }}>
+                      <span style={{ background: color, borderRadius: 999, display: 'block', height: 9, width: 9 }} />
+                      <span style={{ background: '#dce6df', borderRadius: 999, display: 'block', height: 7, width: '48%' }} />
+                    </div>
+                    <div style={{ alignItems: 'end', display: 'flex', gap: 5, height: 42 }}>
+                      {[34, 52, 42, 64, 48].map((height, index) => <span key={height} style={{ background: index === 3 ? color : '#dce6df', borderRadius: 5, flex: 1, height }} />)}
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gap: 6 }}>
+                    <div style={{ alignItems: 'start', display: 'flex', gap: 8, justifyContent: 'space-between' }}>
+                      <strong style={{ color: '#0f172a', fontSize: 16, fontWeight: 850, letterSpacing: 0, lineHeight: 1.08 }}>{option.label}</strong>
+                      <span style={{ background: `${color}18`, borderRadius: 999, color, fontSize: 10, fontWeight: 900, padding: '5px 7px', textTransform: 'uppercase' }}>{option.kind}</span>
+                    </div>
+                    <span style={{ color: '#64748b', fontSize: 12, fontWeight: 650, lineHeight: 1.35 }}>{option.description}</span>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 'auto' }}>
+                    {option.tags.slice(0, 3).map((tag) => <span key={tag} style={{ background: '#f1f5f9', borderRadius: 999, color: '#475569', fontSize: 10, fontWeight: 800, padding: '5px 7px' }}>{tag}</span>)}
+                  </div>
+                </button>
+              )
+            })}
           </div>
         </div>
 
-        <div
-          style={{
-            background: '#ffffff',
-            border: '1px solid #e2e8f0',
-            borderRadius: 8,
-            boxShadow: '0 18px 45px rgba(15, 23, 42, 0.10)',
-            overflow: 'hidden',
-          }}
-        >
+        <aside style={{ alignSelf: 'start', display: 'grid', gap: 14, position: 'sticky', top: 28 }}>
+          <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 16, boxShadow: '0 22px 60px rgba(15, 23, 42, 0.08)', overflow: 'hidden', padding: 12 }}>
           {isIntro ? (
             <Player
+              key={`${composition}-${template}`}
               component={McpChartIntro}
               compositionHeight={1920}
               compositionWidth={1080}
               controls
-              durationInFrames={4200}
+              durationInFrames={selectedDuration}
               fps={30}
               inputProps={{ template }}
               style={{
                 aspectRatio: '9 / 16',
-                maxHeight: '82vh',
+                borderRadius: 10,
+                maxHeight: '72vh',
                 width: '100%',
               }}
             />
           ) : (
             <Player
-              component={selectedAnimation.component}
+              key={composition}
+              component={SelectedComponent}
               compositionHeight={1920}
               compositionWidth={1080}
               controls
-              durationInFrames={MCP_SINGLE_ANIMATION_DURATION}
+              durationInFrames={selectedDuration}
               fps={30}
               style={{
                 aspectRatio: '9 / 16',
-                maxHeight: '82vh',
+                borderRadius: 10,
+                maxHeight: '72vh',
                 width: '100%',
               }}
             />
           )}
-        </div>
+          </div>
+
+          <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 16, boxShadow: '0 16px 42px rgba(15, 23, 42, 0.06)', display: 'grid', gap: 13, padding: 16 }}>
+            <div style={{ alignItems: 'start', display: 'flex', gap: 12, justifyContent: 'space-between' }}>
+              <div style={{ display: 'grid', gap: 5 }}>
+                <span style={{ color: '#225f42', fontSize: 12, fontWeight: 900, textTransform: 'uppercase' }}>{selectedAnimation.category}</span>
+                <h3 style={{ color: '#0f172a', fontSize: 22, fontWeight: 850, letterSpacing: 0, lineHeight: 1.04, margin: 0 }}>{selectedAnimation.label}</h3>
+              </div>
+              <button
+                onClick={() => navigator.clipboard?.writeText(selectedAnimation.value)}
+                style={{ background: '#eef4ef', border: 0, borderRadius: 999, color: '#225f42', cursor: 'pointer', fontSize: 12, fontWeight: 850, padding: '9px 11px' }}
+                type="button"
+              >
+                Copiar ID
+              </button>
+            </div>
+            <p style={{ color: '#64748b', fontSize: 14, fontWeight: 650, lineHeight: 1.45, margin: 0 }}>{selectedAnimation.description}</p>
+            <div style={{ display: 'grid', gap: 8, gridTemplateColumns: '1fr 1fr 1fr' }}>
+              {[
+                ['Duração', `${selectedDuration}f`],
+                ['FPS', '30'],
+                ['Tipo', selectedAnimation.kind],
+              ].map(([label, value]) => (
+                <div key={label} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, display: 'grid', gap: 4, padding: 10 }}>
+                  <span style={{ color: '#64748b', fontSize: 11, fontWeight: 850 }}>{label}</span>
+                  <strong style={{ color: '#0f172a', fontSize: 13, fontWeight: 850, textTransform: label === 'Tipo' ? 'capitalize' : 'none' }}>{value}</strong>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+              {selectedAnimation.tags.map((tag) => <span key={tag} style={{ background: '#f1f5f9', borderRadius: 999, color: '#475569', fontSize: 11, fontWeight: 850, padding: '7px 9px' }}>{tag}</span>)}
+            </div>
+          </div>
+        </aside>
       </section>
     </main>
   )
