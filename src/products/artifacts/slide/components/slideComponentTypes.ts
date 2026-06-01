@@ -61,6 +61,13 @@ export function requiredDataQueryError(props: Record<string, unknown>, path: str
   return null
 }
 
+export function requiredDataSourceError(props: Record<string, unknown>, path: string): string | null {
+  const dataQuery = props.dataQuery
+  const hasQuery = isRecord(dataQuery) && typeof dataQuery.query === 'string' && dataQuery.query.trim()
+  const hasData = Array.isArray(props.data) && props.data.length > 0
+  return hasQuery || hasData ? null : `${path}.dataQuery.query ou ${path}.data é obrigatório`
+}
+
 export function collectPropErrors(
   props: Record<string, unknown>,
   path: string,

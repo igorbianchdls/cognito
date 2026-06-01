@@ -3,6 +3,7 @@ import {
   collectPropErrors,
   optionalNumberError,
   optionalRecordError,
+  requiredDataSourceError,
   optionalStringError,
   requiredDataQueryError,
 } from '@/products/artifacts/slide/components/slideComponentTypes'
@@ -50,7 +51,7 @@ export const SLIDE_DATA_COMPONENTS: SlideComponentDefinition[] = [
     validateProps: (props, { path }) =>
       collectPropErrors(props, path, [
         ...dataVisualChecks,
-        (nextProps, nextPath) => requiredDataQueryError(nextProps, nextPath),
+        (nextProps, nextPath) => requiredDataSourceError(nextProps, nextPath),
         optionalSupportedChartTypeError,
         (nextProps, nextPath) => optionalStringError(nextProps, 'format', nextPath),
         (nextProps, nextPath) => optionalRecordError(nextProps, 'recharts', nextPath),
@@ -66,7 +67,7 @@ export const SLIDE_DATA_COMPONENTS: SlideComponentDefinition[] = [
     validateProps: (props, { path }) =>
       collectPropErrors(props, path, [
         ...dataVisualChecks,
-        (nextProps, nextPath) => requiredDataQueryError(nextProps, nextPath),
+        (nextProps, nextPath) => requiredDataSourceError(nextProps, nextPath),
       ]),
   },
   {
@@ -79,7 +80,7 @@ export const SLIDE_DATA_COMPONENTS: SlideComponentDefinition[] = [
     validateProps: (props, { path }) =>
       collectPropErrors(props, path, [
         ...dataVisualChecks,
-        (nextProps, nextPath) => requiredDataQueryError(nextProps, nextPath),
+        (nextProps, nextPath) => requiredDataSourceError(nextProps, nextPath),
       ]),
   },
 ]
