@@ -271,9 +271,11 @@ function RenderSlideHtmlElement({
 }) {
   const queryResult = useQueryResult()
   const text = resolveElementText(element, queryResult)
-  const children = element.children.map((child) => (
-    <RenderSlideHtmlElement key={child.id} element={child} onAction={onAction} />
-  ))
+  const children = element.children.length
+    ? element.children.map((child) => (
+        <RenderSlideHtmlElement key={child.id} element={child} onAction={onAction} />
+      ))
+    : undefined
 
   if (element.kind === 'text') return <>{text}</>
   if (element.kind === 'lineBreak') return <br />
