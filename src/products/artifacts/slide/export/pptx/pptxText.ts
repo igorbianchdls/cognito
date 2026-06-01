@@ -3,14 +3,18 @@
 import type { SlideElementModel } from '@/products/artifacts/slide/model/slideModel'
 import { cssColorToHex, resolvePptxTheme } from '@/products/artifacts/slide/export/pptx/pptxTheme'
 import type { PptxRenderContext, PptxSlide } from '@/products/artifacts/slide/export/pptx/pptxTypes'
-import { getElementFrame, getElementText, getNumberProp, getStringProp, getStyle } from '@/products/artifacts/slide/export/pptx/pptxUtils'
+import { cssPxToPt, getElementFrame, getElementText, getNumberProp, getStringProp, getStyle } from '@/products/artifacts/slide/export/pptx/pptxUtils'
 
-function getDefaultFontSize(element: SlideElementModel) {
-  if (element.kind === 'title') return 34
-  if (element.kind === 'subtitle') return 17
-  if (element.kind === 'footer') return 9
-  if (element.kind === 'bullets') return 13
-  return 12
+function getDefaultFontSizePx(element: SlideElementModel) {
+  if (element.kind === 'title') return 44
+  if (element.kind === 'subtitle') return 20
+  if (element.kind === 'footer') return 11
+  if (element.kind === 'bullets') return 16
+  return 16
+}
+
+function getFontSizePt(valuePx: number | undefined, fallbackPx: number) {
+  return cssPxToPt(valuePx || fallbackPx)
 }
 
 export function renderPptxText(
@@ -35,7 +39,7 @@ export function renderPptxText(
     color: cssColorToHex(style.color || props.color, element.kind === 'subtitle' || element.kind === 'footer' ? theme.mutedText : theme.text),
     fit: 'shrink',
     fontFace: getStringProp(props, 'fontFace') || 'Aptos',
-    fontSize: getNumberProp(props, 'fontSize') || getDefaultFontSize(element),
+    fontSize: getFontSizePt(getNumberProp(props, 'fontSize'), getDefaultFontSizePx(element)),
     bold: element.kind === 'title',
     margin: 0,
     valign: 'top',
@@ -60,7 +64,7 @@ export function renderPptxHtmlText(
     color: cssColorToHex(style.color, theme.text),
     fit: 'shrink',
     fontFace: 'Aptos',
-    fontSize: getNumberProp(style, 'fontSize') || 11,
+    fontSize: getFontSizePt(getNumberProp(style, 'fontSize'), 14),
     margin: 0,
     valign: 'top',
   } as any)

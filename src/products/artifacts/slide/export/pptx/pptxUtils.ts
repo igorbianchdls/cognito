@@ -27,6 +27,10 @@ export function stripQueryTokens(input: string) {
   return input.replace(/\{\{\s*query\.[^}]+\}\}/g, '-')
 }
 
+export function cssPxToPt(valuePx: number): number {
+  return Math.round(valuePx * 0.75 * 100) / 100
+}
+
 export function getElementText(element: SlideElementModel): string {
   const props = element.props as AnyRecord
   const direct = element.text || getStringProp(props, 'text') || getStringProp(props, 'value') || getStringProp(props, 'title')
