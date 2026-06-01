@@ -276,24 +276,24 @@ export default function RemotionPreviewPage() {
   return (
     <main
       style={{
-        background: '#f6f8f7',
-        color: '#0f172a',
+        background: '#070a0f',
+        color: '#f8fafc',
         display: 'grid',
         gridTemplateColumns: '248px minmax(0, 1fr)',
         minHeight: '100vh',
         padding: 0,
       }}
     >
-      <aside style={{ background: '#ffffff', borderRight: '1px solid #dde5df', display: 'grid', gridTemplateRows: 'auto 1fr auto', minHeight: '100vh', padding: 20, position: 'sticky', top: 0 }}>
+      <aside style={{ background: '#0f141b', borderRight: '1px solid #202a36', display: 'grid', gridTemplateRows: 'auto 1fr auto', minHeight: '100vh', padding: 20, position: 'sticky', top: 0 }}>
         <div style={{ display: 'grid', gap: 18 }}>
           <div style={{ display: 'grid', gap: 7 }}>
-            <span style={{ color: '#225f42', fontSize: 12, fontWeight: 900, letterSpacing: 1.5, textTransform: 'uppercase' }}>Remotion</span>
-            <h1 style={{ color: '#0f172a', fontSize: 25, fontWeight: 850, letterSpacing: 0, lineHeight: 1.04, margin: 0 }}>Component Portal</h1>
-            <p style={{ color: '#64748b', fontSize: 13, fontWeight: 600, lineHeight: 1.42, margin: 0 }}>Biblioteca de animações, galerias e mocks para vídeos SaaS.</p>
+            <span style={{ color: '#67e08f', fontSize: 12, fontWeight: 900, letterSpacing: 1.5, textTransform: 'uppercase' }}>Remotion</span>
+            <h1 style={{ color: '#f8fafc', fontSize: 25, fontWeight: 850, letterSpacing: 0, lineHeight: 1.04, margin: 0 }}>Component Portal</h1>
+            <p style={{ color: '#94a3b8', fontSize: 13, fontWeight: 600, lineHeight: 1.42, margin: 0 }}>Biblioteca de animações, galerias e mocks para vídeos SaaS.</p>
           </div>
 
           <div style={{ display: 'grid', gap: 8 }}>
-            <span style={{ color: '#64748b', fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>Categorias</span>
+            <span style={{ color: '#94a3b8', fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>Categorias</span>
             {categories.map((category) => {
               const count = category === 'Todos' ? animationCatalog.length : animationCatalog.filter((item) => item.category === category).length
               const active = selectedCategory === category
@@ -304,10 +304,10 @@ export default function RemotionPreviewPage() {
                   onClick={() => setSelectedCategory(category)}
                   style={{
                     alignItems: 'center',
-                    background: active ? '#e8f1ec' : 'transparent',
-                    border: active ? '1px solid #cfe0d4' : '1px solid transparent',
+                    background: active ? '#12251a' : 'transparent',
+                    border: active ? '1px solid #25583a' : '1px solid transparent',
                     borderRadius: 10,
-                    color: active ? '#17442f' : '#475569',
+                    color: active ? '#bbf7d0' : '#cbd5e1',
                     cursor: 'pointer',
                     display: 'flex',
                     fontSize: 13,
@@ -319,7 +319,7 @@ export default function RemotionPreviewPage() {
                   type="button"
                 >
                   <span>{category}</span>
-                  <span style={{ color: active ? '#225f42' : '#94a3b8', fontSize: 12 }}>{count}</span>
+                  <span style={{ color: active ? '#67e08f' : '#94a3b8', fontSize: 12 }}>{count}</span>
                 </button>
               )
             })}
@@ -328,9 +328,9 @@ export default function RemotionPreviewPage() {
 
         <div />
 
-        <div style={{ background: '#f7faf7', border: '1px solid #dfe7e1', borderRadius: 12, display: 'grid', gap: 7, padding: 12 }}>
-          <strong style={{ color: '#0f172a', fontSize: 13 }}>Preview</strong>
-          <span style={{ color: '#64748b', fontSize: 12, lineHeight: 1.35 }}>1080x1920 · 30 FPS · players locais.</span>
+        <div style={{ background: '#111827', border: '1px solid #263445', borderRadius: 12, display: 'grid', gap: 7, padding: 12 }}>
+          <strong style={{ color: '#f8fafc', fontSize: 13 }}>Preview</strong>
+          <span style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.35 }}>1080x1920 · 30 FPS · players locais.</span>
         </div>
       </aside>
 
@@ -338,20 +338,20 @@ export default function RemotionPreviewPage() {
         <div style={{ display: 'grid', gap: 18, minWidth: 0 }}>
           <header style={{ alignItems: 'start', display: 'flex', gap: 18, justifyContent: 'space-between' }}>
             <div style={{ display: 'grid', gap: 6 }}>
-              <h2 style={{ color: '#0f172a', fontSize: 30, fontWeight: 850, letterSpacing: 0, margin: 0 }}>Catálogo de componentes</h2>
-              <span style={{ color: '#64748b', fontSize: 14, fontWeight: 650 }}>{visibleAnimations.length} itens encontrados · {selectedAnimation.label} selecionado</span>
+              <h2 style={{ color: '#f8fafc', fontSize: 30, fontWeight: 850, letterSpacing: 0, margin: 0 }}>Catálogo de componentes</h2>
+              <span style={{ color: '#94a3b8', fontSize: 14, fontWeight: 650 }}>{visibleAnimations.length} itens encontrados · {selectedAnimation.label} selecionado</span>
             </div>
             {isIntro ? (
-              <div style={{ background: '#e2e8f0', borderRadius: 10, display: 'inline-flex', gap: 3, padding: 3 }}>
+              <div style={{ background: '#1f2937', borderRadius: 10, display: 'inline-flex', gap: 3, padding: 3 }}>
                 {(['chatgpt', 'claude'] as const).map((value) => (
                   <button
                     key={value}
                     onClick={() => setTemplate(value)}
                     style={{
-                      background: template === value ? '#ffffff' : 'transparent',
+                      background: template === value ? '#0f141b' : 'transparent',
                       border: 0,
                       borderRadius: 8,
-                      color: template === value ? '#0f172a' : '#64748b',
+                      color: template === value ? '#f8fafc' : '#94a3b8',
                       cursor: 'pointer',
                       fontSize: 13,
                       fontWeight: 800,
@@ -367,15 +367,15 @@ export default function RemotionPreviewPage() {
             ) : null}
           </header>
 
-          <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 14, boxShadow: '0 18px 50px rgba(15, 23, 42, 0.06)', display: 'grid', gap: 14, padding: 14 }}>
+          <div style={{ background: '#0f141b', border: '1px solid #263445', borderRadius: 14, boxShadow: '0 18px 50px rgba(15, 23, 42, 0.06)', display: 'grid', gap: 14, padding: 14 }}>
             <input
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Buscar por nome, tag, categoria ou descrição"
               style={{
-                background: '#f8fafc',
-                border: '1px solid #dbe4de',
+                background: '#0b1118',
+                border: '1px solid #293848',
                 borderRadius: 10,
-                color: '#0f172a',
+                color: '#f8fafc',
                 fontSize: 14,
                 fontWeight: 650,
                 outline: 'none',
@@ -392,10 +392,10 @@ export default function RemotionPreviewPage() {
                     key={kind}
                     onClick={() => setSelectedKind(kind)}
                     style={{
-                      background: active ? '#225f42' : '#eef4ef',
+                      background: active ? '#67e08f' : '#16251d',
                       border: 0,
                       borderRadius: 999,
-                      color: active ? '#ffffff' : '#516057',
+                      color: active ? '#0f141b' : '#cbd5e1',
                       cursor: 'pointer',
                       fontSize: 12,
                       fontWeight: 850,
@@ -414,15 +414,15 @@ export default function RemotionPreviewPage() {
           <div style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
             {visibleAnimations.map((option) => {
               const active = option.value === selectedAnimation.value
-              const color = option.kind === 'gallery' ? '#225f42' : option.kind === 'workflow' ? '#3f6d91' : option.kind === 'mockup' ? '#c28f2c' : option.kind === 'chat' ? '#111827' : '#6f8f7b'
+              const color = option.kind === 'gallery' ? '#67e08f' : option.kind === 'workflow' ? '#7dd3fc' : option.kind === 'mockup' ? '#fbbf24' : option.kind === 'chat' ? '#e5e7eb' : '#a7f3d0'
 
               return (
                 <button
                   key={option.value}
                   onClick={() => setComposition(option.value)}
                   style={{
-                    background: '#ffffff',
-                    border: `1px solid ${active ? color : '#dfe7e1'}`,
+                    background: '#0f141b',
+                    border: `1px solid ${active ? color : '#263445'}`,
                     borderRadius: 14,
                     boxShadow: active ? `0 22px 60px ${color}22` : '0 12px 34px rgba(15, 23, 42, 0.05)',
                     cursor: 'pointer',
@@ -434,24 +434,24 @@ export default function RemotionPreviewPage() {
                   }}
                   type="button"
                 >
-                  <div style={{ background: '#f7faf7', border: '1px solid #e4ece6', borderRadius: 11, display: 'grid', gap: 8, height: 86, overflow: 'hidden', padding: 10 }}>
+                  <div style={{ background: '#111827', border: '1px solid #293848', borderRadius: 11, display: 'grid', gap: 8, height: 86, overflow: 'hidden', padding: 10 }}>
                     <div style={{ alignItems: 'center', display: 'flex', gap: 6 }}>
                       <span style={{ background: color, borderRadius: 999, display: 'block', height: 9, width: 9 }} />
-                      <span style={{ background: '#dce6df', borderRadius: 999, display: 'block', height: 7, width: '48%' }} />
+                      <span style={{ background: '#334155', borderRadius: 999, display: 'block', height: 7, width: '48%' }} />
                     </div>
                     <div style={{ alignItems: 'end', display: 'flex', gap: 5, height: 42 }}>
-                      {[34, 52, 42, 64, 48].map((height, index) => <span key={height} style={{ background: index === 3 ? color : '#dce6df', borderRadius: 5, flex: 1, height }} />)}
+                      {[34, 52, 42, 64, 48].map((height, index) => <span key={height} style={{ background: index === 3 ? color : '#334155', borderRadius: 5, flex: 1, height }} />)}
                     </div>
                   </div>
                   <div style={{ display: 'grid', gap: 6 }}>
                     <div style={{ alignItems: 'start', display: 'flex', gap: 8, justifyContent: 'space-between' }}>
-                      <strong style={{ color: '#0f172a', fontSize: 16, fontWeight: 850, letterSpacing: 0, lineHeight: 1.08 }}>{option.label}</strong>
+                      <strong style={{ color: '#f8fafc', fontSize: 16, fontWeight: 850, letterSpacing: 0, lineHeight: 1.08 }}>{option.label}</strong>
                       <span style={{ background: `${color}18`, borderRadius: 999, color, fontSize: 10, fontWeight: 900, padding: '5px 7px', textTransform: 'uppercase' }}>{option.kind}</span>
                     </div>
-                    <span style={{ color: '#64748b', fontSize: 12, fontWeight: 650, lineHeight: 1.35 }}>{option.description}</span>
+                    <span style={{ color: '#94a3b8', fontSize: 12, fontWeight: 650, lineHeight: 1.35 }}>{option.description}</span>
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 'auto' }}>
-                    {option.tags.slice(0, 3).map((tag) => <span key={tag} style={{ background: '#f1f5f9', borderRadius: 999, color: '#475569', fontSize: 10, fontWeight: 800, padding: '5px 7px' }}>{tag}</span>)}
+                    {option.tags.slice(0, 3).map((tag) => <span key={tag} style={{ background: '#182232', borderRadius: 999, color: '#cbd5e1', fontSize: 10, fontWeight: 800, padding: '5px 7px' }}>{tag}</span>)}
                   </div>
                 </button>
               )
@@ -460,7 +460,7 @@ export default function RemotionPreviewPage() {
         </div>
 
         <aside style={{ alignSelf: 'start', display: 'grid', gap: 14, position: 'sticky', top: 28 }}>
-          <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 16, boxShadow: '0 22px 60px rgba(15, 23, 42, 0.08)', overflow: 'hidden', padding: 12 }}>
+          <div style={{ background: '#0f141b', border: '1px solid #263445', borderRadius: 16, boxShadow: '0 22px 60px rgba(15, 23, 42, 0.08)', overflow: 'hidden', padding: 12 }}>
           {isIntro ? (
             <Player
               key={`${composition}-${template}`}
@@ -497,35 +497,35 @@ export default function RemotionPreviewPage() {
           )}
           </div>
 
-          <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 16, boxShadow: '0 16px 42px rgba(15, 23, 42, 0.06)', display: 'grid', gap: 13, padding: 16 }}>
+          <div style={{ background: '#0f141b', border: '1px solid #263445', borderRadius: 16, boxShadow: '0 16px 42px rgba(15, 23, 42, 0.06)', display: 'grid', gap: 13, padding: 16 }}>
             <div style={{ alignItems: 'start', display: 'flex', gap: 12, justifyContent: 'space-between' }}>
               <div style={{ display: 'grid', gap: 5 }}>
-                <span style={{ color: '#225f42', fontSize: 12, fontWeight: 900, textTransform: 'uppercase' }}>{selectedAnimation.category}</span>
-                <h3 style={{ color: '#0f172a', fontSize: 22, fontWeight: 850, letterSpacing: 0, lineHeight: 1.04, margin: 0 }}>{selectedAnimation.label}</h3>
+                <span style={{ color: '#67e08f', fontSize: 12, fontWeight: 900, textTransform: 'uppercase' }}>{selectedAnimation.category}</span>
+                <h3 style={{ color: '#f8fafc', fontSize: 22, fontWeight: 850, letterSpacing: 0, lineHeight: 1.04, margin: 0 }}>{selectedAnimation.label}</h3>
               </div>
               <button
                 onClick={() => navigator.clipboard?.writeText(selectedAnimation.value)}
-                style={{ background: '#eef4ef', border: 0, borderRadius: 999, color: '#225f42', cursor: 'pointer', fontSize: 12, fontWeight: 850, padding: '9px 11px' }}
+                style={{ background: '#16251d', border: 0, borderRadius: 999, color: '#67e08f', cursor: 'pointer', fontSize: 12, fontWeight: 850, padding: '9px 11px' }}
                 type="button"
               >
                 Copiar ID
               </button>
             </div>
-            <p style={{ color: '#64748b', fontSize: 14, fontWeight: 650, lineHeight: 1.45, margin: 0 }}>{selectedAnimation.description}</p>
+            <p style={{ color: '#94a3b8', fontSize: 14, fontWeight: 650, lineHeight: 1.45, margin: 0 }}>{selectedAnimation.description}</p>
             <div style={{ display: 'grid', gap: 8, gridTemplateColumns: '1fr 1fr 1fr' }}>
               {[
                 ['Duração', `${selectedDuration}f`],
                 ['FPS', '30'],
                 ['Tipo', selectedAnimation.kind],
               ].map(([label, value]) => (
-                <div key={label} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, display: 'grid', gap: 4, padding: 10 }}>
-                  <span style={{ color: '#64748b', fontSize: 11, fontWeight: 850 }}>{label}</span>
-                  <strong style={{ color: '#0f172a', fontSize: 13, fontWeight: 850, textTransform: label === 'Tipo' ? 'capitalize' : 'none' }}>{value}</strong>
+                <div key={label} style={{ background: '#111827', border: '1px solid #1f2937', borderRadius: 10, display: 'grid', gap: 4, padding: 10 }}>
+                  <span style={{ color: '#94a3b8', fontSize: 11, fontWeight: 850 }}>{label}</span>
+                  <strong style={{ color: '#f8fafc', fontSize: 13, fontWeight: 850, textTransform: label === 'Tipo' ? 'capitalize' : 'none' }}>{value}</strong>
                 </div>
               ))}
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
-              {selectedAnimation.tags.map((tag) => <span key={tag} style={{ background: '#f1f5f9', borderRadius: 999, color: '#475569', fontSize: 11, fontWeight: 850, padding: '7px 9px' }}>{tag}</span>)}
+              {selectedAnimation.tags.map((tag) => <span key={tag} style={{ background: '#182232', borderRadius: 999, color: '#cbd5e1', fontSize: 11, fontWeight: 850, padding: '7px 9px' }}>{tag}</span>)}
             </div>
           </div>
         </aside>
