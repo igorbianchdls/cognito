@@ -20,10 +20,20 @@ import {
   SaaSBentoGalleryAnimation,
   SaaSCarouselGalleryAnimation,
   SaaSCommandCenterAnimation,
+  SaaSCoverflowGalleryAnimation,
+  SaaSDeviceGalleryAnimation,
+  SaaSDocumentFanGalleryAnimation,
+  SaaSGridZoomGalleryAnimation,
+  SaaSKanbanFlowAnimation,
+  SaaSLogoCloudAnimation,
   SaaSMarqueeGalleryAnimation,
+  SaaSMetricCounterAnimation,
+  SaaSNetworkMapAnimation,
   SaaSOrbitAnimation,
+  SaaSProductTourAnimation,
   SaaSSpotlightGalleryAnimation,
   SaaSStackGalleryAnimation,
+  SaaSSwipeCardsGalleryAnimation,
   SaaSTimelineAnimation,
   SaaSWallGalleryAnimation,
   TweetAnimation,
@@ -32,7 +42,7 @@ import { ExcelWorkbookMock, type ExcelMockSheet } from '@/remotion/components/Ex
 import { PdfViewerMock, type PdfMockPage } from '@/remotion/components/PdfViewerMock'
 import { PowerPointEditorMock, type PowerPointMockSlide } from '@/remotion/components/PowerPointEditorMock'
 
-type PreviewComposition = 'intro' | 'classification' | 'reconciliation' | 'dashboards' | 'report' | 'slides' | 'contracts' | 'entry' | 'powerpoint' | 'pdf' | 'excel' | 'integration' | 'news' | 'tweet' | 'gallery-carousel' | 'gallery-bento' | 'gallery-wall' | 'gallery-stack' | 'gallery-marquee' | 'gallery-spotlight' | 'before-after' | 'timeline' | 'orbit' | 'command-center'
+type PreviewComposition = 'intro' | 'classification' | 'reconciliation' | 'dashboards' | 'report' | 'slides' | 'contracts' | 'entry' | 'powerpoint' | 'pdf' | 'excel' | 'integration' | 'news' | 'tweet' | 'gallery-carousel' | 'gallery-bento' | 'gallery-wall' | 'gallery-stack' | 'gallery-marquee' | 'gallery-spotlight' | 'gallery-document-fan' | 'gallery-device' | 'gallery-grid-zoom' | 'gallery-swipe-cards' | 'gallery-coverflow' | 'before-after' | 'timeline' | 'orbit' | 'command-center' | 'logo-cloud' | 'metric-counter' | 'kanban-flow' | 'network-map' | 'product-tour'
 
 type AnimationOption = {
   component: ComponentType
@@ -178,23 +188,36 @@ const animationOptions: AnimationOption[] = [
   { component: IntegrationFlowAnimation, label: 'Integração', value: 'integration' },
   { component: NewsAnimation, label: 'Notícia', value: 'news' },
   { component: TweetAnimation, label: 'Tweet', value: 'tweet' },
+  { component: SaaSBeforeAfterAnimation, label: 'Before After', value: 'before-after' },
+  { component: SaaSTimelineAnimation, label: 'Timeline', value: 'timeline' },
+  { component: SaaSOrbitAnimation, label: 'Orbit', value: 'orbit' },
+  { component: SaaSCommandCenterAnimation, label: 'Command Center', value: 'command-center' },
+  { component: SaaSLogoCloudAnimation, label: 'Logo Cloud', value: 'logo-cloud' },
+  { component: SaaSMetricCounterAnimation, label: 'Metric Counter', value: 'metric-counter' },
+  { component: SaaSKanbanFlowAnimation, label: 'Kanban Flow', value: 'kanban-flow' },
+  { component: SaaSNetworkMapAnimation, label: 'Network Map', value: 'network-map' },
+  { component: SaaSProductTourAnimation, label: 'Product Tour', value: 'product-tour' },
+]
+
+const galleryOptions: AnimationOption[] = [
   { component: SaaSCarouselGalleryAnimation, label: 'Galeria Carousel', value: 'gallery-carousel' },
   { component: SaaSBentoGalleryAnimation, label: 'Galeria Bento', value: 'gallery-bento' },
   { component: SaaSWallGalleryAnimation, label: 'Galeria Wall', value: 'gallery-wall' },
   { component: SaaSStackGalleryAnimation, label: 'Galeria Stack', value: 'gallery-stack' },
   { component: SaaSMarqueeGalleryAnimation, label: 'Galeria Marquee', value: 'gallery-marquee' },
   { component: SaaSSpotlightGalleryAnimation, label: 'Galeria Spotlight', value: 'gallery-spotlight' },
-  { component: SaaSBeforeAfterAnimation, label: 'Before After', value: 'before-after' },
-  { component: SaaSTimelineAnimation, label: 'Timeline', value: 'timeline' },
-  { component: SaaSOrbitAnimation, label: 'Orbit', value: 'orbit' },
-  { component: SaaSCommandCenterAnimation, label: 'Command Center', value: 'command-center' },
+  { component: SaaSDocumentFanGalleryAnimation, label: 'Galeria Document Fan', value: 'gallery-document-fan' },
+  { component: SaaSDeviceGalleryAnimation, label: 'Galeria Device', value: 'gallery-device' },
+  { component: SaaSGridZoomGalleryAnimation, label: 'Galeria Grid Zoom', value: 'gallery-grid-zoom' },
+  { component: SaaSSwipeCardsGalleryAnimation, label: 'Galeria Swipe Cards', value: 'gallery-swipe-cards' },
+  { component: SaaSCoverflowGalleryAnimation, label: 'Galeria Coverflow', value: 'gallery-coverflow' },
 ]
 
 export default function RemotionPreviewPage() {
   const [composition, setComposition] = useState<PreviewComposition>('classification')
   const [template, setTemplate] = useState<McpTemplate>('chatgpt')
   const isIntro = composition === 'intro'
-  const selectedAnimation = animationOptions.find((option) => option.value === composition) || animationOptions[0]
+  const selectedAnimation = [...animationOptions, ...galleryOptions].find((option) => option.value === composition) || animationOptions[0]
 
   return (
     <main
@@ -246,35 +269,85 @@ export default function RemotionPreviewPage() {
           <div style={{ display: 'grid', gap: 8, justifyItems: 'end' }}>
             <div
               style={{
-                background: '#e2e8f0',
-                borderRadius: 8,
-                display: 'inline-flex',
-                flexWrap: 'wrap',
-                gap: 2,
-                justifyContent: 'flex-end',
+                display: 'grid',
+                gap: 4,
+                justifyItems: 'end',
                 maxWidth: 310,
-                padding: 3,
               }}
             >
-              {[{ label: 'Intro', value: 'intro' as const }, ...animationOptions].map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => setComposition(option.value)}
-                  style={{
-                    background: composition === option.value ? '#ffffff' : 'transparent',
-                    border: 0,
-                    borderRadius: 6,
-                    color: composition === option.value ? '#0f172a' : '#64748b',
-                    cursor: 'pointer',
-                    fontSize: 12,
-                    fontWeight: 700,
-                    padding: '7px 9px',
-                  }}
-                  type="button"
-                >
-                  {option.label}
-                </button>
-              ))}
+              <span style={{ color: '#64748b', fontSize: 11, fontWeight: 800, textTransform: 'uppercase' }}>Outras animações</span>
+              <div
+                style={{
+                  background: '#e2e8f0',
+                  borderRadius: 8,
+                  display: 'inline-flex',
+                  flexWrap: 'wrap',
+                  gap: 2,
+                  justifyContent: 'flex-end',
+                  padding: 3,
+                }}
+              >
+                {[{ label: 'Intro', value: 'intro' as const }, ...animationOptions].map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => setComposition(option.value)}
+                    style={{
+                      background: composition === option.value ? '#ffffff' : 'transparent',
+                      border: 0,
+                      borderRadius: 6,
+                      color: composition === option.value ? '#0f172a' : '#64748b',
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      padding: '7px 9px',
+                    }}
+                    type="button"
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div
+              style={{
+                display: 'grid',
+                gap: 4,
+                justifyItems: 'end',
+                maxWidth: 310,
+              }}
+            >
+              <span style={{ color: '#64748b', fontSize: 11, fontWeight: 800, textTransform: 'uppercase' }}>Galerias</span>
+              <div
+                style={{
+                  background: '#dcfce7',
+                  borderRadius: 8,
+                  display: 'inline-flex',
+                  flexWrap: 'wrap',
+                  gap: 2,
+                  justifyContent: 'flex-end',
+                  padding: 3,
+                }}
+              >
+                {galleryOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => setComposition(option.value)}
+                    style={{
+                      background: composition === option.value ? '#ffffff' : 'transparent',
+                      border: 0,
+                      borderRadius: 6,
+                      color: composition === option.value ? '#0f172a' : '#15803d',
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      padding: '7px 9px',
+                    }}
+                    type="button"
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
             </div>
             {isIntro ? (
               <div

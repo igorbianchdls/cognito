@@ -1440,6 +1440,339 @@ function SaaSCommandCenterAnimationCard() {
   )
 }
 
+function SaaSDocumentFanGalleryAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const activeIndex = Math.floor(frame / 120) % galleryItems.length
+  const spread = progress(frame % 120, 12, 58)
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 48%, rgba(194, 143, 44, 0.15), rgba(244,247,244,0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Document fan gallery" />
+      <div style={{ height: 1020, left: '50%', opacity: sceneIn, position: 'absolute', top: 340, transform: `translateX(-50%) translateY(${(1 - sceneIn) * 34}px)`, width: 920, zIndex: 20 }}>
+        {galleryItems.map((item, index) => {
+          const offset = index - 2.5
+          const active = index === activeIndex
+          const x = offset * 82 * spread
+          const y = Math.abs(offset) * 28 * spread + (active ? -32 : 0)
+          const rotate = offset * 8.5 * spread
+          const scale = active ? 1.1 : 0.96 - Math.abs(offset) * 0.025
+
+          return (
+            <div
+              key={item.title}
+              style={{
+                left: '50%',
+                opacity: 0.48 + spread * 0.52,
+                position: 'absolute',
+                top: 90,
+                transform: `translateX(-50%) translate(${x}px, ${y}px) rotate(${rotate}deg) scale(${scale})`,
+                transformOrigin: '50% 105%',
+                zIndex: active ? 40 : 20 - Math.abs(index - activeIndex),
+              }}
+            >
+              <SaaSScreenshotCard active={active} item={item} scale={1.08} />
+            </div>
+          )
+        })}
+      </div>
+      <GalleryFooter>Document fan gallery com telas abrindo em leque</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+function SaaSDeviceGalleryAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const activeIndex = Math.floor(frame / 135) % galleryItems.length
+  const active = galleryItems[activeIndex]
+  const float = Math.sin(frame / 28) * 12
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 48%, rgba(43, 126, 165, 0.15), rgba(244,247,244,0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Device gallery" />
+      <section style={{ left: 62, opacity: sceneIn, position: 'absolute', right: 62, top: 330, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 20 }}>
+        <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 36, boxShadow: '0 44px 110px rgba(20,24,22,0.20)', minHeight: 920, padding: 34, position: 'relative' }}>
+          <div style={{ display: 'grid', gap: 8, marginBottom: 34 }}>
+            <span style={{ color: active.accent, fontSize: 22, fontWeight: 900, textTransform: 'uppercase' }}>{active.label}</span>
+            <strong style={{ color: '#0f1512', fontSize: 64, letterSpacing: 0, lineHeight: 0.98 }}>{active.title} em todos os formatos</strong>
+          </div>
+          <div style={{ background: '#102019', borderRadius: 30, boxShadow: '0 28px 80px rgba(20,24,22,0.22)', height: 520, left: 76, overflow: 'hidden', padding: 20, position: 'absolute', top: 286, transform: `translateY(${float}px)`, width: 720 }}>
+            <SaaSScreenshotCard item={active} scale={1.16} />
+          </div>
+          <div style={{ background: '#111827', borderRadius: 36, boxShadow: '0 26px 70px rgba(20,24,22,0.24)', height: 520, overflow: 'hidden', padding: 18, position: 'absolute', right: 58, top: 478, transform: `translateY(${-float * 0.6}px)`, width: 276 }}>
+            <SaaSScreenshotCard item={galleryItems[(activeIndex + 1) % galleryItems.length]} scale={0.48} />
+          </div>
+          <div style={{ background: '#162019', borderRadius: 24, boxShadow: '0 22px 58px rgba(20,24,22,0.20)', height: 250, overflow: 'hidden', padding: 14, position: 'absolute', right: 228, top: 682, transform: `translateY(${float * 0.8}px)`, width: 360 }}>
+            <SaaSScreenshotCard item={galleryItems[(activeIndex + 2) % galleryItems.length]} scale={0.57} />
+          </div>
+        </div>
+      </section>
+      <GalleryFooter>Device gallery com desktop, mobile e tablet em camadas</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+function SaaSGridZoomGalleryAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const activeIndex = Math.floor(frame / 72) % 9
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 48%, rgba(34, 95, 66, 0.15), rgba(244,247,244,0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Grid zoom gallery" />
+      <div style={{ display: 'grid', gap: 18, gridTemplateColumns: 'repeat(3, 1fr)', left: 64, opacity: sceneIn, position: 'absolute', right: 64, top: 310, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 20 }}>
+        {Array.from({ length: 9 }).map((_, index) => {
+          const item = galleryItems[index % galleryItems.length]
+          const active = index === activeIndex
+          return (
+            <div key={`${item.title}-${index}`} style={{ transform: `scale(${active ? 1.08 : 0.96})`, transition: 'none', zIndex: active ? 20 : 5 }}>
+              <SaaSScreenshotCard active={active} item={item} scale={0.56} />
+            </div>
+          )
+        })}
+      </div>
+      <div style={{ background: 'rgba(255,255,255,0.90)', border: '1px solid #dfe7e1', borderRadius: 28, boxShadow: '0 30px 80px rgba(20,24,22,0.16)', left: 94, padding: 30, position: 'absolute', right: 94, top: 1168, zIndex: 40 }}>
+        <span style={{ color: '#65716a', fontSize: 22, fontWeight: 850, textTransform: 'uppercase' }}>Zoom alternado</span>
+        <h2 style={{ color: '#0f1512', fontSize: 58, letterSpacing: 0, lineHeight: 0.98, margin: '14px 0 0' }}>Uma grade de telas com foco rotativo</h2>
+      </div>
+      <GalleryFooter>Grid zoom gallery para mostrar volume de telas e foco dinamico</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+function SaaSSwipeCardsGalleryAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const activeIndex = Math.floor(frame / 105) % galleryItems.length
+  const local = (frame % 105) / 105
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 48%, rgba(139, 111, 157, 0.15), rgba(244,247,244,0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Swipe cards gallery" />
+      <div style={{ height: 900, left: '50%', opacity: sceneIn, position: 'absolute', top: 410, transform: `translateX(-50%) translateY(${(1 - sceneIn) * 34}px)`, width: 880, zIndex: 20 }}>
+        {[0, 1, 2, 3].map((slot) => {
+          const item = galleryItems[(activeIndex + slot) % galleryItems.length]
+          const leave = slot === 0 ? progress(local, 0.68, 1) : 0
+          const x = slot * 34 - leave * 620
+          const y = slot * 34 + leave * 80
+          const rotate = slot * -3 - leave * 18
+          const scale = 1.08 - slot * 0.055
+          return (
+            <div key={`${slot}-${item.title}`} style={{ left: '50%', opacity: 1 - slot * 0.14 - leave * 0.4, position: 'absolute', top: 20, transform: `translateX(-50%) translate(${x}px, ${y}px) rotate(${rotate}deg) scale(${scale})`, zIndex: 30 - slot }}>
+              <SaaSScreenshotCard active={slot === 0} item={item} scale={1.14} />
+            </div>
+          )
+        })}
+      </div>
+      <GalleryFooter>Swipe cards gallery com gesto visual de stories e decks</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+function SaaSCoverflowGalleryAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const activeIndex = Math.floor(frame / 112) % galleryItems.length
+  const local = (frame % 112) / 112
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 48%, rgba(34, 95, 66, 0.16), rgba(244,247,244,0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Coverflow gallery" />
+      <div style={{ height: 820, left: '50%', opacity: sceneIn, perspective: 920, position: 'absolute', top: 480, transform: `translateX(-50%) translateY(${(1 - sceneIn) * 34}px)`, width: 1050, zIndex: 20 }}>
+        {[-3, -2, -1, 0, 1, 2, 3].map((slot) => {
+          const item = galleryItems[(activeIndex + slot + galleryItems.length) % galleryItems.length]
+          const unit = slot - local
+          const centerScore = 1 - Math.min(Math.abs(unit) / 3, 1)
+          const x = unit * 165
+          const rotateY = unit * -28
+          const scale = 0.72 + centerScore * 0.38
+          return (
+            <div key={`${slot}-${item.title}`} style={{ left: '50%', opacity: 0.28 + centerScore * 0.72, position: 'absolute', top: 90, transform: `translateX(-50%) translateX(${x}px) rotateY(${rotateY}deg) scale(${scale})`, transformStyle: 'preserve-3d', zIndex: Math.round(centerScore * 30) }}>
+              <SaaSScreenshotCard active={Math.abs(unit) < 0.55} item={item} scale={1.02} />
+            </div>
+          )
+        })}
+      </div>
+      <GalleryFooter>Coverflow gallery em perspectiva para telas de produto</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+function SaaSLogoCloudAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const logos = ['ERP', 'Bank', 'CRM', 'BI', 'Docs', 'Mail', 'Tax', 'Cloud', 'Slack', 'Sheets']
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 48%, rgba(34,95,66,0.16), rgba(244,247,244,0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Logo cloud" />
+      <div style={{ left: 70, opacity: sceneIn, position: 'absolute', right: 70, top: 310, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 20 }}>
+        <h2 style={{ color: '#0f1512', fontSize: 72, letterSpacing: 0, lineHeight: 0.98, margin: '0 0 60px' }}>Conectado ao stack inteiro</h2>
+        <div style={{ display: 'grid', gap: 22, gridTemplateColumns: 'repeat(3, 1fr)' }}>
+          {logos.map((logo, index) => {
+            const p = progress(frame, 34 + index * 9, 76 + index * 9)
+            return (
+              <div key={logo} style={{ alignItems: 'center', background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 28, boxShadow: '0 22px 58px rgba(20,24,22,0.10)', display: 'flex', gap: 18, opacity: p, padding: 24, transform: `translateY(${(1 - p) * 26}px)` }}>
+                <span style={{ alignItems: 'center', background: galleryItems[index % galleryItems.length].accent, borderRadius: 20, color: '#ffffff', display: 'flex', fontSize: 26, fontWeight: 900, height: 64, justifyContent: 'center', width: 64 }}>{logo.slice(0, 1)}</span>
+                <strong style={{ color: '#0f1512', fontSize: 30, letterSpacing: 0 }}>{logo}</strong>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+      <GalleryFooter>Logo cloud para integrações, clientes e social proof</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+function SaaSMetricCounterAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const close = Math.round(interpolate(progress(frame, 42, 210), [0, 1], [0, 64]))
+  const auto = Math.round(interpolate(progress(frame, 70, 250), [0, 1], [0, 98]))
+  const hours = Math.round(interpolate(progress(frame, 96, 280), [0, 1], [0, 184]))
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 48%, rgba(34,95,66,0.18), rgba(244,247,244,0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Metric counter" />
+      <section style={{ left: 74, opacity: sceneIn, position: 'absolute', right: 74, top: 360, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 20 }}>
+        <div style={{ background: '#102019', borderRadius: 42, boxShadow: '0 44px 110px rgba(20,24,22,0.22)', color: '#ffffff', padding: 46 }}>
+          <span style={{ color: '#8aa895', fontSize: 24, fontWeight: 900, textTransform: 'uppercase' }}>Impacto operacional</span>
+          <h2 style={{ color: '#ffffff', fontSize: 76, letterSpacing: 0, lineHeight: 0.94, margin: '18px 0 52px' }}>Menos fechamento manual, mais controle.</h2>
+          <div style={{ display: 'grid', gap: 18, gridTemplateColumns: '1fr 1fr 1fr' }}>
+            {[
+              ['Tempo reduzido', `${close}%`, '#8aa895'],
+              ['Automatizado', `${auto}%`, '#6f8f7b'],
+              ['Horas salvas', `${hours}h`, '#c28f2c'],
+            ].map(([label, value, color]) => (
+              <div key={label} style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 28, display: 'grid', gap: 18, padding: 26 }}>
+                <span style={{ color: 'rgba(255,255,255,0.66)', fontSize: 20, fontWeight: 850 }}>{label}</span>
+                <strong style={{ color, fontSize: 58, letterSpacing: 0, lineHeight: 1 }}>{value}</strong>
+                <span style={{ background: color, borderRadius: 999, display: 'block', height: 10, width: '78%' }} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      <GalleryFooter>Metric counter com numeros grandes e progresso animado</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+function SaaSKanbanFlowAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const columns = ['Entrada', 'IA analisando', 'Aprovado']
+  const moving = progress(frame % 150, 20, 118)
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 48%, rgba(63,109,145,0.15), rgba(244,247,244,0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Kanban flow" />
+      <section style={{ display: 'grid', gap: 18, gridTemplateColumns: 'repeat(3, 1fr)', left: 60, opacity: sceneIn, position: 'absolute', right: 60, top: 330, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 20 }}>
+        {columns.map((column, columnIndex) => (
+          <div key={column} style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 30, boxShadow: '0 28px 74px rgba(20,24,22,0.12)', minHeight: 860, padding: 22 }}>
+            <strong style={{ color: '#0f1512', display: 'block', fontSize: 32, letterSpacing: 0, marginBottom: 24 }}>{column}</strong>
+            {[0, 1, 2].map((card) => {
+              const item = galleryItems[(card + columnIndex) % galleryItems.length]
+              return (
+                <div key={`${column}-${card}`} style={{ background: '#f7faf7', border: '1px solid #dfe7e1', borderRadius: 20, display: 'grid', gap: 12, marginBottom: 16, padding: 18 }}>
+                  <span style={{ color: item.accent, fontSize: 18, fontWeight: 850 }}>{item.label}</span>
+                  <strong style={{ color: '#0f1512', fontSize: 24, letterSpacing: 0 }}>{item.title}</strong>
+                  <span style={{ background: item.accent, borderRadius: 999, display: 'block', height: 8, width: `${54 + card * 15}%` }} />
+                </div>
+              )
+            })}
+          </div>
+        ))}
+        <div style={{ background: '#102019', borderRadius: 22, boxShadow: '0 28px 80px rgba(20,24,22,0.24)', color: '#ffffff', display: 'grid', gap: 10, left: 36 + moving * 610, padding: 22, position: 'absolute', top: 330 + Math.sin(frame / 16) * 14, width: 260, zIndex: 40 }}>
+          <span style={{ color: '#8aa895', fontSize: 17, fontWeight: 850 }}>Movendo card</span>
+          <strong style={{ fontSize: 26, letterSpacing: 0 }}>Despesa revisada</strong>
+        </div>
+      </section>
+      <GalleryFooter>Kanban flow para automacoes atravessando etapas</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+function SaaSNetworkMapAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const nodes = [
+    [540, 900, 'Hub', '#225f42'],
+    [250, 620, 'ERP', '#3f6d91'],
+    [810, 640, 'Banco', '#6f8f7b'],
+    [230, 1120, 'Docs', '#c28f2c'],
+    [820, 1160, 'BI', '#8b6f9d'],
+    [540, 1320, 'Board', '#2b7ea5'],
+  ] as const
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 48%, rgba(34,95,66,0.17), rgba(244,247,244,0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Map / network" />
+      <svg height="100%" style={{ left: 0, opacity: sceneIn, position: 'absolute', top: 0, zIndex: 5 }} viewBox="0 0 1080 1920" width="100%">
+        {nodes.slice(1).map((node, index) => (
+          <line key={node[2]} stroke="#225f42" strokeDasharray="16 20" strokeDashoffset={-(frame * 3 + index * 12)} strokeLinecap="round" strokeWidth="6" x1="540" x2={node[0]} y1="900" y2={node[1]} />
+        ))}
+      </svg>
+      {nodes.map(([x, y, label, color], index) => {
+        const p = progress(frame, 34 + index * 14, 78 + index * 14)
+        return (
+          <div key={label} style={{ alignItems: 'center', background: '#ffffff', border: `1px solid ${color}`, borderRadius: 999, boxShadow: `0 24px 64px ${color}35`, color, display: 'flex', fontSize: label === 'Hub' ? 34 : 26, fontWeight: 900, height: label === 'Hub' ? 150 : 112, justifyContent: 'center', left: x, opacity: p, position: 'absolute', top: y, transform: `translate(-50%, -50%) scale(${0.88 + p * 0.12 + Math.sin((frame + index * 20) / 28) * 0.025})`, width: label === 'Hub' ? 150 : 112, zIndex: label === 'Hub' ? 40 : 25 }}>
+            {label}
+          </div>
+        )
+      })}
+      <GalleryFooter>Map network para dados, entidades e integracoes conectadas</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+function SaaSProductTourAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const activeIndex = Math.floor(frame / 120) % 4
+  const hotspots = [
+    [250, 185, 'Dados'],
+    [640, 185, 'Metricas'],
+    [315, 420, 'Grafico'],
+    [705, 580, 'Acoes'],
+  ] as const
+  const active = hotspots[activeIndex]
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 48%, rgba(34,95,66,0.15), rgba(244,247,244,0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Product tour" />
+      <section style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 36, boxShadow: '0 44px 110px rgba(20,24,22,0.20)', left: 78, opacity: sceneIn, overflow: 'hidden', padding: 34, position: 'absolute', right: 78, top: 320, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 20 }}>
+        <SaaSScreenshotCard item={galleryItems[activeIndex]} scale={1.52} />
+        {hotspots.map(([x, y, label], index) => {
+          const isActive = index === activeIndex
+          return (
+            <span key={label} style={{ alignItems: 'center', background: isActive ? '#225f42' : '#ffffff', border: '3px solid #225f42', borderRadius: 999, boxShadow: isActive ? '0 0 0 18px rgba(34,95,66,0.14)' : '0 16px 38px rgba(20,24,22,0.12)', color: isActive ? '#ffffff' : '#225f42', display: 'flex', fontSize: 22, fontWeight: 900, height: 62, justifyContent: 'center', left: x, position: 'absolute', top: y, transform: 'translate(-50%, -50%)', width: 62 }}>
+              {index + 1}
+            </span>
+          )
+        })}
+      </section>
+      <div style={{ background: '#102019', borderRadius: 28, boxShadow: '0 28px 80px rgba(20,24,22,0.22)', color: '#ffffff', display: 'grid', gap: 10, left: 118, padding: 26, position: 'absolute', right: 118, top: 1266, zIndex: 40 }}>
+        <span style={{ color: '#8aa895', fontSize: 21, fontWeight: 900, textTransform: 'uppercase' }}>Hotspot {activeIndex + 1}</span>
+        <strong style={{ color: '#ffffff', fontSize: 44, letterSpacing: 0 }}>{active[2]} em destaque</strong>
+      </div>
+      <GalleryFooter>Product tour com hotspots guiando a interface</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
 function VerticalPipelineVisual({ item, index }: { item: VerticalPipelineItem; index: number }) {
   const darkSlide = item.kind === 'slide' && index % 2 === 0
   const lineColor = darkSlide ? 'rgba(255,255,255,0.28)' : '#dce6df'
@@ -1791,6 +2124,46 @@ export function SaaSOrbitAnimation() {
 
 export function SaaSCommandCenterAnimation() {
   return <SaaSCommandCenterAnimationCard />
+}
+
+export function SaaSDocumentFanGalleryAnimation() {
+  return <SaaSDocumentFanGalleryAnimationCard />
+}
+
+export function SaaSDeviceGalleryAnimation() {
+  return <SaaSDeviceGalleryAnimationCard />
+}
+
+export function SaaSGridZoomGalleryAnimation() {
+  return <SaaSGridZoomGalleryAnimationCard />
+}
+
+export function SaaSSwipeCardsGalleryAnimation() {
+  return <SaaSSwipeCardsGalleryAnimationCard />
+}
+
+export function SaaSCoverflowGalleryAnimation() {
+  return <SaaSCoverflowGalleryAnimationCard />
+}
+
+export function SaaSLogoCloudAnimation() {
+  return <SaaSLogoCloudAnimationCard />
+}
+
+export function SaaSMetricCounterAnimation() {
+  return <SaaSMetricCounterAnimationCard />
+}
+
+export function SaaSKanbanFlowAnimation() {
+  return <SaaSKanbanFlowAnimationCard />
+}
+
+export function SaaSNetworkMapAnimation() {
+  return <SaaSNetworkMapAnimationCard />
+}
+
+export function SaaSProductTourAnimation() {
+  return <SaaSProductTourAnimationCard />
 }
 
 export function McpOperationsDemo() {
