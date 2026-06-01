@@ -127,6 +127,27 @@ const entryPipelineItems: VerticalPipelineItem[] = [
   { kind: 'entry', eyebrow: 'Etapa 04', title: 'Comprovante', metric: 'Pendente aprovacao', status: 'Gerado', accent: '#c28f2c', secondary: 'PDF' },
 ]
 
+const newsCards = [
+  { accent: '#225f42', eyebrow: 'FINANCAS', headline: 'IA reduz o tempo de fechamento mensal em 64%', source: 'Cognito Newsroom', time: '09:42' },
+  { accent: '#3f6d91', eyebrow: 'MERCADO', headline: 'CFOs aceleram automacao de controles financeiros', source: 'Business Daily', time: '10:18' },
+  { accent: '#c28f2c', eyebrow: 'OPERACOES', headline: 'Empresas revisam contratos com apoio de agentes de IA', source: 'Ops Review', time: '11:07' },
+]
+
+const tweetText = [
+  'Fechamento financeiro nao precisa mais ser uma maratona manual.',
+  'Quando classificacao, conciliacao, contratos e dashboards rodam em esteira,',
+  'o time deixa de procurar dados e passa a decidir.',
+]
+
+const galleryItems = [
+  { accent: '#225f42', label: 'Dashboard', title: 'Executive finance', value: '+18.4%' },
+  { accent: '#3f6d91', label: 'Workflow', title: 'Bank reconciliation', value: '98%' },
+  { accent: '#6f8f7b', label: 'Catalog', title: 'Data workspace', value: '42 fontes' },
+  { accent: '#c28f2c', label: 'Report', title: 'Monthly close', value: 'Maio' },
+  { accent: '#8b6f9d', label: 'Contract', title: 'Renewal alerts', value: '14 dias' },
+  { accent: '#2b7ea5', label: 'AI Review', title: 'Expense controls', value: '96%' },
+]
+
 const integrationNodes: IntegrationNode[] = [
   { color: '#ffe01b', label: 'chimp', side: 'left', x: 175, y: 720 },
   { color: '#ffffff', label: 'G', side: 'left', x: 172, y: 960 },
@@ -544,6 +565,478 @@ function PremiumSceneShell({ children, status, footer }: { children: ReactNode; 
   )
 }
 
+function FloatingNewsCard({ index }: { index: number }) {
+  const frame = useCurrentFrame()
+  const item = newsCards[index % newsCards.length]
+  const driftY = Math.sin((frame + index * 43) / 62) * 16
+  const driftX = Math.cos((frame + index * 31) / 70) * 12
+  const left = [54, 730, 104, 790, 26, 690][index % 6]
+  const top = [250, 180, 680, 810, 1120, 1220][index % 6]
+  const rotation = [-10, 8, -6, 11, 7, -9][index % 6]
+
+  return (
+    <div
+      style={{
+        background: 'rgba(255,255,255,0.70)',
+        border: '1px solid rgba(211, 224, 216, 0.74)',
+        borderRadius: 24,
+        boxShadow: '0 18px 46px rgba(20, 24, 22, 0.08)',
+        filter: 'blur(1.3px)',
+        height: 360,
+        left,
+        opacity: 0.24,
+        padding: 28,
+        position: 'absolute',
+        top,
+        transform: `translate(${driftX}px, ${driftY}px) rotate(${rotation}deg) scale(0.62)`,
+        width: 520,
+      }}
+    >
+      <span style={{ background: item.accent, borderRadius: 999, display: 'block', height: 8, marginBottom: 24, width: 96 }} />
+      <span style={{ color: '#65716a', display: 'block', fontSize: 18, fontWeight: 850, marginBottom: 16 }}>{item.eyebrow}</span>
+      <strong style={{ color: '#0f1512', display: 'block', fontSize: 40, letterSpacing: 0, lineHeight: 1.04 }}>{item.headline}</strong>
+    </div>
+  )
+}
+
+function AnimatedNewsAnimationCard() {
+  const frame = useCurrentFrame()
+  const active = newsCards[Math.floor(frame / 150) % newsCards.length]
+  const local = frame % 150
+  const cardIn = progress(local, 0, 28)
+  const headlineIn = progress(local, 20, 58)
+  const imageIn = progress(local, 36, 78)
+  const ticker = (frame * 5) % 760
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 44%, rgba(34, 95, 66, 0.16), rgba(244, 247, 244, 0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      {[0, 1, 2, 3, 4, 5].map((item) => <FloatingNewsCard index={item} key={item} />)}
+
+      <header style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', padding: '38px 52px', position: 'relative', zIndex: 30 }}>
+        <CognitoBrand />
+        <div style={{ alignItems: 'center', background: 'rgba(255,255,255,0.84)', border: '1px solid #dce6df', borderRadius: 999, boxShadow: '0 16px 36px rgba(20, 24, 22, 0.08)', color: '#314139', display: 'flex', fontSize: 22, fontWeight: 820, gap: 10, padding: '14px 18px' }}>
+          <span style={{ background: '#d64933', borderRadius: 999, display: 'block', height: 12, width: 12 }} />
+          Breaking story animada
+        </div>
+      </header>
+
+      <main
+        style={{
+          background: '#ffffff',
+          border: '1px solid #dfe7e1',
+          borderRadius: 34,
+          boxShadow: '0 44px 110px rgba(20, 24, 22, 0.20)',
+          left: 78,
+          opacity: cardIn,
+          overflow: 'hidden',
+          position: 'absolute',
+          right: 78,
+          top: 274,
+          transform: `translateY(${(1 - cardIn) * 36}px) scale(${0.97 + cardIn * 0.03})`,
+          zIndex: 20,
+        }}
+      >
+        <div style={{ alignItems: 'center', borderBottom: '1px solid #e5ece7', display: 'flex', height: 86, justifyContent: 'space-between', padding: '0 32px' }}>
+          <strong style={{ color: '#0f1512', fontFamily: 'Georgia, serif', fontSize: 34, letterSpacing: 0 }}>The Finance Ledger</strong>
+          <div style={{ alignItems: 'center', color: '#65716a', display: 'flex', fontSize: 18, fontWeight: 800, gap: 14 }}>
+            <span>{active.source}</span>
+            <span style={{ background: '#edf4ef', borderRadius: 999, color: active.accent, padding: '8px 12px' }}>{active.time}</span>
+          </div>
+        </div>
+
+        <section style={{ display: 'grid', gap: 28, padding: '36px 38px 42px' }}>
+          <div style={{ alignItems: 'center', display: 'flex', gap: 12 }}>
+            <span style={{ background: active.accent, borderRadius: 999, display: 'block', height: 12, width: 12 }} />
+            <span style={{ color: active.accent, fontSize: 22, fontWeight: 900, letterSpacing: 1.8 }}>{active.eyebrow}</span>
+            <span style={{ background: '#dce6df', display: 'block', flex: 1, height: 1 }} />
+          </div>
+
+          <h1 style={{ color: '#0f1512', fontFamily: 'Georgia, serif', fontSize: 72, fontWeight: 800, letterSpacing: 0, lineHeight: 0.98, margin: 0, opacity: headlineIn, transform: `translateY(${(1 - headlineIn) * 24}px)` }}>
+            {active.headline}
+          </h1>
+
+          <div style={{ borderRadius: 28, display: 'grid', gap: 0, gridTemplateColumns: '1.2fr 0.8fr', minHeight: 440, overflow: 'hidden' }}>
+            <div style={{ background: '#102019', color: '#ffffff', display: 'grid', overflow: 'hidden', padding: 34, position: 'relative' }}>
+              <div style={{ background: `linear-gradient(90deg, transparent, ${active.accent}, transparent)`, height: 3, left: -760 + ticker, opacity: 0.9, position: 'absolute', right: 0, top: 0, width: 760 }} />
+              <strong style={{ alignSelf: 'end', fontSize: 38, letterSpacing: 0, lineHeight: 1.05, opacity: imageIn }}>Automacao financeira vira pauta de diretoria</strong>
+              <div style={{ alignItems: 'end', display: 'flex', gap: 14, height: 210, marginTop: 28, opacity: imageIn }}>
+                {[132, 188, 156, 248, 206, 290].map((height, index) => <span key={height} style={{ background: index === 5 ? active.accent : 'rgba(255,255,255,0.30)', borderRadius: 10, flex: 1, height }} />)}
+              </div>
+            </div>
+            <aside style={{ background: '#f6f8f6', border: '1px solid #dfe7e1', display: 'grid', gap: 18, padding: 28 }}>
+              {['Lead atualizado', 'Impacto para CFOs', 'Dados verificados'].map((label, index) => (
+                <div key={label} style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 18, display: 'grid', gap: 12, opacity: progress(local, 44 + index * 13, 82 + index * 13), padding: 18 }}>
+                  <span style={{ color: active.accent, fontSize: 18, fontWeight: 850 }}>{label}</span>
+                  <span style={{ background: '#dce6df', borderRadius: 999, display: 'block', height: 10, width: `${86 - index * 12}%` }} />
+                  <span style={{ background: '#e7eee9', borderRadius: 999, display: 'block', height: 10, width: `${68 - index * 7}%` }} />
+                </div>
+              ))}
+            </aside>
+          </div>
+        </section>
+      </main>
+
+      <div style={{ alignItems: 'center', bottom: 58, color: '#65716a', display: 'flex', fontSize: 24, fontWeight: 780, gap: 12, left: 58, position: 'absolute', zIndex: 35 }}>
+        Noticia editorial com headline, imagem e atualizacoes em tempo real
+      </div>
+    </AbsoluteFill>
+  )
+}
+
+function FloatingTweetPill({ index }: { index: number }) {
+  const frame = useCurrentFrame()
+  const driftY = Math.sin((frame + index * 41) / 56) * 16
+  const driftX = Math.cos((frame + index * 23) / 68) * 12
+  const positions = [
+    [82, 310],
+    [720, 246],
+    [56, 1030],
+    [780, 1130],
+    [140, 1380],
+  ]
+  const [left, top] = positions[index % positions.length]
+
+  return (
+    <div
+      style={{
+        background: 'rgba(255,255,255,0.78)',
+        border: '1px solid rgba(211, 224, 216, 0.86)',
+        borderRadius: 999,
+        boxShadow: '0 18px 44px rgba(20, 24, 22, 0.08)',
+        color: '#516057',
+        fontSize: 20,
+        fontWeight: 830,
+        left,
+        opacity: 0.42,
+        padding: '16px 22px',
+        position: 'absolute',
+        top,
+        transform: `translate(${driftX}px, ${driftY}px) rotate(${[-7, 6, -5, 8, -4][index % 5]}deg)`,
+      }}
+    >
+      {['+128 reposts', 'CFO thread', '4.8k views', 'AI finance', 'closing week'][index % 5]}
+    </div>
+  )
+}
+
+function TweetAnimationCard() {
+  const frame = useCurrentFrame()
+  const cardIn = progress(frame, 8, 42)
+  const textIn = progress(frame, 48, 118)
+  const mediaIn = progress(frame, 112, 154)
+  const likeCount = Math.round(interpolate(progress(frame, 160, 320), [0, 1], [821, 12640]))
+  const repostCount = Math.round(interpolate(progress(frame, 178, 340), [0, 1], [114, 2188]))
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 48%, rgba(22, 105, 255, 0.14), rgba(244, 247, 244, 0) 56%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      {[0, 1, 2, 3, 4].map((item) => <FloatingTweetPill index={item} key={item} />)}
+
+      <header style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', padding: '38px 52px', position: 'relative', zIndex: 30 }}>
+        <CognitoBrand />
+        <div style={{ alignItems: 'center', background: 'rgba(255,255,255,0.84)', border: '1px solid #dce6df', borderRadius: 999, boxShadow: '0 16px 36px rgba(20, 24, 22, 0.08)', color: '#314139', display: 'flex', fontSize: 22, fontWeight: 820, gap: 10, padding: '14px 18px' }}>
+          <span style={{ background: '#111111', borderRadius: 999, display: 'block', height: 12, width: 12 }} />
+          Tweet em destaque
+        </div>
+      </header>
+
+      <main
+        style={{
+          background: '#ffffff',
+          border: '1px solid #dfe7e1',
+          borderRadius: 36,
+          boxShadow: '0 44px 110px rgba(20, 24, 22, 0.20)',
+          left: 96,
+          opacity: cardIn,
+          padding: 38,
+          position: 'absolute',
+          right: 96,
+          top: 392,
+          transform: `translateY(${(1 - cardIn) * 34}px) scale(${0.96 + cardIn * 0.04})`,
+          zIndex: 20,
+        }}
+      >
+        <div style={{ alignItems: 'center', display: 'flex', gap: 18 }}>
+          <span style={{ alignItems: 'center', background: '#225f42', borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 34, fontWeight: 900, height: 74, justifyContent: 'center', width: 74 }}>C</span>
+          <div style={{ display: 'grid', gap: 4 }}>
+            <div style={{ alignItems: 'center', display: 'flex', gap: 8 }}>
+              <strong style={{ color: '#0f1512', fontSize: 27, letterSpacing: 0 }}>Cognito</strong>
+              <span style={{ alignItems: 'center', background: '#1d9bf0', borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 15, fontWeight: 900, height: 22, justifyContent: 'center', width: 22 }}>✓</span>
+            </div>
+            <span style={{ color: '#65716a', fontSize: 22, fontWeight: 760 }}>@cognito_ai · 12 min</span>
+          </div>
+          <span style={{ color: '#65716a', fontSize: 34, fontWeight: 900, marginLeft: 'auto' }}>...</span>
+        </div>
+
+        <div style={{ display: 'grid', gap: 16, marginTop: 34, opacity: textIn, transform: `translateY(${(1 - textIn) * 18}px)` }}>
+          {tweetText.map((line) => (
+            <p key={line} style={{ color: '#0f1512', fontSize: 42, fontWeight: 650, letterSpacing: 0, lineHeight: 1.14, margin: 0 }}>
+              {line}
+            </p>
+          ))}
+        </div>
+
+        <div style={{ background: '#102019', borderRadius: 28, color: '#ffffff', display: 'grid', gap: 22, marginTop: 34, opacity: mediaIn, overflow: 'hidden', padding: 28, transform: `translateY(${(1 - mediaIn) * 20}px)` }}>
+          <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+            <strong style={{ fontSize: 28, letterSpacing: 0 }}>Fechamento automatizado</strong>
+            <span style={{ background: '#225f42', borderRadius: 999, fontSize: 20, fontWeight: 850, padding: '10px 14px' }}>+64%</span>
+          </div>
+          <div style={{ alignItems: 'end', display: 'flex', gap: 14, height: 210 }}>
+            {[70, 106, 132, 168, 224, 286].map((height, index) => <span key={height} style={{ background: index > 3 ? '#8aa895' : 'rgba(255,255,255,0.26)', borderRadius: 12, flex: 1, height }} />)}
+          </div>
+        </div>
+
+        <div style={{ borderTop: '1px solid #e5ece7', display: 'flex', justifyContent: 'space-between', marginTop: 34, paddingTop: 24 }}>
+          {[
+            ['Reply', '342'],
+            ['Repost', repostCount.toLocaleString('en-US')],
+            ['Like', likeCount.toLocaleString('en-US')],
+            ['View', '482k'],
+          ].map(([label, value], index) => (
+            <div key={label} style={{ alignItems: 'center', color: index === 2 ? '#d72d72' : '#65716a', display: 'flex', fontSize: 22, fontWeight: 850, gap: 10 }}>
+              <span style={{ border: `2px solid ${index === 2 ? '#d72d72' : '#9ca8a1'}`, borderRadius: index === 2 ? 999 : 6, display: 'block', height: 22, width: 22 }} />
+              <span>{value}</span>
+            </div>
+          ))}
+        </div>
+      </main>
+
+      <div style={{ alignItems: 'center', bottom: 58, color: '#65716a', display: 'flex', fontSize: 24, fontWeight: 780, gap: 12, left: 58, position: 'absolute', zIndex: 35 }}>
+        Tweet animado com texto, midia e metricas de engajamento
+      </div>
+    </AbsoluteFill>
+  )
+}
+
+function SaaSScreenshotCard({ active = false, item, scale = 1 }: { active?: boolean; item: (typeof galleryItems)[number]; scale?: number }) {
+  return (
+    <div
+      style={{
+        background: '#ffffff',
+        border: '1px solid #dfe7e1',
+        borderRadius: 26 * scale,
+        boxShadow: active ? '0 38px 92px rgba(20, 24, 22, 0.20)' : '0 18px 46px rgba(20, 24, 22, 0.10)',
+        display: 'grid',
+        gap: 20 * scale,
+        height: 430 * scale,
+        overflow: 'hidden',
+        padding: 24 * scale,
+        width: 570 * scale,
+      }}
+    >
+      <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+        <div style={{ display: 'grid', gap: 6 * scale }}>
+          <span style={{ color: '#65716a', fontSize: 18 * scale, fontWeight: 850, textTransform: 'uppercase' }}>{item.label}</span>
+          <strong style={{ color: '#0f1512', fontSize: 32 * scale, letterSpacing: 0, lineHeight: 1 }}>{item.title}</strong>
+        </div>
+        <span style={{ background: '#f3f7f4', border: '1px solid #dfe7e1', borderRadius: 16 * scale, color: item.accent, fontSize: 24 * scale, fontWeight: 900, padding: `${11 * scale}px ${14 * scale}px` }}>{item.value}</span>
+      </div>
+      <div style={{ display: 'grid', gap: 13 * scale, gridTemplateColumns: '1fr 1fr 1fr' }}>
+        {[0, 1, 2].map((tile) => (
+          <span key={tile} style={{ background: tile === 0 ? item.accent : '#f3f7f4', border: '1px solid #dfe7e1', borderRadius: 16 * scale, height: 76 * scale }} />
+        ))}
+      </div>
+      <div style={{ alignItems: 'end', display: 'flex', gap: 10 * scale, height: 160 * scale }}>
+        {[72, 112, 88, 148, 124, 178, 106].map((height, index) => (
+          <span key={`${height}-${index}`} style={{ background: index === 4 ? item.accent : '#dce6df', borderRadius: 8 * scale, flex: 1, height: height * scale }} />
+        ))}
+      </div>
+      <div style={{ display: 'grid', gap: 10 * scale }}>
+        {[88, 64, 78].map((width, index) => <span key={width} style={{ background: index === 1 ? item.accent : '#e5ece7', borderRadius: 999, display: 'block', height: 10 * scale, width: `${width}%` }} />)}
+      </div>
+    </div>
+  )
+}
+
+function GallerySceneHeader({ status }: { status: string }) {
+  return (
+    <header style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', padding: '38px 52px', position: 'relative', zIndex: 40 }}>
+      <CognitoBrand />
+      <div style={{ alignItems: 'center', background: 'rgba(255,255,255,0.84)', border: '1px solid #dce6df', borderRadius: 999, boxShadow: '0 16px 36px rgba(20, 24, 22, 0.08)', color: '#314139', display: 'flex', fontSize: 22, fontWeight: 820, gap: 10, padding: '14px 18px' }}>
+        <span style={{ background: '#22a06b', borderRadius: 999, display: 'block', height: 12, width: 12 }} />
+        {status}
+      </div>
+    </header>
+  )
+}
+
+function GalleryFooter({ children }: { children: ReactNode }) {
+  return (
+    <div style={{ alignItems: 'center', bottom: 58, color: '#65716a', display: 'flex', fontSize: 24, fontWeight: 780, gap: 12, left: 58, position: 'absolute', zIndex: 45 }}>
+      {children}
+    </div>
+  )
+}
+
+function SaaSCarouselGalleryAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const activeIndex = Math.floor(frame / 118) % galleryItems.length
+  const local = (frame % 118) / 118
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 48%, rgba(34, 95, 66, 0.16), rgba(244, 247, 244, 0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Carousel de produto" />
+      <div style={{ height: 760, left: '50%', opacity: sceneIn, position: 'absolute', top: 520, transform: `translateX(-50%) translateY(${(1 - sceneIn) * 34}px)`, width: 1030 }}>
+        {[-2, -1, 0, 1, 2].map((slot) => {
+          const itemIndex = (activeIndex + slot + galleryItems.length) % galleryItems.length
+          const item = galleryItems[itemIndex]
+          const unit = slot - local
+          const centerScore = 1 - Math.min(Math.abs(unit) / 2.2, 1)
+          const x = unit * 345
+          const scale = 0.72 + centerScore * 0.34
+          const opacity = 0.28 + centerScore * 0.72
+          const rotation = unit * -3.2
+
+          return (
+            <div
+              key={`${slot}-${item.title}`}
+              style={{
+                left: '50%',
+                opacity,
+                position: 'absolute',
+                top: 110,
+                transform: `translateX(-50%) translateX(${x}px) rotate(${rotation}deg) scale(${scale})`,
+                zIndex: Math.round(centerScore * 20) + 5,
+              }}
+            >
+              <SaaSScreenshotCard active={Math.abs(unit) < 0.5} item={item} />
+            </div>
+          )
+        })}
+      </div>
+      <div style={{ bottom: 168, display: 'flex', gap: 12, justifyContent: 'center', left: 0, position: 'absolute', right: 0, zIndex: 40 }}>
+        {galleryItems.map((item, index) => (
+          <span key={item.title} style={{ background: index === activeIndex ? item.accent : '#cad8cf', borderRadius: 999, display: 'block', height: 12, width: index === activeIndex ? 46 : 12 }} />
+        ))}
+      </div>
+      <GalleryFooter>Galeria carousel com profundidade, foco central e troca continua</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+function SaaSBentoGalleryAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 48%, rgba(63, 109, 145, 0.14), rgba(244, 247, 244, 0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Bento gallery gerando" />
+      <section
+        style={{
+          display: 'grid',
+          gap: 18,
+          gridTemplateColumns: '1.15fr 0.85fr',
+          gridTemplateRows: '370px 270px 270px',
+          left: 74,
+          opacity: sceneIn,
+          position: 'absolute',
+          right: 74,
+          top: 300,
+          transform: `translateY(${(1 - sceneIn) * 32}px)`,
+          zIndex: 20,
+        }}
+      >
+        {galleryItems.slice(0, 5).map((item, index) => {
+          const p = progress(frame, 28 + index * 16, 76 + index * 16)
+          const large = index === 0
+          const tall = index === 1
+          return (
+            <div
+              key={item.title}
+              style={{
+                background: index === 0 ? '#102019' : '#ffffff',
+                border: `1px solid ${index === 0 ? '#102019' : '#dfe7e1'}`,
+                borderRadius: 30,
+                boxShadow: '0 28px 72px rgba(20, 24, 22, 0.14)',
+                color: index === 0 ? '#ffffff' : '#0f1512',
+                display: 'grid',
+                gap: 20,
+                gridColumn: large ? '1 / 2' : undefined,
+                gridRow: large ? '1 / 3' : tall ? '1 / 2' : undefined,
+                opacity: p,
+                overflow: 'hidden',
+                padding: 30,
+                position: 'relative',
+                transform: `translateY(${(1 - p) * 34}px) scale(${0.96 + p * 0.04})`,
+              }}
+            >
+              <span style={{ background: item.accent, borderRadius: 999, display: 'block', height: 8, left: 0, position: 'absolute', right: 0, top: 0 }} />
+              <div style={{ alignItems: 'start', display: 'flex', justifyContent: 'space-between' }}>
+                <div style={{ display: 'grid', gap: 8 }}>
+                  <span style={{ color: index === 0 ? 'rgba(255,255,255,0.68)' : '#65716a', fontSize: 19, fontWeight: 850, textTransform: 'uppercase' }}>{item.label}</span>
+                  <strong style={{ color: index === 0 ? '#ffffff' : '#0f1512', fontSize: large ? 48 : 32, letterSpacing: 0, lineHeight: 1 }}>{item.title}</strong>
+                </div>
+                <span style={{ background: index === 0 ? 'rgba(255,255,255,0.14)' : '#f3f7f4', borderRadius: 16, color: index === 0 ? '#ffffff' : item.accent, fontSize: 22, fontWeight: 900, padding: '11px 14px' }}>{item.value}</span>
+              </div>
+              <div style={{ alignItems: 'end', display: 'flex', gap: 12, height: large ? 280 : 112, marginTop: 'auto' }}>
+                {[82, 136, 104, 196, 152, 236].map((height, bar) => <span key={height} style={{ background: bar === index ? item.accent : index === 0 ? 'rgba(255,255,255,0.26)' : '#dce6df', borderRadius: 10, flex: 1, height: large ? height : height * 0.48 }} />)}
+              </div>
+            </div>
+          )
+        })}
+      </section>
+      <GalleryFooter>Bento grid SaaS com cards modulares entrando em sequencia</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+function SaaSWallGalleryAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const offset = (frame * 2.6) % 360
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 48%, rgba(194, 143, 44, 0.13), rgba(244, 247, 244, 0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Wall de screenshots" />
+      <div
+        style={{
+          height: 1240,
+          left: -170,
+          opacity: sceneIn,
+          position: 'absolute',
+          top: 260,
+          transform: `rotate(-8deg) translateY(${-offset}px)`,
+          width: 1420,
+          zIndex: 10,
+        }}
+      >
+        {Array.from({ length: 18 }).map((_, index) => {
+          const item = galleryItems[index % galleryItems.length]
+          const row = Math.floor(index / 3)
+          const column = index % 3
+          const p = progress(frame, 10 + index * 5, 58 + index * 5)
+
+          return (
+            <div
+              key={`${item.title}-${index}`}
+              style={{
+                left: column * 430 + (row % 2) * 90,
+                opacity: p,
+                position: 'absolute',
+                top: row * 315,
+                transform: `scale(${0.64 + p * 0.08})`,
+              }}
+            >
+              <SaaSScreenshotCard item={item} scale={0.72} />
+            </div>
+          )
+        })}
+      </div>
+      <div style={{ background: 'linear-gradient(180deg, #f4f7f4 0%, rgba(244,247,244,0) 24%, rgba(244,247,244,0) 72%, #f4f7f4 100%)', inset: 0, position: 'absolute', zIndex: 30 }} />
+      <div style={{ background: 'rgba(255,255,255,0.90)', border: '1px solid #dfe7e1', borderRadius: 30, boxShadow: '0 32px 90px rgba(20, 24, 22, 0.18)', left: 120, padding: 34, position: 'absolute', right: 120, top: 690, zIndex: 40 }}>
+        <span style={{ color: '#65716a', fontSize: 22, fontWeight: 850, textTransform: 'uppercase' }}>Product gallery</span>
+        <h2 style={{ color: '#0f1512', fontSize: 64, fontWeight: 850, letterSpacing: 0, lineHeight: 0.98, margin: '14px 0 0' }}>Todos os artefatos em movimento continuo</h2>
+      </div>
+      <GalleryFooter>Wall animado de screenshots, comum em hero sections SaaS</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
 function VerticalPipelineVisual({ item, index }: { item: VerticalPipelineItem; index: number }) {
   const darkSlide = item.kind === 'slide' && index % 2 === 0
   const lineColor = darkSlide ? 'rgba(255,255,255,0.28)' : '#dce6df'
@@ -847,6 +1340,26 @@ export function AccountingEntryAnimation() {
       status="ERP actions executando"
     />
   )
+}
+
+export function NewsAnimation() {
+  return <AnimatedNewsAnimationCard />
+}
+
+export function TweetAnimation() {
+  return <TweetAnimationCard />
+}
+
+export function SaaSCarouselGalleryAnimation() {
+  return <SaaSCarouselGalleryAnimationCard />
+}
+
+export function SaaSBentoGalleryAnimation() {
+  return <SaaSBentoGalleryAnimationCard />
+}
+
+export function SaaSWallGalleryAnimation() {
+  return <SaaSWallGalleryAnimationCard />
 }
 
 export function McpOperationsDemo() {

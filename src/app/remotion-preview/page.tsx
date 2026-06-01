@@ -15,12 +15,17 @@ import {
   IntegrationFlowAnimation,
   ManagementReportAnimation,
   MCP_SINGLE_ANIMATION_DURATION,
+  NewsAnimation,
+  SaaSBentoGalleryAnimation,
+  SaaSCarouselGalleryAnimation,
+  SaaSWallGalleryAnimation,
+  TweetAnimation,
 } from '@/remotion/compositions/McpOperationsDemo'
 import { ExcelWorkbookMock, type ExcelMockSheet } from '@/remotion/components/ExcelWorkbookMock'
 import { PdfViewerMock, type PdfMockPage } from '@/remotion/components/PdfViewerMock'
 import { PowerPointEditorMock, type PowerPointMockSlide } from '@/remotion/components/PowerPointEditorMock'
 
-type PreviewComposition = 'intro' | 'classification' | 'reconciliation' | 'dashboards' | 'report' | 'slides' | 'contracts' | 'entry' | 'powerpoint' | 'pdf' | 'excel' | 'integration'
+type PreviewComposition = 'intro' | 'classification' | 'reconciliation' | 'dashboards' | 'report' | 'slides' | 'contracts' | 'entry' | 'powerpoint' | 'pdf' | 'excel' | 'integration' | 'news' | 'tweet' | 'gallery-carousel' | 'gallery-bento' | 'gallery-wall'
 
 type AnimationOption = {
   component: ComponentType
@@ -164,6 +169,11 @@ const animationOptions: AnimationOption[] = [
   { component: PdfPreviewAnimation, label: 'PDF', value: 'pdf' },
   { component: ExcelPreviewAnimation, label: 'Excel', value: 'excel' },
   { component: IntegrationFlowAnimation, label: 'Integração', value: 'integration' },
+  { component: NewsAnimation, label: 'Notícia', value: 'news' },
+  { component: TweetAnimation, label: 'Tweet', value: 'tweet' },
+  { component: SaaSCarouselGalleryAnimation, label: 'Galeria Carousel', value: 'gallery-carousel' },
+  { component: SaaSBentoGalleryAnimation, label: 'Galeria Bento', value: 'gallery-bento' },
+  { component: SaaSWallGalleryAnimation, label: 'Galeria Wall', value: 'gallery-wall' },
 ]
 
 export default function RemotionPreviewPage() {
