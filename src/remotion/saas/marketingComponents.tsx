@@ -1,0 +1,175 @@
+import type { ReactNode } from 'react'
+import { interpolate, useCurrentFrame } from 'remotion'
+
+import { FloatingScreenshot } from '@/remotion/saas/frames'
+import type { SaaSFeature, SaaSLogo, SaaSMetric, SaaSProductScreen, SaaSTheme } from '@/remotion/saas/types'
+
+export function LogoCloud({
+  logos,
+  theme,
+}: {
+  logos: SaaSLogo[]
+  theme: SaaSTheme
+}) {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
+      {logos.map((logo) => (
+        <div key={logo.label} style={{ alignItems: 'center', background: '#FFFFFF', border: `1px solid ${theme.border}`, borderRadius: 18, display: 'flex', gap: 12, padding: '14px 16px' }}>
+          <span style={{ alignItems: 'center', background: '#F0F5F2', borderRadius: 12, color: theme.accent, display: 'flex', fontSize: 17, fontWeight: 900, height: 36, justifyContent: 'center', letterSpacing: 0, width: 36 }}>{logo.mark || logo.label.slice(0, 1)}</span>
+          <strong style={{ color: theme.text, fontSize: 18, fontWeight: 840, letterSpacing: 0 }}>{logo.label}</strong>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export function TestimonialCard({
+  author,
+  metric,
+  quote,
+  role,
+  theme,
+}: {
+  author: string
+  metric?: SaaSMetric
+  quote: string
+  role?: string
+  theme: SaaSTheme
+}) {
+  return (
+    <article style={{ background: '#FFFFFF', border: `1px solid ${theme.border}`, borderRadius: 28, boxShadow: '0 24px 70px rgba(20,24,22,0.12)', display: 'grid', gap: 22, padding: 28 }}>
+      <p style={{ color: theme.text, fontSize: 30, fontWeight: 760, letterSpacing: 0, lineHeight: 1.16, margin: 0 }}>"{quote}"</p>
+      {metric ? (
+        <div style={{ background: '#F8FBF9', border: `1px solid ${theme.border}`, borderRadius: 18, display: 'grid', gap: 4, padding: 16 }}>
+          <span style={{ color: theme.muted, fontSize: 14, fontWeight: 780 }}>{metric.label}</span>
+          <strong style={{ color: theme.accent, fontSize: 34, fontWeight: 920, letterSpacing: 0 }}>{metric.value}</strong>
+        </div>
+      ) : null}
+      <footer style={{ display: 'grid', gap: 4 }}>
+        <strong style={{ color: theme.text, fontSize: 20, fontWeight: 880, letterSpacing: 0 }}>{author}</strong>
+        {role ? <span style={{ color: theme.muted, fontSize: 15, fontWeight: 680 }}>{role}</span> : null}
+      </footer>
+    </article>
+  )
+}
+
+export function PricingCard({
+  cta = 'Start now',
+  features,
+  highlighted = false,
+  name,
+  price,
+  theme,
+}: {
+  cta?: string
+  features: string[]
+  highlighted?: boolean
+  name: string
+  price: string
+  theme: SaaSTheme
+}) {
+  return (
+    <article style={{ background: highlighted ? theme.text : '#FFFFFF', border: `1px solid ${highlighted ? theme.text : theme.border}`, borderRadius: 28, color: highlighted ? '#FFFFFF' : theme.text, display: 'grid', gap: 22, padding: 28 }}>
+      <div style={{ display: 'grid', gap: 8 }}>
+        <strong style={{ fontSize: 28, fontWeight: 900, letterSpacing: 0 }}>{name}</strong>
+        <span style={{ color: highlighted ? 'rgba(255,255,255,0.70)' : theme.muted, fontSize: 17, fontWeight: 680 }}>For growing teams</span>
+      </div>
+      <strong style={{ fontSize: 54, fontWeight: 940, letterSpacing: 0 }}>{price}</strong>
+      <div style={{ display: 'grid', gap: 11 }}>
+        {features.map((feature) => <span key={feature} style={{ color: highlighted ? 'rgba(255,255,255,0.82)' : theme.muted, fontSize: 17, fontWeight: 720 }}>+ {feature}</span>)}
+      </div>
+      <span style={{ background: highlighted ? theme.accent : theme.text, borderRadius: 999, color: '#FFFFFF', fontSize: 18, fontWeight: 900, letterSpacing: 0, padding: '14px 18px', textAlign: 'center' }}>{cta}</span>
+    </article>
+  )
+}
+
+export function FeatureMatrix({
+  features,
+  theme,
+}: {
+  features: SaaSFeature[]
+  theme: SaaSTheme
+}) {
+  return (
+    <div style={{ background: '#FFFFFF', border: `1px solid ${theme.border}`, borderRadius: 26, display: 'grid', overflow: 'hidden' }}>
+      {features.map((feature, index) => (
+        <div key={feature.title} style={{ borderBottom: index === features.length - 1 ? 'none' : `1px solid ${theme.border}`, display: 'grid', gap: 16, gridTemplateColumns: '0.7fr 1fr 150px', padding: '18px 22px' }}>
+          <strong style={{ color: theme.text, fontSize: 20, fontWeight: 880, letterSpacing: 0 }}>{feature.title}</strong>
+          <span style={{ color: theme.muted, fontSize: 17, fontWeight: 650, lineHeight: 1.35 }}>{feature.description}</span>
+          <span style={{ color: theme.accent, fontSize: 18, fontWeight: 900, textAlign: 'right' }}>{feature.metric || feature.eyebrow || 'Included'}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export function UseCaseCard({
+  description,
+  icon,
+  metric,
+  theme,
+  title,
+}: {
+  description?: string
+  icon?: ReactNode
+  metric?: string
+  theme: SaaSTheme
+  title: string
+}) {
+  return (
+    <article style={{ background: '#FFFFFF', border: `1px solid ${theme.border}`, borderRadius: 24, display: 'grid', gap: 14, padding: 22 }}>
+      <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+        <span style={{ alignItems: 'center', background: '#F0F5F2', borderRadius: 16, color: theme.accent, display: 'flex', fontSize: 22, fontWeight: 900, height: 48, justifyContent: 'center', width: 48 }}>{icon || title.slice(0, 1)}</span>
+        {metric ? <span style={{ color: theme.accent, fontSize: 18, fontWeight: 900 }}>{metric}</span> : null}
+      </div>
+      <strong style={{ color: theme.text, fontSize: 26, fontWeight: 900, letterSpacing: 0, lineHeight: 1 }}>{title}</strong>
+      {description ? <span style={{ color: theme.muted, fontSize: 17, fontWeight: 650, lineHeight: 1.32 }}>{description}</span> : null}
+    </article>
+  )
+}
+
+export function BeforeAfterSlider({
+  after,
+  before,
+  theme,
+}: {
+  after: ReactNode
+  before: ReactNode
+  theme: SaaSTheme
+}) {
+  const frame = useCurrentFrame()
+  const position = interpolate(Math.sin(frame / 34), [-1, 1], [0.25, 0.76])
+  return (
+    <div style={{ background: '#FFFFFF', border: `1px solid ${theme.border}`, borderRadius: 28, height: 560, overflow: 'hidden', position: 'relative' }}>
+      <div style={{ inset: 0, position: 'absolute' }}>{before}</div>
+      <div style={{ bottom: 0, left: 0, overflow: 'hidden', position: 'absolute', top: 0, width: `${position * 100}%` }}>{after}</div>
+      <div style={{ background: theme.accent, bottom: 0, left: `${position * 100}%`, position: 'absolute', top: 0, transform: 'translateX(-50%)', width: 5 }} />
+      <span style={{ background: theme.accent, borderRadius: 999, color: '#FFFFFF', fontSize: 16, fontWeight: 900, left: `${position * 100}%`, letterSpacing: 0, padding: '10px 13px', position: 'absolute', top: 24, transform: 'translateX(-50%)' }}>Compare</span>
+    </div>
+  )
+}
+
+export function ScreenCarousel({
+  screens,
+  theme,
+}: {
+  screens: SaaSProductScreen[]
+  theme: SaaSTheme
+}) {
+  const frame = useCurrentFrame()
+  const activeIndex = Math.floor(frame / 90) % Math.max(1, screens.length)
+  return (
+    <div style={{ height: 520, position: 'relative' }}>
+      {[-1, 0, 1].map((slot) => {
+        const index = (activeIndex + slot + screens.length) % screens.length
+        const screen = screens[index]
+        const active = slot === 0
+        return (
+          <div key={`${screen.title}-${slot}`} style={{ left: '50%', opacity: active ? 1 : 0.44, position: 'absolute', top: active ? 18 : 64, transform: `translateX(-50%) translateX(${slot * 330}px) scale(${active ? 1 : 0.82})`, zIndex: active ? 5 : 2 }}>
+            <FloatingScreenshot active={active} label={screen.title} metric={screen.metric} theme={theme} />
+          </div>
+        )
+      })}
+    </div>
+  )
+}
