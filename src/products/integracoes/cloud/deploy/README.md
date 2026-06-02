@@ -1,6 +1,6 @@
 # Integrations Cloud Run Deploy
 
-Arquivos preparados para deploy futuro dos stubs de integracoes no Google Cloud.
+Arquivos preparados para deploy das integracoes no Google Cloud.
 
 Recursos alvo:
 
@@ -53,6 +53,7 @@ gcloud run services replace src/products/integracoes/cloud/deploy/cloud-run-work
 
 Observacoes:
 
-- Estes arquivos ainda usam stubs, sem ETL real.
+- A infraestrutura de worker, Secret Manager, BigQuery writer e status/cursor esta pronta.
+- Os conectores por provider ainda podem usar stub ate serem implementados.
 - O build deve ser executado com o contexto na raiz do repositorio.
 - Nenhuma chave JSON de service account e necessaria para Cloud Run.

@@ -6,7 +6,7 @@ export async function handleHealthCheck(): Promise<ControlApiResponse> {
     body: {
       ok: true,
       service: 'integracoes-control-api',
-      mode: 'stub',
+      mode: 'gcp',
     },
   }
 }

@@ -54,5 +54,9 @@ export function getIntegrationsCloudConfig(): IntegrationsCloudConfig {
 
 export function getSecretName(parts: Array<string | number>): string {
   const config = getIntegrationsCloudConfig()
-  return [config.secrets.prefix, ...parts].map((part) => String(part).trim()).filter(Boolean).join('/')
+  const secretId = [config.secrets.prefix, ...parts]
+    .map((part) => String(part).trim().toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, ''))
+    .filter(Boolean)
+    .join('-')
+  return `projects/${config.projectId}/secrets/${secretId}`
 }

@@ -45,7 +45,9 @@ export async function POST(
     return Response.json({
       ok: true,
       result,
-      message: 'Sync simulado registrado localmente. O ETL real sera conectado em etapa futura.',
+      message: result.status === 'queued'
+        ? 'Sync enviado ao GCP e registrado como aguardando processamento.'
+        : 'Sync local registrado. Configure INTEGRATIONS_CONTROL_API_URL para processar no GCP.',
     })
   } catch (error) {
     return Response.json(

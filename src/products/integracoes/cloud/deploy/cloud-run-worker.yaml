@@ -31,3 +31,8 @@ spec:
                   value: integrations-sync-worker-sub
                 - name: SECRET_PREFIX
                   value: integrations
+                - name: SUPABASE_DB_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: supabase-db-url
+                      key: latest

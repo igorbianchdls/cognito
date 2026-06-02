@@ -1,15 +1,126 @@
 import { getIntegrationsCloudConfig } from '@/products/integracoes/cloud/src/config/gcpConfig'
+import { authorizedJsonRequest } from '@/products/integracoes/cloud/src/lib/googleAuth'
 
 export type BigQueryWriteInput = {
   dataset?: string
   table: string
+  tenantId: number
+  connectionId: string
+  provider: string
+  resource: string
+  runId?: string | null
   rows: Record<string, unknown>[]
 }
 
-export async function writeRowsToBigQuery(_input: BigQueryWriteInput): Promise<{ ok: boolean; mode: 'stub' }> {
-  const config = getIntegrationsCloudConfig()
-  const dataset = _input.dataset || config.bigQuery.customRawDataset
-  void dataset
+export type BigQueryWriteOutput = {
+  ok: boolean
+  mode: 'bigquery'
+  dataset: string
+  table: string
+  insertedRows: number
+}
 
-  return { ok: true, mode: 'stub' }
+type BigQueryInsertResponse = {
+  insertErrors?: Array<{ index?: number; errors?: Array<{ message?: string }> }>
+}
+
+function normalizeBigQueryIdentifier(value: string, label: string) {
+  const normalized = value.trim().toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '')
+  if (!/^[a-z_][a-z0-9_]{0,1023}$/.test(normalized)) {
+    throw new Error(`${label} BigQuery invalido: ${value}`)
+  }
+  return normalized
+}
+
+function getTableApiPath(projectId: string, dataset: string, table: string) {
+  return `https://bigquery.googleapis.com/bigquery/v2/projects/${projectId}/datasets/${dataset}/tables/${table}`
+}
+
+async function ensureRawTable(projectId: string, dataset: string, table: string) {
+  const tableUrl = getTableApiPath(projectId, dataset, table)
+  const existing = await authorizedJsonRequest<unknown>(tableUrl, { method: 'GET', allowNotFound: true })
+  if (existing.ok) return
+
+  await authorizedJsonRequest<unknown>(
+    `https://bigquery.googleapis.com/bigquery/v2/projects/${projectId}/datasets/${dataset}/tables`,
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        tableReference: {
+          projectId,
+          datasetId: dataset,
+          tableId: table,
+        },
+        schema: {
+          fields: [
+            { name: 'tenant_id', type: 'INTEGER', mode: 'REQUIRED' },
+            { name: 'connection_id', type: 'STRING', mode: 'REQUIRED' },
+            { name: 'provider', type: 'STRING', mode: 'REQUIRED' },
+            { name: 'resource', type: 'STRING', mode: 'REQUIRED' },
+            { name: 'run_id', type: 'STRING', mode: 'NULLABLE' },
+            { name: 'external_id', type: 'STRING', mode: 'NULLABLE' },
+            { name: 'synced_at', type: 'TIMESTAMP', mode: 'REQUIRED' },
+            { name: 'raw_payload', type: 'JSON', mode: 'REQUIRED' },
+          ],
+        },
+        timePartitioning: {
+          type: 'DAY',
+          field: 'synced_at',
+        },
+        clustering: {
+          fields: ['tenant_id', 'provider', 'resource'],
+        },
+      }),
+    },
+  )
+}
+
+export async function writeRowsToBigQuery(input: BigQueryWriteInput): Promise<BigQueryWriteOutput> {
+  const config = getIntegrationsCloudConfig()
+  const dataset = normalizeBigQueryIdentifier(input.dataset || config.bigQuery.customRawDataset, 'dataset')
+  const table = normalizeBigQueryIdentifier(input.table, 'table')
+
+  if (!input.rows.length) {
+    return { ok: true, mode: 'bigquery', dataset, table, insertedRows: 0 }
+  }
+
+  await ensureRawTable(config.projectId, dataset, table)
+
+  const syncedAt = new Date().toISOString()
+  const response = await authorizedJsonRequest<BigQueryInsertResponse>(
+    `https://bigquery.googleapis.com/bigquery/v2/projects/${config.projectId}/datasets/${dataset}/tables/${table}/insertAll`,
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        skipInvalidRows: false,
+        ignoreUnknownValues: false,
+        rows: input.rows.map((row, index) => ({
+          insertId: `${input.connectionId}:${input.resource}:${input.runId || 'run'}:${index}`,
+          json: {
+            tenant_id: input.tenantId,
+            connection_id: input.connectionId,
+            provider: input.provider,
+            resource: input.resource,
+            run_id: input.runId || null,
+            external_id: typeof row.external_id === 'string' ? row.external_id : typeof row.id === 'string' ? row.id : null,
+            synced_at: syncedAt,
+            raw_payload: row,
+          },
+        })),
+      }),
+    },
+  )
+
+  if (response.payload?.insertErrors?.length) {
+    const firstError = response.payload.insertErrors[0]?.errors?.[0]?.message
+    throw new Error(firstError || 'Falha ao inserir linhas no BigQuery')
+  }
+
+  return {
+    ok: true,
+    mode: 'bigquery',
+    dataset,
+    table,
+    insertedRows: input.rows.length,
+  }
 }

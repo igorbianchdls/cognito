@@ -5,6 +5,7 @@ export type ConnectorResult = {
   recordsIn: number
   recordsUpdated: number
   recordsFailed: number
+  rows?: Record<string, unknown>[]
   nextCursor?: Record<string, unknown>
   errorMessage?: string
   metadata?: Record<string, unknown>

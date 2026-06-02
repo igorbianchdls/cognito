@@ -34,3 +34,8 @@ spec:
                 secretKeyRef:
                   name: integrations-internal-api-key
                   key: latest
+            - name: SUPABASE_DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: supabase-db-url
+                  key: latest

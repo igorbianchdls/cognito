@@ -8,6 +8,8 @@ Status atual:
 - Recursos base GCP ativos no projeto `creatto-463117`.
 - Deploy ativo em Cloud Run para `integrations-control-api` e `integrations-worker-service`.
 - Pub/Sub, BigQuery, Secret Manager, Artifact Registry e Cloud Build trigger configurados.
+- Worker GCP preparado para orquestrar sync real, gravar status/cursor no Postgres,
+  ler credenciais no Secret Manager e escrever raw rows no BigQuery.
 - Sem credenciais ou secrets neste repositorio.
 
 Runbook operacional:
@@ -46,8 +48,9 @@ Arquitetura prevista:
 
 - `control-api`: servico HTTP para setup, callbacks, reconexao e despacho de sync.
 - `worker`: servico HTTP invocado por Pub/Sub push e job legado para execucoes pontuais.
-- `connectors`: implementacoes por provedor, iniciando com ERPs e depois CRMs.
-- `lib`: wrappers de infraestrutura GCP; parte ainda esta em stub ate a fase de ETL real.
+- `connectors`: implementacoes por provedor, iniciando com ERPs e depois CRMs. Ainda
+  permanecem em stub ate a entrega de cada conector.
+- `lib`: wrappers de infraestrutura GCP para Pub/Sub, Secret Manager, BigQuery e status/cursor.
 
 Entrypoints planejados:
 
@@ -71,8 +74,7 @@ deploy/README.md
 
 Proximas etapas de produto/ETL:
 
-1. Implementar conectores reais, comecando por Conta Azul/Fivetran.
-2. Gravar credenciais por tenant no Secret Manager.
-3. Trocar o worker stub por sync real e escrita no BigQuery.
-4. Criar tabelas e transforms quando os primeiros ERPs enviarem dados.
-5. Habilitar Cloud Scheduler apenas quando houver sync recorrente.
+1. Implementar conectores reais, comecando por Omie ou Conta Azul.
+2. Criar transforms normalizados quando os primeiros ERPs enviarem dados.
+3. Habilitar Cloud Scheduler apenas quando houver sync recorrente.
+4. Implementar OAuth generico para Conta Azul, Bling e Tiny.

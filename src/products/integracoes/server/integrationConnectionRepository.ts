@@ -485,7 +485,7 @@ export async function createIntegrationSyncRun(params: {
       `INSERT INTO mcp_app.integration_sync_runs
         (tenant_id, connection_id, trigger, status, started_at, finished_at, records_in, records_updated, records_failed, metadata_json)
        VALUES
-        ($1, $2, $3, $4, now(), now(), 0, 0, 0, $5::jsonb)
+        ($1, $2, $3, $4, CASE WHEN $4 = 'queued' THEN NULL ELSE now() END, CASE WHEN $4 = 'queued' THEN NULL ELSE now() END, 0, 0, 0, $5::jsonb)
        RETURNING *`,
       [
         tenantId,
@@ -493,7 +493,7 @@ export async function createIntegrationSyncRun(params: {
         params.trigger,
         status,
         JSON.stringify({
-          simulated: true,
+          simulated: status !== 'queued',
           resources: params.resources || connection.selectedResources,
           ...(params.metadata || {}),
         }),

@@ -1,4 +1,5 @@
 import { getIntegrationsCloudConfig } from '@/products/integracoes/cloud/src/config/gcpConfig'
+import { getCloudAccessToken } from '@/products/integracoes/cloud/src/lib/googleAuth'
 import type { IntegrationSyncTrigger } from '@/products/integracoes/shared/contracts/syncContracts'
 
 export type PublishSyncMessageInput = {
@@ -16,37 +17,13 @@ export type PublishSyncMessageOutput = {
   topic: string
 }
 
-type MetadataTokenResponse = {
-  access_token?: string
-}
-
 type PubSubPublishResponse = {
   messageIds?: string[]
 }
 
-async function getCloudRunAccessToken(): Promise<string> {
-  const response = await fetch('http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token', {
-    headers: {
-      'Metadata-Flavor': 'Google',
-    },
-    signal: AbortSignal.timeout(5000),
-  })
-
-  if (!response.ok) {
-    throw new Error(`Falha ao obter token da metadata server: ${response.status}`)
-  }
-
-  const payload = await response.json() as MetadataTokenResponse
-  if (!payload.access_token) {
-    throw new Error('Metadata server nao retornou access_token')
-  }
-
-  return payload.access_token
-}
-
 export async function publishSyncMessage(input: PublishSyncMessageInput): Promise<PublishSyncMessageOutput> {
   const config = getIntegrationsCloudConfig()
-  const accessToken = await getCloudRunAccessToken()
+  const accessToken = await getCloudAccessToken()
   const topic = `projects/${config.projectId}/topics/${config.pubSub.syncTopic}`
   const data = Buffer.from(JSON.stringify({
     type: 'integration.sync.requested',

@@ -10,7 +10,7 @@ import type {
 } from '@/products/integracoes/shared/contracts/syncContracts'
 
 export type LocalSetupResult = {
-  mode: 'cloud_stub' | 'local_stub'
+  mode: 'cloud' | 'local_stub'
   connection: IntegrationConnection
   message: string
 }
@@ -20,6 +20,9 @@ type CloudControlApiResponse = {
   error?: string
   message?: string
   mode?: string
+  messageId?: string
+  status?: string
+  secretRef?: string
 }
 
 function getCloudControlApiUrl(): string | null {
@@ -61,7 +64,7 @@ export async function prepareLocalConnectionSetup(connection: IntegrationConnect
 
   if (cloud) {
     return {
-      mode: 'cloud_stub',
+      mode: 'cloud',
       connection,
       message: cloud.message || 'Setup enviado ao Cloud Run.',
     }
@@ -89,7 +92,7 @@ export async function requestLocalReconnect(params: {
     status: 'pending_auth',
     metadata: {
       reconnectRequestedAt: new Date().toISOString(),
-      setupMode: cloud ? 'cloud_stub' : 'local_stub',
+      setupMode: cloud ? 'cloud' : 'local_stub',
     },
   })
   await createIntegrationEvent({
@@ -99,13 +102,13 @@ export async function requestLocalReconnect(params: {
     actor: 'integracoes-api',
     message: 'Reconexao registrada localmente aguardando fluxo real de autenticacao.',
     metadata: {
-      setupMode: cloud ? 'cloud_stub' : 'local_stub',
+      setupMode: cloud ? 'cloud' : 'local_stub',
       provider: params.connection.provider,
     },
   })
 
   return {
-    mode: cloud ? 'cloud_stub' : 'local_stub',
+    mode: cloud ? 'cloud' : 'local_stub',
     connection: updated || params.connection,
     message: cloud?.message || 'Reconexao registrada localmente. O fluxo real de autenticacao sera adicionado depois.',
   }
@@ -129,15 +132,16 @@ export async function requestLocalSync(params: {
     tenantId: params.tenantId,
     connectionId: params.connectionId,
     trigger: params.trigger || 'manual',
-    status: 'success',
+    status: cloud ? 'queued' : 'success',
     resources: params.resources,
     metadata: {
       requestedBy: params.requestedBy || 'api',
-      setupMode: cloud ? 'cloud_stub' : 'local_stub',
+      setupMode: cloud ? 'cloud' : 'local_stub',
       cloudDispatch: cloud
         ? {
             mode: cloud.mode,
             message: cloud.message,
+            messageId: cloud.messageId,
           }
         : undefined,
     },

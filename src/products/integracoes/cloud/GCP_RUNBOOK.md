@@ -118,6 +118,8 @@ Secrets:
 
 ```txt
 integrations-internal-api-key
+supabase-db-url
+integrations-{tenantId}-{connectionId}-credentials
 ```
 
 Nunca imprima o valor desse secret em logs ou respostas. Use-o apenas em variavel de
@@ -279,7 +281,7 @@ Resultado esperado:
 ```txt
 MESSAGE: Integration worker finished.
 CONNECTION_ID: smoke-gcloud
-MODE: stub
+MODE: gcp_worker
 ```
 
 ## Deploy e CI/CD
@@ -327,11 +329,47 @@ gcloud run services replace src/products/integracoes/cloud/deploy/cloud-run-work
   --region southamerica-east1
 ```
 
-## O que ainda e stub ou proxima fase
+## Estado da infraestrutura GCP
 
-- O Worker ainda executa `runSyncJob` em modo `stub`; o ETL real entra na fase Conta Azul/Fivetran.
-- As tabelas reais do BigQuery serao criadas quando os conectores/Fivetran comecarem a enviar dados.
+- Secret Manager e BigQuery writer estao implementados para uso generico.
+- O Worker cria sync run, busca conexao no Postgres, resolve provider/resource,
+  chama o connector, grava rows raw no BigQuery quando existirem, atualiza cursor e finaliza status.
+- Os conectores de provider continuam em stub; eles retornam zero linhas ate a entrega de Omie, Conta Azul etc.
+- As tabelas raw do BigQuery sao criadas automaticamente por provider/resource no padrao
+  `{provider}_{resource}`, dentro de `integrations_custom_raw`.
 - Cloud Scheduler nao esta habilitado; so precisa para sync recorrente/agendado.
 - Eventarc nao esta habilitado; nao e necessario no fluxo atual.
 - A assinatura pull `integrations-sync-worker-sub` e legado. A assinatura ativa para o Worker HTTP e `integrations-sync-worker-push-sub`.
 - O secret `integrations-internal-api-key` usa replicacao automatica. Se houver exigencia estrita de residencia regional, recriar secrets com replicacao user-managed em `southamerica-east1`.
+
+## Formato das credenciais
+
+O Control API grava credenciais recebidas em `/connections/setup` no Secret Manager:
+
+```txt
+projects/creatto-463117/secrets/integrations-{tenantId}-{connectionId}-credentials
+```
+
+O valor pode ser string ou JSON. O worker le `latest` e passa para o connector como
+`credentials`, sem logar o conteudo.
+
+## Formato raw no BigQuery
+
+Cada resource grava em tabela raw propria:
+
+```txt
+integrations_custom_raw.{provider}_{resource}
+```
+
+Schema base:
+
+```txt
+tenant_id INTEGER
+connection_id STRING
+provider STRING
+resource STRING
+run_id STRING
+external_id STRING
+synced_at TIMESTAMP
+raw_payload JSON
+```

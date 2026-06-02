@@ -10,6 +10,7 @@ type WorkerPayload = {
   connectionId?: string
   trigger?: IntegrationSyncTrigger
   resources?: string[]
+  requestedBy?: string
 }
 
 type PubSubPushBody = {
@@ -42,6 +43,7 @@ function normalizePayload(value: unknown): WorkerPayload {
     resources: Array.isArray(value.resources)
       ? value.resources.filter((resource): resource is string => typeof resource === 'string')
       : undefined,
+    requestedBy: typeof value.requestedBy === 'string' ? value.requestedBy : undefined,
   }
 }
 
@@ -93,6 +95,7 @@ async function executeWorker(payload: WorkerPayload) {
     connectionId: payload.connectionId || process.env.SYNC_CONNECTION_ID || 'stub',
     trigger: payload.trigger || parseTrigger(process.env.SYNC_TRIGGER),
     resources: payload.resources,
+    requestedBy: payload.requestedBy,
   })
 
   console.log(JSON.stringify({
@@ -114,7 +117,7 @@ export function startHttpServer() {
     const url = new URL(request.url || '/', `http://${request.headers.host || 'localhost'}`)
     if (request.method === 'GET' && url.pathname === '/health') {
       response.writeHead(200, { 'content-type': 'application/json; charset=utf-8' })
-      response.end(JSON.stringify({ ok: true, service: 'integracoes-worker', mode: 'stub' }))
+      response.end(JSON.stringify({ ok: true, service: 'integracoes-worker', mode: 'gcp_worker' }))
       return
     }
 
