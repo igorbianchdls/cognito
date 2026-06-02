@@ -59,6 +59,7 @@ import {
 import { ExcelWorkbookMock, type ExcelMockSheet } from '@/remotion/components/ExcelWorkbookMock'
 import { PdfViewerMock, type PdfMockPage } from '@/remotion/components/PdfViewerMock'
 import { PowerPointEditorMock, type PowerPointMockSlide } from '@/remotion/components/PowerPointEditorMock'
+import { getSaaSIntroDurationInFrames, ledgerAIIntroConfig, SaaSIntroVideo } from '@/remotion/saas/index'
 
 type PreviewComposition = string
 type AnimationCategory = 'Chat / Assistants' | 'Galerias' | 'Operações Financeiras' | 'Apps / Mockups' | 'SaaS Patterns' | 'Workflows'
@@ -67,6 +68,8 @@ type AnimationKind = 'chat' | 'gallery' | 'operation' | 'mockup' | 'pattern' | '
 type AnimationOption = {
   category: AnimationCategory
   component?: ComponentType
+  compositionHeight?: number
+  compositionWidth?: number
   description: string
   duration?: number
   kind: AnimationKind
@@ -199,6 +202,10 @@ function ExcelPreviewAnimation() {
   )
 }
 
+function LedgerAISaaSIntroAnimation() {
+  return <SaaSIntroVideo config={ledgerAIIntroConfig} />
+}
+
 const animationCatalog: AnimationOption[] = [
   { category: 'Chat / Assistants', description: 'Intro mobile com templates ChatGPT e Claude.', duration: 4200, kind: 'chat', label: 'Intro Mobile', tags: ['Mobile', 'Chat', 'MCP'], value: 'intro' },
   { category: 'Chat / Assistants', component: ChatGptWebAnimation, description: 'Janela web do ChatGPT com sidebar, conversa e card analítico.', kind: 'chat', label: 'ChatGPT Web', tags: ['Web', 'Chat', 'Assistant'], value: 'chatgpt-web' },
@@ -218,6 +225,18 @@ const animationCatalog: AnimationOption[] = [
   { category: 'Apps / Mockups', component: MobileAppDemoAnimation, description: 'Mock mobile financeiro com cards, alertas e navegação.', kind: 'mockup', label: 'Mobile App', tags: ['Mobile', 'App', 'Financeiro'], value: 'mobile-app-demo' },
 
   { category: 'SaaS Patterns', component: IntegrationFlowAnimation, description: 'Integrações conectando apps a um hub central.', kind: 'pattern', label: 'Integração', tags: ['SaaS', 'Integração', 'Hub'], value: 'integration' },
+  {
+    category: 'SaaS Patterns',
+    component: LedgerAISaaSIntroAnimation,
+    compositionHeight: 1080,
+    compositionWidth: 1920,
+    description: 'Biblioteca modular nova para intro completa de SaaS por configuração.',
+    duration: getSaaSIntroDurationInFrames(ledgerAIIntroConfig),
+    kind: 'pattern',
+    label: 'SaaS Intro Kit',
+    tags: ['SaaS', 'Intro', 'Library'],
+    value: 'saas-intro-kit',
+  },
   { category: 'SaaS Patterns', component: AIAgentStepsAnimation, description: 'Agente de IA executando etapas, logs e saída operacional.', kind: 'pattern', label: 'AI Agent', tags: ['Agent', 'IA', 'Steps'], value: 'ai-agent-steps' },
   { category: 'SaaS Patterns', component: TableDrilldownAnimation, description: 'Tabela analítica com linha ativa e painel de detalhe.', kind: 'pattern', label: 'Table Drilldown', tags: ['Table', 'Drilldown', 'Data'], value: 'table-drilldown' },
   { category: 'SaaS Patterns', component: CompareScenariosAnimation, description: 'Comparação de cenários financeiros lado a lado.', kind: 'pattern', label: 'Compare Scenarios', tags: ['Scenarios', 'Financeiro', 'Compare'], value: 'compare-scenarios' },
@@ -544,6 +563,9 @@ export default function RemotionPreviewPage() {
   const selectedAnimation = animationCatalog.find((option) => option.value === composition) || animationCatalog[0]
   const SelectedComponent = selectedAnimation.component || ExpenseClassificationAnimation
   const selectedDuration = selectedAnimation.duration || MCP_SINGLE_ANIMATION_DURATION
+  const selectedCompositionHeight = selectedAnimation.compositionHeight || 1920
+  const selectedCompositionWidth = selectedAnimation.compositionWidth || 1080
+  const selectedAspectRatio = `${selectedCompositionWidth} / ${selectedCompositionHeight}`
   const visibleAnimations = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
 
@@ -758,13 +780,13 @@ export default function RemotionPreviewPage() {
             <Player
               key={composition}
               component={SelectedComponent}
-              compositionHeight={1920}
-              compositionWidth={1080}
+              compositionHeight={selectedCompositionHeight}
+              compositionWidth={selectedCompositionWidth}
               controls
               durationInFrames={selectedDuration}
               fps={30}
               style={{
-                aspectRatio: '9 / 16',
+                aspectRatio: selectedAspectRatio,
                 borderRadius: 10,
                 maxHeight: '72vh',
                 width: '100%',
