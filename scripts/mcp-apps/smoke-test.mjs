@@ -83,6 +83,8 @@ async function main() {
   assert(toolsSource.includes("openArtifact: 'open_artifact'"), 'open_artifact public tool constant missing')
   assert(toolsSource.includes("artifactAuthoring: 'artifact_authoring'"), 'artifact_authoring public tool constant missing')
   assert(toolsSource.includes('function callDashboards'), 'dashboards implementation missing')
+  assert(toolsSource.includes("enum: ['dashboard', 'slide', 'report', 'all']"), 'dashboards kind enum should include dashboard, slide, report and all')
+  assert(toolsSource.includes('kind=dashboard, slide, report ou all'), 'dashboards description should mention supported artifact list kinds')
   assert(toolsSource.includes('function callAnalysis'), 'analysis implementation missing')
   assert(toolsSource.includes('function callTable'), 'table implementation missing')
   assert(toolsSource.includes('function callActions'), 'actions implementation missing')
@@ -101,6 +103,7 @@ async function main() {
   const artifactsAdapterSource = await readFile(path.join(root, 'src/products/mcp/adapters/artifactsAdapter.ts'), 'utf8')
   assert(artifactsAdapterSource.includes('thumbnail_data_url: thumbnailDataUrl || null'), 'dashboard list should expose thumbnail_data_url')
   assert(artifactsAdapterSource.includes('buildArtifactUrl'), 'generic artifact URL builder missing')
+  assert(artifactsAdapterSource.includes('listMcpArtifacts'), 'generic artifact list adapter missing')
   assert(artifactsAdapterSource.includes('createMcpArtifact'), 'generic artifact create adapter missing')
   console.log('artifact adapter source ok')
 

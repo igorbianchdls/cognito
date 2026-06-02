@@ -4,6 +4,7 @@ import {
   patchArtifact,
   type ArtifactKind,
 } from '@/products/artifacts/backend/artifactService'
+import { runQuery } from '@/lib/postgres'
 import {
   deleteDashboardArtifact,
   listDashboards,
@@ -16,10 +17,26 @@ import {
 
 export type McpJsonMap = Record<string, unknown>
 export type McpArtifactKind = ArtifactKind
+export type McpArtifactListKind = McpArtifactKind | 'all'
 
 export type McpDashboardListInput = {
   limit?: number | null
 }
+
+export type McpArtifactListInput = {
+  kind?: McpArtifactListKind | null
+  limit?: number | null
+}
+
+export type McpArtifactListItem = Omit<DashboardListItem, 'id' | 'thumbnail_data_url'> & {
+  id: string
+  artifact_type: McpArtifactKind
+  thumbnail_data_url?: string | null
+  has_thumbnail: boolean
+  url: string
+}
+
+type McpArtifactListRow = Omit<McpArtifactListItem, 'has_thumbnail' | 'url'>
 
 export type McpDashboardReadInput = {
   artifactId: string
@@ -142,15 +159,73 @@ function withListDashboardUrl(dashboard: DashboardListItem) {
   const { thumbnail_data_url: thumbnailDataUrl, ...dashboardWithoutThumbnail } = dashboard
   return {
     ...dashboardWithoutThumbnail,
+    artifact_type: 'dashboard' as const,
     has_thumbnail: Boolean(thumbnailDataUrl),
     thumbnail_data_url: thumbnailDataUrl || null,
     url: buildDashboardArtifactUrl(dashboard.id),
   }
 }
 
+function isArtifactListKind(value: unknown): value is McpArtifactListKind {
+  return value === 'dashboard' || value === 'slide' || value === 'report' || value === 'all'
+}
+
+function normalizeArtifactListKind(value: unknown): McpArtifactListKind {
+  return isArtifactListKind(value) ? value : 'dashboard'
+}
+
+function normalizeListLimit(value: unknown) {
+  const parsed = Number.parseInt(String(value ?? '').trim(), 10)
+  if (!Number.isFinite(parsed) || parsed <= 0) return 100
+  return Math.min(parsed, 200)
+}
+
+function withListArtifactUrl(artifact: McpArtifactListRow) {
+  const { thumbnail_data_url: thumbnailDataUrl, ...artifactWithoutThumbnail } = artifact
+  return {
+    ...artifactWithoutThumbnail,
+    has_thumbnail: Boolean(thumbnailDataUrl),
+    thumbnail_data_url: thumbnailDataUrl || null,
+    url: buildArtifactUrl(artifact.artifact_type, artifact.id),
+  }
+}
+
 export async function listMcpDashboards(input: McpDashboardListInput = {}) {
   const dashboards = await listDashboards(input.limit ?? 100)
   return dashboards.map(withListDashboardUrl)
+}
+
+export async function listMcpArtifacts(input: McpArtifactListInput = {}) {
+  const kind = normalizeArtifactListKind(input.kind)
+  const limit = normalizeListLimit(input.limit)
+
+  if (kind === 'dashboard') {
+    return listMcpDashboards({ limit })
+  }
+
+  const rows = await runQuery<McpArtifactListRow>(
+    `
+      SELECT
+        id::text AS id,
+        artifact_type,
+        workspace_id::text AS workspace_id,
+        title,
+        slug,
+        status,
+        current_draft_version,
+        current_published_version,
+        thumbnail_data_url,
+        created_at,
+        updated_at
+      FROM artifacts.artifacts
+      WHERE ($1::text = 'all' OR artifact_type = $1::text)
+      ORDER BY updated_at DESC NULLS LAST, created_at DESC NULLS LAST
+      LIMIT $2::int
+    `,
+    [kind, limit],
+  )
+
+  return rows.map(withListArtifactUrl)
 }
 
 export async function readMcpDashboard(input: McpDashboardReadInput) {

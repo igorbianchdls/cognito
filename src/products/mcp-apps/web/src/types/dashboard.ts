@@ -1,5 +1,6 @@
 export type DashboardListItem = {
   id?: string
+  artifact_type?: 'dashboard' | 'slide' | 'report' | string | null
   title?: string
   slug?: string | null
   status?: string | null

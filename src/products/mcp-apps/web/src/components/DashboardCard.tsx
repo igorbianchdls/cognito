@@ -19,6 +19,12 @@ function formatStatus(value?: string | null) {
   return String(value || 'draft').trim().toLowerCase()
 }
 
+function formatArtifactType(value?: string | null) {
+  const type = String(value || 'dashboard').trim().toLowerCase()
+  if (type === 'slide' || type === 'report') return type
+  return 'dashboard'
+}
+
 function getInitials(title: string) {
   const words = title.trim().split(/\s+/).filter(Boolean)
   if (words.length === 0) return 'DB'
@@ -31,6 +37,7 @@ export function DashboardCard({ dashboard }: DashboardCardProps) {
   const version = dashboard.current_draft_version ?? dashboard.current_published_version
   const thumbnail = dashboard.thumbnail_data_url || ''
   const status = formatStatus(dashboard.status)
+  const artifactType = formatArtifactType(dashboard.artifact_type)
 
   return (
     <article className="dashboard-card">
@@ -46,7 +53,7 @@ export function DashboardCard({ dashboard }: DashboardCardProps) {
       <div className="dashboard-card__body">
         <div className="dashboard-card__content">
           <div className="dashboard-card__topline">
-            <span className="dashboard-card__status">{status}</span>
+            <span className="dashboard-card__status">{artifactType} / {status}</span>
             <span className="dashboard-card__version">{version ? `v${version}` : 'sem versao'}</span>
           </div>
           <h2>{title}</h2>

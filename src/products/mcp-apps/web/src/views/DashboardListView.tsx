@@ -9,12 +9,15 @@ type DashboardListViewProps = {
 
 export function DashboardListView({ data }: DashboardListViewProps) {
   const dashboards = Array.isArray(data.dashboards) ? data.dashboards : []
+  const label = data.artifact_label || 'dashboard'
+  const pluralLabel = data.artifact_label_plural || `${label}s`
+  const countLabel = dashboards.length === 1 ? label : pluralLabel
 
   if (dashboards.length === 0) {
     return (
       <EmptyState
-        title="Nenhum dashboard encontrado"
-        description="A tool retornou uma lista vazia de dashboards."
+        title={`Nenhum ${label} encontrado`}
+        description={`A tool retornou uma lista vazia de ${pluralLabel}.`}
       />
     )
   }
@@ -24,10 +27,9 @@ export function DashboardListView({ data }: DashboardListViewProps) {
       <DashboardHeader
         eyebrow="Cognito"
         title={data.title || 'Dashboards'}
-        description={`${dashboards.length} dashboard${dashboards.length === 1 ? '' : 's'} retornado${dashboards.length === 1 ? '' : 's'}.`}
+        description={`${dashboards.length} ${countLabel} retornado${dashboards.length === 1 ? '' : 's'}.`}
       />
       <DashboardGrid dashboards={dashboards} />
     </>
   )
 }
-

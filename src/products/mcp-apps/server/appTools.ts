@@ -5,6 +5,7 @@ import { DASHBOARD_WIDGET_RESOURCE_URI } from '@/products/mcp-apps/server/appRes
 import {
   buildArtifactUrl,
   buildDashboardArtifactUrl,
+  listMcpArtifacts,
   listMcpDashboards,
   readMcpArtifact,
   readMcpDashboard,
@@ -56,17 +57,23 @@ type McpAppToolDefinition = {
 }
 
 type JsonRecord = Record<string, unknown>
+type ArtifactListKind = 'dashboard' | 'slide' | 'report' | 'all'
 
 const DASHBOARDS_SCHEMA = {
   type: 'object',
   properties: {
+    kind: {
+      type: 'string',
+      enum: ['dashboard', 'slide', 'report', 'all'],
+      description: 'Tipo de artifact a listar. Default dashboard. Use all para dashboards, slides e reports.',
+    },
     query: {
       type: 'string',
-      description: 'Texto opcional para buscar dashboards por titulo, slug, status ou id. Omita para listar dashboards recentes.',
+      description: 'Texto opcional para buscar artifacts por titulo, slug, status, tipo ou id. Omita para listar artifacts recentes.',
     },
     limit: {
       type: 'integer',
-      description: 'Quantidade maxima de dashboards retornados. Default 20, maximo 50.',
+      description: 'Quantidade maxima de artifacts retornados. Default 20, maximo 50.',
     },
   },
   additionalProperties: true,
@@ -216,7 +223,7 @@ const RENDER_LIST_SCHEMA = {
   properties: {
     dashboards: {
       type: 'array',
-      description: 'Dashboards retornados por dashboard_list.',
+      description: 'Artifacts retornados por dashboard_list. O campo preserva o nome dashboards por compatibilidade.',
       items: {
         type: 'object',
         additionalProperties: true,
@@ -278,6 +285,9 @@ const RENDER_LIST_OUTPUT_SCHEMA = {
     tool: { type: 'string' },
     view: { type: 'string', enum: ['dashboard_list'] },
     title: { type: 'string' },
+    artifact_kind: { type: 'string', enum: ['dashboard', 'slide', 'report', 'all'] },
+    artifact_label: { type: 'string' },
+    artifact_label_plural: { type: 'string' },
     dashboards: {
       type: 'array',
       items: {
@@ -886,6 +896,25 @@ function getArtifactKind(value: unknown) {
   return null
 }
 
+function getArtifactListKind(value: unknown): ArtifactListKind {
+  const kind = String(value || '').trim()
+  if (kind === 'dashboard' || kind === 'slide' || kind === 'report' || kind === 'all') return kind
+  return 'dashboard'
+}
+
+function getArtifactListLabels(kind: ArtifactListKind) {
+  switch (kind) {
+    case 'slide':
+      return { singular: 'slide', plural: 'slides', title: 'Slides' }
+    case 'report':
+      return { singular: 'report', plural: 'reports', title: 'Reports' }
+    case 'all':
+      return { singular: 'artifact', plural: 'artifacts', title: 'Artifacts' }
+    default:
+      return { singular: 'dashboard', plural: 'dashboards', title: 'Dashboards' }
+  }
+}
+
 function buildArtifactEmbedUrl(kind: 'dashboard' | 'slide' | 'report', artifactId: string, version?: unknown) {
   const token = createDashboardEmbedToken(artifactId)
   const baseUrl = kind === 'dashboard'
@@ -923,10 +952,12 @@ function withArtifactEmbedUrl<T extends JsonRecord>(artifact: T, fallbackKind?: 
 
 function withDashboardListEmbedUrl(dashboard: JsonRecord) {
   const artifactId = getDashboardArtifactId(dashboard)
+  const kind = getArtifactKind(dashboard.artifact_type) || 'dashboard'
   if (!artifactId) return dashboard
   return {
     ...dashboard,
-    embed_url: buildDashboardEmbedUrl(artifactId),
+    artifact_type: kind,
+    embed_url: buildArtifactEmbedUrl(kind, artifactId),
   }
 }
 
@@ -946,6 +977,7 @@ function dashboardMatchesQuery(dashboard: JsonRecord, query: string) {
     dashboard.title,
     dashboard.slug,
     dashboard.status,
+    dashboard.artifact_type,
   ]
     .filter(Boolean)
     .some((value) => String(value).toLowerCase().includes(normalizedQuery))
@@ -970,10 +1002,13 @@ function toSearchResult(dashboard: JsonRecord) {
 
 async function callDashboards(args: unknown) {
   const input = asRecord(args)
+  const artifactKind = getArtifactListKind(input.kind || input.artifact_kind || input.type)
+  const labels = getArtifactListLabels(artifactKind)
   const query = getSearchQuery(input)
   const limit = normalizeLimit(input.limit, 20, 50)
-  const dashboards = await listMcpDashboards({ limit: Math.max(limit, 20) })
-  const filteredDashboards = dashboards
+  const fetchLimit = Math.max(limit, 20) * (artifactKind === 'all' ? 3 : 1)
+  const artifacts = await listMcpArtifacts({ kind: artifactKind, limit: fetchLimit })
+  const filteredArtifacts = artifacts
     .map((dashboard) => withDashboardListEmbedUrl(dashboard as JsonRecord))
     .filter((dashboard) => dashboardMatchesQuery(dashboard, query))
     .slice(0, limit)
@@ -982,8 +1017,11 @@ async function callDashboards(args: unknown) {
     ok: true,
     tool: MCP_APP_PUBLIC_TOOL_NAMES.dashboards,
     view: 'dashboard_list',
-    title: query ? `Dashboards: ${query}` : 'Dashboards',
-    dashboards: filteredDashboards,
+    title: query ? `${labels.title}: ${query}` : labels.title,
+    artifact_kind: artifactKind,
+    artifact_label: labels.singular,
+    artifact_label_plural: labels.plural,
+    dashboards: filteredArtifacts,
   }
 
   return {
@@ -2150,7 +2188,7 @@ export function listCognitoMcpAppTools() {
         name: MCP_APP_PUBLIC_TOOL_NAMES.dashboards,
         title: 'Dashboards',
         description:
-          'Lista ou busca dashboards Cognito e renderiza cards no app. Use antes de open_artifact quando o usuario nao souber o id.',
+          'Lista ou busca artifacts Cognito e renderiza cards no app. Use kind=dashboard, slide, report ou all. Default dashboard. Use antes de open_artifact quando o usuario nao souber o id.',
         inputSchema: DASHBOARDS_SCHEMA,
         outputSchema: RENDER_LIST_OUTPUT_SCHEMA,
         securitySchemes: COGNITO_READ_SECURITY_SCHEMES,

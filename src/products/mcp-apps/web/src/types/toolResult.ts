@@ -11,6 +11,9 @@ export type DashboardListStructuredContent = {
   tool?: string
   view?: 'dashboard_list'
   title?: string
+  artifact_kind?: 'dashboard' | 'slide' | 'report' | 'all' | string
+  artifact_label?: string
+  artifact_label_plural?: string
   dashboards?: DashboardListItem[]
 }
 
