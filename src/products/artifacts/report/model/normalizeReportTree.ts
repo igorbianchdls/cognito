@@ -162,7 +162,7 @@ function measureNode(node: ReportTreeChild, width: number): number {
 
   if (type === 'Chart') return explicitHeight(node) ?? 320
   if (type === 'Table' || type === 'PivotTable') return explicitHeight(node) ?? 420
-  if (type === 'Query') return children.reduce((height, child) => Math.max(height, measureNode(child, width)), 0)
+  if (type === 'Query') return children.reduce<number>((height, child) => Math.max(height, measureNode(child, width)), 0)
 
   if (isTextNode(type)) {
     const textStyle = getTextStyle(node)
@@ -170,7 +170,7 @@ function measureNode(node: ReportTreeChild, width: number): number {
   }
 
   if (isListNode(type)) {
-    return children.reduce((total, child, index) => total + measureNode(child, width - 18) + (index ? gap : 0), 0)
+    return children.reduce<number>((total, child, index) => total + measureNode(child, width - 18) + (index ? gap : 0), 0)
   }
 
   if (isGrid(style)) {
@@ -186,7 +186,7 @@ function measureNode(node: ReportTreeChild, width: number): number {
   }
 
   const contentWidth = Math.max(80, width - padding * 2)
-  const childHeight = children.reduce((total, child, index) => total + measureNode(child, contentWidth) + (index ? gap : 0), 0)
+  const childHeight = children.reduce<number>((total, child, index) => total + measureNode(child, contentWidth) + (index ? gap : 0), 0)
   const minimum = isCardLike(node) ? 72 : 0
   return Math.ceil(Math.max(minimum, childHeight + padding * 2))
 }
