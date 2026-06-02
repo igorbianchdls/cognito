@@ -78,12 +78,12 @@ export function InstagramPostMock({
 }
 
 export function PromptInputHeroMock({
-  eyebrow = 'AI workspace',
+  assistant = 'ChatGPT',
   prompt = 'Create an executive launch video for a new B2B SaaS product',
-  status = 'Generating campaign direction',
+  status = 'Thinking through launch structure',
   theme,
 }: {
-  eyebrow?: string
+  assistant?: 'ChatGPT' | 'Claude' | string
   prompt?: string
   status?: string
   theme: SaaSTheme
@@ -92,39 +92,43 @@ export function PromptInputHeroMock({
   const typedLength = Math.min(prompt.length, Math.floor(Math.max(0, frame - 18) / 1.45))
   const typedPrompt = prompt.slice(0, typedLength)
   const cursorVisible = Math.floor(frame / 14) % 2 === 0
-  const glow = interpolate(Math.sin(frame / 28), [-1, 1], [0.18, 0.42])
-  const barProgress = interpolate(Math.sin(frame / 42), [-1, 1], [0.22, 0.86])
+  const isClaude = assistant.toLowerCase().includes('claude')
+  const accent = isClaude ? '#D86F4A' : '#10A37F'
+  const surface = isClaude ? '#FBFAF7' : '#FFFFFF'
+  const page = isClaude ? '#F7F4ED' : '#F7F7F8'
+  const border = isClaude ? '#E6DFD2' : '#E5E7EB'
+  const glow = interpolate(Math.sin(frame / 30), [-1, 1], [0.12, 0.30])
 
   return (
-    <section style={{ alignItems: 'center', background: '#F4F7F4', border: `1px solid ${theme.border}`, borderRadius: 30, display: 'grid', minHeight: 620, overflow: 'hidden', padding: 42, placeItems: 'center', position: 'relative' }}>
-      <div style={{ background: `radial-gradient(circle at 50% 50%, ${theme.accent}${Math.round(glow * 100).toString(16).padStart(2, '0')}, rgba(244,247,244,0) 62%)`, inset: -140, position: 'absolute' }} />
-      <div style={{ display: 'grid', gap: 18, maxWidth: 860, position: 'relative', width: '100%', zIndex: 2 }}>
-        <div style={{ display: 'grid', gap: 8, justifyItems: 'center', textAlign: 'center' }}>
-          <span style={{ background: '#FFFFFF', border: `1px solid ${theme.border}`, borderRadius: 999, color: theme.accent, fontSize: 14, fontWeight: 900, letterSpacing: 0, padding: '9px 12px', textTransform: 'uppercase' }}>{eyebrow}</span>
-          <strong style={{ color: theme.text, fontSize: 46, fontWeight: 940, letterSpacing: 0, lineHeight: 1 }}>Prompt-driven creative brief</strong>
+    <section style={{ alignItems: 'center', background: page, border: `1px solid ${border}`, borderRadius: 30, display: 'grid', minHeight: 620, overflow: 'hidden', padding: 42, placeItems: 'center', position: 'relative' }}>
+      <div style={{ background: `radial-gradient(circle at 50% 58%, ${accent}${Math.round(glow * 100).toString(16).padStart(2, '0')}, transparent 62%)`, inset: -120, position: 'absolute' }} />
+      <div style={{ display: 'grid', gap: 28, justifyItems: 'center', maxWidth: 900, position: 'relative', width: '100%', zIndex: 2 }}>
+        <div style={{ display: 'grid', gap: 10, justifyItems: 'center', textAlign: 'center' }}>
+          <span style={{ alignItems: 'center', background: surface, border: `1px solid ${border}`, borderRadius: 999, color: theme.text, display: 'inline-flex', fontSize: 15, fontWeight: 850, gap: 9, letterSpacing: 0, padding: '9px 13px' }}>
+            <span style={{ background: accent, borderRadius: isClaude ? 8 : 999, display: 'block', height: 18, width: 18 }} />
+            {assistant}
+          </span>
+          <strong style={{ color: theme.text, fontSize: 42, fontWeight: 820, letterSpacing: 0, lineHeight: 1.04 }}>What should we create?</strong>
         </div>
-        <div style={{ background: '#FFFFFF', border: `1px solid ${theme.border}`, borderRadius: 28, boxShadow: '0 30px 86px rgba(20,24,22,0.16)', display: 'grid', gap: 18, padding: 22 }}>
-          <div style={{ alignItems: 'center', display: 'flex', gap: 10 }}>
-            <span style={{ background: theme.accent, borderRadius: 999, display: 'block', height: 10, width: 10 }} />
-            <span style={{ color: theme.muted, fontSize: 15, fontWeight: 820, letterSpacing: 0 }}>Prompt input</span>
-          </div>
-          <div style={{ alignItems: 'center', background: '#F8FBF9', border: `1px solid ${theme.border}`, borderRadius: 22, display: 'grid', gridTemplateColumns: '1fr auto', minHeight: 92, padding: '18px 18px 18px 22px' }}>
-            <p style={{ color: typedPrompt ? theme.text : theme.muted, fontSize: 28, fontWeight: 760, letterSpacing: 0, lineHeight: 1.18, margin: 0 }}>
-              {typedPrompt || 'Describe what you want to generate'}
-              <span style={{ background: theme.accent, display: 'inline-block', height: 30, marginLeft: 4, opacity: cursorVisible ? 1 : 0, transform: 'translateY(5px)', width: 3 }} />
+        <div style={{ background: surface, border: `1px solid ${border}`, borderRadius: 30, boxShadow: '0 28px 78px rgba(20,24,22,0.14)', display: 'grid', gap: 16, padding: 18, width: '100%' }}>
+          <div style={{ minHeight: 84, padding: '6px 8px 0' }}>
+            <p style={{ color: typedPrompt ? theme.text : theme.muted, fontSize: 24, fontWeight: 560, letterSpacing: 0, lineHeight: 1.3, margin: 0 }}>
+              {typedPrompt || 'Message ' + assistant}
+              <span style={{ background: accent, display: 'inline-block', height: 26, marginLeft: 4, opacity: cursorVisible ? 1 : 0, transform: 'translateY(4px)', width: 2 }} />
             </p>
-            <span style={{ background: theme.text, borderRadius: 999, color: '#FFFFFF', fontSize: 16, fontWeight: 900, letterSpacing: 0, padding: '13px 16px' }}>Run</span>
           </div>
-          <div style={{ display: 'grid', gap: 10 }}>
-            <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: theme.muted, fontSize: 14, fontWeight: 820, letterSpacing: 0 }}>{status}</span>
-              <span style={{ color: theme.accent, fontSize: 14, fontWeight: 900, letterSpacing: 0 }}>{Math.round(barProgress * 100)}%</span>
+          <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 9 }}>
+              {['+', 'Tools', isClaude ? 'Opus 4.7' : 'GPT-5'].map((item) => (
+                <span key={item} style={{ background: isClaude ? '#F0EBE2' : '#F4F4F5', border: `1px solid ${border}`, borderRadius: 999, color: theme.text, fontSize: 14, fontWeight: 800, letterSpacing: 0, padding: '9px 12px' }}>{item}</span>
+              ))}
             </div>
-            <span style={{ background: '#DDE7E1', borderRadius: 999, display: 'block', height: 8, overflow: 'hidden' }}>
-              <span style={{ background: theme.accent, borderRadius: 999, display: 'block', height: '100%', width: `${barProgress * 100}%` }} />
+            <span style={{ alignItems: 'center', background: typedPrompt.length > 0 ? accent : '#CBD5E1', borderRadius: 999, color: '#FFFFFF', display: 'flex', fontSize: 20, fontWeight: 900, height: 46, justifyContent: 'center', letterSpacing: 0, width: 46 }}>
+              ^
             </span>
           </div>
         </div>
+        <span style={{ color: theme.muted, fontSize: 15, fontWeight: 780, letterSpacing: 0 }}>{status}</span>
       </div>
     </section>
   )

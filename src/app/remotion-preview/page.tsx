@@ -1154,7 +1154,7 @@ const catalog: CatalogItem[] = [
   {
     code: '<PromptInputHeroMock prompt="Create an executive launch video..." theme={theme} />',
     component: PromptInputHeroDemo,
-    description: 'Caixa de prompt centralizada com texto digitando para peças de IA.',
+    description: 'Composer de prompt no estilo ChatGPT/Claude, centralizado e com texto digitando.',
     kind: 'Marketing',
     label: 'PromptInputHeroMock',
     tags: ['Prompt', 'AI', 'Typing'],
