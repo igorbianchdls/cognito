@@ -10,7 +10,9 @@ import {
   ApprovalFlowAnimation,
   BankReconciliationAnimation,
   ChatGptWebAnimation,
+  ChatGptMobileAnimation,
   ClaudeWebAnimation,
+  ClaudeMobileAnimation,
   ClosingSlidesAnimation,
   CompareScenariosAnimation,
   ContractManagementAnimation,
@@ -94,6 +96,7 @@ import {
   IntegrationHealthMatrixMock,
   IntegrationHubMock,
   IntegrationPipelineMock,
+  InstagramPostMock,
   KanbanMock,
   ledgerAIIntroConfig,
   LoadingToSuccess,
@@ -646,6 +649,14 @@ function LogoCloudDemo() {
   )
 }
 
+function InstagramPostDemo() {
+  return (
+    <DemoStage compact>
+      <InstagramPostMock theme={theme} />
+    </DemoStage>
+  )
+}
+
 function TestimonialDemo() {
   return (
     <DemoStage compact>
@@ -1121,6 +1132,15 @@ const catalog: CatalogItem[] = [
     label: 'LogoCloud',
     tags: ['Logos', 'Integrations', 'Proof'],
     value: 'logo-cloud',
+  },
+  {
+    code: '<InstagramPostMock handle="cognito.ops" mediaTitle="Close faster" theme={theme} />',
+    component: InstagramPostDemo,
+    description: 'Post de Instagram editável para lançamento, social proof e anúncios.',
+    kind: 'Marketing',
+    label: 'InstagramPostMock',
+    tags: ['Instagram', 'Social', 'Launch'],
+    value: 'instagram-post',
   },
   {
     code: '<TestimonialCard quote="..." author="..." theme={theme} />',
@@ -1698,10 +1718,10 @@ const catalog: CatalogItem[] = [
     description: 'Notícia editorial animada com headline e cards de apoio.',
     duration: MCP_SINGLE_ANIMATION_DURATION,
     height: 1920,
-    kind: 'Animações',
+    kind: 'Marketing',
     label: 'Notícia',
     tags: ['Editorial', 'Social', 'News'],
-    value: 'animation-news',
+    value: 'marketing-news',
     width: 1080,
   },
   {
@@ -1710,10 +1730,10 @@ const catalog: CatalogItem[] = [
     description: 'Tweet animado com mídia e métricas de engajamento.',
     duration: MCP_SINGLE_ANIMATION_DURATION,
     height: 1920,
-    kind: 'Animações',
+    kind: 'Marketing',
     label: 'Tweet',
     tags: ['Social', 'Post', 'Metrics'],
-    value: 'animation-tweet',
+    value: 'marketing-tweet',
     width: 1080,
   },
   {
@@ -1722,10 +1742,22 @@ const catalog: CatalogItem[] = [
     description: 'Janela web do ChatGPT com sidebar, conversa e card analítico.',
     duration: MCP_SINGLE_ANIMATION_DURATION,
     height: 1920,
-    kind: 'Animações',
+    kind: 'Marketing',
     label: 'ChatGPT Web',
-    tags: ['Web', 'Chat', 'Assistant'],
-    value: 'animation-chatgpt-web',
+    tags: ['Web', 'Chat', 'Assistant', 'Social'],
+    value: 'marketing-chatgpt-web',
+    width: 1080,
+  },
+  {
+    code: '<ChatGptMobileAnimation />',
+    component: ChatGptMobileAnimation,
+    description: 'ChatGPT em mock mobile para posts, demos e vídeos sociais.',
+    duration: MCP_SINGLE_ANIMATION_DURATION,
+    height: 1920,
+    kind: 'Marketing',
+    label: 'ChatGPT Mobile',
+    tags: ['Mobile', 'Chat', 'Assistant', 'Social'],
+    value: 'marketing-chatgpt-mobile',
     width: 1080,
   },
   {
@@ -1734,10 +1766,22 @@ const catalog: CatalogItem[] = [
     description: 'Janela web do Claude com conversa e composer desktop.',
     duration: MCP_SINGLE_ANIMATION_DURATION,
     height: 1920,
-    kind: 'Animações',
+    kind: 'Marketing',
     label: 'Claude Web',
-    tags: ['Web', 'Chat', 'Assistant'],
-    value: 'animation-claude-web',
+    tags: ['Web', 'Chat', 'Assistant', 'Social'],
+    value: 'marketing-claude-web',
+    width: 1080,
+  },
+  {
+    code: '<ClaudeMobileAnimation />',
+    component: ClaudeMobileAnimation,
+    description: 'Claude em mock mobile para posts, demos e vídeos sociais.',
+    duration: MCP_SINGLE_ANIMATION_DURATION,
+    height: 1920,
+    kind: 'Marketing',
+    label: 'Claude Mobile',
+    tags: ['Mobile', 'Chat', 'Assistant', 'Social'],
+    value: 'marketing-claude-mobile',
     width: 1080,
   },
   {
@@ -1830,10 +1874,10 @@ const catalog: CatalogItem[] = [
     description: 'Mock mobile financeiro com cards, alertas e navegação.',
     duration: MCP_SINGLE_ANIMATION_DURATION,
     height: 1920,
-    kind: 'Animações',
+    kind: 'Marketing',
     label: 'Mobile App',
-    tags: ['Mobile', 'App', 'Finance'],
-    value: 'animation-mobile-app',
+    tags: ['Mobile', 'App', 'Social'],
+    value: 'marketing-mobile-app',
     width: 1080,
   },
   {

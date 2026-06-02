@@ -4,6 +4,79 @@ import { interpolate, useCurrentFrame } from 'remotion'
 import { FloatingScreenshot } from '@/remotion/saas/frames'
 import type { SaaSFeature, SaaSLogo, SaaSMetric, SaaSProductScreen, SaaSTheme } from '@/remotion/saas/types'
 
+type InstagramPostMetric = {
+  label: string
+  value: string
+}
+
+export function InstagramPostMock({
+  accentLabel = 'Product launch',
+  caption = 'From scattered finance data to a board-ready close workflow in one workspace.',
+  handle = 'cognito.ops',
+  mediaTitle = 'Close faster with live operations',
+  metrics,
+  theme,
+}: {
+  accentLabel?: string
+  caption?: string
+  handle?: string
+  mediaTitle?: string
+  metrics?: InstagramPostMetric[]
+  theme: SaaSTheme
+}) {
+  const frame = useCurrentFrame()
+  const active = Math.floor(frame / 72) % 3
+  const postMetrics = metrics || [
+    { label: 'Likes', value: '12.8k' },
+    { label: 'Saves', value: '842' },
+    { label: 'Shares', value: '318' },
+  ]
+  const sweep = interpolate(Math.sin(frame / 34), [-1, 1], [0.18, 0.86])
+
+  return (
+    <article style={{ background: '#FFFFFF', border: `1px solid ${theme.border}`, borderRadius: 30, boxShadow: '0 28px 78px rgba(20,24,22,0.14)', display: 'grid', gap: 0, margin: '0 auto', maxWidth: 520, overflow: 'hidden' }}>
+      <header style={{ alignItems: 'center', display: 'flex', gap: 12, justifyContent: 'space-between', padding: '16px 18px' }}>
+        <div style={{ alignItems: 'center', display: 'flex', gap: 12 }}>
+          <span style={{ background: `linear-gradient(135deg, ${theme.accent}, #C28F2C 58%, #D946EF)`, borderRadius: 999, display: 'grid', height: 44, padding: 3, placeContent: 'center', width: 44 }}>
+            <span style={{ background: '#FFFFFF', borderRadius: 999, color: theme.text, display: 'grid', fontSize: 15, fontWeight: 920, height: 36, letterSpacing: 0, placeContent: 'center', width: 36 }}>{handle.slice(0, 1).toUpperCase()}</span>
+          </span>
+          <div style={{ display: 'grid', gap: 2 }}>
+            <strong style={{ color: theme.text, fontSize: 17, fontWeight: 900, letterSpacing: 0 }}>{handle}</strong>
+            <span style={{ color: theme.muted, fontSize: 13, fontWeight: 720, letterSpacing: 0 }}>{accentLabel}</span>
+          </div>
+        </div>
+        <span style={{ color: theme.muted, fontSize: 24, fontWeight: 900, letterSpacing: 0 }}>...</span>
+      </header>
+      <div style={{ background: '#F3F7F4', borderBottom: `1px solid ${theme.border}`, borderTop: `1px solid ${theme.border}`, height: 520, overflow: 'hidden', position: 'relative' }}>
+        <div style={{ background: `linear-gradient(135deg, ${theme.text} 0%, ${theme.text} 44%, ${theme.accent} 100%)`, inset: 0, position: 'absolute' }} />
+        <div style={{ background: `linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.18) ${sweep * 100}%, transparent 100%)`, inset: 0, position: 'absolute' }} />
+        <div style={{ display: 'grid', gap: 18, left: 28, position: 'absolute', right: 28, top: 34 }}>
+          <span style={{ background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 999, color: '#FFFFFF', fontSize: 14, fontWeight: 900, justifySelf: 'start', letterSpacing: 0, padding: '9px 12px', textTransform: 'uppercase' }}>{accentLabel}</span>
+          <strong style={{ color: '#FFFFFF', fontSize: 48, fontWeight: 940, letterSpacing: 0, lineHeight: 0.96 }}>{mediaTitle}</strong>
+        </div>
+        <div style={{ bottom: 28, display: 'grid', gap: 12, left: 28, position: 'absolute', right: 28 }}>
+          {postMetrics.map((metric, index) => (
+            <div key={metric.label} style={{ alignItems: 'center', background: index === active ? '#FFFFFF' : 'rgba(255,255,255,0.16)', border: `1px solid ${index === active ? '#FFFFFF' : 'rgba(255,255,255,0.18)'}`, borderRadius: 18, color: index === active ? theme.text : '#FFFFFF', display: 'flex', justifyContent: 'space-between', padding: '13px 15px', transform: `scale(${index === active ? 1.02 : 1})` }}>
+              <span style={{ fontSize: 14, fontWeight: 850, letterSpacing: 0, textTransform: 'uppercase' }}>{metric.label}</span>
+              <strong style={{ color: index === active ? theme.accent : '#FFFFFF', fontSize: 25, fontWeight: 940, letterSpacing: 0 }}>{metric.value}</strong>
+            </div>
+          ))}
+        </div>
+      </div>
+      <section style={{ display: 'grid', gap: 12, padding: 18 }}>
+        <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', gap: 10 }}>
+            {['Like', 'Comment', 'Share'].map((action) => <span key={action} style={{ border: `1px solid ${theme.border}`, borderRadius: 999, color: theme.text, fontSize: 13, fontWeight: 850, letterSpacing: 0, padding: '8px 10px' }}>{action}</span>)}
+          </div>
+          <span style={{ border: `1px solid ${theme.border}`, borderRadius: 999, color: theme.accent, fontSize: 13, fontWeight: 900, letterSpacing: 0, padding: '8px 10px' }}>Save</span>
+        </div>
+        <p style={{ color: theme.text, fontSize: 16, fontWeight: 720, letterSpacing: 0, lineHeight: 1.34, margin: 0 }}><strong>{handle}</strong> {caption}</p>
+        <span style={{ color: theme.muted, fontSize: 12, fontWeight: 760, letterSpacing: 0, textTransform: 'uppercase' }}>View all comments</span>
+      </section>
+    </article>
+  )
+}
+
 export function LogoCloud({
   logos,
   theme,

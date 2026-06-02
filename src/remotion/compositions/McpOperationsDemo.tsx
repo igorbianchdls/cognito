@@ -2046,6 +2046,73 @@ function ClaudeWebAnimationCard() {
   return <WebChatWindow brand="Claude" kind="claude" />
 }
 
+function MobileChatWindow({ brand, kind }: { brand: 'ChatGPT' | 'Claude'; kind: 'chatgpt' | 'claude' }) {
+  const frame = useCurrentFrame()
+  const isClaude = kind === 'claude'
+  const accent = isClaude ? '#d86f4a' : '#10a37f'
+  const bg = isClaude ? '#f7f4ed' : '#ffffff'
+  const border = isClaude ? '#e6dfd2' : '#e5e5e7'
+  const muted = isClaude ? '#7b7265' : '#6b7280'
+  const phoneIn = progress(frame, 0, 38)
+  const activeMessage = Math.min(webChatMessages.length - 1, Math.floor(frame / 88))
+
+  return (
+    <AbsoluteFill style={{ background: isClaude ? '#ede8de' : '#f4f4f5', color: '#111827', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: isClaude ? 'radial-gradient(circle at 50% 45%, rgba(216,111,74,0.20), rgba(237,232,222,0) 62%)' : 'radial-gradient(circle at 50% 45%, rgba(16,163,127,0.18), rgba(244,244,245,0) 62%)', inset: -180, position: 'absolute' }} />
+      <GallerySceneHeader status={`${brand} mobile`} />
+      <div style={{ background: '#0b1118', border: '12px solid #111827', borderRadius: 66, boxShadow: '0 48px 120px rgba(20,24,22,0.30)', height: 1120, left: '50%', opacity: phoneIn, overflow: 'hidden', position: 'absolute', top: 272, transform: `translateX(-50%) translateY(${(1 - phoneIn) * 34}px)`, width: 548, zIndex: 20 }}>
+        <div style={{ background: bg, inset: 0, position: 'absolute' }}>
+          <header style={{ alignItems: 'center', borderBottom: `1px solid ${border}`, display: 'flex', gap: 14, justifyContent: 'space-between', padding: '44px 28px 20px' }}>
+            <div style={{ alignItems: 'center', display: 'flex', gap: 12 }}>
+              <span style={{ alignItems: 'center', background: accent, borderRadius: isClaude ? 13 : 999, color: '#ffffff', display: 'flex', fontSize: 24, fontWeight: 900, height: 44, justifyContent: 'center', width: 44 }}>{isClaude ? '*' : 'G'}</span>
+              <div style={{ display: 'grid', gap: 2 }}>
+                <strong style={{ color: '#111827', fontSize: 22, letterSpacing: 0 }}>{brand}</strong>
+                <span style={{ color: muted, fontSize: 13, fontWeight: 760 }}>{isClaude ? 'Projeto conectado' : 'Tools enabled'}</span>
+              </div>
+            </div>
+            <span style={{ background: isClaude ? '#f0ebe2' : '#f4f4f5', borderRadius: 999, color: '#111827', fontSize: 14, fontWeight: 820, padding: '9px 12px' }}>{isClaude ? 'Opus' : 'GPT-5'}</span>
+          </header>
+          <main style={{ display: 'grid', gap: 16, padding: '24px 22px 148px' }}>
+            {webChatMessages.map((message, index) => {
+              const visible = progress(frame, 28 + index * 34, 60 + index * 34)
+              const user = message.role === 'user'
+              const active = index === activeMessage
+              return (
+                <div key={`${message.role}-${index}`} style={{ display: 'flex', justifyContent: user ? 'flex-end' : 'flex-start', opacity: visible, transform: `translateY(${(1 - visible) * 14}px)` }}>
+                  <div style={{ background: user ? (isClaude ? '#ebe6dd' : '#f4f4f4') : '#ffffff', border: `1px solid ${user ? border : active ? accent : border}`, borderRadius: 22, boxShadow: active && !user ? '0 18px 44px rgba(20,24,22,0.10)' : 'none', color: '#111827', display: 'grid', gap: 10, maxWidth: user ? 390 : 440, padding: '15px 16px' }}>
+                    {!user ? <strong style={{ color: accent, fontSize: 15, letterSpacing: 0 }}>{brand}</strong> : null}
+                    <p style={{ color: '#111827', fontSize: 18, fontWeight: 600, letterSpacing: 0, lineHeight: 1.3, margin: 0 }}>{message.text}</p>
+                    {active && !user ? (
+                      <div style={{ alignItems: 'end', display: 'flex', gap: 7, height: 74 }}>
+                        {[34, 56, 44, 72, 62].map((height, bar) => <span key={`${height}-${bar}`} style={{ background: bar > 2 ? accent : '#dce3df', borderRadius: 7, flex: 1, height }} />)}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              )
+            })}
+          </main>
+          <footer style={{ background: bg, borderTop: `1px solid ${border}`, bottom: 0, display: 'grid', gap: 12, left: 0, padding: '18px 22px 28px', position: 'absolute', right: 0 }}>
+            <div style={{ background: isClaude ? '#fbfaf7' : '#ffffff', border: `1px solid ${border}`, borderRadius: 24, boxShadow: '0 16px 38px rgba(20,24,22,0.08)', color: muted, display: 'flex', fontSize: 18, fontWeight: 680, justifyContent: 'space-between', padding: '16px 18px' }}>
+              <span>{isClaude ? 'Responder a Claude' : 'Mensagem para ChatGPT'}</span>
+              <span style={{ alignItems: 'center', background: accent, borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 18, fontWeight: 900, height: 34, justifyContent: 'center', width: 34 }}>^</span>
+            </div>
+          </footer>
+        </div>
+      </div>
+      <GalleryFooter>{brand} mobile para posts, demos e videos sociais</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+function ChatGptMobileAnimationCard() {
+  return <MobileChatWindow brand="ChatGPT" kind="chatgpt" />
+}
+
+function ClaudeMobileAnimationCard() {
+  return <MobileChatWindow brand="Claude" kind="claude" />
+}
+
 function EmailAnimationCard() {
   const frame = useCurrentFrame()
   const sceneIn = progress(frame, 0, 38)
@@ -3399,6 +3466,14 @@ export function ChatGptWebAnimation() {
 
 export function ClaudeWebAnimation() {
   return <ClaudeWebAnimationCard />
+}
+
+export function ChatGptMobileAnimation() {
+  return <ChatGptMobileAnimationCard />
+}
+
+export function ClaudeMobileAnimation() {
+  return <ClaudeMobileAnimationCard />
 }
 
 export function EmailAnimation() {
