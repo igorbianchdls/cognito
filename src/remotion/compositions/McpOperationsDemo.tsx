@@ -2835,14 +2835,334 @@ function VerticalArtifactPipelineScene({ footer, items, status }: { footer: stri
   )
 }
 
+function ArtifactPageStackGalleryScene({ footer, items, status }: { footer: string; items: VerticalPipelineItem[]; status: string }) {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const activeIndex = Math.floor(frame / 132) % items.length
+  const local = (frame % 132) / 132
+  const active = items[activeIndex]
+
+  return (
+    <PremiumSceneShell footer={footer} status={status}>
+      <div style={{ left: 74, opacity: sceneIn, position: 'absolute', right: 74, top: 280, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 20 }}>
+        <div style={{ display: 'grid', gap: 20, marginBottom: 38 }}>
+          <span style={{ color: active.accent, fontSize: 24, fontWeight: 900, letterSpacing: 0, textTransform: 'uppercase' }}>{active.status}</span>
+          <strong style={{ color: '#0f1512', fontSize: 76, letterSpacing: 0, lineHeight: 0.94 }}>Relatorio sendo montado pagina por pagina</strong>
+        </div>
+        <div style={{ height: 940, position: 'relative' }}>
+          {items.map((item, index) => {
+            const offset = index - activeIndex
+            const wrapped = offset < -1 ? offset + items.length : offset > 2 ? offset - items.length : offset
+            const activeScore = index === activeIndex ? 1 : 0
+            const x = 250 + wrapped * 110 + local * -34
+            const y = Math.abs(wrapped) * 34 + (index === activeIndex ? 0 : 60)
+            const rotate = wrapped * 5.8
+            const scale = 0.84 + activeScore * 0.18 - Math.abs(wrapped) * 0.025
+
+            return (
+              <div
+                key={item.title}
+                style={{
+                  left: 0,
+                  opacity: Math.abs(wrapped) > 2 ? 0 : 0.34 + activeScore * 0.66,
+                  position: 'absolute',
+                  top: 36,
+                  transform: `translate(${x}px, ${y}px) rotate(${rotate}deg) scale(${scale})`,
+                  transformOrigin: '50% 105%',
+                  zIndex: 30 - Math.abs(wrapped) * 4 + activeScore * 20,
+                }}
+              >
+                <VerticalPipelineArtifact index={index} item={item} />
+              </div>
+            )
+          })}
+          <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 30, bottom: 28, boxShadow: '0 30px 78px rgba(20,24,22,0.13)', display: 'grid', gap: 12, left: 34, padding: 24, position: 'absolute', width: 360, zIndex: 60 }}>
+            <span style={{ color: '#65716a', fontSize: 20, fontWeight: 820 }}>Pagina ativa</span>
+            <strong style={{ color: active.accent, fontSize: 38, letterSpacing: 0, lineHeight: 1 }}>{active.title}</strong>
+            <span style={{ color: '#0f1512', fontSize: 24, fontWeight: 820 }}>{active.metric}</span>
+          </div>
+        </div>
+      </div>
+    </PremiumSceneShell>
+  )
+}
+
+function ArtifactDeckCarouselGalleryScene({ footer, items, status }: { footer: string; items: VerticalPipelineItem[]; status: string }) {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const activeIndex = Math.floor(frame / 118) % items.length
+  const local = (frame % 118) / 118
+
+  return (
+    <PremiumSceneShell footer={footer} status={status}>
+      <div style={{ height: 1040, left: '50%', opacity: sceneIn, position: 'absolute', top: 360, transform: `translateX(-50%) translateY(${(1 - sceneIn) * 34}px)`, width: 1080, zIndex: 20 }}>
+        {[-2, -1, 0, 1, 2].map((slot) => {
+          const itemIndex = (activeIndex + slot + items.length) % items.length
+          const item = items[itemIndex]
+          const unit = slot - local
+          const centerScore = 1 - Math.min(Math.abs(unit) / 2.4, 1)
+          const x = unit * 270
+          const y = Math.abs(unit) * 54
+          const scale = 0.62 + centerScore * 0.46
+          const rotateY = unit * -22
+          const opacity = 0.22 + centerScore * 0.78
+
+          return (
+            <div
+              key={`${slot}-${item.title}`}
+              style={{
+                left: '50%',
+                opacity,
+                position: 'absolute',
+                top: 76,
+                transform: `translateX(-50%) translate(${x}px, ${y}px) perspective(920px) rotateY(${rotateY}deg) scale(${scale})`,
+                transformStyle: 'preserve-3d',
+                zIndex: Math.round(centerScore * 30) + 10,
+              }}
+            >
+              <VerticalPipelineArtifact index={itemIndex} item={item} />
+            </div>
+          )
+        })}
+        <div style={{ bottom: 8, display: 'flex', gap: 12, justifyContent: 'center', left: 0, position: 'absolute', right: 0, zIndex: 60 }}>
+          {items.map((item, index) => (
+            <span key={item.title} style={{ background: index === activeIndex ? item.accent : '#cad8cf', borderRadius: 999, display: 'block', height: 13, width: index === activeIndex ? 48 : 13 }} />
+          ))}
+        </div>
+      </div>
+    </PremiumSceneShell>
+  )
+}
+
+function ArtifactRiskBoardGalleryScene({ footer, items, status }: { footer: string; items: VerticalPipelineItem[]; status: string }) {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const activeIndex = Math.floor(frame / 126) % items.length
+  const active = items[activeIndex]
+
+  return (
+    <PremiumSceneShell footer={footer} status={status}>
+      <section style={{ display: 'grid', gap: 18, gridTemplateRows: 'auto 1fr', left: 70, opacity: sceneIn, position: 'absolute', right: 70, top: 286, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 20 }}>
+        <div style={{ alignItems: 'end', display: 'flex', justifyContent: 'space-between' }}>
+          <div style={{ display: 'grid', gap: 10 }}>
+            <span style={{ color: active.accent, fontSize: 23, fontWeight: 900, letterSpacing: 0, textTransform: 'uppercase' }}>Contract gallery</span>
+            <strong style={{ color: '#0f1512', fontSize: 70, letterSpacing: 0, lineHeight: 0.96 }}>Contratos como board de risco</strong>
+          </div>
+          <div style={{ background: '#102019', borderRadius: 28, color: '#ffffff', display: 'grid', gap: 8, padding: '20px 24px', width: 300 }}>
+            <span style={{ color: 'rgba(255,255,255,0.62)', fontSize: 19, fontWeight: 820 }}>Em foco</span>
+            <strong style={{ color: '#ffffff', fontSize: 34, letterSpacing: 0 }}>{active.secondary}</strong>
+          </div>
+        </div>
+        <div style={{ display: 'grid', gap: 18, gridTemplateColumns: '1fr 1fr', minHeight: 820 }}>
+          {items.map((item, index) => {
+            const p = progress(frame, 32 + index * 18, 78 + index * 18)
+            const activeCard = index === activeIndex
+            return (
+              <div
+                key={item.title}
+                style={{
+                  background: activeCard ? '#102019' : '#ffffff',
+                  border: `1px solid ${activeCard ? '#102019' : '#dfe7e1'}`,
+                  borderRadius: 34,
+                  boxShadow: activeCard ? '0 38px 90px rgba(20,24,22,0.22)' : '0 18px 42px rgba(20,24,22,0.08)',
+                  color: activeCard ? '#ffffff' : '#0f1512',
+                  display: 'grid',
+                  gap: 18,
+                  opacity: p,
+                  padding: 28,
+                  transform: `translateY(${(1 - p) * 28}px) scale(${activeCard ? 1.02 : 1})`,
+                }}
+              >
+                <div style={{ alignItems: 'start', display: 'flex', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'grid', gap: 7 }}>
+                    <span style={{ color: activeCard ? 'rgba(255,255,255,0.60)' : '#65716a', fontSize: 20, fontWeight: 850, textTransform: 'uppercase' }}>{item.eyebrow}</span>
+                    <strong style={{ color: activeCard ? '#ffffff' : '#0f1512', fontSize: 44, letterSpacing: 0, lineHeight: 0.98 }}>{item.title}</strong>
+                  </div>
+                  <span style={{ background: item.accent, borderRadius: 999, display: 'block', height: 18, width: 18 }} />
+                </div>
+                <span style={{ color: activeCard ? 'rgba(255,255,255,0.76)' : '#65716a', fontSize: 27, fontWeight: 780 }}>{item.metric}</span>
+                <div style={{ display: 'grid', gap: 12 }}>
+                  {[78, 54, 88].map((width, line) => (
+                    <span key={`${width}-${line}`} style={{ background: line === 1 ? item.accent : activeCard ? 'rgba(255,255,255,0.16)' : '#dfe7e1', borderRadius: 999, display: 'block', height: line === 1 ? 13 : 10, width: `${width}%` }} />
+                  ))}
+                </div>
+                <span style={{ alignSelf: 'end', color: item.accent, fontSize: 27, fontWeight: 900 }}>{item.status}</span>
+              </div>
+            )
+          })}
+        </div>
+      </section>
+    </PremiumSceneShell>
+  )
+}
+
+function ArtifactLedgerFlowGalleryScene({ footer, items, status }: { footer: string; items: VerticalPipelineItem[]; status: string }) {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const activeIndex = Math.floor(frame / 118) % items.length
+  const line = progress(frame % 118, 10, 82)
+  const active = items[activeIndex]
+
+  return (
+    <PremiumSceneShell footer={footer} status={status}>
+      <section style={{ left: 64, opacity: sceneIn, position: 'absolute', right: 64, top: 300, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 20 }}>
+        <div style={{ display: 'grid', gap: 12, marginBottom: 46 }}>
+          <span style={{ color: active.accent, fontSize: 23, fontWeight: 900, letterSpacing: 0, textTransform: 'uppercase' }}>{active.status}</span>
+          <strong style={{ color: '#0f1512', fontSize: 72, letterSpacing: 0, lineHeight: 0.96 }}>Lancamento contábil em fluxo</strong>
+        </div>
+        <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 38, boxShadow: '0 42px 100px rgba(20,24,22,0.18)', minHeight: 860, overflow: 'hidden', padding: 34, position: 'relative' }}>
+          <div style={{ background: '#dfe7e1', borderRadius: 999, height: 8, left: 78, position: 'absolute', right: 78, top: 238 }} />
+          <div style={{ background: active.accent, borderRadius: 999, height: 8, left: 78, position: 'absolute', top: 238, width: `${line * 82}%` }} />
+          <div style={{ display: 'grid', gap: 22, gridTemplateColumns: `repeat(${items.length}, 1fr)`, marginTop: 88 }}>
+            {items.map((item, index) => {
+              const p = progress(frame, 34 + index * 22, 82 + index * 22)
+              const activeStep = index === activeIndex
+              return (
+                <div key={item.title} style={{ display: 'grid', gap: 18, justifyItems: 'center', opacity: 0.45 + p * 0.55, transform: `translateY(${activeStep ? -18 : 0}px)` }}>
+                  <span style={{ alignItems: 'center', background: activeStep ? item.accent : '#f3f7f4', border: `6px solid ${activeStep ? '#ffffff' : '#dfe7e1'}`, borderRadius: 999, boxShadow: activeStep ? `0 20px 54px ${item.accent}44` : 'none', color: activeStep ? '#ffffff' : '#65716a', display: 'flex', fontSize: 30, fontWeight: 920, height: 86, justifyContent: 'center', width: 86 }}>{index + 1}</span>
+                  <div style={{ background: activeStep ? '#102019' : '#f7faf7', border: `1px solid ${activeStep ? '#102019' : '#dfe7e1'}`, borderRadius: 24, color: activeStep ? '#ffffff' : '#0f1512', display: 'grid', gap: 12, minHeight: 260, padding: 20 }}>
+                    <span style={{ color: activeStep ? 'rgba(255,255,255,0.62)' : '#65716a', fontSize: 18, fontWeight: 850, textTransform: 'uppercase' }}>{item.eyebrow}</span>
+                    <strong style={{ color: activeStep ? '#ffffff' : '#0f1512', fontSize: 31, letterSpacing: 0, lineHeight: 0.98 }}>{item.title}</strong>
+                    <span style={{ color: activeStep ? 'rgba(255,255,255,0.74)' : '#65716a', fontSize: 22, fontWeight: 760 }}>{item.metric}</span>
+                    <span style={{ color: item.accent, fontSize: 26, fontWeight: 900 }}>{item.secondary}</span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          <div style={{ background: '#102019', borderRadius: 30, bottom: 34, color: '#ffffff', display: 'grid', gap: 12, left: 34, padding: 26, position: 'absolute', right: 34 }}>
+            <span style={{ color: 'rgba(255,255,255,0.62)', fontSize: 20, fontWeight: 820 }}>Resultado</span>
+            <strong style={{ color: '#ffffff', fontSize: 42, letterSpacing: 0 }}>{active.title} - {active.status}</strong>
+          </div>
+        </div>
+      </section>
+    </PremiumSceneShell>
+  )
+}
+
+function ArtifactReconciliationMatchGalleryScene({ footer, items, status }: { footer: string; items: VerticalPipelineItem[]; status: string }) {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const activeIndex = Math.floor(frame / 122) % items.length
+  const active = items[activeIndex]
+  const beam = progress(frame % 122, 18, 76)
+
+  return (
+    <PremiumSceneShell footer={footer} status={status}>
+      <section style={{ left: 66, opacity: sceneIn, position: 'absolute', right: 66, top: 300, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 20 }}>
+        <div style={{ display: 'grid', gap: 10, marginBottom: 42 }}>
+          <span style={{ color: active.accent, fontSize: 23, fontWeight: 900, letterSpacing: 0, textTransform: 'uppercase' }}>{active.status}</span>
+          <strong style={{ color: '#0f1512', fontSize: 72, letterSpacing: 0, lineHeight: 0.96 }}>Conciliação banco e ERP em pares</strong>
+        </div>
+        <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 38, boxShadow: '0 42px 100px rgba(20,24,22,0.18)', display: 'grid', gap: 28, gridTemplateColumns: '1fr 92px 1fr', minHeight: 900, padding: 34, position: 'relative' }}>
+          <div style={{ display: 'grid', gap: 18 }}>
+            <strong style={{ color: '#65716a', fontSize: 24, fontWeight: 900, letterSpacing: 0, textTransform: 'uppercase' }}>Banco</strong>
+            {items.map((item, index) => {
+              const activeRow = index === activeIndex
+              const p = progress(frame, 28 + index * 16, 72 + index * 16)
+              return (
+                <div key={`${item.title}-bank`} style={{ background: activeRow ? '#102019' : '#f7faf7', border: `1px solid ${activeRow ? '#102019' : '#dfe7e1'}`, borderRadius: 24, color: activeRow ? '#ffffff' : '#0f1512', display: 'grid', gap: 9, opacity: p, padding: 20, transform: `translateX(${(1 - p) * -24}px)` }}>
+                  <span style={{ color: activeRow ? 'rgba(255,255,255,0.62)' : '#65716a', fontSize: 18, fontWeight: 850 }}>{item.eyebrow}</span>
+                  <strong style={{ color: activeRow ? '#ffffff' : '#0f1512', fontSize: 31, letterSpacing: 0, lineHeight: 1 }}>{item.title}</strong>
+                  <span style={{ color: item.accent, fontSize: 28, fontWeight: 900 }}>{item.secondary}</span>
+                </div>
+              )
+            })}
+          </div>
+          <div style={{ alignItems: 'center', display: 'grid', justifyItems: 'center', paddingTop: 54 }}>
+            {items.map((item, index) => {
+              const activeRow = index === activeIndex
+              return (
+                <div key={`${item.title}-beam`} style={{ alignItems: 'center', display: 'grid', height: 118, justifyItems: 'center' }}>
+                  <span style={{ background: activeRow ? item.accent : '#dfe7e1', borderRadius: 999, boxShadow: activeRow ? `0 0 40px ${item.accent}66` : 'none', display: 'block', height: activeRow ? 10 : 6, opacity: activeRow ? 1 : 0.6, transform: `scaleX(${activeRow ? 0.36 + beam * 0.86 : 0.52})`, width: 92 }} />
+                </div>
+              )
+            })}
+          </div>
+          <div style={{ display: 'grid', gap: 18 }}>
+            <strong style={{ color: '#65716a', fontSize: 24, fontWeight: 900, letterSpacing: 0, textTransform: 'uppercase' }}>ERP</strong>
+            {items.map((item, index) => {
+              const activeRow = index === activeIndex
+              const p = progress(frame, 38 + index * 16, 82 + index * 16)
+              return (
+                <div key={`${item.title}-erp`} style={{ background: activeRow ? item.accent : '#f7faf7', border: `1px solid ${activeRow ? item.accent : '#dfe7e1'}`, borderRadius: 24, color: activeRow ? '#ffffff' : '#0f1512', display: 'grid', gap: 9, opacity: p, padding: 20, transform: `translateX(${(1 - p) * 24}px)` }}>
+                  <span style={{ color: activeRow ? 'rgba(255,255,255,0.70)' : '#65716a', fontSize: 18, fontWeight: 850 }}>{item.metric}</span>
+                  <strong style={{ color: activeRow ? '#ffffff' : '#0f1512', fontSize: 31, letterSpacing: 0, lineHeight: 1 }}>{item.status}</strong>
+                  <span style={{ color: activeRow ? '#ffffff' : item.accent, fontSize: 28, fontWeight: 900 }}>{item.secondary}</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+    </PremiumSceneShell>
+  )
+}
+
+function ArtifactDashboardMosaicGalleryScene({ footer, items, status }: { footer: string; items: VerticalPipelineItem[]; status: string }) {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const activeIndex = Math.floor(frame / 132) % items.length
+  const active = items[activeIndex]
+
+  return (
+    <PremiumSceneShell footer={footer} status={status}>
+      <section style={{ left: 58, opacity: sceneIn, position: 'absolute', right: 58, top: 286, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 20 }}>
+        <div style={{ alignItems: 'end', display: 'flex', justifyContent: 'space-between', marginBottom: 32 }}>
+          <div style={{ display: 'grid', gap: 10 }}>
+            <span style={{ color: active.accent, fontSize: 23, fontWeight: 900, letterSpacing: 0, textTransform: 'uppercase' }}>{active.status}</span>
+            <strong style={{ color: '#0f1512', fontSize: 72, letterSpacing: 0, lineHeight: 0.96 }}>Dashboards em mosaico vivo</strong>
+          </div>
+          <span style={{ background: '#102019', borderRadius: 999, color: '#ffffff', fontSize: 28, fontWeight: 900, padding: '18px 24px' }}>{active.secondary}</span>
+        </div>
+        <div style={{ display: 'grid', gap: 18, gridTemplateColumns: '1.2fr 0.8fr', minHeight: 900 }}>
+          <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 38, boxShadow: '0 42px 100px rgba(20,24,22,0.18)', display: 'grid', gap: 26, padding: 32 }}>
+            <div style={{ display: 'grid', gap: 10 }}>
+              <span style={{ color: active.accent, fontSize: 23, fontWeight: 900, textTransform: 'uppercase' }}>{active.eyebrow}</span>
+              <strong style={{ color: '#0f1512', fontSize: 56, letterSpacing: 0, lineHeight: 0.96 }}>{active.title}</strong>
+              <span style={{ color: '#65716a', fontSize: 28, fontWeight: 780 }}>{active.metric}</span>
+            </div>
+            <div style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(3, 1fr)' }}>
+              {items.slice(0, 3).map((item, index) => (
+                <div key={item.title} style={{ background: index === activeIndex % 3 ? '#102019' : '#f7faf7', border: `1px solid ${index === activeIndex % 3 ? '#102019' : '#dfe7e1'}`, borderRadius: 22, display: 'grid', gap: 8, padding: 18 }}>
+                  <span style={{ color: index === activeIndex % 3 ? 'rgba(255,255,255,0.60)' : '#65716a', fontSize: 17, fontWeight: 850 }}>{item.eyebrow}</span>
+                  <strong style={{ color: index === activeIndex % 3 ? '#ffffff' : item.accent, fontSize: 31, letterSpacing: 0 }}>{item.secondary}</strong>
+                </div>
+              ))}
+            </div>
+            <div style={{ alignItems: 'end', display: 'flex', gap: 13, height: 340 }}>
+              {[96, 146, 118, 210, 164, 286, 230, 188].map((height, index) => (
+                <span key={`${height}-${index}`} style={{ background: index === (activeIndex + 3) % 8 ? active.accent : '#dce6df', borderRadius: 12, flex: 1, height: height + Math.sin((frame + index * 12) / 30) * 14 }} />
+              ))}
+            </div>
+          </div>
+          <div style={{ display: 'grid', gap: 18 }}>
+            {items.map((item, index) => {
+              const p = progress(frame, 34 + index * 20, 82 + index * 20)
+              const activeCard = index === activeIndex
+              return (
+                <div key={item.title} style={{ background: activeCard ? item.accent : '#ffffff', border: `1px solid ${activeCard ? item.accent : '#dfe7e1'}`, borderRadius: 30, boxShadow: activeCard ? `0 28px 72px ${item.accent}33` : '0 16px 36px rgba(20,24,22,0.08)', display: 'grid', gap: 13, opacity: p, padding: 24, transform: `translateX(${(1 - p) * 28}px)` }}>
+                  <span style={{ color: activeCard ? 'rgba(255,255,255,0.68)' : '#65716a', fontSize: 18, fontWeight: 850, textTransform: 'uppercase' }}>{item.eyebrow}</span>
+                  <strong style={{ color: activeCard ? '#ffffff' : '#0f1512', fontSize: 32, letterSpacing: 0, lineHeight: 1 }}>{item.title}</strong>
+                  <span style={{ background: activeCard ? 'rgba(255,255,255,0.34)' : item.accent, borderRadius: 999, display: 'block', height: 10, width: `${58 + index * 9}%` }} />
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+    </PremiumSceneShell>
+  )
+}
+
 export function ExpenseClassificationAnimation() {
   return <ExpenseClassificationPipeline />
 }
 
 export function BankReconciliationAnimation() {
   return (
-    <VerticalArtifactPipelineScene
-      footer="Extrato e ERP pareados em esteira continua"
+    <ArtifactReconciliationMatchGalleryScene
+      footer="Extrato e ERP pareados em galeria de matches"
       items={reconciliationPipelineItems}
       status="Conciliação automática"
     />
@@ -2851,8 +3171,8 @@ export function BankReconciliationAnimation() {
 
 export function DashboardsAnimation() {
   return (
-    <VerticalArtifactPipelineScene
-      footer="Dashboards financeiros renderizados em sequencia"
+    <ArtifactDashboardMosaicGalleryScene
+      footer="Dashboards financeiros em mosaico vivo"
       items={dashboardPipelineItems}
       status="BI workspace renderizando"
     />
@@ -2861,8 +3181,8 @@ export function DashboardsAnimation() {
 
 export function ManagementReportAnimation() {
   return (
-    <VerticalArtifactPipelineScene
-      footer="Relatorio Word gerado em paginas executivas"
+    <ArtifactPageStackGalleryScene
+      footer="Relatorio Word gerado como stack de paginas executivas"
       items={reportPipelineItems}
       status="Relatorio gerencial escrevendo"
     />
@@ -2871,8 +3191,8 @@ export function ManagementReportAnimation() {
 
 export function ClosingSlidesAnimation() {
   return (
-    <VerticalArtifactPipelineScene
-      footer="Deck executivo montado em esteira vertical"
+    <ArtifactDeckCarouselGalleryScene
+      footer="Deck executivo em carousel com foco central"
       items={slidePipelineItems}
       status="Slides gerando"
     />
@@ -2881,8 +3201,8 @@ export function ClosingSlidesAnimation() {
 
 export function ContractManagementAnimation() {
   return (
-    <VerticalArtifactPipelineScene
-      footer="Contratos monitorados por risco, vencimento e reajuste"
+    <ArtifactRiskBoardGalleryScene
+      footer="Contratos organizados em board de risco e renovacao"
       items={contractPipelineItems}
       status="Gestao contratual ativa"
     />
@@ -2891,7 +3211,7 @@ export function ContractManagementAnimation() {
 
 export function AccountingEntryAnimation() {
   return (
-    <VerticalArtifactPipelineScene
+    <ArtifactLedgerFlowGalleryScene
       footer="Lancamento preparado, validado e enviado ao ERP"
       items={entryPipelineItems}
       status="ERP actions executando"
@@ -2909,6 +3229,76 @@ export function TweetAnimation() {
 
 export function SaaSCarouselGalleryAnimation() {
   return <SaaSCarouselGalleryAnimationCard />
+}
+
+export function SaaSArtifactPipelineGalleryAnimation() {
+  return (
+    <VerticalArtifactPipelineScene
+      footer="Galeria vertical de artefatos operacionais"
+      items={dashboardPipelineItems}
+      status="Artifact pipeline"
+    />
+  )
+}
+
+export function SaaSArtifactPageStackGalleryAnimation() {
+  return (
+    <ArtifactPageStackGalleryScene
+      footer="Galeria de paginas em stack para reports e documentos"
+      items={reportPipelineItems}
+      status="Page stack gallery"
+    />
+  )
+}
+
+export function SaaSArtifactDeckCarouselGalleryAnimation() {
+  return (
+    <ArtifactDeckCarouselGalleryScene
+      footer="Galeria de slides em carousel com profundidade"
+      items={slidePipelineItems}
+      status="Deck carousel gallery"
+    />
+  )
+}
+
+export function SaaSArtifactRiskBoardGalleryAnimation() {
+  return (
+    <ArtifactRiskBoardGalleryScene
+      footer="Galeria de contratos em board de risco"
+      items={contractPipelineItems}
+      status="Risk board gallery"
+    />
+  )
+}
+
+export function SaaSArtifactLedgerFlowGalleryAnimation() {
+  return (
+    <ArtifactLedgerFlowGalleryScene
+      footer="Galeria de etapas contabeis em fluxo"
+      items={entryPipelineItems}
+      status="Ledger flow gallery"
+    />
+  )
+}
+
+export function SaaSArtifactReconciliationMatchGalleryAnimation() {
+  return (
+    <ArtifactReconciliationMatchGalleryScene
+      footer="Galeria de conciliação com pares banco e ERP"
+      items={reconciliationPipelineItems}
+      status="Reconciliation match gallery"
+    />
+  )
+}
+
+export function SaaSArtifactDashboardMosaicGalleryAnimation() {
+  return (
+    <ArtifactDashboardMosaicGalleryScene
+      footer="Galeria de dashboards em mosaico executivo"
+      items={dashboardPipelineItems}
+      status="Dashboard mosaic gallery"
+    />
+  )
 }
 
 export function SaaSBentoGalleryAnimation() {
