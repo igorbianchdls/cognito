@@ -57,11 +57,15 @@ import {
 } from '@/remotion/compositions/McpOperationsDemo'
 import {
   AIChatWorkspaceMock,
+  AnimatedBarGroup,
   AuditLogMock,
   BeforeAfterSlider,
   BrowserFrame,
+  CalloutConnector,
+  CardStack,
   CommandPaletteMock,
   ConnectionLine,
+  CursorPath,
   CursorTrail,
   DashboardMock,
   FeatureMatrix,
@@ -73,7 +77,9 @@ import {
   KanbanMock,
   ledgerAIIntroConfig,
   LogoCloud,
+  MarqueeRow,
   MetricCard,
+  MouseClick,
   NumberTicker,
   PhoneFrame,
   PricingCard,
@@ -86,8 +92,12 @@ import {
   TableMock,
   TabletFrame,
   TestimonialCard,
+  TextHighlightSweep,
   TypingText,
   UseCaseCard,
+  WordReveal,
+  ZoomToRegion,
+  RotatingWords,
 } from '@/remotion/saas/index'
 
 type CatalogKind = 'Componentes' | 'Mockups' | 'Motion' | 'Marketing' | 'Galerias' | 'Animações' | 'Templates'
@@ -344,6 +354,117 @@ function ProgressRingDemo() {
   )
 }
 
+function WordRevealDemo() {
+  return (
+    <DemoStage compact>
+      <div style={{ margin: '0 auto', maxWidth: 860 }}>
+        <WordReveal style={{ fontSize: 54, fontWeight: 920, lineHeight: 1.03 }} text="Close finance work faster with live data" theme={theme} />
+      </div>
+    </DemoStage>
+  )
+}
+
+function RotatingWordsDemo() {
+  return (
+    <DemoStage compact>
+      <RotatingWords prefix="Build reports" style={{ fontSize: 56, fontWeight: 920 }} suffix="than before" theme={theme} words={['faster', 'cleaner', 'safer']} />
+    </DemoStage>
+  )
+}
+
+function TextHighlightSweepDemo() {
+  return (
+    <DemoStage compact>
+      <TextHighlightSweep style={{ fontSize: 52, fontWeight: 920, lineHeight: 1.08 }} text="Turn live operational data into a board-ready narrative." theme={theme} />
+    </DemoStage>
+  )
+}
+
+function CursorPathDemo() {
+  return (
+    <DemoStage>
+      <BrowserFrame theme={theme}>
+        <div style={{ height: 560, position: 'relative' }}>
+          <DashboardMock metrics={metrics} screen={productScreens[0]} theme={theme} />
+          <CursorPath path={[{ x: 180, y: 120 }, { x: 420, y: 190 }, { x: 690, y: 320 }, { x: 820, y: 210 }]} theme={theme} />
+          <MouseClick delay={75} left={820} theme={theme} top={210} />
+        </div>
+      </BrowserFrame>
+    </DemoStage>
+  )
+}
+
+function ZoomToRegionDemo() {
+  return (
+    <DemoStage compact>
+      <ZoomToRegion delay={24} region={{ x: 640, y: 250 }} scale={1.18} style={{ borderRadius: 28, height: 560 }}>
+        <BrowserFrame theme={theme}>
+          <DashboardMock metrics={metrics} screen={productScreens[0]} theme={theme} />
+        </BrowserFrame>
+      </ZoomToRegion>
+    </DemoStage>
+  )
+}
+
+function CalloutConnectorDemo() {
+  return (
+    <DemoStage compact>
+      <div style={{ height: 560, margin: '0 auto', position: 'relative', width: 900 }}>
+        <BrowserFrame theme={theme}>
+          <DashboardMock metrics={metrics} screen={productScreens[0]} theme={theme} />
+        </BrowserFrame>
+        <CalloutConnector end={{ x: 720, y: 180 }} label="Anomaly found" start={{ x: 540, y: 260 }} theme={theme} />
+      </div>
+    </DemoStage>
+  )
+}
+
+function AnimatedBarGroupDemo() {
+  return (
+    <DemoStage compact>
+      <div style={{ background: '#FFFFFF', border: `1px solid ${theme.border}`, borderRadius: 28, margin: '0 auto', padding: 28, width: 760 }}>
+        <AnimatedBarGroup theme={theme} values={[42, 68, 55, 92, 76, 128, 104]} />
+      </div>
+    </DemoStage>
+  )
+}
+
+function ProgressBarDemo() {
+  return (
+    <DemoStage compact>
+      <div style={{ display: 'grid', gap: 22, margin: '0 auto', width: 760 }}>
+        <ProgressBar label="Data connected" progress={0.84} theme={theme} />
+        <ProgressBar delay={16} label="Exceptions resolved" progress={0.62} theme={theme} />
+        <ProgressBar delay={32} label="Report ready" progress={0.91} theme={theme} />
+      </div>
+    </DemoStage>
+  )
+}
+
+function CardStackDemo() {
+  return (
+    <DemoStage compact>
+      <CardStack>
+        {[
+          <FloatingScreenshot key="one" label="Finance workspace" metric="+24%" theme={theme} />,
+          <FloatingScreenshot key="two" label="Workflow center" metric="98 flows" theme={theme} />,
+          <FloatingScreenshot key="three" label="Board report" metric="Ready" theme={theme} />,
+        ]}
+      </CardStack>
+    </DemoStage>
+  )
+}
+
+function MarqueeRowDemo() {
+  return (
+    <DemoStage compact>
+      <MarqueeRow>
+        {productScreens.map((screen) => <FloatingScreenshot key={screen.title} label={screen.title} metric={screen.metric} theme={theme} />)}
+      </MarqueeRow>
+    </DemoStage>
+  )
+}
+
 function LogoCloudDemo() {
   return (
     <DemoStage compact>
@@ -593,6 +714,96 @@ const catalog: CatalogItem[] = [
     label: 'ProgressRing',
     tags: ['Progress', 'Score', 'Status'],
     value: 'progress-ring',
+  },
+  {
+    code: '<WordReveal text="Close finance work faster" theme={theme} />',
+    component: WordRevealDemo,
+    description: 'Revela palavras em sequência para headlines premium.',
+    kind: 'Motion',
+    label: 'WordReveal',
+    tags: ['Text', 'Headline', 'Reveal'],
+    value: 'word-reveal',
+  },
+  {
+    code: '<RotatingWords prefix="Build reports" words={words} suffix="than before" theme={theme} />',
+    component: RotatingWordsDemo,
+    description: 'Alterna palavras em uma frase sem remontar o layout.',
+    kind: 'Motion',
+    label: 'RotatingWords',
+    tags: ['Text', 'Loop', 'Headline'],
+    value: 'rotating-words',
+  },
+  {
+    code: '<TextHighlightSweep text="Turn live data into narrative" theme={theme} />',
+    component: TextHighlightSweepDemo,
+    description: 'Sweep de destaque para frases e claims importantes.',
+    kind: 'Motion',
+    label: 'TextHighlightSweep',
+    tags: ['Text', 'Highlight', 'Sweep'],
+    value: 'text-highlight-sweep',
+  },
+  {
+    code: '<CursorPath path={path} theme={theme} />\n<MouseClick left={820} top={210} theme={theme} />',
+    component: CursorPathDemo,
+    description: 'Cursor animado por path com clique sincronizado.',
+    kind: 'Motion',
+    label: 'CursorPath + MouseClick',
+    tags: ['Cursor', 'Click', 'Product Tour'],
+    value: 'cursor-path-click',
+  },
+  {
+    code: '<ZoomToRegion region={{ x: 640, y: 250 }} scale={1.18}>...</ZoomToRegion>',
+    component: ZoomToRegionDemo,
+    description: 'Zoom suave para uma região específica da interface.',
+    kind: 'Motion',
+    label: 'ZoomToRegion',
+    tags: ['Zoom', 'Product Tour', 'Focus'],
+    value: 'zoom-to-region',
+  },
+  {
+    code: '<CalloutConnector start={...} end={...} label="Anomaly found" theme={theme} />',
+    component: CalloutConnectorDemo,
+    description: 'Linha animada com label para destacar pontos da UI.',
+    kind: 'Motion',
+    label: 'CalloutConnector',
+    tags: ['Callout', 'Connector', 'Tour'],
+    value: 'callout-connector',
+  },
+  {
+    code: '<AnimatedBarGroup values={[42, 68, 55, 92]} theme={theme} />',
+    component: AnimatedBarGroupDemo,
+    description: 'Grupo de barras animadas para gráficos simples.',
+    kind: 'Motion',
+    label: 'AnimatedBarGroup',
+    tags: ['Chart', 'Bars', 'Data'],
+    value: 'animated-bar-group',
+  },
+  {
+    code: '<ProgressBar progress={0.84} label="Data connected" theme={theme} />',
+    component: ProgressBarDemo,
+    description: 'Barra de progresso animada para status e execução.',
+    kind: 'Motion',
+    label: 'ProgressBar',
+    tags: ['Progress', 'Status', 'Workflow'],
+    value: 'progress-bar',
+  },
+  {
+    code: '<CardStack>{cards}</CardStack>',
+    component: CardStackDemo,
+    description: 'Stack de cards entrando em camadas.',
+    kind: 'Motion',
+    label: 'CardStack',
+    tags: ['Cards', 'Stack', 'Gallery'],
+    value: 'card-stack',
+  },
+  {
+    code: '<MarqueeRow>{screens}</MarqueeRow>',
+    component: MarqueeRowDemo,
+    description: 'Fileira horizontal contínua para screenshots e logos.',
+    kind: 'Motion',
+    label: 'MarqueeRow',
+    tags: ['Marquee', 'Loop', 'Gallery'],
+    value: 'marquee-row',
   },
   {
     code: '<LogoCloud logos={logos} theme={theme} />',
