@@ -83,6 +83,7 @@ import {
   NumberTicker,
   PhoneFrame,
   PricingCard,
+  ProgressBar,
   ProgressRing,
   Reveal,
   resolveSaaSTheme,
