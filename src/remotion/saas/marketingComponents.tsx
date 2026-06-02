@@ -77,6 +77,59 @@ export function InstagramPostMock({
   )
 }
 
+export function PromptInputHeroMock({
+  eyebrow = 'AI workspace',
+  prompt = 'Create an executive launch video for a new B2B SaaS product',
+  status = 'Generating campaign direction',
+  theme,
+}: {
+  eyebrow?: string
+  prompt?: string
+  status?: string
+  theme: SaaSTheme
+}) {
+  const frame = useCurrentFrame()
+  const typedLength = Math.min(prompt.length, Math.floor(Math.max(0, frame - 18) / 1.45))
+  const typedPrompt = prompt.slice(0, typedLength)
+  const cursorVisible = Math.floor(frame / 14) % 2 === 0
+  const glow = interpolate(Math.sin(frame / 28), [-1, 1], [0.18, 0.42])
+  const barProgress = interpolate(Math.sin(frame / 42), [-1, 1], [0.22, 0.86])
+
+  return (
+    <section style={{ alignItems: 'center', background: '#F4F7F4', border: `1px solid ${theme.border}`, borderRadius: 30, display: 'grid', minHeight: 620, overflow: 'hidden', padding: 42, placeItems: 'center', position: 'relative' }}>
+      <div style={{ background: `radial-gradient(circle at 50% 50%, ${theme.accent}${Math.round(glow * 100).toString(16).padStart(2, '0')}, rgba(244,247,244,0) 62%)`, inset: -140, position: 'absolute' }} />
+      <div style={{ display: 'grid', gap: 18, maxWidth: 860, position: 'relative', width: '100%', zIndex: 2 }}>
+        <div style={{ display: 'grid', gap: 8, justifyItems: 'center', textAlign: 'center' }}>
+          <span style={{ background: '#FFFFFF', border: `1px solid ${theme.border}`, borderRadius: 999, color: theme.accent, fontSize: 14, fontWeight: 900, letterSpacing: 0, padding: '9px 12px', textTransform: 'uppercase' }}>{eyebrow}</span>
+          <strong style={{ color: theme.text, fontSize: 46, fontWeight: 940, letterSpacing: 0, lineHeight: 1 }}>Prompt-driven creative brief</strong>
+        </div>
+        <div style={{ background: '#FFFFFF', border: `1px solid ${theme.border}`, borderRadius: 28, boxShadow: '0 30px 86px rgba(20,24,22,0.16)', display: 'grid', gap: 18, padding: 22 }}>
+          <div style={{ alignItems: 'center', display: 'flex', gap: 10 }}>
+            <span style={{ background: theme.accent, borderRadius: 999, display: 'block', height: 10, width: 10 }} />
+            <span style={{ color: theme.muted, fontSize: 15, fontWeight: 820, letterSpacing: 0 }}>Prompt input</span>
+          </div>
+          <div style={{ alignItems: 'center', background: '#F8FBF9', border: `1px solid ${theme.border}`, borderRadius: 22, display: 'grid', gridTemplateColumns: '1fr auto', minHeight: 92, padding: '18px 18px 18px 22px' }}>
+            <p style={{ color: typedPrompt ? theme.text : theme.muted, fontSize: 28, fontWeight: 760, letterSpacing: 0, lineHeight: 1.18, margin: 0 }}>
+              {typedPrompt || 'Describe what you want to generate'}
+              <span style={{ background: theme.accent, display: 'inline-block', height: 30, marginLeft: 4, opacity: cursorVisible ? 1 : 0, transform: 'translateY(5px)', width: 3 }} />
+            </p>
+            <span style={{ background: theme.text, borderRadius: 999, color: '#FFFFFF', fontSize: 16, fontWeight: 900, letterSpacing: 0, padding: '13px 16px' }}>Run</span>
+          </div>
+          <div style={{ display: 'grid', gap: 10 }}>
+            <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: theme.muted, fontSize: 14, fontWeight: 820, letterSpacing: 0 }}>{status}</span>
+              <span style={{ color: theme.accent, fontSize: 14, fontWeight: 900, letterSpacing: 0 }}>{Math.round(barProgress * 100)}%</span>
+            </div>
+            <span style={{ background: '#DDE7E1', borderRadius: 999, display: 'block', height: 8, overflow: 'hidden' }}>
+              <span style={{ background: theme.accent, borderRadius: 999, display: 'block', height: '100%', width: `${barProgress * 100}%` }} />
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 export function LogoCloud({
   logos,
   theme,

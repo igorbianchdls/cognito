@@ -107,6 +107,7 @@ import {
   NumberTicker,
   PhoneFrame,
   PricingCard,
+  PromptInputHeroMock,
   ProgressBar,
   ProgressRing,
   Reveal,
@@ -657,6 +658,14 @@ function InstagramPostDemo() {
   )
 }
 
+function PromptInputHeroDemo() {
+  return (
+    <DemoStage compact>
+      <PromptInputHeroMock theme={theme} />
+    </DemoStage>
+  )
+}
+
 function TestimonialDemo() {
   return (
     <DemoStage compact>
@@ -1141,6 +1150,15 @@ const catalog: CatalogItem[] = [
     label: 'InstagramPostMock',
     tags: ['Instagram', 'Social', 'Launch'],
     value: 'instagram-post',
+  },
+  {
+    code: '<PromptInputHeroMock prompt="Create an executive launch video..." theme={theme} />',
+    component: PromptInputHeroDemo,
+    description: 'Caixa de prompt centralizada com texto digitando para peças de IA.',
+    kind: 'Marketing',
+    label: 'PromptInputHeroMock',
+    tags: ['Prompt', 'AI', 'Typing'],
+    value: 'prompt-input-hero',
   },
   {
     code: '<TestimonialCard quote="..." author="..." theme={theme} />',
