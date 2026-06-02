@@ -82,7 +82,11 @@ import {
   GradientTextSweep,
   HotspotPulse,
   InboxTriageMock,
+  IntegrationCatalogMock,
+  IntegrationFieldMappingMock,
+  IntegrationHealthMatrixMock,
   IntegrationHubMock,
+  IntegrationPipelineMock,
   KanbanMock,
   ledgerAIIntroConfig,
   LoadingToSuccess,
@@ -262,6 +266,38 @@ function IntegrationHubDemo() {
   return (
     <DemoStage compact>
       <IntegrationHubMock apps={logos} centerLabel="Ledger AI" theme={theme} />
+    </DemoStage>
+  )
+}
+
+function IntegrationCatalogDemo() {
+  return (
+    <DemoStage compact>
+      <IntegrationCatalogMock theme={theme} />
+    </DemoStage>
+  )
+}
+
+function IntegrationPipelineDemo() {
+  return (
+    <DemoStage compact>
+      <IntegrationPipelineMock theme={theme} />
+    </DemoStage>
+  )
+}
+
+function IntegrationHealthMatrixDemo() {
+  return (
+    <DemoStage compact>
+      <IntegrationHealthMatrixMock theme={theme} />
+    </DemoStage>
+  )
+}
+
+function IntegrationFieldMappingDemo() {
+  return (
+    <DemoStage compact>
+      <IntegrationFieldMappingMock theme={theme} />
     </DemoStage>
   )
 }
@@ -754,6 +790,42 @@ const catalog: CatalogItem[] = [
     label: 'IntegrationHubMock',
     tags: ['Integrations', 'Hub', 'Network'],
     value: 'integration-hub',
+  },
+  {
+    code: '<IntegrationCatalogMock theme={theme} />',
+    component: IntegrationCatalogDemo,
+    description: 'Grade de conectores com categoria, latência e status.',
+    kind: 'Mockups',
+    label: 'IntegrationCatalogMock',
+    tags: ['Integrations', 'Catalog', 'Connectors'],
+    value: 'integration-catalog',
+  },
+  {
+    code: '<IntegrationPipelineMock theme={theme} />',
+    component: IntegrationPipelineDemo,
+    description: 'Pipeline visual de extração, normalização, validação e publicação.',
+    kind: 'Mockups',
+    label: 'IntegrationPipelineMock',
+    tags: ['Integrations', 'Pipeline', 'Sync'],
+    value: 'integration-pipeline',
+  },
+  {
+    code: '<IntegrationHealthMatrixMock theme={theme} />',
+    component: IntegrationHealthMatrixDemo,
+    description: 'Matriz operacional de saúde, latência e volume por conector.',
+    kind: 'Mockups',
+    label: 'IntegrationHealthMatrixMock',
+    tags: ['Integrations', 'Health', 'SLA'],
+    value: 'integration-health-matrix',
+  },
+  {
+    code: '<IntegrationFieldMappingMock theme={theme} />',
+    component: IntegrationFieldMappingDemo,
+    description: 'Mapeamento de campos de origem para o modelo normalizado.',
+    kind: 'Mockups',
+    label: 'IntegrationFieldMappingMock',
+    tags: ['Integrations', 'Mapping', 'Data model'],
+    value: 'integration-field-mapping',
   },
   {
     code: '<AuditLogMock events={events} theme={theme} />',
