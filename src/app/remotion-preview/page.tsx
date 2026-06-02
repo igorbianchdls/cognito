@@ -1,755 +1,769 @@
 'use client'
 
 import { Player } from '@remotion/player'
-import type { ComponentType } from 'react'
+import type { ComponentType, ReactNode } from 'react'
 import { useMemo, useState } from 'react'
 
-import { McpChartIntro, type McpTemplate } from '@/remotion/compositions/McpChartIntro'
 import {
-  AccountingEntryAnimation,
-  AIAgentStepsAnimation,
-  ApprovalFlowAnimation,
-  BankReconciliationAnimation,
-  ChatGptWebAnimation,
-  ClaudeWebAnimation,
-  ClosingSlidesAnimation,
-  CompareScenariosAnimation,
-  ContractManagementAnimation,
-  DataPipelineAnimation,
-  DashboardsAnimation,
-  EmailAnimation,
-  ExpenseClassificationAnimation,
-  FileUploadProcessingAnimation,
-  ForecastAnimation,
-  InboxAnimation,
-  IntegrationFlowAnimation,
-  ManagementReportAnimation,
-  MCP_SINGLE_ANIMATION_DURATION,
-  MobileAppDemoAnimation,
-  NewsAnimation,
-  NotificationCenterAnimation,
-  ReportExportAnimation,
-  SaaSAccordionGalleryAnimation,
-  SaaSBeforeAfterAnimation,
-  SaaSBentoGalleryAnimation,
-  SaaSCarouselGalleryAnimation,
-  SaaSCommandCenterAnimation,
-  SaaSCoverflowGalleryAnimation,
-  SaaSDeviceGalleryAnimation,
-  SaaSDocumentFanGalleryAnimation,
-  SaaSGridZoomGalleryAnimation,
-  SaaSKanbanFlowAnimation,
-  SaaSLogoCloudAnimation,
-  SaaSMagnifierGalleryAnimation,
-  SaaSMarqueeGalleryAnimation,
-  SaaSMetricCounterAnimation,
-  SaaSNetworkMapAnimation,
-  SaaSOrbitAnimation,
-  SaaSProductTourAnimation,
-  SaaSRoom3DGalleryAnimation,
-  SaaSSpotlightGalleryAnimation,
-  SaaSStackGalleryAnimation,
-  SaaSStoryboardGalleryAnimation,
-  SaaSSwipeCardsGalleryAnimation,
-  SaaSTimelineAnimation,
-  SaaSWallGalleryAnimation,
-  TableDrilldownAnimation,
-  TweetAnimation,
-} from '@/remotion/compositions/McpOperationsDemo'
-import { ExcelWorkbookMock, type ExcelMockSheet } from '@/remotion/components/ExcelWorkbookMock'
-import { PdfViewerMock, type PdfMockPage } from '@/remotion/components/PdfViewerMock'
-import { PowerPointEditorMock, type PowerPointMockSlide } from '@/remotion/components/PowerPointEditorMock'
-import { getSaaSIntroDurationInFrames, ledgerAIIntroConfig, SaaSIntroVideo } from '@/remotion/saas/index'
+  AIChatWorkspaceMock,
+  AuditLogMock,
+  BeforeAfterSlider,
+  BrowserFrame,
+  CommandPaletteMock,
+  ConnectionLine,
+  CursorTrail,
+  DashboardMock,
+  FeatureMatrix,
+  FloatingScreenshot,
+  getSaaSIntroDurationInFrames,
+  HotspotPulse,
+  InboxTriageMock,
+  IntegrationHubMock,
+  KanbanMock,
+  ledgerAIIntroConfig,
+  LogoCloud,
+  MetricCard,
+  NumberTicker,
+  PhoneFrame,
+  PricingCard,
+  ProgressRing,
+  Reveal,
+  resolveSaaSTheme,
+  SaaSIntroVideo,
+  ScreenCarousel,
+  SettingsPermissionsMock,
+  TableMock,
+  TabletFrame,
+  TestimonialCard,
+  TypingText,
+  UseCaseCard,
+} from '@/remotion/saas/index'
 
-type PreviewComposition = string
-type AnimationCategory = 'Chat / Assistants' | 'Galerias' | 'Operações Financeiras' | 'Apps / Mockups' | 'SaaS Patterns' | 'Workflows'
-type AnimationKind = 'chat' | 'gallery' | 'operation' | 'mockup' | 'pattern' | 'workflow'
+type CatalogKind = 'Componentes' | 'Mockups' | 'Motion' | 'Marketing' | 'Templates'
 
-type AnimationOption = {
-  category: AnimationCategory
-  component?: ComponentType
-  compositionHeight?: number
-  compositionWidth?: number
+type CatalogItem = {
+  code: string
+  component: ComponentType
   description: string
-  duration?: number
-  kind: AnimationKind
+  height?: number
+  kind: CatalogKind
   label: string
   tags: string[]
-  value: PreviewComposition
+  value: string
+  width?: number
+  duration?: number
 }
 
-const powerpointSlides: PowerPointMockSlide[] = [
-  {
-    accent: '#c8a856',
-    layout: 'title',
-    metrics: [
-      { label: 'EBITDA uplift by FY29 (base case)', value: '+$159M' },
-      { label: 'p.a. TSR uplift over plan', value: '+9-14%' },
-      { label: 'Board review - final POV due', value: 'May 7' },
-    ],
-    subtitle: 'A value-creation point of view for the Board',
-    title: 'Project Lighthouse',
-  },
-  {
-    accent: '#c8a856',
-    eyebrow: 'This portfolio showed water',
-    layout: 'metrics',
-    metrics: [
-      { label: 'EBITDA base', value: '+$159M' },
-      { label: 'Cash impact', value: '+$94M' },
-      { label: 'Risk adjusted', value: '+$78M' },
-    ],
-    title: 'The portfolio showed strong execution',
-  },
-  {
-    accent: '#0b5878',
-    eyebrow: 'Acme has under-grown',
-    layout: 'chart',
-    title: 'Core assets show margin expansion',
-  },
-  {
-    accent: '#c8a856',
-    eyebrow: 'Options and open questions',
-    layout: 'bullets',
-    bullets: ['Prioritize pricing reset', 'Reduce indirect procurement', 'Accelerate service attach', 'Prepare May board decision'],
-    title: 'Four directions on the table',
-  },
-  {
-    accent: '#c8a856',
-    eyebrow: 'Reposition the portfolio',
-    layout: 'metrics',
-    metrics: [
-      { label: 'Revenue pool', value: '$430M' },
-      { label: 'EBITDA bridge', value: '$92M' },
-      { label: 'Downside case', value: '$73M' },
-    ],
-    title: 'Reposition toward service-led growth',
-  },
-  {
-    accent: '#0b5878',
-    eyebrow: 'M&A EBITDA',
-    layout: 'chart',
-    title: 'Base case bridge from FY26 to FY29',
-  },
-  {
-    accent: '#c8a856',
-    eyebrow: 'Commercial plan',
-    layout: 'bullets',
-    bullets: ['Scale top accounts', 'Shift mix to recurring', 'Retire low-margin SKUs', 'Lock SteerCo milestones'],
-    title: 'Three moves for the bridge',
-  },
+const theme = resolveSaaSTheme(ledgerAIIntroConfig.brand)
+
+const metrics = [
+  { label: 'Close time', value: '3 days', delta: 'from 11 days' },
+  { label: 'Manual checks', value: '-64%', delta: 'automated' },
+  { label: 'Forecast accuracy', value: '+18%', delta: 'month over month' },
 ]
 
-const pdfPages: PdfMockPage[] = [
-  {
-    accent: '#1298e8',
-    sections: [
-      { kind: 'table', title: 'Canvas element' },
-      { kind: 'icons', title: 'Compositing' },
-      { kind: 'text', title: '2D Context' },
-      { kind: 'chart', title: 'Line styles' },
-    ],
-    subtitle: 'v1.1',
-    title: 'HTML5 Canvas Cheat Sheet',
-  },
-  {
-    accent: '#ff4a1f',
-    sections: [
-      { kind: 'text', title: 'Transformations' },
-      { kind: 'table', title: 'Methods' },
-      { kind: 'chart', title: 'Coordinates' },
-      { kind: 'icons', title: 'Examples' },
-    ],
-    subtitle: 'Page 2',
-    title: 'Canvas API Reference',
-  },
+const productScreens = [
+  { accent: '#245BDB', eyebrow: 'Analytics', metric: '+24%', title: 'Executive dashboard' },
+  { accent: '#22A06B', eyebrow: 'Actions', metric: '98 flows', title: 'Workflow center' },
+  { accent: '#C28F2C', eyebrow: 'Reports', metric: '5 reports', title: 'Board narratives' },
 ]
 
-const excelSheets: ExcelMockSheet[] = [
-  {
-    activeCell: 'I1',
-    name: 'Assumptions',
-    tabs: ['Assumptions', 'Benchmarks', 'Scenarios'],
-    title: 'ACME INDUSTRIAL - VALUE-CREATION MODEL',
-  },
+const logos = [
+  { label: 'Stripe', mark: 'S' },
+  { label: 'HubSpot', mark: 'H' },
+  { label: 'QuickBooks', mark: 'Q' },
+  { label: 'Salesforce', mark: 'SF' },
+  { label: 'Google Ads', mark: 'G' },
+  { label: 'Shopify', mark: 'S' },
 ]
 
-function PowerPointPreviewAnimation() {
+function DemoStage({ children, compact = false }: { children: ReactNode; compact?: boolean }) {
   return (
-    <PowerPointEditorMock
-      slides={powerpointSlides}
-      title="Acme_SteerCo"
-    />
-  )
-}
-
-function PdfPreviewAnimation() {
-  return (
-    <PdfViewerMock
-      fileName="HTML5 Canvas Cheat Sheet"
-      pages={pdfPages}
-      url="https://raw.github.com/mozilla/pdf.js/master/test/pdfs/canvas.pdf"
-    />
-  )
-}
-
-function ExcelPreviewAnimation() {
-  return (
-    <ExcelWorkbookMock
-      fileName="ValueCreation_Model"
-      sheets={excelSheets}
-    />
-  )
-}
-
-function LedgerAISaaSIntroAnimation() {
-  return <SaaSIntroVideo config={ledgerAIIntroConfig} />
-}
-
-const animationCatalog: AnimationOption[] = [
-  { category: 'Chat / Assistants', description: 'Intro mobile com templates ChatGPT e Claude.', duration: 4200, kind: 'chat', label: 'Intro Mobile', tags: ['Mobile', 'Chat', 'MCP'], value: 'intro' },
-  { category: 'Chat / Assistants', component: ChatGptWebAnimation, description: 'Janela web do ChatGPT com sidebar, conversa e card analítico.', kind: 'chat', label: 'ChatGPT Web', tags: ['Web', 'Chat', 'Assistant'], value: 'chatgpt-web' },
-  { category: 'Chat / Assistants', component: ClaudeWebAnimation, description: 'Janela web do Claude com conversa e composer desktop.', kind: 'chat', label: 'Claude Web', tags: ['Web', 'Chat', 'Assistant'], value: 'claude-web' },
-
-  { category: 'Operações Financeiras', component: ExpenseClassificationAnimation, description: 'Esteira vertical de documentos financeiros classificados por IA.', kind: 'operation', label: 'Classificação', tags: ['Financeiro', 'IA', 'Esteira'], value: 'classification' },
-  { category: 'Operações Financeiras', component: BankReconciliationAnimation, description: 'Pareamento entre banco e ERP em fluxo vertical.', kind: 'operation', label: 'Conciliação', tags: ['Banco', 'ERP', 'Financeiro'], value: 'reconciliation' },
-  { category: 'Operações Financeiras', component: DashboardsAnimation, description: 'Dashboards financeiros renderizados em sequência.', kind: 'operation', label: 'Dashboards', tags: ['BI', 'Financeiro', 'Reports'], value: 'dashboards' },
-  { category: 'Operações Financeiras', component: ManagementReportAnimation, description: 'Relatório gerencial em páginas executivas.', kind: 'operation', label: 'Relatório', tags: ['Word', 'Financeiro', 'Executivo'], value: 'report' },
-  { category: 'Operações Financeiras', component: ClosingSlidesAnimation, description: 'Deck executivo de fechamento mensal em esteira.', kind: 'operation', label: 'Slides', tags: ['PPT', 'Fechamento', 'Board'], value: 'slides' },
-  { category: 'Operações Financeiras', component: ContractManagementAnimation, description: 'Contratos monitorados por risco, vencimento e reajuste.', kind: 'operation', label: 'Contratos', tags: ['Jurídico', 'Risco', 'Financeiro'], value: 'contracts' },
-  { category: 'Operações Financeiras', component: AccountingEntryAnimation, description: 'Lançamento contábil preparado, validado e enviado ao ERP.', kind: 'operation', label: 'Lançamento', tags: ['ERP', 'Contábil', 'Workflow'], value: 'entry' },
-
-  { category: 'Apps / Mockups', component: PowerPointPreviewAnimation, description: 'Mock desktop de PowerPoint com slides e painel Claude.', kind: 'mockup', label: 'PowerPoint', tags: ['Office', 'Slides', 'Mockup'], value: 'powerpoint' },
-  { category: 'Apps / Mockups', component: PdfPreviewAnimation, description: 'Viewer de PDF no padrão desktop/macOS.', kind: 'mockup', label: 'PDF', tags: ['Documentos', 'Viewer', 'Mockup'], value: 'pdf' },
-  { category: 'Apps / Mockups', component: ExcelPreviewAnimation, description: 'Mock desktop de Excel com ribbon e workbook financeiro.', kind: 'mockup', label: 'Excel', tags: ['Office', 'Planilha', 'Mockup'], value: 'excel' },
-  { category: 'Apps / Mockups', component: MobileAppDemoAnimation, description: 'Mock mobile financeiro com cards, alertas e navegação.', kind: 'mockup', label: 'Mobile App', tags: ['Mobile', 'App', 'Financeiro'], value: 'mobile-app-demo' },
-
-  { category: 'SaaS Patterns', component: IntegrationFlowAnimation, description: 'Integrações conectando apps a um hub central.', kind: 'pattern', label: 'Integração', tags: ['SaaS', 'Integração', 'Hub'], value: 'integration' },
-  {
-    category: 'SaaS Patterns',
-    component: LedgerAISaaSIntroAnimation,
-    compositionHeight: 1080,
-    compositionWidth: 1920,
-    description: 'Biblioteca modular nova para intro completa de SaaS por configuração.',
-    duration: getSaaSIntroDurationInFrames(ledgerAIIntroConfig),
-    kind: 'pattern',
-    label: 'SaaS Intro Kit',
-    tags: ['SaaS', 'Intro', 'Library'],
-    value: 'saas-intro-kit',
-  },
-  { category: 'SaaS Patterns', component: AIAgentStepsAnimation, description: 'Agente de IA executando etapas, logs e saída operacional.', kind: 'pattern', label: 'AI Agent', tags: ['Agent', 'IA', 'Steps'], value: 'ai-agent-steps' },
-  { category: 'SaaS Patterns', component: TableDrilldownAnimation, description: 'Tabela analítica com linha ativa e painel de detalhe.', kind: 'pattern', label: 'Table Drilldown', tags: ['Table', 'Drilldown', 'Data'], value: 'table-drilldown' },
-  { category: 'SaaS Patterns', component: CompareScenariosAnimation, description: 'Comparação de cenários financeiros lado a lado.', kind: 'pattern', label: 'Compare Scenarios', tags: ['Scenarios', 'Financeiro', 'Compare'], value: 'compare-scenarios' },
-  { category: 'SaaS Patterns', component: ForecastAnimation, description: 'Forecast financeiro com histórico, projeção e confiança.', kind: 'pattern', label: 'Forecast', tags: ['Forecast', 'Financeiro', 'Chart'], value: 'forecast' },
-  { category: 'SaaS Patterns', component: NewsAnimation, description: 'Notícia editorial animada com headline e cards de apoio.', kind: 'pattern', label: 'Notícia', tags: ['Editorial', 'Social', 'News'], value: 'news' },
-  { category: 'SaaS Patterns', component: TweetAnimation, description: 'Tweet animado com mídia e métricas de engajamento.', kind: 'pattern', label: 'Tweet', tags: ['Social', 'Post', 'Métricas'], value: 'tweet' },
-  { category: 'SaaS Patterns', component: SaaSBeforeAfterAnimation, description: 'Comparação antes/depois com slider animado.', kind: 'pattern', label: 'Before After', tags: ['SaaS', 'Comparação', 'Impacto'], value: 'before-after' },
-  { category: 'SaaS Patterns', component: SaaSTimelineAnimation, description: 'Timeline de processo, do dado bruto ao board pack.', kind: 'pattern', label: 'Timeline', tags: ['Processo', 'SaaS', 'Workflow'], value: 'timeline' },
-  { category: 'SaaS Patterns', component: SaaSOrbitAnimation, description: 'Telas orbitando um hub central.', kind: 'pattern', label: 'Orbit', tags: ['Hub', 'Motion', 'SaaS'], value: 'orbit' },
-  { category: 'SaaS Patterns', component: SaaSCommandCenterAnimation, description: 'Command center executivo agregando múltiplas telas.', kind: 'pattern', label: 'Command Center', tags: ['Dashboard', 'Executive', 'SaaS'], value: 'command-center' },
-  { category: 'SaaS Patterns', component: SaaSLogoCloudAnimation, description: 'Cloud de logos para integrações e social proof.', kind: 'pattern', label: 'Logo Cloud', tags: ['Logos', 'Integrações', 'Social Proof'], value: 'logo-cloud' },
-  { category: 'SaaS Patterns', component: SaaSMetricCounterAnimation, description: 'Números grandes crescendo com cards de impacto.', kind: 'pattern', label: 'Metric Counter', tags: ['Métricas', 'Impacto', 'SaaS'], value: 'metric-counter' },
-  { category: 'SaaS Patterns', component: SaaSKanbanFlowAnimation, description: 'Cards atravessando colunas de processo.', kind: 'pattern', label: 'Kanban Flow', tags: ['Kanban', 'Workflow', 'Processo'], value: 'kanban-flow' },
-  { category: 'SaaS Patterns', component: SaaSNetworkMapAnimation, description: 'Mapa de nós conectados para dados e entidades.', kind: 'pattern', label: 'Network Map', tags: ['Network', 'Dados', 'Integrações'], value: 'network-map' },
-  { category: 'SaaS Patterns', component: SaaSProductTourAnimation, description: 'Tour de produto com hotspots sobre uma interface.', kind: 'pattern', label: 'Product Tour', tags: ['Tour', 'Hotspots', 'Product'], value: 'product-tour' },
-
-  { category: 'Workflows', component: EmailAnimation, description: 'Email sendo redigido com resumo e plano de ação.', kind: 'workflow', label: 'Email', tags: ['Email', 'AI Compose', 'Workflow'], value: 'email' },
-  { category: 'Workflows', component: FileUploadProcessingAnimation, description: 'Arquivos entrando, passando por OCR e classificação.', kind: 'workflow', label: 'File Upload', tags: ['Upload', 'OCR', 'Workflow'], value: 'file-upload-processing' },
-  { category: 'Workflows', component: InboxAnimation, description: 'Inbox financeiro com triagem, prioridade e resumo por IA.', kind: 'workflow', label: 'Inbox', tags: ['Inbox', 'Triage', 'Workflow'], value: 'inbox' },
-  { category: 'Workflows', component: NotificationCenterAnimation, description: 'Central de notificações com severidade e ações rápidas.', kind: 'workflow', label: 'Notification', tags: ['Alertas', 'Operações', 'Workflow'], value: 'notification-center' },
-  { category: 'Workflows', component: DataPipelineAnimation, description: 'Pipeline de dados fluindo por etapas técnicas.', kind: 'workflow', label: 'Data Pipeline', tags: ['Dados', 'Pipeline', 'ETL'], value: 'data-pipeline' },
-  { category: 'Workflows', component: ReportExportAnimation, description: 'Exportação de relatório para PDF, PPT e XLS.', kind: 'workflow', label: 'Report Export', tags: ['Export', 'Reports', 'Office'], value: 'report-export' },
-  { category: 'Workflows', component: ApprovalFlowAnimation, description: 'Fluxo de aprovação com validações e envio ao ERP.', kind: 'workflow', label: 'Approval Flow', tags: ['Aprovação', 'ERP', 'Workflow'], value: 'approval-flow' },
-
-  { category: 'Galerias', component: SaaSCarouselGalleryAnimation, description: 'Carousel com foco central e profundidade.', kind: 'gallery', label: 'Carousel', tags: ['Gallery', 'Hero', 'Product'], value: 'gallery-carousel' },
-  { category: 'Galerias', component: SaaSBentoGalleryAnimation, description: 'Bento grid com cards entrando em sequência.', kind: 'gallery', label: 'Bento', tags: ['Gallery', 'Grid', 'SaaS'], value: 'gallery-bento' },
-  { category: 'Galerias', component: SaaSWallGalleryAnimation, description: 'Wall de screenshots em movimento contínuo.', kind: 'gallery', label: 'Wall', tags: ['Gallery', 'Wall', 'Hero'], value: 'gallery-wall' },
-  { category: 'Galerias', component: SaaSStackGalleryAnimation, description: 'Cards empilhados trocando em camadas.', kind: 'gallery', label: 'Stack', tags: ['Gallery', 'Stack', 'Cards'], value: 'gallery-stack' },
-  { category: 'Galerias', component: SaaSMarqueeGalleryAnimation, description: 'Fileiras horizontais infinitas.', kind: 'gallery', label: 'Marquee', tags: ['Gallery', 'Marquee', 'Loop'], value: 'gallery-marquee' },
-  { category: 'Galerias', component: SaaSSpotlightGalleryAnimation, description: 'Tela principal em destaque com callouts.', kind: 'gallery', label: 'Spotlight', tags: ['Gallery', 'Zoom', 'Callouts'], value: 'gallery-spotlight' },
-  { category: 'Galerias', component: SaaSDocumentFanGalleryAnimation, description: 'Documentos/telas abrindo em leque.', kind: 'gallery', label: 'Document Fan', tags: ['Gallery', 'Documents', 'Fan'], value: 'gallery-document-fan' },
-  { category: 'Galerias', component: SaaSDeviceGalleryAnimation, description: 'Desktop, tablet e mobile em camadas.', kind: 'gallery', label: 'Device', tags: ['Gallery', 'Devices', 'Responsive'], value: 'gallery-device' },
-  { category: 'Galerias', component: SaaSGridZoomGalleryAnimation, description: 'Grade de screenshots com foco rotativo.', kind: 'gallery', label: 'Grid Zoom', tags: ['Gallery', 'Grid', 'Zoom'], value: 'gallery-grid-zoom' },
-  { category: 'Galerias', component: SaaSSwipeCardsGalleryAnimation, description: 'Cards em gesto visual de stories.', kind: 'gallery', label: 'Swipe Cards', tags: ['Gallery', 'Cards', 'Swipe'], value: 'gallery-swipe-cards' },
-  { category: 'Galerias', component: SaaSCoverflowGalleryAnimation, description: 'Coverflow em perspectiva para telas de produto.', kind: 'gallery', label: 'Coverflow', tags: ['Gallery', '3D', 'Product'], value: 'gallery-coverflow' },
-  { category: 'Galerias', component: SaaSRoom3DGalleryAnimation, description: 'Telas posicionadas como uma sala 3D.', kind: 'gallery', label: '3D Room', tags: ['Gallery', '3D', 'Room'], value: 'gallery-room-3d' },
-  { category: 'Galerias', component: SaaSMagnifierGalleryAnimation, description: 'Lupa percorrendo uma grade de telas.', kind: 'gallery', label: 'Magnifier', tags: ['Gallery', 'Zoom', 'Detail'], value: 'gallery-magnifier' },
-  { category: 'Galerias', component: SaaSAccordionGalleryAnimation, description: 'Cards expandindo e recolhendo verticalmente.', kind: 'gallery', label: 'Accordion', tags: ['Gallery', 'Cards', 'Accordion'], value: 'gallery-accordion' },
-  { category: 'Galerias', component: SaaSStoryboardGalleryAnimation, description: 'Frames em sequência como storyboard.', kind: 'gallery', label: 'Storyboard', tags: ['Gallery', 'Storyboard', 'Frames'], value: 'gallery-storyboard' },
-]
-
-const categories: Array<'Todos' | AnimationCategory> = ['Todos', 'Chat / Assistants', 'Operações Financeiras', 'Apps / Mockups', 'SaaS Patterns', 'Workflows', 'Galerias']
-const kinds: Array<'Todos' | AnimationKind> = ['Todos', 'chat', 'operation', 'mockup', 'pattern', 'workflow', 'gallery']
-
-function ThumbBars({ color, count = 5 }: { color: string; count?: number }) {
-  return (
-    <div style={{ alignItems: 'end', display: 'flex', gap: 5, height: 42 }}>
-      {Array.from({ length: count }).map((_, index) => (
-        <span key={index} style={{ background: index === Math.min(3, count - 1) ? color : '#334155', borderRadius: 5, flex: 1, height: [34, 52, 42, 64, 48, 28][index] || 36 }} />
-      ))}
+    <div
+      style={{
+        alignItems: 'center',
+        background: theme.background,
+        color: theme.text,
+        display: 'flex',
+        fontFamily: theme.fontFamily,
+        height: '100%',
+        justifyContent: 'center',
+        overflow: 'hidden',
+        padding: compact ? 36 : 56,
+        position: 'relative',
+        width: '100%',
+      }}
+    >
+      <div style={{ background: `radial-gradient(circle at 52% 44%, ${theme.accent}24, rgba(255,255,255,0) 58%)`, inset: -80, position: 'absolute' }} />
+      <div style={{ position: 'relative', width: '100%' }}>{children}</div>
     </div>
   )
 }
 
-function ComponentThumb({ color, option }: { color: string; option: AnimationOption }) {
-  const baseStyle = {
-    background: '#111827',
-    border: '1px solid #293848',
-    borderRadius: 11,
-    height: 86,
-    overflow: 'hidden',
-    padding: 10,
-    position: 'relative' as const,
-  }
-
-  if (option.kind === 'chat') {
-    return (
-      <div style={{ ...baseStyle, display: 'grid', gap: 7, gridTemplateColumns: '34px 1fr' }}>
-        <div style={{ background: '#0b1118', borderRadius: 8, display: 'grid', gap: 5, padding: 5 }}>
-          {[0, 1, 2].map((item) => <span key={item} style={{ background: item === 0 ? color : '#334155', borderRadius: 999, display: 'block', height: 6 }} />)}
-        </div>
-        <div style={{ display: 'grid', gap: 6 }}>
-          <span style={{ background: '#334155', borderRadius: 999, display: 'block', height: 9, justifySelf: 'end', width: '58%' }} />
-          <span style={{ background: color, borderRadius: 999, display: 'block', height: 9, width: '72%' }} />
-          <span style={{ background: '#334155', borderRadius: 999, display: 'block', height: 9, width: '46%' }} />
-        </div>
-      </div>
-    )
-  }
-
-  if (option.value === 'ai-agent-steps') {
-    return (
-      <div style={{ ...baseStyle, display: 'grid', gap: 5 }}>
-        {[0, 1, 2, 3].map((row) => (
-          <div key={row} style={{ alignItems: 'center', display: 'grid', gap: 7, gridTemplateColumns: '18px 1fr 24px' }}>
-            <span style={{ alignItems: 'center', background: row < 3 ? color : '#1f2937', borderRadius: 999, display: 'flex', height: 16, justifyContent: 'center', width: 16 }} />
-            <span style={{ background: '#334155', borderRadius: 999, display: 'block', height: 7, width: `${78 - row * 10}%` }} />
-            <span style={{ background: row < 2 ? color : '#334155', borderRadius: 999, display: 'block', height: 6 }} />
-          </div>
-        ))}
-      </div>
-    )
-  }
-
-  if (option.value === 'file-upload-processing') {
-    return (
-      <div style={baseStyle}>
-        {[0, 1, 2].map((card) => (
-          <span key={card} style={{ background: card === 1 ? color : '#334155', borderRadius: 7, display: 'block', height: card === 1 ? 54 : 42, left: 34 + card * 44, opacity: card === 1 ? 1 : 0.7, position: 'absolute', top: card === 1 ? 15 : 21, width: card === 1 ? 42 : 34 }} />
-        ))}
-        <span style={{ background: '#1f2937', borderRadius: 999, bottom: 10, display: 'block', height: 8, left: 30, position: 'absolute', right: 30 }} />
-      </div>
-    )
-  }
-
-  if (option.value === 'table-drilldown') {
-    return (
-      <div style={{ ...baseStyle, display: 'grid', gap: 7, gridTemplateColumns: '1.25fr 0.75fr' }}>
-        <div style={{ display: 'grid', gap: 5 }}>
-          {[0, 1, 2, 3].map((row) => <span key={row} style={{ background: row === 1 ? color : '#334155', borderRadius: 5, display: 'block' }} />)}
-        </div>
-        <div style={{ background: '#0b1118', borderRadius: 8, display: 'grid', gap: 6, padding: 7 }}>
-          <span style={{ background: color, borderRadius: 999, display: 'block', height: 7, width: '70%' }} />
-          <span style={{ background: '#334155', borderRadius: 999, display: 'block', height: 6 }} />
-          <span style={{ background: '#334155', borderRadius: 999, display: 'block', height: 6, width: '78%' }} />
-        </div>
-      </div>
-    )
-  }
-
-  if (option.value === 'compare-scenarios') {
-    return (
-      <div style={{ ...baseStyle, display: 'grid', gap: 6, gridTemplateColumns: 'repeat(3, 1fr)' }}>
-        {[0, 1, 2].map((column) => (
-          <div key={column} style={{ background: column === 1 ? '#0b1118' : '#1f2937', borderRadius: 8, display: 'grid', gap: 5, padding: 6 }}>
-            <span style={{ background: column === 1 ? color : '#334155', borderRadius: 999, display: 'block', height: 6 }} />
-            <span style={{ background: '#334155', borderRadius: 5, display: 'block', height: 19 + column * 8, marginTop: 'auto' }} />
-          </div>
-        ))}
-      </div>
-    )
-  }
-
-  if (option.value === 'forecast') {
-    return (
-      <div style={baseStyle}>
-        {[20, 38, 56, 74].map((top) => <span key={top} style={{ background: '#1f2937', borderRadius: 999, display: 'block', height: 2, left: 16, position: 'absolute', right: 16, top }} />)}
-        <svg height="86" viewBox="0 0 190 86" width="100%" style={{ display: 'block', left: 0, position: 'absolute', top: 0 }}>
-          <path d="M 20 62 L 54 49 L 86 54 L 118 34 L 152 22 L 176 16" fill="none" stroke={color} strokeLinecap="round" strokeLinejoin="round" strokeWidth="5" />
-          <path d="M 118 34 L 152 22 L 176 16" fill="none" stroke="#fbbf24" strokeDasharray="5 5" strokeLinecap="round" strokeLinejoin="round" strokeWidth="5" />
-        </svg>
-      </div>
-    )
-  }
-
-  if (option.value === 'mobile-app-demo') {
-    return (
-      <div style={{ ...baseStyle, display: 'flex', justifyContent: 'center', padding: 8 }}>
-        <div style={{ background: '#0b1118', border: '3px solid #334155', borderRadius: 16, display: 'grid', gap: 5, height: 70, padding: 8, width: 40 }}>
-          <span style={{ background: color, borderRadius: 6, display: 'block', height: 19 }} />
-          <span style={{ background: '#334155', borderRadius: 5, display: 'block', height: 10 }} />
-          <span style={{ background: '#334155', borderRadius: 5, display: 'block', height: 10 }} />
-        </div>
-      </div>
-    )
-  }
-
-  if (option.kind === 'mockup') {
-    return (
-      <div style={{ ...baseStyle, display: 'grid', gap: 6, gridTemplateRows: '12px 1fr' }}>
-        <div style={{ alignItems: 'center', display: 'flex', gap: 4 }}>
-          {[color, '#fbbf24', '#34d399'].map((dot) => <span key={dot} style={{ background: dot, borderRadius: 999, display: 'block', height: 6, width: 6 }} />)}
-          <span style={{ background: '#334155', borderRadius: 999, display: 'block', height: 6, marginLeft: 8, width: '42%' }} />
-        </div>
-        <div style={{ display: 'grid', gap: 6, gridTemplateColumns: option.value === 'pdf' ? '26px 1fr' : '42px 1fr' }}>
-          <span style={{ background: '#1f2937', borderRadius: 5, display: 'block' }} />
-          <div style={{ background: option.value === 'powerpoint' ? '#172554' : option.value === 'excel' ? '#0f2f22' : '#f8fafc', borderRadius: 5, display: 'grid', gap: 5, padding: 6 }}>
-            <span style={{ background: color, borderRadius: 999, display: 'block', height: 5, width: '46%' }} />
-            <span style={{ background: option.value === 'pdf' ? '#475569' : '#64748b', borderRadius: 999, display: 'block', height: 5, width: '72%' }} />
-            <span style={{ background: option.value === 'pdf' ? '#475569' : '#64748b', borderRadius: 999, display: 'block', height: 5, width: '58%' }} />
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (option.value.includes('pipeline') || option.value === 'integration' || option.value === 'network-map') {
-    return (
-      <div style={baseStyle}>
-        <span style={{ background: '#334155', borderRadius: 999, display: 'block', height: 3, left: 23, position: 'absolute', right: 23, top: 42 }} />
-        {[12, 48, 84, 120, 156].map((left, index) => (
-          <span key={left} style={{ alignItems: 'center', background: index === 2 ? color : '#1f2937', border: '1px solid #334155', borderRadius: 999, display: 'flex', height: index === 2 ? 28 : 21, justifyContent: 'center', left, position: 'absolute', top: index === 2 ? 29 : 33, width: index === 2 ? 28 : 21 }} />
-        ))}
-      </div>
-    )
-  }
-
-  if (option.value === 'email' || option.value === 'inbox' || option.value === 'notification-center') {
-    return (
-      <div style={{ ...baseStyle, display: 'grid', gap: 6 }}>
-        {[0, 1, 2].map((row) => (
-          <div key={row} style={{ alignItems: 'center', background: row === 0 ? '#1f2937' : '#0b1118', borderRadius: 7, display: 'grid', gap: 7, gridTemplateColumns: '15px 1fr 24px', padding: 6 }}>
-            <span style={{ background: row === 1 ? color : '#334155', borderRadius: 999, height: 12, width: 12 }} />
-            <span style={{ background: '#334155', borderRadius: 999, height: 6, width: `${80 - row * 16}%` }} />
-            <span style={{ background: row === 0 ? color : '#334155', borderRadius: 999, height: 6 }} />
-          </div>
-        ))}
-      </div>
-    )
-  }
-
-  if (option.value === 'approval-flow' || option.value === 'kanban-flow') {
-    return (
-      <div style={{ ...baseStyle, display: 'grid', gap: 7, gridTemplateColumns: '1fr 1fr 1fr' }}>
-        {[0, 1, 2].map((column) => (
-          <div key={column} style={{ background: '#0b1118', borderRadius: 7, display: 'grid', gap: 5, padding: 5 }}>
-            {[0, 1].map((card) => <span key={card} style={{ background: column === 2 && card === 1 ? color : '#334155', borderRadius: 5, display: 'block', height: 18 }} />)}
-          </div>
-        ))}
-      </div>
-    )
-  }
-
-  if (option.value === 'gallery-bento') {
-    return (
-      <div style={{ ...baseStyle, display: 'grid', gap: 6, gridTemplateColumns: '1.2fr 0.8fr', gridTemplateRows: '1fr 1fr' }}>
-        <span style={{ background: color, borderRadius: 8, gridRow: '1 / 3' }} />
-        <span style={{ background: '#334155', borderRadius: 8 }} />
-        <span style={{ background: '#1f2937', borderRadius: 8 }} />
-      </div>
-    )
-  }
-
-  if (option.value === 'gallery-wall' || option.value === 'gallery-grid-zoom' || option.value === 'gallery-storyboard') {
-    return (
-      <div style={{ ...baseStyle, display: 'grid', gap: 5, gridTemplateColumns: 'repeat(3, 1fr)' }}>
-        {Array.from({ length: 9 }).map((_, index) => <span key={index} style={{ background: index === 4 ? color : '#334155', borderRadius: 5 }} />)}
-      </div>
-    )
-  }
-
-  if (option.value === 'gallery-coverflow' || option.value === 'gallery-room-3d' || option.value === 'gallery-carousel') {
-    return (
-      <div style={baseStyle}>
-        {[-2, -1, 0, 1, 2].map((slot) => (
-          <span
-            key={slot}
-            style={{
-              background: slot === 0 ? color : '#334155',
-              borderRadius: 7,
-              display: 'block',
-              height: slot === 0 ? 54 : 44,
-              left: 82 + slot * 32,
-              opacity: slot === 0 ? 1 : 0.72,
-              position: 'absolute',
-              top: slot === 0 ? 15 : 20,
-              transform: `rotate(${slot * -10}deg)`,
-              width: slot === 0 ? 44 : 34,
-              zIndex: 10 - Math.abs(slot),
-            }}
-          />
-        ))}
-      </div>
-    )
-  }
-
-  if (option.value === 'gallery-stack' || option.value === 'gallery-swipe-cards' || option.value === 'gallery-document-fan') {
-    return (
-      <div style={baseStyle}>
-        {[0, 1, 2, 3].map((card) => <span key={card} style={{ background: card === 0 ? color : '#334155', borderRadius: 8, display: 'block', height: 52, left: 70 + card * 12, position: 'absolute', top: 16 + card * 5, transform: `rotate(${-8 + card * 5}deg)`, width: 78, zIndex: 10 - card }} />)}
-      </div>
-    )
-  }
-
-  if (option.value === 'gallery-marquee') {
-    return (
-      <div style={{ ...baseStyle, display: 'grid', gap: 7 }}>
-        {[0, 1, 2].map((row) => (
-          <div key={row} style={{ display: 'flex', gap: 6, transform: `translateX(${row % 2 === 0 ? -10 : 10}px)` }}>
-            {[0, 1, 2, 3].map((card) => <span key={card} style={{ background: card === row ? color : '#334155', borderRadius: 6, display: 'block', flex: '0 0 46px', height: 18 }} />)}
-          </div>
-        ))}
-      </div>
-    )
-  }
-
-  if (option.value === 'gallery-magnifier') {
-    return (
-      <div style={baseStyle}>
-        <div style={{ display: 'grid', gap: 4, gridTemplateColumns: 'repeat(4, 1fr)' }}>
-          {Array.from({ length: 12 }).map((_, index) => <span key={index} style={{ background: '#334155', borderRadius: 4, height: 15 }} />)}
-        </div>
-        <span style={{ border: `4px solid ${color}`, borderRadius: 999, display: 'block', height: 34, left: 82, position: 'absolute', top: 30, width: 34 }} />
-        <span style={{ background: color, borderRadius: 999, display: 'block', height: 30, left: 112, position: 'absolute', top: 58, transform: 'rotate(45deg)', width: 5 }} />
-      </div>
-    )
-  }
-
-  if (option.value === 'gallery-accordion') {
-    return (
-      <div style={{ ...baseStyle, display: 'grid', gap: 5 }}>
-        {[0, 1, 2, 3].map((row) => <span key={row} style={{ background: row === 1 ? color : '#334155', borderRadius: 6, display: 'block', height: row === 1 ? 27 : 11 }} />)}
-      </div>
-    )
-  }
-
-  if (option.kind === 'operation') {
-    return (
-      <div style={baseStyle}>
-        <span style={{ background: '#334155', borderRadius: 999, bottom: 8, display: 'block', left: '50%', position: 'absolute', top: 8, transform: 'translateX(-50%)', width: 3 }} />
-        {[-1, 0, 1].map((slot) => <span key={slot} style={{ background: slot === 0 ? color : '#334155', borderRadius: 8, display: 'block', height: slot === 0 ? 42 : 28, left: '50%', opacity: slot === 0 ? 1 : 0.55, position: 'absolute', top: 21 + slot * 28, transform: 'translateX(-50%)', width: slot === 0 ? 70 : 50 }} />)}
-      </div>
-    )
-  }
-
+function BrowserFrameDemo() {
   return (
-    <div style={{ ...baseStyle, display: 'grid', gap: 8 }}>
-      <div style={{ alignItems: 'center', display: 'flex', gap: 6 }}>
-        <span style={{ background: color, borderRadius: 999, display: 'block', height: 9, width: 9 }} />
-        <span style={{ background: '#334155', borderRadius: 999, display: 'block', height: 7, width: '48%' }} />
+    <DemoStage>
+      <BrowserFrame theme={theme} url="ledger.ai/workspace">
+        <DashboardMock metrics={metrics} screen={productScreens[0]} theme={theme} />
+      </BrowserFrame>
+    </DemoStage>
+  )
+}
+
+function DeviceFramesDemo() {
+  return (
+    <DemoStage>
+      <div style={{ alignItems: 'end', display: 'flex', gap: 28, justifyContent: 'center' }}>
+        <TabletFrame style={{ height: 430, width: 650 }} theme={theme}>
+          <DashboardMock metrics={metrics} screen={productScreens[1]} theme={theme} />
+        </TabletFrame>
+        <PhoneFrame style={{ height: 500, width: 250 }} theme={theme}>
+          <InboxTriageMock theme={theme} />
+        </PhoneFrame>
       </div>
-      <ThumbBars color={color} />
+    </DemoStage>
+  )
+}
+
+function FloatingScreenshotDemo() {
+  return (
+    <DemoStage>
+      <div style={{ display: 'grid', justifyContent: 'center' }}>
+        <FloatingScreenshot active label="Revenue command center" metric="+24%" theme={theme} />
+      </div>
+    </DemoStage>
+  )
+}
+
+function MetricCardDemo() {
+  return (
+    <DemoStage compact>
+      <div style={{ display: 'grid', gap: 18, gridTemplateColumns: 'repeat(3, 1fr)' }}>
+        {metrics.map((metric, index) => <MetricCard key={metric.label} index={index} metric={metric} theme={theme} />)}
+      </div>
+    </DemoStage>
+  )
+}
+
+function DashboardMockDemo() {
+  return (
+    <DemoStage>
+      <BrowserFrame theme={theme}>
+        <DashboardMock metrics={metrics} screen={productScreens[0]} theme={theme} />
+      </BrowserFrame>
+    </DemoStage>
+  )
+}
+
+function TableMockDemo() {
+  return (
+    <DemoStage compact>
+      <TableMock theme={theme} />
+    </DemoStage>
+  )
+}
+
+function KanbanMockDemo() {
+  return (
+    <DemoStage compact>
+      <KanbanMock theme={theme} />
+    </DemoStage>
+  )
+}
+
+function CommandPaletteDemo() {
+  return (
+    <DemoStage compact>
+      <CommandPaletteMock theme={theme} />
+    </DemoStage>
+  )
+}
+
+function IntegrationHubDemo() {
+  return (
+    <DemoStage compact>
+      <IntegrationHubMock apps={logos} centerLabel="Ledger AI" theme={theme} />
+    </DemoStage>
+  )
+}
+
+function AuditLogDemo() {
+  return (
+    <DemoStage compact>
+      <AuditLogMock theme={theme} />
+    </DemoStage>
+  )
+}
+
+function PermissionsDemo() {
+  return (
+    <DemoStage compact>
+      <SettingsPermissionsMock theme={theme} />
+    </DemoStage>
+  )
+}
+
+function InboxDemo() {
+  return (
+    <DemoStage compact>
+      <InboxTriageMock theme={theme} />
+    </DemoStage>
+  )
+}
+
+function AIChatDemo() {
+  return (
+    <DemoStage compact>
+      <AIChatWorkspaceMock theme={theme} />
+    </DemoStage>
+  )
+}
+
+function MotionRevealDemo() {
+  return (
+    <DemoStage compact>
+      <div style={{ display: 'grid', gap: 18, margin: '0 auto', maxWidth: 720 }}>
+        {[0, 1, 2].map((index) => (
+          <Reveal key={index} delay={index * 14}>
+            <div style={{ background: '#FFFFFF', border: `1px solid ${theme.border}`, borderRadius: 22, display: 'flex', justifyContent: 'space-between', padding: 22 }}>
+              <strong style={{ color: theme.text, fontSize: 24, letterSpacing: 0 }}>Reveal block {index + 1}</strong>
+              <span style={{ color: theme.accent, fontSize: 20, fontWeight: 900 }}>Ready</span>
+            </div>
+          </Reveal>
+        ))}
+      </div>
+    </DemoStage>
+  )
+}
+
+function TypingTextDemo() {
+  return (
+    <DemoStage compact>
+      <div style={{ background: '#FFFFFF', border: `1px solid ${theme.border}`, borderRadius: 24, margin: '0 auto', padding: 28, width: 760 }}>
+        <TypingText delay={12} speed={1.3} style={{ fontSize: 34, lineHeight: 1.18 }} text="Generate the board report from live finance data" theme={theme} />
+      </div>
+    </DemoStage>
+  )
+}
+
+function NumberTickerDemo() {
+  return (
+    <DemoStage compact>
+      <div style={{ display: 'grid', gap: 14, justifyItems: 'center' }}>
+        <NumberTicker style={{ color: theme.text, fontSize: 96, fontWeight: 940, letterSpacing: 0 }} suffix="h" to={184} />
+        <span style={{ color: theme.muted, fontSize: 24, fontWeight: 760 }}>hours saved this month</span>
+      </div>
+    </DemoStage>
+  )
+}
+
+function HotspotDemo() {
+  return (
+    <DemoStage>
+      <BrowserFrame theme={theme}>
+        <div style={{ height: 560, position: 'relative' }}>
+          <DashboardMock metrics={metrics} screen={productScreens[0]} theme={theme} />
+          <HotspotPulse label="New insight" left={610} theme={theme} top={250} />
+        </div>
+      </BrowserFrame>
+    </DemoStage>
+  )
+}
+
+function CursorTrailDemo() {
+  return (
+    <DemoStage compact>
+      <div style={{ background: '#FFFFFF', border: `1px solid ${theme.border}`, borderRadius: 28, height: 520, margin: '0 auto', position: 'relative', width: 860 }}>
+        <ConnectionLine from={{ x: 150, y: 160 }} theme={theme} to={{ x: 680, y: 360 }} />
+        <CursorTrail path={[{ x: 120, y: 120 }, { x: 260, y: 190 }, { x: 440, y: 280 }, { x: 680, y: 360 }]} theme={theme} />
+      </div>
+    </DemoStage>
+  )
+}
+
+function ProgressRingDemo() {
+  return (
+    <DemoStage compact>
+      <div style={{ display: 'flex', gap: 34, justifyContent: 'center' }}>
+        <ProgressRing label="84%" progress={0.84} theme={theme} />
+        <ProgressRing label="62%" progress={0.62} theme={theme} />
+        <ProgressRing label="91%" progress={0.91} theme={theme} />
+      </div>
+    </DemoStage>
+  )
+}
+
+function LogoCloudDemo() {
+  return (
+    <DemoStage compact>
+      <LogoCloud logos={logos} theme={theme} />
+    </DemoStage>
+  )
+}
+
+function TestimonialDemo() {
+  return (
+    <DemoStage compact>
+      <TestimonialCard author="Marina Costa" metric={{ label: 'Close cycle reduction', value: '68%' }} quote="The product turned our weekly reporting process into a live operating rhythm." role="VP Finance, Northstar" theme={theme} />
+    </DemoStage>
+  )
+}
+
+function PricingDemo() {
+  return (
+    <DemoStage compact>
+      <div style={{ display: 'grid', gap: 18, gridTemplateColumns: '1fr 1fr', margin: '0 auto', maxWidth: 860 }}>
+        <PricingCard features={['Dashboards', 'Reports', 'Approvals']} name="Growth" price="$49" theme={theme} />
+        <PricingCard features={['Automations', 'Audit logs', 'SAML']} highlighted name="Scale" price="$149" theme={theme} />
+      </div>
+    </DemoStage>
+  )
+}
+
+function FeatureMatrixDemo() {
+  return (
+    <DemoStage compact>
+      <FeatureMatrix
+        features={[
+          { description: 'Connects ERP, CRM and revenue systems.', metric: 'Live', title: 'Data sync' },
+          { description: 'Routes exceptions to owners with status.', metric: 'Automated', title: 'Approvals' },
+          { description: 'Creates board-ready narratives.', metric: 'Export', title: 'Reports' },
+        ]}
+        theme={theme}
+      />
+    </DemoStage>
+  )
+}
+
+function UseCaseDemo() {
+  return (
+    <DemoStage compact>
+      <div style={{ display: 'grid', gap: 18, gridTemplateColumns: 'repeat(3, 1fr)' }}>
+        <UseCaseCard description="Spot risk before month-end." metric="Finance" theme={theme} title="Close management" />
+        <UseCaseCard description="Route approvals and follow-ups." metric="Ops" theme={theme} title="Workflow control" />
+        <UseCaseCard description="Turn live data into narratives." metric="Board" theme={theme} title="Executive reporting" />
+      </div>
+    </DemoStage>
+  )
+}
+
+function BeforeAfterDemo() {
+  return (
+    <DemoStage compact>
+      <BeforeAfterSlider
+        after={<DashboardMock metrics={metrics} screen={productScreens[1]} theme={theme} />}
+        before={<TableMock theme={theme} />}
+        theme={theme}
+      />
+    </DemoStage>
+  )
+}
+
+function ScreenCarouselDemo() {
+  return (
+    <DemoStage compact>
+      <ScreenCarousel screens={productScreens} theme={theme} />
+    </DemoStage>
+  )
+}
+
+function SaaSIntroTemplateDemo() {
+  return <SaaSIntroVideo config={ledgerAIIntroConfig} />
+}
+
+const catalog: CatalogItem[] = [
+  {
+    code: '<BrowserFrame theme={theme} url="ledger.ai/workspace">...</BrowserFrame>',
+    component: BrowserFrameDemo,
+    description: 'Frame de navegador para hero, product tour e screenshots de produto.',
+    kind: 'Componentes',
+    label: 'BrowserFrame',
+    tags: ['Frame', 'Desktop', 'Product'],
+    value: 'browser-frame',
+  },
+  {
+    code: '<PhoneFrame theme={theme}>...</PhoneFrame>\n<TabletFrame theme={theme}>...</TabletFrame>',
+    component: DeviceFramesDemo,
+    description: 'Frames de phone/tablet para demos responsivas.',
+    kind: 'Componentes',
+    label: 'Device Frames',
+    tags: ['Device', 'Mobile', 'Responsive'],
+    value: 'device-frames',
+  },
+  {
+    code: '<FloatingScreenshot active label="Revenue" metric="+24%" theme={theme} />',
+    component: FloatingScreenshotDemo,
+    description: 'Card flutuante para screenshots, galerias e hero stacks.',
+    kind: 'Componentes',
+    label: 'FloatingScreenshot',
+    tags: ['Screenshot', 'Card', 'Gallery'],
+    value: 'floating-screenshot',
+  },
+  {
+    code: '<MetricCard metric={metric} index={0} theme={theme} />',
+    component: MetricCardDemo,
+    description: 'Card de métrica com variação escura para destaque.',
+    kind: 'Componentes',
+    label: 'MetricCard',
+    tags: ['Metric', 'KPI', 'Proof'],
+    value: 'metric-card',
+  },
+  {
+    code: '<DashboardMock metrics={metrics} screen={screen} theme={theme} />',
+    component: DashboardMockDemo,
+    description: 'Dashboard SaaS genérico com KPIs, header e gráfico.',
+    kind: 'Mockups',
+    label: 'DashboardMock',
+    tags: ['Dashboard', 'Analytics', 'Product'],
+    value: 'dashboard-mock',
+  },
+  {
+    code: '<TableMock rows={rows} theme={theme} />',
+    component: TableMockDemo,
+    description: 'Tabela analítica para data products, CRM e backoffice.',
+    kind: 'Mockups',
+    label: 'TableMock',
+    tags: ['Table', 'Data', 'Grid'],
+    value: 'table-mock',
+  },
+  {
+    code: '<KanbanMock theme={theme} />',
+    component: KanbanMockDemo,
+    description: 'Kanban de processo para workflow, CRM ou onboarding.',
+    kind: 'Mockups',
+    label: 'KanbanMock',
+    tags: ['Kanban', 'Workflow', 'Cards'],
+    value: 'kanban-mock',
+  },
+  {
+    code: '<CommandPaletteMock theme={theme} />',
+    component: CommandPaletteDemo,
+    description: 'Command palette para produtos AI-first e automações.',
+    kind: 'Mockups',
+    label: 'CommandPaletteMock',
+    tags: ['Command', 'AI', 'Actions'],
+    value: 'command-palette',
+  },
+  {
+    code: '<IntegrationHubMock apps={apps} centerLabel="Ledger AI" theme={theme} />',
+    component: IntegrationHubDemo,
+    description: 'Hub radial de integrações e sistemas conectados.',
+    kind: 'Mockups',
+    label: 'IntegrationHubMock',
+    tags: ['Integrations', 'Hub', 'Network'],
+    value: 'integration-hub',
+  },
+  {
+    code: '<AuditLogMock events={events} theme={theme} />',
+    component: AuditLogDemo,
+    description: 'Log de auditoria para segurança, compliance e operações.',
+    kind: 'Mockups',
+    label: 'AuditLogMock',
+    tags: ['Audit', 'Security', 'Log'],
+    value: 'audit-log',
+  },
+  {
+    code: '<SettingsPermissionsMock theme={theme} />',
+    component: PermissionsDemo,
+    description: 'Matriz de permissões por papel para SaaS enterprise.',
+    kind: 'Mockups',
+    label: 'SettingsPermissionsMock',
+    tags: ['Settings', 'Permissions', 'Enterprise'],
+    value: 'permissions',
+  },
+  {
+    code: '<InboxTriageMock theme={theme} />',
+    component: InboxDemo,
+    description: 'Inbox com priorização para triagem operacional.',
+    kind: 'Mockups',
+    label: 'InboxTriageMock',
+    tags: ['Inbox', 'Triage', 'Ops'],
+    value: 'inbox-triage',
+  },
+  {
+    code: '<AIChatWorkspaceMock theme={theme} />',
+    component: AIChatDemo,
+    description: 'Chat de IA com plano de ação e contexto de workspace.',
+    kind: 'Mockups',
+    label: 'AIChatWorkspaceMock',
+    tags: ['AI', 'Chat', 'Workspace'],
+    value: 'ai-chat-workspace',
+  },
+  {
+    code: '<Reveal delay={20}>...</Reveal>',
+    component: MotionRevealDemo,
+    description: 'Entrada simples para cards e blocos de conteúdo.',
+    kind: 'Motion',
+    label: 'Reveal',
+    tags: ['Motion', 'Entrance', 'Stagger'],
+    value: 'reveal',
+  },
+  {
+    code: '<TypingText text="Generate report..." theme={theme} />',
+    component: TypingTextDemo,
+    description: 'Texto digitando para AI assistants e command bars.',
+    kind: 'Motion',
+    label: 'TypingText',
+    tags: ['Typing', 'AI', 'Text'],
+    value: 'typing-text',
+  },
+  {
+    code: '<NumberTicker to={184} suffix="h" />',
+    component: NumberTickerDemo,
+    description: 'Contador numérico para métricas de impacto.',
+    kind: 'Motion',
+    label: 'NumberTicker',
+    tags: ['Counter', 'Metric', 'Motion'],
+    value: 'number-ticker',
+  },
+  {
+    code: '<HotspotPulse label="New insight" left={610} top={250} theme={theme} />',
+    component: HotspotDemo,
+    description: 'Hotspot pulsante para apontar detalhes de interface.',
+    kind: 'Motion',
+    label: 'HotspotPulse',
+    tags: ['Hotspot', 'Pulse', 'Tour'],
+    value: 'hotspot-pulse',
+  },
+  {
+    code: '<CursorTrail path={[...]} theme={theme} />\n<ConnectionLine from={...} to={...} theme={theme} />',
+    component: CursorTrailDemo,
+    description: 'Cursor e linha para guiar interações e conexões.',
+    kind: 'Motion',
+    label: 'Cursor + Connection',
+    tags: ['Cursor', 'Line', 'Interaction'],
+    value: 'cursor-connection',
+  },
+  {
+    code: '<ProgressRing progress={0.84} label="84%" theme={theme} />',
+    component: ProgressRingDemo,
+    description: 'Ring de progresso para status, score e completion.',
+    kind: 'Motion',
+    label: 'ProgressRing',
+    tags: ['Progress', 'Score', 'Status'],
+    value: 'progress-ring',
+  },
+  {
+    code: '<LogoCloud logos={logos} theme={theme} />',
+    component: LogoCloudDemo,
+    description: 'Cloud de logos para integrações ou social proof.',
+    kind: 'Marketing',
+    label: 'LogoCloud',
+    tags: ['Logos', 'Integrations', 'Proof'],
+    value: 'logo-cloud',
+  },
+  {
+    code: '<TestimonialCard quote="..." author="..." theme={theme} />',
+    component: TestimonialDemo,
+    description: 'Card de depoimento com métrica opcional.',
+    kind: 'Marketing',
+    label: 'TestimonialCard',
+    tags: ['Quote', 'Customer', 'Proof'],
+    value: 'testimonial-card',
+  },
+  {
+    code: '<PricingCard highlighted name="Scale" price="$149" features={features} theme={theme} />',
+    component: PricingDemo,
+    description: 'Card de pricing para planos, upsell e packaging.',
+    kind: 'Marketing',
+    label: 'PricingCard',
+    tags: ['Pricing', 'Plan', 'CTA'],
+    value: 'pricing-card',
+  },
+  {
+    code: '<FeatureMatrix features={features} theme={theme} />',
+    component: FeatureMatrixDemo,
+    description: 'Matriz de features para diferenciais e comparação.',
+    kind: 'Marketing',
+    label: 'FeatureMatrix',
+    tags: ['Features', 'Matrix', 'Compare'],
+    value: 'feature-matrix',
+  },
+  {
+    code: '<UseCaseCard title="Close management" metric="Finance" theme={theme} />',
+    component: UseCaseDemo,
+    description: 'Cards de caso de uso por persona, função ou segmento.',
+    kind: 'Marketing',
+    label: 'UseCaseCard',
+    tags: ['Use case', 'Persona', 'Cards'],
+    value: 'use-case-card',
+  },
+  {
+    code: '<BeforeAfterSlider before={...} after={...} theme={theme} />',
+    component: BeforeAfterDemo,
+    description: 'Slider before/after para transformação visual.',
+    kind: 'Marketing',
+    label: 'BeforeAfterSlider',
+    tags: ['Before', 'After', 'Compare'],
+    value: 'before-after-slider',
+  },
+  {
+    code: '<ScreenCarousel screens={screens} theme={theme} />',
+    component: ScreenCarouselDemo,
+    description: 'Carousel de telas para hero e product tours.',
+    kind: 'Marketing',
+    label: 'ScreenCarousel',
+    tags: ['Carousel', 'Screens', 'Gallery'],
+    value: 'screen-carousel',
+  },
+  {
+    code: '<SaaSIntroVideo config={ledgerAIIntroConfig} />',
+    component: SaaSIntroTemplateDemo,
+    description: 'Template completo gerado por config, usando os blocos da biblioteca.',
+    duration: getSaaSIntroDurationInFrames(ledgerAIIntroConfig),
+    height: 1080,
+    kind: 'Templates',
+    label: 'SaaSIntroVideo',
+    tags: ['Template', 'Intro', 'Config'],
+    value: 'saas-intro-video',
+    width: 1920,
+  },
+]
+
+const kinds: Array<'Todos' | CatalogKind> = ['Todos', 'Componentes', 'Mockups', 'Motion', 'Marketing', 'Templates']
+
+function Thumbnail({ item }: { item: CatalogItem }) {
+  const color = item.kind === 'Motion' ? '#245BDB' : item.kind === 'Marketing' ? '#C28F2C' : item.kind === 'Templates' ? '#7C3AED' : item.kind === 'Mockups' ? '#22A06B' : '#101828'
+  return (
+    <div style={{ background: '#F8FBF9', border: '1px solid #E3E8EF', borderRadius: 12, display: 'grid', gap: 10, height: 96, padding: 12 }}>
+      <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+        <span style={{ background: color, borderRadius: 999, display: 'block', height: 10, width: 10 }} />
+        <span style={{ background: '#D9E2F1', borderRadius: 999, display: 'block', height: 8, width: 52 }} />
+      </div>
+      {item.kind === 'Motion' ? (
+        <div style={{ position: 'relative' }}>
+          <span style={{ background: '#D9E2F1', borderRadius: 999, display: 'block', height: 3, marginTop: 30, width: '100%' }} />
+          <span style={{ background: color, borderRadius: 999, display: 'block', height: 18, left: '54%', position: 'absolute', top: 21, width: 18 }} />
+        </div>
+      ) : item.kind === 'Marketing' ? (
+        <div style={{ display: 'grid', gap: 7, gridTemplateColumns: 'repeat(3, 1fr)' }}>
+          {[0, 1, 2].map((index) => <span key={index} style={{ background: index === 1 ? color : '#E3E8EF', borderRadius: 10, height: 42 }} />)}
+        </div>
+      ) : (
+        <div style={{ alignItems: 'end', display: 'flex', gap: 6, height: 48 }}>
+          {[26, 38, 30, 48, 34].map((height, index) => <span key={height} style={{ background: index === 3 ? color : '#D9E2F1', borderRadius: 6, flex: 1, height }} />)}
+        </div>
+      )}
     </div>
   )
 }
 
 export default function RemotionPreviewPage() {
-  const [composition, setComposition] = useState<PreviewComposition>('classification')
+  const [selectedKind, setSelectedKind] = useState<'Todos' | CatalogKind>('Componentes')
   const [query, setQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<'Todos' | AnimationCategory>('Todos')
-  const [selectedKind, setSelectedKind] = useState<'Todos' | AnimationKind>('Todos')
-  const [template, setTemplate] = useState<McpTemplate>('chatgpt')
-  const isIntro = composition === 'intro'
-  const selectedAnimation = animationCatalog.find((option) => option.value === composition) || animationCatalog[0]
-  const SelectedComponent = selectedAnimation.component || ExpenseClassificationAnimation
-  const selectedDuration = selectedAnimation.duration || MCP_SINGLE_ANIMATION_DURATION
-  const selectedCompositionHeight = selectedAnimation.compositionHeight || 1920
-  const selectedCompositionWidth = selectedAnimation.compositionWidth || 1080
-  const selectedAspectRatio = `${selectedCompositionWidth} / ${selectedCompositionHeight}`
-  const visibleAnimations = useMemo(() => {
+  const [selectedValue, setSelectedValue] = useState('browser-frame')
+
+  const visibleItems = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
-
-    return animationCatalog.filter((option) => {
-      const matchesCategory = selectedCategory === 'Todos' || option.category === selectedCategory
-      const matchesKind = selectedKind === 'Todos' || option.kind === selectedKind
-      const searchable = `${option.label} ${option.description} ${option.category} ${option.kind} ${option.tags.join(' ')}`.toLowerCase()
-      const matchesQuery = normalizedQuery === '' || searchable.includes(normalizedQuery)
-
-      return matchesCategory && matchesKind && matchesQuery
+    return catalog.filter((item) => {
+      const matchesKind = selectedKind === 'Todos' || item.kind === selectedKind
+      const searchable = `${item.label} ${item.description} ${item.kind} ${item.tags.join(' ')}`.toLowerCase()
+      const matchesQuery = !normalizedQuery || searchable.includes(normalizedQuery)
+      return matchesKind && matchesQuery
     })
-  }, [query, selectedCategory, selectedKind])
+  }, [query, selectedKind])
+
+  const selectedItem = catalog.find((item) => item.value === selectedValue) || visibleItems[0] || catalog[0]
+  const SelectedComponent = selectedItem.component
+  const width = selectedItem.width || 1280
+  const height = selectedItem.height || 720
+  const duration = selectedItem.duration || 180
+  const aspectRatio = `${width} / ${height}`
 
   return (
-    <main
-      style={{
-        background: '#070a0f',
-        color: '#f8fafc',
-        display: 'grid',
-        gridTemplateColumns: '248px minmax(0, 1fr)',
-        minHeight: '100vh',
-        padding: 0,
-      }}
-    >
-      <aside style={{ background: '#0f141b', borderRight: '1px solid #202a36', display: 'grid', gridTemplateRows: 'auto 1fr auto', minHeight: '100vh', padding: 20, position: 'sticky', top: 0 }}>
-        <div style={{ display: 'grid', gap: 18 }}>
-          <div style={{ display: 'grid', gap: 7 }}>
-            <span style={{ color: '#67e08f', fontSize: 12, fontWeight: 900, letterSpacing: 1.5, textTransform: 'uppercase' }}>Remotion</span>
-            <h1 style={{ color: '#f8fafc', fontSize: 25, fontWeight: 850, letterSpacing: 0, lineHeight: 1.04, margin: 0 }}>Component Portal</h1>
-            <p style={{ color: '#94a3b8', fontSize: 13, fontWeight: 600, lineHeight: 1.42, margin: 0 }}>Biblioteca de animações, galerias e mocks para vídeos SaaS.</p>
-          </div>
-
+    <main style={{ background: '#F4F6F3', color: '#101828', display: 'grid', fontFamily: theme.fontFamily, gridTemplateColumns: '248px minmax(0, 1fr)', minHeight: '100vh' }}>
+      <aside style={{ background: '#FFFFFF', borderRight: '1px solid #E3E8EF', display: 'grid', gridTemplateRows: 'auto 1fr auto', minHeight: '100vh', padding: 22, position: 'sticky', top: 0 }}>
+        <div style={{ display: 'grid', gap: 26 }}>
           <div style={{ display: 'grid', gap: 8 }}>
-            <span style={{ color: '#94a3b8', fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}>Categorias</span>
-            {categories.map((category) => {
-              const count = category === 'Todos' ? animationCatalog.length : animationCatalog.filter((item) => item.category === category).length
-              const active = selectedCategory === category
-
+            <span style={{ color: theme.accent, fontSize: 12, fontWeight: 900, letterSpacing: 1.5, textTransform: 'uppercase' }}>Remotion</span>
+            <h1 style={{ color: theme.text, fontSize: 27, fontWeight: 900, letterSpacing: 0, lineHeight: 1.02, margin: 0 }}>Component Library</h1>
+            <p style={{ color: theme.muted, fontSize: 13, fontWeight: 650, lineHeight: 1.42, margin: 0 }}>Blocos reutilizáveis para vídeos introdutórios de SaaS.</p>
+          </div>
+          <nav style={{ display: 'grid', gap: 8 }}>
+            {kinds.map((kind) => {
+              const active = selectedKind === kind
+              const count = kind === 'Todos' ? catalog.length : catalog.filter((item) => item.kind === kind).length
               return (
                 <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
+                  key={kind}
+                  onClick={() => setSelectedKind(kind)}
                   style={{
                     alignItems: 'center',
-                    background: active ? '#12251a' : 'transparent',
-                    border: active ? '1px solid #25583a' : '1px solid transparent',
-                    borderRadius: 10,
-                    color: active ? '#bbf7d0' : '#cbd5e1',
+                    background: active ? '#EFF6FF' : 'transparent',
+                    border: active ? '1px solid #BBD5FF' : '1px solid transparent',
+                    borderRadius: 12,
+                    color: active ? '#245BDB' : theme.text,
                     cursor: 'pointer',
                     display: 'flex',
-                    fontSize: 13,
-                    fontWeight: 780,
+                    fontSize: 14,
+                    fontWeight: 820,
                     justifyContent: 'space-between',
-                    padding: '10px 11px',
+                    letterSpacing: 0,
+                    padding: '11px 12px',
                     textAlign: 'left',
                   }}
                   type="button"
                 >
-                  <span>{category}</span>
-                  <span style={{ color: active ? '#67e08f' : '#94a3b8', fontSize: 12 }}>{count}</span>
+                  <span>{kind}</span>
+                  <span style={{ color: active ? '#245BDB' : theme.muted, fontSize: 12 }}>{count}</span>
                 </button>
               )
             })}
-          </div>
+          </nav>
         </div>
-
         <div />
-
-        <div style={{ background: '#111827', border: '1px solid #263445', borderRadius: 12, display: 'grid', gap: 7, padding: 12 }}>
-          <strong style={{ color: '#f8fafc', fontSize: 13 }}>Preview</strong>
-          <span style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.35 }}>1080x1920 · 30 FPS · players locais.</span>
+        <div style={{ background: '#F8FBF9', border: '1px solid #E3E8EF', borderRadius: 14, display: 'grid', gap: 7, padding: 14 }}>
+          <strong style={{ color: theme.text, fontSize: 13, fontWeight: 880 }}>Formato</strong>
+          <span style={{ color: theme.muted, fontSize: 12, fontWeight: 650, lineHeight: 1.35 }}>Componentes isolados, mockups e templates por config.</span>
         </div>
       </aside>
 
-      <section style={{ display: 'grid', gap: 22, gridTemplateColumns: 'minmax(420px, 1fr) 430px', padding: 28 }}>
+      <section style={{ display: 'grid', gap: 24, gridTemplateColumns: 'minmax(520px, 1fr) minmax(460px, 560px)', padding: 30 }}>
         <div style={{ display: 'grid', gap: 18, minWidth: 0 }}>
-          <header style={{ alignItems: 'start', display: 'flex', gap: 18, justifyContent: 'space-between' }}>
+          <header style={{ alignItems: 'end', display: 'flex', justifyContent: 'space-between' }}>
             <div style={{ display: 'grid', gap: 6 }}>
-              <h2 style={{ color: '#f8fafc', fontSize: 30, fontWeight: 850, letterSpacing: 0, margin: 0 }}>Catálogo de componentes</h2>
-              <span style={{ color: '#94a3b8', fontSize: 14, fontWeight: 650 }}>{visibleAnimations.length} itens encontrados · {selectedAnimation.label} selecionado</span>
+              <h2 style={{ color: theme.text, fontSize: 34, fontWeight: 920, letterSpacing: 0, margin: 0 }}>Catálogo</h2>
+              <span style={{ color: theme.muted, fontSize: 14, fontWeight: 680 }}>{visibleItems.length} componentes encontrados</span>
             </div>
-            {isIntro ? (
-              <div style={{ background: '#1f2937', borderRadius: 10, display: 'inline-flex', gap: 3, padding: 3 }}>
-                {(['chatgpt', 'claude'] as const).map((value) => (
-                  <button
-                    key={value}
-                    onClick={() => setTemplate(value)}
-                    style={{
-                      background: template === value ? '#0f141b' : 'transparent',
-                      border: 0,
-                      borderRadius: 8,
-                      color: template === value ? '#f8fafc' : '#94a3b8',
-                      cursor: 'pointer',
-                      fontSize: 13,
-                      fontWeight: 800,
-                      padding: '9px 12px',
-                      textTransform: 'capitalize',
-                    }}
-                    type="button"
-                  >
-                    {value}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-          </header>
-
-          <div style={{ background: '#0f141b', border: '1px solid #263445', borderRadius: 14, boxShadow: '0 18px 50px rgba(15, 23, 42, 0.06)', display: 'grid', gap: 14, padding: 14 }}>
             <input
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Buscar por nome, tag, categoria ou descrição"
-              style={{
-                background: '#0b1118',
-                border: '1px solid #293848',
-                borderRadius: 10,
-                color: '#f8fafc',
-                fontSize: 14,
-                fontWeight: 650,
-                outline: 'none',
-                padding: '12px 13px',
-                width: '100%',
-              }}
+              placeholder="Buscar componente"
+              style={{ background: '#FFFFFF', border: '1px solid #D9E2F1', borderRadius: 12, color: theme.text, fontSize: 14, fontWeight: 700, outline: 'none', padding: '13px 14px', width: 280 }}
               value={query}
             />
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
-              {kinds.map((kind) => {
-                const active = selectedKind === kind
-                return (
-                  <button
-                    key={kind}
-                    onClick={() => setSelectedKind(kind)}
-                    style={{
-                      background: active ? '#67e08f' : '#16251d',
-                      border: 0,
-                      borderRadius: 999,
-                      color: active ? '#0f141b' : '#cbd5e1',
-                      cursor: 'pointer',
-                      fontSize: 12,
-                      fontWeight: 850,
-                      padding: '8px 11px',
-                      textTransform: kind === 'Todos' ? 'none' : 'capitalize',
-                    }}
-                    type="button"
-                  >
-                    {kind}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
+          </header>
 
-          <div style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-            {visibleAnimations.map((option) => {
-              const active = option.value === selectedAnimation.value
-              const color = option.kind === 'gallery' ? '#67e08f' : option.kind === 'workflow' ? '#7dd3fc' : option.kind === 'mockup' ? '#fbbf24' : option.kind === 'chat' ? '#e5e7eb' : '#a7f3d0'
-
+          <div style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))' }}>
+            {visibleItems.map((item) => {
+              const active = selectedItem.value === item.value
               return (
                 <button
-                  key={option.value}
-                  onClick={() => setComposition(option.value)}
+                  key={item.value}
+                  onClick={() => setSelectedValue(item.value)}
                   style={{
-                    background: '#0f141b',
-                    border: `1px solid ${active ? color : '#263445'}`,
-                    borderRadius: 14,
-                    boxShadow: active ? `0 22px 60px ${color}22` : '0 12px 34px rgba(15, 23, 42, 0.05)',
+                    background: '#FFFFFF',
+                    border: `1px solid ${active ? '#245BDB' : '#E3E8EF'}`,
+                    borderRadius: 16,
+                    boxShadow: active ? '0 20px 54px rgba(36,91,219,0.16)' : '0 10px 30px rgba(16,24,40,0.04)',
                     cursor: 'pointer',
                     display: 'grid',
                     gap: 12,
-                    minHeight: 204,
+                    minHeight: 236,
                     padding: 14,
                     textAlign: 'left',
                   }}
                   type="button"
                 >
-                  <ComponentThumb color={color} option={option} />
-                  <div style={{ display: 'grid', gap: 6 }}>
+                  <Thumbnail item={item} />
+                  <div style={{ display: 'grid', gap: 7 }}>
                     <div style={{ alignItems: 'start', display: 'flex', gap: 8, justifyContent: 'space-between' }}>
-                      <strong style={{ color: '#f8fafc', fontSize: 16, fontWeight: 850, letterSpacing: 0, lineHeight: 1.08 }}>{option.label}</strong>
-                      <span style={{ background: `${color}18`, borderRadius: 999, color, fontSize: 10, fontWeight: 900, padding: '5px 7px', textTransform: 'uppercase' }}>{option.kind}</span>
+                      <strong style={{ color: theme.text, fontSize: 17, fontWeight: 900, letterSpacing: 0, lineHeight: 1.08 }}>{item.label}</strong>
+                      <span style={{ background: '#EFF6FF', borderRadius: 999, color: '#245BDB', fontSize: 10, fontWeight: 900, padding: '5px 7px', textTransform: 'uppercase' }}>{item.kind}</span>
                     </div>
-                    <span style={{ color: '#94a3b8', fontSize: 12, fontWeight: 650, lineHeight: 1.35 }}>{option.description}</span>
+                    <span style={{ color: theme.muted, fontSize: 12, fontWeight: 650, lineHeight: 1.35 }}>{item.description}</span>
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 'auto' }}>
-                    {option.tags.slice(0, 3).map((tag) => <span key={tag} style={{ background: '#182232', borderRadius: 999, color: '#cbd5e1', fontSize: 10, fontWeight: 800, padding: '5px 7px' }}>{tag}</span>)}
+                    {item.tags.slice(0, 3).map((tag) => <span key={tag} style={{ background: '#F4F6F8', borderRadius: 999, color: '#5E6D82', fontSize: 10, fontWeight: 850, padding: '5px 7px' }}>{tag}</span>)}
                   </div>
                 </button>
               )
@@ -757,73 +771,45 @@ export default function RemotionPreviewPage() {
           </div>
         </div>
 
-        <aside style={{ alignSelf: 'start', display: 'grid', gap: 14, position: 'sticky', top: 28 }}>
-          <div style={{ background: '#0f141b', border: '1px solid #263445', borderRadius: 16, boxShadow: '0 22px 60px rgba(15, 23, 42, 0.08)', overflow: 'hidden', padding: 12 }}>
-          {isIntro ? (
+        <aside style={{ alignSelf: 'start', display: 'grid', gap: 16, position: 'sticky', top: 30 }}>
+          <div style={{ background: '#FFFFFF', border: '1px solid #E3E8EF', borderRadius: 18, boxShadow: '0 22px 64px rgba(16,24,40,0.08)', overflow: 'hidden', padding: 12 }}>
             <Player
-              key={`${composition}-${template}`}
-              component={McpChartIntro}
-              compositionHeight={1920}
-              compositionWidth={1080}
-              controls
-              durationInFrames={selectedDuration}
-              fps={30}
-              inputProps={{ template }}
-              style={{
-                aspectRatio: '9 / 16',
-                borderRadius: 10,
-                maxHeight: '72vh',
-                width: '100%',
-              }}
-            />
-          ) : (
-            <Player
-              key={composition}
+              key={selectedItem.value}
               component={SelectedComponent}
-              compositionHeight={selectedCompositionHeight}
-              compositionWidth={selectedCompositionWidth}
+              compositionHeight={height}
+              compositionWidth={width}
               controls
-              durationInFrames={selectedDuration}
+              durationInFrames={duration}
               fps={30}
               style={{
-                aspectRatio: selectedAspectRatio,
-                borderRadius: 10,
-                maxHeight: '72vh',
+                aspectRatio,
+                background: theme.background,
+                borderRadius: 12,
+                maxHeight: selectedItem.kind === 'Templates' ? '58vh' : '52vh',
                 width: '100%',
               }}
             />
-          )}
           </div>
-
-          <div style={{ background: '#0f141b', border: '1px solid #263445', borderRadius: 16, boxShadow: '0 16px 42px rgba(15, 23, 42, 0.06)', display: 'grid', gap: 13, padding: 16 }}>
+          <div style={{ background: '#FFFFFF', border: '1px solid #E3E8EF', borderRadius: 18, boxShadow: '0 18px 46px rgba(16,24,40,0.05)', display: 'grid', gap: 16, padding: 18 }}>
             <div style={{ alignItems: 'start', display: 'flex', gap: 12, justifyContent: 'space-between' }}>
               <div style={{ display: 'grid', gap: 5 }}>
-                <span style={{ color: '#67e08f', fontSize: 12, fontWeight: 900, textTransform: 'uppercase' }}>{selectedAnimation.category}</span>
-                <h3 style={{ color: '#f8fafc', fontSize: 22, fontWeight: 850, letterSpacing: 0, lineHeight: 1.04, margin: 0 }}>{selectedAnimation.label}</h3>
+                <span style={{ color: '#245BDB', fontSize: 12, fontWeight: 900, textTransform: 'uppercase' }}>{selectedItem.kind}</span>
+                <h3 style={{ color: theme.text, fontSize: 25, fontWeight: 920, letterSpacing: 0, lineHeight: 1.04, margin: 0 }}>{selectedItem.label}</h3>
               </div>
               <button
-                onClick={() => navigator.clipboard?.writeText(selectedAnimation.value)}
-                style={{ background: '#16251d', border: 0, borderRadius: 999, color: '#67e08f', cursor: 'pointer', fontSize: 12, fontWeight: 850, padding: '9px 11px' }}
+                onClick={() => navigator.clipboard?.writeText(selectedItem.code)}
+                style={{ background: '#EFF6FF', border: 0, borderRadius: 999, color: '#245BDB', cursor: 'pointer', fontSize: 12, fontWeight: 900, padding: '9px 12px' }}
                 type="button"
               >
-                Copiar ID
+                Copiar
               </button>
             </div>
-            <p style={{ color: '#94a3b8', fontSize: 14, fontWeight: 650, lineHeight: 1.45, margin: 0 }}>{selectedAnimation.description}</p>
-            <div style={{ display: 'grid', gap: 8, gridTemplateColumns: '1fr 1fr 1fr' }}>
-              {[
-                ['Duração', `${selectedDuration}f`],
-                ['FPS', '30'],
-                ['Tipo', selectedAnimation.kind],
-              ].map(([label, value]) => (
-                <div key={label} style={{ background: '#111827', border: '1px solid #1f2937', borderRadius: 10, display: 'grid', gap: 4, padding: 10 }}>
-                  <span style={{ color: '#94a3b8', fontSize: 11, fontWeight: 850 }}>{label}</span>
-                  <strong style={{ color: '#f8fafc', fontSize: 13, fontWeight: 850, textTransform: label === 'Tipo' ? 'capitalize' : 'none' }}>{value}</strong>
-                </div>
-              ))}
-            </div>
+            <p style={{ color: theme.muted, fontSize: 14, fontWeight: 650, lineHeight: 1.45, margin: 0 }}>{selectedItem.description}</p>
+            <pre style={{ background: '#101828', borderRadius: 14, color: '#E4E7EC', fontSize: 12, lineHeight: 1.55, margin: 0, overflow: 'auto', padding: 14, whiteSpace: 'pre-wrap' }}>
+              <code>{selectedItem.code}</code>
+            </pre>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
-              {selectedAnimation.tags.map((tag) => <span key={tag} style={{ background: '#182232', borderRadius: 999, color: '#cbd5e1', fontSize: 11, fontWeight: 850, padding: '7px 9px' }}>{tag}</span>)}
+              {selectedItem.tags.map((tag) => <span key={tag} style={{ background: '#F4F6F8', borderRadius: 999, color: '#5E6D82', fontSize: 11, fontWeight: 850, padding: '7px 9px' }}>{tag}</span>)}
             </div>
           </div>
         </aside>
