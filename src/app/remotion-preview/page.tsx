@@ -58,24 +58,34 @@ import {
 import {
   AIChatWorkspaceMock,
   AnimatedBarGroup,
+  AnimatedLineChart,
   AuditLogMock,
   BeforeAfterSlider,
   BrowserFrame,
   CalloutConnector,
   CardStack,
+  CharacterReveal,
+  CheckmarkDraw,
+  ClickRipple,
   CommandPaletteMock,
   ConnectionLine,
   CursorPath,
   CursorTrail,
   DashboardMock,
+  DataRowSweep,
+  DeltaBadgeMotion,
   FeatureMatrix,
   FloatingScreenshot,
+  FocusRect,
+  GaugeMotion,
   getSaaSIntroDurationInFrames,
+  GradientTextSweep,
   HotspotPulse,
   InboxTriageMock,
   IntegrationHubMock,
   KanbanMock,
   ledgerAIIntroConfig,
+  LoadingToSuccess,
   LogoCloud,
   MarqueeRow,
   MetricCard,
@@ -90,11 +100,18 @@ import {
   SaaSIntroVideo,
   ScreenCarousel,
   SettingsPermissionsMock,
+  SparklineMotion,
+  StepIndicator,
+  StatusBadgeCycle,
   TableMock,
   TabletFrame,
+  TaskCompletionList,
   TestimonialCard,
+  TextScramble,
   TextHighlightSweep,
+  TooltipCallout,
   TypingText,
+  UnderlineDraw,
   UseCaseCard,
   WordReveal,
   ZoomToRegion,
@@ -466,6 +483,118 @@ function MarqueeRowDemo() {
   )
 }
 
+function CharacterRevealDemo() {
+  return (
+    <DemoStage compact>
+      <CharacterReveal style={{ fontSize: 58, fontWeight: 920, lineHeight: 1.04 }} text="Launch faster" theme={theme} />
+    </DemoStage>
+  )
+}
+
+function TextScrambleDemo() {
+  return (
+    <DemoStage compact>
+      <TextScramble style={{ fontSize: 54, fontWeight: 920, lineHeight: 1.08 }} text="BOARD REPORT READY" theme={theme} />
+    </DemoStage>
+  )
+}
+
+function GradientTextSweepDemo() {
+  return (
+    <DemoStage compact>
+      <GradientTextSweep style={{ fontSize: 58, fontWeight: 940, lineHeight: 1.04 }} text="Automate the work behind every report" theme={theme} />
+    </DemoStage>
+  )
+}
+
+function UnderlineDrawDemo() {
+  return (
+    <DemoStage compact>
+      <UnderlineDraw style={{ fontSize: 56, fontWeight: 920 }} text="Reduce manual close work" theme={theme} />
+    </DemoStage>
+  )
+}
+
+function FocusRectDemo() {
+  return (
+    <DemoStage>
+      <BrowserFrame theme={theme}>
+        <div style={{ height: 560, position: 'relative' }}>
+          <DashboardMock metrics={metrics} screen={productScreens[0]} theme={theme} />
+          <FocusRect height={120} label="Drill into risk" left={520} theme={theme} top={180} width={320} />
+          <ClickRipple delay={42} left={680} theme={theme} top={240} />
+        </div>
+      </BrowserFrame>
+    </DemoStage>
+  )
+}
+
+function TooltipCalloutDemo() {
+  return (
+    <DemoStage>
+      <BrowserFrame theme={theme}>
+        <div style={{ height: 560, position: 'relative' }}>
+          <DashboardMock metrics={metrics} screen={productScreens[0]} theme={theme} />
+          <TooltipCallout delay={16} label="AI found a variance before month-end." left={580} theme={theme} top={160} />
+        </div>
+      </BrowserFrame>
+    </DemoStage>
+  )
+}
+
+function StepIndicatorDemo() {
+  return (
+    <DemoStage compact>
+      <div style={{ display: 'grid', gap: 28, justifyContent: 'center' }}>
+        <StepIndicator activeIndex={1} steps={['Connect', 'Analyze', 'Publish']} theme={theme} />
+        <TaskCompletionList tasks={['Data synced', 'Exceptions reviewed', 'Board pack generated']} theme={theme} />
+      </div>
+    </DemoStage>
+  )
+}
+
+function StatusWorkflowDemo() {
+  return (
+    <DemoStage compact>
+      <div style={{ alignItems: 'center', display: 'flex', gap: 26, justifyContent: 'center' }}>
+        <CheckmarkDraw theme={theme} />
+        <StatusBadgeCycle statuses={['Syncing', 'Reviewing', 'Ready']} theme={theme} />
+        <LoadingToSuccess label="Published" theme={theme} />
+      </div>
+    </DemoStage>
+  )
+}
+
+function AnimatedLineChartDemo() {
+  return (
+    <DemoStage compact>
+      <div style={{ background: '#FFFFFF', border: `1px solid ${theme.border}`, borderRadius: 28, margin: '0 auto', padding: 34, width: 760 }}>
+        <AnimatedLineChart theme={theme} values={[12, 18, 14, 28, 24, 42, 38, 56]} />
+      </div>
+    </DemoStage>
+  )
+}
+
+function SparkGaugeDemo() {
+  return (
+    <DemoStage compact>
+      <div style={{ alignItems: 'center', display: 'flex', gap: 40, justifyContent: 'center' }}>
+        <SparklineMotion theme={theme} values={[12, 20, 16, 32, 28, 44]} />
+        <GaugeMotion label="84%" progress={0.84} theme={theme} />
+        <DeltaBadgeMotion label="+18%" theme={theme} />
+      </div>
+    </DemoStage>
+  )
+}
+
+function DataRowSweepDemo() {
+  return (
+    <DemoStage compact>
+      <DataRowSweep rows={['ERP sync completed', '8 exceptions detected', '3 approvals routed', 'Board summary generated']} theme={theme} />
+    </DemoStage>
+  )
+}
+
 function LogoCloudDemo() {
   return (
     <DemoStage compact>
@@ -805,6 +934,105 @@ const catalog: CatalogItem[] = [
     label: 'MarqueeRow',
     tags: ['Marquee', 'Loop', 'Gallery'],
     value: 'marquee-row',
+  },
+  {
+    code: '<CharacterReveal text="Launch faster" theme={theme} />',
+    component: CharacterRevealDemo,
+    description: 'Revela caracteres individualmente para títulos curtos.',
+    kind: 'Motion',
+    label: 'CharacterReveal',
+    tags: ['Text', 'Characters', 'Reveal'],
+    value: 'character-reveal',
+  },
+  {
+    code: '<TextScramble text="BOARD REPORT READY" theme={theme} />',
+    component: TextScrambleDemo,
+    description: 'Scramble de texto que resolve no conteúdo final.',
+    kind: 'Motion',
+    label: 'TextScramble',
+    tags: ['Text', 'Scramble', 'Premium'],
+    value: 'text-scramble',
+  },
+  {
+    code: '<GradientTextSweep text="Automate the work..." theme={theme} />',
+    component: GradientTextSweepDemo,
+    description: 'Sweep de gradiente passando pelo texto.',
+    kind: 'Motion',
+    label: 'GradientTextSweep',
+    tags: ['Text', 'Gradient', 'Sweep'],
+    value: 'gradient-text-sweep',
+  },
+  {
+    code: '<UnderlineDraw text="Reduce manual close work" theme={theme} />',
+    component: UnderlineDrawDemo,
+    description: 'Underline animado para destacar claims.',
+    kind: 'Motion',
+    label: 'UnderlineDraw',
+    tags: ['Text', 'Underline', 'Claim'],
+    value: 'underline-draw',
+  },
+  {
+    code: '<FocusRect left={520} top={180} width={320} height={120} theme={theme} />',
+    component: FocusRectDemo,
+    description: 'Retângulo de foco para product tours.',
+    kind: 'Motion',
+    label: 'FocusRect + ClickRipple',
+    tags: ['Tour', 'Focus', 'Click'],
+    value: 'focus-rect',
+  },
+  {
+    code: '<TooltipCallout label="AI found a variance" theme={theme} />',
+    component: TooltipCalloutDemo,
+    description: 'Tooltip animado com seta para explicar uma área.',
+    kind: 'Motion',
+    label: 'TooltipCallout',
+    tags: ['Tooltip', 'Callout', 'Tour'],
+    value: 'tooltip-callout',
+  },
+  {
+    code: '<StepIndicator activeIndex={1} steps={steps} theme={theme} />',
+    component: StepIndicatorDemo,
+    description: 'Indicador de etapas com lista de tarefas concluindo.',
+    kind: 'Motion',
+    label: 'StepIndicator + Tasks',
+    tags: ['Steps', 'Tasks', 'Workflow'],
+    value: 'step-indicator',
+  },
+  {
+    code: '<CheckmarkDraw theme={theme} />\n<StatusBadgeCycle statuses={statuses} theme={theme} />',
+    component: StatusWorkflowDemo,
+    description: 'Status e sucesso animados para workflows.',
+    kind: 'Motion',
+    label: 'Status Workflow',
+    tags: ['Status', 'Success', 'Workflow'],
+    value: 'status-workflow',
+  },
+  {
+    code: '<AnimatedLineChart values={values} theme={theme} />',
+    component: AnimatedLineChartDemo,
+    description: 'Linha de gráfico desenhada por SVG.',
+    kind: 'Motion',
+    label: 'AnimatedLineChart',
+    tags: ['Chart', 'Line', 'Data'],
+    value: 'animated-line-chart',
+  },
+  {
+    code: '<SparklineMotion values={values} theme={theme} />\n<GaugeMotion progress={0.84} theme={theme} />',
+    component: SparkGaugeDemo,
+    description: 'Sparkline, gauge e delta badge animados.',
+    kind: 'Motion',
+    label: 'Sparkline + Gauge',
+    tags: ['Sparkline', 'Gauge', 'Delta'],
+    value: 'sparkline-gauge',
+  },
+  {
+    code: '<DataRowSweep rows={rows} theme={theme} />',
+    component: DataRowSweepDemo,
+    description: 'Linhas de tabela acendendo em sequência.',
+    kind: 'Motion',
+    label: 'DataRowSweep',
+    tags: ['Table', 'Rows', 'Sweep'],
+    value: 'data-row-sweep',
   },
   {
     code: '<LogoCloud logos={logos} theme={theme} />',
