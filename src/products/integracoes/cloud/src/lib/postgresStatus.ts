@@ -17,7 +17,7 @@ export type CloudSyncRun = {
   status: string
 }
 
-let pool: Pool | null = null
+let pool: InstanceType<typeof Pool> | null = null
 
 function getDatabaseUrl() {
   return process.env.SUPABASE_DB_URL?.trim() || process.env.DATABASE_URL?.trim() || ''
