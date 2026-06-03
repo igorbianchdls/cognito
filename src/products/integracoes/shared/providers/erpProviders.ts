@@ -123,6 +123,15 @@ export const ERP_PROVIDERS: IntegrationProvider[] = [
     tags: ['brasil', 'ecommerce', 'marketplace'],
   }),
   erpProvider({
+    slug: 'linx',
+    toolkitSlug: 'LINX',
+    name: 'Linx',
+    description: 'ERP e plataforma de varejo para lojas, PDV, estoque, vendas e operacao omnichannel.',
+    authType: 'oauth2',
+    supportsOAuthCallback: true,
+    tags: ['brasil', 'varejo', 'loja-fisica', 'omnichannel', 'pme'],
+  }),
+  erpProvider({
     slug: 'totvs',
     toolkitSlug: 'TOTVS',
     name: 'TOTVS',
