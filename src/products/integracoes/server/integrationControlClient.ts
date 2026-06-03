@@ -135,33 +135,31 @@ export async function requestLocalSync(params: {
   resources?: string[]
   requestedBy?: string
 }): Promise<IntegrationSyncResult | null> {
-  const cloud = await requestCloudControlApi('/sync', {
-    tenantId: params.tenantId,
-    connectionId: params.connectionId,
-    trigger: params.trigger || 'manual',
-    resources: params.resources,
-    requestedBy: params.requestedBy || 'api',
-  })
+  const hasCloudControlApi = Boolean(getCloudControlApiUrl())
   const run = await createIntegrationSyncRun({
     tenantId: params.tenantId,
     connectionId: params.connectionId,
     trigger: params.trigger || 'manual',
-    status: cloud ? 'queued' : 'success',
+    status: hasCloudControlApi ? 'queued' : 'success',
     resources: params.resources,
     metadata: {
       requestedBy: params.requestedBy || 'api',
-      setupMode: cloud ? 'cloud' : 'local_stub',
-      cloudDispatch: cloud
-        ? {
-            mode: cloud.mode,
-            message: cloud.message,
-            messageId: cloud.messageId,
-          }
-        : undefined,
+      setupMode: hasCloudControlApi ? 'cloud' : 'local_stub',
     },
   })
 
   if (!run) return null
+
+  if (hasCloudControlApi) {
+    await requestCloudControlApi('/sync', {
+      tenantId: params.tenantId,
+      connectionId: params.connectionId,
+      runId: run.id,
+      trigger: params.trigger || 'manual',
+      resources: params.resources,
+      requestedBy: params.requestedBy || 'api',
+    })
+  }
 
   return {
     connectionId: run.connectionId,

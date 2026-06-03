@@ -29,6 +29,12 @@ export function mapIntegrationEventTypeToUi(eventType: IntegrationEventType): In
         tone: 'neutral',
         description: 'Campos operacionais da conexão foram alterados.',
       }
+    case 'connection.oauth.connected':
+      return {
+        label: 'OAuth conectado',
+        tone: 'success',
+        description: 'Tokens OAuth foram recebidos e armazenados.',
+      }
     case 'connection.reconnect_requested':
       return {
         label: 'Reconexão solicitada',
@@ -40,6 +46,24 @@ export function mapIntegrationEventTypeToUi(eventType: IntegrationEventType): In
         label: 'Sync solicitado',
         tone: 'progress',
         description: 'Uma execução de sincronização foi pedida.',
+      }
+    case 'sync.resource.started':
+      return {
+        label: 'Recurso iniciado',
+        tone: 'progress',
+        description: 'A sincronização de um recurso começou.',
+      }
+    case 'sync.resource.completed':
+      return {
+        label: 'Recurso concluído',
+        tone: 'success',
+        description: 'A sincronização de um recurso terminou.',
+      }
+    case 'sync.resource.failed':
+      return {
+        label: 'Recurso com erro',
+        tone: 'danger',
+        description: 'A sincronização de um recurso falhou.',
       }
     case 'sync.completed':
       return {

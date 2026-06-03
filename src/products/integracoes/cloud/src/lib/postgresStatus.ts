@@ -103,13 +103,45 @@ export async function getCloudIntegrationConnection(input: {
   }
 }
 
-export async function createCloudSyncRun(input: {
+export async function startCloudSyncRun(input: {
   tenantId: number
   connectionId: string
+  runId?: string | null
   trigger: string
   resources: string[]
   requestedBy?: string | null
 }): Promise<CloudSyncRun> {
+  if (input.runId) {
+    const result = await getPool().query(
+      `UPDATE mcp_app.integration_sync_runs
+       SET
+         status = 'running',
+         started_at = COALESCE(started_at, now()),
+         metadata_json = metadata_json || $4::jsonb
+       WHERE id = $1 AND tenant_id = $2 AND connection_id = $3
+       RETURNING id::text, status`,
+      [
+        input.runId,
+        input.tenantId,
+        input.connectionId,
+        JSON.stringify({
+          mode: 'gcp_worker',
+          resources: input.resources,
+          requestedBy: input.requestedBy || 'worker',
+          workerStartedAt: new Date().toISOString(),
+        }),
+      ],
+    )
+
+    const row = result.rows[0] as { id?: unknown, status?: unknown } | undefined
+    if (row?.id) {
+      return {
+        id: String(row.id),
+        status: String(row.status || 'running'),
+      }
+    }
+  }
+
   const result = await getPool().query(
     `INSERT INTO mcp_app.integration_sync_runs
       (tenant_id, connection_id, trigger, status, started_at, metadata_json)

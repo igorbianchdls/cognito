@@ -61,7 +61,7 @@ Contrato base de conectores:
 - syncs recebem cursor por recurso e podem devolver linhas em `rows` ou lotes em `batches`;
 - chamadas HTTP de provedores devem usar `connectorJsonRequest` para herdar timeout, retry,
   rate-limit e classificacao de erro;
-- OAuth generico usa `/callbacks/oauth` com state assinado e troca o codigo por token antes
+- OAuth generico usa `/callbacks/provider` com state assinado e troca o codigo por token antes
   de marcar a conexao como `connected`.
 
 Entrypoints planejados:

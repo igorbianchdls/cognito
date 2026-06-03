@@ -163,8 +163,12 @@ function normalizeEventType(eventType: unknown): IntegrationEventType {
   if (
     value === 'connection.created' ||
     value === 'connection.updated' ||
+    value === 'connection.oauth.connected' ||
     value === 'connection.reconnect_requested' ||
     value === 'sync.requested' ||
+    value === 'sync.resource.started' ||
+    value === 'sync.resource.completed' ||
+    value === 'sync.resource.failed' ||
     value === 'sync.completed' ||
     value === 'sync.failed' ||
     value === 'auth.callback_received' ||
@@ -521,21 +525,23 @@ export async function createIntegrationSyncRun(params: {
     if (!row) return null
 
     const run = toSyncRun(row)
-    await insertIntegrationEvent(client, {
-      tenantId,
-      connectionId: params.connectionId,
-      eventType: status === 'error' ? 'sync.failed' : 'sync.completed',
-      severity: status === 'error' ? 'error' : status === 'warning' ? 'warning' : 'info',
-      actor: String(params.metadata?.requestedBy || 'api'),
-      message: status === 'error' ? 'Sincronizacao local terminou com erro.' : 'Sincronizacao local concluida.',
-      metadata: {
-        runId: run.id,
-        status: run.status,
-        recordsIn: run.recordsIn,
-        recordsUpdated: run.recordsUpdated,
-        recordsFailed: run.recordsFailed,
-      },
-    })
+    if (status !== 'queued' && status !== 'running') {
+      await insertIntegrationEvent(client, {
+        tenantId,
+        connectionId: params.connectionId,
+        eventType: status === 'error' ? 'sync.failed' : 'sync.completed',
+        severity: status === 'error' ? 'error' : status === 'warning' ? 'warning' : 'info',
+        actor: String(params.metadata?.requestedBy || 'api'),
+        message: status === 'error' ? 'Sincronizacao local terminou com erro.' : 'Sincronizacao local concluida.',
+        metadata: {
+          runId: run.id,
+          status: run.status,
+          recordsIn: run.recordsIn,
+          recordsUpdated: run.recordsUpdated,
+          recordsFailed: run.recordsFailed,
+        },
+      })
+    }
 
     return run
   })

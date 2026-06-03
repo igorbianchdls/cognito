@@ -4,7 +4,7 @@ import { readSecret } from '@/products/integracoes/cloud/src/lib/secretManager'
 import { writeRowsToBigQuery } from '@/products/integracoes/cloud/src/lib/bigquery'
 import {
   createIntegrationEvent,
-  createCloudSyncRun,
+  startCloudSyncRun,
   finishCloudSyncRun,
   getCloudIntegrationConnection,
   readIntegrationCursor,
@@ -14,6 +14,7 @@ import {
 export type RunSyncJobInput = {
   tenantId: number
   connectionId: string
+  runId?: string
   trigger: IntegrationSyncTrigger
   resources?: string[]
   requestedBy?: string
@@ -75,9 +76,10 @@ export async function runSyncJob(input: RunSyncJobInput): Promise<RunSyncJobOutp
     throw new Error(`Conexao ${input.connectionId} nao possui resources selecionados`)
   }
 
-  const run = await createCloudSyncRun({
+  const run = await startCloudSyncRun({
     tenantId: input.tenantId,
     connectionId: input.connectionId,
+    runId: input.runId,
     trigger: input.trigger,
     resources,
     requestedBy: input.requestedBy,

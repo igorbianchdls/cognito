@@ -5923,6 +5923,7 @@ async function publishSyncMessage(input) {
     type: "integration.sync.requested",
     tenantId: input.tenantId,
     connectionId: input.connectionId,
+    runId: input.runId,
     trigger: input.trigger,
     resources: input.resources || [],
     requestedBy: input.requestedBy || "control-api",
@@ -5940,6 +5941,7 @@ async function publishSyncMessage(input) {
         attributes: {
           tenantId: String(input.tenantId),
           connectionId: input.connectionId,
+          ...input.runId ? { runId: input.runId } : {},
           trigger: input.trigger
         }
       }]
@@ -5971,6 +5973,7 @@ function parseSyncDispatchBody(body) {
   return {
     tenantId: typeof body.tenantId === "number" ? body.tenantId : void 0,
     connectionId: typeof body.connectionId === "string" ? body.connectionId : void 0,
+    runId: typeof body.runId === "string" ? body.runId : void 0,
     trigger: typeof body.trigger === "string" && syncTriggers.includes(body.trigger) ? body.trigger : void 0,
     resources: Array.isArray(body.resources) ? body.resources.filter((resource) => typeof resource === "string") : void 0,
     requestedBy: typeof body.requestedBy === "string" ? body.requestedBy : void 0
@@ -5991,6 +5994,7 @@ async function handleSyncDispatch(request) {
     const publish = await publishSyncMessage({
       tenantId: body.tenantId,
       connectionId: body.connectionId,
+      runId: body.runId,
       trigger: body.trigger || "manual",
       resources: body.resources,
       requestedBy: body.requestedBy
@@ -6002,6 +6006,7 @@ async function handleSyncDispatch(request) {
         mode: publish.mode,
         message: "Sync publicado no Pub/Sub.",
         messageId: publish.messageId,
+        runId: body.runId,
         topic: publish.topic
       }
     };

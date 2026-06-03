@@ -5,6 +5,7 @@ import type { IntegrationSyncTrigger } from '@/products/integracoes/shared/contr
 export type PublishSyncMessageInput = {
   connectionId: string
   tenantId: number
+  runId?: string
   trigger: IntegrationSyncTrigger
   resources?: string[]
   requestedBy?: string
@@ -29,6 +30,7 @@ export async function publishSyncMessage(input: PublishSyncMessageInput): Promis
     type: 'integration.sync.requested',
     tenantId: input.tenantId,
     connectionId: input.connectionId,
+    runId: input.runId,
     trigger: input.trigger,
     resources: input.resources || [],
     requestedBy: input.requestedBy || 'control-api',
@@ -47,6 +49,7 @@ export async function publishSyncMessage(input: PublishSyncMessageInput): Promis
         attributes: {
           tenantId: String(input.tenantId),
           connectionId: input.connectionId,
+          ...(input.runId ? { runId: input.runId } : {}),
           trigger: input.trigger,
         },
       }],

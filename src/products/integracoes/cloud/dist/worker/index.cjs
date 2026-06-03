@@ -7470,7 +7470,36 @@ async function getCloudIntegrationConnection(input) {
     metadata: asRecord(row.metadata_json)
   };
 }
-async function createCloudSyncRun(input) {
+async function startCloudSyncRun(input) {
+  if (input.runId) {
+    const result2 = await getPool().query(
+      `UPDATE mcp_app.integration_sync_runs
+       SET
+         status = 'running',
+         started_at = COALESCE(started_at, now()),
+         metadata_json = metadata_json || $4::jsonb
+       WHERE id = $1 AND tenant_id = $2 AND connection_id = $3
+       RETURNING id::text, status`,
+      [
+        input.runId,
+        input.tenantId,
+        input.connectionId,
+        JSON.stringify({
+          mode: "gcp_worker",
+          resources: input.resources,
+          requestedBy: input.requestedBy || "worker",
+          workerStartedAt: (/* @__PURE__ */ new Date()).toISOString()
+        })
+      ]
+    );
+    const row = result2.rows[0];
+    if (row?.id) {
+      return {
+        id: String(row.id),
+        status: String(row.status || "running")
+      };
+    }
+  }
   const result = await getPool().query(
     `INSERT INTO mcp_app.integration_sync_runs
       (tenant_id, connection_id, trigger, status, started_at, metadata_json)
@@ -7647,9 +7676,10 @@ async function runSyncJob(input) {
   if (!resources.length) {
     throw new Error(`Conexao ${input.connectionId} nao possui resources selecionados`);
   }
-  const run = await createCloudSyncRun({
+  const run = await startCloudSyncRun({
     tenantId: input.tenantId,
     connectionId: input.connectionId,
+    runId: input.runId,
     trigger: input.trigger,
     resources,
     requestedBy: input.requestedBy
@@ -7817,6 +7847,7 @@ function normalizePayload(value) {
   return {
     tenantId: typeof value.tenantId === "number" ? value.tenantId : void 0,
     connectionId: typeof value.connectionId === "string" ? value.connectionId : void 0,
+    runId: typeof value.runId === "string" ? value.runId : void 0,
     trigger: typeof value.trigger === "string" && syncTriggers.includes(value.trigger) ? value.trigger : void 0,
     resources: Array.isArray(value.resources) ? value.resources.filter((resource) => typeof resource === "string") : void 0,
     requestedBy: typeof value.requestedBy === "string" ? value.requestedBy : void 0
@@ -7860,6 +7891,7 @@ async function executeWorker(payload) {
   const result = await runSyncJob({
     tenantId: payload.tenantId || Number(process.env.SYNC_TENANT_ID || 1),
     connectionId: payload.connectionId || process.env.SYNC_CONNECTION_ID || "stub",
+    runId: payload.runId || process.env.SYNC_RUN_ID,
     trigger: payload.trigger || parseTrigger(process.env.SYNC_TRIGGER),
     resources: payload.resources,
     requestedBy: payload.requestedBy

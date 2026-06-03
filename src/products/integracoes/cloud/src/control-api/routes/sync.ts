@@ -10,6 +10,7 @@ const syncTriggers: IntegrationSyncTrigger[] = ['manual', 'scheduled', 'webhook'
 type SyncDispatchBody = {
   tenantId?: number
   connectionId?: string
+  runId?: string
   trigger?: IntegrationSyncTrigger
   resources?: string[]
   requestedBy?: string
@@ -25,6 +26,7 @@ function parseSyncDispatchBody(body: unknown): SyncDispatchBody {
   return {
     tenantId: typeof body.tenantId === 'number' ? body.tenantId : undefined,
     connectionId: typeof body.connectionId === 'string' ? body.connectionId : undefined,
+    runId: typeof body.runId === 'string' ? body.runId : undefined,
     trigger: typeof body.trigger === 'string' && syncTriggers.includes(body.trigger as IntegrationSyncTrigger)
       ? body.trigger as IntegrationSyncTrigger
       : undefined,
@@ -51,6 +53,7 @@ export async function handleSyncDispatch(request: ControlApiRequest): Promise<Co
     const publish = await publishSyncMessage({
       tenantId: body.tenantId,
       connectionId: body.connectionId,
+      runId: body.runId,
       trigger: body.trigger || 'manual',
       resources: body.resources,
       requestedBy: body.requestedBy,
@@ -63,6 +66,7 @@ export async function handleSyncDispatch(request: ControlApiRequest): Promise<Co
         mode: publish.mode,
         message: 'Sync publicado no Pub/Sub.',
         messageId: publish.messageId,
+        runId: body.runId,
         topic: publish.topic,
       },
     }
