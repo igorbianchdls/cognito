@@ -92,6 +92,12 @@ type CreateConnectionResponse = {
   ok?: boolean
   error?: string
   connection?: IntegrationConnectionWithUi
+  setup?: {
+    mode?: string
+    message?: string
+    authorizationUrl?: string
+    status?: string
+  }
 }
 
 type SyncResponse = {
@@ -239,6 +245,9 @@ export async function createIntegrationConnection(
   })
 
   if (!payload.connection) throw new Error('Conexão não retornada')
+  if (payload.setup?.authorizationUrl && typeof window !== 'undefined') {
+    window.location.assign(payload.setup.authorizationUrl)
+  }
 
   return payload.connection
 }

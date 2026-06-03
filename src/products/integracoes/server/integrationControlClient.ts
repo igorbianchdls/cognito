@@ -13,6 +13,8 @@ export type LocalSetupResult = {
   mode: 'cloud' | 'local_stub'
   connection: IntegrationConnection
   message: string
+  authorizationUrl?: string
+  status?: string
 }
 
 type CloudControlApiResponse = {
@@ -23,6 +25,7 @@ type CloudControlApiResponse = {
   messageId?: string
   status?: string
   secretRef?: string
+  authorizationUrl?: string
 }
 
 function getCloudControlApiUrl(): string | null {
@@ -76,6 +79,8 @@ export async function prepareConnectionSetup(params: {
       mode: 'cloud',
       connection,
       message: cloud.message || 'Setup enviado ao Cloud Run.',
+      authorizationUrl: cloud.authorizationUrl,
+      status: cloud.status,
     }
   }
 
