@@ -21,4 +21,4 @@ COPY --from=builder /app/src/products/integracoes/cloud/dist/control-api ./dist/
 
 EXPOSE 8080
 
-CMD ["node", "dist/control-api/index.js"]
+CMD ["node", "dist/control-api/index.cjs"]

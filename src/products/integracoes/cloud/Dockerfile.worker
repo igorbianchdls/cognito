@@ -20,4 +20,4 @@ COPY --from=builder /app/src/products/integracoes/cloud/dist/worker ./dist/worke
 
 EXPOSE 8080
 
-CMD ["node", "dist/worker/index.js"]
+CMD ["node", "dist/worker/index.cjs"]

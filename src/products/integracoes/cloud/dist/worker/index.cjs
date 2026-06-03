@@ -1,17 +1,16 @@
+"use strict";
 var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
-  get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
-}) : x)(function(x) {
-  if (typeof require !== "undefined") return require.apply(this, arguments);
-  throw Error('Dynamic require of "' + x + '" is not supported');
-});
-var __commonJS = (cb, mod) => function __require2() {
+var __commonJS = (cb, mod) => function __require() {
   return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+};
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
 };
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
@@ -29,12 +28,13 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
   mod
 ));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
 // node_modules/.pnpm/postgres-array@2.0.0/node_modules/postgres-array/index.js
 var require_postgres_array = __commonJS({
-  "node_modules/.pnpm/postgres-array@2.0.0/node_modules/postgres-array/index.js"(exports) {
+  "node_modules/.pnpm/postgres-array@2.0.0/node_modules/postgres-array/index.js"(exports2) {
     "use strict";
-    exports.parse = function(source, transform) {
+    exports2.parse = function(source, transform) {
       return new ArrayParser(source, transform).parse();
     };
     var ArrayParser = class _ArrayParser {
@@ -126,9 +126,9 @@ var require_postgres_array = __commonJS({
 
 // node_modules/.pnpm/pg-types@2.2.0/node_modules/pg-types/lib/arrayParser.js
 var require_arrayParser = __commonJS({
-  "node_modules/.pnpm/pg-types@2.2.0/node_modules/pg-types/lib/arrayParser.js"(exports, module) {
+  "node_modules/.pnpm/pg-types@2.2.0/node_modules/pg-types/lib/arrayParser.js"(exports2, module2) {
     var array = require_postgres_array();
-    module.exports = {
+    module2.exports = {
       create: function(source, transform) {
         return {
           parse: function() {
@@ -142,13 +142,13 @@ var require_arrayParser = __commonJS({
 
 // node_modules/.pnpm/postgres-date@1.0.7/node_modules/postgres-date/index.js
 var require_postgres_date = __commonJS({
-  "node_modules/.pnpm/postgres-date@1.0.7/node_modules/postgres-date/index.js"(exports, module) {
+  "node_modules/.pnpm/postgres-date@1.0.7/node_modules/postgres-date/index.js"(exports2, module2) {
     "use strict";
     var DATE_TIME = /(\d{1,})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\.\d{1,})?.*?( BC)?$/;
     var DATE = /^(\d{1,})-(\d{2})-(\d{2})( BC)?$/;
     var TIME_ZONE = /([Z+-])(\d{2})?:?(\d{2})?:?(\d{2})?/;
     var INFINITY = /^-?infinity$/;
-    module.exports = function parseDate(isoDate) {
+    module2.exports = function parseDate(isoDate) {
       if (INFINITY.test(isoDate)) {
         return Number(isoDate.replace("i", "I"));
       }
@@ -229,8 +229,8 @@ var require_postgres_date = __commonJS({
 
 // node_modules/.pnpm/xtend@4.0.2/node_modules/xtend/mutable.js
 var require_mutable = __commonJS({
-  "node_modules/.pnpm/xtend@4.0.2/node_modules/xtend/mutable.js"(exports, module) {
-    module.exports = extend;
+  "node_modules/.pnpm/xtend@4.0.2/node_modules/xtend/mutable.js"(exports2, module2) {
+    module2.exports = extend;
     var hasOwnProperty = Object.prototype.hasOwnProperty;
     function extend(target) {
       for (var i = 1; i < arguments.length; i++) {
@@ -248,10 +248,10 @@ var require_mutable = __commonJS({
 
 // node_modules/.pnpm/postgres-interval@1.2.0/node_modules/postgres-interval/index.js
 var require_postgres_interval = __commonJS({
-  "node_modules/.pnpm/postgres-interval@1.2.0/node_modules/postgres-interval/index.js"(exports, module) {
+  "node_modules/.pnpm/postgres-interval@1.2.0/node_modules/postgres-interval/index.js"(exports2, module2) {
     "use strict";
     var extend = require_mutable();
-    module.exports = PostgresInterval;
+    module2.exports = PostgresInterval;
     function PostgresInterval(raw) {
       if (!(this instanceof PostgresInterval)) {
         return new PostgresInterval(raw);
@@ -339,9 +339,9 @@ var require_postgres_interval = __commonJS({
 
 // node_modules/.pnpm/postgres-bytea@1.0.0/node_modules/postgres-bytea/index.js
 var require_postgres_bytea = __commonJS({
-  "node_modules/.pnpm/postgres-bytea@1.0.0/node_modules/postgres-bytea/index.js"(exports, module) {
+  "node_modules/.pnpm/postgres-bytea@1.0.0/node_modules/postgres-bytea/index.js"(exports2, module2) {
     "use strict";
-    module.exports = function parseBytea(input) {
+    module2.exports = function parseBytea(input) {
       if (/^\\x/.test(input)) {
         return new Buffer(input.substr(2), "hex");
       }
@@ -374,7 +374,7 @@ var require_postgres_bytea = __commonJS({
 
 // node_modules/.pnpm/pg-types@2.2.0/node_modules/pg-types/lib/textParsers.js
 var require_textParsers = __commonJS({
-  "node_modules/.pnpm/pg-types@2.2.0/node_modules/pg-types/lib/textParsers.js"(exports, module) {
+  "node_modules/.pnpm/pg-types@2.2.0/node_modules/pg-types/lib/textParsers.js"(exports2, module2) {
     var array = require_postgres_array();
     var arrayParser = require_arrayParser();
     var parseDate = require_postgres_date();
@@ -566,7 +566,7 @@ var require_textParsers = __commonJS({
       register(1183, parseStringArray);
       register(1270, parseStringArray);
     };
-    module.exports = {
+    module2.exports = {
       init
     };
   }
@@ -574,7 +574,7 @@ var require_textParsers = __commonJS({
 
 // node_modules/.pnpm/pg-int8@1.0.1/node_modules/pg-int8/index.js
 var require_pg_int8 = __commonJS({
-  "node_modules/.pnpm/pg-int8@1.0.1/node_modules/pg-int8/index.js"(exports, module) {
+  "node_modules/.pnpm/pg-int8@1.0.1/node_modules/pg-int8/index.js"(exports2, module2) {
     "use strict";
     var BASE = 1e6;
     function readInt8(buffer) {
@@ -648,13 +648,13 @@ var require_pg_int8 = __commonJS({
         return sign + digits + result;
       }
     }
-    module.exports = readInt8;
+    module2.exports = readInt8;
   }
 });
 
 // node_modules/.pnpm/pg-types@2.2.0/node_modules/pg-types/lib/binaryParsers.js
 var require_binaryParsers = __commonJS({
-  "node_modules/.pnpm/pg-types@2.2.0/node_modules/pg-types/lib/binaryParsers.js"(exports, module) {
+  "node_modules/.pnpm/pg-types@2.2.0/node_modules/pg-types/lib/binaryParsers.js"(exports2, module2) {
     var parseInt64 = require_pg_int8();
     var parseBits = function(data, bits, offset, invert, callback) {
       offset = offset || 0;
@@ -846,7 +846,7 @@ var require_binaryParsers = __commonJS({
       register(1009, parseArray);
       register(25, parseText);
     };
-    module.exports = {
+    module2.exports = {
       init
     };
   }
@@ -854,8 +854,8 @@ var require_binaryParsers = __commonJS({
 
 // node_modules/.pnpm/pg-types@2.2.0/node_modules/pg-types/lib/builtins.js
 var require_builtins = __commonJS({
-  "node_modules/.pnpm/pg-types@2.2.0/node_modules/pg-types/lib/builtins.js"(exports, module) {
-    module.exports = {
+  "node_modules/.pnpm/pg-types@2.2.0/node_modules/pg-types/lib/builtins.js"(exports2, module2) {
+    module2.exports = {
       BOOL: 16,
       BYTEA: 17,
       CHAR: 18,
@@ -922,15 +922,15 @@ var require_builtins = __commonJS({
 
 // node_modules/.pnpm/pg-types@2.2.0/node_modules/pg-types/index.js
 var require_pg_types = __commonJS({
-  "node_modules/.pnpm/pg-types@2.2.0/node_modules/pg-types/index.js"(exports) {
+  "node_modules/.pnpm/pg-types@2.2.0/node_modules/pg-types/index.js"(exports2) {
     var textParsers = require_textParsers();
     var binaryParsers = require_binaryParsers();
     var arrayParser = require_arrayParser();
     var builtinTypes = require_builtins();
-    exports.getTypeParser = getTypeParser;
-    exports.setTypeParser = setTypeParser;
-    exports.arrayParser = arrayParser;
-    exports.builtins = builtinTypes;
+    exports2.getTypeParser = getTypeParser;
+    exports2.setTypeParser = setTypeParser;
+    exports2.arrayParser = arrayParser;
+    exports2.builtins = builtinTypes;
     var typeParsers = {
       text: {},
       binary: {}
@@ -963,9 +963,9 @@ var require_pg_types = __commonJS({
 
 // node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/defaults.js
 var require_defaults = __commonJS({
-  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/defaults.js"(exports, module) {
+  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/defaults.js"(exports2, module2) {
     "use strict";
-    module.exports = {
+    module2.exports = {
       // database host. defaults to localhost
       host: "localhost",
       // database user's name
@@ -1016,7 +1016,7 @@ var require_defaults = __commonJS({
     var pgTypes = require_pg_types();
     var parseBigInteger = pgTypes.getTypeParser(20, "text");
     var parseBigIntegerArray = pgTypes.getTypeParser(1016, "text");
-    module.exports.__defineSetter__("parseInt8", function(val) {
+    module2.exports.__defineSetter__("parseInt8", function(val) {
       pgTypes.setTypeParser(20, "text", val ? pgTypes.getTypeParser(23, "text") : parseBigInteger);
       pgTypes.setTypeParser(1016, "text", val ? pgTypes.getTypeParser(1007, "text") : parseBigIntegerArray);
     });
@@ -1025,10 +1025,10 @@ var require_defaults = __commonJS({
 
 // node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/utils.js
 var require_utils = __commonJS({
-  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/utils.js"(exports, module) {
+  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/utils.js"(exports2, module2) {
     "use strict";
     var defaults2 = require_defaults();
-    var util = __require("util");
+    var util = require("util");
     var { isDate } = util.types || util;
     function escapeElement(elementRepresentation) {
       const escaped = elementRepresentation.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
@@ -1170,7 +1170,7 @@ var require_utils = __commonJS({
       }
       return escaped;
     };
-    module.exports = {
+    module2.exports = {
       prepareValue: function prepareValueWrapper(value) {
         return prepareValue(value);
       },
@@ -1183,9 +1183,9 @@ var require_utils = __commonJS({
 
 // node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/crypto/utils-legacy.js
 var require_utils_legacy = __commonJS({
-  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/crypto/utils-legacy.js"(exports, module) {
+  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/crypto/utils-legacy.js"(exports2, module2) {
     "use strict";
-    var nodeCrypto = __require("crypto");
+    var nodeCrypto = require("crypto");
     function md5(string) {
       return nodeCrypto.createHash("md5").update(string, "utf-8").digest("hex");
     }
@@ -1207,7 +1207,7 @@ var require_utils_legacy = __commonJS({
     async function deriveKey(password, salt, iterations) {
       return nodeCrypto.pbkdf2Sync(password, salt, iterations, 32, "sha256");
     }
-    module.exports = {
+    module2.exports = {
       postgresMd5PasswordHash,
       randomBytes: nodeCrypto.randomBytes,
       deriveKey,
@@ -1221,9 +1221,9 @@ var require_utils_legacy = __commonJS({
 
 // node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/crypto/utils-webcrypto.js
 var require_utils_webcrypto = __commonJS({
-  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/crypto/utils-webcrypto.js"(exports, module) {
-    var nodeCrypto = __require("crypto");
-    module.exports = {
+  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/crypto/utils-webcrypto.js"(exports2, module2) {
+    var nodeCrypto = require("crypto");
+    module2.exports = {
       postgresMd5PasswordHash,
       randomBytes,
       deriveKey,
@@ -1272,20 +1272,20 @@ var require_utils_webcrypto = __commonJS({
 
 // node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/crypto/utils.js
 var require_utils2 = __commonJS({
-  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/crypto/utils.js"(exports, module) {
+  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/crypto/utils.js"(exports2, module2) {
     "use strict";
     var useLegacyCrypto = parseInt(process.versions && process.versions.node && process.versions.node.split(".")[0]) < 15;
     if (useLegacyCrypto) {
-      module.exports = require_utils_legacy();
+      module2.exports = require_utils_legacy();
     } else {
-      module.exports = require_utils_webcrypto();
+      module2.exports = require_utils_webcrypto();
     }
   }
 });
 
 // node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/crypto/cert-signatures.js
 var require_cert_signatures = __commonJS({
-  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/crypto/cert-signatures.js"(exports, module) {
+  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/crypto/cert-signatures.js"(exports2, module2) {
     function x509Error(msg, cert) {
       return new Error("SASL channel binding: " + msg + " when parsing public certificate " + cert.toString("base64"));
     }
@@ -1392,13 +1392,13 @@ var require_cert_signatures = __commonJS({
       }
       throw x509Error("unknown OID " + oid, data);
     }
-    module.exports = { signatureAlgorithmHashFromCertificate };
+    module2.exports = { signatureAlgorithmHashFromCertificate };
   }
 });
 
 // node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/crypto/sasl.js
 var require_sasl = __commonJS({
-  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/crypto/sasl.js"(exports, module) {
+  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/crypto/sasl.js"(exports2, module2) {
     "use strict";
     var crypto = require_utils2();
     var { signatureAlgorithmHashFromCertificate } = require_cert_signatures();
@@ -1555,7 +1555,7 @@ var require_sasl = __commonJS({
       }
       return Buffer.from(a.map((_, i) => a[i] ^ b[i]));
     }
-    module.exports = {
+    module2.exports = {
       startSession,
       continueSession,
       finalizeSession
@@ -1565,7 +1565,7 @@ var require_sasl = __commonJS({
 
 // node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/type-overrides.js
 var require_type_overrides = __commonJS({
-  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/type-overrides.js"(exports, module) {
+  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/type-overrides.js"(exports2, module2) {
     "use strict";
     var types2 = require_pg_types();
     function TypeOverrides2(userTypes) {
@@ -1594,13 +1594,13 @@ var require_type_overrides = __commonJS({
       format = format || "text";
       return this.getOverrides(format)[oid] || this._types.getTypeParser(oid, format);
     };
-    module.exports = TypeOverrides2;
+    module2.exports = TypeOverrides2;
   }
 });
 
 // node_modules/.pnpm/pg-connection-string@2.9.1/node_modules/pg-connection-string/index.js
 var require_pg_connection_string = __commonJS({
-  "node_modules/.pnpm/pg-connection-string@2.9.1/node_modules/pg-connection-string/index.js"(exports, module) {
+  "node_modules/.pnpm/pg-connection-string@2.9.1/node_modules/pg-connection-string/index.js"(exports2, module2) {
     "use strict";
     function parse(str, options = {}) {
       if (str.charAt(0) === "/") {
@@ -1654,7 +1654,7 @@ var require_pg_connection_string = __commonJS({
       if (config.sslcert || config.sslkey || config.sslrootcert || config.sslmode) {
         config.ssl = {};
       }
-      const fs = config.sslcert || config.sslkey || config.sslrootcert ? __require("fs") : null;
+      const fs = config.sslcert || config.sslkey || config.sslrootcert ? require("fs") : null;
       if (config.sslcert) {
         config.ssl.cert = fs.readFileSync(config.sslcert).toString();
       }
@@ -1759,7 +1759,7 @@ var require_pg_connection_string = __commonJS({
     function parseIntoClientConfig(str) {
       return toClientConfig(parse(str));
     }
-    module.exports = parse;
+    module2.exports = parse;
     parse.parse = parse;
     parse.toClientConfig = toClientConfig;
     parse.parseIntoClientConfig = parseIntoClientConfig;
@@ -1768,9 +1768,9 @@ var require_pg_connection_string = __commonJS({
 
 // node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/connection-parameters.js
 var require_connection_parameters = __commonJS({
-  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/connection-parameters.js"(exports, module) {
+  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/connection-parameters.js"(exports2, module2) {
     "use strict";
-    var dns = __require("dns");
+    var dns = require("dns");
     var defaults2 = require_defaults();
     var parse = require_pg_connection_string().parse;
     var val = function(key, config, envVar) {
@@ -1900,13 +1900,13 @@ var require_connection_parameters = __commonJS({
         });
       }
     };
-    module.exports = ConnectionParameters;
+    module2.exports = ConnectionParameters;
   }
 });
 
 // node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/result.js
 var require_result = __commonJS({
-  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/result.js"(exports, module) {
+  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/result.js"(exports2, module2) {
     "use strict";
     var types2 = require_pg_types();
     var matchRegexp = /^([A-Za-z]+)(?: (\d+))?(?: (\d+))?/;
@@ -1991,15 +1991,15 @@ var require_result = __commonJS({
         this._prebuiltEmptyResultObject = { ...row };
       }
     };
-    module.exports = Result2;
+    module2.exports = Result2;
   }
 });
 
 // node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/query.js
 var require_query = __commonJS({
-  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/query.js"(exports, module) {
+  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/query.js"(exports2, module2) {
     "use strict";
-    var { EventEmitter } = __require("events");
+    var { EventEmitter } = require("events");
     var Result2 = require_result();
     var utils = require_utils();
     var Query2 = class extends EventEmitter {
@@ -2188,45 +2188,45 @@ var require_query = __commonJS({
       handleCopyData(msg, connection) {
       }
     };
-    module.exports = Query2;
+    module2.exports = Query2;
   }
 });
 
 // node_modules/.pnpm/pg-protocol@1.10.3/node_modules/pg-protocol/dist/messages.js
 var require_messages = __commonJS({
-  "node_modules/.pnpm/pg-protocol@1.10.3/node_modules/pg-protocol/dist/messages.js"(exports) {
+  "node_modules/.pnpm/pg-protocol@1.10.3/node_modules/pg-protocol/dist/messages.js"(exports2) {
     "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.NoticeMessage = exports.DataRowMessage = exports.CommandCompleteMessage = exports.ReadyForQueryMessage = exports.NotificationResponseMessage = exports.BackendKeyDataMessage = exports.AuthenticationMD5Password = exports.ParameterStatusMessage = exports.ParameterDescriptionMessage = exports.RowDescriptionMessage = exports.Field = exports.CopyResponse = exports.CopyDataMessage = exports.DatabaseError = exports.copyDone = exports.emptyQuery = exports.replicationStart = exports.portalSuspended = exports.noData = exports.closeComplete = exports.bindComplete = exports.parseComplete = void 0;
-    exports.parseComplete = {
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.NoticeMessage = exports2.DataRowMessage = exports2.CommandCompleteMessage = exports2.ReadyForQueryMessage = exports2.NotificationResponseMessage = exports2.BackendKeyDataMessage = exports2.AuthenticationMD5Password = exports2.ParameterStatusMessage = exports2.ParameterDescriptionMessage = exports2.RowDescriptionMessage = exports2.Field = exports2.CopyResponse = exports2.CopyDataMessage = exports2.DatabaseError = exports2.copyDone = exports2.emptyQuery = exports2.replicationStart = exports2.portalSuspended = exports2.noData = exports2.closeComplete = exports2.bindComplete = exports2.parseComplete = void 0;
+    exports2.parseComplete = {
       name: "parseComplete",
       length: 5
     };
-    exports.bindComplete = {
+    exports2.bindComplete = {
       name: "bindComplete",
       length: 5
     };
-    exports.closeComplete = {
+    exports2.closeComplete = {
       name: "closeComplete",
       length: 5
     };
-    exports.noData = {
+    exports2.noData = {
       name: "noData",
       length: 5
     };
-    exports.portalSuspended = {
+    exports2.portalSuspended = {
       name: "portalSuspended",
       length: 5
     };
-    exports.replicationStart = {
+    exports2.replicationStart = {
       name: "replicationStart",
       length: 4
     };
-    exports.emptyQuery = {
+    exports2.emptyQuery = {
       name: "emptyQuery",
       length: 4
     };
-    exports.copyDone = {
+    exports2.copyDone = {
       name: "copyDone",
       length: 4
     };
@@ -2237,7 +2237,7 @@ var require_messages = __commonJS({
         this.name = name;
       }
     };
-    exports.DatabaseError = DatabaseError2;
+    exports2.DatabaseError = DatabaseError2;
     var CopyDataMessage = class {
       constructor(length, chunk) {
         this.length = length;
@@ -2245,7 +2245,7 @@ var require_messages = __commonJS({
         this.name = "copyData";
       }
     };
-    exports.CopyDataMessage = CopyDataMessage;
+    exports2.CopyDataMessage = CopyDataMessage;
     var CopyResponse = class {
       constructor(length, name, binary, columnCount) {
         this.length = length;
@@ -2254,7 +2254,7 @@ var require_messages = __commonJS({
         this.columnTypes = new Array(columnCount);
       }
     };
-    exports.CopyResponse = CopyResponse;
+    exports2.CopyResponse = CopyResponse;
     var Field = class {
       constructor(name, tableID, columnID, dataTypeID, dataTypeSize, dataTypeModifier, format) {
         this.name = name;
@@ -2266,7 +2266,7 @@ var require_messages = __commonJS({
         this.format = format;
       }
     };
-    exports.Field = Field;
+    exports2.Field = Field;
     var RowDescriptionMessage = class {
       constructor(length, fieldCount) {
         this.length = length;
@@ -2275,7 +2275,7 @@ var require_messages = __commonJS({
         this.fields = new Array(this.fieldCount);
       }
     };
-    exports.RowDescriptionMessage = RowDescriptionMessage;
+    exports2.RowDescriptionMessage = RowDescriptionMessage;
     var ParameterDescriptionMessage = class {
       constructor(length, parameterCount) {
         this.length = length;
@@ -2284,7 +2284,7 @@ var require_messages = __commonJS({
         this.dataTypeIDs = new Array(this.parameterCount);
       }
     };
-    exports.ParameterDescriptionMessage = ParameterDescriptionMessage;
+    exports2.ParameterDescriptionMessage = ParameterDescriptionMessage;
     var ParameterStatusMessage = class {
       constructor(length, parameterName, parameterValue) {
         this.length = length;
@@ -2293,7 +2293,7 @@ var require_messages = __commonJS({
         this.name = "parameterStatus";
       }
     };
-    exports.ParameterStatusMessage = ParameterStatusMessage;
+    exports2.ParameterStatusMessage = ParameterStatusMessage;
     var AuthenticationMD5Password = class {
       constructor(length, salt) {
         this.length = length;
@@ -2301,7 +2301,7 @@ var require_messages = __commonJS({
         this.name = "authenticationMD5Password";
       }
     };
-    exports.AuthenticationMD5Password = AuthenticationMD5Password;
+    exports2.AuthenticationMD5Password = AuthenticationMD5Password;
     var BackendKeyDataMessage = class {
       constructor(length, processID, secretKey) {
         this.length = length;
@@ -2310,7 +2310,7 @@ var require_messages = __commonJS({
         this.name = "backendKeyData";
       }
     };
-    exports.BackendKeyDataMessage = BackendKeyDataMessage;
+    exports2.BackendKeyDataMessage = BackendKeyDataMessage;
     var NotificationResponseMessage = class {
       constructor(length, processId, channel, payload) {
         this.length = length;
@@ -2320,7 +2320,7 @@ var require_messages = __commonJS({
         this.name = "notification";
       }
     };
-    exports.NotificationResponseMessage = NotificationResponseMessage;
+    exports2.NotificationResponseMessage = NotificationResponseMessage;
     var ReadyForQueryMessage = class {
       constructor(length, status) {
         this.length = length;
@@ -2328,7 +2328,7 @@ var require_messages = __commonJS({
         this.name = "readyForQuery";
       }
     };
-    exports.ReadyForQueryMessage = ReadyForQueryMessage;
+    exports2.ReadyForQueryMessage = ReadyForQueryMessage;
     var CommandCompleteMessage = class {
       constructor(length, text) {
         this.length = length;
@@ -2336,7 +2336,7 @@ var require_messages = __commonJS({
         this.name = "commandComplete";
       }
     };
-    exports.CommandCompleteMessage = CommandCompleteMessage;
+    exports2.CommandCompleteMessage = CommandCompleteMessage;
     var DataRowMessage = class {
       constructor(length, fields) {
         this.length = length;
@@ -2345,7 +2345,7 @@ var require_messages = __commonJS({
         this.fieldCount = fields.length;
       }
     };
-    exports.DataRowMessage = DataRowMessage;
+    exports2.DataRowMessage = DataRowMessage;
     var NoticeMessage = class {
       constructor(length, message) {
         this.length = length;
@@ -2353,16 +2353,16 @@ var require_messages = __commonJS({
         this.name = "notice";
       }
     };
-    exports.NoticeMessage = NoticeMessage;
+    exports2.NoticeMessage = NoticeMessage;
   }
 });
 
 // node_modules/.pnpm/pg-protocol@1.10.3/node_modules/pg-protocol/dist/buffer-writer.js
 var require_buffer_writer = __commonJS({
-  "node_modules/.pnpm/pg-protocol@1.10.3/node_modules/pg-protocol/dist/buffer-writer.js"(exports) {
+  "node_modules/.pnpm/pg-protocol@1.10.3/node_modules/pg-protocol/dist/buffer-writer.js"(exports2) {
     "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.Writer = void 0;
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.Writer = void 0;
     var Writer = class {
       constructor(size = 256) {
         this.size = size;
@@ -2434,16 +2434,16 @@ var require_buffer_writer = __commonJS({
         return result;
       }
     };
-    exports.Writer = Writer;
+    exports2.Writer = Writer;
   }
 });
 
 // node_modules/.pnpm/pg-protocol@1.10.3/node_modules/pg-protocol/dist/serializer.js
 var require_serializer = __commonJS({
-  "node_modules/.pnpm/pg-protocol@1.10.3/node_modules/pg-protocol/dist/serializer.js"(exports) {
+  "node_modules/.pnpm/pg-protocol@1.10.3/node_modules/pg-protocol/dist/serializer.js"(exports2) {
     "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.serialize = void 0;
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.serialize = void 0;
     var buffer_writer_1 = require_buffer_writer();
     var writer = new buffer_writer_1.Writer();
     var startup = (opts) => {
@@ -2651,16 +2651,16 @@ var require_serializer = __commonJS({
       copyFail,
       cancel
     };
-    exports.serialize = serialize;
+    exports2.serialize = serialize;
   }
 });
 
 // node_modules/.pnpm/pg-protocol@1.10.3/node_modules/pg-protocol/dist/buffer-reader.js
 var require_buffer_reader = __commonJS({
-  "node_modules/.pnpm/pg-protocol@1.10.3/node_modules/pg-protocol/dist/buffer-reader.js"(exports) {
+  "node_modules/.pnpm/pg-protocol@1.10.3/node_modules/pg-protocol/dist/buffer-reader.js"(exports2) {
     "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.BufferReader = void 0;
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.BufferReader = void 0;
     var emptyBuffer = Buffer.allocUnsafe(0);
     var BufferReader = class {
       constructor(offset = 0) {
@@ -2711,16 +2711,16 @@ var require_buffer_reader = __commonJS({
         return result;
       }
     };
-    exports.BufferReader = BufferReader;
+    exports2.BufferReader = BufferReader;
   }
 });
 
 // node_modules/.pnpm/pg-protocol@1.10.3/node_modules/pg-protocol/dist/parser.js
 var require_parser = __commonJS({
-  "node_modules/.pnpm/pg-protocol@1.10.3/node_modules/pg-protocol/dist/parser.js"(exports) {
+  "node_modules/.pnpm/pg-protocol@1.10.3/node_modules/pg-protocol/dist/parser.js"(exports2) {
     "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.Parser = void 0;
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.Parser = void 0;
     var messages_1 = require_messages();
     var buffer_reader_1 = require_buffer_reader();
     var CODE_LENGTH = 1;
@@ -3004,22 +3004,22 @@ var require_parser = __commonJS({
         return message;
       }
     };
-    exports.Parser = Parser;
+    exports2.Parser = Parser;
   }
 });
 
 // node_modules/.pnpm/pg-protocol@1.10.3/node_modules/pg-protocol/dist/index.js
 var require_dist = __commonJS({
-  "node_modules/.pnpm/pg-protocol@1.10.3/node_modules/pg-protocol/dist/index.js"(exports) {
+  "node_modules/.pnpm/pg-protocol@1.10.3/node_modules/pg-protocol/dist/index.js"(exports2) {
     "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.DatabaseError = exports.serialize = exports.parse = void 0;
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.DatabaseError = exports2.serialize = exports2.parse = void 0;
     var messages_1 = require_messages();
-    Object.defineProperty(exports, "DatabaseError", { enumerable: true, get: function() {
+    Object.defineProperty(exports2, "DatabaseError", { enumerable: true, get: function() {
       return messages_1.DatabaseError;
     } });
     var serializer_1 = require_serializer();
-    Object.defineProperty(exports, "serialize", { enumerable: true, get: function() {
+    Object.defineProperty(exports2, "serialize", { enumerable: true, get: function() {
       return serializer_1.serialize;
     } });
     var parser_1 = require_parser();
@@ -3028,24 +3028,24 @@ var require_dist = __commonJS({
       stream.on("data", (buffer) => parser.parse(buffer, callback));
       return new Promise((resolve) => stream.on("end", () => resolve()));
     }
-    exports.parse = parse;
+    exports2.parse = parse;
   }
 });
 
 // node_modules/.pnpm/pg-cloudflare@1.2.7/node_modules/pg-cloudflare/dist/empty.js
 var require_empty = __commonJS({
-  "node_modules/.pnpm/pg-cloudflare@1.2.7/node_modules/pg-cloudflare/dist/empty.js"(exports) {
+  "node_modules/.pnpm/pg-cloudflare@1.2.7/node_modules/pg-cloudflare/dist/empty.js"(exports2) {
     "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.default = {};
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.default = {};
   }
 });
 
 // node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/stream.js
 var require_stream = __commonJS({
-  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/stream.js"(exports, module) {
+  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/stream.js"(exports2, module2) {
     var { getStream, getSecureStream } = getStreamFuncs();
-    module.exports = {
+    module2.exports = {
       /**
        * Get a socket stream compatible with the current runtime environment.
        * @returns {Duplex}
@@ -3060,11 +3060,11 @@ var require_stream = __commonJS({
     };
     function getNodejsStreamFuncs() {
       function getStream2(ssl) {
-        const net = __require("net");
+        const net = require("net");
         return new net.Socket();
       }
       function getSecureStream2(options) {
-        const tls = __require("tls");
+        const tls = require("tls");
         return tls.connect(options);
       }
       return {
@@ -3109,9 +3109,9 @@ var require_stream = __commonJS({
 
 // node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/connection.js
 var require_connection = __commonJS({
-  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/connection.js"(exports, module) {
+  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/connection.js"(exports2, module2) {
     "use strict";
-    var EventEmitter = __require("events").EventEmitter;
+    var EventEmitter = require("events").EventEmitter;
     var { parse, serialize } = require_dist();
     var { getStream, getSecureStream } = require_stream();
     var flushBuffer = serialize.flush();
@@ -3184,7 +3184,7 @@ var require_connection = __commonJS({
               options.key = self.ssl.key;
             }
           }
-          const net = __require("net");
+          const net = require("net");
           if (net.isIP && net.isIP(host) === 0) {
             options.servername = host;
           }
@@ -3287,16 +3287,16 @@ var require_connection = __commonJS({
         this._send(serialize.copyFail(msg));
       }
     };
-    module.exports = Connection2;
+    module2.exports = Connection2;
   }
 });
 
 // node_modules/.pnpm/split2@4.2.0/node_modules/split2/index.js
 var require_split2 = __commonJS({
-  "node_modules/.pnpm/split2@4.2.0/node_modules/split2/index.js"(exports, module) {
+  "node_modules/.pnpm/split2@4.2.0/node_modules/split2/index.js"(exports2, module2) {
     "use strict";
-    var { Transform } = __require("stream");
-    var { StringDecoder } = __require("string_decoder");
+    var { Transform } = require("stream");
+    var { StringDecoder } = require("string_decoder");
     var kLast = /* @__PURE__ */ Symbol("last");
     var kDecoder = /* @__PURE__ */ Symbol("decoder");
     function transform(chunk, enc, cb) {
@@ -3388,18 +3388,18 @@ var require_split2 = __commonJS({
       };
       return stream;
     }
-    module.exports = split;
+    module2.exports = split;
   }
 });
 
 // node_modules/.pnpm/pgpass@1.0.5/node_modules/pgpass/lib/helper.js
 var require_helper = __commonJS({
-  "node_modules/.pnpm/pgpass@1.0.5/node_modules/pgpass/lib/helper.js"(exports, module) {
+  "node_modules/.pnpm/pgpass@1.0.5/node_modules/pgpass/lib/helper.js"(exports2, module2) {
     "use strict";
-    var path = __require("path");
-    var Stream = __require("stream").Stream;
+    var path = require("path");
+    var Stream = require("stream").Stream;
     var split = require_split2();
-    var util = __require("util");
+    var util = require("util");
     var defaultPort = 5432;
     var isWin = process.platform === "win32";
     var warnStream = process.stderr;
@@ -3420,7 +3420,7 @@ var require_helper = __commonJS({
         warnStream.write(util.format.apply(util, args));
       }
     }
-    Object.defineProperty(module.exports, "isWin", {
+    Object.defineProperty(module2.exports, "isWin", {
       get: function() {
         return isWin;
       },
@@ -3428,17 +3428,17 @@ var require_helper = __commonJS({
         isWin = val;
       }
     });
-    module.exports.warnTo = function(stream) {
+    module2.exports.warnTo = function(stream) {
       var old = warnStream;
       warnStream = stream;
       return old;
     };
-    module.exports.getFileName = function(rawEnv) {
+    module2.exports.getFileName = function(rawEnv) {
       var env2 = rawEnv || process.env;
       var file = env2.PGPASSFILE || (isWin ? path.join(env2.APPDATA || "./", "postgresql", "pgpass.conf") : path.join(env2.HOME || "./", ".pgpass"));
       return file;
     };
-    module.exports.usePgPass = function(stats, fname) {
+    module2.exports.usePgPass = function(stats, fname) {
       if (Object.prototype.hasOwnProperty.call(process.env, "PGPASSWORD")) {
         return false;
       }
@@ -3456,7 +3456,7 @@ var require_helper = __commonJS({
       }
       return true;
     };
-    var matcher = module.exports.match = function(connInfo, entry) {
+    var matcher = module2.exports.match = function(connInfo, entry) {
       return fieldNames.slice(0, -1).reduce(function(prev, field, idx) {
         if (idx == 1) {
           if (Number(connInfo[field] || defaultPort) === Number(entry[field])) {
@@ -3466,7 +3466,7 @@ var require_helper = __commonJS({
         return prev && (entry[field] === "*" || entry[field] === connInfo[field]);
       }, true);
     };
-    module.exports.getPassword = function(connInfo, stream, cb) {
+    module2.exports.getPassword = function(connInfo, stream, cb) {
       var pass;
       var lineStream = stream.pipe(split());
       function onLine(line) {
@@ -3488,7 +3488,7 @@ var require_helper = __commonJS({
       stream.on("error", onErr);
       lineStream.on("data", onLine).on("end", onEnd).on("error", onErr);
     };
-    var parseLine = module.exports.parseLine = function(line) {
+    var parseLine = module2.exports.parseLine = function(line) {
       if (line.length < 11 || line.match(/^\s+#/)) {
         return null;
       }
@@ -3523,7 +3523,7 @@ var require_helper = __commonJS({
       obj = Object.keys(obj).length === nrOfFields ? obj : null;
       return obj;
     };
-    var isValidEntry = module.exports.isValidEntry = function(entry) {
+    var isValidEntry = module2.exports.isValidEntry = function(entry) {
       var rules = {
         // host
         0: function(x) {
@@ -3565,12 +3565,12 @@ var require_helper = __commonJS({
 
 // node_modules/.pnpm/pgpass@1.0.5/node_modules/pgpass/lib/index.js
 var require_lib = __commonJS({
-  "node_modules/.pnpm/pgpass@1.0.5/node_modules/pgpass/lib/index.js"(exports, module) {
+  "node_modules/.pnpm/pgpass@1.0.5/node_modules/pgpass/lib/index.js"(exports2, module2) {
     "use strict";
-    var path = __require("path");
-    var fs = __require("fs");
+    var path = require("path");
+    var fs = require("fs");
     var helper = require_helper();
-    module.exports = function(connInfo, cb) {
+    module2.exports = function(connInfo, cb) {
       var file = helper.getFileName();
       fs.stat(file, function(err, stat) {
         if (err || !helper.usePgPass(stat, file)) {
@@ -3580,15 +3580,15 @@ var require_lib = __commonJS({
         helper.getPassword(connInfo, st, cb);
       });
     };
-    module.exports.warnTo = helper.warnTo;
+    module2.exports.warnTo = helper.warnTo;
   }
 });
 
 // node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/client.js
 var require_client = __commonJS({
-  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/client.js"(exports, module) {
+  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/client.js"(exports2, module2) {
     "use strict";
-    var EventEmitter = __require("events").EventEmitter;
+    var EventEmitter = require("events").EventEmitter;
     var utils = require_utils();
     var sasl = require_sasl();
     var TypeOverrides2 = require_type_overrides();
@@ -4107,15 +4107,15 @@ var require_client = __commonJS({
       }
     };
     Client2.Query = Query2;
-    module.exports = Client2;
+    module2.exports = Client2;
   }
 });
 
 // node_modules/.pnpm/pg-pool@3.10.1_pg@8.16.3/node_modules/pg-pool/index.js
 var require_pg_pool = __commonJS({
-  "node_modules/.pnpm/pg-pool@3.10.1_pg@8.16.3/node_modules/pg-pool/index.js"(exports, module) {
+  "node_modules/.pnpm/pg-pool@3.10.1_pg@8.16.3/node_modules/pg-pool/index.js"(exports2, module2) {
     "use strict";
-    var EventEmitter = __require("events").EventEmitter;
+    var EventEmitter = require("events").EventEmitter;
     var NOOP = function() {
     };
     var removeWhere = (list, predicate) => {
@@ -4498,18 +4498,18 @@ var require_pg_pool = __commonJS({
         return this._clients.length;
       }
     };
-    module.exports = Pool2;
+    module2.exports = Pool2;
   }
 });
 
 // node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/native/query.js
 var require_query2 = __commonJS({
-  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/native/query.js"(exports, module) {
+  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/native/query.js"(exports2, module2) {
     "use strict";
-    var EventEmitter = __require("events").EventEmitter;
-    var util = __require("util");
+    var EventEmitter = require("events").EventEmitter;
+    var util = require("util");
     var utils = require_utils();
-    var NativeQuery = module.exports = function(config, values, callback) {
+    var NativeQuery = module2.exports = function(config, values, callback) {
       EventEmitter.call(this);
       config = utils.normalizeQueryConfig(config, values, callback);
       this.text = config.text;
@@ -4645,20 +4645,20 @@ var require_query2 = __commonJS({
 
 // node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/native/client.js
 var require_client2 = __commonJS({
-  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/native/client.js"(exports, module) {
+  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/native/client.js"(exports2, module2) {
     "use strict";
     var Native;
     try {
-      Native = __require("pg-native");
+      Native = require("pg-native");
     } catch (e) {
       throw e;
     }
     var TypeOverrides2 = require_type_overrides();
-    var EventEmitter = __require("events").EventEmitter;
-    var util = __require("util");
+    var EventEmitter = require("events").EventEmitter;
+    var util = require("util");
     var ConnectionParameters = require_connection_parameters();
     var NativeQuery = require_query2();
-    var Client2 = module.exports = function(config) {
+    var Client2 = module2.exports = function(config) {
       EventEmitter.call(this);
       config = config || {};
       this._Promise = config.Promise || global.Promise;
@@ -4885,15 +4885,15 @@ var require_client2 = __commonJS({
 
 // node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/native/index.js
 var require_native = __commonJS({
-  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/native/index.js"(exports, module) {
+  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/native/index.js"(exports2, module2) {
     "use strict";
-    module.exports = require_client2();
+    module2.exports = require_client2();
   }
 });
 
 // node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/index.js
 var require_lib2 = __commonJS({
-  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/index.js"(exports, module) {
+  "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/index.js"(exports2, module2) {
     "use strict";
     var Client2 = require_client();
     var defaults2 = require_defaults();
@@ -4927,10 +4927,10 @@ var require_lib2 = __commonJS({
       this.utils = utils;
     };
     if (typeof process.env.NODE_PG_FORCE_NATIVE !== "undefined") {
-      module.exports = new PG(require_native());
+      module2.exports = new PG(require_native());
     } else {
-      module.exports = new PG(Client2);
-      Object.defineProperty(module.exports, "native", {
+      module2.exports = new PG(Client2);
+      Object.defineProperty(module2.exports, "native", {
         configurable: true,
         enumerable: false,
         get() {
@@ -4942,7 +4942,7 @@ var require_lib2 = __commonJS({
               throw err;
             }
           }
-          Object.defineProperty(module.exports, "native", {
+          Object.defineProperty(module2.exports, "native", {
             value: native
           });
           return native;
@@ -4952,19 +4952,119 @@ var require_lib2 = __commonJS({
   }
 });
 
-// src/products/integracoes/cloud/src/control-api/index.ts
-import { createServer } from "node:http";
+// src/products/integracoes/cloud/src/worker/index.ts
+var index_exports = {};
+__export(index_exports, {
+  main: () => main,
+  startHttpServer: () => startHttpServer
+});
+module.exports = __toCommonJS(index_exports);
+var import_node_http = require("node:http");
 
-// src/products/integracoes/cloud/src/control-api/routes/callbacks.ts
-async function handleProviderCallback(_request) {
+// src/products/integracoes/cloud/src/connectors/stubConnector.ts
+var STUB_RESULT = {
+  status: "success",
+  recordsIn: 0,
+  recordsUpdated: 0,
+  recordsFailed: 0,
+  metadata: {
+    mode: "stub"
+  }
+};
+function createStubConnector(params) {
   return {
-    status: 202,
-    body: {
-      ok: true,
-      mode: "stub",
-      message: "Callback cloud reservado para OAuth futuro."
+    domain: params.domain,
+    provider: params.provider,
+    async testConnection() {
+      return STUB_RESULT;
+    },
+    async syncResource() {
+      return STUB_RESULT;
+    },
+    async refreshToken() {
+      return STUB_RESULT;
     }
   };
+}
+
+// src/products/integracoes/cloud/src/connectors/crm/hubspotConnector.ts
+var hubspotConnector = createStubConnector({
+  domain: "crm",
+  provider: "hubspot"
+});
+
+// src/products/integracoes/cloud/src/connectors/crm/pipedriveConnector.ts
+var pipedriveConnector = createStubConnector({
+  domain: "crm",
+  provider: "pipedrive"
+});
+
+// src/products/integracoes/cloud/src/connectors/crm/rdStationConnector.ts
+var rdStationConnector = createStubConnector({
+  domain: "crm",
+  provider: "rd_station_crm"
+});
+
+// src/products/integracoes/cloud/src/connectors/crm/salesforceConnector.ts
+var salesforceConnector = createStubConnector({
+  domain: "crm",
+  provider: "salesforce"
+});
+
+// src/products/integracoes/cloud/src/providers/crmProviderRegistry.ts
+var CRM_CONNECTORS = [
+  hubspotConnector,
+  pipedriveConnector,
+  salesforceConnector,
+  rdStationConnector
+];
+
+// src/products/integracoes/cloud/src/connectors/erp/blingConnector.ts
+var blingConnector = createStubConnector({
+  domain: "erp",
+  provider: "bling"
+});
+
+// src/products/integracoes/cloud/src/connectors/erp/contaAzulConnector.ts
+var contaAzulConnector = createStubConnector({
+  domain: "erp",
+  provider: "conta_azul"
+});
+
+// src/products/integracoes/cloud/src/connectors/erp/omieConnector.ts
+var omieConnector = createStubConnector({
+  domain: "erp",
+  provider: "omie"
+});
+
+// src/products/integracoes/cloud/src/connectors/erp/tinyConnector.ts
+var tinyConnector = createStubConnector({
+  domain: "erp",
+  provider: "tiny"
+});
+
+// src/products/integracoes/cloud/src/connectors/erp/totvsConnector.ts
+var totvsConnector = createStubConnector({
+  domain: "erp",
+  provider: "totvs"
+});
+
+// src/products/integracoes/cloud/src/providers/erpProviderRegistry.ts
+var ERP_CONNECTORS = [
+  contaAzulConnector,
+  omieConnector,
+  blingConnector,
+  tinyConnector,
+  totvsConnector
+];
+
+// src/products/integracoes/cloud/src/providers/providerRegistry.ts
+var CLOUD_CONNECTORS = [
+  ...ERP_CONNECTORS,
+  ...CRM_CONNECTORS
+];
+function getCloudConnector(provider) {
+  return CLOUD_CONNECTORS.find((connector) => connector.provider === provider);
 }
 
 // src/products/integracoes/cloud/src/config/gcpConfig.ts
@@ -4995,11 +5095,6 @@ function getIntegrationsCloudConfig() {
       worker: env("WORKER_SERVICE_ACCOUNT", "integrations-worker")
     }
   };
-}
-function getSecretName(parts) {
-  const config = getIntegrationsCloudConfig();
-  const secretId = [config.secrets.prefix, ...parts].map((part) => String(part).trim().toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "")).filter(Boolean).join("-");
-  return `projects/${config.projectId}/secrets/${secretId}`;
 }
 
 // src/products/integracoes/cloud/src/lib/googleAuth.ts
@@ -5040,52 +5135,115 @@ async function authorizedJsonRequest(url, init = {}) {
 }
 
 // src/products/integracoes/cloud/src/lib/secretManager.ts
-function encodeBase64(value) {
-  return Buffer.from(value, "utf8").toString("base64");
+function decodeBase64(value) {
+  return Buffer.from(value, "base64").toString("utf8");
 }
-async function ensureSecret(secretName) {
-  const segments = secretName.split("/secrets/");
-  const parent = segments[0];
-  const secretId = segments[1];
-  if (!parent || !secretId) throw new Error(`Secret name invalido: ${secretName}`);
-  const existing = await authorizedJsonRequest(
-    `https://secretmanager.googleapis.com/v1/${secretName}`,
+function normalizeSecretVersionRef(secretRef) {
+  const ref = secretRef.trim();
+  if (!ref) throw new Error("secretRef vazio");
+  if (ref.includes("/versions/")) return ref;
+  return `${ref.replace(/\/+$/, "")}/versions/latest`;
+}
+async function readSecret(secretRef) {
+  const response = await authorizedJsonRequest(
+    `https://secretmanager.googleapis.com/v1/${normalizeSecretVersionRef(secretRef)}:access`,
     { method: "GET", allowNotFound: true }
   );
+  const encoded = response.payload?.payload?.data;
+  return encoded ? decodeBase64(encoded) : null;
+}
+
+// src/products/integracoes/cloud/src/lib/bigquery.ts
+function normalizeBigQueryIdentifier(value, label) {
+  const normalized = value.trim().toLowerCase().replace(/[^a-z0-9_]+/g, "_").replace(/^_+|_+$/g, "");
+  if (!/^[a-z_][a-z0-9_]{0,1023}$/.test(normalized)) {
+    throw new Error(`${label} BigQuery invalido: ${value}`);
+  }
+  return normalized;
+}
+function getTableApiPath(projectId, dataset, table) {
+  return `https://bigquery.googleapis.com/bigquery/v2/projects/${projectId}/datasets/${dataset}/tables/${table}`;
+}
+async function ensureRawTable(projectId, dataset, table) {
+  const tableUrl = getTableApiPath(projectId, dataset, table);
+  const existing = await authorizedJsonRequest(tableUrl, { method: "GET", allowNotFound: true });
   if (existing.ok) return;
   await authorizedJsonRequest(
-    `https://secretmanager.googleapis.com/v1/${parent}/secrets?secretId=${encodeURIComponent(secretId)}`,
+    `https://bigquery.googleapis.com/bigquery/v2/projects/${projectId}/datasets/${dataset}/tables`,
     {
       method: "POST",
       body: JSON.stringify({
-        replication: {
-          automatic: {}
+        tableReference: {
+          projectId,
+          datasetId: dataset,
+          tableId: table
+        },
+        schema: {
+          fields: [
+            { name: "tenant_id", type: "INTEGER", mode: "REQUIRED" },
+            { name: "connection_id", type: "STRING", mode: "REQUIRED" },
+            { name: "provider", type: "STRING", mode: "REQUIRED" },
+            { name: "resource", type: "STRING", mode: "REQUIRED" },
+            { name: "run_id", type: "STRING", mode: "NULLABLE" },
+            { name: "external_id", type: "STRING", mode: "NULLABLE" },
+            { name: "synced_at", type: "TIMESTAMP", mode: "REQUIRED" },
+            { name: "raw_payload", type: "JSON", mode: "REQUIRED" }
+          ]
+        },
+        timePartitioning: {
+          type: "DAY",
+          field: "synced_at"
+        },
+        clustering: {
+          fields: ["tenant_id", "provider", "resource"]
         }
       })
     }
   );
 }
-async function writeSecret(name, value) {
-  const secretName = name.startsWith("projects/") ? name : getSecretName([name]);
-  await ensureSecret(secretName);
-  await authorizedJsonRequest(
-    `https://secretmanager.googleapis.com/v1/${secretName}:addVersion`,
+async function writeRowsToBigQuery(input) {
+  const config = getIntegrationsCloudConfig();
+  const dataset = normalizeBigQueryIdentifier(input.dataset || config.bigQuery.customRawDataset, "dataset");
+  const table = normalizeBigQueryIdentifier(input.table, "table");
+  if (!input.rows.length) {
+    return { ok: true, mode: "bigquery", dataset, table, insertedRows: 0 };
+  }
+  await ensureRawTable(config.projectId, dataset, table);
+  const syncedAt = (/* @__PURE__ */ new Date()).toISOString();
+  const response = await authorizedJsonRequest(
+    `https://bigquery.googleapis.com/bigquery/v2/projects/${config.projectId}/datasets/${dataset}/tables/${table}/insertAll`,
     {
       method: "POST",
       body: JSON.stringify({
-        payload: {
-          data: encodeBase64(value)
-        }
+        skipInvalidRows: false,
+        ignoreUnknownValues: false,
+        rows: input.rows.map((row, index) => ({
+          insertId: `${input.connectionId}:${input.resource}:${input.runId || "run"}:${index}`,
+          json: {
+            tenant_id: input.tenantId,
+            connection_id: input.connectionId,
+            provider: input.provider,
+            resource: input.resource,
+            run_id: input.runId || null,
+            external_id: typeof row.external_id === "string" ? row.external_id : typeof row.id === "string" ? row.id : null,
+            synced_at: syncedAt,
+            raw_payload: row
+          }
+        }))
       })
     }
   );
+  if (response.payload?.insertErrors?.length) {
+    const firstError = response.payload.insertErrors[0]?.errors?.[0]?.message;
+    throw new Error(firstError || "Falha ao inserir linhas no BigQuery");
+  }
   return {
-    secretRef: secretName,
-    mode: "secret_manager"
+    ok: true,
+    mode: "bigquery",
+    dataset,
+    table,
+    insertedRows: input.rows.length
   };
-}
-async function writeConnectionCredentialsSecret(input) {
-  return writeSecret(`${input.tenantId}-${input.connectionId}-credentials`, input.value);
 }
 
 // node_modules/.pnpm/pg@8.16.3/node_modules/pg/esm/index.mjs
@@ -5120,21 +5278,182 @@ function getPool() {
   }
   return pool;
 }
-async function updateConnectionSecret(input) {
+function asStringArray(value) {
+  if (Array.isArray(value)) return value.map((item) => String(item || "").trim()).filter(Boolean);
+  if (typeof value === "string") {
+    try {
+      return asStringArray(JSON.parse(value));
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+function asRecord(value) {
+  if (value && typeof value === "object" && !Array.isArray(value)) return value;
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+  return {};
+}
+function normalizeStatus(value) {
+  if (value === "success" || value === "warning" || value === "error" || value === "cancelled") return value;
+  if (value === "running" || value === "queued") return value;
+  return "error";
+}
+function eventForStatus(status) {
+  if (status === "success" || status === "warning") return "sync.completed";
+  if (status === "error") return "sync.failed";
+  return "system.note";
+}
+async function getCloudIntegrationConnection(input) {
+  const result = await getPool().query(
+    `SELECT *
+     FROM mcp_app.integration_connections
+     WHERE id = $1 AND tenant_id = $2
+     LIMIT 1`,
+    [input.connectionId, input.tenantId]
+  );
+  const row = result.rows[0];
+  if (!row) return null;
+  return {
+    id: String(row.id),
+    tenantId: Number(row.tenant_id),
+    domain: String(row.domain || ""),
+    provider: String(row.provider || ""),
+    status: String(row.status || ""),
+    displayName: String(row.display_name || ""),
+    secretRef: row.secret_ref == null ? null : String(row.secret_ref),
+    selectedResources: asStringArray(row.selected_resources),
+    metadata: asRecord(row.metadata_json)
+  };
+}
+async function createCloudSyncRun(input) {
+  const result = await getPool().query(
+    `INSERT INTO mcp_app.integration_sync_runs
+      (tenant_id, connection_id, trigger, status, started_at, metadata_json)
+     VALUES
+      ($1, $2, $3, 'running', now(), $4::jsonb)
+     RETURNING id::text, status`,
+    [
+      input.tenantId,
+      input.connectionId,
+      input.trigger,
+      JSON.stringify({
+        mode: "gcp_worker",
+        resources: input.resources,
+        requestedBy: input.requestedBy || "worker"
+      })
+    ]
+  );
+  await createIntegrationEvent({
+    tenantId: input.tenantId,
+    connectionId: input.connectionId,
+    eventType: "sync.requested",
+    severity: "info",
+    actor: input.requestedBy || "integrations-worker",
+    message: "Sincronizacao enviada ao worker GCP.",
+    metadata: { resources: input.resources, trigger: input.trigger }
+  });
+  return {
+    id: String(result.rows[0]?.id),
+    status: String(result.rows[0]?.status)
+  };
+}
+async function finishCloudSyncRun(input) {
+  const status = normalizeStatus(input.status);
+  await getPool().query(
+    `UPDATE mcp_app.integration_sync_runs
+     SET
+       status = $4,
+       finished_at = now(),
+       records_in = $5,
+       records_updated = $6,
+       records_failed = $7,
+       error_message = $8,
+       metadata_json = metadata_json || $9::jsonb
+     WHERE id = $1 AND tenant_id = $2 AND connection_id = $3`,
+    [
+      input.runId,
+      input.tenantId,
+      input.connectionId,
+      status,
+      input.recordsIn,
+      input.recordsUpdated,
+      input.recordsFailed,
+      input.errorMessage || null,
+      JSON.stringify(input.metadata || {})
+    ]
+  );
   await getPool().query(
     `UPDATE mcp_app.integration_connections
      SET
-       secret_ref = $3,
-       status = $4,
-       metadata_json = metadata_json || $5::jsonb,
+       last_sync_at = now(),
+       last_success_at = CASE WHEN $3 IN ('success', 'warning') THEN now() ELSE last_success_at END,
+       last_error = CASE WHEN $3 IN ('success', 'warning') THEN NULL ELSE $4 END,
+       records_synced = CASE WHEN $3 IN ('success', 'warning') THEN records_synced + $5 ELSE records_synced END,
+       status = CASE
+         WHEN $3 = 'success' THEN 'connected'
+         WHEN $3 = 'warning' THEN 'warning'
+         WHEN $3 = 'error' THEN 'error'
+         ELSE status
+       END,
        updated_at = now()
      WHERE id = $1 AND tenant_id = $2`,
+    [input.connectionId, input.tenantId, status, input.errorMessage || null, input.recordsUpdated]
+  );
+  await createIntegrationEvent({
+    tenantId: input.tenantId,
+    connectionId: input.connectionId,
+    eventType: eventForStatus(status),
+    severity: status === "error" ? "error" : status === "warning" ? "warning" : "info",
+    actor: "integrations-worker",
+    message: status === "error" ? "Sincronizacao GCP falhou." : "Sincronizacao GCP concluida.",
+    metadata: {
+      runId: input.runId,
+      recordsIn: input.recordsIn,
+      recordsUpdated: input.recordsUpdated,
+      recordsFailed: input.recordsFailed,
+      errorMessage: input.errorMessage || null,
+      ...input.metadata || {}
+    }
+  });
+}
+async function readIntegrationCursor(input) {
+  const result = await getPool().query(
+    `SELECT cursor_json
+     FROM mcp_app.integration_sync_cursors
+     WHERE tenant_id = $1 AND connection_id = $2 AND resource = $3 AND cursor_key = $4
+     LIMIT 1`,
+    [input.tenantId, input.connectionId, input.resource, input.cursorKey || "default"]
+  );
+  const row = result.rows[0];
+  return row ? asRecord(row.cursor_json) : void 0;
+}
+async function writeIntegrationCursor(input) {
+  await getPool().query(
+    `INSERT INTO mcp_app.integration_sync_cursors
+      (tenant_id, connection_id, resource, cursor_key, cursor_value, cursor_json, last_synced_at, updated_at)
+     VALUES
+      ($1, $2, $3, $4, $5, $6::jsonb, now(), now())
+     ON CONFLICT (tenant_id, connection_id, resource, cursor_key)
+     DO UPDATE SET
+       cursor_value = EXCLUDED.cursor_value,
+       cursor_json = EXCLUDED.cursor_json,
+       last_synced_at = now(),
+       updated_at = now()`,
     [
-      input.connectionId,
       input.tenantId,
-      input.secretRef,
-      input.status,
-      JSON.stringify(input.metadata || {})
+      input.connectionId,
+      input.resource,
+      input.cursorKey || "default",
+      input.cursor.updatedAt || input.cursor.updated_at || input.cursor.next || null,
+      JSON.stringify(input.cursor)
     ]
   );
 }
@@ -5155,571 +5474,176 @@ async function createIntegrationEvent(input) {
     ]
   );
 }
-async function updateConnectionStatus(input) {
-  await getPool().query(
-    `UPDATE mcp_app.integration_connections
-     SET status = $3, metadata_json = metadata_json || $4::jsonb, updated_at = now()
-     WHERE id = $1 AND tenant_id = $2`,
-    [input.connectionId, input.tenantId, input.status, JSON.stringify(input.metadata || {})]
-  );
-  return { ok: true, mode: "postgres" };
-}
 
-// src/products/integracoes/shared/providers/crmProviders.ts
-var CRM_RESOURCES = [
-  {
-    slug: "contas",
-    name: "Contas",
-    description: "Empresas, contas e organizacoes comerciais.",
-    defaultEnabled: true
-  },
-  {
-    slug: "contatos",
-    name: "Contatos",
-    description: "Pessoas, emails, telefones e relacoes com contas.",
-    defaultEnabled: true
-  },
-  {
-    slug: "leads",
-    name: "Leads",
-    description: "Leads, origem, qualificacao e status comercial.",
-    defaultEnabled: true
-  },
-  {
-    slug: "oportunidades",
-    name: "Oportunidades",
-    description: "Negocios, funil, valores e datas previstas.",
-    defaultEnabled: true
-  },
-  {
-    slug: "atividades",
-    name: "Atividades",
-    description: "Tarefas, reunioes, ligacoes e proximas acoes.",
-    defaultEnabled: false
-  },
-  {
-    slug: "usuarios",
-    name: "Usuarios",
-    description: "Vendedores, responsaveis e membros do time.",
-    defaultEnabled: false
-  },
-  {
-    slug: "pipelines",
-    name: "Pipelines",
-    description: "Funis, etapas e configuracoes comerciais.",
-    defaultEnabled: false
-  }
-];
-function crmProvider(provider) {
-  return {
-    ...provider,
-    domain: "crm",
-    resources: provider.resources || CRM_RESOURCES,
-    syncModes: ["manual", "scheduled"],
-    supportsIncrementalSync: true,
-    tags: ["crm", "vendas", "relacionamento", ...provider.tags || []]
-  };
-}
-var CRM_PROVIDERS = [
-  crmProvider({
-    slug: "hubspot",
-    toolkitSlug: "HUBSPOT",
-    name: "HubSpot",
-    description: "CRM para contatos, empresas, negocios, atividades e automacao comercial.",
-    authType: "oauth2",
-    supportsOAuthCallback: true,
-    tags: ["marketing", "sales"]
-  }),
-  crmProvider({
-    slug: "pipedrive",
-    toolkitSlug: "PIPEDRIVE",
-    name: "Pipedrive",
-    description: "CRM de vendas com pipeline, negocios, atividades e previsibilidade comercial.",
-    authType: "oauth2",
-    supportsOAuthCallback: true,
-    tags: ["pipeline", "sales"]
-  }),
-  crmProvider({
-    slug: "salesforce",
-    toolkitSlug: "SALESFORCE",
-    name: "Salesforce",
-    description: "CRM corporativo para contas, contatos, leads, oportunidades e atividades.",
-    authType: "oauth2",
-    supportsOAuthCallback: true,
-    tags: ["enterprise", "sales"]
-  }),
-  crmProvider({
-    slug: "rd_station_crm",
-    toolkitSlug: "RD_STATION_CRM",
-    name: "RD Station CRM",
-    description: "CRM brasileiro para leads, contatos, oportunidades, funis e atividades.",
-    authType: "oauth2",
-    supportsOAuthCallback: true,
-    tags: ["brasil", "sales"]
-  })
-];
-
-// src/products/integracoes/shared/providers/erpProviders.ts
-var ERP_RESOURCES = [
-  {
-    slug: "clientes",
-    name: "Clientes",
-    description: "Cadastro de clientes, documentos e dados comerciais.",
-    defaultEnabled: true
-  },
-  {
-    slug: "fornecedores",
-    name: "Fornecedores",
-    description: "Cadastro de fornecedores e parceiros de compra.",
-    defaultEnabled: true
-  },
-  {
-    slug: "produtos",
-    name: "Produtos",
-    description: "Catalogo de produtos, servicos e precos.",
-    defaultEnabled: true
-  },
-  {
-    slug: "pedidos_venda",
-    name: "Pedidos de venda",
-    description: "Pedidos, itens, descontos e situacao comercial.",
-    defaultEnabled: true
-  },
-  {
-    slug: "compras",
-    name: "Compras",
-    description: "Pedidos de compra, itens e recebimentos.",
-    defaultEnabled: true
-  },
-  {
-    slug: "contas_receber",
-    name: "Contas a receber",
-    description: "Titulos, vencimentos, recebimentos e inadimplencia.",
-    defaultEnabled: true
-  },
-  {
-    slug: "contas_pagar",
-    name: "Contas a pagar",
-    description: "Titulos, vencimentos, pagamentos e fornecedores.",
-    defaultEnabled: true
-  },
-  {
-    slug: "notas_fiscais",
-    name: "Notas fiscais",
-    description: "Documentos fiscais, emissoes, cancelamentos e valores.",
-    defaultEnabled: false
-  },
-  {
-    slug: "estoque",
-    name: "Estoque",
-    description: "Saldos, movimentacoes e almoxarifados.",
-    defaultEnabled: false
-  },
-  {
-    slug: "categorias",
-    name: "Categorias",
-    description: "Categorias financeiras e classificacoes operacionais.",
-    defaultEnabled: false
-  },
-  {
-    slug: "centros_custo",
-    name: "Centros de custo",
-    description: "Estrutura gerencial para rateios e analises.",
-    defaultEnabled: false
-  }
-];
-function erpProvider(provider) {
-  return {
-    ...provider,
-    domain: "erp",
-    resources: provider.resources || ERP_RESOURCES,
-    syncModes: ["manual", "scheduled"],
-    supportsIncrementalSync: true,
-    tags: ["erp", "financeiro", "operacional", ...provider.tags || []]
-  };
-}
-var ERP_PROVIDERS = [
-  erpProvider({
-    slug: "conta_azul",
-    toolkitSlug: "CONTA_AZUL",
-    name: "Conta Azul",
-    description: "ERP financeiro, faturamento, vendas e conciliacao para pequenas e medias empresas.",
-    authType: "oauth2",
-    supportsOAuthCallback: true,
-    tags: ["brasil", "pme", "financeiro"]
-  }),
-  erpProvider({
-    slug: "omie",
-    toolkitSlug: "OMIE",
-    name: "Omie",
-    description: "ERP com financeiro, fiscal, pedidos, estoque e automacao operacional.",
-    authType: "api_key",
-    supportsOAuthCallback: false,
-    tags: ["brasil", "pme", "fiscal"]
-  }),
-  erpProvider({
-    slug: "bling",
-    toolkitSlug: "BLING",
-    name: "Bling",
-    description: "ERP para ecommerce, estoque, pedidos, notas fiscais e marketplaces.",
-    authType: "oauth2",
-    supportsOAuthCallback: true,
-    tags: ["brasil", "ecommerce", "marketplace"]
-  }),
-  erpProvider({
-    slug: "tiny",
-    toolkitSlug: "TINY",
-    name: "Tiny",
-    description: "ERP para vendas online, catalogo, estoque, pedidos e emissao fiscal.",
-    authType: "oauth2",
-    supportsOAuthCallback: true,
-    tags: ["brasil", "ecommerce", "marketplace"]
-  }),
-  erpProvider({
-    slug: "totvs",
-    toolkitSlug: "TOTVS",
-    name: "TOTVS",
-    description: "ERP corporativo para dados financeiros, comerciais, fiscais e operacionais.",
-    authType: "manual",
-    supportsOAuthCallback: false,
-    tags: ["brasil", "enterprise", "operacional"]
-  })
-];
-
-// src/products/integracoes/shared/providers/providerTypes.ts
-function normalizeProviderSlug(slug) {
-  return slug.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
-}
-function normalizeToolkitSlug(slug) {
-  return slug.trim().toUpperCase().replace(/[^A-Z0-9]+/g, "_").replace(/^_+|_+$/g, "");
-}
-
-// src/products/integracoes/shared/providers/providerCatalog.ts
-var INTEGRATION_PROVIDERS = [
-  ...ERP_PROVIDERS,
-  ...CRM_PROVIDERS
-];
-function getIntegrationProvider(slug) {
-  const providerSlug = normalizeProviderSlug(slug);
-  const toolkitSlug = normalizeToolkitSlug(slug);
-  return INTEGRATION_PROVIDERS.find((provider) => {
-    return provider.slug === providerSlug || provider.toolkitSlug === toolkitSlug;
-  });
-}
-function mapProviderToToolkitDefinition(provider) {
-  return {
-    slug: provider.toolkitSlug,
-    name: provider.name,
-    description: provider.description
-  };
-}
-var INTEGRATION_PROVIDER_TOOLKITS = INTEGRATION_PROVIDERS.map(
-  mapProviderToToolkitDefinition
-);
-
-// src/products/integracoes/server/integrationProviderRegistry.ts
-var IntegrationProviderError = class extends Error {
-  constructor(message, options) {
-    super(message);
-    this.name = "IntegrationProviderError";
-    this.status = options?.status ?? 400;
-    this.code = options?.code ?? "invalid_provider";
-  }
-};
-function requireIntegrationProvider(slug) {
-  const provider = getIntegrationProvider(slug);
-  if (!provider) {
-    throw new IntegrationProviderError(`Provider de integracao invalido: ${slug || "(vazio)"}`, {
-      status: 404,
-      code: "provider_not_found"
-    });
-  }
-  return provider;
-}
-
-// src/products/integracoes/cloud/src/control-api/routes/connections.ts
-function isRecord(value) {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-function parseBody(body) {
-  if (!isRecord(body)) return {};
-  return {
-    tenantId: typeof body.tenantId === "number" ? body.tenantId : void 0,
-    connectionId: typeof body.connectionId === "string" ? body.connectionId : void 0,
-    provider: typeof body.provider === "string" ? body.provider : void 0,
-    credentials: body.credentials,
-    reconnect: body.reconnect === true,
-    resources: Array.isArray(body.resources) ? body.resources.filter((resource) => typeof resource === "string") : void 0
-  };
-}
-function serializeCredentials(value) {
-  if (value == null) return null;
-  if (typeof value === "string") return value.trim() || null;
-  if (isRecord(value)) return JSON.stringify(value);
-  return null;
-}
-async function handleConnectionSetup(request) {
+// src/products/integracoes/cloud/src/worker/jobs/runSyncJob.ts
+function parseCredentials(value) {
+  if (!value) return null;
   try {
-    const body = parseBody(request.body);
-    if (!body.tenantId || !body.connectionId || !body.provider) {
-      return {
-        status: 400,
-        body: {
-          ok: false,
-          error: "tenantId, connectionId e provider sao obrigatorios."
-        }
-      };
-    }
-    const provider = requireIntegrationProvider(body.provider);
-    const serializedCredentials = serializeCredentials(body.credentials);
-    if (serializedCredentials) {
-      const secret = await writeConnectionCredentialsSecret({
-        tenantId: body.tenantId,
-        connectionId: body.connectionId,
-        value: serializedCredentials
-      });
-      await updateConnectionSecret({
-        tenantId: body.tenantId,
-        connectionId: body.connectionId,
-        secretRef: secret.secretRef,
-        status: "connected",
-        metadata: {
-          setupMode: "gcp",
-          authType: provider.authType,
-          credentialsStoredAt: (/* @__PURE__ */ new Date()).toISOString(),
-          reconnect: body.reconnect === true
-        }
-      });
-      await createIntegrationEvent({
-        tenantId: body.tenantId,
-        connectionId: body.connectionId,
-        eventType: "connection.updated",
-        actor: "integrations-control-api",
-        message: "Credenciais armazenadas no Secret Manager.",
-        metadata: {
-          provider: provider.slug,
-          authType: provider.authType,
-          secretRef: secret.secretRef
-        }
-      });
-      return {
-        status: 202,
-        body: {
-          ok: true,
-          mode: "gcp",
-          status: "connected",
-          secretRef: secret.secretRef,
-          message: "Credenciais armazenadas no Secret Manager e conexao marcada como conectada."
-        }
-      };
-    }
-    const nextStatus = provider.authType === "oauth2" ? "pending_auth" : "pending_auth";
-    await updateConnectionStatus({
-      tenantId: body.tenantId,
-      connectionId: body.connectionId,
-      status: nextStatus,
-      metadata: {
-        setupMode: "gcp",
-        authType: provider.authType,
-        credentialsRequired: provider.authType !== "oauth2",
-        oauthRequired: provider.authType === "oauth2",
-        reconnect: body.reconnect === true
-      }
-    });
-    return {
-      status: 202,
-      body: {
-        ok: true,
-        mode: "gcp",
-        status: nextStatus,
-        authType: provider.authType,
-        message: provider.authType === "oauth2" ? "Conexao aguardando OAuth. Callback generico entra na proxima entrega." : "Conexao aguardando credenciais para gravar no Secret Manager."
-      }
-    };
-  } catch (error) {
-    return {
-      status: 500,
-      body: {
-        ok: false,
-        error: error instanceof Error ? error.message : "Falha no setup cloud da conexao."
-      }
-    };
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : value;
+  } catch {
+    return value;
   }
 }
-
-// src/products/integracoes/cloud/src/control-api/routes/health.ts
-async function handleHealthCheck() {
-  return {
-    status: 200,
-    body: {
-      ok: true,
-      service: "integracoes-control-api",
-      mode: "gcp"
-    }
-  };
+function normalizeRows(value) {
+  if (!Array.isArray(value)) return [];
+  return value.filter((row) => Boolean(row && typeof row === "object" && !Array.isArray(row)));
 }
-
-// src/products/integracoes/cloud/src/lib/pubsub.ts
-async function publishSyncMessage(input) {
-  const config = getIntegrationsCloudConfig();
-  const accessToken = await getCloudAccessToken();
-  const topic = `projects/${config.projectId}/topics/${config.pubSub.syncTopic}`;
-  const data = Buffer.from(JSON.stringify({
-    type: "integration.sync.requested",
+function aggregateStatus(current, next) {
+  if (current === "error" || next === "error") return "error";
+  if (current === "warning" || next === "warning") return "warning";
+  return "success";
+}
+async function runSyncJob(input) {
+  const connection = await getCloudIntegrationConnection({
+    tenantId: input.tenantId,
+    connectionId: input.connectionId
+  });
+  if (!connection) {
+    throw new Error(`Conexao ${input.connectionId} nao encontrada para tenant ${input.tenantId}`);
+  }
+  const connector = getCloudConnector(connection.provider);
+  if (!connector) {
+    throw new Error(`Connector cloud nao registrado para provider ${connection.provider}`);
+  }
+  const resources = input.resources?.length ? input.resources : connection.selectedResources;
+  if (!resources.length) {
+    throw new Error(`Conexao ${input.connectionId} nao possui resources selecionados`);
+  }
+  const run = await createCloudSyncRun({
     tenantId: input.tenantId,
     connectionId: input.connectionId,
     trigger: input.trigger,
-    resources: input.resources || [],
-    requestedBy: input.requestedBy || "control-api",
-    requestedAt: (/* @__PURE__ */ new Date()).toISOString()
-  })).toString("base64");
-  const response = await fetch(`https://pubsub.googleapis.com/v1/${topic}:publish`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      messages: [{
-        data,
-        attributes: {
-          tenantId: String(input.tenantId),
-          connectionId: input.connectionId,
-          trigger: input.trigger
-        }
-      }]
-    })
+    resources,
+    requestedBy: input.requestedBy
   });
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(payload.error?.message || `Falha ao publicar no Pub/Sub: ${response.status}`);
-  }
-  const messageId = payload.messageIds?.[0];
-  if (!messageId) {
-    throw new Error("Pub/Sub nao retornou messageId");
-  }
-  return {
-    ok: true,
-    messageId,
-    mode: "pubsub",
-    topic: config.pubSub.syncTopic
-  };
-}
-
-// src/products/integracoes/cloud/src/control-api/routes/sync.ts
-var syncTriggers = ["manual", "scheduled", "webhook", "initial"];
-function isRecord2(value) {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-function parseSyncDispatchBody(body) {
-  if (!isRecord2(body)) return {};
-  return {
-    tenantId: typeof body.tenantId === "number" ? body.tenantId : void 0,
-    connectionId: typeof body.connectionId === "string" ? body.connectionId : void 0,
-    trigger: typeof body.trigger === "string" && syncTriggers.includes(body.trigger) ? body.trigger : void 0,
-    resources: Array.isArray(body.resources) ? body.resources.filter((resource) => typeof resource === "string") : void 0,
-    requestedBy: typeof body.requestedBy === "string" ? body.requestedBy : void 0
-  };
-}
-async function handleSyncDispatch(request) {
+  let recordsIn = 0;
+  let recordsUpdated = 0;
+  let recordsFailed = 0;
+  let status = "success";
+  const resourceSummaries = [];
   try {
-    const body = parseSyncDispatchBody(request.body);
-    if (!body.tenantId || !body.connectionId) {
-      return {
-        status: 400,
-        body: {
-          ok: false,
-          error: "tenantId e connectionId sao obrigatorios para despachar sync."
-        }
-      };
+    const credentials = parseCredentials(connection.secretRef ? await readSecret(connection.secretRef) : null);
+    for (const resource of resources) {
+      const cursor = await readIntegrationCursor({
+        tenantId: input.tenantId,
+        connectionId: input.connectionId,
+        resource
+      });
+      const result = await connector.syncResource({
+        tenantId: input.tenantId,
+        connectionId: input.connectionId,
+        provider: connection.provider,
+        secretRef: connection.secretRef,
+        credentials,
+        selectedResources: connection.selectedResources,
+        cursor,
+        metadata: connection.metadata
+      }, resource);
+      const rows = normalizeRows(result.rows || result.metadata?.rows);
+      if (rows.length) {
+        await writeRowsToBigQuery({
+          tenantId: input.tenantId,
+          connectionId: input.connectionId,
+          provider: connection.provider,
+          resource,
+          runId: run.id,
+          table: `${connection.provider}_${resource}`,
+          rows
+        });
+      }
+      if (result.nextCursor) {
+        await writeIntegrationCursor({
+          tenantId: input.tenantId,
+          connectionId: input.connectionId,
+          resource,
+          cursor: result.nextCursor
+        });
+      }
+      recordsIn += result.recordsIn;
+      recordsUpdated += result.recordsUpdated || rows.length;
+      recordsFailed += result.recordsFailed;
+      status = aggregateStatus(status, result.status);
+      resourceSummaries.push({
+        resource,
+        status: result.status,
+        recordsIn: result.recordsIn,
+        recordsUpdated: result.recordsUpdated || rows.length,
+        recordsFailed: result.recordsFailed,
+        rowsWritten: rows.length,
+        errorMessage: result.errorMessage || null
+      });
     }
-    const publish = await publishSyncMessage({
-      tenantId: body.tenantId,
-      connectionId: body.connectionId,
-      trigger: body.trigger || "manual",
-      resources: body.resources,
-      requestedBy: body.requestedBy
+    await finishCloudSyncRun({
+      tenantId: input.tenantId,
+      connectionId: input.connectionId,
+      runId: run.id,
+      status,
+      recordsIn,
+      recordsUpdated,
+      recordsFailed,
+      metadata: { resources: resourceSummaries }
     });
     return {
-      status: 202,
-      body: {
-        ok: true,
-        mode: publish.mode,
-        message: "Sync publicado no Pub/Sub.",
-        messageId: publish.messageId,
-        topic: publish.topic
-      }
+      ok: status !== "error",
+      mode: "gcp_worker",
+      connectionId: input.connectionId,
+      runId: run.id,
+      provider: connection.provider,
+      resources,
+      recordsIn,
+      recordsUpdated,
+      recordsFailed,
+      status,
+      message: "Worker GCP executou a sincronizacao."
     };
   } catch (error) {
-    return {
-      status: 500,
-      body: {
-        ok: false,
-        error: error instanceof Error ? error.message : "Falha ao despachar sync."
-      }
-    };
+    recordsFailed = Math.max(recordsFailed, 1);
+    await finishCloudSyncRun({
+      tenantId: input.tenantId,
+      connectionId: input.connectionId,
+      runId: run.id,
+      status: "error",
+      recordsIn,
+      recordsUpdated,
+      recordsFailed,
+      errorMessage: error instanceof Error ? error.message : String(error),
+      metadata: { resources: resourceSummaries }
+    });
+    throw error;
   }
 }
 
-// src/products/integracoes/cloud/src/lib/internalAuth.ts
-import { timingSafeEqual } from "node:crypto";
-function headerValue(headers, name) {
-  if (!headers) return void 0;
-  const value = headers[name] || headers[name.toLowerCase()];
-  if (Array.isArray(value)) return value[0];
-  return value;
+// src/products/integracoes/cloud/src/worker/index.ts
+var syncTriggers = ["manual", "scheduled", "webhook", "initial"];
+function parsePayloadFromEnv() {
+  const rawPayload = process.env.SYNC_JOB_PAYLOAD?.trim();
+  if (!rawPayload) return {};
+  const payload = JSON.parse(rawPayload);
+  return payload;
 }
-function safeEquals(left, right) {
-  const leftBuffer = Buffer.from(left);
-  const rightBuffer = Buffer.from(right);
-  if (leftBuffer.length !== rightBuffer.length) return false;
-  return timingSafeEqual(leftBuffer, rightBuffer);
+function isRecord(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
-function getInternalApiKey() {
-  const value = process.env.INTEGRATIONS_INTERNAL_API_KEY?.trim();
-  return value || null;
-}
-function isInternalRequestAuthorized(headers) {
-  const expected = getInternalApiKey();
-  if (!expected) return false;
-  const authorization = headerValue(headers, "authorization")?.trim();
-  const bearerPrefix = "Bearer ";
-  if (authorization?.startsWith(bearerPrefix)) {
-    return safeEquals(authorization.slice(bearerPrefix.length).trim(), expected);
-  }
-  const apiKey = headerValue(headers, "x-internal-api-key")?.trim();
-  return Boolean(apiKey && safeEquals(apiKey, expected));
-}
-
-// src/products/integracoes/cloud/src/control-api/server.ts
-function createControlApiServer() {
+function normalizePayload(value) {
+  if (!isRecord(value)) return {};
   return {
-    async handle(request) {
-      if (request.path === "/health") return handleHealthCheck();
-      if ((request.path === "/connections/setup" || request.path === "/sync") && !isInternalRequestAuthorized(request.headers)) {
-        return {
-          status: 401,
-          body: {
-            ok: false,
-            error: "Token interno ausente ou invalido."
-          }
-        };
-      }
-      if (request.path === "/connections/setup") return handleConnectionSetup(request);
-      if (request.path === "/callbacks/provider") return handleProviderCallback(request);
-      if (request.path === "/sync") return handleSyncDispatch(request);
-      return {
-        status: 404,
-        body: {
-          ok: false,
-          error: "Rota cloud de integracoes nao encontrada"
-        }
-      };
-    }
+    tenantId: typeof value.tenantId === "number" ? value.tenantId : void 0,
+    connectionId: typeof value.connectionId === "string" ? value.connectionId : void 0,
+    trigger: typeof value.trigger === "string" && syncTriggers.includes(value.trigger) ? value.trigger : void 0,
+    resources: Array.isArray(value.resources) ? value.resources.filter((resource) => typeof resource === "string") : void 0,
+    requestedBy: typeof value.requestedBy === "string" ? value.requestedBy : void 0
   };
 }
-
-// src/products/integracoes/cloud/src/control-api/index.ts
+function parsePubSubPushBody(body) {
+  if (!isRecord(body)) return {};
+  const pubSubBody = body;
+  const encodedData = pubSubBody.message?.data;
+  if (!encodedData) return normalizePayload(body);
+  const decoded = Buffer.from(encodedData, "base64").toString("utf8").trim();
+  if (!decoded) return {};
+  return normalizePayload(JSON.parse(decoded));
+}
 function readRequestBody(request) {
   return new Promise((resolve) => {
     const chunks = [];
@@ -5739,24 +5663,76 @@ function readRequestBody(request) {
     request.on("error", () => resolve(void 0));
   });
 }
-function main() {
-  const controlApi = createControlApiServer();
+function parseTrigger(value) {
+  if (value && syncTriggers.includes(value)) {
+    return value;
+  }
+  return "manual";
+}
+async function executeWorker(payload) {
+  const result = await runSyncJob({
+    tenantId: payload.tenantId || Number(process.env.SYNC_TENANT_ID || 1),
+    connectionId: payload.connectionId || process.env.SYNC_CONNECTION_ID || "stub",
+    trigger: payload.trigger || parseTrigger(process.env.SYNC_TRIGGER),
+    resources: payload.resources,
+    requestedBy: payload.requestedBy
+  });
+  console.log(JSON.stringify({
+    severity: "INFO",
+    message: "Integration worker finished.",
+    result
+  }));
+  return result;
+}
+async function main() {
+  return executeWorker(parsePayloadFromEnv());
+}
+function startHttpServer() {
   const port = Number(process.env.PORT || 8080);
-  const httpServer = createServer(async (request, response) => {
+  const httpServer = (0, import_node_http.createServer)(async (request, response) => {
     const url = new URL(request.url || "/", `http://${request.headers.host || "localhost"}`);
-    const result = await controlApi.handle({
-      method: request.method || "GET",
-      path: url.pathname,
-      headers: request.headers,
-      body: await readRequestBody(request)
-    });
-    response.writeHead(result.status, { "content-type": "application/json; charset=utf-8" });
-    response.end(JSON.stringify(result.body));
+    if (request.method === "GET" && url.pathname === "/health") {
+      response.writeHead(200, { "content-type": "application/json; charset=utf-8" });
+      response.end(JSON.stringify({ ok: true, service: "integracoes-worker", mode: "gcp_worker" }));
+      return;
+    }
+    if (request.method !== "POST" || url.pathname !== "/pubsub") {
+      response.writeHead(404, { "content-type": "application/json; charset=utf-8" });
+      response.end(JSON.stringify({ ok: false, error: "Rota worker nao encontrada." }));
+      return;
+    }
+    try {
+      const result = await executeWorker(parsePubSubPushBody(await readRequestBody(request)));
+      response.writeHead(204);
+      response.end();
+      void result;
+    } catch (error) {
+      console.error(JSON.stringify({
+        severity: "ERROR",
+        message: "Integration worker HTTP request failed.",
+        error: error instanceof Error ? error.message : String(error)
+      }));
+      response.writeHead(500, { "content-type": "application/json; charset=utf-8" });
+      response.end(JSON.stringify({ ok: false, error: "Falha ao processar mensagem Pub/Sub." }));
+    }
   });
   httpServer.listen(port, "0.0.0.0");
   return httpServer;
 }
-void main();
-export {
-  main
-};
+if (process.env.WORKER_HTTP_SERVER === "true" || process.env.PORT) {
+  startHttpServer();
+} else {
+  void main().catch((error) => {
+    console.error(JSON.stringify({
+      severity: "ERROR",
+      message: "Integration worker failed.",
+      error: error instanceof Error ? error.message : String(error)
+    }));
+    process.exit(1);
+  });
+}
+// Annotate the CommonJS export names for ESM import in node:
+0 && (module.exports = {
+  main,
+  startHttpServer
+});
