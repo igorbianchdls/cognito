@@ -5019,12 +5019,6 @@ var CRM_CONNECTORS = [
   rdStationConnector
 ];
 
-// src/products/integracoes/cloud/src/connectors/erp/blingConnector.ts
-var blingConnector = createStubConnector({
-  domain: "erp",
-  provider: "bling"
-});
-
 // src/products/integracoes/cloud/src/lib/rateLimit.ts
 var lastRequestByProvider = /* @__PURE__ */ new Map();
 function delay(ms) {
@@ -5185,9 +5179,10 @@ async function connectorJsonRequest(request) {
   });
 }
 
-// src/products/integracoes/cloud/src/connectors/erp/contaAzul/contaAzulClient.ts
-var DEFAULT_BASE_URL = "https://api-v2.contaazul.com";
+// src/products/integracoes/cloud/src/connectors/erp/bling/blingClient.ts
+var DEFAULT_BASE_URL = "https://api.bling.com.br/Api/v3";
 var DEFAULT_MAX_PAGES = 100;
+var DEFAULT_RATE_LIMIT_MS = 350;
 function isRecord(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -5204,14 +5199,14 @@ function parseCredentials(value) {
 function nonEmptyString(value) {
   return typeof value === "string" && value.trim().length > 0;
 }
-function normalizeContaAzulCredentials(value) {
+function normalizeBlingCredentials(value) {
   const credentials = parseCredentials(value);
   const accessToken = credentials?.accessToken ?? credentials?.access_token;
   if (!credentials || !nonEmptyString(accessToken)) {
     throw new ProviderError({
-      provider: "conta_azul",
+      provider: "bling",
       kind: "auth",
-      message: "Credenciais Conta Azul invalidas. OAuth precisa retornar accessToken.",
+      message: "Credenciais Bling invalidas. OAuth precisa retornar accessToken.",
       retryable: false
     });
   }
@@ -5223,16 +5218,16 @@ function normalizeContaAzulCredentials(value) {
     scope: nonEmptyString(credentials.scope) ? credentials.scope.trim() : void 0
   };
 }
-function validateContaAzulConnectorCredentials(value) {
+function validateBlingConnectorCredentials(value) {
   try {
-    normalizeContaAzulCredentials(value);
+    normalizeBlingCredentials(value);
     return { ok: true };
   } catch (error) {
-    return { ok: false, error: error instanceof Error ? error.message : "Credenciais Conta Azul invalidas." };
+    return { ok: false, error: error instanceof Error ? error.message : "Credenciais Bling invalidas." };
   }
 }
 function getBaseUrl() {
-  return (process.env.CONTA_AZUL_API_BASE_URL || DEFAULT_BASE_URL).replace(/\/+$/, "");
+  return (process.env.BLING_API_BASE_URL || DEFAULT_BASE_URL).replace(/\/+$/, "");
 }
 function buildUrl(config, query) {
   const url = new URL(`${getBaseUrl()}${config.path.startsWith("/") ? config.path : `/${config.path}`}`);
@@ -5247,15 +5242,11 @@ function asNumber(value) {
 }
 function extractTotalPages(payload) {
   if (!isRecord(payload)) return void 0;
-  return asNumber(payload.total_paginas ?? payload.totalPages ?? payload.total_de_paginas ?? payload.pages);
+  return asNumber(payload.totalPaginas ?? payload.total_paginas ?? payload.totalPages ?? payload.pages);
 }
 function extractTotalRecords(payload) {
   if (!isRecord(payload)) return void 0;
-  return asNumber(payload.total_itens ?? payload.totalItems ?? payload.total ?? payload.total_de_registros);
-}
-function getMaxPages() {
-  const value = Number(process.env.CONTA_AZUL_MAX_PAGES_PER_RESOURCE || DEFAULT_MAX_PAGES);
-  return Number.isFinite(value) && value > 0 ? Math.floor(value) : DEFAULT_MAX_PAGES;
+  return asNumber(payload.totalRegistros ?? payload.total_registros ?? payload.totalItems ?? payload.total);
 }
 function extractItems(payload, itemKeys) {
   if (Array.isArray(payload)) {
@@ -5273,29 +5264,34 @@ function extractItems(payload, itemKeys) {
   }
   return [];
 }
-var ContaAzulClient = class {
+function getMaxPages() {
+  const value = Number(process.env.BLING_MAX_PAGES_PER_RESOURCE || DEFAULT_MAX_PAGES);
+  return Number.isFinite(value) && value > 0 ? Math.floor(value) : DEFAULT_MAX_PAGES;
+}
+function getRateLimitMs() {
+  const value = Number(process.env.INTEGRATIONS_RATE_LIMIT_BLING_MS || DEFAULT_RATE_LIMIT_MS);
+  return Number.isFinite(value) && value >= 0 ? value : DEFAULT_RATE_LIMIT_MS;
+}
+var BlingClient = class {
   credentials;
   constructor(credentials) {
     this.credentials = credentials;
   }
   async request(config, input) {
-    const method = config.method || "GET";
-    const query = method === "GET" ? config.buildQuery?.(input) : void 0;
-    const body = method === "POST" ? config.buildBody?.(input) : void 0;
     const response = await connectorJsonRequest({
-      provider: "conta_azul",
+      provider: "bling",
       resource: config.resource,
-      url: buildUrl(config, query),
-      method,
+      url: buildUrl(config, config.buildQuery?.(input)),
+      method: "GET",
       headers: {
         Authorization: `Bearer ${this.credentials.accessToken}`
       },
-      body
+      rateLimitMs: getRateLimitMs()
     });
     return response.payload;
   }
   async *paginate(config, input) {
-    const pageSize = input?.pageSize || Number(process.env.CONTA_AZUL_PAGE_SIZE || config.defaultPageSize);
+    const pageSize = input?.pageSize || Number(process.env.BLING_PAGE_SIZE || config.defaultPageSize);
     const maxPages = getMaxPages();
     let page = Math.max(Number(input?.initialPage || input?.cursor?.page || 1), 1);
     let loadedPages = 0;
@@ -5327,21 +5323,21 @@ var ContaAzulClient = class {
     }
   }
 };
-function createContaAzulClient(credentials) {
-  return new ContaAzulClient(normalizeContaAzulCredentials(credentials));
+function createBlingClient(credentials) {
+  return new BlingClient(normalizeBlingCredentials(credentials));
 }
 
-// src/products/integracoes/cloud/src/connectors/erp/contaAzul/contaAzulMappers.ts
+// src/products/integracoes/cloud/src/connectors/erp/bling/blingMappers.ts
 var EXTERNAL_ID_CANDIDATES = [
   "id",
   "uuid",
   "codigo",
   "numero",
-  "id_legado",
-  "legacy_id",
-  "referencia",
-  "evento.id",
-  "parcela.id"
+  "numeroPedido",
+  "pedido.id",
+  "contato.id",
+  "produto.id",
+  "categoria.id"
 ];
 function getNestedValue(row, path) {
   return path.split(".").reduce((current, key) => {
@@ -5355,11 +5351,400 @@ function getExternalId(row, index) {
     if (typeof value === "string" && value.trim()) return value.trim();
     if (typeof value === "number" && Number.isFinite(value)) return String(value);
   }
+  return `bling_row_${index + 1}`;
+}
+function mapBlingRow(input) {
+  return {
+    external_id: getExternalId(input.row, input.index),
+    bling_resource: input.resource,
+    bling_page: input.page,
+    raw: input.row
+  };
+}
+function mapBlingRows(input) {
+  return input.rows.map((row, index) => mapBlingRow({
+    resource: input.resource,
+    row,
+    page: input.page,
+    index
+  }));
+}
+
+// src/products/integracoes/cloud/src/connectors/erp/bling/blingResources.ts
+var DEFAULT_PAGE_SIZE = 100;
+function pageQuery({ page, pageSize }) {
+  return {
+    pagina: page,
+    limite: pageSize
+  };
+}
+var BLING_RESOURCE_CONFIGS = [
+  {
+    resource: "clientes",
+    path: "/contatos",
+    itemKeys: ["data", "itens", "items", "contatos"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "fornecedores",
+    path: "/contatos",
+    itemKeys: ["data", "itens", "items", "contatos"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "produtos",
+    path: "/produtos",
+    itemKeys: ["data", "itens", "items", "produtos"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "pedidos_venda",
+    path: "/pedidos/vendas",
+    itemKeys: ["data", "itens", "items", "pedidos"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "compras",
+    path: "/pedidos/compras",
+    itemKeys: ["data", "itens", "items", "pedidos"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "contas_receber",
+    path: "/contas/receber",
+    itemKeys: ["data", "itens", "items", "contas"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "contas_pagar",
+    path: "/contas/pagar",
+    itemKeys: ["data", "itens", "items", "contas"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "notas_fiscais",
+    path: "/nfe",
+    itemKeys: ["data", "itens", "items", "notas"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "estoque",
+    path: "/estoques/saldos",
+    itemKeys: ["data", "itens", "items", "saldos"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  },
+  {
+    resource: "categorias",
+    path: "/categorias/produtos",
+    itemKeys: ["data", "itens", "items", "categorias"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildQuery: pageQuery
+  }
+];
+var BLING_RESOURCE_MAP = new Map(BLING_RESOURCE_CONFIGS.map((config) => [config.resource, config]));
+var BLING_RESOURCE_MANIFEST = BLING_RESOURCE_CONFIGS.map((config) => ({
+  resource: config.resource,
+  supportsIncremental: config.supportsIncremental,
+  defaultPageSize: config.defaultPageSize,
+  requiredFields: ["accessToken"]
+}));
+function getBlingResourceConfig(resource) {
+  return BLING_RESOURCE_MAP.get(resource);
+}
+function listBlingSupportedResources() {
+  return BLING_RESOURCE_CONFIGS.map((config) => config.resource);
+}
+
+// src/products/integracoes/cloud/src/connectors/erp/bling/blingConnector.ts
+function warningResult(resource, message) {
+  return {
+    status: "warning",
+    recordsIn: 0,
+    recordsUpdated: 0,
+    recordsFailed: 0,
+    errorMessage: message,
+    metadata: {
+      resource,
+      supportedResources: listBlingSupportedResources()
+    }
+  };
+}
+var blingConnector = {
+  domain: "erp",
+  provider: "bling",
+  resources: BLING_RESOURCE_MANIFEST,
+  validateCredentials: validateBlingConnectorCredentials,
+  async testConnection(context) {
+    const config = getBlingResourceConfig("produtos");
+    if (!config) return warningResult("produtos", "Recurso de teste Bling nao configurado.");
+    const client = createBlingClient(context.credentials);
+    const page = await client.paginate(config, { pageSize: 1 }).next();
+    return {
+      status: "success",
+      recordsIn: 0,
+      recordsUpdated: 0,
+      recordsFailed: 0,
+      metadata: {
+        mode: "bling_api_v3",
+        testResource: "produtos",
+        totalPages: page.value?.totalPages ?? null,
+        totalRecords: page.value?.totalRecords ?? null
+      }
+    };
+  },
+  async syncResource(context, resource) {
+    const config = getBlingResourceConfig(resource);
+    if (!config) {
+      return warningResult(resource, `Recurso Bling ainda nao mapeado para sincronizacao: ${resource}.`);
+    }
+    const client = createBlingClient(context.credentials);
+    const batches = [];
+    let recordsIn = 0;
+    let truncated = false;
+    let totalPages;
+    let totalRecords;
+    for await (const page of client.paginate(config, {
+      cursor: context.cursor
+    })) {
+      const rows = mapBlingRows({
+        resource,
+        rows: page.items,
+        page: page.page
+      });
+      recordsIn += rows.length;
+      totalPages = page.totalPages ?? totalPages;
+      totalRecords = page.totalRecords ?? totalRecords;
+      truncated = truncated || page.truncated;
+      batches.push({
+        resource,
+        rows,
+        nextCursor: page.hasMore && !page.truncated ? { page: page.page + 1 } : void 0
+      });
+    }
+    return {
+      status: truncated ? "warning" : "success",
+      recordsIn,
+      recordsUpdated: recordsIn,
+      recordsFailed: 0,
+      batches,
+      metadata: {
+        mode: "bling_api_v3",
+        resource,
+        totalPages: totalPages ?? null,
+        totalRecords: totalRecords ?? null,
+        truncated
+      }
+    };
+  },
+  async refreshToken() {
+    return {
+      status: "warning",
+      recordsIn: 0,
+      recordsUpdated: 0,
+      recordsFailed: 0,
+      errorMessage: "Refresh OAuth do Bling ainda precisa ser acionado pelo job de refresh token.",
+      metadata: {
+        mode: "oauth2",
+        refreshed: false
+      }
+    };
+  }
+};
+
+// src/products/integracoes/cloud/src/connectors/erp/contaAzul/contaAzulClient.ts
+var DEFAULT_BASE_URL2 = "https://api-v2.contaazul.com";
+var DEFAULT_MAX_PAGES2 = 100;
+function isRecord2(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function parseCredentials2(value) {
+  if (isRecord2(value)) return value;
+  if (typeof value !== "string") return null;
+  try {
+    const parsed = JSON.parse(value);
+    return isRecord2(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+function nonEmptyString2(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+function normalizeContaAzulCredentials(value) {
+  const credentials = parseCredentials2(value);
+  const accessToken = credentials?.accessToken ?? credentials?.access_token;
+  if (!credentials || !nonEmptyString2(accessToken)) {
+    throw new ProviderError({
+      provider: "conta_azul",
+      kind: "auth",
+      message: "Credenciais Conta Azul invalidas. OAuth precisa retornar accessToken.",
+      retryable: false
+    });
+  }
+  return {
+    accessToken: accessToken.trim(),
+    refreshToken: nonEmptyString2(credentials.refreshToken) ? credentials.refreshToken.trim() : nonEmptyString2(credentials.refresh_token) ? credentials.refresh_token.trim() : void 0,
+    expiresAt: nonEmptyString2(credentials.expiresAt) ? credentials.expiresAt.trim() : nonEmptyString2(credentials.expires_at) ? credentials.expires_at.trim() : void 0,
+    tokenType: nonEmptyString2(credentials.tokenType) ? credentials.tokenType.trim() : nonEmptyString2(credentials.token_type) ? credentials.token_type.trim() : void 0,
+    scope: nonEmptyString2(credentials.scope) ? credentials.scope.trim() : void 0
+  };
+}
+function validateContaAzulConnectorCredentials(value) {
+  try {
+    normalizeContaAzulCredentials(value);
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "Credenciais Conta Azul invalidas." };
+  }
+}
+function getBaseUrl2() {
+  return (process.env.CONTA_AZUL_API_BASE_URL || DEFAULT_BASE_URL2).replace(/\/+$/, "");
+}
+function buildUrl2(config, query) {
+  const url = new URL(`${getBaseUrl2()}${config.path.startsWith("/") ? config.path : `/${config.path}`}`);
+  for (const [key, value] of Object.entries(query || {})) {
+    if (value !== void 0 && value !== null && value !== "") url.searchParams.set(key, String(value));
+  }
+  return url.toString();
+}
+function asNumber2(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : void 0;
+}
+function extractTotalPages2(payload) {
+  if (!isRecord2(payload)) return void 0;
+  return asNumber2(payload.total_paginas ?? payload.totalPages ?? payload.total_de_paginas ?? payload.pages);
+}
+function extractTotalRecords2(payload) {
+  if (!isRecord2(payload)) return void 0;
+  return asNumber2(payload.total_itens ?? payload.totalItems ?? payload.total ?? payload.total_de_registros);
+}
+function getMaxPages2() {
+  const value = Number(process.env.CONTA_AZUL_MAX_PAGES_PER_RESOURCE || DEFAULT_MAX_PAGES2);
+  return Number.isFinite(value) && value > 0 ? Math.floor(value) : DEFAULT_MAX_PAGES2;
+}
+function extractItems2(payload, itemKeys) {
+  if (Array.isArray(payload)) {
+    return payload.filter((item) => isRecord2(item));
+  }
+  for (const key of itemKeys) {
+    const value = payload[key];
+    if (Array.isArray(value)) {
+      return value.filter((item) => isRecord2(item));
+    }
+  }
+  const arrays = Object.values(payload).filter(Array.isArray);
+  if (arrays.length === 1) {
+    return arrays[0].filter((item) => isRecord2(item));
+  }
+  return [];
+}
+var ContaAzulClient = class {
+  credentials;
+  constructor(credentials) {
+    this.credentials = credentials;
+  }
+  async request(config, input) {
+    const method = config.method || "GET";
+    const query = method === "GET" ? config.buildQuery?.(input) : void 0;
+    const body = method === "POST" ? config.buildBody?.(input) : void 0;
+    const response = await connectorJsonRequest({
+      provider: "conta_azul",
+      resource: config.resource,
+      url: buildUrl2(config, query),
+      method,
+      headers: {
+        Authorization: `Bearer ${this.credentials.accessToken}`
+      },
+      body
+    });
+    return response.payload;
+  }
+  async *paginate(config, input) {
+    const pageSize = input?.pageSize || Number(process.env.CONTA_AZUL_PAGE_SIZE || config.defaultPageSize);
+    const maxPages = getMaxPages2();
+    let page = Math.max(Number(input?.initialPage || input?.cursor?.page || 1), 1);
+    let loadedPages = 0;
+    while (loadedPages < maxPages) {
+      const payload = await this.request(config, {
+        page,
+        pageSize,
+        cursor: input?.cursor
+      });
+      const items = extractItems2(payload, config.itemKeys);
+      const totalPages = extractTotalPages2(payload);
+      const totalRecords = extractTotalRecords2(payload);
+      loadedPages += 1;
+      const hasMoreByTotal = totalPages ? page < totalPages : void 0;
+      const hasMore = hasMoreByTotal ?? items.length >= pageSize;
+      const truncated = hasMore && loadedPages >= maxPages;
+      yield {
+        page,
+        pageSize,
+        items,
+        payload,
+        totalPages,
+        totalRecords,
+        hasMore,
+        truncated
+      };
+      if (!hasMore || truncated) return;
+      page += 1;
+    }
+  }
+};
+function createContaAzulClient(credentials) {
+  return new ContaAzulClient(normalizeContaAzulCredentials(credentials));
+}
+
+// src/products/integracoes/cloud/src/connectors/erp/contaAzul/contaAzulMappers.ts
+var EXTERNAL_ID_CANDIDATES2 = [
+  "id",
+  "uuid",
+  "codigo",
+  "numero",
+  "id_legado",
+  "legacy_id",
+  "referencia",
+  "evento.id",
+  "parcela.id"
+];
+function getNestedValue2(row, path) {
+  return path.split(".").reduce((current, key) => {
+    if (!current || typeof current !== "object" || Array.isArray(current)) return void 0;
+    return current[key];
+  }, row);
+}
+function getExternalId2(row, index) {
+  for (const key of EXTERNAL_ID_CANDIDATES2) {
+    const value = getNestedValue2(row, key);
+    if (typeof value === "string" && value.trim()) return value.trim();
+    if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  }
   return `conta_azul_row_${index + 1}`;
 }
 function mapContaAzulRow(input) {
   return {
-    external_id: getExternalId(input.row, input.index),
+    external_id: getExternalId2(input.row, input.index),
     conta_azul_resource: input.resource,
     conta_azul_page: input.page,
     raw: input.row
@@ -5375,8 +5760,8 @@ function mapContaAzulRows(input) {
 }
 
 // src/products/integracoes/cloud/src/connectors/erp/contaAzul/contaAzulResources.ts
-var DEFAULT_PAGE_SIZE = 50;
-function pageQuery({ page, pageSize }) {
+var DEFAULT_PAGE_SIZE2 = 50;
+function pageQuery2({ page, pageSize }) {
   return {
     pagina: page,
     tamanho_pagina: pageSize
@@ -5393,48 +5778,48 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     resource: "clientes",
     path: "/v1/pessoas",
     itemKeys: ["itens", "items", "data", "content", "pessoas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
     supportsIncremental: false,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "fornecedores",
     path: "/v1/pessoas",
     itemKeys: ["itens", "items", "data", "content", "pessoas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
     supportsIncremental: false,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "produtos",
     path: "/v1/produtos",
     itemKeys: ["itens", "items", "data", "content", "produtos"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
     supportsIncremental: false,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "categorias",
     path: "/v1/categorias",
     itemKeys: ["itens", "items", "data", "content", "categorias"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
     supportsIncremental: false,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "centros_custo",
     path: "/v1/centro-de-custo",
     itemKeys: ["itens", "items", "data", "content", "centros_custo"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
     supportsIncremental: false,
-    buildQuery: pageQuery
+    buildQuery: pageQuery2
   },
   {
     resource: "contas_receber",
     path: "/v1/financeiro/eventos-financeiros/contas-a-receber/buscar",
     method: "POST",
     itemKeys: ["itens", "items", "data", "content", "eventos", "parcelas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
     supportsIncremental: false,
     buildBody: payableReceivableBody
   },
@@ -5443,7 +5828,7 @@ var CONTA_AZUL_RESOURCE_CONFIGS = [
     path: "/v1/financeiro/eventos-financeiros/contas-a-pagar/buscar",
     method: "POST",
     itemKeys: ["itens", "items", "data", "content", "eventos", "parcelas"],
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: DEFAULT_PAGE_SIZE2,
     supportsIncremental: false,
     buildBody: payableReceivableBody
   }
@@ -5463,7 +5848,7 @@ function listContaAzulSupportedResources() {
 }
 
 // src/products/integracoes/cloud/src/connectors/erp/contaAzul/contaAzulConnector.ts
-function warningResult(resource, message) {
+function warningResult2(resource, message) {
   return {
     status: "warning",
     recordsIn: 0,
@@ -5483,7 +5868,7 @@ var contaAzulConnector = {
   validateCredentials: validateContaAzulConnectorCredentials,
   async testConnection(context) {
     const config = getContaAzulResourceConfig("clientes");
-    if (!config) return warningResult("clientes", "Recurso de teste Conta Azul nao configurado.");
+    if (!config) return warningResult2("clientes", "Recurso de teste Conta Azul nao configurado.");
     const client = createContaAzulClient(context.credentials);
     const page = await client.paginate(config, { pageSize: 1 }).next();
     return {
@@ -5502,7 +5887,7 @@ var contaAzulConnector = {
   async syncResource(context, resource) {
     const config = getContaAzulResourceConfig(resource);
     if (!config) {
-      return warningResult(resource, `Recurso Conta Azul ainda nao mapeado para sincronizacao: ${resource}.`);
+      return warningResult2(resource, `Recurso Conta Azul ainda nao mapeado para sincronizacao: ${resource}.`);
     }
     const client = createContaAzulClient(context.credentials);
     const batches = [];
@@ -5559,27 +5944,27 @@ var contaAzulConnector = {
 };
 
 // src/products/integracoes/cloud/src/connectors/erp/omie/omieClient.ts
-var DEFAULT_BASE_URL2 = "https://app.omie.com.br/api/v1";
-var DEFAULT_MAX_PAGES2 = 100;
-function isRecord2(value) {
+var DEFAULT_BASE_URL3 = "https://app.omie.com.br/api/v1";
+var DEFAULT_MAX_PAGES3 = 100;
+function isRecord3(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
-function parseCredentials2(value) {
-  if (isRecord2(value)) return value;
+function parseCredentials3(value) {
+  if (isRecord3(value)) return value;
   if (typeof value !== "string") return null;
   try {
     const parsed = JSON.parse(value);
-    return isRecord2(parsed) ? parsed : null;
+    return isRecord3(parsed) ? parsed : null;
   } catch {
     return null;
   }
 }
-function nonEmptyString2(value) {
+function nonEmptyString3(value) {
   return typeof value === "string" && value.trim().length > 0;
 }
 function normalizeOmieCredentials(value) {
-  const credentials = parseCredentials2(value);
-  if (!credentials || !nonEmptyString2(credentials.app_key) || !nonEmptyString2(credentials.app_secret)) {
+  const credentials = parseCredentials3(value);
+  if (!credentials || !nonEmptyString3(credentials.app_key) || !nonEmptyString3(credentials.app_secret)) {
     throw new ProviderError({
       provider: "omie",
       kind: "auth",
@@ -5600,41 +5985,41 @@ function validateOmieConnectorCredentials(value) {
     return { ok: false, error: error instanceof Error ? error.message : "Credenciais Omie invalidas." };
   }
 }
-function getBaseUrl2() {
-  return (process.env.OMIE_API_BASE_URL || DEFAULT_BASE_URL2).replace(/\/+$/, "");
+function getBaseUrl3() {
+  return (process.env.OMIE_API_BASE_URL || DEFAULT_BASE_URL3).replace(/\/+$/, "");
 }
-function buildUrl2(endpoint) {
-  return `${getBaseUrl2()}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+function buildUrl3(endpoint) {
+  return `${getBaseUrl3()}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 }
-function asNumber2(value) {
+function asNumber3(value) {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : void 0;
 }
 function getTotalPages(payload) {
-  return asNumber2(payload.total_de_paginas ?? payload.nTotPaginas);
+  return asNumber3(payload.total_de_paginas ?? payload.nTotPaginas);
 }
 function getTotalRecords(payload) {
-  return asNumber2(payload.total_de_registros ?? payload.nTotRegistros);
+  return asNumber3(payload.total_de_registros ?? payload.nTotRegistros);
 }
-function getMaxPages2() {
-  const value = Number(process.env.OMIE_MAX_PAGES_PER_RESOURCE || DEFAULT_MAX_PAGES2);
-  return Number.isFinite(value) && value > 0 ? Math.floor(value) : DEFAULT_MAX_PAGES2;
+function getMaxPages3() {
+  const value = Number(process.env.OMIE_MAX_PAGES_PER_RESOURCE || DEFAULT_MAX_PAGES3);
+  return Number.isFinite(value) && value > 0 ? Math.floor(value) : DEFAULT_MAX_PAGES3;
 }
-function extractItems2(payload, itemKeys) {
+function extractItems3(payload, itemKeys) {
   for (const key of itemKeys) {
     const value = payload[key];
     if (Array.isArray(value)) {
-      return value.filter((item) => isRecord2(item));
+      return value.filter((item) => isRecord3(item));
     }
   }
   const arrays = Object.values(payload).filter(Array.isArray);
   if (arrays.length === 1) {
-    return arrays[0].filter((item) => isRecord2(item));
+    return arrays[0].filter((item) => isRecord3(item));
   }
   return [];
 }
 function assertNoOmieFault(payload, resource) {
-  if (!isRecord2(payload)) return;
+  if (!isRecord3(payload)) return;
   const fault = payload.faultstring ?? payload.faultcode ?? payload.error ?? payload.message;
   if (!fault) return;
   throw new ProviderError({
@@ -5661,7 +6046,7 @@ var OmieClient = class {
     const response = await connectorJsonRequest({
       provider: "omie",
       resource: config.resource,
-      url: buildUrl2(config.endpoint),
+      url: buildUrl3(config.endpoint),
       method: "POST",
       body
     });
@@ -5670,7 +6055,7 @@ var OmieClient = class {
   }
   async *paginate(config, input) {
     const pageSize = input?.pageSize || Number(process.env.OMIE_PAGE_SIZE || config.defaultPageSize);
-    const maxPages = getMaxPages2();
+    const maxPages = getMaxPages3();
     let page = Math.max(Number(input?.initialPage || input?.cursor?.page || 1), 1);
     let loadedPages = 0;
     while (loadedPages < maxPages) {
@@ -5679,7 +6064,7 @@ var OmieClient = class {
         pageSize,
         cursor: input?.cursor
       }));
-      const items = extractItems2(payload, config.itemKeys);
+      const items = extractItems3(payload, config.itemKeys);
       const totalPages = getTotalPages(payload);
       const totalRecords = getTotalRecords(payload);
       loadedPages += 1;
@@ -5706,7 +6091,7 @@ function createOmieClient(credentials) {
 }
 
 // src/products/integracoes/cloud/src/connectors/erp/omie/omieMappers.ts
-var EXTERNAL_ID_CANDIDATES2 = [
+var EXTERNAL_ID_CANDIDATES3 = [
   "codigo_cliente_omie",
   "codigo_cliente_integracao",
   "codigo_produto",
@@ -5721,15 +6106,15 @@ var EXTERNAL_ID_CANDIDATES2 = [
   "codigo",
   "id"
 ];
-function getNestedValue2(row, path) {
+function getNestedValue3(row, path) {
   return path.split(".").reduce((current, key) => {
     if (!current || typeof current !== "object" || Array.isArray(current)) return void 0;
     return current[key];
   }, row);
 }
-function getExternalId2(row, index) {
-  for (const key of EXTERNAL_ID_CANDIDATES2) {
-    const value = getNestedValue2(row, key);
+function getExternalId3(row, index) {
+  for (const key of EXTERNAL_ID_CANDIDATES3) {
+    const value = getNestedValue3(row, key);
     if (typeof value === "string" && value.trim()) return value.trim();
     if (typeof value === "number" && Number.isFinite(value)) return String(value);
   }
@@ -5737,7 +6122,7 @@ function getExternalId2(row, index) {
 }
 function mapOmieRow(input) {
   return {
-    external_id: getExternalId2(input.row, input.index),
+    external_id: getExternalId3(input.row, input.index),
     omie_resource: input.resource,
     omie_page: input.page,
     raw: input.row
@@ -5753,7 +6138,7 @@ function mapOmieRows(input) {
 }
 
 // src/products/integracoes/cloud/src/connectors/erp/omie/omieResources.ts
-var DEFAULT_PAGE_SIZE2 = 50;
+var DEFAULT_PAGE_SIZE3 = 50;
 function defaultParams({ page, pageSize }) {
   return {
     pagina: page,
@@ -5767,7 +6152,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/geral/clientes/",
     call: "ListarClientes",
     itemKeys: ["clientes_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -5776,7 +6161,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/geral/clientes/",
     call: "ListarClientes",
     itemKeys: ["clientes_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -5785,7 +6170,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/geral/produtos/",
     call: "ListarProdutos",
     itemKeys: ["produto_servico_cadastro", "produtos_servico_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -5794,7 +6179,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/produtos/pedido/",
     call: "ListarPedidos",
     itemKeys: ["pedido_venda_produto", "pedidos_venda_produto"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -5803,7 +6188,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/financas/contareceber/",
     call: "ListarContasReceber",
     itemKeys: ["conta_receber_cadastro", "contas_receber_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -5812,7 +6197,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/financas/contapagar/",
     call: "ListarContasPagar",
     itemKeys: ["conta_pagar_cadastro", "contas_pagar_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
     supportsIncremental: false,
     buildParams: defaultParams
   },
@@ -5821,7 +6206,7 @@ var OMIE_RESOURCE_CONFIGS = [
     endpoint: "/geral/categorias/",
     call: "ListarCategorias",
     itemKeys: ["categoria_cadastro", "categorias_cadastro"],
-    defaultPageSize: DEFAULT_PAGE_SIZE2,
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
     supportsIncremental: false,
     buildParams: defaultParams
   }
@@ -5841,7 +6226,7 @@ function listOmieSupportedResources() {
 }
 
 // src/products/integracoes/cloud/src/connectors/erp/omie/omieConnector.ts
-function warningResult2(resource, message) {
+function warningResult3(resource, message) {
   return {
     status: "warning",
     recordsIn: 0,
@@ -5861,7 +6246,7 @@ var omieConnector = {
   validateCredentials: validateOmieConnectorCredentials,
   async testConnection(context) {
     const config = getOmieResourceConfig("clientes");
-    if (!config) return warningResult2("clientes", "Recurso de teste Omie nao configurado.");
+    if (!config) return warningResult3("clientes", "Recurso de teste Omie nao configurado.");
     const client = createOmieClient(context.credentials);
     const payload = await client.call(config, {
       pagina: 1,
@@ -5884,7 +6269,7 @@ var omieConnector = {
   async syncResource(context, resource) {
     const config = getOmieResourceConfig(resource);
     if (!config) {
-      return warningResult2(resource, `Recurso Omie ainda nao mapeado para sincronizacao: ${resource}.`);
+      return warningResult3(resource, `Recurso Omie ainda nao mapeado para sincronizacao: ${resource}.`);
     }
     const client = createOmieClient(context.credentials);
     const batches = [];
@@ -5939,11 +6324,396 @@ var omieConnector = {
   }
 };
 
-// src/products/integracoes/cloud/src/connectors/erp/tinyConnector.ts
-var tinyConnector = createStubConnector({
+// src/products/integracoes/cloud/src/connectors/erp/tiny/tinyClient.ts
+var DEFAULT_BASE_URL4 = "https://api.tiny.com.br/public-api/v3";
+var DEFAULT_MAX_PAGES4 = 100;
+var DEFAULT_RATE_LIMIT_MS2 = 1e3;
+function isRecord4(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function parseCredentials4(value) {
+  if (isRecord4(value)) return value;
+  if (typeof value !== "string") return null;
+  try {
+    const parsed = JSON.parse(value);
+    return isRecord4(parsed) ? parsed : { accessToken: value };
+  } catch {
+    return { accessToken: value };
+  }
+}
+function nonEmptyString4(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+function normalizeTinyCredentials(value) {
+  const credentials = parseCredentials4(value);
+  const accessToken = credentials?.accessToken ?? credentials?.access_token ?? credentials?.token;
+  if (!credentials || !nonEmptyString4(accessToken)) {
+    throw new ProviderError({
+      provider: "tiny",
+      kind: "auth",
+      message: "Credenciais Tiny invalidas. OAuth precisa retornar accessToken.",
+      retryable: false
+    });
+  }
+  return {
+    accessToken: accessToken.trim(),
+    refreshToken: nonEmptyString4(credentials.refreshToken) ? credentials.refreshToken.trim() : nonEmptyString4(credentials.refresh_token) ? credentials.refresh_token.trim() : void 0,
+    expiresAt: nonEmptyString4(credentials.expiresAt) ? credentials.expiresAt.trim() : nonEmptyString4(credentials.expires_at) ? credentials.expires_at.trim() : void 0,
+    tokenType: nonEmptyString4(credentials.tokenType) ? credentials.tokenType.trim() : nonEmptyString4(credentials.token_type) ? credentials.token_type.trim() : void 0,
+    scope: nonEmptyString4(credentials.scope) ? credentials.scope.trim() : void 0
+  };
+}
+function validateTinyConnectorCredentials(value) {
+  try {
+    normalizeTinyCredentials(value);
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "Credenciais Tiny invalidas." };
+  }
+}
+function getBaseUrl4() {
+  return (process.env.TINY_API_BASE_URL || DEFAULT_BASE_URL4).replace(/\/+$/, "");
+}
+function buildUrl4(config, query) {
+  const url = new URL(`${getBaseUrl4()}${config.path.startsWith("/") ? config.path : `/${config.path}`}`);
+  for (const [key, value] of Object.entries(query || {})) {
+    if (value !== void 0 && value !== null && value !== "") url.searchParams.set(key, String(value));
+  }
+  return url.toString();
+}
+function asNumber4(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : void 0;
+}
+function extractTotalPages3(payload) {
+  if (!isRecord4(payload)) return void 0;
+  return asNumber4(payload.totalPaginas ?? payload.total_paginas ?? payload.totalPages ?? payload.pages);
+}
+function extractTotalRecords3(payload) {
+  if (!isRecord4(payload)) return void 0;
+  return asNumber4(payload.totalRegistros ?? payload.total_registros ?? payload.totalItems ?? payload.total);
+}
+function extractItems4(payload, itemKeys) {
+  if (Array.isArray(payload)) {
+    return payload.filter((item) => isRecord4(item));
+  }
+  for (const key of itemKeys) {
+    const value = payload[key];
+    if (Array.isArray(value)) {
+      return value.filter((item) => isRecord4(item));
+    }
+  }
+  const arrays = Object.values(payload).filter(Array.isArray);
+  if (arrays.length === 1) {
+    return arrays[0].filter((item) => isRecord4(item));
+  }
+  return [];
+}
+function getMaxPages4() {
+  const value = Number(process.env.TINY_MAX_PAGES_PER_RESOURCE || DEFAULT_MAX_PAGES4);
+  return Number.isFinite(value) && value > 0 ? Math.floor(value) : DEFAULT_MAX_PAGES4;
+}
+function getRateLimitMs2() {
+  const value = Number(process.env.INTEGRATIONS_RATE_LIMIT_TINY_MS || DEFAULT_RATE_LIMIT_MS2);
+  return Number.isFinite(value) && value >= 0 ? value : DEFAULT_RATE_LIMIT_MS2;
+}
+var TinyClient = class {
+  credentials;
+  constructor(credentials) {
+    this.credentials = credentials;
+  }
+  async request(config, input) {
+    const response = await connectorJsonRequest({
+      provider: "tiny",
+      resource: config.resource,
+      url: buildUrl4(config, config.buildQuery?.(input)),
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${this.credentials.accessToken}`
+      },
+      rateLimitMs: getRateLimitMs2()
+    });
+    return response.payload;
+  }
+  async *paginate(config, input) {
+    const pageSize = input?.pageSize || Number(process.env.TINY_PAGE_SIZE || config.defaultPageSize);
+    const maxPages = getMaxPages4();
+    let page = Math.max(Number(input?.initialPage || input?.cursor?.page || 1), 1);
+    let loadedPages = 0;
+    while (loadedPages < maxPages) {
+      const payload = await this.request(config, {
+        page,
+        pageSize,
+        cursor: input?.cursor
+      });
+      const items = extractItems4(payload, config.itemKeys);
+      const totalPages = extractTotalPages3(payload);
+      const totalRecords = extractTotalRecords3(payload);
+      loadedPages += 1;
+      const hasMoreByTotal = totalPages ? page < totalPages : void 0;
+      const hasMore = hasMoreByTotal ?? items.length >= pageSize;
+      const truncated = hasMore && loadedPages >= maxPages;
+      yield {
+        page,
+        pageSize,
+        items,
+        payload,
+        totalPages,
+        totalRecords,
+        hasMore,
+        truncated
+      };
+      if (!hasMore || truncated) return;
+      page += 1;
+    }
+  }
+};
+function createTinyClient(credentials) {
+  return new TinyClient(normalizeTinyCredentials(credentials));
+}
+
+// src/products/integracoes/cloud/src/connectors/erp/tiny/tinyMappers.ts
+var EXTERNAL_ID_CANDIDATES4 = [
+  "id",
+  "uuid",
+  "codigo",
+  "numero",
+  "numeroPedido",
+  "idContato",
+  "contato.id",
+  "cliente.id",
+  "produto.id"
+];
+function getNestedValue4(row, path) {
+  return path.split(".").reduce((current, key) => {
+    if (!current || typeof current !== "object" || Array.isArray(current)) return void 0;
+    return current[key];
+  }, row);
+}
+function getExternalId4(row, index) {
+  for (const key of EXTERNAL_ID_CANDIDATES4) {
+    const value = getNestedValue4(row, key);
+    if (typeof value === "string" && value.trim()) return value.trim();
+    if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  }
+  return `tiny_row_${index + 1}`;
+}
+function mapTinyRow(input) {
+  return {
+    external_id: getExternalId4(input.row, input.index),
+    tiny_resource: input.resource,
+    tiny_page: input.page,
+    raw: input.row
+  };
+}
+function mapTinyRows(input) {
+  return input.rows.map((row, index) => mapTinyRow({
+    resource: input.resource,
+    row,
+    page: input.page,
+    index
+  }));
+}
+
+// src/products/integracoes/cloud/src/connectors/erp/tiny/tinyResources.ts
+var DEFAULT_PAGE_SIZE4 = 100;
+function pageQuery3({ page, pageSize }) {
+  return {
+    pagina: page,
+    limite: pageSize
+  };
+}
+var TINY_RESOURCE_CONFIGS = [
+  {
+    resource: "clientes",
+    path: "/contatos",
+    itemKeys: ["itens", "items", "data", "content", "contatos"],
+    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    supportsIncremental: false,
+    buildQuery: pageQuery3
+  },
+  {
+    resource: "fornecedores",
+    path: "/contatos",
+    itemKeys: ["itens", "items", "data", "content", "contatos"],
+    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    supportsIncremental: false,
+    buildQuery: pageQuery3
+  },
+  {
+    resource: "produtos",
+    path: "/produtos",
+    itemKeys: ["itens", "items", "data", "content", "produtos"],
+    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    supportsIncremental: false,
+    buildQuery: pageQuery3
+  },
+  {
+    resource: "pedidos_venda",
+    path: "/pedidos",
+    itemKeys: ["itens", "items", "data", "content", "pedidos"],
+    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    supportsIncremental: false,
+    buildQuery: pageQuery3
+  },
+  {
+    resource: "compras",
+    path: "/ordem-compras",
+    itemKeys: ["itens", "items", "data", "content", "ordem_compras", "compras"],
+    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    supportsIncremental: false,
+    buildQuery: pageQuery3
+  },
+  {
+    resource: "contas_receber",
+    path: "/contas-receber",
+    itemKeys: ["itens", "items", "data", "content", "contas_receber"],
+    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    supportsIncremental: false,
+    buildQuery: pageQuery3
+  },
+  {
+    resource: "contas_pagar",
+    path: "/contas-pagar",
+    itemKeys: ["itens", "items", "data", "content", "contas_pagar"],
+    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    supportsIncremental: false,
+    buildQuery: pageQuery3
+  },
+  {
+    resource: "notas_fiscais",
+    path: "/notas",
+    itemKeys: ["itens", "items", "data", "content", "notas"],
+    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    supportsIncremental: false,
+    buildQuery: pageQuery3
+  },
+  {
+    resource: "estoque",
+    path: "/produto-estoques",
+    itemKeys: ["itens", "items", "data", "content", "produto_estoques", "estoques"],
+    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    supportsIncremental: false,
+    buildQuery: pageQuery3
+  },
+  {
+    resource: "categorias",
+    path: "/categorias",
+    itemKeys: ["itens", "items", "data", "content", "categorias"],
+    defaultPageSize: DEFAULT_PAGE_SIZE4,
+    supportsIncremental: false,
+    buildQuery: pageQuery3
+  }
+];
+var TINY_RESOURCE_MAP = new Map(TINY_RESOURCE_CONFIGS.map((config) => [config.resource, config]));
+var TINY_RESOURCE_MANIFEST = TINY_RESOURCE_CONFIGS.map((config) => ({
+  resource: config.resource,
+  supportsIncremental: config.supportsIncremental,
+  defaultPageSize: config.defaultPageSize,
+  requiredFields: ["accessToken"]
+}));
+function getTinyResourceConfig(resource) {
+  return TINY_RESOURCE_MAP.get(resource);
+}
+function listTinySupportedResources() {
+  return TINY_RESOURCE_CONFIGS.map((config) => config.resource);
+}
+
+// src/products/integracoes/cloud/src/connectors/erp/tiny/tinyConnector.ts
+function warningResult4(resource, message) {
+  return {
+    status: "warning",
+    recordsIn: 0,
+    recordsUpdated: 0,
+    recordsFailed: 0,
+    errorMessage: message,
+    metadata: {
+      resource,
+      supportedResources: listTinySupportedResources()
+    }
+  };
+}
+var tinyConnector = {
   domain: "erp",
-  provider: "tiny"
-});
+  provider: "tiny",
+  resources: TINY_RESOURCE_MANIFEST,
+  validateCredentials: validateTinyConnectorCredentials,
+  async testConnection(context) {
+    const config = getTinyResourceConfig("produtos");
+    if (!config) return warningResult4("produtos", "Recurso de teste Tiny nao configurado.");
+    const client = createTinyClient(context.credentials);
+    const page = await client.paginate(config, { pageSize: 1 }).next();
+    return {
+      status: "success",
+      recordsIn: 0,
+      recordsUpdated: 0,
+      recordsFailed: 0,
+      metadata: {
+        mode: "tiny_api_v3",
+        testResource: "produtos",
+        totalPages: page.value?.totalPages ?? null,
+        totalRecords: page.value?.totalRecords ?? null
+      }
+    };
+  },
+  async syncResource(context, resource) {
+    const config = getTinyResourceConfig(resource);
+    if (!config) {
+      return warningResult4(resource, `Recurso Tiny ainda nao mapeado para sincronizacao: ${resource}.`);
+    }
+    const client = createTinyClient(context.credentials);
+    const batches = [];
+    let recordsIn = 0;
+    let truncated = false;
+    let totalPages;
+    let totalRecords;
+    for await (const page of client.paginate(config, {
+      cursor: context.cursor
+    })) {
+      const rows = mapTinyRows({
+        resource,
+        rows: page.items,
+        page: page.page
+      });
+      recordsIn += rows.length;
+      totalPages = page.totalPages ?? totalPages;
+      totalRecords = page.totalRecords ?? totalRecords;
+      truncated = truncated || page.truncated;
+      batches.push({
+        resource,
+        rows,
+        nextCursor: page.hasMore && !page.truncated ? { page: page.page + 1 } : void 0
+      });
+    }
+    return {
+      status: truncated ? "warning" : "success",
+      recordsIn,
+      recordsUpdated: recordsIn,
+      recordsFailed: 0,
+      batches,
+      metadata: {
+        mode: "tiny_api_v3",
+        resource,
+        totalPages: totalPages ?? null,
+        totalRecords: totalRecords ?? null,
+        truncated
+      }
+    };
+  },
+  async refreshToken() {
+    return {
+      status: "warning",
+      recordsIn: 0,
+      recordsUpdated: 0,
+      recordsFailed: 0,
+      errorMessage: "Refresh OAuth do Tiny ainda precisa ser acionado pelo job de refresh token.",
+      metadata: {
+        mode: "oauth2",
+        refreshed: false
+      }
+    };
+  }
+};
 
 // src/products/integracoes/cloud/src/connectors/erp/totvsConnector.ts
 var totvsConnector = createStubConnector({
@@ -6114,7 +6884,7 @@ async function ensureRawTable(projectId, dataset, table) {
     }
   );
 }
-function getExternalId3(row) {
+function getExternalId5(row) {
   const value = row.external_id ?? row.externalId ?? row.id ?? row.codigo ?? row.numero;
   if (value == null) return null;
   return typeof value === "string" || typeof value === "number" ? String(value) : null;
@@ -6157,7 +6927,7 @@ async function writeRowsToBigQuery(input) {
           skipInvalidRows: false,
           ignoreUnknownValues: false,
           rows: batch.map((row, index) => {
-            const externalId = getExternalId3(row);
+            const externalId = getExternalId5(row);
             return {
               insertId: `${input.connectionId}:${input.resource}:${input.runId || "run"}:${externalId || `${batchIndex}-${index}`}`,
               json: {
@@ -6420,7 +7190,7 @@ async function createIntegrationEvent(input) {
 }
 
 // src/products/integracoes/cloud/src/worker/jobs/runSyncJob.ts
-function parseCredentials3(value) {
+function parseCredentials5(value) {
   if (!value) return null;
   try {
     const parsed = JSON.parse(value);
@@ -6467,7 +7237,7 @@ async function runSyncJob(input) {
   let status = "success";
   const resourceSummaries = [];
   try {
-    const credentials = parseCredentials3(connection.secretRef ? await readSecret(connection.secretRef) : null);
+    const credentials = parseCredentials5(connection.secretRef ? await readSecret(connection.secretRef) : null);
     for (const resource of resources) {
       await createIntegrationEvent({
         tenantId: input.tenantId,
@@ -6616,11 +7386,11 @@ function parsePayloadFromEnv() {
   const payload = JSON.parse(rawPayload);
   return payload;
 }
-function isRecord3(value) {
+function isRecord5(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function normalizePayload(value) {
-  if (!isRecord3(value)) return {};
+  if (!isRecord5(value)) return {};
   return {
     tenantId: typeof value.tenantId === "number" ? value.tenantId : void 0,
     connectionId: typeof value.connectionId === "string" ? value.connectionId : void 0,
@@ -6630,7 +7400,7 @@ function normalizePayload(value) {
   };
 }
 function parsePubSubPushBody(body) {
-  if (!isRecord3(body)) return {};
+  if (!isRecord5(body)) return {};
   const pubSubBody = body;
   const encodedData = pubSubBody.message?.data;
   if (!encodedData) return normalizePayload(body);

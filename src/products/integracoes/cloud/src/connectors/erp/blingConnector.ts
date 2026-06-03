@@ -1,6 +1,1 @@
-import { createStubConnector } from '@/products/integracoes/cloud/src/connectors/stubConnector'
-
-export const blingConnector = createStubConnector({
-  domain: 'erp',
-  provider: 'bling',
-})
+export { blingConnector } from '@/products/integracoes/cloud/src/connectors/erp/bling/blingConnector'

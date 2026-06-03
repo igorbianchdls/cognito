@@ -1,6 +1,1 @@
-import { createStubConnector } from '@/products/integracoes/cloud/src/connectors/stubConnector'
-
-export const tinyConnector = createStubConnector({
-  domain: 'erp',
-  provider: 'tiny',
-})
+export { tinyConnector } from '@/products/integracoes/cloud/src/connectors/erp/tiny/tinyConnector'
