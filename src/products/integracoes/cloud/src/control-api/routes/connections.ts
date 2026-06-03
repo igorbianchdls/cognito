@@ -2,6 +2,8 @@ import type {
   ControlApiRequest,
   ControlApiResponse,
 } from '@/products/integracoes/cloud/src/control-api/server'
+import { validateProviderCredentials } from '@/products/integracoes/cloud/src/lib/credentials'
+import { buildOAuthAuthorizationUrl, createOAuthState } from '@/products/integracoes/cloud/src/lib/oauth'
 import { writeConnectionCredentialsSecret } from '@/products/integracoes/cloud/src/lib/secretManager'
 import {
   createIntegrationEvent,
@@ -37,13 +39,6 @@ function parseBody(body: unknown): ConnectionSetupBody {
   }
 }
 
-function serializeCredentials(value: unknown): string | null {
-  if (value == null) return null
-  if (typeof value === 'string') return value.trim() || null
-  if (isRecord(value)) return JSON.stringify(value)
-  return null
-}
-
 export async function handleConnectionSetup(request: ControlApiRequest): Promise<ControlApiResponse> {
   try {
     const body = parseBody(request.body)
@@ -58,12 +53,22 @@ export async function handleConnectionSetup(request: ControlApiRequest): Promise
     }
 
     const provider = requireIntegrationProvider(body.provider)
-    const serializedCredentials = serializeCredentials(body.credentials)
-    if (serializedCredentials) {
+    if (body.credentials != null) {
+      const validation = validateProviderCredentials(provider, body.credentials)
+      if (!validation.ok || !validation.serialized) {
+        return {
+          status: 400,
+          body: {
+            ok: false,
+            error: validation.error || 'Credenciais invalidas.',
+          },
+        }
+      }
+
       const secret = await writeConnectionCredentialsSecret({
         tenantId: body.tenantId,
         connectionId: body.connectionId,
-        value: serializedCredentials,
+        value: validation.serialized,
       })
       await updateConnectionSecret({
         tenantId: body.tenantId,
@@ -102,16 +107,50 @@ export async function handleConnectionSetup(request: ControlApiRequest): Promise
       }
     }
 
-    const nextStatus = provider.authType === 'oauth2' ? 'pending_auth' : 'pending_auth'
+    if (provider.authType === 'oauth2') {
+      const state = createOAuthState({
+        tenantId: body.tenantId,
+        connectionId: body.connectionId,
+        provider: provider.slug,
+      })
+      const authorization = buildOAuthAuthorizationUrl(provider.slug, state)
+      await updateConnectionStatus({
+        tenantId: body.tenantId,
+        connectionId: body.connectionId,
+        status: 'pending_auth',
+        metadata: {
+          setupMode: 'gcp',
+          authType: provider.authType,
+          oauthRequired: true,
+          reconnect: body.reconnect === true,
+          oauthStateCreatedAt: new Date().toISOString(),
+        },
+      })
+
+      return {
+        status: 202,
+        body: {
+          ok: true,
+          mode: 'gcp',
+          status: 'pending_auth',
+          authType: provider.authType,
+          authorizationUrl: authorization.authorizationUrl,
+          message: authorization.ready
+            ? 'Conexao aguardando autorizacao OAuth.'
+            : 'OAuth ainda precisa de variaveis de ambiente do provider.',
+        },
+      }
+    }
+
     await updateConnectionStatus({
       tenantId: body.tenantId,
       connectionId: body.connectionId,
-      status: nextStatus,
+      status: 'pending_auth',
       metadata: {
         setupMode: 'gcp',
         authType: provider.authType,
-        credentialsRequired: provider.authType !== 'oauth2',
-        oauthRequired: provider.authType === 'oauth2',
+        credentialsRequired: true,
+        oauthRequired: false,
         reconnect: body.reconnect === true,
       },
     })
@@ -121,11 +160,9 @@ export async function handleConnectionSetup(request: ControlApiRequest): Promise
       body: {
         ok: true,
         mode: 'gcp',
-        status: nextStatus,
+        status: 'pending_auth',
         authType: provider.authType,
-        message: provider.authType === 'oauth2'
-          ? 'Conexao aguardando OAuth. Callback generico entra na proxima entrega.'
-          : 'Conexao aguardando credenciais para gravar no Secret Manager.',
+        message: 'Conexao aguardando credenciais para gravar no Secret Manager.',
       },
     }
   } catch (error) {

@@ -7,6 +7,7 @@ import { isInternalRequestAuthorized } from '@/products/integracoes/cloud/src/li
 export type ControlApiRequest = {
   method: string
   path: string
+  query?: Record<string, string | string[] | undefined>
   headers?: Record<string, string | string[] | undefined>
   body?: unknown
 }

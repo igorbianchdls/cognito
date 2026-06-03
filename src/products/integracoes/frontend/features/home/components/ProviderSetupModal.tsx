@@ -25,6 +25,7 @@ type ProviderSetupModalProps = {
     displayName: string
     selectedResources: string[]
     syncFrequency: string
+    credentials?: Record<string, unknown>
   }) => Promise<void> | void
 }
 
@@ -45,16 +46,22 @@ export default function ProviderSetupModal({
   const provider = useMemo(() => connector ? getIntegrationProvider(connector.slug) : undefined, [connector])
   const [selectedResources, setSelectedResources] = useState<string[]>([])
   const [syncFrequency, setSyncFrequency] = useState('manual')
+  const [omieAppKey, setOmieAppKey] = useState('')
+  const [omieAppSecret, setOmieAppSecret] = useState('')
 
   useEffect(() => {
     if (!provider || !open) return
     setSelectedResources(provider.resources.filter((resource) => resource.defaultEnabled).map((resource) => resource.slug))
     setSyncFrequency('manual')
+    setOmieAppKey('')
+    setOmieAppSecret('')
   }, [open, provider])
 
   if (!connector) return null
 
-  const canCreate = Boolean(provider && selectedResources.length)
+  const isOmie = provider?.slug === 'omie'
+  const credentialsReady = !isOmie || Boolean(omieAppKey.trim() && omieAppSecret.trim())
+  const canCreate = Boolean(provider && selectedResources.length && credentialsReady)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -72,8 +79,10 @@ export default function ProviderSetupModal({
                 {connector.name}
               </DialogTitle>
               <DialogDescription className="mt-2 text-[15px] leading-7 text-[#66748D]">
-                {provider
-                  ? 'Configure os recursos e a frequência inicial. A autenticação real será conectada em uma etapa futura.'
+                {isOmie
+                  ? 'Informe as credenciais da API Omie e escolha os recursos que serão sincronizados.'
+                  : provider
+                    ? 'Configure os recursos e a frequência inicial. A autenticação real será conectada em uma etapa futura.'
                   : 'Este conector ainda está no catálogo visual; o contrato de conexão será adicionado depois.'}
               </DialogDescription>
             </div>
@@ -83,6 +92,33 @@ export default function ProviderSetupModal({
         <div className="space-y-5 px-7 py-6">
           {provider ? (
             <>
+              {isOmie ? (
+                <section>
+                  <div className="mb-3 text-[14px] font-semibold text-[#24304A]">Credenciais Omie</div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="block">
+                      <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#7B879B]">App key</span>
+                      <input
+                        value={omieAppKey}
+                        onChange={(event) => setOmieAppKey(event.target.value)}
+                        autoComplete="off"
+                        className="mt-2 h-11 w-full rounded-[12px] border border-[#E1E6F0] bg-white px-4 text-[14px] font-medium text-[#2A3550] outline-none transition focus:border-[#B3BDED]"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#7B879B]">App secret</span>
+                      <input
+                        type="password"
+                        value={omieAppSecret}
+                        onChange={(event) => setOmieAppSecret(event.target.value)}
+                        autoComplete="new-password"
+                        className="mt-2 h-11 w-full rounded-[12px] border border-[#E1E6F0] bg-white px-4 text-[14px] font-medium text-[#2A3550] outline-none transition focus:border-[#B3BDED]"
+                      />
+                    </label>
+                  </div>
+                </section>
+              ) : null}
+
               <section>
                 <div className="mb-3 text-[14px] font-semibold text-[#24304A]">Recursos iniciais</div>
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -159,6 +195,12 @@ export default function ProviderSetupModal({
                 displayName: connector.name,
                 selectedResources,
                 syncFrequency,
+                credentials: isOmie
+                  ? {
+                      app_key: omieAppKey.trim(),
+                      app_secret: omieAppSecret.trim(),
+                    }
+                  : undefined,
               })
             }}
             className="inline-flex h-11 items-center justify-center rounded-[14px] bg-[#17203A] px-5 text-[14px] font-semibold text-white transition hover:bg-[#0F172C] disabled:opacity-50"

@@ -1,3 +1,5 @@
+import { withRetry, type RetryOptions } from '@/products/integracoes/cloud/src/lib/retry'
+
 type MetadataTokenResponse = {
   access_token?: string
 }
@@ -27,23 +29,32 @@ export async function getCloudAccessToken(): Promise<string> {
 
 export async function authorizedJsonRequest<T>(
   url: string,
-  init: RequestInit & { allowNotFound?: boolean } = {},
+  init: RequestInit & { allowNotFound?: boolean; timeoutMs?: number; retry?: RetryOptions } = {},
 ): Promise<{ status: number; ok: boolean; payload: T | null }> {
   const token = await getCloudAccessToken()
-  const response = await fetch(url, {
-    ...init,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      ...(init.headers || {}),
-    },
+  const { allowNotFound, timeoutMs, retry, ...fetchInit } = init
+  return withRetry(async () => {
+    const nextResponse = await fetch(url, {
+      ...fetchInit,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        ...(init.headers || {}),
+      },
+      signal: init.signal || AbortSignal.timeout(timeoutMs ?? Number(process.env.GCP_HTTP_TIMEOUT_MS || 30000)),
+    })
+    const payload = await nextResponse.json().catch(() => null) as T | null
+
+    if (!nextResponse.ok && !(allowNotFound && nextResponse.status === 404)) {
+      const errorPayload = payload as { error?: { message?: string } } | null
+      const retryableError = new Error(errorPayload?.error?.message || `Falha na chamada GCP: ${nextResponse.status}`) as Error & { status?: number }
+      retryableError.status = nextResponse.status
+      throw retryableError
+    }
+
+    return { status: nextResponse.status, ok: nextResponse.ok, payload }
+  }, {
+    attempts: Number(process.env.GCP_HTTP_RETRY_ATTEMPTS || 3),
+    ...retry,
   })
-
-  const payload = await response.json().catch(() => null) as T | null
-  if (!response.ok && !(init.allowNotFound && response.status === 404)) {
-    const errorPayload = payload as { error?: { message?: string } } | null
-    throw new Error(errorPayload?.error?.message || `Falha na chamada GCP: ${response.status}`)
-  }
-
-  return { status: response.status, ok: response.ok, payload }
 }

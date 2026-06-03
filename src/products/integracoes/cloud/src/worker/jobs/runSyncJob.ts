@@ -3,6 +3,7 @@ import { getCloudConnector } from '@/products/integracoes/cloud/src/providers/pr
 import { readSecret } from '@/products/integracoes/cloud/src/lib/secretManager'
 import { writeRowsToBigQuery } from '@/products/integracoes/cloud/src/lib/bigquery'
 import {
+  createIntegrationEvent,
   createCloudSyncRun,
   finishCloudSyncRun,
   getCloudIntegrationConnection,
@@ -92,55 +93,111 @@ export async function runSyncJob(input: RunSyncJobInput): Promise<RunSyncJobOutp
     const credentials = parseCredentials(connection.secretRef ? await readSecret(connection.secretRef) : null)
 
     for (const resource of resources) {
-      const cursor = await readIntegrationCursor({
+      await createIntegrationEvent({
         tenantId: input.tenantId,
         connectionId: input.connectionId,
-        resource,
+        eventType: 'sync.resource.started',
+        actor: 'integrations-worker',
+        message: `Sincronizacao do recurso ${resource} iniciada.`,
+        metadata: { runId: run.id, resource, provider: connection.provider },
       })
-      const result = await connector.syncResource({
-        tenantId: input.tenantId,
-        connectionId: input.connectionId,
-        provider: connection.provider,
-        secretRef: connection.secretRef,
-        credentials,
-        selectedResources: connection.selectedResources,
-        cursor,
-        metadata: connection.metadata,
-      }, resource)
-      const rows = normalizeRows(result.rows || result.metadata?.rows)
-      if (rows.length) {
-        await writeRowsToBigQuery({
+
+      try {
+        const cursor = await readIntegrationCursor({
+          tenantId: input.tenantId,
+          connectionId: input.connectionId,
+          resource,
+        })
+        const result = await connector.syncResource({
           tenantId: input.tenantId,
           connectionId: input.connectionId,
           provider: connection.provider,
+          secretRef: connection.secretRef,
+          credentials,
+          selectedResources: connection.selectedResources,
+          cursor,
+          metadata: connection.metadata,
+        }, resource)
+
+        let rowsWritten = 0
+        const batches = result.batches?.length
+          ? result.batches
+          : [{
+            resource,
+            rows: normalizeRows(result.rows || result.metadata?.rows),
+            nextCursor: result.nextCursor,
+          }]
+
+        for (const batch of batches) {
+          const batchRows = normalizeRows(batch.rows)
+          if (batchRows.length) {
+            const write = await writeRowsToBigQuery({
+              tenantId: input.tenantId,
+              connectionId: input.connectionId,
+              provider: connection.provider,
+              resource: batch.resource || resource,
+              runId: run.id,
+              table: `${connection.provider}_${batch.resource || resource}`,
+              rows: batchRows,
+            })
+            rowsWritten += write.insertedRows
+          }
+          if (batch.nextCursor) {
+            await writeIntegrationCursor({
+              tenantId: input.tenantId,
+              connectionId: input.connectionId,
+              resource: batch.resource || resource,
+              cursor: batch.nextCursor,
+            })
+          }
+        }
+
+        recordsIn += result.recordsIn
+        recordsUpdated += result.recordsUpdated || rowsWritten
+        recordsFailed += result.recordsFailed
+        status = aggregateStatus(status, result.status)
+        resourceSummaries.push({
           resource,
-          runId: run.id,
-          table: `${connection.provider}_${resource}`,
-          rows,
+          status: result.status,
+          recordsIn: result.recordsIn,
+          recordsUpdated: result.recordsUpdated || rowsWritten,
+          recordsFailed: result.recordsFailed,
+          rowsWritten,
+          errorMessage: result.errorMessage || null,
         })
-      }
-      if (result.nextCursor) {
-        await writeIntegrationCursor({
+
+        await createIntegrationEvent({
           tenantId: input.tenantId,
           connectionId: input.connectionId,
+          eventType: 'sync.resource.completed',
+          severity: result.status === 'error' ? 'error' : result.status === 'warning' ? 'warning' : 'info',
+          actor: 'integrations-worker',
+          message: `Sincronizacao do recurso ${resource} concluida.`,
+          metadata: { runId: run.id, resource, rowsWritten, status: result.status },
+        })
+      } catch (error) {
+        recordsFailed += 1
+        status = 'error'
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        resourceSummaries.push({
           resource,
-          cursor: result.nextCursor,
+          status: 'error',
+          recordsIn: 0,
+          recordsUpdated: 0,
+          recordsFailed: 1,
+          rowsWritten: 0,
+          errorMessage,
+        })
+        await createIntegrationEvent({
+          tenantId: input.tenantId,
+          connectionId: input.connectionId,
+          eventType: 'sync.resource.failed',
+          severity: 'error',
+          actor: 'integrations-worker',
+          message: `Sincronizacao do recurso ${resource} falhou.`,
+          metadata: { runId: run.id, resource, errorMessage },
         })
       }
-
-      recordsIn += result.recordsIn
-      recordsUpdated += result.recordsUpdated || rows.length
-      recordsFailed += result.recordsFailed
-      status = aggregateStatus(status, result.status)
-      resourceSummaries.push({
-        resource,
-        status: result.status,
-        recordsIn: result.recordsIn,
-        recordsUpdated: result.recordsUpdated || rows.length,
-        recordsFailed: result.recordsFailed,
-        rowsWritten: rows.length,
-        errorMessage: result.errorMessage || null,
-      })
     }
 
     await finishCloudSyncRun({

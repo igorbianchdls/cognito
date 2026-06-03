@@ -58,6 +58,7 @@ export default function useIntegrationConnections(tenantId = 1) {
     displayName?: string
     selectedResources?: string[]
     syncFrequency?: string
+    credentials?: Record<string, unknown>
   }) => {
     setBusyId(params.provider)
     setError(null)
@@ -68,6 +69,7 @@ export default function useIntegrationConnections(tenantId = 1) {
         displayName: params.displayName,
         selectedResources: params.selectedResources,
         syncFrequency: params.syncFrequency,
+        credentials: params.credentials,
       })
       await refreshConnections()
       return connection

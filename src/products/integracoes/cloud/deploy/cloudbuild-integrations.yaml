@@ -6,7 +6,7 @@ steps:
       - -f
       - src/products/integracoes/cloud/Dockerfile.control-api
       - -t
-      - southamerica-east1-docker.pkg.dev/creatto-463117/integrations/control-api:latest
+      - southamerica-east1-docker.pkg.dev/creatto-463117/integrations/control-api:$COMMIT_SHA
       - .
 
   - id: build-worker
@@ -16,14 +16,14 @@ steps:
       - -f
       - src/products/integracoes/cloud/Dockerfile.worker
       - -t
-      - southamerica-east1-docker.pkg.dev/creatto-463117/integrations/worker:latest
+      - southamerica-east1-docker.pkg.dev/creatto-463117/integrations/worker:$COMMIT_SHA
       - .
 
   - id: push-control-api
     name: gcr.io/cloud-builders/docker
     args:
       - push
-      - southamerica-east1-docker.pkg.dev/creatto-463117/integrations/control-api:latest
+      - southamerica-east1-docker.pkg.dev/creatto-463117/integrations/control-api:$COMMIT_SHA
     waitFor:
       - build-control-api
 
@@ -31,33 +31,31 @@ steps:
     name: gcr.io/cloud-builders/docker
     args:
       - push
-      - southamerica-east1-docker.pkg.dev/creatto-463117/integrations/worker:latest
+      - southamerica-east1-docker.pkg.dev/creatto-463117/integrations/worker:$COMMIT_SHA
     waitFor:
       - build-worker
 
   - id: deploy-control-api
     name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: bash
     args:
-      - gcloud
-      - run
-      - services
-      - replace
-      - src/products/integracoes/cloud/deploy/cloud-run-control-api.yaml
-      - --project=creatto-463117
-      - --region=southamerica-east1
+      - -c
+      - |
+        sed "s#southamerica-east1-docker.pkg.dev/creatto-463117/integrations/control-api:latest#southamerica-east1-docker.pkg.dev/creatto-463117/integrations/control-api:$COMMIT_SHA#g" \
+          src/products/integracoes/cloud/deploy/cloud-run-control-api.yaml > /tmp/cloud-run-control-api.yaml
+        gcloud run services replace /tmp/cloud-run-control-api.yaml --project=creatto-463117 --region=southamerica-east1
     waitFor:
       - push-control-api
 
   - id: deploy-worker-service
     name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: bash
     args:
-      - gcloud
-      - run
-      - services
-      - replace
-      - src/products/integracoes/cloud/deploy/cloud-run-worker-service.yaml
-      - --project=creatto-463117
-      - --region=southamerica-east1
+      - -c
+      - |
+        sed "s#southamerica-east1-docker.pkg.dev/creatto-463117/integrations/worker:latest#southamerica-east1-docker.pkg.dev/creatto-463117/integrations/worker:$COMMIT_SHA#g" \
+          src/products/integracoes/cloud/deploy/cloud-run-worker-service.yaml > /tmp/cloud-run-worker-service.yaml
+        gcloud run services replace /tmp/cloud-run-worker-service.yaml --project=creatto-463117 --region=southamerica-east1
     waitFor:
       - push-worker
 

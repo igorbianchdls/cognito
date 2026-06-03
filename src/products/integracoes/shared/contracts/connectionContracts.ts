@@ -37,6 +37,7 @@ export type CreateIntegrationConnectionInput = {
   selectedResources?: string[]
   syncFrequency?: string
   syncModes?: IntegrationSyncMode[]
+  credentials?: Record<string, unknown>
   metadata?: Record<string, unknown>
 }
 

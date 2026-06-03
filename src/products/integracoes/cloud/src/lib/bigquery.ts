@@ -24,6 +24,9 @@ type BigQueryInsertResponse = {
   insertErrors?: Array<{ index?: number; errors?: Array<{ message?: string }> }>
 }
 
+const DEFAULT_MAX_ROWS_PER_BATCH = 500
+const DEFAULT_MAX_BATCH_BYTES = 4 * 1024 * 1024
+
 function normalizeBigQueryIdentifier(value: string, label: string) {
   const normalized = value.trim().toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '')
   if (!/^[a-z_][a-z0-9_]{0,1023}$/.test(normalized)) {
@@ -75,6 +78,34 @@ async function ensureRawTable(projectId: string, dataset: string, table: string)
   )
 }
 
+function getExternalId(row: Record<string, unknown>) {
+  const value = row.external_id ?? row.externalId ?? row.id ?? row.codigo ?? row.numero
+  if (value == null) return null
+  return typeof value === 'string' || typeof value === 'number' ? String(value) : null
+}
+
+function chunkRows(rows: Record<string, unknown>[]) {
+  const maxRows = Number(process.env.BIGQUERY_INSERT_MAX_ROWS || DEFAULT_MAX_ROWS_PER_BATCH)
+  const maxBytes = Number(process.env.BIGQUERY_INSERT_MAX_BYTES || DEFAULT_MAX_BATCH_BYTES)
+  const chunks: Record<string, unknown>[][] = []
+  let current: Record<string, unknown>[] = []
+  let currentBytes = 0
+
+  for (const row of rows) {
+    const rowBytes = Buffer.byteLength(JSON.stringify(row), 'utf8')
+    if (current.length && (current.length >= maxRows || currentBytes + rowBytes > maxBytes)) {
+      chunks.push(current)
+      current = []
+      currentBytes = 0
+    }
+    current.push(row)
+    currentBytes += rowBytes
+  }
+
+  if (current.length) chunks.push(current)
+  return chunks
+}
+
 export async function writeRowsToBigQuery(input: BigQueryWriteInput): Promise<BigQueryWriteOutput> {
   const config = getIntegrationsCloudConfig()
   const dataset = normalizeBigQueryIdentifier(input.dataset || config.bigQuery.customRawDataset, 'dataset')
@@ -87,33 +118,41 @@ export async function writeRowsToBigQuery(input: BigQueryWriteInput): Promise<Bi
   await ensureRawTable(config.projectId, dataset, table)
 
   const syncedAt = new Date().toISOString()
-  const response = await authorizedJsonRequest<BigQueryInsertResponse>(
-    `https://bigquery.googleapis.com/bigquery/v2/projects/${config.projectId}/datasets/${dataset}/tables/${table}/insertAll`,
-    {
-      method: 'POST',
-      body: JSON.stringify({
-        skipInvalidRows: false,
-        ignoreUnknownValues: false,
-        rows: input.rows.map((row, index) => ({
-          insertId: `${input.connectionId}:${input.resource}:${input.runId || 'run'}:${index}`,
-          json: {
-            tenant_id: input.tenantId,
-            connection_id: input.connectionId,
-            provider: input.provider,
-            resource: input.resource,
-            run_id: input.runId || null,
-            external_id: typeof row.external_id === 'string' ? row.external_id : typeof row.id === 'string' ? row.id : null,
-            synced_at: syncedAt,
-            raw_payload: row,
-          },
-        })),
-      }),
-    },
-  )
+  let insertedRows = 0
 
-  if (response.payload?.insertErrors?.length) {
-    const firstError = response.payload.insertErrors[0]?.errors?.[0]?.message
-    throw new Error(firstError || 'Falha ao inserir linhas no BigQuery')
+  for (const [batchIndex, batch] of chunkRows(input.rows).entries()) {
+    const response = await authorizedJsonRequest<BigQueryInsertResponse>(
+      `https://bigquery.googleapis.com/bigquery/v2/projects/${config.projectId}/datasets/${dataset}/tables/${table}/insertAll`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          skipInvalidRows: false,
+          ignoreUnknownValues: false,
+          rows: batch.map((row, index) => {
+            const externalId = getExternalId(row)
+            return {
+              insertId: `${input.connectionId}:${input.resource}:${input.runId || 'run'}:${externalId || `${batchIndex}-${index}`}`,
+              json: {
+                tenant_id: input.tenantId,
+                connection_id: input.connectionId,
+                provider: input.provider,
+                resource: input.resource,
+                run_id: input.runId || null,
+                external_id: externalId,
+                synced_at: syncedAt,
+                raw_payload: row,
+              },
+            }
+          }),
+        }),
+      },
+    )
+
+    if (response.payload?.insertErrors?.length) {
+      const firstError = response.payload.insertErrors[0]?.errors?.[0]?.message
+      throw new Error(firstError || `Falha ao inserir lote ${batchIndex + 1} no BigQuery`)
+    }
+    insertedRows += batch.length
   }
 
   return {
@@ -121,6 +160,6 @@ export async function writeRowsToBigQuery(input: BigQueryWriteInput): Promise<Bi
     mode: 'bigquery',
     dataset,
     table,
-    insertedRows: input.rows.length,
+    insertedRows,
   }
 }

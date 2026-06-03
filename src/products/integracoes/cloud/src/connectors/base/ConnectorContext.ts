@@ -5,6 +5,15 @@ export type ConnectorContext = {
   secretRef?: string | null
   credentials?: Record<string, unknown> | string | null
   selectedResources: string[]
-  cursor?: Record<string, unknown>
+  cursor?: ConnectorCursor
   metadata?: Record<string, unknown>
+}
+
+export type ConnectorCursor = {
+  updatedAt?: string
+  updated_at?: string
+  next?: string | number | null
+  page?: number
+  offset?: number
+  [key: string]: unknown
 }

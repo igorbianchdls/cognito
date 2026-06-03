@@ -5031,11 +5031,546 @@ var contaAzulConnector = createStubConnector({
   provider: "conta_azul"
 });
 
-// src/products/integracoes/cloud/src/connectors/erp/omieConnector.ts
-var omieConnector = createStubConnector({
+// src/products/integracoes/cloud/src/lib/rateLimit.ts
+var lastRequestByProvider = /* @__PURE__ */ new Map();
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+function envRateLimitMs(provider) {
+  const envKey = `INTEGRATIONS_RATE_LIMIT_${provider.toUpperCase().replace(/[^A-Z0-9]+/g, "_")}_MS`;
+  return Number(process.env[envKey] || process.env.INTEGRATIONS_RATE_LIMIT_DEFAULT_MS || 0);
+}
+async function waitForProviderRateLimit(provider, minIntervalMs = envRateLimitMs(provider)) {
+  if (!minIntervalMs || minIntervalMs <= 0) return;
+  const key = provider.trim().toLowerCase();
+  const now = Date.now();
+  const lastRequestAt = lastRequestByProvider.get(key) || 0;
+  const waitMs = Math.max(0, lastRequestAt + minIntervalMs - now);
+  if (waitMs > 0) await delay(waitMs);
+  lastRequestByProvider.set(key, Date.now());
+}
+
+// src/products/integracoes/cloud/src/lib/retry.ts
+function delay2(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+function defaultShouldRetry(error) {
+  if (error && typeof error === "object") {
+    const status = "status" in error ? Number(error.status) : 0;
+    if (status === 408 || status === 409 || status === 425 || status === 429) return true;
+    if (status >= 500 && status <= 599) return true;
+    const code = "code" in error ? String(error.code || "") : "";
+    if (code === "ETIMEDOUT" || code === "ECONNRESET" || code === "EAI_AGAIN") return true;
+  }
+  return error instanceof TypeError;
+}
+function computeDelayMs(attempt, options) {
+  const exponential = Math.min(options.maxDelayMs, options.baseDelayMs * 2 ** Math.max(0, attempt - 1));
+  const jitter = exponential * options.jitterRatio * Math.random();
+  return Math.round(exponential + jitter);
+}
+async function withRetry(fn, options = {}) {
+  const attempts = Math.max(1, options.attempts ?? 3);
+  const retryOptions = {
+    baseDelayMs: options.baseDelayMs ?? 500,
+    maxDelayMs: options.maxDelayMs ?? 8e3,
+    jitterRatio: options.jitterRatio ?? 0.25
+  };
+  const shouldRetry = options.shouldRetry || defaultShouldRetry;
+  let lastError;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (attempt >= attempts || !shouldRetry(error, attempt)) throw error;
+      const delayMs = computeDelayMs(attempt, retryOptions);
+      options.onRetry?.(error, attempt, delayMs);
+      await delay2(delayMs);
+    }
+  }
+  throw lastError;
+}
+
+// src/products/integracoes/cloud/src/lib/providerErrors.ts
+var ProviderError = class extends Error {
+  kind;
+  provider;
+  resource;
+  status;
+  retryable;
+  details;
+  constructor(input) {
+    super(input.message);
+    this.name = "ProviderError";
+    this.kind = input.kind || "unknown";
+    this.provider = input.provider;
+    this.resource = input.resource;
+    this.status = input.status;
+    this.retryable = input.retryable ?? false;
+    this.details = input.details;
+  }
+};
+function classifyHttpStatus(status) {
+  if (status === 401 || status === 403) return { kind: "auth", retryable: false };
+  if (status === 404) return { kind: "not_found", retryable: false };
+  if (status === 408 || status === 429) return { kind: "rate_limit", retryable: true };
+  if (status >= 500) return { kind: "server", retryable: true };
+  return { kind: "unknown", retryable: false };
+}
+
+// src/products/integracoes/cloud/src/lib/connectorHttp.ts
+function serializeBody(body) {
+  if (body == null) return void 0;
+  if (typeof body === "string" || body instanceof URLSearchParams || body instanceof FormData) return body;
+  return JSON.stringify(body);
+}
+function defaultHeaders(body) {
+  if (body == null || typeof body === "string" || body instanceof URLSearchParams || body instanceof FormData) return {};
+  return { "Content-Type": "application/json" };
+}
+function shouldRetryNetworkError(error) {
+  if (error instanceof TypeError) return true;
+  if (!error || typeof error !== "object") return false;
+  const status = Number(error.status || 0);
+  if (status === 408 || status === 409 || status === 425 || status === 429) return true;
+  if (status >= 500 && status <= 599) return true;
+  const code = String(error.code || "");
+  return code === "ETIMEDOUT" || code === "ECONNRESET" || code === "EAI_AGAIN";
+}
+async function parsePayload(response) {
+  const text = await response.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
+async function connectorJsonRequest(request) {
+  const timeoutMs = request.timeoutMs ?? Number(process.env.INTEGRATIONS_HTTP_TIMEOUT_MS || 3e4);
+  const retry = request.retry || {
+    attempts: Number(process.env.INTEGRATIONS_HTTP_RETRY_ATTEMPTS || 3)
+  };
+  const customShouldRetry = retry.shouldRetry;
+  return withRetry(async () => {
+    await waitForProviderRateLimit(request.provider, request.rateLimitMs);
+    const response = await fetch(request.url, {
+      method: request.method || "GET",
+      headers: {
+        ...defaultHeaders(request.body),
+        ...request.headers || {}
+      },
+      body: serializeBody(request.body),
+      signal: AbortSignal.timeout(timeoutMs)
+    });
+    const payload = await parsePayload(response);
+    if (!response.ok) {
+      const classification = classifyHttpStatus(response.status);
+      throw new ProviderError({
+        provider: request.provider,
+        resource: request.resource,
+        status: response.status,
+        kind: classification.kind,
+        retryable: classification.retryable,
+        message: `Chamada ${request.provider} falhou com status ${response.status}`,
+        details: { payload }
+      });
+    }
+    return {
+      status: response.status,
+      headers: response.headers,
+      payload
+    };
+  }, {
+    ...retry,
+    shouldRetry: (error, attempt) => {
+      if (error instanceof ProviderError) return error.retryable;
+      return customShouldRetry ? customShouldRetry(error, attempt) : shouldRetryNetworkError(error);
+    }
+  });
+}
+
+// src/products/integracoes/cloud/src/connectors/erp/omie/omieClient.ts
+var DEFAULT_BASE_URL = "https://app.omie.com.br/api/v1";
+var DEFAULT_MAX_PAGES = 100;
+function isRecord(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function parseCredentials(value) {
+  if (isRecord(value)) return value;
+  if (typeof value !== "string") return null;
+  try {
+    const parsed = JSON.parse(value);
+    return isRecord(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+function nonEmptyString(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+function normalizeOmieCredentials(value) {
+  const credentials = parseCredentials(value);
+  if (!credentials || !nonEmptyString(credentials.app_key) || !nonEmptyString(credentials.app_secret)) {
+    throw new ProviderError({
+      provider: "omie",
+      kind: "auth",
+      message: "Credenciais Omie invalidas. Informe app_key e app_secret.",
+      retryable: false
+    });
+  }
+  return {
+    app_key: credentials.app_key.trim(),
+    app_secret: credentials.app_secret.trim()
+  };
+}
+function validateOmieConnectorCredentials(value) {
+  try {
+    normalizeOmieCredentials(value);
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "Credenciais Omie invalidas." };
+  }
+}
+function getBaseUrl() {
+  return (process.env.OMIE_API_BASE_URL || DEFAULT_BASE_URL).replace(/\/+$/, "");
+}
+function buildUrl(endpoint) {
+  return `${getBaseUrl()}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+}
+function asNumber(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : void 0;
+}
+function getTotalPages(payload) {
+  return asNumber(payload.total_de_paginas ?? payload.nTotPaginas);
+}
+function getTotalRecords(payload) {
+  return asNumber(payload.total_de_registros ?? payload.nTotRegistros);
+}
+function getMaxPages() {
+  const value = Number(process.env.OMIE_MAX_PAGES_PER_RESOURCE || DEFAULT_MAX_PAGES);
+  return Number.isFinite(value) && value > 0 ? Math.floor(value) : DEFAULT_MAX_PAGES;
+}
+function extractItems(payload, itemKeys) {
+  for (const key of itemKeys) {
+    const value = payload[key];
+    if (Array.isArray(value)) {
+      return value.filter((item) => isRecord(item));
+    }
+  }
+  const arrays = Object.values(payload).filter(Array.isArray);
+  if (arrays.length === 1) {
+    return arrays[0].filter((item) => isRecord(item));
+  }
+  return [];
+}
+function assertNoOmieFault(payload, resource) {
+  if (!isRecord(payload)) return;
+  const fault = payload.faultstring ?? payload.faultcode ?? payload.error ?? payload.message;
+  if (!fault) return;
+  throw new ProviderError({
+    provider: "omie",
+    resource,
+    kind: "validation",
+    message: String(payload.faultstring || payload.message || fault),
+    retryable: false,
+    details: { payload }
+  });
+}
+var OmieClient = class {
+  credentials;
+  constructor(credentials) {
+    this.credentials = credentials;
+  }
+  async call(config, params) {
+    const body = {
+      call: config.call,
+      app_key: this.credentials.app_key,
+      app_secret: this.credentials.app_secret,
+      param: [params]
+    };
+    const response = await connectorJsonRequest({
+      provider: "omie",
+      resource: config.resource,
+      url: buildUrl(config.endpoint),
+      method: "POST",
+      body
+    });
+    assertNoOmieFault(response.payload, config.resource);
+    return response.payload;
+  }
+  async *paginate(config, input) {
+    const pageSize = input?.pageSize || Number(process.env.OMIE_PAGE_SIZE || config.defaultPageSize);
+    const maxPages = getMaxPages();
+    let page = Math.max(Number(input?.initialPage || input?.cursor?.page || 1), 1);
+    let loadedPages = 0;
+    while (loadedPages < maxPages) {
+      const payload = await this.call(config, (config.buildParams || ((params) => params))({
+        page,
+        pageSize,
+        cursor: input?.cursor
+      }));
+      const items = extractItems(payload, config.itemKeys);
+      const totalPages = getTotalPages(payload);
+      const totalRecords = getTotalRecords(payload);
+      loadedPages += 1;
+      const hasMoreByTotal = totalPages ? page < totalPages : void 0;
+      const hasMore = hasMoreByTotal ?? items.length >= pageSize;
+      const truncated = hasMore && loadedPages >= maxPages;
+      yield {
+        page,
+        pageSize,
+        items,
+        payload,
+        totalPages,
+        totalRecords,
+        hasMore,
+        truncated
+      };
+      if (!hasMore || truncated) return;
+      page += 1;
+    }
+  }
+};
+function createOmieClient(credentials) {
+  return new OmieClient(normalizeOmieCredentials(credentials));
+}
+
+// src/products/integracoes/cloud/src/connectors/erp/omie/omieMappers.ts
+var EXTERNAL_ID_CANDIDATES = [
+  "codigo_cliente_omie",
+  "codigo_cliente_integracao",
+  "codigo_produto",
+  "codigo_produto_integracao",
+  "codigo_lancamento_omie",
+  "codigo_lancamento_integracao",
+  "codigo_pedido",
+  "codigo_pedido_integracao",
+  "numero_pedido",
+  "numero_pedido_integracao",
+  "codigo_categoria",
+  "codigo",
+  "id"
+];
+function getNestedValue(row, path) {
+  return path.split(".").reduce((current, key) => {
+    if (!current || typeof current !== "object" || Array.isArray(current)) return void 0;
+    return current[key];
+  }, row);
+}
+function getExternalId(row, index) {
+  for (const key of EXTERNAL_ID_CANDIDATES) {
+    const value = getNestedValue(row, key);
+    if (typeof value === "string" && value.trim()) return value.trim();
+    if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  }
+  return `omie_row_${index + 1}`;
+}
+function mapOmieRow(input) {
+  return {
+    external_id: getExternalId(input.row, input.index),
+    omie_resource: input.resource,
+    omie_page: input.page,
+    raw: input.row
+  };
+}
+function mapOmieRows(input) {
+  return input.rows.map((row, index) => mapOmieRow({
+    resource: input.resource,
+    row,
+    page: input.page,
+    index
+  }));
+}
+
+// src/products/integracoes/cloud/src/connectors/erp/omie/omieResources.ts
+var DEFAULT_PAGE_SIZE = 50;
+function defaultParams({ page, pageSize }) {
+  return {
+    pagina: page,
+    registros_por_pagina: pageSize,
+    apenas_importado_api: "N"
+  };
+}
+var OMIE_RESOURCE_CONFIGS = [
+  {
+    resource: "clientes",
+    endpoint: "/geral/clientes/",
+    call: "ListarClientes",
+    itemKeys: ["clientes_cadastro"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildParams: defaultParams
+  },
+  {
+    resource: "fornecedores",
+    endpoint: "/geral/clientes/",
+    call: "ListarClientes",
+    itemKeys: ["clientes_cadastro"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildParams: defaultParams
+  },
+  {
+    resource: "produtos",
+    endpoint: "/geral/produtos/",
+    call: "ListarProdutos",
+    itemKeys: ["produto_servico_cadastro", "produtos_servico_cadastro"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildParams: defaultParams
+  },
+  {
+    resource: "pedidos_venda",
+    endpoint: "/produtos/pedido/",
+    call: "ListarPedidos",
+    itemKeys: ["pedido_venda_produto", "pedidos_venda_produto"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildParams: defaultParams
+  },
+  {
+    resource: "contas_receber",
+    endpoint: "/financas/contareceber/",
+    call: "ListarContasReceber",
+    itemKeys: ["conta_receber_cadastro", "contas_receber_cadastro"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildParams: defaultParams
+  },
+  {
+    resource: "contas_pagar",
+    endpoint: "/financas/contapagar/",
+    call: "ListarContasPagar",
+    itemKeys: ["conta_pagar_cadastro", "contas_pagar_cadastro"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildParams: defaultParams
+  },
+  {
+    resource: "categorias",
+    endpoint: "/geral/categorias/",
+    call: "ListarCategorias",
+    itemKeys: ["categoria_cadastro", "categorias_cadastro"],
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    supportsIncremental: false,
+    buildParams: defaultParams
+  }
+];
+var OMIE_RESOURCE_MAP = new Map(OMIE_RESOURCE_CONFIGS.map((config) => [config.resource, config]));
+var OMIE_RESOURCE_MANIFEST = OMIE_RESOURCE_CONFIGS.map((config) => ({
+  resource: config.resource,
+  supportsIncremental: config.supportsIncremental,
+  defaultPageSize: config.defaultPageSize,
+  requiredFields: ["app_key", "app_secret"]
+}));
+function getOmieResourceConfig(resource) {
+  return OMIE_RESOURCE_MAP.get(resource);
+}
+function listOmieSupportedResources() {
+  return OMIE_RESOURCE_CONFIGS.map((config) => config.resource);
+}
+
+// src/products/integracoes/cloud/src/connectors/erp/omie/omieConnector.ts
+function warningResult(resource, message) {
+  return {
+    status: "warning",
+    recordsIn: 0,
+    recordsUpdated: 0,
+    recordsFailed: 0,
+    errorMessage: message,
+    metadata: {
+      resource,
+      supportedResources: listOmieSupportedResources()
+    }
+  };
+}
+var omieConnector = {
   domain: "erp",
-  provider: "omie"
-});
+  provider: "omie",
+  resources: OMIE_RESOURCE_MANIFEST,
+  validateCredentials: validateOmieConnectorCredentials,
+  async testConnection(context) {
+    const config = getOmieResourceConfig("clientes");
+    if (!config) return warningResult("clientes", "Recurso de teste Omie nao configurado.");
+    const client = createOmieClient(context.credentials);
+    const payload = await client.call(config, {
+      pagina: 1,
+      registros_por_pagina: 1,
+      apenas_importado_api: "N"
+    });
+    return {
+      status: "success",
+      recordsIn: 0,
+      recordsUpdated: 0,
+      recordsFailed: 0,
+      metadata: {
+        mode: "omie_api",
+        testResource: "clientes",
+        totalPages: payload.total_de_paginas ?? payload.nTotPaginas ?? null,
+        totalRecords: payload.total_de_registros ?? payload.nTotRegistros ?? null
+      }
+    };
+  },
+  async syncResource(context, resource) {
+    const config = getOmieResourceConfig(resource);
+    if (!config) {
+      return warningResult(resource, `Recurso Omie ainda nao mapeado para sincronizacao: ${resource}.`);
+    }
+    const client = createOmieClient(context.credentials);
+    const batches = [];
+    let recordsIn = 0;
+    let truncated = false;
+    let totalPages;
+    let totalRecords;
+    for await (const page of client.paginate(config, {
+      cursor: context.cursor
+    })) {
+      const rows = mapOmieRows({
+        resource,
+        rows: page.items,
+        page: page.page
+      });
+      recordsIn += rows.length;
+      totalPages = page.totalPages ?? totalPages;
+      totalRecords = page.totalRecords ?? totalRecords;
+      truncated = truncated || page.truncated;
+      batches.push({
+        resource,
+        rows,
+        nextCursor: page.hasMore && !page.truncated ? { page: page.page + 1 } : void 0
+      });
+    }
+    return {
+      status: truncated ? "warning" : "success",
+      recordsIn,
+      recordsUpdated: recordsIn,
+      recordsFailed: 0,
+      batches,
+      metadata: {
+        mode: "omie_api",
+        resource,
+        totalPages: totalPages ?? null,
+        totalRecords: totalRecords ?? null,
+        truncated
+      }
+    };
+  },
+  async refreshToken() {
+    return {
+      status: "success",
+      recordsIn: 0,
+      recordsUpdated: 0,
+      recordsFailed: 0,
+      metadata: {
+        mode: "api_key",
+        refreshed: false
+      }
+    };
+  }
+};
 
 // src/products/integracoes/cloud/src/connectors/erp/tinyConnector.ts
 var tinyConnector = createStubConnector({
@@ -5118,20 +5653,29 @@ async function getCloudAccessToken() {
 }
 async function authorizedJsonRequest(url, init = {}) {
   const token = await getCloudAccessToken();
-  const response = await fetch(url, {
-    ...init,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-      ...init.headers || {}
+  const { allowNotFound, timeoutMs, retry, ...fetchInit } = init;
+  return withRetry(async () => {
+    const nextResponse = await fetch(url, {
+      ...fetchInit,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        ...init.headers || {}
+      },
+      signal: init.signal || AbortSignal.timeout(timeoutMs ?? Number(process.env.GCP_HTTP_TIMEOUT_MS || 3e4))
+    });
+    const payload = await nextResponse.json().catch(() => null);
+    if (!nextResponse.ok && !(allowNotFound && nextResponse.status === 404)) {
+      const errorPayload = payload;
+      const retryableError = new Error(errorPayload?.error?.message || `Falha na chamada GCP: ${nextResponse.status}`);
+      retryableError.status = nextResponse.status;
+      throw retryableError;
     }
+    return { status: nextResponse.status, ok: nextResponse.ok, payload };
+  }, {
+    attempts: Number(process.env.GCP_HTTP_RETRY_ATTEMPTS || 3),
+    ...retry
   });
-  const payload = await response.json().catch(() => null);
-  if (!response.ok && !(init.allowNotFound && response.status === 404)) {
-    const errorPayload = payload;
-    throw new Error(errorPayload?.error?.message || `Falha na chamada GCP: ${response.status}`);
-  }
-  return { status: response.status, ok: response.ok, payload };
 }
 
 // src/products/integracoes/cloud/src/lib/secretManager.ts
@@ -5154,6 +5698,8 @@ async function readSecret(secretRef) {
 }
 
 // src/products/integracoes/cloud/src/lib/bigquery.ts
+var DEFAULT_MAX_ROWS_PER_BATCH = 500;
+var DEFAULT_MAX_BATCH_BYTES = 4 * 1024 * 1024;
 function normalizeBigQueryIdentifier(value, label) {
   const normalized = value.trim().toLowerCase().replace(/[^a-z0-9_]+/g, "_").replace(/^_+|_+$/g, "");
   if (!/^[a-z_][a-z0-9_]{0,1023}$/.test(normalized)) {
@@ -5201,6 +5747,30 @@ async function ensureRawTable(projectId, dataset, table) {
     }
   );
 }
+function getExternalId2(row) {
+  const value = row.external_id ?? row.externalId ?? row.id ?? row.codigo ?? row.numero;
+  if (value == null) return null;
+  return typeof value === "string" || typeof value === "number" ? String(value) : null;
+}
+function chunkRows(rows) {
+  const maxRows = Number(process.env.BIGQUERY_INSERT_MAX_ROWS || DEFAULT_MAX_ROWS_PER_BATCH);
+  const maxBytes = Number(process.env.BIGQUERY_INSERT_MAX_BYTES || DEFAULT_MAX_BATCH_BYTES);
+  const chunks = [];
+  let current = [];
+  let currentBytes = 0;
+  for (const row of rows) {
+    const rowBytes = Buffer.byteLength(JSON.stringify(row), "utf8");
+    if (current.length && (current.length >= maxRows || currentBytes + rowBytes > maxBytes)) {
+      chunks.push(current);
+      current = [];
+      currentBytes = 0;
+    }
+    current.push(row);
+    currentBytes += rowBytes;
+  }
+  if (current.length) chunks.push(current);
+  return chunks;
+}
 async function writeRowsToBigQuery(input) {
   const config = getIntegrationsCloudConfig();
   const dataset = normalizeBigQueryIdentifier(input.dataset || config.bigQuery.customRawDataset, "dataset");
@@ -5210,39 +5780,46 @@ async function writeRowsToBigQuery(input) {
   }
   await ensureRawTable(config.projectId, dataset, table);
   const syncedAt = (/* @__PURE__ */ new Date()).toISOString();
-  const response = await authorizedJsonRequest(
-    `https://bigquery.googleapis.com/bigquery/v2/projects/${config.projectId}/datasets/${dataset}/tables/${table}/insertAll`,
-    {
-      method: "POST",
-      body: JSON.stringify({
-        skipInvalidRows: false,
-        ignoreUnknownValues: false,
-        rows: input.rows.map((row, index) => ({
-          insertId: `${input.connectionId}:${input.resource}:${input.runId || "run"}:${index}`,
-          json: {
-            tenant_id: input.tenantId,
-            connection_id: input.connectionId,
-            provider: input.provider,
-            resource: input.resource,
-            run_id: input.runId || null,
-            external_id: typeof row.external_id === "string" ? row.external_id : typeof row.id === "string" ? row.id : null,
-            synced_at: syncedAt,
-            raw_payload: row
-          }
-        }))
-      })
+  let insertedRows = 0;
+  for (const [batchIndex, batch] of chunkRows(input.rows).entries()) {
+    const response = await authorizedJsonRequest(
+      `https://bigquery.googleapis.com/bigquery/v2/projects/${config.projectId}/datasets/${dataset}/tables/${table}/insertAll`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          skipInvalidRows: false,
+          ignoreUnknownValues: false,
+          rows: batch.map((row, index) => {
+            const externalId = getExternalId2(row);
+            return {
+              insertId: `${input.connectionId}:${input.resource}:${input.runId || "run"}:${externalId || `${batchIndex}-${index}`}`,
+              json: {
+                tenant_id: input.tenantId,
+                connection_id: input.connectionId,
+                provider: input.provider,
+                resource: input.resource,
+                run_id: input.runId || null,
+                external_id: externalId,
+                synced_at: syncedAt,
+                raw_payload: row
+              }
+            };
+          })
+        })
+      }
+    );
+    if (response.payload?.insertErrors?.length) {
+      const firstError = response.payload.insertErrors[0]?.errors?.[0]?.message;
+      throw new Error(firstError || `Falha ao inserir lote ${batchIndex + 1} no BigQuery`);
     }
-  );
-  if (response.payload?.insertErrors?.length) {
-    const firstError = response.payload.insertErrors[0]?.errors?.[0]?.message;
-    throw new Error(firstError || "Falha ao inserir linhas no BigQuery");
+    insertedRows += batch.length;
   }
   return {
     ok: true,
     mode: "bigquery",
     dataset,
     table,
-    insertedRows: input.rows.length
+    insertedRows
   };
 }
 
@@ -5476,7 +6053,7 @@ async function createIntegrationEvent(input) {
 }
 
 // src/products/integracoes/cloud/src/worker/jobs/runSyncJob.ts
-function parseCredentials(value) {
+function parseCredentials2(value) {
   if (!value) return null;
   try {
     const parsed = JSON.parse(value);
@@ -5523,56 +6100,106 @@ async function runSyncJob(input) {
   let status = "success";
   const resourceSummaries = [];
   try {
-    const credentials = parseCredentials(connection.secretRef ? await readSecret(connection.secretRef) : null);
+    const credentials = parseCredentials2(connection.secretRef ? await readSecret(connection.secretRef) : null);
     for (const resource of resources) {
-      const cursor = await readIntegrationCursor({
+      await createIntegrationEvent({
         tenantId: input.tenantId,
         connectionId: input.connectionId,
-        resource
+        eventType: "sync.resource.started",
+        actor: "integrations-worker",
+        message: `Sincronizacao do recurso ${resource} iniciada.`,
+        metadata: { runId: run.id, resource, provider: connection.provider }
       });
-      const result = await connector.syncResource({
-        tenantId: input.tenantId,
-        connectionId: input.connectionId,
-        provider: connection.provider,
-        secretRef: connection.secretRef,
-        credentials,
-        selectedResources: connection.selectedResources,
-        cursor,
-        metadata: connection.metadata
-      }, resource);
-      const rows = normalizeRows(result.rows || result.metadata?.rows);
-      if (rows.length) {
-        await writeRowsToBigQuery({
+      try {
+        const cursor = await readIntegrationCursor({
+          tenantId: input.tenantId,
+          connectionId: input.connectionId,
+          resource
+        });
+        const result = await connector.syncResource({
           tenantId: input.tenantId,
           connectionId: input.connectionId,
           provider: connection.provider,
+          secretRef: connection.secretRef,
+          credentials,
+          selectedResources: connection.selectedResources,
+          cursor,
+          metadata: connection.metadata
+        }, resource);
+        let rowsWritten = 0;
+        const batches = result.batches?.length ? result.batches : [{
           resource,
-          runId: run.id,
-          table: `${connection.provider}_${resource}`,
-          rows
+          rows: normalizeRows(result.rows || result.metadata?.rows),
+          nextCursor: result.nextCursor
+        }];
+        for (const batch of batches) {
+          const batchRows = normalizeRows(batch.rows);
+          if (batchRows.length) {
+            const write = await writeRowsToBigQuery({
+              tenantId: input.tenantId,
+              connectionId: input.connectionId,
+              provider: connection.provider,
+              resource: batch.resource || resource,
+              runId: run.id,
+              table: `${connection.provider}_${batch.resource || resource}`,
+              rows: batchRows
+            });
+            rowsWritten += write.insertedRows;
+          }
+          if (batch.nextCursor) {
+            await writeIntegrationCursor({
+              tenantId: input.tenantId,
+              connectionId: input.connectionId,
+              resource: batch.resource || resource,
+              cursor: batch.nextCursor
+            });
+          }
+        }
+        recordsIn += result.recordsIn;
+        recordsUpdated += result.recordsUpdated || rowsWritten;
+        recordsFailed += result.recordsFailed;
+        status = aggregateStatus(status, result.status);
+        resourceSummaries.push({
+          resource,
+          status: result.status,
+          recordsIn: result.recordsIn,
+          recordsUpdated: result.recordsUpdated || rowsWritten,
+          recordsFailed: result.recordsFailed,
+          rowsWritten,
+          errorMessage: result.errorMessage || null
         });
-      }
-      if (result.nextCursor) {
-        await writeIntegrationCursor({
+        await createIntegrationEvent({
           tenantId: input.tenantId,
           connectionId: input.connectionId,
+          eventType: "sync.resource.completed",
+          severity: result.status === "error" ? "error" : result.status === "warning" ? "warning" : "info",
+          actor: "integrations-worker",
+          message: `Sincronizacao do recurso ${resource} concluida.`,
+          metadata: { runId: run.id, resource, rowsWritten, status: result.status }
+        });
+      } catch (error) {
+        recordsFailed += 1;
+        status = "error";
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        resourceSummaries.push({
           resource,
-          cursor: result.nextCursor
+          status: "error",
+          recordsIn: 0,
+          recordsUpdated: 0,
+          recordsFailed: 1,
+          rowsWritten: 0,
+          errorMessage
+        });
+        await createIntegrationEvent({
+          tenantId: input.tenantId,
+          connectionId: input.connectionId,
+          eventType: "sync.resource.failed",
+          severity: "error",
+          actor: "integrations-worker",
+          message: `Sincronizacao do recurso ${resource} falhou.`,
+          metadata: { runId: run.id, resource, errorMessage }
         });
       }
-      recordsIn += result.recordsIn;
-      recordsUpdated += result.recordsUpdated || rows.length;
-      recordsFailed += result.recordsFailed;
-      status = aggregateStatus(status, result.status);
-      resourceSummaries.push({
-        resource,
-        status: result.status,
-        recordsIn: result.recordsIn,
-        recordsUpdated: result.recordsUpdated || rows.length,
-        recordsFailed: result.recordsFailed,
-        rowsWritten: rows.length,
-        errorMessage: result.errorMessage || null
-      });
     }
     await finishCloudSyncRun({
       tenantId: input.tenantId,
@@ -5622,11 +6249,11 @@ function parsePayloadFromEnv() {
   const payload = JSON.parse(rawPayload);
   return payload;
 }
-function isRecord(value) {
+function isRecord2(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function normalizePayload(value) {
-  if (!isRecord(value)) return {};
+  if (!isRecord2(value)) return {};
   return {
     tenantId: typeof value.tenantId === "number" ? value.tenantId : void 0,
     connectionId: typeof value.connectionId === "string" ? value.connectionId : void 0,
@@ -5636,7 +6263,7 @@ function normalizePayload(value) {
   };
 }
 function parsePubSubPushBody(body) {
-  if (!isRecord(body)) return {};
+  if (!isRecord2(body)) return {};
   const pubSubBody = body;
   const encodedData = pubSubBody.message?.data;
   if (!encodedData) return normalizePayload(body);

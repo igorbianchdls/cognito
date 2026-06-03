@@ -55,10 +55,19 @@ async function requestCloudControlApi(path: string, body: Record<string, unknown
 }
 
 export async function prepareLocalConnectionSetup(connection: IntegrationConnection): Promise<LocalSetupResult> {
+  return prepareConnectionSetup({ connection })
+}
+
+export async function prepareConnectionSetup(params: {
+  connection: IntegrationConnection
+  credentials?: Record<string, unknown>
+}): Promise<LocalSetupResult> {
+  const { connection } = params
   const cloud = await requestCloudControlApi('/connections/setup', {
     tenantId: connection.tenantId,
     connectionId: connection.id,
     provider: connection.provider,
+    credentials: params.credentials,
     resources: connection.selectedResources,
   })
 

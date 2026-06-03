@@ -214,9 +214,9 @@ var require_postgres_date = __commonJS({
       if (type === "Z") {
         return 0;
       }
-      var sign = type === "-" ? -1 : 1;
+      var sign2 = type === "-" ? -1 : 1;
       var offset = parseInt(zone[2], 10) * 3600 + parseInt(zone[3] || 0, 10) * 60 + parseInt(zone[4] || 0, 10);
-      return offset * sign * 1e3;
+      return offset * sign2 * 1e3;
     }
     function bcYearToNegativeYear(year) {
       return -(year - 1);
@@ -580,11 +580,11 @@ var require_pg_int8 = __commonJS({
     function readInt8(buffer) {
       var high = buffer.readInt32BE(0);
       var low = buffer.readUInt32BE(4);
-      var sign = "";
+      var sign2 = "";
       if (high < 0) {
         high = ~high + (low === 0);
         low = ~low + 1 >>> 0;
-        sign = "-";
+        sign2 = "-";
       }
       var result = "";
       var carry;
@@ -600,7 +600,7 @@ var require_pg_int8 = __commonJS({
         low = t / BASE >>> 0;
         digits = "" + (t - BASE * low);
         if (low === 0 && high === 0) {
-          return sign + digits + result;
+          return sign2 + digits + result;
         }
         pad = "";
         l = 6 - digits.length;
@@ -616,7 +616,7 @@ var require_pg_int8 = __commonJS({
         low = t / BASE >>> 0;
         digits = "" + (t - BASE * low);
         if (low === 0 && high === 0) {
-          return sign + digits + result;
+          return sign2 + digits + result;
         }
         pad = "";
         l = 6 - digits.length;
@@ -632,7 +632,7 @@ var require_pg_int8 = __commonJS({
         low = t / BASE >>> 0;
         digits = "" + (t - BASE * low);
         if (low === 0 && high === 0) {
-          return sign + digits + result;
+          return sign2 + digits + result;
         }
         pad = "";
         l = 6 - digits.length;
@@ -645,7 +645,7 @@ var require_pg_int8 = __commonJS({
         carry = high % BASE;
         t = 4294967296 * carry + low;
         digits = "" + t % BASE;
-        return sign + digits + result;
+        return sign2 + digits + result;
       }
     }
     module2.exports = readInt8;
@@ -694,7 +694,7 @@ var require_binaryParsers = __commonJS({
     };
     var parseFloatFromBits = function(data, precisionBits, exponentBits) {
       var bias = Math.pow(2, exponentBits - 1) - 1;
-      var sign = parseBits(data, 1);
+      var sign2 = parseBits(data, 1);
       var exponent = parseBits(data, exponentBits, 1);
       if (exponent === 0) {
         return 0;
@@ -715,11 +715,11 @@ var require_binaryParsers = __commonJS({
       var mantissa = parseBits(data, precisionBits, exponentBits + 1, false, parsePrecisionBits);
       if (exponent == Math.pow(2, exponentBits + 1) - 1) {
         if (mantissa === 0) {
-          return sign === 0 ? Infinity : -Infinity;
+          return sign2 === 0 ? Infinity : -Infinity;
         }
         return NaN;
       }
-      return (sign === 0 ? 1 : -1) * Math.pow(2, exponent - bias) * mantissa;
+      return (sign2 === 0 ? 1 : -1) * Math.pow(2, exponent - bias) * mantissa;
     };
     var parseInt16 = function(value) {
       if (parseBits(value, 1) == 1) {
@@ -740,8 +740,8 @@ var require_binaryParsers = __commonJS({
       return parseFloatFromBits(value, 52, 11);
     };
     var parseNumeric = function(value) {
-      var sign = parseBits(value, 16, 32);
-      if (sign == 49152) {
+      var sign2 = parseBits(value, 16, 32);
+      if (sign2 == 49152) {
         return NaN;
       }
       var weight = Math.pow(1e4, parseBits(value, 16, 16));
@@ -753,12 +753,12 @@ var require_binaryParsers = __commonJS({
         weight /= 1e4;
       }
       var scale = Math.pow(10, parseBits(value, 16, 48));
-      return (sign === 0 ? 1 : -1) * Math.round(result * scale) / scale;
+      return (sign2 === 0 ? 1 : -1) * Math.round(result * scale) / scale;
     };
     var parseDate = function(isUTC, value) {
-      var sign = parseBits(value, 1);
+      var sign2 = parseBits(value, 1);
       var rawValue = parseBits(value, 63, 1);
-      var result = new Date((sign === 0 ? 1 : -1) * rawValue / 1e3 + 9466848e5);
+      var result = new Date((sign2 === 0 ? 1 : -1) * rawValue / 1e3 + 9466848e5);
       if (!isUTC) {
         result.setTime(result.getTime() + result.getTimezoneOffset() * 6e4);
       }
@@ -1225,7 +1225,7 @@ var require_utils_webcrypto = __commonJS({
     var nodeCrypto = require("crypto");
     module2.exports = {
       postgresMd5PasswordHash,
-      randomBytes,
+      randomBytes: randomBytes2,
       deriveKey,
       sha256,
       hashByName,
@@ -1235,7 +1235,7 @@ var require_utils_webcrypto = __commonJS({
     var webCrypto = nodeCrypto.webcrypto || globalThis.crypto;
     var subtleCrypto = webCrypto.subtle;
     var textEncoder = new TextEncoder();
-    function randomBytes(length) {
+    function randomBytes2(length) {
       return webCrypto.getRandomValues(Buffer.alloc(length));
     }
     async function md5(string) {
@@ -4960,17 +4960,8 @@ __export(index_exports, {
 module.exports = __toCommonJS(index_exports);
 var import_node_http = require("node:http");
 
-// src/products/integracoes/cloud/src/control-api/routes/callbacks.ts
-async function handleProviderCallback(_request) {
-  return {
-    status: 202,
-    body: {
-      ok: true,
-      mode: "stub",
-      message: "Callback cloud reservado para OAuth futuro."
-    }
-  };
-}
+// src/products/integracoes/cloud/src/lib/oauth.ts
+var import_node_crypto = require("node:crypto");
 
 // src/products/integracoes/cloud/src/config/gcpConfig.ts
 function env(name, fallback) {
@@ -5007,6 +4998,160 @@ function getSecretName(parts) {
   return `projects/${config.projectId}/secrets/${secretId}`;
 }
 
+// src/products/integracoes/cloud/src/lib/oauth.ts
+function base64UrlEncode(value) {
+  return Buffer.from(value, "utf8").toString("base64url");
+}
+function base64UrlDecode(value) {
+  return Buffer.from(value, "base64url").toString("utf8");
+}
+function getStateSecret() {
+  return process.env.INTEGRATIONS_OAUTH_STATE_SECRET || process.env.INTEGRATIONS_INTERNAL_API_KEY || getIntegrationsCloudConfig().secrets.internalApiKey;
+}
+function sign(value) {
+  return (0, import_node_crypto.createHmac)("sha256", getStateSecret()).update(value).digest("base64url");
+}
+function verifySignature(value, signature) {
+  const expected = Buffer.from(sign(value));
+  const actual = Buffer.from(signature);
+  return expected.length === actual.length && (0, import_node_crypto.timingSafeEqual)(expected, actual);
+}
+function envName(provider, suffix) {
+  return `INTEGRATIONS_OAUTH_${provider.toUpperCase().replace(/[^A-Z0-9]+/g, "_")}_${suffix}`;
+}
+function getOAuthProviderConfig(provider) {
+  return {
+    clientId: process.env[envName(provider, "CLIENT_ID")]?.trim() || "",
+    clientSecret: process.env[envName(provider, "CLIENT_SECRET")]?.trim() || "",
+    authorizeUrl: process.env[envName(provider, "AUTHORIZE_URL")]?.trim() || "",
+    tokenUrl: process.env[envName(provider, "TOKEN_URL")]?.trim() || "",
+    redirectUri: process.env[envName(provider, "REDIRECT_URI")]?.trim() || process.env.INTEGRATIONS_OAUTH_REDIRECT_URI?.trim() || "",
+    scopes: process.env[envName(provider, "SCOPES")]?.trim() || ""
+  };
+}
+function createOAuthState(input) {
+  const payload = {
+    tenantId: input.tenantId,
+    connectionId: input.connectionId,
+    provider: input.provider,
+    nonce: (0, import_node_crypto.randomBytes)(12).toString("base64url"),
+    expiresAt: Date.now() + (input.ttlSeconds || 900) * 1e3
+  };
+  const encoded = base64UrlEncode(JSON.stringify(payload));
+  return `${encoded}.${sign(encoded)}`;
+}
+function parseOAuthState(state) {
+  const [encoded, signature] = state.split(".");
+  if (!encoded || !signature || !verifySignature(encoded, signature)) {
+    throw new Error("OAuth state invalido.");
+  }
+  const payload = JSON.parse(base64UrlDecode(encoded));
+  if (!payload.expiresAt || payload.expiresAt < Date.now()) {
+    throw new Error("OAuth state expirado.");
+  }
+  return payload;
+}
+function buildOAuthAuthorizationUrl(provider, state) {
+  const config = getOAuthProviderConfig(provider);
+  const missing = [
+    ["clientId", config.clientId],
+    ["authorizeUrl", config.authorizeUrl],
+    ["redirectUri", config.redirectUri]
+  ].filter(([, value]) => !value).map(([key]) => key);
+  if (missing.length) return { ready: false, missing };
+  const url = new URL(config.authorizeUrl);
+  url.searchParams.set("client_id", config.clientId);
+  url.searchParams.set("redirect_uri", config.redirectUri);
+  url.searchParams.set("response_type", "code");
+  url.searchParams.set("state", state);
+  if (config.scopes) url.searchParams.set("scope", config.scopes);
+  return {
+    ready: true,
+    authorizationUrl: url.toString()
+  };
+}
+function mapTokenResponse(payload) {
+  if (!payload.access_token) return null;
+  return {
+    accessToken: payload.access_token,
+    refreshToken: payload.refresh_token,
+    expiresAt: payload.expires_in ? new Date(Date.now() + payload.expires_in * 1e3).toISOString() : void 0,
+    tokenType: payload.token_type,
+    scope: payload.scope
+  };
+}
+async function postTokenRequest(provider, body) {
+  const config = getOAuthProviderConfig(provider);
+  if (!config.clientId || !config.clientSecret || !config.tokenUrl) {
+    throw new Error(`OAuth ${provider} nao configurado.`);
+  }
+  body.set("client_id", config.clientId);
+  body.set("client_secret", config.clientSecret);
+  const response = await fetch(config.tokenUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body,
+    signal: AbortSignal.timeout(Number(process.env.INTEGRATIONS_OAUTH_TIMEOUT_MS || 3e4))
+  });
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(`Falha OAuth ${provider}: ${response.status}`);
+  }
+  return payload ? mapTokenResponse(payload) : null;
+}
+async function exchangeOAuthCode(provider, code, redirectUri) {
+  const config = getOAuthProviderConfig(provider);
+  const body = new URLSearchParams();
+  body.set("grant_type", "authorization_code");
+  body.set("code", code);
+  body.set("redirect_uri", redirectUri || config.redirectUri);
+  return postTokenRequest(provider, body);
+}
+
+// src/products/integracoes/cloud/src/lib/retry.ts
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+function defaultShouldRetry(error) {
+  if (error && typeof error === "object") {
+    const status = "status" in error ? Number(error.status) : 0;
+    if (status === 408 || status === 409 || status === 425 || status === 429) return true;
+    if (status >= 500 && status <= 599) return true;
+    const code = "code" in error ? String(error.code || "") : "";
+    if (code === "ETIMEDOUT" || code === "ECONNRESET" || code === "EAI_AGAIN") return true;
+  }
+  return error instanceof TypeError;
+}
+function computeDelayMs(attempt, options) {
+  const exponential = Math.min(options.maxDelayMs, options.baseDelayMs * 2 ** Math.max(0, attempt - 1));
+  const jitter = exponential * options.jitterRatio * Math.random();
+  return Math.round(exponential + jitter);
+}
+async function withRetry(fn, options = {}) {
+  const attempts = Math.max(1, options.attempts ?? 3);
+  const retryOptions = {
+    baseDelayMs: options.baseDelayMs ?? 500,
+    maxDelayMs: options.maxDelayMs ?? 8e3,
+    jitterRatio: options.jitterRatio ?? 0.25
+  };
+  const shouldRetry = options.shouldRetry || defaultShouldRetry;
+  let lastError;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (attempt >= attempts || !shouldRetry(error, attempt)) throw error;
+      const delayMs = computeDelayMs(attempt, retryOptions);
+      options.onRetry?.(error, attempt, delayMs);
+      await delay(delayMs);
+    }
+  }
+  throw lastError;
+}
+
 // src/products/integracoes/cloud/src/lib/googleAuth.ts
 async function getCloudAccessToken() {
   const explicitToken = process.env.GOOGLE_OAUTH_ACCESS_TOKEN?.trim();
@@ -5028,20 +5173,29 @@ async function getCloudAccessToken() {
 }
 async function authorizedJsonRequest(url, init = {}) {
   const token = await getCloudAccessToken();
-  const response = await fetch(url, {
-    ...init,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-      ...init.headers || {}
+  const { allowNotFound, timeoutMs, retry, ...fetchInit } = init;
+  return withRetry(async () => {
+    const nextResponse = await fetch(url, {
+      ...fetchInit,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        ...init.headers || {}
+      },
+      signal: init.signal || AbortSignal.timeout(timeoutMs ?? Number(process.env.GCP_HTTP_TIMEOUT_MS || 3e4))
+    });
+    const payload = await nextResponse.json().catch(() => null);
+    if (!nextResponse.ok && !(allowNotFound && nextResponse.status === 404)) {
+      const errorPayload = payload;
+      const retryableError = new Error(errorPayload?.error?.message || `Falha na chamada GCP: ${nextResponse.status}`);
+      retryableError.status = nextResponse.status;
+      throw retryableError;
     }
+    return { status: nextResponse.status, ok: nextResponse.ok, payload };
+  }, {
+    attempts: Number(process.env.GCP_HTTP_RETRY_ATTEMPTS || 3),
+    ...retry
   });
-  const payload = await response.json().catch(() => null);
-  if (!response.ok && !(init.allowNotFound && response.status === 404)) {
-    const errorPayload = payload;
-    throw new Error(errorPayload?.error?.message || `Falha na chamada GCP: ${response.status}`);
-  }
-  return { status: response.status, ok: response.ok, payload };
 }
 
 // src/products/integracoes/cloud/src/lib/secretManager.ts
@@ -5168,6 +5322,160 @@ async function updateConnectionStatus(input) {
     [input.connectionId, input.tenantId, input.status, JSON.stringify(input.metadata || {})]
   );
   return { ok: true, mode: "postgres" };
+}
+
+// src/products/integracoes/cloud/src/control-api/routes/callbacks.ts
+function getQueryString(request, name) {
+  const value = request.query?.[name];
+  if (Array.isArray(value)) return value[0];
+  return typeof value === "string" ? value : void 0;
+}
+async function handleProviderCallback(request) {
+  try {
+    const code = getQueryString(request, "code");
+    const state = getQueryString(request, "state");
+    if (!code || !state) {
+      return {
+        status: 400,
+        body: {
+          ok: false,
+          error: "OAuth callback exige code e state."
+        }
+      };
+    }
+    const parsedState = parseOAuthState(state);
+    const tokenSet = await exchangeOAuthCode(parsedState.provider, code);
+    if (!tokenSet) {
+      return {
+        status: 502,
+        body: {
+          ok: false,
+          error: "Provider OAuth nao retornou access token."
+        }
+      };
+    }
+    const secret = await writeConnectionCredentialsSecret({
+      tenantId: parsedState.tenantId,
+      connectionId: parsedState.connectionId,
+      value: JSON.stringify({
+        authType: "oauth2",
+        ...tokenSet
+      })
+    });
+    await updateConnectionSecret({
+      tenantId: parsedState.tenantId,
+      connectionId: parsedState.connectionId,
+      secretRef: secret.secretRef,
+      status: "connected",
+      metadata: {
+        setupMode: "gcp",
+        authType: "oauth2",
+        provider: parsedState.provider,
+        tokenStoredAt: (/* @__PURE__ */ new Date()).toISOString(),
+        tokenExpiresAt: tokenSet.expiresAt || null
+      }
+    });
+    await createIntegrationEvent({
+      tenantId: parsedState.tenantId,
+      connectionId: parsedState.connectionId,
+      eventType: "connection.oauth.connected",
+      actor: "integrations-control-api",
+      message: "OAuth conectado e tokens armazenados no Secret Manager.",
+      metadata: {
+        provider: parsedState.provider,
+        tokenExpiresAt: tokenSet.expiresAt || null
+      }
+    });
+    return {
+      status: 202,
+      body: {
+        ok: true,
+        mode: "gcp",
+        status: "connected",
+        provider: parsedState.provider,
+        message: "OAuth conectado."
+      }
+    };
+  } catch (error) {
+    return {
+      status: 500,
+      body: {
+        ok: false,
+        error: error instanceof Error ? error.message : "Falha no callback OAuth."
+      }
+    };
+  }
+}
+
+// src/products/integracoes/cloud/src/lib/credentials.ts
+function isRecord(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function nonEmptyString(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+function parseCredentials(value) {
+  if (value == null) return null;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    try {
+      const parsed = JSON.parse(trimmed);
+      return isRecord(parsed) ? parsed : trimmed;
+    } catch {
+      return trimmed;
+    }
+  }
+  return isRecord(value) ? value : null;
+}
+function validateOmieCredentials(credentials) {
+  if (!nonEmptyString(credentials.app_key) || !nonEmptyString(credentials.app_secret)) {
+    return {
+      ok: false,
+      error: "Omie exige app_key e app_secret."
+    };
+  }
+  return {
+    ok: true,
+    normalized: {
+      app_key: String(credentials.app_key).trim(),
+      app_secret: String(credentials.app_secret).trim()
+    }
+  };
+}
+function validateOAuthTokenCredentials(credentials) {
+  if (!nonEmptyString(credentials.accessToken) && !nonEmptyString(credentials.access_token)) {
+    return {
+      ok: false,
+      error: "Credenciais OAuth exigem accessToken."
+    };
+  }
+  return { ok: true, normalized: credentials };
+}
+function validateProviderCredentials(provider, value) {
+  const credentials = parseCredentials(value);
+  if (credentials == null) {
+    return {
+      ok: false,
+      error: "Credenciais ausentes."
+    };
+  }
+  if (provider.slug === "omie") {
+    if (!isRecord(credentials)) return { ok: false, error: "Credenciais Omie precisam ser um objeto." };
+    const result = validateOmieCredentials(credentials);
+    return result.ok ? { ...result, serialized: JSON.stringify(result.normalized) } : result;
+  }
+  if (provider.authType === "oauth2") {
+    if (!isRecord(credentials)) return { ok: false, error: "Credenciais OAuth precisam ser um objeto." };
+    const result = validateOAuthTokenCredentials(credentials);
+    return result.ok ? { ...result, serialized: JSON.stringify(result.normalized) } : result;
+  }
+  const normalized = credentials;
+  return {
+    ok: true,
+    normalized,
+    serialized: typeof normalized === "string" ? normalized : JSON.stringify(normalized)
+  };
 }
 
 // src/products/integracoes/shared/providers/crmProviders.ts
@@ -5443,11 +5751,11 @@ function requireIntegrationProvider(slug) {
 }
 
 // src/products/integracoes/cloud/src/control-api/routes/connections.ts
-function isRecord(value) {
+function isRecord2(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function parseBody(body) {
-  if (!isRecord(body)) return {};
+  if (!isRecord2(body)) return {};
   return {
     tenantId: typeof body.tenantId === "number" ? body.tenantId : void 0,
     connectionId: typeof body.connectionId === "string" ? body.connectionId : void 0,
@@ -5456,12 +5764,6 @@ function parseBody(body) {
     reconnect: body.reconnect === true,
     resources: Array.isArray(body.resources) ? body.resources.filter((resource) => typeof resource === "string") : void 0
   };
-}
-function serializeCredentials(value) {
-  if (value == null) return null;
-  if (typeof value === "string") return value.trim() || null;
-  if (isRecord(value)) return JSON.stringify(value);
-  return null;
 }
 async function handleConnectionSetup(request) {
   try {
@@ -5476,12 +5778,21 @@ async function handleConnectionSetup(request) {
       };
     }
     const provider = requireIntegrationProvider(body.provider);
-    const serializedCredentials = serializeCredentials(body.credentials);
-    if (serializedCredentials) {
+    if (body.credentials != null) {
+      const validation = validateProviderCredentials(provider, body.credentials);
+      if (!validation.ok || !validation.serialized) {
+        return {
+          status: 400,
+          body: {
+            ok: false,
+            error: validation.error || "Credenciais invalidas."
+          }
+        };
+      }
       const secret = await writeConnectionCredentialsSecret({
         tenantId: body.tenantId,
         connectionId: body.connectionId,
-        value: serializedCredentials
+        value: validation.serialized
       });
       await updateConnectionSecret({
         tenantId: body.tenantId,
@@ -5518,16 +5829,46 @@ async function handleConnectionSetup(request) {
         }
       };
     }
-    const nextStatus = provider.authType === "oauth2" ? "pending_auth" : "pending_auth";
+    if (provider.authType === "oauth2") {
+      const state = createOAuthState({
+        tenantId: body.tenantId,
+        connectionId: body.connectionId,
+        provider: provider.slug
+      });
+      const authorization = buildOAuthAuthorizationUrl(provider.slug, state);
+      await updateConnectionStatus({
+        tenantId: body.tenantId,
+        connectionId: body.connectionId,
+        status: "pending_auth",
+        metadata: {
+          setupMode: "gcp",
+          authType: provider.authType,
+          oauthRequired: true,
+          reconnect: body.reconnect === true,
+          oauthStateCreatedAt: (/* @__PURE__ */ new Date()).toISOString()
+        }
+      });
+      return {
+        status: 202,
+        body: {
+          ok: true,
+          mode: "gcp",
+          status: "pending_auth",
+          authType: provider.authType,
+          authorizationUrl: authorization.authorizationUrl,
+          message: authorization.ready ? "Conexao aguardando autorizacao OAuth." : "OAuth ainda precisa de variaveis de ambiente do provider."
+        }
+      };
+    }
     await updateConnectionStatus({
       tenantId: body.tenantId,
       connectionId: body.connectionId,
-      status: nextStatus,
+      status: "pending_auth",
       metadata: {
         setupMode: "gcp",
         authType: provider.authType,
-        credentialsRequired: provider.authType !== "oauth2",
-        oauthRequired: provider.authType === "oauth2",
+        credentialsRequired: true,
+        oauthRequired: false,
         reconnect: body.reconnect === true
       }
     });
@@ -5536,9 +5877,9 @@ async function handleConnectionSetup(request) {
       body: {
         ok: true,
         mode: "gcp",
-        status: nextStatus,
+        status: "pending_auth",
         authType: provider.authType,
-        message: provider.authType === "oauth2" ? "Conexao aguardando OAuth. Callback generico entra na proxima entrega." : "Conexao aguardando credenciais para gravar no Secret Manager."
+        message: "Conexao aguardando credenciais para gravar no Secret Manager."
       }
     };
   } catch (error) {
@@ -5613,11 +5954,11 @@ async function publishSyncMessage(input) {
 
 // src/products/integracoes/cloud/src/control-api/routes/sync.ts
 var syncTriggers = ["manual", "scheduled", "webhook", "initial"];
-function isRecord2(value) {
+function isRecord3(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function parseSyncDispatchBody(body) {
-  if (!isRecord2(body)) return {};
+  if (!isRecord3(body)) return {};
   return {
     tenantId: typeof body.tenantId === "number" ? body.tenantId : void 0,
     connectionId: typeof body.connectionId === "string" ? body.connectionId : void 0,
@@ -5667,7 +6008,7 @@ async function handleSyncDispatch(request) {
 }
 
 // src/products/integracoes/cloud/src/lib/internalAuth.ts
-var import_node_crypto = require("node:crypto");
+var import_node_crypto2 = require("node:crypto");
 function headerValue(headers, name) {
   if (!headers) return void 0;
   const value = headers[name] || headers[name.toLowerCase()];
@@ -5678,7 +6019,7 @@ function safeEquals(left, right) {
   const leftBuffer = Buffer.from(left);
   const rightBuffer = Buffer.from(right);
   if (leftBuffer.length !== rightBuffer.length) return false;
-  return (0, import_node_crypto.timingSafeEqual)(leftBuffer, rightBuffer);
+  return (0, import_node_crypto2.timingSafeEqual)(leftBuffer, rightBuffer);
 }
 function getInternalApiKey() {
   const value = process.env.INTEGRATIONS_INTERNAL_API_KEY?.trim();
@@ -5752,6 +6093,7 @@ function main() {
     const result = await controlApi.handle({
       method: request.method || "GET",
       path: url.pathname,
+      query: Object.fromEntries(url.searchParams.entries()),
       headers: request.headers,
       body: await readRequestBody(request)
     });

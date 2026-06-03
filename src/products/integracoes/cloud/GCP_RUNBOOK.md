@@ -125,6 +125,49 @@ integrations-{tenantId}-{connectionId}-credentials
 Nunca imprima o valor desse secret em logs ou respostas. Use-o apenas em variavel de
 ambiente temporaria quando precisar testar chamadas internas.
 
+## Contrato operacional de conectores
+
+Variaveis de runtime comuns:
+
+```txt
+GCP_HTTP_TIMEOUT_MS=30000
+GCP_HTTP_RETRY_ATTEMPTS=3
+INTEGRATIONS_HTTP_TIMEOUT_MS=30000
+INTEGRATIONS_HTTP_RETRY_ATTEMPTS=3
+INTEGRATIONS_RATE_LIMIT_DEFAULT_MS=0
+BIGQUERY_INSERT_MAX_ROWS=500
+BIGQUERY_INSERT_MAX_BYTES=4194304
+```
+
+Variaveis OAuth por provedor:
+
+```txt
+INTEGRATIONS_OAUTH_STATE_SECRET
+INTEGRATIONS_OAUTH_REDIRECT_URI
+INTEGRATIONS_OAUTH_{PROVIDER}_CLIENT_ID
+INTEGRATIONS_OAUTH_{PROVIDER}_CLIENT_SECRET
+INTEGRATIONS_OAUTH_{PROVIDER}_AUTHORIZE_URL
+INTEGRATIONS_OAUTH_{PROVIDER}_TOKEN_URL
+INTEGRATIONS_OAUTH_{PROVIDER}_SCOPES
+```
+
+Exemplo: para Conta Azul, o slug vira `CONTA_AZUL`. Omie normalmente usa app key/app
+secret e nao precisa de OAuth, mas deve ter rate-limit por provedor quando o conector real
+for implementado:
+
+```txt
+INTEGRATIONS_RATE_LIMIT_OMIE_MS=250
+INTEGRATIONS_RATE_LIMIT_CONTA_AZUL_MS=250
+```
+
+Checklist antes de iniciar um provedor real:
+
+1. confirmar tipo de autenticacao do provedor no catalogo;
+2. configurar secrets/variaveis de OAuth quando for OAuth;
+3. validar credenciais via endpoint de conexao;
+4. rodar sync manual de recurso pequeno;
+5. conferir eventos no Postgres, raw rows no BigQuery e logs estruturados do worker.
+
 Service accounts principais:
 
 ```txt

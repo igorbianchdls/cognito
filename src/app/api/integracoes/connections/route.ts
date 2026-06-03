@@ -2,9 +2,10 @@ import { NextRequest } from 'next/server'
 
 import {
   createIntegrationConnection,
+  getIntegrationConnection,
   listIntegrationConnections,
 } from '@/products/integracoes/server/integrationConnectionRepository'
-import { prepareLocalConnectionSetup } from '@/products/integracoes/server/integrationControlClient'
+import { prepareConnectionSetup } from '@/products/integracoes/server/integrationControlClient'
 import { IntegrationProviderError } from '@/products/integracoes/server/integrationProviderRegistry'
 import { mapConnectionStatusToUi } from '@/products/integracoes/server/integrationStatusMapper'
 import type { IntegrationSyncMode } from '@/products/integracoes/shared/providers/providerTypes'
@@ -21,6 +22,11 @@ function asTenantId(value: unknown): number {
 function asStringArray(value: unknown): string[] | undefined {
   if (!Array.isArray(value)) return undefined
   return value.map((item) => String(item || '').trim()).filter(Boolean)
+}
+
+function asCredentials(value: unknown): Record<string, unknown> | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined
+  return value as Record<string, unknown>
 }
 
 function serializeConnection(connection: Awaited<ReturnType<typeof createIntegrationConnection>>) {
@@ -65,8 +71,10 @@ export async function POST(req: NextRequest) {
       return Response.json({ ok: false, error: 'provider obrigatorio' }, { status: 400 })
     }
 
+    const tenantId = asTenantId(payload.tenantId || payload.tenant_id)
+    const credentials = asCredentials(payload.credentials)
     const connection = await createIntegrationConnection({
-      tenantId: asTenantId(payload.tenantId || payload.tenant_id),
+      tenantId,
       provider,
       displayName: payload.displayName == null && payload.display_name == null
         ? undefined
@@ -80,11 +88,12 @@ export async function POST(req: NextRequest) {
         ? payload.metadata as Record<string, unknown>
         : undefined,
     })
-    const setup = await prepareLocalConnectionSetup(connection)
+    const setup = await prepareConnectionSetup({ connection, credentials })
+    const latestConnection = await getIntegrationConnection(connection.id, tenantId)
 
     return Response.json({
       ok: true,
-      connection: serializeConnection(connection),
+      connection: serializeConnection(latestConnection || connection),
       setup,
     }, { status: 201 })
   } catch (error) {

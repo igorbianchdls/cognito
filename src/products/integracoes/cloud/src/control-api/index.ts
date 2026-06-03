@@ -32,6 +32,7 @@ export function main() {
     const result = await controlApi.handle({
       method: request.method || 'GET',
       path: url.pathname,
+      query: Object.fromEntries(url.searchParams.entries()),
       headers: request.headers,
       body: await readRequestBody(request),
     })
