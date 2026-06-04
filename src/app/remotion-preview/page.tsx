@@ -732,77 +732,102 @@ function WhatsAppConversationDemo() {
 function MetaAdsManagerDemo() {
   const frame = useCurrentFrame()
   const sceneIn = previewProgress(frame, 0, 34)
-  const activeCampaign = Math.floor(frame / 42) % 4
-  const scan = (frame * 2.2) % 720
+  const activeRow = Math.floor(frame / 34) % 8
+  const cursorPulse = interpolate(Math.sin(frame / 5), [-1, 1], [0.82, 1])
+  const tableShift = interpolate(frame % 120, [0, 119], [0, -18])
   const campaigns = [
-    { name: 'Prospecting CFOs', spend: 'R$ 18,4k', roas: '4.2x', status: 'Ativa', accent: '#2563eb' },
-    { name: 'Retargeting demo', spend: 'R$ 8,7k', roas: '6.1x', status: 'Ativa', accent: '#16a34a' },
-    { name: 'Board report launch', spend: 'R$ 12,9k', roas: '3.8x', status: 'Aprendizado', accent: '#f59e0b' },
-    { name: 'Integrations video', spend: 'R$ 6,2k', roas: '5.4x', status: 'Ativa', accent: '#7c3aed' },
+    ['Jogger Before and After #1', 'Ad set on', '1.19', 'R$ 47,30', 'R$ 35,00', 'R$ 1.312,40'],
+    ['Jacket Brand Identity #7', 'Ad set on', '1.27', 'R$ 52,15', 'R$ 60,00', 'R$ 1.401,00'],
+    ['Sweater Before and After #3', 'Ad set on', '1.14', 'R$ 49,95', 'R$ 45,00', 'R$ 1.278,65'],
+    ['Sweater Before and After #5', 'Ad set on', '1.14', 'R$ 49,95', 'R$ 45,00', 'R$ 1.276,85'],
+    ['MOF Portrait KnitPolo_01', 'Ad set on', '1.33', 'R$ 58,20', 'R$ 75,00', 'R$ 1.338,18'],
+    ['TOF Mirror Selfie KnitTop_07', 'Ad set on', '1.22', 'R$ 45,10', 'R$ 45,00', 'R$ 1.201,90'],
+    ['BOF Catalog Retargeting', 'Ad set on', '1.08', 'R$ 39,80', 'R$ 80,00', 'R$ 1.118,34'],
+    ['Launch Creative Test', 'Learning', '1.42', 'R$ 62,70', 'R$ 50,00', 'R$ 942,22'],
   ]
+  const sideIcons = ['⌂', '▣', '◎', '▤', '□', '◇', '≋', '⚙']
 
   return (
-    <div style={{ background: '#0b1220', color: '#ffffff', fontFamily: theme.fontFamily, height: '100%', overflow: 'hidden', position: 'relative', width: '100%' }}>
-      <div style={{ background: 'radial-gradient(circle at 52% 34%, rgba(37,99,235,0.36), transparent 58%)', inset: -180, opacity: sceneIn, position: 'absolute' }} />
-      <div style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)', backgroundSize: '78px 78px', inset: 0, opacity: 0.35, position: 'absolute', transform: `translateY(${frame * -0.24}px)` }} />
-      <section style={{ background: '#f8fafc', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 46, boxShadow: '0 48px 130px rgba(0,0,0,0.44)', display: 'grid', gridTemplateRows: '118px auto 1fr', height: 1460, left: 64, opacity: sceneIn, overflow: 'hidden', position: 'absolute', right: 64, top: 160, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 10 }}>
-        <header style={{ alignItems: 'center', background: '#ffffff', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: 18, padding: '0 30px' }}>
-          <span style={{ alignItems: 'center', background: '#1877f2', borderRadius: 18, color: '#ffffff', display: 'flex', fontSize: 34, fontWeight: 950, height: 64, justifyContent: 'center', width: 64 }}>M</span>
-          <div style={{ display: 'grid', gap: 5 }}>
-            <strong style={{ color: '#0f172a', fontSize: 31, fontWeight: 920, letterSpacing: 0 }}>Meta Ads Manager</strong>
-            <span style={{ color: '#64748b', fontSize: 19, fontWeight: 740 }}>Campanhas · Junho 2026</span>
+    <div style={{ background: '#050505', color: '#111827', fontFamily: theme.fontFamily, height: '100%', overflow: 'hidden', position: 'relative', width: '100%' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 38%, rgba(34,211,238,0.20), transparent 48%)', inset: -140, opacity: sceneIn, position: 'absolute' }} />
+      <section style={{ background: '#f8fafc', border: '1px solid rgba(255,255,255,0.18)', boxShadow: '0 44px 120px rgba(0,0,0,0.46)', height: 780, left: -120, opacity: sceneIn, overflow: 'hidden', position: 'absolute', right: -120, top: 602, transform: `translateY(${(1 - sceneIn) * 30}px)`, zIndex: 10 }}>
+        <header style={{ alignItems: 'center', background: '#f3f4f6', borderBottom: '1px solid #d7dce3', display: 'grid', gridTemplateColumns: '94px 1fr 410px', height: 54, padding: '0 20px' }}>
+          <div style={{ display: 'flex', gap: 9 }}>
+            {['#ef4444', '#f59e0b', '#22c55e'].map((color) => <span key={color} style={{ background: color, borderRadius: 999, height: 12, width: 12 }} />)}
           </div>
-          <span style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 999, color: '#2563eb', fontSize: 18, fontWeight: 900, marginLeft: 'auto', padding: '10px 14px' }}>Live</span>
+          <span style={{ background: '#ffffff', border: '1px solid #d1d5db', borderRadius: 8, color: '#64748b', fontSize: 16, fontWeight: 720, padding: '8px 14px' }}>business.facebook.com/latest/adsmanager/manage</span>
+          <div style={{ alignItems: 'center', display: 'flex', gap: 18, justifyContent: 'flex-end' }}>
+            <span style={{ color: '#64748b', fontSize: 15, fontWeight: 800 }}>Updated 18 minutes ago</span>
+            <span style={{ background: '#1877f2', borderRadius: 6, color: '#ffffff', fontSize: 16, fontWeight: 900, padding: '9px 14px' }}>Review</span>
+          </div>
         </header>
-        <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(3, 1fr)', padding: '26px 28px 18px' }}>
-          {[
-            ['Gasto', 'R$ 46,2k', '#2563eb'],
-            ['Receita atrib.', 'R$ 231k', '#16a34a'],
-            ['ROAS', '5.0x', '#7c3aed'],
-          ].map(([label, value, color], index) => {
-            const p = previewProgress(frame, 18 + index * 10, 50 + index * 10)
-            return (
-              <div key={label} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 24, boxShadow: '0 16px 40px rgba(15,23,42,0.08)', display: 'grid', gap: 8, opacity: p, padding: 20, transform: `translateY(${(1 - p) * 18}px)` }}>
-                <span style={{ color: '#64748b', fontSize: 17, fontWeight: 850 }}>{label}</span>
-                <strong style={{ color, fontSize: 34, fontWeight: 950, letterSpacing: 0 }}>{value}</strong>
+
+        <main style={{ display: 'grid', gridTemplateColumns: '70px 1fr', height: 726 }}>
+          <aside style={{ alignItems: 'center', background: '#ffffff', borderRight: '1px solid #dbe2ea', display: 'flex', flexDirection: 'column', gap: 21, paddingTop: 24 }}>
+            <span style={{ color: '#1877f2', fontSize: 26, fontWeight: 950 }}>∞</span>
+            {sideIcons.map((icon, index) => (
+              <span key={`${icon}-${index}`} style={{ alignItems: 'center', background: index === 2 ? '#e0f2fe' : 'transparent', borderRadius: 8, color: index === 2 ? '#0284c7' : '#64748b', display: 'flex', fontSize: 20, fontWeight: 900, height: 34, justifyContent: 'center', width: 34 }}>{icon}</span>
+            ))}
+          </aside>
+
+          <section style={{ background: '#ffffff', display: 'grid', gridTemplateRows: '76px 70px 68px 1fr', overflow: 'hidden' }}>
+            <div style={{ alignItems: 'center', borderBottom: '1px solid #e5e7eb', display: 'grid', gridTemplateColumns: '1fr 260px 230px', padding: '0 24px' }}>
+              <div style={{ alignItems: 'center', display: 'flex', gap: 18 }}>
+                <strong style={{ color: '#0f172a', fontSize: 25, fontWeight: 920, letterSpacing: 0 }}>Ads</strong>
+                <span style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 999, color: '#475569', fontSize: 15, fontWeight: 820, padding: '8px 12px' }}>Heaven</span>
+                <span style={{ background: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: 999, color: '#4338ca', fontSize: 15, fontWeight: 900, padding: '8px 12px' }}>02 Opportunity Score</span>
               </div>
-            )
-          })}
-        </div>
-        <main style={{ display: 'grid', gap: 20, gridTemplateRows: '360px 1fr', padding: '0 28px 28px' }}>
-          <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 28, boxShadow: '0 18px 46px rgba(15,23,42,0.08)', display: 'grid', gap: 18, overflow: 'hidden', padding: 24, position: 'relative' }}>
-            <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
-              <strong style={{ color: '#0f172a', fontSize: 26, fontWeight: 920, letterSpacing: 0 }}>Desempenho diário</strong>
-              <span style={{ color: '#64748b', fontSize: 17, fontWeight: 820 }}>Últimos 14 dias</span>
+              <span style={{ color: '#64748b', fontSize: 15, fontWeight: 760, textAlign: 'right' }}>Columns: Performance</span>
+              <span style={{ color: '#64748b', fontSize: 15, fontWeight: 760, textAlign: 'right' }}>Breakdown · Reports</span>
             </div>
-            <div style={{ alignItems: 'end', display: 'flex', gap: 12, height: 230, position: 'relative' }}>
-              {[88, 132, 104, 176, 146, 212, 168, 228, 190, 248, 206, 270].map((height, index) => (
-                <span key={`${height}-${index}`} style={{ background: index === activeCampaign + 5 ? campaigns[activeCampaign].accent : '#dbeafe', borderRadius: 10, flex: 1, height, transition: 'none' }} />
+
+            <div style={{ alignItems: 'center', borderBottom: '1px solid #e5e7eb', display: 'flex', gap: 12, padding: '0 24px' }}>
+              {['All ads', 'AI ads', 'Actions', 'Active ads', 'See more'].map((filter, index) => (
+                <span key={filter} style={{ background: index === 0 ? '#f8fafc' : '#ffffff', border: '1px solid #dbe2ea', borderRadius: 8, color: '#334155', fontSize: 15, fontWeight: 850, padding: '10px 12px' }}>{filter}</span>
               ))}
-              <span style={{ background: 'linear-gradient(90deg, transparent, rgba(37,99,235,0.20), transparent)', bottom: 0, left: scan - 280, position: 'absolute', top: 0, transform: 'skewX(-14deg)', width: 190 }} />
+              <span style={{ background: '#0ea5e9', borderRadius: 6, color: '#ffffff', fontSize: 15, fontWeight: 900, marginLeft: 'auto', padding: '11px 16px' }}>Create</span>
             </div>
-          </div>
-          <div style={{ display: 'grid', gap: 14 }}>
-            {campaigns.map((campaign, index) => {
-              const p = previewProgress(frame, 48 + index * 12, 82 + index * 12)
-              const active = index === activeCampaign
-              return (
-                <div key={campaign.name} style={{ alignItems: 'center', background: active ? '#0f172a' : '#ffffff', border: `1px solid ${active ? '#0f172a' : '#e2e8f0'}`, borderRadius: 24, boxShadow: active ? '0 18px 48px rgba(15,23,42,0.22)' : '0 12px 30px rgba(15,23,42,0.07)', display: 'grid', gap: 14, gridTemplateColumns: '1fr 120px 104px', opacity: p, padding: 20, transform: `translateX(${(1 - p) * 22}px) scale(${active ? 1.02 : 1})` }}>
-                  <div style={{ display: 'grid', gap: 6 }}>
-                    <span style={{ color: active ? 'rgba(255,255,255,0.62)' : '#64748b', fontSize: 16, fontWeight: 850, textTransform: 'uppercase' }}>{campaign.status}</span>
-                    <strong style={{ color: active ? '#ffffff' : '#0f172a', fontSize: 24, fontWeight: 920, letterSpacing: 0 }}>{campaign.name}</strong>
-                  </div>
-                  <strong style={{ color: active ? '#ffffff' : campaign.accent, fontSize: 23, fontWeight: 940, letterSpacing: 0 }}>{campaign.spend}</strong>
-                  <span style={{ background: active ? 'rgba(255,255,255,0.14)' : '#f1f5f9', borderRadius: 999, color: active ? '#ffffff' : campaign.accent, fontSize: 20, fontWeight: 940, padding: '10px 12px', textAlign: 'center' }}>{campaign.roas}</span>
+
+            <div style={{ borderBottom: '1px solid #e5e7eb', display: 'grid', gap: 14, gridTemplateColumns: '1fr 1fr 1fr', padding: '12px 24px' }}>
+              {['Campaigns', 'Ad sets', 'Ads'].map((tab, index) => (
+                <div key={tab} style={{ alignItems: 'center', background: index === 2 ? '#eff6ff' : '#ffffff', border: `1px solid ${index === 2 ? '#bfdbfe' : '#e2e8f0'}`, borderRadius: 8, display: 'flex', gap: 11, padding: '12px 14px' }}>
+                  <span style={{ background: index === 2 ? '#2563eb' : '#cbd5e1', borderRadius: 4, height: 18, width: 18 }} />
+                  <strong style={{ color: index === 2 ? '#1d4ed8' : '#334155', fontSize: 16, fontWeight: 900 }}>{tab}</strong>
                 </div>
-              )
-            })}
-          </div>
+              ))}
+            </div>
+
+            <div style={{ overflow: 'hidden', padding: '0 24px 24px' }}>
+              <div style={{ color: '#475569', display: 'grid', fontSize: 14, fontWeight: 900, gridTemplateColumns: '46px 1.8fr 1fr 0.8fr 1fr 0.8fr 1fr', height: 48, alignItems: 'center', borderBottom: '1px solid #e2e8f0' }}>
+                {['Off/On', 'Ad', 'Delivery', 'Frequency', 'Cost per result', 'Budget', 'Amount spent'].map((header) => <span key={header}>{header}</span>)}
+              </div>
+              <div style={{ transform: `translateY(${tableShift}px)` }}>
+                {campaigns.map(([name, delivery, freq, cost, budget, spent], index) => {
+                  const active = index === activeRow
+                  return (
+                    <div key={name} style={{ alignItems: 'center', background: active ? '#fff7ed' : '#ffffff', borderBottom: '1px solid #edf2f7', color: '#334155', display: 'grid', fontSize: 15, fontWeight: 760, gridTemplateColumns: '46px 1.8fr 1fr 0.8fr 1fr 0.8fr 1fr', minHeight: 68, outline: active ? '2px solid rgba(251,146,60,0.45)' : 'none', outlineOffset: -2 }}>
+                      <span style={{ background: active ? '#fb923c' : '#cbd5e1', borderRadius: 999, height: 15, width: 15 }} />
+                      <span style={{ alignItems: 'center', display: 'grid', gap: 10, gridTemplateColumns: '42px 1fr' }}>
+                        <span style={{ background: `linear-gradient(135deg, ${index % 2 ? '#fdba74' : '#fecaca'}, #f8fafc)`, borderRadius: 6, height: 42, width: 42 }} />
+                        <strong style={{ color: '#0f172a', fontSize: 15, fontWeight: 850, letterSpacing: 0 }}>{name}</strong>
+                      </span>
+                      <span style={{ color: '#16a34a', fontWeight: 850 }}>{delivery}</span>
+                      <span>{freq}</span>
+                      <span style={{ background: active ? '#fed7aa' : '#f8fafc', borderRadius: 6, color: active ? '#9a3412' : '#334155', display: 'inline-flex', fontWeight: 900, justifySelf: 'start', padding: '7px 10px' }}>{cost}</span>
+                      <span>{budget}</span>
+                      <span>{spent}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </section>
         </main>
+        <span style={{ background: '#4f46e5', border: '5px solid rgba(255,255,255,0.70)', borderRadius: 999, boxShadow: '0 0 0 10px rgba(79,70,229,0.18)', height: 36, left: 505, opacity: sceneIn, position: 'absolute', top: 38, transform: `scale(${cursorPulse})`, width: 36 }} />
       </section>
-      <footer style={{ bottom: 70, display: 'grid', gap: 12, left: 58, position: 'absolute', right: 58, zIndex: 20 }}>
-        <strong style={{ color: '#ffffff', fontSize: 38, fontWeight: 900, letterSpacing: 0 }}>Gerenciador de anúncios para marketing</strong>
-        <span style={{ color: 'rgba(255,255,255,0.68)', fontSize: 24, fontWeight: 720, lineHeight: 1.25 }}>Mock vertical com KPIs, campanhas e gráfico animado.</span>
+      <footer style={{ bottom: 92, display: 'grid', gap: 12, left: 58, position: 'absolute', right: 58, zIndex: 20 }}>
+        <strong style={{ color: '#ffffff', fontSize: 38, fontWeight: 900, letterSpacing: 0 }}>Meta Ads Manager</strong>
+        <span style={{ color: 'rgba(255,255,255,0.68)', fontSize: 24, fontWeight: 720, lineHeight: 1.25 }}>Interface densa com tabela, filtros e campanhas como no gerenciador real.</span>
       </footer>
     </div>
   )
