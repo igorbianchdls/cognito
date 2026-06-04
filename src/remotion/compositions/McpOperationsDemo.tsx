@@ -1430,6 +1430,112 @@ function SaaSMosaicGalleryAnimationCard() {
   )
 }
 
+function SaaSPageFlipGalleryAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const cycle = 126
+  const activeIndex = Math.floor(frame / cycle) % galleryItems.length
+  const nextIndex = (activeIndex + 1) % galleryItems.length
+  const local = frame % cycle
+  const flip = progress(local, 42, 104)
+  const active = galleryItems[activeIndex]
+  const next = galleryItems[nextIndex]
+  const rotateY = -178 * flip
+  const shadow = 0.18 + Math.sin(flip * Math.PI) * 0.34
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: `radial-gradient(circle at 50% 48%, ${active.accent}24, rgba(244, 247, 244, 0) 58%)`, bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Page flip gallery" />
+      <section
+        style={{
+          height: 980,
+          left: '50%',
+          opacity: sceneIn,
+          perspective: 1500,
+          position: 'absolute',
+          top: 310,
+          transform: `translateX(-50%) translateY(${(1 - sceneIn) * 34}px)`,
+          width: 880,
+          zIndex: 20,
+        }}
+      >
+        <div style={{ background: '#102019', borderRadius: 44, bottom: 28, filter: 'blur(28px)', left: 48, opacity: 0.15, position: 'absolute', right: 48, top: 820 }} />
+        <div
+          style={{
+            background: '#ffffff',
+            border: '1px solid #dfe7e1',
+            borderRadius: 38,
+            boxShadow: '0 44px 110px rgba(20,24,22,0.20)',
+            height: 760,
+            left: '50%',
+            overflow: 'hidden',
+            position: 'absolute',
+            top: 54,
+            transform: 'translateX(-50%) rotateX(3deg)',
+            transformStyle: 'preserve-3d',
+            width: 680,
+          }}
+        >
+          <div style={{ background: '#f7faf7', bottom: 0, left: '50%', position: 'absolute', top: 0, width: 2, zIndex: 30 }} />
+          <div style={{ background: '#ffffff', bottom: 0, left: 0, padding: 34, position: 'absolute', top: 0, width: '50%' }}>
+            <span style={{ color: '#65716a', fontSize: 18, fontWeight: 850, textTransform: 'uppercase' }}>{active.label}</span>
+            <h2 style={{ color: '#0f1512', fontSize: 42, fontWeight: 850, letterSpacing: 0, lineHeight: 0.98, margin: '14px 0 20px' }}>{active.title}</h2>
+            <strong style={{ color: active.accent, fontSize: 54, letterSpacing: 0, lineHeight: 1 }}>{active.value}</strong>
+            <div style={{ alignItems: 'end', display: 'flex', gap: 8, height: 250, marginTop: 48 }}>
+              {[72, 128, 98, 172, 134].map((height, index) => <span key={height} style={{ background: index === 3 ? active.accent : '#dce6df', borderRadius: 8, flex: 1, height }} />)}
+            </div>
+            <div style={{ display: 'grid', gap: 10, marginTop: 44 }}>
+              {[84, 68, 92, 56].map((width, index) => <span key={width} style={{ background: index === 1 ? active.accent : '#e5ece7', borderRadius: 999, display: 'block', height: 10, width: `${width}%` }} />)}
+            </div>
+          </div>
+          <div style={{ background: '#ffffff', bottom: 0, padding: 34, position: 'absolute', right: 0, top: 0, width: '50%' }}>
+            <span style={{ color: '#65716a', fontSize: 18, fontWeight: 850, textTransform: 'uppercase' }}>{next.label}</span>
+            <h2 style={{ color: '#0f1512', fontSize: 42, fontWeight: 850, letterSpacing: 0, lineHeight: 0.98, margin: '14px 0 20px' }}>{next.title}</h2>
+            <strong style={{ color: next.accent, fontSize: 54, letterSpacing: 0, lineHeight: 1 }}>{next.value}</strong>
+            <div style={{ display: 'grid', gap: 14, gridTemplateColumns: '1fr 1fr', marginTop: 52 }}>
+              {[0, 1, 2, 3, 4, 5].map((tile) => <span key={tile} style={{ background: tile === 2 ? next.accent : '#e5ece7', borderRadius: 16, display: 'block', height: tile === 0 ? 132 : 88 }} />)}
+            </div>
+          </div>
+          <div
+            style={{
+              background: '#ffffff',
+              bottom: 0,
+              boxShadow: `-24px 0 54px rgba(20,24,22,${shadow})`,
+              left: '50%',
+              overflow: 'hidden',
+              padding: 34,
+              position: 'absolute',
+              top: 0,
+              transform: `rotateY(${rotateY}deg)`,
+              transformOrigin: '0% 50%',
+              transformStyle: 'preserve-3d',
+              width: '50%',
+              zIndex: 40,
+            }}
+          >
+            <div style={{ backfaceVisibility: 'hidden', display: 'grid', gap: 18 }}>
+              <span style={{ color: '#65716a', fontSize: 18, fontWeight: 850, textTransform: 'uppercase' }}>{active.label}</span>
+              <h2 style={{ color: '#0f1512', fontSize: 42, fontWeight: 850, letterSpacing: 0, lineHeight: 0.98, margin: 0 }}>{active.title}</h2>
+              <strong style={{ color: active.accent, fontSize: 54, letterSpacing: 0, lineHeight: 1 }}>{active.value}</strong>
+              <div style={{ display: 'grid', gap: 14, gridTemplateColumns: '1fr 1fr', marginTop: 34 }}>
+                {[0, 1, 2, 3, 4, 5].map((tile) => <span key={tile} style={{ background: tile === 1 ? active.accent : '#e5ece7', borderRadius: 16, display: 'block', height: tile === 0 ? 132 : 88 }} />)}
+              </div>
+            </div>
+            <div style={{ background: `linear-gradient(90deg, rgba(16,32,25,${shadow}), rgba(16,32,25,0))`, bottom: 0, left: 0, pointerEvents: 'none', position: 'absolute', top: 0, width: 70 }} />
+          </div>
+        </div>
+        <div style={{ bottom: 58, display: 'flex', gap: 12, justifyContent: 'center', left: 0, position: 'absolute', right: 0 }}>
+          {galleryItems.map((item, index) => (
+            <span key={item.title} style={{ background: index === activeIndex ? item.accent : '#cad8cf', borderRadius: 999, display: 'block', height: 12, width: index === activeIndex ? 46 : 12 }} />
+          ))}
+        </div>
+      </section>
+      <GalleryFooter>Galeria page flip simulando paginas virando em perspectiva</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
 function SaaSSpotlightGalleryAnimationCard() {
   const frame = useCurrentFrame()
   const sceneIn = progress(frame, 0, 38)
@@ -4146,6 +4252,10 @@ export function SaaSTimelineGalleryAnimation() {
 
 export function SaaSMosaicGalleryAnimation() {
   return <SaaSMosaicGalleryAnimationCard />
+}
+
+export function SaaSPageFlipGalleryAnimation() {
+  return <SaaSPageFlipGalleryAnimationCard />
 }
 
 export function SaaSSpotlightGalleryAnimation() {
