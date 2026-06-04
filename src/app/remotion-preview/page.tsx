@@ -732,9 +732,9 @@ function WhatsAppConversationDemo() {
 function MetaAdsManagerDemo() {
   const frame = useCurrentFrame()
   const sceneIn = previewProgress(frame, 0, 34)
-  const activeRow = Math.floor(frame / 34) % 8
+  const activeRow = Math.floor(frame / 34) % 10
   const cursorPulse = interpolate(Math.sin(frame / 5), [-1, 1], [0.82, 1])
-  const tableShift = interpolate(frame % 120, [0, 119], [0, -18])
+  const tableShift = interpolate(frame % 120, [0, 119], [0, -14])
   const campaigns = [
     ['Jogger Before and After #1', 'Ad set on', '1.19', 'R$ 47,30', 'R$ 35,00', 'R$ 1.312,40'],
     ['Jacket Brand Identity #7', 'Ad set on', '1.27', 'R$ 52,15', 'R$ 60,00', 'R$ 1.401,00'],
@@ -744,76 +744,79 @@ function MetaAdsManagerDemo() {
     ['TOF Mirror Selfie KnitTop_07', 'Ad set on', '1.22', 'R$ 45,10', 'R$ 45,00', 'R$ 1.201,90'],
     ['BOF Catalog Retargeting', 'Ad set on', '1.08', 'R$ 39,80', 'R$ 80,00', 'R$ 1.118,34'],
     ['Launch Creative Test', 'Learning', '1.42', 'R$ 62,70', 'R$ 50,00', 'R$ 942,22'],
+    ['Research Control 01', 'Ad set on', '1.17', 'R$ 43,10', 'R$ 40,00', 'R$ 884,90'],
+    ['Creative Refresh 06', 'Ad set on', '1.31', 'R$ 54,60', 'R$ 55,00', 'R$ 1.022,18'],
   ]
-  const sideIcons = ['⌂', '▣', '◎', '▤', '□', '◇', '≋', '⚙']
+  const sideIcons = ['●', '⌕', '◎', '▦', '□', '◇', '≋', '⚙']
+  const metaFont = 'Arial, Helvetica, sans-serif'
 
   return (
-    <div style={{ background: '#050505', color: '#111827', fontFamily: theme.fontFamily, height: '100%', overflow: 'hidden', position: 'relative', width: '100%' }}>
-      <div style={{ background: 'radial-gradient(circle at 50% 38%, rgba(34,211,238,0.20), transparent 48%)', inset: -140, opacity: sceneIn, position: 'absolute' }} />
-      <section style={{ background: '#f8fafc', border: '1px solid rgba(255,255,255,0.18)', boxShadow: '0 44px 120px rgba(0,0,0,0.46)', height: 780, left: -120, opacity: sceneIn, overflow: 'hidden', position: 'absolute', right: -120, top: 602, transform: `translateY(${(1 - sceneIn) * 30}px)`, zIndex: 10 }}>
-        <header style={{ alignItems: 'center', background: '#f3f4f6', borderBottom: '1px solid #d7dce3', display: 'grid', gridTemplateColumns: '94px 1fr 410px', height: 54, padding: '0 20px' }}>
-          <div style={{ display: 'flex', gap: 9 }}>
-            {['#ef4444', '#f59e0b', '#22c55e'].map((color) => <span key={color} style={{ background: color, borderRadius: 999, height: 12, width: 12 }} />)}
+    <div style={{ background: '#000000', color: '#1c1e21', fontFamily: metaFont, height: '100%', overflow: 'hidden', position: 'relative', width: '100%' }}>
+      <section style={{ background: '#f5f6f7', boxShadow: '0 28px 90px rgba(0,0,0,0.45)', height: 560, left: 18, opacity: sceneIn, overflow: 'hidden', position: 'absolute', right: 18, top: 650, transform: `translateY(${(1 - sceneIn) * 26}px)`, zIndex: 10 }}>
+        <header style={{ alignItems: 'center', background: '#f0f2f5', borderBottom: '1px solid #ccd0d5', display: 'grid', gridTemplateColumns: '74px 1fr 300px', height: 34, padding: '0 12px' }}>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {['#d8dbe0', '#d8dbe0', '#d8dbe0'].map((color, index) => <span key={`${color}-${index}`} style={{ background: color, borderRadius: 999, height: 8, width: 8 }} />)}
           </div>
-          <span style={{ background: '#ffffff', border: '1px solid #d1d5db', borderRadius: 8, color: '#64748b', fontSize: 16, fontWeight: 720, padding: '8px 14px' }}>business.facebook.com/latest/adsmanager/manage</span>
-          <div style={{ alignItems: 'center', display: 'flex', gap: 18, justifyContent: 'flex-end' }}>
-            <span style={{ color: '#64748b', fontSize: 15, fontWeight: 800 }}>Updated 18 minutes ago</span>
-            <span style={{ background: '#1877f2', borderRadius: 6, color: '#ffffff', fontSize: 16, fontWeight: 900, padding: '9px 14px' }}>Review</span>
+          <span style={{ background: '#ffffff', border: '1px solid #ccd0d5', borderRadius: 4, color: '#65676b', fontSize: 10, fontWeight: 400, padding: '5px 10px' }}>business.facebook.com/latest/adsmanager/manage</span>
+          <div style={{ alignItems: 'center', display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+            <span style={{ color: '#65676b', fontSize: 10, fontWeight: 400 }}>Updated 18 minutes ago</span>
+            <span style={{ background: '#1877f2', borderRadius: 4, color: '#ffffff', fontSize: 10, fontWeight: 600, padding: '6px 10px' }}>Review</span>
           </div>
         </header>
 
-        <main style={{ display: 'grid', gridTemplateColumns: '70px 1fr', height: 726 }}>
-          <aside style={{ alignItems: 'center', background: '#ffffff', borderRight: '1px solid #dbe2ea', display: 'flex', flexDirection: 'column', gap: 21, paddingTop: 24 }}>
-            <span style={{ color: '#1877f2', fontSize: 26, fontWeight: 950 }}>∞</span>
+        <main style={{ display: 'grid', gridTemplateColumns: '44px 1fr', height: 526 }}>
+          <aside style={{ alignItems: 'center', background: '#ffffff', borderRight: '1px solid #dadde1', display: 'flex', flexDirection: 'column', gap: 13, paddingTop: 14 }}>
+            <span style={{ color: '#1877f2', fontSize: 18, fontWeight: 700 }}>∞</span>
             {sideIcons.map((icon, index) => (
-              <span key={`${icon}-${index}`} style={{ alignItems: 'center', background: index === 2 ? '#e0f2fe' : 'transparent', borderRadius: 8, color: index === 2 ? '#0284c7' : '#64748b', display: 'flex', fontSize: 20, fontWeight: 900, height: 34, justifyContent: 'center', width: 34 }}>{icon}</span>
+              <span key={`${icon}-${index}`} style={{ alignItems: 'center', background: index === 3 ? '#e7f3ff' : 'transparent', borderRadius: 5, color: index === 3 ? '#1877f2' : '#65676b', display: 'flex', fontSize: 13, fontWeight: 600, height: 24, justifyContent: 'center', width: 24 }}>{icon}</span>
             ))}
           </aside>
 
-          <section style={{ background: '#ffffff', display: 'grid', gridTemplateRows: '76px 70px 68px 1fr', overflow: 'hidden' }}>
-            <div style={{ alignItems: 'center', borderBottom: '1px solid #e5e7eb', display: 'grid', gridTemplateColumns: '1fr 260px 230px', padding: '0 24px' }}>
-              <div style={{ alignItems: 'center', display: 'flex', gap: 18 }}>
-                <strong style={{ color: '#0f172a', fontSize: 25, fontWeight: 920, letterSpacing: 0 }}>Ads</strong>
-                <span style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 999, color: '#475569', fontSize: 15, fontWeight: 820, padding: '8px 12px' }}>Heaven</span>
-                <span style={{ background: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: 999, color: '#4338ca', fontSize: 15, fontWeight: 900, padding: '8px 12px' }}>02 Opportunity Score</span>
+          <section style={{ background: '#ffffff', display: 'grid', gridTemplateRows: '48px 44px 46px 1fr', overflow: 'hidden' }}>
+            <div style={{ alignItems: 'center', borderBottom: '1px solid #dadde1', display: 'grid', gridTemplateColumns: '1fr 168px 170px', padding: '0 14px' }}>
+              <div style={{ alignItems: 'center', display: 'flex', gap: 12 }}>
+                <strong style={{ color: '#1c1e21', fontSize: 15, fontWeight: 600, letterSpacing: 0 }}>Ads</strong>
+                <span style={{ background: '#f5f6f7', border: '1px solid #ccd0d5', borderRadius: 3, color: '#4b4f56', fontSize: 10, fontWeight: 400, padding: '5px 8px' }}>Heaven</span>
+                <span style={{ background: '#f5f6f7', border: '1px solid #ccd0d5', borderRadius: 3, color: '#4b4f56', fontSize: 10, fontWeight: 500, padding: '5px 8px' }}>02 Opportunity Score</span>
               </div>
-              <span style={{ color: '#64748b', fontSize: 15, fontWeight: 760, textAlign: 'right' }}>Columns: Performance</span>
-              <span style={{ color: '#64748b', fontSize: 15, fontWeight: 760, textAlign: 'right' }}>Breakdown · Reports</span>
+              <span style={{ color: '#65676b', fontSize: 10, fontWeight: 400, textAlign: 'right' }}>Columns: Performance</span>
+              <span style={{ color: '#65676b', fontSize: 10, fontWeight: 400, textAlign: 'right' }}>Breakdown · Reports</span>
             </div>
 
-            <div style={{ alignItems: 'center', borderBottom: '1px solid #e5e7eb', display: 'flex', gap: 12, padding: '0 24px' }}>
-              {['All ads', 'AI ads', 'Actions', 'Active ads', 'See more'].map((filter, index) => (
-                <span key={filter} style={{ background: index === 0 ? '#f8fafc' : '#ffffff', border: '1px solid #dbe2ea', borderRadius: 8, color: '#334155', fontSize: 15, fontWeight: 850, padding: '10px 12px' }}>{filter}</span>
+            <div style={{ alignItems: 'center', borderBottom: '1px solid #dadde1', display: 'flex', gap: 7, padding: '0 14px' }}>
+              <span style={{ background: '#00a778', borderRadius: 3, color: '#ffffff', fontSize: 10, fontWeight: 600, padding: '7px 11px' }}>+ Create</span>
+              {['Duplicate', 'Edit', 'A/B test', 'Actions', 'Active ads', 'See more'].map((filter) => (
+                <span key={filter} style={{ background: '#ffffff', border: '1px solid #ccd0d5', borderRadius: 3, color: '#1c1e21', fontSize: 10, fontWeight: 500, padding: '6px 8px' }}>{filter}</span>
               ))}
-              <span style={{ background: '#0ea5e9', borderRadius: 6, color: '#ffffff', fontSize: 15, fontWeight: 900, marginLeft: 'auto', padding: '11px 16px' }}>Create</span>
+              <span style={{ background: '#f5f6f7', border: '1px solid #ccd0d5', borderRadius: 3, color: '#4b4f56', fontSize: 10, fontWeight: 500, marginLeft: 'auto', padding: '6px 8px' }}>Search by name, ID or metrics</span>
             </div>
 
-            <div style={{ borderBottom: '1px solid #e5e7eb', display: 'grid', gap: 14, gridTemplateColumns: '1fr 1fr 1fr', padding: '12px 24px' }}>
+            <div style={{ borderBottom: '1px solid #dadde1', display: 'grid', gap: 8, gridTemplateColumns: '1fr 1fr 1fr', padding: '8px 14px' }}>
               {['Campaigns', 'Ad sets', 'Ads'].map((tab, index) => (
-                <div key={tab} style={{ alignItems: 'center', background: index === 2 ? '#eff6ff' : '#ffffff', border: `1px solid ${index === 2 ? '#bfdbfe' : '#e2e8f0'}`, borderRadius: 8, display: 'flex', gap: 11, padding: '12px 14px' }}>
-                  <span style={{ background: index === 2 ? '#2563eb' : '#cbd5e1', borderRadius: 4, height: 18, width: 18 }} />
-                  <strong style={{ color: index === 2 ? '#1d4ed8' : '#334155', fontSize: 16, fontWeight: 900 }}>{tab}</strong>
+                <div key={tab} style={{ alignItems: 'center', background: index === 2 ? '#e7f3ff' : '#ffffff', border: `1px solid ${index === 2 ? '#b8d9fb' : '#dadde1'}`, borderRadius: 4, display: 'flex', gap: 7, padding: '8px 10px' }}>
+                  <span style={{ background: index === 2 ? '#1877f2' : '#ccd0d5', borderRadius: 2, height: 12, width: 12 }} />
+                  <strong style={{ color: index === 2 ? '#1877f2' : '#4b4f56', fontSize: 10, fontWeight: 600 }}>{tab}</strong>
                 </div>
               ))}
             </div>
 
-            <div style={{ overflow: 'hidden', padding: '0 24px 24px' }}>
-              <div style={{ color: '#475569', display: 'grid', fontSize: 14, fontWeight: 900, gridTemplateColumns: '46px 1.8fr 1fr 0.8fr 1fr 0.8fr 1fr', height: 48, alignItems: 'center', borderBottom: '1px solid #e2e8f0' }}>
+            <div style={{ overflow: 'hidden', padding: '0 14px 14px' }}>
+              <div style={{ alignItems: 'center', borderBottom: '1px solid #dadde1', color: '#4b4f56', display: 'grid', fontSize: 10, fontWeight: 600, gridTemplateColumns: '40px 2.05fr 1fr 0.8fr 1.05fr 0.75fr 1fr', height: 34 }}>
                 {['Off/On', 'Ad', 'Delivery', 'Frequency', 'Cost per result', 'Budget', 'Amount spent'].map((header) => <span key={header}>{header}</span>)}
               </div>
               <div style={{ transform: `translateY(${tableShift}px)` }}>
                 {campaigns.map(([name, delivery, freq, cost, budget, spent], index) => {
                   const active = index === activeRow
                   return (
-                    <div key={name} style={{ alignItems: 'center', background: active ? '#fff7ed' : '#ffffff', borderBottom: '1px solid #edf2f7', color: '#334155', display: 'grid', fontSize: 15, fontWeight: 760, gridTemplateColumns: '46px 1.8fr 1fr 0.8fr 1fr 0.8fr 1fr', minHeight: 68, outline: active ? '2px solid rgba(251,146,60,0.45)' : 'none', outlineOffset: -2 }}>
-                      <span style={{ background: active ? '#fb923c' : '#cbd5e1', borderRadius: 999, height: 15, width: 15 }} />
-                      <span style={{ alignItems: 'center', display: 'grid', gap: 10, gridTemplateColumns: '42px 1fr' }}>
-                        <span style={{ background: `linear-gradient(135deg, ${index % 2 ? '#fdba74' : '#fecaca'}, #f8fafc)`, borderRadius: 6, height: 42, width: 42 }} />
-                        <strong style={{ color: '#0f172a', fontSize: 15, fontWeight: 850, letterSpacing: 0 }}>{name}</strong>
+                    <div key={name} style={{ alignItems: 'center', background: active ? '#fff1e6' : '#ffffff', borderBottom: '1px solid #edf0f2', color: '#1c1e21', display: 'grid', fontSize: 10, fontWeight: 400, gridTemplateColumns: '40px 2.05fr 1fr 0.8fr 1.05fr 0.75fr 1fr', minHeight: 42, outline: active ? '1px solid rgba(251,146,60,0.55)' : 'none', outlineOffset: -1 }}>
+                      <span style={{ background: active ? '#fb923c' : '#ccd0d5', borderRadius: 999, height: 9, width: 9 }} />
+                      <span style={{ alignItems: 'center', display: 'grid', gap: 7, gridTemplateColumns: '28px 1fr' }}>
+                        <span style={{ background: `linear-gradient(135deg, ${index % 2 ? '#fdba74' : '#fecaca'}, #f8fafc)`, borderRadius: 3, height: 28, width: 28 }} />
+                        <strong style={{ color: '#1c1e21', fontSize: 10, fontWeight: 500, letterSpacing: 0 }}>{name}</strong>
                       </span>
-                      <span style={{ color: '#16a34a', fontWeight: 850 }}>{delivery}</span>
+                      <span style={{ color: '#31a24c', fontWeight: 500 }}>{delivery}</span>
                       <span>{freq}</span>
-                      <span style={{ background: active ? '#fed7aa' : '#f8fafc', borderRadius: 6, color: active ? '#9a3412' : '#334155', display: 'inline-flex', fontWeight: 900, justifySelf: 'start', padding: '7px 10px' }}>{cost}</span>
+                      <span style={{ background: active ? '#fec89a' : '#f5f6f7', borderRadius: 3, color: active ? '#8a3f08' : '#1c1e21', display: 'inline-flex', fontWeight: 500, justifySelf: 'start', padding: '5px 7px' }}>{cost}</span>
                       <span>{budget}</span>
                       <span>{spent}</span>
                     </div>
@@ -823,12 +826,8 @@ function MetaAdsManagerDemo() {
             </div>
           </section>
         </main>
-        <span style={{ background: '#4f46e5', border: '5px solid rgba(255,255,255,0.70)', borderRadius: 999, boxShadow: '0 0 0 10px rgba(79,70,229,0.18)', height: 36, left: 505, opacity: sceneIn, position: 'absolute', top: 38, transform: `scale(${cursorPulse})`, width: 36 }} />
+        <span style={{ background: '#4f46e5', border: '3px solid rgba(255,255,255,0.75)', borderRadius: 999, boxShadow: '0 0 0 7px rgba(79,70,229,0.18)', height: 24, left: 486, opacity: sceneIn, position: 'absolute', top: 33, transform: `scale(${cursorPulse})`, width: 24 }} />
       </section>
-      <footer style={{ bottom: 92, display: 'grid', gap: 12, left: 58, position: 'absolute', right: 58, zIndex: 20 }}>
-        <strong style={{ color: '#ffffff', fontSize: 38, fontWeight: 900, letterSpacing: 0 }}>Meta Ads Manager</strong>
-        <span style={{ color: 'rgba(255,255,255,0.68)', fontSize: 24, fontWeight: 720, lineHeight: 1.25 }}>Interface densa com tabela, filtros e campanhas como no gerenciador real.</span>
-      </footer>
     </div>
   )
 }
