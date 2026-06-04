@@ -874,8 +874,13 @@ function AIScanOverlayDemo() {
   const frame = useCurrentFrame()
   const sceneIn = previewProgress(frame, 0, 34)
   const activeScene = Math.floor(frame / 58) % 3
-  const sweep = (frame * 3.1) % 760
-  const pulse = interpolate(Math.sin(frame / 7), [-1, 1], [0.72, 1])
+  const loop = frame % 116
+  const scanX = interpolate(loop, [0, 30, 58, 86, 115], [168, 254, 214, 122, 168])
+  const scanY = interpolate(loop, [0, 30, 58, 86, 115], [412, 528, 716, 596, 412])
+  const scanWidth = interpolate(loop, [0, 30, 58, 86, 115], [696, 610, 672, 744, 696])
+  const scanHeight = interpolate(loop, [0, 30, 58, 86, 115], [176, 242, 206, 278, 176])
+  const sweep = (frame * 5.2) % 900
+  const pulse = interpolate(Math.sin(frame / 5), [-1, 1], [0.72, 1])
   const sources = [
     {
       accent: '#ef4444',
@@ -897,83 +902,70 @@ function AIScanOverlayDemo() {
     },
   ]
   const source = sources[activeScene]
+  const rows = activeScene === 1
+    ? ['Carla brings orange slices', 'Pickup reminder: 8:00 PM', 'Sarah paid registration fee', 'Coach needs medical waiver']
+    : activeScene === 2
+      ? ['Campaign spend increased 18%', 'ROAS dropped on retargeting', 'New lead source detected', 'Follow-up assigned to sales']
+      : ['Registration closes tonight', 'Reply needed from parent', 'Payment window expires at 6 PM', 'Camp roster nearly full']
 
   return (
-    <div style={{ background: '#000000', color: '#ffffff', fontFamily: theme.fontFamily, height: '100%', overflow: 'hidden', position: 'relative', width: '100%' }}>
-      <div style={{ background: 'radial-gradient(circle at 52% 40%, rgba(239,68,68,0.20), transparent 48%)', inset: -160, opacity: sceneIn, position: 'absolute' }} />
-      <header style={{ alignItems: 'center', display: 'flex', left: 44, opacity: sceneIn, position: 'absolute', right: 44, top: 44, zIndex: 30 }}>
-        <span style={{ color: '#ffffff', fontSize: 34, fontWeight: 850, letterSpacing: 0 }}>11:26</span>
-        <div style={{ alignItems: 'center', display: 'flex', gap: 9, marginLeft: 'auto' }}>
-          {[18, 24, 31, 38].map((height) => <span key={height} style={{ background: '#ffffff', borderRadius: 999, display: 'block', height, width: 7 }} />)}
-          <span style={{ border: '3px solid #ffffff', borderTop: 0, borderRadius: '0 0 18px 18px', display: 'block', height: 18, transform: 'rotate(180deg)', width: 36 }} />
-          <span style={{ background: '#ffffff', borderRadius: 8, color: '#000000', fontSize: 22, fontWeight: 900, padding: '3px 8px' }}>32</span>
-        </div>
-      </header>
+    <div style={{ background: '#fff1e8', color: '#111827', fontFamily: theme.fontFamily, height: '100%', overflow: 'hidden', position: 'relative', width: '100%' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 32%, rgba(255,255,255,0.98), rgba(255,241,232,0.20) 62%)', inset: 0, opacity: sceneIn, position: 'absolute' }} />
+      <div style={{ backgroundImage: 'linear-gradient(rgba(185,28,28,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(185,28,28,0.06) 1px, transparent 1px)', backgroundSize: '72px 72px', inset: 0, opacity: 0.42, position: 'absolute', transform: `translateY(${frame * -0.16}px)` }} />
 
-      <section style={{ background: '#151515', borderRadius: 32, boxShadow: '0 18px 50px rgba(0,0,0,0.50)', display: 'grid', gap: 6, gridTemplateColumns: '1fr 86px 86px', left: 22, opacity: sceneIn, padding: '34px 40px', position: 'absolute', right: 22, top: 104, transform: `translateY(${(1 - sceneIn) * -18}px)`, zIndex: 20 }}>
-        <div style={{ display: 'grid', gap: 8 }}>
-          <span style={{ color: '#9ca3af', fontSize: 30, fontWeight: 620, letterSpacing: 0 }}>Brasil</span>
-          <strong style={{ color: '#ffffff', fontSize: 46, fontWeight: 850, letterSpacing: 0 }}>(081) 98461-0519</strong>
+      <section style={{ left: 82, opacity: sceneIn, position: 'absolute', right: 82, top: 156, transform: `translateY(${(1 - sceneIn) * 24}px)`, zIndex: 10 }}>
+        <div style={{ display: 'grid', gap: 18, marginBottom: 34 }}>
+          <span style={{ color: '#b91c1c', fontSize: 24, fontWeight: 900, letterSpacing: 1.4, textTransform: 'uppercase' }}>AI Scan</span>
+          <strong style={{ color: '#111827', fontSize: 58, fontWeight: 900, letterSpacing: 0, lineHeight: 0.95 }}>Scan every connected account</strong>
         </div>
-        <span style={{ alignItems: 'center', alignSelf: 'center', background: '#ff453a', borderRadius: 999, display: 'flex', fontSize: 38, fontWeight: 900, height: 68, justifyContent: 'center', width: 68 }}>⌒</span>
-        <span style={{ alignItems: 'center', alignSelf: 'center', background: '#30d158', borderRadius: 999, display: 'flex', fontSize: 34, fontWeight: 900, height: 68, justifyContent: 'center', transform: 'rotate(-18deg)', width: 68 }}>⌕</span>
-      </section>
 
-      <main style={{ background: '#fff1e8', height: 626, left: 0, opacity: sceneIn, overflow: 'hidden', position: 'absolute', right: 0, top: 674, zIndex: 5 }}>
-        <div style={{ background: 'radial-gradient(circle at 50% 35%, rgba(255,255,255,0.92), rgba(255,241,232,0.25) 62%)', inset: 0, position: 'absolute' }} />
-        <article style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.10)', borderRadius: 18, boxShadow: '0 34px 80px rgba(15,23,42,0.18)', display: 'grid', gap: 16, left: 256, opacity: sceneIn, padding: 24, position: 'absolute', top: 92, transform: `scale(${activeScene === 1 ? 0.72 : 0.86}) rotate(${activeScene === 1 ? '-1.5deg' : '0.5deg'})`, transformOrigin: 'top center', width: activeScene === 1 ? 430 : 560 }}>
-          <div style={{ alignItems: 'center', borderBottom: '1px solid #e5e7eb', display: 'flex', gap: 12, paddingBottom: 14 }}>
-            <span style={{ color: '#94a3b8', fontSize: 22, fontWeight: 900 }}>‹</span>
-            <strong style={{ color: '#0f172a', fontSize: 22, fontWeight: 850, letterSpacing: 0 }}>{source.title}</strong>
-            <span style={{ color: '#94a3b8', fontSize: 15, fontWeight: 820, marginLeft: 'auto' }}>{source.meta}</span>
-          </div>
-          <div style={{ display: 'grid', gap: 13 }}>
+        <article style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.10)', borderRadius: 28, boxShadow: '0 48px 110px rgba(120,53,15,0.18)', minHeight: 940, overflow: 'hidden', padding: 34, position: 'relative' }}>
+          <header style={{ alignItems: 'center', borderBottom: '1px solid #e5e7eb', display: 'flex', gap: 16, paddingBottom: 22 }}>
+            <span style={{ alignItems: 'center', background: `${source.accent}18`, borderRadius: 16, color: source.accent, display: 'flex', fontSize: 26, fontWeight: 950, height: 58, justifyContent: 'center', width: 58 }}>{source.meta.slice(0, 1)}</span>
+            <div style={{ display: 'grid', gap: 5 }}>
+              <strong style={{ color: '#0f172a', fontSize: 30, fontWeight: 900, letterSpacing: 0 }}>{source.title}</strong>
+              <span style={{ color: '#64748b', fontSize: 19, fontWeight: 760 }}>{source.meta} account connected</span>
+            </div>
+            <span style={{ background: '#fee2e2', border: '1px solid #fecaca', borderRadius: 999, color: '#b91c1c', fontSize: 17, fontWeight: 900, marginLeft: 'auto', padding: '10px 14px' }}>Scanning</span>
+          </header>
+
+          <main style={{ display: 'grid', gap: 20, paddingTop: 30 }}>
             {source.body.map((line, index) => (
-              <span key={line} style={{ background: index === 1 ? '#fff1f2' : '#f8fafc', border: `1px solid ${index === 1 ? '#fecdd3' : '#e2e8f0'}`, borderRadius: 10, color: index === 0 ? '#0f172a' : '#334155', display: 'block', fontSize: index === 1 ? 24 : 18, fontWeight: index === 1 ? 850 : 650, lineHeight: 1.25, padding: index === 1 ? '18px 16px' : '13px 14px' }}>{line}</span>
+              <div key={line} style={{ background: index === 1 ? '#fff1f2' : '#f8fafc', border: `1px solid ${index === 1 ? '#fecdd3' : '#e2e8f0'}`, borderRadius: 18, display: 'grid', gap: 10, padding: index === 1 ? '28px 26px' : '22px 24px' }}>
+                <span style={{ color: index === 1 ? '#b91c1c' : '#64748b', fontSize: 17, fontWeight: 900, textTransform: 'uppercase' }}>{index === 1 ? 'Priority signal' : `Item 0${index + 1}`}</span>
+                <strong style={{ color: '#0f172a', fontSize: index === 1 ? 34 : 25, fontWeight: index === 1 ? 900 : 760, letterSpacing: 0, lineHeight: 1.12 }}>{line}</strong>
+              </div>
             ))}
-          </div>
-          <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1fr 1fr 1fr' }}>
-            {[58, 84, 46].map((width, index) => <span key={`${width}-${index}`} style={{ background: '#f1f5f9', borderRadius: 999, height: 13, opacity: 0.9, width: `${width}%` }} />)}
-          </div>
 
-          <div style={{ background: 'rgba(244,63,94,0.24)', border: '3px solid rgba(185,28,28,0.92)', borderRadius: 10, boxShadow: `0 0 ${24 + pulse * 22}px rgba(239,68,68,0.40)`, left: 28, minHeight: activeScene === 1 ? 236 : 182, opacity: 0.95, overflow: 'hidden', position: 'absolute', right: 28, top: activeScene === 0 ? 112 : 132 }}>
-            <span style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.58), transparent)', bottom: 0, left: sweep - 180, position: 'absolute', top: 0, transform: 'skewX(-18deg)', width: 120 }} />
-            <span style={{ background: 'rgba(185,28,28,0.95)', borderRadius: 999, color: '#ffffff', fontSize: 13, fontWeight: 900, left: 12, letterSpacing: 0.6, padding: '6px 9px', position: 'absolute', textTransform: 'uppercase', top: 10 }}>AI Scan</span>
+            <div style={{ display: 'grid', gap: 14, marginTop: 8 }}>
+              {rows.map((row, index) => (
+                <div key={row} style={{ alignItems: 'center', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 16, display: 'grid', gap: 16, gridTemplateColumns: '22px 1fr 108px', padding: '18px 20px' }}>
+                  <span style={{ background: index === activeScene ? '#ef4444' : '#cbd5e1', borderRadius: 999, height: 14, width: 14 }} />
+                  <span style={{ color: '#334155', fontSize: 22, fontWeight: 700 }}>{row}</span>
+                  <span style={{ color: index % 2 === 0 ? '#b91c1c' : '#64748b', fontSize: 18, fontWeight: 850, textAlign: 'right' }}>{index % 2 === 0 ? 'Found' : 'Queued'}</span>
+                </div>
+              ))}
+            </div>
+          </main>
+
+          <div style={{ background: 'rgba(244,63,94,0.22)', border: '4px solid rgba(153,27,27,0.96)', borderRadius: 18, boxShadow: `0 0 ${34 + pulse * 30}px rgba(239,68,68,0.46)`, height: scanHeight, left: scanX, opacity: 0.98, overflow: 'hidden', position: 'absolute', top: scanY, width: scanWidth }}>
+            <span style={{ background: 'linear-gradient(180deg, transparent, rgba(255,255,255,0.65), transparent)', height: 86, left: 0, position: 'absolute', right: 0, top: `${(sweep % 320) - 96}px` }} />
+            <span style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.54), transparent)', bottom: 0, left: sweep - 220, position: 'absolute', top: 0, transform: 'skewX(-18deg)', width: 136 }} />
+            {[0, 1, 2].map((line) => (
+              <span key={line} style={{ background: 'rgba(153,27,27,0.30)', height: 2, left: 16, position: 'absolute', right: 16, top: 42 + line * 54 }} />
+            ))}
+            <span style={{ background: 'rgba(153,27,27,0.98)', borderRadius: 999, color: '#ffffff', fontSize: 15, fontWeight: 950, left: 14, letterSpacing: 0.6, padding: '8px 11px', position: 'absolute', textTransform: 'uppercase', top: 14 }}>AI Scan</span>
+            <span style={{ borderLeft: '4px solid #991b1b', borderTop: '4px solid #991b1b', height: 30, left: 10, position: 'absolute', top: 10, width: 30 }} />
+            <span style={{ borderRight: '4px solid #991b1b', borderTop: '4px solid #991b1b', height: 30, position: 'absolute', right: 10, top: 10, width: 30 }} />
+            <span style={{ borderBottom: '4px solid #991b1b', borderLeft: '4px solid #991b1b', bottom: 10, height: 30, left: 10, position: 'absolute', width: 30 }} />
+            <span style={{ borderBottom: '4px solid #991b1b', borderRight: '4px solid #991b1b', bottom: 10, height: 30, position: 'absolute', right: 10, width: 30 }} />
           </div>
         </article>
-
-        <div style={{ background: 'rgba(17,24,39,0.78)', borderRadius: 5, bottom: 52, color: '#ffffff', fontSize: 25, fontWeight: 620, left: 250, letterSpacing: 0, padding: '9px 12px', position: 'absolute' }}>
-          to scan all of the accounts you just connected.
-        </div>
-      </main>
-
-      <section style={{ bottom: 176, display: 'grid', gap: 28, left: 38, opacity: sceneIn, position: 'absolute', right: 30, zIndex: 20 }}>
-        <div style={{ alignItems: 'center', display: 'grid', gap: 18, gridTemplateColumns: '88px 1fr 198px' }}>
-          <span style={{ background: 'linear-gradient(135deg, #c7d2fe, #334155)', borderRadius: 999, height: 74, width: 74 }} />
-          <div style={{ display: 'grid', gap: 4 }}>
-            <strong style={{ color: '#ffffff', fontSize: 32, fontWeight: 900, letterSpacing: 0 }}>AI Scan Demo</strong>
-            <span style={{ color: '#a1a1aa', fontSize: 25, fontWeight: 620 }}>@cognito_ai</span>
-          </div>
-          <span style={{ background: '#1f1f1f', borderRadius: 999, color: '#ffffff', fontSize: 30, fontWeight: 760, padding: '18px 34px', textAlign: 'center' }}>Seguir</span>
-        </div>
-        <span style={{ color: '#ffffff', fontSize: 30, fontWeight: 580, letterSpacing: 0, lineHeight: 1.18 }}>AI can scan inboxes, chats and reports in seconds...</span>
-        <div style={{ display: 'grid', gap: 20, gridTemplateColumns: '180px 180px 180px 78px 78px' }}>
-          {['568', '5,2k', '1,9k', '▱', '↥'].map((item, index) => (
-            <span key={`${item}-${index}`} style={{ alignItems: 'center', background: '#1c1c1c', borderRadius: 999, color: index === 2 ? '#ff2d7a' : '#ffffff', display: 'flex', fontSize: 28, fontWeight: 760, height: 82, justifyContent: 'center' }}>{item}</span>
-          ))}
-        </div>
       </section>
 
-      <footer style={{ bottom: 36, left: 0, position: 'absolute', right: 0, zIndex: 25 }}>
-        <span style={{ background: '#8b8b8b', display: 'block', height: 5, opacity: 0.85, position: 'relative', width: '100%' }}>
-          <span style={{ background: '#ffffff', display: 'block', height: 5, width: `${22 + (frame % 90) * 0.55}%` }} />
-        </span>
-        <div style={{ alignItems: 'center', display: 'grid', gridTemplateColumns: '120px 1fr 90px 90px 90px', padding: '42px 62px 0' }}>
-          <span style={{ color: '#ffffff', fontSize: 44, fontWeight: 900 }}>Ⅱ</span>
-          <span style={{ color: '#ffffff', fontSize: 27, fontWeight: 650 }}>-1:12</span>
-          <span style={{ color: '#ffffff', fontSize: 38, fontWeight: 820 }}>1x</span>
-          <span style={{ color: '#ffffff', fontSize: 38, fontWeight: 820 }}>⌕</span>
-          <span style={{ color: '#ffffff', fontSize: 38, fontWeight: 820 }}>↗</span>
+      <footer style={{ bottom: 116, left: 82, opacity: sceneIn, position: 'absolute', right: 82, zIndex: 20 }}>
+        <div style={{ background: 'rgba(17,24,39,0.82)', borderRadius: 10, color: '#ffffff', display: 'inline-flex', fontSize: 32, fontWeight: 680, letterSpacing: 0, lineHeight: 1.18, padding: '14px 18px' }}>
+          to scan all of the accounts you just connected.
         </div>
       </footer>
     </div>
