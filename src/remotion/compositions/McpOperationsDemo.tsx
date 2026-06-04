@@ -1632,6 +1632,91 @@ function SaaSPageFlipGalleryAnimationCard() {
   )
 }
 
+function ReportTransitionPage({ accent, index, title }: { accent: string; index: number; title: string }) {
+  return (
+    <div style={{ background: '#f8fafc', border: '1px solid rgba(226,232,240,0.95)', borderRadius: 18, boxShadow: '0 28px 70px rgba(15,23,42,0.28)', color: '#182235', display: 'grid', gap: 16, height: 560, overflow: 'hidden', padding: 24, position: 'relative', width: 300 }}>
+      <span style={{ background: accent, borderRadius: 999, display: 'block', height: 7, left: 0, position: 'absolute', right: 0, top: 0 }} />
+      <div style={{ display: 'grid', gap: 5 }}>
+        <span style={{ color: '#64748b', fontSize: 13, fontWeight: 900, textTransform: 'uppercase' }}>0{index + 1} · {title}</span>
+        <strong style={{ color: '#0f172a', fontSize: 23, fontWeight: 900, letterSpacing: 0, lineHeight: 1 }}>Relatório financeiro</strong>
+      </div>
+      <div style={{ display: 'grid', gap: 9 }}>
+        {[88, 62, 74].map((width, line) => <span key={width} style={{ background: line === 0 ? accent : '#dbe4ef', borderRadius: 999, display: 'block', height: line === 0 ? 9 : 7, width: `${width}%` }} />)}
+      </div>
+      <div style={{ alignItems: 'end', display: 'flex', gap: 8, height: 155, marginTop: 4 }}>
+        {[72, 112, 86, 142, 118, 176, 136].map((height, bar) => <span key={height} style={{ background: bar === index + 2 ? accent : '#dbe4ef', borderRadius: 7, flex: 1, height }} />)}
+      </div>
+      <div style={{ display: 'grid', gap: 14, gridTemplateColumns: '112px 1fr' }}>
+        <div style={{ alignItems: 'center', border: `18px solid ${accent}`, borderLeftColor: '#dbe4ef', borderRadius: 999, display: 'flex', height: 104, justifyContent: 'center', width: 104 }}>
+          <span style={{ color: accent, fontSize: 18, fontWeight: 900 }}>{index === 0 ? '72%' : index === 1 ? '48%' : '63%'}</span>
+        </div>
+        <div style={{ display: 'grid', gap: 8, alignContent: 'center' }}>
+          {[54, 78, 46].map((width, line) => <span key={width} style={{ background: line === 1 ? accent : '#dbe4ef', borderRadius: 999, display: 'block', height: 8, width: `${width}%` }} />)}
+        </div>
+      </div>
+      <svg height="96" style={{ marginTop: 'auto', overflow: 'visible' }} viewBox="0 0 250 96" width="100%">
+        <path d="M0 72 C34 48, 58 62, 88 42 C122 18, 154 44, 184 28 C214 12, 230 30, 250 18" fill="none" stroke={accent} strokeLinecap="round" strokeWidth="8" />
+        <path d="M0 82 C36 68, 62 78, 96 58 C128 39, 158 62, 190 45 C222 27, 238 42, 250 34" fill="none" opacity="0.25" stroke={accent} strokeLinecap="round" strokeWidth="8" />
+      </svg>
+    </div>
+  )
+}
+
+function SaaSPageTransitionGalleryAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const turn = progress(frame % 126, 34, 104)
+  const foldWidth = 110 + Math.sin(turn * Math.PI) * 92
+  const foldRotate = -10 - turn * 62
+  const foldX = 265 + turn * 228
+  const pages = [
+    { accent: '#5b6ee1', title: 'Receitas' },
+    { accent: '#8b5cf6', title: 'Margem' },
+    { accent: '#0f766e', title: 'Despesas' },
+  ]
+
+  return (
+    <AbsoluteFill style={{ background: '#07101f', color: '#ffffff', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 44%, rgba(91,110,225,0.34), rgba(7,16,31,0) 58%)', bottom: -160, left: -160, position: 'absolute', right: -160, top: -160 }} />
+      <header style={{ display: 'grid', gap: 10, left: 58, position: 'absolute', right: 58, top: 64, zIndex: 40 }}>
+        <span style={{ color: '#dbeafe', fontSize: 28, fontWeight: 900, letterSpacing: 0, textTransform: 'uppercase' }}>7. Transição entre páginas</span>
+        <span style={{ color: 'rgba(255,255,255,0.72)', fontSize: 23, fontWeight: 680 }}>Transições modernas como virada de página ou zoom entre páginas.</span>
+      </header>
+      <section style={{ height: 760, left: 50, opacity: sceneIn, perspective: 1300, position: 'absolute', right: 50, top: 365, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 20 }}>
+        {pages.map((page, index) => (
+          <div key={page.title} style={{ left: 18 + index * 338, position: 'absolute', top: index === 1 ? 0 : 26, transform: `rotateY(${index === 0 ? -4 : index === 2 ? 4 : 0}deg) scale(${index === 1 ? 1.06 : 1})`, transformStyle: 'preserve-3d', zIndex: index === 1 ? 24 : 18 }}>
+            <ReportTransitionPage accent={page.accent} index={index} title={page.title} />
+          </div>
+        ))}
+        <div
+          style={{
+            background: 'linear-gradient(90deg, rgba(248,250,252,0.96), rgba(203,213,225,0.72), rgba(248,250,252,0.94))',
+            border: '1px solid rgba(226,232,240,0.8)',
+            borderRadius: '16px 8px 8px 16px',
+            boxShadow: '28px 0 54px rgba(15,23,42,0.32)',
+            height: 560,
+            left: foldX,
+            opacity: sceneIn,
+            overflow: 'hidden',
+            position: 'absolute',
+            top: 5,
+            transform: `rotateY(${foldRotate}deg) skewY(${2 + Math.sin(turn * Math.PI) * 5}deg)`,
+            transformOrigin: '0% 50%',
+            width: foldWidth,
+            zIndex: 42,
+          }}
+        >
+          <div style={{ background: 'linear-gradient(90deg, rgba(15,23,42,0.18), transparent 40%, rgba(255,255,255,0.42))', inset: 0, position: 'absolute' }} />
+          <div style={{ display: 'grid', gap: 12, padding: 22 }}>
+            {[72, 56, 82, 48].map((width) => <span key={width} style={{ background: '#cbd5e1', borderRadius: 999, display: 'block', height: 8, width: `${width}%` }} />)}
+          </div>
+        </div>
+      </section>
+      <GalleryFooter>Galeria de transição entre páginas com folha virando entre relatórios</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
 function SaaSFilmstripGalleryAnimationCard() {
   const frame = useCurrentFrame()
   const sceneIn = progress(frame, 0, 38)
@@ -4069,6 +4154,96 @@ function VerticalArtifactPipelineScene({ footer, items, status }: { footer: stri
   )
 }
 
+function ClassifiedArtifactDistributionScene({ footer, items, status }: { footer: string; items: VerticalPipelineItem[]; status: string }) {
+  const frame = useCurrentFrame()
+  const cycle = 132
+  const activeIndex = Math.floor(frame / cycle) % items.length
+  const local = (frame % cycle) / cycle
+  const destinations = [
+    { label: 'Receitas', x: 310, y: 405, accent: '#225f42' },
+    { label: 'Despesas', x: -315, y: 390, accent: '#c28f2c' },
+    { label: 'Contratos', x: 305, y: -370, accent: '#8b6f9d' },
+    { label: 'Riscos', x: -300, y: -350, accent: '#3f6d91' },
+  ]
+
+  return (
+    <PremiumSceneShell footer={footer} status={status}>
+      <div style={{ height: 1320, left: '50%', position: 'absolute', top: '50%', transform: 'translate(-50%, -50%)', width: 900, zIndex: 20 }}>
+        <div style={{ background: 'linear-gradient(180deg, rgba(34,95,66,0), rgba(34,95,66,0.18), rgba(34,95,66,0))', bottom: 0, left: '50%', position: 'absolute', top: 0, transform: 'translateX(-50%)', width: 2 }} />
+        <div style={{ alignItems: 'center', background: '#102019', borderRadius: 32, boxShadow: '0 34px 90px rgba(20,24,22,0.20)', color: '#ffffff', display: 'grid', gap: 10, height: 184, justifyItems: 'center', left: '50%', padding: 24, position: 'absolute', top: '50%', transform: 'translate(-50%, -50%)', width: 260, zIndex: 34 }}>
+          <span style={{ background: '#8aa895', borderRadius: 999, display: 'block', height: 14, width: 14 }} />
+          <strong style={{ color: '#ffffff', fontSize: 34, letterSpacing: 0, lineHeight: 1, textAlign: 'center' }}>Classificador</strong>
+          <span style={{ color: 'rgba(255,255,255,0.66)', fontSize: 19, fontWeight: 760, textAlign: 'center' }}>IA roteando artefatos</span>
+        </div>
+        {destinations.map((destination, index) => (
+          <div key={destination.label} style={{ alignItems: 'center', background: '#ffffff', border: `1px solid ${destination.accent}`, borderRadius: 999, boxShadow: '0 20px 48px rgba(20,24,22,0.13)', color: destination.accent, display: 'flex', fontSize: 22, fontWeight: 900, gap: 10, left: '50%', padding: '14px 20px', position: 'absolute', top: '50%', transform: `translate(-50%, -50%) translate(${destination.x}px, ${destination.y}px)`, zIndex: 42 }}>
+            <span style={{ background: destination.accent, borderRadius: 999, display: 'block', height: 16, width: 16 }} />
+            {destination.label}
+          </div>
+        ))}
+        <svg height="100%" style={{ inset: 0, position: 'absolute', zIndex: 5 }} viewBox="0 0 900 1320" width="100%">
+          {destinations.map((destination) => (
+            <path d={`M 450 660 C ${450 + destination.x * 0.28} ${660 + destination.y * 0.12}, ${450 + destination.x * 0.72} ${660 + destination.y * 0.82}, ${450 + destination.x} ${660 + destination.y}`} fill="none" key={destination.label} opacity="0.28" stroke={destination.accent} strokeDasharray="14 18" strokeDashoffset={-(frame * 3)} strokeLinecap="round" strokeWidth="4" />
+          ))}
+        </svg>
+
+        {[-1, 0, 1, 2, 3].map((slot) => {
+          const unit = local + slot * 0.23
+          if (unit < 0 || unit > 1.08) return null
+
+          const itemIndex = (activeIndex + slot + items.length) % items.length
+          const item = items[itemIndex]
+          const destination = destinations[itemIndex % destinations.length]
+          const classify = progress(unit, 0.36, 0.58)
+          const x = interpolate(unit, [0, 0.30, 0.55, 1], [0, 0, 0, destination.x], {
+            extrapolateLeft: 'clamp',
+            extrapolateRight: 'clamp',
+          })
+          const y = interpolate(unit, [0, 0.30, 0.55, 1], [-760, -250, 0, destination.y], {
+            extrapolateLeft: 'clamp',
+            extrapolateRight: 'clamp',
+          })
+          const centerScore = 1 - Math.min(Math.abs(unit - 0.5) / 0.5, 1)
+          const scale = 0.48 + centerScore * 0.42 - classify * 0.12
+          const opacity = interpolate(unit, [0, 0.1, 0.86, 1.08], [0, 1, 1, 0], {
+            extrapolateLeft: 'clamp',
+            extrapolateRight: 'clamp',
+          })
+          const rotation = interpolate(unit, [0, 0.55, 1], [itemIndex % 2 === 0 ? -4 : 4, 0, itemIndex % 2 === 0 ? 7 : -7], {
+            extrapolateLeft: 'clamp',
+            extrapolateRight: 'clamp',
+          })
+          const tagOpacity = interpolate(unit, [0.34, 0.45, 0.70, 0.82], [0, 1, 1, 0], {
+            extrapolateLeft: 'clamp',
+            extrapolateRight: 'clamp',
+          })
+
+          return (
+            <div
+              key={`${slot}-${item.title}`}
+              style={{
+                left: '50%',
+                opacity,
+                position: 'absolute',
+                top: '50%',
+                transform: `translate(-50%, -50%) translate(${x}px, ${y}px) rotate(${rotation}deg) scale(${scale})`,
+                zIndex: Math.round(centerScore * 24) + 18,
+              }}
+            >
+              <VerticalPipelineArtifact index={itemIndex} item={item} />
+              <div style={{ alignItems: 'center', background: '#ffffff', border: `1px solid ${destination.accent}`, borderRadius: 999, boxShadow: '0 20px 48px rgba(20,24,22,0.14)', color: destination.accent, display: 'flex', gap: 10, left: '50%', opacity: tagOpacity, padding: '14px 18px', position: 'absolute', top: '50%', transform: 'translate(205px, -82px)', zIndex: 40 }}>
+                <span style={{ background: destination.accent, borderRadius: 999, display: 'block', height: 16, width: 16 }} />
+                <span style={{ color: '#65716a', fontSize: 18, fontWeight: 780 }}>Classificado</span>
+                <strong style={{ color: destination.accent, fontSize: 24, letterSpacing: 0 }}>{destination.label}</strong>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </PremiumSceneShell>
+  )
+}
+
 function ArtifactPageStackGalleryScene({ footer, items, status }: { footer: string; items: VerticalPipelineItem[]; status: string }) {
   const frame = useCurrentFrame()
   const sceneIn = progress(frame, 0, 38)
@@ -4475,6 +4650,16 @@ export function SaaSArtifactPipelineGalleryAnimation() {
   )
 }
 
+export function SaaSClassifiedDistributionGalleryAnimation() {
+  return (
+    <ClassifiedArtifactDistributionScene
+      footer="Galeria de classificação distribuindo artefatos por categoria"
+      items={dashboardPipelineItems}
+      status="Classification gallery"
+    />
+  )
+}
+
 export function SaaSArtifactPageStackGalleryAnimation() {
   return (
     <ArtifactPageStackGalleryScene
@@ -4565,6 +4750,10 @@ export function SaaSMosaicGalleryAnimation() {
 
 export function SaaSPageFlipGalleryAnimation() {
   return <SaaSPageFlipGalleryAnimationCard />
+}
+
+export function SaaSPageTransitionGalleryAnimation() {
+  return <SaaSPageTransitionGalleryAnimationCard />
 }
 
 export function SaaSFilmstripGalleryAnimation() {
