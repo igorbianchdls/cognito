@@ -1196,6 +1196,147 @@ function SaaSMarqueeGalleryAnimationCard() {
   )
 }
 
+function SaaSMasonryGalleryAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const scroll = (frame * 1.7) % 360
+  const cardHeights = [360, 520, 430, 610, 390, 500, 470, 575, 410, 545, 385, 595]
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 48%, rgba(111, 143, 123, 0.16), rgba(244, 247, 244, 0) 58%)', bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Masonry gallery" />
+      <section
+        style={{
+          display: 'grid',
+          gap: 22,
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          left: 60,
+          opacity: sceneIn,
+          position: 'absolute',
+          right: 60,
+          top: 260,
+          transform: `translateY(${(1 - sceneIn) * 34}px)`,
+          zIndex: 20,
+        }}
+      >
+        {[0, 1, 2].map((column) => (
+          <div key={column} style={{ display: 'grid', gap: 22, transform: `translateY(${-scroll + column * 72}px)` }}>
+            {Array.from({ length: 4 }).map((_, row) => {
+              const index = column * 4 + row
+              const item = galleryItems[index % galleryItems.length]
+              const p = progress(frame, 14 + index * 8, 58 + index * 8)
+              const height = cardHeights[index]
+
+              return (
+                <div
+                  key={`${item.title}-${column}-${row}`}
+                  style={{
+                    background: index % 5 === 0 ? '#102019' : '#ffffff',
+                    border: `1px solid ${index % 5 === 0 ? '#102019' : '#dfe7e1'}`,
+                    borderRadius: 28,
+                    boxShadow: '0 26px 68px rgba(20, 24, 22, 0.14)',
+                    color: index % 5 === 0 ? '#ffffff' : '#0f1512',
+                    display: 'grid',
+                    gap: 18,
+                    height,
+                    opacity: p,
+                    overflow: 'hidden',
+                    padding: 24,
+                    position: 'relative',
+                    transform: `translateY(${(1 - p) * 28}px) scale(${0.96 + p * 0.04})`,
+                  }}
+                >
+                  <span style={{ background: item.accent, borderRadius: 999, display: 'block', height: 8, left: 0, position: 'absolute', right: 0, top: 0 }} />
+                  <div style={{ display: 'grid', gap: 8 }}>
+                    <span style={{ color: index % 5 === 0 ? 'rgba(255,255,255,0.68)' : '#65716a', fontSize: 17, fontWeight: 850, textTransform: 'uppercase' }}>{item.label}</span>
+                    <strong style={{ color: index % 5 === 0 ? '#ffffff' : '#0f1512', fontSize: 30, letterSpacing: 0, lineHeight: 1 }}>{item.title}</strong>
+                  </div>
+                  <strong style={{ color: index % 5 === 0 ? '#ffffff' : item.accent, fontSize: 44, letterSpacing: 0, lineHeight: 1 }}>{item.value}</strong>
+                  <div style={{ alignItems: 'end', display: 'flex', gap: 9, height: Math.max(96, height - 250), marginTop: 'auto' }}>
+                    {[62, 108, 84, 142, 118, 172].map((barHeight, bar) => (
+                      <span
+                        key={`${barHeight}-${bar}`}
+                        style={{
+                          background: bar === (index % 6) ? item.accent : index % 5 === 0 ? 'rgba(255,255,255,0.24)' : '#dce6df',
+                          borderRadius: 8,
+                          flex: 1,
+                          height: Math.min(height - 270, barHeight + row * 18),
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        ))}
+      </section>
+      <div style={{ background: 'linear-gradient(180deg, #f4f7f4 0%, rgba(244,247,244,0) 19%, rgba(244,247,244,0) 72%, #f4f7f4 100%)', inset: 0, position: 'absolute', zIndex: 30 }} />
+      <div style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid #dfe7e1', borderRadius: 30, boxShadow: '0 30px 84px rgba(20,24,22,0.16)', left: 86, padding: 34, position: 'absolute', right: 86, top: 670, zIndex: 40 }}>
+        <span style={{ color: '#65716a', fontSize: 22, fontWeight: 850, textTransform: 'uppercase' }}>Variable height collection</span>
+        <h2 style={{ color: '#0f1512', fontSize: 62, fontWeight: 850, letterSpacing: 0, lineHeight: 0.98, margin: '14px 0 0' }}>Screenshots organizados por peso visual</h2>
+      </div>
+      <GalleryFooter>Galeria masonry com cards de alturas diferentes e scroll continuo</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+function SaaSTimelineGalleryAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const activeIndex = Math.floor(frame / 118) % galleryItems.length
+  const local = (frame % 118) / 118
+  const active = galleryItems[activeIndex]
+  const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun']
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: `radial-gradient(circle at 50% 48%, ${active.accent}24, rgba(244, 247, 244, 0) 58%)`, bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Timeline gallery" />
+      <section style={{ left: 78, opacity: sceneIn, position: 'absolute', right: 78, top: 305, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 20 }}>
+        <div style={{ display: 'grid', gap: 12, marginBottom: 42 }}>
+          <span style={{ color: active.accent, fontSize: 23, fontWeight: 900, textTransform: 'uppercase' }}>Chronological collection</span>
+          <h2 style={{ color: '#0f1512', fontSize: 68, fontWeight: 850, letterSpacing: 0, lineHeight: 0.98, margin: 0 }}>Evolucao das telas por etapa</h2>
+        </div>
+        <div style={{ background: '#dce6df', borderRadius: 999, height: 9, left: 16, position: 'absolute', right: 16, top: 210 }} />
+        <div style={{ background: active.accent, borderRadius: 999, height: 9, left: 16, position: 'absolute', top: 210, width: `${Math.min(92, (activeIndex + local) * 15.4)}%` }} />
+        <div style={{ display: 'grid', gap: 18, gridTemplateColumns: 'repeat(6, 1fr)', marginTop: 72 }}>
+          {galleryItems.map((item, index) => {
+            const distance = Math.abs(index - activeIndex)
+            const activeDot = index === activeIndex
+            const p = progress(frame, 28 + index * 13, 74 + index * 13)
+
+            return (
+              <div
+                key={item.title}
+                style={{
+                  display: 'grid',
+                  gap: 18,
+                  opacity: p,
+                  transform: `translateY(${activeDot ? -18 : 0}px) scale(${activeDot ? 1.04 : 0.96})`,
+                  zIndex: activeDot ? 30 : 10 - distance,
+                }}
+              >
+                <span style={{ alignItems: 'center', background: activeDot ? item.accent : '#ffffff', border: `4px solid ${activeDot ? item.accent : '#dce6df'}`, borderRadius: 999, boxShadow: activeDot ? `0 18px 48px ${item.accent}42` : 'none', color: activeDot ? '#ffffff' : '#65716a', display: 'flex', fontSize: 21, fontWeight: 900, height: 68, justifyContent: 'center', margin: '0 auto', width: 68 }}>{months[index]}</span>
+                <div style={{ background: activeDot ? '#102019' : '#ffffff', border: `1px solid ${activeDot ? '#102019' : '#dfe7e1'}`, borderRadius: 24, boxShadow: activeDot ? '0 32px 84px rgba(20,24,22,0.20)' : '0 18px 46px rgba(20,24,22,0.10)', color: activeDot ? '#ffffff' : '#0f1512', display: 'grid', gap: 14, minHeight: activeDot ? 430 : 360, padding: 22 }}>
+                  <span style={{ color: activeDot ? 'rgba(255,255,255,0.66)' : '#65716a', fontSize: 16, fontWeight: 850, textTransform: 'uppercase' }}>{item.label}</span>
+                  <strong style={{ color: activeDot ? '#ffffff' : '#0f1512', fontSize: activeDot ? 29 : 24, letterSpacing: 0, lineHeight: 1 }}>{item.title}</strong>
+                  <span style={{ color: activeDot ? '#ffffff' : item.accent, fontSize: activeDot ? 35 : 28, fontWeight: 900 }}>{item.value}</span>
+                  <div style={{ alignItems: 'end', display: 'flex', gap: 7, height: activeDot ? 148 : 102, marginTop: 'auto' }}>
+                    {[58, 92, 74, 118, 96].map((height, bar) => <span key={height} style={{ background: bar === index % 5 ? item.accent : activeDot ? 'rgba(255,255,255,0.22)' : '#dce6df', borderRadius: 7, flex: 1, height: activeDot ? height : height * 0.72 }} />)}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </section>
+      <GalleryFooter>Galeria timeline organizando telas em uma narrativa cronologica</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
 function SaaSSpotlightGalleryAnimationCard() {
   const frame = useCurrentFrame()
   const sceneIn = progress(frame, 0, 38)
@@ -3900,6 +4041,14 @@ export function SaaSStackGalleryAnimation() {
 
 export function SaaSMarqueeGalleryAnimation() {
   return <SaaSMarqueeGalleryAnimationCard />
+}
+
+export function SaaSMasonryGalleryAnimation() {
+  return <SaaSMasonryGalleryAnimationCard />
+}
+
+export function SaaSTimelineGalleryAnimation() {
+  return <SaaSTimelineGalleryAnimationCard />
 }
 
 export function SaaSSpotlightGalleryAnimation() {
