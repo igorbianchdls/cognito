@@ -1052,8 +1052,8 @@ function AdAgentScanDemo() {
             ))}
           </div>
 
-          <div style={{ alignItems: 'center', background: '#f97316', border: '2px solid #fed7aa', borderRadius: 12, boxShadow: '0 18px 42px rgba(194,65,12,0.32)', color: '#ffffff', display: 'flex', gap: 11, left: agentX, padding: '13px 17px', position: 'absolute', top: agentY, transform: `scale(${0.96 + pulse * 0.04})`, zIndex: 4 }}>
-            <span style={{ color: '#ffffff', fontSize: 28, fontWeight: 950, lineHeight: 1, transform: 'rotate(-24deg)' }}>➤</span>
+          <div style={{ alignItems: 'center', background: '#f97316', border: '2px solid #fed7aa', borderRadius: 12, boxShadow: '0 18px 42px rgba(194,65,12,0.32)', color: '#ffffff', display: 'flex', left: agentX, padding: '13px 17px', position: 'absolute', top: agentY, transform: `scale(${0.96 + pulse * 0.04})`, zIndex: 4 }}>
+            <span style={{ color: '#f97316', fontSize: 34, fontWeight: 950, left: -24, lineHeight: 1, position: 'absolute', textShadow: '0 8px 18px rgba(194,65,12,0.30)', top: -16, transform: 'rotate(-24deg)' }}>➤</span>
             <strong style={{ color: '#ffffff', fontSize: 25, fontWeight: 920, letterSpacing: 0 }}>Ad Agent</strong>
           </div>
         </article>
