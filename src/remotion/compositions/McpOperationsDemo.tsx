@@ -20,15 +20,21 @@ import type {
   AnalysisStructuredContent,
   ChartResultStructuredContent,
   ConnectorsStructuredContent,
+  DashboardListStructuredContent,
+  DataCatalogStructuredContent,
   DataResultStructuredContent,
+  TableStructuredContent,
 } from '@/products/mcp-apps/web/src/types/toolResult'
 import { AnimatedMcpAnalysisView } from '@/remotion/components/AnimatedMcpAnalysisView'
 import { AnimatedMcpChartView } from '@/remotion/components/AnimatedMcpChartView'
 import { AnimatedMcpConnectorsView } from '@/remotion/components/AnimatedMcpConnectorsView'
+import { AnimatedMcpDashboardListView } from '@/remotion/components/AnimatedMcpDashboardListView'
+import { AnimatedMcpDataCatalogView } from '@/remotion/components/AnimatedMcpDataCatalogView'
+import { AnimatedMcpDreView } from '@/remotion/components/AnimatedMcpDreView'
 import { AnimatedMcpTableView } from '@/remotion/components/AnimatedMcpTableView'
 import { IOS_REMOTION_DISPLAY_FONT_STACK, IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/remotion/fonts/sfPro'
 
-export const MCP_SINGLE_ANIMATION_DURATION = 1080
+export const MCP_SINGLE_ANIMATION_DURATION = 1500
 export const MCP_OPERATIONS_DEMO_DURATION = MCP_SINGLE_ANIMATION_DURATION
 
 loadSfProFonts()
@@ -257,6 +263,64 @@ const chatGptSequenceConnectorsData = {
   columns: ['name', 'domain', 'status', 'last_sync_at', 'records'],
 } satisfies ConnectorsStructuredContent
 
+const chatGptSequenceDataCatalogData = {
+  ok: true,
+  success: true,
+  tool: 'data_catalog',
+  view: 'data_catalog',
+  action: 'cobertura',
+  domain: 'erp',
+  resource: 'contas-a-pagar',
+  title: 'Catalogo de Dados',
+  subtitle: 'ERP pronto para dashboard',
+  sources: [
+    { domain: 'erp', label: 'ERP', status: 'connected', total_records: 28410 },
+    { domain: 'crm', label: 'CRM', status: 'connected', total_records: 9120 },
+    { domain: 'marketing', label: 'Marketing', status: 'connected', total_records: 28912 },
+  ],
+  resources: [
+    { resource: 'contas-a-pagar', label: 'Contas a Pagar', status: 'ok', total_records: 420, value_sum: 1842090.4 },
+    { resource: 'contas-a-receber', label: 'Contas a Receber', status: 'ok', total_records: 388, value_sum: 2366000.1 },
+  ],
+  quality: { score: 91, resource: 'contas-a-pagar', missing_fields: 2 },
+  recommendations: ['Usar janela minima de 5 meses para tendencia.'],
+} satisfies DataCatalogStructuredContent
+
+const chatGptSequenceDashboardListData = {
+  ok: true,
+  tool: 'dashboards',
+  view: 'dashboard_list',
+  title: 'Dashboards',
+  dashboards: [
+    { id: 'dash-financeiro', title: 'Financeiro Executivo', slug: 'financeiro-executivo', status: 'published', current_draft_version: 4, current_published_version: 3, updated_at: '2026-05-28T09:10:00.000Z' },
+    { id: 'dash-marketing', title: 'Marketing H1', slug: 'marketing-h1', status: 'draft', current_draft_version: 2, current_published_version: null, updated_at: '2026-05-27T18:30:00.000Z' },
+  ],
+} satisfies DashboardListStructuredContent
+
+const chatGptSequenceDreData = {
+  ok: true,
+  tool: 'financial_statement',
+  view: 'table',
+  kind: 'dre',
+  variant: 'financial_statement',
+  title: 'DRE',
+  subtitle: 'Consolidado 2026',
+  columns: [
+    { key: 'descricao', label: 'DRE' },
+    { key: 'jan_2026', label: 'Jan/26', format: 'currency_plain' },
+    { key: 'fev_2026', label: 'Fev/26', format: 'currency_plain' },
+    { key: 'mar_2026', label: 'Mar/26', format: 'currency_plain' },
+  ],
+  rows: [
+    { descricao: '(+) Receita bruta', jan_2026: 812300, fev_2026: 844200, mar_2026: 904100, _rowType: 'group' },
+    { descricao: '(-) Descontos', jan_2026: -22100, fev_2026: -19800, mar_2026: -24700, _rowType: 'child' },
+    { descricao: '(=) Receita liquida', jan_2026: 790200, fev_2026: 824400, mar_2026: 879400, _rowType: 'subtotal' },
+    { descricao: '(-) Custos', jan_2026: -318000, fev_2026: -334800, mar_2026: -351200, _rowType: 'child' },
+    { descricao: '(=) EBITDA', jan_2026: 279800, fev_2026: 289600, mar_2026: 321100, _rowType: 'subtotal' },
+  ],
+  count: 5,
+} satisfies TableStructuredContent
+
 const chatGptSequenceAnalysisData = {
   ok: true,
   tool: 'analysis',
@@ -264,17 +328,13 @@ const chatGptSequenceAnalysisData = {
   type: 'executive_summary',
   title: 'Resumo executivo',
   subtitle: 'Principais pontos do financeiro',
-  summary: 'Receita concentrada em dois canais, contas a pagar sob controle e um conector bancario precisando de atencao antes do fechamento.',
+  summary: 'Receita concentrada em dois canais, contas a pagar sob controle e um conector bancario pedindo atencao.',
   metrics: [
     { label: 'Receita', value: 'R$ 483,9 mil', tone: 'positive' },
     { label: 'A pagar', value: 'R$ 70,9 mil', tone: 'neutral' },
     { label: 'Conectores OK', value: '3/4', tone: 'warning' },
   ],
-  sections: [
-    { title: 'Oportunidade', body: 'Shopify e Mercado Livre respondem por 64% da receita conectada.' },
-    { title: 'Risco', body: 'O conector bancario esta com sync atrasado e deve ser reconectado.' },
-  ],
-  next_steps: ['Reconciliar banco', 'Aprovar pagamentos de junho', 'Revisar verba dos canais menores'],
+  next_steps: ['Reconciliar banco', 'Aprovar pagamentos de junho'],
 } satisfies AnalysisStructuredContent
 
 function CognitoBrand() {
@@ -2280,8 +2340,8 @@ function ChatGptMobileScreenshot() {
   const frame = useCurrentFrame()
   const conversationY = interpolate(
     frame,
-    [0, 160, 300, 470, 640, 820],
-    [0, 0, -410, -1040, -1700, -2340],
+    [0, 160, 300, 470, 640, 820, 1000, 1180, 1360],
+    [0, 0, -410, -1040, -1700, -2380, -3180, -3980, -4860],
     {
       extrapolateLeft: 'clamp',
       extrapolateRight: 'clamp',
@@ -2301,7 +2361,7 @@ function ChatGptMobileScreenshot() {
       <MoreHorizontal color="#050505" size={51} strokeWidth={3.2} style={{ left: 974, position: 'absolute', top: 157 }} />
 
       <div style={{ bottom: 264, left: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 244 }}>
-        <div style={{ display: 'grid', gap: 34, padding: '20px 0 560px', transform: `translateY(${conversationY}px)` }}>
+        <div style={{ display: 'grid', gap: 34, padding: '20px 0 760px', transform: `translateY(${conversationY}px)` }}>
           <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 10, 18)}>
             Mostre receita por canal
           </ChatGptFlowUserBubble>
@@ -2333,16 +2393,46 @@ function ChatGptMobileScreenshot() {
           </ChatGptToolResultCard>
 
           <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 548, 18)}>
-            Resume para mim
+            Mostre o catalogo de dados
           </ChatGptFlowUserBubble>
           <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 586, 22)}>
-            Fechei um resumo executivo com os principais sinais e próximos passos.
+            Encontrei os recursos disponiveis e a qualidade dos dados conectados.
           </ChatGptFlowAssistantText>
           <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 616, 22)}>
-            <AnimatedMcpAnalysisView data={chatGptSequenceAnalysisData} startFrame={616} />
+            <AnimatedMcpDataCatalogView data={chatGptSequenceDataCatalogData} startFrame={616} />
           </ChatGptToolResultCard>
 
-          <div style={chatGptSequenceStyle(frame, 662, 14)}>
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 736, 18)}>
+            Liste meus dashboards
+          </ChatGptFlowUserBubble>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 774, 22)}>
+            Estes dashboards ja estao disponiveis para abrir no app.
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 804, 22)}>
+            <AnimatedMcpDashboardListView data={chatGptSequenceDashboardListData} startFrame={804} />
+          </ChatGptToolResultCard>
+
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 926, 18)}>
+            E a DRE?
+          </ChatGptFlowUserBubble>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 964, 22)}>
+            Aqui esta a DRE consolidada em formato de demonstrativo financeiro.
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 994, 22)}>
+            <AnimatedMcpDreView data={chatGptSequenceDreData} startFrame={994} />
+          </ChatGptToolResultCard>
+
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 1116, 18)}>
+            Resume para mim
+          </ChatGptFlowUserBubble>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 1154, 22)}>
+            Fechei um resumo executivo com os principais sinais e próximos passos.
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 1184, 22)}>
+            <AnimatedMcpAnalysisView data={chatGptSequenceAnalysisData} startFrame={1184} />
+          </ChatGptToolResultCard>
+
+          <div style={chatGptSequenceStyle(frame, 1244, 14)}>
             <div style={{ padding: '10px 0 0 45px' }}>
               <ChatGptActionRow />
             </div>
