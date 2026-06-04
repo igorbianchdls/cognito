@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
 import {
+  ChevronRight,
   Copy,
   Menu,
   Mic,
@@ -9,9 +10,11 @@ import {
   Plus,
   ReceiptText,
   RotateCcw,
+  SquarePen,
   ThumbsDown,
   ThumbsUp,
   Upload,
+  Volume2,
 } from 'lucide-react'
 import { IOS_REMOTION_DISPLAY_FONT_STACK, IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/remotion/fonts/sfPro'
 
@@ -2061,67 +2064,135 @@ function ClaudeWebAnimationCard() {
   return <WebChatWindow brand="Claude" kind="claude" />
 }
 
-function MobileChatWindow({ brand, kind }: { brand: 'ChatGPT' | 'Claude'; kind: 'chatgpt' | 'claude' }) {
-  const frame = useCurrentFrame()
-  const isClaude = kind === 'claude'
-  const accent = isClaude ? '#d86f4a' : '#10a37f'
-  const bg = isClaude ? '#f7f4ed' : '#ffffff'
-  const border = isClaude ? '#e6dfd2' : '#e5e5e7'
-  const muted = isClaude ? '#7b7265' : '#6b7280'
-  const phoneIn = progress(frame, 0, 38)
-  const activeMessage = Math.min(webChatMessages.length - 1, Math.floor(frame / 88))
+function ChatGptStatusBar() {
+  return (
+    <>
+      <div style={{ color: '#060606', fontSize: 42, fontWeight: 740, left: 78, letterSpacing: 0, lineHeight: 1, position: 'absolute', top: 42 }}>18:07</div>
+      <div style={{ alignItems: 'flex-end', display: 'flex', gap: 5, height: 30, left: 842, position: 'absolute', top: 54, width: 42 }}>
+        {[12, 18, 25, 31].map((height, index) => (
+          <span key={height} style={{ background: index > 1 ? '#c8c8c8' : '#050505', borderRadius: 3, display: 'block', height, width: 7 }} />
+        ))}
+      </div>
+      <div style={{ height: 35, left: 903, position: 'absolute', top: 48, width: 50 }}>
+        <div style={{ border: '6px solid #050505', borderBottom: 0, borderLeftColor: 'transparent', borderRightColor: 'transparent', borderRadius: '50% 50% 0 0', height: 27, left: 1, position: 'absolute', top: 3, transform: 'rotate(180deg)', width: 48 }} />
+        <div style={{ border: '5px solid #050505', borderBottom: 0, borderLeftColor: 'transparent', borderRightColor: 'transparent', borderRadius: '50% 50% 0 0', height: 19, left: 11, position: 'absolute', top: 11, transform: 'rotate(180deg)', width: 29 }} />
+        <div style={{ background: '#050505', borderRadius: 999, height: 7, left: 23, position: 'absolute', top: 27, width: 7 }} />
+      </div>
+      <div style={{ border: '2px solid #bcbcbc', borderRadius: 10, height: 35, left: 965, position: 'absolute', top: 45, width: 67 }}>
+        <div style={{ background: '#e8c348', borderRadius: 7, bottom: 2, left: 2, position: 'absolute', top: 2, width: 45 }} />
+        <div style={{ color: '#050505', fontSize: 26, fontWeight: 760, left: 18, lineHeight: '31px', position: 'absolute', textAlign: 'center', top: 0, width: 40 }}>24</div>
+        <div style={{ background: '#bcbcbc', borderRadius: 3, height: 14, position: 'absolute', right: -6, top: 9, width: 4 }} />
+      </div>
+    </>
+  )
+}
+
+function ChatGptBubble({ children, top }: { children: ReactNode; top: number }) {
+  return (
+    <div
+      style={{
+        alignItems: 'center',
+        background: '#f1f1f1',
+        borderRadius: 60,
+        boxSizing: 'border-box',
+        color: '#111111',
+        display: 'flex',
+        fontFamily: FONT_STACK,
+        fontSize: 42,
+        fontWeight: 430,
+        height: 91,
+        justifyContent: 'center',
+        letterSpacing: 0,
+        lineHeight: 1,
+        maxWidth: 720,
+        padding: '0 42px',
+        position: 'absolute',
+        right: 42,
+        top,
+        width: 'max-content',
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
+function ChatGptActionRow() {
+  const icons = [Copy, Volume2, ThumbsUp, ThumbsDown, Upload, MoreHorizontal]
 
   return (
-    <AbsoluteFill style={{ background: isClaude ? '#ede8de' : '#f4f4f5', color: '#111827', fontFamily: FONT_STACK, overflow: 'hidden' }}>
-      <div style={{ background: isClaude ? 'radial-gradient(circle at 50% 45%, rgba(216,111,74,0.20), rgba(237,232,222,0) 62%)' : 'radial-gradient(circle at 50% 45%, rgba(16,163,127,0.18), rgba(244,244,245,0) 62%)', inset: -180, position: 'absolute' }} />
-      <GallerySceneHeader status={`${brand} mobile`} />
-      <div style={{ background: '#0b1118', border: '12px solid #111827', borderRadius: 66, boxShadow: '0 48px 120px rgba(20,24,22,0.30)', height: 1120, left: '50%', opacity: phoneIn, overflow: 'hidden', position: 'absolute', top: 272, transform: `translateX(-50%) translateY(${(1 - phoneIn) * 34}px)`, width: 548, zIndex: 20 }}>
-        <div style={{ background: bg, inset: 0, position: 'absolute' }}>
-          <header style={{ alignItems: 'center', borderBottom: `1px solid ${border}`, display: 'flex', gap: 14, justifyContent: 'space-between', padding: '44px 28px 20px' }}>
-            <div style={{ alignItems: 'center', display: 'flex', gap: 12 }}>
-              <span style={{ alignItems: 'center', background: accent, borderRadius: isClaude ? 13 : 999, color: '#ffffff', display: 'flex', fontSize: 24, fontWeight: 900, height: 44, justifyContent: 'center', width: 44 }}>{isClaude ? '*' : 'G'}</span>
-              <div style={{ display: 'grid', gap: 2 }}>
-                <strong style={{ color: '#111827', fontSize: 22, letterSpacing: 0 }}>{brand}</strong>
-                <span style={{ color: muted, fontSize: 13, fontWeight: 760 }}>{isClaude ? 'Projeto conectado' : 'Tools enabled'}</span>
-              </div>
-            </div>
-            <span style={{ background: isClaude ? '#f0ebe2' : '#f4f4f5', borderRadius: 999, color: '#111827', fontSize: 14, fontWeight: 820, padding: '9px 12px' }}>{isClaude ? 'Opus' : 'GPT-5'}</span>
-          </header>
-          <main style={{ display: 'grid', gap: 16, padding: '24px 22px 148px' }}>
-            {webChatMessages.map((message, index) => {
-              const visible = progress(frame, 28 + index * 34, 60 + index * 34)
-              const user = message.role === 'user'
-              const active = index === activeMessage
-              return (
-                <div key={`${message.role}-${index}`} style={{ display: 'flex', justifyContent: user ? 'flex-end' : 'flex-start', opacity: visible, transform: `translateY(${(1 - visible) * 14}px)` }}>
-                  <div style={{ background: user ? (isClaude ? '#ebe6dd' : '#f4f4f4') : '#ffffff', border: `1px solid ${user ? border : active ? accent : border}`, borderRadius: 22, boxShadow: active && !user ? '0 18px 44px rgba(20,24,22,0.10)' : 'none', color: '#111827', display: 'grid', gap: 10, maxWidth: user ? 390 : 440, padding: '15px 16px' }}>
-                    {!user ? <strong style={{ color: accent, fontSize: 15, letterSpacing: 0 }}>{brand}</strong> : null}
-                    <p style={{ color: '#111827', fontSize: 18, fontWeight: 600, letterSpacing: 0, lineHeight: 1.3, margin: 0 }}>{message.text}</p>
-                    {active && !user ? (
-                      <div style={{ alignItems: 'end', display: 'flex', gap: 7, height: 74 }}>
-                        {[34, 56, 44, 72, 62].map((height, bar) => <span key={`${height}-${bar}`} style={{ background: bar > 2 ? accent : '#dce3df', borderRadius: 7, flex: 1, height }} />)}
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-              )
-            })}
-          </main>
-          <footer style={{ background: bg, borderTop: `1px solid ${border}`, bottom: 0, display: 'grid', gap: 12, left: 0, padding: '18px 22px 28px', position: 'absolute', right: 0 }}>
-            <div style={{ background: isClaude ? '#fbfaf7' : '#ffffff', border: `1px solid ${border}`, borderRadius: 24, boxShadow: '0 16px 38px rgba(20,24,22,0.08)', color: muted, display: 'flex', fontSize: 18, fontWeight: 680, justifyContent: 'space-between', padding: '16px 18px' }}>
-              <span>{isClaude ? 'Responder a Claude' : 'Mensagem para ChatGPT'}</span>
-              <span style={{ alignItems: 'center', background: accent, borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 18, fontWeight: 900, height: 34, justifyContent: 'center', width: 34 }}>^</span>
-            </div>
-          </footer>
-        </div>
+    <div style={{ alignItems: 'center', display: 'flex', gap: 32 }}>
+      {icons.map((Icon, index) => (
+        <Icon key={index} color="#666666" size={39} strokeWidth={2.5} />
+      ))}
+    </div>
+  )
+}
+
+function ChatGptVoiceButton() {
+  return (
+    <div style={{ alignItems: 'center', background: '#050505', borderRadius: 999, display: 'flex', gap: 7, height: 78, justifyContent: 'center', width: 78 }}>
+      {[20, 35, 48, 35, 20].map((height, index) => (
+        <span key={`${height}-${index}`} style={{ background: '#ffffff', borderRadius: 999, height, width: 6 }} />
+      ))}
+    </div>
+  )
+}
+
+function ChatGptMobileScreenshot() {
+  return (
+    <AbsoluteFill style={{ background: '#ffffff', color: '#111111', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <ChatGptStatusBar />
+
+      <Menu color="#050505" size={48} strokeWidth={2.7} style={{ left: 48, position: 'absolute', top: 158 }} />
+      <div style={{ alignItems: 'center', color: '#111111', display: 'flex', fontSize: 43, fontWeight: 600, gap: 5, left: 161, letterSpacing: 0, lineHeight: 1, position: 'absolute', top: 156 }}>
+        ChatGPT
+        <ChevronRight color="#8b8b8b" size={34} strokeWidth={2.4} />
       </div>
-      <GalleryFooter>{brand} mobile para posts, demos e videos sociais</GalleryFooter>
+      <SquarePen color="#050505" size={47} strokeWidth={2.8} style={{ left: 861, position: 'absolute', top: 149 }} />
+      <MoreHorizontal color="#050505" size={51} strokeWidth={3.2} style={{ left: 974, position: 'absolute', top: 157 }} />
+
+      <ChatGptBubble top={264}>Me diga as contas a pagar</ChatGptBubble>
+
+      <div style={{ color: '#111111', fontSize: 42, fontWeight: 430, left: 42, letterSpacing: 0, lineHeight: 1.42, position: 'absolute', top: 454, width: 1004 }}>
+        Você quer ver as contas a pagar de onde?
+        <br />
+        <br />
+        Por exemplo:
+        <br />
+        <br />
+        <span style={{ display: 'block', paddingLeft: 60, textIndent: -38 }}>•&nbsp;&nbsp;do seu ERP (Conta Azul, Omiê, Bling etc.)</span>
+        <span style={{ display: 'block', paddingLeft: 60, textIndent: -38 }}>•&nbsp;&nbsp;de uma planilha</span>
+        <span style={{ display: 'block', paddingLeft: 60, textIndent: -38 }}>•&nbsp;&nbsp;de um banco de dados/Supabase</span>
+        <span style={{ display: 'block', paddingLeft: 60, textIndent: -38 }}>•&nbsp;&nbsp;ou você quer saber conceitualmente o que</span>
+        <span style={{ display: 'block', paddingLeft: 60 }}>entra em “contas a pagar” no financeiro?</span>
+      </div>
+
+      <div style={{ left: 45, position: 'absolute', top: 987 }}>
+        <ChatGptActionRow />
+      </div>
+
+      <div style={{ background: '#ffffff', bottom: 0, height: 264, left: 0, position: 'absolute', right: 0 }}>
+        <div style={{ alignItems: 'center', display: 'flex', gap: 21, left: 31, position: 'absolute', right: 31, top: 0 }}>
+          <div style={{ alignItems: 'center', background: '#f0f0f0', borderRadius: 999, display: 'flex', height: 84, justifyContent: 'center', width: 84 }}>
+            <Plus color="#555555" size={47} strokeWidth={2.4} />
+          </div>
+          <div style={{ alignItems: 'center', background: '#f0f0f0', borderRadius: 999, display: 'flex', flex: 1, height: 84, minWidth: 0, position: 'relative' }}>
+            <span style={{ color: '#858585', fontSize: 40, fontWeight: 430, left: 41, letterSpacing: 0, lineHeight: 1, position: 'absolute', top: 23 }}>Pergunte ao ChatGPT</span>
+            <Mic color="#777777" size={44} strokeWidth={2.8} style={{ position: 'absolute', right: 103, top: 18 }} />
+            <div style={{ position: 'absolute', right: 8, top: 6 }}>
+              <ChatGptVoiceButton />
+            </div>
+          </div>
+        </div>
+        <div style={{ background: '#050505', borderRadius: 999, bottom: 14, height: 12, left: '50%', position: 'absolute', transform: 'translateX(-50%)', width: 380 }} />
+      </div>
     </AbsoluteFill>
   )
 }
 
 function ChatGptMobileAnimationCard() {
-  return <MobileChatWindow brand="ChatGPT" kind="chatgpt" />
+  return <ChatGptMobileScreenshot />
 }
 
 function ClaudeStatusBar() {

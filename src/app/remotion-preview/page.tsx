@@ -1769,7 +1769,7 @@ const catalog: CatalogItem[] = [
   {
     code: '<ChatGptMobileAnimation />',
     component: ChatGptMobileAnimation,
-    description: 'ChatGPT em mock mobile para posts, demos e vídeos sociais.',
+    description: 'ChatGPT mobile em tela cheia para posts, demos e vídeos sociais.',
     duration: MCP_SINGLE_ANIMATION_DURATION,
     height: 1920,
     kind: 'Marketing',
