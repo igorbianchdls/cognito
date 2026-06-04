@@ -2154,18 +2154,16 @@ function ChatGptMobileScreenshot() {
 
       <ChatGptBubble top={264}>Me diga as contas a pagar</ChatGptBubble>
 
-      <div style={{ color: '#111111', fontSize: 42, fontWeight: 430, left: 42, letterSpacing: 0, lineHeight: 1.42, position: 'absolute', top: 454, width: 1004 }}>
-        Você quer ver as contas a pagar de onde?
-        <br />
-        <br />
-        Por exemplo:
-        <br />
-        <br />
-        <span style={{ display: 'block', paddingLeft: 60, textIndent: -38 }}>•&nbsp;&nbsp;do seu ERP (Conta Azul, Omiê, Bling etc.)</span>
-        <span style={{ display: 'block', paddingLeft: 60, textIndent: -38 }}>•&nbsp;&nbsp;de uma planilha</span>
-        <span style={{ display: 'block', paddingLeft: 60, textIndent: -38 }}>•&nbsp;&nbsp;de um banco de dados/Supabase</span>
-        <span style={{ display: 'block', paddingLeft: 60, textIndent: -38 }}>•&nbsp;&nbsp;ou você quer saber conceitualmente o que</span>
-        <span style={{ display: 'block', paddingLeft: 60 }}>entra em “contas a pagar” no financeiro?</span>
+      <div style={{ color: '#111111', fontFamily: FONT_STACK, fontSize: 42, fontWeight: 400, left: 42, letterSpacing: 0, lineHeight: 1.34, position: 'absolute', top: 454, width: 1004 }}>
+        <p style={{ margin: '0 0 62px' }}>Você quer ver as contas a pagar de onde?</p>
+        <p style={{ margin: '0 0 34px' }}>Por exemplo:</p>
+        <div style={{ display: 'grid', gap: 14 }}>
+          <span style={{ display: 'block', paddingLeft: 73, textIndent: -52 }}>•&nbsp;&nbsp;do seu ERP (Conta Azul, Omiê, Bling etc.)</span>
+          <span style={{ display: 'block', paddingLeft: 73, textIndent: -52 }}>•&nbsp;&nbsp;de uma planilha</span>
+          <span style={{ display: 'block', paddingLeft: 73, textIndent: -52 }}>•&nbsp;&nbsp;de um banco de dados/Supabase</span>
+          <span style={{ display: 'block', paddingLeft: 73, textIndent: -52 }}>•&nbsp;&nbsp;ou você quer saber conceitualmente o que</span>
+          <span style={{ display: 'block', paddingLeft: 73 }}>entra em “contas a pagar” no financeiro?</span>
+        </div>
       </div>
 
       <div style={{ left: 45, position: 'absolute', top: 987 }}>
