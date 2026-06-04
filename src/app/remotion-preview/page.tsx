@@ -870,6 +870,116 @@ function AdLibraryDemo() {
   )
 }
 
+function AIScanOverlayDemo() {
+  const frame = useCurrentFrame()
+  const sceneIn = previewProgress(frame, 0, 34)
+  const activeScene = Math.floor(frame / 58) % 3
+  const sweep = (frame * 3.1) % 760
+  const pulse = interpolate(Math.sin(frame / 7), [-1, 1], [0.72, 1])
+  const sources = [
+    {
+      accent: '#ef4444',
+      body: ['Sarah Whitman', 'Last Day to Register - Soccer Camp!', 'Registration closes tonight. Reply to confirm enrollment.'],
+      meta: 'Email',
+      title: 'Gmail inbox',
+    },
+    {
+      accent: '#f43f5e',
+      body: ['Silver Lakes U10', 'You said Carla would bring orange slices.', 'I can scan the thread and find the task owner.'],
+      meta: 'Messages',
+      title: 'Group chat',
+    },
+    {
+      accent: '#dc2626',
+      body: ['Dashboard review', 'Revenue gap in Paid Social', 'Unassigned follow-up detected in campaign notes.'],
+      meta: 'Workspace',
+      title: 'Marketing ops',
+    },
+  ]
+  const source = sources[activeScene]
+
+  return (
+    <div style={{ background: '#000000', color: '#ffffff', fontFamily: theme.fontFamily, height: '100%', overflow: 'hidden', position: 'relative', width: '100%' }}>
+      <div style={{ background: 'radial-gradient(circle at 52% 40%, rgba(239,68,68,0.20), transparent 48%)', inset: -160, opacity: sceneIn, position: 'absolute' }} />
+      <header style={{ alignItems: 'center', display: 'flex', left: 44, opacity: sceneIn, position: 'absolute', right: 44, top: 44, zIndex: 30 }}>
+        <span style={{ color: '#ffffff', fontSize: 34, fontWeight: 850, letterSpacing: 0 }}>11:26</span>
+        <div style={{ alignItems: 'center', display: 'flex', gap: 9, marginLeft: 'auto' }}>
+          {[18, 24, 31, 38].map((height) => <span key={height} style={{ background: '#ffffff', borderRadius: 999, display: 'block', height, width: 7 }} />)}
+          <span style={{ border: '3px solid #ffffff', borderTop: 0, borderRadius: '0 0 18px 18px', display: 'block', height: 18, transform: 'rotate(180deg)', width: 36 }} />
+          <span style={{ background: '#ffffff', borderRadius: 8, color: '#000000', fontSize: 22, fontWeight: 900, padding: '3px 8px' }}>32</span>
+        </div>
+      </header>
+
+      <section style={{ background: '#151515', borderRadius: 32, boxShadow: '0 18px 50px rgba(0,0,0,0.50)', display: 'grid', gap: 6, gridTemplateColumns: '1fr 86px 86px', left: 22, opacity: sceneIn, padding: '34px 40px', position: 'absolute', right: 22, top: 104, transform: `translateY(${(1 - sceneIn) * -18}px)`, zIndex: 20 }}>
+        <div style={{ display: 'grid', gap: 8 }}>
+          <span style={{ color: '#9ca3af', fontSize: 30, fontWeight: 620, letterSpacing: 0 }}>Brasil</span>
+          <strong style={{ color: '#ffffff', fontSize: 46, fontWeight: 850, letterSpacing: 0 }}>(081) 98461-0519</strong>
+        </div>
+        <span style={{ alignItems: 'center', alignSelf: 'center', background: '#ff453a', borderRadius: 999, display: 'flex', fontSize: 38, fontWeight: 900, height: 68, justifyContent: 'center', width: 68 }}>⌒</span>
+        <span style={{ alignItems: 'center', alignSelf: 'center', background: '#30d158', borderRadius: 999, display: 'flex', fontSize: 34, fontWeight: 900, height: 68, justifyContent: 'center', transform: 'rotate(-18deg)', width: 68 }}>⌕</span>
+      </section>
+
+      <main style={{ background: '#fff1e8', height: 626, left: 0, opacity: sceneIn, overflow: 'hidden', position: 'absolute', right: 0, top: 674, zIndex: 5 }}>
+        <div style={{ background: 'radial-gradient(circle at 50% 35%, rgba(255,255,255,0.92), rgba(255,241,232,0.25) 62%)', inset: 0, position: 'absolute' }} />
+        <article style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.10)', borderRadius: 18, boxShadow: '0 34px 80px rgba(15,23,42,0.18)', display: 'grid', gap: 16, left: 256, opacity: sceneIn, padding: 24, position: 'absolute', top: 92, transform: `scale(${activeScene === 1 ? 0.72 : 0.86}) rotate(${activeScene === 1 ? '-1.5deg' : '0.5deg'})`, transformOrigin: 'top center', width: activeScene === 1 ? 430 : 560 }}>
+          <div style={{ alignItems: 'center', borderBottom: '1px solid #e5e7eb', display: 'flex', gap: 12, paddingBottom: 14 }}>
+            <span style={{ color: '#94a3b8', fontSize: 22, fontWeight: 900 }}>‹</span>
+            <strong style={{ color: '#0f172a', fontSize: 22, fontWeight: 850, letterSpacing: 0 }}>{source.title}</strong>
+            <span style={{ color: '#94a3b8', fontSize: 15, fontWeight: 820, marginLeft: 'auto' }}>{source.meta}</span>
+          </div>
+          <div style={{ display: 'grid', gap: 13 }}>
+            {source.body.map((line, index) => (
+              <span key={line} style={{ background: index === 1 ? '#fff1f2' : '#f8fafc', border: `1px solid ${index === 1 ? '#fecdd3' : '#e2e8f0'}`, borderRadius: 10, color: index === 0 ? '#0f172a' : '#334155', display: 'block', fontSize: index === 1 ? 24 : 18, fontWeight: index === 1 ? 850 : 650, lineHeight: 1.25, padding: index === 1 ? '18px 16px' : '13px 14px' }}>{line}</span>
+            ))}
+          </div>
+          <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1fr 1fr 1fr' }}>
+            {[58, 84, 46].map((width, index) => <span key={`${width}-${index}`} style={{ background: '#f1f5f9', borderRadius: 999, height: 13, opacity: 0.9, width: `${width}%` }} />)}
+          </div>
+
+          <div style={{ background: 'rgba(244,63,94,0.24)', border: '3px solid rgba(185,28,28,0.92)', borderRadius: 10, boxShadow: `0 0 ${24 + pulse * 22}px rgba(239,68,68,0.40)`, left: 28, minHeight: activeScene === 1 ? 236 : 182, opacity: 0.95, overflow: 'hidden', position: 'absolute', right: 28, top: activeScene === 0 ? 112 : 132 }}>
+            <span style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.58), transparent)', bottom: 0, left: sweep - 180, position: 'absolute', top: 0, transform: 'skewX(-18deg)', width: 120 }} />
+            <span style={{ background: 'rgba(185,28,28,0.95)', borderRadius: 999, color: '#ffffff', fontSize: 13, fontWeight: 900, left: 12, letterSpacing: 0.6, padding: '6px 9px', position: 'absolute', textTransform: 'uppercase', top: 10 }}>AI Scan</span>
+          </div>
+        </article>
+
+        <div style={{ background: 'rgba(17,24,39,0.78)', borderRadius: 5, bottom: 52, color: '#ffffff', fontSize: 25, fontWeight: 620, left: 250, letterSpacing: 0, padding: '9px 12px', position: 'absolute' }}>
+          to scan all of the accounts you just connected.
+        </div>
+      </main>
+
+      <section style={{ bottom: 176, display: 'grid', gap: 28, left: 38, opacity: sceneIn, position: 'absolute', right: 30, zIndex: 20 }}>
+        <div style={{ alignItems: 'center', display: 'grid', gap: 18, gridTemplateColumns: '88px 1fr 198px' }}>
+          <span style={{ background: 'linear-gradient(135deg, #c7d2fe, #334155)', borderRadius: 999, height: 74, width: 74 }} />
+          <div style={{ display: 'grid', gap: 4 }}>
+            <strong style={{ color: '#ffffff', fontSize: 32, fontWeight: 900, letterSpacing: 0 }}>AI Scan Demo</strong>
+            <span style={{ color: '#a1a1aa', fontSize: 25, fontWeight: 620 }}>@cognito_ai</span>
+          </div>
+          <span style={{ background: '#1f1f1f', borderRadius: 999, color: '#ffffff', fontSize: 30, fontWeight: 760, padding: '18px 34px', textAlign: 'center' }}>Seguir</span>
+        </div>
+        <span style={{ color: '#ffffff', fontSize: 30, fontWeight: 580, letterSpacing: 0, lineHeight: 1.18 }}>AI can scan inboxes, chats and reports in seconds...</span>
+        <div style={{ display: 'grid', gap: 20, gridTemplateColumns: '180px 180px 180px 78px 78px' }}>
+          {['568', '5,2k', '1,9k', '▱', '↥'].map((item, index) => (
+            <span key={`${item}-${index}`} style={{ alignItems: 'center', background: '#1c1c1c', borderRadius: 999, color: index === 2 ? '#ff2d7a' : '#ffffff', display: 'flex', fontSize: 28, fontWeight: 760, height: 82, justifyContent: 'center' }}>{item}</span>
+          ))}
+        </div>
+      </section>
+
+      <footer style={{ bottom: 36, left: 0, position: 'absolute', right: 0, zIndex: 25 }}>
+        <span style={{ background: '#8b8b8b', display: 'block', height: 5, opacity: 0.85, position: 'relative', width: '100%' }}>
+          <span style={{ background: '#ffffff', display: 'block', height: 5, width: `${22 + (frame % 90) * 0.55}%` }} />
+        </span>
+        <div style={{ alignItems: 'center', display: 'grid', gridTemplateColumns: '120px 1fr 90px 90px 90px', padding: '42px 62px 0' }}>
+          <span style={{ color: '#ffffff', fontSize: 44, fontWeight: 900 }}>Ⅱ</span>
+          <span style={{ color: '#ffffff', fontSize: 27, fontWeight: 650 }}>-1:12</span>
+          <span style={{ color: '#ffffff', fontSize: 38, fontWeight: 820 }}>1x</span>
+          <span style={{ color: '#ffffff', fontSize: 38, fontWeight: 820 }}>⌕</span>
+          <span style={{ color: '#ffffff', fontSize: 38, fontWeight: 820 }}>↗</span>
+        </div>
+      </footer>
+    </div>
+  )
+}
+
 function BeforeAfterDemo() {
   return (
     <DemoStage compact>
@@ -1631,6 +1741,18 @@ const catalog: CatalogItem[] = [
     label: 'Ad Library',
     tags: ['Ads', 'Creative', 'Marketing'],
     value: 'ad-library',
+    width: 1080,
+  },
+  {
+    code: '<AIScanOverlayMock />',
+    component: AIScanOverlayDemo,
+    description: 'Mock vertical de AI Scan com overlay vermelho translúcido sobre emails, chats e relatórios.',
+    duration: MCP_SINGLE_ANIMATION_DURATION,
+    height: 1920,
+    kind: 'Marketing',
+    label: 'AI Scan Overlay',
+    tags: ['AI Scan', 'Overlay', 'Marketing'],
+    value: 'ai-scan-overlay',
     width: 1080,
   },
   {
