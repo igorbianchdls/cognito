@@ -2154,7 +2154,7 @@ function ChatGptMobileScreenshot() {
 
       <ChatGptBubble top={264}>Me diga as contas a pagar</ChatGptBubble>
 
-      <div style={{ color: '#111111', fontFamily: FONT_STACK, fontSize: 42, fontWeight: 400, left: 42, letterSpacing: 0, lineHeight: 1.34, position: 'absolute', top: 454, width: 1004 }}>
+      <div style={{ color: '#111111', fontFamily: FONT_STACK, fontSize: 38, fontWeight: 400, left: 42, letterSpacing: '-0.76px', lineHeight: 1.34, position: 'absolute', top: 454, width: 1004 }}>
         <p style={{ margin: '0 0 62px' }}>Você quer ver as contas a pagar de onde?</p>
         <p style={{ margin: '0 0 34px' }}>Por exemplo:</p>
         <div style={{ display: 'grid', gap: 14 }}>
@@ -2166,7 +2166,7 @@ function ChatGptMobileScreenshot() {
         </div>
       </div>
 
-      <div style={{ left: 45, position: 'absolute', top: 987 }}>
+      <div style={{ left: 45, position: 'absolute', top: 1030 }}>
         <ChatGptActionRow />
       </div>
 

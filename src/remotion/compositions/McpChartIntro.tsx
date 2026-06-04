@@ -375,7 +375,7 @@ function AssistantActions() {
   const iconStyle = { color: '#666666', size: 37, strokeWidth: 2.4 }
 
   return (
-    <div style={{ alignItems: 'center', display: 'flex', gap: 28, paddingTop: 24 }}>
+    <div style={{ alignItems: 'center', display: 'flex', gap: 28, paddingTop: 52 }}>
       <Copy {...iconStyle} />
       <Volume2 {...iconStyle} />
       <ThumbsUp {...iconStyle} />
@@ -501,9 +501,9 @@ function AssistantText({ style }: { style: CSSProperties }) {
         ...style,
         color: '#111111',
         fontFamily: IOS_REMOTION_FONT_STACK,
-        fontSize: 42,
+        fontSize: 38,
         fontWeight: 400,
-        letterSpacing: 0,
+        letterSpacing: '-0.76px',
         lineHeight: 1.34,
         padding: '0 42px',
       }}
