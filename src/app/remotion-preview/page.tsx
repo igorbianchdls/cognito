@@ -140,7 +140,7 @@ import {
   RotatingWords,
 } from '@/remotion/saas/index'
 
-type CatalogKind = 'Componentes' | 'Mockups' | 'Motion' | 'Tipografia Animada' | 'Marketing' | 'Galerias' | 'Animações' | 'Templates'
+type CatalogKind = 'Componentes' | 'Mockups' | 'Motion' | 'Tipografia Animada' | 'Marketing' | 'Galerias' | 'Animações' | 'Logo' | 'Templates'
 
 type CatalogItem = {
   code: string
@@ -1153,7 +1153,145 @@ function SaaSIntroTemplateDemo() {
   return <SaaSIntroVideo config={ledgerAIIntroConfig} />
 }
 
+function OttoLogoMark({ accent, frame, variant }: { accent: string, frame: number, variant: 'pulse' | 'orbit' | 'reveal' | 'grid' | 'spotlight' }) {
+  const pulse = interpolate(Math.sin(frame / 9), [-1, 1], [0.94, 1.06])
+  const rotate = variant === 'orbit' ? frame * 1.4 : variant === 'grid' ? Math.sin(frame / 18) * 4 : 0
+  const scale = variant === 'pulse' ? pulse : 1
+
+  return (
+    <div style={{ alignItems: 'center', display: 'grid', height: 300, justifyItems: 'center', position: 'relative', transform: `scale(${scale}) rotate(${rotate}deg)`, width: 300 }}>
+      <span style={{ background: `${accent}16`, borderRadius: 999, height: 300, position: 'absolute', width: 300 }} />
+      <span style={{ border: `18px solid ${accent}`, borderRadius: 999, boxShadow: `0 26px 80px ${accent}45`, height: 190, position: 'absolute', width: 190 }} />
+      <span style={{ background: accent, borderRadius: 999, height: 54, position: 'absolute', right: 62, top: 62, width: 54 }} />
+      <span style={{ background: '#ffffff', borderRadius: 999, height: 72, position: 'absolute', width: 72 }} />
+    </div>
+  )
+}
+
+function OttoLogoReel({ variant }: { variant: 'pulse' | 'orbit' | 'reveal' | 'grid' | 'spotlight' }) {
+  const frame = useCurrentFrame()
+  const sceneIn = previewProgress(frame, 0, 32)
+  const accents = {
+    grid: '#0ea5e9',
+    orbit: '#7c3aed',
+    pulse: '#111827',
+    reveal: '#f97316',
+    spotlight: '#16a34a',
+  }
+  const accent = accents[variant]
+  const reveal = variant === 'reveal' ? previewProgress(frame, 18, 82) : 1
+  const shimmer = (frame * 3.2) % 520
+  const orbit = frame * 2.6
+
+  return (
+    <div style={{ background: variant === 'pulse' ? '#f8fafc' : '#050505', color: variant === 'pulse' ? '#111827' : '#ffffff', fontFamily: theme.fontFamily, height: '100%', overflow: 'hidden', position: 'relative', width: '100%' }}>
+      <div style={{ background: `radial-gradient(circle at 50% 42%, ${accent}30, transparent 48%)`, inset: -120, opacity: sceneIn, position: 'absolute' }} />
+      {variant === 'grid' ? (
+        <div style={{ backgroundImage: `linear-gradient(${accent}18 1px, transparent 1px), linear-gradient(90deg, ${accent}18 1px, transparent 1px)`, backgroundSize: '92px 92px', inset: 0, opacity: 0.85, position: 'absolute', transform: `translateY(${frame * -0.22}px)` }} />
+      ) : null}
+      {variant === 'spotlight' ? (
+        <div style={{ background: `linear-gradient(115deg, transparent, ${accent}30, transparent)`, bottom: 0, left: shimmer - 560, position: 'absolute', top: 0, transform: 'skewX(-14deg)', width: 360 }} />
+      ) : null}
+      {variant === 'orbit' ? [0, 1, 2, 3, 4, 5].map((dot) => {
+        const angle = (orbit + dot * 60) * Math.PI / 180
+        return <span key={dot} style={{ background: dot % 2 ? '#ffffff' : accent, borderRadius: 999, height: 18, left: 540 + Math.cos(angle) * 214, opacity: 0.82, position: 'absolute', top: 820 + Math.sin(angle) * 214, width: 18 }} />
+      }) : null}
+
+      <main style={{ alignItems: 'center', display: 'grid', justifyItems: 'center', left: 0, opacity: sceneIn, position: 'absolute', right: 0, top: 612, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 5 }}>
+        <div style={{ clipPath: variant === 'reveal' ? `inset(0 ${100 - reveal * 100}% 0 0)` : undefined }}>
+          <OttoLogoMark accent={accent} frame={frame} variant={variant} />
+        </div>
+        <strong style={{ color: variant === 'pulse' ? '#111827' : '#ffffff', fontSize: 76, fontWeight: 850, letterSpacing: 0, lineHeight: 1, marginTop: 46, opacity: variant === 'reveal' ? reveal : 1, transform: `translateY(${variant === 'reveal' ? (1 - reveal) * 24 : 0}px)` }}>Otto</strong>
+      </main>
+
+      {variant === 'pulse' ? (
+        <div style={{ border: `2px solid ${accent}18`, borderRadius: 999, height: 520 + Math.sin(frame / 12) * 24, left: '50%', position: 'absolute', top: 496, transform: 'translateX(-50%)', width: 520 + Math.sin(frame / 12) * 24 }} />
+      ) : null}
+    </div>
+  )
+}
+
+function OttoLogoPulseDemo() {
+  return <OttoLogoReel variant="pulse" />
+}
+
+function OttoLogoOrbitDemo() {
+  return <OttoLogoReel variant="orbit" />
+}
+
+function OttoLogoRevealDemo() {
+  return <OttoLogoReel variant="reveal" />
+}
+
+function OttoLogoGridDemo() {
+  return <OttoLogoReel variant="grid" />
+}
+
+function OttoLogoSpotlightDemo() {
+  return <OttoLogoReel variant="spotlight" />
+}
+
 const catalog: CatalogItem[] = [
+  {
+    code: '<OttoLogoPulse />',
+    component: OttoLogoPulseDemo,
+    description: 'Logo Otto em formato Reels com pulso central limpo.',
+    duration: MCP_SINGLE_ANIMATION_DURATION,
+    height: 1920,
+    kind: 'Logo',
+    label: 'Otto Logo Pulse',
+    tags: ['Logo', 'Otto', 'Reels'],
+    value: 'otto-logo-pulse',
+    width: 1080,
+  },
+  {
+    code: '<OttoLogoOrbit />',
+    component: OttoLogoOrbitDemo,
+    description: 'Logo Otto com pontos orbitando o símbolo central.',
+    duration: MCP_SINGLE_ANIMATION_DURATION,
+    height: 1920,
+    kind: 'Logo',
+    label: 'Otto Logo Orbit',
+    tags: ['Logo', 'Otto', 'Orbit'],
+    value: 'otto-logo-orbit',
+    width: 1080,
+  },
+  {
+    code: '<OttoLogoReveal />',
+    component: OttoLogoRevealDemo,
+    description: 'Logo Otto com revelação horizontal do símbolo e nome.',
+    duration: MCP_SINGLE_ANIMATION_DURATION,
+    height: 1920,
+    kind: 'Logo',
+    label: 'Otto Logo Reveal',
+    tags: ['Logo', 'Otto', 'Reveal'],
+    value: 'otto-logo-reveal',
+    width: 1080,
+  },
+  {
+    code: '<OttoLogoGrid />',
+    component: OttoLogoGridDemo,
+    description: 'Logo Otto com grid técnico em movimento para Reels.',
+    duration: MCP_SINGLE_ANIMATION_DURATION,
+    height: 1920,
+    kind: 'Logo',
+    label: 'Otto Logo Grid',
+    tags: ['Logo', 'Otto', 'Grid'],
+    value: 'otto-logo-grid',
+    width: 1080,
+  },
+  {
+    code: '<OttoLogoSpotlight />',
+    component: OttoLogoSpotlightDemo,
+    description: 'Logo Otto com faixa de luz passando pelo centro.',
+    duration: MCP_SINGLE_ANIMATION_DURATION,
+    height: 1920,
+    kind: 'Logo',
+    label: 'Otto Logo Spotlight',
+    tags: ['Logo', 'Otto', 'Spotlight'],
+    value: 'otto-logo-spotlight',
+    width: 1080,
+  },
   {
     code: '<SaaSCarouselGalleryAnimation />',
     component: SaaSCarouselGalleryAnimation,
@@ -2476,10 +2614,10 @@ const catalog: CatalogItem[] = [
   },
 ]
 
-const kinds: Array<'Todos' | CatalogKind> = ['Todos', 'Componentes', 'Mockups', 'Motion', 'Tipografia Animada', 'Marketing', 'Galerias', 'Animações', 'Templates']
+const kinds: Array<'Todos' | CatalogKind> = ['Todos', 'Logo', 'Componentes', 'Mockups', 'Motion', 'Tipografia Animada', 'Marketing', 'Galerias', 'Animações', 'Templates']
 
 function Thumbnail({ item }: { item: CatalogItem }) {
-  const color = item.kind === 'Motion' ? '#245BDB' : item.kind === 'Tipografia Animada' ? '#DB2777' : item.kind === 'Marketing' ? '#C28F2C' : item.kind === 'Galerias' ? '#7C3AED' : item.kind === 'Animações' ? '#0EA5E9' : item.kind === 'Templates' ? '#9333EA' : item.kind === 'Mockups' ? '#22A06B' : '#101828'
+  const color = item.kind === 'Motion' ? '#245BDB' : item.kind === 'Tipografia Animada' ? '#DB2777' : item.kind === 'Marketing' ? '#C28F2C' : item.kind === 'Galerias' ? '#7C3AED' : item.kind === 'Animações' ? '#0EA5E9' : item.kind === 'Logo' ? '#111827' : item.kind === 'Templates' ? '#9333EA' : item.kind === 'Mockups' ? '#22A06B' : '#101828'
   return (
     <div style={{ background: '#F8FBF9', border: '1px solid #E3E8EF', borderRadius: 12, display: 'grid', gap: 10, height: 96, padding: 12 }}>
       <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
