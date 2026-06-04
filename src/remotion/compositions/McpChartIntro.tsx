@@ -480,9 +480,10 @@ function UserBubble({ children, style }: { children: string; style: CSSPropertie
           background: '#f1f1f1',
           borderRadius: 56,
           color: '#171717',
-          fontSize: 42,
+          fontFamily: IOS_REMOTION_FONT_STACK,
+          fontSize: 38,
           fontWeight: 400,
-          letterSpacing: 0,
+          letterSpacing: '-0.76px',
           lineHeight: 1.2,
           maxWidth: 615,
           padding: '30px 42px',
@@ -1039,8 +1040,15 @@ function ClaudeRichCard({ children, style }: { children: ReactNode; style: CSSPr
 }
 
 function ClaudeMobileTemplate() {
+  const frame = useCurrentFrame()
   const assistantFont = 'Georgia, "Times New Roman", serif'
   const actionIconStyle = { color: '#777772', size: 39, strokeWidth: 2.25 }
+  const firstUserStyle = fadeSlide(frame, 10, 0, 18)
+  const firstAssistantStyle = fadeSlide(frame, 48, 0, 22)
+  const firstActionsStyle = fadeSlide(frame, 82, 0, 14)
+  const secondUserStyle = fadeSlide(frame, 118, 0, 18)
+  const secondAssistantStyle = fadeSlide(frame, 156, 0, 22)
+  const secondActionsStyle = fadeSlide(frame, 190, 0, 14)
 
   return (
     <AbsoluteFill
@@ -1075,15 +1083,15 @@ function ClaudeMobileTemplate() {
       </div>
       <MoreHorizontal color="#3f3f3a" size={49} strokeWidth={3} style={{ left: 966, position: 'absolute', top: 153 }} />
 
-      <div style={{ alignItems: 'center', background: '#f2f1ef', border: '1px solid #e0ded9', borderRadius: 64, color: '#171714', display: 'flex', fontSize: 44, fontWeight: 400, height: 105, justifyContent: 'center', lineHeight: 1, padding: '0 35px', position: 'absolute', right: 42, top: 222 }}>
+      <div style={{ alignItems: 'center', background: '#f2f1ef', border: '1px solid #e0ded9', borderRadius: 64, color: '#171714', display: 'flex', fontSize: 44, fontWeight: 400, height: 105, justifyContent: 'center', lineHeight: 1, padding: '0 35px', position: 'absolute', right: 42, top: 222, ...firstUserStyle }}>
         Olá
       </div>
 
-      <div style={{ color: '#171714', fontFamily: assistantFont, fontSize: 47, fontWeight: 500, left: 42, letterSpacing: -0.55, lineHeight: 1.12, position: 'absolute', top: 394 }}>
+      <div style={{ color: '#171714', fontFamily: assistantFont, fontSize: 47, fontWeight: 500, left: 42, letterSpacing: -0.55, lineHeight: 1.12, position: 'absolute', top: 394, ...firstAssistantStyle }}>
         Olá, Igor! Como posso ajudar?
       </div>
 
-      <div style={{ alignItems: 'center', display: 'flex', gap: 36, left: 50, position: 'absolute', top: 516 }}>
+      <div style={{ alignItems: 'center', display: 'flex', gap: 36, left: 50, position: 'absolute', top: 516, ...firstActionsStyle }}>
         <Copy {...actionIconStyle} />
         <Play {...actionIconStyle} />
         <ThumbsUp {...actionIconStyle} />
@@ -1091,15 +1099,15 @@ function ClaudeMobileTemplate() {
         <RotateCcw {...actionIconStyle} />
       </div>
 
-      <div style={{ alignItems: 'center', background: '#f2f1ef', border: '1px solid #dfddd9', borderRadius: 65, color: '#171714', display: 'flex', fontSize: 45, fontWeight: 400, height: 105, justifyContent: 'center', lineHeight: 1, padding: '0 34px', position: 'absolute', right: 41, top: 559 }}>
+      <div style={{ alignItems: 'center', background: '#f2f1ef', border: '1px solid #dfddd9', borderRadius: 65, color: '#171714', display: 'flex', fontSize: 45, fontWeight: 400, height: 105, justifyContent: 'center', lineHeight: 1, padding: '0 34px', position: 'absolute', right: 41, top: 559, ...secondUserStyle }}>
         Tudo bem com você?
       </div>
 
-      <div style={{ color: '#171714', fontFamily: assistantFont, fontSize: 46, fontWeight: 600, left: 42, letterSpacing: -0.55, lineHeight: 1.43, position: 'absolute', top: 729, width: 980 }}>
+      <div style={{ color: '#171714', fontFamily: assistantFont, fontSize: 46, fontWeight: 600, left: 42, letterSpacing: -0.55, lineHeight: 1.43, position: 'absolute', top: 729, width: 980, ...secondAssistantStyle }}>
         Tudo bem, obrigado! E com você? Alguma coisa no radar hoje — produto, tech, ou só curiosidade do dia?
       </div>
 
-      <div style={{ alignItems: 'center', display: 'flex', gap: 36, left: 50, position: 'absolute', top: 943 }}>
+      <div style={{ alignItems: 'center', display: 'flex', gap: 36, left: 50, position: 'absolute', top: 943, ...secondActionsStyle }}>
         <Copy {...actionIconStyle} />
         <Upload {...actionIconStyle} />
         <Play {...actionIconStyle} />

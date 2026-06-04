@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
 import {
   ChevronRight,
@@ -2087,7 +2087,7 @@ function ChatGptStatusBar() {
   )
 }
 
-function ChatGptBubble({ children, top }: { children: ReactNode; top: number }) {
+function ChatGptBubble({ children, style, top }: { children: ReactNode; style?: CSSProperties; top: number }) {
   return (
     <div
       style={{
@@ -2098,17 +2098,18 @@ function ChatGptBubble({ children, top }: { children: ReactNode; top: number }) 
         color: '#111111',
         display: 'flex',
         fontFamily: FONT_STACK,
-        fontSize: 42,
-        fontWeight: 430,
+        fontSize: 38,
+        fontWeight: 400,
         height: 91,
         justifyContent: 'center',
-        letterSpacing: 0,
+        letterSpacing: '-0.76px',
         lineHeight: 1,
         maxWidth: 720,
         padding: '0 42px',
         position: 'absolute',
         right: 42,
         top,
+        ...style,
         width: 'max-content',
       }}
     >
@@ -2140,6 +2141,11 @@ function ChatGptVoiceButton() {
 }
 
 function ChatGptMobileScreenshot() {
+  const frame = useCurrentFrame()
+  const userIn = progress(frame, 10, 28)
+  const assistantIn = progress(frame, 48, 74)
+  const actionsIn = progress(frame, 82, 98)
+
   return (
     <AbsoluteFill style={{ background: '#ffffff', color: '#111111', fontFamily: FONT_STACK, overflow: 'hidden' }}>
       <ChatGptStatusBar />
@@ -2152,9 +2158,17 @@ function ChatGptMobileScreenshot() {
       <SquarePen color="#050505" size={47} strokeWidth={2.8} style={{ left: 861, position: 'absolute', top: 149 }} />
       <MoreHorizontal color="#050505" size={51} strokeWidth={3.2} style={{ left: 974, position: 'absolute', top: 157 }} />
 
-      <ChatGptBubble top={264}>Me diga as contas a pagar</ChatGptBubble>
+      <ChatGptBubble
+        style={{
+          opacity: userIn,
+          transform: `translateY(${(1 - userIn) * 18}px) scale(${0.98 + userIn * 0.02})`,
+        }}
+        top={264}
+      >
+        Me diga as contas a pagar
+      </ChatGptBubble>
 
-      <div style={{ color: '#111111', fontFamily: FONT_STACK, fontSize: 38, fontWeight: 400, left: 42, letterSpacing: '-0.76px', lineHeight: 1.34, position: 'absolute', top: 454, width: 1004 }}>
+      <div style={{ color: '#111111', fontFamily: FONT_STACK, fontSize: 38, fontWeight: 400, left: 42, letterSpacing: '-0.76px', lineHeight: 1.34, opacity: assistantIn, position: 'absolute', top: 454, transform: `translateY(${(1 - assistantIn) * 22}px)`, width: 1004 }}>
         <p style={{ margin: '0 0 62px' }}>Você quer ver as contas a pagar de onde?</p>
         <p style={{ margin: '0 0 34px' }}>Por exemplo:</p>
         <div style={{ display: 'grid', gap: 14 }}>
@@ -2166,7 +2180,7 @@ function ChatGptMobileScreenshot() {
         </div>
       </div>
 
-      <div style={{ left: 45, position: 'absolute', top: 1030 }}>
+      <div style={{ left: 45, opacity: actionsIn, position: 'absolute', top: 1030, transform: `translateY(${(1 - actionsIn) * 14}px)` }}>
         <ChatGptActionRow />
       </div>
 
@@ -2253,7 +2267,7 @@ function ClaudeActionRow({ second = false }: { second?: boolean }) {
   )
 }
 
-function ClaudeBubble({ children, top }: { children: ReactNode; top: number }) {
+function ClaudeBubble({ children, style, top }: { children: ReactNode; style?: CSSProperties; top: number }) {
   return (
     <div
       style={{
@@ -2276,6 +2290,7 @@ function ClaudeBubble({ children, top }: { children: ReactNode; top: number }) {
         position: 'absolute',
         right: 42,
         top,
+        ...style,
         width: 'max-content',
       }}
     >
@@ -2295,6 +2310,14 @@ function ClaudeVoiceButton() {
 }
 
 function ClaudeMobileScreenshot() {
+  const frame = useCurrentFrame()
+  const firstUserIn = progress(frame, 10, 28)
+  const firstAssistantIn = progress(frame, 48, 74)
+  const firstActionsIn = progress(frame, 82, 98)
+  const secondUserIn = progress(frame, 118, 136)
+  const secondAssistantIn = progress(frame, 156, 182)
+  const secondActionsIn = progress(frame, 190, 206)
+
   return (
     <AbsoluteFill style={{ background: '#fbfaf8', color: '#111111', fontFamily: FONT_STACK, overflow: 'hidden' }}>
       <ClaudeStatusBar />
@@ -2305,21 +2328,37 @@ function ClaudeMobileScreenshot() {
       </div>
       <MoreHorizontal color="#333330" size={50} strokeWidth={3.2} style={{ left: 969, position: 'absolute', top: 158 }} />
 
-      <ClaudeBubble top={222}>Olá</ClaudeBubble>
+      <ClaudeBubble
+        style={{
+          opacity: firstUserIn,
+          transform: `translateY(${(1 - firstUserIn) * 18}px) scale(${0.98 + firstUserIn * 0.02})`,
+        }}
+        top={222}
+      >
+        Olá
+      </ClaudeBubble>
 
-      <div style={{ color: '#111111', fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 47, fontWeight: 500, left: 42, letterSpacing: 0, lineHeight: 1.12, position: 'absolute', top: 392, whiteSpace: 'nowrap' }}>
+      <div style={{ color: '#111111', fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 47, fontWeight: 500, left: 42, letterSpacing: 0, lineHeight: 1.12, opacity: firstAssistantIn, position: 'absolute', top: 392, transform: `translateY(${(1 - firstAssistantIn) * 22}px)`, whiteSpace: 'nowrap' }}>
         Olá, Igor! Como posso ajudar?
       </div>
-      <div style={{ left: 52, position: 'absolute', top: 518 }}>
+      <div style={{ left: 52, opacity: firstActionsIn, position: 'absolute', top: 518, transform: `translateY(${(1 - firstActionsIn) * 14}px)` }}>
         <ClaudeActionRow />
       </div>
 
-      <ClaudeBubble top={558}>Tudo bem com você?</ClaudeBubble>
+      <ClaudeBubble
+        style={{
+          opacity: secondUserIn,
+          transform: `translateY(${(1 - secondUserIn) * 18}px) scale(${0.98 + secondUserIn * 0.02})`,
+        }}
+        top={558}
+      >
+        Tudo bem com você?
+      </ClaudeBubble>
 
-      <div style={{ color: '#111111', fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 47, fontWeight: 500, left: 42, letterSpacing: 0, lineHeight: 1.43, position: 'absolute', top: 724, width: 994 }}>
+      <div style={{ color: '#111111', fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 47, fontWeight: 500, left: 42, letterSpacing: 0, lineHeight: 1.43, opacity: secondAssistantIn, position: 'absolute', top: 724, transform: `translateY(${(1 - secondAssistantIn) * 22}px)`, width: 994 }}>
         Tudo bem, obrigado! E com você? Alguma coisa no radar hoje — produto, tech, ou só curiosidade do dia?
       </div>
-      <div style={{ left: 52, position: 'absolute', top: 949 }}>
+      <div style={{ left: 52, opacity: secondActionsIn, position: 'absolute', top: 949, transform: `translateY(${(1 - secondActionsIn) * 14}px)` }}>
         <ClaudeActionRow second />
       </div>
 
