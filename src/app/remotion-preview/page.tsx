@@ -676,6 +676,200 @@ function PromptInputHeroDemo() {
   )
 }
 
+function WhatsAppConversationDemo() {
+  const frame = useCurrentFrame()
+  const sceneIn = previewProgress(frame, 0, 34)
+  const messages = [
+    { body: 'Bom dia. Como ficou o fechamento de maio?', from: 'user', time: '09:41' },
+    { body: 'Fechamento revisado. Encontrei 3 pontos: frete, mídia paga e contratos.', from: 'assistant', time: '09:42' },
+    { body: 'Me manda o resumo executivo em linguagem simples.', from: 'user', time: '09:43' },
+    { body: 'Resumo: receita subiu 18%, margem estável e caixa com folga. O maior risco é o reajuste de fornecedores.', from: 'assistant', time: '09:44' },
+    { body: 'Perfeito. Crie uma pauta para a reunião.', from: 'user', time: '09:45' },
+    { body: 'Pauta pronta: indicadores, riscos, decisões e responsáveis. Posso transformar em slide também.', from: 'assistant', time: '09:46' },
+  ]
+
+  return (
+    <div style={{ background: '#071d17', color: '#ffffff', fontFamily: theme.fontFamily, height: '100%', overflow: 'hidden', position: 'relative', width: '100%' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 38%, rgba(37,211,102,0.26), transparent 58%)', inset: -180, opacity: sceneIn, position: 'absolute' }} />
+      <div style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px)', backgroundSize: '72px 72px', inset: 0, opacity: 0.36, position: 'absolute', transform: `translateY(${frame * -0.22}px)` }} />
+      <section style={{ background: '#efe7dc', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 48, boxShadow: '0 46px 120px rgba(0,0,0,0.42)', display: 'grid', gridTemplateRows: '122px 1fr 108px', height: 1420, left: 74, opacity: sceneIn, overflow: 'hidden', position: 'absolute', right: 74, top: 190, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 10 }}>
+        <header style={{ alignItems: 'center', background: '#075e54', color: '#ffffff', display: 'flex', gap: 18, padding: '0 30px' }}>
+          <span style={{ alignItems: 'center', background: '#25d366', borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 30, fontWeight: 900, height: 64, justifyContent: 'center', width: 64 }}>C</span>
+          <div style={{ display: 'grid', gap: 5 }}>
+            <strong style={{ color: '#ffffff', fontSize: 31, fontWeight: 900, letterSpacing: 0 }}>Cognito AI</strong>
+            <span style={{ color: 'rgba(255,255,255,0.72)', fontSize: 20, fontWeight: 720 }}>online agora</span>
+          </div>
+          <span style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.78)', fontSize: 34, fontWeight: 900 }}>...</span>
+        </header>
+        <main style={{ background: '#efe7dc', display: 'grid', gap: 20, overflow: 'hidden', padding: '34px 28px', position: 'relative' }}>
+          <div style={{ backgroundImage: 'radial-gradient(rgba(7,94,84,0.10) 1px, transparent 1px)', backgroundSize: '24px 24px', inset: 0, opacity: 0.35, position: 'absolute' }} />
+          {messages.map((message, index) => {
+            const p = previewProgress(frame, 22 + index * 20, 56 + index * 20)
+            const sentByUser = message.from === 'user'
+            return (
+              <div key={`${message.time}-${index}`} style={{ display: 'flex', justifyContent: sentByUser ? 'flex-end' : 'flex-start', opacity: p, position: 'relative', transform: `translateY(${(1 - p) * 26}px) scale(${0.96 + p * 0.04})`, zIndex: 2 }}>
+                <div style={{ background: sentByUser ? '#d9fdd3' : '#ffffff', borderRadius: sentByUser ? '24px 8px 24px 24px' : '8px 24px 24px 24px', boxShadow: '0 8px 20px rgba(15,23,42,0.10)', color: '#111b21', display: 'grid', gap: 10, maxWidth: 650, padding: '20px 22px 15px' }}>
+                  <span style={{ color: '#111b21', fontSize: 28, fontWeight: 560, letterSpacing: 0, lineHeight: 1.26 }}>{message.body}</span>
+                  <span style={{ color: '#667781', fontSize: 17, fontWeight: 760, justifySelf: 'end' }}>{message.time} {sentByUser ? '✓✓' : ''}</span>
+                </div>
+              </div>
+            )
+          })}
+        </main>
+        <footer style={{ alignItems: 'center', background: '#efe7dc', display: 'flex', gap: 14, padding: '18px 24px' }}>
+          <span style={{ alignItems: 'center', background: '#ffffff', borderRadius: 999, color: '#667781', display: 'flex', flex: 1, fontSize: 24, fontWeight: 720, height: 70, padding: '0 24px' }}>Digite uma mensagem</span>
+          <span style={{ alignItems: 'center', background: '#00a884', borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 28, fontWeight: 900, height: 70, justifyContent: 'center', width: 70 }}>›</span>
+        </footer>
+      </section>
+      <footer style={{ bottom: 72, display: 'grid', gap: 12, left: 58, position: 'absolute', right: 58, zIndex: 20 }}>
+        <strong style={{ color: '#ffffff', fontSize: 38, fontWeight: 900, letterSpacing: 0 }}>Conversa WhatsApp para marketing</strong>
+        <span style={{ color: 'rgba(255,255,255,0.68)', fontSize: 24, fontWeight: 720, lineHeight: 1.25 }}>Mock vertical com mensagens animadas para demo social.</span>
+      </footer>
+    </div>
+  )
+}
+
+function MetaAdsManagerDemo() {
+  const frame = useCurrentFrame()
+  const sceneIn = previewProgress(frame, 0, 34)
+  const activeCampaign = Math.floor(frame / 42) % 4
+  const scan = (frame * 2.2) % 720
+  const campaigns = [
+    { name: 'Prospecting CFOs', spend: 'R$ 18,4k', roas: '4.2x', status: 'Ativa', accent: '#2563eb' },
+    { name: 'Retargeting demo', spend: 'R$ 8,7k', roas: '6.1x', status: 'Ativa', accent: '#16a34a' },
+    { name: 'Board report launch', spend: 'R$ 12,9k', roas: '3.8x', status: 'Aprendizado', accent: '#f59e0b' },
+    { name: 'Integrations video', spend: 'R$ 6,2k', roas: '5.4x', status: 'Ativa', accent: '#7c3aed' },
+  ]
+
+  return (
+    <div style={{ background: '#0b1220', color: '#ffffff', fontFamily: theme.fontFamily, height: '100%', overflow: 'hidden', position: 'relative', width: '100%' }}>
+      <div style={{ background: 'radial-gradient(circle at 52% 34%, rgba(37,99,235,0.36), transparent 58%)', inset: -180, opacity: sceneIn, position: 'absolute' }} />
+      <div style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)', backgroundSize: '78px 78px', inset: 0, opacity: 0.35, position: 'absolute', transform: `translateY(${frame * -0.24}px)` }} />
+      <section style={{ background: '#f8fafc', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 46, boxShadow: '0 48px 130px rgba(0,0,0,0.44)', display: 'grid', gridTemplateRows: '118px auto 1fr', height: 1460, left: 64, opacity: sceneIn, overflow: 'hidden', position: 'absolute', right: 64, top: 160, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 10 }}>
+        <header style={{ alignItems: 'center', background: '#ffffff', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: 18, padding: '0 30px' }}>
+          <span style={{ alignItems: 'center', background: '#1877f2', borderRadius: 18, color: '#ffffff', display: 'flex', fontSize: 34, fontWeight: 950, height: 64, justifyContent: 'center', width: 64 }}>M</span>
+          <div style={{ display: 'grid', gap: 5 }}>
+            <strong style={{ color: '#0f172a', fontSize: 31, fontWeight: 920, letterSpacing: 0 }}>Meta Ads Manager</strong>
+            <span style={{ color: '#64748b', fontSize: 19, fontWeight: 740 }}>Campanhas · Junho 2026</span>
+          </div>
+          <span style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 999, color: '#2563eb', fontSize: 18, fontWeight: 900, marginLeft: 'auto', padding: '10px 14px' }}>Live</span>
+        </header>
+        <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(3, 1fr)', padding: '26px 28px 18px' }}>
+          {[
+            ['Gasto', 'R$ 46,2k', '#2563eb'],
+            ['Receita atrib.', 'R$ 231k', '#16a34a'],
+            ['ROAS', '5.0x', '#7c3aed'],
+          ].map(([label, value, color], index) => {
+            const p = previewProgress(frame, 18 + index * 10, 50 + index * 10)
+            return (
+              <div key={label} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 24, boxShadow: '0 16px 40px rgba(15,23,42,0.08)', display: 'grid', gap: 8, opacity: p, padding: 20, transform: `translateY(${(1 - p) * 18}px)` }}>
+                <span style={{ color: '#64748b', fontSize: 17, fontWeight: 850 }}>{label}</span>
+                <strong style={{ color, fontSize: 34, fontWeight: 950, letterSpacing: 0 }}>{value}</strong>
+              </div>
+            )
+          })}
+        </div>
+        <main style={{ display: 'grid', gap: 20, gridTemplateRows: '360px 1fr', padding: '0 28px 28px' }}>
+          <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 28, boxShadow: '0 18px 46px rgba(15,23,42,0.08)', display: 'grid', gap: 18, overflow: 'hidden', padding: 24, position: 'relative' }}>
+            <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+              <strong style={{ color: '#0f172a', fontSize: 26, fontWeight: 920, letterSpacing: 0 }}>Desempenho diário</strong>
+              <span style={{ color: '#64748b', fontSize: 17, fontWeight: 820 }}>Últimos 14 dias</span>
+            </div>
+            <div style={{ alignItems: 'end', display: 'flex', gap: 12, height: 230, position: 'relative' }}>
+              {[88, 132, 104, 176, 146, 212, 168, 228, 190, 248, 206, 270].map((height, index) => (
+                <span key={`${height}-${index}`} style={{ background: index === activeCampaign + 5 ? campaigns[activeCampaign].accent : '#dbeafe', borderRadius: 10, flex: 1, height, transition: 'none' }} />
+              ))}
+              <span style={{ background: 'linear-gradient(90deg, transparent, rgba(37,99,235,0.20), transparent)', bottom: 0, left: scan - 280, position: 'absolute', top: 0, transform: 'skewX(-14deg)', width: 190 }} />
+            </div>
+          </div>
+          <div style={{ display: 'grid', gap: 14 }}>
+            {campaigns.map((campaign, index) => {
+              const p = previewProgress(frame, 48 + index * 12, 82 + index * 12)
+              const active = index === activeCampaign
+              return (
+                <div key={campaign.name} style={{ alignItems: 'center', background: active ? '#0f172a' : '#ffffff', border: `1px solid ${active ? '#0f172a' : '#e2e8f0'}`, borderRadius: 24, boxShadow: active ? '0 18px 48px rgba(15,23,42,0.22)' : '0 12px 30px rgba(15,23,42,0.07)', display: 'grid', gap: 14, gridTemplateColumns: '1fr 120px 104px', opacity: p, padding: 20, transform: `translateX(${(1 - p) * 22}px) scale(${active ? 1.02 : 1})` }}>
+                  <div style={{ display: 'grid', gap: 6 }}>
+                    <span style={{ color: active ? 'rgba(255,255,255,0.62)' : '#64748b', fontSize: 16, fontWeight: 850, textTransform: 'uppercase' }}>{campaign.status}</span>
+                    <strong style={{ color: active ? '#ffffff' : '#0f172a', fontSize: 24, fontWeight: 920, letterSpacing: 0 }}>{campaign.name}</strong>
+                  </div>
+                  <strong style={{ color: active ? '#ffffff' : campaign.accent, fontSize: 23, fontWeight: 940, letterSpacing: 0 }}>{campaign.spend}</strong>
+                  <span style={{ background: active ? 'rgba(255,255,255,0.14)' : '#f1f5f9', borderRadius: 999, color: active ? '#ffffff' : campaign.accent, fontSize: 20, fontWeight: 940, padding: '10px 12px', textAlign: 'center' }}>{campaign.roas}</span>
+                </div>
+              )
+            })}
+          </div>
+        </main>
+      </section>
+      <footer style={{ bottom: 70, display: 'grid', gap: 12, left: 58, position: 'absolute', right: 58, zIndex: 20 }}>
+        <strong style={{ color: '#ffffff', fontSize: 38, fontWeight: 900, letterSpacing: 0 }}>Gerenciador de anúncios para marketing</strong>
+        <span style={{ color: 'rgba(255,255,255,0.68)', fontSize: 24, fontWeight: 720, lineHeight: 1.25 }}>Mock vertical com KPIs, campanhas e gráfico animado.</span>
+      </footer>
+    </div>
+  )
+}
+
+function AdLibraryDemo() {
+  const frame = useCurrentFrame()
+  const sceneIn = previewProgress(frame, 0, 34)
+  const activeIndex = Math.floor(frame / 38) % 6
+  const creatives = [
+    { format: 'Vídeo', metric: 'CTR 2.8%', name: 'Integrações em 30s', tone: '#2563eb' },
+    { format: 'Imagem', metric: 'ROAS 5.1x', name: 'Fechamento mensal', tone: '#16a34a' },
+    { format: 'Carrossel', metric: 'CPA R$ 42', name: 'Board report', tone: '#7c3aed' },
+    { format: 'Stories', metric: 'CPL R$ 18', name: 'Demo CFO', tone: '#f59e0b' },
+    { format: 'Reels', metric: 'VTR 41%', name: 'AI workflow', tone: '#db2777' },
+    { format: 'Coleção', metric: 'Conv. 184', name: 'Dashboard pack', tone: '#0f766e' },
+  ]
+
+  return (
+    <div style={{ background: '#111827', color: '#ffffff', fontFamily: theme.fontFamily, height: '100%', overflow: 'hidden', position: 'relative', width: '100%' }}>
+      <div style={{ background: 'radial-gradient(circle at 50% 36%, rgba(124,58,237,0.34), transparent 58%)', inset: -180, opacity: sceneIn, position: 'absolute' }} />
+      <div style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)', backgroundSize: '76px 76px', inset: 0, opacity: 0.34, position: 'absolute', transform: `translateY(${frame * -0.24}px)` }} />
+      <section style={{ background: '#f8fafc', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 46, boxShadow: '0 48px 130px rgba(0,0,0,0.44)', display: 'grid', gridTemplateRows: '118px 106px 1fr', height: 1460, left: 64, opacity: sceneIn, overflow: 'hidden', position: 'absolute', right: 64, top: 160, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 10 }}>
+        <header style={{ alignItems: 'center', background: '#ffffff', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: 18, padding: '0 30px' }}>
+          <span style={{ alignItems: 'center', background: '#111827', borderRadius: 18, color: '#ffffff', display: 'flex', fontSize: 30, fontWeight: 950, height: 64, justifyContent: 'center', width: 64 }}>Ad</span>
+          <div style={{ display: 'grid', gap: 5 }}>
+            <strong style={{ color: '#0f172a', fontSize: 31, fontWeight: 920, letterSpacing: 0 }}>Biblioteca de anúncios</strong>
+            <span style={{ color: '#64748b', fontSize: 19, fontWeight: 740 }}>Criativos ativos · Meta Ads</span>
+          </div>
+          <span style={{ background: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: 999, color: '#7c3aed', fontSize: 18, fontWeight: 900, marginLeft: 'auto', padding: '10px 14px' }}>24 ads</span>
+        </header>
+        <div style={{ alignItems: 'center', background: '#ffffff', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: 12, overflow: 'hidden', padding: '0 28px' }}>
+          {['Todos', 'Vídeo', 'Reels', 'Conversão', 'Ativos'].map((filter, index) => (
+            <span key={filter} style={{ background: index === activeIndex % 5 ? '#111827' : '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 999, color: index === activeIndex % 5 ? '#ffffff' : '#475569', fontSize: 18, fontWeight: 850, padding: '12px 16px' }}>{filter}</span>
+          ))}
+        </div>
+        <main style={{ display: 'grid', gap: 18, gridTemplateColumns: '1fr 1fr', padding: 28 }}>
+          {creatives.map((creative, index) => {
+            const p = previewProgress(frame, 20 + index * 10, 54 + index * 10)
+            const active = index === activeIndex
+            return (
+              <article key={creative.name} style={{ background: '#ffffff', border: `2px solid ${active ? creative.tone : '#e2e8f0'}`, borderRadius: 28, boxShadow: active ? `0 22px 56px ${creative.tone}30` : '0 12px 30px rgba(15,23,42,0.07)', display: 'grid', gridTemplateRows: '220px auto', opacity: p, overflow: 'hidden', transform: `translateY(${(1 - p) * 22}px) scale(${active ? 1.025 : 1})` }}>
+                <div style={{ background: `linear-gradient(135deg, ${creative.tone}, #0f172a)`, overflow: 'hidden', padding: 18, position: 'relative' }}>
+                  <span style={{ background: 'rgba(255,255,255,0.22)', borderRadius: 999, display: 'block', height: 12, left: 18, position: 'absolute', right: 80, top: 18 }} />
+                  <div style={{ alignItems: 'end', bottom: 20, display: 'flex', gap: 8, left: 18, position: 'absolute', right: 18, top: 56 }}>
+                    {[52, 84, 68, 110, 92].map((height, bar) => <span key={height} style={{ background: bar === index % 5 ? '#ffffff' : 'rgba(255,255,255,0.32)', borderRadius: 8, flex: 1, height }} />)}
+                  </div>
+                  {active ? <span style={{ background: 'rgba(255,255,255,0.34)', bottom: 0, left: `${(frame * 2) % 260 - 80}px`, position: 'absolute', top: 0, transform: 'skewX(-16deg)', width: 60 }} /> : null}
+                </div>
+                <div style={{ display: 'grid', gap: 10, padding: 18 }}>
+                  <span style={{ color: creative.tone, fontSize: 16, fontWeight: 900, textTransform: 'uppercase' }}>{creative.format}</span>
+                  <strong style={{ color: '#0f172a', fontSize: 22, fontWeight: 920, letterSpacing: 0, lineHeight: 1.05 }}>{creative.name}</strong>
+                  <span style={{ color: '#64748b', fontSize: 18, fontWeight: 820 }}>{creative.metric}</span>
+                </div>
+              </article>
+            )
+          })}
+        </main>
+      </section>
+      <footer style={{ bottom: 70, display: 'grid', gap: 12, left: 58, position: 'absolute', right: 58, zIndex: 20 }}>
+        <strong style={{ color: '#ffffff', fontSize: 38, fontWeight: 900, letterSpacing: 0 }}>Biblioteca de anúncios para marketing</strong>
+        <span style={{ color: 'rgba(255,255,255,0.68)', fontSize: 24, fontWeight: 720, lineHeight: 1.25 }}>Mock vertical com criativos, filtros e cards animados.</span>
+      </footer>
+    </div>
+  )
+}
+
 function BeforeAfterDemo() {
   return (
     <DemoStage compact>
@@ -1401,6 +1595,42 @@ const catalog: CatalogItem[] = [
     label: 'PromptInputHeroMock',
     tags: ['Prompt', 'AI', 'Typing'],
     value: 'prompt-input-hero',
+    width: 1080,
+  },
+  {
+    code: '<WhatsAppConversationMock />',
+    component: WhatsAppConversationDemo,
+    description: 'Mock vertical de conversa no WhatsApp com mensagens animadas.',
+    duration: MCP_SINGLE_ANIMATION_DURATION,
+    height: 1920,
+    kind: 'Marketing',
+    label: 'WhatsApp Conversation',
+    tags: ['WhatsApp', 'Chat', 'Social'],
+    value: 'whatsapp-conversation',
+    width: 1080,
+  },
+  {
+    code: '<MetaAdsManagerMock />',
+    component: MetaAdsManagerDemo,
+    description: 'Mock vertical de gerenciador de anúncios do Meta com campanhas e KPIs.',
+    duration: MCP_SINGLE_ANIMATION_DURATION,
+    height: 1920,
+    kind: 'Marketing',
+    label: 'Meta Ads Manager',
+    tags: ['Meta Ads', 'Campaigns', 'Marketing'],
+    value: 'meta-ads-manager',
+    width: 1080,
+  },
+  {
+    code: '<AdLibraryMock />',
+    component: AdLibraryDemo,
+    description: 'Mock vertical de biblioteca de anúncios com criativos, filtros e métricas.',
+    duration: MCP_SINGLE_ANIMATION_DURATION,
+    height: 1920,
+    kind: 'Marketing',
+    label: 'Ad Library',
+    tags: ['Ads', 'Creative', 'Marketing'],
+    value: 'ad-library',
     width: 1080,
   },
   {
