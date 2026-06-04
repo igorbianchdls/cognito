@@ -835,7 +835,7 @@ function TweetAnimationCard() {
 
         <div style={{ display: 'grid', gap: 16, opacity: textIn, transform: `translateY(${(1 - textIn) * 18}px)` }}>
           {tweetText.map((line) => (
-            <p key={line} style={{ color: '#0f1419', fontSize: 44, fontWeight: 520, letterSpacing: 0, lineHeight: 1.18, margin: 0 }}>
+            <p key={line} style={{ color: '#0f1419', fontSize: 36, fontWeight: 400, letterSpacing: 0, lineHeight: 1.28, margin: 0 }}>
               {line}
             </p>
           ))}
