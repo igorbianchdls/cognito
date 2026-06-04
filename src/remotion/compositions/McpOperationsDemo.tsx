@@ -16,6 +16,16 @@ import {
   Upload,
   Volume2,
 } from 'lucide-react'
+import type {
+  AnalysisStructuredContent,
+  ChartResultStructuredContent,
+  ConnectorsStructuredContent,
+  DataResultStructuredContent,
+} from '@/products/mcp-apps/web/src/types/toolResult'
+import { AnimatedMcpAnalysisView } from '@/remotion/components/AnimatedMcpAnalysisView'
+import { AnimatedMcpChartView } from '@/remotion/components/AnimatedMcpChartView'
+import { AnimatedMcpConnectorsView } from '@/remotion/components/AnimatedMcpConnectorsView'
+import { AnimatedMcpTableView } from '@/remotion/components/AnimatedMcpTableView'
 import { IOS_REMOTION_DISPLAY_FONT_STACK, IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/remotion/fonts/sfPro'
 
 export const MCP_SINGLE_ANIMATION_DURATION = 1080
@@ -188,6 +198,84 @@ function progress(frame: number, start: number, end: number) {
     extrapolateRight: 'clamp',
   })
 }
+
+const chatGptSequenceChartData = {
+  ok: true,
+  tool: 'chart',
+  view: 'chart',
+  title: 'Receita por canal',
+  subtitle: 'Ultimos 30 dias',
+  total: { label: 'Receita total', value: 483900, format: 'currency' },
+  chart: {
+    type: 'bar',
+    labelField: 'canal',
+    valueField: 'receita',
+    format: 'currency',
+  },
+  rows: [
+    { canal: 'Shopify', receita: 168000 },
+    { canal: 'Mercado Livre', receita: 142500 },
+    { canal: 'Shopee', receita: 96700 },
+    { canal: 'Amazon', receita: 76700 },
+  ],
+} satisfies ChartResultStructuredContent
+
+const chatGptSequenceTableData = {
+  ok: true,
+  tool: 'erp',
+  view: 'table',
+  title: 'Contas a pagar',
+  resource: 'contas-a-pagar',
+  count: 4,
+  columns: ['Fornecedor', 'Vencimento', 'Status', 'Valor liquido'],
+  rows: [
+    { Fornecedor: 'Google Ads BR', Vencimento: '05 jun', Status: 'aberto', 'Valor liquido': 18400 },
+    { Fornecedor: 'AWS Brasil', Vencimento: '08 jun', Status: 'aberto', 'Valor liquido': 12790 },
+    { Fornecedor: 'Frete Sul', Vencimento: '12 jun', Status: 'agendado', 'Valor liquido': 8420 },
+    { Fornecedor: 'Prime Fornecedores', Vencimento: '15 jun', Status: 'aberto', 'Valor liquido': 31280 },
+  ],
+} satisfies DataResultStructuredContent
+
+const chatGptSequenceConnectorsData = {
+  ok: true,
+  tool: 'connectors',
+  view: 'connectors',
+  title: 'Conectores',
+  subtitle: 'Fontes usadas nesta resposta',
+  summary: {
+    total: 4,
+    connected: 3,
+    warning: 1,
+    last_sync_at: '2026-06-04T17:42:00.000Z',
+  },
+  rows: [
+    { name: 'ERP Omie', domain: 'erp', status: 'connected', last_sync_at: '2026-06-04T17:42:00.000Z', records: 18420 },
+    { name: 'Shopify', domain: 'ecommerce', status: 'connected', last_sync_at: '2026-06-04T17:39:00.000Z', records: 12880 },
+    { name: 'Meta Ads', domain: 'marketing', status: 'connected', last_sync_at: '2026-06-04T17:31:00.000Z', records: 6420 },
+    { name: 'Banco', domain: 'financeiro', status: 'warning', last_sync_at: '2026-06-04T09:10:00.000Z', records: 980 },
+  ],
+  columns: ['name', 'domain', 'status', 'last_sync_at', 'records'],
+} satisfies ConnectorsStructuredContent
+
+const chatGptSequenceAnalysisData = {
+  ok: true,
+  tool: 'analysis',
+  view: 'analysis',
+  type: 'executive_summary',
+  title: 'Resumo executivo',
+  subtitle: 'Principais pontos do financeiro',
+  summary: 'Receita concentrada em dois canais, contas a pagar sob controle e um conector bancario precisando de atencao antes do fechamento.',
+  metrics: [
+    { label: 'Receita', value: 'R$ 483,9 mil', tone: 'positive' },
+    { label: 'A pagar', value: 'R$ 70,9 mil', tone: 'neutral' },
+    { label: 'Conectores OK', value: '3/4', tone: 'warning' },
+  ],
+  sections: [
+    { title: 'Oportunidade', body: 'Shopify e Mercado Livre respondem por 64% da receita conectada.' },
+    { title: 'Risco', body: 'O conector bancario esta com sync atrasado e deve ser reconectado.' },
+  ],
+  next_steps: ['Reconciliar banco', 'Aprovar pagamentos de junho', 'Revisar verba dos canais menores'],
+} satisfies AnalysisStructuredContent
 
 function CognitoBrand() {
   return (
@@ -2087,37 +2175,6 @@ function ChatGptStatusBar() {
   )
 }
 
-function ChatGptBubble({ children, style, top }: { children: ReactNode; style?: CSSProperties; top: number }) {
-  return (
-    <div
-      style={{
-        alignItems: 'center',
-        background: '#f1f1f1',
-        borderRadius: 60,
-        boxSizing: 'border-box',
-        color: '#111111',
-        display: 'flex',
-        fontFamily: FONT_STACK,
-        fontSize: 38,
-        fontWeight: 400,
-        height: 91,
-        justifyContent: 'center',
-        letterSpacing: '-0.76px',
-        lineHeight: 1,
-        maxWidth: 720,
-        padding: '0 42px',
-        position: 'absolute',
-        right: 42,
-        top,
-        ...style,
-        width: 'max-content',
-      }}
-    >
-      {children}
-    </div>
-  )
-}
-
 function ChatGptActionRow() {
   const icons = [Copy, Volume2, ThumbsUp, ThumbsDown, Upload, MoreHorizontal]
 
@@ -2126,6 +2183,85 @@ function ChatGptActionRow() {
       {icons.map((Icon, index) => (
         <Icon key={index} color="#666666" size={39} strokeWidth={2.5} />
       ))}
+    </div>
+  )
+}
+
+function chatGptSequenceStyle(frame: number, start: number, fromY = 20) {
+  const opacity = progress(frame, start, start + 18)
+  const y = interpolate(frame, [start, start + 24], [fromY, 0], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
+
+  return {
+    opacity,
+    transform: `translateY(${y}px)`,
+  }
+}
+
+function ChatGptFlowUserBubble({ children, style }: { children: ReactNode; style: CSSProperties }) {
+  return (
+    <div style={{ ...style, display: 'flex', justifyContent: 'flex-end', paddingRight: 42 }}>
+      <div
+        style={{
+          alignItems: 'center',
+          background: '#f1f1f1',
+          borderRadius: 60,
+          boxSizing: 'border-box',
+          color: '#111111',
+          display: 'flex',
+          fontFamily: FONT_STACK,
+          fontSize: 38,
+          fontWeight: 400,
+          justifyContent: 'center',
+          letterSpacing: '-0.76px',
+          lineHeight: 1.12,
+          maxWidth: 760,
+          minHeight: 91,
+          padding: '23px 42px',
+          width: 'max-content',
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function ChatGptFlowAssistantText({ children, style }: { children: ReactNode; style: CSSProperties }) {
+  return (
+    <div
+      style={{
+        ...style,
+        color: '#111111',
+        fontFamily: FONT_STACK,
+        fontSize: 38,
+        fontWeight: 400,
+        letterSpacing: '-0.76px',
+        lineHeight: 1.34,
+        padding: '0 42px',
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
+function ChatGptToolResultCard({ children, style }: { children: ReactNode; style: CSSProperties }) {
+  return (
+    <div
+      style={{
+        ...style,
+        background: '#ffffff',
+        border: '1px solid #e6e6e6',
+        borderRadius: 28,
+        boxShadow: '0 14px 38px rgba(15, 23, 42, 0.08)',
+        margin: '0 42px',
+        overflow: 'hidden',
+      }}
+    >
+      {children}
     </div>
   )
 }
@@ -2142,9 +2278,15 @@ function ChatGptVoiceButton() {
 
 function ChatGptMobileScreenshot() {
   const frame = useCurrentFrame()
-  const userIn = progress(frame, 10, 28)
-  const assistantIn = progress(frame, 48, 74)
-  const actionsIn = progress(frame, 82, 98)
+  const conversationY = interpolate(
+    frame,
+    [0, 160, 300, 470, 640, 820],
+    [0, 0, -410, -1040, -1700, -2340],
+    {
+      extrapolateLeft: 'clamp',
+      extrapolateRight: 'clamp',
+    },
+  )
 
   return (
     <AbsoluteFill style={{ background: '#ffffff', color: '#111111', fontFamily: FONT_STACK, overflow: 'hidden' }}>
@@ -2158,30 +2300,54 @@ function ChatGptMobileScreenshot() {
       <SquarePen color="#050505" size={47} strokeWidth={2.8} style={{ left: 861, position: 'absolute', top: 149 }} />
       <MoreHorizontal color="#050505" size={51} strokeWidth={3.2} style={{ left: 974, position: 'absolute', top: 157 }} />
 
-      <ChatGptBubble
-        style={{
-          opacity: userIn,
-          transform: `translateY(${(1 - userIn) * 18}px) scale(${0.98 + userIn * 0.02})`,
-        }}
-        top={264}
-      >
-        Me diga as contas a pagar
-      </ChatGptBubble>
+      <div style={{ bottom: 264, left: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 244 }}>
+        <div style={{ display: 'grid', gap: 34, padding: '20px 0 560px', transform: `translateY(${conversationY}px)` }}>
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 10, 18)}>
+            Mostre receita por canal
+          </ChatGptFlowUserBubble>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 48, 22)}>
+            Claro. Aqui está o gráfico da receita por canal nos últimos 30 dias.
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 78, 22)}>
+            <AnimatedMcpChartView data={chatGptSequenceChartData} startFrame={78} />
+          </ChatGptToolResultCard>
 
-      <div style={{ color: '#111111', fontFamily: FONT_STACK, fontSize: 38, fontWeight: 400, left: 42, letterSpacing: '-0.76px', lineHeight: 1.34, opacity: assistantIn, position: 'absolute', top: 454, transform: `translateY(${(1 - assistantIn) * 22}px)`, width: 1004 }}>
-        <p style={{ margin: '0 0 62px' }}>Você quer ver as contas a pagar de onde?</p>
-        <p style={{ margin: '0 0 34px' }}>Por exemplo:</p>
-        <div style={{ display: 'grid', gap: 14 }}>
-          <span style={{ display: 'block', paddingLeft: 73, textIndent: -52 }}>•&nbsp;&nbsp;do seu ERP (Conta Azul, Omiê, Bling etc.)</span>
-          <span style={{ display: 'block', paddingLeft: 73, textIndent: -52 }}>•&nbsp;&nbsp;de uma planilha</span>
-          <span style={{ display: 'block', paddingLeft: 73, textIndent: -52 }}>•&nbsp;&nbsp;de um banco de dados/Supabase</span>
-          <span style={{ display: 'block', paddingLeft: 73, textIndent: -52 }}>•&nbsp;&nbsp;ou você quer saber conceitualmente o que</span>
-          <span style={{ display: 'block', paddingLeft: 73 }}>entra em “contas a pagar” no financeiro?</span>
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 178, 18)}>
+            Agora em tabela
+          </ChatGptFlowUserBubble>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 216, 22)}>
+            Montei a tabela com as contas a pagar abertas e agendadas.
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 246, 22)}>
+            <AnimatedMcpTableView data={chatGptSequenceTableData} startFrame={246} />
+          </ChatGptToolResultCard>
+
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 358, 18)}>
+            Quais fontes estão conectadas?
+          </ChatGptFlowUserBubble>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 396, 22)}>
+            Estas são as integrações usadas para consultar ERP, e-commerce e marketing.
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 426, 22)}>
+            <AnimatedMcpConnectorsView data={chatGptSequenceConnectorsData} startFrame={426} />
+          </ChatGptToolResultCard>
+
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 548, 18)}>
+            Resume para mim
+          </ChatGptFlowUserBubble>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 586, 22)}>
+            Fechei um resumo executivo com os principais sinais e próximos passos.
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 616, 22)}>
+            <AnimatedMcpAnalysisView data={chatGptSequenceAnalysisData} startFrame={616} />
+          </ChatGptToolResultCard>
+
+          <div style={chatGptSequenceStyle(frame, 662, 14)}>
+            <div style={{ padding: '10px 0 0 45px' }}>
+              <ChatGptActionRow />
+            </div>
+          </div>
         </div>
-      </div>
-
-      <div style={{ left: 45, opacity: actionsIn, position: 'absolute', top: 1030, transform: `translateY(${(1 - actionsIn) * 14}px)` }}>
-        <ChatGptActionRow />
       </div>
 
       <div style={{ background: '#ffffff', bottom: 0, height: 264, left: 0, position: 'absolute', right: 0 }}>
