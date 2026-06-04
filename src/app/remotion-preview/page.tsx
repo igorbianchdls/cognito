@@ -973,6 +973,101 @@ function AIScanOverlayDemo() {
   )
 }
 
+function AdAgentScanDemo() {
+  const frame = useCurrentFrame()
+  const sceneIn = previewProgress(frame, 0, 34)
+  const loop = frame % 142
+  const scanFrames = [0, 24, 34, 58, 68, 94, 104, 132, 141]
+  const scanX = interpolate(loop, scanFrames, [28, 28, 48, 48, 48, 48, 48, 48, 28])
+  const scanY = interpolate(loop, scanFrames, [126, 126, 250, 250, 378, 378, 538, 538, 126])
+  const scanWidth = interpolate(loop, scanFrames, [844, 844, 806, 806, 806, 806, 806, 806, 844])
+  const scanHeight = interpolate(loop, scanFrames, [86, 86, 108, 108, 118, 118, 310, 310, 86])
+  const agentX = scanX + scanWidth - 256
+  const agentY = scanY + Math.min(scanHeight - 42, 58)
+  const sweep = (frame * 5.5) % 940
+  const pulse = interpolate(Math.sin(frame / 5), [-1, 1], [0.74, 1])
+  const ads = [
+    ['Jogger Before and After #1', 'Ad set on', '1.19', 'R$ 47,30'],
+    ['Jacket Brand Identity #7', 'Ad set on', '1.27', 'R$ 52,15'],
+    ['Sweater Before and After #3', 'Ad set on', '1.14', 'R$ 49,95'],
+    ['MOF Portrait KnitPolo_01', 'Ad set on', '1.33', 'R$ 58,20'],
+    ['TOF Mirror Selfie KnitTop_07', 'Ad set on', '1.22', 'R$ 45,10'],
+  ]
+
+  return (
+    <div style={{ background: '#edf7f4', color: '#111827', fontFamily: theme.fontFamily, height: '100%', overflow: 'hidden', position: 'relative', width: '100%' }}>
+      <div style={{ background: 'radial-gradient(circle at 52% 35%, rgba(255,255,255,0.94), rgba(237,247,244,0.20) 62%)', inset: 0, opacity: sceneIn, position: 'absolute' }} />
+      <div style={{ backgroundImage: 'linear-gradient(rgba(15,118,110,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(15,118,110,0.07) 1px, transparent 1px)', backgroundSize: '76px 76px', inset: 0, opacity: 0.34, position: 'absolute', transform: `translateY(${frame * -0.14}px)` }} />
+
+      <section style={{ left: 64, opacity: sceneIn, position: 'absolute', right: 64, top: 150, transform: `translateY(${(1 - sceneIn) * 28}px)`, zIndex: 10 }}>
+        <div style={{ display: 'grid', gap: 12, marginBottom: 30 }}>
+          <span style={{ color: '#ea580c', fontSize: 24, fontWeight: 950, letterSpacing: 1.4, textTransform: 'uppercase' }}>Ad Agent</span>
+          <strong style={{ color: '#0f172a', fontSize: 58, fontWeight: 920, letterSpacing: 0, lineHeight: 0.96 }}>Autonomous ad review</strong>
+        </div>
+
+        <article style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.10)', borderRadius: 30, boxShadow: '0 48px 120px rgba(15,23,42,0.18)', minHeight: 1010, overflow: 'hidden', padding: 28, position: 'relative' }}>
+          <header style={{ alignItems: 'center', borderBottom: '1px solid #e5e7eb', display: 'grid', gap: 16, gridTemplateColumns: '56px 1fr 130px', paddingBottom: 22 }}>
+            <span style={{ alignItems: 'center', background: '#eff6ff', borderRadius: 16, color: '#2563eb', display: 'flex', fontSize: 24, fontWeight: 950, height: 56, justifyContent: 'center', width: 56 }}>∞</span>
+            <div style={{ display: 'grid', gap: 6 }}>
+              <strong style={{ color: '#0f172a', fontSize: 30, fontWeight: 900, letterSpacing: 0 }}>Ads Manager</strong>
+              <span style={{ color: '#64748b', fontSize: 19, fontWeight: 760 }}>Creative scan · Opportunity score</span>
+            </div>
+            <span style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 999, color: '#475569', fontSize: 17, fontWeight: 900, padding: '10px 13px', textAlign: 'center' }}>Updated now</span>
+          </header>
+
+          <div style={{ alignItems: 'center', borderBottom: '1px solid #edf2f7', display: 'flex', gap: 12, padding: '20px 0' }}>
+            {['All ads', 'AI ads', 'Actions', 'Active ads'].map((filter, index) => (
+              <span key={filter} style={{ background: index === 0 ? '#0f172a' : '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 999, color: index === 0 ? '#ffffff' : '#475569', fontSize: 17, fontWeight: 850, padding: '11px 14px' }}>{filter}</span>
+            ))}
+            <span style={{ background: '#2563eb', borderRadius: 999, color: '#ffffff', fontSize: 17, fontWeight: 900, marginLeft: 'auto', padding: '12px 16px' }}>Create</span>
+          </div>
+
+          <main style={{ display: 'grid', gap: 12, paddingTop: 22 }}>
+            <div style={{ alignItems: 'center', color: '#64748b', display: 'grid', fontSize: 17, fontWeight: 900, gridTemplateColumns: '44px 1.8fr 1fr 1fr 1fr', padding: '0 14px 8px' }}>
+              <span />
+              <span>Ad</span>
+              <span>Delivery</span>
+              <span>Frequency</span>
+              <span>Cost per result</span>
+            </div>
+            {ads.map(([name, status, frequency, cost], index) => (
+              <div key={name} style={{ alignItems: 'center', background: index < 3 ? '#fff7ed' : '#ffffff', border: `1px solid ${index < 3 ? '#fed7aa' : '#e2e8f0'}`, borderRadius: 18, display: 'grid', gap: 14, gridTemplateColumns: '44px 1.8fr 1fr 1fr 1fr', minHeight: 82, padding: '12px 14px' }}>
+                <span style={{ background: index < 3 ? '#fb923c' : '#cbd5e1', borderRadius: 999, height: 16, width: 16 }} />
+                <div style={{ alignItems: 'center', display: 'grid', gap: 12, gridTemplateColumns: '54px 1fr' }}>
+                  <span style={{ background: `linear-gradient(135deg, ${index % 2 ? '#fb923c' : '#fecaca'}, #f8fafc)`, borderRadius: 12, height: 54, width: 54 }} />
+                  <strong style={{ color: '#0f172a', fontSize: 21, fontWeight: 840, letterSpacing: 0, lineHeight: 1.06 }}>{name}</strong>
+                </div>
+                <span style={{ color: '#16a34a', fontSize: 18, fontWeight: 860 }}>{status}</span>
+                <span style={{ color: '#334155', fontSize: 19, fontWeight: 760 }}>{frequency}</span>
+                <span style={{ background: index < 3 ? '#fed7aa' : '#f8fafc', borderRadius: 999, color: index < 3 ? '#9a3412' : '#475569', fontSize: 18, fontWeight: 900, padding: '9px 11px', textAlign: 'center' }}>{cost}</span>
+              </div>
+            ))}
+          </main>
+
+          <div style={{ background: 'rgba(251,113,133,0.22)', border: '4px solid rgba(190,18,60,0.94)', borderRadius: 18, boxShadow: `0 0 ${30 + pulse * 30}px rgba(244,63,94,0.42)`, height: scanHeight, left: scanX, opacity: 0.98, overflow: 'hidden', position: 'absolute', top: scanY, width: scanWidth }}>
+            <span style={{ background: 'linear-gradient(180deg, transparent, rgba(255,255,255,0.62), transparent)', height: 86, left: 0, position: 'absolute', right: 0, top: `${(sweep % 340) - 100}px` }} />
+            <span style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.54), transparent)', bottom: 0, left: sweep - 230, position: 'absolute', top: 0, transform: 'skewX(-18deg)', width: 138 }} />
+            {[0, 1, 2, 3].map((line) => (
+              <span key={line} style={{ background: 'rgba(190,18,60,0.30)', height: 2, left: 16, opacity: line * 52 + 42 < scanHeight - 18 ? 1 : 0, position: 'absolute', right: 16, top: 42 + line * 52 }} />
+            ))}
+          </div>
+
+          <div style={{ alignItems: 'center', background: '#f97316', border: '2px solid #fed7aa', borderRadius: 12, boxShadow: '0 18px 42px rgba(194,65,12,0.32)', color: '#ffffff', display: 'flex', gap: 11, left: agentX, padding: '13px 17px', position: 'absolute', top: agentY, transform: `scale(${0.96 + pulse * 0.04})`, zIndex: 4 }}>
+            <span style={{ color: '#ffffff', fontSize: 28, fontWeight: 950, lineHeight: 1, transform: 'rotate(-24deg)' }}>➤</span>
+            <strong style={{ color: '#ffffff', fontSize: 25, fontWeight: 920, letterSpacing: 0 }}>Ad Agent</strong>
+          </div>
+        </article>
+      </section>
+
+      <footer style={{ bottom: 116, left: 64, opacity: sceneIn, position: 'absolute', right: 64, zIndex: 20 }}>
+        <div style={{ background: 'rgba(17,24,39,0.82)', borderRadius: 10, color: '#ffffff', display: 'inline-flex', fontSize: 31, fontWeight: 680, letterSpacing: 0, lineHeight: 1.18, padding: '14px 18px' }}>
+          ad agents scan creative performance and launch fixes.
+        </div>
+      </footer>
+    </div>
+  )
+}
+
 function BeforeAfterDemo() {
   return (
     <DemoStage compact>
@@ -1746,6 +1841,18 @@ const catalog: CatalogItem[] = [
     label: 'AI Scan Overlay',
     tags: ['AI Scan', 'Overlay', 'Marketing'],
     value: 'ai-scan-overlay',
+    width: 1080,
+  },
+  {
+    code: '<AdAgentScanMock />',
+    component: AdAgentScanDemo,
+    description: 'Mock vertical de scan em Ads Manager com marcador animado de Ad Agent.',
+    duration: MCP_SINGLE_ANIMATION_DURATION,
+    height: 1920,
+    kind: 'Marketing',
+    label: 'Ad Agent Scan',
+    tags: ['Ad Agent', 'AI Scan', 'Marketing'],
+    value: 'ad-agent-scan',
     width: 1080,
   },
   {
