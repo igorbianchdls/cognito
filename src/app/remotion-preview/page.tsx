@@ -1,6 +1,7 @@
 'use client'
 
 import { Player } from '@remotion/player'
+import { interpolate, useCurrentFrame } from 'remotion'
 import type { ComponentType, ReactNode } from 'react'
 import { useMemo, useState } from 'react'
 
@@ -282,42 +283,82 @@ function CommandPaletteDemo() {
   )
 }
 
+function previewProgress(frame: number, start: number, end: number) {
+  return interpolate(frame, [start, end], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
+}
+
 function IntegrationHubDemo() {
+  const frame = useCurrentFrame()
+  const sceneIn = previewProgress(frame, 0, 38)
+  const pulse = 1 + Math.sin(frame / 18) * 0.018
+
   return (
     <DemoStage compact>
-      <IntegrationHubMock apps={logos} centerLabel="Ledger AI" theme={theme} />
+      <div style={{ opacity: sceneIn, position: 'relative', transform: `translateY(${(1 - sceneIn) * 18}px) scale(${pulse})` }}>
+        <IntegrationHubMock apps={logos} centerLabel="Ledger AI" theme={theme} />
+        <div style={{ border: `2px dashed ${theme.accent}44`, borderRadius: 999, height: 360, left: '50%', opacity: 0.48 + Math.sin(frame / 20) * 0.16, position: 'absolute', top: '50%', transform: 'translate(-50%, -50%)', width: 360 }} />
+      </div>
     </DemoStage>
   )
 }
 
 function IntegrationCatalogDemo() {
+  const frame = useCurrentFrame()
+  const sceneIn = previewProgress(frame, 0, 34)
+
   return (
     <DemoStage compact>
-      <IntegrationCatalogMock theme={theme} />
+      <div style={{ opacity: sceneIn, transform: `translateY(${(1 - sceneIn) * 18}px)` }}>
+        <IntegrationCatalogMock theme={theme} />
+      </div>
     </DemoStage>
   )
 }
 
 function IntegrationPipelineDemo() {
+  const frame = useCurrentFrame()
+  const sceneIn = previewProgress(frame, 0, 34)
+  const scan = (frame * 2.4) % 640
+
   return (
     <DemoStage compact>
-      <IntegrationPipelineMock theme={theme} />
+      <div style={{ opacity: sceneIn, overflow: 'hidden', position: 'relative', transform: `translateY(${(1 - sceneIn) * 18}px)` }}>
+        <IntegrationPipelineMock theme={theme} />
+        <div style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent)', bottom: 0, left: scan - 260, position: 'absolute', top: 0, transform: 'skewX(-14deg)', width: 180 }} />
+      </div>
     </DemoStage>
   )
 }
 
 function IntegrationHealthMatrixDemo() {
+  const frame = useCurrentFrame()
+  const sceneIn = previewProgress(frame, 0, 34)
+  const activeRow = Math.floor(frame / 28) % 6
+
   return (
     <DemoStage compact>
-      <IntegrationHealthMatrixMock theme={theme} />
+      <div style={{ opacity: sceneIn, position: 'relative', transform: `translateY(${(1 - sceneIn) * 18}px)` }}>
+        <IntegrationHealthMatrixMock theme={theme} />
+        <div style={{ border: `2px solid ${theme.accent}66`, borderRadius: 14, height: 54, left: 12, opacity: 0.42, position: 'absolute', right: 12, top: 85 + activeRow * 63, transition: 'none' }} />
+      </div>
     </DemoStage>
   )
 }
 
 function IntegrationFieldMappingDemo() {
+  const frame = useCurrentFrame()
+  const sceneIn = previewProgress(frame, 0, 34)
+  const activeRow = Math.floor(frame / 34) % 4
+
   return (
     <DemoStage compact>
-      <IntegrationFieldMappingMock theme={theme} />
+      <div style={{ opacity: sceneIn, position: 'relative', transform: `translateY(${(1 - sceneIn) * 18}px)` }}>
+        <IntegrationFieldMappingMock theme={theme} />
+        <div style={{ alignItems: 'center', background: theme.accent, borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 18, fontWeight: 920, height: 34, justifyContent: 'center', left: '50%', opacity: 0.9, position: 'absolute', top: 111 + activeRow * 61, transform: 'translateX(-50%)', width: 34 }}>-&gt;</div>
+      </div>
     </DemoStage>
   )
 }
@@ -1062,7 +1103,7 @@ const catalog: CatalogItem[] = [
     code: '<IntegrationHubMock apps={apps} centerLabel="Ledger AI" theme={theme} />',
     component: IntegrationHubDemo,
     description: 'Hub radial de integrações e sistemas conectados.',
-    kind: 'Mockups',
+    kind: 'Marketing',
     label: 'IntegrationHubMock',
     tags: ['Integrations', 'Hub', 'Network'],
     value: 'integration-hub',
@@ -1071,7 +1112,7 @@ const catalog: CatalogItem[] = [
     code: '<IntegrationCatalogMock theme={theme} />',
     component: IntegrationCatalogDemo,
     description: 'Grade de conectores com categoria, latência e status.',
-    kind: 'Mockups',
+    kind: 'Marketing',
     label: 'IntegrationCatalogMock',
     tags: ['Integrations', 'Catalog', 'Connectors'],
     value: 'integration-catalog',
@@ -1080,7 +1121,7 @@ const catalog: CatalogItem[] = [
     code: '<IntegrationPipelineMock theme={theme} />',
     component: IntegrationPipelineDemo,
     description: 'Pipeline visual de extração, normalização, validação e publicação.',
-    kind: 'Mockups',
+    kind: 'Marketing',
     label: 'IntegrationPipelineMock',
     tags: ['Integrations', 'Pipeline', 'Sync'],
     value: 'integration-pipeline',
@@ -1089,7 +1130,7 @@ const catalog: CatalogItem[] = [
     code: '<IntegrationHealthMatrixMock theme={theme} />',
     component: IntegrationHealthMatrixDemo,
     description: 'Matriz operacional de saúde, latência e volume por conector.',
-    kind: 'Mockups',
+    kind: 'Marketing',
     label: 'IntegrationHealthMatrixMock',
     tags: ['Integrations', 'Health', 'SLA'],
     value: 'integration-health-matrix',
@@ -1098,7 +1139,7 @@ const catalog: CatalogItem[] = [
     code: '<IntegrationFieldMappingMock theme={theme} />',
     component: IntegrationFieldMappingDemo,
     description: 'Mapeamento de campos de origem para o modelo normalizado.',
-    kind: 'Mockups',
+    kind: 'Marketing',
     label: 'IntegrationFieldMappingMock',
     tags: ['Integrations', 'Mapping', 'Data model'],
     value: 'integration-field-mapping',
@@ -1781,7 +1822,7 @@ const catalog: CatalogItem[] = [
     description: 'Integrações conectando apps a um hub central.',
     duration: MCP_SINGLE_ANIMATION_DURATION,
     height: 1920,
-    kind: 'Animações',
+    kind: 'Marketing',
     label: 'Integração',
     tags: ['SaaS', 'Integration', 'Hub'],
     value: 'animation-integration',
