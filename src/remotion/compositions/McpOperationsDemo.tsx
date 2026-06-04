@@ -2486,29 +2486,6 @@ function ClaudeStatusBar() {
   )
 }
 
-function ClaudeBurstMark() {
-  return (
-    <div style={{ height: 78, left: 50, position: 'absolute', top: 1047, width: 78 }}>
-      {Array.from({ length: 12 }).map((_, index) => (
-        <span
-          key={index}
-          style={{
-            background: '#dd754f',
-            borderRadius: 999,
-            height: 9,
-            left: 33,
-            position: 'absolute',
-            top: 3,
-            transform: `rotate(${index * 30}deg)`,
-            transformOrigin: '6px 36px',
-            width: 12,
-          }}
-        />
-      ))}
-    </div>
-  )
-}
-
 function ClaudeActionRow({ second = false }: { second?: boolean }) {
   const icons = second
     ? [Copy, Upload, Play, ThumbsUp, ThumbsDown, RotateCcw]
@@ -2523,31 +2500,66 @@ function ClaudeActionRow({ second = false }: { second?: boolean }) {
   )
 }
 
-function ClaudeBubble({ children, style, top }: { children: ReactNode; style?: CSSProperties; top: number }) {
+function ClaudeFlowUserBubble({ children, style }: { children: ReactNode; style: CSSProperties }) {
+  return (
+    <div style={{ ...style, display: 'flex', justifyContent: 'flex-end', paddingRight: 42 }}>
+      <div
+        style={{
+          alignItems: 'center',
+          background: '#f1f0ee',
+          border: '1px solid #dfddd8',
+          borderRadius: 68,
+          boxSizing: 'border-box',
+          color: '#111111',
+          display: 'flex',
+          fontFamily: FONT_STACK,
+          fontSize: 38,
+          fontWeight: 400,
+          justifyContent: 'center',
+          letterSpacing: '-0.76px',
+          lineHeight: 1.12,
+          maxWidth: 760,
+          minHeight: 96,
+          padding: '25px 40px',
+          width: 'max-content',
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function ClaudeFlowAssistantText({ children, style }: { children: ReactNode; style: CSSProperties }) {
   return (
     <div
       style={{
-        alignItems: 'center',
-        background: '#f1f0ee',
-        border: '1px solid #dfddd8',
-        borderRadius: 68,
-        boxSizing: 'border-box',
-        color: '#111111',
-        display: 'flex',
-        fontFamily: FONT_STACK,
-        fontSize: 42,
-        fontWeight: 430,
-        height: 106,
-        justifyContent: 'center',
-        letterSpacing: 0,
-        lineHeight: 1,
-        maxWidth: 620,
-        padding: '0 34px',
-        position: 'absolute',
-        right: 42,
-        top,
         ...style,
-        width: 'max-content',
+        color: '#111111',
+        fontFamily: 'Georgia, "Times New Roman", serif',
+        fontSize: 43,
+        fontWeight: 500,
+        letterSpacing: '-0.55px',
+        lineHeight: 1.26,
+        padding: '0 42px',
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
+function ClaudeToolResultCard({ children, style }: { children: ReactNode; style: CSSProperties }) {
+  return (
+    <div
+      style={{
+        ...style,
+        background: '#fffefa',
+        border: '1px solid #dfddd8',
+        borderRadius: 28,
+        boxShadow: '0 14px 38px rgba(20, 24, 22, 0.10)',
+        margin: '0 42px',
+        overflow: 'hidden',
       }}
     >
       {children}
@@ -2567,12 +2579,15 @@ function ClaudeVoiceButton() {
 
 function ClaudeMobileScreenshot() {
   const frame = useCurrentFrame()
-  const firstUserIn = progress(frame, 10, 28)
-  const firstAssistantIn = progress(frame, 48, 74)
-  const firstActionsIn = progress(frame, 82, 98)
-  const secondUserIn = progress(frame, 118, 136)
-  const secondAssistantIn = progress(frame, 156, 182)
-  const secondActionsIn = progress(frame, 190, 206)
+  const conversationY = interpolate(
+    frame,
+    [0, 160, 300, 470, 640, 820, 1000, 1180, 1360],
+    [0, 0, -410, -1040, -1700, -2380, -3180, -3980, -4860],
+    {
+      extrapolateLeft: 'clamp',
+      extrapolateRight: 'clamp',
+    },
+  )
 
   return (
     <AbsoluteFill style={{ background: '#fbfaf8', color: '#111111', fontFamily: FONT_STACK, overflow: 'hidden' }}>
@@ -2584,45 +2599,84 @@ function ClaudeMobileScreenshot() {
       </div>
       <MoreHorizontal color="#333330" size={50} strokeWidth={3.2} style={{ left: 969, position: 'absolute', top: 158 }} />
 
-      <ClaudeBubble
-        style={{
-          opacity: firstUserIn,
-          transform: `translateY(${(1 - firstUserIn) * 18}px) scale(${0.98 + firstUserIn * 0.02})`,
-        }}
-        top={222}
-      >
-        Olá
-      </ClaudeBubble>
+      <div style={{ bottom: 340, left: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 226 }}>
+        <div style={{ display: 'grid', gap: 34, padding: '20px 0 820px', transform: `translateY(${conversationY}px)` }}>
+          <ClaudeFlowUserBubble style={chatGptSequenceStyle(frame, 10, 18)}>
+            Mostre receita por canal
+          </ClaudeFlowUserBubble>
+          <ClaudeFlowAssistantText style={chatGptSequenceStyle(frame, 48, 22)}>
+            Claro. Aqui está o gráfico da receita por canal nos últimos 30 dias.
+          </ClaudeFlowAssistantText>
+          <ClaudeToolResultCard style={chatGptSequenceStyle(frame, 78, 22)}>
+            <AnimatedMcpChartView data={chatGptSequenceChartData} startFrame={78} />
+          </ClaudeToolResultCard>
 
-      <div style={{ color: '#111111', fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 47, fontWeight: 500, left: 42, letterSpacing: 0, lineHeight: 1.12, opacity: firstAssistantIn, position: 'absolute', top: 392, transform: `translateY(${(1 - firstAssistantIn) * 22}px)`, whiteSpace: 'nowrap' }}>
-        Olá, Igor! Como posso ajudar?
-      </div>
-      <div style={{ left: 52, opacity: firstActionsIn, position: 'absolute', top: 518, transform: `translateY(${(1 - firstActionsIn) * 14}px)` }}>
-        <ClaudeActionRow />
-      </div>
+          <ClaudeFlowUserBubble style={chatGptSequenceStyle(frame, 178, 18)}>
+            Agora em tabela
+          </ClaudeFlowUserBubble>
+          <ClaudeFlowAssistantText style={chatGptSequenceStyle(frame, 216, 22)}>
+            Montei a tabela com as contas a pagar abertas e agendadas.
+          </ClaudeFlowAssistantText>
+          <ClaudeToolResultCard style={chatGptSequenceStyle(frame, 246, 22)}>
+            <AnimatedMcpTableView data={chatGptSequenceTableData} startFrame={246} />
+          </ClaudeToolResultCard>
 
-      <ClaudeBubble
-        style={{
-          opacity: secondUserIn,
-          transform: `translateY(${(1 - secondUserIn) * 18}px) scale(${0.98 + secondUserIn * 0.02})`,
-        }}
-        top={558}
-      >
-        Tudo bem com você?
-      </ClaudeBubble>
+          <ClaudeFlowUserBubble style={chatGptSequenceStyle(frame, 358, 18)}>
+            Quais fontes estão conectadas?
+          </ClaudeFlowUserBubble>
+          <ClaudeFlowAssistantText style={chatGptSequenceStyle(frame, 396, 22)}>
+            Estas são as integrações usadas para consultar ERP, e-commerce e marketing.
+          </ClaudeFlowAssistantText>
+          <ClaudeToolResultCard style={chatGptSequenceStyle(frame, 426, 22)}>
+            <AnimatedMcpConnectorsView data={chatGptSequenceConnectorsData} startFrame={426} />
+          </ClaudeToolResultCard>
 
-      <div style={{ color: '#111111', fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 47, fontWeight: 500, left: 42, letterSpacing: 0, lineHeight: 1.43, opacity: secondAssistantIn, position: 'absolute', top: 724, transform: `translateY(${(1 - secondAssistantIn) * 22}px)`, width: 994 }}>
-        Tudo bem, obrigado! E com você? Alguma coisa no radar hoje — produto, tech, ou só curiosidade do dia?
-      </div>
-      <div style={{ left: 52, opacity: secondActionsIn, position: 'absolute', top: 949, transform: `translateY(${(1 - secondActionsIn) * 14}px)` }}>
-        <ClaudeActionRow second />
-      </div>
+          <ClaudeFlowUserBubble style={chatGptSequenceStyle(frame, 548, 18)}>
+            Mostre o catalogo de dados
+          </ClaudeFlowUserBubble>
+          <ClaudeFlowAssistantText style={chatGptSequenceStyle(frame, 586, 22)}>
+            Encontrei os recursos disponiveis e a qualidade dos dados conectados.
+          </ClaudeFlowAssistantText>
+          <ClaudeToolResultCard style={chatGptSequenceStyle(frame, 616, 22)}>
+            <AnimatedMcpDataCatalogView data={chatGptSequenceDataCatalogData} startFrame={616} />
+          </ClaudeToolResultCard>
 
-      <ClaudeBurstMark />
-      <div style={{ color: '#333330', fontSize: 35, fontWeight: 460, left: 414, letterSpacing: 0, lineHeight: 1.36, position: 'absolute', textAlign: 'center', top: 1046, width: 630 }}>
-        Claude é uma IA e pode cometer erros.
-        <br />
-        Por favor, verifique as respostas.
+          <ClaudeFlowUserBubble style={chatGptSequenceStyle(frame, 736, 18)}>
+            Liste meus dashboards
+          </ClaudeFlowUserBubble>
+          <ClaudeFlowAssistantText style={chatGptSequenceStyle(frame, 774, 22)}>
+            Estes dashboards ja estao disponiveis para abrir no app.
+          </ClaudeFlowAssistantText>
+          <ClaudeToolResultCard style={chatGptSequenceStyle(frame, 804, 22)}>
+            <AnimatedMcpDashboardListView data={chatGptSequenceDashboardListData} startFrame={804} />
+          </ClaudeToolResultCard>
+
+          <ClaudeFlowUserBubble style={chatGptSequenceStyle(frame, 926, 18)}>
+            E a DRE?
+          </ClaudeFlowUserBubble>
+          <ClaudeFlowAssistantText style={chatGptSequenceStyle(frame, 964, 22)}>
+            Aqui está a DRE consolidada em formato de demonstrativo financeiro.
+          </ClaudeFlowAssistantText>
+          <ClaudeToolResultCard style={chatGptSequenceStyle(frame, 994, 22)}>
+            <AnimatedMcpDreView data={chatGptSequenceDreData} startFrame={994} />
+          </ClaudeToolResultCard>
+
+          <ClaudeFlowUserBubble style={chatGptSequenceStyle(frame, 1116, 18)}>
+            Resume para mim
+          </ClaudeFlowUserBubble>
+          <ClaudeFlowAssistantText style={chatGptSequenceStyle(frame, 1154, 22)}>
+            Fechei um resumo executivo com os principais sinais e próximos passos.
+          </ClaudeFlowAssistantText>
+          <ClaudeToolResultCard style={chatGptSequenceStyle(frame, 1184, 22)}>
+            <AnimatedMcpAnalysisView data={chatGptSequenceAnalysisData} startFrame={1184} />
+          </ClaudeToolResultCard>
+
+          <div style={chatGptSequenceStyle(frame, 1244, 14)}>
+            <div style={{ padding: '10px 0 0 52px' }}>
+              <ClaudeActionRow second />
+            </div>
+          </div>
+        </div>
       </div>
 
       <div style={{ background: '#fbfaf8', bottom: 0, height: 340, left: 0, position: 'absolute', right: 0 }}>
