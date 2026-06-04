@@ -1038,132 +1038,108 @@ function ClaudeRichCard({ children, style }: { children: ReactNode; style: CSSPr
 }
 
 function ClaudeMobileTemplate() {
-  const frame = useCurrentFrame()
-  const firstUserStyle = fadeSlide(frame, 12, 38, 0)
-  const firstAssistantStyle = fadeSlide(frame, 42, 0, 18)
-  const secondUserStyle = fadeSlide(frame, 128, 38, 0)
-  const secondAssistantStyle = fadeSlide(frame, 164, 0, 18)
-  const noticeStyle = fadeSlide(frame, 224, 0, 16)
-  const erpUserStyle = fadeSlide(frame, 298, 38, 0)
-  const connectorsTextStyle = fadeSlide(frame, 334, 0, 18)
-  const connectorsStyle = fadeSlide(frame, 368, 0, 24)
-  const tableTextStyle = fadeSlide(frame, 476, 0, 18)
-  const tableStyle = fadeSlide(frame, 510, 0, 24)
-  const dreTextStyle = fadeSlide(frame, 618, 0, 18)
-  const dreStyle = fadeSlide(frame, 652, 0, 24)
-  const cashFlowTextStyle = fadeSlide(frame, 788, 0, 18)
-  const cashFlowStyle = fadeSlide(frame, 822, 0, 24)
-  const chartTextStyle = fadeSlide(frame, 958, 0, 18)
-  const chartStyle = fadeSlide(frame, 992, 0, 24)
-  const pieStyle = fadeSlide(frame, 1082, 0, 24)
-  const lineStyle = fadeSlide(frame, 1152, 0, 24)
-  const dataCatalogTextStyle = fadeSlide(frame, 1250, 0, 18)
-  const dataCatalogStyle = fadeSlide(frame, 1284, 0, 24)
-  const analysisTextStyle = fadeSlide(frame, 1396, 0, 18)
-  const analysisStyle = fadeSlide(frame, 1430, 0, 24)
-  const dashboardListTextStyle = fadeSlide(frame, 1542, 0, 18)
-  const dashboardListStyle = fadeSlide(frame, 1576, 0, 24)
-  const conversationY = interpolate(frame, [0, 250, 370, 500, 620, 800, 980, 1180, 1400, 1620, 1860, 2120, 2400, 2680, 2900, 3200, 3560, 3980], [0, 0, -450, -1000, -1540, -2320, -3080, -3840, -4640, -5500, -6380, -7260, -8140, -9020, -9700, -10850, -12150, -13500], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  })
+  const assistantFont = 'Georgia, "Times New Roman", serif'
+  const actionIconStyle = { color: '#777772', size: 39, strokeWidth: 2.25 }
 
   return (
     <AbsoluteFill
       style={{
-        background: CLAUDE_BG,
+        background: '#fbfaf8',
         color: CLAUDE_TEXT,
         fontFamily: CLAUDE_FONT,
+        overflow: 'hidden',
       }}
     >
-      <ClaudeStatusBar />
-      <ClaudeTopBar />
+      <div style={{ color: '#000000', fontSize: 42, fontWeight: 740, left: 77, letterSpacing: 0, lineHeight: 1, position: 'absolute', top: 43 }}>19:04</div>
 
-      <div
-        style={{
-          bottom: 247,
-          left: 0,
-          overflow: 'hidden',
-          position: 'absolute',
-          right: 0,
-          top: 188,
-        }}
-      >
-        <div style={{ display: 'grid', gap: 58, padding: '28px 0 520px', transform: `translateY(${conversationY}px)` }}>
-          <ClaudeUserBubble style={firstUserStyle}>Olá</ClaudeUserBubble>
-          <ClaudeAssistantText style={firstAssistantStyle}>Olá, Igor! Como posso ajudar?</ClaudeAssistantText>
-          <ClaudeUserBubble style={secondUserStyle}>Tudo bem com você?</ClaudeUserBubble>
-          <ClaudeAssistantText includeShare style={secondAssistantStyle}>
-            Tudo bem, obrigado! E com você? Alguma coisa no radar hoje — produto, tech, ou só curiosidade do dia?
-          </ClaudeAssistantText>
-          <ClaudeNotice style={noticeStyle} />
-
-          <ClaudeUserBubble style={erpUserStyle}>Me diga as contas a pagar</ClaudeUserBubble>
-          <ClaudeAssistantText style={connectorsTextStyle}>
-            Primeiro, estes conectores estão sincronizados.
-          </ClaudeAssistantText>
-          <ClaudeRichCard style={connectorsStyle}>
-            <AnimatedMcpConnectorsView data={connectorsData} startFrame={368} />
-          </ClaudeRichCard>
-
-          <ClaudeAssistantText style={tableTextStyle}>
-            Encontrei estas contas a pagar conectadas ao ERP.
-          </ClaudeAssistantText>
-          <ClaudeRichCard style={tableStyle}>
-            <AnimatedMcpTableView data={tableData} startFrame={510} />
-          </ClaudeRichCard>
-
-          <ClaudeAssistantText style={dreTextStyle}>
-            Também posso abrir o demonstrativo de resultado no mesmo padrão.
-          </ClaudeAssistantText>
-          <ClaudeRichCard style={dreStyle}>
-            <AnimatedMcpDreView data={dreData} startFrame={652} />
-          </ClaudeRichCard>
-
-          <ClaudeAssistantText style={cashFlowTextStyle}>
-            E cruzar com o fluxo de caixa previsto por vencimento.
-          </ClaudeAssistantText>
-          <ClaudeRichCard style={cashFlowStyle}>
-            <AnimatedMcpCashFlowView data={cashFlowData} startFrame={822} />
-          </ClaudeRichCard>
-
-          <ClaudeAssistantText style={chartTextStyle}>
-            Também posso transformar a mesma consulta em visualizações.
-          </ClaudeAssistantText>
-          <ClaudeRichCard style={chartStyle}>
-            <AnimatedMcpChartView data={chartData} startFrame={992} />
-          </ClaudeRichCard>
-          <ClaudeRichCard style={pieStyle}>
-            <AnimatedMcpPieChartView data={pieData} startFrame={1082} />
-          </ClaudeRichCard>
-          <ClaudeRichCard style={lineStyle}>
-            <AnimatedMcpLineChartView data={lineData} startFrame={1152} />
-          </ClaudeRichCard>
-
-          <ClaudeAssistantText style={dataCatalogTextStyle}>
-            Antes de criar o dashboard, valido o catálogo de dados conectado.
-          </ClaudeAssistantText>
-          <ClaudeRichCard style={dataCatalogStyle}>
-            <AnimatedMcpDataCatalogView data={dataCatalogData} startFrame={1284} />
-          </ClaudeRichCard>
-
-          <ClaudeAssistantText style={analysisTextStyle}>
-            Depois faço a análise com métricas, riscos e próximos passos.
-          </ClaudeAssistantText>
-          <ClaudeRichCard style={analysisStyle}>
-            <AnimatedMcpAnalysisView data={analysisData} startFrame={1430} />
-          </ClaudeRichCard>
-
-          <ClaudeAssistantText style={dashboardListTextStyle}>
-            E deixo os dashboards prontos para abrir ou continuar editando.
-          </ClaudeAssistantText>
-          <ClaudeRichCard style={dashboardListStyle}>
-            <AnimatedMcpDashboardListView data={dashboardListData} startFrame={1576} />
-          </ClaudeRichCard>
+      <div style={{ alignItems: 'center', display: 'flex', gap: 16, position: 'absolute', right: 52, top: 42 }}>
+        <div style={{ alignItems: 'flex-end', display: 'flex', gap: 4, height: 27 }}>
+          {[11, 16, 22, 28].map((height, index) => (
+            <span key={height} style={{ background: index === 3 ? '#c7c7c7' : '#000000', borderRadius: 3, display: 'block', height, width: 8 }} />
+          ))}
+        </div>
+        <div style={{ height: 32, position: 'relative', width: 43 }}>
+          <div style={{ border: '5px solid #000000', borderBottomColor: 'transparent', borderLeftColor: 'transparent', borderRadius: '50%', height: 36, left: 0, position: 'absolute', top: 2, transform: 'rotate(-45deg)', width: 43 }} />
+          <span style={{ background: '#000000', borderRadius: 999, bottom: 0, display: 'block', height: 7, left: 18, position: 'absolute', width: 7 }} />
+        </div>
+        <div style={{ alignItems: 'center', border: '1px solid #c9c9c9', borderRadius: 9, color: '#000000', display: 'flex', fontSize: 25, fontWeight: 800, height: 34, justifyContent: 'center', lineHeight: 1, overflow: 'hidden', position: 'relative', width: 62 }}>
+          <span style={{ background: '#f4d141', bottom: 0, left: 0, position: 'absolute', top: 0, width: 24 }} />
+          <span style={{ position: 'relative' }}>5</span>
         </div>
       </div>
 
-      <ClaudeComposer />
+      <Menu color="#3f3f3a" size={46} strokeWidth={2.2} style={{ left: 61, position: 'absolute', top: 166 }} />
+      <div style={{ alignItems: 'center', background: '#3a3a37', borderRadius: 999, display: 'flex', height: 53, justifyContent: 'center', left: 837, position: 'absolute', top: 151, width: 53 }}>
+        <Plus color="#ffffff" size={39} strokeWidth={3.2} />
+      </div>
+      <MoreHorizontal color="#3f3f3a" size={49} strokeWidth={3} style={{ left: 966, position: 'absolute', top: 153 }} />
+
+      <div style={{ alignItems: 'center', background: '#f2f1ef', border: '1px solid #e0ded9', borderRadius: 64, color: '#171714', display: 'flex', fontSize: 44, fontWeight: 400, height: 105, justifyContent: 'center', lineHeight: 1, padding: '0 35px', position: 'absolute', right: 42, top: 222 }}>
+        Olá
+      </div>
+
+      <div style={{ color: '#171714', fontFamily: assistantFont, fontSize: 47, fontWeight: 500, left: 42, letterSpacing: -0.55, lineHeight: 1.12, position: 'absolute', top: 394 }}>
+        Olá, Igor! Como posso ajudar?
+      </div>
+
+      <div style={{ alignItems: 'center', display: 'flex', gap: 36, left: 50, position: 'absolute', top: 516 }}>
+        <Copy {...actionIconStyle} />
+        <Play {...actionIconStyle} />
+        <ThumbsUp {...actionIconStyle} />
+        <ThumbsDown {...actionIconStyle} />
+        <RotateCcw {...actionIconStyle} />
+      </div>
+
+      <div style={{ alignItems: 'center', background: '#f2f1ef', border: '1px solid #dfddd9', borderRadius: 65, color: '#171714', display: 'flex', fontSize: 45, fontWeight: 400, height: 105, justifyContent: 'center', lineHeight: 1, padding: '0 34px', position: 'absolute', right: 41, top: 559 }}>
+        Tudo bem com você?
+      </div>
+
+      <div style={{ color: '#171714', fontFamily: assistantFont, fontSize: 46, fontWeight: 600, left: 42, letterSpacing: -0.55, lineHeight: 1.43, position: 'absolute', top: 729, width: 980 }}>
+        Tudo bem, obrigado! E com você? Alguma coisa no radar hoje — produto, tech, ou só curiosidade do dia?
+      </div>
+
+      <div style={{ alignItems: 'center', display: 'flex', gap: 36, left: 50, position: 'absolute', top: 943 }}>
+        <Copy {...actionIconStyle} />
+        <Upload {...actionIconStyle} />
+        <Play {...actionIconStyle} />
+        <ThumbsUp {...actionIconStyle} />
+        <ThumbsDown {...actionIconStyle} />
+        <RotateCcw {...actionIconStyle} />
+      </div>
+
+      <div style={{ height: 78, left: 42, position: 'absolute', top: 1038, width: 78 }}>
+        {Array.from({ length: 12 }).map((_, index) => (
+          <span key={index} style={{ background: '#df744d', borderRadius: 999, height: 9, left: 8, position: 'absolute', top: 35, transform: `rotate(${index * 30}deg) translateX(26px)`, transformOrigin: '31px 4px', width: 43 }} />
+        ))}
+      </div>
+
+      <div style={{ color: '#3f3f3a', fontSize: 35, fontWeight: 400, left: 420, letterSpacing: 0, lineHeight: 1.35, position: 'absolute', textAlign: 'center', top: 1039, width: 610 }}>
+        Claude é uma IA e pode cometer erros.
+        <br />
+        Por favor, verifique as respostas.
+      </div>
+
+      <div style={{ background: '#fbfaf8', bottom: 0, height: 327, left: 0, position: 'absolute', right: 0 }}>
+        <div style={{ background: '#fffefa', border: '1.5px solid #c8c6c1', borderRadius: 63, boxShadow: '0 18px 34px rgba(0, 0, 0, 0.13)', height: 252, left: 42, padding: '48px 20px 18px 31px', position: 'absolute', right: 42, top: 0 }}>
+          <div style={{ color: '#77746f', fontSize: 40, fontWeight: 400, letterSpacing: 0, lineHeight: 1, marginBottom: 35 }}>
+            Responder a Claude
+          </div>
+          <div style={{ alignItems: 'center', display: 'flex', gap: 20 }}>
+            <div style={{ alignItems: 'center', background: '#f0efeb', borderRadius: 999, display: 'flex', height: 82, justifyContent: 'center', width: 82 }}>
+              <Plus color="#000000" size={42} strokeWidth={2.3} />
+            </div>
+            <div style={{ alignItems: 'center', background: '#f0efeb', borderRadius: 999, color: '#171714', display: 'flex', fontSize: 31, fontWeight: 400, height: 82, justifyContent: 'center', letterSpacing: 0, padding: '0 42px' }}>
+              Sonnet 4.6
+            </div>
+            <div style={{ flex: 1 }} />
+            <div style={{ alignItems: 'center', background: '#f0efeb', borderRadius: 999, display: 'flex', height: 82, justifyContent: 'center', width: 82 }}>
+              <Mic color="#3f3f3a" size={47} strokeWidth={2.6} />
+            </div>
+            <VoiceButton />
+          </div>
+        </div>
+        <div style={{ background: '#000000', borderRadius: 999, bottom: 12, height: 12, left: '50%', position: 'absolute', transform: 'translateX(-50%)', width: 380 }} />
+      </div>
     </AbsoluteFill>
   )
 }
