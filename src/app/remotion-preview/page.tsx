@@ -28,6 +28,9 @@ import {
   InboxAnimation,
   SaaSInfiniteCanvasGalleryAnimation,
   IntegrationFlowAnimation,
+  IntegrationHubDockAnimation,
+  IntegrationHubMeshAnimation,
+  IntegrationHubRingsAnimation,
   SaaSLightboxGalleryAnimation,
   ManagementReportAnimation,
   MCP_SINGLE_ANIMATION_DURATION,
@@ -101,11 +104,7 @@ import {
   GradientTextSweep,
   HotspotPulse,
   InboxTriageMock,
-  IntegrationCatalogMock,
-  IntegrationFieldMappingMock,
-  IntegrationHealthMatrixMock,
   IntegrationHubMock,
-  IntegrationPipelineMock,
   InstagramPostMock,
   KanbanMock,
   ledgerAIIntroConfig,
@@ -300,64 +299,6 @@ function IntegrationHubDemo() {
       <div style={{ opacity: sceneIn, position: 'relative', transform: `translateY(${(1 - sceneIn) * 18}px) scale(${pulse})` }}>
         <IntegrationHubMock apps={logos} centerLabel="Ledger AI" theme={theme} />
         <div style={{ border: `2px dashed ${theme.accent}44`, borderRadius: 999, height: 360, left: '50%', opacity: 0.48 + Math.sin(frame / 20) * 0.16, position: 'absolute', top: '50%', transform: 'translate(-50%, -50%)', width: 360 }} />
-      </div>
-    </DemoStage>
-  )
-}
-
-function IntegrationCatalogDemo() {
-  const frame = useCurrentFrame()
-  const sceneIn = previewProgress(frame, 0, 34)
-
-  return (
-    <DemoStage compact>
-      <div style={{ opacity: sceneIn, transform: `translateY(${(1 - sceneIn) * 18}px)` }}>
-        <IntegrationCatalogMock theme={theme} />
-      </div>
-    </DemoStage>
-  )
-}
-
-function IntegrationPipelineDemo() {
-  const frame = useCurrentFrame()
-  const sceneIn = previewProgress(frame, 0, 34)
-  const scan = (frame * 2.4) % 640
-
-  return (
-    <DemoStage compact>
-      <div style={{ opacity: sceneIn, overflow: 'hidden', position: 'relative', transform: `translateY(${(1 - sceneIn) * 18}px)` }}>
-        <IntegrationPipelineMock theme={theme} />
-        <div style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent)', bottom: 0, left: scan - 260, position: 'absolute', top: 0, transform: 'skewX(-14deg)', width: 180 }} />
-      </div>
-    </DemoStage>
-  )
-}
-
-function IntegrationHealthMatrixDemo() {
-  const frame = useCurrentFrame()
-  const sceneIn = previewProgress(frame, 0, 34)
-  const activeRow = Math.floor(frame / 28) % 6
-
-  return (
-    <DemoStage compact>
-      <div style={{ opacity: sceneIn, position: 'relative', transform: `translateY(${(1 - sceneIn) * 18}px)` }}>
-        <IntegrationHealthMatrixMock theme={theme} />
-        <div style={{ border: `2px solid ${theme.accent}66`, borderRadius: 14, height: 54, left: 12, opacity: 0.42, position: 'absolute', right: 12, top: 85 + activeRow * 63, transition: 'none' }} />
-      </div>
-    </DemoStage>
-  )
-}
-
-function IntegrationFieldMappingDemo() {
-  const frame = useCurrentFrame()
-  const sceneIn = previewProgress(frame, 0, 34)
-  const activeRow = Math.floor(frame / 34) % 4
-
-  return (
-    <DemoStage compact>
-      <div style={{ opacity: sceneIn, position: 'relative', transform: `translateY(${(1 - sceneIn) * 18}px)` }}>
-        <IntegrationFieldMappingMock theme={theme} />
-        <div style={{ alignItems: 'center', background: theme.accent, borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 18, fontWeight: 920, height: 34, justifyContent: 'center', left: '50%', opacity: 0.9, position: 'absolute', top: 111 + activeRow * 61, transform: 'translateX(-50%)', width: 34 }}>-&gt;</div>
       </div>
     </DemoStage>
   )
@@ -1109,40 +1050,40 @@ const catalog: CatalogItem[] = [
     value: 'integration-hub',
   },
   {
-    code: '<IntegrationCatalogMock theme={theme} />',
-    component: IntegrationCatalogDemo,
-    description: 'Grade de conectores com categoria, latência e status.',
+    code: '<IntegrationHubRingsAnimation />',
+    component: IntegrationHubRingsAnimation,
+    description: 'Variação de integration hub com conectores em anéis concêntricos.',
+    duration: MCP_SINGLE_ANIMATION_DURATION,
+    height: 1920,
     kind: 'Marketing',
-    label: 'IntegrationCatalogMock',
-    tags: ['Integrations', 'Catalog', 'Connectors'],
-    value: 'integration-catalog',
+    label: 'Integration Hub Rings',
+    tags: ['Integrations', 'Hub', 'Rings'],
+    value: 'marketing-integration-hub-rings',
+    width: 1080,
   },
   {
-    code: '<IntegrationPipelineMock theme={theme} />',
-    component: IntegrationPipelineDemo,
-    description: 'Pipeline visual de extração, normalização, validação e publicação.',
+    code: '<IntegrationHubMeshAnimation />',
+    component: IntegrationHubMeshAnimation,
+    description: 'Variação de integration hub com conectores em malha viva.',
+    duration: MCP_SINGLE_ANIMATION_DURATION,
+    height: 1920,
     kind: 'Marketing',
-    label: 'IntegrationPipelineMock',
-    tags: ['Integrations', 'Pipeline', 'Sync'],
-    value: 'integration-pipeline',
+    label: 'Integration Hub Mesh',
+    tags: ['Integrations', 'Hub', 'Mesh'],
+    value: 'marketing-integration-hub-mesh',
+    width: 1080,
   },
   {
-    code: '<IntegrationHealthMatrixMock theme={theme} />',
-    component: IntegrationHealthMatrixDemo,
-    description: 'Matriz operacional de saúde, latência e volume por conector.',
+    code: '<IntegrationHubDockAnimation />',
+    component: IntegrationHubDockAnimation,
+    description: 'Variação de integration hub com docks laterais alimentando o centro.',
+    duration: MCP_SINGLE_ANIMATION_DURATION,
+    height: 1920,
     kind: 'Marketing',
-    label: 'IntegrationHealthMatrixMock',
-    tags: ['Integrations', 'Health', 'SLA'],
-    value: 'integration-health-matrix',
-  },
-  {
-    code: '<IntegrationFieldMappingMock theme={theme} />',
-    component: IntegrationFieldMappingDemo,
-    description: 'Mapeamento de campos de origem para o modelo normalizado.',
-    kind: 'Marketing',
-    label: 'IntegrationFieldMappingMock',
-    tags: ['Integrations', 'Mapping', 'Data model'],
-    value: 'integration-field-mapping',
+    label: 'Integration Hub Dock',
+    tags: ['Integrations', 'Hub', 'Dock'],
+    value: 'marketing-integration-hub-dock',
+    width: 1080,
   },
   {
     code: '<AuditLogMock events={events} theme={theme} />',
@@ -1819,13 +1760,13 @@ const catalog: CatalogItem[] = [
   {
     code: '<IntegrationFlowAnimation />',
     component: IntegrationFlowAnimation,
-    description: 'Integrações conectando apps a um hub central.',
+    description: 'Variação de integration hub com mocks orbitando o centro.',
     duration: MCP_SINGLE_ANIMATION_DURATION,
     height: 1920,
     kind: 'Marketing',
-    label: 'Integração',
-    tags: ['SaaS', 'Integration', 'Hub'],
-    value: 'animation-integration',
+    label: 'Integration Hub Orbit',
+    tags: ['SaaS', 'Integration', 'Hub', 'Orbit'],
+    value: 'marketing-integration-hub-orbit',
     width: 1080,
   },
   {

@@ -41,12 +41,12 @@ loadSfProFonts()
 
 const FONT_STACK = IOS_REMOTION_FONT_STACK
 
-type IntegrationNode = {
-  color: string
+type IntegrationOrbitMock = {
+  accent: string
   label: string
-  side: 'left' | 'right'
-  x: number
-  y: number
+  metric: string
+  status: string
+  title: string
 }
 
 type ClassificationDocumentItem = {
@@ -189,13 +189,13 @@ const galleryItems = [
   { accent: '#2b7ea5', label: 'AI Review', title: 'Expense controls', value: '96%' },
 ]
 
-const integrationNodes: IntegrationNode[] = [
-  { color: '#ffe01b', label: 'chimp', side: 'left', x: 175, y: 720 },
-  { color: '#ffffff', label: 'G', side: 'left', x: 172, y: 960 },
-  { color: '#635bff', label: 'S', side: 'left', x: 176, y: 1188 },
-  { color: '#ffffff', label: '31', side: 'right', x: 904, y: 720 },
-  { color: '#ffffff', label: 'cloud', side: 'right', x: 906, y: 960 },
-  { color: '#ffffff', label: 'slack', side: 'right', x: 904, y: 1188 },
+const integrationOrbitMocks: IntegrationOrbitMock[] = [
+  { accent: '#225f42', label: 'Hub', metric: '6 fontes', status: 'Connected', title: 'Integration hub' },
+  { accent: '#3f6d91', label: 'Catalog', metric: '42 apps', status: 'Indexed', title: 'Connector catalog' },
+  { accent: '#6f8f7b', label: 'Pipeline', metric: '4 etapas', status: 'Syncing', title: 'Sync pipeline' },
+  { accent: '#c28f2c', label: 'Health', metric: '98% SLA', status: 'Watching', title: 'Health matrix' },
+  { accent: '#8b6f9d', label: 'Mapping', metric: '128 campos', status: 'Mapped', title: 'Field mapping' },
+  { accent: '#2b7ea5', label: 'Warehouse', metric: '2.1m linhas', status: 'Streaming', title: 'Data warehouse' },
 ]
 
 function progress(frame: number, start: number, end: number) {
@@ -354,135 +354,231 @@ function CognitoBrand() {
   )
 }
 
-function IntegrationLogo({ node }: { node: IntegrationNode }) {
+function IntegrationOrbitMockCard({ active = false, mock, scale = 1 }: { active?: boolean; mock: IntegrationOrbitMock; scale?: number }) {
   return (
     <div
       style={{
-        alignItems: 'center',
-        background: node.color,
-        borderRadius: 999,
-        boxShadow: '0 18px 42px rgba(15, 23, 42, 0.12)',
-        color: node.label === 'G' ? '#4285f4' : node.label === 'slack' ? '#36c5f0' : node.label === 'cloud' ? '#1683d8' : node.label === '31' ? '#1a73e8' : '#ffffff',
-        display: 'flex',
-        fontSize: node.label === 'chimp' ? 30 : 32,
-        fontWeight: 900,
-        height: 72,
-        justifyContent: 'center',
-        left: node.x - 36,
-        position: 'absolute',
-        top: node.y - 36,
-        width: 72,
-        zIndex: 8,
+        background: active ? '#102019' : '#ffffff',
+        border: `1px solid ${active ? '#102019' : '#dfe7e1'}`,
+        borderRadius: 24 * scale,
+        boxShadow: active ? '0 34px 90px rgba(20,24,22,0.22)' : '0 18px 46px rgba(20,24,22,0.12)',
+        color: active ? '#ffffff' : '#0f1512',
+        display: 'grid',
+        gap: 15 * scale,
+        minHeight: 228 * scale,
+        overflow: 'hidden',
+        padding: 22 * scale,
+        position: 'relative',
+        width: 318 * scale,
       }}
     >
-      {node.label === 'chimp' ? (
-        <span style={{ color: '#111111', fontSize: 28 }}>@</span>
-      ) : node.label === 'cloud' ? (
-        <span style={{ color: '#1683d8', fontSize: 34 }}>~</span>
-      ) : node.label === 'slack' ? (
-        <span style={{ color: '#e01e5a', fontSize: 34 }}>*</span>
-      ) : (
-        node.label
-      )}
-    </div>
-  )
-}
-
-function AnimatedIntegrationPath({ node, index }: { node: IntegrationNode; index: number }) {
-  const frame = useCurrentFrame()
-  const centerX = 540
-  const centerY = 960
-  const joinX = node.side === 'left' ? 358 : 722
-  const p = progress(frame, 40 + index * 14, 120 + index * 14)
-  const dashOffset = -((frame * 4 + index * 18) % 60)
-  const d = `M ${node.x + (node.side === 'left' ? 46 : -46)} ${node.y} C ${node.side === 'left' ? node.x + 110 : node.x - 110} ${node.y}, ${joinX} ${centerY}, ${joinX} ${centerY} L ${centerX} ${centerY}`
-
-  return (
-    <path
-      d={d}
-      fill="none"
-      stroke="#1f74e8"
-      strokeDasharray="18 22"
-      strokeDashoffset={dashOffset}
-      strokeLinecap="round"
-      strokeWidth={8}
-      style={{ opacity: p }}
-    />
-  )
-}
-
-function IntegrationHub() {
-  const frame = useCurrentFrame()
-  const pulse = 1 + Math.sin(frame / 18) * 0.035
-
-  return (
-    <div
-      style={{
-        alignItems: 'center',
-        background: '#eef0ff',
-        border: '1px solid #d3d8ee',
-        borderRadius: 18,
-        boxShadow: '0 22px 58px rgba(31, 116, 232, 0.24)',
-        display: 'flex',
-        height: 96,
-        justifyContent: 'center',
-        left: 492,
-        position: 'absolute',
-        top: 912,
-        transform: `scale(${pulse})`,
-        width: 96,
-        zIndex: 12,
-      }}
-    >
-      <span
-        style={{
-          alignItems: 'center',
-          background: '#1769ff',
-          borderRadius: 16,
-          color: '#ffffff',
-          display: 'flex',
-          fontSize: 48,
-          fontWeight: 900,
-          height: 70,
-          justifyContent: 'center',
-          width: 70,
-        }}
-      >
-        z
-      </span>
+      <span style={{ background: mock.accent, borderRadius: 999, display: 'block', height: 7 * scale, left: 0, position: 'absolute', right: 0, top: 0 }} />
+      <div style={{ alignItems: 'start', display: 'flex', gap: 14 * scale, justifyContent: 'space-between' }}>
+        <span style={{ alignItems: 'center', background: active ? 'rgba(255,255,255,0.12)' : '#f3f7f4', borderRadius: 16 * scale, color: active ? '#ffffff' : mock.accent, display: 'flex', fontSize: 18 * scale, fontWeight: 900, height: 48 * scale, justifyContent: 'center', width: 58 * scale }}>{mock.label.slice(0, 2)}</span>
+        <span style={{ background: active ? 'rgba(255,255,255,0.12)' : '#eef5f0', borderRadius: 999, color: active ? '#ffffff' : mock.accent, fontSize: 15 * scale, fontWeight: 900, padding: `${8 * scale}px ${10 * scale}px` }}>{mock.status}</span>
+      </div>
+      <div style={{ display: 'grid', gap: 8 * scale }}>
+        <span style={{ color: active ? 'rgba(255,255,255,0.64)' : '#65716a', fontSize: 15 * scale, fontWeight: 850, textTransform: 'uppercase' }}>{mock.label}</span>
+        <strong style={{ color: active ? '#ffffff' : '#0f1512', fontSize: 28 * scale, letterSpacing: 0, lineHeight: 1 }}>{mock.title}</strong>
+        <span style={{ color: active ? '#ffffff' : mock.accent, fontSize: 24 * scale, fontWeight: 900 }}>{mock.metric}</span>
+      </div>
+      <div style={{ display: 'grid', gap: 8 * scale, marginTop: 'auto' }}>
+        {[82, 58, 72].map((width, index) => <span key={width} style={{ background: index === 1 ? mock.accent : active ? 'rgba(255,255,255,0.18)' : '#e5ece7', borderRadius: 999, display: 'block', height: 8 * scale, width: `${width}%` }} />)}
+      </div>
     </div>
   )
 }
 
 export function IntegrationFlowAnimation() {
   const frame = useCurrentFrame()
-  const cardIn = progress(frame, 0, 34)
+  const sceneIn = progress(frame, 0, 38)
+  const centerX = 540
+  const centerY = 930
+  const activeIndex = Math.floor(frame / 98) % integrationOrbitMocks.length
+  const active = integrationOrbitMocks[activeIndex]
 
   return (
-    <AbsoluteFill style={{ background: '#ffffff', fontFamily: FONT_STACK, overflow: 'hidden' }}>
-      <section
-        style={{
-          background: '#f8f8f8',
-          borderRadius: 26,
-          bottom: 80,
-          left: 42,
-          opacity: cardIn,
-          position: 'absolute',
-          right: 42,
-          top: 80,
-          transform: `translateY(${(1 - cardIn) * 22}px)`,
-        }}
-      >
-        <svg height="100%" style={{ left: 0, overflow: 'visible', position: 'absolute', top: 0 }} viewBox="0 0 1080 1920" width="100%">
-          {integrationNodes.map((node, index) => (
-            <AnimatedIntegrationPath index={index} key={`${node.label}-${index}`} node={node} />
-          ))}
-        </svg>
-        {integrationNodes.map((node) => (
-          <IntegrationLogo key={`${node.label}-${node.x}`} node={node} />
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: `radial-gradient(circle at 50% 48%, ${active.accent}24, rgba(244, 247, 244, 0) 58%)`, bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Integration orbit" />
+      <svg height="100%" style={{ left: 0, opacity: sceneIn, position: 'absolute', top: 0, zIndex: 5 }} viewBox="0 0 1080 1920" width="100%">
+        {[245, 360, 475].map((radius) => (
+          <circle cx={centerX} cy={centerY} fill="none" key={radius} r={radius} stroke="rgba(34,95,66,0.13)" strokeDasharray={radius === 360 ? '18 18' : undefined} strokeWidth="3" />
         ))}
-        <IntegrationHub />
+        {integrationOrbitMocks.map((_, index) => {
+          const angle = frame / 62 + index * ((Math.PI * 2) / integrationOrbitMocks.length)
+          const radius = index % 2 === 0 ? 420 : 310
+          const x = centerX + Math.cos(angle) * radius
+          const y = centerY + Math.sin(angle) * radius
+          const d = `M ${centerX} ${centerY} L ${x} ${y}`
+          return <path d={d} fill="none" key={index} opacity="0.22" stroke={active.accent} strokeDasharray="14 16" strokeWidth="4" />
+        })}
+      </svg>
+      <div style={{ opacity: sceneIn, position: 'absolute', zIndex: 20 }}>
+        {integrationOrbitMocks.map((mock, index) => {
+          const angle = frame / 62 + index * ((Math.PI * 2) / integrationOrbitMocks.length)
+          const radius = index % 2 === 0 ? 420 : 310
+          const x = centerX + Math.cos(angle) * radius
+          const y = centerY + Math.sin(angle) * radius
+          const depth = (Math.sin(angle) + 1) / 2
+          const activeCard = index === activeIndex
+          const scale = 0.72 + depth * 0.16 + (activeCard ? 0.16 : 0)
+
+          return (
+            <div
+              key={mock.label}
+              style={{
+                left: x,
+                opacity: 0.58 + depth * 0.42,
+                position: 'absolute',
+                top: y,
+                transform: `translate(-50%, -50%) scale(${scale})`,
+                zIndex: Math.round(depth * 20) + (activeCard ? 30 : 8),
+              }}
+            >
+              <IntegrationOrbitMockCard active={activeCard} mock={mock} scale={0.92} />
+            </div>
+          )
+        })}
+      </div>
+      <div style={{ alignItems: 'center', background: '#102019', border: '1px solid #102019', borderRadius: 42, boxShadow: '0 44px 110px rgba(20,24,22,0.22)', color: '#ffffff', display: 'grid', gap: 14, height: 304, justifyItems: 'center', left: '50%', padding: 32, position: 'absolute', top: centerY, transform: `translate(-50%, -50%) scale(${0.94 + sceneIn * 0.06})`, width: 380, zIndex: 45 }}>
+        <span style={{ background: active.accent, borderRadius: 999, display: 'block', height: 18, width: 18 }} />
+        <strong style={{ color: '#ffffff', fontSize: 50, letterSpacing: 0, lineHeight: 0.98, textAlign: 'center' }}>Integration hub</strong>
+        <span style={{ color: 'rgba(255,255,255,0.68)', fontSize: 23, fontWeight: 760, textAlign: 'center' }}>Mocks orbitando o sistema central</span>
+      </div>
+      <div style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid #dfe7e1', borderRadius: 30, boxShadow: '0 30px 84px rgba(20,24,22,0.16)', left: 86, padding: 34, position: 'absolute', right: 86, top: 1350, zIndex: 50 }}>
+        <span style={{ color: active.accent, fontSize: 22, fontWeight: 900, textTransform: 'uppercase' }}>Marketing integrations</span>
+        <h2 style={{ color: '#0f1512', fontSize: 58, fontWeight: 850, letterSpacing: 0, lineHeight: 0.98, margin: '14px 0 0' }}>Hub, catálogo, pipeline, health e mapping em uma órbita viva</h2>
+      </div>
+      <GalleryFooter>Animação de integração baseada no Orbit, com mocks conectados ao hub</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+export function IntegrationHubRingsAnimation() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const centerX = 540
+  const centerY = 940
+  const activeIndex = Math.floor(frame / 94) % integrationOrbitMocks.length
+  const active = integrationOrbitMocks[activeIndex]
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: `radial-gradient(circle at 50% 48%, ${active.accent}24, rgba(244,247,244,0) 58%)`, bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Integration rings" />
+      <svg height="100%" style={{ left: 0, opacity: sceneIn, position: 'absolute', top: 0, zIndex: 5 }} viewBox="0 0 1080 1920" width="100%">
+        {[190, 320, 450].map((radius, index) => (
+          <circle cx={centerX} cy={centerY} fill="none" key={radius} r={radius} stroke={index === activeIndex % 3 ? active.accent : 'rgba(34,95,66,0.14)'} strokeDasharray="18 18" strokeDashoffset={-(frame * (index + 1.4))} strokeWidth={index === activeIndex % 3 ? 5 : 3} />
+        ))}
+      </svg>
+      {integrationOrbitMocks.map((mock, index) => {
+        const ring = index % 3
+        const radius = [190, 320, 450][ring]
+        const angle = index * ((Math.PI * 2) / integrationOrbitMocks.length) - Math.PI / 2 + frame / (130 + ring * 24)
+        const x = centerX + Math.cos(angle) * radius
+        const y = centerY + Math.sin(angle) * radius
+        const activeCard = index === activeIndex
+
+        return (
+          <div key={mock.label} style={{ left: x, opacity: sceneIn, position: 'absolute', top: y, transform: `translate(-50%, -50%) scale(${activeCard ? 0.98 : 0.72})`, zIndex: activeCard ? 45 : 20 + ring }}>
+            <IntegrationOrbitMockCard active={activeCard} mock={mock} scale={0.86} />
+          </div>
+        )
+      })}
+      <div style={{ alignItems: 'center', background: '#102019', borderRadius: 999, boxShadow: '0 36px 100px rgba(20,24,22,0.24)', color: '#ffffff', display: 'grid', gap: 8, height: 250, justifyItems: 'center', left: centerX, padding: 30, position: 'absolute', top: centerY, transform: `translate(-50%, -50%) scale(${0.92 + sceneIn * 0.08})`, width: 250, zIndex: 50 }}>
+        <span style={{ background: active.accent, borderRadius: 999, display: 'block', height: 16, width: 16 }} />
+        <strong style={{ color: '#ffffff', fontSize: 42, letterSpacing: 0, lineHeight: 1, textAlign: 'center' }}>Hub rings</strong>
+        <span style={{ color: 'rgba(255,255,255,0.68)', fontSize: 19, fontWeight: 760, textAlign: 'center' }}>Camadas de conectores por função</span>
+      </div>
+      <GalleryFooter>Integration hub em aneis concêntricos com conectores ativos</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+export function IntegrationHubMeshAnimation() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const centerX = 540
+  const centerY = 940
+  const activeIndex = Math.floor(frame / 90) % integrationOrbitMocks.length
+  const points = [
+    [210, 640],
+    [380, 420],
+    [740, 500],
+    [890, 790],
+    [760, 1190],
+    [300, 1240],
+  ]
+  const active = integrationOrbitMocks[activeIndex]
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: `radial-gradient(circle at 50% 48%, ${active.accent}24, rgba(244,247,244,0) 58%)`, bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Integration mesh" />
+      <svg height="100%" style={{ left: 0, opacity: sceneIn, position: 'absolute', top: 0, zIndex: 5 }} viewBox="0 0 1080 1920" width="100%">
+        {points.map(([x, y], index) => (
+          <path d={`M ${centerX} ${centerY} C ${(centerX + x) / 2} ${centerY - 90}, ${(centerX + x) / 2} ${y + 90}, ${x} ${y}`} fill="none" key={`${x}-${y}`} opacity={index === activeIndex ? 0.82 : 0.24} stroke={index === activeIndex ? active.accent : '#225f42'} strokeDasharray="14 18" strokeDashoffset={-(frame * 4 + index * 16)} strokeLinecap="round" strokeWidth={index === activeIndex ? 6 : 4} />
+        ))}
+        {points.map(([x, y], index) => {
+          const next = points[(index + 1) % points.length]
+          return <path d={`M ${x} ${y} L ${next[0]} ${next[1]}`} fill="none" key={`mesh-${index}`} opacity="0.14" stroke="#225f42" strokeWidth="3" />
+        })}
+      </svg>
+      {integrationOrbitMocks.map((mock, index) => {
+        const [x, y] = points[index]
+        const activeCard = index === activeIndex
+        const float = Math.sin((frame + index * 18) / 28) * 8
+
+        return (
+          <div key={mock.label} style={{ left: x, opacity: sceneIn, position: 'absolute', top: y + float, transform: `translate(-50%, -50%) scale(${activeCard ? 1 : 0.76})`, zIndex: activeCard ? 45 : 20 }}>
+            <IntegrationOrbitMockCard active={activeCard} mock={mock} scale={0.86} />
+          </div>
+        )
+      })}
+      <div style={{ alignItems: 'center', background: '#102019', borderRadius: 42, boxShadow: '0 44px 110px rgba(20,24,22,0.22)', color: '#ffffff', display: 'grid', gap: 12, height: 278, justifyItems: 'center', left: centerX, padding: 30, position: 'absolute', top: centerY, transform: `translate(-50%, -50%) scale(${0.94 + sceneIn * 0.06})`, width: 344, zIndex: 50 }}>
+        <span style={{ background: active.accent, borderRadius: 999, display: 'block', height: 18, width: 18 }} />
+        <strong style={{ color: '#ffffff', fontSize: 46, letterSpacing: 0, lineHeight: 1, textAlign: 'center' }}>Mesh hub</strong>
+        <span style={{ color: 'rgba(255,255,255,0.68)', fontSize: 21, fontWeight: 760, textAlign: 'center' }}>Conectores em rede viva</span>
+      </div>
+      <GalleryFooter>Integration hub em malha de conexões com fluxo ativo</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+export function IntegrationHubDockAnimation() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const activeIndex = Math.floor(frame / 86) % integrationOrbitMocks.length
+  const active = integrationOrbitMocks[activeIndex]
+  const packet = (frame * 5) % 520
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: `radial-gradient(circle at 50% 48%, ${active.accent}24, rgba(244,247,244,0) 58%)`, bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Integration dock" />
+      <section style={{ bottom: 210, display: 'grid', gap: 28, gridTemplateColumns: '280px 1fr 280px', left: 70, opacity: sceneIn, position: 'absolute', right: 70, top: 320, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 20 }}>
+        <div style={{ display: 'grid', gap: 22 }}>
+          {integrationOrbitMocks.slice(0, 3).map((mock, index) => <IntegrationOrbitMockCard active={index === activeIndex} key={mock.label} mock={mock} scale={0.78} />)}
+        </div>
+        <div style={{ alignItems: 'center', display: 'grid', justifyItems: 'center', position: 'relative' }}>
+          <svg height="100%" style={{ inset: 0, position: 'absolute' }} viewBox="0 0 420 780" width="100%">
+            {[120, 260, 400].map((y, index) => (
+              <path d={`M 0 ${y} C 150 ${y}, 150 390, 210 390 C 270 390, 270 ${y}, 420 ${y}`} fill="none" key={y} opacity="0.28" stroke={index === activeIndex % 3 ? active.accent : '#225f42'} strokeDasharray="14 18" strokeDashoffset={-(frame * 4)} strokeWidth="5" />
+            ))}
+          </svg>
+          <div style={{ background: '#102019', borderRadius: 46, boxShadow: '0 44px 110px rgba(20,24,22,0.22)', color: '#ffffff', display: 'grid', gap: 14, height: 330, justifyItems: 'center', padding: 36, position: 'relative', width: 360, zIndex: 20 }}>
+            <span style={{ background: active.accent, borderRadius: 999, display: 'block', height: 18, width: 18 }} />
+            <strong style={{ color: '#ffffff', fontSize: 50, letterSpacing: 0, lineHeight: 1, textAlign: 'center' }}>Dock hub</strong>
+            <span style={{ color: 'rgba(255,255,255,0.68)', fontSize: 22, fontWeight: 760, textAlign: 'center' }}>Apps entrando pelas laterais</span>
+          </div>
+          <span style={{ background: active.accent, borderRadius: 999, boxShadow: `0 0 34px ${active.accent}88`, display: 'block', height: 22, left: `${Math.min(88, 12 + packet / 6)}%`, position: 'absolute', top: '50%', transform: 'translate(-50%, -50%)', width: 22, zIndex: 30 }} />
+        </div>
+        <div style={{ display: 'grid', gap: 22 }}>
+          {integrationOrbitMocks.slice(3, 6).map((mock, index) => <IntegrationOrbitMockCard active={index + 3 === activeIndex} key={mock.label} mock={mock} scale={0.78} />)}
+        </div>
       </section>
+      <GalleryFooter>Integration hub em formato dock, com conectores alimentando o centro</GalleryFooter>
     </AbsoluteFill>
   )
 }
