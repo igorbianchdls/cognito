@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
+import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/remotion/fonts/sfPro'
 
 export type ExcelMockSheet = {
   activeCell?: string
@@ -16,7 +17,9 @@ type ExcelWorkbookMockProps = {
   style?: CSSProperties
 }
 
-const FONT_STACK = 'Geist, "Segoe UI", Arial, sans-serif'
+loadSfProFonts()
+
+const FONT_STACK = IOS_REMOTION_FONT_STACK
 const FALLBACK_SHEET: ExcelMockSheet = {
   activeCell: 'I1',
   name: 'Assumptions',

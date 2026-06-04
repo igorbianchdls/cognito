@@ -1,6 +1,9 @@
 import type { SaaSBrand, SaaSTheme } from '@/remotion/saas/types'
+import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/remotion/fonts/sfPro'
 
-export const SAAS_FONT_STACK = 'Geist, "Segoe UI", -apple-system, BlinkMacSystemFont, "SF Pro Text", Arial, sans-serif'
+loadSfProFonts()
+
+export const SAAS_FONT_STACK = IOS_REMOTION_FONT_STACK
 
 export const defaultSaaSTheme: SaaSTheme = {
   accent: '#225F42',

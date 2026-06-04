@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
+import { IOS_REMOTION_DISPLAY_FONT_STACK, IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/remotion/fonts/sfPro'
 
 export type PowerPointMockSlideLayout = 'title' | 'metrics' | 'chart' | 'bullets'
 
@@ -22,7 +23,9 @@ type PowerPointEditorMockProps = {
   title: string
 }
 
-const FONT_STACK = 'Geist, "Segoe UI", Arial, sans-serif'
+loadSfProFonts()
+
+const FONT_STACK = IOS_REMOTION_FONT_STACK
 const DEFAULT_ACCENT = '#c8a856'
 const FALLBACK_SLIDE: PowerPointMockSlide = {
   accent: DEFAULT_ACCENT,
@@ -208,8 +211,8 @@ function SlideSurface({ slide, scale = 1 }: { slide: PowerPointMockSlide; scale?
         <span style={{ background: accent, bottom: 82 * scale, display: 'block', left: 32 * scale, position: 'absolute', top: 78 * scale, width: 5 * scale }} />
         <div style={{ display: 'grid', gap: 10 * scale, left: 52 * scale, position: 'absolute', top: 94 * scale }}>
           <span style={{ color: accent, fontSize: 11 * scale, fontWeight: 760, letterSpacing: 5 * scale }}>ACME INDUSTRIAL SOLUTIONS, INC.</span>
-          <h2 style={{ color: '#ffffff', fontFamily: 'Georgia, serif', fontSize: 39 * scale, letterSpacing: 0, lineHeight: 1, margin: 0 }}>{slide.title}</h2>
-          <p style={{ color: '#f6f0e1', fontFamily: 'Georgia, serif', fontSize: 20 * scale, fontStyle: 'italic', margin: 0 }}>{slide.subtitle}</p>
+          <h2 style={{ color: '#ffffff', fontFamily: IOS_REMOTION_DISPLAY_FONT_STACK, fontSize: 39 * scale, letterSpacing: 0, lineHeight: 1, margin: 0 }}>{slide.title}</h2>
+          <p style={{ color: '#f6f0e1', fontFamily: IOS_REMOTION_DISPLAY_FONT_STACK, fontSize: 20 * scale, fontStyle: 'italic', margin: 0 }}>{slide.subtitle}</p>
           <span style={{ color: '#ffffff', fontSize: 11 * scale, fontWeight: 700, marginTop: 6 * scale }}>Pre-read for the SteerCo of Thursday, April 30, 2026</span>
         </div>
         <div style={{ bottom: 104 * scale, display: 'grid', gap: 32 * scale, gridTemplateColumns: '1fr 1fr 1fr', left: 52 * scale, position: 'absolute', right: 36 * scale }}>
@@ -220,7 +223,7 @@ function SlideSurface({ slide, scale = 1 }: { slide: PowerPointMockSlide; scale?
           ]).slice(0, 3).map((metric) => (
             <div key={metric.label} style={{ display: 'grid', gap: 8 * scale }}>
               <span style={{ background: '#9b8a55', display: 'block', height: 2 * scale }} />
-              <strong style={{ color: accent, fontFamily: 'Georgia, serif', fontSize: 24 * scale, lineHeight: 1 }}>{metric.value}</strong>
+              <strong style={{ color: accent, fontFamily: IOS_REMOTION_DISPLAY_FONT_STACK, fontSize: 24 * scale, lineHeight: 1 }}>{metric.value}</strong>
               <span style={{ color: '#ffffff', fontSize: 8 * scale, fontStyle: 'italic', fontWeight: 700 }}>{metric.label}</span>
             </div>
           ))}

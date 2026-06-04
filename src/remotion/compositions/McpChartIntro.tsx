@@ -1,5 +1,6 @@
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
 import type { CSSProperties, ReactNode } from 'react'
+import { IOS_REMOTION_DISPLAY_FONT_STACK, IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/remotion/fonts/sfPro'
 import {
   ChevronRight,
   Copy,
@@ -35,6 +36,8 @@ import { AnimatedMcpDreView } from '@/remotion/components/AnimatedMcpDreView'
 import { AnimatedMcpLineChartView } from '@/remotion/components/AnimatedMcpLineChartView'
 import { AnimatedMcpPieChartView } from '@/remotion/components/AnimatedMcpPieChartView'
 import { AnimatedMcpTableView } from '@/remotion/components/AnimatedMcpTableView'
+
+loadSfProFonts()
 
 const chartData = {
   ok: true,
@@ -590,7 +593,7 @@ function ChatGptMobileTemplate() {
       style={{
         background: '#ffffff',
         color: '#111111',
-        fontFamily: 'Geist, "Segoe UI", -apple-system, BlinkMacSystemFont, "SF Pro Text", Arial, sans-serif',
+        fontFamily: IOS_REMOTION_FONT_STACK,
       }}
     >
       <StatusBar />
@@ -690,7 +693,7 @@ const CLAUDE_MUTED = '#77746f'
 const CLAUDE_ICON = '#3f3f3a'
 const CLAUDE_ACTION = '#7b7a74'
 const CLAUDE_ACCENT = '#e17b5c'
-const CLAUDE_FONT = 'Geist, "Segoe UI", -apple-system, BlinkMacSystemFont, "SF Pro Text", Arial, sans-serif'
+const CLAUDE_FONT = IOS_REMOTION_FONT_STACK
 
 function ClaudeStatusBar() {
   return (
@@ -846,7 +849,7 @@ function ClaudeAssistantText({ children, style, includeShare = false }: { childr
       style={{
         ...style,
         color: CLAUDE_TEXT,
-        fontFamily: 'Georgia, "Times New Roman", serif',
+        fontFamily: IOS_REMOTION_DISPLAY_FONT_STACK,
         fontSize: 47,
         fontWeight: 500,
         letterSpacing: -0.7,

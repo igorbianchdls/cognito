@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
+import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/remotion/fonts/sfPro'
 
 export type PdfMockSection = {
   kind: 'text' | 'table' | 'chart' | 'icons'
@@ -22,7 +23,9 @@ type PdfViewerMockProps = {
   url?: string
 }
 
-const FONT_STACK = 'Geist, "Segoe UI", Arial, sans-serif'
+loadSfProFonts()
+
+const FONT_STACK = IOS_REMOTION_FONT_STACK
 const DEFAULT_ACCENT = '#1c8ee9'
 const FALLBACK_PAGE: PdfMockPage = {
   sections: [

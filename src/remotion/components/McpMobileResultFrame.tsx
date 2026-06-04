@@ -1,8 +1,11 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { interpolate, useCurrentFrame } from 'remotion'
+import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/remotion/fonts/sfPro'
 
 const MOBILE_RESULT_WIDTH = 430
 const MOBILE_RESULT_ZOOM = 2.08
+
+loadSfProFonts()
 
 function progress(frame: number, start: number, end: number) {
   return interpolate(frame, [start, end], [0, 1], {
@@ -42,7 +45,7 @@ export function McpMobileResultFrame({
         className="app-shell"
         style={{
           color: 'var(--cognito-text)',
-          fontFamily: 'Geist, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+          fontFamily: IOS_REMOTION_FONT_STACK,
           gap: 12,
           letterSpacing: '-0.02em',
           margin: 0,

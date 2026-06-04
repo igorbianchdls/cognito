@@ -1,11 +1,14 @@
 import type { ReactNode } from 'react'
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
 import { ReceiptText } from 'lucide-react'
+import { IOS_REMOTION_DISPLAY_FONT_STACK, IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/remotion/fonts/sfPro'
 
 export const MCP_SINGLE_ANIMATION_DURATION = 1080
 export const MCP_OPERATIONS_DEMO_DURATION = MCP_SINGLE_ANIMATION_DURATION
 
-const FONT_STACK = 'Geist, "Segoe UI", -apple-system, BlinkMacSystemFont, "SF Pro Text", Arial, sans-serif'
+loadSfProFonts()
+
+const FONT_STACK = IOS_REMOTION_FONT_STACK
 
 type IntegrationNode = {
   color: string
@@ -645,7 +648,7 @@ function AnimatedNewsAnimationCard() {
         }}
       >
         <div style={{ alignItems: 'center', borderBottom: '1px solid #e5ece7', display: 'flex', height: 86, justifyContent: 'space-between', padding: '0 32px' }}>
-          <strong style={{ color: '#0f1512', fontFamily: 'Georgia, serif', fontSize: 34, letterSpacing: 0 }}>The Finance Ledger</strong>
+          <strong style={{ color: '#0f1512', fontFamily: IOS_REMOTION_DISPLAY_FONT_STACK, fontSize: 34, letterSpacing: 0 }}>The Finance Ledger</strong>
           <div style={{ alignItems: 'center', color: '#65716a', display: 'flex', fontSize: 18, fontWeight: 800, gap: 14 }}>
             <span>{active.source}</span>
             <span style={{ background: '#edf4ef', borderRadius: 999, color: active.accent, padding: '8px 12px' }}>{active.time}</span>
@@ -659,7 +662,7 @@ function AnimatedNewsAnimationCard() {
             <span style={{ background: '#dce6df', display: 'block', flex: 1, height: 1 }} />
           </div>
 
-          <h1 style={{ color: '#0f1512', fontFamily: 'Georgia, serif', fontSize: 72, fontWeight: 800, letterSpacing: 0, lineHeight: 0.98, margin: 0, opacity: headlineIn, transform: `translateY(${(1 - headlineIn) * 24}px)` }}>
+          <h1 style={{ color: '#0f1512', fontFamily: IOS_REMOTION_DISPLAY_FONT_STACK, fontSize: 72, fontWeight: 800, letterSpacing: 0, lineHeight: 0.98, margin: 0, opacity: headlineIn, transform: `translateY(${(1 - headlineIn) * 24}px)` }}>
             {active.headline}
           </h1>
 
