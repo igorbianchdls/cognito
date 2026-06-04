@@ -1337,6 +1337,99 @@ function SaaSTimelineGalleryAnimationCard() {
   )
 }
 
+function SaaSMosaicGalleryAnimationCard() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const activeIndex = Math.floor(frame / 126) % galleryItems.length
+  const active = galleryItems[activeIndex]
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: `radial-gradient(circle at 50% 48%, ${active.accent}22, rgba(244, 247, 244, 0) 58%)`, bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Mosaic gallery" />
+      <section
+        style={{
+          display: 'grid',
+          gap: 22,
+          gridTemplateColumns: '1.35fr 0.65fr',
+          gridTemplateRows: '360px 250px 250px',
+          left: 68,
+          opacity: sceneIn,
+          position: 'absolute',
+          right: 68,
+          top: 280,
+          transform: `translateY(${(1 - sceneIn) * 34}px)`,
+          zIndex: 20,
+        }}
+      >
+        {galleryItems.map((item, index) => {
+          const p = progress(frame, 18 + index * 12, 66 + index * 12)
+          const featured = index === activeIndex
+          const slot = (index - activeIndex + galleryItems.length) % galleryItems.length
+          const gridColumn = featured ? '1 / 2' : slot === 1 || slot === 2 ? '2 / 3' : undefined
+          const gridRow = featured ? '1 / 4' : slot === 1 ? '1 / 2' : slot === 2 ? '2 / 3' : undefined
+          const visible = featured || slot <= 4
+
+          if (!visible) {
+            return null
+          }
+
+          return (
+            <div
+              key={`${item.title}-${index}`}
+              style={{
+                background: featured ? '#102019' : '#ffffff',
+                border: `1px solid ${featured ? '#102019' : '#dfe7e1'}`,
+                borderRadius: featured ? 34 : 26,
+                boxShadow: featured ? '0 44px 110px rgba(20,24,22,0.22)' : '0 22px 58px rgba(20,24,22,0.12)',
+                color: featured ? '#ffffff' : '#0f1512',
+                display: 'grid',
+                gap: featured ? 28 : 16,
+                gridColumn,
+                gridRow,
+                minHeight: slot === 3 || slot === 4 ? 250 : undefined,
+                opacity: p,
+                overflow: 'hidden',
+                padding: featured ? 34 : 24,
+                position: 'relative',
+                transform: `translateY(${(1 - p) * 28}px) scale(${0.96 + p * 0.04})`,
+              }}
+            >
+              <span style={{ background: item.accent, borderRadius: 999, display: 'block', height: 8, left: 0, position: 'absolute', right: 0, top: 0 }} />
+              <div style={{ alignItems: 'start', display: 'flex', justifyContent: 'space-between' }}>
+                <div style={{ display: 'grid', gap: 8 }}>
+                  <span style={{ color: featured ? 'rgba(255,255,255,0.68)' : '#65716a', fontSize: featured ? 22 : 17, fontWeight: 850, textTransform: 'uppercase' }}>{item.label}</span>
+                  <strong style={{ color: featured ? '#ffffff' : '#0f1512', fontSize: featured ? 60 : 27, letterSpacing: 0, lineHeight: 0.98 }}>{item.title}</strong>
+                </div>
+                <span style={{ background: featured ? 'rgba(255,255,255,0.13)' : '#f3f7f4', borderRadius: featured ? 18 : 15, color: featured ? '#ffffff' : item.accent, fontSize: featured ? 26 : 20, fontWeight: 900, padding: featured ? '13px 17px' : '10px 12px' }}>{item.value}</span>
+              </div>
+              <div style={{ display: 'grid', gap: featured ? 18 : 11, gridTemplateColumns: 'repeat(3, 1fr)', marginTop: featured ? 18 : 'auto' }}>
+                {[0, 1, 2, 3, 4, 5].map((tile) => (
+                  <span
+                    key={tile}
+                    style={{
+                      background: tile === index % 6 ? item.accent : featured ? 'rgba(255,255,255,0.16)' : '#e5ece7',
+                      borderRadius: featured ? 18 : 13,
+                      display: 'block',
+                      height: featured ? (tile === 0 ? 180 : 116) : 48,
+                    }}
+                  />
+                ))}
+              </div>
+              {featured ? (
+                <div style={{ alignItems: 'end', display: 'flex', gap: 12, height: 240, marginTop: 'auto' }}>
+                  {[88, 138, 112, 196, 150, 228, 178].map((height, bar) => <span key={height} style={{ background: bar === 4 ? item.accent : 'rgba(255,255,255,0.20)', borderRadius: 10, flex: 1, height }} />)}
+                </div>
+              ) : null}
+            </div>
+          )
+        })}
+      </section>
+      <GalleryFooter>Galeria mosaic com uma tela dominante e previews ao redor</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
 function SaaSSpotlightGalleryAnimationCard() {
   const frame = useCurrentFrame()
   const sceneIn = progress(frame, 0, 38)
@@ -4049,6 +4142,10 @@ export function SaaSMasonryGalleryAnimation() {
 
 export function SaaSTimelineGalleryAnimation() {
   return <SaaSTimelineGalleryAnimationCard />
+}
+
+export function SaaSMosaicGalleryAnimation() {
+  return <SaaSMosaicGalleryAnimationCard />
 }
 
 export function SaaSSpotlightGalleryAnimation() {
