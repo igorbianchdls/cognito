@@ -96,7 +96,6 @@ import {
   DashboardMock,
   DataRowSweep,
   DeltaBadgeMotion,
-  FeatureMatrix,
   FloatingScreenshot,
   FocusRect,
   GaugeMotion,
@@ -115,7 +114,6 @@ import {
   MouseClick,
   NumberTicker,
   PhoneFrame,
-  PricingCard,
   PromptInputHeroMock,
   ProgressBar,
   ProgressRing,
@@ -130,13 +128,11 @@ import {
   TableMock,
   TabletFrame,
   TaskCompletionList,
-  TestimonialCard,
   TextScramble,
   TextHighlightSweep,
   TooltipCallout,
   TypingText,
   UnderlineDraw,
-  UseCaseCard,
   WordReveal,
   ZoomToRegion,
   RotatingWords,
@@ -650,56 +646,31 @@ function InstagramPostDemo() {
 }
 
 function PromptInputHeroDemo() {
-  return (
-    <DemoStage compact>
-      <PromptInputHeroMock theme={theme} />
-    </DemoStage>
-  )
-}
+  const frame = useCurrentFrame()
+  const sceneIn = previewProgress(frame, 0, 34)
+  const float = Math.sin(frame / 26) * 10
 
-function TestimonialDemo() {
   return (
-    <DemoStage compact>
-      <TestimonialCard author="Marina Costa" metric={{ label: 'Close cycle reduction', value: '68%' }} quote="The product turned our weekly reporting process into a live operating rhythm." role="VP Finance, Northstar" theme={theme} />
-    </DemoStage>
-  )
-}
-
-function PricingDemo() {
-  return (
-    <DemoStage compact>
-      <div style={{ display: 'grid', gap: 18, gridTemplateColumns: '1fr 1fr', margin: '0 auto', maxWidth: 860 }}>
-        <PricingCard features={['Dashboards', 'Reports', 'Approvals']} name="Growth" price="$49" theme={theme} />
-        <PricingCard features={['Automations', 'Audit logs', 'SAML']} highlighted name="Scale" price="$149" theme={theme} />
-      </div>
-    </DemoStage>
-  )
-}
-
-function FeatureMatrixDemo() {
-  return (
-    <DemoStage compact>
-      <FeatureMatrix
-        features={[
-          { description: 'Connects ERP, CRM and revenue systems.', metric: 'Live', title: 'Data sync' },
-          { description: 'Routes exceptions to owners with status.', metric: 'Automated', title: 'Approvals' },
-          { description: 'Creates board-ready narratives.', metric: 'Export', title: 'Reports' },
-        ]}
-        theme={theme}
-      />
-    </DemoStage>
-  )
-}
-
-function UseCaseDemo() {
-  return (
-    <DemoStage compact>
-      <div style={{ display: 'grid', gap: 18, gridTemplateColumns: 'repeat(3, 1fr)' }}>
-        <UseCaseCard description="Spot risk before month-end." metric="Finance" theme={theme} title="Close management" />
-        <UseCaseCard description="Route approvals and follow-ups." metric="Ops" theme={theme} title="Workflow control" />
-        <UseCaseCard description="Turn live data into narratives." metric="Board" theme={theme} title="Executive reporting" />
-      </div>
-    </DemoStage>
+    <div style={{ background: '#0f1512', color: '#ffffff', fontFamily: theme.fontFamily, height: '100%', overflow: 'hidden', position: 'relative', width: '100%' }}>
+      <div style={{ background: `radial-gradient(circle at 50% 42%, ${theme.accent}44, transparent 56%)`, inset: -180, opacity: sceneIn, position: 'absolute' }} />
+      <div style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)', backgroundSize: '86px 86px', inset: 0, opacity: 0.32, position: 'absolute', transform: `translateY(${frame * -0.35}px)` }} />
+      <header style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', left: 58, position: 'absolute', right: 58, top: 64, zIndex: 20 }}>
+        <strong style={{ color: '#ffffff', fontSize: 34, fontWeight: 900, letterSpacing: 0 }}>Cognito</strong>
+        <span style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 999, color: '#ffffff', fontSize: 22, fontWeight: 850, padding: '12px 16px' }}>AI prompt</span>
+      </header>
+      <section style={{ left: 70, opacity: sceneIn, position: 'absolute', right: 70, top: 360, transform: `translateY(${(1 - sceneIn) * 34 + float}px)`, zIndex: 10 }}>
+        <PromptInputHeroMock prompt="Crie um video executivo para apresentar as integrações do produto" theme={theme} />
+      </section>
+      <aside style={{ alignItems: 'center', bottom: 330, display: 'grid', gap: 28, position: 'absolute', right: 42, zIndex: 30 }}>
+        {['+', 'AI', '^'].map((label, index) => (
+          <span key={label} style={{ alignItems: 'center', background: index === 1 ? theme.accent : 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 24, fontWeight: 900, height: 68, justifyContent: 'center', width: 68 }}>{label}</span>
+        ))}
+      </aside>
+      <footer style={{ bottom: 74, display: 'grid', gap: 14, left: 58, position: 'absolute', right: 150, zIndex: 20 }}>
+        <strong style={{ color: '#ffffff', fontSize: 36, fontWeight: 900, letterSpacing: 0 }}>Prompt input para vídeos sociais</strong>
+        <span style={{ color: 'rgba(255,255,255,0.68)', fontSize: 24, fontWeight: 720, lineHeight: 1.25 }}>Composer vertical no formato Reels/TikTok, com digitação animada.</span>
+      </footer>
+    </div>
   )
 }
 
@@ -1386,46 +1357,13 @@ const catalog: CatalogItem[] = [
     code: '<PromptInputHeroMock prompt="Create an executive launch video..." theme={theme} />',
     component: PromptInputHeroDemo,
     description: 'Composer de prompt no estilo ChatGPT/Claude, centralizado e com texto digitando.',
+    duration: MCP_SINGLE_ANIMATION_DURATION,
+    height: 1920,
     kind: 'Marketing',
     label: 'PromptInputHeroMock',
     tags: ['Prompt', 'AI', 'Typing'],
     value: 'prompt-input-hero',
-  },
-  {
-    code: '<TestimonialCard quote="..." author="..." theme={theme} />',
-    component: TestimonialDemo,
-    description: 'Card de depoimento com métrica opcional.',
-    kind: 'Marketing',
-    label: 'TestimonialCard',
-    tags: ['Quote', 'Customer', 'Proof'],
-    value: 'testimonial-card',
-  },
-  {
-    code: '<PricingCard highlighted name="Scale" price="$149" features={features} theme={theme} />',
-    component: PricingDemo,
-    description: 'Card de pricing para planos, upsell e packaging.',
-    kind: 'Marketing',
-    label: 'PricingCard',
-    tags: ['Pricing', 'Plan', 'CTA'],
-    value: 'pricing-card',
-  },
-  {
-    code: '<FeatureMatrix features={features} theme={theme} />',
-    component: FeatureMatrixDemo,
-    description: 'Matriz de features para diferenciais e comparação.',
-    kind: 'Marketing',
-    label: 'FeatureMatrix',
-    tags: ['Features', 'Matrix', 'Compare'],
-    value: 'feature-matrix',
-  },
-  {
-    code: '<UseCaseCard title="Close management" metric="Finance" theme={theme} />',
-    component: UseCaseDemo,
-    description: 'Cards de caso de uso por persona, função ou segmento.',
-    kind: 'Marketing',
-    label: 'UseCaseCard',
-    tags: ['Use case', 'Persona', 'Cards'],
-    value: 'use-case-card',
+    width: 1080,
   },
   {
     code: '<BeforeAfterSlider before={...} after={...} theme={theme} />',
