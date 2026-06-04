@@ -135,7 +135,7 @@ import {
   RotatingWords,
 } from '@/remotion/saas/index'
 
-type CatalogKind = 'Componentes' | 'Mockups' | 'Motion' | 'Marketing' | 'Galerias' | 'Animações' | 'Templates'
+type CatalogKind = 'Componentes' | 'Mockups' | 'Motion' | 'Tipografia Animada' | 'Marketing' | 'Galerias' | 'Animações' | 'Templates'
 
 type CatalogItem = {
   code: string
@@ -1001,7 +1001,7 @@ const catalog: CatalogItem[] = [
     code: '<TypingText text="Generate report..." theme={theme} />',
     component: TypingTextDemo,
     description: 'Texto digitando para AI assistants e command bars.',
-    kind: 'Motion',
+    kind: 'Tipografia Animada',
     label: 'TypingText',
     tags: ['Typing', 'AI', 'Text'],
     value: 'typing-text',
@@ -1046,7 +1046,7 @@ const catalog: CatalogItem[] = [
     code: '<WordReveal text="Close finance work faster" theme={theme} />',
     component: WordRevealDemo,
     description: 'Revela palavras em sequência para headlines premium.',
-    kind: 'Motion',
+    kind: 'Tipografia Animada',
     label: 'WordReveal',
     tags: ['Text', 'Headline', 'Reveal'],
     value: 'word-reveal',
@@ -1055,7 +1055,7 @@ const catalog: CatalogItem[] = [
     code: '<RotatingWords prefix="Build reports" words={words} suffix="than before" theme={theme} />',
     component: RotatingWordsDemo,
     description: 'Alterna palavras em uma frase sem remontar o layout.',
-    kind: 'Motion',
+    kind: 'Tipografia Animada',
     label: 'RotatingWords',
     tags: ['Text', 'Loop', 'Headline'],
     value: 'rotating-words',
@@ -1064,7 +1064,7 @@ const catalog: CatalogItem[] = [
     code: '<TextHighlightSweep text="Turn live data into narrative" theme={theme} />',
     component: TextHighlightSweepDemo,
     description: 'Sweep de destaque para frases e claims importantes.',
-    kind: 'Motion',
+    kind: 'Tipografia Animada',
     label: 'TextHighlightSweep',
     tags: ['Text', 'Highlight', 'Sweep'],
     value: 'text-highlight-sweep',
@@ -1136,7 +1136,7 @@ const catalog: CatalogItem[] = [
     code: '<CharacterReveal text="Launch faster" theme={theme} />',
     component: CharacterRevealDemo,
     description: 'Revela caracteres individualmente para títulos curtos.',
-    kind: 'Motion',
+    kind: 'Tipografia Animada',
     label: 'CharacterReveal',
     tags: ['Text', 'Characters', 'Reveal'],
     value: 'character-reveal',
@@ -1145,7 +1145,7 @@ const catalog: CatalogItem[] = [
     code: '<TextScramble text="BOARD REPORT READY" theme={theme} />',
     component: TextScrambleDemo,
     description: 'Scramble de texto que resolve no conteúdo final.',
-    kind: 'Motion',
+    kind: 'Tipografia Animada',
     label: 'TextScramble',
     tags: ['Text', 'Scramble', 'Premium'],
     value: 'text-scramble',
@@ -1154,7 +1154,7 @@ const catalog: CatalogItem[] = [
     code: '<GradientTextSweep text="Automate the work..." theme={theme} />',
     component: GradientTextSweepDemo,
     description: 'Sweep de gradiente passando pelo texto.',
-    kind: 'Motion',
+    kind: 'Tipografia Animada',
     label: 'GradientTextSweep',
     tags: ['Text', 'Gradient', 'Sweep'],
     value: 'gradient-text-sweep',
@@ -1163,7 +1163,7 @@ const catalog: CatalogItem[] = [
     code: '<UnderlineDraw text="Reduce manual close work" theme={theme} />',
     component: UnderlineDrawDemo,
     description: 'Underline animado para destacar claims.',
-    kind: 'Motion',
+    kind: 'Tipografia Animada',
     label: 'UnderlineDraw',
     tags: ['Text', 'Underline', 'Claim'],
     value: 'underline-draw',
@@ -1926,10 +1926,10 @@ const catalog: CatalogItem[] = [
   },
 ]
 
-const kinds: Array<'Todos' | CatalogKind> = ['Todos', 'Componentes', 'Mockups', 'Motion', 'Marketing', 'Galerias', 'Animações', 'Templates']
+const kinds: Array<'Todos' | CatalogKind> = ['Todos', 'Componentes', 'Mockups', 'Motion', 'Tipografia Animada', 'Marketing', 'Galerias', 'Animações', 'Templates']
 
 function Thumbnail({ item }: { item: CatalogItem }) {
-  const color = item.kind === 'Motion' ? '#245BDB' : item.kind === 'Marketing' ? '#C28F2C' : item.kind === 'Galerias' ? '#7C3AED' : item.kind === 'Animações' ? '#0EA5E9' : item.kind === 'Templates' ? '#9333EA' : item.kind === 'Mockups' ? '#22A06B' : '#101828'
+  const color = item.kind === 'Motion' ? '#245BDB' : item.kind === 'Tipografia Animada' ? '#DB2777' : item.kind === 'Marketing' ? '#C28F2C' : item.kind === 'Galerias' ? '#7C3AED' : item.kind === 'Animações' ? '#0EA5E9' : item.kind === 'Templates' ? '#9333EA' : item.kind === 'Mockups' ? '#22A06B' : '#101828'
   return (
     <div style={{ background: '#F8FBF9', border: '1px solid #E3E8EF', borderRadius: 12, display: 'grid', gap: 10, height: 96, padding: 12 }}>
       <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
