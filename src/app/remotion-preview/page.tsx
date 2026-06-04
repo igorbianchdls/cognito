@@ -1793,7 +1793,7 @@ const catalog: CatalogItem[] = [
   {
     code: '<ClaudeMobileAnimation />',
     component: ClaudeMobileAnimation,
-    description: 'Claude em mock mobile para posts, demos e vídeos sociais.',
+    description: 'Claude mobile em tela cheia para posts, demos e vídeos sociais.',
     duration: MCP_SINGLE_ANIMATION_DURATION,
     height: 1920,
     kind: 'Marketing',
