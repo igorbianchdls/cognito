@@ -2552,9 +2552,10 @@ function ClaudeFlowAssistantText({ children, style }: { children: ReactNode; sty
 function ClaudeToolResultCard({ children, style }: { children: ReactNode; style: CSSProperties }) {
   return (
     <div
+      className="claude-tool-result-card"
       style={{
         ...style,
-        background: '#fffefa',
+        background: 'transparent',
         border: '1px solid #dfddd8',
         borderRadius: 28,
         boxShadow: '0 14px 38px rgba(20, 24, 22, 0.10)',
@@ -2591,6 +2592,25 @@ function ClaudeMobileScreenshot() {
 
   return (
     <AbsoluteFill style={{ background: '#fbfaf8', color: '#111111', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <style>
+        {`
+          .claude-tool-result-card,
+          .claude-tool-result-card .app-shell,
+          .claude-tool-result-card .chart-card,
+          .claude-tool-result-card .table-card,
+          .claude-tool-result-card .dashboard-card,
+          .claude-tool-result-card .catalog-panel,
+          .claude-tool-result-card .analysis-panel {
+            background: transparent !important;
+          }
+
+          .claude-tool-result-card {
+            --cognito-bg: transparent;
+            --cognito-surface: transparent;
+            --cognito-surface-muted: transparent;
+          }
+        `}
+      </style>
       <ClaudeStatusBar />
 
       <Menu color="#333330" size={47} strokeWidth={2.4} style={{ left: 61, position: 'absolute', top: 161 }} />
