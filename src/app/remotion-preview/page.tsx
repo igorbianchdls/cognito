@@ -752,19 +752,20 @@ function MetaAdsManagerDemo() {
 
   return (
     <div style={{ background: '#000000', color: '#1c1e21', fontFamily: metaFont, height: '100%', overflow: 'hidden', position: 'relative', width: '100%' }}>
-      <section style={{ background: '#f5f6f7', boxShadow: '0 28px 90px rgba(0,0,0,0.45)', height: 560, left: 18, opacity: sceneIn, overflow: 'hidden', position: 'absolute', right: 18, top: 650, transform: `translateY(${(1 - sceneIn) * 26}px)`, zIndex: 10 }}>
-        <header style={{ alignItems: 'center', background: '#f0f2f5', borderBottom: '1px solid #ccd0d5', display: 'grid', gridTemplateColumns: '74px 1fr 300px', height: 34, padding: '0 12px' }}>
+      <section style={{ background: '#f5f6f7', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 14, boxShadow: '0 28px 90px rgba(0,0,0,0.45)', height: 600, left: 18, opacity: sceneIn, overflow: 'hidden', position: 'absolute', right: 18, top: 630, transform: `translateY(${(1 - sceneIn) * 26}px)`, zIndex: 10 }}>
+        <header style={{ alignItems: 'center', background: 'linear-gradient(#f7f8fa, #eceef2)', borderBottom: '1px solid #c7cbd1', display: 'grid', gridTemplateColumns: '74px 44px 1fr 88px', height: 40, padding: '0 12px' }}>
           <div style={{ display: 'flex', gap: 6 }}>
-            {['#d8dbe0', '#d8dbe0', '#d8dbe0'].map((color, index) => <span key={`${color}-${index}`} style={{ background: color, borderRadius: 999, height: 8, width: 8 }} />)}
+            {['#ff5f57', '#ffbd2e', '#28c840'].map((color) => <span key={color} style={{ background: color, border: '1px solid rgba(0,0,0,0.10)', borderRadius: 999, height: 10, width: 10 }} />)}
           </div>
-          <span style={{ background: '#ffffff', border: '1px solid #ccd0d5', borderRadius: 4, color: '#65676b', fontSize: 10, fontWeight: 400, padding: '5px 10px' }}>business.facebook.com/latest/adsmanager/manage</span>
-          <div style={{ alignItems: 'center', display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-            <span style={{ color: '#65676b', fontSize: 10, fontWeight: 400 }}>Updated 18 minutes ago</span>
-            <span style={{ background: '#1877f2', borderRadius: 4, color: '#ffffff', fontSize: 10, fontWeight: 600, padding: '6px 10px' }}>Review</span>
+          <span style={{ color: '#606770', fontSize: 14, fontWeight: 500, letterSpacing: 0 }}>‹ ›</span>
+          <span style={{ background: '#ffffff', border: '1px solid #cdd1d6', borderRadius: 7, boxShadow: 'inset 0 1px 1px rgba(0,0,0,0.03)', color: '#606770', fontSize: 10, fontWeight: 400, justifySelf: 'stretch', padding: '7px 12px', textAlign: 'center' }}>business.facebook.com/latest/adsmanager/manage</span>
+          <div style={{ alignItems: 'center', color: '#606770', display: 'flex', fontSize: 14, fontWeight: 600, gap: 14, justifyContent: 'flex-end' }}>
+            <span>↻</span>
+            <span>⤴</span>
           </div>
         </header>
 
-        <main style={{ display: 'grid', gridTemplateColumns: '44px 1fr', height: 526 }}>
+        <main style={{ display: 'grid', gridTemplateColumns: '44px 1fr', height: 560 }}>
           <aside style={{ alignItems: 'center', background: '#ffffff', borderRight: '1px solid #dadde1', display: 'flex', flexDirection: 'column', gap: 13, paddingTop: 14 }}>
             <span style={{ color: '#1877f2', fontSize: 18, fontWeight: 700 }}>∞</span>
             {sideIcons.map((icon, index) => (
