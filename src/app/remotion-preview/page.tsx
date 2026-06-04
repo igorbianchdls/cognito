@@ -874,11 +874,12 @@ function AIScanOverlayDemo() {
   const frame = useCurrentFrame()
   const sceneIn = previewProgress(frame, 0, 34)
   const activeScene = Math.floor(frame / 58) % 3
-  const loop = frame % 116
-  const scanX = interpolate(loop, [0, 30, 58, 86, 115], [168, 254, 214, 122, 168])
-  const scanY = interpolate(loop, [0, 30, 58, 86, 115], [412, 528, 716, 596, 412])
-  const scanWidth = interpolate(loop, [0, 30, 58, 86, 115], [696, 610, 672, 744, 696])
-  const scanHeight = interpolate(loop, [0, 30, 58, 86, 115], [176, 242, 206, 278, 176])
+  const loop = frame % 136
+  const scanFrames = [0, 24, 34, 58, 68, 92, 102, 126, 135]
+  const scanX = interpolate(loop, scanFrames, [24, 24, 34, 34, 34, 34, 34, 34, 24])
+  const scanY = interpolate(loop, scanFrames, [24, 24, 146, 146, 274, 274, 548, 548, 24])
+  const scanWidth = interpolate(loop, scanFrames, [868, 868, 848, 848, 848, 848, 848, 848, 868])
+  const scanHeight = interpolate(loop, scanFrames, [96, 96, 106, 106, 144, 144, 314, 314, 96])
   const sweep = (frame * 5.2) % 900
   const pulse = interpolate(Math.sin(frame / 5), [-1, 1], [0.72, 1])
   const sources = [
@@ -951,8 +952,8 @@ function AIScanOverlayDemo() {
           <div style={{ background: 'rgba(244,63,94,0.22)', border: '4px solid rgba(153,27,27,0.96)', borderRadius: 18, boxShadow: `0 0 ${34 + pulse * 30}px rgba(239,68,68,0.46)`, height: scanHeight, left: scanX, opacity: 0.98, overflow: 'hidden', position: 'absolute', top: scanY, width: scanWidth }}>
             <span style={{ background: 'linear-gradient(180deg, transparent, rgba(255,255,255,0.65), transparent)', height: 86, left: 0, position: 'absolute', right: 0, top: `${(sweep % 320) - 96}px` }} />
             <span style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.54), transparent)', bottom: 0, left: sweep - 220, position: 'absolute', top: 0, transform: 'skewX(-18deg)', width: 136 }} />
-            {[0, 1, 2].map((line) => (
-              <span key={line} style={{ background: 'rgba(153,27,27,0.30)', height: 2, left: 16, position: 'absolute', right: 16, top: 42 + line * 54 }} />
+            {[0, 1, 2, 3].map((line) => (
+              <span key={line} style={{ background: 'rgba(153,27,27,0.30)', height: 2, left: 16, opacity: line * 54 + 42 < scanHeight - 18 ? 1 : 0, position: 'absolute', right: 16, top: 42 + line * 54 }} />
             ))}
             <span style={{ background: 'rgba(153,27,27,0.98)', borderRadius: 999, color: '#ffffff', fontSize: 15, fontWeight: 950, left: 14, letterSpacing: 0.6, padding: '8px 11px', position: 'absolute', textTransform: 'uppercase', top: 14 }}>AI Scan</span>
             <span style={{ borderLeft: '4px solid #991b1b', borderTop: '4px solid #991b1b', height: 30, left: 10, position: 'absolute', top: 10, width: 30 }} />
