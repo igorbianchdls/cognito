@@ -2184,7 +2184,7 @@ function ClaudeActionRow({ second = false }: { second?: boolean }) {
   )
 }
 
-function ClaudeBubble({ children, top, width }: { children: ReactNode; top: number; width: number }) {
+function ClaudeBubble({ children, top }: { children: ReactNode; top: number }) {
   return (
     <div
       style={{
@@ -2192,20 +2192,22 @@ function ClaudeBubble({ children, top, width }: { children: ReactNode; top: numb
         background: '#f1f0ee',
         border: '1px solid #dfddd8',
         borderRadius: 68,
+        boxSizing: 'border-box',
         color: '#111111',
         display: 'flex',
         fontFamily: FONT_STACK,
-        fontSize: 44,
-        fontWeight: 520,
+        fontSize: 42,
+        fontWeight: 430,
         height: 106,
         justifyContent: 'center',
         letterSpacing: 0,
         lineHeight: 1,
-        padding: '0 32px',
+        maxWidth: 620,
+        padding: '0 34px',
         position: 'absolute',
         right: 42,
         top,
-        width,
+        width: 'max-content',
       }}
     >
       {children}
@@ -2234,7 +2236,7 @@ function ClaudeMobileScreenshot() {
       </div>
       <MoreHorizontal color="#333330" size={50} strokeWidth={3.2} style={{ left: 969, position: 'absolute', top: 158 }} />
 
-      <ClaudeBubble top={222} width={105}>Olá</ClaudeBubble>
+      <ClaudeBubble top={222}>Olá</ClaudeBubble>
 
       <div style={{ color: '#111111', fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 47, fontWeight: 500, left: 42, letterSpacing: 0, lineHeight: 1.12, position: 'absolute', top: 392, whiteSpace: 'nowrap' }}>
         Olá, Igor! Como posso ajudar?
@@ -2243,7 +2245,7 @@ function ClaudeMobileScreenshot() {
         <ClaudeActionRow />
       </div>
 
-      <ClaudeBubble top={558} width={398}>Tudo bem com você?</ClaudeBubble>
+      <ClaudeBubble top={558}>Tudo bem com você?</ClaudeBubble>
 
       <div style={{ color: '#111111', fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 47, fontWeight: 500, left: 42, letterSpacing: 0, lineHeight: 1.43, position: 'absolute', top: 724, width: 994 }}>
         Tudo bem, obrigado! E com você? Alguma coisa no radar hoje — produto, tech, ou só curiosidade do dia?
