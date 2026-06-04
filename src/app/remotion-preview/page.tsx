@@ -836,61 +836,97 @@ function MetaAdsManagerDemo() {
 function AdLibraryDemo() {
   const frame = useCurrentFrame()
   const sceneIn = previewProgress(frame, 0, 34)
-  const activeIndex = Math.floor(frame / 38) % 6
-  const creatives = [
-    { format: 'Vídeo', metric: 'CTR 2.8%', name: 'Integrações em 30s', tone: '#2563eb' },
-    { format: 'Imagem', metric: 'ROAS 5.1x', name: 'Fechamento mensal', tone: '#16a34a' },
-    { format: 'Carrossel', metric: 'CPA R$ 42', name: 'Board report', tone: '#7c3aed' },
-    { format: 'Stories', metric: 'CPL R$ 18', name: 'Demo CFO', tone: '#f59e0b' },
-    { format: 'Reels', metric: 'VTR 41%', name: 'AI workflow', tone: '#db2777' },
-    { format: 'Coleção', metric: 'Conv. 184', name: 'Dashboard pack', tone: '#0f766e' },
+  const activeIndex = Math.floor(frame / 30) % 10
+  const gridShift = interpolate(frame % 150, [0, 149], [0, -18])
+  const adLibraryFont = 'Arial, Helvetica, sans-serif'
+  const ads = [
+    { brand: 'Taqueria Factory', copy: 'Weekly specials and fresh tacos for pickup.', image: '#c2410c', status: 'Sponsored' },
+    { brand: 'Taqueria Factory', copy: 'Our menu is packed with delicious favorites.', image: '#f97316', status: 'Sponsored' },
+    { brand: 'Taqueria Jalisco Catedral', copy: 'Bar and details. Hiring now for weekend shifts.', image: '#111827', status: 'Sponsored' },
+    { brand: 'Taqueria Jalisco Catedral', copy: 'Stop by for authentic Mexican food this week.', image: '#0f766e', status: 'Sponsored' },
+    { brand: 'Taqueria Jalisco Midland', copy: 'We are hiring. Apply today for open positions.', image: '#16a34a', status: 'Sponsored' },
+    { brand: 'Primoso Taqueria', copy: 'Good food. Good mood. Order online today.', image: '#dc2626', status: 'Sponsored' },
+    { brand: 'Primoso Taqueria', copy: 'Special lunch combo available this week.', image: '#ea580c', status: 'Sponsored' },
+    { brand: 'Qdoba taqueria', copy: 'Tasty weekend offer near you.', image: '#a855f7', status: 'Sponsored' },
+    { brand: 'Primoso Taqueria', copy: 'Fresh tacos, nachos and cold drinks.', image: '#b45309', status: 'Sponsored' },
+    { brand: 'Primoso Taqueria', copy: 'Family pack available for pickup and delivery.', image: '#15803d', status: 'Sponsored' },
   ]
 
   return (
-    <div style={{ background: '#111827', color: '#ffffff', fontFamily: theme.fontFamily, height: '100%', overflow: 'hidden', position: 'relative', width: '100%' }}>
-      <div style={{ background: 'radial-gradient(circle at 50% 36%, rgba(124,58,237,0.34), transparent 58%)', inset: -180, opacity: sceneIn, position: 'absolute' }} />
-      <div style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)', backgroundSize: '76px 76px', inset: 0, opacity: 0.34, position: 'absolute', transform: `translateY(${frame * -0.24}px)` }} />
-      <section style={{ background: '#f8fafc', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 46, boxShadow: '0 48px 130px rgba(0,0,0,0.44)', display: 'grid', gridTemplateRows: '118px 106px 1fr', height: 1460, left: 64, opacity: sceneIn, overflow: 'hidden', position: 'absolute', right: 64, top: 160, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 10 }}>
-        <header style={{ alignItems: 'center', background: '#ffffff', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: 18, padding: '0 30px' }}>
-          <span style={{ alignItems: 'center', background: '#111827', borderRadius: 18, color: '#ffffff', display: 'flex', fontSize: 30, fontWeight: 950, height: 64, justifyContent: 'center', width: 64 }}>Ad</span>
-          <div style={{ display: 'grid', gap: 5 }}>
-            <strong style={{ color: '#0f172a', fontSize: 31, fontWeight: 920, letterSpacing: 0 }}>Biblioteca de anúncios</strong>
-            <span style={{ color: '#64748b', fontSize: 19, fontWeight: 740 }}>Criativos ativos · Meta Ads</span>
+    <div style={{ background: '#000000', color: '#1c1e21', fontFamily: adLibraryFont, height: '100%', overflow: 'hidden', position: 'relative', width: '100%' }}>
+      <section style={{ background: '#f0f2f5', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 14, boxShadow: '0 30px 96px rgba(0,0,0,0.46)', height: 640, left: 18, opacity: sceneIn, overflow: 'hidden', position: 'absolute', right: 18, top: 612, transform: `translateY(${(1 - sceneIn) * 26}px)`, zIndex: 10 }}>
+        <header style={{ alignItems: 'center', background: 'linear-gradient(#f7f8fa, #eceef2)', borderBottom: '1px solid #c7cbd1', display: 'grid', gridTemplateColumns: '74px 44px 1fr 88px', height: 40, padding: '0 12px' }}>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {['#ff5f57', '#ffbd2e', '#28c840'].map((color) => <span key={color} style={{ background: color, border: '1px solid rgba(0,0,0,0.10)', borderRadius: 999, height: 10, width: 10 }} />)}
           </div>
-          <span style={{ background: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: 999, color: '#7c3aed', fontSize: 18, fontWeight: 900, marginLeft: 'auto', padding: '10px 14px' }}>24 ads</span>
+          <span style={{ color: '#606770', fontSize: 14, fontWeight: 500, letterSpacing: 0 }}>‹ ›</span>
+          <span style={{ background: '#ffffff', border: '1px solid #cdd1d6', borderRadius: 7, boxShadow: 'inset 0 1px 1px rgba(0,0,0,0.03)', color: '#606770', fontSize: 10, fontWeight: 400, justifySelf: 'stretch', padding: '7px 12px', textAlign: 'center' }}>facebook.com/ads/library/?active_status=all&ad_type=all&q=taqueria</span>
+          <div style={{ alignItems: 'center', color: '#606770', display: 'flex', fontSize: 14, fontWeight: 600, gap: 14, justifyContent: 'flex-end' }}>
+            <span>↻</span>
+            <span>⤴</span>
+          </div>
         </header>
-        <div style={{ alignItems: 'center', background: '#ffffff', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: 12, overflow: 'hidden', padding: '0 28px' }}>
-          {['Todos', 'Vídeo', 'Reels', 'Conversão', 'Ativos'].map((filter, index) => (
-            <span key={filter} style={{ background: index === activeIndex % 5 ? '#111827' : '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 999, color: index === activeIndex % 5 ? '#ffffff' : '#475569', fontSize: 18, fontWeight: 850, padding: '12px 16px' }}>{filter}</span>
-          ))}
-        </div>
-        <main style={{ display: 'grid', gap: 18, gridTemplateColumns: '1fr 1fr', padding: 28 }}>
-          {creatives.map((creative, index) => {
-            const p = previewProgress(frame, 20 + index * 10, 54 + index * 10)
-            const active = index === activeIndex
-            return (
-              <article key={creative.name} style={{ background: '#ffffff', border: `2px solid ${active ? creative.tone : '#e2e8f0'}`, borderRadius: 28, boxShadow: active ? `0 22px 56px ${creative.tone}30` : '0 12px 30px rgba(15,23,42,0.07)', display: 'grid', gridTemplateRows: '220px auto', opacity: p, overflow: 'hidden', transform: `translateY(${(1 - p) * 22}px) scale(${active ? 1.025 : 1})` }}>
-                <div style={{ background: `linear-gradient(135deg, ${creative.tone}, #0f172a)`, overflow: 'hidden', padding: 18, position: 'relative' }}>
-                  <span style={{ background: 'rgba(255,255,255,0.22)', borderRadius: 999, display: 'block', height: 12, left: 18, position: 'absolute', right: 80, top: 18 }} />
-                  <div style={{ alignItems: 'end', bottom: 20, display: 'flex', gap: 8, left: 18, position: 'absolute', right: 18, top: 56 }}>
-                    {[52, 84, 68, 110, 92].map((height, bar) => <span key={height} style={{ background: bar === index % 5 ? '#ffffff' : 'rgba(255,255,255,0.32)', borderRadius: 8, flex: 1, height }} />)}
-                  </div>
-                  {active ? <span style={{ background: 'rgba(255,255,255,0.34)', bottom: 0, left: `${(frame * 2) % 260 - 80}px`, position: 'absolute', top: 0, transform: 'skewX(-16deg)', width: 60 }} /> : null}
-                </div>
-                <div style={{ display: 'grid', gap: 10, padding: 18 }}>
-                  <span style={{ color: creative.tone, fontSize: 16, fontWeight: 900, textTransform: 'uppercase' }}>{creative.format}</span>
-                  <strong style={{ color: '#0f172a', fontSize: 22, fontWeight: 920, letterSpacing: 0, lineHeight: 1.05 }}>{creative.name}</strong>
-                  <span style={{ color: '#64748b', fontSize: 18, fontWeight: 820 }}>{creative.metric}</span>
-                </div>
-              </article>
-            )
-          })}
+
+        <main style={{ background: '#f0f2f5', display: 'grid', gridTemplateRows: '48px 48px 42px 1fr', height: 600 }}>
+          <nav style={{ alignItems: 'center', background: '#ffffff', borderBottom: '1px solid #dadde1', display: 'grid', gridTemplateColumns: '1fr 340px', padding: '0 14px' }}>
+            <div style={{ alignItems: 'center', display: 'flex', gap: 7 }}>
+              <span style={{ color: '#1877f2', fontSize: 18, fontWeight: 700 }}>∞</span>
+              <strong style={{ color: '#1c1e21', fontSize: 13, fontWeight: 600 }}>Meta</strong>
+            </div>
+            <div style={{ alignItems: 'center', color: '#4b4f56', display: 'flex', fontSize: 10, fontWeight: 500, gap: 20, justifyContent: 'flex-end' }}>
+              <span>Ad Library</span>
+              <span>Ad Library Report</span>
+              <span>Ad Library API</span>
+              <span style={{ fontSize: 16 }}>☰</span>
+            </div>
+          </nav>
+
+          <div style={{ alignItems: 'center', background: '#ffffff', borderBottom: '1px solid #dadde1', display: 'grid', gap: 10, gridTemplateColumns: '120px 100px 1fr 100px', padding: '0 14px' }}>
+            <span style={{ background: '#f5f6f7', border: '1px solid #ccd0d5', borderRadius: 4, color: '#1c1e21', fontSize: 10, fontWeight: 500, padding: '7px 8px' }}>United States</span>
+            <span style={{ background: '#f5f6f7', border: '1px solid #ccd0d5', borderRadius: 4, color: '#1c1e21', fontSize: 10, fontWeight: 500, padding: '7px 8px' }}>All ads</span>
+            <span style={{ background: '#f5f6f7', border: '1px solid #ccd0d5', borderRadius: 4, color: '#606770', fontSize: 10, fontWeight: 400, padding: '7px 10px' }}>⌕ "taqueria"</span>
+            <span style={{ background: '#f5f6f7', border: '1px solid #ccd0d5', borderRadius: 4, color: '#1c1e21', fontSize: 10, fontWeight: 500, padding: '7px 8px', textAlign: 'center' }}>Saved</span>
+          </div>
+
+          <div style={{ alignItems: 'center', background: '#ffffff', borderBottom: '1px solid #dadde1', display: 'grid', gridTemplateColumns: '1fr 90px 120px', padding: '0 14px' }}>
+            <strong style={{ color: '#1c1e21', fontSize: 11, fontWeight: 600 }}>Launched March 2023</strong>
+            <span style={{ background: '#f5f6f7', border: '1px solid #ccd0d5', borderRadius: 4, color: '#1c1e21', fontSize: 10, fontWeight: 500, padding: '6px 8px', textAlign: 'center' }}>Filters</span>
+            <span style={{ background: '#f5f6f7', border: '1px solid #ccd0d5', borderRadius: 4, color: '#1c1e21', fontSize: 10, fontWeight: 500, padding: '6px 8px', textAlign: 'center' }}>Save search</span>
+          </div>
+
+          <section style={{ overflow: 'hidden', padding: '14px 14px 20px' }}>
+            <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(5, 1fr)', transform: `translateY(${gridShift}px)` }}>
+              {ads.map((ad, index) => {
+                const active = index === activeIndex
+                return (
+                  <article key={`${ad.brand}-${index}`} style={{ background: active ? '#fff7ed' : '#ffffff', border: `1px solid ${active ? '#fdba74' : '#dadde1'}`, borderRadius: 3, boxShadow: active ? '0 12px 28px rgba(194,65,12,0.18)' : '0 1px 2px rgba(0,0,0,0.05)', minHeight: 232, overflow: 'hidden', transform: active ? 'scale(1.015)' : 'scale(1)' }}>
+                    <div style={{ display: 'grid', gap: 4, padding: '9px 9px 6px' }}>
+                      <div style={{ alignItems: 'center', display: 'grid', gap: 6, gridTemplateColumns: '18px 1fr' }}>
+                        <span style={{ background: '#e4e6eb', borderRadius: 999, height: 18, width: 18 }} />
+                        <div style={{ display: 'grid', gap: 1 }}>
+                          <strong style={{ color: '#1c1e21', fontSize: 9, fontWeight: 600, letterSpacing: 0 }}>{ad.brand}</strong>
+                          <span style={{ color: '#65676b', fontSize: 8, fontWeight: 400 }}>{ad.status}</span>
+                        </div>
+                      </div>
+                      <p style={{ color: '#1c1e21', fontSize: 8.5, fontWeight: 400, lineHeight: 1.25, margin: 0, minHeight: 30 }}>{ad.copy}</p>
+                    </div>
+                    <div style={{ background: `linear-gradient(135deg, ${ad.image}, #fff7ed)`, height: 82, margin: '0 9px 8px', overflow: 'hidden', position: 'relative' }}>
+                      <span style={{ background: 'rgba(255,255,255,0.78)', borderRadius: 3, bottom: 8, color: '#1c1e21', fontSize: 8, fontWeight: 700, left: 8, padding: '4px 5px', position: 'absolute' }}>{index % 2 ? 'Apply Now' : 'Learn more'}</span>
+                      <span style={{ background: 'rgba(255,255,255,0.32)', bottom: 0, left: `${(frame * 1.6 + index * 18) % 160 - 60}px`, position: 'absolute', top: 0, transform: 'skewX(-18deg)', width: 34 }} />
+                    </div>
+                    <div style={{ borderTop: '1px solid #e4e6eb', color: '#65676b', display: 'grid', gap: 4, fontSize: 8, fontWeight: 400, padding: '7px 9px' }}>
+                      <span style={{ color: '#31a24c', fontWeight: 600 }}>● Active</span>
+                      <span>Started running on Mar {20 + index}, 2023</span>
+                      <span>Platforms: ◎ 〇 □</span>
+                      <span style={{ background: '#f5f6f7', borderRadius: 3, color: '#1c1e21', fontWeight: 500, marginTop: 3, padding: '5px 7px', textAlign: 'center' }}>See ad details</span>
+                    </div>
+                  </article>
+                )
+              })}
+            </div>
+          </section>
         </main>
       </section>
-      <footer style={{ bottom: 70, display: 'grid', gap: 12, left: 58, position: 'absolute', right: 58, zIndex: 20 }}>
-        <strong style={{ color: '#ffffff', fontSize: 38, fontWeight: 900, letterSpacing: 0 }}>Biblioteca de anúncios para marketing</strong>
-        <span style={{ color: 'rgba(255,255,255,0.68)', fontSize: 24, fontWeight: 720, lineHeight: 1.25 }}>Mock vertical com criativos, filtros e cards animados.</span>
-      </footer>
     </div>
   )
 }
