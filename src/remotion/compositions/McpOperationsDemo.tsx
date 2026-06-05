@@ -401,6 +401,97 @@ const chatGptReconciliationResultData = {
   ],
 } satisfies DataResultStructuredContent
 
+const chatGptPayableSupplierData = {
+  ok: true,
+  tool: 'erp',
+  view: 'table',
+  title: 'Fornecedor localizado',
+  resource: 'financeiro/fornecedores',
+  count: 3,
+  columns: ['Fornecedor', 'CNPJ', 'Status', 'Match'],
+  rows: [
+    { Fornecedor: 'Frete Sul Logistica', CNPJ: '12.384.901/0001-44', Status: 'Ativo', Match: '99%' },
+    { Fornecedor: 'Frete Sul Express', CNPJ: '18.332.144/0001-09', Status: 'Inativo', Match: '74%' },
+    { Fornecedor: 'Transportes Sul', CNPJ: '07.104.228/0001-82', Status: 'Ativo', Match: '63%' },
+  ],
+} satisfies DataResultStructuredContent
+
+const chatGptPayableDraftData = {
+  ok: true,
+  tool: 'analysis',
+  view: 'analysis',
+  type: 'erp_action_preview',
+  title: 'Conta a pagar preparada',
+  subtitle: 'Aguardando confirmacao',
+  summary: 'Fornecedor Frete Sul localizado. Categoria Frete e Logistica, centro Operacoes e conta Banco Stone. Posso criar a conta a pagar de R$ 8.420?',
+  metrics: [
+    { label: 'Valor', value: 'R$ 8.420', tone: 'neutral' },
+    { label: 'Vencimento', value: '12 jun', tone: 'neutral' },
+    { label: 'Match', value: '99%', tone: 'positive' },
+  ],
+  next_steps: ['Criar conta a pagar no ERP', 'Status aberto', 'Origem ChatGPT'],
+} satisfies AnalysisStructuredContent
+
+const chatGptPayableResultData = {
+  ok: true,
+  tool: 'erp_acoes',
+  view: 'table',
+  title: 'Conta a pagar criada',
+  resource: 'contas-a-pagar',
+  count: 1,
+  columns: ['ID', 'Fornecedor', 'Valor', 'Vencimento', 'Status'],
+  rows: [
+    { ID: 'CP-1048', Fornecedor: 'Frete Sul Logistica', Valor: 'R$ 8.420', Vencimento: '12 jun', Status: 'Aberta' },
+  ],
+} satisfies DataResultStructuredContent
+
+const chatGptCollectionOverdueData = {
+  ok: true,
+  tool: 'erp',
+  view: 'table',
+  title: 'Contas em atraso',
+  resource: 'contas-a-receber',
+  count: 3,
+  columns: ['Cliente', 'Documento', 'Valor', 'Atraso'],
+  rows: [
+    { Cliente: 'Cliente Norte Ltda', Documento: 'NF-2041', Valor: 'R$ 12.400', Atraso: '7 dias' },
+    { Cliente: 'Mercado Alfa', Documento: 'NF-2038', Valor: 'R$ 8.900', Atraso: '4 dias' },
+    { Cliente: 'Delta Foods', Documento: 'NF-2029', Valor: 'R$ 6.180', Atraso: '2 dias' },
+  ],
+} satisfies DataResultStructuredContent
+
+const chatGptCollectionDraftData = {
+  ok: true,
+  tool: 'analysis',
+  view: 'analysis',
+  type: 'collection_preview',
+  title: 'Cobranca sugerida',
+  subtitle: 'Aguardando confirmacao',
+  summary: 'Sugiro cobrar a NF-2041 do Cliente Norte com PIX + boleto, mensagem amigavel e envio por WhatsApp e email para o financeiro.',
+  metrics: [
+    { label: 'Valor', value: 'R$ 12.400', tone: 'neutral' },
+    { label: 'Atraso', value: '7 dias', tone: 'warning' },
+    { label: 'Forma', value: 'PIX + boleto', tone: 'positive' },
+  ],
+  next_steps: ['Gerar PIX e boleto', 'Enviar WhatsApp', 'Enviar email de cobranca'],
+} satisfies AnalysisStructuredContent
+
+const chatGptCollectionResultData = {
+  ok: true,
+  tool: 'erp_acoes',
+  view: 'table',
+  title: 'Cobranca realizada',
+  resource: 'contas-a-receber',
+  count: 4,
+  columns: ['Etapa', 'Canal', 'Referencia', 'Status'],
+  rows: [
+    { Etapa: 'PIX', Canal: 'ERP', Referencia: 'CR-2041', Status: 'Gerado' },
+    { Etapa: 'Boleto', Canal: 'ERP', Referencia: 'BOL-2041', Status: 'Gerado' },
+    { Etapa: 'Mensagem', Canal: 'WhatsApp', Referencia: '+55 81 98461-0519', Status: 'Enviada' },
+    { Etapa: 'Email', Canal: 'Email', Referencia: 'financeiro@norte.com', Status: 'Enviado' },
+  ],
+} satisfies DataResultStructuredContent
+
 const chatGptExpenseRawData = {
   ok: true,
   tool: 'erp',
@@ -3218,8 +3309,8 @@ function ChatGptMobileScreenshot() {
   const frame = useCurrentFrame()
   const conversationY = interpolate(
     frame,
-    [0, 140, 260, 420, 580, 760, 940, 1120, 1320],
-    [0, 0, -280, -770, -1280, -1820, -2380, -2940, -3520],
+    [0, 150, 300, 470, 640, 810, 980, 1150, 1320],
+    [0, 0, -520, -1120, -1780, -2400, -3020, -3640, -4260],
     {
       extrapolateLeft: 'clamp',
       extrapolateRight: 'clamp',
@@ -3241,40 +3332,76 @@ function ChatGptMobileScreenshot() {
       <div style={{ bottom: 264, left: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 244 }}>
         <div style={{ display: 'grid', gap: 34, padding: '20px 0 760px', transform: `translateY(${conversationY}px)` }}>
           <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 10, 18)}>
-            Classifique essas despesas
+            Concilie banco e ERP
           </ChatGptFlowUserBubble>
           <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 48, 22)}>
-            Vou ler as despesas sem categoria antes de aplicar as regras.
+            Encontrei os matches e separei o que precisa de revisao. Posso conciliar os itens seguros?
           </ChatGptFlowAssistantText>
           <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 78, 22)}>
-            <AnimatedMcpTableView data={chatGptExpenseRawData} startFrame={78} />
+            <AnimatedMcpAnalysisView data={chatGptReconciliationSummaryData} startFrame={78} />
+          </ChatGptToolResultCard>
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 178, 18)}>
+            Sim, concilie
+          </ChatGptFlowUserBubble>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 218, 22)}>
+            <AnimatedMcpTableView data={chatGptReconciliationResultData} startFrame={218} />
           </ChatGptToolResultCard>
 
-          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 228, 22)}>
-            Encontrei categorias e centros de custo provaveis para cada despesa.
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 348, 18)}>
+            Lance a despesa de frete
+          </ChatGptFlowUserBubble>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 386, 22)}>
+            Localizei o fornecedor e montei a conta a pagar no ERP.
           </ChatGptFlowAssistantText>
-          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 258, 22)}>
-            <AnimatedMcpTableView data={chatGptExpenseRulesData} startFrame={258} />
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 416, 22)}>
+            <AnimatedMcpAnalysisView data={chatGptPayableDraftData} startFrame={416} />
+          </ChatGptToolResultCard>
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 546, 18)}>
+            Pode criar
+          </ChatGptFlowUserBubble>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 586, 22)}>
+            <AnimatedMcpTableView data={chatGptPayableResultData} startFrame={586} />
           </ChatGptToolResultCard>
 
-          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 418, 22)}>
-            Posso aplicar as classificacoes com alta confianca no ERP?
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 716, 18)}>
+            Busque contas a receber em atraso
+          </ChatGptFlowUserBubble>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 754, 22)}>
+            Encontrei recebiveis vencidos e priorizei o maior atraso.
           </ChatGptFlowAssistantText>
-          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 448, 22)}>
-            <AnimatedMcpAnalysisView data={chatGptExpenseDraftData} startFrame={448} />
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 784, 22)}>
+            <AnimatedMcpTableView data={chatGptCollectionOverdueData} startFrame={784} />
+          </ChatGptToolResultCard>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 896, 22)}>
+            Sugeri a cobranca com PIX, boleto, WhatsApp e email. Posso realizar?
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 926, 22)}>
+            <AnimatedMcpAnalysisView data={chatGptCollectionDraftData} startFrame={926} />
+          </ChatGptToolResultCard>
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 1038, 18)}>
+            Sim, cobre agora
+          </ChatGptFlowUserBubble>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 1078, 22)}>
+            <AnimatedMcpTableView data={chatGptCollectionResultData} startFrame={1078} />
           </ChatGptToolResultCard>
 
-          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 608, 18)}>
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 1198, 18)}>
+            Classifique essas despesas
+          </ChatGptFlowUserBubble>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 1236, 22)}>
+            Sugeri categorias e centros. Posso aplicar as classificacoes confiaveis?
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 1266, 22)}>
+            <AnimatedMcpAnalysisView data={chatGptExpenseDraftData} startFrame={1266} />
+          </ChatGptToolResultCard>
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 1378, 18)}>
             Sim, aplique
           </ChatGptFlowUserBubble>
-          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 650, 22)}>
-            Classificacoes aplicadas e uma regra criada para tarifas bancarias.
-          </ChatGptFlowAssistantText>
-          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 680, 22)}>
-            <AnimatedMcpTableView data={chatGptExpenseResultData} startFrame={680} />
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 1418, 22)}>
+            <AnimatedMcpTableView data={chatGptExpenseResultData} startFrame={1418} />
           </ChatGptToolResultCard>
 
-          <div style={chatGptSequenceStyle(frame, 790, 14)}>
+          <div style={chatGptSequenceStyle(frame, 1474, 14)}>
             <div style={{ padding: '10px 0 0 45px' }}>
               <ChatGptActionRow />
             </div>
