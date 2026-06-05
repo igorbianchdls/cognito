@@ -337,6 +337,70 @@ const chatGptSequenceAnalysisData = {
   next_steps: ['Reconciliar banco', 'Aprovar pagamentos de junho'],
 } satisfies AnalysisStructuredContent
 
+const chatGptReconciliationBankStatementData = {
+  ok: true,
+  tool: 'bank_statement',
+  view: 'table',
+  title: 'Extrato bancario',
+  resource: 'extrato-bancario',
+  count: 4,
+  columns: ['Data', 'Historico', 'Documento', 'Valor', 'Saldo'],
+  rows: [
+    { Data: '03 jun', Historico: 'PIX Cliente Norte', Documento: 'E2E90318471', Valor: '+R$ 42.100', Saldo: 'R$ 184.920' },
+    { Data: '03 jun', Historico: 'Cartao Stone', Documento: 'LOTE-552', Valor: '+R$ 68.900', Saldo: 'R$ 176.480' },
+    { Data: '04 jun', Historico: 'Pagamento Frete Sul', Documento: 'TED-774012', Valor: '-R$ 8.420', Saldo: 'R$ 151.900' },
+    { Data: '04 jun', Historico: 'Tarifa bancaria', Documento: 'TAR-0421', Valor: '-R$ 189', Saldo: 'R$ 149.870' },
+  ],
+} satisfies DataResultStructuredContent
+
+const chatGptReconciliationErpData = {
+  ok: true,
+  tool: 'erp',
+  view: 'table',
+  title: 'Lancamentos do ERP',
+  resource: 'financeiro/lancamentos',
+  count: 4,
+  columns: ['Titulo', 'Cliente/fornecedor', 'Vencimento', 'Valor', 'Status'],
+  rows: [
+    { Titulo: 'NF-9031', 'Cliente/fornecedor': 'Cliente Norte', Vencimento: '03 jun', Valor: 'R$ 42.100', Status: 'Aberto' },
+    { Titulo: 'Lote-552', 'Cliente/fornecedor': 'Stone', Vencimento: '03 jun', Valor: 'R$ 68.900', Status: 'Aberto' },
+    { Titulo: 'CTR-210', 'Cliente/fornecedor': 'Frete Sul', Vencimento: '04 jun', Valor: 'R$ 8.420', Status: 'Divergente' },
+    { Titulo: 'Regra pendente', 'Cliente/fornecedor': 'Banco', Vencimento: '04 jun', Valor: 'R$ 189', Status: 'Sem regra' },
+  ],
+} satisfies DataResultStructuredContent
+
+const chatGptReconciliationSummaryData = {
+  ok: true,
+  tool: 'analysis',
+  view: 'analysis',
+  type: 'reconciliation_summary',
+  title: 'Resumo da conciliacao',
+  subtitle: 'Antes de executar',
+  summary: 'Comparei o extrato bancario com os lancamentos do ERP. Ha 14 movimentos com alta confianca, 3 divergencias para revisar e 1 tarifa sem lancamento correspondente.',
+  metrics: [
+    { label: 'Prontos', value: '14', tone: 'positive' },
+    { label: 'Revisar', value: '3', tone: 'warning' },
+    { label: 'Sem ERP', value: '1', tone: 'neutral' },
+  ],
+  next_steps: ['Conciliar 14 matches com alta confianca', 'Manter divergencias pendentes', 'Sugerir regra para tarifa bancaria'],
+} satisfies AnalysisStructuredContent
+
+const chatGptReconciliationResultData = {
+  ok: true,
+  tool: 'erp_acoes',
+  view: 'table',
+  title: 'Conciliacao executada',
+  resource: 'financeiro/conciliacao',
+  count: 4,
+  columns: ['Movimento', 'ERP encontrado', 'Acao', 'Status'],
+  rows: [
+    { Movimento: 'PIX Cliente Norte', 'ERP encontrado': 'NF-9031 · 99%', Acao: 'Baixar titulo', Status: 'Conciliado' },
+    { Movimento: 'Cartao Stone', 'ERP encontrado': 'Lote-552 · 98%', Acao: 'Marcar recebido', Status: 'Conciliado' },
+    { Movimento: 'Pagamento Frete Sul', 'ERP encontrado': 'CTR-210 · 72%', Acao: 'Aguardar ajuste', Status: 'Pendente' },
+    { Movimento: 'Tarifa bancaria', 'ERP encontrado': 'Sem lancamento', Acao: 'Sugerir despesa', Status: 'Pendente' },
+  ],
+} satisfies DataResultStructuredContent
+
 function CognitoBrand() {
   return (
     <div style={{ alignItems: 'center', display: 'flex', gap: 15 }}>
@@ -3090,8 +3154,8 @@ function ChatGptMobileScreenshot() {
   const frame = useCurrentFrame()
   const conversationY = interpolate(
     frame,
-    [0, 160, 300, 470, 640, 820, 1000, 1180, 1360],
-    [0, 0, -410, -1040, -1700, -2380, -3180, -3980, -4860],
+    [0, 140, 260, 420, 580, 760, 940, 1120, 1320],
+    [0, 0, -300, -820, -1360, -1900, -2440, -3040, -3620],
     {
       extrapolateLeft: 'clamp',
       extrapolateRight: 'clamp',
@@ -3113,76 +3177,40 @@ function ChatGptMobileScreenshot() {
       <div style={{ bottom: 264, left: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 244 }}>
         <div style={{ display: 'grid', gap: 34, padding: '20px 0 760px', transform: `translateY(${conversationY}px)` }}>
           <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 10, 18)}>
-            Mostre receita por canal
+            Concilie o extrato bancario com o ERP
           </ChatGptFlowUserBubble>
           <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 48, 22)}>
-            Claro. Aqui está o gráfico da receita por canal nos últimos 30 dias.
+            Vou comparar as movimentacoes reais do banco com os lancamentos financeiros do ERP.
           </ChatGptFlowAssistantText>
           <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 78, 22)}>
-            <AnimatedMcpChartView data={chatGptSequenceChartData} startFrame={78} />
+            <AnimatedMcpTableView data={chatGptReconciliationBankStatementData} startFrame={78} />
           </ChatGptToolResultCard>
 
-          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 178, 18)}>
-            Agora em tabela
-          </ChatGptFlowUserBubble>
-          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 216, 22)}>
-            Montei a tabela com as contas a pagar abertas e agendadas.
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 228, 22)}>
+            Agora busquei no ERP os titulos e lancamentos que podem corresponder ao extrato.
           </ChatGptFlowAssistantText>
-          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 246, 22)}>
-            <AnimatedMcpTableView data={chatGptSequenceTableData} startFrame={246} />
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 258, 22)}>
+            <AnimatedMcpTableView data={chatGptReconciliationErpData} startFrame={258} />
           </ChatGptToolResultCard>
 
-          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 358, 18)}>
-            Quais fontes estão conectadas?
-          </ChatGptFlowUserBubble>
-          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 396, 22)}>
-            Estas são as integrações usadas para consultar ERP, e-commerce e marketing.
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 418, 22)}>
+            Encontrei o que bate e o que ainda precisa de revisao. Posso conciliar os matches de alta confianca?
           </ChatGptFlowAssistantText>
-          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 426, 22)}>
-            <AnimatedMcpConnectorsView data={chatGptSequenceConnectorsData} startFrame={426} />
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 448, 22)}>
+            <AnimatedMcpAnalysisView data={chatGptReconciliationSummaryData} startFrame={448} />
           </ChatGptToolResultCard>
 
-          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 548, 18)}>
-            Mostre o catalogo de dados
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 608, 18)}>
+            Sim, concilie os 14 itens
           </ChatGptFlowUserBubble>
-          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 586, 22)}>
-            Encontrei os recursos disponiveis e a qualidade dos dados conectados.
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 650, 22)}>
+            Conciliei os matches aprovados e deixei as excecoes pendentes para revisao.
           </ChatGptFlowAssistantText>
-          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 616, 22)}>
-            <AnimatedMcpDataCatalogView data={chatGptSequenceDataCatalogData} startFrame={616} />
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 680, 22)}>
+            <AnimatedMcpTableView data={chatGptReconciliationResultData} startFrame={680} />
           </ChatGptToolResultCard>
 
-          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 736, 18)}>
-            Liste meus dashboards
-          </ChatGptFlowUserBubble>
-          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 774, 22)}>
-            Estes dashboards ja estao disponiveis para abrir no app.
-          </ChatGptFlowAssistantText>
-          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 804, 22)}>
-            <AnimatedMcpDashboardListView data={chatGptSequenceDashboardListData} startFrame={804} />
-          </ChatGptToolResultCard>
-
-          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 926, 18)}>
-            E a DRE?
-          </ChatGptFlowUserBubble>
-          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 964, 22)}>
-            Aqui esta a DRE consolidada em formato de demonstrativo financeiro.
-          </ChatGptFlowAssistantText>
-          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 994, 22)}>
-            <AnimatedMcpDreView data={chatGptSequenceDreData} startFrame={994} />
-          </ChatGptToolResultCard>
-
-          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 1116, 18)}>
-            Resume para mim
-          </ChatGptFlowUserBubble>
-          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 1154, 22)}>
-            Fechei um resumo executivo com os principais sinais e próximos passos.
-          </ChatGptFlowAssistantText>
-          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 1184, 22)}>
-            <AnimatedMcpAnalysisView data={chatGptSequenceAnalysisData} startFrame={1184} />
-          </ChatGptToolResultCard>
-
-          <div style={chatGptSequenceStyle(frame, 1244, 14)}>
+          <div style={chatGptSequenceStyle(frame, 790, 14)}>
             <div style={{ padding: '10px 0 0 45px' }}>
               <ChatGptActionRow />
             </div>
