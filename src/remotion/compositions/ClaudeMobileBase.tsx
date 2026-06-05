@@ -2,7 +2,7 @@ import type { CSSProperties, ReactNode } from 'react'
 import { AbsoluteFill } from 'remotion'
 import { Copy, Menu, Mic, MoreHorizontal, Play, Plus, RotateCcw, ThumbsDown, ThumbsUp, Upload } from 'lucide-react'
 
-import { chatGptSequenceStyle, fastCharacterTyping } from '@/remotion/compositions/ChatGptMobileBase'
+import { OttoAssistantHeader, chatGptSequenceStyle, fastCharacterTyping } from '@/remotion/compositions/ChatGptMobileBase'
 import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/remotion/fonts/sfPro'
 
 loadSfProFonts()
@@ -89,6 +89,7 @@ export function ClaudeFlowAssistantText({ children, style }: { children: ReactNo
         padding: '0 42px',
       }}
     >
+      <OttoAssistantHeader muted="#8b857c" />
       {fastCharacterTyping(children, style)}
     </div>
   )

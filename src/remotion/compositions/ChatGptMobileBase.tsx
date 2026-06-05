@@ -56,6 +56,20 @@ export function fastCharacterTyping(children: ReactNode, style: CSSProperties) {
   )
 }
 
+export function OttoAssistantHeader({ muted = '#8a8a8a' }: { muted?: string }) {
+  return (
+    <div style={{ alignItems: 'center', display: 'flex', gap: 9, marginBottom: 13 }}>
+      <span style={{ display: 'grid', gap: 3, gridTemplateColumns: 'repeat(2, 7px)' }}>
+        <span style={{ background: '#225f42', borderRadius: 2, display: 'block', height: 7, width: 7 }} />
+        <span style={{ background: '#8aa895', borderRadius: 2, display: 'block', height: 7, width: 7 }} />
+        <span style={{ background: '#c9d8ce', borderRadius: 2, display: 'block', height: 7, width: 7 }} />
+        <span style={{ background: '#225f42', borderRadius: 2, display: 'block', height: 7, width: 7 }} />
+      </span>
+      <span style={{ color: muted, fontFamily: CHATGPT_MOBILE_FONT_STACK, fontSize: 20, fontWeight: 680, letterSpacing: 0, lineHeight: 1 }}>Otto</span>
+    </div>
+  )
+}
+
 export function ChatGptStatusBar() {
   return (
     <>
@@ -134,6 +148,7 @@ export function ChatGptFlowAssistantText({ children, style }: { children: ReactN
         padding: '0 42px',
       }}
     >
+      <OttoAssistantHeader />
       {fastCharacterTyping(children, style)}
     </div>
   )
