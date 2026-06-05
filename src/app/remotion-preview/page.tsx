@@ -88,6 +88,7 @@ import {
 } from '@/remotion/compositions/McpOperationsDemo'
 import { ChatGptMobileAnimation } from '@/remotion/compositions/ChatGptMobileMarketing'
 import { ChatGptOperationalFlowsVideo } from '@/remotion/compositions/ChatGptOperationalFlowsVideo'
+import { ChatGptTaskLauncherAnimation } from '@/remotion/compositions/ChatGptTaskLauncherAnimation'
 import { ClaudeMobileAnimation } from '@/remotion/compositions/ClaudeMobileMarketing'
 import { ClaudeOperationalFlowsVideo } from '@/remotion/compositions/ClaudeOperationalFlowsVideo'
 import { TaskLauncherAnimation } from '@/remotion/compositions/TaskLauncherAnimation'
@@ -2839,6 +2840,18 @@ const catalog: CatalogItem[] = [
     label: 'Task Launcher',
     tags: ['Prompt', 'Cursor', 'SaaS', 'Marketing'],
     value: 'marketing-task-launcher',
+    width: 1080,
+  },
+  {
+    code: '<ChatGptTaskLauncherAnimation />',
+    component: ChatGptTaskLauncherAnimation,
+    description: 'Versao mobile do ChatGPT com sugestoes clicaveis, prompt digitado e envio final.',
+    duration: 240,
+    height: 1920,
+    kind: 'Marketing',
+    label: 'ChatGPT Task Launcher',
+    tags: ['ChatGPT', 'Mobile', 'Prompt', 'Cursor'],
+    value: 'marketing-chatgpt-task-launcher',
     width: 1080,
   },
   {

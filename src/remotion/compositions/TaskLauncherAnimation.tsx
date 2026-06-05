@@ -42,26 +42,30 @@ export function TaskLauncherAnimation() {
   const frame = useCurrentFrame()
   const intro = ease(frame, 0, 34)
   const cursorIn = ease(frame, 32, 56)
-  const select = ease(frame, 62, 92)
-  const promptIn = ease(frame, 90, 128)
-  const ctaIn = ease(frame, 142, 172)
-  const typedChars = Math.floor(interpolate(frame, [118, 176], [0, promptText.length], {
+  const promptIn = ease(frame, 142, 180)
+  const ctaIn = ease(frame, 182, 210)
+  const typedChars = Math.floor(interpolate(frame, [172, 218], [0, promptText.length], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   }))
 
   const shellY = interpolate(promptIn, [0, 1], [0, -88])
   const promptHeight = interpolate(promptIn, [0, 1], [0, 238])
-  const cursorX = interpolate(frame, [32, 72, 110], [735, 465, 914], {
+  const cursorX = interpolate(frame, [28, 58, 82, 106, 136, 232], [744, 360, 480, 786, 910, 910], {
     easing: Easing.inOut(Easing.cubic),
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   })
-  const cursorY = interpolate(frame, [32, 72, 110], [850, 820, 1102], {
+  const cursorY = interpolate(frame, [28, 58, 82, 106, 136, 232], [846, 780, 907, 907, 1110, 1110], {
     easing: Easing.inOut(Easing.cubic),
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   })
+  const clickOne = ease(frame, 58, 70) * (1 - ease(frame, 104, 116))
+  const clickTwo = ease(frame, 82, 94) * (1 - ease(frame, 104, 116))
+  const clickThree = ease(frame, 106, 128)
+  const ctaClick = ease(frame, 218, 230)
+  const clickByIndex = [clickOne, 0, 0, 0, clickTwo, clickThree]
 
   return (
     <AbsoluteFill style={{ background: '#f8f7f2', color: '#171411', fontFamily: FONT_STACK, overflow: 'hidden' }}>
@@ -107,24 +111,25 @@ export function TaskLauncherAnimation() {
         >
           <div style={{ display: 'grid', gap: 18, gridTemplateColumns: 'repeat(3, 1fr)' }}>
             {actions.map(({ icon: Icon, label }, index) => {
-              const active = index === 4
+              const selected = clickByIndex[index] || 0
+              const active = selected > 0.02
               const itemIn = ease(frame, 10 + index * 4, 40 + index * 4)
               return (
                 <div
                   key={label}
                   style={{
                     alignItems: 'center',
-                    background: active ? `rgba(225,222,210,${0.28 + select * 0.58})` : 'rgba(255,255,255,0.72)',
-                    border: `2px solid ${active ? `rgba(40,35,30,${0.12 + select * 0.18})` : 'rgba(40,35,30,0.10)'}`,
+                    background: active ? `rgba(225,222,210,${0.28 + selected * 0.58})` : 'rgba(255,255,255,0.72)',
+                    border: `2px solid ${active ? `rgba(40,35,30,${0.12 + selected * 0.18})` : 'rgba(40,35,30,0.10)'}`,
                     borderRadius: 15,
-                    boxShadow: active ? `0 ${10 + select * 12}px ${24 + select * 28}px rgba(40,35,30,${0.06 + select * 0.08})` : '0 8px 18px rgba(40,35,30,0.04)',
+                    boxShadow: active ? `0 ${10 + selected * 12}px ${24 + selected * 28}px rgba(40,35,30,${0.06 + selected * 0.08})` : '0 8px 18px rgba(40,35,30,0.04)',
                     display: 'grid',
                     gap: 20,
                     gridTemplateColumns: '54px 1fr',
                     height: 86,
                     opacity: itemIn,
                     padding: '0 24px',
-                    transform: `translateY(${(1 - itemIn) * 16}px) scale(${active ? 1 + select * 0.012 : 1})`,
+                    transform: `translateY(${(1 - itemIn) * 16}px) scale(${active ? 1 + selected * 0.012 : 1})`,
                   }}
                 >
                   <span style={{ alignItems: 'center', background: '#f5f4ef', border: '2px solid rgba(40,35,30,0.10)', borderRadius: 8, color: '#b7b4ad', display: 'flex', height: 42, justifyContent: 'center', width: 42 }}>
@@ -177,7 +182,7 @@ export function TaskLauncherAnimation() {
                   marginLeft: 'auto',
                   opacity: ctaIn,
                   padding: '0 22px',
-                  transform: `translateX(${(1 - ctaIn) * 18}px)`,
+                  transform: `translateX(${(1 - ctaIn) * 18}px) scale(${1 - ctaClick * 0.035})`,
                 }}
                 type="button"
               >
@@ -200,7 +205,7 @@ export function TaskLauncherAnimation() {
           opacity: cursorIn,
           position: 'absolute',
           top: cursorY,
-          transform: `rotate(-12deg) scale(${1 + select * 0.08})`,
+          transform: `rotate(-12deg) scale(${1 + Math.max(clickOne, clickTwo, clickThree, ctaClick) * 0.10})`,
           zIndex: 20,
         }}
       />
