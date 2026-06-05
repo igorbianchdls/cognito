@@ -11,7 +11,6 @@ import {
   ApprovalFlowAnimation,
   BankReconciliationAnimation,
   ChatGptWebAnimation,
-  ChatGptMobileAnimation,
   ClaudeWebAnimation,
   ClaudeMobileAnimation,
   ClosingSlidesAnimation,
@@ -88,6 +87,8 @@ import {
   TableDrilldownAnimation,
   TweetAnimation,
 } from '@/remotion/compositions/McpOperationsDemo'
+import { ChatGptMobileAnimation } from '@/remotion/compositions/ChatGptMobileMarketing'
+import { ChatGptOperationalFlowsVideo } from '@/remotion/compositions/ChatGptOperationalFlowsVideo'
 import {
   AIChatWorkspaceMock,
   AnimatedBarGroup,
@@ -149,7 +150,7 @@ import {
   RotatingWords,
 } from '@/remotion/saas/index'
 
-type CatalogKind = 'Componentes' | 'Mockups' | 'Motion' | 'Tipografia Animada' | 'Marketing' | 'Galerias' | 'Animações' | 'Logo' | 'Templates'
+type CatalogKind = 'Componentes' | 'Mockups' | 'Motion' | 'Tipografia Animada' | 'Marketing' | 'Vídeos criados' | 'Galerias' | 'Animações' | 'Logo' | 'Templates'
 
 type CatalogItem = {
   code: string
@@ -2827,10 +2828,22 @@ const catalog: CatalogItem[] = [
     width: 1080,
   },
   {
+    code: '<ChatGptOperationalFlowsVideo />',
+    component: ChatGptOperationalFlowsVideo,
+    description: 'Video mobile do ChatGPT com fluxos operacionais de financeiro, estoque, atendimento, CRM e marketing.',
+    duration: 5900,
+    height: 1920,
+    kind: 'Vídeos criados',
+    label: 'ChatGPT Fluxos Operacionais',
+    tags: ['ChatGPT', 'Mobile', 'Operacoes', 'Video'],
+    value: 'video-chatgpt-operational-flows',
+    width: 1080,
+  },
+  {
     code: '<ChatGptMobileAnimation />',
     component: ChatGptMobileAnimation,
     description: 'ChatGPT mobile em tela cheia para posts, demos e vídeos sociais.',
-    duration: 5900,
+    duration: MCP_SINGLE_ANIMATION_DURATION,
     height: 1920,
     kind: 'Marketing',
     label: 'ChatGPT Mobile',
@@ -2972,10 +2985,10 @@ const catalog: CatalogItem[] = [
   },
 ]
 
-const kinds: Array<'Todos' | CatalogKind> = ['Todos', 'Logo', 'Componentes', 'Mockups', 'Motion', 'Tipografia Animada', 'Marketing', 'Galerias', 'Animações', 'Templates']
+const kinds: Array<'Todos' | CatalogKind> = ['Todos', 'Logo', 'Componentes', 'Mockups', 'Motion', 'Tipografia Animada', 'Marketing', 'Vídeos criados', 'Galerias', 'Animações', 'Templates']
 
 function Thumbnail({ item }: { item: CatalogItem }) {
-  const color = item.kind === 'Motion' ? '#245BDB' : item.kind === 'Tipografia Animada' ? '#DB2777' : item.kind === 'Marketing' ? '#C28F2C' : item.kind === 'Galerias' ? '#7C3AED' : item.kind === 'Animações' ? '#0EA5E9' : item.kind === 'Logo' ? '#111827' : item.kind === 'Templates' ? '#9333EA' : item.kind === 'Mockups' ? '#22A06B' : '#101828'
+  const color = item.kind === 'Motion' ? '#245BDB' : item.kind === 'Tipografia Animada' ? '#DB2777' : item.kind === 'Marketing' ? '#C28F2C' : item.kind === 'Vídeos criados' ? '#0F766E' : item.kind === 'Galerias' ? '#7C3AED' : item.kind === 'Animações' ? '#0EA5E9' : item.kind === 'Logo' ? '#111827' : item.kind === 'Templates' ? '#9333EA' : item.kind === 'Mockups' ? '#22A06B' : '#101828'
   return (
     <div style={{ background: '#F8FBF9', border: '1px solid #E3E8EF', borderRadius: 12, display: 'grid', gap: 10, height: 96, padding: 12 }}>
       <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
