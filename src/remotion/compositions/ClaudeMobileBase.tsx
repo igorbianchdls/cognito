@@ -2,7 +2,7 @@ import type { CSSProperties, ReactNode } from 'react'
 import { AbsoluteFill } from 'remotion'
 import { Copy, Menu, Mic, MoreHorizontal, Play, Plus, RotateCcw, ThumbsDown, ThumbsUp, Upload } from 'lucide-react'
 
-import { chatGptSequenceStyle } from '@/remotion/compositions/ChatGptMobileBase'
+import { chatGptSequenceStyle, fastCharacterTyping } from '@/remotion/compositions/ChatGptMobileBase'
 import { IOS_REMOTION_FONT_STACK, loadSfProFonts } from '@/remotion/fonts/sfPro'
 
 loadSfProFonts()
@@ -69,7 +69,7 @@ export function ClaudeFlowUserBubble({ children, style }: { children: ReactNode;
           width: 'max-content',
         }}
       >
-        {children}
+        {fastCharacterTyping(children, style)}
       </div>
     </div>
   )
@@ -89,7 +89,7 @@ export function ClaudeFlowAssistantText({ children, style }: { children: ReactNo
         padding: '0 42px',
       }}
     >
-      {children}
+      {fastCharacterTyping(children, style)}
     </div>
   )
 }

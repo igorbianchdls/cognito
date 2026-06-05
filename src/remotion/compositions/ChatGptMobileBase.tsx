@@ -38,6 +38,24 @@ export function chatGptSequenceStyle(frame: number, start: number, fromY = 20): 
   }
 }
 
+export function fastCharacterTyping(children: ReactNode, style: CSSProperties) {
+  const text = typeof children === 'string' || typeof children === 'number' ? String(children) : null
+  if (text === null) return children
+
+  const opacity = typeof style.opacity === 'number' ? style.opacity : 1
+  const progress = Math.max(0, Math.min(1, opacity / 0.78))
+  const visibleChars = Math.ceil(text.length * progress)
+  const visible = text.slice(0, visibleChars)
+  const hidden = text.slice(visibleChars)
+
+  return (
+    <>
+      <span>{visible}</span>
+      <span aria-hidden="true" style={{ visibility: 'hidden' }}>{hidden}</span>
+    </>
+  )
+}
+
 export function ChatGptStatusBar() {
   return (
     <>
@@ -96,7 +114,7 @@ export function ChatGptFlowUserBubble({ children, style }: { children: ReactNode
           width: 'max-content',
         }}
       >
-        {children}
+        {fastCharacterTyping(children, style)}
       </div>
     </div>
   )
@@ -116,7 +134,7 @@ export function ChatGptFlowAssistantText({ children, style }: { children: ReactN
         padding: '0 42px',
       }}
     >
-      {children}
+      {fastCharacterTyping(children, style)}
     </div>
   )
 }
