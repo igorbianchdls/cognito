@@ -583,6 +583,131 @@ export function IntegrationHubDockAnimation() {
   )
 }
 
+export function IntegrationTimelineAnimation() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const activeIndex = Math.floor(frame / 82) % integrationOrbitMocks.length
+  const active = integrationOrbitMocks[activeIndex]
+  const cursor = progress(frame % 82, 8, 64)
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: `radial-gradient(circle at 50% 42%, ${active.accent}22, rgba(244,247,244,0) 58%)`, bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Integration timeline" />
+      <section style={{ left: 72, opacity: sceneIn, position: 'absolute', right: 72, top: 310, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 20 }}>
+        <div style={{ display: 'grid', gap: 12, marginBottom: 42 }}>
+          <span style={{ color: active.accent, fontSize: 23, fontWeight: 900, textTransform: 'uppercase' }}>Sync timeline</span>
+          <strong style={{ color: '#0f1512', fontSize: 72, letterSpacing: 0, lineHeight: 0.96 }}>Cada conector vira uma etapa de sincronização</strong>
+        </div>
+        <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 40, boxShadow: '0 42px 100px rgba(20,24,22,0.18)', minHeight: 920, padding: 34, position: 'relative' }}>
+          <div style={{ background: '#dfe7e1', borderRadius: 999, bottom: 120, left: 104, position: 'absolute', top: 112, width: 8 }} />
+          <div style={{ background: active.accent, borderRadius: 999, height: `${Math.min(82, 12 + cursor * 72)}%`, left: 104, position: 'absolute', top: 112, width: 8 }} />
+          <div style={{ display: 'grid', gap: 18 }}>
+            {integrationOrbitMocks.map((mock, index) => {
+              const rowIn = progress(frame, 24 + index * 12, 66 + index * 12)
+              const activeRow = index === activeIndex
+              return (
+                <div key={mock.label} style={{ alignItems: 'center', display: 'grid', gap: 28, gridTemplateColumns: '96px 1fr', opacity: rowIn, transform: `translateX(${(1 - rowIn) * 30}px)` }}>
+                  <span style={{ alignItems: 'center', background: activeRow ? mock.accent : '#f3f7f4', border: '7px solid #ffffff', borderRadius: 999, boxShadow: activeRow ? `0 18px 50px ${mock.accent}55` : '0 12px 34px rgba(20,24,22,0.10)', color: activeRow ? '#ffffff' : '#65716a', display: 'flex', fontSize: 24, fontWeight: 900, height: 76, justifyContent: 'center', width: 76 }}>{index + 1}</span>
+                  <div style={{ background: activeRow ? '#102019' : '#f7faf7', border: `1px solid ${activeRow ? '#102019' : '#dfe7e1'}`, borderRadius: 26, color: activeRow ? '#ffffff' : '#0f1512', display: 'grid', gap: 10, padding: 22 }}>
+                    <span style={{ color: activeRow ? 'rgba(255,255,255,0.62)' : '#65716a', fontSize: 17, fontWeight: 850, textTransform: 'uppercase' }}>{mock.status}</span>
+                    <strong style={{ color: activeRow ? '#ffffff' : '#0f1512', fontSize: 32, letterSpacing: 0 }}>{mock.title}</strong>
+                    <span style={{ color: activeRow ? '#ffffff' : mock.accent, fontSize: 25, fontWeight: 900 }}>{mock.metric}</span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+      <GalleryFooter>Integração em timeline, mostrando cada fonte como etapa de sincronização</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+export function IntegrationBridgeAnimation() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const activeIndex = Math.floor(frame / 88) % integrationOrbitMocks.length
+  const active = integrationOrbitMocks[activeIndex]
+  const packet = (frame * 5.4) % 760
+  const left = integrationOrbitMocks.slice(0, 3)
+  const right = integrationOrbitMocks.slice(3, 6)
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: `radial-gradient(circle at 50% 48%, ${active.accent}22, rgba(244,247,244,0) 58%)`, bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Integration bridge" />
+      <section style={{ bottom: 220, display: 'grid', gap: 34, gridTemplateColumns: '280px 1fr 280px', left: 70, opacity: sceneIn, position: 'absolute', right: 70, top: 330, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 20 }}>
+        <div style={{ display: 'grid', gap: 24 }}>
+          {left.map((mock, index) => <IntegrationOrbitMockCard active={index === activeIndex} key={mock.label} mock={mock} scale={0.76} />)}
+        </div>
+        <div style={{ alignItems: 'center', display: 'grid', justifyItems: 'center', position: 'relative' }}>
+          <svg height="100%" style={{ inset: 0, position: 'absolute' }} viewBox="0 0 420 820" width="100%">
+            {[180, 300, 420, 540, 660].map((y, index) => (
+              <path d={`M 0 ${y} C 132 ${y - 28}, 140 410, 210 410 C 280 410, 288 ${y + 28}, 420 ${y}`} fill="none" key={y} opacity={index === activeIndex % 5 ? 0.80 : 0.22} stroke={index === activeIndex % 5 ? active.accent : '#225f42'} strokeDasharray="16 18" strokeDashoffset={-(frame * 4.2)} strokeLinecap="round" strokeWidth={index === activeIndex % 5 ? 6 : 4} />
+            ))}
+          </svg>
+          <div style={{ background: '#102019', borderRadius: 48, boxShadow: '0 44px 110px rgba(20,24,22,0.22)', color: '#ffffff', display: 'grid', gap: 12, height: 312, justifyItems: 'center', padding: 36, position: 'relative', width: 352, zIndex: 20 }}>
+            <span style={{ background: active.accent, borderRadius: 999, display: 'block', height: 18, width: 18 }} />
+            <strong style={{ color: '#ffffff', fontSize: 48, letterSpacing: 0, lineHeight: 1, textAlign: 'center' }}>Data bridge</strong>
+            <span style={{ color: 'rgba(255,255,255,0.68)', fontSize: 22, fontWeight: 760, textAlign: 'center' }}>Apps cruzando para o warehouse</span>
+          </div>
+          <span style={{ background: active.accent, borderRadius: 999, boxShadow: `0 0 36px ${active.accent}88`, display: 'block', height: 24, left: `${8 + (packet / 760) * 84}%`, position: 'absolute', top: `${34 + Math.sin(frame / 18) * 18}%`, width: 24, zIndex: 30 }} />
+        </div>
+        <div style={{ display: 'grid', gap: 24 }}>
+          {right.map((mock, index) => <IntegrationOrbitMockCard active={index + 3 === activeIndex} key={mock.label} mock={mock} scale={0.76} />)}
+        </div>
+      </section>
+      <GalleryFooter>Integração em ponte, conectando fontes de um lado ao destino do outro</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
+export function IntegrationSyncStackAnimation() {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const activeIndex = Math.floor(frame / 84) % integrationOrbitMocks.length
+  const active = integrationOrbitMocks[activeIndex]
+
+  return (
+    <AbsoluteFill style={{ background: '#f4f7f4', color: '#0f1512', fontFamily: FONT_STACK, overflow: 'hidden' }}>
+      <div style={{ background: `radial-gradient(circle at 50% 44%, ${active.accent}22, rgba(244,247,244,0) 58%)`, bottom: -180, left: -160, position: 'absolute', right: -160, top: -180 }} />
+      <GallerySceneHeader status="Integration sync stack" />
+      <section style={{ left: 70, opacity: sceneIn, position: 'absolute', right: 70, top: 330, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 20 }}>
+        <div style={{ display: 'grid', gap: 12, marginBottom: 42 }}>
+          <span style={{ color: active.accent, fontSize: 23, fontWeight: 900, textTransform: 'uppercase' }}>Sync stack</span>
+          <strong style={{ color: '#0f1512', fontSize: 72, letterSpacing: 0, lineHeight: 0.96 }}>Conectores empilhados virando uma fonte única</strong>
+        </div>
+        <div style={{ height: 900, position: 'relative' }}>
+          {integrationOrbitMocks.map((mock, index) => {
+            const activeCard = index === activeIndex
+            const offset = index - activeIndex
+            const normalized = ((offset + integrationOrbitMocks.length) % integrationOrbitMocks.length)
+            const y = 70 + normalized * 88
+            const x = 120 + Math.sin((frame + index * 20) / 22) * 18
+            const scale = activeCard ? 1 : 0.86
+            return (
+              <div key={mock.label} style={{ left: x, opacity: activeCard ? 1 : 0.62, position: 'absolute', top: y, transform: `scale(${scale})`, transformOrigin: 'left top', zIndex: activeCard ? 40 : 20 - normalized }}>
+                <IntegrationOrbitMockCard active={activeCard} mock={mock} scale={0.88} />
+              </div>
+            )
+          })}
+          <div style={{ background: '#102019', borderRadius: 48, boxShadow: '0 44px 110px rgba(20,24,22,0.22)', color: '#ffffff', display: 'grid', gap: 14, height: 500, justifyItems: 'center', padding: 38, position: 'absolute', right: 40, top: 185, width: 388, zIndex: 45 }}>
+            <span style={{ background: active.accent, borderRadius: 999, display: 'block', height: 18, width: 18 }} />
+            <strong style={{ color: '#ffffff', fontSize: 52, letterSpacing: 0, lineHeight: 0.96, textAlign: 'center' }}>Unified data</strong>
+            <span style={{ color: 'rgba(255,255,255,0.68)', fontSize: 23, fontWeight: 760, textAlign: 'center' }}>O stack sincroniza e entrega uma camada operacional</span>
+            <div style={{ display: 'grid', gap: 12, marginTop: 20, width: '100%' }}>
+              {[86, 64, 92, 58].map((width, index) => <span key={width} style={{ background: index === activeIndex % 4 ? active.accent : 'rgba(255,255,255,0.16)', borderRadius: 999, height: index === activeIndex % 4 ? 13 : 10, width: `${width}%` }} />)}
+            </div>
+          </div>
+        </div>
+      </section>
+      <GalleryFooter>Integração em stack, consolidando conectores em uma camada unificada</GalleryFooter>
+    </AbsoluteFill>
+  )
+}
+
 function PipelineDocument({ doc, index, muted = false }: { doc: ClassificationDocumentItem; index: number; muted?: boolean }) {
   return (
     <div
@@ -4244,6 +4369,170 @@ function ClassifiedArtifactDistributionScene({ footer, items, status }: { footer
   )
 }
 
+function ClassifiedFanGalleryScene({ footer, items, status }: { footer: string; items: VerticalPipelineItem[]; status: string }) {
+  const frame = useCurrentFrame()
+  const cycle = 118
+  const activeIndex = Math.floor(frame / cycle) % items.length
+  const local = (frame % cycle) / cycle
+  const lanes = [
+    { label: 'Finance', x: -355, y: -420, rotation: -18, accent: '#225f42' },
+    { label: 'Ops', x: 350, y: -330, rotation: 14, accent: '#3f6d91' },
+    { label: 'Risk', x: -335, y: 310, rotation: -12, accent: '#c28f2c' },
+    { label: 'Review', x: 345, y: 410, rotation: 18, accent: '#8b6f9d' },
+  ]
+
+  return (
+    <PremiumSceneShell footer={footer} status={status}>
+      <div style={{ height: 1320, left: '50%', position: 'absolute', top: '50%', transform: 'translate(-50%, -50%)', width: 900, zIndex: 20 }}>
+        <div style={{ background: '#102019', borderRadius: 999, boxShadow: '0 34px 90px rgba(20,24,22,0.20)', height: 170, left: '50%', position: 'absolute', top: '50%', transform: 'translate(-50%, -50%)', width: 170, zIndex: 30 }}>
+          <span style={{ color: '#ffffff', fontSize: 24, fontWeight: 900, left: 0, lineHeight: '170px', position: 'absolute', textAlign: 'center', width: '100%' }}>Sort</span>
+        </div>
+        {lanes.map((lane) => (
+          <div key={lane.label} style={{ background: '#ffffff', border: `1px solid ${lane.accent}`, borderRadius: 999, boxShadow: '0 20px 48px rgba(20,24,22,0.12)', color: lane.accent, fontSize: 22, fontWeight: 900, left: '50%', padding: '14px 20px', position: 'absolute', top: '50%', transform: `translate(-50%, -50%) translate(${lane.x}px, ${lane.y}px) rotate(${lane.rotation * 0.35}deg)`, zIndex: 42 }}>
+            {lane.label}
+          </div>
+        ))}
+        {[-1, 0, 1, 2, 3].map((slot) => {
+          const unit = local + slot * 0.24
+          if (unit < 0 || unit > 1.08) return null
+          const itemIndex = (activeIndex + slot + items.length) % items.length
+          const item = items[itemIndex]
+          const lane = lanes[itemIndex % lanes.length]
+          const classify = progress(unit, 0.34, 0.72)
+          const x = interpolate(unit, [0, 0.24, 0.50, 1], [0, 0, 0, lane.x], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+          const y = interpolate(unit, [0, 0.24, 0.50, 1], [610, 220, 0, lane.y], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+          const rotation = interpolate(unit, [0, 0.52, 1], [0, 0, lane.rotation], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+          const scale = interpolate(unit, [0, 0.45, 1], [0.58, 0.86, 0.52], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+          const opacity = interpolate(unit, [0, 0.10, 0.86, 1.08], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+
+          return (
+            <div key={`${slot}-${item.title}`} style={{ left: '50%', opacity, position: 'absolute', top: '50%', transform: `translate(-50%, -50%) translate(${x}px, ${y}px) rotate(${rotation}deg) scale(${scale})`, zIndex: Math.round((1 - classify) * 10) + 24 }}>
+              <VerticalPipelineArtifact index={itemIndex} item={item} />
+              <div style={{ background: lane.accent, borderRadius: 999, boxShadow: '0 18px 42px rgba(20,24,22,0.16)', color: '#ffffff', fontSize: 18, fontWeight: 900, opacity: classify, padding: '12px 16px', position: 'absolute', right: -38, top: -22 }}>
+                {lane.label}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </PremiumSceneShell>
+  )
+}
+
+function ClassifiedBucketsGalleryScene({ footer, items, status }: { footer: string; items: VerticalPipelineItem[]; status: string }) {
+  const frame = useCurrentFrame()
+  const cycle = 122
+  const activeIndex = Math.floor(frame / cycle) % items.length
+  const local = (frame % cycle) / cycle
+  const buckets = [
+    { label: 'Paid', x: -300, accent: '#225f42' },
+    { label: 'Organic', x: 0, accent: '#3f6d91' },
+    { label: 'Review', x: 300, accent: '#c28f2c' },
+  ]
+
+  return (
+    <PremiumSceneShell footer={footer} status={status}>
+      <div style={{ height: 1320, left: '50%', position: 'absolute', top: '50%', transform: 'translate(-50%, -50%)', width: 900, zIndex: 20 }}>
+        {buckets.map((bucket) => (
+          <div key={bucket.label} style={{ background: 'rgba(255,255,255,0.78)', border: `1px solid ${bucket.accent}`, borderRadius: 36, bottom: 105, boxShadow: '0 24px 60px rgba(20,24,22,0.10)', left: '50%', position: 'absolute', top: 470, transform: `translateX(calc(-50% + ${bucket.x}px))`, width: 246, zIndex: 12 }}>
+            <div style={{ alignItems: 'center', color: bucket.accent, display: 'flex', fontSize: 24, fontWeight: 900, gap: 10, justifyContent: 'center', paddingTop: 24 }}>
+              <span style={{ background: bucket.accent, borderRadius: 999, height: 14, width: 14 }} />
+              {bucket.label}
+            </div>
+          </div>
+        ))}
+        <div style={{ alignItems: 'center', background: '#102019', borderRadius: 32, boxShadow: '0 34px 90px rgba(20,24,22,0.20)', color: '#ffffff', display: 'grid', gap: 8, height: 150, justifyItems: 'center', left: '50%', padding: 20, position: 'absolute', top: 250, transform: 'translateX(-50%)', width: 300, zIndex: 34 }}>
+          <strong style={{ color: '#ffffff', fontSize: 31, letterSpacing: 0 }}>Classifier</strong>
+          <span style={{ color: 'rgba(255,255,255,0.62)', fontSize: 18, fontWeight: 760 }}>bucket routing</span>
+        </div>
+        {[-1, 0, 1, 2, 3].map((slot) => {
+          const unit = local + slot * 0.22
+          if (unit < 0 || unit > 1.08) return null
+          const itemIndex = (activeIndex + slot + items.length) % items.length
+          const item = items[itemIndex]
+          const bucket = buckets[itemIndex % buckets.length]
+          const x = interpolate(unit, [0, 0.28, 0.56, 1], [0, 0, 0, bucket.x], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+          const y = interpolate(unit, [0, 0.28, 0.56, 1], [-540, -160, 120, 575], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+          const scale = interpolate(unit, [0, 0.44, 1], [0.50, 0.82, 0.43], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+          const opacity = interpolate(unit, [0, 0.10, 0.88, 1.08], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+          const tagged = progress(unit, 0.44, 0.70)
+
+          return (
+            <div key={`${slot}-${item.title}`} style={{ left: '50%', opacity, position: 'absolute', top: '50%', transform: `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${scale})`, zIndex: 32 }}>
+              <VerticalPipelineArtifact index={itemIndex} item={item} />
+              <div style={{ background: '#ffffff', border: `1px solid ${bucket.accent}`, borderRadius: 999, color: bucket.accent, fontSize: 20, fontWeight: 900, opacity: tagged, padding: '12px 16px', position: 'absolute', right: -44, top: -26 }}>
+                {bucket.label}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </PremiumSceneShell>
+  )
+}
+
+function ClassifiedRadarGalleryScene({ footer, items, status }: { footer: string; items: VerticalPipelineItem[]; status: string }) {
+  const frame = useCurrentFrame()
+  const cycle = 136
+  const activeIndex = Math.floor(frame / cycle) % items.length
+  const local = (frame % cycle) / cycle
+  const clusters = [
+    { label: 'High', angle: -75, radius: 410, accent: '#c28f2c' },
+    { label: 'Core', angle: -18, radius: 350, accent: '#225f42' },
+    { label: 'Watch', angle: 42, radius: 390, accent: '#3f6d91' },
+    { label: 'Archive', angle: 126, radius: 360, accent: '#8b6f9d' },
+  ]
+  const sweepAngle = frame * 2.6
+
+  return (
+    <PremiumSceneShell footer={footer} status={status}>
+      <div style={{ height: 1320, left: '50%', position: 'absolute', top: '50%', transform: 'translate(-50%, -50%)', width: 900, zIndex: 20 }}>
+        {[620, 430, 250].map((size) => (
+          <span key={size} style={{ border: '1px solid rgba(34,95,66,0.20)', borderRadius: 999, height: size, left: '50%', position: 'absolute', top: '50%', transform: 'translate(-50%, -50%)', width: size }} />
+        ))}
+        <span style={{ background: 'linear-gradient(90deg, rgba(34,95,66,0.34), transparent)', height: 3, left: '50%', position: 'absolute', top: '50%', transform: `rotate(${sweepAngle}deg)`, transformOrigin: '0 50%', width: 330 }} />
+        <div style={{ alignItems: 'center', background: '#102019', borderRadius: 999, boxShadow: '0 34px 90px rgba(20,24,22,0.20)', color: '#ffffff', display: 'grid', height: 190, justifyItems: 'center', left: '50%', position: 'absolute', top: '50%', transform: 'translate(-50%, -50%)', width: 190, zIndex: 34 }}>
+          <strong style={{ color: '#ffffff', fontSize: 31, letterSpacing: 0 }}>Radar</strong>
+        </div>
+        {clusters.map((cluster) => {
+          const angle = cluster.angle * Math.PI / 180
+          const x = Math.cos(angle) * cluster.radius
+          const y = Math.sin(angle) * cluster.radius
+          return (
+            <div key={cluster.label} style={{ background: '#ffffff', border: `1px solid ${cluster.accent}`, borderRadius: 999, color: cluster.accent, fontSize: 21, fontWeight: 900, left: '50%', padding: '13px 18px', position: 'absolute', top: '50%', transform: `translate(-50%, -50%) translate(${x}px, ${y}px)`, zIndex: 42 }}>
+              {cluster.label}
+            </div>
+          )
+        })}
+        {[-1, 0, 1, 2, 3].map((slot) => {
+          const unit = local + slot * 0.23
+          if (unit < 0 || unit > 1.08) return null
+          const itemIndex = (activeIndex + slot + items.length) % items.length
+          const item = items[itemIndex]
+          const cluster = clusters[itemIndex % clusters.length]
+          const angle = cluster.angle * Math.PI / 180
+          const targetX = Math.cos(angle) * (cluster.radius - 84)
+          const targetY = Math.sin(angle) * (cluster.radius - 84)
+          const x = interpolate(unit, [0, 0.34, 0.62, 1], [Math.cos(angle + 1.6) * 460, 0, 0, targetX], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+          const y = interpolate(unit, [0, 0.34, 0.62, 1], [Math.sin(angle + 1.6) * 460, 0, 0, targetY], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+          const scale = interpolate(unit, [0, 0.50, 1], [0.40, 0.74, 0.48], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+          const opacity = interpolate(unit, [0, 0.12, 0.90, 1.08], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+          const tagOpacity = progress(unit, 0.56, 0.78)
+
+          return (
+            <div key={`${slot}-${item.title}`} style={{ left: '50%', opacity, position: 'absolute', top: '50%', transform: `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${scale})`, zIndex: 30 }}>
+              <VerticalPipelineArtifact index={itemIndex} item={item} />
+              <div style={{ background: cluster.accent, borderRadius: 999, color: '#ffffff', fontSize: 18, fontWeight: 900, opacity: tagOpacity, padding: '11px 15px', position: 'absolute', right: -30, top: -24 }}>
+                {cluster.label}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </PremiumSceneShell>
+  )
+}
+
 function ArtifactPageStackGalleryScene({ footer, items, status }: { footer: string; items: VerticalPipelineItem[]; status: string }) {
   const frame = useCurrentFrame()
   const sceneIn = progress(frame, 0, 38)
@@ -4656,6 +4945,36 @@ export function SaaSClassifiedDistributionGalleryAnimation() {
       footer="Galeria de classificação distribuindo artefatos por categoria"
       items={dashboardPipelineItems}
       status="Classification gallery"
+    />
+  )
+}
+
+export function SaaSClassifiedFanGalleryAnimation() {
+  return (
+    <ClassifiedFanGalleryScene
+      footer="Galeria de classificacao em leque separando artefatos"
+      items={dashboardPipelineItems}
+      status="Classified fan gallery"
+    />
+  )
+}
+
+export function SaaSClassifiedBucketsGalleryAnimation() {
+  return (
+    <ClassifiedBucketsGalleryScene
+      footer="Galeria de buckets classificando artefatos por destino"
+      items={dashboardPipelineItems}
+      status="Classified buckets gallery"
+    />
+  )
+}
+
+export function SaaSClassifiedRadarGalleryAnimation() {
+  return (
+    <ClassifiedRadarGalleryScene
+      footer="Galeria radar agrupando artefatos por cluster"
+      items={dashboardPipelineItems}
+      status="Classified radar gallery"
     />
   )
 }
