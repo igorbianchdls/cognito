@@ -401,62 +401,67 @@ const chatGptReconciliationResultData = {
   ],
 } satisfies DataResultStructuredContent
 
-const chatGptCollectionCustomerData = {
+const chatGptExpenseRawData = {
   ok: true,
   tool: 'erp',
   view: 'table',
-  title: 'Cliente localizado',
-  resource: 'financeiro/clientes',
-  count: 3,
-  columns: ['Cliente', 'CNPJ', 'Contato', 'Match'],
+  title: 'Despesas encontradas',
+  resource: 'financeiro/despesas',
+  count: 4,
+  columns: ['Descricao', 'Data', 'Valor', 'Origem'],
   rows: [
-    { Cliente: 'Cliente Norte Ltda', CNPJ: '31.420.901/0001-18', Contato: 'financeiro@norte.com', Match: '99%' },
-    { Cliente: 'Cliente Norte Filial', CNPJ: '31.420.901/0002-99', Contato: 'filial@norte.com', Match: '72%' },
-    { Cliente: 'Norte Comercio', CNPJ: '09.884.120/0001-40', Contato: 'cobranca@norte.com', Match: '61%' },
+    { Descricao: 'Google Ads BR', Data: '03 jun', Valor: 'R$ 18.400', Origem: 'Cartao' },
+    { Descricao: 'AWS Brasil', Data: '04 jun', Valor: 'R$ 12.790', Origem: 'Boleto' },
+    { Descricao: 'Tarifa bancaria', Data: '04 jun', Valor: 'R$ 189', Origem: 'Extrato' },
+    { Descricao: 'Frete Sul', Data: '05 jun', Valor: 'R$ 8.420', Origem: 'TED' },
   ],
 } satisfies DataResultStructuredContent
 
-const chatGptCollectionParametersData = {
+const chatGptExpenseRulesData = {
   ok: true,
   tool: 'erp',
   view: 'table',
-  title: 'Parametros da cobranca',
-  resource: 'financeiro/cobrancas',
-  count: 3,
-  columns: ['Campo', 'Selecionado', 'Alternativas', 'Confianca'],
+  title: 'Regras e centros',
+  resource: 'financeiro/classificacao',
+  count: 4,
+  columns: ['Despesa', 'Categoria', 'Centro', 'Confianca'],
   rows: [
-    { Campo: 'Forma', Selecionado: 'PIX + boleto', Alternativas: 'Link cartao', Confianca: '96%' },
-    { Campo: 'Conta financeira', Selecionado: 'Banco Stone', Alternativas: 'Itau Empresas', Confianca: '94%' },
-    { Campo: 'Categoria', Selecionado: 'Receita de servicos', Alternativas: 'Receita recorrente', Confianca: '91%' },
+    { Despesa: 'Google Ads BR', Categoria: 'Marketing pago', Centro: 'Marketing', Confianca: '98%' },
+    { Despesa: 'AWS Brasil', Categoria: 'Software e cloud', Centro: 'TI', Confianca: '96%' },
+    { Despesa: 'Tarifa bancaria', Categoria: 'Tarifas bancarias', Centro: 'Financeiro', Confianca: '91%' },
+    { Despesa: 'Frete Sul', Categoria: 'Logistica', Centro: 'Operacoes', Confianca: '72%' },
   ],
 } satisfies DataResultStructuredContent
 
-const chatGptCollectionDraftData = {
+const chatGptExpenseDraftData = {
   ok: true,
   tool: 'analysis',
   view: 'analysis',
-  type: 'collection_preview',
-  title: 'Cobranca preparada',
+  type: 'expense_classification_preview',
+  title: 'Classificacao sugerida',
   subtitle: 'Aguardando confirmacao',
-  summary: 'Vou criar uma conta a receber para Cliente Norte Ltda no valor de R$ 12.400, com vencimento em 10 jun, forma PIX + boleto e envio por WhatsApp.',
+  summary: 'Encontrei 4 despesas. Posso aplicar automaticamente as 3 classificacoes acima de 90% e deixar Frete Sul pendente para revisao?',
   metrics: [
-    { label: 'Valor', value: 'R$ 12.400', tone: 'neutral' },
-    { label: 'Vencimento', value: '10 jun', tone: 'neutral' },
-    { label: 'Confianca', value: '96%', tone: 'positive' },
+    { label: 'Aplicar', value: '3', tone: 'positive' },
+    { label: 'Revisar', value: '1', tone: 'warning' },
+    { label: 'Regra nova', value: 'Tarifa', tone: 'neutral' },
   ],
-  next_steps: ['Criar conta a receber no ERP', 'Gerar PIX e boleto', 'Enviar cobranca ao cliente'],
+  next_steps: ['Atualizar categoria e centro no ERP', 'Criar regra para tarifa bancaria', 'Manter Frete Sul em revisao'],
 } satisfies AnalysisStructuredContent
 
-const chatGptCollectionResultData = {
+const chatGptExpenseResultData = {
   ok: true,
   tool: 'erp_acoes',
   view: 'table',
-  title: 'Cobranca criada',
-  resource: 'contas-a-receber',
-  count: 1,
-  columns: ['ID', 'Cliente', 'Valor', 'Vencimento', 'Status'],
+  title: 'Classificacoes aplicadas',
+  resource: 'financeiro/despesas',
+  count: 4,
+  columns: ['Despesa', 'Categoria', 'Centro', 'Status'],
   rows: [
-    { ID: 'CR-2041', Cliente: 'Cliente Norte Ltda', Valor: 'R$ 12.400', Vencimento: '10 jun', Status: 'Enviada' },
+    { Despesa: 'Google Ads BR', Categoria: 'Marketing pago', Centro: 'Marketing', Status: 'Aplicada' },
+    { Despesa: 'AWS Brasil', Categoria: 'Software e cloud', Centro: 'TI', Status: 'Aplicada' },
+    { Despesa: 'Tarifa bancaria', Categoria: 'Tarifas bancarias', Centro: 'Financeiro', Status: 'Regra criada' },
+    { Despesa: 'Frete Sul', Categoria: 'Logistica', Centro: 'Operacoes', Status: 'Revisar' },
   ],
 } satisfies DataResultStructuredContent
 
@@ -3236,37 +3241,37 @@ function ChatGptMobileScreenshot() {
       <div style={{ bottom: 264, left: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 244 }}>
         <div style={{ display: 'grid', gap: 34, padding: '20px 0 760px', transform: `translateY(${conversationY}px)` }}>
           <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 10, 18)}>
-            Gere uma cobranca para o Cliente Norte
+            Classifique essas despesas
           </ChatGptFlowUserBubble>
           <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 48, 22)}>
-            Vou localizar o cliente antes de montar a cobranca.
+            Vou ler as despesas sem categoria antes de aplicar as regras.
           </ChatGptFlowAssistantText>
           <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 78, 22)}>
-            <AnimatedMcpTableView data={chatGptCollectionCustomerData} startFrame={78} />
+            <AnimatedMcpTableView data={chatGptExpenseRawData} startFrame={78} />
           </ChatGptToolResultCard>
 
           <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 228, 22)}>
-            Agora defini forma de pagamento, conta financeira e categoria de receita.
+            Encontrei categorias e centros de custo provaveis para cada despesa.
           </ChatGptFlowAssistantText>
           <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 258, 22)}>
-            <AnimatedMcpTableView data={chatGptCollectionParametersData} startFrame={258} />
+            <AnimatedMcpTableView data={chatGptExpenseRulesData} startFrame={258} />
           </ChatGptToolResultCard>
 
           <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 418, 22)}>
-            Montei a cobranca. Posso criar no ERP e enviar ao cliente?
+            Posso aplicar as classificacoes com alta confianca no ERP?
           </ChatGptFlowAssistantText>
           <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 448, 22)}>
-            <AnimatedMcpAnalysisView data={chatGptCollectionDraftData} startFrame={448} />
+            <AnimatedMcpAnalysisView data={chatGptExpenseDraftData} startFrame={448} />
           </ChatGptToolResultCard>
 
           <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 608, 18)}>
-            Sim, crie e envie
+            Sim, aplique
           </ChatGptFlowUserBubble>
           <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 650, 22)}>
-            Cobranca criada no ERP e enviada por WhatsApp.
+            Classificacoes aplicadas e uma regra criada para tarifas bancarias.
           </ChatGptFlowAssistantText>
           <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 680, 22)}>
-            <AnimatedMcpTableView data={chatGptCollectionResultData} startFrame={680} />
+            <AnimatedMcpTableView data={chatGptExpenseResultData} startFrame={680} />
           </ChatGptToolResultCard>
 
           <div style={chatGptSequenceStyle(frame, 790, 14)}>
