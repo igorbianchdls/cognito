@@ -90,6 +90,7 @@ import { ChatGptMobileAnimation } from '@/remotion/compositions/ChatGptMobileMar
 import { ChatGptOperationalFlowsVideo } from '@/remotion/compositions/ChatGptOperationalFlowsVideo'
 import { ClaudeMobileAnimation } from '@/remotion/compositions/ClaudeMobileMarketing'
 import { ClaudeOperationalFlowsVideo } from '@/remotion/compositions/ClaudeOperationalFlowsVideo'
+import { TaskLauncherAnimation } from '@/remotion/compositions/TaskLauncherAnimation'
 import {
   AIChatWorkspaceMock,
   AnimatedBarGroup,
@@ -2826,6 +2827,18 @@ const catalog: CatalogItem[] = [
     label: 'ChatGPT Web',
     tags: ['Web', 'Chat', 'Assistant', 'Social'],
     value: 'marketing-chatgpt-web',
+    width: 1080,
+  },
+  {
+    code: '<TaskLauncherAnimation />',
+    component: TaskLauncherAnimation,
+    description: 'Cards de ação que se transformam em prompt com cursor, typing e CTA.',
+    duration: 220,
+    height: 1920,
+    kind: 'Marketing',
+    label: 'Task Launcher',
+    tags: ['Prompt', 'Cursor', 'SaaS', 'Marketing'],
+    value: 'marketing-task-launcher',
     width: 1080,
   },
   {
