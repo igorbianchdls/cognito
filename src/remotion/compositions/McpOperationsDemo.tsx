@@ -556,6 +556,53 @@ const chatGptExpenseResultData = {
   ],
 } satisfies DataResultStructuredContent
 
+const chatGptServiceOrderContextData = {
+  ok: true,
+  tool: 'crm',
+  view: 'table',
+  title: 'Contexto operacional',
+  resource: 'operacao/ordens-servico',
+  count: 3,
+  columns: ['Campo', 'Encontrado', 'Status', 'SLA'],
+  rows: [
+    { Campo: 'Cliente', Encontrado: 'Cliente Norte Ltda', Status: 'Contrato ativo', SLA: '24h' },
+    { Campo: 'Endereco', Encontrado: 'Unidade Recife', Status: 'Confirmado', SLA: '24h' },
+    { Campo: 'Servico', Encontrado: 'Manutencao preventiva', Status: 'Elegivel', SLA: '24h' },
+  ],
+} satisfies DataResultStructuredContent
+
+const chatGptServiceOrderDraftData = {
+  ok: true,
+  tool: 'analysis',
+  view: 'analysis',
+  type: 'service_order_preview',
+  title: 'OS preparada',
+  subtitle: 'Aguardando confirmacao',
+  summary: 'Preparei a OS para Cliente Norte, prioridade alta, tecnico Bruno Lima disponivel as 14h e checklist de manutencao preventiva.',
+  metrics: [
+    { label: 'Prioridade', value: 'Alta', tone: 'warning' },
+    { label: 'Tecnico', value: 'Bruno', tone: 'positive' },
+    { label: 'SLA', value: '24h', tone: 'neutral' },
+  ],
+  next_steps: ['Criar OS', 'Alocar tecnico', 'Avisar cliente'],
+} satisfies AnalysisStructuredContent
+
+const chatGptServiceOrderResultData = {
+  ok: true,
+  tool: 'operacao',
+  view: 'table',
+  title: 'Ordem de servico criada',
+  resource: 'operacao/ordens-servico',
+  count: 4,
+  columns: ['Etapa', 'Responsavel', 'Referencia', 'Status'],
+  rows: [
+    { Etapa: 'OS', Responsavel: 'Operacoes', Referencia: 'OS-1842', Status: 'Criada' },
+    { Etapa: 'Tecnico', Responsavel: 'Bruno Lima', Referencia: '14h', Status: 'Alocado' },
+    { Etapa: 'Checklist', Responsavel: 'Sistema', Referencia: 'Preventiva', Status: 'Gerado' },
+    { Etapa: 'Aviso', Responsavel: 'WhatsApp', Referencia: 'Cliente Norte', Status: 'Enviado' },
+  ],
+} satisfies DataResultStructuredContent
+
 function CognitoBrand() {
   return (
     <div style={{ alignItems: 'center', display: 'flex', gap: 15 }}>
@@ -3309,8 +3356,8 @@ function ChatGptMobileScreenshot() {
   const frame = useCurrentFrame()
   const conversationY = interpolate(
     frame,
-    [0, 150, 300, 470, 640, 810, 980, 1150, 1320],
-    [0, 0, -520, -1120, -1780, -2400, -3020, -3640, -4260],
+    [0, 150, 300, 470, 640, 810, 980, 1150, 1320, 1500, 1700, 1880],
+    [0, 0, -520, -1120, -1780, -2400, -3020, -3640, -4260, -4860, -5480, -6100],
     {
       extrapolateLeft: 'clamp',
       extrapolateRight: 'clamp',
@@ -3401,7 +3448,29 @@ function ChatGptMobileScreenshot() {
             <AnimatedMcpTableView data={chatGptExpenseResultData} startFrame={1418} />
           </ChatGptToolResultCard>
 
-          <div style={chatGptSequenceStyle(frame, 1474, 14)}>
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 1518, 18)}>
+            Crie uma ordem de servico
+          </ChatGptFlowUserBubble>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 1556, 22)}>
+            Busquei contrato, endereco, SLA e tipo de atendimento do cliente.
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 1586, 22)}>
+            <AnimatedMcpTableView data={chatGptServiceOrderContextData} startFrame={1586} />
+          </ChatGptToolResultCard>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 1698, 22)}>
+            Sugeri tecnico, agenda e checklist. Posso criar a OS e avisar o cliente?
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 1728, 22)}>
+            <AnimatedMcpAnalysisView data={chatGptServiceOrderDraftData} startFrame={1728} />
+          </ChatGptToolResultCard>
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 1840, 18)}>
+            Sim, pode criar
+          </ChatGptFlowUserBubble>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 1878, 22)}>
+            <AnimatedMcpTableView data={chatGptServiceOrderResultData} startFrame={1878} />
+          </ChatGptToolResultCard>
+
+          <div style={chatGptSequenceStyle(frame, 1948, 14)}>
             <div style={{ padding: '10px 0 0 45px' }}>
               <ChatGptActionRow />
             </div>
