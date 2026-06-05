@@ -4797,6 +4797,147 @@ function ArtifactReconciliationMatchGalleryScene({ footer, items, status }: { fo
   )
 }
 
+function ArtifactReconciliationSplitGalleryScene({ footer, items, status }: { footer: string; items: VerticalPipelineItem[]; status: string }) {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const activeIndex = Math.floor(frame / 116) % items.length
+  const active = items[activeIndex]
+  const match = progress(frame % 116, 20, 72)
+
+  return (
+    <PremiumSceneShell footer={footer} status={status}>
+      <section style={{ left: 62, opacity: sceneIn, position: 'absolute', right: 62, top: 300, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 20 }}>
+        <div style={{ display: 'grid', gap: 10, marginBottom: 40 }}>
+          <span style={{ color: active.accent, fontSize: 23, fontWeight: 900, textTransform: 'uppercase' }}>{active.status}</span>
+          <strong style={{ color: '#0f1512', fontSize: 72, letterSpacing: 0, lineHeight: 0.96 }}>Match em split screen</strong>
+        </div>
+        <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 38, boxShadow: '0 42px 100px rgba(20,24,22,0.18)', display: 'grid', gap: 26, gridTemplateColumns: '1fr 160px 1fr', minHeight: 900, padding: 34, position: 'relative' }}>
+          <div style={{ display: 'grid', gap: 18 }}>
+            <strong style={{ color: '#65716a', fontSize: 24, fontWeight: 900, textTransform: 'uppercase' }}>Banco</strong>
+            {items.map((item, index) => {
+              const activeRow = index === activeIndex
+              return (
+                <div key={`${item.title}-split-bank`} style={{ background: activeRow ? '#102019' : '#f7faf7', border: `1px solid ${activeRow ? '#102019' : '#dfe7e1'}`, borderRadius: 26, color: activeRow ? '#ffffff' : '#0f1512', display: 'grid', gap: 10, minHeight: 142, padding: 22, transform: `scale(${activeRow ? 1.02 : 1})` }}>
+                  <span style={{ color: activeRow ? 'rgba(255,255,255,0.62)' : '#65716a', fontSize: 18, fontWeight: 850 }}>{item.eyebrow}</span>
+                  <strong style={{ color: activeRow ? '#ffffff' : '#0f1512', fontSize: 32, letterSpacing: 0, lineHeight: 1 }}>{item.title}</strong>
+                  <span style={{ color: item.accent, fontSize: 29, fontWeight: 900 }}>{item.secondary}</span>
+                </div>
+              )
+            })}
+          </div>
+          <div style={{ alignItems: 'center', display: 'grid', justifyItems: 'center', paddingTop: 66 }}>
+            {items.map((item, index) => {
+              const activeRow = index === activeIndex
+              return (
+                <div key={`${item.title}-split-line`} style={{ alignItems: 'center', display: 'grid', height: 160, justifyItems: 'center', position: 'relative', width: 150 }}>
+                  <span style={{ background: activeRow ? item.accent : '#dfe7e1', borderRadius: 999, boxShadow: activeRow ? `0 0 44px ${item.accent}66` : 'none', display: 'block', height: activeRow ? 12 : 6, transform: `scaleX(${activeRow ? 0.24 + match * 0.88 : 0.42})`, width: 142 }} />
+                  {activeRow ? <span style={{ alignItems: 'center', background: item.accent, borderRadius: 999, color: '#ffffff', display: 'flex', fontSize: 26, fontWeight: 900, height: 58, justifyContent: 'center', position: 'absolute', width: 58 }}>✓</span> : null}
+                </div>
+              )
+            })}
+          </div>
+          <div style={{ display: 'grid', gap: 18 }}>
+            <strong style={{ color: '#65716a', fontSize: 24, fontWeight: 900, textTransform: 'uppercase' }}>ERP</strong>
+            {items.map((item, index) => {
+              const activeRow = index === activeIndex
+              return (
+                <div key={`${item.title}-split-erp`} style={{ background: activeRow ? item.accent : '#f7faf7', border: `1px solid ${activeRow ? item.accent : '#dfe7e1'}`, borderRadius: 26, color: activeRow ? '#ffffff' : '#0f1512', display: 'grid', gap: 10, minHeight: 142, padding: 22, transform: `scale(${activeRow ? 1.02 : 1})` }}>
+                  <span style={{ color: activeRow ? 'rgba(255,255,255,0.70)' : '#65716a', fontSize: 18, fontWeight: 850 }}>{item.metric}</span>
+                  <strong style={{ color: activeRow ? '#ffffff' : '#0f1512', fontSize: 32, letterSpacing: 0, lineHeight: 1 }}>{item.status}</strong>
+                  <span style={{ color: activeRow ? '#ffffff' : item.accent, fontSize: 29, fontWeight: 900 }}>{item.secondary}</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+    </PremiumSceneShell>
+  )
+}
+
+function ArtifactReconciliationMatrixGalleryScene({ footer, items, status }: { footer: string; items: VerticalPipelineItem[]; status: string }) {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const activeIndex = Math.floor(frame / 104) % items.length
+  const active = items[activeIndex]
+  const scan = progress(frame % 104, 12, 76)
+
+  return (
+    <PremiumSceneShell footer={footer} status={status}>
+      <section style={{ left: 62, opacity: sceneIn, position: 'absolute', right: 62, top: 300, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 20 }}>
+        <div style={{ display: 'grid', gap: 10, marginBottom: 40 }}>
+          <span style={{ color: active.accent, fontSize: 23, fontWeight: 900, textTransform: 'uppercase' }}>Score {Math.round(82 + scan * 16)}%</span>
+          <strong style={{ color: '#0f1512', fontSize: 72, letterSpacing: 0, lineHeight: 0.96 }}>Matriz de match banco x ERP</strong>
+        </div>
+        <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 38, boxShadow: '0 42px 100px rgba(20,24,22,0.18)', display: 'grid', gap: 22, minHeight: 900, padding: 34, position: 'relative' }}>
+          <div style={{ display: 'grid', gap: 14, gridTemplateColumns: '170px repeat(4, 1fr)' }}>
+            <span />
+            {items.map((item) => <strong key={`${item.title}-head`} style={{ color: '#65716a', fontSize: 18, fontWeight: 900, lineHeight: 1.05, textAlign: 'center' }}>{item.metric}</strong>)}
+            {items.map((bank, row) => (
+              <div key={`${bank.title}-matrix-row`} style={{ display: 'contents' }}>
+                <strong key={`${bank.title}-label`} style={{ alignItems: 'center', color: '#0f1512', display: 'flex', fontSize: 21, fontWeight: 900, lineHeight: 1.05 }}>{bank.title}</strong>
+                {items.map((erp, col) => {
+                  const matched = row === col
+                  const activeCell = row === activeIndex && col === activeIndex
+                  return (
+                    <div key={`${bank.title}-${erp.metric}`} style={{ alignItems: 'center', background: activeCell ? active.accent : matched ? '#e8f2ec' : '#f7faf7', border: `1px solid ${activeCell ? active.accent : matched ? '#b9d1c2' : '#dfe7e1'}`, borderRadius: 22, color: activeCell ? '#ffffff' : matched ? '#225f42' : '#65716a', display: 'grid', gap: 6, height: 112, justifyItems: 'center', position: 'relative', transform: `scale(${activeCell ? 1.06 : 1})` }}>
+                      <strong style={{ color: activeCell ? '#ffffff' : matched ? '#225f42' : '#65716a', fontSize: 25, letterSpacing: 0 }}>{matched ? '98%' : `${62 + ((row + col) % 3) * 8}%`}</strong>
+                      <span style={{ color: activeCell ? 'rgba(255,255,255,0.76)' : '#65716a', fontSize: 15, fontWeight: 820 }}>{matched ? 'match' : 'review'}</span>
+                      {activeCell ? <span style={{ background: 'rgba(255,255,255,0.40)', bottom: 0, left: `${scan * 100 - 28}%`, position: 'absolute', top: 0, transform: 'skewX(-14deg)', width: 28 }} /> : null}
+                    </div>
+                  )
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </PremiumSceneShell>
+  )
+}
+
+function ArtifactReconciliationLedgerSweepGalleryScene({ footer, items, status }: { footer: string; items: VerticalPipelineItem[]; status: string }) {
+  const frame = useCurrentFrame()
+  const sceneIn = progress(frame, 0, 38)
+  const activeIndex = Math.floor(frame / 110) % items.length
+  const active = items[activeIndex]
+  const sweep = (frame * 4.4) % 780
+
+  return (
+    <PremiumSceneShell footer={footer} status={status}>
+      <section style={{ left: 62, opacity: sceneIn, position: 'absolute', right: 62, top: 300, transform: `translateY(${(1 - sceneIn) * 34}px)`, zIndex: 20 }}>
+        <div style={{ display: 'grid', gap: 10, marginBottom: 40 }}>
+          <span style={{ color: active.accent, fontSize: 23, fontWeight: 900, textTransform: 'uppercase' }}>{active.status}</span>
+          <strong style={{ color: '#0f1512', fontSize: 72, letterSpacing: 0, lineHeight: 0.96 }}>Ledger sweep conciliando linhas</strong>
+        </div>
+        <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 38, boxShadow: '0 42px 100px rgba(20,24,22,0.18)', minHeight: 900, overflow: 'hidden', padding: 34, position: 'relative' }}>
+          <span style={{ background: `linear-gradient(90deg, transparent, ${active.accent}33, transparent)`, bottom: 0, left: sweep - 220, position: 'absolute', top: 0, transform: 'skewX(-15deg)', width: 160, zIndex: 4 }} />
+          <div style={{ display: 'grid', gap: 16, position: 'relative', zIndex: 10 }}>
+            <div style={{ color: '#65716a', display: 'grid', fontSize: 20, fontWeight: 900, gridTemplateColumns: '1fr 1fr 150px 150px', padding: '0 20px', textTransform: 'uppercase' }}>
+              <span>Banco</span>
+              <span>ERP</span>
+              <span>Valor</span>
+              <span>Status</span>
+            </div>
+            {items.concat(items).map((item, index) => {
+              const itemIndex = index % items.length
+              const activeRow = itemIndex === activeIndex
+              return (
+                <div key={`${item.title}-${index}-sweep`} style={{ alignItems: 'center', background: activeRow ? '#102019' : '#f7faf7', border: `1px solid ${activeRow ? '#102019' : '#dfe7e1'}`, borderRadius: 24, color: activeRow ? '#ffffff' : '#0f1512', display: 'grid', gap: 18, gridTemplateColumns: '1fr 1fr 150px 150px', minHeight: 88, padding: '18px 20px', transform: `translateX(${activeRow ? 8 : 0}px)` }}>
+                  <strong style={{ color: activeRow ? '#ffffff' : '#0f1512', fontSize: 25, letterSpacing: 0 }}>{item.title}</strong>
+                  <span style={{ color: activeRow ? 'rgba(255,255,255,0.74)' : '#65716a', fontSize: 22, fontWeight: 780 }}>{item.metric}</span>
+                  <strong style={{ color: activeRow ? '#ffffff' : item.accent, fontSize: 24, letterSpacing: 0 }}>{item.secondary}</strong>
+                  <span style={{ background: activeRow ? item.accent : '#e8f2ec', borderRadius: 999, color: activeRow ? '#ffffff' : '#225f42', fontSize: 18, fontWeight: 900, padding: '11px 13px', textAlign: 'center' }}>{activeRow ? 'Matched' : 'Ready'}</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+    </PremiumSceneShell>
+  )
+}
+
 function ArtifactDashboardMosaicGalleryScene({ footer, items, status }: { footer: string; items: VerticalPipelineItem[]; status: string }) {
   const frame = useCurrentFrame()
   const sceneIn = progress(frame, 0, 38)
@@ -5025,6 +5166,36 @@ export function SaaSArtifactReconciliationMatchGalleryAnimation() {
       footer="Galeria de conciliação com pares banco e ERP"
       items={reconciliationPipelineItems}
       status="Reconciliation match gallery"
+    />
+  )
+}
+
+export function SaaSArtifactReconciliationSplitGalleryAnimation() {
+  return (
+    <ArtifactReconciliationSplitGalleryScene
+      footer="Galeria de conciliacao em split screen banco x ERP"
+      items={reconciliationPipelineItems}
+      status="Reconciliation split gallery"
+    />
+  )
+}
+
+export function SaaSArtifactReconciliationMatrixGalleryAnimation() {
+  return (
+    <ArtifactReconciliationMatrixGalleryScene
+      footer="Galeria de conciliacao em matriz de score"
+      items={reconciliationPipelineItems}
+      status="Reconciliation matrix gallery"
+    />
+  )
+}
+
+export function SaaSArtifactReconciliationLedgerSweepGalleryAnimation() {
+  return (
+    <ArtifactReconciliationLedgerSweepGalleryScene
+      footer="Galeria de conciliacao com sweep no ledger"
+      items={reconciliationPipelineItems}
+      status="Reconciliation ledger sweep"
     />
   )
 }
