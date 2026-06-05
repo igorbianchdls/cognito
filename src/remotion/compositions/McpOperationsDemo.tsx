@@ -715,6 +715,165 @@ const chatGptPaidTrafficResultData = {
   ],
 } satisfies DataResultStructuredContent
 
+const chatGptInventoryCurrentData = {
+  ok: true,
+  tool: 'erp',
+  view: 'table',
+  title: 'Estoque atual',
+  resource: 'estoque/estoque-atual',
+  count: 4,
+  columns: ['Produto', 'Disponivel', 'Minimo', 'Reservado'],
+  rows: [
+    { Produto: 'Kit Premium 500ml', Disponivel: '42', Minimo: '80', Reservado: '18' },
+    { Produto: 'Refil Essencial', Disponivel: '128', Minimo: '120', Reservado: '34' },
+    { Produto: 'Combo Profissional', Disponivel: '16', Minimo: '45', Reservado: '9' },
+    { Produto: 'Acessorio Pro', Disponivel: '210', Minimo: '90', Reservado: '22' },
+  ],
+} satisfies DataResultStructuredContent
+
+const chatGptInventorySalesVelocityData = {
+  ok: true,
+  tool: 'ecommerce',
+  view: 'table',
+  title: 'Giro de vendas',
+  resource: 'ecommerce/vendas-produtos',
+  count: 4,
+  columns: ['Produto', 'Vendas 7d', 'Media/dia', 'Dias restantes'],
+  rows: [
+    { Produto: 'Kit Premium 500ml', 'Vendas 7d': '96', 'Media/dia': '13,7', 'Dias restantes': '3 dias' },
+    { Produto: 'Refil Essencial', 'Vendas 7d': '54', 'Media/dia': '7,7', 'Dias restantes': '16 dias' },
+    { Produto: 'Combo Profissional', 'Vendas 7d': '42', 'Media/dia': '6,0', 'Dias restantes': '2 dias' },
+    { Produto: 'Acessorio Pro', 'Vendas 7d': '25', 'Media/dia': '3,6', 'Dias restantes': '58 dias' },
+  ],
+} satisfies DataResultStructuredContent
+
+const chatGptInventoryOpenPurchasesData = {
+  ok: true,
+  tool: 'erp',
+  view: 'table',
+  title: 'Compras em aberto',
+  resource: 'compras/pedidos',
+  count: 3,
+  columns: ['Produto', 'Fornecedor', 'Quantidade', 'Chegada'],
+  rows: [
+    { Produto: 'Kit Premium 500ml', Fornecedor: 'Prime Fornecedores', Quantidade: '120', Chegada: '10 jun' },
+    { Produto: 'Combo Profissional', Fornecedor: 'Sul Distribuidora', Quantidade: '60', Chegada: '14 jun' },
+    { Produto: 'Refil Essencial', Fornecedor: 'Prime Fornecedores', Quantidade: '200', Chegada: '18 jun' },
+  ],
+} satisfies DataResultStructuredContent
+
+const chatGptInventoryRiskPlanData = {
+  ok: true,
+  tool: 'analysis',
+  view: 'analysis',
+  type: 'inventory_rupture_plan',
+  title: 'Plano de estoque',
+  subtitle: 'Risco de ruptura',
+  summary: 'Kit Premium e Combo Profissional podem romper antes da proxima entrega. Sugiro antecipar compra, transferir saldo parado e pausar anuncios dos itens criticos.',
+  metrics: [
+    { label: 'Criticos', value: '2', tone: 'warning' },
+    { label: 'Receita em risco', value: 'R$ 38 mil', tone: 'warning' },
+    { label: 'Acao', value: 'Reposicao', tone: 'positive' },
+  ],
+  next_steps: ['Antecipar pedido do Kit Premium', 'Criar compra extra do Combo Profissional', 'Pausar campanha de itens sem cobertura'],
+} satisfies AnalysisStructuredContent
+
+const chatGptInventoryReplenishmentData = {
+  ok: true,
+  tool: 'erp',
+  view: 'table',
+  title: 'Reposicao preparada',
+  resource: 'compras/requisicoes',
+  count: 4,
+  columns: ['Produto', 'Acao', 'Quantidade', 'Status'],
+  rows: [
+    { Produto: 'Kit Premium 500ml', Acao: 'Antecipar entrega', Quantidade: '120', Status: 'Rascunho' },
+    { Produto: 'Combo Profissional', Acao: 'Comprar extra', Quantidade: '80', Status: 'Rascunho' },
+    { Produto: 'Acessorio Pro', Acao: 'Transferir saldo', Quantidade: '40', Status: 'Sugerido' },
+    { Produto: 'Kit Premium 500ml', Acao: 'Pausar anuncio', Quantidade: '2 campanhas', Status: 'Sugerido' },
+  ],
+} satisfies DataResultStructuredContent
+
+const chatGptSupportWhatsappData = {
+  ok: true,
+  tool: 'atendimento',
+  view: 'table',
+  title: 'WhatsApp pendente',
+  resource: 'atendimento/whatsapp',
+  count: 4,
+  columns: ['Cliente', 'Assunto', 'Espera', 'Prioridade'],
+  rows: [
+    { Cliente: 'Cliente Norte', Assunto: 'Status do pedido', Espera: '42 min', Prioridade: 'Alta' },
+    { Cliente: 'Mercado Alfa', Assunto: 'Segunda via', Espera: '18 min', Prioridade: 'Media' },
+    { Cliente: 'Delta Foods', Assunto: 'Reclamacao entrega', Espera: '1h12', Prioridade: 'Alta' },
+    { Cliente: 'Lead Recife', Assunto: 'Preco atacado', Espera: '9 min', Prioridade: 'Comercial' },
+  ],
+} satisfies DataResultStructuredContent
+
+const chatGptSupportInstagramData = {
+  ok: true,
+  tool: 'atendimento',
+  view: 'table',
+  title: 'Instagram',
+  resource: 'atendimento/instagram',
+  count: 4,
+  columns: ['Perfil', 'Tipo', 'Assunto', 'Urgencia'],
+  rows: [
+    { Perfil: '@loja.norte', Tipo: 'DM', Assunto: 'Troca de produto', Urgencia: 'Alta' },
+    { Perfil: '@clientevip', Tipo: 'Comentario', Assunto: 'Cupom expirado', Urgencia: 'Media' },
+    { Perfil: '@revenda.pe', Tipo: 'DM', Assunto: 'Proposta revenda', Urgencia: 'Comercial' },
+    { Perfil: '@comprador24', Tipo: 'DM', Assunto: 'Prazo entrega', Urgencia: 'Baixa' },
+  ],
+} satisfies DataResultStructuredContent
+
+const chatGptSupportEmailData = {
+  ok: true,
+  tool: 'atendimento',
+  view: 'table',
+  title: 'Email pendente',
+  resource: 'atendimento/email',
+  count: 4,
+  columns: ['Remetente', 'Categoria', 'Prazo', 'Responsavel'],
+  rows: [
+    { Remetente: 'financeiro@norte.com', Categoria: 'Boleto', Prazo: 'Hoje', Responsavel: 'Financeiro' },
+    { Remetente: 'compras@alfa.com', Categoria: 'Pedido B2B', Prazo: 'Hoje', Responsavel: 'Comercial' },
+    { Remetente: 'sac@delta.com', Categoria: 'Reclamacao', Prazo: '2h', Responsavel: 'Suporte' },
+    { Remetente: 'lead@recife.com', Categoria: 'Proposta', Prazo: 'Amanha', Responsavel: 'Vendas' },
+  ],
+} satisfies DataResultStructuredContent
+
+const chatGptSupportOmnichannelPlanData = {
+  ok: true,
+  tool: 'analysis',
+  view: 'analysis',
+  type: 'support_omnichannel_plan',
+  title: 'Plano omnichannel',
+  subtitle: 'Sugestao de atendimento',
+  summary: 'Analisei WhatsApp, Instagram e email. Sugiro responder duvidas simples, abrir tickets para reclamacoes e encaminhar oportunidades comerciais para o time de vendas.',
+  metrics: [
+    { label: 'Mensagens', value: '12', tone: 'neutral' },
+    { label: 'Urgentes', value: '4', tone: 'warning' },
+    { label: 'Comerciais', value: '3', tone: 'positive' },
+  ],
+  next_steps: ['Preparar respostas por canal', 'Abrir tickets criticos', 'Encaminhar oportunidades para vendas'],
+} satisfies AnalysisStructuredContent
+
+const chatGptSupportResponsesData = {
+  ok: true,
+  tool: 'atendimento',
+  view: 'table',
+  title: 'Respostas preparadas',
+  resource: 'atendimento/rascunhos',
+  count: 4,
+  columns: ['Canal', 'Destino', 'Acao sugerida', 'Status'],
+  rows: [
+    { Canal: 'WhatsApp', Destino: 'Cliente Norte', 'Acao sugerida': 'Enviar status do pedido', Status: 'Rascunho' },
+    { Canal: 'Instagram', Destino: '@loja.norte', 'Acao sugerida': 'Abrir ticket de troca', Status: 'Rascunho' },
+    { Canal: 'Email', Destino: 'compras@alfa.com', 'Acao sugerida': 'Enviar proposta B2B', Status: 'Rascunho' },
+    { Canal: 'WhatsApp', Destino: 'Delta Foods', 'Acao sugerida': 'Escalar reclamacao', Status: 'Rascunho' },
+  ],
+} satisfies DataResultStructuredContent
+
 function CognitoBrand() {
   return (
     <div style={{ alignItems: 'center', display: 'flex', gap: 15 }}>
@@ -3468,8 +3627,8 @@ function ChatGptMobileScreenshot() {
   const frame = useCurrentFrame()
   const conversationY = interpolate(
     frame,
-    [0, 170, 340, 540, 740, 960, 1160, 1380, 1600, 1820, 2040, 2260, 2480, 2700, 2920, 3140, 3360, 3580, 3820, 4100],
-    [0, 0, -620, -1300, -1980, -2700, -3380, -4080, -4780, -5480, -6180, -6880, -7580, -8280, -8980, -9680, -10360, -11040, -11720, -12400],
+    [0, 170, 340, 540, 740, 960, 1160, 1380, 1600, 1820, 2040, 2260, 2480, 2700, 2920, 3140, 3360, 3580, 3820, 4100, 4320, 4540, 4760, 4980, 5200, 5420, 5640, 5900],
+    [0, 0, -620, -1300, -1980, -2700, -3380, -4080, -4780, -5480, -6180, -6880, -7580, -8280, -8980, -9680, -10360, -11040, -11720, -12400, -13080, -13760, -14440, -15120, -15800, -16480, -17160, -17840],
     {
       extrapolateLeft: 'clamp',
       extrapolateRight: 'clamp',
@@ -3662,7 +3821,75 @@ function ChatGptMobileScreenshot() {
             <AnimatedMcpTableView data={chatGptPaidTrafficResultData} startFrame={3970} />
           </ChatGptToolResultCard>
 
-          <div style={chatGptSequenceStyle(frame, 4088, 14)}>
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 4138, 18)}>
+            Analise risco de ruptura no estoque
+          </ChatGptFlowUserBubble>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 4176, 22)}>
+            Primeiro li o estoque atual e separei os itens abaixo do ponto de seguranca.
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 4206, 22)}>
+            <AnimatedMcpTableView data={chatGptInventoryCurrentData} startFrame={4206} />
+          </ChatGptToolResultCard>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 4318, 22)}>
+            Depois cruzei com vendas recentes para estimar quantos dias cada produto ainda dura.
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 4348, 22)}>
+            <AnimatedMcpTableView data={chatGptInventorySalesVelocityData} startFrame={4348} />
+          </ChatGptToolResultCard>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 4460, 22)}>
+            Tambem verifiquei pedidos de compra em aberto para evitar reposicao duplicada.
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 4490, 22)}>
+            <AnimatedMcpTableView data={chatGptInventoryOpenPurchasesData} startFrame={4490} />
+          </ChatGptToolResultCard>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 4602, 22)}>
+            Encontrei ruptura provavel antes da proxima entrega. Posso preparar a reposicao?
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 4632, 22)}>
+            <AnimatedMcpAnalysisView data={chatGptInventoryRiskPlanData} startFrame={4632} />
+          </ChatGptToolResultCard>
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 4750, 18)}>
+            Prepare a reposicao
+          </ChatGptFlowUserBubble>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 4790, 22)}>
+            <AnimatedMcpTableView data={chatGptInventoryReplenishmentData} startFrame={4790} />
+          </ChatGptToolResultCard>
+
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 4958, 18)}>
+            Analise os atendimentos de hoje
+          </ChatGptFlowUserBubble>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 4996, 22)}>
+            Primeiro analisei as conversas abertas no WhatsApp.
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 5026, 22)}>
+            <AnimatedMcpTableView data={chatGptSupportWhatsappData} startFrame={5026} />
+          </ChatGptToolResultCard>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 5138, 22)}>
+            Depois li DMs e comentarios do Instagram com intencao comercial ou suporte.
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 5168, 22)}>
+            <AnimatedMcpTableView data={chatGptSupportInstagramData} startFrame={5168} />
+          </ChatGptToolResultCard>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 5280, 22)}>
+            Por fim, revisei emails que precisam de resposta ou encaminhamento.
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 5310, 22)}>
+            <AnimatedMcpTableView data={chatGptSupportEmailData} startFrame={5310} />
+          </ChatGptToolResultCard>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 5422, 22)}>
+            Cruzei os tres canais e separei prioridades, oportunidades e casos que exigem humano.
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 5452, 22)}>
+            <AnimatedMcpAnalysisView data={chatGptSupportOmnichannelPlanData} startFrame={5452} />
+          </ChatGptToolResultCard>
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 5570, 18)}>
+            Prepare as respostas
+          </ChatGptFlowUserBubble>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 5610, 22)}>
+            <AnimatedMcpTableView data={chatGptSupportResponsesData} startFrame={5610} />
+          </ChatGptToolResultCard>
+
+          <div style={chatGptSequenceStyle(frame, 5740, 14)}>
             <div style={{ padding: '10px 0 0 45px' }}>
               <ChatGptActionRow />
             </div>
