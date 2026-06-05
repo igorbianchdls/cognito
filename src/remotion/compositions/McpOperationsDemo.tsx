@@ -4744,6 +4744,8 @@ function ArtifactReconciliationMatchGalleryScene({ footer, items, status }: { fo
   const activeIndex = Math.floor(frame / 122) % items.length
   const active = items[activeIndex]
   const beam = progress(frame % 122, 18, 76)
+  const bankTypes = ['PIX', 'Cartao', 'TED', 'Tarifa']
+  const bankDates = ['03 Jun', '03 Jun', '04 Jun', '04 Jun']
 
   return (
     <PremiumSceneShell footer={footer} status={status}>
@@ -4754,15 +4756,24 @@ function ArtifactReconciliationMatchGalleryScene({ footer, items, status }: { fo
         </div>
         <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 38, boxShadow: '0 42px 100px rgba(20,24,22,0.18)', display: 'grid', gap: 28, gridTemplateColumns: '1fr 92px 1fr', minHeight: 900, padding: 34, position: 'relative' }}>
           <div style={{ display: 'grid', gap: 18 }}>
-            <strong style={{ color: '#65716a', fontSize: 24, fontWeight: 900, letterSpacing: 0, textTransform: 'uppercase' }}>Banco</strong>
+            <div style={{ background: '#f7faf7', border: '1px solid #dfe7e1', borderRadius: 22, display: 'grid', gap: 7, padding: '18px 20px' }}>
+              <strong style={{ color: '#0f1512', fontSize: 27, fontWeight: 900, letterSpacing: 0 }}>Extrato bancário</strong>
+              <span style={{ color: '#65716a', fontSize: 18, fontWeight: 760 }}>Conta Stone · 03-04 Jun · Saldo R$ 184.920</span>
+            </div>
             {items.map((item, index) => {
               const activeRow = index === activeIndex
               const p = progress(frame, 28 + index * 16, 72 + index * 16)
               return (
-                <div key={`${item.title}-bank`} style={{ background: activeRow ? '#102019' : '#f7faf7', border: `1px solid ${activeRow ? '#102019' : '#dfe7e1'}`, borderRadius: 24, color: activeRow ? '#ffffff' : '#0f1512', display: 'grid', gap: 9, opacity: p, padding: 20, transform: `translateX(${(1 - p) * -24}px)` }}>
-                  <span style={{ color: activeRow ? 'rgba(255,255,255,0.62)' : '#65716a', fontSize: 18, fontWeight: 850 }}>{item.eyebrow}</span>
-                  <strong style={{ color: activeRow ? '#ffffff' : '#0f1512', fontSize: 31, letterSpacing: 0, lineHeight: 1 }}>{item.title}</strong>
-                  <span style={{ color: item.accent, fontSize: 28, fontWeight: 900 }}>{item.secondary}</span>
+                <div key={`${item.title}-bank`} style={{ alignItems: 'center', background: activeRow ? '#102019' : '#ffffff', border: `1px solid ${activeRow ? '#102019' : '#dfe7e1'}`, borderRadius: 18, color: activeRow ? '#ffffff' : '#0f1512', display: 'grid', gap: 14, gridTemplateColumns: '74px 1fr 118px', minHeight: 118, opacity: p, padding: '17px 18px', transform: `translateX(${(1 - p) * -24}px)` }}>
+                  <div style={{ display: 'grid', gap: 8 }}>
+                    <span style={{ color: activeRow ? 'rgba(255,255,255,0.58)' : '#65716a', fontSize: 16, fontWeight: 820 }}>{bankDates[index % bankDates.length]}</span>
+                    <span style={{ background: activeRow ? 'rgba(255,255,255,0.14)' : '#e8f2ec', borderRadius: 999, color: activeRow ? '#ffffff' : '#225f42', fontSize: 15, fontWeight: 900, padding: '7px 8px', textAlign: 'center' }}>{bankTypes[index % bankTypes.length]}</span>
+                  </div>
+                  <div style={{ display: 'grid', gap: 6, minWidth: 0 }}>
+                    <strong style={{ color: activeRow ? '#ffffff' : '#0f1512', fontSize: 25, letterSpacing: 0, lineHeight: 1.02 }}>{item.title}</strong>
+                    <span style={{ color: activeRow ? 'rgba(255,255,255,0.62)' : '#65716a', fontSize: 16, fontWeight: 760 }}>ID TX-{9031 + index * 173} · {item.eyebrow}</span>
+                  </div>
+                  <strong style={{ color: activeRow ? '#ffffff' : item.accent, fontSize: 24, fontWeight: 900, letterSpacing: 0, textAlign: 'right' }}>{item.secondary}</strong>
                 </div>
               )
             })}
