@@ -4746,6 +4746,8 @@ function ArtifactReconciliationMatchGalleryScene({ footer, items, status }: { fo
   const beam = progress(frame % 122, 18, 76)
   const bankTypes = ['PIX', 'Cartao', 'TED', 'Tarifa']
   const bankDates = ['03 Jun', '03 Jun', '04 Jun', '04 Jun']
+  const bankDocs = ['E2E90318471', 'CARD-1842', 'TED-774012', 'TAR-0421']
+  const bankBalances = ['R$ 184.920', 'R$ 176.480', 'R$ 151.900', 'R$ 149.870']
 
   return (
     <PremiumSceneShell footer={footer} status={status}>
@@ -4755,49 +4757,97 @@ function ArtifactReconciliationMatchGalleryScene({ footer, items, status }: { fo
           <strong style={{ color: '#0f1512', fontSize: 72, letterSpacing: 0, lineHeight: 0.96 }}>Conciliação banco e ERP em pares</strong>
         </div>
         <div style={{ background: '#ffffff', border: '1px solid #dfe7e1', borderRadius: 38, boxShadow: '0 42px 100px rgba(20,24,22,0.18)', display: 'grid', gap: 28, gridTemplateColumns: '1fr 92px 1fr', minHeight: 900, padding: 34, position: 'relative' }}>
-          <div style={{ display: 'grid', gap: 18 }}>
-            <div style={{ background: '#f7faf7', border: '1px solid #dfe7e1', borderRadius: 22, display: 'grid', gap: 7, padding: '18px 20px' }}>
-              <strong style={{ color: '#0f1512', fontSize: 27, fontWeight: 900, letterSpacing: 0 }}>Extrato bancário</strong>
-              <span style={{ color: '#65716a', fontSize: 18, fontWeight: 760 }}>Conta Stone · 03-04 Jun · Saldo R$ 184.920</span>
+          <div style={{ display: 'grid', gap: 14 }}>
+            <div style={{ background: '#f8faf8', border: '1px solid #dfe7e1', borderRadius: 22, display: 'grid', gap: 14, padding: '18px 20px' }}>
+              <div style={{ alignItems: 'start', display: 'grid', gridTemplateColumns: '1fr auto' }}>
+                <div style={{ display: 'grid', gap: 5 }}>
+                  <span style={{ color: '#65716a', fontSize: 15, fontWeight: 900, letterSpacing: 1.6, textTransform: 'uppercase' }}>Banco Stone</span>
+                  <strong style={{ color: '#0f1512', fontSize: 29, fontWeight: 900, letterSpacing: 0 }}>Extrato bancário</strong>
+                  <span style={{ color: '#65716a', fontSize: 17, fontWeight: 760 }}>Ag. 0001 · Conta 84932-7 · 03-04 Jun</span>
+                </div>
+                <span style={{ border: '1px solid #dfe7e1', borderRadius: 999, color: '#65716a', fontSize: 15, fontWeight: 900, padding: '7px 11px' }}>PDF</span>
+              </div>
+              <div style={{ display: 'grid', gap: 9, gridTemplateColumns: '1fr 1fr 1fr' }}>
+                {[
+                  ['Saldo ant.', 'R$ 152.740'],
+                  ['Entradas', 'R$ 32.180'],
+                  ['Saldo atual', 'R$ 184.920'],
+                ].map(([label, value]) => (
+                  <div key={label} style={{ background: '#ffffff', border: '1px solid #e1e8e3', borderRadius: 14, display: 'grid', gap: 3, padding: '10px 11px' }}>
+                    <span style={{ color: '#718078', fontSize: 13, fontWeight: 850 }}>{label}</span>
+                    <strong style={{ color: '#0f1512', fontSize: 17, fontWeight: 900, letterSpacing: 0 }}>{value}</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ alignItems: 'center', borderBottom: '1px solid #dfe7e1', color: '#65716a', display: 'grid', fontSize: 14, fontWeight: 900, gridTemplateColumns: '72px 1fr 98px 114px 110px', letterSpacing: 0.3, padding: '0 14px 9px', textTransform: 'uppercase' }}>
+              <span>Data</span>
+              <span>Historico</span>
+              <span>Doc.</span>
+              <span style={{ textAlign: 'right' }}>Valor</span>
+              <span style={{ textAlign: 'right' }}>Saldo</span>
             </div>
             {items.map((item, index) => {
               const activeRow = index === activeIndex
               const p = progress(frame, 28 + index * 16, 72 + index * 16)
               return (
-                <div key={`${item.title}-bank`} style={{ alignItems: 'center', background: activeRow ? '#102019' : '#ffffff', border: `1px solid ${activeRow ? '#102019' : '#dfe7e1'}`, borderRadius: 18, color: activeRow ? '#ffffff' : '#0f1512', display: 'grid', gap: 14, gridTemplateColumns: '74px 1fr 118px', minHeight: 118, opacity: p, padding: '17px 18px', transform: `translateX(${(1 - p) * -24}px)` }}>
-                  <div style={{ display: 'grid', gap: 8 }}>
-                    <span style={{ color: activeRow ? 'rgba(255,255,255,0.58)' : '#65716a', fontSize: 16, fontWeight: 820 }}>{bankDates[index % bankDates.length]}</span>
-                    <span style={{ background: activeRow ? 'rgba(255,255,255,0.14)' : '#e8f2ec', borderRadius: 999, color: activeRow ? '#ffffff' : '#225f42', fontSize: 15, fontWeight: 900, padding: '7px 8px', textAlign: 'center' }}>{bankTypes[index % bankTypes.length]}</span>
+                <div key={`${item.title}-bank`} style={{ alignItems: 'center', background: activeRow ? '#102019' : '#ffffff', border: `1px solid ${activeRow ? '#102019' : '#dfe7e1'}`, borderRadius: 16, color: activeRow ? '#ffffff' : '#0f1512', display: 'grid', gap: 12, gridTemplateColumns: '72px 1fr 98px 114px 110px', minHeight: 102, opacity: p, padding: '14px 14px', transform: `translateX(${(1 - p) * -24}px)` }}>
+                  <span style={{ color: activeRow ? 'rgba(255,255,255,0.66)' : '#65716a', fontSize: 17, fontWeight: 850 }}>{bankDates[index % bankDates.length]}</span>
+                  <div style={{ display: 'grid', gap: 5, minWidth: 0 }}>
+                    <strong style={{ color: activeRow ? '#ffffff' : '#0f1512', fontSize: 21, letterSpacing: 0, lineHeight: 1.02 }}>LANC. {item.title}</strong>
+                    <span style={{ color: activeRow ? 'rgba(255,255,255,0.62)' : '#65716a', fontSize: 14, fontWeight: 800 }}>{bankTypes[index % bankTypes.length]} · {item.eyebrow}</span>
                   </div>
-                  <div style={{ display: 'grid', gap: 6, minWidth: 0 }}>
-                    <strong style={{ color: activeRow ? '#ffffff' : '#0f1512', fontSize: 25, letterSpacing: 0, lineHeight: 1.02 }}>{item.title}</strong>
-                    <span style={{ color: activeRow ? 'rgba(255,255,255,0.62)' : '#65716a', fontSize: 16, fontWeight: 760 }}>ID TX-{9031 + index * 173} · {item.eyebrow}</span>
-                  </div>
-                  <strong style={{ color: activeRow ? '#ffffff' : item.accent, fontSize: 24, fontWeight: 900, letterSpacing: 0, textAlign: 'right' }}>{item.secondary}</strong>
+                  <span style={{ color: activeRow ? 'rgba(255,255,255,0.68)' : '#65716a', fontSize: 14, fontWeight: 850 }}>{bankDocs[index % bankDocs.length]}</span>
+                  <strong style={{ color: activeRow ? '#ffffff' : item.accent, fontSize: 20, fontWeight: 900, letterSpacing: 0, textAlign: 'right' }}>{item.secondary}</strong>
+                  <strong style={{ color: activeRow ? 'rgba(255,255,255,0.76)' : '#0f1512', fontSize: 18, fontWeight: 900, letterSpacing: 0, textAlign: 'right' }}>{bankBalances[index % bankBalances.length]}</strong>
                 </div>
               )
             })}
           </div>
-          <div style={{ alignItems: 'center', display: 'grid', justifyItems: 'center', paddingTop: 54 }}>
+          <div style={{ alignItems: 'start', display: 'grid', justifyItems: 'center', paddingTop: 226 }}>
             {items.map((item, index) => {
               const activeRow = index === activeIndex
               return (
-                <div key={`${item.title}-beam`} style={{ alignItems: 'center', display: 'grid', height: 118, justifyItems: 'center' }}>
+                <div key={`${item.title}-beam`} style={{ alignItems: 'center', display: 'grid', height: 116, justifyItems: 'center' }}>
                   <span style={{ background: activeRow ? item.accent : '#dfe7e1', borderRadius: 999, boxShadow: activeRow ? `0 0 40px ${item.accent}66` : 'none', display: 'block', height: activeRow ? 10 : 6, opacity: activeRow ? 1 : 0.6, transform: `scaleX(${activeRow ? 0.36 + beam * 0.86 : 0.52})`, width: 92 }} />
                 </div>
               )
             })}
           </div>
-          <div style={{ display: 'grid', gap: 18 }}>
-            <strong style={{ color: '#65716a', fontSize: 24, fontWeight: 900, letterSpacing: 0, textTransform: 'uppercase' }}>ERP</strong>
+          <div style={{ display: 'grid', gap: 14 }}>
+            <div style={{ background: '#f7faf7', border: '1px solid #dfe7e1', borderRadius: 22, display: 'grid', gap: 14, padding: '18px 20px' }}>
+              <div style={{ display: 'grid', gap: 5 }}>
+                <span style={{ color: '#65716a', fontSize: 15, fontWeight: 900, letterSpacing: 1.6, textTransform: 'uppercase' }}>ERP financeiro</span>
+                <strong style={{ color: '#0f1512', fontSize: 29, fontWeight: 900, letterSpacing: 0 }}>Titulos encontrados</strong>
+                <span style={{ color: '#65716a', fontSize: 17, fontWeight: 760 }}>Contas a receber · NF-e · Boletos</span>
+              </div>
+              <div style={{ display: 'grid', gap: 9, gridTemplateColumns: '1fr 1fr 1fr' }}>
+                {[
+                  ['Pendentes', '04'],
+                  ['Match', '98%'],
+                  ['Diverg.', '01'],
+                ].map(([label, value]) => (
+                  <div key={label} style={{ background: '#ffffff', border: '1px solid #e1e8e3', borderRadius: 14, display: 'grid', gap: 3, padding: '10px 11px' }}>
+                    <span style={{ color: '#718078', fontSize: 13, fontWeight: 850 }}>{label}</span>
+                    <strong style={{ color: '#0f1512', fontSize: 17, fontWeight: 900, letterSpacing: 0 }}>{value}</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ alignItems: 'center', borderBottom: '1px solid #dfe7e1', color: '#65716a', display: 'grid', fontSize: 14, fontWeight: 900, gridTemplateColumns: '1fr 112px', letterSpacing: 0.3, padding: '0 14px 9px', textTransform: 'uppercase' }}>
+              <span>Lancamento ERP</span>
+              <span style={{ textAlign: 'right' }}>Valor</span>
+            </div>
             {items.map((item, index) => {
               const activeRow = index === activeIndex
               const p = progress(frame, 38 + index * 16, 82 + index * 16)
               return (
-                <div key={`${item.title}-erp`} style={{ background: activeRow ? item.accent : '#f7faf7', border: `1px solid ${activeRow ? item.accent : '#dfe7e1'}`, borderRadius: 24, color: activeRow ? '#ffffff' : '#0f1512', display: 'grid', gap: 9, opacity: p, padding: 20, transform: `translateX(${(1 - p) * 24}px)` }}>
-                  <span style={{ color: activeRow ? 'rgba(255,255,255,0.70)' : '#65716a', fontSize: 18, fontWeight: 850 }}>{item.metric}</span>
-                  <strong style={{ color: activeRow ? '#ffffff' : '#0f1512', fontSize: 31, letterSpacing: 0, lineHeight: 1 }}>{item.status}</strong>
-                  <span style={{ color: activeRow ? '#ffffff' : item.accent, fontSize: 28, fontWeight: 900 }}>{item.secondary}</span>
+                <div key={`${item.title}-erp`} style={{ alignItems: 'center', background: activeRow ? item.accent : '#f7faf7', border: `1px solid ${activeRow ? item.accent : '#dfe7e1'}`, borderRadius: 16, color: activeRow ? '#ffffff' : '#0f1512', display: 'grid', gap: 12, gridTemplateColumns: '1fr 112px', minHeight: 102, opacity: p, padding: '14px 16px', transform: `translateX(${(1 - p) * 24}px)` }}>
+                  <div style={{ display: 'grid', gap: 5, minWidth: 0 }}>
+                    <span style={{ color: activeRow ? 'rgba(255,255,255,0.70)' : '#65716a', fontSize: 14, fontWeight: 850 }}>{item.metric}</span>
+                    <strong style={{ color: activeRow ? '#ffffff' : '#0f1512', fontSize: 22, letterSpacing: 0, lineHeight: 1.02 }}>{item.status}</strong>
+                  </div>
+                  <strong style={{ color: activeRow ? '#ffffff' : item.accent, fontSize: 20, fontWeight: 900, letterSpacing: 0, textAlign: 'right' }}>{item.secondary}</strong>
                 </div>
               )
             })}
