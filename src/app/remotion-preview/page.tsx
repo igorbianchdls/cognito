@@ -1138,6 +1138,175 @@ function AdAgentScanDemo() {
   )
 }
 
+function AIScanVariantDemo({ variant }: { variant: 'inbox' | 'dashboard' | 'connectors' }) {
+  const frame = useCurrentFrame()
+  const sceneIn = previewProgress(frame, 0, 34)
+  const loop = frame % 132
+  const sweep = (frame * 5.4) % 900
+  const pulse = interpolate(Math.sin(frame / 5), [-1, 1], [0.74, 1])
+  const config = {
+    connectors: {
+      accent: '#dc2626',
+      eyebrow: 'AI Scan · Connectors',
+      title: 'Scan connected sources',
+      subtitle: 'Verificando status, latência e cobertura por canal.',
+      rows: ['Shopify connected', 'Meta Ads records synced', 'ERP financial tables ready', 'Warehouse stream active'],
+    },
+    dashboard: {
+      accent: '#b91c1c',
+      eyebrow: 'AI Scan · Dashboard',
+      title: 'Scan KPI anomalies',
+      subtitle: 'Detectando variações em receita, margem e mídia paga.',
+      rows: ['Revenue spike detected', 'Paid social ROAS dropped', 'Margin stable', 'Cash runway healthy'],
+    },
+    inbox: {
+      accent: '#ef4444',
+      eyebrow: 'AI Scan · Inbox',
+      title: 'Scan messages and tasks',
+      subtitle: 'Extraindo responsáveis, prazos e riscos das conversas.',
+      rows: ['Reply needed today', 'Missing attachment found', 'Owner assigned to Sarah', 'Deadline moved to Friday'],
+    },
+  }[variant]
+  const scanFrames = [0, 22, 32, 56, 66, 92, 102, 124, 131]
+  const scanY = interpolate(loop, scanFrames, [34, 34, 196, 196, 352, 352, 558, 558, 34])
+  const scanHeight = interpolate(loop, scanFrames, [118, 118, 124, 124, 142, 142, 300, 300, 118])
+
+  return (
+    <div style={{ background: '#fff7ed', color: '#111827', fontFamily: theme.fontFamily, height: '100%', overflow: 'hidden', position: 'relative', width: '100%' }}>
+      <div style={{ background: `radial-gradient(circle at 50% 34%, ${config.accent}24, transparent 54%)`, inset: -120, opacity: sceneIn, position: 'absolute' }} />
+      <section style={{ left: 76, opacity: sceneIn, position: 'absolute', right: 76, top: 190, transform: `translateY(${(1 - sceneIn) * 28}px)`, zIndex: 10 }}>
+        <div style={{ display: 'grid', gap: 14, marginBottom: 36 }}>
+          <span style={{ color: config.accent, fontSize: 24, fontWeight: 950, letterSpacing: 1.2, textTransform: 'uppercase' }}>{config.eyebrow}</span>
+          <strong style={{ color: '#111827', fontSize: 58, fontWeight: 920, letterSpacing: 0, lineHeight: 0.96 }}>{config.title}</strong>
+        </div>
+        <article style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.10)', borderRadius: 30, boxShadow: '0 48px 110px rgba(120,53,15,0.18)', minHeight: 1000, overflow: 'hidden', padding: 34, position: 'relative' }}>
+          <header style={{ borderBottom: '1px solid #e5e7eb', display: 'grid', gap: 10, paddingBottom: 26 }}>
+            <strong style={{ color: '#0f172a', fontSize: 32, fontWeight: 900, letterSpacing: 0 }}>Connected workspace</strong>
+            <span style={{ color: '#64748b', fontSize: 22, fontWeight: 680, lineHeight: 1.2 }}>{config.subtitle}</span>
+          </header>
+          <main style={{ display: 'grid', gap: 18, paddingTop: 30 }}>
+            {config.rows.map((row, index) => (
+              <div key={row} style={{ alignItems: 'center', background: index === 1 ? '#fff1f2' : '#f8fafc', border: `1px solid ${index === 1 ? '#fecdd3' : '#e2e8f0'}`, borderRadius: 20, display: 'grid', gap: 18, gridTemplateColumns: '24px 1fr 104px', minHeight: index === 1 ? 132 : 104, padding: '20px 22px' }}>
+                <span style={{ background: index % 2 === 0 ? config.accent : '#cbd5e1', borderRadius: 999, height: 16, width: 16 }} />
+                <strong style={{ color: '#0f172a', fontSize: index === 1 ? 31 : 25, fontWeight: index === 1 ? 900 : 760, letterSpacing: 0 }}>{row}</strong>
+                <span style={{ color: index % 2 === 0 ? config.accent : '#64748b', fontSize: 18, fontWeight: 900, textAlign: 'right' }}>{index % 2 === 0 ? 'Found' : 'Scan'}</span>
+              </div>
+            ))}
+          </main>
+          <div style={{ background: 'rgba(244,63,94,0.22)', border: `4px solid ${config.accent}`, borderRadius: 18, boxShadow: `0 0 ${34 + pulse * 28}px ${config.accent}66`, height: scanHeight, left: 26, opacity: 0.98, overflow: 'hidden', position: 'absolute', right: 26, top: scanY }}>
+            <span style={{ background: 'linear-gradient(180deg, transparent, rgba(255,255,255,0.68), transparent)', height: 86, left: 0, position: 'absolute', right: 0, top: `${(sweep % 340) - 100}px` }} />
+            <span style={{ background: 'rgba(153,27,27,0.95)', borderRadius: 999, color: '#ffffff', fontSize: 15, fontWeight: 950, left: 14, letterSpacing: 0.6, padding: '8px 11px', position: 'absolute', textTransform: 'uppercase', top: 14 }}>AI Scan</span>
+          </div>
+        </article>
+      </section>
+    </div>
+  )
+}
+
+function AIScanInboxDemo() {
+  return <AIScanVariantDemo variant="inbox" />
+}
+
+function AIScanDashboardDemo() {
+  return <AIScanVariantDemo variant="dashboard" />
+}
+
+function AIScanConnectorsDemo() {
+  return <AIScanVariantDemo variant="connectors" />
+}
+
+function AdAgentVariantDemo({ variant }: { variant: 'research' | 'creative' | 'budget' }) {
+  const frame = useCurrentFrame()
+  const sceneIn = previewProgress(frame, 0, 34)
+  const loop = frame % 138
+  const pulse = interpolate(Math.sin(frame / 5), [-1, 1], [0.76, 1])
+  const sweep = (frame * 5.2) % 820
+  const config = {
+    budget: {
+      accent: '#2563eb',
+      agent: 'Budget Agent',
+      eyebrow: 'Ad Agent · Budget',
+      title: 'Reallocate spend by signal',
+      columns: ['Campaign', 'Spend', 'CPA', 'Action'],
+      rows: ['Retargeting CFOs', 'Creative Test #12', 'Board Report Launch', 'Demo Request Lookalike'],
+    },
+    creative: {
+      accent: '#db2777',
+      agent: 'Creative Agent',
+      eyebrow: 'Ad Agent · Creative',
+      title: 'Generate winning variants',
+      columns: ['Creative', 'Hook', 'CTR', 'Action'],
+      rows: ['Before/After Reel', 'Founder Story', 'Static Proof', 'Carousel Demo'],
+    },
+    research: {
+      accent: '#f97316',
+      agent: 'Research Agent',
+      eyebrow: 'Ad Agent · Research',
+      title: 'Research competitors and offers',
+      columns: ['Advertiser', 'Offer', 'Format', 'Action'],
+      rows: ['Tempo AI', 'Parenting App', 'Growth OS', 'Creative Lab'],
+    },
+  }[variant]
+  const scanFrames = [0, 24, 34, 60, 70, 96, 106, 130, 137]
+  const scanY = interpolate(loop, scanFrames, [154, 154, 278, 278, 392, 392, 522, 522, 154])
+  const scanHeight = interpolate(loop, scanFrames, [88, 88, 102, 102, 102, 102, 250, 250, 88])
+  const agentY = scanY + Math.min(scanHeight - 24, 60)
+
+  return (
+    <div style={{ background: '#edf7f4', color: '#111827', fontFamily: theme.fontFamily, height: '100%', overflow: 'hidden', position: 'relative', width: '100%' }}>
+      <div style={{ background: `radial-gradient(circle at 52% 35%, ${config.accent}24, rgba(237,247,244,0.16) 62%)`, inset: 0, opacity: sceneIn, position: 'absolute' }} />
+      <section style={{ left: 64, opacity: sceneIn, position: 'absolute', right: 64, top: 150, transform: `translateY(${(1 - sceneIn) * 28}px)`, zIndex: 10 }}>
+        <div style={{ display: 'grid', gap: 12, marginBottom: 30 }}>
+          <span style={{ color: config.accent, fontSize: 24, fontWeight: 950, letterSpacing: 1.4, textTransform: 'uppercase' }}>{config.eyebrow}</span>
+          <strong style={{ color: '#0f172a', fontSize: 58, fontWeight: 920, letterSpacing: 0, lineHeight: 0.96 }}>{config.title}</strong>
+        </div>
+        <article style={{ background: '#ffffff', border: '1px solid rgba(15,23,42,0.10)', borderRadius: 30, boxShadow: '0 48px 120px rgba(15,23,42,0.18)', minHeight: 1010, overflow: 'hidden', padding: 28, position: 'relative' }}>
+          <header style={{ alignItems: 'center', borderBottom: '1px solid #e5e7eb', display: 'grid', gap: 16, gridTemplateColumns: '56px 1fr 150px', paddingBottom: 22 }}>
+            <span style={{ alignItems: 'center', background: `${config.accent}18`, borderRadius: 16, color: config.accent, display: 'flex', fontSize: 24, fontWeight: 950, height: 56, justifyContent: 'center', width: 56 }}>Ad</span>
+            <div style={{ display: 'grid', gap: 6 }}>
+              <strong style={{ color: '#0f172a', fontSize: 30, fontWeight: 900, letterSpacing: 0 }}>Marketing workspace</strong>
+              <span style={{ color: '#64748b', fontSize: 19, fontWeight: 760 }}>Agent is scanning live campaign context</span>
+            </div>
+            <span style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 999, color: '#475569', fontSize: 17, fontWeight: 900, padding: '10px 13px', textAlign: 'center' }}>Live</span>
+          </header>
+          <main style={{ display: 'grid', gap: 12, paddingTop: 22 }}>
+            <div style={{ color: '#64748b', display: 'grid', fontSize: 17, fontWeight: 900, gridTemplateColumns: '1.2fr 1fr 0.8fr 0.9fr', padding: '0 14px 8px' }}>
+              {config.columns.map((column) => <span key={column}>{column}</span>)}
+            </div>
+            {config.rows.map((row, index) => (
+              <div key={row} style={{ alignItems: 'center', background: index < 3 ? '#fff7ed' : '#ffffff', border: `1px solid ${index < 3 ? '#fed7aa' : '#e2e8f0'}`, borderRadius: 18, display: 'grid', gap: 14, gridTemplateColumns: '1.2fr 1fr 0.8fr 0.9fr', minHeight: 88, padding: '14px 16px' }}>
+                <strong style={{ color: '#0f172a', fontSize: 21, fontWeight: 840, letterSpacing: 0 }}>{row}</strong>
+                <span style={{ color: '#334155', fontSize: 18, fontWeight: 760 }}>{index % 2 ? 'Active' : 'Rising'}</span>
+                <span style={{ color: config.accent, fontSize: 19, fontWeight: 900 }}>{index % 2 ? '3.8x' : '42%'}</span>
+                <span style={{ background: index < 3 ? '#fed7aa' : '#f8fafc', borderRadius: 999, color: index < 3 ? '#9a3412' : '#475569', fontSize: 17, fontWeight: 900, padding: '9px 11px', textAlign: 'center' }}>{index === 0 ? 'Create' : 'Queue'}</span>
+              </div>
+            ))}
+          </main>
+          <div style={{ background: 'rgba(251,113,133,0.18)', border: `4px solid ${config.accent}`, borderRadius: 18, boxShadow: `0 0 ${30 + pulse * 30}px ${config.accent}55`, height: scanHeight, left: 30, opacity: 0.98, overflow: 'hidden', position: 'absolute', right: 30, top: scanY }}>
+            <span style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.54), transparent)', bottom: 0, left: sweep - 230, position: 'absolute', top: 0, transform: 'skewX(-18deg)', width: 138 }} />
+          </div>
+          <div style={{ alignItems: 'center', background: config.accent, border: '2px solid rgba(255,255,255,0.56)', borderRadius: 12, boxShadow: '0 18px 42px rgba(15,23,42,0.22)', color: '#ffffff', display: 'flex', padding: '13px 17px', position: 'absolute', right: 76, top: agentY, transform: `scale(${0.96 + pulse * 0.04})`, zIndex: 4 }}>
+            <span style={{ color: config.accent, fontSize: 34, fontWeight: 950, left: -24, lineHeight: 1, position: 'absolute', textShadow: '0 8px 18px rgba(15,23,42,0.24)', top: -16, transform: 'rotate(-24deg)' }}>➤</span>
+            <strong style={{ color: '#ffffff', fontSize: 25, fontWeight: 920, letterSpacing: 0 }}>{config.agent}</strong>
+          </div>
+        </article>
+      </section>
+    </div>
+  )
+}
+
+function AdAgentResearchDemo() {
+  return <AdAgentVariantDemo variant="research" />
+}
+
+function AdAgentCreativeDemo() {
+  return <AdAgentVariantDemo variant="creative" />
+}
+
+function AdAgentBudgetDemo() {
+  return <AdAgentVariantDemo variant="budget" />
+}
+
 function BeforeAfterDemo() {
   return (
     <DemoStage compact>
@@ -2136,6 +2305,42 @@ const catalog: CatalogItem[] = [
     width: 1080,
   },
   {
+    code: '<AIScanInboxMock />',
+    component: AIScanInboxDemo,
+    description: 'Variação de AI Scan focada em inbox, tarefas e mensagens.',
+    duration: MCP_SINGLE_ANIMATION_DURATION,
+    height: 1920,
+    kind: 'Marketing',
+    label: 'AI Scan Inbox',
+    tags: ['AI Scan', 'Inbox', 'Marketing'],
+    value: 'ai-scan-inbox',
+    width: 1080,
+  },
+  {
+    code: '<AIScanDashboardMock />',
+    component: AIScanDashboardDemo,
+    description: 'Variação de AI Scan focada em dashboard e anomalias de KPI.',
+    duration: MCP_SINGLE_ANIMATION_DURATION,
+    height: 1920,
+    kind: 'Marketing',
+    label: 'AI Scan Dashboard',
+    tags: ['AI Scan', 'Dashboard', 'Marketing'],
+    value: 'ai-scan-dashboard',
+    width: 1080,
+  },
+  {
+    code: '<AIScanConnectorsMock />',
+    component: AIScanConnectorsDemo,
+    description: 'Variação de AI Scan focada em conectores e fontes conectadas.',
+    duration: MCP_SINGLE_ANIMATION_DURATION,
+    height: 1920,
+    kind: 'Marketing',
+    label: 'AI Scan Connectors',
+    tags: ['AI Scan', 'Connectors', 'Marketing'],
+    value: 'ai-scan-connectors',
+    width: 1080,
+  },
+  {
     code: '<AdAgentScanMock />',
     component: AdAgentScanDemo,
     description: 'Mock vertical de scan em Ads Manager com marcador animado de Ad Agent.',
@@ -2145,6 +2350,42 @@ const catalog: CatalogItem[] = [
     label: 'Ad Agent Scan',
     tags: ['Ad Agent', 'AI Scan', 'Marketing'],
     value: 'ad-agent-scan',
+    width: 1080,
+  },
+  {
+    code: '<AdAgentResearchMock />',
+    component: AdAgentResearchDemo,
+    description: 'Variação de Ad Agent analisando concorrentes, ofertas e formatos.',
+    duration: MCP_SINGLE_ANIMATION_DURATION,
+    height: 1920,
+    kind: 'Marketing',
+    label: 'Ad Agent Research',
+    tags: ['Ad Agent', 'Research', 'Marketing'],
+    value: 'ad-agent-research',
+    width: 1080,
+  },
+  {
+    code: '<AdAgentCreativeMock />',
+    component: AdAgentCreativeDemo,
+    description: 'Variação de Ad Agent gerando e priorizando criativos vencedores.',
+    duration: MCP_SINGLE_ANIMATION_DURATION,
+    height: 1920,
+    kind: 'Marketing',
+    label: 'Ad Agent Creative',
+    tags: ['Ad Agent', 'Creative', 'Marketing'],
+    value: 'ad-agent-creative',
+    width: 1080,
+  },
+  {
+    code: '<AdAgentBudgetMock />',
+    component: AdAgentBudgetDemo,
+    description: 'Variação de Ad Agent redistribuindo verba por sinal de performance.',
+    duration: MCP_SINGLE_ANIMATION_DURATION,
+    height: 1920,
+    kind: 'Marketing',
+    label: 'Ad Agent Budget',
+    tags: ['Ad Agent', 'Budget', 'Marketing'],
+    value: 'ad-agent-budget',
     width: 1080,
   },
   {
