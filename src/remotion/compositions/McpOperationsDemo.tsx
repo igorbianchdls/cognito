@@ -401,18 +401,34 @@ const chatGptReconciliationResultData = {
   ],
 } satisfies DataResultStructuredContent
 
-const chatGptPayableSupplierData = {
+const chatGptPayablePendingData = {
   ok: true,
   tool: 'erp',
   view: 'table',
-  title: 'Fornecedor localizado',
-  resource: 'financeiro/fornecedores',
+  title: 'Despesas a lancar',
+  resource: 'financeiro/pendencias',
   count: 3,
-  columns: ['Fornecedor', 'CNPJ', 'Status', 'Match'],
+  columns: ['Origem', 'Descricao', 'Valor', 'Acao'],
   rows: [
-    { Fornecedor: 'Frete Sul Logistica', CNPJ: '12.384.901/0001-44', Status: 'Ativo', Match: '99%' },
-    { Fornecedor: 'Frete Sul Express', CNPJ: '18.332.144/0001-09', Status: 'Inativo', Match: '74%' },
-    { Fornecedor: 'Transportes Sul', CNPJ: '07.104.228/0001-82', Status: 'Ativo', Match: '63%' },
+    { Origem: 'Extrato', Descricao: 'Frete Sul', Valor: 'R$ 8.420', Acao: 'Criar conta a pagar' },
+    { Origem: 'Email', Descricao: 'AWS Brasil', Valor: 'R$ 12.790', Acao: 'Validar nota' },
+    { Origem: 'Cartao', Descricao: 'Google Ads BR', Valor: 'R$ 18.400', Acao: 'Classificar despesa' },
+  ],
+} satisfies DataResultStructuredContent
+
+const chatGptPayableParametersData = {
+  ok: true,
+  tool: 'erp',
+  view: 'table',
+  title: 'Parametros do lancamento',
+  resource: 'financeiro/classificacao',
+  count: 4,
+  columns: ['Campo', 'Selecionado', 'Confianca', 'Status'],
+  rows: [
+    { Campo: 'Fornecedor', Selecionado: 'Frete Sul Logistica', Confianca: '99%', Status: 'Ativo' },
+    { Campo: 'Categoria', Selecionado: 'Frete e Logistica', Confianca: '96%', Status: 'OK' },
+    { Campo: 'Centro de custo', Selecionado: 'Operacoes', Confianca: '94%', Status: 'OK' },
+    { Campo: 'Conta financeira', Selecionado: 'Banco Stone', Confianca: '91%', Status: 'OK' },
   ],
 } satisfies DataResultStructuredContent
 
@@ -3404,8 +3420,8 @@ function ChatGptMobileScreenshot() {
   const frame = useCurrentFrame()
   const conversationY = interpolate(
     frame,
-    [0, 150, 300, 470, 640, 810, 980, 1150, 1320, 1500, 1700, 1880, 2060, 2260, 2440],
-    [0, 0, -520, -1120, -1780, -2400, -3020, -3640, -4260, -4860, -5480, -6100, -6720, -7340, -7960],
+    [0, 170, 340, 540, 740, 960, 1160, 1380, 1600, 1820, 2040, 2260, 2480, 2700, 2920, 3140, 3360, 3580],
+    [0, 0, -620, -1300, -1980, -2700, -3380, -4080, -4780, -5480, -6180, -6880, -7580, -8280, -8980, -9680, -10360, -11040],
     {
       extrapolateLeft: 'clamp',
       extrapolateRight: 'clamp',
@@ -3430,117 +3446,153 @@ function ChatGptMobileScreenshot() {
             Concilie banco e ERP
           </ChatGptFlowUserBubble>
           <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 48, 22)}>
-            Encontrei os matches e separei o que precisa de revisao. Posso conciliar os itens seguros?
+            Primeiro li as movimentacoes reais do extrato bancario.
           </ChatGptFlowAssistantText>
           <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 78, 22)}>
-            <AnimatedMcpAnalysisView data={chatGptReconciliationSummaryData} startFrame={78} />
+            <AnimatedMcpTableView data={chatGptReconciliationBankStatementData} startFrame={78} />
           </ChatGptToolResultCard>
-          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 178, 18)}>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 190, 22)}>
+            Depois busquei os lancamentos correspondentes no ERP.
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 220, 22)}>
+            <AnimatedMcpTableView data={chatGptReconciliationErpData} startFrame={220} />
+          </ChatGptToolResultCard>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 332, 22)}>
+            Encontrei os matches e separei o que precisa de revisao. Posso conciliar os itens seguros?
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 362, 22)}>
+            <AnimatedMcpAnalysisView data={chatGptReconciliationSummaryData} startFrame={362} />
+          </ChatGptToolResultCard>
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 504, 18)}>
             Sim, concilie
           </ChatGptFlowUserBubble>
-          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 218, 22)}>
-            <AnimatedMcpTableView data={chatGptReconciliationResultData} startFrame={218} />
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 544, 22)}>
+            <AnimatedMcpTableView data={chatGptReconciliationResultData} startFrame={544} />
           </ChatGptToolResultCard>
 
-          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 348, 18)}>
-            Lance a despesa de frete
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 696, 18)}>
+            Mostre despesas pendentes de lancamento
           </ChatGptFlowUserBubble>
-          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 386, 22)}>
-            Localizei o fornecedor e montei a conta a pagar no ERP.
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 734, 22)}>
+            Encontrei uma despesa de frete que precisa virar conta a pagar.
           </ChatGptFlowAssistantText>
-          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 416, 22)}>
-            <AnimatedMcpAnalysisView data={chatGptPayableDraftData} startFrame={416} />
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 764, 22)}>
+            <AnimatedMcpTableView data={chatGptPayablePendingData} startFrame={764} />
           </ChatGptToolResultCard>
-          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 546, 18)}>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 876, 22)}>
+            Localizei fornecedor, categoria, centro de custo e conta financeira.
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 906, 22)}>
+            <AnimatedMcpTableView data={chatGptPayableParametersData} startFrame={906} />
+          </ChatGptToolResultCard>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 1018, 22)}>
+            Posso criar a conta a pagar no ERP?
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 1048, 22)}>
+            <AnimatedMcpAnalysisView data={chatGptPayableDraftData} startFrame={1048} />
+          </ChatGptToolResultCard>
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 1160, 18)}>
             Pode criar
           </ChatGptFlowUserBubble>
-          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 586, 22)}>
-            <AnimatedMcpTableView data={chatGptPayableResultData} startFrame={586} />
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 1200, 22)}>
+            <AnimatedMcpTableView data={chatGptPayableResultData} startFrame={1200} />
           </ChatGptToolResultCard>
 
-          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 716, 18)}>
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 1368, 18)}>
             Busque contas a receber em atraso
           </ChatGptFlowUserBubble>
-          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 754, 22)}>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 1406, 22)}>
             Encontrei recebiveis vencidos e priorizei o maior atraso.
           </ChatGptFlowAssistantText>
-          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 784, 22)}>
-            <AnimatedMcpTableView data={chatGptCollectionOverdueData} startFrame={784} />
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 1436, 22)}>
+            <AnimatedMcpTableView data={chatGptCollectionOverdueData} startFrame={1436} />
           </ChatGptToolResultCard>
-          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 896, 22)}>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 1548, 22)}>
             Sugeri a cobranca com PIX, boleto, WhatsApp e email. Posso realizar?
           </ChatGptFlowAssistantText>
-          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 926, 22)}>
-            <AnimatedMcpAnalysisView data={chatGptCollectionDraftData} startFrame={926} />
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 1578, 22)}>
+            <AnimatedMcpAnalysisView data={chatGptCollectionDraftData} startFrame={1578} />
           </ChatGptToolResultCard>
-          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 1038, 18)}>
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 1690, 18)}>
             Sim, cobre agora
           </ChatGptFlowUserBubble>
-          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 1078, 22)}>
-            <AnimatedMcpTableView data={chatGptCollectionResultData} startFrame={1078} />
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 1730, 22)}>
+            <AnimatedMcpTableView data={chatGptCollectionResultData} startFrame={1730} />
           </ChatGptToolResultCard>
 
-          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 1198, 18)}>
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 1900, 18)}>
             Classifique essas despesas
           </ChatGptFlowUserBubble>
-          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 1236, 22)}>
-            Sugeri categorias e centros. Posso aplicar as classificacoes confiaveis?
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 1938, 22)}>
+            Primeiro li as despesas sem categoria.
           </ChatGptFlowAssistantText>
-          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 1266, 22)}>
-            <AnimatedMcpAnalysisView data={chatGptExpenseDraftData} startFrame={1266} />
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 1968, 22)}>
+            <AnimatedMcpTableView data={chatGptExpenseRawData} startFrame={1968} />
           </ChatGptToolResultCard>
-          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 1378, 18)}>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 2080, 22)}>
+            Depois sugeri categoria e centro de custo para cada despesa.
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 2110, 22)}>
+            <AnimatedMcpTableView data={chatGptExpenseRulesData} startFrame={2110} />
+          </ChatGptToolResultCard>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 2222, 22)}>
+            Posso aplicar as classificacoes confiaveis no ERP?
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 2252, 22)}>
+            <AnimatedMcpAnalysisView data={chatGptExpenseDraftData} startFrame={2252} />
+          </ChatGptToolResultCard>
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 2364, 18)}>
             Sim, aplique
           </ChatGptFlowUserBubble>
-          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 1418, 22)}>
-            <AnimatedMcpTableView data={chatGptExpenseResultData} startFrame={1418} />
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 2404, 22)}>
+            <AnimatedMcpTableView data={chatGptExpenseResultData} startFrame={2404} />
           </ChatGptToolResultCard>
 
-          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 1518, 18)}>
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 2576, 18)}>
             Mostre chamados pendentes de hoje
           </ChatGptFlowUserBubble>
-          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 1556, 22)}>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 2614, 22)}>
             Cliente Norte tem prioridade alta e SLA de 24h. Posso montar a ordem de servico?
           </ChatGptFlowAssistantText>
-          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 1586, 22)}>
-            <AnimatedMcpTableView data={chatGptServiceOrderContextData} startFrame={1586} />
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 2644, 22)}>
+            <AnimatedMcpTableView data={chatGptServiceOrderContextData} startFrame={2644} />
           </ChatGptToolResultCard>
-          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 1698, 22)}>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 2756, 22)}>
             Sugeri tecnico, agenda e checklist. Posso criar a ordem de servico e avisar o cliente?
           </ChatGptFlowAssistantText>
-          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 1728, 22)}>
-            <AnimatedMcpAnalysisView data={chatGptServiceOrderDraftData} startFrame={1728} />
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 2786, 22)}>
+            <AnimatedMcpAnalysisView data={chatGptServiceOrderDraftData} startFrame={2786} />
           </ChatGptToolResultCard>
-          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 1840, 18)}>
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 2898, 18)}>
             Sim, pode criar
           </ChatGptFlowUserBubble>
-          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 1878, 22)}>
-            <AnimatedMcpTableView data={chatGptServiceOrderResultData} startFrame={1878} />
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 2938, 22)}>
+            <AnimatedMcpTableView data={chatGptServiceOrderResultData} startFrame={2938} />
           </ChatGptToolResultCard>
 
-          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 1998, 18)}>
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 3108, 18)}>
             Mostre oportunidades prontas para proposta
           </ChatGptFlowUserBubble>
-          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 2036, 22)}>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 3146, 22)}>
             Encontrei oportunidades com diagnostico feito e proxima acao comercial.
           </ChatGptFlowAssistantText>
-          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 2066, 22)}>
-            <AnimatedMcpTableView data={chatGptCrmOpportunitiesData} startFrame={2066} />
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 3176, 22)}>
+            <AnimatedMcpTableView data={chatGptCrmOpportunitiesData} startFrame={3176} />
           </ChatGptToolResultCard>
-          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 2178, 22)}>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 3288, 22)}>
             Cliente Norte esta pronto para proposta. Posso gerar e enviar?
           </ChatGptFlowAssistantText>
-          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 2208, 22)}>
-            <AnimatedMcpAnalysisView data={chatGptProposalDraftData} startFrame={2208} />
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 3318, 22)}>
+            <AnimatedMcpAnalysisView data={chatGptProposalDraftData} startFrame={3318} />
           </ChatGptToolResultCard>
-          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 2320, 18)}>
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 3430, 18)}>
             Sim, envie a proposta
           </ChatGptFlowUserBubble>
-          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 2358, 22)}>
-            <AnimatedMcpTableView data={chatGptProposalResultData} startFrame={2358} />
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 3468, 22)}>
+            <AnimatedMcpTableView data={chatGptProposalResultData} startFrame={3468} />
           </ChatGptToolResultCard>
 
-          <div style={chatGptSequenceStyle(frame, 2438, 14)}>
+          <div style={chatGptSequenceStyle(frame, 3548, 14)}>
             <div style={{ padding: '10px 0 0 45px' }}>
               <ChatGptActionRow />
             </div>
