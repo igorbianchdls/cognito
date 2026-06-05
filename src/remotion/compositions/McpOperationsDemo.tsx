@@ -667,6 +667,54 @@ const chatGptProposalResultData = {
   ],
 } satisfies DataResultStructuredContent
 
+const chatGptPaidTrafficCampaignsData = {
+  ok: true,
+  tool: 'marketing',
+  view: 'table',
+  title: 'Campanhas de hoje',
+  resource: 'marketing/campanhas',
+  count: 4,
+  columns: ['Campanha', 'Gasto', 'CPA', 'ROAS'],
+  rows: [
+    { Campanha: 'Prospecting Broad', Gasto: 'R$ 1.840', CPA: 'R$ 128', ROAS: '0.9x' },
+    { Campanha: 'Retargeting 7d', Gasto: 'R$ 920', CPA: 'R$ 42', ROAS: '4.8x' },
+    { Campanha: 'Lookalike Premium', Gasto: 'R$ 1.220', CPA: 'R$ 61', ROAS: '3.6x' },
+    { Campanha: 'Creative Test A', Gasto: 'R$ 680', CPA: 'R$ 97', ROAS: '1.4x' },
+  ],
+} satisfies DataResultStructuredContent
+
+const chatGptPaidTrafficDraftData = {
+  ok: true,
+  tool: 'analysis',
+  view: 'analysis',
+  type: 'paid_traffic_optimization',
+  title: 'Redistribuicao sugerida',
+  subtitle: 'Otimizar verba de hoje',
+  summary: 'Sugiro reduzir R$ 300/dia da Prospecting Broad, aumentar R$ 220/dia em Retargeting 7d e mover R$ 80/dia para Lookalike Premium.',
+  metrics: [
+    { label: 'Cortar', value: 'R$ 300', tone: 'warning' },
+    { label: 'Aumentar', value: 'R$ 220', tone: 'positive' },
+    { label: 'ROAS alvo', value: '4.0x', tone: 'positive' },
+  ],
+  next_steps: ['Atualizar budgets no Meta Ads', 'Criar alerta de CPA', 'Enviar resumo ao time'],
+} satisfies AnalysisStructuredContent
+
+const chatGptPaidTrafficResultData = {
+  ok: true,
+  tool: 'marketing_acoes',
+  view: 'table',
+  title: 'Trafego pago ajustado',
+  resource: 'marketing/campanhas',
+  count: 4,
+  columns: ['Acao', 'Campanha', 'Ajuste', 'Status'],
+  rows: [
+    { Acao: 'Reduzir budget', Campanha: 'Prospecting Broad', Ajuste: '-R$ 300/dia', Status: 'Aplicado' },
+    { Acao: 'Aumentar budget', Campanha: 'Retargeting 7d', Ajuste: '+R$ 220/dia', Status: 'Aplicado' },
+    { Acao: 'Aumentar budget', Campanha: 'Lookalike Premium', Ajuste: '+R$ 80/dia', Status: 'Aplicado' },
+    { Acao: 'Alerta', Campanha: 'Todas', Ajuste: 'CPA > R$ 75', Status: 'Criado' },
+  ],
+} satisfies DataResultStructuredContent
+
 function CognitoBrand() {
   return (
     <div style={{ alignItems: 'center', display: 'flex', gap: 15 }}>
@@ -3420,8 +3468,8 @@ function ChatGptMobileScreenshot() {
   const frame = useCurrentFrame()
   const conversationY = interpolate(
     frame,
-    [0, 170, 340, 540, 740, 960, 1160, 1380, 1600, 1820, 2040, 2260, 2480, 2700, 2920, 3140, 3360, 3580],
-    [0, 0, -620, -1300, -1980, -2700, -3380, -4080, -4780, -5480, -6180, -6880, -7580, -8280, -8980, -9680, -10360, -11040],
+    [0, 170, 340, 540, 740, 960, 1160, 1380, 1600, 1820, 2040, 2260, 2480, 2700, 2920, 3140, 3360, 3580, 3820, 4100],
+    [0, 0, -620, -1300, -1980, -2700, -3380, -4080, -4780, -5480, -6180, -6880, -7580, -8280, -8980, -9680, -10360, -11040, -11720, -12400],
     {
       extrapolateLeft: 'clamp',
       extrapolateRight: 'clamp',
@@ -3592,7 +3640,29 @@ function ChatGptMobileScreenshot() {
             <AnimatedMcpTableView data={chatGptProposalResultData} startFrame={3468} />
           </ChatGptToolResultCard>
 
-          <div style={chatGptSequenceStyle(frame, 3548, 14)}>
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 3608, 18)}>
+            Analise trafego pago de hoje
+          </ChatGptFlowUserBubble>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 3646, 22)}>
+            Encontrei uma campanha gastando mal e duas campanhas com ROAS forte.
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 3676, 22)}>
+            <AnimatedMcpTableView data={chatGptPaidTrafficCampaignsData} startFrame={3676} />
+          </ChatGptToolResultCard>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 3788, 22)}>
+            Posso redistribuir o orcamento para as campanhas vencedoras?
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 3818, 22)}>
+            <AnimatedMcpAnalysisView data={chatGptPaidTrafficDraftData} startFrame={3818} />
+          </ChatGptToolResultCard>
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 3930, 18)}>
+            Sim, otimize
+          </ChatGptFlowUserBubble>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 3970, 22)}>
+            <AnimatedMcpTableView data={chatGptPaidTrafficResultData} startFrame={3970} />
+          </ChatGptToolResultCard>
+
+          <div style={chatGptSequenceStyle(frame, 4088, 14)}>
             <div style={{ padding: '10px 0 0 45px' }}>
               <ChatGptActionRow />
             </div>
