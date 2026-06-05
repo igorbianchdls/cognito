@@ -12,7 +12,6 @@ import {
   BankReconciliationAnimation,
   ChatGptWebAnimation,
   ClaudeWebAnimation,
-  ClaudeMobileAnimation,
   ClosingSlidesAnimation,
   CompareScenariosAnimation,
   ContractManagementAnimation,
@@ -89,6 +88,8 @@ import {
 } from '@/remotion/compositions/McpOperationsDemo'
 import { ChatGptMobileAnimation } from '@/remotion/compositions/ChatGptMobileMarketing'
 import { ChatGptOperationalFlowsVideo } from '@/remotion/compositions/ChatGptOperationalFlowsVideo'
+import { ClaudeMobileAnimation } from '@/remotion/compositions/ClaudeMobileMarketing'
+import { ClaudeOperationalFlowsVideo } from '@/remotion/compositions/ClaudeOperationalFlowsVideo'
 import {
   AIChatWorkspaceMock,
   AnimatedBarGroup,
@@ -2837,6 +2838,18 @@ const catalog: CatalogItem[] = [
     label: 'ChatGPT Fluxos Operacionais',
     tags: ['ChatGPT', 'Mobile', 'Operacoes', 'Video'],
     value: 'video-chatgpt-operational-flows',
+    width: 1080,
+  },
+  {
+    code: '<ClaudeOperationalFlowsVideo />',
+    component: ClaudeOperationalFlowsVideo,
+    description: 'Video mobile do Claude com fluxos operacionais de financeiro, estoque, atendimento, CRM e marketing.',
+    duration: 5900,
+    height: 1920,
+    kind: 'Vídeos criados',
+    label: 'Claude Fluxos Operacionais',
+    tags: ['Claude', 'Mobile', 'Operacoes', 'Video'],
+    value: 'video-claude-operational-flows',
     width: 1080,
   },
   {
