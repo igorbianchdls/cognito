@@ -401,62 +401,62 @@ const chatGptReconciliationResultData = {
   ],
 } satisfies DataResultStructuredContent
 
-const chatGptPayableSupplierData = {
+const chatGptCollectionCustomerData = {
   ok: true,
   tool: 'erp',
   view: 'table',
-  title: 'Fornecedor localizado',
-  resource: 'financeiro/fornecedores',
+  title: 'Cliente localizado',
+  resource: 'financeiro/clientes',
   count: 3,
-  columns: ['Fornecedor', 'CNPJ', 'Status', 'Match'],
+  columns: ['Cliente', 'CNPJ', 'Contato', 'Match'],
   rows: [
-    { Fornecedor: 'Frete Sul Logistica', CNPJ: '12.384.901/0001-44', Status: 'Ativo', Match: '99%' },
-    { Fornecedor: 'Frete Sul Express', CNPJ: '18.332.144/0001-09', Status: 'Inativo', Match: '74%' },
-    { Fornecedor: 'Transportes Sul', CNPJ: '07.104.228/0001-82', Status: 'Ativo', Match: '63%' },
+    { Cliente: 'Cliente Norte Ltda', CNPJ: '31.420.901/0001-18', Contato: 'financeiro@norte.com', Match: '99%' },
+    { Cliente: 'Cliente Norte Filial', CNPJ: '31.420.901/0002-99', Contato: 'filial@norte.com', Match: '72%' },
+    { Cliente: 'Norte Comercio', CNPJ: '09.884.120/0001-40', Contato: 'cobranca@norte.com', Match: '61%' },
   ],
 } satisfies DataResultStructuredContent
 
-const chatGptPayableParametersData = {
+const chatGptCollectionParametersData = {
   ok: true,
   tool: 'erp',
   view: 'table',
-  title: 'Parametros financeiros',
-  resource: 'financeiro/classificacao',
+  title: 'Parametros da cobranca',
+  resource: 'financeiro/cobrancas',
   count: 3,
   columns: ['Campo', 'Selecionado', 'Alternativas', 'Confianca'],
   rows: [
-    { Campo: 'Categoria', Selecionado: 'Frete e Logistica', Alternativas: 'Despesa operacional', Confianca: '96%' },
-    { Campo: 'Centro de custo', Selecionado: 'Operacoes', Alternativas: 'Financeiro', Confianca: '94%' },
-    { Campo: 'Conta financeira', Selecionado: 'Banco Stone', Alternativas: 'Itau Empresas', Confianca: '91%' },
+    { Campo: 'Forma', Selecionado: 'PIX + boleto', Alternativas: 'Link cartao', Confianca: '96%' },
+    { Campo: 'Conta financeira', Selecionado: 'Banco Stone', Alternativas: 'Itau Empresas', Confianca: '94%' },
+    { Campo: 'Categoria', Selecionado: 'Receita de servicos', Alternativas: 'Receita recorrente', Confianca: '91%' },
   ],
 } satisfies DataResultStructuredContent
 
-const chatGptPayableDraftData = {
+const chatGptCollectionDraftData = {
   ok: true,
   tool: 'analysis',
   view: 'analysis',
-  type: 'erp_action_preview',
-  title: 'Lancamento preparado',
+  type: 'collection_preview',
+  title: 'Cobranca preparada',
   subtitle: 'Aguardando confirmacao',
-  summary: 'Vou criar uma conta a pagar para Frete Sul Logistica no valor de R$ 8.420, com vencimento em 12 jun, categoria Frete e Logistica, centro de custo Operacoes e conta Banco Stone.',
+  summary: 'Vou criar uma conta a receber para Cliente Norte Ltda no valor de R$ 12.400, com vencimento em 10 jun, forma PIX + boleto e envio por WhatsApp.',
   metrics: [
-    { label: 'Valor', value: 'R$ 8.420', tone: 'neutral' },
-    { label: 'Vencimento', value: '12 jun', tone: 'neutral' },
+    { label: 'Valor', value: 'R$ 12.400', tone: 'neutral' },
+    { label: 'Vencimento', value: '10 jun', tone: 'neutral' },
     { label: 'Confianca', value: '96%', tone: 'positive' },
   ],
-  next_steps: ['Criar conta a pagar no ERP', 'Manter status em aberto', 'Registrar origem da automacao'],
+  next_steps: ['Criar conta a receber no ERP', 'Gerar PIX e boleto', 'Enviar cobranca ao cliente'],
 } satisfies AnalysisStructuredContent
 
-const chatGptPayableResultData = {
+const chatGptCollectionResultData = {
   ok: true,
   tool: 'erp_acoes',
   view: 'table',
-  title: 'Conta a pagar criada',
-  resource: 'contas-a-pagar',
+  title: 'Cobranca criada',
+  resource: 'contas-a-receber',
   count: 1,
-  columns: ['ID', 'Fornecedor', 'Valor', 'Vencimento', 'Status'],
+  columns: ['ID', 'Cliente', 'Valor', 'Vencimento', 'Status'],
   rows: [
-    { ID: 'CP-1048', Fornecedor: 'Frete Sul Logistica', Valor: 'R$ 8.420', Vencimento: '12 jun', Status: 'Aberta' },
+    { ID: 'CR-2041', Cliente: 'Cliente Norte Ltda', Valor: 'R$ 12.400', Vencimento: '10 jun', Status: 'Enviada' },
   ],
 } satisfies DataResultStructuredContent
 
@@ -3236,37 +3236,37 @@ function ChatGptMobileScreenshot() {
       <div style={{ bottom: 264, left: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 244 }}>
         <div style={{ display: 'grid', gap: 34, padding: '20px 0 760px', transform: `translateY(${conversationY}px)` }}>
           <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 10, 18)}>
-            Lance essa despesa no ERP
+            Gere uma cobranca para o Cliente Norte
           </ChatGptFlowUserBubble>
           <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 48, 22)}>
-            Vou localizar o fornecedor antes de montar a conta a pagar.
+            Vou localizar o cliente antes de montar a cobranca.
           </ChatGptFlowAssistantText>
           <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 78, 22)}>
-            <AnimatedMcpTableView data={chatGptPayableSupplierData} startFrame={78} />
+            <AnimatedMcpTableView data={chatGptCollectionCustomerData} startFrame={78} />
           </ChatGptToolResultCard>
 
           <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 228, 22)}>
-            Agora busquei categoria, centro de custo e conta financeira.
+            Agora defini forma de pagamento, conta financeira e categoria de receita.
           </ChatGptFlowAssistantText>
           <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 258, 22)}>
-            <AnimatedMcpTableView data={chatGptPayableParametersData} startFrame={258} />
+            <AnimatedMcpTableView data={chatGptCollectionParametersData} startFrame={258} />
           </ChatGptToolResultCard>
 
           <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 418, 22)}>
-            Montei o lancamento. Posso criar essa conta a pagar no ERP?
+            Montei a cobranca. Posso criar no ERP e enviar ao cliente?
           </ChatGptFlowAssistantText>
           <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 448, 22)}>
-            <AnimatedMcpAnalysisView data={chatGptPayableDraftData} startFrame={448} />
+            <AnimatedMcpAnalysisView data={chatGptCollectionDraftData} startFrame={448} />
           </ChatGptToolResultCard>
 
           <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 608, 18)}>
-            Sim, pode criar
+            Sim, crie e envie
           </ChatGptFlowUserBubble>
           <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 650, 22)}>
-            Conta a pagar criada e registrada no financeiro.
+            Cobranca criada no ERP e enviada por WhatsApp.
           </ChatGptFlowAssistantText>
           <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 680, 22)}>
-            <AnimatedMcpTableView data={chatGptPayableResultData} startFrame={680} />
+            <AnimatedMcpTableView data={chatGptCollectionResultData} startFrame={680} />
           </ChatGptToolResultCard>
 
           <div style={chatGptSequenceStyle(frame, 790, 14)}>
