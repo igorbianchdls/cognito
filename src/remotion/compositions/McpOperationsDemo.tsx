@@ -401,6 +401,65 @@ const chatGptReconciliationResultData = {
   ],
 } satisfies DataResultStructuredContent
 
+const chatGptPayableSupplierData = {
+  ok: true,
+  tool: 'erp',
+  view: 'table',
+  title: 'Fornecedor localizado',
+  resource: 'financeiro/fornecedores',
+  count: 3,
+  columns: ['Fornecedor', 'CNPJ', 'Status', 'Match'],
+  rows: [
+    { Fornecedor: 'Frete Sul Logistica', CNPJ: '12.384.901/0001-44', Status: 'Ativo', Match: '99%' },
+    { Fornecedor: 'Frete Sul Express', CNPJ: '18.332.144/0001-09', Status: 'Inativo', Match: '74%' },
+    { Fornecedor: 'Transportes Sul', CNPJ: '07.104.228/0001-82', Status: 'Ativo', Match: '63%' },
+  ],
+} satisfies DataResultStructuredContent
+
+const chatGptPayableParametersData = {
+  ok: true,
+  tool: 'erp',
+  view: 'table',
+  title: 'Parametros financeiros',
+  resource: 'financeiro/classificacao',
+  count: 3,
+  columns: ['Campo', 'Selecionado', 'Alternativas', 'Confianca'],
+  rows: [
+    { Campo: 'Categoria', Selecionado: 'Frete e Logistica', Alternativas: 'Despesa operacional', Confianca: '96%' },
+    { Campo: 'Centro de custo', Selecionado: 'Operacoes', Alternativas: 'Financeiro', Confianca: '94%' },
+    { Campo: 'Conta financeira', Selecionado: 'Banco Stone', Alternativas: 'Itau Empresas', Confianca: '91%' },
+  ],
+} satisfies DataResultStructuredContent
+
+const chatGptPayableDraftData = {
+  ok: true,
+  tool: 'analysis',
+  view: 'analysis',
+  type: 'erp_action_preview',
+  title: 'Lancamento preparado',
+  subtitle: 'Aguardando confirmacao',
+  summary: 'Vou criar uma conta a pagar para Frete Sul Logistica no valor de R$ 8.420, com vencimento em 12 jun, categoria Frete e Logistica, centro de custo Operacoes e conta Banco Stone.',
+  metrics: [
+    { label: 'Valor', value: 'R$ 8.420', tone: 'neutral' },
+    { label: 'Vencimento', value: '12 jun', tone: 'neutral' },
+    { label: 'Confianca', value: '96%', tone: 'positive' },
+  ],
+  next_steps: ['Criar conta a pagar no ERP', 'Manter status em aberto', 'Registrar origem da automacao'],
+} satisfies AnalysisStructuredContent
+
+const chatGptPayableResultData = {
+  ok: true,
+  tool: 'erp_acoes',
+  view: 'table',
+  title: 'Conta a pagar criada',
+  resource: 'contas-a-pagar',
+  count: 1,
+  columns: ['ID', 'Fornecedor', 'Valor', 'Vencimento', 'Status'],
+  rows: [
+    { ID: 'CP-1048', Fornecedor: 'Frete Sul Logistica', Valor: 'R$ 8.420', Vencimento: '12 jun', Status: 'Aberta' },
+  ],
+} satisfies DataResultStructuredContent
+
 function CognitoBrand() {
   return (
     <div style={{ alignItems: 'center', display: 'flex', gap: 15 }}>
@@ -3155,7 +3214,7 @@ function ChatGptMobileScreenshot() {
   const conversationY = interpolate(
     frame,
     [0, 140, 260, 420, 580, 760, 940, 1120, 1320],
-    [0, 0, -300, -820, -1360, -1900, -2440, -3040, -3620],
+    [0, 0, -280, -770, -1280, -1820, -2380, -2940, -3520],
     {
       extrapolateLeft: 'clamp',
       extrapolateRight: 'clamp',
@@ -3177,37 +3236,37 @@ function ChatGptMobileScreenshot() {
       <div style={{ bottom: 264, left: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 244 }}>
         <div style={{ display: 'grid', gap: 34, padding: '20px 0 760px', transform: `translateY(${conversationY}px)` }}>
           <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 10, 18)}>
-            Concilie o extrato bancario com o ERP
+            Lance essa despesa no ERP
           </ChatGptFlowUserBubble>
           <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 48, 22)}>
-            Vou comparar as movimentacoes reais do banco com os lancamentos financeiros do ERP.
+            Vou localizar o fornecedor antes de montar a conta a pagar.
           </ChatGptFlowAssistantText>
           <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 78, 22)}>
-            <AnimatedMcpTableView data={chatGptReconciliationBankStatementData} startFrame={78} />
+            <AnimatedMcpTableView data={chatGptPayableSupplierData} startFrame={78} />
           </ChatGptToolResultCard>
 
           <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 228, 22)}>
-            Agora busquei no ERP os titulos e lancamentos que podem corresponder ao extrato.
+            Agora busquei categoria, centro de custo e conta financeira.
           </ChatGptFlowAssistantText>
           <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 258, 22)}>
-            <AnimatedMcpTableView data={chatGptReconciliationErpData} startFrame={258} />
+            <AnimatedMcpTableView data={chatGptPayableParametersData} startFrame={258} />
           </ChatGptToolResultCard>
 
           <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 418, 22)}>
-            Encontrei o que bate e o que ainda precisa de revisao. Posso conciliar os matches de alta confianca?
+            Montei o lancamento. Posso criar essa conta a pagar no ERP?
           </ChatGptFlowAssistantText>
           <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 448, 22)}>
-            <AnimatedMcpAnalysisView data={chatGptReconciliationSummaryData} startFrame={448} />
+            <AnimatedMcpAnalysisView data={chatGptPayableDraftData} startFrame={448} />
           </ChatGptToolResultCard>
 
           <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 608, 18)}>
-            Sim, concilie os 14 itens
+            Sim, pode criar
           </ChatGptFlowUserBubble>
           <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 650, 22)}>
-            Conciliei os matches aprovados e deixei as excecoes pendentes para revisao.
+            Conta a pagar criada e registrada no financeiro.
           </ChatGptFlowAssistantText>
           <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 680, 22)}>
-            <AnimatedMcpTableView data={chatGptReconciliationResultData} startFrame={680} />
+            <AnimatedMcpTableView data={chatGptPayableResultData} startFrame={680} />
           </ChatGptToolResultCard>
 
           <div style={chatGptSequenceStyle(frame, 790, 14)}>
