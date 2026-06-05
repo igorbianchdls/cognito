@@ -560,14 +560,14 @@ const chatGptServiceOrderContextData = {
   ok: true,
   tool: 'crm',
   view: 'table',
-  title: 'Contexto operacional',
+  title: 'Chamados pendentes',
   resource: 'operacao/ordens-servico',
   count: 3,
-  columns: ['Campo', 'Encontrado', 'Status', 'SLA'],
+  columns: ['Cliente', 'Chamado', 'Prioridade', 'SLA'],
   rows: [
-    { Campo: 'Cliente', Encontrado: 'Cliente Norte Ltda', Status: 'Contrato ativo', SLA: '24h' },
-    { Campo: 'Endereco', Encontrado: 'Unidade Recife', Status: 'Confirmado', SLA: '24h' },
-    { Campo: 'Servico', Encontrado: 'Manutencao preventiva', Status: 'Elegivel', SLA: '24h' },
+    { Cliente: 'Cliente Norte Ltda', Chamado: 'Manutencao preventiva', Prioridade: 'Alta', SLA: '24h' },
+    { Cliente: 'Mercado Alfa', Chamado: 'Visita tecnica', Prioridade: 'Media', SLA: '48h' },
+    { Cliente: 'Delta Foods', Chamado: 'Inspecao mensal', Prioridade: 'Baixa', SLA: '72h' },
   ],
 } satisfies DataResultStructuredContent
 
@@ -576,15 +576,15 @@ const chatGptServiceOrderDraftData = {
   tool: 'analysis',
   view: 'analysis',
   type: 'service_order_preview',
-  title: 'OS preparada',
+  title: 'Ordem de servico preparada',
   subtitle: 'Aguardando confirmacao',
-  summary: 'Preparei a OS para Cliente Norte, prioridade alta, tecnico Bruno Lima disponivel as 14h e checklist de manutencao preventiva.',
+  summary: 'Cliente Norte tem chamado prioritario e SLA de 24h. Preparei a ordem de servico com tecnico Bruno Lima as 14h e checklist de manutencao preventiva.',
   metrics: [
     { label: 'Prioridade', value: 'Alta', tone: 'warning' },
     { label: 'Tecnico', value: 'Bruno', tone: 'positive' },
     { label: 'SLA', value: '24h', tone: 'neutral' },
   ],
-  next_steps: ['Criar OS', 'Alocar tecnico', 'Avisar cliente'],
+  next_steps: ['Criar ordem de servico', 'Alocar tecnico', 'Avisar cliente'],
 } satisfies AnalysisStructuredContent
 
 const chatGptServiceOrderResultData = {
@@ -596,10 +596,58 @@ const chatGptServiceOrderResultData = {
   count: 4,
   columns: ['Etapa', 'Responsavel', 'Referencia', 'Status'],
   rows: [
-    { Etapa: 'OS', Responsavel: 'Operacoes', Referencia: 'OS-1842', Status: 'Criada' },
+    { Etapa: 'Ordem de servico', Responsavel: 'Operacoes', Referencia: '1842', Status: 'Criada' },
     { Etapa: 'Tecnico', Responsavel: 'Bruno Lima', Referencia: '14h', Status: 'Alocado' },
     { Etapa: 'Checklist', Responsavel: 'Sistema', Referencia: 'Preventiva', Status: 'Gerado' },
     { Etapa: 'Aviso', Responsavel: 'WhatsApp', Referencia: 'Cliente Norte', Status: 'Enviado' },
+  ],
+} satisfies DataResultStructuredContent
+
+const chatGptCrmOpportunitiesData = {
+  ok: true,
+  tool: 'crm',
+  view: 'table',
+  title: 'Oportunidades prontas',
+  resource: 'crm/oportunidades',
+  count: 3,
+  columns: ['Cliente', 'Etapa', 'Valor', 'Proxima acao'],
+  rows: [
+    { Cliente: 'Cliente Norte', Etapa: 'Diagnostico feito', Valor: 'R$ 48.000', 'Proxima acao': 'Proposta' },
+    { Cliente: 'Mercado Alfa', Etapa: 'Reuniao marcada', Valor: 'R$ 32.000', 'Proxima acao': 'Follow-up' },
+    { Cliente: 'Delta Foods', Etapa: 'Qualificacao', Valor: 'R$ 22.000', 'Proxima acao': 'Diagnostico' },
+  ],
+} satisfies DataResultStructuredContent
+
+const chatGptProposalDraftData = {
+  ok: true,
+  tool: 'analysis',
+  view: 'analysis',
+  type: 'proposal_preview',
+  title: 'Proposta recomendada',
+  subtitle: 'Cliente Norte pronto para proposta',
+  summary: 'A oportunidade tem dor validada, decisor identificado e budget estimado. Vou gerar proposta com escopo operacional, prazo de 30 dias e pagamento em 2 parcelas.',
+  metrics: [
+    { label: 'Valor', value: 'R$ 48.000', tone: 'positive' },
+    { label: 'Validade', value: '7 dias', tone: 'neutral' },
+    { label: 'Chance', value: '82%', tone: 'positive' },
+  ],
+  next_steps: ['Criar proposta', 'Mover CRM para Proposta enviada', 'Enviar email e WhatsApp'],
+} satisfies AnalysisStructuredContent
+
+const chatGptProposalResultData = {
+  ok: true,
+  tool: 'crm',
+  view: 'table',
+  title: 'Proposta enviada',
+  resource: 'crm/propostas',
+  count: 5,
+  columns: ['Etapa', 'Referencia', 'Canal', 'Status'],
+  rows: [
+    { Etapa: 'Proposta', Referencia: 'PROP-882', Canal: 'CRM', Status: 'Criada' },
+    { Etapa: 'Oportunidade', Referencia: 'Cliente Norte', Canal: 'CRM', Status: 'Proposta enviada' },
+    { Etapa: 'Email', Referencia: 'decisor@norte.com', Canal: 'Email', Status: 'Enviado' },
+    { Etapa: 'WhatsApp', Referencia: '+55 81 98461-0519', Canal: 'WhatsApp', Status: 'Enviado' },
+    { Etapa: 'Follow-up', Referencia: 'D+2', Canal: 'CRM', Status: 'Agendado' },
   ],
 } satisfies DataResultStructuredContent
 
@@ -3356,8 +3404,8 @@ function ChatGptMobileScreenshot() {
   const frame = useCurrentFrame()
   const conversationY = interpolate(
     frame,
-    [0, 150, 300, 470, 640, 810, 980, 1150, 1320, 1500, 1700, 1880],
-    [0, 0, -520, -1120, -1780, -2400, -3020, -3640, -4260, -4860, -5480, -6100],
+    [0, 150, 300, 470, 640, 810, 980, 1150, 1320, 1500, 1700, 1880, 2060, 2260, 2440],
+    [0, 0, -520, -1120, -1780, -2400, -3020, -3640, -4260, -4860, -5480, -6100, -6720, -7340, -7960],
     {
       extrapolateLeft: 'clamp',
       extrapolateRight: 'clamp',
@@ -3449,16 +3497,16 @@ function ChatGptMobileScreenshot() {
           </ChatGptToolResultCard>
 
           <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 1518, 18)}>
-            Crie uma ordem de servico
+            Mostre chamados pendentes de hoje
           </ChatGptFlowUserBubble>
           <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 1556, 22)}>
-            Busquei contrato, endereco, SLA e tipo de atendimento do cliente.
+            Cliente Norte tem prioridade alta e SLA de 24h. Posso montar a ordem de servico?
           </ChatGptFlowAssistantText>
           <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 1586, 22)}>
             <AnimatedMcpTableView data={chatGptServiceOrderContextData} startFrame={1586} />
           </ChatGptToolResultCard>
           <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 1698, 22)}>
-            Sugeri tecnico, agenda e checklist. Posso criar a OS e avisar o cliente?
+            Sugeri tecnico, agenda e checklist. Posso criar a ordem de servico e avisar o cliente?
           </ChatGptFlowAssistantText>
           <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 1728, 22)}>
             <AnimatedMcpAnalysisView data={chatGptServiceOrderDraftData} startFrame={1728} />
@@ -3470,7 +3518,29 @@ function ChatGptMobileScreenshot() {
             <AnimatedMcpTableView data={chatGptServiceOrderResultData} startFrame={1878} />
           </ChatGptToolResultCard>
 
-          <div style={chatGptSequenceStyle(frame, 1948, 14)}>
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 1998, 18)}>
+            Mostre oportunidades prontas para proposta
+          </ChatGptFlowUserBubble>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 2036, 22)}>
+            Encontrei oportunidades com diagnostico feito e proxima acao comercial.
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 2066, 22)}>
+            <AnimatedMcpTableView data={chatGptCrmOpportunitiesData} startFrame={2066} />
+          </ChatGptToolResultCard>
+          <ChatGptFlowAssistantText style={chatGptSequenceStyle(frame, 2178, 22)}>
+            Cliente Norte esta pronto para proposta. Posso gerar e enviar?
+          </ChatGptFlowAssistantText>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 2208, 22)}>
+            <AnimatedMcpAnalysisView data={chatGptProposalDraftData} startFrame={2208} />
+          </ChatGptToolResultCard>
+          <ChatGptFlowUserBubble style={chatGptSequenceStyle(frame, 2320, 18)}>
+            Sim, envie a proposta
+          </ChatGptFlowUserBubble>
+          <ChatGptToolResultCard style={chatGptSequenceStyle(frame, 2358, 22)}>
+            <AnimatedMcpTableView data={chatGptProposalResultData} startFrame={2358} />
+          </ChatGptToolResultCard>
+
+          <div style={chatGptSequenceStyle(frame, 2438, 14)}>
             <div style={{ padding: '10px 0 0 45px' }}>
               <ChatGptActionRow />
             </div>

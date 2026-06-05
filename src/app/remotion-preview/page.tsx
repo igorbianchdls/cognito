@@ -2830,7 +2830,7 @@ const catalog: CatalogItem[] = [
     code: '<ChatGptMobileAnimation />',
     component: ChatGptMobileAnimation,
     description: 'ChatGPT mobile em tela cheia para posts, demos e vídeos sociais.',
-    duration: 2100,
+    duration: 2600,
     height: 1920,
     kind: 'Marketing',
     label: 'ChatGPT Mobile',
