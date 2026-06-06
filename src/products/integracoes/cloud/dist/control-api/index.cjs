@@ -6787,10 +6787,32 @@ var EXTERNAL_ID_CANDIDATES3 = [
   "codigo_produto_integracao",
   "codigo_lancamento_omie",
   "codigo_lancamento_integracao",
+  "nCodTitulo",
+  "detalhes.nCodTitulo",
+  "detalhes.cCodIntTitulo",
+  "nCodMovCC",
+  "detalhes.nCodMovCC",
   "codigo_pedido",
   "codigo_pedido_integracao",
   "numero_pedido",
   "numero_pedido_integracao",
+  "nCodPed",
+  "cCodIntPed",
+  "cNumero",
+  "nCodNF",
+  "nNF",
+  "cChaveNFe",
+  "nChaveNFe",
+  "Cabecalho.nCodNF",
+  "Cabecalho.nNumeroNFSe",
+  "Cabecalho.cCodigoVerifNFSe",
+  "nCodProd",
+  "cCodIntProd",
+  "cCodigo",
+  "idProd",
+  "id_prod",
+  "nCodCC",
+  "cCodCCInt",
   "codigo_categoria",
   "codigo",
   "id"
@@ -6828,11 +6850,29 @@ function mapOmieRows(input) {
 
 // src/products/integracoes/cloud/src/connectors/erp/omie/omieResources.ts
 var DEFAULT_PAGE_SIZE3 = 50;
+function formatOmieDate(value) {
+  const day = String(value.getDate()).padStart(2, "0");
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const year = value.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+function defaultStartDate() {
+  return process.env.OMIE_DEFAULT_START_DATE?.trim() || "01/01/2000";
+}
+function today() {
+  return formatOmieDate(/* @__PURE__ */ new Date());
+}
 function defaultParams({ page, pageSize }) {
   return {
     pagina: page,
     registros_por_pagina: pageSize,
     apenas_importado_api: "N"
+  };
+}
+function omieNParams({ page, pageSize }) {
+  return {
+    nPagina: page,
+    nRegPorPagina: pageSize
   };
 }
 var OMIE_RESOURCE_CONFIGS = [
@@ -6896,6 +6936,103 @@ var OMIE_RESOURCE_CONFIGS = [
     call: "ListarCategorias",
     itemKeys: ["categoria_cadastro", "categorias_cadastro"],
     defaultPageSize: DEFAULT_PAGE_SIZE3,
+    supportsIncremental: false,
+    buildParams: defaultParams
+  },
+  {
+    resource: "pedidos_compra",
+    endpoint: "/produtos/pedidocompra/",
+    call: "PesquisarPedCompra",
+    itemKeys: ["pedidos_pesquisa", "pedido_pesquisa", "pedidos_compra", "pedidos"],
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    supportsIncremental: false,
+    buildParams: ({ page, pageSize }) => ({
+      nPagina: page,
+      nRegsPorPagina: pageSize,
+      lApenasImportadoApi: "F",
+      lExibirPedidosPendentes: "T",
+      lExibirPedidosFaturados: "T",
+      lExibirPedidosRecebidos: "T",
+      lExibirPedidosCancelados: "T",
+      lExibirPedidosEncerrados: "T",
+      lExibirPedidosRecParciais: "T",
+      lExibirPedidosFatParciais: "T",
+      dDataInicial: defaultStartDate(),
+      dDataFinal: today(),
+      lApenasAlterados: "F"
+    })
+  },
+  {
+    resource: "notas_fiscais",
+    endpoint: "/produtos/nfconsultar/",
+    call: "ListarNF",
+    itemKeys: ["nfCadastro", "notas_fiscais", "notas"],
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    supportsIncremental: false,
+    buildParams: ({ page, pageSize }) => ({
+      pagina: page,
+      registros_por_pagina: pageSize,
+      ordenar_por: "CODIGO",
+      cDetalhesPedido: "S",
+      cApenasResumo: "N"
+    })
+  },
+  {
+    resource: "notas_servico",
+    endpoint: "/servicos/nfse/",
+    call: "ListarNFSEs",
+    itemKeys: ["nfseEncontradas", "notas_servico", "notas"],
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    supportsIncremental: false,
+    buildParams: omieNParams
+  },
+  {
+    resource: "estoque_saldos",
+    endpoint: "/estoque/consulta/",
+    call: "ListarPosEstoque",
+    itemKeys: ["produtos", "saldos", "estoques"],
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    supportsIncremental: false,
+    buildParams: ({ page, pageSize }) => ({
+      nPagina: page,
+      nRegPorPagina: pageSize,
+      dDataPosicao: today(),
+      cExibeTodos: "N",
+      codigo_local_estoque: 0
+    })
+  },
+  {
+    resource: "estoque_movimentacoes",
+    endpoint: "/estoque/consulta/",
+    call: "ListarMovimentoEstoque",
+    itemKeys: ["movProdutoListar", "movProduto", "movimentos", "cadastros"],
+    defaultPageSize: DEFAULT_PAGE_SIZE3,
+    supportsIncremental: false,
+    buildParams: ({ page, pageSize }) => ({
+      nPagina: page,
+      nRegPorPagina: pageSize,
+      codigo_local_estoque: 0,
+      idProd: 0,
+      dDtInicial: defaultStartDate(),
+      dDtFinal: today(),
+      lista_local_estoque: ""
+    })
+  },
+  {
+    resource: "lancamentos_financeiros",
+    endpoint: "/financas/mf/",
+    call: "ListarMovimentos",
+    itemKeys: ["movimentos", "lancamentos_financeiros", "lancamentos"],
+    defaultPageSize: 500,
+    supportsIncremental: false,
+    buildParams: omieNParams
+  },
+  {
+    resource: "contas_correntes",
+    endpoint: "/geral/contacorrente/",
+    call: "ListarContasCorrentes",
+    itemKeys: ["ListarContasCorrentes", "conta_corrente_cadastro", "contas_correntes", "contas"],
+    defaultPageSize: 100,
     supportsIncremental: false,
     buildParams: defaultParams
   }
@@ -7306,6 +7443,48 @@ var OMIE_RESOURCES = [
     slug: "categorias",
     name: "Categorias",
     description: "Categorias financeiras e classificacoes operacionais.",
+    defaultEnabled: false
+  },
+  {
+    slug: "pedidos_compra",
+    name: "Pedidos de compra",
+    description: "Pedidos de compra, fornecedores, itens, recebimentos e status.",
+    defaultEnabled: false
+  },
+  {
+    slug: "notas_fiscais",
+    name: "Notas fiscais",
+    description: "NF-e emitidas, itens, totais, titulos e dados fiscais.",
+    defaultEnabled: false
+  },
+  {
+    slug: "notas_servico",
+    name: "Notas de servico",
+    description: "NFS-e emitidas, servicos, valores, impostos e status.",
+    defaultEnabled: false
+  },
+  {
+    slug: "estoque_saldos",
+    name: "Saldos de estoque",
+    description: "Posicao consolidada de estoque por produto e local.",
+    defaultEnabled: false
+  },
+  {
+    slug: "estoque_movimentacoes",
+    name: "Movimentacoes de estoque",
+    description: "Entradas, saidas e movimentacoes de estoque por periodo.",
+    defaultEnabled: false
+  },
+  {
+    slug: "lancamentos_financeiros",
+    name: "Lancamentos financeiros",
+    description: "Movimentos financeiros de contas a pagar, receber e conta corrente.",
+    defaultEnabled: false
+  },
+  {
+    slug: "contas_correntes",
+    name: "Contas correntes",
+    description: "Cadastro de contas correntes, bancos, carteiras e saldos iniciais.",
     defaultEnabled: false
   }
 ];

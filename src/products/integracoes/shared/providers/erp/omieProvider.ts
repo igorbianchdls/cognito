@@ -44,6 +44,48 @@ export const OMIE_RESOURCES: IntegrationResource[] = [
     description: 'Categorias financeiras e classificacoes operacionais.',
     defaultEnabled: false,
   },
+  {
+    slug: 'pedidos_compra',
+    name: 'Pedidos de compra',
+    description: 'Pedidos de compra, fornecedores, itens, recebimentos e status.',
+    defaultEnabled: false,
+  },
+  {
+    slug: 'notas_fiscais',
+    name: 'Notas fiscais',
+    description: 'NF-e emitidas, itens, totais, titulos e dados fiscais.',
+    defaultEnabled: false,
+  },
+  {
+    slug: 'notas_servico',
+    name: 'Notas de servico',
+    description: 'NFS-e emitidas, servicos, valores, impostos e status.',
+    defaultEnabled: false,
+  },
+  {
+    slug: 'estoque_saldos',
+    name: 'Saldos de estoque',
+    description: 'Posicao consolidada de estoque por produto e local.',
+    defaultEnabled: false,
+  },
+  {
+    slug: 'estoque_movimentacoes',
+    name: 'Movimentacoes de estoque',
+    description: 'Entradas, saidas e movimentacoes de estoque por periodo.',
+    defaultEnabled: false,
+  },
+  {
+    slug: 'lancamentos_financeiros',
+    name: 'Lancamentos financeiros',
+    description: 'Movimentos financeiros de contas a pagar, receber e conta corrente.',
+    defaultEnabled: false,
+  },
+  {
+    slug: 'contas_correntes',
+    name: 'Contas correntes',
+    description: 'Cadastro de contas correntes, bancos, carteiras e saldos iniciais.',
+    defaultEnabled: false,
+  },
 ]
 
 export const OMIE_PROVIDER = erpProvider({
